@@ -116,6 +116,10 @@ def _admin_context(api_user):
             "src.services.security.rate_limiting.check_admin_user_lookup_rate_limit",
             return_value=(True, 0),
         ),
+        patch(
+            "src.services.security.rate_limiting.check_admin_user_provision_rate_limit",
+            return_value=(True, 0),
+        ),
     ):
         yield
 
@@ -621,3 +625,32 @@ class TestAdminRouter:
             response = await client.post("/api/v1/admin/acme/users/2/anonymize")
         assert response.status_code == 200
         assert response.json()["api_tokens_revoked"] == 1
+
+    async def test_trail_detail_endpoints(self, client, api_user):
+        """Cover GET /trails/{user_id} and GET /trails/{user_id}/courses/{course_uuid}."""
+        trail_detail_payload = {
+            "trail_uuid": "trail_1",
+            "user_id": 2,
+            "org_id": 1,
+            "creation_date": "2024-01-01",
+            "update_date": "2024-01-01",
+            "courses": [],
+        }
+
+        with _admin_context(api_user), patch(
+            "src.routers.admin.get_user_trail_detail",
+            new_callable=AsyncMock,
+            return_value=trail_detail_payload,
+        ):
+            response = await client.get("/api/v1/admin/acme/trails/2")
+        assert response.status_code == 200
+        assert response.json()["trail_uuid"] == "trail_1"
+
+        with _admin_context(api_user), patch(
+            "src.routers.admin.get_user_trail_detail",
+            new_callable=AsyncMock,
+            return_value=trail_detail_payload,
+        ):
+            response = await client.get("/api/v1/admin/acme/trails/2/courses/course_1")
+        assert response.status_code == 200
+        assert response.json()["user_id"] == 2

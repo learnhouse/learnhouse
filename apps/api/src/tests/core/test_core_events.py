@@ -34,11 +34,19 @@ class _FakeSession:
     def close(self):
         self.closed = True
 
+    def __enter__(self):
+        return self
 
-def test_auto_install_triggers_install_when_default_org_missing(monkeypatch):
+    def __exit__(self, exc_type, exc, tb):
+        self.close()
+        return False
+
+
+def test_auto_install_triggers_install_when_no_orgs_exist(monkeypatch):
     created_engines = []
     created_tables = []
     installs = []
+    refreshes = []
 
     config = SimpleNamespace(database_config=SimpleNamespace(sql_connection_string="sqlite:///test.db"))
 
@@ -47,30 +55,58 @@ def test_auto_install_triggers_install_when_default_org_missing(monkeypatch):
     monkeypatch.setattr(autoinstall.SQLModel.metadata, "create_all", lambda engine: created_tables.append(engine))
     monkeypatch.setattr(autoinstall, "Session", lambda engine: _FakeSession(engine, row=None))
     monkeypatch.setattr(autoinstall, "install", lambda short: installs.append(short))
+    monkeypatch.setattr(autoinstall, "install_default_elements", lambda db: refreshes.append(db))
 
     autoinstall.auto_install()
 
     assert created_engines
     assert created_tables
     assert installs == [True]
+    # Fresh bootstrap path returns before the refresh helper runs.
+    assert refreshes == []
 
 
-def test_auto_install_skips_install_when_default_org_exists(monkeypatch):
+def test_auto_install_refreshes_default_roles_when_any_org_exists(monkeypatch):
+    import contextlib
     created_tables = []
     installs = []
+    refreshes = []
 
     config = SimpleNamespace(database_config=SimpleNamespace(sql_connection_string="sqlite:///test.db"))
 
+    fake_session = SimpleNamespace()
+
+    @contextlib.asynccontextmanager
+    async def fake_async_session_factory():
+        yield fake_session
+
+    class _FakeAsyncSessionmaker:
+        def __call__(self):
+            return fake_async_session_factory()
+
+    class _FakeAsyncEngine:
+        async def dispose(self):
+            pass
+
     monkeypatch.setattr(autoinstall, "get_learnhouse_config", lambda: config)
     monkeypatch.setattr(autoinstall, "create_engine", lambda *args, **kwargs: object())
+    monkeypatch.setattr(autoinstall, "create_async_engine", lambda *args, **kwargs: _FakeAsyncEngine())
+    monkeypatch.setattr(autoinstall, "async_sessionmaker", lambda *args, **kwargs: _FakeAsyncSessionmaker())
     monkeypatch.setattr(autoinstall.SQLModel.metadata, "create_all", lambda engine: created_tables.append(engine))
     monkeypatch.setattr(autoinstall, "Session", lambda engine: _FakeSession(engine, row=object()))
     monkeypatch.setattr(autoinstall, "install", lambda short: installs.append(short))
+
+    async def fake_install_default_elements(db):
+        refreshes.append(db)
+
+    monkeypatch.setattr(autoinstall, "install_default_elements", fake_install_default_elements)
 
     autoinstall.auto_install()
 
     assert created_tables
     assert installs == []
+    # Existing install: role refresh always runs so new permission keys land.
+    assert len(refreshes) == 1
 
 
 @pytest.mark.asyncio
@@ -252,11 +288,14 @@ async def test_startup_and_shutdown_app(monkeypatch):
     async def check_content_directory():
         calls.append("content")
 
+    async def fake_reconcile_packs():
+        calls.append("reconcile")
+
     monkeypatch.setattr(events, "connect_to_db", connect_to_db)
     monkeypatch.setattr(events, "create_logs_dir", create_logs_dir)
     monkeypatch.setattr(events, "check_content_directory", check_content_directory)
     monkeypatch.setattr(events, "auto_install", lambda: calls.append("install"))
-    monkeypatch.setattr(events, "_reconcile_packs", lambda: calls.append("reconcile"))
+    monkeypatch.setattr(events, "_reconcile_packs", fake_reconcile_packs)
     monkeypatch.setattr(events, "run_ee_startup", lambda app_: calls.append(("ee", app_)))
     monkeypatch.setattr(
         "src.services.courses.migration.migration_service.cleanup_old_temp_migrations",
@@ -310,38 +349,46 @@ async def test_startup_and_shutdown_app(monkeypatch):
     assert ("db-close", app) in calls
 
 
-def test_reconcile_packs_success_and_failure(monkeypatch, caplog):
-    config = SimpleNamespace(database_config=SimpleNamespace(sql_connection_string="sqlite:///packs.db"))
-    created_sessions = []
+@pytest.mark.asyncio
+async def test_reconcile_packs_success_and_failure(monkeypatch, caplog):
+    import contextlib
     reconciled = []
 
-    class _SessionFactory:
-        def __init__(self, engine):
-            created_sessions.append(engine)
-            self.session = _FakeSession(engine)
+    # _reconcile_packs is now async and uses _async_session_factory from database.
+    # Patch the factory at the import location used inside events._reconcile_packs.
+    fake_session = SimpleNamespace()
 
-        def __getattr__(self, name):
-            return getattr(self.session, name)
+    @contextlib.asynccontextmanager
+    async def fake_session_factory():
+        yield fake_session
 
-    monkeypatch.setattr(events, "get_learnhouse_config", lambda: config)
-    monkeypatch.setattr("sqlalchemy.create_engine", lambda *args, **kwargs: object())
-    monkeypatch.setattr("sqlmodel.Session", lambda engine: _SessionFactory(engine))
     monkeypatch.setattr(
-        "src.services.packs.packs.reconcile_pack_credits",
-        lambda db_session: reconciled.append(db_session) or "ok",
+        "src.core.events.database._async_session_factory",
+        fake_session_factory,
     )
 
-    events._reconcile_packs()
-    assert created_sessions
-    assert reconciled
+    async def fake_reconcile_credits(db_session):
+        reconciled.append(db_session)
+        return "ok"
 
     monkeypatch.setattr(
         "src.services.packs.packs.reconcile_pack_credits",
-        lambda db_session: (_ for _ in ()).throw(RuntimeError("boom")),
+        fake_reconcile_credits,
+    )
+
+    await events._reconcile_packs()
+    assert reconciled == [fake_session]
+
+    async def boom_reconcile(db_session):
+        raise RuntimeError("boom")
+
+    monkeypatch.setattr(
+        "src.services.packs.packs.reconcile_pack_credits",
+        boom_reconcile,
     )
 
     with caplog.at_level(logging.WARNING):
-        events._reconcile_packs()
+        await events._reconcile_packs()
 
     assert "Pack reconciliation skipped (non-fatal)" in caplog.text
 

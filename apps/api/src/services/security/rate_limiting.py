@@ -7,10 +7,9 @@ Rate limits:
 - Verification resend: 5 attempts per 5 minutes per email
 """
 import ipaddress
-from typing import Optional, Tuple
-import redis
+from typing import Tuple
 from fastapi import HTTPException, Request
-from config.config import get_learnhouse_config
+from src.core.redis import get_redis_client as _get_redis_pool_client
 
 
 class RateLimitExceeded(Exception):
@@ -21,18 +20,15 @@ class RateLimitExceeded(Exception):
         super().__init__(self.message)
 
 
-def get_redis_connection() -> redis.Redis:
-    """Get Redis connection from config."""
-    LH_CONFIG = get_learnhouse_config()
-    redis_conn_string = LH_CONFIG.redis_config.redis_connection_string
-
-    if not redis_conn_string:
+def get_redis_connection():
+    """Get Redis connection from shared pool."""
+    r = _get_redis_pool_client()
+    if r is None:
         raise HTTPException(
             status_code=500,
             detail="Redis connection string not found",
         )
-
-    return redis.Redis.from_url(redis_conn_string)
+    return r
 
 
 def _is_trusted_proxy(ip: str) -> bool:
@@ -95,7 +91,7 @@ def check_rate_limit(
     key: str,
     max_attempts: int,
     window_seconds: int,
-    r: Optional[redis.Redis] = None
+    r=None
 ) -> Tuple[bool, int, int]:
     """
     Check if rate limit is exceeded for a given key.
@@ -290,6 +286,26 @@ def check_search_rate_limit(user_id: int) -> Tuple[bool, int]:
     is_allowed, _count, retry_after = check_rate_limit(
         key=key,
         max_attempts=60,
+        window_seconds=60,
+    )
+    return is_allowed, retry_after
+
+
+def check_admin_user_provision_rate_limit(api_token_id: int) -> Tuple[bool, int]:
+    """
+    Rate limit admin-API user provisioning at 30/min per API token.
+
+    Provisioning creates DB rows, increments member usage (billing-relevant),
+    and fires webhooks/analytics. Without a cap, a leaked or buggy integration
+    can fan out resource creation and exhaust limits for the org.
+
+    Returns:
+        Tuple of (is_allowed, retry_after_seconds)
+    """
+    key = f"admin_user_provision:{api_token_id}"
+    is_allowed, _count, retry_after = check_rate_limit(
+        key=key,
+        max_attempts=30,
         window_seconds=60,
     )
     return is_allowed, retry_after

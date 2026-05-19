@@ -116,6 +116,22 @@
         "sso": {
           "description": "Single Sign-On (SSO) — премиум-функция для планов Enterprise. Обновите для безопасной аутентификации через провайдер идентификации.",
           "title": "Функция Enterprise"
+        },
+        "boards": {
+          "title": "Standard Feature",
+          "description": "Boards is a premium feature available only to organizations on our Standard plan or higher. Upgrade to unlock collaborative boards for real-time brainstorming and planning."
+        },
+        "playgrounds": {
+          "title": "Standard Feature",
+          "description": "Playgrounds is a premium feature available only to organizations on our Standard plan or higher. Upgrade to create interactive AI-generated experiences for your learners."
+        },
+        "scorm": {
+          "title": "Enterprise Feature",
+          "description": "SCORM support is a premium feature available only to organizations on our Enterprise plan. Upgrade to import and deliver SCORM packages alongside your courses."
+        },
+        "webhooks": {
+          "title": "Pro Feature",
+          "description": "Automations is a premium feature available only to organizations on our Pro plan or higher. Upgrade to wire your courses up to webhooks and external integrations."
         }
       },
       "current_plan": "Текущий план",
@@ -132,7 +148,8 @@
           "podcasts": "Подкасты",
           "payments": "Платежи",
           "trail": "Отслеживание прогресса",
-          "boards": "Доски"
+          "boards": "Доски",
+          "playgrounds": "Playgrounds"
         },
         "public": {
           "title": "{{feature}} недоступен",
@@ -181,7 +198,13 @@
     "boards": "Доски",
     "close": "Закрыть",
     "optional": "необязательно",
-    "playgrounds": "Площадки"
+    "playgrounds": "Площадки",
+    "analytics": "Аналитика",
+    "add": "Добавить",
+    "choose_an_organization_to_continue": "Выберите организацию, чтобы продолжить",
+    "for": "для",
+    "powered_by": "Работает на",
+    "results": "результат"
   },
   "banner": {
     "viewing_as_guest": "Вы просматриваете {{name}} как гость.",
@@ -325,7 +348,9 @@
     "verification_missing_params": "Отсутствуют параметры подтверждения. Проверьте ссылку.",
     "verification_trouble": "Проблемы? Попробуйте запросить новое письмо со страницы входа.",
     "verify_email_title": "Подтвердите email",
-    "verifying_email": "Подтверждение адреса email..."
+    "verifying_email": "Подтверждение адреса email...",
+    "error_generic": "Что-то пошло не так. Пожалуйста, попробуйте ещё раз.",
+    "sign_in": "Войти"
   },
   "validation": {
     "required": "Обязательно",
@@ -608,14 +633,16 @@
       "from_existing_description": "Загрузите файлы с другой платформы и организуйте их в курс"
     },
     "usergroup_filter": {
-      "all_courses": "All Courses",
-      "filter_by_group": "Filter by group",
-      "info_title": "User Group Filter",
-      "info_description": "Filter courses by user group to see only courses assigned to a specific group. Useful for families or teams sharing the same organization."
+      "all_courses": "Все курсы",
+      "filter_by_group": "Фильтр по группе",
+      "info_title": "Фильтр по группам пользователей",
+      "info_description": "Фильтруйте курсы по группе пользователей, чтобы видеть только курсы, назначенные определённой группе. Полезно для семей или команд, входящих в одну организацию."
     },
     "copied": "Скопировано!",
     "quit_course_confirm": "Вы уверены, что хотите покинуть курс? Весь прогресс будет потерян.",
-    "quit_course_title": "Покинуть курс?"
+    "quit_course_title": "Покинуть курс?",
+    "courses_load_error": "Не удалось загрузить курсы. Пожалуйста, попробуйте ещё раз.",
+    "view_all_courses": "Посмотреть все курсы"
   },
   "communities": {
     "title": "Сообщества",
@@ -663,7 +690,8 @@
       "clear_search": "Очистить поиск",
       "no_discussions": "Обсуждений пока нет",
       "no_discussions_description": "Станьте первым, кто начнёт обсуждение в этом сообществе!",
-      "start_discussion": "Начать обсуждение"
+      "start_discussion": "Начать обсуждение",
+      "delete_failed": "Не удалось удалить обсуждение"
     },
     "discussion_detail": {
       "edit": "Редактировать",
@@ -671,7 +699,8 @@
       "delete_title": "Удалить обсуждение?",
       "delete_confirm": "Вы уверены, что хотите удалить это обсуждение? Это действие необратимо.",
       "delete_button": "Удалить обсуждение",
-      "no_details": "Дополнительные сведения не предоставлены."
+      "no_details": "Дополнительные сведения не предоставлены.",
+      "delete_failed": "Не удалось удалить обсуждение"
     },
     "discussion_card": {
       "pin_discussion": "Закрепить обсуждение",
@@ -681,7 +710,10 @@
       "delete_discussion": "Удалить обсуждение",
       "delete_title": "Удалить обсуждение?",
       "delete_confirm": "Вы уверены, что хотите удалить это обсуждение? Это действие необратимо.",
-      "votes": "голосов"
+      "votes": "голосов",
+      "delete_failed": "Не удалось удалить обсуждение",
+      "lock_failed": "Не удалось обновить состояние блокировки",
+      "pin_failed": "Не удалось обновить состояние закрепления"
     },
     "comments": {
       "no_replies": "Ответов пока нет",
@@ -697,7 +729,8 @@
       "cancel": "Отмена",
       "failed_to_post": "Не удалось опубликовать ответ. Пожалуйста, попробуйте снова.",
       "content_not_allowed": "Ваш ответ содержит недопустимый контент.",
-      "failed_to_update": "Не удалось обновить. Пожалуйста, попробуйте снова."
+      "failed_to_update": "Не удалось обновить. Пожалуйста, попробуйте снова.",
+      "failed_to_delete": "Не удалось удалить комментарий"
     },
     "label_filter": {
       "label": "Метка:",
@@ -908,7 +941,7 @@
     "quiz": "Тест",
     "file_submission": "Отправка файла",
     "form": "Форма",
-    "code": "Code",
+    "code": "Код",
     "interactive": "Интерактив",
     "activities": "Занятия",
     "current_activity": "Текущее занятие",
@@ -967,13 +1000,20 @@
     "points": "баллов",
     "current_points": "Текущие баллы: {{points}}",
     "grade": "Оценка",
-    "run_autograde": "Run Auto-grade",
+    "run_autograde": "Запустить автопроверку",
     "due_date": "Срок сдачи",
     "task_breakdown": "Разбивка по задачам",
     "no_grade_details": "Подробности оценки пока недоступны.",
     "task_passed": "Зачтено",
     "task_not_passed": "Не зачтено",
-    "score": "балл"
+    "score": "балл",
+    "form": {
+      "expected_answer": "Ожидаемый"
+    },
+    "quiz": {
+      "correct_answer": "Правильно",
+      "incorrect_answer": "Неправильно"
+    }
   },
   "certificate": {
     "certificate": "Сертификат",
@@ -1060,7 +1100,8 @@
     "subscription": "Подписка",
     "benefits": "Преимущества:",
     "min_price": "Минимальная цена:",
-    "choose_price": "Выберите свою цену"
+    "choose_price": "Выберите свою цену",
+    "stripe_denied": "Подключение к Stripe было отменено."
   },
   "account": {
     "title": "Аккаунт",
@@ -1289,7 +1330,8 @@
           "loading_error": "Ошибка загрузки данных профиля",
           "save_success": "Профиль успешно обновлён",
           "save_error": "Ошибка обновления профиля"
-        }
+        },
+        "unknown_section": "Неизвестный раздел"
       }
     },
     "sign_out": "Выйти",
@@ -2038,7 +2080,8 @@
             "create_success": "Занятие успешно создано",
             "uploading": "Загрузка файла и создание занятия...",
             "upload_success": "Файл успешно загружен",
-            "creating_uploading": "Создание занятия и загрузка файла..."
+            "creating_uploading": "Создание занятия и загрузка файла...",
+            "update_error": "Не удалось обновить занятие"
           },
           "versioning": {
             "version_history": "История версий",
@@ -2082,6 +2125,9 @@
               "remote_detected": "Обнаружены удалённые изменения",
               "editing_notice": "{{author}} внёс изменения, пока вы редактировали"
             }
+          },
+          "descriptions": {
+            "scorm": "Учебный пакет, совместимый с SCORM"
           }
         }
       },
@@ -2169,7 +2215,9 @@
           "other": "Другое",
           "domains": "Домены",
           "sso": "SSO",
-          "usage": "Использование"
+          "usage": "Использование",
+          "seo": "SEO",
+          "automations": "Автоматизация"
         },
         "pages": {
           "general": {
@@ -2231,9 +2279,12 @@
         "footer_text": "Текст подвала",
         "footer_text_placeholder": "Введите текст подвала...",
         "footer_text_desc": "Пользовательский текст, отображаемый внизу страниц вашей организации",
+        "default_language": "Язык по умолчанию",
+        "default_language_desc": "Язык, который новые посетители видят по умолчанию и который используется в письмах, отправляемых от имени этой организации. Участники по-прежнему могут менять язык своего интерфейса.",
         "watermark_desc": "Показывать водяной знак LearnHouse на страницах организации",
         "watermark_free_plan": "Водяной знак всегда отображается на бесплатном плане",
-        "watermark_label": "Водяной знак \"Made with LearnHouse\""
+        "watermark_label": "Водяной знак \"Made with LearnHouse\"",
+        "watermark_ee": "Скрыто лицензией Enterprise Edition"
       },
       "images": {
         "title": "Изображения и превью",
@@ -3115,6 +3166,34 @@
             "toasts": {
               "success": "Роль успешно сохранена",
               "error": "Ошибка при сохранении роли, пожалуйста, попробуйте позже."
+            },
+            "permissions": {
+              "actions": {
+                "access": "доступ",
+                "create": "создание",
+                "delete": "удаление",
+                "delete_own": "удаление своих",
+                "read": "чтение",
+                "read_own": "чтение своих",
+                "update": "обновление",
+                "update_own": "обновление своих"
+              },
+              "deselect": "Снять выбор",
+              "deselect_all": "Снять выбор со всех",
+              "sections": {
+                "activities": "Занятия",
+                "collections": "Коллекции",
+                "coursechapters": "Главы курсов",
+                "courses": "Курсы",
+                "dashboard": "Панель управления",
+                "organizations": "Организации",
+                "roles": "Роли",
+                "usergroups": "Группы пользователей",
+                "users": "Пользователи"
+              },
+              "select": "Выбрать",
+              "select_all": "Выбрать все",
+              "title": "Права доступа"
             }
           },
           "delete": {
@@ -3233,8 +3312,8 @@
             "description": "Анкеты для заполнения учениками"
           },
           "code": {
-            "title": "Code",
-            "description": "Code challenge with automated test case grading"
+            "title": "Код",
+            "description": "Задание по программированию с автоматической проверкой тестовыми случаями"
           },
           "short_answer": {
             "title": "Короткий ответ",
@@ -3351,14 +3430,14 @@
           "reject": "Отклонить задание",
           "set_final_grade": "Установить итоговую оценку",
           "mark_as_done": "Отметить занятие как выполненное для пользователя",
-          "finalize": "Finalize & Complete",
+          "finalize": "Завершить и подтвердить",
           "reject_description": "Удаляет работу и позволяет студенту отправить заново",
           "set_final_grade_description": "Вычисляет и сохраняет оценку без завершения активности",
           "finalize_description": "Устанавливает итоговую оценку и отмечает активность как выполненную для студента"
         },
         "toasts": {
           "reject_success": "Задание успешно отклонено",
-          "finalize_success": "Assignment graded and activity marked as complete"
+          "finalize_success": "Задание оценено, активность отмечена как выполненная"
         },
         "filters": {
           "all": "Все"
@@ -3482,7 +3561,9 @@
             "anti_copy_paste_description": "Препятствуйте вставке ответов от ИИ блокируя события вставки. Примечание: это сдерживающий фактор.",
             "auto_grading_disabled_file": "Автоматическое оценивание недоступно — в этом задании есть отправка файла, требующая проверки человеком.",
             "grading_type_hint": "Как оценки отображаются студентам",
-            "grading_options_hint": "Поведение при отправке"
+            "grading_options_hint": "Поведение при отправке",
+            "show_correct_answers_description": "После проверки работы покажите ученикам правильные ответы рядом с их собственными — какие варианты теста были верны, ожидаемый краткий или числовой ответ и правильные пропуски в форме.",
+            "show_correct_answers_label": "Показывать правильные ответы после проверки"
           },
           "toasts": {
             "updating": "Обновление задания...",
@@ -3522,12 +3603,184 @@
             "anti_copy_paste_label": "Блокировать копирование и вставку",
             "anti_copy_paste_description": "Препятствуйте вставке ответов от ИИ блокируя события вставки. Примечание: это сдерживающий фактор.",
             "grading_type_hint": "Как оценки отображаются студентам",
-            "grading_options_hint": "Поведение при отправке"
+            "grading_options_hint": "Поведение при отправке",
+            "show_correct_answers_description": "После проверки ученики увидят правильные ответы рядом со своими.",
+            "show_correct_answers_label": "Показывать правильные ответы после проверки"
           },
           "toasts": {
             "creating": "Создание задания...",
             "success": "Задание успешно создано"
           }
+        }
+      }
+    },
+    "search": {
+      "trigger": "Поиск",
+      "placeholder": "Поиск страниц и контента…",
+      "shortcut_hint": "⌘K",
+      "no_results": "Ничего не найдено",
+      "loading": "Поиск…",
+      "type_to_search": "Введите не менее 2 символов для поиска контента",
+      "groups": {
+        "pages": "Страницы",
+        "courses": "Курсы",
+        "collections": "Коллекции",
+        "users": "Пользователи",
+        "communities": "Сообщества",
+        "discussions": "Обсуждения",
+        "playgrounds": "Песочницы",
+        "podcasts": "Подкасты"
+      },
+      "entries": {
+        "home": {
+          "description": "Обзор панели",
+          "keywords": "главная, обзор, старт, панель"
+        },
+        "courses": {
+          "description": "Управление курсами",
+          "keywords": "курсы, уроки, обучение, тренинг, классы"
+        },
+        "assignments": {
+          "description": "Управление заданиями",
+          "keywords": "задачи, домашние задания, упражнения"
+        },
+        "communities": {
+          "description": "Управление сообществами",
+          "keywords": "форумы, обсуждения, участники, посты"
+        },
+        "podcasts": {
+          "description": "Управление подкастами",
+          "keywords": "аудио, эпизоды, передачи"
+        },
+        "boards": {
+          "description": "Управление досками",
+          "keywords": "канбан, проект, задачи, списки"
+        },
+        "playgrounds": {
+          "description": "Песочницы кода",
+          "keywords": "код, песочница, repl, программирование"
+        },
+        "analytics": {
+          "description": "Просмотр панелей аналитики",
+          "keywords": "статистика, метрики, графики, отчёты"
+        },
+        "users": {
+          "description": "Управление пользователями организации",
+          "keywords": "участники, аккаунты, люди"
+        },
+        "usergroups": {
+          "description": "Управление группами пользователей",
+          "keywords": "команды, когорты, группы"
+        },
+        "roles": {
+          "description": "Управление ролями и правами",
+          "keywords": "разрешения, доступ, rbac, безопасность"
+        },
+        "signups": {
+          "description": "Просмотр регистраций",
+          "keywords": "регистрации, заявки, запросы"
+        },
+        "org_general": {
+          "description": "Общие настройки организации",
+          "keywords": "название, бренд, slug, профиль"
+        },
+        "org_features": {
+          "description": "Управление функциями организации",
+          "keywords": "функции, модули, переключатели"
+        },
+        "org_billing": {
+          "description": "Биллинг и подписка",
+          "keywords": "план, платежи, счёт, подписка"
+        },
+        "payments_overview": {
+          "description": "Обзор платежей и доходов",
+          "keywords": "stripe, панель, доходы, продажи",
+          "title": "Обзор платежей"
+        },
+        "payments_products": {
+          "description": "Платёжные продукты и цены",
+          "keywords": "продукты, цены, stripe, уровни, планы",
+          "title": "Продукты"
+        },
+        "users_add": {
+          "description": "Пригласить новых участников",
+          "keywords": "пригласить, добавить, участники, отправить"
+        },
+        "users_audit_logs": {
+          "description": "Журнал активности организации",
+          "keywords": "аудит, журналы, история, безопасность, активность"
+        },
+        "org_branding": {
+          "description": "Логотип, цвета и визуальный стиль",
+          "keywords": "брендинг, логотип, цвета, тема"
+        },
+        "org_landing": {
+          "description": "Настройка лендинга",
+          "keywords": "лендинг, главная, hero, страница"
+        },
+        "org_seo": {
+          "description": "Поисковая оптимизация",
+          "keywords": "seo, поиск, мета, рейтинг, google"
+        },
+        "org_ai": {
+          "description": "Функции и настройки ИИ",
+          "keywords": "ии, llm, gpt, openai, генерация"
+        },
+        "org_domains": {
+          "description": "Свои домены",
+          "keywords": "домен, dns, свой, поддомен, cname"
+        },
+        "org_automations": {
+          "description": "Вебхуки и внешние интеграции",
+          "keywords": "вебхуки, автоматизация, zapier, интеграции, триггеры"
+        },
+        "org_api": {
+          "description": "API-токены и программный доступ",
+          "keywords": "api, токены, доступ, программный, ключи"
+        },
+        "org_sso": {
+          "description": "Настройка единого входа",
+          "keywords": "sso, saml, oauth, корпоративный, вход"
+        },
+        "org_other": {
+          "description": "Другие настройки организации",
+          "keywords": "разное, расширенные, свои, дополнительно"
+        },
+        "payments_groups": {
+          "description": "Группы и пакеты платежей",
+          "keywords": "группы, пакеты, наборы",
+          "title": "Группы платежей"
+        },
+        "payments_configuration": {
+          "description": "Настройка Stripe и платежей",
+          "keywords": "настройка, параметры, stripe, установка, connect",
+          "title": "Настройка"
+        },
+        "payments_customers": {
+          "description": "Клиенты и подписчики",
+          "keywords": "клиенты, подписчики, покупатели, оплаченные",
+          "title": "Клиенты"
+        },
+        "courses_migrate": {
+          "description": "Импорт курсов из другой LMS",
+          "keywords": "импорт, миграция, перенос, lms, moodle, canvas",
+          "title": "Перенос курсов"
+        },
+        "account_general": {
+          "description": "Общие настройки личного аккаунта",
+          "keywords": "аккаунт, настройки, email, имя, язык"
+        },
+        "account_profile": {
+          "description": "Редактирование профиля и биографии",
+          "keywords": "профиль, био, аватар, фото, публичный"
+        },
+        "account_security": {
+          "description": "Пароль и настройки безопасности",
+          "keywords": "пароль, безопасность, 2fa, mfa, сессии"
+        },
+        "account_purchases": {
+          "description": "Ваши покупки и подписки",
+          "keywords": "покупки, подписки, оплата, история, чеки"
         }
       }
     }
@@ -3818,8 +4071,8 @@
       "advanced": "Расширенная"
     },
     "not_configured": {
-      "title": "Analytics not configured",
-      "description": "Analytics requires a Tinybird connection. Set the <code>LEARNHOUSE_TINYBIRD_INGEST_TOKEN</code> and <code>LEARNHOUSE_TINYBIRD_READ_TOKEN</code> environment variables to enable it."
+      "title": "Аналитика не настроена",
+      "description": "Для аналитики требуется подключение к Tinybird. Чтобы её включить, задайте переменные окружения <code>LEARNHOUSE_TINYBIRD_INGEST_TOKEN</code> и <code>LEARNHOUSE_TINYBIRD_READ_TOKEN</code>."
     },
     "advanced_gate": {
       "requires": "Требуется",
@@ -3828,156 +4081,156 @@
     "common": {
       "loading": "Загрузка...",
       "no_data": "Данных пока нет",
-      "users": "Users",
-      "views": "Views",
-      "enrollments": "Enrollments",
-      "completions": "Completions",
-      "course": "Course",
-      "date": "Date",
-      "user": "User",
-      "type": "Type",
-      "expand": "Expand",
-      "days": "Days",
-      "score": "Score",
-      "unique_users": "unique users"
+      "users": "Пользователи",
+      "views": "Просмотры",
+      "enrollments": "Записи",
+      "completions": "Завершения",
+      "course": "Курс",
+      "date": "Дата",
+      "user": "Пользователь",
+      "type": "Тип",
+      "expand": "Развернуть",
+      "days": "Дни",
+      "score": "Балл",
+      "unique_users": "уникальных пользователей"
     },
     "overview": {
-      "live_now": "Live Now",
-      "last_5_minutes": "Last 5 minutes",
-      "signups": "Signups",
-      "submissions": "Submissions",
-      "daily_active_users": "Daily Active Users",
-      "active_users": "Active Users",
-      "countries": "Countries",
-      "top_countries": "Top Countries",
-      "devices": "Devices",
-      "desktop": "Desktop",
-      "mobile": "Mobile",
-      "tablet": "Tablet",
-      "top_referrers": "Top Referrers",
-      "top_referrer": "Top Referrer",
-      "enrollment_funnel": "Enrollment Funnel",
-      "page_views": "Page Views",
-      "course_views": "Course Views",
-      "view_to_enroll": "View → Enroll",
-      "enroll_to_complete": "Enroll → Complete",
-      "page_to_complete": "Page → Complete",
-      "conv_rate": "Conv. Rate",
-      "top_courses": "Top Courses",
-      "activity_engagement": "Activity Engagement",
-      "activity": "Activity",
-      "avg_time": "Avg Time",
-      "activities": "Activities",
-      "courses": "Courses",
+      "live_now": "Сейчас в сети",
+      "last_5_minutes": "Последние 5 минут",
+      "signups": "Регистрации",
+      "submissions": "Отправки",
+      "daily_active_users": "Ежедневные активные пользователи",
+      "active_users": "Активные пользователи",
+      "countries": "Страны",
+      "top_countries": "Топ стран",
+      "devices": "Устройства",
+      "desktop": "Десктоп",
+      "mobile": "Мобильное",
+      "tablet": "Планшет",
+      "top_referrers": "Топ источников переходов",
+      "top_referrer": "Главный источник переходов",
+      "enrollment_funnel": "Воронка записи",
+      "page_views": "Просмотры страниц",
+      "course_views": "Просмотры курсов",
+      "view_to_enroll": "Просмотр → Запись",
+      "enroll_to_complete": "Запись → Завершение",
+      "page_to_complete": "Страница → Завершение",
+      "conv_rate": "Конверсия",
+      "top_courses": "Топ курсов",
+      "activity_engagement": "Вовлечённость в активности",
+      "activity": "Активность",
+      "avg_time": "Среднее время",
+      "activities": "Активности",
+      "courses": "Курсы",
       "enrollments": "Зачисления",
       "completions": "Завершения"
     },
     "modals": {
       "live_users": {
-        "title": "Live Users",
-        "description": "Users active in the last 5 minutes"
+        "title": "Активные пользователи",
+        "description": "Пользователи, активные за последние 5 минут"
       },
       "signups": {
-        "title": "Signups",
-        "description": "New user registrations in the last {{days}} days"
+        "title": "Регистрации",
+        "description": "Регистрации новых пользователей за последние {{days}} дн."
       },
       "enrollments": {
-        "title": "Enrollments",
-        "description": "Course enrollments in the last {{days}} days"
+        "title": "Записи",
+        "description": "Записи на курсы за последние {{days}} дн."
       },
       "completions": {
-        "title": "Completions",
-        "description": "Course completions in the last {{days}} days"
+        "title": "Завершения",
+        "description": "Завершения курсов за последние {{days}} дн."
       },
       "live_users_table": {
-        "current_page": "Current Page",
-        "device": "Device",
-        "country": "Country",
-        "last_seen": "Last Seen"
+        "current_page": "Текущая страница",
+        "device": "Устройство",
+        "country": "Страна",
+        "last_seen": "Последний визит"
       },
       "signups_table": {
         "email": "Email",
-        "method": "Method"
+        "method": "Метод"
       }
     },
     "advanced_widgets": {
       "org_growth_trend": {
-        "title": "Org Growth Trend",
-        "description": "Weekly signups, enrollments, completions"
+        "title": "Тренд роста организации",
+        "description": "Еженедельные регистрации, записи, завершения"
       },
       "new_vs_returning": {
-        "title": "New vs Returning Users",
-        "description": "Growth vs retention health"
+        "title": "Новые vs возвращающиеся пользователи",
+        "description": "Здоровье роста и удержания"
       },
       "cohort_retention": {
-        "title": "Cohort Retention",
-        "description": "% users active after signup week",
-        "cohort": "Cohort",
-        "size": "Size"
+        "title": "Удержание когорты",
+        "description": "% пользователей, активных после недели регистрации",
+        "cohort": "Когорта",
+        "size": "Размер"
       },
       "peak_usage": {
-        "title": "Peak Usage Hours",
-        "description": "Event volume by day and hour",
+        "title": "Часы пиковой нагрузки",
+        "description": "Количество событий по дням и часам",
         "days": {
-          "mon": "Mon",
-          "tue": "Tue",
-          "wed": "Wed",
-          "thu": "Thu",
-          "fri": "Fri",
-          "sat": "Sat",
-          "sun": "Sun"
+          "mon": "Пн",
+          "tue": "Вт",
+          "wed": "Ср",
+          "thu": "Чт",
+          "fri": "Пт",
+          "sat": "Сб",
+          "sun": "Вс"
         },
-        "events": "events"
+        "events": "событий"
       },
       "course_dropoff": {
-        "title": "Course Dropoff",
-        "description": "Where users stop per course"
+        "title": "Отток с курса",
+        "description": "Где пользователи останавливаются по каждому курсу"
       },
       "time_to_completion": {
-        "title": "Time to Completion",
-        "description": "Median days to complete each course"
+        "title": "Время до завершения",
+        "description": "Медианное число дней на завершение каждого курса"
       },
       "completion_velocity": {
-        "title": "Completion Velocity",
-        "description": "Avg days between activity completions"
+        "title": "Скорость завершения",
+        "description": "Среднее число дней между завершениями активностей"
       },
       "content_type_effectiveness": {
-        "title": "Content Type Effectiveness",
-        "description": "Completion rate by activity type"
+        "title": "Эффективность типов контента",
+        "description": "Процент завершения по типу активности"
       },
       "course_effectiveness_matrix": {
-        "title": "Course Effectiveness Matrix",
-        "description": "Activity count vs completion rate (sized by enrollments)"
+        "title": "Матрица эффективности курсов",
+        "description": "Количество активностей vs процент завершения (размер по записям)"
       },
       "community_correlation": {
-        "title": "Community Correlation",
-        "description": "Completion rate: discussors vs non-discussors",
-        "discussion_users": "Discussion Users",
-        "non_discussion_users": "Non-Discussion Users"
+        "title": "Корреляция с сообществом",
+        "description": "Процент завершения: участники обсуждений vs не участники",
+        "discussion_users": "Участники обсуждений",
+        "non_discussion_users": "Не участвующие в обсуждениях"
       },
       "learner_engagement_score": {
-        "title": "Learner Engagement Score",
-        "description": "Top learners by composite engagement",
-        "user_id": "User ID"
+        "title": "Оценка вовлечённости учащегося",
+        "description": "Лучшие учащиеся по совокупной вовлечённости",
+        "user_id": "ID пользователя"
       },
       "user_progress_snapshot": {
-        "title": "User Progress Snapshot",
-        "description": "Users at each completion bracket per course"
+        "title": "Снимок прогресса пользователей",
+        "description": "Пользователи в каждом диапазоне завершения по курсам"
       },
       "grade_distribution": {
-        "title": "Grade Distribution",
-        "description": "Assignment grade histogram"
+        "title": "Распределение оценок",
+        "description": "Гистограмма оценок за задания"
       },
       "search_effectiveness": {
-        "title": "Search Effectiveness",
-        "description": "Top queries and zero-result rate",
-        "query": "Query",
-        "searches": "Searches",
-        "zero_results": "Zero Results %"
+        "title": "Эффективность поиска",
+        "description": "Топ запросов и доля без результатов",
+        "query": "Запрос",
+        "searches": "Поисковых запросов",
+        "zero_results": "Без результатов %"
       },
       "certification_rate": {
-        "title": "Certification Rate",
-        "description": "% of completers who claim certificates"
+        "title": "Уровень сертификации",
+        "description": "% завершивших, получивших сертификаты"
       }
     },
     "course_analytics": {
@@ -4431,7 +4684,8 @@
       "search_placeholder": "Поиск по имени или email...",
       "title": "Участники",
       "user": "Пользователь",
-      "viewer": "Наблюдатель"
+      "viewer": "Наблюдатель",
+      "all_groups": "Все группы"
     },
     "name": "Название",
     "name_placeholder": "напр. Планирование проекта",
@@ -4443,7 +4697,8 @@
       "delete": "Удалить",
       "delete_multiple": "Удалить {{count}} элементов",
       "move_back": "Переместить назад",
-      "move_forward": "Переместить вперёд"
+      "move_forward": "Переместить вперёд",
+      "duplicate": "Дублировать"
     },
     "open_board": "Открыть доску",
     "pagination": {
@@ -4546,7 +4801,9 @@
     "zoom": {
       "zoom_in": "Приблизить",
       "zoom_out": "Отдалить"
-    }
+    },
+    "no_boards": "Пока нет досок",
+    "no_search_results": "Доски не найдены"
   },
   "embed": {
     "not_supported_description": "Этот тип активности требует аутентификации и не может быть встроен.",
@@ -4612,7 +4869,9 @@
           "ai": "1 000 кредитов ИИ",
           "ai_desc": "Ускорьте создание контента с помощью инструментов написания на базе ИИ.",
           "analytics": "Аналитика учащихся",
-          "analytics_desc": "Отслеживайте прогресс и вовлечённость для улучшения курсов."
+          "analytics_desc": "Отслеживайте прогресс и вовлечённость для улучшения курсов.",
+          "playgrounds": "Интерактивные песочницы",
+          "playgrounds_desc": "Позвольте учащимся экспериментировать и практиковаться с интерактивными упражнениями."
         }
       },
       "pro": {
@@ -4629,8 +4888,6 @@
           "custom_domain_desc": "Используйте свой домен для брендированной академии.",
           "roles": "Пользовательские роли и разрешения",
           "roles_desc": "Точно контролируйте, кто что может делать в вашей организации.",
-          "playgrounds": "Интерактивные песочницы",
-          "playgrounds_desc": "Позвольте учащимся экспериментировать и практиковаться с интерактивными упражнениями.",
           "api": "Доступ к API и вебхуки",
           "api_desc": "Интегрируйтесь с существующими инструментами и автоматизируйте рабочие процессы."
         }
@@ -4666,6 +4923,15 @@
       "usergroups_add_a_group": "Добавить группу",
       "toast_add_error": "Не удалось добавить группу",
       "toast_remove_error": "Не удалось удалить группу"
-    }
+    },
+    "accessDenied": "Не удаётся получить доступ к этому курсу",
+    "backToCourses": "Назад к курсам",
+    "loadError": "Не удалось найти этот курс или произошла ошибка при его загрузке.",
+    "noPermission": "У вас нет прав для просмотра этого курса."
+  },
+  "pagination": {
+    "next": "Вперёд",
+    "previous": "Назад",
+    "showing_page": "Страница {{current}} из {{total}}"
   }
 }

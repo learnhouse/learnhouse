@@ -17,10 +17,25 @@ logger = logging.getLogger(__name__)
 def _is_allowed_base_url(url: str) -> bool:
     """Validate that a URL is an allowed origin for email links."""
     config = get_learnhouse_config()
+    url_stripped = url.rstrip("/")
+
+    # In single tenancy, the operator's host is authoritative — accept any
+    # http(s) URL with a non-empty hostname. The VPS may be reachable on a
+    # domain the operator hasn't enumerated in `allowed_origins`, and that's
+    # the entire point of the single mode.
+    if config.hosting_config.tenancy == "single":
+        parsed = urlparse(url_stripped)
+        if (
+            parsed.scheme in ("http", "https")
+            and parsed.hostname
+            and not parsed.hostname.startswith(".")
+        ):
+            return True
+        return False
+
     allowed_origins = config.hosting_config.allowed_origins
 
     # Check against configured allowed origins
-    url_stripped = url.rstrip("/")
     for allowed in allowed_origins:
         if url_stripped == allowed.rstrip("/"):
             return True
@@ -55,7 +70,7 @@ def _is_allowed_base_url(url: str) -> bool:
     return False
 
 
-def get_org_signup_base_url(
+async def get_org_signup_base_url(
     org_slug: str,
     request: Request,
     db_session=None,
@@ -64,31 +79,28 @@ def get_org_signup_base_url(
     """
     Return the org-scoped frontend base URL for invitation / signup links.
 
-    When ``db_session`` and ``org_id`` are supplied, prefers the org's verified
-    custom domain (primary first). Otherwise falls back to
-    ``{slug}.{hosting_config.domain}``. Using the generic subdomain for orgs
-    that have a custom domain is cross-origin to any existing session on the
-    custom domain, which breaks the client-side org-context fetch in some
-    browsers (strict cross-site cookies, ad blockers) and leaves users on an
-    error screen.
+    Branches on tenancy:
 
-    Falls back to the request-derived base URL for:
-    - Self-hosted single-instance deployments (no subdomain concept).
-    - Development mode (``localhost:3000`` doesn't host working subdomains).
-    - Misconfigured deployments with no ``hosting_config.domain``.
+    - tenancy == "single": always use the URL the request came in on. Same
+      code path serves localhost dev and self-hosted VPS deployments — there
+      is no subdomain concept and no custom-domain table to consult.
+    - tenancy == "multi":
+        1. If ``db_session`` and ``org_id`` are supplied, prefer the org's
+           verified custom domain (primary first). Using the generic
+           subdomain for orgs that have a custom domain would be cross-origin
+           to the user's existing session on the custom domain.
+        2. Else fall back to ``{slug}.{hosting_config.domain}``.
+        3. Misconfigured (no domain or localhost) → request-derived URL.
     """
     config = get_learnhouse_config()
 
-    if (
-        config.hosting_config.self_hosted
-        or config.general_config.development_mode
-    ):
+    if config.hosting_config.tenancy == "single":
         return get_base_url_from_request(request)
 
     scheme = "https" if config.hosting_config.ssl else "http"
 
     if db_session is not None and org_id is not None:
-        custom_domain = _get_primary_verified_custom_domain(db_session, org_id)
+        custom_domain = await _get_primary_verified_custom_domain(db_session, org_id)
         if custom_domain:
             return f"{scheme}://{custom_domain}"
 
@@ -99,28 +111,28 @@ def get_org_signup_base_url(
     return f"{scheme}://{org_slug}.{base_domain}"
 
 
-def _get_primary_verified_custom_domain(db_session, org_id: int) -> Optional[str]:
+async def _get_primary_verified_custom_domain(db_session, org_id: int) -> Optional[str]:
     """Return the org's primary verified custom domain, or any verified one."""
     try:
         from sqlmodel import select
         from src.db.custom_domains import CustomDomain
 
-        primary = db_session.exec(
+        primary = (await db_session.execute(
             select(CustomDomain).where(
                 CustomDomain.org_id == org_id,
                 CustomDomain.status == "verified",
                 CustomDomain.primary == True,  # noqa: E712
             )
-        ).first()
+        )).scalars().first()
         if primary:
             return primary.domain
 
-        any_verified = db_session.exec(
+        any_verified = (await db_session.execute(
             select(CustomDomain).where(
                 CustomDomain.org_id == org_id,
                 CustomDomain.status == "verified",
             )
-        ).first()
+        )).scalars().first()
         return any_verified.domain if any_verified else None
     except Exception:
         logger.exception("Failed to look up custom domain for org %s", org_id)
@@ -170,17 +182,29 @@ def get_base_url_from_request(request: Request) -> str:
 
 
 def send_email(to: EmailStr, subject: str, body: str):
+    from fastapi import HTTPException
+
     lh_config = get_learnhouse_config()
     mailing = lh_config.mailing_config
     sender = f"LearnHouse <{mailing.system_email_address}>"
 
+    # Resend (and most providers) require a plain `email@example.com` string.
+    # Pydantic's EmailStr is a str subclass, but third-party JSON serializers
+    # can mis-handle it — coerce to a stripped plain str and validate shape
+    # so a malformed stored email surfaces here rather than as an opaque
+    # provider 4xx.
+    to_addr = str(to).strip()
+    if not to_addr or "@" not in to_addr:
+        logger.error("Refusing to send email: invalid recipient %r", to)
+        raise HTTPException(status_code=400, detail="Invalid recipient email address")
+
     if mailing.email_provider == "smtp":
-        return _send_email_smtp(sender, to, subject, body, mailing)
+        return _send_email_smtp(sender, to_addr, subject, body, mailing)
     else:
-        return _send_email_resend(sender, to, subject, body, mailing)
+        return _send_email_resend(sender, to_addr, subject, body, mailing)
 
 
-def _send_email_resend(sender: str, to: EmailStr, subject: str, body: str, mailing):
+def _send_email_resend(sender: str, to: str, subject: str, body: str, mailing):
     from fastapi import HTTPException
     resend.api_key = mailing.resend_api_key
     try:
@@ -198,11 +222,11 @@ def _send_email_resend(sender: str, to: EmailStr, subject: str, body: str, maili
 _SMTP_TIMEOUT = 15
 
 
-def _send_email_smtp(sender: str, to: EmailStr, subject: str, body: str, mailing):
+def _send_email_smtp(sender: str, to: str, subject: str, body: str, mailing):
     from fastapi import HTTPException
     msg = MIMEMultipart("alternative")
     msg["From"] = sender
-    msg["To"] = str(to)
+    msg["To"] = to
     msg["Subject"] = subject
     msg.attach(MIMEText(body, "html"))
 
@@ -217,8 +241,8 @@ def _send_email_smtp(sender: str, to: EmailStr, subject: str, body: str, mailing
         if mailing.smtp_username and mailing.smtp_password:
             server.login(mailing.smtp_username, mailing.smtp_password)
 
-        server.sendmail(mailing.system_email_address, str(to), msg.as_string())
-        return {"id": None, "to": str(to)}
+        server.sendmail(mailing.system_email_address, to, msg.as_string())
+        return {"id": None, "to": to}
     except smtplib.SMTPException as e:
         logger.error("SMTP error sending to %s: %s", to, e, exc_info=True)
         raise HTTPException(status_code=503, detail="Email service error")

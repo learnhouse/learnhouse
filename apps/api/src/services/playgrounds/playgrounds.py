@@ -2,7 +2,8 @@ from typing import List
 from uuid import uuid4
 from datetime import datetime
 from fastapi import HTTPException, Request, UploadFile
-from sqlmodel import Session, select
+from sqlmodel import select
+from sqlmodel.ext.asyncio.session import AsyncSession
 
 from src.db.playgrounds import (
     Playground,
@@ -19,19 +20,31 @@ from src.db.organizations import Organization
 from src.db.user_organizations import UserOrganization
 from src.db.courses.courses import Course
 from src.security.rbac.constants import ADMIN_OR_MAINTAINER_ROLE_IDS
+from src.security.superadmin import is_user_superadmin
 from src.services.utils.upload_content import upload_file
 from src.services.webhooks.dispatch import dispatch_webhooks
 
 
-def _playground_to_read(playground: Playground, db_session: Session) -> PlaygroundRead:
+_SUPERADMIN_PLAYGROUND_RIGHTS = {
+    "action_create": True,
+    "action_read": True,
+    "action_read_own": True,
+    "action_update": True,
+    "action_update_own": True,
+    "action_delete": True,
+    "action_delete_own": True,
+}
+
+
+async def _playground_to_read(playground: Playground, db_session: AsyncSession) -> PlaygroundRead:
     """Convert a Playground model to PlaygroundRead, enriching with org_uuid, org_slug, and author info."""
     read = PlaygroundRead.model_validate(playground)
-    org = db_session.get(Organization, playground.org_id)
+    org = (await db_session.execute(select(Organization).where(Organization.id == playground.org_id))).scalars().first()
     if org:
         read.org_uuid = org.org_uuid
         read.org_slug = org.slug
     if playground.created_by:
-        author = db_session.get(User, playground.created_by)
+        author = (await db_session.execute(select(User).where(User.id == playground.created_by))).scalars().first()
         if author:
             read.author_username = author.username
             read.author_first_name = author.first_name
@@ -41,23 +54,27 @@ def _playground_to_read(playground: Playground, db_session: Session) -> Playgrou
     return read
 
 
-def _get_user_rights(
+async def _get_user_rights(
     user_id: int,
     org_id: int,
-    db_session: Session,
+    db_session: AsyncSession,
 ) -> dict:
-    """Return the first role's rights for the user in the org, or empty dict."""
+    # Superadmins administer every tenant from the platform panel; they don't
+    # need an org membership row.
+    if await is_user_superadmin(user_id, db_session):
+        return {"playgrounds": dict(_SUPERADMIN_PLAYGROUND_RIGHTS)}
+
     statement = (
         select(UserOrganization)
         .where(UserOrganization.user_id == user_id)
         .where(UserOrganization.org_id == org_id)
     )
-    user_org = db_session.exec(statement).first()
+    user_org = (await db_session.execute(statement)).scalars().first()
     if not user_org:
         return {}
 
     from src.db.roles import Role
-    role = db_session.get(Role, user_org.role_id)
+    role = (await db_session.execute(select(Role).where(Role.id == user_org.role_id))).scalars().first()
     if not role or not role.rights:
         return {}
 
@@ -67,25 +84,25 @@ def _get_user_rights(
     return rights.model_dump() if hasattr(rights, "model_dump") else {}
 
 
-def _is_org_admin(user_id: int, org_id: int, db_session: Session) -> bool:
+async def _is_org_admin(user_id: int, org_id: int, db_session: AsyncSession) -> bool:
     statement = (
         select(UserOrganization)
         .where(UserOrganization.user_id == user_id)
         .where(UserOrganization.org_id == org_id)
     )
-    user_org = db_session.exec(statement).first()
+    user_org = (await db_session.execute(statement)).scalars().first()
     if not user_org:
         return False
     return user_org.role_id in ADMIN_OR_MAINTAINER_ROLE_IDS
 
 
-def _user_in_playground_usergroup(
-    user_id: int, playground_uuid: str, db_session: Session
+async def _user_in_playground_usergroup(
+    user_id: int, playground_uuid: str, db_session: AsyncSession
 ) -> bool:
     usergroup_stmt = select(UserGroupResource).where(
         UserGroupResource.resource_uuid == playground_uuid
     )
-    ugrs = db_session.exec(usergroup_stmt).all()
+    ugrs = (await db_session.execute(usergroup_stmt)).scalars().all()
     if not ugrs:
         return False
 
@@ -94,13 +111,13 @@ def _user_in_playground_usergroup(
         UserGroupUser.usergroup_id.in_(usergroup_ids),
         UserGroupUser.user_id == user_id,
     )
-    return db_session.exec(membership_stmt).first() is not None
+    return (await db_session.execute(membership_stmt)).scalars().first() is not None
 
 
-def _check_read_access(
+async def _check_read_access(
     playground: Playground,
     current_user: PublicUser | AnonymousUser | APITokenUser,
-    db_session: Session,
+    db_session: AsyncSession,
 ) -> None:
     """Raise 403 if current_user cannot read this playground."""
     if playground.access_type == PlaygroundAccessType.PUBLIC:
@@ -114,11 +131,11 @@ def _check_read_access(
 
     # RESTRICTED
     acting_user_id = resolve_acting_user_id(current_user)
-    if _is_org_admin(acting_user_id, playground.org_id, db_session):
+    if await _is_org_admin(acting_user_id, playground.org_id, db_session):
         return
     if playground.created_by == acting_user_id:
         return
-    if _user_in_playground_usergroup(acting_user_id, playground.playground_uuid, db_session):
+    if await _user_in_playground_usergroup(acting_user_id, playground.playground_uuid, db_session):
         return
 
     raise HTTPException(status_code=403, detail="Access denied to this playground")
@@ -129,15 +146,15 @@ async def create_playground(
     org_id: int,
     playground_data: PlaygroundCreate,
     current_user: PublicUser,
-    db_session: Session,
+    db_session: AsyncSession,
 ) -> PlaygroundRead:
     # Verify org exists
-    org = db_session.get(Organization, org_id)
+    org = (await db_session.execute(select(Organization).where(Organization.id == org_id))).scalars().first()
     if not org:
         raise HTTPException(status_code=404, detail="Organization not found")
 
     # Check rights
-    rights = _get_user_rights(current_user.id, org_id, db_session)
+    rights = await _get_user_rights(current_user.id, org_id, db_session)
     pg_rights = rights.get("playgrounds", {})
     if not pg_rights.get("action_create", False):
         raise HTTPException(status_code=403, detail="Insufficient permissions to create playgrounds")
@@ -145,9 +162,9 @@ async def create_playground(
     # Resolve course_id if course_uuid provided
     course_id = None
     if playground_data.course_uuid:
-        course = db_session.exec(
+        course = (await db_session.execute(
             select(Course).where(Course.course_uuid == playground_data.course_uuid)
-        ).first()
+        )).scalars().first()
         if course and course.org_id == org_id:
             course_id = course.id
 
@@ -168,8 +185,8 @@ async def create_playground(
         update_date=now,
     )
     db_session.add(playground)
-    db_session.commit()
-    db_session.refresh(playground)
+    await db_session.commit()
+    await db_session.refresh(playground)
 
     await dispatch_webhooks(
         event_name="playground_created",
@@ -181,41 +198,41 @@ async def create_playground(
         },
     )
 
-    return _playground_to_read(playground, db_session)
+    return await _playground_to_read(playground, db_session)
 
 
 async def get_playground(
     request: Request,
     playground_uuid: str,
     current_user: PublicUser | AnonymousUser,
-    db_session: Session,
+    db_session: AsyncSession,
 ) -> PlaygroundRead:
-    playground = db_session.exec(
+    playground = (await db_session.execute(
         select(Playground).where(Playground.playground_uuid == playground_uuid)
-    ).first()
+    )).scalars().first()
     if not playground:
         raise HTTPException(status_code=404, detail="Playground not found")
 
-    _check_read_access(playground, current_user, db_session)
-    return _playground_to_read(playground, db_session)
+    await _check_read_access(playground, current_user, db_session)
+    return await _playground_to_read(playground, db_session)
 
 
 async def list_org_playgrounds(
     request: Request,
     org_id: int,
     current_user: PublicUser | AnonymousUser,
-    db_session: Session,
+    db_session: AsyncSession,
 ) -> List[PlaygroundRead]:
-    playgrounds = db_session.exec(
+    playgrounds = (await db_session.execute(
         select(Playground).where(Playground.org_id == org_id)
-    ).all()
+    )).scalars().all()
     if not playgrounds:
         return []
 
     is_anon = isinstance(current_user, AnonymousUser)
     user_id = None if is_anon else current_user.id
 
-    is_admin = False if is_anon else _is_org_admin(user_id, org_id, db_session)
+    is_admin = False if is_anon else await _is_org_admin(user_id, org_id, db_session)
 
     # Batch resolve usergroup access for RESTRICTED playgrounds (only needed for
     # authenticated non-admin non-owner users).
@@ -228,21 +245,21 @@ async def list_org_playgrounds(
             and pg.created_by != user_id
         ]
         if restricted_uuids:
-            ugrs = db_session.exec(
+            ugrs = (await db_session.execute(
                 select(
                     UserGroupResource.resource_uuid,
                     UserGroupResource.usergroup_id,
                 ).where(UserGroupResource.resource_uuid.in_(restricted_uuids))
-            ).all()
+            )).all()
             if ugrs:
                 ug_ids = list({row[1] for row in ugrs})
                 member_ug_ids = set(
-                    db_session.exec(
+                    (await db_session.execute(
                         select(UserGroupUser.usergroup_id).where(
                             UserGroupUser.usergroup_id.in_(ug_ids),
                             UserGroupUser.user_id == user_id,
                         )
-                    ).all()
+                    )).scalars().all()
                 )
                 for resource_uuid, ug_id in ugrs:
                     if ug_id in member_ug_ids:
@@ -273,13 +290,13 @@ async def list_org_playgrounds(
     if not allowed:
         return []
 
-    org = db_session.get(Organization, org_id)
+    org = (await db_session.execute(select(Organization).where(Organization.id == org_id))).scalars().first()
     author_ids = {pg.created_by for pg in allowed if pg.created_by}
     authors_map: dict[int, User] = {}
     if author_ids:
-        authors = db_session.exec(
+        authors = (await db_session.execute(
             select(User).where(User.id.in_(author_ids))
-        ).all()
+        )).scalars().all()
         authors_map = {u.id: u for u in authors}
 
     result: List[PlaygroundRead] = []
@@ -305,15 +322,15 @@ async def update_playground(
     playground_uuid: str,
     playground_data: PlaygroundUpdate,
     current_user: PublicUser,
-    db_session: Session,
+    db_session: AsyncSession,
 ) -> PlaygroundRead:
-    playground = db_session.exec(
+    playground = (await db_session.execute(
         select(Playground).where(Playground.playground_uuid == playground_uuid)
-    ).first()
+    )).scalars().first()
     if not playground:
         raise HTTPException(status_code=404, detail="Playground not found")
 
-    rights = _get_user_rights(current_user.id, playground.org_id, db_session)
+    rights = await _get_user_rights(current_user.id, playground.org_id, db_session)
     pg_rights = rights.get("playgrounds", {})
 
     is_owner = playground.created_by == current_user.id
@@ -329,9 +346,9 @@ async def update_playground(
     if "course_uuid" in update_data:
         new_course_uuid = update_data.get("course_uuid")
         if new_course_uuid:
-            course = db_session.exec(
+            course = (await db_session.execute(
                 select(Course).where(Course.course_uuid == new_course_uuid)
-            ).first()
+            )).scalars().first()
             if course and course.org_id == playground.org_id:
                 playground.course_id = course.id
             else:
@@ -344,24 +361,24 @@ async def update_playground(
 
     playground.update_date = datetime.utcnow().isoformat()
     db_session.add(playground)
-    db_session.commit()
-    db_session.refresh(playground)
-    return _playground_to_read(playground, db_session)
+    await db_session.commit()
+    await db_session.refresh(playground)
+    return await _playground_to_read(playground, db_session)
 
 
 async def delete_playground(
     request: Request,
     playground_uuid: str,
     current_user: PublicUser,
-    db_session: Session,
+    db_session: AsyncSession,
 ) -> dict:
-    playground = db_session.exec(
+    playground = (await db_session.execute(
         select(Playground).where(Playground.playground_uuid == playground_uuid)
-    ).first()
+    )).scalars().first()
     if not playground:
         raise HTTPException(status_code=404, detail="Playground not found")
 
-    rights = _get_user_rights(current_user.id, playground.org_id, db_session)
+    rights = await _get_user_rights(current_user.id, playground.org_id, db_session)
     pg_rights = rights.get("playgrounds", {})
 
     is_owner = playground.created_by == current_user.id
@@ -372,16 +389,16 @@ async def delete_playground(
         raise HTTPException(status_code=403, detail="Insufficient permissions to delete playground")
 
     # Remove usergroup associations
-    ugrs = db_session.exec(
+    ugrs = (await db_session.execute(
         select(UserGroupResource).where(
             UserGroupResource.resource_uuid == playground_uuid
         )
-    ).all()
+    )).scalars().all()
     for ugr in ugrs:
-        db_session.delete(ugr)
+        await db_session.delete(ugr)
 
-    db_session.delete(playground)
-    db_session.commit()
+    await db_session.delete(playground)
+    await db_session.commit()
     return {"detail": "Playground deleted"}
 
 
@@ -389,15 +406,15 @@ async def duplicate_playground(
     request: Request,
     playground_uuid: str,
     current_user: PublicUser,
-    db_session: Session,
+    db_session: AsyncSession,
 ) -> PlaygroundRead:
-    playground = db_session.exec(
+    playground = (await db_session.execute(
         select(Playground).where(Playground.playground_uuid == playground_uuid)
-    ).first()
+    )).scalars().first()
     if not playground:
         raise HTTPException(status_code=404, detail="Playground not found")
 
-    rights = _get_user_rights(current_user.id, playground.org_id, db_session)
+    rights = await _get_user_rights(current_user.id, playground.org_id, db_session)
     pg_rights = rights.get("playgrounds", {})
     if not pg_rights.get("action_create", False):
         raise HTTPException(status_code=403, detail="Insufficient permissions to create playgrounds")
@@ -419,9 +436,9 @@ async def duplicate_playground(
         update_date=now,
     )
     db_session.add(new_playground)
-    db_session.commit()
-    db_session.refresh(new_playground)
-    return _playground_to_read(new_playground, db_session)
+    await db_session.commit()
+    await db_session.refresh(new_playground)
+    return await _playground_to_read(new_playground, db_session)
 
 
 async def add_usergroup_to_playground(
@@ -429,15 +446,15 @@ async def add_usergroup_to_playground(
     playground_uuid: str,
     usergroup_uuid: str,
     current_user: PublicUser,
-    db_session: Session,
+    db_session: AsyncSession,
 ) -> dict:
-    playground = db_session.exec(
+    playground = (await db_session.execute(
         select(Playground).where(Playground.playground_uuid == playground_uuid)
-    ).first()
+    )).scalars().first()
     if not playground:
         raise HTTPException(status_code=404, detail="Playground not found")
 
-    rights = _get_user_rights(current_user.id, playground.org_id, db_session)
+    rights = await _get_user_rights(current_user.id, playground.org_id, db_session)
     pg_rights = rights.get("playgrounds", {})
     is_owner = playground.created_by == current_user.id
     can_update = pg_rights.get("action_update", False) or (
@@ -447,18 +464,18 @@ async def add_usergroup_to_playground(
         raise HTTPException(status_code=403, detail="Insufficient permissions")
 
     from src.db.usergroups import UserGroup
-    ug = db_session.exec(
+    ug = (await db_session.execute(
         select(UserGroup).where(UserGroup.usergroup_uuid == usergroup_uuid)
-    ).first()
+    )).scalars().first()
     if not ug:
         raise HTTPException(status_code=404, detail="User group not found")
 
-    existing = db_session.exec(
+    existing = (await db_session.execute(
         select(UserGroupResource).where(
             UserGroupResource.resource_uuid == playground_uuid,
             UserGroupResource.usergroup_id == ug.id,
         )
-    ).first()
+    )).scalars().first()
     if existing:
         return {"detail": "User group already has access"}
 
@@ -471,7 +488,7 @@ async def add_usergroup_to_playground(
         update_date=now,
     )
     db_session.add(ugr)
-    db_session.commit()
+    await db_session.commit()
     return {"detail": "User group added to playground"}
 
 
@@ -480,15 +497,15 @@ async def remove_usergroup_from_playground(
     playground_uuid: str,
     usergroup_uuid: str,
     current_user: PublicUser,
-    db_session: Session,
+    db_session: AsyncSession,
 ) -> dict:
-    playground = db_session.exec(
+    playground = (await db_session.execute(
         select(Playground).where(Playground.playground_uuid == playground_uuid)
-    ).first()
+    )).scalars().first()
     if not playground:
         raise HTTPException(status_code=404, detail="Playground not found")
 
-    rights = _get_user_rights(current_user.id, playground.org_id, db_session)
+    rights = await _get_user_rights(current_user.id, playground.org_id, db_session)
     pg_rights = rights.get("playgrounds", {})
     is_owner = playground.created_by == current_user.id
     can_update = pg_rights.get("action_update", False) or (
@@ -498,23 +515,23 @@ async def remove_usergroup_from_playground(
         raise HTTPException(status_code=403, detail="Insufficient permissions")
 
     from src.db.usergroups import UserGroup
-    ug = db_session.exec(
+    ug = (await db_session.execute(
         select(UserGroup).where(UserGroup.usergroup_uuid == usergroup_uuid)
-    ).first()
+    )).scalars().first()
     if not ug:
         raise HTTPException(status_code=404, detail="User group not found")
 
-    ugr = db_session.exec(
+    ugr = (await db_session.execute(
         select(UserGroupResource).where(
             UserGroupResource.resource_uuid == playground_uuid,
             UserGroupResource.usergroup_id == ug.id,
         )
-    ).first()
+    )).scalars().first()
     if not ugr:
         raise HTTPException(status_code=404, detail="User group not associated with playground")
 
-    db_session.delete(ugr)
-    db_session.commit()
+    await db_session.delete(ugr)
+    await db_session.commit()
     return {"detail": "User group removed from playground"}
 
 
@@ -522,16 +539,16 @@ async def update_playground_thumbnail(
     request: Request,
     playground_uuid: str,
     current_user: PublicUser,
-    db_session: Session,
+    db_session: AsyncSession,
     thumbnail_file: UploadFile | None = None,
 ) -> PlaygroundRead:
-    playground = db_session.exec(
+    playground = (await db_session.execute(
         select(Playground).where(Playground.playground_uuid == playground_uuid)
-    ).first()
+    )).scalars().first()
     if not playground:
         raise HTTPException(status_code=404, detail="Playground not found")
 
-    rights = _get_user_rights(current_user.id, playground.org_id, db_session)
+    rights = await _get_user_rights(current_user.id, playground.org_id, db_session)
     pg_rights = rights.get("playgrounds", {})
     is_owner = playground.created_by == current_user.id
     can_update = pg_rights.get("action_update", False) or (
@@ -540,7 +557,7 @@ async def update_playground_thumbnail(
     if not can_update:
         raise HTTPException(status_code=403, detail="Insufficient permissions to update playground")
 
-    org = db_session.get(Organization, playground.org_id)
+    org = (await db_session.execute(select(Organization).where(Organization.id == playground.org_id))).scalars().first()
     if not org:
         raise HTTPException(status_code=404, detail="Organization not found")
 
@@ -559,33 +576,33 @@ async def update_playground_thumbnail(
     playground.thumbnail_image = name_in_disk
     playground.update_date = datetime.utcnow().isoformat()
     db_session.add(playground)
-    db_session.commit()
-    db_session.refresh(playground)
-    return _playground_to_read(playground, db_session)
+    await db_session.commit()
+    await db_session.refresh(playground)
+    return await _playground_to_read(playground, db_session)
 
 
 async def get_playground_usergroups(
     request: Request,
     playground_uuid: str,
     current_user: PublicUser,
-    db_session: Session,
+    db_session: AsyncSession,
 ) -> List[dict]:
-    playground = db_session.exec(
+    playground = (await db_session.execute(
         select(Playground).where(Playground.playground_uuid == playground_uuid)
-    ).first()
+    )).scalars().first()
     if not playground:
         raise HTTPException(status_code=404, detail="Playground not found")
 
-    ugrs = db_session.exec(
+    ugrs = (await db_session.execute(
         select(UserGroupResource).where(
             UserGroupResource.resource_uuid == playground_uuid
         )
-    ).all()
+    )).scalars().all()
 
     result = []
     from src.db.usergroups import UserGroup
     for ugr in ugrs:
-        ug = db_session.get(UserGroup, ugr.usergroup_id)
+        ug = (await db_session.execute(select(UserGroup).where(UserGroup.id == ugr.usergroup_id))).scalars().first()
         if ug:
             result.append(
                 {

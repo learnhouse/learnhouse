@@ -1,7 +1,8 @@
 'use client'
 import { getAPIUrl } from '@services/config/config'
-import { swrFetcher } from '@services/utils/ts/requests'
-import useSWR from 'swr'
+import { apiFetch } from '@services/utils/ts/requests'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
+import { queryKeys } from '@/lib/query/keys'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
 import { useCallback, useRef, useState } from 'react'
 
@@ -26,22 +27,31 @@ export interface ActivityState {
 }
 
 /**
- * Hook to fetch activity version history
+ * Hook to fetch activity version history.
+ *
+ * Pass `enabled: false` to skip the fetch (e.g., when the panel is closed).
+ * The list is only useful when the user actually opens the version history.
  */
-export function useActivityVersions(activityUuid: string, limit: number = 20) {
+export function useActivityVersions(
+  activityUuid: string,
+  limit: number = 20,
+  enabled: boolean = true
+) {
   const session = useLHSession() as any
   const access_token = session?.data?.tokens?.access_token
 
-  const { data: versions, error, isLoading, mutate } = useSWR<ActivityVersion[]>(
-    activityUuid && access_token
-      ? `${getAPIUrl()}activities/${activityUuid}/versions?limit=${limit}`
-      : null,
-    (url: string) => swrFetcher(url, access_token),
-    {
-      revalidateOnFocus: false,
-      dedupingInterval: 5000,
-    }
-  )
+  const queryClient = useQueryClient()
+  const { data: versions, error, isLoading } = useQuery<ActivityVersion[]>({
+    queryKey: queryKeys.activity.versions(activityUuid),
+    queryFn: () => apiFetch(`${getAPIUrl()}activities/${activityUuid}/versions?limit=${limit}`, access_token),
+    enabled: enabled && !!activityUuid && !!access_token,
+    staleTime: 30_000,
+    refetchOnWindowFocus: false,
+  })
+
+  const mutate = useCallback(() => {
+    return queryClient.invalidateQueries({ queryKey: queryKeys.activity.versions(activityUuid) })
+  }, [queryClient, activityUuid])
 
   return {
     versions: versions || [],
@@ -58,22 +68,20 @@ export function useActivityState(activityUuid: string, enabled: boolean = true) 
   const session = useLHSession() as any
   const access_token = session?.data?.tokens?.access_token
 
-  const { data: state, error, isLoading, mutate } = useSWR<ActivityState>(
-    enabled && activityUuid && access_token
-      ? `${getAPIUrl()}activities/${activityUuid}/state`
-      : null,
-    (url: string) => swrFetcher(url, access_token),
-    {
-      revalidateOnFocus: false,
-      revalidateOnReconnect: true,
-      dedupingInterval: 2000,
-      refreshInterval: 0, // Manual refresh only
-    }
-  )
+  const queryClient = useQueryClient()
+  const { data: state, error, isLoading } = useQuery<ActivityState>({
+    queryKey: queryKeys.activity.state(activityUuid),
+    queryFn: () => apiFetch(`${getAPIUrl()}activities/${activityUuid}/state`, access_token),
+    enabled: enabled && !!activityUuid && !!access_token,
+    staleTime: 30_000,
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: true,
+    refetchInterval: false,
+  })
 
   const refresh = useCallback(() => {
-    return mutate()
-  }, [mutate])
+    return queryClient.invalidateQueries({ queryKey: queryKeys.activity.state(activityUuid) })
+  }, [queryClient, activityUuid])
 
   return {
     state,

@@ -78,19 +78,19 @@ def test_userupdate_accepts_valid_email():
 # ---------------------------------------------------------------------------
 
 
-def _set_user_email_state(db, *, user_id: int, email: str, verified: bool) -> User:
+async def _set_user_email_state(db, *, user_id: int, email: str, verified: bool) -> User:
     """Adjust the email+verification fields on the user row that the
     ``regular_user`` conftest fixture already created.
     """
     from sqlmodel import select
-    u = db.exec(select(User).where(User.id == user_id)).first()
+    u = (await db.execute(select(User).where(User.id == user_id))).scalars().first()
     assert u is not None, "regular_user fixture should have created the row"
     u.email = email
     u.email_verified = verified
     u.email_verified_at = str(datetime.now()) if verified else None
     db.add(u)
-    db.commit()
-    db.refresh(u)
+    await db.commit()
+    await db.refresh(u)
     return u
 
 
@@ -99,7 +99,7 @@ async def test_update_user_resets_email_verified_when_email_changes(
     db, org, regular_user, mock_request
 ):
     """Changing the email flips email_verified back to False."""
-    _set_user_email_state(db, user_id=regular_user.id, email="regular@test.com", verified=True)
+    await _set_user_email_state(db, user_id=regular_user.id, email="regular@test.com", verified=True)
 
     with patch("src.services.users.users.rbac_check", new=AsyncMock()):
         result = await update_user(
@@ -128,7 +128,7 @@ async def test_update_user_keeps_email_verified_when_email_unchanged(
     db, org, regular_user, mock_request
 ):
     """Profile edits that do NOT change the email must keep verification intact."""
-    _set_user_email_state(db, user_id=regular_user.id, email="regular@test.com", verified=True)
+    await _set_user_email_state(db, user_id=regular_user.id, email="regular@test.com", verified=True)
 
     with patch("src.services.users.users.rbac_check", new=AsyncMock()):
         result = await update_user(

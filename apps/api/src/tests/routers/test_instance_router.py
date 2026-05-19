@@ -41,7 +41,10 @@ class TestInstanceRouter:
 
     async def test_get_instance_info_builds_response(self, client, db, org):
         config = SimpleNamespace(
-            hosting_config=SimpleNamespace(frontend_domain="localhost:3000")
+            hosting_config=SimpleNamespace(
+                frontend_domain="localhost:3000",
+                tenancy="multi",
+            )
         )
         with patch(
             "src.routers.instance.get_cached_instance_info",
@@ -65,11 +68,47 @@ class TestInstanceRouter:
         assert body["default_org_slug"] == org.slug
         assert body["frontend_domain"] == "localhost:3000"
         assert body["top_domain"] == "localhost"
+        assert body["tenancy"] == "multi"
+        assert body["multi_org_enabled"] is True
         mock_set_cache.assert_called_once()
+
+    async def test_get_instance_info_single_tenancy(self, client, db, org):
+        # In single tenancy, multi_org_enabled (deprecated alias) must be
+        # False even if EE/SaaS would otherwise allow it.
+        config = SimpleNamespace(
+            hosting_config=SimpleNamespace(
+                frontend_domain="learn.example.org",
+                tenancy="single",
+            )
+        )
+        with patch(
+            "src.routers.instance.get_cached_instance_info",
+            return_value=None,
+        ), patch(
+            "src.routers.instance.get_learnhouse_config",
+            return_value=config,
+        ), patch(
+            "src.routers.instance.get_deployment_mode",
+            return_value="ee",
+        ), patch(
+            "src.routers.instance.is_multi_org_allowed",
+            return_value=True,
+        ), patch(
+            "src.routers.instance.set_cached_instance_info",
+        ):
+            response = await client.get("/api/v1/instance/info")
+
+        assert response.status_code == 200
+        body = response.json()
+        assert body["tenancy"] == "single"
+        assert body["multi_org_enabled"] is False
 
     async def test_get_instance_info_falls_back_when_db_lookup_fails(self, client):
         config = SimpleNamespace(
-            hosting_config=SimpleNamespace(frontend_domain="learnhouse.ai")
+            hosting_config=SimpleNamespace(
+                frontend_domain="learnhouse.ai",
+                tenancy="single",
+            )
         )
         bad_session = Mock()
         bad_session.exec.side_effect = RuntimeError("db error")

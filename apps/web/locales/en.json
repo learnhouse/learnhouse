@@ -11,6 +11,7 @@
     "payments": "Payments",
     "playgrounds": "Playgrounds",
     "organization": "Organization",
+    "analytics": "Analytics",
     "dashboard": "Dashboard",
     "settings": "Settings",
     "language": "Language",
@@ -121,6 +122,22 @@
         "course_analytics": {
           "title": "Pro Feature",
           "description": "Course Analytics is a premium feature available only to organizations on our Pro plan or higher. Upgrade to unlock detailed engagement data, enrollment trends, and learner progress for individual courses."
+        },
+        "boards": {
+          "title": "Standard Feature",
+          "description": "Boards is a premium feature available only to organizations on our Standard plan or higher. Upgrade to unlock collaborative boards for real-time brainstorming and planning."
+        },
+        "playgrounds": {
+          "title": "Standard Feature",
+          "description": "Playgrounds is a premium feature available only to organizations on our Standard plan or higher. Upgrade to create interactive AI-generated experiences for your learners."
+        },
+        "scorm": {
+          "title": "Enterprise Feature",
+          "description": "SCORM support is a premium feature available only to organizations on our Enterprise plan. Upgrade to import and deliver SCORM packages alongside your courses."
+        },
+        "webhooks": {
+          "title": "Pro Feature",
+          "description": "Automations is a premium feature available only to organizations on our Pro plan or higher. Upgrade to wire your courses up to webhooks and external integrations."
         }
       }
     },
@@ -135,7 +152,8 @@
           "podcasts": "Podcasts",
           "payments": "Payments",
           "trail": "Progress Tracking",
-          "boards": "Boards"
+          "boards": "Boards",
+          "playgrounds": "Playgrounds"
         },
         "public": {
           "title": "{{feature}} Not Available",
@@ -649,7 +667,8 @@
       "clear_search": "Clear search",
       "no_discussions": "No discussions yet",
       "no_discussions_description": "Be the first to start a discussion in this community!",
-      "start_discussion": "Start Discussion"
+      "start_discussion": "Start Discussion",
+      "delete_failed": "Failed to delete discussion"
     },
     "discussion_detail": {
       "edit": "Edit",
@@ -657,7 +676,8 @@
       "delete_title": "Delete Discussion?",
       "delete_confirm": "Are you sure you want to delete this discussion? This action cannot be undone.",
       "delete_button": "Delete Discussion",
-      "no_details": "No additional details provided."
+      "no_details": "No additional details provided.",
+      "delete_failed": "Failed to delete discussion"
     },
     "discussion_card": {
       "pin_discussion": "Pin discussion",
@@ -667,7 +687,10 @@
       "delete_discussion": "Delete discussion",
       "delete_title": "Delete discussion?",
       "delete_confirm": "Are you sure you want to delete this discussion? This action cannot be undone.",
-      "votes": "votes"
+      "votes": "votes",
+      "delete_failed": "Failed to delete discussion",
+      "lock_failed": "Failed to update lock state",
+      "pin_failed": "Failed to update pin state"
     },
     "comments": {
       "no_replies": "No replies yet",
@@ -683,7 +706,8 @@
       "cancel": "Cancel",
       "failed_to_post": "Failed to post reply. Please try again.",
       "content_not_allowed": "Your reply contains content that is not allowed.",
-      "failed_to_update": "Failed to update reply. Please try again."
+      "failed_to_update": "Failed to update reply. Please try again.",
+      "failed_to_delete": "Failed to delete comment"
     },
     "label_filter": {
       "label": "Label:",
@@ -1222,6 +1246,17 @@
     "grade": "Grade",
     "run_autograde": "Run Auto-grade",
     "due_date": "Due Date",
+    "attempt_label": "Attempt",
+    "attempt_count": "Attempt {{current}}",
+    "attempt_count_bounded": "Attempt {{current}} of {{max}}",
+    "retry_assignment": "Try again",
+    "retry_assignment_title": "Try this assignment again?",
+    "retry_assignment_confirm": "Your current submission and answers will be reset so you can start over. Your previous grade will be replaced once you resubmit.",
+    "retry_assignment_remaining": "You have {{remaining}} attempt{{plural}} left after this one.",
+    "retry_assignment_last": "This is your last attempt — make it count.",
+    "retry_assignment_success": "Your work has been reset — give it another shot.",
+    "retry_assignment_failed": "Couldn't reset your submission. Please try again.",
+    "retry_no_attempts_left": "No retries left",
     "quiz": {
       "correct_answer": "Correct",
       "incorrect_answer": "Wrong"
@@ -1283,7 +1318,9 @@
       "discussions": "Discussions",
       "playgrounds": "Playgrounds",
       "podcasts": "Podcasts"
-    }
+    },
+    "course": "Course",
+    "user": "Member"
   },
   "ai": {
     "ask_ai": "Ask AI",
@@ -1543,7 +1580,8 @@
           "loading_error": "Failed to load profile data",
           "save_success": "Profile updated successfully",
           "save_error": "Error updating profile"
-        }
+        },
+        "unknown_section": "Unknown section"
       }
     },
     "sign_out": "Sign out",
@@ -2361,7 +2399,8 @@
             "create_success": "Activity created successfully",
             "uploading": "Uploading file and creating activity...",
             "upload_success": "File uploaded successfully",
-            "creating_uploading": "Creating activity and uploading file..."
+            "creating_uploading": "Creating activity and uploading file...",
+            "update_error": "Failed to update activity"
           },
           "versioning": {
             "version_history": "Version History",
@@ -2405,6 +2444,9 @@
               "remote_detected": "Remote changes detected",
               "editing_notice": "{{author}} has made changes while you were editing"
             }
+          },
+          "descriptions": {
+            "scorm": "SCORM-compliant learning package"
           }
         }
       }
@@ -2423,7 +2465,9 @@
           "sso": "SSO",
           "features": "Features",
           "usage": "Usage",
-          "other": "Other"
+          "other": "Other",
+          "seo": "SEO",
+          "automations": "Automations"
         },
         "pages": {
           "general": {
@@ -2483,9 +2527,12 @@
         "footer_text": "Footer Text",
         "footer_text_placeholder": "Enter footer text...",
         "footer_text_desc": "Custom text displayed at the bottom of your organization pages",
+        "default_language": "Default Language",
+        "default_language_desc": "The language new visitors see by default and the language used for emails sent on behalf of this organization. Members can still switch their own UI language.",
         "watermark_label": "\"Made with LearnHouse\" watermark",
         "watermark_desc": "Show the LearnHouse branding watermark on your organization pages",
-        "watermark_free_plan": "Watermark is always shown on the free plan"
+        "watermark_free_plan": "Watermark is always shown on the free plan",
+        "watermark_ee": "Hidden by your Enterprise Edition license"
       },
       "images": {
         "title": "Images & Previews",
@@ -3762,6 +3809,11 @@
             "anti_copy_paste_description": "Discourage pasting AI-generated answers by blocking paste events in the code editor and text inputs. Note: this is a deterrent — tech-savvy students can bypass it.",
             "show_correct_answers_label": "Reveal correct answers after grading",
             "show_correct_answers_description": "Once the submission is graded, show students the right answers alongside their own — which quiz options were correct, the expected short or number answer, and the correct form blanks.",
+            "allow_retries_label": "Allow retries",
+            "allow_retries_description": "Let students reset and re-attempt the assignment after it's graded. Each retry wipes their previous answers and counts as a new attempt.",
+            "max_retries_label": "Maximum attempts",
+            "max_retries_unlimited": "0 means unlimited attempts",
+            "max_retries_bounded": "Total graded attempts (initial submission + retries)",
             "cancel": "Cancel",
             "save": "Save Changes",
             "saving": "Saving..."
@@ -3812,6 +3864,176 @@
             "creating": "Creating assignment...",
             "success": "Assignment created successfully"
           }
+        }
+      }
+    },
+    "search": {
+      "trigger": "Search",
+      "placeholder": "Search pages and content…",
+      "shortcut_hint": "⌘K",
+      "no_results": "No results found",
+      "loading": "Searching…",
+      "type_to_search": "Type at least 2 characters to search content",
+      "groups": {
+        "pages": "Pages",
+        "courses": "Courses",
+        "collections": "Collections",
+        "users": "Users",
+        "communities": "Communities",
+        "discussions": "Discussions",
+        "playgrounds": "Playgrounds",
+        "podcasts": "Podcasts"
+      },
+      "entries": {
+        "home": {
+          "description": "Dashboard overview",
+          "keywords": "home, overview, start, dashboard"
+        },
+        "courses": {
+          "description": "Manage your courses",
+          "keywords": "courses, lessons, learn, training, classes"
+        },
+        "assignments": {
+          "description": "Manage assignments",
+          "keywords": "tasks, homework, exercises, submissions"
+        },
+        "communities": {
+          "description": "Manage communities",
+          "keywords": "forums, discussions, members, posts"
+        },
+        "podcasts": {
+          "description": "Manage podcasts",
+          "keywords": "audio, episodes, shows"
+        },
+        "boards": {
+          "description": "Manage boards",
+          "keywords": "kanban, project, tasks, lists"
+        },
+        "playgrounds": {
+          "description": "Coding playgrounds",
+          "keywords": "code, sandbox, repl, programming"
+        },
+        "analytics": {
+          "description": "View analytics dashboards",
+          "keywords": "stats, metrics, charts, reports, insights"
+        },
+        "users": {
+          "description": "Manage organization users",
+          "keywords": "members, accounts, people"
+        },
+        "usergroups": {
+          "description": "Manage user groups",
+          "keywords": "teams, cohorts, groups"
+        },
+        "roles": {
+          "description": "Manage roles & permissions",
+          "keywords": "permissions, access, rbac, security"
+        },
+        "signups": {
+          "description": "Review user signups",
+          "keywords": "registrations, applications, requests"
+        },
+        "org_general": {
+          "description": "Organization general settings",
+          "keywords": "name, branding, slug, profile"
+        },
+        "org_features": {
+          "description": "Manage organization features",
+          "keywords": "features, modules, toggles"
+        },
+        "org_billing": {
+          "description": "Billing & subscription",
+          "keywords": "plan, payments, invoice, subscription"
+        },
+        "payments_overview": {
+          "description": "Payments overview and revenue",
+          "keywords": "stripe, dashboard, revenue, sales",
+          "title": "Payments Overview"
+        },
+        "payments_products": {
+          "description": "Payment products and pricing",
+          "keywords": "products, prices, stripe, tiers, plans",
+          "title": "Products"
+        },
+        "users_add": {
+          "description": "Invite new members",
+          "keywords": "invite, add, members, send"
+        },
+        "users_audit_logs": {
+          "description": "Organization activity log",
+          "keywords": "audit, logs, history, security, activity"
+        },
+        "org_branding": {
+          "description": "Logo, colors, and visual identity",
+          "keywords": "branding, logo, colors, theme, look"
+        },
+        "org_landing": {
+          "description": "Customize your landing page",
+          "keywords": "landing, homepage, hero, page"
+        },
+        "org_seo": {
+          "description": "Search engine optimization",
+          "keywords": "seo, search, meta, ranking, google"
+        },
+        "org_ai": {
+          "description": "AI features and configuration",
+          "keywords": "ai, llm, gpt, openai, generation"
+        },
+        "org_domains": {
+          "description": "Custom domains",
+          "keywords": "domain, dns, custom, subdomain, cname"
+        },
+        "org_automations": {
+          "description": "Webhooks and external integrations",
+          "keywords": "webhooks, automations, zapier, integrations, triggers"
+        },
+        "org_api": {
+          "description": "API tokens and programmatic access",
+          "keywords": "api, tokens, access, programmatic, keys"
+        },
+        "org_sso": {
+          "description": "Single sign-on configuration",
+          "keywords": "sso, saml, oauth, enterprise, login"
+        },
+        "org_other": {
+          "description": "Other organization settings",
+          "keywords": "misc, advanced, custom, extra"
+        },
+        "payments_groups": {
+          "description": "Payment groups and bundles",
+          "keywords": "groups, bundles, sets",
+          "title": "Payment Groups"
+        },
+        "payments_configuration": {
+          "description": "Stripe and payment configuration",
+          "keywords": "configuration, settings, stripe, setup, connect",
+          "title": "Configuration"
+        },
+        "payments_customers": {
+          "description": "Customers and subscribers",
+          "keywords": "customers, subscribers, buyers, paid",
+          "title": "Customers"
+        },
+        "courses_migrate": {
+          "description": "Import courses from another LMS",
+          "keywords": "import, migrate, transfer, lms, moodle, canvas",
+          "title": "Migrate Courses"
+        },
+        "account_general": {
+          "description": "Personal account general settings",
+          "keywords": "account, settings, email, name, language"
+        },
+        "account_profile": {
+          "description": "Edit your profile and bio",
+          "keywords": "profile, bio, avatar, picture, public"
+        },
+        "account_security": {
+          "description": "Password and security settings",
+          "keywords": "password, security, 2fa, mfa, sessions"
+        },
+        "account_purchases": {
+          "description": "Your purchases and subscriptions",
+          "keywords": "purchases, subscriptions, billing, history, receipts"
         }
       }
     }
@@ -4635,6 +4857,8 @@
           "communities_desc": "Let learners connect, ask questions, and share ideas.",
           "podcasts": "Create podcasts",
           "podcasts_desc": "Deliver audio content and reach learners on the go.",
+          "playgrounds": "Interactive playgrounds",
+          "playgrounds_desc": "Let learners experiment and practice with hands-on interactive exercises.",
           "ai": "1,000 AI credits",
           "ai_desc": "Speed up content creation with AI-powered writing tools.",
           "analytics": "Learner analytics",
@@ -4655,8 +4879,6 @@
           "custom_domain_desc": "Use your own domain for a fully branded academy.",
           "roles": "Custom roles & permissions",
           "roles_desc": "Control exactly who can do what across your organization.",
-          "playgrounds": "Interactive playgrounds",
-          "playgrounds_desc": "Let learners experiment and practice with hands-on interactive exercises.",
           "api": "API access & webhooks",
           "api_desc": "Integrate with your existing tools and automate workflows."
         }
@@ -4692,6 +4914,15 @@
       "usergroups_add_a_group": "Add a group",
       "toast_add_error": "Could not add user group",
       "toast_remove_error": "Could not remove user group"
-    }
+    },
+    "accessDenied": "Unable to access this course",
+    "backToCourses": "Back to Courses",
+    "loadError": "This course could not be found or there was an error loading it.",
+    "noPermission": "You do not have permission to view this course."
+  },
+  "pagination": {
+    "next": "Next",
+    "previous": "Previous",
+    "showing_page": "Showing page {{current}} of {{total}}"
   }
 }

@@ -1,6 +1,7 @@
 from typing import List
 from uuid import uuid4
-from sqlmodel import Session, select, or_, and_, func
+from sqlmodel import select, or_, and_, func
+from sqlmodel.ext.asyncio.session import AsyncSession
 from src.db.usergroup_resources import UserGroupResource
 from src.db.usergroup_user import UserGroupUser
 from src.db.organizations import Organization
@@ -39,12 +40,12 @@ from datetime import datetime
 from src.db.organization_config import OrganizationConfig
 
 
-def _is_podcasts_feature_enabled(org_id: int, db_session: Session) -> bool:
+async def _is_podcasts_feature_enabled(org_id: int, db_session: AsyncSession) -> bool:
     """Check if podcasts feature is enabled for the organization."""
     from src.security.features_utils.resolve import resolve_feature
 
     statement = select(OrganizationConfig).where(OrganizationConfig.org_id == org_id)
-    org_config = db_session.exec(statement).first()
+    org_config = (await db_session.execute(statement)).scalars().first()
 
     if org_config is None:
         return False
@@ -57,7 +58,7 @@ async def _user_can_view_unpublished_podcast(
     request: Request,
     podcast: Podcast,
     current_user: PublicUser | AnonymousUser | APITokenUser,
-    db_session: Session,
+    db_session: AsyncSession,
 ) -> bool:
     """
     Check if the user has permission to view an unpublished podcast.
@@ -74,7 +75,7 @@ async def _user_can_view_unpublished_podcast(
     acting_user_id = resolve_acting_user_id(current_user)
 
     # Superadmins can always view unpublished podcasts
-    if is_user_superadmin(acting_user_id, db_session):
+    if await is_user_superadmin(acting_user_id, db_session):
         return True
 
     # Check if user is a resource author of this podcast
@@ -83,7 +84,7 @@ async def _user_can_view_unpublished_podcast(
         ResourceAuthor.user_id == acting_user_id,
         ResourceAuthor.authorship_status == ResourceAuthorshipStatusEnum.ACTIVE
     )
-    is_author = db_session.exec(author_statement).first()
+    is_author = (await db_session.execute(author_statement)).scalars().first()
     if is_author:
         return True
 
@@ -94,7 +95,7 @@ async def _user_can_view_unpublished_podcast(
         .where(UserOrganization.org_id == podcast.org_id)
         .where(UserOrganization.user_id == acting_user_id)
     )
-    user_roles = db_session.exec(role_statement).all()
+    user_roles = (await db_session.execute(role_statement)).scalars().all()
     for role in user_roles:
         if role.id in ADMIN_OR_MAINTAINER_ROLE_IDS:  # Admin or Maintainer role IDs
             return True
@@ -103,7 +104,7 @@ async def _user_can_view_unpublished_podcast(
     usergroup_stmt = select(UserGroupResource).where(
         UserGroupResource.resource_uuid == podcast.podcast_uuid
     )
-    usergroup_resources = db_session.exec(usergroup_stmt).all()
+    usergroup_resources = (await db_session.execute(usergroup_stmt)).scalars().all()
 
     if usergroup_resources:
         usergroup_ids = [ugr.usergroup_id for ugr in usergroup_resources]
@@ -111,7 +112,7 @@ async def _user_can_view_unpublished_podcast(
             UserGroupUser.usergroup_id.in_(usergroup_ids),
             UserGroupUser.user_id == acting_user_id
         )
-        membership = db_session.exec(membership_stmt).first()
+        membership = (await db_session.execute(membership_stmt)).scalars().first()
         if membership:
             return True
 
@@ -122,10 +123,10 @@ async def get_podcast(
     request: Request,
     podcast_uuid: str,
     current_user: PublicUser | AnonymousUser | APITokenUser,
-    db_session: Session,
+    db_session: AsyncSession,
 ):
     statement = select(Podcast).where(Podcast.podcast_uuid == podcast_uuid)
-    podcast = db_session.exec(statement).first()
+    podcast = (await db_session.execute(statement)).scalars().first()
 
     if not podcast:
         raise HTTPException(
@@ -134,7 +135,7 @@ async def get_podcast(
         )
 
     # Check if podcasts feature is enabled for this organization
-    if not _is_podcasts_feature_enabled(podcast.org_id, db_session):
+    if not await _is_podcasts_feature_enabled(podcast.org_id, db_session):
         raise HTTPException(
             status_code=404,
             detail="Podcast not found",
@@ -161,7 +162,7 @@ async def get_podcast(
         .where(ResourceAuthor.resource_uuid == podcast.podcast_uuid)
         .order_by(ResourceAuthor.id.asc())
     )
-    author_results = db_session.exec(authors_statement).all()
+    author_results = (await db_session.execute(authors_statement)).all()
 
     # Convert to AuthorWithRole objects
     authors = [
@@ -184,7 +185,7 @@ async def get_podcast_meta(
     request: Request,
     podcast_uuid: str,
     current_user: PublicUser | AnonymousUser,
-    db_session: Session,
+    db_session: AsyncSession,
 ) -> dict:
     """Get podcast with episodes list."""
     from src.services.podcasts.episodes import get_episodes_by_podcast
@@ -197,7 +198,7 @@ async def get_podcast_meta(
         .where(Podcast.podcast_uuid == podcast_uuid)
         .order_by(ResourceAuthor.id.asc())
     )
-    results = db_session.exec(podcast_statement).all()
+    results = (await db_session.execute(podcast_statement)).all()
 
     if not results:
         raise HTTPException(
@@ -210,7 +211,7 @@ async def get_podcast_meta(
     author_results = [(ra, u) for _, ra, u in results if ra is not None and u is not None]
 
     # Check if podcasts feature is enabled for this organization
-    if not _is_podcasts_feature_enabled(podcast.org_id, db_session):
+    if not await _is_podcasts_feature_enabled(podcast.org_id, db_session):
         raise HTTPException(
             status_code=404,
             detail="Podcast not found",
@@ -264,7 +265,7 @@ async def get_podcasts_orgslug(
     request: Request,
     current_user: PublicUser | AnonymousUser | APITokenUser,
     org_slug: str,
-    db_session: Session,
+    db_session: AsyncSession,
     page: int = 1,
     limit: int = 10,
     include_unpublished: bool = False,
@@ -273,12 +274,12 @@ async def get_podcasts_orgslug(
 
     # Get organization
     org_statement = select(Organization).where(Organization.slug == org_slug)
-    org = db_session.exec(org_statement).first()
+    org = (await db_session.execute(org_statement)).scalars().first()
     if not org:
         return []
 
     # Check if podcasts feature is enabled for this organization
-    if not _is_podcasts_feature_enabled(org.id, db_session):
+    if not await _is_podcasts_feature_enabled(org.id, db_session):
         return []
 
     acting_user_id = resolve_acting_user_id(current_user)
@@ -287,7 +288,7 @@ async def get_podcasts_orgslug(
     can_view_unpublished = False
     if include_unpublished and not isinstance(current_user, AnonymousUser):
         # Superadmins can always view unpublished podcasts
-        if is_user_superadmin(acting_user_id, db_session):
+        if await is_user_superadmin(acting_user_id, db_session):
             can_view_unpublished = True
         else:
             role_statement = (
@@ -296,7 +297,7 @@ async def get_podcasts_orgslug(
                 .where(UserOrganization.org_id == org.id)
                 .where(UserOrganization.user_id == acting_user_id)
             )
-            user_roles = db_session.exec(role_statement).all()
+            user_roles = (await db_session.execute(role_statement)).scalars().all()
             for role in user_roles:
                 if role.id in ADMIN_OR_MAINTAINER_ROLE_IDS:  # Admin role IDs
                     can_view_unpublished = True
@@ -341,7 +342,7 @@ async def get_podcasts_orgslug(
     # Apply ordering and pagination
     query = query.order_by(Podcast.creation_date.desc()).offset(offset).limit(limit).distinct()
 
-    podcasts = db_session.exec(query).all()
+    podcasts = (await db_session.execute(query)).scalars().all()
 
     if not podcasts:
         return []
@@ -358,7 +359,7 @@ async def get_podcasts_orgslug(
         .order_by(ResourceAuthor.id.asc())
     )
 
-    author_results = db_session.exec(authors_query).all()
+    author_results = (await db_session.execute(authors_query)).all()
 
     # Create a dictionary mapping podcast_uuid to list of authors
     podcast_authors = {}
@@ -381,7 +382,7 @@ async def get_podcasts_orgslug(
         .where(PodcastEpisode.podcast_id.in_(podcast_ids))
         .group_by(PodcastEpisode.podcast_id)
     )
-    episode_counts = {podcast_id: count for podcast_id, count in db_session.exec(episode_count_query).all()}
+    episode_counts = {podcast_id: count for podcast_id, count in (await db_session.execute(episode_count_query)).all()}
 
     # Create PodcastReadWithEpisodeCount objects with authors
     podcast_reads = []
@@ -411,7 +412,7 @@ async def get_podcasts_count_orgslug(
     request: Request,
     current_user: PublicUser | AnonymousUser | APITokenUser,
     org_slug: str,
-    db_session: Session,
+    db_session: AsyncSession,
 ) -> int:
     """Get total count of podcasts for an organization (respecting visibility rules)"""
     count_acting_user_id = resolve_acting_user_id(current_user)
@@ -425,7 +426,7 @@ async def get_podcasts_count_orgslug(
     if isinstance(current_user, AnonymousUser):
         # For anonymous users, only count public AND published podcasts
         query = query.where(Podcast.public == True, Podcast.published == True)
-    elif not isinstance(current_user, AnonymousUser) and is_user_superadmin(count_acting_user_id, db_session):
+    elif not isinstance(current_user, AnonymousUser) and await is_user_superadmin(count_acting_user_id, db_session):
         # Superadmins see all podcasts (no additional filter)
         pass
     else:
@@ -450,7 +451,7 @@ async def get_podcasts_count_orgslug(
             ))
         )
 
-    count = db_session.exec(query).one()
+    count = (await db_session.execute(query)).scalar_one()
     return count
 
 
@@ -459,7 +460,7 @@ async def create_podcast(
     org_id: int,
     podcast_object: PodcastCreate,
     current_user: PublicUser | AnonymousUser | APITokenUser,
-    db_session: Session,
+    db_session: AsyncSession,
     thumbnail_file: UploadFile | None = None,
 ):
     """Create a new podcast"""
@@ -469,17 +470,17 @@ async def create_podcast(
     await check_resource_access(request, db_session, current_user, "podcast_x", AccessAction.CREATE)
 
     # Check plan access (podcasts require standard+ plan)
-    check_feature_access("podcasts", org_id, db_session)
+    await check_feature_access("podcasts", org_id, db_session)
 
     # Usage check (also checks if feature is enabled)
-    check_limits_with_usage("podcasts", org_id, db_session)
+    await check_limits_with_usage("podcasts", org_id, db_session)
 
     # Complete podcast object
     podcast.org_id = org_id
 
     # Get org uuid
     org_statement = select(Organization).where(Organization.id == org_id)
-    org = db_session.exec(org_statement).first()
+    org = (await db_session.execute(org_statement)).scalars().first()
 
     podcast.podcast_uuid = str(f"podcast_{uuid4()}")
     podcast.creation_date = str(datetime.now())
@@ -496,8 +497,8 @@ async def create_podcast(
 
     # Insert podcast
     db_session.add(podcast)
-    db_session.commit()
-    db_session.refresh(podcast)
+    await db_session.commit()
+    await db_session.refresh(podcast)
 
     # SECURITY: Make the user the creator of the podcast
     if isinstance(current_user, APITokenUser):
@@ -516,8 +517,8 @@ async def create_podcast(
 
     # Insert podcast author
     db_session.add(resource_author)
-    db_session.commit()
-    db_session.refresh(resource_author)
+    await db_session.commit()
+    await db_session.refresh(resource_author)
 
     # Get podcast authors with their roles
     authors_statement = (
@@ -526,7 +527,7 @@ async def create_podcast(
         .where(ResourceAuthor.resource_uuid == podcast.podcast_uuid)
         .order_by(ResourceAuthor.id.asc())
     )
-    author_results = db_session.exec(authors_statement).all()
+    author_results = (await db_session.execute(authors_statement)).all()
 
     # Convert to AuthorWithRole objects
     authors = [
@@ -541,7 +542,7 @@ async def create_podcast(
     ]
 
     # Feature usage
-    increase_feature_usage("podcasts", podcast.org_id, db_session)
+    await increase_feature_usage("podcasts", podcast.org_id, db_session)
 
     podcast_data = {key: getattr(podcast, key) for key in podcast.model_fields}
     return PodcastRead.model_validate({**podcast_data, "authors": authors})
@@ -551,11 +552,11 @@ async def update_podcast_thumbnail(
     request: Request,
     podcast_uuid: str,
     current_user: PublicUser | AnonymousUser,
-    db_session: Session,
+    db_session: AsyncSession,
     thumbnail_file: UploadFile | None = None,
 ):
     statement = select(Podcast).where(Podcast.podcast_uuid == podcast_uuid)
-    podcast = db_session.exec(statement).first()
+    podcast = (await db_session.execute(statement)).scalars().first()
 
     name_in_disk = None
 
@@ -570,7 +571,7 @@ async def update_podcast_thumbnail(
 
     # Get org uuid
     org_statement = select(Organization).where(Organization.id == podcast.org_id)
-    org = db_session.exec(org_statement).first()
+    org = (await db_session.execute(org_statement)).scalars().first()
 
     # Upload thumbnail
     if thumbnail_file and thumbnail_file.filename:
@@ -591,8 +592,8 @@ async def update_podcast_thumbnail(
     podcast.update_date = str(datetime.now())
 
     db_session.add(podcast)
-    db_session.commit()
-    db_session.refresh(podcast)
+    await db_session.commit()
+    await db_session.refresh(podcast)
 
     # Get podcast authors with their roles
     authors_statement = (
@@ -601,7 +602,7 @@ async def update_podcast_thumbnail(
         .where(ResourceAuthor.resource_uuid == podcast.podcast_uuid)
         .order_by(ResourceAuthor.id.asc())
     )
-    author_results = db_session.exec(authors_statement).all()
+    author_results = (await db_session.execute(authors_statement)).all()
 
     # Convert to AuthorWithRole objects
     authors = [
@@ -625,11 +626,11 @@ async def update_podcast(
     podcast_object: PodcastUpdate,
     podcast_uuid: str,
     current_user: PublicUser | AnonymousUser | APITokenUser,
-    db_session: Session,
+    db_session: AsyncSession,
 ):
     """Update a podcast"""
     statement = select(Podcast).where(Podcast.podcast_uuid == podcast_uuid)
-    podcast = db_session.exec(statement).first()
+    podcast = (await db_session.execute(statement)).scalars().first()
 
     if not podcast:
         raise HTTPException(
@@ -655,7 +656,7 @@ async def update_podcast(
             ResourceAuthor.resource_uuid == podcast_uuid,
             ResourceAuthor.user_id == acting_user_id
         )
-        resource_author = db_session.exec(statement).first()
+        resource_author = (await db_session.execute(statement)).scalars().first()
 
         is_podcast_owner = False
         if resource_author:
@@ -683,8 +684,8 @@ async def update_podcast(
     podcast.update_date = str(datetime.now())
 
     db_session.add(podcast)
-    db_session.commit()
-    db_session.refresh(podcast)
+    await db_session.commit()
+    await db_session.refresh(podcast)
 
     # Get podcast authors with their roles
     authors_statement = (
@@ -693,7 +694,7 @@ async def update_podcast(
         .where(ResourceAuthor.resource_uuid == podcast.podcast_uuid)
         .order_by(ResourceAuthor.id.asc())
     )
-    author_results = db_session.exec(authors_statement).all()
+    author_results = (await db_session.execute(authors_statement)).all()
 
     # Convert to AuthorWithRole objects
     authors = [
@@ -716,10 +717,10 @@ async def delete_podcast(
     request: Request,
     podcast_uuid: str,
     current_user: PublicUser | AnonymousUser | APITokenUser,
-    db_session: Session,
+    db_session: AsyncSession,
 ):
     statement = select(Podcast).where(Podcast.podcast_uuid == podcast_uuid)
-    podcast = db_session.exec(statement).first()
+    podcast = (await db_session.execute(statement)).scalars().first()
 
     if not podcast:
         raise HTTPException(
@@ -731,19 +732,19 @@ async def delete_podcast(
     await check_resource_access(request, db_session, current_user, podcast.podcast_uuid, AccessAction.DELETE)
 
     # Feature usage
-    decrease_feature_usage("podcasts", podcast.org_id, db_session)
+    await decrease_feature_usage("podcasts", podcast.org_id, db_session)
 
     # Clean up content files from storage
     from src.db.organizations import Organization
     org_statement = select(Organization).where(Organization.id == podcast.org_id)
-    org = db_session.exec(org_statement).first()
+    org = (await db_session.execute(org_statement)).scalars().first()
     if org:
         from src.services.courses.transfer.storage_utils import delete_storage_directory
         content_path = f"content/orgs/{org.org_uuid}/podcasts/{podcast_uuid}"
         delete_storage_directory(content_path)
 
-    db_session.delete(podcast)
-    db_session.commit()
+    await db_session.delete(podcast)
+    await db_session.commit()
 
     return {"detail": "Podcast deleted"}
 
@@ -752,11 +753,11 @@ async def get_podcast_user_rights(
     request: Request,
     podcast_uuid: str,
     current_user: PublicUser | AnonymousUser | APITokenUser,
-    db_session: Session,
+    db_session: AsyncSession,
 ) -> dict:
     """Get detailed user rights for a specific podcast."""
     statement = select(Podcast).where(Podcast.podcast_uuid == podcast_uuid)
-    podcast = db_session.exec(statement).first()
+    podcast = (await db_session.execute(statement)).scalars().first()
 
     if not podcast:
         raise HTTPException(
@@ -807,7 +808,7 @@ async def get_podcast_user_rights(
         ResourceAuthor.resource_uuid == podcast_uuid,
         ResourceAuthor.user_id == acting_user_id
     )
-    resource_author = db_session.exec(statement).first()
+    resource_author = (await db_session.execute(statement)).scalars().first()
 
     if resource_author:
         rights["ownership"]["authorship_status"] = resource_author.authorship_status

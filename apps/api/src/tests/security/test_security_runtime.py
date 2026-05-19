@@ -79,17 +79,29 @@ class TestSecurityRuntime:
 
 
 class TestSuperadminRuntime:
-    def test_is_user_superadmin_true_and_false(self):
-        db_session = Mock(spec=Session)
+    @pytest.mark.asyncio
+    async def test_is_user_superadmin_true_and_false(self):
+        from unittest.mock import AsyncMock as _AsyncMock, MagicMock as _MM
 
-        db_session.exec.return_value.first.return_value = True
-        assert is_user_superadmin(1, db_session) is True
+        def _make_db(first_value):
+            db = _AsyncMock()
+            _scalars = _MM()
+            _scalars.first.return_value = first_value
+            _exec = _MM()
+            _exec.scalars.return_value = _scalars
+            db.execute.return_value = _exec
+            # Reset cache between calls
+            db._superadmin_cache = None
+            return db
 
-        db_session.exec.return_value.first.return_value = False
-        assert is_user_superadmin(2, db_session) is False
+        db1 = _make_db(True)
+        assert await is_user_superadmin(1, db1) is True
 
-        db_session.exec.return_value.first.return_value = None
-        assert is_user_superadmin(3, db_session) is False
+        db2 = _make_db(False)
+        assert await is_user_superadmin(2, db2) is False
+
+        db3 = _make_db(None)
+        assert await is_user_superadmin(3, db3) is False
 
     @pytest.mark.asyncio
     async def test_get_current_user_lazy_delegates(self):

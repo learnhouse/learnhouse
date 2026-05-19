@@ -52,6 +52,7 @@ class ContentDeliveryConfig(BaseModel):
 
 
 class HostingConfig(BaseModel):
+    tenancy: Literal["multi", "single"]
     domain: str
     frontend_domain: str
     ssl: bool
@@ -186,6 +187,7 @@ def get_learnhouse_config() -> LearnHouseConfig:
     env_allowed_origins = os.environ.get("LEARNHOUSE_ALLOWED_ORIGINS")
     env_cookie_domain = os.environ.get("LEARNHOUSE_COOKIE_DOMAIN")
     env_frontend_domain = os.environ.get("LEARNHOUSE_FRONTEND_DOMAIN")
+    env_tenancy = os.environ.get("LEARNHOUSE_TENANCY")
 
     # Allowed origins should be a comma separated string
     if env_allowed_origins:
@@ -216,6 +218,63 @@ def get_learnhouse_config() -> LearnHouseConfig:
     self_hosted = env_self_hosted or yaml_config.get("hosting_config", {}).get(
         "self_hosted"
     )
+
+    # Tenancy mode — single explicit knob that supersedes the older overlapping
+    # flags (`self_hosted`, `use_default_org`). Two values:
+    #   - "multi":  slug.{LEARNHOUSE_DOMAIN} subdomain detection. Requires EE
+    #               and a configured domain.
+    #   - "single": always serve the default org. Works for localhost dev and
+    #               for self-hosted VPS deployments on any hostname.
+    #
+    # When unset, we infer a default from existing flags so the introduction of
+    # this env var is backward-compatible:
+    #   - EE/SaaS deploys with a real (non-localhost) domain that aren't marked
+    #     self-hosted/dev → "multi" (preserves prior behavior of routing
+    #     `acme.learnhouse.io` to org `acme`).
+    #   - Anything else → "single".
+    # Existing operators upgrading do not need to set LEARNHOUSE_TENANCY for
+    # behavior to stay the same; new operators only need to set it to opt in
+    # to multi tenancy.
+    tenancy_explicit = env_tenancy or yaml_config.get("hosting_config", {}).get("tenancy")
+    if tenancy_explicit:
+        tenancy_raw = tenancy_explicit
+    else:
+        # Inference picks "multi" only when there's a clear signal the
+        # operator intends subdomain-based tenancy. Two signals qualify:
+        #   1. SaaS mode is on (LEARNHOUSE_SAAS=true) — SaaS deployments are
+        #      always multi-tenant by definition.
+        #   2. EE is available AND a shared-subdomain cookie was configured
+        #      (LEARNHOUSE_COOKIE_DOMAIN starts with "."). The dotted cookie
+        #      domain is the strong signal — operators only set it when they
+        #      want subdomains to share auth.
+        # Plain EE on a VPS without a dotted cookie domain falls through to
+        # "single" — which is the right default for the EE-self-host case
+        # (one org on a custom domain, EE features available locally).
+        try:
+            from src.core.ee_hooks import is_ee_available as _is_ee_available
+            _ee_available = _is_ee_available()
+        except Exception:
+            _ee_available = False
+        _dev_for_tenancy = (
+            env_development_mode if env_development_mode is not None
+            else yaml_config.get("general", {}).get("development_mode")
+        )
+        _has_real_domain = bool(domain) and "localhost" not in str(domain).lower()
+        _is_self_or_dev = bool(self_hosted) or bool(_dev_for_tenancy)
+        # `cookies_domain` is computed below; resolve it inline here so the
+        # inference can run before that block.
+        _ck_for_inf = env_cookie_domain or (
+            yaml_config.get("hosting_config", {}).get("cookies_config", {}).get("domain")
+        )
+        _has_shared_cookie_domain = bool(_ck_for_inf) and str(_ck_for_inf).startswith(".")
+        _multi_intent = bool(saas_mode) or (_ee_available and _has_shared_cookie_domain)
+        tenancy_raw = "multi" if (_multi_intent and _has_real_domain and not _is_self_or_dev) else "single"
+
+    tenancy = str(tenancy_raw).strip().lower()
+    if tenancy not in ("multi", "single"):
+        raise ValueError(
+            f"LEARNHOUSE_TENANCY must be 'multi' or 'single' (got {tenancy_raw!r})."
+        )
 
     cookies_domain = env_cookie_domain or yaml_config.get("hosting_config", {}).get(
         "cookies_config", {}
@@ -407,6 +466,7 @@ def get_learnhouse_config() -> LearnHouseConfig:
 
     # Create HostingConfig and DatabaseConfig objects
     hosting_config = HostingConfig(
+        tenancy=tenancy,
         domain=domain,
         frontend_domain=frontend_domain,
         ssl=bool(ssl),
@@ -418,6 +478,61 @@ def get_learnhouse_config() -> LearnHouseConfig:
         cookie_config=cookie_config,
         content_delivery=content_delivery,
     )
+
+    # Tenancy validation and deprecation warnings — only enforce in non-test
+    # contexts so unit tests can construct configs with arbitrary values.
+    _TESTING_TENANCY = os.environ.get("TESTING", "").lower() in ("true", "1", "yes")
+    if not _TESTING_TENANCY:
+        import logging as _t_log
+        _t_logger = _t_log.getLogger(__name__)
+
+        if tenancy == "multi":
+            # Multi mode requires EE (or SaaS, which implies EE features) and
+            # an explicit base domain. Localhost is not a routable subdomain
+            # parent for browsers in production, so `LEARNHOUSE_DOMAIN=localhost`
+            # is rejected here.
+            try:
+                from src.core.ee_hooks import is_ee_available
+                ee_available = is_ee_available()
+            except Exception:
+                ee_available = False
+            if not (ee_available or saas_mode):
+                raise ValueError(
+                    "LEARNHOUSE_TENANCY=multi requires the Enterprise Edition "
+                    "or LEARNHOUSE_SAAS=true. Either install the `ee/` folder, "
+                    "unset LEARNHOUSE_DISABLE_EE, or use LEARNHOUSE_TENANCY=single."
+                )
+            if not domain or "localhost" in str(domain).lower():
+                raise ValueError(
+                    "LEARNHOUSE_TENANCY=multi requires LEARNHOUSE_DOMAIN to be set "
+                    "to a routable parent domain (e.g. 'learnhouse.io'). "
+                    f"Got domain={domain!r}."
+                )
+
+        if tenancy == "single":
+            # In single mode the cookie domain is always host-only — operators
+            # who set LEARNHOUSE_COOKIE_DOMAIN expecting cross-subdomain auth
+            # will be surprised. Warn loudly.
+            if env_cookie_domain:
+                _t_logger.warning(
+                    "LEARNHOUSE_COOKIE_DOMAIN=%r is set but LEARNHOUSE_TENANCY=single "
+                    "ignores it (cookies are host-only in single mode).",
+                    env_cookie_domain,
+                )
+
+        # Deprecations: both flags are subsumed by LEARNHOUSE_TENANCY.
+        if env_use_default_org is not None:
+            _t_logger.warning(
+                "LEARNHOUSE_USE_DEFAULT_ORG is deprecated; tenancy mode "
+                "(LEARNHOUSE_TENANCY=%s) now controls default-org behavior.",
+                tenancy,
+            )
+        if env_self_hosted is not None:
+            _t_logger.warning(
+                "LEARNHOUSE_SELF_HOSTED is deprecated; use LEARNHOUSE_TENANCY=single "
+                "instead (currently tenancy=%s).",
+                tenancy,
+            )
     database_config = DatabaseConfig(
         sql_connection_string=sql_connection_string,
     )
@@ -431,7 +546,12 @@ def get_learnhouse_config() -> LearnHouseConfig:
     # Surface missing internal-service keys at boot rather than at first
     # request — the per-endpoint handlers fail closed either way, but a
     # 403 from a cron job is harder to diagnose than a startup log line.
-    if not development_mode:
+    #
+    # These keys are SaaS-only — they secure RPC calls from the platform
+    # control plane (custom domains, plans, internal cron) to the per-tenant
+    # backend. Self-hosted EE / OSS deployments don't run that control plane
+    # and don't need them, so suppress the warning in those modes.
+    if not development_mode and saas_mode:
         import logging as _cfg_log
         _log = _cfg_log.getLogger(__name__)
         if not os.environ.get("CLOUD_INTERNAL_KEY"):

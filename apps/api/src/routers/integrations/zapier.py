@@ -18,7 +18,8 @@ from uuid import uuid4
 
 from fastapi import APIRouter, Depends, HTTPException, Request, status
 from pydantic import BaseModel, Field
-from sqlmodel import Session, select, col
+from sqlmodel import select, col
+from sqlmodel.ext.asyncio.session import AsyncSession
 
 from src.core.events.database import get_db_session
 from src.db.courses.courses import Course
@@ -56,8 +57,8 @@ def _require_api_token(current_user) -> APITokenUser:
     return current_user
 
 
-def _require_pro_plan(org_id: int, db_session: Session) -> None:
-    current_plan = get_org_plan(org_id, db_session)
+async def _require_pro_plan(org_id: int, db_session: AsyncSession) -> None:
+    current_plan = await get_org_plan(org_id, db_session)
     if not plan_meets_requirement(current_plan, "pro"):
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
@@ -68,12 +69,12 @@ def _require_pro_plan(org_id: int, db_session: Session) -> None:
         )
 
 
-def _zapier_context(
+async def _zapier_context(
     current_user=Depends(get_current_user),
-    db_session: Session = Depends(get_db_session),
+    db_session: AsyncSession = Depends(get_db_session),
 ):
     api_user = _require_api_token(current_user)
-    _require_pro_plan(api_user.org_id, db_session)
+    await _require_pro_plan(api_user.org_id, db_session)
     return api_user, db_session
 
 
@@ -160,7 +161,7 @@ def _validate_event(event: str) -> None:
 async def zapier_me(ctx=Depends(_zapier_context)) -> ZapierMeResponse:
     api_user, db_session = ctx
     org_query = select(Organization).where(Organization.id == api_user.org_id)
-    org = db_session.scalars(org_query).first()
+    org = (await db_session.execute(org_query)).scalars().first()
     if not org:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -211,7 +212,7 @@ async def zapier_list_courses(
         .order_by(col(Course.creation_date).desc())
         .limit(min(limit, 500))
     )
-    courses = db_session.scalars(query).all()
+    courses = (await db_session.execute(query)).scalars().all()
     return [
         ZapierCourseItem(id=c.id or 0, course_uuid=c.course_uuid, name=c.name)
         for c in courses
@@ -240,7 +241,7 @@ async def zapier_list_users(
         .where(UserOrganization.org_id == api_user.org_id)
         .limit(min(limit, 500))
     )
-    users = db_session.scalars(query).all()
+    users = (await db_session.execute(query)).scalars().all()
     return [
         ZapierUserItem(
             id=u.id or 0,
@@ -275,7 +276,7 @@ async def zapier_list_usergroups(
         .where(UserGroup.org_id == api_user.org_id)
         .limit(min(limit, 500))
     )
-    groups = db_session.scalars(query).all()
+    groups = (await db_session.execute(query)).scalars().all()
     return [
         ZapierUserGroupItem(
             id=g.id or 0,
@@ -341,8 +342,8 @@ async def zapier_create_subscription(
     )
 
     db_session.add(endpoint)
-    db_session.commit()
-    db_session.refresh(endpoint)
+    await db_session.commit()
+    await db_session.refresh(endpoint)
 
     return ZapierSubscriptionResponse(
         id=endpoint.id or 0,
@@ -374,7 +375,7 @@ async def zapier_list_subscriptions(
         WebhookEndpoint.org_id == api_user.org_id,
         WebhookEndpoint.source == "zapier",
     )
-    endpoints = db_session.scalars(query).all()
+    endpoints = (await db_session.execute(query)).scalars().all()
     return [
         ZapierSubscriptionResponse(
             id=ep.id or 0,
@@ -410,13 +411,13 @@ async def zapier_delete_subscription(
         WebhookEndpoint.org_id == api_user.org_id,
         WebhookEndpoint.source == "zapier",
     )
-    endpoint = db_session.scalars(query).first()
+    endpoint = (await db_session.execute(query)).scalars().first()
     if not endpoint:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Subscription not found",
         )
 
-    db_session.delete(endpoint)
-    db_session.commit()
+    await db_session.delete(endpoint)
+    await db_session.commit()
     return {"detail": "Subscription deleted"}

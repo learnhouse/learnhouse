@@ -47,7 +47,7 @@ def _token_rights(*, grant_create: bool = False) -> dict:
     }
 
 
-def _make_token(db, org, **overrides):
+async def _make_token(db, org, **overrides):
     token = APIToken(
         id=overrides.pop("id", None),
         token_uuid=overrides.pop("token_uuid", "apitoken_test"),
@@ -65,8 +65,8 @@ def _make_token(db, org, **overrides):
         rights=overrides.pop("rights", None),
     )
     db.add(token)
-    db.commit()
-    db.refresh(token)
+    await db.commit()
+    await db.refresh(token)
     return token
 
 
@@ -201,7 +201,7 @@ class TestApiTokenLifecycle:
                 admin_user,
             )
 
-            manual_token = _make_token(
+            manual_token = await _make_token(
                 db,
                 org,
                 token_uuid="apitoken_manual",
@@ -274,7 +274,7 @@ class TestApiTokenLifecycle:
         rights_payload = _token_rights()
 
         # Seed a token to update
-        token = _make_token(
+        token = await _make_token(
             db,
             org,
             token_uuid="apitoken_rights_obj",
@@ -321,7 +321,7 @@ class TestApiTokenLifecycle:
 
     @pytest.mark.asyncio
     async def test_create_validation_and_not_found_paths(self, mock_request, db, org, admin_user, admin_role):
-        _make_token(
+        await _make_token(
             db,
             org,
             name="Existing Token",
@@ -418,7 +418,7 @@ class TestValidateApiTokenForAuth:
     async def test_validate_api_token_for_auth_success_and_edge_paths(self, db, org):
         valid_token = "lh_valid_token"
         valid_hash = hash_token(valid_token)
-        valid = _make_token(
+        valid = await _make_token(
             db,
             org,
             token_uuid="apitoken_valid",
@@ -426,7 +426,7 @@ class TestValidateApiTokenForAuth:
             token_prefix="lh_valid",
             expires_at=(datetime.now(timezone.utc) + timedelta(days=1)).isoformat(),
         )
-        _inactive = _make_token(
+        _inactive = await _make_token(
             db,
             org,
             token_uuid="apitoken_inactive",
@@ -434,7 +434,7 @@ class TestValidateApiTokenForAuth:
             token_prefix="lh_inactive",
             is_active=False,
         )
-        _expired = _make_token(
+        _expired = await _make_token(
             db,
             org,
             token_uuid="apitoken_expired",
@@ -442,7 +442,7 @@ class TestValidateApiTokenForAuth:
             token_prefix="lh_expired",
             expires_at=(datetime.now(timezone.utc) - timedelta(days=1)).isoformat(),
         )
-        malformed = _make_token(
+        malformed = await _make_token(
             db,
             org,
             token_uuid="apitoken_malformed",
@@ -499,7 +499,7 @@ class TestUpdateApiTokenRightsObject:
             boards=_full_po(), playgrounds=_full_po(),
         )
 
-        token = _make_token(
+        token = await _make_token(
             db,
             org,
             token_uuid="apitoken_rights_dump",

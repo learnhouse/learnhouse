@@ -10,7 +10,7 @@ import TaskCodeObject from 'app/orgs/[orgslug]/dash/assignments/[assignmentuuid]
 import TaskShortAnswerObject from 'app/orgs/[orgslug]/dash/assignments/[assignmentuuid]/_components/TaskEditor/Subs/TaskTypes/TaskShortAnswerObject'
 import TaskNumberAnswerObject from 'app/orgs/[orgslug]/dash/assignments/[assignmentuuid]/_components/TaskEditor/Subs/TaskTypes/TaskNumberAnswerObject'
 import toast from 'react-hot-toast';
-import { Backpack, Calendar, CheckCircle2, Download, EllipsisVertical, Info, MessageSquare, XCircle } from 'lucide-react';
+import { Backpack, Calendar, CheckCircle2, Download, EllipsisVertical, Info, MessageSquare, RotateCcw, XCircle } from 'lucide-react';
 import Link from 'next/link';
 import React, { useEffect } from 'react'
 import { useTranslation } from 'react-i18next';
@@ -28,6 +28,16 @@ function AssignmentStudentActivity() {
   // server-verified value (auto-grade or teacher override). Before that,
   // task.grade is the placeholder 0 from save-progress.
   const isGraded = Array.isArray(submission) && submission.length > 0 && submission[0].submission_status === 'GRADED';
+
+  // Attempt indicator. Only worth showing when the teacher actually enabled
+  // retries and the student has burned at least one attempt — otherwise it's
+  // noise.
+  const allowRetries = !!assignments?.assignment_object?.allow_retries;
+  const maxRetries = Number(assignments?.assignment_object?.max_retries || 0);
+  const currentAttempt = Number(
+    (Array.isArray(submission) && submission[0]?.attempt_number) || 1
+  );
+  const showAttemptBadge = allowRetries && currentAttempt > 1;
 
   // Keep per-task pass/fail aligned with the overall grade threshold on the
   // server (50% for NUMERIC / PERCENTAGE / PASS_FAIL, 60% for ALPHABET /
@@ -52,7 +62,7 @@ function AssignmentStudentActivity() {
           </div>
         </div>
         <div>
-          <div className='flex gap-2 items-center'>
+          <div className='flex gap-2 items-center flex-wrap justify-center'>
             <EllipsisVertical className='text-slate-400 hidden md:block' size={18} />
             <div className='flex gap-2 items-center'>
               <div className='flex gap-1 md:space-x-2 text-xs items-center text-slate-400'>
@@ -61,6 +71,19 @@ function AssignmentStudentActivity() {
                 <p className='font-semibold'>{assignments?.assignment_object?.due_date}</p>
               </div>
             </div>
+            {showAttemptBadge && (
+              <div className='flex gap-1.5 items-center text-xs px-2.5 py-1 rounded-full bg-fuchsia-50 text-fuchsia-700 font-semibold nice-shadow'>
+                <RotateCcw size={12} />
+                <span>
+                  {maxRetries
+                    ? t('assignments.attempt_count_bounded', {
+                        current: currentAttempt,
+                        max: maxRetries,
+                      })
+                    : t('assignments.attempt_count', { current: currentAttempt })}
+                </span>
+              </div>
+            )}
           </div>
         </div>
       </div>

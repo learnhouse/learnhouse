@@ -23,8 +23,9 @@ import {
   CustomSelectTrigger,
   CustomSelectValue,
 } from "../EditCourseGeneral/CustomSelect";
-import useSWR from 'swr';
-import { getAPIUrl } from '@services/config/config';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { queryKeys } from '@/lib/query/keys';
+import { getCourseCertifications } from '@services/courses/certifications';
 import toast from 'react-hot-toast';
 import { useTranslation } from 'react-i18next';
 
@@ -59,6 +60,7 @@ function EditCourseCertification(props: EditCourseCertificationProps) {
   const session = useLHSession() as any;
   const org = useOrg() as any;
   const access_token = session?.data?.tokens?.access_token;
+  const queryClient = useQueryClient();
 
   // Use the new field sync hook
   const {
@@ -73,44 +75,18 @@ function EditCourseCertification(props: EditCourseCertificationProps) {
   const hasInitializedRef = useRef(false);
 
   // Fetch existing certifications
-  const { data: certifications, error: certificationsError, mutate: mutateCertifications } = useSWR(
-    courseStructure?.course_uuid && access_token && org?.id ?
-    `certifications/course/${courseStructure.course_uuid}?org_id=${org.id}` : null,
-    async () => {
-      if (!courseStructure?.course_uuid || !access_token || !org?.id) return null;
-      const result = await fetch(
-        `${getAPIUrl()}certifications/course/${courseStructure.course_uuid}?org_id=${org.id}`,
-        {
-          method: 'GET',
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${access_token}`,
-          },
-          credentials: 'include',
-        }
-      );
-      const response = await result.json();
-      
-
-      
-      if (result.status === 200) {
-        return {
-          success: true,
-          data: response,
-          status: result.status,
-          HTTPmessage: result.statusText,
-        };
-      } else {
-        return {
-          success: false,
-          data: response,
-          status: result.status,
-          HTTPmessage: result.statusText,
-        };
-      }
-    },
-    { revalidateOnFocus: false }
-  );
+  const { data: certifications, error: certificationsError, isPending: isCertificationsPending } = useQuery({
+    queryKey: queryKeys.certifications.byCourse(courseStructure?.course_uuid ?? ''),
+    queryFn: () =>
+      getCourseCertifications(
+        courseStructure!.course_uuid,
+        org.id,
+        null,
+        access_token
+      ),
+    enabled: !!(courseStructure?.course_uuid && access_token && org?.id),
+    staleTime: 60_000,
+  });
 
   const existingCertification = certifications?.data?.[0]; // Assuming one certification per course
   const hasExistingCertification = !!existingCertification;
@@ -182,7 +158,7 @@ function EditCourseCertification(props: EditCourseCertificationProps) {
         // createCertification uses errorHandling which returns JSON directly on success
         if (result) {
           toast.success(t('dashboard.courses.certification.toasts.create_success'));
-          mutateCertifications();
+          queryClient.invalidateQueries({ queryKey: queryKeys.certifications.byCourse(courseStructure.course_uuid) });
           formik.setFieldValue('enable_certification', true);
         } else {
           throw new Error('Failed to create certification');
@@ -206,7 +182,7 @@ function EditCourseCertification(props: EditCourseCertificationProps) {
         // deleteCertification uses errorHandling which returns JSON directly on success
         if (result) {
           toast.success(t('dashboard.courses.certification.toasts.remove_success'));
-          mutateCertifications();
+          queryClient.invalidateQueries({ queryKey: queryKeys.certifications.byCourse(courseStructure.course_uuid) });
           formik.setFieldValue('enable_certification', false);
         } else {
           throw new Error('Failed to delete certification');
@@ -277,8 +253,23 @@ function EditCourseCertification(props: EditCourseCertificationProps) {
 
   // useCourseFieldSync flushes pending edits on unmount, so no local cleanup.
 
-  if (isLoading || !courseStructure || (courseStructure.course_uuid && access_token && certifications === undefined)) {
-    return <div>{t('dashboard.courses.settings.loading')}</div>;
+  if (isLoading || !courseStructure || (courseStructure.course_uuid && access_token && org?.id && isCertificationsPending)) {
+    return (
+      <div>
+        <div className="mx-4 sm:mx-10 bg-white rounded-xl shadow-xs px-4 py-4">
+          <div className="animate-pulse space-y-4">
+            <div className="flex items-center justify-between bg-gray-50 px-3 sm:px-5 py-3 rounded-md">
+              <div className="flex flex-col space-y-2">
+                <div className="h-5 bg-gray-200 rounded w-48" />
+                <div className="h-3 bg-gray-100 rounded w-64" />
+              </div>
+              <div className="w-11 h-6 bg-gray-200 rounded-full" />
+            </div>
+            <div className="h-40 bg-gray-100 rounded-lg w-full" />
+          </div>
+        </div>
+      </div>
+    );
   }
 
   if (certificationsError) {

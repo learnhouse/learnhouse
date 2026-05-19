@@ -9,13 +9,15 @@ from typing import Optional
 import redis
 from fastapi import HTTPException, Request
 from pydantic import EmailStr
-from sqlmodel import Session, select
+from sqlmodel import select
+from sqlmodel.ext.asyncio.session import AsyncSession
 
 from config.config import get_learnhouse_config
+from src.db.organization_config import OrganizationConfig
 from src.db.organizations import Organization, OrganizationRead
 from src.db.usergroups import UserGroup
 from src.db.users import AnonymousUser, PublicUser, UserRead
-from src.services.orgs.orgs import rbac_check
+from src.services.orgs.orgs import get_org_default_language, rbac_check
 from src.services.users.emails import send_invitation_email
 
 logger = logging.getLogger(__name__)
@@ -59,7 +61,7 @@ async def create_invite_code(
     request: Request,
     org_id: int,
     current_user: PublicUser | AnonymousUser,
-    db_session: Session,
+    db_session: AsyncSession,
     usergroup_id: Optional[int] = None,
 ):
     # Redis init
@@ -73,9 +75,7 @@ async def create_invite_code(
         )
 
     statement = select(Organization).where(Organization.id == org_id)
-    result = db_session.exec(statement)
-
-    org = result.first()
+    org = (await db_session.execute(statement)).scalars().first()
 
     if not org:
         raise HTTPException(
@@ -101,7 +101,7 @@ async def create_invite_code(
             UserGroup.id == usergroup_id,
             UserGroup.org_id == org_id,
         )
-        usergroup = db_session.exec(statement).first()
+        usergroup = (await db_session.execute(statement)).scalars().first()
         if not usergroup:
             raise HTTPException(
                 status_code=404,
@@ -159,7 +159,7 @@ async def get_invite_codes(
     request: Request,
     org_id: int,
     current_user: PublicUser | AnonymousUser,
-    db_session: Session,
+    db_session: AsyncSession,
 ):
     # Redis init
     LH_CONFIG = get_learnhouse_config()
@@ -172,9 +172,7 @@ async def get_invite_codes(
         )
 
     statement = select(Organization).where(Organization.id == org_id)
-    result = db_session.exec(statement)
-
-    org = result.first()
+    org = (await db_session.execute(statement)).scalars().first()
 
     if not org:
         raise HTTPException(
@@ -208,7 +206,7 @@ async def get_invite_codes(
             statement = select(UserGroup).where(
                 UserGroup.id == invite_code["usergroup_id"]
             )
-            usergroup = db_session.exec(statement).first()
+            usergroup = (await db_session.execute(statement)).scalars().first()
             invite_code["usergroup_name"] = usergroup.name if usergroup else None
 
         invite_codes_list.append(invite_code)
@@ -221,7 +219,7 @@ async def get_invite_code(
     org_id: int,
     invite_code: str,
     current_user: PublicUser | AnonymousUser,
-    db_session: Session,
+    db_session: AsyncSession,
 ):
     # Redis init
     LH_CONFIG = get_learnhouse_config()
@@ -234,9 +232,7 @@ async def get_invite_code(
         )
 
     statement = select(Organization).where(Organization.id == org_id)
-    result = db_session.exec(statement)
-
-    org = result.first()
+    org = (await db_session.execute(statement)).scalars().first()
 
     if not org:
         raise HTTPException(
@@ -286,7 +282,7 @@ async def delete_invite_code(
     org_id: int,
     invite_code_uuid: str,
     current_user: PublicUser | AnonymousUser,
-    db_session: Session,
+    db_session: AsyncSession,
 ):
     # Redis init
     LH_CONFIG = get_learnhouse_config()
@@ -299,9 +295,7 @@ async def delete_invite_code(
         )
 
     statement = select(Organization).where(Organization.id == org_id)
-    result = db_session.exec(statement)
-
-    org = result.first()
+    org = (await db_session.execute(statement)).scalars().first()
 
     if not org:
         raise HTTPException(
@@ -335,13 +329,13 @@ async def delete_invite_code(
     return keys
 
 
-def send_invite_email(
+async def send_invite_email(
     org: OrganizationRead,
     invite_code_uuid: str | None,
     user: UserRead,
     email: EmailStr,
     request: Request,
-    db_session: Session | None = None,
+    db_session=None,
 ):
     invite_code = None
 
@@ -361,7 +355,7 @@ def send_invite_email(
     # Build signup URL rooted at the org's own frontend subdomain (or primary
     # verified custom domain if one is configured — passing db_session opts in).
     from src.services.email.utils import get_org_signup_base_url
-    org_base_url = get_org_signup_base_url(
+    org_base_url = await get_org_signup_base_url(
         org.slug, request, db_session=db_session, org_id=org.id
     )
 
@@ -370,6 +364,15 @@ def send_invite_email(
     else:
         signup_url = f"{org_base_url}/signup"
 
+    lang = "en"
+    if db_session is not None:
+        try:
+            org_config_stmt = select(OrganizationConfig).where(OrganizationConfig.org_id == org.id)
+            org_config = (await db_session.execute(org_config_stmt)).scalars().first()
+            lang = get_org_default_language(org_config)
+        except Exception:
+            pass
+
     try:
         result = send_invitation_email(
             email=email,
@@ -377,6 +380,7 @@ def send_invite_email(
             inviter_username=user.username,
             invite_code=invite_code,
             signup_url=signup_url,
+            lang=lang,
         )
         return result is not None
     except Exception:

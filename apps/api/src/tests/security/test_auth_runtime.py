@@ -260,21 +260,24 @@ class TestAuthRuntime:
 
     @pytest.mark.asyncio
     async def test_verify_api_token_org_boundary_org_slug_mismatch(self):
+        from unittest.mock import MagicMock
         request = _mock_request(path_params={"org_slug": "acme"})
         api_token_user = _make_api_token_user(org_id=7)
         org = Mock()
         org.id = 13
-        exec_result = Mock()
-        exec_result.first.return_value = org
-        db_session = Mock(spec=Session)
-        db_session.exec.return_value = exec_result
+        db_session = AsyncMock()
+        _scalars = MagicMock()
+        _scalars.first.return_value = org
+        _exec_result = MagicMock()
+        _exec_result.scalars.return_value = _scalars
+        db_session.execute.return_value = _exec_result
 
         with pytest.raises(HTTPException) as exc_info:
             await _verify_api_token_org_boundary(request, api_token_user, db_session)
 
         assert exc_info.value.status_code == 403
         assert "outside its organization" in exc_info.value.detail
-        db_session.exec.assert_called_once()
+        db_session.execute.assert_called_once()
 
     @pytest.mark.asyncio
     async def test_verify_api_token_org_boundary_allows_non_matching_org_id_strings(self):
@@ -286,15 +289,18 @@ class TestAuthRuntime:
 
     @pytest.mark.asyncio
     async def test_verify_api_token_org_boundary_allows_matching_org_slug(self):
+        from unittest.mock import MagicMock
         request = _mock_request(path_params={"org_slug": "acme"})
         api_token_user = _make_api_token_user(org_id=7)
         org = Mock()
         org.id = 7
-        exec_result = Mock()
-        exec_result.first.return_value = org
-        db_session = Mock(spec=Session)
-        db_session.exec.return_value = exec_result
+        db_session = AsyncMock()
+        _scalars = MagicMock()
+        _scalars.first.return_value = org
+        _exec_result = MagicMock()
+        _exec_result.scalars.return_value = _scalars
+        db_session.execute.return_value = _exec_result
 
         await _verify_api_token_org_boundary(request, api_token_user, db_session)
 
-        db_session.exec.assert_called_once()
+        db_session.execute.assert_called_once()

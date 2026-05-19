@@ -3,7 +3,9 @@ import UserAvatar from '@components/Objects/UserAvatar';
 import Modal from '@components/Objects/StyledElements/Modal/Modal';
 import { getAPIUrl } from '@services/config/config';
 import { getUserAvatarMediaDirectory } from '@services/media/media';
-import { swrFetcher } from '@services/utils/ts/requests';
+import { apiFetch } from '@services/utils/ts/requests';
+import { useQuery } from '@tanstack/react-query';
+import { queryKeys } from '@/lib/query/keys';
 import {
     ArrowUpDown,
     Calendar,
@@ -11,13 +13,13 @@ import {
     ChevronDown,
     Clock,
     Inbox,
+    RotateCcw,
     Search,
     SendHorizonal,
     Users,
     X,
 } from 'lucide-react';
 import React, { useMemo, useState } from 'react';
-import useSWR from 'swr';
 import EvaluateAssignment from './Modals/EvaluateAssignment';
 import { AssignmentProvider } from '@components/Contexts/Assignments/AssignmentContext';
 import { AssignmentsTaskProvider } from '@components/Contexts/Assignments/AssignmentsTaskContext';
@@ -46,20 +48,17 @@ function AssignmentSubmissionsSubPage({ assignment_uuid }: { assignment_uuid: st
     const [sortDirection, setSortDirection] = useState<SortDirection>('desc');
     const [sortDropdownOpen, setSortDropdownOpen] = useState(false);
 
-    const { data: assignmentSubmissions } = useSWR(
-        `${getAPIUrl()}assignments/assignment_${assignment_uuid}/submissions`,
-        (url) => swrFetcher(url, access_token),
-        {
-            // Keep the submissions view in near real-time: poll every 10s, and
-            // refetch whenever the teacher refocuses the tab or reconnects.
-            // 10s is a reasonable floor — auto-graded submissions should show
-            // up without the teacher having to manually refresh the page.
-            refreshInterval: 10000,
-            revalidateOnFocus: true,
-            revalidateOnReconnect: true,
-            dedupingInterval: 5000,
-        }
-    );
+    const { data: assignmentSubmissions } = useQuery({
+        queryKey: queryKeys.assignments.allSubmissions(assignment_uuid),
+        queryFn: () => apiFetch(`${getAPIUrl()}assignments/assignment_${assignment_uuid}/submissions`, access_token),
+        enabled: !!(assignment_uuid && access_token),
+        // Keep the submissions view in near real-time: poll every 10s so
+        // auto-graded submissions show up without a manual page refresh.
+        staleTime: 5_000,
+        refetchInterval: 10_000,
+        refetchOnWindowFocus: false,
+        refetchOnReconnect: true,
+    });
 
     const stats = useMemo(() => {
         if (!assignmentSubmissions) return { total: 0, late: 0, submitted: 0, graded: 0 };
@@ -253,8 +252,17 @@ function SubmissionsList({
 
     if (!submissions) {
         return (
-            <div className="flex items-center justify-center h-40 text-sm text-gray-400 font-medium">
-                {t('dashboard.assignments.submissions.loading')}
+            <div className="bg-white nice-shadow rounded-xl overflow-hidden animate-pulse">
+                {[1, 2, 3, 4, 5].map((i) => (
+                    <div key={i} className="flex items-center px-5 py-3.5 border-b border-gray-100 last:border-0 gap-3">
+                        <div className="w-9 h-9 rounded-full bg-gray-100 flex-shrink-0" />
+                        <div className="flex-1 space-y-1.5">
+                            <div className="h-3.5 bg-gray-100 rounded w-1/3" />
+                            <div className="h-3 bg-gray-100 rounded w-1/4" />
+                        </div>
+                        <div className="h-6 w-20 bg-gray-100 rounded-full" />
+                    </div>
+                ))}
             </div>
         );
     }
@@ -359,11 +367,12 @@ function SubmissionRow({
     const access_token = session?.data?.tokens?.access_token;
     const [gradeModalOpen, setGradeModalOpen] = useState(false);
 
-    const { data: user } = useSWR(
-        `${getAPIUrl()}users/id/${submission.user_id}`,
-        (url) => swrFetcher(url, access_token),
-        { revalidateOnFocus: false }
-    );
+    const { data: user } = useQuery({
+        queryKey: ['users', 'id', submission.user_id],
+        queryFn: () => apiFetch(`${getAPIUrl()}users/id/${submission.user_id}`, access_token),
+        enabled: !!(submission.user_id && access_token),
+        staleTime: 60_000,
+    });
 
     const matchesSearch = useMemo(() => {
         if (!searchQuery) return true;
@@ -463,6 +472,16 @@ function SubmissionRow({
                 {status.icon}
                 <span>{status.label}</span>
             </div>
+
+            {/* Attempt indicator — only shown when the student is past the
+                first attempt so the row stays uncluttered for the common
+                case of a single submission. */}
+            {submission.attempt_number && submission.attempt_number > 1 && (
+                <div className="flex items-center space-x-1 px-2.5 py-1 rounded-full mr-4 text-xs font-semibold bg-fuchsia-50 text-fuchsia-700">
+                    <RotateCcw size={11} />
+                    <span>{t('assignments.attempt_label')} {submission.attempt_number}</span>
+                </div>
+            )}
 
             {/* Evaluate button */}
             <Modal

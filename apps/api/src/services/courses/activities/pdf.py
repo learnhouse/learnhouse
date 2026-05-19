@@ -1,6 +1,8 @@
+from typing import Optional
 from src.db.courses.courses import Course
 from src.db.organizations import Organization
-from sqlmodel import Session, select
+from sqlmodel import select
+from sqlmodel.ext.asyncio.session import AsyncSession
 from src.db.courses.chapters import Chapter
 from src.db.courses.activities import (
     Activity,
@@ -21,14 +23,15 @@ from src.security.rbac import check_resource_access, AccessAction
 async def create_documentpdf_activity(
     request: Request,
     name: str,
-    chapter_id: str,
+    chapter_id: int,
     current_user: PublicUser | AnonymousUser,
-    db_session: Session,
+    db_session: AsyncSession,
     pdf_file: UploadFile | None = None,
+    extra_metadata: Optional[dict] = None,
 ):
     # get chapter_id
     statement = select(Chapter).where(Chapter.id == chapter_id)
-    chapter = db_session.exec(statement).first()
+    chapter = (await db_session.execute(statement)).scalars().first()
 
     if not chapter:
         raise HTTPException(
@@ -37,7 +40,7 @@ async def create_documentpdf_activity(
         )
 
     statement = select(CourseChapter).where(CourseChapter.chapter_id == chapter_id)
-    coursechapter = db_session.exec(statement).first()
+    coursechapter = (await db_session.execute(statement)).scalars().first()
 
     if not coursechapter:
         raise HTTPException(
@@ -47,7 +50,7 @@ async def create_documentpdf_activity(
 
     # Get course_uuid for RBAC check
     statement = select(Course).where(Course.id == coursechapter.course_id)
-    course = db_session.exec(statement).first()
+    course = (await db_session.execute(statement)).scalars().first()
 
     if not course:
         raise HTTPException(
@@ -56,14 +59,16 @@ async def create_documentpdf_activity(
         )
 
     # RBAC check
-    await check_resource_access(request, db_session, current_user, course.course_uuid, AccessAction.CREATE)
+    await check_resource_access(
+        request, db_session, current_user, course.course_uuid, AccessAction.CREATE
+    )
 
     # get org_id
     org_id = coursechapter.org_id
 
     # Get org_uuid
     statement = select(Organization).where(Organization.id == coursechapter.org_id)
-    organization = db_session.exec(statement).first()
+    organization = (await db_session.execute(statement)).scalars().first()
 
     # create activity uuid
     activity_uuid = f"activity_{uuid4()}"
@@ -102,32 +107,33 @@ async def create_documentpdf_activity(
         content={
             "filename": saved_filename or "documentpdf",
             "activity_uuid": activity_uuid,
-            },
+        },
         org_id=org_id if org_id else 0,
         course_id=coursechapter.course_id,
         activity_uuid=activity_uuid,
         creation_date=str(datetime.now()),
         update_date=str(datetime.now()),
+        extra_metadata=extra_metadata,
     )
 
     # Insert Activity in DB
     db_session.add(activity)
-    db_session.commit()
-    db_session.refresh(activity)
+    await db_session.commit()
+    await db_session.refresh(activity)
 
     # Find the last activity order in the chapter
     statement = (
         select(ChapterActivity)
-        .where(ChapterActivity.chapter_id == int(chapter_id))
+        .where(ChapterActivity.chapter_id == chapter_id)
         .order_by(ChapterActivity.order)  # type: ignore
     )
-    chapter_activities = db_session.exec(statement).all()
+    chapter_activities = (await db_session.execute(statement)).scalars().all()
     last_order = chapter_activities[-1].order if chapter_activities else 0
     to_be_used_order = last_order + 1
 
     # Add activity to chapter
     activity_chapter = ChapterActivity(
-        chapter_id=(int(chapter_id)),
+        chapter_id=chapter_id,
         activity_id=activity.id,  # type: ignore
         course_id=coursechapter.course_id,
         org_id=coursechapter.org_id,
@@ -138,7 +144,62 @@ async def create_documentpdf_activity(
 
     # Insert ChapterActivity link in DB
     db_session.add(activity_chapter)
+    await db_session.commit()
+    await db_session.refresh(activity_chapter)
+
+    return ActivityRead.model_validate(activity)
+
+
+async def update_documentpdf_activity(
+    request: Request,
+    activity_uuid: str,
+    current_user: PublicUser | AnonymousUser,
+    db_session: AsyncSession,
+    name: Optional[str] = None,
+    pdf_file: UploadFile | None = None,
+) -> ActivityRead:
+    statement = select(Activity).where(Activity.activity_uuid == activity_uuid)
+    activity = db_session.exec(statement).first()
+
+    if not activity:
+        raise HTTPException(status_code=404, detail="Activity not found")
+
+    statement = select(Course).where(Course.id == activity.course_id)
+    course = db_session.exec(statement).first()
+
+    if not course:
+        raise HTTPException(status_code=404, detail="Course not found")
+
+    await check_resource_access(
+        request, db_session, current_user, course.course_uuid, AccessAction.UPDATE
+    )
+
+    if name:
+        activity.name = name
+
+    if pdf_file and pdf_file.filename:
+        if pdf_file.content_type not in ["application/pdf"]:
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT, detail="Pdf : Wrong pdf format"
+            )
+
+        statement = select(Organization).where(Organization.id == activity.org_id)
+        organization = db_session.exec(statement).first()
+
+        if organization and course:
+            saved_filename = await upload_pdf(
+                pdf_file,
+                activity_uuid,
+                organization.org_uuid,
+                course.course_uuid,
+            )
+            content = dict(activity.content) if activity.content else {}
+            content["filename"] = saved_filename
+            activity.content = content
+
+    activity.update_date = str(datetime.now())
+    db_session.add(activity)
     db_session.commit()
-    db_session.refresh(activity_chapter)
+    db_session.refresh(activity)
 
     return ActivityRead.model_validate(activity)

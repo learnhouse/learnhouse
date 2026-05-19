@@ -196,6 +196,53 @@ export async function removeUserGroupFromActivity(
   return result.json()
 }
 
+export async function updateHostedVideoActivity(
+  activityUuid: string,
+  videoDetails: { startTime: number; endTime: number | null; autoplay: boolean; muted: boolean },
+  access_token: string,
+  name?: string,
+  videoFile?: File | null,
+) {
+  const formData = new FormData()
+  if (name) formData.append('name', name)
+  formData.append('start_time', String(videoDetails.startTime))
+  if (videoDetails.endTime !== null) formData.append('end_time', String(videoDetails.endTime))
+  formData.append('autoplay', String(videoDetails.autoplay))
+  formData.append('muted', String(videoDetails.muted))
+  if (videoFile) formData.append('video_file', videoFile)
+  const result = await fetch(
+    `${getAPIUrl()}activities/video/${activityUuid}`,
+    RequestBodyFormWithAuthHeader('PUT', formData, null, access_token)
+  )
+  return getResponseMetadata(result)
+}
+
+export async function updateExternalVideoActivity(
+  activityUuid: string,
+  youtubeUrl: string,
+  videoDetails: { startTime: number; endTime: number | null; autoplay: boolean; muted: boolean },
+  access_token: string,
+  name?: string,
+) {
+  const result = await fetch(
+    `${getAPIUrl()}activities/external_video/${activityUuid}`,
+    RequestBodyWithAuthHeader(
+      'PUT',
+      {
+        name,
+        uri: youtubeUrl,
+        startTime: videoDetails.startTime,
+        endTime: videoDetails.endTime,
+        autoplay: videoDetails.autoplay,
+        muted: videoDetails.muted,
+      },
+      null,
+      access_token
+    )
+  )
+  return getResponseMetadata(result)
+}
+
 export async function getUrlPreview(url: string) {
   const result = await fetch(
     `${getAPIUrl()}utils/link-preview?url=${encodeURIComponent(url)}`,
@@ -257,4 +304,20 @@ export async function restoreActivityVersion(
   )
   const res = await getResponseMetadata(result)
   return res
+}
+
+export async function updateDocumentActivity(
+  activityUuid: string,
+  access_token: string,
+  name?: string,
+  pdfFile?: File | null,
+) {
+  const formData = new FormData()
+  if (name) formData.append('name', name)
+  if (pdfFile) formData.append('pdf_file', pdfFile)
+  const result = await fetch(
+    `${getAPIUrl()}activities/documentpdf/${activityUuid}`,
+    RequestBodyFormWithAuthHeader('PUT', formData, null, access_token)
+  )
+  return getResponseMetadata(result)
 }

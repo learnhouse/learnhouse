@@ -3,8 +3,8 @@ import React, { createContext, useContext, useEffect, useReducer } from 'react'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
 import { getAssignmentTask } from '@services/courses/assignments'
 import { useAssignments } from './AssignmentContext';
-import { mutate } from 'swr';
-import { getAPIUrl } from '@services/config/config';
+import { useQueryClient } from '@tanstack/react-query';
+import { queryKeys } from '@/lib/query/keys';
 
 interface State {
     selectedAssignmentTaskUUID: string | null;
@@ -30,12 +30,12 @@ export function AssignmentsTaskProvider({ children }: { children: React.ReactNod
     const session = useLHSession() as any;
     const access_token = session?.data?.tokens?.access_token;
     const assignment = useAssignments() as any
+    const queryClient = useQueryClient();
 
     const [state, dispatch] = useReducer(assignmentstaskReducer, initialState);
 
     async function fetchAssignmentTask(assignmentTaskUUID: string) {
         const res = await getAssignmentTask(assignmentTaskUUID, access_token);
-
 
         if (res.success) {
             dispatch({ type: 'setAssignmentTask', payload: res.data });
@@ -46,7 +46,10 @@ export function AssignmentsTaskProvider({ children }: { children: React.ReactNod
 
         if (state.selectedAssignmentTaskUUID) {
             fetchAssignmentTask(state.selectedAssignmentTaskUUID);
-            mutate(`${getAPIUrl()}assignments/${assignment.assignment_object?.assignment_uuid}/tasks`);
+            const assignmentUuid = assignment.assignment_object?.assignment_uuid;
+            if (assignmentUuid) {
+                queryClient.invalidateQueries({ queryKey: queryKeys.assignments.tasks(assignmentUuid) });
+            }
         }
     }, [state.selectedAssignmentTaskUUID, state.reloadTrigger, assignment]);
 

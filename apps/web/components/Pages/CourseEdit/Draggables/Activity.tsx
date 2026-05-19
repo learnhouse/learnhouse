@@ -12,7 +12,8 @@ import {
   Save,
   File,
 } from 'lucide-react'
-import { mutate } from 'swr'
+import { useQueryClient } from '@tanstack/react-query'
+import { queryKeys } from '@/lib/query/keys'
 import { revalidateTags } from '@services/utils/ts/requests'
 import { useRouter } from 'next/navigation'
 import ConfirmationModal from '@components/Objects/StyledElements/ConfirmationModal/ConfirmationModal'
@@ -28,6 +29,8 @@ interface ModifiedActivityInterface {
 function Activity(props: any) {
   const router = useRouter()
   const session = useLHSession() as any;
+  const queryClient = useQueryClient()
+  const cleanCourseUuid = (id: string) => id?.replace(/^course_/, '') ?? id
   const [modifiedActivity, setModifiedActivity] = React.useState<
     ModifiedActivityInterface | undefined
   >(undefined)
@@ -39,7 +42,7 @@ function Activity(props: any) {
 
   async function removeActivity() {
     await deleteActivity(props.activity.id, session.data?.tokens?.access_token)
-    mutate(`${getAPIUrl()}chapters/meta/course_${props.courseid}?with_unpublished_activities=${withUnpublishedActivities}`)
+    queryClient.invalidateQueries({ queryKey: queryKeys.courses.meta(cleanCourseUuid(props.courseid)) })
     await revalidateTags(['courses'], props.orgslug)
     router.refresh()
   }
@@ -50,7 +53,7 @@ function Activity(props: any) {
       selectedActivity !== undefined
     ) {
       await updateActivity({ name: modifiedActivity.activityName }, activityId, session.data?.tokens?.access_token)
-      await mutate(`${getAPIUrl()}chapters/meta/course_${props.courseid}?with_unpublished_activities=${withUnpublishedActivities}`)
+      queryClient.invalidateQueries({ queryKey: queryKeys.courses.meta(cleanCourseUuid(props.courseid)) })
       await revalidateTags(['courses'], props.orgslug)
       router.refresh()
     }

@@ -2,12 +2,14 @@
 
 import React, { useState, useRef, useEffect } from 'react'
 import { UploadCloud, Image as ImageIcon, ArrowBigUpDash } from 'lucide-react'
+import { useOrg } from '@components/Contexts/OrgContext'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
 import { updateBoardThumbnail } from '@services/boards/boards'
 import { getBoardThumbnailMediaDirectory } from '@services/media/media'
 import UnsplashImagePicker from '@components/Dashboard/Pages/Course/EditCourseGeneral/UnsplashImagePicker'
 import toast from 'react-hot-toast'
-import { mutate } from 'swr'
+import { useQueryClient } from '@tanstack/react-query'
+import { queryKeys } from '@/lib/query/keys'
 import { useTranslation } from 'react-i18next'
 
 const MAX_FILE_SIZE = 8_000_000
@@ -22,8 +24,10 @@ interface BoardThumbnailTabProps {
 
 function BoardThumbnailTab({ board, boardUuid, orgUuid, boardKey }: BoardThumbnailTabProps) {
   const { t } = useTranslation()
+  const org = useOrg() as any
   const session = useLHSession() as any
   const access_token = session?.data?.tokens?.access_token
+  const queryClient = useQueryClient()
 
   const imageInputRef = useRef<HTMLInputElement>(null)
   const [localThumbnail, setLocalThumbnail] = useState<{ url: string } | null>(null)
@@ -49,8 +53,8 @@ function BoardThumbnailTab({ board, boardUuid, orgUuid, boardKey }: BoardThumbna
       await updateBoardThumbnail(boardUuid, file, access_token)
       toast.success(t('boards.thumbnail.thumbnail_updated'))
       setLocalThumbnail(null)
-      if (boardKey) mutate(boardKey)
-      mutate((key) => typeof key === 'string' && key.includes('/boards/org/'), undefined, { revalidate: true })
+      queryClient.invalidateQueries({ queryKey: queryKeys.boards.detail(boardUuid) })
+      queryClient.invalidateQueries({ queryKey: queryKeys.boards.list(org?.slug) })
     } catch {
       toast.error(t('boards.thumbnail.thumbnail_updated_error'))
     } finally {

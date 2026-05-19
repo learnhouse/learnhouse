@@ -6,9 +6,9 @@ import { useOrg } from '@components/Contexts/OrgContext'
 import { getUriWithOrg } from '@services/config/config'
 import { Award, ExternalLink, Calendar, Hash, Building } from 'lucide-react'
 import Link from 'next/link'
-import useSWR from 'swr'
-import { swrFetcher } from '@services/utils/ts/requests'
-import { getAPIUrl } from '@services/config/config'
+import { useQuery } from '@tanstack/react-query'
+import { queryKeys } from '@/lib/query/keys'
+import { getAllUserCertificates } from '@services/courses/certifications'
 import { useTranslation } from 'react-i18next'
 import { getCourseThumbnailMediaDirectory } from '@services/media/media'
 
@@ -22,13 +22,15 @@ const UserCertificates: React.FC<UserCertificatesProps> = ({ orgslug }) => {
   const access_token = session?.data?.tokens?.access_token
   const org = useOrg() as any
 
-  const { data: certificates, error, isLoading } = useSWR(
-    access_token && org?.id ? `${getAPIUrl()}certifications/user/all?org_id=${org.id}` : null,
-    (url) => swrFetcher(url, access_token)
-  )
+  const { data: certificates, error, isLoading } = useQuery({
+    queryKey: queryKeys.certifications.detail(`user_all_${org?.id}`),
+    queryFn: () => getAllUserCertificates(org.id, access_token),
+    select: (res: any) => (Array.isArray(res) ? res : res?.data ?? []),
+    enabled: !!access_token && !!org?.id,
+    staleTime: 60_000,
+  })
 
-  // Handle the actual API response structure - certificates are returned as an array directly
-  const certificatesData = Array.isArray(certificates) ? certificates : certificates?.data || []
+  const certificatesData: any[] = certificates ?? []
 
   if (isLoading) {
     return (

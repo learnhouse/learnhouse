@@ -1,13 +1,13 @@
 import React from 'react'
 import CourseClient from './course'
-import { getCourseMetadata, getCourseRights } from '@services/courses/courses'
+import { getCourseMetadata } from '@services/courses/courses'
 import { getOrganizationContextInfo } from '@services/organizations/orgs'
 import { Metadata } from 'next'
 import { getCourseThumbnailMediaDirectory, getOrgOgImageMediaDirectory } from '@services/media/media'
 import { getServerSession } from '@/lib/auth/server'
-import { getCanonicalUrl, getOrgSeoConfig, buildPageTitle, buildBreadcrumbJsonLd } from '@/lib/seo/utils'
-import { JsonLd } from '@components/SEO/JsonLd'
-import { notFound } from 'next/navigation'
+import { getOrgSeoConfig, buildPageTitle } from '@/lib/seo/utils'
+import { getServerCanonicalUrl } from '@/lib/seo/utils.server'
+
 
 type MetadataProps = {
   params: Promise<{ orgslug: string; courseuuid: string }>
@@ -77,7 +77,7 @@ export async function generateMetadata(props: MetadataProps): Promise<Metadata> 
       },
     },
     alternates: {
-      canonical: seo.canonical_url || getCanonicalUrl(params.orgslug, `/course/${params.courseuuid}`),
+      canonical: seo.canonical_url || (await getServerCanonicalUrl(params.orgslug, `/course/${params.courseuuid}`)),
     },
     openGraph: {
       title: seo.og_title || seo.title || defaultTitle,
@@ -105,82 +105,14 @@ export async function generateMetadata(props: MetadataProps): Promise<Metadata> 
 }
 
 const CoursePage = async (params: any) => {
-  const session = await getServerSession()
-  const access_token = session?.tokens?.access_token
-
-  // Await params before using them
   const { courseuuid, orgslug } = await params.params
-
-  // Fetch course metadata + org info in parallel
-  let course_meta = null
-  let fetchError: { status?: number } | null = null
-
-  const [courseResult, org] = await Promise.all([
-    getCourseMetadata(
-      courseuuid,
-      { revalidate: 120, tags: ['courses'] },
-      access_token ?? undefined,
-      { slim: true }
-    ).catch((error: any) => {
-      fetchError = { status: error?.status }
-      return null
-    }),
-    getOrganizationContextInfo(orgslug, {
-      revalidate: 120,
-      tags: ['organizations'],
-    }),
-  ])
-  course_meta = courseResult
-
-  // If truly not found (no auth token and no course), show 404
-  if (!course_meta && !fetchError) {
-    notFound()
-  }
-
-  // For anonymous visitors denied access to a non-public course, pretend it
-  // doesn't exist (404) rather than showing an access-denied screen — that
-  // would otherwise confirm the course's existence and leak its URL.
-  if (!course_meta && fetchError && !access_token) {
-    notFound()
-  }
-
-  // Build Course JSON-LD for structured data
-  const courseJsonLd = course_meta ? {
-    '@context': 'https://schema.org',
-    '@type': 'Course',
-    name: course_meta.name,
-    description: course_meta.description || '',
-    url: getCanonicalUrl(orgslug, `/course/${courseuuid}`),
-    provider: {
-      '@type': 'Organization',
-      name: org?.name || '',
-    },
-    ...(course_meta.thumbnail_image && org && {
-      image: getCourseThumbnailMediaDirectory(org.org_uuid, course_meta.course_uuid, course_meta.thumbnail_image),
-    }),
-    ...(course_meta.learnings && {
-      keywords: Array.isArray(course_meta.learnings) ? course_meta.learnings.join(', ') : course_meta.learnings,
-    }),
-  } : null
-
-  const breadcrumbJsonLd = buildBreadcrumbJsonLd([
-    { name: 'Home', url: getCanonicalUrl(orgslug, '/') },
-    { name: 'Courses', url: getCanonicalUrl(orgslug, '/courses') },
-    { name: course_meta?.name || 'Course', url: getCanonicalUrl(orgslug, `/course/${courseuuid}`) },
-  ])
-
   return (
-    <>
-      <JsonLd data={breadcrumbJsonLd} />
-      {courseJsonLd && <JsonLd data={courseJsonLd} />}
-      <CourseClient
-        courseuuid={courseuuid}
-        orgslug={orgslug}
-        course={course_meta}
-        access_token={access_token}
-        serverError={fetchError}
-      />
-    </>
+    <CourseClient
+      courseuuid={courseuuid}
+      orgslug={orgslug}
+      course={null}
+      serverError={null}
+    />
   )
 }
 

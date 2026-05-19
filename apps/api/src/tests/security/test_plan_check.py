@@ -29,8 +29,8 @@ PLAN_DEPENDENCIES = [
     ("Analytics", require_plan("pro", "Analytics")),
     ("Usergroups", require_plan_for_usergroups("pro", "Usergroups")),
     ("Certificates", require_plan_for_certifications("pro", "Certificates")),
-    ("Boards", require_plan_for_boards("pro", "Boards")),
-    ("Playgrounds", require_plan_for_playgrounds("pro", "Playgrounds")),
+    ("Boards", require_plan_for_boards("personal", "Boards")),
+    ("Playgrounds", require_plan_for_playgrounds("personal", "Playgrounds")),
     ("Communities", require_plan_for_community("standard", "Communities")),
 ]
 
@@ -49,7 +49,7 @@ def _request(path_params=None, query_params=None):
     )
 
 
-def _make_org_config(db, org, config):
+async def _make_org_config(db, org, config):
     org_config = OrganizationConfig(
         org_id=org.id,
         config=config,
@@ -57,8 +57,8 @@ def _make_org_config(db, org, config):
         update_date=str(datetime.now()),
     )
     db.add(org_config)
-    db.commit()
-    db.refresh(org_config)
+    await db.commit()
+    await db.refresh(org_config)
     return org_config
 
 
@@ -97,29 +97,31 @@ class TestPlanCheck:
         ):
             assert _check_mode_bypass("Analytics") is True
 
-    def test_get_org_plan_versions_and_missing_config(self, db, org):
-        _make_org_config(
+    @pytest.mark.asyncio
+    async def test_get_org_plan_versions_and_missing_config(self, db, org):
+        from sqlalchemy import delete as sa_delete
+        await _make_org_config(
             db,
             org,
             {"config_version": "1.4", "cloud": {"plan": "pro"}},
         )
-        assert get_org_plan(org.id, db) == "pro"
+        assert await get_org_plan(org.id, db) == "pro"
 
-        db.query(OrganizationConfig).delete()
-        db.commit()
-        _make_org_config(db, org, {"config_version": "2.0", "plan": "enterprise"})
-        assert get_org_plan(org.id, db) == "enterprise"
+        await db.execute(sa_delete(OrganizationConfig).where(OrganizationConfig.org_id == org.id))
+        await db.commit()
+        await _make_org_config(db, org, {"config_version": "2.0", "plan": "enterprise"})
+        assert await get_org_plan(org.id, db) == "enterprise"
 
-        db.query(OrganizationConfig).delete()
-        db.commit()
+        await db.execute(sa_delete(OrganizationConfig).where(OrganizationConfig.org_id == org.id))
+        await db.commit()
         with pytest.raises(HTTPException) as exc:
-            get_org_plan(org.id, db)
+            await get_org_plan(org.id, db)
 
         assert exc.value.status_code == 404
 
     @pytest.mark.asyncio
     async def test_require_plan_from_path_and_query(self, db, org):
-        _make_org_config(
+        await _make_org_config(
             db,
             org,
             {"config_version": "2.0", "plan": "standard"},
@@ -175,10 +177,10 @@ class TestPlanCheck:
             ("Usergroups", require_plan_for_usergroups("pro", "Usergroups"), {"query_params": {"org_id": "abc"}}, 200),
             ("Certificates", require_plan_for_certifications("pro", "Certificates"), {"path_params": {"org_id": "abc"}}, 200),
             ("Certificates", require_plan_for_certifications("pro", "Certificates"), {"query_params": {"org_id": "abc"}}, 200),
-            ("Boards", require_plan_for_boards("pro", "Boards"), {"path_params": {"org_id": "abc"}}, 200),
-            ("Boards", require_plan_for_boards("pro", "Boards"), {"query_params": {"org_id": "abc"}}, 200),
-            ("Playgrounds", require_plan_for_playgrounds("pro", "Playgrounds"), {"path_params": {"org_id": "abc"}}, 200),
-            ("Playgrounds", require_plan_for_playgrounds("pro", "Playgrounds"), {"query_params": {"org_id": "abc"}}, 200),
+            ("Boards", require_plan_for_boards("personal", "Boards"), {"path_params": {"org_id": "abc"}}, 200),
+            ("Boards", require_plan_for_boards("personal", "Boards"), {"query_params": {"org_id": "abc"}}, 200),
+            ("Playgrounds", require_plan_for_playgrounds("personal", "Playgrounds"), {"path_params": {"org_id": "abc"}}, 200),
+            ("Playgrounds", require_plan_for_playgrounds("personal", "Playgrounds"), {"query_params": {"org_id": "abc"}}, 200),
             ("Communities", require_plan_for_community("standard", "Communities"), {"path_params": {"org_id": "abc"}}, 200),
             ("Communities", require_plan_for_community("standard", "Communities"), {"query_params": {"org_id": "abc"}}, 200),
         ],
@@ -197,7 +199,7 @@ class TestPlanCheck:
 
     @pytest.mark.asyncio
     async def test_require_plan_for_usergroups_success_and_no_org(self, db, org):
-        _make_org_config(db, org, {"config_version": "2.0", "plan": "standard"})
+        await _make_org_config(db, org, {"config_version": "2.0", "plan": "standard"})
         usergroup = UserGroup(
             org_id=org.id,
             name="Group",
@@ -207,8 +209,8 @@ class TestPlanCheck:
             update_date=str(datetime.now()),
         )
         db.add(usergroup)
-        db.commit()
-        db.refresh(usergroup)
+        await db.commit()
+        await db.refresh(usergroup)
 
         dependency = require_plan_for_usergroups("pro", "Usergroups")
         with patch(
@@ -237,7 +239,7 @@ class TestPlanCheck:
 
     @pytest.mark.asyncio
     async def test_require_plan_for_certifications_variants(self, db, org, course, regular_user):
-        _make_org_config(db, org, {"config_version": "2.0", "plan": "enterprise"})
+        await _make_org_config(db, org, {"config_version": "2.0", "plan": "enterprise"})
         cert = Certifications(
             certification_uuid="cert_test",
             course_id=course.id,
@@ -246,8 +248,8 @@ class TestPlanCheck:
             update_date=str(datetime.now()),
         )
         db.add(cert)
-        db.commit()
-        db.refresh(cert)
+        await db.commit()
+        await db.refresh(cert)
         user_cert = CertificateUser(
             user_id=regular_user.id,
             certification_id=cert.id,
@@ -256,7 +258,7 @@ class TestPlanCheck:
             updated_at=str(datetime.now()),
         )
         db.add(user_cert)
-        db.commit()
+        await db.commit()
 
         dependency = require_plan_for_certifications("pro", "Certificates")
         with patch(
@@ -298,7 +300,7 @@ class TestPlanCheck:
 
     @pytest.mark.asyncio
     async def test_require_plan_for_board_playground_and_community(self, db, org):
-        _make_org_config(db, org, {"config_version": "2.0", "plan": "standard"})
+        await _make_org_config(db, org, {"config_version": "2.0", "plan": "standard"})
         board = Board(
             org_id=org.id,
             name="Board",
@@ -333,10 +335,10 @@ class TestPlanCheck:
         db.add(board)
         db.add(playground)
         db.add(community)
-        db.commit()
+        await db.commit()
 
-        board_dependency = require_plan_for_boards("pro", "Boards")
-        playground_dependency = require_plan_for_playgrounds("pro", "Playgrounds")
+        board_dependency = require_plan_for_boards("personal", "Boards")
+        playground_dependency = require_plan_for_playgrounds("personal", "Playgrounds")
         community_dependency = require_plan_for_community("free", "Communities")
 
         with patch(

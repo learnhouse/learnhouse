@@ -1,7 +1,7 @@
 import React from 'react';
 import { updateAssignment } from '@services/courses/assignments';
-import { mutate } from 'swr';
-import { getAPIUrl } from '@services/config/config';
+import { useQueryClient } from '@tanstack/react-query';
+import { queryKeys } from '@/lib/query/keys';
 import toast from 'react-hot-toast';
 import * as Form from '@radix-ui/react-form';
 import { useFormik } from 'formik';
@@ -27,6 +27,8 @@ import {
     Shield,
     AlertTriangle,
     Eye,
+    RotateCcw,
+    Infinity as InfinityIcon,
 } from 'lucide-react';
 
 type GradingType = 'ALPHABET' | 'NUMERIC' | 'PERCENTAGE' | 'PASS_FAIL' | 'GPA_SCALE';
@@ -40,6 +42,8 @@ interface Assignment {
     auto_grading?: boolean;
     anti_copy_paste?: boolean;
     show_correct_answers?: boolean;
+    allow_retries?: boolean;
+    max_retries?: number;
     assignment_tasks?: any[];
 }
 
@@ -124,6 +128,7 @@ const EditAssignmentForm: React.FC<EditAssignmentFormProps> = ({
     accessToken
 }) => {
     const { t } = useTranslation()
+    const queryClient = useQueryClient()
 
     // Auto-grading is incompatible with file-submission tasks — those need
     // human review. If any such task exists, we force the toggle off and
@@ -141,18 +146,29 @@ const EditAssignmentForm: React.FC<EditAssignmentFormProps> = ({
             auto_grading: assignment.auto_grading || false,
             anti_copy_paste: assignment.anti_copy_paste || false,
             show_correct_answers: assignment.show_correct_answers || false,
+            allow_retries: assignment.allow_retries || false,
+            // 0 means unlimited — kept as a number so the input below stays
+            // numeric and the backend doesn't have to coerce strings.
+            max_retries:
+                typeof assignment.max_retries === 'number' ? assignment.max_retries : 0,
         },
         enableReinitialize: true,
         onSubmit: async (values, { setSubmitting }) => {
-            // Never send auto_grading=true when the assignment has a file task
-            const payload = hasFileSubmissionTask
+            // Never send auto_grading=true when the assignment has a file task.
+            // Also drop max_retries back to 0 when retries are turned off so a
+            // stale number doesn't sit in the DB and reappear if the teacher
+            // toggles retries back on later.
+            const payload: any = hasFileSubmissionTask
                 ? { ...values, auto_grading: false }
-                : values;
+                : { ...values };
+            if (!payload.allow_retries) {
+                payload.max_retries = 0;
+            }
             const toast_loading = toast.loading(t('dashboard.assignments.modals.edit.toasts.updating'));
             try {
                 const res = await updateAssignment(payload, assignment.assignment_uuid, accessToken);
                 if (res.success) {
-                    mutate(`${getAPIUrl()}assignments/${assignment.assignment_uuid}`);
+                    queryClient.invalidateQueries({ queryKey: queryKeys.assignments.detail(assignment.assignment_uuid) });
                     toast.success(t('dashboard.assignments.modals.edit.toasts.success'));
                     onClose();
                 } else {
@@ -309,6 +325,17 @@ const EditAssignmentForm: React.FC<EditAssignmentFormProps> = ({
                         checked={formik.values.show_correct_answers}
                         onChange={(v) => formik.setFieldValue('show_correct_answers', v, true)}
                     />
+                    <RetryRow
+                        allowRetries={formik.values.allow_retries}
+                        maxRetries={formik.values.max_retries}
+                        onAllowChange={(v) => formik.setFieldValue('allow_retries', v, true)}
+                        onMaxChange={(n) => formik.setFieldValue('max_retries', n, true)}
+                        labelAllow={t('dashboard.assignments.modals.edit.form.allow_retries_label')}
+                        descriptionAllow={t('dashboard.assignments.modals.edit.form.allow_retries_description')}
+                        labelMax={t('dashboard.assignments.modals.edit.form.max_retries_label')}
+                        helperUnlimited={t('dashboard.assignments.modals.edit.form.max_retries_unlimited')}
+                        helperBounded={t('dashboard.assignments.modals.edit.form.max_retries_bounded')}
+                    />
                 </div>
             </div>
 
@@ -415,6 +442,115 @@ function ToggleRow({
                     }`}
                 />
             </button>
+        </div>
+    );
+}
+
+function RetryRow({
+    allowRetries,
+    maxRetries,
+    onAllowChange,
+    onMaxChange,
+    labelAllow,
+    descriptionAllow,
+    labelMax,
+    helperUnlimited,
+    helperBounded,
+}: {
+    allowRetries: boolean;
+    maxRetries: number;
+    onAllowChange: (next: boolean) => void;
+    onMaxChange: (next: number) => void;
+    labelAllow: string;
+    descriptionAllow: string;
+    labelMax: string;
+    helperUnlimited: string;
+    helperBounded: string;
+}) {
+    return (
+        <div className="rounded-xl border nice-shadow bg-white border-gray-100 overflow-hidden">
+            <div className="flex items-start justify-between gap-3 p-3">
+                <div className="flex items-start gap-2.5 flex-1 min-w-0">
+                    <div className="mt-0.5 flex-none">
+                        <RotateCcw size={16} className="text-fuchsia-500" />
+                    </div>
+                    <div className="flex flex-col min-w-0">
+                        <p className="text-xs font-bold text-gray-900">{labelAllow}</p>
+                        <p className="text-[10px] text-gray-500 leading-snug mt-0.5">
+                            {descriptionAllow}
+                        </p>
+                    </div>
+                </div>
+                <button
+                    type="button"
+                    onClick={() => onAllowChange(!allowRetries)}
+                    aria-pressed={allowRetries}
+                    className={`relative flex-none inline-flex h-5 w-9 items-center rounded-full transition-colors ${
+                        allowRetries ? 'bg-gray-900' : 'bg-gray-200 hover:bg-gray-300'
+                    }`}
+                >
+                    <span
+                        className={`inline-block h-3.5 w-3.5 transform rounded-full bg-white shadow transition-transform ${
+                            allowRetries ? 'translate-x-5' : 'translate-x-1'
+                        }`}
+                    />
+                </button>
+            </div>
+            {allowRetries && (
+                <div className="border-t border-gray-100 px-3 py-3 bg-gray-50/50">
+                    <div className="flex items-center justify-between gap-3">
+                        <div className="flex flex-col min-w-0">
+                            <p className="text-[11px] font-semibold text-gray-700">
+                                {labelMax}
+                            </p>
+                            <p className="text-[10px] text-gray-500 leading-snug mt-0.5 flex items-center gap-1">
+                                {maxRetries === 0 ? (
+                                    <>
+                                        <InfinityIcon size={11} className="text-fuchsia-500" />
+                                        <span>{helperUnlimited}</span>
+                                    </>
+                                ) : (
+                                    <span>{helperBounded}</span>
+                                )}
+                            </p>
+                        </div>
+                        <div className="flex-none flex items-center gap-2">
+                            <button
+                                type="button"
+                                onClick={() =>
+                                    onMaxChange(Math.max(0, (maxRetries || 0) - 1))
+                                }
+                                className="h-7 w-7 rounded-md bg-white border border-gray-200 nice-shadow text-gray-600 hover:bg-gray-50 text-sm font-bold"
+                            >
+                                −
+                            </button>
+                            <input
+                                type="number"
+                                min={0}
+                                max={20}
+                                value={maxRetries}
+                                onChange={(e) => {
+                                    const raw = parseInt(e.target.value, 10);
+                                    const clamped = isNaN(raw)
+                                        ? 0
+                                        : Math.max(0, Math.min(20, raw));
+                                    onMaxChange(clamped);
+                                }}
+                                className="w-12 h-7 text-center text-sm font-bold text-gray-900 bg-white border border-gray-200 rounded-md outline-none focus:ring-1 focus:ring-gray-300"
+                            />
+                            <button
+                                type="button"
+                                onClick={() =>
+                                    onMaxChange(Math.min(20, (maxRetries || 0) + 1))
+                                }
+                                className="h-7 w-7 rounded-md bg-white border border-gray-200 nice-shadow text-gray-600 hover:bg-gray-50 text-sm font-bold"
+                            >
+                                +
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }

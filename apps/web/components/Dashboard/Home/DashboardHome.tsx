@@ -8,7 +8,8 @@ import {
   Users,
   BookOpen,
 } from '@phosphor-icons/react'
-import useSWR from 'swr'
+import { useQuery } from '@tanstack/react-query'
+import { queryKeys } from '@/lib/query/keys'
 import { useTranslation } from 'react-i18next'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
 import { useOrg } from '@components/Contexts/OrgContext'
@@ -39,19 +40,20 @@ export default function DashboardHome() {
   const orgId = org?.id
   const username = session?.data?.user?.username || ''
 
-  // SWR will dedupe with UsageOverview's identical call
-  const { data: usageData } = useSWR<OrgUsageResponse>(
-    token && orgId ? `${getAPIUrl()}orgs/${orgId}/usage` : null,
-    (url) => orgUsageFetcher(url, token),
-    { revalidateOnFocus: false, dedupingInterval: 30000 }
-  )
+  // TanStack Query will dedupe with UsageOverview's identical call via shared queryKey
+  const { data: usageData } = useQuery<OrgUsageResponse>({
+    queryKey: queryKeys.org.usage(orgId),
+    queryFn: () => orgUsageFetcher(`${getAPIUrl()}orgs/${orgId}/usage`, token),
+    enabled: !!token && !!orgId,
+    staleTime: 60_000,
+  })
 
   const plan = usePlan()
   const planStyle = PLAN_COLORS[plan] || PLAN_COLORS.free
 
   return (
     <div className="h-full w-full bg-[#f8f8f8]">
-      <div className="px-10 pt-8 pb-10">
+      <div className="px-4 sm:px-10 pt-8 pb-10">
         <div className="space-y-6 max-w-[1600px] mx-auto w-full">
           {/* Welcome Header */}
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
@@ -70,7 +72,7 @@ export default function DashboardHome() {
                 )}
               </div>
             </div>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 flex-wrap">
               <Link
                 href="/dash/courses?new=true"
                 className="inline-flex items-center gap-1.5 px-3.5 py-2 text-xs font-medium text-white bg-gray-900 rounded-lg hover:bg-gray-800 transition-colors"

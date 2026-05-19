@@ -191,13 +191,27 @@ export async function devCommand(opts: { ee?: boolean; adminEmail?: string; admi
   const envOk = await checkDevEnv(root)
   if (!envOk) process.exit(1)
 
-  // EE mode — controlled via LEARNHOUSE_DISABLE_EE env var instead of moving folders
+  // EE mode — set up ee/ symlink when --ee is passed
   const eePath = path.join(root, 'apps', 'api', 'ee')
   if (opts.ee) {
+    if (!fs.existsSync(eePath)) {
+      // Try the sibling `ee` repo (parent-dir/ee/apps/api/ee)
+      const parentDir = path.dirname(root)
+      const eeRepoPath = path.join(parentDir, 'ee', 'apps', 'api', 'ee')
+      if (fs.existsSync(eeRepoPath)) {
+        try {
+          fs.symlinkSync(eeRepoPath, eePath)
+          p.log.success(`Linked EE folder → ${eeRepoPath}`)
+        } catch (err: any) {
+          p.log.warning(`Could not create EE symlink: ${err.message}`)
+        }
+      } else {
+        p.log.warning(`--ee passed but no ee/ folder found at ${eeRepoPath} — running in OSS mode`)
+      }
+    }
+
     if (fs.existsSync(eePath)) {
       p.log.info(`Running in ${pc.bold('EE')} mode`)
-    } else {
-      p.log.warning('--ee was passed but no ee/ folder found — running in OSS mode')
     }
   }
 
@@ -267,9 +281,12 @@ export async function devCommand(opts: { ee?: boolean; adminEmail?: string; admi
 
   serviceEnv = {
     FORCE_COLOR: '1',
+    LEARNHOUSE_DEVELOPMENT_MODE: 'true',
     ...(adminEmail && { LEARNHOUSE_INITIAL_ADMIN_EMAIL: adminEmail }),
     ...(adminPassword && { LEARNHOUSE_INITIAL_ADMIN_PASSWORD: adminPassword }),
     ...(!opts.ee && { LEARNHOUSE_DISABLE_EE: '1' }),
+    // Bypass license verification for local dev when --ee is active
+    ...(opts.ee && { LEARNHOUSE_FORCE_EE: '1' }),
   }
 
   // Health checks

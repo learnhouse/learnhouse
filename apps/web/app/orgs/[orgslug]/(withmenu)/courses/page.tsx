@@ -1,13 +1,10 @@
-export const dynamic = 'force-dynamic'
 import React from 'react'
 import Courses from './courses'
 import { Metadata } from 'next'
 import { getOrganizationContextInfo } from '@services/organizations/orgs'
-import { getServerSession } from '@/lib/auth/server'
-import { getOrgCourses } from '@services/courses/courses'
 import { getOrgThumbnailMediaDirectory, getOrgOgImageMediaDirectory } from '@services/media/media'
-import { getCanonicalUrl, getOrgSeoConfig, buildPageTitle, buildBreadcrumbJsonLd } from '@/lib/seo/utils'
-import { JsonLd } from '@components/SEO/JsonLd'
+import { getOrgSeoConfig, buildPageTitle } from '@/lib/seo/utils'
+import { getServerCanonicalUrl } from '@/lib/seo/utils.server'
 
 type MetadataProps = {
   params: Promise<{ orgslug: string }>
@@ -26,7 +23,7 @@ export async function generateMetadata(props: MetadataProps): Promise<Metadata> 
     ? getOrgOgImageMediaDirectory(org?.org_uuid, seoConfig.default_og_image)
     : null
   const imageUrl = ogImageUrl || getOrgThumbnailMediaDirectory(org?.org_uuid, org?.thumbnail_image)
-  const canonical = getCanonicalUrl(params.orgslug, '/courses')
+  const canonical = await getServerCanonicalUrl(params.orgslug, '/courses')
   const title = buildPageTitle('Courses', org.name, seoConfig)
   const description = org.description || seoConfig.default_meta_description || ''
 
@@ -72,53 +69,7 @@ export async function generateMetadata(props: MetadataProps): Promise<Metadata> 
 
 const CoursesPage = async (params: any) => {
   const orgslug = (await params.params).orgslug
-  const session = await getServerSession()
-  const access_token = session?.tokens?.access_token
-
-  const [org, coursesResult] = await Promise.all([
-    getOrganizationContextInfo(orgslug, {
-      revalidate: 120,
-      tags: ['organizations'],
-    }),
-    getOrgCourses(
-      orgslug,
-      { revalidate: 120, tags: ['courses'] },
-      access_token ?? undefined
-    ).catch((error: any) => {
-      if (error?.status === 403) return []
-      throw error
-    }),
-  ])
-  const courses = coursesResult
-
-  const coursesJsonLd = {
-    '@context': 'https://schema.org',
-    '@type': 'ItemList',
-    name: `Courses — ${org.name}`,
-    itemListElement: courses.map((course: any, index: number) => ({
-      '@type': 'ListItem',
-      position: index + 1,
-      item: {
-        '@type': 'Course',
-        name: course.name,
-        description: course.description,
-        url: getCanonicalUrl(orgslug, `/course/${course.course_uuid.replace('course_', '')}`),
-      },
-    })),
-  }
-
-  const breadcrumbJsonLd = buildBreadcrumbJsonLd([
-    { name: 'Home', url: getCanonicalUrl(orgslug, '/') },
-    { name: 'Courses', url: getCanonicalUrl(orgslug, '/courses') },
-  ])
-
-  return (
-    <div>
-      <JsonLd data={breadcrumbJsonLd} />
-      <JsonLd data={coursesJsonLd} />
-      <Courses org_id={org.id} orgslug={orgslug} courses={courses} />
-    </div>
-  )
+  return <Courses orgslug={orgslug} />
 }
 
 export default CoursesPage

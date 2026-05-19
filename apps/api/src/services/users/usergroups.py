@@ -3,7 +3,8 @@ import logging
 from typing import Literal
 from uuid import uuid4
 from fastapi import HTTPException, Request
-from sqlmodel import Session, select
+from sqlmodel import select
+from sqlmodel.ext.asyncio.session import AsyncSession
 from src.security.features_utils.usage import (
     check_limits_with_usage,
     increase_feature_usage,
@@ -26,7 +27,7 @@ from src.services.webhooks.dispatch import dispatch_webhooks
 async def _validate_resource_exists_and_belongs_to_org(
     resource_uuid: str,
     org_id: int,
-    db_session: Session,
+    db_session: AsyncSession,
 ) -> bool:
     """
     Validate that a resource exists and belongs to the specified organization.
@@ -55,23 +56,23 @@ async def _validate_resource_exists_and_belongs_to_org(
     if config.resource_type == "courses":
         from src.db.courses.courses import Course
         statement = select(Course).where(Course.course_uuid == resource_uuid)
-        resource = db_session.exec(statement).first()
+        resource = (await db_session.execute(statement)).scalars().first()
     elif config.resource_type == "podcasts":
         from src.db.podcasts.podcasts import Podcast
         statement = select(Podcast).where(Podcast.podcast_uuid == resource_uuid)
-        resource = db_session.exec(statement).first()
+        resource = (await db_session.execute(statement)).scalars().first()
     elif config.resource_type == "communities":
         from src.db.communities.communities import Community
         statement = select(Community).where(Community.community_uuid == resource_uuid)
-        resource = db_session.exec(statement).first()
+        resource = (await db_session.execute(statement)).scalars().first()
     elif config.resource_type == "collections":
         from src.db.collections import Collection
         statement = select(Collection).where(Collection.collection_uuid == resource_uuid)
-        resource = db_session.exec(statement).first()
+        resource = (await db_session.execute(statement)).scalars().first()
     elif config.resource_type == "boards":
         from src.db.boards import Board
         statement = select(Board).where(Board.board_uuid == resource_uuid)
-        resource = db_session.exec(statement).first()
+        resource = (await db_session.execute(statement)).scalars().first()
     else:
         raise HTTPException(
             status_code=400,
@@ -103,7 +104,7 @@ async def _validate_resource_exists_and_belongs_to_org(
 
 async def create_usergroup(
     request: Request,
-    db_session: Session,
+    db_session: AsyncSession,
     current_user: PublicUser | AnonymousUser,
     usergroup_create: UserGroupCreate,
 ) -> UserGroupRead:
@@ -121,7 +122,7 @@ async def create_usergroup(
 
     # Check if Organization exists
     statement = select(Organization).where(Organization.id == usergroup_create.org_id)
-    org = db_session.exec(statement).first()
+    org = (await db_session.execute(statement)).scalars().first()
 
     if not org or org.id is None:
         raise HTTPException(
@@ -130,7 +131,7 @@ async def create_usergroup(
         )
 
     # Usage check
-    check_limits_with_usage("courses", org.id, db_session)
+    await check_limits_with_usage("courses", org.id, db_session)
 
     # Complete the object
     usergroup.usergroup_uuid = f"usergroup_{uuid4()}"
@@ -139,11 +140,11 @@ async def create_usergroup(
 
     # Save the object
     db_session.add(usergroup)
-    db_session.commit()
-    db_session.refresh(usergroup)
+    await db_session.commit()
+    await db_session.refresh(usergroup)
 
     # Feature usage
-    increase_feature_usage("usergroups", org.id, db_session)
+    await increase_feature_usage("usergroups", org.id, db_session)
 
     await dispatch_webhooks(
         event_name="usergroup_created",
@@ -161,13 +162,13 @@ async def create_usergroup(
 
 async def read_usergroup_by_id(
     request: Request,
-    db_session: Session,
+    db_session: AsyncSession,
     current_user: PublicUser | AnonymousUser,
     usergroup_id: int,
 ) -> UserGroupRead:
 
     statement = select(UserGroup).where(UserGroup.id == usergroup_id)
-    usergroup = db_session.exec(statement).first()
+    usergroup = (await db_session.execute(statement)).scalars().first()
 
     if not usergroup:
         raise HTTPException(
@@ -192,13 +193,13 @@ async def read_usergroup_by_id(
 
 async def get_users_linked_to_usergroup(
     request: Request,
-    db_session: Session,
+    db_session: AsyncSession,
     current_user: PublicUser | AnonymousUser,
     usergroup_id: int,
 ) -> list[UserRead]:
 
     statement = select(UserGroup).where(UserGroup.id == usergroup_id)
-    usergroup = db_session.exec(statement).first()
+    usergroup = (await db_session.execute(statement)).scalars().first()
 
     if not usergroup:
         raise HTTPException(
@@ -222,20 +223,20 @@ async def get_users_linked_to_usergroup(
         .join(UserGroupUser, UserGroupUser.user_id == User.id)  # type: ignore
         .where(UserGroupUser.usergroup_id == usergroup_id)
     )
-    users = db_session.exec(statement).all()
+    users = (await db_session.execute(statement)).scalars().all()
 
     return [UserRead.model_validate(user) for user in users]
 
 
 async def read_usergroups_by_org_id(
     request: Request,
-    db_session: Session,
+    db_session: AsyncSession,
     current_user: PublicUser | AnonymousUser,
     org_id: int,
 ) -> list[UserGroupRead]:
 
     statement = select(UserGroup).where(UserGroup.org_id == org_id).order_by(UserGroup.creation_date.desc())
-    usergroups = db_session.exec(statement).all()
+    usergroups = (await db_session.execute(statement)).scalars().all()
 
     # RBAC check
     await rbac_check(
@@ -253,7 +254,7 @@ async def read_usergroups_by_org_id(
 
 async def get_usergroups_by_resource(
     request: Request,
-    db_session: Session,
+    db_session: AsyncSession,
     current_user: PublicUser | AnonymousUser,
     resource_uuid: str,
 ) -> list[UserGroupRead]:
@@ -261,7 +262,7 @@ async def get_usergroups_by_resource(
     statement = select(UserGroupResource).where(
         UserGroupResource.resource_uuid == resource_uuid
     )
-    usergroup_resources = db_session.exec(statement).all()
+    usergroup_resources = (await db_session.execute(statement)).scalars().all()
 
     # RBAC check
     await rbac_check(
@@ -278,20 +279,20 @@ async def get_usergroups_by_resource(
         return []
 
     statement = select(UserGroup).where(UserGroup.id.in_(usergroup_ids))  # type: ignore
-    usergroups = db_session.exec(statement).all()
+    usergroups = (await db_session.execute(statement)).scalars().all()
 
     return [UserGroupRead.model_validate(ug) for ug in usergroups]
 
 
 async def get_resources_by_usergroup(
     request: Request,
-    db_session: Session,
+    db_session: AsyncSession,
     current_user: PublicUser | AnonymousUser,
     usergroup_id: int,
 ) -> list[str]:
 
     statement = select(UserGroup).where(UserGroup.id == usergroup_id)
-    usergroup = db_session.exec(statement).first()
+    usergroup = (await db_session.execute(statement)).scalars().first()
 
     if not usergroup:
         raise HTTPException(
@@ -312,21 +313,21 @@ async def get_resources_by_usergroup(
     statement = select(UserGroupResource).where(
         UserGroupResource.usergroup_id == usergroup_id
     )
-    usergroup_resources = db_session.exec(statement).all()
+    usergroup_resources = (await db_session.execute(statement)).scalars().all()
 
     return [ugr.resource_uuid for ugr in usergroup_resources]
 
 
 async def update_usergroup_by_id(
     request: Request,
-    db_session: Session,
+    db_session: AsyncSession,
     current_user: PublicUser | AnonymousUser,
     usergroup_id: int,
     usergroup_update: UserGroupUpdate,
 ) -> UserGroupRead:
 
     statement = select(UserGroup).where(UserGroup.id == usergroup_id)
-    usergroup = db_session.exec(statement).first()
+    usergroup = (await db_session.execute(statement)).scalars().first()
 
     if not usergroup:
         raise HTTPException(
@@ -351,8 +352,8 @@ async def update_usergroup_by_id(
     usergroup.update_date = str(datetime.now())
 
     db_session.add(usergroup)
-    db_session.commit()
-    db_session.refresh(usergroup)
+    await db_session.commit()
+    await db_session.refresh(usergroup)
 
     usergroup = UserGroupRead.model_validate(usergroup)
 
@@ -361,13 +362,13 @@ async def update_usergroup_by_id(
 
 async def delete_usergroup_by_id(
     request: Request,
-    db_session: Session,
+    db_session: AsyncSession,
     current_user: PublicUser | AnonymousUser,
     usergroup_id: int,
 ) -> str:
 
     statement = select(UserGroup).where(UserGroup.id == usergroup_id)
-    usergroup = db_session.exec(statement).first()
+    usergroup = (await db_session.execute(statement)).scalars().first()
 
     if not usergroup:
         raise HTTPException(
@@ -386,14 +387,14 @@ async def delete_usergroup_by_id(
     )
 
     # Feature usage
-    increase_feature_usage("usergroups", usergroup.org_id, db_session)
+    await increase_feature_usage("usergroups", usergroup.org_id, db_session)
 
     usergroup_uuid_val = usergroup.usergroup_uuid
     usergroup_name_val = usergroup.name
     usergroup_org_id = usergroup.org_id
 
-    db_session.delete(usergroup)
-    db_session.commit()
+    await db_session.delete(usergroup)
+    await db_session.commit()
 
     await dispatch_webhooks(
         event_name="usergroup_deleted",
@@ -409,14 +410,14 @@ async def delete_usergroup_by_id(
 
 async def add_users_to_usergroup(
     request: Request,
-    db_session: Session,
+    db_session: AsyncSession,
     current_user: PublicUser | AnonymousUser | InternalUser,
     usergroup_id: int,
     user_ids: str,
 ) -> str:
 
     statement = select(UserGroup).where(UserGroup.id == usergroup_id)
-    usergroup = db_session.exec(statement).first()
+    usergroup = (await db_session.execute(statement)).scalars().first()
 
     if not usergroup:
         raise HTTPException(
@@ -434,18 +435,18 @@ async def add_users_to_usergroup(
         org_id=usergroup.org_id,
     )
 
-    user_ids_array = user_ids.split(",")
+    user_ids_array = [int(uid) for uid in user_ids.split(",")]
 
     for user_id in user_ids_array:
         statement = select(User).where(User.id == user_id)
-        user = db_session.exec(statement).first()
+        user = (await db_session.execute(statement)).scalars().first()
 
         # Check if User is already Linked to UserGroup
         statement = select(UserGroupUser).where(
             UserGroupUser.usergroup_id == usergroup_id,
             UserGroupUser.user_id == user_id,
         )
-        usergroup_user = db_session.exec(statement).first()
+        usergroup_user = (await db_session.execute(statement)).scalars().first()
 
         if usergroup_user:
             logging.error(f"User with id {user_id} already exists in UserGroup")
@@ -466,7 +467,7 @@ async def add_users_to_usergroup(
         else:
             logging.error(f"User with id {user_id} not found")
 
-    db_session.commit()
+    await db_session.commit()
 
     await dispatch_webhooks(
         event_name="usergroup_users_added",
@@ -474,7 +475,7 @@ async def add_users_to_usergroup(
         data={
             "usergroup_id": usergroup_id,
             "usergroup_uuid": usergroup.usergroup_uuid,
-            "user_ids": [int(uid) for uid in user_ids_array],
+            "user_ids": user_ids_array,
         },
     )
 
@@ -483,14 +484,14 @@ async def add_users_to_usergroup(
 
 async def remove_users_from_usergroup(
     request: Request,
-    db_session: Session,
+    db_session: AsyncSession,
     current_user: PublicUser | AnonymousUser | InternalUser,
     usergroup_id: int,
     user_ids: str,
 ) -> str:
 
     statement = select(UserGroup).where(UserGroup.id == usergroup_id)
-    usergroup = db_session.exec(statement).first()
+    usergroup = (await db_session.execute(statement)).scalars().first()
 
     if not usergroup:
         raise HTTPException(
@@ -508,34 +509,34 @@ async def remove_users_from_usergroup(
         org_id=usergroup.org_id,
     )
 
-    user_ids_array = user_ids.split(",")
+    user_ids_array = [int(uid) for uid in user_ids.split(",")]
 
     for user_id in user_ids_array:
         statement = select(UserGroupUser).where(
             UserGroupUser.user_id == user_id, UserGroupUser.usergroup_id == usergroup_id
         )
-        usergroup_user = db_session.exec(statement).first()
+        usergroup_user = (await db_session.execute(statement)).scalars().first()
 
         if usergroup_user:
-            db_session.delete(usergroup_user)
+            await db_session.delete(usergroup_user)
         else:
             logging.error(f"User with id {user_id} not found in UserGroup")
 
-    db_session.commit()
+    await db_session.commit()
 
     return "Users removed from UserGroup successfully"
 
 
 async def add_resources_to_usergroup(
     request: Request,
-    db_session: Session,
+    db_session: AsyncSession,
     current_user: PublicUser | AnonymousUser,
     usergroup_id: int,
     resources_uuids: str,
 ) -> str:
 
     statement = select(UserGroup).where(UserGroup.id == usergroup_id)
-    usergroup = db_session.exec(statement).first()
+    usergroup = (await db_session.execute(statement)).scalars().first()
 
     if not usergroup:
         raise HTTPException(
@@ -561,7 +562,7 @@ async def add_resources_to_usergroup(
             UserGroupResource.usergroup_id == usergroup_id,
             UserGroupResource.resource_uuid == resource_uuid,
         )
-        usergroup_resource = db_session.exec(statement).first()
+        usergroup_resource = (await db_session.execute(statement)).scalars().first()
 
         if usergroup_resource:
             logging.error(f"Resource {resource_uuid} already exists in UserGroup")
@@ -582,7 +583,7 @@ async def add_resources_to_usergroup(
 
         db_session.add(usergroup_obj)
 
-    db_session.commit()
+    await db_session.commit()
 
     await dispatch_webhooks(
         event_name="usergroup_resources_added",
@@ -599,14 +600,14 @@ async def add_resources_to_usergroup(
 
 async def remove_resources_from_usergroup(
     request: Request,
-    db_session: Session,
+    db_session: AsyncSession,
     current_user: PublicUser | AnonymousUser,
     usergroup_id: int,
     resources_uuids: str,
 ) -> str:
 
     statement = select(UserGroup).where(UserGroup.id == usergroup_id)
-    usergroup = db_session.exec(statement).first()
+    usergroup = (await db_session.execute(statement)).scalars().first()
 
     if not usergroup:
         raise HTTPException(
@@ -631,14 +632,14 @@ async def remove_resources_from_usergroup(
             UserGroupResource.resource_uuid == resource_uuid,
             UserGroupResource.usergroup_id == usergroup_id,
         )
-        usergroup_resource = db_session.exec(statement).first()
+        usergroup_resource = (await db_session.execute(statement)).scalars().first()
 
         if usergroup_resource:
-            db_session.delete(usergroup_resource)
+            await db_session.delete(usergroup_resource)
         else:
             logging.error(f"resource with uuid {resource_uuid} not found in UserGroup")
 
-    db_session.commit()
+    await db_session.commit()
 
     return "Resources removed from UserGroup successfully"
 
@@ -659,7 +660,7 @@ async def rbac_check(
     usergroup_uuid: str,
     current_user: PublicUser | AnonymousUser | InternalUser | APITokenUser,
     action: Literal["create", "read", "update", "delete"],
-    db_session: Session,
+    db_session: AsyncSession,
     org_id: int | None = None,
 ):
     if isinstance(current_user, InternalUser):
@@ -679,7 +680,7 @@ async def rbac_check(
 
         if org_id is not None:
             # Scope permission check to the usergroup's own org to prevent cross-org IDOR.
-            require_org_role_permission(
+            await require_org_role_permission(
                 current_user.id,
                 org_id,
                 db_session,

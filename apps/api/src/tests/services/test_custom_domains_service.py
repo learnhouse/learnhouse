@@ -35,7 +35,7 @@ from src.services.orgs.custom_domains import (
 )
 
 
-def _make_custom_domain(
+async def _make_custom_domain(
     db,
     org_id,
     *,
@@ -64,8 +64,8 @@ def _make_custom_domain(
         check_error=check_error,
     )
     db.add(custom_domain)
-    db.commit()
-    db.refresh(custom_domain)
+    await db.commit()
+    await db.refresh(custom_domain)
     return custom_domain
 
 
@@ -174,9 +174,9 @@ class TestAddCustomDomain:
                 admin_user,
             )
 
-        row = db.exec(
+        row = (await db.execute(
             select(CustomDomain).where(CustomDomain.domain == "docs.example.com")
-        ).first()
+        )).scalars().first()
 
         assert result.domain == "docs.example.com"
         assert result.org_id == org.id
@@ -214,7 +214,7 @@ class TestAddCustomDomain:
     async def test_add_custom_domain_validation_and_duplicate_paths(
         self, mock_request, db, org, admin_user
     ):
-        _make_custom_domain(
+        await _make_custom_domain(
             db,
             org.id,
             domain="already.example.com",
@@ -268,7 +268,7 @@ class TestListAndGetCustomDomains:
     async def test_list_custom_domains_and_get_domain(
         self, mock_request, db, org, admin_user
     ):
-        older = _make_custom_domain(
+        older = await _make_custom_domain(
             db,
             org.id,
             domain="older.example.com",
@@ -276,7 +276,7 @@ class TestListAndGetCustomDomains:
             creation_date="2024-01-01 00:00:00",
             update_date="2024-01-01 00:00:00",
         )
-        newer = _make_custom_domain(
+        newer = await _make_custom_domain(
             db,
             org.id,
             domain="newer.example.com",
@@ -341,7 +341,7 @@ class TestVerificationInfoAndVerifyCustomDomain:
     async def test_get_domain_verification_info_and_verify_custom_domain(
         self, mock_request, db, org, admin_user
     ):
-        domain = _make_custom_domain(
+        domain = await _make_custom_domain(
             db,
             org.id,
             domain="docs.example.com",
@@ -381,7 +381,7 @@ class TestVerificationInfoAndVerifyCustomDomain:
     async def test_verify_custom_domain_failure_and_missing_rows(
         self, mock_request, db, org, admin_user, regular_user
     ):
-        domain = _make_custom_domain(
+        domain = await _make_custom_domain(
             db,
             org.id,
             domain="fail.example.com",
@@ -442,7 +442,7 @@ class TestVerificationInfoAndVerifyCustomDomain:
 class TestVerifyDomainDns:
     @pytest.mark.asyncio
     async def test_verify_domain_dns_success_and_dns_errors(self, db, org):
-        domain = _make_custom_domain(
+        domain = await _make_custom_domain(
             db,
             org.id,
             domain="docs.example.com",
@@ -466,7 +466,8 @@ class TestVerifyDomainDns:
             "TXT",
         )
 
-        mismatch = _make_custom_domain(
+        
+        mismatch = await _make_custom_domain(
             db,
             org.id,
             domain="mismatch.example.com",
@@ -484,7 +485,8 @@ class TestVerifyDomainDns:
         assert mismatch.status == "pending"
         assert mismatch.check_error == "TXT record found but value doesn't match"
 
-        missing = _make_custom_domain(
+        
+        missing = await _make_custom_domain(
             db,
             org.id,
             domain="missing.example.com",
@@ -502,7 +504,8 @@ class TestVerifyDomainDns:
         assert missing.status == "pending"
         assert missing.check_error == "TXT record not found"
 
-        unanswered = _make_custom_domain(
+        
+        unanswered = await _make_custom_domain(
             db,
             org.id,
             domain="noanswer.example.com",
@@ -521,7 +524,7 @@ class TestVerifyDomainDns:
 
     @pytest.mark.asyncio
     async def test_verify_domain_dns_dev_mode_and_import_error(self, db, org):
-        dev_domain = _make_custom_domain(
+        dev_domain = await _make_custom_domain(
             db,
             org.id,
             domain="dev.example.com",
@@ -540,7 +543,8 @@ class TestVerifyDomainDns:
         assert message == "Verified (dev mode)"
         assert dev_domain.status == "verified"
 
-        import_error_domain = _make_custom_domain(
+        
+        import_error_domain = await _make_custom_domain(
             db,
             org.id,
             domain="import-error.example.com",
@@ -566,7 +570,8 @@ class TestVerifyDomainDns:
         assert "temporarily unavailable" in message
         assert import_error_domain.check_error == "DNS verification unavailable"
 
-        dns_error_domain = _make_custom_domain(
+        
+        dns_error_domain = await _make_custom_domain(
             db,
             org.id,
             domain="dns-error.example.com",
@@ -589,14 +594,14 @@ class TestCustomDomainDeletionAndListing:
     async def test_delete_custom_domain_and_list_all_verified_domains(
         self, mock_request, db, org, admin_user
     ):
-        verified = _make_custom_domain(
+        verified = await _make_custom_domain(
             db,
             org.id,
             domain="verified.example.com",
             status="verified",
             verification_token="token-verified",
         )
-        pending = _make_custom_domain(
+        pending = await _make_custom_domain(
             db,
             org.id,
             domain="pending.example.com",
@@ -613,9 +618,9 @@ class TestCustomDomainDeletionAndListing:
             admin_user,
         )
 
-        row = db.exec(
+        row = (await db.execute(
             select(CustomDomain).where(CustomDomain.domain_uuid == verified.domain_uuid)
-        ).first()
+        )).scalars().first()
 
         assert listed == [
             {
@@ -626,9 +631,9 @@ class TestCustomDomainDeletionAndListing:
         ]
         assert deleted["message"] == "Custom domain deleted successfully"
         assert row is None
-        assert db.exec(
+        assert (await db.execute(
             select(CustomDomain).where(CustomDomain.domain_uuid == pending.domain_uuid)
-        ).first() is not None
+        )).scalars().first() is not None
 
     @pytest.mark.asyncio
     async def test_delete_custom_domain_not_found(self, mock_request, db, org, admin_user):
@@ -647,21 +652,21 @@ class TestCustomDomainDeletionAndListing:
 class TestResolveAndSslStatus:
     @pytest.mark.asyncio
     async def test_resolve_org_by_domain_variants(self, db, org):
-        verified = _make_custom_domain(
+        verified = await _make_custom_domain(
             db,
             org.id,
             domain="resolve.example.com",
             status="verified",
             verification_token="token-resolve",
         )
-        orphan_verified = _make_custom_domain(
+        orphan_verified = await _make_custom_domain(
             db,
             999,
             domain="orphan.example.com",
             status="verified",
             verification_token="token-orphan",
         )
-        _make_custom_domain(
+        await _make_custom_domain(
             db,
             org.id,
             domain="pending.example.com",
@@ -689,28 +694,28 @@ class TestResolveAndSslStatus:
     async def test_check_domain_ssl_status_variants(
         self, mock_request, db, org, admin_user
     ):
-        pending = _make_custom_domain(
+        pending = await _make_custom_domain(
             db,
             org.id,
             domain="pending-ssl.example.com",
             status="pending",
             verification_token="token-pending",
         )
-        verified = _make_custom_domain(
+        verified = await _make_custom_domain(
             db,
             org.id,
             domain="active-ssl.example.com",
             status="verified",
             verification_token="token-active",
         )
-        invalid = _make_custom_domain(
+        invalid = await _make_custom_domain(
             db,
             org.id,
             domain="invalid-ssl.example.com",
             status="verified",
             verification_token="token-invalid",
         )
-        provisioning = _make_custom_domain(
+        provisioning = await _make_custom_domain(
             db,
             org.id,
             domain="provisioning-ssl.example.com",
@@ -845,7 +850,8 @@ class TestResolveAndSslStatus:
         """
         from src.services.utils.ssrf_guard import SSRFBlockedError
 
-        domain = _make_custom_domain(
+        
+        domain = await _make_custom_domain(
             db,
             org.id,
             domain="imds.example.com",
@@ -875,7 +881,7 @@ class TestResolveAndSslStatus:
     async def test_custom_domain_missing_org_and_domain_paths(
         self, mock_request, db, org, admin_user
     ):
-        domain = _make_custom_domain(
+        domain = await _make_custom_domain(
             db,
             org.id,
             domain="paths.example.com",
@@ -909,6 +915,10 @@ class TestResolveAndSslStatus:
                     domain.domain_uuid,
                     admin_user,
                 )
+        with patch(
+            "src.services.orgs.custom_domains.require_org_membership",
+            return_value=None,
+        ):
             with pytest.raises(HTTPException) as ssl_org_exc:
                 await check_domain_ssl_status(
                     mock_request,
@@ -950,7 +960,7 @@ class TestResolveAndSslStatus:
         assert list_org_exc.value.status_code == 404
         assert info_org_exc.value.status_code == 404
         assert verify_org_exc.value.status_code == 404
-        assert ssl_org_exc.value.status_code == 403
+        assert ssl_org_exc.value.status_code == 404
         assert info_domain_exc.value.status_code == 404
         assert verify_domain_exc.value.status_code == 404
         assert ssl_domain_exc.value.status_code == 404

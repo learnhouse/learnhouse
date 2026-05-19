@@ -2,7 +2,7 @@
 
 import React from 'react'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
-import useSWR from 'swr'
+import { useQuery } from '@tanstack/react-query'
 import { getUserEnrollments } from '@services/payments/offers'
 import CourseThumbnail from '@components/Objects/Thumbnails/CourseThumbnail'
 import { BookOpen } from 'lucide-react'
@@ -18,10 +18,12 @@ function AccountMyCourses({ orgId, orgslug }: AccountMyCoursesProps) {
   const access_token = session?.data?.tokens?.access_token
   const { t } = useTranslation()
 
-  const { data: ownedCourses, error, isLoading } = useSWR(
-    orgId && access_token ? [`/payments/${orgId}/enrollments/mine`, access_token] : null,
-    ([, token]) => getUserEnrollments(orgId, token)
-  )
+  const { data: ownedCourses, error, isLoading } = useQuery({
+    queryKey: ['payments', orgId, 'enrollments', 'mine'],
+    queryFn: () => getUserEnrollments(orgId, access_token),
+    enabled: !!orgId && !!access_token,
+    staleTime: 60_000,
+  })
 
   if (isLoading) {
     return (

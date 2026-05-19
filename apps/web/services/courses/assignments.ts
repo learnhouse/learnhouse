@@ -273,6 +273,18 @@ export async function getFinalGrade(
   return res
 }
 
+export async function retryAssignmentSubmission(
+  assignmentUUID: string,
+  access_token: string
+) {
+  const result: any = await fetch(
+    `${getAPIUrl()}assignments/${assignmentUUID}/submissions/me/retry`,
+    RequestBodyWithAuthHeader('POST', null, null, access_token)
+  )
+  const res = await getResponseMetadata(result)
+  return res
+}
+
 export async function markActivityAsDoneForUser(
   user_id: string,
   assignmentUUID: string,

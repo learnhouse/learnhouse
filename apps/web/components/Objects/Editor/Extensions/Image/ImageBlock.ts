@@ -1,7 +1,10 @@
 import { mergeAttributes, Node } from '@tiptap/core'
 import { ReactNodeViewRenderer } from '@tiptap/react'
+import dynamic from 'next/dynamic'
 
-import ImageBlockComponent from './ImageBlockComponent'
+const ImageBlockComponent = dynamic(() => import('./ImageBlockComponent'), {
+  ssr: false,
+})
 
 export default Node.create({
   name: 'blockImage',
@@ -48,6 +51,6 @@ export default Node.create({
   },
 
   addNodeView() {
-    return ReactNodeViewRenderer(ImageBlockComponent)
+    return ReactNodeViewRenderer(ImageBlockComponent as any)
   },
 })

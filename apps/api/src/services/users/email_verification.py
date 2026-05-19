@@ -10,10 +10,13 @@ import secrets
 import redis
 from fastapi import HTTPException, Request
 from pydantic import EmailStr
-from sqlmodel import Session, select
+from sqlmodel import select
+from sqlmodel.ext.asyncio.session import AsyncSession
+from src.db.organization_config import OrganizationConfig
 from src.db.organizations import Organization, OrganizationRead
 from src.db.users import User, UserRead
 from config.config import get_learnhouse_config
+from src.services.orgs.orgs import get_org_default_language
 from src.services.users.emails import send_email_verification_email
 from src.services.email.utils import get_base_url_from_request
 from src.services.security.rate_limiting import check_verification_resend_rate_limit
@@ -56,7 +59,7 @@ def generate_verification_token() -> str:
 
 async def send_verification_email(
     request: Request,
-    db_session: Session,
+    db_session: AsyncSession,
     user: User,
     org_id: int | None = None,
 ) -> str:
@@ -75,10 +78,11 @@ async def send_verification_email(
     org = None
     org_read = None
     org_uuid = NO_ORG_UUID
+    lang = "en"
 
     if org_id is not None:
         statement = select(Organization).where(Organization.id == org_id)
-        org = db_session.exec(statement).first()
+        org = (await db_session.execute(statement)).scalars().first()
 
         if not org:
             raise HTTPException(
@@ -87,6 +91,10 @@ async def send_verification_email(
             )
         org_uuid = org.org_uuid
         org_read = OrganizationRead.model_validate(org)
+
+        org_config_stmt = select(OrganizationConfig).where(OrganizationConfig.org_id == org.id)
+        org_config = (await db_session.execute(org_config_stmt)).scalars().first()
+        lang = get_org_default_language(org_config)
 
     # Get Redis connection
     r = get_redis_connection()
@@ -119,6 +127,7 @@ async def send_verification_email(
         organization=org_read,
         email=user.email,
         base_url=base_url,
+        lang=lang,
     )
 
     if not email_sent:
@@ -132,7 +141,7 @@ async def send_verification_email(
 
 async def verify_email_token(
     request: Request,
-    db_session: Session,
+    db_session: AsyncSession,
     token: str,
     user_uuid: str,
     org_uuid: str,
@@ -183,7 +192,7 @@ async def verify_email_token(
 
     # Get user from database
     statement = select(User).where(User.user_uuid == user_uuid)
-    user = db_session.exec(statement).first()
+    user = (await db_session.execute(statement)).scalars().first()
 
     if not user:
         raise HTTPException(
@@ -202,8 +211,8 @@ async def verify_email_token(
     user.email_verified_at = datetime.now(timezone.utc).isoformat()
 
     db_session.add(user)
-    db_session.commit()
-    db_session.refresh(user)
+    await db_session.commit()
+    await db_session.refresh(user)
 
     # Delete used token
     r.delete(redis_key)
@@ -211,7 +220,7 @@ async def verify_email_token(
     # Dispatch webhook — resolve org_id from org_uuid
     if org_uuid != NO_ORG_UUID:
         org_statement = select(Organization).where(Organization.org_uuid == org_uuid)
-        org = db_session.exec(org_statement).first()
+        org = (await db_session.execute(org_statement)).scalars().first()
         if org:
             await dispatch_webhooks(
                 event_name="user_email_verified",
@@ -227,7 +236,7 @@ async def verify_email_token(
 
 async def resend_verification_email(
     request: Request,
-    db_session: Session,
+    db_session: AsyncSession,
     email: EmailStr,
     org_id: int | None = None,
 ) -> str:
@@ -261,7 +270,7 @@ async def resend_verification_email(
     )
 
     statement = select(User).where(User.email == email)
-    user = db_session.exec(statement).first()
+    user = (await db_session.execute(statement)).scalars().first()
 
     if user and not user.email_verified:
         await send_verification_email(request, db_session, user, org_id)

@@ -1,7 +1,8 @@
 from typing import List
 from uuid import uuid4
 import logging
-from sqlmodel import Session, select, or_, and_, text, func
+from sqlmodel import select, or_, and_, func
+from sqlmodel.ext.asyncio.session import AsyncSession
 from src.db.usergroup_resources import UserGroupResource
 from src.db.usergroup_user import UserGroupUser
 from src.db.organizations import Organization
@@ -36,6 +37,7 @@ from src.security.rbac import (
 from src.security.rbac.constants import ADMIN_OR_MAINTAINER_ROLE_IDS
 from src.security.superadmin import is_user_superadmin
 from src.services.courses.thumbnails import upload_thumbnail
+from src.services.search.normalization import LIKE_ESCAPE_CHAR, build_like_pattern
 from src.services.webhooks.dispatch import dispatch_webhooks
 from fastapi import HTTPException, Request, UploadFile, status
 from datetime import datetime
@@ -47,10 +49,10 @@ async def get_course(
     request: Request,
     course_uuid: str,
     current_user: PublicUser | AnonymousUser,
-    db_session: Session,
+    db_session: AsyncSession,
 ):
     statement = select(Course).where(Course.course_uuid == course_uuid)
-    course = db_session.exec(statement).first()
+    course = (await db_session.execute(statement)).scalars().first()
 
     if not course:
         raise HTTPException(
@@ -78,7 +80,7 @@ async def get_course(
             ResourceAuthor.id.asc() # type: ignore
         )
     )
-    author_results = db_session.exec(authors_statement).all()
+    author_results = (await db_session.execute(authors_statement)).all()
 
     # Convert to AuthorWithRole objects
     authors = [
@@ -99,12 +101,12 @@ async def get_course(
 
 async def get_course_by_id(
     request: Request,
-    course_id: str,
+    course_id: int,
     current_user: PublicUser | AnonymousUser,
-    db_session: Session,
+    db_session: AsyncSession,
 ):
     statement = select(Course).where(Course.id == course_id)
-    course = db_session.exec(statement).first()
+    course = (await db_session.execute(statement)).scalars().first()
 
     if not course:
         raise HTTPException(
@@ -124,7 +126,7 @@ async def get_course_by_id(
             ResourceAuthor.id.asc() # type: ignore
         )
     )
-    author_results = db_session.exec(authors_statement).all()
+    author_results = (await db_session.execute(authors_statement)).all()
 
     # Convert to AuthorWithRole objects
     authors = [
@@ -148,7 +150,7 @@ async def get_course_meta(
     course_uuid: str,
     with_unpublished_activities: bool,
     current_user: PublicUser | AnonymousUser,
-    db_session: Session,
+    db_session: AsyncSession,
     slim: bool = False,
 ) -> FullCourseRead:
     # Avoid circular import
@@ -163,7 +165,7 @@ async def get_course_meta(
         .where(Course.course_uuid == course_uuid)
         .order_by(ResourceAuthor.id.asc())  # type: ignore
     )
-    results = db_session.exec(course_statement).all()
+    results = (await db_session.execute(course_statement)).all()
 
     if not results:
         raise HTTPException(
@@ -241,7 +243,7 @@ async def get_courses_orgslug(
     request: Request,
     current_user: PublicUser | AnonymousUser | APITokenUser,
     org_slug: str,
-    db_session: Session,
+    db_session: AsyncSession,
     page: int = 1,
     limit: int = 10,
     include_unpublished: bool = False,
@@ -265,7 +267,7 @@ async def get_courses_orgslug(
 
     # Get organization
     org_statement = select(Organization).where(Organization.slug == org_slug)
-    org = db_session.exec(org_statement).first()
+    org = (await db_session.execute(org_statement)).scalars().first()
     if not org:
         return []
 
@@ -273,7 +275,7 @@ async def get_courses_orgslug(
     can_view_unpublished = False
     if include_unpublished and not isinstance(current_user, AnonymousUser):
         # Superadmins can always view unpublished courses
-        if is_user_superadmin(acting_user_id, db_session):
+        if await is_user_superadmin(acting_user_id, db_session):
             can_view_unpublished = True
         else:
             # Check if user has admin/editor role in this organization
@@ -283,7 +285,7 @@ async def get_courses_orgslug(
                 .where(UserOrganization.org_id == org.id)
                 .where(UserOrganization.user_id == acting_user_id)
             )
-            user_roles = db_session.exec(role_statement).all()
+            user_roles = (await db_session.execute(role_statement)).scalars().all()
             for role in user_roles:
                 if role.id in ADMIN_OR_MAINTAINER_ROLE_IDS:  # Admin role IDs
                     can_view_unpublished = True
@@ -340,7 +342,7 @@ async def get_courses_orgslug(
     if needs_distinct:
         query = query.distinct()
 
-    courses = db_session.exec(query).all()
+    courses = (await db_session.execute(query)).scalars().all()
 
     if not courses:
         return []
@@ -358,7 +360,7 @@ async def get_courses_orgslug(
         )
     )
     
-    author_results = db_session.exec(authors_query).all()
+    author_results = (await db_session.execute(authors_query)).all()
     
     # Create a dictionary mapping course_uuid to list of authors
     course_authors = {}
@@ -379,21 +381,9 @@ async def get_courses_orgslug(
     course_reads = []
     for course in courses:
         course_read = CourseRead.model_validate({
+            **course.model_dump(),
             "id": course.id or 0,  # Ensure id is never None
-            "org_id": course.org_id,
-            "name": course.name,
-            "description": course.description or "",
-            "about": course.about or "",
-            "learnings": course.learnings or "",
-            "tags": course.tags or "",
-            "thumbnail_image": course.thumbnail_image or "",
-            "public": course.public,
-            "published": course.published,
-            "open_to_contributors": course.open_to_contributors,
-            "course_uuid": course.course_uuid,
-            "creation_date": course.creation_date,
-            "update_date": course.update_date,
-            "authors": course_authors.get(course.course_uuid, [])
+            "authors": course_authors.get(course.course_uuid, []),
         })
         course_reads.append(course_read)
 
@@ -412,7 +402,7 @@ async def get_courses_count_orgslug(
     request: Request,
     current_user: PublicUser | AnonymousUser | APITokenUser,
     org_slug: str,
-    db_session: Session,
+    db_session: AsyncSession,
 ) -> int:
     """
     Get total count of courses for an organization (respecting visibility rules)
@@ -429,7 +419,7 @@ async def get_courses_count_orgslug(
     if isinstance(current_user, AnonymousUser):
         # For anonymous users, only count public AND published courses
         query = query.where(Course.public == True, Course.published == True)
-    elif not isinstance(current_user, AnonymousUser) and is_user_superadmin(acting_user_id, db_session):
+    elif not isinstance(current_user, AnonymousUser) and await is_user_superadmin(acting_user_id, db_session):
         # Superadmins see all courses (no additional filter)
         pass
     else:
@@ -458,7 +448,7 @@ async def get_courses_count_orgslug(
             ))
         )
 
-    count = db_session.exec(query).one()
+    count = (await db_session.execute(query)).scalar_one()
     return count
 
 
@@ -467,7 +457,7 @@ async def search_courses(
     current_user: PublicUser | AnonymousUser | APITokenUser,
     org_slug: str,
     search_query: str,
-    db_session: Session,
+    db_session: AsyncSession,
     page: int = 1,
     limit: int = 10,
 ) -> List[CourseRead]:
@@ -481,11 +471,8 @@ async def search_courses(
     limit = min(limit, 100)
     offset = (page - 1) * limit
 
-    # SECURITY FIX: Use parameterized queries to prevent SQL injection
-    # The search pattern is passed as a parameter, not interpolated into SQL
-    search_pattern = f"%{search_query}%"
+    pattern = build_like_pattern(search_query)
 
-    # Base query with parameterized search
     needs_distinct = False
     query = (
         select(Course)
@@ -493,14 +480,13 @@ async def search_courses(
         .where(Organization.slug == org_slug)
         .where(
             or_(
-                text('LOWER(course.name) LIKE LOWER(:pattern)'),
-                text('LOWER(course.description) LIKE LOWER(:pattern)'),
-                text('LOWER(course.about) LIKE LOWER(:pattern)'),
-                text('LOWER(course.learnings) LIKE LOWER(:pattern)'),
-                text('LOWER(course.tags) LIKE LOWER(:pattern)')
+                Course.name.ilike(pattern, escape=LIKE_ESCAPE_CHAR),  # type: ignore[attr-defined]
+                Course.description.ilike(pattern, escape=LIKE_ESCAPE_CHAR),  # type: ignore[attr-defined]
+                Course.about.ilike(pattern, escape=LIKE_ESCAPE_CHAR),  # type: ignore[attr-defined]
+                Course.learnings.ilike(pattern, escape=LIKE_ESCAPE_CHAR),  # type: ignore[attr-defined]
+                Course.tags.ilike(pattern, escape=LIKE_ESCAPE_CHAR),  # type: ignore[attr-defined]
             )
         )
-        .params(pattern=search_pattern)
     )
 
     search_acting_user_id = resolve_acting_user_id(current_user)
@@ -508,7 +494,7 @@ async def search_courses(
     if isinstance(current_user, AnonymousUser):
         # For anonymous users, only show public AND published courses
         query = query.where(Course.public == True, Course.published == True)
-    elif is_user_superadmin(search_acting_user_id, db_session):
+    elif await is_user_superadmin(search_acting_user_id, db_session):
         # Superadmins see all courses (no additional filter)
         pass
     else:
@@ -543,7 +529,7 @@ async def search_courses(
     if needs_distinct:
         query = query.distinct()
 
-    courses = db_session.exec(query).all()
+    courses = (await db_session.execute(query)).scalars().all()
 
     if not courses:
         return []
@@ -556,7 +542,7 @@ async def search_courses(
         .where(ResourceAuthor.resource_uuid.in_(course_uuids))  # type: ignore
         .order_by(ResourceAuthor.id.asc())  # type: ignore
     )
-    author_results = db_session.exec(authors_query).all()
+    author_results = (await db_session.execute(authors_query)).all()
 
     # Group authors by course_uuid
     course_authors: dict[str, list[AuthorWithRole]] = {}
@@ -574,21 +560,9 @@ async def search_courses(
     course_reads = []
     for course in courses:
         course_read = CourseRead.model_validate({
+            **course.model_dump(),
             "id": course.id or 0,
-            "org_id": course.org_id,
-            "name": course.name,
-            "description": course.description or "",
-            "about": course.about or "",
-            "learnings": course.learnings or "",
-            "tags": course.tags or "",
-            "thumbnail_image": course.thumbnail_image or "",
-            "public": course.public,
-            "published": course.published,
-            "open_to_contributors": course.open_to_contributors,
-            "course_uuid": course.course_uuid,
-            "creation_date": course.creation_date,
-            "update_date": course.update_date,
-            "authors": course_authors.get(course.course_uuid, [])
+            "authors": course_authors.get(course.course_uuid, []),
         })
         course_reads.append(course_read)
 
@@ -600,7 +574,7 @@ async def create_course(
     org_id: int,
     course_object: CourseCreate,
     current_user: PublicUser | AnonymousUser | APITokenUser,
-    db_session: Session,
+    db_session: AsyncSession,
     thumbnail_file: UploadFile | None = None,
     thumbnail_type: ThumbnailType = ThumbnailType.IMAGE,
 ):
@@ -621,14 +595,14 @@ async def create_course(
     await check_resource_access(request, db_session, current_user, "course_x", AccessAction.CREATE)
 
     # Usage check
-    check_limits_with_usage("courses", org_id, db_session)
+    await check_limits_with_usage("courses", org_id, db_session)
 
     # Complete course object
     course.org_id = course.org_id
 
     # Get org uuid
     org_statement = select(Organization).where(Organization.id == org_id)
-    org = db_session.exec(org_statement).first()
+    org = (await db_session.execute(org_statement)).scalars().first()
 
     course.course_uuid = str(f"course_{uuid4()}")
     course.creation_date = str(datetime.now())
@@ -669,13 +643,13 @@ async def create_course(
     # Insert course and author atomically in a single transaction
     try:
         db_session.add(course)
-        db_session.flush()  # Get the ID without committing
-        db_session.refresh(course)
+        await db_session.flush()  # Get the ID without committing
+        await db_session.refresh(course)
         db_session.add(resource_author)
-        db_session.commit()  # Single commit for both
-        db_session.refresh(resource_author)
+        await db_session.commit()  # Single commit for both
+        await db_session.refresh(resource_author)
     except Exception:
-        db_session.rollback()
+        await db_session.rollback()
         raise
 
     # Get course authors with their roles
@@ -687,7 +661,7 @@ async def create_course(
             ResourceAuthor.id.asc() # type: ignore
         )
     )
-    author_results = db_session.exec(authors_statement).all()
+    author_results = (await db_session.execute(authors_statement)).all()
 
     # Convert to AuthorWithRole objects
     authors = [
@@ -702,7 +676,7 @@ async def create_course(
     ]
 
     # Feature usage
-    increase_feature_usage("courses", course.org_id, db_session)
+    await increase_feature_usage("courses", course.org_id, db_session)
 
     await dispatch_webhooks(
         event_name="course_created",
@@ -722,12 +696,12 @@ async def update_course_thumbnail(
     request: Request,
     course_uuid: str,
     current_user: PublicUser | AnonymousUser,
-    db_session: Session,
+    db_session: AsyncSession,
     thumbnail_file: UploadFile | None = None,
     thumbnail_type: ThumbnailType = ThumbnailType.IMAGE,
 ):
     statement = select(Course).where(Course.course_uuid == course_uuid)
-    course = db_session.exec(statement).first()
+    course = (await db_session.execute(statement)).scalars().first()
 
     name_in_disk = None
 
@@ -742,7 +716,7 @@ async def update_course_thumbnail(
 
     # Get org uuid
     org_statement = select(Organization).where(Organization.id == course.org_id)
-    org = db_session.exec(org_statement).first()
+    org = (await db_session.execute(org_statement)).scalars().first()
 
     # Upload thumbnail
     if thumbnail_file and thumbnail_file.filename:
@@ -768,8 +742,8 @@ async def update_course_thumbnail(
     course.update_date = str(datetime.now())
 
     db_session.add(course)
-    db_session.commit()
-    db_session.refresh(course)
+    await db_session.commit()
+    await db_session.refresh(course)
 
     # Get course authors with their roles
     authors_statement = (
@@ -780,7 +754,7 @@ async def update_course_thumbnail(
             ResourceAuthor.id.asc() # type: ignore
         )
     )
-    author_results = db_session.exec(authors_statement).all()
+    author_results = (await db_session.execute(authors_statement)).all()
 
     # Convert to AuthorWithRole objects
     authors = [
@@ -804,7 +778,7 @@ async def update_course(
     course_object: CourseUpdate,
     course_uuid: str,
     current_user: PublicUser | AnonymousUser | APITokenUser,
-    db_session: Session,
+    db_session: AsyncSession,
 ):
     """
     Update a course
@@ -815,7 +789,7 @@ async def update_course(
     - Cannot change course access settings without proper permissions
     """
     statement = select(Course).where(Course.course_uuid == course_uuid)
-    course = db_session.exec(statement).first()
+    course = (await db_session.execute(statement)).scalars().first()
 
     if not course:
         raise HTTPException(
@@ -849,7 +823,7 @@ async def update_course(
             ResourceAuthor.resource_uuid == course_uuid,
             ResourceAuthor.user_id == acting_user_id
         )
-        resource_author = db_session.exec(statement).first()
+        resource_author = (await db_session.execute(statement)).scalars().first()
 
         is_course_owner = False
         if resource_author:
@@ -882,8 +856,8 @@ async def update_course(
     course.update_date = str(datetime.now())
 
     db_session.add(course)
-    db_session.commit()
-    db_session.refresh(course)
+    await db_session.commit()
+    await db_session.refresh(course)
 
     # Dispatch webhook if published state changed
     if course_object.published is not None and course.published != old_published:
@@ -906,7 +880,7 @@ async def update_course(
             ResourceAuthor.id.asc() # type: ignore
         )
     )
-    author_results = db_session.exec(authors_statement).all()
+    author_results = (await db_session.execute(authors_statement)).all()
 
     # Convert to AuthorWithRole objects
     authors = [
@@ -929,10 +903,10 @@ async def delete_course(
     request: Request,
     course_uuid: str,
     current_user: PublicUser | AnonymousUser,
-    db_session: Session,
+    db_session: AsyncSession,
 ):
     statement = select(Course).where(Course.course_uuid == course_uuid)
-    course = db_session.exec(statement).first()
+    course = (await db_session.execute(statement)).scalars().first()
 
     if not course:
         raise HTTPException(
@@ -944,11 +918,11 @@ async def delete_course(
     await check_resource_access(request, db_session, current_user, course.course_uuid, AccessAction.DELETE)
 
     # Feature usage
-    decrease_feature_usage("courses", course.org_id, db_session)
+    await decrease_feature_usage("courses", course.org_id, db_session)
 
     # Clean up content files from storage
     org_statement = select(Organization).where(Organization.id == course.org_id)
-    org = db_session.exec(org_statement).first()
+    org = (await db_session.execute(org_statement)).scalars().first()
     if org:
         from src.services.courses.transfer.storage_utils import delete_storage_directory
         content_path = f"content/orgs/{org.org_uuid}/courses/{course_uuid}"
@@ -958,8 +932,8 @@ async def delete_course(
     course_name_val = course.name
     course_org_id = course.org_id
 
-    db_session.delete(course)
-    db_session.commit()
+    await db_session.delete(course)
+    await db_session.commit()
 
     await dispatch_webhooks(
         event_name="course_deleted",
@@ -977,7 +951,7 @@ async def get_user_courses(
     request: Request,
     current_user: PublicUser | AnonymousUser,
     user_id: int,
-    db_session: Session,
+    db_session: AsyncSession,
     page: int = 1,
     limit: int = 10,
 ) -> List[CourseRead]:
@@ -996,7 +970,7 @@ async def get_user_courses(
         .limit(limit)
     )
     
-    courses = db_session.exec(statement).all()
+    courses = (await db_session.execute(statement)).scalars().all()
     
     if not courses:
         return []
@@ -1009,7 +983,7 @@ async def get_user_courses(
         .where(ResourceAuthor.resource_uuid.in_(course_uuids))  # type: ignore
         .order_by(ResourceAuthor.id.asc())  # type: ignore
     )
-    author_results = db_session.exec(authors_query).all()
+    author_results = (await db_session.execute(authors_query)).all()
 
     # Group authors by course_uuid
     course_authors: dict[str, list[AuthorWithRole]] = {}
@@ -1027,21 +1001,9 @@ async def get_user_courses(
     result = []
     for course in courses:
         course_read = CourseRead.model_validate({
+            **course.model_dump(),
             "id": course.id or 0,
-            "org_id": course.org_id,
-            "name": course.name,
-            "description": course.description or "",
-            "about": course.about or "",
-            "learnings": course.learnings or "",
-            "tags": course.tags or "",
-            "thumbnail_image": course.thumbnail_image or "",
-            "public": course.public,
-            "published": course.published,
-            "open_to_contributors": course.open_to_contributors,
-            "course_uuid": course.course_uuid,
-            "creation_date": course.creation_date,
-            "update_date": course.update_date,
-            "authors": course_authors.get(course.course_uuid, [])
+            "authors": course_authors.get(course.course_uuid, []),
         })
         result.append(course_read)
 
@@ -1121,7 +1083,7 @@ async def clone_course(
     request: Request,
     course_uuid: str,
     current_user: PublicUser | AnonymousUser | APITokenUser,
-    db_session: Session,
+    db_session: AsyncSession,
 ) -> CourseRead:
     """
     Clone a course with all its chapters, activities, blocks, and files.
@@ -1154,7 +1116,7 @@ async def clone_course(
 
     # Get the original course
     statement = select(Course).where(Course.course_uuid == course_uuid)
-    original_course = db_session.exec(statement).first()
+    original_course = (await db_session.execute(statement)).scalars().first()
 
     if not original_course:
         raise HTTPException(
@@ -1169,11 +1131,11 @@ async def clone_course(
     await check_resource_access(request, db_session, current_user, "course_x", AccessAction.CREATE)
 
     # Usage check for creating new course
-    check_limits_with_usage("courses", original_course.org_id, db_session)
+    await check_limits_with_usage("courses", original_course.org_id, db_session)
 
     # Get organization for file operations
     org_statement = select(Organization).where(Organization.id == original_course.org_id)
-    org = db_session.exec(org_statement).first()
+    org = (await db_session.execute(org_statement)).scalars().first()
 
     if not org:
         raise HTTPException(
@@ -1202,6 +1164,7 @@ async def clone_course(
         creation_date=str(datetime.now()),
         update_date=str(datetime.now()),
         seo=original_course.seo,
+        extra_metadata=original_course.extra_metadata,
     )
 
     # Copy thumbnail files if they exist
@@ -1233,8 +1196,8 @@ async def clone_course(
 
     # Insert new course
     db_session.add(new_course)
-    db_session.flush()  # Get new_course.id without committing
-    db_session.refresh(new_course)
+    await db_session.flush()  # Get new_course.id without committing
+    await db_session.refresh(new_course)
 
     # Make current user the creator
     if isinstance(current_user, APITokenUser):
@@ -1251,7 +1214,7 @@ async def clone_course(
         update_date=str(datetime.now()),
     )
     db_session.add(resource_author)
-    db_session.flush()
+    await db_session.flush()
 
     # Get original chapters with order
     statement = (
@@ -1260,16 +1223,16 @@ async def clone_course(
         .where(CourseChapter.course_id == original_course.id)
         .order_by(CourseChapter.order)
     )
-    chapter_results = db_session.exec(statement).all()
+    chapter_results = (await db_session.execute(statement)).all()
 
     # Pre-fetch all activities for every chapter in one query to avoid N+1
     _original_chapter_ids = [ch.id for ch, _ in chapter_results]
-    _all_act_results = db_session.exec(
+    _all_act_results = (await db_session.execute(
         select(Activity, ChapterActivity)
         .join(ChapterActivity, Activity.id == ChapterActivity.activity_id)
         .where(ChapterActivity.chapter_id.in_(_original_chapter_ids))
         .order_by(ChapterActivity.order)
-    ).all()
+    )).all()
     _activities_by_chapter: dict = defaultdict(list)
     for _act, _ca in _all_act_results:
         _activities_by_chapter[_ca.chapter_id].append((_act, _ca))
@@ -1280,9 +1243,9 @@ async def clone_course(
         if _act.activity_type.value == "TYPE_DYNAMIC"
     ]
     if _dynamic_activity_ids:
-        _all_blocks = db_session.exec(
+        _all_blocks = (await db_session.execute(
             select(Block).where(Block.activity_id.in_(_dynamic_activity_ids))
-        ).all()
+        )).scalars().all()
         _blocks_by_activity: dict = defaultdict(list)
         for _blk in _all_blocks:
             _blocks_by_activity[_blk.activity_id].append(_blk)
@@ -1304,10 +1267,11 @@ async def clone_course(
             course_id=new_course.id,
             creation_date=str(datetime.now()),
             update_date=str(datetime.now()),
+            extra_metadata=original_chapter.extra_metadata,
         )
 
         db_session.add(new_chapter)
-        db_session.flush()  # Get new_chapter.id without committing
+        await db_session.flush()  # Get new_chapter.id without committing
 
         chapter_id_map[original_chapter.id] = new_chapter.id
 
@@ -1344,10 +1308,11 @@ async def clone_course(
                 activity_uuid=new_activity_uuid,
                 creation_date=str(datetime.now()),
                 update_date=str(datetime.now()),
+                extra_metadata=original_activity.extra_metadata,
             )
 
             db_session.add(new_activity)
-            db_session.flush()  # Get new_activity.id without committing
+            await db_session.flush()  # Get new_activity.id without committing
 
             # Create ChapterActivity link
             new_chapter_activity = ChapterActivity(
@@ -1441,10 +1406,10 @@ async def clone_course(
                     db_session.add(new_activity)
 
     # Single commit for all chapters, activities, blocks, and links
-    db_session.commit()
+    await db_session.commit()
 
     # Increase feature usage for the new course
-    increase_feature_usage("courses", new_course.org_id, db_session)
+    await increase_feature_usage("courses", new_course.org_id, db_session)
 
     # Get course authors with their roles
     authors_statement = (
@@ -1453,7 +1418,7 @@ async def clone_course(
         .where(ResourceAuthor.resource_uuid == new_course.course_uuid)
         .order_by(ResourceAuthor.id.asc())
     )
-    author_results = db_session.exec(authors_statement).all()
+    author_results = (await db_session.execute(authors_statement)).all()
 
     # Convert to AuthorWithRole objects
     authors = [
@@ -1476,7 +1441,7 @@ async def get_course_user_rights(
     request: Request,
     course_uuid: str,
     current_user: PublicUser | AnonymousUser | APITokenUser,
-    db_session: Session,
+    db_session: AsyncSession,
 ) -> dict:
     """
     Get detailed user rights for a specific course.
@@ -1491,7 +1456,7 @@ async def get_course_user_rights(
     """
     # Check if course exists
     statement = select(Course).where(Course.course_uuid == course_uuid)
-    course = db_session.exec(statement).first()
+    course = (await db_session.execute(statement)).scalars().first()
 
     if not course:
         raise HTTPException(
@@ -1548,7 +1513,7 @@ async def get_course_user_rights(
         ResourceAuthor.resource_uuid == course_uuid,
         ResourceAuthor.user_id == rights_acting_user_id
     )
-    resource_author = db_session.exec(statement).first()
+    resource_author = (await db_session.execute(statement)).scalars().first()
     
     if resource_author:
         rights["ownership"]["authorship_status"] = resource_author.authorship_status

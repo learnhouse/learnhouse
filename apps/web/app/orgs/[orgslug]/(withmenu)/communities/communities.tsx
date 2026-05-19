@@ -11,7 +11,7 @@ import { EditCommunityModal } from '@components/Objects/Modals/Communities/EditC
 import ContentPlaceHolderIfUserIsNotAdmin from '@components/Objects/ContentPlaceHolder'
 import { Users, Plus, MessagesSquare } from 'lucide-react'
 import { Community } from '@services/communities/communities'
-import FeatureDisabledView from '@components/Dashboard/Shared/FeatureDisabled/FeatureDisabledView'
+import FeatureGate from '@components/Dashboard/Shared/FeatureGate/FeatureGate'
 
 interface CommunitiesClientProps {
   communities: Community[]
@@ -25,12 +25,7 @@ const CommunitiesClient = ({ communities, orgslug, org_id }: CommunitiesClientPr
   const [editingCommunity, setEditingCommunity] = useState<Community | null>(null)
 
   return (
-    <FeatureDisabledView
-      featureName="communities"
-      orgslug={orgslug}
-      icon={MessagesSquare}
-      context="public"
-    >
+    <FeatureGate feature="communities" orgslug={orgslug} context="public">
     <GeneralWrapperStyled>
       <div className="flex flex-col space-y-2 mb-6">
         <div className="flex items-center justify-between">
@@ -112,7 +107,7 @@ const CommunitiesClient = ({ communities, orgslug, org_id }: CommunitiesClientPr
         />
       )}
     </GeneralWrapperStyled>
-    </FeatureDisabledView>
+    </FeatureGate>
   )
 }
 

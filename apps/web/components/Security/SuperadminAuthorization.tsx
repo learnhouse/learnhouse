@@ -26,7 +26,7 @@ const SuperadminAuthorization: React.FC<SuperadminAuthorizationProps> = ({
     if (session.status === 'loading') return
 
     if (!isUserAuthenticated) {
-      router.push('/login')
+      router.push('/admin/login')
       return
     }
 

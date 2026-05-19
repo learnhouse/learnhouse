@@ -1,6 +1,6 @@
 'use client'
 import React from 'react'
-import useSWR from 'swr'
+import { useQuery } from '@tanstack/react-query'
 import { ShoppingBag, Loader2 } from 'lucide-react'
 import { useOrg } from '@components/Contexts/OrgContext'
 import { getOffersByResource } from '@services/payments/offers'
@@ -15,10 +15,12 @@ function PaidCourseActivityDisclaimer({ course }: PaidCourseActivityProps) {
   const { t } = useTranslation()
   const org = useOrg() as any
 
-  const { data: offersResult, isLoading } = useSWR(
-    org?.id && course?.course_uuid ? ['offers-by-resource', org.id, course.course_uuid] : null,
-    () => getOffersByResource(org.id, course.course_uuid)
-  )
+  const { data: offersResult, isLoading } = useQuery({
+    queryKey: ['offers', 'by-resource', org?.id, course?.course_uuid],
+    queryFn: () => getOffersByResource(org.id, course.course_uuid),
+    enabled: !!org?.id && !!course?.course_uuid,
+    staleTime: 60_000,
+  })
 
   const offers: any[] = offersResult?.data ?? []
 

@@ -1,9 +1,10 @@
 'use client'
 import React, { useState, useMemo, useRef, useEffect, useCallback } from 'react'
-import useSWR from 'swr'
+import { useQuery } from '@tanstack/react-query'
+import { queryKeys } from '@/lib/query/keys'
 import { getAPIUrl } from '@services/config/config'
 import { getOrgLogoMediaDirectory, getUserAvatarMediaDirectory } from '@services/media/media'
-import { swrFetcher } from '@services/utils/ts/requests'
+import { apiFetch } from '@services/utils/ts/requests'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
 import Link from 'next/link'
 import { useSearchParams, useRouter, usePathname } from 'next/navigation'
@@ -72,7 +73,7 @@ function getFrontendDomain(): string {
   return (
     document.cookie
       .split('; ')
-      .find((c) => c.startsWith('learnhouse_frontend_domain='))
+      .find((c) => c.startsWith('LH_frontend_domain='))
       ?.split('=')[1] || 'localhost:3000'
   )
 }
@@ -247,20 +248,25 @@ export default function OrganizationList() {
     return params.toString()
   }, [page, sortBy, debouncedSearch, planFilter])
 
-  const { data: orgData, isLoading, isValidating } = useSWR<PaginatedOrgResponse>(
-    accessToken ? `${getAPIUrl()}ee/superadmin/organizations?${queryParams}` : null,
-    (url: string) => swrFetcher(url, accessToken),
-    { revalidateOnFocus: true, keepPreviousData: true }
-  )
+  const { data: orgData, isLoading, isFetching } = useQuery<PaginatedOrgResponse>({
+    queryKey: [...queryKeys.superadmin.orgs(), queryParams],
+    queryFn: () => apiFetch(`${getAPIUrl()}ee/superadmin/organizations?${queryParams}`, accessToken),
+    enabled: !!accessToken,
+    staleTime: 60_000,
+    placeholderData: (prev) => prev,
+  })
+
+  const isValidating = isFetching
 
   const orgs = orgData?.items
   const totalCount = orgData?.total ?? 0
 
-  const { data: visitsData } = useSWR<{ data: VisitRow[] }>(
-    accessToken ? `${getAPIUrl()}ee/superadmin/organizations/visits` : null,
-    (url: string) => swrFetcher(url, accessToken),
-    { revalidateOnFocus: false }
-  )
+  const { data: visitsData } = useQuery<{ data: VisitRow[] }>({
+    queryKey: ['superadmin', 'orgs', 'visits'],
+    queryFn: () => apiFetch(`${getAPIUrl()}ee/superadmin/organizations/visits`, accessToken),
+    enabled: !!accessToken,
+    staleTime: 60_000,
+  })
 
   const visitsByOrg = useMemo(() => {
     const map: Record<number, number[]> = {}
@@ -427,7 +433,7 @@ export default function OrganizationList() {
             return (
               <tr key={org.id} className="border-b border-white/[0.05] hover:bg-white/[0.03] transition-colors">
                 <td className="px-4 py-3">
-                  <Link href={`/organizations/${org.id}`} className="flex items-center gap-3 hover:opacity-80 transition-opacity">
+                  <Link href={`/admin/organizations/${org.id}`} className="flex items-center gap-3 hover:opacity-80 transition-opacity">
                     {org.logo_image ? (
                       <ImgWithFallback
                         src={getLogoUrl(org.org_uuid, org.logo_image)}

@@ -5,7 +5,8 @@ Provides dependency functions to enforce plan requirements at the router level.
 """
 
 from fastapi import Depends, HTTPException, Request
-from sqlmodel import Session, select
+from sqlmodel import select
+from sqlmodel.ext.asyncio.session import AsyncSession
 
 from src.core.deployment_mode import get_deployment_mode, EE_ONLY_FEATURES
 from src.core.events.database import get_db_session
@@ -39,7 +40,7 @@ def _check_mode_bypass(feature_name: str) -> bool | None:
     return None  # SaaS — proceed with plan check
 
 
-def get_org_plan(org_id: int, db_session: Session) -> PlanLevel:
+async def get_org_plan(org_id: int, db_session: AsyncSession) -> PlanLevel:
     """
     Query the organization's current plan from OrganizationConfig.
 
@@ -54,8 +55,7 @@ def get_org_plan(org_id: int, db_session: Session) -> PlanLevel:
         HTTPException: 404 if organization config not found
     """
     statement = select(OrganizationConfig).where(OrganizationConfig.org_id == org_id)
-    result = db_session.exec(statement)
-    org_config = result.first()
+    org_config = (await db_session.execute(statement)).scalars().first()
 
     if org_config is None:
         raise HTTPException(
@@ -88,7 +88,7 @@ def require_plan(required_plan: PlanLevel, feature_name: str):
 
     async def plan_dependency(
         request: Request,
-        db_session: Session = Depends(get_db_session),
+        db_session: AsyncSession = Depends(get_db_session),
     ):
         bypass = _check_mode_bypass(feature_name)
         if bypass is not None:
@@ -119,7 +119,7 @@ def require_plan(required_plan: PlanLevel, feature_name: str):
                 detail="Organization ID is required",
             )
 
-        current_plan = get_org_plan(org_id, db_session)
+        current_plan = await get_org_plan(org_id, db_session)
 
         if not plan_meets_requirement(current_plan, required_plan):
             raise HTTPException(
@@ -141,7 +141,7 @@ def require_plan_for_usergroups(required_plan: PlanLevel, feature_name: str):
 
     async def plan_dependency(
         request: Request,
-        db_session: Session = Depends(get_db_session),
+        db_session: AsyncSession = Depends(get_db_session),
     ):
         bypass = _check_mode_bypass(feature_name)
         if bypass is not None:
@@ -174,7 +174,7 @@ def require_plan_for_usergroups(required_plan: PlanLevel, feature_name: str):
                 try:
                     usergroup_id = int(usergroup_id_param)
                     statement = select(UserGroup).where(UserGroup.id == usergroup_id)
-                    usergroup = db_session.exec(statement).first()
+                    usergroup = (await db_session.execute(statement)).scalars().first()
                     if usergroup:
                         org_id = usergroup.org_id
                 except (ValueError, TypeError):
@@ -189,7 +189,7 @@ def require_plan_for_usergroups(required_plan: PlanLevel, feature_name: str):
             # cap is a soft ceiling here, not the last line of defence.
             return True
 
-        current_plan = get_org_plan(org_id, db_session)
+        current_plan = await get_org_plan(org_id, db_session)
 
         if not plan_meets_requirement(current_plan, required_plan):
             raise HTTPException(
@@ -212,7 +212,7 @@ def require_plan_for_certifications(required_plan: PlanLevel, feature_name: str)
 
     async def plan_dependency(
         request: Request,
-        db_session: Session = Depends(get_db_session),
+        db_session: AsyncSession = Depends(get_db_session),
     ):
         bypass = _check_mode_bypass(feature_name)
         if bypass is not None:
@@ -245,11 +245,11 @@ def require_plan_for_certifications(required_plan: PlanLevel, feature_name: str)
             statement = select(Certifications).where(
                 Certifications.certification_uuid == path_params["certification_uuid"]
             )
-            cert = db_session.exec(statement).first()
+            cert = (await db_session.execute(statement)).scalars().first()
             if cert:
-                course = db_session.exec(
+                course = (await db_session.execute(
                     select(Course).where(Course.id == cert.course_id)
-                ).first()
+                )).scalars().first()
                 if course:
                     org_id = course.org_id
 
@@ -259,7 +259,7 @@ def require_plan_for_certifications(required_plan: PlanLevel, feature_name: str)
             statement = select(Course).where(
                 Course.course_uuid == path_params["course_uuid"]
             )
-            course = db_session.exec(statement).first()
+            course = (await db_session.execute(statement)).scalars().first()
             if course:
                 org_id = course.org_id
 
@@ -270,15 +270,15 @@ def require_plan_for_certifications(required_plan: PlanLevel, feature_name: str)
             statement = select(CertificateUser).where(
                 CertificateUser.user_certification_uuid == path_params["user_certification_uuid"]
             )
-            user_cert = db_session.exec(statement).first()
+            user_cert = (await db_session.execute(statement)).scalars().first()
             if user_cert:
-                cert = db_session.exec(
+                cert = (await db_session.execute(
                     select(Certifications).where(Certifications.id == user_cert.certification_id)
-                ).first()
+                )).scalars().first()
                 if cert:
-                    course = db_session.exec(
+                    course = (await db_session.execute(
                         select(Course).where(Course.id == cert.course_id)
-                    ).first()
+                    )).scalars().first()
                     if course:
                         org_id = course.org_id
 
@@ -291,7 +291,7 @@ def require_plan_for_certifications(required_plan: PlanLevel, feature_name: str)
             # cap is a soft ceiling here, not the last line of defence.
             return True
 
-        current_plan = get_org_plan(org_id, db_session)
+        current_plan = await get_org_plan(org_id, db_session)
 
         if not plan_meets_requirement(current_plan, required_plan):
             raise HTTPException(
@@ -311,12 +311,12 @@ def require_plan_for_boards(required_plan: PlanLevel, feature_name: str):
     for board routes. Resolves org_id from board_uuid, path params, or query params.
 
     Usage in router:
-        dependencies=[Depends(require_plan_for_boards("pro", "Boards"))]
+        dependencies=[Depends(require_plan_for_boards("personal", "Boards"))]
     """
 
     async def plan_dependency(
         request: Request,
-        db_session: Session = Depends(get_db_session),
+        db_session: AsyncSession = Depends(get_db_session),
     ):
         bypass = _check_mode_bypass(feature_name)
         if bypass is not None:
@@ -347,7 +347,7 @@ def require_plan_for_boards(required_plan: PlanLevel, feature_name: str):
             if board_uuid:
                 from src.db.boards import Board
                 statement = select(Board).where(Board.board_uuid == board_uuid)
-                board = db_session.exec(statement).first()
+                board = (await db_session.execute(statement)).scalars().first()
                 if board:
                     org_id = board.org_id
 
@@ -360,7 +360,7 @@ def require_plan_for_boards(required_plan: PlanLevel, feature_name: str):
             # cap is a soft ceiling here, not the last line of defence.
             return True
 
-        current_plan = get_org_plan(org_id, db_session)
+        current_plan = await get_org_plan(org_id, db_session)
 
         if not plan_meets_requirement(current_plan, required_plan):
             raise HTTPException(
@@ -380,12 +380,12 @@ def require_plan_for_playgrounds(required_plan: PlanLevel, feature_name: str):
     for playground routes. Resolves org_id from playground_uuid, path params, or query params.
 
     Usage in router:
-        dependencies=[Depends(require_plan_for_playgrounds("pro", "Playgrounds"))]
+        dependencies=[Depends(require_plan_for_playgrounds("personal", "Playgrounds"))]
     """
 
     async def plan_dependency(
         request: Request,
-        db_session: Session = Depends(get_db_session),
+        db_session: AsyncSession = Depends(get_db_session),
     ):
         bypass = _check_mode_bypass(feature_name)
         if bypass is not None:
@@ -416,7 +416,7 @@ def require_plan_for_playgrounds(required_plan: PlanLevel, feature_name: str):
             if playground_uuid:
                 from src.db.playgrounds import Playground
                 statement = select(Playground).where(Playground.playground_uuid == playground_uuid)
-                playground = db_session.exec(statement).first()
+                playground = (await db_session.execute(statement)).scalars().first()
                 if playground:
                     org_id = playground.org_id
 
@@ -429,7 +429,7 @@ def require_plan_for_playgrounds(required_plan: PlanLevel, feature_name: str):
             # cap is a soft ceiling here, not the last line of defence.
             return True
 
-        current_plan = get_org_plan(org_id, db_session)
+        current_plan = await get_org_plan(org_id, db_session)
 
         if not plan_meets_requirement(current_plan, required_plan):
             raise HTTPException(
@@ -462,7 +462,7 @@ def require_plan_for_community(required_plan: PlanLevel, feature_name: str):
 
     async def plan_dependency(
         request: Request,
-        db_session: Session = Depends(get_db_session),
+        db_session: AsyncSession = Depends(get_db_session),
     ):
         bypass = _check_mode_bypass(feature_name)
         if bypass is not None:
@@ -493,8 +493,7 @@ def require_plan_for_community(required_plan: PlanLevel, feature_name: str):
             if community_uuid:
                 # Look up the community to get its org_id
                 statement = select(Community).where(Community.community_uuid == community_uuid)
-                result = db_session.exec(statement)
-                community = result.first()
+                community = (await db_session.execute(statement)).scalars().first()
 
                 if community:
                     org_id = community.org_id
@@ -508,7 +507,7 @@ def require_plan_for_community(required_plan: PlanLevel, feature_name: str):
             # cap is a soft ceiling here, not the last line of defence.
             return True
 
-        current_plan = get_org_plan(org_id, db_session)
+        current_plan = await get_org_plan(org_id, db_session)
 
         if not plan_meets_requirement(current_plan, required_plan):
             raise HTTPException(
@@ -520,5 +519,3 @@ def require_plan_for_community(required_plan: PlanLevel, feature_name: str):
         return True
 
     return plan_dependency
-
-

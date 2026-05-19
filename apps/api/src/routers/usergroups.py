@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Depends, Request
-from sqlmodel import Session
+from sqlmodel.ext.asyncio.session import AsyncSession
 from src.db.usergroups import UserGroupCreate, UserGroupRead, UserGroupUpdate
 from src.db.users import PublicUser, UserRead
 from src.services.users.usergroups import (
@@ -39,7 +39,7 @@ router = APIRouter()
 async def api_create_usergroup(
     *,
     request: Request,
-    db_session: Session = Depends(get_db_session),
+    db_session: AsyncSession = Depends(get_db_session),
     current_user: PublicUser = Depends(get_current_user),
     usergroup_object: UserGroupCreate,
 ) -> UserGroupRead:
@@ -65,7 +65,7 @@ async def api_create_usergroup(
 async def api_get_usergroup(
     *,
     request: Request,
-    db_session: Session = Depends(get_db_session),
+    db_session: AsyncSession = Depends(get_db_session),
     current_user: PublicUser = Depends(get_current_user),
     usergroup_id: int,
 ) -> UserGroupRead:
@@ -91,7 +91,7 @@ async def api_get_usergroup(
 async def api_get_users_linked_to_usergroup(
     *,
     request: Request,
-    db_session: Session = Depends(get_db_session),
+    db_session: AsyncSession = Depends(get_db_session),
     current_user: PublicUser = Depends(get_current_user),
     usergroup_id: int,
 ) -> list[UserRead]:
@@ -119,7 +119,7 @@ async def api_get_users_linked_to_usergroup(
 async def api_get_usergroups(
     *,
     request: Request,
-    db_session: Session = Depends(get_db_session),
+    db_session: AsyncSession = Depends(get_db_session),
     current_user: PublicUser = Depends(get_current_user),
     org_id: int,
 ) -> list[UserGroupRead]:
@@ -145,7 +145,7 @@ async def api_get_usergroups(
 async def api_get_resources_linked_to_usergroup(
     *,
     request: Request,
-    db_session: Session = Depends(get_db_session),
+    db_session: AsyncSession = Depends(get_db_session),
     current_user: PublicUser = Depends(get_current_user),
     usergroup_id: int,
 ) -> list[str]:
@@ -173,7 +173,7 @@ async def api_get_resources_linked_to_usergroup(
 async def api_get_usergroupsby_resource(
     *,
     request: Request,
-    db_session: Session = Depends(get_db_session),
+    db_session: AsyncSession = Depends(get_db_session),
     current_user: PublicUser = Depends(get_current_user),
     resource_uuid: str,
 ) -> list[UserGroupRead]:
@@ -201,7 +201,7 @@ async def api_get_usergroupsby_resource(
 async def api_update_usergroup(
     *,
     request: Request,
-    db_session: Session = Depends(get_db_session),
+    db_session: AsyncSession = Depends(get_db_session),
     current_user: PublicUser = Depends(get_current_user),
     usergroup_id: int,
     usergroup_object: UserGroupUpdate,
@@ -229,7 +229,7 @@ async def api_update_usergroup(
 async def api_delete_usergroup(
     *,
     request: Request,
-    db_session: Session = Depends(get_db_session),
+    db_session: AsyncSession = Depends(get_db_session),
     current_user: PublicUser = Depends(get_current_user),
     usergroup_id: int,
 ) -> str:
@@ -254,7 +254,7 @@ async def api_delete_usergroup(
 async def api_add_users_to_usergroup(
     *,
     request: Request,
-    db_session: Session = Depends(get_db_session),
+    db_session: AsyncSession = Depends(get_db_session),
     current_user: PublicUser = Depends(get_current_user),
     usergroup_id: int,
     user_ids: str,
@@ -282,7 +282,7 @@ async def api_add_users_to_usergroup(
 async def api_delete_users_from_usergroup(
     *,
     request: Request,
-    db_session: Session = Depends(get_db_session),
+    db_session: AsyncSession = Depends(get_db_session),
     current_user: PublicUser = Depends(get_current_user),
     usergroup_id: int,
     user_ids: str,
@@ -310,7 +310,7 @@ async def api_delete_users_from_usergroup(
 async def api_add_resources_to_usergroup(
     *,
     request: Request,
-    db_session: Session = Depends(get_db_session),
+    db_session: AsyncSession = Depends(get_db_session),
     current_user: PublicUser = Depends(get_current_user),
     usergroup_id: int,
     resource_uuids: str,
@@ -338,7 +338,7 @@ async def api_add_resources_to_usergroup(
 async def api_delete_resources_from_usergroup(
     *,
     request: Request,
-    db_session: Session = Depends(get_db_session),
+    db_session: AsyncSession = Depends(get_db_session),
     current_user: PublicUser = Depends(get_current_user),
     usergroup_id: int,
     resource_uuids: str,

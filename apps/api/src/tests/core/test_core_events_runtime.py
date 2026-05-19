@@ -1,6 +1,7 @@
 """Runtime coverage for core event helpers and EE hooks."""
 
 import asyncio
+import contextlib
 import logging
 from types import SimpleNamespace
 from unittest.mock import AsyncMock, Mock
@@ -33,22 +34,50 @@ class _FakeSession:
     def close(self):
         self.closed = True
 
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exc_type, exc, tb):
+        self.close()
+        return False
+
 
 def test_auto_install_branches(monkeypatch):
     create_all_calls = []
     installs = []
+    refreshes = []
 
     fake_config = SimpleNamespace(
         database_config=SimpleNamespace(sql_connection_string="sqlite:///fake.db")
     )
 
+    fake_session = SimpleNamespace()
+
+    @contextlib.asynccontextmanager
+    async def fake_async_session_factory():
+        yield fake_session
+
+    class _FakeAsyncSessionmaker:
+        def __call__(self):
+            return fake_async_session_factory()
+
+    class _FakeAsyncEngine:
+        async def dispose(self):
+            pass
+
+    async def fake_install_default_elements(db):
+        refreshes.append(db)
+
     monkeypatch.setattr(autoinstall, "get_learnhouse_config", lambda: fake_config)
     monkeypatch.setattr(autoinstall, "create_engine", lambda *args, **kwargs: object())
+    monkeypatch.setattr(autoinstall, "create_async_engine", lambda *args, **kwargs: _FakeAsyncEngine())
+    monkeypatch.setattr(autoinstall, "async_sessionmaker", lambda *args, **kwargs: _FakeAsyncSessionmaker())
     monkeypatch.setattr(
         autoinstall.SQLModel.metadata,
         "create_all",
         lambda engine: create_all_calls.append(engine),
     )
+    monkeypatch.setattr(autoinstall, "install_default_elements", fake_install_default_elements)
 
     monkeypatch.setattr(
         autoinstall,
@@ -61,15 +90,17 @@ def test_auto_install_branches(monkeypatch):
 
     assert create_all_calls and len(create_all_calls) == 1
     assert installs == [True]
+    assert refreshes == []  # bootstrap path returns before refresh
 
     monkeypatch.setattr(
         autoinstall,
         "Session",
-        lambda engine: _FakeSession(SimpleNamespace(slug="default")),
+        lambda engine: _FakeSession(SimpleNamespace(slug="anything")),
     )
     autoinstall.auto_install()
 
     assert installs == [True]
+    assert len(refreshes) == 1  # existing-install path always refreshes
 
 
 @pytest.mark.asyncio
@@ -134,7 +165,7 @@ async def test_events_startup_shutdown_and_reconcile(monkeypatch):
     check_content_directory = AsyncMock()
     run_ee_startup = Mock()
     auto_install = Mock()
-    reconcile_packs = Mock()
+    reconcile_packs = AsyncMock()
     cleanup_temp_migrations = Mock()
 
     class _AwaitableFakeTask:
@@ -194,35 +225,40 @@ async def test_events_startup_shutdown_and_reconcile(monkeypatch):
     close_database.assert_awaited_once_with(app)
 
 
-def test_reconcile_packs_branches(monkeypatch, caplog):
-    fake_config = SimpleNamespace(
-        database_config=SimpleNamespace(sql_connection_string="sqlite:///fake.db")
-    )
-    closed_sessions = []
+@pytest.mark.asyncio
+async def test_reconcile_packs_branches(monkeypatch, caplog):
+    reconciled = []
+    fake_session = SimpleNamespace()
 
-    class _Session:
-        def __init__(self, engine):
-            self.engine = engine
+    @contextlib.asynccontextmanager
+    async def fake_session_factory():
+        yield fake_session
 
-        def close(self):
-            closed_sessions.append(self.engine)
-
-    monkeypatch.setattr(core_events, "get_learnhouse_config", lambda: fake_config)
-    monkeypatch.setattr("sqlalchemy.create_engine", lambda *args, **kwargs: object())
-    monkeypatch.setattr("sqlmodel.Session", _Session)
     monkeypatch.setattr(
-        "src.services.packs.packs.reconcile_pack_credits",
-        lambda db_session: {"packs": 3},
+        "src.core.events.database._async_session_factory",
+        fake_session_factory,
     )
-    core_events._reconcile_packs()
-    assert closed_sessions
+
+    async def fake_reconcile(db_session):
+        reconciled.append(db_session)
+        return {"packs": 3}
 
     monkeypatch.setattr(
         "src.services.packs.packs.reconcile_pack_credits",
-        lambda db_session: (_ for _ in ()).throw(RuntimeError("boom")),
+        fake_reconcile,
+    )
+    await core_events._reconcile_packs()
+    assert reconciled == [fake_session]
+
+    async def boom_reconcile(db_session):
+        raise RuntimeError("boom")
+
+    monkeypatch.setattr(
+        "src.services.packs.packs.reconcile_pack_credits",
+        boom_reconcile,
     )
     with caplog.at_level(logging.WARNING):
-        core_events._reconcile_packs()
+        await core_events._reconcile_packs()
     assert "Pack reconciliation skipped (non-fatal)" in caplog.text
 
 

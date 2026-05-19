@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Depends, File, Request, UploadFile
-from sqlmodel import Session
+from sqlmodel.ext.asyncio.session import AsyncSession
 from src.db.podcasts.episodes import (
     PodcastEpisodeRead,
     PodcastEpisodeUpdate,
@@ -33,7 +33,7 @@ async def api_get_episode(
     request: Request,
     episode_uuid: str,
     current_user=Depends(get_current_user),
-    db_session: Session = Depends(get_db_session),
+    db_session: AsyncSession = Depends(get_db_session),
 ):
     """Get an episode by UUID"""
     episode = await get_episode(request, episode_uuid, current_user, db_session)
@@ -57,7 +57,7 @@ async def api_update_episode(
     episode_uuid: str,
     episode_object: PodcastEpisodeUpdate,
     current_user=Depends(get_current_user),
-    db_session: Session = Depends(get_db_session),
+    db_session: AsyncSession = Depends(get_db_session),
 ):
     """Update an episode"""
     episode = await update_episode(
@@ -81,7 +81,7 @@ async def api_delete_episode(
     request: Request,
     episode_uuid: str,
     current_user=Depends(get_current_user),
-    db_session: Session = Depends(get_db_session),
+    db_session: AsyncSession = Depends(get_db_session),
 ):
     """Delete an episode"""
     result = await delete_episode(request, episode_uuid, current_user, db_session)
@@ -105,7 +105,7 @@ async def api_upload_episode_audio(
     episode_uuid: str,
     audio: UploadFile = File(...),
     current_user=Depends(get_current_user),
-    db_session: Session = Depends(get_db_session),
+    db_session: AsyncSession = Depends(get_db_session),
 ):
     """Upload audio file for an episode"""
     episode = await upload_episode_audio_file(
@@ -131,7 +131,7 @@ async def api_upload_episode_thumbnail(
     episode_uuid: str,
     thumbnail: UploadFile = File(...),
     current_user=Depends(get_current_user),
-    db_session: Session = Depends(get_db_session),
+    db_session: AsyncSession = Depends(get_db_session),
 ):
     """Upload thumbnail for an episode"""
     episode = await upload_episode_thumbnail_file(

@@ -1,3 +1,4 @@
+from contextlib import asynccontextmanager
 from datetime import datetime
 from unittest.mock import AsyncMock, MagicMock, patch
 
@@ -19,7 +20,7 @@ class _FakeStream:
         return None
 
 
-def _make_endpoint(db, org, admin_user, *, webhook_uuid, events, is_active=True):
+async def _make_endpoint(db, org, admin_user, *, webhook_uuid, events, is_active=True):
     endpoint = WebhookEndpoint(
         webhook_uuid=webhook_uuid,
         org_id=org.id,
@@ -33,8 +34,8 @@ def _make_endpoint(db, org, admin_user, *, webhook_uuid, events, is_active=True)
         update_date=str(datetime.now()),
     )
     db.add(endpoint)
-    db.commit()
-    db.refresh(endpoint)
+    await db.commit()
+    await db.refresh(endpoint)
     return endpoint
 
 
@@ -48,36 +49,12 @@ def _make_response(status_code, *, body="ok", peer=("93.184.216.34", 443)):
     )
 
 
-class _FakePruneResult:
-    def __init__(self, rows):
-        self._rows = rows
-
-    def all(self):
-        return self._rows
-
-
-class _FakePruneSession:
-    def __init__(self, rows):
-        self.rows = rows
-        self.exec_calls = []
-        self.deleted_statement = None
-        self.committed = False
-
-    def __enter__(self):
-        return self
-
-    def __exit__(self, exc_type, exc, tb):
-        return False
-
-    def exec(self, statement):
-        self.exec_calls.append(statement)
-        if len(self.exec_calls) == 1:
-            return _FakePruneResult(self.rows)
-        self.deleted_statement = statement
-        return _FakePruneResult([])
-
-    def commit(self):
-        self.committed = True
+def _make_fake_session_factory(db):
+    """Return an async context manager factory that yields the test db session."""
+    @asynccontextmanager
+    async def _factory():
+        yield db
+    return _factory
 
 
 @pytest.fixture(autouse=True)
@@ -157,21 +134,21 @@ class TestWebhookDispatchHelpers:
         other_org,
         admin_user,
     ):
-        matching = _make_endpoint(
+        matching = await _make_endpoint(
             db,
             org,
             admin_user,
             webhook_uuid="match",
             events=["course_created"],
         )
-        _make_endpoint(
+        await _make_endpoint(
             db,
             org,
             admin_user,
             webhook_uuid="skip-event",
             events=["user_signed_up"],
         )
-        _make_endpoint(
+        await _make_endpoint(
             db,
             other_org,
             admin_user,
@@ -179,7 +156,10 @@ class TestWebhookDispatchHelpers:
             events=["course_created"],
         )
 
-        with patch.object(dispatch, "engine", db.get_bind()), patch(
+        with patch(
+            "src.services.webhooks.dispatch._async_session_factory",
+            _make_fake_session_factory(db),
+        ), patch(
             "src.services.webhooks.dispatch._deliver_to_endpoint",
             new_callable=AsyncMock,
         ) as mock_deliver:
@@ -196,14 +176,14 @@ class TestWebhookDispatchHelpers:
 
     @pytest.mark.asyncio
     async def test_deliver_webhooks_filters_by_requested_ids(self, db, org, admin_user):
-        selected = _make_endpoint(
+        selected = await _make_endpoint(
             db,
             org,
             admin_user,
             webhook_uuid="selected",
             events=["user_signed_up"],
         )
-        skipped = _make_endpoint(
+        skipped = await _make_endpoint(
             db,
             org,
             admin_user,
@@ -212,7 +192,10 @@ class TestWebhookDispatchHelpers:
             is_active=False,
         )
 
-        with patch.object(dispatch, "engine", db.get_bind()), patch(
+        with patch(
+            "src.services.webhooks.dispatch._async_session_factory",
+            _make_fake_session_factory(db),
+        ), patch(
             "src.services.webhooks.dispatch._deliver_to_endpoint",
             new_callable=AsyncMock,
         ) as mock_deliver:
@@ -229,8 +212,11 @@ class TestWebhookDispatchHelpers:
 
     @pytest.mark.asyncio
     async def test_deliver_webhooks_logs_error_on_delivery_failure(self, db, org, admin_user):
-        _make_endpoint(db, org, admin_user, webhook_uuid="fail-ep", events=["course_created"])
-        with patch.object(dispatch, "engine", db.get_bind()), patch(
+        await _make_endpoint(db, org, admin_user, webhook_uuid="fail-ep", events=["course_created"])
+        with patch(
+            "src.services.webhooks.dispatch._async_session_factory",
+            _make_fake_session_factory(db),
+        ), patch(
             "src.services.webhooks.dispatch._deliver_to_endpoint",
             new_callable=AsyncMock,
             side_effect=RuntimeError("delivery failed"),
@@ -240,9 +226,11 @@ class TestWebhookDispatchHelpers:
 
     @pytest.mark.asyncio
     async def test_deliver_webhooks_logs_warning_on_session_failure(self):
+        broken_factory = MagicMock(side_effect=RuntimeError("boom"))
+
         with patch(
-            "src.services.webhooks.dispatch.Session",
-            side_effect=RuntimeError("boom"),
+            "src.services.webhooks.dispatch._async_session_factory",
+            broken_factory,
         ), patch("src.services.webhooks.dispatch.logger.warning") as mock_warning:
             await dispatch._deliver_webhooks(
                 "course_created",
@@ -273,7 +261,10 @@ class TestWebhookDispatchHelpers:
             ]
         )
 
-        with patch.object(dispatch, "engine", db.get_bind()), patch(
+        with patch(
+            "src.services.webhooks.dispatch._async_session_factory",
+            _make_fake_session_factory(db),
+        ), patch(
             "src.services.webhooks.dispatch.decrypt_secret",
             return_value="plaintext-secret",
         ), patch(
@@ -289,6 +280,7 @@ class TestWebhookDispatchHelpers:
             return_value=client,
         ), patch(
             "src.services.webhooks.dispatch._prune_delivery_logs",
+            new_callable=AsyncMock,
         ) as mock_prune, patch(
             "src.services.webhooks.dispatch.asyncio.sleep",
             new_callable=AsyncMock,
@@ -302,13 +294,15 @@ class TestWebhookDispatchHelpers:
 
         assert client.post.await_count == 2
         mock_sleep.assert_awaited_once_with(1)
-        mock_prune.assert_called_once_with(endpoint.id)
+        mock_prune.assert_awaited_once_with(endpoint.id)
 
-        logs = db.exec(
-            select(WebhookDeliveryLog).where(
-                WebhookDeliveryLog.webhook_id == endpoint.id
-            ).order_by(WebhookDeliveryLog.attempt)
-        ).all()
+        logs = (
+            await db.execute(
+                select(WebhookDeliveryLog).where(
+                    WebhookDeliveryLog.webhook_id == endpoint.id
+                ).order_by(WebhookDeliveryLog.attempt)
+            )
+        ).scalars().all()
         assert [log.attempt for log in logs] == [1, 2]
         assert logs[0].success is False
         assert logs[0].response_status == 500
@@ -339,7 +333,10 @@ class TestWebhookDispatchHelpers:
         client = MagicMock()
         client.post = AsyncMock(return_value=_make_response(200, body="ok"))
 
-        with patch.object(dispatch, "engine", db.get_bind()), patch(
+        with patch(
+            "src.services.webhooks.dispatch._async_session_factory",
+            _make_fake_session_factory(db),
+        ), patch(
             "src.services.webhooks.dispatch.decrypt_secret",
             side_effect=[RuntimeError("no secret"), "plaintext-secret"],
         ), patch(
@@ -356,6 +353,7 @@ class TestWebhookDispatchHelpers:
             return_value=client,
         ), patch(
             "src.services.webhooks.dispatch._prune_delivery_logs",
+            new_callable=AsyncMock,
         ), patch(
             "src.services.webhooks.dispatch.asyncio.sleep",
             new_callable=AsyncMock,
@@ -375,18 +373,22 @@ class TestWebhookDispatchHelpers:
 
         assert client.post.await_count == 3
 
-        decrypt_logs = db.exec(
-            select(WebhookDeliveryLog).where(
-                WebhookDeliveryLog.webhook_id == decrypt_endpoint.id
+        decrypt_logs = (
+            await db.execute(
+                select(WebhookDeliveryLog).where(
+                    WebhookDeliveryLog.webhook_id == decrypt_endpoint.id
+                )
             )
-        ).all()
+        ).scalars().all()
         assert decrypt_logs == []
 
-        ssrf_logs = db.exec(
-            select(WebhookDeliveryLog).where(
-                WebhookDeliveryLog.webhook_id == ssrf_endpoint.id
-            ).order_by(WebhookDeliveryLog.attempt)
-        ).all()
+        ssrf_logs = (
+            await db.execute(
+                select(WebhookDeliveryLog).where(
+                    WebhookDeliveryLog.webhook_id == ssrf_endpoint.id
+                ).order_by(WebhookDeliveryLog.attempt)
+            )
+        ).scalars().all()
         assert len(ssrf_logs) == 3
         assert all(log.success is False for log in ssrf_logs)
         assert all(log.error_message.startswith("SSRF guard: ") for log in ssrf_logs)
@@ -403,7 +405,10 @@ class TestWebhookDispatchHelpers:
         client = MagicMock()
         client.post = AsyncMock(return_value=_make_response(200, body="ok"))
 
-        with patch.object(dispatch, "engine", db.get_bind()), patch(
+        with patch(
+            "src.services.webhooks.dispatch._async_session_factory",
+            _make_fake_session_factory(db),
+        ), patch(
             "src.services.webhooks.dispatch.decrypt_secret",
             return_value="plaintext-secret",
         ), patch(
@@ -417,6 +422,7 @@ class TestWebhookDispatchHelpers:
             return_value=client,
         ), patch(
             "src.services.webhooks.dispatch._prune_delivery_logs",
+            new_callable=AsyncMock,
         ), patch(
             "src.services.webhooks.dispatch.asyncio.sleep",
             new_callable=AsyncMock,
@@ -429,11 +435,13 @@ class TestWebhookDispatchHelpers:
             )
 
         assert client.post.await_count == 0
-        logs = db.exec(
-            select(WebhookDeliveryLog).where(
-                WebhookDeliveryLog.webhook_id == endpoint.id
-            ).order_by(WebhookDeliveryLog.attempt)
-        ).all()
+        logs = (
+            await db.execute(
+                select(WebhookDeliveryLog).where(
+                    WebhookDeliveryLog.webhook_id == endpoint.id
+                ).order_by(WebhookDeliveryLog.attempt)
+            )
+        ).scalars().all()
         assert len(logs) == 3
         assert all(log.success is False for log in logs)
         assert all("SSRF guard: blocked hostname" == log.error_message for log in logs)
@@ -450,7 +458,10 @@ class TestWebhookDispatchHelpers:
         client = MagicMock()
         client.post = AsyncMock(side_effect=RuntimeError("socket closed"))
 
-        with patch.object(dispatch, "engine", db.get_bind()), patch(
+        with patch(
+            "src.services.webhooks.dispatch._async_session_factory",
+            _make_fake_session_factory(db),
+        ), patch(
             "src.services.webhooks.dispatch.decrypt_secret",
             return_value="plaintext-secret",
         ), patch(
@@ -464,6 +475,7 @@ class TestWebhookDispatchHelpers:
             return_value=client,
         ), patch(
             "src.services.webhooks.dispatch._prune_delivery_logs",
+            new_callable=AsyncMock,
         ), patch(
             "src.services.webhooks.dispatch.asyncio.sleep",
             new_callable=AsyncMock,
@@ -478,31 +490,53 @@ class TestWebhookDispatchHelpers:
         assert client.post.await_count == 3
         assert mock_sleep.await_count == 2
 
-        logs = db.exec(
-            select(WebhookDeliveryLog).where(
-                WebhookDeliveryLog.webhook_id == endpoint.id
-            ).order_by(WebhookDeliveryLog.attempt)
-        ).all()
+        logs = (
+            await db.execute(
+                select(WebhookDeliveryLog).where(
+                    WebhookDeliveryLog.webhook_id == endpoint.id
+                ).order_by(WebhookDeliveryLog.attempt)
+            )
+        ).scalars().all()
         assert len(logs) == 3
         assert all(log.success is False for log in logs)
         assert logs[0].error_message == "socket closed"
 
-    def test_prune_delivery_logs_keeps_recent_rows(self):
-        fake_session = _FakePruneSession(
-            list(range(dispatch.LOG_RETENTION_PER_ENDPOINT + 1))
-        )
+    @pytest.mark.asyncio
+    async def test_prune_delivery_logs_keeps_recent_rows(self, db):
+        webhook_id = 31
+        # Insert LOG_RETENTION_PER_ENDPOINT + 1 rows so pruning actually fires.
+        for i in range(dispatch.LOG_RETENTION_PER_ENDPOINT + 1):
+            row = WebhookDeliveryLog(
+                webhook_id=webhook_id,
+                event_name="course_created",
+                delivery_uuid=f"delivery-{i}",
+                request_payload={"message": "ok"},
+                response_status=200,
+                response_body="ok",
+                success=True,
+                attempt=1,
+                created_at=str(datetime.now()),
+            )
+            db.add(row)
+        await db.commit()
 
         with patch(
-            "src.services.webhooks.dispatch.Session",
-            return_value=fake_session,
+            "src.services.webhooks.dispatch._async_session_factory",
+            _make_fake_session_factory(db),
         ):
-            dispatch._prune_delivery_logs(31)
+            await dispatch._prune_delivery_logs(webhook_id)
 
-        assert fake_session.exec_calls
-        assert fake_session.deleted_statement is not None
-        assert fake_session.committed is True
+        remaining = (
+            await db.execute(
+                select(WebhookDeliveryLog).where(
+                    WebhookDeliveryLog.webhook_id == webhook_id
+                )
+            )
+        ).scalars().all()
+        assert len(remaining) == dispatch.LOG_RETENTION_PER_ENDPOINT
 
-    def test_prune_delivery_logs_noop_when_below_retention(self, db):
+    @pytest.mark.asyncio
+    async def test_prune_delivery_logs_noop_when_below_retention(self, db):
         webhook_id = 32
         row = WebhookDeliveryLog(
             webhook_id=webhook_id,
@@ -516,13 +550,19 @@ class TestWebhookDispatchHelpers:
             created_at=str(datetime.now()),
         )
         db.add(row)
-        db.commit()
+        await db.commit()
 
-        dispatch._prune_delivery_logs(webhook_id)
+        with patch(
+            "src.services.webhooks.dispatch._async_session_factory",
+            _make_fake_session_factory(db),
+        ):
+            await dispatch._prune_delivery_logs(webhook_id)
 
-        remaining = db.exec(
-            select(WebhookDeliveryLog).where(
-                WebhookDeliveryLog.webhook_id == webhook_id
+        remaining = (
+            await db.execute(
+                select(WebhookDeliveryLog).where(
+                    WebhookDeliveryLog.webhook_id == webhook_id
+                )
             )
-        ).all()
+        ).scalars().all()
         assert len(remaining) == 1

@@ -1,7 +1,8 @@
 from typing import List, Union
 from uuid import uuid4
 from datetime import datetime
-from sqlmodel import Session, select
+from sqlmodel import select
+from sqlmodel.ext.asyncio.session import AsyncSession
 from fastapi import HTTPException, Request
 
 from src.db.users import PublicUser, AnonymousUser, APITokenUser, User
@@ -20,7 +21,7 @@ async def get_reactions(
     request: Request,
     discussion_uuid: str,
     current_user: Union[PublicUser, AnonymousUser, APITokenUser],
-    db_session: Session,
+    db_session: AsyncSession,
 ) -> List[DiscussionReactionSummary]:
     """
     Get all reactions for a discussion, grouped by emoji.
@@ -31,7 +32,7 @@ async def get_reactions(
     discussion_statement = select(Discussion).where(
         Discussion.discussion_uuid == discussion_uuid
     )
-    discussion = db_session.exec(discussion_statement).first()
+    discussion = (await db_session.execute(discussion_statement)).scalars().first()
 
     if not discussion:
         raise HTTPException(status_code=404, detail="Discussion not found")
@@ -40,7 +41,7 @@ async def get_reactions(
     community_statement = select(Community).where(
         Community.id == discussion.community_id
     )
-    community = db_session.exec(community_statement).first()
+    community = (await db_session.execute(community_statement)).scalars().first()
 
     if not community:
         raise HTTPException(status_code=404, detail="Community not found")
@@ -53,7 +54,7 @@ async def get_reactions(
     reactions_statement = select(DiscussionReaction).where(
         DiscussionReaction.discussion_id == discussion.id
     )
-    reactions = db_session.exec(reactions_statement).all()
+    reactions = (await db_session.execute(reactions_statement)).scalars().all()
 
     # Group reactions by emoji
     emoji_groups: dict = {}
@@ -62,17 +63,19 @@ async def get_reactions(
             emoji_groups[reaction.emoji] = []
         emoji_groups[reaction.emoji].append(reaction)
 
+    # Batch-fetch all users referenced by any reaction in a single query,
+    # then look them up by id in the per-emoji loop — eliminates N+1.
+    all_user_ids = list({r.user_id for r in reactions})
+    user_map: dict[int, User] = {}
+    if all_user_ids:
+        fetched = (await db_session.execute(select(User).where(User.id.in_(all_user_ids)))).scalars().all()  # type: ignore
+        user_map = {u.id: u for u in fetched}
+
     # Build summary with user info
     summaries = []
     for emoji, emoji_reactions in emoji_groups.items():
-        # Get user IDs
         user_ids = [r.user_id for r in emoji_reactions]
 
-        # Fetch users
-        users_statement = select(User).where(User.id.in_(user_ids))  # type: ignore
-        users = db_session.exec(users_statement).all()
-
-        # Build user list
         user_list = [
             ReactionUser(
                 id=u.id,
@@ -82,10 +85,10 @@ async def get_reactions(
                 last_name=u.last_name,
                 avatar_image=u.avatar_image,
             )
-            for u in users
+            for uid in user_ids
+            if (u := user_map.get(uid)) is not None
         ]
 
-        # Check if current user has reacted with this emoji
         has_reacted = current_user.id in user_ids if current_user.id != 0 else False
 
         summaries.append(
@@ -108,7 +111,7 @@ async def toggle_reaction(
     discussion_uuid: str,
     emoji: str,
     current_user: Union[PublicUser, AnonymousUser, APITokenUser],
-    db_session: Session,
+    db_session: AsyncSession,
 ) -> dict:
     """
     Toggle a reaction on a discussion.
@@ -123,7 +126,7 @@ async def toggle_reaction(
     discussion_statement = select(Discussion).where(
         Discussion.discussion_uuid == discussion_uuid
     )
-    discussion = db_session.exec(discussion_statement).first()
+    discussion = (await db_session.execute(discussion_statement)).scalars().first()
 
     if not discussion:
         raise HTTPException(status_code=404, detail="Discussion not found")
@@ -132,7 +135,7 @@ async def toggle_reaction(
     community_statement = select(Community).where(
         Community.id == discussion.community_id
     )
-    community = db_session.exec(community_statement).first()
+    community = (await db_session.execute(community_statement)).scalars().first()
 
     if not community:
         raise HTTPException(status_code=404, detail="Community not found")
@@ -156,12 +159,12 @@ async def toggle_reaction(
         DiscussionReaction.user_id == current_user.id,
         DiscussionReaction.emoji == emoji,
     )
-    existing_reaction = db_session.exec(existing_reaction_statement).first()
+    existing_reaction = (await db_session.execute(existing_reaction_statement)).scalars().first()
 
     if existing_reaction:
         # Remove the reaction
-        db_session.delete(existing_reaction)
-        db_session.commit()
+        await db_session.delete(existing_reaction)
+        await db_session.commit()
         return {"action": "removed", "emoji": emoji}
     else:
         # Add the reaction
@@ -173,5 +176,5 @@ async def toggle_reaction(
             creation_date=str(datetime.now()),
         )
         db_session.add(reaction)
-        db_session.commit()
+        await db_session.commit()
         return {"action": "added", "emoji": emoji}

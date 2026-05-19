@@ -5,11 +5,11 @@ import { useTranslation } from 'react-i18next'
 import { ChartBar } from '@phosphor-icons/react'
 import { useOrg } from '@components/Contexts/OrgContext'
 import { useCourse } from '@components/Contexts/CourseContext'
-import { isFeatureAvailable, PlanLevel } from '@services/plans/plans'
+import { isFeatureAvailable } from '@services/plans/plans'
 import { useAnalyticsStatus } from '../useAnalyticsDashboard'
-import PlanRestrictedFeature from '@components/Dashboard/Shared/PlanRestricted/PlanRestrictedFeature'
-import ExportAnalyticsButton from '../AnalyticsExport'
+import FeatureGate from '@components/Dashboard/Shared/FeatureGate/FeatureGate'
 import { usePlan } from '@components/Hooks/usePlan'
+import ExportAnalyticsButton from '../AnalyticsExport'
 
 const CourseOverviewStats = dynamic(() => import('./CourseOverviewStats'))
 const CourseEnrollmentTrend = dynamic(() => import('./CourseEnrollmentTrend'))
@@ -98,15 +98,9 @@ export default function CourseAnalyticsTab({ courseUUID }: { courseUUID: string 
   if (!isCourseAnalyticsAvailable) {
     return (
       <div className="p-6">
-        <PlanRestrictedFeature
-          currentPlan={currentPlan}
-          requiredPlan="pro"
-          icon={ChartBar}
-          titleKey="common.plans.feature_restricted.course_analytics.title"
-          descriptionKey="common.plans.feature_restricted.course_analytics.description"
-        >
+        <FeatureGate feature="course_analytics">
           <></>
-        </PlanRestrictedFeature>
+        </FeatureGate>
       </div>
     )
   }

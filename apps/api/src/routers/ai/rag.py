@@ -11,8 +11,9 @@ from typing import Literal, Optional
 from fastapi import APIRouter, Depends, HTTPException, Request
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
-from sqlmodel import Session, select
+from sqlmodel import select
 
+from sqlmodel.ext.asyncio.session import AsyncSession
 from src.core.events.database import get_db_session
 from src.db.courses.courses import Course
 from src.db.organization_config import OrganizationConfig
@@ -143,7 +144,7 @@ async def api_rag_chat(
     request: Request,
     chat_request: RAGChatRequest,
     current_user: PublicUser | AnonymousUser | APITokenUser = Depends(get_authenticated_user),
-    db_session: Session = Depends(get_db_session),
+    db_session: AsyncSession = Depends(get_db_session),
 ):
     """
     Streaming RAG chatbot (SSE).
@@ -155,28 +156,28 @@ async def api_rag_chat(
     org_id = None
 
     if chat_request.course_uuid:
-        course = db_session.exec(
+        course = (await db_session.execute(
             select(Course).where(Course.course_uuid == chat_request.course_uuid)
-        ).first()
+        )).scalars().first()
         if not course:
             raise HTTPException(status_code=404, detail="Course not found")
         course_id = course.id
         org_id = course.org_id
     else:
         if chat_request.org_slug:
-            org = db_session.exec(
+            org = (await db_session.execute(
                 select(Organization).where(Organization.slug == chat_request.org_slug)
-            ).first()
+            )).scalars().first()
             if not org:
                 raise HTTPException(status_code=404, detail="Organization not found")
             org_id = org.id
         else:
             from src.db.user_organizations import UserOrganization
-            user_org = db_session.exec(
+            user_org = (await db_session.execute(
                 select(UserOrganization).where(
                     UserOrganization.user_id == resolve_acting_user_id(current_user)
                 )
-            ).first()
+            )).scalars().first()
             if not user_org:
                 raise HTTPException(status_code=403, detail="User has no organization")
             org_id = user_org.org_id
@@ -186,16 +187,16 @@ async def api_rag_chat(
     # the resolved org. Without this check, an attacker in org A can drain
     # org B's AI credits or run RAG against org B's indexed content by
     # supplying a course_uuid or org_slug from org B.
-    if not is_org_member(resolve_acting_user_id(current_user), org_id, db_session):
+    if not await is_org_member(resolve_acting_user_id(current_user), org_id, db_session):
         raise HTTPException(
             status_code=403,
             detail="You are not a member of this organization",
         )
 
     # Check if copilot is enabled for this org
-    org_config = db_session.exec(
+    org_config = (await db_session.execute(
         select(OrganizationConfig).where(OrganizationConfig.org_id == org_id)
-    ).first()
+    )).scalars().first()
     if org_config and org_config.config:
         from src.security.features_utils.resolve import resolve_feature
         resolved_ai = resolve_feature("ai", org_config.config, org_id)
@@ -218,7 +219,7 @@ async def api_rag_chat(
     enforce_ai_rate_limit(chat_acting_user_id, org_id)
 
     # Atomic credit reservation — RAG chat makes 2 API calls (embedding + generation)
-    reserve_ai_credit(org_id, db_session, amount=2)
+    await reserve_ai_credit(org_id, db_session, amount=2)
 
     # Get or create chat session
     is_new_session = chat_request.aichat_uuid is None
@@ -273,21 +274,21 @@ async def api_rag_index(
     request: Request,
     index_request: RAGIndexRequest,
     current_user: PublicUser | AnonymousUser | APITokenUser = Depends(get_current_user),
-    db_session: Session = Depends(get_db_session),
+    db_session: AsyncSession = Depends(get_db_session),
 ):
     """
     Manually trigger re-indexing of a course's content for RAG.
     Requires admin/maintainer role on the course's organization.
     """
     # Resolve course
-    course = db_session.exec(
+    course = (await db_session.execute(
         select(Course).where(Course.course_uuid == index_request.course_uuid)
-    ).first()
+    )).scalars().first()
     if not course:
         raise HTTPException(status_code=404, detail="Course not found")
 
     # Require admin/maintainer access
-    require_org_admin(resolve_acting_user_id(current_user), course.org_id, db_session)
+    await require_org_admin(resolve_acting_user_id(current_user), course.org_id, db_session)
 
     # Run indexing
     chunks_indexed = await embed_course_content(
@@ -318,15 +319,15 @@ async def api_rag_index(
 )
 async def api_rag_sessions(
     current_user: PublicUser | AnonymousUser | APITokenUser = Depends(get_current_user),
-    db_session: Session = Depends(get_db_session),
+    db_session: AsyncSession = Depends(get_db_session),
     org_slug: Optional[str] = None,
 ):
     """List all chat sessions for the current user, optionally filtered by org."""
     org_id = None
     if org_slug:
-        org = db_session.exec(
+        org = (await db_session.execute(
             select(Organization).where(Organization.slug == org_slug)
-        ).first()
+        )).scalars().first()
         if org:
             org_id = org.id
     sessions = get_user_chat_sessions(resolve_acting_user_id(current_user), org_id=org_id)

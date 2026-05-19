@@ -11,8 +11,7 @@ import json
 import logging
 from typing import Optional
 
-import redis
-from config.config import get_learnhouse_config
+from src.core.redis import get_redis_client as _get_redis_client
 
 logger = logging.getLogger(__name__)
 
@@ -27,18 +26,6 @@ CACHE_TTL_LIVE = 0         # live_users — never cached
 _NO_CACHE_QUERIES = {"live_users", "detail_live_users"}
 
 _KEY_PREFIX = "tb_cache"
-
-
-def _get_redis_client() -> Optional[redis.Redis]:
-    """Return a Redis client or None if unavailable."""
-    try:
-        config = get_learnhouse_config()
-        conn_string = config.redis_config.redis_connection_string
-        if not conn_string:
-            return None
-        return redis.Redis.from_url(conn_string, socket_connect_timeout=2)
-    except Exception:
-        return None
 
 
 def _build_cache_key(

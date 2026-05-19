@@ -1,6 +1,7 @@
 from typing import Dict, Any
 from fastapi import HTTPException
-from sqlmodel import Session, select
+from sqlmodel import select
+from sqlmodel.ext.asyncio.session import AsyncSession
 
 from src.db.organizations import Organization
 from src.security.features_utils.usage import reserve_ai_credit
@@ -103,7 +104,7 @@ def _serialize_tiptap_content_to_text(content: Any) -> str:
 async def editor_ai_start_chat_session_stream(
     chat_session_object: StartEditorAIChatSession,
     current_user: PublicUser,
-    db_session: Session,
+    db_session: AsyncSession,
 ) -> Dict[str, Any]:
     """
     Start a new AI Editor chat session with streaming response.
@@ -113,7 +114,7 @@ async def editor_ai_start_chat_session_stream(
     statement = select(Activity).where(
         Activity.activity_uuid == chat_session_object.activity_uuid
     )
-    activity = db_session.exec(statement).first()
+    activity = (await db_session.execute(statement)).scalars().first()
 
     if not activity:
         raise HTTPException(status_code=404, detail="Activity not found")
@@ -126,7 +127,7 @@ async def editor_ai_start_chat_session_stream(
         .join(Activity)
         .where(Activity.activity_uuid == chat_session_object.activity_uuid)
     )
-    course = db_session.exec(statement).first()
+    course = (await db_session.execute(statement)).scalars().first()
 
     if not course:
         raise HTTPException(status_code=404, detail="Course not found")
@@ -142,7 +143,7 @@ async def editor_ai_start_chat_session_stream(
         .where(ResourceAuthor.resource_uuid == course.course_uuid)
         .order_by(ResourceAuthor.id.asc())  # type: ignore
     )
-    author_results = db_session.exec(authors_statement).all()
+    author_results = (await db_session.execute(authors_statement)).all()
 
     authors = [
         AuthorWithRole(
@@ -159,7 +160,7 @@ async def editor_ai_start_chat_session_stream(
 
     # Get the Organization
     statement = select(Organization).where(Organization.id == course.org_id)
-    org = db_session.exec(statement).first()
+    org = (await db_session.execute(statement)).scalars().first()
 
     if not org or org.id is None:
         raise HTTPException(status_code=404, detail="Organization not found")
@@ -171,7 +172,7 @@ async def editor_ai_start_chat_session_stream(
     enforce_ai_rate_limit(resolve_acting_user_id(current_user), org.id)
 
     # Atomic credit reservation to prevent concurrent over-use.
-    reserve_ai_credit(org.id, db_session)
+    await reserve_ai_credit(org.id, db_session)
 
     # Serialize current content to text for AI context
     content_text = _serialize_tiptap_content_to_text(chat_session_object.current_content)
@@ -211,7 +212,7 @@ async def editor_ai_start_chat_session_stream(
 async def editor_ai_send_message_stream(
     chat_session_object: SendEditorAIChatMessage,
     current_user: PublicUser,
-    db_session: Session,
+    db_session: AsyncSession,
 ) -> Dict[str, Any]:
     """
     Send a message in an existing AI Editor chat session with streaming response.
@@ -221,7 +222,7 @@ async def editor_ai_send_message_stream(
     statement = select(Activity).where(
         Activity.activity_uuid == chat_session_object.activity_uuid
     )
-    activity = db_session.exec(statement).first()
+    activity = (await db_session.execute(statement)).scalars().first()
 
     if not activity:
         raise HTTPException(status_code=404, detail="Activity not found")
@@ -234,7 +235,7 @@ async def editor_ai_send_message_stream(
         .join(Activity)
         .where(Activity.activity_uuid == chat_session_object.activity_uuid)
     )
-    course = db_session.exec(statement).first()
+    course = (await db_session.execute(statement)).scalars().first()
 
     if not course:
         raise HTTPException(status_code=404, detail="Course not found")
@@ -250,7 +251,7 @@ async def editor_ai_send_message_stream(
         .where(ResourceAuthor.resource_uuid == course.course_uuid)
         .order_by(ResourceAuthor.id.asc())  # type: ignore
     )
-    author_results = db_session.exec(authors_statement).all()
+    author_results = (await db_session.execute(authors_statement)).all()
 
     authors = [
         AuthorWithRole(
@@ -267,7 +268,7 @@ async def editor_ai_send_message_stream(
 
     # Get the Organization
     statement = select(Organization).where(Organization.id == course.org_id)
-    org = db_session.exec(statement).first()
+    org = (await db_session.execute(statement)).scalars().first()
 
     if not org or org.id is None:
         raise HTTPException(status_code=404, detail="Organization not found")
@@ -279,7 +280,7 @@ async def editor_ai_send_message_stream(
     enforce_ai_rate_limit(resolve_acting_user_id(current_user), org.id)
 
     # Atomic credit reservation to prevent concurrent over-use.
-    reserve_ai_credit(org.id, db_session)
+    await reserve_ai_credit(org.id, db_session)
 
     # Serialize current content to text for AI context
     content_text = _serialize_tiptap_content_to_text(chat_session_object.current_content)

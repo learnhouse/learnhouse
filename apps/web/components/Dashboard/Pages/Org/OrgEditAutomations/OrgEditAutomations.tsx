@@ -6,8 +6,9 @@ import { useLHSession } from '@components/Contexts/LHSessionContext'
 import { toast } from 'react-hot-toast'
 import { Button } from '@components/ui/button'
 import { getAPIUrl } from '@services/config/config'
-import useSWR, { mutate } from 'swr'
-import { swrFetcher } from '@services/utils/ts/requests'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
+import { queryKeys } from '@/lib/query/keys'
+import { apiFetch } from '@services/utils/ts/requests'
 import {
   Table,
   TableBody,
@@ -74,8 +75,7 @@ import {
   sendTestEvent,
   getWebhookDeliveryLogs,
 } from '@services/webhooks/webhooks'
-import PlanRestrictedFeature from '@components/Dashboard/Shared/PlanRestricted/PlanRestrictedFeature'
-import { usePlan } from '@components/Hooks/usePlan'
+import FeatureGate from '@components/Dashboard/Shared/FeatureGate/FeatureGate'
 
 // Types for API-driven event registry
 interface EventInfo {
@@ -110,14 +110,15 @@ const OrgEditAutomations: React.FC = () => {
   const session = useLHSession() as any
   const access_token = session?.data?.tokens?.access_token
   const org = useOrg() as any
-  const currentPlan = usePlan()
+  const queryClient = useQueryClient()
 
   // Fetch event registry from API
-  const eventsUrl = org?.id ? `${getAPIUrl()}orgs/${org.id}/webhooks/events` : null
-  const { data: eventsData } = useSWR<{ events: Record<string, EventInfo> }>(
-    eventsUrl,
-    (url: string) => swrFetcher(url, access_token)
-  )
+  const { data: eventsData } = useQuery<{ events: Record<string, EventInfo> }>({
+    queryKey: org?.id ? ['org', org.id, 'webhooks-events'] : ['webhooks-events-disabled'],
+    queryFn: () => apiFetch(`${getAPIUrl()}orgs/${org.id}/webhooks/events`, access_token),
+    enabled: !!(org?.id && access_token),
+    staleTime: 60_000,
+  })
   const eventRegistry = eventsData?.events || {}
   const eventCategories = buildCategories(eventRegistry)
   const allEventIds = Object.keys(eventRegistry)
@@ -148,11 +149,12 @@ const OrgEditAutomations: React.FC = () => {
   const [logsLoading, setLogsLoading] = useState(false)
 
   // Fetch webhooks
-  const webhooksUrl = org?.id ? `${getAPIUrl()}orgs/${org.id}/webhooks` : null
-  const { data: webhooks, isLoading } = useSWR<WebhookEndpoint[]>(
-    webhooksUrl,
-    (url: string) => swrFetcher(url, access_token)
-  )
+  const { data: webhooks, isLoading } = useQuery<WebhookEndpoint[]>({
+    queryKey: org?.id ? queryKeys.org.automations(org.id) : ['automations-disabled'],
+    queryFn: () => apiFetch(`${getAPIUrl()}orgs/${org.id}/webhooks`, access_token),
+    enabled: !!(org?.id && access_token),
+    staleTime: 60_000,
+  })
 
   // Split webhooks by source so the Zapier and manual lists render separately.
   const zapierWebhooks = (webhooks || []).filter((w) => w.source === 'zapier')
@@ -186,7 +188,7 @@ const OrgEditAutomations: React.FC = () => {
       if (response.success) {
         setNewSecret(response.data.secret)
         setShowSecret(true)
-        mutate(webhooksUrl)
+        queryClient.invalidateQueries({ queryKey: queryKeys.org.automations(org.id) })
         toast.success('Webhook created', { id: loadingToast })
         resetCreateForm()
       } else {
@@ -207,7 +209,7 @@ const OrgEditAutomations: React.FC = () => {
         access_token
       )
       if (response.success) {
-        mutate(webhooksUrl)
+        queryClient.invalidateQueries({ queryKey: queryKeys.org.automations(org.id) })
         toast.success(webhook.is_active ? 'Webhook disabled' : 'Webhook enabled', { id: loadingToast })
       } else {
         toast.error(response.data?.detail || 'Failed to update', { id: loadingToast })
@@ -223,7 +225,7 @@ const OrgEditAutomations: React.FC = () => {
     try {
       const response = await deleteWebhookEndpoint(org.id, selectedWebhook.webhook_uuid, access_token)
       if (response.success) {
-        mutate(webhooksUrl)
+        queryClient.invalidateQueries({ queryKey: queryKeys.org.automations(org.id) })
         toast.success('Webhook deleted', { id: loadingToast })
         setIsDeleteDialogOpen(false)
         setSelectedWebhook(null)
@@ -243,7 +245,7 @@ const OrgEditAutomations: React.FC = () => {
       if (response.success) {
         setNewSecret(response.data.secret)
         setShowSecret(true)
-        mutate(webhooksUrl)
+        queryClient.invalidateQueries({ queryKey: queryKeys.org.automations(org.id) })
         toast.success('Secret regenerated', { id: loadingToast })
       } else {
         toast.error(response.data?.detail || 'Failed to regenerate', { id: loadingToast })
@@ -304,7 +306,7 @@ const OrgEditAutomations: React.FC = () => {
         access_token
       )
       if (response.success) {
-        mutate(webhooksUrl)
+        queryClient.invalidateQueries({ queryKey: queryKeys.org.automations(org.id) })
         toast.success('Webhook updated', { id: loadingToast })
         setEditingWebhook(null)
       } else {
@@ -337,15 +339,10 @@ const OrgEditAutomations: React.FC = () => {
   }
 
   return (
-    <PlanRestrictedFeature
-      currentPlan={currentPlan}
-      requiredPlan="pro"
-      icon={Zap}
-      titleKey="common.plans.feature_restricted.webhooks.title"
-      descriptionKey="common.plans.feature_restricted.webhooks.description"
-    >
+    <FeatureGate feature="webhooks">
       <>
-        {/* ── Zapier hero card (subtle variant) ────────────────────── */}
+        {/* ── Zapier hero card (hidden until the LearnHouse Zapier app is live) ────────────────────── */}
+        {false && (
         <div className="sm:mx-10 mx-0 mb-6 bg-white rounded-xl nice-shadow overflow-hidden">
           <div className="px-5 py-4 flex items-center gap-4">
             <div className="flex-shrink-0 w-10 h-10 rounded-lg overflow-hidden nice-shadow">
@@ -412,6 +409,7 @@ const OrgEditAutomations: React.FC = () => {
             </div>
           )}
         </div>
+        )}
 
         {/* ── Manual webhooks ──────────────────────────────────────── */}
         <div className="sm:mx-10 mx-0 bg-white rounded-xl nice-shadow pt-3">
@@ -442,8 +440,17 @@ const OrgEditAutomations: React.FC = () => {
               </div>
 
               {isLoading ? (
-                <div className="flex justify-center py-8">
-                  <RefreshCw className="animate-spin text-gray-400" size={24} />
+                <div className="animate-pulse space-y-3">
+                  {[1, 2, 3].map((i) => (
+                    <div key={i} className="border rounded-lg p-4 flex items-center gap-4">
+                      <div className="h-5 w-9 bg-gray-100 rounded-full" />
+                      <div className="flex-1 space-y-1.5">
+                        <div className="h-4 bg-gray-100 rounded w-3/5" />
+                        <div className="h-3 bg-gray-100 rounded w-2/5" />
+                      </div>
+                      <div className="h-4 w-16 bg-gray-100 rounded" />
+                    </div>
+                  ))}
                 </div>
               ) : manualWebhooks.length > 0 ? (
                 <div className="space-y-3">
@@ -757,7 +764,7 @@ const OrgEditAutomations: React.FC = () => {
           </DialogContent>
         </Dialog>
       </>
-    </PlanRestrictedFeature>
+    </FeatureGate>
   )
 }
 

@@ -1,9 +1,10 @@
 'use client'
 
 import React from 'react'
-import { getAPIUrl } from '@services/config/config'
-import useSWR from 'swr'
-import { swrFetcher } from '@services/utils/ts/requests'
+import { useQuery } from '@tanstack/react-query'
+import { queryKeys } from '@/lib/query/keys'
+import { getBoard } from '@services/boards/boards'
+import { getOrganizationContextInfo } from '@services/organizations/orgs'
 import BoardCanvas from '@components/Dashboard/Boards/BoardCanvas'
 
 interface BoardCanvasClientProps {
@@ -14,16 +15,20 @@ interface BoardCanvasClientProps {
 }
 
 export default function BoardCanvasClient({ boardUuid, accessToken, orgslug, username }: BoardCanvasClientProps) {
-  const { data: board, isLoading, error } = useSWR(
-    accessToken ? `${getAPIUrl()}boards/${boardUuid}` : null,
-    (url) => swrFetcher(url, accessToken)
-  )
+  const { data: board, isLoading, error } = useQuery({
+    queryKey: queryKeys.boards.detail(boardUuid),
+    queryFn: () => getBoard(boardUuid, accessToken),
+    enabled: !!accessToken,
+    staleTime: 60_000,
+  })
 
   // Fetch org info to get org_uuid for media URLs in board blocks
-  const { data: orgData } = useSWR(
-    orgslug ? `${getAPIUrl()}orgs/slug/${orgslug}` : null,
-    (url) => swrFetcher(url, accessToken)
-  )
+  const { data: orgData } = useQuery({
+    queryKey: queryKeys.org.detail(orgslug),
+    queryFn: () => getOrganizationContextInfo(orgslug, null, accessToken),
+    enabled: !!orgslug,
+    staleTime: 60_000,
+  })
 
   if (isLoading) {
     return (

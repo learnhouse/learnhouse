@@ -2,10 +2,12 @@
 
 import React, { useState, useEffect } from 'react'
 import { Save } from 'lucide-react'
+import { useOrg } from '@components/Contexts/OrgContext'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
 import { updateBoard } from '@services/boards/boards'
 import toast from 'react-hot-toast'
-import { mutate } from 'swr'
+import { useQueryClient } from '@tanstack/react-query'
+import { queryKeys } from '@/lib/query/keys'
 import { useTranslation } from 'react-i18next'
 
 interface BoardGeneralTabProps {
@@ -16,8 +18,10 @@ interface BoardGeneralTabProps {
 
 function BoardGeneralTab({ board, boardUuid, boardKey }: BoardGeneralTabProps) {
   const { t } = useTranslation()
+  const org = useOrg() as any
   const session = useLHSession() as any
   const access_token = session?.data?.tokens?.access_token
+  const queryClient = useQueryClient()
 
   const [name, setName] = useState(board.name)
   const [description, setDescription] = useState(board.description || '')
@@ -36,7 +40,8 @@ function BoardGeneralTab({ board, boardUuid, boardKey }: BoardGeneralTabProps) {
     try {
       await updateBoard(boardUuid, { name, description }, access_token)
       toast.success(t('boards.general.board_updated'))
-      if (boardKey) mutate(boardKey)
+      queryClient.invalidateQueries({ queryKey: queryKeys.boards.detail(boardUuid) })
+      queryClient.invalidateQueries({ queryKey: queryKeys.boards.list(org?.slug) })
     } catch {
       toast.error(t('boards.general.board_updated_error'))
     } finally {

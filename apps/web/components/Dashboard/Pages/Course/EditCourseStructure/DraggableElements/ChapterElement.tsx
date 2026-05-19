@@ -28,9 +28,10 @@ import { deleteAssignmentUsingActivityUUID } from '@services/courses/assignments
 import { revalidateTags } from '@services/utils/ts/requests'
 import { useRouter } from 'next/navigation'
 import { getAPIUrl } from '@services/config/config'
-import { mutate } from 'swr'
+import { useQueryClient } from '@tanstack/react-query'
+import { queryKeys } from '@lib/query/keys'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
-import { useCourse, useCourseDispatch, getCourseMetaCacheKey } from '@components/Contexts/CourseContext'
+import { useCourse, useCourseDispatch } from '@components/Contexts/CourseContext'
 import toast from 'react-hot-toast'
 import { useTranslation } from 'react-i18next'
 
@@ -60,6 +61,8 @@ function ChapterElement(props: ChapterElementProps) {
   const course = useCourse() as any;
   const dispatchCourse = useCourseDispatch() as any;
   const withUnpublishedActivities = course ? course.withUnpublishedActivities : false
+  const queryClient = useQueryClient()
+  const cleanCourseUuid = (id: string) => id?.replace(/^course_/, '') ?? id
 
   const router = useRouter()
 
@@ -123,6 +126,7 @@ function ChapterElement(props: ChapterElementProps) {
         )
       }
       clearSelection()
+      await queryClient.invalidateQueries({ queryKey: queryKeys.courses.meta(cleanCourseUuid(props.course_uuid)) })
       revalidateTags(['courses'], props.orgslug)
     } catch {
       toast.error(
@@ -152,6 +156,7 @@ function ChapterElement(props: ChapterElementProps) {
       )
       clearSelection()
       toast.success(t('dashboard.courses.structure.bulk_actions.delete_success', { count }))
+      await queryClient.invalidateQueries({ queryKey: queryKeys.courses.meta(cleanCourseUuid(props.course_uuid)) })
       revalidateTags(['courses'], props.orgslug)
     } catch {
       toast.error(t('dashboard.courses.structure.bulk_actions.delete_error'))
@@ -162,7 +167,7 @@ function ChapterElement(props: ChapterElementProps) {
 
   const deleteChapterUI = async () => {
     await deleteChapter(props.chapter.id, access_token)
-    await mutate(getCourseMetaCacheKey(props.course_uuid, withUnpublishedActivities), undefined, { revalidate: true })
+    await queryClient.invalidateQueries({ queryKey: queryKeys.courses.meta(cleanCourseUuid(props.course_uuid)) })
     await revalidateTags(['courses'], props.orgslug)
     router.refresh()
   }
@@ -173,7 +178,7 @@ function ChapterElement(props: ChapterElementProps) {
         name: modifiedChapter.chapterName,
       }
       await updateChapter(chapterId, modifiedChapterCopy, access_token)
-      await mutate(getCourseMetaCacheKey(props.course_uuid, withUnpublishedActivities), undefined, { revalidate: true })
+      await queryClient.invalidateQueries({ queryKey: queryKeys.courses.meta(cleanCourseUuid(props.course_uuid)) })
       await revalidateTags(['courses'], props.orgslug)
       router.refresh()
     }
@@ -192,6 +197,7 @@ function ChapterElement(props: ChapterElementProps) {
       dispatchCourse({ type: 'setCourseStructure', payload: updatedStructure })
       dispatchCourse({ type: 'setIsSaved' })
       toast.success(t('dashboard.courses.structure.activity.toasts.update_success'))
+      await queryClient.invalidateQueries({ queryKey: queryKeys.courses.meta(cleanCourseUuid(props.course_uuid)) })
       revalidateTags(['courses'], props.orgslug)
     } catch {
       toast.error(t('dashboard.courses.structure.activity.toasts.update_error'))

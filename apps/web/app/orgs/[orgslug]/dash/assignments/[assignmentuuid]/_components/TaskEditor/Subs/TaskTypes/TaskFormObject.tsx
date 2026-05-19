@@ -3,14 +3,14 @@ import { useAssignmentSubmission, useAssignmentTaskSubmissions } from '@componen
 import { useAssignmentsTask, useAssignmentsTaskDispatch } from '@components/Contexts/Assignments/AssignmentsTaskContext';
 import { useLHSession } from '@components/Contexts/LHSessionContext';
 import AssignmentBoxUI from '@components/Objects/Activities/Assignment/AssignmentBoxUI';
-import { getAPIUrl } from '@services/config/config';
 import { getAssignmentTask, getAssignmentTaskSubmissionsUser, handleAssignmentTaskSubmission, updateAssignmentTask } from '@services/courses/assignments';
 import { Check, Info, Minus, Plus, PlusCircle, X, Type } from 'lucide-react';
 import React, { useEffect, useState } from 'react';
 import toast from 'react-hot-toast';
 import { v4 as uuidv4 } from 'uuid';
 import { useTranslation } from 'react-i18next';
-import { mutate } from 'swr';
+import { useQueryClient } from '@tanstack/react-query';
+import { queryKeys } from '@/lib/query/keys';
 
 type FormSchema = {
     questionText: string;
@@ -47,6 +47,7 @@ function TaskFormObject({ view, assignmentTaskUUID, user_id }: TaskFormObjectPro
     const assignmentTaskStateHook = useAssignmentsTaskDispatch() as any;
     const assignment = useAssignments() as any;
     const taskSubmissionsMap = useAssignmentTaskSubmissions();
+    const queryClient = useQueryClient();
     // Reveal correct answers only after the submission is GRADED AND the
     // teacher opted in on the assignment. See TaskQuizObject for the same
     // pattern — keep these consistent across task types.
@@ -238,7 +239,7 @@ function TaskFormObject({ view, assignmentTaskUUID, user_id }: TaskFormObjectPro
             setUserSubmissions(updatedUserSubmissions);
             setInitialUserSubmissions(updatedUserSubmissions);
             setShowSavingDisclaimer(false);
-            mutate(`${getAPIUrl()}assignments/${assignment.assignment_object.assignment_uuid}/tasks/submissions/me`);
+            queryClient.invalidateQueries({ queryKey: queryKeys.assignments.taskSubmission(assignment.assignment_object.assignment_uuid) });
         } else {
             console.error('Submission error:', res);
             toast.error('Error submitting form, please retry later.');

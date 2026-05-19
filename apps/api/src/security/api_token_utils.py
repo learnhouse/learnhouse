@@ -6,7 +6,7 @@ This module is separate from auth.py to avoid circular imports.
 
 from typing import Union
 from fastapi import Depends, HTTPException, Request, status
-from sqlmodel import Session
+from sqlmodel.ext.asyncio.session import AsyncSession
 
 from src.core.events.database import get_db_session
 from src.db.users import AnonymousUser, APITokenUser, PublicUser
@@ -75,7 +75,7 @@ async def require_non_api_token_user(
 
 async def get_authenticated_non_api_token_user(
     request: Request,
-    db_session: Session = Depends(get_db_session),
+    db_session: AsyncSession = Depends(get_db_session),
 ) -> PublicUser:
     """
     FastAPI dependency that requires an authenticated, non-API-token user.

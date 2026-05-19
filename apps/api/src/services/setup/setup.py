@@ -3,7 +3,8 @@ from datetime import datetime
 import json
 from uuid import uuid4
 from fastapi import HTTPException
-from sqlmodel import Session, select
+from sqlmodel import select
+from sqlmodel.ext.asyncio.session import AsyncSession
 from src.db.organization_config import (
     OrganizationConfig,
     OrganizationConfigV2Base,
@@ -17,7 +18,7 @@ from src.security.rbac.constants import ADMIN_ROLE_ID
 
 
 # Install Default roles
-def install_default_elements(db_session: Session):
+async def install_default_elements(db_session: AsyncSession):
     """Upsert global default roles. Existing roles are updated in place to
     preserve FK references from userorganization."""
 
@@ -463,7 +464,7 @@ def install_default_elements(db_session: Session):
 
     # Upsert: update existing roles in place, create missing ones
     for desired in desired_roles:
-        existing = db_session.get(Role, desired.id)
+        existing = await db_session.get(Role, desired.id)
         if existing:
             existing.name = desired.name
             existing.description = desired.description
@@ -477,13 +478,13 @@ def install_default_elements(db_session: Session):
             db_session.add(desired)
             logger.info(f"Created new global role: {desired.name} (id={desired.id})")
 
-    db_session.commit()
+    await db_session.commit()
 
     return True
 
 
 # Organization creation
-def install_create_organization(org_object: OrganizationCreate, db_session: Session):
+async def install_create_organization(org_object: OrganizationCreate, db_session: AsyncSession):
     org = Organization.model_validate(org_object)
 
     # Complete the org object
@@ -492,8 +493,8 @@ def install_create_organization(org_object: OrganizationCreate, db_session: Sess
     org.update_date = str(datetime.now())
 
     db_session.add(org)
-    db_session.commit()
-    db_session.refresh(org)
+    await db_session.commit()
+    await db_session.refresh(org)
 
     # Org Config (v2 format)
     org_config = OrganizationConfigV2Base(
@@ -512,14 +513,14 @@ def install_create_organization(org_object: OrganizationCreate, db_session: Sess
     )
 
     db_session.add(org_settings)
-    db_session.commit()
-    db_session.refresh(org_settings)
+    await db_session.commit()
+    await db_session.refresh(org_settings)
 
     return org
 
 
-def install_create_organization_user(
-    user_object: UserCreate, org_slug: str, db_session: Session
+async def install_create_organization_user(
+    user_object: UserCreate, org_slug: str, db_session: AsyncSession
 ):
     user = User.model_validate(user_object)
 
@@ -534,9 +535,9 @@ def install_create_organization_user(
 
     # Check if Organization exists
     statement = select(Organization).where(Organization.slug == org_slug)
-    org = db_session.exec(statement)
+    org = (await db_session.execute(statement)).scalars().first()
 
-    if not org.first():
+    if not org:
         raise HTTPException(
             status_code=409,
             detail="Organization does not exist",
@@ -544,9 +545,9 @@ def install_create_organization_user(
 
     # Username
     statement = select(User).where(User.username == user.username)
-    result = db_session.exec(statement)
+    existing_user = (await db_session.execute(statement)).scalars().first()
 
-    if result.first():
+    if existing_user:
         raise HTTPException(
             status_code=409,
             detail="Username already exists",
@@ -554,9 +555,9 @@ def install_create_organization_user(
 
     # Email
     statement = select(User).where(User.email == user.email)
-    result = db_session.exec(statement)
+    existing_email = (await db_session.execute(statement)).scalars().first()
 
-    if result.first():
+    if existing_email:
         raise HTTPException(
             status_code=409,
             detail="Email already exists",
@@ -569,13 +570,12 @@ def install_create_organization_user(
 
     # Add user to database
     db_session.add(user)
-    db_session.commit()
-    db_session.refresh(user)
+    await db_session.commit()
+    await db_session.refresh(user)
 
     # get org id
     statement = select(Organization).where(Organization.slug == org_slug)
-    org = db_session.exec(statement)
-    org = org.first()
+    org = (await db_session.execute(statement)).scalars().first()
     org_id = org.id if org else 0
 
     # Link user and organization
@@ -588,8 +588,8 @@ def install_create_organization_user(
     )
 
     db_session.add(user_organization)
-    db_session.commit()
-    db_session.refresh(user_organization)
+    await db_session.commit()
+    await db_session.refresh(user_organization)
 
     user = UserRead.model_validate(user)
 

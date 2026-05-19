@@ -9,7 +9,8 @@ from datetime import datetime
 from typing import List
 
 from fastapi import HTTPException, Request, status
-from sqlmodel import Session, select
+from sqlmodel import select
+from sqlmodel.ext.asyncio.session import AsyncSession
 
 from src.db.courses.activities import Activity
 from src.db.courses.chapters import Chapter
@@ -20,48 +21,48 @@ from src.db.users import PublicUser
 from src.security.rbac import AccessAction, check_resource_access
 
 
-def _load_chapter_and_course(chapter_uuid, db_session):
-    chapter = db_session.exec(
+async def _load_chapter_and_course(chapter_uuid, db_session):
+    chapter = (await db_session.execute(
         select(Chapter).where(Chapter.chapter_uuid == chapter_uuid)
-    ).first()
+    )).scalars().first()
     if not chapter:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Chapter not found")
 
-    course = db_session.exec(select(Course).where(Course.id == chapter.course_id)).first()
+    course = (await db_session.execute(select(Course).where(Course.id == chapter.course_id))).scalars().first()
     if not course:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Course not found")
     return chapter, course
 
 
-def _load_activity_and_course(activity_uuid, db_session):
-    activity = db_session.exec(
+async def _load_activity_and_course(activity_uuid, db_session):
+    activity = (await db_session.execute(
         select(Activity).where(Activity.activity_uuid == activity_uuid)
-    ).first()
+    )).scalars().first()
     if not activity:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Activity not found")
 
-    course = db_session.exec(select(Course).where(Course.id == activity.course_id)).first()
+    course = (await db_session.execute(select(Course).where(Course.id == activity.course_id))).scalars().first()
     if not course:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Course not found")
     return activity, course
 
 
-def _load_usergroup(usergroup_uuid, db_session):
-    ug = db_session.exec(
+async def _load_usergroup(usergroup_uuid, db_session):
+    ug = (await db_session.execute(
         select(UserGroup).where(UserGroup.usergroup_uuid == usergroup_uuid)
-    ).first()
+    )).scalars().first()
     if not ug:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User group not found")
     return ug
 
 
-def _attach_usergroup(resource_uuid, org_id, usergroup_id, db_session):
-    existing = db_session.exec(
+async def _attach_usergroup(resource_uuid, org_id, usergroup_id, db_session):
+    existing = (await db_session.execute(
         select(UserGroupResource).where(
             UserGroupResource.resource_uuid == resource_uuid,
             UserGroupResource.usergroup_id == usergroup_id,
         )
-    ).first()
+    )).scalars().first()
     if existing:
         return {"detail": "User group already has access"}
 
@@ -74,34 +75,36 @@ def _attach_usergroup(resource_uuid, org_id, usergroup_id, db_session):
         update_date=now,
     )
     db_session.add(ugr)
-    db_session.commit()
+    await db_session.commit()
     return {"detail": "User group added"}
 
 
-def _detach_usergroup(resource_uuid, usergroup_id, db_session):
-    ugr = db_session.exec(
+async def _detach_usergroup(resource_uuid, usergroup_id, db_session):
+    ugr = (await db_session.execute(
         select(UserGroupResource).where(
             UserGroupResource.resource_uuid == resource_uuid,
             UserGroupResource.usergroup_id == usergroup_id,
         )
-    ).first()
+    )).scalars().first()
     if not ugr:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="User group not associated with resource",
         )
-    db_session.delete(ugr)
-    db_session.commit()
+    await db_session.delete(ugr)
+    await db_session.commit()
     return {"detail": "User group removed"}
 
 
-def _list_usergroups_for_resource(resource_uuid, db_session):
-    ugrs = db_session.exec(
+async def _list_usergroups_for_resource(resource_uuid, db_session):
+    ugrs = (await db_session.execute(
         select(UserGroupResource).where(UserGroupResource.resource_uuid == resource_uuid)
-    ).all()
+    )).scalars().all()
     out = []
     for ugr in ugrs:
-        ug = db_session.get(UserGroup, ugr.usergroup_id)
+        ug = (await db_session.execute(
+            select(UserGroup).where(UserGroup.id == ugr.usergroup_id)
+        )).scalars().first()
         if ug:
             out.append(
                 {
@@ -124,14 +127,14 @@ async def add_usergroup_to_chapter(
     chapter_uuid: str,
     usergroup_uuid: str,
     current_user: PublicUser,
-    db_session: Session,
+    db_session: AsyncSession,
 ) -> dict:
-    _, course = _load_chapter_and_course(chapter_uuid, db_session)
+    _, course = await _load_chapter_and_course(chapter_uuid, db_session)
     await check_resource_access(
         request, db_session, current_user, course.course_uuid, AccessAction.UPDATE
     )
-    ug = _load_usergroup(usergroup_uuid, db_session)
-    return _attach_usergroup(chapter_uuid, course.org_id, ug.id, db_session)
+    ug = await _load_usergroup(usergroup_uuid, db_session)
+    return await _attach_usergroup(chapter_uuid, course.org_id, ug.id, db_session)
 
 
 async def remove_usergroup_from_chapter(
@@ -139,27 +142,27 @@ async def remove_usergroup_from_chapter(
     chapter_uuid: str,
     usergroup_uuid: str,
     current_user: PublicUser,
-    db_session: Session,
+    db_session: AsyncSession,
 ) -> dict:
-    _, course = _load_chapter_and_course(chapter_uuid, db_session)
+    _, course = await _load_chapter_and_course(chapter_uuid, db_session)
     await check_resource_access(
         request, db_session, current_user, course.course_uuid, AccessAction.UPDATE
     )
-    ug = _load_usergroup(usergroup_uuid, db_session)
-    return _detach_usergroup(chapter_uuid, ug.id, db_session)
+    ug = await _load_usergroup(usergroup_uuid, db_session)
+    return await _detach_usergroup(chapter_uuid, ug.id, db_session)
 
 
 async def get_chapter_usergroups(
     request: Request,
     chapter_uuid: str,
     current_user: PublicUser,
-    db_session: Session,
+    db_session: AsyncSession,
 ) -> List[dict]:
-    _, course = _load_chapter_and_course(chapter_uuid, db_session)
+    _, course = await _load_chapter_and_course(chapter_uuid, db_session)
     await check_resource_access(
         request, db_session, current_user, course.course_uuid, AccessAction.READ
     )
-    return _list_usergroups_for_resource(chapter_uuid, db_session)
+    return await _list_usergroups_for_resource(chapter_uuid, db_session)
 
 
 # ---------------------------------------------------------------------------
@@ -172,14 +175,14 @@ async def add_usergroup_to_activity(
     activity_uuid: str,
     usergroup_uuid: str,
     current_user: PublicUser,
-    db_session: Session,
+    db_session: AsyncSession,
 ) -> dict:
-    _, course = _load_activity_and_course(activity_uuid, db_session)
+    _, course = await _load_activity_and_course(activity_uuid, db_session)
     await check_resource_access(
         request, db_session, current_user, course.course_uuid, AccessAction.UPDATE
     )
-    ug = _load_usergroup(usergroup_uuid, db_session)
-    return _attach_usergroup(activity_uuid, course.org_id, ug.id, db_session)
+    ug = await _load_usergroup(usergroup_uuid, db_session)
+    return await _attach_usergroup(activity_uuid, course.org_id, ug.id, db_session)
 
 
 async def remove_usergroup_from_activity(
@@ -187,24 +190,24 @@ async def remove_usergroup_from_activity(
     activity_uuid: str,
     usergroup_uuid: str,
     current_user: PublicUser,
-    db_session: Session,
+    db_session: AsyncSession,
 ) -> dict:
-    _, course = _load_activity_and_course(activity_uuid, db_session)
+    _, course = await _load_activity_and_course(activity_uuid, db_session)
     await check_resource_access(
         request, db_session, current_user, course.course_uuid, AccessAction.UPDATE
     )
-    ug = _load_usergroup(usergroup_uuid, db_session)
-    return _detach_usergroup(activity_uuid, ug.id, db_session)
+    ug = await _load_usergroup(usergroup_uuid, db_session)
+    return await _detach_usergroup(activity_uuid, ug.id, db_session)
 
 
 async def get_activity_usergroups(
     request: Request,
     activity_uuid: str,
     current_user: PublicUser,
-    db_session: Session,
+    db_session: AsyncSession,
 ) -> List[dict]:
-    _, course = _load_activity_and_course(activity_uuid, db_session)
+    _, course = await _load_activity_and_course(activity_uuid, db_session)
     await check_resource_access(
         request, db_session, current_user, course.course_uuid, AccessAction.READ
     )
-    return _list_usergroups_for_resource(activity_uuid, db_session)
+    return await _list_usergroups_for_resource(activity_uuid, db_session)

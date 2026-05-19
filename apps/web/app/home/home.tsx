@@ -2,13 +2,13 @@
 import { useLHSession } from '@components/Contexts/LHSessionContext'
 import UserAvatar from '@components/Objects/UserAvatar'
 import { getAPIUrl, getUriWithOrg } from '@services/config/config'
-import { swrFetcher } from '@services/utils/ts/requests'
+import { apiFetch } from '@services/utils/ts/requests'
 import { signOut } from '@components/Contexts/AuthContext'
 import { getOrgLogoMediaDirectory } from '@services/media/media'
 import { ChevronRight, Languages, Check, LogOut, Settings, TentTree, LogIn } from 'lucide-react'
 import Link from 'next/link'
 import React, { useEffect } from 'react'
-import useSWR from 'swr'
+import { useQuery } from '@tanstack/react-query'
 import { useRouter } from 'next/navigation'
 import { useTranslation } from 'react-i18next'
 import { changeLanguage } from '@/lib/i18n'
@@ -34,10 +34,12 @@ function HomeClient() {
   const isAuthenticated = session?.status === 'authenticated'
   const isLoading = session?.status === 'loading'
 
-  const { data: orgs, isLoading: orgsLoading } = useSWR(
-    isAuthenticated ? `${getAPIUrl()}orgs/user/page/1/limit/50` : null,
-    (url) => swrFetcher(url, access_token)
-  )
+  const { data: orgs, isLoading: orgsLoading } = useQuery({
+    queryKey: ['orgs', 'user'],
+    queryFn: () => apiFetch(`${getAPIUrl()}orgs/user/page/1/limit/50`, access_token),
+    enabled: isAuthenticated,
+    staleTime: 60_000,
+  })
 
   useEffect(() => {
     if (!isLoading && !isAuthenticated) {

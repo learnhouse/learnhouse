@@ -1,9 +1,11 @@
-from typing import List
+from typing import List, Optional
+import json
 import os
-from fastapi import APIRouter, Depends, UploadFile, Form, Request, Query, BackgroundTasks
+from fastapi import APIRouter, Depends, HTTPException, UploadFile, Form, Request, Query, BackgroundTasks
 from fastapi.responses import FileResponse
 from pydantic import BaseModel, field_validator
-from sqlmodel import Session
+
+from sqlmodel.ext.asyncio.session import AsyncSession
 from src.core.events.database import get_db_session
 from src.db.courses.course_updates import (
     CourseUpdateCreate,
@@ -123,7 +125,7 @@ async def api_export_courses_batch(
     request: Request,
     batch_request: BatchExportRequest,
     background_tasks: BackgroundTasks,
-    db_session: Session = Depends(get_db_session),
+    db_session: AsyncSession = Depends(get_db_session),
     current_user: PublicUser = Depends(get_current_user),
 ):
     """
@@ -179,7 +181,7 @@ async def api_analyze_import_package(
     request: Request,
     org_id: int,
     zip_file: UploadFile,
-    db_session: Session = Depends(get_db_session),
+    db_session: AsyncSession = Depends(get_db_session),
     current_user: PublicUser = Depends(get_current_user),
 ) -> ImportAnalysisResponse:
     """
@@ -223,7 +225,7 @@ async def api_import_courses(
     request: Request,
     org_id: int,
     import_request: ImportRequest,
-    db_session: Session = Depends(get_db_session),
+    db_session: AsyncSession = Depends(get_db_session),
     current_user: PublicUser = Depends(get_current_user),
 ) -> ImportResult:
     """
@@ -286,13 +288,23 @@ async def api_create_course(
     tags: str = Form(None),
     about: str = Form(),
     thumbnail_type: ThumbnailType = Form(default=ThumbnailType.IMAGE),
+    extra_metadata: Optional[str] = Form(default=None),
     current_user: PublicUser = Depends(get_current_user),
-    db_session: Session = Depends(get_db_session),
+    db_session: AsyncSession = Depends(get_db_session),
     thumbnail: UploadFile | None = None,
 ) -> CourseRead:
     """
     Create new Course
     """
+    parsed_metadata: Optional[dict] = None
+    if extra_metadata:
+        try:
+            parsed_metadata = json.loads(extra_metadata)
+        except json.JSONDecodeError:
+            raise HTTPException(status_code=422, detail="extra_metadata must be a JSON object")
+        if not isinstance(parsed_metadata, dict):
+            raise HTTPException(status_code=422, detail="extra_metadata must be a JSON object")
+
     course = CourseCreate(
         name=name,
         description=description,
@@ -305,6 +317,7 @@ async def api_create_course(
         learnings=learnings,
         tags=tags,
         open_to_contributors=False,
+        extra_metadata=parsed_metadata,
     )
     return await create_course(
         request, org_id, course, current_user, db_session, thumbnail, thumbnail_type
@@ -328,7 +341,7 @@ async def api_create_course_thumbnail(
     course_uuid: str,
     thumbnail_type: ThumbnailType = Form(default=ThumbnailType.IMAGE),
     thumbnail: UploadFile | None = None,
-    db_session: Session = Depends(get_db_session),
+    db_session: AsyncSession = Depends(get_db_session),
     current_user: PublicUser = Depends(get_current_user),
 ) -> CourseRead:
     """
@@ -353,7 +366,7 @@ async def api_create_course_thumbnail(
 async def api_get_course(
     request: Request,
     course_uuid: str,
-    db_session: Session = Depends(get_db_session),
+    db_session: AsyncSession = Depends(get_db_session),
     current_user: PublicUser = Depends(get_current_user),
 ) -> CourseRead:
     """
@@ -377,8 +390,8 @@ async def api_get_course(
 )
 async def api_get_course_by_id(
     request: Request,
-    course_id: str,
-    db_session: Session = Depends(get_db_session),
+    course_id: int,
+    db_session: AsyncSession = Depends(get_db_session),
     current_user: PublicUser = Depends(get_current_user),
 ) -> CourseRead:
     """
@@ -409,7 +422,7 @@ async def api_get_course_meta(
     course_uuid: str,
     with_unpublished_activities: bool = False,
     slim: bool = False,
-    db_session: Session = Depends(get_db_session),
+    db_session: AsyncSession = Depends(get_db_session),
     current_user: PublicUser = Depends(get_current_user),
 ) -> FullCourseRead:
     """
@@ -442,7 +455,7 @@ async def api_get_course_by_orgslug(
     limit: int,
     org_slug: str,
     include_unpublished: bool = False,
-    db_session: Session = Depends(get_db_session),
+    db_session: AsyncSession = Depends(get_db_session),
     current_user: PublicUser = Depends(get_current_user),
 ) -> List[CourseRead]:
     """
@@ -465,7 +478,7 @@ async def api_get_course_by_orgslug(
 async def api_get_courses_count(
     request: Request,
     org_slug: str,
-    db_session: Session = Depends(get_db_session),
+    db_session: AsyncSession = Depends(get_db_session),
     current_user: PublicUser = Depends(get_current_user),
 ) -> int:
     """
@@ -497,7 +510,7 @@ async def api_search_courses(
     query: str = Query(..., min_length=1, max_length=200, description="Search query"),
     page: int = Query(default=1, ge=1, description="Page number"),
     limit: int = Query(default=10, ge=1, le=50, description="Items per page (max 50)"),
-    db_session: Session = Depends(get_db_session),
+    db_session: AsyncSession = Depends(get_db_session),
     current_user: PublicUser = Depends(get_current_user),
 ) -> List[CourseRead]:
     """
@@ -529,7 +542,7 @@ async def api_update_course(
     request: Request,
     course_object: CourseUpdate,
     course_uuid: str,
-    db_session: Session = Depends(get_db_session),
+    db_session: AsyncSession = Depends(get_db_session),
     current_user: PublicUser = Depends(get_current_user),
 ) -> CourseRead:
     """
@@ -553,7 +566,7 @@ async def api_update_course(
 async def api_delete_course(
     request: Request,
     course_uuid: str,
-    db_session: Session = Depends(get_db_session),
+    db_session: AsyncSession = Depends(get_db_session),
     current_user: PublicUser = Depends(get_current_user),
 ):
     """
@@ -581,7 +594,7 @@ async def api_delete_course(
 async def api_clone_course(
     request: Request,
     course_uuid: str,
-    db_session: Session = Depends(get_db_session),
+    db_session: AsyncSession = Depends(get_db_session),
     current_user: PublicUser = Depends(get_current_user),
 ) -> CourseRead:
     """
@@ -624,7 +637,7 @@ async def api_export_course(
     request: Request,
     course_uuid: str,
     background_tasks: BackgroundTasks,
-    db_session: Session = Depends(get_db_session),
+    db_session: AsyncSession = Depends(get_db_session),
     current_user: PublicUser = Depends(get_current_user),
 ):
     """
@@ -673,7 +686,7 @@ async def api_export_course(
 async def api_apply_course_contributor(
     request: Request,
     course_uuid: str,
-    db_session: Session = Depends(get_db_session),
+    db_session: AsyncSession = Depends(get_db_session),
     current_user: PublicUser = Depends(get_current_user),
 ):
     """
@@ -696,7 +709,7 @@ async def api_apply_course_contributor(
 async def api_get_course_updates(
     request: Request,
     course_uuid: str,
-    db_session: Session = Depends(get_db_session),
+    db_session: AsyncSession = Depends(get_db_session),
     current_user: PublicUser = Depends(get_current_user),
 ) -> List[CourseUpdateRead]:
     """
@@ -724,7 +737,7 @@ async def api_create_course_update(
     request: Request,
     course_uuid: str,
     update_object: CourseUpdateCreate,
-    db_session: Session = Depends(get_db_session),
+    db_session: AsyncSession = Depends(get_db_session),
     current_user: PublicUser = Depends(get_current_user),
 ) -> CourseUpdateRead:
     """
@@ -753,7 +766,7 @@ async def api_update_course_update(
     course_uuid: str,
     courseupdate_uuid: str,
     update_object: CourseUpdateUpdate,
-    db_session: Session = Depends(get_db_session),
+    db_session: AsyncSession = Depends(get_db_session),
     current_user: PublicUser = Depends(get_current_user),
 ) -> CourseUpdateRead:
     """
@@ -779,7 +792,7 @@ async def api_delete_course_update(
     request: Request,
     course_uuid: str,
     courseupdate_uuid: str,
-    db_session: Session = Depends(get_db_session),
+    db_session: AsyncSession = Depends(get_db_session),
     current_user: PublicUser = Depends(get_current_user),
 ):
     """
@@ -802,7 +815,7 @@ async def api_delete_course_update(
 async def api_get_course_contributors(
     request: Request,
     course_uuid: str,
-    db_session: Session = Depends(get_db_session),
+    db_session: AsyncSession = Depends(get_db_session),
     current_user: PublicUser = Depends(get_current_user),
 ):
     """
@@ -831,7 +844,7 @@ async def api_update_course_contributor(
     contributor_user_id: int,
     authorship: ResourceAuthorshipEnum,
     authorship_status: ResourceAuthorshipStatusEnum,
-    db_session: Session = Depends(get_db_session),
+    db_session: AsyncSession = Depends(get_db_session),
     current_user: PublicUser = Depends(get_current_user),
 ):
     """
@@ -866,7 +879,7 @@ async def api_add_bulk_course_contributors(
     request: Request,
     course_uuid: str,
     usernames: List[str],
-    db_session: Session = Depends(get_db_session),
+    db_session: AsyncSession = Depends(get_db_session),
     current_user: PublicUser = Depends(get_current_user),
 ):
     """
@@ -896,7 +909,7 @@ async def api_remove_bulk_course_contributors(
     request: Request,
     course_uuid: str,
     usernames: List[str],
-    db_session: Session = Depends(get_db_session),
+    db_session: AsyncSession = Depends(get_db_session),
     current_user: PublicUser = Depends(get_current_user),
 ):
     """
@@ -923,7 +936,7 @@ async def api_remove_bulk_course_contributors(
 async def api_get_course_user_rights(
     request: Request,
     course_uuid: str,
-    db_session: Session = Depends(get_db_session),
+    db_session: AsyncSession = Depends(get_db_session),
     current_user: PublicUser = Depends(get_current_user),
 ) -> dict:
     """

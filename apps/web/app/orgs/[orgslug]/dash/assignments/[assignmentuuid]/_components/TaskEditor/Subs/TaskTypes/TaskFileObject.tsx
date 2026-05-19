@@ -4,7 +4,6 @@ import { useAssignmentsTaskDispatch } from '@components/Contexts/Assignments/Ass
 import { useLHSession } from '@components/Contexts/LHSessionContext';
 import { useOrg } from '@components/Contexts/OrgContext';
 import AssignmentBoxUI from '@components/Objects/Activities/Assignment/AssignmentBoxUI'
-import { getAPIUrl } from '@services/config/config';
 import { getAssignmentTask, getAssignmentTaskSubmissionsUser, handleAssignmentTaskSubmission, updateSubFile } from '@services/courses/assignments';
 import { getTaskFileSubmissionDir } from '@services/media/media';
 import { Cloud, Download, File, Info, Loader, UploadCloud } from 'lucide-react'
@@ -12,7 +11,8 @@ import Link from 'next/link';
 import React, { useEffect, useState } from 'react'
 import toast from 'react-hot-toast';
 import { useTranslation } from 'react-i18next';
-import { mutate } from 'swr';
+import { useQueryClient } from '@tanstack/react-query';
+import { queryKeys } from '@/lib/query/keys';
 
 type FileSchema = {
     fileUUID: string;
@@ -37,6 +37,7 @@ export default function TaskFileObject({ view, user_id, assignmentTaskUUID }: Ta
     const assignmentTaskStateHook = useAssignmentsTaskDispatch() as any;
     const assignment = useAssignments() as any;
     const taskSubmissionsMap = useAssignmentTaskSubmissions();
+    const queryClient = useQueryClient();
 
     /* TEACHER VIEW CODE */
     /* TEACHER VIEW CODE */
@@ -79,7 +80,7 @@ export default function TaskFileObject({ view, user_id, assignmentTaskUUID }: Ta
                 fileUUID: res.data.file_uuid,
                 assignment_task_submission_uuid: res.data.assignment_task_submission_uuid
             })
-            mutate(`${getAPIUrl()}assignments/${assignment.assignment_object.assignment_uuid}/tasks/submissions/me`);
+            queryClient.invalidateQueries({ queryKey: queryKeys.assignments.taskSubmission(assignment.assignment_object.assignment_uuid) });
             setIsLoading(false)
             setError('')
         }
@@ -131,7 +132,7 @@ export default function TaskFileObject({ view, user_id, assignmentTaskUUID }: Ta
                 };
                 setUserSubmissions(updatedUserSubmissions);
                 setInitialUserSubmissions(updatedUserSubmissions);
-                mutate(`${getAPIUrl()}assignments/${assignment.assignment_object.assignment_uuid}/tasks/submissions/me`);
+                queryClient.invalidateQueries({ queryKey: queryKeys.assignments.taskSubmission(assignment.assignment_object.assignment_uuid) });
             } else {
                 toast.error(t('dashboard.assignments.editor.toasts.task_save_error'));
             }

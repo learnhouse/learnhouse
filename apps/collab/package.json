@@ -1,6 +1,6 @@
 {
   "name": "@learnhouse/collab",
-  "version": "1.1.4",
+  "version": "1.2.1",
   "private": true,
   "type": "module",
   "scripts": {
@@ -9,8 +9,8 @@
     "build": "tsc"
   },
   "dependencies": {
-    "@hocuspocus/extension-database": "^3.0.0",
-    "@hocuspocus/server": "^3.0.0",
+    "@hocuspocus/extension-database": "^4.0.0",
+    "@hocuspocus/server": "^4.0.0",
     "dotenv": "^17.0.0",
     "ioredis": "^5.9.3",
     "jsonwebtoken": "^9.0.2",

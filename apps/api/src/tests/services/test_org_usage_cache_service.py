@@ -1,8 +1,7 @@
 """Coverage for src/services/orgs/{usage,cache,uploads}.py."""
 
 from datetime import datetime
-from types import SimpleNamespace
-from unittest.mock import AsyncMock, Mock, patch
+from unittest.mock import AsyncMock, MagicMock, Mock, patch
 
 import pytest
 from fastapi import HTTPException
@@ -13,7 +12,7 @@ from src.services.orgs import uploads as org_uploads
 from src.services.orgs import usage as org_usage
 
 
-def _make_org_config(db, org_id: int, config: dict) -> OrganizationConfig:
+async def _make_org_config(db, org_id: int, config: dict) -> OrganizationConfig:
     row = OrganizationConfig(
         org_id=org_id,
         config=config,
@@ -21,8 +20,8 @@ def _make_org_config(db, org_id: int, config: dict) -> OrganizationConfig:
         update_date=str(datetime.now()),
     )
     db.add(row)
-    db.commit()
-    db.refresh(row)
+    await db.commit()
+    await db.refresh(row)
     return row
 
 
@@ -35,15 +34,9 @@ class TestOrgCacheHelpers:
         ]
 
         with patch(
-            "src.services.orgs.cache.get_learnhouse_config",
-            return_value=SimpleNamespace(
-                redis_config=SimpleNamespace(redis_connection_string="redis://cache")
-            ),
-        ), patch(
-            "src.services.orgs.cache.redis.Redis.from_url",
+            "src.services.orgs.cache.get_redis_client",
             return_value=redis_client,
-        ) as from_url:
-            assert org_cache._get_redis_client() is redis_client
+        ):
             assert org_cache.get_cached_org_by_slug("cached-org") == {
                 "slug": "cached-org"
             }
@@ -52,8 +45,6 @@ class TestOrgCacheHelpers:
             assert org_cache.get_cached_instance_info() == {"instance": "cached"}
             org_cache.set_cached_instance_info({"instance": "cached"})
 
-        assert from_url.call_count == 6
-        from_url.assert_called_with("redis://cache", socket_connect_timeout=2)
         redis_client.get.assert_any_call("org_cache:slug:cached-org")
         redis_client.get.assert_any_call("org_cache:instance_info")
         redis_client.setex.assert_any_call(
@@ -69,7 +60,7 @@ class TestOrgCacheHelpers:
         redis_client.delete.assert_called_once_with("org_cache:slug:cached-org")
 
     def test_cache_helpers_handle_missing_client_and_redis_errors(self):
-        with patch("src.services.orgs.cache._get_redis_client", return_value=None):
+        with patch("src.services.orgs.cache.get_redis_client", return_value=None):
             assert org_cache.get_cached_org_by_slug("missing") is None
             org_cache.set_cached_org_by_slug("missing", {"slug": "missing"})
             org_cache.invalidate_org_cache("missing")
@@ -81,7 +72,7 @@ class TestOrgCacheHelpers:
         redis_client.setex.side_effect = RuntimeError("boom")
         redis_client.delete.side_effect = RuntimeError("boom")
 
-        with patch("src.services.orgs.cache._get_redis_client", return_value=redis_client):
+        with patch("src.services.orgs.cache.get_redis_client", return_value=redis_client):
             assert org_cache.get_cached_org_by_slug("broken") is None
             org_cache.set_cached_org_by_slug("broken", {"slug": "broken"})
             org_cache.invalidate_org_cache("broken")
@@ -92,20 +83,16 @@ class TestOrgCacheHelpers:
         assert redis_client.setex.call_count == 2
         assert redis_client.delete.call_count == 1
 
-    def test_get_redis_client_handles_missing_and_error_paths(self):
-        with patch(
-            "src.services.orgs.cache.get_learnhouse_config",
-            return_value=SimpleNamespace(
-                redis_config=SimpleNamespace(redis_connection_string="")
-            ),
-        ):
-            assert org_cache._get_redis_client() is None
-
-        with patch(
-            "src.services.orgs.cache.get_learnhouse_config",
-            side_effect=RuntimeError("boom"),
-        ):
-            assert org_cache._get_redis_client() is None
+    def test_get_redis_client_returns_none_when_core_returns_none(self):
+        """get_redis_client from src.core.redis returns None → cache functions
+        all return None / no-op silently."""
+        with patch("src.services.orgs.cache.get_redis_client", return_value=None):
+            assert org_cache.get_cached_org_by_slug("any-slug") is None
+            assert org_cache.get_cached_instance_info() is None
+            # These must not raise
+            org_cache.set_cached_org_by_slug("any-slug", {})
+            org_cache.invalidate_org_cache("any-slug")
+            org_cache.set_cached_instance_info({})
 
 
 class TestOrgUsageHelpers:
@@ -184,8 +171,10 @@ class TestOrgUsageHelpers:
         self,
         admin_user,
     ):
-        db_session = Mock()
-        db_session.exec.return_value.first.return_value = None
+        db_session = AsyncMock()
+        mock_result = MagicMock()
+        mock_result.scalars.return_value.first.return_value = None
+        db_session.execute.return_value = mock_result
 
         with patch(
             "src.services.orgs.usage.authorization_verify_if_user_is_anon",
@@ -211,7 +200,7 @@ class TestOrgUsageHelpers:
         org,
         admin_user,
     ):
-        _make_org_config(
+        await _make_org_config(
             db,
             org.id,
             {
@@ -232,9 +221,11 @@ class TestOrgUsageHelpers:
             return_value="saas",
         ), patch(
             "src.services.orgs.usage._get_actual_usage",
+            new_callable=AsyncMock,
             side_effect=[3, 1],
         ), patch(
             "src.services.orgs.usage._get_actual_admin_seat_count",
+            new_callable=AsyncMock,
             return_value=2,
         ), patch(
             "src.services.orgs.usage.get_plan_limit",
@@ -286,7 +277,7 @@ class TestOrgUsageHelpers:
         org,
         admin_user,
     ):
-        _make_org_config(
+        await _make_org_config(
             db,
             org.id,
             {
@@ -307,9 +298,11 @@ class TestOrgUsageHelpers:
             return_value="oss",
         ), patch(
             "src.services.orgs.usage._get_actual_usage",
+            new_callable=AsyncMock,
             side_effect=[2, 1],
         ), patch(
             "src.services.orgs.usage._get_actual_admin_seat_count",
+            new_callable=AsyncMock,
             return_value=0,
         ), patch(
             "src.services.orgs.usage.get_plan_limit",

@@ -47,12 +47,21 @@ echo "  ✅ Version bumped in web, collab, api, ee/info"
 
 # ─── Commit version bump on dev ─────────────────────────────
 echo "  📦 Committing version bump on dev..."
-git add \
-  "$REPO_ROOT/apps/web/package.json" \
-  "$REPO_ROOT/apps/collab/package.json" \
-  "$REPO_ROOT/apps/api/pyproject.toml" \
-  "$REPO_ROOT/apps/api/app.py" \
-  "$REPO_ROOT/apps/api/ee/routers/info.py"
+
+# If apps/api/ee is a symlink, the EE codebase lives in a separate repo —
+# the sed bump already updated it there, but we can't stage it here.
+FILES_TO_ADD=(
+  "$REPO_ROOT/apps/web/package.json"
+  "$REPO_ROOT/apps/collab/package.json"
+  "$REPO_ROOT/apps/api/pyproject.toml"
+  "$REPO_ROOT/apps/api/app.py"
+)
+if [ -L "$REPO_ROOT/apps/api/ee" ]; then
+  echo "  ℹ️  apps/api/ee is a symlink — EE info.py bumped in linked repo, skipping git add here"
+else
+  FILES_TO_ADD+=("$REPO_ROOT/apps/api/ee/routers/info.py")
+fi
+git add "${FILES_TO_ADD[@]}"
 
 if git diff --cached --quiet; then
   echo "  ℹ️  Version already at ${VERSION}, skipping commit"

@@ -3,9 +3,11 @@
 import React, { Suspense, lazy, useState, useEffect, useRef, useCallback } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useSearchParams } from 'next/navigation'
-import { getUriWithOrg } from '@services/config/config'
+import { getLEARNHOUSE_DOMAIN_VAL, getLEARNHOUSE_HTTP_PROTOCOL_VAL } from '@services/config/config'
 import Image from 'next/image'
 import { CourseContext, CourseDispatchContext } from '@components/Contexts/CourseContext'
+import { useActivity } from '@/hooks/queries/useActivity'
+import { useCourseMeta } from '@/hooks/queries/useCourses'
 
 const Canva = lazy(() => import('@components/Objects/Activities/DynamicCanva/DynamicCanva'))
 const VideoActivity = lazy(() => import('@components/Objects/Activities/Video/Video'))
@@ -39,10 +41,10 @@ function EmbedCourseProvider({ children, course }: { children: React.ReactNode; 
 }
 
 interface EmbedActivityClientProps {
-  activity: any
-  course: any
   activityId: string
+  courseuuid: string
   orgslug: string
+  bgcolor: string | null
 }
 
 const EMBEDDABLE_TYPES = ['TYPE_DYNAMIC', 'TYPE_VIDEO', 'TYPE_DOCUMENT']
@@ -101,11 +103,11 @@ function useContentReady(activityType: string, activitySubType?: string) {
 
     observer.observe(el, { childList: true, subtree: true })
 
-    // Safety timeout — always reveal after 4s regardless
+    // Safety timeout — always reveal after 1.5s regardless
     const timeout = setTimeout(() => {
       setReady(true)
       observer.disconnect()
-    }, 4000)
+    }, 1500)
 
     return () => {
       observer.disconnect()
@@ -116,24 +118,54 @@ function useContentReady(activityType: string, activitySubType?: string) {
   return { ready, containerRef }
 }
 
-function EmbedActivityClient({ activity, course, activityId, orgslug }: EmbedActivityClientProps) {
+function EmbedActivityClient({ activityId, courseuuid, orgslug, bgcolor }: EmbedActivityClientProps) {
   const { t } = useTranslation()
   const searchParams = useSearchParams()
   const showLearnHouseLogo = searchParams.get('showlearnhouselogo') !== 'false'
-  const bgColor = searchParams.get('bgcolor')
   const textColor = searchParams.get('textcolor')
-  const isEmbeddable = EMBEDDABLE_TYPES.includes(activity.activity_type)
-  const { ready, containerRef } = useContentReady(activity.activity_type, activity.activity_sub_type)
+
+  const { data: activity, isLoading: activityLoading } = useActivity(activityId)
+  const { data: course, isLoading: courseLoading } = useCourseMeta(courseuuid)
+
+  const isLoading = activityLoading || courseLoading
+  const { ready, containerRef } = useContentReady(
+    activity?.activity_type ?? '',
+    activity?.activity_sub_type,
+  )
 
   const getActivityUrl = () => {
-    const cleanCourseUuid = course.course_uuid.replace('course_', '')
-    return getUriWithOrg(orgslug, `/course/${cleanCourseUuid}/activity/${activityId}`)
+    const cleanCourseUuid = (course?.course_uuid ?? courseuuid).replace('course_', '')
+    const path = `/course/${cleanCourseUuid}/activity/${activityId}`
+    // Always build an absolute org URL — the embed may be served from the main app domain
+    // (e.g. app.learnhouse.io), so a relative path would resolve to the wrong host.
+    if (typeof window !== 'undefined' && orgslug) {
+      const domain = getLEARNHOUSE_DOMAIN_VAL()
+      const protocol = getLEARNHOUSE_HTTP_PROTOCOL_VAL()
+      if (domain && domain !== 'localhost') {
+        return `${protocol}${orgslug}.${domain}${path}`
+      }
+    }
+    return path
   }
+
+  if (isLoading) {
+    return <div className="min-h-screen" />
+  }
+
+  if (!activity || activity.detail === 'Not Found' || !course || course.detail === 'Not Found') {
+    return null
+  }
+
+  if (!activity.published) {
+    return null
+  }
+
+  const isEmbeddable = EMBEDDABLE_TYPES.includes(activity.activity_type)
 
   if (!isEmbeddable) {
     return (
       <div className="min-h-screen bg-gray-100 flex flex-col items-center justify-center p-8">
-        <div className="bg-white rounded-xl shadow-lg p-8 max-w-md w-full text-center">
+        <div className="bg-white rounded-2xl nice-shadow p-8 max-w-md w-full text-center">
           <div className="mb-6">
             <Image
               src="/learnhouse_bigicon.png"
@@ -161,6 +193,19 @@ function EmbedActivityClient({ activity, course, activityId, orgslug }: EmbedAct
         {showLearnHouseLogo && <PoweredByBadge activityUrl={getActivityUrl()} />}
       </div>
     )
+  }
+
+  const defaultBg = activity.activity_type === 'TYPE_DYNAMIC' ? '#ffffff' : '#09090b'
+
+  const customStyles: React.CSSProperties = {
+    backgroundColor: bgcolor ?? defaultBg,
+    // Prevent browser auto-dark-mode from inverting text inside the embed container
+    colorScheme: 'light',
+    ...(textColor
+      ? { color: `#${textColor}` }
+      : activity.activity_type === 'TYPE_DYNAMIC'
+        ? { color: '#000000' }
+        : {}),
   }
 
   const renderActivityContent = () => {
@@ -204,18 +249,10 @@ function EmbedActivityClient({ activity, course, activityId, orgslug }: EmbedAct
     }
   }
 
-  const defaultBg = activity.activity_type === 'TYPE_DYNAMIC' ? '#ffffff' : '#09090b'
-
-  const customStyles: React.CSSProperties = {
-    backgroundColor: bgColor ? `#${bgColor}` : defaultBg,
-    ...(textColor ? { color: `#${textColor}` } : {}),
-  }
-
   return (
     <div className="min-h-screen relative" style={customStyles}>
       <div
         ref={containerRef}
-        className="p-4"
         style={{
           opacity: ready ? 1 : 0,
           transition: 'opacity 0.15s ease-in',

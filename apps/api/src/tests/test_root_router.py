@@ -78,6 +78,7 @@ def _install_stub_modules(monkeypatch: pytest.MonkeyPatch) -> None:
         "code_submissions",
         "health",
         "instance",
+        "monitoring",
         "plans",
         "usergroups",
         "dev",
@@ -363,7 +364,7 @@ class TestRootRouter:
         # permissive dep; the strict dep is applied on boards_playground below.
         assert _dependency_names(boards) == [
             "get_non_api_token_user",
-            "require_plan_for_boards_pro_boards",
+            "require_plan_for_boards_personal_boards",
         ]
 
         boards_internal = next(

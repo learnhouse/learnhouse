@@ -17,7 +17,7 @@ Usage:
 
 from typing import Callable, Union, TYPE_CHECKING
 from fastapi import Depends, HTTPException, Request, status
-from sqlmodel import Session
+from sqlmodel.ext.asyncio.session import AsyncSession
 
 from src.core.events.database import get_db_session
 from src.db.users import AnonymousUser, PublicUser, APITokenUser
@@ -66,7 +66,7 @@ def require_resource_access(
 
     async def dependency(
         request: Request,
-        db_session: Session = Depends(get_db_session),
+        db_session: AsyncSession = Depends(get_db_session),
         current_user: Union[PublicUser, AnonymousUser, APITokenUser] = Depends(_get_current_user_dependency()),
     ) -> AccessDecision:
         # Extract resource_uuid from path parameters
@@ -167,7 +167,7 @@ def require_create_access(
 
     async def dependency(
         request: Request,
-        db_session: Session = Depends(get_db_session),
+        db_session: AsyncSession = Depends(get_db_session),
         current_user: Union[PublicUser, AnonymousUser, APITokenUser] = Depends(_get_current_user_dependency()),
     ) -> AccessDecision:
         # Use placeholder UUID for creation

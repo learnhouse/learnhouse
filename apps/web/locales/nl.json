@@ -116,6 +116,22 @@
         "sso": {
           "description": "Single Sign-On (SSO) is een premiumfunctie alleen beschikbaar voor organisaties met een Enterprise-plan. Upgrade om veilige authenticatie via uw identiteitsprovider in te schakelen.",
           "title": "Enterprise-functie"
+        },
+        "boards": {
+          "title": "Standard Feature",
+          "description": "Boards is a premium feature available only to organizations on our Standard plan or higher. Upgrade to unlock collaborative boards for real-time brainstorming and planning."
+        },
+        "playgrounds": {
+          "title": "Standard Feature",
+          "description": "Playgrounds is a premium feature available only to organizations on our Standard plan or higher. Upgrade to create interactive AI-generated experiences for your learners."
+        },
+        "scorm": {
+          "title": "Enterprise Feature",
+          "description": "SCORM support is a premium feature available only to organizations on our Enterprise plan. Upgrade to import and deliver SCORM packages alongside your courses."
+        },
+        "webhooks": {
+          "title": "Pro Feature",
+          "description": "Automations is a premium feature available only to organizations on our Pro plan or higher. Upgrade to wire your courses up to webhooks and external integrations."
         }
       },
       "current_plan": "Huidig plan",
@@ -132,7 +148,8 @@
           "podcasts": "Podcasts",
           "payments": "Betalingen",
           "trail": "Voortgang bijhouden",
-          "boards": "Borden"
+          "boards": "Borden",
+          "playgrounds": "Playgrounds"
         },
         "public": {
           "title": "{{feature}} niet beschikbaar",
@@ -181,7 +198,13 @@
     "boards": "Borden",
     "close": "Sluiten",
     "optional": "optioneel",
-    "playgrounds": "Playgrounds"
+    "playgrounds": "Playgrounds",
+    "analytics": "Analyse",
+    "add": "Toevoegen",
+    "choose_an_organization_to_continue": "Kies een organisatie om door te gaan",
+    "for": "voor",
+    "powered_by": "Mogelijk gemaakt door",
+    "results": "resultaat"
   },
   "banner": {
     "viewing_as_guest": "Je bekijkt {{name}} als gast.",
@@ -290,7 +313,7 @@
       "hide_details": "Technische details verbergen",
       "missing_params": "Ongeldige SSO-callback. Vereiste parameters ontbreken.",
       "please_wait": "Even geduld terwijl we uw identiteit verifiëren",
-      "provider": "Provider",
+      "provider": "Aanbieder",
       "redirecting": "U wordt doorgestuurd naar de applicatie...",
       "show_details": "Technische details tonen",
       "success": "Authenticatie geslaagd",
@@ -302,7 +325,9 @@
       },
       "try_again": "Opnieuw proberen"
     },
-    "sso_error": "SSO-authenticatie mislukt. Probeer het opnieuw."
+    "sso_error": "SSO-authenticatie mislukt. Probeer het opnieuw.",
+    "error_generic": "Er is iets misgegaan. Probeer het opnieuw.",
+    "sign_in": "Inloggen"
   },
   "validation": {
     "required": "Verplicht",
@@ -585,14 +610,16 @@
       "from_existing_description": "Upload bestanden van een ander platform en organiseer ze in een cursus"
     },
     "usergroup_filter": {
-      "all_courses": "All Courses",
-      "filter_by_group": "Filter by group",
-      "info_title": "User Group Filter",
-      "info_description": "Filter courses by user group to see only courses assigned to a specific group. Useful for families or teams sharing the same organization."
+      "all_courses": "Alle cursussen",
+      "filter_by_group": "Filteren op groep",
+      "info_title": "Filter op gebruikersgroep",
+      "info_description": "Filter cursussen op gebruikersgroep om alleen cursussen te zien die zijn toegewezen aan een specifieke groep. Handig voor families of teams die dezelfde organisatie delen."
     },
     "copied": "Gekopieerd!",
     "quit_course_confirm": "Weet u zeker dat u deze cursus wilt verlaten? U verliest al uw voortgang.",
-    "quit_course_title": "Cursus verlaten?"
+    "quit_course_title": "Cursus verlaten?",
+    "courses_load_error": "Cursussen laden mislukt. Probeer het opnieuw.",
+    "view_all_courses": "Alle cursussen bekijken"
   },
   "communities": {
     "title": "Community's",
@@ -640,7 +667,8 @@
       "clear_search": "Zoekopdracht wissen",
       "no_discussions": "Nog geen discussies",
       "no_discussions_description": "Wees de eerste die een discussie start in deze community!",
-      "start_discussion": "Discussie starten"
+      "start_discussion": "Discussie starten",
+      "delete_failed": "Kon discussie niet verwijderen"
     },
     "discussion_detail": {
       "edit": "Bewerken",
@@ -648,7 +676,8 @@
       "delete_title": "Discussie verwijderen?",
       "delete_confirm": "Weet je zeker dat je deze discussie wilt verwijderen? Deze actie kan niet ongedaan worden gemaakt.",
       "delete_button": "Discussie verwijderen",
-      "no_details": "Geen aanvullende details verstrekt."
+      "no_details": "Geen aanvullende details verstrekt.",
+      "delete_failed": "Kon discussie niet verwijderen"
     },
     "discussion_card": {
       "pin_discussion": "Discussie vastpinnen",
@@ -658,7 +687,10 @@
       "delete_discussion": "Discussie verwijderen",
       "delete_title": "Discussie verwijderen?",
       "delete_confirm": "Weet je zeker dat je deze discussie wilt verwijderen? Deze actie kan niet ongedaan worden gemaakt.",
-      "votes": "stemmen"
+      "votes": "stemmen",
+      "delete_failed": "Kon discussie niet verwijderen",
+      "lock_failed": "Kon vergrendelstatus niet bijwerken",
+      "pin_failed": "Kon pinstatus niet bijwerken"
     },
     "comments": {
       "no_replies": "Nog geen reacties",
@@ -674,7 +706,8 @@
       "cancel": "Annuleren",
       "failed_to_post": "Kon reactie niet plaatsen. Probeer het opnieuw.",
       "content_not_allowed": "Je reactie bevat niet-toegestane inhoud.",
-      "failed_to_update": "Bijwerken mislukt. Probeer het opnieuw."
+      "failed_to_update": "Bijwerken mislukt. Probeer het opnieuw.",
+      "failed_to_delete": "Kon reactie niet verwijderen"
     },
     "label_filter": {
       "label": "Label:",
@@ -944,13 +977,20 @@
     "points": "punten",
     "current_points": "Huidige punten: {{points}}",
     "grade": "Cijfer",
-    "run_autograde": "Run Auto-grade",
+    "run_autograde": "Automatisch beoordelen uitvoeren",
     "due_date": "Inleverdatum",
     "task_breakdown": "Taakoverzicht",
     "no_grade_details": "Nog geen cijferdetails beschikbaar.",
     "task_passed": "Geslaagd",
     "task_not_passed": "Niet geslaagd",
-    "score": "score"
+    "score": "score",
+    "form": {
+      "expected_answer": "Verwacht"
+    },
+    "quiz": {
+      "correct_answer": "Juist",
+      "incorrect_answer": "Fout"
+    }
   },
   "certificate": {
     "certificate": "Certificaat",
@@ -1037,7 +1077,8 @@
     "subscription": "Abonnement",
     "benefits": "Voordelen:",
     "min_price": "Minimale prijs:",
-    "choose_price": "Kies je prijs"
+    "choose_price": "Kies je prijs",
+    "stripe_denied": "Stripe-verbinding is geannuleerd."
   },
   "account": {
     "title": "Account",
@@ -1266,7 +1307,8 @@
           "loading_error": "Fout bij het laden van profielgegevens",
           "save_success": "Profiel succesvol bijgewerkt",
           "save_error": "Fout bij het bijwerken van profiel"
-        }
+        },
+        "unknown_section": "Onbekende sectie"
       }
     },
     "sign_out": "Uitloggen",
@@ -1797,7 +1839,7 @@
           "info_description": "Content die deze regels overtreedt, wordt afgewezen met een foutmelding en wordt niet geplaatst.",
           "restrictions_title": "Contentbeperkingen",
           "length_title": "Lengtelimieten",
-          "rate_limits_title": "Rate limits",
+          "rate_limits_title": "Snelheidslimieten",
           "account_requirements_title": "Account-vereisten",
           "blocked_words_section_title": "Geblokkeerde woorden",
           "block_links_label": "Externe links blokkeren",
@@ -2015,7 +2057,8 @@
             "create_success": "Activiteit succesvol aangemaakt",
             "uploading": "Bestand uploaden & activiteit aanmaken...",
             "upload_success": "Bestand succesvol geüpload",
-            "creating_uploading": "Activiteit aanmaken & bestand uploaden..."
+            "creating_uploading": "Activiteit aanmaken & bestand uploaden...",
+            "update_error": "Activiteit bijwerken mislukt"
           },
           "versioning": {
             "version_history": "Versiegeschiedenis",
@@ -2059,6 +2102,9 @@
               "remote_detected": "Externe wijzigingen gedetecteerd",
               "editing_notice": "{{author}} heeft wijzigingen aangebracht terwijl je aan het bewerken was"
             }
+          },
+          "descriptions": {
+            "scorm": "SCORM-compatibel leerpakket"
           }
         }
       },
@@ -2146,7 +2192,9 @@
           "other": "Overig",
           "domains": "Domeinen",
           "sso": "SSO",
-          "usage": "Gebruik"
+          "usage": "Gebruik",
+          "seo": "SEO",
+          "automations": "Automatiseringen"
         },
         "pages": {
           "general": {
@@ -2208,9 +2256,12 @@
         "footer_text": "Voettekst",
         "footer_text_placeholder": "Voer voettekst in...",
         "footer_text_desc": "Aangepaste tekst die onderaan je organisatiepagina's wordt weergegeven",
+        "default_language": "Standaardtaal",
+        "default_language_desc": "De taal die nieuwe bezoekers standaard zien en die wordt gebruikt voor e-mails namens deze organisatie. Leden kunnen hun eigen interfacetaal nog steeds wijzigen.",
         "watermark_desc": "LearnHouse-watermerk tonen op organisatiepagina's",
         "watermark_free_plan": "Watermerk wordt altijd getoond bij het gratis plan",
-        "watermark_label": "\"Made with LearnHouse\"-watermerk"
+        "watermark_label": "\"Made with LearnHouse\"-watermerk",
+        "watermark_ee": "Verborgen door je Enterprise Edition-licentie"
       },
       "images": {
         "title": "Afbeeldingen & Previews",
@@ -2218,7 +2269,7 @@
         "tabs": {
           "logo": "Logo",
           "thumbnail": "Miniatuur",
-          "previews": "Previews"
+          "previews": "Voorbeelden"
         },
         "upload_logo": "Upload nieuw logo",
         "upload_thumbnail": "Upload nieuwe miniatuur",
@@ -2561,7 +2612,7 @@
           "title_label": "Titel",
           "title_placeholder": "Voer sectietitel in",
           "logos": "Logo's",
-          "logo_url": "Logo URL",
+          "logo_url": "Logo-URL",
           "alt_text": "Alt-tekst",
           "upload_logo": "Logo uploaden",
           "add_logo": "Logo toevoegen"
@@ -3004,7 +3055,7 @@
             "presets": {
               "title": "Vooraf ingestelde machtigingen",
               "admin": {
-                "name": "Admin",
+                "name": "Beheerder",
                 "description": "Volledige platformcontrole met alle machtigingen"
               },
               "maintainer": {
@@ -3092,6 +3143,34 @@
             "toasts": {
               "success": "Rol succesvol opgeslagen",
               "error": "Er is een fout opgetreden bij het opslaan van de rol. Probeer het later opnieuw."
+            },
+            "permissions": {
+              "actions": {
+                "access": "toegang",
+                "create": "aanmaken",
+                "delete": "verwijderen",
+                "delete_own": "eigen verwijderen",
+                "read": "lezen",
+                "read_own": "eigen lezen",
+                "update": "bijwerken",
+                "update_own": "eigen bijwerken"
+              },
+              "deselect": "Deselecteren",
+              "deselect_all": "Alles deselecteren",
+              "sections": {
+                "activities": "Activiteiten",
+                "collections": "Collecties",
+                "coursechapters": "Cursushoofdstukken",
+                "courses": "Cursussen",
+                "dashboard": "Dashboard",
+                "organizations": "Organisaties",
+                "roles": "Rollen",
+                "usergroups": "Gebruikersgroepen",
+                "users": "Gebruikers"
+              },
+              "select": "Selecteren",
+              "select_all": "Alles selecteren",
+              "title": "Machtigingen"
             }
           },
           "delete": {
@@ -3211,7 +3290,7 @@
           },
           "code": {
             "title": "Code",
-            "description": "Code challenge with automated test case grading"
+            "description": "Code-uitdaging met geautomatiseerde testcase-beoordeling"
           },
           "short_answer": {
             "title": "Kort antwoord",
@@ -3328,14 +3407,14 @@
           "reject": "Opdracht afwijzen",
           "set_final_grade": "Eindcijfer instellen",
           "mark_as_done": "Markeer gebruikersactiviteit als voltooid",
-          "finalize": "Finalize & Complete",
+          "finalize": "Afronden & Voltooien",
           "reject_description": "Verwijdert de inzending en laat de student opnieuw indienen",
           "set_final_grade_description": "Berekent en slaat het cijfer op zonder de activiteit te voltooien",
           "finalize_description": "Stelt het eindcijfer in en markeert de activiteit als voltooid voor de student"
         },
         "toasts": {
           "reject_success": "Opdracht succesvol afgewezen",
-          "finalize_success": "Assignment graded and activity marked as complete"
+          "finalize_success": "Opdracht beoordeeld en activiteit gemarkeerd als voltooid"
         },
         "filters": {
           "all": "Alle"
@@ -3459,7 +3538,9 @@
             "anti_copy_paste_description": "Ontmoedig het plakken van AI-gegenereerde antwoorden door plakgebeurtenissen te blokkeren. Let op: dit is een afschrikmiddel.",
             "auto_grading_disabled_file": "Automatisch beoordelen is niet beschikbaar omdat deze opdracht een bestandsinzending heeft die menselijke beoordeling vereist.",
             "grading_type_hint": "Hoe cijfers aan studenten worden getoond",
-            "grading_options_hint": "Gedrag bij inzenden"
+            "grading_options_hint": "Gedrag bij inzenden",
+            "show_correct_answers_description": "Zodra de inzending is beoordeeld, zien studenten de juiste antwoorden naast hun eigen — welke quizopties correct waren, het verwachte korte antwoord of getal en de juiste formulierinvullingen.",
+            "show_correct_answers_label": "Juiste antwoorden tonen na beoordeling"
           },
           "toasts": {
             "updating": "Opdracht bijwerken...",
@@ -3499,12 +3580,184 @@
             "anti_copy_paste_label": "Kopiëren & plakken blokkeren",
             "anti_copy_paste_description": "Ontmoedig het plakken van AI-gegenereerde antwoorden door plakgebeurtenissen te blokkeren. Let op: dit is een afschrikmiddel.",
             "grading_type_hint": "Hoe cijfers aan studenten worden getoond",
-            "grading_options_hint": "Gedrag bij inzenden"
+            "grading_options_hint": "Gedrag bij inzenden",
+            "show_correct_answers_description": "Na beoordeling zien studenten de juiste antwoorden naast hun eigen.",
+            "show_correct_answers_label": "Juiste antwoorden tonen na beoordeling"
           },
           "toasts": {
             "creating": "Opdracht aanmaken...",
             "success": "Opdracht succesvol aangemaakt"
           }
+        }
+      }
+    },
+    "search": {
+      "trigger": "Zoeken",
+      "placeholder": "Zoek pagina's en inhoud…",
+      "shortcut_hint": "⌘K",
+      "no_results": "Geen resultaten gevonden",
+      "loading": "Bezig met zoeken…",
+      "type_to_search": "Typ ten minste 2 tekens om inhoud te zoeken",
+      "groups": {
+        "pages": "Pagina's",
+        "courses": "Cursussen",
+        "collections": "Collecties",
+        "users": "Gebruikers",
+        "communities": "Communities",
+        "discussions": "Discussies",
+        "playgrounds": "Speeltuinen",
+        "podcasts": "Podcasts"
+      },
+      "entries": {
+        "home": {
+          "description": "Dashboardoverzicht",
+          "keywords": "home, overzicht, start, dashboard"
+        },
+        "courses": {
+          "description": "Beheer je cursussen",
+          "keywords": "cursussen, lessen, leren, training, klassen"
+        },
+        "assignments": {
+          "description": "Beheer opdrachten",
+          "keywords": "taken, huiswerk, oefeningen, inzendingen"
+        },
+        "communities": {
+          "description": "Beheer communities",
+          "keywords": "forums, discussies, leden, berichten"
+        },
+        "podcasts": {
+          "description": "Beheer podcasts",
+          "keywords": "audio, afleveringen, shows"
+        },
+        "boards": {
+          "description": "Beheer borden",
+          "keywords": "kanban, project, taken, lijsten"
+        },
+        "playgrounds": {
+          "description": "Code-speeltuinen",
+          "keywords": "code, sandbox, repl, programmeren"
+        },
+        "analytics": {
+          "description": "Bekijk analysedashboards",
+          "keywords": "statistieken, metrieken, grafieken, rapporten"
+        },
+        "users": {
+          "description": "Beheer gebruikers van de organisatie",
+          "keywords": "leden, accounts, mensen"
+        },
+        "usergroups": {
+          "description": "Beheer gebruikersgroepen",
+          "keywords": "teams, cohorten, groepen"
+        },
+        "roles": {
+          "description": "Beheer rollen en machtigingen",
+          "keywords": "machtigingen, toegang, rbac, beveiliging"
+        },
+        "signups": {
+          "description": "Aanmeldingen bekijken",
+          "keywords": "registraties, aanvragen, verzoeken"
+        },
+        "org_general": {
+          "description": "Algemene organisatie-instellingen",
+          "keywords": "naam, branding, slug, profiel"
+        },
+        "org_features": {
+          "description": "Beheer organisatiefuncties",
+          "keywords": "functies, modules, schakelaars"
+        },
+        "org_billing": {
+          "description": "Facturering en abonnement",
+          "keywords": "abonnement, betalingen, factuur"
+        },
+        "payments_overview": {
+          "description": "Betalingsoverzicht en omzet",
+          "keywords": "stripe, dashboard, omzet, verkopen",
+          "title": "Betalingsoverzicht"
+        },
+        "payments_products": {
+          "description": "Betaalproducten en prijzen",
+          "keywords": "producten, prijzen, stripe, niveaus, plannen",
+          "title": "Producten"
+        },
+        "users_add": {
+          "description": "Nieuwe leden uitnodigen",
+          "keywords": "uitnodigen, toevoegen, leden, verzenden"
+        },
+        "users_audit_logs": {
+          "description": "Activiteitenlogboek van de organisatie",
+          "keywords": "audit, logs, geschiedenis, beveiliging, activiteit"
+        },
+        "org_branding": {
+          "description": "Logo, kleuren en visuele identiteit",
+          "keywords": "branding, logo, kleuren, thema"
+        },
+        "org_landing": {
+          "description": "Pas je landingspagina aan",
+          "keywords": "landing, startpagina, hero, pagina"
+        },
+        "org_seo": {
+          "description": "Zoekmachineoptimalisatie",
+          "keywords": "seo, zoeken, meta, ranking, google"
+        },
+        "org_ai": {
+          "description": "AI-functies en configuratie",
+          "keywords": "ai, llm, gpt, openai, generatie"
+        },
+        "org_domains": {
+          "description": "Aangepaste domeinen",
+          "keywords": "domein, dns, aangepast, subdomein, cname"
+        },
+        "org_automations": {
+          "description": "Webhooks en externe integraties",
+          "keywords": "webhooks, automatiseringen, zapier, integraties, triggers"
+        },
+        "org_api": {
+          "description": "API-tokens en programmatische toegang",
+          "keywords": "api, tokens, toegang, programmatisch, sleutels"
+        },
+        "org_sso": {
+          "description": "Single sign-on configuratie",
+          "keywords": "sso, saml, oauth, onderneming, login"
+        },
+        "org_other": {
+          "description": "Andere organisatie-instellingen",
+          "keywords": "diversen, geavanceerd, aangepast, extra"
+        },
+        "payments_groups": {
+          "description": "Betaalgroepen en bundels",
+          "keywords": "groepen, bundels, sets",
+          "title": "Betaalgroepen"
+        },
+        "payments_configuration": {
+          "description": "Stripe- en betalingsconfiguratie",
+          "keywords": "configuratie, instellingen, stripe, setup, connect",
+          "title": "Configuratie"
+        },
+        "payments_customers": {
+          "description": "Klanten en abonnees",
+          "keywords": "klanten, abonnees, kopers, betaald",
+          "title": "Klanten"
+        },
+        "courses_migrate": {
+          "description": "Importeer cursussen vanuit een ander LMS",
+          "keywords": "importeren, migreren, overdragen, lms, moodle, canvas",
+          "title": "Cursussen migreren"
+        },
+        "account_general": {
+          "description": "Algemene instellingen van persoonlijk account",
+          "keywords": "account, instellingen, email, naam, taal"
+        },
+        "account_profile": {
+          "description": "Profiel en biografie bewerken",
+          "keywords": "profiel, bio, avatar, foto, openbaar"
+        },
+        "account_security": {
+          "description": "Wachtwoord- en beveiligingsinstellingen",
+          "keywords": "wachtwoord, beveiliging, 2fa, mfa, sessies"
+        },
+        "account_purchases": {
+          "description": "Je aankopen en abonnementen",
+          "keywords": "aankopen, abonnementen, facturering, geschiedenis, bonnen"
         }
       }
     }
@@ -3665,13 +3918,13 @@
         "edit_embed": "Insluitcode bewerken",
         "add_embed_from": "Insluitcode toevoegen van",
         "click_service": "Klik op een service",
-        "add_embed": "Insluitcode toevoegen",
+        "add_embed": "{{name}}-insluitcode toevoegen",
         "add_embed_url": "URL voor insluitcode toevoegen",
         "add_embed_code": "Code insluitcode toevoegen",
-        "paste_url": "URL plakken",
+        "paste_url": "{{name}}-insluit-URL plakken",
         "paste_any_url": "Plak een URL",
         "paste_directly": "Rechtstreeks plakken",
-        "how_to_embed": "Insluitcode toevoegen",
+        "how_to_embed": "{{name}} insluiten",
         "paste_code": "Code plakken",
         "paste_iframe": "iframe plakken"
       },
@@ -3795,8 +4048,8 @@
       "advanced": "Geavanceerd"
     },
     "not_configured": {
-      "title": "Analytics not configured",
-      "description": "Analytics requires a Tinybird connection. Set the <code>LEARNHOUSE_TINYBIRD_INGEST_TOKEN</code> and <code>LEARNHOUSE_TINYBIRD_READ_TOKEN</code> environment variables to enable it."
+      "title": "Analytics niet geconfigureerd",
+      "description": "Analytics vereist een Tinybird-verbinding. Stel de omgevingsvariabelen <code>LEARNHOUSE_TINYBIRD_INGEST_TOKEN</code> en <code>LEARNHOUSE_TINYBIRD_READ_TOKEN</code> in om dit te activeren."
     },
     "advanced_gate": {
       "requires": "Vereist",
@@ -3805,156 +4058,156 @@
     "common": {
       "loading": "Laden...",
       "no_data": "Nog geen gegevens",
-      "users": "Users",
-      "views": "Views",
-      "enrollments": "Enrollments",
-      "completions": "Completions",
-      "course": "Course",
-      "date": "Date",
-      "user": "User",
+      "users": "Gebruikers",
+      "views": "Weergaven",
+      "enrollments": "Inschrijvingen",
+      "completions": "Voltooiingen",
+      "course": "Cursus",
+      "date": "Datum",
+      "user": "Gebruiker",
       "type": "Type",
-      "expand": "Expand",
-      "days": "Days",
+      "expand": "Uitklappen",
+      "days": "Dagen",
       "score": "Score",
-      "unique_users": "unique users"
+      "unique_users": "unieke gebruikers"
     },
     "overview": {
-      "live_now": "Live Now",
-      "last_5_minutes": "Last 5 minutes",
-      "signups": "Signups",
-      "submissions": "Submissions",
-      "daily_active_users": "Daily Active Users",
-      "active_users": "Active Users",
-      "countries": "Countries",
-      "top_countries": "Top Countries",
-      "devices": "Devices",
+      "live_now": "Nu live",
+      "last_5_minutes": "Afgelopen 5 minuten",
+      "signups": "Aanmeldingen",
+      "submissions": "Inzendingen",
+      "daily_active_users": "Dagelijks actieve gebruikers",
+      "active_users": "Actieve gebruikers",
+      "countries": "Landen",
+      "top_countries": "Top landen",
+      "devices": "Apparaten",
       "desktop": "Desktop",
-      "mobile": "Mobile",
+      "mobile": "Mobiel",
       "tablet": "Tablet",
-      "top_referrers": "Top Referrers",
-      "top_referrer": "Top Referrer",
-      "enrollment_funnel": "Enrollment Funnel",
-      "page_views": "Page Views",
-      "course_views": "Course Views",
-      "view_to_enroll": "View → Enroll",
-      "enroll_to_complete": "Enroll → Complete",
-      "page_to_complete": "Page → Complete",
-      "conv_rate": "Conv. Rate",
-      "top_courses": "Top Courses",
-      "activity_engagement": "Activity Engagement",
-      "activity": "Activity",
-      "avg_time": "Avg Time",
-      "activities": "Activities",
-      "courses": "Courses",
+      "top_referrers": "Top verwijzers",
+      "top_referrer": "Top verwijzer",
+      "enrollment_funnel": "Inschrijvingstrechter",
+      "page_views": "Paginaweergaven",
+      "course_views": "Cursusweergaven",
+      "view_to_enroll": "Weergave → Inschrijving",
+      "enroll_to_complete": "Inschrijving → Voltooid",
+      "page_to_complete": "Pagina → Voltooid",
+      "conv_rate": "Conv.-percentage",
+      "top_courses": "Top cursussen",
+      "activity_engagement": "Activiteitsbetrokkenheid",
+      "activity": "Activiteit",
+      "avg_time": "Gem. tijd",
+      "activities": "Activiteiten",
+      "courses": "Cursussen",
       "enrollments": "Inschrijvingen",
       "completions": "Voltooiingen"
     },
     "modals": {
       "live_users": {
-        "title": "Live Users",
-        "description": "Users active in the last 5 minutes"
+        "title": "Live gebruikers",
+        "description": "Gebruikers die actief waren in de afgelopen 5 minuten"
       },
       "signups": {
-        "title": "Signups",
-        "description": "New user registrations in the last {{days}} days"
+        "title": "Aanmeldingen",
+        "description": "Nieuwe gebruikersregistraties in de afgelopen {{days}} dagen"
       },
       "enrollments": {
-        "title": "Enrollments",
-        "description": "Course enrollments in the last {{days}} days"
+        "title": "Inschrijvingen",
+        "description": "Cursusinschrijvingen in de afgelopen {{days}} dagen"
       },
       "completions": {
-        "title": "Completions",
-        "description": "Course completions in the last {{days}} days"
+        "title": "Voltooiingen",
+        "description": "Cursusvoltooiingen in de afgelopen {{days}} dagen"
       },
       "live_users_table": {
-        "current_page": "Current Page",
-        "device": "Device",
-        "country": "Country",
-        "last_seen": "Last Seen"
+        "current_page": "Huidige pagina",
+        "device": "Apparaat",
+        "country": "Land",
+        "last_seen": "Laatst gezien"
       },
       "signups_table": {
-        "email": "Email",
-        "method": "Method"
+        "email": "E-mail",
+        "method": "Methode"
       }
     },
     "advanced_widgets": {
       "org_growth_trend": {
-        "title": "Org Growth Trend",
-        "description": "Weekly signups, enrollments, completions"
+        "title": "Groeitrend organisatie",
+        "description": "Wekelijkse aanmeldingen, inschrijvingen, voltooiingen"
       },
       "new_vs_returning": {
-        "title": "New vs Returning Users",
-        "description": "Growth vs retention health"
+        "title": "Nieuwe vs. terugkerende gebruikers",
+        "description": "Groei vs. retentiegezondheid"
       },
       "cohort_retention": {
-        "title": "Cohort Retention",
-        "description": "% users active after signup week",
+        "title": "Cohortretentie",
+        "description": "% gebruikers actief na week van aanmelding",
         "cohort": "Cohort",
-        "size": "Size"
+        "size": "Grootte"
       },
       "peak_usage": {
-        "title": "Peak Usage Hours",
-        "description": "Event volume by day and hour",
+        "title": "Piekgebruiksuren",
+        "description": "Gebeurtenisvolume per dag en uur",
         "days": {
-          "mon": "Mon",
-          "tue": "Tue",
-          "wed": "Wed",
-          "thu": "Thu",
-          "fri": "Fri",
-          "sat": "Sat",
-          "sun": "Sun"
+          "mon": "ma",
+          "tue": "di",
+          "wed": "wo",
+          "thu": "do",
+          "fri": "vr",
+          "sat": "za",
+          "sun": "zo"
         },
-        "events": "events"
+        "events": "gebeurtenissen"
       },
       "course_dropoff": {
-        "title": "Course Dropoff",
-        "description": "Where users stop per course"
+        "title": "Cursus-uitval",
+        "description": "Waar gebruikers stoppen per cursus"
       },
       "time_to_completion": {
-        "title": "Time to Completion",
-        "description": "Median days to complete each course"
+        "title": "Tijd tot voltooiing",
+        "description": "Mediaan aantal dagen om elke cursus te voltooien"
       },
       "completion_velocity": {
-        "title": "Completion Velocity",
-        "description": "Avg days between activity completions"
+        "title": "Voltooiingssnelheid",
+        "description": "Gem. dagen tussen activiteitsvoltooiingen"
       },
       "content_type_effectiveness": {
-        "title": "Content Type Effectiveness",
-        "description": "Completion rate by activity type"
+        "title": "Effectiviteit van inhoudstype",
+        "description": "Voltooiingspercentage per activiteitstype"
       },
       "course_effectiveness_matrix": {
-        "title": "Course Effectiveness Matrix",
-        "description": "Activity count vs completion rate (sized by enrollments)"
+        "title": "Cursuseffectiviteitsmatrix",
+        "description": "Aantal activiteiten vs. voltooiingspercentage (grootte op basis van inschrijvingen)"
       },
       "community_correlation": {
-        "title": "Community Correlation",
-        "description": "Completion rate: discussors vs non-discussors",
-        "discussion_users": "Discussion Users",
-        "non_discussion_users": "Non-Discussion Users"
+        "title": "Communitycorrelatie",
+        "description": "Voltooiingspercentage: deelnemers vs. niet-deelnemers aan discussies",
+        "discussion_users": "Deelnemers aan discussies",
+        "non_discussion_users": "Niet-deelnemers aan discussies"
       },
       "learner_engagement_score": {
-        "title": "Learner Engagement Score",
-        "description": "Top learners by composite engagement",
-        "user_id": "User ID"
+        "title": "Betrokkenheidsscore leerlingen",
+        "description": "Top leerlingen op basis van samengestelde betrokkenheid",
+        "user_id": "Gebruikers-ID"
       },
       "user_progress_snapshot": {
-        "title": "User Progress Snapshot",
-        "description": "Users at each completion bracket per course"
+        "title": "Momentopname gebruikersvoortgang",
+        "description": "Gebruikers per voltooiingscategorie per cursus"
       },
       "grade_distribution": {
-        "title": "Grade Distribution",
-        "description": "Assignment grade histogram"
+        "title": "Cijferverdeling",
+        "description": "Histogram van opdrachtcijfers"
       },
       "search_effectiveness": {
-        "title": "Search Effectiveness",
-        "description": "Top queries and zero-result rate",
-        "query": "Query",
-        "searches": "Searches",
-        "zero_results": "Zero Results %"
+        "title": "Zoekeffectiviteit",
+        "description": "Top zoekopdrachten en percentage zonder resultaat",
+        "query": "Zoekopdracht",
+        "searches": "Zoekopdrachten",
+        "zero_results": "Nul resultaten %"
       },
       "certification_rate": {
-        "title": "Certification Rate",
-        "description": "% of completers who claim certificates"
+        "title": "Certificeringspercentage",
+        "description": "% voltooiers dat certificaten claimt"
       }
     },
     "course_analytics": {
@@ -4211,7 +4464,7 @@
         "slash_commands": "Typ / voor slash-commando's",
         "headings_lists": "Koppen, lijsten & tekst",
         "images_media": "Afbeeldingen & media",
-        "video_embeds": "Video & embeds",
+        "video_embeds": "Video & insluitingen",
         "tables_callouts": "Tabellen & callouts",
         "interactive_blocks": "Interactieve blokken"
       },
@@ -4408,7 +4661,8 @@
       "search_placeholder": "Zoek op naam of e-mail...",
       "title": "Leden",
       "user": "Gebruiker",
-      "viewer": "Kijker"
+      "viewer": "Kijker",
+      "all_groups": "Alle groepen"
     },
     "name": "Naam",
     "name_placeholder": "bijv. Projectplanning",
@@ -4420,7 +4674,8 @@
       "delete": "Verwijderen",
       "delete_multiple": "{{count}} items verwijderen",
       "move_back": "Naar achteren",
-      "move_forward": "Naar voren"
+      "move_forward": "Naar voren",
+      "duplicate": "Dupliceren"
     },
     "open_board": "Bord openen",
     "pagination": {
@@ -4523,12 +4778,14 @@
     "zoom": {
       "zoom_in": "Inzoomen",
       "zoom_out": "Uitzoomen"
-    }
+    },
+    "no_boards": "Nog geen borden",
+    "no_search_results": "Geen borden gevonden"
   },
   "embed": {
     "not_supported_description": "Dit type activiteit vereist authenticatie en kan niet worden ingebed.",
     "not_supported_title": "Deze activiteit wordt niet ondersteund",
-    "powered_by": "Powered by LearnHouse",
+    "powered_by": "Mogelijk gemaakt door LearnHouse",
     "visit_activity": "Activiteitpagina bezoeken"
   },
   "migration": {
@@ -4589,7 +4846,9 @@
           "ai": "1.000 AI-credits",
           "ai_desc": "Versnel het maken van content met AI-schrijftools.",
           "analytics": "Leerlingenanalyses",
-          "analytics_desc": "Volg voortgang en betrokkenheid om uw cursussen te verbeteren."
+          "analytics_desc": "Volg voortgang en betrokkenheid om uw cursussen te verbeteren.",
+          "playgrounds": "Interactieve playgrounds",
+          "playgrounds_desc": "Laat leerlingen experimenteren en oefenen met praktische interactieve oefeningen."
         }
       },
       "pro": {
@@ -4606,8 +4865,6 @@
           "custom_domain_desc": "Gebruik uw eigen domein voor een academie met uw merk.",
           "roles": "Aangepaste rollen & machtigingen",
           "roles_desc": "Bepaal precies wie wat kan doen in uw organisatie.",
-          "playgrounds": "Interactieve playgrounds",
-          "playgrounds_desc": "Laat leerlingen experimenteren en oefenen met praktische interactieve oefeningen.",
           "api": "API-toegang & webhooks",
           "api_desc": "Integreer met bestaande tools en automatiseer workflows."
         }
@@ -4643,6 +4900,15 @@
       "usergroups_add_a_group": "Groep toevoegen",
       "toast_add_error": "Groep kon niet worden toegevoegd",
       "toast_remove_error": "Groep kon niet worden verwijderd"
-    }
+    },
+    "accessDenied": "Geen toegang tot deze cursus",
+    "backToCourses": "Terug naar cursussen",
+    "loadError": "Deze cursus kon niet worden gevonden of er is een fout opgetreden bij het laden.",
+    "noPermission": "Je hebt geen toestemming om deze cursus te bekijken."
+  },
+  "pagination": {
+    "next": "Volgende",
+    "previous": "Vorige",
+    "showing_page": "Pagina {{current}} van {{total}} weergegeven"
   }
 }

@@ -1,7 +1,6 @@
 import pytest
-from unittest.mock import Mock, AsyncMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 from fastapi import HTTPException, Request
-from sqlmodel import Session
 from src.security.rbac.rbac import (
     authorization_verify_if_element_is_public,
     authorization_verify_if_user_is_author,
@@ -14,6 +13,7 @@ from src.db.courses.courses import Course
 from src.db.collections import Collection
 from src.db.resource_authors import ResourceAuthor, ResourceAuthorshipEnum, ResourceAuthorshipStatusEnum
 from src.db.roles import Role
+from unittest.mock import Mock
 
 
 class TestRBAC:
@@ -27,7 +27,9 @@ class TestRBAC:
     @pytest.fixture
     def mock_db_session(self):
         """Create a mock database session"""
-        return Mock(spec=Session)
+        session = AsyncMock()
+        session.execute.return_value = MagicMock()
+        return session
 
     @pytest.fixture
     def mock_course(self):
@@ -157,8 +159,8 @@ class TestRBAC:
             mock_check_type.return_value = "courses"
             
             # Mock database query
-            mock_db_session.exec.return_value.first.return_value = mock_course
-            
+            mock_db_session.execute.return_value.scalars.return_value.first.return_value = mock_course
+
             result = await authorization_verify_if_element_is_public(
                 request=mock_request,
                 element_uuid="course_123",
@@ -175,7 +177,7 @@ class TestRBAC:
             mock_check_type.return_value = "courses"
             
             # Mock database query to return None (course not found or not public)
-            mock_db_session.exec.return_value.first.return_value = None
+            mock_db_session.execute.return_value.scalars.return_value.first.return_value = None
             
             with pytest.raises(HTTPException) as exc_info:
                 await authorization_verify_if_element_is_public(
@@ -195,7 +197,7 @@ class TestRBAC:
             mock_check_type.return_value = "collections"
             
             # Mock database query
-            mock_db_session.exec.return_value.first.return_value = mock_collection
+            mock_db_session.execute.return_value.scalars.return_value.first.return_value = mock_collection
             
             result = await authorization_verify_if_element_is_public(
                 request=mock_request,
@@ -241,8 +243,8 @@ class TestRBAC:
         """Test author verification success"""
         with patch('src.security.rbac.rbac.check_element_type', new_callable=AsyncMock):
             # Mock database query
-            mock_db_session.exec.return_value.first.return_value = mock_resource_author
-            
+            mock_db_session.execute.return_value.scalars.return_value.first.return_value = mock_resource_author
+
             result = await authorization_verify_if_user_is_author(
                 request=mock_request,
                 user_id=1,
@@ -259,7 +261,7 @@ class TestRBAC:
         with patch('src.security.rbac.rbac.check_element_type', new_callable=AsyncMock):
             # Mock database query - returns None because the query now filters by user_id
             # and user_id=2 doesn't match the resource author with user_id=1
-            mock_db_session.exec.return_value.first.return_value = None
+            mock_db_session.execute.return_value.scalars.return_value.first.return_value = None
 
             result = await authorization_verify_if_user_is_author(
                 request=mock_request,
@@ -276,8 +278,8 @@ class TestRBAC:
         """Test author verification when no resource author exists"""
         with patch('src.security.rbac.rbac.check_element_type', new_callable=AsyncMock):
             # Mock database query to return None
-            mock_db_session.exec.return_value.first.return_value = None
-            
+            mock_db_session.execute.return_value.scalars.return_value.first.return_value = None
+
             result = await authorization_verify_if_user_is_author(
                 request=mock_request,
                 user_id=1,
@@ -296,7 +298,7 @@ class TestRBAC:
             mock_check_type.return_value = "courses"
 
             # Mock database query
-            mock_db_session.exec.return_value.all.return_value = [mock_role]
+            mock_db_session.execute.return_value.scalars.return_value.all.return_value = [mock_role]
 
             result = await authorization_verify_based_on_roles(
                 request=mock_request,
@@ -319,7 +321,7 @@ class TestRBAC:
             mock_role.rights.courses.action_read = False
 
             # Mock database query
-            mock_db_session.exec.return_value.all.return_value = [mock_role]
+            mock_db_session.execute.return_value.scalars.return_value.all.return_value = [mock_role]
 
             result = await authorization_verify_based_on_roles(
                 request=mock_request,
@@ -347,7 +349,7 @@ class TestRBAC:
             mock_user_org.role_id = 1  # Admin role
 
             # Mock database query - implementation uses .first()
-            mock_db_session.exec.return_value.first.return_value = mock_user_org
+            mock_db_session.execute.return_value.scalars.return_value.first.return_value = mock_user_org
 
             result = await authorization_verify_based_on_org_admin_status(
                 request=mock_request,
@@ -368,8 +370,7 @@ class TestRBAC:
             mock_get_org_id.return_value = 1
 
             # Mock no UserOrganization found (user is NOT admin in target org)
-            # Implementation uses .first() which should return None
-            mock_db_session.exec.return_value.first.return_value = None
+            mock_db_session.execute.return_value.scalars.return_value.first.return_value = None
 
             result = await authorization_verify_based_on_org_admin_status(
                 request=mock_request,

@@ -19,7 +19,8 @@ import {
   AlertTriangle,
 } from 'lucide-react';
 import toast from 'react-hot-toast';
-import useSWR, { mutate } from 'swr';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { queryKeys } from '@/lib/query/keys';
 import ConfirmationModal from '@components/Objects/StyledElements/ConfirmationModal/ConfirmationModal';
 import { Button } from '@components/ui/button';
 import { getMainDomainUri } from '@services/config/config';
@@ -60,24 +61,44 @@ const PaymentsConfigurationPage: React.FC = () => {
   const org = useOrg() as any;
   const session = useLHSession() as any;
   const access_token = session?.data?.tokens?.access_token;
+  const queryClient = useQueryClient();
 
-  const { data: paymentConfigs, error, isLoading } = useSWR(
-    () => (org && access_token ? [`/payments/${org.id}/config`, access_token] : null),
-    ([, token]) => getPaymentConfigs(org.id, token),
-    { revalidateOnFocus: false }
-  );
+  const { data: paymentConfigs, error, isLoading } = useQuery({
+    queryKey: queryKeys.payments.configs(org?.id),
+    queryFn: () => getPaymentConfigs(org.id, access_token),
+    enabled: !!(org?.id && access_token),
+    staleTime: 60_000,
+  });
 
   useEffect(() => {
     const handleMessage = (event: MessageEvent) => {
       if (event.data?.type === 'payment_provider_connected') {
-        mutate([`/payments/${org?.id}/config`, access_token]);
+        queryClient.invalidateQueries({ queryKey: queryKeys.payments.configs(org?.id) });
       }
     };
     window.addEventListener('message', handleMessage);
     return () => window.removeEventListener('message', handleMessage);
-  }, [org?.id, access_token]);
+  }, [org?.id, queryClient]);
 
-  if (isLoading) return <div className="p-6 text-sm text-gray-500">Loading...</div>;
+  if (isLoading) return (
+    <div className="ml-10 mr-10 mx-auto bg-white rounded-xl nice-shadow px-4 py-4 animate-pulse">
+      <div className="h-14 bg-gray-100 rounded-md mb-4" />
+      <div className="space-y-3">
+        {[1, 2].map((i) => (
+          <div key={i} className="border border-gray-200 rounded-xl px-5 py-4 flex items-center justify-between">
+            <div className="flex items-center space-x-4">
+              <div className="w-10 h-10 bg-gray-200 rounded-lg" />
+              <div className="space-y-2">
+                <div className="h-4 bg-gray-200 rounded w-28" />
+                <div className="h-3 bg-gray-100 rounded w-48" />
+              </div>
+            </div>
+            <div className="h-8 bg-gray-200 rounded w-24" />
+          </div>
+        ))}
+      </div>
+    </div>
+  );
   if (error) return <div className="p-6 text-sm text-red-500">Error loading payment configuration</div>;
 
   const configs: any[] = Array.isArray(paymentConfigs) ? paymentConfigs : [];
@@ -120,6 +141,7 @@ interface ProviderCardProps {
 }
 
 const ProviderCard: React.FC<ProviderCardProps> = ({ provider, config, orgId, accessToken }) => {
+  const queryClient = useQueryClient();
   const [isConnecting, setIsConnecting] = useState(false);
   const [disconnectError, setDisconnectError] = useState<{ count: number } | null>(null);
   const isConnected = !!(config?.provider_specific_id && config?.active);
@@ -129,7 +151,7 @@ const ProviderCard: React.FC<ProviderCardProps> = ({ provider, config, orgId, ac
       setIsConnecting(true);
       if (!config) {
         await initializePaymentConfig(orgId, { provider: provider.id, enabled: true }, provider.id, accessToken);
-        await mutate([`/payments/${orgId}/config`, accessToken]);
+        queryClient.invalidateQueries({ queryKey: queryKeys.payments.configs(orgId) });
       }
       const redirectUri = getMainDomainUri(provider.callbackPath);
       const url = await provider.getConnectUrl(orgId, accessToken, redirectUri);
@@ -146,7 +168,7 @@ const ProviderCard: React.FC<ProviderCardProps> = ({ provider, config, orgId, ac
     try {
       await deletePaymentConfig(orgId, config.id, accessToken);
       toast.success(`${provider.name} connection removed`);
-      mutate([`/payments/${orgId}/config`, accessToken]);
+      queryClient.invalidateQueries({ queryKey: queryKeys.payments.configs(orgId) });
     } catch (err: any) {
       if (err?.status === 409 || err?.response?.status === 409) {
         let detail: any = err?.detail ?? err?.response?.data?.detail;

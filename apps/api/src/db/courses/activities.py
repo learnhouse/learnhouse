@@ -1,5 +1,6 @@
 from typing import Optional
 from sqlalchemy import JSON, Column, ForeignKey, Integer
+from sqlalchemy.dialects.postgresql import JSONB
 from sqlmodel import Field, SQLModel
 from enum import Enum
 
@@ -61,6 +62,7 @@ class Activity(ActivityBase, table=True):
     activity_uuid: str = Field(default="", index=True)
     creation_date: str = ""
     update_date: str = ""
+    extra_metadata: Optional[dict] = Field(default=None, sa_column=Column(JSONB))
     # Versioning fields
     current_version: int = Field(default=1)
     last_modified_by_id: Optional[int] = Field(
@@ -74,6 +76,7 @@ class ActivityCreate(ActivityBase):
     activity_type: ActivityTypeEnum = ActivityTypeEnum.TYPE_CUSTOM
     activity_sub_type: ActivitySubTypeEnum = ActivitySubTypeEnum.SUBTYPE_CUSTOM
     details: dict = Field(default_factory=dict, sa_column=Column(JSON))
+    extra_metadata: Optional[dict] = None
     pass
 
 
@@ -87,6 +90,7 @@ class ActivityUpdate(SQLModel):
     published_version: Optional[int] = None
     version: Optional[int] = None
     lock_type: Optional[ActivityLockType] = None
+    extra_metadata: Optional[dict] = None
 
 
 class ActivityRead(ActivityBase):
@@ -97,6 +101,7 @@ class ActivityRead(ActivityBase):
     creation_date: str
     update_date: str
     details: Optional[dict] = Field(default=None, sa_column=Column(JSON))
+    extra_metadata: Optional[dict] = None
     # Versioning fields
     current_version: int = 1
     last_modified_by_id: Optional[int] = None

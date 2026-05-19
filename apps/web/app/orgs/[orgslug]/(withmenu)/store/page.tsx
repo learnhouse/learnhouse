@@ -2,6 +2,7 @@ import { Metadata } from 'next'
 import { getOrganizationContextInfo } from '@services/organizations/orgs'
 import { getOrgThumbnailMediaDirectory, getOrgOgImageMediaDirectory } from '@services/media/media'
 import { getCanonicalUrl, getOrgSeoConfig, buildPageTitle, buildBreadcrumbJsonLd } from '@/lib/seo/utils'
+import { getServerCanonicalUrl } from '@/lib/seo/utils.server'
 import { JsonLd } from '@components/SEO/JsonLd'
 import { getPublicOffers } from '@services/payments/offers'
 import Store from './store'
@@ -18,7 +19,7 @@ export async function generateMetadata({ params }: { params: PageParams }): Prom
   const imageUrl = ogImageUrl || (org ? getOrgThumbnailMediaDirectory(org.org_uuid, org.thumbnail_image) : undefined)
   const title = buildPageTitle('Store', org?.name || 'Organization', seoConfig)
   const description = `Browse offers and subscriptions from ${org?.name || 'this organization'}`
-  const canonical = getCanonicalUrl(orgslug, '/store')
+  const canonical = await getServerCanonicalUrl(orgslug, '/store')
 
   return {
     title,
@@ -69,8 +70,8 @@ export default async function StorePage({ params }: { params: PageParams }) {
   }
 
   const breadcrumbJsonLd = buildBreadcrumbJsonLd([
-    { name: 'Home', url: getCanonicalUrl(orgslug, '/') },
-    { name: 'Store', url: getCanonicalUrl(orgslug, '/store') },
+    { name: 'Home', url: await getServerCanonicalUrl(orgslug, '/') },
+    { name: 'Store', url: await getServerCanonicalUrl(orgslug, '/store') },
   ])
 
   return (

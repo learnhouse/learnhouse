@@ -5,7 +5,9 @@ import * as Yup from 'yup'
 import {
   updateOrganization,
   updateOrgFooterTextConfig,
+  updateOrgDefaultLanguageConfig,
 } from '@services/settings/org'
+import { AVAILABLE_LANGUAGES } from '@/lib/languages'
 import { revalidateTags } from '@services/utils/ts/requests'
 import { useRouter } from 'next/navigation'
 import { useOrg } from '@components/Contexts/OrgContext'
@@ -16,8 +18,8 @@ import { Textarea } from "@components/ui/textarea"
 import { Button } from "@components/ui/button"
 import { Label } from "@components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@components/ui/select"
-import { mutate } from 'swr'
-import { getAPIUrl } from '@services/config/config'
+import { useQueryClient } from '@tanstack/react-query'
+import { queryKeys } from '@/lib/query/keys'
 import { useTranslation } from 'react-i18next'
 
 const ORG_LABELS = [
@@ -78,10 +80,18 @@ const OrgEditGeneral: React.FC = () => {
   const session = useLHSession() as any
   const access_token = session?.data?.tokens?.access_token
   const org = useOrg() as any
+  const queryClient = useQueryClient()
 
   // Footer text state
   const [footerText, setFooterText] = React.useState<string>(org?.config?.config?.customization?.general?.footer_text || org?.config?.config?.general?.footer_text || '')
   const [isFooterSaving, setIsFooterSaving] = React.useState(false)
+
+  // Default language state
+  const [defaultLanguage, setDefaultLanguage] = React.useState<string>(
+    org?.config?.config?.customization?.general?.default_language ||
+    org?.config?.config?.general?.default_language ||
+    'en'
+  )
 
   const initialValues: OrganizationValues = {
     name: org?.name,
@@ -96,8 +106,10 @@ const OrgEditGeneral: React.FC = () => {
       await updateOrganization(org.id, values, access_token)
       // Also save footer text
       await updateOrgFooterTextConfig(org.id, footerText, access_token)
+      // Save default language
+      await updateOrgDefaultLanguageConfig(org.id, defaultLanguage, access_token)
       await revalidateTags(['organizations'], org.slug)
-      mutate(`${getAPIUrl()}orgs/slug/${org.slug}`)
+      queryClient.invalidateQueries({ queryKey: queryKeys.org.detail(org.slug) })
       toast.success(t('dashboard.organization.settings.update_success'), { id: loadingToast })
     } catch (err) {
       toast.error(t('dashboard.organization.settings.update_error'), { id: loadingToast })
@@ -231,6 +243,31 @@ const OrgEditGeneral: React.FC = () => {
                         maxLength={100}
                       />
                       <p className="text-gray-500 text-sm mt-1">{t('dashboard.organization.settings.footer_text_desc')}</p>
+                    </div>
+
+                    <div>
+                      <Label htmlFor="defaultLanguage">
+                        {t('dashboard.organization.settings.default_language')}
+                      </Label>
+                      <Select
+                        value={defaultLanguage}
+                        onValueChange={setDefaultLanguage}
+                      >
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {AVAILABLE_LANGUAGES.map((lang) => (
+                            <SelectItem key={lang.code} value={lang.code}>
+                              <span className="flex items-center space-x-2">
+                                <span className="text-xs font-mono text-gray-400 w-6">{lang.code.toUpperCase()}</span>
+                                <span>{lang.nativeName}</span>
+                              </span>
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <p className="text-gray-500 text-sm mt-1">{t('dashboard.organization.settings.default_language_desc')}</p>
                     </div>
 
                   </div>

@@ -71,7 +71,7 @@ interface SessionCache {
 const SESSION_CACHE_TTL = 10 * 60 * 1000 // 10 minutes
 const TOKEN_REFRESH_THRESHOLD = 60 * 1000 // 1 minute before expiry
 const AUTH_BROADCAST_CHANNEL = 'learnhouse_auth_sync'
-const OAUTH_STATE_COOKIE = 'learnhouse_oauth_state'
+const OAUTH_STATE_COOKIE = 'LH_oauth_state'
 
 // Context
 interface AuthContextValue {
@@ -231,7 +231,7 @@ export function SessionProvider({
 
   // Check if a session might exist (marker cookie is set alongside httpOnly auth cookies)
   const hasSessionMarker = useCallback((): boolean => {
-    return typeof document !== 'undefined' && document.cookie.includes('learnhouse_has_session')
+    return typeof document !== 'undefined' && document.cookie.includes('LH_session')
   }, [])
 
   // Refresh access token using refresh token cookie
@@ -569,10 +569,10 @@ export function SessionProvider({
 
           if (options.orgSlug || options.orgId) {
             if (options.orgSlug) {
-              document.cookie = `learnhouse_oauth_orgslug=${options.orgSlug}${baseAttributes}${domainAttr}`
+              document.cookie = `LH_oauth_orgslug=${options.orgSlug}${baseAttributes}${domainAttr}`
             }
             if (options.orgId) {
-              document.cookie = `learnhouse_oauth_org_id=${options.orgId}${baseAttributes}${domainAttr}`
+              document.cookie = `LH_oauth_org_id=${options.orgId}${baseAttributes}${domainAttr}`
             }
           }
 
@@ -670,8 +670,8 @@ export function SessionProvider({
     // Clear any auth cookies on client side
     const { secureAttr, domainAttr, sameSiteAttr } = getCookieAttributes()
     const expireAttr = '; expires=Thu, 01 Jan 1970 00:00:00 GMT'
-    document.cookie = `learnhouse_oauth_orgslug=; path=/${expireAttr}${secureAttr}${domainAttr}`
-    document.cookie = `learnhouse_oauth_org_id=; path=/${expireAttr}${secureAttr}${domainAttr}`
+    document.cookie = `LH_oauth_orgslug=; path=/${expireAttr}${secureAttr}${domainAttr}`
+    document.cookie = `LH_oauth_org_id=; path=/${expireAttr}${secureAttr}${domainAttr}`
 
     // Clear OAuth state
     clearOAuthStateCookie()
@@ -849,8 +849,8 @@ export async function signOut(options?: SignOutOptions): Promise<void> {
   // Clear cookies
   const { secureAttr, domainAttr, sameSiteAttr } = getCookieAttributes()
   const expireAttr = '; expires=Thu, 01 Jan 1970 00:00:00 GMT'
-  document.cookie = `learnhouse_oauth_orgslug=; path=/${expireAttr}${secureAttr}${domainAttr}`
-  document.cookie = `learnhouse_oauth_org_id=; path=/${expireAttr}${secureAttr}${domainAttr}`
+  document.cookie = `LH_oauth_orgslug=; path=/${expireAttr}${secureAttr}${domainAttr}`
+  document.cookie = `LH_oauth_org_id=; path=/${expireAttr}${secureAttr}${domainAttr}`
 
   // Clear OAuth state
   clearOAuthStateCookie()

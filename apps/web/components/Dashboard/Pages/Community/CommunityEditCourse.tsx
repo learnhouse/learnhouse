@@ -1,5 +1,5 @@
 'use client'
-import React, { useState, useEffect } from 'react'
+import React, { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useTranslation } from 'react-i18next'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
@@ -8,7 +8,9 @@ import { useCommunity, useCommunityDispatch } from '@components/Contexts/Communi
 import { linkCommunityToCourse, unlinkCommunityFromCourse } from '@services/communities/communities'
 import { getOrgCourses } from '@services/courses/courses'
 import { revalidateTags } from '@services/utils/ts/requests'
-import { mutate } from 'swr'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
+import { queryKeys } from '@/lib/query/keys'
+import { searchMatches } from '@/lib/search/normalize'
 import { getAPIUrl } from '@services/config/config'
 import { Loader2, Link2, Unlink, Search, BookOpen } from 'lucide-react'
 import toast from 'react-hot-toast'
@@ -31,35 +33,24 @@ const CommunityEditCourse: React.FC = () => {
   const dispatch = useCommunityDispatch()
   const community = communityState?.community
   const accessToken = session?.data?.tokens?.access_token
+  const queryClient = useQueryClient()
 
   const [isSubmitting, setIsSubmitting] = useState(false)
-  const [courses, setCourses] = useState<Course[]>([])
-  const [isLoadingCourses, setIsLoadingCourses] = useState(true)
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedCourse, setSelectedCourse] = useState<string | null>(null)
 
-  useEffect(() => {
-    const fetchCourses = async () => {
-      if (!org?.slug) return
-
-      setIsLoadingCourses(true)
-      try {
-        const result = await getOrgCourses(org.slug, null, accessToken)
-        setCourses(result || [])
-      } catch (error) {
-        console.error('Failed to fetch courses:', error)
-      } finally {
-        setIsLoadingCourses(false)
-      }
-    }
-
-    fetchCourses()
-  }, [org?.slug, accessToken])
+  const { data: coursesData, isLoading: isLoadingCourses } = useQuery({
+    queryKey: queryKeys.courses.list(org?.slug ?? ''),
+    queryFn: () => getOrgCourses(org.slug, null, accessToken),
+    enabled: !!(org?.slug && accessToken),
+    staleTime: 60_000,
+  })
+  const courses: Course[] = coursesData || []
 
   if (!community) return null
 
   const filteredCourses = courses.filter((course) =>
-    course.name.toLowerCase().includes(searchQuery.toLowerCase())
+    searchMatches(course.name, searchQuery)
   )
 
   const linkedCourse = courses.find((c) => c.id === community.course_id)
@@ -73,7 +64,7 @@ const CommunityEditCourse: React.FC = () => {
     try {
       await linkCommunityToCourse(community.community_uuid, selectedCourse, accessToken)
       await revalidateTags(['communities'], org.slug)
-      mutate(`${getAPIUrl()}communities/${community.community_uuid}`)
+      queryClient.invalidateQueries({ queryKey: queryKeys.community.detail(community.community_uuid) })
       toast.success(t('dashboard.courses.communities.course.toasts.link_success'), { id: loadingToast })
       setSelectedCourse(null)
       router.refresh()
@@ -92,7 +83,7 @@ const CommunityEditCourse: React.FC = () => {
     try {
       await unlinkCommunityFromCourse(community.community_uuid, accessToken)
       await revalidateTags(['communities'], org.slug)
-      mutate(`${getAPIUrl()}communities/${community.community_uuid}`)
+      queryClient.invalidateQueries({ queryKey: queryKeys.community.detail(community.community_uuid) })
       toast.success(t('dashboard.courses.communities.course.toasts.unlink_success'), { id: loadingToast })
       router.refresh()
     } catch (error) {

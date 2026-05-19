@@ -5,7 +5,7 @@ The consume endpoint sets a Redis key for the jti with NX+TTL on first use.
 A second consume of the same jti must return 410.
 """
 
-from unittest.mock import MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 from fastapi import HTTPException
@@ -33,11 +33,21 @@ async def test_magic_link_single_use_blocks_replay(legit_payload):
     user_row = MagicMock(id=99, email=legit_payload["sub"])
     membership = MagicMock()
 
-    db_mock = MagicMock()
-    db_mock.exec.return_value.first.side_effect = [
-        user_row, membership,
-        user_row, membership,
-    ]
+    from unittest.mock import MagicMock as _MM
+    db_mock = AsyncMock()
+    _results = [user_row, membership, user_row, membership]
+    _call_count = [0]
+
+    def _first():
+        val = _results[_call_count[0]]
+        _call_count[0] += 1
+        return val
+
+    _scalars_mock = _MM()
+    _scalars_mock.first.side_effect = _first
+    _execute_result = _MM()
+    _execute_result.scalars.return_value = _scalars_mock
+    db_mock.execute.return_value = _execute_result
 
     fake_cfg = MagicMock()
     fake_cfg.redis_config.redis_connection_string = "redis://fake"
@@ -83,8 +93,13 @@ async def test_magic_link_falls_through_when_redis_unavailable(legit_payload):
     """Fail-open: with Redis down, consume still succeeds (JWT exp bounds window)."""
     user_row = MagicMock(id=99, email=legit_payload["sub"])
     membership = MagicMock()
-    db_mock = MagicMock()
-    db_mock.exec.return_value.first.side_effect = [user_row, membership]
+    from unittest.mock import MagicMock as _MM2
+    db_mock = AsyncMock()
+    _scalars2 = _MM2()
+    _scalars2.first.side_effect = [user_row, membership]
+    _execute_result2 = _MM2()
+    _execute_result2.scalars.return_value = _scalars2
+    db_mock.execute.return_value = _execute_result2
 
     fake_cfg = MagicMock()
     fake_cfg.redis_config.redis_connection_string = "redis://fake"

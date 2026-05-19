@@ -8,10 +8,12 @@ Uses an in-memory SQLite database with real SQLModel tables.
 import pytest
 from datetime import datetime
 from unittest.mock import AsyncMock, patch
-from sqlmodel import Session, SQLModel, create_engine, select
-from sqlalchemy import event, JSON
+from sqlmodel import SQLModel, select
+from sqlalchemy import JSON
+from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker
 from sqlalchemy.pool import StaticPool
 from sqlalchemy.dialects.postgresql import JSONB
+from sqlmodel.ext.asyncio.session import AsyncSession
 from fastapi import HTTPException
 from starlette.requests import Request
 
@@ -54,6 +56,7 @@ from src.services.admin.admin import (
     get_user_enrollments,
     get_user_groups,
     get_user_progress,
+    get_user_trail_detail,
     issue_magic_link,
     complete_activity,
     uncomplete_activity,
@@ -78,37 +81,33 @@ from src.services.admin.admin import (
 
 
 @pytest.fixture
-def engine():
-    engine = create_engine(
-        "sqlite://",
-        connect_args={"check_same_thread": False},
-        poolclass=StaticPool,
-    )
-
-    # Map JSONB -> JSON for SQLite compatibility
-    @event.listens_for(engine, "connect")
-    def _set_sqlite_pragma(dbapi_connection, connection_record):
-        pass  # placeholder for future pragmas
-
+async def engine():
     # Replace JSONB columns with JSON before creating tables
     for table in SQLModel.metadata.tables.values():
         for col in table.columns:
             if isinstance(col.type, JSONB):
                 col.type = JSON()
 
-    SQLModel.metadata.create_all(engine)
-    yield engine
-    engine.dispose()
+    eng = create_async_engine(
+        "sqlite+aiosqlite://",
+        connect_args={"check_same_thread": False},
+        poolclass=StaticPool,
+    )
+    async with eng.begin() as conn:
+        await conn.run_sync(SQLModel.metadata.create_all)
+    yield eng
+    await eng.dispose()
 
 
 @pytest.fixture
-def db(engine):
-    with Session(engine) as session:
+async def db(engine):
+    factory = async_sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)
+    async with factory() as session:
         yield session
 
 
 @pytest.fixture
-def org(db):
+async def org(db):
     org = Organization(
         id=1,
         name="Test Org",
@@ -119,13 +118,13 @@ def org(db):
         update_date=str(datetime.now()),
     )
     db.add(org)
-    db.commit()
-    db.refresh(org)
+    await db.commit()
+    await db.refresh(org)
     return org
 
 
 @pytest.fixture
-def other_org(db):
+async def other_org(db):
     org = Organization(
         id=2,
         name="Other Org",
@@ -136,13 +135,13 @@ def other_org(db):
         update_date=str(datetime.now()),
     )
     db.add(org)
-    db.commit()
-    db.refresh(org)
+    await db.commit()
+    await db.refresh(org)
     return org
 
 
 @pytest.fixture
-def user(db, org):
+async def user(db, org):
     u = User(
         id=1,
         username="testuser",
@@ -153,15 +152,15 @@ def user(db, org):
         user_uuid="user_test123",
     )
     db.add(u)
-    db.commit()
-    db.refresh(u)
+    await db.commit()
+    await db.refresh(u)
 
     membership = UserOrganization(
         user_id=u.id, org_id=org.id, role_id=1,
         creation_date=str(datetime.now()), update_date=str(datetime.now()),
     )
     db.add(membership)
-    db.commit()
+    await db.commit()
     return u
 
 
@@ -190,7 +189,7 @@ def other_org_token(other_org):
 
 
 @pytest.fixture
-def course(db, org):
+async def course(db, org):
     c = Course(
         id=1,
         name="Test Course",
@@ -204,13 +203,13 @@ def course(db, org):
         update_date=str(datetime.now()),
     )
     db.add(c)
-    db.commit()
-    db.refresh(c)
+    await db.commit()
+    await db.refresh(c)
     return c
 
 
 @pytest.fixture
-def unpublished_course(db, org):
+async def unpublished_course(db, org):
     c = Course(
         id=2,
         name="Unpublished Course",
@@ -224,13 +223,13 @@ def unpublished_course(db, org):
         update_date=str(datetime.now()),
     )
     db.add(c)
-    db.commit()
-    db.refresh(c)
+    await db.commit()
+    await db.refresh(c)
     return c
 
 
 @pytest.fixture
-def chapter(db, org, course):
+async def chapter(db, org, course):
     ch = Chapter(
         id=1,
         name="Test Chapter",
@@ -242,13 +241,13 @@ def chapter(db, org, course):
         update_date=str(datetime.now()),
     )
     db.add(ch)
-    db.commit()
-    db.refresh(ch)
+    await db.commit()
+    await db.refresh(ch)
     return ch
 
 
 @pytest.fixture
-def activity(db, org, course):
+async def activity(db, org, course):
     a = Activity(
         id=1,
         name="Test Activity",
@@ -262,13 +261,13 @@ def activity(db, org, course):
         update_date=str(datetime.now()),
     )
     db.add(a)
-    db.commit()
-    db.refresh(a)
+    await db.commit()
+    await db.refresh(a)
     return a
 
 
 @pytest.fixture
-def chapter_activity(db, org, course, chapter, activity):
+async def chapter_activity(db, org, course, chapter, activity):
     ca = ChapterActivity(
         id=1,
         order=1,
@@ -280,13 +279,13 @@ def chapter_activity(db, org, course, chapter, activity):
         update_date=str(datetime.now()),
     )
     db.add(ca)
-    db.commit()
-    db.refresh(ca)
+    await db.commit()
+    await db.refresh(ca)
     return ca
 
 
 @pytest.fixture
-def foreign_activity(db, other_org):
+async def foreign_activity(db, other_org):
     foreign_course = Course(
         id=200,
         name="Foreign Course",
@@ -300,8 +299,8 @@ def foreign_activity(db, other_org):
         update_date=str(datetime.now()),
     )
     db.add(foreign_course)
-    db.commit()
-    db.refresh(foreign_course)
+    await db.commit()
+    await db.refresh(foreign_course)
 
     foreign_activity = Activity(
         id=200,
@@ -316,8 +315,8 @@ def foreign_activity(db, other_org):
         update_date=str(datetime.now()),
     )
     db.add(foreign_activity)
-    db.commit()
-    db.refresh(foreign_activity)
+    await db.commit()
+    await db.refresh(foreign_activity)
     return foreign_activity
 
 
@@ -329,7 +328,7 @@ def mock_request():
 
 
 @pytest.fixture
-def second_user(db, org):
+async def second_user(db, org):
     """A second org member, used in bulk-enroll and group-membership tests."""
     u = User(
         id=20,
@@ -341,19 +340,19 @@ def second_user(db, org):
         user_uuid="user_bob20",
     )
     db.add(u)
-    db.commit()
-    db.refresh(u)
+    await db.commit()
+    await db.refresh(u)
     membership = UserOrganization(
         user_id=u.id, org_id=org.id, role_id=4,
         creation_date=str(datetime.now()), update_date=str(datetime.now()),
     )
     db.add(membership)
-    db.commit()
+    await db.commit()
     return u
 
 
 @pytest.fixture
-def org_admin_user(db, org):
+async def org_admin_user(db, org):
     """A user with the admin role in the org — required for last-admin tests."""
     u = User(
         id=30,
@@ -365,19 +364,19 @@ def org_admin_user(db, org):
         user_uuid="user_admin30",
     )
     db.add(u)
-    db.commit()
-    db.refresh(u)
+    await db.commit()
+    await db.refresh(u)
     membership = UserOrganization(
         user_id=u.id, org_id=org.id, role_id=1,  # ADMIN_ROLE_ID
         creation_date=str(datetime.now()), update_date=str(datetime.now()),
     )
     db.add(membership)
-    db.commit()
+    await db.commit()
     return u
 
 
 @pytest.fixture
-def certification(db, course):
+async def certification(db, course):
     """A Certifications row tied to the test course."""
     cert = Certifications(
         id=1,
@@ -388,13 +387,13 @@ def certification(db, course):
         update_date=str(datetime.now()),
     )
     db.add(cert)
-    db.commit()
-    db.refresh(cert)
+    await db.commit()
+    await db.refresh(cert)
     return cert
 
 
 @pytest.fixture
-def usergroup(db, org):
+async def usergroup(db, org):
     """A user group in the test org."""
     group = UserGroup(
         id=1,
@@ -406,13 +405,13 @@ def usergroup(db, org):
         update_date=str(datetime.now()),
     )
     db.add(group)
-    db.commit()
-    db.refresh(group)
+    await db.commit()
+    await db.refresh(group)
     return group
 
 
 @pytest.fixture
-def other_org_usergroup(db, other_org):
+async def other_org_usergroup(db, other_org):
     """A user group in a DIFFERENT org — used for cross-org tests."""
     group = UserGroup(
         id=2,
@@ -424,13 +423,13 @@ def other_org_usergroup(db, other_org):
         update_date=str(datetime.now()),
     )
     db.add(group)
-    db.commit()
-    db.refresh(group)
+    await db.commit()
+    await db.refresh(group)
     return group
 
 
 @pytest.fixture
-def student_role(db, org):
+async def student_role(db, org):
     """A student role in the test org — used for role-change tests."""
     role = Role(
         id=4,
@@ -444,13 +443,13 @@ def student_role(db, org):
         update_date=str(datetime.now()),
     )
     db.add(role)
-    db.commit()
-    db.refresh(role)
+    await db.commit()
+    await db.refresh(role)
     return role
 
 
 @pytest.fixture
-def admin_role(db, org):
+async def admin_role(db, org):
     """The admin role (id=1) for role-change tests."""
     role = Role(
         id=1,
@@ -464,8 +463,8 @@ def admin_role(db, org):
         update_date=str(datetime.now()),
     )
     db.add(role)
-    db.commit()
-    db.refresh(role)
+    await db.commit()
+    await db.refresh(role)
     return role
 
 
@@ -478,9 +477,9 @@ def mock_admin_side_effects():
     patches = [
         patch("src.services.admin.admin.dispatch_webhooks", new_callable=AsyncMock),
         patch("src.services.admin.admin.track", new_callable=AsyncMock),
-        patch("src.services.admin.admin.check_limits_with_usage", return_value=True),
-        patch("src.services.admin.admin.increase_feature_usage", return_value=True),
-        patch("src.services.admin.admin.decrease_feature_usage", return_value=True),
+        patch("src.services.admin.admin.check_limits_with_usage", new_callable=AsyncMock, return_value=True),
+        patch("src.services.admin.admin.increase_feature_usage", new_callable=AsyncMock, return_value=True),
+        patch("src.services.admin.admin.decrease_feature_usage", new_callable=AsyncMock, return_value=True),
     ]
     started = [p.start() for p in patches]
     yield {
@@ -541,45 +540,45 @@ class TestRequireApiToken:
 
 class TestResolveOrgSlug:
 
-    def test_resolves_matching_org(self, token_user, org, db):
+    async def test_resolves_matching_org(self, token_user, org, db):
         with _patch_plan(), patch("src.services.admin.admin.plan_meets_requirement", return_value=True):
-            result = _resolve_org_slug("test-org", token_user, db)
+            result = await _resolve_org_slug("test-org", token_user, db)
         assert result.id == org.id
 
-    def test_rejects_unknown_slug(self, token_user, db):
+    async def test_rejects_unknown_slug(self, token_user, db):
         with pytest.raises(HTTPException) as exc:
-            _resolve_org_slug("nonexistent", token_user, db)
+            await _resolve_org_slug("nonexistent", token_user, db)
         assert exc.value.status_code == 404
 
-    def test_rejects_mismatched_org(self, other_org_token, org, db):
+    async def test_rejects_mismatched_org(self, other_org_token, org, db):
         with _patch_plan(), patch("src.services.admin.admin.plan_meets_requirement", return_value=True):
             with pytest.raises(HTTPException) as exc:
-                _resolve_org_slug("test-org", other_org_token, db)
+                await _resolve_org_slug("test-org", other_org_token, db)
             assert exc.value.status_code == 403
 
-    def test_rejects_insufficient_plan(self, token_user, org, db):
+    async def test_rejects_insufficient_plan(self, token_user, org, db):
         with patch("src.services.admin.admin.get_org_plan", return_value="free"), \
              patch("src.services.admin.admin.plan_meets_requirement", return_value=False):
             with pytest.raises(HTTPException) as exc:
-                _resolve_org_slug("test-org", token_user, db)
+                await _resolve_org_slug("test-org", token_user, db)
             assert exc.value.status_code == 403
             assert "Pro plan" in exc.value.detail
 
 
 class TestGetUserInOrg:
 
-    def test_returns_user_in_org(self, user, org, db):
-        result = _get_user_in_org(user.id, org.id, db)
+    async def test_returns_user_in_org(self, user, org, db):
+        result = await _get_user_in_org(user.id, org.id, db)
         assert result.id == user.id
 
-    def test_rejects_nonexistent_user(self, org, db):
+    async def test_rejects_nonexistent_user(self, org, db):
         with pytest.raises(HTTPException) as exc:
-            _get_user_in_org(9999, org.id, db)
+            await _get_user_in_org(9999, org.id, db)
         assert exc.value.status_code == 404
 
-    def test_rejects_user_not_in_org(self, user, other_org, db):
+    async def test_rejects_user_not_in_org(self, user, other_org, db):
         with pytest.raises(HTTPException) as exc:
-            _get_user_in_org(user.id, other_org.id, db)
+            await _get_user_in_org(user.id, other_org.id, db)
         assert exc.value.status_code == 403
 
 
@@ -601,15 +600,15 @@ class TestCheckCourseAccess:
             creation_date=str(datetime.now()), update_date=str(datetime.now()),
         )
         db.add(trail)
-        db.commit()
-        db.refresh(trail)
+        await db.commit()
+        await db.refresh(trail)
         tr = TrailRun(
             trail_id=trail.id, course_id=course.id,
             org_id=token_user.org_id, user_id=user.id,
             creation_date=str(datetime.now()), update_date=str(datetime.now()),
         )
         db.add(tr)
-        db.commit()
+        await db.commit()
 
         result = await check_course_access(token_user, "course_test123", user.id, db)
         assert result["has_access"] is True
@@ -662,13 +661,13 @@ class TestUnenrollUser:
     @patch("src.services.admin.admin.track", new_callable=AsyncMock)
     async def test_unenrolls_user_and_removes_steps(self, mock_track, token_user, user, course, db, mock_request):
         await enroll_user(mock_request, token_user, user.id, "course_test123", db)
-        trail_run = db.exec(
+        trail_run = (await db.execute(
             select(TrailRun).where(
                 TrailRun.course_id == course.id,
                 TrailRun.user_id == user.id,
                 TrailRun.org_id == token_user.org_id,
             )
-        ).first()
+        )).scalars().first()
         assert trail_run is not None
 
         step = TrailStep(
@@ -685,11 +684,11 @@ class TestUnenrollUser:
             update_date=str(datetime.now()),
         )
         db.add(step)
-        db.commit()
+        await db.commit()
 
         result = await unenroll_user(token_user, user.id, "course_test123", db)
         assert result["detail"] == "User unenrolled successfully"
-        assert db.exec(select(TrailStep).where(TrailStep.id == step.id)).first() is None
+        assert (await db.execute(select(TrailStep).where(TrailStep.id == step.id))).scalars().first() is None
 
     async def test_unenroll_not_enrolled(self, token_user, user, course, db):
         with pytest.raises(HTTPException) as exc:
@@ -846,8 +845,8 @@ class TestGetAllUserProgress:
             update_date=str(datetime.now()),
         )
         db.add(trail)
-        db.commit()
-        db.refresh(trail)
+        await db.commit()
+        await db.refresh(trail)
 
         trail_run = TrailRun(
             trail_id=trail.id,
@@ -858,10 +857,104 @@ class TestGetAllUserProgress:
             update_date=str(datetime.now()),
         )
         db.add(trail_run)
-        db.commit()
+        await db.commit()
 
         result = await get_all_user_progress(token_user, user.id, db)
         assert result == []
+
+
+class TestGetUserTrailDetail:
+
+    @pytest.fixture
+    async def course_chapter(self, db, org, course, chapter):
+        from src.db.courses.course_chapters import CourseChapter
+        cc = CourseChapter(
+            order=1,
+            course_id=course.id,
+            chapter_id=chapter.id,
+            org_id=org.id,
+            creation_date=str(datetime.now()),
+            update_date=str(datetime.now()),
+        )
+        db.add(cc)
+        await db.commit()
+        await db.refresh(cc)
+        return cc
+
+    async def test_no_trail_returns_empty_shell(self, token_user, user, db):
+        result = await get_user_trail_detail(token_user, user.id, db)
+        assert result["trail_uuid"] is None
+        assert result["user_id"] == user.id
+        assert result["org_id"] == token_user.org_id
+        assert result["courses"] == []
+
+    @patch("src.services.admin.admin.track", new_callable=AsyncMock)
+    async def test_full_breakdown_with_enrollment(
+        self, mock_track, token_user, user, course, course_chapter, chapter_activity, db, mock_request,
+    ):
+        await enroll_user(mock_request, token_user, user.id, "course_test123", db)
+        result = await get_user_trail_detail(token_user, user.id, db)
+
+        assert result["trail_uuid"] is not None
+        assert len(result["courses"]) == 1
+        course_block = result["courses"][0]
+        assert course_block["course_uuid"] == "course_test123"
+        assert course_block["status"] == "STATUS_IN_PROGRESS"
+        assert course_block["total_activities"] == 1
+        assert course_block["completed_activities"] == 0
+        assert course_block["completion_percentage"] == 0
+        assert len(course_block["chapters"]) == 1
+        chap = course_block["chapters"][0]
+        assert chap["chapter_uuid"] == "chapter_test123"
+        assert len(chap["activities"]) == 1
+        act = chap["activities"][0]
+        assert act["activity_uuid"] == "activity_test123"
+        assert act["completed"] is False
+        assert act["completed_at"] is None
+
+    @patch("src.services.admin.admin.check_course_completion_and_create_certificate", new_callable=AsyncMock, return_value=False)
+    @patch("src.services.admin.admin.track", new_callable=AsyncMock)
+    async def test_reflects_activity_completion(
+        self, mock_track, mock_cert, token_user, user, activity, course, course_chapter, chapter_activity, db, mock_request,
+    ):
+        await complete_activity(mock_request, token_user, user.id, "activity_test123", db)
+        result = await get_user_trail_detail(token_user, user.id, db)
+
+        course_block = result["courses"][0]
+        assert course_block["completed_activities"] == 1
+        assert course_block["completion_percentage"] == 100.0
+        act = course_block["chapters"][0]["activities"][0]
+        assert act["completed"] is True
+        assert act["completed_at"] is not None
+
+    @patch("src.services.admin.admin.track", new_callable=AsyncMock)
+    async def test_filter_by_course_uuid(
+        self, mock_track, token_user, user, course, course_chapter, chapter_activity, db, mock_request,
+    ):
+        await enroll_user(mock_request, token_user, user.id, "course_test123", db)
+        result = await get_user_trail_detail(
+            token_user, user.id, db, course_uuid="course_test123",
+        )
+        assert len(result["courses"]) == 1
+        assert result["courses"][0]["course_uuid"] == "course_test123"
+
+    async def test_filter_by_course_uuid_without_enrollment(
+        self, token_user, user, course, course_chapter, chapter_activity, db,
+    ):
+        # No enrollment row, but admin can still see the breakdown for that course.
+        result = await get_user_trail_detail(
+            token_user, user.id, db, course_uuid="course_test123",
+        )
+        assert len(result["courses"]) == 1
+        course_block = result["courses"][0]
+        assert course_block["status"] is None
+        assert course_block["enrolled_at"] is None
+        assert course_block["total_activities"] == 1
+
+    async def test_filter_by_course_uuid_not_found(self, token_user, user, db):
+        with pytest.raises(HTTPException) as exc:
+            await get_user_trail_detail(token_user, user.id, db, course_uuid="nonexistent")
+        assert exc.value.status_code == 404
 
 
 class TestGetUserCertificates:
@@ -897,7 +990,7 @@ class TestGetUserCertificates:
         )
         db.add(valid_course)
         db.add(other_course)
-        db.commit()
+        await db.commit()
 
         valid_cert = Certifications(
             id=201,
@@ -917,7 +1010,7 @@ class TestGetUserCertificates:
         )
         db.add(valid_cert)
         db.add(other_cert)
-        db.commit()
+        await db.commit()
 
         valid_user_cert = CertificateUser(
             id=301,
@@ -946,7 +1039,7 @@ class TestGetUserCertificates:
         db.add(valid_user_cert)
         db.add(missing_cert_user)
         db.add(other_org_user_cert)
-        db.commit()
+        await db.commit()
 
         result = await get_user_certificates(token_user, user.id, db)
         assert len(result) == 1
@@ -985,13 +1078,13 @@ class TestIssueUserToken:
             user_uuid="user_out99",
         )
         db.add(u)
-        db.commit()
+        await db.commit()
         membership = UserOrganization(
             user_id=u.id, org_id=other_org.id, role_id=1,
             creation_date=str(datetime.now()), update_date=str(datetime.now()),
         )
         db.add(membership)
-        db.commit()
+        await db.commit()
 
         with pytest.raises(HTTPException) as exc:
             await issue_user_token(token_user, u.id, db)
@@ -1003,7 +1096,7 @@ class TestIssueUserToken:
 
 class TestProvisionUser:
 
-    async def test_creates_user_and_membership(self, token_user, mock_request, db, mock_admin_side_effects):
+    async def test_creates_user_and_membership(self, token_user, student_role, mock_request, db, mock_admin_side_effects):
         result = await provision_user(
             token_user=token_user,
             email="new@example.com",
@@ -1018,18 +1111,19 @@ class TestProvisionUser:
         assert result.email == "new@example.com"
         assert result.email_verified is True
 
-        membership = db.exec(
+        membership = (await db.execute(
             select(UserOrganization).where(
                 UserOrganization.user_id == result.id,
                 UserOrganization.org_id == token_user.org_id,
             )
-        ).first()
+        )).scalars().first()
         assert membership is not None
         assert membership.role_id == 4
         mock_admin_side_effects["check_limits_with_usage"].assert_called_once()
         mock_admin_side_effects["increase_feature_usage"].assert_called_once()
 
-    async def test_duplicate_email_rejected(self, token_user, user, mock_request, db, mock_admin_side_effects):
+    async def test_duplicate_email_in_org_rejected(self, token_user, user, student_role, mock_request, db, mock_admin_side_effects):
+        # `user` is already a member of token_user's org via the fixture
         with pytest.raises(HTTPException) as exc:
             await provision_user(
                 token_user=token_user,
@@ -1039,8 +1133,81 @@ class TestProvisionUser:
                 request=mock_request, db_session=db,
             )
         assert exc.value.status_code == 400
+        assert "in this organization" in exc.value.detail
 
-    async def test_duplicate_username_rejected(self, token_user, user, mock_request, db, mock_admin_side_effects):
+    async def test_existing_user_in_other_org_is_attached(self, token_user, other_org, student_role, mock_request, db, mock_admin_side_effects):
+        # Seed a user that exists ONLY in another org → simulates the orphan case
+        # the original bug created. provision_user should attach them to the
+        # caller's org instead of failing.
+        foreign = User(
+            id=42,
+            username="foreign",
+            first_name="Foreign",
+            last_name="Person",
+            email="foreign@example.com",
+            password="hashed",
+            user_uuid="user_foreign",
+        )
+        db.add(foreign)
+        await db.commit()
+        db.add(UserOrganization(
+            user_id=foreign.id, org_id=other_org.id, role_id=4,
+            creation_date=str(datetime.now()), update_date=str(datetime.now()),
+        ))
+        await db.commit()
+
+        result = await provision_user(
+            token_user=token_user,
+            email="foreign@example.com",
+            username="ignored_username",
+            first_name="ignored", last_name="ignored",
+            password=None, role_id=4,
+            request=mock_request, db_session=db,
+        )
+        # Same underlying user, now linked to the caller's org
+        assert result.id == foreign.id
+        membership = (await db.execute(
+            select(UserOrganization).where(
+                UserOrganization.user_id == foreign.id,
+                UserOrganization.org_id == token_user.org_id,
+            )
+        )).scalars().first()
+        assert membership is not None
+        assert membership.role_id == 4
+        mock_admin_side_effects["increase_feature_usage"].assert_called_once()
+
+    async def test_orphan_user_is_attached(self, token_user, student_role, mock_request, db, mock_admin_side_effects):
+        # An orphan user (in users table, no UserOrganization anywhere)
+        # — created by the pre-fix bug — should be recoverable by re-calling
+        # provision_user with the same email.
+        orphan = User(
+            id=99,
+            username="orphan",
+            first_name="Orph", last_name="An",
+            email="orphan@example.com",
+            password="hashed",
+            user_uuid="user_orphan",
+        )
+        db.add(orphan)
+        await db.commit()
+
+        result = await provision_user(
+            token_user=token_user,
+            email="orphan@example.com",
+            username="newname",
+            first_name="", last_name="", password=None, role_id=4,
+            request=mock_request, db_session=db,
+        )
+        assert result.id == orphan.id
+        membership = (await db.execute(
+            select(UserOrganization).where(
+                UserOrganization.user_id == orphan.id,
+                UserOrganization.org_id == token_user.org_id,
+            )
+        )).scalars().first()
+        assert membership is not None
+
+    async def test_duplicate_username_rejected(self, token_user, user, student_role, mock_request, db, mock_admin_side_effects):
         with pytest.raises(HTTPException) as exc:
             await provision_user(
                 token_user=token_user,
@@ -1051,7 +1218,7 @@ class TestProvisionUser:
             )
         assert exc.value.status_code == 400
 
-    async def test_weak_password_rejected(self, token_user, mock_request, db, mock_admin_side_effects):
+    async def test_weak_password_rejected(self, token_user, student_role, mock_request, db, mock_admin_side_effects):
         with pytest.raises(HTTPException) as exc:
             await provision_user(
                 token_user=token_user,
@@ -1064,7 +1231,7 @@ class TestProvisionUser:
             )
         assert exc.value.status_code == 400
 
-    async def test_member_limit_enforced(self, token_user, mock_request, db, mock_admin_side_effects):
+    async def test_member_limit_enforced(self, token_user, student_role, mock_request, db, mock_admin_side_effects):
         mock_admin_side_effects["check_limits_with_usage"].side_effect = HTTPException(
             status_code=403, detail="Usage Limit has been reached for Members"
         )
@@ -1078,6 +1245,248 @@ class TestProvisionUser:
             )
         assert exc.value.status_code == 403
 
+    async def test_unknown_role_rejected(self, token_user, mock_request, db, mock_admin_side_effects):
+        # No role with id=999 exists — must 400 before any user record is created.
+        with pytest.raises(HTTPException) as exc:
+            await provision_user(
+                token_user=token_user,
+                email="norole@example.com",
+                username="noroleuser",
+                first_name="", last_name="", password=None, role_id=999,
+                request=mock_request, db_session=db,
+            )
+        assert exc.value.status_code == 400
+        assert "Role" in str(exc.value.detail)
+        # No user should have been created
+        assert (await db.execute(select(User).where(User.email == "norole@example.com"))).scalars().first() is None
+
+    async def test_foreign_org_role_rejected(self, token_user, other_org, mock_request, db, mock_admin_side_effects):
+        # A role belonging to a different org must not be grantable.
+        foreign_role = Role(
+            id=77, name="ForeignRole", description="", rights={},
+            org_id=other_org.id,
+            role_type=RoleTypeEnum.TYPE_ORGANIZATION,
+            role_uuid="role_foreign_77",
+            creation_date=str(datetime.now()), update_date=str(datetime.now()),
+        )
+        db.add(foreign_role)
+        await db.commit()
+
+        with pytest.raises(HTTPException) as exc:
+            await provision_user(
+                token_user=token_user,
+                email="x@example.com",
+                username="xuser",
+                first_name="", last_name="", password=None, role_id=77,
+                request=mock_request, db_session=db,
+            )
+        assert exc.value.status_code == 403
+        assert "organization" in str(exc.value.detail).lower()
+        assert (await db.execute(select(User).where(User.email == "x@example.com"))).scalars().first() is None
+
+    async def test_global_role_accepted(self, token_user, mock_request, db, mock_admin_side_effects):
+        # A global role (org_id=None) must be grantable by any org's token.
+        global_role = Role(
+            id=55, name="GlobalRole", description="", rights={},
+            org_id=None,
+            role_type=RoleTypeEnum.TYPE_GLOBAL,
+            role_uuid="role_global_55",
+            creation_date=str(datetime.now()), update_date=str(datetime.now()),
+        )
+        db.add(global_role)
+        await db.commit()
+
+        result = await provision_user(
+            token_user=token_user,
+            email="global@example.com",
+            username="globaluser",
+            first_name="", last_name="", password=None, role_id=55,
+            request=mock_request, db_session=db,
+        )
+        membership = (await db.execute(
+            select(UserOrganization).where(UserOrganization.user_id == result.id)
+        )).scalars().first()
+        assert membership is not None
+        assert membership.role_id == 55
+
+    async def test_admin_role_rejected(self, token_user, mock_request, db, mock_admin_side_effects):
+        # API tokens must never grant Admin (role_id=1), even when the creator is admin.
+        admin_role = Role(
+            id=1, name="Admin", description="", rights={},
+            org_id=None,
+            role_type=RoleTypeEnum.TYPE_GLOBAL,
+            role_uuid="role_admin_1",
+            creation_date=str(datetime.now()), update_date=str(datetime.now()),
+        )
+        db.add(admin_role)
+        await db.commit()
+
+        with pytest.raises(HTTPException) as exc:
+            await provision_user(
+                token_user=token_user,
+                email="elev@example.com",
+                username="elevuser",
+                first_name="", last_name="", password=None, role_id=1,
+                request=mock_request, db_session=db,
+            )
+        assert exc.value.status_code == 403
+        assert "Admin" in str(exc.value.detail) or "Maintainer" in str(exc.value.detail)
+        assert (await db.execute(select(User).where(User.email == "elev@example.com"))).scalars().first() is None
+
+    async def test_maintainer_role_rejected(self, token_user, mock_request, db, mock_admin_side_effects):
+        # Same guard for Maintainer (role_id=2).
+        maintainer_role = Role(
+            id=2, name="Maintainer", description="", rights={},
+            org_id=None,
+            role_type=RoleTypeEnum.TYPE_GLOBAL,
+            role_uuid="role_maintainer_2",
+            creation_date=str(datetime.now()), update_date=str(datetime.now()),
+        )
+        db.add(maintainer_role)
+        await db.commit()
+
+        with pytest.raises(HTTPException) as exc:
+            await provision_user(
+                token_user=token_user,
+                email="mnt@example.com",
+                username="mntuser",
+                first_name="", last_name="", password=None, role_id=2,
+                request=mock_request, db_session=db,
+            )
+        assert exc.value.status_code == 403
+        assert "Admin" in str(exc.value.detail) or "Maintainer" in str(exc.value.detail)
+        assert (await db.execute(select(User).where(User.email == "mnt@example.com"))).scalars().first() is None
+
+    async def test_creator_no_longer_member_rejected(self, token_user, user, student_role, mock_request, db, mock_admin_side_effects):
+        # If the user who created the token is no longer a member of the org,
+        # the token can't be used to provision anyone — even into a low-priv role.
+        creator_membership = (await db.execute(
+            select(UserOrganization).where(
+                UserOrganization.user_id == token_user.created_by_user_id,
+                UserOrganization.org_id == token_user.org_id,
+            )
+        )).scalars().first()
+        assert creator_membership is not None
+        await db.delete(creator_membership)
+        await db.commit()
+
+        with pytest.raises(HTTPException) as exc:
+            await provision_user(
+                token_user=token_user,
+                email="orphan@example.com",
+                username="orphanuser",
+                first_name="", last_name="", password=None, role_id=4,
+                request=mock_request, db_session=db,
+            )
+        assert exc.value.status_code == 403
+        assert "creator" in str(exc.value.detail).lower()
+        assert (await db.execute(select(User).where(User.email == "orphan@example.com"))).scalars().first() is None
+
+    async def test_creator_privilege_cap_rejects_higher_role(self, token_user, user, mock_request, db, mock_admin_side_effects):
+        # Demote the token creator to role 4 (User), then attempt to grant role 3
+        # (Instructor — higher privilege). Must be rejected by the creator-cap layer.
+        creator_membership = (await db.execute(
+            select(UserOrganization).where(
+                UserOrganization.user_id == token_user.created_by_user_id,
+                UserOrganization.org_id == token_user.org_id,
+            )
+        )).scalars().first()
+        assert creator_membership is not None
+        creator_membership.role_id = 4
+        db.add(creator_membership)
+        await db.commit()
+
+        instructor_role = Role(
+            id=3, name="Instructor", description="", rights={},
+            org_id=None,
+            role_type=RoleTypeEnum.TYPE_GLOBAL,
+            role_uuid="role_instructor_3",
+            creation_date=str(datetime.now()), update_date=str(datetime.now()),
+        )
+        db.add(instructor_role)
+        await db.commit()
+
+        with pytest.raises(HTTPException) as exc:
+            await provision_user(
+                token_user=token_user,
+                email="escal@example.com",
+                username="escaluser",
+                first_name="", last_name="", password=None, role_id=3,
+                request=mock_request, db_session=db,
+            )
+        assert exc.value.status_code == 403
+        assert "higher privilege" in str(exc.value.detail).lower()
+        assert (await db.execute(select(User).where(User.email == "escal@example.com"))).scalars().first() is None
+
+    async def test_creator_can_grant_same_or_lower_role(self, token_user, user, student_role, mock_request, db, mock_admin_side_effects):
+        # Creator at Instructor (role 3) granting role 4 (User) must succeed.
+        creator_membership = (await db.execute(
+            select(UserOrganization).where(
+                UserOrganization.user_id == token_user.created_by_user_id,
+                UserOrganization.org_id == token_user.org_id,
+            )
+        )).scalars().first()
+        assert creator_membership is not None
+        creator_membership.role_id = 3
+        db.add(creator_membership)
+        await db.commit()
+
+        result = await provision_user(
+            token_user=token_user,
+            email="ok@example.com",
+            username="okuser",
+            first_name="", last_name="", password=None, role_id=4,
+            request=mock_request, db_session=db,
+        )
+        assert result.email == "ok@example.com"
+        membership = (await db.execute(
+            select(UserOrganization).where(
+                UserOrganization.user_id == result.id,
+                UserOrganization.org_id == token_user.org_id,
+            )
+        )).scalars().first()
+        assert membership is not None
+        assert membership.role_id == 4
+
+    async def test_creator_user_role_cannot_grant_custom_role(self, token_user, user, mock_request, db, mock_admin_side_effects):
+        # Creator demoted to User (role 4, priority 3) tries to grant a custom
+        # role with id outside _ROLE_PRIORITY (e.g. id=99). Custom role gets the
+        # default priority (2), which is *higher* privilege than the creator's
+        # priority (3), so the cap layer must deny. Exercises the
+        # _role_priority default-branch on the cap-deny path.
+        creator_membership = (await db.execute(
+            select(UserOrganization).where(
+                UserOrganization.user_id == token_user.created_by_user_id,
+                UserOrganization.org_id == token_user.org_id,
+            )
+        )).scalars().first()
+        assert creator_membership is not None
+        creator_membership.role_id = 4
+        db.add(creator_membership)
+        await db.commit()
+
+        custom_role = Role(
+            id=99, name="CustomRole", description="", rights={},
+            org_id=token_user.org_id,
+            role_type=RoleTypeEnum.TYPE_ORGANIZATION,
+            role_uuid="role_custom_99",
+            creation_date=str(datetime.now()), update_date=str(datetime.now()),
+        )
+        db.add(custom_role)
+        await db.commit()
+
+        with pytest.raises(HTTPException) as exc:
+            await provision_user(
+                token_user=token_user,
+                email="custcap@example.com",
+                username="custcapuser",
+                first_name="", last_name="", password=None, role_id=99,
+                request=mock_request, db_session=db,
+            )
+        assert exc.value.status_code == 403
+        assert "higher privilege" in str(exc.value.detail).lower()
+        assert (await db.execute(select(User).where(User.email == "custcap@example.com"))).scalars().first() is None
+
 
 # ── Remove user from org tests ──────────────────────────────────────────────
 
@@ -1088,15 +1497,15 @@ class TestRemoveUserFromOrg:
         result = await remove_user_from_org_admin(token_user, second_user.id, db)
         assert result["detail"] == "User removed from org"
 
-        membership = db.exec(
+        membership = (await db.execute(
             select(UserOrganization).where(
                 UserOrganization.user_id == second_user.id,
                 UserOrganization.org_id == token_user.org_id,
             )
-        ).first()
+        )).scalars().first()
         assert membership is None
 
-        still_exists = db.exec(select(User).where(User.id == second_user.id)).first()
+        still_exists = (await db.execute(select(User).where(User.id == second_user.id))).scalars().first()
         assert still_exists is not None
 
     async def test_last_admin_blocked(self, org, org_admin_user, db, mock_admin_side_effects):
@@ -1134,12 +1543,12 @@ class TestGetUserByEmail:
             email="outsider50@example.com", password="hashed", user_uuid="user_out50",
         )
         db.add(outsider)
-        db.commit()
+        await db.commit()
         db.add(UserOrganization(
             user_id=outsider.id, org_id=other_org.id, role_id=1,
             creation_date=str(datetime.now()), update_date=str(datetime.now()),
         ))
-        db.commit()
+        await db.commit()
 
         with pytest.raises(HTTPException) as exc:
             await get_user_by_email(token_user, "outsider50@example.com", db)
@@ -1324,9 +1733,9 @@ class TestBulkEnroll:
         assert result["already_enrolled"] == []
         assert result["skipped"] == []
 
-        runs = db.exec(
+        runs = (await db.execute(
             select(TrailRun).where(TrailRun.course_id == course.id)
-        ).all()
+        )).scalars().all()
         assert len(runs) == 2
 
     async def test_already_enrolled_filtered(self, token_user, user, course, mock_request, db, mock_admin_side_effects):
@@ -1421,9 +1830,9 @@ class TestResetUserProgress:
             token_user=token_user, course_uuid=course.course_uuid,
             user_ids=[user.id], request=mock_request, db_session=db,
         )
-        trailrun = db.exec(
+        trailrun = (await db.execute(
             select(TrailRun).where(TrailRun.user_id == user.id)
-        ).first()
+        )).scalars().first()
         step = TrailStep(
             trailrun_id=trailrun.id,
             activity_id=activity.id,
@@ -1438,17 +1847,17 @@ class TestResetUserProgress:
             update_date=str(datetime.now()),
         )
         db.add(step)
-        db.commit()
+        await db.commit()
 
         result = await reset_user_progress(token_user, user.id, course.course_uuid, db)
         assert result["steps_deleted"] == 1
 
-        remaining = db.exec(
+        remaining = (await db.execute(
             select(TrailStep).where(
                 TrailStep.user_id == user.id,
                 TrailStep.course_id == course.id,
             )
-        ).all()
+        )).scalars().all()
         assert remaining == []
 
     async def test_no_progress_is_noop(self, token_user, user, course, db):
@@ -1480,9 +1889,9 @@ class TestAwardCertificate:
         assert result["course_uuid"] == course.course_uuid
         assert result["user_certification_uuid"]
 
-        cert_row = db.exec(
+        cert_row = (await db.execute(
             select(CertificateUser).where(CertificateUser.user_id == user.id)
-        ).first()
+        )).scalars().first()
         assert cert_row is not None
 
     async def test_no_certification_configured(self, token_user, user, course, mock_request, db):
@@ -1537,11 +1946,11 @@ class TestRevokeCertificate:
         )
         assert result["detail"] == "Certificate revoked"
 
-        remaining = db.exec(
+        remaining = (await db.execute(
             select(CertificateUser).where(
                 CertificateUser.user_certification_uuid == awarded["user_certification_uuid"]
             )
-        ).first()
+        )).scalars().first()
         assert remaining is None
 
     async def test_not_found(self, token_user, user, db, mock_admin_side_effects):
@@ -1564,12 +1973,12 @@ class TestUserGroupMembers:
         )
         assert result["detail"] == "User added to group"
 
-        row = db.exec(
+        row = (await db.execute(
             select(UserGroupUser).where(
                 UserGroupUser.usergroup_id == usergroup.id,
                 UserGroupUser.user_id == user.id,
             )
-        ).first()
+        )).scalars().first()
         assert row is not None
 
     async def test_add_duplicate_rejected(self, token_user, user, usergroup, db, mock_admin_side_effects):
@@ -1585,12 +1994,12 @@ class TestUserGroupMembers:
         )
         assert result["detail"] == "User removed from group"
 
-        row = db.exec(
+        row = (await db.execute(
             select(UserGroupUser).where(
                 UserGroupUser.usergroup_id == usergroup.id,
                 UserGroupUser.user_id == user.id,
             )
-        ).first()
+        )).scalars().first()
         assert row is None
 
     async def test_remove_non_member(self, token_user, user, usergroup, db, mock_admin_side_effects):
@@ -1625,7 +2034,7 @@ class TestUpdateUserProfile:
     async def test_partial_update_preserves_other_fields(self, token_user, user, db):
         original_email = user.email
         await update_user_profile(token_user, user.id, {"first_name": "Changed"}, db)
-        db.refresh(user)
+        await db.refresh(user)
         assert user.first_name == "Changed"
         assert user.email == original_email
 
@@ -1658,12 +2067,12 @@ class TestChangeUserRole:
         result = await change_user_role(token_user, user.id, admin_role.id, db)
         assert result["role_id"] == admin_role.id
 
-        membership = db.exec(
+        membership = (await db.execute(
             select(UserOrganization).where(
                 UserOrganization.user_id == user.id,
                 UserOrganization.org_id == token_user.org_id,
             )
-        ).first()
+        )).scalars().first()
         assert membership.role_id == admin_role.id
 
     async def test_role_not_found(self, token_user, user, db):
@@ -1703,15 +2112,15 @@ class TestDeleteUserGroup:
         result = await delete_usergroup(token_user, usergroup.usergroup_uuid, db)
         assert result["detail"] == "UserGroup deleted"
 
-        assert db.exec(
+        assert (await db.execute(
             select(UserGroup).where(UserGroup.usergroup_uuid == usergroup.usergroup_uuid)
-        ).first() is None
-        assert db.exec(
+        )).scalars().first() is None
+        assert (await db.execute(
             select(UserGroupUser).where(UserGroupUser.usergroup_id == usergroup.id)
-        ).first() is None
-        assert db.exec(
+        )).scalars().first() is None
+        assert (await db.execute(
             select(UserGroupResource).where(UserGroupResource.usergroup_id == usergroup.id)
-        ).first() is None
+        )).scalars().first() is None
 
     async def test_delete_not_found(self, token_user, db, mock_admin_side_effects):
         with pytest.raises(HTTPException) as exc:
@@ -1768,12 +2177,12 @@ class TestCohortCourseAccess:
         )
         assert result["detail"] == "Course linked to group"
 
-        link = db.exec(
+        link = (await db.execute(
             select(UserGroupResource).where(
                 UserGroupResource.usergroup_id == usergroup.id,
                 UserGroupResource.resource_uuid == course.course_uuid,
             )
-        ).first()
+        )).scalars().first()
         assert link is not None
 
     async def test_duplicate_link_rejected(self, token_user, course, usergroup, db, mock_admin_side_effects):
@@ -1791,12 +2200,12 @@ class TestCohortCourseAccess:
         )
         assert result["detail"] == "Course unlinked from group"
 
-        link = db.exec(
+        link = (await db.execute(
             select(UserGroupResource).where(
                 UserGroupResource.usergroup_id == usergroup.id,
                 UserGroupResource.resource_uuid == course.course_uuid,
             )
-        ).first()
+        )).scalars().first()
         assert link is None
 
     async def test_unlink_not_found(self, token_user, course, usergroup, db, mock_admin_side_effects):
@@ -1830,9 +2239,9 @@ class TestBulkUnenroll:
         assert sorted(result["unenrolled"]) == sorted([user.id, second_user.id])
         assert result["not_enrolled"] == []
 
-        remaining = db.exec(
+        remaining = (await db.execute(
             select(TrailRun).where(TrailRun.course_id == course.id)
-        ).all()
+        )).scalars().all()
         assert remaining == []
 
     async def test_not_enrolled_reported(self, token_user, user, course, db, mock_admin_side_effects):
@@ -1878,7 +2287,7 @@ class TestExportUserData:
             user_id=user.id, org_id=other_org.id, role_id=4,
             creation_date=str(datetime.now()), update_date=str(datetime.now()),
         ))
-        db.commit()
+        await db.commit()
 
         result = await export_user_data(token_user, user.id, db)
         assert len(result["memberships"]) == 1
@@ -1894,8 +2303,8 @@ class TestExportUserData:
             creation_date=str(datetime.now()), update_date=str(datetime.now()),
         )
         db.add(other_course)
-        db.commit()
-        db.refresh(other_course)
+        await db.commit()
+        await db.refresh(other_course)
 
         other_cert = Certifications(
             id=555, certification_uuid="cert_other555",
@@ -1903,14 +2312,14 @@ class TestExportUserData:
             creation_date=str(datetime.now()), update_date=str(datetime.now()),
         )
         db.add(other_cert)
-        db.commit()
+        await db.commit()
 
         db.add(CertificateUser(
             id=555, user_id=user.id, certification_id=other_cert.id,
             user_certification_uuid="uc_other_555",
             created_at=str(datetime.now()), updated_at=str(datetime.now()),
         ))
-        db.commit()
+        await db.commit()
 
         result = await export_user_data(token_user, user.id, db)
         assert result["certificates"] == []
@@ -1924,7 +2333,7 @@ class TestAnonymizeUser:
         assert result["api_tokens_revoked"] == 0
         assert "deleted-user-" in result["anonymized_email"]
 
-        db.refresh(user)
+        await db.refresh(user)
         assert user.email != original_email
         assert user.email == f"deleted-user-{user.id}@anonymized.local"
         assert user.first_name == "Deleted"
@@ -1946,14 +2355,14 @@ class TestAnonymizeUser:
             is_active=True,
         )
         db.add(api_token)
-        db.commit()
+        await db.commit()
 
         result = await anonymize_user(token_user, user.id, db)
         assert result["api_tokens_revoked"] == 1
 
-        remaining = db.exec(
+        remaining = (await db.execute(
             select(APIToken).where(APIToken.created_by_user_id == user.id)
-        ).all()
+        )).scalars().all()
         assert remaining == []
 
     async def test_does_not_revoke_other_org_api_tokens(self, token_user, user, other_org, db, mock_admin_side_effects):
@@ -1971,14 +2380,14 @@ class TestAnonymizeUser:
             is_active=True,
         )
         db.add(other_org_token)
-        db.commit()
+        await db.commit()
 
         result = await anonymize_user(token_user, user.id, db)
         assert result["api_tokens_revoked"] == 0
 
-        remaining = db.exec(
+        remaining = (await db.execute(
             select(APIToken).where(APIToken.org_id == other_org.id)
-        ).all()
+        )).scalars().all()
         assert len(remaining) == 1
 
 

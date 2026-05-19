@@ -1,7 +1,6 @@
 'use client'
 import React, { use, useEffect } from 'react';
 import { CourseProvider } from '../../../../../../../../components/Contexts/CourseContext'
-import Link from 'next/link'
 import { CourseOverviewTop } from '@components/Dashboard/Misc/CourseOverviewTop'
 import { motion } from 'motion/react'
 import { GalleryVerticalEnd, Globe, Info, UserPen, Award, Lock, Search } from 'lucide-react'
@@ -14,15 +13,12 @@ import EditCourseCertification from '@components/Dashboard/Pages/Course/EditCour
 import EditCourseSEO from '@components/Dashboard/Pages/Course/EditCourseSEO/EditCourseSEO'
 import { useCourseRights } from '@hooks/useCourseRights'
 import { useRouter } from 'next/navigation'
-import ToolTip from '@components/Objects/StyledElements/Tooltip/Tooltip'
 import { getUriWithOrg } from '@services/config/config';
 import { useTranslation } from 'react-i18next';
-import { useOrg } from '@components/Contexts/OrgContext';
-import { PlanLevel, isFeatureAvailable } from '@services/plans/plans';
-import PlanBadge from '@components/Dashboard/Shared/PlanRestricted/PlanBadge';
-import PlanRestrictedFeature from '@components/Dashboard/Shared/PlanRestricted/PlanRestrictedFeature';
+import { PlanLevel } from '@services/plans/plans';
+import FeatureGate from '@components/Dashboard/Shared/FeatureGate/FeatureGate';
 import CourseAnalyticsTab from '@components/Dashboard/Analytics/Course/CourseAnalyticsTab';
-import { usePlan } from '@components/Hooks/usePlan'
+import { DashTabBar, DashTabItem } from '@components/Dashboard/Shared/DashTabBar/DashTabBar';
 
 export type CourseOverviewParams = {
   orgslug: string
@@ -34,10 +30,6 @@ function CourseOverviewPage(props: { params: Promise<CourseOverviewParams> }) {
   const { t } = useTranslation()
   const params = use(props.params);
   const router = useRouter();
-  const org = useOrg() as any;
-  const currentPlan = usePlan();
-  const hasCertificationsAccess = isFeatureAvailable('certifications', currentPlan);
-  const hasSEOAccess = isFeatureAvailable('seo', currentPlan);
 
   function getEntireCourseUUID(courseuuid: string) {
     // add course_ to uuid
@@ -118,16 +110,7 @@ function CourseOverviewPage(props: { params: Promise<CourseOverviewParams> }) {
     }
   }, [rightsLoading, hasAccessToCurrentPage, visibleTabs, router, params.orgslug])
 
-  // Show loading state while rights are being fetched
-  if (rightsLoading) {
-    return (
-      <div className="h-screen w-full bg-[#f8f8f8] flex items-center justify-center">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
-      </div>
-    )
-  }
-
-  // Show access denied if no tabs are available
+  // Access denied (rights loaded but no tabs visible)
   if (!rightsLoading && visibleTabs.length === 0) {
     return (
       <div className="h-screen w-full bg-[#f8f8f8] flex items-center justify-center">
@@ -140,64 +123,35 @@ function CourseOverviewPage(props: { params: Promise<CourseOverviewParams> }) {
     )
   }
 
+  // CourseProvider is always rendered so course meta fetches IN PARALLEL with rights —
+  // no sequential waterfall. The tab content is gated by hasPermission() which returns
+  // false (safe default) until rights finish loading.
   return (
-    <div className="h-screen w-full bg-[#f8f8f8] grid grid-rows-[auto_1fr]">
+    <div className="h-screen w-full bg-[#f8f8f8] grid grid-rows-[auto_1fr] grid-cols-1">
       <CourseProvider courseuuid={courseuuid} withUnpublishedActivities={true}>
-        <div className="pl-10 pr-10 text-sm tracking-tight bg-[#fcfbfc] z-10 nice-shadow relative">
+        <div className="pl-4 pr-4 sm:pl-10 sm:pr-10 text-sm tracking-tight bg-[#fcfbfc] z-10 nice-shadow relative min-w-0 overflow-hidden">
           <CourseOverviewTop params={params} />
-          <div className="flex space-x-3 font-black text-sm">
-            {tabs.map((tab) => {
-              const IconComponent = tab.icon
-              const isActive = params.subpage.toString() === tab.key
-              const hasAccess = hasPermission(tab.requiredPermission)
-              
-              if (!hasAccess) {
-                // Show disabled tab with subtle visual cues and tooltip
-                return (
-                  <ToolTip
-                    key={tab.key}
-                    content={
-                      <div className="text-center">
-                        <div className="font-medium text-gray-900">{t('dashboard.courses.settings.access_restricted.title')}</div>
-                        <div className="text-sm text-gray-600">
-                          {t('dashboard.courses.settings.access_restricted.message', { tab: tab.label })}
-                        </div>
-                      </div>
-                    }
-                  >
-                    <div className="flex space-x-4 py-2 w-fit text-center border-black transition-all ease-linear opacity-30 cursor-not-allowed">
-                      <div className="flex items-center space-x-2.5 mx-2">
-                        <IconComponent size={16} />
-                        <div>{tab.label}</div>
-                      </div>
-                    </div>
-                  </ToolTip>
-                )
-              }
-              
-              return (
-                <Link
-                  key={tab.key}
-                  prefetch={false}
-                  href={getUriWithOrg(params.orgslug, '') + tab.href}
-                >
-                  <div
-                    className={`flex space-x-4 py-2 w-fit text-center border-black transition-all ease-linear ${
-                      isActive ? 'border-b-4' : 'opacity-50 hover:opacity-75'
-                    } cursor-pointer`}
-                  >
-                    <div className="flex items-center space-x-2.5 mx-2">
-                      <IconComponent size={16} />
-                      <div>{tab.label}</div>
-                      {(tab as any).requiresPlan && (
-                        <PlanBadge currentPlan={currentPlan} requiredPlan={(tab as any).requiresPlan} size="sm" noMargin />
-                      )}
-                    </div>
+          <DashTabBar tabs={tabs.map((tab) => {
+            const hasAccess = hasPermission(tab.requiredPermission)
+            const IconComponent = tab.icon
+            return {
+              key: tab.key,
+              label: tab.label,
+              icon: <IconComponent size={16} />,
+              href: getUriWithOrg(params.orgslug, '') + tab.href,
+              active: params.subpage.toString() === tab.key,
+              disabled: !hasAccess,
+              disabledTooltip: !hasAccess ? (
+                <div className="text-center">
+                  <div className="font-medium text-gray-900">{t('dashboard.courses.settings.access_restricted.title')}</div>
+                  <div className="text-sm text-gray-600">
+                    {t('dashboard.courses.settings.access_restricted.message', { tab: tab.label })}
                   </div>
-                </Link>
-              )
-            })}
-          </div>
+                </div>
+              ) : undefined,
+              requiresPlan: tab.requiresPlan,
+            } as DashTabItem
+          })} />
         </div>
         <motion.div
           initial={{ opacity: 0 }}
@@ -207,56 +161,46 @@ function CourseOverviewPage(props: { params: Promise<CourseOverviewParams> }) {
           className="h-full overflow-y-auto overflow-x-hidden"
         >
           <div>
-            {params.subpage == 'content' && hasPermission('update_content') ? (
+            {rightsLoading ? (
+              <div className="p-10 space-y-4 animate-pulse">
+                <div className="h-6 bg-gray-200 rounded w-48" />
+                <div className="h-4 bg-gray-200 rounded w-full max-w-xl" />
+                <div className="h-4 bg-gray-200 rounded w-full max-w-md" />
+                <div className="h-32 bg-gray-200 rounded w-full max-w-2xl mt-6" />
+              </div>
+            ) : null}
+            {!rightsLoading && params.subpage == 'content' && hasPermission('update_content') ? (
               <EditCourseStructure orgslug={params.orgslug} />
             ) : null}
-            {params.subpage == 'general' && hasPermission('update') ? (
+            {!rightsLoading && params.subpage == 'general' && hasPermission('update') ? (
               <EditCourseGeneral orgslug={params.orgslug} />
             ) : null}
-            {params.subpage == 'access' && hasPermission('manage_access') ? (
+            {!rightsLoading && params.subpage == 'access' && hasPermission('manage_access') ? (
               <EditCourseAccess orgslug={params.orgslug} />
             ) : null}
-            {params.subpage == 'contributors' && hasPermission('manage_contributors') ? (
+            {!rightsLoading && params.subpage == 'contributors' && hasPermission('manage_contributors') ? (
               <EditCourseContributors orgslug={params.orgslug} />
             ) : null}
-            {params.subpage == 'seo' && hasPermission('update') ? (
+            {!rightsLoading && params.subpage == 'seo' && hasPermission('update') ? (
               <>
                 <div className="h-6" />
-                <PlanRestrictedFeature
-                  currentPlan={currentPlan}
-                  requiredPlan="standard"
-                  icon={Search}
-                  titleKey="common.plans.feature_restricted.seo.title"
-                  descriptionKey="common.plans.feature_restricted.seo.description"
-                >
+                <FeatureGate feature="seo">
                   <EditCourseSEO orgslug={params.orgslug} />
-                </PlanRestrictedFeature>
+                </FeatureGate>
               </>
             ) : null}
-            {params.subpage == 'certification' && hasPermission('create_certifications') ? (
-              <div className="h-6" />
+            {!rightsLoading && params.subpage == 'certification' && hasPermission('create_certifications') ? (
+              <>
+                <div className="h-6" />
+                <FeatureGate feature="certifications">
+                  <EditCourseCertification orgslug={params.orgslug} />
+                </FeatureGate>
+              </>
             ) : null}
-            {params.subpage == 'certification' && hasPermission('create_certifications') ? (
-              <PlanRestrictedFeature
-                currentPlan={currentPlan}
-                requiredPlan="pro"
-                icon={Award}
-                titleKey="common.plans.feature_restricted.certifications.title"
-                descriptionKey="common.plans.feature_restricted.certifications.description"
-              >
-                <EditCourseCertification orgslug={params.orgslug} />
-              </PlanRestrictedFeature>
-            ) : null}
-            {params.subpage == 'analytics' && hasPermission('update') ? (
-              <PlanRestrictedFeature
-                currentPlan={currentPlan}
-                requiredPlan="pro"
-                icon={ChartBar}
-                titleKey="common.plans.feature_restricted.course_analytics.title"
-                descriptionKey="common.plans.feature_restricted.course_analytics.description"
-              >
+            {!rightsLoading && params.subpage == 'analytics' && hasPermission('update') ? (
+              <FeatureGate feature="course_analytics">
                 <CourseAnalyticsTab courseUUID={courseuuid} />
-              </PlanRestrictedFeature>
+              </FeatureGate>
             ) : null}
           </div>
         </motion.div>

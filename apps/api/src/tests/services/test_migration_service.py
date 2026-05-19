@@ -297,7 +297,7 @@ async def test_create_course_from_migration_skips_bad_files_and_validates_inputs
 
     assert result.success is True
     assert result.activities_created == 1
-    assert db.exec(select(Course).where(Course.course_uuid == result.course_uuid)).first() is not None
+    assert (await db.execute(select(Course).where(Course.course_uuid == result.course_uuid))).scalars().first() is not None
 
     invalid_course_response = None
     with pytest.raises(ValueError) as exc_info:
@@ -526,24 +526,24 @@ async def test_create_course_from_migration_success_and_failure(monkeypatch, tmp
     assert result.chapters_created == 1
     assert result.activities_created == 2
 
-    course = db.exec(select(Course).where(Course.course_uuid == result.course_uuid)).first()
+    course = (await db.execute(select(Course).where(Course.course_uuid == result.course_uuid))).scalars().first()
     assert course is not None
 
-    chapter = db.exec(select(Chapter).where(Chapter.course_id == course.id)).first()
+    chapter = (await db.execute(select(Chapter).where(Chapter.course_id == course.id))).scalars().first()
     assert chapter is not None
-    activity_rows = db.exec(select(Activity).where(Activity.course_id == course.id)).all()
+    activity_rows = (await db.execute(select(Activity).where(Activity.course_id == course.id))).scalars().all()
     assert len(activity_rows) == 2
     assert {activity.activity_type for activity in activity_rows} == {
         ActivityTypeEnum.TYPE_VIDEO,
         ActivityTypeEnum.TYPE_DYNAMIC,
     }
 
-    assert db.exec(select(CourseChapter).where(CourseChapter.course_id == course.id)).first() is not None
-    assert db.exec(select(ChapterActivity).where(ChapterActivity.course_id == course.id)).all()
-    assert db.exec(select(Block).where(Block.course_id == course.id)).first() is not None
-    assert db.exec(
+    assert (await db.execute(select(CourseChapter).where(CourseChapter.course_id == course.id))).scalars().first() is not None
+    assert (await db.execute(select(ChapterActivity).where(ChapterActivity.course_id == course.id))).scalars().all()
+    assert (await db.execute(select(Block).where(Block.course_id == course.id))).scalars().first() is not None
+    assert (await db.execute(
         select(ResourceAuthor).where(ResourceAuthor.resource_uuid == result.course_uuid)
-    ).first() is not None
+    )).scalars().first() is not None
     assert not temp_dir.exists()
 
     org_id = org.id

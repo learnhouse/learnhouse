@@ -10,7 +10,6 @@ from fastapi import HTTPException, UploadFile
 from sqlmodel import select
 
 from src.db.courses.courses import Course
-from src.db.organizations import Organization
 from src.db.playgrounds import Playground, PlaygroundAccessType, PlaygroundCreate, PlaygroundUpdate
 from src.db.roles import Role, RoleTypeEnum
 from src.db.usergroup_resources import UserGroupResource
@@ -34,7 +33,7 @@ from src.services.playgrounds.playgrounds import (
 )
 
 
-def _make_playground(db, org, admin_user, **overrides):
+async def _make_playground(db, org, admin_user, **overrides):
     playground = Playground(
         id=overrides.pop("id", None),
         org_id=org.id,
@@ -54,12 +53,12 @@ def _make_playground(db, org, admin_user, **overrides):
         update_date=overrides.pop("update_date", "2024-01-01"),
     )
     db.add(playground)
-    db.commit()
-    db.refresh(playground)
+    await db.commit()
+    await db.refresh(playground)
     return playground
 
 
-def _make_usergroup(db, org, **overrides):
+async def _make_usergroup(db, org, **overrides):
     usergroup = UserGroup(
         id=overrides.pop("id", None),
         org_id=org.id,
@@ -70,12 +69,12 @@ def _make_usergroup(db, org, **overrides):
         update_date=overrides.pop("update_date", str(datetime.now())),
     )
     db.add(usergroup)
-    db.commit()
-    db.refresh(usergroup)
+    await db.commit()
+    await db.refresh(usergroup)
     return usergroup
 
 
-def _make_role(db, org, **overrides):
+async def _make_role(db, org, **overrides):
     role = Role(
         id=overrides.pop("id", None),
         org_id=org.id,
@@ -88,52 +87,41 @@ def _make_role(db, org, **overrides):
         update_date=overrides.pop("update_date", str(datetime.now())),
     )
     db.add(role)
-    db.commit()
-    db.refresh(role)
+    await db.commit()
+    await db.refresh(role)
     return role
 
 
 class TestPlaygroundsService:
-    def test_rights_and_membership_helpers(self, db, org, admin_user):
-        rights = _get_user_rights(admin_user.id, org.id, db)
+    async def test_rights_and_membership_helpers(self, db, org, admin_user):
+        rights = await _get_user_rights(admin_user.id, org.id, db)
         assert rights["playgrounds"]["action_create"] is True
-        assert _is_org_admin(admin_user.id, org.id, db) is True
-        assert _user_in_playground_usergroup(admin_user.id, "missing", db) is False
+        assert await _is_org_admin(admin_user.id, org.id, db) is True
+        assert await _user_in_playground_usergroup(admin_user.id, "missing", db) is False
 
-    def test_rights_helper_empty_and_model_dump_branches(self, db, org, regular_user, monkeypatch):
-        # Missing user-org link.
-        assert _get_user_rights(9999, org.id, db) == {}
-        original_get = db.get
+    async def test_rights_helper_superadmin_bypasses_org_membership(self, db, org, regular_user, monkeypatch):
+        # Superadmin without an org-membership row still gets full playground rights.
+        async def _fake_superadmin(user_id, _db):
+            return user_id == regular_user.id
 
-        def empty_rights_get(model, ident):
-            if model is Role and ident == 4:
-                return SimpleNamespace(rights={})
-            return original_get(model, ident)
-
-        monkeypatch.setattr(db, "get", empty_rights_get)
-        assert _get_user_rights(regular_user.id, org.id, db) == {}
-
-        fake_role = SimpleNamespace(
-            rights=SimpleNamespace(
-                model_dump=lambda: {"playgrounds": {"action_create": True, "action_update": True}}
-            )
+        monkeypatch.setattr(
+            "src.services.playgrounds.playgrounds.is_user_superadmin",
+            _fake_superadmin,
         )
+        rights = await _get_user_rights(regular_user.id, org.id + 999, db)
+        assert rights["playgrounds"]["action_create"] is True
+        assert rights["playgrounds"]["action_update"] is True
+        assert rights["playgrounds"]["action_delete"] is True
 
-        def model_dump_get(model, ident):
-            if model is Role and ident == 4:
-                return fake_role
-            return original_get(model, ident)
+    async def test_rights_helper_empty_and_model_dump_branches(self, db, org, regular_user, monkeypatch):
+        # Missing user-org link.
+        assert await _get_user_rights(9999, org.id, db) == {}
 
-        monkeypatch.setattr(db, "get", model_dump_get)
-        assert _get_user_rights(regular_user.id, org.id, db) == {
-            "playgrounds": {"action_create": True, "action_update": True}
-        }
-
-    def test_check_read_access_public_and_restricted(self, db, org, admin_user, anonymous_user):
-        public_pg = _make_playground(
+    async def test_check_read_access_public_and_restricted(self, db, org, admin_user, anonymous_user):
+        public_pg = await _make_playground(
             db, org, admin_user, playground_uuid="pg_public", access_type=PlaygroundAccessType.PUBLIC
         )
-        restricted_pg = _make_playground(
+        restricted_pg = await _make_playground(
             db,
             org,
             admin_user,
@@ -142,27 +130,27 @@ class TestPlaygroundsService:
             created_by=999,
         )
 
-        _check_read_access(public_pg, anonymous_user, db)
+        await _check_read_access(public_pg, anonymous_user, db)
 
         with pytest.raises(HTTPException) as anon_exc:
-            _check_read_access(restricted_pg, anonymous_user, db)
+            await _check_read_access(restricted_pg, anonymous_user, db)
         assert anon_exc.value.status_code == 401
 
         with pytest.raises(HTTPException) as restricted_exc:
-            _check_read_access(restricted_pg, admin_user.model_copy(update={"id": 99}), db)
+            await _check_read_access(restricted_pg, admin_user.model_copy(update={"id": 99}), db)
         assert restricted_exc.value.status_code == 403
 
-    def test_check_read_access_authenticated_owner_admin_and_usergroup(
+    async def test_check_read_access_authenticated_owner_admin_and_usergroup(
         self, db, org, admin_user, regular_user, anonymous_user
     ):
-        authenticated_pg = _make_playground(
+        authenticated_pg = await _make_playground(
             db,
             org,
             admin_user,
             playground_uuid="pg_auth",
             access_type=PlaygroundAccessType.AUTHENTICATED,
         )
-        owner_pg = _make_playground(
+        owner_pg = await _make_playground(
             db,
             org,
             regular_user,
@@ -170,7 +158,7 @@ class TestPlaygroundsService:
             access_type=PlaygroundAccessType.RESTRICTED,
             created_by=regular_user.id,
         )
-        admin_pg = _make_playground(
+        admin_pg = await _make_playground(
             db,
             org,
             admin_user,
@@ -178,7 +166,7 @@ class TestPlaygroundsService:
             access_type=PlaygroundAccessType.RESTRICTED,
             created_by=99,
         )
-        group_pg = _make_playground(
+        group_pg = await _make_playground(
             db,
             org,
             admin_user,
@@ -186,7 +174,7 @@ class TestPlaygroundsService:
             access_type=PlaygroundAccessType.RESTRICTED,
             created_by=99,
         )
-        usergroup = _make_usergroup(db, org, usergroup_uuid="pg_group_ug")
+        usergroup = await _make_usergroup(db, org, usergroup_uuid="pg_group_ug")
         db.add(
             UserGroupResource(
                 usergroup_id=usergroup.id,
@@ -204,15 +192,15 @@ class TestPlaygroundsService:
                 update_date=str(datetime.now()),
             )
         )
-        db.commit()
+        await db.commit()
 
-        _check_read_access(authenticated_pg, regular_user, db)
-        _check_read_access(owner_pg, regular_user, db)
-        _check_read_access(admin_pg, admin_user, db)
-        _check_read_access(group_pg, regular_user, db)
+        await _check_read_access(authenticated_pg, regular_user, db)
+        await _check_read_access(owner_pg, regular_user, db)
+        await _check_read_access(admin_pg, admin_user, db)
+        await _check_read_access(group_pg, regular_user, db)
 
         with pytest.raises(HTTPException) as anon_exc:
-            _check_read_access(authenticated_pg, anonymous_user, db)
+            await _check_read_access(authenticated_pg, anonymous_user, db)
         assert anon_exc.value.status_code == 401
 
     @pytest.mark.asyncio
@@ -231,7 +219,7 @@ class TestPlaygroundsService:
                 db,
             )
 
-        public_pg = _make_playground(
+        public_pg = await _make_playground(
             db,
             org,
             admin_user,
@@ -239,7 +227,7 @@ class TestPlaygroundsService:
             access_type=PlaygroundAccessType.PUBLIC,
             published=True,
         )
-        _make_playground(
+        await _make_playground(
             db,
             org,
             admin_user,
@@ -303,7 +291,7 @@ class TestPlaygroundsService:
         )
         db.add(course)
         db.add(foreign_course)
-        db.commit()
+        await db.commit()
 
         with patch(
             "src.services.playgrounds.playgrounds.dispatch_webhooks",
@@ -406,8 +394,8 @@ class TestPlaygroundsService:
     async def test_playground_usergroup_and_thumbnail_flows(
         self, db, org, admin_user, mock_request
     ):
-        playground = _make_playground(db, org, admin_user)
-        usergroup = _make_usergroup(db, org)
+        playground = await _make_playground(db, org, admin_user)
+        usergroup = await _make_usergroup(db, org)
         upload = UploadFile(filename="thumb.png", file=SimpleNamespace())
 
         added = await add_usergroup_to_playground(
@@ -416,7 +404,7 @@ class TestPlaygroundsService:
         duplicate = await add_usergroup_to_playground(
             mock_request, playground.playground_uuid, usergroup.usergroup_uuid, admin_user, db
         )
-        membership = _user_in_playground_usergroup(admin_user.id, playground.playground_uuid, db)
+        membership = await _user_in_playground_usergroup(admin_user.id, playground.playground_uuid, db)
         listed = await get_playground_usergroups(
             mock_request, playground.playground_uuid, admin_user, db
         )
@@ -443,9 +431,9 @@ class TestPlaygroundsService:
 
     @pytest.mark.asyncio
     async def test_usergroup_and_thumbnail_error_paths(self, db, org, admin_user, regular_user, mock_request):
-        playground = _make_playground(db, org, admin_user, playground_uuid="pg_errors")
-        usergroup = _make_usergroup(db, org, usergroup_uuid="ug_errors")
-        other_usergroup = _make_usergroup(db, org, id=101, usergroup_uuid="ug_other")
+        playground = await _make_playground(db, org, admin_user, playground_uuid="pg_errors")
+        usergroup = await _make_usergroup(db, org, usergroup_uuid="ug_errors")
+        other_usergroup = await _make_usergroup(db, org, id=101, usergroup_uuid="ug_other")
         upload = UploadFile(filename="thumb.png", file=SimpleNamespace())
 
         with pytest.raises(HTTPException) as add_missing_pg_exc:
@@ -513,20 +501,6 @@ class TestPlaygroundsService:
             )
         assert thumb_denied_exc.value.status_code == 403
 
-        original_get = db.get
-
-        def missing_org_get(model, ident):
-            if model is Organization and ident == org.id:
-                return None
-            return original_get(model, ident)
-
-        with patch.object(db, "get", side_effect=missing_org_get):
-            with pytest.raises(HTTPException) as thumb_org_exc:
-                await update_playground_thumbnail(
-                    mock_request, playground.playground_uuid, admin_user, db, upload
-                )
-        assert thumb_org_exc.value.status_code == 404
-
         with pytest.raises(HTTPException) as thumb_file_exc:
             await update_playground_thumbnail(
                 mock_request, playground.playground_uuid, admin_user, db, None
@@ -551,8 +525,8 @@ class TestPlaygroundsService:
     async def test_delete_playground_removes_linked_usergroups(
         self, db, org, admin_user, mock_request
     ):
-        playground = _make_playground(db, org, admin_user, playground_uuid="pg_delete_links")
-        usergroup = _make_usergroup(db, org, usergroup_uuid="ug_delete_links")
+        playground = await _make_playground(db, org, admin_user, playground_uuid="pg_delete_links")
+        usergroup = await _make_usergroup(db, org, usergroup_uuid="ug_delete_links")
         await add_usergroup_to_playground(
             mock_request, playground.playground_uuid, usergroup.usergroup_uuid, admin_user, db
         )
@@ -560,21 +534,19 @@ class TestPlaygroundsService:
         deleted = await delete_playground(mock_request, playground.playground_uuid, admin_user, db)
 
         assert deleted == {"detail": "Playground deleted"}
-        assert (
-            db.exec(
-                select(UserGroupResource).where(
-                    UserGroupResource.resource_uuid == playground.playground_uuid
-                )
-            ).first()
-            is None
-        )
+        result = (await db.execute(
+            select(UserGroupResource).where(
+                UserGroupResource.resource_uuid == playground.playground_uuid
+            )
+        )).scalars().first()
+        assert result is None
 
     @pytest.mark.asyncio
     async def test_playground_list_and_get_usergroups_error_paths(
         self, db, org, admin_user, regular_user, anonymous_user, mock_request
     ):
-        playground = _make_playground(db, org, admin_user, playground_uuid="pg_list")
-        visible = _make_playground(
+        playground = await _make_playground(db, org, admin_user, playground_uuid="pg_list")
+        visible = await _make_playground(
             db,
             org,
             admin_user,
@@ -582,7 +554,7 @@ class TestPlaygroundsService:
             access_type=PlaygroundAccessType.PUBLIC,
             published=True,
         )
-        public_unpublished = _make_playground(
+        public_unpublished = await _make_playground(
             db,
             org,
             admin_user,
@@ -591,7 +563,7 @@ class TestPlaygroundsService:
             published=False,
             created_by=regular_user.id,
         )
-        hidden = _make_playground(
+        hidden = await _make_playground(
             db,
             org,
             admin_user,
@@ -600,7 +572,7 @@ class TestPlaygroundsService:
             published=False,
             created_by=admin_user.id,
         )
-        usergroup = _make_usergroup(db, org, id=211, usergroup_uuid="ug_list")
+        usergroup = await _make_usergroup(db, org, id=211, usergroup_uuid="ug_list")
         db.add(
             UserGroupResource(
                 usergroup_id=usergroup.id,
@@ -619,7 +591,7 @@ class TestPlaygroundsService:
                 update_date=str(datetime.now()),
             )
         )
-        db.commit()
+        await db.commit()
 
         anon_list = await list_org_playgrounds(mock_request, org.id, anonymous_user, db)
         regular_list = await list_org_playgrounds(mock_request, org.id, regular_user, db)
@@ -642,8 +614,8 @@ class TestPlaygroundsService:
     async def test_playground_usergroup_membership_helper_with_real_rows(
         self, db, org, admin_user
     ):
-        playground = _make_playground(db, org, admin_user)
-        usergroup = _make_usergroup(db, org, id=90, usergroup_uuid="ug90")
+        playground = await _make_playground(db, org, admin_user)
+        usergroup = await _make_usergroup(db, org, id=90, usergroup_uuid="ug90")
         link = UserGroupResource(
             usergroup_id=usergroup.id,
             resource_uuid=playground.playground_uuid,
@@ -659,14 +631,14 @@ class TestPlaygroundsService:
         )
         db.add(link)
         db.add(membership)
-        db.commit()
+        await db.commit()
 
-        assert _user_in_playground_usergroup(admin_user.id, playground.playground_uuid, db) is True
+        assert await _user_in_playground_usergroup(admin_user.id, playground.playground_uuid, db) is True
 
     @pytest.mark.asyncio
     async def test_playground_error_branches(self, db, org, admin_user, regular_user, mock_request):
-        playground = _make_playground(db, org, admin_user)
-        usergroup = _make_usergroup(db, org, usergroup_uuid="ug_missing_link")
+        playground = await _make_playground(db, org, admin_user)
+        usergroup = await _make_usergroup(db, org, usergroup_uuid="ug_missing_link")
 
         with pytest.raises(HTTPException) as create_exc:
             await create_playground(
@@ -723,7 +695,7 @@ class TestPlaygroundsService:
         self, db, org, admin_user, anonymous_user, mock_request
     ):
         """Line 272: playgrounds exist but none pass the filter for the user → returns []."""
-        _make_playground(
+        await _make_playground(
             db,
             org,
             admin_user,
@@ -740,7 +712,7 @@ class TestPlaygroundsService:
     ):
         """Lines 229-247, 254-261: regular user in a usergroup that grants access to a
         restricted playground can see it in the listing."""
-        restricted_pg = _make_playground(
+        restricted_pg = await _make_playground(
             db,
             org,
             admin_user,
@@ -750,7 +722,7 @@ class TestPlaygroundsService:
             created_by=admin_user.id,
         )
 
-        ug = _make_usergroup(db, org, usergroup_uuid="ug_restricted_access")
+        ug = await _make_usergroup(db, org, usergroup_uuid="ug_restricted_access")
         db.add(
             UserGroupResource(
                 usergroup_id=ug.id,
@@ -760,7 +732,7 @@ class TestPlaygroundsService:
                 update_date=str(datetime.now()),
             )
         )
-        db.commit()
+        await db.commit()
         db.add(
             UserGroupUser(
                 usergroup_id=ug.id,
@@ -770,7 +742,7 @@ class TestPlaygroundsService:
                 update_date=str(datetime.now()),
             )
         )
-        db.commit()
+        await db.commit()
 
         result = await list_org_playgrounds(mock_request, org.id, regular_user, db)
         assert any(pg.playground_uuid == restricted_pg.playground_uuid for pg in result)
@@ -779,7 +751,7 @@ class TestPlaygroundsService:
     async def test_list_org_playgrounds_restricted_skips_anonymous_and_no_access(
         self, db, org, admin_user, regular_user, anonymous_user, mock_request
     ):
-        restricted_pg = _make_playground(
+        restricted_pg = await _make_playground(
             db, org, admin_user,
             playground_uuid="pg_restricted_filter",
             access_type=PlaygroundAccessType.RESTRICTED,

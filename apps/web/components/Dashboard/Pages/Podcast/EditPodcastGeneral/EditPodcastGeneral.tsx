@@ -6,6 +6,8 @@ import { useOrg } from '@components/Contexts/OrgContext'
 import { updatePodcast, updatePodcastThumbnail } from '@services/podcasts/podcasts'
 import { getPodcastThumbnailMediaDirectory } from '@services/media/media'
 import { revalidateTags } from '@services/utils/ts/requests'
+import { useQueryClient } from '@tanstack/react-query'
+import { queryKeys } from '@/lib/query/keys'
 import { useFormik } from 'formik'
 import * as Yup from 'yup'
 import { useTranslation } from 'react-i18next'
@@ -28,6 +30,7 @@ function EditPodcastGeneral({ orgslug }: EditPodcastGeneralProps) {
   const { podcast, refreshPodcast, isLoading } = usePodcast()
   const session = useLHSession() as any
   const org = useOrg() as any
+  const queryClient = useQueryClient()
   const [isSaving, setIsSaving] = useState(false)
   const [thumbnailFile, setThumbnailFile] = useState<File | null>(null)
   const [thumbnailPreview, setThumbnailPreview] = useState<string | null>(null)
@@ -73,6 +76,8 @@ function EditPodcastGeneral({ orgslug }: EditPodcastGeneralProps) {
 
         await revalidateTags(['podcasts'], orgslug)
         await refreshPodcast()
+        queryClient.invalidateQueries({ queryKey: queryKeys.podcasts.list(orgslug) })
+        queryClient.invalidateQueries({ queryKey: queryKeys.podcasts.detail(podcast!.podcast_uuid) })
         toast.success(t('podcasts.dashboard.saved'), { id: toastId })
         setThumbnailFile(null)
         setThumbnailPreview(null)
@@ -104,8 +109,44 @@ function EditPodcastGeneral({ orgslug }: EditPodcastGeneralProps) {
 
   if (isLoading || !podcast) {
     return (
-      <div className="flex items-center justify-center h-64">
-        <Loader2 className="w-8 h-8 animate-spin text-gray-400" />
+      <div className="h-full">
+        <div className="h-6" />
+        <div className="px-10 pb-10">
+          <div className="bg-white rounded-xl shadow-sm p-6 animate-pulse">
+            <div className="space-y-6">
+              {/* Thumbnail placeholder */}
+              <div>
+                <div className="h-4 w-24 bg-gray-200 rounded mb-2" />
+                <div className="flex items-start space-x-4">
+                  <div className="w-40 h-40 bg-gray-200 rounded-lg shrink-0" />
+                  <div className="flex flex-col gap-2 pt-1">
+                    <div className="h-9 w-36 bg-gray-200 rounded-lg" />
+                    <div className="h-3 w-48 bg-gray-100 rounded" />
+                  </div>
+                </div>
+              </div>
+              {/* Fields */}
+              {[1, 2, 3, 4].map((i) => (
+                <div key={i} className="space-y-2">
+                  <div className="h-3.5 w-24 bg-gray-200 rounded" />
+                  <div className="h-10 bg-gray-100 rounded-lg" />
+                </div>
+              ))}
+              {/* Checkboxes */}
+              <div className="border-t border-gray-100 pt-6 space-y-4">
+                <div className="h-4 w-32 bg-gray-200 rounded" />
+                <div className="flex items-center gap-3">
+                  <div className="w-4 h-4 bg-gray-200 rounded" />
+                  <div className="h-3.5 w-20 bg-gray-100 rounded" />
+                </div>
+                <div className="flex items-center gap-3">
+                  <div className="w-4 h-4 bg-gray-200 rounded" />
+                  <div className="h-3.5 w-20 bg-gray-100 rounded" />
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
     )
   }

@@ -74,7 +74,7 @@ export default function GoogleCallbackPage() {
         const cookies = document.cookie.split(';')
         for (const cookie of cookies) {
           const [name, value] = cookie.trim().split('=')
-          if (name === 'learnhouse_oauth_org_id' && value) {
+          if (name === 'LH_oauth_org_id' && value) {
             orgId = parseInt(value, 10)
             if (isNaN(orgId)) {
               orgId = undefined

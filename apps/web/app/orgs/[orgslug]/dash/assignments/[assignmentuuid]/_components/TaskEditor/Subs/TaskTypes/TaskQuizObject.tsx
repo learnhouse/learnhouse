@@ -3,14 +3,14 @@ import { useAssignmentSubmission, useAssignmentTaskSubmissions } from '@componen
 import { useAssignmentsTask, useAssignmentsTaskDispatch } from '@components/Contexts/Assignments/AssignmentsTaskContext';
 import { useLHSession } from '@components/Contexts/LHSessionContext';
 import AssignmentBoxUI from '@components/Objects/Activities/Assignment/AssignmentBoxUI';
-import { getAPIUrl } from '@services/config/config';
 import { getAssignmentTask, getAssignmentTaskSubmissionsUser, handleAssignmentTaskSubmission, updateAssignmentTask } from '@services/courses/assignments';
 import { Check, Info, Minus, Plus, PlusCircle, X } from 'lucide-react';
 import React, { useEffect, useState } from 'react';
 import toast from 'react-hot-toast';
 import { v4 as uuidv4 } from 'uuid';
 import { useTranslation } from 'react-i18next';
-import { mutate } from 'swr';
+import { useQueryClient } from '@tanstack/react-query';
+import { queryKeys } from '@/lib/query/keys';
 
 type QuizSchema = {
     questionText: string;
@@ -54,6 +54,7 @@ function TaskQuizObject({ view, assignmentTaskUUID, user_id }: TaskQuizObjectPro
     const assignmentTaskStateHook = useAssignmentsTaskDispatch() as any;
     const assignment = useAssignments() as any;
     const taskSubmissionsMap = useAssignmentTaskSubmissions();
+    const queryClient = useQueryClient();
     // Reveal correct answers to the student only after the submission is
     // GRADED AND the teacher opted into it on the assignment. Before grading
     // we still hide the answer key (the assignment hasn't been evaluated yet)
@@ -272,7 +273,7 @@ function TaskQuizObject({ view, assignmentTaskUUID, user_id }: TaskQuizObjectPro
                 };
                 setUserSubmissions(updatedUserSubmissionsWithUUID);
                 setInitialUserSubmissions(updatedUserSubmissionsWithUUID);
-                mutate(`${getAPIUrl()}assignments/${assignment.assignment_object.assignment_uuid}/tasks/submissions/me`);
+                queryClient.invalidateQueries({ queryKey: queryKeys.assignments.taskSubmission(assignment.assignment_object.assignment_uuid) });
             } else {
                 toast.error(t('dashboard.assignments.editor.toasts.task_save_error'));
             }

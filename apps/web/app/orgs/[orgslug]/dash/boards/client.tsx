@@ -5,18 +5,17 @@ import { Search, X, Users, Globe, Lock, ChevronLeft, ChevronRight, MoreVertical,
 import { ChalkboardSimple } from '@phosphor-icons/react'
 import { useOrg } from '@components/Contexts/OrgContext'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
-import { getAPIUrl, getUriWithOrg } from '@services/config/config'
-import useSWR, { mutate } from 'swr'
-import { swrFetcher } from '@services/utils/ts/requests'
-import { createBoard, deleteBoard, duplicateBoard } from '@services/boards/boards'
+import { getUriWithOrg } from '@services/config/config'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
+import { queryKeys } from '@/lib/query/keys'
+import { createBoard, deleteBoard, duplicateBoard, getBoards } from '@services/boards/boards'
 import { getBoardThumbnailMediaDirectory } from '@services/media/media'
 import toast from 'react-hot-toast'
 import { useTranslation } from 'react-i18next'
 import Link from 'next/link'
 import { Breadcrumbs } from '@components/Objects/Breadcrumbs/Breadcrumbs'
 import AuthenticatedClientElement from '@components/Security/AuthenticatedClientElement'
-import PlanRestrictedFeature from '@components/Dashboard/Shared/PlanRestricted/PlanRestrictedFeature'
-import FeatureDisabledView from '@components/Dashboard/Shared/FeatureDisabled/FeatureDisabledView'
+import FeatureGate from '@components/Dashboard/Shared/FeatureGate/FeatureGate'
 import ConfirmationModal from '@components/Objects/StyledElements/ConfirmationModal/ConfirmationModal'
 import {
   DropdownMenu,
@@ -24,9 +23,8 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@components/ui/dropdown-menu"
-import { PlanLevel } from '@services/plans/plans'
 import Modal from '@components/Objects/StyledElements/Modal/Modal'
-import { usePlan } from '@components/Hooks/usePlan'
+import { searchMatchesAny } from '@/lib/search/normalize'
 
 interface BoardListClientProps {
   org_id: number
@@ -97,7 +95,7 @@ export default function BoardListClient({ org_id, orgslug }: BoardListClientProp
   const org = useOrg() as any
   const session = useLHSession() as any
   const access_token = session?.data?.tokens?.access_token
-  const plan = usePlan()
+  const queryClient = useQueryClient()
 
   const isBoardsEnabled = org?.config?.config?.resolved_features?.boards?.enabled ?? org?.config?.config?.features?.boards?.enabled !== false
 
@@ -107,21 +105,19 @@ export default function BoardListClient({ org_id, orgslug }: BoardListClientProp
   const [selectedBoards, setSelectedBoards] = useState<Set<string>>(new Set())
   const itemsPerPage = 12
 
-  const boardsKey = isBoardsEnabled && access_token ? `${getAPIUrl()}boards/org/${org_id}` : null
-  const { data: boards, isLoading } = useSWR(
-    boardsKey,
-    (url) => swrFetcher(url, access_token),
-    { revalidateOnFocus: false }
-  )
+  const { data: boards, isLoading } = useQuery({
+    queryKey: queryKeys.boards.list(orgslug),
+    queryFn: () => getBoards(org_id, access_token),
+    enabled: isBoardsEnabled && !!access_token && !!org_id,
+    staleTime: 60_000,
+  })
 
   const allBoards = boards || []
 
   const filteredBoards = useMemo(() => {
     if (!searchQuery.trim()) return allBoards
-    const query = searchQuery.toLowerCase()
     return allBoards.filter((board: any) =>
-      board.name?.toLowerCase().includes(query) ||
-      board.description?.toLowerCase().includes(query)
+      searchMatchesAny([board.name, board.description], searchQuery)
     )
   }, [allBoards, searchQuery])
 
@@ -137,7 +133,7 @@ export default function BoardListClient({ org_id, orgslug }: BoardListClientProp
 
   const handleCreated = () => {
     setCreateModalOpen(false)
-    if (boardsKey) mutate(boardsKey)
+    queryClient.invalidateQueries({ queryKey: queryKeys.boards.list(orgslug) })
   }
 
   const toggleBoardSelection = (boardUuid: string) => {
@@ -181,14 +177,14 @@ export default function BoardListClient({ org_id, orgslug }: BoardListClientProp
     }
 
     clearSelection()
-    if (boardsKey) mutate(boardsKey)
+    queryClient.invalidateQueries({ queryKey: queryKeys.boards.list(orgslug) })
   }
 
   const handleDeleteBoard = async (boardUuid: string) => {
     const toastId = toast.loading(t('boards.deleting_board'))
     try {
       await deleteBoard(boardUuid, access_token)
-      if (boardsKey) mutate(boardsKey)
+      queryClient.invalidateQueries({ queryKey: queryKeys.boards.list(orgslug) })
       toast.success(t('boards.board_deleted_success'))
     } catch {
       toast.error(t('boards.board_deleted_error'))
@@ -201,7 +197,7 @@ export default function BoardListClient({ org_id, orgslug }: BoardListClientProp
     const toastId = toast.loading(t('boards.duplicating_board'))
     try {
       await duplicateBoard(boardUuid, access_token)
-      if (boardsKey) mutate(boardsKey)
+      queryClient.invalidateQueries({ queryKey: queryKeys.boards.list(orgslug) })
       toast.success(t('boards.board_duplicated_success'))
     } catch {
       toast.error(t('boards.board_duplicated_error'))
@@ -243,14 +239,8 @@ export default function BoardListClient({ org_id, orgslug }: BoardListClientProp
   }
 
   return (
-    <PlanRestrictedFeature
-      currentPlan={plan}
-      requiredPlan="pro"
-      titleKey="Boards"
-      descriptionKey="Create collaborative boards for real-time brainstorming and planning."
-    >
-    <FeatureDisabledView featureName="boards" orgslug={orgslug} context="dashboard">
-      <div className="h-full w-full bg-[#f8f8f8] pl-10 pr-10">
+    <FeatureGate feature="boards" orgslug={orgslug} context="dashboard">
+      <div className="h-full w-full bg-[#f8f8f8] pl-4 pr-4 sm:pl-10 sm:pr-10">
         <div className="mb-6 pt-6">
           <Breadcrumbs items={[
             { label: t('boards.boards'), href: '/dash/boards', icon: <ChalkboardSimple size={14} /> }
@@ -470,8 +460,7 @@ export default function BoardListClient({ org_id, orgslug }: BoardListClientProp
           </div>
         )}
       </div>
-    </FeatureDisabledView>
-    </PlanRestrictedFeature>
+    </FeatureGate>
   )
 }
 

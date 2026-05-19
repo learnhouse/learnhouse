@@ -5,7 +5,8 @@ from typing import Literal
 from uuid import uuid4
 from fastapi import HTTPException, Request, UploadFile, status
 import redis
-from sqlmodel import Session, select
+from sqlmodel import select
+from sqlmodel.ext.asyncio.session import AsyncSession
 from config.config import get_learnhouse_config
 from src.security.features_utils.usage import (
     check_limits_with_usage,
@@ -23,7 +24,9 @@ from src.security.rbac.rbac import (
     authorization_verify_based_on_roles_and_authorship,
     authorization_verify_if_user_is_anon,
 )
+from src.db.organization_config import OrganizationConfig
 from src.db.organizations import Organization, OrganizationRead
+from src.services.orgs.orgs import get_org_default_language
 from src.db.users import (
     AnonymousUser,
     InternalUser,
@@ -47,7 +50,7 @@ from src.services.webhooks.dispatch import dispatch_webhooks
 
 async def create_user(
     request: Request,
-    db_session: Session,
+    db_session: AsyncSession,
     current_user: PublicUser | AnonymousUser,
     user_object: UserCreate,
     org_id: int,
@@ -94,25 +97,25 @@ async def create_user(
 
     # Check if Organization exists
     statement = select(Organization).where(Organization.id == org_id)
-    result = db_session.exec(statement)
+    result = (await db_session.execute(statement)).scalars().first()
 
-    if not result.first():
+    if not result:
         raise HTTPException(
             status_code=400,
             detail="Organization does not exist",
         )
 
     # Usage check
-    check_limits_with_usage("members", org_id, db_session)
+    await check_limits_with_usage("members", org_id, db_session)
 
     # SECURITY: single generic error for both email and username conflicts so
     # the endpoint cannot be used to probe which addresses or handles are
     # already registered (account enumeration).
-    conflict = db_session.exec(
+    conflict = (await db_session.execute(
         select(User).where(
             (User.username == user.username) | (User.email == user.email)
         )
-    ).first()
+    )).scalars().first()
 
     if conflict:
         raise HTTPException(
@@ -129,25 +132,25 @@ async def create_user(
 
     # Add user to database
     db_session.add(user)
-    db_session.commit()
-    db_session.refresh(user)
+    await db_session.commit()
+    await db_session.refresh(user)
 
     # Link user and organization
     user_organization = UserOrganization(
         user_id=user.id if user.id else 0,
-        org_id=int(org_id),
+        org_id=org_id,
         role_id=4,
         creation_date=str(datetime.now()),
         update_date=str(datetime.now()),
     )
 
     db_session.add(user_organization)
-    db_session.commit()
-    db_session.refresh(user_organization)
+    await db_session.commit()
+    await db_session.refresh(user_organization)
 
     user_read = UserRead.model_validate(user)
 
-    increase_feature_usage("members", org_id, db_session)
+    await increase_feature_usage("members", org_id, db_session)
 
     # Track user signup
     await track(
@@ -173,9 +176,12 @@ async def create_user(
 
     # Send verification email for non-OAuth users, account creation email for OAuth users
     if is_oauth:
+        org_config_stmt = select(OrganizationConfig).where(OrganizationConfig.org_id == org_id)
+        org_config = (await db_session.execute(org_config_stmt)).scalars().first()
         send_account_creation_email(
             user=user_read,
             email=user_read.email,
+            lang=get_org_default_language(org_config),
         )
     else:
         # Import here to avoid circular imports
@@ -187,7 +193,7 @@ async def create_user(
 
 async def create_user_with_invite(
     request: Request,
-    db_session: Session,
+    db_session: AsyncSession,
     current_user: PublicUser | AnonymousUser,
     user_object: UserCreate,
     org_id: int,
@@ -206,9 +212,9 @@ async def create_user_with_invite(
         )
 
     # Usage check
-    check_limits_with_usage("members", org_id, db_session)
+    await check_limits_with_usage("members", org_id, db_session)
 
-    
+
 
     user = await create_user(request, db_session, current_user, user_object, org_id, signup_provider="invite")
 
@@ -223,7 +229,7 @@ async def create_user_with_invite(
             str(user.id),
         )
 
-    increase_feature_usage("members", org_id, db_session)
+    await increase_feature_usage("members", org_id, db_session)
 
     # Mark the invitation as no longer pending in Redis
     try:
@@ -232,7 +238,7 @@ async def create_user_with_invite(
         if redis_conn_string:
             r = redis.Redis.from_url(redis_conn_string)
             statement = select(Organization).where(Organization.id == org_id)
-            org = db_session.exec(statement).first()
+            org = (await db_session.execute(statement)).scalars().first()
             if org:
                 redis_key = f"invited_user:{user_object.email}:org:{org.org_uuid}"
                 invited_data = r.get(redis_key)
@@ -256,7 +262,7 @@ async def create_user_with_invite(
 
 async def create_user_without_org(
     request: Request,
-    db_session: Session,
+    db_session: AsyncSession,
     current_user: PublicUser | AnonymousUser,
     user_object: UserCreate,
     is_oauth: bool = False,
@@ -302,11 +308,11 @@ async def create_user_without_org(
 
     # SECURITY: single generic error for both email and username conflicts to
     # prevent account enumeration via this org-less signup endpoint.
-    conflict = db_session.exec(
+    conflict = (await db_session.execute(
         select(User).where(
             (User.username == user.username) | (User.email == user.email)
         )
-    ).first()
+    )).scalars().first()
 
     if conflict:
         raise HTTPException(
@@ -323,8 +329,8 @@ async def create_user_without_org(
 
     # Add user to database
     db_session.add(user)
-    db_session.commit()
-    db_session.refresh(user)
+    await db_session.commit()
+    await db_session.refresh(user)
 
     user_read = UserRead.model_validate(user)
 
@@ -344,14 +350,14 @@ async def create_user_without_org(
 
 async def update_user(
     request: Request,
-    db_session: Session,
+    db_session: AsyncSession,
     user_id: int,
     current_user: PublicUser | AnonymousUser,
     user_object: UserUpdate,
 ):
     # Get user
     statement = select(User).where(User.id == user_id)
-    user = db_session.exec(statement).first()
+    user = (await db_session.execute(statement)).scalars().first()
 
     if not user:
         raise HTTPException(
@@ -367,12 +373,12 @@ async def update_user(
     # SECURITY: merge email/username conflict errors into one generic message
     # so an authenticated attacker cannot iterate candidate usernames/emails
     # via the update endpoint to enumerate other accounts.
-    conflict = db_session.exec(
+    conflict = (await db_session.execute(
         select(User).where(
             ((User.username == user_object.username) | (User.email == user_object.email))
             & (User.id != current_user.id)
         )
-    ).first()
+    )).scalars().first()
 
     if conflict:
         raise HTTPException(
@@ -403,8 +409,8 @@ async def update_user(
 
     # Update user in database
     db_session.add(user)
-    db_session.commit()
-    db_session.refresh(user)
+    await db_session.commit()
+    await db_session.refresh(user)
 
     user = UserRead.model_validate(user)
 
@@ -413,13 +419,13 @@ async def update_user(
 
 async def update_user_avatar(
     request: Request,
-    db_session: Session,
+    db_session: AsyncSession,
     current_user: PublicUser | AnonymousUser,
     avatar_file: UploadFile | None = None,
 ):
     # Get user
     statement = select(User).where(User.id == current_user.id)
-    user = db_session.exec(statement).first()
+    user = (await db_session.execute(statement)).scalars().first()
 
     if not user:
         raise HTTPException(
@@ -443,8 +449,8 @@ async def update_user_avatar(
 
     # Update user in database
     db_session.add(user)
-    db_session.commit()
-    db_session.refresh(user)
+    await db_session.commit()
+    await db_session.refresh(user)
 
     user = UserRead.model_validate(user)
 
@@ -453,7 +459,7 @@ async def update_user_avatar(
 
 async def update_user_password(
     request: Request,
-    db_session: Session,
+    db_session: AsyncSession,
     current_user: PublicUser | AnonymousUser,
     user_id: int,
     form: UserUpdatePassword,
@@ -466,7 +472,7 @@ async def update_user_password(
     2. Verifies the old password before allowing change
     3. Validates password complexity requirements
     """
-    
+
     # Users can ONLY change their own password
     if current_user.id != user_id:
         raise HTTPException(
@@ -489,7 +495,7 @@ async def update_user_password(
 
     # Get user (we already verified it's the current user)
     statement = select(User).where(User.id == user_id)
-    user = db_session.exec(statement).first()
+    user = (await db_session.execute(statement)).scalars().first()
 
     if not user:
         raise HTTPException(
@@ -509,8 +515,8 @@ async def update_user_password(
 
     # Update user in database
     db_session.add(user)
-    db_session.commit()
-    db_session.refresh(user)
+    await db_session.commit()
+    await db_session.refresh(user)
 
     user = UserRead.model_validate(user)
 
@@ -519,7 +525,7 @@ async def update_user_password(
 
 async def read_user_by_id(
     request: Request,
-    db_session: Session,
+    db_session: AsyncSession,
     current_user: PublicUser | AnonymousUser,
     user_id: int,
 ):
@@ -531,7 +537,7 @@ async def read_user_by_id(
     """
     # Get user
     statement = select(User).where(User.id == user_id)
-    user = db_session.exec(statement).first()
+    user = (await db_session.execute(statement)).scalars().first()
 
     if not user:
         raise HTTPException(
@@ -544,7 +550,7 @@ async def read_user_by_id(
 
 async def read_user_by_uuid(
     request: Request,
-    db_session: Session,
+    db_session: AsyncSession,
     current_user: PublicUser | AnonymousUser,
     user_uuid: str,
 ):
@@ -556,7 +562,7 @@ async def read_user_by_uuid(
     """
     # Get user
     statement = select(User).where(User.user_uuid == user_uuid)
-    user = db_session.exec(statement).first()
+    user = (await db_session.execute(statement)).scalars().first()
 
     if not user:
         raise HTTPException(
@@ -569,7 +575,7 @@ async def read_user_by_uuid(
 
 async def read_user_by_username(
     request: Request,
-    db_session: Session,
+    db_session: AsyncSession,
     current_user: PublicUser | AnonymousUser,
     username: str,
 ):
@@ -581,7 +587,7 @@ async def read_user_by_username(
     """
     # Get user
     statement = select(User).where(User.username == username)
-    user = db_session.exec(statement).first()
+    user = (await db_session.execute(statement)).scalars().first()
 
     if not user:
         raise HTTPException(
@@ -594,12 +600,12 @@ async def read_user_by_username(
 
 async def get_user_session(
     request: Request,
-    db_session: Session,
+    db_session: AsyncSession,
     current_user: PublicUser | AnonymousUser,
 ) -> UserSession:
     # Get user
     statement = select(User).where(User.user_uuid == current_user.user_uuid)
-    user = db_session.exec(statement).first()
+    user = (await db_session.execute(statement)).scalars().first()
 
     if not user:
         raise HTTPException(
@@ -617,7 +623,7 @@ async def get_user_session(
         .join(Organization, Organization.id == UserOrganization.org_id)
         .where(UserOrganization.user_id == user.id)
     )
-    results = db_session.exec(statement.limit(100)).all()
+    results = (await db_session.execute(statement.limit(100))).all()
     if len(results) == 100:  # pragma: no cover
         logging.getLogger(__name__).warning(
             "User %s has 100+ org memberships, result truncated", user.id
@@ -643,14 +649,14 @@ async def get_user_session(
 
 async def authorize_user_action(
     request: Request,
-    db_session: Session,
+    db_session: AsyncSession,
     current_user: PublicUser | AnonymousUser,
     resource_uuid: str,
     action: Literal["create", "read", "update", "delete"],
 ):
     # Get user
     statement = select(User).where(User.user_uuid == current_user.user_uuid)
-    user = db_session.exec(statement).first()
+    user = (await db_session.execute(statement)).scalars().first()
 
     if not user:
         raise HTTPException(
@@ -676,13 +682,13 @@ async def authorize_user_action(
 
 async def delete_user_by_id(
     request: Request,
-    db_session: Session,
+    db_session: AsyncSession,
     current_user: PublicUser | AnonymousUser,
     user_id: int,
 ):
     # Get user
     statement = select(User).where(User.id == user_id)
-    user = db_session.exec(statement).first()
+    user = (await db_session.execute(statement)).scalars().first()
 
     if not user:
         raise HTTPException(
@@ -694,17 +700,17 @@ async def delete_user_by_id(
     await rbac_check(request, current_user, "delete", user.user_uuid, db_session)
 
     # Remove org memberships first (no CASCADE on this FK)
-    user_orgs = db_session.exec(
+    user_orgs = (await db_session.execute(
         select(UserOrganization).where(UserOrganization.user_id == user_id)
-    ).all()
+    )).scalars().all()
     for uo in user_orgs:
-        db_session.delete(uo)
+        await db_session.delete(uo)
 
-    db_session.flush()
+    await db_session.flush()
 
     # Delete user (all other FKs have ondelete="CASCADE")
-    db_session.delete(user)
-    db_session.commit()
+    await db_session.delete(user)
+    await db_session.commit()
 
     return {"detail": "User deleted successfully"}
 
@@ -712,7 +718,7 @@ async def delete_user_by_id(
 # Utils & Security functions
 
 
-async def security_get_user(request: Request, db_session: Session, email: str) -> User | None:
+async def security_get_user(request: Request, db_session: AsyncSession, email: str) -> User | None:
     """
     Get user by email for security/authentication purposes.
 
@@ -722,7 +728,7 @@ async def security_get_user(request: Request, db_session: Session, email: str) -
     """
     # Check if user exists
     statement = select(User).where(User.email == email)
-    user = db_session.exec(statement).first()
+    user = (await db_session.execute(statement)).scalars().first()
 
     if not user:
         return None
@@ -740,7 +746,7 @@ async def rbac_check(
     current_user: PublicUser | AnonymousUser,
     action: Literal["create", "read", "update", "delete"],
     user_uuid: str,
-    db_session: Session,
+    db_session: AsyncSession,
 ):
     if action == "create" or action == "read":
         if current_user.id == 0:  # if user is anonymous

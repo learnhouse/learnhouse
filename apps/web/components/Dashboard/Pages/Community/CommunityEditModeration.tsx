@@ -26,8 +26,8 @@ import {
   CommunityModerationSettings,
 } from '@services/communities/communities'
 import { revalidateTags } from '@services/utils/ts/requests'
-import { mutate } from 'swr'
-import { getAPIUrl } from '@services/config/config'
+import { useQueryClient } from '@tanstack/react-query'
+import { queryKeys } from '@/lib/query/keys'
 import toast from 'react-hot-toast'
 import { Input } from '@components/ui/input'
 import { Button } from '@components/ui/button'
@@ -100,6 +100,7 @@ const CommunityEditModeration: React.FC = () => {
   const dispatch = useCommunityDispatch()
   const community = communityState?.community
   const accessToken = session?.data?.tokens?.access_token
+  const queryClient = useQueryClient()
   const inputRef = useRef<HTMLInputElement>(null)
   const batchInputRef = useRef<HTMLTextAreaElement>(null)
 
@@ -193,7 +194,8 @@ const CommunityEditModeration: React.FC = () => {
       }
       await updateCommunity(community.community_uuid, payload, accessToken)
       await revalidateTags(['communities'], org.slug)
-      mutate(`${getAPIUrl()}communities/${community.community_uuid}`)
+      queryClient.invalidateQueries({ queryKey: queryKeys.community.list(org.id) })
+      queryClient.invalidateQueries({ queryKey: queryKeys.community.detail(community.community_uuid) })
       if (dispatch) {
         dispatch({
           type: 'setCommunity',

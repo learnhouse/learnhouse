@@ -1,7 +1,8 @@
 from typing import List, Dict, Union
 from uuid import uuid4
 from datetime import datetime
-from sqlmodel import Session, select
+from sqlmodel import select
+from sqlmodel.ext.asyncio.session import AsyncSession
 from fastapi import HTTPException, Request
 
 from src.db.users import PublicUser, AnonymousUser, APITokenUser
@@ -16,7 +17,7 @@ async def upvote_discussion(
     request: Request,
     discussion_uuid: str,
     current_user: Union[PublicUser, AnonymousUser, APITokenUser],
-    db_session: Session,
+    db_session: AsyncSession,
 ) -> DiscussionVoteRead:
     """
     Upvote a discussion.
@@ -31,7 +32,7 @@ async def upvote_discussion(
     discussion_statement = select(Discussion).where(
         Discussion.discussion_uuid == discussion_uuid
     )
-    discussion = db_session.exec(discussion_statement).first()
+    discussion = (await db_session.execute(discussion_statement)).scalars().first()
 
     if not discussion:
         raise HTTPException(status_code=404, detail="Discussion not found")
@@ -40,7 +41,7 @@ async def upvote_discussion(
     community_statement = select(Community).where(
         Community.id == discussion.community_id
     )
-    community = db_session.exec(community_statement).first()
+    community = (await db_session.execute(community_statement)).scalars().first()
 
     if not community:
         raise HTTPException(status_code=404, detail="Community not found")
@@ -54,7 +55,7 @@ async def upvote_discussion(
         DiscussionVote.discussion_id == discussion.id,
         DiscussionVote.user_id == current_user.id,
     )
-    existing_vote = db_session.exec(existing_vote_statement).first()
+    existing_vote = (await db_session.execute(existing_vote_statement)).scalars().first()
 
     if existing_vote:
         raise HTTPException(
@@ -76,8 +77,8 @@ async def upvote_discussion(
     discussion.upvote_count += 1
     db_session.add(discussion)
 
-    db_session.commit()
-    db_session.refresh(vote)
+    await db_session.commit()
+    await db_session.refresh(vote)
 
     await dispatch_webhooks(
         event_name="discussion_vote_cast",
@@ -96,7 +97,7 @@ async def remove_upvote(
     request: Request,
     discussion_uuid: str,
     current_user: Union[PublicUser, AnonymousUser, APITokenUser],
-    db_session: Session,
+    db_session: AsyncSession,
 ) -> dict:
     """
     Remove an upvote from a discussion.
@@ -110,7 +111,7 @@ async def remove_upvote(
     discussion_statement = select(Discussion).where(
         Discussion.discussion_uuid == discussion_uuid
     )
-    discussion = db_session.exec(discussion_statement).first()
+    discussion = (await db_session.execute(discussion_statement)).scalars().first()
 
     if not discussion:
         raise HTTPException(status_code=404, detail="Discussion not found")
@@ -120,7 +121,7 @@ async def remove_upvote(
         DiscussionVote.discussion_id == discussion.id,
         DiscussionVote.user_id == current_user.id,
     )
-    vote = db_session.exec(vote_statement).first()
+    vote = (await db_session.execute(vote_statement)).scalars().first()
 
     if not vote:
         raise HTTPException(
@@ -129,13 +130,13 @@ async def remove_upvote(
         )
 
     # Delete vote
-    db_session.delete(vote)
+    await db_session.delete(vote)
 
     # Decrement upvote count (minimum 0)
     discussion.upvote_count = max(0, discussion.upvote_count - 1)
     db_session.add(discussion)
 
-    db_session.commit()
+    await db_session.commit()
 
     return {"detail": "Upvote removed"}
 
@@ -144,7 +145,7 @@ async def get_user_votes_for_discussions(
     request: Request,
     discussion_uuids: List[str],
     current_user: Union[PublicUser, AnonymousUser, APITokenUser],
-    db_session: Session,
+    db_session: AsyncSession,
 ) -> Dict[str, bool]:
     """
     Batch check if user has voted for multiple discussions.
@@ -159,7 +160,7 @@ async def get_user_votes_for_discussions(
     discussions_statement = select(Discussion).where(
         Discussion.discussion_uuid.in_(discussion_uuids)  # type: ignore
     )
-    discussions = db_session.exec(discussions_statement).all()
+    discussions = (await db_session.execute(discussions_statement)).scalars().all()
     discussion_id_to_uuid = {d.id: d.discussion_uuid for d in discussions}
 
     # Get user's votes for these discussions
@@ -167,7 +168,7 @@ async def get_user_votes_for_discussions(
         DiscussionVote.discussion_id.in_(discussion_id_to_uuid.keys()),  # type: ignore
         DiscussionVote.user_id == current_user.id,
     )
-    votes = db_session.exec(votes_statement).all()
+    votes = (await db_session.execute(votes_statement)).scalars().all()
     voted_discussion_ids = {v.discussion_id for v in votes}
 
     # Build result

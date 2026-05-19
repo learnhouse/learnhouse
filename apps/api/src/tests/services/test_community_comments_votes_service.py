@@ -28,7 +28,7 @@ from src.services.communities.votes import (
 )
 
 
-def _make_community(db, org, **overrides):
+async def _make_community(db, org, **overrides):
     community = Community(
         id=overrides.pop("id", None),
         org_id=org.id,
@@ -43,12 +43,12 @@ def _make_community(db, org, **overrides):
         update_date=overrides.pop("update_date", "2024-01-01"),
     )
     db.add(community)
-    db.commit()
-    db.refresh(community)
+    await db.commit()
+    await db.refresh(community)
     return community
 
 
-def _make_discussion(db, community, org, author_id, **overrides):
+async def _make_discussion(db, community, org, author_id, **overrides):
     discussion = Discussion(
         id=overrides.pop("id", None),
         title=overrides.pop("title", "Title"),
@@ -67,12 +67,12 @@ def _make_discussion(db, community, org, author_id, **overrides):
         update_date=overrides.pop("update_date", "2024-01-01T00:00:00+00:00"),
     )
     db.add(discussion)
-    db.commit()
-    db.refresh(discussion)
+    await db.commit()
+    await db.refresh(discussion)
     return discussion
 
 
-def _make_comment(db, discussion, author_id, **overrides):
+async def _make_comment(db, discussion, author_id, **overrides):
     comment = DiscussionComment(
         id=overrides.pop("id", None),
         discussion_id=discussion.id,
@@ -84,8 +84,8 @@ def _make_comment(db, discussion, author_id, **overrides):
         update_date=overrides.pop("update_date", "2024-01-01"),
     )
     db.add(comment)
-    db.commit()
-    db.refresh(comment)
+    await db.commit()
+    await db.refresh(comment)
     return comment
 
 
@@ -94,8 +94,8 @@ class TestCommunityCommentsAndVotes:
     async def test_create_get_update_and_count_comments(
         self, db, org, admin_user, regular_user, mock_request
     ):
-        community = _make_community(db, org)
-        discussion = _make_discussion(
+        community = await _make_community(db, org)
+        discussion = await _make_discussion(
             db, community, org, author_id=admin_user.id, discussion_uuid="discussion_a"
         )
 
@@ -147,8 +147,8 @@ class TestCommunityCommentsAndVotes:
     async def test_comment_error_and_delete_paths(
         self, db, org, admin_user, regular_user, mock_request
     ):
-        community = _make_community(db, org, community_uuid="community_delete")
-        locked_discussion = _make_discussion(
+        community = await _make_community(db, org, community_uuid="community_delete")
+        locked_discussion = await _make_discussion(
             db,
             community,
             org,
@@ -156,7 +156,7 @@ class TestCommunityCommentsAndVotes:
             discussion_uuid="discussion_locked",
             is_locked=True,
         )
-        discussion = _make_discussion(
+        discussion = await _make_discussion(
             db,
             community,
             org,
@@ -164,7 +164,7 @@ class TestCommunityCommentsAndVotes:
             author_id=admin_user.id,
             discussion_uuid="discussion_delete",
         )
-        comment = _make_comment(
+        comment = await _make_comment(
             db,
             discussion,
             author_id=regular_user.id,
@@ -224,8 +224,8 @@ class TestCommunityCommentsAndVotes:
 
     @pytest.mark.asyncio
     async def test_discussion_votes(self, db, org, admin_user, regular_user, mock_request):
-        community = _make_community(db, org, community_uuid="community_votes")
-        discussion = _make_discussion(
+        community = await _make_community(db, org, community_uuid="community_votes")
+        discussion = await _make_discussion(
             db, community, org, author_id=admin_user.id, discussion_uuid="discussion_votes"
         )
 
@@ -263,15 +263,15 @@ class TestCommunityCommentsAndVotes:
     async def test_comment_vote_error_branches(
         self, db, org, admin_user, regular_user, mock_request
     ):
-        community = _make_community(db, org, community_uuid="community_error_paths")
-        discussion = _make_discussion(
+        community = await _make_community(db, org, community_uuid="community_error_paths")
+        discussion = await _make_discussion(
             db,
             community,
             org,
             author_id=admin_user.id,
             discussion_uuid="discussion_error_paths",
         )
-        comment = _make_comment(
+        comment = await _make_comment(
             db,
             discussion,
             author_id=admin_user.id,
@@ -296,7 +296,7 @@ class TestCommunityCommentsAndVotes:
             update_date="2024-01-01T00:00:00+00:00",
         )
         db.add(orphan_discussion)
-        db.commit()
+        await db.commit()
 
         orphan_comment = DiscussionComment(
             id=999,
@@ -309,11 +309,11 @@ class TestCommunityCommentsAndVotes:
             update_date="2024-01-01",
         )
         db.add(orphan_comment)
-        db.commit()
+        await db.commit()
 
         discussion.community_id = 9999
         db.add(discussion)
-        db.commit()
+        await db.commit()
 
         with patch(
             "src.services.communities.comment_votes.authorization_verify_if_user_is_anon",
@@ -339,15 +339,15 @@ class TestCommunityCommentsAndVotes:
     async def test_comment_vote_duplicate_and_lookup_paths(
         self, db, org, admin_user, regular_user, mock_request
     ):
-        community = _make_community(db, org, community_uuid="community_vote_lookup")
-        discussion = _make_discussion(
+        community = await _make_community(db, org, community_uuid="community_vote_lookup")
+        discussion = await _make_discussion(
             db,
             community,
             org,
             author_id=admin_user.id,
             discussion_uuid="discussion_vote_lookup",
         )
-        comment = _make_comment(
+        comment = await _make_comment(
             db,
             discussion,
             author_id=admin_user.id,
@@ -369,7 +369,7 @@ class TestCommunityCommentsAndVotes:
                 creation_date="2024-01-01",
             )
             db.add(comment_vote)
-            db.commit()
+            await db.commit()
             with pytest.raises(HTTPException) as duplicate_comment_vote_exc:
                 await upvote_comment(
                     mock_request, comment.comment_uuid, regular_user, db
@@ -379,8 +379,8 @@ class TestCommunityCommentsAndVotes:
                 await remove_comment_upvote(
                     mock_request, "missing_comment", regular_user, db
                 )
-            db.delete(comment_vote)
-            db.commit()
+            await db.delete(comment_vote)
+            await db.commit()
             with pytest.raises(HTTPException) as missing_remove_vote_exc:
                 await remove_comment_upvote(
                     mock_request, comment.comment_uuid, regular_user, db
@@ -401,8 +401,8 @@ class TestCommunityCommentsAndVotes:
     async def test_discussion_vote_error_branches_and_lookup_paths(
         self, db, org, admin_user, regular_user, mock_request
     ):
-        community = _make_community(db, org, community_uuid="community_discussion_votes")
-        discussion = _make_discussion(
+        community = await _make_community(db, org, community_uuid="community_discussion_votes")
+        discussion = await _make_discussion(
             db,
             community,
             org,
@@ -427,7 +427,7 @@ class TestCommunityCommentsAndVotes:
             update_date="2024-01-01T00:00:00+00:00",
         )
         db.add(orphan_discussion)
-        db.commit()
+        await db.commit()
 
         with patch(
             "src.services.communities.votes.authorization_verify_if_user_is_anon",
@@ -455,7 +455,7 @@ class TestCommunityCommentsAndVotes:
                 creation_date="2024-01-01",
             )
             db.add(discussion_vote)
-            db.commit()
+            await db.commit()
             with pytest.raises(HTTPException) as duplicate_vote_exc:
                 await upvote_discussion(
                     mock_request, discussion.discussion_uuid, regular_user, db
@@ -465,8 +465,8 @@ class TestCommunityCommentsAndVotes:
                 await remove_upvote(
                     mock_request, "missing_discussion", regular_user, db
                 )
-            db.delete(discussion_vote)
-            db.commit()
+            await db.delete(discussion_vote)
+            await db.commit()
             with pytest.raises(HTTPException) as missing_remove_vote_exc:
                 await remove_upvote(
                     mock_request, discussion.discussion_uuid, regular_user, db
@@ -494,15 +494,15 @@ class TestCommunityCommentsAndVotes:
     async def test_comment_creation_and_delete_error_branches(
         self, db, org, admin_user, regular_user, mock_request
     ):
-        community = _make_community(db, org, community_uuid="community_comment_errors")
-        discussion = _make_discussion(
+        community = await _make_community(db, org, community_uuid="community_comment_errors")
+        discussion = await _make_discussion(
             db,
             community,
             org,
             author_id=admin_user.id,
             discussion_uuid="discussion_comment_errors",
         )
-        comment = _make_comment(
+        comment = await _make_comment(
             db,
             discussion,
             author_id=admin_user.id,
@@ -548,13 +548,13 @@ class TestCommunityCommentsAndVotes:
                 update_date="2024-01-01T00:00:00+00:00",
             )
             db.add(locked)
-            db.commit()
+            await db.commit()
             with pytest.raises(HTTPException) as locked_comment_exc:
                 await create_comment(
                     mock_request, locked.discussion_uuid, "Hi", regular_user, db
                 )
 
-            missing_community_discussion = _make_discussion(
+            missing_community_discussion = await _make_discussion(
                 db,
                 community,
                 org,
@@ -563,8 +563,8 @@ class TestCommunityCommentsAndVotes:
             )
             missing_community_discussion.community_id = 9999
             db.add(missing_community_discussion)
-            db.commit()
-            temp_comment_delete = _make_comment(
+            await db.commit()
+            temp_comment_delete = await _make_comment(
                 db,
                 missing_community_discussion,
                 author_id=admin_user.id,
@@ -629,7 +629,7 @@ class TestCommunityCommentsAndVotes:
                 update_date="2024-01-01",
             )
             db.add(orphan_delete_comment)
-            db.commit()
+            await db.commit()
             with pytest.raises(HTTPException) as missing_discussion_delete_exc:
                 await delete_comment(
                     mock_request, orphan_delete_comment.comment_uuid, regular_user, db
@@ -648,15 +648,15 @@ class TestCommunityCommentsAndVotes:
 
     @pytest.mark.asyncio
     async def test_comment_votes(self, db, org, admin_user, regular_user, mock_request):
-        community = _make_community(db, org, community_uuid="community_comment_votes")
-        discussion = _make_discussion(
+        community = await _make_community(db, org, community_uuid="community_comment_votes")
+        discussion = await _make_discussion(
             db,
             community,
             org,
             author_id=admin_user.id,
             discussion_uuid="discussion_comment_votes",
         )
-        comment = _make_comment(
+        comment = await _make_comment(
             db, discussion, author_id=admin_user.id, comment_uuid="comment_votes"
         )
 

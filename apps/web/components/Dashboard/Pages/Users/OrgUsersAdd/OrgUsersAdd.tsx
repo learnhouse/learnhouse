@@ -5,7 +5,8 @@ import Toast from '@components/Objects/StyledElements/Toast/Toast'
 import ToolTip from '@components/Objects/StyledElements/Tooltip/Tooltip'
 import { getAPIUrl } from '@services/config/config'
 import { inviteBatchUsers, removeInvitedUser } from '@services/organizations/invites'
-import { swrFetcher } from '@services/utils/ts/requests'
+import { apiFetch } from '@services/utils/ts/requests'
+import { searchMatches } from '@/lib/search/normalize'
 import {
   Info,
   UserPlus,
@@ -21,9 +22,10 @@ import {
   Clock,
   CheckCircle2,
 } from 'lucide-react'
-import React, { useEffect, useMemo, useState, useCallback } from 'react'
+import React, { useMemo, useState, useCallback } from 'react'
 import toast from 'react-hot-toast'
-import useSWR, { mutate } from 'swr'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
+import { queryKeys } from '@/lib/query/keys'
 import { useTranslation } from 'react-i18next'
 
 const ITEMS_PER_PAGE = 10
@@ -40,11 +42,15 @@ type InviteSummary = {
   already_invited: number
 }
 
+// Query key for invited users (pending invitations list)
+const invitedUsersKey = (orgId: number) => ['org', orgId, 'invitedUsers'] as const
+
 function OrgUsersAdd() {
   const { t } = useTranslation()
   const org = useOrg() as any
   const session = useLHSession() as any
   const access_token = session?.data?.tokens?.access_token
+  const queryClient = useQueryClient()
   const [isLoading, setIsLoading] = useState(false)
   const [invitedUsers, setInvitedUsers] = useState('')
   const [selectedInviteCode, setSelectedInviteCode] = useState<string | undefined>(undefined)
@@ -53,24 +59,25 @@ function OrgUsersAdd() {
   const [searchValue, setSearchValue] = useState('')
   const [page, setPage] = useState(1)
 
-  const { data: invites } = useSWR(
-    org ? `${getAPIUrl()}orgs/${org?.id}/invites` : null,
-    (url) => swrFetcher(url, access_token),
-    { revalidateOnFocus: false }
-  )
-  const { data: invited_users } = useSWR(
-    org ? `${getAPIUrl()}orgs/${org?.id}/invites/users` : null,
-    (url) => swrFetcher(url, access_token),
-    { revalidateOnFocus: false }
-  )
+  const { data: invites } = useQuery({
+    queryKey: queryKeys.org.inviteCodes(org?.id),
+    queryFn: () => apiFetch(`${getAPIUrl()}orgs/${org?.id}/invites`, access_token),
+    enabled: !!org?.id && !!access_token,
+    staleTime: 60_000,
+  })
 
+  const { data: invited_users, isLoading: isInvitedUsersLoading } = useQuery({
+    queryKey: invitedUsersKey(org?.id),
+    queryFn: () => apiFetch(`${getAPIUrl()}orgs/${org?.id}/invites/users`, access_token),
+    enabled: !!org?.id && !!access_token,
+    staleTime: 60_000,
+  })
 
   // Filter + paginate invited users
   const filteredUsers = useMemo(() => {
     if (!invited_users) return []
     if (!searchValue) return invited_users
-    const q = searchValue.toLowerCase()
-    return invited_users.filter((u: any) => u.email?.toLowerCase().includes(q))
+    return invited_users.filter((u: any) => searchMatches(u.email, searchValue))
   }, [invited_users, searchValue])
 
   const totalFiltered = filteredUsers.length
@@ -97,7 +104,7 @@ function OrgUsersAdd() {
       const data = res.data
       setSendResults(data.results || [])
       setSendSummary(data.summary || null)
-      mutate(`${getAPIUrl()}orgs/${org?.id}/invites/users`)
+      queryClient.invalidateQueries({ queryKey: invitedUsersKey(org?.id) })
       setIsLoading(false)
       setInvitedUsers('')
 
@@ -122,7 +129,7 @@ function OrgUsersAdd() {
     const toastId = toast.loading(t('dashboard.users.invite_members.invited_users.removing'))
     const res = await removeInvitedUser(org.id, email, access_token)
     if (res.status === 200) {
-      mutate(`${getAPIUrl()}orgs/${org?.id}/invites/users`)
+      queryClient.invalidateQueries({ queryKey: invitedUsersKey(org?.id) })
       toast.success(t('dashboard.users.invite_members.invited_users.remove_success'), {
         id: toastId,
       })
@@ -165,8 +172,8 @@ function OrgUsersAdd() {
       <div className="h-6"></div>
 
       {/* Send Invites Section */}
-      <div className="ml-10 mr-10 mx-auto bg-white rounded-xl shadow-xs">
-        <div className="flex items-center justify-between px-6 py-5 border-b border-gray-100">
+      <div className="mx-4 sm:mx-10 bg-white rounded-xl nice-shadow">
+        <div className="flex flex-wrap gap-3 items-start justify-between px-4 sm:px-6 py-5 border-b border-gray-100">
           <div className="flex-1">
             <h1 className="font-bold text-xl text-gray-800">
               {t('dashboard.users.invite_members.title')}
@@ -185,7 +192,7 @@ function OrgUsersAdd() {
             className="w-full h-[140px] rounded-lg border border-gray-200 px-4 py-3 bg-gray-50/50 placeholder:italic placeholder:text-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-400 transition-all resize-none"
             placeholder={t('dashboard.users.invite_members.email_placeholder')}
           />
-          <div className="flex items-center justify-between mt-4">
+          <div className="flex flex-wrap gap-3 items-center justify-between mt-4">
             <div className="flex items-center gap-3">
               <span className="text-sm text-gray-600 font-medium">
                 {t('dashboard.users.invite_members.invite_code_label')}
@@ -287,10 +294,10 @@ function OrgUsersAdd() {
 
       {/* Invited Users Table */}
       <div className="h-6"></div>
-      <div className="ml-10 mr-10 mx-auto bg-white rounded-xl shadow-xs">
+      <div className="mx-4 sm:mx-10 bg-white rounded-xl nice-shadow">
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-5 border-b border-gray-100">
-          <div className="flex-1">
+        <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between px-4 sm:px-6 py-5 border-b border-gray-100">
+          <div className="flex-1 min-w-0">
             <h1 className="font-bold text-xl text-gray-800">
               {t('dashboard.users.invite_members.invited_users.title')}
             </h1>
@@ -298,20 +305,20 @@ function OrgUsersAdd() {
               {t('dashboard.users.invite_members.invited_users.subtitle')}
             </p>
           </div>
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2">
             {totalFiltered > 0 && (
               <div className="text-sm text-gray-500 bg-gray-50 px-3 py-1.5 rounded-lg font-medium">
                 {totalFiltered} {totalFiltered === 1 ? 'invite' : 'invites'}
               </div>
             )}
-            <div className="relative">
+            <div className="relative flex-1 lg:flex-none">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
               <input
                 placeholder={
                   t('dashboard.users.invite_members.invited_users.search_placeholder') ||
                   'Search by email...'
                 }
-                className="pl-10 pr-4 py-2 w-[240px] border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-400 transition-all"
+                className="pl-10 pr-4 py-2 w-full sm:w-[200px] border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-400 transition-all"
                 value={searchValue}
                 onChange={(e) => handleSearchChange(e.target.value)}
               />
@@ -321,9 +328,16 @@ function OrgUsersAdd() {
 
         {/* Table */}
         <div className="px-0">
-          {!invited_users ? (
-            <div className="py-16 text-center">
-              <p className="text-gray-400 text-sm font-medium">Loading...</p>
+          {isInvitedUsersLoading && !invited_users ? (
+            <div className="animate-pulse space-y-0 px-6 py-4">
+              {[1, 2, 3, 4].map((i) => (
+                <div key={i} className="flex items-center gap-4 py-4 border-b border-gray-50">
+                  <div className="h-4 bg-gray-100 rounded flex-1" />
+                  <div className="h-5 bg-gray-100 rounded w-20" />
+                  <div className="h-5 bg-gray-100 rounded w-16" />
+                  <div className="h-7 bg-gray-100 rounded w-16 ml-auto" />
+                </div>
+              ))}
             </div>
           ) : paginatedUsers.length === 0 ? (
             <div className="py-16 text-center">

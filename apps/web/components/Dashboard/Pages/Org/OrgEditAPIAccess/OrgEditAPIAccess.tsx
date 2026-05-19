@@ -4,9 +4,9 @@ import { useOrg } from '@components/Contexts/OrgContext'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
 import { toast } from 'react-hot-toast'
 import { Button } from '@components/ui/button'
-import { getAPIUrl, getPlatformUrl } from '@services/config/config'
-import useSWR, { mutate } from 'swr'
-import { swrFetcher } from '@services/utils/ts/requests'
+import { getPlatformUrl } from '@services/config/config'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
+import { queryKeys } from '@/lib/query/keys'
 import { useTranslation } from 'react-i18next'
 import {
   Table,
@@ -52,22 +52,20 @@ import {
   getDefaultRights,
   getFullRights,
   getReadOnlyRights,
+  listAPITokens,
   regenerateAPIToken,
   revokeAPIToken,
 } from '@services/api_tokens/api_tokens'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@components/ui/tabs'
 import APIDocumentation from './APIDocumentation'
-import PlanRestrictedFeature from '@components/Dashboard/Shared/PlanRestricted/PlanRestrictedFeature'
-import { PlanLevel } from '@services/plans/plans'
-import { usePlan } from '@components/Hooks/usePlan'
+import FeatureGate from '@components/Dashboard/Shared/FeatureGate/FeatureGate'
 
 const OrgEditAPIAccess: React.FC = () => {
   const { t } = useTranslation()
   const session = useLHSession() as any
   const access_token = session?.data?.tokens?.access_token
   const org = useOrg() as any
-  const currentPlan = usePlan()
-
+  const queryClient = useQueryClient()
   const [activeTab, setActiveTab] = useState('tokens')
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false)
   const [isViewDialogOpen, setIsViewDialogOpen] = useState(false)
@@ -86,12 +84,12 @@ const OrgEditAPIAccess: React.FC = () => {
   const [rightsPreset, setRightsPreset] = useState<'custom' | 'readonly' | 'full'>('readonly')
 
   // Fetch tokens
-  const tokensUrl = org?.id ? `${getAPIUrl()}orgs/${org.id}/api-tokens` : null
-  const { data: tokens, isLoading } = useSWR<APIToken[]>(
-    tokensUrl,
-    (url: string) => swrFetcher(url, access_token),
-    { revalidateOnFocus: false }
-  )
+  const { data: tokens, isLoading } = useQuery<APIToken[]>({
+    queryKey: org?.id ? ['org', org.id, 'api-tokens'] : ['api-tokens-disabled'],
+    queryFn: () => listAPITokens(org.id, access_token),
+    enabled: !!(org?.id && access_token),
+    staleTime: 60_000,
+  })
 
   const handleCreateToken = async () => {
     if (!tokenName.trim()) {
@@ -113,7 +111,7 @@ const OrgEditAPIAccess: React.FC = () => {
       if (response.success) {
         setNewTokenValue(response.data.token)
         setShowTokenValue(true)
-        mutate(tokensUrl)
+        queryClient.invalidateQueries({ queryKey: ['org', org.id, 'api-tokens'] })
         toast.success('API token created successfully', { id: loadingToast })
         // Reset form
         setTokenName('')
@@ -137,7 +135,7 @@ const OrgEditAPIAccess: React.FC = () => {
       const response = await revokeAPIToken(org.id, selectedToken.token_uuid, access_token)
 
       if (response.success) {
-        mutate(tokensUrl)
+        queryClient.invalidateQueries({ queryKey: ['org', org.id, 'api-tokens'] })
         toast.success('API token revoked successfully', { id: loadingToast })
         setIsRevokeDialogOpen(false)
         setSelectedToken(null)
@@ -159,7 +157,7 @@ const OrgEditAPIAccess: React.FC = () => {
       if (response.success) {
         setNewTokenValue(response.data.token)
         setShowTokenValue(true)
-        mutate(tokensUrl)
+        queryClient.invalidateQueries({ queryKey: ['org', org.id, 'api-tokens'] })
         toast.success('API token regenerated successfully', { id: loadingToast })
         // Don't close the dialog here - keep it open to show the new token
       } else {
@@ -202,13 +200,7 @@ const OrgEditAPIAccess: React.FC = () => {
   }
 
   return (
-    <PlanRestrictedFeature
-      currentPlan={currentPlan}
-      requiredPlan="pro"
-      icon={Key}
-      titleKey="common.plans.feature_restricted.api_access.title"
-      descriptionKey="common.plans.feature_restricted.api_access.description"
-    >
+    <FeatureGate feature="api_access">
     <>
     <div className="sm:mx-10 mx-0 bg-white rounded-xl nice-shadow pt-3">
       <div className="flex flex-col gap-0">
@@ -263,8 +255,18 @@ const OrgEditAPIAccess: React.FC = () => {
             </div>
 
             {isLoading ? (
-              <div className="flex justify-center py-8">
-                <RefreshCw className="animate-spin text-gray-400" size={24} />
+              <div className="animate-pulse space-y-2">
+                <div className="h-9 bg-gray-100 rounded w-full" />
+                {[1, 2, 3].map((i) => (
+                  <div key={i} className="flex gap-4 px-4 py-3 border-b border-gray-100">
+                    <div className="h-4 bg-gray-100 rounded w-32" />
+                    <div className="h-4 bg-gray-100 rounded w-24" />
+                    <div className="h-4 bg-gray-100 rounded w-16" />
+                    <div className="h-4 bg-gray-100 rounded w-28" />
+                    <div className="h-4 bg-gray-100 rounded w-28" />
+                    <div className="h-4 bg-gray-100 rounded w-20" />
+                  </div>
+                ))}
               </div>
             ) : tokens && tokens.length > 0 ? (
               <Table>
@@ -692,7 +694,7 @@ const OrgEditAPIAccess: React.FC = () => {
         </DialogContent>
       </Dialog>
     </>
-    </PlanRestrictedFeature>
+    </FeatureGate>
   )
 }
 

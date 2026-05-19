@@ -24,7 +24,7 @@ from src.services.orgs.users import (
 )
 
 
-def _make_role(db, org, **overrides):
+async def _make_role(db, org, **overrides):
     role = Role(
         id=overrides.pop("id", None),
         name=overrides.pop("name", "Custom Role"),
@@ -36,12 +36,12 @@ def _make_role(db, org, **overrides):
         update_date=overrides.pop("update_date", str(datetime.now())),
     )
     db.add(role)
-    db.commit()
-    db.refresh(role)
+    await db.commit()
+    await db.refresh(role)
     return role
 
 
-def _make_user(db, **overrides):
+async def _make_user(db, **overrides):
     user = User(
         id=overrides.pop("id", None),
         username=overrides.pop("username", "user"),
@@ -56,12 +56,12 @@ def _make_user(db, **overrides):
         update_date=overrides.pop("update_date", str(datetime.now())),
     )
     db.add(user)
-    db.commit()
-    db.refresh(user)
+    await db.commit()
+    await db.refresh(user)
     return user
 
 
-def _link_user(db, user_id, org_id, role_id):
+async def _link_user(db, user_id, org_id, role_id):
     link = UserOrganization(
         user_id=user_id,
         org_id=org_id,
@@ -70,12 +70,12 @@ def _link_user(db, user_id, org_id, role_id):
         update_date=str(datetime.now()),
     )
     db.add(link)
-    db.commit()
-    db.refresh(link)
+    await db.commit()
+    await db.refresh(link)
     return link
 
 
-def _make_usergroup(db, org, **overrides):
+async def _make_usergroup(db, org, **overrides):
     usergroup = UserGroup(
         id=overrides.pop("id", None),
         org_id=org.id,
@@ -86,8 +86,8 @@ def _make_usergroup(db, org, **overrides):
         update_date=overrides.pop("update_date", str(datetime.now())),
     )
     db.add(usergroup)
-    db.commit()
-    db.refresh(usergroup)
+    await db.commit()
+    await db.refresh(usergroup)
     return usergroup
 
 
@@ -106,8 +106,8 @@ class TestOrgUsersService:
     async def test_get_organization_users_filters_sort_and_counts(
         self, mock_request, db, org, admin_user
     ):
-        member_role = _make_role(db, org, id=10, name="Member", role_uuid="role_member")
-        in_group_user = _make_user(
+        member_role = await _make_role(db, org, id=10, name="Member", role_uuid="role_member")
+        in_group_user = await _make_user(
             db,
             id=20,
             username="grouped",
@@ -117,9 +117,9 @@ class TestOrgUsersService:
             email_verified=True,
             user_uuid="user_grouped",
         )
-        _link_user(db, in_group_user.id, org.id, member_role.id)
+        await _link_user(db, in_group_user.id, org.id, member_role.id)
 
-        out_group_user = _make_user(
+        out_group_user = await _make_user(
             db,
             id=21,
             username="ungrouped",
@@ -129,9 +129,9 @@ class TestOrgUsersService:
             email_verified=False,
             user_uuid="user_ungrouped",
         )
-        _link_user(db, out_group_user.id, org.id, member_role.id)
+        await _link_user(db, out_group_user.id, org.id, member_role.id)
 
-        usergroup = _make_usergroup(db, org, id=30, name="Group A")
+        usergroup = await _make_usergroup(db, org, id=30, name="Group A")
         db.add(
             UserGroupUser(
                 usergroup_id=usergroup.id,
@@ -141,7 +141,7 @@ class TestOrgUsersService:
                 update_date=str(datetime.now()),
             )
         )
-        db.commit()
+        await db.commit()
 
         with patch(
             "src.services.orgs.users.is_org_member", return_value=True
@@ -224,8 +224,8 @@ class TestOrgUsersService:
     async def test_export_organization_users_csv_success(
         self, mock_request, db, org, admin_user
     ):
-        member_role = _make_role(db, org, id=12, name="Member", role_uuid="role_member2")
-        user = _make_user(
+        member_role = await _make_role(db, org, id=12, name="Member", role_uuid="role_member2")
+        user = await _make_user(
             db,
             id=22,
             username="csvuser",
@@ -246,7 +246,7 @@ class TestOrgUsersService:
                 update_date=str(datetime.now()),
             )
         )
-        usergroup = _make_usergroup(db, org, id=31, name="Export Group")
+        usergroup = await _make_usergroup(db, org, id=31, name="Export Group")
         db.add(
             UserGroupUser(
                 usergroup_id=usergroup.id,
@@ -256,7 +256,7 @@ class TestOrgUsersService:
                 update_date=str(datetime.now()),
             )
         )
-        db.commit()
+        await db.commit()
 
         with patch(
             "src.services.orgs.users.is_org_member", return_value=True
@@ -282,7 +282,7 @@ class TestOrgUsersService:
         assert "Name,Username,Email,Groups,Role,Joined,Email Verified,Signup Method,Last Login" in csv_text
         assert 'CSV Person,csvuser,csv@test.com,Export Group,Member,"Jan 02, 2024",No,oauth,' in csv_text
 
-        verified_user = _make_user(
+        verified_user = await _make_user(
             db,
             id=23,
             username="verifieduser",
@@ -302,7 +302,7 @@ class TestOrgUsersService:
                 update_date=str(datetime.now()),
             )
         )
-        db.commit()
+        await db.commit()
 
         with patch(
             "src.services.orgs.users.is_org_member", return_value=True
@@ -371,10 +371,10 @@ class TestOrgUsersService:
     async def test_update_user_role_guard_paths_and_email_failure(
         self, mock_request, db, org, other_org, admin_user, regular_user
     ):
-        other_role = _make_role(
+        other_role = await _make_role(
             db, other_org, id=40, name="Other Role", role_uuid="role_other"
         )
-        other_user = _make_user(
+        other_user = await _make_user(
             db,
             id=41,
             username="other",
@@ -383,7 +383,7 @@ class TestOrgUsersService:
             email="other@test.com",
             user_uuid="user_other",
         )
-        _link_user(db, other_user.id, other_org.id, other_role.id)
+        await _link_user(db, other_user.id, other_org.id, other_role.id)
 
         with patch(
             "src.services.orgs.users.rbac_check",
@@ -420,7 +420,7 @@ class TestOrgUsersService:
                 )
         assert no_admin_exc.value.status_code == 400
 
-        role = _make_role(db, org, id=11, name="Instructor", role_uuid="role_instructor")
+        role = await _make_role(db, org, id=11, name="Instructor", role_uuid="role_instructor")
 
         with patch(
             "src.services.orgs.users.rbac_check",
@@ -736,7 +736,7 @@ class TestOrgUsersService:
     async def test_get_organization_users_fake_session_edge_cases(
         self, mock_request, org, admin_user
     ):
-        class _Result:
+        class _Scalars:
             def __init__(self, value):
                 self.value = value
 
@@ -747,14 +747,33 @@ class TestOrgUsersService:
                 return self.value
 
             def all(self):
+                return self.value if isinstance(self.value, list) else [self.value]
+
+        class _Result:
+            def __init__(self, value):
+                self.value = value
+
+            def scalars(self):
+                return _Scalars(self.value)
+
+            def scalar_one(self):
                 return self.value
+
+            def first(self):
+                return self.value
+
+            def one(self):
+                return self.value
+
+            def all(self):
+                return self.value if isinstance(self.value, list) else [self.value]
 
         class _Session:
             def __init__(self, results):
                 self.results = results
                 self.index = 0
 
-            def exec(self, statement):
+            async def execute(self, statement):
                 result = self.results[self.index]
                 self.index += 1
                 return _Result(result)
@@ -822,8 +841,8 @@ class TestOrgUsersService:
     async def test_export_organization_users_csv_invalid_date_and_missing_user_org(
         self, mock_request, db, org, admin_user
     ):
-        member_role = _make_role(db, org, id=13, name="Member", role_uuid="role_member3")
-        user = _make_user(
+        member_role = await _make_role(db, org, id=13, name="Member", role_uuid="role_member3")
+        user = await _make_user(
             db,
             id=24,
             username="baddate",
@@ -843,7 +862,7 @@ class TestOrgUsersService:
                 update_date=str(datetime.now()),
             )
         )
-        db.commit()
+        await db.commit()
 
         with patch(
             "src.services.orgs.users.is_org_member", return_value=True
@@ -864,28 +883,38 @@ class TestOrgUsersService:
         csv_text = await _streaming_response_text(response)
         assert "not-a-date" in csv_text
 
-        class _Result:
+        class _Scalars2:
             def __init__(self, value):
                 self.value = value
-
             def first(self):
                 return self.value
-
             def one(self):
                 return self.value
-
             def all(self):
-                return self.value
+                return self.value if isinstance(self.value, list) else [self.value]
 
-        class _Session:
+        class _Result2:
+            def __init__(self, value):
+                self.value = value
+            def scalars(self):
+                return _Scalars2(self.value)
+            def first(self):
+                return self.value
+            def one(self):
+                return self.value
+            def all(self):
+                return self.value if isinstance(self.value, list) else [self.value]
+
+        class _Session2:
             def __init__(self, results):
                 self.results = results
                 self.index = 0
-
-            def exec(self, statement):
+            async def execute(self, statement):
                 result = self.results[self.index]
                 self.index += 1
-                return _Result(result)
+                return _Result2(result)
+
+        _Session = _Session2
 
         fake_org = SimpleNamespace(id=org.id, org_uuid=org.org_uuid)
         fake_user = SimpleNamespace(id=90)
@@ -911,10 +940,10 @@ class TestOrgUsersService:
     async def test_get_organization_users_and_export_csv(
         self, mock_request, db, org, admin_user
     ):
-        member_role = _make_role(
+        member_role = await _make_role(
             db, org, id=10, name="Member", role_uuid="role_member"
         )
-        extra_user = _make_user(
+        extra_user = await _make_user(
             db,
             id=20,
             username="member20",
@@ -923,8 +952,8 @@ class TestOrgUsersService:
             email="member20@test.com",
             user_uuid="user_20",
         )
-        _link_user(db, extra_user.id, org.id, member_role.id)
-        usergroup = _make_usergroup(db, org, id=30, name="Group A")
+        await _link_user(db, extra_user.id, org.id, member_role.id)
+        usergroup = await _make_usergroup(db, org, id=30, name="Group A")
         db.add(
             UserGroupUser(
                 usergroup_id=usergroup.id,
@@ -934,7 +963,7 @@ class TestOrgUsersService:
                 update_date=str(datetime.now()),
             )
         )
-        db.commit()
+        await db.commit()
 
         with patch(
             "src.services.orgs.users.is_org_member", return_value=True
@@ -986,7 +1015,7 @@ class TestOrgUsersService:
     async def test_remove_users_and_update_role(
         self, mock_request, db, org, admin_user, regular_user
     ):
-        second_admin = _make_user(
+        second_admin = await _make_user(
             db,
             id=30,
             username="admin2",
@@ -995,8 +1024,8 @@ class TestOrgUsersService:
             email="admin2@test.com",
             user_uuid="user_admin2",
         )
-        _link_user(db, second_admin.id, org.id, 1)
-        role = _make_role(db, org, id=11, name="Instructor", role_uuid="role_instructor")
+        await _link_user(db, second_admin.id, org.id, 1)
+        role = await _make_role(db, org, id=11, name="Instructor", role_uuid="role_instructor")
 
         with patch(
             "src.services.orgs.users.rbac_check",
@@ -1035,7 +1064,7 @@ class TestOrgUsersService:
                 )
         assert last_admin_exc.value.status_code == 400
 
-        second_admin = _make_user(
+        second_admin = await _make_user(
             db,
             id=31,
             username="admin3",
@@ -1044,7 +1073,7 @@ class TestOrgUsersService:
             email="admin3@test.com",
             user_uuid="user_admin3",
         )
-        _link_user(db, second_admin.id, org.id, 1)
+        await _link_user(db, second_admin.id, org.id, 1)
 
         with patch(
             "src.services.orgs.users.rbac_check",

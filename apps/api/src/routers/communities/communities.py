@@ -1,7 +1,8 @@
 from typing import List
 from fastapi import APIRouter, Depends, Request, UploadFile
 from pydantic import BaseModel
-from sqlmodel import Session, select
+from sqlmodel import select
+from sqlmodel.ext.asyncio.session import AsyncSession
 from src.core.events.database import get_db_session
 from src.db.users import PublicUser
 from src.db.organizations import Organization
@@ -50,7 +51,7 @@ async def api_create_community(
     org_id: int,
     community_data: CommunityCreateRequest,
     current_user: PublicUser = Depends(get_current_user),
-    db_session: Session = Depends(get_db_session),
+    db_session: AsyncSession = Depends(get_db_session),
 ) -> CommunityRead:
     """
     Create a new community in an organization.
@@ -88,7 +89,7 @@ async def api_get_community(
     request: Request,
     community_uuid: str,
     current_user: PublicUser = Depends(get_current_user),
-    db_session: Session = Depends(get_db_session),
+    db_session: AsyncSession = Depends(get_db_session),
 ) -> CommunityRead:
     """
     Get a community by UUID.
@@ -114,7 +115,7 @@ async def api_get_communities_by_org(
     page: int = 1,
     limit: int = 10,
     current_user: PublicUser = Depends(get_current_user),
-    db_session: Session = Depends(get_db_session),
+    db_session: AsyncSession = Depends(get_db_session),
 ) -> List[CommunityRead]:
     """
     Get paginated list of communities for an organization.
@@ -139,7 +140,7 @@ async def api_get_community_by_course(
     request: Request,
     course_uuid: str,
     current_user: PublicUser = Depends(get_current_user),
-    db_session: Session = Depends(get_db_session),
+    db_session: AsyncSession = Depends(get_db_session),
 ) -> CommunityRead | None:
     """
     Get the community linked to a specific course.
@@ -164,7 +165,7 @@ async def api_update_community(
     community_uuid: str,
     community_data: CommunityUpdate,
     current_user: PublicUser = Depends(get_current_user),
-    db_session: Session = Depends(get_db_session),
+    db_session: AsyncSession = Depends(get_db_session),
 ) -> CommunityRead:
     """
     Update a community.
@@ -191,7 +192,7 @@ async def api_delete_community(
     request: Request,
     community_uuid: str,
     current_user: PublicUser = Depends(get_current_user),
-    db_session: Session = Depends(get_db_session),
+    db_session: AsyncSession = Depends(get_db_session),
 ) -> dict:
     """
     Delete a community.
@@ -218,7 +219,7 @@ async def api_link_community_to_course(
     community_uuid: str,
     course_uuid: str,
     current_user: PublicUser = Depends(get_current_user),
-    db_session: Session = Depends(get_db_session),
+    db_session: AsyncSession = Depends(get_db_session),
 ) -> CommunityRead:
     """
     Link a community to a course.
@@ -246,7 +247,7 @@ async def api_unlink_community_from_course(
     request: Request,
     community_uuid: str,
     current_user: PublicUser = Depends(get_current_user),
-    db_session: Session = Depends(get_db_session),
+    db_session: AsyncSession = Depends(get_db_session),
 ) -> CommunityRead:
     """
     Unlink a community from its course.
@@ -272,7 +273,7 @@ async def api_get_community_rights(
     request: Request,
     community_uuid: str,
     current_user: PublicUser = Depends(get_current_user),
-    db_session: Session = Depends(get_db_session),
+    db_session: AsyncSession = Depends(get_db_session),
 ) -> dict:
     """
     Get detailed user rights for a specific community.
@@ -299,7 +300,7 @@ async def api_update_community_thumbnail(
     community_uuid: str,
     thumbnail: UploadFile | None = None,
     current_user: PublicUser = Depends(get_current_user),
-    db_session: Session = Depends(get_db_session),
+    db_session: AsyncSession = Depends(get_db_session),
 ) -> CommunityRead:
     """
     Upload or update a community thumbnail.
@@ -308,7 +309,7 @@ async def api_update_community_thumbnail(
     """
     # Get community
     community_statement = select(Community).where(Community.community_uuid == community_uuid)
-    community = db_session.exec(community_statement).first()
+    community = (await db_session.execute(community_statement)).scalars().first()
 
     if not community:
         from fastapi import HTTPException
@@ -319,7 +320,7 @@ async def api_update_community_thumbnail(
 
     # Get org UUID for storage path
     org_statement = select(Organization).where(Organization.id == community.org_id)
-    org = db_session.exec(org_statement).first()
+    org = (await db_session.execute(org_statement)).scalars().first()
 
     if not org:
         from fastapi import HTTPException
@@ -337,7 +338,7 @@ async def api_update_community_thumbnail(
         community.thumbnail_image = filename
 
     db_session.add(community)
-    db_session.commit()
-    db_session.refresh(community)
+    await db_session.commit()
+    await db_session.refresh(community)
 
     return CommunityRead.model_validate(community.model_dump())

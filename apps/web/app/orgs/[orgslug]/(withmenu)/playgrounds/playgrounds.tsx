@@ -5,13 +5,16 @@ import { useRouter } from 'next/navigation'
 import { Search, X, ChevronLeft, ChevronRight } from 'lucide-react'
 import { Cube } from '@phosphor-icons/react'
 import toast from 'react-hot-toast'
+import { useQueryClient } from '@tanstack/react-query'
+import { queryKeys } from '@/lib/query/keys'
 import GeneralWrapperStyled from '@components/Objects/StyledElements/Wrappers/GeneralWrapper'
 import TypeOfContentTitle from '@components/Objects/StyledElements/Titles/TypeOfContentTitle'
 import PlaygroundCard from '@components/Playground/PlaygroundCard'
 import { Playground, createPlayground } from '@services/playgrounds/playgrounds'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
-import FeatureDisabledView from '@components/Dashboard/Shared/FeatureDisabled/FeatureDisabledView'
+import FeatureGate from '@components/Dashboard/Shared/FeatureGate/FeatureGate'
 import useAdminStatus from '@components/Hooks/useAdminStatus'
+import { searchMatchesAny } from '@/lib/search/normalize'
 
 interface PlaygroundsClientProps {
   orgslug: string
@@ -28,6 +31,7 @@ export default function PlaygroundsClient({
   const session = useLHSession() as any
   const access_token = session?.data?.tokens?.access_token
   const { isAdmin: isUserAdmin } = useAdminStatus()
+  const queryClient = useQueryClient()
 
   const [playgrounds, setPlaygrounds] = useState<Playground[]>(initialPlaygrounds)
   const [searchQuery, setSearchQuery] = useState('')
@@ -39,11 +43,8 @@ export default function PlaygroundsClient({
 
   const filtered = useMemo(() => {
     if (!searchQuery.trim()) return playgrounds
-    const q = searchQuery.toLowerCase()
-    return playgrounds.filter(
-      (p) =>
-        p.name.toLowerCase().includes(q) ||
-        p.description?.toLowerCase().includes(q)
+    return playgrounds.filter((p) =>
+      searchMatchesAny([p.name, p.description], searchQuery)
     )
   }, [playgrounds, searchQuery])
 
@@ -100,6 +101,7 @@ export default function PlaygroundsClient({
         access_token
       )
       setPlaygrounds((prev) => [newPlayground, ...prev])
+      queryClient.invalidateQueries({ queryKey: queryKeys.playgrounds.list(orgslug) })
       router.push(`/editor/playground/${newPlayground.playground_uuid}/edit`)
     } catch {
       toast.error('Failed to create playground')
@@ -110,12 +112,7 @@ export default function PlaygroundsClient({
 
   return (
     <>
-    <FeatureDisabledView
-      featureName="playgrounds"
-      orgslug={orgslug}
-      icon={Cube}
-      context="public"
-    >
+    <FeatureGate feature="playgrounds" orgslug={orgslug} context="public">
       <div className="w-full">
         <GeneralWrapperStyled>
           <div className="flex flex-col space-y-2 mb-2">
@@ -259,7 +256,7 @@ export default function PlaygroundsClient({
           </div>
         </GeneralWrapperStyled>
       </div>
-    </FeatureDisabledView>
+    </FeatureGate>
 
     {/* Create name modal */}
     {showNameModal && (

@@ -1,15 +1,10 @@
 'use client'
-import { getAPIUrl } from '@services/config/config'
-import { swrFetcher } from '@services/utils/ts/requests'
+import { getCourseMetadata } from '@services/courses/courses'
 import React, { createContext, useContext, useEffect, useReducer, useMemo, useCallback, useRef } from 'react'
-import useSWR, { useSWRConfig } from 'swr'
+import { useQuery } from '@tanstack/react-query'
+import { queryKeys } from '@/lib/query/keys'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
 
-// Unified cache key generator - use this everywhere
-export const getCourseMetaCacheKey = (courseUuid: string, withUnpublishedActivities: boolean = false) =>
-  withUnpublishedActivities
-    ? `${getAPIUrl()}courses/${courseUuid}/meta?with_unpublished_activities=true`
-    : `${getAPIUrl()}courses/${courseUuid}/meta?with_unpublished_activities=false&slim=true`
 
 // Debounce manager for coordinating saves across components
 class DebounceManager {
@@ -99,27 +94,44 @@ export type CourseAction =
 export const CourseContext = createContext<CourseState | null>(null)
 export const CourseDispatchContext = createContext<React.Dispatch<CourseAction> | null>(null)
 
-export function CourseProvider({ children, courseuuid, withUnpublishedActivities = false }: any) {
+export function CourseProvider({
+  children,
+  courseuuid,
+  withUnpublishedActivities = false,
+  initialCourseStructure,
+}: any) {
   const session = useLHSession() as any
   const access_token = session?.data?.tokens?.access_token
-  const { mutate } = useSWRConfig()
   const lastServerDataRef = useRef<any>(null)
 
-  const swrKey = session?.status !== 'loading'
-    ? getCourseMetaCacheKey(courseuuid, withUnpublishedActivities)
-    : null
+  // Normalise the UUID: callers may pass either the clean form ("abc123") or
+  // the prefixed form ("course_abc123") depending on whether they read it from
+  // the URL param or from the API response object.  We always use the clean
+  // form for query keys so that CourseProvider, useCourseMeta, and any
+  // standalone useQuery share a single cache entry.
+  const cleanUuid = courseuuid.replace('course_', '')
 
-  const { data: courseStructureData, error, isValidating } = useSWR(
-    swrKey,
-    url => swrFetcher(url, access_token),
-    {
-      revalidateOnFocus: true,
-      revalidateOnReconnect: true,
-      dedupingInterval: 0,
-      keepPreviousData: false,
-      revalidateIfStale: true,
-    }
-  )
+  // For unpublished-activities variant there is no dedicated queryKeys entry,
+  // so we fall back to a raw key. The canonical (non-unpublished) variant uses
+  // queryKeys.courses.meta so invalidations from save actions land correctly.
+  const queryKey = withUnpublishedActivities
+    ? ['course', cleanUuid, 'meta', 'withUnpublished']
+    : queryKeys.courses.meta(cleanUuid)
+
+  const { data: courseStructureData, error } = useQuery({
+    queryKey,
+    queryFn: () => getCourseMetadata(
+      cleanUuid,
+      {},
+      access_token,
+      withUnpublishedActivities ? { withUnpublishedActivities: true } : { slim: true }
+    ),
+    enabled: session?.status !== 'loading',
+    staleTime: 60_000,
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: true,
+    placeholderData: initialCourseStructure ?? undefined,
+  })
 
   const effectiveData = courseStructureData
 
@@ -179,11 +191,24 @@ export function CourseProvider({ children, courseuuid, withUnpublishedActivities
   // error (network, 500) we show a subtle inline message.
   if (error) {
     const status = (error as any)?.status
-    if (status === 403 || status === 404) return null
+    if (status === 403 || status === 404) {
+      // Still render the provider so children can call useCourse() without throwing —
+      // they'll see isLoading:false and courseStructure as the stub, and the parent
+      // page handles the access-denied redirect via useCourseRights.
+      return (
+        <CourseContext.Provider value={state}>
+          <CourseDispatchContext.Provider value={dispatch}>
+            {children}
+          </CourseDispatchContext.Provider>
+        </CourseContext.Provider>
+      )
+    }
     return <div className="p-4 text-center text-gray-500 text-sm">Failed to load course. Please refresh the page.</div>
   }
-  if (!effectiveData) return null
 
+  // Always render the provider — consumers use state.isLoading to show skeletons.
+  // Returning null here would unmount children before the context is provided,
+  // causing useCourse() to throw "must be used within a CourseProvider".
   return (
     <CourseContext.Provider value={state}>
       <CourseDispatchContext.Provider value={dispatch}>

@@ -1,5 +1,6 @@
 from typing import Optional, Union
-from sqlmodel import Session, select
+from sqlmodel import select
+from sqlmodel.ext.asyncio.session import AsyncSession
 from src.core.events.database import get_db_session
 from src.db.users import AnonymousUser, APITokenUser, PublicUser, User, UserRead
 from src.services.users.users import security_get_user
@@ -49,7 +50,7 @@ JWT_ACCESS_TOKEN_EXPIRES = timedelta(hours=8)
 JWT_COOKIE_SAMESITE = "lax"
 JWT_COOKIE_SECURE = True
 JWT_COOKIE_DOMAIN = get_learnhouse_config().hosting_config.cookie_config.domain
-JWT_COOKIE_NAME = "access_token_cookie"
+JWT_COOKIE_NAME = "LH_access"
 
 
 def extract_jwt_from_request(request: Request) -> Optional[str]:
@@ -119,7 +120,7 @@ async def authenticate_user(
     request: Request,
     email: str,
     password: str,
-    db_session: Session,
+    db_session: AsyncSession,
 ) -> User | bool:
     user = await security_get_user(request, db_session, email)
     if not user:
@@ -157,7 +158,7 @@ def create_access_token(data: dict, expires_delta: timedelta | None = None):
 
 
 JWT_REFRESH_TOKEN_EXPIRES = timedelta(days=30)
-JWT_REFRESH_COOKIE_NAME = "refresh_token_cookie"
+JWT_REFRESH_COOKIE_NAME = "LH_refresh"
 
 
 def create_refresh_token(data: dict, expires_delta: timedelta | None = None):
@@ -192,12 +193,8 @@ def _get_revocation_redis_client():
     defense-in-depth timer, not the only wall.
     """
     try:
-        import redis  # local import keeps auth module importable in Redis-less tests
-        lh_config = get_learnhouse_config()
-        url = lh_config.redis_config.redis_connection_string
-        if not url:
-            return None
-        return redis.Redis.from_url(url, socket_connect_timeout=2, socket_timeout=2)
+        from src.core.redis import get_redis_client
+        return get_redis_client()
     except Exception:
         return None
 
@@ -309,7 +306,7 @@ def _mark_refresh_jti_used(user_id: int, jti: str) -> bool:
 async def _verify_api_token_org_boundary(
     request: Request,
     api_token_user: APITokenUser,
-    db_session: Session,
+    db_session: AsyncSession,
 ) -> None:
     """
     Global safety net: reject API token requests that target a different organization.
@@ -335,9 +332,9 @@ async def _verify_api_token_org_boundary(
     org_slug_param = path_params.get("org_slug")
     if org_slug_param is not None:
         from src.db.organizations import Organization
-        org = db_session.exec(
+        org = (await db_session.execute(
             select(Organization).where(Organization.slug == org_slug_param)
-        ).first()
+        )).scalars().first()
         if org and org.id != api_token_user.org_id:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
@@ -347,7 +344,7 @@ async def _verify_api_token_org_boundary(
 
 async def get_current_user(
     request: Request,
-    db_session: Session = Depends(get_db_session),
+    db_session: AsyncSession = Depends(get_db_session),
 ) -> Union[PublicUser, APITokenUser, AnonymousUser]:
     credentials_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
@@ -440,7 +437,7 @@ async def non_public_endpoint(current_user: UserRead | AnonymousUser):
 
 async def get_authenticated_user(
     request: Request,
-    db_session: Session = Depends(get_db_session),
+    db_session: AsyncSession = Depends(get_db_session),
 ) -> Union[PublicUser, APITokenUser]:
     """
     Dependency that requires authentication.
@@ -468,7 +465,7 @@ async def get_authenticated_user(
 
 async def validate_api_token(
     token: str,
-    db_session: Session,
+    db_session: AsyncSession,
 ) -> Optional[APITokenUser]:
     """
     Validate an API token and return an APITokenUser if valid.

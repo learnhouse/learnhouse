@@ -8,8 +8,8 @@ import * as Form from '@radix-ui/react-form'
 import { useOrg } from '@components/Contexts/OrgContext'
 import React from 'react'
 import { updateUserGroup } from '@services/usergroups/usergroups'
-import { mutate } from 'swr'
-import { getAPIUrl } from '@services/config/config'
+import { useQueryClient } from '@tanstack/react-query'
+import { queryKeys } from '@/lib/query/keys'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
 import { useFormik } from 'formik'
 import toast from 'react-hot-toast'
@@ -38,6 +38,7 @@ function EditUserGroup(props: EditUserGroupProps) {
     const org = useOrg() as any;
     const session = useLHSession() as any
     const access_token = session?.data?.tokens?.access_token;
+    const queryClient = useQueryClient()
     const [isSubmitting, setIsSubmitting] = React.useState(false)
 
     const formik = useFormik({
@@ -53,7 +54,7 @@ function EditUserGroup(props: EditUserGroupProps) {
             if (res.status == 200) {
                 setIsSubmitting(false)
                 toast.success(t('dashboard.users.usergroups.modals.edit.toasts.success'))
-                mutate(`${getAPIUrl()}usergroups/org/${org.id}?org_id=${org.id}`)
+                queryClient.invalidateQueries({ queryKey: queryKeys.usergroups.list(org.id) })
             } else {
                 toast.error(t('dashboard.users.usergroups.modals.edit.toasts.error'))
                 setIsSubmitting(false)

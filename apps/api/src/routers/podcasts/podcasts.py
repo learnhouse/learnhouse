@@ -1,6 +1,6 @@
 from typing import List, Optional
 from fastapi import APIRouter, Depends, File, Form, Request, UploadFile
-from sqlmodel import Session
+from sqlmodel.ext.asyncio.session import AsyncSession
 from src.db.podcasts.podcasts import (
     PodcastRead,
     PodcastUpdate,
@@ -51,7 +51,7 @@ async def api_create_podcast(
     public: bool = Form(False),
     thumbnail: Optional[UploadFile] = File(None),
     current_user=Depends(get_current_user),
-    db_session: Session = Depends(get_db_session),
+    db_session: AsyncSession = Depends(get_db_session),
 ):
     """Create a new podcast"""
     from src.db.podcasts.podcasts import PodcastCreate
@@ -88,7 +88,7 @@ async def api_get_podcast(
     request: Request,
     podcast_uuid: str,
     current_user=Depends(get_current_user),
-    db_session: Session = Depends(get_db_session),
+    db_session: AsyncSession = Depends(get_db_session),
 ):
     """Get a podcast by UUID"""
     podcast = await get_podcast(request, podcast_uuid, current_user, db_session)
@@ -110,7 +110,7 @@ async def api_get_podcast_meta(
     request: Request,
     podcast_uuid: str,
     current_user=Depends(get_current_user),
-    db_session: Session = Depends(get_db_session),
+    db_session: AsyncSession = Depends(get_db_session),
 ):
     """Get a podcast with its episodes"""
     result = await get_podcast_meta(request, podcast_uuid, current_user, db_session)
@@ -136,7 +136,7 @@ async def api_get_podcasts_orgslug(
     limit: int,
     include_unpublished: bool = False,
     current_user=Depends(get_current_user),
-    db_session: Session = Depends(get_db_session),
+    db_session: AsyncSession = Depends(get_db_session),
 ):
     """Get paginated podcasts for an organization"""
     podcasts = await get_podcasts_orgslug(
@@ -160,7 +160,7 @@ async def api_get_podcasts_count_orgslug(
     request: Request,
     org_slug: str,
     current_user=Depends(get_current_user),
-    db_session: Session = Depends(get_db_session),
+    db_session: AsyncSession = Depends(get_db_session),
 ):
     """Get total count of podcasts for an organization"""
     count = await get_podcasts_count_orgslug(request, current_user, org_slug, db_session)
@@ -184,7 +184,7 @@ async def api_update_podcast(
     podcast_uuid: str,
     podcast_object: PodcastUpdate,
     current_user=Depends(get_current_user),
-    db_session: Session = Depends(get_db_session),
+    db_session: AsyncSession = Depends(get_db_session),
 ):
     """Update a podcast"""
     podcast = await update_podcast(
@@ -210,7 +210,7 @@ async def api_update_podcast_thumbnail(
     podcast_uuid: str,
     thumbnail: UploadFile = File(...),
     current_user=Depends(get_current_user),
-    db_session: Session = Depends(get_db_session),
+    db_session: AsyncSession = Depends(get_db_session),
 ):
     """Update podcast thumbnail"""
     podcast = await update_podcast_thumbnail(
@@ -234,7 +234,7 @@ async def api_delete_podcast(
     request: Request,
     podcast_uuid: str,
     current_user=Depends(get_current_user),
-    db_session: Session = Depends(get_db_session),
+    db_session: AsyncSession = Depends(get_db_session),
 ):
     """Delete a podcast"""
     result = await delete_podcast(request, podcast_uuid, current_user, db_session)
@@ -255,7 +255,7 @@ async def api_get_podcast_rights(
     request: Request,
     podcast_uuid: str,
     current_user=Depends(get_current_user),
-    db_session: Session = Depends(get_db_session),
+    db_session: AsyncSession = Depends(get_db_session),
 ):
     """Get user rights for a podcast"""
     rights = await get_podcast_user_rights(
@@ -282,7 +282,7 @@ async def api_get_podcast_episodes(
     podcast_uuid: str,
     include_unpublished: bool = False,
     current_user=Depends(get_current_user),
-    db_session: Session = Depends(get_db_session),
+    db_session: AsyncSession = Depends(get_db_session),
 ):
     """Get all episodes for a podcast"""
     from sqlmodel import select
@@ -290,7 +290,7 @@ async def api_get_podcast_episodes(
 
     # Get the podcast
     podcast_statement = select(Podcast).where(Podcast.podcast_uuid == podcast_uuid)
-    podcast = db_session.exec(podcast_statement).first()
+    podcast = (await db_session.execute(podcast_statement)).scalars().first()
 
     if not podcast:
         from fastapi import HTTPException
@@ -324,7 +324,7 @@ async def api_create_episode(
     audio: Optional[UploadFile] = File(None),
     thumbnail: Optional[UploadFile] = File(None),
     current_user=Depends(get_current_user),
-    db_session: Session = Depends(get_db_session),
+    db_session: AsyncSession = Depends(get_db_session),
 ):
     """Create a new episode for a podcast"""
     import logging
@@ -363,7 +363,7 @@ async def api_reorder_episodes(
     podcast_uuid: str,
     episode_orders: List[dict],
     current_user=Depends(get_current_user),
-    db_session: Session = Depends(get_db_session),
+    db_session: AsyncSession = Depends(get_db_session),
 ):
     """Reorder episodes in a podcast"""
     episodes = await reorder_episodes(

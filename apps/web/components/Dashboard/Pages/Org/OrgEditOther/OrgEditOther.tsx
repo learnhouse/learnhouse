@@ -13,8 +13,9 @@ import { Label } from "@components/ui/label"
 import { Textarea } from "@components/ui/textarea"
 import { Switch } from '@components/ui/switch'
 import { Code2, Plus, Trash2, PencilLine, AlertTriangle } from "lucide-react"
-import { mutate } from 'swr'
-import { getAPIUrl } from '@services/config/config'
+import { useQueryClient } from '@tanstack/react-query'
+import { queryKeys } from '@/lib/query/keys'
+import { getAPIUrl, getDeploymentMode } from '@services/config/config'
 import { usePlan } from '@components/Hooks/usePlan'
 import {
   Tooltip,
@@ -44,8 +45,10 @@ const OrgEditOther: React.FC = () => {
   const session = useLHSession() as any
   const access_token = session?.data?.tokens?.access_token
   const org = useOrg() as any
+  const queryClient = useQueryClient()
   const plan = usePlan()
   const isFree = plan === 'free'
+  const isEE = getDeploymentMode() === 'ee'
   const [selectedView, setSelectedView] = React.useState<'list' | 'edit'>('list')
   const [scripts, setScripts] = React.useState<Script[]>([])
   const [currentScript, setCurrentScript] = React.useState<Script | null>(null)
@@ -74,7 +77,7 @@ const OrgEditOther: React.FC = () => {
       if (!response.ok) throw new Error('Failed to update watermark')
       setWatermarkEnabled(enabled)
       await revalidateTags(['organizations'], org.slug)
-      mutate(`${getAPIUrl()}orgs/slug/${org.slug}`)
+      queryClient.invalidateQueries({ queryKey: queryKeys.org.detail(org.slug) })
       toast.success(t('dashboard.organization.settings.update_success'), { id: loadingToast })
     } catch {
       setWatermarkEnabled(!enabled)
@@ -118,7 +121,7 @@ const OrgEditOther: React.FC = () => {
       
       await updateOrganization(org.id, updateData, access_token)
       await revalidateTags(['organizations'], org.slug)
-      mutate(`${getAPIUrl()}orgs/slug/${org.slug}`)
+      queryClient.invalidateQueries({ queryKey: queryKeys.org.detail(org.slug) })
       setScripts(updatedScripts)
       setSelectedView('list')
       setCurrentScript(null)
@@ -144,7 +147,7 @@ const OrgEditOther: React.FC = () => {
 
       await updateOrganization(org.id, updateData, access_token)
       await revalidateTags(['organizations'], org.slug)
-      mutate(`${getAPIUrl()}orgs/slug/${org.slug}`)
+      queryClient.invalidateQueries({ queryKey: queryKeys.org.detail(org.slug) })
       setScripts(updatedScripts)
       toast.success(t('dashboard.organization.scripts.toasts.delete_success'), { id: loadingToast })
     } catch (err) {
@@ -161,15 +164,17 @@ const OrgEditOther: React.FC = () => {
           <div className="space-y-0.5">
             <Label className="text-base font-medium">{t('dashboard.organization.settings.watermark_label')}</Label>
             <p className="text-sm text-gray-500">
-              {isFree
-                ? t('dashboard.organization.settings.watermark_free_plan')
-                : t('dashboard.organization.settings.watermark_desc')}
+              {isEE
+                ? t('dashboard.organization.settings.watermark_ee')
+                : isFree
+                  ? t('dashboard.organization.settings.watermark_free_plan')
+                  : t('dashboard.organization.settings.watermark_desc')}
             </p>
           </div>
           <Switch
-            checked={watermarkEnabled}
+            checked={isEE ? false : watermarkEnabled}
             onCheckedChange={updateWatermark}
-            disabled={isWatermarkSaving || isFree}
+            disabled={isWatermarkSaving || isFree || isEE}
           />
         </div>
       </div>

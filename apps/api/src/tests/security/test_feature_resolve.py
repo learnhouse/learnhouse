@@ -1,6 +1,7 @@
 from unittest.mock import Mock, patch
 
 from src.security.features_utils.resolve import (
+    _fetch_purchased_extras,
     _get_admin_toggle,
     _get_overrides,
     _get_plan_from_config,
@@ -49,7 +50,7 @@ class TestFeatureResolve:
         redis_client.get.side_effect = [b"9", b"4", None]
 
         with patch(
-            "src.security.features_utils.usage._get_redis_client",
+            "src.core.redis.get_redis_client",
             return_value=redis_client,
         ):
             assert _get_purchased_extra(1, "ai") == 9
@@ -57,7 +58,7 @@ class TestFeatureResolve:
             assert _get_purchased_extra(3, "unknown") == 0
 
         with patch(
-            "src.security.features_utils.usage._get_redis_client",
+            "src.core.redis.get_redis_client",
             side_effect=RuntimeError("boom"),
         ):
             assert _get_purchased_extra(4, "ai") == 0
@@ -117,7 +118,7 @@ class TestFeatureResolve:
         assert boards == {
             "enabled": False,
             "limit": 0,
-            "required_plan": "pro",
+            "required_plan": "personal",
         }
         assert ai == {
             "enabled": False,
@@ -190,10 +191,68 @@ class TestFeatureResolve:
             "required_plan": "standard",
         }
 
+    def test_fetch_purchased_extras_returns_defaults_when_org_id_zero(self):
+        result = _fetch_purchased_extras(0)
+        assert result == {"ai": 0, "members": 0, "admin_seats": 0}
+
+    def test_fetch_purchased_extras_returns_defaults_when_redis_unavailable(self):
+        with patch("src.core.redis.get_redis_client", return_value=None):
+            result = _fetch_purchased_extras(5)
+        assert result == {"ai": 0, "members": 0, "admin_seats": 0}
+
+    def test_fetch_purchased_extras_returns_values_from_redis(self):
+        redis_client = Mock()
+        redis_client.mget.return_value = [b"100", b"50"]
+        with patch("src.core.redis.get_redis_client", return_value=redis_client):
+            result = _fetch_purchased_extras(7)
+        assert result == {"ai": 100, "members": 50, "admin_seats": 50}
+        redis_client.mget.assert_called_once_with(
+            ["ai_credits_purchased:7", "member_seats_purchased:7"]
+        )
+
+    def test_fetch_purchased_extras_handles_none_redis_values(self):
+        redis_client = Mock()
+        redis_client.mget.return_value = [None, None]
+        with patch("src.core.redis.get_redis_client", return_value=redis_client):
+            result = _fetch_purchased_extras(8)
+        assert result == {"ai": 0, "members": 0, "admin_seats": 0}
+
+    def test_fetch_purchased_extras_returns_defaults_on_exception(self):
+        with patch("src.core.redis.get_redis_client", side_effect=RuntimeError("redis down")):
+            result = _fetch_purchased_extras(9)
+        assert result == {"ai": 0, "members": 0, "admin_seats": 0}
+
+    def test_get_purchased_extra_uses_pre_fetched_extras(self):
+        extras = {"ai": 42, "members": 10, "admin_seats": 10}
+        # No redis call should happen when _extras is provided
+        with patch("src.core.redis.get_redis_client") as mock_redis:
+            assert _get_purchased_extra(5, "ai", _extras=extras) == 42
+            assert _get_purchased_extra(5, "members", _extras=extras) == 10
+            assert _get_purchased_extra(5, "unknown_feature", _extras=extras) == 0
+            mock_redis.assert_not_called()
+
+    def test_get_purchased_extra_returns_zero_when_org_id_is_zero(self):
+        assert _get_purchased_extra(0, "ai") == 0
+
+    def test_get_purchased_extra_returns_zero_when_redis_unavailable(self):
+        with patch("src.core.redis.get_redis_client", return_value=None):
+            assert _get_purchased_extra(10, "ai") == 0
+
+    def test_resolve_all_features_skips_fetch_when_org_id_zero(self):
+        with patch(
+            "src.security.features_utils.resolve._fetch_purchased_extras"
+        ) as mock_fetch, patch(
+            "src.security.features_utils.resolve.resolve_feature",
+            return_value={"enabled": True, "limit": 0, "required_plan": None},
+        ):
+            result = resolve_all_features({"config_version": "2.0"}, org_id=0)
+        mock_fetch.assert_not_called()
+        assert len(result) == 19
+
     def test_resolve_all_features_uses_resolve_feature_for_every_entry(self):
         calls = []
 
-        def _fake_resolve(feature: str, config: dict, org_id: int = 0):
+        def _fake_resolve(feature: str, config: dict, org_id: int = 0, _extras=None):
             calls.append((feature, config, org_id))
             return {"enabled": True, "limit": 1, "required_plan": None}
 

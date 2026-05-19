@@ -1,4 +1,8 @@
 import ConfirmationModal from '@components/Objects/StyledElements/ConfirmationModal/ConfirmationModal'
+import Modal from '@components/Objects/StyledElements/Modal/Modal'
+import EditVideoActivityModal from '@components/Objects/Modals/Activities/Edit/EditVideoActivityModal'
+import EditDocumentActivityModal from '@components/Objects/Modals/Activities/Edit/EditDocumentActivityModal'
+import EditScormActivityModal from '@components/Objects/Modals/Activities/Edit/EditScormActivityModal'
 import { getUriWithOrg } from '@services/config/config'
 import {
   addUserGroupToActivity,
@@ -33,10 +37,11 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import React, { useEffect, useState } from 'react'
 import { Draggable } from '@hello-pangea/dnd'
-import { mutate } from 'swr'
+import { useQueryClient } from '@tanstack/react-query'
+import { queryKeys } from '@lib/query/keys'
 import { deleteAssignmentUsingActivityUUID, getAssignmentFromActivityUUID } from '@services/courses/assignments'
 import { useOrg } from '@components/Contexts/OrgContext'
-import { useCourse, useCourseDispatch, getCourseMetaCacheKey } from '@components/Contexts/CourseContext'
+import { useCourse, useCourseDispatch } from '@components/Contexts/CourseContext'
 import toast from 'react-hot-toast'
 import { useMediaQuery } from 'usehooks-ts'
 import { useTranslation } from 'react-i18next'
@@ -77,12 +82,17 @@ function ActivityElement(props: ActivitiyElementProps) {
   const [isUpdatingName, setIsUpdatingName] = React.useState<boolean>(false)
   const [isPublishing, setIsPublishing] = React.useState<boolean>(false)
   const [deleteModalOpen, setDeleteModalOpen] = React.useState(false)
+  const [editVideoModalOpen, setEditVideoModalOpen] = React.useState(false)
+  const [editDocumentModalOpen, setEditDocumentModalOpen] = React.useState(false)
+  const [editScormModalOpen, setEditScormModalOpen] = React.useState(false)
   const activityUUID = props.activity.activity_uuid
   const isMobile = useMediaQuery('(max-width: 767px)')
   const org = useOrg() as any;
   const course = useCourse() as any;
   const dispatchCourse = useCourseDispatch() as any;
   const withUnpublishedActivities = course ? course.withUnpublishedActivities : false
+  const queryClient = useQueryClient()
+  const cleanCourseUuid = (id: string) => id?.replace(/^course_/, '') ?? id
 
   // Assignment UUID for edit link
   const [assignmentUUID, setAssignmentUUID] = useState('');
@@ -111,8 +121,7 @@ function ActivityElement(props: ActivitiyElementProps) {
     }
     dispatchCourse({ type: 'setCourseStructure', payload: updatedStructure })
     dispatchCourse({ type: 'setIsSaved' })
-    mutate((key: string) => typeof key === 'string' && key.includes('/courses/org_slug/'))
-    mutate((key: string) => typeof key === 'string' && key.includes('/assignments/course/'))
+    queryClient.invalidateQueries({ queryKey: queryKeys.courses.meta(cleanCourseUuid(props.course_uuid)) })
     toast.dismiss(toast_loading)
     toast.success(t('dashboard.courses.structure.activity.toasts.delete_success'))
     revalidateTags(['courses'], props.orgslug)
@@ -137,6 +146,7 @@ function ActivityElement(props: ActivitiyElementProps) {
       dispatchCourse({ type: 'setCourseStructure', payload: updatedStructure })
       dispatchCourse({ type: 'setIsSaved' })
       toast.success(t('dashboard.courses.structure.activity.toasts.update_success'))
+      await queryClient.invalidateQueries({ queryKey: queryKeys.courses.meta(cleanCourseUuid(props.course_uuid)) })
       revalidateTags(['courses'], props.orgslug)
     } catch {
       toast.error(t('dashboard.courses.structure.activity.toasts.update_error'))
@@ -180,6 +190,7 @@ function ActivityElement(props: ActivitiyElementProps) {
         dispatchCourse({ type: 'setCourseStructure', payload: updatedStructure })
         dispatchCourse({ type: 'setIsSaved' })
         toast.success(t('dashboard.courses.structure.activity.toasts.update_success'))
+        await queryClient.invalidateQueries({ queryKey: queryKeys.courses.meta(cleanCourseUuid(props.course_uuid)) })
         revalidateTags(['courses'], props.orgslug)
       } else {
         toast.error(t('dashboard.courses.structure.activity.toasts.update_error'))
@@ -197,7 +208,7 @@ function ActivityElement(props: ActivitiyElementProps) {
       setIsUpdatingName(true)
       try {
         await updateActivity({ name: modifiedActivity.activityName }, activityUUID, access_token)
-        await mutate(getCourseMetaCacheKey(props.course_uuid, withUnpublishedActivities), undefined, { revalidate: true })
+        await queryClient.invalidateQueries({ queryKey: queryKeys.courses.meta(cleanCourseUuid(props.course_uuid)) })
         await revalidateTags(['courses'], props.orgslug)
         toast.success(t('dashboard.courses.structure.activity.toasts.name_update_success'))
         router.refresh()
@@ -336,7 +347,82 @@ function ActivityElement(props: ActivitiyElementProps) {
               </button>
               <div className="w-px h-5 bg-gray-200/80 mx-1" />
               <div className="flex items-center gap-1">
-              {editHref ? (
+              {props.activity.activity_type === 'TYPE_VIDEO' ? (
+                <Modal
+                  isDialogOpen={editVideoModalOpen}
+                  onOpenChange={() => setEditVideoModalOpen(!editVideoModalOpen)}
+                  minHeight="no-min"
+                  minWidth="md"
+                  dialogTitle="Edit Video Activity"
+                  dialogDescription="Update the video source, URL, or playback settings."
+                  dialogContent={
+                    <EditVideoActivityModal
+                      activity={props.activity}
+                      courseUuid={props.course_uuid}
+                      orgSlug={props.orgslug}
+                      onClose={() => setEditVideoModalOpen(false)}
+                    />
+                  }
+                  dialogTrigger={
+                    <button
+                      className="h-7 w-7 flex items-center justify-center rounded-md text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors"
+                      title="Edit video"
+                    >
+                      <FilePenLine size={15} />
+                    </button>
+                  }
+                />
+              ) : props.activity.activity_type === 'TYPE_DOCUMENT' ? (
+                <Modal
+                  isDialogOpen={editDocumentModalOpen}
+                  onOpenChange={() => setEditDocumentModalOpen(!editDocumentModalOpen)}
+                  minHeight="no-min"
+                  minWidth="md"
+                  dialogTitle="Edit Document Activity"
+                  dialogDescription="Update the document name or replace the PDF file."
+                  dialogContent={
+                    <EditDocumentActivityModal
+                      activity={props.activity}
+                      courseUuid={props.course_uuid}
+                      orgSlug={props.orgslug}
+                      onClose={() => setEditDocumentModalOpen(false)}
+                    />
+                  }
+                  dialogTrigger={
+                    <button
+                      className="h-7 w-7 flex items-center justify-center rounded-md text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors"
+                      title="Edit document"
+                    >
+                      <FilePenLine size={15} />
+                    </button>
+                  }
+                />
+              ) : props.activity.activity_type === 'TYPE_SCORM' ? (
+                <Modal
+                  isDialogOpen={editScormModalOpen}
+                  onOpenChange={() => setEditScormModalOpen(!editScormModalOpen)}
+                  minHeight="no-min"
+                  minWidth="md"
+                  dialogTitle="Edit SCORM Activity"
+                  dialogDescription="Update the SCORM activity name."
+                  dialogContent={
+                    <EditScormActivityModal
+                      activity={props.activity}
+                      courseUuid={props.course_uuid}
+                      orgSlug={props.orgslug}
+                      onClose={() => setEditScormModalOpen(false)}
+                    />
+                  }
+                  dialogTrigger={
+                    <button
+                      className="h-7 w-7 flex items-center justify-center rounded-md text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors"
+                      title="Edit SCORM activity"
+                    >
+                      <FilePenLine size={15} />
+                    </button>
+                  }
+                />
+              ) : editHref ? (
                 <Link
                   href={editHref}
                   target="_blank"

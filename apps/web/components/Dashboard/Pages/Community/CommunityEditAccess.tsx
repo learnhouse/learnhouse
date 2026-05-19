@@ -6,9 +6,9 @@ import { useOrg } from '@components/Contexts/OrgContext'
 import { useCommunity, useCommunityDispatch } from '@components/Contexts/CommunityContext'
 import { updateCommunity } from '@services/communities/communities'
 import { unLinkResourcesToUserGroup } from '@services/usergroups/usergroups'
-import { revalidateTags, swrFetcher } from '@services/utils/ts/requests'
-import { mutate } from 'swr'
-import useSWR from 'swr'
+import { revalidateTags, RequestBodyWithAuthHeader } from '@services/utils/ts/requests'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
+import { queryKeys } from '@/lib/query/keys'
 import { getAPIUrl } from '@services/config/config'
 import { Globe, Users, SquareUserRound, X } from 'lucide-react'
 import toast from 'react-hot-toast'
@@ -24,14 +24,19 @@ const CommunityEditAccess: React.FC = () => {
   const dispatch = useCommunityDispatch()
   const community = communityState?.community
   const accessToken = session?.data?.tokens?.access_token
+  const queryClient = useQueryClient()
 
-  const { data: usergroups } = useSWR(
-    community?.community_uuid && org?.id
-      ? `${getAPIUrl()}usergroups/resource/${community.community_uuid}?org_id=${org.id}`
-      : null,
-    (url) => swrFetcher(url, accessToken),
-    { revalidateOnFocus: false }
-  )
+  const { data: usergroups, isLoading: isLoadingUsergroups } = useQuery({
+    queryKey: ['usergroups', 'resource', community?.community_uuid, org?.id],
+    queryFn: async () => {
+      const url = `${getAPIUrl()}usergroups/resource/${community!.community_uuid}?org_id=${org.id}`
+      const res = await fetch(url, RequestBodyWithAuthHeader('GET', null, null, accessToken))
+      if (!res.ok) throw new Error('Failed to fetch usergroups')
+      return res.json()
+    },
+    enabled: !!(community?.community_uuid && org?.id),
+    staleTime: 60_000,
+  })
 
   // Track local public state
   const [isClientPublic, setIsClientPublic] = useState<boolean | undefined>(undefined)
@@ -65,7 +70,7 @@ const CommunityEditAccess: React.FC = () => {
 
         if (result) {
           await revalidateTags(['communities'], org.slug)
-          mutate(`${getAPIUrl()}communities/${community.community_uuid}`)
+          queryClient.invalidateQueries({ queryKey: queryKeys.community.detail(community.community_uuid) })
           if (dispatch) {
             dispatch({ type: 'setCommunity', payload: { ...community, public: value } })
           }
@@ -151,13 +156,13 @@ const CommunityEditAccess: React.FC = () => {
             status="info"
           />
         </div>
-        {!isClientPublic && <UserGroupsSection usergroups={usergroups} />}
+        {!isClientPublic && <UserGroupsSection usergroups={usergroups} isLoading={isLoadingUsergroups} />}
       </div>
     </div>
   )
 }
 
-function UserGroupsSection({ usergroups }: { usergroups: any[] }) {
+function UserGroupsSection({ usergroups, isLoading }: { usergroups: any[]; isLoading?: boolean }) {
   const { t } = useTranslation()
   const communityState = useCommunity()
   const community = communityState?.community
@@ -165,6 +170,7 @@ function UserGroupsSection({ usergroups }: { usergroups: any[] }) {
   const session = useLHSession() as any
   const access_token = session?.data?.tokens?.access_token
   const org = useOrg() as any
+  const queryClient = useQueryClient()
 
   const removeUserGroupLink = async (usergroup_id: number) => {
     if (!community) return
@@ -177,7 +183,7 @@ function UserGroupsSection({ usergroups }: { usergroups: any[] }) {
       )
       if (res.status === 200) {
         toast.success(t('dashboard.courses.communities.access.usergroups.toasts.unlink_success'))
-        mutate(`${getAPIUrl()}usergroups/resource/${community.community_uuid}?org_id=${org.id}`)
+        queryClient.invalidateQueries({ queryKey: ['usergroups', 'resource', community.community_uuid, org.id] })
       } else {
         toast.error(
           t('dashboard.courses.communities.access.usergroups.toasts.link_error', {
@@ -202,6 +208,16 @@ function UserGroupsSection({ usergroups }: { usergroups: any[] }) {
         </h2>
       </div>
       <div className="overflow-x-auto">
+        {isLoading ? (
+          <div className="space-y-2 animate-pulse">
+            {[1, 2, 3].map((i) => (
+              <div key={i} className="flex items-center justify-between px-4 py-3 border-b border-gray-100">
+                <div className="h-4 bg-gray-200 rounded w-1/3" />
+                <div className="h-7 bg-gray-200 rounded w-24" />
+              </div>
+            ))}
+          </div>
+        ) : (
         <table className="table-auto w-full text-left whitespace-nowrap rounded-md overflow-hidden">
           <thead className="bg-gray-100 text-gray-500 rounded-xl uppercase">
             <tr className="font-bolder text-sm">
@@ -232,6 +248,7 @@ function UserGroupsSection({ usergroups }: { usergroups: any[] }) {
             ))}
           </tbody>
         </table>
+        )}
       </div>
       <div className="flex flex-row-reverse mt-3 mr-2">
         <Modal

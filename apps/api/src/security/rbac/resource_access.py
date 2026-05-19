@@ -19,7 +19,8 @@ Access Rules:
 import logging
 from typing import Union, Optional
 from fastapi import HTTPException, Request, status
-from sqlmodel import Session, select
+from sqlmodel import select
+from sqlmodel.ext.asyncio.session import AsyncSession
 
 from src.db.users import AnonymousUser, PublicUser, APITokenUser
 from src.db.resource_authors import ResourceAuthor, ResourceAuthorshipEnum, ResourceAuthorshipStatusEnum
@@ -54,7 +55,7 @@ class ResourceAccessChecker:
     def __init__(
         self,
         request: Request,
-        db_session: Session,
+        db_session: AsyncSession,
         current_user: Union[PublicUser, AnonymousUser, APITokenUser],
     ):
         self.request = request
@@ -105,6 +106,21 @@ class ResourceAccessChecker:
                 allowed=False,
                 reason=f"Unknown resource type for UUID: {resource_uuid}",
                 resource_uuid=resource_uuid,
+                action=action.value,
+                context=context.value,
+            )
+
+        # Superadmin bypass — platform admins act on any tenant without an org
+        # membership row. The flag is loaded onto PublicUser by get_current_user
+        # so this is a free attribute read, no DB hit. API tokens and anonymous
+        # users carry no superadmin flag and continue through the normal path.
+        if isinstance(self.current_user, PublicUser) and self.current_user.is_superadmin:
+            return AccessDecision(
+                allowed=True,
+                reason="Superadmin access",
+                via_admin=True,
+                resource_uuid=resource_uuid,
+                user_id=self.current_user.id,
                 action=action.value,
                 context=context.value,
             )
@@ -668,31 +684,31 @@ class ResourceAccessChecker:
         if parent_config.resource_type == "courses":
             from src.db.courses.courses import Course
             statement = select(Course).where(Course.id == parent_id)
-            parent = self.db_session.exec(statement).first()
+            parent = (await self.db_session.execute(statement)).scalars().first()
             return parent.course_uuid if parent else None
 
         elif parent_config.resource_type == "podcasts":
             from src.db.podcasts.podcasts import Podcast
             statement = select(Podcast).where(Podcast.id == parent_id)
-            parent = self.db_session.exec(statement).first()
+            parent = (await self.db_session.execute(statement)).scalars().first()
             return parent.podcast_uuid if parent else None
 
         elif parent_config.resource_type == "communities":
             from src.db.communities.communities import Community
             statement = select(Community).where(Community.id == parent_id)
-            parent = self.db_session.exec(statement).first()
+            parent = (await self.db_session.execute(statement)).scalars().first()
             return parent.community_uuid if parent else None
 
         elif parent_config.resource_type == "coursechapters":
             from src.db.courses.chapters import Chapter
             statement = select(Chapter).where(Chapter.id == parent_id)
-            parent = self.db_session.exec(statement).first()
+            parent = (await self.db_session.execute(statement)).scalars().first()
             return parent.chapter_uuid if parent else None
 
         elif parent_config.resource_type == "collections":
             from src.db.collections import Collection
             statement = select(Collection).where(Collection.id == parent_id)
-            parent = self.db_session.exec(statement).first()
+            parent = (await self.db_session.execute(statement)).scalars().first()
             return parent.collection_uuid if parent else None
 
         return None
@@ -732,7 +748,7 @@ class ResourceAccessChecker:
             ResourceAuthor.resource_uuid == resource_uuid,
             ResourceAuthor.user_id == user_id
         )
-        resource_author = self.db_session.exec(statement).first()
+        resource_author = (await self.db_session.execute(statement)).scalars().first()
 
         if not resource_author:
             self._author_cache[resource_uuid] = False
@@ -782,7 +798,7 @@ class ResourceAccessChecker:
         usergroup_stmt = select(UserGroupResource).where(
             UserGroupResource.resource_uuid == resource_uuid
         )
-        usergroup_resources = self.db_session.exec(usergroup_stmt).all()
+        usergroup_resources = (await self.db_session.execute(usergroup_stmt)).scalars().all()
 
         # If no UserGroups linked, resource is accessible to any authenticated user.
         # UsersOnly semantics: public=false + no linked group = signed-in users only;
@@ -797,7 +813,7 @@ class ResourceAccessChecker:
             UserGroupUser.usergroup_id.in_(usergroup_ids),
             UserGroupUser.user_id == user_id
         )
-        membership = self.db_session.exec(membership_stmt).first()
+        membership = (await self.db_session.execute(membership_stmt)).scalars().first()
 
         result = membership is not None
         self._usergroup_cache[cache_key] = result
@@ -814,43 +830,43 @@ class ResourceAccessChecker:
         if config.resource_type == "courses":
             from src.db.courses.courses import Course
             statement = select(Course).where(Course.course_uuid == resource_uuid)
-            resource = self.db_session.exec(statement).first()
+            resource = (await self.db_session.execute(statement)).scalars().first()
 
         elif config.resource_type == "podcasts":
             from src.db.podcasts.podcasts import Podcast
             statement = select(Podcast).where(Podcast.podcast_uuid == resource_uuid)
-            resource = self.db_session.exec(statement).first()
+            resource = (await self.db_session.execute(statement)).scalars().first()
 
         elif config.resource_type == "communities":
             from src.db.communities.communities import Community
             statement = select(Community).where(Community.community_uuid == resource_uuid)
-            resource = self.db_session.exec(statement).first()
+            resource = (await self.db_session.execute(statement)).scalars().first()
 
         elif config.resource_type == "collections":
             from src.db.collections import Collection
             statement = select(Collection).where(Collection.collection_uuid == resource_uuid)
-            resource = self.db_session.exec(statement).first()
+            resource = (await self.db_session.execute(statement)).scalars().first()
 
         # Child resources
         elif config.resource_type == "coursechapters":
             from src.db.courses.chapters import Chapter
             statement = select(Chapter).where(Chapter.chapter_uuid == resource_uuid)
-            resource = self.db_session.exec(statement).first()
+            resource = (await self.db_session.execute(statement)).scalars().first()
 
         elif config.resource_type == "activities":
             from src.db.courses.activities import Activity
             statement = select(Activity).where(Activity.activity_uuid == resource_uuid)
-            resource = self.db_session.exec(statement).first()
+            resource = (await self.db_session.execute(statement)).scalars().first()
 
         elif config.resource_type == "episodes":
             from src.db.podcasts.episodes import PodcastEpisode
             statement = select(PodcastEpisode).where(PodcastEpisode.episode_uuid == resource_uuid)
-            resource = self.db_session.exec(statement).first()
+            resource = (await self.db_session.execute(statement)).scalars().first()
 
         elif config.resource_type == "discussions":
             from src.db.communities.discussions import Discussion
             statement = select(Discussion).where(Discussion.discussion_uuid == resource_uuid)
-            resource = self.db_session.exec(statement).first()
+            resource = (await self.db_session.execute(statement)).scalars().first()
 
         self._resource_cache[resource_uuid] = resource
         return resource
@@ -860,7 +876,7 @@ class ResourceAccessChecker:
 
 def _get_request_checker(
     request: Request,
-    db_session: Session,
+    db_session: AsyncSession,
     current_user: Union[PublicUser, AnonymousUser, APITokenUser],
 ) -> "ResourceAccessChecker":
     """
@@ -888,7 +904,7 @@ def _get_request_checker(
 
 async def check_resource_access(
     request: Request,
-    db_session: Session,
+    db_session: AsyncSession,
     current_user: Union[PublicUser, AnonymousUser, APITokenUser],
     resource_uuid: str,
     action: AccessAction,

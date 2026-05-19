@@ -119,6 +119,19 @@ export async function updateOrgFontConfig(
   return res
 }
 
+export async function updateOrgDefaultLanguageConfig(
+  org_id: string,
+  default_language: string,
+  access_token: string
+) {
+  const result: any = await fetch(
+    `${getAPIUrl()}orgs/${org_id}/config/default_language?default_language=${encodeURIComponent(default_language)}`,
+    RequestBodyWithAuthHeader('PUT', null, null, access_token)
+  )
+  const res = await errorHandling(result)
+  return res
+}
+
 export interface AuthBrandingConfig {
   welcome_message: string
   background_type: 'gradient' | 'custom' | 'unsplash'

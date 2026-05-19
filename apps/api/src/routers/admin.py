@@ -10,7 +10,7 @@ from typing import Any, Dict, List, Optional
 from fastapi import APIRouter, Depends, HTTPException, Path, Query, Request, Response
 from fastapi.responses import HTMLResponse, RedirectResponse
 from pydantic import BaseModel, EmailStr, Field
-from sqlmodel import Session
+from sqlmodel.ext.asyncio.session import AsyncSession
 from src.core.events.database import get_db_session
 from src.db.trails import TrailRead
 from src.db.users import UserRead
@@ -41,6 +41,7 @@ from src.services.admin.admin import (
     get_user_enrollments,
     get_user_groups,
     get_user_progress,
+    get_user_trail_detail,
     issue_magic_link,
     issue_user_token,
     list_course_enrollments,
@@ -153,12 +154,13 @@ class IssueTokenRequest(BaseModel):
 
 class ProvisionUserRequest(BaseModel):
     """Request body for provisioning a new user."""
-    email: EmailStr
-    username: str = Field(min_length=1)
-    first_name: str = ""
-    last_name: str = ""
-    password: Optional[str] = Field(default=None, description="Optional — if omitted, treated as SSO user with empty password")
-    role_id: int = Field(default=4, description="Role id for the org membership (default 4 = student)")
+    email: EmailStr = Field(max_length=320)
+    username: str = Field(min_length=1, max_length=150)
+    first_name: str = Field(default="", max_length=150)
+    last_name: str = Field(default="", max_length=150)
+    password: Optional[str] = Field(default=None, max_length=256, description="Optional — if omitted, treated as SSO user with empty password")
+    role_id: int = Field(default=4, ge=1, description="Role id for the org membership (default 4 = student)")
+    extra_metadata: Optional[dict] = Field(default=None, description="Optional arbitrary JSON metadata attached to the user for headless integrations")
 
 
 class RemoveUserResponse(BaseModel):
@@ -317,6 +319,55 @@ class UserDataExportResponse(BaseModel):
     exported_at: str = Field(description="ISO8601 timestamp when the export was generated")
 
 
+class TrailActivityProgress(BaseModel):
+    """A single activity within a chapter, annotated with the user's completion state."""
+    activity_uuid: str
+    activity_id: int
+    name: str
+    activity_type: str
+    activity_sub_type: str
+    order: int = Field(description="Order of this activity within its chapter")
+    published: bool
+    completed: bool
+    teacher_verified: bool = Field(default=False, description="Whether a teacher has verified the completion (assignments)")
+    grade: str = Field(default="", description="Grade/feedback recorded on the trail step, when set")
+    completed_at: Optional[str] = Field(default=None, description="ISO timestamp when the activity was marked complete; null if not completed")
+
+
+class TrailChapterProgress(BaseModel):
+    """A chapter inside a course with its activities and per-chapter counts."""
+    chapter_uuid: str
+    chapter_id: int
+    name: str
+    order: int
+    total_activities: int
+    completed_activities: int
+    activities: List[TrailActivityProgress]
+
+
+class TrailCourseProgress(BaseModel):
+    """A course the user is enrolled in (or has touched), with the full chapter/activity breakdown."""
+    course_uuid: str
+    course_id: int
+    course_name: str
+    status: Optional[str] = Field(default=None, description="TrailRun status (STATUS_IN_PROGRESS, STATUS_COMPLETED, …); null when there is no enrollment row")
+    enrolled_at: Optional[str] = Field(default=None, description="ISO timestamp the user was enrolled; null when there is no enrollment row")
+    total_activities: int
+    completed_activities: int
+    completion_percentage: float
+    chapters: List[TrailChapterProgress]
+
+
+class UserTrailDetail(BaseModel):
+    """Full breakdown of a user's trail across courses in the org."""
+    trail_uuid: Optional[str] = Field(default=None, description="Null if the user has never started a trail in this org")
+    user_id: int
+    org_id: int
+    creation_date: Optional[str] = None
+    update_date: Optional[str] = None
+    courses: List[TrailCourseProgress]
+
+
 # ── Auth endpoints ───────────────────────────────────────────────────────────
 
 
@@ -338,10 +389,10 @@ async def api_admin_issue_token(
     org_slug: str,
     body: IssueTokenRequest,
     current_user=Depends(get_current_user),
-    db_session: Session = Depends(get_db_session),
+    db_session: AsyncSession = Depends(get_db_session),
 ) -> TokenResponse:
     token_user = _require_api_token(current_user)
-    _resolve_org_slug(org_slug, token_user, db_session)
+    await _resolve_org_slug(org_slug, token_user, db_session)
     result = await issue_user_token(token_user, body.user_id, db_session)
     return TokenResponse(**result)
 
@@ -367,10 +418,10 @@ async def api_admin_check_course_access(
     course_uuid: str,
     user_id: int,
     current_user=Depends(get_current_user),
-    db_session: Session = Depends(get_db_session),
+    db_session: AsyncSession = Depends(get_db_session),
 ) -> CourseAccessResponse:
     token_user = _require_api_token(current_user)
-    _resolve_org_slug(org_slug, token_user, db_session)
+    await _resolve_org_slug(org_slug, token_user, db_session)
     result = await check_course_access(token_user, course_uuid, user_id, db_session)
     return CourseAccessResponse(**result)
 
@@ -395,10 +446,10 @@ async def api_admin_bulk_unenroll(
     org_slug: str,
     body: BulkUnenrollRequest,
     current_user=Depends(get_current_user),
-    db_session: Session = Depends(get_db_session),
+    db_session: AsyncSession = Depends(get_db_session),
 ) -> BulkUnenrollResponse:
     token_user = _require_api_token(current_user)
-    _resolve_org_slug(org_slug, token_user, db_session)
+    await _resolve_org_slug(org_slug, token_user, db_session)
     result = await bulk_unenroll_users(
         token_user=token_user,
         course_uuid=body.course_uuid,
@@ -429,10 +480,10 @@ async def api_admin_enroll_user(
     user_id: int,
     course_uuid: str,
     current_user=Depends(get_current_user),
-    db_session: Session = Depends(get_db_session),
+    db_session: AsyncSession = Depends(get_db_session),
 ) -> TrailRead:
     token_user = _require_api_token(current_user)
-    _resolve_org_slug(org_slug, token_user, db_session)
+    await _resolve_org_slug(org_slug, token_user, db_session)
     return await enroll_user(request, token_user, user_id, course_uuid, db_session)
 
 
@@ -454,10 +505,10 @@ async def api_admin_unenroll_user(
     user_id: int,
     course_uuid: str,
     current_user=Depends(get_current_user),
-    db_session: Session = Depends(get_db_session),
+    db_session: AsyncSession = Depends(get_db_session),
 ) -> UnenrollResponse:
     token_user = _require_api_token(current_user)
-    _resolve_org_slug(org_slug, token_user, db_session)
+    await _resolve_org_slug(org_slug, token_user, db_session)
     result = await unenroll_user(token_user, user_id, course_uuid, db_session)
     return UnenrollResponse(**result)
 
@@ -479,10 +530,10 @@ async def api_admin_get_user_enrollments(
     org_slug: str,
     user_id: int,
     current_user=Depends(get_current_user),
-    db_session: Session = Depends(get_db_session),
+    db_session: AsyncSession = Depends(get_db_session),
 ) -> TrailRead:
     token_user = _require_api_token(current_user)
-    _resolve_org_slug(org_slug, token_user, db_session)
+    await _resolve_org_slug(org_slug, token_user, db_session)
     return await get_user_enrollments(token_user, user_id, db_session)
 
 
@@ -507,10 +558,10 @@ async def api_admin_get_user_progress(
     user_id: int,
     course_uuid: str,
     current_user=Depends(get_current_user),
-    db_session: Session = Depends(get_db_session),
+    db_session: AsyncSession = Depends(get_db_session),
 ) -> ProgressResponse:
     token_user = _require_api_token(current_user)
-    _resolve_org_slug(org_slug, token_user, db_session)
+    await _resolve_org_slug(org_slug, token_user, db_session)
     result = await get_user_progress(token_user, user_id, course_uuid, db_session)
     return ProgressResponse(**result)
 
@@ -535,10 +586,10 @@ async def api_admin_complete_activity(
     user_id: int,
     activity_uuid: str,
     current_user=Depends(get_current_user),
-    db_session: Session = Depends(get_db_session),
+    db_session: AsyncSession = Depends(get_db_session),
 ) -> ActivityCompletionResponse:
     token_user = _require_api_token(current_user)
-    _resolve_org_slug(org_slug, token_user, db_session)
+    await _resolve_org_slug(org_slug, token_user, db_session)
     result = await complete_activity(request, token_user, user_id, activity_uuid, db_session)
     return ActivityCompletionResponse(**result)
 
@@ -561,10 +612,10 @@ async def api_admin_uncomplete_activity(
     user_id: int,
     activity_uuid: str,
     current_user=Depends(get_current_user),
-    db_session: Session = Depends(get_db_session),
+    db_session: AsyncSession = Depends(get_db_session),
 ) -> ActivityUncompletionResponse:
     token_user = _require_api_token(current_user)
-    _resolve_org_slug(org_slug, token_user, db_session)
+    await _resolve_org_slug(org_slug, token_user, db_session)
     result = await uncomplete_activity(token_user, user_id, activity_uuid, db_session)
     return ActivityUncompletionResponse(**result)
 
@@ -589,10 +640,10 @@ async def api_admin_complete_course(
     user_id: int,
     course_uuid: str,
     current_user=Depends(get_current_user),
-    db_session: Session = Depends(get_db_session),
+    db_session: AsyncSession = Depends(get_db_session),
 ) -> CourseCompletionResponse:
     token_user = _require_api_token(current_user)
-    _resolve_org_slug(org_slug, token_user, db_session)
+    await _resolve_org_slug(org_slug, token_user, db_session)
     result = await complete_course(request, token_user, user_id, course_uuid, db_session)
     return CourseCompletionResponse(**result)
 
@@ -615,12 +666,75 @@ async def api_admin_get_all_user_progress(
     org_slug: str,
     user_id: int,
     current_user=Depends(get_current_user),
-    db_session: Session = Depends(get_db_session),
+    db_session: AsyncSession = Depends(get_db_session),
 ) -> List[ProgressSummaryItem]:
     token_user = _require_api_token(current_user)
-    _resolve_org_slug(org_slug, token_user, db_session)
+    await _resolve_org_slug(org_slug, token_user, db_session)
     results = await get_all_user_progress(token_user, user_id, db_session)
     return [ProgressSummaryItem(**r) for r in results]
+
+
+# ── Trail breakdown endpoints (read-only) ────────────────────────────────────
+
+
+@router.get(
+    "/{org_slug}/trails/{user_id}",
+    response_model=UserTrailDetail,
+    summary="Get user trail with full progress breakdown",
+    description=(
+        "Return the user's trail in the organization with a full chapter-by-chapter "
+        "and activity-by-activity progress breakdown for every course they are "
+        "enrolled in. Each activity carries its completion state, teacher "
+        "verification flag, grade, and completion timestamp. Requires "
+        "`courses.action_read` permission."
+    ),
+    responses={
+        200: {"description": "Full trail breakdown grouped by course → chapter → activity.", "model": UserTrailDetail},
+        403: {"description": "API token lacks access to this organization"},
+        404: {"description": "User not found or not a member of this organization"},
+    },
+)
+async def api_admin_get_user_trail_detail(
+    org_slug: str,
+    user_id: int,
+    current_user=Depends(get_current_user),
+    db_session: AsyncSession = Depends(get_db_session),
+) -> UserTrailDetail:
+    token_user = _require_api_token(current_user)
+    await _resolve_org_slug(org_slug, token_user, db_session)
+    result = await get_user_trail_detail(token_user, user_id, db_session)
+    return UserTrailDetail(**result)
+
+
+@router.get(
+    "/{org_slug}/trails/{user_id}/courses/{course_uuid}",
+    response_model=UserTrailDetail,
+    summary="Get user trail breakdown for a single course",
+    description=(
+        "Return the user's full chapter-by-chapter and activity-by-activity "
+        "progress breakdown for a single course. Surfaces progress even when the "
+        "user has no explicit enrollment row (status will be null in that case). "
+        "Requires `courses.action_read` permission."
+    ),
+    responses={
+        200: {"description": "Full breakdown for the requested course only.", "model": UserTrailDetail},
+        403: {"description": "API token lacks access to this organization"},
+        404: {"description": "Course or user not found"},
+    },
+)
+async def api_admin_get_user_course_trail_detail(
+    org_slug: str,
+    user_id: int,
+    course_uuid: str,
+    current_user=Depends(get_current_user),
+    db_session: AsyncSession = Depends(get_db_session),
+) -> UserTrailDetail:
+    token_user = _require_api_token(current_user)
+    await _resolve_org_slug(org_slug, token_user, db_session)
+    result = await get_user_trail_detail(
+        token_user, user_id, db_session, course_uuid=course_uuid
+    )
+    return UserTrailDetail(**result)
 
 
 # ── Certification endpoints (read-only) ──────────────────────────────────────
@@ -644,10 +758,10 @@ async def api_admin_get_user_certificates(
     org_slug: str,
     user_id: int,
     current_user=Depends(get_current_user),
-    db_session: Session = Depends(get_db_session),
+    db_session: AsyncSession = Depends(get_db_session),
 ) -> List[CertificateItem]:
     token_user = _require_api_token(current_user)
-    _resolve_org_slug(org_slug, token_user, db_session)
+    await _resolve_org_slug(org_slug, token_user, db_session)
     results = await get_user_certificates(token_user, user_id, db_session)
     return [CertificateItem(**r) for r in results]
 
@@ -662,12 +776,16 @@ async def api_admin_get_user_certificates(
     description=(
         "Create a user and attach them to the organization in one call. Designed "
         "for SSO/JIT provisioning — the user's email is auto-verified and the "
-        "normal email-verification flow is skipped."
+        "normal email-verification flow is skipped. If a user with the given "
+        "email already exists in another organization, they are attached to this "
+        "org (idempotent); the password/username/name fields in the request are "
+        "ignored in that case."
     ),
     responses={
-        200: {"description": "User created and attached to the org. Returns the provisioned user.", "model": UserRead},
-        400: {"description": "Duplicate email/username or weak password"},
-        403: {"description": "Member limit reached or feature disabled"},
+        200: {"description": "User created or attached to the org. Returns the user.", "model": UserRead},
+        400: {"description": "Email already in this org, duplicate username, weak password, or invalid role_id"},
+        403: {"description": "Member limit reached, feature disabled, role belongs to another org, role is elevated (Admin/Maintainer), or token creator lacks privilege"},
+        429: {"description": "Too many provisioning requests for this token"},
     },
 )
 async def api_admin_provision_user(
@@ -675,10 +793,20 @@ async def api_admin_provision_user(
     org_slug: str,
     body: ProvisionUserRequest,
     current_user=Depends(get_current_user),
-    db_session: Session = Depends(get_db_session),
+    db_session: AsyncSession = Depends(get_db_session),
 ) -> UserRead:
     token_user = _require_api_token(current_user)
-    _resolve_org_slug(org_slug, token_user, db_session)
+    await _resolve_org_slug(org_slug, token_user, db_session)
+
+    from src.services.security.rate_limiting import check_admin_user_provision_rate_limit
+    is_allowed, retry_after = check_admin_user_provision_rate_limit(token_user.id)
+    if not is_allowed:
+        raise HTTPException(
+            status_code=429,
+            detail="Too many user provisioning requests. Please slow down.",
+            headers={"Retry-After": str(retry_after)},
+        )
+
     return await provision_user(
         token_user=token_user,
         email=body.email,
@@ -689,6 +817,7 @@ async def api_admin_provision_user(
         role_id=body.role_id,
         request=request,
         db_session=db_session,
+        extra_metadata=body.extra_metadata,
     )
 
 
@@ -710,10 +839,10 @@ async def api_admin_remove_user(
     org_slug: str,
     user_id: int,
     current_user=Depends(get_current_user),
-    db_session: Session = Depends(get_db_session),
+    db_session: AsyncSession = Depends(get_db_session),
 ) -> RemoveUserResponse:
     token_user = _require_api_token(current_user)
-    _resolve_org_slug(org_slug, token_user, db_session)
+    await _resolve_org_slug(org_slug, token_user, db_session)
     result = await remove_user_from_org_admin(token_user, user_id, db_session)
     return RemoveUserResponse(**result)
 
@@ -735,10 +864,10 @@ async def api_admin_get_user_by_email(
     org_slug: str,
     email: str = Path(description="URL-encoded email address"),
     current_user=Depends(get_current_user),
-    db_session: Session = Depends(get_db_session),
+    db_session: AsyncSession = Depends(get_db_session),
 ) -> UserRead:
     token_user = _require_api_token(current_user)
-    _resolve_org_slug(org_slug, token_user, db_session)
+    await _resolve_org_slug(org_slug, token_user, db_session)
 
     # Throttle per-token: 200/404 distinguishes "in org" vs "not in org",
     # which is useful to integrators but also a bulk-enumeration oracle if
@@ -779,10 +908,10 @@ async def api_admin_issue_magic_link(
     org_slug: str,
     body: MagicLinkRequest,
     current_user=Depends(get_current_user),
-    db_session: Session = Depends(get_db_session),
+    db_session: AsyncSession = Depends(get_db_session),
 ) -> MagicLinkResponse:
     token_user = _require_api_token(current_user)
-    _resolve_org_slug(org_slug, token_user, db_session)
+    await _resolve_org_slug(org_slug, token_user, db_session)
     result = await issue_magic_link(
         token_user=token_user,
         user_id=body.user_id,
@@ -860,7 +989,7 @@ async def api_admin_magic_consume(
     response: Response,
     org_slug: str,
     token: str = Query(..., description="Magic-link JWT"),
-    db_session: Session = Depends(get_db_session),
+    db_session: AsyncSession = Depends(get_db_session),
 ):
     try:
         _user, access_token, refresh_token, redirect_to = await consume_magic_link_token(
@@ -901,10 +1030,10 @@ async def api_admin_bulk_enroll(
     org_slug: str,
     body: BulkEnrollRequest,
     current_user=Depends(get_current_user),
-    db_session: Session = Depends(get_db_session),
+    db_session: AsyncSession = Depends(get_db_session),
 ) -> BulkEnrollResponse:
     token_user = _require_api_token(current_user)
-    _resolve_org_slug(org_slug, token_user, db_session)
+    await _resolve_org_slug(org_slug, token_user, db_session)
     result = await bulk_enroll_users(
         token_user=token_user,
         course_uuid=body.course_uuid,
@@ -934,10 +1063,10 @@ async def api_admin_list_course_enrollments(
     page: int = Query(1, ge=1),
     limit: int = Query(25, ge=1, le=100),
     current_user=Depends(get_current_user),
-    db_session: Session = Depends(get_db_session),
+    db_session: AsyncSession = Depends(get_db_session),
 ) -> List[CourseEnrollmentItem]:
     token_user = _require_api_token(current_user)
-    _resolve_org_slug(org_slug, token_user, db_session)
+    await _resolve_org_slug(org_slug, token_user, db_session)
     results = await list_course_enrollments(
         token_user, course_uuid, db_session, page=page, limit=limit
     )
@@ -965,10 +1094,10 @@ async def api_admin_reset_user_progress(
     user_id: int,
     course_uuid: str,
     current_user=Depends(get_current_user),
-    db_session: Session = Depends(get_db_session),
+    db_session: AsyncSession = Depends(get_db_session),
 ) -> ResetProgressResponse:
     token_user = _require_api_token(current_user)
-    _resolve_org_slug(org_slug, token_user, db_session)
+    await _resolve_org_slug(org_slug, token_user, db_session)
     result = await reset_user_progress(token_user, user_id, course_uuid, db_session)
     return ResetProgressResponse(**result)
 
@@ -997,10 +1126,10 @@ async def api_admin_award_certificate(
     user_id: int,
     course_uuid: str,
     current_user=Depends(get_current_user),
-    db_session: Session = Depends(get_db_session),
+    db_session: AsyncSession = Depends(get_db_session),
 ) -> AwardCertificateResponse:
     token_user = _require_api_token(current_user)
-    _resolve_org_slug(org_slug, token_user, db_session)
+    await _resolve_org_slug(org_slug, token_user, db_session)
     result = await award_certificate(
         token_user, user_id, course_uuid, request, db_session
     )
@@ -1022,10 +1151,10 @@ async def api_admin_revoke_certificate(
     user_id: int,
     user_certification_uuid: str,
     current_user=Depends(get_current_user),
-    db_session: Session = Depends(get_db_session),
+    db_session: AsyncSession = Depends(get_db_session),
 ) -> RevokeCertificateResponse:
     token_user = _require_api_token(current_user)
-    _resolve_org_slug(org_slug, token_user, db_session)
+    await _resolve_org_slug(org_slug, token_user, db_session)
     result = await revoke_certificate(
         token_user, user_id, user_certification_uuid, db_session
     )
@@ -1051,10 +1180,10 @@ async def api_admin_add_usergroup_member(
     usergroup_uuid: str,
     user_id: int,
     current_user=Depends(get_current_user),
-    db_session: Session = Depends(get_db_session),
+    db_session: AsyncSession = Depends(get_db_session),
 ) -> UserGroupMemberResponse:
     token_user = _require_api_token(current_user)
-    _resolve_org_slug(org_slug, token_user, db_session)
+    await _resolve_org_slug(org_slug, token_user, db_session)
     result = await add_usergroup_member(
         token_user, usergroup_uuid, user_id, db_session
     )
@@ -1076,10 +1205,10 @@ async def api_admin_remove_usergroup_member(
     usergroup_uuid: str,
     user_id: int,
     current_user=Depends(get_current_user),
-    db_session: Session = Depends(get_db_session),
+    db_session: AsyncSession = Depends(get_db_session),
 ) -> UserGroupMemberResponse:
     token_user = _require_api_token(current_user)
-    _resolve_org_slug(org_slug, token_user, db_session)
+    await _resolve_org_slug(org_slug, token_user, db_session)
     result = await remove_usergroup_member(
         token_user, usergroup_uuid, user_id, db_session
     )
@@ -1109,10 +1238,10 @@ async def api_admin_update_user_profile(
     user_id: int,
     body: UpdateUserRequest,
     current_user=Depends(get_current_user),
-    db_session: Session = Depends(get_db_session),
+    db_session: AsyncSession = Depends(get_db_session),
 ) -> UserRead:
     token_user = _require_api_token(current_user)
-    _resolve_org_slug(org_slug, token_user, db_session)
+    await _resolve_org_slug(org_slug, token_user, db_session)
     updates = body.model_dump(exclude_unset=True)
     return await update_user_profile(token_user, user_id, updates, db_session)
 
@@ -1137,10 +1266,10 @@ async def api_admin_change_user_role(
     user_id: int,
     body: ChangeRoleRequest,
     current_user=Depends(get_current_user),
-    db_session: Session = Depends(get_db_session),
+    db_session: AsyncSession = Depends(get_db_session),
 ) -> ChangeRoleResponse:
     token_user = _require_api_token(current_user)
-    _resolve_org_slug(org_slug, token_user, db_session)
+    await _resolve_org_slug(org_slug, token_user, db_session)
     result = await change_user_role(token_user, user_id, body.role_id, db_session)
     return ChangeRoleResponse(**result)
 
@@ -1161,10 +1290,10 @@ async def api_admin_create_usergroup(
     org_slug: str,
     body: CreateUserGroupRequest,
     current_user=Depends(get_current_user),
-    db_session: Session = Depends(get_db_session),
+    db_session: AsyncSession = Depends(get_db_session),
 ) -> UserGroupResponse:
     token_user = _require_api_token(current_user)
-    _resolve_org_slug(org_slug, token_user, db_session)
+    await _resolve_org_slug(org_slug, token_user, db_session)
     group = await create_usergroup(token_user, body.name, body.description, db_session)
     return UserGroupResponse(**group.model_dump())
 
@@ -1186,10 +1315,10 @@ async def api_admin_delete_usergroup(
     org_slug: str,
     usergroup_uuid: str,
     current_user=Depends(get_current_user),
-    db_session: Session = Depends(get_db_session),
+    db_session: AsyncSession = Depends(get_db_session),
 ) -> DeleteUserGroupResponse:
     token_user = _require_api_token(current_user)
-    _resolve_org_slug(org_slug, token_user, db_session)
+    await _resolve_org_slug(org_slug, token_user, db_session)
     result = await delete_usergroup(token_user, usergroup_uuid, db_session)
     return DeleteUserGroupResponse(**result)
 
@@ -1210,10 +1339,10 @@ async def api_admin_list_usergroup_members(
     page: int = Query(1, ge=1),
     limit: int = Query(25, ge=1, le=100),
     current_user=Depends(get_current_user),
-    db_session: Session = Depends(get_db_session),
+    db_session: AsyncSession = Depends(get_db_session),
 ) -> List[UserGroupMemberListItem]:
     token_user = _require_api_token(current_user)
-    _resolve_org_slug(org_slug, token_user, db_session)
+    await _resolve_org_slug(org_slug, token_user, db_session)
     results = await list_usergroup_members(
         token_user, usergroup_uuid, db_session, page=page, limit=limit
     )
@@ -1234,10 +1363,10 @@ async def api_admin_get_user_groups(
     org_slug: str,
     user_id: int,
     current_user=Depends(get_current_user),
-    db_session: Session = Depends(get_db_session),
+    db_session: AsyncSession = Depends(get_db_session),
 ) -> List[UserUserGroupItem]:
     token_user = _require_api_token(current_user)
-    _resolve_org_slug(org_slug, token_user, db_session)
+    await _resolve_org_slug(org_slug, token_user, db_session)
     results = await get_user_groups(token_user, user_id, db_session)
     return [UserUserGroupItem(**r) for r in results]
 
@@ -1264,10 +1393,10 @@ async def api_admin_add_course_to_usergroup(
     usergroup_uuid: str,
     course_uuid: str,
     current_user=Depends(get_current_user),
-    db_session: Session = Depends(get_db_session),
+    db_session: AsyncSession = Depends(get_db_session),
 ) -> UserGroupCourseResponse:
     token_user = _require_api_token(current_user)
-    _resolve_org_slug(org_slug, token_user, db_session)
+    await _resolve_org_slug(org_slug, token_user, db_session)
     result = await add_course_to_usergroup(
         token_user, usergroup_uuid, course_uuid, db_session
     )
@@ -1289,10 +1418,10 @@ async def api_admin_remove_course_from_usergroup(
     usergroup_uuid: str,
     course_uuid: str,
     current_user=Depends(get_current_user),
-    db_session: Session = Depends(get_db_session),
+    db_session: AsyncSession = Depends(get_db_session),
 ) -> UserGroupCourseResponse:
     token_user = _require_api_token(current_user)
-    _resolve_org_slug(org_slug, token_user, db_session)
+    await _resolve_org_slug(org_slug, token_user, db_session)
     result = await remove_course_from_usergroup(
         token_user, usergroup_uuid, course_uuid, db_session
     )
@@ -1321,10 +1450,10 @@ async def api_admin_export_user_data(
     org_slug: str,
     user_id: int,
     current_user=Depends(get_current_user),
-    db_session: Session = Depends(get_db_session),
+    db_session: AsyncSession = Depends(get_db_session),
 ) -> UserDataExportResponse:
     token_user = _require_api_token(current_user)
-    _resolve_org_slug(org_slug, token_user, db_session)
+    await _resolve_org_slug(org_slug, token_user, db_session)
     bundle = await export_user_data(token_user, user_id, db_session)
     return UserDataExportResponse(**bundle)
 
@@ -1348,10 +1477,10 @@ async def api_admin_anonymize_user(
     org_slug: str,
     user_id: int,
     current_user=Depends(get_current_user),
-    db_session: Session = Depends(get_db_session),
+    db_session: AsyncSession = Depends(get_db_session),
 ) -> AnonymizeUserResponse:
     token_user = _require_api_token(current_user)
-    _resolve_org_slug(org_slug, token_user, db_session)
+    await _resolve_org_slug(org_slug, token_user, db_session)
     result = await anonymize_user(token_user, user_id, db_session)
     return AnonymizeUserResponse(**result)
 
@@ -1376,9 +1505,9 @@ async def api_admin_get_course_analytics(
     org_slug: str,
     course_uuid: str,
     current_user=Depends(get_current_user),
-    db_session: Session = Depends(get_db_session),
+    db_session: AsyncSession = Depends(get_db_session),
 ) -> CourseAnalyticsResponse:
     token_user = _require_api_token(current_user)
-    _resolve_org_slug(org_slug, token_user, db_session)
+    await _resolve_org_slug(org_slug, token_user, db_session)
     result = await get_course_analytics(token_user, course_uuid, db_session)
     return CourseAnalyticsResponse(**result)

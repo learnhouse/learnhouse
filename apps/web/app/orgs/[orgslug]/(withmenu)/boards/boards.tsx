@@ -9,7 +9,8 @@ import Link from 'next/link'
 import { Search, X, Users, ChevronLeft, ChevronRight } from 'lucide-react'
 import { ChalkboardSimple } from '@phosphor-icons/react'
 import { useTranslation } from 'react-i18next'
-import FeatureDisabledView from '@components/Dashboard/Shared/FeatureDisabled/FeatureDisabledView'
+import FeatureGate from '@components/Dashboard/Shared/FeatureGate/FeatureGate'
+import { searchMatchesAny } from '@/lib/search/normalize'
 
 interface BoardsPublicClientProps {
   orgslug: string
@@ -35,10 +36,8 @@ export default function BoardsPublicClient({
 
   const filteredBoards = useMemo(() => {
     if (!searchQuery.trim()) return allBoards
-    const query = searchQuery.toLowerCase()
     return allBoards.filter((board: any) =>
-      board.name?.toLowerCase().includes(query) ||
-      board.description?.toLowerCase().includes(query)
+      searchMatchesAny([board.name, board.description], searchQuery)
     )
   }, [allBoards, searchQuery])
 
@@ -88,12 +87,7 @@ export default function BoardsPublicClient({
   }
 
   return (
-    <FeatureDisabledView
-      featureName="boards"
-      orgslug={orgslug}
-      icon={ChalkboardSimple as any}
-      context="public"
-    >
+    <FeatureGate feature="boards" orgslug={orgslug} context="public">
     <div className="w-full">
       <GeneralWrapperStyled>
         <div className="flex flex-col space-y-2 mb-2">
@@ -217,7 +211,7 @@ export default function BoardsPublicClient({
         </div>
       </GeneralWrapperStyled>
     </div>
-    </FeatureDisabledView>
+    </FeatureGate>
   )
 }
 

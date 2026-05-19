@@ -19,23 +19,21 @@ import { Cube } from '@phosphor-icons/react'
 import { getPlaygroundThumbnailMediaDirectory } from '@services/media/media'
 import { useOrg } from '@components/Contexts/OrgContext'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
-import { getAPIUrl } from '@services/config/config'
-import useSWR, { mutate } from 'swr'
-import { swrFetcher } from '@services/utils/ts/requests'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
+import { queryKeys } from '@/lib/query/keys'
 import {
   createPlayground,
   deletePlayground,
   duplicatePlayground,
+  getOrgPlaygrounds,
 } from '@services/playgrounds/playgrounds'
 import toast from 'react-hot-toast'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { Breadcrumbs } from '@components/Objects/Breadcrumbs/Breadcrumbs'
 import AuthenticatedClientElement from '@components/Security/AuthenticatedClientElement'
-import PlanRestrictedFeature from '@components/Dashboard/Shared/PlanRestricted/PlanRestrictedFeature'
-import FeatureDisabledView from '@components/Dashboard/Shared/FeatureDisabled/FeatureDisabledView'
-import { PlanLevel } from '@services/plans/plans'
-import { usePlan } from '@components/Hooks/usePlan'
+import FeatureGate from '@components/Dashboard/Shared/FeatureGate/FeatureGate'
+import { searchMatchesAny } from '@/lib/search/normalize'
 
 interface PlaygroundsListClientProps {
   org_id: number
@@ -46,7 +44,7 @@ export default function PlaygroundsListClient({ org_id, orgslug }: PlaygroundsLi
   const org = useOrg() as any
   const session = useLHSession() as any
   const access_token = session?.data?.tokens?.access_token
-  const plan = usePlan()
+  const queryClient = useQueryClient()
   const router = useRouter()
 
   const [searchQuery, setSearchQuery] = useState('')
@@ -58,22 +56,19 @@ export default function PlaygroundsListClient({ org_id, orgslug }: PlaygroundsLi
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
   const itemsPerPage = 12
 
-  const playgroundsKey = access_token ? `${getAPIUrl()}playgrounds/org/${org_id}` : null
-
-  const { data: playgrounds, isLoading } = useSWR(
-    playgroundsKey,
-    (url) => swrFetcher(url, access_token),
-    { revalidateOnFocus: false }
-  )
+  const { data: playgrounds, isLoading } = useQuery({
+    queryKey: queryKeys.playgrounds.list(orgslug),
+    queryFn: () => getOrgPlaygrounds(org_id, access_token),
+    enabled: !!access_token && !!org_id,
+    staleTime: 60_000,
+  })
 
   const allPlaygrounds: any[] = playgrounds || []
 
   const filtered = useMemo(() => {
     if (!searchQuery.trim()) return allPlaygrounds
-    const q = searchQuery.toLowerCase()
-    return allPlaygrounds.filter(
-      (pg: any) =>
-        pg.name?.toLowerCase().includes(q) || pg.description?.toLowerCase().includes(q)
+    return allPlaygrounds.filter((pg: any) =>
+      searchMatchesAny([pg.name, pg.description], searchQuery)
     )
   }, [allPlaygrounds, searchQuery])
 
@@ -136,7 +131,7 @@ export default function PlaygroundsListClient({ org_id, orgslug }: PlaygroundsLi
     setShowNameModal(false)
     try {
       const pg = await createPlayground(org_id, { name, access_type: 'authenticated' }, access_token)
-      if (playgroundsKey) mutate(playgroundsKey)
+      queryClient.invalidateQueries({ queryKey: queryKeys.playgrounds.list(orgslug) })
       router.push(`/editor/playground/${pg.playground_uuid}/edit`)
     } catch {
       toast.error('Failed to create playground')
@@ -151,7 +146,7 @@ export default function PlaygroundsListClient({ org_id, orgslug }: PlaygroundsLi
     try {
       await Promise.all(uuids.map((uuid) => deletePlayground(uuid, access_token)))
       clearSelection()
-      if (playgroundsKey) mutate(playgroundsKey)
+      queryClient.invalidateQueries({ queryKey: queryKeys.playgrounds.list(orgslug) })
       toast.success(`Deleted ${uuids.length} playground${uuids.length > 1 ? 's' : ''}`)
     } catch {
       toast.error('Failed to delete some playgrounds')
@@ -166,7 +161,7 @@ export default function PlaygroundsListClient({ org_id, orgslug }: PlaygroundsLi
     const t = toast.loading(`Duplicating ${uuids.length} playground${uuids.length > 1 ? 's' : ''}…`)
     try {
       await Promise.all(uuids.map((uuid) => duplicatePlayground(uuid, access_token)))
-      if (playgroundsKey) mutate(playgroundsKey)
+      queryClient.invalidateQueries({ queryKey: queryKeys.playgrounds.list(orgslug) })
       toast.success(`Duplicated ${uuids.length} playground${uuids.length > 1 ? 's' : ''}`, { id: t })
     } catch {
       toast.error('Failed to duplicate some playgrounds', { id: t })
@@ -189,14 +184,8 @@ export default function PlaygroundsListClient({ org_id, orgslug }: PlaygroundsLi
   const hasSelection = selectedUuids.size > 0
 
   return (
-    <PlanRestrictedFeature
-      currentPlan={plan}
-      requiredPlan="pro"
-      titleKey="Playgrounds"
-      descriptionKey="Create interactive AI-generated experiences for your learners."
-    >
-      <FeatureDisabledView featureName="playgrounds" orgslug={orgslug} context="dashboard">
-        <div className="h-full w-full bg-[#f8f8f8] pl-10 pr-10">
+    <FeatureGate feature="playgrounds" orgslug={orgslug} context="dashboard">
+        <div className="h-full w-full bg-[#f8f8f8] pl-4 pr-4 sm:pl-10 sm:pr-10">
 
           {/* Header */}
           <div className="mb-6 pt-6">
@@ -383,7 +372,6 @@ export default function PlaygroundsListClient({ org_id, orgslug }: PlaygroundsLi
             </>
           )}
         </div>
-      </FeatureDisabledView>
 
       {/* Create modal */}
       {showNameModal && (
@@ -461,7 +449,7 @@ export default function PlaygroundsListClient({ org_id, orgslug }: PlaygroundsLi
           </div>
         </div>
       )}
-    </PlanRestrictedFeature>
+    </FeatureGate>
   )
 }
 

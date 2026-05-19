@@ -6,8 +6,8 @@ import { Hexagon, MoreVertical, Pencil, Save, Sparkles, X } from 'lucide-react'
 import ConfirmationModal from '@components/Objects/StyledElements/ConfirmationModal/ConfirmationModal'
 import { useRouter } from 'next/navigation'
 import { updateChapter } from '@services/courses/chapters'
-import { mutate } from 'swr'
-import { getAPIUrl } from '@services/config/config'
+import { useQueryClient } from '@tanstack/react-query'
+import { queryKeys } from '@/lib/query/keys'
 import { revalidateTags } from '@services/utils/ts/requests'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
 import { useCourse } from '@components/Contexts/CourseContext'
@@ -19,6 +19,8 @@ interface ModifiedChapterInterface {
 function Chapter(props: any) {
   const router = useRouter()
   const session = useLHSession() as any;
+  const queryClient = useQueryClient()
+  const cleanCourseUuid = (id: string) => id?.replace(/^course_/, '') ?? id
   const [modifiedChapter, setModifiedChapter] = React.useState<
     ModifiedChapterInterface | undefined
   >(undefined)
@@ -34,7 +36,7 @@ function Chapter(props: any) {
         name: modifiedChapter.chapterName,
       }
       await updateChapter(chapterId, modifiedChapterCopy, session.data?.tokens?.access_token)
-      await mutate(`${getAPIUrl()}chapters/course/${props.course_uuid}/meta?with_unpublished_activities=${withUnpublishedActivities}`)
+      queryClient.invalidateQueries({ queryKey: queryKeys.courses.meta(cleanCourseUuid(props.course_uuid)) })
       await revalidateTags(['courses'], props.orgslug)
       router.refresh()
     }

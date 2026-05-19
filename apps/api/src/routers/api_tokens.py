@@ -1,7 +1,8 @@
 from typing import List
 from fastapi import APIRouter, Depends, HTTPException, Request
-from sqlmodel import Session
 
+
+from sqlmodel.ext.asyncio.session import AsyncSession
 from src.core.events.database import get_db_session
 from src.db.api_tokens import (
     APITokenCreate,
@@ -44,7 +45,7 @@ async def api_create_api_token(
     org_id: int,
     token_data: APITokenCreate,
     current_user: PublicUser = Depends(get_current_user),
-    db_session: Session = Depends(get_db_session),
+    db_session: AsyncSession = Depends(get_db_session),
 ) -> APITokenCreatedResponse:
     """
     Create a new API token for an organization.
@@ -83,7 +84,7 @@ async def api_list_api_tokens(
     request: Request,
     org_id: int,
     current_user: PublicUser = Depends(get_current_user),
-    db_session: Session = Depends(get_db_session),
+    db_session: AsyncSession = Depends(get_db_session),
 ) -> List[APITokenRead]:
     """
     List all API tokens for an organization.
@@ -112,7 +113,7 @@ async def api_get_api_token(
     org_id: int,
     token_uuid: str,
     current_user: PublicUser = Depends(get_current_user),
-    db_session: Session = Depends(get_db_session),
+    db_session: AsyncSession = Depends(get_db_session),
 ) -> APITokenRead:
     """
     Get details of a specific API token.
@@ -142,7 +143,7 @@ async def api_update_api_token(
     token_uuid: str,
     token_data: APITokenUpdate,
     current_user: PublicUser = Depends(get_current_user),
-    db_session: Session = Depends(get_db_session),
+    db_session: AsyncSession = Depends(get_db_session),
 ) -> APITokenRead:
     """
     Update an API token's name, description, rights, or expiration.
@@ -172,7 +173,7 @@ async def api_revoke_api_token(
     org_id: int,
     token_uuid: str,
     current_user: PublicUser = Depends(get_current_user),
-    db_session: Session = Depends(get_db_session),
+    db_session: AsyncSession = Depends(get_db_session),
 ) -> dict:
     """
     Revoke an API token.
@@ -203,7 +204,7 @@ async def api_regenerate_api_token(
     org_id: int,
     token_uuid: str,
     current_user: PublicUser = Depends(get_current_user),
-    db_session: Session = Depends(get_db_session),
+    db_session: AsyncSession = Depends(get_db_session),
 ) -> APITokenCreatedResponse:
     """
     Regenerate the secret for an API token.

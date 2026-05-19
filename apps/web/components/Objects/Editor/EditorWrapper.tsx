@@ -7,6 +7,7 @@ import Toast from '@components/Objects/StyledElements/Toast/Toast'
 import { OrgProvider } from '@components/Contexts/OrgContext'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
 import { useTranslation } from 'react-i18next'
+import { preloadComponentsForContent } from './editorPreload'
 
 /**
  * Transforms ProseMirror JSON content to fix mark type names.
@@ -76,20 +77,29 @@ function EditorWrapper(props: EditorWrapperProps): JSX.Element {
     props.activity.update_date || ''
   )
 
-  // Normalize content to fix AI-generated mark types (strong -> bold, em -> italic)
+  // Normalize content to fix AI-generated mark types (strong -> bold, em -> italic).
+  // Most documents have neither, so we pre-scan the raw JSON for those mark
+  // type names before doing the recursive object clone — avoids allocating a
+  // new object per node on every editor open.
   const normalizedContent = React.useMemo(() => {
     if (!props.content) return props.content;
     try {
-      // Content might be a string (JSON) or already parsed object
-      const parsed = typeof props.content === 'string'
-        ? JSON.parse(props.content)
-        : props.content;
-      return normalizeMarkTypes(parsed);
+      const isString = typeof props.content === 'string';
+      const rawForScan = isString ? props.content : JSON.stringify(props.content);
+      const needsNormalization = /"type"\s*:\s*"(?:strong|em)"/.test(rawForScan);
+      const parsed = isString ? JSON.parse(props.content) : props.content;
+      return needsNormalization ? normalizeMarkTypes(parsed) : parsed;
     } catch (e) {
       // If parsing fails, return original content
       return props.content;
     }
   }, [props.content]);
+
+  // Kick off non-awaited dynamic imports for the node-view chunks needed by
+  // the blocks present in this document, so they're cached before TipTap renders.
+  React.useEffect(() => {
+    preloadComponentsForContent(normalizedContent)
+  }, [normalizedContent]);
 
   // Check for remote changes (conflict detection)
   const checkForConflicts = React.useCallback(async (): Promise<ConflictInfo | null> => {

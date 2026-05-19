@@ -101,8 +101,8 @@ function OpenSignUpComponent() {
       const secureAttr = isSecure ? '; secure' : '';
       const baseAttributes = `; path=/; SameSite=Lax${secureAttr}`;
       const domainAttr = topDomain === 'localhost' ? '' : `; domain=.${topDomain}`;
-      document.cookie = `learnhouse_oauth_orgslug=${org.slug}${baseAttributes}${domainAttr}`;
-      document.cookie = `learnhouse_oauth_org_id=${org.id}${baseAttributes}${domainAttr}`;
+      document.cookie = `LH_oauth_orgslug=${org.slug}${baseAttributes}${domainAttr}`;
+      document.cookie = `LH_oauth_org_id=${org.id}${baseAttributes}${domainAttr}`;
     }
     // Use absolute URL with current origin for custom domain support
     signIn('google', { callbackUrl: `${window.location.origin}/redirect_from_auth` });

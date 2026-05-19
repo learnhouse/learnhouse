@@ -1,6 +1,10 @@
 import { mergeAttributes, Node } from '@tiptap/core'
 import { ReactNodeViewRenderer } from '@tiptap/react'
-import WebPreviewComponent from './WebPreviewComponent'
+import dynamic from 'next/dynamic'
+
+const WebPreviewComponent = dynamic(() => import('./WebPreviewComponent'), {
+  ssr: false,
+})
 
 const WebPreview = Node.create({
   name: 'blockWebPreview',
@@ -35,7 +39,7 @@ const WebPreview = Node.create({
   },
 
   addNodeView() {
-    return ReactNodeViewRenderer(WebPreviewComponent)
+    return ReactNodeViewRenderer(WebPreviewComponent as any)
   },
 })
 

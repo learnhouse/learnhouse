@@ -30,7 +30,7 @@ function VersionHistoryPanel({
   const { t } = useTranslation()
   const session = useLHSession() as any
   const access_token = session?.data?.tokens?.access_token
-  const { versions, isLoading, error, mutate } = useActivityVersions(activityUuid)
+  const { versions, isLoading, error, mutate } = useActivityVersions(activityUuid, 20, isOpen)
   const [restoringVersion, setRestoringVersion] = React.useState<number | null>(null)
   const [previewVersion, setPreviewVersion] = React.useState<ActivityVersion | null>(null)
 

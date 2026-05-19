@@ -1,4 +1,3 @@
-from types import SimpleNamespace
 from unittest.mock import Mock, patch
 
 import pytest
@@ -50,24 +49,15 @@ def test_get_redis_connection_success_and_missing_config():
     redis_client = object()
 
     with patch(
-        "src.services.security.rate_limiting.get_learnhouse_config"
-    ) as mock_config, patch(
-        "src.services.security.rate_limiting.redis.Redis.from_url",
+        "src.services.security.rate_limiting._get_redis_pool_client",
         return_value=redis_client,
-    ) as mock_from_url:
-        mock_config.return_value = SimpleNamespace(
-            redis_config=SimpleNamespace(redis_connection_string="redis://example")
-        )
+    ):
         assert get_redis_connection() is redis_client
-        mock_from_url.assert_called_once_with("redis://example")
 
     with patch(
-        "src.services.security.rate_limiting.get_learnhouse_config"
-    ) as mock_config:
-        mock_config.return_value = SimpleNamespace(
-            redis_config=SimpleNamespace(redis_connection_string="")
-        )
-
+        "src.services.security.rate_limiting._get_redis_pool_client",
+        return_value=None,
+    ):
         with pytest.raises(HTTPException) as exc_info:
             get_redis_connection()
 

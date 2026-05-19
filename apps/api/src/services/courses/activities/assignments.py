@@ -5,7 +5,8 @@ import re
 from datetime import datetime
 from uuid import uuid4
 from fastapi import HTTPException, Request, UploadFile
-from sqlmodel import Session, select
+from sqlmodel import select
+from sqlmodel.ext.asyncio.session import AsyncSession
 
 from src.db.courses.activities import Activity
 from src.db.courses.assignments import (
@@ -619,12 +620,12 @@ async def create_assignment(
     request: Request,
     assignment_object: AssignmentCreate,
     current_user: PublicUser | AnonymousUser | APITokenUser,
-    db_session: Session,
+    db_session: AsyncSession,
 ):
     _block_api_tokens(current_user)
     # Check if org exists
     statement = select(Course).where(Course.id == assignment_object.course_id)
-    course = db_session.exec(statement).first()
+    course = (await db_session.execute(statement)).scalars().first()
 
     if not course:
         raise HTTPException(
@@ -636,7 +637,7 @@ async def create_assignment(
     await check_resource_access(request, db_session, current_user, course.course_uuid, AccessAction.CREATE)
 
     # Usage check
-    check_limits_with_usage("assignments", course.org_id, db_session)
+    await check_limits_with_usage("assignments", course.org_id, db_session)
 
     # Create Assignment
     assignment = Assignment(**assignment_object.model_dump())
@@ -648,11 +649,11 @@ async def create_assignment(
 
     # Insert Assignment in DB
     db_session.add(assignment)
-    db_session.commit()
-    db_session.refresh(assignment)
+    await db_session.commit()
+    await db_session.refresh(assignment)
 
     # Feature usage
-    increase_feature_usage("assignments", course.org_id, db_session)
+    await increase_feature_usage("assignments", course.org_id, db_session)
 
     # return assignment read
     return AssignmentRead.model_validate(assignment)
@@ -662,7 +663,7 @@ async def read_assignment(
     request: Request,
     assignment_uuid: str,
     current_user: PublicUser | AnonymousUser | APITokenUser,
-    db_session: Session,
+    db_session: AsyncSession,
 ):
     _block_api_tokens(current_user)
     statement = (
@@ -671,7 +672,7 @@ async def read_assignment(
         .join(Activity, Activity.id == Assignment.activity_id)  # type: ignore
         .where(Assignment.assignment_uuid == assignment_uuid)
     )
-    row = db_session.exec(statement).first()
+    row = (await db_session.execute(statement)).first()
 
     if not row:
         raise HTTPException(
@@ -693,7 +694,7 @@ async def read_assignment_from_activity_uuid(
     request: Request,
     activity_uuid: str,
     current_user: PublicUser | AnonymousUser | APITokenUser,
-    db_session: Session,
+    db_session: AsyncSession,
 ):
     _block_api_tokens(current_user)
     statement = (
@@ -702,7 +703,7 @@ async def read_assignment_from_activity_uuid(
         .join(Course, Course.id == Assignment.course_id)  # type: ignore
         .where(Activity.activity_uuid == activity_uuid)
     )
-    row = db_session.exec(statement).first()
+    row = (await db_session.execute(statement)).first()
 
     if not row:
         raise HTTPException(
@@ -725,12 +726,12 @@ async def update_assignment(
     assignment_uuid: str,
     assignment_object: AssignmentUpdate,
     current_user: PublicUser | AnonymousUser | APITokenUser,
-    db_session: Session,
+    db_session: AsyncSession,
 ):
     _block_api_tokens(current_user)
     # Check if assignment exists
     statement = select(Assignment).where(Assignment.assignment_uuid == assignment_uuid)
-    assignment = db_session.exec(statement).first()
+    assignment = (await db_session.execute(statement)).scalars().first()
 
     if not assignment:
         raise HTTPException(
@@ -740,7 +741,7 @@ async def update_assignment(
 
     # Check if course exists
     statement = select(Course).where(Course.id == assignment.course_id)
-    course = db_session.exec(statement).first()
+    course = (await db_session.execute(statement)).scalars().first()
 
     if not course:
         raise HTTPException(
@@ -759,8 +760,8 @@ async def update_assignment(
 
     # Insert Assignment in DB
     db_session.add(assignment)
-    db_session.commit()
-    db_session.refresh(assignment)
+    await db_session.commit()
+    await db_session.refresh(assignment)
 
     # return assignment read
     return AssignmentRead.model_validate(assignment)
@@ -770,12 +771,12 @@ async def delete_assignment(
     request: Request,
     assignment_uuid: str,
     current_user: PublicUser | AnonymousUser | APITokenUser,
-    db_session: Session,
+    db_session: AsyncSession,
 ):
     _block_api_tokens(current_user)
     # Check if assignment exists
     statement = select(Assignment).where(Assignment.assignment_uuid == assignment_uuid)
-    assignment = db_session.exec(statement).first()
+    assignment = (await db_session.execute(statement)).scalars().first()
 
     if not assignment:
         raise HTTPException(
@@ -785,7 +786,7 @@ async def delete_assignment(
 
     # Check if course exists
     statement = select(Course).where(Course.id == assignment.course_id)
-    course = db_session.exec(statement).first()
+    course = (await db_session.execute(statement)).scalars().first()
 
     if not course:
         raise HTTPException(
@@ -797,11 +798,11 @@ async def delete_assignment(
     await check_resource_access(request, db_session, current_user, course.course_uuid, AccessAction.DELETE)
 
     # Feature usage
-    decrease_feature_usage("assignments", course.org_id, db_session)
+    await decrease_feature_usage("assignments", course.org_id, db_session)
 
     # Delete Assignment
-    db_session.delete(assignment)
-    db_session.commit()
+    await db_session.delete(assignment)
+    await db_session.commit()
 
     return {"message": "Assignment deleted"}
 
@@ -810,13 +811,13 @@ async def delete_assignment_from_activity_uuid(
     request: Request,
     activity_uuid: str,
     current_user: PublicUser | AnonymousUser | APITokenUser,
-    db_session: Session,
+    db_session: AsyncSession,
 ):
     _block_api_tokens(current_user)
     # Check if activity exists
     statement = select(Activity).where(Activity.activity_uuid == activity_uuid)
 
-    activity = db_session.exec(statement).first()
+    activity = (await db_session.execute(statement)).scalars().first()
 
     if not activity:
         raise HTTPException(
@@ -826,7 +827,7 @@ async def delete_assignment_from_activity_uuid(
 
     # Check if course exists
     statement = select(Course).where(Course.id == activity.course_id)
-    course = db_session.exec(statement).first()
+    course = (await db_session.execute(statement)).scalars().first()
 
     if not course:
         raise HTTPException(
@@ -836,7 +837,7 @@ async def delete_assignment_from_activity_uuid(
 
     # Check if assignment exists
     statement = select(Assignment).where(Assignment.activity_id == activity.id)
-    assignment = db_session.exec(statement).first()
+    assignment = (await db_session.execute(statement)).scalars().first()
 
     if not assignment:
         raise HTTPException(
@@ -848,12 +849,12 @@ async def delete_assignment_from_activity_uuid(
     await check_resource_access(request, db_session, current_user, course.course_uuid, AccessAction.DELETE)
 
      # Feature usage
-    decrease_feature_usage("assignments", course.org_id, db_session)
+    await decrease_feature_usage("assignments", course.org_id, db_session)
 
     # Delete Assignment
-    db_session.delete(assignment)
+    await db_session.delete(assignment)
 
-    db_session.commit()
+    await db_session.commit()
 
     return {"message": "Assignment deleted"}
 
@@ -866,12 +867,12 @@ async def create_assignment_task(
     assignment_uuid: str,
     assignment_task_object: AssignmentTaskCreate,
     current_user: PublicUser | AnonymousUser | APITokenUser,
-    db_session: Session,
+    db_session: AsyncSession,
 ):
     _block_api_tokens(current_user)
     # Check if assignment exists
     statement = select(Assignment).where(Assignment.assignment_uuid == assignment_uuid)
-    assignment = db_session.exec(statement).first()
+    assignment = (await db_session.execute(statement)).scalars().first()
 
     if not assignment:
         raise HTTPException(
@@ -881,7 +882,7 @@ async def create_assignment_task(
 
     # Check if course exists
     statement = select(Course).where(Course.id == assignment.course_id)
-    course = db_session.exec(statement).first()
+    course = (await db_session.execute(statement)).scalars().first()
 
     if not course:
         raise HTTPException(
@@ -906,8 +907,8 @@ async def create_assignment_task(
 
     # Insert Assignment Task in DB
     db_session.add(assignment_task)
-    db_session.commit()
-    db_session.refresh(assignment_task)
+    await db_session.commit()
+    await db_session.refresh(assignment_task)
 
     # return assignment task read
     return AssignmentTaskRead.model_validate(assignment_task)
@@ -917,12 +918,12 @@ async def read_assignment_tasks(
     request: Request,
     assignment_uuid: str,
     current_user: PublicUser | AnonymousUser | APITokenUser,
-    db_session: Session,
+    db_session: AsyncSession,
 ):
     _block_api_tokens(current_user)
     # Find assignment
     statement = select(Assignment).where(Assignment.assignment_uuid == assignment_uuid)
-    assignment = db_session.exec(statement).first()
+    assignment = (await db_session.execute(statement)).scalars().first()
 
     if not assignment:
         raise HTTPException(
@@ -932,7 +933,7 @@ async def read_assignment_tasks(
 
     # Check if course exists
     statement = select(Course).where(Course.id == assignment.course_id)
-    course = db_session.exec(statement).first()
+    course = (await db_session.execute(statement)).scalars().first()
 
     if not course:
         raise HTTPException(
@@ -953,7 +954,7 @@ async def read_assignment_tasks(
     # return assignment tasks read
     return [
         AssignmentTaskRead.model_validate(assignment_task)
-        for assignment_task in db_session.exec(statement).all()
+        for assignment_task in (await db_session.execute(statement)).scalars().all()
     ]
 
 
@@ -961,14 +962,14 @@ async def read_assignment_task(
     request: Request,
     assignment_task_uuid: str,
     current_user: PublicUser | AnonymousUser | APITokenUser,
-    db_session: Session,
+    db_session: AsyncSession,
 ):
     _block_api_tokens(current_user)
     # Find assignment
     statement = select(AssignmentTask).where(
         AssignmentTask.assignment_task_uuid == assignment_task_uuid
     )
-    assignmenttask = db_session.exec(statement).first()
+    assignmenttask = (await db_session.execute(statement)).scalars().first()
 
     if not assignmenttask:
         raise HTTPException(
@@ -978,7 +979,7 @@ async def read_assignment_task(
 
     # Check if assignment exists
     statement = select(Assignment).where(Assignment.id == assignmenttask.assignment_id)
-    assignment = db_session.exec(statement).first()
+    assignment = (await db_session.execute(statement)).scalars().first()
 
     if not assignment:
         raise HTTPException(
@@ -988,7 +989,7 @@ async def read_assignment_task(
 
     # Check if course exists
     statement = select(Course).where(Course.id == assignment.course_id)
-    course = db_session.exec(statement).first()
+    course = (await db_session.execute(statement)).scalars().first()
 
     if not course:
         raise HTTPException(
@@ -1005,7 +1006,7 @@ async def read_assignment_task(
 
 async def put_assignment_task_reference_file(
     request: Request,
-    db_session: Session,
+    db_session: AsyncSession,
     assignment_task_uuid: str,
     current_user: PublicUser | AnonymousUser | APITokenUser,
     reference_file: UploadFile | None = None,
@@ -1015,7 +1016,7 @@ async def put_assignment_task_reference_file(
     statement = select(AssignmentTask).where(
         AssignmentTask.assignment_task_uuid == assignment_task_uuid
     )
-    assignment_task = db_session.exec(statement).first()
+    assignment_task = (await db_session.execute(statement)).scalars().first()
 
     if not assignment_task:
         raise HTTPException(
@@ -1025,7 +1026,7 @@ async def put_assignment_task_reference_file(
 
     # Check if assignment exists
     statement = select(Assignment).where(Assignment.id == assignment_task.assignment_id)
-    assignment = db_session.exec(statement).first()
+    assignment = (await db_session.execute(statement)).scalars().first()
 
     if not assignment:
         raise HTTPException(
@@ -1035,11 +1036,11 @@ async def put_assignment_task_reference_file(
 
     # Check for activity
     statement = select(Activity).where(Activity.id == assignment.activity_id)
-    activity = db_session.exec(statement).first()
+    activity = (await db_session.execute(statement)).scalars().first()
 
     # Check if course exists
     statement = select(Course).where(Course.id == assignment.course_id)
-    course = db_session.exec(statement).first()
+    course = (await db_session.execute(statement)).scalars().first()
 
     if not course:
         raise HTTPException(
@@ -1049,7 +1050,7 @@ async def put_assignment_task_reference_file(
 
     # Get org uuid
     org_statement = select(Organization).where(Organization.id == course.org_id)
-    org = db_session.exec(org_statement).first()
+    org = (await db_session.execute(org_statement)).scalars().first()
 
     # RBAC check
     await check_resource_access(request, db_session, current_user, course.course_uuid, AccessAction.UPDATE)
@@ -1071,8 +1072,8 @@ async def put_assignment_task_reference_file(
 
     # Insert Assignment Task in DB
     db_session.add(assignment_task)
-    db_session.commit()
-    db_session.refresh(assignment_task)
+    await db_session.commit()
+    await db_session.refresh(assignment_task)
 
     # return assignment task read
     return AssignmentTaskRead.model_validate(assignment_task)
@@ -1080,7 +1081,7 @@ async def put_assignment_task_reference_file(
 
 async def put_assignment_task_submission_file(
     request: Request,
-    db_session: Session,
+    db_session: AsyncSession,
     assignment_task_uuid: str,
     current_user: PublicUser | AnonymousUser | APITokenUser,
     sub_file: UploadFile | None = None,
@@ -1090,7 +1091,7 @@ async def put_assignment_task_submission_file(
     statement = select(AssignmentTask).where(
         AssignmentTask.assignment_task_uuid == assignment_task_uuid
     )
-    assignment_task = db_session.exec(statement).first()
+    assignment_task = (await db_session.execute(statement)).scalars().first()
 
     if not assignment_task:
         raise HTTPException(
@@ -1100,7 +1101,7 @@ async def put_assignment_task_submission_file(
 
     # Check if assignment exists
     statement = select(Assignment).where(Assignment.id == assignment_task.assignment_id)
-    assignment = db_session.exec(statement).first()
+    assignment = (await db_session.execute(statement)).scalars().first()
 
     if not assignment:
         raise HTTPException(
@@ -1110,11 +1111,11 @@ async def put_assignment_task_submission_file(
 
     # Check for activity
     statement = select(Activity).where(Activity.id == assignment.activity_id)
-    activity = db_session.exec(statement).first()
+    activity = (await db_session.execute(statement)).scalars().first()
 
     # Check if course exists
     statement = select(Course).where(Course.id == assignment.course_id)
-    course = db_session.exec(statement).first()
+    course = (await db_session.execute(statement)).scalars().first()
 
     if not course:
         raise HTTPException(
@@ -1124,7 +1125,7 @@ async def put_assignment_task_submission_file(
 
     # Get org uuid
     org_statement = select(Organization).where(Organization.id == course.org_id)
-    org = db_session.exec(org_statement).first()
+    org = (await db_session.execute(org_statement)).scalars().first()
 
     # RBAC check - only need read permission to submit files
     await check_resource_access(request, db_session, current_user, course.course_uuid, AccessAction.READ)
@@ -1155,14 +1156,14 @@ async def update_assignment_task(
     assignment_task_uuid: str,
     assignment_task_object: AssignmentTaskUpdate,
     current_user: PublicUser | AnonymousUser | APITokenUser,
-    db_session: Session,
+    db_session: AsyncSession,
 ):
     _block_api_tokens(current_user)
     # Check if assignment task exists
     statement = select(AssignmentTask).where(
         AssignmentTask.assignment_task_uuid == assignment_task_uuid
     )
-    assignment_task = db_session.exec(statement).first()
+    assignment_task = (await db_session.execute(statement)).scalars().first()
 
     if not assignment_task:
         raise HTTPException(
@@ -1172,7 +1173,7 @@ async def update_assignment_task(
 
     # Check if assignment exists
     statement = select(Assignment).where(Assignment.id == assignment_task.assignment_id)
-    assignment = db_session.exec(statement).first()
+    assignment = (await db_session.execute(statement)).scalars().first()
 
     if not assignment:
         raise HTTPException(
@@ -1182,7 +1183,7 @@ async def update_assignment_task(
 
     # Check if course exists
     statement = select(Course).where(Course.id == assignment.course_id)
-    course = db_session.exec(statement).first()
+    course = (await db_session.execute(statement)).scalars().first()
 
     if not course:
         raise HTTPException(
@@ -1201,8 +1202,8 @@ async def update_assignment_task(
 
     # Insert Assignment Task in DB
     db_session.add(assignment_task)
-    db_session.commit()
-    db_session.refresh(assignment_task)
+    await db_session.commit()
+    await db_session.refresh(assignment_task)
 
     # return assignment task read
     return AssignmentTaskRead.model_validate(assignment_task)
@@ -1212,14 +1213,14 @@ async def delete_assignment_task(
     request: Request,
     assignment_task_uuid: str,
     current_user: PublicUser | AnonymousUser | APITokenUser,
-    db_session: Session,
+    db_session: AsyncSession,
 ):
     _block_api_tokens(current_user)
     # Check if assignment task exists
     statement = select(AssignmentTask).where(
         AssignmentTask.assignment_task_uuid == assignment_task_uuid
     )
-    assignment_task = db_session.exec(statement).first()
+    assignment_task = (await db_session.execute(statement)).scalars().first()
 
     if not assignment_task:
         raise HTTPException(
@@ -1229,7 +1230,7 @@ async def delete_assignment_task(
 
     # Check if assignment exists
     statement = select(Assignment).where(Assignment.id == assignment_task.assignment_id)
-    assignment = db_session.exec(statement).first()
+    assignment = (await db_session.execute(statement)).scalars().first()
 
     if not assignment:
         raise HTTPException(
@@ -1239,7 +1240,7 @@ async def delete_assignment_task(
 
     # Check if course exists
     statement = select(Course).where(Course.id == assignment.course_id)
-    course = db_session.exec(statement).first()
+    course = (await db_session.execute(statement)).scalars().first()
 
     if not course:
         raise HTTPException(
@@ -1251,8 +1252,8 @@ async def delete_assignment_task(
     await check_resource_access(request, db_session, current_user, course.course_uuid, AccessAction.DELETE)
 
     # Delete Assignment Task
-    db_session.delete(assignment_task)
-    db_session.commit()
+    await db_session.delete(assignment_task)
+    await db_session.commit()
 
     return {"message": "Assignment Task deleted"}
 
@@ -1265,7 +1266,7 @@ async def handle_assignment_task_submission(
     assignment_task_uuid: str,
     assignment_task_submission_object: AssignmentTaskSubmissionUpdate,
     current_user: PublicUser | AnonymousUser | APITokenUser,
-    db_session: Session,
+    db_session: AsyncSession,
 ):
     _block_api_tokens(current_user)
     assignment_task_submission_uuid = assignment_task_submission_object.assignment_task_submission_uuid
@@ -1273,7 +1274,7 @@ async def handle_assignment_task_submission(
     statement = select(AssignmentTask).where(
         AssignmentTask.assignment_task_uuid == assignment_task_uuid
     )
-    assignment_task = db_session.exec(statement).first()
+    assignment_task = (await db_session.execute(statement)).scalars().first()
 
     if not assignment_task:
         raise HTTPException(
@@ -1283,7 +1284,7 @@ async def handle_assignment_task_submission(
 
     # Check if assignment exists
     statement = select(Assignment).where(Assignment.id == assignment_task.assignment_id)
-    assignment = db_session.exec(statement).first()
+    assignment = (await db_session.execute(statement)).scalars().first()
 
     if not assignment:
         raise HTTPException(
@@ -1293,7 +1294,7 @@ async def handle_assignment_task_submission(
 
     # Check if course exists
     statement = select(Course).where(Course.id == assignment.course_id)
-    course = db_session.exec(statement).first()
+    course = (await db_session.execute(statement)).scalars().first()
 
     if not course:
         raise HTTPException(
@@ -1332,14 +1333,14 @@ async def handle_assignment_task_submission(
         AssignmentTaskSubmission.assignment_task_id == assignment_task.id,
         AssignmentTaskSubmission.user_id == current_user.id,
     )
-    assignment_task_submission = db_session.exec(statement).first()
+    assignment_task_submission = (await db_session.execute(statement)).scalars().first()
     
     # If no submission found by user+task, try to find by UUID if provided (for specific submission updates)
     if not assignment_task_submission and assignment_task_submission_uuid:
         statement = select(AssignmentTaskSubmission).where(
             AssignmentTaskSubmission.assignment_task_submission_uuid == assignment_task_submission_uuid
         )
-        assignment_task_submission = db_session.exec(statement).first()
+        assignment_task_submission = (await db_session.execute(statement)).scalars().first()
 
     # If submission exists, update it
     if assignment_task_submission:
@@ -1358,8 +1359,8 @@ async def handle_assignment_task_submission(
 
         # Insert Assignment Task Submission in DB
         db_session.add(assignment_task_submission)
-        db_session.commit()
-        db_session.refresh(assignment_task_submission)
+        await db_session.commit()
+        await db_session.refresh(assignment_task_submission)
 
     else:
         # Create new Task submission
@@ -1385,8 +1386,8 @@ async def handle_assignment_task_submission(
 
         # Insert Assignment Task Submission in DB
         db_session.add(assignment_task_submission)
-        db_session.commit()
-        db_session.refresh(assignment_task_submission)
+        await db_session.commit()
+        await db_session.refresh(assignment_task_submission)
 
     # return assignment task submission read
     return AssignmentTaskSubmissionRead.model_validate(assignment_task_submission)
@@ -1397,14 +1398,14 @@ async def read_user_assignment_task_submissions(
     assignment_task_uuid: str,
     user_id: int,
     current_user: PublicUser | AnonymousUser | APITokenUser,
-    db_session: Session,
+    db_session: AsyncSession,
 ):
     _block_api_tokens(current_user)
     # Check if assignment task exists
     statement = select(AssignmentTask).where(
         AssignmentTask.assignment_task_uuid == assignment_task_uuid
     )
-    assignment_task = db_session.exec(statement).first()
+    assignment_task = (await db_session.execute(statement)).scalars().first()
 
     if not assignment_task:
         raise HTTPException(
@@ -1414,7 +1415,7 @@ async def read_user_assignment_task_submissions(
 
     # Check if assignment exists
     statement = select(Assignment).where(Assignment.id == assignment_task.assignment_id)
-    assignment = db_session.exec(statement).first()
+    assignment = (await db_session.execute(statement)).scalars().first()
 
     if not assignment:
         raise HTTPException(
@@ -1424,7 +1425,7 @@ async def read_user_assignment_task_submissions(
 
     # Check if course exists
     statement = select(Course).where(Course.id == assignment.course_id)
-    course = db_session.exec(statement).first()
+    course = (await db_session.execute(statement)).scalars().first()
 
     if not course:
         raise HTTPException(
@@ -1450,7 +1451,7 @@ async def read_user_assignment_task_submissions(
         AssignmentTaskSubmission.assignment_task_id == assignment_task.id,
         AssignmentTaskSubmission.user_id == user_id,
     )
-    assignment_task_submission = db_session.exec(statement).first()
+    assignment_task_submission = (await db_session.execute(statement)).scalars().first()
 
     if not assignment_task_submission:
         raise HTTPException(
@@ -1466,18 +1467,18 @@ async def read_user_assignment_task_submissions_me_batch(
     request: Request,
     assignment_uuid: str,
     current_user: PublicUser | AnonymousUser | APITokenUser,
-    db_session: Session,
+    db_session: AsyncSession,
 ):
     """Return a map of {assignment_task_uuid: submission | None} for the
     current user across every task in the assignment, in a single round trip.
     Replaces N per-task /submissions/me calls from the activity view."""
     _block_api_tokens(current_user)
 
-    assignment_row = db_session.exec(
+    assignment_row = (await db_session.execute(
         select(Assignment, Course.course_uuid)
         .join(Course, Course.id == Assignment.course_id)  # type: ignore
         .where(Assignment.assignment_uuid == assignment_uuid)
-    ).first()
+    )).first()
 
     if not assignment_row:
         raise HTTPException(
@@ -1489,7 +1490,7 @@ async def read_user_assignment_task_submissions_me_batch(
 
     await check_resource_access(request, db_session, current_user, course_uuid, AccessAction.READ)
 
-    rows = db_session.exec(
+    rows = (await db_session.execute(
         select(AssignmentTask, AssignmentTaskSubmission)
         .outerjoin(
             AssignmentTaskSubmission,
@@ -1503,7 +1504,7 @@ async def read_user_assignment_task_submissions_me_batch(
         # overwrites lower ids with higher ones, leaving the most recent
         # submission as the winning value.
         .order_by(AssignmentTaskSubmission.id.asc())  # type: ignore
-    ).all()
+    )).all()
 
     return {
         task.assignment_task_uuid: (
@@ -1517,14 +1518,14 @@ async def read_user_assignment_task_submissions_me(
     request: Request,
     assignment_task_uuid: str,
     current_user: PublicUser | AnonymousUser | APITokenUser,
-    db_session: Session,
+    db_session: AsyncSession,
 ):
     _block_api_tokens(current_user)
     # Check if assignment task exists
     statement = select(AssignmentTask).where(
         AssignmentTask.assignment_task_uuid == assignment_task_uuid
     )
-    assignment_task = db_session.exec(statement).first()
+    assignment_task = (await db_session.execute(statement)).scalars().first()
 
     if not assignment_task:
         raise HTTPException(
@@ -1537,7 +1538,7 @@ async def read_user_assignment_task_submissions_me(
         AssignmentTaskSubmission.assignment_task_id == assignment_task.id,
         AssignmentTaskSubmission.user_id == current_user.id,
     )
-    assignment_task_submission = db_session.exec(statement).first()
+    assignment_task_submission = (await db_session.execute(statement)).scalars().first()
 
     if not assignment_task_submission:
         # Return None instead of raising an error for cases where no submission exists yet
@@ -1545,7 +1546,7 @@ async def read_user_assignment_task_submissions_me(
 
     # Check if assignment exists
     statement = select(Assignment).where(Assignment.id == assignment_task.assignment_id)
-    assignment = db_session.exec(statement).first()
+    assignment = (await db_session.execute(statement)).scalars().first()
 
     if not assignment:
         raise HTTPException(
@@ -1555,7 +1556,7 @@ async def read_user_assignment_task_submissions_me(
 
     # Check if course exists
     statement = select(Course).where(Course.id == assignment.course_id)
-    course = db_session.exec(statement).first()
+    course = (await db_session.execute(statement)).scalars().first()
 
     if not course:
         raise HTTPException(
@@ -1574,7 +1575,7 @@ async def read_assignment_task_submissions(
     request: Request,
     assignment_task_uuid: str,
     current_user: PublicUser | AnonymousUser | APITokenUser,
-    db_session: Session,
+    db_session: AsyncSession,
     limit: int = 50,
     offset: int = 0,
 ):
@@ -1583,7 +1584,7 @@ async def read_assignment_task_submissions(
     statement = select(AssignmentTask).where(
         AssignmentTask.assignment_task_uuid == assignment_task_uuid,
     )
-    assignment_task = db_session.exec(statement).first()
+    assignment_task = (await db_session.execute(statement)).scalars().first()
 
     if not assignment_task:
         raise HTTPException(
@@ -1593,7 +1594,7 @@ async def read_assignment_task_submissions(
 
     # Check if assignment exists
     statement = select(Assignment).where(Assignment.id == assignment_task.assignment_id)
-    assignment = db_session.exec(statement).first()
+    assignment = (await db_session.execute(statement)).scalars().first()
 
     if not assignment:
         raise HTTPException(
@@ -1603,7 +1604,7 @@ async def read_assignment_task_submissions(
 
     # Check if course exists
     statement = select(Course).where(Course.id == assignment.course_id)
-    course = db_session.exec(statement).first()
+    course = (await db_session.execute(statement)).scalars().first()
 
     if not course:
         raise HTTPException(
@@ -1617,7 +1618,7 @@ async def read_assignment_task_submissions(
     statement = select(AssignmentTaskSubmission).where(
         AssignmentTaskSubmission.assignment_task_id == assignment_task.id
     ).limit(limit).offset(offset)
-    submissions = db_session.exec(statement).all()
+    submissions = (await db_session.execute(statement)).scalars().all()
     return [AssignmentTaskSubmissionRead.model_validate(s) for s in submissions]
 
 
@@ -1626,7 +1627,7 @@ async def update_assignment_task_submission(
     assignment_task_submission_uuid: str,
     assignment_task_submission_object: AssignmentTaskSubmissionCreate,
     current_user: PublicUser | AnonymousUser | APITokenUser,
-    db_session: Session,
+    db_session: AsyncSession,
 ):
     _block_api_tokens(current_user)
     # Check if assignment task submission exists
@@ -1634,7 +1635,7 @@ async def update_assignment_task_submission(
         AssignmentTaskSubmission.assignment_task_submission_uuid
         == assignment_task_submission_uuid
     )
-    assignment_task_submission = db_session.exec(statement).first()
+    assignment_task_submission = (await db_session.execute(statement)).scalars().first()
 
     if not assignment_task_submission:
         raise HTTPException(
@@ -1646,7 +1647,7 @@ async def update_assignment_task_submission(
     statement = select(AssignmentTask).where(
         AssignmentTask.id == assignment_task_submission.assignment_task_id
     )
-    assignment_task = db_session.exec(statement).first()
+    assignment_task = (await db_session.execute(statement)).scalars().first()
 
     if not assignment_task:
         raise HTTPException(
@@ -1656,7 +1657,7 @@ async def update_assignment_task_submission(
 
     # Check if assignment exists
     statement = select(Assignment).where(Assignment.id == assignment_task.assignment_id)
-    assignment = db_session.exec(statement).first()
+    assignment = (await db_session.execute(statement)).scalars().first()
 
     if not assignment:
         raise HTTPException(
@@ -1666,7 +1667,7 @@ async def update_assignment_task_submission(
 
     # Check if course exists
     statement = select(Course).where(Course.id == assignment.course_id)
-    course = db_session.exec(statement).first()
+    course = (await db_session.execute(statement)).scalars().first()
 
     if not course:
         raise HTTPException(
@@ -1685,8 +1686,8 @@ async def update_assignment_task_submission(
 
     # Insert Assignment Task Submission in DB
     db_session.add(assignment_task_submission)
-    db_session.commit()
-    db_session.refresh(assignment_task_submission)
+    await db_session.commit()
+    await db_session.refresh(assignment_task_submission)
 
     # return assignment task submission read
     return AssignmentTaskSubmissionRead.model_validate(assignment_task_submission)
@@ -1696,7 +1697,7 @@ async def delete_assignment_task_submission(
     request: Request,
     assignment_task_submission_uuid: str,
     current_user: PublicUser | AnonymousUser | APITokenUser,
-    db_session: Session,
+    db_session: AsyncSession,
 ):
     _block_api_tokens(current_user)
     # Check if assignment task submission exists
@@ -1704,7 +1705,7 @@ async def delete_assignment_task_submission(
         AssignmentTaskSubmission.assignment_task_submission_uuid
         == assignment_task_submission_uuid
     )
-    assignment_task_submission = db_session.exec(statement).first()
+    assignment_task_submission = (await db_session.execute(statement)).scalars().first()
 
     if not assignment_task_submission:
         raise HTTPException(
@@ -1716,7 +1717,7 @@ async def delete_assignment_task_submission(
     statement = select(AssignmentTask).where(
         AssignmentTask.id == assignment_task_submission.assignment_task_id
     )
-    assignment_task = db_session.exec(statement).first()
+    assignment_task = (await db_session.execute(statement)).scalars().first()
 
     if not assignment_task:
         raise HTTPException(
@@ -1726,7 +1727,7 @@ async def delete_assignment_task_submission(
 
     # Check if assignment exists
     statement = select(Assignment).where(Assignment.id == assignment_task.assignment_id)
-    assignment = db_session.exec(statement).first()
+    assignment = (await db_session.execute(statement)).scalars().first()
 
     if not assignment:
         raise HTTPException(
@@ -1736,7 +1737,7 @@ async def delete_assignment_task_submission(
 
     # Check if course exists
     statement = select(Course).where(Course.id == assignment.course_id)
-    course = db_session.exec(statement).first()
+    course = (await db_session.execute(statement)).scalars().first()
 
     if not course:
         raise HTTPException(
@@ -1748,8 +1749,8 @@ async def delete_assignment_task_submission(
     await check_resource_access(request, db_session, current_user, course.course_uuid, AccessAction.DELETE)
 
     # Delete Assignment Task Submission
-    db_session.delete(assignment_task_submission)
-    db_session.commit()
+    await db_session.delete(assignment_task_submission)
+    await db_session.commit()
 
     return {"message": "Assignment Task Submission deleted"}
 
@@ -1761,12 +1762,12 @@ async def create_assignment_submission(
     request: Request,
     assignment_uuid: str,
     current_user: PublicUser | AnonymousUser | APITokenUser,
-    db_session: Session,
+    db_session: AsyncSession,
 ):
     _block_api_tokens(current_user)
     # Check if assignment exists
     statement = select(Assignment).where(Assignment.assignment_uuid == assignment_uuid)
-    assignment = db_session.exec(statement).first()
+    assignment = (await db_session.execute(statement)).scalars().first()
 
     if not assignment:
         raise HTTPException(
@@ -1774,23 +1775,33 @@ async def create_assignment_submission(
             detail="Assignment not found",
         )
 
-    # Check if the submission has already been made
+    # Check if the submission has already been made. A row in PENDING /
+    # NOT_SUBMITTED state means the student previously hit "Try again":
+    # retry_assignment_submission left the row in place so the attempt
+    # counter survives, but cleared everything else. Treat that as a
+    # fresh-submission slot — flip status to SUBMITTED and reuse the row
+    # — instead of erroring out on the existing row.
     statement = select(AssignmentUserSubmission).where(
         AssignmentUserSubmission.assignment_id == assignment.id,
         AssignmentUserSubmission.user_id == current_user.id,
     )
 
-    assignment_user_submission = db_session.exec(statement).first()
+    assignment_user_submission = (await db_session.execute(statement)).scalars().first()
 
     if assignment_user_submission:
-        raise HTTPException(
-            status_code=400,
-            detail="Assignment User Submission already exists",
+        reusable_states = (
+            AssignmentUserSubmissionStatus.PENDING,
+            AssignmentUserSubmissionStatus.NOT_SUBMITTED,
         )
+        if assignment_user_submission.submission_status not in reusable_states:
+            raise HTTPException(
+                status_code=400,
+                detail="Assignment User Submission already exists",
+            )
 
     # Check if course exists
     statement = select(Course).where(Course.id == assignment.course_id)
-    course = db_session.exec(statement).first()
+    course = (await db_session.execute(statement)).scalars().first()
 
     if not course:
         raise HTTPException(
@@ -1801,22 +1812,40 @@ async def create_assignment_submission(
     # RBAC check
     await check_resource_access(request, db_session, current_user, course.course_uuid, AccessAction.READ)
 
-    # Create Assignment User Submission
-    assignment_user_submission = AssignmentUserSubmission(
-        user_id=current_user.id,
-        assignment_id=assignment.id,  # type: ignore
-        grade=0,
-        assignmentusersubmission_uuid=str(f"assignmentusersubmission_{uuid4()}"),
-        submission_status=AssignmentUserSubmissionStatus.SUBMITTED,
-        creation_date=str(datetime.now()),
-        update_date=str(datetime.now()),
-    )
+    # Either reuse the existing PENDING row (retry path) or create a fresh
+    # submission. On the retry path we keep the original
+    # assignmentusersubmission_uuid so external systems that already store a
+    # reference don't break. The creation_date IS refreshed to the time of
+    # this new attempt — the teacher's submissions list sorts by submitted-at
+    # and a stale original date would put a brand-new retry at the bottom
+    # next to old submissions.
+    if assignment_user_submission:
+        assignment_user_submission.submission_status = (
+            AssignmentUserSubmissionStatus.SUBMITTED
+        )
+        assignment_user_submission.grade = 0
+        assignment_user_submission.creation_date = str(datetime.now())
+        assignment_user_submission.update_date = str(datetime.now())
+    else:
+        assignment_user_submission = AssignmentUserSubmission(
+            user_id=current_user.id,
+            assignment_id=assignment.id,  # type: ignore
+            grade=0,
+            assignmentusersubmission_uuid=str(f"assignmentusersubmission_{uuid4()}"),
+            submission_status=AssignmentUserSubmissionStatus.SUBMITTED,
+            attempt_number=1,
+            creation_date=str(datetime.now()),
+            update_date=str(datetime.now()),
+        )
 
     # Insert Assignment User Submission in DB
     db_session.add(assignment_user_submission)
-    db_session.commit()
+    await db_session.commit()
 
-    # Track assignment submission
+    # Track assignment submission. attempt_number lets downstream consumers
+    # (analytics, webhooks) tell a retry resubmit from the original — without
+    # it, retries would silently double-count.
+    submitted_attempt_number = int(assignment_user_submission.attempt_number or 1)
     await track(
         event_name=analytics_events.ASSIGNMENT_SUBMITTED,
         org_id=course.org_id,
@@ -1824,6 +1853,7 @@ async def create_assignment_submission(
         properties={
             "assignment_uuid": assignment_uuid,
             "course_uuid": course.course_uuid,
+            "attempt_number": submitted_attempt_number,
         },
     )
     await dispatch_webhooks(
@@ -1833,12 +1863,13 @@ async def create_assignment_submission(
             "user": {"user_uuid": current_user.user_uuid, "email": current_user.email, "username": current_user.username},
             "assignment": {"assignment_uuid": assignment_uuid},
             "course": {"course_uuid": course.course_uuid, "name": course.name},
+            "attempt_number": submitted_attempt_number,
         },
     )
 
     # User
     statement = select(User).where(User.id == current_user.id)
-    user = db_session.exec(statement).first()
+    user = (await db_session.execute(statement)).scalars().first()
 
     if not user:
         raise HTTPException(
@@ -1848,7 +1879,7 @@ async def create_assignment_submission(
 
     # Activity
     statement = select(Activity).where(Activity.id == assignment.activity_id)
-    activity = db_session.exec(statement).first()
+    activity = (await db_session.execute(statement)).scalars().first()
 
     if not activity:
         raise HTTPException(
@@ -1870,7 +1901,7 @@ async def create_assignment_submission(
         TrailRun.course_id == course.id,
         TrailRun.user_id == user.id,
     )
-    trailrun = db_session.exec(statement).first()
+    trailrun = (await db_session.execute(statement)).scalars().first()
 
     if not trailrun:
         trailrun = TrailRun(
@@ -1882,15 +1913,15 @@ async def create_assignment_submission(
             update_date=str(datetime.now()),
         )
         db_session.add(trailrun)
-        db_session.commit()
-        db_session.refresh(trailrun)
+        await db_session.commit()
+        await db_session.refresh(trailrun)
 
     statement = select(TrailStep).where(
         TrailStep.trailrun_id == trailrun.id,
         TrailStep.activity_id == activity.id,
         TrailStep.user_id == user.id,
     )
-    trailstep = db_session.exec(statement).first()
+    trailstep = (await db_session.execute(statement)).scalars().first()
 
     if not trailstep:
         trailstep = TrailStep(
@@ -1907,8 +1938,19 @@ async def create_assignment_submission(
             update_date=str(datetime.now()),
         )
         db_session.add(trailstep)
-        db_session.commit()
-        db_session.refresh(trailstep)
+        await db_session.commit()
+        await db_session.refresh(trailstep)
+    else:
+        # Existing trail step — either from prior progress saves, or because
+        # the student just hit "Try again" (the retry endpoint flipped it to
+        # incomplete). Re-flip it to complete now that the assignment is
+        # back in SUBMITTED state. The first-submission branch above sets
+        # complete=True; this keeps the reuse path consistent.
+        trailstep.complete = True
+        trailstep.update_date = str(datetime.now())
+        db_session.add(trailstep)
+        await db_session.commit()
+        await db_session.refresh(trailstep)
 
     # Auto-grading path: if the teacher enabled auto_grading on this assignment
     # AND every task is in AUTO_GRADABLE_TASK_TYPES (explicit allow-list —
@@ -1923,7 +1965,7 @@ async def create_assignment_submission(
         tasks_statement = select(AssignmentTask).where(
             AssignmentTask.assignment_id == assignment.id
         )
-        assignment_tasks = db_session.exec(tasks_statement).all()
+        assignment_tasks = (await db_session.execute(tasks_statement)).scalars().all()
 
         all_auto_gradable = bool(assignment_tasks) and all(
             t.assignment_type in AUTO_GRADABLE_TASK_TYPES for t in assignment_tasks
@@ -1945,7 +1987,7 @@ async def create_assignment_submission(
             trailstep.complete = True
             trailstep.update_date = str(datetime.now())
             db_session.add(trailstep)
-            db_session.commit()
+            await db_session.commit()
 
     # Check if all activities in the course are completed and create certificate if so
     if course and course.id and user and user.id:
@@ -1961,14 +2003,14 @@ async def read_assignment_submissions(
     request: Request,
     assignment_uuid: str,
     current_user: PublicUser | AnonymousUser | APITokenUser,
-    db_session: Session,
+    db_session: AsyncSession,
     limit: int = 50,
     offset: int = 0,
 ):
     _block_api_tokens(current_user)
     # Find assignment
     statement = select(Assignment).where(Assignment.assignment_uuid == assignment_uuid)
-    assignment = db_session.exec(statement).first()
+    assignment = (await db_session.execute(statement)).scalars().first()
 
     if not assignment:
         raise HTTPException(
@@ -1978,7 +2020,7 @@ async def read_assignment_submissions(
 
     # Check if course exists
     statement = select(Course).where(Course.id == assignment.course_id)
-    course = db_session.exec(statement).first()
+    course = (await db_session.execute(statement)).scalars().first()
 
     if not course:
         raise HTTPException(
@@ -2013,11 +2055,11 @@ async def read_assignment_submissions(
     tasks_statement = select(AssignmentTask).where(
         AssignmentTask.assignment_id == assignment.id
     )
-    assignment_tasks = db_session.exec(tasks_statement).all()
+    assignment_tasks = (await db_session.execute(tasks_statement)).scalars().all()
     max_grade = sum(int(t.max_grade_value or 0) for t in assignment_tasks)
 
     results = []
-    for sub in db_session.exec(statement).all():
+    for sub in (await db_session.execute(statement)).scalars().all():
         row = AssignmentUserSubmissionRead.model_validate(sub).model_dump()
         if sub.submission_status == AssignmentUserSubmissionStatus.GRADED:
             row["grade_display"] = compute_assignment_grade(
@@ -2036,12 +2078,12 @@ async def read_user_assignment_submissions(
     assignment_uuid: str,
     user_id: int,
     current_user: PublicUser | AnonymousUser | APITokenUser,
-    db_session: Session,
+    db_session: AsyncSession,
 ):
     _block_api_tokens(current_user)
     # Find assignment
     statement = select(Assignment).where(Assignment.assignment_uuid == assignment_uuid)
-    assignment = db_session.exec(statement).first()
+    assignment = (await db_session.execute(statement)).scalars().first()
 
     if not assignment:
         raise HTTPException(
@@ -2051,7 +2093,7 @@ async def read_user_assignment_submissions(
 
     # Check if course exists
     statement = select(Course).where(Course.id == assignment.course_id)
-    course = db_session.exec(statement).first()
+    course = (await db_session.execute(statement)).scalars().first()
 
     if not course:
         raise HTTPException(
@@ -2081,7 +2123,7 @@ async def read_user_assignment_submissions(
     # return assignment tasks read
     return [
         AssignmentUserSubmissionRead.model_validate(assignment_user_submission)
-        for assignment_user_submission in db_session.exec(statement).all()
+        for assignment_user_submission in (await db_session.execute(statement)).scalars().all()
     ]
 
 
@@ -2089,7 +2131,7 @@ async def read_user_assignment_submissions_me(
     request: Request,
     assignment_uuid: str,
     current_user: PublicUser | AnonymousUser | APITokenUser,
-    db_session: Session,
+    db_session: AsyncSession,
 ):
     _block_api_tokens(current_user)
     return await read_user_assignment_submissions(
@@ -2103,16 +2145,16 @@ async def read_user_assignment_submissions_me(
 
 async def update_assignment_submission(
     request: Request,
-    user_id: str,
+    user_id: int,
     assignment_uuid: str,
     assignment_user_submission_object: AssignmentUserSubmissionCreate,
     current_user: PublicUser | AnonymousUser | APITokenUser,
-    db_session: Session,
+    db_session: AsyncSession,
 ):
     _block_api_tokens(current_user)
     # Check if assignment exists
     statement = select(Assignment).where(Assignment.assignment_uuid == assignment_uuid)
-    assignment = db_session.exec(statement).first()
+    assignment = (await db_session.execute(statement)).scalars().first()
 
     if not assignment:
         raise HTTPException(
@@ -2125,7 +2167,7 @@ async def update_assignment_submission(
         AssignmentUserSubmission.user_id == user_id,
         AssignmentUserSubmission.assignment_id == assignment.id,
     )
-    assignment_user_submission = db_session.exec(statement).first()
+    assignment_user_submission = (await db_session.execute(statement)).scalars().first()
 
     if not assignment_user_submission:
         raise HTTPException(
@@ -2135,7 +2177,7 @@ async def update_assignment_submission(
 
     # Check if course exists
     statement = select(Course).where(Course.id == assignment.course_id)
-    course = db_session.exec(statement).first()
+    course = (await db_session.execute(statement)).scalars().first()
 
     if not course:
         raise HTTPException(
@@ -2168,8 +2210,8 @@ async def update_assignment_submission(
 
     # Insert Assignment User Submission in DB
     db_session.add(assignment_user_submission)
-    db_session.commit()
-    db_session.refresh(assignment_user_submission)
+    await db_session.commit()
+    await db_session.refresh(assignment_user_submission)
 
     # return assignment user submission read
     return AssignmentUserSubmissionRead.model_validate(assignment_user_submission)
@@ -2177,15 +2219,15 @@ async def update_assignment_submission(
 
 async def delete_assignment_submission(
     request: Request,
-    user_id: str,
+    user_id: int,
     assignment_uuid: str,
     current_user: PublicUser | AnonymousUser | APITokenUser,
-    db_session: Session,
+    db_session: AsyncSession,
 ):
     _block_api_tokens(current_user)
     # Check if assignment exists
     statement = select(Assignment).where(Assignment.assignment_uuid == assignment_uuid)
-    assignment = db_session.exec(statement).first()
+    assignment = (await db_session.execute(statement)).scalars().first()
 
     if not assignment:
         raise HTTPException(
@@ -2198,7 +2240,7 @@ async def delete_assignment_submission(
         AssignmentUserSubmission.user_id == user_id,
         AssignmentUserSubmission.assignment_id == assignment.id,
     )
-    assignment_user_submission = db_session.exec(statement).first()
+    assignment_user_submission = (await db_session.execute(statement)).scalars().first()
 
     if not assignment_user_submission:
         raise HTTPException(
@@ -2208,7 +2250,7 @@ async def delete_assignment_submission(
 
     # Check if course exists
     statement = select(Course).where(Course.id == assignment.course_id)
-    course = db_session.exec(statement).first()
+    course = (await db_session.execute(statement)).scalars().first()
 
     if not course:
         raise HTTPException(
@@ -2227,9 +2269,9 @@ async def delete_assignment_submission(
     # from scratch.
     trailstep_statement = select(TrailStep).where(
         TrailStep.activity_id == assignment.activity_id,
-        TrailStep.user_id == int(user_id),
+        TrailStep.user_id == user_id,
     )
-    trailstep = db_session.exec(trailstep_statement).first()
+    trailstep = (await db_session.execute(trailstep_statement)).scalars().first()
     if trailstep:
         trailstep.complete = False
         trailstep.teacher_verified = False
@@ -2245,21 +2287,182 @@ async def delete_assignment_submission(
     cert_statement = select(Certifications).where(
         Certifications.course_id == course.id
     )
-    certification = db_session.exec(cert_statement).first()
+    certification = (await db_session.execute(cert_statement)).scalars().first()
     if certification:
         cert_user_statement = select(CertificateUser).where(
-            CertificateUser.user_id == int(user_id),
+            CertificateUser.user_id == user_id,
             CertificateUser.certification_id == certification.id,
         )
-        cert_user = db_session.exec(cert_user_statement).first()
+        cert_user = (await db_session.execute(cert_user_statement)).scalars().first()
         if cert_user:
-            db_session.delete(cert_user)
+            await db_session.delete(cert_user)
 
     # Delete Assignment User Submission (so the student can create a new one)
-    db_session.delete(assignment_user_submission)
-    db_session.commit()
+    await db_session.delete(assignment_user_submission)
+    await db_session.commit()
 
     return {"message": "Assignment User Submission deleted"}
+
+
+async def retry_assignment_submission(
+    request: Request,
+    assignment_uuid: str,
+    current_user: PublicUser | AnonymousUser | APITokenUser,
+    db_session: AsyncSession,
+):
+    """
+    Reset the current user's submission for ``assignment_uuid`` so they can
+    attempt it again. The teacher must have opted in via ``allow_retries``;
+    we additionally bound the number of retries with ``max_retries`` (0
+    means unlimited).
+
+    On retry we keep the AssignmentUserSubmission row in place so the
+    attempt counter survives. Everything else is wiped: per-task
+    submissions are deleted, the row is flipped to PENDING with grade=0,
+    the matching TrailStep is reset to incomplete, and any issued course
+    certificate is revoked. The student then re-fills the tasks and
+    submits again, at which point ``create_assignment_submission``
+    transitions the existing PENDING row to SUBMITTED.
+    """
+    _block_api_tokens(current_user)
+
+    statement = select(Assignment).where(Assignment.assignment_uuid == assignment_uuid)
+    assignment = (await db_session.execute(statement)).scalars().first()
+    if not assignment:
+        raise HTTPException(
+            status_code=404,
+            detail="Assignment not found",
+        )
+
+    if not assignment.allow_retries:
+        raise HTTPException(
+            status_code=403,
+            detail="Retries are not enabled for this assignment",
+        )
+
+    statement = select(Course).where(Course.id == assignment.course_id)
+    course = (await db_session.execute(statement)).scalars().first()
+    if not course:
+        raise HTTPException(
+            status_code=404,
+            detail="Course not found",
+        )
+
+    # Only READ permission is required: the student is rescheduling their
+    # own work, not editing the assignment configuration.
+    await check_resource_access(request, db_session, current_user, course.course_uuid, AccessAction.READ)
+
+    # Row-level lock on the user's submission so two concurrent retries can't
+    # both read attempt_number=N, pass the cap check, and increment to N+1 —
+    # which would let students sneak past max_retries on a double-click. The
+    # lock is released on commit/rollback at the end of the function.
+    # SQLite (used in tests) ignores FOR UPDATE and falls back to its own
+    # locking, which is single-writer anyway.
+    statement = (
+        select(AssignmentUserSubmission)
+        .where(
+            AssignmentUserSubmission.user_id == current_user.id,
+            AssignmentUserSubmission.assignment_id == assignment.id,
+        )
+        .with_for_update()
+    )
+    assignment_user_submission = (await db_session.execute(statement)).scalars().first()
+    if not assignment_user_submission:
+        raise HTTPException(
+            status_code=404,
+            detail="Assignment User Submission not found",
+        )
+
+    # Only graded submissions are eligible to be retried. Retrying a row
+    # that is still SUBMITTED would silently throw away the student's
+    # pending work before the teacher even sees it.
+    if assignment_user_submission.submission_status != AssignmentUserSubmissionStatus.GRADED:
+        raise HTTPException(
+            status_code=400,
+            detail="Only graded submissions can be retried",
+        )
+
+    # Enforce the attempt cap. max_retries=0 means unlimited; otherwise the
+    # current attempt_number must be strictly less than max_retries so the
+    # increment below stays within bounds.
+    current_attempt = int(assignment_user_submission.attempt_number or 1)
+    max_attempts = int(assignment.max_retries or 0)
+    if max_attempts and current_attempt >= max_attempts:
+        raise HTTPException(
+            status_code=403,
+            detail="No retry attempts remaining",
+        )
+
+    # Wipe per-task submissions so the student starts the next attempt with
+    # an empty slate. Without this the prior answers stay on screen and the
+    # auto-grader would just re-grade the existing work.
+    task_ids_statement = select(AssignmentTask.id).where(
+        AssignmentTask.assignment_id == assignment.id
+    )
+    task_ids = [tid for tid in (await db_session.execute(task_ids_statement)).scalars().all() if tid is not None]
+    if task_ids:
+        existing_submissions = (await db_session.execute(
+            select(AssignmentTaskSubmission).where(
+                AssignmentTaskSubmission.user_id == current_user.id,
+                AssignmentTaskSubmission.assignment_task_id.in_(task_ids),  # type: ignore[attr-defined]
+            )
+        )).scalars().all()
+        for ts in existing_submissions:
+            await db_session.delete(ts)
+
+    # Mark the activity incomplete again so the student's progress bar
+    # reflects the in-flight retry rather than the (now stale) previous
+    # completion.
+    trailstep_statement = select(TrailStep).where(
+        TrailStep.activity_id == assignment.activity_id,
+        TrailStep.user_id == int(current_user.id),
+    )
+    trailstep = (await db_session.execute(trailstep_statement)).scalars().first()
+    if trailstep:
+        trailstep.complete = False
+        trailstep.teacher_verified = False
+        trailstep.grade = ""
+        trailstep.update_date = str(datetime.now())
+        db_session.add(trailstep)
+
+    # Revoke any course certificate previously issued. If this assignment
+    # was the final activity, a new certificate will be re-issued once the
+    # retry attempt is graded and the course is again fully complete.
+    cert_statement = select(Certifications).where(
+        Certifications.course_id == course.id
+    )
+    certification = (await db_session.execute(cert_statement)).scalars().first()
+    if certification:
+        cert_user_statement = select(CertificateUser).where(
+            CertificateUser.user_id == int(current_user.id),
+            CertificateUser.certification_id == certification.id,
+        )
+        cert_user = (await db_session.execute(cert_user_statement)).scalars().first()
+        if cert_user:
+            await db_session.delete(cert_user)
+
+    # Reset the submission row in place. Keeping the same uuid means
+    # downstream consumers (analytics, webhooks) don't see a "new"
+    # submission appear; the attempt_number is the canonical signal that
+    # this is the next attempt.
+    assignment_user_submission.submission_status = AssignmentUserSubmissionStatus.PENDING
+    assignment_user_submission.grade = 0
+    assignment_user_submission.overall_feedback = None
+    assignment_user_submission.attempt_number = current_attempt + 1
+    assignment_user_submission.update_date = str(datetime.now())
+    db_session.add(assignment_user_submission)
+
+    await db_session.commit()
+    await db_session.refresh(assignment_user_submission)
+
+    return {
+        "message": "Assignment User Submission reset for retry",
+        "attempt_number": assignment_user_submission.attempt_number,
+        "max_retries": max_attempts,
+        "submission": AssignmentUserSubmissionRead.model_validate(
+            assignment_user_submission
+        ).model_dump(),
+    }
 
 
 ## > Assignments Submissions Grading
@@ -2270,7 +2473,7 @@ async def _apply_grade_and_finalize(
     course: Course,
     user_id: int,
     assignment_user_submission: AssignmentUserSubmission,
-    db_session: Session,
+    db_session: AsyncSession,
     overall_feedback: str | None = None,
     auto_graded: bool = False,
 ) -> dict:
@@ -2290,7 +2493,7 @@ async def _apply_grade_and_finalize(
     tasks_statement = select(AssignmentTask).where(
         AssignmentTask.assignment_id == assignment.id
     )
-    assignment_tasks = db_session.exec(tasks_statement).all()
+    assignment_tasks = (await db_session.execute(tasks_statement)).scalars().all()
     max_grade = 0
     for task in assignment_tasks:
         max_grade += int(task.max_grade_value or 0)
@@ -2301,10 +2504,10 @@ async def _apply_grade_and_finalize(
     task_submissions_by_task_id: dict = {}
     if task_ids:
         ts_statement = select(AssignmentTaskSubmission).where(
-            AssignmentTaskSubmission.user_id == int(user_id),
+            AssignmentTaskSubmission.user_id == user_id,
             AssignmentTaskSubmission.assignment_task_id.in_(task_ids),  # type: ignore[attr-defined]
         )
-        for ts in db_session.exec(ts_statement).all():
+        for ts in (await db_session.execute(ts_statement)).scalars().all():
             task_submissions_by_task_id[ts.assignment_task_id] = ts
 
     # Server-side re-verification for task types where we don't trust the
@@ -2351,14 +2554,14 @@ async def _apply_grade_and_finalize(
     assignment_user_submission.grade = computed["grade"]
     assignment_user_submission.submission_status = AssignmentUserSubmissionStatus.GRADED
     db_session.add(assignment_user_submission)
-    db_session.commit()
-    db_session.refresh(assignment_user_submission)
+    await db_session.commit()
+    await db_session.refresh(assignment_user_submission)
 
     await dispatch_webhooks(
         event_name="assignment_graded",
         org_id=course.org_id,
         data={
-            "user_id": int(user_id),
+            "user_id": user_id,
             "assignment_uuid": assignment.assignment_uuid,
             "course_uuid": course.course_uuid,
             "grade": computed["grade"],
@@ -2379,17 +2582,17 @@ async def _apply_grade_and_finalize(
 
 async def grade_assignment_submission(
     request: Request,
-    user_id: str,
+    user_id: int,
     assignment_uuid: str,
     current_user: PublicUser | AnonymousUser | APITokenUser,
-    db_session: Session,
+    db_session: AsyncSession,
     overall_feedback: str | None = None,
 ):
     _block_api_tokens(current_user)
     # SECURITY: This function should only be accessible by course owners or instructors
     # Check if assignment exists
     statement = select(Assignment).where(Assignment.assignment_uuid == assignment_uuid)
-    assignment = db_session.exec(statement).first()
+    assignment = (await db_session.execute(statement)).scalars().first()
 
     if not assignment:
         raise HTTPException(
@@ -2398,7 +2601,7 @@ async def grade_assignment_submission(
         )
 
     statement = select(Course).where(Course.id == assignment.course_id)
-    course = db_session.exec(statement).first()
+    course = (await db_session.execute(statement)).scalars().first()
 
     if not course:
         raise HTTPException(
@@ -2414,7 +2617,7 @@ async def grade_assignment_submission(
         AssignmentUserSubmission.user_id == user_id,
         AssignmentUserSubmission.assignment_id == assignment.id,
     )
-    assignment_user_submission = db_session.exec(statement).first()
+    assignment_user_submission = (await db_session.execute(statement)).scalars().first()
 
     if not assignment_user_submission:
         raise HTTPException(
@@ -2425,7 +2628,7 @@ async def grade_assignment_submission(
     computed = await _apply_grade_and_finalize(
         assignment=assignment,
         course=course,
-        user_id=int(user_id),
+        user_id=user_id,
         assignment_user_submission=assignment_user_submission,
         db_session=db_session,
         overall_feedback=overall_feedback,
@@ -2440,15 +2643,15 @@ async def grade_assignment_submission(
 
 async def get_grade_assignment_submission(
     request: Request,
-    user_id: str,
+    user_id: int,
     assignment_uuid: str,
     current_user: PublicUser | AnonymousUser | APITokenUser,
-    db_session: Session,
+    db_session: AsyncSession,
 ):
     _block_api_tokens(current_user)
     # Check if assignment exists
     statement = select(Assignment).where(Assignment.assignment_uuid == assignment_uuid)
-    assignment = db_session.exec(statement).first()
+    assignment = (await db_session.execute(statement)).scalars().first()
 
     if not assignment:
         raise HTTPException(
@@ -2458,7 +2661,7 @@ async def get_grade_assignment_submission(
 
     # Check if course exists
     statement = select(Course).where(Course.id == assignment.course_id)
-    course = db_session.exec(statement).first()
+    course = (await db_session.execute(statement)).scalars().first()
 
     if not course:
         raise HTTPException(
@@ -2484,7 +2687,7 @@ async def get_grade_assignment_submission(
         AssignmentUserSubmission.user_id == user_id,
         AssignmentUserSubmission.assignment_id == assignment.id,
     )
-    assignment_user_submission = db_session.exec(statement).first()
+    assignment_user_submission = (await db_session.execute(statement)).scalars().first()
 
     if not assignment_user_submission:
         raise HTTPException(
@@ -2498,7 +2701,7 @@ async def get_grade_assignment_submission(
     tasks_statement = select(AssignmentTask).where(
         AssignmentTask.assignment_id == assignment.id
     )
-    assignment_tasks = db_session.exec(tasks_statement).all()
+    assignment_tasks = (await db_session.execute(tasks_statement)).scalars().all()
     max_grade = 0
     for task in assignment_tasks:
         max_grade += int(task.max_grade_value or 0)
@@ -2510,10 +2713,10 @@ async def get_grade_assignment_submission(
     task_submissions_by_task_id: dict = {}
     if task_ids:
         ts_statement = select(AssignmentTaskSubmission).where(
-            AssignmentTaskSubmission.user_id == int(user_id),
+            AssignmentTaskSubmission.user_id == user_id,
             AssignmentTaskSubmission.assignment_task_id.in_(task_ids),  # type: ignore[attr-defined]
         )
-        for ts in db_session.exec(ts_statement).all():
+        for ts in (await db_session.execute(ts_statement)).scalars().all():
             task_submissions_by_task_id[ts.assignment_task_id] = ts
 
     grade_obj = compute_assignment_grade(
@@ -2532,16 +2735,16 @@ async def get_grade_assignment_submission(
 
 async def mark_activity_as_done_for_user(
     request: Request,
-    user_id: str,
+    user_id: int,
     assignment_uuid: str,
     current_user: PublicUser | AnonymousUser | APITokenUser,
-    db_session: Session,
+    db_session: AsyncSession,
 ):
     _block_api_tokens(current_user)
     # SECURITY: This function should only be accessible by course owners or instructors
     # Get Assignment
     statement = select(Assignment).where(Assignment.assignment_uuid == assignment_uuid)
-    assignment = db_session.exec(statement).first()
+    assignment = (await db_session.execute(statement)).scalars().first()
 
     if not assignment:
         raise HTTPException(
@@ -2551,10 +2754,10 @@ async def mark_activity_as_done_for_user(
 
     # Check if activity exists
     statement = select(Activity).where(Activity.id == assignment.activity_id)
-    activity = db_session.exec(statement).first()
+    activity = (await db_session.execute(statement)).scalars().first()
 
     statement = select(Course).where(Course.id == assignment.course_id)
-    course = db_session.exec(statement).first()
+    course = (await db_session.execute(statement)).scalars().first()
 
     if not course:
         raise HTTPException(
@@ -2573,7 +2776,7 @@ async def mark_activity_as_done_for_user(
 
     # Check if user exists
     statement = select(User).where(User.id == user_id)
-    user = db_session.exec(statement).first()
+    user = (await db_session.execute(statement)).scalars().first()
 
     if not user:
         raise HTTPException(
@@ -2586,7 +2789,7 @@ async def mark_activity_as_done_for_user(
         TrailStep.activity_id == activity.id,
         TrailStep.user_id == user_id,
     )
-    trailstep = db_session.exec(trailsteps).first()
+    trailstep = (await db_session.execute(trailsteps)).scalars().first()
 
     if not trailstep:
         raise HTTPException(
@@ -2600,13 +2803,13 @@ async def mark_activity_as_done_for_user(
 
     # Insert TrailStep in DB
     db_session.add(trailstep)
-    db_session.commit()
-    db_session.refresh(trailstep)
+    await db_session.commit()
+    await db_session.refresh(trailstep)
 
     # Check if all activities in the course are completed and create certificate if so
     if course and course.id:
         await check_course_completion_and_create_certificate(
-            request, int(user_id), course.id, db_session
+            request, user_id, course.id, db_session
         )
 
     # return OK
@@ -2617,12 +2820,12 @@ async def get_assignments_from_course(
     request: Request,
     course_uuid: str,
     current_user: PublicUser | AnonymousUser | APITokenUser,
-    db_session: Session,
+    db_session: AsyncSession,
 ):
     _block_api_tokens(current_user)
     # Find course
     statement = select(Course).where(Course.course_uuid == course_uuid)
-    course = db_session.exec(statement).first()
+    course = (await db_session.execute(statement)).scalars().first()
 
     if not course:
         raise HTTPException(
@@ -2632,7 +2835,7 @@ async def get_assignments_from_course(
 
     # Get Assignments
     statement = select(Assignment).where(Assignment.course_id == course.id)
-    assignments = db_session.exec(statement).all()
+    assignments = (await db_session.execute(statement)).scalars().all()
 
     # RBAC check
     await check_resource_access(request, db_session, current_user, course.course_uuid, AccessAction.READ)

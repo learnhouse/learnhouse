@@ -116,6 +116,22 @@
         "sso": {
           "description": "싱글 사인온(SSO)은 Enterprise 플랜의 조직에서만 사용할 수 있는 프리미엄 기능입니다. 조직의 ID 제공자를 통한 보안 인증을 활성화하려면 업그레이드하세요.",
           "title": "Enterprise 기능"
+        },
+        "boards": {
+          "title": "Standard Feature",
+          "description": "Boards is a premium feature available only to organizations on our Standard plan or higher. Upgrade to unlock collaborative boards for real-time brainstorming and planning."
+        },
+        "playgrounds": {
+          "title": "Standard Feature",
+          "description": "Playgrounds is a premium feature available only to organizations on our Standard plan or higher. Upgrade to create interactive AI-generated experiences for your learners."
+        },
+        "scorm": {
+          "title": "Enterprise Feature",
+          "description": "SCORM support is a premium feature available only to organizations on our Enterprise plan. Upgrade to import and deliver SCORM packages alongside your courses."
+        },
+        "webhooks": {
+          "title": "Pro Feature",
+          "description": "Automations is a premium feature available only to organizations on our Pro plan or higher. Upgrade to wire your courses up to webhooks and external integrations."
         }
       },
       "current_plan": "현재 플랜",
@@ -132,7 +148,8 @@
           "podcasts": "팟캐스트",
           "payments": "결제",
           "trail": "진행 상황 추적",
-          "boards": "보드"
+          "boards": "보드",
+          "playgrounds": "Playgrounds"
         },
         "public": {
           "title": "{{feature}} 사용 불가",
@@ -181,7 +198,13 @@
     "boards": "보드",
     "close": "닫기",
     "optional": "선택사항",
-    "playgrounds": "플레이그라운드"
+    "playgrounds": "플레이그라운드",
+    "analytics": "분석",
+    "add": "추가",
+    "choose_an_organization_to_continue": "계속하려면 조직을 선택하세요",
+    "for": "대상",
+    "powered_by": "제공",
+    "results": "결과"
   },
   "banner": {
     "viewing_as_guest": "{{name}}을(를) 게스트로 보고 있습니다.",
@@ -302,7 +325,9 @@
       "try_again": "다시 시도"
     },
     "sso_error": "SSO 인증에 실패했습니다. 다시 시도해 주세요.",
-    "try_again_in": "{{minutes}}분 후에 다시 시도해 주세요"
+    "try_again_in": "{{minutes}}분 후에 다시 시도해 주세요",
+    "error_generic": "문제가 발생했습니다. 다시 시도해 주세요.",
+    "sign_in": "로그인"
   },
   "verify_email": {
     "title": "이메일 인증",
@@ -595,14 +620,16 @@
       "from_existing_description": "다른 플랫폼에서 파일을 업로드하고 코스로 구성"
     },
     "usergroup_filter": {
-      "all_courses": "All Courses",
-      "filter_by_group": "Filter by group",
-      "info_title": "User Group Filter",
-      "info_description": "Filter courses by user group to see only courses assigned to a specific group. Useful for families or teams sharing the same organization."
+      "all_courses": "모든 코스",
+      "filter_by_group": "그룹별 필터",
+      "info_title": "사용자 그룹 필터",
+      "info_description": "사용자 그룹별로 코스를 필터링하여 특정 그룹에 할당된 코스만 표시합니다. 동일한 조직을 공유하는 가족이나 팀에 유용합니다."
     },
     "copied": "복사됨!",
     "quit_course_confirm": "이 코스를 그만두시겠습니까? 모든 진행 상황이 사라집니다.",
-    "quit_course_title": "코스를 그만두시겠습니까?"
+    "quit_course_title": "코스를 그만두시겠습니까?",
+    "courses_load_error": "코스를 불러오지 못했습니다. 다시 시도해 주세요.",
+    "view_all_courses": "모든 코스 보기"
   },
   "communities": {
     "title": "커뮤니티",
@@ -650,7 +677,8 @@
       "clear_search": "검색 지우기",
       "no_discussions": "아직 토론이 없습니다",
       "no_discussions_description": "이 커뮤니티에서 첫 번째 토론을 시작해 보세요!",
-      "start_discussion": "토론 시작"
+      "start_discussion": "토론 시작",
+      "delete_failed": "토론 삭제에 실패했습니다"
     },
     "discussion_detail": {
       "edit": "수정",
@@ -658,7 +686,8 @@
       "delete_title": "토론을 삭제하시겠습니까?",
       "delete_confirm": "이 토론을 삭제하시겠습니까? 이 작업은 취소할 수 없습니다.",
       "delete_button": "토론 삭제",
-      "no_details": "추가 세부 정보가 없습니다."
+      "no_details": "추가 세부 정보가 없습니다.",
+      "delete_failed": "토론 삭제에 실패했습니다"
     },
     "discussion_card": {
       "pin_discussion": "토론 고정",
@@ -668,7 +697,10 @@
       "delete_discussion": "토론 삭제",
       "delete_title": "토론을 삭제하시겠습니까?",
       "delete_confirm": "이 토론을 삭제하시겠습니까? 이 작업은 취소할 수 없습니다.",
-      "votes": "표"
+      "votes": "표",
+      "delete_failed": "토론 삭제에 실패했습니다",
+      "lock_failed": "잠금 상태 업데이트에 실패했습니다",
+      "pin_failed": "고정 상태 업데이트에 실패했습니다"
     },
     "comments": {
       "no_replies": "아직 답글이 없습니다",
@@ -684,7 +716,8 @@
       "cancel": "취소",
       "failed_to_post": "답글 게시에 실패했습니다. 다시 시도해 주세요.",
       "content_not_allowed": "답글에 허용되지 않는 콘텐츠가 포함되어 있습니다.",
-      "failed_to_update": "업데이트에 실패했습니다. 다시 시도해 주세요."
+      "failed_to_update": "업데이트에 실패했습니다. 다시 시도해 주세요.",
+      "failed_to_delete": "댓글 삭제에 실패했습니다"
     },
     "label_filter": {
       "label": "라벨:",
@@ -895,7 +928,7 @@
     "quiz": "퀴즈",
     "file_submission": "파일 제출",
     "form": "폼",
-    "code": "Code",
+    "code": "코드",
     "interactive": "인터랙티브",
     "activities": "활동",
     "current_activity": "현재 활동",
@@ -954,13 +987,20 @@
     "points": "점수",
     "current_points": "현재 점수: {{points}}",
     "grade": "성적",
-    "run_autograde": "Run Auto-grade",
+    "run_autograde": "자동 채점 실행",
     "due_date": "제출 기한",
     "task_breakdown": "과제별 내역",
     "no_grade_details": "아직 성적 세부 정보가 없습니다.",
     "task_passed": "통과",
     "task_not_passed": "미통과",
-    "score": "점수"
+    "score": "점수",
+    "form": {
+      "expected_answer": "예상 답변"
+    },
+    "quiz": {
+      "correct_answer": "정답",
+      "incorrect_answer": "오답"
+    }
   },
   "certificate": {
     "certificate": "수료증",
@@ -1047,7 +1087,8 @@
     "subscription": "구독",
     "benefits": "혜택:",
     "min_price": "최저 가격:",
-    "choose_price": "가격 선택"
+    "choose_price": "가격 선택",
+    "stripe_denied": "Stripe 연결이 취소되었습니다."
   },
   "account": {
     "title": "계정",
@@ -1276,7 +1317,8 @@
           "loading_error": "프로필 데이터 로드 실패",
           "save_success": "프로필이 성공적으로 업데이트되었습니다",
           "save_error": "프로필 업데이트 중 오류 발생"
-        }
+        },
+        "unknown_section": "알 수 없는 섹션"
       }
     },
     "sign_out": "로그아웃",
@@ -2025,7 +2067,8 @@
             "create_success": "활동이 성공적으로 생성되었습니다",
             "uploading": "파일 업로드 및 활동 생성 중...",
             "upload_success": "파일이 성공적으로 업로드되었습니다",
-            "creating_uploading": "활동 생성 및 파일 업로드 중..."
+            "creating_uploading": "활동 생성 및 파일 업로드 중...",
+            "update_error": "활동 업데이트에 실패했습니다"
           },
           "versioning": {
             "version_history": "버전 기록",
@@ -2069,6 +2112,9 @@
               "remote_detected": "원격 변경 사항 감지됨",
               "editing_notice": "{{author}}이(가) 편집 중 변경했습니다"
             }
+          },
+          "descriptions": {
+            "scorm": "SCORM 호환 학습 패키지"
           }
         }
       },
@@ -2156,7 +2202,9 @@
           "other": "기타",
           "domains": "도메인",
           "sso": "SSO",
-          "usage": "사용량"
+          "usage": "사용량",
+          "seo": "SEO",
+          "automations": "자동화"
         },
         "pages": {
           "general": {
@@ -2218,9 +2266,12 @@
         "footer_text": "푸터 텍스트",
         "footer_text_placeholder": "푸터 텍스트 입력...",
         "footer_text_desc": "조직 페이지 하단에 표시되는 사용자 지정 텍스트",
+        "default_language": "기본 언어",
+        "default_language_desc": "새 방문자에게 기본으로 표시되는 언어이며, 이 조직을 대신해 발송되는 이메일에 사용되는 언어입니다. 구성원은 자신의 UI 언어를 계속 전환할 수 있습니다.",
         "watermark_desc": "조직 페이지에 LearnHouse 브랜드 워터마크 표시",
         "watermark_free_plan": "무료 플랜에서는 워터마크가 항상 표시됩니다",
-        "watermark_label": "\"Made with LearnHouse\" 워터마크"
+        "watermark_label": "\"Made with LearnHouse\" 워터마크",
+        "watermark_ee": "Enterprise Edition 라이선스에 의해 숨겨짐"
       },
       "images": {
         "title": "이미지 및 미리보기",
@@ -3102,6 +3153,34 @@
             "toasts": {
               "success": "역할이 성공적으로 저장되었습니다",
               "error": "역할 저장 중 오류가 발생했습니다. 나중에 다시 시도해 주세요."
+            },
+            "permissions": {
+              "actions": {
+                "access": "액세스",
+                "create": "생성",
+                "delete": "삭제",
+                "delete_own": "자신의 것 삭제",
+                "read": "읽기",
+                "read_own": "자신의 것 읽기",
+                "update": "업데이트",
+                "update_own": "자신의 것 업데이트"
+              },
+              "deselect": "해제",
+              "deselect_all": "전체 선택 해제",
+              "sections": {
+                "activities": "활동",
+                "collections": "컬렉션",
+                "coursechapters": "코스 장",
+                "courses": "코스",
+                "dashboard": "대시보드",
+                "organizations": "조직",
+                "roles": "역할",
+                "usergroups": "사용자 그룹",
+                "users": "사용자"
+              },
+              "select": "선택",
+              "select_all": "전체 선택",
+              "title": "권한"
             }
           },
           "delete": {
@@ -3220,8 +3299,8 @@
             "description": "학생들을 위한 빈칸 채우기 양식"
           },
           "code": {
-            "title": "Code",
-            "description": "Code challenge with automated test case grading"
+            "title": "코드",
+            "description": "자동화된 테스트 케이스 채점이 포함된 코딩 문제"
           },
           "short_answer": {
             "title": "단답형",
@@ -3338,14 +3417,14 @@
           "reject": "과제 반려",
           "set_final_grade": "최종 성적 설정",
           "mark_as_done": "사용자의 활동을 완료로 표시",
-          "finalize": "Finalize & Complete",
+          "finalize": "최종 확정 및 완료",
           "reject_description": "제출물을 삭제하고 학생이 다시 제출할 수 있게 합니다",
           "set_final_grade_description": "활동을 완료하지 않고 성적을 계산하고 저장합니다",
           "finalize_description": "최종 성적을 설정하고 학생의 활동을 완료로 표시합니다"
         },
         "toasts": {
           "reject_success": "과제가 성공적으로 반려되었습니다",
-          "finalize_success": "Assignment graded and activity marked as complete"
+          "finalize_success": "과제가 채점되고 활동이 완료로 표시되었습니다"
         },
         "filters": {
           "all": "전체"
@@ -3469,7 +3548,9 @@
             "anti_copy_paste_description": "붙여넣기 이벤트를 차단하여 AI 생성 답변 붙여넣기를 억제합니다. 참고: 이것은 억제책입니다.",
             "auto_grading_disabled_file": "자동 채점을 사용할 수 없습니다 — 이 과제에는 사람의 검토가 필요한 파일 제출 과제가 있습니다.",
             "grading_type_hint": "학생에게 성적이 표시되는 방식",
-            "grading_options_hint": "제출 시 동작"
+            "grading_options_hint": "제출 시 동작",
+            "show_correct_answers_description": "제출물이 채점되면 학생에게 자신의 답변과 함께 정답을 표시합니다. 어떤 퀴즈 선택지가 정답이었는지, 예상되는 단답형 또는 숫자 답변, 그리고 양식 빈칸의 정답이 표시됩니다.",
+            "show_correct_answers_label": "채점 후 정답 공개"
           },
           "toasts": {
             "updating": "과제 업데이트 중...",
@@ -3509,12 +3590,184 @@
             "anti_copy_paste_label": "복사 및 붙여넣기 차단",
             "anti_copy_paste_description": "붙여넣기 이벤트를 차단하여 AI 생성 답변 붙여넣기를 억제합니다. 참고: 이것은 억제책입니다.",
             "grading_type_hint": "학생에게 성적이 표시되는 방식",
-            "grading_options_hint": "제출 시 동작"
+            "grading_options_hint": "제출 시 동작",
+            "show_correct_answers_description": "채점이 완료되면 학생들은 자신의 답변 옆에서 정답을 확인할 수 있습니다.",
+            "show_correct_answers_label": "채점 후 정답 공개"
           },
           "toasts": {
             "creating": "과제 생성 중...",
             "success": "과제가 성공적으로 생성되었습니다"
           }
+        }
+      }
+    },
+    "search": {
+      "trigger": "검색",
+      "placeholder": "페이지 및 콘텐츠 검색…",
+      "shortcut_hint": "⌘K",
+      "no_results": "결과를 찾을 수 없습니다",
+      "loading": "검색 중…",
+      "type_to_search": "콘텐츠를 검색하려면 2자 이상 입력하세요",
+      "groups": {
+        "pages": "페이지",
+        "courses": "강좌",
+        "collections": "컬렉션",
+        "users": "사용자",
+        "communities": "커뮤니티",
+        "discussions": "토론",
+        "playgrounds": "플레이그라운드",
+        "podcasts": "팟캐스트"
+      },
+      "entries": {
+        "home": {
+          "description": "대시보드 개요",
+          "keywords": "홈, 개요, 시작, 대시보드"
+        },
+        "courses": {
+          "description": "강좌 관리",
+          "keywords": "강좌, 수업, 학습, 교육, 클래스"
+        },
+        "assignments": {
+          "description": "과제 관리",
+          "keywords": "작업, 숙제, 연습, 제출"
+        },
+        "communities": {
+          "description": "커뮤니티 관리",
+          "keywords": "포럼, 토론, 회원, 게시물"
+        },
+        "podcasts": {
+          "description": "팟캐스트 관리",
+          "keywords": "오디오, 에피소드, 프로그램"
+        },
+        "boards": {
+          "description": "보드 관리",
+          "keywords": "칸반, 프로젝트, 작업, 목록"
+        },
+        "playgrounds": {
+          "description": "코드 플레이그라운드",
+          "keywords": "코드, 샌드박스, repl, 프로그래밍"
+        },
+        "analytics": {
+          "description": "분석 대시보드 보기",
+          "keywords": "통계, 메트릭, 차트, 보고서"
+        },
+        "users": {
+          "description": "조직 사용자 관리",
+          "keywords": "회원, 계정, 사람"
+        },
+        "usergroups": {
+          "description": "사용자 그룹 관리",
+          "keywords": "팀, 코호트, 그룹"
+        },
+        "roles": {
+          "description": "역할 및 권한 관리",
+          "keywords": "권한, 접근, rbac, 보안"
+        },
+        "signups": {
+          "description": "가입 검토",
+          "keywords": "등록, 신청, 요청"
+        },
+        "org_general": {
+          "description": "조직 일반 설정",
+          "keywords": "이름, 브랜딩, slug, 프로필"
+        },
+        "org_features": {
+          "description": "조직 기능 관리",
+          "keywords": "기능, 모듈, 토글"
+        },
+        "org_billing": {
+          "description": "결제 및 구독",
+          "keywords": "플랜, 결제, 청구서, 구독"
+        },
+        "payments_overview": {
+          "description": "결제 개요 및 수익",
+          "keywords": "stripe, 대시보드, 수익, 판매",
+          "title": "결제 개요"
+        },
+        "payments_products": {
+          "description": "결제 상품 및 가격",
+          "keywords": "상품, 가격, stripe, 등급, 플랜",
+          "title": "상품"
+        },
+        "users_add": {
+          "description": "새 회원 초대",
+          "keywords": "초대, 추가, 회원, 보내기"
+        },
+        "users_audit_logs": {
+          "description": "조직 활동 로그",
+          "keywords": "감사, 로그, 기록, 보안, 활동"
+        },
+        "org_branding": {
+          "description": "로고, 색상 및 시각적 정체성",
+          "keywords": "브랜딩, 로고, 색상, 테마"
+        },
+        "org_landing": {
+          "description": "랜딩 페이지 사용자 정의",
+          "keywords": "랜딩, 홈페이지, hero, 페이지"
+        },
+        "org_seo": {
+          "description": "검색 엔진 최적화",
+          "keywords": "seo, 검색, 메타, 순위, google"
+        },
+        "org_ai": {
+          "description": "AI 기능 및 구성",
+          "keywords": "ai, llm, gpt, openai, 생성"
+        },
+        "org_domains": {
+          "description": "사용자 정의 도메인",
+          "keywords": "도메인, dns, 사용자 정의, 하위 도메인, cname"
+        },
+        "org_automations": {
+          "description": "웹훅 및 외부 통합",
+          "keywords": "웹훅, 자동화, zapier, 통합, 트리거"
+        },
+        "org_api": {
+          "description": "API 토큰 및 프로그래밍 액세스",
+          "keywords": "api, 토큰, 액세스, 프로그래밍, 키"
+        },
+        "org_sso": {
+          "description": "싱글 사인온 구성",
+          "keywords": "sso, saml, oauth, 엔터프라이즈, 로그인"
+        },
+        "org_other": {
+          "description": "기타 조직 설정",
+          "keywords": "기타, 고급, 사용자 정의, 추가"
+        },
+        "payments_groups": {
+          "description": "결제 그룹 및 번들",
+          "keywords": "그룹, 번들, 세트",
+          "title": "결제 그룹"
+        },
+        "payments_configuration": {
+          "description": "Stripe 및 결제 구성",
+          "keywords": "구성, 설정, stripe, 셋업, connect",
+          "title": "구성"
+        },
+        "payments_customers": {
+          "description": "고객 및 구독자",
+          "keywords": "고객, 구독자, 구매자, 지불됨",
+          "title": "고객"
+        },
+        "courses_migrate": {
+          "description": "다른 LMS에서 강좌 가져오기",
+          "keywords": "가져오기, 마이그레이션, 전송, lms, moodle, canvas",
+          "title": "강좌 마이그레이션"
+        },
+        "account_general": {
+          "description": "개인 계정 일반 설정",
+          "keywords": "계정, 설정, 이메일, 이름, 언어"
+        },
+        "account_profile": {
+          "description": "프로필 및 소개 편집",
+          "keywords": "프로필, 소개, 아바타, 사진, 공개"
+        },
+        "account_security": {
+          "description": "비밀번호 및 보안 설정",
+          "keywords": "비밀번호, 보안, 2fa, mfa, 세션"
+        },
+        "account_purchases": {
+          "description": "내 구매 및 구독",
+          "keywords": "구매, 구독, 결제, 기록, 영수증"
         }
       }
     }
@@ -3675,13 +3928,13 @@
         "edit_embed": "임베드 편집",
         "add_embed_from": "에서 임베드 추가",
         "click_service": "서비스 선택",
-        "add_embed": "임베드 추가",
+        "add_embed": "{{name}} 임베드 추가",
         "add_embed_url": "URL에서 임베드 추가",
         "add_embed_code": "코드에서 임베드 추가",
-        "paste_url": "URL 붙여넣기",
+        "paste_url": "{{name}} 임베드 URL 붙여넣기",
         "paste_any_url": "아무 URL이나 붙여넣기",
         "paste_directly": "직접 붙여넣기",
-        "how_to_embed": "임베드 방법",
+        "how_to_embed": "{{name}} 임베드 방법",
         "paste_code": "코드 붙여넣기",
         "paste_iframe": "iframe 코드 붙여넣기"
       },
@@ -3805,8 +4058,8 @@
       "advanced": "고급"
     },
     "not_configured": {
-      "title": "Analytics not configured",
-      "description": "Analytics requires a Tinybird connection. Set the <code>LEARNHOUSE_TINYBIRD_INGEST_TOKEN</code> and <code>LEARNHOUSE_TINYBIRD_READ_TOKEN</code> environment variables to enable it."
+      "title": "분석이 구성되지 않았습니다",
+      "description": "분석 기능을 사용하려면 Tinybird 연결이 필요합니다. 활성화하려면 <code>LEARNHOUSE_TINYBIRD_INGEST_TOKEN</code> 및 <code>LEARNHOUSE_TINYBIRD_READ_TOKEN</code> 환경 변수를 설정하세요."
     },
     "advanced_gate": {
       "requires": "필요",
@@ -3815,152 +4068,152 @@
     "common": {
       "loading": "로딩 중...",
       "no_data": "아직 데이터가 없습니다",
-      "users": "Users",
-      "views": "Views",
-      "enrollments": "Enrollments",
-      "completions": "Completions",
-      "course": "Course",
-      "date": "Date",
-      "user": "User",
-      "type": "Type",
-      "expand": "Expand",
-      "days": "Days",
-      "score": "Score",
-      "unique_users": "unique users"
+      "users": "사용자",
+      "views": "조회수",
+      "enrollments": "등록",
+      "completions": "완료",
+      "course": "코스",
+      "date": "날짜",
+      "user": "사용자",
+      "type": "유형",
+      "expand": "확장",
+      "days": "일",
+      "score": "점수",
+      "unique_users": "고유 사용자"
     },
     "overview": {
-      "live_now": "Live Now",
-      "last_5_minutes": "Last 5 minutes",
-      "signups": "Signups",
-      "submissions": "Submissions",
-      "daily_active_users": "Daily Active Users",
-      "active_users": "Active Users",
-      "countries": "Countries",
-      "top_countries": "Top Countries",
-      "devices": "Devices",
-      "desktop": "Desktop",
-      "mobile": "Mobile",
-      "tablet": "Tablet",
-      "top_referrers": "Top Referrers",
-      "top_referrer": "Top Referrer",
-      "enrollment_funnel": "Enrollment Funnel",
-      "page_views": "Page Views",
-      "course_views": "Course Views",
-      "view_to_enroll": "View → Enroll",
-      "enroll_to_complete": "Enroll → Complete",
-      "page_to_complete": "Page → Complete",
-      "conv_rate": "Conv. Rate",
-      "top_courses": "Top Courses",
-      "activity_engagement": "Activity Engagement",
-      "activity": "Activity",
-      "avg_time": "Avg Time",
-      "activities": "Activities",
-      "courses": "Courses",
+      "live_now": "실시간",
+      "last_5_minutes": "최근 5분",
+      "signups": "가입",
+      "submissions": "제출",
+      "daily_active_users": "일일 활성 사용자",
+      "active_users": "활성 사용자",
+      "countries": "국가",
+      "top_countries": "상위 국가",
+      "devices": "기기",
+      "desktop": "데스크톱",
+      "mobile": "모바일",
+      "tablet": "태블릿",
+      "top_referrers": "상위 추천 출처",
+      "top_referrer": "최상위 추천 출처",
+      "enrollment_funnel": "등록 퍼널",
+      "page_views": "페이지 조회수",
+      "course_views": "코스 조회수",
+      "view_to_enroll": "조회 → 등록",
+      "enroll_to_complete": "등록 → 완료",
+      "page_to_complete": "페이지 → 완료",
+      "conv_rate": "전환율",
+      "top_courses": "상위 코스",
+      "activity_engagement": "활동 참여도",
+      "activity": "활동",
+      "avg_time": "평균 시간",
+      "activities": "활동",
+      "courses": "코스",
       "enrollments": "등록",
       "completions": "완료"
     },
     "modals": {
       "live_users": {
-        "title": "Live Users",
-        "description": "Users active in the last 5 minutes"
+        "title": "실시간 사용자",
+        "description": "최근 5분간 활성 사용자"
       },
       "signups": {
-        "title": "Signups",
-        "description": "New user registrations in the last {{days}} days"
+        "title": "가입",
+        "description": "최근 {{days}}일간 신규 사용자 등록"
       },
       "enrollments": {
-        "title": "Enrollments",
-        "description": "Course enrollments in the last {{days}} days"
+        "title": "등록",
+        "description": "최근 {{days}}일간 코스 등록"
       },
       "completions": {
-        "title": "Completions",
-        "description": "Course completions in the last {{days}} days"
+        "title": "완료",
+        "description": "최근 {{days}}일간 코스 완료"
       },
       "live_users_table": {
-        "current_page": "Current Page",
-        "device": "Device",
-        "country": "Country",
-        "last_seen": "Last Seen"
+        "current_page": "현재 페이지",
+        "device": "기기",
+        "country": "국가",
+        "last_seen": "마지막 접속"
       },
       "signups_table": {
-        "email": "Email",
-        "method": "Method"
+        "email": "이메일",
+        "method": "방법"
       }
     },
     "advanced_widgets": {
       "org_growth_trend": {
-        "title": "Org Growth Trend",
-        "description": "Weekly signups, enrollments, completions"
+        "title": "조직 성장 추이",
+        "description": "주간 가입, 등록, 완료"
       },
       "new_vs_returning": {
-        "title": "New vs Returning Users",
-        "description": "Growth vs retention health"
+        "title": "신규 대 재방문 사용자",
+        "description": "성장 대 유지율 상태"
       },
       "cohort_retention": {
-        "title": "Cohort Retention",
-        "description": "% users active after signup week",
-        "cohort": "Cohort",
-        "size": "Size"
+        "title": "코호트 유지율",
+        "description": "가입 주 이후 활성 사용자 비율(%)",
+        "cohort": "코호트",
+        "size": "규모"
       },
       "peak_usage": {
-        "title": "Peak Usage Hours",
-        "description": "Event volume by day and hour",
+        "title": "피크 사용 시간",
+        "description": "요일 및 시간대별 이벤트 수",
         "days": {
-          "mon": "Mon",
-          "tue": "Tue",
-          "wed": "Wed",
-          "thu": "Thu",
-          "fri": "Fri",
-          "sat": "Sat",
-          "sun": "Sun"
+          "mon": "월",
+          "tue": "화",
+          "wed": "수",
+          "thu": "목",
+          "fri": "금",
+          "sat": "토",
+          "sun": "일"
         },
-        "events": "events"
+        "events": "이벤트"
       },
       "course_dropoff": {
-        "title": "Course Dropoff",
-        "description": "Where users stop per course"
+        "title": "코스 이탈",
+        "description": "코스별 사용자 이탈 지점"
       },
       "time_to_completion": {
-        "title": "Time to Completion",
-        "description": "Median days to complete each course"
+        "title": "완료까지 소요 시간",
+        "description": "각 코스 완료까지의 중앙값(일)"
       },
       "completion_velocity": {
-        "title": "Completion Velocity",
-        "description": "Avg days between activity completions"
+        "title": "완료 속도",
+        "description": "활동 완료 간 평균 일수"
       },
       "content_type_effectiveness": {
-        "title": "Content Type Effectiveness",
-        "description": "Completion rate by activity type"
+        "title": "콘텐츠 유형 효과",
+        "description": "활동 유형별 완료율"
       },
       "course_effectiveness_matrix": {
-        "title": "Course Effectiveness Matrix",
-        "description": "Activity count vs completion rate (sized by enrollments)"
+        "title": "코스 효과 매트릭스",
+        "description": "활동 수 대 완료율 (등록 수에 따라 크기 조정)"
       },
       "community_correlation": {
-        "title": "Community Correlation",
-        "description": "Completion rate: discussors vs non-discussors",
-        "discussion_users": "Discussion Users",
-        "non_discussion_users": "Non-Discussion Users"
+        "title": "커뮤니티 상관관계",
+        "description": "완료율: 토론 참여자 대 비참여자",
+        "discussion_users": "토론 참여 사용자",
+        "non_discussion_users": "토론 비참여 사용자"
       },
       "learner_engagement_score": {
-        "title": "Learner Engagement Score",
-        "description": "Top learners by composite engagement",
-        "user_id": "User ID"
+        "title": "학습자 참여도 점수",
+        "description": "종합 참여도 기준 상위 학습자",
+        "user_id": "사용자 ID"
       },
       "user_progress_snapshot": {
-        "title": "User Progress Snapshot",
-        "description": "Users at each completion bracket per course"
+        "title": "사용자 진행 상황 스냅샷",
+        "description": "코스별 완료 구간에 있는 사용자"
       },
       "grade_distribution": {
-        "title": "Grade Distribution",
-        "description": "Assignment grade histogram"
+        "title": "성적 분포",
+        "description": "과제 성적 히스토그램"
       },
       "search_effectiveness": {
-        "title": "Search Effectiveness",
-        "description": "Top queries and zero-result rate",
-        "query": "Query",
-        "searches": "Searches",
-        "zero_results": "Zero Results %"
+        "title": "검색 효과",
+        "description": "상위 검색어 및 결과 없음 비율",
+        "query": "검색어",
+        "searches": "검색 수",
+        "zero_results": "결과 없음 %"
       },
       "certification_rate": {
         "title": "인증률",
@@ -4418,7 +4671,8 @@
       "search_placeholder": "이름 또는 이메일로 검색...",
       "title": "멤버",
       "user": "사용자",
-      "viewer": "뷰어"
+      "viewer": "뷰어",
+      "all_groups": "모든 그룹"
     },
     "name": "이름",
     "name_placeholder": "예: 프로젝트 기획",
@@ -4430,7 +4684,8 @@
       "delete": "삭제",
       "delete_multiple": "{{count}}개 항목 삭제",
       "move_back": "뒤로 이동",
-      "move_forward": "앞으로 이동"
+      "move_forward": "앞으로 이동",
+      "duplicate": "복제"
     },
     "open_board": "보드 열기",
     "pagination": {
@@ -4533,7 +4788,9 @@
     "zoom": {
       "zoom_in": "확대",
       "zoom_out": "축소"
-    }
+    },
+    "no_boards": "아직 보드가 없습니다",
+    "no_search_results": "보드를 찾을 수 없습니다"
   },
   "embed": {
     "not_supported_description": "이 유형의 활동은 인증이 필요하며 임베드할 수 없습니다.",
@@ -4599,7 +4856,9 @@
           "ai": "1,000 AI 크레딧",
           "ai_desc": "AI 글쓰기 도구로 콘텐츠 제작을 가속화하세요.",
           "analytics": "학습자 분석",
-          "analytics_desc": "진행 상황과 참여도를 추적하여 코스를 개선하세요."
+          "analytics_desc": "진행 상황과 참여도를 추적하여 코스를 개선하세요.",
+          "playgrounds": "인터랙티브 플레이그라운드",
+          "playgrounds_desc": "학습자가 실습형 인터랙티브 연습으로 실험하고 연습할 수 있게 합니다."
         }
       },
       "pro": {
@@ -4616,8 +4875,6 @@
           "custom_domain_desc": "브랜드 아카데미를 위해 자체 도메인을 사용하세요.",
           "roles": "맞춤 역할 및 권한",
           "roles_desc": "조직에서 누가 무엇을 할 수 있는지 정확하게 제어하세요.",
-          "playgrounds": "인터랙티브 플레이그라운드",
-          "playgrounds_desc": "학습자가 실습형 인터랙티브 연습으로 실험하고 연습할 수 있게 합니다.",
           "api": "API 액세스 및 Webhooks",
           "api_desc": "기존 도구와 통합하고 워크플로를 자동화하세요."
         }
@@ -4653,6 +4910,15 @@
       "usergroups_add_a_group": "그룹 추가",
       "toast_add_error": "그룹을 추가할 수 없습니다",
       "toast_remove_error": "그룹을 제거할 수 없습니다"
-    }
+    },
+    "accessDenied": "이 코스에 액세스할 수 없습니다",
+    "backToCourses": "코스 목록으로 돌아가기",
+    "loadError": "이 코스를 찾을 수 없거나 로드하는 중 오류가 발생했습니다.",
+    "noPermission": "이 코스를 볼 수 있는 권한이 없습니다."
+  },
+  "pagination": {
+    "next": "다음",
+    "previous": "이전",
+    "showing_page": "{{total}}페이지 중 {{current}}페이지 표시"
   }
 }

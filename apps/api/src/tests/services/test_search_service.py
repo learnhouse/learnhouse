@@ -17,9 +17,14 @@ from src.db.courses.courses import Course
 from src.db.collections_courses import CollectionCourse
 from src.db.playgrounds import Playground, PlaygroundAccessType
 from src.services.search.search import SearchResult, _escape_like_wildcards, search_across_org
+from src.services.search.normalization import (
+    build_like_pattern,
+    escape_like_wildcards,
+    normalize_search_term,
+)
 
 
-def _make_course(db, org, *, id, name="Extra Course", course_uuid=None,
+async def _make_course(db, org, *, id, name="Extra Course", course_uuid=None,
                  public=True, published=True):
     """Helper to insert an additional course."""
     c = Course(
@@ -35,12 +40,12 @@ def _make_course(db, org, *, id, name="Extra Course", course_uuid=None,
         update_date=str(datetime.now()),
     )
     db.add(c)
-    db.commit()
-    db.refresh(c)
+    await db.commit()
+    await db.refresh(c)
     return c
 
 
-def _make_collection(db, org, *, id, name="Extra Collection",
+async def _make_collection(db, org, *, id, name="Extra Collection",
                      collection_uuid=None, public=True):
     """Helper to insert an additional collection."""
     c = Collection(
@@ -54,8 +59,8 @@ def _make_collection(db, org, *, id, name="Extra Collection",
         update_date=str(datetime.now()),
     )
     db.add(c)
-    db.commit()
-    db.refresh(c)
+    await db.commit()
+    await db.refresh(c)
     return c
 
 
@@ -95,7 +100,7 @@ class TestSearchAcrossOrg:
     async def test_search_finds_collections_by_name(
         self, db, org, anonymous_user, mock_request
     ):
-        _make_collection(
+        await _make_collection(
             db, org, id=70, name="Searchable Bundle",
             collection_uuid="collection_searchable", public=True,
         )
@@ -308,7 +313,7 @@ class TestSearchAcrossOrg:
             update_date=str(datetime.now()),
         )
         db.add(pg)
-        db.commit()
+        await db.commit()
 
         with patch(
             "src.services.search.search.search_courses",
@@ -335,7 +340,7 @@ class TestSearchAcrossOrg:
                 update_date=str(datetime.now()),
             )
         )
-        db.commit()
+        await db.commit()
 
         with patch(
             "src.services.search.search.search_courses",
@@ -348,3 +353,99 @@ class TestSearchAcrossOrg:
 
         assert len(result.collections) == 1
         assert len(result.collections[0].courses) == 1
+
+
+class TestUnicodeNormalization:
+    """Helper-level tests for normalize_search_term / build_like_pattern.
+
+    The combined form (NFC) of "café" is 4 code points; the decomposed form
+    (NFD) is 5 ("cafe" + U+0301). If a user pastes one form and the stored
+    value uses the other, ILIKE fails to match. Normalizing both sides to NFC
+    fixes that. Same idea for emoji modifiers (skin tones, ZWJ family).
+    """
+
+    def test_normalize_collapses_nfc_nfd(self):
+        nfc = "café"
+        nfd = "café"
+        assert nfc != nfd
+        assert normalize_search_term(nfc) == normalize_search_term(nfd)
+
+    def test_normalize_strips_whitespace(self):
+        assert normalize_search_term("  hello  ") == "hello"
+
+    def test_normalize_handles_empty(self):
+        assert normalize_search_term("") == ""
+        assert normalize_search_term(None) == ""  # type: ignore[arg-type]
+
+    def test_normalize_preserves_emoji(self):
+        assert normalize_search_term("hello \U0001f600") == "hello \U0001f600"
+
+    def test_escape_like_wildcards_alias_matches_export(self):
+        # Back-compat alias kept in search.py for callers/tests.
+        assert _escape_like_wildcards("%_\\") == escape_like_wildcards("%_\\")
+
+    def test_build_like_pattern_normalizes_and_escapes(self):
+        # NFD diacritic in input becomes NFC in pattern.
+        pattern = build_like_pattern("café")
+        assert pattern == "%café%"
+
+        # Wildcards inside the term are escaped.
+        assert build_like_pattern("100%") == "%100\\%%"
+
+    def test_build_like_pattern_handles_emoji(self):
+        # ZWJ family emoji round-trips intact through normalize + escape.
+        family = "\U0001f468‍\U0001f469‍\U0001f467"
+        pattern = build_like_pattern(family)
+        assert family in pattern
+
+
+class TestSearchUnicodeMatching:
+    """End-to-end: emoji and accented chars in stored data are searchable.
+
+    Use SQLite-friendly assertions (no Postgres-specific collation tricks).
+    """
+
+    @pytest.mark.asyncio
+    async def test_search_finds_collection_with_emoji_in_name(
+        self, db, org, anonymous_user, mock_request
+    ):
+        await _make_collection(
+            db, org, id=71,
+            name="Rocket Bundle \U0001f680",
+            collection_uuid="collection_emoji",
+            public=True,
+        )
+
+        with patch(
+            "src.services.search.search.search_courses",
+            new_callable=AsyncMock, return_value=[],
+        ):
+            result = await search_across_org(
+                mock_request, anonymous_user, "test-org", "\U0001f680", db
+            )
+
+        names = [c.name for c in result.collections]
+        assert "Rocket Bundle \U0001f680" in names
+
+    @pytest.mark.asyncio
+    async def test_search_matches_nfd_query_to_nfc_stored(
+        self, db, org, anonymous_user, mock_request
+    ):
+        # Stored as NFC ("café"); user query is NFD ("cafe" + U+0301).
+        await _make_collection(
+            db, org, id=72,
+            name="café club",
+            collection_uuid="collection_cafe",
+            public=True,
+        )
+
+        with patch(
+            "src.services.search.search.search_courses",
+            new_callable=AsyncMock, return_value=[],
+        ):
+            result = await search_across_org(
+                mock_request, anonymous_user, "test-org", "café", db
+            )
+
+        names = [c.name for c in result.collections]
+        assert "café club" in names

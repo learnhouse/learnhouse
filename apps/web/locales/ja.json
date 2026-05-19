@@ -118,6 +118,22 @@
         "sso": {
           "description": "シングルサインオン（SSO）はEnterpriseプランの組織のみ利用可能なプレミアム機能です。組織のIDプロバイダーを通じたセキュアな認証を有効にするにはアップグレードしてください。",
           "title": "Enterpriseプラン機能"
+        },
+        "boards": {
+          "title": "Standard Feature",
+          "description": "Boards is a premium feature available only to organizations on our Standard plan or higher. Upgrade to unlock collaborative boards for real-time brainstorming and planning."
+        },
+        "playgrounds": {
+          "title": "Standard Feature",
+          "description": "Playgrounds is a premium feature available only to organizations on our Standard plan or higher. Upgrade to create interactive AI-generated experiences for your learners."
+        },
+        "scorm": {
+          "title": "Enterprise Feature",
+          "description": "SCORM support is a premium feature available only to organizations on our Enterprise plan. Upgrade to import and deliver SCORM packages alongside your courses."
+        },
+        "webhooks": {
+          "title": "Pro Feature",
+          "description": "Automations is a premium feature available only to organizations on our Pro plan or higher. Upgrade to wire your courses up to webhooks and external integrations."
         }
       },
       "current_plan": "現在のプラン",
@@ -134,7 +150,8 @@
           "podcasts": "ポッドキャスト",
           "payments": "支払い",
           "trail": "進捗追跡",
-          "boards": "ボード"
+          "boards": "ボード",
+          "playgrounds": "Playgrounds"
         },
         "public": {
           "title": "{{feature}}は利用できません",
@@ -181,7 +198,13 @@
     "creating": "作成中...",
     "view_details": "詳細を見る",
     "close": "閉じる",
-    "optional": "任意"
+    "optional": "任意",
+    "analytics": "分析",
+    "add": "追加",
+    "choose_an_organization_to_continue": "続行するには組織を選択してください",
+    "for": "対象",
+    "powered_by": "Powered by",
+    "results": "件"
   },
   "banner": {
     "viewing_as_guest": "{{name}}をゲストとして閲覧しています。",
@@ -302,7 +325,9 @@
     },
     "sso_error": "SSO認証に失敗しました。もう一度お試しください。",
     "login_failed": "ログインに失敗しました",
-    "try_again_in": "{{minutes}}分後に再試行してください"
+    "try_again_in": "{{minutes}}分後に再試行してください",
+    "error_generic": "問題が発生しました。もう一度お試しください。",
+    "sign_in": "サインイン"
   },
   "verify_email": {
     "title": "メール確認",
@@ -595,14 +620,16 @@
       "from_existing_description": "別のプラットフォームからファイルをアップロードしてコースに整理"
     },
     "usergroup_filter": {
-      "all_courses": "All Courses",
-      "filter_by_group": "Filter by group",
-      "info_title": "User Group Filter",
-      "info_description": "Filter courses by user group to see only courses assigned to a specific group. Useful for families or teams sharing the same organization."
+      "all_courses": "すべてのコース",
+      "filter_by_group": "グループでフィルター",
+      "info_title": "ユーザーグループフィルター",
+      "info_description": "ユーザーグループでコースをフィルターし、特定のグループに割り当てられたコースのみを表示します。同じ組織を共有する家族やチームに便利です。"
     },
     "copied": "コピーしました！",
     "quit_course_confirm": "このコースを終了してもよろしいですか？すべての進捗が失われます。",
-    "quit_course_title": "コースを終了しますか？"
+    "quit_course_title": "コースを終了しますか？",
+    "courses_load_error": "コースの読み込みに失敗しました。もう一度お試しください。",
+    "view_all_courses": "すべてのコースを表示"
   },
   "communities": {
     "title": "コミュニティ",
@@ -650,7 +677,8 @@
       "clear_search": "検索をクリア",
       "no_discussions": "ディスカッションがまだありません",
       "no_discussions_description": "このコミュニティで最初のディスカッションを始めましょう！",
-      "start_discussion": "ディスカッションを開始"
+      "start_discussion": "ディスカッションを開始",
+      "delete_failed": "ディスカッションの削除に失敗しました"
     },
     "discussion_detail": {
       "edit": "編集",
@@ -658,7 +686,8 @@
       "delete_title": "ディスカッションを削除しますか？",
       "delete_confirm": "このディスカッションを削除してもよろしいですか？この操作は取り消せません。",
       "delete_button": "ディスカッションを削除",
-      "no_details": "追加の詳細はありません。"
+      "no_details": "追加の詳細はありません。",
+      "delete_failed": "ディスカッションの削除に失敗しました"
     },
     "discussion_card": {
       "pin_discussion": "ディスカッションをピン留め",
@@ -668,7 +697,10 @@
       "delete_discussion": "ディスカッションを削除",
       "delete_title": "ディスカッションを削除しますか？",
       "delete_confirm": "このディスカッションを削除してもよろしいですか？この操作は取り消せません。",
-      "votes": "票"
+      "votes": "票",
+      "delete_failed": "ディスカッションの削除に失敗しました",
+      "lock_failed": "ロック状態の更新に失敗しました",
+      "pin_failed": "ピン状態の更新に失敗しました"
     },
     "comments": {
       "no_replies": "まだ返信がありません",
@@ -684,7 +716,8 @@
       "cancel": "キャンセル",
       "failed_to_post": "返信の投稿に失敗しました。もう一度お試しください。",
       "content_not_allowed": "返信に許可されていないコンテンツが含まれています。",
-      "failed_to_update": "更新に失敗しました。もう一度お試しください。"
+      "failed_to_update": "更新に失敗しました。もう一度お試しください。",
+      "failed_to_delete": "コメントの削除に失敗しました"
     },
     "label_filter": {
       "label": "ラベル：",
@@ -895,7 +928,7 @@
     "quiz": "クイズ",
     "file_submission": "ファイル提出",
     "form": "フォーム",
-    "code": "Code",
+    "code": "コード",
     "interactive": "インタラクティブ",
     "activities": "アクティビティ",
     "current_activity": "現在のアクティビティ",
@@ -954,13 +987,20 @@
     "points": "点数",
     "current_points": "現在の点数: {{points}}",
     "grade": "評価",
-    "run_autograde": "Run Auto-grade",
+    "run_autograde": "自動採点を実行",
     "due_date": "提出期限",
     "task_breakdown": "タスクの内訳",
     "no_grade_details": "成績の詳細はまだありません。",
     "task_passed": "合格",
     "task_not_passed": "不合格",
-    "score": "スコア"
+    "score": "スコア",
+    "form": {
+      "expected_answer": "期待される回答"
+    },
+    "quiz": {
+      "correct_answer": "正解",
+      "incorrect_answer": "不正解"
+    }
   },
   "certificate": {
     "certificate": "修了証",
@@ -1047,7 +1087,8 @@
     "subscription": "サブスクリプション",
     "benefits": "特典:",
     "min_price": "最低価格:",
-    "choose_price": "価格を選択"
+    "choose_price": "価格を選択",
+    "stripe_denied": "Stripe 接続がキャンセルされました。"
   },
   "account": {
     "title": "アカウント",
@@ -1276,7 +1317,8 @@
           "loading_error": "プロフィールデータの読み込みに失敗しました",
           "save_success": "プロフィールを正常に更新しました",
           "save_error": "プロフィールの更新中にエラーが発生しました"
-        }
+        },
+        "unknown_section": "不明なセクション"
       }
     },
     "sign_out": "ログアウト",
@@ -2010,9 +2052,9 @@
             "assignments": "課題",
             "dynamic": "ダイナミック",
             "dynamic_page": "ダイナミックページ",
-            "scorm": "Scorm",
+            "scorm": "SCORM",
             "markdown": "Markdown",
-            "embed": "Embed"
+            "embed": "埋め込み"
           },
           "toasts": {
             "deleting": "アクティビティを削除中...",
@@ -2025,7 +2067,8 @@
             "create_success": "アクティビティを正常に作成しました",
             "uploading": "ファイルをアップロードしてアクティビティを作成中...",
             "upload_success": "ファイルを正常にアップロードしました",
-            "creating_uploading": "アクティビティの作成とファイルのアップロード中..."
+            "creating_uploading": "アクティビティの作成とファイルのアップロード中...",
+            "update_error": "アクティビティの更新に失敗しました"
           },
           "versioning": {
             "version_history": "バージョン履歴",
@@ -2069,6 +2112,9 @@
               "remote_detected": "リモートの変更が検出されました",
               "editing_notice": "編集中に{{author}}が変更を加えました"
             }
+          },
+          "descriptions": {
+            "scorm": "SCORM準拠の学習パッケージ"
           }
         }
       },
@@ -2153,10 +2199,12 @@
           "ai": "AI",
           "api": "APIアクセス",
           "features": "機能",
-          "usage": "Usage",
+          "usage": "使用状況",
           "other": "その他",
           "domains": "ドメイン",
-          "sso": "SSO"
+          "sso": "SSO",
+          "seo": "SEO",
+          "automations": "自動化"
         },
         "pages": {
           "general": {
@@ -2188,8 +2236,8 @@
             "subtitle": "組織の機能を有効または無効にする"
           },
           "usage": {
-            "title": "Usage",
-            "subtitle": "Monitor your organization's resource usage and plan limits"
+            "title": "使用状況",
+            "subtitle": "組織のリソース使用状況とプランの上限を監視します"
           },
           "domains": {
             "subtitle": "組織のカスタムドメインを設定",
@@ -2216,9 +2264,12 @@
         "footer_text": "フッターテキスト",
         "footer_text_placeholder": "フッターテキストを入力...",
         "footer_text_desc": "組織ページの下部に表示されるカスタムテキスト",
+        "default_language": "デフォルト言語",
+        "default_language_desc": "新しい訪問者にデフォルトで表示される言語であり、この組織を代表して送信されるメールに使用される言語です。メンバーは自分のUI言語を引き続き切り替えできます。",
         "watermark_desc": "組織ページにLearnHouseブランドの透かしを表示",
         "watermark_free_plan": "無料プランでは透かしが常に表示されます",
-        "watermark_label": "\"Made with LearnHouse\"透かし"
+        "watermark_label": "\"Made with LearnHouse\"透かし",
+        "watermark_ee": "Enterprise Editionライセンスによって非表示になっています"
       },
       "images": {
         "title": "画像とプレビュー",
@@ -3100,6 +3151,34 @@
             "toasts": {
               "success": "ロールを正常に保存しました",
               "error": "ロールの保存中にエラーが発生しました。後でもう一度お試しください。"
+            },
+            "permissions": {
+              "actions": {
+                "access": "アクセス",
+                "create": "作成",
+                "delete": "削除",
+                "delete_own": "自分の削除",
+                "read": "読み取り",
+                "read_own": "自分の読み取り",
+                "update": "更新",
+                "update_own": "自分の更新"
+              },
+              "deselect": "解除",
+              "deselect_all": "すべての選択を解除",
+              "sections": {
+                "activities": "アクティビティ",
+                "collections": "コレクション",
+                "coursechapters": "コースの章",
+                "courses": "コース",
+                "dashboard": "ダッシュボード",
+                "organizations": "組織",
+                "roles": "ロール",
+                "usergroups": "ユーザーグループ",
+                "users": "ユーザー"
+              },
+              "select": "選択",
+              "select_all": "すべて選択",
+              "title": "権限"
             }
           },
           "delete": {
@@ -3218,8 +3297,8 @@
             "description": "受講生が入力するフォーム"
           },
           "code": {
-            "title": "Code",
-            "description": "Code challenge with automated test case grading"
+            "title": "コード",
+            "description": "自動テストケース採点付きのコーディング課題"
           },
           "short_answer": {
             "title": "短答",
@@ -3336,14 +3415,14 @@
           "reject": "課題を却下",
           "set_final_grade": "最終評価を設定",
           "mark_as_done": "ユーザーのアクティビティを完了にする",
-          "finalize": "Finalize & Complete",
+          "finalize": "確定して完了",
           "reject_description": "提出物を削除し、学生に再提出を許可します",
           "set_final_grade_description": "アクティビティを完了せずに成績を計算して保存します",
           "finalize_description": "最終成績を設定し、学生のアクティビティを完了としてマークします"
         },
         "toasts": {
           "reject_success": "課題を正常に却下しました",
-          "finalize_success": "Assignment graded and activity marked as complete"
+          "finalize_success": "課題が採点され、アクティビティが完了としてマークされました"
         },
         "filters": {
           "all": "すべて"
@@ -3467,7 +3546,9 @@
             "anti_copy_paste_description": "ペーストイベントをブロックしてAI生成の回答の貼り付けを抑制します。注：これは抑止力です。",
             "auto_grading_disabled_file": "自動採点は利用できません — この課題には人間のレビューが必要なファイル提出タスクがあります。",
             "grading_type_hint": "成績の学生への表示方法",
-            "grading_options_hint": "提出時の動作"
+            "grading_options_hint": "提出時の動作",
+            "show_correct_answers_description": "提出物が採点された後、学生に自分の回答と並べて正解を表示します。クイズのどの選択肢が正しかったか、期待される短答や数値、フォームの空欄の正解が表示されます。",
+            "show_correct_answers_label": "採点後に正解を表示する"
           },
           "toasts": {
             "updating": "課題を更新中...",
@@ -3507,12 +3588,184 @@
             "anti_copy_paste_label": "コピー＆ペーストをブロック",
             "anti_copy_paste_description": "ペーストイベントをブロックしてAI生成の回答の貼り付けを抑制します。注：これは抑止力です。",
             "grading_type_hint": "成績の学生への表示方法",
-            "grading_options_hint": "提出時の動作"
+            "grading_options_hint": "提出時の動作",
+            "show_correct_answers_description": "採点後、学生は自分の回答の隣に正解を確認できます。",
+            "show_correct_answers_label": "採点後に正解を表示する"
           },
           "toasts": {
             "creating": "課題を作成中...",
             "success": "課題を正常に作成しました"
           }
+        }
+      }
+    },
+    "search": {
+      "trigger": "検索",
+      "placeholder": "ページとコンテンツを検索…",
+      "shortcut_hint": "⌘K",
+      "no_results": "結果が見つかりません",
+      "loading": "検索中…",
+      "type_to_search": "コンテンツを検索するには2文字以上入力してください",
+      "groups": {
+        "pages": "ページ",
+        "courses": "コース",
+        "collections": "コレクション",
+        "users": "ユーザー",
+        "communities": "コミュニティ",
+        "discussions": "ディスカッション",
+        "playgrounds": "プレイグラウンド",
+        "podcasts": "ポッドキャスト"
+      },
+      "entries": {
+        "home": {
+          "description": "ダッシュボード概要",
+          "keywords": "ホーム, 概要, 開始, ダッシュボード"
+        },
+        "courses": {
+          "description": "コースを管理",
+          "keywords": "コース, レッスン, 学習, トレーニング, クラス"
+        },
+        "assignments": {
+          "description": "課題を管理",
+          "keywords": "タスク, 宿題, 演習, 提出"
+        },
+        "communities": {
+          "description": "コミュニティを管理",
+          "keywords": "フォーラム, ディスカッション, メンバー, 投稿"
+        },
+        "podcasts": {
+          "description": "ポッドキャストを管理",
+          "keywords": "オーディオ, エピソード, 番組"
+        },
+        "boards": {
+          "description": "ボードを管理",
+          "keywords": "カンバン, プロジェクト, タスク, リスト"
+        },
+        "playgrounds": {
+          "description": "コードプレイグラウンド",
+          "keywords": "コード, サンドボックス, repl, プログラミング"
+        },
+        "analytics": {
+          "description": "分析ダッシュボードを表示",
+          "keywords": "統計, メトリクス, グラフ, レポート"
+        },
+        "users": {
+          "description": "組織のユーザーを管理",
+          "keywords": "メンバー, アカウント, 人"
+        },
+        "usergroups": {
+          "description": "ユーザーグループを管理",
+          "keywords": "チーム, コホート, グループ"
+        },
+        "roles": {
+          "description": "ロールと権限を管理",
+          "keywords": "権限, アクセス, rbac, セキュリティ"
+        },
+        "signups": {
+          "description": "サインアップを確認",
+          "keywords": "登録, 申請, リクエスト"
+        },
+        "org_general": {
+          "description": "組織の一般設定",
+          "keywords": "名前, ブランディング, slug, プロフィール"
+        },
+        "org_features": {
+          "description": "組織機能を管理",
+          "keywords": "機能, モジュール, トグル"
+        },
+        "org_billing": {
+          "description": "請求とサブスクリプション",
+          "keywords": "プラン, 支払い, 請求書, サブスクリプション"
+        },
+        "payments_overview": {
+          "description": "支払い概要と収益",
+          "keywords": "stripe, ダッシュボード, 収益, 売上",
+          "title": "支払い概要"
+        },
+        "payments_products": {
+          "description": "支払い商品と価格",
+          "keywords": "商品, 価格, stripe, ティア, プラン",
+          "title": "商品"
+        },
+        "users_add": {
+          "description": "新しいメンバーを招待",
+          "keywords": "招待, 追加, メンバー, 送信"
+        },
+        "users_audit_logs": {
+          "description": "組織のアクティビティログ",
+          "keywords": "監査, ログ, 履歴, セキュリティ, アクティビティ"
+        },
+        "org_branding": {
+          "description": "ロゴ、色、ビジュアルアイデンティティ",
+          "keywords": "ブランディング, ロゴ, 色, テーマ"
+        },
+        "org_landing": {
+          "description": "ランディングページのカスタマイズ",
+          "keywords": "ランディング, ホームページ, hero, ページ"
+        },
+        "org_seo": {
+          "description": "検索エンジン最適化",
+          "keywords": "seo, 検索, メタ, ランキング, google"
+        },
+        "org_ai": {
+          "description": "AI機能と設定",
+          "keywords": "ai, llm, gpt, openai, 生成"
+        },
+        "org_domains": {
+          "description": "カスタムドメイン",
+          "keywords": "ドメイン, dns, カスタム, サブドメイン, cname"
+        },
+        "org_automations": {
+          "description": "Webhookと外部連携",
+          "keywords": "webhooks, 自動化, zapier, 連携, トリガー"
+        },
+        "org_api": {
+          "description": "APIトークンとプログラマティックアクセス",
+          "keywords": "api, トークン, アクセス, プログラマティック, キー"
+        },
+        "org_sso": {
+          "description": "シングルサインオン設定",
+          "keywords": "sso, saml, oauth, エンタープライズ, ログイン"
+        },
+        "org_other": {
+          "description": "その他の組織設定",
+          "keywords": "その他, 高度, カスタム, 追加"
+        },
+        "payments_groups": {
+          "description": "支払いグループとバンドル",
+          "keywords": "グループ, バンドル, セット",
+          "title": "支払いグループ"
+        },
+        "payments_configuration": {
+          "description": "Stripeと支払いの設定",
+          "keywords": "設定, セットアップ, stripe, 構成, connect",
+          "title": "設定"
+        },
+        "payments_customers": {
+          "description": "顧客とサブスクライバー",
+          "keywords": "顧客, サブスクライバー, バイヤー, 支払い済み",
+          "title": "顧客"
+        },
+        "courses_migrate": {
+          "description": "他のLMSからコースをインポート",
+          "keywords": "インポート, 移行, 転送, lms, moodle, canvas",
+          "title": "コースの移行"
+        },
+        "account_general": {
+          "description": "個人アカウントの一般設定",
+          "keywords": "アカウント, 設定, メール, 名前, 言語"
+        },
+        "account_profile": {
+          "description": "プロフィールと自己紹介を編集",
+          "keywords": "プロフィール, 自己紹介, アバター, 写真, 公開"
+        },
+        "account_security": {
+          "description": "パスワードとセキュリティ設定",
+          "keywords": "パスワード, セキュリティ, 2fa, mfa, セッション"
+        },
+        "account_purchases": {
+          "description": "購入履歴とサブスクリプション",
+          "keywords": "購入, サブスクリプション, 請求, 履歴, レシート"
         }
       }
     }
@@ -3803,8 +4056,8 @@
       "advanced": "高度"
     },
     "not_configured": {
-      "title": "Analytics not configured",
-      "description": "Analytics requires a Tinybird connection. Set the <code>LEARNHOUSE_TINYBIRD_INGEST_TOKEN</code> and <code>LEARNHOUSE_TINYBIRD_READ_TOKEN</code> environment variables to enable it."
+      "title": "分析が構成されていません",
+      "description": "分析にはTinybird接続が必要です。有効にするには、<code>LEARNHOUSE_TINYBIRD_INGEST_TOKEN</code>および<code>LEARNHOUSE_TINYBIRD_READ_TOKEN</code>環境変数を設定してください。"
     },
     "advanced_gate": {
       "requires": "必要",
@@ -3813,152 +4066,152 @@
     "common": {
       "loading": "読み込み中...",
       "no_data": "データがありません",
-      "users": "Users",
-      "views": "Views",
-      "enrollments": "Enrollments",
-      "completions": "Completions",
-      "course": "Course",
-      "date": "Date",
-      "user": "User",
-      "type": "Type",
-      "expand": "Expand",
-      "days": "Days",
-      "score": "Score",
-      "unique_users": "unique users"
+      "users": "ユーザー",
+      "views": "ビュー",
+      "enrollments": "登録",
+      "completions": "完了",
+      "course": "コース",
+      "date": "日付",
+      "user": "ユーザー",
+      "type": "タイプ",
+      "expand": "展開",
+      "days": "日",
+      "score": "スコア",
+      "unique_users": "ユニークユーザー"
     },
     "overview": {
-      "live_now": "Live Now",
-      "last_5_minutes": "Last 5 minutes",
-      "signups": "Signups",
-      "submissions": "Submissions",
-      "daily_active_users": "Daily Active Users",
-      "active_users": "Active Users",
-      "countries": "Countries",
-      "top_countries": "Top Countries",
-      "devices": "Devices",
-      "desktop": "Desktop",
-      "mobile": "Mobile",
-      "tablet": "Tablet",
-      "top_referrers": "Top Referrers",
-      "top_referrer": "Top Referrer",
-      "enrollment_funnel": "Enrollment Funnel",
-      "page_views": "Page Views",
-      "course_views": "Course Views",
-      "view_to_enroll": "View → Enroll",
-      "enroll_to_complete": "Enroll → Complete",
-      "page_to_complete": "Page → Complete",
-      "conv_rate": "Conv. Rate",
-      "top_courses": "Top Courses",
-      "activity_engagement": "Activity Engagement",
-      "activity": "Activity",
-      "avg_time": "Avg Time",
-      "activities": "Activities",
-      "courses": "Courses",
+      "live_now": "現在ライブ",
+      "last_5_minutes": "過去5分",
+      "signups": "サインアップ",
+      "submissions": "提出",
+      "daily_active_users": "デイリーアクティブユーザー",
+      "active_users": "アクティブユーザー",
+      "countries": "国",
+      "top_countries": "上位の国",
+      "devices": "デバイス",
+      "desktop": "デスクトップ",
+      "mobile": "モバイル",
+      "tablet": "タブレット",
+      "top_referrers": "上位の参照元",
+      "top_referrer": "上位の参照元",
+      "enrollment_funnel": "登録ファネル",
+      "page_views": "ページビュー",
+      "course_views": "コースビュー",
+      "view_to_enroll": "閲覧 → 登録",
+      "enroll_to_complete": "登録 → 完了",
+      "page_to_complete": "ページ → 完了",
+      "conv_rate": "コンバージョン率",
+      "top_courses": "上位のコース",
+      "activity_engagement": "アクティビティエンゲージメント",
+      "activity": "アクティビティ",
+      "avg_time": "平均時間",
+      "activities": "アクティビティ",
+      "courses": "コース",
       "enrollments": "登録",
       "completions": "完了"
     },
     "modals": {
       "live_users": {
-        "title": "Live Users",
-        "description": "Users active in the last 5 minutes"
+        "title": "ライブユーザー",
+        "description": "過去5分間にアクティブだったユーザー"
       },
       "signups": {
-        "title": "Signups",
-        "description": "New user registrations in the last {{days}} days"
+        "title": "サインアップ",
+        "description": "過去{{days}}日間の新規ユーザー登録"
       },
       "enrollments": {
-        "title": "Enrollments",
-        "description": "Course enrollments in the last {{days}} days"
+        "title": "登録",
+        "description": "過去{{days}}日間のコース登録"
       },
       "completions": {
-        "title": "Completions",
-        "description": "Course completions in the last {{days}} days"
+        "title": "完了",
+        "description": "過去{{days}}日間のコース完了"
       },
       "live_users_table": {
-        "current_page": "Current Page",
-        "device": "Device",
-        "country": "Country",
-        "last_seen": "Last Seen"
+        "current_page": "現在のページ",
+        "device": "デバイス",
+        "country": "国",
+        "last_seen": "最終確認"
       },
       "signups_table": {
-        "email": "Email",
-        "method": "Method"
+        "email": "メールアドレス",
+        "method": "方法"
       }
     },
     "advanced_widgets": {
       "org_growth_trend": {
-        "title": "Org Growth Trend",
-        "description": "Weekly signups, enrollments, completions"
+        "title": "組織の成長トレンド",
+        "description": "週次のサインアップ、登録、完了"
       },
       "new_vs_returning": {
-        "title": "New vs Returning Users",
-        "description": "Growth vs retention health"
+        "title": "新規ユーザー vs 再訪ユーザー",
+        "description": "成長 vs リテンション健全性"
       },
       "cohort_retention": {
-        "title": "Cohort Retention",
-        "description": "% users active after signup week",
-        "cohort": "Cohort",
-        "size": "Size"
+        "title": "コホートリテンション",
+        "description": "サインアップ週後にアクティブだったユーザーの%",
+        "cohort": "コホート",
+        "size": "サイズ"
       },
       "peak_usage": {
-        "title": "Peak Usage Hours",
-        "description": "Event volume by day and hour",
+        "title": "ピーク利用時間帯",
+        "description": "曜日と時間帯ごとのイベント数",
         "days": {
-          "mon": "Mon",
-          "tue": "Tue",
-          "wed": "Wed",
-          "thu": "Thu",
-          "fri": "Fri",
-          "sat": "Sat",
-          "sun": "Sun"
+          "mon": "月",
+          "tue": "火",
+          "wed": "水",
+          "thu": "木",
+          "fri": "金",
+          "sat": "土",
+          "sun": "日"
         },
-        "events": "events"
+        "events": "イベント"
       },
       "course_dropoff": {
-        "title": "Course Dropoff",
-        "description": "Where users stop per course"
+        "title": "コース離脱",
+        "description": "コースごとにユーザーが離脱する地点"
       },
       "time_to_completion": {
-        "title": "Time to Completion",
-        "description": "Median days to complete each course"
+        "title": "完了までの時間",
+        "description": "各コースを完了するまでの中央値日数"
       },
       "completion_velocity": {
-        "title": "Completion Velocity",
-        "description": "Avg days between activity completions"
+        "title": "完了ベロシティ",
+        "description": "アクティビティ完了間の平均日数"
       },
       "content_type_effectiveness": {
-        "title": "Content Type Effectiveness",
-        "description": "Completion rate by activity type"
+        "title": "コンテンツタイプ別の効果",
+        "description": "アクティビティタイプ別の完了率"
       },
       "course_effectiveness_matrix": {
-        "title": "Course Effectiveness Matrix",
-        "description": "Activity count vs completion rate (sized by enrollments)"
+        "title": "コース効果マトリクス",
+        "description": "アクティビティ数 vs 完了率(登録数で大きさを表現)"
       },
       "community_correlation": {
-        "title": "Community Correlation",
-        "description": "Completion rate: discussors vs non-discussors",
-        "discussion_users": "Discussion Users",
-        "non_discussion_users": "Non-Discussion Users"
+        "title": "コミュニティ相関",
+        "description": "完了率:ディスカッション参加者 vs 非参加者",
+        "discussion_users": "ディスカッション参加ユーザー",
+        "non_discussion_users": "ディスカッション非参加ユーザー"
       },
       "learner_engagement_score": {
-        "title": "Learner Engagement Score",
-        "description": "Top learners by composite engagement",
-        "user_id": "User ID"
+        "title": "学習者エンゲージメントスコア",
+        "description": "総合エンゲージメントによる上位の学習者",
+        "user_id": "ユーザーID"
       },
       "user_progress_snapshot": {
-        "title": "User Progress Snapshot",
-        "description": "Users at each completion bracket per course"
+        "title": "ユーザー進捗スナップショット",
+        "description": "コースごとの各完了帯にいるユーザー"
       },
       "grade_distribution": {
-        "title": "Grade Distribution",
-        "description": "Assignment grade histogram"
+        "title": "成績分布",
+        "description": "課題成績のヒストグラム"
       },
       "search_effectiveness": {
-        "title": "Search Effectiveness",
-        "description": "Top queries and zero-result rate",
-        "query": "Query",
-        "searches": "Searches",
-        "zero_results": "Zero Results %"
+        "title": "検索の有効性",
+        "description": "上位のクエリと結果ゼロ率",
+        "query": "クエリ",
+        "searches": "検索",
+        "zero_results": "結果ゼロ %"
       },
       "certification_rate": {
         "title": "認定率",
@@ -4288,7 +4541,8 @@
       "member_added": "メンバーが追加されました",
       "member_added_error": "メンバーの追加に失敗しました（既にメンバーの可能性があります）",
       "member_removed": "メンバーが削除されました",
-      "member_removed_error": "メンバーの削除に失敗しました"
+      "member_removed_error": "メンバーの削除に失敗しました",
+      "all_groups": "すべてのグループ"
     },
     "toolbar": {
       "select": "選択",
@@ -4300,7 +4554,7 @@
       "note": "ノート",
       "sticker": "ステッカー",
       "youtube": "YouTube",
-      "ai_playground": "AI Playground",
+      "ai_playground": "AIプレイグラウンド",
       "activity": "アクティビティ",
       "embed": "埋め込み",
       "webpage": "ウェブページ",
@@ -4310,7 +4564,7 @@
       "undo": "元に戻す",
       "redo": "やり直す",
       "podcast": "ポッドキャスト",
-      "todo": "To-do"
+      "todo": "ToDo"
     },
     "zoom": {
       "zoom_in": "拡大",
@@ -4380,7 +4634,7 @@
       "open_in_new_tab": "新しいタブで開く"
     },
     "playground_block": {
-      "title": "AI Playground",
+      "title": "AIプレイグラウンド",
       "description": "AIを活用したインタラクティブな要素を生成する",
       "generate": "生成",
       "edit": "編集",
@@ -4388,7 +4642,7 @@
       "generating": "インタラクティブコンテンツを生成中...",
       "streaming": "生成中...",
       "empty_state": "作りたいものを説明すると、それが形になります",
-      "chat_header": "AI Playground",
+      "chat_header": "AIプレイグラウンド",
       "prompt_text": "生成するインタラクティブ要素を説明してください",
       "ai_content": "AI生成コンテンツ",
       "check_preview": "左側のプレビューを確認してください",
@@ -4407,7 +4661,8 @@
       "move_back": "背面に移動",
       "move_forward": "前面に移動",
       "delete": "削除",
-      "delete_multiple": "{{count}} 個のアイテムを削除"
+      "delete_multiple": "{{count}} 個のアイテムを削除",
+      "duplicate": "複製"
     },
     "pagination": {
       "previous": "前へ",
@@ -4437,7 +4692,9 @@
     "duplicating_board": "ボードを複製中...",
     "open_board": "ボードを開く",
     "select_all": "すべて選択",
-    "selected_count": "{{count}}件選択中"
+    "selected_count": "{{count}}件選択中",
+    "no_boards": "まだボードがありません",
+    "no_search_results": "ボードが見つかりません"
   },
   "onboarding": {
     "getting_started": "はじめに",
@@ -4597,7 +4854,9 @@
           "ai": "1,000 AIクレジット",
           "ai_desc": "AIライティングツールでコンテンツ作成を加速。",
           "analytics": "学習者アナリティクス",
-          "analytics_desc": "進捗とエンゲージメントを追跡してコースを改善。"
+          "analytics_desc": "進捗とエンゲージメントを追跡してコースを改善。",
+          "playgrounds": "インタラクティブプレイグラウンド",
+          "playgrounds_desc": "学習者がインタラクティブな演習で実験し練習できるようにします。"
         }
       },
       "pro": {
@@ -4614,8 +4873,6 @@
           "custom_domain_desc": "独自ドメインでブランドアカデミーを構築。",
           "roles": "カスタムロールと権限",
           "roles_desc": "組織内で誰が何をできるかを正確に制御。",
-          "playgrounds": "インタラクティブプレイグラウンド",
-          "playgrounds_desc": "学習者がインタラクティブな演習で実験し練習できるようにします。",
           "api": "APIアクセスとWebhooks",
           "api_desc": "既存ツールと統合し、ワークフローを自動化。"
         }
@@ -4651,6 +4908,15 @@
       "usergroups_add_a_group": "グループを追加",
       "toast_add_error": "グループを追加できませんでした",
       "toast_remove_error": "グループを削除できませんでした"
-    }
+    },
+    "accessDenied": "このコースにアクセスできません",
+    "backToCourses": "コース一覧に戻る",
+    "loadError": "このコースが見つからないか、読み込み中にエラーが発生しました。",
+    "noPermission": "このコースを表示する権限がありません。"
+  },
+  "pagination": {
+    "next": "次へ",
+    "previous": "前へ",
+    "showing_page": "{{total}} ページ中 {{current}} ページを表示"
   }
 }

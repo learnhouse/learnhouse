@@ -8,11 +8,12 @@ import UserAvatar from '@components/Objects/UserAvatar'
 import { getAPIUrl } from '@services/config/config'
 import { getUserAvatarMediaDirectory } from '@services/media/media'
 import { removeUserFromOrg, removeUsersFromOrg, updateUserRole } from '@services/organizations/orgs'
-import { swrFetcher } from '@services/utils/ts/requests'
-import { LogOut, Search, ChevronLeft, ChevronRight, Shield, User, Crown, Users, CheckCircle2, XCircle, Mail, Globe, ArrowUpDown, ArrowUp, ArrowDown, X, Filter, Download } from 'lucide-react'
+import { apiFetch } from '@services/utils/ts/requests'
+import { LogOut, Search, ChevronLeft, ChevronRight, Shield, User, Crown, Users, CheckCircle2, XCircle, Mail, Globe, ArrowUp, ArrowDown, X, Filter, Download } from 'lucide-react'
 import React, { useState, useCallback, useMemo } from 'react'
 import toast from 'react-hot-toast'
-import useSWR, { mutate } from 'swr'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
+import { queryKeys } from '@/lib/query/keys'
 import { useTranslation } from 'react-i18next'
 import {
   Select,
@@ -40,6 +41,7 @@ function OrgUsers() {
   const org = useOrg() as any
   const session = useLHSession() as any
   const access_token = session?.data?.tokens?.access_token;
+  const queryClient = useQueryClient()
 
   const [page, setPage] = useState(1)
   const [searchValue, setSearchValue] = useState('')
@@ -64,33 +66,40 @@ function OrgUsers() {
     return params.toString()
   }
 
-  const usersUrl = org && access_token ? `${getAPIUrl()}orgs/${org?.id}/users?${buildQuery()}` : null
-  const { data, isValidating } = useSWR(
-    usersUrl,
-    (url) => swrFetcher(url, access_token),
-    {
-      revalidateOnFocus: false,
-    }
+  // Build a stable query key from all filter params
+  const usersQueryKey = useMemo(
+    () => [...queryKeys.org.users(org?.id ?? 0), page, sortOrder, searchValue, filterRole, filterStatus, filterGroupId],
+    [org?.id, page, sortOrder, searchValue, filterRole, filterStatus, filterGroupId]
   )
+
+  const { data, isFetching } = useQuery({
+    queryKey: usersQueryKey,
+    queryFn: () => apiFetch(`${getAPIUrl()}orgs/${org?.id}/users?${buildQuery()}`, access_token),
+    enabled: !!org?.id && !!access_token,
+    staleTime: 60_000,
+    placeholderData: (prev) => prev,
+  })
 
   // Fetch available roles
-  const { data: roles } = useSWR(
-    org && access_token ? `${getAPIUrl()}roles/org/${org.id}` : null,
-    (url) => swrFetcher(url, access_token),
-    { revalidateOnFocus: false }
-  )
+  const { data: roles } = useQuery({
+    queryKey: queryKeys.org.roles(org?.id),
+    queryFn: () => apiFetch(`${getAPIUrl()}roles/org/${org.id}`, access_token),
+    enabled: !!org?.id && !!access_token,
+    staleTime: 60_000,
+  })
 
   // Fetch available usergroups for filter dropdown
-  const { data: usergroups } = useSWR(
-    org && access_token ? `${getAPIUrl()}usergroups/org/${org.id}?org_id=${org.id}` : null,
-    (url) => swrFetcher(url, access_token),
-    { revalidateOnFocus: false }
-  )
+  const { data: usergroups } = useQuery({
+    queryKey: queryKeys.usergroups.list(org?.id),
+    queryFn: () => apiFetch(`${getAPIUrl()}usergroups/org/${org.id}?org_id=${org.id}`, access_token),
+    enabled: !!org?.id && !!access_token,
+    staleTime: 60_000,
+  })
 
   const orgUsers = data?.items || []
   const total = data?.total || 0
-  const isInitialLoading = !data && isValidating
-  const isPageTransitioning = !!data && isValidating
+  const isInitialLoading = !data && isFetching
+  const isPageTransitioning = !!data && isFetching
 
   const visibleUserIds: number[] = orgUsers.map((u: any) => u.user.id)
   const allVisibleSelected = visibleUserIds.length > 0 && visibleUserIds.every((id: number) => selectedUserIds.has(id))
@@ -139,7 +148,7 @@ function OrgUsers() {
     const toastId = toast.loading(t('dashboard.users.active_users.actions.updating_role') || 'Updating role...');
     const res = await updateUserRole(org.id, user_id, newRoleUuid, access_token)
     if (res.status === 200) {
-      await mutate(usersUrl)
+      queryClient.invalidateQueries({ queryKey: queryKeys.org.users(org.id) })
       toast.success(t('dashboard.users.active_users.actions.role_update_success') || 'Role updated successfully', {id:toastId});
     } else {
       toast.error(t('dashboard.users.active_users.actions.role_update_error') || 'Error updating role', {id:toastId});
@@ -150,7 +159,7 @@ function OrgUsers() {
     const toastId = toast.loading(t('dashboard.users.active_users.actions.removing'));
     const res = await removeUserFromOrg(org.id, user_id, access_token)
     if (res.status === 200) {
-      await mutate(usersUrl)
+      queryClient.invalidateQueries({ queryKey: queryKeys.org.users(org.id) })
       toast.success(t('dashboard.users.active_users.actions.remove_success'), {id:toastId});
     } else {
       toast.error(t('dashboard.users.active_users.actions.remove_error'), {id:toastId});
@@ -163,7 +172,7 @@ function OrgUsers() {
     const res = await removeUsersFromOrg(org.id, ids, access_token)
     if (res.status === 200) {
       setSelectedUserIds(new Set())
-      await mutate(usersUrl)
+      queryClient.invalidateQueries({ queryKey: queryKeys.org.users(org.id) })
       toast.success(`${ids.length} user(s) removed successfully`, {id:toastId});
     } else {
       toast.error('Error removing users', {id:toastId});
@@ -236,16 +245,16 @@ function OrgUsers() {
     <div>
       <Toast></Toast>
       <div className="h-6"></div>
-      <div className="ml-10 mr-10 mx-auto bg-white rounded-xl shadow-xs">
+      <div className="mx-4 sm:mx-10 bg-white rounded-xl nice-shadow">
             {/* Header */}
-            <div className="flex items-center justify-between px-6 py-5 border-b border-gray-100">
-              <div className="flex-1">
+            <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between px-4 sm:px-6 py-5 border-b border-gray-100">
+              <div className="flex-1 min-w-0">
                 <h1 className="font-bold text-xl text-gray-800">{t('dashboard.users.active_users.title')}</h1>
                 <p className="text-sm text-gray-500 mt-0.5">
                   {t('dashboard.users.active_users.subtitle')}
                 </p>
               </div>
-              <div className="flex items-center gap-3">
+              <div className="flex items-center gap-2 flex-wrap">
                 {total > 0 && (
                   <div className="text-sm text-gray-500 bg-gray-50 px-3 py-1.5 rounded-lg font-medium">
                     {total} {total === 1 ? 'user' : 'users'}
@@ -255,7 +264,7 @@ function OrgUsers() {
                   <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
                   <input
                     placeholder={t('dashboard.users.active_users.search_placeholder') || 'Search users...'}
-                    className="pl-10 pr-4 py-2 w-[260px] border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-400 transition-all"
+                    className="pl-10 pr-4 py-2 w-full sm:w-[220px] border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-400 transition-all"
                     value={searchValue}
                     onChange={(e) => handleSearchChange(e.target.value)}
                   />
@@ -267,13 +276,13 @@ function OrgUsers() {
                   title="Export users as CSV"
                 >
                   <Download className="w-4 h-4" />
-                  <span>Export</span>
+                  <span className="hidden sm:inline">Export</span>
                 </button>
               </div>
             </div>
 
             {/* Filter Bar */}
-            <div className="flex items-center gap-3 px-6 py-3 border-b border-gray-100 bg-gray-50/30">
+            <div className="flex flex-wrap items-center gap-2 px-4 sm:px-6 py-3 border-b border-gray-100 bg-gray-50/30">
               <Filter className="w-4 h-4 text-gray-400" />
               <span className="text-xs font-medium text-gray-500 uppercase tracking-wide">Filters</span>
 
@@ -361,10 +370,44 @@ function OrgUsers() {
             )}
 
             {/* Content */}
-            <div className="px-0 relative">
+            <div className="overflow-x-auto relative">
               {isInitialLoading ? (
-                <div className="py-20 flex justify-center">
-                  <LearnHouseSpinner size={36} />
+                <div className="animate-pulse px-6 py-4 space-y-0">
+                  {/* Table header skeleton */}
+                  <div className="flex items-center gap-4 py-3 border-b border-gray-100 mb-1">
+                    <div className="w-4 h-4 bg-gray-200 rounded w-10" />
+                    <div className="flex-1 h-3 bg-gray-200 rounded w-24" />
+                    <div className="h-3 bg-gray-100 rounded w-20" />
+                    <div className="h-3 bg-gray-100 rounded w-16" />
+                    <div className="h-3 bg-gray-100 rounded w-20" />
+                    <div className="h-3 bg-gray-100 rounded w-16" />
+                    <div className="h-3 bg-gray-100 rounded w-16" />
+                  </div>
+                  {/* Row skeletons */}
+                  {Array.from({ length: ITEMS_PER_PAGE }).map((_, i) => (
+                    <div key={i} className="flex items-center gap-4 py-4 border-b border-gray-50">
+                      {/* Checkbox */}
+                      <div className="w-4 h-4 bg-gray-100 rounded shrink-0" />
+                      {/* Avatar + name */}
+                      <div className="flex items-center gap-3 flex-1 min-w-0">
+                        <div className="w-10 h-10 bg-gray-200 rounded-full shrink-0" />
+                        <div className="space-y-1.5 flex-1 min-w-0">
+                          <div className="h-3.5 bg-gray-200 rounded w-32" />
+                          <div className="h-2.5 bg-gray-100 rounded w-20" />
+                        </div>
+                      </div>
+                      {/* Groups */}
+                      <div className="h-5 bg-gray-100 rounded-md w-20" />
+                      {/* Joined */}
+                      <div className="h-3 bg-gray-100 rounded w-20" />
+                      {/* Status */}
+                      <div className="h-3 bg-gray-100 rounded w-16" />
+                      {/* Role */}
+                      <div className="h-8 bg-gray-100 rounded-md w-24" />
+                      {/* Actions */}
+                      <div className="h-8 bg-gray-100 rounded-md w-24 ml-auto" />
+                    </div>
+                  ))}
                 </div>
               ) : orgUsers.length === 0 ? (
                 <div className="py-16 text-center">
@@ -623,7 +666,7 @@ function OrgUsers() {
 
             {/* Pagination Controls */}
             {total > ITEMS_PER_PAGE && (
-              <div className="flex items-center justify-between px-6 py-4 border-t border-gray-100 bg-gray-50/50">
+              <div className="flex items-center justify-between px-4 sm:px-6 py-4 border-t border-gray-100 bg-gray-50/50">
                 <div className="text-xs text-gray-500 font-medium">
                   {t('dashboard.users.active_users.pagination.showing', {
                     start: (page - 1) * ITEMS_PER_PAGE + 1,

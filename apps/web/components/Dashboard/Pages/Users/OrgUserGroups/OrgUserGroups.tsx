@@ -4,49 +4,47 @@ import { useOrg } from '@components/Contexts/OrgContext'
 import AddUserGroup from '@components/Objects/Modals/Dash/OrgUserGroups/AddUserGroup'
 import EditUserGroup from '@components/Objects/Modals/Dash/OrgUserGroups/EditUserGroup'
 import ManageUsers from '@components/Objects/Modals/Dash/OrgUserGroups/ManageUsers'
-import LearnHouseSpinner from '@components/Objects/Loaders/LearnHouseSpinner'
 import ConfirmationModal from '@components/Objects/StyledElements/ConfirmationModal/ConfirmationModal'
 import Modal from '@components/Objects/StyledElements/Modal/Modal'
-import PlanRestrictedFeature from '@components/Dashboard/Shared/PlanRestricted/PlanRestrictedFeature'
+import FeatureGate from '@components/Dashboard/Shared/FeatureGate/FeatureGate'
 import { getAPIUrl } from '@services/config/config'
+import { searchMatchesAny } from '@/lib/search/normalize'
 import { deleteUserGroup } from '@services/usergroups/usergroups'
-import { swrFetcher } from '@services/utils/ts/requests'
-import { PlanLevel } from '@services/plans/plans'
+import { apiFetch } from '@services/utils/ts/requests'
 import { Pencil, SquareUserRound, Users, X, Search, Calendar } from 'lucide-react'
 import React, { useState, useMemo } from 'react'
 import toast from 'react-hot-toast'
-import useSWR, { mutate } from 'swr'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
+import { queryKeys } from '@/lib/query/keys'
 import { useTranslation } from 'react-i18next'
 import { Badge } from '@components/ui/badge'
-import { usePlan } from '@components/Hooks/usePlan'
 
 function OrgUserGroups() {
     const { t } = useTranslation()
     const org = useOrg() as any
     const session = useLHSession() as any
     const access_token = session?.data?.tokens?.access_token;
-    const currentPlan = usePlan()
+    const queryClient = useQueryClient()
     const [userGroupManagementModal, setUserGroupManagementModal] = React.useState(false)
     const [createUserGroupModal, setCreateUserGroupModal] = React.useState(false)
     const [editUserGroupModal, setEditUserGroupModal] = React.useState(false)
     const [selectedUserGroup, setSelectedUserGroup] = React.useState(null) as any
     const [searchValue, setSearchValue] = useState('')
 
-    const { data: usergroups, isValidating: isUsergroupsValidating } = useSWR(
-        org && access_token ? `${getAPIUrl()}usergroups/org/${org.id}?org_id=${org.id}` : null,
-        (url) => swrFetcher(url, access_token),
-        { revalidateOnFocus: false }
-    )
-    const isInitialLoading = !usergroups && isUsergroupsValidating
+    const { data: usergroups, isLoading: isUsergroupsLoading } = useQuery({
+        queryKey: queryKeys.usergroups.list(org?.id),
+        queryFn: () => apiFetch(`${getAPIUrl()}usergroups/org/${org.id}?org_id=${org.id}`, access_token),
+        enabled: !!org?.id && !!access_token,
+        staleTime: 60_000,
+    })
+    const isInitialLoading = isUsergroupsLoading && !usergroups
 
     // Filter usergroups based on search
     const filteredUsergroups = useMemo(() => {
         if (!usergroups) return []
         if (!searchValue.trim()) return usergroups
-        const search = searchValue.toLowerCase()
         return usergroups.filter((group: any) =>
-            group.name?.toLowerCase().includes(search) ||
-            group.description?.toLowerCase().includes(search)
+            searchMatchesAny([group.name, group.description], searchValue)
         )
     }, [usergroups, searchValue])
 
@@ -54,7 +52,7 @@ function OrgUserGroups() {
         const toastId = toast.loading(t('dashboard.users.usergroups.toasts.deleting'));
         const res = await deleteUserGroup(usergroup_id, org.id, access_token)
         if (res.status == 200) {
-            mutate(`${getAPIUrl()}usergroups/org/${org.id}?org_id=${org.id}`)
+            queryClient.invalidateQueries({ queryKey: queryKeys.usergroups.list(org.id) })
             toast.success(t('dashboard.users.usergroups.toasts.delete_success'), {id:toastId})
         }
         else {
@@ -69,23 +67,17 @@ function OrgUserGroups() {
     }
 
     return (
-        <PlanRestrictedFeature
-            currentPlan={currentPlan}
-            requiredPlan="standard"
-            icon={SquareUserRound}
-            titleKey="common.plans.feature_restricted.usergroups.title"
-            descriptionKey="common.plans.feature_restricted.usergroups.description"
-        >
-            <div className="ml-10 mr-10 mx-auto bg-white rounded-xl shadow-xs">
+        <FeatureGate feature="usergroups">
+            <div className="mx-4 sm:mx-10 bg-white rounded-xl nice-shadow">
                 {/* Header */}
-                <div className="flex items-center justify-between px-6 py-5 border-b border-gray-100">
-                    <div className="flex-1">
+                <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between px-4 sm:px-6 py-5 border-b border-gray-100">
+                    <div className="flex-1 min-w-0">
                         <h1 className="font-bold text-xl text-gray-800">{t('dashboard.users.usergroups.title')}</h1>
                         <p className="text-sm text-gray-500 mt-0.5">
                             {t('dashboard.users.usergroups.subtitle')}
                         </p>
                     </div>
-                    <div className="flex items-center gap-3">
+                    <div className="flex items-center gap-2">
                         {usergroups && usergroups.length > 0 && (
                             <div className="text-sm text-gray-500 bg-gray-50 px-3 py-1.5 rounded-lg font-medium">
                                 {usergroups.length} {usergroups.length === 1
@@ -93,11 +85,11 @@ function OrgUserGroups() {
                                     : t('dashboard.users.usergroups.count.plural')}
                             </div>
                         )}
-                        <div className="relative">
+                        <div className="relative flex-1 sm:flex-none">
                             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
                             <input
                                 placeholder={t('dashboard.users.usergroups.search_placeholder')}
-                                className="pl-10 pr-4 py-2 w-[260px] border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-400 transition-all"
+                                className="pl-10 pr-4 py-2 w-full sm:w-[220px] border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-400 transition-all"
                                 value={searchValue}
                                 onChange={(e) => setSearchValue(e.target.value)}
                             />
@@ -128,8 +120,23 @@ function OrgUserGroups() {
                     {/* UserGroups List */}
                     <div className="space-y-1">
                         {isInitialLoading ? (
-                            <div className="py-20 flex justify-center">
-                                <LearnHouseSpinner size={36} />
+                            <div className="animate-pulse space-y-1 py-2">
+                                {[1, 2, 3].map((i) => (
+                                    <div key={i} className="flex items-center justify-between p-4 rounded-lg">
+                                        <div className="flex items-center gap-4 flex-1">
+                                            <div className="w-10 h-10 bg-gray-100 rounded-lg" />
+                                            <div className="space-y-1.5">
+                                                <div className="h-4 bg-gray-100 rounded w-32" />
+                                                <div className="h-3 bg-gray-100 rounded w-20" />
+                                            </div>
+                                        </div>
+                                        <div className="flex gap-2">
+                                            <div className="h-8 bg-gray-100 rounded w-24" />
+                                            <div className="h-8 bg-gray-100 rounded w-16" />
+                                            <div className="h-8 bg-gray-100 rounded w-16" />
+                                        </div>
+                                    </div>
+                                ))}
                             </div>
                         ) : filteredUsergroups.length === 0 ? (
                             <div className="py-16 text-center">
@@ -253,18 +260,19 @@ function OrgUserGroups() {
                     </div>
                 </div>
             </div>
-        </PlanRestrictedFeature>
+        </FeatureGate>
     )
 }
 
 // Component to fetch and display member count for a usergroup
 function MemberCountBadge({ usergroup_id, org_id, access_token }: { usergroup_id: number, org_id: number, access_token: string }) {
     const { t } = useTranslation()
-    const { data: users } = useSWR(
-        access_token ? `${getAPIUrl()}usergroups/${usergroup_id}/users?org_id=${org_id}` : null,
-        (url) => swrFetcher(url, access_token),
-        { revalidateOnFocus: false }
-    )
+    const { data: users } = useQuery({
+        queryKey: ['usergroup', usergroup_id, 'users', org_id],
+        queryFn: () => apiFetch(`${getAPIUrl()}usergroups/${usergroup_id}/users?org_id=${org_id}`, access_token),
+        enabled: !!access_token,
+        staleTime: 60_000,
+    })
 
     const count = users?.length || 0
 
