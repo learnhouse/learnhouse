@@ -11,6 +11,23 @@ export function checkPort(port: number): Promise<boolean> {
   })
 }
 
+/**
+ * Find the first available port starting from `preferred`, walking up the
+ * provided candidate list. Used to pick a working default when 80 is taken
+ * (a common case on macOS / dev machines running another local stack).
+ */
+export async function findAvailablePort(
+  preferred: number,
+  candidates: number[] = [8080, 8000, 9090, 3030, 5050],
+): Promise<number | null> {
+  if (await checkPort(preferred)) return preferred
+  for (const port of candidates) {
+    if (port === preferred) continue
+    if (await checkPort(port)) return port
+  }
+  return null
+}
+
 export function checkTcpConnection(host: string, port: number, timeoutMs = 5000): Promise<boolean> {
   return new Promise((resolve) => {
     const socket = net.createConnection({ host, port })

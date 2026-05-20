@@ -21,6 +21,7 @@ const baseConfig: SetupConfig = {
   useAiDatabase: false,
   useExternalRedis: false,
   orgName: 'Test Org',
+  orgSlug: 'test-org',
   adminEmail: 'admin@test.dev',
   adminPassword: 'password123',
   aiEnabled: false,
@@ -277,6 +278,61 @@ describe('generateNginxConf — Server Action headers', () => {
   it('forwards X-Forwarded-Host with the full host:port', () => {
     const conf = generateNginxConf()
     expect(conf).toMatch(/proxy_set_header\s+X-Forwarded-Host\s+\$http_host/)
+  })
+})
+
+// ─── Regression: nginx must listen on IPv6 too ──────────────
+//
+// Alpine's busybox `wget` (used by the compose healthcheck) resolves
+// `localhost` to ::1 first. nginx's plain `listen 80;` binds IPv4 only,
+// so the healthcheck failed permanently and the proxy showed
+// "(unhealthy)" even though it was serving traffic fine. We pair an
+// explicit IPv6 listen in the conf with a 127.0.0.1 healthcheck —
+// either alone is enough, both together is durable.
+
+describe('generateNginxConf — IPv6 listen', () => {
+  it('listens on IPv6 as well as IPv4', () => {
+    const conf = generateNginxConf()
+    expect(conf).toMatch(/listen\s+\[::\]:80/)
+  })
+})
+
+describe('generateDockerCompose — IPv6-safe healthchecks', () => {
+  it('nginx healthcheck targets 127.0.0.1, not the dual-stack localhost', () => {
+    const yml = generateDockerCompose(baseConfig)
+    expect(yml).toMatch(/wget[^\n]*127\.0\.0\.1/)
+    // The old buggy form was `wget --spider http://localhost/`.
+    expect(yml).not.toMatch(/wget[^"]*http:\/\/localhost\//)
+  })
+
+  it('caddy healthcheck targets 127.0.0.1, not the dual-stack localhost', () => {
+    const yml = generateDockerCompose({ ...baseConfig, autoSsl: true, useHttps: true, httpPort: 443, sslEmail: 'a@b.c' })
+    expect(yml).toMatch(/wget[^\n]*127\.0\.0\.1:80/)
+    expect(yml).not.toMatch(/wget[^"]*http:\/\/localhost:80\//)
+  })
+})
+
+// ─── Regression: org name/slug propagate to the backend ─────
+//
+// The CLI used to collect `orgName` from the user but never sent it
+// downstream — the API's auto-install hard-coded "Default Organization"
+// / slug "default". The user's wizard input was discarded silently.
+// The fix threads LEARNHOUSE_INITIAL_ORG_NAME / _ORG_SLUG into .env,
+// where the API's `install(short=True)` reads them.
+
+describe('generateEnvFile — org propagation', () => {
+  it('writes the user-chosen org name and slug', () => {
+    const env = generateEnvFile({ ...baseConfig, orgName: 'Acme Academy', orgSlug: 'acme' })
+    expect(env).toContain('LEARNHOUSE_INITIAL_ORG_NAME=')
+    expect(env).toContain('Acme Academy')
+    expect(env).toContain('LEARNHOUSE_INITIAL_ORG_SLUG=acme')
+    expect(env).toContain('NEXT_PUBLIC_LEARNHOUSE_DEFAULT_ORG=acme')
+  })
+
+  it('falls back to default when no slug was set', () => {
+    const env = generateEnvFile({ ...baseConfig, orgSlug: '' as unknown as string })
+    expect(env).toContain('NEXT_PUBLIC_LEARNHOUSE_DEFAULT_ORG=default')
+    expect(env).toContain('LEARNHOUSE_INITIAL_ORG_SLUG=default')
   })
 })
 

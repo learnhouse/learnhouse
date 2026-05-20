@@ -1,5 +1,7 @@
 import * as p from '../utils/prompt.js'
+import pc from 'picocolors'
 import { validateDomain, validateEmail, validatePort } from '../utils/validators.js'
+import { checkPort, findAvailablePort } from './../utils/network.js'
 
 export interface DomainConfig {
   domain: string
@@ -48,23 +50,49 @@ export async function promptDomain(): Promise<DomainConfig> {
     }
   }
 
-  const defaultPort = autoSsl ? 443 : 80
+  // Pick a sensible default port. If the canonical default (80 or 443) is
+  // already in use we suggest the first available alternative (8080, 8000…)
+  // so the wizard doesn't hand the user a config that will fail on `up`.
+  const canonicalDefault = autoSsl ? 443 : 80
+  let defaultPort = canonicalDefault
+  if (!autoSsl) {
+    const available = await findAvailablePort(canonicalDefault)
+    if (available && available !== canonicalDefault) {
+      p.log.warn(`Port ${canonicalDefault} is already in use. Suggesting ${pc.cyan(String(available))} instead.`)
+      defaultPort = available
+    } else if (!available) {
+      p.log.warn('Could not find a free common port. You will need to enter one manually.')
+    }
+  }
+
   const portMessage = autoSsl
     ? 'HTTPS port? (Caddy needs 443 for auto SSL, and will also listen on 80 for redirect)'
     : 'HTTP port for the web server?'
 
-  const port = await p.text({
-    message: portMessage,
-    placeholder: String(defaultPort),
-    defaultValue: String(defaultPort),
-    validate: validatePort,
-  })
-  if (p.isCancel(port)) { p.cancel(); process.exit(0) }
+  let httpPort = 0
+  while (httpPort === 0) {
+    const port = await p.text({
+      message: portMessage,
+      placeholder: String(defaultPort),
+      defaultValue: String(defaultPort),
+      validate: validatePort,
+    })
+    if (p.isCancel(port)) { p.cancel(); process.exit(0) }
+    const parsed = parseInt(port as string, 10)
+    // Only re-check non-privileged ports here — privileged ports (≤1024) might
+    // be bound by a system service that the wizard can't see from user space,
+    // but Docker can still publish to them; trust the user in that case.
+    if (parsed > 1024 && !(await checkPort(parsed))) {
+      p.log.warn(`Port ${parsed} is already in use. Pick another.`)
+      continue
+    }
+    httpPort = parsed
+  }
 
   return {
     domain: domain as string,
     useHttps,
-    httpPort: parseInt(port as string, 10),
+    httpPort,
     autoSsl,
     sslEmail,
   }

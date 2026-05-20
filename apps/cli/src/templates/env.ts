@@ -52,7 +52,7 @@ export function generateEnvFile(config: SetupConfig): string {
     `NEXT_PUBLIC_LEARNHOUSE_DOMAIN=${domainWithPort}`,
     `NEXT_PUBLIC_LEARNHOUSE_TOP_DOMAIN=${topDomain}`,
     'NEXT_PUBLIC_LEARNHOUSE_MULTI_ORG=False',
-    'NEXT_PUBLIC_LEARNHOUSE_DEFAULT_ORG=default',
+    `NEXT_PUBLIC_LEARNHOUSE_DEFAULT_ORG=${config.orgSlug || 'default'}`,
     `NEXT_PUBLIC_LEARNHOUSE_HTTPS=${config.useHttps ? 'True' : 'False'}`,
   ]
 
@@ -99,6 +99,8 @@ export function generateEnvFile(config: SetupConfig): string {
     `LEARNHOUSE_AUTH_JWT_SECRET_KEY=${jwtSecret}`,
     `LEARNHOUSE_INITIAL_ADMIN_EMAIL=${quoteEnvValue(config.adminEmail)}`,
     `LEARNHOUSE_INITIAL_ADMIN_PASSWORD=${quoteEnvValue(config.adminPassword)}`,
+    `LEARNHOUSE_INITIAL_ORG_NAME=${quoteEnvValue(config.orgName || 'Default Organization')}`,
+    `LEARNHOUSE_INITIAL_ORG_SLUG=${quoteEnvValue(config.orgSlug || 'default')}`,
     '',
     '# =============================================================================',
     '# Collaboration Server',
