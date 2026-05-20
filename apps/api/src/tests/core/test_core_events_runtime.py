@@ -42,7 +42,8 @@ class _FakeSession:
         return False
 
 
-def test_auto_install_branches(monkeypatch):
+@pytest.mark.asyncio
+async def test_auto_install_branches(monkeypatch):
     create_all_calls = []
     installs = []
     refreshes = []
@@ -84,9 +85,12 @@ def test_auto_install_branches(monkeypatch):
         "Session",
         lambda engine: _FakeSession(None),
     )
-    monkeypatch.setattr(autoinstall, "install", lambda short=True: installs.append(short))
+    async def fake_install_async(short=True):
+        installs.append(short)
 
-    autoinstall.auto_install()
+    monkeypatch.setattr(autoinstall, "_install_async", fake_install_async)
+
+    await autoinstall.auto_install()
 
     assert create_all_calls and len(create_all_calls) == 1
     assert installs == [True]
@@ -97,7 +101,7 @@ def test_auto_install_branches(monkeypatch):
         "Session",
         lambda engine: _FakeSession(SimpleNamespace(slug="anything")),
     )
-    autoinstall.auto_install()
+    await autoinstall.auto_install()
 
     assert installs == [True]
     assert len(refreshes) == 1  # existing-install path always refreshes

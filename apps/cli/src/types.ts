@@ -23,6 +23,7 @@ export interface SetupConfig {
 
   // Organization
   orgName: string
+  orgSlug: string
 
   // Admin
   adminEmail: string

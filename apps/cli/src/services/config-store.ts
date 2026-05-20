@@ -16,7 +16,7 @@ export function writeConfig(config: SetupConfig): void {
     useHttps: config.useHttps,
     autoSsl: config.autoSsl,
     useExternalDb: config.useExternalDb,
-    orgSlug: 'default',
+    orgSlug: config.orgSlug || 'default',
   }
   fs.writeFileSync(
     path.join(config.installDir, CONFIG_FILENAME),

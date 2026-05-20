@@ -19,7 +19,7 @@ import { generateCaddyfile } from '../templates/caddyfile.js'
 import { writeConfig } from '../services/config-store.js'
 import { dockerComposeUp } from '../services/docker.js'
 import { waitForHealth } from '../services/health.js'
-import { checkPort } from '../utils/network.js'
+import { checkPort, findAvailablePort } from '../utils/network.js'
 import { resolveAppImage } from '../services/version-check.js'
 
 const STEP_NAMES = [
@@ -87,12 +87,10 @@ async function stepInstallDir(): Promise<string | typeof BACK> {
 
 async function stepDomain() {
   p.log.step(pc.cyan(`Step 2/6`) + ' Domain Configuration')
-  const config = await promptDomain()
-  const portAvailable = await checkPort(config.httpPort)
-  if (!portAvailable) {
-    p.log.warn(`Port ${config.httpPort} is already in use. You may need to free it before starting.`)
-  }
-  return config
+  // promptDomain itself now refuses to return a non-privileged port that
+  // is in use, so by the time we get here httpPort is either free or a
+  // privileged port (≤1024) we have to trust. No extra warning needed.
+  return await promptDomain()
 }
 
 async function stepDatabase() {
@@ -122,6 +120,8 @@ export interface SetupOptions {
   port?: number
   adminEmail?: string
   adminPassword?: string
+  orgName?: string
+  orgSlug?: string
   channel?: string
   start?: boolean
 }
@@ -145,19 +145,38 @@ export async function setupCommand(options: SetupOptions) {
     const channel = (options.channel === 'dev' ? 'dev' : 'stable') as 'stable' | 'dev'
     const dbPassword = crypto.randomBytes(24).toString('base64url')
 
+    // If the user didn't pin a port, prefer 80 but fall back automatically
+    // when it's taken — CI shouldn't fail just because the runner has another
+    // service on port 80.
+    let httpPort = options.port || 80
+    if (!options.port) {
+      const available = await findAvailablePort(httpPort)
+      if (available && available !== httpPort) {
+        console.log(`Port ${httpPort} is in use — falling back to ${available}.`)
+        httpPort = available
+      } else if (!available) {
+        console.error('No common port is available. Pass --port=<port> explicitly.')
+        process.exit(1)
+      }
+    } else if (!(await checkPort(httpPort))) {
+      console.error(`Port ${httpPort} is already in use. Free it or pass a different --port.`)
+      process.exit(1)
+    }
+
     const config: SetupConfig = {
       deploymentId,
       installDir: resolvedDir,
       channel,
       domain: options.domain || 'localhost',
       useHttps: false,
-      httpPort: options.port || 80,
+      httpPort,
       autoSsl: false,
       useExternalDb: false,
       dbPassword,
       useAiDatabase: false,
       useExternalRedis: false,
-      orgName: 'Default',
+      orgName: options.orgName || 'Default Organization',
+      orgSlug: (options.orgSlug || 'default').toLowerCase(),
       adminEmail: options.adminEmail || 'admin@school.dev',
       adminPassword: options.adminPassword,
       aiEnabled: false,
@@ -191,8 +210,14 @@ export async function setupCommand(options: SetupOptions) {
         } else {
           console.log('Health check timed out — services may still be starting')
         }
-      } catch {
-        console.error('Failed to start services')
+      } catch (err) {
+        const stderr = (err as { stderr?: Buffer; message?: string })?.stderr?.toString?.() ?? ''
+        const message = (err as { message?: string })?.message ?? ''
+        if (/port is already allocated/i.test(stderr) || /address already in use/i.test(stderr) || /port is already allocated/i.test(message)) {
+          console.error(`Port ${config.httpPort} is already bound — pass --port=<other> and re-run.`)
+        } else {
+          console.error('Failed to start services')
+        }
         process.exit(1)
       }
     }
@@ -463,8 +488,27 @@ export async function setupCommand(options: SetupOptions) {
       s2.stop('Services started')
     } catch (err) {
       s2.stop('Failed to start services')
-      p.log.error('Docker Compose failed. Check the output above for details.')
-      p.log.info(`You can manually start with: cd ${finalDir} && docker compose up -d`)
+      const stderr = (err as { stderr?: Buffer; message?: string })?.stderr?.toString?.() ?? ''
+      const message = (err as { message?: string })?.message ?? ''
+      const portAllocated =
+        /port is already allocated/i.test(stderr) ||
+        /port is already allocated/i.test(message) ||
+        /bind:.*address already in use/i.test(stderr)
+      if (portAllocated) {
+        p.log.error(
+          `Port ${config.httpPort} is already bound by another process or container — ` +
+          `Docker couldn't publish to it.`
+        )
+        p.log.info(
+          'Fix one of these and re-run `learnhouse start` (your config is already saved):\n' +
+          `  • Stop whatever is using port ${config.httpPort}, or\n` +
+          `  • Re-run \`learnhouse setup\` and pick a different port, or\n` +
+          `  • Edit HTTP_PORT in ${finalDir}/.env and run \`docker compose up -d\` from there.`
+        )
+      } else {
+        p.log.error('Docker Compose failed. Check the output above for details.')
+        p.log.info(`You can manually start with: cd ${finalDir} && docker compose up -d`)
+      }
       process.exit(1)
     }
 

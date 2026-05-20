@@ -53,7 +53,7 @@ def startup_app(app: FastAPI) -> Callable:
         await check_content_directory()
 
         # Check if auto-installation is needed
-        auto_install()
+        await auto_install()
 
         # Reconcile pack credits (Redis ↔ DB)
         await _reconcile_packs()

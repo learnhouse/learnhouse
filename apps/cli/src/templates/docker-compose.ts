@@ -38,7 +38,8 @@ export function generateDockerCompose(config: SetupConfig, appImage?: string): s
     networks:
       - learnhouse-network-${id}
     healthcheck:
-      test: ["CMD-SHELL", "wget --quiet --tries=1 --spider http://localhost:80/ || exit 1"]
+      # Use 127.0.0.1 — alpine's wget tries IPv6 first and Caddy only binds v4 by default
+      test: ["CMD-SHELL", "wget --quiet --tries=1 --spider http://127.0.0.1:80/ || exit 1"]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -58,7 +59,8 @@ export function generateDockerCompose(config: SetupConfig, appImage?: string): s
     networks:
       - learnhouse-network-${id}
     healthcheck:
-      test: ["CMD-SHELL", "wget --quiet --tries=1 --spider http://localhost/ || exit 1"]
+      # Use 127.0.0.1 — alpine's wget resolves localhost to IPv6 first, but nginx only listens on v4 by default
+      test: ["CMD-SHELL", "wget --quiet --tries=1 --spider http://127.0.0.1/ || exit 1"]
       interval: 30s
       timeout: 10s
       retries: 3
