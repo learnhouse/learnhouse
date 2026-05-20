@@ -520,7 +520,10 @@ async def install_create_organization(org_object: OrganizationCreate, db_session
 
 
 async def install_create_organization_user(
-    user_object: UserCreate, org_slug: str, db_session: AsyncSession
+    user_object: UserCreate,
+    org_slug: str,
+    db_session: AsyncSession,
+    is_superadmin: bool = False,
 ):
     user = User.model_validate(user_object)
 
@@ -528,6 +531,7 @@ async def install_create_organization_user(
     user.user_uuid = f"user_{uuid4()}"
     user.password = security_hash_password(user_object.password)
     user.email_verified = False
+    user.is_superadmin = is_superadmin
     user.creation_date = str(datetime.now())
     user.update_date = str(datetime.now())
 
