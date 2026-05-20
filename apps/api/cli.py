@@ -108,7 +108,9 @@ async def _install_async(short: bool) -> None:
                 user = UserCreate(
                     username="admin", email=email, password=password
                 )
-                await install_create_organization_user(user, org_slug, db_session)
+                await install_create_organization_user(
+                    user, org_slug, db_session, is_superadmin=True
+                )
                 print("Default organization user created ✅")
 
                 # Show the user how to login
@@ -150,7 +152,9 @@ async def _install_async(short: bool) -> None:
                 email = typer.prompt("What's the email for the user?")
                 password = typer.prompt("What's the password for the user?", hide_input=True)
                 user = UserCreate(username=username, email=email, password=password)
-                await install_create_organization_user(user, slug, db_session)
+                await install_create_organization_user(
+                    user, slug, db_session, is_superadmin=True
+                )
                 print(username + " user created ✅")
 
                 # Show the user how to login
