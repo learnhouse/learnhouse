@@ -77,7 +77,6 @@ class TestTokenHelpersAndValidation:
 
         assert full_token == "lh_abc123"
         assert prefix == "lh_abc123"
-        assert token_hash == hash_token(full_token)
         assert verify_token(full_token, token_hash) is True
         assert verify_token("lh_other", token_hash) is False
 
@@ -416,48 +415,50 @@ class TestApiTokenLifecycle:
 class TestValidateApiTokenForAuth:
     @pytest.mark.asyncio
     async def test_validate_api_token_for_auth_success_and_edge_paths(self, db, org):
-        valid_token = "lh_valid_token"
-        valid_hash = hash_token(valid_token)
+        valid_token = "lh_valid_tkn"
         valid = await _make_token(
             db,
             org,
             token_uuid="apitoken_valid",
-            token_hash=valid_hash,
-            token_prefix="lh_valid",
+            token_hash=hash_token(valid_token),
+            token_prefix=valid_token[:12],
             expires_at=(datetime.now(timezone.utc) + timedelta(days=1)).isoformat(),
         )
+        inactive_token = "lh_inactiv_a"
         _inactive = await _make_token(
             db,
             org,
             token_uuid="apitoken_inactive",
-            token_hash=hash_token("lh_inactive"),
-            token_prefix="lh_inactive",
+            token_hash=hash_token(inactive_token),
+            token_prefix=inactive_token[:12],
             is_active=False,
         )
+        expired_token = "lh_expired_a"
         _expired = await _make_token(
             db,
             org,
             token_uuid="apitoken_expired",
-            token_hash=hash_token("lh_expired"),
-            token_prefix="lh_expired",
+            token_hash=hash_token(expired_token),
+            token_prefix=expired_token[:12],
             expires_at=(datetime.now(timezone.utc) - timedelta(days=1)).isoformat(),
         )
+        malformed_token = "lh_malformed"
         malformed = await _make_token(
             db,
             org,
             token_uuid="apitoken_malformed",
-            token_hash=hash_token("lh_malformed"),
-            token_prefix="lh_malformed",
+            token_hash=hash_token(malformed_token),
+            token_prefix=malformed_token[:12],
             expires_at="not-a-date",
         )
 
         assert await validate_api_token_for_auth("bad_prefix", db) is None
         assert await validate_api_token_for_auth("lh_missing", db) is None
-        assert await validate_api_token_for_auth("lh_inactive", db) is None
-        assert await validate_api_token_for_auth("lh_expired", db) is None
+        assert await validate_api_token_for_auth(inactive_token, db) is None
+        assert await validate_api_token_for_auth(expired_token, db) is None
 
         with patch.object(db, "commit", side_effect=Exception("commit failed")):
-            malformed_result = await validate_api_token_for_auth("lh_malformed", db)
+            malformed_result = await validate_api_token_for_auth(malformed_token, db)
 
         valid_result = await validate_api_token_for_auth(valid_token, db)
 

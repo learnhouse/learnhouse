@@ -68,24 +68,17 @@ export function listInstallations(): { name: string; dir: string; config: LearnH
 }
 
 export function findInstallDir(): string {
-  // 1. If only one installation exists, use it
   const installations = listInstallations()
   if (installations.length === 1) return installations[0].dir
 
-  // 2. Among multiple, prefer one whose containers are actually running
-  //    (avoids targeting a stale install dir whose containers are long gone)
   if (installations.length > 1) {
     const running = installations.find((i) =>
       isContainerRunning(`learnhouse-app-${i.config.deploymentId}`)
     )
-    if (running) return running.dir
-    return installations[0].dir
+    return (running ?? installations[0]).dir
   }
 
-  // 3. Fallback: check CWD for legacy installs
   const cwd = process.cwd()
   if (isCompleteInstall(cwd)) return cwd
-
-  // No installation found — return cwd so readConfig returns null
   return process.cwd()
 }

@@ -1,7 +1,20 @@
+const RESERVED_TLDS = new Set([
+  'local',
+  'localhost',
+  'test',
+  'invalid',
+  'example',
+])
+
 export function validateEmail(value: string): string | undefined {
   if (!value) return 'Email is required'
   const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
   if (!re.test(value)) return 'Please enter a valid email address'
+  const domain = value.slice(value.lastIndexOf('@') + 1).toLowerCase()
+  const tld = domain.includes('.') ? domain.slice(domain.lastIndexOf('.') + 1) : domain
+  if (RESERVED_TLDS.has(tld)) {
+    return `Reserved TLD ".${tld}" is not accepted. Use a real domain (e.g. admin@yourdomain.com).`
+  }
   return undefined
 }
 

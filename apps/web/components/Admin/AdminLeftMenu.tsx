@@ -2,6 +2,7 @@
 import {
   Buildings,
   ChartBar,
+  Key,
   SignOut,
   User,
   Users,
@@ -62,6 +63,11 @@ function AdminTopMenu() {
             href="/admin/analytics"
             icon={<ChartBar size={16} weight="fill" />}
             label="Analytics"
+          />
+          <NavLink
+            href="/admin/developers"
+            icon={<Key size={16} weight="fill" />}
+            label="Developers"
           />
         </nav>
 

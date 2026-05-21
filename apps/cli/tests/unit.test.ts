@@ -7,6 +7,7 @@ import { generateEnvFile } from '../src/templates/env.js'
 import { generateNginxConf } from '../src/templates/nginx.js'
 import { generateCaddyfile } from '../src/templates/caddyfile.js'
 import { writeConfig, readConfig, findInstallDir, listInstallations } from '../src/services/config-store.js'
+import { validateEmail } from '../src/utils/validators.js'
 import type { SetupConfig } from '../src/types.js'
 
 const baseConfig: SetupConfig = {
@@ -425,5 +426,52 @@ describe('findInstallDir — picks the running install over a stale one', () => 
     ;(isContainerRunning as ReturnType<typeof vi.fn>).mockReturnValue(false)
 
     expect(findInstallDir()).toBe(only)
+  })
+})
+
+// ─── Regression: admin email must reject reserved TLDs ──────
+//
+// The API's Pydantic EmailStr rejects RFC 6761 reserved TLDs (.local,
+// .test, .localhost, .invalid). If the CLI accepts one of those, the
+// generated .env passes setup but the API container crashes during
+// auto_install — leaving an empty `organization` table and a restart
+// loop. Reported on Discord against 1.2.1 with a *.local admin email.
+
+describe('validateEmail — reserved TLDs', () => {
+  it('accepts a normal email', () => {
+    expect(validateEmail('admin@school.dev')).toBeUndefined()
+    expect(validateEmail('admin@yourdomain.com')).toBeUndefined()
+  })
+
+  it('rejects empty', () => {
+    expect(validateEmail('')).toMatch(/required/i)
+  })
+
+  it('rejects a malformed address', () => {
+    expect(validateEmail('not-an-email')).toMatch(/valid email/i)
+  })
+
+  it('rejects .local TLD (RFC 6762 mDNS)', () => {
+    expect(validateEmail('admin@school.local')).toMatch(/RFC 6761|reserved/i)
+  })
+
+  it('rejects .test TLD (RFC 6761)', () => {
+    expect(validateEmail('admin@learnhouse.test')).toMatch(/RFC 6761|reserved/i)
+  })
+
+  it('rejects .invalid TLD (RFC 6761)', () => {
+    expect(validateEmail('admin@host.invalid')).toMatch(/RFC 6761|reserved/i)
+  })
+
+  it('rejects .localhost TLD', () => {
+    expect(validateEmail('admin@host.localhost')).toMatch(/RFC 6761|reserved/i)
+  })
+
+  it('rejects .example TLD (RFC 2606 documentation)', () => {
+    expect(validateEmail('admin@learnhouse.example')).toMatch(/RFC 6761|reserved/i)
+  })
+
+  it('is case-insensitive on the TLD', () => {
+    expect(validateEmail('admin@SCHOOL.LOCAL')).toMatch(/RFC 6761|reserved/i)
   })
 })

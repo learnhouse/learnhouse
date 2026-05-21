@@ -1,6 +1,18 @@
+# ruff: noqa: E402
+# stdout/stderr reconfig must run before any other import that might print.
 import asyncio
 import os
+import sys
 from typing import Annotated
+
+# Force UTF-8 so install messages with emoji don't crash cp1252 consoles (Windows).
+for _stream in (sys.stdout, sys.stderr):
+    if hasattr(_stream, "reconfigure"):
+        try:
+            _stream.reconfigure(encoding="utf-8", errors="replace")
+        except Exception:
+            pass
+
 from sqlalchemy import create_engine
 from sqlalchemy.ext.asyncio import create_async_engine
 from sqlmodel import SQLModel

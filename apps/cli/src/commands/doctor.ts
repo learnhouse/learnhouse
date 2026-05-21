@@ -162,8 +162,7 @@ export async function doctorCommand() {
     p.log.message(pc.dim(diskUsage.trim()))
   } catch { /* ignore */ }
 
-  // 9. Log scanning — match logger emissions, not literal mentions of "error"
-  //    (e.g. file paths like "learnhouse-api-error.log" should not trip this)
+  // 9. Log scanning
   p.log.step('Log Analysis')
   const errorPatterns = /\bERROR\b[:\s]|\bFATAL\b[:\s]|\bTraceback\b|\bException\b[:\s]/
   for (const c of containers) {
