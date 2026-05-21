@@ -105,6 +105,21 @@ class APITokenUser(SQLModel):
     created_by_user_id: int = 0  # User who created the token
 
 
+class SuperadminAPITokenUser(SQLModel):
+    """Represents an authenticated cross-org superadmin API token request.
+
+    Deliberately NOT a subclass of APITokenUser — existing
+    ``isinstance(user, APITokenUser)`` org-scope checks continue to reject
+    org tokens unchanged, while superadmin tokens are handled via their own
+    type and the ``require_superadmin`` dependency.
+    """
+    id: int = 0  # superadmin_apitoken.id (NOT a user id)
+    user_uuid: str = "satoken_user"  # set to token_uuid
+    username: str = "superadmin_api_token"
+    token_name: str = ""
+    created_by_user_id: int = 0  # the superadmin user who minted it
+
+
 class User(UserBase, table=True):
     __table_args__ = (
         Index("ix_user_email", "email"),
