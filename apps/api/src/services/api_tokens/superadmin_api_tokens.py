@@ -1,12 +1,5 @@
-"""Service module for cross-org superadmin API tokens.
+"""Cross-org superadmin API tokens."""
 
-This is deliberately separate from ``src.services.api_tokens.api_tokens`` —
-the org-scoped service is entangled with org_id, Rights, and per-org RBAC
-checks. Sharing helpers would leak superadmin concepts into the org service
-and vice versa, so the two stay parallel.
-"""
-
-import hashlib
 import secrets
 from datetime import datetime
 from typing import List, Optional
@@ -23,6 +16,7 @@ from src.db.superadmin_api_tokens import (
     SuperadminAPITokenRead,
     SuperadminAPITokenUpdate,
 )
+from src.security.security import security_hash_token, security_verify_token
 
 
 TOKEN_PREFIX = "lh_sa_"
@@ -30,28 +24,19 @@ TOKEN_BYTES = 32  # 256 bits of entropy
 
 
 def generate_token() -> tuple[str, str, str]:
-    """Generate a new superadmin API token.
-
-    Returns:
-        (full_token, token_prefix, token_hash)
-        - full_token: complete token, only returned to the user once on creation
-        - token_prefix: first 15 chars for display (``lh_sa_xxxxxxxxx``)
-        - token_hash: SHA-256 hex for storage and lookup
-    """
     random_part = secrets.token_urlsafe(TOKEN_BYTES)
     full_token = f"{TOKEN_PREFIX}{random_part}"
     token_prefix = full_token[:15]
-    token_hash = hashlib.sha256(full_token.encode()).hexdigest()
+    token_hash = security_hash_token(full_token)
     return full_token, token_prefix, token_hash
 
 
 def hash_token(token: str) -> str:
-    return hashlib.sha256(token.encode()).hexdigest()
+    return security_hash_token(token)
 
 
 def verify_token(provided_token: str, stored_hash: str) -> bool:
-    """Timing-safe comparison of a provided token against a stored hash."""
-    return secrets.compare_digest(hash_token(provided_token), stored_hash)
+    return security_verify_token(provided_token, stored_hash)
 
 
 async def create_superadmin_token(
@@ -198,14 +183,18 @@ async def validate_superadmin_token_for_auth(
     if not token.startswith(TOKEN_PREFIX):
         return None
 
-    token_hash = hash_token(token)
-    api_token = (await db_session.execute(
-        select(SuperadminAPIToken).where(SuperadminAPIToken.token_hash == token_hash)
-    )).scalars().first()
+    candidates = (await db_session.execute(
+        select(SuperadminAPIToken).where(
+            SuperadminAPIToken.token_prefix == token[:15],
+            SuperadminAPIToken.is_active == True,  # noqa: E712
+        )
+    )).scalars().all()
+    api_token = next(
+        (t for t in candidates if security_verify_token(token, t.token_hash)),
+        None,
+    )
 
     if not api_token:
-        return None
-    if not api_token.is_active:
         return None
 
     if api_token.expires_at:

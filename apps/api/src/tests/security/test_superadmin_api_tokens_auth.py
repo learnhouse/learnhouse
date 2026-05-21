@@ -1,3 +1,4 @@
+# ruff: noqa: E402
 """Tests for the superadmin API token auth path.
 
 Covers the new ``lh_sa_`` branch in ``get_current_user``, the
@@ -10,13 +11,23 @@ from types import SimpleNamespace
 from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
+
+# These tests exercise EE-only code paths (the `ee/` package). OSS builds
+# strip that directory, so the whole module would fail to import and
+# bring pytest collection down with it. Skip the whole module instead.
+ee_superadmin_tokens = pytest.importorskip(
+    "ee.routers.superadmin_tokens",
+    reason="EE module not available in this build",
+)
+
 from fastapi import HTTPException, Request
 from sqlmodel import Session
 
 from src.db.users import AnonymousUser, APITokenUser, PublicUser, SuperadminAPITokenUser
 from src.security.auth import get_current_user, validate_superadmin_api_token
 from src.security.superadmin import require_superadmin
-from ee.routers.superadmin_tokens import reject_any_api_token
+
+reject_any_api_token = ee_superadmin_tokens.reject_any_api_token
 
 
 def _mock_request(auth_header: str = ""):

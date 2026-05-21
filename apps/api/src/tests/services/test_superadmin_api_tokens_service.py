@@ -1,7 +1,6 @@
 """Tests for src/services/api_tokens/superadmin_api_tokens.py."""
 
 from datetime import datetime, timedelta, timezone
-from unittest.mock import patch
 
 import pytest
 from fastapi import HTTPException
@@ -48,20 +47,24 @@ async def _seed_token(db, **overrides) -> SuperadminAPIToken:
 
 
 class TestTokenHelpers:
-    def test_generate_token_prefix_and_hash(self):
+    def test_generate_token_prefix_and_shape(self):
         full, prefix, h = generate_token()
         assert full.startswith(TOKEN_PREFIX)
         assert len(prefix) == 15
         assert prefix == full[:15]
-        assert h == hash_token(full)
+        assert verify_token(full, h) is True
 
     def test_generate_is_unique(self):
         seen = {generate_token()[0] for _ in range(200)}
         assert len(seen) == 200
 
-    def test_hash_is_deterministic(self):
-        assert hash_token("lh_sa_x") == hash_token("lh_sa_x")
-        assert hash_token("lh_sa_x") != hash_token("lh_sa_y")
+    def test_hash_is_salted_and_verifies(self):
+        h1 = hash_token("lh_sa_x")
+        h2 = hash_token("lh_sa_x")
+        assert h1 != h2
+        assert verify_token("lh_sa_x", h1) is True
+        assert verify_token("lh_sa_x", h2) is True
+        assert verify_token("lh_sa_y", h1) is False
 
     def test_verify_token_happy_and_wrong(self):
         full, _prefix, h = generate_token()
@@ -139,11 +142,31 @@ class TestListGetUpdateRevoke:
             await update_superadmin_token(db, created.token_uuid, SuperadminAPITokenUpdate(name="   "))
         assert exc.value.status_code == 400
 
+    async def test_update_rejects_name_too_long(self, db):
+        created = await create_superadmin_token(db, SuperadminAPITokenCreate(name="orig"), created_by_user_id=1)
+        with pytest.raises(HTTPException) as exc:
+            await update_superadmin_token(
+                db, created.token_uuid, SuperadminAPITokenUpdate(name="x" * 101)
+            )
+        assert exc.value.status_code == 400
+
+    async def test_update_404s_unknown_uuid(self, db):
+        with pytest.raises(HTTPException) as exc:
+            await update_superadmin_token(
+                db, "satoken_does_not_exist", SuperadminAPITokenUpdate(name="renamed")
+            )
+        assert exc.value.status_code == 404
+
     async def test_revoke_soft_deletes(self, db):
         created = await create_superadmin_token(db, SuperadminAPITokenCreate(name="r"), created_by_user_id=1)
         await revoke_superadmin_token(db, created.token_uuid)
         after = await get_superadmin_token(db, created.token_uuid)
         assert after.is_active is False
+
+    async def test_revoke_404s_unknown_uuid(self, db):
+        with pytest.raises(HTTPException) as exc:
+            await revoke_superadmin_token(db, "satoken_does_not_exist")
+        assert exc.value.status_code == 404
 
 
 class TestValidateForAuth:
@@ -184,3 +207,25 @@ class TestValidateForAuth:
         _, full = await _seed_token(db, expires_at="not-a-date")
         result = await validate_superadmin_token_for_auth(full, db)
         assert result is not None
+
+    async def test_last_used_update_failure_does_not_break_auth(self, db, monkeypatch):
+        """If updating last_used_at raises, auth still succeeds — the timestamp
+        is bookkeeping, not a security gate."""
+        token_row, full = await _seed_token(db)
+
+        original_commit = db.commit
+        commit_calls = {"n": 0}
+
+        async def flaky_commit():
+            commit_calls["n"] += 1
+            if commit_calls["n"] == 1:
+                # First commit (the last_used_at update) raises; subsequent
+                # commits behave normally.
+                raise RuntimeError("simulated DB hiccup on last_used_at update")
+            return await original_commit()
+
+        monkeypatch.setattr(db, "commit", flaky_commit)
+
+        result = await validate_superadmin_token_for_auth(full, db)
+        assert result is not None
+        assert result.id == token_row.id

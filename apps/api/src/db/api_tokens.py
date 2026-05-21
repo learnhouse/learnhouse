@@ -16,15 +16,15 @@ class APIToken(APITokenBase, table=True):
     """Database model for API tokens"""
     __tablename__ = "apitoken"
     __table_args__ = (
-        Index("ix_apitoken_token_hash", "token_hash"),
+        Index("ix_apitoken_token_prefix", "token_prefix"),
         Index("ix_apitoken_org_id", "org_id"),
         {"extend_existing": True}
     )
 
     id: Optional[int] = Field(default=None, primary_key=True)
     token_uuid: str = Field(default="", max_length=100)  # format: apitoken_{uuid4()}
-    token_prefix: str = Field(default="", max_length=12)  # first 12 chars, e.g., "lh_abc12345"
-    token_hash: str = Field(default="", sa_column=Column(String(64)))  # SHA-256 hash, 64 chars
+    token_prefix: str = Field(default="", max_length=12)
+    token_hash: str = Field(default="", sa_column=Column(String(255)))
     org_id: int = Field(
         sa_column=Column(Integer, ForeignKey("organization.id", ondelete="CASCADE"), nullable=False)
     )

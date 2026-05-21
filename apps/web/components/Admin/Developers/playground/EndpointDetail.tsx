@@ -188,7 +188,7 @@ export default function EndpointDetail({
         <section>
           <div className="flex items-center justify-between mb-2">
             <h3 className="text-xs uppercase tracking-wider text-white/40 font-semibold">Request Body (JSON)</h3>
-            {endpoint.sampleBody && (
+            {endpoint.sampleBody != null && (
               <button
                 onClick={() => setBodyText(JSON.stringify(endpoint.sampleBody, null, 2))}
                 className="text-[11px] text-white/40 hover:text-white/70 transition-colors"

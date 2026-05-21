@@ -42,7 +42,7 @@ class _FakeSession:
         return False
 
 
-def test_auto_install_triggers_install_when_no_orgs_exist(monkeypatch):
+async def test_auto_install_triggers_install_when_no_orgs_exist(monkeypatch):
     created_engines = []
     created_tables = []
     installs = []
@@ -50,14 +50,17 @@ def test_auto_install_triggers_install_when_no_orgs_exist(monkeypatch):
 
     config = SimpleNamespace(database_config=SimpleNamespace(sql_connection_string="sqlite:///test.db"))
 
+    async def fake_install_async(short=False):
+        installs.append(short)
+
     monkeypatch.setattr(autoinstall, "get_learnhouse_config", lambda: config)
     monkeypatch.setattr(autoinstall, "create_engine", lambda *args, **kwargs: created_engines.append((args, kwargs)) or object())
     monkeypatch.setattr(autoinstall.SQLModel.metadata, "create_all", lambda engine: created_tables.append(engine))
     monkeypatch.setattr(autoinstall, "Session", lambda engine: _FakeSession(engine, row=None))
-    monkeypatch.setattr(autoinstall, "install", lambda short: installs.append(short))
+    monkeypatch.setattr(autoinstall, "_install_async", fake_install_async)
     monkeypatch.setattr(autoinstall, "install_default_elements", lambda db: refreshes.append(db))
 
-    autoinstall.auto_install()
+    await autoinstall.auto_install()
 
     assert created_engines
     assert created_tables
@@ -66,7 +69,7 @@ def test_auto_install_triggers_install_when_no_orgs_exist(monkeypatch):
     assert refreshes == []
 
 
-def test_auto_install_refreshes_default_roles_when_any_org_exists(monkeypatch):
+async def test_auto_install_refreshes_default_roles_when_any_org_exists(monkeypatch):
     import contextlib
     created_tables = []
     installs = []
@@ -88,20 +91,23 @@ def test_auto_install_refreshes_default_roles_when_any_org_exists(monkeypatch):
         async def dispose(self):
             pass
 
+    async def fake_install_async(short=False):
+        installs.append(short)
+
     monkeypatch.setattr(autoinstall, "get_learnhouse_config", lambda: config)
     monkeypatch.setattr(autoinstall, "create_engine", lambda *args, **kwargs: object())
     monkeypatch.setattr(autoinstall, "create_async_engine", lambda *args, **kwargs: _FakeAsyncEngine())
     monkeypatch.setattr(autoinstall, "async_sessionmaker", lambda *args, **kwargs: _FakeAsyncSessionmaker())
     monkeypatch.setattr(autoinstall.SQLModel.metadata, "create_all", lambda engine: created_tables.append(engine))
     monkeypatch.setattr(autoinstall, "Session", lambda engine: _FakeSession(engine, row=object()))
-    monkeypatch.setattr(autoinstall, "install", lambda short: installs.append(short))
+    monkeypatch.setattr(autoinstall, "_install_async", fake_install_async)
 
     async def fake_install_default_elements(db):
         refreshes.append(db)
 
     monkeypatch.setattr(autoinstall, "install_default_elements", fake_install_default_elements)
 
-    autoinstall.auto_install()
+    await autoinstall.auto_install()
 
     assert created_tables
     assert installs == []
@@ -291,10 +297,13 @@ async def test_startup_and_shutdown_app(monkeypatch):
     async def fake_reconcile_packs():
         calls.append("reconcile")
 
+    async def fake_auto_install():
+        calls.append("install")
+
     monkeypatch.setattr(events, "connect_to_db", connect_to_db)
     monkeypatch.setattr(events, "create_logs_dir", create_logs_dir)
     monkeypatch.setattr(events, "check_content_directory", check_content_directory)
-    monkeypatch.setattr(events, "auto_install", lambda: calls.append("install"))
+    monkeypatch.setattr(events, "auto_install", fake_auto_install)
     monkeypatch.setattr(events, "_reconcile_packs", fake_reconcile_packs)
     monkeypatch.setattr(events, "run_ee_startup", lambda app_: calls.append(("ee", app_)))
     monkeypatch.setattr(

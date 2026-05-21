@@ -135,3 +135,29 @@ def security_verify_and_update_password(plain_password: str, hashed_password: st
 
 
 ### 🔒 Passwords Hashing ##############################################################
+
+
+### 🔒 API token hashing ##############################################################
+
+
+_TOKEN_PEPPER = SECRET_KEY.encode() if isinstance(SECRET_KEY, str) else bytes(SECRET_KEY)
+_TOKEN_PEPPER_B64 = base64.b64encode(_TOKEN_PEPPER).decode("ascii")
+_token_hasher = Argon2Hasher()
+
+
+def _token_input(token: str) -> str:
+    return f"{_TOKEN_PEPPER_B64}:{token}"
+
+
+def security_hash_token(token: str) -> str:
+    return _token_hasher.hash(_token_input(token))
+
+
+def security_verify_token(provided_token: str, stored_hash: str) -> bool:
+    try:
+        return _token_hasher.verify(_token_input(provided_token), stored_hash)
+    except Exception:
+        return False
+
+
+### 🔒 API token hashing ##############################################################
