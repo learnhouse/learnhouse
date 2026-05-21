@@ -18,9 +18,10 @@ import { generateNginxConf } from '../templates/nginx.js'
 import { generateCaddyfile } from '../templates/caddyfile.js'
 import { writeConfig } from '../services/config-store.js'
 import { dockerComposeUp } from '../services/docker.js'
-import { waitForHealth } from '../services/health.js'
+import { waitForHealth, waitForOrgSeed } from '../services/health.js'
 import { checkPort, findAvailablePort } from '../utils/network.js'
 import { resolveAppImage } from '../services/version-check.js'
+import { validateEmail } from '../utils/validators.js'
 
 const STEP_NAMES = [
   'Install Directory',
@@ -134,6 +135,19 @@ export async function setupCommand(options: SetupOptions) {
       process.exit(1)
     }
 
+    // Validate --admin-email up-front. The API's Pydantic EmailStr rejects
+    // reserved TLDs (.local/.test/.localhost/.invalid) per RFC 6761, and
+    // that rejection happens deep inside the container at first boot —
+    // by which point auto_install has crashed and `organization` is empty,
+    // leaving the user staring at a broken instance. Fail loudly here.
+    if (options.adminEmail) {
+      const emailErr = validateEmail(options.adminEmail)
+      if (emailErr) {
+        console.error(`Error: --admin-email "${options.adminEmail}" — ${emailErr}`)
+        process.exit(1)
+      }
+    }
+
     await checkPrerequisites()
 
     const installName = options.name || 'default'
@@ -206,7 +220,25 @@ export async function setupCommand(options: SetupOptions) {
         dockerComposeUp(resolvedDir)
         const healthy = await waitForHealth(`http://localhost:${config.httpPort}`)
         if (healthy) {
-          console.log('LearnHouse is ready!')
+          // The API can return 200 on /health while the seeder silently
+          // failed — e.g. when the bundled image's cli.py calls async
+          // setup functions without `await`. Confirm the default org
+          // landed before declaring victory.
+          const seeded = await waitForOrgSeed(`http://localhost:${config.httpPort}`, 'default')
+          if (seeded) {
+            console.log('LearnHouse is ready!')
+          } else {
+            console.error('')
+            console.error('LearnHouse API is healthy but the default organization was never seeded.')
+            console.error('This means the bundled image\'s install step failed silently — its')
+            console.error('logs will show "Default organization created ✅" alongside a')
+            console.error('"RuntimeWarning: coroutine ... was never awaited".')
+            console.error('')
+            console.error('Inspect with: npx learnhouse logs   (and grep RuntimeWarning)')
+            console.error('Workaround:   pin to a known-good image tag or rebuild from source.')
+            console.error('')
+            process.exit(1)
+          }
         } else {
           console.log('Health check timed out — services may still be starting')
         }
@@ -519,7 +551,22 @@ export async function setupCommand(options: SetupOptions) {
     const healthy = await waitForHealth(`http://localhost:${config.httpPort}`)
 
     if (healthy) {
-      s3.stop('LearnHouse is ready!')
+      // /health can succeed while the seeder silently failed (see CI path).
+      // Verify the default org actually exists before showing the success
+      // banner.
+      const seeded = await waitForOrgSeed(`http://localhost:${config.httpPort}`, 'default')
+      if (seeded) {
+        s3.stop('LearnHouse is ready!')
+      } else {
+        s3.stop('LearnHouse API is up but the default organization was not seeded')
+        p.log.error(
+          'The install completed but `/api/v1/orgs/slug/default` returns no org. ' +
+          'The bundled image\'s install step ran but never committed — check ' +
+          '`learnhouse logs` for a "RuntimeWarning: coroutine ... was never ' +
+          'awaited" line. Pin to a known-good image tag and re-run setup.',
+        )
+        process.exit(1)
+      }
     } else {
       s3.stop('Health check timed out')
       p.log.warn('LearnHouse may still be starting. Check status with:')

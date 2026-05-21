@@ -96,6 +96,7 @@ export const queryKeys = {
     orgs: () => ['superadmin', 'orgs'] as const,
     users: () => ['superadmin', 'users'] as const,
     analytics: () => ['superadmin', 'analytics'] as const,
+    apiTokens: () => ['superadmin', 'apiTokens'] as const,
   },
   payments: {
     configs: (orgId: number) => ['payments', orgId, 'configs'] as const,

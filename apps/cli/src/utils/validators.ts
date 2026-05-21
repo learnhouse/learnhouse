@@ -1,7 +1,23 @@
+// Reserved/special-use TLDs that the API's Pydantic EmailStr rejects per
+// RFC 6761/6762. The CLI must mirror this so the user is told up-front
+// instead of producing a working .env that crashes the API during seed.
+const RESERVED_TLDS = new Set([
+  'local',
+  'localhost',
+  'test',
+  'invalid',
+  'example',
+])
+
 export function validateEmail(value: string): string | undefined {
   if (!value) return 'Email is required'
   const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
   if (!re.test(value)) return 'Please enter a valid email address'
+  const domain = value.slice(value.lastIndexOf('@') + 1).toLowerCase()
+  const tld = domain.includes('.') ? domain.slice(domain.lastIndexOf('.') + 1) : domain
+  if (RESERVED_TLDS.has(tld)) {
+    return `Reserved TLD ".${tld}" is rejected by the API (RFC 6761). Use a real domain (e.g. admin@yourdomain.com).`
+  }
   return undefined
 }
 
