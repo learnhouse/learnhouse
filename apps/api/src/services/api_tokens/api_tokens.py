@@ -1,5 +1,4 @@
 import secrets
-import hashlib
 from typing import List, Optional
 from uuid import uuid4
 from datetime import datetime
@@ -25,6 +24,7 @@ from src.security.org_auth import (
     require_org_role_permission,
     get_user_org_role,
 )
+from src.security.security import security_hash_token, security_verify_token
 
 
 # Token generation constants
@@ -42,22 +42,15 @@ def generate_api_token() -> tuple[str, str, str]:
         - token_prefix: First 12 characters of the token for display
         - token_hash: SHA-256 hash of the token for storage
     """
-    # Generate cryptographically secure random bytes
     random_part = secrets.token_urlsafe(TOKEN_BYTES)
     full_token = f"{TOKEN_PREFIX}{random_part}"
-
-    # Create prefix (first 12 chars including lh_)
     token_prefix = full_token[:12]
-
-    # Create SHA-256 hash for storage
-    token_hash = hashlib.sha256(full_token.encode()).hexdigest()
-
+    token_hash = security_hash_token(full_token)
     return full_token, token_prefix, token_hash
 
 
 def hash_token(token: str) -> str:
-    """Hash a token for comparison."""
-    return hashlib.sha256(token.encode()).hexdigest()
+    return security_hash_token(token)
 
 
 def _block_api_tokens(current_user) -> None:
@@ -86,8 +79,7 @@ def verify_token(provided_token: str, stored_hash: str) -> bool:
     Returns:
         bool: True if the token is valid
     """
-    provided_hash = hash_token(provided_token)
-    return secrets.compare_digest(provided_hash, stored_hash)
+    return security_verify_token(provided_token, stored_hash)
 
 
 async def create_api_token(
@@ -433,22 +425,20 @@ async def validate_api_token_for_auth(
     Returns:
         APIToken if valid, None otherwise
     """
-    # Check token format
     if not token.startswith(TOKEN_PREFIX):
         return None
 
-    # Hash the token for lookup
-    token_hash = hash_token(token)
-
-    # Find the token in the database
-    statement = select(APIToken).where(APIToken.token_hash == token_hash)
-    api_token = (await db_session.execute(statement)).scalars().first()
+    statement = select(APIToken).where(
+        APIToken.token_prefix == token[:12],
+        APIToken.is_active == True,  # noqa: E712
+    )
+    candidates = (await db_session.execute(statement)).scalars().all()
+    api_token = next(
+        (t for t in candidates if security_verify_token(token, t.token_hash)),
+        None,
+    )
 
     if not api_token:
-        return None
-
-    # Check if token is active
-    if not api_token.is_active:
         return None
 
     # Check if token is expired

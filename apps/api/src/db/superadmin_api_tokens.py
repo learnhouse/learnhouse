@@ -19,15 +19,15 @@ class SuperadminAPIToken(SuperadminAPITokenBase, table=True):
     """
     __tablename__ = "superadmin_apitoken"
     __table_args__ = (
-        Index("ix_superadmin_apitoken_token_hash", "token_hash"),
+        Index("ix_superadmin_apitoken_token_prefix", "token_prefix"),
         Index("ix_superadmin_apitoken_created_by", "created_by_user_id"),
         {"extend_existing": True},
     )
 
     id: Optional[int] = Field(default=None, primary_key=True)
     token_uuid: str = Field(default="", max_length=100)  # satoken_{uuid4()}
-    token_prefix: str = Field(default="", max_length=15)  # first 15 chars, e.g. "lh_sa_abc1234"
-    token_hash: str = Field(default="", sa_column=Column(String(64)))  # SHA-256 hex
+    token_prefix: str = Field(default="", max_length=15)
+    token_hash: str = Field(default="", sa_column=Column(String(255)))
     created_by_user_id: int = Field(
         sa_column=Column(Integer, ForeignKey("user.id", ondelete="CASCADE"), nullable=False)
     )
