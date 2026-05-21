@@ -3,7 +3,7 @@ from fastapi import Depends, HTTPException, Request, status
 from sqlmodel import select
 from sqlmodel.ext.asyncio.session import AsyncSession
 from src.core.events.database import get_db_session
-from src.db.users import PublicUser, User
+from src.db.users import User
 
 logger = logging.getLogger(__name__)
 
@@ -29,17 +29,46 @@ async def _get_current_user_lazy(request: Request, db_session: AsyncSession = De
 
 
 async def require_superadmin(
-    current_user: PublicUser = Depends(_get_current_user_lazy),
+    current_user=Depends(_get_current_user_lazy),
     db_session: AsyncSession = Depends(get_db_session),
-) -> PublicUser:
-    """FastAPI dependency that requires the current user to be a superadmin."""
-    from src.db.users import AnonymousUser
+):
+    """FastAPI dependency that requires the current user to be a superadmin.
+
+    Accepts:
+      - regular ``PublicUser``: checks ``User.is_superadmin``
+      - ``SuperadminAPITokenUser``: re-checks the minting user is STILL a
+        superadmin (so demoting a user invalidates all of their tokens
+        without a separate revocation step)
+
+    Rejects:
+      - ``AnonymousUser`` (401)
+      - ``APITokenUser`` (org-scoped token; 403 — org tokens are never superadmins)
+    """
+    from src.db.users import AnonymousUser, APITokenUser, SuperadminAPITokenUser
 
     if isinstance(current_user, AnonymousUser):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Authentication required",
         )
+
+    # Org-scoped API tokens are never superadmins, regardless of who minted them.
+    if isinstance(current_user, APITokenUser):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Superadmin access required",
+        )
+
+    if isinstance(current_user, SuperadminAPITokenUser):
+        # Re-check the minting user still has is_superadmin=True. If they've
+        # been demoted, the token loses effect immediately — no separate
+        # revocation needed.
+        if not await is_user_superadmin(current_user.created_by_user_id, db_session):
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Token creator is no longer a superadmin",
+            )
+        return current_user
 
     if not await is_user_superadmin(current_user.id, db_session):
         raise HTTPException(

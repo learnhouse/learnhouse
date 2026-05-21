@@ -18,9 +18,10 @@ import { generateNginxConf } from '../templates/nginx.js'
 import { generateCaddyfile } from '../templates/caddyfile.js'
 import { writeConfig } from '../services/config-store.js'
 import { dockerComposeUp } from '../services/docker.js'
-import { waitForHealth } from '../services/health.js'
+import { waitForHealth, waitForOrgSeed } from '../services/health.js'
 import { checkPort, findAvailablePort } from '../utils/network.js'
 import { resolveAppImage } from '../services/version-check.js'
+import { validateEmail } from '../utils/validators.js'
 
 const STEP_NAMES = [
   'Install Directory',
@@ -134,6 +135,14 @@ export async function setupCommand(options: SetupOptions) {
       process.exit(1)
     }
 
+    if (options.adminEmail) {
+      const emailErr = validateEmail(options.adminEmail)
+      if (emailErr) {
+        console.error(`Error: --admin-email "${options.adminEmail}" — ${emailErr}`)
+        process.exit(1)
+      }
+    }
+
     await checkPrerequisites()
 
     const installName = options.name || 'default'
@@ -206,7 +215,16 @@ export async function setupCommand(options: SetupOptions) {
         dockerComposeUp(resolvedDir)
         const healthy = await waitForHealth(`http://localhost:${config.httpPort}`)
         if (healthy) {
-          console.log('LearnHouse is ready!')
+          const seeded = await waitForOrgSeed(`http://localhost:${config.httpPort}`, 'default')
+          if (seeded) {
+            console.log('LearnHouse is ready!')
+          } else {
+            console.error('')
+            console.error('API is healthy but the default organization was not seeded.')
+            console.error('Run `npx learnhouse logs` to inspect; pin a different image tag and re-run.')
+            console.error('')
+            process.exit(1)
+          }
         } else {
           console.log('Health check timed out — services may still be starting')
         }
@@ -519,7 +537,17 @@ export async function setupCommand(options: SetupOptions) {
     const healthy = await waitForHealth(`http://localhost:${config.httpPort}`)
 
     if (healthy) {
-      s3.stop('LearnHouse is ready!')
+      const seeded = await waitForOrgSeed(`http://localhost:${config.httpPort}`, 'default')
+      if (seeded) {
+        s3.stop('LearnHouse is ready!')
+      } else {
+        s3.stop('API is healthy but the default organization was not seeded')
+        p.log.error(
+          '`/api/v1/orgs/slug/default` returns no org. Run `learnhouse logs` to inspect, ' +
+          'pin a different image tag, and re-run setup.',
+        )
+        process.exit(1)
+      }
     } else {
       s3.stop('Health check timed out')
       p.log.warn('LearnHouse may still be starting. Check status with:')

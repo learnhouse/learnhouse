@@ -66,14 +66,8 @@ export function generateDockerCompose(config: SetupConfig, appImage?: string): s
       retries: 3
 `
 
-  // When the public HTTP port is not 80, Next.js SSR fetches inside the app
-  // container hit `localhost:${HTTP_PORT}` which has nothing listening — only
-  // the container's internal nginx on port 80 serves the same routes. We add
-  // a tiny socat sidecar that shares the app container's network namespace
-  // and forwards `localhost:${HTTP_PORT}` → `localhost:80`, making SSR work
-  // identically to a port-80 deployment without rebuilding the app image.
-  // Skipped when HTTP_PORT=80 (would clash with internal nginx) and when
-  // auto-SSL/HTTPS is in use (the public URL is HTTPS and goes through Caddy).
+  // Sidecar forwards localhost:${HTTP_PORT} → localhost:80 inside the app
+  // container so SSR fetches reach the internal nginx on non-80 deployments.
   const needsSsrPortForward = !config.autoSsl && !config.useHttps && config.httpPort !== 80
   const ssrForwardService = needsSsrPortForward
     ? `

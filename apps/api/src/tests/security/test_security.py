@@ -1,6 +1,8 @@
 from src.security.security import (
     security_hash_password,
+    security_hash_token,
     security_verify_password,
+    security_verify_token,
     ACCESS_TOKEN_EXPIRE_MINUTES,
     SECRET_KEY,
     ALGORITHM,
@@ -97,6 +99,17 @@ class TestSecurity:
         """Test password hashing with very long password"""
         password = "a" * 1000
         hashed = security_hash_password(password)
-        
+
         assert security_verify_password(password, hashed) is True
-        assert security_verify_password("wrong", hashed) is False 
+        assert security_verify_password("wrong", hashed) is False
+
+    def test_security_verify_token_round_trip(self):
+        token = "lh_abc1234567890"
+        assert security_verify_token(token, security_hash_token(token)) is True
+        assert security_verify_token("lh_other", security_hash_token(token)) is False
+
+    def test_security_verify_token_malformed_stored_hash(self):
+        assert security_verify_token("lh_abc", "not-a-valid-argon2-hash") is False
+        assert security_verify_token("lh_abc", "") is False
+        # None forces the hasher to raise TypeError; verify_token swallows it.
+        assert security_verify_token("lh_abc", None) is False  # type: ignore[arg-type] 

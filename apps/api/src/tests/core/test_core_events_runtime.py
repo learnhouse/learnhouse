@@ -168,7 +168,7 @@ async def test_events_startup_shutdown_and_reconcile(monkeypatch):
     create_logs_dir = AsyncMock()
     check_content_directory = AsyncMock()
     run_ee_startup = Mock()
-    auto_install = Mock()
+    auto_install = AsyncMock()
     reconcile_packs = AsyncMock()
     cleanup_temp_migrations = Mock()
 

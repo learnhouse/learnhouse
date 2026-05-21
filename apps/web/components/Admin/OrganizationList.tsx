@@ -10,6 +10,7 @@ import Link from 'next/link'
 import { useSearchParams, useRouter, usePathname } from 'next/navigation'
 import { Buildings, Globe, User, CaretLeft, CaretRight, BookOpen, MagnifyingGlass, ArrowSquareOut, Plus } from '@phosphor-icons/react'
 import CreateOrganizationModal from '@components/Admin/CreateOrganizationModal'
+import EELicenseError from '@components/Admin/EELicenseError'
 
 /** Ensure a URL only uses http/https — returns '#' for anything else. */
 function safeHref(url: string): string {
@@ -249,12 +250,15 @@ export default function OrganizationList() {
     return params.toString()
   }, [page, sortBy, debouncedSearch, planFilter])
 
-  const { data: orgData, isLoading, isFetching } = useQuery<PaginatedOrgResponse>({
+  const { data: orgData, isLoading, isFetching, isError, error } = useQuery<PaginatedOrgResponse>({
     queryKey: [...queryKeys.superadmin.orgs(), queryParams],
     queryFn: () => apiFetch(`${getAPIUrl()}ee/superadmin/organizations?${queryParams}`, accessToken),
     enabled: !!accessToken,
     staleTime: 60_000,
     placeholderData: (prev) => prev,
+    // Don't retry a 503 ee_license_inactive — the license state won't change
+    // mid-render and retries just add latency to the failure banner.
+    retry: (failureCount, err: any) => err?.status !== 503 && failureCount < 2,
   })
 
   const isValidating = isFetching
@@ -415,7 +419,9 @@ export default function OrganizationList() {
             <div className="h-5 w-5 border-2 border-white/20 border-t-white/60 rounded-full animate-spin" />
           </div>
         )}
-        {isLoading ? (
+        {isError ? (
+          <EELicenseError error={error} />
+        ) : isLoading ? (
           <div className="flex items-center justify-center py-20">
             <div className="h-6 w-6 border-2 border-white/20 border-t-white/60 rounded-full animate-spin" />
           </div>

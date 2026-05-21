@@ -2,7 +2,7 @@ from typing import Optional, Union
 from sqlmodel import select
 from sqlmodel.ext.asyncio.session import AsyncSession
 from src.core.events.database import get_db_session
-from src.db.users import AnonymousUser, APITokenUser, PublicUser, User, UserRead
+from src.db.users import AnonymousUser, APITokenUser, PublicUser, SuperadminAPITokenUser, User, UserRead
 from src.services.users.users import security_get_user
 from config.config import get_learnhouse_config
 from pydantic import BaseModel
@@ -345,18 +345,36 @@ async def _verify_api_token_org_boundary(
 async def get_current_user(
     request: Request,
     db_session: AsyncSession = Depends(get_db_session),
-) -> Union[PublicUser, APITokenUser, AnonymousUser]:
+) -> Union[PublicUser, APITokenUser, SuperadminAPITokenUser, AnonymousUser]:
     credentials_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
         detail="Could not validate credentials",
         headers={"WWW-Authenticate": "Bearer"},
     )
 
-    # Step 1: Check for API token (Bearer lh_...)
+    # Step 1: Check for API token (Bearer lh_... or Bearer lh_sa_...)
     auth_header = request.headers.get("Authorization", "").strip()
+    auth_lower = auth_header.lower()
 
-    # Case-insensitive check for "Bearer " prefix with lh_ token
-    if auth_header.lower().startswith("bearer lh_"):
+    # ORDER MATTERS: the superadmin prefix "lh_sa_" also starts with "lh_",
+    # so the broader org-token branch below would shadow it. Keep this
+    # branch above the org-token branch — do not reorder for "alphabetical
+    # cleanliness" — or every superadmin token will silently fall through
+    # to org-token validation and fail.
+    if auth_lower.startswith("bearer lh_sa_"):
+        token = auth_header[7:].strip()  # strip "Bearer "
+        sa_user = await validate_superadmin_api_token(token, db_session)
+        if sa_user:
+            # No _verify_api_token_org_boundary call: superadmin tokens are
+            # cross-org by design and have no org to bind to.
+            request.state.user = sa_user
+            request.state.is_api_token = True
+            request.state.is_superadmin_api_token = True
+            return sa_user
+        raise credentials_exception
+
+    # Case-insensitive check for "Bearer " prefix with lh_ token (org-scoped)
+    if auth_lower.startswith("bearer lh_"):
         token = auth_header[7:].strip()  # Remove "Bearer " prefix and trim
         api_token_user = await validate_api_token(token, db_session)
         if api_token_user:
@@ -438,7 +456,7 @@ async def non_public_endpoint(current_user: UserRead | AnonymousUser):
 async def get_authenticated_user(
     request: Request,
     db_session: AsyncSession = Depends(get_db_session),
-) -> Union[PublicUser, APITokenUser]:
+) -> Union[PublicUser, APITokenUser, SuperadminAPITokenUser]:
     """
     Dependency that requires authentication.
 
@@ -512,6 +530,33 @@ async def validate_api_token(
         username=f"api_token_{api_token.name}",
         org_id=api_token.org_id,
         rights=rights,
+        token_name=api_token.name,
+        created_by_user_id=api_token.created_by_user_id,
+    )
+
+
+async def validate_superadmin_api_token(
+    token: str,
+    db_session: AsyncSession,
+) -> Optional[SuperadminAPITokenUser]:
+    """Validate a cross-org superadmin API token (lh_sa_...).
+
+    Returns a SuperadminAPITokenUser principal on success, None otherwise.
+    The principal's `id` is the token id (not a user id) — code that needs
+    the acting user must use `created_by_user_id`.
+    """
+    from src.services.api_tokens.superadmin_api_tokens import (
+        validate_superadmin_token_for_auth,
+    )
+
+    api_token = await validate_superadmin_token_for_auth(token, db_session)
+    if not api_token:
+        return None
+
+    return SuperadminAPITokenUser(
+        id=api_token.id,
+        user_uuid=api_token.token_uuid,
+        username=f"superadmin_api_token_{api_token.name}",
         token_name=api_token.name,
         created_by_user_id=api_token.created_by_user_id,
     )
