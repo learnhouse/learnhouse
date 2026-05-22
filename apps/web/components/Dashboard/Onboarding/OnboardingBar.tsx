@@ -659,7 +659,6 @@ export default function OnboardingBar() {
                                           href="https://university.learnhouse.io"
                                           target="_blank"
                                           rel="noopener noreferrer"
-                                          onClick={() => completeStep('teach_the_world')}
                                           className="flex items-center gap-3 px-4 py-3 rounded-lg bg-white nice-shadow hover:bg-gray-50 transition-colors"
                                         >
                                           <img
@@ -681,7 +680,6 @@ export default function OnboardingBar() {
                                           href="https://classroom.learnhouse.io"
                                           target="_blank"
                                           rel="noopener noreferrer"
-                                          onClick={() => completeStep('teach_the_world')}
                                           className="flex items-center gap-3 px-4 py-3 rounded-lg bg-white nice-shadow hover:bg-gray-50 transition-colors"
                                         >
                                           <img
