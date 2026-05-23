@@ -5,6 +5,7 @@ import * as p from '@clack/prompts'
 import pc from 'picocolors'
 import { findInstallDir, readConfig } from '../services/config-store.js'
 import { dockerComposeDown, dockerComposeUp } from '../services/docker.js'
+import { migrateContentVolume } from '../services/content-volume-migration.js'
 
 const GHCR_BASE = 'ghcr.io/learnhouse/app'
 
@@ -89,6 +90,35 @@ export async function updateCommand(options: { version?: string; migrate?: boole
     // docker compose up with --pull always handles the pull
     s.stop('Image reference updated')
 
+    // Preserve any uploaded media before the container is recreated.
+    s.start('Checking content storage')
+    try {
+      const migration = migrateContentVolume(config.installDir, config.deploymentId)
+      switch (migration.status) {
+        case 'migrated':
+          s.stop(
+            `Migrated uploaded content into persistent volume (${formatBytes(migration.copiedBytes ?? 0)})`,
+          )
+          break
+        case 'patched_no_data':
+          s.stop('Added persistent content volume to docker-compose.yml')
+          break
+        case 'already_mounted':
+          s.stop('Content storage already persistent')
+          break
+        case 'skipped_s3':
+          s.stop('Content served from S3 — no local volume needed')
+          break
+        case 'no_compose':
+          s.stop('Skipped content migration (no docker-compose.yml found)')
+          break
+      }
+    } catch (err) {
+      s.stop('Content migration failed')
+      const msg = err instanceof Error ? err.message : String(err)
+      p.log.warn(`Could not migrate uploaded content: ${msg}`)
+    }
+
     s.start('Restarting services')
     dockerComposeDown(config.installDir)
     dockerComposeUp(config.installDir)
@@ -165,6 +195,13 @@ export async function updateCommand(options: { version?: string; migrate?: boole
     p.log.error('Failed to update. Check Docker output above.')
     process.exit(1)
   }
+}
+
+function formatBytes(bytes: number): string {
+  if (bytes < 1024) return `${bytes} B`
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`
+  if (bytes < 1024 * 1024 * 1024) return `${(bytes / 1024 / 1024).toFixed(1)} MB`
+  return `${(bytes / 1024 / 1024 / 1024).toFixed(2)} GB`
 }
 
 function getAppContainerName(cwd: string): string | null {

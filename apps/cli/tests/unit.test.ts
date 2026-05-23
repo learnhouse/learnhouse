@@ -7,6 +7,7 @@ import { generateEnvFile } from '../src/templates/env.js'
 import { generateNginxConf } from '../src/templates/nginx.js'
 import { generateCaddyfile } from '../src/templates/caddyfile.js'
 import { writeConfig, readConfig, findInstallDir, listInstallations } from '../src/services/config-store.js'
+import { patchComposeAddContentVolume } from '../src/services/content-volume-migration.js'
 import { validateEmail } from '../src/utils/validators.js'
 import type { SetupConfig } from '../src/types.js'
 
@@ -76,6 +77,86 @@ describe('generateDockerCompose', () => {
   it('uses default APP_IMAGE when no image provided', () => {
     const yml = generateDockerCompose(baseConfig)
     expect(yml).toContain('ghcr.io/learnhouse/app:')
+  })
+
+  it('mounts a content volume on filesystem delivery', () => {
+    const yml = generateDockerCompose(baseConfig)
+    expect(yml).toContain('learnhouse_content_test1234:/app/api/content')
+    expect(yml).toContain('  learnhouse_content_test1234:')
+  })
+
+  it('skips the content volume when s3 is enabled', () => {
+    const yml = generateDockerCompose({ ...baseConfig, s3Enabled: true })
+    expect(yml).not.toContain('/app/api/content')
+    expect(yml).not.toContain('learnhouse_content_test1234')
+  })
+})
+
+// ─── Content volume migration — compose patcher ──────────────
+
+describe('patchComposeAddContentVolume', () => {
+  const legacyCompose = `name: learnhouse-abc123
+
+services:
+  learnhouse-app:
+    image: ghcr.io/learnhouse/app:1.2.1
+    container_name: learnhouse-app-abc123
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      - HOSTNAME=0.0.0.0
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - learnhouse-network-abc123
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost/api/v1/health"]
+
+  db:
+    image: pgvector/pgvector:pg16
+    container_name: learnhouse-db-abc123
+    volumes:
+      - learnhouse_db_data_abc123:/var/lib/postgresql/data
+    networks:
+      - learnhouse-network-abc123
+
+volumes:
+  learnhouse_db_data_abc123:
+`
+
+  it('injects mount on learnhouse-app and appends named volume', () => {
+    const out = patchComposeAddContentVolume(legacyCompose, 'abc123')
+    expect(out).toContain('- learnhouse_content_abc123:/app/api/content')
+    expect(out).toContain('  learnhouse_content_abc123:')
+
+    const appBlock = out.slice(out.indexOf('learnhouse-app:'), out.indexOf('\n  db:'))
+    expect(appBlock).toContain('/app/api/content')
+
+    const volumesSection = out.slice(out.lastIndexOf('volumes:'))
+    expect(volumesSection).toContain('learnhouse_db_data_abc123:')
+    expect(volumesSection).toContain('learnhouse_content_abc123:')
+  })
+
+  it('is idempotent', () => {
+    const once = patchComposeAddContentVolume(legacyCompose, 'abc123')
+    const twice = patchComposeAddContentVolume(once, 'abc123')
+    const mountCount = (twice.match(/learnhouse_content_abc123:\/app\/api\/content/g) ?? []).length
+    const declCount = (twice.match(/^  learnhouse_content_abc123:$/gm) ?? []).length
+    expect(mountCount).toBe(1)
+    expect(declCount).toBe(1)
+  })
+
+  it('merges into an existing learnhouse-app volumes block', () => {
+    const composeWithExistingVolumes = legacyCompose.replace(
+      '    environment:\n      - HOSTNAME=0.0.0.0',
+      '    environment:\n      - HOSTNAME=0.0.0.0\n    volumes:\n      - ./extra:/extra:ro',
+    )
+    const out = patchComposeAddContentVolume(composeWithExistingVolumes, 'abc123')
+    const appBlock = out.slice(out.indexOf('learnhouse-app:'), out.indexOf('\n  db:'))
+    expect(appBlock).toContain('./extra:/extra:ro')
+    expect(appBlock).toContain('learnhouse_content_abc123:/app/api/content')
   })
 })
 
