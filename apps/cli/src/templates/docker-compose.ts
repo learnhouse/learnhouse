@@ -127,6 +127,11 @@ export function generateDockerCompose(config: SetupConfig, appImage?: string): s
 `
     : ''
 
+  const useLocalContent = !config.s3Enabled
+  const appVolumes = useLocalContent
+    ? `    volumes:\n      - learnhouse_content_${id}:/app/api/content\n`
+    : ''
+
   const volumeEntries: string[] = []
   if (config.autoSsl) {
     volumeEntries.push(`  learnhouse_caddy_data_${id}:`)
@@ -134,6 +139,7 @@ export function generateDockerCompose(config: SetupConfig, appImage?: string): s
   }
   if (useLocalDb) volumeEntries.push(`  learnhouse_db_data_${id}:`)
   if (useLocalRedis) volumeEntries.push(`  learnhouse_redis_data_${id}:`)
+  if (useLocalContent) volumeEntries.push(`  learnhouse_content_${id}:`)
 
   const volumesSection = volumeEntries.length > 0
     ? `volumes:\n${volumeEntries.join('\n')}`
@@ -152,7 +158,7 @@ services:
       # HOSTNAME needs to be set explicitly for the container
       - HOSTNAME=0.0.0.0
       - LEARNHOUSE_API_URL=http://localhost:9000
-${appDependsOn}
+${appVolumes}${appDependsOn}
     networks:
       - learnhouse-network-${id}
     healthcheck:
