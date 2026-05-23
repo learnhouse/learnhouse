@@ -16,7 +16,11 @@ from src.db.superadmin_api_tokens import (
     SuperadminAPITokenRead,
     SuperadminAPITokenUpdate,
 )
-from src.security.security import security_hash_token, security_verify_token
+from src.security.security import (
+    security_hash_token,
+    security_token_needs_rehash,
+    security_verify_token,
+)
 
 
 TOKEN_PREFIX = "lh_sa_"
@@ -209,6 +213,8 @@ async def validate_superadmin_token_for_auth(
 
     try:
         api_token.last_used_at = str(datetime.now())
+        if security_token_needs_rehash(api_token.token_hash):
+            api_token.token_hash = security_hash_token(token)
         db_session.add(api_token)
         await db_session.commit()
         await db_session.refresh(api_token)

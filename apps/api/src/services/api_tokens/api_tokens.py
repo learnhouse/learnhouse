@@ -24,7 +24,11 @@ from src.security.org_auth import (
     require_org_role_permission,
     get_user_org_role,
 )
-from src.security.security import security_hash_token, security_verify_token
+from src.security.security import (
+    security_hash_token,
+    security_token_needs_rehash,
+    security_verify_token,
+)
 
 
 # Token generation constants
@@ -452,9 +456,11 @@ async def validate_api_token_for_auth(
             # If we can't parse the date, consider it not expired
             pass
 
-    # Update last_used_at
+    # Update last_used_at and opportunistically upgrade legacy hashes.
     try:
         api_token.last_used_at = str(datetime.now())
+        if security_token_needs_rehash(api_token.token_hash):
+            api_token.token_hash = security_hash_token(token)
         db_session.add(api_token)
         await db_session.commit()
         await db_session.refresh(api_token)
