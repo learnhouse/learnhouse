@@ -149,15 +149,37 @@ def _token_input(token: str) -> str:
     return f"{_TOKEN_PEPPER_B64}:{token}"
 
 
+def _is_legacy_sha256_hash(stored_hash: str) -> bool:
+    # Legacy hashes were pepperless SHA-256 hex digests — exactly 64 lowercase hex chars.
+    if not isinstance(stored_hash, str) or len(stored_hash) != 64:
+        return False
+    try:
+        int(stored_hash, 16)
+    except ValueError:
+        return False
+    return stored_hash == stored_hash.lower()
+
+
 def security_hash_token(token: str) -> str:
     return _token_hasher.hash(_token_input(token))
 
 
 def security_verify_token(provided_token: str, stored_hash: str) -> bool:
+    # Backwards compatibility: tokens created before the argon2id switch were
+    # stored as pepperless SHA-256 hex. Detect that shape and verify directly
+    # so existing customer tokens keep authenticating.
+    if _is_legacy_sha256_hash(stored_hash):
+        provided_hash = hashlib.sha256(provided_token.encode()).hexdigest()
+        return secrets.compare_digest(provided_hash, stored_hash)
     try:
         return _token_hasher.verify(_token_input(provided_token), stored_hash)
     except Exception:
         return False
+
+
+def security_token_needs_rehash(stored_hash: str) -> bool:
+    """True when ``stored_hash`` uses a deprecated scheme that should be upgraded."""
+    return _is_legacy_sha256_hash(stored_hash)
 
 
 ### 🔒 API token hashing ##############################################################

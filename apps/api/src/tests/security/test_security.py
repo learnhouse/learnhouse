@@ -1,6 +1,9 @@
+import hashlib
+
 from src.security.security import (
     security_hash_password,
     security_hash_token,
+    security_token_needs_rehash,
     security_verify_password,
     security_verify_token,
     ACCESS_TOKEN_EXPIRE_MINUTES,
@@ -112,4 +115,18 @@ class TestSecurity:
         assert security_verify_token("lh_abc", "not-a-valid-argon2-hash") is False
         assert security_verify_token("lh_abc", "") is False
         # None forces the hasher to raise TypeError; verify_token swallows it.
-        assert security_verify_token("lh_abc", None) is False  # type: ignore[arg-type] 
+        assert security_verify_token("lh_abc", None) is False  # type: ignore[arg-type]
+
+    def test_security_verify_token_legacy_sha256(self):
+        # Pre-argon2 tokens were stored as pepperless SHA-256 hex.
+        token = "lh_legacytoken123"
+        legacy_hash = hashlib.sha256(token.encode()).hexdigest()
+
+        assert security_verify_token(token, legacy_hash) is True
+        assert security_verify_token("lh_other", legacy_hash) is False
+        assert security_token_needs_rehash(legacy_hash) is True
+        # Argon2 hashes from the current scheme should not be flagged for rehash.
+        assert security_token_needs_rehash(security_hash_token(token)) is False
+        # Uppercase / non-hex 64-char strings must not be misidentified as legacy.
+        assert security_token_needs_rehash("A" * 64) is False
+        assert security_token_needs_rehash("z" * 64) is False
