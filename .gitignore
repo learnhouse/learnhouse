@@ -64,3 +64,6 @@ apps/api/ee
 
 # Claude Code
 .claude/
+
+# Git worktrees
+.worktrees/
