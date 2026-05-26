@@ -7,9 +7,9 @@ authors = [
     {name = "Badr B. (swve)"}
 ]
 dependencies = [
-    "boto3==1.43.11",
-    "botocore==1.43.11",
-    "faker==40.18.0",
+    "boto3==1.43.14",
+    "botocore==1.43.14",
+    "faker==40.19.1",
     "fastapi==0.136.1",
     "httpx==0.28.1",
     "google-genai==1.75.0",
@@ -35,7 +35,7 @@ dependencies = [
     "sqlalchemy-utils==0.42.1",
     "stripe==15.1.0",
     "cryptography==46.0.7",
-    "pyjwt[crypto]==2.12.1",
+    "pyjwt[crypto]==2.13.0",
     "beautifulsoup4==4.14.3",
     "pytest-asyncio==1.3.0",
     "sentry-sdk[fastapi]==2.60.0",
@@ -45,7 +45,7 @@ dependencies = [
     "defusedxml==0.7.1",
     "llama-index-core==0.14.22",
     "pgvector==0.4.2",
-    "pypdf==6.11.0",
+    "pypdf==6.12.1",
 ]
 
 [tool.ruff]
