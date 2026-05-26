@@ -335,6 +335,11 @@ async def import_courses(
     if not organization:
         raise HTTPException(status_code=404, detail="Organization not found")
 
+    # Snapshot the fields we need across commits: db_session.commit() expires
+    # the ORM instance, which would otherwise trigger a lazy reload mid-loop.
+    organization_id = organization.id
+    organization_uuid = organization.org_uuid
+
     # RBAC check - user needs create permission for courses
     await check_resource_access(request, db_session, current_user, "course_x", AccessAction.CREATE)
 
@@ -392,11 +397,11 @@ async def import_courses(
             # Pre-generate the course UUID so we can clean up files on failure
             new_course_uuid = f"course_{uuid4()}"
             content_base = "content/orgs"
-            new_course_content_path = f"{content_base}/{organization.org_uuid}/courses/{new_course_uuid}"
+            new_course_content_path = f"{content_base}/{organization_uuid}/courses/{new_course_uuid}"
 
             # Use a savepoint so we can rollback just this course on failure
             # without losing previously imported courses in the batch
-            nested = db_session.begin_nested()
+            nested = await db_session.begin_nested()
             try:
                 new_course = await _import_single_course(
                     course_path=course_paths[course_uuid],
@@ -406,9 +411,9 @@ async def import_courses(
                     db_session=db_session,
                     new_course_uuid=new_course_uuid,
                 )
-                nested.commit()
+                await nested.commit()
             except Exception:
-                nested.rollback()
+                await nested.rollback()
                 # Clean up any files/S3 objects written for the failed course
                 delete_storage_directory(new_course_content_path)
                 raise
@@ -418,7 +423,7 @@ async def import_courses(
 
             # Track usage AFTER commit — increase_feature_usage calls commit()
             # internally, so it must not run inside the savepoint
-            await increase_feature_usage("courses", organization.id, db_session)
+            await increase_feature_usage("courses", organization_id, db_session)
 
             results.append(ImportCourseResult(
                 original_uuid=course_uuid,
