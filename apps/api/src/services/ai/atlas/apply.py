@@ -215,7 +215,7 @@ async def _apply_update_chapter(edit: PendingEdit, deps: AtlasDeps) -> dict[str,
 
 async def _apply_delete_chapter(edit: PendingEdit, deps: AtlasDeps) -> dict[str, Any]:
     chapter_id = int(edit.target.get("uuid", "0"))
-    await delete_chapter(deps.request, str(chapter_id), deps.current_user, deps.db)
+    await delete_chapter(deps.request, chapter_id, deps.current_user, deps.db)
     return {"uuid": str(chapter_id), "name": edit.target.get("name", "")}
 
 

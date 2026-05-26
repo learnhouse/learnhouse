@@ -13,7 +13,6 @@ import {
   AtlasSession,
   CandidateDTO,
   cancelPendingEdit,
-  listPendingsForChat,
   refinePendingEdit,
   revokeAtlasSession,
   startAtlasSession,
@@ -22,6 +21,8 @@ import {
 } from '@services/ai/atlas'
 import { AlertTriangle, Loader2, Send, X as XIcon } from 'lucide-react'
 import { GlobeStand } from '@phosphor-icons/react'
+import { useQueryClient } from '@tanstack/react-query'
+import { queryKeys } from '@/lib/query/keys'
 
 import {
   ActionDock,
@@ -57,7 +58,6 @@ export default function AtlasMiniPanel({ open, onClose }: Props) {
   const {
     input,
     setInput,
-    appendToInput,
     focusInput,
     registerInputRef,
     pageContext,
@@ -71,6 +71,38 @@ export default function AtlasMiniPanel({ open, onClose }: Props) {
   const [messages, setMessages] = useState<ChatMessage[]>([])
   const [sending, setSending] = useState(false)
   const [aichatUuid, setAichatUuid] = useState<string | null>(null)
+
+  const queryClient = useQueryClient()
+
+  // Mirrors AtlasChat.invalidateAppliedTarget — when Atlas mutates a
+  // course / chapter / activity, any other open page reading the same
+  // entity through TanStack would otherwise show stale data.
+  const invalidateAppliedTarget = useCallback(
+    (target: { kind: 'course' | 'chapter' | 'activity'; uuid: string; parent_course_uuid?: string }) => {
+      const strip = (v: string, prefix: string) =>
+        v.startsWith(prefix) ? v.slice(prefix.length) : v
+      if (target.kind === 'course') {
+        const bare = strip(target.uuid, 'course_')
+        queryClient.invalidateQueries({ queryKey: queryKeys.courses.detail(bare) })
+        queryClient.invalidateQueries({ queryKey: queryKeys.courses.meta(bare) })
+      } else if (target.kind === 'activity') {
+        const bare = strip(target.uuid, 'activity_')
+        queryClient.invalidateQueries({ queryKey: queryKeys.activity.detail(bare) })
+        queryClient.invalidateQueries({ queryKey: queryKeys.activity.editorBootstrap(bare) })
+        if (target.parent_course_uuid) {
+          const bareCourse = strip(target.parent_course_uuid, 'course_')
+          queryClient.invalidateQueries({ queryKey: queryKeys.courses.meta(bareCourse) })
+        }
+      } else if (target.kind === 'chapter') {
+        if (target.parent_course_uuid) {
+          const bareCourse = strip(target.parent_course_uuid, 'course_')
+          queryClient.invalidateQueries({ queryKey: queryKeys.courses.meta(bareCourse) })
+          queryClient.invalidateQueries({ queryKey: queryKeys.courses.detail(bareCourse) })
+        }
+      }
+    },
+    [queryClient],
+  )
 
   const abortRef = useRef<AbortController | null>(null)
   const scrollRef = useRef<HTMLDivElement | null>(null)
@@ -249,6 +281,7 @@ export default function AtlasMiniPanel({ open, onClose }: Props) {
               versionAfter: event.version_after,
               undoToken: event.undo_token,
             }))
+            if (event.target) invalidateAppliedTarget(event.target)
           } else if (event.type === 'error') {
             updatePending(pendingId, (p) => ({
               ...p,
@@ -271,7 +304,7 @@ export default function AtlasMiniPanel({ open, onClose }: Props) {
         })
       }
     },
-    [accessToken, atlasSession, orgId, updatePending],
+    [accessToken, atlasSession, invalidateAppliedTarget, orgId, updatePending],
   )
 
   const handleUndoPending = useCallback(
@@ -293,6 +326,7 @@ export default function AtlasMiniPanel({ open, onClose }: Props) {
               status: 'dropped',
               versionAfter: event.version_after ?? p.versionAfter,
             }))
+            if (event.target) invalidateAppliedTarget(event.target)
           } else if (event.type === 'error') {
             updatePending(pendingId, (p) => ({
               ...p,
@@ -306,7 +340,7 @@ export default function AtlasMiniPanel({ open, onClose }: Props) {
         return false
       }
     },
-    [accessToken, atlasSession, orgId, updatePending],
+    [accessToken, atlasSession, invalidateAppliedTarget, orgId, updatePending],
   )
 
   const handleCancelPending = useCallback(
@@ -363,6 +397,9 @@ export default function AtlasMiniPanel({ open, onClose }: Props) {
             setAichatUuid(event.aichat_uuid)
             continue
           }
+          if (event.type === 'applied' && (event as any).target) {
+            invalidateAppliedTarget((event as any).target)
+          }
           setMessages((prev) =>
             prev.map((m) => (m.id === assistantMsg.id ? applyEvent(m, event) : m)),
           )
@@ -392,6 +429,7 @@ export default function AtlasMiniPanel({ open, onClose }: Props) {
       atlasSession,
       buildPageContextPayload,
       clearReferences,
+      invalidateAppliedTarget,
       orgId,
       setInput,
     ],
@@ -425,6 +463,9 @@ export default function AtlasMiniPanel({ open, onClose }: Props) {
         })
         for await (const event of stream) {
           if (event.type === 'session') continue
+          if (event.type === 'applied' && (event as any).target) {
+            invalidateAppliedTarget((event as any).target)
+          }
           setMessages((prev) =>
             prev.map((m) => (m.id === assistantMsg.id ? applyEvent(m, event) : m)),
           )
@@ -441,7 +482,7 @@ export default function AtlasMiniPanel({ open, onClose }: Props) {
         setSending(false)
       }
     },
-    [accessToken, atlasSession, buildPageContextPayload, orgId],
+    [accessToken, atlasSession, buildPageContextPayload, invalidateAppliedTarget, orgId],
   )
 
   const onSubmit = (e?: React.FormEvent) => {
@@ -467,7 +508,7 @@ export default function AtlasMiniPanel({ open, onClose }: Props) {
     <aside
       className={`fixed bottom-0 right-0 top-0 z-50 flex w-[460px] max-w-[100vw] flex-col text-white transition-transform ${
         open ? 'translate-x-0' : 'translate-x-full'
-      }`}
+      } ${sending ? 'atlas-loading-border' : ''}`}
       style={{
         background:
           'linear-gradient(0deg, rgba(0, 0, 0, 0.35) 0%, rgba(0, 0, 0, 0.35) 100%), ' +

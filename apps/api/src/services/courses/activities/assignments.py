@@ -58,6 +58,67 @@ from src.services.webhooks.dispatch import dispatch_webhooks
 logger = logging.getLogger(__name__)
 
 
+def _block_api_tokens(current_user: PublicUser | AnonymousUser | APITokenUser) -> None:
+    """
+    Block API tokens from accessing the assignment retry endpoint.
+
+    Retrying an assignment wipes the student's per-task submissions and resets
+    grade/state — this is a destructive action that must come from a logged-in
+    human, never a long-lived API token.
+    """
+    if isinstance(current_user, APITokenUser):
+        raise HTTPException(
+            status_code=403,
+            detail="API tokens cannot access assignments. Only user authentication is allowed.",
+        )
+
+
+## > Grade computation
+
+# Default passing threshold as a percentage (0-100). Used for PASS_FAIL,
+# NUMERIC, and PERCENTAGE grading types — any type where the pass/fail line
+# isn't implied by the display format itself.
+DEFAULT_PASSING_THRESHOLD_PERCENTAGE = 50.0
+
+# For ALPHABET (A/B/C/D/F) and GPA_SCALE (0.0-4.0), we use 60% as the passing
+# line so the `passed` field stays consistent with the display: any score that
+# renders as "F" or "0.0" will also have passed=False.
+LETTER_PASSING_THRESHOLD_PERCENTAGE = 60.0
+
+
+## > Auto-grading allow-list + server-side verification
+##
+## Not every task type can be graded without a human reviewer. This is an
+## EXPLICIT allow-list (not a deny-list) so that when new task types are added
+## to AssignmentTaskTypeEnum in the future, they default to requiring human
+## review until they're explicitly opted in here.
+
+# Tasks whose grade can be computed without teacher review. FILE_SUBMISSION
+# and OTHER are deliberately excluded — files need human eyes, and OTHER is
+# a legacy catch-all with no grading logic.
+AUTO_GRADABLE_TASK_TYPES = frozenset(
+    {
+        AssignmentTaskTypeEnum.QUIZ,
+        AssignmentTaskTypeEnum.FORM,
+        AssignmentTaskTypeEnum.CODE,
+        AssignmentTaskTypeEnum.SHORT_ANSWER,
+        AssignmentTaskTypeEnum.NUMBER_ANSWER,
+    }
+)
+
+# Tasks where the backend independently verifies the student's answer against
+# the stored task contents during auto-grading, instead of trusting whatever
+# grade the client-side component computed and posted.
+SERVER_VERIFIED_TASK_TYPES = frozenset(
+    {
+        AssignmentTaskTypeEnum.SHORT_ANSWER,
+        AssignmentTaskTypeEnum.NUMBER_ANSWER,
+        AssignmentTaskTypeEnum.QUIZ,
+        AssignmentTaskTypeEnum.FORM,
+        AssignmentTaskTypeEnum.CODE,
+    }
+)
+
 
 def _check_short_answer(answer, accepted, mode) -> bool:
     """

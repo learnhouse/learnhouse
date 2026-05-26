@@ -19,6 +19,8 @@ export interface MagicBlockRevision {
 
 export interface MagicBlockSession {
   session_uuid: string
+  iteration_count: number
+  max_iterations: number
   html_content: string | null
   message_history: MagicBlockMessage[]
   revisions: MagicBlockRevision[]

@@ -104,13 +104,6 @@ COPY --from=collab-builder /app/dist ./dist
 COPY apps/collab/package.json apps/collab/bun.lock* ./
 RUN bun install --production
 
-# MCP server: install the standalone package into system Python so the
-# `learnhouse-mcp` CLI is on PATH. Kept out of the API venv to avoid dep
-# conflicts and to keep each service independently restartable.
-WORKDIR /app/mcp
-COPY ./apps/mcp ./
-RUN pip install --no-cache-dir .
-
 # Copy configs and scripts
 WORKDIR /app
 COPY ./docker/nginx.conf /etc/nginx/conf.d/default.conf
@@ -118,8 +111,8 @@ COPY ./apps/api/docker-entrypoint.sh /app/api/docker-entrypoint.sh
 COPY ./docker/start.sh /app/start.sh
 RUN chmod +x /app/api/docker-entrypoint.sh /app/start.sh
 
-ENV PORT=8000 LEARNHOUSE_PORT=9000 COLLAB_PORT=4000 LEARNHOUSE_MCP_PORT=8765 LEARNHOUSE_MCP_HOST=127.0.0.1 HOSTNAME=0.0.0.0 LEARNHOUSE_OSS=true NEXT_PUBLIC_LEARNHOUSE_OSS=true
+ENV PORT=8000 LEARNHOUSE_PORT=9000 COLLAB_PORT=4000 HOSTNAME=0.0.0.0 LEARNHOUSE_OSS=true NEXT_PUBLIC_LEARNHOUSE_OSS=true
 
-EXPOSE 80 9000 4000 8765
+EXPOSE 80 9000 4000
 
 CMD ["sh", "/app/start.sh"]

@@ -36,6 +36,7 @@ import AssignmentEditorSubPage from './subpages/AssignmentEditorSubPage';
 import { useMediaQuery } from 'usehooks-ts';
 import EditAssignmentModal from '@components/Objects/Modals/Activities/Assignments/EditAssignmentModal';
 import { useTranslation } from 'react-i18next';
+import { useRegisterAtlasPageContext } from '@components/Dashboard/Atlas/AtlasMiniContext';
 const AssignmentSubmissionsSubPage = dynamic(() => import('./subpages/AssignmentSubmissionsSubPage'))
 const AssignmentAnalyticsSubPage = dynamic(() => import('./subpages/AssignmentAnalyticsSubPage'))
 
@@ -63,6 +64,7 @@ function AssignmentEdit() {
     return (
         <div className='flex w-full flex-col h-screen'>
             <AssignmentProvider assignment_uuid={'assignment_' + params.assignmentuuid}>
+                <AtlasContextBridge />
                 <div className='flex flex-col bg-white z-10 nice-shadow relative'>
                     <div className='flex justify-between mr-10 h-full'>
                         <div className="pl-10 mr-10 tracking-tighter">
@@ -128,6 +130,28 @@ function AssignmentEdit() {
 }
 
 export default AssignmentEdit
+
+// Surfaces the active assignment's course + activity to the Atlas mini panel
+// so terse follow-ups like "grade this" or "rewrite the prompt" resolve to
+// the assignment the user is looking at without a round trip. Must live
+// inside <AssignmentProvider> so it can read the loaded context.
+function AtlasContextBridge() {
+    const assignment = useAssignments() as any
+    const courseUuid = assignment?.course_object?.course_uuid
+    const activityUuid = assignment?.activity_object?.activity_uuid
+    const activityName = assignment?.assignment_object?.title
+
+    useRegisterAtlasPageContext(
+        courseUuid && activityUuid
+            ? {
+                  course_uuid: courseUuid,
+                  activity_uuid: activityUuid,
+                  activity_name: activityName,
+              }
+            : null,
+    )
+    return null
+}
 
 function BrdCmpx() {
     const { t } = useTranslation()

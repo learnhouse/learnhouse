@@ -1,7 +1,7 @@
 'use client'
 import React from 'react'
 import { useRouter } from 'next/navigation'
-import useSWR from 'swr'
+import { useQuery } from '@tanstack/react-query'
 import { motion, AnimatePresence } from 'motion/react'
 import { ChevronLeft, ChevronRight, Folder } from 'lucide-react'
 import {
@@ -9,11 +9,14 @@ import {
   FileText,
   Note,
   Video,
+  Package,
+  PuzzlePiece,
+  MarkdownLogo,
+  Globe,
 } from '@phosphor-icons/react'
 
 import { useAuth } from '@components/Contexts/AuthContext'
-import { getCourseMetaCacheKey } from '@components/Contexts/CourseContext'
-import { swrFetcher } from '@services/utils/ts/requests'
+import { getCourseMetadata } from '@services/courses/courses'
 
 interface ActivitySwitcherProps {
   course: { course_uuid: string }
@@ -22,7 +25,9 @@ interface ActivitySwitcherProps {
   onSave?: () => Promise<void> | void
 }
 
-function ActivityTypeIcon({ type, size = 12 }: { type?: string; size?: number }) {
+function ActivityTypeIcon({ type, subType, size = 12 }: { type?: string; subType?: string; size?: number }) {
+  if (subType === 'SUBTYPE_DYNAMIC_MARKDOWN') return <MarkdownLogo size={size} weight="fill" />
+  if (subType === 'SUBTYPE_DYNAMIC_EMBED') return <Globe size={size} weight="fill" />
   switch (type) {
     case 'TYPE_VIDEO':
       return <Video size={size} weight="fill" />
@@ -30,6 +35,10 @@ function ActivityTypeIcon({ type, size = 12 }: { type?: string; size?: number })
       return <FileText size={size} weight="fill" />
     case 'TYPE_ASSIGNMENT':
       return <Backpack size={size} weight="fill" />
+    case 'TYPE_SCORM':
+      return <Package size={size} weight="fill" />
+    case 'TYPE_CUSTOM':
+      return <PuzzlePiece size={size} weight="fill" />
     case 'TYPE_DYNAMIC':
     default:
       return <Note size={size} weight="fill" />
@@ -56,16 +65,22 @@ export default function ActivitySwitcher({
   const cleanCourseUuid = courseUuid?.replace('course_', '') ?? ''
   const currentActivityUuid = activity?.activity_uuid
 
-  const cacheKey =
-    courseUuid && accessToken
-      ? getCourseMetaCacheKey(courseUuid, true)
-      : null
-
-  const { data } = useSWR(
-    cacheKey,
-    (url) => swrFetcher(url, accessToken ?? undefined),
-    { revalidateOnFocus: false, keepPreviousData: true }
-  )
+  // Share the cache entry with CourseProvider's withUnpublishedActivities
+  // variant so a single fetch backs both consumers.
+  const { data } = useQuery({
+    queryKey: ['course', cleanCourseUuid, 'meta', 'withUnpublished'],
+    queryFn: () =>
+      getCourseMetadata(
+        cleanCourseUuid,
+        {},
+        accessToken ?? undefined,
+        { withUnpublishedActivities: true }
+      ),
+    enabled: !!cleanCourseUuid && !!accessToken,
+    staleTime: 60_000,
+    refetchOnWindowFocus: false,
+    placeholderData: (prev) => prev,
+  })
 
   const chapters: any[] = data?.chapters ?? []
   const hasChapters = chapters.length > 0
@@ -214,7 +229,7 @@ export default function ActivitySwitcher({
                         }
                         title={act.name}
                       >
-                        <ActivityTypeIcon type={act.activity_type} size={11} />
+                        <ActivityTypeIcon type={act.activity_type} subType={act.activity_sub_type} size={11} />
                         <span className="max-w-[150px] truncate">{act.name}</span>
                       </a>
                     )

@@ -2353,7 +2353,8 @@
           "publish_all_success": "All activities published successfully",
           "unpublish_all": "Unpublish All",
           "unpublish_all_success": "All activities unpublished successfully",
-          "publish_all_error": "Failed to update some activities"
+          "publish_all_error": "Failed to update some activities",
+          "send_to_atlas": "Send title to Atlas"
         },
         "bulk_actions": {
           "selected": "{{count}} selected",
@@ -2403,7 +2404,8 @@
             "uploading": "Uploading file and creating activity...",
             "upload_success": "File uploaded successfully",
             "creating_uploading": "Creating activity and uploading file...",
-            "update_error": "Failed to update activity"
+            "update_error": "Failed to update activity",
+            "added_to_atlas": "Added to Atlas chat"
           },
           "versioning": {
             "version_history": "Version History",

@@ -135,7 +135,7 @@ export type AtlasEvent =
       patch: Record<string, any>
       current?: Record<string, any> | null
       summary: string
-      mode: 'create' | 'edit' | 'delete' | 'reorder_chapters'
+      mode: 'create' | 'edit' | 'delete' | 'reorder_chapters' | 'rename'
     }
   | { type: 'results.list'; kind: string; items: Record<string, any>[] }
   | { type: 'structure.proposal'; tree: Record<string, any> }

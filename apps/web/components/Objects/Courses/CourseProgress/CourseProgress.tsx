@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react'
-import { Check, Square, ArrowRight, Folder, FileText, Video, Layers, BookOpenCheck } from 'lucide-react'
+import { Check, Square, ArrowRight, Folder, FileText, Video, Layers, BookOpenCheck, Package, Puzzle, Globe } from 'lucide-react'
+import { MarkdownLogo } from '@phosphor-icons/react'
 import { getUriWithOrg } from '@services/config/config'
 import Link from 'next/link'
 import Modal from '@components/Objects/StyledElements/Modal/Modal'
@@ -47,7 +48,9 @@ const CourseProgress: React.FC<CourseProgressProps> = ({ course, orgslug, isOpen
     return false
   }
 
-  const getActivityTypeIcon = (activityType: string) => {
+  const getActivityTypeIcon = (activityType: string, activitySubType?: string) => {
+    if (activitySubType === 'SUBTYPE_DYNAMIC_MARKDOWN') return <MarkdownLogo size={16} className="text-gray-400" />
+    if (activitySubType === 'SUBTYPE_DYNAMIC_EMBED') return <Globe size={16} className="text-gray-400" />
     switch (activityType) {
       case 'TYPE_VIDEO':
         return <Video size={16} className="text-gray-400" />
@@ -57,6 +60,10 @@ const CourseProgress: React.FC<CourseProgressProps> = ({ course, orgslug, isOpen
         return <Layers size={16} className="text-gray-400" />
       case 'TYPE_ASSIGNMENT':
         return <BookOpenCheck size={16} className="text-gray-400" />
+      case 'TYPE_SCORM':
+        return <Package size={16} className="text-gray-400" />
+      case 'TYPE_CUSTOM':
+        return <Puzzle size={16} className="text-gray-400" />
       default:
         return <FileText size={16} className="text-gray-400" />
     }
@@ -95,7 +102,7 @@ const CourseProgress: React.FC<CourseProgressProps> = ({ course, orgslug, isOpen
                         <Square size={18} className="stroke-[2] text-gray-300" />
                       )}
                       <div className="flex items-center space-x-2">
-                        {getActivityTypeIcon(activity.activity_type)}
+                        {getActivityTypeIcon(activity.activity_type, activity.activity_sub_type)}
                         <span className="text-gray-700 group-hover:text-gray-900">
                           {activity.name}
                         </span>

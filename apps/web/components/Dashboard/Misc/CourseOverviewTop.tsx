@@ -9,7 +9,7 @@ import { getCourseThumbnailMediaDirectory } from '@services/media/media'
 import Link from 'next/link'
 import Image from 'next/image'
 import EmptyThumbnailImage from '../../../public/empty_thumbnail.png'
-import { BookCopy, BrainCircuit, Eye, Globe, GlobeLock, Loader2, Check, Info } from 'lucide-react'
+import { BookCopy, BrainCircuit, Eye, Globe, GlobeLock, Loader2, Check } from 'lucide-react'
 import { GlobeStand } from '@phosphor-icons/react'
 import { useAtlasMini, useRegisterAtlasPageContext } from '@components/Dashboard/Atlas/AtlasMiniContext'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@components/ui/tooltip'
@@ -41,7 +41,6 @@ export function CourseOverviewTop({
 
   const courseStructure = course?.courseStructure
   const isPublished = courseStructure?.published
-  const withUnpublishedActivities = course?.withUnpublishedActivities ?? false
 
   // Tell Atlas which course the user is viewing so the agent can pre-focus
   // it and skip the "which course?" round-trip on terse messages like
@@ -54,11 +53,6 @@ export function CourseOverviewTop({
         }
       : null,
   )
-
-  // Use unified cache key
-  const cacheKey = courseStructure?.course_uuid
-    ? getCourseMetaCacheKey(courseStructure.course_uuid, withUnpublishedActivities)
-    : null
 
   const isAIEnabled = org?.config?.config?.resolved_features?.ai?.enabled ?? org?.config?.config?.features?.ai?.enabled !== false
 

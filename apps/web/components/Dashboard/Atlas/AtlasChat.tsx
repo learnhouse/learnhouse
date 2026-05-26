@@ -51,6 +51,8 @@ import dynamic from 'next/dynamic'
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
+import { queryKeys } from '@/lib/query/keys'
 
 import AppliedPill from './cards/AppliedPill'
 import ChapterPreviewCard from './cards/ChapterPreviewCard'
@@ -436,8 +438,67 @@ export default function AtlasChat() {
 
   // Chat session persistence.
   const [aichatUuid, setAichatUuid] = useState<string | null>(null)
-  const [chatSessions, setChatSessions] = useState<AtlasChatSession[]>([])
   const [loadingChat, setLoadingChat] = useState(false)
+
+  const queryClient = useQueryClient()
+  const sessionsKey = orgId ? queryKeys.ai.atlasSessions(orgId) : (['ai', 'atlas', 'sessions', 'pending'] as const)
+  const { data: chatSessions = [] } = useQuery<AtlasChatSession[]>({
+    queryKey: sessionsKey,
+    queryFn: () => listAtlasChatSessions(orgId!, accessToken!),
+    enabled: !!orgId && !!accessToken,
+    staleTime: 60_000,
+    refetchOnWindowFocus: false,
+  })
+  const invalidateSessions = useCallback(() => {
+    if (!orgId) return
+    queryClient.invalidateQueries({ queryKey: queryKeys.ai.atlasSessions(orgId) })
+  }, [queryClient, orgId])
+
+  // Invalidate TanStack caches for any open page reading the entity Atlas
+  // just mutated. Atlas backend stores prefixed UUIDs (`course_xxx`,
+  // `activity_xxx`); the cache keys are bare uuids. For chapters there's
+  // no dedicated detail key — they hang off the parent course's meta.
+  const invalidateAppliedTarget = useCallback(
+    (target: { kind: 'course' | 'chapter' | 'activity'; uuid: string; parent_course_uuid?: string }) => {
+      const strip = (v: string, prefix: string) =>
+        v.startsWith(prefix) ? v.slice(prefix.length) : v
+      if (target.kind === 'course') {
+        const bare = strip(target.uuid, 'course_')
+        queryClient.invalidateQueries({ queryKey: queryKeys.courses.detail(bare) })
+        queryClient.invalidateQueries({ queryKey: queryKeys.courses.meta(bare) })
+      } else if (target.kind === 'activity') {
+        const bare = strip(target.uuid, 'activity_')
+        queryClient.invalidateQueries({ queryKey: queryKeys.activity.detail(bare) })
+        queryClient.invalidateQueries({ queryKey: queryKeys.activity.editorBootstrap(bare) })
+        // Activity edits change the parent course's structure too (e.g.
+        // create / delete / rename appear in the chapter list on the
+        // course overview page).
+        if (target.parent_course_uuid) {
+          const bareCourse = strip(target.parent_course_uuid, 'course_')
+          queryClient.invalidateQueries({ queryKey: queryKeys.courses.meta(bareCourse) })
+        }
+      } else if (target.kind === 'chapter') {
+        // Chapters are read through the parent course's meta — there is
+        // no standalone chapter detail key in this codebase.
+        if (target.parent_course_uuid) {
+          const bareCourse = strip(target.parent_course_uuid, 'course_')
+          queryClient.invalidateQueries({ queryKey: queryKeys.courses.meta(bareCourse) })
+          queryClient.invalidateQueries({ queryKey: queryKeys.courses.detail(bareCourse) })
+        }
+      }
+    },
+    [queryClient],
+  )
+  const patchSessionsCache = useCallback(
+    (updater: (prev: AtlasChatSession[]) => AtlasChatSession[]) => {
+      if (!orgId) return
+      queryClient.setQueryData<AtlasChatSession[]>(
+        queryKeys.ai.atlasSessions(orgId),
+        (prev) => updater(prev ?? []),
+      )
+    },
+    [queryClient, orgId],
+  )
 
   const abortRef = useRef<AbortController | null>(null)
   const scrollRef = useRef<HTMLDivElement | null>(null)
@@ -482,21 +543,6 @@ export default function AtlasChat() {
     }
   }, [messages])
 
-  // ── chat session list ──────────────────────────────────────────────────
-  const refreshSessionList = useCallback(async () => {
-    if (!orgId || !accessToken) return
-    try {
-      const list = await listAtlasChatSessions(orgId, accessToken)
-      setChatSessions(list)
-    } catch {
-      // Non-fatal — the sidebar just won't populate; keep the chat alive.
-    }
-  }, [orgId, accessToken])
-
-  useEffect(() => {
-    refreshSessionList()
-  }, [refreshSessionList])
-
   // ── URL <-> chat sync (?chat=aichat_xxx) ───────────────────────────────
   useEffect(() => {
     if (typeof window === 'undefined') return
@@ -540,13 +586,22 @@ export default function AtlasChat() {
   )
 
   const startNewChat = useCallback(() => {
-    if (sending) return
-    abortRef.current?.abort()
+    // The sidebar's "New chat" button is disabled while sending /
+    // loading, so we don't need to guard against an in-flight stream
+    // here — but abort + clear defensively anyway in case the function
+    // is invoked from another path (e.g. removeChat on the active uuid).
+    if (abortRef.current) {
+      abortRef.current.abort()
+      abortRef.current = null
+    }
     setMessages([])
     setAichatUuid(null)
     setInput('')
+    setLoadingChat(false)
+    setSessionError(null)
+    setPendingBusy({})
     syncUrl(null)
-  }, [sending, syncUrl])
+  }, [syncUrl])
 
   const removeChat = useCallback(
     async (uuid: string) => {
@@ -556,34 +611,34 @@ export default function AtlasChat() {
       } catch {
         /* ignore */
       }
-      setChatSessions((prev) => prev.filter((s) => s.aichat_uuid !== uuid))
+      patchSessionsCache((prev) => prev.filter((s) => s.aichat_uuid !== uuid))
       if (uuid === aichatUuid) {
         startNewChat()
       }
     },
-    [accessToken, aichatUuid, startNewChat],
+    [accessToken, aichatUuid, startNewChat, patchSessionsCache],
   )
 
   const renameChat = useCallback(
     async (uuid: string, title: string) => {
       if (!accessToken) return
       await updateAtlasChatSession(uuid, { title }, accessToken)
-      setChatSessions((prev) =>
+      patchSessionsCache((prev) =>
         prev.map((s) => (s.aichat_uuid === uuid ? { ...s, title } : s)),
       )
     },
-    [accessToken],
+    [accessToken, patchSessionsCache],
   )
 
   const toggleFavorite = useCallback(
     async (uuid: string, favorite: boolean) => {
       if (!accessToken) return
       await updateAtlasChatSession(uuid, { favorite }, accessToken)
-      setChatSessions((prev) =>
+      patchSessionsCache((prev) =>
         prev.map((s) => (s.aichat_uuid === uuid ? { ...s, favorite } : s)),
       )
     },
-    [accessToken],
+    [accessToken, patchSessionsCache],
   )
 
   // ── sending ────────────────────────────────────────────────────────────
@@ -654,6 +709,9 @@ export default function AtlasChat() {
                 i === ownerIdx ? applyEvent(m, event) : m,
               )
             })
+            if (event.type === 'applied' && (event as any).target) {
+              invalidateAppliedTarget((event as any).target)
+            }
             continue
           }
           setMessages((prev) =>
@@ -684,10 +742,10 @@ export default function AtlasChat() {
         abortRef.current = null
         // The first turn of a new chat creates the session row — refresh
         // the sidebar so the new entry pops in.
-        if (isNewChat) refreshSessionList()
+        if (isNewChat) invalidateSessions()
       }
     },
-    [accessToken, aichatUuid, atlasSession, orgId, refreshSessionList, syncUrl],
+    [accessToken, aichatUuid, atlasSession, orgId, invalidateSessions, syncUrl],
   )
 
   const onSubmit = (e?: React.FormEvent) => {
@@ -747,6 +805,7 @@ export default function AtlasChat() {
               versionAfter: event.version_after,
               undoToken: event.undo_token,
             }))
+            if (event.target) invalidateAppliedTarget(event.target)
           } else if (event.type === 'error') {
             updatePending(pendingId, (p) => ({
               ...p,
@@ -769,7 +828,7 @@ export default function AtlasChat() {
         })
       }
     },
-    [accessToken, atlasSession, orgId, updatePending],
+    [accessToken, atlasSession, invalidateAppliedTarget, orgId, updatePending],
   )
 
   const handleCancelPending = useCallback(
@@ -819,6 +878,9 @@ export default function AtlasChat() {
         })
         for await (const event of stream) {
           if (event.type === 'session') continue
+          if (event.type === 'applied' && (event as any).target) {
+            invalidateAppliedTarget((event as any).target)
+          }
           setMessages((prev) =>
             prev.map((m) => (m.id === assistantMsg.id ? applyEvent(m, event) : m)),
           )
@@ -835,7 +897,7 @@ export default function AtlasChat() {
         setSending(false)
       }
     },
-    [accessToken, atlasSession, orgId],
+    [accessToken, atlasSession, invalidateAppliedTarget, orgId],
   )
 
   // ── structure proposal apply ────────────────────────────────────────────
@@ -908,6 +970,10 @@ export default function AtlasChat() {
               status: 'dropped',
               versionAfter: event.version_after ?? p.versionAfter,
             }))
+            // Undo reverts a previously-applied mutation — invalidate
+            // the same keys the original apply did, so any open page
+            // sees the rollback.
+            if (event.target) invalidateAppliedTarget(event.target)
           } else if (event.type === 'error') {
             updatePending(pendingId, (p) => ({
               ...p,
@@ -921,7 +987,7 @@ export default function AtlasChat() {
         return false
       }
     },
-    [accessToken, atlasSession, orgId, updatePending],
+    [accessToken, atlasSession, invalidateAppliedTarget, orgId, updatePending],
   )
 
   // ── pending hydration on chat reload ────────────────────────────────────
@@ -989,7 +1055,11 @@ export default function AtlasChat() {
       />
 
       {/* main chat column */}
-      <div className="flex flex-col flex-1 min-w-0 bg-white/[0.02] ring-1 ring-inset ring-white/[0.04] rounded-2xl overflow-hidden shadow-xl shadow-black/30">
+      <div
+        className={`relative flex flex-col flex-1 min-w-0 bg-white/[0.02] ring-1 ring-inset ring-white/[0.04] rounded-2xl overflow-hidden shadow-xl shadow-black/30 ${
+          sending ? 'atlas-loading-border' : ''
+        }`}
+      >
         {sessionError && (
           <div className="flex-none flex items-center gap-2 bg-rose-500/10 text-rose-200 px-5 py-2 text-xs border-b border-rose-500/20">
             <AlertTriangle size={14} />
@@ -1746,7 +1816,7 @@ function ToolRow({ tool }: { tool: ToolEvent }) {
 export function ActionDock({ tools }: { tools: ToolEvent[] }) {
   const visible = tools.slice(-4)
   return (
-    <div>
+    <div className="atlas-dock-enter">
       <div className="flex items-center gap-1.5 text-[10px] uppercase tracking-wider text-violet-300/80 font-semibold pb-1.5">
         <span className="flex items-center gap-1">
           <span className="w-1 h-1 bg-violet-300/60 rounded-full animate-pulse [animation-delay:0ms]" />

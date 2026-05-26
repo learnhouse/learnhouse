@@ -740,7 +740,7 @@ function AudioBlockComponent(props: ExtendedNodeViewProps) {
             {/* Tabs */}
             <div className="flex gap-1 bg-neutral-100 rounded-lg p-1">
               {([
-                { key: 'upload' as TabType, icon: Upload, label: 'Upload' },
+                { key: 'upload' as TabType, icon: UploadSimple, label: 'Upload' },
                 { key: 'episode' as TabType, icon: MusicNote, label: 'Episode' },
                 { key: 'podcast' as TabType, icon: List, label: 'Playlist' },
               ]).map((tab) => (

@@ -92,7 +92,6 @@ const CONTROLS_BAR = pc.dim('─'.repeat(72)) + '\n' +
   pc.dim('  ') + pc.bold('ra') + pc.dim(' api  ') +
   pc.bold('rw') + pc.dim(' web  ') +
   pc.bold('rc') + pc.dim(' collab  ') +
-  pc.bold('rm') + pc.dim(' mcp  ') +
   pc.bold('rb') + pc.dim(' all  ') +
   pc.bold('q') + pc.dim(' quit') + '\n' +
   pc.dim('─'.repeat(72))
@@ -345,30 +344,10 @@ export async function devCommand(opts: { ee?: boolean; adminEmail?: string; admi
     }
   }
 
-  const mcpDir = path.join(root, 'apps', 'mcp')
-  if (fs.existsSync(mcpDir) && !fs.existsSync(path.join(mcpDir, '.venv'))) {
-    p.log.info('Installing MCP dependencies...')
-    const venv = spawnSync('uv', ['venv', '.venv'], { cwd: mcpDir, stdio: 'inherit', shell: true })
-    if (venv.status !== 0) {
-      p.log.error('Failed to create MCP venv')
-      process.exit(1)
-    }
-    const install = spawnSync('uv', ['pip', 'install', '-e', '.'], {
-      cwd: mcpDir,
-      stdio: 'inherit',
-      shell: true,
-    })
-    if (install.status !== 0) {
-      p.log.error('Failed to install MCP dependencies')
-      process.exit(1)
-    }
-  }
-
   // Start local services
   let apiProc: ChildProcess | null = null
   let webProc: ChildProcess | null = null
   let collabProc: ChildProcess | null = null
-  let mcpProc: ChildProcess | null = null
 
   const startApi = () => {
     return spawnService('uv', ['run', 'python', 'app.py'], path.join(root, 'apps', 'api'), 'api', pc.magenta)
@@ -382,35 +361,11 @@ export async function devCommand(opts: { ee?: boolean; adminEmail?: string; admi
     return spawnService('tsx', ['watch', 'src/index.ts'], path.join(root, 'apps', 'collab'), 'collab', pc.yellow)
   }
 
-  // The MCP server reads LEARNHOUSE_API_URL from env and forwards each caller's
-  // own token. In dev the API binds to 1338 (see apps/api/config/config.yaml).
-  const startMcp = () => {
-    return spawnService(
-      'uv',
-      ['run', 'learnhouse-mcp'],
-      mcpDir,
-      'mcp',
-      pc.green,
-      {
-        LEARNHOUSE_API_URL: 'http://localhost:1338',
-        LEARNHOUSE_MCP_HOST: '127.0.0.1',
-        LEARNHOUSE_MCP_PORT: '8765',
-      },
-    )
-  }
-
   apiProc = startApi()
   webProc = startWeb()
   collabProc = startCollab()
-  if (fs.existsSync(mcpDir)) {
-    mcpProc = startMcp()
-  }
 
-  p.log.success(
-    mcpProc
-      ? 'API, Web, Collab, and MCP servers started'
-      : 'API, Web, and Collab servers started',
-  )
+  p.log.success('API, Web, and Collab servers started')
   console.log()
   console.log(pc.dim('  Thank you for contributing to LearnHouse!'))
   console.log()
@@ -433,7 +388,6 @@ export async function devCommand(opts: { ee?: boolean; adminEmail?: string; admi
       killProcess(apiProc),
       killProcess(webProc),
       killProcess(collabProc),
-      killProcess(mcpProc),
     ])
 
     console.log(pc.dim('DB and Redis containers are still running for next session.'))
@@ -488,29 +442,16 @@ export async function devCommand(opts: { ee?: boolean; adminEmail?: string; admi
           await killProcess(collabProc)
           collabProc = startCollab()
           printControls()
-        } else if (key === 'm') {
-          if (!fs.existsSync(mcpDir)) {
-            console.log(pc.dim('\n  apps/mcp not present — nothing to restart\n'))
-          } else {
-            console.log(pc.green('\n  Restarting MCP...\n'))
-            await killProcess(mcpProc)
-            mcpProc = startMcp()
-          }
-          printControls()
         } else if (key === 'b') {
           console.log(pc.yellow('\n  Restarting all...\n'))
           await Promise.all([
             killProcess(apiProc),
             killProcess(webProc),
             killProcess(collabProc),
-            killProcess(mcpProc),
           ])
           apiProc = startApi()
           webProc = startWeb()
           collabProc = startCollab()
-          if (fs.existsSync(mcpDir)) {
-            mcpProc = startMcp()
-          }
           printControls()
         }
       }

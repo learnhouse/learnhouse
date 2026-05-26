@@ -1,6 +1,7 @@
 'use client'
 import { useMediaQuery } from 'usehooks-ts'
-import { Check, FileText, ListTree, Video, X, StickyNote, Backpack, ArrowRight } from 'lucide-react'
+import { Check, FileText, ListTree, Video, X, StickyNote, Backpack, ArrowRight, Package, Puzzle, Globe } from 'lucide-react'
+import { MarkdownLogo } from '@phosphor-icons/react'
 import { getUriWithOrg } from '@services/config/config'
 import Link from 'next/link'
 import React from 'react'
@@ -55,7 +56,9 @@ export default function ActivityChapterDropdown(props: ActivityChapterDropdownPr
   };
 
   // Function to get the appropriate icon for activity type
-  const getActivityTypeIcon = (activityType: string) => {
+  const getActivityTypeIcon = (activityType: string, activitySubType?: string) => {
+    if (activitySubType === 'SUBTYPE_DYNAMIC_MARKDOWN') return <MarkdownLogo size={10} />;
+    if (activitySubType === 'SUBTYPE_DYNAMIC_EMBED') return <Globe size={10} />;
     switch (activityType) {
       case 'TYPE_VIDEO':
         return <Video size={10} />;
@@ -65,12 +68,18 @@ export default function ActivityChapterDropdown(props: ActivityChapterDropdownPr
         return <StickyNote size={10} />;
       case 'TYPE_ASSIGNMENT':
         return <Backpack size={10} />;
+      case 'TYPE_SCORM':
+        return <Package size={10} />;
+      case 'TYPE_CUSTOM':
+        return <Puzzle size={10} />;
       default:
         return <FileText size={10} />;
     }
   };
 
-  const getActivityTypeLabel = (activityType: string) => {
+  const getActivityTypeLabel = (activityType: string, activitySubType?: string) => {
+    if (activitySubType === 'SUBTYPE_DYNAMIC_MARKDOWN') return t('activities.markdown');
+    if (activitySubType === 'SUBTYPE_DYNAMIC_EMBED') return t('activities.embed');
     switch (activityType) {
       case 'TYPE_VIDEO':
         return t('activities.video');
@@ -80,6 +89,10 @@ export default function ActivityChapterDropdown(props: ActivityChapterDropdownPr
         return t('activities.page');
       case 'TYPE_ASSIGNMENT':
         return t('activities.assignment');
+      case 'TYPE_SCORM':
+        return t('activities.scorm');
+      case 'TYPE_CUSTOM':
+        return t('activities.custom');
       default:
         return t('activities.learning_material');
     }
@@ -175,9 +188,9 @@ export default function ActivityChapterDropdown(props: ActivityChapterDropdownPr
                                 )}
                               </div>
                               <div className="flex items-center space-x-1 mt-0.5 text-neutral-400">
-                                {getActivityTypeIcon(activity.activity_type)}
+                                {getActivityTypeIcon(activity.activity_type, activity.activity_sub_type)}
                                 <span className="text-[10px] font-medium">
-                                  {getActivityTypeLabel(activity.activity_type)}
+                                  {getActivityTypeLabel(activity.activity_type, activity.activity_sub_type)}
                                 </span>
                               </div>
                             </div>

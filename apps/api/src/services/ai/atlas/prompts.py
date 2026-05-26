@@ -148,7 +148,7 @@ def render_focus_block(
                     f"(id={ch_id}, {ch.get('activity_count', 0)} activities){marker}"
                 )
             lines.append(
-                f"  (activities list elided — total {total_activities} > "
+                f"  (activity list elided — total {total_activities} > "
                 f"{inline_activity_limit}; call get_chapter to drill in)"
             )
     elif course_uuid:
