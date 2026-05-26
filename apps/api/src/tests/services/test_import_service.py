@@ -575,10 +575,14 @@ class TestImportHelpers:
             "src.services.courses.transfer.import_service.uuid4",
             side_effect=lambda: next(new_uuid_sequence),
         ):
+            # Snapshot org.id before the call: SAVEPOINT rollback in import_courses
+            # expires session-tracked instances, so post-call attribute access on
+            # `org` would trigger a lazy reload (and fail in this sync block).
+            expected_org_id = org.id
             result = await import_courses(
                 mock_request,
                 temp_id,
-                org.id,
+                expected_org_id,
                 ImportOptions(course_uuids=["course-success", "course-missing", "course-failure"]),
                 admin_user,
                 db,
@@ -594,7 +598,7 @@ class TestImportHelpers:
         assert result.courses[2].success is False
         assert "boom" in result.courses[2].error
         assert check_limits.call_count == 2
-        increase_usage.assert_called_once_with("courses", org.id, db)
+        increase_usage.assert_called_once_with("courses", expected_org_id, db)
         delete_storage_directory.assert_called_once()
         assert not os.path.exists(tmp_path / f"{temp_id}-importing")
 
