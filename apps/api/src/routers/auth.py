@@ -348,7 +348,7 @@ async def login(
             select(User).where(User.email == username)
         )).scalars().first()
         if user_record:
-            record_failed_login(
+            await record_failed_login(
                 user_record,
                 db_session,
                 ip_address=get_client_ip(request),
@@ -391,9 +391,9 @@ async def login(
         )
 
     # Step 5: Reset failed attempts and update login info
-    reset_failed_attempts(user, db_session)
+    await reset_failed_attempts(user, db_session)
     client_ip = get_client_ip(request)
-    update_login_info(user, client_ip, db_session)
+    await update_login_info(user, client_ip, db_session)
 
     # Step 6: Issue tokens
     access_token = create_access_token(

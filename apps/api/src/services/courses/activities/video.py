@@ -278,13 +278,13 @@ async def update_video_activity(
     details: Optional[str] = None,
 ) -> ActivityRead:
     statement = select(Activity).where(Activity.activity_uuid == activity_uuid)
-    activity = db_session.exec(statement).first()
+    activity = (await db_session.execute(statement)).scalars().first()
 
     if not activity:
         raise HTTPException(status_code=404, detail="Activity not found")
 
     statement = select(Course).where(Course.id == activity.course_id)
-    course = db_session.exec(statement).first()
+    course = (await db_session.execute(statement)).scalars().first()
 
     if not course:
         raise HTTPException(status_code=404, detail="Course not found")
@@ -307,7 +307,7 @@ async def update_video_activity(
             )
 
         statement = select(Organization).where(Organization.id == activity.org_id)
-        organization = db_session.exec(statement).first()
+        organization = (await db_session.execute(statement)).scalars().first()
 
         if organization and course:
             saved_filename = await upload_video(
@@ -325,8 +325,8 @@ async def update_video_activity(
 
     activity.update_date = str(datetime.now())
     db_session.add(activity)
-    db_session.commit()
-    db_session.refresh(activity)
+    await db_session.commit()
+    await db_session.refresh(activity)
 
     return ActivityRead.model_validate(activity)
 
@@ -341,13 +341,13 @@ async def update_external_video_activity(
     details: Optional[str] = None,
 ) -> ActivityRead:
     statement = select(Activity).where(Activity.activity_uuid == activity_uuid)
-    activity = db_session.exec(statement).first()
+    activity = (await db_session.execute(statement)).scalars().first()
 
     if not activity:
         raise HTTPException(status_code=404, detail="Activity not found")
 
     statement = select(Course).where(Course.id == activity.course_id)
-    course = db_session.exec(statement).first()
+    course = (await db_session.execute(statement)).scalars().first()
 
     if not course:
         raise HTTPException(status_code=404, detail="Course not found")
@@ -372,8 +372,8 @@ async def update_external_video_activity(
 
     activity.update_date = str(datetime.now())
     db_session.add(activity)
-    db_session.commit()
-    db_session.refresh(activity)
+    await db_session.commit()
+    await db_session.refresh(activity)
 
     return ActivityRead.model_validate(activity)
 

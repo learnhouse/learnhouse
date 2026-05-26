@@ -191,6 +191,6 @@ async def signWithGoogle(
 
     # Update last login info
     client_ip = get_client_ip(request)
-    update_login_info(user, client_ip, db_session)
+    await update_login_info(user, client_ip, db_session)
 
     return UserRead.model_validate(user)
