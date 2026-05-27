@@ -695,7 +695,7 @@ async def query_course_dashboard_detail(
             ch_data = [
                 {
                     "user_id": tr.user_id,
-                    "timestamp": tr.creation_date,
+                    "enrolled_at": tr.creation_date,
                 }
                 for tr in trail_runs
             ]
