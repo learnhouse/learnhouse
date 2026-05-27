@@ -1,5 +1,5 @@
 import { useAssignments } from '@components/Contexts/Assignments/AssignmentContext';
-import { BookOpenCheck, Check, CircleHelp, Download, Info, MessageSquare, X } from 'lucide-react';
+import { BookOpenCheck, Check, CircleHelp, Download, Info, MessageSquare, UserCheck, X } from 'lucide-react';
 import Link from 'next/link';
 import React, { useEffect, useState } from 'react'
 import { useQueryClient } from '@tanstack/react-query';
@@ -169,6 +169,12 @@ function EvaluateAssignment({ user_id }: any) {
                                         {taskSubmitted
                                             ? tb.percentage_display
                                             : t('dashboard.assignments.submissions.preview.not_submitted')}
+                                    </div>
+                                )}
+                                {tb?.manually_graded && (
+                                    <div className='flex items-center space-x-1 text-[10px] font-bold px-2 py-0.5 rounded-full bg-orange-50 text-orange-700'>
+                                        <UserCheck size={10} />
+                                        <span>{t('dashboard.assignments.submissions.preview.manually_graded', { defaultValue: 'Manually graded' })}</span>
                                     </div>
                                 )}
                             </div>

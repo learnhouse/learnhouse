@@ -13,6 +13,7 @@ import toast from 'react-hot-toast';
 import { useTranslation } from 'react-i18next';
 import { useQueryClient } from '@tanstack/react-query';
 import { queryKeys } from '@/lib/query/keys';
+import { applyManualGrade } from './applyManualGrade';
 
 type FileSchema = {
     fileUUID: string;
@@ -167,11 +168,13 @@ export default function TaskFileObject({ view, user_id, assignmentTaskUUID }: Ta
 
     // Detect changes between initial and current submissions
     useEffect(() => {
+        /* eslint-disable react-hooks/set-state-in-effect */
         if (userSubmissions.fileUUID !== initialUserSubmissions.fileUUID) {
             setShowSavingDisclaimer(true);
         } else {
             setShowSavingDisclaimer(false);
         }
+        /* eslint-enable react-hooks/set-state-in-effect */
     }, [userSubmissions]);
 
     /* STUDENT VIEW CODE */
@@ -201,40 +204,24 @@ export default function TaskFileObject({ view, user_id, assignmentTaskUUID }: Ta
     }
 
     async function gradeCustomFC(grade: number, feedback?: string) {
-        if (assignmentTaskUUID) {
-            if (Number.isNaN(grade) || grade < 0) {
-                toast.error('Grade must be a positive number.');
-                return;
-            }
-            if (grade > assignmentTaskOutsideProvider.max_grade_value) {
-                toast.error(`Grade cannot be more than ${assignmentTaskOutsideProvider.max_grade_value} points`);
-                return;
-            }
-            const trimmed = feedback?.trim();
-            const finalFeedback = trimmed && trimmed.length > 0
-                ? trimmed
-                : `Graded by teacher : @${session?.data?.user?.username ?? ''}`;
-
-            const values = {
-                assignment_task_submission_uuid: userSubmissions.assignment_task_submission_uuid,
-                task_submission: userSubmissions,
-                grade,
-                task_submission_grade_feedback: finalFeedback,
-            };
-
-            const res = await handleAssignmentTaskSubmission(values, assignmentTaskUUID, assignment.assignment_object.assignment_uuid, access_token);
-            if (res) {
-                getAssignmentTaskSubmissionFromIdentifiedUserUI();
-                toast.success(`Task graded successfully with ${grade} points`);
-            } else {
-                toast.error('Error grading task, please retry later.');
-            }
-        }
+        await applyManualGrade({
+            grade,
+            feedback,
+            maxPoints: assignmentTaskOutsideProvider?.max_grade_value || 100,
+            assignmentTaskUUID,
+            assignmentUUID: assignment.assignment_object.assignment_uuid,
+            accessToken: access_token,
+            username: session?.data?.user?.username,
+            assignmentTaskSubmissionUUID: userSubmissions?.assignment_task_submission_uuid,
+            taskSubmissionPayload: userSubmissions,
+            onSuccess: getAssignmentTaskSubmissionFromIdentifiedUserUI,
+        });
     }
 
     /* GRADING VIEW CODE */
     const [assignmentTaskOutsideProvider, setAssignmentTaskOutsideProvider] = useState<any>(null);
     useEffect(() => {
+        /* eslint-disable react-hooks/set-state-in-effect */
         // Student area: hydrate from already-fetched context payloads.
         if (view === 'student') {
             hydrateTaskFromContext()
@@ -246,6 +233,7 @@ export default function TaskFileObject({ view, user_id, assignmentTaskUUID }: Ta
             getAssignmentTaskUI();
             getAssignmentTaskSubmissionFromIdentifiedUserUI();
         }
+        /* eslint-enable react-hooks/set-state-in-effect */
     }, [view, assignmentTaskUUID, assignment?.assignment_tasks, taskSubmissionsMap])
 
     return (
