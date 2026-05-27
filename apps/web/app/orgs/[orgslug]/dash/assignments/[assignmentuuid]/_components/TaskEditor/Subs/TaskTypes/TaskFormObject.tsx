@@ -246,6 +246,39 @@ function TaskFormObject({ view, assignmentTaskUUID, user_id }: TaskFormObjectPro
         }
     };
 
+    const gradeCustomFC = async (grade: number, feedback?: string) => {
+        if (!user_id) {
+            toast.error('User ID is required for grading.');
+            return;
+        }
+        const maxPoints = assignmentTaskOutsideProvider?.max_grade_value || 100;
+        if (Number.isNaN(grade) || grade < 0) {
+            toast.error('Grade must be a positive number.');
+            return;
+        }
+        if (grade > maxPoints) {
+            toast.error(`Grade cannot be more than ${maxPoints} points`);
+            return;
+        }
+        const trimmed = feedback?.trim();
+        const finalFeedback = trimmed && trimmed.length > 0
+            ? trimmed
+            : `Graded by teacher : @${session?.data?.user?.username ?? ''}`;
+        const values = {
+            assignment_task_submission_uuid: userSubmissions.assignment_task_submission_uuid,
+            task_submission: userSubmissions,
+            grade,
+            task_submission_grade_feedback: finalFeedback,
+        };
+        const res = await handleAssignmentTaskSubmission(values, assignmentTaskUUID, assignment.assignment_object.assignment_uuid, access_token);
+        if (res) {
+            getAssignmentTaskSubmissionFromIdentifiedUserUI();
+            toast.success(`Task graded successfully with ${grade} points`);
+        } else {
+            toast.error('Error grading task, please retry later.');
+        }
+    };
+
     const gradeFC = async () => {
         if (!user_id) {
             toast.error('User ID is required for grading.');
@@ -405,15 +438,18 @@ function TaskFormObject({ view, assignmentTaskUUID, user_id }: TaskFormObjectPro
 
     if (view === 'teacher' || (questions && questions.length > 0)) {
         return (
-            <AssignmentBoxUI 
-                submitFC={submitFC} 
-                saveFC={saveFC} 
-                gradeFC={gradeFC} 
-                view={view} 
-                currentPoints={userSubmissionObject?.grade} 
-                maxPoints={assignmentTaskOutsideProvider?.max_grade_value} 
-                showSavingDisclaimer={showSavingDisclaimer} 
+            <AssignmentBoxUI
+                submitFC={submitFC}
+                saveFC={saveFC}
+                gradeFC={gradeFC}
+                gradeCustomFC={gradeCustomFC}
+                view={view}
+                currentPoints={userSubmissionObject?.grade}
+                currentFeedback={userSubmissionObject?.task_submission_grade_feedback}
+                maxPoints={assignmentTaskOutsideProvider?.max_grade_value}
+                showSavingDisclaimer={showSavingDisclaimer}
                 type="form"
+                autoGradable={true}
             >
                 {view === 'grading' && (
                     <div className="mb-6 p-4 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg border border-blue-200">
