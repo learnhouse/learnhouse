@@ -200,22 +200,28 @@ export default function TaskFileObject({ view, user_id, assignmentTaskUUID }: Ta
         }
     }
 
-    async function gradeCustomFC(grade: number) {
+    async function gradeCustomFC(grade: number, feedback?: string) {
         if (assignmentTaskUUID) {
+            if (Number.isNaN(grade) || grade < 0) {
+                toast.error('Grade must be a positive number.');
+                return;
+            }
             if (grade > assignmentTaskOutsideProvider.max_grade_value) {
                 toast.error(`Grade cannot be more than ${assignmentTaskOutsideProvider.max_grade_value} points`);
                 return;
             }
-            
-    
-            // Save the grade to the server
+            const trimmed = feedback?.trim();
+            const finalFeedback = trimmed && trimmed.length > 0
+                ? trimmed
+                : `Graded by teacher : @${session?.data?.user?.username ?? ''}`;
+
             const values = {
                 assignment_task_submission_uuid: userSubmissions.assignment_task_submission_uuid,
                 task_submission: userSubmissions,
-                grade: grade,
-                task_submission_grade_feedback: 'Graded by teacher : @' + session.data.user.username,
+                grade,
+                task_submission_grade_feedback: finalFeedback,
             };
-    
+
             const res = await handleAssignmentTaskSubmission(values, assignmentTaskUUID, assignment.assignment_object.assignment_uuid, access_token);
             if (res) {
                 getAssignmentTaskSubmissionFromIdentifiedUserUI();
@@ -243,7 +249,7 @@ export default function TaskFileObject({ view, user_id, assignmentTaskUUID }: Ta
     }, [view, assignmentTaskUUID, assignment?.assignment_tasks, taskSubmissionsMap])
 
     return (
-        <AssignmentBoxUI submitFC={submitFC} showSavingDisclaimer={showSavingDisclaimer} view={view} gradeCustomFC={gradeCustomFC} currentPoints={userSubmissionObject?.grade} maxPoints={assignmentTaskOutsideProvider?.max_grade_value} type="file">
+        <AssignmentBoxUI submitFC={submitFC} showSavingDisclaimer={showSavingDisclaimer} view={view} gradeCustomFC={gradeCustomFC} currentPoints={userSubmissionObject?.grade} currentFeedback={userSubmissionObject?.task_submission_grade_feedback} maxPoints={assignmentTaskOutsideProvider?.max_grade_value} type="file">
             {view === 'teacher' && (
                 <div className='flex flex-col sm:flex-row py-5 sm:py-6 text-xs sm:text-sm justify-center mx-auto space-y-2 sm:space-y-0 sm:space-x-3 text-slate-600 px-4 sm:px-2 text-center sm:text-left bg-slate-50 rounded-lg border border-slate-100'>
                     <Info size={18} className="mx-auto sm:mx-0 text-slate-500" />
