@@ -46,9 +46,6 @@ dependencies = [
     "llama-index-core==0.14.22",
     "pgvector==0.4.2",
     "pypdf==6.12.1",
-    "mcp==1.27.0",
-    "pydantic-ai-slim[google]==1.5.0",
-    "sse-starlette==3.3.4",
     "markdown-it-py>=4.0.0",
 ]
 

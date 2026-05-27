@@ -1,48 +1,26 @@
 'use client'
 
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import React, { useCallback, useEffect, useRef, useState } from 'react'
 import { useParams } from 'next/navigation'
 
 import { useLHSession } from '@components/Contexts/LHSessionContext'
 import { useOrg } from '@components/Contexts/OrgContext'
 import {
-  applyPendingEdit,
-  AtlasEvent,
   AtlasPageContextPayload,
   AtlasReferencePayload,
   AtlasSession,
-  CandidateDTO,
-  cancelPendingEdit,
-  refinePendingEdit,
   revokeAtlasSession,
   startAtlasSession,
   streamAtlasChat,
-  undoPendingEdit,
 } from '@services/ai/atlas'
 import { AlertTriangle, Loader2, Send, X as XIcon } from 'lucide-react'
 import { GlobeStand } from '@phosphor-icons/react'
-import { useQueryClient } from '@tanstack/react-query'
-import { queryKeys } from '@/lib/query/keys'
 
-import {
-  ActionDock,
-  applyEvent,
-  ChatMessage,
-  EmptyState,
-  MessageBubble,
-  MessagePending,
-} from './AtlasChat'
+import { ChatMessage, EmptyState } from './AtlasChat'
 import { AtlasReference, useAtlasMini } from './AtlasMiniContext'
-import { EditableStructure } from './cards/StructureProposalCard'
 import PageContextBreadcrumb from './composer/PageContextBreadcrumb'
 import QuickActionChips from './composer/QuickActionChips'
 import ReferencePicker from './composer/ReferencePicker'
-
-// Side-panel surface for Atlas. Mounted once at ClientAdminLayout (via
-// AtlasMiniProvider) so dashboard route transitions don't unmount the
-// chat. Shares the streaming + event logic with AtlasChat — preview
-// cards, destructive challenges, applied pills, ambiguities all render
-// through the same MessageBubble.
 
 interface Props {
   open: boolean
@@ -72,59 +50,17 @@ export default function AtlasMiniPanel({ open, onClose }: Props) {
   const [sending, setSending] = useState(false)
   const [aichatUuid, setAichatUuid] = useState<string | null>(null)
 
-  const queryClient = useQueryClient()
-
-  // Mirrors AtlasChat.invalidateAppliedTarget — when Atlas mutates a
-  // course / chapter / activity, any other open page reading the same
-  // entity through TanStack would otherwise show stale data.
-  const invalidateAppliedTarget = useCallback(
-    (target: { kind: 'course' | 'chapter' | 'activity'; uuid: string; parent_course_uuid?: string }) => {
-      const strip = (v: string, prefix: string) =>
-        v.startsWith(prefix) ? v.slice(prefix.length) : v
-      if (target.kind === 'course') {
-        const bare = strip(target.uuid, 'course_')
-        queryClient.invalidateQueries({ queryKey: queryKeys.courses.detail(bare) })
-        queryClient.invalidateQueries({ queryKey: queryKeys.courses.meta(bare) })
-      } else if (target.kind === 'activity') {
-        const bare = strip(target.uuid, 'activity_')
-        queryClient.invalidateQueries({ queryKey: queryKeys.activity.detail(bare) })
-        queryClient.invalidateQueries({ queryKey: queryKeys.activity.editorBootstrap(bare) })
-        if (target.parent_course_uuid) {
-          const bareCourse = strip(target.parent_course_uuid, 'course_')
-          queryClient.invalidateQueries({ queryKey: queryKeys.courses.meta(bareCourse) })
-        }
-      } else if (target.kind === 'chapter') {
-        if (target.parent_course_uuid) {
-          const bareCourse = strip(target.parent_course_uuid, 'course_')
-          queryClient.invalidateQueries({ queryKey: queryKeys.courses.meta(bareCourse) })
-          queryClient.invalidateQueries({ queryKey: queryKeys.courses.detail(bareCourse) })
-        }
-      }
-    },
-    [queryClient],
-  )
-
   const abortRef = useRef<AbortController | null>(null)
   const scrollRef = useRef<HTMLDivElement | null>(null)
   const inputElRef = useRef<HTMLTextAreaElement | null>(null)
   const pageContextRef = useRef(pageContext)
   const referencesRef = useRef(attachedReferences)
 
-  // Route-derived page context. ``useRegisterAtlasPageContext`` (called
-  // from CourseOverviewTop / EditorLoader) is the rich source — it supplies
-  // human-readable names and activity-level focus — but it only fires once
-  // the relevant component mounts and its context loads. The URL is always
-  // available, so we mine ``course_uuid`` straight from the params and
-  // merge it in as a fallback. This guarantees the backend sees
-  // ``course_uuid`` on every chat turn the user fires while on a course
-  // route, even before CourseContext has hydrated.
   const routeParams = useParams() as Record<string, string | string[] | undefined> | null
   const rawCourseUuid = (() => {
     const v = routeParams?.courseuuid ?? routeParams?.courseid
     return Array.isArray(v) ? v[0] : v
   })()
-  // Dashboard routes pass the raw UUID in the URL; the backend / context
-  // layer expects the ``course_`` prefix. Add it if missing.
   const routeCourseUuid = rawCourseUuid
     ? rawCourseUuid.startsWith('course_')
       ? rawCourseUuid
@@ -147,8 +83,6 @@ export default function AtlasMiniPanel({ open, onClose }: Props) {
     }
   }, [routeCourseUuid, routeActivityUuid])
 
-  // Latest-snapshot refs so the in-flight stream closure picks up
-  // updated context without re-binding the send callback.
   useEffect(() => {
     pageContextRef.current = pageContext
   }, [pageContext])
@@ -156,8 +90,6 @@ export default function AtlasMiniPanel({ open, onClose }: Props) {
     referencesRef.current = attachedReferences
   }, [attachedReferences])
 
-  // Register textarea ref so external callers can `focusInput()` /
-  // `appendToInput()`.
   useEffect(() => {
     registerInputRef(inputElRef.current)
     return () => registerInputRef(null)
@@ -223,9 +155,6 @@ export default function AtlasMiniPanel({ open, onClose }: Props) {
           activity_type: r.activity_type,
         }))
       : undefined
-    // Merge order: route-derived UUIDs are the floor, the registered
-    // ``pageContext`` overlays them (so course_name / chapter_name from
-    // CourseContext win), and references are appended last.
     const merged: AtlasPageContextPayload = {
       ...(route.course_uuid ? { course_uuid: route.course_uuid } : {}),
       ...(route.activity_uuid ? { activity_uuid: route.activity_uuid } : {}),
@@ -245,138 +174,12 @@ export default function AtlasMiniPanel({ open, onClose }: Props) {
   const canSend =
     !!atlasSession && !!accessToken && !!orgId && !sending && input.trim().length > 0
 
-  // ── pending edit lifecycle ─────────────────────────────────────────────
-  const [pendingBusy, setPendingBusy] = useState<Record<string, boolean>>({})
-
-  const updatePending = useCallback(
-    (pendingId: string, patch: (p: MessagePending) => MessagePending) => {
-      setMessages((prev) =>
-        prev.map((m) => {
-          if (!m.pendings || !m.pendings[pendingId]) return m
-          return { ...m, pendings: { ...m.pendings, [pendingId]: patch(m.pendings[pendingId]) } }
-        }),
-      )
-    },
-    [],
-  )
-
-  const handleApplyPending = useCallback(
-    async (pendingId: string, opts?: { confirmationPhrase?: string }) => {
-      if (!atlasSession || !accessToken || !orgId) return
-      setPendingBusy((p) => ({ ...p, [pendingId]: true }))
-      updatePending(pendingId, (p) => ({ ...p, status: 'applying' }))
-      try {
-        const stream = applyPendingEdit({
-          pendingId,
-          orgId,
-          sessionToken: atlasSession.token,
-          confirmationPhrase: opts?.confirmationPhrase,
-          accessToken,
-        })
-        for await (const event of stream) {
-          if (event.type === 'applied') {
-            updatePending(pendingId, (p) => ({
-              ...p,
-              status: 'applied',
-              versionAfter: event.version_after,
-              undoToken: event.undo_token,
-            }))
-            if (event.target) invalidateAppliedTarget(event.target)
-          } else if (event.type === 'error') {
-            updatePending(pendingId, (p) => ({
-              ...p,
-              status: 'error',
-              errorMessage: event.message,
-            }))
-          }
-        }
-      } catch (err: any) {
-        updatePending(pendingId, (p) => ({
-          ...p,
-          status: 'error',
-          errorMessage: err?.message || 'Apply failed.',
-        }))
-      } finally {
-        setPendingBusy((p) => {
-          const next = { ...p }
-          delete next[pendingId]
-          return next
-        })
-      }
-    },
-    [accessToken, atlasSession, invalidateAppliedTarget, orgId, updatePending],
-  )
-
-  const handleUndoPending = useCallback(
-    async (pendingId: string): Promise<boolean> => {
-      if (!atlasSession || !accessToken || !orgId) return false
-      try {
-        const stream = undoPendingEdit({
-          pendingId,
-          orgId,
-          sessionToken: atlasSession.token,
-          accessToken,
-        })
-        let ok = false
-        for await (const event of stream) {
-          if (event.type === 'applied') {
-            ok = true
-            updatePending(pendingId, (p) => ({
-              ...p,
-              status: 'dropped',
-              versionAfter: event.version_after ?? p.versionAfter,
-            }))
-            if (event.target) invalidateAppliedTarget(event.target)
-          } else if (event.type === 'error') {
-            updatePending(pendingId, (p) => ({
-              ...p,
-              status: 'error',
-              errorMessage: event.message,
-            }))
-          }
-        }
-        return ok
-      } catch {
-        return false
-      }
-    },
-    [accessToken, atlasSession, invalidateAppliedTarget, orgId, updatePending],
-  )
-
-  const handleCancelPending = useCallback(
-    async (pendingId: string) => {
-      if (!accessToken || !orgId) return
-      setPendingBusy((p) => ({ ...p, [pendingId]: true }))
-      try {
-        const ok = await cancelPendingEdit({ pendingId, orgId, accessToken })
-        if (ok) updatePending(pendingId, (p) => ({ ...p, status: 'dropped' }))
-      } finally {
-        setPendingBusy((p) => {
-          const next = { ...p }
-          delete next[pendingId]
-          return next
-        })
-      }
-    },
-    [accessToken, orgId, updatePending],
-  )
-
-  // ── send / refine ──────────────────────────────────────────────────────
+  // ── send ───────────────────────────────────────────────────────────────
   const sendMessage = useCallback(
     async (text: string) => {
       if (!atlasSession || !accessToken || !orgId) return
-      const userMsg: ChatMessage = { id: `u-${Date.now()}`, role: 'user', content: text }
-      const assistantMsg: ChatMessage = {
-        id: `a-${Date.now() + 1}`,
-        role: 'model',
-        content: '',
-        toolCalls: [],
-        streaming: true,
-      }
-      setMessages((prev) => [...prev, userMsg, assistantMsg])
       setInput('')
       setSending(true)
-      // Clear chips on send so the next message doesn't carry stale pins.
       clearReferences()
 
       const controller = new AbortController()
@@ -395,28 +198,13 @@ export default function AtlasMiniPanel({ open, onClose }: Props) {
         for await (const event of stream) {
           if (event.type === 'session') {
             setAichatUuid(event.aichat_uuid)
-            continue
           }
-          if (event.type === 'applied' && (event as any).target) {
-            invalidateAppliedTarget((event as any).target)
-          }
-          setMessages((prev) =>
-            prev.map((m) => (m.id === assistantMsg.id ? applyEvent(m, event) : m)),
-          )
+          // Bubble/answer rendering removed — stream is drained while the
+          // new chat UI is being rebuilt on top of this skeleton.
         }
       } catch (err: any) {
         if (err?.name !== 'AbortError') {
-          setMessages((prev) =>
-            prev.map((m) =>
-              m.id === assistantMsg.id
-                ? { ...m, streaming: false, errored: true, content: m.content || `Atlas encountered an error: ${err?.message || err}` }
-                : m,
-            ),
-          )
-        } else {
-          setMessages((prev) =>
-            prev.map((m) => (m.id === assistantMsg.id ? { ...m, streaming: false } : m)),
-          )
+          setSessionError(err?.message || 'Stream failed.')
         }
       } finally {
         setSending(false)
@@ -429,60 +217,9 @@ export default function AtlasMiniPanel({ open, onClose }: Props) {
       atlasSession,
       buildPageContextPayload,
       clearReferences,
-      invalidateAppliedTarget,
       orgId,
       setInput,
     ],
-  )
-
-  const handleRefinePending = useCallback(
-    async (pendingId: string, instruction: string) => {
-      if (!atlasSession || !accessToken || !orgId) return
-      const userMsg: ChatMessage = {
-        id: `u-${Date.now()}`,
-        role: 'user',
-        content: `Refine: ${instruction}`,
-      }
-      const assistantMsg: ChatMessage = {
-        id: `a-${Date.now() + 1}`,
-        role: 'model',
-        content: '',
-        toolCalls: [],
-        streaming: true,
-      }
-      setMessages((prev) => [...prev, userMsg, assistantMsg])
-      setSending(true)
-      try {
-        const stream = refinePendingEdit({
-          pendingId,
-          orgId,
-          sessionToken: atlasSession.token,
-          instruction,
-          accessToken,
-          pageContext: buildPageContextPayload(),
-        })
-        for await (const event of stream) {
-          if (event.type === 'session') continue
-          if (event.type === 'applied' && (event as any).target) {
-            invalidateAppliedTarget((event as any).target)
-          }
-          setMessages((prev) =>
-            prev.map((m) => (m.id === assistantMsg.id ? applyEvent(m, event) : m)),
-          )
-        }
-      } catch (err: any) {
-        setMessages((prev) =>
-          prev.map((m) =>
-            m.id === assistantMsg.id
-              ? { ...m, streaming: false, errored: true, content: err?.message || 'Refine failed.' }
-              : m,
-          ),
-        )
-      } finally {
-        setSending(false)
-      }
-    },
-    [accessToken, atlasSession, buildPageContextPayload, invalidateAppliedTarget, orgId],
   )
 
   const onSubmit = (e?: React.FormEvent) => {
@@ -493,17 +230,7 @@ export default function AtlasMiniPanel({ open, onClose }: Props) {
 
   const stop = () => abortRef.current?.abort()
 
-  const liveTools = useMemo(() => {
-    const last = messages[messages.length - 1]
-    if (!last || last.role !== 'model' || !last.streaming) return null
-    return last.toolCalls || null
-  }, [messages])
-
   // ── render ─────────────────────────────────────────────────────────────
-  //
-  // No backdrop / blur overlay — the panel pushes the page (handled by
-  // AtlasMiniProvider). No shadow either: the panel sits flush against
-  // its slot so any drop-shadow bleeds onto the visible page edge.
   return (
     <aside
       className={`fixed bottom-0 right-0 top-0 z-50 flex w-[460px] max-w-[100vw] flex-col text-white transition-transform ${
@@ -517,7 +244,6 @@ export default function AtlasMiniPanel({ open, onClose }: Props) {
       }}
       aria-hidden={!open}
     >
-        {/* header */}
         <header className="flex-none flex items-center justify-between px-4 py-3 border-b border-white/[0.06]">
           <div className="flex items-center gap-2">
             <GlobeStand size={18} weight="duotone" className="text-violet-300" />
@@ -546,7 +272,6 @@ export default function AtlasMiniPanel({ open, onClose }: Props) {
           </div>
         )}
 
-        {/* messages */}
         <div ref={scrollRef} className="flex-1 min-h-0 overflow-y-auto atlas-scroll">
           {messages.length === 0 ? (
             <div className="h-full min-h-[40vh] flex items-center justify-center px-4">
@@ -556,62 +281,10 @@ export default function AtlasMiniPanel({ open, onClose }: Props) {
               />
             </div>
           ) : (
-            <div className="flex flex-col gap-5 px-4 py-5">
-              {messages.map((m, i) => (
-                <MessageBubble
-                  key={m.id}
-                  message={m}
-                  isLast={i === messages.length - 1}
-                  disabled={sending}
-                  onConfirm={() => sendMessage('go')}
-                  onCancel={() => sendMessage('cancel')}
-                  onApplyPending={handleApplyPending}
-                  onCancelPending={handleCancelPending}
-                  onRefinePending={handleRefinePending}
-                  onUndoPending={handleUndoPending}
-                  onApplyStructure={(structure: EditableStructure) => {
-                    const payload = {
-                      name: structure.title || 'Untitled course',
-                      description: structure.description || undefined,
-                      chapters: structure.chapters.map((ch) => ({
-                        name: ch.name,
-                        activities: ch.activities.map((a) => ({
-                          name: a.name,
-                          kind: a.kind,
-                        })),
-                      })),
-                    }
-                    sendMessage(
-                      'Call `propose_course_from_structure` with this exact structure ' +
-                        '(do not modify it):\n```json\n' +
-                        JSON.stringify(payload, null, 2) +
-                        '\n```',
-                    )
-                  }}
-                  onRefineStructure={(instruction) =>
-                    sendMessage(`Regenerate the course structure with this constraint: ${instruction}`)
-                  }
-                  onRetryError={() => {
-                    const lastUser = [...messages].reverse().find((mm) => mm.role === 'user')
-                    if (lastUser?.content) sendMessage(lastUser.content)
-                  }}
-                  onPickCandidate={(cand: CandidateDTO) =>
-                    sendMessage(`Use ${cand.kind} ${cand.uuid} (${cand.name}).`)
-                  }
-                  pendingBusy={pendingBusy}
-                />
-              ))}
-            </div>
+            <div className="flex-1 min-h-0" />
           )}
         </div>
 
-        {liveTools && liveTools.length > 0 && (
-          <div className="flex-none px-4 pt-2">
-            <ActionDock tools={liveTools} />
-          </div>
-        )}
-
-        {/* attached chips */}
         {attachedReferences.length > 0 && (
           <div className="flex-none px-4 pt-2 flex flex-wrap gap-1.5">
             {attachedReferences.map((r) => (
@@ -634,7 +307,6 @@ export default function AtlasMiniPanel({ open, onClose }: Props) {
           </div>
         )}
 
-        {/* composer */}
         <div className="flex-none border-t border-white/[0.04]">
           <PageContextBreadcrumb compact />
           {input.trim().length === 0 && !sending && (
@@ -704,8 +376,6 @@ export default function AtlasMiniPanel({ open, onClose }: Props) {
           .atlas-scroll::-webkit-scrollbar-thumb:hover {
             background-color: rgba(255, 255, 255, 0.2);
           }
-          /* Composer glow during Atlas streaming. Same animation across
-             the full page + mini panel for consistency. */
           .atlas-composer-glow {
             box-shadow:
               inset 0 0 0 1px rgba(167, 139, 250, 0.45),
@@ -731,9 +401,3 @@ export default function AtlasMiniPanel({ open, onClose }: Props) {
     </aside>
   )
 }
-
-// Re-export the named utility so external suppress-warning imports work.
-// (The Provider mounts <AtlasMiniPanel /> as default; this keeps the
-// module shape compatible with anything that imported `{ appendToInput }`
-// or similar from this file in the past.)
-export { applyEvent }

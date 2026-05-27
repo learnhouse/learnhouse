@@ -13,7 +13,7 @@ from src.routers import stream
 from src.routers import api_tokens
 from src.routers import webhooks
 from src.routers.integrations import zapier as zapier_integration
-from src.routers.ai import ai, atlas as atlas_router_module, magicblocks, courseplanning, rag
+from src.routers.ai import ai, magicblocks, courseplanning, rag
 from src.routers.boards import boards_playground
 from src.routers.orgs import ai_credits
 from src.routers.orgs import custom_domains
@@ -239,13 +239,6 @@ v1_router.include_router(
     prefix="/ai",
     tags=["ai", "rag"],
     dependencies=[Depends(require_authenticated_user)]
-)
-v1_router.include_router(
-    atlas_router_module.router,
-    prefix="/ai/atlas",
-    tags=["ai", "atlas"],
-    # OSS short-circuits require_plan to pass; SaaS enforces pro.
-    dependencies=[Depends(require_authenticated_user), Depends(require_plan("pro", "Atlas"))],
 )
 v1_router.include_router(
     boards_playground.router,
