@@ -1,6 +1,7 @@
 'use client'
 
 import React, { useState, useRef, useCallback } from 'react'
+import { useTranslation } from 'react-i18next'
 import Link from 'next/link'
 import {
   ArrowsOutSimple,
@@ -40,6 +41,7 @@ export default function PlaygroundViewClient({
   playground,
   canEdit,
 }: PlaygroundViewClientProps) {
+  const { t } = useTranslation()
   const [isFullscreen, setIsFullscreen] = useState(false)
   const iframeContainerRef = useRef<HTMLDivElement>(null)
 
@@ -243,7 +245,7 @@ export default function PlaygroundViewClient({
                 <div className="w-14 h-14 rounded-2xl bg-white nice-shadow flex items-center justify-center mb-4">
                   <Sparkle size={24} weight="fill" className="text-gray-300" />
                 </div>
-                <p className="text-base font-semibold text-gray-500">No content yet</p>
+                <p className="text-base font-semibold text-gray-500">{t('common.no_content_yet')}</p>
                 <p className="text-sm text-gray-400 mt-1">
                   {canEdit ? 'Open the editor to generate content.' : 'Check back later.'}
                 </p>

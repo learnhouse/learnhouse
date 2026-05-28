@@ -1,6 +1,7 @@
 'use client'
 
 import React, { useState, useMemo } from 'react'
+import { useTranslation } from 'react-i18next'
 import { useRouter } from 'next/navigation'
 import { Search, X, ChevronLeft, ChevronRight } from 'lucide-react'
 import { Cube } from '@phosphor-icons/react'
@@ -39,6 +40,7 @@ export default function PlaygroundsClient({
   const [currentPage, setCurrentPage] = useState(1)
   const [showNameModal, setShowNameModal] = useState(false)
   const [newName, setNewName] = useState('')
+  const { t } = useTranslation()
   const itemsPerPage = 12
 
   const filtered = useMemo(() => {
@@ -104,7 +106,7 @@ export default function PlaygroundsClient({
       queryClient.invalidateQueries({ queryKey: queryKeys.playgrounds.list(orgslug) })
       router.push(`/editor/playground/${newPlayground.playground_uuid}/edit`)
     } catch {
-      toast.error('Failed to create playground')
+      toast.error(t('playgrounds.failed_create'))
     } finally {
       setIsCreating(false)
     }
@@ -117,14 +119,14 @@ export default function PlaygroundsClient({
         <GeneralWrapperStyled>
           <div className="flex flex-col space-y-2 mb-2">
             <div className="flex items-center justify-between">
-              <TypeOfContentTitle title="Playgrounds" type="pg" />
+              <TypeOfContentTitle title={t('common.playgrounds')} type="pg" />
               {isUserAdmin && (
                 <button
                   onClick={openCreateModal}
                   disabled={isCreating}
                   className="rounded-lg bg-black transition-all duration-100 ease-linear antialiased p-2 px-5 my-auto font text-xs font-bold text-white nice-shadow flex space-x-2 items-center hover:scale-105 disabled:opacity-50"
                 >
-                  <div>New Playground</div>
+                  <div>{t('playgrounds.new_playground')}</div>
                   <div className="text-md bg-neutral-800 px-1 rounded-full">+</div>
                 </button>
               )}
@@ -140,7 +142,7 @@ export default function PlaygroundsClient({
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                     aria-label="Search playgrounds"
-                    placeholder="Search playgrounds..."
+                    placeholder={t('playgrounds.search_placeholder')}
                     className="w-full pl-10 pr-10 py-2.5 bg-white nice-shadow rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-black focus:ring-offset-2 border-0"
                   />
                   {searchQuery && (
@@ -176,8 +178,8 @@ export default function PlaygroundsClient({
               {filtered.length === 0 && searchQuery && (
                 <div className="col-span-full flex flex-col justify-center items-center py-12 px-4">
                   <Search className="w-12 h-12 text-gray-300 mb-4" />
-                  <h2 className="text-xl font-semibold text-gray-600 mb-2">No results for &quot;{searchQuery}&quot;</h2>
-                  <p className="text-gray-400">Try a different search term</p>
+                  <h2 className="text-xl font-semibold text-gray-600 mb-2">{t('playgrounds.no_results_for')} &quot;{searchQuery}&quot;</h2>
+                  <p className="text-gray-400">{t('playgrounds.try_different_search')}</p>
                 </div>
               )}
 
@@ -186,9 +188,9 @@ export default function PlaygroundsClient({
                   <div className="p-4 bg-white rounded-full nice-shadow mb-4">
                     <Cube className="w-8 h-8 text-gray-300" />
                   </div>
-                  <h1 className="text-xl font-bold text-gray-600 mb-2">No playgrounds yet</h1>
+                  <h1 className="text-xl font-bold text-gray-600 mb-2">{t('playgrounds.no_playgrounds_yet')}</h1>
                   <p className="text-md text-gray-400 mb-6 max-w-xs text-center">
-                    Create interactive AI-generated experiences for your learners.
+                    {t('playgrounds.playgrounds_description')}
                   </p>
                   {isUserAdmin && (
                     <button
@@ -196,7 +198,7 @@ export default function PlaygroundsClient({
                       disabled={isCreating}
                       className="rounded-lg bg-black transition-all duration-100 ease-linear antialiased p-2 px-5 my-auto font text-xs font-bold text-white nice-shadow flex space-x-2 items-center hover:scale-105 disabled:opacity-50"
                     >
-                      <div>New Playground</div>
+                      <div>{t('playgrounds.new_playground')}</div>
                       <div className="text-md bg-neutral-800 px-1 rounded-full">+</div>
                     </button>
                   )}
@@ -262,8 +264,8 @@ export default function PlaygroundsClient({
     {showNameModal && (
       <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-sm" onClick={() => setShowNameModal(false)}>
         <div className="bg-white rounded-2xl shadow-xl p-6 w-full max-w-sm mx-4" onClick={(e) => e.stopPropagation()}>
-          <h2 className="text-base font-bold text-gray-900 mb-1">New Playground</h2>
-          <p className="text-xs text-gray-400 mb-4">Give your playground a name to get started.</p>
+          <h2 className="text-base font-bold text-gray-900 mb-1">{t('playgrounds.new_playground_modal_title')}</h2>
+          <p className="text-xs text-gray-400 mb-4">{t('playgrounds.new_playground_modal_desc')}</p>
           <input
             autoFocus
             type="text"
@@ -275,14 +277,14 @@ export default function PlaygroundsClient({
           />
           <div className="flex gap-2 justify-end">
             <button onClick={() => setShowNameModal(false)} className="px-4 py-2 text-sm font-medium text-gray-500 hover:text-gray-700 transition-colors">
-              Cancel
+              {t('common.cancel')}
             </button>
             <button
               onClick={handleCreate}
               disabled={isCreating}
               className="px-4 py-2 bg-black text-white text-sm font-bold rounded-lg hover:bg-gray-800 disabled:opacity-50 transition-colors"
             >
-              {isCreating ? 'Creating…' : 'Create'}
+              {isCreating ? t('playgrounds.creating') : t('playgrounds.create')}
             </button>
           </div>
         </div>

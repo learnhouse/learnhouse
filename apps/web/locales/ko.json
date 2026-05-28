@@ -31,6 +31,7 @@
     "dutch": "네덜란드어",
     "thai": "태국어",
     "bengali": "뱅골어",
+    "slovak": "슬로바키아어",
     "loading": "로딩 중...",
     "search": "검색",
     "all": "전체",
@@ -203,7 +204,11 @@
     "choose_an_organization_to_continue": "계속하려면 조직을 선택하세요",
     "for": "대상",
     "powered_by": "제공",
-    "results": "결과"
+    "results": "결과",
+    "no_content_yet": "아직 콘텐츠가 없습니다",
+    "other": "Other",
+    "disabled": "Disabled",
+    "store": "Store"
   },
   "banner": {
     "viewing_as_guest": "{{name}}을(를) 게스트로 보고 있습니다.",
@@ -2321,7 +2326,8 @@
           "video_preview_added": "동영상 미리보기가 추가되었습니다",
           "video_preview_error": "동영상 미리보기 추가에 실패했습니다",
           "updating_order": "미리보기 순서를 업데이트하는 중..."
-        }
+        },
+        "favicon_preview": "파비콘 미리보기 (32×32)"
       },
       "branding": {
         "title": "브랜딩",
@@ -2407,7 +2413,12 @@
         "toasts": {
           "save_success": "AI 설정이 성공적으로 업데이트되었습니다",
           "save_error": "AI 설정 업데이트에 실패했습니다"
-        }
+        },
+        "ai_copilot": "AI Copilot",
+        "ai_copilot_description": "Let learners ask questions about course content. Uses indexed material to provide grounded answers with source citations.",
+        "feature_editor_description": "AI-powered content editing assistance for course creators.",
+        "feature_activity_description": "AI assistant available within activities to help learners.",
+        "always_on": "Always on"
       },
       "features": {
         "title": "기능 설정",
@@ -2434,6 +2445,14 @@
           "podcasts": {
             "description": "조직의 팟캐스트 제작 및 오디오 콘텐츠 활성화",
             "title": "팟캐스트"
+          },
+          "boards": {
+            "title": "Boards",
+            "description": "Create collaborative boards with lists and cards for project management"
+          },
+          "playgrounds": {
+            "title": "Playgrounds",
+            "description": "Create interactive AI-generated experiences for your learners"
           }
         },
         "toasts": {
@@ -2700,6 +2719,113 @@
         "workos_info": "WorkOS는 SAML 및 OIDC ID 제공자를 지원하는 엔터프라이즈 SSO를 제공합니다.",
         "workos_org_id": "WorkOS 조직 ID",
         "workos_org_id_help": "이 ID는 설정 포털을 통해 SSO를 구성하면 자동으로 생성됩니다."
+      },
+      "seo": {
+        "org_seo": {
+          "quick_links": "Quick Links",
+          "important_seo_urls": "Important SEO URLs for your organization",
+          "sitemap": "Sitemap:",
+          "robots_txt": "Robots.txt:",
+          "default_meta_tags": "Default Meta Tags",
+          "set_default_metadata": "Set default metadata for all pages",
+          "title_suffix": "Title Suffix",
+          "title_suffix_hint": "Appended to all page titles, e.g. \" | My Academy\"",
+          "default_description": "Default Description",
+          "default_description_hint": "Fallback description when a page has no specific one",
+          "social_open_graph": "Social & Open Graph",
+          "social_open_graph_hint": "Control how your pages appear when shared on social media",
+          "default_og_image": "Default OG Image",
+          "default_og_image_hint": "Default sharing image for social media (1200x630 recommended)",
+          "twitter_handle": "Twitter Handle",
+          "twitter_handle_hint": "Shown on Twitter cards as the site account",
+          "search_engine_verification": "Search Engine Verification",
+          "search_engine_verification_hint": "Verify ownership with search engines",
+          "google_search_console": "Google Search Console",
+          "google_search_console_hint": "Verification code from Google Search Console",
+          "indexing_controls": "Indexing Controls",
+          "indexing_controls_hint": "Control which pages search engines can index",
+          "hide_communities": "Hide Communities",
+          "hide_communities_hint": "Hide community pages from search engines"
+        }
+      },
+      "domains": {
+        "title": "Custom Domains",
+        "subtitle": "Configure custom domains to access your organization",
+        "empty_description": "Add your own domain to provide a branded experience for your learners.",
+        "add_domain": "Add Domain",
+        "domain_name": "Domain Name",
+        "enter_domain": "Enter your domain",
+        "verify": "Verify",
+        "verify_domain": "Verify Domain",
+        "verifying": "Verifying...",
+        "verify_dns": "Verify DNS",
+        "remove": "Remove",
+        "pending": "Pending",
+        "active": "Active",
+        "failed": "Failed",
+        "ssl_active": "SSL Active",
+        "failed_add": "Failed to add domain",
+        "failed_delete": "Failed to delete domain",
+        "failed_verify": "Failed to verify domain",
+        "verifying_domain": "Verifying domain...",
+        "domain_verified": "Domain verified successfully",
+        "domain_added": "Domain added",
+        "domain_removed": "Domain removed",
+        "no_domains_yet": "No custom domains yet",
+        "add_first_domain": "Add your first domain to get started",
+        "add_custom_domain": "Add Custom Domain",
+        "add_custom_domain_desc": "Enter the domain you want to use for your organization.",
+        "domain_label": "Domain",
+        "domain_hint": "Enter a domain or subdomain (e.g., learn.mycompany.com or academy.example.org)"
+      },
+      "automations": {
+        "webhooks_title": "Webhooks",
+        "webhooks_subtitle": "Send real-time event notifications to external services like Make.com, n8n, or your own API",
+        "webhooks_description": "Webhook endpoints receive HTTP POST requests when events happen in your organization."
+      },
+      "api_access": {
+        "title": "API Access",
+        "api_tokens": "API Tokens",
+        "docs_playground": "Documentation & Playground",
+        "something_not_working": "Something not working as expected?",
+        "tokens_description": "API tokens allow external applications to access your organization's data securely.",
+        "create_token": "Create Token",
+        "no_tokens_yet": "No API tokens yet",
+        "create_first_token": "Create your first token to get started",
+        "create_api_token": "Create API Token",
+        "token_name": "Token Name *",
+        "expires": "Expires",
+        "never": "Never",
+        "revoked": "Revoked",
+        "revoke": "Revoke",
+        "api_docs_title": "API Documentation & Playground",
+        "create_token_desc": "Create a new API token for programmatic access. The token will only be shown once.",
+        "token_name_label": "Token Name *",
+        "description_label": "Description",
+        "expiration_label": "Expiration Date (optional)",
+        "expiration_hint": "Leave empty for a token that never expires",
+        "permissions_label": "Permissions",
+        "read_only": "Read Only",
+        "full_access": "Full Access",
+        "custom": "Custom",
+        "cancel": "Cancel",
+        "save_token_warning": "Save your token now!",
+        "save_token_hint": "This is the only time you'll see this token. Copy it and store it securely.",
+        "your_api_token": "Your API Token",
+        "done": "Done"
+      },
+      "usage": {
+        "plan_resource_usage": "Plan & Resource Usage",
+        "courses": "Courses",
+        "members_label": "Members",
+        "admin_seats": "Admin Seats",
+        "unlimited": "Unlimited",
+        "ai_credits": "AI Credits",
+        "credit_usage": "Credit Usage",
+        "base_credits": "Base Credits",
+        "purchased": "Purchased",
+        "used": "Used",
+        "remaining": "Remaining"
       }
     },
     "users": {
@@ -4919,5 +5045,18 @@
     "next": "다음",
     "previous": "이전",
     "showing_page": "{{total}}페이지 중 {{current}}페이지 표시"
+  },
+  "playgrounds": {
+    "no_playgrounds_yet": "아직 플레이그라운드가 없습니다",
+    "playgrounds_description": "학습자를 위한 AI 생성 인터랙티브 경험을 만드세요.",
+    "new_playground": "New Playground",
+    "search_placeholder": "Search playgrounds...",
+    "no_results_for": "No results for",
+    "try_different_search": "Try a different search term",
+    "new_playground_modal_title": "New Playground",
+    "new_playground_modal_desc": "Give your playground a name to get started.",
+    "creating": "Creating...",
+    "create": "Create",
+    "failed_create": "Failed to create playground"
   }
 }

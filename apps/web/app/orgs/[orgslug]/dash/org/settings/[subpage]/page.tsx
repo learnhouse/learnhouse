@@ -42,7 +42,7 @@ const getSettingTabs = (t: any): TabConfig[] => [
   { id: 'seo', label: 'SEO', icon: Search },
   { id: 'ai', label: t('dashboard.organization.settings.tabs.ai') || 'AI', customIcon: '/learnhouse_ai_simple_colored.png', requiredPlan: 'standard' },
   { id: 'domains', label: t('dashboard.organization.settings.tabs.domains') || 'Domains', icon: Globe, requiredPlan: 'standard' },
-  { id: 'automations', label: 'Automations', icon: Zap, requiredPlan: 'pro' },
+  { id: 'automations', label: t('dashboard.organization.settings.tabs.automations') || 'Automations', icon: Zap, requiredPlan: 'pro' },
   { id: 'api', label: t('dashboard.organization.settings.tabs.api') || 'API Access', icon: KeyIcon, requiredPlan: 'pro' },
   { id: 'sso', label: t('dashboard.organization.settings.tabs.sso') || 'SSO', icon: Shield, requiredPlan: 'enterprise' },
   { id: 'usage', label: t('dashboard.organization.settings.tabs.usage') || 'Usage', icon: BarChart3 },
@@ -79,8 +79,8 @@ function OrgPage(props: { params: Promise<OrgParams> }) {
       setH1Label(t('dashboard.organization.settings.pages.domains.title') || 'Custom Domains')
       setH2Label(t('dashboard.organization.settings.pages.domains.subtitle') || 'Configure custom domains for your organization')
     } else if (params.subpage == 'automations') {
-      setH1Label('Automations')
-      setH2Label('Connect external services with webhooks')
+      setH1Label(t('dashboard.organization.settings.tabs.automations') || 'Automations')
+      setH2Label(t('dashboard.organization.automations.webhooks_subtitle') || 'Connect external services with webhooks')
     } else if (params.subpage == 'api') {
       setH1Label(t('dashboard.organization.settings.pages.api.title') || 'API Access')
       setH2Label(t('dashboard.organization.settings.pages.api.subtitle') || 'Manage API tokens and access')
