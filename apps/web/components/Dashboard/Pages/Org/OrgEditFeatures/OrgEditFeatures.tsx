@@ -282,7 +282,7 @@ const OrgEditFeatures: React.FC = () => {
           <FeatureToggle
             id="boards"
             title="Boards"
-            description="Create collaborative boards with lists and cards for project management"
+            description={t('dashboard.organization.features.toggles.boards.description')}
             enabled={boardsEnabled}
             isUpdating={updatingFeature === 'boards'}
             canEdit={canEditOrgSettings}
@@ -296,7 +296,7 @@ const OrgEditFeatures: React.FC = () => {
           <FeatureToggle
             id="playgrounds"
             title="Playgrounds"
-            description="Create interactive AI-generated experiences for your learners"
+            description={t('dashboard.organization.features.toggles.playgrounds.description')}
             enabled={playgroundsEnabled}
             isUpdating={updatingFeature === 'playgrounds'}
             canEdit={canEditOrgSettings}

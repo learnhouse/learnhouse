@@ -135,8 +135,8 @@ const OrgEditAI: React.FC = () => {
           <div className="space-y-3 pl-4 border-l-2 border-gray-100 ml-2">
             <SettingRow
               icon={<MessageCircle className="w-4 h-4" />}
-              title="AI Copilot"
-              description="Let learners ask questions about course content. Uses indexed material to provide grounded answers with source citations."
+              title={t('dashboard.organization.ai.ai_copilot')}
+              description={t('dashboard.organization.ai.ai_copilot_description')}
               checked={copilotEnabled}
               onToggle={(checked) => {
                 setCopilotEnabled(checked)
@@ -148,7 +148,7 @@ const OrgEditAI: React.FC = () => {
             <SettingRow
               icon={<Pencil className="w-4 h-4" />}
               title={t('dashboard.organization.ai.feature_editor')}
-              description="AI-powered content editing assistance for course creators."
+              description={t('dashboard.organization.ai.feature_editor_description')}
               checked={true}
               disabled={true}
               alwaysOn
@@ -157,7 +157,7 @@ const OrgEditAI: React.FC = () => {
             <SettingRow
               icon={<Sparkles className="w-4 h-4" />}
               title={t('dashboard.organization.ai.feature_activity')}
-              description="AI assistant available within activities to help learners."
+              description={t('dashboard.organization.ai.feature_activity_description')}
               checked={true}
               disabled={true}
               alwaysOn
@@ -178,6 +178,7 @@ function SettingRow({ icon, title, description, checked, onToggle, disabled, alw
   disabled?: boolean
   alwaysOn?: boolean
 }) {
+  const { t } = useTranslation()
   return (
     <div className="flex items-start justify-between gap-4 p-4 rounded-xl bg-white nice-shadow">
       <div className="flex gap-3 min-w-0">
@@ -189,7 +190,7 @@ function SettingRow({ icon, title, description, checked, onToggle, disabled, alw
       </div>
       {alwaysOn ? (
         <span className="flex-shrink-0 text-[11px] font-medium text-gray-400 bg-gray-100 px-2 py-1 rounded-md mt-0.5">
-          Always on
+          {t('dashboard.organization.ai.always_on')}
         </span>
       ) : (
         <Switch

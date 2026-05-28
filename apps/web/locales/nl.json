@@ -31,6 +31,7 @@
     "dutch": "Nederlands",
     "thai": "Thai",
     "bengali": "Bengalees",
+    "slovak": "Slowaaks",
     "loading": "Laden...",
     "search": "Zoeken",
     "all": "Alle",
@@ -203,7 +204,11 @@
     "choose_an_organization_to_continue": "Kies een organisatie om door te gaan",
     "for": "voor",
     "powered_by": "Mogelijk gemaakt door",
-    "results": "resultaat"
+    "results": "resultaat",
+    "no_content_yet": "Nog geen inhoud",
+    "other": "Other",
+    "disabled": "Disabled",
+    "store": "Store"
   },
   "banner": {
     "viewing_as_guest": "Je bekijkt {{name}} als gast.",
@@ -2311,7 +2316,8 @@
           "video_preview_added": "Video-preview toegevoegd",
           "video_preview_error": "Toevoegen van video-preview mislukt",
           "updating_order": "Volgorde van previews bijwerken..."
-        }
+        },
+        "favicon_preview": "Favicon voorbeeld (32×32)"
       },
       "branding": {
         "title": "Branding",
@@ -2373,7 +2379,12 @@
         "toasts": {
           "save_success": "AI-instellingen succesvol bijgewerkt",
           "save_error": "AI-instellingen bijwerken mislukt"
-        }
+        },
+        "ai_copilot": "AI Copilot",
+        "ai_copilot_description": "Let learners ask questions about course content. Uses indexed material to provide grounded answers with source citations.",
+        "feature_editor_description": "AI-powered content editing assistance for course creators.",
+        "feature_activity_description": "AI assistant available within activities to help learners.",
+        "always_on": "Always on"
       },
       "features": {
         "title": "Functie-instellingen",
@@ -2400,6 +2411,14 @@
           "podcasts": {
             "description": "Podcast-creatie en audio-inhoud inschakelen",
             "title": "Podcasts"
+          },
+          "boards": {
+            "title": "Boards",
+            "description": "Create collaborative boards with lists and cards for project management"
+          },
+          "playgrounds": {
+            "title": "Playgrounds",
+            "description": "Create interactive AI-generated experiences for your learners"
           }
         },
         "toasts": {
@@ -2690,6 +2709,113 @@
         "workos_info": "WorkOS biedt enterprise SSO met SAML- en OIDC-ondersteuning.",
         "workos_org_id": "WorkOS Organisatie-ID",
         "workos_org_id_help": "Dit ID wordt automatisch gegenereerd wanneer u SSO configureert via het setup-portal."
+      },
+      "seo": {
+        "org_seo": {
+          "quick_links": "Quick Links",
+          "important_seo_urls": "Important SEO URLs for your organization",
+          "sitemap": "Sitemap:",
+          "robots_txt": "Robots.txt:",
+          "default_meta_tags": "Default Meta Tags",
+          "set_default_metadata": "Set default metadata for all pages",
+          "title_suffix": "Title Suffix",
+          "title_suffix_hint": "Appended to all page titles, e.g. \" | My Academy\"",
+          "default_description": "Default Description",
+          "default_description_hint": "Fallback description when a page has no specific one",
+          "social_open_graph": "Social & Open Graph",
+          "social_open_graph_hint": "Control how your pages appear when shared on social media",
+          "default_og_image": "Default OG Image",
+          "default_og_image_hint": "Default sharing image for social media (1200x630 recommended)",
+          "twitter_handle": "Twitter Handle",
+          "twitter_handle_hint": "Shown on Twitter cards as the site account",
+          "search_engine_verification": "Search Engine Verification",
+          "search_engine_verification_hint": "Verify ownership with search engines",
+          "google_search_console": "Google Search Console",
+          "google_search_console_hint": "Verification code from Google Search Console",
+          "indexing_controls": "Indexing Controls",
+          "indexing_controls_hint": "Control which pages search engines can index",
+          "hide_communities": "Hide Communities",
+          "hide_communities_hint": "Hide community pages from search engines"
+        }
+      },
+      "domains": {
+        "title": "Custom Domains",
+        "subtitle": "Configure custom domains to access your organization",
+        "empty_description": "Add your own domain to provide a branded experience for your learners.",
+        "add_domain": "Add Domain",
+        "domain_name": "Domain Name",
+        "enter_domain": "Enter your domain",
+        "verify": "Verify",
+        "verify_domain": "Verify Domain",
+        "verifying": "Verifying...",
+        "verify_dns": "Verify DNS",
+        "remove": "Remove",
+        "pending": "Pending",
+        "active": "Active",
+        "failed": "Failed",
+        "ssl_active": "SSL Active",
+        "failed_add": "Failed to add domain",
+        "failed_delete": "Failed to delete domain",
+        "failed_verify": "Failed to verify domain",
+        "verifying_domain": "Verifying domain...",
+        "domain_verified": "Domain verified successfully",
+        "domain_added": "Domain added",
+        "domain_removed": "Domain removed",
+        "no_domains_yet": "No custom domains yet",
+        "add_first_domain": "Add your first domain to get started",
+        "add_custom_domain": "Add Custom Domain",
+        "add_custom_domain_desc": "Enter the domain you want to use for your organization.",
+        "domain_label": "Domain",
+        "domain_hint": "Enter a domain or subdomain (e.g., learn.mycompany.com or academy.example.org)"
+      },
+      "automations": {
+        "webhooks_title": "Webhooks",
+        "webhooks_subtitle": "Send real-time event notifications to external services like Make.com, n8n, or your own API",
+        "webhooks_description": "Webhook endpoints receive HTTP POST requests when events happen in your organization."
+      },
+      "api_access": {
+        "title": "API Access",
+        "api_tokens": "API Tokens",
+        "docs_playground": "Documentation & Playground",
+        "something_not_working": "Something not working as expected?",
+        "tokens_description": "API tokens allow external applications to access your organization's data securely.",
+        "create_token": "Create Token",
+        "no_tokens_yet": "No API tokens yet",
+        "create_first_token": "Create your first token to get started",
+        "create_api_token": "Create API Token",
+        "token_name": "Token Name *",
+        "expires": "Expires",
+        "never": "Never",
+        "revoked": "Revoked",
+        "revoke": "Revoke",
+        "api_docs_title": "API Documentation & Playground",
+        "create_token_desc": "Create a new API token for programmatic access. The token will only be shown once.",
+        "token_name_label": "Token Name *",
+        "description_label": "Description",
+        "expiration_label": "Expiration Date (optional)",
+        "expiration_hint": "Leave empty for a token that never expires",
+        "permissions_label": "Permissions",
+        "read_only": "Read Only",
+        "full_access": "Full Access",
+        "custom": "Custom",
+        "cancel": "Cancel",
+        "save_token_warning": "Save your token now!",
+        "save_token_hint": "This is the only time you'll see this token. Copy it and store it securely.",
+        "your_api_token": "Your API Token",
+        "done": "Done"
+      },
+      "usage": {
+        "plan_resource_usage": "Plan & Resource Usage",
+        "courses": "Courses",
+        "members_label": "Members",
+        "admin_seats": "Admin Seats",
+        "unlimited": "Unlimited",
+        "ai_credits": "AI Credits",
+        "credit_usage": "Credit Usage",
+        "base_credits": "Base Credits",
+        "purchased": "Purchased",
+        "used": "Used",
+        "remaining": "Remaining"
       }
     },
     "users": {
@@ -4909,5 +5035,18 @@
     "next": "Volgende",
     "previous": "Vorige",
     "showing_page": "Pagina {{current}} van {{total}} weergegeven"
+  },
+  "playgrounds": {
+    "no_playgrounds_yet": "Nog geen playgrounds",
+    "playgrounds_description": "Maak interactieve AI-gegenereerde ervaringen voor uw leerlingen.",
+    "new_playground": "New Playground",
+    "search_placeholder": "Search playgrounds...",
+    "no_results_for": "No results for",
+    "try_different_search": "Try a different search term",
+    "new_playground_modal_title": "New Playground",
+    "new_playground_modal_desc": "Give your playground a name to get started.",
+    "creating": "Creating...",
+    "create": "Create",
+    "failed_create": "Failed to create playground"
   }
 }

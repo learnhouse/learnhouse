@@ -1,5 +1,6 @@
 'use client'
 import React, { useState, useEffect, useCallback, useRef } from 'react'
+import { useTranslation } from 'react-i18next'
 import { useOrg } from '@components/Contexts/OrgContext'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
 import { toast } from 'react-hot-toast'
@@ -59,6 +60,7 @@ const OrgEditDomains: React.FC = () => {
   const session = useLHSession() as any
   const access_token = session?.data?.tokens?.access_token
   const org = useOrg() as any
+  const { t } = useTranslation()
   const queryClient = useQueryClient()
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false)
   const [isVerifyDialogOpen, setIsVerifyDialogOpen] = useState(false)
@@ -245,7 +247,7 @@ const OrgEditDomains: React.FC = () => {
         return (
           <Badge variant="outline" className="border-transparent bg-green-100 text-green-800" title={`Issuer: ${sslStatus.issuer || 'Unknown'}\nExpires: ${sslStatus.expires || 'Unknown'}`}>
             <ShieldCheck size={12} className="mr-1" />
-            SSL Active
+            {t('dashboard.organization.domains.ssl_active')}
           </Badge>
         )
       case 'provisioning':
@@ -325,23 +327,23 @@ const OrgEditDomains: React.FC = () => {
         <div className="sm:mx-10 mx-0 bg-white rounded-xl nice-shadow pt-3">
           <div className="flex flex-col gap-0">
             <div className="flex flex-col bg-gray-50 -space-y-1 px-5 py-3 mx-3 mb-3 rounded-md">
-              <h1 className="font-bold text-xl text-gray-800">Custom Domains</h1>
+              <h1 className="font-bold text-xl text-gray-800">{t('dashboard.organization.domains.title')}</h1>
               <h2 className="text-gray-500 text-md">
-                Configure custom domains to access your organization
+                {t('dashboard.organization.domains.subtitle')}
               </h2>
             </div>
 
             <div className="px-5 pb-4">
               <div className="flex justify-between items-center mb-4">
                 <p className="text-sm text-gray-600">
-                  Add your own domain to provide a branded experience for your learners.
+                  {t('dashboard.organization.domains.empty_description')}
                 </p>
                 <Button
                   onClick={() => setIsAddDialogOpen(true)}
                   className="bg-black text-white hover:bg-black/90"
                 >
                   <Plus size={16} className="mr-2" />
-                  Add Domain
+                  {t('dashboard.organization.domains.add_domain')}
                 </Button>
               </div>
 
@@ -434,8 +436,8 @@ const OrgEditDomains: React.FC = () => {
               ) : (
                 <div className="text-center py-12 text-gray-500">
                   <Globe size={48} className="mx-auto mb-4 opacity-50" />
-                  <p>No custom domains yet</p>
-                  <p className="text-sm">Add your first domain to get started</p>
+                  <p>{t('dashboard.organization.domains.no_domains_yet')}</p>
+                  <p className="text-sm">{t('dashboard.organization.domains.add_first_domain')}</p>
                 </div>
               )}
             </div>
@@ -446,14 +448,14 @@ const OrgEditDomains: React.FC = () => {
         <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
           <DialogContent>
             <DialogHeader className="px-6 pt-6">
-              <DialogTitle>Add Custom Domain</DialogTitle>
+              <DialogTitle>{t('dashboard.organization.domains.add_custom_domain')}</DialogTitle>
               <DialogDescription>
-                Enter the domain you want to use for your organization.
+                {t('dashboard.organization.domains.add_custom_domain_desc')}
               </DialogDescription>
             </DialogHeader>
             <div className="px-6 pb-6 space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="domain">Domain</Label>
+                <Label htmlFor="domain">{t('dashboard.organization.domains.domain_label')}</Label>
                 <Input
                   id="domain"
                   value={newDomain}
@@ -461,7 +463,7 @@ const OrgEditDomains: React.FC = () => {
                   placeholder="learn.mycompany.com"
                 />
                 <p className="text-xs text-gray-500">
-                  Enter a domain or subdomain (e.g., learn.mycompany.com or academy.example.org)
+                  {t('dashboard.organization.domains.domain_hint')}
                 </p>
               </div>
 
@@ -469,7 +471,7 @@ const OrgEditDomains: React.FC = () => {
                 <Button variant="outline" onClick={() => setIsAddDialogOpen(false)}>
                   Cancel
                 </Button>
-                <Button onClick={handleAddDomain}>Add Domain</Button>
+                <Button onClick={handleAddDomain}>{t('dashboard.organization.domains.add_domain')}</Button>
               </DialogFooter>
             </div>
           </DialogContent>
@@ -667,12 +669,12 @@ const OrgEditDomains: React.FC = () => {
                   {isVerifying ? (
                     <>
                       <RefreshCw size={16} className="mr-2 animate-spin" />
-                      Verifying...
+                      {t('dashboard.organization.domains.verifying')}
                     </>
                   ) : (
                     <>
                       <Check size={16} className="mr-2" />
-                      Verify DNS
+                      {t('dashboard.organization.domains.verify_dns')}
                     </>
                   )}
                 </Button>

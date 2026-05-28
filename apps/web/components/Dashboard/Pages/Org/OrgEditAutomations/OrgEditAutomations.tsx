@@ -1,5 +1,6 @@
 'use client'
 import React, { useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import Image from 'next/image'
 import { useOrg } from '@components/Contexts/OrgContext'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
@@ -110,6 +111,7 @@ const OrgEditAutomations: React.FC = () => {
   const session = useLHSession() as any
   const access_token = session?.data?.tokens?.access_token
   const org = useOrg() as any
+  const { t } = useTranslation()
   const queryClient = useQueryClient()
 
   // Fetch event registry from API
@@ -415,16 +417,16 @@ const OrgEditAutomations: React.FC = () => {
         <div className="sm:mx-10 mx-0 bg-white rounded-xl nice-shadow pt-3">
           <div className="flex flex-col gap-0">
             <div className="flex flex-col bg-gray-50 -space-y-1 px-5 py-3 mx-3 mb-3 rounded-md">
-              <h1 className="font-bold text-xl text-gray-800">Webhooks</h1>
+              <h1 className="font-bold text-xl text-gray-800">{t('dashboard.organization.automations.webhooks_title')}</h1>
               <h2 className="text-gray-500 text-md">
-                Send real-time event notifications to external services like Make.com, n8n, or your own API
+                {t('dashboard.organization.automations.webhooks_subtitle')}
               </h2>
             </div>
 
             <div className="px-5 pb-4">
               <div className="flex justify-between items-center mb-4">
                 <p className="text-sm text-gray-600">
-                  Webhook endpoints receive HTTP POST requests when events happen in your organization.
+                  {t('dashboard.organization.automations.webhooks_description')}
                 </p>
                 <Button
                   onClick={() => {
