@@ -1,5 +1,6 @@
 'use client'
 import React from 'react'
+import { useTranslation } from 'react-i18next'
 import { useQuery } from '@tanstack/react-query'
 import { queryKeys } from '@/lib/query/keys'
 import {
@@ -57,6 +58,7 @@ const METER_ICONS: Record<string, React.ComponentType<any>> = {
 }
 
 export default function OrgEditUsage() {
+  const { t } = useTranslation()
   const org = useOrg() as any
   const session = useLHSession() as any
   const token = session?.data?.tokens?.access_token
@@ -92,9 +94,9 @@ export default function OrgEditUsage() {
 
   const meters = features
     ? [
-        { label: 'Courses', ...features.courses },
-        { label: 'Members', ...features.members },
-        { label: 'Admin Seats', ...features.admin_seats },
+        { label: t('dashboard.organization.usage.courses'), ...features.courses },
+        { label: t('dashboard.organization.usage.members_label'), ...features.members },
+        { label: t('dashboard.organization.usage.admin_seats'), ...features.admin_seats },
       ]
     : []
 
@@ -104,7 +106,7 @@ export default function OrgEditUsage() {
       <div className="bg-white rounded-xl nice-shadow">
         <div className="border-b px-6 py-4 flex items-center justify-between">
           <h3 className="text-lg font-semibold text-gray-800">
-            Plan & Resource Usage
+            {t('dashboard.organization.usage.plan_resource_usage')}
           </h3>
           <span
             className={`text-xs font-semibold px-3 py-1 rounded-full capitalize ${planStyle.bg} ${planStyle.text}`}
@@ -126,7 +128,7 @@ export default function OrgEditUsage() {
             <div className="space-y-6">
               {meters.map((meter) => {
                 const isUnlimited = ossMode || meter.limit === 'unlimited'
-                const limitText = isUnlimited ? 'Unlimited' : String(meter.limit)
+                const limitText = isUnlimited ? t('dashboard.organization.usage.unlimited') : String(meter.limit)
                 const barColor = isUnlimited
                   ? 'bg-green-500'
                   : getBarColor(meter.usage, meter.limit)
@@ -187,7 +189,7 @@ export default function OrgEditUsage() {
                     )}
                     {isUnlimited && (
                       <p className="text-xs text-gray-400 mt-1.5">
-                        Unlimited
+                        {t('dashboard.organization.usage.unlimited')}
                       </p>
                     )}
                   </div>
@@ -208,7 +210,7 @@ export default function OrgEditUsage() {
       {aiCredits && aiCredits.mode !== 'disabled' && (
         <div className="bg-white rounded-xl nice-shadow">
           <div className="border-b px-6 py-4">
-            <h3 className="text-lg font-semibold text-gray-800">AI Credits</h3>
+            <h3 className="text-lg font-semibold text-gray-800">{t('dashboard.organization.usage.ai_credits')}</h3>
           </div>
           <div className="p-6">
             <AICreditsDetail credits={aiCredits} />
@@ -286,6 +288,7 @@ export default function OrgEditUsage() {
 }
 
 function AICreditsDetail({ credits }: { credits: AICreditsSummary }) {
+  const { t } = useTranslation()
   const total =
     typeof credits.total_credits === 'number' ? credits.total_credits : 0
   const used = credits.used_credits ?? 0
@@ -320,11 +323,11 @@ function AICreditsDetail({ credits }: { credits: AICreditsSummary }) {
           <div className="flex items-center gap-2.5">
             <Lightning size={16} weight="duotone" className="text-violet-400" />
             <span className="text-sm font-medium text-gray-700">
-              Credit Usage
+              {t('dashboard.organization.usage.credit_usage')}
             </span>
           </div>
           <span className="text-sm text-gray-500 tabular-nums font-medium">
-            {used} / {isUnlimited ? 'Unlimited' : total}
+            {used} / {isUnlimited ? t('dashboard.organization.usage.unlimited') : total}
           </span>
         </div>
         <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
@@ -334,7 +337,7 @@ function AICreditsDetail({ credits }: { credits: AICreditsSummary }) {
           />
         </div>
         {isUnlimited ? (
-          <p className="text-xs text-gray-400 mt-1.5">{used} used</p>
+          <p className="text-xs text-gray-400 mt-1.5">{used} {t('dashboard.organization.usage.used').toLowerCase()}</p>
         ) : remaining !== null && remaining > 0 ? (
           <p className="text-xs text-gray-400 mt-1.5">
             {remaining} remaining
@@ -347,29 +350,29 @@ function AICreditsDetail({ credits }: { credits: AICreditsSummary }) {
       {/* Breakdown */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-2">
         <div className="bg-gray-50 rounded-lg px-4 py-3">
-          <p className="text-xs text-gray-400 mb-1">Base Credits</p>
+          <p className="text-xs text-gray-400 mb-1">{t('dashboard.organization.usage.base_credits')}</p>
           <p className="text-lg font-semibold text-gray-700 tabular-nums">
             {credits.base_credits === 'unlimited'
-              ? 'Unlimited'
+              ? t('dashboard.organization.usage.unlimited')
               : credits.base_credits}
           </p>
         </div>
         <div className="bg-gray-50 rounded-lg px-4 py-3">
-          <p className="text-xs text-gray-400 mb-1">Purchased</p>
+          <p className="text-xs text-gray-400 mb-1">{t('dashboard.organization.usage.purchased')}</p>
           <p className="text-lg font-semibold text-gray-700 tabular-nums">
             {credits.purchased_credits}
           </p>
         </div>
         <div className="bg-gray-50 rounded-lg px-4 py-3">
-          <p className="text-xs text-gray-400 mb-1">Used</p>
+          <p className="text-xs text-gray-400 mb-1">{t('dashboard.organization.usage.used')}</p>
           <p className="text-lg font-semibold text-gray-700 tabular-nums">
             {used}
           </p>
         </div>
         <div className="bg-gray-50 rounded-lg px-4 py-3">
-          <p className="text-xs text-gray-400 mb-1">Remaining</p>
+          <p className="text-xs text-gray-400 mb-1">{t('dashboard.organization.usage.remaining')}</p>
           <p className="text-lg font-semibold text-gray-700 tabular-nums">
-            {isUnlimited ? 'Unlimited' : remaining ?? 0}
+            {isUnlimited ? t('dashboard.organization.usage.unlimited') : remaining ?? 0}
           </p>
         </div>
       </div>

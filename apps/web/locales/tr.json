@@ -31,6 +31,7 @@
     "dutch": "Flemenkçe",
     "thai": "Tayca",
     "bengali": "Bengalce",
+    "slovak": "Slovakça",
     "loading": "Yükleniyor...",
     "search": "Ara",
     "all": "Hepsi",
@@ -67,10 +68,6 @@
         "usergroups": {
           "title": "Standart Özellik",
           "description": "Kullanıcı grupları, yalnızca Standart veya üzeri plandaki kuruluşlar için kullanılabilen premium bir özelliktir. Daha iyi erişim yönetimi için kullanıcıları gruplara ayırmak için yükseltin."
-        },
-        "api_access": {
-          "title": "Pro Özellik",
-          "description": "API Erişimi, yalnızca Pro veya üzeri plandaki kuruluşlar için kullanılabilen premium bir özelliktir. Kuruluşunuzun verilerine programatik erişim için yükseltin."
         },
         "roles": {
           "title": "Pro Özellik",
@@ -203,7 +200,11 @@
     "choose_an_organization_to_continue": "Devam etmek için bir organizasyon seçin",
     "for": "için",
     "powered_by": "Destekleyen",
-    "results": "sonuç"
+    "results": "sonuç",
+    "no_content_yet": "Henüz içerik yok",
+    "other": "Other",
+    "disabled": "Disabled",
+    "store": "Store"
   },
   "banner": {
     "viewing_as_guest": "{{name}} sitesini misafir olarak görüntülüyorsunuz.",
@@ -2209,7 +2210,6 @@
           "landing": "Açılış Sayfası",
           "branding": "Marka",
           "ai": "YZ",
-          "api": "API Erişimi",
           "features": "Özellikler",
           "other": "Diğer",
           "domains": "Alan Adları",
@@ -2238,10 +2238,6 @@
           "ai": {
             "title": "Yapay Zeka Özellikleri",
             "subtitle": "Organizasyonunuz için yapay zeka yeteneklerini yapılandırın"
-          },
-          "api": {
-            "title": "API Erişimi",
-            "subtitle": "API tokenlarını ve programatik erişimi yönetin"
           },
           "features": {
             "title": "Özellikler",
@@ -2334,7 +2330,8 @@
           "video_preview_added": "Video önizlemesi başarıyla eklendi",
           "video_preview_error": "Video önizlemesi eklenemedi",
           "updating_order": "Önizleme sırası güncelleniyor..."
-        }
+        },
+        "favicon_preview": "Favicon önizleme (32×32)"
       },
       "branding": {
         "title": "Marka",
@@ -2423,6 +2420,14 @@
           "podcasts": {
             "description": "Organizasyonunuz için podcast oluşturma ve ses içeriğini etkinleştirin",
             "title": "Podcastler"
+          },
+          "boards": {
+            "title": "Boards",
+            "description": "Create collaborative boards with lists and cards for project management"
+          },
+          "playgrounds": {
+            "title": "Playgrounds",
+            "description": "Create interactive AI-generated experiences for your learners"
           }
         },
         "toasts": {
@@ -2639,7 +2644,8 @@
           "loading_courses": "Kurslar yükleniyor...",
           "selected": "Seçildi",
           "select": "Seç"
-        }
+        },
+        "org_id_not_found": "Organizasyon kimliği bulunamadı"
       },
       "theme": {
         "primary_color": "Ana Renk",
@@ -2713,6 +2719,44 @@
         "workos_info": "WorkOS, SAML ve OIDC kimlik sağlayıcıları desteğiyle kurumsal SSO sağlar.",
         "workos_org_id": "WorkOS Organizasyon Kimliği",
         "workos_org_id_help": "Bu kimlik, kurulum portalı aracılığıyla SSO yapılandırdığınızda otomatik olarak oluşturulur."
+      },
+      "seo": {
+        "copied_to_clipboard": "Panoya kopyalandı",
+        "save_failed": "SEO ayarları kaydedilemedi"
+      },
+      "automations": {},
+      "domains": {
+        "domain_required": "Alan adı gereklidir",
+        "domain_added_success": "Alan adı başarıyla eklendi",
+        "domain_deleted_success": "Alan adı başarıyla silindi",
+        "copied_to_clipboard": "Panoya kopyalandı",
+        "table_domain": "Alan Adı",
+        "table_status": "Durum",
+        "table_ssl": "SSL",
+        "table_added": "Eklenme",
+        "table_verified": "Doğrulandı",
+        "table_actions": "İşlemler",
+        "adding_domain": "Alan adı ekleniyor...",
+        "deleting_domain": "Alan adı siliniyor...",
+        "dns_config_required": "DNS yapılandırması gerekli",
+        "dns_config_description": "Bu kayıtları alan adı kayıt şirketinizde ekleyin (ör. Cloudflare, GoDaddy, Namecheap). DNS değişiklikleri 48 saate kadar sürebilir.",
+        "txt_record": "TXT Kaydı",
+        "for_verification": "Doğrulama için",
+        "cname_record": "CNAME Kaydı",
+        "for_routing": "Yönlendirme için",
+        "host_name": "Ana Bilgisayar / Ad",
+        "value": "Değer",
+        "value_target": "Değer / Hedef",
+        "ssl_certificate": "SSL Sertifikası",
+        "https_status": "HTTPS Durumu",
+        "check": "Kontrol Et",
+        "checking_ssl": "SSL durumu kontrol ediliyor...",
+        "delete_domain_title": "Özel alan adını sil",
+        "delete_domain_confirm": "Bu alan adını silmek istediğinizden emin misiniz? Bu işlem geri alınamaz.",
+        "delete_domain": "Alan Adını Sil",
+        "verify_domain_desc": "Sahipliği doğrulamak için alan adı sağlayıcınızda aşağıdaki DNS kayıtlarını ekleyin.",
+        "issuer": "Veren",
+        "expires": "Sona eriyor"
       }
     },
     "users": {
@@ -3732,10 +3776,6 @@
         "org_automations": {
           "description": "Webhooks ve dış entegrasyonlar",
           "keywords": "webhooks, otomasyonlar, zapier, entegrasyonlar, tetikleyiciler"
-        },
-        "org_api": {
-          "description": "API tokenları ve programatik erişim",
-          "keywords": "api, tokenlar, erişim, programatik, anahtarlar"
         },
         "org_sso": {
           "description": "Tek oturum açma yapılandırması",
@@ -4886,9 +4926,7 @@
           "custom_domain": "Özel alan adı",
           "custom_domain_desc": "Markalı bir akademi için kendi alan adınızı kullanın.",
           "roles": "Özel roller ve izinler",
-          "roles_desc": "Organizasyonunuzda kimin ne yapabileceğini tam olarak kontrol edin.",
-          "api": "API erişimi ve webhook'lar",
-          "api_desc": "Mevcut araçlarınızla entegre olun ve iş akışlarını otomatikleştirin."
+          "roles_desc": "Organizasyonunuzda kimin ne yapabileceğini tam olarak kontrol edin."
         }
       }
     }
@@ -4932,5 +4970,36 @@
     "next": "Sonraki",
     "previous": "Önceki",
     "showing_page": "{{total}} sayfadan {{current}}. sayfa gösteriliyor"
+  },
+  "playgrounds": {
+    "no_playgrounds_yet": "Henüz playground yok",
+    "playgrounds_description": "Öğrencileriniz için AI tarafından oluşturulan etkileşimli deneyimler oluşturun.",
+    "new_playground": "New Playground",
+    "search_placeholder": "Search playgrounds...",
+    "no_results_for": "No results for",
+    "try_different_search": "Try a different search term",
+    "new_playground_modal_title": "New Playground",
+    "new_playground_modal_desc": "Give your playground a name to get started.",
+    "creating": "Creating...",
+    "create": "Create",
+    "failed_create": "Failed to create playground",
+    "view": {
+      "open_editor_to_generate": "İçerik oluşturmak için editörü açın.",
+      "check_back_later": "Daha sonra tekrar kontrol edin.",
+      "open_editor": "Editörü Aç",
+      "breadcrumb": "Oyun Alanları",
+      "about": "Hakkında",
+      "author": "Yazar",
+      "access": "Erişim",
+      "created": "Oluşturulma",
+      "status": "Durum",
+      "published": "Yayınlandı",
+      "draft": "Taslak",
+      "edit_in_editor": "Editörde düzenle",
+      "download": "İndir",
+      "reactions": "Tepkiler",
+      "exit_fullscreen": "Çık",
+      "fullscreen": "Tam ekran"
+    }
   }
 }

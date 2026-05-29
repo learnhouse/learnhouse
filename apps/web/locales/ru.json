@@ -31,6 +31,7 @@
     "dutch": "Голландский",
     "thai": "Тайский",
     "bengali": "Бенгальский",
+    "slovak": "Словацкий",
     "loading": "Загрузка...",
     "search": "Поиск",
     "all": "Все",
@@ -67,10 +68,6 @@
         "usergroups": {
           "title": "Функция Standard",
           "description": "Группы пользователей — это премиум-функция, доступная только для организаций на тарифе Standard или выше. Обновитесь, чтобы организовать пользователей в группы для лучшего управления доступом."
-        },
-        "api_access": {
-          "title": "Функция Pro",
-          "description": "Доступ к API — это премиум-функция, доступная только для организаций на тарифе Pro или выше. Обновитесь, чтобы разблокировать программный доступ к данным вашей организации."
         },
         "roles": {
           "title": "Функция Pro",
@@ -203,7 +200,11 @@
     "choose_an_organization_to_continue": "Выберите организацию, чтобы продолжить",
     "for": "для",
     "powered_by": "Работает на",
-    "results": "результат"
+    "results": "результат",
+    "no_content_yet": "Контента пока нет",
+    "other": "Other",
+    "disabled": "Disabled",
+    "store": "Store"
   },
   "banner": {
     "viewing_as_guest": "Вы просматриваете {{name}} как гость.",
@@ -2209,7 +2210,6 @@
           "landing": "Лендинг",
           "branding": "Брендинг",
           "ai": "ИИ",
-          "api": "Доступ к API",
           "features": "Функции",
           "other": "Другое",
           "domains": "Домены",
@@ -2238,10 +2238,6 @@
           "ai": {
             "title": "Функции ИИ",
             "subtitle": "Настройте возможности ИИ для вашей организации"
-          },
-          "api": {
-            "title": "Доступ к API",
-            "subtitle": "Управление токенами API и программным доступом"
           },
           "features": {
             "title": "Функции",
@@ -2334,7 +2330,8 @@
           "video_preview_added": "Видео-превью добавлено",
           "video_preview_error": "Не удалось добавить видео-превью",
           "updating_order": "Обновление порядка превью..."
-        }
+        },
+        "favicon_preview": "Предпросмотр favicon (32×32)"
       },
       "branding": {
         "title": "Брендинг",
@@ -2396,7 +2393,12 @@
         "toasts": {
           "save_success": "Настройки ИИ успешно обновлены",
           "save_error": "Не удалось обновить настройки ИИ"
-        }
+        },
+        "ai_copilot": "AI Copilot",
+        "ai_copilot_description": "Let learners ask questions about course content. Uses indexed material to provide grounded answers with source citations.",
+        "feature_editor_description": "AI-powered content editing assistance for course creators.",
+        "feature_activity_description": "AI assistant available within activities to help learners.",
+        "always_on": "Always on"
       },
       "features": {
         "title": "Настройки функций",
@@ -2423,6 +2425,14 @@
           "podcasts": {
             "description": "Включить создание подкастов и аудио контента",
             "title": "Подкасты"
+          },
+          "boards": {
+            "title": "Boards",
+            "description": "Create collaborative boards with lists and cards for project management"
+          },
+          "playgrounds": {
+            "title": "Playgrounds",
+            "description": "Create interactive AI-generated experiences for your learners"
           }
         },
         "toasts": {
@@ -2639,7 +2649,8 @@
           "loading_courses": "Загрузка курсов...",
           "selected": "Выбрано",
           "select": "Выбрать"
-        }
+        },
+        "org_id_not_found": "ID организации не найден"
       },
       "theme": {
         "primary_color": "Основной цвет",
@@ -2713,6 +2724,115 @@
         "workos_info": "WorkOS предоставляет корпоративный SSO с поддержкой SAML и OIDC.",
         "workos_org_id": "ID организации WorkOS",
         "workos_org_id_help": "Этот ID генерируется автоматически при настройке SSO через портал."
+      },
+      "seo": {
+        "org_seo": {
+          "quick_links": "Быстрые ссылки",
+          "important_seo_urls": "Важные SEO-адреса вашей организации",
+          "sitemap": "Sitemap:",
+          "robots_txt": "Robots.txt:",
+          "default_meta_tags": "Мета-теги по умолчанию",
+          "set_default_metadata": "Установить метаданные по умолчанию для всех страниц",
+          "title_suffix": "Суффикс заголовка",
+          "title_suffix_hint": "Добавляется ко всем заголовкам, напр. \" | Моя Академия\"",
+          "default_description": "Описание по умолчанию",
+          "default_description_hint": "Запасное описание когда у страницы нет своего",
+          "social_open_graph": "Social & Open Graph",
+          "social_open_graph_hint": "Управляйте отображением страниц при публикации в соцсетях",
+          "default_og_image": "OG-изображение по умолчанию",
+          "default_og_image_hint": "Изображение по умолчанию для соцсетей (1200x630 рекомендуется)",
+          "twitter_handle": "Аккаунт Twitter",
+          "twitter_handle_hint": "Отображается на карточках Twitter как аккаунт сайта",
+          "search_engine_verification": "Верификация поисковых систем",
+          "search_engine_verification_hint": "Подтвердите владение в поисковых системах",
+          "google_search_console": "Google Search Console",
+          "google_search_console_hint": "Код верификации из Google Search Console",
+          "indexing_controls": "Управление индексацией",
+          "indexing_controls_hint": "Управляйте какие страницы могут индексироваться",
+          "hide_communities": "Скрыть сообщества",
+          "hide_communities_hint": "Скрыть страницы сообществ от поисковых систем"
+        },
+        "copied_to_clipboard": "Скопировано в буфер обмена",
+        "save_failed": "Не удалось сохранить настройки SEO"
+      },
+      "domains": {
+        "title": "Собственные домены",
+        "subtitle": "Настройка собственных доменов",
+        "empty_description": "Добавьте свой домен для брендированного опыта.",
+        "add_domain": "Добавить домен",
+        "domain_name": "Имя домена",
+        "enter_domain": "Введите домен",
+        "verify": "Проверить",
+        "verify_domain": "Проверить домен",
+        "verifying": "Проверка...",
+        "verify_dns": "Проверить DNS",
+        "remove": "Удалить",
+        "pending": "Ожидание",
+        "active": "Активен",
+        "failed": "Ошибка",
+        "ssl_active": "SSL активен",
+        "failed_add": "Не удалось добавить домен",
+        "failed_delete": "Не удалось удалить домен",
+        "failed_verify": "Не удалось проверить домен",
+        "verifying_domain": "Проверка домена...",
+        "domain_verified": "Домен проверен",
+        "domain_added": "Домен добавлен",
+        "domain_removed": "Домен удален",
+        "no_domains_yet": "Нет собственных доменов",
+        "add_first_domain": "Добавьте первый домен",
+        "add_custom_domain": "Добавить собственный домен",
+        "add_custom_domain_desc": "Введите домен, который хотите использовать.",
+        "domain_label": "Домен",
+        "domain_hint": "Введите домен или поддомен (напр. learn.company.ru)",
+        "domain_required": "Домен обязателен",
+        "domain_added_success": "Домен успешно добавлен",
+        "domain_deleted_success": "Домен успешно удалён",
+        "copied_to_clipboard": "Скопировано в буфер обмена",
+        "table_domain": "Домен",
+        "table_status": "Статус",
+        "table_ssl": "SSL",
+        "table_added": "Добавлен",
+        "table_verified": "Подтверждён",
+        "table_actions": "Действия",
+        "adding_domain": "Добавление домена...",
+        "deleting_domain": "Удаление домена...",
+        "dns_config_required": "Требуется настройка DNS",
+        "dns_config_description": "Добавьте эти записи у вашего регистратора доменов (напр. Cloudflare, GoDaddy, Namecheap). Изменения DNS могут занять до 48 часов.",
+        "txt_record": "TXT-запись",
+        "for_verification": "Для верификации",
+        "cname_record": "CNAME-запись",
+        "for_routing": "Для маршрутизации",
+        "host_name": "Хост / Имя",
+        "value": "Значение",
+        "value_target": "Значение / Цель",
+        "ssl_certificate": "SSL-сертификат",
+        "https_status": "Статус HTTPS",
+        "check": "Проверить",
+        "checking_ssl": "Проверка статуса SSL...",
+        "delete_domain_title": "Удалить пользовательский домен",
+        "delete_domain_confirm": "Вы уверены, что хотите удалить этот домен? Это действие нельзя отменить.",
+        "delete_domain": "Удалить домен",
+        "verify_domain_desc": "Добавьте следующие DNS-записи у вашего провайдера домена для подтверждения владения.",
+        "issuer": "Издатель",
+        "expires": "Истекает"
+      },
+      "automations": {
+        "webhooks_title": "Webhooks",
+        "webhooks_subtitle": "Отправка уведомлений в реальном времени во внешние сервисы",
+        "webhooks_description": "Webhook-эндпоинты получают HTTP POST запросы при событиях в вашей организации."
+      },
+      "usage": {
+        "plan_resource_usage": "План и использование ресурсов",
+        "courses": "Курсы",
+        "members_label": "Участники",
+        "admin_seats": "Места админов",
+        "unlimited": "Безлимитно",
+        "ai_credits": "AI-кредиты",
+        "credit_usage": "Использование кредитов",
+        "base_credits": "Базовые кредиты",
+        "purchased": "Куплено",
+        "used": "Использовано",
+        "remaining": "Осталось"
       }
     },
     "users": {
@@ -3732,10 +3852,6 @@
         "org_automations": {
           "description": "Вебхуки и внешние интеграции",
           "keywords": "вебхуки, автоматизация, zapier, интеграции, триггеры"
-        },
-        "org_api": {
-          "description": "API-токены и программный доступ",
-          "keywords": "api, токены, доступ, программный, ключи"
         },
         "org_sso": {
           "description": "Настройка единого входа",
@@ -4886,9 +5002,7 @@
           "custom_domain": "Собственный домен",
           "custom_domain_desc": "Используйте свой домен для брендированной академии.",
           "roles": "Пользовательские роли и разрешения",
-          "roles_desc": "Точно контролируйте, кто что может делать в вашей организации.",
-          "api": "Доступ к API и вебхуки",
-          "api_desc": "Интегрируйтесь с существующими инструментами и автоматизируйте рабочие процессы."
+          "roles_desc": "Точно контролируйте, кто что может делать в вашей организации."
         }
       }
     }
@@ -4932,5 +5046,36 @@
     "next": "Вперёд",
     "previous": "Назад",
     "showing_page": "Страница {{current}} из {{total}}"
+  },
+  "playgrounds": {
+    "no_playgrounds_yet": "Площадок пока нет",
+    "playgrounds_description": "Создавайте интерактивные AI-генерируемые материалы для ваших учеников.",
+    "new_playground": "New Playground",
+    "search_placeholder": "Search playgrounds...",
+    "no_results_for": "No results for",
+    "try_different_search": "Try a different search term",
+    "new_playground_modal_title": "New Playground",
+    "new_playground_modal_desc": "Give your playground a name to get started.",
+    "creating": "Creating...",
+    "create": "Create",
+    "failed_create": "Failed to create playground",
+    "view": {
+      "open_editor_to_generate": "Откройте редактор для создания контента.",
+      "check_back_later": "Загляните позже.",
+      "open_editor": "Открыть редактор",
+      "breadcrumb": "Площадки",
+      "about": "О проекте",
+      "author": "Автор",
+      "access": "Доступ",
+      "created": "Создано",
+      "status": "Статус",
+      "published": "Опубликовано",
+      "draft": "Черновик",
+      "edit_in_editor": "Редактировать в редакторе",
+      "download": "Скачать",
+      "reactions": "Реакции",
+      "exit_fullscreen": "Выйти",
+      "fullscreen": "Полный экран"
+    }
   }
 }

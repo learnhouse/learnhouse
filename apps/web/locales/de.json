@@ -33,6 +33,7 @@
     "dutch": "Niederländisch",
     "thai": "Thailändisch",
     "bengali": "Bengalisch",
+    "slovak": "Slowakisch",
     "loading": "Wird geladen...",
     "search": "Suchen",
     "all": "Alle",
@@ -69,10 +70,6 @@
         "usergroups": {
           "title": "Standard-Funktion",
           "description": "Benutzergruppen sind eine Premium-Funktion, die nur für Organisationen mit unserem Standard-Plan oder höher verfügbar ist. Führen Sie ein Upgrade durch, um Benutzer in Gruppen für eine bessere Zugriffsverwaltung zu organisieren."
-        },
-        "api_access": {
-          "title": "Pro-Funktion",
-          "description": "API-Zugriff ist eine Premium-Funktion, die nur für Organisationen mit unserem Pro-Plan oder höher verfügbar ist. Führen Sie ein Upgrade durch, um programmatischen Zugriff auf die Daten Ihrer Organisation freizuschalten."
         },
         "roles": {
           "title": "Pro-Funktion",
@@ -203,7 +200,11 @@
     "choose_an_organization_to_continue": "Wählen Sie eine Organisation, um fortzufahren",
     "for": "für",
     "powered_by": "Bereitgestellt von",
-    "results": "Ergebnis"
+    "results": "Ergebnis",
+    "no_content_yet": "Noch kein Inhalt",
+    "other": "Other",
+    "disabled": "Disabled",
+    "store": "Store"
   },
   "banner": {
     "viewing_as_guest": "Sie betrachten {{name}} als Gast.",
@@ -2186,7 +2187,6 @@
           "landing": "Landingpage",
           "branding": "Branding",
           "ai": "KI",
-          "api": "API-Zugang",
           "features": "Funktionen",
           "usage": "Nutzung",
           "other": "Sonstiges",
@@ -2215,10 +2215,6 @@
           "ai": {
             "title": "KI-Funktionen",
             "subtitle": "Konfigurieren Sie die KI-Fähigkeiten Ihrer Organisation"
-          },
-          "api": {
-            "title": "API-Zugang",
-            "subtitle": "Verwalten Sie API-Token und programmatischen Zugang"
           },
           "features": {
             "title": "Funktionen",
@@ -2309,7 +2305,8 @@
           "video_preview_added": "Video-Vorschau hinzugefügt",
           "video_preview_error": "Fehler beim Hinzufügen der Video-Vorschau",
           "updating_order": "Vorschaureihenfolge wird aktualisiert..."
-        }
+        },
+        "favicon_preview": "Favicon-Vorschau (32×32)"
       },
       "branding": {
         "title": "Branding",
@@ -2395,7 +2392,12 @@
         "toasts": {
           "save_success": "KI-Einstellungen erfolgreich aktualisiert",
           "save_error": "Fehler beim Aktualisieren der KI-Einstellungen"
-        }
+        },
+        "ai_copilot": "AI Copilot",
+        "ai_copilot_description": "Let learners ask questions about course content. Uses indexed material to provide grounded answers with source citations.",
+        "feature_editor_description": "AI-powered content editing assistance for course creators.",
+        "feature_activity_description": "AI assistant available within activities to help learners.",
+        "always_on": "Always on"
       },
       "features": {
         "title": "Funktionseinstellungen",
@@ -2422,6 +2424,14 @@
           "podcasts": {
             "description": "Podcast-Erstellung und Audioinhalte für Ihre Organisation aktivieren",
             "title": "Podcasts"
+          },
+          "boards": {
+            "title": "Boards",
+            "description": "Erstellen Sie kollaborative Boards mit Listen und Karten für das Projektmanagement"
+          },
+          "playgrounds": {
+            "title": "Playgrounds",
+            "description": "Erstellen Sie interaktive KI-generierte Erlebnisse für Ihre Lernenden"
           }
         },
         "toasts": {
@@ -2638,7 +2648,8 @@
           "loading_courses": "Kurse werden geladen...",
           "selected": "Ausgewählt",
           "select": "Auswählen"
-        }
+        },
+        "org_id_not_found": "Organisations-ID nicht gefunden"
       },
       "theme": {
         "primary_color": "Primärfarbe",
@@ -2688,6 +2699,115 @@
         "workos_info": "WorkOS bietet Enterprise-SSO mit Unterstützung für SAML- und OIDC-Identitätsanbieter.",
         "workos_org_id": "WorkOS-Organisations-ID",
         "workos_org_id_help": "Diese ID wird automatisch generiert, wenn Sie SSO über das Setup-Portal konfigurieren."
+      },
+      "seo": {
+        "org_seo": {
+          "quick_links": "Schnelllinks",
+          "important_seo_urls": "Wichtige SEO-URLs Ihrer Organisation",
+          "sitemap": "Sitemap:",
+          "robots_txt": "Robots.txt:",
+          "default_meta_tags": "Standard-Meta-Tags",
+          "set_default_metadata": "Standard-Metadaten festlegen",
+          "title_suffix": "Titel-Suffix",
+          "title_suffix_hint": "Wird an alle Seitentitel angehaengt, z.B. \" | Meine Akademie\"",
+          "default_description": "Standardbeschreibung",
+          "default_description_hint": "Fallback-Beschreibung wenn eine Seite keine hat",
+          "social_open_graph": "Social & Open Graph",
+          "social_open_graph_hint": "Steuern Sie die Darstellung beim Teilen in sozialen Medien",
+          "default_og_image": "Standard-OG-Bild",
+          "default_og_image_hint": "Standard-Bild fuer soziale Medien (1200x630 empfohlen)",
+          "twitter_handle": "Twitter-Handle",
+          "twitter_handle_hint": "Wird auf Twitter-Karten als Website-Konto angezeigt",
+          "search_engine_verification": "Suchmaschinen-Verifizierung",
+          "search_engine_verification_hint": "Eigentum bei Suchmaschinen verifizieren",
+          "google_search_console": "Google Search Console",
+          "google_search_console_hint": "Verifizierungscode von Google Search Console",
+          "indexing_controls": "Indexierungssteuerung",
+          "indexing_controls_hint": "Steuern Sie welche Seiten indexiert werden",
+          "hide_communities": "Communities ausblenden",
+          "hide_communities_hint": "Community-Seiten vor Suchmaschinen verbergen"
+        },
+        "copied_to_clipboard": "In die Zwischenablage kopiert",
+        "save_failed": "SEO-Einstellungen konnten nicht gespeichert werden"
+      },
+      "domains": {
+        "title": "Eigene Domains",
+        "subtitle": "Eigene Domains konfigurieren",
+        "empty_description": "Eigene Domain fuer ein markenbezogenes Erlebnis hinzufuegen.",
+        "add_domain": "Domain hinzufuegen",
+        "domain_name": "Domainname",
+        "enter_domain": "Domain eingeben",
+        "verify": "Verifizieren",
+        "verify_domain": "Domain verifizieren",
+        "verifying": "Verifizierung...",
+        "verify_dns": "DNS verifizieren",
+        "remove": "Entfernen",
+        "pending": "Ausstehend",
+        "active": "Aktiv",
+        "failed": "Fehlgeschlagen",
+        "ssl_active": "SSL aktiv",
+        "failed_add": "Domain konnte nicht hinzugefuegt werden",
+        "failed_delete": "Domain konnte nicht geloescht werden",
+        "failed_verify": "Domain konnte nicht verifiziert werden",
+        "verifying_domain": "Domain wird verifiziert...",
+        "domain_verified": "Domain erfolgreich verifiziert",
+        "domain_added": "Domain hinzugefuegt",
+        "domain_removed": "Domain entfernt",
+        "no_domains_yet": "Noch keine eigenen Domains",
+        "add_first_domain": "Erste Domain hinzufuegen",
+        "add_custom_domain": "Eigene Domain hinzufuegen",
+        "add_custom_domain_desc": "Domain eingeben, die Sie verwenden moechten.",
+        "domain_label": "Domain",
+        "domain_hint": "Domain oder Subdomain eingeben (z.B. learn.firma.de)",
+        "domain_required": "Domain ist erforderlich",
+        "domain_added_success": "Domain erfolgreich hinzugefügt",
+        "domain_deleted_success": "Domain erfolgreich gelöscht",
+        "copied_to_clipboard": "In die Zwischenablage kopiert",
+        "table_domain": "Domain",
+        "table_status": "Status",
+        "table_ssl": "SSL",
+        "table_added": "Hinzugefügt",
+        "table_verified": "Verifiziert",
+        "table_actions": "Aktionen",
+        "adding_domain": "Domain wird hinzugefügt...",
+        "deleting_domain": "Domain wird gelöscht...",
+        "dns_config_required": "DNS-Konfiguration erforderlich",
+        "dns_config_description": "Fügen Sie diese Einträge bei Ihrem Domain-Registrar hinzu (z.B. Cloudflare, GoDaddy, Namecheap). DNS-Änderungen können bis zu 48 Stunden dauern.",
+        "txt_record": "TXT-Eintrag",
+        "for_verification": "Zur Verifizierung",
+        "cname_record": "CNAME-Eintrag",
+        "for_routing": "Für das Routing",
+        "host_name": "Host / Name",
+        "value": "Wert",
+        "value_target": "Wert / Ziel",
+        "ssl_certificate": "SSL-Zertifikat",
+        "https_status": "HTTPS-Status",
+        "check": "Prüfen",
+        "checking_ssl": "SSL-Status wird geprüft...",
+        "delete_domain_title": "Benutzerdefinierte Domain löschen",
+        "delete_domain_confirm": "Sind Sie sicher, dass Sie diese Domain löschen möchten? Diese Aktion kann nicht rückgängig gemacht werden.",
+        "delete_domain": "Domain löschen",
+        "verify_domain_desc": "Fügen Sie die folgenden DNS-Einträge bei Ihrem Domain-Anbieter hinzu, um den Besitz zu bestätigen.",
+        "issuer": "Aussteller",
+        "expires": "Läuft ab"
+      },
+      "automations": {
+        "webhooks_title": "Webhooks",
+        "webhooks_subtitle": "Echtzeit-Ereignisbenachrichtigungen an externe Dienste senden",
+        "webhooks_description": "Webhook-Endpunkte empfangen HTTP-POST-Anfragen bei Ereignissen in Ihrer Organisation."
+      },
+      "usage": {
+        "plan_resource_usage": "Plan & Ressourcennutzung",
+        "courses": "Kurse",
+        "members_label": "Mitglieder",
+        "admin_seats": "Admin-Plaetze",
+        "unlimited": "Unbegrenzt",
+        "ai_credits": "KI-Credits",
+        "credit_usage": "Credit-Nutzung",
+        "base_credits": "Basis-Credits",
+        "purchased": "Gekauft",
+        "used": "Verwendet",
+        "remaining": "Verbleibend"
       }
     },
     "users": {
@@ -3707,10 +3827,6 @@
         "org_automations": {
           "description": "Webhooks und externe Integrationen",
           "keywords": "webhooks, automatisierungen, zapier, integrationen, trigger"
-        },
-        "org_api": {
-          "description": "API-Token und programmatischer Zugriff",
-          "keywords": "api, token, zugriff, programmatisch, schlüssel"
         },
         "org_sso": {
           "description": "Single Sign-On Konfiguration",
@@ -4861,9 +4977,7 @@
           "custom_domain": "Eigene Domain",
           "custom_domain_desc": "Nutzen Sie Ihre eigene Domain für eine gebrandete Akademie.",
           "roles": "Rollen & Berechtigungen",
-          "roles_desc": "Kontrollieren Sie genau, wer was in Ihrer Organisation tun kann.",
-          "api": "API-Zugang & Webhooks",
-          "api_desc": "Integrieren Sie mit bestehenden Tools und automatisieren Sie Workflows."
+          "roles_desc": "Kontrollieren Sie genau, wer was in Ihrer Organisation tun kann."
         }
       }
     }
@@ -4907,5 +5021,36 @@
     "next": "Weiter",
     "previous": "Zurück",
     "showing_page": "Seite {{current}} von {{total}}"
+  },
+  "playgrounds": {
+    "no_playgrounds_yet": "Noch keine Playgrounds",
+    "playgrounds_description": "Erstellen Sie interaktive KI-generierte Erlebnisse für Ihre Lernenden.",
+    "new_playground": "New Playground",
+    "search_placeholder": "Search playgrounds...",
+    "no_results_for": "No results for",
+    "try_different_search": "Try a different search term",
+    "new_playground_modal_title": "New Playground",
+    "new_playground_modal_desc": "Give your playground a name to get started.",
+    "creating": "Creating...",
+    "create": "Create",
+    "failed_create": "Failed to create playground",
+    "view": {
+      "open_editor_to_generate": "Öffne den Editor, um Inhalte zu generieren.",
+      "check_back_later": "Schauen Sie später noch einmal vorbei.",
+      "open_editor": "Editor öffnen",
+      "breadcrumb": "Playgrounds",
+      "about": "Über",
+      "author": "Autor",
+      "access": "Zugriff",
+      "created": "Erstellt",
+      "status": "Status",
+      "published": "Veröffentlicht",
+      "draft": "Entwurf",
+      "edit_in_editor": "Im Editor bearbeiten",
+      "download": "Herunterladen",
+      "reactions": "Reaktionen",
+      "exit_fullscreen": "Beenden",
+      "fullscreen": "Vollbild"
+    }
   }
 }

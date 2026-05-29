@@ -31,6 +31,7 @@
     "dutch": "ภาษาดัตช์",
     "thai": "ภาษาไทย",
     "bengali": "ภาษาเบงกาลี",
+    "slovak": "ภาษาสโลวัก",
     "loading": "กำลังโหลด...",
     "search": "ค้นหา",
     "all": "ทั้งหมด",
@@ -67,10 +68,6 @@
         "usergroups": {
           "title": "ฟีเจอร์ Standard",
           "description": "กลุ่มผู้ใช้เป็นฟีเจอร์พรีเมียมที่มีเฉพาะสำหรับองค์กรที่ใช้แผน Standard หรือสูงกว่า อัปเกรดเพื่อจัดกลุ่มผู้ใช้เพื่อการจัดการการเข้าถึงที่ดีขึ้น"
-        },
-        "api_access": {
-          "title": "ฟีเจอร์ Pro",
-          "description": "การเข้าถึง API เป็นฟีเจอร์พรีเมียมที่มีเฉพาะสำหรับองค์กรที่ใช้แผน Pro หรือสูงกว่า อัปเกรดเพื่อปลดล็อกการเข้าถึงข้อมูลองค์กรของคุณแบบโปรแกรม"
         },
         "roles": {
           "title": "ฟีเจอร์ Pro",
@@ -203,7 +200,11 @@
     "choose_an_organization_to_continue": "เลือกองค์กรเพื่อดำเนินการต่อ",
     "for": "สำหรับ",
     "powered_by": "ขับเคลื่อนโดย",
-    "results": "ผลลัพธ์"
+    "results": "ผลลัพธ์",
+    "no_content_yet": "ยังไม่มีเนื้อหา",
+    "other": "Other",
+    "disabled": "Disabled",
+    "store": "Store"
   },
   "banner": {
     "viewing_as_guest": "คุณกำลังดู {{name}} ในฐานะแขก",
@@ -2209,7 +2210,6 @@
           "landing": "หน้าแลนดิ้ง",
           "branding": "แบรนด์",
           "ai": "AI",
-          "api": "การเข้าถึง API",
           "features": "ฟีเจอร์",
           "other": "อื่นๆ",
           "domains": "โดเมน",
@@ -2238,10 +2238,6 @@
           "ai": {
             "title": "ฟีเจอร์ AI",
             "subtitle": "กำหนดค่าความสามารถ AI สำหรับองค์กรของคุณ"
-          },
-          "api": {
-            "title": "การเข้าถึง API",
-            "subtitle": "จัดการโทเค็น API และการเข้าถึงแบบโปรแกรม"
           },
           "features": {
             "title": "ฟีเจอร์",
@@ -2334,7 +2330,8 @@
           "video_preview_added": "เพิ่มวิดีโอตัวอย่างสำเร็จแล้ว",
           "video_preview_error": "เพิ่มวิดีโอตัวอย่างล้มเหลว",
           "updating_order": "กำลังอัปเดตลำดับรูปภาพตัวอย่าง..."
-        }
+        },
+        "favicon_preview": "ตัวอย่าง Favicon (32×32)"
       },
       "branding": {
         "title": "แบรนด์",
@@ -2423,6 +2420,14 @@
           "podcasts": {
             "description": "เปิดใช้งานการสร้างพอดแคสต์และเนื้อหาเสียงสำหรับองค์กรของคุณ",
             "title": "พอดแคสต์"
+          },
+          "boards": {
+            "title": "Boards",
+            "description": "Create collaborative boards with lists and cards for project management"
+          },
+          "playgrounds": {
+            "title": "Playgrounds",
+            "description": "Create interactive AI-generated experiences for your learners"
           }
         },
         "toasts": {
@@ -2663,7 +2668,8 @@
           "loading_courses": "กำลังโหลดคอร์สเรียน...",
           "selected": "เลือกแล้ว",
           "select": "เลือก"
-        }
+        },
+        "org_id_not_found": "ไม่พบ ID องค์กร"
       },
       "theme": {
         "primary_color": "สีหลัก",
@@ -2713,6 +2719,44 @@
         "workos_info": "WorkOS ให้บริการ SSO ระดับองค์กรพร้อมการรองรับผู้ให้บริการระบุตัวตนแบบ SAML และ OIDC",
         "workos_org_id": "WorkOS Organization ID",
         "workos_org_id_help": "ID นี้ถูกสร้างขึ้นโดยอัตโนมัติเมื่อคุณกำหนดค่า SSO ผ่านพอร์ทัลตั้งค่า"
+      },
+      "seo": {
+        "copied_to_clipboard": "คัดลอกไปยังคลิปบอร์ดแล้ว",
+        "save_failed": "ไม่สามารถบันทึกการตั้งค่า SEO ได้"
+      },
+      "automations": {},
+      "domains": {
+        "domain_required": "จำเป็นต้องระบุโดเมน",
+        "domain_added_success": "เพิ่มโดเมนสำเร็จ",
+        "domain_deleted_success": "ลบโดเมนสำเร็จ",
+        "copied_to_clipboard": "คัดลอกไปยังคลิปบอร์ดแล้ว",
+        "table_domain": "โดเมน",
+        "table_status": "สถานะ",
+        "table_ssl": "SSL",
+        "table_added": "เพิ่มเมื่อ",
+        "table_verified": "ยืนยันแล้ว",
+        "table_actions": "การดำเนินการ",
+        "adding_domain": "กำลังเพิ่มโดเมน...",
+        "deleting_domain": "กำลังลบโดเมน...",
+        "dns_config_required": "ต้องกำหนดค่า DNS",
+        "dns_config_description": "เพิ่มระเบียนเหล่านี้ที่ผู้ให้บริการจดทะเบียนโดเมนของคุณ (เช่น Cloudflare, GoDaddy, Namecheap) การเปลี่ยนแปลง DNS อาจใช้เวลาถึง 48 ชั่วโมง",
+        "txt_record": "ระเบียน TXT",
+        "for_verification": "สำหรับการยืนยัน",
+        "cname_record": "ระเบียน CNAME",
+        "for_routing": "สำหรับการกำหนดเส้นทาง",
+        "host_name": "โฮสต์ / ชื่อ",
+        "value": "ค่า",
+        "value_target": "ค่า / เป้าหมาย",
+        "ssl_certificate": "ใบรับรอง SSL",
+        "https_status": "สถานะ HTTPS",
+        "check": "ตรวจสอบ",
+        "checking_ssl": "กำลังตรวจสอบสถานะ SSL...",
+        "delete_domain_title": "ลบโดเมนที่กำหนดเอง",
+        "delete_domain_confirm": "คุณแน่ใจหรือไม่ว่าต้องการลบโดเมนนี้? การดำเนินการนี้ไม่สามารถย้อนกลับได้",
+        "delete_domain": "ลบโดเมน",
+        "verify_domain_desc": "เพิ่มระเบียน DNS ต่อไปนี้ที่ผู้ให้บริการโดเมนของคุณเพื่อยืนยันความเป็นเจ้าของ",
+        "issuer": "ผู้ออก",
+        "expires": "หมดอายุ"
       }
     },
     "users": {
@@ -3732,10 +3776,6 @@
         "org_automations": {
           "description": "Webhook และการผสานภายนอก",
           "keywords": "webhook, การทำงานอัตโนมัติ, zapier, การผสาน, ทริกเกอร์"
-        },
-        "org_api": {
-          "description": "โทเค็น API และการเข้าถึงแบบโปรแกรม",
-          "keywords": "api, โทเค็น, การเข้าถึง, โปรแกรม, คีย์"
         },
         "org_sso": {
           "description": "การกำหนดค่า Single Sign-On",
@@ -4886,9 +4926,7 @@
           "custom_domain": "โดเมนที่กำหนดเอง",
           "custom_domain_desc": "ใช้โดเมนของคุณเองสำหรับสถาบันที่มีแบรนด์ของคุณ",
           "roles": "บทบาทและสิทธิ์ที่กำหนดเอง",
-          "roles_desc": "ควบคุมอย่างแม่นยำว่าใครสามารถทำอะไรได้ในองค์กรของคุณ",
-          "api": "การเข้าถึง API และ webhooks",
-          "api_desc": "เชื่อมต่อกับเครื่องมือที่มีอยู่และทำให้เวิร์กโฟลว์เป็นอัตโนมัติ"
+          "roles_desc": "ควบคุมอย่างแม่นยำว่าใครสามารถทำอะไรได้ในองค์กรของคุณ"
         }
       }
     }
@@ -4932,5 +4970,36 @@
     "next": "ถัดไป",
     "previous": "ก่อนหน้า",
     "showing_page": "แสดงหน้า {{current}} จาก {{total}}"
+  },
+  "playgrounds": {
+    "no_playgrounds_yet": "ยังไม่มี Playground",
+    "playgrounds_description": "สร้างประสบการณ์เชิงโต้ตอบที่สร้างโดย AI สำหรับผู้เรียนของคุณ",
+    "new_playground": "New Playground",
+    "search_placeholder": "Search playgrounds...",
+    "no_results_for": "No results for",
+    "try_different_search": "Try a different search term",
+    "new_playground_modal_title": "New Playground",
+    "new_playground_modal_desc": "Give your playground a name to get started.",
+    "creating": "Creating...",
+    "create": "Create",
+    "failed_create": "Failed to create playground",
+    "view": {
+      "open_editor_to_generate": "เปิดตัวแก้ไขเพื่อสร้างเนื้อหา",
+      "check_back_later": "กลับมาตรวจสอบภายหลัง",
+      "open_editor": "เปิดตัวแก้ไข",
+      "breadcrumb": "สนามเด็กเล่น",
+      "about": "เกี่ยวกับ",
+      "author": "ผู้เขียน",
+      "access": "การเข้าถึง",
+      "created": "สร้างเมื่อ",
+      "status": "สถานะ",
+      "published": "เผยแพร่แล้ว",
+      "draft": "ฉบับร่าง",
+      "edit_in_editor": "แก้ไขในตัวแก้ไข",
+      "download": "ดาวน์โหลด",
+      "reactions": "ปฏิกิริยา",
+      "exit_fullscreen": "ออก",
+      "fullscreen": "เต็มจอ"
+    }
   }
 }

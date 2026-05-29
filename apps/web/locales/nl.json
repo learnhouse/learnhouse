@@ -31,6 +31,7 @@
     "dutch": "Nederlands",
     "thai": "Thai",
     "bengali": "Bengalees",
+    "slovak": "Slowaaks",
     "loading": "Laden...",
     "search": "Zoeken",
     "all": "Alle",
@@ -67,10 +68,6 @@
         "usergroups": {
           "title": "Standard Functie",
           "description": "Gebruikersgroepen is een premiumfunctie die alleen beschikbaar is voor organisaties met ons Standard-abonnement of hoger. Upgrade om gebruikers in groepen te organiseren voor beter toegangsbeheer."
-        },
-        "api_access": {
-          "title": "Pro Functie",
-          "description": "API-toegang is een premiumfunctie die alleen beschikbaar is voor organisaties met ons Pro-abonnement of hoger. Upgrade om programmatische toegang tot de gegevens van uw organisatie te ontgrendelen."
         },
         "roles": {
           "title": "Pro Functie",
@@ -203,7 +200,11 @@
     "choose_an_organization_to_continue": "Kies een organisatie om door te gaan",
     "for": "voor",
     "powered_by": "Mogelijk gemaakt door",
-    "results": "resultaat"
+    "results": "resultaat",
+    "no_content_yet": "Nog geen inhoud",
+    "other": "Other",
+    "disabled": "Disabled",
+    "store": "Store"
   },
   "banner": {
     "viewing_as_guest": "Je bekijkt {{name}} als gast.",
@@ -2186,7 +2187,6 @@
           "landing": "Landingspagina",
           "branding": "Branding",
           "ai": "AI",
-          "api": "API-toegang",
           "features": "Functies",
           "other": "Overig",
           "domains": "Domeinen",
@@ -2215,10 +2215,6 @@
           "ai": {
             "title": "AI-functies",
             "subtitle": "Configureer AI-mogelijkheden voor je organisatie"
-          },
-          "api": {
-            "title": "API-toegang",
-            "subtitle": "Beheer API-tokens en programmatische toegang"
           },
           "features": {
             "title": "Functies",
@@ -2311,7 +2307,8 @@
           "video_preview_added": "Video-preview toegevoegd",
           "video_preview_error": "Toevoegen van video-preview mislukt",
           "updating_order": "Volgorde van previews bijwerken..."
-        }
+        },
+        "favicon_preview": "Favicon voorbeeld (32×32)"
       },
       "branding": {
         "title": "Branding",
@@ -2373,7 +2370,12 @@
         "toasts": {
           "save_success": "AI-instellingen succesvol bijgewerkt",
           "save_error": "AI-instellingen bijwerken mislukt"
-        }
+        },
+        "ai_copilot": "AI Copilot",
+        "ai_copilot_description": "Let learners ask questions about course content. Uses indexed material to provide grounded answers with source citations.",
+        "feature_editor_description": "AI-powered content editing assistance for course creators.",
+        "feature_activity_description": "AI assistant available within activities to help learners.",
+        "always_on": "Always on"
       },
       "features": {
         "title": "Functie-instellingen",
@@ -2400,6 +2402,14 @@
           "podcasts": {
             "description": "Podcast-creatie en audio-inhoud inschakelen",
             "title": "Podcasts"
+          },
+          "boards": {
+            "title": "Boards",
+            "description": "Create collaborative boards with lists and cards for project management"
+          },
+          "playgrounds": {
+            "title": "Playgrounds",
+            "description": "Create interactive AI-generated experiences for your learners"
           }
         },
         "toasts": {
@@ -2640,7 +2650,8 @@
           "loading_courses": "Cursussen laden...",
           "selected": "Geselecteerd",
           "select": "Selecteer"
-        }
+        },
+        "org_id_not_found": "Organisatie-ID niet gevonden"
       },
       "theme": {
         "primary_color": "Primaire kleur",
@@ -2690,6 +2701,115 @@
         "workos_info": "WorkOS biedt enterprise SSO met SAML- en OIDC-ondersteuning.",
         "workos_org_id": "WorkOS Organisatie-ID",
         "workos_org_id_help": "Dit ID wordt automatisch gegenereerd wanneer u SSO configureert via het setup-portal."
+      },
+      "seo": {
+        "org_seo": {
+          "quick_links": "Snelle links",
+          "important_seo_urls": "Belangrijke SEO-URLs voor uw organisatie",
+          "sitemap": "Sitemap:",
+          "robots_txt": "Robots.txt:",
+          "default_meta_tags": "Standaard meta-tags",
+          "set_default_metadata": "Standaard metadata instellen voor alle paginas",
+          "title_suffix": "Titel-achtervoegsel",
+          "title_suffix_hint": "Toegevoegd aan alle paginatitels, bijv. \" | Mijn Academie\"",
+          "default_description": "Standaardbeschrijving",
+          "default_description_hint": "Fallback-beschrijving wanneer een pagina er geen heeft",
+          "social_open_graph": "Social & Open Graph",
+          "social_open_graph_hint": "Bepaal hoe uw paginas eruitzien bij het delen op sociale media",
+          "default_og_image": "Standaard OG-afbeelding",
+          "default_og_image_hint": "Standaard deelafbeelding voor sociale media (1200x630 aanbevolen)",
+          "twitter_handle": "Twitter-account",
+          "twitter_handle_hint": "Getoond op Twitter-kaarten als het site-account",
+          "search_engine_verification": "Zoekmachine-verificatie",
+          "search_engine_verification_hint": "Eigendom verifiaren bij zoekmachines",
+          "google_search_console": "Google Search Console",
+          "google_search_console_hint": "Verificatiecode van Google Search Console",
+          "indexing_controls": "Indexeringscontroles",
+          "indexing_controls_hint": "Bepaal welke paginas zoekmachines kunnen indexeren",
+          "hide_communities": "Communities verbergen",
+          "hide_communities_hint": "Communitypaginas verbergen voor zoekmachines"
+        },
+        "copied_to_clipboard": "Gekopieerd naar klembord",
+        "save_failed": "SEO-instellingen opslaan mislukt"
+      },
+      "domains": {
+        "title": "Eigen domeinen",
+        "subtitle": "Eigen domeinen configureren",
+        "empty_description": "Voeg uw eigen domein toe voor een merkervaring.",
+        "add_domain": "Domein toevoegen",
+        "domain_name": "Domeinnaam",
+        "enter_domain": "Voer uw domein in",
+        "verify": "Verifieer",
+        "verify_domain": "Domein verifieren",
+        "verifying": "Verifieren...",
+        "verify_dns": "DNS verifieren",
+        "remove": "Verwijderen",
+        "pending": "In afwachting",
+        "active": "Actief",
+        "failed": "Mislukt",
+        "ssl_active": "SSL actief",
+        "failed_add": "Domein kon niet worden toegevoegd",
+        "failed_delete": "Domein kon niet worden verwijderd",
+        "failed_verify": "Domein kon niet worden geverifieerd",
+        "verifying_domain": "Domein wordt geverifieerd...",
+        "domain_verified": "Domein geverifieerd",
+        "domain_added": "Domein toegevoegd",
+        "domain_removed": "Domein verwijderd",
+        "no_domains_yet": "Nog geen eigen domeinen",
+        "add_first_domain": "Voeg uw eerste domein toe",
+        "add_custom_domain": "Eigen domein toevoegen",
+        "add_custom_domain_desc": "Voer het domein in dat u wilt gebruiken.",
+        "domain_label": "Domein",
+        "domain_hint": "Voer een domein of subdomein in (bijv. learn.bedrijf.nl)",
+        "domain_required": "Domein is verplicht",
+        "domain_added_success": "Domein succesvol toegevoegd",
+        "domain_deleted_success": "Domein succesvol verwijderd",
+        "copied_to_clipboard": "Gekopieerd naar klembord",
+        "table_domain": "Domein",
+        "table_status": "Status",
+        "table_ssl": "SSL",
+        "table_added": "Toegevoegd",
+        "table_verified": "Geverifieerd",
+        "table_actions": "Acties",
+        "adding_domain": "Domein toevoegen...",
+        "deleting_domain": "Domein verwijderen...",
+        "dns_config_required": "DNS-configuratie vereist",
+        "dns_config_description": "Voeg deze records toe bij uw domeinregistrar (bijv. Cloudflare, GoDaddy, Namecheap). DNS-wijzigingen kunnen tot 48 uur duren.",
+        "txt_record": "TXT-record",
+        "for_verification": "Voor verificatie",
+        "cname_record": "CNAME-record",
+        "for_routing": "Voor routing",
+        "host_name": "Host / Naam",
+        "value": "Waarde",
+        "value_target": "Waarde / Doel",
+        "ssl_certificate": "SSL-certificaat",
+        "https_status": "HTTPS-status",
+        "check": "Controleren",
+        "checking_ssl": "SSL-status controleren...",
+        "delete_domain_title": "Aangepast domein verwijderen",
+        "delete_domain_confirm": "Weet u zeker dat u dit domein wilt verwijderen? Deze actie kan niet ongedaan worden gemaakt.",
+        "delete_domain": "Domein verwijderen",
+        "verify_domain_desc": "Voeg de volgende DNS-records toe bij uw domeinprovider om eigendom te verifiëren.",
+        "issuer": "Uitgever",
+        "expires": "Verloopt"
+      },
+      "automations": {
+        "webhooks_title": "Webhooks",
+        "webhooks_subtitle": "Stuur realtime meldingen naar externe diensten",
+        "webhooks_description": "Webhook-endpoints ontvangen HTTP POST-verzoeken wanneer er gebeurtenissen plaatsvinden."
+      },
+      "usage": {
+        "plan_resource_usage": "Plan & Gebruik",
+        "courses": "Cursussen",
+        "members_label": "Leden",
+        "admin_seats": "Admin-plaatsen",
+        "unlimited": "Onbeperkt",
+        "ai_credits": "AI-credits",
+        "credit_usage": "Creditgebruik",
+        "base_credits": "Basiscredits",
+        "purchased": "Gekocht",
+        "used": "Gebruikt",
+        "remaining": "Resterend"
       }
     },
     "users": {
@@ -3709,10 +3829,6 @@
         "org_automations": {
           "description": "Webhooks en externe integraties",
           "keywords": "webhooks, automatiseringen, zapier, integraties, triggers"
-        },
-        "org_api": {
-          "description": "API-tokens en programmatische toegang",
-          "keywords": "api, tokens, toegang, programmatisch, sleutels"
         },
         "org_sso": {
           "description": "Single sign-on configuratie",
@@ -4863,9 +4979,7 @@
           "custom_domain": "Eigen domein",
           "custom_domain_desc": "Gebruik uw eigen domein voor een academie met uw merk.",
           "roles": "Aangepaste rollen & machtigingen",
-          "roles_desc": "Bepaal precies wie wat kan doen in uw organisatie.",
-          "api": "API-toegang & webhooks",
-          "api_desc": "Integreer met bestaande tools en automatiseer workflows."
+          "roles_desc": "Bepaal precies wie wat kan doen in uw organisatie."
         }
       }
     }
@@ -4909,5 +5023,36 @@
     "next": "Volgende",
     "previous": "Vorige",
     "showing_page": "Pagina {{current}} van {{total}} weergegeven"
+  },
+  "playgrounds": {
+    "no_playgrounds_yet": "Nog geen playgrounds",
+    "playgrounds_description": "Maak interactieve AI-gegenereerde ervaringen voor uw leerlingen.",
+    "new_playground": "New Playground",
+    "search_placeholder": "Search playgrounds...",
+    "no_results_for": "No results for",
+    "try_different_search": "Try a different search term",
+    "new_playground_modal_title": "New Playground",
+    "new_playground_modal_desc": "Give your playground a name to get started.",
+    "creating": "Creating...",
+    "create": "Create",
+    "failed_create": "Failed to create playground",
+    "view": {
+      "open_editor_to_generate": "Open de editor om inhoud te genereren.",
+      "check_back_later": "Kom later terug.",
+      "open_editor": "Editor openen",
+      "breadcrumb": "Playgrounds",
+      "about": "Over",
+      "author": "Auteur",
+      "access": "Toegang",
+      "created": "Aangemaakt",
+      "status": "Status",
+      "published": "Gepubliceerd",
+      "draft": "Concept",
+      "edit_in_editor": "Bewerken in editor",
+      "download": "Downloaden",
+      "reactions": "Reacties",
+      "exit_fullscreen": "Sluiten",
+      "fullscreen": "Volledig scherm"
+    }
   }
 }
