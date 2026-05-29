@@ -2720,7 +2720,38 @@
         "workos_org_id_help": "Bu kimlik, kurulum portalı aracılığıyla SSO yapılandırdığınızda otomatik olarak oluşturulur."
       },
       "seo": {},
-      "automations": {}
+      "automations": {},
+      "domains": {
+        "domain_required": "Alan adı gereklidir",
+        "domain_added_success": "Alan adı başarıyla eklendi",
+        "domain_deleted_success": "Alan adı başarıyla silindi",
+        "copied_to_clipboard": "Panoya kopyalandı",
+        "table_domain": "Alan Adı",
+        "table_status": "Durum",
+        "table_ssl": "SSL",
+        "table_added": "Eklenme",
+        "table_verified": "Doğrulandı",
+        "table_actions": "İşlemler",
+        "adding_domain": "Alan adı ekleniyor...",
+        "deleting_domain": "Alan adı siliniyor...",
+        "dns_config_required": "DNS yapılandırması gerekli",
+        "dns_config_description": "Bu kayıtları alan adı kayıt şirketinizde ekleyin (ör. Cloudflare, GoDaddy, Namecheap). DNS değişiklikleri 48 saate kadar sürebilir.",
+        "txt_record": "TXT Kaydı",
+        "for_verification": "Doğrulama için",
+        "cname_record": "CNAME Kaydı",
+        "for_routing": "Yönlendirme için",
+        "host_name": "Ana Bilgisayar / Ad",
+        "value": "Değer",
+        "value_target": "Değer / Hedef",
+        "ssl_certificate": "SSL Sertifikası",
+        "https_status": "HTTPS Durumu",
+        "check": "Kontrol Et",
+        "checking_ssl": "SSL durumu kontrol ediliyor...",
+        "delete_domain_title": "Özel alan adını sil",
+        "delete_domain_confirm": "Bu alan adını silmek istediğinizden emin misiniz? Bu işlem geri alınamaz.",
+        "delete_domain": "Alan Adını Sil",
+        "verify_domain_desc": "Sahipliği doğrulamak için alan adı sağlayıcınızda aşağıdaki DNS kayıtlarını ekleyin."
+      }
     },
     "users": {
       "settings": {
@@ -4945,6 +4976,24 @@
     "new_playground_modal_desc": "Give your playground a name to get started.",
     "creating": "Creating...",
     "create": "Create",
-    "failed_create": "Failed to create playground"
+    "failed_create": "Failed to create playground",
+    "view": {
+      "open_editor_to_generate": "İçerik oluşturmak için editörü açın.",
+      "check_back_later": "Daha sonra tekrar kontrol edin.",
+      "open_editor": "Editörü Aç",
+      "breadcrumb": "Oyun Alanları",
+      "about": "Hakkında",
+      "author": "Yazar",
+      "access": "Erişim",
+      "created": "Oluşturulma",
+      "status": "Durum",
+      "published": "Yayınlandı",
+      "draft": "Taslak",
+      "edit_in_editor": "Editörde düzenle",
+      "download": "İndir",
+      "reactions": "Tepkiler",
+      "exit_fullscreen": "Çık",
+      "fullscreen": "Tam ekran"
+    }
   }
 }

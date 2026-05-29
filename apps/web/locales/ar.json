@@ -2709,7 +2709,38 @@
         "workos_org_id_help": "يتم إنشاء هذا المعرف تلقائياً عند تكوين SSO من خلال بوابة الإعداد."
       },
       "seo": {},
-      "automations": {}
+      "automations": {},
+      "domains": {
+        "domain_required": "النطاق مطلوب",
+        "domain_added_success": "تمت إضافة النطاق بنجاح",
+        "domain_deleted_success": "تم حذف النطاق بنجاح",
+        "copied_to_clipboard": "تم النسخ إلى الحافظة",
+        "table_domain": "النطاق",
+        "table_status": "الحالة",
+        "table_ssl": "SSL",
+        "table_added": "تاريخ الإضافة",
+        "table_verified": "تم التحقق",
+        "table_actions": "الإجراءات",
+        "adding_domain": "جاري إضافة النطاق...",
+        "deleting_domain": "جاري حذف النطاق...",
+        "dns_config_required": "مطلوب تكوين DNS",
+        "dns_config_description": "أضف هذه السجلات لدى مسجل النطاق الخاص بك (مثل Cloudflare، GoDaddy، Namecheap). قد تستغرق تغييرات DNS حتى 48 ساعة.",
+        "txt_record": "سجل TXT",
+        "for_verification": "للتحقق",
+        "cname_record": "سجل CNAME",
+        "for_routing": "للتوجيه",
+        "host_name": "المضيف / الاسم",
+        "value": "القيمة",
+        "value_target": "القيمة / الهدف",
+        "ssl_certificate": "شهادة SSL",
+        "https_status": "حالة HTTPS",
+        "check": "تحقق",
+        "checking_ssl": "جاري التحقق من حالة SSL...",
+        "delete_domain_title": "حذف النطاق المخصص",
+        "delete_domain_confirm": "هل أنت متأكد من حذف هذا النطاق؟ لا يمكن التراجع عن هذا الإجراء.",
+        "delete_domain": "حذف النطاق",
+        "verify_domain_desc": "أضف سجلات DNS التالية لدى مزود النطاق الخاص بك للتحقق من الملكية."
+      }
     },
     "users": {
       "settings": {
@@ -4934,6 +4965,24 @@
     "new_playground_modal_desc": "Give your playground a name to get started.",
     "creating": "Creating...",
     "create": "Create",
-    "failed_create": "Failed to create playground"
+    "failed_create": "Failed to create playground",
+    "view": {
+      "open_editor_to_generate": "افتح المحرر لإنشاء المحتوى.",
+      "check_back_later": "تحقق لاحقاً.",
+      "open_editor": "فتح المحرر",
+      "breadcrumb": "الملاعب",
+      "about": "حول",
+      "author": "المؤلف",
+      "access": "الوصول",
+      "created": "تاريخ الإنشاء",
+      "status": "الحالة",
+      "published": "منشور",
+      "draft": "مسودة",
+      "edit_in_editor": "تعديل في المحرر",
+      "download": "تحميل",
+      "reactions": "التفاعلات",
+      "exit_fullscreen": "خروج",
+      "fullscreen": "ملء الشاشة"
+    }
   }
 }

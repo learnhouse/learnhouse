@@ -2718,7 +2718,38 @@
         "workos_org_id_help": "এই ID স্বয়ংক্রিয়ভাবে তৈরি হয় যখন আপনি সেটআপ পোর্টালের মাধ্যমে SSO কনফিগার করেন।"
       },
       "seo": {},
-      "automations": {}
+      "automations": {},
+      "domains": {
+        "domain_required": "ডোমেইন আবশ্যক",
+        "domain_added_success": "ডোমেইন সফলভাবে যোগ করা হয়েছে",
+        "domain_deleted_success": "ডোমেইন সফলভাবে মুছে ফেলা হয়েছে",
+        "copied_to_clipboard": "ক্লিপবোর্ডে কপি করা হয়েছে",
+        "table_domain": "ডোমেইন",
+        "table_status": "অবস্থা",
+        "table_ssl": "SSL",
+        "table_added": "যোগ করা হয়েছে",
+        "table_verified": "যাচাইকৃত",
+        "table_actions": "কার্যক্রম",
+        "adding_domain": "ডোমেইন যোগ করা হচ্ছে...",
+        "deleting_domain": "ডোমেইন মুছে ফেলা হচ্ছে...",
+        "dns_config_required": "DNS কনফিগারেশন প্রয়োজন",
+        "dns_config_description": "আপনার ডোমেইন রেজিস্ট্রারে (যেমন Cloudflare, GoDaddy, Namecheap) এই রেকর্ডগুলি যোগ করুন। DNS পরিবর্তন ৪৮ ঘণ্টা পর্যন্ত সময় নিতে পারে।",
+        "txt_record": "TXT রেকর্ড",
+        "for_verification": "যাচাইয়ের জন্য",
+        "cname_record": "CNAME রেকর্ড",
+        "for_routing": "রাউটিংয়ের জন্য",
+        "host_name": "হোস্ট / নাম",
+        "value": "মান",
+        "value_target": "মান / লক্ষ্য",
+        "ssl_certificate": "SSL সার্টিফিকেট",
+        "https_status": "HTTPS অবস্থা",
+        "check": "পরীক্ষা করুন",
+        "checking_ssl": "SSL অবস্থা পরীক্ষা করা হচ্ছে...",
+        "delete_domain_title": "কাস্টম ডোমেইন মুছুন",
+        "delete_domain_confirm": "আপনি কি নিশ্চিত যে এই ডোমেইনটি মুছতে চান? এই কাজটি পূর্বাবস্থায় ফেরানো যাবে না।",
+        "delete_domain": "ডোমেইন মুছুন",
+        "verify_domain_desc": "মালিকানা যাচাই করতে আপনার ডোমেইন প্রদানকারীতে নিম্নলিখিত DNS রেকর্ডগুলি যোগ করুন।"
+      }
     },
     "users": {
       "settings": {
@@ -4943,6 +4974,24 @@
     "new_playground_modal_desc": "Give your playground a name to get started.",
     "creating": "Creating...",
     "create": "Create",
-    "failed_create": "Failed to create playground"
+    "failed_create": "Failed to create playground",
+    "view": {
+      "open_editor_to_generate": "কন্টেন্ট তৈরি করতে এডিটর খুলুন।",
+      "check_back_later": "পরে আবার দেখুন।",
+      "open_editor": "এডিটর খুলুন",
+      "breadcrumb": "প্লেগ্রাউন্ড",
+      "about": "সম্পর্কে",
+      "author": "লেখক",
+      "access": "অ্যাক্সেস",
+      "created": "তৈরি",
+      "status": "অবস্থা",
+      "published": "প্রকাশিত",
+      "draft": "খসড়া",
+      "edit_in_editor": "এডিটরে সম্পাদনা করুন",
+      "download": "ডাউনলোড",
+      "reactions": "প্রতিক্রিয়া",
+      "exit_fullscreen": "প্রস্থান",
+      "fullscreen": "পূর্ণ স্ক্রিন"
+    }
   }
 }

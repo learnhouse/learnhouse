@@ -2718,7 +2718,38 @@
         "workos_org_id_help": "जब आप सेटअप पोर्टल के माध्यम से SSO कॉन्फ़िगर करते हैं तो यह ID स्वचालित रूप से उत्पन्न होती है।"
       },
       "seo": {},
-      "automations": {}
+      "automations": {},
+      "domains": {
+        "domain_required": "डोमेन आवश्यक है",
+        "domain_added_success": "डोमेन सफलतापूर्वक जोड़ा गया",
+        "domain_deleted_success": "डोमेन सफलतापूर्वक हटाया गया",
+        "copied_to_clipboard": "क्लिपबोर्ड पर कॉपी किया गया",
+        "table_domain": "डोमेन",
+        "table_status": "स्थिति",
+        "table_ssl": "SSL",
+        "table_added": "जोड़ा गया",
+        "table_verified": "सत्यापित",
+        "table_actions": "कार्रवाई",
+        "adding_domain": "डोमेन जोड़ा जा रहा है...",
+        "deleting_domain": "डोमेन हटाया जा रहा है...",
+        "dns_config_required": "DNS कॉन्फ़िगरेशन आवश्यक",
+        "dns_config_description": "अपने डोमेन रजिस्ट्रार (जैसे Cloudflare, GoDaddy, Namecheap) पर ये रिकॉर्ड जोड़ें। DNS परिवर्तन में 48 घंटे तक लग सकते हैं।",
+        "txt_record": "TXT रिकॉर्ड",
+        "for_verification": "सत्यापन के लिए",
+        "cname_record": "CNAME रिकॉर्ड",
+        "for_routing": "रूटिंग के लिए",
+        "host_name": "होस्ट / नाम",
+        "value": "मान",
+        "value_target": "मान / लक्ष्य",
+        "ssl_certificate": "SSL प्रमाणपत्र",
+        "https_status": "HTTPS स्थिति",
+        "check": "जाँचें",
+        "checking_ssl": "SSL स्थिति जाँची जा रही है...",
+        "delete_domain_title": "कस्टम डोमेन हटाएँ",
+        "delete_domain_confirm": "क्या आप वाकई इस डोमेन को हटाना चाहते हैं? यह क्रिया पूर्ववत नहीं की जा सकती।",
+        "delete_domain": "डोमेन हटाएँ",
+        "verify_domain_desc": "स्वामित्व सत्यापित करने के लिए अपने डोमेन प्रदाता पर निम्नलिखित DNS रिकॉर्ड जोड़ें।"
+      }
     },
     "users": {
       "settings": {
@@ -4943,6 +4974,24 @@
     "new_playground_modal_desc": "Give your playground a name to get started.",
     "creating": "Creating...",
     "create": "Create",
-    "failed_create": "Failed to create playground"
+    "failed_create": "Failed to create playground",
+    "view": {
+      "open_editor_to_generate": "सामग्री बनाने के लिए एडिटर खोलें।",
+      "check_back_later": "बाद में फिर से देखें।",
+      "open_editor": "एडिटर खोलें",
+      "breadcrumb": "प्लेग्राउंड",
+      "about": "परिचय",
+      "author": "लेखक",
+      "access": "पहुँच",
+      "created": "बनाया गया",
+      "status": "स्थिति",
+      "published": "प्रकाशित",
+      "draft": "ड्राफ्ट",
+      "edit_in_editor": "एडिटर में संपादित करें",
+      "download": "डाउनलोड",
+      "reactions": "प्रतिक्रियाएँ",
+      "exit_fullscreen": "बाहर निकलें",
+      "fullscreen": "पूर्ण स्क्रीन"
+    }
   }
 }

@@ -281,7 +281,7 @@ const OrgEditFeatures: React.FC = () => {
           {/* Boards Toggle */}
           <FeatureToggle
             id="boards"
-            title="Boards"
+            title={t('dashboard.organization.features.toggles.boards.title')}
             description={t('dashboard.organization.features.toggles.boards.description')}
             enabled={boardsEnabled}
             isUpdating={updatingFeature === 'boards'}
@@ -295,7 +295,7 @@ const OrgEditFeatures: React.FC = () => {
           {/* Playgrounds Toggle */}
           <FeatureToggle
             id="playgrounds"
-            title="Playgrounds"
+            title={t('dashboard.organization.features.toggles.playgrounds.title')}
             description={t('dashboard.organization.features.toggles.playgrounds.description')}
             enabled={playgroundsEnabled}
             isUpdating={updatingFeature === 'playgrounds'}
