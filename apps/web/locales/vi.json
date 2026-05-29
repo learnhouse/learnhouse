@@ -69,10 +69,6 @@
           "title": "Tính năng Standard",
           "description": "Nhóm người dùng là tính năng cao cấp chỉ dành cho các tổ chức sử dụng gói Standard trở lên. Nâng cấp để tổ chức người dùng thành các nhóm để quản lý quyền truy cập tốt hơn."
         },
-        "api_access": {
-          "title": "Tính năng Pro",
-          "description": "Truy cập API là tính năng cao cấp chỉ dành cho các tổ chức sử dụng gói Pro trở lên. Nâng cấp để mở khóa quyền truy cập lập trình vào dữ liệu tổ chức của bạn."
-        },
         "roles": {
           "title": "Tính năng Pro",
           "description": "Tạo vai trò tùy chỉnh là tính năng cao cấp chỉ dành cho các tổ chức sử dụng gói Pro trở lên. Nâng cấp để tạo các vai trò với quyền cụ thể."
@@ -2214,7 +2210,6 @@
           "landing": "Trang đích",
           "branding": "Thương hiệu",
           "ai": "AI",
-          "api": "Truy cập API",
           "features": "Tính năng",
           "other": "Khác",
           "domains": "Tên miền",
@@ -2243,10 +2238,6 @@
           "ai": {
             "title": "Tính năng AI",
             "subtitle": "Cấu hình khả năng AI cho tổ chức của bạn"
-          },
-          "api": {
-            "title": "Truy cập API",
-            "subtitle": "Quản lý token API và truy cập lập trình"
           },
           "features": {
             "title": "Tính năng",
@@ -3749,10 +3740,6 @@
           "description": "Webhook và tích hợp bên ngoài",
           "keywords": "webhook, tự động hóa, zapier, tích hợp, kích hoạt"
         },
-        "org_api": {
-          "description": "Mã API và truy cập lập trình",
-          "keywords": "api, mã, truy cập, lập trình, khóa"
-        },
         "org_sso": {
           "description": "Cấu hình đăng nhập một lần",
           "keywords": "sso, saml, oauth, doanh nghiệp, đăng nhập"
@@ -4902,9 +4889,7 @@
           "custom_domain": "Tên miền tùy chỉnh",
           "custom_domain_desc": "Sử dụng tên miền riêng cho học viện mang thương hiệu của bạn.",
           "roles": "Vai trò và quyền tùy chỉnh",
-          "roles_desc": "Kiểm soát chính xác ai có thể làm gì trong tổ chức của bạn.",
-          "api": "Truy cập API và webhooks",
-          "api_desc": "Tích hợp với các công cụ hiện có và tự động hóa quy trình làm việc."
+          "roles_desc": "Kiểm soát chính xác ai có thể làm gì trong tổ chức của bạn."
         }
       }
     }

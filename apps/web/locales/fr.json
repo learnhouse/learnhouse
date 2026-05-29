@@ -71,10 +71,6 @@
           "title": "Fonctionnalité Standard",
           "description": "Les groupes d'utilisateurs sont une fonctionnalité premium disponible uniquement pour les organisations sur notre plan Standard ou supérieur. Mettez à niveau pour organiser les utilisateurs en groupes pour une meilleure gestion des accès."
         },
-        "api_access": {
-          "title": "Fonctionnalité Pro",
-          "description": "L'accès API est une fonctionnalité premium disponible uniquement pour les organisations sur notre plan Pro ou supérieur. Mettez à niveau pour débloquer l'accès programmatique aux données de votre organisation."
-        },
         "roles": {
           "title": "Fonctionnalité Pro",
           "description": "La création de rôles personnalisés est une fonctionnalité premium disponible uniquement pour les organisations sur notre plan Pro ou supérieur. Mettez à niveau pour créer des rôles avec des permissions spécifiques."
@@ -2191,7 +2187,6 @@
           "landing": "Page d'accueil",
           "branding": "Image de marque",
           "ai": "IA",
-          "api": "Accès API",
           "features": "Fonctionnalités",
           "usage": "Utilisation",
           "other": "Autre",
@@ -2220,10 +2215,6 @@
           "ai": {
             "title": "Fonctionnalités IA",
             "subtitle": "Configurez les capacités IA de votre organisation"
-          },
-          "api": {
-            "title": "Accès API",
-            "subtitle": "Gérez les jetons API et l'accès programmatique"
           },
           "features": {
             "title": "Fonctionnalités",
@@ -2770,37 +2761,6 @@
         "webhooks_title": "Webhooks",
         "webhooks_subtitle": "Envoyer des notifications en temps reel vers des services externes",
         "webhooks_description": "Les endpoints webhook recoivent des requetes HTTP POST lors d'evenements dans votre organisation."
-      },
-      "api_access": {
-        "title": "Acces API",
-        "api_tokens": "Tokens API",
-        "docs_playground": "Documentation & Playground",
-        "something_not_working": "Quelque chose ne fonctionne pas ?",
-        "tokens_description": "Les tokens API permettent un acces securise aux donnees.",
-        "create_token": "Creer un token",
-        "no_tokens_yet": "Aucun token API",
-        "create_first_token": "Creez votre premier token",
-        "create_api_token": "Creer un token API",
-        "token_name_label": "Nom du token *",
-        "description_label": "Description",
-        "expiration_label": "Date d'expiration (optionnel)",
-        "expiration_hint": "Laisser vide pour un token sans expiration",
-        "permissions_label": "Permissions",
-        "read_only": "Lecture seule",
-        "full_access": "Acces complet",
-        "custom": "Personnalise",
-        "cancel": "Annuler",
-        "save_token_warning": "Sauvegardez votre token !",
-        "save_token_hint": "Vous ne verrez ce token qu'une seule fois.",
-        "your_api_token": "Votre token API",
-        "done": "Termine",
-        "create_token_desc": "Creer un nouveau token pour l'acces programmatique.",
-        "token_name": "Nom du token *",
-        "expires": "Expiration",
-        "never": "Jamais",
-        "revoked": "Revoque",
-        "revoke": "Revoquer",
-        "api_docs_title": "Documentation & Playground API"
       },
       "usage": {
         "plan_resource_usage": "Plan & Utilisation",
@@ -3833,10 +3793,6 @@
         "org_automations": {
           "description": "Webhooks et intégrations externes",
           "keywords": "webhooks, automatisations, zapier, intégrations, déclencheurs"
-        },
-        "org_api": {
-          "description": "Jetons API et accès programmatique",
-          "keywords": "api, jetons, accès, programmatique, clés"
         },
         "org_sso": {
           "description": "Configuration de l'authentification unique",
@@ -4987,9 +4943,7 @@
           "custom_domain": "Domaine personnalisé",
           "custom_domain_desc": "Utilisez votre propre domaine pour une académie à votre image.",
           "roles": "Rôles et permissions personnalisés",
-          "roles_desc": "Contrôlez précisément qui peut faire quoi.",
-          "api": "Accès API et webhooks",
-          "api_desc": "Intégrez vos outils existants et automatisez vos workflows."
+          "roles_desc": "Contrôlez précisément qui peut faire quoi."
         }
       }
     }

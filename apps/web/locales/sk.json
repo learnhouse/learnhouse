@@ -74,10 +74,6 @@
           "title": "Štandardná funkcia",
           "description": "Skupiny používateľov sú prémiová funkcia dostupná len pre organizácie na pláne Standard alebo vyššom. Inovujte pre organizovanie používateľov do skupín."
         },
-        "api_access": {
-          "title": "Pro funkcia",
-          "description": "Prístup k API je prémiová funkcia dostupná len pre organizácie na pláne Pro alebo vyššom. Inovujte pre programový prístup k údajom vašej organizácie."
-        },
         "roles": {
           "title": "Pro funkcia",
           "description": "Vytváranie vlastných rolí je prémiová funkcia dostupná len pre organizácie na pláne Pro alebo vyššom. Inovujte pre vytváranie rolí so špecifickými oprávneniami."
@@ -2465,7 +2461,6 @@
           "branding": "Branding",
           "ai": "AI",
           "domains": "Domény",
-          "api": "API prístup",
           "sso": "SSO",
           "features": "Funkcie",
           "usage": "Využitie",
@@ -2493,10 +2488,6 @@
           "ai": {
             "title": "AI funkcie",
             "subtitle": "Nakonfigurujte AI možnosti pre vašu organizáciu"
-          },
-          "api": {
-            "title": "API prístup",
-            "subtitle": "Spravujte API tokeny a programový prístup"
           },
           "domains": {
             "title": "Vlastné domény",
@@ -3043,37 +3034,6 @@
         "webhooks_title": "Webhooky",
         "webhooks_subtitle": "Odosielajte notifikácie o udalostiach v reálnom čase do externých služieb ako Make.com, n8n alebo vaše vlastné API",
         "webhooks_description": "Webhook endpointy prijímajú HTTP POST požiadavky, keď sa vo vašej organizácii udejú udalosti."
-      },
-      "api_access": {
-        "title": "API prístup",
-        "api_tokens": "API tokeny",
-        "docs_playground": "Dokumentácia a ihrisko",
-        "something_not_working": "Niečo nefunguje podľa očakávaní?",
-        "tokens_description": "API tokeny umožňujú externým aplikáciám bezpečný prístup k údajom vašej organizácie.",
-        "create_token": "Vytvoriť token",
-        "no_tokens_yet": "Zatiaľ žiadne API tokeny",
-        "create_first_token": "Vytvorte svoj prvý token pre začatie",
-        "create_api_token": "Vytvoriť API token",
-        "token_name": "Názov tokenu *",
-        "expires": "Platnosť",
-        "never": "Nikdy",
-        "revoked": "Zrušený",
-        "revoke": "Zrušiť",
-        "api_docs_title": "API dokumentácia a ihrisko",
-        "create_token_desc": "Vytvorte nový API token pre programový prístup. Token sa zobrazí len raz.",
-        "token_name_label": "Názov tokenu *",
-        "description_label": "Popis",
-        "expiration_label": "Dátum expirácie (voliteľné)",
-        "expiration_hint": "Nechajte prázdne pre token bez expirácie",
-        "permissions_label": "Oprávnenia",
-        "read_only": "Len čítanie",
-        "full_access": "Plný prístup",
-        "custom": "Vlastné",
-        "cancel": "Zrušiť",
-        "save_token_warning": "Uložte si token teraz!",
-        "save_token_hint": "Toto je jediný raz, kedy uvidíte tento token. Skopírujte ho a bezpečne uložte.",
-        "your_api_token": "Váš API token",
-        "done": "Hotovo"
       },
       "usage": {
         "plan_resource_usage": "Plán a využitie zdrojov",
@@ -4112,10 +4072,6 @@
           "description": "Webhooky a externe integracie",
           "keywords": "webhooky, automatizacie, integracie"
         },
-        "org_api": {
-          "description": "API tokeny a programovy pristup",
-          "keywords": "api, tokeny, pristup, kluce"
-        },
         "org_sso": {
           "description": "Konfiguracia jednotneho prihlasenia",
           "keywords": "sso, saml, oauth, enterprise"
@@ -5003,9 +4959,7 @@
           "custom_domain": "Vlastná doména",
           "custom_domain_desc": "Použite vlastnú doménu pre plne brandovanú akadémiu.",
           "roles": "Vlastné roly a oprávnenia",
-          "roles_desc": "Kontrolujte presne, kto môže čo robiť vo vašej organizácii.",
-          "api": "Prístup k API a webhooky",
-          "api_desc": "Integrujte s existujúcimi nástrojmi a automatizujte pracovné postupy."
+          "roles_desc": "Kontrolujte presne, kto môže čo robiť vo vašej organizácii."
         }
       }
     }
