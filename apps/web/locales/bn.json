@@ -33,6 +33,7 @@
     "dutch": "ডাচ",
     "thai": "থাই",
     "bengali": "বাংলা",
+    "slovak": "স্লোভাক",
     "loading": "লোড হচ্ছে...",
     "search": "অনুসন্ধান",
     "all": "সব",
@@ -69,10 +70,6 @@
         "usergroups": {
           "title": "স্ট্যান্ডার্ড ফিচার",
           "description": "ইউজার গ্রুপ একটি প্রিমিয়াম ফিচার যা শুধুমাত্র স্ট্যান্ডার্ড প্ল্যান বা তার উপরের সংস্থাগুলির জন্য উপলব্ধ। উন্নত অ্যাক্সেস ম্যানেজমেন্টের জন্য ব্যবহারকারীদের গ্রুপে সংগঠিত করতে আপগ্রেড করুন।"
-        },
-        "api_access": {
-          "title": "প্রো ফিচার",
-          "description": "API অ্যাক্সেস একটি প্রিমিয়াম ফিচার যা শুধুমাত্র প্রো প্ল্যান বা তার উপরের সংস্থাগুলির জন্য উপলব্ধ। আপনার সংস্থার ডেটায় প্রোগ্রামেটিক অ্যাক্সেস আনলক করতে আপগ্রেড করুন।"
         },
         "roles": {
           "title": "প্রো ফিচার",
@@ -203,7 +200,11 @@
     "choose_an_organization_to_continue": "চালিয়ে যেতে একটি সংস্থা নির্বাচন করুন",
     "for": "জন্য",
     "powered_by": "দ্বারা চালিত",
-    "results": "ফলাফল"
+    "results": "ফলাফল",
+    "no_content_yet": "এখনো কোনো বিষয়বস্তু নেই",
+    "other": "Other",
+    "disabled": "Disabled",
+    "store": "Store"
   },
   "banner": {
     "viewing_as_guest": "আপনি {{name}} অতিথি হিসেবে দেখছেন।",
@@ -2209,7 +2210,6 @@
           "landing": "ল্যান্ডিং পেজ",
           "branding": "ব্র্যান্ডিং",
           "ai": "AI",
-          "api": "API অ্যাক্সেস",
           "features": "ফিচার",
           "usage": "ব্যবহার",
           "other": "অন্যান্য",
@@ -2238,10 +2238,6 @@
           "ai": {
             "title": "AI ফিচার",
             "subtitle": "আপনার সংস্থার জন্য AI সক্ষমতা কনফিগার করুন"
-          },
-          "api": {
-            "title": "API অ্যাক্সেস",
-            "subtitle": "API টোকেন এবং প্রোগ্রাম্যাটিক অ্যাক্সেস পরিচালনা করুন"
           },
           "features": {
             "title": "ফিচার",
@@ -2332,7 +2328,8 @@
           "video_preview_added": "ভিডিও প্রিভিউ যোগ করা হয়েছে",
           "video_preview_error": "ভিডিও প্রিভিউ যোগ করতে ব্যর্থ",
           "updating_order": "প্রিভিউ ক্রম আপডেট করা হচ্ছে..."
-        }
+        },
+        "favicon_preview": "ফেভিকন প্রিভিউ (32×32)"
       },
       "branding": {
         "title": "ব্র্যান্ডিং",
@@ -2421,6 +2418,14 @@
           "podcasts": {
             "description": "আপনার সংস্থার জন্য পডকাস্ট তৈরি এবং অডিও কন্টেন্ট সক্রিয় করুন",
             "title": "পডকাস্ট"
+          },
+          "boards": {
+            "title": "Boards",
+            "description": "Create collaborative boards with lists and cards for project management"
+          },
+          "playgrounds": {
+            "title": "Playgrounds",
+            "description": "Create interactive AI-generated experiences for your learners"
           }
         },
         "toasts": {
@@ -2661,7 +2666,8 @@
           "loading_courses": "কোর্সসমূহ লোড হচ্ছে...",
           "selected": "নির্বাচিত",
           "select": "নির্বাচন করুন"
-        }
+        },
+        "org_id_not_found": "সংস্থার ID পাওয়া যায়নি"
       },
       "theme": {
         "primary_color": "প্রাথমিক রঙ",
@@ -2711,6 +2717,44 @@
         "workos_info": "WorkOS SAML এবং OIDC আইডেন্টিটি প্রোভাইডারের জন্য সমর্থন সহ এন্টারপ্রাইজ SSO প্রদান করে।",
         "workos_org_id": "WorkOS Organization ID",
         "workos_org_id_help": "এই ID স্বয়ংক্রিয়ভাবে তৈরি হয় যখন আপনি সেটআপ পোর্টালের মাধ্যমে SSO কনফিগার করেন।"
+      },
+      "seo": {
+        "copied_to_clipboard": "ক্লিপবোর্ডে কপি করা হয়েছে",
+        "save_failed": "SEO সেটিংস সংরক্ষণ ব্যর্থ"
+      },
+      "automations": {},
+      "domains": {
+        "domain_required": "ডোমেইন আবশ্যক",
+        "domain_added_success": "ডোমেইন সফলভাবে যোগ করা হয়েছে",
+        "domain_deleted_success": "ডোমেইন সফলভাবে মুছে ফেলা হয়েছে",
+        "copied_to_clipboard": "ক্লিপবোর্ডে কপি করা হয়েছে",
+        "table_domain": "ডোমেইন",
+        "table_status": "অবস্থা",
+        "table_ssl": "SSL",
+        "table_added": "যোগ করা হয়েছে",
+        "table_verified": "যাচাইকৃত",
+        "table_actions": "কার্যক্রম",
+        "adding_domain": "ডোমেইন যোগ করা হচ্ছে...",
+        "deleting_domain": "ডোমেইন মুছে ফেলা হচ্ছে...",
+        "dns_config_required": "DNS কনফিগারেশন প্রয়োজন",
+        "dns_config_description": "আপনার ডোমেইন রেজিস্ট্রারে (যেমন Cloudflare, GoDaddy, Namecheap) এই রেকর্ডগুলি যোগ করুন। DNS পরিবর্তন ৪৮ ঘণ্টা পর্যন্ত সময় নিতে পারে।",
+        "txt_record": "TXT রেকর্ড",
+        "for_verification": "যাচাইয়ের জন্য",
+        "cname_record": "CNAME রেকর্ড",
+        "for_routing": "রাউটিংয়ের জন্য",
+        "host_name": "হোস্ট / নাম",
+        "value": "মান",
+        "value_target": "মান / লক্ষ্য",
+        "ssl_certificate": "SSL সার্টিফিকেট",
+        "https_status": "HTTPS অবস্থা",
+        "check": "পরীক্ষা করুন",
+        "checking_ssl": "SSL অবস্থা পরীক্ষা করা হচ্ছে...",
+        "delete_domain_title": "কাস্টম ডোমেইন মুছুন",
+        "delete_domain_confirm": "আপনি কি নিশ্চিত যে এই ডোমেইনটি মুছতে চান? এই কাজটি পূর্বাবস্থায় ফেরানো যাবে না।",
+        "delete_domain": "ডোমেইন মুছুন",
+        "verify_domain_desc": "মালিকানা যাচাই করতে আপনার ডোমেইন প্রদানকারীতে নিম্নলিখিত DNS রেকর্ডগুলি যোগ করুন।",
+        "issuer": "ইস্যুকারী",
+        "expires": "মেয়াদ শেষ"
       }
     },
     "users": {
@@ -3730,10 +3774,6 @@
         "org_automations": {
           "description": "ওয়েবহুক এবং বাহ্যিক ইন্টিগ্রেশন",
           "keywords": "ওয়েবহুক, অটোমেশন, zapier, ইন্টিগ্রেশন, ট্রিগার"
-        },
-        "org_api": {
-          "description": "API টোকেন এবং প্রোগ্রামেটিক অ্যাক্সেস",
-          "keywords": "api, টোকেন, অ্যাক্সেস, প্রোগ্রামেটিক, কী"
         },
         "org_sso": {
           "description": "সিঙ্গেল সাইন-অন কনফিগারেশন",
@@ -4884,9 +4924,7 @@
           "custom_domain": "কাস্টম ডোমেইন",
           "custom_domain_desc": "সম্পূর্ণ ব্র্যান্ডেড একাডেমির জন্য নিজের ডোমেইন ব্যবহার করুন।",
           "roles": "কাস্টম ভূমিকা ও অনুমতি",
-          "roles_desc": "আপনার সংস্থায় কে কী করতে পারে তা নিয়ন্ত্রণ করুন।",
-          "api": "API অ্যাক্সেস ও webhooks",
-          "api_desc": "আপনার বিদ্যমান টুলের সাথে সংযুক্ত করুন এবং ওয়ার্কফ্লো স্বয়ংক্রিয় করুন।"
+          "roles_desc": "আপনার সংস্থায় কে কী করতে পারে তা নিয়ন্ত্রণ করুন।"
         }
       }
     }
@@ -4930,5 +4968,36 @@
     "next": "পরবর্তী",
     "previous": "আগের",
     "showing_page": "{{total}}-এর মধ্যে পৃষ্ঠা {{current}} দেখানো হচ্ছে"
+  },
+  "playgrounds": {
+    "no_playgrounds_yet": "এখনো কোনো প্লেগ্রাউন্ড নেই",
+    "playgrounds_description": "আপনার শিক্ষার্থীদের জন্য AI-জেনারেটেড ইন্টারেক্টিভ অভিজ্ঞতা তৈরি করুন।",
+    "new_playground": "New Playground",
+    "search_placeholder": "Search playgrounds...",
+    "no_results_for": "No results for",
+    "try_different_search": "Try a different search term",
+    "new_playground_modal_title": "New Playground",
+    "new_playground_modal_desc": "Give your playground a name to get started.",
+    "creating": "Creating...",
+    "create": "Create",
+    "failed_create": "Failed to create playground",
+    "view": {
+      "open_editor_to_generate": "কন্টেন্ট তৈরি করতে এডিটর খুলুন।",
+      "check_back_later": "পরে আবার দেখুন।",
+      "open_editor": "এডিটর খুলুন",
+      "breadcrumb": "প্লেগ্রাউন্ড",
+      "about": "সম্পর্কে",
+      "author": "লেখক",
+      "access": "অ্যাক্সেস",
+      "created": "তৈরি",
+      "status": "অবস্থা",
+      "published": "প্রকাশিত",
+      "draft": "খসড়া",
+      "edit_in_editor": "এডিটরে সম্পাদনা করুন",
+      "download": "ডাউনলোড",
+      "reactions": "প্রতিক্রিয়া",
+      "exit_fullscreen": "প্রস্থান",
+      "fullscreen": "পূর্ণ স্ক্রিন"
+    }
   }
 }

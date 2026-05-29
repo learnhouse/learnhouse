@@ -206,11 +206,11 @@ const OrgEditAPIAccess: React.FC = () => {
       <div className="flex flex-col gap-0">
         <div className="flex flex-col bg-gray-50 -space-y-1 px-5 py-3 mx-3 mb-3 rounded-md">
           <h1 className="font-bold text-xl text-gray-800">
-            {activeTab === 'tokens' ? 'API Access' : 'API Documentation & Playground'}
+            {activeTab === 'tokens' ? t('dashboard.organization.api_access.title') : t('dashboard.organization.api_access.api_docs_title')}
           </h1>
           <h2 className="text-gray-500 text-md">
             {activeTab === 'tokens'
-              ? 'Manage API tokens and programmatic access to your organization'
+              ? t('dashboard.organization.settings.pages.api.subtitle')
               : 'Explore and test API endpoints using your API tokens'}
           </h2>
         </div>
@@ -224,7 +224,7 @@ const OrgEditAPIAccess: React.FC = () => {
             </TabsTrigger>
             <TabsTrigger value="documentation" className="flex items-center gap-2">
               <BookOpen size={16} />
-              Documentation & Playground
+              {t('dashboard.organization.api_access.docs_playground')}
             </TabsTrigger>
           </TabsList>
           <a
@@ -235,7 +235,7 @@ const OrgEditAPIAccess: React.FC = () => {
             title="Contact LearnHouse support"
           >
             <LifeBuoy size={14} />
-            Something not working as expected?
+            {t('dashboard.organization.api_access.something_not_working')}
           </a>
         </div>
 
@@ -243,14 +243,14 @@ const OrgEditAPIAccess: React.FC = () => {
           <div className="pb-4">
             <div className="flex justify-between items-center mb-4">
               <p className="text-sm text-gray-600">
-                API tokens allow external applications to access your organization&apos;s data securely.
+                {t('dashboard.organization.api_access.tokens_description')}
               </p>
               <Button
                 onClick={() => setIsCreateDialogOpen(true)}
                 className="bg-black text-white hover:bg-black/90"
               >
                 <Plus size={16} className="mr-2" />
-                Create Token
+                {t('dashboard.organization.api_access.create_token')}
               </Button>
             </div>
 
@@ -361,8 +361,8 @@ const OrgEditAPIAccess: React.FC = () => {
             ) : (
               <div className="text-center py-12 text-gray-500">
                 <Key size={48} className="mx-auto mb-4 opacity-50" />
-                <p>No API tokens yet</p>
-                <p className="text-sm">Create your first token to get started</p>
+                <p>{t('dashboard.organization.api_access.no_tokens_yet')}</p>
+                <p className="text-sm">{t('dashboard.organization.api_access.create_first_token')}</p>
               </div>
             )}
           </div>
@@ -379,9 +379,9 @@ const OrgEditAPIAccess: React.FC = () => {
       <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
         <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader className="px-6 pt-6">
-            <DialogTitle>Create API Token</DialogTitle>
+            <DialogTitle>{t('dashboard.organization.api_access.create_api_token')}</DialogTitle>
             <DialogDescription>
-              Create a new API token for programmatic access. The token will only be shown once.
+              {t('dashboard.organization.api_access.create_token_desc')}
             </DialogDescription>
           </DialogHeader>
 
@@ -391,16 +391,16 @@ const OrgEditAPIAccess: React.FC = () => {
                 <div className="flex items-start gap-3">
                   <AlertTriangle className="text-yellow-600 flex-shrink-0 mt-0.5" size={20} />
                   <div>
-                    <p className="font-medium text-yellow-800">Save your token now!</p>
+                    <p className="font-medium text-yellow-800">{t('dashboard.organization.api_access.save_token_warning')}</p>
                     <p className="text-sm text-yellow-700">
-                      This is the only time you&apos;ll see this token. Copy it and store it securely.
+                      {t('dashboard.organization.api_access.save_token_hint')}
                     </p>
                   </div>
                 </div>
               </div>
 
               <div className="space-y-2">
-                <Label>Your API Token</Label>
+                <Label>{t('dashboard.organization.api_access.your_api_token')}</Label>
                 <div className="flex gap-2">
                   <Input
                     type={showTokenValue ? 'text' : 'password'}
@@ -433,14 +433,14 @@ const OrgEditAPIAccess: React.FC = () => {
                     setShowTokenValue(false)
                   }}
                 >
-                  Done
+                  {t('dashboard.organization.api_access.done')}
                 </Button>
               </DialogFooter>
             </div>
           ) : (
             <div className="px-6 pb-6 space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="tokenName">Token Name *</Label>
+                <Label htmlFor="tokenName">{t('dashboard.organization.api_access.token_name_label')}</Label>
                 <Input
                   id="tokenName"
                   value={tokenName}
@@ -451,7 +451,7 @@ const OrgEditAPIAccess: React.FC = () => {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="tokenDescription">Description</Label>
+                <Label htmlFor="tokenDescription">{t('dashboard.organization.api_access.description_label')}</Label>
                 <Textarea
                   id="tokenDescription"
                   value={tokenDescription}
@@ -462,18 +462,18 @@ const OrgEditAPIAccess: React.FC = () => {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="tokenExpiry">Expiration Date (optional)</Label>
+                <Label htmlFor="tokenExpiry">{t('dashboard.organization.api_access.expiration_label')}</Label>
                 <Input
                   id="tokenExpiry"
                   type="datetime-local"
                   value={tokenExpiry}
                   onChange={(e) => setTokenExpiry(e.target.value)}
                 />
-                <p className="text-xs text-gray-500">Leave empty for a token that never expires</p>
+                <p className="text-xs text-gray-500">{t('dashboard.organization.api_access.expiration_hint')}</p>
               </div>
 
               <div className="space-y-3">
-                <Label>Permissions</Label>
+                <Label>{t('dashboard.organization.api_access.permissions_label')}</Label>
                 <div className="flex gap-2">
                   <Button
                     type="button"
@@ -481,7 +481,7 @@ const OrgEditAPIAccess: React.FC = () => {
                     size="sm"
                     onClick={() => handlePresetChange('readonly')}
                   >
-                    Read Only
+                    {t('dashboard.organization.api_access.read_only')}
                   </Button>
                   <Button
                     type="button"
@@ -489,7 +489,7 @@ const OrgEditAPIAccess: React.FC = () => {
                     size="sm"
                     onClick={() => handlePresetChange('full')}
                   >
-                    Full Access
+                    {t('dashboard.organization.api_access.full_access')}
                   </Button>
                   <Button
                     type="button"
@@ -497,7 +497,7 @@ const OrgEditAPIAccess: React.FC = () => {
                     size="sm"
                     onClick={() => handlePresetChange('custom')}
                   >
-                    Custom
+                    {t('dashboard.organization.api_access.custom')}
                   </Button>
                 </div>
 
@@ -508,9 +508,9 @@ const OrgEditAPIAccess: React.FC = () => {
 
               <DialogFooter>
                 <Button variant="outline" onClick={() => setIsCreateDialogOpen(false)}>
-                  Cancel
+                  {t('dashboard.organization.api_access.cancel')}
                 </Button>
-                <Button onClick={handleCreateToken}>Create Token</Button>
+                <Button onClick={handleCreateToken}>{t('dashboard.organization.api_access.create_token')}</Button>
               </DialogFooter>
             </div>
           )}

@@ -581,7 +581,7 @@ export default function OrgEditBranding() {
                         )}
                         style={{ backgroundImage: `url(${localFavicon || ((org?.config?.config?.customization?.general?.favicon_image || org?.config?.config?.general?.favicon_image) ? getOrgFaviconMediaDirectory(org?.org_uuid, org?.config?.config?.customization?.general?.favicon_image || org?.config?.config?.general?.favicon_image) : '')})` }}
                       />
-                      <p className="text-xs text-gray-400">Favicon preview (32×32)</p>
+                      <p className="text-xs text-gray-400">{t('dashboard.organization.images.favicon_preview')}</p>
                     </div>
 
                     <div className="flex flex-col items-center space-y-4">

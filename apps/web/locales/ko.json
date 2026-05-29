@@ -31,6 +31,7 @@
     "dutch": "네덜란드어",
     "thai": "태국어",
     "bengali": "뱅골어",
+    "slovak": "슬로바키아어",
     "loading": "로딩 중...",
     "search": "검색",
     "all": "전체",
@@ -67,10 +68,6 @@
         "usergroups": {
           "title": "스탠다드 기능",
           "description": "사용자 그룹은 스탠다드 플랜 이상의 조직에서만 사용할 수 있는 프리미엄 기능입니다. 업그레이드하여 더 나은 접근 관리를 위해 사용자를 그룹으로 구성하세요."
-        },
-        "api_access": {
-          "title": "프로 기능",
-          "description": "API 액세스는 프로 플랜 이상의 조직에서만 사용할 수 있는 프리미엄 기능입니다. 업그레이드하여 조직 데이터에 대한 프로그래밍 방식 액세스를 잠금 해제하세요."
         },
         "roles": {
           "title": "프로 기능",
@@ -203,7 +200,11 @@
     "choose_an_organization_to_continue": "계속하려면 조직을 선택하세요",
     "for": "대상",
     "powered_by": "제공",
-    "results": "결과"
+    "results": "결과",
+    "no_content_yet": "아직 콘텐츠가 없습니다",
+    "other": "Other",
+    "disabled": "Disabled",
+    "store": "Store"
   },
   "banner": {
     "viewing_as_guest": "{{name}}을(를) 게스트로 보고 있습니다.",
@@ -2196,7 +2197,6 @@
           "landing": "랜딩 페이지",
           "branding": "브랜딩",
           "ai": "AI",
-          "api": "API 접근",
           "features": "기능",
           "other": "기타",
           "domains": "도메인",
@@ -2225,10 +2225,6 @@
           "ai": {
             "title": "AI 기능",
             "subtitle": "조직의 AI 기능을 구성합니다"
-          },
-          "api": {
-            "title": "API 접근",
-            "subtitle": "API 토큰 및 프로그래밍 방식 접근 관리"
           },
           "features": {
             "title": "기능",
@@ -2321,7 +2317,8 @@
           "video_preview_added": "동영상 미리보기가 추가되었습니다",
           "video_preview_error": "동영상 미리보기 추가에 실패했습니다",
           "updating_order": "미리보기 순서를 업데이트하는 중..."
-        }
+        },
+        "favicon_preview": "파비콘 미리보기 (32×32)"
       },
       "branding": {
         "title": "브랜딩",
@@ -2434,6 +2431,14 @@
           "podcasts": {
             "description": "조직의 팟캐스트 제작 및 오디오 콘텐츠 활성화",
             "title": "팟캐스트"
+          },
+          "boards": {
+            "title": "Boards",
+            "description": "Create collaborative boards with lists and cards for project management"
+          },
+          "playgrounds": {
+            "title": "Playgrounds",
+            "description": "Create interactive AI-generated experiences for your learners"
           }
         },
         "toasts": {
@@ -2650,7 +2655,8 @@
           "loading_courses": "코스를 불러오는 중...",
           "selected": "선택됨",
           "select": "선택"
-        }
+        },
+        "org_id_not_found": "조직 ID를 찾을 수 없습니다"
       },
       "theme": {
         "primary_color": "기본 색상",
@@ -2700,6 +2706,44 @@
         "workos_info": "WorkOS는 SAML 및 OIDC ID 제공자를 지원하는 엔터프라이즈 SSO를 제공합니다.",
         "workos_org_id": "WorkOS 조직 ID",
         "workos_org_id_help": "이 ID는 설정 포털을 통해 SSO를 구성하면 자동으로 생성됩니다."
+      },
+      "seo": {
+        "copied_to_clipboard": "클립보드에 복사되었습니다",
+        "save_failed": "SEO 설정 저장에 실패했습니다"
+      },
+      "automations": {},
+      "domains": {
+        "domain_required": "도메인은 필수입니다",
+        "domain_added_success": "도메인이 성공적으로 추가되었습니다",
+        "domain_deleted_success": "도메인이 성공적으로 삭제되었습니다",
+        "copied_to_clipboard": "클립보드에 복사되었습니다",
+        "table_domain": "도메인",
+        "table_status": "상태",
+        "table_ssl": "SSL",
+        "table_added": "추가일",
+        "table_verified": "확인됨",
+        "table_actions": "작업",
+        "adding_domain": "도메인 추가 중...",
+        "deleting_domain": "도메인 삭제 중...",
+        "dns_config_required": "DNS 설정 필요",
+        "dns_config_description": "도메인 등록기관(예: Cloudflare, GoDaddy, Namecheap)에서 이 레코드를 추가하세요. DNS 변경은 최대 48시간이 걸릴 수 있습니다.",
+        "txt_record": "TXT 레코드",
+        "for_verification": "확인용",
+        "cname_record": "CNAME 레코드",
+        "for_routing": "라우팅용",
+        "host_name": "호스트 / 이름",
+        "value": "값",
+        "value_target": "값 / 대상",
+        "ssl_certificate": "SSL 인증서",
+        "https_status": "HTTPS 상태",
+        "check": "확인",
+        "checking_ssl": "SSL 상태 확인 중...",
+        "delete_domain_title": "사용자 정의 도메인 삭제",
+        "delete_domain_confirm": "이 도메인을 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다.",
+        "delete_domain": "도메인 삭제",
+        "verify_domain_desc": "소유권을 확인하기 위해 도메인 제공업체에서 다음 DNS 레코드를 추가하세요.",
+        "issuer": "발급자",
+        "expires": "만료"
       }
     },
     "users": {
@@ -3719,10 +3763,6 @@
         "org_automations": {
           "description": "웹훅 및 외부 통합",
           "keywords": "웹훅, 자동화, zapier, 통합, 트리거"
-        },
-        "org_api": {
-          "description": "API 토큰 및 프로그래밍 액세스",
-          "keywords": "api, 토큰, 액세스, 프로그래밍, 키"
         },
         "org_sso": {
           "description": "싱글 사인온 구성",
@@ -4873,9 +4913,7 @@
           "custom_domain": "커스텀 도메인",
           "custom_domain_desc": "브랜드 아카데미를 위해 자체 도메인을 사용하세요.",
           "roles": "맞춤 역할 및 권한",
-          "roles_desc": "조직에서 누가 무엇을 할 수 있는지 정확하게 제어하세요.",
-          "api": "API 액세스 및 Webhooks",
-          "api_desc": "기존 도구와 통합하고 워크플로를 자동화하세요."
+          "roles_desc": "조직에서 누가 무엇을 할 수 있는지 정확하게 제어하세요."
         }
       }
     }
@@ -4919,5 +4957,36 @@
     "next": "다음",
     "previous": "이전",
     "showing_page": "{{total}}페이지 중 {{current}}페이지 표시"
+  },
+  "playgrounds": {
+    "no_playgrounds_yet": "아직 플레이그라운드가 없습니다",
+    "playgrounds_description": "학습자를 위한 AI 생성 인터랙티브 경험을 만드세요.",
+    "new_playground": "New Playground",
+    "search_placeholder": "Search playgrounds...",
+    "no_results_for": "No results for",
+    "try_different_search": "Try a different search term",
+    "new_playground_modal_title": "New Playground",
+    "new_playground_modal_desc": "Give your playground a name to get started.",
+    "creating": "Creating...",
+    "create": "Create",
+    "failed_create": "Failed to create playground",
+    "view": {
+      "open_editor_to_generate": "에디터를 열어 콘텐츠를 생성하세요.",
+      "check_back_later": "나중에 다시 확인하세요.",
+      "open_editor": "에디터 열기",
+      "breadcrumb": "플레이그라운드",
+      "about": "소개",
+      "author": "작성자",
+      "access": "접근",
+      "created": "생성일",
+      "status": "상태",
+      "published": "게시됨",
+      "draft": "초안",
+      "edit_in_editor": "에디터에서 편집",
+      "download": "다운로드",
+      "reactions": "반응",
+      "exit_fullscreen": "종료",
+      "fullscreen": "전체 화면"
+    }
   }
 }

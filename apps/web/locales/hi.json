@@ -33,6 +33,7 @@
     "dutch": "डच",
     "thai": "थाई",
     "bengali": "बंगाली",
+    "slovak": "स्लोवाक",
     "loading": "लोड हो रहा है...",
     "search": "खोजें",
     "all": "सभी",
@@ -69,10 +70,6 @@
         "usergroups": {
           "title": "स्टैंडर्ड सुविधा",
           "description": "उपयोगकर्ता समूह एक प्रीमियम सुविधा है जो केवल स्टैंडर्ड प्लान या उससे ऊपर के संगठनों के लिए उपलब्ध है। बेहतर एक्सेस प्रबंधन के लिए उपयोगकर्ताओं को समूहों में व्यवस्थित करने के लिए अपग्रेड करें।"
-        },
-        "api_access": {
-          "title": "प्रो सुविधा",
-          "description": "API एक्सेस एक प्रीमियम सुविधा है जो केवल प्रो प्लान या उससे ऊपर के संगठनों के लिए उपलब्ध है। अपने संगठन के डेटा तक प्रोग्रामेटिक एक्सेस अनलॉक करने के लिए अपग्रेड करें।"
         },
         "roles": {
           "title": "प्रो सुविधा",
@@ -203,7 +200,11 @@
     "choose_an_organization_to_continue": "जारी रखने के लिए एक संगठन चुनें",
     "for": "के लिए",
     "powered_by": "द्वारा संचालित",
-    "results": "परिणाम"
+    "results": "परिणाम",
+    "no_content_yet": "अभी तक कोई सामग्री नहीं",
+    "other": "Other",
+    "disabled": "Disabled",
+    "store": "Store"
   },
   "banner": {
     "viewing_as_guest": "आप {{name}} को अतिथि के रूप में देख रहे हैं।",
@@ -2209,7 +2210,6 @@
           "landing": "लैंडिंग पेज",
           "branding": "ब्रांडिंग",
           "ai": "AI",
-          "api": "API एक्सेस",
           "features": "सुविधाएं",
           "usage": "उपयोग",
           "other": "अन्य",
@@ -2238,10 +2238,6 @@
           "ai": {
             "title": "AI सुविधाएं",
             "subtitle": "अपने संगठन के लिए AI क्षमताओं को कॉन्फ़िगर करें"
-          },
-          "api": {
-            "title": "API एक्सेस",
-            "subtitle": "API टोकन और प्रोग्रामेटिक एक्सेस प्रबंधित करें"
           },
           "features": {
             "title": "सुविधाएं",
@@ -2332,7 +2328,8 @@
           "video_preview_added": "वीडियो पूर्वावलोकन जोड़ा गया",
           "video_preview_error": "वीडियो पूर्वावलोकन जोड़ने में विफल",
           "updating_order": "पूर्वावलोकन क्रम अपडेट किया जा रहा है..."
-        }
+        },
+        "favicon_preview": "Favicon पूर्वावलोकन (32×32)"
       },
       "branding": {
         "title": "ब्रांडिंग",
@@ -2421,6 +2418,14 @@
           "podcasts": {
             "description": "अपने संगठन के लिए पॉडकास्ट निर्माण और ऑडियो सामग्री सक्षम करें",
             "title": "पॉडकास्ट"
+          },
+          "boards": {
+            "title": "Boards",
+            "description": "Create collaborative boards with lists and cards for project management"
+          },
+          "playgrounds": {
+            "title": "Playgrounds",
+            "description": "Create interactive AI-generated experiences for your learners"
           }
         },
         "toasts": {
@@ -2637,7 +2642,8 @@
           "loading_courses": "कोर्स लोड हो रहे हैं...",
           "selected": "चयनित",
           "select": "चुनें"
-        }
+        },
+        "org_id_not_found": "संगठन ID नहीं मिली"
       },
       "theme": {
         "primary_color": "प्राथमिक रंग",
@@ -2711,6 +2717,44 @@
         "workos_info": "WorkOS, SAML और OIDC पहचान प्रदाताओं के समर्थन के साथ एंटरप्राइज़ SSO प्रदान करता है।",
         "workos_org_id": "WorkOS Organization ID",
         "workos_org_id_help": "जब आप सेटअप पोर्टल के माध्यम से SSO कॉन्फ़िगर करते हैं तो यह ID स्वचालित रूप से उत्पन्न होती है।"
+      },
+      "seo": {
+        "copied_to_clipboard": "क्लिपबोर्ड पर कॉपी किया गया",
+        "save_failed": "SEO सेटिंग्स सहेजने में विफल"
+      },
+      "automations": {},
+      "domains": {
+        "domain_required": "डोमेन आवश्यक है",
+        "domain_added_success": "डोमेन सफलतापूर्वक जोड़ा गया",
+        "domain_deleted_success": "डोमेन सफलतापूर्वक हटाया गया",
+        "copied_to_clipboard": "क्लिपबोर्ड पर कॉपी किया गया",
+        "table_domain": "डोमेन",
+        "table_status": "स्थिति",
+        "table_ssl": "SSL",
+        "table_added": "जोड़ा गया",
+        "table_verified": "सत्यापित",
+        "table_actions": "कार्रवाई",
+        "adding_domain": "डोमेन जोड़ा जा रहा है...",
+        "deleting_domain": "डोमेन हटाया जा रहा है...",
+        "dns_config_required": "DNS कॉन्फ़िगरेशन आवश्यक",
+        "dns_config_description": "अपने डोमेन रजिस्ट्रार (जैसे Cloudflare, GoDaddy, Namecheap) पर ये रिकॉर्ड जोड़ें। DNS परिवर्तन में 48 घंटे तक लग सकते हैं।",
+        "txt_record": "TXT रिकॉर्ड",
+        "for_verification": "सत्यापन के लिए",
+        "cname_record": "CNAME रिकॉर्ड",
+        "for_routing": "रूटिंग के लिए",
+        "host_name": "होस्ट / नाम",
+        "value": "मान",
+        "value_target": "मान / लक्ष्य",
+        "ssl_certificate": "SSL प्रमाणपत्र",
+        "https_status": "HTTPS स्थिति",
+        "check": "जाँचें",
+        "checking_ssl": "SSL स्थिति जाँची जा रही है...",
+        "delete_domain_title": "कस्टम डोमेन हटाएँ",
+        "delete_domain_confirm": "क्या आप वाकई इस डोमेन को हटाना चाहते हैं? यह क्रिया पूर्ववत नहीं की जा सकती।",
+        "delete_domain": "डोमेन हटाएँ",
+        "verify_domain_desc": "स्वामित्व सत्यापित करने के लिए अपने डोमेन प्रदाता पर निम्नलिखित DNS रिकॉर्ड जोड़ें।",
+        "issuer": "जारीकर्ता",
+        "expires": "समाप्ति"
       }
     },
     "users": {
@@ -3730,10 +3774,6 @@
         "org_automations": {
           "description": "वेबहुक और बाहरी एकीकरण",
           "keywords": "वेबहुक, स्वचालन, zapier, एकीकरण, ट्रिगर"
-        },
-        "org_api": {
-          "description": "एपीआई टोकन और प्रोग्रामेटिक पहुँच",
-          "keywords": "एपीआई, टोकन, पहुँच, प्रोग्रामेटिक, कुंजी"
         },
         "org_sso": {
           "description": "सिंगल साइन-ऑन कॉन्फ़िगरेशन",
@@ -4884,9 +4924,7 @@
           "custom_domain": "कस्टम डोमेन",
           "custom_domain_desc": "ब्रांडेड एकेडमी के लिए अपना खुद का डोमेन उपयोग करें।",
           "roles": "कस्टम भूमिकाएँ और अनुमतियाँ",
-          "roles_desc": "नियंत्रित करें कि आपके संगठन में कौन क्या कर सकता है।",
-          "api": "API एक्सेस और webhooks",
-          "api_desc": "अपने मौजूदा टूल से इंटीग्रेट करें और वर्कफ़्लो ऑटोमेट करें।"
+          "roles_desc": "नियंत्रित करें कि आपके संगठन में कौन क्या कर सकता है।"
         }
       }
     }
@@ -4930,5 +4968,36 @@
     "next": "अगला",
     "previous": "पिछला",
     "showing_page": "{{total}} में से पृष्ठ {{current}} दिखाया जा रहा है"
+  },
+  "playgrounds": {
+    "no_playgrounds_yet": "अभी तक कोई प्लेग्राउंड नहीं",
+    "playgrounds_description": "अपने शिक्षार्थियों के लिए AI-जनित इंटरैक्टिव अनुभव बनाएं।",
+    "new_playground": "New Playground",
+    "search_placeholder": "Search playgrounds...",
+    "no_results_for": "No results for",
+    "try_different_search": "Try a different search term",
+    "new_playground_modal_title": "New Playground",
+    "new_playground_modal_desc": "Give your playground a name to get started.",
+    "creating": "Creating...",
+    "create": "Create",
+    "failed_create": "Failed to create playground",
+    "view": {
+      "open_editor_to_generate": "सामग्री बनाने के लिए एडिटर खोलें।",
+      "check_back_later": "बाद में फिर से देखें।",
+      "open_editor": "एडिटर खोलें",
+      "breadcrumb": "प्लेग्राउंड",
+      "about": "परिचय",
+      "author": "लेखक",
+      "access": "पहुँच",
+      "created": "बनाया गया",
+      "status": "स्थिति",
+      "published": "प्रकाशित",
+      "draft": "ड्राफ्ट",
+      "edit_in_editor": "एडिटर में संपादित करें",
+      "download": "डाउनलोड",
+      "reactions": "प्रतिक्रियाएँ",
+      "exit_fullscreen": "बाहर निकलें",
+      "fullscreen": "पूर्ण स्क्रीन"
+    }
   }
 }

@@ -31,6 +31,7 @@
     "dutch": "Holenderski",
     "thai": "Tajski",
     "bengali": "Bengalski",
+    "slovak": "Słowacki",
     "loading": "Ładowanie...",
     "search": "Szukaj",
     "all": "Wszystkie",
@@ -67,10 +68,6 @@
         "usergroups": {
           "title": "Funkcja Standard",
           "description": "Grupy użytkowników to funkcja premium dostępna tylko dla organizacji z planem Standard lub wyższym. Uaktualnij, aby organizować użytkowników w grupy dla lepszego zarządzania dostępem."
-        },
-        "api_access": {
-          "title": "Funkcja Pro",
-          "description": "Dostęp do API to funkcja premium dostępna tylko dla organizacji z planem Pro lub wyższym. Uaktualnij, aby odblokować programowy dostęp do danych Twojej organizacji."
         },
         "roles": {
           "title": "Funkcja Pro",
@@ -203,7 +200,11 @@
     "choose_an_organization_to_continue": "Wybierz organizację, aby kontynuować",
     "for": "dla",
     "powered_by": "Obsługiwane przez",
-    "results": "wynik"
+    "results": "wynik",
+    "no_content_yet": "Brak treści",
+    "other": "Other",
+    "disabled": "Disabled",
+    "store": "Store"
   },
   "banner": {
     "viewing_as_guest": "Przeglądasz {{name}} jako gość.",
@@ -2209,7 +2210,6 @@
           "landing": "Strona lądowania",
           "branding": "Branding",
           "ai": "AI",
-          "api": "Dostęp API",
           "features": "Funkcje",
           "other": "Inne",
           "domains": "Domeny",
@@ -2238,10 +2238,6 @@
           "ai": {
             "title": "Funkcje AI",
             "subtitle": "Skonfiguruj możliwości AI dla swojej organizacji"
-          },
-          "api": {
-            "title": "Dostęp API",
-            "subtitle": "Zarządzaj tokenami API i dostępem programistycznym"
           },
           "features": {
             "title": "Funkcje",
@@ -2334,7 +2330,8 @@
           "video_preview_added": "Dodano podgląd wideo",
           "video_preview_error": "Nie udało się dodać podglądu wideo",
           "updating_order": "Aktualizowanie kolejności podglądów..."
-        }
+        },
+        "favicon_preview": "Podgląd favicon (32×32)"
       },
       "branding": {
         "title": "Branding",
@@ -2396,7 +2393,12 @@
         "toasts": {
           "save_success": "Ustawienia AI zostały pomyślnie zaktualizowane",
           "save_error": "Nie udało się zaktualizować ustawień AI"
-        }
+        },
+        "ai_copilot": "AI Copilot",
+        "ai_copilot_description": "Let learners ask questions about course content. Uses indexed material to provide grounded answers with source citations.",
+        "feature_editor_description": "AI-powered content editing assistance for course creators.",
+        "feature_activity_description": "AI assistant available within activities to help learners.",
+        "always_on": "Always on"
       },
       "features": {
         "title": "Ustawienia funkcji",
@@ -2423,6 +2425,14 @@
           "podcasts": {
             "description": "Włącz tworzenie podcastów i treści audio",
             "title": "Podcasty"
+          },
+          "boards": {
+            "title": "Boards",
+            "description": "Create collaborative boards with lists and cards for project management"
+          },
+          "playgrounds": {
+            "title": "Playgrounds",
+            "description": "Create interactive AI-generated experiences for your learners"
           }
         },
         "toasts": {
@@ -2663,7 +2673,8 @@
           "loading_courses": "Ładowanie kursów...",
           "selected": "Wybrano",
           "select": "Wybierz"
-        }
+        },
+        "org_id_not_found": "Nie znaleziono ID organizacji"
       },
       "theme": {
         "primary_color": "Kolor główny",
@@ -2713,6 +2724,115 @@
         "workos_info": "WorkOS zapewnia korporacyjne SSO z obsługą SAML i OIDC.",
         "workos_org_id": "ID organizacji WorkOS",
         "workos_org_id_help": "Ten ID jest generowany automatycznie podczas konfiguracji SSO."
+      },
+      "seo": {
+        "org_seo": {
+          "quick_links": "Szybkie linki",
+          "important_seo_urls": "Wazne adresy SEO Twojej organizacji",
+          "sitemap": "Sitemap:",
+          "robots_txt": "Robots.txt:",
+          "default_meta_tags": "Domyslne meta tagi",
+          "set_default_metadata": "Ustaw domyslne metadane dla wszystkich stron",
+          "title_suffix": "Sufiks tytulu",
+          "title_suffix_hint": "Dodawany do wszystkich tytulow, np. \" | Moja Akademia\"",
+          "default_description": "Domyslny opis",
+          "default_description_hint": "Opis zastepczy gdy strona nie ma wlasnego",
+          "social_open_graph": "Social & Open Graph",
+          "social_open_graph_hint": "Kontroluj jak Twoje strony wygladaja przy udostepnianiu",
+          "default_og_image": "Domyslny obraz OG",
+          "default_og_image_hint": "Domyslny obraz do udostepniania (1200x630 zalecane)",
+          "twitter_handle": "Konto Twitter",
+          "twitter_handle_hint": "Wyswietlane na kartach Twittera jako konto strony",
+          "search_engine_verification": "Weryfikacja wyszukiwarek",
+          "search_engine_verification_hint": "Zweryfikuj wlasnosc w wyszukiwarkach",
+          "google_search_console": "Google Search Console",
+          "google_search_console_hint": "Kod weryfikacyjny z Google Search Console",
+          "indexing_controls": "Kontrola indeksowania",
+          "indexing_controls_hint": "Kontroluj ktore strony moga byc indeksowane",
+          "hide_communities": "Ukryj spolecznosci",
+          "hide_communities_hint": "Ukryj strony spolecznosci przed wyszukiwarkami"
+        },
+        "copied_to_clipboard": "Skopiowano do schowka",
+        "save_failed": "Nie udało się zapisać ustawień SEO"
+      },
+      "domains": {
+        "title": "Wlasne domeny",
+        "subtitle": "Skonfiguruj wlasne domeny",
+        "empty_description": "Dodaj wlasna domene dla markowego doswiadczenia.",
+        "add_domain": "Dodaj domene",
+        "domain_name": "Nazwa domeny",
+        "enter_domain": "Wpisz domene",
+        "verify": "Zweryfikuj",
+        "verify_domain": "Zweryfikuj domene",
+        "verifying": "Weryfikacja...",
+        "verify_dns": "Zweryfikuj DNS",
+        "remove": "Usun",
+        "pending": "Oczekujace",
+        "active": "Aktywna",
+        "failed": "Nieudane",
+        "ssl_active": "SSL aktywny",
+        "failed_add": "Nie udalo sie dodac domeny",
+        "failed_delete": "Nie udalo sie usunac domeny",
+        "failed_verify": "Nie udalo sie zweryfikowac domeny",
+        "verifying_domain": "Weryfikacja domeny...",
+        "domain_verified": "Domena zweryfikowana",
+        "domain_added": "Domena dodana",
+        "domain_removed": "Domena usunieta",
+        "no_domains_yet": "Brak wlasnych domen",
+        "add_first_domain": "Dodaj pierwsza domene",
+        "add_custom_domain": "Dodaj wlasna domene",
+        "add_custom_domain_desc": "Wpisz domene, ktorej chcesz uzywac.",
+        "domain_label": "Domena",
+        "domain_hint": "Wpisz domene lub subdomene (np. learn.firma.pl)",
+        "domain_required": "Domena jest wymagana",
+        "domain_added_success": "Domena dodana pomyślnie",
+        "domain_deleted_success": "Domena usunięta pomyślnie",
+        "copied_to_clipboard": "Skopiowano do schowka",
+        "table_domain": "Domena",
+        "table_status": "Status",
+        "table_ssl": "SSL",
+        "table_added": "Dodano",
+        "table_verified": "Zweryfikowano",
+        "table_actions": "Akcje",
+        "adding_domain": "Dodawanie domeny...",
+        "deleting_domain": "Usuwanie domeny...",
+        "dns_config_required": "Wymagana konfiguracja DNS",
+        "dns_config_description": "Dodaj te rekordy u swojego rejestratora domen (np. Cloudflare, GoDaddy, Namecheap). Zmiany DNS mogą potrwać do 48 godzin.",
+        "txt_record": "Rekord TXT",
+        "for_verification": "Do weryfikacji",
+        "cname_record": "Rekord CNAME",
+        "for_routing": "Do routingu",
+        "host_name": "Host / Nazwa",
+        "value": "Wartość",
+        "value_target": "Wartość / Cel",
+        "ssl_certificate": "Certyfikat SSL",
+        "https_status": "Status HTTPS",
+        "check": "Sprawdź",
+        "checking_ssl": "Sprawdzanie statusu SSL...",
+        "delete_domain_title": "Usuń domenę niestandardową",
+        "delete_domain_confirm": "Czy na pewno chcesz usunąć tę domenę? Tej akcji nie można cofnąć.",
+        "delete_domain": "Usuń domenę",
+        "verify_domain_desc": "Dodaj następujące rekordy DNS u swojego dostawcy domeny, aby zweryfikować własność.",
+        "issuer": "Wystawca",
+        "expires": "Wygasa"
+      },
+      "automations": {
+        "webhooks_title": "Webhooks",
+        "webhooks_subtitle": "Wysylaj powiadomienia w czasie rzeczywistym do zewnetrznych uslug",
+        "webhooks_description": "Endpointy webhook otrzymuja zadania HTTP POST gdy zdarzenia wystepuja w Twojej organizacji."
+      },
+      "usage": {
+        "plan_resource_usage": "Plan i uzycie zasobow",
+        "courses": "Kursy",
+        "members_label": "Czlonkowie",
+        "admin_seats": "Miejsca admin",
+        "unlimited": "Nieograniczone",
+        "ai_credits": "Kredyty AI",
+        "credit_usage": "Uzycie kredytow",
+        "base_credits": "Kredyty bazowe",
+        "purchased": "Zakupione",
+        "used": "Uzyte",
+        "remaining": "Pozostale"
       }
     },
     "users": {
@@ -3732,10 +3852,6 @@
         "org_automations": {
           "description": "Webhooki i integracje zewnętrzne",
           "keywords": "webhooki, automatyzacje, zapier, integracje, wyzwalacze"
-        },
-        "org_api": {
-          "description": "Tokeny API i dostęp programistyczny",
-          "keywords": "api, tokeny, dostęp, programistyczny, klucze"
         },
         "org_sso": {
           "description": "Konfiguracja logowania jednokrotnego",
@@ -4886,9 +5002,7 @@
           "custom_domain": "Własna domena",
           "custom_domain_desc": "Użyj własnej domeny dla akademii z Twoją marką.",
           "roles": "Niestandardowe role i uprawnienia",
-          "roles_desc": "Kontroluj dokładnie, kto co może robić w Twojej organizacji.",
-          "api": "Dostęp do API i webhooków",
-          "api_desc": "Integruj z istniejącymi narzędziami i automatyzuj przepływy pracy."
+          "roles_desc": "Kontroluj dokładnie, kto co może robić w Twojej organizacji."
         }
       }
     }
@@ -4932,5 +5046,36 @@
     "next": "Następna",
     "previous": "Poprzednia",
     "showing_page": "Strona {{current}} z {{total}}"
+  },
+  "playgrounds": {
+    "no_playgrounds_yet": "Brak playgroundów",
+    "playgrounds_description": "Twórz interaktywne doświadczenia generowane przez AI dla swoich uczniów.",
+    "new_playground": "New Playground",
+    "search_placeholder": "Search playgrounds...",
+    "no_results_for": "No results for",
+    "try_different_search": "Try a different search term",
+    "new_playground_modal_title": "New Playground",
+    "new_playground_modal_desc": "Give your playground a name to get started.",
+    "creating": "Creating...",
+    "create": "Create",
+    "failed_create": "Failed to create playground",
+    "view": {
+      "open_editor_to_generate": "Otwórz edytor, aby wygenerować treść.",
+      "check_back_later": "Sprawdź ponownie później.",
+      "open_editor": "Otwórz edytor",
+      "breadcrumb": "Playgrounds",
+      "about": "O projekcie",
+      "author": "Autor",
+      "access": "Dostęp",
+      "created": "Utworzono",
+      "status": "Status",
+      "published": "Opublikowano",
+      "draft": "Szkic",
+      "edit_in_editor": "Edytuj w edytorze",
+      "download": "Pobierz",
+      "reactions": "Reakcje",
+      "exit_fullscreen": "Zamknij",
+      "fullscreen": "Pełny ekran"
+    }
   }
 }
