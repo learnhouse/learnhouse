@@ -69,10 +69,6 @@
           "title": "Funkcja Standard",
           "description": "Grupy użytkowników to funkcja premium dostępna tylko dla organizacji z planem Standard lub wyższym. Uaktualnij, aby organizować użytkowników w grupy dla lepszego zarządzania dostępem."
         },
-        "api_access": {
-          "title": "Funkcja Pro",
-          "description": "Dostęp do API to funkcja premium dostępna tylko dla organizacji z planem Pro lub wyższym. Uaktualnij, aby odblokować programowy dostęp do danych Twojej organizacji."
-        },
         "roles": {
           "title": "Funkcja Pro",
           "description": "Tworzenie niestandardowych ról to funkcja premium dostępna tylko dla organizacji z planem Pro lub wyższym. Uaktualnij, aby tworzyć role ze specyficznymi uprawnieniami."
@@ -2214,7 +2210,6 @@
           "landing": "Strona lądowania",
           "branding": "Branding",
           "ai": "AI",
-          "api": "Dostęp API",
           "features": "Funkcje",
           "other": "Inne",
           "domains": "Domeny",
@@ -2243,10 +2238,6 @@
           "ai": {
             "title": "Funkcje AI",
             "subtitle": "Skonfiguruj możliwości AI dla swojej organizacji"
-          },
-          "api": {
-            "title": "Dostęp API",
-            "subtitle": "Zarządzaj tokenami API i dostępem programistycznym"
           },
           "features": {
             "title": "Funkcje",
@@ -2795,37 +2786,6 @@
         "webhooks_title": "Webhooks",
         "webhooks_subtitle": "Wysylaj powiadomienia w czasie rzeczywistym do zewnetrznych uslug",
         "webhooks_description": "Endpointy webhook otrzymuja zadania HTTP POST gdy zdarzenia wystepuja w Twojej organizacji."
-      },
-      "api_access": {
-        "title": "Dostep API",
-        "api_tokens": "Tokeny API",
-        "docs_playground": "Dokumentacja & Playground",
-        "something_not_working": "Cos nie dziala?",
-        "tokens_description": "Tokeny API umozliwiaja bezpieczny dostep do danych.",
-        "create_token": "Utworz token",
-        "no_tokens_yet": "Brak tokenow API",
-        "create_first_token": "Utworz pierwszy token",
-        "create_api_token": "Utworz token API",
-        "token_name_label": "Nazwa tokenu *",
-        "description_label": "Opis",
-        "expiration_label": "Data wygasniecia (opcjonalnie)",
-        "expiration_hint": "Pozostaw puste dla tokenu bez wygasniecia",
-        "permissions_label": "Uprawnienia",
-        "read_only": "Tylko odczyt",
-        "full_access": "Pelny dostep",
-        "custom": "Niestandardowe",
-        "cancel": "Anuluj",
-        "save_token_warning": "Zapisz token teraz!",
-        "save_token_hint": "Zobaczysz ten token tylko raz.",
-        "your_api_token": "Twoj token API",
-        "done": "Gotowe",
-        "create_token_desc": "Utworz nowy token dla dostepu programowego.",
-        "token_name": "Nazwa tokenu *",
-        "expires": "Wygasa",
-        "never": "Nigdy",
-        "revoked": "Uniewazniony",
-        "revoke": "Uniewaznij",
-        "api_docs_title": "Dokumentacja & Playground API"
       },
       "usage": {
         "plan_resource_usage": "Plan i uzycie zasobow",
@@ -3858,10 +3818,6 @@
         "org_automations": {
           "description": "Webhooki i integracje zewnętrzne",
           "keywords": "webhooki, automatyzacje, zapier, integracje, wyzwalacze"
-        },
-        "org_api": {
-          "description": "Tokeny API i dostęp programistyczny",
-          "keywords": "api, tokeny, dostęp, programistyczny, klucze"
         },
         "org_sso": {
           "description": "Konfiguracja logowania jednokrotnego",
@@ -5012,9 +4968,7 @@
           "custom_domain": "Własna domena",
           "custom_domain_desc": "Użyj własnej domeny dla akademii z Twoją marką.",
           "roles": "Niestandardowe role i uprawnienia",
-          "roles_desc": "Kontroluj dokładnie, kto co może robić w Twojej organizacji.",
-          "api": "Dostęp do API i webhooków",
-          "api_desc": "Integruj z istniejącymi narzędziami i automatyzuj przepływy pracy."
+          "roles_desc": "Kontroluj dokładnie, kto co może robić w Twojej organizacji."
         }
       }
     }

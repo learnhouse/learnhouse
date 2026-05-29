@@ -69,10 +69,6 @@
           "title": "Standart Özellik",
           "description": "Kullanıcı grupları, yalnızca Standart veya üzeri plandaki kuruluşlar için kullanılabilen premium bir özelliktir. Daha iyi erişim yönetimi için kullanıcıları gruplara ayırmak için yükseltin."
         },
-        "api_access": {
-          "title": "Pro Özellik",
-          "description": "API Erişimi, yalnızca Pro veya üzeri plandaki kuruluşlar için kullanılabilen premium bir özelliktir. Kuruluşunuzun verilerine programatik erişim için yükseltin."
-        },
         "roles": {
           "title": "Pro Özellik",
           "description": "Özel roller oluşturmak, yalnızca Pro veya üzeri plandaki kuruluşlar için kullanılabilen premium bir özelliktir. Belirli izinlerle roller oluşturmak için yükseltin."
@@ -2214,7 +2210,6 @@
           "landing": "Açılış Sayfası",
           "branding": "Marka",
           "ai": "YZ",
-          "api": "API Erişimi",
           "features": "Özellikler",
           "other": "Diğer",
           "domains": "Alan Adları",
@@ -2243,10 +2238,6 @@
           "ai": {
             "title": "Yapay Zeka Özellikleri",
             "subtitle": "Organizasyonunuz için yapay zeka yeteneklerini yapılandırın"
-          },
-          "api": {
-            "title": "API Erişimi",
-            "subtitle": "API tokenlarını ve programatik erişimi yönetin"
           },
           "features": {
             "title": "Özellikler",
@@ -3749,10 +3740,6 @@
           "description": "Webhooks ve dış entegrasyonlar",
           "keywords": "webhooks, otomasyonlar, zapier, entegrasyonlar, tetikleyiciler"
         },
-        "org_api": {
-          "description": "API tokenları ve programatik erişim",
-          "keywords": "api, tokenlar, erişim, programatik, anahtarlar"
-        },
         "org_sso": {
           "description": "Tek oturum açma yapılandırması",
           "keywords": "sso, saml, oauth, kurumsal, giriş"
@@ -4902,9 +4889,7 @@
           "custom_domain": "Özel alan adı",
           "custom_domain_desc": "Markalı bir akademi için kendi alan adınızı kullanın.",
           "roles": "Özel roller ve izinler",
-          "roles_desc": "Organizasyonunuzda kimin ne yapabileceğini tam olarak kontrol edin.",
-          "api": "API erişimi ve webhook'lar",
-          "api_desc": "Mevcut araçlarınızla entegre olun ve iş akışlarını otomatikleştirin."
+          "roles_desc": "Organizasyonunuzda kimin ne yapabileceğini tam olarak kontrol edin."
         }
       }
     }

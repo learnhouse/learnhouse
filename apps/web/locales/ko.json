@@ -69,10 +69,6 @@
           "title": "스탠다드 기능",
           "description": "사용자 그룹은 스탠다드 플랜 이상의 조직에서만 사용할 수 있는 프리미엄 기능입니다. 업그레이드하여 더 나은 접근 관리를 위해 사용자를 그룹으로 구성하세요."
         },
-        "api_access": {
-          "title": "프로 기능",
-          "description": "API 액세스는 프로 플랜 이상의 조직에서만 사용할 수 있는 프리미엄 기능입니다. 업그레이드하여 조직 데이터에 대한 프로그래밍 방식 액세스를 잠금 해제하세요."
-        },
         "roles": {
           "title": "프로 기능",
           "description": "사용자 정의 역할 생성은 프로 플랜 이상의 조직에서만 사용할 수 있는 프리미엄 기능입니다. 업그레이드하여 특정 권한을 가진 역할을 생성하세요."
@@ -2201,7 +2197,6 @@
           "landing": "랜딩 페이지",
           "branding": "브랜딩",
           "ai": "AI",
-          "api": "API 접근",
           "features": "기능",
           "other": "기타",
           "domains": "도메인",
@@ -2230,10 +2225,6 @@
           "ai": {
             "title": "AI 기능",
             "subtitle": "조직의 AI 기능을 구성합니다"
-          },
-          "api": {
-            "title": "API 접근",
-            "subtitle": "API 토큰 및 프로그래밍 방식 접근 관리"
           },
           "features": {
             "title": "기능",
@@ -3736,10 +3727,6 @@
           "description": "웹훅 및 외부 통합",
           "keywords": "웹훅, 자동화, zapier, 통합, 트리거"
         },
-        "org_api": {
-          "description": "API 토큰 및 프로그래밍 액세스",
-          "keywords": "api, 토큰, 액세스, 프로그래밍, 키"
-        },
         "org_sso": {
           "description": "싱글 사인온 구성",
           "keywords": "sso, saml, oauth, 엔터프라이즈, 로그인"
@@ -4889,9 +4876,7 @@
           "custom_domain": "커스텀 도메인",
           "custom_domain_desc": "브랜드 아카데미를 위해 자체 도메인을 사용하세요.",
           "roles": "맞춤 역할 및 권한",
-          "roles_desc": "조직에서 누가 무엇을 할 수 있는지 정확하게 제어하세요.",
-          "api": "API 액세스 및 Webhooks",
-          "api_desc": "기존 도구와 통합하고 워크플로를 자동화하세요."
+          "roles_desc": "조직에서 누가 무엇을 할 수 있는지 정확하게 제어하세요."
         }
       }
     }

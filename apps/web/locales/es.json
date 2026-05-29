@@ -71,10 +71,6 @@
           "title": "Función Standard",
           "description": "Los grupos de usuarios son una función premium disponible solo para organizaciones en nuestro plan Standard o superior. Actualiza para organizar usuarios en grupos para una mejor gestión de accesos."
         },
-        "api_access": {
-          "title": "Función Pro",
-          "description": "El acceso API es una función premium disponible solo para organizaciones en nuestro plan Pro o superior. Actualiza para desbloquear el acceso programático a los datos de tu organización."
-        },
         "roles": {
           "title": "Función Pro",
           "description": "La creación de roles personalizados es una función premium disponible solo para organizaciones en nuestro plan Pro o superior. Actualiza para crear roles con permisos específicos."
@@ -2191,7 +2187,6 @@
           "landing": "Página de inicio",
           "branding": "Marca",
           "ai": "IA",
-          "api": "Acceso API",
           "features": "Funcionalidades",
           "usage": "Uso",
           "other": "Otros",
@@ -2220,10 +2215,6 @@
           "ai": {
             "title": "Funciones de IA",
             "subtitle": "Configura las capacidades de IA de tu organización"
-          },
-          "api": {
-            "title": "Acceso API",
-            "subtitle": "Gestiona tokens API y acceso programático"
           },
           "features": {
             "title": "Funcionalidades",
@@ -2770,37 +2761,6 @@
         "webhooks_title": "Webhooks",
         "webhooks_subtitle": "Enviar notificaciones en tiempo real a servicios externos",
         "webhooks_description": "Los endpoints webhook reciben solicitudes HTTP POST cuando ocurren eventos en tu organizacion."
-      },
-      "api_access": {
-        "title": "Acceso API",
-        "api_tokens": "Tokens API",
-        "docs_playground": "Documentacion & Playground",
-        "something_not_working": "Algo no funciona?",
-        "tokens_description": "Los tokens API permiten acceso seguro a los datos.",
-        "create_token": "Crear token",
-        "no_tokens_yet": "Sin tokens API",
-        "create_first_token": "Crea tu primer token",
-        "create_api_token": "Crear token API",
-        "token_name_label": "Nombre del token *",
-        "description_label": "Descripcion",
-        "expiration_label": "Fecha de expiracion (opcional)",
-        "expiration_hint": "Dejar vacio para token sin expiracion",
-        "permissions_label": "Permisos",
-        "read_only": "Solo lectura",
-        "full_access": "Acceso completo",
-        "custom": "Personalizado",
-        "cancel": "Cancelar",
-        "save_token_warning": "Guarda tu token ahora!",
-        "save_token_hint": "Solo veras este token una vez.",
-        "your_api_token": "Tu token API",
-        "done": "Listo",
-        "create_token_desc": "Crear un nuevo token para acceso programatico.",
-        "token_name": "Nombre del token *",
-        "expires": "Expira",
-        "never": "Nunca",
-        "revoked": "Revocado",
-        "revoke": "Revocar",
-        "api_docs_title": "Documentacion & Playground API"
       },
       "usage": {
         "plan_resource_usage": "Plan y uso de recursos",
@@ -3833,10 +3793,6 @@
         "org_automations": {
           "description": "Webhooks e integraciones externas",
           "keywords": "webhooks, automatizaciones, zapier, integraciones, disparadores"
-        },
-        "org_api": {
-          "description": "Tokens de API y acceso programático",
-          "keywords": "api, tokens, acceso, programático, claves"
         },
         "org_sso": {
           "description": "Configuración de inicio de sesión único",
@@ -4987,9 +4943,7 @@
           "custom_domain": "Dominio personalizado",
           "custom_domain_desc": "Usa tu propio dominio para una academia con tu marca.",
           "roles": "Roles y permisos personalizados",
-          "roles_desc": "Controla exactamente quién puede hacer qué en tu organización.",
-          "api": "Acceso API y webhooks",
-          "api_desc": "Integra con tus herramientas existentes y automatiza flujos de trabajo."
+          "roles_desc": "Controla exactamente quién puede hacer qué en tu organización."
         }
       }
     }

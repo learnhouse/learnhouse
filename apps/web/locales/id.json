@@ -71,10 +71,6 @@
           "title": "Fitur Standard",
           "description": "Grup pengguna adalah fitur premium yang hanya tersedia untuk organisasi dengan paket Standard atau lebih tinggi. Upgrade untuk mengorganisir pengguna ke dalam grup untuk manajemen akses yang lebih baik."
         },
-        "api_access": {
-          "title": "Fitur Pro",
-          "description": "Akses API adalah fitur premium yang hanya tersedia untuk organisasi dengan paket Pro atau lebih tinggi. Upgrade untuk membuka akses programatik ke data organisasi Anda."
-        },
         "roles": {
           "title": "Fitur Pro",
           "description": "Membuat peran kustom adalah fitur premium yang hanya tersedia untuk organisasi dengan paket Pro atau lebih tinggi. Upgrade untuk membuat peran dengan izin spesifik."
@@ -2214,7 +2210,6 @@
           "landing": "Halaman Landas",
           "branding": "Branding",
           "ai": "AI",
-          "api": "Akses API",
           "features": "Fitur",
           "usage": "Penggunaan",
           "other": "Lainnya",
@@ -2243,10 +2238,6 @@
           "ai": {
             "title": "Fitur AI",
             "subtitle": "Konfigurasi kemampuan AI untuk organisasi Anda"
-          },
-          "api": {
-            "title": "Akses API",
-            "subtitle": "Kelola token API dan akses programatik"
           },
           "features": {
             "title": "Fitur",
@@ -3747,10 +3738,6 @@
           "description": "Webhook dan integrasi eksternal",
           "keywords": "webhook, otomatisasi, zapier, integrasi, pemicu"
         },
-        "org_api": {
-          "description": "Token API dan akses programatik",
-          "keywords": "api, token, akses, programatik, kunci"
-        },
         "org_sso": {
           "description": "Konfigurasi sign-on tunggal",
           "keywords": "sso, saml, oauth, perusahaan, login"
@@ -4900,9 +4887,7 @@
           "custom_domain": "Domain kustom",
           "custom_domain_desc": "Gunakan domain Anda sendiri untuk akademi bermerek.",
           "roles": "Peran & izin kustom",
-          "roles_desc": "Kontrol dengan tepat siapa yang bisa melakukan apa di organisasi Anda.",
-          "api": "Akses API & webhooks",
-          "api_desc": "Integrasikan dengan alat yang ada dan otomatisasi alur kerja."
+          "roles_desc": "Kontrol dengan tepat siapa yang bisa melakukan apa di organisasi Anda."
         }
       }
     }

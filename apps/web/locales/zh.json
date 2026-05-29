@@ -69,10 +69,6 @@
           "title": "标准版功能",
           "description": "用户组是仅适用于标准版或更高版本组织的高级功能。升级以将用户组织成组以更好地管理访问权限。"
         },
-        "api_access": {
-          "title": "专业版功能",
-          "description": "API访问是仅适用于专业版或更高版本组织的高级功能。升级以解锁对组织数据的编程访问。"
-        },
         "roles": {
           "title": "专业版功能",
           "description": "创建自定义角色是仅适用于专业版或更高版本组织的高级功能。升级以创建具有特定权限的角色。"
@@ -2201,7 +2197,6 @@
           "landing": "落地页",
           "branding": "品牌",
           "ai": "AI",
-          "api": "API访问",
           "features": "功能",
           "other": "其他",
           "domains": "域名",
@@ -2230,10 +2225,6 @@
           "ai": {
             "title": "AI功能",
             "subtitle": "为您的组织配置AI功能"
-          },
-          "api": {
-            "title": "API访问",
-            "subtitle": "管理API令牌和程序化访问"
           },
           "features": {
             "title": "功能",
@@ -3736,10 +3727,6 @@
           "description": "Webhook 和外部集成",
           "keywords": "webhooks, 自动化, zapier, 集成, 触发器"
         },
-        "org_api": {
-          "description": "API 令牌和程序化访问",
-          "keywords": "api, 令牌, 访问, 程序化, 密钥"
-        },
         "org_sso": {
           "description": "单点登录配置",
           "keywords": "sso, saml, oauth, 企业, 登录"
@@ -4889,9 +4876,7 @@
           "custom_domain": "自定义域名",
           "custom_domain_desc": "使用您自己的域名打造品牌学院。",
           "roles": "自定义角色和权限",
-          "roles_desc": "精确控制组织中谁可以做什么。",
-          "api": "API 访问和 Webhooks",
-          "api_desc": "与现有工具集成并自动化工作流程。"
+          "roles_desc": "精确控制组织中谁可以做什么。"
         }
       }
     }

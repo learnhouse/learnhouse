@@ -69,10 +69,6 @@
           "title": "Standard Functie",
           "description": "Gebruikersgroepen is een premiumfunctie die alleen beschikbaar is voor organisaties met ons Standard-abonnement of hoger. Upgrade om gebruikers in groepen te organiseren voor beter toegangsbeheer."
         },
-        "api_access": {
-          "title": "Pro Functie",
-          "description": "API-toegang is een premiumfunctie die alleen beschikbaar is voor organisaties met ons Pro-abonnement of hoger. Upgrade om programmatische toegang tot de gegevens van uw organisatie te ontgrendelen."
-        },
         "roles": {
           "title": "Pro Functie",
           "description": "Het maken van aangepaste rollen is een premiumfunctie die alleen beschikbaar is voor organisaties met ons Pro-abonnement of hoger. Upgrade om rollen met specifieke rechten te maken."
@@ -2191,7 +2187,6 @@
           "landing": "Landingspagina",
           "branding": "Branding",
           "ai": "AI",
-          "api": "API-toegang",
           "features": "Functies",
           "other": "Overig",
           "domains": "Domeinen",
@@ -2220,10 +2215,6 @@
           "ai": {
             "title": "AI-functies",
             "subtitle": "Configureer AI-mogelijkheden voor je organisatie"
-          },
-          "api": {
-            "title": "API-toegang",
-            "subtitle": "Beheer API-tokens en programmatische toegang"
           },
           "features": {
             "title": "Functies",
@@ -2772,37 +2763,6 @@
         "webhooks_title": "Webhooks",
         "webhooks_subtitle": "Stuur realtime meldingen naar externe diensten",
         "webhooks_description": "Webhook-endpoints ontvangen HTTP POST-verzoeken wanneer er gebeurtenissen plaatsvinden."
-      },
-      "api_access": {
-        "title": "API-toegang",
-        "api_tokens": "API-tokens",
-        "docs_playground": "Documentatie & Playground",
-        "something_not_working": "Iets werkt niet?",
-        "tokens_description": "API-tokens bieden veilige toegang tot gegevens.",
-        "create_token": "Token aanmaken",
-        "no_tokens_yet": "Nog geen API-tokens",
-        "create_first_token": "Maak uw eerste token",
-        "create_api_token": "API-token aanmaken",
-        "token_name_label": "Tokennaam *",
-        "description_label": "Beschrijving",
-        "expiration_label": "Vervaldatum (optioneel)",
-        "expiration_hint": "Leeg laten voor een token zonder vervaldatum",
-        "permissions_label": "Rechten",
-        "read_only": "Alleen lezen",
-        "full_access": "Volledige toegang",
-        "custom": "Aangepast",
-        "cancel": "Annuleren",
-        "save_token_warning": "Sla uw token nu op!",
-        "save_token_hint": "U ziet deze token slechts eenmaal.",
-        "your_api_token": "Uw API-token",
-        "done": "Klaar",
-        "create_token_desc": "Maak een nieuw token voor programmatische toegang.",
-        "token_name": "Tokennaam *",
-        "expires": "Verloopt",
-        "never": "Nooit",
-        "revoked": "Ingetrokken",
-        "revoke": "Intrekken",
-        "api_docs_title": "API-documentatie & Playground"
       },
       "usage": {
         "plan_resource_usage": "Plan & Gebruik",
@@ -3835,10 +3795,6 @@
         "org_automations": {
           "description": "Webhooks en externe integraties",
           "keywords": "webhooks, automatiseringen, zapier, integraties, triggers"
-        },
-        "org_api": {
-          "description": "API-tokens en programmatische toegang",
-          "keywords": "api, tokens, toegang, programmatisch, sleutels"
         },
         "org_sso": {
           "description": "Single sign-on configuratie",
@@ -4989,9 +4945,7 @@
           "custom_domain": "Eigen domein",
           "custom_domain_desc": "Gebruik uw eigen domein voor een academie met uw merk.",
           "roles": "Aangepaste rollen & machtigingen",
-          "roles_desc": "Bepaal precies wie wat kan doen in uw organisatie.",
-          "api": "API-toegang & webhooks",
-          "api_desc": "Integreer met bestaande tools en automatiseer workflows."
+          "roles_desc": "Bepaal precies wie wat kan doen in uw organisatie."
         }
       }
     }
