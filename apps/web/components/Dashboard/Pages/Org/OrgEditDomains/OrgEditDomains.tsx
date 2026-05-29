@@ -632,10 +632,10 @@ const OrgEditDomains: React.FC = () => {
                               {sslStatuses[selectedDomain.domain_uuid].has_ssl && (
                                 <div className="text-xs text-green-700 mt-1 space-y-0.5">
                                   {sslStatuses[selectedDomain.domain_uuid].issuer && (
-                                    <p>Issuer: {sslStatuses[selectedDomain.domain_uuid].issuer}</p>
+                                    <p>{t('dashboard.organization.domains.issuer')}: {sslStatuses[selectedDomain.domain_uuid].issuer}</p>
                                   )}
                                   {sslStatuses[selectedDomain.domain_uuid].expires && (
-                                    <p>Expires: {sslStatuses[selectedDomain.domain_uuid].expires}</p>
+                                    <p>{t('dashboard.organization.domains.expires')}: {sslStatuses[selectedDomain.domain_uuid].expires}</p>
                                   )}
                                 </div>
                               )}

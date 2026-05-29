@@ -2650,7 +2650,8 @@
           "loading_courses": "Cursussen laden...",
           "selected": "Geselecteerd",
           "select": "Selecteer"
-        }
+        },
+        "org_id_not_found": "Organisatie-ID niet gevonden"
       },
       "theme": {
         "primary_color": "Primaire kleur",
@@ -2727,7 +2728,9 @@
           "indexing_controls_hint": "Bepaal welke paginas zoekmachines kunnen indexeren",
           "hide_communities": "Communities verbergen",
           "hide_communities_hint": "Communitypaginas verbergen voor zoekmachines"
-        }
+        },
+        "copied_to_clipboard": "Gekopieerd naar klembord",
+        "save_failed": "SEO-instellingen opslaan mislukt"
       },
       "domains": {
         "title": "Eigen domeinen",
@@ -2786,7 +2789,9 @@
         "delete_domain_title": "Aangepast domein verwijderen",
         "delete_domain_confirm": "Weet u zeker dat u dit domein wilt verwijderen? Deze actie kan niet ongedaan worden gemaakt.",
         "delete_domain": "Domein verwijderen",
-        "verify_domain_desc": "Voeg de volgende DNS-records toe bij uw domeinprovider om eigendom te verifiëren."
+        "verify_domain_desc": "Voeg de volgende DNS-records toe bij uw domeinprovider om eigendom te verifiëren.",
+        "issuer": "Uitgever",
+        "expires": "Verloopt"
       },
       "automations": {
         "webhooks_title": "Webhooks",

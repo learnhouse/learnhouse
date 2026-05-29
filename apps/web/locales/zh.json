@@ -2655,7 +2655,8 @@
           "loading_courses": "正在加载课程...",
           "selected": "已选择",
           "select": "选择"
-        }
+        },
+        "org_id_not_found": "未找到组织ID"
       },
       "theme": {
         "primary_color": "主色",
@@ -2706,7 +2707,10 @@
         "workos_org_id": "WorkOS 组织 ID",
         "workos_org_id_help": "当您通过设置门户配置 SSO 时，此 ID 将自动生成。"
       },
-      "seo": {},
+      "seo": {
+        "copied_to_clipboard": "已复制到剪贴板",
+        "save_failed": "保存SEO设置失败"
+      },
       "automations": {},
       "domains": {
         "domain_required": "域名为必填项",
@@ -2737,7 +2741,9 @@
         "delete_domain_title": "删除自定义域名",
         "delete_domain_confirm": "确定要删除此域名吗？此操作无法撤消。",
         "delete_domain": "删除域名",
-        "verify_domain_desc": "在您的域名提供商处添加以下DNS记录以验证所有权。"
+        "verify_domain_desc": "在您的域名提供商处添加以下DNS记录以验证所有权。",
+        "issuer": "颁发者",
+        "expires": "过期时间"
       }
     },
     "users": {

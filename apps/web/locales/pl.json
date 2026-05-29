@@ -2673,7 +2673,8 @@
           "loading_courses": "Ładowanie kursów...",
           "selected": "Wybrano",
           "select": "Wybierz"
-        }
+        },
+        "org_id_not_found": "Nie znaleziono ID organizacji"
       },
       "theme": {
         "primary_color": "Kolor główny",
@@ -2750,7 +2751,9 @@
           "indexing_controls_hint": "Kontroluj ktore strony moga byc indeksowane",
           "hide_communities": "Ukryj spolecznosci",
           "hide_communities_hint": "Ukryj strony spolecznosci przed wyszukiwarkami"
-        }
+        },
+        "copied_to_clipboard": "Skopiowano do schowka",
+        "save_failed": "Nie udało się zapisać ustawień SEO"
       },
       "domains": {
         "title": "Wlasne domeny",
@@ -2809,7 +2812,9 @@
         "delete_domain_title": "Usuń domenę niestandardową",
         "delete_domain_confirm": "Czy na pewno chcesz usunąć tę domenę? Tej akcji nie można cofnąć.",
         "delete_domain": "Usuń domenę",
-        "verify_domain_desc": "Dodaj następujące rekordy DNS u swojego dostawcy domeny, aby zweryfikować własność."
+        "verify_domain_desc": "Dodaj następujące rekordy DNS u swojego dostawcy domeny, aby zweryfikować własność.",
+        "issuer": "Wystawca",
+        "expires": "Wygasa"
       },
       "automations": {
         "webhooks_title": "Webhooks",

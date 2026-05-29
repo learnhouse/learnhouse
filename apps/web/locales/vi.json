@@ -2668,7 +2668,8 @@
           "loading_courses": "Đang tải khóa học...",
           "selected": "Đã chọn",
           "select": "Chọn"
-        }
+        },
+        "org_id_not_found": "Không tìm thấy ID tổ chức"
       },
       "theme": {
         "primary_color": "Màu chính",
@@ -2719,7 +2720,10 @@
         "workos_org_id": "WorkOS Organization ID",
         "workos_org_id_help": "ID này được tạo tự động khi bạn cấu hình SSO thông qua cổng thiết lập."
       },
-      "seo": {},
+      "seo": {
+        "copied_to_clipboard": "Đã sao chép vào clipboard",
+        "save_failed": "Không thể lưu cài đặt SEO"
+      },
       "automations": {},
       "domains": {
         "domain_required": "Tên miền là bắt buộc",
@@ -2750,7 +2754,9 @@
         "delete_domain_title": "Xóa tên miền tùy chỉnh",
         "delete_domain_confirm": "Bạn có chắc chắn muốn xóa tên miền này? Hành động này không thể hoàn tác.",
         "delete_domain": "Xóa tên miền",
-        "verify_domain_desc": "Thêm các bản ghi DNS sau tại nhà cung cấp tên miền của bạn để xác minh quyền sở hữu."
+        "verify_domain_desc": "Thêm các bản ghi DNS sau tại nhà cung cấp tên miền của bạn để xác minh quyền sở hữu.",
+        "issuer": "Nhà phát hành",
+        "expires": "Hết hạn"
       }
     },
     "users": {

@@ -2642,7 +2642,8 @@
           "loading_courses": "Memuat kursus...",
           "selected": "Terpilih",
           "select": "Pilih"
-        }
+        },
+        "org_id_not_found": "ID organisasi tidak ditemukan"
       },
       "theme": {
         "primary_color": "Warna Utama",
@@ -2717,7 +2718,10 @@
         "workos_org_id": "ID Organisasi WorkOS",
         "workos_org_id_help": "ID ini dibuat secara otomatis saat Anda mengonfigurasi SSO melalui portal pengaturan."
       },
-      "seo": {},
+      "seo": {
+        "copied_to_clipboard": "Disalin ke clipboard",
+        "save_failed": "Gagal menyimpan pengaturan SEO"
+      },
       "automations": {},
       "domains": {
         "domain_required": "Domain wajib diisi",
@@ -2748,7 +2752,9 @@
         "delete_domain_title": "Hapus domain kustom",
         "delete_domain_confirm": "Apakah Anda yakin ingin menghapus domain ini? Tindakan ini tidak dapat dibatalkan.",
         "delete_domain": "Hapus Domain",
-        "verify_domain_desc": "Tambahkan catatan DNS berikut di penyedia domain Anda untuk memverifikasi kepemilikan."
+        "verify_domain_desc": "Tambahkan catatan DNS berikut di penyedia domain Anda untuk memverifikasi kepemilikan.",
+        "issuer": "Penerbit",
+        "expires": "Kedaluwarsa"
       }
     },
     "users": {

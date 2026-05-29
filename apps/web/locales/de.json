@@ -2648,7 +2648,8 @@
           "loading_courses": "Kurse werden geladen...",
           "selected": "Ausgewählt",
           "select": "Auswählen"
-        }
+        },
+        "org_id_not_found": "Organisations-ID nicht gefunden"
       },
       "theme": {
         "primary_color": "Primärfarbe",
@@ -2725,7 +2726,9 @@
           "indexing_controls_hint": "Steuern Sie welche Seiten indexiert werden",
           "hide_communities": "Communities ausblenden",
           "hide_communities_hint": "Community-Seiten vor Suchmaschinen verbergen"
-        }
+        },
+        "copied_to_clipboard": "In die Zwischenablage kopiert",
+        "save_failed": "SEO-Einstellungen konnten nicht gespeichert werden"
       },
       "domains": {
         "title": "Eigene Domains",
@@ -2784,7 +2787,9 @@
         "delete_domain_title": "Benutzerdefinierte Domain löschen",
         "delete_domain_confirm": "Sind Sie sicher, dass Sie diese Domain löschen möchten? Diese Aktion kann nicht rückgängig gemacht werden.",
         "delete_domain": "Domain löschen",
-        "verify_domain_desc": "Fügen Sie die folgenden DNS-Einträge bei Ihrem Domain-Anbieter hinzu, um den Besitz zu bestätigen."
+        "verify_domain_desc": "Fügen Sie die folgenden DNS-Einträge bei Ihrem Domain-Anbieter hinzu, um den Besitz zu bestätigen.",
+        "issuer": "Aussteller",
+        "expires": "Läuft ab"
       },
       "automations": {
         "webhooks_title": "Webhooks",

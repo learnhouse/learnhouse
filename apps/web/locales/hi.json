@@ -2642,7 +2642,8 @@
           "loading_courses": "कोर्स लोड हो रहे हैं...",
           "selected": "चयनित",
           "select": "चुनें"
-        }
+        },
+        "org_id_not_found": "संगठन ID नहीं मिली"
       },
       "theme": {
         "primary_color": "प्राथमिक रंग",
@@ -2717,7 +2718,10 @@
         "workos_org_id": "WorkOS Organization ID",
         "workos_org_id_help": "जब आप सेटअप पोर्टल के माध्यम से SSO कॉन्फ़िगर करते हैं तो यह ID स्वचालित रूप से उत्पन्न होती है।"
       },
-      "seo": {},
+      "seo": {
+        "copied_to_clipboard": "क्लिपबोर्ड पर कॉपी किया गया",
+        "save_failed": "SEO सेटिंग्स सहेजने में विफल"
+      },
       "automations": {},
       "domains": {
         "domain_required": "डोमेन आवश्यक है",
@@ -2748,7 +2752,9 @@
         "delete_domain_title": "कस्टम डोमेन हटाएँ",
         "delete_domain_confirm": "क्या आप वाकई इस डोमेन को हटाना चाहते हैं? यह क्रिया पूर्ववत नहीं की जा सकती।",
         "delete_domain": "डोमेन हटाएँ",
-        "verify_domain_desc": "स्वामित्व सत्यापित करने के लिए अपने डोमेन प्रदाता पर निम्नलिखित DNS रिकॉर्ड जोड़ें।"
+        "verify_domain_desc": "स्वामित्व सत्यापित करने के लिए अपने डोमेन प्रदाता पर निम्नलिखित DNS रिकॉर्ड जोड़ें।",
+        "issuer": "जारीकर्ता",
+        "expires": "समाप्ति"
       }
     },
     "users": {

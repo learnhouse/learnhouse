@@ -2970,7 +2970,8 @@
           "loading_courses": "Načítavajú sa kurzy...",
           "selected": "Vybrané",
           "select": "Select"
-        }
+        },
+        "org_id_not_found": "ID organizácie sa nenašlo"
       },
       "seo": {
         "org_seo": {
@@ -2998,7 +2999,9 @@
           "indexing_controls_hint": "Ovládajte, ktoré stránky môžu vyhľadávače indexovať",
           "hide_communities": "Skryť komunity",
           "hide_communities_hint": "Skryť stránky komunít pred vyhľadávačmi"
-        }
+        },
+        "copied_to_clipboard": "Skopírované do schránky",
+        "save_failed": "Nepodarilo sa uložiť nastavenia SEO"
       },
       "domains": {
         "title": "Vlastné domény",
@@ -3057,7 +3060,9 @@
         "delete_domain_title": "Odstrániť vlastnú doménu",
         "delete_domain_confirm": "Naozaj chcete odstrániť túto doménu? Túto akciu nie je možné vrátiť späť.",
         "delete_domain": "Odstrániť doménu",
-        "verify_domain_desc": "Pridajte nasledujúce DNS záznamy u svojho poskytovateľa domén na overenie vlastníctva."
+        "verify_domain_desc": "Pridajte nasledujúce DNS záznamy u svojho poskytovateľa domén na overenie vlastníctva.",
+        "issuer": "Vydavateľ",
+        "expires": "Platnosť do"
       },
       "automations": {
         "webhooks_title": "Webhooky",
