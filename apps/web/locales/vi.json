@@ -2720,7 +2720,38 @@
         "workos_org_id_help": "ID này được tạo tự động khi bạn cấu hình SSO thông qua cổng thiết lập."
       },
       "seo": {},
-      "automations": {}
+      "automations": {},
+      "domains": {
+        "domain_required": "Tên miền là bắt buộc",
+        "domain_added_success": "Thêm tên miền thành công",
+        "domain_deleted_success": "Xóa tên miền thành công",
+        "copied_to_clipboard": "Đã sao chép vào clipboard",
+        "table_domain": "Tên miền",
+        "table_status": "Trạng thái",
+        "table_ssl": "SSL",
+        "table_added": "Ngày thêm",
+        "table_verified": "Đã xác minh",
+        "table_actions": "Hành động",
+        "adding_domain": "Đang thêm tên miền...",
+        "deleting_domain": "Đang xóa tên miền...",
+        "dns_config_required": "Cần cấu hình DNS",
+        "dns_config_description": "Thêm các bản ghi này tại nhà đăng ký tên miền của bạn (ví dụ: Cloudflare, GoDaddy, Namecheap). Thay đổi DNS có thể mất đến 48 giờ.",
+        "txt_record": "Bản ghi TXT",
+        "for_verification": "Để xác minh",
+        "cname_record": "Bản ghi CNAME",
+        "for_routing": "Để định tuyến",
+        "host_name": "Host / Tên",
+        "value": "Giá trị",
+        "value_target": "Giá trị / Đích",
+        "ssl_certificate": "Chứng chỉ SSL",
+        "https_status": "Trạng thái HTTPS",
+        "check": "Kiểm tra",
+        "checking_ssl": "Đang kiểm tra trạng thái SSL...",
+        "delete_domain_title": "Xóa tên miền tùy chỉnh",
+        "delete_domain_confirm": "Bạn có chắc chắn muốn xóa tên miền này? Hành động này không thể hoàn tác.",
+        "delete_domain": "Xóa tên miền",
+        "verify_domain_desc": "Thêm các bản ghi DNS sau tại nhà cung cấp tên miền của bạn để xác minh quyền sở hữu."
+      }
     },
     "users": {
       "settings": {
@@ -4945,6 +4976,24 @@
     "new_playground_modal_desc": "Give your playground a name to get started.",
     "creating": "Creating...",
     "create": "Create",
-    "failed_create": "Failed to create playground"
+    "failed_create": "Failed to create playground",
+    "view": {
+      "open_editor_to_generate": "Mở trình soạn thảo để tạo nội dung.",
+      "check_back_later": "Hãy quay lại sau.",
+      "open_editor": "Mở trình soạn thảo",
+      "breadcrumb": "Sân chơi",
+      "about": "Giới thiệu",
+      "author": "Tác giả",
+      "access": "Truy cập",
+      "created": "Ngày tạo",
+      "status": "Trạng thái",
+      "published": "Đã xuất bản",
+      "draft": "Bản nháp",
+      "edit_in_editor": "Chỉnh sửa trong trình soạn thảo",
+      "download": "Tải xuống",
+      "reactions": "Phản ứng",
+      "exit_fullscreen": "Thoát",
+      "fullscreen": "Toàn màn hình"
+    }
   }
 }

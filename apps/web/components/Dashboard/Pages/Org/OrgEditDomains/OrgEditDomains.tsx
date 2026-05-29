@@ -83,17 +83,17 @@ const OrgEditDomains: React.FC = () => {
 
   const handleAddDomain = async () => {
     if (!newDomain.trim()) {
-      toast.error('Domain is required')
+      toast.error(t('dashboard.organization.domains.domain_required'))
       return
     }
 
-    const loadingToast = toast.loading('Adding domain...')
+    const loadingToast = toast.loading(t('dashboard.organization.domains.adding_domain'))
     try {
       const response = await addCustomDomain(org.id, { domain: newDomain.trim() }, access_token)
 
       if (response.success) {
         queryClient.invalidateQueries({ queryKey: ['org', org.id, 'domains'] })
-        toast.success('Domain added successfully', { id: loadingToast })
+        toast.success(t('dashboard.organization.domains.domain_added_success'), { id: loadingToast })
         setNewDomain('')
         setIsAddDialogOpen(false)
         // Open verification dialog
@@ -101,10 +101,10 @@ const OrgEditDomains: React.FC = () => {
         await loadVerificationInfo(response.data.domain_uuid)
         setIsVerifyDialogOpen(true)
       } else {
-        toast.error(response.data?.detail || 'Failed to add domain', { id: loadingToast })
+        toast.error(response.data?.detail || t('dashboard.organization.domains.failed_add'), { id: loadingToast })
       }
     } catch (error: any) {
-      toast.error(error.message || 'Failed to add domain', { id: loadingToast })
+      toast.error(error.message || t('dashboard.organization.domains.failed_add'), { id: loadingToast })
     }
   }
 
@@ -121,21 +121,21 @@ const OrgEditDomains: React.FC = () => {
     if (!selectedDomain) return
 
     setIsVerifying(true)
-    const loadingToast = toast.loading('Verifying domain...')
+    const loadingToast = toast.loading(t('dashboard.organization.domains.verifying_domain'))
     try {
       const response = await verifyCustomDomain(org.id, selectedDomain.domain_uuid, access_token)
 
       if (response.success) {
         queryClient.invalidateQueries({ queryKey: ['org', org.id, 'domains'] })
-        toast.success('Domain verified successfully!', { id: loadingToast })
+        toast.success(t('dashboard.organization.domains.domain_verified'), { id: loadingToast })
         setIsVerifyDialogOpen(false)
         setSelectedDomain(null)
         setVerificationInfo(null)
       } else {
-        toast.error(response.data?.detail || 'Verification failed', { id: loadingToast })
+        toast.error(response.data?.detail || t('dashboard.organization.domains.failed_verify'), { id: loadingToast })
       }
     } catch (error: any) {
-      toast.error(error.message || 'Verification failed', { id: loadingToast })
+      toast.error(error.message || t('dashboard.organization.domains.failed_verify'), { id: loadingToast })
     } finally {
       setIsVerifying(false)
     }
@@ -144,27 +144,27 @@ const OrgEditDomains: React.FC = () => {
   const handleDeleteDomain = async () => {
     if (!selectedDomain) return
 
-    const loadingToast = toast.loading('Deleting domain...')
+    const loadingToast = toast.loading(t('dashboard.organization.domains.deleting_domain'))
     try {
       const response = await deleteCustomDomain(org.id, selectedDomain.domain_uuid, access_token)
 
       if (response.success) {
         queryClient.invalidateQueries({ queryKey: ['org', org.id, 'domains'] })
-        toast.success('Domain deleted successfully', { id: loadingToast })
+        toast.success(t('dashboard.organization.domains.domain_deleted_success'), { id: loadingToast })
         setIsDeleteDialogOpen(false)
         setSelectedDomain(null)
       } else {
-        toast.error(response.data?.detail || 'Failed to delete domain', { id: loadingToast })
+        toast.error(response.data?.detail || t('dashboard.organization.domains.failed_delete'), { id: loadingToast })
       }
     } catch (error: any) {
-      toast.error(error.message || 'Failed to delete domain', { id: loadingToast })
+      toast.error(error.message || t('dashboard.organization.domains.failed_delete'), { id: loadingToast })
     }
   }
 
   const copyToClipboard = async (text: string, field: string) => {
     await navigator.clipboard.writeText(text)
     setCopiedField(field)
-    toast.success('Copied to clipboard')
+    toast.success(t('dashboard.organization.domains.copied_to_clipboard'))
     setTimeout(() => setCopiedField(null), 2000)
   }
 
@@ -365,12 +365,12 @@ const OrgEditDomains: React.FC = () => {
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead>Domain</TableHead>
-                      <TableHead>Status</TableHead>
-                      <TableHead>SSL</TableHead>
-                      <TableHead>Added</TableHead>
-                      <TableHead>Verified</TableHead>
-                      <TableHead>Actions</TableHead>
+                      <TableHead>{t('dashboard.organization.domains.table_domain')}</TableHead>
+                      <TableHead>{t('dashboard.organization.domains.table_status')}</TableHead>
+                      <TableHead>{t('dashboard.organization.domains.table_ssl')}</TableHead>
+                      <TableHead>{t('dashboard.organization.domains.table_added')}</TableHead>
+                      <TableHead>{t('dashboard.organization.domains.table_verified')}</TableHead>
+                      <TableHead>{t('dashboard.organization.domains.table_actions')}</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -469,7 +469,7 @@ const OrgEditDomains: React.FC = () => {
 
               <DialogFooter>
                 <Button variant="outline" onClick={() => setIsAddDialogOpen(false)}>
-                  Cancel
+                  {t('common.cancel')}
                 </Button>
                 <Button onClick={handleAddDomain}>{t('dashboard.organization.domains.add_domain')}</Button>
               </DialogFooter>
@@ -481,9 +481,9 @@ const OrgEditDomains: React.FC = () => {
         <Dialog open={isVerifyDialogOpen} onOpenChange={setIsVerifyDialogOpen}>
           <DialogContent className="max-w-2xl">
             <DialogHeader className="px-6 pt-6">
-              <DialogTitle>Verify Domain</DialogTitle>
+              <DialogTitle>{t('dashboard.organization.domains.verify_domain')}</DialogTitle>
               <DialogDescription>
-                Add the following DNS records at your domain provider to verify ownership.
+                {t('dashboard.organization.domains.verify_domain_desc')}
               </DialogDescription>
             </DialogHeader>
             <div className="px-6 pb-6 space-y-4">
@@ -493,10 +493,9 @@ const OrgEditDomains: React.FC = () => {
                     <div className="flex items-start gap-3">
                       <AlertTriangle className="text-blue-600 flex-shrink-0 mt-0.5" size={20} />
                       <div>
-                        <p className="font-medium text-blue-800">DNS Configuration Required</p>
+                        <p className="font-medium text-blue-800">{t('dashboard.organization.domains.dns_config_required')}</p>
                         <p className="text-sm text-blue-700">
-                          Add these records at your domain registrar (e.g., Cloudflare, GoDaddy, Namecheap).
-                          DNS changes may take up to 48 hours to propagate.
+                          {t('dashboard.organization.domains.dns_config_description')}
                         </p>
                       </div>
                     </div>
@@ -505,12 +504,12 @@ const OrgEditDomains: React.FC = () => {
                   {/* TXT Record */}
                   <div className="border rounded-lg p-4 space-y-3">
                     <div className="flex items-center gap-2">
-                      <Badge variant="outline">TXT Record</Badge>
-                      <span className="text-sm text-gray-500">For verification</span>
+                      <Badge variant="outline">{t('dashboard.organization.domains.txt_record')}</Badge>
+                      <span className="text-sm text-gray-500">{t('dashboard.organization.domains.for_verification')}</span>
                     </div>
                     <div className="space-y-2">
                       <div>
-                        <Label className="text-xs text-gray-500">Host / Name</Label>
+                        <Label className="text-xs text-gray-500">{t('dashboard.organization.domains.host_name')}</Label>
                         <div className="flex gap-2 mt-1">
                           <code className="flex-1 bg-gray-100 px-3 py-2 rounded text-sm break-all">
                             {verificationInfo.txt_record_host}
@@ -525,7 +524,7 @@ const OrgEditDomains: React.FC = () => {
                         </div>
                       </div>
                       <div>
-                        <Label className="text-xs text-gray-500">Value</Label>
+                        <Label className="text-xs text-gray-500">{t('dashboard.organization.domains.value')}</Label>
                         <div className="flex gap-2 mt-1">
                           <code className="flex-1 bg-gray-100 px-3 py-2 rounded text-sm break-all">
                             {verificationInfo.txt_record_value}
@@ -545,12 +544,12 @@ const OrgEditDomains: React.FC = () => {
                   {/* CNAME Record */}
                   <div className="border rounded-lg p-4 space-y-3">
                     <div className="flex items-center gap-2">
-                      <Badge variant="outline">CNAME Record</Badge>
-                      <span className="text-sm text-gray-500">For routing</span>
+                      <Badge variant="outline">{t('dashboard.organization.domains.cname_record')}</Badge>
+                      <span className="text-sm text-gray-500">{t('dashboard.organization.domains.for_routing')}</span>
                     </div>
                     <div className="space-y-2">
                       <div>
-                        <Label className="text-xs text-gray-500">Host / Name</Label>
+                        <Label className="text-xs text-gray-500">{t('dashboard.organization.domains.host_name')}</Label>
                         <div className="flex gap-2 mt-1">
                           <code className="flex-1 bg-gray-100 px-3 py-2 rounded text-sm break-all">
                             {verificationInfo.cname_record_host}
@@ -565,7 +564,7 @@ const OrgEditDomains: React.FC = () => {
                         </div>
                       </div>
                       <div>
-                        <Label className="text-xs text-gray-500">Value / Target</Label>
+                        <Label className="text-xs text-gray-500">{t('dashboard.organization.domains.value_target')}</Label>
                         <div className="flex gap-2 mt-1">
                           <code className="flex-1 bg-gray-100 px-3 py-2 rounded text-sm break-all">
                             {verificationInfo.cname_record_value}
@@ -587,8 +586,8 @@ const OrgEditDomains: React.FC = () => {
                     <div className="border rounded-lg p-4 space-y-3">
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-2">
-                          <Badge variant="outline">SSL Certificate</Badge>
-                          <span className="text-sm text-gray-500">HTTPS status</span>
+                          <Badge variant="outline">{t('dashboard.organization.domains.ssl_certificate')}</Badge>
+                          <span className="text-sm text-gray-500">{t('dashboard.organization.domains.https_status')}</span>
                         </div>
                         <Button
                           variant="outline"
@@ -646,7 +645,7 @@ const OrgEditDomains: React.FC = () => {
                       ) : (
                         <div className="flex items-center gap-2 text-sm text-gray-500">
                           <Loader2 size={14} className="animate-spin" />
-                          Checking SSL status...
+                          {t('dashboard.organization.domains.checking_ssl')}
                         </div>
                       )}
                     </div>
@@ -689,10 +688,10 @@ const OrgEditDomains: React.FC = () => {
             <DialogHeader className="px-6 pt-6">
               <DialogTitle className="flex items-center gap-2 text-red-600">
                 <AlertTriangle size={20} />
-                Delete Custom Domain
+                {t('dashboard.organization.domains.delete_domain_title')}
               </DialogTitle>
               <DialogDescription>
-                Are you sure you want to delete this domain? This action cannot be undone.
+                {t('dashboard.organization.domains.delete_domain_confirm')}
               </DialogDescription>
             </DialogHeader>
             <div className="px-6 pb-6">
@@ -709,7 +708,7 @@ const OrgEditDomains: React.FC = () => {
                   Cancel
                 </Button>
                 <Button variant="destructive" onClick={handleDeleteDomain}>
-                  Delete Domain
+                  {t('dashboard.organization.domains.delete_domain')}
                 </Button>
               </DialogFooter>
             </div>

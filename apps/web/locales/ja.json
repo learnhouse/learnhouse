@@ -2705,7 +2705,38 @@
         "workos_org_id_help": "このIDはセットアップポータルでSSOを設定すると自動的に生成されます。"
       },
       "seo": {},
-      "automations": {}
+      "automations": {},
+      "domains": {
+        "domain_required": "ドメインは必須です",
+        "domain_added_success": "ドメインが正常に追加されました",
+        "domain_deleted_success": "ドメインが正常に削除されました",
+        "copied_to_clipboard": "クリップボードにコピーしました",
+        "table_domain": "ドメイン",
+        "table_status": "ステータス",
+        "table_ssl": "SSL",
+        "table_added": "追加日",
+        "table_verified": "確認済み",
+        "table_actions": "操作",
+        "adding_domain": "ドメインを追加中...",
+        "deleting_domain": "ドメインを削除中...",
+        "dns_config_required": "DNS設定が必要です",
+        "dns_config_description": "ドメインレジストラ（例：Cloudflare、GoDaddy、Namecheap）でこれらのレコードを追加してください。DNS変更には最大48時間かかる場合があります。",
+        "txt_record": "TXTレコード",
+        "for_verification": "確認用",
+        "cname_record": "CNAMEレコード",
+        "for_routing": "ルーティング用",
+        "host_name": "ホスト / 名前",
+        "value": "値",
+        "value_target": "値 / ターゲット",
+        "ssl_certificate": "SSL証明書",
+        "https_status": "HTTPSステータス",
+        "check": "確認",
+        "checking_ssl": "SSLステータスを確認中...",
+        "delete_domain_title": "カスタムドメインを削除",
+        "delete_domain_confirm": "このドメインを削除してもよろしいですか？この操作は元に戻せません。",
+        "delete_domain": "ドメインを削除",
+        "verify_domain_desc": "所有権を確認するために、ドメインプロバイダーで以下のDNSレコードを追加してください。"
+      }
     },
     "users": {
       "settings": {
@@ -4930,6 +4961,24 @@
     "new_playground_modal_desc": "Give your playground a name to get started.",
     "creating": "Creating...",
     "create": "Create",
-    "failed_create": "Failed to create playground"
+    "failed_create": "Failed to create playground",
+    "view": {
+      "open_editor_to_generate": "エディターを開いてコンテンツを生成してください。",
+      "check_back_later": "後でもう一度確認してください。",
+      "open_editor": "エディターを開く",
+      "breadcrumb": "プレイグラウンド",
+      "about": "概要",
+      "author": "作成者",
+      "access": "アクセス",
+      "created": "作成日",
+      "status": "ステータス",
+      "published": "公開済み",
+      "draft": "下書き",
+      "edit_in_editor": "エディターで編集",
+      "download": "ダウンロード",
+      "reactions": "リアクション",
+      "exit_fullscreen": "終了",
+      "fullscreen": "全画面"
+    }
   }
 }

@@ -2718,7 +2718,38 @@
         "workos_org_id_help": "ID ini dibuat secara otomatis saat Anda mengonfigurasi SSO melalui portal pengaturan."
       },
       "seo": {},
-      "automations": {}
+      "automations": {},
+      "domains": {
+        "domain_required": "Domain wajib diisi",
+        "domain_added_success": "Domain berhasil ditambahkan",
+        "domain_deleted_success": "Domain berhasil dihapus",
+        "copied_to_clipboard": "Disalin ke clipboard",
+        "table_domain": "Domain",
+        "table_status": "Status",
+        "table_ssl": "SSL",
+        "table_added": "Ditambahkan",
+        "table_verified": "Terverifikasi",
+        "table_actions": "Tindakan",
+        "adding_domain": "Menambahkan domain...",
+        "deleting_domain": "Menghapus domain...",
+        "dns_config_required": "Konfigurasi DNS diperlukan",
+        "dns_config_description": "Tambahkan catatan ini di registrar domain Anda (mis. Cloudflare, GoDaddy, Namecheap). Perubahan DNS dapat memakan waktu hingga 48 jam.",
+        "txt_record": "Catatan TXT",
+        "for_verification": "Untuk verifikasi",
+        "cname_record": "Catatan CNAME",
+        "for_routing": "Untuk routing",
+        "host_name": "Host / Nama",
+        "value": "Nilai",
+        "value_target": "Nilai / Target",
+        "ssl_certificate": "Sertifikat SSL",
+        "https_status": "Status HTTPS",
+        "check": "Periksa",
+        "checking_ssl": "Memeriksa status SSL...",
+        "delete_domain_title": "Hapus domain kustom",
+        "delete_domain_confirm": "Apakah Anda yakin ingin menghapus domain ini? Tindakan ini tidak dapat dibatalkan.",
+        "delete_domain": "Hapus Domain",
+        "verify_domain_desc": "Tambahkan catatan DNS berikut di penyedia domain Anda untuk memverifikasi kepemilikan."
+      }
     },
     "users": {
       "settings": {
@@ -4943,6 +4974,24 @@
     "new_playground_modal_desc": "Give your playground a name to get started.",
     "creating": "Creating...",
     "create": "Create",
-    "failed_create": "Failed to create playground"
+    "failed_create": "Failed to create playground",
+    "view": {
+      "open_editor_to_generate": "Buka editor untuk membuat konten.",
+      "check_back_later": "Periksa kembali nanti.",
+      "open_editor": "Buka Editor",
+      "breadcrumb": "Playground",
+      "about": "Tentang",
+      "author": "Penulis",
+      "access": "Akses",
+      "created": "Dibuat",
+      "status": "Status",
+      "published": "Dipublikasikan",
+      "draft": "Draf",
+      "edit_in_editor": "Edit di Editor",
+      "download": "Unduh",
+      "reactions": "Reaksi",
+      "exit_fullscreen": "Keluar",
+      "fullscreen": "Layar penuh"
+    }
   }
 }
