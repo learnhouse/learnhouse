@@ -168,7 +168,7 @@
     "saving": "Ukladá sa...",
     "cancel": "Zrušiť",
     "submit": "Odoslať",
-    "delete": "Vymazať",
+    "delete": "Odstrániť",
     "previous": "Predchádzajúce",
     "next": "Ďalšie",
     "status": "Stav",
@@ -2356,7 +2356,7 @@
         "bulk_actions": {
           "selected": "{{count}} vybraných",
           "clear": "Zrušiť výber",
-          "delete": "Vymazať",
+          "delete": "Odstrániť",
           "delete_title": "Odstrániť vybrané aktivity",
           "delete_confirm": "Ste si istí, že chcete odstrániť {{count}} vybraných aktivít? Táto akcia je nevratná.",
           "delete_button": "Odstrániť aktivity",
@@ -2838,15 +2838,15 @@
             "description": "Pridajte hero sekciu s nadpisom a výzvu k akcii"
           },
           "text_and_image": {
-            "label": "Text & Image",
+            "label": "Text a obrázok",
             "description": "Pridajte sekciu s textom a obrázkom"
           },
           "logos": {
-            "label": "Logos",
+            "label": "Logá",
             "description": "Pridajte sekciu na prezentáciu log"
           },
           "people": {
-            "label": "People",
+            "label": "Ľudia",
             "description": "Pridajte sekciu na zvýraznenie členov tímu"
           },
           "featured_courses": {
@@ -2879,17 +2879,17 @@
             "image": "Obrázok"
           },
           "background_color": "Farba pozadia",
-          "gradient_type": "Gradient Type",
+          "gradient_type": "Typ gradientu",
           "gradient_type_placeholder": "Vyberte typ gradientu",
           "gradient_types": {
-            "preset": "Preset Gradients",
-            "custom": "Custom Gradient"
+            "preset": "Predvolené gradienty",
+            "custom": "Vlastný gradient"
           },
           "start_color": "Počiatočná farba",
           "end_color": "Koncová farba",
-          "gradient_direction": "Gradient Direction",
+          "gradient_direction": "Smer gradientu",
           "gradient_direction_placeholder": "Vyberte smer gradientu",
-          "gradient_preset": "Gradient Preset",
+          "gradient_preset": "Predvoľba gradientu",
           "gradient_preset_placeholder": "Vyberte predvoľbu gradientu",
           "background_image": "Obrázok pozadia",
           "upload_image": "Nahrať obrázok",
@@ -2940,7 +2940,7 @@
           "title": "Sekcia logá",
           "title_label": "Názov",
           "title_placeholder": "Zadajte názov sekcie",
-          "logos": "Logos",
+          "logos": "Logá",
           "logo_url": "URL loga",
           "alt_text": "Alternatívny text",
           "upload_logo": "Nahrať logo",
@@ -2950,7 +2950,7 @@
           "title": "Sekcia ľudia",
           "title_label": "Názov",
           "title_placeholder": "Zadajte názov sekcie",
-          "people": "People",
+          "people": "Ľudia",
           "name": "Názov",
           "name_placeholder": "Meno osoby",
           "username": "Používateľské meno",
@@ -2958,7 +2958,7 @@
           "image": "Obrázok",
           "image_url": "URL obrázka",
           "upload_avatar": "Nahrať avatar",
-          "description": "Description",
+          "description": "Popis",
           "description_placeholder": "Popis alebo rola",
           "add_person": "Pridať osobu"
         },
@@ -2969,7 +2969,7 @@
           "select_courses": "Vybrať kurzy",
           "loading_courses": "Načítavajú sa kurzy...",
           "selected": "Vybrané",
-          "select": "Select"
+          "select": "Vybrať"
         },
         "org_id_not_found": "ID organizácie sa nenašlo"
       },
@@ -3148,16 +3148,16 @@
           "role_update_error": "Chyba pri aktualizácii role"
         },
         "pagination": {
-          "showing": "Showing {{start}}-{{end}} of {{total}}",
-          "page": "Page {{current}} of {{total}}"
+          "showing": "Zobrazené {{start}}-{{end}} z {{total}}",
+          "page": "Strana {{current}} z {{total}}"
         },
         "modals": {
           "update_role": {
             "title": "Aktualizovať rolu",
-            "description": "Update @{{username}}'s role"
+            "description": "Aktualizovať rolu používateľa @{{username}}"
           },
           "remove_user": {
-            "title": "Delete {{username}} ?",
+            "title": "Odstrániť {{username}}?",
             "message": "Ste si istí, že chcete odstrániť tohto používateľa z organizácie?",
             "button": "Odstrániť používateľa"
           }
@@ -3209,7 +3209,7 @@
             "delete_success": "Kód pozvánky odstránený",
             "delete_error": "Chyba pri odstraňovaní",
             "changing_method": "Mení sa spôsob pripojenia...",
-            "change_success": "Changed join method to {{method}}",
+            "change_success": "Spôsob pripojenia zmenený na {{method}}",
             "change_error": "Chyba pri zmene spôsobu pripojenia"
           }
         },
@@ -3236,9 +3236,9 @@
         "send_button": "Poslať pozvánky e-mailom",
         "results": {
           "summary_title": "Výsledky",
-          "sent_count": "{{count}} sent",
-          "failed_count": "{{count}} failed",
-          "skipped_count": "{{count}} already invited",
+          "sent_count": "{{count}} odoslaných",
+          "failed_count": "{{count}} zlyhaných",
+          "skipped_count": "{{count}} už pozvaných",
           "status": {
             "sent": "Odoslané",
             "email_failed": "Zlyhalo",
@@ -3270,12 +3270,12 @@
           "remove_error": "Chyba pri odstraňovaní pozvánky",
           "remove_button": "Odstrániť",
           "remove_title": "Odstrániť pozvánku",
-          "remove_message": "Ste si isti, ze chcete odstranit pozvanku pre {{email}}?"
+          "remove_message": "Ste si istí, že chcete odstrániť pozvánku pre {{email}}?"
         },
         "toasts": {
           "sending": "Odosielajú sa pozvánky...",
           "success": "Pozvánky úspešne odoslané",
-          "partial": "{{sent}} sent, {{failed}} failed",
+          "partial": "{{sent}} odoslaných, {{failed}} zlyhaných",
           "error": "Chyba pri odosielaní pozvánok"
         }
       },
@@ -3301,8 +3301,8 @@
         },
         "actions": {
           "manage_users": "Spravovať používateľov",
-          "edit": "Edit",
-          "delete": "Vymazať",
+          "edit": "Upraviť",
+          "delete": "Odstrániť",
           "create": "Vytvoriť skupinu používateľov"
         },
         "modals": {
@@ -3318,10 +3318,10 @@
               "not_in_group": "Nie v skupine"
             },
             "selection": {
-              "count": "{{count}} users selected",
+              "count": "{{count}} vybraných používateľov",
               "clear": "Vymazať",
-              "add_selected": "Add {{count}} to Group",
-              "remove_selected": "Remove {{count}} from Group",
+              "add_selected": "Pridať {{count}} do skupiny",
+              "remove_selected": "Odstrániť {{count}} zo skupiny",
               "select_all_visible": "Vybrať všetkých viditeľných"
             },
             "status": {
@@ -3331,8 +3331,8 @@
               "not_linked": "Neprepojené"
             },
             "pagination": {
-              "showing": "Showing {{start}}-{{end}} of {{total}}",
-              "page": "Page {{current}} of {{total}}"
+              "showing": "Zobrazené {{start}}-{{end}} z {{total}}",
+              "page": "Strana {{current}} z {{total}}"
             },
             "table": {
               "user": "Používateľ",
@@ -3347,9 +3347,9 @@
               "link_success": "Používateľ úspešne prepojený",
               "unlink_success": "Používateľ úspešne odpojený",
               "bulk_adding": "Pridávajú sa používatelia do skupiny...",
-              "bulk_add_success": "Successfully added {{count}} users to group",
+              "bulk_add_success": "Úspešne pridaných {{count}} používateľov do skupiny",
               "bulk_removing": "Odstraňujú sa používatelia zo skupiny...",
-              "bulk_remove_success": "Successfully removed {{count}} users from group",
+              "bulk_remove_success": "Úspešne odstránených {{count}} používateľov zo skupiny",
               "bulk_error": "Počas operácie došlo k chybe",
               "error": "Error {{status}}: {{detail}}"
             }
@@ -3407,11 +3407,11 @@
         },
         "no_description": "Bez popisu",
         "no_permissions": "Bez oprávnení",
-        "permissions_count": "{{count}} permissions",
+        "permissions_count": "{{count}} oprávnení",
         "system_wide": "Celý systém",
         "actions": {
-          "edit": "Edit",
-          "delete": "Vymazať",
+          "edit": "Upraviť",
+          "delete": "Odstrániť",
           "create": "Vytvoriť rolu",
           "view_rights": "Zobraziť práva"
         },
@@ -3421,7 +3421,7 @@
             "description": "Vytvoriť novú rolu so špecifickými oprávneniami",
             "form": {
               "role_name": "Názov role",
-              "role_name_placeholder": "e.g., Course Manager",
+              "role_name_placeholder": "napr. Správca kurzov",
               "description": "Popis",
               "description_placeholder": "Opíšte, čo táto rola môže robiť...",
               "permissions": "Oprávnenia",
@@ -3569,7 +3569,7 @@
             "button": "Odstrániť rolu"
           },
           "view_rights": {
-            "title": "{{roleName}} - Permissions",
+            "title": "{{roleName}} – Oprávnenia",
             "description": "Zobraziť všetky oprávnenia priradené tejto role"
           }
         },
@@ -3608,7 +3608,7 @@
         "empty": "Zatiaľ žiadne úlohy",
         "empty_filtered": "Žiadne úlohy nezodpovedajú vašim filtrom",
         "clear_filters": "Vymazať filtre",
-        "showing_count": "Showing {{shown}} of {{total}} assignments",
+        "showing_count": "Zobrazené {{shown}} z {{total}} úloh",
         "stats": {
           "total": "Celkom",
           "published": "Publikované",
@@ -3702,7 +3702,7 @@
         "task_editor": {
           "general": {
             "title": "Názov",
-            "description": "Description",
+            "description": "Popis",
             "hint": "Nápoveda",
             "reference_file": "Referenčný súbor",
             "reference_file_info": "Povolené formáty: pdf, docx, mp4, jpg, jpeg, png, pptx, zip",
@@ -3819,10 +3819,10 @@
         "submission_label": "Odovzdanie",
         "evaluate": "Ohodnotiť",
         "evaluate_modal": {
-          "title": "Evaluate @{{username}}",
+          "title": "Ohodnotiť @{{username}}",
           "description": "Ohodnotiť odovzdanie"
         },
-        "task_label": "Task {{number}} :",
+        "task_label": "Úloha {{number}} :",
         "hint": "Nápoveda",
         "reference_document": "Referenčný dokument",
         "actions": {
@@ -3849,9 +3849,9 @@
           "average": "Priemer triedy",
           "median": "Medián",
           "pass_rate": "Miera úspešnosti",
-          "pass_rate_sub": "{{passed}} of {{total}} passed",
+          "pass_rate_sub": "{{passed}} z {{total}} úspešných",
           "on_time": "Miera včasnosti",
-          "on_time_sub": "{{late}} late of {{total}}"
+          "on_time_sub": "{{late}} oneskorených z {{total}}"
         },
         "mini": {
           "highest": "Najvyššie",
@@ -3987,168 +3987,168 @@
       }
     },
     "search": {
-      "trigger": "Hladat",
-      "placeholder": "Hladat stranky a obsah...",
+      "trigger": "Hľadať",
+      "placeholder": "Hľadať stránky a obsah...",
       "shortcut_hint": "Cmd+K",
-      "no_results": "Ziadne vysledky",
-      "loading": "Hlada sa...",
-      "type_to_search": "Zadajte aspon 2 znaky pre vyhladavanie obsahu",
+      "no_results": "Žiadne výsledky",
+      "loading": "Hľadá sa...",
+      "type_to_search": "Zadajte aspoň 2 znaky pre vyhľadávanie obsahu",
       "groups": {
-        "pages": "Stranky",
+        "pages": "Stránky",
         "courses": "Kurzy",
         "collections": "Kolekcie",
-        "users": "Pouzivatelia",
+        "users": "Používatelia",
         "communities": "Komunity",
         "discussions": "Diskusie",
-        "playgrounds": "Ihriska",
+        "playgrounds": "Ihriská",
         "podcasts": "Podcasty"
       },
       "entries": {
         "home": {
-          "description": "Prehlad nastenky",
-          "keywords": "domov, prehlad, start, nastenka"
+          "description": "Prehľad nástenky",
+          "keywords": "domov, prehľad, štart, nástenka"
         },
         "courses": {
-          "description": "Spravovat kurzy",
-          "keywords": "kurzy, lekcie, ucenie"
+          "description": "Spravovať kurzy",
+          "keywords": "kurzy, lekcie, učenie"
         },
         "assignments": {
-          "description": "Spravovat ulohy",
-          "keywords": "ulohy, domace ulohy, cvicenia"
+          "description": "Spravovať úlohy",
+          "keywords": "úlohy, domáce úlohy, cvičenia"
         },
         "communities": {
-          "description": "Spravovat komunity",
-          "keywords": "fora, diskusie, clenovia"
+          "description": "Spravovať komunity",
+          "keywords": "fóra, diskusie, členovia"
         },
         "podcasts": {
-          "description": "Spravovat podcasty",
-          "keywords": "audio, epizody"
+          "description": "Spravovať podcasty",
+          "keywords": "audio, epizódy"
         },
         "boards": {
-          "description": "Spravovat tabule",
-          "keywords": "kanban, projekt, ulohy"
+          "description": "Spravovať tabule",
+          "keywords": "kanban, projekt, úlohy"
         },
         "playgrounds": {
-          "description": "Programovacie ihriska",
-          "keywords": "kod, sandbox, programovanie"
+          "description": "Programovacie ihriská",
+          "keywords": "kód, sandbox, programovanie"
         },
         "analytics": {
-          "description": "Zobrazit analytiku",
-          "keywords": "statistiky, metriky, grafy, reporty"
+          "description": "Zobraziť analytiku",
+          "keywords": "štatistiky, metriky, grafy, reporty"
         },
         "users": {
-          "description": "Spravovat pouzivatelov organizacie",
-          "keywords": "clenovia, ucty, ludia"
+          "description": "Spravovať používateľov organizácie",
+          "keywords": "členovia, účty, ľudia"
         },
         "usergroups": {
-          "description": "Spravovat skupiny pouzivatelov",
-          "keywords": "timy, kohorty, skupiny"
+          "description": "Spravovať skupiny používateľov",
+          "keywords": "tímy, kohorty, skupiny"
         },
         "roles": {
-          "description": "Spravovat role a opravnenia",
-          "keywords": "opravnenia, pristup, bezpecnost"
+          "description": "Spravovať role a oprávnenia",
+          "keywords": "oprávnenia, prístup, bezpečnosť"
         },
         "signups": {
-          "description": "Skontrolovat registracie",
-          "keywords": "registracie, ziadosti"
+          "description": "Skontrolovať registrácie",
+          "keywords": "registrácie, žiadosti"
         },
         "org_general": {
-          "description": "Vseobecne nastavenia organizacie",
-          "keywords": "nazov, branding, profil"
+          "description": "Všeobecné nastavenia organizácie",
+          "keywords": "názov, branding, profil"
         },
         "org_features": {
-          "description": "Spravovat funkcie organizacie",
+          "description": "Spravovať funkcie organizácie",
           "keywords": "funkcie, moduly"
         },
         "org_billing": {
-          "description": "Fakturacia a predplatne",
-          "keywords": "plan, platby, faktura"
+          "description": "Fakturácia a predplatné",
+          "keywords": "plán, platby, faktúra"
         },
         "payments_overview": {
-          "description": "Prehlad platieb a prijmov",
-          "keywords": "stripe, nastenka, prijmy",
-          "title": "Prehlad platieb"
+          "description": "Prehľad platieb a príjmov",
+          "keywords": "stripe, nástenka, príjmy",
+          "title": "Prehľad platieb"
         },
         "payments_products": {
-          "description": "Platobne produkty a ceny",
+          "description": "Platobné produkty a ceny",
           "keywords": "produkty, ceny, stripe",
           "title": "Produkty"
         },
         "users_add": {
-          "description": "Pozvat novych clenov",
-          "keywords": "pozvat, pridat, clenovia"
+          "description": "Pozvať nových členov",
+          "keywords": "pozvať, pridať, členovia"
         },
         "users_audit_logs": {
-          "description": "Zaznamy aktivit organizacie",
-          "keywords": "audit, zaznamy, historia, bezpecnost"
+          "description": "Záznamy aktivít organizácie",
+          "keywords": "audit, záznamy, história, bezpečnosť"
         },
         "org_branding": {
-          "description": "Logo, farby a vizualna identita",
-          "keywords": "branding, logo, farby, tema"
+          "description": "Logo, farby a vizuálna identita",
+          "keywords": "branding, logo, farby, téma"
         },
         "org_landing": {
-          "description": "Prisposobit vstupnu stranku",
-          "keywords": "vstupna, domovska, hero, stranka"
+          "description": "Prispôsobiť vstupnú stránku",
+          "keywords": "vstupná, domovská, hero, stránka"
         },
         "org_seo": {
-          "description": "Optimalizacia pre vyhladavace",
-          "keywords": "seo, vyhladavanie, meta, google"
+          "description": "Optimalizácia pre vyhľadávače",
+          "keywords": "seo, vyhľadávanie, meta, google"
         },
         "org_ai": {
-          "description": "AI funkcie a konfiguracia",
+          "description": "AI funkcie a konfigurácia",
           "keywords": "ai, llm, gpt, generovanie"
         },
         "org_domains": {
-          "description": "Vlastne domeny",
-          "keywords": "domena, dns, vlastna, subdomena"
+          "description": "Vlastné domény",
+          "keywords": "doména, dns, vlastná, subdoména"
         },
         "org_automations": {
-          "description": "Webhooky a externe integracie",
-          "keywords": "webhooky, automatizacie, integracie"
+          "description": "Webhooky a externé integrácie",
+          "keywords": "webhooky, automatizácie, integrácie"
         },
         "org_sso": {
-          "description": "Konfiguracia jednotneho prihlasenia",
+          "description": "Konfigurácia jednotného prihlásenia",
           "keywords": "sso, saml, oauth, enterprise"
         },
         "org_other": {
-          "description": "Dalsie nastavenia organizacie",
-          "keywords": "rozne, pokrocile, extra"
+          "description": "Ďalšie nastavenia organizácie",
+          "keywords": "rôzne, pokročilé, extra"
         },
         "payments_groups": {
-          "description": "Platobne skupiny a baliky",
-          "keywords": "skupiny, baliky",
-          "title": "Platobne skupiny"
+          "description": "Platobné skupiny a balíky",
+          "keywords": "skupiny, balíky",
+          "title": "Platobné skupiny"
         },
         "payments_configuration": {
-          "description": "Stripe a konfiguracia platieb",
-          "keywords": "konfiguracia, nastavenia, stripe",
-          "title": "Konfiguracia"
+          "description": "Stripe a konfigurácia platieb",
+          "keywords": "konfigurácia, nastavenia, stripe",
+          "title": "Konfigurácia"
         },
         "payments_customers": {
-          "description": "Zakaznici a predplatitelia",
-          "keywords": "zakaznici, predplatitelia, kupujuci",
-          "title": "Zakaznici"
+          "description": "Zákazníci a predplatitelia",
+          "keywords": "zákazníci, predplatitelia, kupujúci",
+          "title": "Zákazníci"
         },
         "courses_migrate": {
-          "description": "Importovat kurzy z ineho LMS",
-          "keywords": "import, migracia, prenos, lms",
-          "title": "Migrovat kurzy"
+          "description": "Importovať kurzy z iného LMS",
+          "keywords": "import, migrácia, prenos, lms",
+          "title": "Migrovať kurzy"
         },
         "account_general": {
-          "description": "Vseobecne nastavenia uctu",
-          "keywords": "ucet, nastavenia, email, meno, jazyk"
+          "description": "Všeobecné nastavenia účtu",
+          "keywords": "účet, nastavenia, email, meno, jazyk"
         },
         "account_profile": {
-          "description": "Upravit profil a zivotopis",
-          "keywords": "profil, zivotopis, avatar, fotka"
+          "description": "Upraviť profil a životopis",
+          "keywords": "profil, životopis, avatar, fotka"
         },
         "account_security": {
-          "description": "Heslo a bezpecnostne nastavenia",
-          "keywords": "heslo, bezpecnost, relacie"
+          "description": "Heslo a bezpečnostné nastavenia",
+          "keywords": "heslo, bezpečnosť, relácie"
         },
         "account_purchases": {
-          "description": "Vase nakupy a predplatne",
-          "keywords": "nakupy, predplatne, fakturacia, historia"
+          "description": "Vaše nákupy a predplatné",
+          "keywords": "nákupy, predplatné, fakturácia, história"
         }
       }
     }
