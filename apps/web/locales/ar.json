@@ -2657,7 +2657,8 @@
           "loading_courses": "جاري تحميل الدورات...",
           "selected": "مختار",
           "select": "اختر"
-        }
+        },
+        "org_id_not_found": "لم يتم العثور على معرف المنظمة"
       },
       "theme": {
         "primary_color": "اللون الأساسي",
@@ -2708,7 +2709,10 @@
         "workos_org_id": "معرف مؤسسة WorkOS",
         "workos_org_id_help": "يتم إنشاء هذا المعرف تلقائياً عند تكوين SSO من خلال بوابة الإعداد."
       },
-      "seo": {},
+      "seo": {
+        "copied_to_clipboard": "تم النسخ إلى الحافظة",
+        "save_failed": "فشل حفظ إعدادات SEO"
+      },
       "automations": {},
       "domains": {
         "domain_required": "النطاق مطلوب",
@@ -2739,7 +2743,9 @@
         "delete_domain_title": "حذف النطاق المخصص",
         "delete_domain_confirm": "هل أنت متأكد من حذف هذا النطاق؟ لا يمكن التراجع عن هذا الإجراء.",
         "delete_domain": "حذف النطاق",
-        "verify_domain_desc": "أضف سجلات DNS التالية لدى مزود النطاق الخاص بك للتحقق من الملكية."
+        "verify_domain_desc": "أضف سجلات DNS التالية لدى مزود النطاق الخاص بك للتحقق من الملكية.",
+        "issuer": "المُصدر",
+        "expires": "ينتهي"
       }
     },
     "users": {

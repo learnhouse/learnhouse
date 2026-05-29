@@ -2979,7 +2979,9 @@
           "loading_courses": "Loading courses...",
           "selected": "Selected",
           "select": "Select"
-        }
+        },
+        "org_id_not_found": "Organization ID not found",
+        "unknown_section_type": "Unknown section type"
       },
       "seo": {
         "org_seo": {
@@ -3007,7 +3009,9 @@
           "indexing_controls_hint": "Control which pages search engines can index",
           "hide_communities": "Hide Communities",
           "hide_communities_hint": "Hide community pages from search engines"
-        }
+        },
+        "copied_to_clipboard": "Copied to clipboard",
+        "save_failed": "Failed to save SEO settings"
       },
       "domains": {
         "title": "Custom Domains",
@@ -3066,7 +3070,9 @@
         "delete_domain_title": "Delete Custom Domain",
         "delete_domain_confirm": "Are you sure you want to delete this domain? This action cannot be undone.",
         "delete_domain": "Delete Domain",
-        "verify_domain_desc": "Add the following DNS records at your domain provider to verify ownership."
+        "verify_domain_desc": "Add the following DNS records at your domain provider to verify ownership.",
+        "issuer": "Issuer",
+        "expires": "Expires"
       },
       "automations": {
         "webhooks_title": "Webhooks",
@@ -3116,6 +3122,14 @@
         "purchased": "Purchased",
         "used": "Used",
         "remaining": "Remaining"
+      },
+      "general": {
+        "validation": {
+          "short_description_required": "Short description is required",
+          "short_description_max": "Short description must be 100 characters or less",
+          "about_max": "About text must be 400 characters or less",
+          "label_required": "Organization label is required"
+        }
       }
     },
     "users": {

@@ -2644,7 +2644,8 @@
           "loading_courses": "Kurslar yükleniyor...",
           "selected": "Seçildi",
           "select": "Seç"
-        }
+        },
+        "org_id_not_found": "Organizasyon kimliği bulunamadı"
       },
       "theme": {
         "primary_color": "Ana Renk",
@@ -2719,7 +2720,10 @@
         "workos_org_id": "WorkOS Organizasyon Kimliği",
         "workos_org_id_help": "Bu kimlik, kurulum portalı aracılığıyla SSO yapılandırdığınızda otomatik olarak oluşturulur."
       },
-      "seo": {},
+      "seo": {
+        "copied_to_clipboard": "Panoya kopyalandı",
+        "save_failed": "SEO ayarları kaydedilemedi"
+      },
       "automations": {},
       "domains": {
         "domain_required": "Alan adı gereklidir",
@@ -2750,7 +2754,9 @@
         "delete_domain_title": "Özel alan adını sil",
         "delete_domain_confirm": "Bu alan adını silmek istediğinizden emin misiniz? Bu işlem geri alınamaz.",
         "delete_domain": "Alan Adını Sil",
-        "verify_domain_desc": "Sahipliği doğrulamak için alan adı sağlayıcınızda aşağıdaki DNS kayıtlarını ekleyin."
+        "verify_domain_desc": "Sahipliği doğrulamak için alan adı sağlayıcınızda aşağıdaki DNS kayıtlarını ekleyin.",
+        "issuer": "Veren",
+        "expires": "Sona eriyor"
       }
     },
     "users": {

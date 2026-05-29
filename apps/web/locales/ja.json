@@ -2653,7 +2653,8 @@
           "loading_courses": "コースを読み込み中...",
           "selected": "選択済み",
           "select": "選択"
-        }
+        },
+        "org_id_not_found": "組織IDが見つかりません"
       },
       "theme": {
         "primary_color": "プライマリカラー",
@@ -2704,7 +2705,10 @@
         "workos_org_id": "WorkOS組織ID",
         "workos_org_id_help": "このIDはセットアップポータルでSSOを設定すると自動的に生成されます。"
       },
-      "seo": {},
+      "seo": {
+        "copied_to_clipboard": "クリップボードにコピーしました",
+        "save_failed": "SEO設定の保存に失敗しました"
+      },
       "automations": {},
       "domains": {
         "domain_required": "ドメインは必須です",
@@ -2735,7 +2739,9 @@
         "delete_domain_title": "カスタムドメインを削除",
         "delete_domain_confirm": "このドメインを削除してもよろしいですか？この操作は元に戻せません。",
         "delete_domain": "ドメインを削除",
-        "verify_domain_desc": "所有権を確認するために、ドメインプロバイダーで以下のDNSレコードを追加してください。"
+        "verify_domain_desc": "所有権を確認するために、ドメインプロバイダーで以下のDNSレコードを追加してください。",
+        "issuer": "発行者",
+        "expires": "有効期限"
       }
     },
     "users": {

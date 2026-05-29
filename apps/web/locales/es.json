@@ -2648,7 +2648,8 @@
           "loading_courses": "Cargando cursos...",
           "selected": "Seleccionado",
           "select": "Seleccionar"
-        }
+        },
+        "org_id_not_found": "ID de organización no encontrado"
       },
       "theme": {
         "primary_color": "Color primario",
@@ -2725,7 +2726,9 @@
           "indexing_controls_hint": "Controla que paginas pueden indexar los motores de busqueda",
           "hide_communities": "Ocultar comunidades",
           "hide_communities_hint": "Ocultar paginas de comunidad de los motores de busqueda"
-        }
+        },
+        "copied_to_clipboard": "Copiado al portapapeles",
+        "save_failed": "Error al guardar la configuración SEO"
       },
       "domains": {
         "title": "Dominios personalizados",
@@ -2784,7 +2787,9 @@
         "delete_domain_title": "Eliminar dominio personalizado",
         "delete_domain_confirm": "¿Estás seguro de que quieres eliminar este dominio? Esta acción no se puede deshacer.",
         "delete_domain": "Eliminar dominio",
-        "verify_domain_desc": "Añade los siguientes registros DNS en tu proveedor de dominio para verificar la propiedad."
+        "verify_domain_desc": "Añade los siguientes registros DNS en tu proveedor de dominio para verificar la propiedad.",
+        "issuer": "Emisor",
+        "expires": "Expira"
       },
       "automations": {
         "webhooks_title": "Webhooks",

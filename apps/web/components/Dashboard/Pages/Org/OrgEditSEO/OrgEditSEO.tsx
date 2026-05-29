@@ -48,7 +48,7 @@ const OrgEditSEO: React.FC = () => {
 
   const copyToClipboard = (text: string) => {
     navigator.clipboard.writeText(text)
-    toast.success('Copied to clipboard')
+    toast.success(t('dashboard.organization.seo.copied_to_clipboard'))
   }
 
   const handleOgImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -90,7 +90,7 @@ const OrgEditSEO: React.FC = () => {
       setOgImageFile(null)
       toast.success('SEO settings saved successfully', { id: loadingToast })
     } catch (err) {
-      toast.error('Failed to save SEO settings', { id: loadingToast })
+      toast.error(t('dashboard.organization.seo.save_failed'), { id: loadingToast })
     }
   }
 
