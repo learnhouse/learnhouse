@@ -70,6 +70,7 @@ import { PlanLevel } from '@services/plans/plans'
 import { useOrg } from '@components/Contexts/OrgContext'
 const VersionHistoryPanel = dynamic(() => import('./VersionHistory/VersionHistoryPanel'), { ssr: false, loading: () => null })
 const MergeConflictModal = dynamic(() => import('./VersionHistory/MergeConflictModal'), { ssr: false, loading: () => null })
+const ActivitySwitcher = dynamic(() => import('./ActivitySwitcher'), { ssr: false, loading: () => null })
 import { usePlan } from '@components/Hooks/usePlan'
 
 interface ConflictInfo {
@@ -99,6 +100,7 @@ function Editor(props: Editor) {
   const aiEditorState = useAIEditor() as AIEditorStateTypes
   const is_ai_feature_enabled = useGetAIFeatures({ feature: 'editor' })
   const [editorReady, setEditorReady] = React.useState(false)
+  const [isDirty, setIsDirty] = React.useState(false)
 
   // Conflict detection state
   const [conflictInfo, setConflictInfo] = React.useState<ConflictInfo | null>(null)
@@ -201,6 +203,9 @@ function Editor(props: Editor) {
         props.onReady?.()
       }, 0)
     },
+    onUpdate: () => {
+      setIsDirty(true)
+    },
   })
 
   // Handler to check for conflicts on save button hover
@@ -234,8 +239,21 @@ function Editor(props: Editor) {
     if (!result?.hasConflict) {
       setConflictInfo(null)
       setShowConflictModal(false)
+      setIsDirty(false)
     }
   }, [editor, conflictInfo, props.setContent])
+
+  // Cmd+S / Ctrl+S → save. The save handler shows its own toast.
+  React.useEffect(() => {
+    const onKeyDown = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && !e.shiftKey && !e.altKey && e.key.toLowerCase() === 's') {
+        e.preventDefault()
+        handleSave(false)
+      }
+    }
+    window.addEventListener('keydown', onKeyDown)
+    return () => window.removeEventListener('keydown', onKeyDown)
+  }, [handleSave])
 
   // Handler to reload with remote changes
   const handleReloadRemote = React.useCallback(() => {
@@ -326,6 +344,12 @@ function Editor(props: Editor) {
 
       <CourseProvider courseuuid={props.course.course_uuid} initialCourseStructure={props.course}>
           <div className="activity-editor-top">
+            <ActivitySwitcher
+              course={props.course}
+              activity={props.activity}
+              isDirty={isDirty}
+              onSave={() => handleSave(false)}
+            />
             <div className="activity-editor-doc-section">
               <div className="activity-editor-info-wrapper">
                 <Link href="/">

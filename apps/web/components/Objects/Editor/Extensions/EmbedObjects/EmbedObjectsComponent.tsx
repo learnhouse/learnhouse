@@ -1,6 +1,6 @@
 import { NodeViewWrapper } from '@tiptap/react'
 import React, { useState, useRef, useEffect, useMemo } from 'react'
-import { Link as LinkIcon, GripVertical, GripHorizontal, AlignCenter, Code, X, ExternalLink, Palette } from 'lucide-react'
+import { Link as LinkIcon, DotsSixVertical, DotsSix, TextAlignCenter, Code, X, ArrowSquareOut, Palette } from '@phosphor-icons/react'
 import { useEditorProvider } from '@components/Contexts/Editor/EditorContext'
 import { SiGithub, SiReplit, SiSpotify, SiLoom, SiGooglemaps, SiNotion, SiGoogledocs, SiX, SiFigma, SiGiphy, SiYoutube } from '@icons-pack/react-simple-icons'
 import DOMPurify from 'dompurify'
@@ -360,7 +360,7 @@ function EmbedObjectsComponent(props: any) {
         {/* Header */}
         <div className="flex items-center justify-between mb-3">
           <div className="flex items-center gap-2">
-            <ExternalLink className="text-neutral-400" size={16} />
+            <ArrowSquareOut weight="duotone" className="text-neutral-400" size={16} />
             <span className="uppercase tracking-widest text-xs font-bold text-neutral-400">
               {t('editor.blocks.embed')}
             </span>
@@ -370,7 +370,7 @@ function EmbedObjectsComponent(props: any) {
               onClick={handleRemove}
               className="text-neutral-400 hover:text-red-500 transition-colors"
             >
-              <X size={16} />
+              <X weight="duotone" size={16} />
             </button>
           )}
         </div>
@@ -405,7 +405,7 @@ function EmbedObjectsComponent(props: any) {
                     className="p-1.5 rounded-md hover:bg-neutral-100 text-neutral-600"
                     title={alignment === 'center' ? t('editor.blocks.common.align_left') : t('editor.blocks.common.align_center')}
                   >
-                    <AlignCenter size={16} />
+                    <TextAlignCenter weight="duotone" size={16} />
                   </button>
                 </div>
               )}
@@ -445,7 +445,7 @@ function EmbedObjectsComponent(props: any) {
                     }}
                     className="flex items-center gap-1.5 px-3 py-1.5 bg-neutral-200 hover:bg-neutral-300 rounded-lg text-sm text-neutral-700 transition-colors"
                   >
-                    <LinkIcon size={14} />
+                    <LinkIcon weight="duotone" size={14} />
                     <span>URL</span>
                   </button>
                   <button
@@ -455,7 +455,7 @@ function EmbedObjectsComponent(props: any) {
                     }}
                     className="flex items-center gap-1.5 px-3 py-1.5 bg-neutral-200 hover:bg-neutral-300 rounded-lg text-sm text-neutral-700 transition-colors"
                   >
-                    <Code size={14} />
+                    <Code weight="duotone" size={14} />
                     <span>Code</span>
                   </button>
                 </div>
@@ -492,7 +492,7 @@ function EmbedObjectsComponent(props: any) {
                     onClick={() => setActiveInput('none')}
                     className="p-1 rounded-full hover:bg-neutral-100 text-neutral-500"
                   >
-                    <X size={20} />
+                    <X weight="duotone" size={20} />
                   </button>
                 </div>
 
@@ -500,7 +500,7 @@ function EmbedObjectsComponent(props: any) {
                   <>
                     <div className="relative mb-2">
                       <div className="absolute left-3 top-1/2 transform -translate-y-1/2 text-neutral-500">
-                        <LinkIcon size={16} />
+                        <LinkIcon weight="duotone" size={16} />
                       </div>
                       <input
                         ref={urlInputRef}
@@ -572,13 +572,13 @@ function EmbedObjectsComponent(props: any) {
                 className="absolute right-0 top-0 bottom-0 w-4 cursor-ew-resize flex items-center justify-center bg-white/70 hover:bg-white/90 transition-opacity"
                 onMouseDown={(e) => handleResizeStart(e, 'horizontal')}
               >
-                <GripVertical size={16} className="text-neutral-500" />
+                <DotsSixVertical weight="duotone" size={16} className="text-neutral-500" />
               </div>
               <div
                 className="absolute left-0 right-0 bottom-0 h-4 cursor-ns-resize flex items-center justify-center bg-white/70 hover:bg-white/90 transition-opacity"
                 onMouseDown={(e) => handleResizeStart(e, 'vertical')}
               >
-                <GripHorizontal size={16} className="text-neutral-500" />
+                <DotsSix weight="duotone" size={16} className="text-neutral-500" />
               </div>
             </>
           )}

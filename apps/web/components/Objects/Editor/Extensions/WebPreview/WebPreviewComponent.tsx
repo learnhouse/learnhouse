@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { NodeViewWrapper } from '@tiptap/react';
-import { Edit2, Save, X, AlignLeft, AlignCenter, AlignRight, Trash } from 'lucide-react';
+import { PencilSimple, FloppyDisk, X, TextAlignLeft, TextAlignCenter, TextAlignRight, Trash } from '@phosphor-icons/react';
 import { useEditorProvider } from '@components/Contexts/Editor/EditorContext';
 import { getUrlPreview } from '@services/courses/activities';
 import Modal from '@components/Objects/StyledElements/Modal/Modal';
@@ -24,9 +24,9 @@ interface WebPreviewProps {
 }
 
 const ALIGNMENTS = [
-  { value: 'left', label: <AlignLeft size={16} /> },
-  { value: 'center', label: <AlignCenter size={16} /> },
-  { value: 'right', label: <AlignRight size={16} /> },
+  { value: 'left', label: <TextAlignLeft weight="duotone" size={16} /> },
+  { value: 'center', label: <TextAlignCenter weight="duotone" size={16} /> },
+  { value: 'right', label: <TextAlignRight weight="duotone" size={16} /> },
 ];
 
 const WebPreviewComponent: React.FC<WebPreviewProps> = ({ node, updateAttributes, deleteNode }) => {
@@ -181,7 +181,7 @@ const WebPreviewComponent: React.FC<WebPreviewProps> = ({ node, updateAttributes
                 title={t('editor.blocks.web_preview_block.edit_url')}
                 type="button"
               >
-                <Edit2 size={16} />
+                <PencilSimple weight="duotone" size={16} />
               </button>
               <button
                 className="flex items-center justify-center bg-red-50 text-red-700 border border-red-200 shadow-md rounded-md p-1.5 hover:bg-red-100"
@@ -189,7 +189,7 @@ const WebPreviewComponent: React.FC<WebPreviewProps> = ({ node, updateAttributes
                 title={t('editor.blocks.web_preview_block.delete_card')}
                 type="button"
               >
-                <Trash size={16} />
+                <Trash weight="duotone" size={16} />
               </button>
             </div>
           )}
@@ -276,10 +276,10 @@ const WebPreviewComponent: React.FC<WebPreviewProps> = ({ node, updateAttributes
                 {error && <div className="text-red-600 text-xs mt-2">{error}</div>}
                 <div className="flex justify-end gap-2 mt-2">
                   <Button type="button" variant="outline" onClick={handleCancelEdit}>
-                    <span className="flex items-center"><X size={16} className="mr-1" /> {t('editor.blocks.common.cancel')}</span>
+                    <span className="flex items-center"><X weight="duotone" size={16} className="mr-1" /> {t('editor.blocks.common.cancel')}</span>
                   </Button>
                   <Button type="submit" disabled={loading || !inputUrl}>
-                    <span className="flex items-center"><Save size={16} className="mr-1" /> {t('editor.blocks.common.save')}</span>
+                    <span className="flex items-center"><FloppyDisk weight="duotone" size={16} className="mr-1" /> {t('editor.blocks.common.save')}</span>
                   </Button>
                 </div>
               </form>
@@ -305,26 +305,18 @@ const WebPreviewComponent: React.FC<WebPreviewProps> = ({ node, updateAttributes
                   </div>
                 )}
                 <div className="pt-4 pb-2">
-                  <a
-                    href={previewData.url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="no-underline hover:no-underline focus:no-underline active:no-underline"
+                  <span
+                    className="font-semibold text-lg text-[#232323] mb-1.5 leading-tight no-underline hover:no-underline focus:no-underline active:no-underline"
                     style={{ textDecoration: 'none', borderBottom: 'none' }}
                   >
-                    <span
-                      className="font-semibold text-lg text-[#232323] mb-1.5 leading-tight no-underline hover:no-underline focus:no-underline active:no-underline"
-                      style={{ textDecoration: 'none', borderBottom: 'none' }}
-                    >
-                      {previewData.title}
-                    </span>
-                    <span
-                      className="block text-gray-700 text-sm mb-3 leading-snug no-underline hover:no-underline focus:no-underline active:no-underline"
-                      style={{ textDecoration: 'none', borderBottom: 'none' }}
-                    >
-                      {previewData.description}
-                    </span>
-                  </a>
+                    {previewData.title}
+                  </span>
+                  <span
+                    className="block text-gray-700 text-sm mb-3 leading-snug no-underline hover:no-underline focus:no-underline active:no-underline"
+                    style={{ textDecoration: 'none', borderBottom: 'none' }}
+                  >
+                    {previewData.description}
+                  </span>
                 </div>
               </a>
               <div className="flex items-center mt-0 pt-2 border-t border-gray-100">

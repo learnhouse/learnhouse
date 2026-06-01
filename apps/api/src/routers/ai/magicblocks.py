@@ -13,13 +13,10 @@ from src.security.auth import get_current_user, get_authenticated_user, resolve_
 from src.security.features_utils.usage import (
     reserve_ai_credit,
 )
-from src.security.features_utils.plan_check import get_org_plan
-from src.security.features_utils.plans import plan_meets_requirement
 from src.services.ai.magicblocks import (
     get_magicblock_session,
     create_magicblock_session,
     generate_magicblock_stream,
-    MAX_ITERATIONS,
 )
 from src.services.ai.schemas.magicblocks import (
     StartMagicBlockSession,
@@ -46,24 +43,7 @@ async def event_generator(generator, session_uuid: str):
 
 
 async def get_org_ai_model(org_id: int, db_session: AsyncSession) -> str:
-    """
-    Get the AI model for MagicBlocks based on the organization's plan.
-
-    - Standard plan (or lower): gemini-2.5-flash-lite
-    - Pro plan or higher: gemini-3-flash-preview
-    """
-    try:
-        current_plan = await get_org_plan(org_id, db_session)
-
-        # Pro or Enterprise plans get the better model
-        if plan_meets_requirement(current_plan, "pro"):
-            return "gemini-3-flash-preview"
-
-        # Standard and free plans get the lite model
-        return "gemini-2.5-flash-lite"
-    except Exception:
-        # Fallback to lite model if plan check fails
-        return "gemini-2.5-flash-lite"
+    return "gemini-3.1-pro-preview"
 
 
 @router.post(
@@ -138,7 +118,8 @@ async def start_magicblock_session(
     stream = generate_magicblock_stream(
         prompt=session_request.prompt,
         session=session,
-        gemini_model_name=ai_model
+        gemini_model_name=ai_model,
+        style_reference=session_request.style_reference,
     )
 
     return StreamingResponse(
@@ -155,13 +136,13 @@ async def start_magicblock_session(
 @router.post(
     "/magicblocks/iterate",
     summary="Iterate MagicBlock session (streaming)",
-    description="Continue an existing MagicBlock session with a new user message. Streams the updated HTML as Server-Sent Events (SSE). Consumes AI credits and is bounded by the session's max iterations.",
+    description="Continue an existing MagicBlock session with a new user message. Streams the updated HTML as Server-Sent Events (SSE). Consumes AI credits.",
     responses={
         200: {
             "description": "SSE stream of generation events (chunk, done, error).",
             "content": {"text/event-stream": {}},
         },
-        400: {"description": "Maximum iterations reached or activity/block UUID mismatch"},
+        400: {"description": "Activity/block UUID mismatch"},
         401: {"description": "Authentication required"},
         403: {"description": "AI feature disabled or insufficient credits"},
         404: {"description": "Session, course, or organization not found"},
@@ -182,13 +163,6 @@ async def iterate_magicblock_session(
 
     if not session:
         raise HTTPException(status_code=404, detail="Session not found")
-
-    # Check iteration limit
-    if session.iteration_count >= session.max_iterations:
-        raise HTTPException(
-            status_code=400,
-            detail=f"Maximum iterations ({MAX_ITERATIONS}) reached"
-        )
 
     # Validate activity matches
     if session.activity_uuid != message_request.activity_uuid:
@@ -234,7 +208,8 @@ async def iterate_magicblock_session(
         prompt=message_request.message,
         session=session,
         gemini_model_name=ai_model,
-        current_html=html_to_iterate
+        current_html=html_to_iterate,
+        style_reference=message_request.style_reference,
     )
 
     return StreamingResponse(
@@ -280,5 +255,6 @@ async def get_session_state(
         message_history=[
             MagicBlockMessage(role=msg.role, content=msg.content)
             for msg in session.message_history
-        ]
+        ],
+        revisions=session.revisions,
     )

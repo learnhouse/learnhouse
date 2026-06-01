@@ -5,7 +5,7 @@ const BlockMath = lazy(() => {
   import('katex/dist/katex.min.css')
   return import('react-katex').then(m => ({ default: m.BlockMath }))
 })
-import { Save, Sigma, ExternalLink, ChevronDown, BookOpen, Lightbulb } from 'lucide-react'
+import { FloppyDisk, Sigma, ArrowSquareOut, CaretDown, BookOpen, Lightbulb } from '@phosphor-icons/react'
 import Link from 'next/link'
 import { useEditorProvider } from '@components/Contexts/Editor/EditorContext'
 import { useTranslation } from 'react-i18next'
@@ -176,7 +176,7 @@ function MathEquationBlockComponent(props: any) {
       <div className="bg-neutral-50 rounded-xl px-5 py-4 nice-shadow transition-all ease-linear">
         {/* Header */}
         <div className="flex items-center gap-2 mb-3">
-          <Sigma className="text-neutral-400" size={16} />
+          <Sigma weight="duotone" className="text-neutral-400" size={16} />
           <span className="uppercase tracking-widest text-xs font-bold text-neutral-400">
             {t('editor.blocks.math')}
           </span>
@@ -198,9 +198,9 @@ function MathEquationBlockComponent(props: any) {
                   onClick={() => setShowTemplates(!showTemplates)}
                   className="flex items-center gap-1.5 px-3 py-1.5 bg-neutral-200 hover:bg-neutral-300 text-neutral-700 rounded-lg text-sm transition-colors outline-none"
                 >
-                  <BookOpen size={14} />
+                  <BookOpen weight="duotone" size={14} />
                   <span>{t('editor.blocks.math_block.templates')}</span>
-                  <ChevronDown size={14} className={`transition-transform ${showTemplates ? 'rotate-180' : ''}`} />
+                  <CaretDown weight="duotone" size={14} className={`transition-transform ${showTemplates ? 'rotate-180' : ''}`} />
                 </button>
 
                 {showTemplates && (
@@ -230,9 +230,9 @@ function MathEquationBlockComponent(props: any) {
                   onClick={() => setShowSymbols(!showSymbols)}
                   className="flex items-center gap-1.5 px-3 py-1.5 bg-neutral-200 hover:bg-neutral-300 text-neutral-700 rounded-lg text-sm transition-colors outline-none"
                 >
-                  <Sigma size={14} />
+                  <Sigma weight="duotone" size={14} />
                   <span>{t('editor.blocks.math_block.symbols')}</span>
-                  <ChevronDown size={14} className={`transition-transform ${showSymbols ? 'rotate-180' : ''}`} />
+                  <CaretDown weight="duotone" size={14} className={`transition-transform ${showSymbols ? 'rotate-180' : ''}`} />
                 </button>
 
                 {showSymbols && (
@@ -262,9 +262,9 @@ function MathEquationBlockComponent(props: any) {
                   onClick={() => setShowHelp(!showHelp)}
                   className="flex items-center gap-1.5 px-3 py-1.5 bg-neutral-200 hover:bg-neutral-300 text-neutral-700 rounded-lg text-sm transition-colors outline-none"
                 >
-                  <Lightbulb size={14} />
+                  <Lightbulb weight="duotone" size={14} />
                   <span>{t('editor.blocks.math_block.help')}</span>
-                  <ChevronDown size={14} className={`transition-transform ${showHelp ? 'rotate-180' : ''}`} />
+                  <CaretDown weight="duotone" size={14} className={`transition-transform ${showHelp ? 'rotate-180' : ''}`} />
                 </button>
 
                 {showHelp && (
@@ -298,7 +298,7 @@ function MathEquationBlockComponent(props: any) {
                           target="_blank"
                         >
                           {t('editor.blocks.math_block.view_reference')}
-                          <ExternalLink size={10} className="ml-1" />
+                          <ArrowSquareOut weight="duotone" size={10} className="ml-1" />
                         </Link>
                       </div>
                     </div>
@@ -321,7 +321,7 @@ function MathEquationBlockComponent(props: any) {
                 onClick={() => saveEquation()}
                 className="flex items-center justify-center w-8 h-8 bg-neutral-100 hover:bg-neutral-200 text-neutral-600 rounded-md transition-colors"
               >
-                <Save size={15} />
+                <FloppyDisk weight="duotone" size={15} />
               </button>
             </div>
 
@@ -334,7 +334,7 @@ function MathEquationBlockComponent(props: any) {
                 target="_blank"
               >
                 {t('editor.blocks.math_block.guide')}
-                <ExternalLink size={12} className="ml-1" />
+                <ArrowSquareOut weight="duotone" size={12} className="ml-1" />
               </Link>
               <span>{t('editor.blocks.math_block.for_functions')}</span>
             </div>

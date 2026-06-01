@@ -389,9 +389,13 @@ async def update_activity(
     update_data = activity_object.model_dump(exclude_unset=True)
 
     # Create a version snapshot before updating content
-    # This preserves the current state for version history
+    # This preserves the current state for version history.
+    # resolve_acting_user_id unwraps APITokenUser → the creating human's id,
+    # because current_user.id on a token is 0 (the token id, not a user id)
+    # and created_by_id is an FK to user.id — writing 0 triggers a FK
+    # violation and the whole update 500s.
     if 'content' in update_data and activity.content:
-        user_id = current_user.id if hasattr(current_user, 'id') else None
+        user_id = resolve_acting_user_id(current_user)
         await create_activity_version(activity, user_id, db_session)
         # Increment version number
         activity.current_version = (activity.current_version or 1) + 1

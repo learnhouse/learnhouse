@@ -2,7 +2,15 @@ import { NodeViewWrapper } from '@tiptap/react'
 import { v4 as uuidv4 } from 'uuid'
 import { cn } from '@/lib/utils'
 import React from 'react'
-import { BadgeHelp, Check, Minus, Plus, RefreshCcw } from 'lucide-react'
+import {
+  Question,
+  Check,
+  CheckCircle,
+  Plus,
+  ArrowCounterClockwise,
+  Trash,
+  X,
+} from '@phosphor-icons/react'
 import dynamic from 'next/dynamic'
 const ReactConfetti = dynamic(() => import('react-confetti'), { ssr: false })
 import { useEditorProvider } from '@components/Contexts/Editor/EditorContext'
@@ -35,16 +43,19 @@ function QuizBlockComponent(props: any) {
   const isEditable = editorState.isEditable
 
   const handleAnswerClick = (question_id: string, answer_id: string) => {
-    if (submitted) return;
+    if (isEditable || submitted) return
 
     const existingAnswerIndex = userAnswers.findIndex(
-      (answer: any) => answer.question_id === question_id && answer.answer_id === answer_id
-    );
+      (answer: any) =>
+        answer.question_id === question_id && answer.answer_id === answer_id
+    )
 
     if (existingAnswerIndex !== -1) {
-      setUserAnswers(userAnswers.filter((_, index) => index !== existingAnswerIndex));
+      setUserAnswers(
+        userAnswers.filter((_, index) => index !== existingAnswerIndex)
+      )
     } else {
-      setUserAnswers([...userAnswers, { question_id, answer_id }]);
+      setUserAnswers([...userAnswers, { question_id, answer_id }])
     }
   }
 
@@ -55,82 +66,73 @@ function QuizBlockComponent(props: any) {
   }
 
   const handleUserSubmission = () => {
-    setSubmitted(true);
+    setSubmitted(true)
 
     const correctAnswers = questions.every((question: Question) => {
-      const correctAnswers = question.answers.filter((answer: Answer) => answer.correct);
+      const correctAnswers = question.answers.filter(
+        (answer: Answer) => answer.correct
+      )
       const userAnswersForQuestion = userAnswers.filter(
         (userAnswer: any) => userAnswer.question_id === question.question_id
-      );
+      )
 
       if (correctAnswers.length === 0 && userAnswersForQuestion.length === 0) {
-        return true;
+        return true
       }
 
       return (
         correctAnswers.length === userAnswersForQuestion.length &&
         correctAnswers.every((correctAnswer: Answer) =>
           userAnswersForQuestion.some(
-            (userAnswer: any) => userAnswer.answer_id === correctAnswer.answer_id
+            (userAnswer: any) =>
+              userAnswer.answer_id === correctAnswer.answer_id
           )
         )
-      );
-    });
+      )
+    })
 
-    setSubmissionMessage(correctAnswers ? 'correct' : 'incorrect');
+    setSubmissionMessage(correctAnswers ? 'correct' : 'incorrect')
   }
 
-  const getAnswerID = (answerIndex: number, questionId: string) => {
+  const getAnswerLetter = (answerIndex: number) => {
     const alphabet = Array.from({ length: 26 }, (_, i) =>
       String.fromCharCode('A'.charCodeAt(0) + i)
     )
-    let alphabetID = alphabet[answerIndex]
-    return `${alphabetID}`
+    return alphabet[answerIndex] ?? '?'
   }
 
-  const saveQuestions = (questions: any) => {
-    props.updateAttributes({
-      questions: questions,
-    })
-    setQuestions(questions)
+  const saveQuestions = (newQuestions: Question[]) => {
+    props.updateAttributes({ questions: newQuestions })
+    setQuestions(newQuestions)
   }
 
   const addSampleQuestion = () => {
-    const newQuestion = {
+    const newQuestion: Question = {
       question_id: uuidv4(),
       question: '',
       type: 'multiple_choice',
-      answers: [
-        {
-          answer_id: uuidv4(),
-          answer: '',
-          correct: false,
-        },
-      ],
+      answers: [{ answer_id: uuidv4(), answer: '', correct: false }],
     }
-    setQuestions([...questions, newQuestion])
+    saveQuestions([...questions, newQuestion])
   }
 
   const addAnswer = (question_id: string) => {
-    const newAnswer = {
+    const question: any = questions.find(
+      (q: Question) => q.question_id === question_id
+    )
+    if (!question || question.answers.length >= 5) return
+
+    const newAnswer: Answer = {
       answer_id: uuidv4(),
       answer: '',
       correct: false,
     }
 
-    const question: any = questions.find(
-      (question: Question) => question.question_id === question_id
+    const newQuestions = questions.map((q: Question) =>
+      q.question_id === question_id
+        ? { ...q, answers: [...q.answers, newAnswer] }
+        : q
     )
-    if (question.answers.length >= 5) {
-      return
-    }
-
-    const newQuestions = questions.map((question: Question) => {
-      if (question.question_id === question_id) {
-        question.answers.push(newAnswer)
-      }
-      return question
-    })
 
     saveQuestions(newQuestions)
   }
@@ -140,117 +142,118 @@ function QuizBlockComponent(props: any) {
     answer_id: string,
     value: string
   ) => {
-    const newQuestions = questions.map((question: Question) => {
-      if (question.question_id === question_id) {
-        question.answers.map((answer: Answer) => {
-          if (answer.answer_id === answer_id) {
-            answer.answer = value
+    const newQuestions = questions.map((question: Question) =>
+      question.question_id === question_id
+        ? {
+            ...question,
+            answers: question.answers.map((answer: Answer) =>
+              answer.answer_id === answer_id
+                ? { ...answer, answer: value }
+                : answer
+            ),
           }
-          return answer
-        })
-      }
-      return question
-    })
-    saveQuestions(newQuestions)
-  }
-
-  const changeQuestionValue = (question_id: string, value: string) => {
-    const newQuestions = questions.map((question: Question) => {
-      if (question.question_id === question_id) {
-        question.question = value
-      }
-      return question
-    })
-    saveQuestions(newQuestions)
-  }
-
-  const deleteQuestion = (question_id: string) => {
-    const newQuestions = questions.filter(
-      (question: Question) => question.question_id !== question_id
+        : question
     )
     saveQuestions(newQuestions)
   }
 
+  const changeQuestionValue = (question_id: string, value: string) => {
+    const newQuestions = questions.map((question: Question) =>
+      question.question_id === question_id
+        ? { ...question, question: value }
+        : question
+    )
+    saveQuestions(newQuestions)
+  }
+
+  const deleteQuestion = (question_id: string) => {
+    saveQuestions(
+      questions.filter((q: Question) => q.question_id !== question_id)
+    )
+  }
+
   const deleteAnswer = (question_id: string, answer_id: string) => {
-    const newQuestions = questions.map((question: Question) => {
-      if (question.question_id === question_id) {
-        question.answers = question.answers.filter(
-          (answer: Answer) => answer.answer_id !== answer_id
-        )
-      }
-      return question
-    })
+    const newQuestions = questions.map((question: Question) =>
+      question.question_id === question_id
+        ? {
+            ...question,
+            answers: question.answers.filter(
+              (answer: Answer) => answer.answer_id !== answer_id
+            ),
+          }
+        : question
+    )
     saveQuestions(newQuestions)
   }
 
   const markAnswerCorrect = (question_id: string, answer_id: string) => {
-    const newQuestions = questions.map((question: Question) => {
-      if (question.question_id === question_id) {
-        question.answers = question.answers.map((answer: Answer) => ({
-          ...answer,
-          correct: answer.answer_id === answer_id ? !answer.correct : answer.correct,
-        }));
-      }
-      return question;
-    });
-    saveQuestions(newQuestions);
+    const newQuestions = questions.map((question: Question) =>
+      question.question_id === question_id
+        ? {
+            ...question,
+            answers: question.answers.map((answer: Answer) => ({
+              ...answer,
+              correct:
+                answer.answer_id === answer_id
+                  ? !answer.correct
+                  : answer.correct,
+            })),
+          }
+        : question
+    )
+    saveQuestions(newQuestions)
   }
+
+  const totalQuestions = questions.length
+  const hasAnyAnswer = userAnswers.length > 0
 
   return (
     <NodeViewWrapper className="block-quiz">
-      <div className="bg-neutral-50 rounded-xl px-5 py-4 nice-shadow transition-all ease-linear">
-        {/* Header section */}
-        <div className="flex flex-wrap gap-2 items-center text-sm mb-3">
-          {submitted && submissionMessage === 'correct' && (
-            <ReactConfetti
-              numberOfPieces={submitted ? 1400 : 0}
-              recycle={false}
-              className="w-full h-screen"
-            />
-          )}
+      <div className="bg-neutral-50 rounded-xl px-4 py-3 nice-shadow transition-all ease-linear">
+        {submitted && submissionMessage === 'correct' && (
+          <ReactConfetti
+            numberOfPieces={1400}
+            recycle={false}
+            className="w-full h-screen"
+          />
+        )}
+
+        {/* Header */}
+        <div className="flex items-center justify-between mb-2">
           <div className="flex items-center gap-2">
-            <BadgeHelp className="text-neutral-400" size={16} />
-            <span className="uppercase tracking-widest text-xs font-bold text-neutral-400">
+            <Question weight="duotone" className="text-neutral-400" size={15} />
+            <span className="uppercase tracking-widest text-[11px] font-bold text-neutral-400">
               {t('editor.blocks.quiz')}
             </span>
           </div>
 
-          {/* Submission message */}
-          {submitted && (
-            <div className={cn(
-              "text-xs font-medium px-2 py-1 rounded-md",
-              submissionMessage === 'correct'
-                ? 'bg-emerald-100 text-emerald-700'
-                : 'bg-red-100 text-red-700'
-            )}>
-              {submissionMessage === 'correct'
-                ? t('editor.blocks.quiz_block.all_correct')
-                : t('editor.blocks.quiz_block.some_incorrect')}
-            </div>
-          )}
-
-          <div className="grow"></div>
-
-          {/* Action buttons */}
           {isEditable ? (
             <button
               onClick={addSampleQuestion}
-              className="bg-neutral-200 hover:bg-neutral-300 text-neutral-700 font-medium py-1.5 px-3 rounded-lg text-xs transition-colors outline-none"
+              className="flex items-center gap-1 bg-neutral-200 hover:bg-neutral-300 text-neutral-700 text-xs font-medium px-2.5 py-1 rounded-md transition-colors outline-none"
             >
+              <Plus weight="duotone" size={12} />
               {t('editor.blocks.quiz_block.add_question')}
             </button>
           ) : (
             <div className="flex items-center gap-1">
               <button
-                onClick={() => refreshUserSubmission()}
-                className="p-1.5 rounded-md hover:bg-neutral-200 transition-colors"
+                onClick={refreshUserSubmission}
+                disabled={!hasAnyAnswer && !submitted}
+                className="p-1 rounded-md text-neutral-400 hover:text-neutral-700 hover:bg-neutral-200 transition-colors disabled:opacity-40 disabled:hover:bg-transparent disabled:hover:text-neutral-400 disabled:cursor-not-allowed outline-none"
                 title={t('editor.blocks.quiz_block.reset_answers')}
               >
-                <RefreshCcw className="text-neutral-500" size={15} />
+                <ArrowCounterClockwise weight="duotone" size={13} />
               </button>
               <button
-                onClick={() => handleUserSubmission()}
-                className="bg-neutral-200 hover:bg-neutral-300 text-neutral-700 font-medium py-1.5 px-3 rounded-lg text-xs transition-colors outline-none"
+                onClick={handleUserSubmission}
+                disabled={submitted || !hasAnyAnswer || totalQuestions === 0}
+                className={cn(
+                  'text-xs font-medium px-2.5 py-1 rounded-md transition-colors outline-none',
+                  submitted || !hasAnyAnswer || totalQuestions === 0
+                    ? 'bg-neutral-200/60 text-neutral-400 cursor-not-allowed'
+                    : 'bg-neutral-700 hover:bg-neutral-800 text-white'
+                )}
               >
                 {t('editor.blocks.quiz_block.submit')}
               </button>
@@ -258,160 +261,290 @@ function QuizBlockComponent(props: any) {
           )}
         </div>
 
-        {/* Questions section */}
-        <div className="space-y-4">
-          {questions.map((question: Question) => (
-            <div key={question.question_id} className="bg-white rounded-lg p-4 nice-shadow">
-              {/* Question */}
-              <div className="flex items-start gap-2 mb-3">
-                <div className="flex-1">
-                  {isEditable ? (
-                    <input
-                      value={question.question}
-                      placeholder={t('editor.blocks.quiz_block.question_placeholder')}
-                      onChange={(e) =>
-                        changeQuestionValue(
-                          question.question_id,
-                          e.target.value
-                        )
-                      }
-                      className="text-neutral-800 bg-transparent border-2 border-dashed border-neutral-200 rounded-lg text-base font-semibold w-full p-2 focus:border-neutral-300 outline-none transition-colors"
-                    />
-                  ) : (
-                    <p className="text-neutral-800 text-base font-semibold p-2 break-words">
-                      {question.question}
-                    </p>
-                  )}
-                </div>
-                {isEditable && (
-                  <button
-                    onClick={() => deleteQuestion(question.question_id)}
-                    className="w-7 h-7 flex items-center justify-center rounded-lg bg-neutral-100 hover:bg-neutral-200 transition-colors"
-                  >
-                    <Minus className="text-neutral-500" size={14} />
-                  </button>
-                )}
-              </div>
+        {/* Empty state */}
+        {totalQuestions === 0 && (
+          <div className="bg-white rounded-lg nice-shadow flex items-center justify-center gap-2 py-6">
+            <Question weight="duotone" className="text-neutral-300" size={20} />
+            <p className="text-xs text-neutral-500">
+              {isEditable
+                ? t('editor.blocks.quiz_block.empty_editable', {
+                    defaultValue:
+                      'No questions yet. Add your first one to get started.',
+                  })
+                : t('editor.blocks.quiz_block.empty_readonly', {
+                    defaultValue: 'This quiz has no questions yet.',
+                  })}
+            </p>
+          </div>
+        )}
 
-              {/* Answers */}
-              <div className="space-y-2">
-                {question.answers.map((answer: Answer) => {
-                  const isSelected = userAnswers.some(
-                    (userAnswer: any) =>
-                      userAnswer.question_id === question.question_id &&
-                      userAnswer.answer_id === answer.answer_id
-                  );
-                  const isCorrectAnswer = answer.correct;
-                  const isIncorrectSelection = submitted && isSelected && !isCorrectAnswer;
-                  const isCorrectSelection = submitted && isCorrectAnswer;
-
-                  return (
-                    <div
-                      key={answer.answer_id}
-                      onClick={() => handleAnswerClick(question.question_id, answer.answer_id)}
-                      className={cn(
-                        "flex items-stretch rounded-lg border-2 transition-all cursor-pointer min-h-[44px]",
-                        // Default state
-                        !isEditable && !submitted && !isSelected && "border-neutral-200 bg-neutral-50 hover:border-neutral-300 hover:bg-neutral-100",
-                        // Selected (not submitted)
-                        !isEditable && !submitted && isSelected && "border-blue-400 bg-blue-50",
-                        // Correct answer (submitted)
-                        submitted && isCorrectAnswer && "border-emerald-400 bg-emerald-50",
-                        // Incorrect selection (submitted)
-                        isIncorrectSelection && "border-red-400 bg-red-50",
-                        // Edit mode - correct marked
-                        isEditable && isCorrectAnswer && "border-emerald-400 bg-emerald-50",
-                        // Edit mode - not marked
-                        isEditable && !isCorrectAnswer && "border-neutral-200 bg-neutral-50"
-                      )}
-                    >
-                      {/* Answer Letter */}
-                      <div
-                        className={cn(
-                          "w-10 flex items-center justify-center rounded-l-md font-bold text-sm flex-shrink-0",
-                          // Default
-                          !isEditable && !submitted && !isSelected && "bg-neutral-100 text-neutral-600",
-                          // Selected (not submitted)
-                          !isEditable && !submitted && isSelected && "bg-blue-400 text-white",
-                          // Correct (submitted)
-                          submitted && isCorrectAnswer && "bg-emerald-400 text-white",
-                          // Incorrect selection
-                          isIncorrectSelection && "bg-red-400 text-white",
-                          // Edit mode - correct
-                          isEditable && isCorrectAnswer && "bg-emerald-400 text-white",
-                          // Edit mode - not correct
-                          isEditable && !isCorrectAnswer && "bg-neutral-100 text-neutral-600"
+        {/* Questions */}
+        {totalQuestions > 0 && (
+          <div className="space-y-3">
+            {questions.map((question: Question, qIndex: number) => (
+              <div key={question.question_id}>
+                {/* Question header */}
+                <div className="flex items-start justify-between gap-2 mb-1.5 px-1">
+                  <div className="flex-1 min-w-0">
+                    <div className="text-[10px] uppercase tracking-widest font-bold text-neutral-400 mb-0.5">
+                      {t('editor.blocks.quiz_block.question_label', {
+                        defaultValue: 'Question',
+                      })}{' '}
+                      {qIndex + 1}
+                    </div>
+                    {isEditable ? (
+                      <input
+                        value={question.question}
+                        placeholder={t(
+                          'editor.blocks.quiz_block.question_placeholder'
                         )}
-                      >
-                        {getAnswerID(question.answers.indexOf(answer), question.question_id)}
-                      </div>
-
-                      {/* Answer Text */}
-                      <div className="flex-1 flex items-center px-3 py-2">
-                        {isEditable ? (
-                          <input
-                            value={answer.answer}
-                            onChange={(e) =>
-                              changeAnswerValue(
-                                question.question_id,
-                                answer.answer_id,
-                                e.target.value
-                              )
-                            }
-                            placeholder={t('editor.blocks.quiz_block.answer_placeholder')}
-                            className="w-full text-neutral-700 bg-transparent border-0 text-sm font-medium outline-none"
-                            onClick={(e) => e.stopPropagation()}
-                          />
-                        ) : (
-                          <span className="text-neutral-700 text-sm font-medium break-words">
-                            {answer.answer}
+                        onChange={(e) =>
+                          changeQuestionValue(
+                            question.question_id,
+                            e.target.value
+                          )
+                        }
+                        className="w-full text-neutral-800 bg-transparent text-sm font-semibold outline-none placeholder:text-neutral-300"
+                      />
+                    ) : (
+                      <p className="text-neutral-800 text-sm font-semibold break-words leading-snug">
+                        {question.question || (
+                          <span className="text-neutral-300 italic font-normal">
+                            {t(
+                              'editor.blocks.quiz_block.question_placeholder'
+                            )}
                           </span>
                         )}
-                      </div>
+                      </p>
+                    )}
+                  </div>
+                  {isEditable && (
+                    <button
+                      onClick={() => deleteQuestion(question.question_id)}
+                      className="shrink-0 w-6 h-6 flex items-center justify-center rounded-md text-neutral-400 hover:text-red-500 hover:bg-red-50 transition-colors outline-none"
+                      title={t('editor.blocks.quiz_block.delete_question', {
+                        defaultValue: 'Delete question',
+                      })}
+                    >
+                      <Trash weight="duotone" size={12} />
+                    </button>
+                  )}
+                </div>
 
-                      {/* Edit Actions */}
-                      {isEditable && (
-                        <div className="flex items-center gap-1 px-2">
+                {/* Answers */}
+                <div className="space-y-1">
+                  {question.answers.map((answer: Answer, aIndex: number) => {
+                    const isSelected = userAnswers.some(
+                      (userAnswer: any) =>
+                        userAnswer.question_id === question.question_id &&
+                        userAnswer.answer_id === answer.answer_id
+                    )
+                    const isMarkedCorrect = answer.correct
+                    const isCorrectReveal = submitted && isMarkedCorrect
+                    const isWrongSelection =
+                      submitted && isSelected && !isMarkedCorrect
+                    const letter = getAnswerLetter(aIndex)
+
+                    const row = cn(
+                      'group flex items-center gap-2 rounded-lg nice-shadow px-2 py-1.5 transition-colors',
+                      // Take mode — default
+                      !isEditable &&
+                        !submitted &&
+                        !isSelected &&
+                        'bg-white hover:bg-neutral-50 cursor-pointer',
+                      // Take mode — selected
+                      !isEditable &&
+                        !submitted &&
+                        isSelected &&
+                        'bg-blue-50 cursor-pointer',
+                      // Submitted — correct
+                      isCorrectReveal && 'bg-emerald-50',
+                      // Submitted — wrong selection
+                      isWrongSelection && 'bg-red-50',
+                      // Submitted — neutral (not selected, not correct)
+                      submitted &&
+                        !isMarkedCorrect &&
+                        !isSelected &&
+                        'bg-white opacity-60',
+                      // Edit — marked correct
+                      isEditable && isMarkedCorrect && 'bg-emerald-50',
+                      // Edit — not marked
+                      isEditable &&
+                        !isMarkedCorrect &&
+                        'bg-white hover:bg-neutral-50'
+                    )
+
+                    const chip = cn(
+                      'shrink-0 w-6 h-6 rounded-md flex items-center justify-center text-[11px] font-bold transition-colors',
+                      // Take mode — default
+                      !isEditable &&
+                        !submitted &&
+                        !isSelected &&
+                        'bg-neutral-100 text-neutral-500',
+                      // Take mode — selected
+                      !isEditable &&
+                        !submitted &&
+                        isSelected &&
+                        'bg-blue-500 text-white',
+                      // Submitted — correct
+                      isCorrectReveal && 'bg-emerald-500 text-white',
+                      // Submitted — wrong selection
+                      isWrongSelection && 'bg-red-500 text-white',
+                      // Submitted — neutral
+                      submitted &&
+                        !isMarkedCorrect &&
+                        !isSelected &&
+                        'bg-neutral-100 text-neutral-400',
+                      // Edit — correct
+                      isEditable &&
+                        isMarkedCorrect &&
+                        'bg-emerald-500 text-white',
+                      // Edit — not correct
+                      isEditable &&
+                        !isMarkedCorrect &&
+                        'bg-neutral-100 text-neutral-500'
+                    )
+
+                    return (
+                      <div
+                        key={answer.answer_id}
+                        onClick={() =>
+                          handleAnswerClick(
+                            question.question_id,
+                            answer.answer_id
+                          )
+                        }
+                        className={row}
+                      >
+                        {/* Letter chip — clickable in edit mode to toggle correct */}
+                        {isEditable ? (
                           <button
                             onClick={(e) => {
-                              e.stopPropagation();
-                              markAnswerCorrect(question.question_id, answer.answer_id);
+                              e.stopPropagation()
+                              markAnswerCorrect(
+                                question.question_id,
+                                answer.answer_id
+                              )
                             }}
-                            className="w-7 h-7 flex items-center justify-center rounded-lg bg-emerald-100 hover:bg-emerald-200 transition-colors"
-                            title={answer.correct ? t('editor.blocks.quiz_block.mark_incorrect') : t('editor.blocks.quiz_block.mark_correct')}
+                            className={cn(chip, 'cursor-pointer outline-none')}
+                            title={
+                              answer.correct
+                                ? t('editor.blocks.quiz_block.mark_incorrect')
+                                : t('editor.blocks.quiz_block.mark_correct')
+                            }
                           >
-                            <Check className="text-emerald-700" size={14} />
+                            {answer.correct ? <Check weight="duotone" size={12} /> : letter}
                           </button>
+                        ) : (
+                          <div className={chip}>{letter}</div>
+                        )}
+
+                        {/* Answer text */}
+                        <div className="flex-1 min-w-0">
+                          {isEditable ? (
+                            <input
+                              value={answer.answer}
+                              onChange={(e) =>
+                                changeAnswerValue(
+                                  question.question_id,
+                                  answer.answer_id,
+                                  e.target.value
+                                )
+                              }
+                              placeholder={t(
+                                'editor.blocks.quiz_block.answer_placeholder'
+                              )}
+                              className="w-full bg-transparent border-0 text-sm text-neutral-700 placeholder:text-neutral-400 outline-none"
+                              onClick={(e) => e.stopPropagation()}
+                            />
+                          ) : (
+                            <span
+                              className={cn(
+                                'text-sm break-words',
+                                isCorrectReveal
+                                  ? 'text-emerald-900 font-medium'
+                                  : isWrongSelection
+                                  ? 'text-red-900 font-medium'
+                                  : 'text-neutral-700'
+                              )}
+                            >
+                              {answer.answer || (
+                                <span className="text-neutral-300 italic">
+                                  {t(
+                                    'editor.blocks.quiz_block.answer_placeholder'
+                                  )}
+                                </span>
+                              )}
+                            </span>
+                          )}
+                        </div>
+
+                        {/* Trailing — status icon (take mode) or delete (edit) */}
+                        {isEditable ? (
                           <button
                             onClick={(e) => {
-                              e.stopPropagation();
-                              deleteAnswer(question.question_id, answer.answer_id);
+                              e.stopPropagation()
+                              deleteAnswer(
+                                question.question_id,
+                                answer.answer_id
+                              )
                             }}
-                            className="w-7 h-7 flex items-center justify-center rounded-lg bg-neutral-100 hover:bg-neutral-200 transition-colors"
+                            className="shrink-0 w-6 h-6 flex items-center justify-center rounded-md text-neutral-400 hover:text-red-500 hover:bg-neutral-100 transition-colors opacity-0 group-hover:opacity-100 focus:opacity-100 outline-none"
                             title={t('editor.blocks.quiz_block.delete_answer')}
                           >
-                            <Minus className="text-neutral-500" size={14} />
+                            <Trash weight="duotone" size={12} />
                           </button>
-                        </div>
-                      )}
-                    </div>
-                  );
-                })}
+                        ) : isCorrectReveal ? (
+                          <CheckCircle
+                            weight="duotone"
+                            className="shrink-0 text-emerald-500"
+                            size={14}
+                          />
+                        ) : isWrongSelection ? (
+                          <X weight="duotone" className="shrink-0 text-red-500" size={14} />
+                        ) : null}
+                      </div>
+                    )
+                  })}
 
-                {/* Add Answer Button */}
-                {isEditable && (
-                  <button
-                    onClick={() => addAnswer(question.question_id)}
-                    className="w-full flex items-center justify-center gap-1 h-11 border-2 border-dashed border-neutral-200 rounded-lg text-neutral-600 hover:border-neutral-300 hover:bg-neutral-50 transition-colors"
-                  >
-                    <Plus size={15} />
-                    <span className="text-sm font-medium">{t('editor.blocks.quiz_block.add_answer')}</span>
-                  </button>
-                )}
+                  {/* Add answer */}
+                  {isEditable && question.answers.length < 5 && (
+                    <button
+                      onClick={() => addAnswer(question.question_id)}
+                      className="w-full flex items-center justify-center gap-1 h-7 rounded-lg text-[11px] font-medium text-neutral-500 hover:text-neutral-700 border border-dashed border-neutral-200 hover:border-neutral-300 hover:bg-white transition-colors outline-none"
+                    >
+                      <Plus weight="duotone" size={11} />
+                      {t('editor.blocks.quiz_block.add_answer')}
+                    </button>
+                  )}
+                </div>
               </div>
+            ))}
+          </div>
+        )}
+
+        {/* Submission message */}
+        {submitted && (
+          <div className="mt-2.5">
+            <div
+              className={cn(
+                'inline-flex items-center gap-1.5 text-[11px] font-medium px-2 py-1 rounded-md',
+                submissionMessage === 'correct'
+                  ? 'bg-emerald-50 text-emerald-700'
+                  : 'bg-red-50 text-red-700'
+              )}
+            >
+              {submissionMessage === 'correct' ? (
+                <CheckCircle weight="duotone" size={12} />
+              ) : (
+                <X weight="duotone" size={12} />
+              )}
+              {submissionMessage === 'correct'
+                ? t('editor.blocks.quiz_block.all_correct')
+                : t('editor.blocks.quiz_block.some_incorrect')}
             </div>
-          ))}
-        </div>
+          </div>
+        )}
       </div>
     </NodeViewWrapper>
   )

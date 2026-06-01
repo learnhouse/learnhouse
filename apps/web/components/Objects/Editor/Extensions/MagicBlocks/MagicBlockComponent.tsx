@@ -1,6 +1,6 @@
 import { NodeViewProps, NodeViewWrapper } from '@tiptap/react'
 import { Node } from '@tiptap/core'
-import { X, Edit3, Expand, GripHorizontal, Lock } from 'lucide-react'
+import { X, PencilSimple, ArrowsOut, DotsSixVertical, Lock } from '@phosphor-icons/react'
 import React from 'react'
 import { v4 as uuidv4 } from 'uuid'
 import Image from 'next/image'
@@ -13,7 +13,7 @@ import { cn } from '@/lib/utils'
 import MagicBlockModal from './MagicBlockModal'
 import MagicBlockPreview from './MagicBlockPreview'
 import Modal from '@components/Objects/StyledElements/Modal/Modal'
-import type { MagicBlockContext, MagicBlockMessage } from './types'
+import type { MagicBlockContext, MagicBlockMessage, MagicBlockRevision } from './types'
 import { getMagicBlockSession } from '@services/ai/magicblocks'
 import { PlanLevel } from '@services/plans/plans'
 import PlanBadge from '@components/Dashboard/Shared/PlanRestricted/PlanBadge'
@@ -63,6 +63,7 @@ function MagicBlockComponent(props: ExtendedNodeViewProps) {
   const [isModalOpen, setIsModalOpen] = React.useState(false)
   const [isPreviewModalOpen, setIsPreviewModalOpen] = React.useState(false)
   const [cachedMessages, setCachedMessages] = React.useState<MagicBlockMessage[]>([])
+  const [cachedRevisions, setCachedRevisions] = React.useState<MagicBlockRevision[]>([])
   const [isResizing, setIsResizing] = React.useState(false)
 
   const isEditable = editorState?.isEditable
@@ -77,7 +78,6 @@ function MagicBlockComponent(props: ExtendedNodeViewProps) {
   const blockUuid = node.attrs.blockUuid || `magic_${uuidv4()}`
   const sessionUuid = node.attrs.sessionUuid
   const htmlContent = node.attrs.htmlContent
-  const iterationCount = node.attrs.iterationCount || 0
   const title = node.attrs.title || 'Interactive Element'
   const height = node.attrs.height || 400
 
@@ -125,12 +125,15 @@ function MagicBlockComponent(props: ExtendedNodeViewProps) {
     }
   }, [node.attrs.blockUuid, blockUuid, updateAttributes])
 
-  // Load session messages when opening modal with existing session
+  // Load session messages + revisions when opening modal with existing session
   React.useEffect(() => {
     if (isModalOpen && sessionUuid && accessToken && cachedMessages.length === 0) {
       getMagicBlockSession(sessionUuid, accessToken).then((result) => {
         if (result.success && result.data?.message_history) {
           setCachedMessages(result.data.message_history)
+        }
+        if (result.success && result.data?.revisions) {
+          setCachedRevisions(result.data.revisions)
         }
       })
     }
@@ -172,13 +175,11 @@ function MagicBlockComponent(props: ExtendedNodeViewProps) {
 
   const handleSave = (
     newHtmlContent: string,
-    newSessionUuid: string,
-    newIterationCount: number
+    newSessionUuid: string
   ) => {
     updateAttributes({
       htmlContent: newHtmlContent,
       sessionUuid: newSessionUuid,
-      iterationCount: newIterationCount,
     })
   }
 
@@ -186,9 +187,9 @@ function MagicBlockComponent(props: ExtendedNodeViewProps) {
     updateAttributes({
       htmlContent: null,
       sessionUuid: null,
-      iterationCount: 0,
     })
     setCachedMessages([])
+    setCachedRevisions([])
   }
 
   // Preview mode - show iframe only
@@ -197,7 +198,7 @@ function MagicBlockComponent(props: ExtendedNodeViewProps) {
       <>
         <NodeViewWrapper className="block-magic w-full">
           <div className="relative group">
-            <div className="rounded-xl overflow-hidden nice-shadow" style={{ height: `${height}px` }}>
+            <div className="rounded-xl overflow-hidden" style={{ height: `${height}px` }}>
               <MagicBlockPreview htmlContent={htmlContent} />
             </div>
             <button
@@ -205,7 +206,7 @@ function MagicBlockComponent(props: ExtendedNodeViewProps) {
               className="absolute top-2 right-2 p-2 bg-black/50 hover:bg-black/70 rounded-lg transition-colors opacity-0 group-hover:opacity-100"
               title={t('editor.blocks.common.expand')}
             >
-              <Expand className="w-4 h-4 text-white" />
+              <ArrowsOut weight="duotone" className="w-4 h-4 text-white" />
             </button>
           </div>
         </NodeViewWrapper>
@@ -255,16 +256,10 @@ function MagicBlockComponent(props: ExtendedNodeViewProps) {
                   {t('editor.blocks.magic_block_content.title')}
                 </span>
               </div>
-              {sessionUuid && (
-                <div className="bg-white/5 text-white/40 py-0.5 px-3 flex space-x-1 rounded-full items-center outline outline-1 outline-neutral-100/10">
-                  <span className="text-xs font-semibold antialiased">
-                    {t('editor.blocks.magic_block_content.iterations', { count: iterationCount, max: 6 })}
-                  </span>
-                </div>
-              )}
             </div>
             {htmlContent && (
               <X
+                weight="duotone"
                 size={20}
                 className="text-white/50 hover:cursor-pointer bg-white/10 p-1 rounded-full items-center hover:bg-red-500/30 hover:text-red-300 transition-colors"
                 onClick={handleRemove}
@@ -313,7 +308,7 @@ function MagicBlockComponent(props: ExtendedNodeViewProps) {
               ) : (
                 <div className="inline-flex flex-col items-center gap-3">
                   <div className="p-4 rounded-full bg-white/10">
-                    <Lock className="w-8 h-8 text-white/40" />
+                    <Lock weight="duotone" className="w-8 h-8 text-white/40" />
                   </div>
                   <div className="space-y-1">
                     <p className="font-semibold text-white/80 flex items-center gap-2 justify-center">
@@ -375,7 +370,7 @@ function MagicBlockComponent(props: ExtendedNodeViewProps) {
                     )}
                     title={t('editor.blocks.magic_block_content.drag_resize')}
                   >
-                    <GripHorizontal className="w-3 h-3" />
+                    <DotsSixVertical weight="duotone" className="w-3 h-3" />
                     <span className="text-xs font-medium">{height}px</span>
                   </div>
                 </div>
@@ -384,18 +379,16 @@ function MagicBlockComponent(props: ExtendedNodeViewProps) {
                     onClick={() => setIsPreviewModalOpen(true)}
                     className="flex space-x-1.5 items-center bg-white/5 cursor-pointer px-4 py-1.5 rounded-xl outline outline-1 outline-neutral-100/10 text-xs font-semibold text-white/40 hover:text-white/60 hover:bg-white/10 hover:outline-neutral-200/40 delay-75 ease-linear transition-all"
                   >
-                    <Expand className="w-4 h-4" />
+                    <ArrowsOut weight="duotone" className="w-4 h-4" />
                     <span>{t('editor.blocks.common.expand')}</span>
                   </button>
-                  {iterationCount < 6 && (
-                    <button
-                      onClick={() => setIsModalOpen(true)}
-                      className="flex space-x-1.5 items-center bg-white/5 cursor-pointer px-4 py-1.5 rounded-xl outline outline-1 outline-neutral-100/10 text-xs font-semibold text-white/40 hover:text-white/60 hover:bg-white/10 hover:outline-neutral-200/40 delay-75 ease-linear transition-all"
-                    >
-                      <Edit3 className="w-4 h-4" />
-                      <span>{t('editor.blocks.magic_block_content.edit_left', { count: 6 - iterationCount })}</span>
-                    </button>
-                  )}
+                  <button
+                    onClick={() => setIsModalOpen(true)}
+                    className="flex space-x-1.5 items-center bg-white/5 cursor-pointer px-4 py-1.5 rounded-xl outline outline-1 outline-neutral-100/10 text-xs font-semibold text-white/40 hover:text-white/60 hover:bg-white/10 hover:outline-neutral-200/40 delay-75 ease-linear transition-all"
+                  >
+                    <PencilSimple weight="duotone" className="w-4 h-4" />
+                    <span>{t('editor.blocks.magic_block_content.edit')}</span>
+                  </button>
                 </div>
               </div>
             </div>
@@ -415,8 +408,8 @@ function MagicBlockComponent(props: ExtendedNodeViewProps) {
           accessToken={accessToken}
           initialSessionUuid={sessionUuid}
           initialHtmlContent={htmlContent}
-          initialIterationCount={iterationCount}
           initialMessages={cachedMessages}
+          initialRevisions={cachedRevisions}
         />
       )}
 

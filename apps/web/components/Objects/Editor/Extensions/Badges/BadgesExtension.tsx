@@ -1,7 +1,7 @@
 import { NodeViewContent, NodeViewWrapper } from '@tiptap/react'
 import React, { useState, useRef, useEffect, lazy, Suspense } from 'react'
 const Picker = lazy(() => import('@emoji-mart/react'))
-import { ChevronDown, ChevronRight, Palette } from 'lucide-react'
+import { CaretDown, CaretRight, Palette } from '@phosphor-icons/react'
 import { twMerge } from 'tailwind-merge'
 import { useEditorProvider } from '@components/Contexts/Editor/EditorContext'
 
@@ -144,7 +144,7 @@ const BadgesExtension: React.FC = (props: any) => {
             <span className='text'>{emoji}</span>
             {isEditable && (
               <button onClick={() => setShowEmojiPicker(!showEmojiPicker)}>
-                <ChevronDown size={14} />
+                <CaretDown weight="duotone" size={14} />
               </button>
             )}
           </div>
@@ -156,7 +156,7 @@ const BadgesExtension: React.FC = (props: any) => {
           {isEditable && (
             <div className="flex items-center justify-center space-x-2 relative">
               <button onClick={() => setShowColorPicker(!showColorPicker)}>
-                <Palette size={14} />
+                <Palette weight="duotone" size={14} />
               </button>
               {showColorPicker && (
                 <div ref={colorPickerRef} className="absolute left-full ml-2 p-2 bg-white rounded-full nice-shadow">
@@ -180,7 +180,7 @@ const BadgesExtension: React.FC = (props: any) => {
             onClick={() => setShowPredefinedCallouts(!showPredefinedCallouts)}
             className="text-neutral-300 hover:text-neutral-400 transition-colors"
           >
-            <ChevronRight size={16} />
+            <CaretRight weight="duotone" size={16} />
           </button>
         )}
 

@@ -2,9 +2,41 @@ import { Extension } from '@tiptap/core'
 import { Plugin, PluginKey } from '@tiptap/pm/state'
 import { EditorView } from '@tiptap/pm/view'
 import { NodeSelection } from '@tiptap/pm/state'
-import { Slice, Fragment } from '@tiptap/pm/model'
+import { Slice, Fragment, Node as PMNode } from '@tiptap/pm/model'
 
 const DRAG_HANDLE_KEY = new PluginKey('dragHandle')
+
+// Copy a single block to the system clipboard so it can be pasted into another
+// TipTap editor instance. We use view.serializeForClipboard so ProseMirror
+// embeds the slice metadata it needs for native paste to round-trip exactly.
+function copyBlockToClipboard(view: EditorView, node: PMNode, button: HTMLElement) {
+  const slice = new Slice(Fragment.from(node), 0, 0)
+  const { dom, text } = view.serializeForClipboard(slice)
+  const html = (dom as HTMLElement).outerHTML
+
+  const onCopy = (event: ClipboardEvent) => {
+    event.preventDefault()
+    event.clipboardData?.setData('text/html', html)
+    event.clipboardData?.setData('text/plain', text)
+  }
+
+  document.addEventListener('copy', onCopy, { once: true })
+  const succeeded = document.execCommand('copy')
+
+  if (!succeeded) {
+    document.removeEventListener('copy', onCopy)
+    navigator.clipboard?.writeText(text).catch(() => {})
+  }
+
+  const tooltip = button.querySelector('.tooltip-text') as HTMLElement | null
+  if (tooltip) {
+    const original = tooltip.textContent
+    tooltip.textContent = 'Copied!'
+    setTimeout(() => {
+      if (tooltip.textContent === 'Copied!') tooltip.textContent = original
+    }, 1200)
+  }
+}
 
 function createDragHandlePlugin() {
   let dragHandle: HTMLElement | null = null
@@ -19,36 +51,31 @@ function createDragHandlePlugin() {
     dragHandle.className = 'editor-drag-handle nice-shadow'
     dragHandle.innerHTML = `
       <div class="drag-grip" draggable="true">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
-          <circle cx="9" cy="5" r="2"/>
-          <circle cx="9" cy="12" r="2"/>
-          <circle cx="9" cy="19" r="2"/>
-          <circle cx="15" cy="5" r="2"/>
-          <circle cx="15" cy="12" r="2"/>
-          <circle cx="15" cy="19" r="2"/>
+        <svg width="14" height="14" viewBox="0 0 256 256" fill="currentColor">
+          <path d="M104,60A12,12,0,1,1,92,48,12,12,0,0,1,104,60Zm60,12a12,12,0,1,0-12-12A12,12,0,0,0,164,72ZM92,116a12,12,0,1,0,12,12A12,12,0,0,0,92,116Zm72,0a12,12,0,1,0,12,12A12,12,0,0,0,164,116ZM92,184a12,12,0,1,0,12,12A12,12,0,0,0,92,184Zm72,0a12,12,0,1,0,12,12A12,12,0,0,0,164,184Z"/>
         </svg>
       </div>
       <button class="action-btn clear-btn" data-action="clear">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/>
-          <path d="M3 3v5h5"/>
+        <svg width="14" height="14" viewBox="0 0 256 256" fill="currentColor">
+          <path d="M224,128a96,96,0,0,1-94.71,96H128A95.38,95.38,0,0,1,62.1,197.8a8,8,0,0,1,11-11.63A80,80,0,1,0,71.43,71.39a3.07,3.07,0,0,1-.26.25L44.59,96H72a8,8,0,0,1,0,16H24a8,8,0,0,1-8-8V56a8,8,0,0,1,16,0V85.8L60.25,60A96,96,0,0,1,224,128Z"/>
         </svg>
         <span class="tooltip-text">Clear</span>
       </button>
       <button class="action-btn duplicate-btn" data-action="duplicate">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <rect width="14" height="14" x="8" y="8" rx="2" ry="2"/>
-          <path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/>
+        <svg width="14" height="14" viewBox="0 0 256 256" fill="currentColor">
+          <path d="M216,32H88a8,8,0,0,0-8,8V80H40a8,8,0,0,0-8,8V216a8,8,0,0,0,8,8H168a8,8,0,0,0,8-8V176h40a8,8,0,0,0,8-8V40A8,8,0,0,0,216,32ZM160,208H48V96H160Zm48-48H176V88a8,8,0,0,0-8-8H96V48H208Z"/>
         </svg>
         <span class="tooltip-text">Duplicate</span>
       </button>
+      <button class="action-btn copy-btn" data-action="copy">
+        <svg width="14" height="14" viewBox="0 0 256 256" fill="currentColor">
+          <path d="M168,152a8,8,0,0,1-8,8H96a8,8,0,0,1,0-16h64A8,8,0,0,1,168,152Zm-8-40H96a8,8,0,0,0,0,16h64a8,8,0,0,0,0-16Zm56-64V216a16,16,0,0,1-16,16H56a16,16,0,0,1-16-16V48A16,16,0,0,1,56,32H92.26a47.92,47.92,0,0,1,71.48,0H200A16,16,0,0,1,216,48ZM96,64h64a32,32,0,0,0-64,0ZM200,48H173.25A47.93,47.93,0,0,1,176,64v8a8,8,0,0,1-8,8H88a8,8,0,0,1-8-8V64a47.93,47.93,0,0,1,2.75-16H56V216H200Z"/>
+        </svg>
+        <span class="tooltip-text">Copy</span>
+      </button>
       <button class="action-btn delete-btn" data-action="delete">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M3 6h18"/>
-          <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/>
-          <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/>
-          <line x1="10" x2="10" y1="11" y2="17"/>
-          <line x1="14" x2="14" y1="11" y2="17"/>
+        <svg width="14" height="14" viewBox="0 0 256 256" fill="currentColor">
+          <path d="M216,48H176V40a24,24,0,0,0-24-24H104A24,24,0,0,0,80,40v8H40a8,8,0,0,0,0,16h8V208a16,16,0,0,0,16,16H192a16,16,0,0,0,16-16V64h8a8,8,0,0,0,0-16ZM96,40a8,8,0,0,1,8-8h48a8,8,0,0,1,8,8v8H96Zm96,168H64V64H192ZM112,104v64a8,8,0,0,1-16,0V104a8,8,0,0,1,16,0Zm48,0v64a8,8,0,0,1-16,0V104a8,8,0,0,1,16,0Z"/>
         </svg>
         <span class="tooltip-text">Delete</span>
       </button>
@@ -151,6 +178,9 @@ function createDragHandlePlugin() {
         const slice = new Slice(Fragment.from(node), 0, 0)
         const tr = view.state.tr.insert(nodePos + node.nodeSize, slice.content)
         view.dispatch(tr)
+      } else if (action === 'copy') {
+        copyBlockToClipboard(view, node, button)
+        return
       } else if (action === 'clear') {
         // Create an empty version of the same node type
         const emptyNode = view.state.schema.nodes[node.type.name].create(

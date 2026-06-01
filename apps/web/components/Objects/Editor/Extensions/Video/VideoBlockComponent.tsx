@@ -1,9 +1,9 @@
 import { NodeViewProps, NodeViewWrapper } from '@tiptap/react'
 import { Node } from '@tiptap/core'
 import {
-  Loader2, Video, Upload, X, ArrowLeftRight,
-  CheckCircle2, AlertCircle, Expand,
-} from 'lucide-react'
+  CircleNotch, VideoCamera, UploadSimple, X, ArrowsLeftRight,
+  CheckCircle, WarningCircle, ArrowsOut,
+} from '@phosphor-icons/react'
 import React from 'react'
 import toast from 'react-hot-toast'
 import { uploadNewVideoFile } from '../../../../../services/blocks/Video/video'
@@ -277,7 +277,7 @@ function VideoBlockComponent(props: ExtendedNodeViewProps) {
                     className="p-2 outline-none bg-black/50 hover:bg-black/70 rounded-lg transition-colors"
                     title={t('editor.blocks.video_block.expand_video')}
                   >
-                    <Expand className="w-4 h-4 text-white" />
+                    <ArrowsOut weight="duotone" className="w-4 h-4 text-white" />
                   </button>
                 </div>
               </div>
@@ -317,7 +317,7 @@ function VideoBlockComponent(props: ExtendedNodeViewProps) {
         {/* Header */}
         <div className="flex items-center justify-between mb-3">
           <div className="flex items-center gap-2">
-            <Video className="text-neutral-400" size={16} />
+            <VideoCamera weight="duotone" className="text-neutral-400" size={16} />
             <span className="uppercase tracking-widest text-xs font-bold text-neutral-400">
               {t('editor.blocks.video')}
             </span>
@@ -327,7 +327,7 @@ function VideoBlockComponent(props: ExtendedNodeViewProps) {
               onClick={handleRemove}
               className="text-neutral-400 hover:text-red-500 transition-colors"
             >
-              <X size={16} />
+              <X weight="duotone" size={16} />
             </button>
           )}
         </div>
@@ -359,7 +359,7 @@ function VideoBlockComponent(props: ExtendedNodeViewProps) {
             >
               {isLoading ? (
                 <div className="space-y-3">
-                  <Loader2 className="w-8 h-8 animate-spin mx-auto text-blue-500" />
+                  <CircleNotch weight="duotone" className="w-8 h-8 animate-spin mx-auto text-blue-500" />
                   <p className="text-sm text-neutral-600">{t('editor.blocks.video_block.uploading')} {uploadProgress}%</p>
                   <div className="w-48 h-1 bg-neutral-200 rounded-full mx-auto overflow-hidden">
                     <div
@@ -370,7 +370,7 @@ function VideoBlockComponent(props: ExtendedNodeViewProps) {
                 </div>
               ) : (
                 <div className="space-y-3">
-                  <Upload className="w-8 h-8 mx-auto text-neutral-400" />
+                  <UploadSimple weight="duotone" className="w-8 h-8 mx-auto text-neutral-400" />
                   <div>
                     <p className="text-sm font-medium text-neutral-700">
                       {t('editor.blocks.video_block.drop_or_browse')}
@@ -385,7 +385,7 @@ function VideoBlockComponent(props: ExtendedNodeViewProps) {
 
             {error && (
               <div className="flex items-center gap-2 text-sm text-red-500 font-medium bg-red-50 rounded-lg p-3">
-                <AlertCircle size={16} />
+                <WarningCircle weight="duotone" size={16} />
                 {error}
               </div>
             )}
@@ -398,7 +398,7 @@ function VideoBlockComponent(props: ExtendedNodeViewProps) {
             {/* Size Controls */}
             <div className="flex items-center gap-2 flex-wrap">
               <div className="text-sm text-neutral-500 font-medium flex items-center gap-1">
-                <ArrowLeftRight size={14} />
+                <ArrowsLeftRight weight="duotone" size={14} />
                 {t('editor.blocks.common.size')}:
               </div>
               {(Object.keys(VIDEO_SIZES) as VideoSize[]).map((size) => (
@@ -412,7 +412,7 @@ function VideoBlockComponent(props: ExtendedNodeViewProps) {
                       : "bg-neutral-200 text-neutral-700 hover:bg-neutral-300"
                   )}
                 >
-                  {size === selectedSize && <CheckCircle2 size={14} />}
+                  {size === selectedSize && <CheckCircle weight="duotone" size={14} />}
                   {t(`editor.blocks.common.${size}`)}
                 </button>
               ))}
@@ -431,7 +431,7 @@ function VideoBlockComponent(props: ExtendedNodeViewProps) {
                 <div className="relative rounded-lg overflow-hidden bg-black/5 nice-shadow">
                   {isLoading && (
                     <div className="absolute inset-0 flex items-center justify-center bg-black/10 backdrop-blur-sm">
-                      <Loader2 className="w-8 h-8 animate-spin text-white" />
+                      <CircleNotch weight="duotone" className="w-8 h-8 animate-spin text-white" />
                     </div>
                   )}
                   <video
@@ -449,7 +449,7 @@ function VideoBlockComponent(props: ExtendedNodeViewProps) {
                       className="p-2 outline-none bg-black/50 hover:bg-black/70 rounded-lg transition-colors"
                       title={t('editor.blocks.video_block.expand_video')}
                     >
-                      <Expand className="w-4 h-4 text-white" />
+                      <ArrowsOut weight="duotone" className="w-4 h-4 text-white" />
                     </button>
                   </div>
                 </div>

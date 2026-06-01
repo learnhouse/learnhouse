@@ -959,7 +959,10 @@
     "embed": "Intégrer",
     "embed_code_copied": "Code d'intégration copié !",
     "link_copied": "Lien copié !",
-    "share": "Partager"
+    "share": "Partager",
+    "markdown": "Markdown",
+    "custom": "Personnalisé",
+    "scorm": "SCORM"
   },
   "assignments": {
     "submit_assignment": "Rendre le devoir",
@@ -2044,7 +2047,8 @@
             "dynamic_page": "Page dynamique",
             "scorm": "SCORM",
             "markdown": "Markdown",
-            "embed": "Intégration"
+            "embed": "Intégration",
+            "custom": "Personnalisé"
           },
           "toasts": {
             "deleting": "Suppression de l'activité...",

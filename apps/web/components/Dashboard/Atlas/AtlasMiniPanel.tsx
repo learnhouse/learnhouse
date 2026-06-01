@@ -1,0 +1,403 @@
+'use client'
+
+import React, { useCallback, useEffect, useRef, useState } from 'react'
+import { useParams } from 'next/navigation'
+
+import { useLHSession } from '@components/Contexts/LHSessionContext'
+import { useOrg } from '@components/Contexts/OrgContext'
+import {
+  AtlasPageContextPayload,
+  AtlasReferencePayload,
+  AtlasSession,
+  revokeAtlasSession,
+  startAtlasSession,
+  streamAtlasChat,
+} from '@services/ai/atlas'
+import { AlertTriangle, Loader2, Send, X as XIcon } from 'lucide-react'
+import { GlobeStand } from '@phosphor-icons/react'
+
+import { ChatMessage, EmptyState } from './AtlasChat'
+import { AtlasReference, useAtlasMini } from './AtlasMiniContext'
+import PageContextBreadcrumb from './composer/PageContextBreadcrumb'
+import QuickActionChips from './composer/QuickActionChips'
+import ReferencePicker from './composer/ReferencePicker'
+
+interface Props {
+  open: boolean
+  onClose: () => void
+}
+
+export default function AtlasMiniPanel({ open, onClose }: Props) {
+  const session = useLHSession() as any
+  const accessToken: string | undefined = session?.data?.tokens?.access_token
+  const org = useOrg() as any
+  const orgId: number | undefined = org?.id
+
+  const {
+    input,
+    setInput,
+    focusInput,
+    registerInputRef,
+    pageContext,
+    attachedReferences,
+    removeReference,
+    clearReferences,
+  } = useAtlasMini()
+
+  const [atlasSession, setAtlasSession] = useState<AtlasSession | null>(null)
+  const [sessionError, setSessionError] = useState<string | null>(null)
+  const [messages, setMessages] = useState<ChatMessage[]>([])
+  const [sending, setSending] = useState(false)
+  const [aichatUuid, setAichatUuid] = useState<string | null>(null)
+
+  const abortRef = useRef<AbortController | null>(null)
+  const scrollRef = useRef<HTMLDivElement | null>(null)
+  const inputElRef = useRef<HTMLTextAreaElement | null>(null)
+  const pageContextRef = useRef(pageContext)
+  const referencesRef = useRef(attachedReferences)
+
+  const routeParams = useParams() as Record<string, string | string[] | undefined> | null
+  const rawCourseUuid = (() => {
+    const v = routeParams?.courseuuid ?? routeParams?.courseid
+    return Array.isArray(v) ? v[0] : v
+  })()
+  const routeCourseUuid = rawCourseUuid
+    ? rawCourseUuid.startsWith('course_')
+      ? rawCourseUuid
+      : `course_${rawCourseUuid}`
+    : undefined
+  const rawActivityUuid = (() => {
+    const v = routeParams?.activityuuid ?? routeParams?.activityid
+    return Array.isArray(v) ? v[0] : v
+  })()
+  const routeActivityUuid = rawActivityUuid
+    ? rawActivityUuid.startsWith('activity_')
+      ? rawActivityUuid
+      : `activity_${rawActivityUuid}`
+    : undefined
+  const routeContextRef = useRef<{ course_uuid?: string; activity_uuid?: string }>({})
+  useEffect(() => {
+    routeContextRef.current = {
+      course_uuid: routeCourseUuid,
+      activity_uuid: routeActivityUuid,
+    }
+  }, [routeCourseUuid, routeActivityUuid])
+
+  useEffect(() => {
+    pageContextRef.current = pageContext
+  }, [pageContext])
+  useEffect(() => {
+    referencesRef.current = attachedReferences
+  }, [attachedReferences])
+
+  useEffect(() => {
+    registerInputRef(inputElRef.current)
+    return () => registerInputRef(null)
+  }, [registerInputRef])
+
+  // ── session-token lifecycle ────────────────────────────────────────────
+  const refreshSession = useCallback(async () => {
+    if (!orgId || !accessToken) return
+    try {
+      const next = await startAtlasSession(orgId, accessToken)
+      setAtlasSession(next)
+      setSessionError(null)
+    } catch (err: any) {
+      setSessionError(err?.message || 'Could not start Atlas session.')
+    }
+  }, [orgId, accessToken])
+
+  useEffect(() => {
+    if (!open) return
+    if (!atlasSession) refreshSession()
+  }, [open, atlasSession, refreshSession])
+
+  useEffect(() => {
+    if (!atlasSession?.expires_at) return
+    const expiryMs = new Date(atlasSession.expires_at).getTime()
+    const refreshAt = expiryMs - 2 * 60 * 1000
+    const delay = Math.max(refreshAt - Date.now(), 10_000)
+    const t = setTimeout(() => refreshSession(), delay)
+    return () => clearTimeout(t)
+  }, [atlasSession, refreshSession])
+
+  useEffect(() => {
+    return () => {
+      const s = atlasSession
+      if (s && accessToken) {
+        revokeAtlasSession(s.token_uuid, accessToken).catch(() => {})
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
+  useEffect(() => {
+    if (open) setTimeout(focusInput, 0)
+  }, [open, focusInput])
+
+  useEffect(() => {
+    if (scrollRef.current) scrollRef.current.scrollTop = scrollRef.current.scrollHeight
+  }, [messages])
+
+  // ── derived state ──────────────────────────────────────────────────────
+  const buildPageContextPayload = useCallback((): AtlasPageContextPayload | undefined => {
+    const pc = pageContextRef.current
+    const route = routeContextRef.current
+    const refs = referencesRef.current
+    const refsPayload: AtlasReferencePayload[] | undefined = refs.length
+      ? refs.map((r: AtlasReference) => ({
+          type: r.type,
+          uuid: r.uuid,
+          name: r.name,
+          parent_course_uuid: r.parent_course_uuid,
+          parent_chapter_id: r.parent_chapter_id,
+          parent_chapter_name: r.parent_chapter_name,
+          activity_type: r.activity_type,
+        }))
+      : undefined
+    const merged: AtlasPageContextPayload = {
+      ...(route.course_uuid ? { course_uuid: route.course_uuid } : {}),
+      ...(route.activity_uuid ? { activity_uuid: route.activity_uuid } : {}),
+      ...(pc || {}),
+    }
+    if (refsPayload) merged.references = refsPayload
+    const hasAnyContext =
+      merged.course_uuid ||
+      merged.chapter_uuid ||
+      merged.chapter_id !== undefined ||
+      merged.activity_uuid ||
+      refsPayload
+    if (!hasAnyContext) return undefined
+    return merged
+  }, [])
+
+  const canSend =
+    !!atlasSession && !!accessToken && !!orgId && !sending && input.trim().length > 0
+
+  // ── send ───────────────────────────────────────────────────────────────
+  const sendMessage = useCallback(
+    async (text: string) => {
+      if (!atlasSession || !accessToken || !orgId) return
+      setInput('')
+      setSending(true)
+      clearReferences()
+
+      const controller = new AbortController()
+      abortRef.current = controller
+
+      try {
+        const stream = streamAtlasChat({
+          orgId,
+          sessionToken: atlasSession.token,
+          message: text,
+          aichatUuid: aichatUuid ?? undefined,
+          accessToken,
+          signal: controller.signal,
+          pageContext: buildPageContextPayload(),
+        })
+        for await (const event of stream) {
+          if (event.type === 'session') {
+            setAichatUuid(event.aichat_uuid)
+          }
+          // Bubble/answer rendering removed — stream is drained while the
+          // new chat UI is being rebuilt on top of this skeleton.
+        }
+      } catch (err: any) {
+        if (err?.name !== 'AbortError') {
+          setSessionError(err?.message || 'Stream failed.')
+        }
+      } finally {
+        setSending(false)
+        abortRef.current = null
+      }
+    },
+    [
+      accessToken,
+      aichatUuid,
+      atlasSession,
+      buildPageContextPayload,
+      clearReferences,
+      orgId,
+      setInput,
+    ],
+  )
+
+  const onSubmit = (e?: React.FormEvent) => {
+    e?.preventDefault()
+    if (!canSend) return
+    sendMessage(input.trim())
+  }
+
+  const stop = () => abortRef.current?.abort()
+
+  // ── render ─────────────────────────────────────────────────────────────
+  return (
+    <aside
+      className={`fixed bottom-0 right-0 top-0 z-50 flex w-[460px] max-w-[100vw] flex-col text-white transition-transform ${
+        open ? 'translate-x-0' : 'translate-x-full'
+      } ${sending ? 'atlas-loading-border' : ''}`}
+      style={{
+        background:
+          'linear-gradient(0deg, rgba(0, 0, 0, 0.35) 0%, rgba(0, 0, 0, 0.35) 100%), ' +
+          'radial-gradient(120% 110% at 50% -5%, rgba(139, 92, 246, 0.18) 0%, rgba(0, 0, 0, 0) 55%), ' +
+          'rgb(2 1 20 / 100%)',
+      }}
+      aria-hidden={!open}
+    >
+        <header className="flex-none flex items-center justify-between px-4 py-3 border-b border-white/[0.06]">
+          <div className="flex items-center gap-2">
+            <GlobeStand size={18} weight="duotone" className="text-violet-300" />
+            <span className="text-sm font-semibold text-white/90">Atlas</span>
+          </div>
+          <button
+            type="button"
+            aria-label="Close Atlas"
+            onClick={onClose}
+            className="rounded-md p-1.5 text-white/55 hover:text-white/90 hover:bg-white/[0.06] transition-colors"
+          >
+            <XIcon size={16} />
+          </button>
+        </header>
+
+        {sessionError && (
+          <div className="flex-none flex items-center gap-2 bg-rose-500/10 text-rose-200 px-4 py-2 text-xs border-b border-rose-500/20">
+            <AlertTriangle size={13} />
+            <span className="flex-1">{sessionError}</span>
+            <button
+              className="font-semibold underline hover:text-rose-100"
+              onClick={() => refreshSession()}
+            >
+              Retry
+            </button>
+          </div>
+        )}
+
+        <div ref={scrollRef} className="flex-1 min-h-0 overflow-y-auto atlas-scroll">
+          {messages.length === 0 ? (
+            <div className="h-full min-h-[40vh] flex items-center justify-center px-4">
+              <EmptyState
+                onPick={(p) => sendMessage(p)}
+                disabled={!atlasSession || sending}
+              />
+            </div>
+          ) : (
+            <div className="flex-1 min-h-0" />
+          )}
+        </div>
+
+        {attachedReferences.length > 0 && (
+          <div className="flex-none px-4 pt-2 flex flex-wrap gap-1.5">
+            {attachedReferences.map((r) => (
+              <span
+                key={`${r.type}_${r.uuid}`}
+                className="inline-flex items-center gap-1 rounded-full bg-violet-500/15 ring-1 ring-inset ring-violet-400/25 px-2 py-0.5 text-[11px] text-violet-100"
+              >
+                <span className="font-medium truncate max-w-[12rem]">{r.name}</span>
+                <span className="text-violet-300/50">· {r.type}</span>
+                <button
+                  type="button"
+                  onClick={() => removeReference(r.uuid)}
+                  className="text-violet-200/60 hover:text-white"
+                  aria-label="Remove reference"
+                >
+                  <XIcon size={11} />
+                </button>
+              </span>
+            ))}
+          </div>
+        )}
+
+        <div className="flex-none border-t border-white/[0.04]">
+          <PageContextBreadcrumb compact />
+          {input.trim().length === 0 && !sending && (
+            <QuickActionChips
+              onPick={(p) => setInput(p)}
+              disabled={!atlasSession}
+            />
+          )}
+          <form onSubmit={onSubmit} className="px-3 py-2.5 flex items-end gap-2">
+            <ReferencePicker />
+            <div
+              className={`flex-1 rounded-xl bg-white/[0.02] transition-all ${
+                sending
+                  ? 'atlas-composer-glow'
+                  : 'ring-1 ring-inset ring-white/[0.06] focus-within:ring-violet-400/30 focus-within:bg-white/[0.04]'
+              }`}
+            >
+              <textarea
+                ref={inputElRef}
+                value={input}
+                onChange={(e) => setInput(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault()
+                    onSubmit()
+                  }
+                }}
+                placeholder={atlasSession ? 'Ask Atlas…' : 'Starting Atlas…'}
+                rows={2}
+                className="w-full resize-none bg-transparent outline-none text-[13px] text-white placeholder:text-white/30 px-3 py-2 min-h-[44px] max-h-40"
+                disabled={!atlasSession}
+              />
+            </div>
+            {sending ? (
+              <button
+                type="button"
+                onClick={stop}
+                className="flex items-center gap-1.5 bg-white/10 hover:bg-white/15 text-white/80 ring-1 ring-inset ring-white/10 rounded-xl px-3 py-2.5 text-sm font-semibold transition-colors"
+              >
+                <Loader2 size={14} className="animate-spin" />
+                Stop
+              </button>
+            ) : (
+              <button
+                type="submit"
+                disabled={!canSend}
+                className="flex items-center gap-1.5 bg-violet-600 hover:bg-violet-500 disabled:bg-white/5 disabled:text-white/30 text-white ring-1 ring-inset ring-violet-400/30 disabled:ring-white/10 rounded-xl px-3 py-2.5 text-sm font-semibold transition-colors"
+              >
+                <Send size={14} />
+                Send
+              </button>
+            )}
+          </form>
+        </div>
+
+        <style jsx>{`
+          .atlas-scroll {
+            scrollbar-width: thin;
+            scrollbar-color: rgba(255, 255, 255, 0.12) transparent;
+          }
+          .atlas-scroll::-webkit-scrollbar { width: 8px; }
+          .atlas-scroll::-webkit-scrollbar-track { background: transparent; }
+          .atlas-scroll::-webkit-scrollbar-thumb {
+            background-color: rgba(255, 255, 255, 0.1);
+            border-radius: 4px;
+          }
+          .atlas-scroll::-webkit-scrollbar-thumb:hover {
+            background-color: rgba(255, 255, 255, 0.2);
+          }
+          .atlas-composer-glow {
+            box-shadow:
+              inset 0 0 0 1px rgba(167, 139, 250, 0.45),
+              0 0 14px 0 rgba(167, 139, 250, 0.25),
+              0 0 28px 0 rgba(167, 139, 250, 0.12);
+            animation: atlas-composer-glow 2.4s ease-in-out infinite;
+          }
+          @keyframes atlas-composer-glow {
+            0%, 100% {
+              box-shadow:
+                inset 0 0 0 1px rgba(167, 139, 250, 0.35),
+                0 0 12px 0 rgba(167, 139, 250, 0.18),
+                0 0 24px 0 rgba(167, 139, 250, 0.08);
+            }
+            50% {
+              box-shadow:
+                inset 0 0 0 1px rgba(167, 139, 250, 0.60),
+                0 0 20px 0 rgba(167, 139, 250, 0.38),
+                0 0 40px 0 rgba(167, 139, 250, 0.18);
+            }
+          }
+        `}</style>
+    </aside>
+  )
+}

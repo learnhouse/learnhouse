@@ -88,13 +88,13 @@ async function waitForHealth(label: string, command: string, args: string[], max
   return false
 }
 
-const CONTROLS_BAR = pc.dim('─'.repeat(60)) + '\n' +
-  pc.dim('  ') + pc.bold('ra') + pc.dim(' restart api  ') +
-  pc.bold('rw') + pc.dim(' restart web  ') +
-  pc.bold('rc') + pc.dim(' restart collab  ') +
-  pc.bold('rb') + pc.dim(' restart all  ') +
+const CONTROLS_BAR = pc.dim('─'.repeat(72)) + '\n' +
+  pc.dim('  ') + pc.bold('ra') + pc.dim(' api  ') +
+  pc.bold('rw') + pc.dim(' web  ') +
+  pc.bold('rc') + pc.dim(' collab  ') +
+  pc.bold('rb') + pc.dim(' all  ') +
   pc.bold('q') + pc.dim(' quit') + '\n' +
-  pc.dim('─'.repeat(60))
+  pc.dim('─'.repeat(72))
 
 let lineCount = 0
 const CONTROLS_INTERVAL = 50
@@ -140,7 +140,14 @@ function isInfraRunning(): boolean {
 
 let serviceEnv: Record<string, string> = {}
 
-function spawnService(command: string, args: string[], cwd: string, label: string, color: (s: string) => string): ChildProcess {
+function spawnService(
+  command: string,
+  args: string[],
+  cwd: string,
+  label: string,
+  color: (s: string) => string,
+  extraEnv?: Record<string, string>,
+): ChildProcess {
   const localBin = path.join(cwd, 'node_modules', '.bin')
   const child = spawn(command, args, {
     cwd,
@@ -149,6 +156,7 @@ function spawnService(command: string, args: string[], cwd: string, label: strin
     env: {
       ...process.env,
       ...serviceEnv,
+      ...extraEnv,
       PATH: `${localBin}${path.delimiter}${process.env.PATH ?? ''}`,
     },
   })
@@ -376,7 +384,11 @@ export async function devCommand(opts: { ee?: boolean; adminEmail?: string; admi
     }
     process.stdin.pause()
 
-    await Promise.all([killProcess(apiProc), killProcess(webProc), killProcess(collabProc)])
+    await Promise.all([
+      killProcess(apiProc),
+      killProcess(webProc),
+      killProcess(collabProc),
+    ])
 
     console.log(pc.dim('DB and Redis containers are still running for next session.'))
     console.log(pc.dim('To stop them: docker compose -f .learnhouse/docker-compose.dev.yml -p learnhouse-dev down'))
@@ -432,7 +444,11 @@ export async function devCommand(opts: { ee?: boolean; adminEmail?: string; admi
           printControls()
         } else if (key === 'b') {
           console.log(pc.yellow('\n  Restarting all...\n'))
-          await Promise.all([killProcess(apiProc), killProcess(webProc), killProcess(collabProc)])
+          await Promise.all([
+            killProcess(apiProc),
+            killProcess(webProc),
+            killProcess(collabProc),
+          ])
           apiProc = startApi()
           webProc = startWeb()
           collabProc = startCollab()

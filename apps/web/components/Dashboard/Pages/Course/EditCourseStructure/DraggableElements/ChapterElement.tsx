@@ -9,8 +9,10 @@ import {
   MoreVertical,
   Pencil,
   Save,
+  SquarePlus,
   Trash2,
 } from 'lucide-react'
+import { useAtlasMini } from '@components/Dashboard/Atlas/AtlasMiniContext'
 import React from 'react'
 import { Draggable, Droppable } from '@hello-pangea/dnd'
 import ActivityElement from './ActivityElement'
@@ -63,6 +65,20 @@ function ChapterElement(props: ChapterElementProps) {
   const withUnpublishedActivities = course ? course.withUnpublishedActivities : false
   const queryClient = useQueryClient()
   const cleanCourseUuid = (id: string) => id?.replace(/^course_/, '') ?? id
+  const { open: atlasOpen, attachReference: atlasAttachReference } = useAtlasMini()
+
+  function copyChapterTitleToAtlas() {
+    if (!props.chapter?.chapter_uuid || !props.chapter?.name) return
+    atlasAttachReference({
+      type: 'chapter',
+      uuid: props.chapter.chapter_uuid,
+      name: props.chapter.name,
+      parent_course_uuid: props.course_uuid,
+      parent_chapter_id: props.chapter.id,
+      parent_chapter_name: props.chapter.name,
+    })
+    toast.success(t('dashboard.courses.structure.activity.toasts.added_to_atlas', { defaultValue: 'Added to Atlas chat' }))
+  }
 
   const router = useRouter()
 
@@ -278,6 +294,17 @@ function ChapterElement(props: ChapterElementProps) {
                   onClick={() => setSelectedChapter(props.chapter.id)}
                   className="text-neutral-600 hover:cursor-pointer"
                 />
+                {atlasOpen && (
+                  <button
+                    type="button"
+                    onClick={copyChapterTitleToAtlas}
+                    title={t('dashboard.courses.structure.actions.send_to_atlas', { defaultValue: 'Send title to Atlas' })}
+                    aria-label={t('dashboard.courses.structure.actions.send_to_atlas', { defaultValue: 'Send title to Atlas' })}
+                    className="h-6 w-6 inline-flex items-center justify-center rounded-md text-violet-500 hover:text-violet-700 hover:bg-violet-50 transition-colors"
+                  >
+                    <SquarePlus size={14} />
+                  </button>
+                )}
               </div>
             </div>
             <div className="flex items-center space-x-2">
@@ -386,6 +413,8 @@ function ChapterElement(props: ChapterElementProps) {
                     key={activity.activity_uuid}
                     orgslug={props.orgslug}
                     course_uuid={props.course_uuid}
+                    chapter_id={props.chapter.id}
+                    chapter_name={props.chapter.name}
                     activityIndex={index}
                     activity={activity}
                     isSelected={selectedActivities.has(activity.activity_uuid)}

@@ -1219,7 +1219,10 @@
     "copy_link": "Copy Link",
     "link_copied": "Link copied!",
     "embed": "Embed",
-    "embed_code_copied": "Embed code copied!"
+    "embed_code_copied": "Embed code copied!",
+    "markdown": "Markdown",
+    "custom": "Custom",
+    "scorm": "SCORM"
   },
   "embed": {
     "not_supported_title": "This activity is not supported",
@@ -2355,7 +2358,8 @@
           "publish_all_success": "All activities published successfully",
           "unpublish_all": "Unpublish All",
           "unpublish_all_success": "All activities unpublished successfully",
-          "publish_all_error": "Failed to update some activities"
+          "publish_all_error": "Failed to update some activities",
+          "send_to_atlas": "Send title to Atlas"
         },
         "bulk_actions": {
           "selected": "{{count}} selected",
@@ -2390,7 +2394,8 @@
             "dynamic_page": "Dynamic Page",
             "scorm": "Scorm",
             "markdown": "Markdown",
-            "embed": "Embed"
+            "embed": "Embed",
+            "custom": "Custom"
           },
           "toasts": {
             "deleting": "Deleting activity...",
@@ -2404,7 +2409,8 @@
             "uploading": "Uploading file and creating activity...",
             "upload_success": "File uploaded successfully",
             "creating_uploading": "Creating activity and uploading file...",
-            "update_error": "Failed to update activity"
+            "update_error": "Failed to update activity",
+            "added_to_atlas": "Added to Atlas chat"
           },
           "versioning": {
             "version_history": "Version History",
@@ -4390,7 +4396,13 @@
         "reset_answers": "Reset answers",
         "mark_correct": "Mark as correct",
         "mark_incorrect": "Mark as incorrect",
-        "delete_answer": "Delete answer"
+        "delete_answer": "Delete answer",
+        "question_label": "Question",
+        "question_count_one": "question",
+        "question_count_other": "questions",
+        "delete_question": "Delete question",
+        "empty_editable": "No questions yet. Add your first one to get started.",
+        "empty_readonly": "This quiz has no questions yet."
       },
       "math_block": {
         "templates": "Templates",
@@ -4467,6 +4479,30 @@
         "check_preview": "The interactive element has been generated. Check the preview panel.",
         "creating_magic": "Creating magic...",
         "max_iterations_reached": "Maximum iterations reached. Save your content or start a new block.",
+        "edit": "Edit",
+        "history": "History",
+        "history_empty": "No revisions yet. Each AI generation will appear here.",
+        "revision_n": "Revision {{n}}",
+        "preview": "Preview",
+        "stop_preview": "Stop preview",
+        "restore": "Restore",
+        "previewing_revision": "Previewing a past revision (read-only)",
+        "time_just_now": "just now",
+        "time_minutes_ago": "{{count}}m ago",
+        "time_hours_ago": "{{count}}h ago",
+        "time_days_ago": "{{count}}d ago",
+        "chat_tab": "Chat",
+        "history_tab": "History",
+        "copy_style": "Copy style",
+        "copy_style_done": "Copied to clipboard!",
+        "copy_style_tooltip": "Copy this block's design to your clipboard — paste it into a magic block in any activity to match its design language",
+        "paste_style": "Paste style",
+        "paste_style_tooltip": "Paste a design copied from another magic block to match its style",
+        "paste_style_invalid": "Clipboard doesn't contain a magic block design. Copy a block's style first.",
+        "clipboard_unavailable": "Couldn't access the clipboard. Check browser permissions.",
+        "using_copied_style": "Design reference active — generations will match its style",
+        "style_ref_banner": "A design reference is active. New generations will match its visual style.",
+        "clear_style": "Clear design reference",
         "placeholder_new": "Describe what you want to create...",
         "placeholder_edit": "Describe changes or improvements...",
         "suggestion_physics": "Physics simulation",

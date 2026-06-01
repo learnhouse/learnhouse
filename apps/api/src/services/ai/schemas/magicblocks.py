@@ -1,4 +1,4 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from typing import Optional, List
 
 
@@ -14,6 +14,7 @@ class StartMagicBlockSession(BaseModel):
     block_uuid: str
     prompt: str
     context: MagicBlockContext
+    style_reference: Optional[str] = None  # HTML of another block to match the design language of
 
 
 class SendMagicBlockMessage(BaseModel):
@@ -22,11 +23,19 @@ class SendMagicBlockMessage(BaseModel):
     block_uuid: str
     message: str
     current_html: Optional[str] = None  # The current HTML content to iterate on
+    style_reference: Optional[str] = None  # HTML of another block to match the design language of
 
 
 class MagicBlockMessage(BaseModel):
     role: str  # "user" or "model"
     content: str
+
+
+class MagicBlockRevision(BaseModel):
+    revision_uuid: str
+    prompt: str
+    html: str
+    created_at: float  # unix timestamp
 
 
 class MagicBlockSessionResponse(BaseModel):
@@ -35,6 +44,7 @@ class MagicBlockSessionResponse(BaseModel):
     max_iterations: int
     html_content: Optional[str]
     message_history: List[MagicBlockMessage]
+    revisions: List[MagicBlockRevision] = Field(default_factory=list)
 
 
 class MagicBlockSessionData(BaseModel):
@@ -46,3 +56,4 @@ class MagicBlockSessionData(BaseModel):
     message_history: List[MagicBlockMessage]
     current_html: Optional[str]
     context: MagicBlockContext
+    revisions: List[MagicBlockRevision] = Field(default_factory=list)

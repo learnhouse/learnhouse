@@ -959,7 +959,10 @@
     "embed": "Incrustar",
     "embed_code_copied": "¡Código de incrustación copiado!",
     "link_copied": "¡Enlace copiado!",
-    "share": "Compartir"
+    "share": "Compartir",
+    "markdown": "Markdown",
+    "custom": "Personalizado",
+    "scorm": "SCORM"
   },
   "assignments": {
     "submit_assignment": "Enviar tarea",
@@ -2044,7 +2047,8 @@
             "dynamic_page": "Página dinámica",
             "scorm": "Scorm",
             "markdown": "Markdown",
-            "embed": "Embed"
+            "embed": "Embed",
+            "custom": "Personalizado"
           },
           "toasts": {
             "deleting": "Eliminando actividad...",

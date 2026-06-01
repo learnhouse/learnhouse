@@ -969,7 +969,10 @@
     "embed": "임베드",
     "embed_code_copied": "임베드 코드가 복사되었습니다!",
     "link_copied": "링크가 복사되었습니다!",
-    "share": "공유"
+    "share": "공유",
+    "markdown": "마크다운",
+    "custom": "사용자 정의",
+    "scorm": "SCORM"
   },
   "assignments": {
     "submit_assignment": "과제 제출",
@@ -2054,7 +2057,8 @@
             "dynamic_page": "동적 페이지",
             "scorm": "Scorm",
             "markdown": "Markdown",
-            "embed": "Embed"
+            "embed": "Embed",
+            "custom": "사용자 정의"
           },
           "toasts": {
             "deleting": "활동 삭제 중...",

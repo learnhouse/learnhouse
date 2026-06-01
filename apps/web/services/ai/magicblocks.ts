@@ -16,14 +16,16 @@ export async function startMagicBlockSession(
   accessToken: string,
   onChunk: (chunk: string) => void,
   onComplete: (sessionUuid: string) => void,
-  onError: (error: string) => void
+  onError: (error: string) => void,
+  styleReference?: string | null
 ): Promise<void> {
-  const data = {
+  const data: Record<string, unknown> = {
     activity_uuid: activityUuid,
     block_uuid: blockUuid,
     prompt,
     context,
   }
+  if (styleReference) data.style_reference = styleReference
 
   try {
     const response = await fetch(`${getAPIUrl()}ai/magicblocks/start`, {
@@ -58,15 +60,17 @@ export async function iterateMagicBlock(
   onChunk: (chunk: string) => void,
   onComplete: (sessionUuid: string) => void,
   onError: (error: string) => void,
-  currentHtml?: string | null
+  currentHtml?: string | null,
+  styleReference?: string | null
 ): Promise<void> {
-  const data = {
+  const data: Record<string, unknown> = {
     session_uuid: sessionUuid,
     activity_uuid: activityUuid,
     block_uuid: blockUuid,
     message,
     current_html: currentHtml || undefined,
   }
+  if (styleReference) data.style_reference = styleReference
 
   try {
     const response = await fetch(`${getAPIUrl()}ai/magicblocks/iterate`, {

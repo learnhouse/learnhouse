@@ -242,7 +242,7 @@ async def test_fetch_link_preview_blocks_peer_validation_errors():
 
 
 @pytest.mark.asyncio
-async def test_fetch_link_preview_rejects_oversized_responses():
+async def test_fetch_link_preview_falls_back_for_oversized_responses():
     response = _make_response(
         content_length=5 * 1024 * 1024 + 1,
         html="<html><head><title>Too big</title></head></html>",
@@ -258,11 +258,17 @@ async def test_fetch_link_preview_rejects_oversized_responses():
         "src.services.utils.link_preview.httpx.AsyncClient",
         return_value=fake_client,
     ):
-        with pytest.raises(HTTPException) as exc_info:
-            await fetch_link_preview("https://example.com/page")
+        result = await fetch_link_preview("https://example.com/page")
 
-    assert exc_info.value.status_code == 400
-    assert exc_info.value.detail == "Response too large"
+    assert result == {
+        "title": None,
+        "description": None,
+        "og_image": None,
+        "favicon": "https://example.com/favicon.ico",
+        "og_type": None,
+        "og_url": "https://example.com/page",
+        "url": "https://example.com/page",
+    }
 
 
 @pytest.mark.asyncio
@@ -349,3 +355,135 @@ async def test_fetch_link_preview_uses_fallback_favicon_for_relative_icon():
         result = await fetch_link_preview("https://example.com/page")
 
     assert result["favicon"] == "https://example.com/favicon-alt.ico"
+
+
+_MINIMAL_PREVIEW = {
+    "title": None,
+    "description": None,
+    "og_image": None,
+    "favicon": "https://example.com/favicon.ico",
+    "og_type": None,
+    "og_url": "https://example.com/page",
+    "url": "https://example.com/page",
+}
+
+
+@pytest.mark.asyncio
+async def test_fetch_link_preview_falls_back_when_upstream_returns_4xx():
+    response = _make_response(
+        status_code=403,
+        html="<html><body>blocked by waf</body></html>",
+    )
+    fake_client = _FakeAsyncClient([response])
+
+    with patch(
+        "src.services.utils.link_preview.resolve_and_validate_url",
+        return_value={"93.184.216.34"},
+    ), patch(
+        "src.services.utils.link_preview.assert_connected_peer_allowed"
+    ), patch(
+        "src.services.utils.link_preview.httpx.AsyncClient",
+        return_value=fake_client,
+    ):
+        result = await fetch_link_preview("https://example.com/page")
+
+    assert result == _MINIMAL_PREVIEW
+
+
+@pytest.mark.asyncio
+async def test_fetch_link_preview_falls_back_for_non_html_content_type():
+    response = _make_response(
+        html="%PDF-1.4 not html",
+    )
+    response.headers["content-type"] = "application/pdf"
+    fake_client = _FakeAsyncClient([response])
+
+    with patch(
+        "src.services.utils.link_preview.resolve_and_validate_url",
+        return_value={"93.184.216.34"},
+    ), patch(
+        "src.services.utils.link_preview.assert_connected_peer_allowed"
+    ), patch(
+        "src.services.utils.link_preview.httpx.AsyncClient",
+        return_value=fake_client,
+    ):
+        result = await fetch_link_preview("https://example.com/page")
+
+    assert result == _MINIMAL_PREVIEW
+
+
+@pytest.mark.asyncio
+async def test_fetch_link_preview_falls_back_when_httpx_raises():
+    import httpx
+
+    class _RaisingClient(_FakeAsyncClient):
+        async def get(self, url):
+            self.requested_urls.append(url)
+            raise httpx.ConnectError("connection refused")
+
+    fake_client = _RaisingClient([])
+
+    with patch(
+        "src.services.utils.link_preview.resolve_and_validate_url",
+        return_value={"93.184.216.34"},
+    ), patch(
+        "src.services.utils.link_preview.assert_connected_peer_allowed"
+    ), patch(
+        "src.services.utils.link_preview.httpx.AsyncClient",
+        return_value=fake_client,
+    ):
+        result = await fetch_link_preview("https://example.com/page")
+
+    assert result == _MINIMAL_PREVIEW
+    assert fake_client.requested_urls == ["https://example.com/page"]
+
+
+@pytest.mark.asyncio
+async def test_fetch_link_preview_sends_browser_user_agent():
+    response = _make_response(html="<html><head><title>OK</title></head></html>")
+    fake_client = _FakeAsyncClient([response])
+
+    with patch(
+        "src.services.utils.link_preview.resolve_and_validate_url",
+        return_value={"93.184.216.34"},
+    ), patch(
+        "src.services.utils.link_preview.assert_connected_peer_allowed"
+    ), patch(
+        "src.services.utils.link_preview.httpx.AsyncClient",
+        return_value=fake_client,
+    ) as mock_client_cls:
+        await fetch_link_preview("https://example.com/page")
+
+    headers = mock_client_cls.call_args.kwargs["headers"]
+    assert "Mozilla/5.0" in headers["User-Agent"]
+    assert "html" in headers["Accept"]
+
+
+@pytest.mark.asyncio
+async def test_fetch_link_preview_prefers_twitter_card_when_og_missing():
+    response = _make_response(
+        html=(
+            "<html><head>"
+            "<title>Fallback Title</title>"
+            '<meta name="twitter:title" content="Twitter Title">'
+            '<meta name="twitter:description" content="From twitter card">'
+            '<meta name="twitter:image" content="https://cdn.example.com/tw.png">'
+            "</head></html>"
+        )
+    )
+    fake_client = _FakeAsyncClient([response])
+
+    with patch(
+        "src.services.utils.link_preview.resolve_and_validate_url",
+        return_value={"93.184.216.34"},
+    ), patch(
+        "src.services.utils.link_preview.assert_connected_peer_allowed"
+    ), patch(
+        "src.services.utils.link_preview.httpx.AsyncClient",
+        return_value=fake_client,
+    ):
+        result = await fetch_link_preview("https://example.com/page")
+
+    assert result["title"] == "Twitter Title"
+    assert result["description"] == "From twitter card"
+    assert result["og_image"] == "https://cdn.example.com/tw.png"
