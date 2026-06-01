@@ -50,7 +50,7 @@ app = FastAPI(
     description=learnhouse_config.site_description,
     docs_url="/docs" if learnhouse_config.general_config.development_mode else None,
     redoc_url="/redoc" if learnhouse_config.general_config.development_mode else None,
-    version="1.2.2",
+    version="1.2.3",
 )
 
 # Middleware
