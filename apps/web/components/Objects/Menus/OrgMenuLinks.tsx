@@ -115,14 +115,14 @@ const LinkItem = (props: any) => {
         {props.type == 'playgrounds' && (
           <>
             <Cube size={20} weight="fill" />{' '}
-            <span>Playgrounds</span>
+            <span>{t('common.playgrounds')}</span>
           </>
         )}
 
         {props.type == 'store' && (
           <>
             <ShoppingBag size={20} weight="fill" />{' '}
-            <span>Store</span>
+            <span>{t('common.store')}</span>
           </>
         )}
 

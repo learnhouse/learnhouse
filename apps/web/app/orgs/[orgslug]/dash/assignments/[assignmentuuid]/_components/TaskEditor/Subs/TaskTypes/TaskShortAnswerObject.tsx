@@ -251,13 +251,53 @@ function TaskShortAnswerObject({
   // --- GRADING helpers ---
   const gradedPassed = userSubmissionObject?.grade > 0
 
+  async function gradeCustomFC(grade: number, feedback?: string) {
+    if (!assignmentTaskUUID || !userSubmissions) return
+    const maxPoints =
+      assignmentTaskOutsideProvider?.max_grade_value ||
+      assignmentTaskState?.assignmentTask?.max_grade_value ||
+      100
+    if (Number.isNaN(grade) || grade < 0) {
+      toast.error('Grade must be a positive number.')
+      return
+    }
+    if (grade > maxPoints) {
+      toast.error(`Grade cannot be more than ${maxPoints} points`)
+      return
+    }
+    const trimmed = feedback?.trim()
+    const finalFeedback = trimmed && trimmed.length > 0
+      ? trimmed
+      : `Graded by teacher : @${session?.data?.user?.username ?? ''}`
+    const values = {
+      assignment_task_submission_uuid: userSubmissions.assignment_task_submission_uuid,
+      task_submission: userSubmissions.task_submission,
+      grade,
+      task_submission_grade_feedback: finalFeedback,
+    }
+    const res = await handleAssignmentTaskSubmission(
+      values,
+      assignmentTaskUUID,
+      assignment.assignment_object.assignment_uuid,
+      access_token
+    )
+    if (res) {
+      loadUserSubmission()
+      toast.success(`Task graded successfully with ${grade} points`)
+    } else {
+      toast.error('Error grading task, please retry later.')
+    }
+  }
+
   return (
     <AssignmentBoxUI
       type="form"
       view={view}
       saveFC={saveFC}
       submitFC={submitFC}
+      gradeCustomFC={gradeCustomFC}
       currentPoints={userSubmissionObject?.grade}
+      currentFeedback={userSubmissionObject?.task_submission_grade_feedback}
       maxPoints={
         assignmentTaskOutsideProvider?.max_grade_value ||
         assignmentTaskState?.assignmentTask?.max_grade_value

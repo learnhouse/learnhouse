@@ -32,6 +32,7 @@
     "dutch": "Tiếng Hà Lan",
     "thai": "Tiếng Thái",
     "bengali": "Tiếng Bengali",
+    "slovak": "Tiếng Slovak",
     "loading": "Đang tải...",
     "search": "Tìm kiếm",
     "all": "Tất cả",
@@ -68,10 +69,6 @@
         "usergroups": {
           "title": "Tính năng Standard",
           "description": "Nhóm người dùng là tính năng cao cấp chỉ dành cho các tổ chức sử dụng gói Standard trở lên. Nâng cấp để tổ chức người dùng thành các nhóm để quản lý quyền truy cập tốt hơn."
-        },
-        "api_access": {
-          "title": "Tính năng Pro",
-          "description": "Truy cập API là tính năng cao cấp chỉ dành cho các tổ chức sử dụng gói Pro trở lên. Nâng cấp để mở khóa quyền truy cập lập trình vào dữ liệu tổ chức của bạn."
         },
         "roles": {
           "title": "Tính năng Pro",
@@ -204,7 +201,11 @@
     "choose_an_organization_to_continue": "Chọn một tổ chức để tiếp tục",
     "for": "cho",
     "powered_by": "Cung cấp bởi",
-    "results": "kết quả"
+    "results": "kết quả",
+    "no_content_yet": "Chưa có nội dung",
+    "other": "Other",
+    "disabled": "Disabled",
+    "store": "Store"
   },
   "banner": {
     "viewing_as_guest": "Bạn đang xem {{name}} với tư cách khách.",
@@ -2210,7 +2211,6 @@
           "landing": "Trang đích",
           "branding": "Thương hiệu",
           "ai": "AI",
-          "api": "Truy cập API",
           "features": "Tính năng",
           "other": "Khác",
           "domains": "Tên miền",
@@ -2239,10 +2239,6 @@
           "ai": {
             "title": "Tính năng AI",
             "subtitle": "Cấu hình khả năng AI cho tổ chức của bạn"
-          },
-          "api": {
-            "title": "Truy cập API",
-            "subtitle": "Quản lý token API và truy cập lập trình"
           },
           "features": {
             "title": "Tính năng",
@@ -2335,7 +2331,8 @@
           "video_preview_added": "Đã thêm video xem trước thành công",
           "video_preview_error": "Thêm video xem trước thất bại",
           "updating_order": "Đang cập nhật thứ tự xem trước..."
-        }
+        },
+        "favicon_preview": "Xem trước favicon (32×32)"
       },
       "branding": {
         "title": "Thương hiệu",
@@ -2424,6 +2421,14 @@
           "podcasts": {
             "description": "Bật tạo podcast và nội dung âm thanh cho tổ chức của bạn",
             "title": "Podcast"
+          },
+          "boards": {
+            "title": "Boards",
+            "description": "Create collaborative boards with lists and cards for project management"
+          },
+          "playgrounds": {
+            "title": "Playgrounds",
+            "description": "Create interactive AI-generated experiences for your learners"
           }
         },
         "toasts": {
@@ -2664,7 +2669,8 @@
           "loading_courses": "Đang tải khóa học...",
           "selected": "Đã chọn",
           "select": "Chọn"
-        }
+        },
+        "org_id_not_found": "Không tìm thấy ID tổ chức"
       },
       "theme": {
         "primary_color": "Màu chính",
@@ -2714,6 +2720,44 @@
         "workos_info": "WorkOS cung cấp SSO doanh nghiệp với hỗ trợ các nhà cung cấp danh tính SAML và OIDC.",
         "workos_org_id": "WorkOS Organization ID",
         "workos_org_id_help": "ID này được tạo tự động khi bạn cấu hình SSO thông qua cổng thiết lập."
+      },
+      "seo": {
+        "copied_to_clipboard": "Đã sao chép vào clipboard",
+        "save_failed": "Không thể lưu cài đặt SEO"
+      },
+      "automations": {},
+      "domains": {
+        "domain_required": "Tên miền là bắt buộc",
+        "domain_added_success": "Thêm tên miền thành công",
+        "domain_deleted_success": "Xóa tên miền thành công",
+        "copied_to_clipboard": "Đã sao chép vào clipboard",
+        "table_domain": "Tên miền",
+        "table_status": "Trạng thái",
+        "table_ssl": "SSL",
+        "table_added": "Ngày thêm",
+        "table_verified": "Đã xác minh",
+        "table_actions": "Hành động",
+        "adding_domain": "Đang thêm tên miền...",
+        "deleting_domain": "Đang xóa tên miền...",
+        "dns_config_required": "Cần cấu hình DNS",
+        "dns_config_description": "Thêm các bản ghi này tại nhà đăng ký tên miền của bạn (ví dụ: Cloudflare, GoDaddy, Namecheap). Thay đổi DNS có thể mất đến 48 giờ.",
+        "txt_record": "Bản ghi TXT",
+        "for_verification": "Để xác minh",
+        "cname_record": "Bản ghi CNAME",
+        "for_routing": "Để định tuyến",
+        "host_name": "Host / Tên",
+        "value": "Giá trị",
+        "value_target": "Giá trị / Đích",
+        "ssl_certificate": "Chứng chỉ SSL",
+        "https_status": "Trạng thái HTTPS",
+        "check": "Kiểm tra",
+        "checking_ssl": "Đang kiểm tra trạng thái SSL...",
+        "delete_domain_title": "Xóa tên miền tùy chỉnh",
+        "delete_domain_confirm": "Bạn có chắc chắn muốn xóa tên miền này? Hành động này không thể hoàn tác.",
+        "delete_domain": "Xóa tên miền",
+        "verify_domain_desc": "Thêm các bản ghi DNS sau tại nhà cung cấp tên miền của bạn để xác minh quyền sở hữu.",
+        "issuer": "Nhà phát hành",
+        "expires": "Hết hạn"
       }
     },
     "users": {
@@ -3733,10 +3777,6 @@
         "org_automations": {
           "description": "Webhook và tích hợp bên ngoài",
           "keywords": "webhook, tự động hóa, zapier, tích hợp, kích hoạt"
-        },
-        "org_api": {
-          "description": "Mã API và truy cập lập trình",
-          "keywords": "api, mã, truy cập, lập trình, khóa"
         },
         "org_sso": {
           "description": "Cấu hình đăng nhập một lần",
@@ -4887,9 +4927,7 @@
           "custom_domain": "Tên miền tùy chỉnh",
           "custom_domain_desc": "Sử dụng tên miền riêng cho học viện mang thương hiệu của bạn.",
           "roles": "Vai trò và quyền tùy chỉnh",
-          "roles_desc": "Kiểm soát chính xác ai có thể làm gì trong tổ chức của bạn.",
-          "api": "Truy cập API và webhooks",
-          "api_desc": "Tích hợp với các công cụ hiện có và tự động hóa quy trình làm việc."
+          "roles_desc": "Kiểm soát chính xác ai có thể làm gì trong tổ chức của bạn."
         }
       }
     }
@@ -4933,5 +4971,36 @@
     "next": "Tiếp",
     "previous": "Trước",
     "showing_page": "Trang {{current}} trên {{total}}"
+  },
+  "playgrounds": {
+    "no_playgrounds_yet": "Chưa có sân chơi nào",
+    "playgrounds_description": "Tạo trải nghiệm tương tác do AI tạo cho người học của bạn.",
+    "new_playground": "New Playground",
+    "search_placeholder": "Search playgrounds...",
+    "no_results_for": "No results for",
+    "try_different_search": "Try a different search term",
+    "new_playground_modal_title": "New Playground",
+    "new_playground_modal_desc": "Give your playground a name to get started.",
+    "creating": "Creating...",
+    "create": "Create",
+    "failed_create": "Failed to create playground",
+    "view": {
+      "open_editor_to_generate": "Mở trình soạn thảo để tạo nội dung.",
+      "check_back_later": "Hãy quay lại sau.",
+      "open_editor": "Mở trình soạn thảo",
+      "breadcrumb": "Sân chơi",
+      "about": "Giới thiệu",
+      "author": "Tác giả",
+      "access": "Truy cập",
+      "created": "Ngày tạo",
+      "status": "Trạng thái",
+      "published": "Đã xuất bản",
+      "draft": "Bản nháp",
+      "edit_in_editor": "Chỉnh sửa trong trình soạn thảo",
+      "download": "Tải xuống",
+      "reactions": "Phản ứng",
+      "exit_fullscreen": "Thoát",
+      "fullscreen": "Toàn màn hình"
+    }
   }
 }

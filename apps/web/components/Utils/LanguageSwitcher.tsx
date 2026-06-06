@@ -16,15 +16,17 @@ import { getMenuColorClasses } from '@services/utils/ts/colorUtils'
 const LanguageSwitcher = ({ primaryColor = '' }: { primaryColor?: string }) => {
   const { i18n, t } = useTranslation()
   const colors = getMenuColorClasses(primaryColor)
+  const [mounted, setMounted] = React.useState(false)
+  React.useEffect(() => setMounted(true), [])
 
-  const currentLangCode = i18n.language.split('-')[0].toUpperCase()
+  const currentLangCode = mounted ? i18n.language.split('-')[0].toUpperCase() : ''
 
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <button className={`flex items-center space-x-1.5 px-2.5 py-2 rounded-lg transition-colors text-sm font-bold outline-none ${colors.iconBtn}`}>
           <Languages size={16} strokeWidth={2.5} />
-          <span>{currentLangCode}</span>
+          <span suppressHydrationWarning>{currentLangCode}</span>
           <ChevronDown size={12} className="opacity-50" />
         </button>
       </DropdownMenuTrigger>

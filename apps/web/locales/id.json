@@ -34,6 +34,7 @@
     "dutch": "Belanda",
     "thai": "Thailand",
     "bengali": "Benggala",
+    "slovak": "Bahasa Slovak",
     "loading": "Memuat...",
     "search": "Cari",
     "all": "Semua",
@@ -70,10 +71,6 @@
         "usergroups": {
           "title": "Fitur Standard",
           "description": "Grup pengguna adalah fitur premium yang hanya tersedia untuk organisasi dengan paket Standard atau lebih tinggi. Upgrade untuk mengorganisir pengguna ke dalam grup untuk manajemen akses yang lebih baik."
-        },
-        "api_access": {
-          "title": "Fitur Pro",
-          "description": "Akses API adalah fitur premium yang hanya tersedia untuk organisasi dengan paket Pro atau lebih tinggi. Upgrade untuk membuka akses programatik ke data organisasi Anda."
         },
         "roles": {
           "title": "Fitur Pro",
@@ -204,7 +201,11 @@
     "choose_an_organization_to_continue": "Pilih organisasi untuk melanjutkan",
     "for": "untuk",
     "powered_by": "Didukung oleh",
-    "results": "hasil"
+    "results": "hasil",
+    "no_content_yet": "Belum ada konten",
+    "other": "Other",
+    "disabled": "Disabled",
+    "store": "Store"
   },
   "banner": {
     "viewing_as_guest": "Anda melihat {{name}} sebagai tamu.",
@@ -2210,7 +2211,6 @@
           "landing": "Halaman Landas",
           "branding": "Branding",
           "ai": "AI",
-          "api": "Akses API",
           "features": "Fitur",
           "usage": "Penggunaan",
           "other": "Lainnya",
@@ -2239,10 +2239,6 @@
           "ai": {
             "title": "Fitur AI",
             "subtitle": "Konfigurasi kemampuan AI untuk organisasi Anda"
-          },
-          "api": {
-            "title": "Akses API",
-            "subtitle": "Kelola token API dan akses programatik"
           },
           "features": {
             "title": "Fitur",
@@ -2333,7 +2329,8 @@
           "video_preview_added": "Pratinjau video ditambahkan",
           "video_preview_error": "Gagal menambahkan pratinjau video",
           "updating_order": "Memperbarui urutan pratinjau..."
-        }
+        },
+        "favicon_preview": "Pratinjau favicon (32×32)"
       },
       "branding": {
         "title": "Branding",
@@ -2422,6 +2419,14 @@
           "podcasts": {
             "description": "Aktifkan pembuatan podcast dan konten audio untuk organisasi Anda",
             "title": "Podcast"
+          },
+          "boards": {
+            "title": "Boards",
+            "description": "Create collaborative boards with lists and cards for project management"
+          },
+          "playgrounds": {
+            "title": "Playgrounds",
+            "description": "Create interactive AI-generated experiences for your learners"
           }
         },
         "toasts": {
@@ -2638,7 +2643,8 @@
           "loading_courses": "Memuat kursus...",
           "selected": "Terpilih",
           "select": "Pilih"
-        }
+        },
+        "org_id_not_found": "ID organisasi tidak ditemukan"
       },
       "theme": {
         "primary_color": "Warna Utama",
@@ -2712,6 +2718,44 @@
         "workos_info": "WorkOS menyediakan SSO enterprise dengan dukungan untuk penyedia identitas SAML dan OIDC.",
         "workos_org_id": "ID Organisasi WorkOS",
         "workos_org_id_help": "ID ini dibuat secara otomatis saat Anda mengonfigurasi SSO melalui portal pengaturan."
+      },
+      "seo": {
+        "copied_to_clipboard": "Disalin ke clipboard",
+        "save_failed": "Gagal menyimpan pengaturan SEO"
+      },
+      "automations": {},
+      "domains": {
+        "domain_required": "Domain wajib diisi",
+        "domain_added_success": "Domain berhasil ditambahkan",
+        "domain_deleted_success": "Domain berhasil dihapus",
+        "copied_to_clipboard": "Disalin ke clipboard",
+        "table_domain": "Domain",
+        "table_status": "Status",
+        "table_ssl": "SSL",
+        "table_added": "Ditambahkan",
+        "table_verified": "Terverifikasi",
+        "table_actions": "Tindakan",
+        "adding_domain": "Menambahkan domain...",
+        "deleting_domain": "Menghapus domain...",
+        "dns_config_required": "Konfigurasi DNS diperlukan",
+        "dns_config_description": "Tambahkan catatan ini di registrar domain Anda (mis. Cloudflare, GoDaddy, Namecheap). Perubahan DNS dapat memakan waktu hingga 48 jam.",
+        "txt_record": "Catatan TXT",
+        "for_verification": "Untuk verifikasi",
+        "cname_record": "Catatan CNAME",
+        "for_routing": "Untuk routing",
+        "host_name": "Host / Nama",
+        "value": "Nilai",
+        "value_target": "Nilai / Target",
+        "ssl_certificate": "Sertifikat SSL",
+        "https_status": "Status HTTPS",
+        "check": "Periksa",
+        "checking_ssl": "Memeriksa status SSL...",
+        "delete_domain_title": "Hapus domain kustom",
+        "delete_domain_confirm": "Apakah Anda yakin ingin menghapus domain ini? Tindakan ini tidak dapat dibatalkan.",
+        "delete_domain": "Hapus Domain",
+        "verify_domain_desc": "Tambahkan catatan DNS berikut di penyedia domain Anda untuk memverifikasi kepemilikan.",
+        "issuer": "Penerbit",
+        "expires": "Kedaluwarsa"
       }
     },
     "users": {
@@ -3731,10 +3775,6 @@
         "org_automations": {
           "description": "Webhook dan integrasi eksternal",
           "keywords": "webhook, otomatisasi, zapier, integrasi, pemicu"
-        },
-        "org_api": {
-          "description": "Token API dan akses programatik",
-          "keywords": "api, token, akses, programatik, kunci"
         },
         "org_sso": {
           "description": "Konfigurasi sign-on tunggal",
@@ -4885,9 +4925,7 @@
           "custom_domain": "Domain kustom",
           "custom_domain_desc": "Gunakan domain Anda sendiri untuk akademi bermerek.",
           "roles": "Peran & izin kustom",
-          "roles_desc": "Kontrol dengan tepat siapa yang bisa melakukan apa di organisasi Anda.",
-          "api": "Akses API & webhooks",
-          "api_desc": "Integrasikan dengan alat yang ada dan otomatisasi alur kerja."
+          "roles_desc": "Kontrol dengan tepat siapa yang bisa melakukan apa di organisasi Anda."
         }
       }
     }
@@ -4931,5 +4969,36 @@
     "next": "Berikutnya",
     "previous": "Sebelumnya",
     "showing_page": "Menampilkan halaman {{current}} dari {{total}}"
+  },
+  "playgrounds": {
+    "no_playgrounds_yet": "Belum ada playground",
+    "playgrounds_description": "Buat pengalaman interaktif yang dihasilkan AI untuk pelajar Anda.",
+    "new_playground": "New Playground",
+    "search_placeholder": "Search playgrounds...",
+    "no_results_for": "No results for",
+    "try_different_search": "Try a different search term",
+    "new_playground_modal_title": "New Playground",
+    "new_playground_modal_desc": "Give your playground a name to get started.",
+    "creating": "Creating...",
+    "create": "Create",
+    "failed_create": "Failed to create playground",
+    "view": {
+      "open_editor_to_generate": "Buka editor untuk membuat konten.",
+      "check_back_later": "Periksa kembali nanti.",
+      "open_editor": "Buka Editor",
+      "breadcrumb": "Playground",
+      "about": "Tentang",
+      "author": "Penulis",
+      "access": "Akses",
+      "created": "Dibuat",
+      "status": "Status",
+      "published": "Dipublikasikan",
+      "draft": "Draf",
+      "edit_in_editor": "Edit di Editor",
+      "download": "Unduh",
+      "reactions": "Reaksi",
+      "exit_fullscreen": "Keluar",
+      "fullscreen": "Layar penuh"
+    }
   }
 }

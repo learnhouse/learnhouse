@@ -1,5 +1,6 @@
 'use client'
 import React, { useRef, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { Form, Formik } from 'formik'
 import {
   updateOrgSeoConfig,
@@ -22,6 +23,7 @@ import { Copy, ExternalLink, Upload, X } from 'lucide-react'
 import { getCanonicalUrl } from '@/lib/seo/utils'
 
 const OrgEditSEO: React.FC = () => {
+  const { t } = useTranslation()
   const session = useLHSession() as any
   const access_token = session?.data?.tokens?.access_token
   const org = useOrg() as any
@@ -46,7 +48,7 @@ const OrgEditSEO: React.FC = () => {
 
   const copyToClipboard = (text: string) => {
     navigator.clipboard.writeText(text)
-    toast.success('Copied to clipboard')
+    toast.success(t('dashboard.organization.seo.copied_to_clipboard'))
   }
 
   const handleOgImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -88,7 +90,7 @@ const OrgEditSEO: React.FC = () => {
       setOgImageFile(null)
       toast.success('SEO settings saved successfully', { id: loadingToast })
     } catch (err) {
-      toast.error('Failed to save SEO settings', { id: loadingToast })
+      toast.error(t('dashboard.organization.seo.save_failed'), { id: loadingToast })
     }
   }
 
@@ -114,9 +116,9 @@ const OrgEditSEO: React.FC = () => {
             <div className="flex flex-col gap-0">
               {/* Quick Links */}
               <div className="flex flex-col bg-gray-50 -space-y-1 px-5 py-3 mx-3 my-3 rounded-md">
-                <h1 className="font-bold text-xl text-gray-800">Quick Links</h1>
+                <h1 className="font-bold text-xl text-gray-800">{t('dashboard.organization.seo.org_seo.quick_links')}</h1>
                 <h2 className="text-gray-500 text-md">
-                  Important SEO URLs for your organization
+                  {t('dashboard.organization.seo.org_seo.important_seo_urls')}
                 </h2>
               </div>
               <div className="mx-5 my-3 space-y-3">
@@ -180,15 +182,15 @@ const OrgEditSEO: React.FC = () => {
 
               {/* Default Meta Tags */}
               <div className="flex flex-col bg-gray-50 -space-y-1 px-5 py-3 mx-3 mt-4 rounded-md">
-                <h1 className="font-bold text-xl text-gray-800">Default Meta Tags</h1>
+                <h1 className="font-bold text-xl text-gray-800">{t('dashboard.organization.seo.org_seo.default_meta_tags')}</h1>
                 <h2 className="text-gray-500 text-md">
-                  Set default metadata for all pages
+                  {t('dashboard.organization.seo.org_seo.set_default_metadata')}
                 </h2>
               </div>
               <div className="mx-5 my-5 space-y-4">
                 <div>
                   <Label htmlFor="default_meta_title_suffix">
-                    Title Suffix
+                    {t('dashboard.organization.seo.org_seo.title_suffix')}
                     <span className="text-gray-500 text-sm ml-2">
                       ({30 - (values.default_meta_title_suffix?.length || 0)} characters left)
                     </span>
@@ -202,12 +204,12 @@ const OrgEditSEO: React.FC = () => {
                     maxLength={30}
                   />
                   <p className="text-gray-500 text-sm mt-1">
-                    Appended to all page titles, e.g. &quot; | My Academy&quot;
+                    {t('dashboard.organization.seo.org_seo.title_suffix_hint')}
                   </p>
                 </div>
                 <div>
                   <Label htmlFor="default_meta_description">
-                    Default Description
+                    {t('dashboard.organization.seo.org_seo.default_description')}
                     <span className="text-gray-500 text-sm ml-2">
                       ({160 - (values.default_meta_description?.length || 0)} characters left)
                     </span>
@@ -222,23 +224,23 @@ const OrgEditSEO: React.FC = () => {
                     className="min-h-[80px]"
                   />
                   <p className="text-gray-500 text-sm mt-1">
-                    Fallback description when a page has no specific one
+                    {t('dashboard.organization.seo.org_seo.default_description_hint')}
                   </p>
                 </div>
               </div>
 
               {/* Social & Open Graph */}
               <div className="flex flex-col bg-gray-50 -space-y-1 px-5 py-3 mx-3 mt-4 rounded-md">
-                <h1 className="font-bold text-xl text-gray-800">Social & Open Graph</h1>
+                <h1 className="font-bold text-xl text-gray-800">{t('dashboard.organization.seo.org_seo.social_open_graph')}</h1>
                 <h2 className="text-gray-500 text-md">
-                  Control how your pages appear when shared on social media
+                  {t('dashboard.organization.seo.org_seo.social_open_graph_hint')}
                 </h2>
               </div>
               <div className="mx-5 my-5 space-y-4">
                 <div>
-                  <Label>Default OG Image</Label>
+                  <Label>{t('dashboard.organization.seo.org_seo.default_og_image')}</Label>
                   <p className="text-gray-500 text-sm mb-2">
-                    Default sharing image for social media (1200x630 recommended)
+                    {t('dashboard.organization.seo.org_seo.default_og_image_hint')}
                   </p>
                   <div className="flex items-start space-x-4">
                     {(ogImagePreview || existingOgImageUrl) && (
@@ -279,7 +281,7 @@ const OrgEditSEO: React.FC = () => {
                   </div>
                 </div>
                 <div>
-                  <Label htmlFor="twitter_handle">Twitter Handle</Label>
+                  <Label htmlFor="twitter_handle">{t('dashboard.organization.seo.org_seo.twitter_handle')}</Label>
                   <Input
                     id="twitter_handle"
                     name="twitter_handle"
@@ -288,21 +290,21 @@ const OrgEditSEO: React.FC = () => {
                     placeholder="@yourhandle"
                   />
                   <p className="text-gray-500 text-sm mt-1">
-                    Shown on Twitter cards as the site account
+                    {t('dashboard.organization.seo.org_seo.twitter_handle_hint')}
                   </p>
                 </div>
               </div>
 
               {/* Search Engine Verification */}
               <div className="flex flex-col bg-gray-50 -space-y-1 px-5 py-3 mx-3 mt-4 rounded-md">
-                <h1 className="font-bold text-xl text-gray-800">Search Engine Verification</h1>
+                <h1 className="font-bold text-xl text-gray-800">{t('dashboard.organization.seo.org_seo.search_engine_verification')}</h1>
                 <h2 className="text-gray-500 text-md">
-                  Verify ownership with search engines
+                  {t('dashboard.organization.seo.org_seo.search_engine_verification_hint')}
                 </h2>
               </div>
               <div className="mx-5 my-5 space-y-4">
                 <div>
-                  <Label htmlFor="google_site_verification">Google Search Console</Label>
+                  <Label htmlFor="google_site_verification">{t('dashboard.organization.seo.org_seo.google_search_console')}</Label>
                   <Input
                     id="google_site_verification"
                     name="google_site_verification"
@@ -311,24 +313,24 @@ const OrgEditSEO: React.FC = () => {
                     placeholder="Google verification code"
                   />
                   <p className="text-gray-500 text-sm mt-1">
-                    Verification code from Google Search Console
+                    {t('dashboard.organization.seo.org_seo.google_search_console_hint')}
                   </p>
                 </div>
               </div>
 
               {/* Indexing Controls */}
               <div className="flex flex-col bg-gray-50 -space-y-1 px-5 py-3 mx-3 mt-4 rounded-md">
-                <h1 className="font-bold text-xl text-gray-800">Indexing Controls</h1>
+                <h1 className="font-bold text-xl text-gray-800">{t('dashboard.organization.seo.org_seo.indexing_controls')}</h1>
                 <h2 className="text-gray-500 text-md">
-                  Control which pages search engines can index
+                  {t('dashboard.organization.seo.org_seo.indexing_controls_hint')}
                 </h2>
               </div>
               <div className="mx-5 my-5 space-y-4">
                 <div className="flex items-center justify-between p-4 bg-gray-50/50 rounded-lg">
                   <div className="space-y-0.5">
-                    <Label className="text-base">Hide Communities</Label>
+                    <Label className="text-base">{t('dashboard.organization.seo.org_seo.hide_communities')}</Label>
                     <p className="text-sm text-gray-500">
-                      Hide community pages from search engines
+                      {t('dashboard.organization.seo.org_seo.hide_communities_hint')}
                     </p>
                   </div>
                   <Switch

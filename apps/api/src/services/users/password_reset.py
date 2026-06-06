@@ -289,7 +289,7 @@ async def change_password_with_reset_code(
 
     # Change password
     user.password = security_hash_password(new_password)
-    user.password_changed_at = datetime.now(timezone.utc)
+    user.password_changed_at = datetime.now(timezone.utc).replace(tzinfo=None)
     db_session.add(user)
 
     await db_session.commit()
@@ -434,7 +434,7 @@ async def change_password_with_reset_code_platform(
         )
 
     user.password = security_hash_password(new_password)
-    user.password_changed_at = datetime.now(timezone.utc)
+    user.password_changed_at = datetime.now(timezone.utc).replace(tzinfo=None)
     db_session.add(user)
 
     await db_session.commit()

@@ -255,7 +255,7 @@ const OrgEditLanding = () => {
 
   const handleSave = async () => {
     if (!org?.id) {
-      toast.error('Organization ID not found')
+      toast.error(t('dashboard.organization.landing.org_id_not_found'))
       return
     }
 

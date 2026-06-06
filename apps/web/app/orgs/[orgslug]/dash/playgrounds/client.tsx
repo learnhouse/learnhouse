@@ -1,6 +1,7 @@
 'use client'
 
 import React, { useState, useMemo } from 'react'
+import { useTranslation } from 'react-i18next'
 import {
   Plus,
   Search,
@@ -46,6 +47,7 @@ export default function PlaygroundsListClient({ org_id, orgslug }: PlaygroundsLi
   const access_token = session?.data?.tokens?.access_token
   const queryClient = useQueryClient()
   const router = useRouter()
+  const { t } = useTranslation()
 
   const [searchQuery, setSearchQuery] = useState('')
   const [currentPage, setCurrentPage] = useState(1)
@@ -315,9 +317,9 @@ export default function PlaygroundsListClient({ org_id, orgslug }: PlaygroundsLi
                     <div className="rounded-full bg-gray-100 p-4 w-fit mx-auto mb-4">
                       <Cube size={24} className="text-gray-400" />
                     </div>
-                    <h2 className="text-2xl font-bold text-gray-600 mb-2">No playgrounds yet</h2>
+                    <h2 className="text-2xl font-bold text-gray-600 mb-2">{t('playgrounds.no_playgrounds_yet')}</h2>
                     <p className="text-lg text-gray-400">
-                      Create interactive AI-generated experiences for your learners.
+                      {t('playgrounds.playgrounds_description')}
                     </p>
                   </div>
                 </div>
