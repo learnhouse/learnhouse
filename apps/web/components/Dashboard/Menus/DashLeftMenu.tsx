@@ -419,7 +419,7 @@ function DashLeftMenu() {
               <MenuLink
                 href="/dash/boards"
                 icon={<ChalkboardSimple size={20} weight="fill" />}
-                label="Boards"
+                label={t('boards.boards')}
                 isCollapsed={isCollapsed}
                 active={isActivePath('/dash/boards')}
               />
@@ -428,7 +428,7 @@ function DashLeftMenu() {
               <MenuLink
                 href="/dash/playgrounds"
                 icon={<Cube size={20} weight="fill" />}
-                label="Playgrounds"
+                label={t('common.playgrounds')}
                 isCollapsed={isCollapsed}
                 active={isActivePath('/dash/playgrounds')}
               />
@@ -683,7 +683,7 @@ function DashLeftMenu() {
                     </span>
                     {!isCollapsed && (
                       <>
-                        <span className="text-sm font-medium flex-1 text-left">Analytics</span>
+                        <span className="text-sm font-medium flex-1 text-left">{t('common.analytics')}</span>
                         <CaretDown aria-hidden="true" size={14} weight="bold" className={active ? "text-white/70" : "text-white/40"} />
                       </>
                     )}
@@ -698,9 +698,9 @@ function DashLeftMenu() {
                 content={
                   <HoverMenuContent className="w-64">
                     <HoverMenuLabel className="flex items-center justify-between text-white/70 font-medium">
-                      <span>Other</span>
+                      <span>{t('common.other')}</span>
                       <span className="text-[9px] font-medium uppercase tracking-wider px-1.5 py-0.5 rounded bg-white/[0.06] text-white/25">
-                        Disabled
+                        {t('common.disabled')}
                       </span>
                     </HoverMenuLabel>
                     <HoverMenuSeparator />
@@ -732,7 +732,7 @@ function DashLeftMenu() {
                       <HoverMenuItem asChild>
                         <Link href="/dash/playgrounds" className="flex items-center gap-2 px-3 py-2 text-sm text-white/30 hover:text-white/50 hover:bg-white/[0.05] cursor-pointer transition-colors">
                           <Cube size={16} weight="fill" />
-                          <span>Playgrounds</span>
+                          <span>{t('common.playgrounds')}</span>
                         </Link>
                       </HoverMenuItem>
                     )}
@@ -762,7 +762,7 @@ function DashLeftMenu() {
                   </span>
                   {!isCollapsed && (
                     <>
-                      <span className="text-sm font-medium flex-1 text-left">Other</span>
+                      <span className="text-sm font-medium flex-1 text-left">{t('common.other')}</span>
                       <CaretDown aria-hidden="true" size={14} weight="bold" className="text-white/20" />
                     </>
                   )}

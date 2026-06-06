@@ -34,6 +34,7 @@
     "dutch": "オランダ語",
     "thai": "タイ語",
     "bengali": "ベンガル語",
+    "slovak": "スロバキア語",
     "loading": "読み込み中...",
     "search": "検索",
     "all": "すべて",
@@ -70,10 +71,6 @@
         "usergroups": {
           "title": "スタンダード機能",
           "description": "ユーザーグループはスタンダードプラン以上の組織でのみ利用可能なプレミアム機能です。アップグレードしてアクセス管理を改善するためにユーザーをグループに整理しましょう。"
-        },
-        "api_access": {
-          "title": "プロ機能",
-          "description": "APIアクセスはプロプラン以上の組織でのみ利用可能なプレミアム機能です。アップグレードして組織データへのプログラムアクセスをアンロックしましょう。"
         },
         "roles": {
           "title": "プロ機能",
@@ -204,7 +201,11 @@
     "choose_an_organization_to_continue": "続行するには組織を選択してください",
     "for": "対象",
     "powered_by": "Powered by",
-    "results": "件"
+    "results": "件",
+    "no_content_yet": "まだコンテンツがありません",
+    "other": "Other",
+    "disabled": "Disabled",
+    "store": "Store"
   },
   "banner": {
     "viewing_as_guest": "{{name}}をゲストとして閲覧しています。",
@@ -2197,7 +2198,6 @@
           "landing": "ランディングページ",
           "branding": "ブランディング",
           "ai": "AI",
-          "api": "APIアクセス",
           "features": "機能",
           "usage": "使用状況",
           "other": "その他",
@@ -2226,10 +2226,6 @@
           "ai": {
             "title": "AI機能",
             "subtitle": "組織のAI機能を設定します"
-          },
-          "api": {
-            "title": "APIアクセス",
-            "subtitle": "APIトークンとプログラムによるアクセスを管理"
           },
           "features": {
             "title": "機能",
@@ -2320,7 +2316,8 @@
           "video_preview_added": "動画プレビューを追加しました",
           "video_preview_error": "動画プレビューの追加に失敗しました",
           "updating_order": "プレビューの順序を更新中..."
-        }
+        },
+        "favicon_preview": "ファビコンプレビュー (32×32)"
       },
       "branding": {
         "title": "ブランディング",
@@ -2433,6 +2430,14 @@
           "podcasts": {
             "description": "組織のポッドキャスト作成とオーディオコンテンツを有効にする",
             "title": "ポッドキャスト"
+          },
+          "boards": {
+            "title": "Boards",
+            "description": "Create collaborative boards with lists and cards for project management"
+          },
+          "playgrounds": {
+            "title": "Playgrounds",
+            "description": "Create interactive AI-generated experiences for your learners"
           }
         },
         "toasts": {
@@ -2649,7 +2654,8 @@
           "loading_courses": "コースを読み込み中...",
           "selected": "選択済み",
           "select": "選択"
-        }
+        },
+        "org_id_not_found": "組織IDが見つかりません"
       },
       "theme": {
         "primary_color": "プライマリカラー",
@@ -2699,6 +2705,44 @@
         "workos_info": "WorkOSはSAMLとOIDC IDプロバイダーをサポートするエンタープライズSSOを提供します。",
         "workos_org_id": "WorkOS組織ID",
         "workos_org_id_help": "このIDはセットアップポータルでSSOを設定すると自動的に生成されます。"
+      },
+      "seo": {
+        "copied_to_clipboard": "クリップボードにコピーしました",
+        "save_failed": "SEO設定の保存に失敗しました"
+      },
+      "automations": {},
+      "domains": {
+        "domain_required": "ドメインは必須です",
+        "domain_added_success": "ドメインが正常に追加されました",
+        "domain_deleted_success": "ドメインが正常に削除されました",
+        "copied_to_clipboard": "クリップボードにコピーしました",
+        "table_domain": "ドメイン",
+        "table_status": "ステータス",
+        "table_ssl": "SSL",
+        "table_added": "追加日",
+        "table_verified": "確認済み",
+        "table_actions": "操作",
+        "adding_domain": "ドメインを追加中...",
+        "deleting_domain": "ドメインを削除中...",
+        "dns_config_required": "DNS設定が必要です",
+        "dns_config_description": "ドメインレジストラ（例：Cloudflare、GoDaddy、Namecheap）でこれらのレコードを追加してください。DNS変更には最大48時間かかる場合があります。",
+        "txt_record": "TXTレコード",
+        "for_verification": "確認用",
+        "cname_record": "CNAMEレコード",
+        "for_routing": "ルーティング用",
+        "host_name": "ホスト / 名前",
+        "value": "値",
+        "value_target": "値 / ターゲット",
+        "ssl_certificate": "SSL証明書",
+        "https_status": "HTTPSステータス",
+        "check": "確認",
+        "checking_ssl": "SSLステータスを確認中...",
+        "delete_domain_title": "カスタムドメインを削除",
+        "delete_domain_confirm": "このドメインを削除してもよろしいですか？この操作は元に戻せません。",
+        "delete_domain": "ドメインを削除",
+        "verify_domain_desc": "所有権を確認するために、ドメインプロバイダーで以下のDNSレコードを追加してください。",
+        "issuer": "発行者",
+        "expires": "有効期限"
       }
     },
     "users": {
@@ -3718,10 +3762,6 @@
         "org_automations": {
           "description": "Webhookと外部連携",
           "keywords": "webhooks, 自動化, zapier, 連携, トリガー"
-        },
-        "org_api": {
-          "description": "APIトークンとプログラマティックアクセス",
-          "keywords": "api, トークン, アクセス, プログラマティック, キー"
         },
         "org_sso": {
           "description": "シングルサインオン設定",
@@ -4872,9 +4912,7 @@
           "custom_domain": "カスタムドメイン",
           "custom_domain_desc": "独自ドメインでブランドアカデミーを構築。",
           "roles": "カスタムロールと権限",
-          "roles_desc": "組織内で誰が何をできるかを正確に制御。",
-          "api": "APIアクセスとWebhooks",
-          "api_desc": "既存ツールと統合し、ワークフローを自動化。"
+          "roles_desc": "組織内で誰が何をできるかを正確に制御。"
         }
       }
     }
@@ -4918,5 +4956,36 @@
     "next": "次へ",
     "previous": "前へ",
     "showing_page": "{{total}} ページ中 {{current}} ページを表示"
+  },
+  "playgrounds": {
+    "no_playgrounds_yet": "プレイグラウンドはまだありません",
+    "playgrounds_description": "AI生成のインタラクティブな体験を学習者に提供しましょう。",
+    "new_playground": "New Playground",
+    "search_placeholder": "Search playgrounds...",
+    "no_results_for": "No results for",
+    "try_different_search": "Try a different search term",
+    "new_playground_modal_title": "New Playground",
+    "new_playground_modal_desc": "Give your playground a name to get started.",
+    "creating": "Creating...",
+    "create": "Create",
+    "failed_create": "Failed to create playground",
+    "view": {
+      "open_editor_to_generate": "エディターを開いてコンテンツを生成してください。",
+      "check_back_later": "後でもう一度確認してください。",
+      "open_editor": "エディターを開く",
+      "breadcrumb": "プレイグラウンド",
+      "about": "概要",
+      "author": "作成者",
+      "access": "アクセス",
+      "created": "作成日",
+      "status": "ステータス",
+      "published": "公開済み",
+      "draft": "下書き",
+      "edit_in_editor": "エディターで編集",
+      "download": "ダウンロード",
+      "reactions": "リアクション",
+      "exit_fullscreen": "終了",
+      "fullscreen": "全画面"
+    }
   }
 }

@@ -1,5 +1,5 @@
 import { useAssignmentSubmission } from '@components/Contexts/Assignments/AssignmentSubmissionContext'
-import { BookPlus, BookUser, Code2, EllipsisVertical, FileUp, Forward, InfoIcon, ListTodo, Save, Type } from 'lucide-react'
+import { BookPlus, BookUser, Code2, EllipsisVertical, FileUp, Forward, InfoIcon, ListTodo, MessageSquare, Save, Type } from 'lucide-react'
 import React from 'react'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
 import { useTranslation } from 'react-i18next'
@@ -9,21 +9,53 @@ type AssignmentBoxProps = {
     view?: 'teacher' | 'student' | 'grading' | 'custom-grading'
     maxPoints?: number
     currentPoints?: number
+    currentFeedback?: string
     saveFC?: () => void
     submitFC?: () => void
     gradeFC?: () => void
-    gradeCustomFC?: (grade: number) => void
+    gradeCustomFC?: (grade: number, feedback?: string) => void
     showSavingDisclaimer?: boolean
     autoGradable?: boolean
     children: React.ReactNode
 }
 
-function AssignmentBoxUI({ type, view, currentPoints, maxPoints, saveFC, submitFC, gradeFC, gradeCustomFC, showSavingDisclaimer, autoGradable, children }: AssignmentBoxProps) {
+// Strings the system writes automatically when no teacher comment is provided.
+// We treat these as "no real feedback" so we don't pre-fill the textarea with
+// them on subsequent grading passes.
+const isAutoFeedback = (s?: string) =>
+    !!s && (/^Auto graded by system$/.test(s) || /^Graded by teacher : @/.test(s))
+
+function AssignmentBoxUI({ type, view, currentPoints, currentFeedback, maxPoints, saveFC, submitFC, gradeFC, gradeCustomFC, showSavingDisclaimer, autoGradable, children }: AssignmentBoxProps) {
     const { t } = useTranslation()
-    const [customGrade, setCustomGrade] = React.useState<number>(0)
+    // Grading view manual input. Pre-filled from the server-side currentPoints
+    // so teachers can tweak an existing grade instead of retyping it.
+    const [manualGrade, setManualGrade] = React.useState<string>('')
+    const [manualFeedback, setManualFeedback] = React.useState<string>('')
     const submission = useAssignmentSubmission() as any
     const session = useLHSession() as any
-    
+
+    React.useEffect(() => {
+        if (currentPoints !== undefined && currentPoints !== null) {
+            setManualGrade(String(currentPoints))
+        }
+    }, [currentPoints])
+
+    React.useEffect(() => {
+        if (currentFeedback && !isAutoFeedback(currentFeedback)) {
+            setManualFeedback(currentFeedback)
+        }
+    }, [currentFeedback])
+
+    const submitManualGrade = () => {
+        if (!gradeCustomFC) return
+        const parsed = parseInt(manualGrade, 10)
+        if (Number.isNaN(parsed)) return
+        const trimmed = manualFeedback.trim()
+        gradeCustomFC(parsed, trimmed.length > 0 ? trimmed : undefined)
+    }
+
+    const isGradingMode = view === 'grading' || view === 'custom-grading'
+
     // Check if user is authenticated
     const isAuthenticated = session?.status === 'authenticated'
 
@@ -101,45 +133,79 @@ function AssignmentBoxUI({ type, view, currentPoints, maxPoints, saveFC, submitF
                         </div>
                     }
 
-                    {/* Grading button */}
-                    {view === 'grading' &&
-                        <div
-                            className='flex flex-wrap sm:flex-nowrap w-full sm:w-auto px-0.5 py-0.5 rounded-md gap-2 sm:space-x-2 items-center'>
+                    {/* Grading controls — shared between 'grading' and 'custom-grading' views */}
+                    {isGradingMode && maxPoints !== undefined && gradeCustomFC && (
+                        <div className='flex flex-wrap sm:flex-nowrap w-full sm:w-auto px-0.5 py-0.5 rounded-md gap-2 sm:space-x-2 items-center'>
                             {currentPoints !== undefined && currentPoints > 0 && (
                                 <p className='font-semibold px-2 text-xs text-emerald-700 bg-emerald-50 rounded-full py-0.5'>{currentPoints}/{maxPoints} {t('assignments.points')}</p>
                             )}
-                            <div
-                                onClick={() => gradeFC && gradeFC()}
-                                className='cursor-pointer bg-orange-50 text-orange-700 hover:bg-orange-100 items-center flex rounded-md px-2 py-1 space-x-1.5 transition-colors'>
-                                <BookPlus size={14} />
-                                <p className='text-xs font-semibold'>{autoGradable ? t('assignments.run_autograde') : t('assignments.grade')}</p>
+                            <div className='flex items-center gap-1'>
+                                <button
+                                    type='button'
+                                    onClick={() => setManualGrade(String(maxPoints))}
+                                    className='cursor-pointer text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 hover:bg-emerald-100 transition-colors'>
+                                    {t('assignments.quick_grade.full', { defaultValue: 'Full' })}
+                                </button>
+                                <button
+                                    type='button'
+                                    onClick={() => setManualGrade(String(Math.round(maxPoints / 2)))}
+                                    className='cursor-pointer text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-amber-50 text-amber-700 hover:bg-amber-100 transition-colors'>
+                                    {t('assignments.quick_grade.half', { defaultValue: 'Half' })}
+                                </button>
+                                <button
+                                    type='button'
+                                    onClick={() => setManualGrade('0')}
+                                    className='cursor-pointer text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-rose-50 text-rose-700 hover:bg-rose-100 transition-colors'>
+                                    {t('assignments.quick_grade.zero', { defaultValue: 'Zero' })}
+                                </button>
                             </div>
-                        </div>
-                    }
-
-                    {/* CustomGrading button */}
-                    {view === 'custom-grading' && maxPoints &&
-                        <div
-                            className='flex flex-wrap sm:flex-nowrap w-full sm:w-auto px-0.5 py-0.5 cursor-pointer rounded-md gap-2 sm:space-x-2 items-center bg-linear-to-bl hover:outline-offset-4 active:outline-offset-1 linear transition-all outline-offset-2 outline-dashed outline-orange-500/60'>
-                            <p className='font-semibold px-2 text-xs text-orange-700 w-full sm:w-auto'>{t('assignments.current_points', { points: currentPoints })}</p>
-                            <div className='flex items-center gap-2 w-full sm:w-auto'>
+                            <div className='flex items-center gap-1.5'>
                                 <input
-                                    onChange={(e) => setCustomGrade(parseInt(e.target.value))}
-                                    placeholder={maxPoints.toString()} 
-                                    className='w-full sm:w-[100px] light-shadow text-sm py-0.5 outline outline-gray-200 rounded-lg px-2' 
-                                    type="number" 
+                                    value={manualGrade}
+                                    onChange={(e) => setManualGrade(e.target.value)}
+                                    onKeyDown={(e) => {
+                                        if (e.key === 'Enter') submitManualGrade()
+                                    }}
+                                    placeholder={`/${maxPoints}`}
+                                    min={0}
+                                    max={maxPoints}
+                                    className='w-[80px] light-shadow text-sm py-0.5 outline outline-gray-200 rounded-lg px-2'
+                                    type='number'
                                 />
                                 <div
-                                    onClick={() => gradeCustomFC && gradeCustomFC(customGrade)}
-                                    className='bg-linear-to-bl text-orange-700 bg-orange-300/20 hover:bg-orange-300/10 items-center flex rounded-md px-2 py-1 space-x-2 whitespace-nowrap'>
+                                    onClick={submitManualGrade}
+                                    className='cursor-pointer bg-orange-50 text-orange-700 hover:bg-orange-100 items-center flex rounded-md px-2 py-1 space-x-1.5 transition-colors'>
                                     <BookPlus size={14} />
                                     <p className='text-xs font-semibold'>{t('assignments.grade')}</p>
                                 </div>
                             </div>
+                            {view === 'grading' && gradeFC && (
+                                <div
+                                    onClick={() => gradeFC && gradeFC()}
+                                    className='cursor-pointer bg-gray-100 text-gray-700 hover:bg-gray-200 items-center flex rounded-md px-2 py-1 space-x-1.5 transition-colors'>
+                                    <BookPlus size={14} />
+                                    <p className='text-xs font-semibold'>{autoGradable ? t('assignments.run_autograde') : t('assignments.grade')}</p>
+                                </div>
+                            )}
                         </div>
-                    }
+                    )}
                 </div>
             </div>
+
+            {/* Per-task feedback — saved together with the manual grade. */}
+            {isGradingMode && gradeCustomFC && (
+                <div className='flex items-start gap-2 mb-3 px-1'>
+                    <MessageSquare size={14} className='text-gray-400 mt-2 flex-none' />
+                    <textarea
+                        value={manualFeedback}
+                        onChange={(e) => setManualFeedback(e.target.value)}
+                        placeholder={t('assignments.task_feedback_placeholder', { defaultValue: 'Note for this task (saved with grade)' })}
+                        rows={1}
+                        className='w-full px-2.5 py-1.5 text-xs text-gray-700 bg-white border border-gray-200 rounded-md focus:outline-none focus:ring-1 focus:ring-orange-200 placeholder:text-gray-400 resize-y'
+                    />
+                </div>
+            )}
+
             {children}
         </div>
     )

@@ -32,6 +32,7 @@
     "dutch": "荷兰语",
     "thai": "泰语",
     "bengali": "孟加拉语",
+    "slovak": "斯洛伐克语",
     "loading": "加载中...",
     "search": "搜索",
     "all": "全部",
@@ -68,10 +69,6 @@
         "usergroups": {
           "title": "标准版功能",
           "description": "用户组是仅适用于标准版或更高版本组织的高级功能。升级以将用户组织成组以更好地管理访问权限。"
-        },
-        "api_access": {
-          "title": "专业版功能",
-          "description": "API访问是仅适用于专业版或更高版本组织的高级功能。升级以解锁对组织数据的编程访问。"
         },
         "roles": {
           "title": "专业版功能",
@@ -204,7 +201,11 @@
     "choose_an_organization_to_continue": "选择一个组织以继续",
     "for": "用于",
     "powered_by": "技术支持",
-    "results": "结果"
+    "results": "结果",
+    "no_content_yet": "暂无内容",
+    "other": "Other",
+    "disabled": "Disabled",
+    "store": "Store"
   },
   "banner": {
     "viewing_as_guest": "您正在以访客身份浏览 {{name}}。",
@@ -2197,7 +2198,6 @@
           "landing": "落地页",
           "branding": "品牌",
           "ai": "AI",
-          "api": "API访问",
           "features": "功能",
           "other": "其他",
           "domains": "域名",
@@ -2226,10 +2226,6 @@
           "ai": {
             "title": "AI功能",
             "subtitle": "为您的组织配置AI功能"
-          },
-          "api": {
-            "title": "API访问",
-            "subtitle": "管理API令牌和程序化访问"
           },
           "features": {
             "title": "功能",
@@ -2322,7 +2318,8 @@
           "video_preview_added": "视频预览已添加",
           "video_preview_error": "添加视频预览失败",
           "updating_order": "正在更新预览图顺序..."
-        }
+        },
+        "favicon_preview": "Favicon 预览 (32×32)"
       },
       "branding": {
         "title": "品牌",
@@ -2435,6 +2432,14 @@
           "podcasts": {
             "description": "为您的组织启用播客创建和音频内容",
             "title": "播客"
+          },
+          "boards": {
+            "title": "Boards",
+            "description": "Create collaborative boards with lists and cards for project management"
+          },
+          "playgrounds": {
+            "title": "Playgrounds",
+            "description": "Create interactive AI-generated experiences for your learners"
           }
         },
         "toasts": {
@@ -2651,7 +2656,8 @@
           "loading_courses": "正在加载课程...",
           "selected": "已选择",
           "select": "选择"
-        }
+        },
+        "org_id_not_found": "未找到组织ID"
       },
       "theme": {
         "primary_color": "主色",
@@ -2701,6 +2707,44 @@
         "workos_info": "WorkOS 提供支持 SAML 和 OIDC 身份提供商的企业 SSO。",
         "workos_org_id": "WorkOS 组织 ID",
         "workos_org_id_help": "当您通过设置门户配置 SSO 时，此 ID 将自动生成。"
+      },
+      "seo": {
+        "copied_to_clipboard": "已复制到剪贴板",
+        "save_failed": "保存SEO设置失败"
+      },
+      "automations": {},
+      "domains": {
+        "domain_required": "域名为必填项",
+        "domain_added_success": "域名添加成功",
+        "domain_deleted_success": "域名删除成功",
+        "copied_to_clipboard": "已复制到剪贴板",
+        "table_domain": "域名",
+        "table_status": "状态",
+        "table_ssl": "SSL",
+        "table_added": "添加时间",
+        "table_verified": "已验证",
+        "table_actions": "操作",
+        "adding_domain": "正在添加域名...",
+        "deleting_domain": "正在删除域名...",
+        "dns_config_required": "需要DNS配置",
+        "dns_config_description": "在您的域名注册商（如Cloudflare、GoDaddy、Namecheap）添加这些记录。DNS更改可能需要最多48小时生效。",
+        "txt_record": "TXT记录",
+        "for_verification": "用于验证",
+        "cname_record": "CNAME记录",
+        "for_routing": "用于路由",
+        "host_name": "主机 / 名称",
+        "value": "值",
+        "value_target": "值 / 目标",
+        "ssl_certificate": "SSL证书",
+        "https_status": "HTTPS状态",
+        "check": "检查",
+        "checking_ssl": "正在检查SSL状态...",
+        "delete_domain_title": "删除自定义域名",
+        "delete_domain_confirm": "确定要删除此域名吗？此操作无法撤消。",
+        "delete_domain": "删除域名",
+        "verify_domain_desc": "在您的域名提供商处添加以下DNS记录以验证所有权。",
+        "issuer": "颁发者",
+        "expires": "过期时间"
       }
     },
     "users": {
@@ -3720,10 +3764,6 @@
         "org_automations": {
           "description": "Webhook 和外部集成",
           "keywords": "webhooks, 自动化, zapier, 集成, 触发器"
-        },
-        "org_api": {
-          "description": "API 令牌和程序化访问",
-          "keywords": "api, 令牌, 访问, 程序化, 密钥"
         },
         "org_sso": {
           "description": "单点登录配置",
@@ -4874,9 +4914,7 @@
           "custom_domain": "自定义域名",
           "custom_domain_desc": "使用您自己的域名打造品牌学院。",
           "roles": "自定义角色和权限",
-          "roles_desc": "精确控制组织中谁可以做什么。",
-          "api": "API 访问和 Webhooks",
-          "api_desc": "与现有工具集成并自动化工作流程。"
+          "roles_desc": "精确控制组织中谁可以做什么。"
         }
       }
     }
@@ -4920,5 +4958,36 @@
     "next": "下一页",
     "previous": "上一页",
     "showing_page": "第 {{current}} 页，共 {{total}} 页"
+  },
+  "playgrounds": {
+    "no_playgrounds_yet": "暂无游乐场",
+    "playgrounds_description": "为您的学习者创建AI生成的互动体验。",
+    "new_playground": "New Playground",
+    "search_placeholder": "Search playgrounds...",
+    "no_results_for": "No results for",
+    "try_different_search": "Try a different search term",
+    "new_playground_modal_title": "New Playground",
+    "new_playground_modal_desc": "Give your playground a name to get started.",
+    "creating": "Creating...",
+    "create": "Create",
+    "failed_create": "Failed to create playground",
+    "view": {
+      "open_editor_to_generate": "打开编辑器以生成内容。",
+      "check_back_later": "请稍后再来查看。",
+      "open_editor": "打开编辑器",
+      "breadcrumb": "实验场",
+      "about": "关于",
+      "author": "作者",
+      "access": "访问",
+      "created": "创建时间",
+      "status": "状态",
+      "published": "已发布",
+      "draft": "草稿",
+      "edit_in_editor": "在编辑器中编辑",
+      "download": "下载",
+      "reactions": "反应",
+      "exit_fullscreen": "退出",
+      "fullscreen": "全屏"
+    }
   }
 }

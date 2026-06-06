@@ -302,6 +302,36 @@ function TaskQuizObject({ view, assignmentTaskUUID, user_id }: TaskQuizObjectPro
         }
     }
 
+    async function gradeCustomFC(grade: number, feedback?: string) {
+        if (!assignmentTaskUUID) return;
+        const maxPoints = assignmentTaskOutsideProvider?.max_grade_value || 100;
+        if (Number.isNaN(grade) || grade < 0) {
+            toast.error('Grade must be a positive number.');
+            return;
+        }
+        if (grade > maxPoints) {
+            toast.error(`Grade cannot be more than ${maxPoints} points`);
+            return;
+        }
+        const trimmed = feedback?.trim();
+        const finalFeedback = trimmed && trimmed.length > 0
+            ? trimmed
+            : `Graded by teacher : @${session?.data?.user?.username ?? ''}`;
+        const values = {
+            assignment_task_submission_uuid: userSubmissions.assignment_task_submission_uuid,
+            task_submission: userSubmissions,
+            grade,
+            task_submission_grade_feedback: finalFeedback,
+        };
+        const res = await handleAssignmentTaskSubmission(values, assignmentTaskUUID, assignment.assignment_object.assignment_uuid, access_token);
+        if (res) {
+            getAssignmentTaskSubmissionFromIdentifiedUserUI();
+            toast.success(`Task graded successfully with ${grade} points`);
+        } else {
+            toast.error('Error grading task, please retry later.');
+        }
+    }
+
     async function gradeFC() {
         if (assignmentTaskUUID) {
             const maxPoints = assignmentTaskOutsideProvider?.max_grade_value || 100;
@@ -367,7 +397,7 @@ function TaskQuizObject({ view, assignmentTaskUUID, user_id }: TaskQuizObjectPro
 
     if (questions && questions.length >= 0) {
         return (
-            <AssignmentBoxUI submitFC={submitFC} saveFC={saveFC} gradeFC={gradeFC} view={view} currentPoints={userSubmissionObject?.grade} maxPoints={assignmentTaskOutsideProvider?.max_grade_value} showSavingDisclaimer={showSavingDisclaimer} type="quiz" autoGradable={true}>
+            <AssignmentBoxUI submitFC={submitFC} saveFC={saveFC} gradeFC={gradeFC} gradeCustomFC={gradeCustomFC} view={view} currentPoints={userSubmissionObject?.grade} currentFeedback={userSubmissionObject?.task_submission_grade_feedback} maxPoints={assignmentTaskOutsideProvider?.max_grade_value} showSavingDisclaimer={showSavingDisclaimer} type="quiz" autoGradable={true}>
                 <div className="flex flex-col space-y-6">
                     {questions && questions.map((question, qIndex) => (
                         <div key={qIndex} className="flex flex-col space-y-1.5">
