@@ -232,7 +232,7 @@ async def analyze_import_package(
                 detail="Invalid package: manifest.json not found"
             )
 
-        with open(manifest_path, 'r') as f:
+        with open(manifest_path, 'r', encoding="utf-8") as f:
             manifest = json.load(f)
 
         # Validate manifest format
@@ -253,7 +253,7 @@ async def analyze_import_package(
             if not os.path.exists(course_json_path):
                 continue
 
-            with open(course_json_path, 'r') as f:
+            with open(course_json_path, 'r', encoding="utf-8") as f:
                 course_data = json.load(f)
 
             # Count chapters and activities
@@ -363,7 +363,7 @@ async def import_courses(
     extract_dir = os.path.join(work_dir, "extracted")
     manifest_path = os.path.join(extract_dir, "manifest.json")
 
-    with open(manifest_path, 'r') as f:
+    with open(manifest_path, 'r', encoding="utf-8") as f:
         manifest = json.load(f)
 
     # Build a map of course_uuid to path
@@ -468,7 +468,7 @@ async def _import_single_course(
     Import a single course from the extracted package.
     """
     # Load course data
-    with open(os.path.join(course_path, "course.json"), 'r') as f:
+    with open(os.path.join(course_path, "course.json"), 'r', encoding="utf-8") as f:
         course_data = json.load(f)
 
     # Apply name prefix if specified
@@ -565,7 +565,7 @@ async def _import_single_course(
             chapter_dir_path = os.path.join(chapters_dir, chapter_uuid_dir)
             chapter_json_path = os.path.join(chapter_dir_path, "chapter.json")
             if os.path.isdir(chapter_dir_path) and os.path.exists(chapter_json_path):
-                with open(chapter_json_path, 'r') as f:
+                with open(chapter_json_path, 'r', encoding="utf-8") as f:
                     chapter_data = json.load(f)
                 chapter_items.append((chapter_uuid_dir, chapter_data))
 
@@ -633,7 +633,7 @@ async def _import_chapter(
             activity_dir_path = os.path.join(activities_dir, activity_uuid_dir)
             activity_json_path = os.path.join(activity_dir_path, "activity.json")
             if os.path.isdir(activity_dir_path) and os.path.exists(activity_json_path):
-                with open(activity_json_path, 'r') as f:
+                with open(activity_json_path, 'r', encoding="utf-8") as f:
                     activity_data = json.load(f)
                 activity_items.append((activity_uuid_dir, activity_data))
 
@@ -743,7 +743,7 @@ async def _import_activity(
             block_json_path = os.path.join(block_dir_path, "block.json")
 
             if os.path.isdir(block_dir_path) and os.path.exists(block_json_path):
-                with open(block_json_path, 'r') as f:
+                with open(block_json_path, 'r', encoding="utf-8") as f:
                     block_data = json.load(f)
 
                 new_block_uuid, content_updates = await _import_block(
