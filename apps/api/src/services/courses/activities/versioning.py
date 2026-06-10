@@ -6,7 +6,7 @@ from src.db.courses.activity_versions import ActivityVersion, ActivityVersionRea
 from src.db.courses.courses import Course
 from src.db.users import User, PublicUser, AnonymousUser
 from fastapi import HTTPException, Request
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import List, Optional
 
 from src.security.rbac import check_resource_access, AccessAction
@@ -34,7 +34,7 @@ async def create_activity_version(
         version_number=activity.current_version,
         content=activity.content,
         created_by_id=user_id,
-        created_at=datetime.utcnow(),
+        created_at=datetime.now(timezone.utc).replace(tzinfo=None),
     )
 
     db_session.add(version)

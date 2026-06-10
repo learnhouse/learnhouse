@@ -1,6 +1,6 @@
 from typing import List, Union
 from uuid import uuid4
-from datetime import datetime
+from datetime import datetime, timezone
 from sqlmodel import select
 from sqlmodel.ext.asyncio.session import AsyncSession
 from fastapi import HTTPException, Request
@@ -108,7 +108,7 @@ async def toggle_playground_reaction(
         user_id=current_user.id,
         emoji=emoji,
         reaction_uuid=f"reaction_{uuid4()}",
-        creation_date=str(datetime.utcnow()),
+        creation_date=str(datetime.now(timezone.utc).replace(tzinfo=None)),
     )
     db_session.add(reaction)
     await db_session.commit()
