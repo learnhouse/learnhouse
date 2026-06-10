@@ -77,7 +77,7 @@ class TestDefusedXml:
         )
         if not os.path.exists(scorm_path):
             pytest.skip("EE not present (OSS build) — SCORM source check not applicable")
-        with open(scorm_path) as f:
+        with open(scorm_path, encoding='utf-8') as f:
             source = f.read()
 
         # Should use defusedxml for parsing
