@@ -15,6 +15,7 @@ Session to AsyncSession in this PR:
 """
 
 from datetime import datetime
+from types import SimpleNamespace
 from unittest.mock import AsyncMock, patch
 
 import pytest
@@ -1531,9 +1532,6 @@ class TestDeleteAssignmentSubmissionCertRevocation:
 # ---------------------------------------------------------------------------
 # _is_assignment_past_due (lines 85-93)
 # ---------------------------------------------------------------------------
-
-
-from types import SimpleNamespace
 
 
 class TestIsAssignmentPastDue:
