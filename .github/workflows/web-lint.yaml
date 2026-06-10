@@ -41,8 +41,10 @@ jobs:
         if: github.event_name == 'pull_request'
         working-directory: ./apps/web
         run: |
+          # Pathspecs are resolved relative to working-directory (apps/web),
+          # while --name-only output stays repo-root-relative — hence the sed.
           CHANGED=$(git diff --name-only --diff-filter=ACMR "origin/${GITHUB_BASE_REF}...HEAD" -- \
-            'apps/web/**/*.ts' 'apps/web/**/*.tsx' 'apps/web/**/*.js' 'apps/web/**/*.jsx' 'apps/web/**/*.mjs' \
+            '**/*.ts' '**/*.tsx' '**/*.js' '**/*.jsx' '**/*.mjs' \
             | sed 's|^apps/web/||')
           if [ -z "$CHANGED" ]; then
             echo "No changed lintable files."
