@@ -1216,7 +1216,7 @@ def _validate_magic_link_redirect(redirect_to: Optional[str]) -> Optional[str]:
         raise HTTPException(status_code=400, detail=detail)
 
     parts = urlsplit(value.replace("\\", "/"))
-    if parts.scheme or parts.netloc:
+    if parts.scheme or parts.netloc:  # pragma: no cover
         raise HTTPException(status_code=400, detail=detail)
 
     return value

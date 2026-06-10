@@ -25,6 +25,7 @@ from src.services.courses.transfer.import_service import (
     _import_block,
     _import_chapter,
     _import_single_course,
+    _safe_manifest_join,
     analyze_import_package,
     cleanup_old_temp_imports,
     import_courses,
@@ -85,6 +86,46 @@ class TestImportHelpers:
             result = sanitize_path("course/file.txt")
 
         assert result == ""
+
+    def test_safe_manifest_join_rejects_none_and_empty(self, tmp_path):
+        # Lines 103, 106: None / non-str / empty-after-sanitize -> None.
+        assert _safe_manifest_join(str(tmp_path), None) is None
+        assert _safe_manifest_join(str(tmp_path), "") is None
+        assert _safe_manifest_join(str(tmp_path), 123) is None  # type: ignore[arg-type]
+        # ".." sanitizes to "" -> None
+        assert _safe_manifest_join(str(tmp_path), "..") is None
+
+    def test_safe_manifest_join_strips_traversal_to_contained_path(self, tmp_path):
+        # sanitize_path strips leading "../" components, so "../escape" becomes
+        # the contained "escape" under extract_dir rather than escaping it.
+        result = _safe_manifest_join(str(tmp_path), "../escape")
+        assert result == os.path.join(str(tmp_path), "escape")
+        assert os.path.realpath(result).startswith(os.path.realpath(str(tmp_path)))
+
+        result2 = _safe_manifest_join(str(tmp_path), "../../etc/passwd")
+        assert result2 == os.path.join(str(tmp_path), "etc/passwd")
+
+    def test_safe_manifest_join_returns_contained_path(self, tmp_path):
+        result = _safe_manifest_join(str(tmp_path), "course/file.txt")
+        assert result == os.path.join(str(tmp_path), "course/file.txt")
+        # The joined path stays inside extract_dir.
+        assert os.path.realpath(result).startswith(os.path.realpath(str(tmp_path)))
+
+    def test_safe_manifest_join_rejects_when_commonpath_mismatch(self, tmp_path):
+        # Line 112: commonpath resolves outside extract_dir -> None.
+        with patch(
+            "src.services.courses.transfer.import_service.os.path.commonpath",
+            return_value="/some/other/root",
+        ):
+            assert _safe_manifest_join(str(tmp_path), "course/file.txt") is None
+
+    def test_safe_manifest_join_rejects_when_commonpath_raises(self, tmp_path):
+        # Lines 113-114: ValueError from commonpath -> treated as unsafe -> None.
+        with patch(
+            "src.services.courses.transfer.import_service.os.path.commonpath",
+            side_effect=ValueError("mixed drives"),
+        ):
+            assert _safe_manifest_join(str(tmp_path), "course/file.txt") is None
 
     @pytest.mark.asyncio
     async def test_analyze_import_package_rejects_oversized_package(

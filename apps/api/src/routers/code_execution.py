@@ -120,7 +120,10 @@ def _validate_storage_path(file_path: str) -> str:
     # Resolve to absolute and verify containment within content/
     base_real = os.path.realpath("content")
     full_real = os.path.realpath(full_path)
-    if not full_real.startswith(base_real + os.sep) and full_real != base_real:
+    try:
+        if os.path.commonpath([base_real, full_real]) != base_real:
+            raise HTTPException(status_code=400, detail="Invalid file path")
+    except ValueError:
         raise HTTPException(status_code=400, detail="Invalid file path")
     return full_path
 
@@ -178,7 +181,10 @@ def _read_storage_file(file_path: str) -> bytes:
         # the realpath check to be visible immediately before the file operation).
         base_real = os.path.realpath("content")
         resolved = os.path.realpath(safe_path)  # noqa: S108
-        if not resolved.startswith(base_real + os.sep):
+        try:
+            if os.path.commonpath([base_real, resolved]) != base_real:
+                raise HTTPException(status_code=400, detail="Invalid file path")
+        except ValueError:
             raise HTTPException(status_code=400, detail="Invalid file path")
         if not os.path.isfile(resolved):
             raise HTTPException(status_code=404, detail="SQLite database file not found")

@@ -197,3 +197,44 @@ class TestSafeFilename:
 
     def test_safe_filename_rejects_unsafe_extension(self):
         assert get_safe_filename("name.bad-ext", "prefix") == "prefix.bin"
+
+    def test_safe_filename_uses_content_type_not_client_filename(self):
+        # A client-supplied dangerous name must NOT control the stored extension;
+        # the validated content_type drives the extension instead.
+        assert (
+            get_safe_filename("evil.php", "prefix", content_type="image/png")
+            == "prefix.png"
+        )
+        assert (
+            get_safe_filename("evil.html", "prefix", content_type="image/jpeg")
+            == "prefix.jpg"
+        )
+
+    @pytest.mark.parametrize(
+        ("content_type", "expected_ext"),
+        [
+            ("image/png", "png"),
+            ("image/jpeg", "jpg"),
+            ("video/mp4", "mp4"),
+            ("application/pdf", "pdf"),
+            ("application/vnd.sqlite3", "sqlite3"),
+            ("application/x-sqlite3", "sqlite3"),
+            (
+                "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+                "docx",
+            ),
+        ],
+    )
+    def test_safe_filename_maps_known_content_types(self, content_type, expected_ext):
+        assert (
+            get_safe_filename("whatever.xyz", "pfx", content_type=content_type)
+            == f"pfx.{expected_ext}"
+        )
+
+    def test_safe_filename_unknown_content_type_falls_back_to_bin(self):
+        # content_type given but not in MIME_TO_SAFE_EXT -> ".bin", still ignoring
+        # the client filename's extension.
+        assert (
+            get_safe_filename("evil.png", "pfx", content_type="application/x-msdownload")
+            == "pfx.bin"
+        )

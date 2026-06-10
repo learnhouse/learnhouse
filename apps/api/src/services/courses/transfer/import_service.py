@@ -107,7 +107,10 @@ def _safe_manifest_join(extract_dir: str, manifest_path: Optional[str]) -> Optio
     target = os.path.join(extract_dir, safe)
     base_real = os.path.realpath(extract_dir)
     target_real = os.path.realpath(target)
-    if target_real != base_real and not target_real.startswith(base_real + os.sep):
+    try:
+        if os.path.commonpath([base_real, target_real]) != base_real:
+            return None
+    except ValueError:
         return None
     return target
 
@@ -232,7 +235,11 @@ async def analyze_import_package(
                 # extract_dir (shouldn't happen with a fresh uuid4 tempdir but
                 # defense in depth) cannot redirect the write.
                 resolved = os.path.realpath(target_path)
-                if not (resolved == abs_extract or resolved.startswith(abs_extract + os.sep)):
+                try:
+                    contained = os.path.commonpath([abs_extract, resolved]) == abs_extract
+                except ValueError:
+                    contained = False
+                if not contained:
                     continue
 
                 if info.is_dir():
