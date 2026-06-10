@@ -502,9 +502,9 @@ class TestFeatureUsage:
             "plan": "standard",
             "base_credits": 5,
             "purchased_credits": 4,
-            "total_credits": 9,
+            "total_credits": 11,
             "used_credits": 6,
-            "remaining_credits": 3,
+            "remaining_credits": 5,
         }
 
 

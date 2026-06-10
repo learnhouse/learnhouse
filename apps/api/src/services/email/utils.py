@@ -19,18 +19,32 @@ def _is_allowed_base_url(url: str) -> bool:
     config = get_learnhouse_config()
     url_stripped = url.rstrip("/")
 
-    # In single tenancy, the operator's host is authoritative — accept any
-    # http(s) URL with a non-empty hostname. The VPS may be reachable on a
-    # domain the operator hasn't enumerated in `allowed_origins`, and that's
-    # the entire point of the single mode.
     if config.hosting_config.tenancy == "single":
         parsed = urlparse(url_stripped)
-        if (
-            parsed.scheme in ("http", "https")
-            and parsed.hostname
-            and not parsed.hostname.startswith(".")
+        if parsed.scheme not in ("http", "https") or not parsed.hostname:
+            return False
+
+        req_host = parsed.hostname.removeprefix("www.").lower()
+
+        configured_hosts = set()
+        for cfg_value in (
+            config.hosting_config.frontend_domain,
+            config.hosting_config.domain,
         ):
+            cfg_value = (cfg_value or "").strip().rstrip("/")
+            if not cfg_value:
+                continue
+            cfg_host = urlparse(cfg_value).hostname or cfg_value
+            cfg_host = cfg_host.removeprefix("www.").lower()
+            if cfg_host:
+                configured_hosts.add(cfg_host)
+
+        if req_host in configured_hosts:
             return True
+
+        if config.general_config.development_mode and req_host in ("localhost", "127.0.0.1"):
+            return True
+
         return False
 
     allowed_origins = config.hosting_config.allowed_origins

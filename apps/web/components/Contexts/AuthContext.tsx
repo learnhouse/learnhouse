@@ -78,7 +78,7 @@ interface AuthContextValue {
   session: Session | null
   status: SessionStatus
   accessToken: string | null
-  refreshSession: (force?: boolean) => Promise<void>
+  refreshSession: (force?: boolean) => Promise<string | null>
   signIn: (provider: string, options?: SignInOptions) => Promise<SignInResult | void>
   signOut: (options?: SignOutOptions) => Promise<void>
 }
@@ -167,6 +167,11 @@ export function SessionProvider({
   const intervalRef = useRef<NodeJS.Timeout | null>(null)
   const broadcastChannelRef = useRef<BroadcastChannel | null>(null)
 
+  const accessTokenRef = useRef<string | null>(accessToken)
+  accessTokenRef.current = accessToken
+
+  const refreshSessionInternalRef = useRef<() => Promise<void>>(async () => {})
+
   // Use ref for refresh promise to avoid issues with stale closures
   // but still deduplicate within the same tab
   const refreshPromiseRef = useRef<Promise<{ access_token: string; expiry?: number } | null> | null>(null)
@@ -187,7 +192,7 @@ export function SessionProvider({
           sessionCacheRef.current = null
         } else if (event.data.type === 'LOGIN') {
           // Another tab logged in, refresh our session
-          refreshSessionInternal()
+          refreshSessionInternalRef.current()
         }
       }
     }
@@ -311,8 +316,10 @@ export function SessionProvider({
     }
   }, [refreshAccessToken, fetchUserSession])
 
+  refreshSessionInternalRef.current = refreshSessionInternal
+
   // Main session refresh function
-  const refreshSession = useCallback(async (force?: boolean) => {
+  const refreshSession = useCallback(async (force?: boolean): Promise<string | null> => {
     // Check cache first (skip if force refresh requested)
     const now = Date.now()
     if (
@@ -322,7 +329,7 @@ export function SessionProvider({
     ) {
       setSession(sessionCacheRef.current.data)
       setStatus('authenticated')
-      return
+      return accessTokenRef.current
     }
 
     // Invalidate cache when forcing
@@ -349,7 +356,7 @@ export function SessionProvider({
           setAccessToken(null)
           setTokenExpiry(null)
           sessionCacheRef.current = null
-          return
+          return null
         }
       }
 
@@ -362,15 +369,18 @@ export function SessionProvider({
           data: sessionData,
           timestamp: now,
         }
+        return currentToken
       } else {
         setSession(null)
         setStatus('unauthenticated')
         sessionCacheRef.current = null
+        return null
       }
     } catch (error) {
       console.error('Session refresh error:', error)
       setSession(null)
       setStatus('unauthenticated')
+      return null
     }
   }, [accessToken, tokenExpiry, fetchUserSession, isTokenExpiringSoon, refreshAccessToken])
 
@@ -719,7 +729,9 @@ export function useSession(): UseSessionReturn {
   return {
     data: context.session,
     status: context.status,
-    update: context.refreshSession,
+    update: async (force?: boolean) => {
+      await context.refreshSession(force)
+    },
   }
 }
 
@@ -889,7 +901,8 @@ export function useAuth() {
       if (context.accessToken) {
         const expiry = context.session?.tokens?.expiry
         if (expiry && Date.now() + TOKEN_REFRESH_THRESHOLD >= expiry) {
-          await context.refreshSession()
+          const refreshed = await context.refreshSession()
+          return refreshed ?? context.accessToken
         }
         return context.accessToken
       }

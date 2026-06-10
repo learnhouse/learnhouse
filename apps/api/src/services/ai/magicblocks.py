@@ -60,7 +60,8 @@ def get_magicblock_session(session_uuid: str) -> Optional[MagicBlockSessionData]
 def create_magicblock_session(
     block_uuid: str,
     activity_uuid: str,
-    context: MagicBlockContext
+    context: MagicBlockContext,
+    user_id: Optional[int] = None,
 ) -> MagicBlockSessionData:
     """Create a new MagicBlock session"""
     session_uuid = f"mb_{uuid4()}"
@@ -73,7 +74,8 @@ def create_magicblock_session(
         max_iterations=MAX_ITERATIONS,
         message_history=[],
         current_html=None,
-        context=context
+        context=context,
+        user_id=user_id,
     )
 
     save_magicblock_session(session)

@@ -2,6 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException, Request
 from fastapi.responses import StreamingResponse
 from sqlmodel import select
 import json
+import logging
 
 from src.db.organizations import Organization
 from src.db.courses.courses import Course
@@ -10,8 +11,10 @@ from sqlmodel.ext.asyncio.session import AsyncSession
 from src.core.events.database import get_db_session
 from src.db.users import PublicUser, AnonymousUser, APITokenUser
 from src.security.auth import get_current_user, get_authenticated_user, resolve_acting_user_id
+from src.security.org_auth import is_org_member
 from src.security.features_utils.usage import (
     reserve_ai_credit,
+    refund_ai_credit,
 )
 from src.security.features_utils.plan_check import get_org_plan
 from src.security.features_utils.plans import plan_meets_requirement
@@ -31,18 +34,47 @@ from src.services.ai.schemas.magicblocks import (
 
 router = APIRouter()
 
+logger = logging.getLogger(__name__)
 
-async def event_generator(generator, session_uuid: str):
-    """Convert async generator to SSE format"""
+
+async def event_generator(
+    generator,
+    session_uuid: str,
+    org_id: int | None = None,
+    reserved_credits: int = 0,
+):
+    """Convert async generator to SSE format.
+
+    Credits are reserved by the caller before the stream is created. If the
+    stream dies before producing any model output (upstream error, client
+    disconnect, cancellation) we refund the reserved credits so a flaky
+    connection doesn't silently drain the org's quota.
+    """
+    import asyncio
+
+    produced_content = False
+    stream_failed = False
     try:
         async for chunk in generator:
+            if chunk:
+                produced_content = True
             # Send each chunk as an SSE data event
             yield f"data: {json.dumps({'type': 'chunk', 'content': chunk})}\n\n"
 
         # Send completion event
         yield f"data: {json.dumps({'type': 'done', 'session_uuid': session_uuid})}\n\n"
+    except asyncio.CancelledError:
+        stream_failed = True
+        raise
     except Exception as e:
+        stream_failed = True
         yield f"data: {json.dumps({'type': 'error', 'message': str(e)})}\n\n"
+    finally:
+        if org_id is not None and reserved_credits > 0 and (stream_failed or not produced_content):
+            try:
+                refund_ai_credit(org_id, reserved_credits)
+            except Exception:
+                logger.debug("MagicBlock AI credit refund failed", exc_info=True)
 
 
 async def get_org_ai_model(org_id: int, db_session: AsyncSession) -> str:
@@ -117,9 +149,16 @@ async def start_magicblock_session(
     if not org or org.id is None:
         raise HTTPException(status_code=404, detail="Organization not found")
 
+    acting_user_id = resolve_acting_user_id(current_user)
+    if not await is_org_member(acting_user_id, org.id, db_session):
+        raise HTTPException(
+            status_code=403,
+            detail="You are not a member of this organization",
+        )
+
     # F-9: per-user + per-org rate limit before any compute / credit spend.
     from src.services.security.rate_limiting import enforce_ai_rate_limit
-    enforce_ai_rate_limit(resolve_acting_user_id(current_user), org.id)
+    enforce_ai_rate_limit(acting_user_id, org.id)
 
     # Atomically check + deduct AI credits to prevent concurrent-request overdraw.
     await reserve_ai_credit(org.id, db_session, amount=3)
@@ -131,7 +170,8 @@ async def start_magicblock_session(
     session = create_magicblock_session(
         block_uuid=session_request.block_uuid,
         activity_uuid=session_request.activity_uuid,
-        context=session_request.context
+        context=session_request.context,
+        user_id=acting_user_id,
     )
 
     # Generate with streaming
@@ -142,7 +182,7 @@ async def start_magicblock_session(
     )
 
     return StreamingResponse(
-        event_generator(stream, session.session_uuid),
+        event_generator(stream, session.session_uuid, org_id=org.id, reserved_credits=3),
         media_type="text/event-stream",
         headers={
             "Cache-Control": "no-cache",
@@ -183,6 +223,10 @@ async def iterate_magicblock_session(
     if not session:
         raise HTTPException(status_code=404, detail="Session not found")
 
+    acting_user_id = resolve_acting_user_id(current_user)
+    if session.user_id is not None and session.user_id != acting_user_id:
+        raise HTTPException(status_code=404, detail="Session not found")
+
     # Check iteration limit
     if session.iteration_count >= session.max_iterations:
         raise HTTPException(
@@ -216,9 +260,15 @@ async def iterate_magicblock_session(
     if not org or org.id is None:
         raise HTTPException(status_code=404, detail="Organization not found")
 
+    if not await is_org_member(acting_user_id, org.id, db_session):
+        raise HTTPException(
+            status_code=403,
+            detail="You are not a member of this organization",
+        )
+
     # F-9: per-user + per-org rate limit before any compute / credit spend.
     from src.services.security.rate_limiting import enforce_ai_rate_limit
-    enforce_ai_rate_limit(resolve_acting_user_id(current_user), org.id)
+    enforce_ai_rate_limit(acting_user_id, org.id)
 
     # Atomically check + deduct AI credits to prevent concurrent-request overdraw.
     await reserve_ai_credit(org.id, db_session, amount=3)
@@ -238,7 +288,7 @@ async def iterate_magicblock_session(
     )
 
     return StreamingResponse(
-        event_generator(stream, session.session_uuid),
+        event_generator(stream, session.session_uuid, org_id=org.id, reserved_credits=3),
         media_type="text/event-stream",
         headers={
             "Cache-Control": "no-cache",
@@ -270,6 +320,9 @@ async def get_session_state(
     session = get_magicblock_session(session_uuid)
 
     if not session:
+        raise HTTPException(status_code=404, detail="Session not found")
+
+    if session.user_id is not None and session.user_id != resolve_acting_user_id(current_user):
         raise HTTPException(status_code=404, detail="Session not found")
 
     return MagicBlockSessionResponse(

@@ -14,10 +14,11 @@ from src.security.rbac.rbac import (
     authorization_verify_based_on_roles_and_authorship_or_api_token,
     authorization_verify_if_user_is_anon,
 )
-from src.security.org_auth import require_org_role_permission
+from src.security.org_auth import require_org_role_permission, require_org_membership
 from src.security.rbac.config import get_resource_config
 from src.db.usergroup_resources import UserGroupResource
 from src.db.usergroup_user import UserGroupUser
+from src.db.user_organizations import UserOrganization
 from src.db.organizations import Organization
 from src.db.usergroups import UserGroup, UserGroupCreate, UserGroupRead, UserGroupUpdate
 from src.db.users import AnonymousUser, APITokenUser, InternalUser, PublicUser, User, UserRead
@@ -109,7 +110,13 @@ async def create_usergroup(
     usergroup_create: UserGroupCreate,
 ) -> UserGroupRead:
 
+    from src.security.auth import resolve_acting_user_id
+
     usergroup = UserGroup.model_validate(usergroup_create)
+
+    await require_org_membership(
+        resolve_acting_user_id(current_user), usergroup_create.org_id, db_session
+    )
 
     # RBAC check
     await rbac_check(
@@ -235,6 +242,12 @@ async def read_usergroups_by_org_id(
     org_id: int,
 ) -> list[UserGroupRead]:
 
+    from src.security.auth import resolve_acting_user_id
+
+    await require_org_membership(
+        resolve_acting_user_id(current_user), org_id, db_session
+    )
+
     statement = select(UserGroup).where(UserGroup.org_id == org_id).order_by(UserGroup.creation_date.desc())
     usergroups = (await db_session.execute(statement)).scalars().all()
 
@@ -263,6 +276,16 @@ async def get_usergroups_by_resource(
         UserGroupResource.resource_uuid == resource_uuid
     )
     usergroup_resources = (await db_session.execute(statement)).scalars().all()
+
+    if not usergroup_resources:
+        return []
+
+    from src.security.auth import resolve_acting_user_id
+
+    target_org_id = usergroup_resources[0].org_id
+    await require_org_membership(
+        resolve_acting_user_id(current_user), target_org_id, db_session
+    )
 
     # RBAC check
     await rbac_check(
@@ -450,6 +473,20 @@ async def add_users_to_usergroup(
 
         if usergroup_user:
             logging.error(f"User with id {user_id} already exists in UserGroup")
+            continue
+
+        membership_statement = select(UserOrganization).where(
+            UserOrganization.user_id == user_id,
+            UserOrganization.org_id == usergroup.org_id,
+        )
+        user_org_membership = (
+            await db_session.execute(membership_statement)
+        ).scalars().first()
+
+        if not user_org_membership:
+            logging.error(
+                f"User with id {user_id} is not a member of org {usergroup.org_id}; skipping"
+            )
             continue
 
         if user:

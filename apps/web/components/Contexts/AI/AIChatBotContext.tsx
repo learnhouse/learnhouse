@@ -68,13 +68,13 @@ function aiChatBotReducer(state: any, action: any) {
     case 'addMessage':
       return { ...state, messages: [...state.messages, action.payload] }
     case 'setIsModalOpen':
-      return { ...state, isModalOpen: true }
+      return { ...state, isModalOpen: action.payload ?? true }
     case 'setIsModalClose':
       return { ...state, isModalOpen: false }
     case 'setAichat_uuid':
       return { ...state, aichat_uuid: action.payload }
     case 'setIsWaitingForResponse':
-      return { ...state, isWaitingForResponse: true }
+      return { ...state, isWaitingForResponse: action.payload ?? true }
     case 'setIsNoLongerWaitingForResponse':
       return { ...state, isWaitingForResponse: false }
     case 'setChatInputValue':

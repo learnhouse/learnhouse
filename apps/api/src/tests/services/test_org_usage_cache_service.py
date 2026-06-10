@@ -229,7 +229,7 @@ class TestOrgUsageHelpers:
             return_value=2,
         ), patch(
             "src.services.orgs.usage.get_plan_limit",
-            side_effect=[4, 2],
+            side_effect=[4],
         ) as get_plan_limit, patch(
             "src.services.orgs.usage.get_purchased_member_seats",
             return_value=5,
@@ -238,6 +238,7 @@ class TestOrgUsageHelpers:
             side_effect=[
                 {"enabled": True, "limit": 0},
                 {"enabled": True, "limit": 6},
+                {"enabled": True, "limit": 2},
             ],
         ) as resolve_feature, patch(
             "src.services.orgs.usage._set_cached_usage",
@@ -265,8 +266,8 @@ class TestOrgUsageHelpers:
         assert result["features"]["admin_seats"]["limit_reached"] is True
         resolve_feature.assert_any_call("courses", {"config_version": "2.0", "plan": "pro", "admin_toggles": {}}, org.id)
         resolve_feature.assert_any_call("members", {"config_version": "2.0", "plan": "pro", "admin_toggles": {}}, org.id)
+        resolve_feature.assert_any_call("admin_seats", {"config_version": "2.0", "plan": "pro", "admin_toggles": {}}, org.id)
         get_plan_limit.assert_any_call("pro", "members")
-        get_plan_limit.assert_any_call("pro", "admin_seats")
         purchased.assert_called_once_with(org.id)
         set_cached.assert_called_once_with(org.id, result)
 
@@ -313,6 +314,7 @@ class TestOrgUsageHelpers:
             side_effect=[
                 {"enabled": True, "limit": 3},
                 {"enabled": True, "limit": 4},
+                {"enabled": True, "limit": 0},
             ],
         ), patch(
             "src.services.orgs.usage._set_cached_usage",

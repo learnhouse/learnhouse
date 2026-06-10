@@ -72,6 +72,27 @@ def _block_api_tokens(current_user: PublicUser | AnonymousUser | APITokenUser) -
         )
 
 
+def _is_assignment_past_due(assignment: Assignment) -> bool:
+    """Return True if the assignment has a due_date set and it is in the past.
+
+    due_date is stored as a free-form string. We parse it defensively: if it
+    is empty or unparseable, we treat the deadline as NOT set (return False)
+    so a malformed value never locks students out. Comparison is done with a
+    naive ``datetime.now()`` to match the rest of this module (all timestamps
+    here are naive local-time strings produced by ``datetime.now()``).
+    """
+    raw = getattr(assignment, "due_date", None)
+    if not raw or not str(raw).strip():
+        return False
+    try:
+        parsed = datetime.fromisoformat(str(raw).strip())
+    except (ValueError, TypeError):
+        return False
+    if parsed.tzinfo is not None:
+        parsed = parsed.replace(tzinfo=None)
+    return parsed < datetime.now()
+
+
 ## > Grade computation
 
 # Default passing threshold as a percentage (0-100). Used for PASS_FAIL,
@@ -1313,14 +1334,17 @@ async def handle_assignment_task_submission(
                 status_code=403,
                 detail="You must be enrolled in this course to submit assignments"
             )
-        
-        # SECURITY: Regular users cannot update grades - only check if actual values are being set
-        if (assignment_task_submission_object.grade is not None and assignment_task_submission_object.grade != 0) or \
-           (assignment_task_submission_object.task_submission_grade_feedback is not None and assignment_task_submission_object.task_submission_grade_feedback != ""):
+
+        if _is_assignment_past_due(assignment):
             raise HTTPException(
                 status_code=403,
-                detail="You do not have permission to update grades"
+                detail="Assignment deadline has passed",
             )
+
+        assignment_task_submission_object.grade = None
+        assignment_task_submission_object.task_submission_grade_feedback = None
+        assignment_task_submission_object.assignment_task_id = None
+        assignment_task_submission_object.assignment_type = None
 
         # Only need read permission for submissions
         await check_resource_access(request, db_session, current_user, course.course_uuid, AccessAction.READ)
@@ -1675,8 +1699,23 @@ async def update_assignment_task_submission(
             detail="Course not found",
         )
 
-    # RBAC check
-    await check_resource_access(request, db_session, current_user, course.course_uuid, AccessAction.READ)
+    is_instructor = await authorization_verify_based_on_roles(
+        request, current_user.id, "update", course.course_uuid, db_session
+    )
+
+    if is_instructor:
+        await check_resource_access(request, db_session, current_user, course.course_uuid, AccessAction.UPDATE)
+    else:
+        await check_resource_access(request, db_session, current_user, course.course_uuid, AccessAction.READ)
+        if assignment_task_submission.user_id != current_user.id:
+            raise HTTPException(
+                status_code=403,
+                detail="You can only update your own submissions",
+            )
+        assignment_task_submission_object.grade = None
+        assignment_task_submission_object.task_submission_grade_feedback = None
+        assignment_task_submission_object.assignment_task_id = None
+        assignment_task_submission_object.assignment_type = None
 
     # Update only the fields that were passed in
     for var, value in vars(assignment_task_submission_object).items():
@@ -1811,6 +1850,15 @@ async def create_assignment_submission(
 
     # RBAC check
     await check_resource_access(request, db_session, current_user, course.course_uuid, AccessAction.READ)
+
+    is_instructor = await authorization_verify_based_on_roles(
+        request, current_user.id, "update", course.course_uuid, db_session
+    )
+    if not is_instructor and _is_assignment_past_due(assignment):
+        raise HTTPException(
+            status_code=403,
+            detail="Assignment deadline has passed",
+        )
 
     # Either reuse the existing PENDING row (retry path) or create a fresh
     # submission. On the retry path we keep the original
@@ -2201,6 +2249,9 @@ async def update_assignment_submission(
                 status_code=403,
                 detail="You can only update your own submissions",
             )
+        for protected_field in ("grade", "submission_status", "user_id", "assignment_id"):
+            if hasattr(assignment_user_submission_object, protected_field):
+                setattr(assignment_user_submission_object, protected_field, None)
 
     # Update only the fields that were passed in
     for var, value in vars(assignment_user_submission_object).items():

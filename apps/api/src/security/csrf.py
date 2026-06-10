@@ -63,7 +63,7 @@ class CSRFProtectionMiddleware(BaseHTTPMiddleware):
         if origin in self.allowed_origins:
             return True
 
-        if self.compiled_regexp and self.compiled_regexp.match(origin):
+        if self.compiled_regexp and self.compiled_regexp.fullmatch(origin):
             return True
 
         if self.development_mode:
@@ -86,11 +86,6 @@ class CSRFProtectionMiddleware(BaseHTTPMiddleware):
             referer_origin = self._extract_origin_from_url(referer)
             if referer_origin:
                 return self._is_origin_allowed(referer_origin)
-
-        # No Origin and no Referer — in development mode, allow these
-        # (server-side proxies like Next.js strip the Origin header)
-        if self.development_mode:
-            return True
 
         return False
 

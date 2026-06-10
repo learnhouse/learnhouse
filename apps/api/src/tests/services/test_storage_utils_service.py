@@ -131,17 +131,21 @@ class TestStorageClientHelpers:
 
 
 class TestFileReadAndExistenceHelpers:
-    def test_read_file_content_covers_filesystem_and_s3_fallbacks(self, tmp_path):
-        local_file = tmp_path / "content.txt"
-        local_file.write_bytes(b"local-bytes")
+    def test_read_file_content_covers_filesystem_and_s3_fallbacks(self, tmp_path, monkeypatch):
+        monkeypatch.chdir(tmp_path)
+        content_dir = tmp_path / "content"
+        content_dir.mkdir()
+        (content_dir / "content.txt").write_bytes(b"local-bytes")
 
         with patch.object(
             storage_utils,
             "get_content_delivery_type",
             return_value="filesystem",
         ):
-            assert storage_utils.read_file_content(str(local_file)) == b"local-bytes"
-            assert storage_utils.read_file_content(str(tmp_path / "missing.txt")) is None
+            assert storage_utils.read_file_content("content/content.txt") == b"local-bytes"
+            assert storage_utils.read_file_content("content/missing.txt") is None
+            assert storage_utils.read_file_content("content/../../etc/passwd") is None
+            assert storage_utils.read_file_content("/etc/passwd") is None
 
         body = Mock()
         body.read.return_value = b"s3-bytes"
