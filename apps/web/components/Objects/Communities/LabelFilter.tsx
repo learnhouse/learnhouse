@@ -8,7 +8,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@components/ui/dropdown-menu"
-import { DISCUSSION_LABELS, DiscussionLabel } from '@services/communities/discussions'
+import { DISCUSSION_LABELS } from '@services/communities/discussions'
 
 interface LabelFilterProps {
   value: string | null

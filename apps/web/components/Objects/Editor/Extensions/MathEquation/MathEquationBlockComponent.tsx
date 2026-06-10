@@ -1,5 +1,5 @@
 import { NodeViewWrapper } from '@tiptap/react'
-import React, { lazy, Suspense, useEffect } from 'react'
+import React, { lazy, Suspense } from 'react'
 const BlockMath = lazy(() => {
   // Load katex CSS when the component is first used
   import('katex/dist/katex.min.css')

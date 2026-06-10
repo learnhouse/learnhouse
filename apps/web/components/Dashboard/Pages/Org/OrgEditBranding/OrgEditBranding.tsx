@@ -1,6 +1,6 @@
 'use client'
 import React, { useState } from 'react'
-import { UploadCloud, Info, Plus, X, GripVertical, Images, StarIcon, ImageIcon, Share2, Link as LinkIcon, Palette, LogIn } from 'lucide-react'
+import { UploadCloud, Info, Plus, X, GripVertical, Images, StarIcon, ImageIcon, Share2, Palette, LogIn } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { useOrg } from '@components/Contexts/OrgContext'
 import { useLHSession } from '@components/Contexts/LHSessionContext'

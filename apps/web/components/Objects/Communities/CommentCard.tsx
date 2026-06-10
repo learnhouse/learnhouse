@@ -3,7 +3,7 @@ import React, { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import dayjs from 'dayjs'
 import relativeTime from 'dayjs/plugin/relativeTime'
-import { MoreHorizontal, Pencil, Trash2, X, Check, Loader2, AlertCircle } from 'lucide-react'
+import { MoreHorizontal, Pencil, Trash2, Loader2, AlertCircle } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
 import {

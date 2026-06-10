@@ -2,7 +2,7 @@
 import React, { useMemo } from 'react'
 
 import Link from 'next/link'
-import { Package, Crown, Shield, User, Users, SignOut, CaretDown, Globe, Check, ShoppingBag } from '@phosphor-icons/react'
+import { Crown, Shield, User, Users, SignOut, CaretDown, Globe, Check, ShoppingBag } from '@phosphor-icons/react'
 import UserAvatar from '@components/Objects/UserAvatar'
 import useAdminStatus from '@components/Hooks/useAdminStatus'
 import { useLHSession } from '@components/Contexts/LHSessionContext'

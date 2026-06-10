@@ -7,7 +7,6 @@ import { getActivity, updateHostedVideoActivity, updateExternalVideoActivity } f
 import { useLHSession } from '@components/Contexts/LHSessionContext'
 import toast from 'react-hot-toast'
 import { mutate } from 'swr'
-import { getAPIUrl } from '@services/config/config'
 
 const SUPPORTED_FILES = constructAcceptValue(['mp4', 'webm'])
 

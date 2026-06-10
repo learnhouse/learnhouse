@@ -29,7 +29,6 @@ import {
   SpinnerGap,
   Sparkle,
   ArrowRight,
-  CaretRight,
   Books,
   Plus,
   Trash,

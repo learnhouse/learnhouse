@@ -1,6 +1,6 @@
 import { Metadata } from 'next'
 import { getOrganizationContextInfo } from '@services/organizations/orgs'
-import { getCanonicalUrl, getOrgSeoConfig, buildPageTitle, buildBreadcrumbJsonLd } from '@/lib/seo/utils'
+import { getOrgSeoConfig, buildPageTitle, buildBreadcrumbJsonLd } from '@/lib/seo/utils'
 import { getServerCanonicalUrl } from '@/lib/seo/utils.server'
 import { JsonLd } from '@components/SEO/JsonLd'
 import { getPublicOffer } from '@services/payments/offers'
