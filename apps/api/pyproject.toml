@@ -61,7 +61,6 @@ filterwarnings = [
     "ignore::DeprecationWarning",
     "ignore::UserWarning",
     "ignore:.*crypt.*deprecated.*",
-    "ignore:.*utcnow.*deprecated.*",
     "ignore:.*Instrumentation will have no effect.*",
     "ignore:.*handler names should be lower-case.*",
 ]
