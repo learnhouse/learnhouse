@@ -5,7 +5,7 @@ so locked chapters and activities share the same association table as
 playgrounds. Only users with course UPDATE permission can manage these.
 """
 
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import List
 
 from fastapi import HTTPException, Request, status
@@ -66,7 +66,7 @@ async def _attach_usergroup(resource_uuid, org_id, usergroup_id, db_session):
     if existing:
         return {"detail": "User group already has access"}
 
-    now = datetime.utcnow().isoformat()
+    now = datetime.now(timezone.utc).replace(tzinfo=None).isoformat()
     ugr = UserGroupResource(
         usergroup_id=usergroup_id,
         resource_uuid=resource_uuid,
