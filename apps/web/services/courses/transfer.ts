@@ -1,8 +1,6 @@
 import { getAPIUrl } from '@services/config/config'
-import {
-  RequestBodyWithAuthHeader,
-  getResponseMetadata,
-} from '@services/utils/ts/requests'
+
+
 
 /**
  * Course Transfer Service

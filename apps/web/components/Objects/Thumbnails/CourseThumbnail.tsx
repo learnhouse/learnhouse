@@ -2,7 +2,7 @@
 import { useOrg } from '@components/Contexts/OrgContext'
 import AuthenticatedClientElement from '@components/Security/AuthenticatedClientElement'
 import ConfirmationModal from '@components/Objects/StyledElements/ConfirmationModal/ConfirmationModal'
-import { getUriWithOrg, getAPIUrl } from '@services/config/config'
+import { getUriWithOrg } from '@services/config/config'
 import { deleteCourseFromBackend, cloneCourse } from '@services/courses/courses'
 import { exportCourse, downloadBlob, ExportStatus } from '@services/courses/transfer'
 import { exportToast } from '@components/Objects/StyledElements/Toast/ExportToast'
@@ -174,7 +174,7 @@ function CourseThumbnail({ course, orgslug, customLink, isDashboard = false, isS
       <Link prefetch={false} href={courseLink} className="block relative aspect-video overflow-hidden bg-gray-50">
         {/* Hidden img gives the browser a real resource hint so it can fetch the background-image early as an LCP candidate */}
         {isPriority && (
-          // eslint-disable-next-line @next/next/no-img-element
+           
           <img
             src={thumbnailImage}
             alt=""

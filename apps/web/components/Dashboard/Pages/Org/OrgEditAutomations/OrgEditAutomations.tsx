@@ -66,7 +66,6 @@ const ZapierLogo: React.FC<{ size?: number; className?: string }> = ({
 )
 import {
   WebhookEndpoint,
-  WebhookEndpointCreated,
   WebhookDeliveryLog,
   WebhookCreateRequest,
   createWebhookEndpoint,

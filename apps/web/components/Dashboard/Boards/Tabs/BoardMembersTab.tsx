@@ -2,7 +2,6 @@
 
 import React, { useState } from 'react'
 import { UserPlus, Trash2, Search, Check, User, Users } from 'lucide-react'
-import { useOrg } from '@components/Contexts/OrgContext'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
 import { getAPIUrl } from '@services/config/config'
 import { useQuery, useQueryClient } from '@tanstack/react-query'

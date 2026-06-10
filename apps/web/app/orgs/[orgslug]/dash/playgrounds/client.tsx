@@ -3,7 +3,6 @@
 import React, { useState, useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
 import {
-  Plus,
   Search,
   X,
   Globe,

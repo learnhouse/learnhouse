@@ -6,7 +6,6 @@ import Link from 'next/link'
 import { motion, type Transition, type TargetAndTransition } from 'motion/react'
 import {
   ArrowLeft,
-  Globe,
   Check,
   FloppyDisk,
   Eye,

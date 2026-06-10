@@ -1,5 +1,4 @@
 'use client'
-import { getAPIUrl } from '@services/config/config'
 import { updateCourseOrderStructure } from '@services/courses/chapters'
 import { revalidateTags } from '@services/utils/ts/requests'
 import {
@@ -9,7 +8,7 @@ import {
 } from '@components/Contexts/CourseContext'
 import { useQueryClient } from '@tanstack/react-query'
 import { queryKeys } from '@/lib/query/keys'
-import { Check, SaveAllIcon, Timer, Loader2, AlertCircle } from 'lucide-react'
+import { Check, SaveAllIcon, Loader2, AlertCircle } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import React, { useCallback, useEffect, useRef } from 'react'
 import { updateCourse } from '@services/courses/courses'

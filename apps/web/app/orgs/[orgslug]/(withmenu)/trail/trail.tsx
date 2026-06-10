@@ -13,7 +13,7 @@ import { removeCourse } from '@services/courses/activity'
 import { revalidateTags } from '@services/utils/ts/requests'
 import { useRouter } from 'next/navigation'
 import ConfirmationModal from '@components/Objects/StyledElements/ConfirmationModal/ConfirmationModal'
-import { BookOpen, Signpost } from 'lucide-react'
+import { BookOpen } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import FeatureGate from '@components/Dashboard/Shared/FeatureGate/FeatureGate'
 

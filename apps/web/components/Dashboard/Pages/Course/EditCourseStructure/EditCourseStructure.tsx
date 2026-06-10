@@ -1,5 +1,4 @@
 'use client'
-import { getAPIUrl } from '@services/config/config'
 import { revalidateTags } from '@services/utils/ts/requests'
 import React, { useEffect, useState } from 'react'
 import { DragDropContext, Droppable } from '@hello-pangea/dnd'

@@ -6,7 +6,6 @@ import {
   ChartBar,
   GearSix,
   Users,
-  BookOpen,
 } from '@phosphor-icons/react'
 import { useQuery } from '@tanstack/react-query'
 import { queryKeys } from '@/lib/query/keys'
