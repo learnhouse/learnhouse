@@ -79,7 +79,9 @@ function loadState(): OnboardingState {
         welcomeSeen: parsed.welcomeSeen || false,
       }
     }
-  } catch {}
+  } catch {
+    /* ignore */
+  }
   return { completedSteps: [], skippedSteps: [], minimized: false, expanded: false, showAllSteps: false, dismissed: false, welcomeSeen: false }
 }
 
@@ -87,14 +89,16 @@ function saveState(state: OnboardingState) {
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(state))
     window.dispatchEvent(new Event('lh_onboarding_change'))
-  } catch {}
+  } catch {
+    /* ignore */
+  }
 }
 
 export function useOnboarding() {
   const [state, setState] = useState<OnboardingState>(loadState)
 
   const applyLocalChange = useCallback(
-    (updater: (prev: OnboardingState) => OnboardingState) => {
+    (updater: (_prev: OnboardingState) => OnboardingState) => {
       setState((prev) => {
         const next = updater(prev)
         if (next !== prev) {

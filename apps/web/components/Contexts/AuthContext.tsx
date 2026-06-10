@@ -31,7 +31,7 @@ export type SessionStatus = 'loading' | 'authenticated' | 'unauthenticated'
 export interface UseSessionReturn {
   data: Session | null
   status: SessionStatus
-  update: (force?: boolean) => Promise<void>
+  update: (_force?: boolean) => Promise<void>
 }
 
 export interface SignInOptions {
@@ -78,9 +78,9 @@ interface AuthContextValue {
   session: Session | null
   status: SessionStatus
   accessToken: string | null
-  refreshSession: (force?: boolean) => Promise<string | null>
-  signIn: (provider: string, options?: SignInOptions) => Promise<SignInResult | void>
-  signOut: (options?: SignOutOptions) => Promise<void>
+  refreshSession: (_force?: boolean) => Promise<string | null>
+  signIn: (_provider: string, _options?: SignInOptions) => Promise<SignInResult | void>
+  signOut: (_options?: SignOutOptions) => Promise<void>
 }
 
 const AuthContext = createContext<AuthContextValue | null>(null)
@@ -140,7 +140,9 @@ function getOAuthStateCookie(): { csrf: string; timestamp: number } | null {
         return JSON.parse(decodeURIComponent(rest.join('=')))
       }
     }
-  } catch {}
+  } catch {
+    /* ignore */
+  }
   return null
 }
 
@@ -164,7 +166,7 @@ export function SessionProvider({
   const [accessToken, setAccessToken] = useState<string | null>(null)
   const [tokenExpiry, setTokenExpiry] = useState<number | null>(null)
   const sessionCacheRef = useRef<SessionCache | null>(null)
-  const intervalRef = useRef<NodeJS.Timeout | null>(null)
+  const intervalRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const broadcastChannelRef = useRef<BroadcastChannel | null>(null)
 
   const accessTokenRef = useRef<string | null>(accessToken)
@@ -678,7 +680,7 @@ export function SessionProvider({
     isRefreshingRef.current = false
 
     // Clear any auth cookies on client side
-    const { secureAttr, domainAttr, sameSiteAttr } = getCookieAttributes()
+    const { secureAttr, domainAttr } = getCookieAttributes()
     const expireAttr = '; expires=Thu, 01 Jan 1970 00:00:00 GMT'
     document.cookie = `LH_oauth_orgslug=; path=/${expireAttr}${secureAttr}${domainAttr}`
     document.cookie = `LH_oauth_org_id=; path=/${expireAttr}${secureAttr}${domainAttr}`
@@ -783,9 +785,6 @@ export async function signIn(
   // For now, we'll handle it differently for Google OAuth which needs redirect
 
   if (provider === 'google') {
-    const { secureAttr, domainAttr, sameSiteAttr } = getCookieAttributes()
-    const baseAttributes = `; path=/${sameSiteAttr}${secureAttr}`
-
     // Store org context from cookies if present (for compatibility)
     // The options should contain orgSlug and orgId if needed
 
@@ -859,7 +858,7 @@ export async function signOut(options?: SignOutOptions): Promise<void> {
   }
 
   // Clear cookies
-  const { secureAttr, domainAttr, sameSiteAttr } = getCookieAttributes()
+  const { secureAttr, domainAttr } = getCookieAttributes()
   const expireAttr = '; expires=Thu, 01 Jan 1970 00:00:00 GMT'
   document.cookie = `LH_oauth_orgslug=; path=/${expireAttr}${secureAttr}${domainAttr}`
   document.cookie = `LH_oauth_org_id=; path=/${expireAttr}${secureAttr}${domainAttr}`
