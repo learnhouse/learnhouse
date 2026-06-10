@@ -12,7 +12,7 @@ dependencies = [
     "faker==40.21.0",
     "fastapi==0.136.3",
     "httpx==0.28.1",
-    "google-genai==1.75.0",
+    "google-genai==2.8.0",
     "pwdlib[argon2]==0.3.0",
     "psycopg2-binary==2.9.12",
     "asyncpg==0.31.0",
