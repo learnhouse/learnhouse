@@ -79,7 +79,9 @@ function TaskNumberAnswerObject({
   const [contents, setContents] = useState<NumberAnswerContents>(DEFAULT_CONTENTS)
   const [studentAnswer, setStudentAnswer] = useState<string>('')
   const [initialAnswer, setInitialAnswer] = useState<string>('')
-  const [showSavingDisclaimer, setShowSavingDisclaimer] = useState(false)
+  // Derived: the disclaimer shows exactly while the draft differs from the
+  // last saved answer (submitFC syncs initialAnswer on success).
+  const showSavingDisclaimer = view === 'student' && studentAnswer !== initialAnswer
 
   const [userSubmissions, setUserSubmissions] = useState<any>(null)
   const [userSubmissionObject, setUserSubmissionObject] = useState<any>(null)
@@ -150,12 +152,6 @@ function TaskNumberAnswerObject({
     }
   }, [view, assignmentTaskUUID, assignment, access_token])
 
-  useEffect(() => {
-    if (view === 'student') {
-      setShowSavingDisclaimer(studentAnswer !== initialAnswer)
-    }
-  }, [studentAnswer, initialAnswer, view])
-
   // --- SAVE (teacher) ---
   async function saveFC() {
     if (!assignmentTaskState?.assignmentTask?.assignment_task_uuid) return
@@ -199,7 +195,6 @@ function TaskNumberAnswerObject({
     if (res.success) {
       setUserSubmissions(res.data)
       setInitialAnswer(studentAnswer)
-      setShowSavingDisclaimer(false)
       toast.success(t('dashboard.assignments.editor.toasts.task_saved'))
     } else {
       toast.error(t('dashboard.assignments.editor.toasts.task_save_error'))
