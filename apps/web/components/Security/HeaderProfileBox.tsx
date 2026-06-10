@@ -1,5 +1,5 @@
 'use client'
-import React, { useEffect, useMemo } from 'react'
+import React, { useMemo } from 'react'
 
 import Link from 'next/link'
 import { Package, Crown, Shield, User, Users, SignOut, CaretDown, Globe, Check, ShoppingBag } from '@phosphor-icons/react'
@@ -49,19 +49,16 @@ export const HeaderProfileBox = ({ primaryColor = '' }: { primaryColor?: string 
   const colors = getMenuColorClasses(primaryColor)
 
 
-  useEffect(() => { }
-    , [session])
-
   const userRoleInfo = useMemo((): RoleInfo | null => {
     if (!userRoles || userRoles.length === 0) return null;
 
     // Find the highest priority role for the current organization
     const orgRoles = userRoles.filter((role: any) => role.org.id === org?.id);
-    
+
     if (orgRoles.length === 0) return null;
 
     // Sort by role priority (admin > maintainer > instructor > user)
-    const sortedRoles = orgRoles.sort((a: any, b: any) => {
+    const sortedRoles = [...orgRoles].sort((a: any, b: any) => {
       const getRolePriority = (role: any) => {
         if (role.role.role_uuid === 'role_global_admin' || role.role.id === 1) return 4;
         if (role.role.role_uuid === 'role_global_maintainer' || role.role.id === 2) return 3;
@@ -118,7 +115,8 @@ export const HeaderProfileBox = ({ primaryColor = '' }: { primaryColor?: string 
     }
 
     return roleConfigs[roleKey] || roleConfigs['role_global_user'];
-  }, [userRoles, org?.id]);
+    // t is a real dependency: the labels must recompute on language change
+  }, [userRoles, org?.id, t]);
 
   const customRoles = useMemo((): CustomRoleInfo[] => {
     if (!userRoles || userRoles.length === 0) return [];
@@ -143,7 +141,8 @@ export const HeaderProfileBox = ({ primaryColor = '' }: { primaryColor?: string 
       name: role.role.name || t('roles.custom_role'),
       description: role.role.description
     }));
-  }, [userRoles, org?.id]);
+    // t is a real dependency: the fallback label must recompute on language change
+  }, [userRoles, org?.id, t]);
 
   return (
     <div className="flex items-stretch items-center">
