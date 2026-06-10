@@ -55,7 +55,7 @@ async def api_ai_start_activity_chat_session(
     """
     Start a new AI Chat session with a Course Activity
     """
-    return ai_start_activity_chat_session(
+    return await ai_start_activity_chat_session(
         request, chat_session_object, current_user, db_session
     )
 
@@ -80,7 +80,7 @@ async def api_ai_send_activity_chat_message(
     """
     Send a message to an AI Chat session with a Course Activity
     """
-    return ai_send_activity_chat_message(
+    return await ai_send_activity_chat_message(
         request, chat_session_object, current_user, db_session
     )
 
@@ -300,6 +300,7 @@ async def editor_chat_event_generator(
     buffer = ""
     in_content_block = False
     content_buffer = ""
+    stream_failed = False
 
     try:
         # Send start event immediately
@@ -404,18 +405,16 @@ async def editor_chat_event_generator(
             yield f"data: {json.dumps({'type': 'follow_ups', 'follow_up_suggestions': follow_ups})}\n\n"
 
     except asyncio.CancelledError:
+        stream_failed = True
         # Client disconnect / cancellation — let Starlette observe it after
         # we refund credits in the finally block.
-        if org_id is not None and not full_response:
-            try:
-                refund_ai_credit(org_id, 1)
-            except Exception:
-                logger.debug("AI credit refund failed", exc_info=True)
         raise
     except Exception:
+        stream_failed = True
         logger.exception("Error in editor_chat_event_generator")
         yield f"data: {json.dumps({'type': 'error', 'message': 'An internal error occurred while processing the AI request.'})}\n\n"
-        if org_id is not None and not full_response:
+    finally:
+        if org_id is not None and (stream_failed or not full_response):
             try:
                 refund_ai_credit(org_id, 1)
             except Exception:

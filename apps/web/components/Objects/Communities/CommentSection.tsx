@@ -38,21 +38,31 @@ export function CommentSection({ discussionUuid, communityUuid, isLocked = false
   const [error, setError] = useState<string | null>(null)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
 
-  const fetchComments = async () => {
-    setIsLoading(true)
-    try {
-      const result = await getComments(discussionUuid, 1, 100, null, accessToken)
-      setComments(result || [])
-    } catch (_error) {
-      // silent — loading errors are handled by the empty state
-    } finally {
-      setIsLoading(false)
-    }
-  }
-
   useEffect(() => {
+    let stale = false
+
+    const fetchComments = async () => {
+      setIsLoading(true)
+      try {
+        const result = await getComments(discussionUuid, 1, 100, null, accessToken)
+        if (!stale) {
+          setComments(result || [])
+        }
+      } catch (_error) {
+        // silent — loading errors are handled by the empty state
+      } finally {
+        if (!stale) {
+          setIsLoading(false)
+        }
+      }
+    }
+
     fetchComments()
-  }, [discussionUuid])
+
+    return () => {
+      stale = true
+    }
+  }, [discussionUuid, accessToken])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()

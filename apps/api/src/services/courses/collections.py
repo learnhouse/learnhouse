@@ -107,6 +107,11 @@ async def create_collection(
             course = (await db_session.execute(statement)).scalars().first()
             
             if course:
+                if course.org_id != collection.org_id:
+                    raise HTTPException(
+                        status_code=403,
+                        detail=f"Course {course.name} does not belong to this organization",
+                    )
                 # Verify user has read access to the course before adding it to collection
                 try:
                     await check_resource_access(request, db_session, current_user, course.course_uuid, AccessAction.READ)
@@ -194,6 +199,11 @@ async def update_collection(
 
     # Add new collection_courses
     for course in courses or []:
+        course_statement = select(Course).where(Course.id == int(course))
+        course_obj = (await db_session.execute(course_statement)).scalars().first()
+        if not course_obj or course_obj.org_id != collection.org_id:
+            continue
+
         collection_course = CollectionCourse(
             collection_id=int(collection.id),  # type: ignore
             course_id=int(course),

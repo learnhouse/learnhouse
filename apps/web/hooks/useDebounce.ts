@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 
 // Function debouncing
 export function useDebounce<T extends (...args: any[]) => any>(
@@ -13,6 +13,19 @@ export function useDebounce<T>(value: T, delay: number): T;
 export function useDebounce<T>(valueOrCallback: T, delay: number): T {
   const [debouncedValue, setDebouncedValue] = useState<T>(valueOrCallback);
   const timeoutRef = useRef<NodeJS.Timeout | undefined>(undefined);
+
+  const callbackRef = useRef(valueOrCallback);
+  callbackRef.current = valueOrCallback;
+
+  const debouncedFn = useCallback((...args: any[]) => {
+    if (timeoutRef.current) {
+      clearTimeout(timeoutRef.current);
+    }
+
+    timeoutRef.current = setTimeout(() => {
+      (callbackRef.current as Function)(...args);
+    }, delay);
+  }, [delay]);
 
   useEffect(() => {
     // If it's a function, return a debounced version of it
@@ -38,17 +51,9 @@ export function useDebounce<T>(valueOrCallback: T, delay: number): T {
 
   // If it's a function, return a debounced version
   if (typeof valueOrCallback === 'function') {
-    return ((...args: any[]) => {
-      if (timeoutRef.current) {
-        clearTimeout(timeoutRef.current);
-      }
-
-      timeoutRef.current = setTimeout(() => {
-        (valueOrCallback as Function)(...args);
-      }, delay);
-    }) as T;
+    return debouncedFn as T;
   }
 
   // For values, return the debounced value
   return debouncedValue;
-} 
+}

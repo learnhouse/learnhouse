@@ -111,18 +111,24 @@ class TestEmailUtilsService:
             assert await get_org_signup_base_url("acme", request) == "https://fallback.test"
             mock_base_url.assert_called_once_with(request)
 
-    def test_is_allowed_base_url_accepts_request_host_in_single_tenancy(self):
-        # In single tenancy the operator's host is authoritative — any
-        # http(s) URL with a non-empty hostname is acceptable, so VPS
-        # deployments don't need to enumerate `allowed_origins`.
+    def test_is_allowed_base_url_pins_to_configured_host_in_single_tenancy(self):
         with patch(
             "src.services.email.utils.get_learnhouse_config",
             return_value=_config(tenancy="single"),
         ):
-            assert _is_allowed_base_url("https://learn.example.org")
-            assert _is_allowed_base_url("http://localhost:3000")
+            assert _is_allowed_base_url("https://app.learnhouse.app")
+            assert _is_allowed_base_url("https://learnhouse.app")
+            assert _is_allowed_base_url("https://www.learnhouse.app")
+            assert not _is_allowed_base_url("https://learn.example.org")
             assert not _is_allowed_base_url("javascript:alert(1)")
             assert not _is_allowed_base_url("https://")
+            assert not _is_allowed_base_url("http://localhost:3000")
+
+        with patch(
+            "src.services.email.utils.get_learnhouse_config",
+            return_value=_config(tenancy="single", development_mode=True),
+        ):
+            assert _is_allowed_base_url("http://localhost:3000")
 
     @pytest.mark.asyncio
     @pytest.mark.parametrize(
