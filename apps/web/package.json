@@ -124,7 +124,7 @@
     "tailwind-merge": "^3.3.1",
     "tailwindcss-animate": "^1.0.7",
     "tippy.js": "^6.3.7",
-    "unsplash-js": "^7.0.20",
+    "unsplash-js": "^8.0.0",
     "usehooks-ts": "^3.1.1",
     "uuid": "^14.0.0",
     "wavesurfer.js": "^7.12.1",
