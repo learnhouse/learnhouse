@@ -14,7 +14,7 @@ export function useDebounce<T>(valueOrCallback: T, delay: number): T {
       clearTimeout(timeoutRef.current);
     }
     timeoutRef.current = setTimeout(() => {
-      (callbackRef.current as (...a: any[]) => any)(...args);
+      (callbackRef.current as Function)(...args);
     }, delay);
   }, [delay]);
 
