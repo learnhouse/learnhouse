@@ -29,6 +29,7 @@ from src.db.courses.assignments import (
     AssignmentTaskCreate,
     AssignmentTaskRead,
     AssignmentTaskSubmission,
+    AssignmentTaskSubmissionCreate,
     AssignmentTaskSubmissionRead,
     AssignmentTaskSubmissionUpdate,
     AssignmentTaskTypeEnum,
@@ -46,6 +47,7 @@ from src.db.trails import Trail
 from src.db.users import APITokenUser
 from src.services.courses.activities.assignments import (
     _block_api_tokens,
+    _is_assignment_past_due,
     create_assignment,
     create_assignment_submission,
     create_assignment_task,
@@ -1307,6 +1309,73 @@ class TestUpdateAssignmentTaskSubmission:
             )
         assert result.assignment_task_submission_uuid == task_submission.assignment_task_submission_uuid
 
+    async def test_non_instructor_grade_and_feedback_stripped(
+        self, mock_request, db, regular_user, assignment_task, task_submission
+    ):
+        """Covers lines 1709-1718: a non-instructor updating their OWN task
+        submission has grade / feedback / assignment_task_id / assignment_type
+        forced to None so they cannot self-grade."""
+        original_grade = task_submission.grade  # 100
+        payload = AssignmentTaskSubmissionCreate(
+            assignment_task_submission_uuid=task_submission.assignment_task_submission_uuid,
+            user_id=regular_user.id,
+            activity_id=assignment_task.activity_id,
+            course_id=assignment_task.course_id,
+            chapter_id=assignment_task.chapter_id,
+            assignment_task_id=task_submission.assignment_task_id,
+            task_submission={"answer": "tampered"},
+            grade=5,
+            task_submission_grade_feedback="I deserve full marks",
+            assignment_type=AssignmentTaskTypeEnum.SHORT_ANSWER,
+        )
+        # is_instructor -> False; submission belongs to regular_user
+        with patch(_PATCH_RBAC, new_callable=AsyncMock), \
+             patch(_PATCH_AUTH_ROLES, new_callable=AsyncMock, return_value=False):
+            result = await update_assignment_task_submission(
+                mock_request,
+                task_submission.assignment_task_submission_uuid,
+                payload,
+                regular_user,
+                db,
+            )
+        # task_submission content WAS updated, but grade/feedback were NOT
+        assert result.task_submission == {"answer": "tampered"}
+        assert result.grade == original_grade
+        await db.refresh(task_submission)
+        assert task_submission.grade == original_grade
+        assert task_submission.task_submission_grade_feedback == "Correct"
+
+    async def test_non_instructor_other_users_submission_raises_403(
+        self, mock_request, db, admin_user, assignment_task, task_submission
+    ):
+        """Covers lines 1710-1714: non-instructor editing someone else's
+        submission is rejected with 403. task_submission belongs to
+        regular_user (id 2); we call as admin_user (id 1) but force
+        is_instructor -> False."""
+        payload = AssignmentTaskSubmissionCreate(
+            assignment_task_submission_uuid=task_submission.assignment_task_submission_uuid,
+            user_id=admin_user.id,
+            activity_id=assignment_task.activity_id,
+            course_id=assignment_task.course_id,
+            chapter_id=assignment_task.chapter_id,
+            assignment_task_id=task_submission.assignment_task_id,
+            task_submission={"answer": "hijack"},
+            grade=0,
+            task_submission_grade_feedback="",
+            assignment_type=AssignmentTaskTypeEnum.SHORT_ANSWER,
+        )
+        with patch(_PATCH_RBAC, new_callable=AsyncMock), \
+             patch(_PATCH_AUTH_ROLES, new_callable=AsyncMock, return_value=False):
+            with pytest.raises(HTTPException) as exc:
+                await update_assignment_task_submission(
+                    mock_request,
+                    task_submission.assignment_task_submission_uuid,
+                    payload,
+                    admin_user,
+                    db,
+                )
+        assert exc.value.status_code == 403
+
 
 # ---------------------------------------------------------------------------
 # delete_assignment_task_submission
@@ -1457,3 +1526,250 @@ class TestDeleteAssignmentSubmissionCertRevocation:
                 db,
             )
         assert result["message"] == "Assignment User Submission deleted"
+
+
+# ---------------------------------------------------------------------------
+# _is_assignment_past_due (lines 85-93)
+# ---------------------------------------------------------------------------
+
+
+from types import SimpleNamespace
+
+
+class TestIsAssignmentPastDue:
+    def test_past_iso_date_returns_true(self):
+        a = SimpleNamespace(due_date="2000-01-01")
+        assert _is_assignment_past_due(a) is True
+
+    def test_past_iso_datetime_returns_true(self):
+        a = SimpleNamespace(due_date="2000-01-01T12:00:00")
+        assert _is_assignment_past_due(a) is True
+
+    def test_future_iso_date_returns_false(self):
+        a = SimpleNamespace(due_date="2999-01-01")
+        assert _is_assignment_past_due(a) is False
+
+    def test_empty_string_returns_false(self):
+        assert _is_assignment_past_due(SimpleNamespace(due_date="")) is False
+
+    def test_whitespace_only_returns_false(self):
+        assert _is_assignment_past_due(SimpleNamespace(due_date="   ")) is False
+
+    def test_none_returns_false(self):
+        assert _is_assignment_past_due(SimpleNamespace(due_date=None)) is False
+
+    def test_missing_attribute_returns_false(self):
+        assert _is_assignment_past_due(SimpleNamespace()) is False
+
+    def test_garbage_string_returns_false(self):
+        assert _is_assignment_past_due(SimpleNamespace(due_date="not-a-date")) is False
+
+    def test_tz_aware_past_date_returns_true(self):
+        # tz-aware ISO string in the distant past -> stripped to naive -> past
+        a = SimpleNamespace(due_date="2000-01-01T00:00:00+00:00")
+        assert _is_assignment_past_due(a) is True
+
+
+# ---------------------------------------------------------------------------
+# Due-date enforcement (lines 1338-1342 + 1857-1861)
+# ---------------------------------------------------------------------------
+
+
+class TestDueDateEnforcement:
+    async def _set_due(self, db, assignment, due_date):
+        assignment.due_date = due_date
+        db.add(assignment)
+        await db.commit()
+        await db.refresh(assignment)
+
+    async def test_handle_task_submission_non_instructor_past_due_raises_403(
+        self, mock_request, db, assignment, assignment_task, regular_user
+    ):
+        await self._set_due(db, assignment, "2000-01-01")
+        obj = AssignmentTaskSubmissionUpdate(task_submission={"answer": "x"})
+        # is_instructor -> False, enrollment read -> True
+        with patch(_PATCH_RBAC, new_callable=AsyncMock), \
+             patch(_PATCH_AUTH_ROLES, new_callable=AsyncMock, side_effect=[False, True]):
+            with pytest.raises(HTTPException) as exc:
+                await handle_assignment_task_submission(
+                    mock_request, assignment_task.assignment_task_uuid, obj, regular_user, db
+                )
+        assert exc.value.status_code == 403
+        assert "deadline has passed" in exc.value.detail
+
+    async def test_handle_task_submission_instructor_past_due_allowed(
+        self, mock_request, db, assignment, assignment_task, admin_user
+    ):
+        await self._set_due(db, assignment, "2000-01-01")
+        obj = AssignmentTaskSubmissionUpdate(task_submission={"answer": "x"})
+        # is_instructor -> True bypasses the due-date check entirely
+        with patch(_PATCH_RBAC, new_callable=AsyncMock), \
+             patch(_PATCH_AUTH_ROLES, new_callable=AsyncMock, return_value=True):
+            result = await handle_assignment_task_submission(
+                mock_request, assignment_task.assignment_task_uuid, obj, admin_user, db
+            )
+        assert isinstance(result, AssignmentTaskSubmissionRead)
+
+    async def test_create_submission_non_instructor_past_due_raises_403(
+        self, mock_request, db, assignment, course, activity, regular_user
+    ):
+        await self._set_due(db, assignment, "2000-01-01")
+        with patch(_PATCH_RBAC, new_callable=AsyncMock), \
+             patch(_PATCH_AUTH_ROLES, new_callable=AsyncMock, return_value=False), \
+             patch(_PATCH_TRACK, new_callable=AsyncMock), \
+             patch(_PATCH_DISPATCH, new_callable=AsyncMock):
+            with pytest.raises(HTTPException) as exc:
+                await create_assignment_submission(
+                    mock_request, assignment.assignment_uuid, regular_user, db
+                )
+        assert exc.value.status_code == 403
+        assert "deadline has passed" in exc.value.detail
+
+    async def test_create_submission_instructor_past_due_allowed(
+        self, mock_request, db, assignment, course, activity, admin_user
+    ):
+        await self._set_due(db, assignment, "2000-01-01")
+        trail = Trail(
+            org_id=course.org_id,
+            user_id=admin_user.id,
+            trail_uuid="trail_pastdue_instructor",
+            creation_date=str(datetime.now()),
+            update_date=str(datetime.now()),
+        )
+        db.add(trail)
+        await db.commit()
+        await db.refresh(trail)
+        # is_instructor -> True; due-date check skipped, submission proceeds
+        with patch(_PATCH_RBAC, new_callable=AsyncMock), \
+             patch(_PATCH_TRAIL_PRESENCE, new_callable=AsyncMock, return_value=trail), \
+             patch(_PATCH_AUTH_ROLES, new_callable=AsyncMock, return_value=True), \
+             patch(_PATCH_CERT, new_callable=AsyncMock), \
+             patch(_PATCH_CERT_CHECK, new_callable=AsyncMock), \
+             patch(_PATCH_TRACK, new_callable=AsyncMock), \
+             patch(_PATCH_DISPATCH, new_callable=AsyncMock):
+            result = await create_assignment_submission(
+                mock_request, assignment.assignment_uuid, admin_user, db
+            )
+        assert result.submission_status == AssignmentUserSubmissionStatus.SUBMITTED
+
+    async def test_create_submission_non_instructor_no_due_date_allowed(
+        self, mock_request, db, assignment, course, activity, regular_user
+    ):
+        await self._set_due(db, assignment, "")
+        trail = Trail(
+            org_id=course.org_id,
+            user_id=regular_user.id,
+            trail_uuid="trail_nodue",
+            creation_date=str(datetime.now()),
+            update_date=str(datetime.now()),
+        )
+        db.add(trail)
+        await db.commit()
+        await db.refresh(trail)
+        with patch(_PATCH_RBAC, new_callable=AsyncMock), \
+             patch(_PATCH_TRAIL_PRESENCE, new_callable=AsyncMock, return_value=trail), \
+             patch(_PATCH_AUTH_ROLES, new_callable=AsyncMock, return_value=False), \
+             patch(_PATCH_CERT, new_callable=AsyncMock), \
+             patch(_PATCH_CERT_CHECK, new_callable=AsyncMock), \
+             patch(_PATCH_TRACK, new_callable=AsyncMock), \
+             patch(_PATCH_DISPATCH, new_callable=AsyncMock):
+            result = await create_assignment_submission(
+                mock_request, assignment.assignment_uuid, regular_user, db
+            )
+        assert result.submission_status == AssignmentUserSubmissionStatus.SUBMITTED
+
+
+# ---------------------------------------------------------------------------
+# update_assignment_submission — protected-field stripping (lines 2252-2254)
+# ---------------------------------------------------------------------------
+
+
+class TestUpdateAssignmentSubmissionProtectedFields:
+    """Covers the non-instructor protected-field stripping (lines 2252-2254).
+
+    NOTE: ``AssignmentUserSubmissionCreate`` only *declares* ``assignment_id``;
+    extra kwargs (grade/submission_status/user_id) are silently dropped by
+    pydantic, so ``assignment_id`` is the single protected field that actually
+    survives onto the payload object and exercises the ``hasattr``/``setattr``
+    stripping path. We assert via ``assignment_id`` reassignment, which is the
+    real exploit the strip guards against.
+    """
+
+    async def test_non_instructor_cannot_reassign_submission_to_another_assignment(
+        self, mock_request, db, org, course, chapter, activity, assignment,
+        user_submission, regular_user,
+    ):
+        original_assignment_id = user_submission.assignment_id  # 10
+        # A second assignment the attacker tries to move their submission onto.
+        other = Assignment(
+            id=11,
+            title="Other Assignment",
+            description="another",
+            due_date="2030-01-01",
+            published=True,
+            grading_type=GradingTypeEnum.NUMERIC,
+            auto_grading=False,
+            org_id=org.id,
+            course_id=course.id,
+            chapter_id=chapter.id,
+            activity_id=activity.id,
+            assignment_uuid="assignment_other",
+            creation_date=str(datetime.now()),
+            update_date=str(datetime.now()),
+        )
+        db.add(other)
+        await db.commit()
+
+        obj = AssignmentUserSubmissionCreate(assignment_id=other.id)
+        # is_instructor -> False; submission belongs to regular_user
+        with patch(_PATCH_RBAC, new_callable=AsyncMock), \
+             patch(_PATCH_AUTH_ROLES, new_callable=AsyncMock, return_value=False):
+            result = await update_assignment_submission(
+                mock_request,
+                regular_user.id,
+                assignment.assignment_uuid,
+                obj,
+                regular_user,
+                db,
+            )
+        # assignment_id was stripped to None -> NOT written; stays original
+        assert result.assignment_id == original_assignment_id
+        await db.refresh(user_submission)
+        assert user_submission.assignment_id == original_assignment_id
+
+    async def test_instructor_can_reassign_assignment_id(
+        self, mock_request, db, org, course, chapter, activity, assignment,
+        user_submission, admin_user, regular_user,
+    ):
+        other = Assignment(
+            id=12,
+            title="Other Assignment 2",
+            description="another",
+            due_date="2030-01-01",
+            published=True,
+            grading_type=GradingTypeEnum.NUMERIC,
+            auto_grading=False,
+            org_id=org.id,
+            course_id=course.id,
+            chapter_id=chapter.id,
+            activity_id=activity.id,
+            assignment_uuid="assignment_other2",
+            creation_date=str(datetime.now()),
+            update_date=str(datetime.now()),
+        )
+        db.add(other)
+        await db.commit()
+
+        obj = AssignmentUserSubmissionCreate(assignment_id=other.id)
+        # is_instructor -> True; assignment_id IS applied (not stripped)
+        with patch(_PATCH_RBAC, new_callable=AsyncMock), \
+             patch(_PATCH_AUTH_ROLES, new_callable=AsyncMock, return_value=True):
+            result = await update_assignment_submission(
+                mock_request,
+                regular_user.id,
+                assignment.assignment_uuid,
+                obj,
+                admin_user,
+                db,
+            )
+        assert result.assignment_id == other.id

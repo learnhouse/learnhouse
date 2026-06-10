@@ -130,6 +130,21 @@ class TestEmailUtilsService:
         ):
             assert _is_allowed_base_url("http://localhost:3000")
 
+    def test_is_allowed_base_url_skips_blank_configured_host_in_single_tenancy(self):
+        # Line 36: a blank/whitespace configured value (here frontend_domain) is
+        # skipped via `continue`; only the non-empty `domain` is honored.
+        with patch(
+            "src.services.email.utils.get_learnhouse_config",
+            return_value=_config(
+                tenancy="single",
+                frontend_domain="   ",
+                domain="learnhouse.app",
+            ),
+        ):
+            assert _is_allowed_base_url("https://learnhouse.app")
+            # The blank frontend_domain contributed no allowed host.
+            assert not _is_allowed_base_url("https://other.example.org")
+
     @pytest.mark.asyncio
     @pytest.mark.parametrize(
         "ssl,expected",

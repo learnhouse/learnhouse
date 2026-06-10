@@ -46,7 +46,10 @@ def _validate_local_path(file_path: str) -> Optional[str]:
 
     base_real = os.path.realpath(_CONTENT_ROOT)
     full_real = os.path.realpath(file_path)
-    if full_real != base_real and not full_real.startswith(base_real + os.sep):
+    try:
+        if os.path.commonpath([base_real, full_real]) != base_real:
+            return None
+    except ValueError:
         return None
 
     return file_path
