@@ -1,6 +1,6 @@
 from typing import Optional
 from sqlmodel import SQLModel, Field, Column, JSON
-from datetime import datetime
+from datetime import datetime, timezone
 
 
 class CodeSubmission(SQLModel, table=True):
@@ -18,7 +18,7 @@ class CodeSubmission(SQLModel, table=True):
     total_tests: int = 0
     passed_tests: int = 0
     execution_time_ms: Optional[int] = None
-    created_at: str = Field(default_factory=lambda: datetime.utcnow().isoformat())
+    created_at: str = Field(default_factory=lambda: datetime.now(timezone.utc).replace(tzinfo=None).isoformat())
 
 
 class CodeSubmissionRead(SQLModel):

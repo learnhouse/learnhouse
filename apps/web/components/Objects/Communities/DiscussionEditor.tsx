@@ -14,6 +14,34 @@ interface DiscussionEditorProps {
   minHeight?: string
 }
 
+// Defined at module level so React keeps the same component identity across
+// renders — defining it inside DiscussionEditor would remount every button
+// (and drop hover/focus state) on each keystroke.
+const ToolbarButton = ({
+  onClick,
+  isActive,
+  children,
+  title,
+}: {
+  onClick: () => void
+  isActive?: boolean
+  children: React.ReactNode
+  title: string
+}) => (
+  <button
+    type="button"
+    onClick={onClick}
+    title={title}
+    className={`p-1.5 rounded transition-colors ${
+      isActive
+        ? 'bg-gray-200 text-gray-900'
+        : 'text-gray-500 hover:bg-gray-100 hover:text-gray-700'
+    }`}
+  >
+    {children}
+  </button>
+)
+
 export function DiscussionEditor({
   content,
   onChange,
@@ -88,31 +116,6 @@ export function DiscussionEditor({
 
     editor.chain().focus().extendMarkRange('link').setLink({ href: url }).run()
   }
-
-  const ToolbarButton = ({
-    onClick,
-    isActive,
-    children,
-    title,
-  }: {
-    onClick: () => void
-    isActive?: boolean
-    children: React.ReactNode
-    title: string
-  }) => (
-    <button
-      type="button"
-      onClick={onClick}
-      title={title}
-      className={`p-1.5 rounded transition-colors ${
-        isActive
-          ? 'bg-gray-200 text-gray-900'
-          : 'text-gray-500 hover:bg-gray-100 hover:text-gray-700'
-      }`}
-    >
-      {children}
-    </button>
-  )
 
   return (
     <div className="discussion-editor">
