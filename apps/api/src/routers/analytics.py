@@ -161,8 +161,12 @@ def _parse_safe_params(
     default_days: int,
 ) -> tuple[int, int]:
     """Validate and return (safe_org_id, safe_days)."""
+    try:
+        safe_org_id = int(org_id)
+    except (ValueError, TypeError):
+        raise HTTPException(status_code=400, detail="Invalid org_id")
     days_param = request.query_params.get("days")
-    return int(org_id), _validate_days(days_param, default_days)
+    return safe_org_id, _validate_days(days_param, default_days)
 
 
 # ---------------------------------------------------------------------------
@@ -1139,12 +1143,10 @@ async def export_analytics(
     safe_org_id = int(org_id)
     safe_days   = _validate_days(request.query_params.get("days"), _MAX_SAFE_DAYS)
 
-    ts = datetime.now(timezone.utc).strftime("%Y%m%d_%H%M%S")
-
     # ── Course export: one row per user ───────────────────────────────────────
     if safe_course_uuid:
         flat = await _fetch_course_users_flat(safe_org_id, safe_days, safe_course_uuid, db_session, for_export=True)
-        label = f"course_{safe_course_uuid}_{ts}"
+        
 
         if fmt == "json":
             return flat
@@ -1168,8 +1170,6 @@ async def export_analytics(
         except HTTPException:
             result = {"data": [], "rows": 0, "meta": []}
         results[qname] = result
-
-    label = f"org_{safe_org_id}_{ts}"
 
     if fmt == "json":
         return results

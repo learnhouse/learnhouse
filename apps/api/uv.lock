@@ -897,7 +897,7 @@ requires-dist = [
     { name = "google-genai", specifier = "==2.8.0" },
     { name = "httpx", specifier = "==0.28.1" },
     { name = "llama-index-core", specifier = "==0.14.22" },
-    { name = "openpyxl", specifier = ">=3.1.5" },
+    { name = "openpyxl", specifier = ">=3.1.0" },
     { name = "pgvector", specifier = "==0.4.2" },
     { name = "protobuf", specifier = "==7.35.0" },
     { name = "psycopg2-binary", specifier = "==2.9.12" },

@@ -16,7 +16,6 @@ interface ExportAnalyticsButtonProps {
 
 export default function ExportAnalyticsButton({
   days,
-  queries,
   courseId,
 }: ExportAnalyticsButtonProps) {
   const { t } = useTranslation()
