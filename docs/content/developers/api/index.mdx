@@ -1,0 +1,50 @@
+import { Callout } from 'nextra/components'
+
+# API Reference
+
+The LearnHouse API is a RESTful service built with **FastAPI**. It powers all platform operations, from user authentication to course management and AI features. All endpoints are prefixed with `/api/v1/`.
+
+## Interactive Documentation
+
+<Callout type="warning">
+The interactive API documentation is only available when running in **development mode**. Production instances do not expose Swagger UI or the OpenAPI spec.
+</Callout>
+
+When running the development environment, auto-generated interactive API documentation is available:
+
+- **Swagger UI** -- Available at `/docs` (e.g., [http://localhost:1338/docs](http://localhost:1338/docs))
+
+These interfaces let you explore all available endpoints, view request and response schemas, and test API calls directly from your browser.
+
+## Base URL
+
+In local development, the API is available at:
+
+```
+http://localhost:1338/api/v1/
+```
+
+In production, the API is served behind a reverse proxy and is accessible at the root domain under `/api/v1/`.
+
+## Response Format
+
+All API responses are returned as JSON. Successful responses typically include the requested data directly, while error responses follow this structure:
+
+```json
+{
+  "detail": "Description of the error"
+}
+```
+
+## Sections
+
+- **[Authentication](/developers/api/authentication)** -- How to obtain and use authentication tokens.
+- **[Endpoints](/developers/api/endpoints)** -- Overview of the key API endpoint groups.
+
+## OpenAPI Specification
+
+Since the API is built with FastAPI, a machine-readable OpenAPI specification is available at `/openapi.json` on development instances. This can be used to generate client libraries or import into API testing tools.
+
+<Callout type="info">
+The OpenAPI spec at `/openapi.json` is only served in development mode.
+</Callout>

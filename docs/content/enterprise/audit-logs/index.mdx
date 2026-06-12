@@ -1,0 +1,47 @@
+import { Callout } from 'nextra/components'
+
+# Audit Logs
+
+Audit logs provide a detailed record of all actions taken on the platform, giving administrators full visibility into who did what and when. This is essential for compliance, security monitoring, and troubleshooting.
+
+<Callout>
+Audit logs require an Enterprise plan.
+</Callout>
+
+## What's Captured
+
+Every mutation (create, update, delete) on the platform is recorded with the following details:
+
+| Field | Description |
+|---|---|
+| User | Who performed the action (username and ID). |
+| Action | The HTTP method (POST, PUT, DELETE, PATCH). |
+| Resource | What was affected (e.g., `/courses`, `/users`). |
+| Resource ID | The specific item that was modified. |
+| Status code | The HTTP response status. |
+| IP address | The origin of the request. |
+| Timestamp | When the action occurred. |
+| Payload | The request body (with sensitive data scrubbed). |
+
+## Sensitive Data Handling
+
+Audit logs automatically scrub sensitive fields from request payloads before storing them. Fields like `password`, `token`, `secret`, and similar keys are redacted to prevent sensitive data from appearing in logs.
+
+## Filtering & Search
+
+You can filter audit logs by:
+
+- User (ID, username, or full name)
+- Action type
+- Resource type and ID
+- HTTP status code
+- IP address
+- Date range
+
+## CSV Export
+
+Audit logs can be exported as CSV files for offline analysis, compliance reporting, or integration with external SIEM tools.
+
+## Performance
+
+Audit log entries are buffered in Redis and flushed to the database in batches every 60 seconds. This ensures that logging does not impact platform performance, even under heavy usage.

@@ -1,0 +1,89 @@
+# Environment Variables
+
+The CLI generates a `.env` file during setup with all configuration variables. These can also be edited interactively with `npx learnhouse env`.
+
+## Domain & Hosting
+
+| Variable | Description | Example |
+| --- | --- | --- |
+| `LEARNHOUSE_DOMAIN` | Hostname | `localhost` |
+| `HTTP_PORT` | HTTP port for reverse proxy | `80` |
+| `NEXT_PUBLIC_LEARNHOUSE_API_URL` | Public API URL | `http://localhost/api/v1/` |
+| `NEXT_PUBLIC_LEARNHOUSE_BACKEND_URL` | Backend URL | `http://localhost` |
+| `NEXT_PUBLIC_LEARNHOUSE_DOMAIN` | Public domain | `localhost` |
+| `NEXT_PUBLIC_LEARNHOUSE_TOP_DOMAIN` | Top-level domain | `localhost` |
+| `NEXT_PUBLIC_LEARNHOUSE_MULTI_ORG` | Multi-org mode | `false` |
+| `NEXT_PUBLIC_LEARNHOUSE_DEFAULT_ORG` | Default org slug | `my-school` |
+| `NEXT_PUBLIC_LEARNHOUSE_HTTPS` | HTTPS enabled | `false` |
+
+## Database & Redis
+
+| Variable | Description | Example |
+| --- | --- | --- |
+| `LEARNHOUSE_SQL_CONNECTION_STRING` | PostgreSQL connection | `postgresql://learnhouse:pass@db:5432/learnhouse` |
+| `LEARNHOUSE_REDIS_CONNECTION_STRING` | Redis connection | `redis://redis:6379/learnhouse` |
+| `LEARNHOUSE_REDIS_URL` | Redis URL | `redis://redis:6379/learnhouse` |
+| `POSTGRES_USER` | Database user (local only) | `learnhouse` |
+| `POSTGRES_PASSWORD` | Database password (local only) | Auto-generated |
+| `POSTGRES_DB` | Database name (local only) | `learnhouse` |
+
+## Security & Authentication
+
+| Variable | Description | Example |
+| --- | --- | --- |
+| `LEARNHOUSE_AUTH_JWT_SECRET_KEY` | JWT signing key | Auto-generated |
+| `LEARNHOUSE_INITIAL_ADMIN_EMAIL` | First admin email | `admin@example.com` |
+| `LEARNHOUSE_INITIAL_ADMIN_PASSWORD` | First admin password | Set during setup |
+| `LEARNHOUSE_COOKIE_DOMAIN` | Cookie domain | `localhost` |
+| `COLLAB_INTERNAL_KEY` | Collaboration service key | Auto-generated |
+| `NEXTAUTH_SECRET` | NextAuth secret | Auto-generated |
+| `NEXTAUTH_URL` | NextAuth URL | `http://localhost` |
+
+## Application
+
+| Variable | Description | Example |
+| --- | --- | --- |
+| `LEARNHOUSE_PORT` | Internal API port | `9000` |
+| `LEARNHOUSE_DEVELOPMENT_MODE` | Dev mode flag | `False` |
+| `NEXT_PUBLIC_COLLAB_URL` | WebSocket collab URL | `ws://localhost/collab` |
+
+## AI
+
+| Variable | Description | Example |
+| --- | --- | --- |
+| `LEARNHOUSE_IS_AI_ENABLED` | Enable AI features | `True` / `False` |
+| `LEARNHOUSE_GEMINI_API_KEY` | Gemini API key | Your API key |
+
+## Email
+
+| Variable | Description | Example |
+| --- | --- | --- |
+| `LEARNHOUSE_EMAIL_PROVIDER` | Email provider | `resend` / `smtp` |
+| `LEARNHOUSE_SYSTEM_EMAIL_ADDRESS` | From address | `noreply@example.com` |
+| `LEARNHOUSE_RESEND_API_KEY` | Resend API key | Your API key |
+| `LEARNHOUSE_SMTP_HOST` | SMTP host | `smtp.gmail.com` |
+| `LEARNHOUSE_SMTP_PORT` | SMTP port | `587` |
+| `LEARNHOUSE_SMTP_USERNAME` | SMTP username | `user@example.com` |
+| `LEARNHOUSE_SMTP_PASSWORD` | SMTP password | Your password |
+| `LEARNHOUSE_SMTP_USE_TLS` | Enable TLS | `True` / `False` |
+
+## S3 Storage
+
+| Variable | Description | Example |
+| --- | --- | --- |
+| `LEARNHOUSE_CONTENT_DELIVERY_TYPE` | Storage type | `filesystem` / `s3api` |
+| `LEARNHOUSE_S3_API_BUCKET_NAME` | S3 bucket name | `my-bucket` |
+| `LEARNHOUSE_S3_API_ENDPOINT_URL` | S3 endpoint (optional for AWS) | `https://s3.amazonaws.com` |
+
+## OAuth
+
+| Variable | Description | Example |
+| --- | --- | --- |
+| `LEARNHOUSE_GOOGLE_CLIENT_ID` | Google OAuth client ID | Your client ID |
+| `LEARNHOUSE_GOOGLE_CLIENT_SECRET` | Google OAuth client secret | Your secret |
+
+## Unsplash
+
+| Variable | Description | Example |
+| --- | --- | --- |
+| `NEXT_PUBLIC_UNSPLASH_ACCESS_KEY` | Unsplash API key | Your access key |

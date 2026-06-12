@@ -1,0 +1,71 @@
+import { Callout } from 'nextra/components'
+
+# CLI
+
+The LearnHouse CLI is the primary tool for deploying, managing, and developing LearnHouse. It orchestrates Docker Compose services and provides an interactive setup wizard for production deployments, as well as a full local development environment.
+
+<img src="/img/pages/cli/cli-screenshot.png" alt="LearnHouse CLI" style={{ borderRadius: '12px', marginTop: '1rem' }} />
+
+**Package**: [`learnhouse`](https://www.npmjs.com/package/learnhouse) on npm
+
+## Installation
+
+### Quick Start (recommended)
+
+```bash
+npx learnhouse@latest setup
+```
+
+### One-line Install (macOS / Linux)
+
+Installs Docker, Node.js, and launches the CLI:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/learnhouse/learnhouse/main/apps/cli/install.sh | bash
+```
+
+### Windows (PowerShell)
+
+```powershell
+irm https://raw.githubusercontent.com/learnhouse/learnhouse/main/apps/cli/install.ps1 | iex
+```
+
+## Requirements
+
+- **Node.js** 18+
+- **Docker** with Docker Compose v2
+
+## What It Does
+
+The CLI handles two main workflows:
+
+### Production Deployment
+
+The [setup wizard](/cli/setup-wizard) generates a complete Docker Compose deployment with:
+
+- **LearnHouse app** container (Next.js + FastAPI)
+- **PostgreSQL** database (with optional pgvector for AI)
+- **Redis** cache
+- **Caddy** or **Nginx** reverse proxy (with optional auto-SSL)
+
+Each deployment gets a unique ID, allowing multiple instances on the same machine.
+
+### Local Development
+
+The [`dev` command](/cli/dev-mode) starts infrastructure in Docker and runs the API, web, and collaboration servers locally with hot reload.
+
+## Quick Reference
+
+| Command | Description |
+| --- | --- |
+| `npx learnhouse setup` | Interactive setup wizard |
+| `npx learnhouse start` | Start all services |
+| `npx learnhouse stop` | Stop all services |
+| `npx learnhouse logs` | Stream container logs |
+| `npx learnhouse doctor` | Run diagnostics |
+| `npx learnhouse backup` | Backup database |
+| `npx learnhouse dev` | Start dev environment |
+
+<Callout type="info">
+See [Commands](/cli/commands) for the full reference.
+</Callout>

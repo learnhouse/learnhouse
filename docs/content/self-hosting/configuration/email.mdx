@@ -1,0 +1,79 @@
+import { Callout } from 'nextra/components'
+
+# Email Configuration
+
+LearnHouse supports two email providers for transactional email delivery: **Resend** and **SMTP**. Email is used for user invitations, password resets, and system notifications.
+
+## Choosing a Provider
+
+Set the email provider in your `.env` file using the `LEARNHOUSE_EMAIL_PROVIDER` variable:
+
+```env
+LEARNHOUSE_EMAIL_PROVIDER=resend   # or "smtp"
+```
+
+## Option 1: Resend
+
+[Resend](https://resend.com) is a developer-friendly email API service.
+
+```env
+LEARNHOUSE_EMAIL_PROVIDER=resend
+LEARNHOUSE_RESEND_API_KEY=re_your-resend-api-key
+LEARNHOUSE_SYSTEM_EMAIL_ADDRESS=noreply@example.com
+```
+
+### Getting a Resend API Key
+
+1. Create an account at [resend.com](https://resend.com)
+2. Add and verify your sending domain
+3. Generate an API key from the Resend dashboard
+4. Copy the API key into your `.env` file
+
+## Option 2: SMTP
+
+You can use any SMTP server, including services like Amazon SES, Mailgun, or your own mail server.
+
+```env
+LEARNHOUSE_EMAIL_PROVIDER=smtp
+LEARNHOUSE_SMTP_HOST=smtp.example.com
+LEARNHOUSE_SMTP_PORT=587
+LEARNHOUSE_SMTP_USERNAME=user@example.com
+LEARNHOUSE_SMTP_PASSWORD=your-smtp-password
+LEARNHOUSE_SMTP_USE_TLS=true
+LEARNHOUSE_SYSTEM_EMAIL_ADDRESS=noreply@example.com
+```
+
+### SMTP Variables
+
+| Variable | Description | Default |
+|---|---|---|
+| `LEARNHOUSE_SMTP_HOST` | SMTP server hostname | -- |
+| `LEARNHOUSE_SMTP_PORT` | SMTP server port | `587` |
+| `LEARNHOUSE_SMTP_USERNAME` | SMTP authentication username | -- |
+| `LEARNHOUSE_SMTP_PASSWORD` | SMTP authentication password | -- |
+| `LEARNHOUSE_SMTP_USE_TLS` | Enable TLS encryption | `true` |
+
+## Applying Changes
+
+After updating your email configuration, restart your instance:
+
+```bash
+learnhouse stop
+learnhouse start
+```
+
+## System Email Address
+
+The `LEARNHOUSE_SYSTEM_EMAIL_ADDRESS` is the "from" address used for all outgoing emails. When using Resend, this address must belong to a domain that is verified in your Resend account. When using SMTP, ensure the address is permitted by your SMTP server.
+
+<Callout type="info">
+If email is not configured, features like user invitations and password resets will not work. Users can still be created manually by an administrator.
+</Callout>
+
+## What Emails Are Sent
+
+LearnHouse sends the following types of email:
+
+- **User invitations** -- when an admin invites a user to join the platform or an organization
+- **Password resets** -- when a user requests a password reset
+- **System notifications** -- important system-level notifications

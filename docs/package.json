@@ -1,0 +1,32 @@
+{
+  "name": "learnhouse-docs",
+  "version": "0.1.0",
+  "scripts": {
+    "dev": "next dev",
+    "build": "node scripts/generate-llms-full.mjs && next build",
+    "postbuild": "pagefind --site .next/server/app --output-path public/_pagefind && next-sitemap",
+    "start": "next start",
+    "lint": "next lint"
+  },
+  "dependencies": {
+    "@icons-pack/react-simple-icons": "^13.12.0",
+    "@phosphor-icons/react": "^2.1.10",
+    "@vercel/analytics": "^2.0.1",
+    "@xyflow/react": "^12.10.1",
+    "next": "16.2.4",
+    "next-sitemap": "^4.2.3",
+    "nextra": "^4.6.1",
+    "nextra-theme-docs": "^4.6.1",
+    "posthog-js": "^1.360.2",
+    "react": "^19.2.4",
+    "react-dom": "^19.2.4"
+  },
+  "devDependencies": {
+    "@tailwindcss/postcss": "^4.2.1",
+    "@types/node": "25.6.0",
+    "@types/react": "19.2.14",
+    "pagefind": "^1.4.0",
+    "tailwindcss": "^4.2.1",
+    "typescript": "6.0.3"
+  }
+}

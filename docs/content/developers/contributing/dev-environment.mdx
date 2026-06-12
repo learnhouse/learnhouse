@@ -1,0 +1,64 @@
+import { Callout } from 'nextra/components'
+
+# Development Environment Setup
+
+The LearnHouse CLI provides a streamlined way to set up and run the entire development environment with a single command.
+
+## Prerequisites
+
+Make sure you have the following installed before proceeding:
+
+- **Docker** (with Docker Compose v2)
+- **Node.js 18+**
+- **[Bun](https://bun.sh/)** — used to install and run the web and collab workspaces
+- **[uv](https://docs.astral.sh/uv/)** — used to manage and run the Python API
+
+<Callout type="warning">
+Make sure Docker has at least **4GB of RAM** allocated. You can check and adjust this in Docker Desktop under Settings &gt; Resources.
+</Callout>
+
+<Callout type="info">
+`npx learnhouse dev` runs `bun install` and `uv sync` to install project dependencies, but it does **not** install `bun` or `uv` themselves — install them on your host first.
+</Callout>
+
+## Setup Steps
+
+### 1. Clone the Repository and Start Development
+
+```bash
+git clone https://github.com/learnhouse/learnhouse && cd learnhouse && npx learnhouse dev
+```
+
+That single command handles everything:
+
+- **Starts backing services** -- PostgreSQL and Redis are launched via Docker Compose.
+- **Installs dependencies** -- Python dependencies are installed via `uv` and JavaScript dependencies via `bun`, all automatically.
+- **Starts the API** -- The FastAPI backend starts on port 1338 with hot reload.
+- **Starts the frontend** -- The Next.js development server starts with `--turbopack` and hot reload.
+- **Starts the collaboration server** -- The Hocuspocus collaboration server starts via `tsx watch`.
+
+All services are coordinated automatically so you do not need to manage them individually.
+
+## Accessing the Application
+
+Once `npx learnhouse dev` is running, you can access:
+
+| Service | URL |
+| --- | --- |
+| Frontend | [http://localhost:3000](http://localhost:3000) |
+| API | [http://localhost:1338](http://localhost:1338) |
+| API Documentation (Swagger) | [http://localhost:1338/docs](http://localhost:1338/docs) |
+
+<Callout type="info">
+The Swagger UI at `/docs` is only available in development mode. Production instances do not expose the interactive API documentation.
+</Callout>
+
+## Stopping the Environment
+
+Press `Ctrl+C` in the terminal where `npx learnhouse dev` is running to stop all services.
+
+## Troubleshooting
+
+- **Port conflicts** -- Make sure ports 3000 (web), 1338 (API), 4000 (collab), 5432 (Postgres), and 6379 (Redis) are not in use by other applications.
+- **Docker not running** -- Ensure the Docker daemon is started before running `npx learnhouse dev`.
+- **Dependency issues** -- The CLI installs all dependencies automatically. If you encounter issues, try deleting `node_modules` and `.venv` directories and re-running `npx learnhouse dev`.
