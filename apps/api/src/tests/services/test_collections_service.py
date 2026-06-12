@@ -178,6 +178,31 @@ class TestCreateCollection:
 
         assert exc_info.value.status_code == 403
 
+    @pytest.mark.asyncio
+    async def test_create_collection_rejects_course_from_other_org_403(
+        self, db, org, other_org, admin_user, mock_request, bypass_rbac,
+        bypass_webhooks,
+    ):
+        """Covers line 109-114: a course whose org_id != collection.org_id is
+        rejected with 403 (cross-org course cannot be added)."""
+        foreign_course = await _make_course(
+            db, other_org, id=900, name="Foreign Course",
+            course_uuid="course_foreign_create",
+        )
+        payload = CollectionCreate(
+            name="Cross Org Collection",
+            description="",
+            public=True,
+            courses=[foreign_course.id],
+            org_id=org.id,
+        )
+
+        with pytest.raises(HTTPException) as exc_info:
+            await create_collection(mock_request, payload, admin_user, db)
+
+        assert exc_info.value.status_code == 403
+        assert "does not belong to this organization" in exc_info.value.detail
+
 
 class TestUpdateCollection:
     """Tests for update_collection()."""
@@ -194,6 +219,40 @@ class TestUpdateCollection:
         )
 
         assert result.name == "Updated Name"
+
+    @pytest.mark.asyncio
+    async def test_update_collection_skips_course_from_other_org(
+        self, db, org, other_org, course, collection, admin_user, mock_request,
+        bypass_rbac,
+    ):
+        """Covers line 204-205: a course whose org_id != collection.org_id is
+        silently skipped (not linked) on update."""
+        foreign_course = await _make_course(
+            db, other_org, id=901, name="Foreign Course Update",
+            course_uuid="course_foreign_update",
+        )
+        # Ask to set the collection's courses to [same-org course, foreign course]
+        payload = CollectionUpdate(
+            name="Updated With Foreign",
+            courses=[course.id, foreign_course.id],
+        )
+
+        result = await update_collection(
+            mock_request, payload, "collection_test", admin_user, db
+        )
+
+        result_course_ids = {c.id for c in result.courses}
+        # same-org course linked, foreign one skipped
+        assert course.id in result_course_ids
+        assert foreign_course.id not in result_course_ids
+        # Confirm no join row was created for the foreign course
+        link = (await db.execute(
+            select(CollectionCourse).where(
+                CollectionCourse.collection_id == collection.id,
+                CollectionCourse.course_id == foreign_course.id,
+            )
+        )).scalars().first()
+        assert link is None
 
     @pytest.mark.asyncio
     async def test_update_collection_not_found(

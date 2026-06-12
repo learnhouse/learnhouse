@@ -45,6 +45,49 @@ def reset_storage_utils_state():
     storage_utils._s3_client = None
 
 
+class TestValidateLocalPath:
+    """Direct tests for _validate_local_path (security gate for local reads)."""
+
+    def test_rejects_empty_and_nul_byte(self):
+        # Line 38: empty or NUL-containing paths are rejected outright.
+        assert storage_utils._validate_local_path("") is None
+        assert storage_utils._validate_local_path("content/file\x00.txt") is None
+
+    def test_rejects_absolute_and_traversal(self):
+        assert storage_utils._validate_local_path("/etc/passwd") is None
+        assert storage_utils._validate_local_path("../../etc/passwd") is None
+        assert storage_utils._validate_local_path("content/../../etc/passwd") is None
+
+    def test_accepts_contained_relative_path(self, tmp_path, monkeypatch):
+        # Resolve under the content root so commonpath containment holds.
+        monkeypatch.chdir(tmp_path)
+        content_dir = tmp_path / "content"
+        content_dir.mkdir()
+        (content_dir / "ok.txt").write_text("data")
+
+        assert storage_utils._validate_local_path("content/ok.txt") == "content/ok.txt"
+
+    def test_rejects_path_escaping_content_root(self, tmp_path, monkeypatch):
+        # A path that normalizes inside but realpath-escapes the content root
+        # is rejected by the commonpath check (lines 50-51).
+        monkeypatch.chdir(tmp_path)
+        (tmp_path / "content").mkdir()
+        # "sibling/file" resolves to tmp_path/sibling/file which is NOT under
+        # tmp_path/content.
+        assert storage_utils._validate_local_path("sibling/file.txt") is None
+
+    def test_rejects_when_commonpath_raises_value_error(self, tmp_path, monkeypatch):
+        # Lines 52-53: os.path.commonpath raises ValueError (e.g. mixed drives on
+        # Windows) -> treated as unsafe and rejected.
+        monkeypatch.chdir(tmp_path)
+        (tmp_path / "content").mkdir()
+        with patch(
+            "src.services.courses.transfer.storage_utils.os.path.commonpath",
+            side_effect=ValueError("paths don't have the same drive"),
+        ):
+            assert storage_utils._validate_local_path("content/ok.txt") is None
+
+
 class TestStorageClientHelpers:
     def test_cached_config_helpers_cover_delivery_bucket_and_s3_flag(self):
         with patch.object(
@@ -131,17 +174,21 @@ class TestStorageClientHelpers:
 
 
 class TestFileReadAndExistenceHelpers:
-    def test_read_file_content_covers_filesystem_and_s3_fallbacks(self, tmp_path):
-        local_file = tmp_path / "content.txt"
-        local_file.write_bytes(b"local-bytes")
+    def test_read_file_content_covers_filesystem_and_s3_fallbacks(self, tmp_path, monkeypatch):
+        monkeypatch.chdir(tmp_path)
+        content_dir = tmp_path / "content"
+        content_dir.mkdir()
+        (content_dir / "content.txt").write_bytes(b"local-bytes")
 
         with patch.object(
             storage_utils,
             "get_content_delivery_type",
             return_value="filesystem",
         ):
-            assert storage_utils.read_file_content(str(local_file)) == b"local-bytes"
-            assert storage_utils.read_file_content(str(tmp_path / "missing.txt")) is None
+            assert storage_utils.read_file_content("content/content.txt") == b"local-bytes"
+            assert storage_utils.read_file_content("content/missing.txt") is None
+            assert storage_utils.read_file_content("content/../../etc/passwd") is None
+            assert storage_utils.read_file_content("/etc/passwd") is None
 
         body = Mock()
         body.read.return_value = b"s3-bytes"

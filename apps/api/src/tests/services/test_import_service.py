@@ -25,6 +25,7 @@ from src.services.courses.transfer.import_service import (
     _import_block,
     _import_chapter,
     _import_single_course,
+    _safe_manifest_join,
     analyze_import_package,
     cleanup_old_temp_imports,
     import_courses,
@@ -85,6 +86,126 @@ class TestImportHelpers:
             result = sanitize_path("course/file.txt")
 
         assert result == ""
+
+    def test_safe_manifest_join_rejects_none_and_empty(self, tmp_path):
+        # Lines 103, 106: None / non-str / empty-after-sanitize -> None.
+        assert _safe_manifest_join(str(tmp_path), None) is None
+        assert _safe_manifest_join(str(tmp_path), "") is None
+        assert _safe_manifest_join(str(tmp_path), 123) is None  # type: ignore[arg-type]
+        # ".." sanitizes to "" -> None
+        assert _safe_manifest_join(str(tmp_path), "..") is None
+
+    def test_safe_manifest_join_strips_traversal_to_contained_path(self, tmp_path):
+        # sanitize_path strips leading "../" components, so "../escape" becomes
+        # the contained "escape" under extract_dir rather than escaping it.
+        result = _safe_manifest_join(str(tmp_path), "../escape")
+        assert result == os.path.join(str(tmp_path), "escape")
+        assert os.path.realpath(result).startswith(os.path.realpath(str(tmp_path)))
+
+        result2 = _safe_manifest_join(str(tmp_path), "../../etc/passwd")
+        assert result2 == os.path.join(str(tmp_path), "etc/passwd")
+
+    def test_safe_manifest_join_returns_contained_path(self, tmp_path):
+        result = _safe_manifest_join(str(tmp_path), "course/file.txt")
+        assert result == os.path.join(str(tmp_path), "course/file.txt")
+        # The joined path stays inside extract_dir.
+        assert os.path.realpath(result).startswith(os.path.realpath(str(tmp_path)))
+
+    def test_safe_manifest_join_rejects_when_commonpath_mismatch(self, tmp_path):
+        # Line 112: commonpath resolves outside extract_dir -> None.
+        with patch(
+            "src.services.courses.transfer.import_service.os.path.commonpath",
+            return_value="/some/other/root",
+        ):
+            assert _safe_manifest_join(str(tmp_path), "course/file.txt") is None
+
+    def test_safe_manifest_join_rejects_when_commonpath_raises(self, tmp_path):
+        # Lines 113-114: ValueError from commonpath -> treated as unsafe -> None.
+        with patch(
+            "src.services.courses.transfer.import_service.os.path.commonpath",
+            side_effect=ValueError("mixed drives"),
+        ):
+            assert _safe_manifest_join(str(tmp_path), "course/file.txt") is None
+
+    @pytest.mark.asyncio
+    @pytest.mark.parametrize("bad_path", ["", "/extract/../../etc"])
+    async def test_import_single_course_rejects_unsafe_course_path(
+        self, db, org, admin_user, bad_path
+    ):
+        # Line 503: empty or '..'-containing course_path is refused with 400
+        # before any file is opened.
+        with pytest.raises(HTTPException) as exc:
+            await _import_single_course(
+                course_path=bad_path,
+                organization=org,
+                current_user=admin_user,
+                options=ImportOptions(course_uuids=["c1"]),
+                db_session=db,
+                new_course_uuid="c1-new",
+            )
+        assert exc.value.status_code == 400
+        assert "Invalid course path" in exc.value.detail
+
+    @pytest.mark.asyncio
+    async def test_analyze_import_package_skips_unsafe_manifest_course_path(
+        self, db, org, admin_user, mock_request, tmp_path, monkeypatch
+    ):
+        # Line 280: a manifest course path that _safe_manifest_join rejects
+        # (".." sanitizes to "" -> None) is skipped -> no valid courses.
+        _set_import_temp_dir(monkeypatch, tmp_path)
+        manifest = {
+            "format": "learnhouse-course-export",
+            "version": "2.0.0",
+            "courses": [{"course_uuid": "c1", "path": ".."}],
+        }
+        package_bytes = _zip_bytes({"manifest.json": json.dumps(manifest).encode()})
+
+        with patch(
+            "src.services.courses.transfer.import_service.check_resource_access",
+            new_callable=AsyncMock,
+        ):
+            with pytest.raises(HTTPException) as exc:
+                await analyze_import_package(
+                    mock_request, _upload_file(package_bytes), org.id, admin_user, db
+                )
+
+        assert exc.value.status_code == 400
+        assert "No valid courses found" in exc.value.detail
+
+    @pytest.mark.asyncio
+    async def test_analyze_import_package_skips_entry_on_commonpath_valueerror(
+        self, db, org, admin_user, mock_request, tmp_path, monkeypatch
+    ):
+        # Lines 240-241: a ValueError from commonpath during extraction is
+        # treated as "not contained" so the entry is skipped (defense in depth).
+        _set_import_temp_dir(monkeypatch, tmp_path)
+        manifest = {
+            "format": "learnhouse-course-export",
+            "version": "2.0.0",
+            "courses": [{"course_uuid": "c1", "path": "c1"}],
+        }
+        package_bytes = _zip_bytes(
+            {
+                "manifest.json": json.dumps(manifest).encode(),
+                "c1/course.json": json.dumps({"course_uuid": "c1", "name": "X"}).encode(),
+            }
+        )
+
+        with patch(
+            "src.services.courses.transfer.import_service.check_resource_access",
+            new_callable=AsyncMock,
+        ), patch(
+            "src.services.courses.transfer.import_service.os.path.commonpath",
+            side_effect=ValueError("mixed drives"),
+        ):
+            with pytest.raises(HTTPException) as exc:
+                await analyze_import_package(
+                    mock_request, _upload_file(package_bytes), org.id, admin_user, db
+                )
+
+        # Every entry skipped → manifest.json is never written to disk.
+        assert exc.value.status_code == 400
+        assert "manifest.json not found" in exc.value.detail
 
     @pytest.mark.asyncio
     async def test_analyze_import_package_rejects_oversized_package(

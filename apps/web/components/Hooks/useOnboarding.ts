@@ -1,5 +1,5 @@
 'use client'
-import { useState, useCallback, useEffect, useRef } from 'react'
+import { useState, useCallback, useEffect } from 'react'
 
 export type OnboardingStep = {
   id: string
@@ -79,7 +79,9 @@ function loadState(): OnboardingState {
         welcomeSeen: parsed.welcomeSeen || false,
       }
     }
-  } catch {}
+  } catch {
+    /* ignore */
+  }
   return { completedSteps: [], skippedSteps: [], minimized: false, expanded: false, showAllSteps: false, dismissed: false, welcomeSeen: false }
 }
 
@@ -87,27 +89,35 @@ function saveState(state: OnboardingState) {
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(state))
     window.dispatchEvent(new Event('lh_onboarding_change'))
-  } catch {}
+  } catch {
+    /* ignore */
+  }
 }
 
 export function useOnboarding() {
   const [state, setState] = useState<OnboardingState>(loadState)
-  const isExternalUpdate = useRef(false)
 
-  // Sync to localStorage on every change (skip if update came from listener)
-  useEffect(() => {
-    if (isExternalUpdate.current) {
-      isExternalUpdate.current = false
-      return
-    }
-    saveState(state)
-  }, [state])
+  const applyLocalChange = useCallback(
+    (updater: (_prev: OnboardingState) => OnboardingState) => {
+      setState((prev) => {
+        const next = updater(prev)
+        if (next !== prev) {
+          saveState(next)
+        }
+        return next
+      })
+    },
+    []
+  )
 
   // Listen for changes from other instances of this hook
   useEffect(() => {
     const handler = () => {
-      isExternalUpdate.current = true
-      setState(loadState())
+      setState((prev) => {
+        const loaded = loadState()
+        if (JSON.stringify(loaded) === JSON.stringify(prev)) return prev
+        return loaded
+      })
     }
     window.addEventListener('lh_onboarding_change', handler)
     return () => window.removeEventListener('lh_onboarding_change', handler)
@@ -125,42 +135,42 @@ export function useOnboarding() {
   const progress = steps.length > 0 ? steps.filter((s) => s.completed).length / steps.length : 0
 
   const completeStep = useCallback((stepId: string) => {
-    setState((prev) => {
+    applyLocalChange((prev) => {
       if (prev.completedSteps.includes(stepId)) return prev
       return { ...prev, completedSteps: [...prev.completedSteps, stepId] }
     })
-  }, [])
+  }, [applyLocalChange])
 
   const toggleMinimized = useCallback(() => {
-    setState((prev) => ({ ...prev, minimized: !prev.minimized }))
-  }, [])
+    applyLocalChange((prev) => ({ ...prev, minimized: !prev.minimized }))
+  }, [applyLocalChange])
 
   const toggleExpanded = useCallback(() => {
-    setState((prev) => ({ ...prev, expanded: !prev.expanded }))
-  }, [])
+    applyLocalChange((prev) => ({ ...prev, expanded: !prev.expanded }))
+  }, [applyLocalChange])
 
   const toggleShowAllSteps = useCallback(() => {
-    setState((prev) => ({ ...prev, showAllSteps: !prev.showAllSteps }))
-  }, [])
+    applyLocalChange((prev) => ({ ...prev, showAllSteps: !prev.showAllSteps }))
+  }, [applyLocalChange])
 
   const dismiss = useCallback(() => {
-    setState((prev) => ({ ...prev, dismissed: true }))
-  }, [])
+    applyLocalChange((prev) => (prev.dismissed ? prev : { ...prev, dismissed: true }))
+  }, [applyLocalChange])
 
   const markWelcomeSeen = useCallback(() => {
-    setState((prev) => ({ ...prev, welcomeSeen: true }))
-  }, [])
+    applyLocalChange((prev) => (prev.welcomeSeen ? prev : { ...prev, welcomeSeen: true }))
+  }, [applyLocalChange])
 
   const skipStep = useCallback((stepId: string) => {
-    setState((prev) => {
+    applyLocalChange((prev) => {
       if (prev.skippedSteps.includes(stepId)) return prev
       return { ...prev, skippedSteps: [...prev.skippedSteps, stepId] }
     })
-  }, [])
+  }, [applyLocalChange])
 
   const reset = useCallback(() => {
-    setState({ completedSteps: [], skippedSteps: [], minimized: false, expanded: false, showAllSteps: false, dismissed: false, welcomeSeen: false })
-  }, [])
+    applyLocalChange(() => ({ completedSteps: [], skippedSteps: [], minimized: false, expanded: false, showAllSteps: false, dismissed: false, welcomeSeen: false }))
+  }, [applyLocalChange])
 
   return {
     steps,

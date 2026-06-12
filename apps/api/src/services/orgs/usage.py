@@ -112,6 +112,9 @@ async def get_org_usage_and_limits(
     members_limit = members_resolved["limit"]
     members_plan_limit = 0 if mode != 'saas' else get_plan_limit(org_plan, "members")
     members_purchased = 0 if mode != 'saas' else get_purchased_member_seats(org_id)
+    # admin_seats is not a resolvable feature in resolve_feature() (it has no
+    # plan feature config), so resolve_feature would return limit=0 -> wrongly
+    # reported as "unlimited". Read the real per-plan limit directly.
     admin_seats_limit = 0 if mode != 'saas' else get_plan_limit(org_plan, "admin_seats")
 
     def calc_remaining(usage: int, limit: int) -> int | str:

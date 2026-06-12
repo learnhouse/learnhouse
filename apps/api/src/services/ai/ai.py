@@ -442,16 +442,20 @@ async def ai_start_activity_chat_session_stream(
     # Atomic credit reservation to prevent concurrent over-use.
     await reserve_ai_credit(org.id, db_session)
 
-    chat_session = get_chat_session_history()
+    try:
+        chat_session = get_chat_session_history()
 
-    message = "You are a helpful Education Assistant, and you are helping a student with the associated Course. "
-    message += "Use the course content provided to answer questions about the course material."
-    message += "For context, this is the Course name: "
-    message += course.name
-    message += " and this is the Lecture name: "
-    message += activity.name
-    message += "."
-    message += "Use your knowledge to help the student if the context is not enough."
+        message = "You are a helpful Education Assistant, and you are helping a student with the associated Course. "
+        message += "Use the course content provided to answer questions about the course material."
+        message += "For context, this is the Course name: "
+        message += course.name
+        message += " and this is the Lecture name: "
+        message += activity.name
+        message += "."
+        message += "Use your knowledge to help the student if the context is not enough."
+    except Exception:
+        refund_ai_credit(org.id)
+        raise
 
     return {
         "chat_session": chat_session,
@@ -487,16 +491,20 @@ async def ai_send_activity_chat_message_stream(
     # Atomic credit reservation to prevent concurrent over-use.
     await reserve_ai_credit(org.id, db_session)
 
-    chat_session = get_chat_session_history(chat_session_object.aichat_uuid)
+    try:
+        chat_session = get_chat_session_history(chat_session_object.aichat_uuid)
 
-    message = "You are a helpful Education Assistant, and you are helping a student with the associated Course. "
-    message += "Use the course content provided to answer questions about the course material."
-    message += "For context, this is the Course name: "
-    message += course.name
-    message += " and this is the Lecture name: "
-    message += activity.name
-    message += "."
-    message += "Use your knowledge to help the student if the context is not enough."
+        message = "You are a helpful Education Assistant, and you are helping a student with the associated Course. "
+        message += "Use the course content provided to answer questions about the course material."
+        message += "For context, this is the Course name: "
+        message += course.name
+        message += " and this is the Lecture name: "
+        message += activity.name
+        message += "."
+        message += "Use your knowledge to help the student if the context is not enough."
+    except Exception:
+        refund_ai_credit(org.id)
+        raise
 
     return {
         "chat_session": chat_session,

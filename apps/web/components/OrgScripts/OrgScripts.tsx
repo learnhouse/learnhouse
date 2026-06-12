@@ -4,6 +4,14 @@ import React, { useEffect } from 'react'
 import { useOrg } from '@/components/Contexts/OrgContext'
 import DOMPurify from 'dompurify'
 
+if (typeof window !== 'undefined') {
+  DOMPurify.addHook('afterSanitizeAttributes', function (node) {
+    if (node.nodeName === 'SCRIPT') {
+      node.setAttribute('type', 'text/javascript')
+    }
+  })
+}
+
 const OrgScripts: React.FC = () => {
   const org = useOrg() as any
 
@@ -41,12 +49,6 @@ const OrgScripts: React.FC = () => {
     if (typeof window === 'undefined') {
       return content;
     }
-
-    DOMPurify.addHook('afterSanitizeAttributes', function(node) {
-      if (node.nodeName === 'SCRIPT') {
-        node.setAttribute('type', 'text/javascript');
-      }
-    });
 
     const purifyConfig = {
       ALLOWED_TAGS: ['script'],

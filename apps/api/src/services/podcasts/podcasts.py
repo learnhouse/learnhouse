@@ -16,6 +16,7 @@ from src.security.features_utils.usage import (
 from src.db.resource_authors import ResourceAuthor, ResourceAuthorshipEnum, ResourceAuthorshipStatusEnum
 from src.db.users import PublicUser, AnonymousUser, User, UserRead, APITokenUser
 from src.security.auth import resolve_acting_user_id
+from src.security.org_auth import require_org_membership
 from src.db.podcasts.podcasts import (
     Podcast,
     PodcastCreate,
@@ -468,6 +469,10 @@ async def create_podcast(
 
     # SECURITY: Check if user has permission to create podcasts
     await check_resource_access(request, db_session, current_user, "podcast_x", AccessAction.CREATE)
+
+    await require_org_membership(
+        resolve_acting_user_id(current_user), org_id, db_session
+    )
 
     # Check plan access (podcasts require standard+ plan)
     await check_feature_access("podcasts", org_id, db_session)

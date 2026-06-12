@@ -24,6 +24,7 @@ import httpx
 from src.services.analytics.analytics import track
 from src.services.analytics.cache import get_cached_result, set_cached_result
 from src.services.analytics.events import ALLOWED_FRONTEND_EVENTS
+from src.services.orgs.users import _csv_safe
 from src.services.analytics.queries import (
     ALL_QUERIES,
     ADVANCED_QUERIES,
@@ -859,7 +860,9 @@ async def export_analytics(
         if rows:
             writer = csv.DictWriter(output, fieldnames=rows[0].keys())
             writer.writeheader()
-            writer.writerows(rows)
+            writer.writerows(
+                {k: _csv_safe(v) for k, v in row.items()} for row in rows
+            )
         output.write("\n")
 
     filename = f"analytics_export_{safe_org_id}_{safe_days}d.csv"

@@ -7,7 +7,7 @@ import { queryKeys } from '@/lib/query/keys';
 export type ContributorStatus = 'NONE' | 'PENDING' | 'ACTIVE' | 'INACTIVE';
 
 interface Contributor {
-  user_id: string;
+  user_id: string | number;
   authorship_status: ContributorStatus;
 }
 
@@ -30,7 +30,7 @@ export function useContributorStatus(courseUuid: string) {
   const contributorStatus = useMemo<ContributorStatus>(() => {
     if (!userId || !data || !Array.isArray(data)) return 'NONE';
     const currentUser = data.find(
-      (contributor: Contributor) => contributor.user_id === userId
+      (contributor: Contributor) => String(contributor.user_id) === String(userId)
     );
     return currentUser ? (currentUser.authorship_status as ContributorStatus) : 'NONE';
   }, [data, userId]);
