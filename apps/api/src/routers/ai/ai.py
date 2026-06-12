@@ -132,9 +132,11 @@ async def activity_chat_event_generator(
             yield f"data: {json.dumps({'type': 'follow_ups', 'follow_up_suggestions': follow_ups})}\n\n"
 
     except asyncio.CancelledError:
-        stream_failed = True
-        # Client disconnect / server shutdown. Re-raise so Starlette observes
-        # the cancellation, but let the finally refund first.
+        # Client disconnect / server shutdown. Do NOT force a refund here: if
+        # the model already produced output the credit was legitimately spent.
+        # The finally block still refunds when nothing was produced
+        # (full_response empty), so a disconnect *after* a full response can't
+        # be abused to get free AI. Re-raise so Starlette observes the cancel.
         raise
     except Exception:
         stream_failed = True
@@ -405,9 +407,11 @@ async def editor_chat_event_generator(
             yield f"data: {json.dumps({'type': 'follow_ups', 'follow_up_suggestions': follow_ups})}\n\n"
 
     except asyncio.CancelledError:
-        stream_failed = True
-        # Client disconnect / cancellation — let Starlette observe it after
-        # we refund credits in the finally block.
+        # Client disconnect / cancellation. Do NOT force a refund here: if the
+        # model already produced output the credit was legitimately spent. The
+        # finally block still refunds when nothing was produced (full_response
+        # empty), so a disconnect *after* a full response can't be abused to
+        # get free AI. Re-raise so Starlette observes the cancel.
         raise
     except Exception:
         stream_failed = True

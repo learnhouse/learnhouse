@@ -34,7 +34,13 @@ def _is_allowed_base_url(url: str) -> bool:
             cfg_value = (cfg_value or "").strip().rstrip("/")
             if not cfg_value:
                 continue
-            cfg_host = urlparse(cfg_value).hostname or cfg_value
+            # frontend_domain/domain may be a bare host or "host:port" with no
+            # scheme (the shipped default is "localhost:3000"). urlparse only
+            # populates .hostname when a scheme or leading "//" is present, so
+            # prefix "//" for schemeless values; otherwise the port would leak
+            # into the host and never match req_host (which is always port-less).
+            cfg_parsed = urlparse(cfg_value if "://" in cfg_value else f"//{cfg_value}")
+            cfg_host = cfg_parsed.hostname or cfg_value
             cfg_host = cfg_host.removeprefix("www.").lower()
             if cfg_host:
                 configured_hosts.add(cfg_host)

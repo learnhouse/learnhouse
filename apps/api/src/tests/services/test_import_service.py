@@ -128,6 +128,86 @@ class TestImportHelpers:
             assert _safe_manifest_join(str(tmp_path), "course/file.txt") is None
 
     @pytest.mark.asyncio
+    @pytest.mark.parametrize("bad_path", ["", "/extract/../../etc"])
+    async def test_import_single_course_rejects_unsafe_course_path(
+        self, db, org, admin_user, bad_path
+    ):
+        # Line 503: empty or '..'-containing course_path is refused with 400
+        # before any file is opened.
+        with pytest.raises(HTTPException) as exc:
+            await _import_single_course(
+                course_path=bad_path,
+                organization=org,
+                current_user=admin_user,
+                options=ImportOptions(course_uuids=["c1"]),
+                db_session=db,
+                new_course_uuid="c1-new",
+            )
+        assert exc.value.status_code == 400
+        assert "Invalid course path" in exc.value.detail
+
+    @pytest.mark.asyncio
+    async def test_analyze_import_package_skips_unsafe_manifest_course_path(
+        self, db, org, admin_user, mock_request, tmp_path, monkeypatch
+    ):
+        # Line 280: a manifest course path that _safe_manifest_join rejects
+        # (".." sanitizes to "" -> None) is skipped -> no valid courses.
+        _set_import_temp_dir(monkeypatch, tmp_path)
+        manifest = {
+            "format": "learnhouse-course-export",
+            "version": "2.0.0",
+            "courses": [{"course_uuid": "c1", "path": ".."}],
+        }
+        package_bytes = _zip_bytes({"manifest.json": json.dumps(manifest).encode()})
+
+        with patch(
+            "src.services.courses.transfer.import_service.check_resource_access",
+            new_callable=AsyncMock,
+        ):
+            with pytest.raises(HTTPException) as exc:
+                await analyze_import_package(
+                    mock_request, _upload_file(package_bytes), org.id, admin_user, db
+                )
+
+        assert exc.value.status_code == 400
+        assert "No valid courses found" in exc.value.detail
+
+    @pytest.mark.asyncio
+    async def test_analyze_import_package_skips_entry_on_commonpath_valueerror(
+        self, db, org, admin_user, mock_request, tmp_path, monkeypatch
+    ):
+        # Lines 240-241: a ValueError from commonpath during extraction is
+        # treated as "not contained" so the entry is skipped (defense in depth).
+        _set_import_temp_dir(monkeypatch, tmp_path)
+        manifest = {
+            "format": "learnhouse-course-export",
+            "version": "2.0.0",
+            "courses": [{"course_uuid": "c1", "path": "c1"}],
+        }
+        package_bytes = _zip_bytes(
+            {
+                "manifest.json": json.dumps(manifest).encode(),
+                "c1/course.json": json.dumps({"course_uuid": "c1", "name": "X"}).encode(),
+            }
+        )
+
+        with patch(
+            "src.services.courses.transfer.import_service.check_resource_access",
+            new_callable=AsyncMock,
+        ), patch(
+            "src.services.courses.transfer.import_service.os.path.commonpath",
+            side_effect=ValueError("mixed drives"),
+        ):
+            with pytest.raises(HTTPException) as exc:
+                await analyze_import_package(
+                    mock_request, _upload_file(package_bytes), org.id, admin_user, db
+                )
+
+        # Every entry skipped → manifest.json is never written to disk.
+        assert exc.value.status_code == 400
+        assert "manifest.json not found" in exc.value.detail
+
+    @pytest.mark.asyncio
     async def test_analyze_import_package_rejects_oversized_package(
         self, db, org, admin_user, mock_request, tmp_path, monkeypatch
     ):

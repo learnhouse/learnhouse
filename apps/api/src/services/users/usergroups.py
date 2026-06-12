@@ -277,6 +277,17 @@ async def get_usergroups_by_resource(
     )
     usergroup_resources = (await db_session.execute(statement)).scalars().all()
 
+    # Authorize unconditionally, before the empty-result shortcut below, so an
+    # absent/unlinked resource cannot be used as an unauthenticated existence
+    # oracle (an anonymous caller must get 403, not an empty 200).
+    await rbac_check(
+        request,
+        usergroup_uuid="usergroup_X",
+        current_user=current_user,
+        action="read",
+        db_session=db_session,
+    )
+
     if not usergroup_resources:
         return []
 
@@ -285,15 +296,6 @@ async def get_usergroups_by_resource(
     target_org_id = usergroup_resources[0].org_id
     await require_org_membership(
         resolve_acting_user_id(current_user), target_org_id, db_session
-    )
-
-    # RBAC check
-    await rbac_check(
-        request,
-        usergroup_uuid="usergroup_X",
-        current_user=current_user,
-        action="read",
-        db_session=db_session,
     )
 
     # Batch fetch all usergroups in a single query

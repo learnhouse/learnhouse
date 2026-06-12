@@ -66,9 +66,12 @@ async def event_generator(
     except asyncio.CancelledError:
         stream_failed = True
         raise
-    except Exception as e:
+    except Exception:
         stream_failed = True
-        yield f"data: {json.dumps({'type': 'error', 'message': str(e)})}\n\n"
+        # Log the full exception server-side; never leak exception/stack-trace
+        # detail to the external client (CodeQL py/stack-trace-exposure).
+        logger.exception("MagicBlock stream failed for session %s", session_uuid)
+        yield f"data: {json.dumps({'type': 'error', 'message': 'Generation failed. Please try again.'})}\n\n"
     finally:
         if org_id is not None and reserved_credits > 0 and (stream_failed or not produced_content):
             try:

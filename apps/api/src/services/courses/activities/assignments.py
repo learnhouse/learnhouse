@@ -2,7 +2,7 @@ import asyncio
 import logging
 import math
 import re
-from datetime import datetime
+from datetime import datetime, timedelta
 from uuid import uuid4
 from fastapi import HTTPException, Request, UploadFile
 from sqlmodel import select
@@ -84,12 +84,19 @@ def _is_assignment_past_due(assignment: Assignment) -> bool:
     raw = getattr(assignment, "due_date", None)
     if not raw or not str(raw).strip():
         return False
+    raw_str = str(raw).strip()
     try:
-        parsed = datetime.fromisoformat(str(raw).strip())
+        parsed = datetime.fromisoformat(raw_str)
     except (ValueError, TypeError):
         return False
     if parsed.tzinfo is not None:
         parsed = parsed.replace(tzinfo=None)
+    # A date-only deadline (e.g. "2026-06-12", produced by an HTML
+    # <input type="date">) parses to midnight. The whole due day should still
+    # count as on time, so treat a value with no time component as end-of-day
+    # by shifting the cutoff to the following midnight.
+    if "T" not in raw_str and ":" not in raw_str:
+        parsed = parsed + timedelta(days=1)
     return parsed < datetime.now()
 
 

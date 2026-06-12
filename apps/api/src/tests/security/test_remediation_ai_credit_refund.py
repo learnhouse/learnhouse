@@ -167,3 +167,38 @@ async def test_activity_chat_refunds_on_client_disconnect():
                 pass
 
     assert refunded == [(77, 1)]
+
+
+@pytest.mark.asyncio
+async def test_activity_chat_does_not_refund_on_disconnect_after_content():
+    """Abuse guard: a client that disconnects AFTER receiving model output must
+    NOT get its credit refunded, otherwise scripted disconnects yield free AI."""
+    from src.routers.ai.ai import activity_chat_event_generator
+
+    async def _content_then_cancel():
+        yield "hello"
+        raise asyncio.CancelledError()
+
+    refunded = []
+    with patch(
+        "src.security.features_utils.usage.refund_ai_credit",
+        side_effect=lambda org_id, amount=1: refunded.append((org_id, amount)),
+    ), patch(
+        "src.routers.ai.ai.save_message_to_history",
+    ):
+        gen = activity_chat_event_generator(
+            _content_then_cancel(),
+            "chat_uuid",
+            "activity_uuid",
+            "hello",
+            "ai text",
+            "gemini",
+            org_id=77,
+        )
+
+        with pytest.raises(asyncio.CancelledError):
+            async for _ in gen:
+                pass
+
+    # Content was produced before the disconnect → credit legitimately spent.
+    assert refunded == []

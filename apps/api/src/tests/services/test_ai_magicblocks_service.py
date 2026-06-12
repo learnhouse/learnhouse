@@ -92,3 +92,25 @@ def test_create_returns_session_even_when_no_redis(monkeypatch):
         block_uuid="b1", activity_uuid="a1", context=_context(), user_id=77
     )
     assert session.user_id == 77
+
+
+async def test_generate_stream_reraises_on_provider_error(monkeypatch):
+    """A provider failure must propagate as an exception, not be yielded as an
+    "Error: ..." content chunk. Yielding it leaked exception detail to the
+    client and defeated the router's credit-refund logic."""
+    import pytest
+
+    def _boom():
+        raise RuntimeError("upstream provider 500")
+
+    monkeypatch.setattr(mb, "get_gemini_client", _boom)
+
+    session = mb.create_magicblock_session(
+        block_uuid="b1", activity_uuid="a1", context=_context(), user_id=1
+    )
+
+    with pytest.raises(RuntimeError):
+        async for _ in mb.generate_magicblock_stream(
+            prompt="hi", session=session, gemini_model_name="gemini-x"
+        ):
+            pass
