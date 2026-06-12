@@ -18,31 +18,32 @@ from src.security.features_utils.plans import plan_meets_requirement
 
 logger = logging.getLogger(__name__)
 
-Tier = Literal["fast", "standard", "pro", "interactive", "interactive_pro"]
-Purpose = Literal["chat", "planning", "interactive"]
+Tier = Literal["fast", "standard", "pro"]
+Purpose = Literal["chat", "planning"]
 
-# Built-in defaults preserve the exact pre-refactor Gemini model selection.
+# Three tiers, defaulting to the current Gemini 3 family (verified live against the API,
+# June 2026 — these exact IDs return from models.list() and support generateContent):
+#   fast     -> gemini-3.1-flash-lite (GA)      — titles, follow-ups, migration
+#   standard -> gemini-3.5-flash (GA)           — chat, RAG, planning/blocks (std plans)
+#   pro      -> gemini-3.1-pro-preview          — planning/blocks (Pro+ plans)
 _TIER_DEFAULTS: dict[str, str] = {
-    "fast": "gemini-2.0-flash-lite",
-    "standard": "gemini-2.5-flash",
-    "pro": "gemini-2.5-pro",
-    "interactive": "gemini-2.5-flash-lite",
-    "interactive_pro": "gemini-3-flash-preview",
+    "fast": "gemini-3.1-flash-lite",
+    "standard": "gemini-3.5-flash",
+    "pro": "gemini-3.1-pro-preview",
 }
 
 _TIER_CONFIG_ATTR: dict[str, str] = {
     "fast": "model_fast",
     "standard": "model_standard",
     "pro": "model_pro",
-    "interactive": "model_interactive",
-    "interactive_pro": "model_interactive_pro",
 }
 
-# Maps a feature purpose to its (standard-plan tier, pro-plan tier).
+# Maps a feature purpose to its (standard-plan tier, pro-plan tier). Plan-gated features
+# (course planning, MagicBlocks, boards & playground generation) use `standard` for
+# free/standard plans and `pro` for Pro+ plans; plain chat always uses `standard`.
 _PURPOSE_TIERS: dict[str, tuple[Tier, Tier]] = {
     "chat": ("standard", "standard"),
     "planning": ("standard", "pro"),
-    "interactive": ("interactive", "interactive_pro"),
 }
 
 

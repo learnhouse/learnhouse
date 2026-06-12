@@ -14,7 +14,7 @@ from src.db.users import PublicUser, AnonymousUser, APITokenUser
 from src.security.auth import get_current_user, resolve_acting_user_id
 from src.security.features_utils.usage import reserve_ai_credit
 from src.security.features_utils.dependencies import require_playgrounds_feature
-from src.services.ai.llm import resolve_model_for_org
+from src.services.ai.llm import model_for_tier
 from src.services.playgrounds.playgrounds_generator import (
     get_playground_session,
     create_playground_session,
@@ -43,7 +43,7 @@ async def event_generator(generator, session_uuid: str):
 
 
 async def get_org_ai_model(org_id: int, db_session: AsyncSession) -> str:
-    return await resolve_model_for_org(org_id, db_session, purpose="interactive")
+    return model_for_tier("fast")  # interactive widgets: fast + concise (gemini-3.1-flash-lite)
 
 
 async def _get_course_context(

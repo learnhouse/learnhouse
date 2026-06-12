@@ -23,7 +23,8 @@ DEFAULT_OLLAMA_BASE_URL = "http://localhost:11434/v1"
 
 _GOOGLE_ALIASES = {"google", "google-gla", "gemini"}
 # Providers that speak the OpenAI Chat Completions API (incl. local/compatible servers).
-_OPENAI_ALIASES = {"openai", "openai-compatible", "azure", "openrouter", "together"}
+# `openrouter` has its own branch (it auto-configures its base URL), so it's not listed here.
+_OPENAI_ALIASES = {"openai", "openai-compatible", "azure", "together"}
 
 
 class AINotConfiguredError(Exception):
@@ -35,8 +36,10 @@ def build_model(model_name: str) -> Model:
 
     Provider SDKs are imported lazily so an unused/uninstalled provider never breaks import.
     """
-    cfg = get_learnhouse_config().ai_config
-    provider_id = (getattr(cfg, "provider", None) or DEFAULT_PROVIDER).strip().lower()
+    lh_config = get_learnhouse_config()
+    cfg = lh_config.ai_config
+    # Treat None / empty / whitespace-only as "unset" and fall back to the default provider.
+    provider_id = (getattr(cfg, "provider", None) or "").strip().lower() or DEFAULT_PROVIDER
     api_key = getattr(cfg, "api_key", None)
     base_url = getattr(cfg, "base_url", None) or None  # treat "" as unset
 
@@ -49,6 +52,19 @@ def build_model(model_name: str) -> Model:
             model_name,
             provider=OllamaProvider(base_url=base_url or DEFAULT_OLLAMA_BASE_URL),
         )
+
+    # AWS Bedrock: credentials come from the standard AWS chain (env vars, IAM role, or
+    # `~/.aws` profile) + AWS_REGION, so no LEARNHOUSE_AI_API_KEY is required. If one is set
+    # it is passed through as a Bedrock API key. Model names are Bedrock model IDs, e.g.
+    # "anthropic.claude-sonnet-4-5-20250929-v1:0" or "us.anthropic.claude-...".
+    if provider_id == "bedrock":
+        from pydantic_ai.models.bedrock import BedrockConverseModel
+        from pydantic_ai.providers.bedrock import BedrockProvider
+
+        provider_kwargs = {}
+        if api_key:
+            provider_kwargs["api_key"] = api_key
+        return BedrockConverseModel(model_name, provider=BedrockProvider(**provider_kwargs))
 
     # The google provider falls back to the legacy gemini_api_key so upgrades are seamless.
     if provider_id in _GOOGLE_ALIASES and not api_key:
@@ -64,6 +80,21 @@ def build_model(model_name: str) -> Model:
         from pydantic_ai.providers.google import GoogleProvider
 
         return GoogleModel(model_name, provider=GoogleProvider(api_key=api_key))
+
+    # OpenRouter: an OpenAI-compatible gateway to many models. Its provider auto-configures
+    # the base URL, so users only set provider + api_key + a model slug (e.g.
+    # "anthropic/claude-sonnet-4-5", "openai/gpt-4o-mini"). app_title gives dashboard attribution.
+    if provider_id == "openrouter":
+        from pydantic_ai.models.openai import OpenAIChatModel
+        from pydantic_ai.providers.openrouter import OpenRouterProvider
+
+        return OpenAIChatModel(
+            model_name,
+            provider=OpenRouterProvider(
+                api_key=api_key,
+                app_title=getattr(lh_config, "site_name", None) or "LearnHouse",
+            ),
+        )
 
     if provider_id in _OPENAI_ALIASES:
         from pydantic_ai.models.openai import OpenAIChatModel

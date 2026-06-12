@@ -69,18 +69,26 @@ payments_config:
 ai_config:
   is_ai_enabled: false
   # Provider-agnostic generation (Pydantic AI). Set provider + api_key to use any
-  # supported provider: google | openai | anthropic | groq | mistral | ollama.
+  # supported provider: google | openai | anthropic | groq | mistral | openrouter | bedrock | ollama.
   # base_url is optional (OpenAI-compatible / local endpoints, e.g. Ollama).
+  # For "openrouter": leave base_url blank (auto-set) and use OpenRouter model slugs like
+  # "anthropic/claude-sonnet-4-5" or "openai/gpt-4o-mini" in the model_* fields below.
+  # For "bedrock": use standard AWS credentials (env/role/profile) + AWS_REGION; api_key optional.
   provider: "google"
   api_key: ""
   base_url: ""
-  # Model names per tier. Leave blank to use the built-in Gemini defaults.
-  model_fast: ""              # titles, follow-ups, migration   (default: gemini-2.0-flash-lite)
-  model_standard: ""          # chat / course planning, std plan (default: gemini-2.5-flash)
-  model_pro: ""               # course planning, pro plan        (default: gemini-2.5-pro)
-  model_interactive: ""       # magicblocks/boards/playgrounds, std (default: gemini-2.5-flash-lite)
-  model_interactive_pro: ""   # magicblocks/boards/playgrounds, pro (default: gemini-3-flash-preview)
-  # Required ONLY for RAG embeddings, which stay on Gemini (fixed 768-dim vector store).
+  # Three model tiers. Leave blank to use the built-in Gemini 3 defaults.
+  model_fast: ""        # titles, follow-ups, migration                 (default: gemini-3.1-flash-lite)
+  model_standard: ""    # chat, RAG, course planning / blocks (std plan) (default: gemini-3.5-flash)
+  model_pro: ""         # course planning / blocks (Pro+ plan)          (default: gemini-3.1-pro-preview)
+  # RAG embeddings follow the chosen provider (Google / OpenAI family incl. Ollama). Override
+  # any of these; embedding_dimensions defaults to 768 to match the pgvector column (changing
+  # it requires a DB migration + re-index). Providers without embeddings (Anthropic, Groq,
+  # Mistral, OpenRouter, Bedrock) fall back to Google when gemini_api_key is set.
+  embedding_provider: ""    # default: same as `provider`
+  embedding_model: ""       # default per provider (e.g. gemini-embedding-001, text-embedding-3-small)
+  embedding_dimensions: ""  # default: 768
+  # Google/Gemini key. Also the embeddings fallback for providers that lack an embeddings API.
   gemini_api_key: ""
 
 tinybird_config:

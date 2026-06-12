@@ -240,7 +240,7 @@ Please modify the HTML code above according to the user's request. Output ONLY t
 
         full_response = ""
         async for chunk in generate_stream(
-            model_name=model_name or model_for_tier("interactive"),
+            model_name=model_name or model_for_tier("fast"),
             user_prompt=user_prompt,
             system_prompt=system_prompt,
             history=history,

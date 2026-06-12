@@ -45,11 +45,33 @@ def test_build_model_per_provider(monkeypatch, provider, model_name, expected_cl
     assert type(model).__name__ == expected_cls
 
 
+def test_build_model_openrouter(monkeypatch):
+    # OpenRouter is an OpenAI-compatible gateway; its base URL is auto-configured, so the
+    # user only supplies an api_key + a model slug. It resolves to an OpenAIChatModel.
+    _patch_ai_config(monkeypatch, provider="openrouter", api_key="sk-or-test")
+    model = build_model("anthropic/claude-sonnet-4-5")
+    assert type(model).__name__ == "OpenAIChatModel"
+
+
+def test_build_model_openrouter_requires_key(monkeypatch):
+    _patch_ai_config(monkeypatch, provider="openrouter", api_key=None)
+    with pytest.raises(AINotConfiguredError):
+        build_model("openai/gpt-4o-mini")
+
+
 def test_build_model_ollama_needs_no_key(monkeypatch):
     # Ollama speaks the OpenAI API and requires no real credentials.
     _patch_ai_config(monkeypatch, provider="ollama", base_url="http://localhost:11434/v1")
     model = build_model("llama3.2")
     assert type(model).__name__ == "OpenAIChatModel"
+
+
+def test_build_model_bedrock_needs_no_api_key(monkeypatch):
+    # Bedrock uses the standard AWS credential chain + region (not LEARNHOUSE_AI_API_KEY).
+    monkeypatch.setenv("AWS_DEFAULT_REGION", "us-east-1")
+    _patch_ai_config(monkeypatch, provider="bedrock", api_key=None)
+    model = build_model("anthropic.claude-sonnet-4-5-20250929-v1:0")
+    assert type(model).__name__ == "BedrockConverseModel"
 
 
 def test_build_model_defaults_to_google(monkeypatch):
@@ -121,9 +143,64 @@ def test_attachments_to_parts():
 
 
 def test_model_for_tier_defaults():
-    # With no config overrides, tiers resolve to the historical Gemini model names.
-    assert model_for_tier("standard") == "gemini-2.5-flash"
-    assert model_for_tier("pro") == "gemini-2.5-pro"
-    assert model_for_tier("fast") == "gemini-2.0-flash-lite"
-    assert model_for_tier("interactive") == "gemini-2.5-flash-lite"
-    assert model_for_tier("interactive_pro") == "gemini-3-flash-preview"
+    # With no config overrides, the three tiers resolve to the Gemini 3 family defaults.
+    assert model_for_tier("fast") == "gemini-3.1-flash-lite"
+    assert model_for_tier("standard") == "gemini-3.5-flash"
+    assert model_for_tier("pro") == "gemini-3.1-pro-preview"
+
+
+# --- Provider-agnostic embeddings ---------------------------------------------------------
+
+from src.services.ai.llm import embeddings as embeddings_mod
+
+
+def _patch_embed_config(monkeypatch, **overrides):
+    fields = {
+        "provider": None, "api_key": None, "base_url": None, "gemini_api_key": None,
+        "embedding_provider": None, "embedding_model": None, "embedding_dimensions": None,
+    }
+    fields.update(overrides)
+    cfg = SimpleNamespace(**fields)
+    monkeypatch.setattr(
+        embeddings_mod, "get_learnhouse_config", lambda: SimpleNamespace(ai_config=cfg)
+    )
+
+
+def test_embeddings_follow_google_provider(monkeypatch):
+    _patch_embed_config(monkeypatch, provider="google", api_key="g-key")
+    assert type(embeddings_mod.build_embedding_model()).__name__ == "GoogleEmbeddingModel"
+
+
+def test_embeddings_follow_openai_provider(monkeypatch):
+    _patch_embed_config(monkeypatch, provider="openai", api_key="sk-key")
+    assert type(embeddings_mod.build_embedding_model()).__name__ == "OpenAIEmbeddingModel"
+
+
+def test_embeddings_follow_ollama_provider(monkeypatch):
+    _patch_embed_config(monkeypatch, provider="ollama", base_url="http://localhost:11434/v1")
+    assert type(embeddings_mod.build_embedding_model()).__name__ == "OpenAIEmbeddingModel"
+
+
+def test_embeddings_explicit_override(monkeypatch):
+    # Generation on Anthropic, embeddings explicitly on OpenAI.
+    _patch_embed_config(monkeypatch, provider="anthropic", api_key="sk-key", embedding_provider="openai")
+    assert type(embeddings_mod.build_embedding_model()).__name__ == "OpenAIEmbeddingModel"
+
+
+def test_embeddings_fall_back_to_gemini_for_providers_without_embeddings(monkeypatch):
+    # Anthropic/Groq have no embeddings API -> use Google when a Gemini key is present.
+    _patch_embed_config(monkeypatch, provider="anthropic", api_key="sk-ant", gemini_api_key="g-key")
+    assert type(embeddings_mod.build_embedding_model()).__name__ == "GoogleEmbeddingModel"
+
+
+def test_embeddings_raise_when_no_embeddings_capable_config(monkeypatch):
+    _patch_embed_config(monkeypatch, provider="groq", api_key="gsk", gemini_api_key=None)
+    with pytest.raises(AINotConfiguredError):
+        embeddings_mod.build_embedding_model()
+
+
+def test_embedding_dimensions_default_and_override(monkeypatch):
+    _patch_embed_config(monkeypatch, provider="google", api_key="g")
+    assert embeddings_mod.embedding_dimensions() == 768
+    _patch_embed_config(monkeypatch, provider="google", api_key="g", embedding_dimensions=1536)
+    assert embeddings_mod.embedding_dimensions() == 1536

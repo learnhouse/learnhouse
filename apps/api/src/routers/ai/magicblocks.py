@@ -16,7 +16,7 @@ from src.security.features_utils.usage import (
     reserve_ai_credit,
     refund_ai_credit,
 )
-from src.services.ai.llm import resolve_model_for_org
+from src.services.ai.llm import model_for_tier
 from src.services.ai.magicblocks import (
     get_magicblock_session,
     create_magicblock_session,
@@ -84,7 +84,7 @@ async def get_org_ai_model(org_id: int, db_session: AsyncSession) -> str:
     Get the AI model for MagicBlocks based on the organization's plan,
     resolved via the provider-agnostic LLM layer.
     """
-    return await resolve_model_for_org(org_id, db_session, purpose="interactive")
+    return model_for_tier("fast")  # interactive widgets: fast + concise (gemini-3.1-flash-lite)
 
 
 @router.post(

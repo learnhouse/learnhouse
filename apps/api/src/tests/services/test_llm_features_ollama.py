@@ -25,11 +25,13 @@ from src.services.ai.courseplanning import (
 from src.services.ai.schemas.courseplanning import CoursePlanningSessionData
 from src.services.ai.magicblocks import generate_magicblock_stream
 from src.services.ai.schemas.magicblocks import MagicBlockContext, MagicBlockSessionData
+from src.services.ai.rag.embedding_service import embed_single_text, generate_embeddings
 
 import os
 
 OLLAMA_HOST, OLLAMA_PORT = "localhost", 11434
 OLLAMA_MODEL = os.environ.get("OLLAMA_TEST_MODEL", "qwen2.5:3b")
+OLLAMA_EMBED_MODEL = os.environ.get("OLLAMA_EMBED_MODEL", "nomic-embed-text")
 
 
 def _ollama_running() -> bool:
@@ -51,8 +53,10 @@ def _ollama_env(monkeypatch):
     """Configure the REAL config to use Ollama for every tier (env path, not a mock)."""
     monkeypatch.setenv("LEARNHOUSE_AI_PROVIDER", "ollama")
     monkeypatch.setenv("LEARNHOUSE_AI_BASE_URL", f"http://{OLLAMA_HOST}:{OLLAMA_PORT}/v1")
-    for tier in ("FAST", "STANDARD", "PRO", "INTERACTIVE", "INTERACTIVE_PRO"):
+    for tier in ("FAST", "STANDARD", "PRO"):
         monkeypatch.setenv(f"LEARNHOUSE_AI_MODEL_{tier}", OLLAMA_MODEL)
+    # Embeddings follow the same (ollama) provider; use a local embedding model.
+    monkeypatch.setenv("LEARNHOUSE_AI_EMBEDDING_MODEL", OLLAMA_EMBED_MODEL)
 
 
 @pytest.mark.asyncio
@@ -179,3 +183,15 @@ async def test_magicblock_stream_produces_html():
 
     assert not full.startswith("Error:"), f"generation errored: {full[:200]}"
     assert "<" in full and ">" in full, "expected HTML-ish output"
+
+
+@pytest.mark.asyncio
+async def test_rag_embeddings_follow_provider():
+    """RAG embeddings run through the chosen provider (Ollama), not hardcoded Gemini."""
+    vec = await embed_single_text("photosynthesis converts sunlight into energy")
+    assert isinstance(vec, list) and len(vec) == 768  # matches the pgvector column
+    assert all(isinstance(x, float) for x in vec[:5])
+
+    # Batch path used by course indexing.
+    vecs = await generate_embeddings(["alpha", "beta", "gamma"])
+    assert len(vecs) == 3 and all(len(v) == 768 for v in vecs)
