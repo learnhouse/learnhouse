@@ -1,0 +1,37 @@
+import { Callout } from 'nextra/components'
+
+# Code Execution
+
+LearnHouse integrates with [Judge0](https://judge0.com/) to provide sandboxed code execution inside **Code Playground** blocks on Dynamic Page activities. Students can write and run code directly in the platform, and teachers can define test cases for automatic grading.
+
+## Supported Languages
+
+The Code Playground block supports 30 languages: Python 3, JavaScript (Node), TypeScript, Java, C, C++, Rust, Go, PHP, Ruby, Kotlin, C#, Swift, Scala, Perl, R, Dart, Haskell, Lua, Elixir, Clojure, SQL, Bash, Objective-C, Pascal, Fortran, Prolog, Common Lisp, PowerShell, and Assembly (NASM).
+
+## How It Works
+
+1. A teacher inserts a **Code Playground** block into a Dynamic Page activity and (optionally) defines test cases as input/output pairs.
+2. Students write their solution in the built-in code editor embedded in the activity.
+3. On submission, the code is executed against all test cases in a sandboxed Judge0 environment.
+4. Results are reported per test case — pass/fail, execution time, and memory usage. Submissions are stored per `activity_uuid` + `block_id`.
+
+<Callout type="info">
+Code execution is surfaced as an editor block inside course content — it is **not** a standalone assignment task type. If you want graded code exercises, insert a Code Playground block into a Dynamic Page activity.
+</Callout>
+
+## Test Cases
+
+Each test case defines:
+
+- **Input** — The standard input provided to the program.
+- **Expected Output** — The output the program should produce.
+
+The system runs the student's code against each test case and compares the actual output to the expected output.
+
+<Callout>
+Code execution requires a Judge0 instance to be configured. See the [Self-Hosting Configuration](/self-hosting/configuration) for setup details.
+</Callout>
+
+## Batch Execution
+
+For blocks with multiple test cases, the platform executes all test cases in a single batch request, providing a comprehensive results summary that shows which tests passed and which failed.

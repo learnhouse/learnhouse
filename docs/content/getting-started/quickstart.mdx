@@ -1,0 +1,64 @@
+import { Callout } from 'nextra/components'
+
+# Quickstart
+
+There are two ways to start using LearnHouse: the managed **LearnHouse Cloud** or a **self-hosted** deployment. Pick the path that suits your needs.
+
+---
+
+## Option A — LearnHouse Cloud
+
+The fastest way to get started. No infrastructure to manage.
+
+1. **Sign up** — Create an account at [learnhouse.app](https://learnhouse.app).
+2. **Create an organization** — After signing in, create your first organization. This is the top-level container for all of your courses, users, and settings.
+3. **Create your first course** — Inside the organization dashboard, click **New Course**, give it a title, and start adding chapters and activities.
+
+You are ready to go. LearnHouse Cloud handles hosting, updates, backups, and SSL for you.
+
+<Callout>
+Not sure whether Cloud or self-hosting is right for you? See the [Cloud vs Self Hosting](/getting-started/cloud-vs-self-hosting) comparison.
+</Callout>
+
+---
+
+## Option B — Self-Hosted
+
+Run LearnHouse on your own infrastructure using the LearnHouse CLI. You'll need [Docker](https://docs.docker.com/get-docker/) and [Node.js](https://nodejs.org/) (v18+) installed.
+
+### 1. Run the setup wizard
+
+```bash
+npx learnhouse@latest setup
+```
+
+The interactive wizard walks you through domain configuration, database setup, admin account creation, and optional features (AI, email, storage, OAuth).
+
+### 2. Start LearnHouse
+
+```bash
+npx learnhouse start
+```
+
+Your instance will be available at `http://localhost` (or the domain you configured during setup).
+
+### 3. Manage your instance
+
+```bash
+npx learnhouse stop     # Stop all services
+npx learnhouse logs     # Stream logs
+npx learnhouse backup   # Backup database
+npx learnhouse doctor   # Run diagnostics
+```
+
+<Callout type="info">
+For detailed installation options, see the [Quick Install](/self-hosting/installation/quick-install) guide. For environment variables and configuration, see [Configuration](/self-hosting/configuration).
+</Callout>
+
+---
+
+## What to do next
+
+- Familiarize yourself with the [Key Concepts](/getting-started/key-concepts) — organizations, courses, activities, and more.
+- Explore the [Editor](/platform/editor) to see how content authoring works.
+- Set up [AI features](/self-hosting/configuration/ai-setup) if you want built-in AI assistance for students and teachers.

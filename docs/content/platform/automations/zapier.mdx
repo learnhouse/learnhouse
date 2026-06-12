@@ -1,0 +1,111 @@
+import { Callout } from 'nextra/components'
+
+# Zapier
+
+The official LearnHouse Zapier app lets you build no-code workflows across Slack, Google Sheets, HubSpot, Notion, Airtable, Mailchimp, and every other Zapier app — without writing a webhook consumer yourself.
+
+<Callout type="info">
+The Zapier integration is available on the **Pro plan** or higher. It is implemented on top of the same event system as [Webhooks](/platform/automations/webhooks), so the two can be used together.
+</Callout>
+
+## What you can do
+
+### Triggers (LearnHouse → other apps)
+
+Every event in the [Event Catalogue](/platform/automations/events) is available as a Zapier trigger. When that event fires in LearnHouse, the Zap runs and can push data into any of Zapier's supported apps.
+
+Common patterns:
+
+- **Course Completed → Slack**: post a celebration message to a channel when a learner finishes a course.
+- **User Signed Up → HubSpot**: create or update a contact when someone signs up for your org.
+- **Assignment Submitted → Google Sheets**: append a row for every submission.
+- **Certificate Claimed → Mailchimp**: tag the contact in your newsletter audience.
+
+### Actions (other apps → LearnHouse)
+
+Actions run a LearnHouse operation from any step of a Zap. They call existing admin endpoints under `/api/v1/admin/{org_slug}/*` using the API token you connected.
+
+| Action | What it does |
+| --- | --- |
+| **Enroll User** | Enrols an existing user in a course. |
+| **Unenroll User** | Removes a user's enrolment from a course. |
+| **Complete Activity** | Marks a specific activity complete for a user. |
+| **Complete Course** | Marks an entire course complete for a user. |
+
+### Searches
+
+| Search | What it does |
+| --- | --- |
+| **Find User by Email** | Looks up a LearnHouse user by email — use the result to feed a user ID into a follow-up action. |
+
+## Setup
+
+### 1. Get a LearnHouse API token
+
+1. In the LearnHouse dashboard open **Settings → API Access**.
+2. Click **Create token** and give it a descriptive name (e.g., "Zapier").
+3. Copy the `lh_…` token immediately. The token is scoped to your current organization.
+
+<Callout type="warning">
+API tokens are shown only once at creation. Store the value somewhere you can retrieve later; if you lose it, revoke the token and create a new one.
+</Callout>
+
+### 2. Connect the Zapier app
+
+1. In Zapier, click **Create Zap** and search for **LearnHouse** as the trigger app.
+2. Pick an event (e.g., **Course Completed**) and click **Continue**.
+3. When prompted to sign in, paste your `lh_…` API token.
+4. Zapier calls LearnHouse's `/integrations/zapier/me` endpoint to verify the token and then displays your organization name.
+
+### 3. Configure the trigger
+
+Pick the event, optionally filter by course or user group using the dynamic dropdowns Zapier populates from your org, and click **Test trigger**. Zapier pulls a recent sample payload so you can map fields into the action step.
+
+### 4. Turn on the Zap
+
+When you toggle the Zap on, Zapier calls `POST /integrations/zapier/subscriptions` on LearnHouse with its own callback URL. LearnHouse records the subscription (as a webhook endpoint tagged `source="zapier"`) and starts delivering the event to Zapier. Toggling the Zap off removes the subscription automatically.
+
+## How it works under the hood
+
+The Zapier integration is implemented on top of LearnHouse's webhook pipeline using the Zapier **REST Hooks** pattern:
+
+1. Zapier calls LearnHouse endpoints under `/api/v1/integrations/zapier/*` — `/me` for auth verification, `/events` for the trigger catalogue, `/courses` / `/users` / `/usergroups` for dropdown sources, and `/subscriptions` for registering callbacks.
+2. Each enabled Zap registers one subscription, which is stored as a webhook endpoint with `source = "zapier"`, a single event, and Zapier's callback URL.
+3. When the event fires, the existing webhook dispatcher delivers the payload to Zapier using the same retries, SSRF guard, and delivery logging described in [Webhooks](/platform/automations/webhooks).
+
+Subscriptions show up in the same **Settings → Automations** dashboard as manual webhooks, labelled with the Zap name Zapier provided at subscribe time. You can view delivery logs for a Zapier subscription the same way you do for a manual webhook.
+
+<Callout type="info">
+Signatures are still computed and sent, but Zapier does not verify them — its REST Hook URL is protected by its own secret path. You don't need to do anything with the signature as an end user.
+</Callout>
+
+## Managing Zapier subscriptions
+
+- The canonical place to enable / disable a Zap is the **Zapier UI**. Toggling a Zap on or off there adds or removes the corresponding LearnHouse subscription.
+- Deleting a subscription from the LearnHouse dashboard will stop deliveries, but Zapier will not know the subscription is gone — the Zap will silently receive nothing. Prefer turning the Zap off from Zapier.
+- If you revoke the underlying API token, every Zap that was connected with that token will fail to re-subscribe when Zapier next syncs. Create a new token and reconnect the account in Zapier.
+
+## Zapier integration endpoints
+
+These endpoints are called by the Zapier Platform on your organization's behalf — you typically won't call them directly, but they are documented here for completeness.
+
+| Method | Endpoint | Purpose |
+| --- | --- | --- |
+| `GET` | `/api/v1/integrations/zapier/me` | Auth test; returns org and token identity |
+| `GET` | `/api/v1/integrations/zapier/events` | Full event registry with schemas |
+| `GET` | `/api/v1/integrations/zapier/courses` | Course list for dynamic dropdowns (max 500) |
+| `GET` | `/api/v1/integrations/zapier/users` | User list for dynamic dropdowns (max 500) |
+| `GET` | `/api/v1/integrations/zapier/usergroups` | User-group list for dynamic dropdowns (max 500) |
+| `POST` | `/api/v1/integrations/zapier/subscriptions` | Called when a Zap is turned on |
+| `GET` | `/api/v1/integrations/zapier/subscriptions` | Lists your org's Zap subscriptions |
+| `DELETE` | `/api/v1/integrations/zapier/subscriptions/{id}` | Called when a Zap is turned off or deleted |
+
+All Zapier endpoints require `Authorization: Bearer lh_…` — the org scope is carried by the token, so no `org_id` appears in the URL.
+
+## Troubleshooting
+
+- **"This endpoint requires an API token"** — You tried to connect with session-cookie auth instead of an `lh_…` token. Generate one in **Settings → API Access**.
+- **"Zapier integration requires a Pro plan or higher"** — Upgrade the organization's plan; the Zapier endpoints are gated at Pro.
+- **"Unknown event"** — The Zapier app was pushed with an event name that no longer exists in LearnHouse (or vice versa). Make sure the Zapier app and the LearnHouse instance are on compatible versions.
+- **Zap runs but no data comes through** — Check **Settings → Automations** in LearnHouse; the subscription row shows recent delivery attempts, their status, and the response body Zapier returned.
+- **SSRF block** — Zapier's callback URL is public, so this should not happen in production. If it does, check the delivery log's `error_message` — it'll explain which IP was blocked.

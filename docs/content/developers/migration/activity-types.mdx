@@ -1,0 +1,490 @@
+import { Callout } from 'nextra/components'
+
+# Activity Types Reference
+
+Every activity in LearnHouse is described by two enums and one JSON `content` blob:
+
+- `activity_type` -- one of `TYPE_DYNAMIC`, `TYPE_VIDEO`, `TYPE_DOCUMENT`, `TYPE_ASSIGNMENT`, `TYPE_CUSTOM`, `TYPE_SCORM`.
+- `activity_sub_type` -- a more specific variant within the type (e.g. `SUBTYPE_VIDEO_YOUTUBE` vs `SUBTYPE_VIDEO_HOSTED`).
+- `content` -- a JSON object whose shape depends on the sub-type.
+
+This page is the canonical reference for what `content` (and `details`) must contain for each combination, alongside the create endpoint to use.
+
+<Callout type="info">
+The list of valid types and sub-types is enforced by the API as Python enums. Sending an unknown value returns a 422 Unprocessable Entity. The full enum is reproduced at the bottom of this page.
+</Callout>
+
+## Dynamic activities
+
+`activity_type: "TYPE_DYNAMIC"` -- pages rendered inside the activity viewer.
+
+### Dynamic Page (`SUBTYPE_DYNAMIC_PAGE`)
+
+The flagship activity type. `content` is a [TipTap](https://tiptap.dev/) / ProseMirror document.
+
+**Create endpoint:** `POST /api/v1/activities/` (JSON body, see [Programmatic Migration](/developers/migration/programmatic#3a-generic-json-create----post-apiv1activities)).
+
+**Initial content:** start empty (`"content": {}`) and update later, or send a complete document on creation:
+
+```json
+{
+  "name": "Welcome to the course",
+  "chapter_id": 7,
+  "activity_type": "TYPE_DYNAMIC",
+  "activity_sub_type": "SUBTYPE_DYNAMIC_PAGE",
+  "content": {
+    "type": "doc",
+    "content": [
+      {
+        "type": "heading",
+        "attrs": { "level": 1 },
+        "content": [{ "type": "text", "text": "Welcome" }]
+      },
+      {
+        "type": "paragraph",
+        "content": [
+          { "type": "text", "text": "This is a " },
+          { "type": "text", "text": "bold", "marks": [{ "type": "bold" }] },
+          { "type": "text", "text": " introduction." }
+        ]
+      },
+      {
+        "type": "bulletList",
+        "content": [
+          {
+            "type": "listItem",
+            "content": [{
+              "type": "paragraph",
+              "content": [{ "type": "text", "text": "Learning objective 1" }]
+            }]
+          },
+          {
+            "type": "listItem",
+            "content": [{
+              "type": "paragraph",
+              "content": [{ "type": "text", "text": "Learning objective 2" }]
+            }]
+          }
+        ]
+      }
+    ]
+  }
+}
+```
+
+The root must be `{ "type": "doc", "content": [...] }`. Each child is a block node.
+
+#### Valid TipTap block types
+
+The API validates dynamic-page content against this whitelist (unknown types are accepted but logged):
+
+```
+paragraph, heading, bulletList, orderedList, listItem,
+codeBlock, table, tableRow, tableHeader, tableCell,
+horizontalRule, hardBreak, text,
+
+calloutInfo, calloutWarning,
+blockImage, blockVideo, blockPDF, blockAudio, blockMathEquation,
+blockEmbed, blockQuiz, blockUser, blockWebPreview,
+flipcard, scenarios, button, badge
+```
+
+The `block*` types correspond to LearnHouse's custom node extensions. Standard TipTap block types (`paragraph`, `heading`, etc.) behave as in any TipTap editor.
+
+#### Inline marks
+
+Text nodes (`"type": "text"`) can carry inline marks:
+
+```json
+{ "type": "text", "text": "see link", "marks": [
+  { "type": "link", "attrs": { "href": "https://example.com" } }
+] }
+```
+
+Supported marks: `bold`, `italic`, `code`, `link`, plus the standard StarterKit marks.
+
+<Callout type="info">
+The web client tolerates `strong` and `em` (HTML aliases) and rewrites them to `bold` / `italic` on render. Prefer `bold` / `italic` directly in API payloads.
+</Callout>
+
+#### Alternative: simplified blocks-only content
+
+When the [AI-assisted migration](/developers/migration/assisted) creates a dynamic-page activity from a single image or audio file, it writes a simpler legacy shape instead of TipTap JSON:
+
+```json
+{
+  "blocks": [
+    {
+      "block_uuid": "block_7522d174-...",
+      "block_type": "BLOCK_IMAGE",
+      "content": { "file_id": "3a80fc43-...", "file_format": "png" }
+    }
+  ]
+}
+```
+
+The dynamic-page renderer accepts both shapes. Use the TipTap shape when authoring rich content; the simpler `blocks` shape exists primarily for migration-style media-only pages.
+
+#### Embedding media blocks
+
+Media blocks (`blockImage`, `blockVideo`, `blockPDF`, `blockAudio`) are atom nodes that point to a previously-uploaded Block via the `blockObject` attribute:
+
+```json
+{
+  "type": "blockImage",
+  "attrs": {
+    "blockObject": {
+      "block_uuid": "block_2a8...",
+      "block_type": "BLOCK_IMAGE",
+      "content": {
+        "file_id": "block_a1b2c3...",
+        "file_format": "png",
+        "file_name": "diagram.png",
+        "file_size": 24576,
+        "file_type": "image/png",
+        "activity_uuid": "activity_91c..."
+      }
+    },
+    "size": { "width": 600 },
+    "alignment": "center"
+  }
+}
+```
+
+The full `BlockRead` object returned by `POST /api/v1/blocks/image` (or `/video` / `/pdf` / `/audio`) goes into `attrs.blockObject`. Attribute defaults per block:
+
+| Block node | Required attrs | Optional attrs |
+| --- | --- | --- |
+| `blockImage` | `blockObject` | `size: { width }`, `alignment` (`center`, `left`, `right`), `unsplash_*` |
+| `blockVideo` | `blockObject` | -- |
+| `blockPDF` | `blockObject` | -- |
+| `blockAudio` | `blockObject` | -- |
+
+#### Code blocks
+
+Code blocks include a `language` attribute consumed by lowlight syntax highlighting:
+
+```json
+{
+  "type": "codeBlock",
+  "attrs": { "language": "python" },
+  "content": [
+    { "type": "text", "text": "def hello():\n    print(\"Hello, world!\")" }
+  ]
+}
+```
+
+Common languages: `python`, `javascript`, `typescript`, `java`, `cpp`, `c`, `rust`, `go`, `php`, `ruby`, `kotlin`, `csharp`, `swift`, `scala`, `perl`, `r`, plus anything supported by `lowlight`'s `common` set.
+
+#### Quiz blocks
+
+```json
+{
+  "type": "blockQuiz",
+  "attrs": {
+    "quizId": "quiz_1",
+    "questions": [
+      {
+        "id": "q1",
+        "question": "What does Python's print() do?",
+        "options": [
+          { "id": "a", "text": "Outputs to stdout", "correct": true },
+          { "id": "b", "text": "Reads input", "correct": false }
+        ]
+      }
+    ]
+  }
+}
+```
+
+The exact `questions` schema is the same one rendered by the editor's `QuizBlockComponent`. Inspect a real quiz in the editor and export the JSON if you need an authoritative shape -- it has evolved over time and is best treated as opaque to migration scripts.
+
+### Dynamic Markdown (`SUBTYPE_DYNAMIC_MARKDOWN`)
+
+Renders a Markdown file fetched from a remote URL.
+
+```json
+{
+  "name": "README",
+  "chapter_id": 7,
+  "activity_type": "TYPE_DYNAMIC",
+  "activity_sub_type": "SUBTYPE_DYNAMIC_MARKDOWN",
+  "content": { "markdown_url": "https://github.com/user/repo/raw/main/README.md" }
+}
+```
+
+The viewer fetches and renders the URL on each page load.
+
+### Dynamic Embed (`SUBTYPE_DYNAMIC_EMBED`)
+
+Renders an arbitrary URL inside an iframe (Google Docs, Notion, Figma, etc.):
+
+```json
+{
+  "name": "Course brief",
+  "chapter_id": 7,
+  "activity_type": "TYPE_DYNAMIC",
+  "activity_sub_type": "SUBTYPE_DYNAMIC_EMBED",
+  "content": { "embed_url": "https://docs.google.com/document/d/abc123/edit" }
+}
+```
+
+The embedded site must allow iframe embedding (`X-Frame-Options` / `Content-Security-Policy`). LearnHouse cannot work around a destination's frame-blocking headers.
+
+## Video activities
+
+`activity_type: "TYPE_VIDEO"`.
+
+### Hosted video (`SUBTYPE_VIDEO_HOSTED`)
+
+Created via the dedicated multipart endpoint -- you cannot create a hosted video by sending JSON to `/activities/`.
+
+<Callout type="info">
+The endpoint creates the activity with `published: false` regardless of any payload field. To publish, follow up with `PUT /api/v1/activities/{activity_uuid}` setting `{"published": true}`. The same is true for `/activities/external_video` and `/activities/documentpdf`.
+</Callout>
+
+**Create endpoint:** `POST /api/v1/activities/video`
+
+```bash
+curl -X POST "http://localhost:1338/api/v1/activities/video" \
+  -H "Authorization: Bearer lh_your_api_token" \
+  -F 'name=Lesson 1 walkthrough' \
+  -F 'chapter_id=7' \
+  -F 'video_file=@./lesson-01.mp4;type=video/mp4' \
+  -F 'details={"startTime":0,"endTime":null,"autoplay":false,"muted":false}'
+```
+
+`Content-Type` is checked strictly -- only `video/mp4` and `video/webm` are accepted. The server stores the file, builds the `content` object internally, and returns the resulting `ActivityRead`. The persisted `content` looks like:
+
+```json
+{
+  "filename": "1e231d81-ae8a-4142-b165-e2b158057bc1_video.mp4",
+  "activity_uuid": "activity_ec39ecc1-..."
+}
+```
+
+`filename` is the safe-on-disk name LearnHouse generated; the player resolves it through `/api/v1/content/...`. The `details` form field is a JSON-encoded string with player options:
+
+| `details` key | Type | Notes |
+| --- | --- | --- |
+| `startTime` | number (seconds) | Seek-to point on play |
+| `endTime` | number or `null` | Stop point (omit to play to end) |
+| `autoplay` | boolean | -- |
+| `muted` | boolean | -- |
+
+### External video (`SUBTYPE_VIDEO_YOUTUBE`)
+
+For YouTube and Vimeo embeds. Note the sub-type name is historical -- the same sub-type covers Vimeo too, distinguished by the `type` field in the request.
+
+**Create endpoint:** `POST /api/v1/activities/external_video`
+
+```bash
+curl -X POST "http://localhost:1338/api/v1/activities/external_video" \
+  -H "Authorization: Bearer lh_your_api_token" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "Intro lecture",
+    "uri": "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+    "type": "youtube",
+    "chapter_id": "7",
+    "details": "{\"startTime\":0,\"endTime\":null,\"autoplay\":false,\"muted\":false}"
+  }'
+```
+
+| Field | Type | Required | Notes |
+| --- | --- | --- | --- |
+| `name` | string | Yes | Activity title |
+| `uri` | string | Yes | YouTube or Vimeo URL |
+| `type` | enum | Yes | `"youtube"` or `"vimeo"` |
+| `chapter_id` | string | Yes | Numeric chapter ID, sent as a string |
+| `details` | string | No | JSON-encoded player options (same keys as above), defaults to `"{}"` |
+
+The persisted `content` is `{ uri, type, activity_uuid }`.
+
+## Document activities
+
+`activity_type: "TYPE_DOCUMENT"`.
+
+### PDF (`SUBTYPE_DOCUMENT_PDF`)
+
+**Create endpoint:** `POST /api/v1/activities/documentpdf`
+
+```bash
+curl -X POST "http://localhost:1338/api/v1/activities/documentpdf" \
+  -H "Authorization: Bearer lh_your_api_token" \
+  -F 'name=Course syllabus' \
+  -F 'chapter_id=7' \
+  -F 'pdf_file=@./syllabus.pdf;type=application/pdf'
+```
+
+`Content-Type` must be `application/pdf`. The persisted `content` is:
+
+```json
+{
+  "filename": "9325f6f7-...-d4ecbfdc89c1_documentpdf.pdf",
+  "activity_uuid": "activity_37d02abc-..."
+}
+```
+
+The viewer renders the PDF with PDF.js.
+
+### Generic document (`SUBTYPE_DOCUMENT_DOC`)
+
+Reserved sub-type. There is no dedicated upload endpoint -- if you need to host arbitrary downloadable files, use a hosted-video-style upload via the editor UI, or wrap the file in a Block and reference it from a dynamic page.
+
+## Assignments
+
+`activity_type: "TYPE_ASSIGNMENT"`, `activity_sub_type: "SUBTYPE_ASSIGNMENT_ANY"`.
+
+<Callout type="warning">
+**An assignment activity on its own is an empty box.** The activity record is just a placeholder -- the title, description, due date, grading type, and any submission tasks live in a separate `Assignment` record. If you create the activity but skip the second step, learners see a blank panel. Treat both calls as a single transaction in your migration script.
+</Callout>
+
+An assignment is a **three-step** create when you want learners to actually submit something:
+
+### Step 1 -- Create the activity shell
+
+Generic `POST /api/v1/activities/`:
+
+```json
+{
+  "name": "Final assignment",
+  "chapter_id": 7,
+  "activity_type": "TYPE_ASSIGNMENT",
+  "activity_sub_type": "SUBTYPE_ASSIGNMENT_ANY",
+  "content": {},
+  "published": true
+}
+```
+
+Capture `id` and `activity_uuid` from the response.
+
+### Step 2 -- Create the linked Assignment record
+
+`POST /api/v1/assignments/` with the assignment metadata. **All numeric IDs are required**:
+
+```json
+{
+  "title": "Final assignment",
+  "description": "Submit your final project.",
+  "due_date": "2026-12-31",
+  "grading_type": "PERCENTAGE",
+  "published": true,
+  "org_id": 1,
+  "course_id": 17,
+  "chapter_id": 7,
+  "activity_id": 145,
+  "auto_grading": false,
+  "anti_copy_paste": false,
+  "show_correct_answers": false
+}
+```
+
+| Field | Type | Required | Notes |
+| --- | --- | --- | --- |
+| `title` | string | Yes | Shown in the assignment header |
+| `description` | string | Yes | Body text |
+| `due_date` | string (`YYYY-MM-DD`) | Yes | -- |
+| `grading_type` | enum | Yes | `ALPHABET`, `NUMERIC`, `PERCENTAGE`, `PASS_FAIL`, `GPA_SCALE` |
+| `org_id` / `course_id` / `chapter_id` / `activity_id` | int | Yes | All four foreign keys are required |
+| `published` | boolean | No | Defaults `false` |
+| `auto_grading` / `anti_copy_paste` / `show_correct_answers` | boolean | No | All default `false` |
+
+The response includes `assignment_uuid`, which is the handle for step 3.
+
+### Step 3 -- Add at least one Task
+
+Without tasks, the assignment renders the description but has no submission UI. `POST /api/v1/assignments/{assignment_uuid}/tasks`:
+
+```json
+{
+  "title": "Submit your project file",
+  "description": "Upload a PDF of your final project.",
+  "hint": "Use a clear filename.",
+  "assignment_type": "FILE_SUBMISSION",
+  "contents": {},
+  "max_grade_value": 100
+}
+```
+
+| Field | Type | Required | Notes |
+| --- | --- | --- | --- |
+| `title` | string | Yes | -- |
+| `description` | string | Yes | -- |
+| `hint` | string | Yes | Pass `""` if you don't want a hint -- the field is required by the model |
+| `assignment_type` | enum | Yes | See list below |
+| `contents` | object | No (default `{}`) | Type-dependent payload |
+| `max_grade_value` | int | No (default `100`) | Tasks are graded out of this value; new code uses `100` everywhere |
+| `reference_file` | string | No | Reference document URL or filename |
+
+Task types (`assignment_type`): `FILE_SUBMISSION`, `QUIZ`, `FORM`, `CODE`, `SHORT_ANSWER`, `NUMBER_ANSWER`, `OTHER`. Each task type interprets `contents` differently -- the safest path for unknown types is `{}`. See the `/api/v1/assignments/` endpoint group in Swagger UI for the per-type contents schema.
+
+<Callout type="warning">
+**Assignments require authentication to view**, even on a public course. The `/api/v1/assignments/*` router has a router-level `Depends(require_authenticated_user)` that returns `401` for anonymous requests, so an unauthenticated viewer of a public course sees an **empty panel** where the assignment widget would be. The course outline still lists the assignment activity, but the assignment's title, description, due date, tasks and submission UI only appear after login. There is no public read mode for assignments today -- if learners need to read the assignment description without signing in, surface it in a sibling dynamic page instead.
+</Callout>
+
+## Custom
+
+`activity_type: "TYPE_CUSTOM"`, `activity_sub_type: "SUBTYPE_CUSTOM"`.
+
+A free-form activity. `content` is any JSON object you want -- the platform stores it verbatim and exposes it to a custom renderer that you supply on the frontend. Use this when no built-in type fits and you have your own UI for the activity.
+
+```json
+{
+  "name": "Custom widget",
+  "chapter_id": 7,
+  "activity_type": "TYPE_CUSTOM",
+  "activity_sub_type": "SUBTYPE_CUSTOM",
+  "content": { "anything": "you want", "shape": [1, 2, 3] }
+}
+```
+
+<Callout type="warning">
+**Stock LearnHouse has no built-in renderer for `TYPE_CUSTOM`.** The activity will appear as an empty container in the learner viewer until you ship a custom frontend component for it. Treat `TYPE_CUSTOM` as a hook for your own integration code -- if you don't already have that integration, prefer `SUBTYPE_DYNAMIC_PAGE` (TipTap) or `SUBTYPE_DYNAMIC_EMBED` (iframe) instead.
+</Callout>
+
+## SCORM
+
+`activity_type: "TYPE_SCORM"`, sub-types `SUBTYPE_SCORM_12` and `SUBTYPE_SCORM_2004`.
+
+SCORM packages are uploaded through the editor UI -- the manifest (`imsmanifest.xml`) is parsed, files are extracted to storage, and the `content` is populated with launch metadata. Programmatic creation of SCORM activities is not currently exposed as a documented public endpoint; check the Swagger UI on a development instance for the latest interface.
+
+## The full enum (verbatim)
+
+Reproduced from `apps/api/src/db/courses/activities.py`:
+
+```python
+class ActivityTypeEnum(str, Enum):
+    TYPE_VIDEO = "TYPE_VIDEO"
+    TYPE_DOCUMENT = "TYPE_DOCUMENT"
+    TYPE_DYNAMIC = "TYPE_DYNAMIC"
+    TYPE_ASSIGNMENT = "TYPE_ASSIGNMENT"
+    TYPE_CUSTOM = "TYPE_CUSTOM"
+    TYPE_SCORM = "TYPE_SCORM"
+
+
+class ActivitySubTypeEnum(str, Enum):
+    # Dynamic
+    SUBTYPE_DYNAMIC_PAGE = "SUBTYPE_DYNAMIC_PAGE"
+    SUBTYPE_DYNAMIC_MARKDOWN = "SUBTYPE_DYNAMIC_MARKDOWN"
+    SUBTYPE_DYNAMIC_EMBED = "SUBTYPE_DYNAMIC_EMBED"
+    # Video
+    SUBTYPE_VIDEO_YOUTUBE = "SUBTYPE_VIDEO_YOUTUBE"
+    SUBTYPE_VIDEO_HOSTED = "SUBTYPE_VIDEO_HOSTED"
+    # Document
+    SUBTYPE_DOCUMENT_PDF = "SUBTYPE_DOCUMENT_PDF"
+    SUBTYPE_DOCUMENT_DOC = "SUBTYPE_DOCUMENT_DOC"
+    # Assignment
+    SUBTYPE_ASSIGNMENT_ANY = "SUBTYPE_ASSIGNMENT_ANY"
+    # Custom
+    SUBTYPE_CUSTOM = "SUBTYPE_CUSTOM"
+    # SCORM
+    SUBTYPE_SCORM_12 = "SUBTYPE_SCORM_12"
+    SUBTYPE_SCORM_2004 = "SUBTYPE_SCORM_2004"
+
+
+class ActivityLockType(str, Enum):
+    PUBLIC = "public"                # anyone, including anonymous, can view
+    AUTHENTICATED = "authenticated"  # must be signed in
+    RESTRICTED = "restricted"        # only members of assigned usergroups
+```

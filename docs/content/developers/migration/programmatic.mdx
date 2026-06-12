@@ -1,0 +1,588 @@
+import { Callout } from 'nextra/components'
+
+# Programmatic Migration
+
+This guide walks through the full sequence of API calls needed to build a course from scratch -- the same calls the LearnHouse web UI makes when an editor clicks through the dashboard. Use it as a reference when writing your own migration script.
+
+The base URL in every example is `http://localhost:1338/api/v1` -- replace it with your instance domain.
+
+<Callout type="info">
+All examples use an API token (`Authorization: Bearer lh_...`). A user JWT works identically.
+</Callout>
+
+## 1. Create the course
+
+```bash
+curl -X POST "http://localhost:1338/api/v1/courses/?org_id=1" \
+  -H "Authorization: Bearer lh_your_api_token" \
+  -F 'name=Introduction to Python' \
+  -F 'description=A beginner-friendly Python course' \
+  -F 'public=false' \
+  -F 'about=Hands-on Python from zero to writing your first scripts.' \
+  -F 'thumbnail_type=image' \
+  -F 'thumbnail=@./thumbnail.png'
+```
+
+`org_id` is a query parameter on the create endpoint. The body is **multipart form data** because the same call optionally uploads a thumbnail image or video.
+
+| Field | Type | Required | Notes |
+| --- | --- | --- | --- |
+| `name` | string | Yes | Course title |
+| `description` | string | Yes | Short description (one-liner) |
+| `about` | string | Yes | Long-form description shown on the course page |
+| `public` | boolean | Yes | `true` = listed publicly, `false` = members only |
+| `thumbnail_type` | enum | No | `image` (default) or `video` |
+| `thumbnail` | file | No | Image or video file matching `thumbnail_type` |
+| `learnings` | string | No | JSON-encoded array of learning objectives |
+| `tags` | string | No | JSON-encoded array of tags |
+
+The response is a `CourseRead`:
+
+```json
+{
+  "id": 42,
+  "course_uuid": "course_8e3...",
+  "org_id": 1,
+  "name": "Introduction to Python",
+  "description": "A beginner-friendly Python course",
+  "about": "Hands-on Python from zero to writing your first scripts.",
+  "public": false,
+  "published": false,
+  "thumbnail_type": "image",
+  "thumbnail_image": "thumbnail.png",
+  "thumbnail_video": "",
+  "creation_date": "2026-04-25 10:00:00",
+  "update_date": "2026-04-25 10:00:00",
+  "authors": [...]
+}
+```
+
+**Capture both `id` and `course_uuid`.** You will need `id` (integer) to create chapters, and `course_uuid` to fetch, update, or delete the course later.
+
+## 2. Create chapters
+
+Chapters are created one at a time with a JSON body:
+
+```bash
+curl -X POST "http://localhost:1338/api/v1/chapters/" \
+  -H "Authorization: Bearer lh_your_api_token" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "Chapter 1 — Getting set up",
+    "description": "Install Python, pick an editor, write hello world.",
+    "course_id": 42,
+    "org_id": 1,
+    "lock_type": "public"
+  }'
+```
+
+| Field | Type | Required | Notes |
+| --- | --- | --- | --- |
+| `name` | string | Yes | Chapter title |
+| `course_id` | integer | Yes | Course primary key from step 1 |
+| `org_id` | integer | Yes | Same org as the course |
+| `description` | string | No | Short description |
+| `thumbnail_image` | string | No | URL or path to a thumbnail |
+| `lock_type` | enum | No | `public` (default), `authenticated`, or `restricted` |
+
+Response (`ChapterRead`):
+
+```json
+{
+  "id": 7,
+  "chapter_uuid": "chapter_4d1...",
+  "name": "Chapter 1 — Getting set up",
+  "description": "Install Python, pick an editor, write hello world.",
+  "course_id": 42,
+  "org_id": 1,
+  "lock_type": "public",
+  "is_locked": false,
+  "activities": [],
+  "creation_date": "...",
+  "update_date": "..."
+}
+```
+
+Capture `id` -- it is the `chapter_id` you will pass when creating activities.
+
+<Callout type="info">
+Chapters appear in the order they are created. To rearrange them later (or to reorder activities inside a chapter), call `PUT /api/v1/chapters/course/{course_uuid}/order` with the desired ordering. See [Reordering](#reordering) below.
+</Callout>
+
+## 3. Create activities
+
+There are three families of activity-create endpoints, depending on the activity type:
+
+### 3a. Generic JSON create -- `POST /api/v1/activities/`
+
+Use this for **dynamic pages, markdown pages, embeds, assignments (shell), and custom activities**. The body is `ActivityCreate`:
+
+```bash
+curl -X POST "http://localhost:1338/api/v1/activities/" \
+  -H "Authorization: Bearer lh_your_api_token" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "Hello, world",
+    "chapter_id": 7,
+    "activity_type": "TYPE_DYNAMIC",
+    "activity_sub_type": "SUBTYPE_DYNAMIC_PAGE",
+    "content": {},
+    "details": {},
+    "published": false,
+    "lock_type": "public"
+  }'
+```
+
+| Field | Type | Required | Notes |
+| --- | --- | --- | --- |
+| `name` | string | Yes | Activity title |
+| `chapter_id` | integer | Yes | Chapter primary key from step 2 |
+| `activity_type` | enum | No (default `TYPE_CUSTOM`) | Always set this explicitly -- the default is rarely what you want. See [Activity Types Reference](/developers/migration/activity-types) |
+| `activity_sub_type` | enum | No (default `SUBTYPE_CUSTOM`) | Sub-type for the chosen `activity_type`; the default pairs with `TYPE_CUSTOM` and won't render in the stock viewer |
+| `content` | object | No (default `{}`) | Per-type JSON payload (see reference). Always required in practice for every type except a freshly-shelled assignment. |
+| `details` | object | No | Per-type metadata (e.g. video player options) |
+| `published` | boolean | No | Defaults to `false` |
+| `lock_type` | enum | No | `public`, `authenticated`, or `restricted` |
+
+The response is an `ActivityRead`. Capture `id` and `activity_uuid` -- you will need `activity_uuid` if you plan to upload media blocks for a dynamic page, and to update `content` later.
+
+### 3b. Hosted video upload -- `POST /api/v1/activities/video`
+
+Multipart form data. Creates a `TYPE_VIDEO` / `SUBTYPE_VIDEO_HOSTED` activity in one call:
+
+```bash
+curl -X POST "http://localhost:1338/api/v1/activities/video" \
+  -H "Authorization: Bearer lh_your_api_token" \
+  -F 'name=Lesson 1 walkthrough' \
+  -F 'chapter_id=7' \
+  -F 'video_file=@./lesson-01.mp4;type=video/mp4' \
+  -F 'details={"startTime":0,"endTime":null,"autoplay":false,"muted":false}'
+```
+
+`chapter_id` is sent as a string in the form -- it is parsed to an integer server-side.
+
+<Callout type="warning">
+The endpoint validates `Content-Type` strictly: only `video/mp4` and `video/webm` are accepted. Curl's automatic content-type detection works for real `.mp4` / `.webm` files, but if the upload is rejected with `"Video : Wrong video format"`, append `;type=video/mp4` (or `video/webm`) to the `-F` argument to set it explicitly.
+</Callout>
+
+### 3c. External video -- `POST /api/v1/activities/external_video`
+
+JSON body. Creates a `TYPE_VIDEO` / `SUBTYPE_VIDEO_YOUTUBE` activity that embeds an external player:
+
+```bash
+curl -X POST "http://localhost:1338/api/v1/activities/external_video" \
+  -H "Authorization: Bearer lh_your_api_token" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "Intro lecture",
+    "uri": "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+    "type": "youtube",
+    "chapter_id": "7",
+    "details": "{\"startTime\":0,\"endTime\":null,\"autoplay\":false,\"muted\":false}"
+  }'
+```
+
+`type` accepts `"youtube"` or `"vimeo"`. `chapter_id` and `details` are both **strings** for this endpoint -- `details` is a JSON-encoded string that the server parses.
+
+### 3d. PDF document -- `POST /api/v1/activities/documentpdf`
+
+Multipart form data. Creates a `TYPE_DOCUMENT` / `SUBTYPE_DOCUMENT_PDF` activity:
+
+```bash
+curl -X POST "http://localhost:1338/api/v1/activities/documentpdf" \
+  -H "Authorization: Bearer lh_your_api_token" \
+  -F 'name=Course syllabus' \
+  -F 'chapter_id=7' \
+  -F 'pdf_file=@./syllabus.pdf;type=application/pdf'
+```
+
+<Callout type="warning">
+`Content-Type` must be exactly `application/pdf`, otherwise the server returns `"Pdf : Wrong pdf format"`. As with video uploads, curl auto-detects this for real PDFs but `;type=application/pdf` makes it explicit.
+</Callout>
+
+### 3e. Assignments (three-step)
+
+An assignment is **never just an activity**. It is an activity shell + an `Assignment` record + at least one `AssignmentTask`. Skip any of those steps and learners see a blank panel. Full sequence:
+
+```bash
+# 1. Activity shell
+ACT=$(curl -fsS -X POST "http://localhost:1338/api/v1/activities/" \
+  -H "Authorization: Bearer lh_your_api_token" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "Final project",
+    "chapter_id": 7,
+    "activity_type": "TYPE_ASSIGNMENT",
+    "activity_sub_type": "SUBTYPE_ASSIGNMENT_ANY",
+    "content": {},
+    "published": true
+  }')
+ACT_ID=$(echo "$ACT" | jq -r .id)
+
+# 2. Assignment record (all four foreign keys are required)
+ASSIGN=$(curl -fsS -X POST "http://localhost:1338/api/v1/assignments/" \
+  -H "Authorization: Bearer lh_your_api_token" \
+  -H "Content-Type: application/json" \
+  -d "{
+    \"title\":\"Final project\",
+    \"description\":\"Submit your final project.\",
+    \"due_date\":\"2026-12-31\",
+    \"grading_type\":\"PERCENTAGE\",
+    \"published\":true,
+    \"org_id\":1,
+    \"course_id\":42,
+    \"chapter_id\":7,
+    \"activity_id\":$ACT_ID
+  }")
+ASSIGN_UUID=$(echo "$ASSIGN" | jq -r .assignment_uuid)
+
+# 3. At least one task — without this the assignment renders without a submission UI
+curl -fsS -X POST "http://localhost:1338/api/v1/assignments/$ASSIGN_UUID/tasks" \
+  -H "Authorization: Bearer lh_your_api_token" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "title":"Submit your project file",
+    "description":"Upload a PDF of your final project.",
+    "hint":"Use a clear filename.",
+    "assignment_type":"FILE_SUBMISSION",
+    "contents":{},
+    "max_grade_value":100
+  }'
+```
+
+See [Activity Types Reference -- Assignments](/developers/migration/activity-types#assignments) for the full field list, supported `grading_type` values, and `assignment_type` task types (`FILE_SUBMISSION`, `QUIZ`, `FORM`, `CODE`, `SHORT_ANSWER`, `NUMBER_ANSWER`, `OTHER`).
+
+## 4. (Optional) Add media blocks to a dynamic page
+
+For `SUBTYPE_DYNAMIC_PAGE` activities, images / videos / PDFs / audio can be embedded inline. The recommended flow is:
+
+1. Upload the file to a Block via `POST /api/v1/blocks/{image|video|pdf|audio}`.
+2. Embed the returned `BlockRead` object as the `blockObject` attribute of a TipTap node inside the activity's `content`.
+3. Persist the updated `content` via `PUT /api/v1/activities/{activity_uuid}`.
+
+Upload an image block (note: the blocks router rejects API tokens — use a JWT, e.g. one minted via the admin token-swap documented in [Overview → Authentication](/developers/migration#authentication)):
+
+```bash
+curl -X POST "http://localhost:1338/api/v1/blocks/image" \
+  -H "Authorization: Bearer $JWT" \
+  -F 'activity_uuid=activity_91c...' \
+  -F 'file_object=@./diagram.png'
+```
+
+Response:
+
+```json
+{
+  "id": 13,
+  "block_uuid": "block_2a8...",
+  "block_type": "BLOCK_IMAGE",
+  "content": {
+    "file_id": "90b8f12e-fb6b-4726-85ef-f6b511e319e5_block_2a8...",
+    "file_format": "png",
+    "file_name": "diagram.png",
+    "file_size": 24576,
+    "file_type": "image/png",
+    "activity_uuid": "activity_91c..."
+  },
+  "org_id": 1,
+  "course_id": 42,
+  "chapter_id": null,
+  "activity_id": 99,
+  "creation_date": "...",
+  "update_date": "..."
+}
+```
+
+`content.file_id` is a compound identifier (a UUID, an underscore, then the block UUID). Treat it as opaque -- the renderer uses it as-is to fetch the asset from `/api/v1/content/...`.
+
+You can then reference this block from a TipTap `blockImage` node inside the activity's `content`. See [Activity Types Reference -- Dynamic Page](/developers/migration/activity-types#dynamic-page-subtype_dynamic_page) for the exact node shape.
+
+The four block endpoints are symmetric:
+
+| Endpoint | Allowed file extensions | Resulting `block_type` |
+| --- | --- | --- |
+| `POST /api/v1/blocks/image` | `jpg, jpeg, png, gif, webp` | `BLOCK_IMAGE` |
+| `POST /api/v1/blocks/video` | `mp4, webm, ogg` | `BLOCK_VIDEO` |
+| `POST /api/v1/blocks/pdf` | `pdf` | `BLOCK_DOCUMENT_PDF` |
+| `POST /api/v1/blocks/audio` | `mp3, wav, ogg, m4a` | `BLOCK_AUDIO` |
+
+All four take the same form fields: `file_object` (the file) and `activity_uuid` (the parent activity).
+
+## 5. Update an activity's content
+
+After creating a dynamic-page activity (`content: {}`), upload any media blocks, then `PUT` the full TipTap document:
+
+```bash
+curl -X PUT "http://localhost:1338/api/v1/activities/activity_91c..." \
+  -H "Authorization: Bearer lh_your_api_token" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "content": {
+      "type": "doc",
+      "content": [
+        { "type": "heading", "attrs": { "level": 1 },
+          "content": [{ "type": "text", "text": "Hello, world" }] },
+        { "type": "paragraph",
+          "content": [{ "type": "text", "text": "Welcome to the course." }] }
+      ]
+    }
+  }'
+```
+
+The full list of valid TipTap node types is in [Activity Types Reference](/developers/migration/activity-types#valid-tiptap-block-types).
+
+`ActivityUpdate` accepts a partial body -- only fields you set are changed. Updateable fields:
+
+| Field | Type | Notes |
+| --- | --- | --- |
+| `name` | string | Activity title |
+| `content` | object | Replaces the entire content document |
+| `details` | object | Replaces the details object |
+| `published` | boolean | Flip to `true` when ready to publish |
+| `lock_type` | enum | Access control |
+| `published_version` / `version` | int | Advanced versioning -- usually leave alone |
+
+`activity_type` and `activity_sub_type` are technically updateable in the schema but should be treated as immutable in practice -- the persisted `content` shape will not match the new type.
+
+## Reordering
+
+Chapters and the activities inside them appear in the order they were created. To explicitly set ordering, call:
+
+```bash
+curl -X PUT "http://localhost:1338/api/v1/chapters/course/course_8e3.../order" \
+  -H "Authorization: Bearer lh_your_api_token" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "chapter_order_by_ids": [
+      { "chapter_id": 7,  "activities_order_by_ids": [{"activity_id": 99}, {"activity_id": 100}] },
+      { "chapter_id": 8,  "activities_order_by_ids": [{"activity_id": 101}] }
+    ]
+  }'
+```
+
+The path takes the `course_uuid`.
+
+<Callout type="warning">
+**This endpoint is destructive.** It re-specifies the entire course tree -- every chapter you omit from `chapter_order_by_ids` is unlinked from the course, and every activity you omit from a chapter's `activities_order_by_ids` is unlinked from that chapter. The underlying Activity / Chapter rows are not deleted, but they are removed from the course's table of contents and learners will no longer see them.
+
+Always:
+- Fetch the current tree first via `GET /api/v1/courses/{course_uuid}/meta?with_unpublished_activities=true&slim=true`,
+- Build the reorder payload from that tree (modifying only the order),
+- Then `PUT` it back.
+
+Sending an empty `activities_order_by_ids` for a chapter wipes that chapter's activities from the course.
+</Callout>
+
+## Publishing
+
+When the migration is complete, flip the course and each activity to `published: true`:
+
+```bash
+# Publish the course
+curl -X PUT "http://localhost:1338/api/v1/courses/course_8e3..." \
+  -H "Authorization: Bearer lh_your_api_token" \
+  -H "Content-Type: application/json" \
+  -d '{ "published": true }'
+
+# Publish an activity
+curl -X PUT "http://localhost:1338/api/v1/activities/activity_91c..." \
+  -H "Authorization: Bearer lh_your_api_token" \
+  -H "Content-Type: application/json" \
+  -d '{ "published": true }'
+```
+
+To preview unpublished work, fetch the course tree with the `with_unpublished_activities` flag:
+
+```bash
+curl "http://localhost:1338/api/v1/courses/course_8e3.../meta?with_unpublished_activities=true" \
+  -H "Authorization: Bearer lh_your_api_token"
+```
+
+## End-to-end script (bash)
+
+The script below creates a complete, public, published course with **one of every activity type** -- a thumbnail, three chapters, a TipTap dynamic page with an embedded image block, a remote-Markdown page, an iframe embed, a hosted MP4, a YouTube embed, a PDF, and a fully-functional assignment with one File Submission task. It is the same flow used to validate this documentation against a live instance.
+
+Save the assets you want to use to a folder (the script expects `thumbnail.jpg`, `diagram.jpg`, `clip.mp4`, `doc.pdf`) and run it. Total runtime is under 10 seconds against a local dev instance.
+
+<Callout type="info">
+**Pre-requisites:** `bash`, `curl`, `jq`, and `python3` (for one inline JSON-builder). The script uses the API-token-to-JWT swap so it works with either an `lh_*` API token (the recommended setup) or by replacing `TOKEN=...` with a JWT you already have.
+</Callout>
+
+```bash
+#!/usr/bin/env bash
+# build-demo-course.sh — create a complete course end-to-end via the LearnHouse API.
+set -euo pipefail
+
+# ── Config ───────────────────────────────────────────────────────────────────
+API=http://localhost:1338/api/v1
+API_TOKEN=lh_your_api_token        # Pro-plan API token
+ORG_SLUG=default                   # your org slug
+ORG_ID=1                           # your org id
+USER_ID=1                          # which user the script acts as
+ASSETS=./assets                    # folder containing thumbnail.jpg, diagram.jpg, clip.mp4, doc.pdf
+
+# ── 0. Mint a user JWT from the API token ───────────────────────────────────
+# (Most endpoints accept the API token directly, but the JWT path is universal
+# — including the AI-assisted migration endpoints which reject API tokens.)
+TOKEN=$(curl -fsS -X POST "$API/admin/$ORG_SLUG/auth/token" \
+  -H "Authorization: Bearer $API_TOKEN" \
+  -H 'Content-Type: application/json' \
+  -d "{\"user_id\":$USER_ID}" | jq -r .access_token)
+
+# Tiny helpers
+post_json() { curl -fsS -X POST "$1" -H "Authorization: Bearer $TOKEN" -H 'Content-Type: application/json' -d "$2"; }
+put_json()  { curl -fsS -X PUT  "$1" -H "Authorization: Bearer $TOKEN" -H 'Content-Type: application/json' -d "$2"; }
+
+# ── 1. Course (multipart, with a real JPEG thumbnail) ───────────────────────
+COURSE=$(curl -fsS -X POST "$API/courses/?org_id=$ORG_ID" \
+  -H "Authorization: Bearer $TOKEN" \
+  -F 'name=The Complete Demo Course' \
+  -F 'description=One of every activity type, built via the API' \
+  -F 'about=Created end-to-end by the LearnHouse migration quickstart script.' \
+  -F 'public=true' \
+  -F 'thumbnail_type=image' \
+  -F "thumbnail=@$ASSETS/thumbnail.jpg;type=image/jpeg")
+CID=$(echo "$COURSE" | jq -r .id)
+CUUID=$(echo "$COURSE" | jq -r .course_uuid)
+echo "→ course $CUUID (id=$CID)"
+
+# ── 2. Three chapters ───────────────────────────────────────────────────────
+CH1_ID=$(post_json "$API/chapters/" \
+  "{\"name\":\"1. Dynamic content\",\"description\":\"Pages, embeds, markdown\",\"course_id\":$CID,\"org_id\":$ORG_ID}" | jq -r .id)
+CH2_ID=$(post_json "$API/chapters/" \
+  "{\"name\":\"2. Media\",\"description\":\"Hosted video, YouTube, PDF\",\"course_id\":$CID,\"org_id\":$ORG_ID}" | jq -r .id)
+CH3_ID=$(post_json "$API/chapters/" \
+  "{\"name\":\"3. Interactive\",\"description\":\"Assignment\",\"course_id\":$CID,\"org_id\":$ORG_ID}" | jq -r .id)
+
+# ── 3a. Dynamic Page (TipTap content with an embedded image block) ──────────
+# Create the activity with empty content first, then upload an image block,
+# then PUT the full TipTap document referencing that block.
+PAGE=$(post_json "$API/activities/" \
+  "{\"name\":\"Welcome page\",\"chapter_id\":$CH1_ID,\"activity_type\":\"TYPE_DYNAMIC\",\"activity_sub_type\":\"SUBTYPE_DYNAMIC_PAGE\",\"content\":{},\"published\":true}")
+PAGE_UUID=$(echo "$PAGE" | jq -r .activity_uuid)
+
+BLOCK=$(curl -fsS -X POST "$API/blocks/image" \
+  -H "Authorization: Bearer $TOKEN" \
+  -F "activity_uuid=$PAGE_UUID" \
+  -F "file_object=@$ASSETS/diagram.jpg;type=image/jpeg")
+echo "$BLOCK" > /tmp/lh-block.json
+
+# Build the TipTap document — the image block is embedded as a `blockImage`
+# atom node whose `attrs.blockObject` carries the full BlockRead response.
+TIPTAP=$(python3 - <<'PY'
+import json
+block = json.load(open('/tmp/lh-block.json'))
+doc = {
+  "type": "doc",
+  "content": [
+    {"type":"heading","attrs":{"level":1},"content":[{"type":"text","text":"Welcome to the demo course"}]},
+    {"type":"paragraph","content":[
+      {"type":"text","text":"This page was created "},
+      {"type":"text","text":"entirely via the API","marks":[{"type":"bold"}]},
+      {"type":"text","text":". It uses TipTap blocks: paragraphs, headings, lists, code, and an image block."}
+    ]},
+    {"type":"heading","attrs":{"level":2},"content":[{"type":"text","text":"A figure"}]},
+    {"type":"blockImage","attrs":{"blockObject": block, "size":{"width":500},"alignment":"center"}},
+    {"type":"heading","attrs":{"level":2},"content":[{"type":"text","text":"What you will learn"}]},
+    {"type":"bulletList","content":[
+      {"type":"listItem","content":[{"type":"paragraph","content":[{"type":"text","text":"Programmatic course migration"}]}]},
+      {"type":"listItem","content":[{"type":"paragraph","content":[{"type":"text","text":"Every activity type"}]}]},
+      {"type":"listItem","content":[{"type":"paragraph","content":[{"type":"text","text":"TipTap content blocks"}]}]}
+    ]},
+    {"type":"heading","attrs":{"level":2},"content":[{"type":"text","text":"A code block"}]},
+    {"type":"codeBlock","attrs":{"language":"python"},
+     "content":[{"type":"text","text":"def hello():\n    print(\"Hello, world!\")\n\nhello()"}]}
+  ]
+}
+print(json.dumps({"content": doc, "published": True}))
+PY
+)
+put_json "$API/activities/$PAGE_UUID" "$TIPTAP" > /dev/null
+
+# ── 3b. Dynamic Markdown (renders a remote .md URL) ─────────────────────────
+post_json "$API/activities/" \
+  "{\"name\":\"Markdown remote page\",\"chapter_id\":$CH1_ID,\"activity_type\":\"TYPE_DYNAMIC\",\"activity_sub_type\":\"SUBTYPE_DYNAMIC_MARKDOWN\",\"content\":{\"markdown_url\":\"https://raw.githubusercontent.com/anthropics/anthropic-cookbook/main/README.md\"},\"published\":true}" > /dev/null
+
+# ── 3c. Dynamic Embed (iframe) ──────────────────────────────────────────────
+post_json "$API/activities/" \
+  "{\"name\":\"Embed example\",\"chapter_id\":$CH1_ID,\"activity_type\":\"TYPE_DYNAMIC\",\"activity_sub_type\":\"SUBTYPE_DYNAMIC_EMBED\",\"content\":{\"embed_url\":\"https://en.wikipedia.org/wiki/Special:Random\"},\"published\":true}" > /dev/null
+
+# ── 4a. Hosted MP4 (multipart, then PUT to publish) ─────────────────────────
+# /activities/video forces published=false on create; we flip it after.
+VID=$(curl -fsS -X POST "$API/activities/video" \
+  -H "Authorization: Bearer $TOKEN" \
+  -F 'name=Hosted MP4 sample' \
+  -F "chapter_id=$CH2_ID" \
+  -F "video_file=@$ASSETS/clip.mp4;type=video/mp4" \
+  -F 'details={"startTime":0,"endTime":null,"autoplay":false,"muted":false}')
+put_json "$API/activities/$(echo "$VID" | jq -r .activity_uuid)" '{"published":true}' > /dev/null
+
+# ── 4b. YouTube external video (JSON, then PUT to publish) ──────────────────
+YT=$(post_json "$API/activities/external_video" \
+  "{\"name\":\"YouTube embed\",\"uri\":\"https://www.youtube.com/watch?v=jNQXAC9IVRw\",\"type\":\"youtube\",\"chapter_id\":\"$CH2_ID\",\"details\":\"{\\\"startTime\\\":0,\\\"endTime\\\":null,\\\"autoplay\\\":false,\\\"muted\\\":false}\"}")
+put_json "$API/activities/$(echo "$YT" | jq -r .activity_uuid)" '{"published":true}' > /dev/null
+
+# ── 4c. PDF document (multipart, then PUT to publish) ───────────────────────
+PDF=$(curl -fsS -X POST "$API/activities/documentpdf" \
+  -H "Authorization: Bearer $TOKEN" \
+  -F 'name=Sample PDF document' \
+  -F "chapter_id=$CH2_ID" \
+  -F "pdf_file=@$ASSETS/doc.pdf;type=application/pdf")
+put_json "$API/activities/$(echo "$PDF" | jq -r .activity_uuid)" '{"published":true}' > /dev/null
+
+# ── 5. Assignment (THREE-step: shell + record + at least one task) ──────────
+ASSIGN_ACT=$(post_json "$API/activities/" \
+  "{\"name\":\"Final assignment\",\"chapter_id\":$CH3_ID,\"activity_type\":\"TYPE_ASSIGNMENT\",\"activity_sub_type\":\"SUBTYPE_ASSIGNMENT_ANY\",\"content\":{},\"published\":true}")
+ASSIGN_ACT_ID=$(echo "$ASSIGN_ACT" | jq -r .id)
+
+ASSIGN=$(post_json "$API/assignments/" \
+  "{\"title\":\"Final assignment\",\"description\":\"Submit your final project.\",\"due_date\":\"2026-12-31\",\"grading_type\":\"PERCENTAGE\",\"published\":true,\"org_id\":$ORG_ID,\"course_id\":$CID,\"chapter_id\":$CH3_ID,\"activity_id\":$ASSIGN_ACT_ID}")
+ASSIGN_UUID=$(echo "$ASSIGN" | jq -r .assignment_uuid)
+
+post_json "$API/assignments/$ASSIGN_UUID/tasks" \
+  '{"title":"Submit your project file","description":"Upload a PDF of your final project.","hint":"Use a clear filename.","assignment_type":"FILE_SUBMISSION","contents":{},"max_grade_value":100}' > /dev/null
+
+# ── 6. Publish the course ───────────────────────────────────────────────────
+put_json "$API/courses/$CUUID" '{"published":true,"public":true}' > /dev/null
+
+# ── 7. Verify ───────────────────────────────────────────────────────────────
+echo ""
+echo "Tree:"
+curl -fsS "$API/courses/$CUUID/meta?with_unpublished_activities=true&slim=true" \
+  -H "Authorization: Bearer $TOKEN" | jq -r '
+    "course: \(.name) (public=\(.public), published=\(.published))",
+    (.chapters[] | "  \(.name)",
+      (.activities[] | "    - \(.name) [\(.activity_type)/\(.activity_sub_type)]"))'
+echo ""
+echo "View it at: http://localhost:3000/course/$(echo $CUUID | sed s/course_//)"
+```
+
+What you should see in the browser at the printed URL:
+
+- **Course landing page** with the JPEG thumbnail, three chapters, "7 exciting activities" badge, and a "Start Course" button.
+- **Welcome page** with the heading, bold paragraph, embedded image, bullet list, and Python-highlighted code block, plus a TOC sidebar generated from the headings.
+- **Markdown remote page** rendering the GitHub README with full formatting.
+- **Embed example** showing a Wikipedia article inside an iframe.
+- **Hosted MP4 sample** in the LearnHouse video player.
+- **YouTube embed** with the YouTube iframe player.
+- **Sample PDF document** in the embedded PDF.js viewer with toolbar.
+- **Final assignment** showing the description, due date, and File Submission widget -- **but only when signed in**. The `/api/v1/assignments/*` router rejects anonymous requests, so on a public course an anonymous viewer sees a blank panel where the assignment widget would be. Sign in (or open via the dashboard) to see the description, tasks, and submission UI.
+
+## Verifying the result
+
+After migration, fetch the full course tree and inspect it before announcing the course to learners:
+
+```bash
+curl "http://localhost:1338/api/v1/courses/$CUUID/meta?with_unpublished_activities=true&slim=true" \
+  -H "Authorization: Bearer $TOKEN" | jq '
+    {chapters: (.chapters | length),
+     activities: (.chapters | map(.activities | length) | add)}'
+```
+
+`slim=true` omits the heavy `content` field from each activity, which is much faster when you only want to verify the structure.
+
+If anything is wrong, every resource has a `DELETE` endpoint -- safest is to delete the course (`DELETE /api/v1/courses/{course_uuid}`), which cascades to its chapters, activities, and blocks, and then re-run the script.
+
+```bash
+curl -X DELETE "$API/courses/$CUUID" -H "Authorization: Bearer $TOKEN"
+```

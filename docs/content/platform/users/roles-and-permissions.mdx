@@ -1,0 +1,48 @@
+# Roles and Permissions
+
+LearnHouse uses a role-based access control model. Roles are stored as database rows with a per-resource permission matrix (courses, users, usergroups, collections, organizations, chapters, activities, roles, dashboard, communities, discussions, podcasts, boards, playgrounds), so organizations can customize permissions or create their own roles on top of the defaults.
+
+Every new instance is seeded with four default global roles:
+
+## Admin
+
+Admins have full control over the organization. They can:
+
+- Manage all courses, collections, and content
+- Manage users and assign roles
+- Configure organization settings (branding, AI, signup)
+- Access all platform features
+
+## Maintainer
+
+Maintainers are mid-level managers who can operate most of the organization day-to-day but cannot change platform-level settings. They can:
+
+- Manage courses, collections, and published content
+- Manage users within the organization
+- Moderate community discussions and boards
+
+## Instructor
+
+Instructors focus on teaching and creating educational content. They can:
+
+- Create and edit their own courses, chapters, and activities
+- View learner progress for their courses
+- Use the AI assistant for content creation
+- Manage collections they own
+
+Instructors cannot modify organization-level settings or manage other users' roles.
+
+## User
+
+Users are the default learner role. They can:
+
+- Browse and enroll in available courses
+- Complete activities, assignments, and quizzes
+- View their own Trail and progress
+- Interact with the AI assistant for learning support
+
+Users cannot create or edit courses or access administrative features.
+
+## Custom Roles
+
+Admins can create additional roles (global or organization-scoped) and fine-tune each permission individually from the dashboard.
