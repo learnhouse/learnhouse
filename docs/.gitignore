@@ -20,6 +20,9 @@
 # pagefind (generated at build time)
 /public/_pagefind
 
+# generated at build time by scripts/generate-llms-full.mjs
+/public/llms-full.txt
+
 # production
 /build
 
