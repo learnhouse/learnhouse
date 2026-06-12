@@ -42,7 +42,7 @@ function EnrollmentRow({
         )}
       </div>
       <span className={`${compact ? 'text-[10px]' : 'text-xs'} text-gray-400 whitespace-nowrap`}>
-        {new Date(row.timestamp).toLocaleDateString()}
+        {new Date(row.enrolled_at ?? row.timestamp).toLocaleDateString()}
       </span>
     </div>
   )
