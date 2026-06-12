@@ -20,9 +20,16 @@
 
 ## Local Development
 
+This site lives in the [`learnhouse/learnhouse`](https://github.com/learnhouse/learnhouse)
+monorepo under `docs/`. Run all commands from that directory.
+
 **Prerequisites:** [Bun](https://bun.sh) installed.
 
 ```bash
+# Clone the monorepo and move into the docs app
+git clone https://github.com/learnhouse/learnhouse.git
+cd learnhouse/docs
+
 # Install dependencies
 bun install
 
@@ -41,6 +48,7 @@ content/          # MDX documentation pages
   self-hosting/
   developers/
   enterprise/
+  cli/
 app/              # Next.js App Router
 components/       # React components
 public/           # Static assets

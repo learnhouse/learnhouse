@@ -83,7 +83,7 @@ export default async function RootLayout({ children }) {
           <CustomNavbar />
           <Layout
             pageMap={await getPageMap()}
-            docsRepositoryBase="https://github.com/learnhouse/docs/tree/main"
+            docsRepositoryBase="https://github.com/learnhouse/learnhouse/tree/dev/docs"
             sidebar={{ defaultMenuCollapseLevel: 2 }}
             editLink="Edit this page on GitHub"
             footer={<></>}

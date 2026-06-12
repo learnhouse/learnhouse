@@ -77,11 +77,12 @@ function Pagination() {
 
 function EditOnGitHub({ filePath }) {
   // `filePath` comes from Nextra page metadata and is the actual source path
-  // relative to the docs repo root (e.g. "content/cli/index.mdx"). Using it
+  // relative to the docs app root (e.g. "content/cli/index.mdx"). The docs app
+  // lives under docs/ in the learnhouse monorepo, so prefix with that. Using it
   // directly avoids guessing folder-index vs leaf-file from the URL.
   if (!filePath) return null
 
-  const href = `https://github.com/learnhouse/docs/edit/main/${filePath}`
+  const href = `https://github.com/learnhouse/learnhouse/edit/dev/docs/${filePath}`
 
   return (
     <a
