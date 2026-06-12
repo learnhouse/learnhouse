@@ -4485,6 +4485,7 @@
     "export": {
       "button": "تصدير",
       "csv": "تحميل CSV",
+      "xlsx": "تحميل XLSX",
       "downloading": "جارٍ التصدير...",
       "json": "تحميل JSON"
     }

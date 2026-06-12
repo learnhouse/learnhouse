@@ -4566,6 +4566,7 @@
     "export": {
       "button": "Eksportuj",
       "csv": "Pobierz CSV",
+      "xlsx": "Pobierz XLSX",
       "downloading": "Eksportowanie...",
       "json": "Pobierz JSON"
     }

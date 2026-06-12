@@ -4490,6 +4490,7 @@
     "export": {
       "button": "ส่งออก",
       "csv": "ดาวน์โหลด CSV",
+      "xlsx": "ดาวน์โหลด XLSX",
       "downloading": "กำลังส่งออก...",
       "json": "ดาวน์โหลด JSON"
     }
