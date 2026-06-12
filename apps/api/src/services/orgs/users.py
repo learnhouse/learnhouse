@@ -33,6 +33,19 @@ from src.services.webhooks.dispatch import dispatch_webhooks
 logger = logging.getLogger(__name__)
 
 
+def _csv_safe(value):
+    """Neutralize CSV formula injection (S12).
+
+    Spreadsheet apps interpret a cell whose first character is one of = + - @
+    (or a leading tab / carriage return) as a formula. Prefix any such string
+    with a single quote so it is rendered as literal text. Non-string values
+    are returned unchanged.
+    """
+    if isinstance(value, str) and value and value[0] in ("=", "+", "-", "@", "\t", "\r"):
+        return "'" + value
+    return value
+
+
 async def get_organization_users(
     request: Request,
     org_id: int,
@@ -390,14 +403,14 @@ async def export_organization_users_csv(
             groups = "; ".join(user_usergroups_map.get(user.id, []))
 
             writer.writerow([
-                f"{user.first_name or ''} {user.last_name or ''}".strip(),
-                user.username or "",
-                user.email or "",
-                groups,
-                role.name if role else "",
+                _csv_safe(f"{user.first_name or ''} {user.last_name or ''}".strip()),
+                _csv_safe(user.username or ""),
+                _csv_safe(user.email or ""),
+                _csv_safe(groups),
+                _csv_safe(role.name if role else ""),
                 fmt_date(user_org.creation_date),
                 "Yes" if user.email_verified else "No",
-                user.signup_method or "",
+                _csv_safe(user.signup_method or ""),
                 fmt_date(user.last_login_at) if hasattr(user, "last_login_at") else "",
             ])
 

@@ -108,6 +108,8 @@ async def join_org(
             db_session.add(user_organization)
             await db_session.commit()
 
+            await increase_feature_usage("members", org.id, db_session)
+
             from src.routers.users import _invalidate_session_cache
             _invalidate_session_cache(user.id)
 
@@ -120,8 +122,6 @@ async def join_org(
                     int(inviteCode.get("usergroup_id")),
                     str(user.id),
                 )
-
-            await increase_feature_usage("members", org.id, db_session)
 
             return "Great, You're part of the Organization"
 

@@ -1,0 +1,82 @@
+import { Callout } from 'nextra/components'
+
+# SSL and Domain Setup
+
+Securing your LearnHouse instance with SSL is strongly recommended for production deployments. This guide covers domain configuration and SSL setup options.
+
+## Domain Configuration
+
+Set your domain in the `.env` file:
+
+```env
+LEARNHOUSE_DOMAIN=learn.example.com
+LEARNHOUSE_SSL=true
+LEARNHOUSE_COOKIE_DOMAIN=.example.com
+```
+
+Make sure your DNS records point to the server running LearnHouse before enabling SSL.
+
+## Using a Reverse Proxy
+
+The recommended approach for SSL termination is to place a reverse proxy in front of LearnHouse. This gives you flexibility in certificate management and allows you to serve other applications on the same server.
+
+### Caddy
+
+Caddy automatically obtains and renews Let's Encrypt certificates. Create a `Caddyfile`:
+
+```
+learn.example.com {
+    reverse_proxy localhost:80
+}
+```
+
+### Nginx
+
+An example nginx configuration with Let's Encrypt (via Certbot):
+
+```nginx
+server {
+    listen 443 ssl;
+    server_name learn.example.com;
+
+    ssl_certificate /etc/letsencrypt/live/learn.example.com/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/learn.example.com/privkey.pem;
+
+    location / {
+        proxy_pass http://localhost:80;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+}
+
+server {
+    listen 80;
+    server_name learn.example.com;
+    return 301 https://$server_name$request_uri;
+}
+```
+
+### Traefik
+
+If you use Traefik as your reverse proxy, you can configure it to route traffic to LearnHouse and handle Let's Encrypt certificates automatically through its built-in ACME support.
+
+## Let's Encrypt
+
+For free, automated SSL certificates, use Let's Encrypt with one of the reverse proxy options above:
+
+- **Caddy** handles Let's Encrypt automatically with zero configuration.
+- **Nginx** works with [Certbot](https://certbot.eff.org/) for automated certificate issuance and renewal.
+- **Traefik** has built-in ACME/Let's Encrypt support.
+
+<Callout type="warning">
+When enabling SSL, update all related configuration to use `https://` URLs, including `LEARNHOUSE_ALLOWED_ORIGINS` and `NEXTAUTH_URL`.
+</Callout>
+
+## Cookie Domain
+
+The `LEARNHOUSE_COOKIE_DOMAIN` variable controls which domain cookies are scoped to. This is important for authentication to work correctly.
+
+- For a single domain like `learn.example.com`, set it to `.example.com`
+- Using a leading dot (`.example.com`) allows cookies to work across subdomains, which is required if you use multi-organization mode with subdomains

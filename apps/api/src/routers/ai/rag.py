@@ -31,6 +31,7 @@ from src.services.ai.base import (
     get_chat_messages,
     delete_chat_session,
     update_chat_session_meta,
+    chat_session_belongs_to_user,
 )
 from src.services.ai.rag.embedding_service import embed_course_content
 from src.services.ai.rag.query_service import query_course_rag_stream
@@ -223,6 +224,10 @@ async def api_rag_chat(
 
     # Get or create chat session
     is_new_session = chat_request.aichat_uuid is None
+    if not is_new_session and not chat_session_belongs_to_user(
+        chat_request.aichat_uuid, chat_acting_user_id
+    ):
+        raise HTTPException(status_code=404, detail="Chat session not found")
     chat_session = get_chat_session_history(chat_request.aichat_uuid)
 
     # Perform RAG query with streaming

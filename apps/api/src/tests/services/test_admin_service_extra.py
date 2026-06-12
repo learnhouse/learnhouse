@@ -168,6 +168,33 @@ def test_validate_magic_link_redirect_whitespace_returns_none():
     assert result is None
 
 
+def test_validate_magic_link_redirect_accepts_same_origin_path():
+    assert _validate_magic_link_redirect("/dashboard") == "/dashboard"
+    assert _validate_magic_link_redirect("/course/foo?x=1") == "/course/foo?x=1"
+
+
+def test_validate_magic_link_redirect_returns_none_for_empty_and_none():
+    assert _validate_magic_link_redirect(None) is None
+    assert _validate_magic_link_redirect("") is None
+
+
+@pytest.mark.parametrize(
+    "redirect_to",
+    [
+        "/\\evil.com",        # backslash-prefixed -> treated as protocol-relative
+        "//evil.com",          # protocol-relative
+        "https://evil.com",    # absolute external URL with scheme
+        "http://evil.com",
+        "javascript:alert(1)",  # scheme without leading slash
+        "evil.com",            # does not start with '/'
+    ],
+)
+def test_validate_magic_link_redirect_rejects_open_redirects(redirect_to):
+    with pytest.raises(HTTPException) as exc_info:
+        _validate_magic_link_redirect(redirect_to)
+    assert exc_info.value.status_code == 400
+
+
 # ---------------------------------------------------------------------------
 # Lines 986, 995 — consume_magic_link_token
 # ---------------------------------------------------------------------------

@@ -13,6 +13,14 @@ SUPPORTED_LANGUAGES: Final[tuple[str, ...]] = (
     "ko", "it", "tr", "vi", "id", "pl", "uk", "nl", "th", "bn",
 )
 
+# Locales selectable as an organisation's UI language; mirrors
+# apps/web/lib/languages.ts. A UI locale need not have an email-translation
+# bundle — emails for any locale without one fall back to English (see `t()`).
+SUPPORTED_UI_LANGUAGES: Final[tuple[str, ...]] = (
+    "en", "fr", "de", "es", "ar", "ja", "pt", "ru", "zh", "hi",
+    "ko", "it", "tr", "vi", "id", "pl", "uk", "nl", "th", "bn", "sk",
+)
+
 DEFAULT_LANGUAGE: Final[str] = "en"
 
 

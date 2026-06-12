@@ -1,8 +1,26 @@
+export type Edition = 'community' | 'enterprise'
+export type EeTenancy = 'single' | 'agency'
+
 export interface SetupConfig {
   // Deployment
   deploymentId: string
   installDir: string
   channel: 'stable' | 'dev'
+
+  // Edition (Community is the default; Enterprise unlocks the licensed stack)
+  edition?: Edition
+  // Enterprise-only:
+  licenseKey?: string
+  eeTenancy?: EeTenancy
+  eeImageTag?: string
+  eeLocalTls?: boolean
+  acmeEmail?: string
+  // External database (skip the in-container Postgres)
+  externalDbUrl?: string
+  // Cloudflare DNS-01 (for wildcard certs on *.domain) + IPv6 compose network
+  dnsProvider?: 'cloudflare'
+  cfApiToken?: string
+  dockerIpv6?: boolean
 
   // Domain & SSL
   domain: string
@@ -62,4 +80,8 @@ export interface LearnHouseConfigJson {
   autoSsl: boolean
   useExternalDb: boolean
   orgSlug: string
+  // Enterprise metadata (absent/`community` for the OSS stack)
+  edition?: Edition
+  eeTenancy?: EeTenancy
+  eeLocalTls?: boolean
 }

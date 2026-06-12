@@ -43,15 +43,12 @@ def _validate_content_path(file_path: str) -> Path | None:
     if '..' in normalized:  # pragma: no cover
         return None
 
-    # Canonicalize via os.path.realpath (resolves symlinks, normalizes) and verify containment.
-    # realpath is used deliberately: it is a recognized path-injection sanitizer.
     try:
         base_real = os.path.realpath(str(CONTENT_DIR))
         full_real = os.path.realpath(os.path.join(base_real, normalized))
+        if os.path.commonpath([base_real, full_real]) != base_real:
+            return None
     except (OSError, ValueError):
-        return None
-
-    if not full_real.startswith(base_real + os.sep) and full_real != base_real:
         return None
 
     return Path(full_real)

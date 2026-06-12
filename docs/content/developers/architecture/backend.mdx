@@ -1,0 +1,96 @@
+import { Callout } from 'nextra/components'
+
+# Backend Architecture
+
+The LearnHouse backend is a **FastAPI** application written in Python, located at `apps/api` in the project. It serves as the central API layer that handles all business logic and data management.
+
+## Technology Stack
+
+- **FastAPI** 0.135.3 -- High-performance Python web framework
+- **Python 3.14**
+- **SQLModel** 0.0.38 -- ORM for database interactions (built on SQLAlchemy and Pydantic)
+- **Alembic** -- Database migration management
+- **PostgreSQL 16** with **pgvector** extension -- Primary relational database
+- **redis-py** 7.4.0 -- Python Redis client
+- **Uvicorn** 0.44.0 -- ASGI server
+- **uv** -- Python package manager
+
+## Key Dependencies
+
+- **psycopg2-binary** -- PostgreSQL adapter
+- **pyjwt[crypto]** -- JWT token handling
+- **pwdlib[argon2]** -- Password hashing with Argon2
+- **google-genai** 1.71.0 -- Gemini AI integration (the only AI provider)
+- **llama-index-core + pgvector** -- RAG and vector embeddings
+- **stripe** -- Payment processing
+- **workos** -- Enterprise SSO
+- **boto3** -- S3-compatible storage
+- **resend** -- Transactional email
+- **sentry-sdk** -- Error tracking and monitoring
+
+## Configuration
+
+The backend uses a dual configuration system:
+
+- **YAML config** at `config/config.yaml` for structured settings
+- **Environment variables** which override YAML values when set
+
+The API prefix for all endpoints is `/api/v1/`.
+
+## Responsibilities
+
+The backend handles all core platform operations:
+
+- **Authentication and authorization** -- JWT-based token authentication with role-based access control
+- **Course management** -- CRUD operations for organizations, courses, chapters, and activities
+- **User management** -- Registration, profiles, and permissions
+- **File storage and uploads** -- Handling media uploads with support for local filesystem and S3-compatible storage (via boto3)
+- **AI features** -- Integration with Google Gemini and LlamaIndex for learning assistance and RAG
+- **Search** -- Content indexing and search across courses and activities
+- **Payments** -- Stripe integration for course monetization
+- **Email** -- Transactional email via Resend
+
+## Database Layer
+
+SQLModel is used as the ORM, connecting to a PostgreSQL 16 database with the pgvector extension for AI embeddings. Database models define the schema for all entities: organizations, users, courses, chapters, activities, collections, and more. Migrations are managed with **Alembic** to keep the schema in sync across environments.
+
+## Caching
+
+Redis is used for:
+
+- **Response caching** -- Frequently accessed data is cached to reduce database load.
+- **Session data** -- Temporary session information is stored in Redis for fast retrieval.
+
+## API Documentation
+
+FastAPI automatically generates interactive API documentation, but it is only available when running in development mode.
+
+<Callout type="info">
+Swagger UI (`/docs/`) and ReDoc (`/redoc/`) are only accessible when `LEARNHOUSE_DEVELOPMENT_MODE=True` is set. They are disabled in production.
+</Callout>
+
+## Directory Structure
+
+```
+apps/api/
+├── src/
+│   ├── routers/      # API route definitions
+│   ├── db/           # SQLModel table definitions
+│   ├── services/     # Business logic
+│   ├── security/     # Authentication and authorization
+│   └── core/         # Configuration and dependencies
+├── migrations/       # Alembic database migrations
+├── ee/               # Enterprise Edition features
+└── config/           # YAML configuration files
+```
+
+## Development
+
+The backend runs on **port 1338** by default during local development (configurable via `LEARNHOUSE_PORT`). In production Docker deployments, it runs on port 9000. Install dependencies and run the server:
+
+```bash
+uv sync              # install dependencies
+uv run python app.py # start the dev server (which calls uvicorn internally)
+```
+
+When using the LearnHouse CLI (`learnhouse dev`), the backend starts automatically with hot reload enabled.

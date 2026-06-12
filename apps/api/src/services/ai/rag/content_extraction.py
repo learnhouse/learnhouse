@@ -11,6 +11,7 @@ Extracts text from all course content types:
 """
 
 import logging
+import os
 from typing import Optional
 
 from sqlmodel import select
@@ -26,6 +27,24 @@ from src.services.courses.transfer.storage_utils import read_file_content
 logger = logging.getLogger(__name__)
 
 MAX_PDF_CHARS = 100_000
+
+
+def _is_safe_content_path(file_path: str) -> bool:
+    """Reject obviously unsafe stored-file paths before reading them.
+
+    Block values (file_id/uri/file_path) are persisted from user input, so
+    guard against traversal here in addition to the containment check in
+    read_file_content (S8). Rejects empty paths, NUL bytes, absolute paths and
+    any ``..`` component.
+    """
+    if not file_path or not isinstance(file_path, str) or "\x00" in file_path:
+        return False
+    normalized = file_path.replace("\\", "/")
+    if normalized.startswith("/") or os.path.isabs(file_path):
+        return False
+    if ".." in normalized.split("/"):
+        return False
+    return True
 
 
 def extract_text_from_prosemirror(content: dict) -> str:
@@ -181,7 +200,7 @@ def _extract_block_content(block: Block, activity_name: str) -> Optional[dict]:
     if block_type == BlockTypeEnum.BLOCK_DOCUMENT_PDF:
         # Read PDF file and extract text
         file_path = content.get("file_id") or content.get("uri") or content.get("file_path", "")
-        if not file_path:
+        if not file_path or not _is_safe_content_path(file_path):
             return None
         pdf_bytes = read_file_content(file_path)
         if not pdf_bytes:
@@ -332,7 +351,7 @@ async def extract_all_course_content(
             content = activity.content
             if content and isinstance(content, dict):
                 file_path = content.get("file_id") or content.get("uri") or content.get("file_path", "")
-                if file_path:
+                if file_path and _is_safe_content_path(file_path):
                     pdf_bytes = read_file_content(file_path)
                     if pdf_bytes:
                         text = extract_text_from_pdf(pdf_bytes)

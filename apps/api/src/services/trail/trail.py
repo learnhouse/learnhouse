@@ -18,6 +18,7 @@ from src.services.courses.certifications import (
 from src.services.analytics.analytics import track
 from src.services.analytics import events as analytics_events
 from src.services.webhooks.dispatch import dispatch_webhooks
+from src.security.rbac import check_resource_access, AccessAction
 
 
 async def _build_trail_read(
@@ -89,7 +90,7 @@ async def _build_trail_read(
         for step in steps_by_run.get(tr.id, []):
             db_session.expunge(step)
             step_course = course_map.get(step.course_id)
-            step.data = dict(course=step_course)
+            step.data = {"course": step_course.model_dump() if step_course else None}
             run.steps.append(step)
 
         trail_runs.append(run)
@@ -219,6 +220,10 @@ async def add_activity_to_trail(
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail="Course not found"
         )
+
+    await check_resource_access(
+        request, db_session, user, course.course_uuid, AccessAction.READ
+    )
 
     trail = await check_trail_presence(
         org_id=course.org_id,
@@ -404,6 +409,10 @@ async def add_course_to_trail(
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail="Course not found"
         )
+
+    await check_resource_access(
+        request, db_session, user, course.course_uuid, AccessAction.READ
+    )
 
     # check if run already exists
     statement = select(TrailRun).where(

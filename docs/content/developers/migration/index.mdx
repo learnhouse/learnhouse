@@ -1,0 +1,139 @@
+import { Callout } from 'nextra/components'
+
+# Migrating Content into LearnHouse
+
+This section explains how to bring existing course content into LearnHouse using the public API. There are two supported approaches:
+
+1. **Programmatic Migration** -- you script every step (create the course, then chapters, then activities, then upload files). Use this when you need full control of the resulting structure -- typical for migrating from another LMS where you already know the chapter/activity layout.
+2. **AI-Assisted Migration** -- you upload a folder of media (videos, PDFs, images, audio) and LearnHouse asks Gemini to propose a chapter/activity tree. You review and confirm, and a single endpoint creates the entire course in one transaction. Use this when you have a pile of files but no predefined structure.
+
+Both approaches share the same underlying data model -- a Course contains Chapters, and each Chapter contains an ordered list of Activities.
+
+<Callout type="info">
+All endpoints below are prefixed with `/api/v1/`. In local development the base URL is `http://localhost:1338/api/v1/`. In production it is served at `/api/v1/` on your instance domain.
+</Callout>
+
+## Authentication
+
+Every migration call must be authenticated. There are two token types:
+
+- **JWT access tokens** (`POST /api/v1/auth/login`) -- a user session, 8-hour lifetime, refreshable.
+- **API tokens** (Pro plan) -- prefixed with `lh_`, issued per organization, no expiry.
+
+Both are sent the same way:
+
+```bash
+curl http://localhost:1338/api/v1/courses/?org_id=1 \
+  -H "Authorization: Bearer lh_your_api_token_here"
+```
+
+API tokens are bound to a single organization at creation time. Any attempt to operate on a different `org_id` is rejected at the auth layer, so a leaked token cannot reach across tenants.
+
+<Callout type="warning">
+**API tokens cannot call every endpoint.** A small set of routers -- including the AI-assisted migration endpoints under `/api/v1/courses/migrate/*` and several user-scoped endpoints like `/users/profile` -- explicitly reject API tokens (HTTP 403, `"API tokens cannot access this resource"`). For these calls, you need a user JWT. The supported pattern is the **admin token-swap**: use your API token once to mint a JWT on behalf of any user in your organization, then use that JWT for the protected calls.
+
+```bash
+# Mint a user JWT using your API token
+curl -X POST 'http://localhost:1338/api/v1/admin/{org_slug}/auth/token' \
+  -H 'Authorization: Bearer lh_your_api_token' \
+  -H 'Content-Type: application/json' \
+  -d '{"user_id": 1}'
+# → { "access_token": "eyJ...", "token_type": "bearer", "user_id": 1, "user_uuid": "..." }
+```
+
+The minted JWT is a normal user session and works on every endpoint, including the migration endpoints. The API token must have the `users.action_read` permission and the target user must belong to the same organization.
+</Callout>
+
+| Endpoint group | API token | JWT |
+| --- | --- | --- |
+| `POST /courses/`, `PUT /courses/{uuid}`, `DELETE /courses/{uuid}` | ✓ | ✓ |
+| `POST /chapters/`, `PUT /chapters/{id}/...`, `DELETE /chapters/{id}` | ✓ | ✓ |
+| `POST /activities/`, `/activities/video`, `/activities/external_video`, `/activities/documentpdf` | ✓ | ✓ |
+| `POST /blocks/{image,video,pdf,audio}` | ✗ | ✓ |
+| `POST /assignments/`, `POST /assignments/{uuid}/tasks` | ✓ | ✓ |
+| `POST /courses/migrate/upload` / `/suggest` / `/create` | ✗ | ✓ |
+
+The blocks router has `Depends(get_non_api_token_user)` at the router level, so even though individual block handlers accept anonymous + JWT users, an `lh_*` API token is rejected with `403 "API tokens cannot access this resource"`. The same is true for the AI-assisted migration endpoints. For both, use the admin token-swap to mint a JWT first (see callout above).
+
+See [Authentication](/developers/api/authentication) for token issuance.
+
+## The data model in one diagram
+
+```
+Organization (org_id)
+└── Course (course_uuid, course_id)
+    └── Chapter (chapter_uuid, chapter_id)
+        └── Activity (activity_uuid, activity_id)
+            └── (optional) Block (block_uuid)  ← media files referenced from a dynamic page
+```
+
+Two ID conventions to keep straight:
+
+- **`*_uuid`** strings (e.g. `course_uuid`, `activity_uuid`, `chapter_uuid`) are the public identifiers used in URLs and most `GET` endpoints.
+- **`*_id`** integers (e.g. `course_id`, `chapter_id`) are the internal primary keys. They are required when **creating** a child resource (a chapter needs `course_id`, an activity needs `chapter_id`).
+
+Both are returned in every create response, so capture them as you go.
+
+## Activity types at a glance
+
+| `activity_type` | `activity_sub_type` | What it is | How content is supplied |
+| --- | --- | --- | --- |
+| `TYPE_DYNAMIC` | `SUBTYPE_DYNAMIC_PAGE` | Rich-text page (TipTap / ProseMirror) | JSON document in `content` |
+| `TYPE_DYNAMIC` | `SUBTYPE_DYNAMIC_MARKDOWN` | Page rendered from a remote Markdown URL | `content: { markdown_url }` |
+| `TYPE_DYNAMIC` | `SUBTYPE_DYNAMIC_EMBED` | Iframe embed (Google Doc, Notion, etc.) | `content: { embed_url }` |
+| `TYPE_VIDEO` | `SUBTYPE_VIDEO_HOSTED` | Self-hosted video file | Multipart upload to `/activities/video` |
+| `TYPE_VIDEO` | `SUBTYPE_VIDEO_YOUTUBE` | Embedded YouTube / Vimeo video | JSON `POST /activities/external_video` |
+| `TYPE_DOCUMENT` | `SUBTYPE_DOCUMENT_PDF` | PDF document | Multipart upload to `/activities/documentpdf` |
+| `TYPE_DOCUMENT` | `SUBTYPE_DOCUMENT_DOC` | Generic document | Reserved -- not exposed via dedicated upload endpoint |
+| `TYPE_ASSIGNMENT` | `SUBTYPE_ASSIGNMENT_ANY` | Graded assignment with tasks | Three-step: activity shell + assignment record + at least one task |
+| `TYPE_CUSTOM` | `SUBTYPE_CUSTOM` | Free-form structured content | JSON `content` of any shape |
+| `TYPE_SCORM` | `SUBTYPE_SCORM_12` / `SUBTYPE_SCORM_2004` | SCORM packages | Reserved -- handled via the SCORM uploader |
+
+The full per-type `content` JSON schemas, including the dynamic page block list, are documented in [Activity Types Reference](/developers/migration/activity-types).
+
+## Quick start: the four building blocks
+
+A complete migration boils down to four call types, in order:
+
+1. **Create a course.** `POST /api/v1/courses/?org_id={org_id}` (multipart). Capture `course_uuid` and `id` from the response.
+2. **Create chapters.** `POST /api/v1/chapters/` (JSON), one per chapter, passing `course_id` and `org_id`. Capture each chapter's `id`.
+3. **Create activities.** Either the generic `POST /api/v1/activities/` (JSON, for dynamic / embed / markdown / custom / assignment shells) or one of the typed endpoints `/activities/video`, `/activities/external_video`, `/activities/documentpdf` (multipart, for hosted media).
+4. **(Optional) Upload media blocks** referenced from a dynamic page via `/api/v1/blocks/{image,video,pdf,audio}` (multipart) and embed them in the page's TipTap content.
+
+A copy-pasteable bash script for the full flow lives in [Programmatic Migration](/developers/migration/programmatic).
+
+## Common pitfalls
+
+<Callout type="warning">
+**`chapter_id` and `course_id` are integers, not UUIDs.** Many `GET` endpoints take a UUID, but every `create` body wants the integer primary key. Read it from the previous response's `id` field, not its `chapter_uuid` / `course_uuid` field.
+</Callout>
+
+<Callout type="warning">
+**Activity type is immutable.** You cannot change `activity_type` or `activity_sub_type` after creation. Delete and recreate the activity if you picked the wrong type.
+</Callout>
+
+<Callout type="warning">
+**Modifying `content` creates a new version.** Each `PUT /api/v1/activities/{activity_uuid}` that touches `content` increments the activity's `current_version`. This is normal -- learners always see the published version -- but expect your migration to leave a tidy version history.
+</Callout>
+
+<Callout type="info">
+**Set `published: false` while migrating** and flip it to `true` only once you have spot-checked the result. Unpublished activities are returned by `GET /courses/{course_uuid}/meta?with_unpublished_activities=true` so you can preview the final tree before exposing it to learners.
+</Callout>
+
+<Callout type="warning">
+**Typed-upload endpoints (`/activities/video`, `/activities/external_video`, `/activities/documentpdf`) always create activities with `published: false` regardless of any payload field.** Follow the create call with `PUT /api/v1/activities/{activity_uuid}` setting `{"published": true}` to publish them. Only the generic `POST /activities/` honours `published` on creation.
+</Callout>
+
+<Callout type="warning">
+**`TYPE_ASSIGNMENT` is a three-step create.** A bare assignment activity renders as an empty panel. You also need to `POST /api/v1/assignments/` to attach the title/description/grading, and at least one `POST /api/v1/assignments/{uuid}/tasks` for a submission UI. See [Activity Types Reference -- Assignments](/developers/migration/activity-types#assignments).
+</Callout>
+
+<Callout type="warning">
+**`TYPE_CUSTOM` has no built-in renderer.** A custom activity will appear as an empty container in the learner viewer until you ship your own React component for it. Prefer `SUBTYPE_DYNAMIC_PAGE` (TipTap) or `SUBTYPE_DYNAMIC_EMBED` (iframe) unless you specifically have custom frontend code in place.
+</Callout>
+
+## Where to next
+
+- [Programmatic Migration](/developers/migration/programmatic) -- step-by-step guide with curl examples for each call.
+- [Activity Types Reference](/developers/migration/activity-types) -- the exact `content` JSON shape for every activity sub-type, including TipTap blocks for dynamic pages.
+- [AI-Assisted Migration](/developers/migration/assisted) -- the three-call upload / suggest / create flow for bulk file imports.

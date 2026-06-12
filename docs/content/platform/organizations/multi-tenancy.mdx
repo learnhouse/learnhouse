@@ -1,0 +1,29 @@
+import { Callout } from 'nextra/components'
+
+# Multi-Tenancy
+
+<Callout type="warning">
+Multi-tenancy is an **Enterprise** feature. It is not available on the open-source or standard plans.
+</Callout>
+
+LearnHouse supports running one or more organizations on a single instance. This multi-tenant architecture lets you serve different groups from the same deployment.
+
+## Single Organization (Default)
+
+By default, LearnHouse runs with a single organization. This is the simplest setup and is suitable for most deployments where one team, school, or company uses the platform.
+
+## Multi-Organization
+
+In multi-org mode, a single LearnHouse instance hosts multiple independent organizations. Each organization operates as if it were its own separate platform:
+
+- Courses, users, and settings are fully scoped to each organization.
+- Data is stored in a shared database but isolated by organization ID.
+- Each organization can have its own branding and configuration.
+
+<Callout>
+Multi-org mode is useful for platforms that serve multiple schools, departments, or clients from a centralized deployment.
+</Callout>
+
+## Data Isolation
+
+All database queries are scoped by `org_id`, ensuring that one organization cannot access another's data. Users, courses, collections, trails, and settings are all partitioned at the organization level.

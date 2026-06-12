@@ -398,13 +398,17 @@ async def get_current_user(
             # are only valid at their specific consume endpoint — allowing them as
             # session tokens would let an intercepted single-use token act as a
             # full session for its entire TTL.
-            # A token with no "purpose" key (purpose is None via .get) is treated
-            # as a normal session token and is allowed through. A token that
-            # explicitly carries purpose="session" is also allowed. Any other
-            # purpose value — including "password_reset" and "email_verification"
-            # — is rejected.
             token_purpose = payload.get("purpose")
-            if token_purpose is not None and token_purpose != "session":
+            SINGLE_USE_PURPOSES = {
+                "reset",
+                "verify",
+                "email_verification",
+                "magic_link",
+                "password_reset",
+            }
+            if token_purpose in SINGLE_USE_PURPOSES or (
+                token_purpose is not None and token_purpose != "session"
+            ):
                 raise credentials_exception
             username = payload.get("sub")
 
