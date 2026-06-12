@@ -1,0 +1,48 @@
+import { Callout } from 'nextra/components'
+
+# Custom OIDC
+
+The Custom OIDC provider lets you connect LearnHouse directly to any OpenID Connect 1.0 compatible identity provider. This is ideal for organizations that want to use their existing IdP without going through a third-party broker.
+
+## Compatible Providers
+
+Any OIDC-compliant provider works, including:
+
+- **Azure AD / Microsoft Entra ID**
+- **Okta**
+- **Google Workspace**
+- **Keycloak**
+- **Auth0**
+- **OneLogin**
+- **Ping Identity**
+
+## Configuration
+
+| Field | Required | Description |
+|---|---|---|
+| `issuer_url` | Yes | The OIDC Issuer URL. LearnHouse uses this to auto-discover endpoints via `/.well-known/openid-configuration`. |
+| `client_id` | Yes | OAuth 2.0 Client ID from your identity provider. |
+| `client_secret` | Yes | OAuth 2.0 Client Secret from your identity provider. |
+| `scopes` | No | Space-separated OAuth scopes. Defaults to `openid email profile`. |
+
+## Issuer URL Examples
+
+| Provider | Issuer URL Format |
+|---|---|
+| Azure AD | `https://login.microsoftonline.com/{tenant-id}/v2.0` |
+| Okta | `https://{your-domain}.okta.com` |
+| Google Workspace | `https://accounts.google.com` |
+| Keycloak | `https://{host}/realms/{realm}` |
+| Auth0 | `https://{your-domain}.auth0.com` |
+
+## Setup Steps
+
+1. Register LearnHouse as an application in your identity provider and obtain a Client ID and Client Secret.
+2. Set the callback/redirect URI in your IdP to your LearnHouse SSO callback URL.
+3. In the organization settings, select **Custom OIDC** as the SSO provider.
+4. Enter the Issuer URL, Client ID, and Client Secret.
+5. Users with matching email domains can now log in via SSO.
+
+<Callout type="info">
+LearnHouse uses OIDC Discovery to automatically find the authorization, token, and userinfo endpoints from the issuer URL. Make sure your IdP exposes a `/.well-known/openid-configuration` document.
+</Callout>

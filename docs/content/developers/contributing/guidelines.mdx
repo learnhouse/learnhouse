@@ -1,0 +1,86 @@
+# Contribution Guidelines
+
+This page outlines the workflow and standards for contributing to LearnHouse.
+
+## Workflow
+
+### 1. Fork and Clone
+
+Fork the [LearnHouse repository](https://github.com/learnhouse/learnhouse) on GitHub, then clone your fork:
+
+```bash
+git clone https://github.com/YOUR_USERNAME/learnhouse.git
+cd learnhouse
+```
+
+### 2. Create a Feature Branch
+
+Always create a new branch for your changes. Use a descriptive branch name:
+
+```bash
+git checkout -b feature/your-feature-name
+```
+
+Branch naming conventions:
+
+- `feature/` -- New features or enhancements
+- `fix/` -- Bug fixes
+- `docs/` -- Documentation changes
+- `refactor/` -- Code refactoring without behavior changes
+
+### 3. Make Your Changes
+
+Develop your changes locally using the [development environment](/developers/contributing/dev-environment). Keep commits focused and atomic.
+
+When adding or updating dependencies:
+
+- **Frontend** -- Use `bun` to manage JavaScript/TypeScript dependencies (e.g., `bun add <package>`).
+- **Backend** -- Use `uv` to manage Python dependencies (e.g., `uv add <package>`).
+
+### 4. Submit a Pull Request
+
+Push your branch to your fork and open a pull request against the `main` branch of the LearnHouse repository:
+
+```bash
+git push origin feature/your-feature-name
+```
+
+In your pull request description:
+
+- Explain **what** your change does and **why** it is needed.
+- Reference any related [GitHub issues](https://github.com/learnhouse/learnhouse/issues).
+- Include screenshots or recordings for UI changes.
+
+## Code Style
+
+### Frontend (TypeScript / React)
+
+- Use **TypeScript** for all new code.
+- Follow existing patterns in the codebase for component structure and naming.
+- Use functional components with hooks.
+- Format code consistently -- the project includes configuration for code formatters.
+
+### Backend (Python)
+
+- Follow **PEP 8** conventions.
+- Use type hints for function parameters and return values.
+- Write clear docstrings for public functions and classes.
+- Keep functions focused and concise.
+
+## Testing
+
+- Test your changes locally before submitting a pull request.
+- Verify that existing functionality is not broken by your changes.
+- For new features, include tests where applicable.
+
+## Review Process
+
+After submitting a pull request:
+
+1. A maintainer will review your code and may request changes.
+2. Address any feedback by pushing additional commits to your branch.
+3. Once approved, a maintainer will merge your pull request.
+
+## Reporting Issues
+
+If you find a bug or have a feature request, please [open an issue](https://github.com/learnhouse/learnhouse/issues/new) on GitHub. Include as much detail as possible: steps to reproduce, expected behavior, actual behavior, and any relevant logs or screenshots.

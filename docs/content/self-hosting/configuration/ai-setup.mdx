@@ -1,0 +1,44 @@
+import { Callout } from 'nextra/components'
+
+# AI Setup
+
+LearnHouse includes AI-powered features for learning assistance and content editing, powered by **Google Gemini**. These features are optional and disabled by default.
+
+LearnHouse uses **llama-index** with **pgvector** for RAG (Retrieval-Augmented Generation), enabling AI assistants to answer questions using your course content as context.
+
+## Enabling AI
+
+Set the following environment variables in your `.env` file:
+
+```env
+LEARNHOUSE_GEMINI_API_KEY=your-gemini-api-key
+LEARNHOUSE_IS_AI_ENABLED=true
+```
+
+To get a Gemini API key, visit [Google AI Studio](https://aistudio.google.com/apikey).
+
+After updating your `.env` file, restart your instance:
+
+```bash
+learnhouse stop
+learnhouse start
+```
+
+<Callout type="warning">
+AI features require a valid Gemini API key with sufficient quota. Usage costs are billed directly by Google based on the models and volume used.
+</Callout>
+
+## Models
+
+LearnHouse uses Gemini models directly — the model names are managed by LearnHouse and are not configurable:
+
+- `gemini-2.5-flash` — main assistant responses
+- `gemini-2.0-flash-lite` — short tasks such as chat title generation and follow-up suggestions
+
+## Per-Organization AI Configuration
+
+Once AI is enabled on the instance, each organization can toggle AI on or off and set usage limits from its admin settings. The Gemini API key itself is set once at deployment via `LEARNHOUSE_GEMINI_API_KEY` and is shared across organizations.
+
+## Usage Limits
+
+You can configure a per-organization request limit to control API costs. When a user exceeds the limit, further AI requests are rejected until the window resets.
