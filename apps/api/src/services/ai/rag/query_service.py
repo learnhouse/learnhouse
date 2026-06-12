@@ -13,11 +13,11 @@ from sqlmodel.ext.asyncio.session import AsyncSession
 
 from src.services.ai.rag.embedding_service import embed_single_text
 from src.services.ai.base import ask_ai_stream
+from src.services.ai.llm import model_for_tier
 
 logger = logging.getLogger(__name__)
 
 TOP_K = 5
-GEMINI_MODEL = "gemini-2.5-flash"
 
 
 async def query_course_rag(
@@ -198,7 +198,7 @@ async def query_course_rag_stream(
         message_history=message_history,
         text_reference=context,
         message_for_the_prompt=system_prompt,
-        gemini_model_name=GEMINI_MODEL,
+        model_name=model_for_tier("standard"),
     )
 
     return stream, sources

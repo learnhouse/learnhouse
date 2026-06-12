@@ -1,22 +1,33 @@
 """
 Embedding service for RAG.
 
-Uses google-genai for embeddings (text-embedding-004) and
-llama-index-core SentenceSplitter for chunking.
+Embeddings intentionally stay on Google Gemini (gemini-embedding-001, fixed 768 dims) even
+when text generation runs on another provider — the pgvector store is dimension-locked, so
+swapping embedding models would invalidate every stored vector. Uses google-genai for
+embeddings and llama-index-core SentenceSplitter for chunking.
 """
 
 import asyncio
 import logging
 from datetime import datetime
 
+from google import genai
 from sqlmodel import select
 from sqlmodel.ext.asyncio.session import AsyncSession
 
+from config.config import get_learnhouse_config
 from src.db.course_embeddings import CourseEmbedding
-from src.services.ai.base import get_gemini_client
 from src.services.ai.rag.content_extraction import extract_all_course_content
 
 logger = logging.getLogger(__name__)
+
+
+def get_embeddings_client() -> genai.Client:
+    """Gemini client used solely for RAG embeddings (requires LEARNHOUSE_GEMINI_API_KEY)."""
+    api_key = getattr(get_learnhouse_config().ai_config, "gemini_api_key", None)
+    if not api_key:
+        raise Exception("Gemini API key not configured (required for RAG embeddings)")
+    return genai.Client(api_key=api_key)
 
 CHUNK_SIZE = 512
 CHUNK_OVERLAP = 50
@@ -42,7 +53,7 @@ async def generate_embeddings(texts: list[str]) -> list[list[float]]:
     Runs blocking Gemini calls off the event loop via asyncio.to_thread
     and retries transient failures with exponential backoff.
     """
-    client = get_gemini_client()
+    client = get_embeddings_client()
     all_embeddings = []
 
     for i in range(0, len(texts), EMBEDDING_BATCH_SIZE):
@@ -78,7 +89,7 @@ async def generate_embeddings(texts: list[str]) -> list[list[float]]:
 
 async def embed_single_text(text: str) -> list[float]:
     """Generate embedding for a single text, with retry."""
-    client = get_gemini_client()
+    client = get_embeddings_client()
     for attempt in range(MAX_RETRIES):
         try:
             result = await asyncio.to_thread(

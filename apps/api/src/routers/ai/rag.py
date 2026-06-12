@@ -35,6 +35,7 @@ from src.services.ai.base import (
 )
 from src.services.ai.rag.embedding_service import embed_course_content
 from src.services.ai.rag.query_service import query_course_rag_stream
+from src.services.ai.llm import model_for_tier
 
 logger = logging.getLogger(__name__)
 
@@ -113,7 +114,7 @@ async def rag_chat_event_generator(
 
         # Generate AI-summarized title for new sessions
         if is_new_session and user_id is not None:
-            title = generate_chat_title(user_message, full_response)
+            title = await generate_chat_title(user_message, full_response)
             update_chat_session_meta(aichat_uuid, user_id, title=title)
             yield f"data: {json.dumps({'type': 'session_title', 'title': title})}\n\n"
 
@@ -247,7 +248,7 @@ async def api_rag_chat(
             chat_request.message,
             sources,
             chat_request.message,  # context_text for follow-ups
-            "gemini-2.5-flash",
+            model_for_tier("fast"),
             user_id=chat_acting_user_id,
             course_uuid=chat_request.course_uuid,
             is_new_session=is_new_session,
