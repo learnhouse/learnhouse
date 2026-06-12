@@ -19,6 +19,7 @@ from src.services.ai.base import (
     get_chat_session_history,
     save_message_to_history,
 )
+from src.services.ai.llm import model_for_tier
 
 from src.services.ai.schemas.ai import (
     ActivityAIChatSessionResponse,
@@ -142,8 +143,8 @@ async def ai_start_activity_chat_session(
 
     org_config = OrganizationConfig.model_validate(org_config)
 
-    # Use Gemini 2.5 Flash as the default model
-    ai_model = "gemini-2.5-flash"
+    # Default chat model (provider-agnostic; resolved from AI config)
+    ai_model = model_for_tier("standard")
 
     chat_session = get_chat_session_history()
 
@@ -157,7 +158,7 @@ async def ai_start_activity_chat_session(
     message += "Use your knowledge to help the student if the context is not enough."
 
     try:
-        response = ask_ai(
+        response = await ask_ai(
             chat_session_object.message,
             chat_session["message_history"],
             ai_friendly_text,
@@ -281,8 +282,8 @@ async def ai_send_activity_chat_message(
 
     org_config = OrganizationConfig.model_validate(org_config)
 
-    # Use Gemini 2.5 Flash as the default model
-    ai_model = "gemini-2.5-flash"
+    # Default chat model (provider-agnostic; resolved from AI config)
+    ai_model = model_for_tier("standard")
 
     chat_session = get_chat_session_history(chat_session_object.aichat_uuid)
 
@@ -296,7 +297,7 @@ async def ai_send_activity_chat_message(
     message += "Use your knowledge to help the student if the context is not enough."
 
     try:
-        response = ask_ai(
+        response = await ask_ai(
             chat_session_object.message,
             chat_session["message_history"],
             ai_friendly_text,
@@ -413,8 +414,8 @@ async def _get_activity_and_course_info(
 
     org_config = OrganizationConfig.model_validate(org_config)
 
-    # Use Gemini 2.5 Flash as the default model
-    ai_model = "gemini-2.5-flash"
+    # Default chat model (provider-agnostic; resolved from AI config)
+    ai_model = model_for_tier("standard")
 
     return activity, course, org, ai_model, ai_friendly_text
 

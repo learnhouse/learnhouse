@@ -67,8 +67,21 @@ payments_config:
     stripe_webhook_connect_secret: ""    # whsec_...
 
 ai_config:
-  gemini_api_key: ""
   is_ai_enabled: false
+  # Provider-agnostic generation (Pydantic AI). Set provider + api_key to use any
+  # supported provider: google | openai | anthropic | groq | mistral | ollama.
+  # base_url is optional (OpenAI-compatible / local endpoints, e.g. Ollama).
+  provider: "google"
+  api_key: ""
+  base_url: ""
+  # Model names per tier. Leave blank to use the built-in Gemini defaults.
+  model_fast: ""              # titles, follow-ups, migration   (default: gemini-2.0-flash-lite)
+  model_standard: ""          # chat / course planning, std plan (default: gemini-2.5-flash)
+  model_pro: ""               # course planning, pro plan        (default: gemini-2.5-pro)
+  model_interactive: ""       # magicblocks/boards/playgrounds, std (default: gemini-2.5-flash-lite)
+  model_interactive_pro: ""   # magicblocks/boards/playgrounds, pro (default: gemini-3-flash-preview)
+  # Required ONLY for RAG embeddings, which stay on Gemini (fixed 768-dim vector store).
+  gemini_api_key: ""
 
 tinybird_config:
   # Set api_url to enable analytics automatically

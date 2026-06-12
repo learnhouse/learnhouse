@@ -3,10 +3,9 @@ from uuid import uuid4
 import logging
 import redis
 import json
-import asyncio
 
 from config.config import get_learnhouse_config
-from src.services.ai.base import get_gemini_client
+from src.services.ai.llm import generate_stream, model_for_tier
 from src.services.ai.schemas.magicblocks import (
     MagicBlockContext,
     MagicBlockSessionData,
@@ -199,7 +198,7 @@ The HTML must be complete and ready to render in an iframe."""
 async def generate_magicblock_stream(
     prompt: str,
     session: MagicBlockSessionData,
-    gemini_model_name: str = "gemini-2.0-flash",
+    model_name: str = "",
     current_html: Optional[str] = None
 ) -> AsyncGenerator[str, None]:
     """
@@ -209,30 +208,22 @@ async def generate_magicblock_stream(
     Args:
         prompt: The user's request/instruction
         session: The current session data
-        gemini_model_name: The Gemini model to use
+        model_name: The model to use (resolved by the provider-agnostic LLM layer)
         current_html: The current HTML content to iterate on (for modifications)
     """
     try:
-        client = get_gemini_client()
-
-        # Build conversation contents
-        contents = []
-
-        # Add system instruction
+        # Build the system prompt (provider-agnostic system instruction)
         system_prompt = build_magicblock_system_prompt(session.context)
-        contents.append({"role": "user", "parts": [{"text": system_prompt}]})
-        contents.append({"role": "model", "parts": [{"text": "I understand. I'll create interactive HTML content for educational purposes. I'll output only valid HTML code that's self-contained and ready to render."}]})
 
-        # Add message history
-        for msg in session.message_history:
-            contents.append({
-                "role": msg.role,
-                "parts": [{"text": msg.content}]
-            })
+        # Prior conversation turns
+        history = [
+            {"role": msg.role, "content": msg.content}
+            for msg in session.message_history
+        ]
 
         # Build the iteration prompt with current HTML context
         if current_html and session.iteration_count > 0:
-            iteration_prompt = f"""The user wants to modify the existing interactive element.
+            user_prompt = f"""The user wants to modify the existing interactive element.
 
 CURRENT HTML CODE:
 ```html
@@ -243,48 +234,20 @@ USER REQUEST:
 {prompt}
 
 Please modify the HTML code above according to the user's request. Output ONLY the complete updated HTML code, starting with <!DOCTYPE html> and ending with </html>. Do not include any explanations."""
-            contents.append({"role": "user", "parts": [{"text": iteration_prompt}]})
         else:
             # First generation - just use the prompt
-            contents.append({"role": "user", "parts": [{"text": prompt}]})
-
-        # Stream Gemini response: run the blocking SDK iterator in a thread and
-        # forward each chunk to the async generator via a Queue so callers see
-        # incremental output instead of waiting for the full response.
-        import threading
-        loop = asyncio.get_running_loop()
-        _sentinel = object()
-        queue: asyncio.Queue = asyncio.Queue()
-        _stream_error: list = []
-
-        def _run_stream():
-            try:
-                resp = client.models.generate_content_stream(
-                    model=gemini_model_name,
-                    contents=contents,
-                )
-                for chunk in resp:
-                    loop.call_soon_threadsafe(queue.put_nowait, chunk)
-            except Exception as exc:
-                _stream_error.append(exc)
-            finally:
-                loop.call_soon_threadsafe(queue.put_nowait, _sentinel)
-
-        t = threading.Thread(target=_run_stream, daemon=True)
-        t.start()
+            user_prompt = prompt
 
         full_response = ""
-        while True:
-            item = await queue.get()
-            if item is _sentinel:
-                break
-            if item.text:
-                full_response += item.text
-                yield item.text
-                await asyncio.sleep(0)
-
-        if _stream_error:
-            raise _stream_error[0]
+        async for chunk in generate_stream(
+            model_name=model_name or model_for_tier("interactive"),
+            user_prompt=user_prompt,
+            system_prompt=system_prompt,
+            history=history,
+            timeout=300.0,
+        ):
+            full_response += chunk
+            yield chunk
 
         # Update session after generation completes
         session.message_history.append(MagicBlockMessage(role="user", content=prompt))

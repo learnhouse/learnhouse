@@ -13,6 +13,7 @@ dependencies = [
     "fastapi==0.136.3",
     "httpx==0.28.1",
     "google-genai==2.8.0",
+    "pydantic-ai-slim[openai,anthropic,google,groq,mistral]>=1.5.0",
     "pwdlib[argon2]==0.3.0",
     "psycopg2-binary==2.9.12",
     "asyncpg==0.31.0",
@@ -56,6 +57,7 @@ asyncio_mode = "auto"
 asyncio_default_fixture_loop_scope = "function"
 markers = [
     "asyncio: mark test as async",
+    "ollama: live test that requires a local Ollama server (opt-in; skipped if unreachable)",
 ]
 filterwarnings = [
     "ignore::DeprecationWarning",
