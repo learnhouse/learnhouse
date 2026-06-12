@@ -4,6 +4,7 @@ from src.services.email.translations import (
     DEFAULT_LANGUAGE,
     EMAIL_TRANSLATIONS,
     SUPPORTED_LANGUAGES,
+    SUPPORTED_UI_LANGUAGES,
     normalize_language,
     t,
 )
@@ -64,3 +65,19 @@ class TestT:
         # the English fallback for a "supported" locale.
         for code in SUPPORTED_LANGUAGES:
             assert code in EMAIL_TRANSLATIONS, f"missing translation bundle: {code}"
+
+
+class TestSupportedUILanguages:
+    def test_email_languages_are_a_subset_of_ui_languages(self):
+        # Every locale with email bundles must also be a valid UI language.
+        assert set(SUPPORTED_LANGUAGES).issubset(set(SUPPORTED_UI_LANGUAGES))
+
+    def test_ui_languages_include_slovak(self):
+        # Regression: sk must be selectable as an org UI language.
+        assert "sk" in SUPPORTED_UI_LANGUAGES
+
+    def test_ui_only_languages_fall_back_to_english_email(self):
+        # A UI language without an email bundle must not break email sending.
+        for code in SUPPORTED_UI_LANGUAGES:
+            if code not in EMAIL_TRANSLATIONS:
+                assert t(code, "invitation.heading") == EMAIL_TRANSLATIONS["en"]["invitation.heading"]
