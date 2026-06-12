@@ -61,6 +61,24 @@ def is_reserved_domain(domain: str) -> bool:
     return False
 
 
+def is_agency_subdomain(domain: str) -> bool:
+    """True if `domain` is the agency's own top domain or a subdomain of it.
+
+    In agency (multi-tenant) deployments the whole `*.{LEARNHOUSE_DOMAIN}` space
+    is already under the operator's control (wildcard DNS + wildcard TLS served
+    by Caddy via DNS-01), so a custom domain under it is provably theirs and
+    needs no separate DNS TXT proof-of-ownership — we can auto-verify it.
+
+    Guarded so we never auto-verify when no real agency domain is configured
+    (the default/dev values), which would otherwise be unsafe.
+    """
+    base = (LEARNHOUSE_DOMAIN or "").lower().strip().split(":")[0]
+    if not base or base in ("learnhouse.io", "localhost"):
+        return False
+    domain = domain.lower().strip().split(":")[0]
+    return domain == base or domain.endswith("." + base)
+
+
 def _get_subdomain_prefix(domain: str) -> str:
     """
     Extract the subdomain prefix from a domain.
@@ -129,6 +147,18 @@ async def verify_domain_dns(domain: CustomDomain, db_session: AsyncSession, org_
         db_session.add(domain)
         await db_session.commit()
         return True, "Verified (dev mode)"
+
+    # Agency's own subdomains are already operator-controlled (wildcard DNS+TLS),
+    # so there's nothing to prove via a DNS TXT record — verify immediately.
+    if is_agency_subdomain(domain.domain):
+        logger.info(f"Auto-verifying {domain.domain} (subdomain of agency domain {LEARNHOUSE_DOMAIN})")
+        domain.status = "verified"
+        domain.verified_at = str(datetime.now())
+        domain.last_check_at = str(datetime.now())
+        domain.check_error = None
+        db_session.add(domain)
+        await db_session.commit()
+        return True, "Verified automatically (subdomain of your agency domain)"
 
     try:
         import dns.resolver
@@ -257,20 +287,27 @@ async def add_custom_domain(
             detail="This domain is already registered",
         )
 
-    # Create the custom domain
+    # Create the custom domain.
+    # Subdomains of the agency's own domain are already under operator control
+    # (wildcard DNS + wildcard TLS), so skip the manual DNS TXT step and mark
+    # them verified right away.
     now = str(datetime.now())
     verification_token = generate_verification_token()
+    auto_verified = is_agency_subdomain(domain)
 
     custom_domain = CustomDomain(
         domain_uuid=f"domain_{uuid4()}",
         domain=domain,
         org_id=org_id,
-        status="pending",
+        status="verified" if auto_verified else "pending",
         verification_token=verification_token,
+        verified_at=now if auto_verified else None,
         primary=False,
         creation_date=now,
         update_date=now,
     )
+    if auto_verified:
+        logger.info(f"Auto-verified {domain} on add (subdomain of agency domain {LEARNHOUSE_DOMAIN})")
 
     db_session.add(custom_domain)
     await db_session.commit()
