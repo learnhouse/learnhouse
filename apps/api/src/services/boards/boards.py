@@ -34,6 +34,8 @@ async def create_board(
 ) -> BoardRead:
     await check_resource_access(request, db_session, current_user, "board_x", AccessAction.CREATE)
 
+    await require_org_membership(resolve_acting_user_id(current_user), org_id, db_session)
+
     board = Board(
         **board_object.model_dump(),
         org_id=org_id,
@@ -157,6 +159,8 @@ async def duplicate_board(
     await check_resource_access(request, db_session, current_user, source.board_uuid, AccessAction.READ)
     # Also need create permission
     await check_resource_access(request, db_session, current_user, "board_x", AccessAction.CREATE)
+
+    await require_org_membership(resolve_acting_user_id(current_user), source.org_id, db_session)
 
     board = Board(
         org_id=source.org_id,

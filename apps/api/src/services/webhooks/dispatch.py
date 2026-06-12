@@ -244,22 +244,19 @@ async def _prune_delivery_logs(webhook_id: int) -> None:
     """Keep only the most recent LOG_RETENTION_PER_ENDPOINT logs per endpoint."""
     try:
         async with _async_session_factory() as db_session:
-            ordered_ids = (await db_session.execute(
+            keep_ids = (
                 select(WebhookDeliveryLog.id)
                 .where(WebhookDeliveryLog.webhook_id == webhook_id)
                 .order_by(col(WebhookDeliveryLog.id).desc())
-            )).scalars().all()
-            stale_ids = [
-                row if isinstance(row, int) else row[0]
-                for row in ordered_ids[LOG_RETENTION_PER_ENDPOINT:]
-            ]
-            if stale_ids:
-                await db_session.execute(
-                    delete(WebhookDeliveryLog).where(
-                        WebhookDeliveryLog.webhook_id == webhook_id,
-                        WebhookDeliveryLog.id.in_(stale_ids),
-                    )
+                .limit(LOG_RETENTION_PER_ENDPOINT)
+                .scalar_subquery()
+            )
+            await db_session.execute(
+                delete(WebhookDeliveryLog).where(
+                    WebhookDeliveryLog.webhook_id == webhook_id,
+                    col(WebhookDeliveryLog.id).not_in(keep_ids),
                 )
-                await db_session.commit()
+            )
+            await db_session.commit()
     except Exception:
         logger.warning("Failed to prune webhook delivery logs for endpoint %s", webhook_id)

@@ -132,10 +132,14 @@ export const SearchBar: React.FC<SearchBarProps> = ({
   }, []);
 
   useEffect(() => {
+    let stale = false;
+
     const fetchResults = async () => {
       if (debouncedSearch.trim().length === 0) {
-        setSearchResults({ courses: [], collections: [], users: [] });
-        setIsLoading(false);
+        if (!stale) {
+          setSearchResults({ courses: [], collections: [], users: [] });
+          setIsLoading(false);
+        }
         return;
       }
 
@@ -149,7 +153,9 @@ export const SearchBar: React.FC<SearchBarProps> = ({
           null,
           session?.data?.tokens?.access_token
         );
-        
+
+        if (stale) return;
+
         // Type assertion and safe access
         const typedResponse = response.data as any;
 
@@ -169,13 +175,21 @@ export const SearchBar: React.FC<SearchBarProps> = ({
         });
       } catch (error) {
         console.error('Error searching content:', error);
-        setSearchResults({ courses: [], collections: [], users: [] });
+        if (!stale) {
+          setSearchResults({ courses: [], collections: [], users: [] });
+        }
       }
-      setIsLoading(false);
-      setIsInitialLoad(false);
+      if (!stale) {
+        setIsLoading(false);
+        setIsInitialLoad(false);
+      }
     };
 
     fetchResults();
+
+    return () => {
+      stale = true;
+    };
   }, [debouncedSearch, orgslug, session?.data?.tokens?.access_token]);
 
   const MemoizedEmptyState = useMemo(() => {

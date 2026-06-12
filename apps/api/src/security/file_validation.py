@@ -161,6 +161,50 @@ FILE_TYPES = {
 }
 
 
+EXT_TO_CANONICAL_MIME = {
+    '.jpg': 'image/jpeg',
+    '.jpeg': 'image/jpeg',
+    '.png': 'image/png',
+    '.gif': 'image/gif',
+    '.webp': 'image/webp',
+    '.mp4': 'video/mp4',
+    '.webm': 'video/webm',
+    '.pdf': 'application/pdf',
+    '.mp3': 'audio/mpeg',
+    '.wav': 'audio/wav',
+    '.ogg': 'audio/ogg',
+    '.m4a': 'audio/mp4',
+    '.zip': 'application/zip',
+    '.sqlite': 'application/vnd.sqlite3',
+    '.db': 'application/vnd.sqlite3',
+    '.sqlite3': 'application/vnd.sqlite3',
+    '.docx': 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+    '.pptx': 'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+}
+
+
+MIME_TO_SAFE_EXT = {
+    'image/jpeg': 'jpg',
+    'image/png': 'png',
+    'image/gif': 'gif',
+    'image/webp': 'webp',
+    'video/mp4': 'mp4',
+    'video/webm': 'webm',
+    'application/pdf': 'pdf',
+    'audio/mpeg': 'mp3',
+    'audio/wav': 'wav',
+    'audio/ogg': 'ogg',
+    'audio/mp4': 'm4a',
+    'application/zip': 'zip',
+    'application/x-zip-compressed': 'zip',
+    'application/vnd.sqlite3': 'sqlite3',
+    'application/x-sqlite3': 'sqlite3',
+    'application/octet-stream': 'bin',
+    'application/vnd.openxmlformats-officedocument.wordprocessingml.document': 'docx',
+    'application/vnd.openxmlformats-officedocument.presentationml.presentation': 'pptx',
+}
+
+
 def validate_upload(
     file: UploadFile,
     allowed_types: List[str],
@@ -214,18 +258,38 @@ def validate_upload(
     # Validate file content
     if not config['validator'](content):
         raise HTTPException(status_code=415, detail="File appears to be corrupted or invalid")
-    
-    return file.content_type, content
+
+    canonical_type = EXT_TO_CANONICAL_MIME.get(ext, file.content_type)
+    return canonical_type, content
 
 
-def get_safe_filename(original_filename: str, prefix: str = "") -> str:
-    """Generate a safe filename with UUID and validated extension."""
+def get_safe_filename(
+    original_filename: str,
+    prefix: str = "",
+    content_type: Optional[str] = None,
+) -> str:
+    """Generate a safe filename with a UUID prefix and a safe extension.
+
+    When ``content_type`` is provided (the validated, server-determined MIME
+    type from ``validate_upload``), the stored extension is derived from that
+    type via ``MIME_TO_SAFE_EXT`` — NOT from the client-supplied filename.
+    This prevents a client from controlling the stored file's extension (e.g.
+    uploading image bytes under a ".html" name). When no content_type is
+    given, fall back to the (sanitized) client extension for backward
+    compatibility.
+    """
+    if content_type is not None:
+        safe_ext = MIME_TO_SAFE_EXT.get(content_type)
+        if safe_ext:
+            return f"{prefix}.{safe_ext}"
+        return f"{prefix}.bin"
+
     if not original_filename:
         return f"{prefix}.bin"
-    
+
     ext = original_filename.split('.')[-1].lower()
     # Only allow safe alphanumeric extensions
     if re.match(r'^[a-zA-Z0-9]+$', ext):
         return f"{prefix}.{ext}"
-    
+
     return f"{prefix}.bin"

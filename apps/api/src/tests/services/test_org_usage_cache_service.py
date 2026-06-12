@@ -313,6 +313,7 @@ class TestOrgUsageHelpers:
             side_effect=[
                 {"enabled": True, "limit": 3},
                 {"enabled": True, "limit": 4},
+                {"enabled": True, "limit": 0},
             ],
         ), patch(
             "src.services.orgs.usage._set_cached_usage",

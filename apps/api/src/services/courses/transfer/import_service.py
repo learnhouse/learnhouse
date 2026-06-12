@@ -91,6 +91,30 @@ def sanitize_path(path: str) -> str:
     return sanitized
 
 
+def _safe_manifest_join(extract_dir: str, manifest_path: Optional[str]) -> Optional[str]:
+    """Safely resolve a manifest-supplied relative path under extract_dir.
+
+    manifest.json ``path`` values are attacker-controlled (they come from the
+    uploaded package), so they must be sanitized exactly like zip entry names
+    and re-verified to stay inside extract_dir (S13). Returns the joined path
+    on success, or None if the path is empty, missing, or escapes extract_dir.
+    """
+    if not manifest_path or not isinstance(manifest_path, str):
+        return None
+    safe = sanitize_path(manifest_path)
+    if not safe:
+        return None
+    target = os.path.join(extract_dir, safe)
+    base_real = os.path.realpath(extract_dir)
+    target_real = os.path.realpath(target)
+    try:
+        if os.path.commonpath([base_real, target_real]) != base_real:
+            return None
+    except ValueError:
+        return None
+    return target
+
+
 async def analyze_import_package(
     request: Request,
     zip_file: UploadFile,
@@ -211,7 +235,11 @@ async def analyze_import_package(
                 # extract_dir (shouldn't happen with a fresh uuid4 tempdir but
                 # defense in depth) cannot redirect the write.
                 resolved = os.path.realpath(target_path)
-                if not (resolved == abs_extract or resolved.startswith(abs_extract + os.sep)):
+                try:
+                    contained = os.path.commonpath([abs_extract, resolved]) == abs_extract
+                except ValueError:
+                    contained = False
+                if not contained:
                     continue
 
                 if info.is_dir():
@@ -247,7 +275,9 @@ async def analyze_import_package(
         # Analyze courses in the package
         courses_info = []
         for course_entry in manifest.get("courses", []):
-            course_path = os.path.join(extract_dir, course_entry.get("path", ""))
+            course_path = _safe_manifest_join(extract_dir, course_entry.get("path", ""))
+            if not course_path:
+                continue
             course_json_path = os.path.join(course_path, "course.json")
 
             if not os.path.exists(course_json_path):
@@ -372,7 +402,9 @@ async def import_courses(
         cid = entry.get("course_uuid")
         cpath = entry.get("path")
         if cid and cpath:
-            course_paths[cid] = os.path.join(extract_dir, cpath)
+            safe_course_path = _safe_manifest_join(extract_dir, cpath)
+            if safe_course_path:
+                course_paths[cid] = safe_course_path
 
     results = []
     successful = 0
@@ -467,6 +499,9 @@ async def _import_single_course(
     """
     Import a single course from the extracted package.
     """
+    if not course_path or ".." in str(course_path).replace("\\", "/").split("/"):
+        raise HTTPException(status_code=400, detail="Invalid course path in package")
+
     # Load course data
     with open(os.path.join(course_path, "course.json"), 'r', encoding="utf-8") as f:
         course_data = json.load(f)

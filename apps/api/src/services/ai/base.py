@@ -234,6 +234,30 @@ def update_chat_session_meta(aichat_uuid: str, user_id: int, title: Optional[str
         return None
 
 
+def chat_session_belongs_to_user(aichat_uuid: str, user_id: int) -> bool:
+    """Return True if the chat session is owned by ``user_id``.
+
+    Ownership is recorded in the ``chat_meta:<uuid>`` Redis key (see
+    :func:`save_chat_session_meta`). A session with no metadata (brand-new or
+    expired) is treated as ownable by the caller — the IDOR risk we guard
+    against is reusing *another* user's existing session, which always has a
+    populated ``user_id``. This mirrors the ownership check in
+    :func:`get_chat_messages` / :func:`delete_chat_session`.
+    """
+    r = _get_redis()
+    if not r:
+        return True
+    try:
+        meta_data = r.get(f"chat_meta:{aichat_uuid}")
+        if not meta_data:
+            return True
+        meta = json.loads(meta_data.decode("utf-8") if isinstance(meta_data, bytes) else meta_data)
+        return meta.get("user_id") == user_id
+    except Exception as e:
+        logger.error("Failed to verify chat session ownership: %s", e, exc_info=True)
+        return False
+
+
 def get_user_chat_sessions(user_id: int, org_id: Optional[int] = None) -> list[dict]:
     """Return all chat sessions for a user, newest first. Optionally filter by org_id."""
     r = _get_redis()

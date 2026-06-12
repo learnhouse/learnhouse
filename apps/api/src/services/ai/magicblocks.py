@@ -60,7 +60,8 @@ def get_magicblock_session(session_uuid: str) -> Optional[MagicBlockSessionData]
 def create_magicblock_session(
     block_uuid: str,
     activity_uuid: str,
-    context: MagicBlockContext
+    context: MagicBlockContext,
+    user_id: Optional[int] = None,
 ) -> MagicBlockSessionData:
     """Create a new MagicBlock session"""
     session_uuid = f"mb_{uuid4()}"
@@ -73,7 +74,8 @@ def create_magicblock_session(
         max_iterations=MAX_ITERATIONS,
         message_history=[],
         current_html=None,
-        context=context
+        context=context,
+        user_id=user_id,
     )
 
     save_magicblock_session(session)
@@ -296,8 +298,14 @@ Please modify the HTML code above according to the user's request. Output ONLY t
 
         save_magicblock_session(session)
 
-    except Exception as e:
-        yield f"Error: {str(e)}"
+    except Exception:
+        # Re-raise instead of yielding the error as a content chunk. Yielding
+        # "Error: {e}" both leaked exception detail to the client and defeated
+        # the caller's credit-refund logic (a non-empty chunk read as success).
+        # event_generator's handler emits a sanitized SSE error event and
+        # refunds the reserved credits.
+        logger.exception("MagicBlock generation failed")
+        raise
 
 
 def extract_html_from_response(response: str) -> str:

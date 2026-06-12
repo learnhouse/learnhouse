@@ -989,6 +989,11 @@ async def get_ai_credits_summary(org_id: int, db_session: AsyncSession) -> dict:
 
     base_credits = get_ai_credit_limit(org_plan)
 
+    config = org_config.config or {}
+    extra = 0
+    if config.get("config_version", "1.0").startswith("2"):
+        extra = config.get("overrides", {}).get("ai", {}).get("extra_limit", 0) or 0
+
     # Batch-fetch both keys in a single round-trip
     purchased_raw, used_raw = r.mget(
         f"ai_credits_purchased:{org_id}",
@@ -1007,7 +1012,7 @@ async def get_ai_credits_summary(org_id: int, db_session: AsyncSession) -> dict:
             "remaining_credits": "unlimited",
         }
 
-    total_credits = base_credits + purchased_credits_count
+    total_credits = base_credits + extra + purchased_credits_count
     remaining_credits = max(0, total_credits - used_credits_count)
 
     return {
