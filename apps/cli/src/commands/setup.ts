@@ -22,6 +22,7 @@ import { waitForHealth, waitForOrgSeed } from '../services/health.js'
 import { checkPort, findAvailablePort } from '../utils/network.js'
 import { resolveAppImage } from '../services/version-check.js'
 import { validateEmail } from '../utils/validators.js'
+import { setupEnterprise, type EeSetupOptions } from './setup-ee.js'
 
 const STEP_NAMES = [
   'Install Directory',
@@ -125,11 +126,53 @@ export interface SetupOptions {
   orgSlug?: string
   channel?: string
   start?: boolean
+  // Enterprise Edition
+  edition?: string
+  license?: string
+  tenancy?: string
+  acmeEmail?: string
+  eeImageTag?: string
+  localTls?: boolean
+  externalDb?: string
+  externalRedis?: string
+  dnsProvider?: string
+  cfApiToken?: string
+  dockerIpv6?: boolean
+  installDir?: string
+}
+
+function wantsEnterprise(edition?: string): boolean {
+  return edition === 'enterprise' || edition === 'ee'
+}
+
+function toEeOptions(options: SetupOptions, ci: boolean): EeSetupOptions {
+  return {
+    ci,
+    name: options.name,
+    installDir: options.installDir,
+    license: options.license,
+    domain: options.domain,
+    tenancy: options.tenancy,
+    acmeEmail: options.acmeEmail,
+    adminEmail: options.adminEmail,
+    adminPassword: options.adminPassword,
+    eeImageTag: options.eeImageTag,
+    localTls: options.localTls,
+    externalDb: options.externalDb,
+    dnsProvider: options.dnsProvider,
+    cfApiToken: options.cfApiToken,
+    dockerIpv6: options.dockerIpv6,
+    start: options.start,
+  }
 }
 
 export async function setupCommand(options: SetupOptions) {
   // ─── CI / non-interactive mode ──────────────────────────────
   if (options.ci) {
+    if (wantsEnterprise(options.edition)) {
+      await setupEnterprise(toEeOptions(options, true))
+      return
+    }
     if (!options.adminPassword) {
       console.error('Error: --admin-password is required in --ci mode')
       process.exit(1)
@@ -180,10 +223,16 @@ export async function setupCommand(options: SetupOptions) {
       useHttps: false,
       httpPort,
       autoSsl: false,
-      useExternalDb: false,
+      // External DB/Redis work for the Community stack too — when a connection
+      // string is supplied, the in-container service is omitted from the compose.
+      useExternalDb: !!options.externalDb,
+      externalDbConnectionString: options.externalDb,
       dbPassword,
       useAiDatabase: false,
-      useExternalRedis: false,
+      useExternalRedis: !!options.externalRedis,
+      externalRedisConnectionString: options.externalRedis,
+      // Needed when the external DB is IPv6-only.
+      dockerIpv6: options.dockerIpv6,
       orgName: options.orgName || 'Default Organization',
       orgSlug: (options.orgSlug || 'default').toLowerCase(),
       adminEmail: options.adminEmail || 'admin@school.dev',
@@ -204,6 +253,7 @@ export async function setupCommand(options: SetupOptions) {
     fs.mkdirSync(path.join(resolvedDir, 'extra'), { recursive: true })
     fs.writeFileSync(path.join(resolvedDir, 'docker-compose.yml'), generateDockerCompose(config, appImage))
     fs.writeFileSync(path.join(resolvedDir, '.env'), generateEnvFile(config))
+    fs.chmodSync(path.join(resolvedDir, '.env'), 0o600)
     fs.writeFileSync(path.join(resolvedDir, 'extra', 'nginx.prod.conf'), generateNginxConf())
     writeConfig(config)
 
@@ -250,6 +300,24 @@ export async function setupCommand(options: SetupOptions) {
   // ─── Interactive mode ───────────────────────────────────────
   await printBanner()
   p.intro(pc.cyan('LearnHouse Setup Wizard'))
+
+  // Edition selection (Community vs Enterprise)
+  let edition = options.edition
+  if (!wantsEnterprise(edition) && edition !== 'community') {
+    const choice = await p.select({
+      message: 'Which edition do you want to deploy?',
+      options: [
+        { value: 'community', label: 'Community', hint: 'free, open-source — single organization' },
+        { value: 'enterprise', label: 'Enterprise', hint: 'license key — SSO, payments, multi-tenant' },
+      ],
+    })
+    if (p.isCancel(choice)) { p.cancel(); process.exit(0) }
+    edition = choice as string
+  }
+  if (wantsEnterprise(edition)) {
+    await setupEnterprise(toEeOptions(options, false))
+    return
+  }
 
   // Prerequisites (no going back from this)
   await checkPrerequisites()
@@ -469,6 +537,7 @@ export async function setupCommand(options: SetupOptions) {
 
     fs.writeFileSync(path.join(finalDir, 'docker-compose.yml'), generateDockerCompose(config, appImage))
     fs.writeFileSync(path.join(finalDir, '.env'), generateEnvFile(config))
+    fs.chmodSync(path.join(finalDir, '.env'), 0o600)
 
     if (config.autoSsl) {
       fs.writeFileSync(path.join(finalDir, 'extra', 'Caddyfile'), generateCaddyfile(config))

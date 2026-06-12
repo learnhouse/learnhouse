@@ -6,6 +6,14 @@ const RESERVED_TLDS = new Set([
   'example',
 ])
 
+// RFC 2606 reserved second-level domains. The LearnHouse seeder rejects these,
+// silently leaving the install with no admin user, so the CLI must too.
+const RESERVED_DOMAINS = new Set([
+  'example.com',
+  'example.net',
+  'example.org',
+])
+
 export function validateEmail(value: string): string | undefined {
   if (!value) return 'Email is required'
   const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
@@ -14,6 +22,9 @@ export function validateEmail(value: string): string | undefined {
   const tld = domain.includes('.') ? domain.slice(domain.lastIndexOf('.') + 1) : domain
   if (RESERVED_TLDS.has(tld)) {
     return `Reserved TLD ".${tld}" is not accepted. Use a real domain (e.g. admin@yourdomain.com).`
+  }
+  if (RESERVED_DOMAINS.has(domain)) {
+    return `Reserved domain "${domain}" is not accepted — the seeder would create no admin. Use a real domain.`
   }
   return undefined
 }

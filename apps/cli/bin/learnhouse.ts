@@ -70,6 +70,19 @@ program
   .option('--org-slug <slug>', 'Organization slug used in URLs (default: "default")')
   .option('--channel <channel>', 'Release channel: stable or dev (default: "stable")')
   .option('--no-start', 'Skip starting services after setup')
+  // ── Enterprise Edition ──
+  .option('--edition <edition>', 'Edition to deploy: community (default) or enterprise')
+  .option('--license <key>', 'EE license key (also the image-registry password)')
+  .option('--tenancy <mode>', 'EE tenancy: single (default) or agency (multi-tenant)')
+  .option('--acme-email <email>', "EE: Let's Encrypt contact email (default: admin email)")
+  .option('--ee-image-tag <tag>', 'EE image tag (default: "prod")')
+  .option('--local-tls', 'EE: use Caddy internal CA (self-signed) — testing only')
+  .option('--external-db <uri>', 'Use an external Postgres (e.g. Supabase) instead of the in-container db')
+  .option('--external-redis <uri>', 'Use an external Redis instead of the in-container redis')
+  .option('--dns-provider <provider>', 'EE: DNS-01 provider for wildcard certs (cloudflare)')
+  .option('--cf-api-token <token>', 'EE: Cloudflare API token (Zone:DNS:Edit) for DNS-01')
+  .option('--docker-ipv6', 'Enable IPv6 on the compose network (needed for IPv6-only external DBs)')
+  .option('--install-dir <dir>', 'Override the install directory')
   .action(setupCommand)
 
 program
@@ -116,10 +129,11 @@ program
 
 program
   .command('update')
-  .description('Update LearnHouse to latest or a specific version')
-  .option('-v, --version <version>', 'Target version (e.g. 1.0.0)')
+  .description('Update LearnHouse to latest or a specific version (EE: backs up the DB + runs migrations)')
+  .option('-v, --version <version>', 'Target version (e.g. 1.0.0; EE default: "prod")')
   .option('--migrate', 'Run database migrations automatically')
   .option('--no-migrate', 'Skip database migrations')
+  .option('--no-backup', 'EE: skip the pre-upgrade database backup (not recommended)')
   .action(updateCommand)
 
 program
