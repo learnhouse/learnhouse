@@ -25,6 +25,7 @@ from src.db.courses.courses import (
     ThumbnailType,
 )
 from src.security.auth import resolve_acting_user_id
+from src.security.org_auth import require_org_membership
 from src.security.rbac.rbac import (
     authorization_verify_if_user_is_anon,
     authorization_verify_based_on_org_admin_status,
@@ -594,11 +595,15 @@ async def create_course(
     # For now, we'll use the existing RBAC check but with proper organization context
     await check_resource_access(request, db_session, current_user, "course_x", AccessAction.CREATE)
 
+    await require_org_membership(
+        resolve_acting_user_id(current_user), org_id, db_session
+    )
+
     # Usage check
     await check_limits_with_usage("courses", org_id, db_session)
 
     # Complete course object
-    course.org_id = course.org_id
+    course.org_id = org_id
 
     # Get org uuid
     org_statement = select(Organization).where(Organization.id == org_id)

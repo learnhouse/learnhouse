@@ -1,0 +1,107 @@
+import { Callout } from 'nextra/components'
+
+# Setup Wizard
+
+The setup wizard (`npx learnhouse@latest setup`) is an interactive 6-step process that generates a complete Docker Compose deployment. You can go back and edit any step before confirming.
+
+## Step 1 — Install Directory
+
+Choose where the deployment files will be created.
+
+- **Default**: `./learnhouse`
+- The directory is created if it doesn't exist
+
+## Step 2 — Domain Configuration
+
+Configure your hostname and HTTPS settings.
+
+- **Domain**: hostname or IP address (default: `localhost`)
+- **HTTPS options** (non-localhost only):
+  - **Automatic SSL** (recommended) — Uses Let's Encrypt via Caddy. Requires a valid domain and ports 80/443.
+  - **Manual SSL** — You handle the reverse proxy or Cloudflare. LearnHouse runs on HTTP internally.
+  - **No HTTPS** — HTTP only (not recommended for production)
+- **Port**: Automatically set based on SSL choice (443 for auto SSL, 80 for HTTP)
+
+## Step 3 — Database & Redis
+
+Choose local Docker containers or connect to external services.
+
+### PostgreSQL
+
+- **Local Docker** (recommended):
+  - Uses `pgvector/pgvector:pg16` (PostgreSQL 16 with the pgvector extension, used for AI/RAG features when enabled)
+  - Password is auto-generated
+- **External** — Provide a connection string (`postgresql://user:pass@host:5432/db`). The wizard tests connectivity before proceeding.
+
+### Redis
+
+- **Local Docker** (recommended) — Uses `redis:7.2.3-alpine`
+- **External** — Provide a connection string. The wizard tests connectivity before proceeding.
+
+## Step 4 — Organization
+
+Set your organization name (e.g., "My School"). This creates the initial organization in the database.
+
+## Step 5 — Admin Account
+
+Create the first admin user with email and password (minimum 8 characters).
+
+## Step 6 — Optional Features
+
+Enable any of the following integrations:
+
+| Feature | Required Configuration |
+| --- | --- |
+| **AI (Gemini)** | Gemini API key |
+| **Email (Resend)** | Resend API key + system email address |
+| **Email (SMTP)** | Host, port, username, password, TLS toggle + system email |
+| **S3 Storage** | Bucket name, endpoint URL (optional for AWS) |
+| **Google OAuth** | Client ID + Client Secret |
+| **Unsplash** | Access Key |
+
+## Confirmation
+
+After completing all steps, the wizard shows a summary of your configuration. You can:
+
+- **Proceed** — Generate files and optionally start the deployment
+- **Edit** — Go back and change any step
+- **Cancel** — Abort without generating anything
+
+## Generated Files
+
+After confirmation, the wizard creates:
+
+```
+{installDir}/
+├── docker-compose.yml        # Service definitions
+├── .env                      # All configuration variables
+├── learnhouse.config.json    # CLI metadata
+└── extra/
+    ├── Caddyfile             # If auto-SSL enabled
+    └── nginx.prod.conf       # If manual SSL or HTTP
+```
+
+## Docker Services
+
+Each deployment gets a unique 8-character ID for container and network isolation.
+
+| Service | Image | Purpose |
+| --- | --- | --- |
+| `learnhouse-app-{id}` | `ghcr.io/learnhouse/app:latest` (or `:dev`) | Next.js + FastAPI application |
+| `learnhouse-db-{id}` | `pgvector/pgvector:pg16` | PostgreSQL database |
+| `learnhouse-redis-{id}` | `redis:7.2.3-alpine` | Redis cache |
+| `learnhouse-caddy-{id}` | `caddy:2-alpine` | Reverse proxy with auto-SSL |
+| `learnhouse-nginx-{id}` | `nginx:alpine` | Reverse proxy (no auto-SSL) |
+
+<Callout type="info">
+The wizard optionally starts the deployment and waits up to 3 minutes for the health check (`/api/v1/health`) to pass before showing your credentials and URL.
+</Callout>
+
+## Release Channels
+
+During setup you choose a release channel:
+
+- **Stable** — Recommended for production (pulls `ghcr.io/learnhouse/app:latest`)
+- **Dev** — Bleeding edge, latest features (pulls `ghcr.io/learnhouse/app:dev`)
+
+To pin to a specific image tag after setup, use `learnhouse update --version <tag>`.

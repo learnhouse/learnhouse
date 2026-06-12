@@ -1,0 +1,36 @@
+import { Callout } from 'nextra/components'
+
+# Organization Settings
+
+Each organization in LearnHouse has its own configurable settings that control branding, features, and access.
+
+## Branding
+
+Customize the look and feel of your organization:
+
+- Organization name and description
+- Logo and favicon
+- Color scheme and theme preferences
+
+## AI Configuration
+
+Per-organization AI controls let admins:
+
+- Enable or disable AI features for the organization
+- Set a per-user request limit to cap usage
+- Toggle individual AI surfaces (such as the admin copilot)
+
+<Callout>
+The Google Gemini API key itself is a global, instance-level setting (`LEARNHOUSE_GEMINI_API_KEY`) — it is configured once at deployment and shared across all organizations. See [AI Setup](/self-hosting/configuration/ai-setup) for details.
+</Callout>
+
+## User and Access Settings
+
+Control how users interact with your organization:
+
+- **Signup mechanism** — Choose between open signup and invite-only registration.
+- **User limits** — Set maximum user counts if needed.
+
+## Managing Settings
+
+Organization settings are accessible to Admin users from the organization dashboard. Navigate to **Settings** to view and modify all available options.

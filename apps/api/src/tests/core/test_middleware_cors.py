@@ -8,28 +8,50 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from src.core.middleware.cors import (
-    _SINGLE_TENANCY_ORIGIN_REGEX,
+    _SINGLE_TENANCY_LOCALHOST_REGEX,
     configure_cors,
     get_cors_origin_regex,
 )
 
 
-def _config(tenancy: str, allowed_regexp: str = r"^https?://acme\.test$"):
+def _config(
+    tenancy: str,
+    allowed_regexp: str = r"^https?://acme\.test$",
+    frontend_domain: str = "app.example.com",
+    domain: str = "example.com",
+):
     return SimpleNamespace(
         hosting_config=SimpleNamespace(
             tenancy=tenancy,
             allowed_regexp=allowed_regexp,
+            frontend_domain=frontend_domain,
+            domain=domain,
         )
     )
 
 
 class TestGetCorsOriginRegex:
-    def test_single_tenancy_returns_permissive_regex(self):
+    def test_single_tenancy_pins_to_configured_hosts(self):
         with patch(
             "src.core.middleware.cors.get_learnhouse_config",
             return_value=_config("single"),
         ):
-            assert get_cors_origin_regex() == _SINGLE_TENANCY_ORIGIN_REGEX
+            regex = get_cors_origin_regex()
+            assert re.fullmatch(regex, "https://app.example.com")
+            assert re.fullmatch(regex, "https://example.com")
+            assert re.fullmatch(regex, "https://www.app.example.com")
+            assert re.fullmatch(regex, "http://localhost:3000")
+            assert not re.fullmatch(regex, "https://evil.example.org")
+
+    def test_single_tenancy_falls_back_to_localhost_when_unconfigured(self):
+        with patch(
+            "src.core.middleware.cors.get_learnhouse_config",
+            return_value=_config("single", frontend_domain="", domain=""),
+        ):
+            regex = get_cors_origin_regex()
+            assert regex == _SINGLE_TENANCY_LOCALHOST_REGEX
+            assert re.fullmatch(regex, "http://localhost:3000")
+            assert not re.fullmatch(regex, "https://evil.example.org")
 
     def test_multi_tenancy_returns_configured_regex(self):
         configured = r"^https?://(.*\.)?learnhouse\.io$"
@@ -41,32 +63,38 @@ class TestGetCorsOriginRegex:
 
 
 class TestSingleTenancyRegex:
-    """The permissive regex used in single mode must accept legitimate
-    operator origins and reject obvious garbage."""
+    """The single-mode regex must accept the configured operator origin(s)
+    and reject everything else while credentials are allowed."""
 
     @staticmethod
-    def _matches(origin: str) -> bool:
-        return re.fullmatch(_SINGLE_TENANCY_ORIGIN_REGEX, origin) is not None
+    def _regex() -> str:
+        with patch(
+            "src.core.middleware.cors.get_learnhouse_config",
+            return_value=_config("single"),
+        ):
+            return get_cors_origin_regex()
 
-    def test_accepts_https_domain(self):
-        assert self._matches("https://learn.example.org")
+    def _matches(self, origin: str) -> bool:
+        return re.fullmatch(self._regex(), origin) is not None
+
+    def test_accepts_configured_https_domain(self):
+        assert self._matches("https://app.example.com")
 
     def test_accepts_http_localhost_with_port(self):
         assert self._matches("http://localhost:3000")
 
-    def test_accepts_https_with_port(self):
+    def test_accepts_configured_host_with_port(self):
         assert self._matches("https://app.example.com:8443")
 
-    def test_accepts_ip_origin(self):
-        # Internal pod-to-pod or dev IP origins must work in single mode.
-        assert self._matches("http://10.0.0.5:3000")
+    def test_rejects_unconfigured_domain(self):
+        assert not self._matches("https://learn.example.org")
 
     def test_rejects_origin_with_path(self):
         # CORS Origin header should never include a path; reject if present.
-        assert not self._matches("https://learn.example.org/login")
+        assert not self._matches("https://app.example.com/login")
 
     def test_rejects_origin_with_whitespace(self):
-        assert not self._matches("https://learn.example.org foo")
+        assert not self._matches("https://app.example.com foo")
 
     def test_rejects_non_http_scheme(self):
         assert not self._matches("javascript:alert(1)")

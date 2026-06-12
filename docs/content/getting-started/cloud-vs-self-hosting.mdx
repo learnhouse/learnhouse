@@ -1,0 +1,59 @@
+import { Callout } from 'nextra/components'
+
+# Cloud vs Self Hosting
+
+LearnHouse is open-source software. You can use the managed **LearnHouse Cloud** platform or self-host the core platform on your own infrastructure using the **LearnHouse CLI**. This page explains the differences so you can make an informed choice.
+
+## Comparison
+
+|                              | ☁️ LearnHouse Cloud                                | 🖥️ Self Hosting                 |
+| ---------------------------- | ------------------------------------------------- | -------------------------------- |
+| 🌍 Worldwide CDN             | ✅ Included                                        | ⚙️ Manual setup + additional cost |
+| 🔄 Weekly updates            | ✅ Automatic                                       | 🔧 Manual                        |
+| 🛠️ Maintenance               | ✅ Managed by the LearnHouse team                  | 👤 Your responsibility            |
+| 🔒 Security patches          | ✅ Applied automatically                           | 🔧 Manual                        |
+| 📊 Threat & uptime monitoring | ✅ Included                                       | ❌ Not included                   |
+| 🔐 SSL certificate           | ✅ Included                                        | 🔧 Manual                        |
+| 💾 Continuous backups         | ✅ Included                                        | ⚙️ Manual + additional cost       |
+| 📈 Scalability               | ✅ Automatic                                       | ⚙️ Depends on your provider       |
+| 🖥️ Direct SSH & DB access    | ❌ Not available                                   | ✅ Full access                    |
+| 🎧 Product support           | ✅ Email support                                   | 👥 Community support              |
+| 💚 Where your money goes     | ✅ Supporting the team and funding new features     | 🏢 Third-party hosting companies  |
+
+## ☁️ When to choose LearnHouse Cloud
+
+**Best for:** teams, organizations, and businesses that want to focus on content and learners — not infrastructure.
+
+- **Launch in minutes** — no servers to provision, no DevOps overhead. Your team can start building courses immediately.
+- **Zero-maintenance operations** — updates, security patches, SSL certificates, and backups are handled automatically by the LearnHouse team.
+- **Enterprise-grade reliability** — global CDN, threat monitoring, uptime guarantees, and automatic scaling out of the box.
+- **Priority support** — dedicated email support with faster response times for production issues.
+- **Invest in the product** — your subscription directly funds development of new features and improvements for the entire LearnHouse ecosystem.
+
+<Callout type="info">
+LearnHouse Cloud is the recommended option for most organizations. It eliminates operational complexity and lets your team focus entirely on creating great learning experiences.
+</Callout>
+
+## 🖥️ When to choose Self Hosting
+
+**Best for:** enterprises, institutions, and teams with strict infrastructure requirements and dedicated engineering resources.
+
+- **Full data sovereignty** — host on your own infrastructure with complete control over where data lives. Ideal for organizations with data residency mandates.
+- **Regulatory compliance** — meet on-premises hosting requirements for HIPAA, SOC 2, internal security policies, or government regulations.
+- **Deep infrastructure access** — direct SSH, database access, and full control over networking, storage, and compute resources.
+- **Custom integrations** — connect to internal systems, private networks, SSO providers, and proprietary tooling without restrictions.
+- **Dedicated engineering teams** — organizations with DevOps or platform engineering teams that prefer to own their deployment pipeline.
+
+<Callout type="warning">
+Self hosting requires your team to manage updates, backups, security patches, and scaling. Make sure you have the engineering capacity before choosing this path.
+</Callout>
+
+<Callout type="info">
+Both options give you access to the same core feature set. Self-hosted instances can be upgraded at any time with `learnhouse update`, which pulls the latest release from the [LearnHouse GitHub repository](https://github.com/learnhouse/learnhouse).
+</Callout>
+
+## Next steps
+
+- Ready to get started? Head to the [Quickstart](/getting-started/quickstart).
+- Want to try the cloud platform? Visit [learnhouse.app](https://learnhouse.app) to create your account.
+- Need help configuring a self-hosted instance? See the [Self Hosting Guide](/self-hosting).

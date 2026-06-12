@@ -1,0 +1,61 @@
+import { Callout } from 'nextra/components'
+
+# Monitoring
+
+Monitoring your self-hosted LearnHouse instance helps you catch issues early and ensure a reliable experience for your users.
+
+## Service Health Checks
+
+The CLI offers three complementary commands:
+
+```bash
+learnhouse status    # quick container status for each service
+learnhouse health    # PostgreSQL, Redis, HTTP health endpoint, disk, resources
+learnhouse doctor    # deep diagnostics (Docker, ports, DNS, env validation, logs)
+```
+
+You can also verify the application health endpoint directly:
+
+```bash
+curl http://localhost/api/v1/health
+```
+
+## Viewing Logs
+
+Stream logs from all containers:
+
+```bash
+learnhouse logs
+```
+
+## What to Monitor
+
+### Application Health
+
+- Run `learnhouse doctor` regularly to verify all services are running and healthy
+- Watch for container restarts, which may indicate memory issues or application errors
+
+### Disk Usage
+
+- Monitor disk space, especially if using filesystem storage for uploaded content
+- Database size grows over time as more content is created
+- Docker images and logs also consume disk space
+
+### Memory Usage
+
+- LearnHouse requires at least 2 GB of RAM
+- Monitor memory consumption to ensure the server is not swapping, which degrades performance
+
+### Database Performance
+
+- Watch for slow queries in the application logs
+- Monitor PostgreSQL connection counts
+
+## Monitoring Recommendations
+
+For production deployments, consider setting up:
+
+- **Uptime monitoring** -- use an external service to check that your LearnHouse instance is accessible (e.g., monitor `http://your-domain/api/v1/health`)
+- **Disk space alerts** -- get notified before disk space runs out
+- **Log aggregation** -- ship logs to a centralized logging system for easier analysis
+- **Container monitoring** -- tools like Docker's built-in stats, cAdvisor, or Prometheus with node-exporter can track resource usage over time

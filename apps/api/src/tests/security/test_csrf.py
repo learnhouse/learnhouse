@@ -139,7 +139,7 @@ class TestCSRFOriginValidation:
         with patch("urllib.parse.urlparse", side_effect=Exception("boom")):
             assert mw._extract_origin_from_url("not-a-url") is None
 
-    def test_development_mode_allows_missing_headers(self):
+    def test_development_mode_rejects_missing_headers(self):
         with patch("src.security.csrf.get_learnhouse_config", return_value=_make_mock_config(
             allowed_origins=[],
             development_mode=True
@@ -147,7 +147,7 @@ class TestCSRFOriginValidation:
             from src.security.csrf import CSRFProtectionMiddleware
 
             mw = CSRFProtectionMiddleware(MagicMock())
-            assert mw.is_allowed_origin(None, None) is True
+            assert mw.is_allowed_origin(None, None) is False
 
 
 class TestCSRFExemptions:

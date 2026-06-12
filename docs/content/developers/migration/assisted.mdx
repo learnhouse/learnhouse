@@ -1,0 +1,269 @@
+import { Callout } from 'nextra/components'
+
+# AI-Assisted Migration
+
+LearnHouse exposes a three-call API that uploads a folder of media files, asks Gemini to organise them into chapters and activities, and then creates the entire course in a single transaction. This is the right path when you have a directory full of legacy lecture recordings, PDFs, and images but no existing structure.
+
+All three endpoints live under `/api/v1/courses/migrate/`. They require an **authenticated user session (JWT)** with permission to create courses in the target organization.
+
+<Callout type="warning">
+**API tokens are blocked here.** Unlike the standard course/chapter/activity endpoints, the migration endpoints reject requests authenticated with an `lh_*` API token (`HTTP 403: API tokens cannot access this resource. Only user authentication is allowed.`). If you only have an API token, use the **admin token-swap** to mint a JWT first:
+
+```bash
+JWT=$(curl -s -X POST 'http://localhost:1338/api/v1/admin/{org_slug}/auth/token' \
+  -H 'Authorization: Bearer lh_your_api_token' \
+  -H 'Content-Type: application/json' \
+  -d '{"user_id": 1}' | jq -r .access_token)
+
+# Now use $JWT for the migrate/* calls
+curl -X POST "http://localhost:1338/api/v1/courses/migrate/upload?org_id=1" \
+  -H "Authorization: Bearer $JWT" -F 'files=@./video.mp4'
+```
+
+The token-swap endpoint requires the API token to have the `users.action_read` permission and the target user must belong to the same organization.
+</Callout>
+
+## When to use this vs. programmatic migration
+
+| Situation | Use |
+| --- | --- |
+| You have a clean export from another LMS with a known chapter / activity layout | [Programmatic Migration](/developers/migration/programmatic) |
+| You need every detail of the resulting tree to be exact (titles, ordering, types) | Programmatic |
+| You have a pile of files and want LearnHouse to propose a structure | AI-assisted (this page) |
+| You want to author rich-text dynamic pages | Programmatic (AI-assisted produces media-only activities) |
+
+<Callout type="warning">
+The assisted flow only handles **media files** -- video, PDF, image, and audio. It does not import HTML, Markdown, or rich-text content into dynamic pages. For text-heavy migrations, write a programmatic script.
+</Callout>
+
+## Supported file types
+
+| Extension | Resulting activity | Sub-type |
+| --- | --- | --- |
+| `mp4`, `webm`, `mov` | `TYPE_VIDEO` | `SUBTYPE_VIDEO_HOSTED` |
+| `pdf` | `TYPE_DOCUMENT` | `SUBTYPE_DOCUMENT_PDF` |
+| `png`, `jpg`, `jpeg`, `webp` | `TYPE_DYNAMIC` (image block) | `SUBTYPE_DYNAMIC_PAGE` |
+| `mp3`, `wav` | `TYPE_DYNAMIC` (audio block) | `SUBTYPE_DYNAMIC_PAGE` |
+
+Files with any other extension are skipped. Per-file size limit is **5 GB**, and total upload size per migration is **20 GB**.
+
+## Endpoint overview
+
+| # | Method | Path | Purpose |
+| --- | --- | --- | --- |
+| 1 | `POST` | `/api/v1/courses/migrate/upload?org_id={org_id}` | Upload one or more files to a temporary holding area. Returns a `temp_id`. |
+| 2 | `POST` | `/api/v1/courses/migrate/suggest?org_id={org_id}` | Ask Gemini to propose a course tree from the uploaded files. Returns the structure for you to review. |
+| 3 | `POST` | `/api/v1/courses/migrate/create?org_id={org_id}` | Commit the (possibly edited) structure: creates the course, chapters, activities, and uploads each file to its final destination. |
+
+Temporary uploads older than 60 minutes are garbage-collected automatically, so finish a migration in one sitting.
+
+## Step 1 -- Upload files
+
+Upload up to 20 GB of files in one or more requests. Pass `temp_id` on subsequent requests to append to the same migration package:
+
+```bash
+# First batch -- creates a new temp_id
+curl -X POST "http://localhost:1338/api/v1/courses/migrate/upload?org_id=1" \
+  -H "Authorization: Bearer lh_your_api_token" \
+  -F 'files=@./lectures/lesson-01.mp4' \
+  -F 'files=@./lectures/lesson-02.mp4' \
+  -F 'files=@./handouts/syllabus.pdf'
+```
+
+Response:
+
+```json
+{
+  "temp_id": "9c4e3...-d8f1-4...",
+  "files": [
+    {
+      "file_id": "f1a2b3...",
+      "filename": "lesson-01.mp4",
+      "file_type": "video/mp4",
+      "size": 41943040,
+      "extension": "mp4"
+    },
+    ...
+  ],
+  "skipped": []
+}
+```
+
+Append more files to the same `temp_id`:
+
+```bash
+curl -X POST "http://localhost:1338/api/v1/courses/migrate/upload?org_id=1&temp_id=9c4e3...-d8f1-4..." \
+  -H "Authorization: Bearer lh_your_api_token" \
+  -F 'files=@./images/diagram-01.png'
+```
+
+`skipped` lists files rejected because of unsupported extension or size. They do not count against the total but you should re-encode and re-upload if you need them.
+
+<Callout type="info">
+The server limits concurrent uploads to **3 simultaneous requests per process**. If you parallelise the upload of a large package, throttle yourself accordingly.
+</Callout>
+
+## Step 2 -- Ask for a suggested structure
+
+Send the `temp_id` and a course name; Gemini groups the files into chapters and proposes activity titles:
+
+```bash
+curl -X POST "http://localhost:1338/api/v1/courses/migrate/suggest?org_id=1" \
+  -H "Authorization: Bearer lh_your_api_token" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "temp_id": "9c4e3...-d8f1-4...",
+    "course_name": "Introduction to Astronomy",
+    "description": "Self-paced intro to astronomy concepts."
+  }'
+```
+
+Response:
+
+```json
+{
+  "course_name": "Introduction to Astronomy",
+  "course_description": "Self-paced intro to astronomy concepts.",
+  "chapters": [
+    {
+      "name": "Foundations",
+      "activities": [
+        {
+          "name": "Course syllabus",
+          "activity_type": "TYPE_DOCUMENT",
+          "activity_sub_type": "SUBTYPE_DOCUMENT_PDF",
+          "file_ids": ["f3c4d5..."]
+        },
+        {
+          "name": "Lecture 1 -- The night sky",
+          "activity_type": "TYPE_VIDEO",
+          "activity_sub_type": "SUBTYPE_VIDEO_HOSTED",
+          "file_ids": ["f1a2b3..."]
+        }
+      ]
+    },
+    {
+      "name": "The solar system",
+      "activities": [...]
+    }
+  ]
+}
+```
+
+The AI prompt is parameterised by file extensions (see the table at the top of this page), so the suggested types are deterministic per extension; only the **names**, **chapter grouping**, and **ordering** are AI-generated.
+
+If the AI call fails or quota is exhausted, the endpoint falls back to a **flat structure** -- a single chapter named "Content" containing one activity per file, with names derived from filenames. This guarantees you can still complete the migration even if the AI service is degraded.
+
+### Editing the suggestion
+
+The structure is just JSON -- mutate it in your client however you like before posting to step 3. Common edits:
+
+- Rename chapters and activities
+- Move activities between chapters (move a `file_ids` entry between activities, or duplicate the activity object)
+- Split or merge chapters
+- Reorder activities (the order in the array becomes the activity order)
+- Drop an activity by removing it from the array (its file will simply not be imported)
+
+The only constraints are that every `file_id` you reference must exist in the manifest, every `activity_type` / `activity_sub_type` must be a valid enum value, and every file should be referenced by **at most one activity** (referencing the same file twice will fail on the second copy).
+
+## Step 3 -- Create the course
+
+Post the (possibly edited) structure back with the same `temp_id`. The server creates the course, chapters, activities, and copies each file from the temporary upload area to its final location -- all in a single database transaction:
+
+```bash
+curl -X POST "http://localhost:1338/api/v1/courses/migrate/create?org_id=1" \
+  -H "Authorization: Bearer lh_your_api_token" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "temp_id": "9c4e3...-d8f1-4...",
+    "structure": {
+      "course_name": "Introduction to Astronomy",
+      "course_description": "Self-paced intro to astronomy concepts.",
+      "chapters": [
+        {
+          "name": "Foundations",
+          "activities": [
+            {
+              "name": "Course syllabus",
+              "activity_type": "TYPE_DOCUMENT",
+              "activity_sub_type": "SUBTYPE_DOCUMENT_PDF",
+              "file_ids": ["f3c4d5..."]
+            }
+          ]
+        }
+      ]
+    }
+  }'
+```
+
+Response:
+
+```json
+{
+  "course_uuid": "course_b7e1...",
+  "course_name": "Introduction to Astronomy",
+  "chapters_created": 3,
+  "activities_created": 12,
+  "success": true,
+  "error": null
+}
+```
+
+The created course is **unpublished and private** by default (`public: false`, `published: false`). Visit `/{org_slug}/courses/{course_uuid}/edit` in the dashboard to review and publish it, or use `PUT /api/v1/courses/{course_uuid}` to publish programmatically.
+
+If anything fails (database error, file copy failure, missing files), the entire transaction is rolled back and `success` is `false` with the error in `error`. The temporary upload directory is cleaned up either way -- start over from step 1 with a fresh upload.
+
+## End-to-end script (bash)
+
+```bash
+#!/usr/bin/env bash
+set -euo pipefail
+
+API=http://localhost:1338/api/v1
+API_TOKEN=lh_your_api_token        # Pro-plan API token
+ORG_SLUG=default
+ORG_ID=1
+USER_ID=1                          # the user to act as
+COURSE_NAME="Migrated content"
+
+# 0. Swap the API token for a user JWT (migrate/* endpoints reject API tokens)
+TOKEN=$(curl -fsS -X POST "$API/admin/$ORG_SLUG/auth/token" \
+  -H "Authorization: Bearer $API_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d "{\"user_id\":$USER_ID}" | jq -r .access_token)
+
+# 1. Upload everything in ./content/
+UPLOAD_RESP=$(curl -fsS -X POST "$API/courses/migrate/upload?org_id=$ORG_ID" \
+  -H "Authorization: Bearer $TOKEN" \
+  $(for f in ./content/*; do echo -n "-F files=@$f "; done))
+TEMP_ID=$(echo "$UPLOAD_RESP" | jq -r '.temp_id')
+
+# 2. Suggest structure
+STRUCTURE=$(curl -fsS -X POST "$API/courses/migrate/suggest?org_id=$ORG_ID" \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d "{\"temp_id\":\"$TEMP_ID\",\"course_name\":\"$COURSE_NAME\"}")
+
+# 3. (Optional) Edit the structure here, e.g. with `jq` -- skipped in this example.
+
+# 4. Create the course
+curl -fsS -X POST "$API/courses/migrate/create?org_id=$ORG_ID" \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d "{\"temp_id\":\"$TEMP_ID\",\"structure\":$STRUCTURE}"
+```
+
+## Cleaning up
+
+If you abandon a migration mid-way, the temporary directory is deleted automatically after 60 minutes by the periodic cleanup task. There is no public endpoint to delete a `temp_id` early -- if you need to retry immediately, just start a new upload (you will get a new `temp_id`).
+
+A successfully completed migration leaves no temporary state behind: step 3 deletes the temp directory once the transaction commits.
+
+## Limitations
+
+- **Media only.** Text content (Markdown, HTML, rich text) is not imported. The dynamic-page activities created from images and audio contain a single block referencing the file; no surrounding prose is generated.
+- **Single-chapter fallback.** If Gemini is unavailable, every file lands in one chapter named "Content". You can edit the structure before step 3 to rearrange.
+- **No assignments / quizzes / SCORM.** The flow does not infer interactive content from media. Create those separately via the programmatic flow.
+- **One file per activity.** Each migrated activity references exactly one source file. If you need an activity that combines multiple files (e.g. a dynamic page with several images), build that with the programmatic flow.
+
+For anything beyond the limits above, drop down to [Programmatic Migration](/developers/migration/programmatic) -- you can also use the assisted flow for the bulk of media and follow up with programmatic calls to add rich-text pages, assignments, and quizzes.

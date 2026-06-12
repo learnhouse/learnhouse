@@ -170,7 +170,7 @@ ${appVolumes}${appDependsOn}
 ${proxyService}${ssrForwardService}${dbService}${redisService}
 networks:
   learnhouse-network-${id}:
-    driver: bridge
+    driver: bridge${config.dockerIpv6 ? '\n    enable_ipv6: true' : ''}
 
 ${volumesSection}
 `

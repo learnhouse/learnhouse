@@ -1,0 +1,33 @@
+import { Callout } from 'nextra/components'
+
+# Authentication
+
+LearnHouse supports multiple authentication methods to fit different deployment scenarios.
+
+## Login Methods
+
+- **Email and password** — the default authentication method for every LearnHouse instance.
+- **Google OAuth** — the only third-party login provider currently supported outside of Enterprise SSO.
+
+For enterprise deployments, SAML (via WorkOS) and Custom OIDC are available — see [Enterprise SSO](/enterprise/sso).
+
+## Security
+
+Logins are rate-limited per IP, and accounts are temporarily locked after repeated failed attempts. SaaS-mode deployments additionally require users to verify their email address before they can sign in.
+
+## Signup Mechanisms
+
+Organizations can control how new users join the platform:
+
+- **Open signup** — Anyone can create an account and join the organization.
+- **Invite-only** — Only users who receive an invitation can create an account.
+
+The signup mechanism is configured per-organization in the [organization settings](/platform/organizations/settings).
+
+<Callout>
+Choose invite-only signup for private or internal deployments where you want to control exactly who has access.
+</Callout>
+
+## Session Management
+
+Once authenticated, users maintain a session via JWT tokens. The backend issues an access token (8-hour expiry) and a refresh token (30-day expiry) that keep users signed in across page loads.

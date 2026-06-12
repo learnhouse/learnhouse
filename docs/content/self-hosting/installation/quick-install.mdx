@@ -1,0 +1,79 @@
+import { Callout } from 'nextra/components'
+
+# Quick Install
+
+Follow these steps to install and start a self-hosted LearnHouse instance using the LearnHouse CLI.
+
+## Step 1: Run the Setup Wizard
+
+The quickest way to get started is to run the setup wizard directly using `npx`. No global installation is needed.
+
+```bash
+npx learnhouse@latest setup
+```
+
+<Callout type="info">
+You can also use the one-line installer scripts if you prefer:
+
+**macOS / Linux:**
+```bash
+curl -fsSL https://raw.githubusercontent.com/learnhouse/learnhouse/main/apps/cli/install.sh | bash
+```
+
+**Windows (PowerShell):**
+```powershell
+irm https://raw.githubusercontent.com/learnhouse/learnhouse/main/apps/cli/install.ps1 | iex
+```
+</Callout>
+
+The wizard will prompt you for:
+
+- **Domain configuration** -- your domain name or localhost for local development
+- **Database settings** -- PostgreSQL configuration (defaults are provided)
+- **Admin credentials** -- email and password for the initial admin account
+- **Optional features** -- AI features, email delivery, and more
+
+The wizard generates `docker-compose.yml`, `.env`, `learnhouse.config.json`, and an nginx or Caddy configuration based on your choices. Sensible defaults are provided for most options -- you can press Enter to accept them and adjust settings later.
+
+## Step 2: Start LearnHouse
+
+Once setup is complete, start all services:
+
+```bash
+npx learnhouse start
+```
+
+The CLI will pull the required Docker images (on first run), create the containers, and start all services. This typically takes one to two minutes on first launch.
+
+## Step 3: Access LearnHouse
+
+Once all services are running, access LearnHouse at your configured domain or:
+
+- **http://localhost** (if using the default local configuration)
+
+Log in with the admin credentials you provided during setup.
+
+<Callout type="warning">
+Change the default admin password after your first login. The initial credentials are intended only for the first setup. Navigate to your account settings to update your password.
+</Callout>
+
+## Verifying the Installation
+
+Run the built-in diagnostics to check that everything is working:
+
+```bash
+learnhouse doctor
+```
+
+This command checks Docker, container health, port availability, DNS resolution, and disk space, then reports any issues it finds.
+
+You can also verify the health endpoint directly:
+
+```bash
+curl http://localhost/api/v1/health
+```
+
+## Next Steps
+
+- [CLI Reference](/self-hosting/installation/cli-reference) -- Learn all available CLI commands.
+- [Configuration](/self-hosting/configuration) -- Customize your instance with environment variables, AI, email, and more.

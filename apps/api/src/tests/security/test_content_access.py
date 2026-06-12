@@ -312,3 +312,27 @@ class TestS3ContentAccess:
             "orgs/org1/logo.png",
             self._make_anon_user(), db
         )
+
+    @pytest.mark.asyncio
+    async def test_unknown_path_anonymous_rejected_401(self):
+        from src.routers.content_files import _check_content_access
+        db = self._make_db_session()
+        with pytest.raises(HTTPException) as exc_info:
+            await _check_content_access(
+                "something/unknown/file.txt",
+                self._make_anon_user(), db
+            )
+        assert exc_info.value.status_code == 401
+
+    @pytest.mark.asyncio
+    async def test_unknown_path_authenticated_rejected_403(self):
+        # content_files.py line 192: an authenticated (non-anon) user hitting an
+        # unrecognized path pattern is denied with 403 (deny-by-default).
+        from src.routers.content_files import _check_content_access
+        db = self._make_db_session()
+        with pytest.raises(HTTPException) as exc_info:
+            await _check_content_access(
+                "something/unknown/file.txt",
+                self._make_auth_user(), db
+            )
+        assert exc_info.value.status_code == 403

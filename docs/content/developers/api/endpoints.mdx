@@ -1,0 +1,162 @@
+import { Callout } from 'nextra/components'
+
+# API Endpoints
+
+This page provides an overview of the API endpoint groups available in LearnHouse. All endpoints are prefixed with `/api/v1/`. For the full interactive reference with request and response schemas, visit the Swagger UI at `/docs` on a development instance.
+
+<Callout type="info">
+The complete, interactive API documentation is available at [http://localhost:1338/docs](http://localhost:1338/docs) in development mode only. It includes every endpoint, parameter, and response schema.
+</Callout>
+
+## Core Endpoint Groups
+
+### Authentication
+
+Login, logout, token refresh, OAuth, and email verification.
+
+```bash
+# Login (form-encoded, not JSON)
+curl -X POST http://localhost:1338/api/v1/auth/login \
+  -F 'username=user@example.com' \
+  -F 'password=password'
+```
+
+See [Authentication](/developers/api/authentication) for full details.
+
+### Users
+
+User CRUD, profile management, session info, and password reset.
+
+```bash
+# Get current user profile
+curl http://localhost:1338/api/v1/users/profile \
+  -H "Authorization: Bearer <token>"
+```
+
+### Organizations
+
+Organization CRUD, user management, roles, invites, configuration, SEO settings, branding, API tokens, and custom domains.
+
+```bash
+# Get organization details by slug
+curl http://localhost:1338/api/v1/orgs/slug/{org_slug} \
+  -H "Authorization: Bearer <token>"
+```
+
+### Courses
+
+Course CRUD, cloning, export/import, and contributor management.
+
+```bash
+# List courses in an organization (paginated)
+curl "http://localhost:1338/api/v1/courses/org_slug/{org_slug}/page/1/limit/20" \
+  -H "Authorization: Bearer <token>"
+
+# Create a new course (multipart form data)
+curl -X POST "http://localhost:1338/api/v1/courses/?org_id=1" \
+  -H "Authorization: Bearer <token>" \
+  -F 'name=Introduction to Python' \
+  -F 'description=A beginner-friendly Python course' \
+  -F 'public=false' \
+  -F 'about=...'
+```
+
+### Chapters
+
+Chapter CRUD and ordering within courses.
+
+### Activities
+
+Activity CRUD — individual content units within chapters. Activity types include dynamic pages, videos, documents, assignments, custom, and SCORM (1.2 and 2004).
+
+### Blocks
+
+Block CRUD — content blocks within dynamic page activities.
+
+### Collections
+
+Collections group related courses together for organization and discovery.
+
+### Assignments
+
+Assignment CRUD for course assessments. Task types include file submissions, quizzes, and custom (`OTHER`) tasks.
+
+### AI
+
+AI-powered features including the course assistant, magic blocks, course planning, and RAG (Retrieval-Augmented Generation). All AI features are powered by Google Gemini.
+
+Routes live under `/api/v1/ai/` and include streaming endpoints such as `POST /api/v1/ai/stream/editor/message`. Refer to `/docs` for the full list.
+
+### Analytics
+
+Course analytics and usage tracking (backed by Tinybird with a Redis cache layer).
+
+### Search
+
+Full-text search across courses and content. Results are paginated with a default page size of 10 and a maximum of 50 per page.
+
+### Code Execution
+
+Code execution endpoints powered by Judge0 (used by the Code Playground editor block).
+
+### Learning Trails
+
+Learning trail management and progress tracking.
+
+### Video Streaming
+
+Video streaming and delivery endpoints.
+
+## Community Features (Standard Plan)
+
+### Communities
+
+Community forums for organizations.
+
+### Discussions
+
+Discussion threads within communities, including pinning, locking, labels, votes, and reactions.
+
+### User Groups
+
+User group management for organizing learners.
+
+## Pro Features (Pro Plan)
+
+### Certifications
+
+Certificate generation and management for course completion.
+
+### Boards
+
+Real-time collaborative canvases (Miro/FigJam-style), powered by Yjs and Hocuspocus.
+
+### Playgrounds
+
+AI-generated interactive HTML playgrounds (separate from the Judge0-powered Code Playground editor block).
+
+### Podcasts
+
+Podcast and episode CRUD for audio content delivery, exposing a standard RSS feed for manual submission to directories like Apple Podcasts and Spotify.
+
+## Infrastructure Endpoints
+
+| Method | Endpoint | Description |
+| --- | --- | --- |
+| `GET` | `/api/v1/health` | Health check |
+| `GET` | `/api/v1/instance/info` | Public instance information |
+| `GET` | `/api/v1/content/...` | Content delivery (filesystem or S3) |
+| `GET` | `/openapi.json` | OpenAPI spec (dev mode only) |
+
+## Common Patterns
+
+- All endpoints are prefixed with `/api/v1/`.
+- Resources follow standard REST conventions: `GET` to list or retrieve, `POST` to create, `PUT` to update, `DELETE` to remove.
+- Create/update endpoints commonly accept **multipart form data** rather than JSON, since many also accept file uploads (e.g. thumbnails, avatars).
+- Authenticated endpoints require either the `Authorization: Bearer <token>` header or the `access_token_cookie` cookie.
+- Programmatic access uses API tokens with the `lh_` prefix (Pro plan).
+- Responses are returned as JSON.
+
+<Callout type="info">
+Endpoint paths and request/response schemas may evolve between versions. Always refer to the interactive `/docs` endpoint on a development instance for the most up-to-date reference.
+</Callout>

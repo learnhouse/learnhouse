@@ -1,0 +1,56 @@
+import { Callout } from 'nextra/components'
+
+# Self-Hosting LearnHouse
+
+LearnHouse can be self-hosted on your own infrastructure using the **LearnHouse CLI**. The CLI handles everything from initial setup to ongoing maintenance, including Docker Compose generation, environment file management, service orchestration, backups, and health checks.
+
+## Quick Start
+
+Make sure you have **Docker Engine 20.10+**, **Docker Compose 2.0+**, and **Node.js 18+** installed, then run:
+
+```bash
+npx learnhouse@latest setup
+```
+
+The interactive setup wizard will walk you through domain configuration, database settings, admin credentials, and optional features. Once complete, start all services:
+
+```bash
+npx learnhouse start
+```
+
+LearnHouse will be available at **http://localhost** (or your configured domain). Log in with the admin credentials you provided during setup.
+
+<Callout type="info">
+The CLI generates `docker-compose.yml`, `.env`, and reverse proxy configuration for you. You do not need to write or maintain these files manually.
+</Callout>
+
+### Verify the installation
+
+```bash
+npx learnhouse doctor
+```
+
+### Common management commands
+
+```bash
+npx learnhouse stop       # Stop all services
+npx learnhouse start      # Start all services
+npx learnhouse logs       # Stream container logs
+npx learnhouse config     # View current configuration
+npx learnhouse backup     # Backup or restore the database
+npx learnhouse doctor     # Diagnose issues
+```
+
+## Documentation
+
+### [Installation](/self-hosting/installation)
+
+System requirements, quick install steps, and the full CLI command reference.
+
+### [Configuration](/self-hosting/configuration)
+
+Environment variables, AI features, email delivery, content storage, and SSL/domain setup.
+
+### [Maintenance](/self-hosting/maintenance)
+
+Updates, backups, monitoring, and troubleshooting guides.

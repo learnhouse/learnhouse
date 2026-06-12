@@ -53,7 +53,7 @@ function OpenSignUpComponent() {
   const org = useOrg() as any
   const router = useRouter()
   const [error, setError] = React.useState('')
-  const [message, setMessage] = React.useState('')
+  const [message, setMessage] = React.useState<{ email_verified: boolean } | null>(null)
   const formik = useFormik({
     initialValues: {
       org_slug: org?.slug,
@@ -69,12 +69,12 @@ function OpenSignUpComponent() {
     enableReinitialize: true,
     onSubmit: async (values) => {
       setError('')
-      setMessage('')
+      setMessage(null)
       setIsSubmitting(true)
       let res = await signup(values)
       let message = await res.json()
       if (res.status == 200) {
-        setMessage(t('auth.account_created_success'))
+        setMessage(message)
         setIsSubmitting(false)
       } else if (
         res.status == 401 ||
@@ -123,7 +123,9 @@ function OpenSignUpComponent() {
           <div className="font-bold text-sm">{error}</div>
         </div>
       )}
-      {message && (
+
+
+      {message && message.email_verified === false && (
         <div className="flex flex-col gap-4 bg-green-100 rounded-xl text-green-900 p-4 mb-6 nice-shadow">
           <div className="flex items-center gap-2">
             <Mail size={18} />
@@ -132,6 +134,20 @@ function OpenSignUpComponent() {
           <p className="text-xs text-green-800">
             {t('auth.verification_email_sent_message')}
           </p>
+          <hr className="border-green-200" />
+          <Link className="flex items-center gap-2 text-sm font-medium hover:underline" href="/login">
+            <User size={14} />
+            <span>{t('auth.login')}</span>
+          </Link>
+        </div>
+      )}
+
+      {message && message.email_verified && (
+        <div className="flex flex-col gap-4 bg-green-100 rounded-xl text-green-900 p-4 mb-6 nice-shadow">
+          <div className="flex items-center gap-2">
+            <Mail size={18} />
+            <div className="font-bold text-sm">{t('auth.account_created_success')}</div>
+          </div>
           <hr className="border-green-200" />
           <Link className="flex items-center gap-2 text-sm font-medium hover:underline" href="/login">
             <User size={14} />

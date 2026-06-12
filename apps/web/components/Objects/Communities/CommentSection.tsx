@@ -1,7 +1,7 @@
 'use client'
 import React, { useState, useEffect, useRef } from 'react'
 import { useTranslation } from 'react-i18next'
-import { MessageSquare, Send, Loader2, User, AlertCircle, Lock, UserPlus } from 'lucide-react'
+import { Loader2, User, AlertCircle, Lock, UserPlus } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
 import { useOrgMembership } from '@components/Contexts/OrgContext'
@@ -12,7 +12,6 @@ import {
   DiscussionCommentWithAuthor,
 } from '@services/communities/discussions'
 import { CommentCard } from './CommentCard'
-import UserAvatar from '@components/Objects/UserAvatar'
 
 interface CommentSectionProps {
   discussionUuid: string
@@ -25,7 +24,6 @@ export function CommentSection({ discussionUuid, communityUuid, isLocked = false
   const session = useLHSession() as any
   const accessToken = session?.data?.tokens?.access_token
   const isAuthenticated = session?.status === 'authenticated'
-  const currentUser = session?.data?.user
   const { isUserPartOfTheOrg } = useOrgMembership()
   const { canManageCommunity } = useCommunityRights(communityUuid || '')
   const canComment = isAuthenticated && isUserPartOfTheOrg
@@ -38,21 +36,31 @@ export function CommentSection({ discussionUuid, communityUuid, isLocked = false
   const [error, setError] = useState<string | null>(null)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
 
-  const fetchComments = async () => {
-    setIsLoading(true)
-    try {
-      const result = await getComments(discussionUuid, 1, 100, null, accessToken)
-      setComments(result || [])
-    } catch (_error) {
-      // silent — loading errors are handled by the empty state
-    } finally {
-      setIsLoading(false)
-    }
-  }
-
   useEffect(() => {
+    let stale = false
+
+    const fetchComments = async () => {
+      setIsLoading(true)
+      try {
+        const result = await getComments(discussionUuid, 1, 100, null, accessToken)
+        if (!stale) {
+          setComments(result || [])
+        }
+      } catch {
+        // silent — loading errors are handled by the empty state
+      } finally {
+        if (!stale) {
+          setIsLoading(false)
+        }
+      }
+    }
+
     fetchComments()
-  }, [discussionUuid])
+
+    return () => {
+      stale = true
+    }
+  }, [discussionUuid, accessToken])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()

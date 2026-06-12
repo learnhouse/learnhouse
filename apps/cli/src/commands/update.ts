@@ -1,4 +1,3 @@
-import { execSync } from 'node:child_process'
 import { readFileSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
 import * as p from '@clack/prompts'
@@ -6,6 +5,17 @@ import pc from 'picocolors'
 import { findInstallDir, readConfig } from '../services/config-store.js'
 import { dockerComposeDown, dockerComposeUp } from '../services/docker.js'
 import { migrateContentVolume } from '../services/content-volume-migration.js'
+import { waitForHealth } from '../services/health.js'
+import {
+  updateEnterprise,
+  backupDatabase,
+  ensureAlembicBaseline,
+  runAlembicUpgrade,
+  type EditionLayout,
+} from './update-ee.js'
+
+// Community (monolith) layout: one app container, alembic under /app/api, in-container db.
+const COMMUNITY_LAYOUT: EditionLayout = { appService: 'learnhouse-app', alembicCwd: '/app/api', dbService: 'db' }
 
 const GHCR_BASE = 'ghcr.io/learnhouse/app'
 
@@ -35,12 +45,26 @@ async function resolveTag(version: string): Promise<boolean> {
   }
 }
 
-export async function updateCommand(options: { version?: string; migrate?: boolean }) {
+export async function updateCommand(options: { version?: string; migrate?: boolean; backup?: boolean }) {
   const dir = findInstallDir()
   const config = readConfig(dir)
   if (!config) {
     p.log.error('No LearnHouse installation found. Run `npx learnhouse setup` first.')
     process.exit(1)
+    return
+  }
+
+  // Enterprise installs use a different upgrade path: license re-auth, EE images,
+  // a pre-upgrade DB backup, and Alembic migrations against the (possibly external) DB.
+  if (config.edition === 'enterprise') {
+    p.intro(pc.cyan('Upgrading LearnHouse Enterprise'))
+    await updateEnterprise(config, {
+      version: options.version,
+      migrate: options.migrate,
+      backup: options.backup,
+      interactive: !!process.stdout.isTTY,
+    })
+    return
   }
 
   const targetVersion = options.version?.replace(/^v/, '')
@@ -51,8 +75,32 @@ export async function updateCommand(options: { version?: string; migrate?: boole
     p.intro(pc.cyan('Updating LearnHouse to latest'))
   }
 
+  const ui = {
+    log: (m: string) => p.log.info(m),
+    ok: (m: string) => p.log.success(m),
+    warn: (m: string) => p.log.warn(m),
+  }
   const s = p.spinner()
   try {
+    // 1) Back up the database first (safety net for migrations) — works for the
+    //    in-container db AND an external one via the .env string.
+    if (options.backup !== false) {
+      s.start('Backing up the database')
+      try {
+        const b = backupDatabase(config, COMMUNITY_LAYOUT, ui)
+        s.stop('Database backed up')
+        ui.ok(`Backup: ${b}`)
+      } catch (err) {
+        s.stop('Backup failed')
+        p.log.error(`Database backup failed: ${(err as Error)?.message ?? err}. Aborting — nothing changed.`)
+        process.exit(1)
+      }
+    } else {
+      p.log.warn('Skipping database backup (--no-backup). Not recommended for production.')
+    }
+    // 2) Stamp an Alembic baseline if the DB was created via create_all and never stamped.
+    ensureAlembicBaseline(config.installDir, COMMUNITY_LAYOUT, ui)
+
     // Resolve the target image tag
     let targetImage: string
     if (targetVersion) {
@@ -124,65 +172,20 @@ export async function updateCommand(options: { version?: string; migrate?: boole
     dockerComposeUp(config.installDir)
     s.stop('Services restarted')
 
-    // Database migrations
-    let shouldMigrate: boolean
-    if (options.migrate === true) {
-      shouldMigrate = true
-    } else if (options.migrate === false) {
-      shouldMigrate = false
-    } else {
-      // Interactive — ask the user
-      p.log.info('')
-      p.log.warn(
-        pc.bold('This update may include database migrations.'),
-      )
-      p.log.info(
-        `Before proceeding, check the release notes at ${pc.cyan('https://docs.learnhouse.app')} for migration guides and breaking changes.`,
-      )
-      p.log.info('')
+    // 4) Wait for the app, then run migrations via the shared helper.
+    s.start('Waiting for LearnHouse to be ready')
+    await waitForHealth(`http://localhost:${config.httpPort}`)
+    s.stop('LearnHouse is up')
 
-      const runMigrations = await p.confirm({
-        message: 'Run database migrations now?',
-        initialValue: false,
-      })
-      shouldMigrate = !p.isCancel(runMigrations) && !!runMigrations
-    }
-
-    if (shouldMigrate) {
-      s.start('Running database migrations')
-      try {
-        const appContainer = getAppContainerName(config.installDir)
-        if (appContainer) {
-          waitForContainer(appContainer)
-          execSync(
-            `docker exec ${appContainer} sh -c "cd /app/api && uv run alembic upgrade head"`,
-            { stdio: 'pipe', timeout: 120_000 },
-          )
-          s.stop('Database migrations complete')
-        } else {
-          s.stop('Skipped migrations (container not found)')
-          p.log.warn('Could not find the app container to run migrations. Run them manually:')
-          p.log.warn('  docker exec <container> sh -c "cd /app/api && uv run alembic upgrade head"')
-        }
-      } catch (err: unknown) {
-        s.stop('Database migrations failed')
-        const stderr =
-          (err as { stderr?: Buffer | string })?.stderr?.toString?.() ?? ''
-        const stdout =
-          (err as { stdout?: Buffer | string })?.stdout?.toString?.() ?? ''
-        const output = (stderr || stdout).trim()
-        if (output) {
-          for (const line of output.split('\n')) p.log.error(`  ${line}`)
-        }
-        const container = getAppContainerName(config.installDir) ?? '<container>'
-        p.log.warn('Retry manually with:')
-        p.log.warn(
-          `  docker exec ${container} sh -c "cd /app/api && uv run alembic upgrade head"`,
-        )
+    if (options.migrate !== false) {
+      p.log.step('Running database migrations')
+      if (!runAlembicUpgrade(config.installDir, COMMUNITY_LAYOUT, ui)) {
+        p.log.warn('Your DB backup is in ./backups/ — restore it and re-pin the previous image to roll back.')
+        process.exit(1)
       }
     } else {
-      p.log.info('Skipped database migrations. You can run them later with:')
-      p.log.info('  docker exec <container> sh -c "cd /app/api && uv run alembic upgrade head"')
+      p.log.info('Skipped migrations (--no-migrate). Run later:')
+      p.log.info('  docker compose exec learnhouse-app sh -c "cd /app/api && uv run alembic upgrade head"')
     }
 
     if (targetVersion) {
@@ -204,40 +207,3 @@ function formatBytes(bytes: number): string {
   return `${(bytes / 1024 / 1024 / 1024).toFixed(2)} GB`
 }
 
-function getAppContainerName(cwd: string): string | null {
-  try {
-    const output = execSync('docker compose ps --format "{{.Name}}"', {
-      cwd,
-      stdio: 'pipe',
-    }).toString().trim()
-    const lines = output.split('\n')
-    return lines.find((name) => name.includes('learnhouse-app-')) || null
-  } catch {
-    return null
-  }
-}
-
-function waitForContainer(containerName: string, timeoutMs = 60_000): void {
-  const start = Date.now()
-  while (Date.now() - start < timeoutMs) {
-    try {
-      const status = execSync(
-        `docker inspect -f '{{.State.Health.Status}}' ${containerName}`,
-        { stdio: 'pipe' },
-      ).toString().trim()
-      if (status === 'healthy') return
-    } catch {
-      // Container may not have health check — check if running
-      try {
-        const running = execSync(
-          `docker inspect -f '{{.State.Running}}' ${containerName}`,
-          { stdio: 'pipe' },
-        ).toString().trim()
-        if (running === 'true') return
-      } catch {
-        // not ready yet
-      }
-    }
-    execSync('sleep 2', { stdio: 'pipe' })
-  }
-}

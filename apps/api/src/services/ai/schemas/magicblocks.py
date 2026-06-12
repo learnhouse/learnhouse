@@ -46,3 +46,4 @@ class MagicBlockSessionData(BaseModel):
     message_history: List[MagicBlockMessage]
     current_html: Optional[str]
     context: MagicBlockContext
+    user_id: Optional[int] = None
