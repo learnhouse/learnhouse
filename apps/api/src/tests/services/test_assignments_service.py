@@ -14,7 +14,7 @@ Session to AsyncSession in this PR:
   _block_api_tokens.
 """
 
-from datetime import datetime
+from datetime import datetime, timedelta
 from types import SimpleNamespace
 from unittest.mock import AsyncMock, patch
 
@@ -1565,6 +1565,24 @@ class TestIsAssignmentPastDue:
     def test_tz_aware_past_date_returns_true(self):
         # tz-aware ISO string in the distant past -> stripped to naive -> past
         a = SimpleNamespace(due_date="2000-01-01T00:00:00+00:00")
+        assert _is_assignment_past_due(a) is True
+
+    def test_due_today_date_only_returns_false(self):
+        # A date-only deadline of "today" must remain submittable for the whole
+        # day (date inputs have no time component) -> not past due.
+        today = datetime.now().date().isoformat()
+        a = SimpleNamespace(due_date=today)
+        assert _is_assignment_past_due(a) is False
+
+    def test_due_yesterday_date_only_returns_true(self):
+        yesterday = (datetime.now() - timedelta(days=1)).date().isoformat()
+        a = SimpleNamespace(due_date=yesterday)
+        assert _is_assignment_past_due(a) is True
+
+    def test_due_today_earlier_time_returns_true(self):
+        # When an explicit past time-of-day is given for today, it IS past due.
+        earlier = (datetime.now() - timedelta(hours=1)).replace(microsecond=0).isoformat()
+        a = SimpleNamespace(due_date=earlier)
         assert _is_assignment_past_due(a) is True
 
 

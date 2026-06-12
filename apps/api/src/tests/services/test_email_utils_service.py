@@ -130,6 +130,23 @@ class TestEmailUtilsService:
         ):
             assert _is_allowed_base_url("http://localhost:3000")
 
+    def test_is_allowed_base_url_accepts_host_with_port_config_in_single_tenancy(self):
+        # The shipped default config uses schemeless "host:port" values
+        # (e.g. "localhost:3000"). The configured host must still match the
+        # always-port-less request host instead of being silently rejected.
+        with patch(
+            "src.services.email.utils.get_learnhouse_config",
+            return_value=_config(
+                tenancy="single",
+                frontend_domain="localhost:3000",
+                domain="learn.myschool.org:8443",
+            ),
+        ):
+            assert _is_allowed_base_url("http://localhost:3000")
+            assert _is_allowed_base_url("https://learn.myschool.org:8443")
+            assert _is_allowed_base_url("https://learn.myschool.org")
+            assert not _is_allowed_base_url("https://evil.example.org")
+
     def test_is_allowed_base_url_skips_blank_configured_host_in_single_tenancy(self):
         # Line 36: a blank/whitespace configured value (here frontend_domain) is
         # skipped via `continue`; only the non-empty `domain` is honored.

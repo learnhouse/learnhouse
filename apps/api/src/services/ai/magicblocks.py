@@ -298,8 +298,14 @@ Please modify the HTML code above according to the user's request. Output ONLY t
 
         save_magicblock_session(session)
 
-    except Exception as e:
-        yield f"Error: {str(e)}"
+    except Exception:
+        # Re-raise instead of yielding the error as a content chunk. Yielding
+        # "Error: {e}" both leaked exception detail to the client and defeated
+        # the caller's credit-refund logic (a non-empty chunk read as success).
+        # event_generator's handler emits a sanitized SSE error event and
+        # refunds the reserved credits.
+        logger.exception("MagicBlock generation failed")
+        raise
 
 
 def extract_html_from_response(response: str) -> str:
