@@ -62,6 +62,16 @@ describe('generateDockerCompose', () => {
     expect(yml).not.toContain('learnhouse-redis-test1234')
   })
 
+  it('enables IPv6 on the network when dockerIpv6 is set (e.g. IPv6-only external DB)', () => {
+    const yml = generateDockerCompose({ ...baseConfig, dockerIpv6: true })
+    expect(yml).toContain('enable_ipv6: true')
+  })
+
+  it('omits IPv6 from the network by default', () => {
+    const yml = generateDockerCompose(baseConfig)
+    expect(yml).not.toContain('enable_ipv6')
+  })
+
   it('uses caddy instead of nginx when autoSsl is true', () => {
     const yml = generateDockerCompose({ ...baseConfig, autoSsl: true })
     expect(yml).toContain('learnhouse-caddy-test1234')
