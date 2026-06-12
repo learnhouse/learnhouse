@@ -140,14 +140,14 @@ class TestBoardsRouter:
             "src.services.ai.llm.tiers.plan_meets_requirement",
             return_value=True,
         ):
-            assert await get_boards_org_ai_model(org.id, db) == "gemini-3-flash-preview"
+            assert await get_boards_org_ai_model(org.id, db) == "gemini-3.1-flash-lite"
 
         with patch(
             "src.services.ai.llm.tiers.get_org_plan",
             new_callable=AsyncMock,
             side_effect=RuntimeError("boom"),
         ):
-            assert await get_boards_org_ai_model(org.id, db) == "gemini-2.5-flash-lite"
+            assert await get_boards_org_ai_model(org.id, db) == "gemini-3.1-flash-lite"
 
         with patch(
             "src.services.ai.llm.tiers.get_org_plan",
@@ -157,7 +157,7 @@ class TestBoardsRouter:
             "src.services.ai.llm.tiers.plan_meets_requirement",
             return_value=False,
         ):
-            assert await get_boards_org_ai_model(org.id, db) == "gemini-2.5-flash-lite"
+            assert await get_boards_org_ai_model(org.id, db) == "gemini-3.1-flash-lite"
 
         with patch("src.routers.boards.boards_playground.reserve_ai_credit"), patch(
             "src.routers.boards.boards_playground.get_org_ai_model",

@@ -216,8 +216,8 @@ class TestPlaygroundsGeneratorService:
         assert current_html_session.message_history[-1].content == (
             "```html\n<div>updated</div>\n```"
         )
-        # No explicit model -> resolves to the configured "interactive" tier default.
-        assert captured["model_name"] == "gemini-2.5-flash-lite"
+        # No explicit model -> resolves to the fast tier default (interactive widgets).
+        assert captured["model_name"] == "gemini-3.1-flash-lite"
         assert "CURRENT HTML CODE:" in captured["user_prompt"]
         save_session.assert_called_once()
 

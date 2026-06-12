@@ -39,19 +39,26 @@ class SecurityConfig(BaseModel):
 class AIConfig(BaseModel):
     is_ai_enabled: bool | None
     # Provider-agnostic generation config (Pydantic AI). `provider` selects the SDK
-    # ("google" | "openai" | "anthropic" | "groq" | "mistral" | "ollama" | ...),
-    # `api_key`/`base_url` are the single credentials used regardless of provider.
+    # ("google" | "openai" | "anthropic" | "groq" | "mistral" | "openrouter" | "bedrock"
+    # | "ollama" | ...); `api_key`/`base_url` are the single credentials used regardless of
+    # provider. For "openrouter" base_url is auto-set; for "bedrock" use standard AWS
+    # credentials (env/role/profile) + AWS_REGION, with api_key optional.
     provider: str | None = None
     api_key: str | None = None
     base_url: str | None = None
-    # Model names per tier (left as provider-specific strings). Defaults preserve the
-    # historical Gemini behavior when unset — see src/services/ai/llm/tiers.py.
+    # Three model tiers (provider-specific strings). Defaults to the Gemini 3 family when
+    # unset — see src/services/ai/llm/tiers.py.
     model_fast: str | None = None
     model_standard: str | None = None
     model_pro: str | None = None
-    model_interactive: str | None = None
-    model_interactive_pro: str | None = None
-    # Kept solely for RAG embeddings, which stay on Gemini (fixed 768-dim vector store).
+    # RAG embeddings follow the chosen provider where it supports embeddings (Google, OpenAI
+    # family incl. Ollama). Optionally override the embeddings provider/model/dimensions.
+    # Output dimensions default to 768 to match the Vector(768) pgvector column.
+    embedding_provider: str | None = None
+    embedding_model: str | None = None
+    embedding_dimensions: int | None = None
+    # Google/Gemini key. Doubles as the embeddings fallback for providers (Anthropic, Groq,
+    # Mistral, OpenRouter, Bedrock) that have no embeddings API of their own.
     gemini_api_key: str | None = None
 
 
@@ -383,8 +390,10 @@ def get_learnhouse_config() -> LearnHouseConfig:
     ai_model_fast = os.environ.get("LEARNHOUSE_AI_MODEL_FAST") or yaml_ai_config.get("model_fast")
     ai_model_standard = os.environ.get("LEARNHOUSE_AI_MODEL_STANDARD") or yaml_ai_config.get("model_standard")
     ai_model_pro = os.environ.get("LEARNHOUSE_AI_MODEL_PRO") or yaml_ai_config.get("model_pro")
-    ai_model_interactive = os.environ.get("LEARNHOUSE_AI_MODEL_INTERACTIVE") or yaml_ai_config.get("model_interactive")
-    ai_model_interactive_pro = os.environ.get("LEARNHOUSE_AI_MODEL_INTERACTIVE_PRO") or yaml_ai_config.get("model_interactive_pro")
+    ai_embedding_provider = os.environ.get("LEARNHOUSE_AI_EMBEDDING_PROVIDER") or yaml_ai_config.get("embedding_provider")
+    ai_embedding_model = os.environ.get("LEARNHOUSE_AI_EMBEDDING_MODEL") or yaml_ai_config.get("embedding_model")
+    _ai_embedding_dims = os.environ.get("LEARNHOUSE_AI_EMBEDDING_DIMENSIONS") or yaml_ai_config.get("embedding_dimensions")
+    ai_embedding_dimensions = int(_ai_embedding_dims) if _ai_embedding_dims else None
 
     # Parse is_ai_enabled from env or yaml
     if env_is_ai_enabled_str:
@@ -569,8 +578,9 @@ def get_learnhouse_config() -> LearnHouseConfig:
         model_fast=ai_model_fast,
         model_standard=ai_model_standard,
         model_pro=ai_model_pro,
-        model_interactive=ai_model_interactive,
-        model_interactive_pro=ai_model_interactive_pro,
+        embedding_provider=ai_embedding_provider,
+        embedding_model=ai_embedding_model,
+        embedding_dimensions=ai_embedding_dimensions,
         gemini_api_key=gemini_api_key,
     )
 

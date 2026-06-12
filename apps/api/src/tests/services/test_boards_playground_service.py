@@ -229,8 +229,8 @@ class TestBoardsPlaygroundService:
         assert session.current_html == "<!DOCTYPE html><html>updated</html>"
         assert len(session.message_history) == 12
         assert any(msg.content == "msg-12" for msg in session.message_history)
-        # No explicit model -> resolves to the configured "interactive" tier default.
-        assert captured["model_name"] == "gemini-2.5-flash-lite"
+        # No explicit model -> resolves to the fast tier default (interactive widgets).
+        assert captured["model_name"] == "gemini-3.1-flash-lite"
         iteration_prompt = captured["user_prompt"]
         assert "CURRENT HTML CODE" in iteration_prompt
         assert "Update it" in iteration_prompt

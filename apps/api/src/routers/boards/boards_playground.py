@@ -14,7 +14,7 @@ from src.security.features_utils.usage import (
     reserve_ai_credit,
 )
 from src.security.org_auth import is_org_member
-from src.services.ai.llm import resolve_model_for_org
+from src.services.ai.llm import model_for_tier
 from src.services.boards.boards_playground import (
     get_boards_playground_session,
     create_boards_playground_session,
@@ -44,7 +44,7 @@ async def event_generator(generator, session_uuid: str):
 
 
 async def get_org_ai_model(org_id: int, db_session: AsyncSession) -> str:
-    return await resolve_model_for_org(org_id, db_session, purpose="interactive")
+    return model_for_tier("fast")  # interactive widgets: fast + concise (gemini-3.1-flash-lite)
 
 
 @router.post(
