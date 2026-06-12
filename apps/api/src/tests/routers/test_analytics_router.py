@@ -595,7 +595,7 @@ class TestAnalyticsRouter:
             )
         assert response.status_code == 400
 
-    async def test_export_json_csv_and_errors(self, client):
+    async def test_export_json_csv_xlsx_and_errors(self, client):
         with _analytics_guard_patches(), patch(
             "src.routers.analytics._enrich_with_metadata",
             new_callable=AsyncMock,
@@ -605,7 +605,7 @@ class TestAnalyticsRouter:
             new_callable=AsyncMock,
             return_value={"data": [{"course_uuid": "course_1", "user_id": 1}], "rows": 1, "meta": []},
         ):
-            response = await client.get("/api/v1/analytics/export?org_id=1&format=json&queries=daily_active_users")
+            response = await client.get("/api/v1/analytics/export?org_id=1&format=json")
         assert response.status_code == 200
         assert response.json()["daily_active_users"]["rows"] == 1
 
@@ -619,19 +619,11 @@ class TestAnalyticsRouter:
             return_value={"data": [{"course_uuid": "course_1", "user_id": 1}], "rows": 1, "meta": []},
         ):
             response = await client.get(
-                "/api/v1/analytics/export?org_id=1&format=csv&queries=daily_active_users"
+                "/api/v1/analytics/export?org_id=1&format=csv"
             )
         assert response.status_code == 200
         assert "# daily_active_users" in response.text
 
-        with _analytics_guard_patches():
-            response = await client.get("/api/v1/analytics/export?org_id=1&format=xml&queries=daily_active_users")
-        assert response.status_code == 400
-
-        with _analytics_guard_patches():
-            response = await client.get("/api/v1/analytics/export?org_id=1&format=json")
-        assert response.status_code == 400
-
         with _analytics_guard_patches(), patch(
             "src.routers.analytics._enrich_with_metadata",
             new_callable=AsyncMock,
@@ -641,28 +633,13 @@ class TestAnalyticsRouter:
             new_callable=AsyncMock,
             return_value={"data": [{"course_uuid": "course_1", "user_id": 1}], "rows": 1, "meta": []},
         ):
-            response = await client.get(
-                "/api/v1/analytics/export?org_id=1&format=json&queries=daily_active_users,unknown_query"
-            )
+            response = await client.get("/api/v1/analytics/export?org_id=1&format=xlsx")
         assert response.status_code == 200
+        assert response.headers["content-type"] == "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
 
         with _analytics_guard_patches():
-            response = await client.get("/api/v1/analytics/export?org_id=1&format=json&queries=daily_active_users&days=bad")
+            response = await client.get("/api/v1/analytics/export?org_id=1&format=xml")
         assert response.status_code == 400
-
-        with _analytics_guard_patches(), patch(
-            "src.routers.analytics._enrich_with_metadata",
-            new_callable=AsyncMock,
-            side_effect=lambda rows, db: rows,
-        ), patch(
-            "src.routers.analytics._execute_tinybird_query",
-            new_callable=AsyncMock,
-            return_value={"data": [{"course_uuid": "course_1", "user_id": 1}], "rows": 1, "meta": []},
-        ):
-            response = await client.get(
-                "/api/v1/analytics/export?org_id=1&format=json&queries=daily_active_users&course_uuid=course_1"
-            )
-        assert response.status_code == 200
 
     async def test_dashboard_unknown_and_course_plan_and_query_validation(self, client):
         with _analytics_guard_patches():
