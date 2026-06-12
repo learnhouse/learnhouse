@@ -1,0 +1,33 @@
+import { Callout } from 'nextra-theme-docs'
+import { Steps } from 'nextra-theme-docs'
+
+# Using Vercel as Frontend
+
+<Callout type="warning" >
+  This is a draft - it should not be published without core team approval. 
+</Callout>
+<br>
+
+<Callout type="info" >
+  It's important to note that you can't use Vercel for frontend & backend. Vercel is only hosting the frontend.
+</Callout>
+
+<Steps>
+
+### Deploy to Vercel
+
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Flearnhouse%2Flearnhouse)
+Create or log into your Vercel account and clone the repository automatically by clicking on this button.
+
+### Add Environmental Variables
+
+In Vercel project settings go to `Settings > Environmental Variables` and paste this .env file into any textbox.
+
+```env filename="settings/environmental variables" {1-2}
+NEXT_PUBLIC_LEARNHOUSE_MULTI_ORG=false
+NEXT_PUBLIC_LEARNHOUSE_DEFAULT_ORG=defaultorg
+```
+
+<Callout type="warning">
+  You must have a backend to work with the frontend. Vercel will not and can not run the backend of this project.
+</Callout>

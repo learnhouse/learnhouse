@@ -1,0 +1,58 @@
+# System Requirements
+
+Before installing LearnHouse, ensure your server meets the following requirements.
+
+## Software Requirements
+
+| Software | Minimum Version | Notes |
+|---|---|---|
+| Docker Engine | 20.10+ | Required for running containers |
+| Docker Compose | 2.0+ | Included with Docker Desktop; install separately on Linux |
+| Node.js | 18+ | Required to run the LearnHouse CLI |
+| npm | 8+ | Comes with Node.js |
+
+## Hardware Requirements
+
+| Resource | Minimum | Recommended |
+|---|---|---|
+| RAM | 2 GB | 4 GB |
+| Disk Space | 10 GB | 20 GB+ |
+| CPU | 1 core | 2+ cores |
+
+Disk usage will grow over time depending on the amount of uploaded content (videos, documents, images). Plan storage capacity accordingly if you expect heavy usage.
+
+## Operating System
+
+LearnHouse is supported on:
+
+- **Linux** (Ubuntu 20.04+, Debian 11+, CentOS 8+, or any distribution with Docker support)
+- **macOS** (with Docker Desktop)
+- **Windows** (via WSL2 with Docker Desktop)
+
+Linux is recommended for production deployments.
+
+## Network Requirements
+
+- Port **80** (HTTP) and/or port **443** (HTTPS) must be available
+- Outbound internet access is required during installation to pull Docker images
+- A domain name is recommended for production use but not required for local testing
+
+## Verifying Prerequisites
+
+Run the following commands to verify your system is ready:
+
+```bash
+# Check Docker
+docker --version
+
+# Check Docker Compose
+docker compose version
+
+# Check Node.js
+node --version
+
+# Check npm
+npm --version
+```
+
+All commands should return version numbers that meet or exceed the minimums listed above.

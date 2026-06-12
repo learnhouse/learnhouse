@@ -1,0 +1,67 @@
+import { Callout } from 'nextra/components'
+
+# Content Storage
+
+LearnHouse supports two storage backends for uploaded content such as images, videos, and documents.
+
+## Storage Options
+
+### Filesystem (Default)
+
+By default, uploaded content is stored on the local filesystem using a Docker volume. This is the simplest option and works well for small to medium deployments.
+
+```env
+LEARNHOUSE_CONTENT_DELIVERY_TYPE=filesystem
+```
+
+Content is persisted in a Docker volume, so it survives container restarts. The `learnhouse backup` command includes filesystem content in its backups.
+
+### S3-Compatible Storage
+
+For production deployments or when you need scalable storage, you can use any S3-compatible storage service:
+
+- **AWS S3**
+- **CloudFlare R2**
+- **MinIO** (self-hosted)
+- Any other S3-compatible provider
+
+```env
+LEARNHOUSE_CONTENT_DELIVERY_TYPE=s3api
+LEARNHOUSE_S3_API_BUCKET_NAME=learnhouse-content
+LEARNHOUSE_S3_API_ENDPOINT_URL=https://s3.amazonaws.com
+```
+
+After updating your storage configuration, restart your instance:
+
+```bash
+learnhouse stop
+learnhouse start
+```
+
+<Callout type="info">
+When using S3-compatible storage, make sure the bucket exists and the credentials have read/write permissions. For AWS S3, credentials are typically provided via standard AWS environment variables or instance roles.
+</Callout>
+
+## Choosing a Storage Backend
+
+| Consideration | Filesystem | S3-Compatible |
+|---|---|---|
+| Setup complexity | Simple, works out of the box | Requires external service or additional container |
+| Scalability | Limited by server disk | Virtually unlimited |
+| Backup | Included in `learnhouse backup` | Managed separately by your storage provider |
+| Cost | Included with your server | Varies by provider |
+| Redundancy | Single disk, no redundancy | Built-in redundancy (provider-dependent) |
+
+For most self-hosted installations starting out, filesystem storage is a good default. You can migrate to S3-compatible storage later as your needs grow.
+
+## Using MinIO for Self-Hosted S3
+
+If you want S3-compatible storage without relying on a cloud provider, you can run MinIO alongside LearnHouse. MinIO provides an S3-compatible API on your own infrastructure.
+
+Configure the endpoint URL to point to your MinIO instance:
+
+```env
+LEARNHOUSE_CONTENT_DELIVERY_TYPE=s3api
+LEARNHOUSE_S3_API_BUCKET_NAME=learnhouse-content
+LEARNHOUSE_S3_API_ENDPOINT_URL=http://minio:9000
+```

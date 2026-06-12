@@ -1,0 +1,73 @@
+# Frontend Architecture
+
+The LearnHouse frontend is a **Next.js 16** application located at `apps/web` in the project. It serves as the primary user interface for learners, instructors, and administrators.
+
+## Technology Stack
+
+- **Next.js 16.2.3** with the App Router (standalone output)
+- **React 19.2.5** with Server Components
+- **TypeScript 6.0.2**
+- **TailwindCSS v4** for styling
+- **Bun** as the package manager
+- **Turbopack** for development builds (`next dev --turbopack`)
+- **SWR** for client-side data fetching
+
+## Key Dependencies
+
+- **@tiptap/core** -- Block-based rich text editor
+- **@radix-ui** -- Accessible, unstyled UI primitives
+- **@hocuspocus/provider** -- Real-time collaboration client
+- **yjs** -- CRDT library for conflict-free collaborative editing
+- **@codemirror** -- Code editor component
+- **recharts** -- Charting and data visualization
+- **formik / yup** -- Form handling and validation
+- **motion** -- Animation library
+- **i18next** -- Internationalization
+- **wavesurfer.js** -- Audio/podcast player
+- **jspdf / html2canvas** -- Certificate generation
+- **unsplash-js** -- Unsplash image integration
+
+## App Router
+
+The frontend uses the Next.js App Router, which enables:
+
+- **Server Components by default** -- Pages and layouts render on the server, reducing client-side JavaScript and improving initial load times.
+- **Client Components where needed** -- Interactive elements opt into client-side rendering with the `"use client"` directive.
+- **Streaming and Suspense** -- Content is progressively streamed to the browser as it becomes ready.
+- **Route Groups and Layouts** -- Shared layouts and nested routing keep the codebase organized.
+
+## Authentication
+
+Authentication is handled via **JWT tokens** issued by the FastAPI backend. On login, the backend sets an `access_token_cookie` (HS256, 8-hour expiry) that the frontend attaches to API requests. Protected routes check for a valid session before rendering.
+
+## Communication with the Backend
+
+The frontend communicates with the FastAPI backend over HTTP. API calls are made from both:
+
+- **Server Components** -- Data is fetched at request time on the server, which keeps sensitive tokens off the client.
+- **Client Components** -- Interactive features make API calls directly from the browser using **SWR** for caching and revalidation.
+
+## Directory Structure
+
+```
+apps/web/
+├── app/           # App Router pages and layouts
+├── components/    # Reusable UI components
+├── services/      # API client and service functions
+├── hooks/         # Shared React hooks
+├── lib/           # Utilities and client helpers
+├── locales/       # i18next translation resources
+├── styles/        # Global styles
+├── ee/            # Enterprise Edition components
+└── public/        # Static assets
+```
+
+## Development
+
+The frontend runs on **port 3000** during local development. Start the dev server with Turbopack enabled:
+
+```bash
+bun dev  # runs next dev --turbopack
+```
+
+When using the LearnHouse CLI (`learnhouse dev`), the frontend starts automatically with hot reload enabled.

@@ -1,0 +1,30 @@
+import { Callout } from 'nextra/components'
+
+# Payments
+
+LearnHouse integrates with Stripe to let you sell courses and content directly from your platform. You can create offers, bundle courses into groups, and manage subscriptions and one-time purchases.
+
+<Callout>
+Payments is available on the **Standard plan** and above on LearnHouse Cloud. For self-hosted instances, it requires the **Enterprise Edition**. It must also be enabled in your [Organization Settings](/platform/organizations/settings).
+</Callout>
+
+## How Payments Work
+
+1. Connect your Stripe account to your organization.
+2. Create offers — either subscriptions or one-time purchases.
+3. Assign courses or course bundles to each offer.
+4. Students purchase access through a checkout flow powered by Stripe.
+5. Enrollment is granted automatically on successful payment.
+
+## Stripe Connect Modes
+
+LearnHouse supports two ways to connect with Stripe:
+
+- **Standard Mode** — You connect your own existing Stripe account via OAuth.
+- **Express Mode** — LearnHouse creates a Stripe Express account on your behalf, simplifying onboarding.
+
+## Learn More
+
+- [Offers & Pricing](/platform/payments/offers) — Create and manage products with flexible pricing.
+- [Groups & Bundles](/platform/payments/groups) — Bundle courses together for package deals.
+- [Enrollments & Checkout](/platform/payments/enrollments) — How students purchase and gain access.

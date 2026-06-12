@@ -1,0 +1,237 @@
+import { Callout } from 'nextra/components'
+
+# Webhooks
+
+Webhooks deliver real-time event notifications to any HTTPS endpoint you control. When something happens in LearnHouse — a learner completes a course, a user signs up, an assignment is graded — LearnHouse sends a signed `POST` request with a JSON payload to every matching endpoint.
+
+<Callout type="info">
+Webhooks are available on the **Pro plan** or higher. Manage endpoints under **Settings → Automations** in the organization dashboard, or via the [REST API](#api-reference) with an API token.
+</Callout>
+
+## Quick start
+
+1. In the dashboard go to **Settings → Automations → Webhooks → New endpoint**.
+2. Enter the target URL (must be HTTPS and publicly reachable).
+3. Select the events you want to subscribe to — see the [Event Catalogue](/platform/automations/events) for the full list.
+4. Click **Create**. The signing secret is shown **once** on this screen — copy it into your server's secret store immediately.
+5. From the endpoint detail page, click **Send test event** to deliver a `ping` payload and confirm your server is reachable.
+
+## Payload format
+
+Every delivery has the same outer envelope:
+
+```json
+{
+  "event": "course_completed",
+  "delivery_id": "dlv_9f1e3c7b22a44f0d",
+  "timestamp": "2026-04-19T14:31:02Z",
+  "org_id": 1,
+  "data": {
+    "user": {
+      "user_uuid": "user_abc",
+      "email": "alice@example.com",
+      "username": "alice"
+    },
+    "course": {
+      "course_uuid": "course_xyz",
+      "name": "Intro to Python"
+    }
+  }
+}
+```
+
+The shape of `data` varies per event. See the [Event Catalogue](/platform/automations/events) for the canonical schema of every event.
+
+### Headers
+
+| Header | Value |
+| --- | --- |
+| `Content-Type` | `application/json` |
+| `User-Agent` | `LearnHouse-Webhooks/1.0` |
+| `X-Webhook-Event` | Event name (e.g. `course_completed`) |
+| `X-Webhook-Delivery` | Unique delivery ID (matches `delivery_id` in the body) |
+| `X-Webhook-Signature` | `sha256=<hex_digest>` — HMAC-SHA256 of the raw body |
+
+## Verifying the signature
+
+LearnHouse signs every payload with HMAC-SHA256, using the endpoint's signing secret. The signature covers the **raw request body** (exactly the bytes sent over the wire, before any JSON parsing) and is delivered in the `X-Webhook-Signature` header as `sha256=<hex_digest>` — the same convention used by GitHub and Stripe.
+
+<Callout type="warning">
+Always verify the signature before trusting a payload. Anyone who discovers your endpoint URL can send unsigned requests; the signature is the only thing that proves the request came from LearnHouse.
+</Callout>
+
+### Node.js
+
+```js
+import crypto from 'node:crypto'
+
+function verifyWebhook(rawBody, signatureHeader, secret) {
+  const expected = 'sha256=' + crypto
+    .createHmac('sha256', secret)
+    .update(rawBody)
+    .digest('hex')
+
+  // Constant-time compare to resist timing attacks
+  const a = Buffer.from(signatureHeader)
+  const b = Buffer.from(expected)
+  return a.length === b.length && crypto.timingSafeEqual(a, b)
+}
+```
+
+### Python
+
+```python
+import hmac
+import hashlib
+
+def verify_webhook(raw_body: bytes, signature_header: str, secret: str) -> bool:
+    expected = "sha256=" + hmac.new(
+        secret.encode(), raw_body, hashlib.sha256
+    ).hexdigest()
+    return hmac.compare_digest(expected, signature_header)
+```
+
+<Callout type="info">
+If your framework parses the body into a dict before you see it (Express without `express.raw`, FastAPI without the raw bytes, etc.), you must re-read the raw body. Re-serialising the parsed JSON produces a different byte sequence and the signature will not match.
+</Callout>
+
+## Delivery and retries
+
+- **Transport**: HTTPS `POST` with a 10-second timeout. Redirects are not followed.
+- **Retries**: Up to **3 attempts** per event, with exponential backoff of **1 s, 4 s, 16 s**. Any non-2xx response, timeout, or network error triggers a retry.
+- **Success**: A response with an HTTP status in `2xx` marks the delivery as successful and stops further retries.
+- **Ordering**: Deliveries are fire-and-forget and may arrive slightly out of order under load. Use the `timestamp` field if you need strict ordering.
+- **Delivery logs**: The most recent **200 attempts per endpoint** are retained. Each log entry records the HTTP status, a truncated response body (first 500 bytes), the attempt number, and any transport-level error.
+
+Logs are visible from the endpoint detail page in the dashboard and via `GET /{org_id}/webhooks/{webhook_uuid}/deliveries`.
+
+## Your endpoint: what to return
+
+- **Respond quickly.** LearnHouse uses a 10 s per-attempt timeout; if your handler does heavy work, enqueue a job and return `200` immediately.
+- **Respond with any 2xx status.** Body content is ignored (but captured in the delivery log for debugging).
+- **Be idempotent.** Because of retries and rare duplicate deliveries, handle the same `delivery_id` arriving twice as a no-op.
+- **Verify the signature.** Do this before any database write.
+
+## Security
+
+- **HTTPS only.** `http://` URLs are rejected at create time.
+- **Private address protection (SSRF guard).** LearnHouse resolves every webhook URL to an IP before calling it and refuses to deliver to private ranges (`10.0.0.0/8`, `127.0.0.0/8`, `169.254.0.0/16`, `172.16.0.0/12`, `192.168.0.0/16`, `::1`, link-local, etc.). The same check is repeated **after** the connection is established to defeat DNS rebinding.
+- **Signing secret at rest.** Secrets are stored encrypted (Fernet, key derived from the application's JWT secret) and are returned in plaintext **only** at creation and when you click **Regenerate**. LearnHouse cannot recover a lost secret — you can only rotate it.
+- **Scope.** A webhook endpoint is scoped to a single organization. It can only subscribe to events fired for that org.
+
+## Regenerating a secret
+
+If a secret leaks, go to **Settings → Automations → Webhooks → *endpoint* → Regenerate secret**. The new secret is returned once and replaces the old one immediately. Every subsequent delivery will be signed with the new secret, so update your consumer before regenerating (or accept a brief window of rejected signatures while you roll out the change).
+
+## API reference
+
+All endpoints require authentication (session cookie or API token) and are scoped to `org_id`.
+
+### List available events
+
+```http
+GET /api/v1/{org_id}/webhooks/events
+```
+
+Returns the full catalogue of event names, categories, descriptions, and data schemas. This is the same data shown in the Event Catalogue.
+
+### Create an endpoint
+
+```http
+POST /api/v1/{org_id}/webhooks
+Content-Type: application/json
+
+{
+  "url": "https://example.com/hooks/learnhouse",
+  "description": "Main backend",
+  "events": ["course_completed", "user_signed_up"]
+}
+```
+
+Response (200):
+
+```json
+{
+  "webhook_uuid": "webhook_b5f2…",
+  "url": "https://example.com/hooks/learnhouse",
+  "description": "Main backend",
+  "events": ["course_completed", "user_signed_up"],
+  "is_active": true,
+  "secret": "whsec_…",
+  "created_by_user_id": 1,
+  "creation_date": "2026-04-19 14:31:02"
+}
+```
+
+<Callout type="warning">
+The `secret` is returned **only on this response**. Store it immediately — it cannot be retrieved again.
+</Callout>
+
+### List endpoints
+
+```http
+GET /api/v1/{org_id}/webhooks
+```
+
+### Get an endpoint
+
+```http
+GET /api/v1/{org_id}/webhooks/{webhook_uuid}
+```
+
+### Update an endpoint
+
+```http
+PUT /api/v1/{org_id}/webhooks/{webhook_uuid}
+Content-Type: application/json
+
+{
+  "url": "https://example.com/hooks/v2",
+  "events": ["course_completed"],
+  "is_active": true
+}
+```
+
+All fields are optional; omit to leave unchanged.
+
+### Delete an endpoint
+
+```http
+DELETE /api/v1/{org_id}/webhooks/{webhook_uuid}
+```
+
+Deletes the endpoint **and** all of its delivery logs.
+
+### Regenerate the signing secret
+
+```http
+POST /api/v1/{org_id}/webhooks/{webhook_uuid}/regenerate-secret
+```
+
+Returns a `WebhookEndpointCreatedResponse` with the fresh `secret`. Subsequent deliveries use the new secret immediately.
+
+### Send a test event
+
+```http
+POST /api/v1/{org_id}/webhooks/{webhook_uuid}/test
+```
+
+Delivers a synthetic `ping` event:
+
+```json
+{
+  "event": "ping",
+  "delivery_id": "dlv_…",
+  "timestamp": "2026-04-19T14:31:02Z",
+  "org_id": 1,
+  "data": { "message": "This is a test webhook event from LearnHouse." }
+}
+```
+
+### List delivery logs
+
+```http
+GET /api/v1/{org_id}/webhooks/{webhook_uuid}/deliveries?limit=50
+```
+
+Returns up to `limit` of the most recent delivery attempts (capped at 200 retained per endpoint), each including HTTP status, truncated response body, attempt number, and error message when applicable.
