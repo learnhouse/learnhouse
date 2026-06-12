@@ -17,6 +17,7 @@ from src.services.ai.llm import (
     to_message_history,
 )
 from src.services.ai.llm import provider as provider_mod
+from src.services.ai.llm import embeddings as embeddings_mod
 
 
 def _patch_ai_config(monkeypatch, **overrides):
@@ -150,8 +151,6 @@ def test_model_for_tier_defaults():
 
 
 # --- Provider-agnostic embeddings ---------------------------------------------------------
-
-from src.services.ai.llm import embeddings as embeddings_mod
 
 
 def _patch_embed_config(monkeypatch, **overrides):
