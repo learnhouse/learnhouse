@@ -61,6 +61,32 @@ def is_reserved_domain(domain: str) -> bool:
     return False
 
 
+def is_own_agency_subdomain(domain: str, org_slug: str) -> bool:
+    """True only if `domain` is THIS org's own slug host under the agency apex.
+
+    In agency (multi-tenant) deployments the whole `*.{LEARNHOUSE_DOMAIN}` space
+    is under the operator's control (wildcard DNS + wildcard TLS served by Caddy
+    via DNS-01). That proves the *operator* controls the namespace — it does NOT
+    prove a given org owns an arbitrary label within it. Only `{slug}.{apex}` is
+    provably this org's, so we auto-verify exactly that host and nothing else:
+    the bare apex and every other label (including other orgs' slugs) must still
+    go through the DNS TXT proof-of-ownership flow. Without this restriction any
+    tenant admin could claim another org's subdomain — or the apex — and hijack
+    its routing.
+
+    Guarded so we never auto-verify when no real agency domain is configured
+    (the default/dev values), which would otherwise be unsafe.
+    """
+    base = (LEARNHOUSE_DOMAIN or "").lower().strip().split(":")[0]
+    if not base or base in ("learnhouse.io", "localhost"):
+        return False
+    slug = (org_slug or "").lower().strip()
+    if not slug:
+        return False
+    domain = domain.lower().strip().split(":")[0]
+    return domain == f"{slug}.{base}"
+
+
 def _get_subdomain_prefix(domain: str) -> str:
     """
     Extract the subdomain prefix from a domain.
@@ -129,6 +155,19 @@ async def verify_domain_dns(domain: CustomDomain, db_session: AsyncSession, org_
         db_session.add(domain)
         await db_session.commit()
         return True, "Verified (dev mode)"
+
+    # This org's own slug host under the agency apex is provably theirs (wildcard
+    # DNS+TLS), so there's nothing to prove via a DNS TXT record — verify it now.
+    # Any other label still has to go through the TXT flow below.
+    if is_own_agency_subdomain(domain.domain, org_slug):
+        logger.info(f"Auto-verifying {domain.domain} (own slug host under agency domain {LEARNHOUSE_DOMAIN})")
+        domain.status = "verified"
+        domain.verified_at = str(datetime.now())
+        domain.last_check_at = str(datetime.now())
+        domain.check_error = None
+        db_session.add(domain)
+        await db_session.commit()
+        return True, "Verified automatically (subdomain of your agency domain)"
 
     try:
         import dns.resolver
@@ -257,20 +296,27 @@ async def add_custom_domain(
             detail="This domain is already registered",
         )
 
-    # Create the custom domain
+    # Create the custom domain.
+    # Subdomains of the agency's own domain are already under operator control
+    # (wildcard DNS + wildcard TLS), so skip the manual DNS TXT step and mark
+    # them verified right away.
     now = str(datetime.now())
     verification_token = generate_verification_token()
+    auto_verified = is_own_agency_subdomain(domain, organization.slug)
 
     custom_domain = CustomDomain(
         domain_uuid=f"domain_{uuid4()}",
         domain=domain,
         org_id=org_id,
-        status="pending",
+        status="verified" if auto_verified else "pending",
         verification_token=verification_token,
+        verified_at=now if auto_verified else None,
         primary=False,
         creation_date=now,
         update_date=now,
     )
+    if auto_verified:
+        logger.info(f"Auto-verified {domain} on add (subdomain of agency domain {LEARNHOUSE_DOMAIN})")
 
     db_session.add(custom_domain)
     await db_session.commit()

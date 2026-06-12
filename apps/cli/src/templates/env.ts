@@ -1,15 +1,9 @@
 import crypto from 'node:crypto'
 import type { SetupConfig } from '../types.js'
+import { quoteEnvValue } from '../utils/env-quote.js'
 
 function generateSecret(): string {
   return crypto.randomBytes(32).toString('base64')
-}
-
-function quoteEnvValue(value: string): string {
-  if (/[\s#$'"\\`!]/.test(value)) {
-    return `'${value.replace(/'/g, "'\\''")}'`
-  }
-  return value
 }
 
 export function generateEnvFile(config: SetupConfig): string {

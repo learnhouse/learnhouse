@@ -41,6 +41,24 @@ const SECRET_ENV_VARS = [
   'POSTGRES_PASSWORD',
 ]
 
+// Enterprise installs use a different .env contract (license + Caddy + the
+// six-service stack builds connection strings in compose, not in .env).
+const EE_REQUIRED_ENV_VARS_BASE = [
+  'LEARNHOUSE_LICENSE_KEY',
+  'ACME_EMAIL',
+  'EE_IMAGE_TAG',
+  'DB_PASSWORD',
+  'LEARNHOUSE_AUTH_JWT_SECRET_KEY',
+  'COLLAB_INTERNAL_KEY',
+  'LEARNHOUSE_INITIAL_ADMIN_EMAIL',
+  'LEARNHOUSE_INITIAL_ADMIN_PASSWORD',
+]
+const EE_SECRET_ENV_VARS = [
+  'LEARNHOUSE_AUTH_JWT_SECRET_KEY',
+  'COLLAB_INTERNAL_KEY',
+  'DB_PASSWORD',
+]
+
 export async function doctorCommand() {
   const dir = findInstallDir()
   const config = readConfig(dir)
@@ -201,15 +219,21 @@ export async function doctorCommand() {
       envMap.set(trimmed.slice(0, eqIdx), trimmed.slice(eqIdx + 1))
     }
 
+    const isEe = config.edition === 'enterprise'
+    const requiredVars = isEe
+      ? [...EE_REQUIRED_ENV_VARS_BASE, config.eeTenancy === 'agency' ? 'AGENCY_DOMAIN' : 'DOMAIN']
+      : REQUIRED_ENV_VARS
+    const secretVars = isEe ? EE_SECRET_ENV_VARS : SECRET_ENV_VARS
+
     let envOk = true
-    for (const key of REQUIRED_ENV_VARS) {
+    for (const key of requiredVars) {
       if (!envMap.has(key) || !envMap.get(key)) {
         fail(`Missing or empty: ${key}`)
         envOk = false
       }
     }
 
-    for (const key of SECRET_ENV_VARS) {
+    for (const key of secretVars) {
       const val = envMap.get(key) || ''
       if (val && val.length < 8) {
         warn(`${key} seems too short (${val.length} chars)`, 'Use a stronger secret')
