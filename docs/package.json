@@ -9,24 +9,24 @@
     "lint": "next lint"
   },
   "dependencies": {
-    "@icons-pack/react-simple-icons": "^13.12.0",
+    "@icons-pack/react-simple-icons": "^13.13.0",
     "@phosphor-icons/react": "^2.1.10",
     "@vercel/analytics": "^2.0.1",
-    "@xyflow/react": "^12.10.1",
-    "next": "16.2.4",
+    "@xyflow/react": "^12.11.0",
+    "next": "16.2.9",
     "next-sitemap": "^4.2.3",
     "nextra": "^4.6.1",
     "nextra-theme-docs": "^4.6.1",
-    "posthog-js": "^1.360.2",
-    "react": "^19.2.4",
-    "react-dom": "^19.2.4"
+    "posthog-js": "^1.386.6",
+    "react": "^19.2.7",
+    "react-dom": "^19.2.7"
   },
   "devDependencies": {
-    "@tailwindcss/postcss": "^4.2.1",
-    "@types/node": "25.6.0",
-    "@types/react": "19.2.14",
-    "pagefind": "^1.4.0",
-    "tailwindcss": "^4.2.1",
+    "@tailwindcss/postcss": "^4.3.0",
+    "@types/node": "25.9.3",
+    "@types/react": "19.2.17",
+    "pagefind": "^1.5.2",
+    "tailwindcss": "^4.3.0",
     "typescript": "6.0.3"
   }
 }
