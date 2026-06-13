@@ -53,9 +53,18 @@ learnhouse start
 ```
 
 <Callout type="info">
-**Backwards compatible.** If you only set `LEARNHOUSE_GEMINI_API_KEY` (the legacy variable),
-LearnHouse keeps working on Google Gemini exactly as before — `provider` defaults to `google`
-and the legacy key is used automatically.
+**Upgrading from a Gemini-only setup.** No config changes are required: if you only set
+`LEARNHOUSE_GEMINI_API_KEY`, `provider` defaults to `google` and that key is used automatically
+(for generation **and** embeddings). The one difference is that the default models are now the
+**Gemini 3 family** (`gemini-3.5-flash`, `gemini-3.1-flash-lite`, `gemini-3.1-pro-preview`)
+rather than Gemini 2.5 — so your key/project must have Gemini 3 access (the Pro tier uses a
+*preview* model). To stay on the previous models, pin them explicitly:
+
+```env
+LEARNHOUSE_AI_MODEL_FAST=gemini-2.0-flash-lite
+LEARNHOUSE_AI_MODEL_STANDARD=gemini-2.5-flash
+LEARNHOUSE_AI_MODEL_PRO=gemini-2.5-pro
+```
 </Callout>
 
 <Callout type="warning">
