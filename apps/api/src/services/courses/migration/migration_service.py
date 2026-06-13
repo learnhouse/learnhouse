@@ -310,16 +310,15 @@ async def suggest_structure(
     )
 
     try:
-        from src.services.ai.base import get_gemini_client
+        from src.services.ai.llm import generate, model_for_tier
 
-        client = get_gemini_client()
-        response = client.models.generate_content(
-            model="gemini-2.0-flash-lite",
-            contents=[{"role": "user", "parts": [{"text": prompt}]}],
-            config={"temperature": 0.3, "max_output_tokens": 4096},
+        raw = await generate(
+            model_name=model_for_tier("fast"),
+            user_prompt=prompt,
+            temperature=0.3,
+            max_tokens=4096,
         )
-
-        raw = response.text.strip()
+        raw = raw.strip()
         # Strip markdown code fences if present
         if raw.startswith("```"):
             raw = raw.split("\n", 1)[1]

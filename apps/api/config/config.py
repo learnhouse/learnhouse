@@ -37,8 +37,29 @@ class SecurityConfig(BaseModel):
 
 
 class AIConfig(BaseModel):
-    gemini_api_key: str | None
     is_ai_enabled: bool | None
+    # Provider-agnostic generation config (Pydantic AI). `provider` selects the SDK
+    # ("google" | "openai" | "anthropic" | "deepseek" | "moonshot" | "mistral" | "openrouter" | "bedrock"
+    # | "ollama" | ...); `api_key`/`base_url` are the single credentials used regardless of
+    # provider. For "openrouter" base_url is auto-set; for "bedrock" use standard AWS
+    # credentials (env/role/profile) + AWS_REGION, with api_key optional.
+    provider: str | None = None
+    api_key: str | None = None
+    base_url: str | None = None
+    # Three model tiers (provider-specific strings). Defaults to the Gemini 3 family when
+    # unset — see src/services/ai/llm/tiers.py.
+    model_fast: str | None = None
+    model_standard: str | None = None
+    model_pro: str | None = None
+    # RAG embeddings follow the chosen provider where it supports embeddings (Google, OpenAI
+    # family incl. Ollama). Optionally override the embeddings provider/model/dimensions.
+    # Output dimensions default to 768 to match the Vector(768) pgvector column.
+    embedding_provider: str | None = None
+    embedding_model: str | None = None
+    embedding_dimensions: int | None = None
+    # Google/Gemini key. Doubles as the embeddings fallback for providers (Anthropic, DeepSeek,
+    # Moonshot, Mistral, OpenRouter, Bedrock) that have no embeddings API of their own.
+    gemini_api_key: str | None = None
 
 
 class S3ApiConfig(BaseModel):
@@ -356,18 +377,29 @@ def get_learnhouse_config() -> LearnHouseConfig:
     ).get("sql_connection_string")
 
     # AI Config
+    yaml_ai_config = yaml_config.get("ai_config", {}) or {}
     env_gemini_api_key = os.environ.get("LEARNHOUSE_GEMINI_API_KEY")
     env_is_ai_enabled_str = os.environ.get("LEARNHOUSE_IS_AI_ENABLED")
 
-    gemini_api_key = env_gemini_api_key or yaml_config.get("ai_config", {}).get(
-        "gemini_api_key"
-    )
-    
+    gemini_api_key = env_gemini_api_key or yaml_ai_config.get("gemini_api_key")
+
+    # Provider-agnostic generation settings (env takes precedence over yaml).
+    ai_provider = os.environ.get("LEARNHOUSE_AI_PROVIDER") or yaml_ai_config.get("provider")
+    ai_api_key = os.environ.get("LEARNHOUSE_AI_API_KEY") or yaml_ai_config.get("api_key")
+    ai_base_url = os.environ.get("LEARNHOUSE_AI_BASE_URL") or yaml_ai_config.get("base_url")
+    ai_model_fast = os.environ.get("LEARNHOUSE_AI_MODEL_FAST") or yaml_ai_config.get("model_fast")
+    ai_model_standard = os.environ.get("LEARNHOUSE_AI_MODEL_STANDARD") or yaml_ai_config.get("model_standard")
+    ai_model_pro = os.environ.get("LEARNHOUSE_AI_MODEL_PRO") or yaml_ai_config.get("model_pro")
+    ai_embedding_provider = os.environ.get("LEARNHOUSE_AI_EMBEDDING_PROVIDER") or yaml_ai_config.get("embedding_provider")
+    ai_embedding_model = os.environ.get("LEARNHOUSE_AI_EMBEDDING_MODEL") or yaml_ai_config.get("embedding_model")
+    _ai_embedding_dims = os.environ.get("LEARNHOUSE_AI_EMBEDDING_DIMENSIONS") or yaml_ai_config.get("embedding_dimensions")
+    ai_embedding_dimensions = int(_ai_embedding_dims) if _ai_embedding_dims else None
+
     # Parse is_ai_enabled from env or yaml
     if env_is_ai_enabled_str:
         is_ai_enabled = env_is_ai_enabled_str.lower() in ("true", "1", "yes")
     else:
-        is_ai_enabled = yaml_config.get("ai_config", {}).get("is_ai_enabled", False)
+        is_ai_enabled = yaml_ai_config.get("is_ai_enabled", False)
 
     # Redis config
     env_redis_connection_string = os.environ.get("LEARNHOUSE_REDIS_CONNECTION_STRING")
@@ -539,8 +571,17 @@ def get_learnhouse_config() -> LearnHouseConfig:
 
     # AI Config
     ai_config = AIConfig(
-        gemini_api_key=gemini_api_key,
         is_ai_enabled=bool(is_ai_enabled),
+        provider=ai_provider,
+        api_key=ai_api_key,
+        base_url=ai_base_url,
+        model_fast=ai_model_fast,
+        model_standard=ai_model_standard,
+        model_pro=ai_model_pro,
+        embedding_provider=ai_embedding_provider,
+        embedding_model=ai_embedding_model,
+        embedding_dimensions=ai_embedding_dimensions,
+        gemini_api_key=gemini_api_key,
     )
 
     # Surface missing internal-service keys at boot rather than at first

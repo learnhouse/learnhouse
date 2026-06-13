@@ -16,8 +16,7 @@ from src.security.features_utils.usage import (
     reserve_ai_credit,
     refund_ai_credit,
 )
-from src.security.features_utils.plan_check import get_org_plan
-from src.security.features_utils.plans import plan_meets_requirement
+from src.services.ai.llm import model_for_tier
 from src.services.ai.magicblocks import (
     get_magicblock_session,
     create_magicblock_session,
@@ -82,23 +81,10 @@ async def event_generator(
 
 async def get_org_ai_model(org_id: int, db_session: AsyncSession) -> str:
     """
-    Get the AI model for MagicBlocks based on the organization's plan.
-
-    - Standard plan (or lower): gemini-2.5-flash-lite
-    - Pro plan or higher: gemini-3-flash-preview
+    Get the AI model for MagicBlocks based on the organization's plan,
+    resolved via the provider-agnostic LLM layer.
     """
-    try:
-        current_plan = await get_org_plan(org_id, db_session)
-
-        # Pro or Enterprise plans get the better model
-        if plan_meets_requirement(current_plan, "pro"):
-            return "gemini-3-flash-preview"
-
-        # Standard and free plans get the lite model
-        return "gemini-2.5-flash-lite"
-    except Exception:
-        # Fallback to lite model if plan check fails
-        return "gemini-2.5-flash-lite"
+    return model_for_tier("fast")  # interactive widgets: fast + concise (gemini-3.1-flash-lite)
 
 
 @router.post(
@@ -181,7 +167,7 @@ async def start_magicblock_session(
     stream = generate_magicblock_stream(
         prompt=session_request.prompt,
         session=session,
-        gemini_model_name=ai_model
+        model_name=ai_model
     )
 
     return StreamingResponse(
@@ -286,7 +272,7 @@ async def iterate_magicblock_session(
     stream = generate_magicblock_stream(
         prompt=message_request.message,
         session=session,
-        gemini_model_name=ai_model,
+        model_name=ai_model,
         current_html=html_to_iterate
     )
 
