@@ -19,20 +19,60 @@ fi
 VERSION="${VERSION#v}"
 TAG="${VERSION}"
 
+# Abort with a clear message. Every check in the preflight below runs BEFORE anything
+# is mutated, so a failed precondition leaves the repository exactly as it was.
+die() { printf '\n  ❌ %s\n\n' "$*" >&2; exit 1; }
+
+# Files that carry the version number — also the only files expected to conflict on
+# the dev → main release merge (main still holds the previous version).
+VERSION_FILES=(
+  "apps/web/package.json"
+  "apps/collab/package.json"
+  "apps/api/pyproject.toml"
+  "apps/api/app.py"
+)
+
 echo ""
 echo "  🚀 LearnHouse Release — ${TAG}"
 echo "  ─────────────────────────────"
 echo ""
 
-# Ensure we're up to date
-echo "  📡 Fetching latest from origin..."
-git fetch origin
+# ─── Preflight: verify EVERYTHING before changing anything ──────────────────
+echo "  🔎 Running preflight checks..."
 
-# Check if tag already exists
-if git rev-parse "$TAG" >/dev/null 2>&1; then
-  echo "  ❌ Error: Tag $TAG already exists."
-  exit 1
-fi
+# Version must look like semver (optionally a -preview / .N suffix)
+[[ "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+([.-][0-9A-Za-z.]+)?$ ]] \
+  || die "Invalid version '$VERSION' — expected semver, e.g. 1.2.5"
+
+# Tooling + auth
+command -v gh >/dev/null 2>&1 || die "GitHub CLI 'gh' is not installed."
+gh auth status >/dev/null 2>&1 || die "GitHub CLI is not authenticated — run: gh auth login"
+[ -n "$REPO" ] || die "Could not determine the GitHub repo (gh repo view)."
+
+# No half-finished git operation that we'd otherwise stomp on
+GIT_DIR="$(git rev-parse --git-dir)"
+[ -f "$GIT_DIR/MERGE_HEAD" ] && die "A merge is already in progress. Finish it or run 'git merge --abort' first."
+{ [ -d "$GIT_DIR/rebase-merge" ] || [ -d "$GIT_DIR/rebase-apply" ]; } && die "A rebase is in progress. Finish or abort it first."
+
+# Clean working tree — never release uncommitted local changes
+git diff --quiet && git diff --cached --quiet \
+  || die "Working tree has uncommitted changes. Commit or stash them before releasing."
+
+# Sync refs + tags from origin
+echo "  📡 Fetching latest from origin..."
+git fetch --quiet origin --tags --prune
+
+# Tag must not already exist (locally or on origin)
+git rev-parse -q --verify "refs/tags/$TAG" >/dev/null 2>&1 \
+  && die "Tag $TAG already exists locally. Pick a new version or delete the tag first."
+git ls-remote --exit-code --tags origin "refs/tags/$TAG" >/dev/null 2>&1 \
+  && die "Tag $TAG already exists on origin. Pick a new version."
+
+# Required branches must exist on origin
+git ls-remote --exit-code --heads origin dev  >/dev/null 2>&1 || die "origin/dev not found."
+git ls-remote --exit-code --heads origin main >/dev/null 2>&1 || die "origin/main not found."
+
+echo "  ✅ Preflight passed — releasing ${TAG} to ${REPO}"
 
 # ─── Bump version numbers ───────────────────────────────────
 echo "  📝 Bumping version to ${VERSION}..."
@@ -44,6 +84,12 @@ sed -i '' "s/version=\"[^\"]*\"/version=\"${VERSION}\"/" "$REPO_ROOT/apps/api/ap
 sed -i '' "s/\"version\": \"[^\"]*\"/\"version\": \"${VERSION}\"/" "$REPO_ROOT/apps/api/ee/routers/info.py"
 
 echo "  ✅ Version bumped in web, collab, api, ee/info"
+
+# Verify the bump actually landed in every tracked version file before we commit/push.
+for vf in "${VERSION_FILES[@]}"; do
+  grep -q "$VERSION" "$REPO_ROOT/$vf" \
+    || die "Version bump did not apply to $vf (format may have changed) — aborting before any push."
+done
 
 # ─── Commit version bump on dev ─────────────────────────────
 echo "  📦 Committing version bump on dev..."
@@ -80,10 +126,30 @@ echo "  🔀 Switching to main..."
 git checkout main
 
 echo "  ⬇️  Pulling latest main..."
-git pull origin main
+git pull --ff-only origin main \
+  || die "Local 'main' has diverged from origin/main — reconcile it before releasing."
 
 echo "  🔀 Merging dev into main..."
-git merge origin/dev -m "release: merge dev into main for ${TAG}"
+if ! git merge origin/dev -m "release: merge dev into main for ${TAG}"; then
+  # The ONLY conflicts we expect are the version files (main is one release behind).
+  # Auto-resolve those to the new version; abort on anything else so a human looks.
+  UNMERGED="$(git diff --name-only --diff-filter=U | sort)"
+  [ -z "$UNMERGED" ] && { git merge --abort; die "Merge failed without conflicts to resolve — aborted, repo restored."; }
+  EXPECTED="$(printf '%s\n' "${VERSION_FILES[@]}" | sort)"
+  UNEXPECTED="$(comm -23 <(printf '%s\n' "$UNMERGED") <(printf '%s\n' "$EXPECTED") || true)"
+  if [ -n "$UNEXPECTED" ]; then
+    git merge --abort
+    die "Merge has conflicts beyond the version files — resolve manually, then re-run:"$'\n'"$UNEXPECTED"
+  fi
+  echo "  🧩 Auto-resolving version-only conflicts to ${VERSION}..."
+  while IFS= read -r vf; do
+    [ -z "$vf" ] && continue
+    git checkout --theirs -- "$vf"   # take dev's side (the new version)
+    git add -- "$vf"
+  done <<< "$UNMERGED"
+  git commit --no-edit
+  echo "  ✅ Version conflicts resolved automatically"
+fi
 
 echo "  ⬆️  Pushing main..."
 git push origin main
