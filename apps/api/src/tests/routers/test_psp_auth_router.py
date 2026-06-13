@@ -1,7 +1,12 @@
+from unittest.mock import AsyncMock, patch
+
 import pytest
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
+from sqlmodel import select
 
+from src.db.user_organizations import UserOrganization
+from src.db.users import User
 from src.routers import psp_auth
 
 
@@ -20,7 +25,7 @@ class FakeRedis:
 def client(monkeypatch):
     fake = FakeRedis()
 
-    async def _noop_ensure(_email):
+    async def _noop_ensure(_request, _email):
         return None
 
     monkeypatch.setattr(psp_auth, "get_redis_client", lambda: fake)
@@ -67,3 +72,43 @@ def test_token_exchange_rejects_bad_shell_token(client, monkeypatch):
     monkeypatch.setattr(psp_auth, "validate_shell_token", boom)
     res = c.post("/api/v1/psp/token-exchange", headers={"Authorization": "Bearer bad"})
     assert res.status_code == 401
+
+
+# ---------------------------------------------------------------------------
+# _provision_psp_user — must link the new user to the org, not just insert a
+# bare User row. Routes through the canonical create_user service so a
+# UserOrganization membership + role are created (regression for the org-less
+# provisioning bug).
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.asyncio
+async def test_provision_psp_user_creates_org_membership(mock_request, db, org, user_role):
+    with patch(
+        "src.services.users.users.check_limits_with_usage", new_callable=AsyncMock
+    ), patch(
+        "src.services.users.users.increase_feature_usage", new_callable=AsyncMock
+    ), patch(
+        "src.services.users.users.track", new_callable=AsyncMock
+    ), patch(
+        "src.services.users.users.dispatch_webhooks", new_callable=AsyncMock
+    ), patch(
+        "src.services.users.users.send_account_creation_email"
+    ):
+        await psp_auth._provision_psp_user(mock_request, db, "learner@opengov.com", org.id)
+
+    user = (
+        await db.execute(select(User).where(User.email == "learner@opengov.com"))
+    ).scalars().first()
+    assert user is not None
+    assert user.email_verified is True
+    assert user.signup_method == "psp"
+
+    membership = (
+        await db.execute(
+            select(UserOrganization).where(UserOrganization.user_id == user.id)
+        )
+    ).scalars().first()
+    assert membership is not None, "PSP-provisioned user must be linked to the org"
+    assert membership.org_id == org.id
+    assert membership.role_id == 4  # the user_role seeded by the fixture

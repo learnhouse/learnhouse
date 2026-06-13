@@ -19,8 +19,7 @@ from datetime import datetime
 from typing import Any
 from uuid import uuid4
 
-from sqlalchemy import cast, text
-from sqlalchemy.dialects.postgresql import JSONB
+from sqlalchemy import text
 from sqlmodel import select
 from sqlmodel.ext.asyncio.session import AsyncSession
 
@@ -109,31 +108,29 @@ class LhCourseClient:
         kb_id: str,
     ) -> Course | None:
         """Return the Course row whose extra_metadata->>'kb_id' == kb_id."""
-        # Use a raw JSON path expression that works for both PostgreSQL (asyncpg)
-        # and SQLite (aiosqlite, used in tests via JSON type remapping).
-        #
-        # We do a Python-side filter as a fallback so tests running on SQLite
-        # (which lacks ->> operator) still work: fetch all org courses that
-        # carry extra_metadata and filter in Python.  The result set is small
-        # (only KB-sourced courses have source=="kb") so this is acceptable.
-        try:
+        # Branch on the dialect explicitly rather than try/except-and-fallback:
+        # PostgreSQL (asyncpg, prod) supports the ->> JSON operator; SQLite
+        # (aiosqlite, used in tests via JSON type remapping) does not. A blanket
+        # except would also swallow genuine connection/programming errors and
+        # silently degrade to a full org-courses scan, so we detect instead.
+        if session.get_bind().dialect.name == "postgresql":
             stmt = select(Course).where(
                 Course.org_id == org_id,
                 text("extra_metadata->>'kb_id' = :kb_id").bindparams(kb_id=kb_id),
             )
-            result = (await session.execute(stmt)).scalars().first()
-            return result
-        except Exception:
-            # Fallback for SQLite / dialect that doesn't support ->> (tests)
-            stmt_all = select(Course).where(
-                Course.org_id == org_id,
-                Course.extra_metadata.isnot(None),  # type: ignore[attr-defined]
-            )
-            rows = (await session.execute(stmt_all)).scalars().all()
-            for row in rows:
-                if (row.extra_metadata or {}).get("kb_id") == kb_id:
-                    return row
-            return None
+            return (await session.execute(stmt)).scalars().first()
+
+        # Non-Postgres (SQLite/tests): fetch org courses carrying extra_metadata
+        # and filter in Python. Small result set (only KB-sourced courses).
+        stmt_all = select(Course).where(
+            Course.org_id == org_id,
+            Course.extra_metadata.isnot(None),  # type: ignore[attr-defined]
+        )
+        rows = (await session.execute(stmt_all)).scalars().all()
+        for row in rows:
+            if (row.extra_metadata or {}).get("kb_id") == kb_id:
+                return row
+        return None
 
     async def _create(
         self,

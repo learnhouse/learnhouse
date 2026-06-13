@@ -57,7 +57,9 @@ def _verify_signature(token: str, issuer: str, audiences: set[str]) -> dict:
             signing_key.key,
             algorithms=["RS256"],
             issuer=issuer,
-            options={"verify_aud": False},
+            # require exp so a shell token minted without an expiry can never
+            # validate (PyJWT only checks exp when the claim is present).
+            options={"verify_aud": False, "require": ["exp"]},
         )
     except PyJWTError as err:
         raise ShellTokenError(f"signature/issuer check failed: {err}")
