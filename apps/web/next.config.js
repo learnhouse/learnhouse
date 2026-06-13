@@ -15,19 +15,36 @@ const nextConfig = {
     ]
   },
   async headers() {
+    const shellOrigin = process.env.PSP_SHELL_ORIGIN || ''
+    const frameAncestors = shellOrigin
+      ? `frame-ancestors 'self' ${shellOrigin}`
+      : "frame-ancestors 'self'"
     return [
       {
         source: '/embed/:orgslug/course/:courseuuid/activity/:path*',
         headers: [
-          {
-            key: 'X-Frame-Options',
-            value: 'ALLOWALL',
-          },
-          {
-            key: 'Content-Security-Policy',
-            value: 'frame-ancestors *',
-          },
+          { key: 'X-Frame-Options', value: 'ALLOWALL' },
+          { key: 'Content-Security-Policy', value: 'frame-ancestors *' },
         ],
+      },
+      // PSP embed: allow the configured shell origin to frame the token-exchange
+      // landing page and the dashboard. CSP frame-ancestors only (no
+      // X-Frame-Options, which can't express an allowlist and would conflict).
+      {
+        source: '/auth/token-exchange',
+        headers: [{ key: 'Content-Security-Policy', value: frameAncestors }],
+      },
+      {
+        source: '/orgs/:orgslug/dash/:path*',
+        headers: [{ key: 'Content-Security-Policy', value: frameAncestors }],
+      },
+      {
+        source: '/orgs/:orgslug/dash',
+        headers: [{ key: 'Content-Security-Policy', value: frameAncestors }],
+      },
+      {
+        source: '/home',
+        headers: [{ key: 'Content-Security-Policy', value: frameAncestors }],
       },
     ]
   },

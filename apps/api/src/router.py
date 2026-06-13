@@ -8,6 +8,7 @@ from src.routers import instance
 from src.routers import plans
 from src.routers import usergroups
 from src.routers import dev, trail, users, auth, orgs, roles, search
+from src.routers import psp_auth
 from src.routers import monitoring
 from src.routers import stream
 from src.routers import api_tokens
@@ -72,6 +73,7 @@ v1_router.include_router(
     ],
 )
 v1_router.include_router(auth.router, prefix="/auth", tags=["auth"])
+v1_router.include_router(psp_auth.psp_router, prefix="/psp", tags=["psp"])
 v1_router.include_router(
     orgs.router,
     prefix="/orgs",
