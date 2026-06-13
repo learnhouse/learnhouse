@@ -42,3 +42,31 @@ def test_missing_email_raises(monkeypatch):
     token = _make_token({"iss": "https://trusted/"})
     with pytest.raises(psp_jwks.ShellTokenError):
         psp_jwks.validate_shell_token(token)
+
+
+def test_passes_raw_issuer_with_trailing_slash_to_verifier(monkeypatch):
+    # Bug 1 regression: the issuer handed to the signature verifier must keep
+    # the trailing slash exactly as it appears in the token's iss claim.
+    monkeypatch.setattr(psp_jwks, "_trusted_issuers", lambda: {"https://trusted/"})
+    monkeypatch.setattr(psp_jwks, "_trusted_audiences", lambda: set())
+    captured = {}
+
+    def fake_verify(token, issuer, auds):
+        captured["issuer"] = issuer
+        return {"email": "u@og.com"}
+
+    monkeypatch.setattr(psp_jwks, "_verify_signature", fake_verify)
+    token = _make_token({"iss": "https://trusted/"})
+    assert psp_jwks.validate_shell_token(token) == "u@og.com"
+    assert captured["issuer"] == "https://trusted/"
+
+
+def test_jwks_resolution_failure_becomes_shell_token_error(monkeypatch):
+    # Bug 2 regression: discovery/JWKS failures must surface as ShellTokenError,
+    # never as an unhandled exception (500).
+    def boom(_iss):
+        raise RuntimeError("discovery unreachable")
+
+    monkeypatch.setattr(psp_jwks, "_jwks_client", boom)
+    with pytest.raises(psp_jwks.ShellTokenError):
+        psp_jwks._verify_signature("anytoken", "https://trusted/", set())

@@ -6,14 +6,13 @@ the shell's authProvider only changes which trusted issuer signs the token.
 """
 
 import os
-import time
 from functools import lru_cache
-from typing import Optional
 
 import httpx
 import jwt
 from jwt import PyJWKClient
 from jwt.exceptions import PyJWTError
+
 
 
 class ShellTokenError(Exception):
@@ -45,21 +44,30 @@ def _jwks_client(issuer: str) -> PyJWKClient:
 
 
 def _verify_signature(token: str, issuer: str, audiences: set[str]) -> dict:
-    signing_key = _jwks_client(issuer).get_signing_key_from_jwt(token)
-    last_err: Optional[Exception] = None
-    for aud in audiences or {None}:
-        try:
-            return jwt.decode(
-                token,
-                signing_key.key,
-                algorithms=["RS256"],
-                audience=aud,
-                issuer=issuer.rstrip("/"),
-                options={"verify_aud": aud is not None},
-            )
-        except PyJWTError as err:
-            last_err = err
-    raise ShellTokenError(f"signature/audience check failed: {last_err}")
+    # `issuer` is the EXACT iss claim string from the token (trailing slash
+    # preserved) so PyJWT's equality check matches Auth0 and Okta alike.
+    try:
+        signing_key = _jwks_client(issuer).get_signing_key_from_jwt(token)
+    except Exception as err:  # discovery/network/kid failures → fail closed
+        raise ShellTokenError(f"jwks resolution failed: {err}")
+
+    try:
+        claims = jwt.decode(
+            token,
+            signing_key.key,
+            algorithms=["RS256"],
+            issuer=issuer,
+            options={"verify_aud": False},
+        )
+    except PyJWTError as err:
+        raise ShellTokenError(f"signature/issuer check failed: {err}")
+
+    if audiences:
+        raw = claims.get("aud")
+        token_auds = {raw} if isinstance(raw, str) else set(raw or [])
+        if not (token_auds & audiences):
+            raise ShellTokenError("audience not allowed")
+    return claims
 
 
 def validate_shell_token(token: str) -> str:
@@ -71,15 +79,12 @@ def validate_shell_token(token: str) -> str:
     except PyJWTError as err:
         raise ShellTokenError(f"unparseable token: {err}")
 
-    iss = (unverified.get("iss") or "").rstrip("/") + "/"
-    if iss not in _trusted_issuers():
-        raise ShellTokenError(f"untrusted issuer: {iss}")
+    raw_iss = unverified.get("iss") or ""
+    normalized = raw_iss.rstrip("/") + "/"
+    if normalized not in _trusted_issuers():
+        raise ShellTokenError(f"untrusted issuer: {normalized}")
 
-    exp = unverified.get("exp")
-    if exp is not None and float(exp) < time.time():
-        raise ShellTokenError("token expired")
-
-    claims = _verify_signature(token, iss.rstrip("/"), _trusted_audiences())
+    claims = _verify_signature(token, raw_iss, _trusted_audiences())
     email = claims.get("email") or claims.get("preferred_username")
     if not email:
         raise ShellTokenError("no email claim in token")
