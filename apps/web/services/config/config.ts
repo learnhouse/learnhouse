@@ -290,12 +290,18 @@ export const getUriWithOrg = (orgslug: string, path: string) => {
     }
 
     // Safety net: only synthesize an absolute subdomain URL when the user is
-    // already on some subdomain of the base domain. If they're on the apex,
-    // localhost, or any host that doesn't end in `.{baseDomain}`, building
-    // `${slug}.${baseDomain}` will land them on a hostname that may not
-    // resolve — e.g. `default.localhost`. In that case, return a relative
-    // path so navigation stays on the current origin.
-    if (!isSubdomainOf(currentHostname, baseDomain)) {
+    // on the apex base domain itself (e.g. the org-selection screen) or on
+    // some subdomain of it. On any other host — localhost, a host that
+    // doesn't end in `.{baseDomain}` — building `${slug}.${baseDomain}` would
+    // land them on a hostname that may not resolve (e.g. `default.localhost`),
+    // so we return a relative path and keep navigation on the current origin.
+    //
+    // The apex case is essential: the org-selection screen lives on the apex
+    // (`{baseDomain}`), and from there every org link must cross to its
+    // `${slug}.${baseDomain}` subdomain. `isSubdomainOf` is false for the apex
+    // (a host is not a subdomain of itself), so without the `isSameHost` check
+    // org links would collapse to the apex path and loop back to the selector.
+    if (!isSubdomainOf(currentHostname, baseDomain) && !isSameHost(currentHostname, baseDomain)) {
       return path
     }
 
