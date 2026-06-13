@@ -2,7 +2,7 @@
 
 Embeddings follow the configured AI provider wherever that provider exposes an embeddings API
 — Google and the OpenAI family (OpenAI, Azure, Together, and local Ollama). Providers without
-an embeddings API (Anthropic, Groq, Mistral, OpenRouter, Bedrock) transparently fall back to
+an embeddings API (Anthropic, DeepSeek, Moonshot, Mistral, OpenRouter, Bedrock) transparently fall back to
 Google embeddings when ``gemini_api_key`` is set, otherwise a clear error is raised.
 
 The output dimensionality is pinned (default 768) to match the ``Vector(768)`` pgvector column
@@ -103,7 +103,7 @@ def build_embedding_model() -> EmbeddingModel:
             settings=settings,
         )
 
-    # Providers without an embeddings API (anthropic, groq, mistral, openrouter, bedrock):
+    # Providers without an embeddings API (anthropic, deepseek, moonshot, mistral, openrouter, bedrock):
     # fall back to Google embeddings when a Gemini key is available.
     gemini_key = getattr(cfg, "gemini_api_key", None)
     if gemini_key:

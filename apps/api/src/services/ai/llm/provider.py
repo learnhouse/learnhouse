@@ -2,8 +2,7 @@
 
 `build_model()` reads the global AI config (provider + api_key + base_url) and returns a
 configured Pydantic AI ``Model``. Switching providers is a config change only — no business
-logic touches a vendor SDK. Embeddings are intentionally NOT handled here: they stay on
-Gemini (see ``src/services/ai/rag/embedding_service.py``).
+logic touches a vendor SDK. Embeddings are handled provider-agnostically in ``embeddings.py``.
 """
 
 from __future__ import annotations

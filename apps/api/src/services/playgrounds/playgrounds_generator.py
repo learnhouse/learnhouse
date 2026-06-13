@@ -203,7 +203,7 @@ async def generate_playground_stream(
             for msg in session.message_history
         ]
 
-        if current_html:
+        if current_html and session.iteration_count > 0:
             user_prompt = f"""The user wants to modify the existing interactive element.
 
 CURRENT HTML CODE:

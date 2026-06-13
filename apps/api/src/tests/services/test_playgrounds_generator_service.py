@@ -183,7 +183,7 @@ class TestPlaygroundsGeneratorService:
         current_html_session = PlaygroundSessionData(
             session_uuid="pg_existing",
             playground_uuid="playground_1",
-            iteration_count=0,
+            iteration_count=1,  # an existing iteration -> "modify" prompt branch
             max_iterations=10,
             message_history=[
                 PlaygroundMessage(role="user", content=f"msg{i}") for i in range(13)
@@ -209,7 +209,7 @@ class TestPlaygroundsGeneratorService:
             ]
 
         assert "".join(iteration_chunks) == "```html\n<div>updated</div>\n```"
-        assert current_html_session.iteration_count == 1
+        assert current_html_session.iteration_count == 2
         assert current_html_session.current_html == "<div>updated</div>"
         assert len(current_html_session.message_history) == 12
         assert current_html_session.message_history[-2].content == "Make it brighter"

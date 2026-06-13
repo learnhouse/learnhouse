@@ -57,8 +57,8 @@ class AIConfig(BaseModel):
     embedding_provider: str | None = None
     embedding_model: str | None = None
     embedding_dimensions: int | None = None
-    # Google/Gemini key. Doubles as the embeddings fallback for providers (Anthropic, Groq,
-    # Mistral, OpenRouter, Bedrock) that have no embeddings API of their own.
+    # Google/Gemini key. Doubles as the embeddings fallback for providers (Anthropic, DeepSeek,
+    # Moonshot, Mistral, OpenRouter, Bedrock) that have no embeddings API of their own.
     gemini_api_key: str | None = None
 
 

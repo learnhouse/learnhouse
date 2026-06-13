@@ -83,7 +83,7 @@ ai_config:
   model_pro: ""         # course planning / blocks (Pro+ plan)          (default: gemini-3.1-pro-preview)
   # RAG embeddings follow the chosen provider (Google / OpenAI family incl. Ollama). Override
   # any of these; embedding_dimensions defaults to 768 to match the pgvector column (changing
-  # it requires a DB migration + re-index). Providers without embeddings (Anthropic, Groq,
+  # it requires a DB migration + re-index). Providers without embeddings (Anthropic, DeepSeek, Moonshot,
   # Mistral, OpenRouter, Bedrock) fall back to Google when gemini_api_key is set.
   embedding_provider: ""    # default: same as `provider`
   embedding_model: ""       # default per provider (e.g. gemini-embedding-001, text-embedding-3-small)
