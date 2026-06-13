@@ -15,7 +15,13 @@ export default function Providers({ children }: { children: React.ReactNode }) {
   // it into a single managed <style> tag. Additive only — no effect when the
   // app runs standalone (no host posts the message).
   useEffect(() => {
+    // Fail closed: only accept theme messages from the configured PSP shell
+    // origin. Without this, any frame in the embedding chain could inject
+    // arbitrary CSS (UI-redress / attribute-selector data exfiltration). When
+    // the origin is unset (standalone), no message is ever trusted.
+    const allowedOrigin = process.env.NEXT_PUBLIC_PSP_SHELL_ORIGIN || ''
     const handler = (e: MessageEvent) => {
+      if (!allowedOrigin || e.origin !== allowedOrigin) return
       if (e.data?.type !== 'OG_THEME' || typeof e.data.css !== 'string') return
       let style = document.getElementById('og-theme-override') as HTMLStyleElement | null
       if (!style) {
