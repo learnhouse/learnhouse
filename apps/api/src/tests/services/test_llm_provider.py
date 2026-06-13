@@ -36,7 +36,8 @@ def _patch_ai_config(monkeypatch, **overrides):
         ("google", "gemini-2.5-flash", "GoogleModel"),
         ("openai", "gpt-4o", "OpenAIChatModel"),
         ("anthropic", "claude-sonnet-4-5", "AnthropicModel"),
-        ("groq", "llama-3.3-70b", "GroqModel"),
+        ("deepseek", "deepseek-chat", "OpenAIChatModel"),
+        ("moonshot", "kimi-k2-0905-preview", "OpenAIChatModel"),
         ("mistral", "mistral-large", "MistralModel"),
     ],
 )
@@ -187,13 +188,13 @@ def test_embeddings_explicit_override(monkeypatch):
 
 
 def test_embeddings_fall_back_to_gemini_for_providers_without_embeddings(monkeypatch):
-    # Anthropic/Groq have no embeddings API -> use Google when a Gemini key is present.
+    # Anthropic/DeepSeek have no embeddings API -> use Google when a Gemini key is present.
     _patch_embed_config(monkeypatch, provider="anthropic", api_key="sk-ant", gemini_api_key="g-key")
     assert type(embeddings_mod.build_embedding_model()).__name__ == "GoogleEmbeddingModel"
 
 
 def test_embeddings_raise_when_no_embeddings_capable_config(monkeypatch):
-    _patch_embed_config(monkeypatch, provider="groq", api_key="gsk", gemini_api_key=None)
+    _patch_embed_config(monkeypatch, provider="deepseek", api_key="sk-ds", gemini_api_key=None)
     with pytest.raises(AINotConfiguredError):
         embeddings_mod.build_embedding_model()
 

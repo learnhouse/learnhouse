@@ -761,23 +761,6 @@ wheels = [
 ]
 
 [[package]]
-name = "groq"
-version = "1.4.0"
-source = { registry = "https://pypi.org/simple" }
-dependencies = [
-    { name = "anyio" },
-    { name = "distro" },
-    { name = "httpx" },
-    { name = "pydantic" },
-    { name = "sniffio" },
-    { name = "typing-extensions" },
-]
-sdist = { url = "https://files.pythonhosted.org/packages/26/84/d99c4894d32ed52bf2763127804343d9323dce22beb61d42aebc7d9c5f4d/groq-1.4.0.tar.gz", hash = "sha256:09b1ed51408c6969a11ef1a4dfe44d42ec975b5f1510e5de3f3dab56e22dffc6", size = 158123, upload-time = "2026-05-28T03:11:47.5Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/3a/5b/28cfd8937be95c0814fd9458710a8a257fb8424a39e291b7bbd494476108/groq-1.4.0-py3-none-any.whl", hash = "sha256:99a3bcd57c71538f69cf11c75cdae91598983d2681b9a14008636a018c4b6d17", size = 143699, upload-time = "2026-05-28T03:11:46.23Z" },
-]
-
-[[package]]
 name = "h11"
 version = "0.16.0"
 source = { registry = "https://pypi.org/simple" }
@@ -971,7 +954,7 @@ dependencies = [
     { name = "psycopg2-binary" },
     { name = "pwdlib", extra = ["argon2"] },
     { name = "pydantic", extra = ["email"] },
-    { name = "pydantic-ai-slim", extra = ["anthropic", "google", "groq", "mistral", "openai"] },
+    { name = "pydantic-ai-slim", extra = ["anthropic", "google", "mistral", "openai"] },
     { name = "pyjwt", extra = ["crypto"] },
     { name = "pypdf" },
     { name = "pytest" },
@@ -1015,7 +998,7 @@ requires-dist = [
     { name = "psycopg2-binary", specifier = "==2.9.12" },
     { name = "pwdlib", extras = ["argon2"], specifier = "==0.3.0" },
     { name = "pydantic", extras = ["email"], specifier = "==2.13.4" },
-    { name = "pydantic-ai-slim", extras = ["openai", "anthropic", "google", "groq", "mistral"], specifier = ">=1.5.0" },
+    { name = "pydantic-ai-slim", extras = ["openai", "anthropic", "google", "mistral"], specifier = ">=1.5.0" },
     { name = "pyjwt", extras = ["crypto"], specifier = "==2.13.0" },
     { name = "pypdf", specifier = "==6.13.0" },
     { name = "pytest", specifier = "==9.0.3" },
@@ -1600,9 +1583,6 @@ anthropic = [
 ]
 google = [
     { name = "google-genai" },
-]
-groq = [
-    { name = "groq" },
 ]
 mistral = [
     { name = "mistralai" },

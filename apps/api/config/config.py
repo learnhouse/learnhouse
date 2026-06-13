@@ -39,7 +39,7 @@ class SecurityConfig(BaseModel):
 class AIConfig(BaseModel):
     is_ai_enabled: bool | None
     # Provider-agnostic generation config (Pydantic AI). `provider` selects the SDK
-    # ("google" | "openai" | "anthropic" | "groq" | "mistral" | "openrouter" | "bedrock"
+    # ("google" | "openai" | "anthropic" | "deepseek" | "moonshot" | "mistral" | "openrouter" | "bedrock"
     # | "ollama" | ...); `api_key`/`base_url` are the single credentials used regardless of
     # provider. For "openrouter" base_url is auto-set; for "bedrock" use standard AWS
     # credentials (env/role/profile) + AWS_REGION, with api_key optional.
