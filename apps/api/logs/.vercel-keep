@@ -1,0 +1,1 @@
+Placeholder so Vercel bundles this dir; create_logs_dir() skips mkdir on the read-only serverless FS.
