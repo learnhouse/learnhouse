@@ -38,9 +38,10 @@ _TIER_CONFIG_ATTR: dict[str, str] = {
     "pro": "model_pro",
 }
 
-# Maps a feature purpose to its (standard-plan tier, pro-plan tier). Plan-gated features
-# (course planning, MagicBlocks, boards & playground generation) use `standard` for
-# free/standard plans and `pro` for Pro+ plans; plain chat always uses `standard`.
+# Maps a feature purpose to its (standard-plan tier, pro-plan tier). `planning` (course
+# planning) uses `standard` for free/standard plans and `pro` for Pro+ plans; `chat` always
+# uses `standard`. Interactive widget features (MagicBlocks, boards, playgrounds) intentionally
+# bypass this and use the `fast` tier directly for low latency — see their routers.
 _PURPOSE_TIERS: dict[str, tuple[Tier, Tier]] = {
     "chat": ("standard", "standard"),
     "planning": ("standard", "pro"),
