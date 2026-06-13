@@ -6,12 +6,14 @@ grounded in course content.
 """
 
 import logging
+import os
 from typing import AsyncGenerator, Optional
 
 from sqlalchemy import text
 from sqlmodel.ext.asyncio.session import AsyncSession
 
 from src.services.ai.rag.embedding_service import embed_single_text
+from src.services.ai.rag.kb_context import fetch_kb_context
 from src.services.ai.base import ask_ai_stream
 from src.services.ai.llm import model_for_tier
 
@@ -145,6 +147,13 @@ async def query_course_rag_stream(
 
     context = rag_result["context"]
     sources = rag_result["sources"]
+
+    # Augment with approved KB content (best-effort; empty string on any failure).
+    kb_extra = await fetch_kb_context(
+        question, os.getenv("KB_API_URL", ""), os.getenv("KB_API_TOKEN", "")
+    )
+    if kb_extra:
+        context = f"{kb_extra}\n\n---\n\n{context}" if context else kb_extra
 
     # Build the grounding prompt based on mode
     citation_instructions = (
