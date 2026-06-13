@@ -1,8 +1,10 @@
 """
 Embedding service for RAG.
 
-Uses google-genai for embeddings (text-embedding-004) and
-llama-index-core SentenceSplitter for chunking.
+Embeddings are provider-agnostic: they follow the configured AI provider through the shared
+``src.services.ai.llm.embeddings`` layer (Google, OpenAI family incl. Ollama; other providers
+fall back to Google). Output is pinned to 768 dims to match the Vector(768) pgvector column.
+Uses llama-index-core SentenceSplitter for chunking.
 """
 
 import asyncio
@@ -13,15 +15,18 @@ from sqlmodel import select
 from sqlmodel.ext.asyncio.session import AsyncSession
 
 from src.db.course_embeddings import CourseEmbedding
-from src.services.ai.base import get_gemini_client
+from src.services.ai.llm.embeddings import (
+    DEFAULT_EMBEDDING_DIMENSIONS,
+    embed_documents,
+    embed_query,
+)
 from src.services.ai.rag.content_extraction import extract_all_course_content
 
 logger = logging.getLogger(__name__)
 
 CHUNK_SIZE = 512
 CHUNK_OVERLAP = 50
-EMBEDDING_MODEL = "gemini-embedding-001"
-EMBEDDING_DIMENSIONS = 768  # Must match Vector(768) in CourseEmbedding model
+EMBEDDING_DIMENSIONS = DEFAULT_EMBEDDING_DIMENSIONS  # Must match Vector(768) in CourseEmbedding
 EMBEDDING_BATCH_SIZE = 100
 BATCH_DELAY_SECONDS = 0.5
 MAX_RETRIES = 3
@@ -38,34 +43,25 @@ def chunk_text(text: str) -> list[str]:
 
 async def generate_embeddings(texts: list[str]) -> list[list[float]]:
     """
-    Generate embeddings for a list of texts using Gemini.
-    Runs blocking Gemini calls off the event loop via asyncio.to_thread
-    and retries transient failures with exponential backoff.
+    Generate embeddings for a list of texts via the configured provider.
+    Batches inputs and retries transient failures with exponential backoff.
     """
-    client = get_gemini_client()
-    all_embeddings = []
+    all_embeddings: list[list[float]] = []
 
     for i in range(0, len(texts), EMBEDDING_BATCH_SIZE):
         batch = texts[i:i + EMBEDDING_BATCH_SIZE]
 
         for attempt in range(MAX_RETRIES):
             try:
-                result = await asyncio.to_thread(
-                    client.models.embed_content,
-                    model=EMBEDDING_MODEL,
-                    contents=batch,
-                    config={"output_dimensionality": EMBEDDING_DIMENSIONS},
-                )
-                for emb in result.embeddings:
-                    all_embeddings.append(list(emb.values))
+                all_embeddings.extend(await embed_documents(batch))
                 break
             except Exception as e:
                 if attempt == MAX_RETRIES - 1:
-                    logger.error("Gemini embedding failed after %d attempts: %s", MAX_RETRIES, e)
+                    logger.error("Embedding failed after %d attempts: %s", MAX_RETRIES, e)
                     raise
                 wait = 2 ** attempt
                 logger.warning(
-                    "Gemini embedding attempt %d/%d failed, retrying in %ds: %s",
+                    "Embedding attempt %d/%d failed, retrying in %ds: %s",
                     attempt + 1, MAX_RETRIES, wait, e,
                 )
                 await asyncio.sleep(wait)
@@ -77,20 +73,13 @@ async def generate_embeddings(texts: list[str]) -> list[list[float]]:
 
 
 async def embed_single_text(text: str) -> list[float]:
-    """Generate embedding for a single text, with retry."""
-    client = get_gemini_client()
+    """Generate embedding for a single text (query), with retry."""
     for attempt in range(MAX_RETRIES):
         try:
-            result = await asyncio.to_thread(
-                client.models.embed_content,
-                model=EMBEDDING_MODEL,
-                contents=[text],
-                config={"output_dimensionality": EMBEDDING_DIMENSIONS},
-            )
-            return list(result.embeddings[0].values)
+            return await embed_query(text)
         except Exception as e:
             if attempt == MAX_RETRIES - 1:
-                logger.error("Gemini single embedding failed after %d attempts: %s", MAX_RETRIES, e)
+                logger.error("Single embedding failed after %d attempts: %s", MAX_RETRIES, e)
                 raise
             await asyncio.sleep(2 ** attempt)
     raise RuntimeError("unreachable")
