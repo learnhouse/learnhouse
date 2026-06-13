@@ -52,10 +52,15 @@ export function getCookieDomain(request: NextRequest): string | undefined {
 export function getCookieOptions(request: NextRequest) {
   const isSecure = request.nextUrl.protocol === 'https:'
   const domain = getCookieDomain(request)
+  // Embedded in the PSP shell (cross-origin iframe): browsers only send cookies
+  // on cross-site subrequests when SameSite=None; Secure. Gated by env so
+  // standalone LearnHouse keeps its stricter Lax default. SameSite=None REQUIRES
+  // Secure, so force secure in embed mode (the shell is always HTTPS).
+  const embedMode = getConfig('NEXT_PUBLIC_LEARNHOUSE_EMBED_MODE') === 'true'
   return {
     httpOnly: true,
-    secure: isSecure,
-    sameSite: 'lax' as const,
+    secure: embedMode ? true : isSecure,
+    sameSite: embedMode ? ('none' as const) : ('lax' as const),
     path: '/',
     ...(domain ? { domain } : {}),
   }
