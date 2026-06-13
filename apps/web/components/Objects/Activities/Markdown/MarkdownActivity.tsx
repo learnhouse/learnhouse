@@ -43,6 +43,7 @@ function MarkdownActivity({ activity, editable = false, style }: MarkdownActivit
   const session = useLHSession() as any
   const access_token = session?.data?.tokens?.access_token
   const markdownUrl = activity.content?.markdown_url || ''
+  const inlineMarkdown = typeof activity.content?.markdown === 'string' ? activity.content.markdown : null
 
   const [markdown, setMarkdown] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
@@ -76,8 +77,14 @@ function MarkdownActivity({ activity, editable = false, style }: MarkdownActivit
   }, [])
 
   useEffect(() => {
+    if (inlineMarkdown !== null) {
+      setMarkdown(inlineMarkdown)
+      setLoading(false)
+      setError(null)
+      return
+    }
     fetchMarkdown(markdownUrl)
-  }, [markdownUrl, fetchMarkdown])
+  }, [inlineMarkdown, markdownUrl, fetchMarkdown])
 
   const handleSaveUrl = async () => {
     if (!editUrl.trim()) return
