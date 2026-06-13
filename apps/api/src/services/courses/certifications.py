@@ -427,7 +427,13 @@ async def is_course_fully_completed(
         return False
 
     completed_activities = (await db_session.execute(
-        select(func.count(TrailStep.id)).where(
+        select(func.count(func.distinct(TrailStep.activity_id)))
+        .join(
+            ChapterActivity,
+            (ChapterActivity.activity_id == TrailStep.activity_id)
+            & (ChapterActivity.course_id == TrailStep.course_id),
+        )
+        .where(
             TrailStep.user_id == user_id,
             TrailStep.course_id == course_id,
             TrailStep.complete == True,
@@ -466,7 +472,13 @@ async def check_course_completion_and_create_certificate(
         return False  # No activities in course
 
     completed_count = (await db_session.execute(
-        select(func.count(TrailStep.id)).where(
+        select(func.count(func.distinct(TrailStep.activity_id)))
+        .join(
+            ChapterActivity,
+            (ChapterActivity.activity_id == TrailStep.activity_id)
+            & (ChapterActivity.course_id == TrailStep.course_id),
+        )
+        .where(
             TrailStep.user_id == user_id,
             TrailStep.course_id == course_id,
             TrailStep.complete == True,

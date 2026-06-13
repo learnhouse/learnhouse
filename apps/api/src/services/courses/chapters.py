@@ -169,6 +169,8 @@ async def update_chapter(
 
     # Update only the fields that were passed in
     for var, value in vars(chapter_object).items():
+        if var in ("org_id", "course_id"):
+            continue
         if value is not None:
             setattr(chapter, var, value)
 
@@ -560,6 +562,18 @@ async def reorder_chapters_and_activities(
     # Create a map of existing chapters for faster lookup
     existing_chapter_map = {cc.chapter_id: cc for cc in existing_course_chapters}
 
+    unlinked_chapter_ids = [
+        co.chapter_id
+        for co in chapters_order.chapter_order_by_ids
+        if co.chapter_id not in existing_chapter_map
+    ]
+    chapter_owner_map = {}
+    if unlinked_chapter_ids:
+        rows = (await db_session.execute(
+            select(Chapter).where(Chapter.id.in_(unlinked_chapter_ids))  # type: ignore
+        )).scalars().all()
+        chapter_owner_map = {c.id: c for c in rows}
+
     # Update or create course chapters based on new order
     for index, chapter_order in enumerate(chapters_order.chapter_order_by_ids):
         if chapter_order.chapter_id in existing_chapter_map:
@@ -568,6 +582,12 @@ async def reorder_chapters_and_activities(
             course_chapter.order = index
             db_session.add(course_chapter)
         else:
+            owner = chapter_owner_map.get(chapter_order.chapter_id)
+            if owner is None or owner.course_id != course.id or owner.org_id != course.org_id:
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail=f"Chapter {chapter_order.chapter_id} is not part of this course",
+                )
             # Create new course chapter
             course_chapter = CourseChapter(
                 chapter_id=chapter_order.chapter_id,
@@ -599,9 +619,22 @@ async def reorder_chapters_and_activities(
 
     # Create a map for faster lookup
     existing_activity_map = {
-        (ca.chapter_id, ca.activity_id): ca 
+        (ca.chapter_id, ca.activity_id): ca
         for ca in existing_chapter_activities
     }
+
+    valid_chapter_ids = {co.chapter_id for co in chapters_order.chapter_order_by_ids}
+    requested_activity_ids = {
+        ao.activity_id
+        for co in chapters_order.chapter_order_by_ids
+        for ao in co.activities_order_by_ids
+    }
+    activity_owner_map = {}
+    if requested_activity_ids:
+        rows = (await db_session.execute(
+            select(Activity).where(Activity.id.in_(requested_activity_ids))  # type: ignore
+        )).scalars().all()
+        activity_owner_map = {a.id: a for a in rows}
 
     # Track which activities we want to keep
     activities_to_keep = set()
@@ -610,14 +643,29 @@ async def reorder_chapters_and_activities(
     for chapter_order in chapters_order.chapter_order_by_ids:
         for index, activity_order in enumerate(chapter_order.activities_order_by_ids):
             activity_key = (chapter_order.chapter_id, activity_order.activity_id)
-            activities_to_keep.add(activity_key)
 
             if activity_key in existing_activity_map:
+                activities_to_keep.add(activity_key)
                 # Update existing activity order
                 chapter_activity = existing_activity_map[activity_key]
                 chapter_activity.order = index
                 db_session.add(chapter_activity)
             else:
+                owner = activity_owner_map.get(activity_order.activity_id)
+                if (
+                    chapter_order.chapter_id not in valid_chapter_ids
+                    or owner is None
+                    or owner.course_id != course.id
+                    or owner.org_id != course.org_id
+                ):
+                    raise HTTPException(
+                        status_code=status.HTTP_400_BAD_REQUEST,
+                        detail=(
+                            f"Activity {activity_order.activity_id} or chapter "
+                            f"{chapter_order.chapter_id} is not part of this course"
+                        ),
+                    )
+                activities_to_keep.add(activity_key)
                 # Create new chapter activity
                 chapter_activity = ChapterActivity(
                     chapter_id=chapter_order.chapter_id,

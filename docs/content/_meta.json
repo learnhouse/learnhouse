@@ -1,0 +1,17 @@
+{
+  "index": "Home",
+  "-- Getting Started": {
+    "type": "separator",
+    "title": "Getting Started"
+  },
+  "getting-started": "Getting Started",
+  "-- Platform": {
+    "type": "separator",
+    "title": "Platform"
+  },
+  "platform": "Platform",
+  "self-hosting": "Self Hosting",
+  "developers": "Developers",
+  "cli": "CLI",
+  "enterprise": "Enterprise Edition"
+}

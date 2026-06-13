@@ -54,7 +54,6 @@ class OrganizationUpdate(SQLModel):
     label: Optional[str] = None
     slug: Optional[str] = None
     email: Optional[str] = None
-    explore: Optional[bool] = None
 
 class OrganizationCreate(OrganizationBase):
     pass

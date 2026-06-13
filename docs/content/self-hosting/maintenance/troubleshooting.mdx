@@ -1,0 +1,138 @@
+import { Callout } from 'nextra/components'
+
+# Troubleshooting
+
+This guide covers common issues with self-hosted LearnHouse instances and how to resolve them.
+
+## First Step: Run Diagnostics
+
+Before diving into specific issues, run the built-in diagnostics:
+
+```bash
+learnhouse doctor
+```
+
+This checks Docker availability, container health, port conflicts, DNS resolution, and disk space. It will often identify the root cause of problems automatically.
+
+## Services Not Starting
+
+**Symptoms:** `learnhouse start` fails, or containers are stopped or restarting.
+
+**Common causes:**
+
+- **Docker is not running.** Verify Docker is running with `docker info`. Start the Docker daemon if needed.
+- **Insufficient memory.** LearnHouse requires at least 2 GB of RAM. Check available memory with `free -m` (Linux) or Activity Monitor (macOS).
+- **Port conflicts.** Another service may be using port 80 or 443. Check with `lsof -i :80` and stop the conflicting service. `learnhouse doctor` will also detect port conflicts.
+- **Corrupted configuration.** Re-run `learnhouse setup` to regenerate configuration files.
+
+## Database Connection Errors
+
+**Symptoms:** Application logs show database connection errors, or the app fails to start with PostgreSQL-related messages.
+
+**Steps to resolve:**
+
+1. Run diagnostics to check container health:
+   ```bash
+   learnhouse doctor
+   ```
+
+2. Check database logs:
+   ```bash
+   learnhouse logs
+   ```
+   Look for log lines from the `db` container.
+
+3. Verify the connection string in your `.env` file matches the database container's configuration.
+
+4. If the database container keeps restarting, it may be running out of disk space. Check available disk space on the host.
+
+## Port Conflicts
+
+**Symptoms:** Error messages about ports already being in use.
+
+Check which process is using the port:
+
+```bash
+# Check port 80
+lsof -i :80
+
+# Check port 443
+lsof -i :443
+```
+
+Stop the conflicting service, or reconfigure LearnHouse to use a different port by re-running `learnhouse setup`.
+
+## Storage Permission Errors
+
+**Symptoms:** File upload fails, or logs show permission denied errors when writing to storage.
+
+**For filesystem storage:**
+
+- Docker volumes should handle permissions automatically. If issues persist, check that the Docker daemon has appropriate permissions on the host filesystem.
+
+**For S3 storage:**
+
+- Verify your S3 credentials have read and write permissions on the configured bucket.
+- Check that the bucket name (`LEARNHOUSE_S3_API_BUCKET_NAME`) and endpoint URL (`LEARNHOUSE_S3_API_ENDPOINT_URL`) are correct in your `.env` file.
+- Test connectivity to the S3 endpoint from the server.
+
+## Authentication Issues
+
+**Symptoms:** Users cannot log in, or sessions expire immediately.
+
+- Verify `NEXTAUTH_SECRET` is set and has not changed since the last restart. Changing the secret invalidates all existing sessions.
+- Verify `LEARNHOUSE_COOKIE_DOMAIN` matches your actual domain. Incorrect cookie domain prevents authentication from working.
+- If using SSL, ensure `NEXTAUTH_URL` uses `https://`.
+
+## Performance Issues
+
+**Symptoms:** Slow page loads, timeouts, or high resource usage.
+
+1. Run diagnostics:
+   ```bash
+   learnhouse doctor
+   ```
+
+2. Review application logs for errors or slow operations:
+   ```bash
+   learnhouse logs
+   ```
+
+3. Check resource limits on your containers:
+   ```bash
+   learnhouse deployments
+   ```
+
+4. Consider increasing server resources (RAM, CPU) if usage is consistently high.
+
+5. If using filesystem storage with a large amount of content, consider migrating to S3-compatible storage.
+
+## Resetting Your Instance
+
+<Callout type="warning">
+Resetting your instance deletes all data. Create a backup first if you want to preserve any data.
+</Callout>
+
+If you need to start fresh:
+
+```bash
+# Back up current data (optional)
+learnhouse backup
+
+# Stop all services
+learnhouse stop
+
+# Re-run setup
+learnhouse setup
+
+# Start fresh
+learnhouse start
+```
+
+## Getting Help
+
+If you cannot resolve an issue using this guide:
+
+1. Run `learnhouse doctor` and include the output in your report.
+2. Check the [LearnHouse GitHub issues](https://github.com/learnhouse/learnhouse/issues) for known problems and solutions.
+3. Open a new issue with details about your problem, including relevant log output and your environment (OS, Docker version, RAM).

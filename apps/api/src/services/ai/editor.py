@@ -10,6 +10,7 @@ from src.db.users import PublicUser
 from src.security.auth import resolve_acting_user_id
 from src.db.courses.activities import Activity, ActivityRead
 from src.services.ai.base import get_chat_session_history
+from src.services.ai.llm import model_for_tier
 from src.services.ai.schemas.editor import (
     StartEditorAIChatSession,
     SendEditorAIChatMessage,
@@ -193,8 +194,8 @@ async def editor_ai_start_chat_session_stream(
 
     chat_session = get_chat_session_history()
 
-    # Use Gemini 2.5 Flash as the default model
-    ai_model = "gemini-2.5-flash"
+    # Default editor model (provider-agnostic; resolved from AI config)
+    ai_model = model_for_tier("standard")
 
     return {
         "chat_session": chat_session,
@@ -301,8 +302,8 @@ async def editor_ai_send_message_stream(
 
     chat_session = get_chat_session_history(chat_session_object.aichat_uuid)
 
-    # Use Gemini 2.5 Flash as the default model
-    ai_model = "gemini-2.5-flash"
+    # Default editor model (provider-agnostic; resolved from AI config)
+    ai_model = model_for_tier("standard")
 
     return {
         "chat_session": chat_session,

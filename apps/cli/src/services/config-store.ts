@@ -17,6 +17,10 @@ export function writeConfig(config: SetupConfig): void {
     autoSsl: config.autoSsl,
     useExternalDb: config.useExternalDb,
     orgSlug: config.orgSlug || 'default',
+    edition: config.edition || 'community',
+    ...(config.edition === 'enterprise'
+      ? { eeTenancy: config.eeTenancy || 'single', eeLocalTls: !!config.eeLocalTls }
+      : {}),
   }
   fs.writeFileSync(
     path.join(config.installDir, CONFIG_FILENAME),

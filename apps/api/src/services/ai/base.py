@@ -4,81 +4,40 @@ from datetime import datetime, timezone
 import logging
 import redis
 import json
-import asyncio
-from google import genai
 
 from config.config import get_learnhouse_config
+from src.services.ai.llm import generate, generate_stream, model_for_tier
 
 logger = logging.getLogger(__name__)
 
 LH_CONFIG = get_learnhouse_config()
 
-def get_gemini_client():
-    """Get Gemini client instance"""
-    api_key = getattr(LH_CONFIG.ai_config, 'gemini_api_key', None)
-    if not api_key:
-        raise Exception("Gemini API key not configured")
-    return genai.Client(api_key=api_key)
+
+def _build_context_prompt(message_for_the_prompt: str, text_reference: str) -> str:
+    """Combine the feature system prompt with course-content context."""
+    if text_reference:
+        return f"{message_for_the_prompt}\n\nCourse Content Context:\n{text_reference}"
+    return message_for_the_prompt
 
 
-def ask_ai(
+async def ask_ai(
     question: str,
     message_history: Any,
     text_reference: str,
     message_for_the_prompt: str,
-    gemini_model_name: str,
+    model_name: str,
 ) -> Dict[str, Any]:
     """
-    Process an AI query using Google Gen AI SDK with course content as context
+    Process an AI query through the provider-agnostic LLM layer with course content as context.
     """
     try:
-        # Use Gemini 2.0 Flash as default if no model specified or if OpenAI model
-        if not gemini_model_name or gemini_model_name.startswith("gpt-"):
-            gemini_model_name = "gemini-2.5-flash"
-
-        client = get_gemini_client()
-
-        # Build conversation contents
-        contents = []
-
-        # Add system instruction as the first message
-        system_instruction = f"{message_for_the_prompt}\n\nCourse Content Context:\n{text_reference}"
-        contents.append({"role": "user", "parts": [{"text": system_instruction}]})
-        contents.append({"role": "model", "parts": [{"text": "I understand. I'm ready to help with questions about this course content."}]})
-
-        # Add message history if available
-        if hasattr(message_history, 'messages'):
-            for msg in message_history.messages:
-                if hasattr(msg, 'type') and hasattr(msg, 'content'):
-                    role = "user" if msg.type == "human" else "model"
-                    contents.append({"role": role, "parts": [{"text": msg.content}]})
-        elif isinstance(message_history, list):
-            # Handle simple list format
-            for msg in message_history:
-                if isinstance(msg, dict) and 'role' in msg and 'content' in msg:
-                    contents.append({"role": msg['role'], "parts": [{"text": msg['content']}]})
-
-        # Add current question
-        contents.append({"role": "user", "parts": [{"text": question}]})
-
-        # Generate response (60s timeout)
-        import concurrent.futures
-        with concurrent.futures.ThreadPoolExecutor(max_workers=1) as executor:
-            future = executor.submit(
-                client.models.generate_content,
-                model=gemini_model_name,
-                contents=contents,
-            )
-            try:
-                response = future.result(timeout=60.0)
-            except concurrent.futures.TimeoutError:
-                raise TimeoutError("Gemini API request timed out after 60s")
-
-        return {
-            "output": response.text,
-            "intermediate_steps": []
-        }
-
+        output = await generate(
+            model_name=model_name or model_for_tier("standard"),
+            user_prompt=question,
+            system_prompt=_build_context_prompt(message_for_the_prompt, text_reference),
+            history=message_history,
+        )
+        return {"output": output, "intermediate_steps": []}
     except Exception as e:
         raise Exception(f"Error processing AI request: {str(e)}")
 
@@ -234,6 +193,30 @@ def update_chat_session_meta(aichat_uuid: str, user_id: int, title: Optional[str
         return None
 
 
+def chat_session_belongs_to_user(aichat_uuid: str, user_id: int) -> bool:
+    """Return True if the chat session is owned by ``user_id``.
+
+    Ownership is recorded in the ``chat_meta:<uuid>`` Redis key (see
+    :func:`save_chat_session_meta`). A session with no metadata (brand-new or
+    expired) is treated as ownable by the caller — the IDOR risk we guard
+    against is reusing *another* user's existing session, which always has a
+    populated ``user_id``. This mirrors the ownership check in
+    :func:`get_chat_messages` / :func:`delete_chat_session`.
+    """
+    r = _get_redis()
+    if not r:
+        return True
+    try:
+        meta_data = r.get(f"chat_meta:{aichat_uuid}")
+        if not meta_data:
+            return True
+        meta = json.loads(meta_data.decode("utf-8") if isinstance(meta_data, bytes) else meta_data)
+        return meta.get("user_id") == user_id
+    except Exception as e:
+        logger.error("Failed to verify chat session ownership: %s", e, exc_info=True)
+        return False
+
+
 def get_user_chat_sessions(user_id: int, org_id: Optional[int] = None) -> list[dict]:
     """Return all chat sessions for a user, newest first. Optionally filter by org_id."""
     r = _get_redis()
@@ -322,23 +305,23 @@ def delete_chat_session(aichat_uuid: str, user_id: int) -> bool:
         return False
 
 
-def generate_chat_title(user_message: str, ai_response: str) -> str:
-    """Generate a short summarized title for a chat session using a lightweight model."""
+async def generate_chat_title(user_message: str, ai_response: str) -> str:
+    """Generate a short summarized title for a chat session using the fast model tier."""
     try:
-        client = get_gemini_client()
         prompt = (
             "Summarize this conversation into a very short title (max 6 words). "
             "Output ONLY the title, nothing else. No quotes, no punctuation at the end.\n\n"
             f"User: {user_message[:300]}\n"
             f"Assistant: {ai_response[:300]}"
         )
-        response = client.models.generate_content(
-            model="gemini-2.0-flash-lite",
-            contents=[{"role": "user", "parts": [{"text": prompt}]}],
-            config={"max_output_tokens": 30, "temperature": 0.3},
+        text = await generate(
+            model_name=model_for_tier("fast"),
+            user_prompt=prompt,
+            max_tokens=30,
+            temperature=0.3,
         )
-        if response.text:
-            title = response.text.strip().strip('"\'').strip()
+        if text:
+            title = text.strip().strip('"\'').strip()
             if title:
                 return title[:60]
     except Exception as e:
@@ -355,60 +338,20 @@ async def ask_ai_stream(
     message_history: Any,
     text_reference: str,
     message_for_the_prompt: str,
-    gemini_model_name: str,
+    model_name: str,
 ) -> AsyncGenerator[str, None]:
     """
-    Process an AI query using Google Gen AI SDK with streaming response.
+    Process an AI query through the provider-agnostic LLM layer with a streaming response.
     Yields chunks of the response as they arrive.
     """
     try:
-        # Use Gemini 2.0 Flash as default if no model specified or if OpenAI model
-        if not gemini_model_name or gemini_model_name.startswith("gpt-"):
-            gemini_model_name = "gemini-2.5-flash"
-
-        client = get_gemini_client()
-
-        # Build conversation contents
-        contents = []
-
-        # Add system instruction as the first message
-        system_instruction = f"{message_for_the_prompt}\n\nCourse Content Context:\n{text_reference}"
-        contents.append({"role": "user", "parts": [{"text": system_instruction}]})
-        contents.append({"role": "model", "parts": [{"text": "I understand. I'm ready to help with questions about this course content."}]})
-
-        # Add message history if available
-        if hasattr(message_history, 'messages'):
-            for msg in message_history.messages:
-                if hasattr(msg, 'type') and hasattr(msg, 'content'):
-                    role = "user" if msg.type == "human" else "model"
-                    contents.append({"role": role, "parts": [{"text": msg.content}]})
-        elif isinstance(message_history, list):
-            # Handle simple list format
-            for msg in message_history:
-                if isinstance(msg, dict) and 'role' in msg and 'content' in msg:
-                    contents.append({"role": msg['role'], "parts": [{"text": msg['content']}]})
-
-        # Add current question
-        contents.append({"role": "user", "parts": [{"text": question}]})
-
-        # Generate response with streaming (run sync SDK in thread to allow timeout)
-        response = await asyncio.wait_for(
-            asyncio.to_thread(
-                client.models.generate_content_stream,
-                model=gemini_model_name,
-                contents=contents,
-            ),
-            timeout=90.0,
-        )
-
-        for chunk in response:
-            if chunk.text:
-                yield chunk.text
-                await asyncio.sleep(0.01)
-
-    except asyncio.TimeoutError:
-        logger.error("ask_ai_stream timed out after 90s")
-        raise
+        async for chunk in generate_stream(
+            model_name=model_name or model_for_tier("standard"),
+            user_prompt=question,
+            system_prompt=_build_context_prompt(message_for_the_prompt, text_reference),
+            history=message_history,
+        ):
+            yield chunk
     except Exception as e:
         logger.error("ask_ai_stream failed: %s", e, exc_info=True)
         raise
@@ -417,18 +360,16 @@ async def ask_ai_stream(
 async def generate_follow_up_suggestions(
     ai_response: str,
     context: str,
-    gemini_model_name: str,
+    model_name: str,
     user_message: str = "",
 ) -> list[str]:
     """
     Generate 3 contextual follow-up questions based on the AI response.
     Returns a list of suggested follow-up questions.
-    Uses a fast model with minimal prompt for quick generation.
+    Uses the fast model tier with a minimal prompt for quick generation.
     Questions are generated in the same language as the user's message.
     """
     try:
-        client = get_gemini_client()
-
         # Use only a small snippet of the response for speed
         response_snippet = ai_response[:500] if len(ai_response) > 500 else ai_response
 
@@ -440,21 +381,16 @@ Response: {response_snippet}
 
 Questions:"""
 
-        contents = [{"role": "user", "parts": [{"text": prompt}]}]
-
-        # Use flash model with limited output for speed
-        response = client.models.generate_content(
-            model="gemini-2.0-flash-lite",
-            contents=contents,
-            config={
-                "max_output_tokens": 150,
-                "temperature": 0.7,
-            }
+        text = await generate(
+            model_name=model_for_tier("fast"),
+            user_prompt=prompt,
+            max_tokens=150,
+            temperature=0.7,
         )
 
         # Parse the response into a list of questions
-        if response.text:
-            questions = [q.strip().lstrip('0123456789.-) ') for q in response.text.strip().split('\n') if q.strip() and '?' in q]
+        if text:
+            questions = [q.strip().lstrip('0123456789.-) ') for q in text.strip().split('\n') if q.strip() and '?' in q]
             return questions[:3]
 
         return []

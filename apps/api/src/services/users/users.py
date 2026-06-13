@@ -183,7 +183,7 @@ async def create_user(
             email=user_read.email,
             lang=get_org_default_language(org_config),
         )
-    else:
+    elif get_deployment_mode() == 'saas':
         # Import here to avoid circular imports
         from src.services.users.email_verification import send_verification_email
         await send_verification_email(request, db_session, user, org_id)

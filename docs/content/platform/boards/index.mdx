@@ -1,0 +1,27 @@
+import { Callout } from 'nextra/components'
+
+# Boards
+
+Boards are real-time collaborative **canvases** — a Miro / FigJam-style freeform workspace that multiple users can pan, zoom, and edit together. They are not document editors and do not reuse the course-activity block editor.
+
+<Callout>
+Boards must be enabled in your [Organization Settings](/platform/organizations/settings) to be available.
+</Callout>
+
+## How Boards Work
+
+Each board is an infinite canvas backed by Yjs CRDTs, so concurrent edits merge without conflicts. The collaboration server (Hocuspocus) syncs changes in real time over WebSockets and persists document state to Redis and PostgreSQL.
+
+## Key Features
+
+- **Real-time collaboration** — Multiple users can edit a board at the same time with live presence and cursor tracking.
+- **Role-based access** — Board members are assigned one of three roles: **Owner**, **Editor**, or **Viewer**.
+- **Canvas tools** — Drawing strokes, sticky notes, to-do cards, frames, and freeform pan/zoom navigation.
+- **Rich embeds** — Drop in webpages, YouTube videos, podcasts, activities, AI-generated playgrounds, and other LearnHouse resources as cards on the canvas.
+- **Member management** — Board owners can invite members and manage their access levels.
+
+## Use Cases
+
+- **Group projects** — Students collaborate on shared boards for team assignments.
+- **Planning and brainstorming** — Teachers and staff map ideas, lesson plans, or workflows visually.
+- **Workshops** — Run live exercises where the whole class contributes to a single shared surface.

@@ -1,0 +1,29 @@
+# Enrollments & Checkout
+
+Enrollments track student access to paid content. When a student completes a purchase, an enrollment record is created that grants them access to the associated courses.
+
+## Checkout Flow
+
+1. A student selects an offer from the storefront or course page.
+2. They are redirected to a Stripe-hosted checkout page.
+3. On successful payment, an enrollment is created automatically.
+4. The student gains immediate access to the purchased courses.
+
+## Enrollment Statuses
+
+| Status | Description |
+|---|---|
+| Pending | Payment initiated but not yet confirmed. |
+| Completed | One-time payment successful, access granted. |
+| Active | Subscription is active, access granted. |
+| Cancelled | Subscription cancelled, access revoked. |
+| Failed | Payment failed. |
+| Refunded | Payment refunded, access revoked. |
+
+## Billing Portal
+
+Students with active subscriptions can access a Stripe billing portal to manage their payment methods, view invoices, and cancel or update their subscriptions.
+
+## Stripe Dashboard
+
+Administrators can view an overview of charges, subscriptions, and customers directly from the LearnHouse admin panel without needing to log into Stripe separately.

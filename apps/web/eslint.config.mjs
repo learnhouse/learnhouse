@@ -15,6 +15,7 @@ export default [
             "@next/next/no-img-element": "off",
             "unused-imports/no-unused-imports": "warn",
             "no-console": "warn",
+            "no-unused-vars": ["error", { "argsIgnorePattern": "^_", "varsIgnorePattern": "^_", "caughtErrorsIgnorePattern": "^_" }],
         },
     },
 ];

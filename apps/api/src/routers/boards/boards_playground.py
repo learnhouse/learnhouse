@@ -13,9 +13,8 @@ from src.security.auth import get_current_user, get_authenticated_user, resolve_
 from src.security.features_utils.usage import (
     reserve_ai_credit,
 )
-from src.security.features_utils.plan_check import get_org_plan
-from src.security.features_utils.plans import plan_meets_requirement
 from src.security.org_auth import is_org_member
+from src.services.ai.llm import model_for_tier
 from src.services.boards.boards_playground import (
     get_boards_playground_session,
     create_boards_playground_session,
@@ -45,13 +44,7 @@ async def event_generator(generator, session_uuid: str):
 
 
 async def get_org_ai_model(org_id: int, db_session: AsyncSession) -> str:
-    try:
-        current_plan = await get_org_plan(org_id, db_session)
-        if plan_meets_requirement(current_plan, "pro"):
-            return "gemini-3-flash-preview"
-        return "gemini-2.5-flash-lite"
-    except Exception:
-        return "gemini-2.5-flash-lite"
+    return model_for_tier("fast")  # interactive widgets: fast + concise (gemini-3.1-flash-lite)
 
 
 @router.post(
@@ -112,7 +105,7 @@ async def start_boards_playground_session(
     stream = generate_boards_playground_stream(
         prompt=session_request.prompt,
         session=session,
-        gemini_model_name=ai_model,
+        model_name=ai_model,
     )
 
     return StreamingResponse(
@@ -192,7 +185,7 @@ async def iterate_boards_playground_session(
     stream = generate_boards_playground_stream(
         prompt=message_request.message,
         session=session,
-        gemini_model_name=ai_model,
+        model_name=ai_model,
         current_html=html_to_iterate,
     )
 

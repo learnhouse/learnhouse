@@ -21,9 +21,16 @@ from src.services.playgrounds.schemas.playgrounds_generator import (
 )
 
 
-class _Chunk:
-    def __init__(self, text):
-        self.text = text
+def _fake_stream(chunks, recorder=None, raise_exc=None):
+    """Stand-in for llm.generate_stream: an async generator over `chunks`."""
+    async def _gen(**kwargs):
+        if recorder is not None:
+            recorder.update(kwargs)
+        if raise_exc is not None:
+            raise raise_exc
+        for chunk in chunks:
+            yield chunk
+    return _gen
 
 
 class TestPlaygroundsGeneratorService:
@@ -155,17 +162,9 @@ class TestPlaygroundsGeneratorService:
             current_html=None,
             context=context,
         )
-        fake_client = SimpleNamespace(
-            models=SimpleNamespace(
-                generate_content_stream=lambda **_: iter(
-                    [_Chunk("<!DOCTYPE html>"), _Chunk("<html>ok</html>")]
-                )
-            )
-        )
-
         with patch(
-            "src.services.playgrounds.playgrounds_generator.get_gemini_client",
-            return_value=fake_client,
+            "src.services.playgrounds.playgrounds_generator.generate_stream",
+            _fake_stream(["<!DOCTYPE html>", "<html>ok</html>"]),
         ), patch(
             "src.services.playgrounds.playgrounds_generator.save_playground_session"
         ) as save_session:
@@ -184,7 +183,7 @@ class TestPlaygroundsGeneratorService:
         current_html_session = PlaygroundSessionData(
             session_uuid="pg_existing",
             playground_uuid="playground_1",
-            iteration_count=0,
+            iteration_count=1,  # an existing iteration -> "modify" prompt branch
             max_iterations=10,
             message_history=[
                 PlaygroundMessage(role="user", content=f"msg{i}") for i in range(13)
@@ -192,20 +191,11 @@ class TestPlaygroundsGeneratorService:
             current_html="<div>old</div>",
             context=context,
         )
-        captured_contents = {}
-
-        def _generate_content_stream(*, model, contents):
-            captured_contents["model"] = model
-            captured_contents["contents"] = contents
-            return iter([_Chunk(""), _Chunk("```html\n<div>updated</div>\n```")])
-
-        fake_iteration_client = SimpleNamespace(
-            models=SimpleNamespace(generate_content_stream=_generate_content_stream)
-        )
+        captured: dict = {}
 
         with patch(
-            "src.services.playgrounds.playgrounds_generator.get_gemini_client",
-            return_value=fake_iteration_client,
+            "src.services.playgrounds.playgrounds_generator.generate_stream",
+            _fake_stream(["", "```html\n<div>updated</div>\n```"], recorder=captured),
         ), patch(
             "src.services.playgrounds.playgrounds_generator.save_playground_session"
         ) as save_session:
@@ -219,22 +209,21 @@ class TestPlaygroundsGeneratorService:
             ]
 
         assert "".join(iteration_chunks) == "```html\n<div>updated</div>\n```"
-        assert current_html_session.iteration_count == 1
+        assert current_html_session.iteration_count == 2
         assert current_html_session.current_html == "<div>updated</div>"
         assert len(current_html_session.message_history) == 12
         assert current_html_session.message_history[-2].content == "Make it brighter"
         assert current_html_session.message_history[-1].content == (
             "```html\n<div>updated</div>\n```"
         )
-        assert captured_contents["model"] == "gemini-2.0-flash"
-        assert "CURRENT HTML CODE:" in captured_contents["contents"][-1]["parts"][0][
-            "text"
-        ]
+        # No explicit model -> resolves to the fast tier default (interactive widgets).
+        assert captured["model_name"] == "gemini-3.1-flash-lite"
+        assert "CURRENT HTML CODE:" in captured["user_prompt"]
         save_session.assert_called_once()
 
         with patch(
-            "src.services.playgrounds.playgrounds_generator.get_gemini_client",
-            side_effect=RuntimeError("boom"),
+            "src.services.playgrounds.playgrounds_generator.generate_stream",
+            _fake_stream([], raise_exc=RuntimeError("boom")),
         ):
             error_chunks = [
                 chunk

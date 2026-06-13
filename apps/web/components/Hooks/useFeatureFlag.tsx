@@ -1,5 +1,5 @@
 import { useOrg } from '@components/Contexts/OrgContext'
-import { useEffect, useState } from 'react'
+import { useMemo } from 'react'
 
 type FeatureType = {
   path: string[]
@@ -8,12 +8,13 @@ type FeatureType = {
 
 function useFeatureFlag(feature: FeatureType) {
   const org = useOrg() as any
-  const [isEnabled, setIsEnabled] = useState<boolean>(!!feature.defaultValue)
 
-  useEffect(() => {
+  // Derived directly from org config — computing during render avoids the
+  // extra "stale then corrected" render cycle the old effect+setState caused.
+  return useMemo(() => {
     if (org?.config?.config) {
       let currentValue = org.config.config
-      
+
       // Traverse the path to get the feature flag value
       for (const key of feature.path) {
         if (currentValue && typeof currentValue === 'object') {
@@ -24,13 +25,10 @@ function useFeatureFlag(feature: FeatureType) {
         }
       }
 
-      setIsEnabled(!!currentValue)
-    } else {
-      setIsEnabled(!!feature.defaultValue)
+      return !!currentValue
     }
+    return !!feature.defaultValue
   }, [org, feature])
-
-  return isEnabled
 }
 
 export default useFeatureFlag

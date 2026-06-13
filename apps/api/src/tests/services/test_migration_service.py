@@ -3,7 +3,6 @@
 import json
 import os
 from pathlib import Path
-from types import SimpleNamespace
 from uuid import uuid4
 from unittest.mock import patch
 
@@ -414,39 +413,37 @@ async def test_suggest_structure_success_and_fallback(monkeypatch, tmp_path):
     ]
     temp_dir = _write_manifest(base, temp_id, files)
 
-    class _FakeModels:
-        @staticmethod
-        def generate_content(**kwargs):
-            payload = {
-                "course_name": "Suggested Course",
-                "course_description": "Generated",
-                "chapters": [
+    payload = {
+        "course_name": "Suggested Course",
+        "course_description": "Generated",
+        "chapters": [
+            {
+                "name": "Chapter 1",
+                "activities": [
                     {
-                        "name": "Chapter 1",
-                        "activities": [
-                            {
-                                "name": "Intro",
-                                "activity_type": "TYPE_VIDEO",
-                                "activity_sub_type": "SUBTYPE_VIDEO_HOSTED",
-                                "file_ids": [files[0]["file_id"]],
-                            }
-                        ],
+                        "name": "Intro",
+                        "activity_type": "TYPE_VIDEO",
+                        "activity_sub_type": "SUBTYPE_VIDEO_HOSTED",
+                        "file_ids": [files[0]["file_id"]],
                     }
                 ],
             }
-            return SimpleNamespace(text=f"```json\n{json.dumps(payload)}\n```")
+        ],
+    }
 
-    fake_client = SimpleNamespace(models=_FakeModels())
-    monkeypatch.setattr("src.services.ai.base.get_gemini_client", lambda: fake_client)
+    async def _fake_generate(**kwargs):
+        return f"```json\n{json.dumps(payload)}\n```"
+
+    monkeypatch.setattr("src.services.ai.llm.generate", _fake_generate)
 
     suggested = await migrations.suggest_structure(temp_id, "Suggested Course", "Generated")
     assert suggested.course_name == "Suggested Course"
     assert suggested.chapters[0].activities[0].name == "Intro"
 
-    monkeypatch.setattr(
-        "src.services.ai.base.get_gemini_client",
-        lambda: (_ for _ in ()).throw(RuntimeError("AI unavailable")),
-    )
+    async def _failing_generate(**kwargs):
+        raise RuntimeError("AI unavailable")
+
+    monkeypatch.setattr("src.services.ai.llm.generate", _failing_generate)
     fallback = await migrations.suggest_structure(temp_id, "Fallback Course", None)
     assert fallback.course_name == "Fallback Course"
     assert fallback.chapters[0].name == "Content"

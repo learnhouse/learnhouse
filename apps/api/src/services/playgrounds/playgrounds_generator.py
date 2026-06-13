@@ -3,10 +3,9 @@ from uuid import uuid4
 import logging
 import redis
 import json
-import asyncio
 
 from config.config import get_learnhouse_config
-from src.services.ai.base import get_gemini_client
+from src.services.ai.llm import generate_stream, model_for_tier
 from src.services.playgrounds.schemas.playgrounds_generator import (
     PlaygroundContext,
     PlaygroundSessionData,
@@ -192,33 +191,20 @@ Do not include any explanations, markdown code blocks, or other text outside the
 async def generate_playground_stream(
     prompt: str,
     session: PlaygroundSessionData,
-    gemini_model_name: str = "gemini-2.0-flash",
+    model_name: str = "",
     current_html: Optional[str] = None,
     course_context: Optional[str] = None,
 ) -> AsyncGenerator[str, None]:
     try:
-        client = get_gemini_client()
-
-        contents = []
-
         system_prompt = build_playground_system_prompt(session.context, course_context)
-        contents.append({"role": "user", "parts": [{"text": system_prompt}]})
-        contents.append(
-            {
-                "role": "model",
-                "parts": [
-                    {
-                        "text": "I understand. I'll create interactive, self-contained HTML content for educational playgrounds. I'll output only valid HTML code."
-                    }
-                ],
-            }
-        )
 
-        for msg in session.message_history:
-            contents.append({"role": msg.role, "parts": [{"text": msg.content}]})
+        history = [
+            {"role": msg.role, "content": msg.content}
+            for msg in session.message_history
+        ]
 
-        if current_html:
-            iteration_prompt = f"""The user wants to modify the existing interactive element.
+        if current_html and session.iteration_count > 0:
+            user_prompt = f"""The user wants to modify the existing interactive element.
 
 CURRENT HTML CODE:
 ```html
@@ -229,20 +215,19 @@ USER REQUEST:
 {prompt}
 
 Please modify the HTML code above according to the user's request. Output ONLY the complete updated HTML code, starting with <!DOCTYPE html> and ending with </html>. Do not include any explanations."""
-            contents.append({"role": "user", "parts": [{"text": iteration_prompt}]})
         else:
-            contents.append({"role": "user", "parts": [{"text": prompt}]})
-
-        response = client.models.generate_content_stream(
-            model=gemini_model_name, contents=contents
-        )
+            user_prompt = prompt
 
         full_response = ""
-        for chunk in response:
-            if chunk.text:
-                full_response += chunk.text
-                yield chunk.text
-                await asyncio.sleep(0.01)
+        async for chunk in generate_stream(
+            model_name=model_name or model_for_tier("fast"),
+            user_prompt=user_prompt,
+            system_prompt=system_prompt,
+            history=history,
+            timeout=300.0,
+        ):
+            full_response += chunk
+            yield chunk
 
         session.message_history.append(
             PlaygroundMessage(role="user", content=prompt)

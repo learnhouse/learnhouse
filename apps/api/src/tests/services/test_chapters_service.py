@@ -11,6 +11,7 @@ from src.db.courses.activities import Activity, ActivityLockType, ActivityRead, 
 from src.db.courses.chapter_activities import ChapterActivity
 from src.db.courses.chapters import Chapter, ChapterCreate, ChapterRead, ChapterUpdate, ChapterUpdateOrder, LockType
 from src.db.courses.course_chapters import CourseChapter
+from src.db.courses.courses import Course
 from src.services.courses.chapters import (
     DEPRECEATED_get_course_chapters,
     _apply_locks_to_chapters,
@@ -155,6 +156,44 @@ class TestUpdateChapter:
 
         assert exc_info.value.status_code == 404
         assert "Course does not exist" in exc_info.value.detail
+
+    @pytest.mark.asyncio
+    async def test_update_chapter_cannot_change_org_or_course(
+        self, db, org, course, chapter, admin_user, mock_request, activity, other_org
+    ):
+        """Covers line 172-173: update_chapter skips org_id/course_id keys, so a
+        payload carrying them can never re-home a chapter to another org/course."""
+        original_org_id = chapter.org_id
+        original_course_id = chapter.course_id
+
+        # Use a loose object so org_id/course_id survive into vars() the way a
+        # crafted/extra-bearing payload would at runtime. ChapterUpdate forbids
+        # these fields, so this is the only way to drive the guard.
+        payload = SimpleNamespace(
+            name="Renamed Chapter",
+            org_id=other_org.id,
+            course_id=99999,
+            description=None,
+            thumbnail_image=None,
+            lock_type=None,
+            extra_metadata=None,
+        )
+
+        with patch(
+            "src.services.courses.chapters.check_resource_access",
+            new_callable=AsyncMock,
+        ):
+            result = await update_chapter(
+                mock_request, payload, chapter.id, admin_user, db
+            )
+
+        # name applied, but org_id/course_id untouched
+        assert result.name == "Renamed Chapter"
+        await db.refresh(chapter)
+        assert chapter.org_id == original_org_id
+        assert chapter.course_id == original_course_id
+        assert chapter.org_id != other_org.id
+        assert chapter.course_id != 99999
 
 
 class TestDeleteChapter:
@@ -483,6 +522,145 @@ class TestReorderChaptersAndActivities:
             select(ChapterActivity).where(ChapterActivity.activity_id == third_activity.id)
         )).scalars().first()
         assert new_chapter_activity is not None
+
+    @pytest.mark.asyncio
+    async def test_reorder_rejects_chapter_from_another_course(
+        self, db, org, other_org, course, chapter, activity, admin_user, mock_request
+    ):
+        """Covers line 586-590: a chapter that has no link to this course AND is
+        owned by a different course/org must be rejected with 400."""
+        foreign_course = Course(
+            id=777,
+            name="Foreign Course",
+            description="",
+            public=True,
+            published=True,
+            open_to_contributors=False,
+            org_id=other_org.id,
+            course_uuid="course_foreign",
+            creation_date="2024-01-01",
+            update_date="2024-01-01",
+        )
+        db.add(foreign_course)
+        await db.commit()
+        await db.refresh(foreign_course)
+
+        foreign_chapter = Chapter(
+            name="Foreign Chapter",
+            description="",
+            thumbnail_image="",
+            org_id=other_org.id,
+            course_id=foreign_course.id,
+            chapter_uuid="chapter_foreign",
+            creation_date="2024-01-01",
+            update_date="2024-01-01",
+        )
+        db.add(foreign_chapter)
+        await db.commit()
+        await db.refresh(foreign_chapter)
+
+        payload = ChapterUpdateOrder.model_validate(
+            {
+                "chapter_order_by_ids": [
+                    {
+                        "chapter_id": foreign_chapter.id,
+                        "activities_order_by_ids": [],
+                    }
+                ]
+            }
+        )
+
+        with patch(
+            "src.services.courses.chapters.check_resource_access",
+            new_callable=AsyncMock,
+        ):
+            with pytest.raises(HTTPException) as exc_info:
+                await reorder_chapters_and_activities(
+                    mock_request, course.course_uuid, payload, admin_user, db
+                )
+
+        assert exc_info.value.status_code == 400
+        assert "not part of this course" in exc_info.value.detail
+        # No link should have been created for the foreign chapter.
+        link = (await db.execute(
+            select(CourseChapter).where(
+                CourseChapter.chapter_id == foreign_chapter.id,
+                CourseChapter.course_id == course.id,
+            )
+        )).scalars().first()
+        assert link is None
+
+    @pytest.mark.asyncio
+    async def test_reorder_rejects_activity_from_another_course(
+        self, db, org, other_org, course, chapter, activity, admin_user, mock_request
+    ):
+        """Covers line 654-667: an activity owned by a different course/org that
+        is being linked under a valid chapter must be rejected with 400."""
+        foreign_course = Course(
+            id=778,
+            name="Foreign Course 2",
+            description="",
+            public=True,
+            published=True,
+            open_to_contributors=False,
+            org_id=other_org.id,
+            course_uuid="course_foreign2",
+            creation_date="2024-01-01",
+            update_date="2024-01-01",
+        )
+        db.add(foreign_course)
+        await db.commit()
+        await db.refresh(foreign_course)
+
+        foreign_activity = Activity(
+            name="Foreign Activity",
+            activity_type=ActivityTypeEnum.TYPE_DYNAMIC,
+            activity_sub_type=ActivitySubTypeEnum.SUBTYPE_DYNAMIC_PAGE,
+            content={"type": "doc", "content": []},
+            published=True,
+            org_id=other_org.id,
+            course_id=foreign_course.id,
+            activity_uuid="activity_foreign",
+            creation_date="2024-01-01",
+            update_date="2024-01-01",
+            current_version=1,
+        )
+        db.add(foreign_activity)
+        await db.commit()
+        await db.refresh(foreign_activity)
+
+        # The chapter IS valid for this course, but the activity is foreign.
+        payload = ChapterUpdateOrder.model_validate(
+            {
+                "chapter_order_by_ids": [
+                    {
+                        "chapter_id": chapter.id,
+                        "activities_order_by_ids": [
+                            {"activity_id": foreign_activity.id},
+                        ],
+                    }
+                ]
+            }
+        )
+
+        with patch(
+            "src.services.courses.chapters.check_resource_access",
+            new_callable=AsyncMock,
+        ):
+            with pytest.raises(HTTPException) as exc_info:
+                await reorder_chapters_and_activities(
+                    mock_request, course.course_uuid, payload, admin_user, db
+                )
+
+        assert exc_info.value.status_code == 400
+        assert "not part of this course" in exc_info.value.detail
+        link = (await db.execute(
+            select(ChapterActivity).where(
+                ChapterActivity.activity_id == foreign_activity.id,
+                ChapterActivity.course_id == course.id,
+            )
+        )).scalars().first()
+        assert link is None
 
     @pytest.mark.asyncio
     async def test_reorder_missing_course_raises(
