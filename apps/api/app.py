@@ -22,6 +22,7 @@ from src.core.ee_hooks import register_ee_middlewares
 from src.core.events.events import shutdown_app, startup_app
 from src.core.middleware.cors import configure_cors
 from src.router import v1_router
+from src.routers.psp_auth import platform_router as psp_platform_router
 from src.routers.content_files import router as content_files_router
 from src.routers.local_content import router as local_content_router
 
@@ -70,6 +71,7 @@ else:
     app.include_router(local_content_router)
 
 app.include_router(v1_router)
+app.include_router(psp_platform_router)
 
 
 @app.get("/")
