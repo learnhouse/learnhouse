@@ -3,6 +3,7 @@ from unittest.mock import AsyncMock, patch
 
 import pytest
 from fastapi import HTTPException
+from sqlalchemy.exc import IntegrityError
 
 from src.db.communities.communities import Community
 from src.db.communities.discussion_comments import DiscussionComment, DiscussionCommentUpdate
@@ -489,6 +490,56 @@ class TestCommunityCommentsAndVotes:
             "missing": False,
         }
         assert known_discussion_votes[discussion.discussion_uuid] is False
+
+    @pytest.mark.asyncio
+    async def test_upvote_discussion_integrity_error_race_rolls_back_and_400(
+        self, db, org, admin_user, regular_user, mock_request
+    ):
+        """Covers lines 81-86: if the INSERT+UPDATE commit hits an
+        IntegrityError (concurrent duplicate vote race), the service rolls back
+        and raises HTTPException 400 instead of leaking a 500."""
+        community = await _make_community(db, org, community_uuid="community_race")
+        discussion = await _make_discussion(
+            db,
+            community,
+            org,
+            author_id=admin_user.id,
+            discussion_uuid="discussion_race",
+        )
+
+        original_rollback = db.rollback
+        rollback_calls = []
+
+        async def failing_commit(*args, **kwargs):
+            raise IntegrityError("INSERT", {}, Exception("duplicate key"))
+
+        async def tracking_rollback(*args, **kwargs):
+            rollback_calls.append(True)
+            return await original_rollback(*args, **kwargs)
+
+        with patch(
+            "src.services.communities.votes.authorization_verify_if_user_is_anon",
+            new_callable=AsyncMock,
+        ), patch(
+            "src.services.communities.votes.check_resource_access",
+            new_callable=AsyncMock,
+        ), patch(
+            "src.services.communities.votes.dispatch_webhooks",
+            new_callable=AsyncMock,
+        ), patch.object(
+            db, "commit", side_effect=failing_commit
+        ), patch.object(
+            db, "rollback", side_effect=tracking_rollback
+        ):
+            with pytest.raises(HTTPException) as exc:
+                await upvote_discussion(
+                    mock_request, discussion.discussion_uuid, regular_user, db
+                )
+
+        assert exc.value.status_code == 400
+        assert "already upvoted" in exc.value.detail
+        # safety-net rolled the failed transaction back
+        assert rollback_calls, "expected db_session.rollback() to be called"
 
     @pytest.mark.asyncio
     async def test_comment_creation_and_delete_error_branches(

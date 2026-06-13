@@ -6,15 +6,16 @@ SQL >
     %
     SELECT
         user_id,
-        timestamp
+        min(timestamp) AS enrolled_at
     FROM events
     WHERE
         ({{Int64(org_id, 0)}} = 0 OR org_id = {{Int64(org_id, 0)}})
-        AND JSONExtractString(properties, 'course_id') = {{String(course_id, '')}}
+        AND JSONExtractString(properties, 'course_uuid') = {{String(course_uuid, '')}}
         AND event_name = 'course_enrolled'
         AND timestamp >= now() - INTERVAL {{Int32(days, 30)}} DAY
         AND user_id != 0
-    ORDER BY timestamp DESC
+    GROUP BY user_id
+    ORDER BY enrolled_at DESC
     LIMIT 50
 
 TYPE endpoint

@@ -1,6 +1,6 @@
 """Tests for src/services/courses/activities/versioning.py."""
 
-from datetime import datetime
+from datetime import datetime, timezone
 from unittest.mock import AsyncMock, patch
 
 import pytest
@@ -73,7 +73,7 @@ class TestCleanupOldVersions:
                 org_id=activity.org_id,
                 version_number=i + 1,
                 content={},
-                created_at=datetime.utcnow(),
+                created_at=datetime.now(timezone.utc).replace(tzinfo=None),
             ))
         await db.commit()
 
@@ -95,7 +95,7 @@ class TestCleanupOldVersions:
                 org_id=activity.org_id,
                 version_number=i + 1,
                 content={},
-                created_at=datetime.utcnow(),
+                created_at=datetime.now(timezone.utc).replace(tzinfo=None),
             ))
         await db.commit()
 
@@ -131,7 +131,7 @@ class TestGetActivityVersions:
             org_id=activity.org_id,
             version_number=1,
             content={"type": "doc"},
-            created_at=datetime.utcnow(),
+            created_at=datetime.now(timezone.utc).replace(tzinfo=None),
         ))
         await db.commit()
 
@@ -179,7 +179,7 @@ class TestGetActivityVersion:
             org_id=activity.org_id,
             version_number=3,
             content={"type": "doc"},
-            created_at=datetime.utcnow(),
+            created_at=datetime.now(timezone.utc).replace(tzinfo=None),
         ))
         await db.commit()
 
@@ -263,7 +263,7 @@ class TestRestoreActivityVersion:
             org_id=activity.org_id,
             version_number=1,
             content={"type": "doc", "restored": True},
-            created_at=datetime.utcnow(),
+            created_at=datetime.now(timezone.utc).replace(tzinfo=None),
         ))
         await db.commit()
 

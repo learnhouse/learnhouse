@@ -293,7 +293,7 @@ class TestUsergroupsService:
                     admin_user,
                     UserGroupCreate(name="UG2", description="Desc", org_id=999999),
                 )
-        assert missing_org_exc.value.status_code == 400
+        assert missing_org_exc.value.status_code == 403
 
         with patch(
             "src.services.users.usergroups.rbac_check",

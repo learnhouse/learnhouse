@@ -1,6 +1,6 @@
 from typing import List
 from uuid import uuid4
-from datetime import datetime
+from datetime import datetime, timezone
 from fastapi import HTTPException, Request, UploadFile
 from sqlmodel import select
 from sqlmodel.ext.asyncio.session import AsyncSession
@@ -168,7 +168,7 @@ async def create_playground(
         if course and course.org_id == org_id:
             course_id = course.id
 
-    now = datetime.utcnow().isoformat()
+    now = datetime.now(timezone.utc).replace(tzinfo=None).isoformat()
     playground = Playground(
         name=playground_data.name,
         description=playground_data.description,
@@ -359,7 +359,7 @@ async def update_playground(
     for key, value in update_data.items():
         setattr(playground, key, value)
 
-    playground.update_date = datetime.utcnow().isoformat()
+    playground.update_date = datetime.now(timezone.utc).replace(tzinfo=None).isoformat()
     db_session.add(playground)
     await db_session.commit()
     await db_session.refresh(playground)
@@ -419,7 +419,7 @@ async def duplicate_playground(
     if not pg_rights.get("action_create", False):
         raise HTTPException(status_code=403, detail="Insufficient permissions to create playgrounds")
 
-    now = datetime.utcnow().isoformat()
+    now = datetime.now(timezone.utc).replace(tzinfo=None).isoformat()
     new_playground = Playground(
         name=f"{playground.name} (Copy)",
         description=playground.description,
@@ -479,7 +479,7 @@ async def add_usergroup_to_playground(
     if existing:
         return {"detail": "User group already has access"}
 
-    now = datetime.utcnow().isoformat()
+    now = datetime.now(timezone.utc).replace(tzinfo=None).isoformat()
     ugr = UserGroupResource(
         usergroup_id=ug.id,
         resource_uuid=playground_uuid,
@@ -574,7 +574,7 @@ async def update_playground_thumbnail(
     )
 
     playground.thumbnail_image = name_in_disk
-    playground.update_date = datetime.utcnow().isoformat()
+    playground.update_date = datetime.now(timezone.utc).replace(tzinfo=None).isoformat()
     db_session.add(playground)
     await db_session.commit()
     await db_session.refresh(playground)

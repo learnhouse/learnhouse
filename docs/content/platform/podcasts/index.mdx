@@ -1,0 +1,27 @@
+import { Callout } from 'nextra/components'
+
+# Podcasts
+
+Podcasts let you create and manage audio content within your organization. You can organize audio material into podcasts with individual episodes, providing an alternative content format alongside courses.
+
+<Callout>
+Podcasts must be enabled in your [Organization Settings](/platform/organizations/settings) to be available.
+</Callout>
+
+## How Podcasts Work
+
+Each podcast acts as a container for related episodes. You create a podcast, add metadata like a name, description, and thumbnail, then populate it with episodes. Episodes are streamed to users with optimized audio delivery.
+
+## Key Features
+
+- **Episode management** — Add, edit, reorder, and remove episodes within a podcast.
+- **Audio streaming** — Episodes are streamed with HTTP Range request support for efficient playback and seeking.
+- **RSS feed** — Every podcast exposes a standard RSS feed at `/podcast/{shortUuid}/feed` that you can submit manually to Apple Podcasts Connect, Spotify for Podcasters, and other directories. LearnHouse does not publish to these services on your behalf.
+- **Metadata & discovery** — Each podcast and episode supports names, descriptions, and tags for easy browsing.
+- **Thumbnails** — Upload custom artwork for podcasts and episodes.
+
+## Use Cases
+
+- **Lecture recordings** — Provide audio versions of lectures for on-the-go learning.
+- **Supplementary material** — Share interviews, discussions, or expert commentary alongside course content.
+- **Audio courses** — Build entire courses around audio content for topics that suit a listening format.

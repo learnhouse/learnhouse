@@ -1,0 +1,73 @@
+# LearnHouse Documentation
+
+> Official documentation for LearnHouse, the open-source learning management system (LMS).
+
+LearnHouse is an open-source platform for creating and delivering modern educational content. It features a Notion-like WYSIWYG editor, built-in AI assistants, multi-organizational support, real-time collaboration, progress tracking, and can be self-hosted or used via LearnHouse Cloud.
+
+## Docs
+
+- [Getting Started](https://docs.learnhouse.app/getting-started): Set up your first organization and course
+  - [Quickstart](https://docs.learnhouse.app/getting-started/quickstart): Get up and running in minutes
+  - [Key Concepts](https://docs.learnhouse.app/getting-started/key-concepts): Organizations, courses, chapters, activities, and trails
+  - [Cloud vs Self Hosting](https://docs.learnhouse.app/getting-started/cloud-vs-self-hosting): Choose the right deployment model
+
+- [Platform](https://docs.learnhouse.app/platform): Complete guide to LearnHouse features
+  - [Courses](https://docs.learnhouse.app/platform/courses): Creating and managing courses
+    - [Chapters & Activities](https://docs.learnhouse.app/platform/courses/chapters-and-activities): Structuring course content
+    - [Collections](https://docs.learnhouse.app/platform/courses/collections): Grouping courses together
+    - [Trails](https://docs.learnhouse.app/platform/courses/trails): Student progression tracking
+  - [Editor](https://docs.learnhouse.app/platform/editor): Block-based WYSIWYG content editor
+    - [Blocks](https://docs.learnhouse.app/platform/editor/blocks): Available editor block types
+  - [AI Features](https://docs.learnhouse.app/platform/ai): Built-in AI assistant
+    - [For Students](https://docs.learnhouse.app/platform/ai/for-students): AI chat, explanations, quizzes
+    - [For Teachers](https://docs.learnhouse.app/platform/ai/for-teachers): AI content generation tools
+  - [Users](https://docs.learnhouse.app/platform/users): User management
+    - [Roles & Permissions](https://docs.learnhouse.app/platform/users/roles-and-permissions): Admin, teacher, student roles
+    - [Authentication](https://docs.learnhouse.app/platform/users/authentication): Login methods and OAuth
+  - [Organizations](https://docs.learnhouse.app/platform/organizations): Multi-org management
+    - [Settings](https://docs.learnhouse.app/platform/organizations/settings): Organization configuration
+    - [Multi-Tenancy](https://docs.learnhouse.app/platform/organizations/multi-tenancy): Running multiple orgs
+  - [Discussions](https://docs.learnhouse.app/platform/discussions): Discussion forums
+    - [Comments](https://docs.learnhouse.app/platform/discussions/comments): Comment system
+  - [Assignments](https://docs.learnhouse.app/platform/assignments): Student assignments
+    - [Grading](https://docs.learnhouse.app/platform/assignments/grading): Grading system
+  - [Playgrounds](https://docs.learnhouse.app/platform/playgrounds): Interactive code playgrounds
+  - [Boards](https://docs.learnhouse.app/platform/boards): Kanban-style boards
+  - [Analytics](https://docs.learnhouse.app/platform/analytics): Usage analytics
+  - [Certifications](https://docs.learnhouse.app/platform/certifications): Course certifications
+  - [Search](https://docs.learnhouse.app/platform/search): Full-text search
+  - [Podcasts](https://docs.learnhouse.app/platform/podcasts): Podcast support
+  - [Code Execution](https://docs.learnhouse.app/platform/code-execution): Sandboxed code execution
+
+- [Self Hosting](https://docs.learnhouse.app/self-hosting): Deploy on your own infrastructure
+  - [Installation](https://docs.learnhouse.app/self-hosting/installation): Install via the LearnHouse CLI
+    - [Requirements](https://docs.learnhouse.app/self-hosting/installation/requirements): System requirements
+    - [Quick Install](https://docs.learnhouse.app/self-hosting/installation/quick-install): Step-by-step install guide
+    - [CLI Reference](https://docs.learnhouse.app/self-hosting/installation/cli-reference): All CLI commands
+  - [Configuration](https://docs.learnhouse.app/self-hosting/configuration): Configure your instance
+    - [Environment Variables](https://docs.learnhouse.app/self-hosting/configuration/environment-variables): All env vars
+    - [SSL](https://docs.learnhouse.app/self-hosting/configuration/ssl): HTTPS and SSL setup
+    - [AI Setup](https://docs.learnhouse.app/self-hosting/configuration/ai-setup): Configure AI providers
+    - [Email](https://docs.learnhouse.app/self-hosting/configuration/email): Email delivery setup
+    - [Storage](https://docs.learnhouse.app/self-hosting/configuration/storage): S3 and filesystem storage
+  - [Maintenance](https://docs.learnhouse.app/self-hosting/maintenance): Keep your instance healthy
+    - [Backups](https://docs.learnhouse.app/self-hosting/maintenance/backups): Database backups
+    - [Updates](https://docs.learnhouse.app/self-hosting/maintenance/updates): Updating LearnHouse
+    - [Monitoring](https://docs.learnhouse.app/self-hosting/maintenance/monitoring): Health checks and monitoring
+    - [Troubleshooting](https://docs.learnhouse.app/self-hosting/maintenance/troubleshooting): Common issues
+
+- [Developers](https://docs.learnhouse.app/developers): Architecture, API, and contributing
+  - [Architecture](https://docs.learnhouse.app/developers/architecture): System architecture
+    - [Backend](https://docs.learnhouse.app/developers/architecture/backend): FastAPI backend
+    - [Frontend](https://docs.learnhouse.app/developers/architecture/frontend): Next.js frontend
+    - [Services](https://docs.learnhouse.app/developers/architecture/services): Supporting services
+  - [API](https://docs.learnhouse.app/developers/api): REST API reference
+    - [Authentication](https://docs.learnhouse.app/developers/api/authentication): JWT and API tokens
+    - [Endpoints](https://docs.learnhouse.app/developers/api/endpoints): API endpoint reference
+  - [Contributing](https://docs.learnhouse.app/developers/contributing): How to contribute
+    - [Dev Environment](https://docs.learnhouse.app/developers/contributing/dev-environment): Development setup
+    - [Guidelines](https://docs.learnhouse.app/developers/contributing/guidelines): Contribution guidelines
+
+## Optional
+
+- [Full documentation content](https://docs.learnhouse.app/llms-full.txt): Complete text of all documentation pages

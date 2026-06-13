@@ -152,7 +152,7 @@ class TestTrailService:
         assert empty.runs == []
         assert populated.runs[0].course["course_uuid"] == course.course_uuid
         assert populated.runs[0].course_total_steps == 0
-        assert populated.runs[0].steps[0].data["course"].course_uuid == extra_course.course_uuid
+        assert populated.runs[0].steps[0].data["course"]["course_uuid"] == extra_course.course_uuid
 
     @pytest.mark.asyncio
     async def test_check_trail_presence_creates_trail_and_gets_existing_trail(

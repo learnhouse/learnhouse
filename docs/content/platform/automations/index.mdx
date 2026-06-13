@@ -1,0 +1,37 @@
+import { Callout } from 'nextra/components'
+
+# Automations
+
+LearnHouse pushes real-time events to your own systems and to no-code automation tools. Use these to sync learners into your CRM, notify a Slack channel on course completion, trigger certificate printing, or feed any downstream workflow.
+
+<Callout type="info">
+Automations are available on the **Pro plan** or higher. Both webhooks and Zapier rely on API tokens scoped to a single organization.
+</Callout>
+
+## What's available
+
+- **[Webhooks](/platform/automations/webhooks)** — Direct, signed HTTP `POST` deliveries to any URL you control. Best for custom backends and self-hosted services.
+- **[Zapier](/platform/automations/zapier)** — Official Zapier app with triggers for every LearnHouse event and actions for enrolling users, completing activities, and looking up learners. Best for no-code workflows into Slack, Google Sheets, HubSpot, and 6,000+ other Zapier apps.
+- **[Event Catalogue](/platform/automations/events)** — The canonical list of every event that can fire, with payload schemas.
+
+## How it works
+
+Every automation is powered by the same internal event bus:
+
+1. Something happens inside LearnHouse (a learner completes a course, a user is invited, an assignment is graded, …).
+2. The event is dispatched to every active subscriber for that organization — webhook endpoints you configured manually, and any Zapier REST Hook subscriptions created by your active Zaps.
+3. Each endpoint receives the same JSON envelope with an event name, a delivery ID, an organization ID, and an event-specific `data` payload.
+
+Signing, retries, delivery logs, and SSRF protection all work identically across both paths. Choosing between webhooks and Zapier is a question of where you want to handle the event, not whether you'll get a different payload.
+
+## Choosing between webhooks and Zapier
+
+| You want to… | Use |
+| --- | --- |
+| Call a custom backend you control | **Webhooks** |
+| Route events into Slack, Google Sheets, HubSpot, Airtable, Notion, etc. | **Zapier** |
+| Verify cryptographic signatures on payloads | **Webhooks** (Zapier handles its own auth internally) |
+| Run a **LearnHouse action** from another app (e.g., enroll a user when a HubSpot form is submitted) | **Zapier** |
+| Keep infrastructure dependencies to a minimum | **Webhooks** |
+
+You can use both at the same time for the same events.

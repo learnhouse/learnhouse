@@ -22,8 +22,7 @@ from src.security.org_auth import is_org_member
 from src.security.features_utils.usage import (
     reserve_ai_credit,
 )
-from src.security.features_utils.plan_check import get_org_plan
-from src.security.features_utils.plans import plan_meets_requirement
+from src.services.ai.llm import resolve_model_for_org, model_for_tier
 from src.services.ai.courseplanning import (
     get_course_planning_session,
     create_course_planning_session,
@@ -78,14 +77,8 @@ async def event_generator_with_save(generator, session_uuid: str, activity_uuid:
 
 
 async def get_org_ai_model(org_id: int, db_session: AsyncSession) -> str:
-    """Get the AI model based on the organization's plan."""
-    try:
-        current_plan = await get_org_plan(org_id, db_session)
-        if plan_meets_requirement(current_plan, "pro"):
-            return "gemini-2.5-pro"
-        return "gemini-2.5-flash"
-    except Exception:
-        return "gemini-2.5-flash"
+    """Resolve the course-planning model for the org's plan (provider-agnostic)."""
+    return await resolve_model_for_org(org_id, db_session, purpose="planning")
 
 
 async def verify_user_org_membership(user_id: int, org_id: int, db_session: AsyncSession) -> bool:
@@ -130,7 +123,7 @@ async def start_course_planning_session(
 
     # Get AI model — pro models cost more credits
     ai_model = await get_org_ai_model(org.id, db_session)
-    credit_cost = 3 if ai_model == "gemini-2.5-pro" else 1
+    credit_cost = 3 if ai_model == model_for_tier("pro") else 1
     # F-9: per-user + per-org rate limit before any compute / credit spend.
     from src.services.security.rate_limiting import enforce_ai_rate_limit
     enforce_ai_rate_limit(resolve_acting_user_id(current_user), org.id)
@@ -145,7 +138,7 @@ async def start_course_planning_session(
     stream = generate_course_plan_stream(
         prompt=session_request.prompt,
         session=session,
-        gemini_model_name=ai_model,
+        model_name=ai_model,
         attachments=session_request.attachments
     )
 
@@ -211,7 +204,7 @@ async def iterate_course_planning_session(
 
     # Get AI model — pro models cost more credits
     ai_model = await get_org_ai_model(org.id, db_session)
-    credit_cost = 3 if ai_model == "gemini-2.5-pro" else 1
+    credit_cost = 3 if ai_model == model_for_tier("pro") else 1
     # F-9: per-user + per-org rate limit before any compute / credit spend.
     from src.services.security.rate_limiting import enforce_ai_rate_limit
     enforce_ai_rate_limit(resolve_acting_user_id(current_user), org.id)
@@ -226,7 +219,7 @@ async def iterate_course_planning_session(
     stream = generate_course_plan_stream(
         prompt=message_request.message,
         session=session,
-        gemini_model_name=ai_model,
+        model_name=ai_model,
         current_plan=current_plan,
         attachments=message_request.attachments
     )
@@ -483,7 +476,7 @@ async def generate_activity_content(
 
     # Get AI model — pro models cost more credits
     ai_model = await get_org_ai_model(org.id, db_session)
-    credit_cost = 3 if ai_model == "gemini-2.5-pro" else 1
+    credit_cost = 3 if ai_model == model_for_tier("pro") else 1
     # F-9: per-user + per-org rate limit before any compute / credit spend.
     from src.services.security.rate_limiting import enforce_ai_rate_limit
     enforce_ai_rate_limit(resolve_acting_user_id(current_user), org.id)
@@ -505,7 +498,7 @@ async def generate_activity_content(
         chapter_name=content_request.chapter_name,
         course_name=content_request.course_name,
         course_description=content_request.course_description,
-        gemini_model_name=ai_model,
+        model_name=ai_model,
         prompt=content_request.prompt,
         current_content=current_content
     )

@@ -1130,7 +1130,7 @@ ORDER BY date ASC
 COURSE_RECENT_ENROLLMENTS = """
 SELECT
     user_id,
-    min(timestamp) AS timestamp
+    min(timestamp) AS enrolled_at
 FROM events
 WHERE
     ({org_id} = 0 OR org_id = {org_id})
@@ -1139,7 +1139,7 @@ WHERE
     AND timestamp >= now() - INTERVAL {days} DAY
     AND user_id != 0
 GROUP BY user_id
-ORDER BY timestamp DESC
+ORDER BY enrolled_at DESC
 LIMIT 50
 """
 

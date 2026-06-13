@@ -1,0 +1,166 @@
+import { Callout } from 'nextra/components'
+
+# CLI Reference
+
+Complete reference for all LearnHouse CLI commands. The CLI is published as `learnhouse` on npm and is typically run via `npx learnhouse@latest`.
+
+## Setup and Configuration
+
+### `learnhouse setup`
+
+Run the interactive setup wizard. This command generates `docker-compose.yml`, `.env`, `learnhouse.config.json`, and nginx or Caddy configuration files based on your choices.
+
+```bash
+learnhouse setup
+```
+
+Flags: `--ci`, `--name`, `--domain`, `--port`, `--admin-email`, `--admin-password`, `--channel <stable|dev>`, `--no-start`.
+
+You can re-run this command at any time to reconfigure your instance. Existing configuration will be preserved as defaults in the prompts.
+
+### `learnhouse config`
+
+View the current configuration.
+
+```bash
+learnhouse config
+```
+
+### `learnhouse env`
+
+Interactively edit environment variables in your `.env` file (Domain & Hosting, Database & Redis, Security, AI, Email (Resend), S3 Storage, OAuth).
+
+```bash
+learnhouse env
+```
+
+<Callout type="info">
+The `env` command edits a curated set of variables only. SMTP credentials (`LEARNHOUSE_SMTP_*`) are not editable through this command — edit `.env` directly if you need them.
+</Callout>
+
+## Service Management
+
+### `learnhouse start`
+
+Start all LearnHouse services. On first run, this pulls the required Docker images before starting containers.
+
+```bash
+learnhouse start
+```
+
+### `learnhouse stop`
+
+Stop all running LearnHouse services. Data is preserved in Docker volumes.
+
+```bash
+learnhouse stop
+```
+
+### `learnhouse status`
+
+Show the status of each LearnHouse service.
+
+```bash
+learnhouse status
+```
+
+### `learnhouse logs`
+
+Stream container logs for all services.
+
+```bash
+learnhouse logs
+```
+
+### `learnhouse update`
+
+Update LearnHouse to the latest release or a specific version. Pulls the target image, rewrites `docker-compose.yml`, restarts services, and prompts for database migrations.
+
+```bash
+learnhouse update
+learnhouse update --version 1.4.2
+learnhouse update --migrate       # auto-apply migrations
+learnhouse update --no-migrate    # skip migrations
+```
+
+### `learnhouse dev`
+
+Start a full development environment (PostgreSQL + Redis in Docker, API + web + collab run locally).
+
+```bash
+learnhouse dev
+```
+
+## Diagnostics
+
+### `learnhouse doctor`
+
+Run diagnostics on your LearnHouse installation. Checks Docker availability, container health, port conflicts, DNS resolution, and disk space.
+
+```bash
+learnhouse doctor
+```
+
+### `learnhouse health`
+
+Run the CLI's health checks (PostgreSQL connection, Redis ping, HTTP health endpoint, disk, resources).
+
+```bash
+learnhouse health
+```
+
+### `learnhouse shell`
+
+Open an interactive shell inside a running container for debugging.
+
+```bash
+learnhouse shell
+```
+
+## Infrastructure
+
+### `learnhouse deployments`
+
+Manage deployments and scale memory limits for your LearnHouse containers.
+
+```bash
+learnhouse deployments
+```
+
+## Backup and Restore
+
+### `learnhouse backup`
+
+Create a PostgreSQL dump archive of your instance's database (plus a copy of `.env`). Archives are written to `<installDir>/backups/`.
+
+```bash
+learnhouse backup
+```
+
+### `learnhouse restore`
+
+Restore a database from a backup archive.
+
+```bash
+learnhouse restore <path/to/learnhouse-backup-<timestamp>.tar.gz>
+```
+
+## Command Summary
+
+| Command | Description |
+|---|---|
+| `learnhouse setup` | Interactive setup wizard, generates docker-compose.yml, .env, and config files |
+| `learnhouse start` | Start all services |
+| `learnhouse stop` | Stop all services |
+| `learnhouse update` | Update to latest or a specific version |
+| `learnhouse status` | Show service status |
+| `learnhouse health` | Run health checks |
+| `learnhouse logs` | Stream container logs |
+| `learnhouse config` | View current configuration |
+| `learnhouse env` | Edit environment variables |
+| `learnhouse backup` | Create a database backup archive |
+| `learnhouse restore` | Restore the database from an archive |
+| `learnhouse doctor` | Diagnose Docker, containers, ports, DNS, and disk |
+| `learnhouse shell` | Open a shell in a running container |
+| `learnhouse deployments` | Manage deployments and memory limits |
+| `learnhouse dev` | Start full development environment |

@@ -10,7 +10,15 @@ from typing import Final
 
 SUPPORTED_LANGUAGES: Final[tuple[str, ...]] = (
     "en", "fr", "de", "es", "ar", "ja", "pt", "ru", "zh", "hi",
-    "ko", "it", "tr", "vi", "id", "pl", "nl", "th", "bn",
+    "ko", "it", "tr", "vi", "id", "pl", "uk", "nl", "th", "bn",
+)
+
+# Locales selectable as an organisation's UI language; mirrors
+# apps/web/lib/languages.ts. A UI locale need not have an email-translation
+# bundle — emails for any locale without one fall back to English (see `t()`).
+SUPPORTED_UI_LANGUAGES: Final[tuple[str, ...]] = (
+    "en", "fr", "de", "es", "ar", "ja", "pt", "ru", "zh", "hi",
+    "ko", "it", "tr", "vi", "id", "pl", "uk", "nl", "th", "bn", "sk",
 )
 
 DEFAULT_LANGUAGE: Final[str] = "en"
@@ -592,6 +600,42 @@ EMAIL_TRANSLATIONS: dict[str, dict[str, str]] = {
         "email_verification.cta": "Zweryfikuj adres e-mail",
         "email_verification.copy_paste": "Lub skopiuj i wklej ten link:",
         "email_verification.footer": "Link wygasa w ciągu 1 godziny. Jeśli nie zakładałeś konta LearnHouse, możesz zignorować tę wiadomość.",
+    },
+    "uk": {
+        "account_creation.subject": "Ласкаво просимо до LearnHouse, {username}!",
+        "account_creation.heading": "Вітаємо, {username}!",
+        "account_creation.body": "Ваш обліковий запис LearnHouse готовий. Почніть зі створення власної організації або приєднайтеся до наявної.",
+        "account_creation.cta": "Розпочати",
+        "account_creation.footer": "Потрібна допомога? Відвідайте {academy_link}, щоб ознайомитися з основами.",
+        "academy_link_text": "LearnHouse Academy",
+
+        "password_reset.subject": "Скидання пароля",
+        "password_reset.heading": "Скидання пароля",
+        "password_reset.body": "Вітаємо, {username}! Ми отримали запит на скидання вашого пароля. Скористайтеся кодом нижче або натисніть кнопку.",
+        "password_reset.cta": "Скинути пароль",
+        "password_reset.footer_org": "Якщо ви не надсилали запит на скидання пароля, можете проігнорувати цей лист. Посилання незабаром стане недійсним.",
+        "password_reset.footer_platform": "Якщо ви не надсилали запит на скидання пароля, можете проігнорувати цей лист. Посилання стане недійсним за 1 годину.",
+
+        "invitation.subject": "Вас запросили приєднатися до {org_name}",
+        "invitation.heading": "Вас запросили!",
+        "invitation.intro": "<strong>@{inviter}</strong> запросив(-ла) вас приєднатися до <strong>{org_name}</strong> на LearnHouse.",
+        "invitation.code_hint": "Скористайтеся кодом запрошення вище або натисніть кнопку нижче, щоб зареєструватися.",
+        "invitation.no_code_hint": "Натисніть кнопку нижче, щоб почати.",
+        "invitation.cta": "Приєднатися до {org_name}",
+        "invitation.footer": "Це запрошення надіслав @{inviter}. Якщо ви цього не очікували, можете проігнорувати його.",
+
+        "role_changed.subject": "Вашу роль у {org_name} оновлено",
+        "role_changed.heading": "Вашу роль оновлено",
+        "role_changed.body_1": "Вітаємо, {username}! Вашу роль у <strong>{org_name}</strong> змінено на <strong>{role}</strong>.",
+        "role_changed.body_2": "Це може вплинути на те, до чого ви маєте доступ і чим можете керувати в межах організації. Якщо у вас виникли запитання, зверніться до адміністратора вашої організації.",
+        "role_changed.footer": "Ви отримали цей лист, оскільки вашу роль було змінено в {org_name} на LearnHouse.",
+
+        "email_verification.subject": "Підтвердьте вашу електронну адресу",
+        "email_verification.heading": "Підтвердьте вашу електронну адресу",
+        "email_verification.body": "Вітаємо, {username}! Ласкаво просимо до LearnHouse! Натисніть кнопку нижче, щоб підтвердити свою електронну адресу та активувати обліковий запис.",
+        "email_verification.cta": "Підтвердити електронну адресу",
+        "email_verification.copy_paste": "Або скопіюйте та вставте це посилання:",
+        "email_verification.footer": "Посилання стане недійсним за 1 годину. Якщо ви не створювали обліковий запис LearnHouse, можете проігнорувати цей лист.",
     },
     "nl": {
         "account_creation.subject": "Welkom bij LearnHouse, {username}!",

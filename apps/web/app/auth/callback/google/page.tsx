@@ -271,7 +271,7 @@ export default function GoogleCallbackPage() {
           </p>
           <div className="space-y-3">
             <Link
-              href="/login"
+              href="/auth/login"
               className="block w-full py-2 px-4 bg-black text-white rounded-md hover:bg-gray-800 transition-colors"
             >
               Go to Login
@@ -303,7 +303,7 @@ export default function GoogleCallbackPage() {
           <p className="text-gray-600 mb-6">{error}</p>
           <div className="space-y-3">
             <Link
-              href="/login"
+              href="/auth/login"
               className="block w-full py-2 px-4 bg-black text-white rounded-md hover:bg-gray-800 transition-colors"
             >
               Try Again

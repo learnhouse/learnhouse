@@ -20,8 +20,8 @@ const CourseProgress: React.FC<CourseProgressProps> = ({ course, orgslug, isOpen
     let total = 0
     let completed = 0
 
-    course.chapters.forEach((chapter: any) => {
-      chapter.activities.forEach((activity: any) => {
+    ;(course.chapters ?? []).forEach((chapter: any) => {
+      (chapter.activities ?? []).forEach((activity: any) => {
         total++
         if (isActivityDone(activity)) {
           completed++
@@ -62,21 +62,16 @@ const CourseProgress: React.FC<CourseProgressProps> = ({ course, orgslug, isOpen
     }
   }
 
-  const progressPercentage = totalActivities > 0 ? (completedActivities / totalActivities) * 100 : 0
-  const radius = 40
-  const circumference = 2 * Math.PI * radius
-  const strokeDashoffset = circumference - (progressPercentage / 100) * circumference
-
   const dialogContent = (
     <div className="space-y-4">
-      {course.chapters.map((chapter: any) => (
+      {(course.chapters ?? []).map((chapter: any) => (
         <div key={chapter.chapter_uuid} className="bg-gray-50 rounded-lg overflow-hidden">
           <div className="px-4 py-3 bg-gray-100 font-semibold text-gray-700 flex items-center space-x-2">
             <Folder size={16} className="text-gray-400" />
             <span>{chapter.name}</span>
           </div>
           <div className="divide-y divide-gray-100">
-            {chapter.activities.map((activity: any) => {
+            {(chapter.activities ?? []).map((activity: any) => {
               const activityId = activity.activity_uuid.replace('activity_', '')
               const courseId = course.course_uuid.replace('course_', '')
               return (

@@ -3,6 +3,8 @@ from uuid import uuid4
 from datetime import datetime
 from sqlmodel import select
 from sqlmodel.ext.asyncio.session import AsyncSession
+from sqlalchemy import update as sql_update
+from sqlalchemy.exc import IntegrityError
 from fastapi import HTTPException, Request
 
 from src.db.users import PublicUser, AnonymousUser, APITokenUser
@@ -50,35 +52,41 @@ async def upvote_discussion(
         request, db_session, current_user, community.community_uuid, AccessAction.READ
     )
 
-    # Check if user has already voted
-    existing_vote_statement = select(DiscussionVote).where(
-        DiscussionVote.discussion_id == discussion.id,
-        DiscussionVote.user_id == current_user.id,
-    )
-    existing_vote = (await db_session.execute(existing_vote_statement)).scalars().first()
-
+    existing_vote = (await db_session.execute(
+        select(DiscussionVote).where(
+            DiscussionVote.discussion_id == discussion.id,
+            DiscussionVote.user_id == current_user.id,
+        )
+    )).scalars().first()
     if existing_vote:
         raise HTTPException(
             status_code=400,
             detail="You have already upvoted this discussion",
         )
 
-    # Create vote
     vote = DiscussionVote(
         discussion_id=discussion.id,
         user_id=current_user.id,
         vote_uuid=f"vote_{uuid4()}",
         creation_date=str(datetime.now()),
     )
+    try:
+        db_session.add(vote)
+        await db_session.execute(
+            sql_update(Discussion)
+            .where(Discussion.id == discussion.id)
+            .values(upvote_count=Discussion.upvote_count + 1)
+        )
+        await db_session.commit()
+    except IntegrityError:
+        await db_session.rollback()
+        raise HTTPException(
+            status_code=400,
+            detail="You have already upvoted this discussion",
+        )
 
-    db_session.add(vote)
-
-    # Increment upvote count
-    discussion.upvote_count += 1
-    db_session.add(discussion)
-
-    await db_session.commit()
     await db_session.refresh(vote)
+    await db_session.refresh(discussion)
 
     await dispatch_webhooks(
         event_name="discussion_vote_cast",

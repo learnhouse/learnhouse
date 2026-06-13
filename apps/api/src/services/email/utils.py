@@ -19,18 +19,38 @@ def _is_allowed_base_url(url: str) -> bool:
     config = get_learnhouse_config()
     url_stripped = url.rstrip("/")
 
-    # In single tenancy, the operator's host is authoritative — accept any
-    # http(s) URL with a non-empty hostname. The VPS may be reachable on a
-    # domain the operator hasn't enumerated in `allowed_origins`, and that's
-    # the entire point of the single mode.
     if config.hosting_config.tenancy == "single":
         parsed = urlparse(url_stripped)
-        if (
-            parsed.scheme in ("http", "https")
-            and parsed.hostname
-            and not parsed.hostname.startswith(".")
+        if parsed.scheme not in ("http", "https") or not parsed.hostname:
+            return False
+
+        req_host = parsed.hostname.removeprefix("www.").lower()
+
+        configured_hosts = set()
+        for cfg_value in (
+            config.hosting_config.frontend_domain,
+            config.hosting_config.domain,
         ):
+            cfg_value = (cfg_value or "").strip().rstrip("/")
+            if not cfg_value:
+                continue
+            # frontend_domain/domain may be a bare host or "host:port" with no
+            # scheme (the shipped default is "localhost:3000"). urlparse only
+            # populates .hostname when a scheme or leading "//" is present, so
+            # prefix "//" for schemeless values; otherwise the port would leak
+            # into the host and never match req_host (which is always port-less).
+            cfg_parsed = urlparse(cfg_value if "://" in cfg_value else f"//{cfg_value}")
+            cfg_host = cfg_parsed.hostname or cfg_value
+            cfg_host = cfg_host.removeprefix("www.").lower()
+            if cfg_host:
+                configured_hosts.add(cfg_host)
+
+        if req_host in configured_hosts:
             return True
+
+        if config.general_config.development_mode and req_host in ("localhost", "127.0.0.1"):
+            return True
+
         return False
 
     allowed_origins = config.hosting_config.allowed_origins

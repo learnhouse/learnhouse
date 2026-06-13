@@ -187,9 +187,9 @@ async def _check_content_access(
     if len(parts) >= 2 and parts[0] == 'users':
         return
 
-    # Unknown path pattern — require auth as a safe default
     if isinstance(current_user, AnonymousUser):
         raise HTTPException(status_code=401, detail="Authentication required")
+    raise HTTPException(status_code=403, detail="Access denied")
 
 
 @router.get(

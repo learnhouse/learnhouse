@@ -161,7 +161,7 @@ async def _upload_migration_files_inner(
         if not manifest_real.startswith(temp_real + os.sep):
             raise ValueError("Invalid path")
         if os.path.exists(manifest_real):
-            with open(manifest_real, "r") as f:
+            with open(manifest_real, "r", encoding="utf-8") as f:
                 existing_manifest = json.load(f)
             existing_files = existing_manifest.get("files", [])
     else:
@@ -240,7 +240,7 @@ async def _upload_migration_files_inner(
         "files": all_files,
     }
     manifest_real = _resolve_within(temp_real, "manifest.json")
-    with open(manifest_real, "w") as f:
+    with open(manifest_real, "w", encoding="utf-8") as f:
         json.dump(manifest, f)
 
     return MigrationUploadResponse(
@@ -266,7 +266,7 @@ async def suggest_structure(
     if not os.path.exists(manifest_real):
         raise ValueError(f"Migration package not found: {temp_id}")
 
-    with open(manifest_real, "r") as f:
+    with open(manifest_real, "r", encoding="utf-8") as f:
         manifest = json.load(f)
 
     files = manifest["files"]
@@ -310,16 +310,15 @@ async def suggest_structure(
     )
 
     try:
-        from src.services.ai.base import get_gemini_client
+        from src.services.ai.llm import generate, model_for_tier
 
-        client = get_gemini_client()
-        response = client.models.generate_content(
-            model="gemini-2.0-flash-lite",
-            contents=[{"role": "user", "parts": [{"text": prompt}]}],
-            config={"temperature": 0.3, "max_output_tokens": 4096},
+        raw = await generate(
+            model_name=model_for_tier("fast"),
+            user_prompt=prompt,
+            temperature=0.3,
+            max_tokens=4096,
         )
-
-        raw = response.text.strip()
+        raw = raw.strip()
         # Strip markdown code fences if present
         if raw.startswith("```"):
             raw = raw.split("\n", 1)[1]
@@ -391,7 +390,7 @@ async def create_course_from_migration(
     if not os.path.exists(manifest_real):
         raise ValueError(f"Migration package not found: {temp_id}")
 
-    with open(manifest_real, "r") as f:
+    with open(manifest_real, "r", encoding="utf-8") as f:
         manifest = json.load(f)
 
     file_lookup = {fi["file_id"]: fi for fi in manifest["files"]}
