@@ -69,7 +69,7 @@ payments_config:
 ai_config:
   is_ai_enabled: false
   # Provider-agnostic generation (Pydantic AI). Set provider + api_key to use any
-  # supported provider: google | openai | anthropic | groq | mistral | openrouter | bedrock | ollama.
+  # supported provider: google | openai | anthropic | deepseek | moonshot | mistral | openrouter | bedrock | ollama.
   # base_url is optional (OpenAI-compatible / local endpoints, e.g. Ollama).
   # For "openrouter": leave base_url blank (auto-set) and use OpenRouter model slugs like
   # "anthropic/claude-sonnet-4-5" or "openai/gpt-4o-mini" in the model_* fields below.

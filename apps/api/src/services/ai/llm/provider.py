@@ -110,11 +110,19 @@ def build_model(model_name: str) -> Model:
 
         return AnthropicModel(model_name, provider=AnthropicProvider(api_key=api_key))
 
-    if provider_id == "groq":
-        from pydantic_ai.models.groq import GroqModel
-        from pydantic_ai.providers.groq import GroqProvider
+    # DeepSeek (Chinese) — OpenAI-compatible; provider auto-configures api.deepseek.com.
+    if provider_id == "deepseek":
+        from pydantic_ai.models.openai import OpenAIChatModel
+        from pydantic_ai.providers.deepseek import DeepSeekProvider
 
-        return GroqModel(model_name, provider=GroqProvider(api_key=api_key))
+        return OpenAIChatModel(model_name, provider=DeepSeekProvider(api_key=api_key))
+
+    # Moonshot AI / Kimi (Chinese) — OpenAI-compatible; auto-configures api.moonshot.ai.
+    if provider_id in ("moonshot", "moonshotai", "kimi"):
+        from pydantic_ai.models.openai import OpenAIChatModel
+        from pydantic_ai.providers.moonshotai import MoonshotAIProvider
+
+        return OpenAIChatModel(model_name, provider=MoonshotAIProvider(api_key=api_key))
 
     if provider_id == "mistral":
         from pydantic_ai.models.mistral import MistralModel

@@ -17,7 +17,8 @@ assistants to answer questions using your course content as context.
     { name: 'Google Gemini', id: 'google', logo: 'google' },
     { name: 'OpenAI', id: 'openai', logo: 'openai' },
     { name: 'Anthropic', id: 'anthropic', logo: 'anthropic' },
-    { name: 'Groq', id: 'groq', logo: 'groq' },
+    { name: 'DeepSeek', id: 'deepseek', logo: 'deepseek' },
+    { name: 'Moonshot (Kimi)', id: 'moonshot', logo: 'moonshot' },
     { name: 'Mistral', id: 'mistral', logo: 'mistral' },
     { name: 'OpenRouter', id: 'openrouter', logo: 'openrouter' },
     { name: 'AWS Bedrock', id: 'bedrock', logo: 'bedrock' },
@@ -40,7 +41,7 @@ Set the provider, an API key, and the feature flag in your `.env` file:
 
 ```env
 LEARNHOUSE_IS_AI_ENABLED=true
-LEARNHOUSE_AI_PROVIDER=google           # google | openai | anthropic | groq | mistral | openrouter | bedrock | ollama
+LEARNHOUSE_AI_PROVIDER=google           # google | openai | anthropic | deepseek | moonshot | mistral | openrouter | bedrock | ollama
 LEARNHOUSE_AI_API_KEY=your-api-key      # the single key, whatever the provider
 ```
 
@@ -74,7 +75,8 @@ export const ProviderTab = ({ logo, children }) => (
   <ProviderTab logo="google">Google Gemini</ProviderTab>,
   <ProviderTab logo="openai">OpenAI</ProviderTab>,
   <ProviderTab logo="anthropic">Anthropic</ProviderTab>,
-  <ProviderTab logo="groq">Groq</ProviderTab>,
+  <ProviderTab logo="deepseek">DeepSeek</ProviderTab>,
+  <ProviderTab logo="moonshot">Moonshot (Kimi)</ProviderTab>,
   <ProviderTab logo="mistral">Mistral</ProviderTab>,
   <ProviderTab logo="openrouter">OpenRouter</ProviderTab>,
   <ProviderTab logo="bedrock">AWS Bedrock</ProviderTab>,
@@ -108,11 +110,25 @@ LEARNHOUSE_AI_MODEL_FAST=claude-haiku-4-5
 </Tabs.Tab>
 
 <Tabs.Tab>
+DeepSeek's OpenAI-compatible endpoint is auto-configured — just set the key.
+
 ```env
-LEARNHOUSE_AI_PROVIDER=groq
-LEARNHOUSE_AI_API_KEY=gsk_...
-LEARNHOUSE_AI_MODEL_STANDARD=llama-3.3-70b-versatile
+LEARNHOUSE_AI_PROVIDER=deepseek
+LEARNHOUSE_AI_API_KEY=sk-...
+LEARNHOUSE_AI_MODEL_STANDARD=deepseek-chat
 ```
+</Tabs.Tab>
+
+<Tabs.Tab>
+Moonshot AI (Kimi) — endpoint auto-configured.
+
+```env
+LEARNHOUSE_AI_PROVIDER=moonshot
+LEARNHOUSE_AI_API_KEY=sk-...
+LEARNHOUSE_AI_MODEL_STANDARD=kimi-k2-0905-preview
+```
+
+Other Chinese models (Alibaba **Qwen**, Zhipu **GLM**) expose OpenAI-compatible APIs — use `provider: openai` with their `base_url`, e.g. `https://dashscope-intl.aliyuncs.com/compatible-mode/v1`.
 </Tabs.Tab>
 
 <Tabs.Tab>
@@ -196,8 +212,7 @@ LEARNHOUSE_AI_EMBEDDING_DIMENSIONS=768           # default: 768
    produce 768-dim vectors. If you set `LEARNHOUSE_AI_EMBEDDING_DIMENSIONS` to another value
    (or use a model with a fixed, different size), you must migrate the `course_embedding`
    column and re-index existing courses.
-2. **Some providers have no embeddings API** — Anthropic, Groq, Mistral, OpenRouter, and
-   Bedrock. With one of those selected for generation, embeddings automatically fall back to
+2. **Some providers have no embeddings API** — Anthropic, DeepSeek, Moonshot, Mistral, OpenRouter, and    Bedrock. With one of those selected for generation, embeddings automatically fall back to
    **Google** when `LEARNHOUSE_GEMINI_API_KEY` is set; otherwise set
    `LEARNHOUSE_AI_EMBEDDING_PROVIDER` to `google`, `openai`, or `ollama`.
 </Callout>
@@ -211,7 +226,7 @@ Course planning can take **images, PDFs, and YouTube links** as reference materi
 converts each attachment into the right format for your provider; what actually works depends on
 the provider's own capabilities:
 
-| Attachment | Google Gemini | OpenAI | Anthropic (Claude) | Groq / Mistral / others |
+| Attachment | Google Gemini | OpenAI | Anthropic (Claude) | DeepSeek / Mistral / others |
 | --- | --- | --- | --- | --- |
 | Images | ✅ | ✅ | ✅ | ✅ on vision models |
 | PDFs | ✅ | ✅ (document-capable models) | ✅ | ⚠️ model-dependent |
@@ -238,7 +253,7 @@ limit, further AI requests are rejected until the window resets.
 | Variable | Description |
 | --- | --- |
 | `LEARNHOUSE_IS_AI_ENABLED` | Master switch for all AI features (`true`/`false`). |
-| `LEARNHOUSE_AI_PROVIDER` | `google`, `openai`, `anthropic`, `groq`, `mistral`, `openrouter`, `bedrock`, or `ollama`. Defaults to `google`. |
+| `LEARNHOUSE_AI_PROVIDER` | `google`, `openai`, `anthropic`, `deepseek`, `moonshot`, `mistral`, `openrouter`, `bedrock`, or `ollama`. Defaults to `google`. |
 | `LEARNHOUSE_AI_API_KEY` | API key for the chosen provider. Not required for `ollama` or `bedrock`. |
 | `LEARNHOUSE_AI_BASE_URL` | Optional. Custom endpoint for OpenAI-compatible / local providers (e.g. Ollama). Auto-set for OpenRouter. |
 | `LEARNHOUSE_AI_MODEL_FAST` / `_STANDARD` / `_PRO` | Per-tier model overrides (see table above). |
