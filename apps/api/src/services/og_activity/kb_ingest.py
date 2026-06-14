@@ -8,18 +8,23 @@ chapter. `bodyMd` -> one `dynamic_page` activity carrying raw markdown
 """
 
 import logging
+import os
 from dataclasses import dataclass
 from typing import Literal, Optional
 
+from fastapi import Request
+from sqlmodel import select
+
 from sqlmodel.ext.asyncio.session import AsyncSession
 
+from src.db.users import PublicUser, User
 from src.services.og_activity.adapter import upsert_activity
 from src.services.og_activity.alignment import resolve_alignment
 from src.services.og_activity.contract import ActivityContract
 from src.services.og_activity.course_provision import provision_artifact_chapter, provision_launch_course
 from src.services.og_activity.kb_client import KbClient, approved
 from src.services.og_activity.registry import ActivityTypeRegistry
-from src.services.og_activity.store import ActivityStore
+from src.services.og_activity.store import ActivityStore, ServiceActivityStore
 
 logger = logging.getLogger(__name__)
 
@@ -168,3 +173,44 @@ async def ingest_from_kb(
         report.created, report.updated, report.skipped, report.errors,
     )
     return report
+
+
+def _system_request() -> Request:
+    # Minimal ASGI scope for the service-layer store. No receive/send is wired,
+    # so any downstream request.body()/form() access would raise — the store
+    # only forwards this request, it does not read its body.
+    return Request({"type": "http", "method": "POST", "path": "/og/kb-ingest", "headers": [], "query_string": b""})
+
+
+async def _service_user(session: AsyncSession, user_id: int) -> PublicUser:
+    user = (await session.execute(select(User).where(User.id == user_id))).scalars().one_or_none()
+    if user is None:
+        raise RuntimeError(
+            f"kb_ingest: service user id={user_id} not found; set ENABLEMENT_SERVICE_USER_ID"
+        )
+    return PublicUser(
+        id=user.id, username=user.username, first_name=user.first_name,
+        last_name=user.last_name, email=user.email, user_uuid=user.user_uuid,
+    )
+
+
+async def run() -> IngestReport:
+    """Headless entrypoint (cron/scheduler). Requires env: KB_API_URL,
+    KB_API_TOKEN, ENABLEMENT_ORG_ID, ENABLEMENT_SERVICE_USER_ID.
+
+    The service user must hold author rights in the org (RBAC via
+    check_resource_access). This mirrors the service-account deferral noted in
+    lh_course_client.py."""
+    from src.core.events.database import _async_session_factory  # lazy: avoids circular import
+
+    kb_api_url = os.getenv("KB_API_URL", "")
+    if not kb_api_url:
+        raise ValueError("kb_ingest: KB_API_URL is not set")
+    kb_client = KbClient(kb_api_url, os.getenv("KB_API_TOKEN", ""))
+    org_id = int(os.getenv("ENABLEMENT_ORG_ID", "1"))
+    service_user_id = int(os.getenv("ENABLEMENT_SERVICE_USER_ID", "1"))
+
+    async with _async_session_factory() as session:
+        user = await _service_user(session, service_user_id)
+        store = ServiceActivityStore(_system_request(), user, session)
+        return await ingest_from_kb(kb_client, session=session, org_id=org_id, store=store)
