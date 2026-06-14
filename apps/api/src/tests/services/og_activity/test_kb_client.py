@@ -71,28 +71,31 @@ async def test_get_propagates_http_error(monkeypatch):
 
 
 @pytest.mark.asyncio
-async def test_traverse_unwraps_rows_envelope(monkeypatch):
+async def test_traverse_posts_payload_and_returns_array(monkeypatch):
     seen = {}
 
-    async def fake_get(self, url, params=None, headers=None, timeout=None):
+    async def fake_post(self, url, json=None, headers=None, timeout=None):
         seen["url"] = url
-        seen["params"] = params
-        return _Resp({"rows": [{"id": "p", "type": "product", "relType": "for_product"}], "meta": {}})
+        seen["json"] = json
+        seen["auth"] = headers["Authorization"]
+        return _Resp([{"id": "p", "type": "product", "relType": "for_product", "depth": 1}])
 
-    monkeypatch.setattr(kb_client.httpx.AsyncClient, "get", fake_get)
+    monkeypatch.setattr(kb_client.httpx.AsyncClient, "post", fake_post)
     client = KbClient("https://kb/api", "tok")
     rows = await client.traverse("L1", "launch", ["product", "market"], max_depth=3)
-    assert rows == [{"id": "p", "type": "product", "relType": "for_product"}]
-    assert seen["url"] == "https://kb/api/entities/launch/L1/traverse"
-    assert seen["params"] == {"targetTypes": "product,market", "maxDepth": 3}
+
+    assert rows == [{"id": "p", "type": "product", "relType": "for_product", "depth": 1}]
+    assert seen["url"] == "https://kb/api/traverse"
+    assert seen["json"] == {"fromId": "L1", "fromType": "launch", "targetTypes": ["product", "market"], "maxDepth": 3}
+    assert seen["auth"] == "Bearer tok"
 
 
 @pytest.mark.asyncio
-async def test_traverse_accepts_bare_list(monkeypatch):
-    async def fake_get(self, url, params=None, headers=None, timeout=None):
-        return _Resp([{"id": "p", "type": "product"}])
+async def test_traverse_tolerates_rows_envelope(monkeypatch):
+    async def fake_post(self, url, json=None, headers=None, timeout=None):
+        return _Resp({"rows": [{"id": "p", "type": "product"}], "meta": {}})
 
-    monkeypatch.setattr(kb_client.httpx.AsyncClient, "get", fake_get)
+    monkeypatch.setattr(kb_client.httpx.AsyncClient, "post", fake_post)
     client = KbClient("https://kb/api", "tok")
     rows = await client.traverse("L1", "launch", ["product"])
     assert rows == [{"id": "p", "type": "product"}]

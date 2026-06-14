@@ -16,10 +16,6 @@ logger = logging.getLogger(__name__)
 _TIMEOUT = 30.0
 _DEFAULT_LIMIT = 200
 
-# The graph-traversal REST path is NOT verified in this repo (the data + shape
-# are confirmed via the KB MCP `kb_traverse` tool). Confirm and adjust here.
-_TRAVERSE_PATH = "/entities/{from_type}/{from_id}/traverse"
-
 
 def approved(rows: list[dict]) -> list[dict]:
     """Keep only rows whose ``status == 'approved'`` (client-side filter)."""
@@ -72,11 +68,26 @@ class KbClient:
         *,
         max_depth: int = 3,
     ) -> list[dict]:
-        """Outgoing-edge BFS to the given target node types. Tolerates either a
-        bare list or a ``{"rows": [...]}`` envelope."""
-        path = _TRAVERSE_PATH.format(from_type=from_type, from_id=from_id)
-        data = await self._get(path, {"targetTypes": ",".join(target_types), "maxDepth": max_depth})
+        """Outgoing-edge BFS to the given target node types via `POST /traverse`.
+        Returns the bare array of nodes (`{id, type, relType, depth}`); tolerates
+        a `{"rows": [...]}` envelope defensively."""
+        async with httpx.AsyncClient() as client:
+            resp = await client.post(
+                f"{self._base}/traverse",
+                json={
+                    "fromId": from_id,
+                    "fromType": from_type,
+                    "targetTypes": list(target_types),
+                    "maxDepth": max_depth,
+                },
+                headers=self._headers,
+                timeout=self._timeout,
+            )
+            resp.raise_for_status()
+            data = resp.json()
+        if isinstance(data, list):
+            return data
         if isinstance(data, dict):
             rows = data.get("rows", [])
             return rows if isinstance(rows, list) else []
-        return data if isinstance(data, list) else []
+        return []
