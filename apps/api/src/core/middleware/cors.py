@@ -34,6 +34,11 @@ def _single_tenancy_origin_regex(config) -> str:
     for cfg_value in (
         config.hosting_config.frontend_domain,
         config.hosting_config.domain,
+        # Operator-configured explicit allowlist (LEARNHOUSE_ALLOWED_ORIGINS).
+        # Still an allowlist (not reflect-all), so credentialed CORS stays safe
+        # per S25 — this is how an embedding cross-origin caller like the PSP
+        # shell (productops.ogintegration.us) reaches /api/v1/psp/token-exchange.
+        *config.hosting_config.allowed_origins,
     ):
         host = _host_from(cfg_value)
         if host and "localhost" not in host:
