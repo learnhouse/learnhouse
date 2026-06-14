@@ -26,6 +26,7 @@ function UserAvatar(props: UserAvatarProps) {
   const access_token = session?.data?.tokens?.access_token
   const params = useParams() as any
   const [userData, setUserData] = useState<any>(null)
+  const [erroredUrl, setErroredUrl] = useState<string | null>(null)
 
   useEffect(() => {
     const fetchUserData = async () => {
@@ -121,12 +122,24 @@ function UserAvatar(props: UserAvatarProps) {
     return getUriWithOrg(params.orgslug, '/empty_avatar.png')
   }
 
+  const emptyAvatarUrl = getUriWithOrg(params.orgslug, '/empty_avatar.png')
+  const resolvedAvatarUrl = getAvatarUrl()
+  // Tracking the failed URL (rather than a boolean) resets automatically when
+  // the resolved source changes, avoiding a setState-in-effect.
+  const hasError = erroredUrl === resolvedAvatarUrl
+
   const avatarImage = (
     <img
       alt="User Avatar"
       width={props.width ?? 50}
       height={props.width ?? 50}
-      src={getAvatarUrl()}
+      src={hasError ? emptyAvatarUrl : resolvedAvatarUrl}
+      onError={() => {
+        // Fall back to the empty avatar placeholder when the image fails to load
+        if (resolvedAvatarUrl !== emptyAvatarUrl) {
+          setErroredUrl(resolvedAvatarUrl)
+        }
+      }}
       className={`
         ${props.avatar_url && session?.data?.user?.avatar_image ? '' : 'bg-gray-700'}
         ${props.border ? `border ${props.border}` : ''}
