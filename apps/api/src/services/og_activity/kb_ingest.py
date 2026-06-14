@@ -9,8 +9,12 @@ chapter. `bodyMd` -> one `dynamic_page` activity carrying raw markdown
 
 import logging
 from dataclasses import dataclass
+from typing import Literal, Optional
 
+from src.services.og_activity.adapter import upsert_activity
 from src.services.og_activity.contract import ActivityContract
+from src.services.og_activity.registry import ActivityTypeRegistry
+from src.services.og_activity.store import ActivityStore
 
 logger = logging.getLogger(__name__)
 
@@ -67,3 +71,37 @@ def artifact_to_contracts(artifact: dict) -> list[ActivityContract]:
         )
 
     return contracts
+
+
+@dataclass
+class IngestReport:
+    created: int = 0
+    updated: int = 0
+    skipped: int = 0
+
+    def record(self, action: Literal["created", "updated", "skipped"]) -> None:
+        setattr(self, action, getattr(self, action) + 1)
+
+
+async def ingest_artifact(
+    artifact: dict,
+    *,
+    course_id: int,
+    chapter_id: int,
+    org_id: int,
+    store: ActivityStore,
+    report: IngestReport,
+    registry: Optional[ActivityTypeRegistry] = None,
+) -> None:
+    """Upsert every contract derived from `artifact` into the given chapter,
+    accumulating actions into `report`."""
+    for contract in artifact_to_contracts(artifact):
+        result = await upsert_activity(
+            contract,
+            chapter_id=chapter_id,
+            course_id=course_id,
+            org_id=org_id,
+            store=store,
+            registry=registry,
+        )
+        report.record(result.action)
