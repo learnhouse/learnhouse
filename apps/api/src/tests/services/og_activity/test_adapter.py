@@ -1,5 +1,4 @@
 from types import SimpleNamespace
-from typing import Optional
 
 import pytest
 from pydantic import BaseModel
