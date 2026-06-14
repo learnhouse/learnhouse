@@ -67,3 +67,4 @@ apps/api/ee
 
 # Git worktrees
 .worktrees/
+.DS_Store

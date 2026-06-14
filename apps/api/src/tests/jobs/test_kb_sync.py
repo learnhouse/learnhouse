@@ -1,3 +1,5 @@
+import warnings
+
 import pytest
 
 from src.jobs import kb_sync
@@ -79,7 +81,9 @@ async def test_only_approved_artifacts_sync():
          "status": "in_review", "artifactType": "messaging", "sourceSha": "sha2"},
     ]
     lh = FakeLH()
-    await kb_sync.sync_rows(rows, lh, org_id=1)
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore", DeprecationWarning)
+        await kb_sync.sync_rows(rows, lh, org_id=1)
 
     assert len(lh.upserts) == 1
     up = lh.upserts[0]
@@ -96,5 +100,7 @@ async def test_empty_when_none_approved():
     rows = [{"id": "x", "name": "X", "status": "generating",
              "artifactType": "messaging", "sourceSha": "s"}]
     lh = FakeLH()
-    await kb_sync.sync_rows(rows, lh, org_id=1)
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore", DeprecationWarning)
+        await kb_sync.sync_rows(rows, lh, org_id=1)
     assert lh.upserts == []

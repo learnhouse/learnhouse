@@ -1,15 +1,15 @@
-"""Nightly mirror of approved KB launch artifacts into LearnHouse courses.
+"""Nightly KB -> LearnHouse sync.
 
-Only KbArtifactStatus == "approved" rows sync (filtered client-side — KB has no
-status query param). Courses are keyed on extra_metadata.kb_id for idempotency;
-extra_metadata.kb_sha lets a re-run skip unchanged artifacts. Content (bodyMd)
-goes into the course's first chapter; summary populates the description.
+DEPRECATED course/markdown-activity path: superseded by
+``src.services.og_activity.kb_ingest`` (P2), which writes one canonical
+contract-driven activity per artifact (markdown dynamic_page + document
+attachments) into one course per launch, with knowledge-graph alignment. This
+module now delegates to it. ``sync_rows`` is retained only for the existing
+unit test and emits a deprecation warning.
 """
 
 import logging
-import os
-
-import httpx
+import warnings
 
 logger = logging.getLogger(__name__)
 
@@ -56,9 +56,13 @@ async def _fetch_all_artifacts(client, kb_api: str, kb_token: str) -> list:
 
 
 async def sync_rows(rows, lh_client, org_id: int) -> int:
-    """Upsert the approved subset of `rows` via `lh_client`. Returns count."""
+    """DEPRECATED. Use src.services.og_activity.kb_ingest.ingest_from_kb."""
+    warnings.warn(
+        "kb_sync.sync_rows is deprecated; use og_activity.kb_ingest.ingest_from_kb",
+        DeprecationWarning,
+        stacklevel=2,
+    )
     approved = [r for r in rows if r.get("status") == "approved"]
-    count = 0
     for r in approved:
         await lh_client.upsert_course(
             org_id=org_id,
@@ -70,29 +74,17 @@ async def sync_rows(rows, lh_client, org_id: int) -> int:
                 "public": False,
                 "published": True,
                 "open_to_contributors": False,
-                "extra_metadata": {
-                    "source": "kb",
-                    "kb_id": r["id"],
-                    "kb_sha": r.get("sourceSha"),
-                },
+                "extra_metadata": {"source": "kb", "kb_id": r["id"], "kb_sha": r.get("sourceSha")},
             },
             body_md=r.get("bodyMd"),
         )
-        count += 1
-    return count
+    return len(approved)
 
 
 async def run() -> int:
-    """Entry point for the nightly job (cron/scheduler calls this)."""
-    from src.services.courses.lh_course_client import LhCourseClient
+    """Entry point for the nightly job - delegates to the contract-driven ingest."""
+    from src.services.og_activity.kb_ingest import run as ingest_run
 
-    kb_api = os.getenv("KB_API_URL", "").rstrip("/")
-    kb_token = os.getenv("KB_API_TOKEN", "")
-    org_id = int(os.getenv("ENABLEMENT_ORG_ID", "1"))
-
-    async with httpx.AsyncClient() as client:
-        rows = await _fetch_all_artifacts(client, kb_api, kb_token)
-
-    n = await sync_rows(rows, LhCourseClient(org_id), org_id)
-    logger.info("kb_sync: upserted %d approved artifacts", n)
-    return n
+    report = await ingest_run()
+    logger.info("kb_sync: %d created, %d updated, %d skipped", report.created, report.updated, report.skipped)
+    return report.created + report.updated
