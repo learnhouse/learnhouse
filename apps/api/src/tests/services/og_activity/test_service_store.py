@@ -7,7 +7,6 @@ from src.services.og_activity.contract import ActivityContract
 from src.services.og_activity.adapter import upsert_activity
 from src.services.og_activity.spec import LearnHouseActivitySpec
 from src.services.og_activity.store import ServiceActivityStore
-from src.services.og_activity.registry import _REGISTRY
 from src.services.og_activity.types import register_builtin_types
 
 _PATCH_RBAC = "src.services.courses.activities.activities.check_resource_access"
@@ -15,9 +14,9 @@ _PATCH_RBAC = "src.services.courses.activities.activities.check_resource_access"
 
 @pytest.fixture(autouse=True)
 def _register_builtins():
-    # The Task 8 end-to-end test drives the adapter through the registry;
-    # register here so a registry-clearing test file run earlier can't break it.
-    _REGISTRY.clear()
+    # The end-to-end test drives the adapter through the default registry.
+    # register_builtin_types() is idempotent and the _isolate_registry fixture
+    # (conftest) restores the registry afterwards.
     register_builtin_types()
     yield
 
@@ -61,6 +60,26 @@ async def test_update_changes_content(mock_request, db, org, course, chapter, ad
         )
     assert updated.content == {"type": "doc", "content": [{"x": 1}]}
     assert updated.extra_metadata.get("kb_sha") == "sha-2"
+
+
+@pytest.mark.asyncio
+async def test_update_preserves_details_when_spec_has_none(mock_request, db, org, course, chapter, admin_user):
+    # _spec() carries details=None; update must not clobber the row's existing details.
+    store = ServiceActivityStore(mock_request, admin_user, db)
+    spec_with_details = LearnHouseActivitySpec(
+        activity_type=ActivityTypeEnum.TYPE_DYNAMIC,
+        activity_sub_type=ActivitySubTypeEnum.SUBTYPE_DYNAMIC_PAGE,
+        content={"type": "doc", "content": []},
+        details={"keep": "me"},
+    )
+    with patch(_PATCH_RBAC, new_callable=AsyncMock):
+        created = await store.create(spec_with_details, "Lesson", chapter.id, {"source": "kb", "kb_id": "kb-d"})
+        assert created.details == {"keep": "me"}
+        updated = await store.update(
+            created.activity_uuid, _spec(blocks=[{"x": 1}]), "Lesson v2", {"source": "kb", "kb_id": "kb-d"}
+        )
+    assert updated.details == {"keep": "me"}
+    assert updated.content == {"type": "doc", "content": [{"x": 1}]}
 
 
 # (built-in types are registered by the autouse _register_builtins fixture above)

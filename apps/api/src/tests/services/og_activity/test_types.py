@@ -4,15 +4,14 @@ import pytest
 
 from src.db.courses.activities import ActivityTypeEnum, ActivitySubTypeEnum
 from src.services.og_activity.contract import ContractType
-from src.services.og_activity.registry import get_module, _REGISTRY
+from src.services.og_activity.registry import default_registry, get_module
 from src.services.og_activity.types import register_builtin_types
 
 
 @pytest.fixture(autouse=True)
 def _register_builtins():
-    # Register here (not via import side-effect) so other test files that
-    # clear the global registry can't leave it empty for these tests.
-    _REGISTRY.clear()
+    # register_builtin_types() is idempotent; the _isolate_registry fixture
+    # (conftest) restores the registry after each test.
     register_builtin_types()
     yield
 
@@ -51,5 +50,5 @@ def test_document_non_pdf_uses_doc_subtype():
 
 
 def test_both_types_registered():
-    assert ContractType.DYNAMIC_PAGE in _REGISTRY
-    assert ContractType.DOCUMENT in _REGISTRY
+    assert ContractType.DYNAMIC_PAGE in default_registry
+    assert ContractType.DOCUMENT in default_registry

@@ -6,7 +6,7 @@ from pydantic import BaseModel
 from src.db.courses.activities import ActivityTypeEnum, ActivitySubTypeEnum
 from src.services.og_activity.contract import ActivityContract, ContractType
 from src.services.og_activity.spec import LearnHouseActivitySpec
-from src.services.og_activity.registry import ActivityTypeModule, register, _REGISTRY
+from src.services.og_activity.registry import ActivityTypeModule, register
 from src.services.og_activity.adapter import upsert_activity
 
 
@@ -34,7 +34,7 @@ class FakeActivityStore:
         self.rows: list[SimpleNamespace] = []
         self._uuid = 0
 
-    async def find_by_kb_id(self, course_id: int, kb_id: str):
+    async def find_by_kb_id(self, course_id: int, kb_id: str, org_id=None):
         for r in self.rows:
             if r.course_id == course_id and (r.extra_metadata or {}).get("kb_id") == kb_id:
                 return r
@@ -63,10 +63,10 @@ class FakeActivityStore:
 
 @pytest.fixture(autouse=True)
 def _register_stub():
-    _REGISTRY.clear()
+    # Override the dynamic_page module with a stub for these tests. The
+    # _isolate_registry fixture (conftest) restores the registry afterwards.
     register(_StubModule())
     yield
-    _REGISTRY.clear()
 
 
 def _contract(kb_sha="sha-1", blocks=None):
