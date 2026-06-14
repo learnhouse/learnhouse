@@ -8,22 +8,44 @@ import { QueryClientProvider } from '@tanstack/react-query'
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools'
 import { makeQueryClient } from '@/lib/query/client'
 
+const DEFAULT_OG_THEME = `
+:root {
+  --primary-color: #1466d6;
+  --surface-color: #ffffff;
+  --text-color: #1a1a1a;
+  --font-family-base: 'Inter', system-ui, -apple-system, sans-serif;
+}
+body { font-family: var(--font-family-base); color: var(--text-color); }
+nav[aria-label="Top navigation"] ul li svg { display: none !important; }
+nav[aria-label="Dashboard sidebar navigation"] {
+  width: 240px !important;
+  min-width: 240px !important;
+}
+`.trim()
+
+function applyThemeCss(css: string) {
+  let style = document.getElementById('og-theme-override') as HTMLStyleElement | null
+  if (!style) {
+    style = document.createElement('style')
+    style.id = 'og-theme-override'
+    document.head.appendChild(style)
+  }
+  style.textContent = css
+}
+
 export default function Providers({ children }: { children: React.ReactNode }) {
   const [queryClient] = useState(() => makeQueryClient())
 
-  // OG_THEME: the PSP host posts Capital-token CSS into this iframe. We write
-  // it into a single managed <style> tag. Additive only — no effect when the
-  // app runs standalone (no host posts the message).
   useEffect(() => {
+    // Apply Capital branding immediately so it's visible standalone too.
+    // The PSP shell overrides it via postMessage when running embedded.
+    applyThemeCss(DEFAULT_OG_THEME)
+
+    const allowedOrigin = process.env.NEXT_PUBLIC_PSP_SHELL_ORIGIN || ''
     const handler = (e: MessageEvent) => {
+      if (allowedOrigin && e.origin !== allowedOrigin) return
       if (e.data?.type !== 'OG_THEME' || typeof e.data.css !== 'string') return
-      let style = document.getElementById('og-theme-override') as HTMLStyleElement | null
-      if (!style) {
-        style = document.createElement('style')
-        style.id = 'og-theme-override'
-        document.head.appendChild(style)
-      }
-      style.textContent = e.data.css
+      applyThemeCss(e.data.css)
     }
     window.addEventListener('message', handler)
     return () => window.removeEventListener('message', handler)

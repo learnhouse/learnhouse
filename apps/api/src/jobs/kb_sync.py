@@ -13,6 +13,47 @@ import warnings
 
 logger = logging.getLogger(__name__)
 
+_PAGE_SIZE = 200
+_MAX_PAGES = 50  # safety cap → 10k artifacts before we warn and stop
+
+
+async def _fetch_all_artifacts(client, kb_api: str, kb_token: str) -> list:
+    """Page through every launch_artifact, not just the first `_PAGE_SIZE`.
+
+    KB exposes no status filter, so we must pull all rows and filter approved
+    client-side; capping at one page would silently drop artifacts past row 200.
+    We page on `offset` and dedupe by id, which also makes us safe if the API
+    ignores `offset` (a non-advancing page yields no new ids → we stop) instead
+    of looping forever.
+    """
+    headers = {"Authorization": f"Bearer {kb_token}"}
+    rows: list = []
+    seen: set = set()
+    for page in range(_MAX_PAGES):
+        resp = await client.get(
+            f"{kb_api}/entities/launch_artifact",
+            params={"limit": _PAGE_SIZE, "offset": page * _PAGE_SIZE},
+            headers=headers,
+            timeout=30.0,
+        )
+        resp.raise_for_status()
+        batch = resp.json()
+        fresh = [r for r in batch if r.get("id") not in seen]
+        if not fresh:
+            break  # no new rows (exhausted, or API ignored offset)
+        seen.update(r.get("id") for r in fresh)
+        rows.extend(fresh)
+        if len(batch) < _PAGE_SIZE:
+            break  # last (short) page
+    else:
+        logger.warning(
+            "kb_sync: hit max page cap (%d pages × %d); artifacts beyond %d may be unsynced",
+            _MAX_PAGES,
+            _PAGE_SIZE,
+            _MAX_PAGES * _PAGE_SIZE,
+        )
+    return rows
+
 
 async def sync_rows(rows, lh_client, org_id: int) -> int:
     """DEPRECATED. Use src.services.og_activity.kb_ingest.ingest_from_kb."""

@@ -5,6 +5,65 @@ import pytest
 from src.jobs import kb_sync
 
 
+class _Resp:
+    def __init__(self, data):
+        self._data = data
+
+    def json(self):
+        return self._data
+
+    def raise_for_status(self):
+        return None
+
+
+class _PagingClient:
+    """Honors `offset`: serves page N from `pages[N]`, empty past the end."""
+
+    def __init__(self, pages):
+        self.pages = pages
+        self.calls = []
+
+    async def get(self, url, params=None, headers=None, timeout=None):
+        self.calls.append(params)
+        idx = params["offset"] // params["limit"]
+        return _Resp(self.pages[idx] if idx < len(self.pages) else [])
+
+
+class _StaticClient:
+    """Ignores `offset`: always serves the same full page (worst case)."""
+
+    def __init__(self, page):
+        self.page = page
+        self.calls = []
+
+    async def get(self, url, params=None, headers=None, timeout=None):
+        self.calls.append(params)
+        return _Resp(self.page)
+
+
+@pytest.mark.asyncio
+async def test_fetch_all_artifacts_paginates_past_first_page():
+    page1 = [{"id": str(i)} for i in range(kb_sync._PAGE_SIZE)]
+    page2 = [{"id": str(i)} for i in range(kb_sync._PAGE_SIZE, kb_sync._PAGE_SIZE + 50)]
+    client = _PagingClient([page1, page2])
+
+    rows = await kb_sync._fetch_all_artifacts(client, "https://kb", "tok")
+
+    assert len(rows) == kb_sync._PAGE_SIZE + 50  # not truncated at the first page
+
+
+@pytest.mark.asyncio
+async def test_fetch_all_artifacts_terminates_when_offset_ignored():
+    page = [{"id": str(i)} for i in range(kb_sync._PAGE_SIZE)]
+    client = _StaticClient(page)
+
+    rows = await kb_sync._fetch_all_artifacts(client, "https://kb", "tok")
+
+    # Deduped by id and stopped — no infinite loop against an offset-ignoring API.
+    assert len(rows) == kb_sync._PAGE_SIZE
+    assert len(client.calls) == 2  # page 0 consumed; page 1 had no new ids → stop
+
+
 class FakeLH:
     def __init__(self):
         self.upserts = []

@@ -104,8 +104,10 @@ const nextConfig = {
   },
 }
 
-// Generate runtime config for development
-if (process.env.NODE_ENV === 'development') {
+// Generate runtime config for development, and for Vercel builds (where the
+// container entrypoint that normally writes runtime-config.js never runs, so
+// the client would otherwise fall back to localhost).
+if (process.env.NODE_ENV === 'development' || process.env.VERCEL) {
   const fs = require('fs')
   const path = require('path')
   const runtimeConfig = {}
