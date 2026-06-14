@@ -96,3 +96,17 @@ async def test_traverse_accepts_bare_list(monkeypatch):
     client = KbClient("https://kb/api", "tok")
     rows = await client.traverse("L1", "launch", ["product"])
     assert rows == [{"id": "p", "type": "product"}]
+
+
+@pytest.mark.asyncio
+async def test_list_all_artifacts_paginates(monkeypatch):
+    # Two full pages of size 2, then a short page -> stop.
+    pages = {0: [{"id": "1"}, {"id": "2"}], 2: [{"id": "3"}, {"id": "4"}], 4: [{"id": "5"}]}
+
+    async def fake_get(self, url, params=None, headers=None, timeout=None):
+        return _Resp(pages[params["offset"]])
+
+    monkeypatch.setattr(kb_client.httpx.AsyncClient, "get", fake_get)
+    client = KbClient("https://kb/api", "tok")
+    rows = await client.list_all_artifacts(page_size=2)
+    assert [r["id"] for r in rows] == ["1", "2", "3", "4", "5"]

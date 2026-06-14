@@ -47,6 +47,19 @@ class KbClient:
         """Slim list of launch artifacts (no bodyMd). Bare array."""
         return await self._get("/entities/launch_artifact", {"limit": limit, "offset": offset})
 
+    async def list_all_artifacts(self, *, page_size: int = _DEFAULT_LIMIT) -> list[dict]:
+        """All launch artifacts, paging until a short page. Avoids the
+        single-call truncation at the default limit."""
+        rows: list[dict] = []
+        offset = 0
+        while True:
+            page = await self.list_artifacts(limit=page_size, offset=offset)
+            rows.extend(page)
+            if len(page) < page_size:
+                break
+            offset += page_size
+        return rows
+
     async def get_entity(self, entity_type: str, entity_id: str) -> dict:
         """Full entity row (includes bodyMd / attachments for launch_artifact)."""
         return await self._get(f"/entities/{entity_type}/{entity_id}")
