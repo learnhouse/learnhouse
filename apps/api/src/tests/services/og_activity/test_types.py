@@ -2,6 +2,8 @@ from types import SimpleNamespace
 
 import pytest
 
+from pydantic import ValidationError
+
 from src.db.courses.activities import ActivityTypeEnum, ActivitySubTypeEnum
 from src.services.og_activity.contract import ContractType
 from src.services.og_activity.registry import default_registry, get_module
@@ -52,3 +54,24 @@ def test_document_non_pdf_uses_doc_subtype():
 def test_both_types_registered():
     assert ContractType.DYNAMIC_PAGE in default_registry
     assert ContractType.DOCUMENT in default_registry
+
+
+def test_dynamic_page_markdown_to_learnhouse():
+    module = get_module(ContractType.DYNAMIC_PAGE)
+    payload = module.validate({"markdown": "# Title\n\nBody."})
+    spec = module.to_learnhouse(payload)
+    assert spec.activity_type is ActivityTypeEnum.TYPE_DYNAMIC
+    assert spec.activity_sub_type is ActivitySubTypeEnum.SUBTYPE_DYNAMIC_MARKDOWN
+    assert spec.content == {"markdown": "# Title\n\nBody."}
+
+
+def test_dynamic_page_markdown_round_trip():
+    module = get_module(ContractType.DYNAMIC_PAGE)
+    activity = SimpleNamespace(content={"markdown": "# Title"})
+    assert module.from_learnhouse(activity) == {"markdown": "# Title"}
+
+
+def test_dynamic_page_rejects_both_markdown_and_blocks():
+    module = get_module(ContractType.DYNAMIC_PAGE)
+    with pytest.raises(ValidationError):
+        module.validate({"markdown": "x", "blocks": [{"type": "paragraph"}]})
