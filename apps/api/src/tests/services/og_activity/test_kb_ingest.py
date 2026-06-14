@@ -28,39 +28,15 @@ def test_body_md_maps_to_markdown_dynamic_page():
     assert c.source.skill_used == "cs-enablement"
 
 
-def test_attachments_map_to_documents_with_distinct_kb_ids():
-    artifact = {
-        "id": "art-2",
-        "name": "Release Notes",
-        "sourceSha": "sha-2",
-        "bodyMd": "body",
-        "attachments": [
-            {"fileRef": "files/guide.pdf", "mime": "application/pdf", "name": "Guide"},
-            {"url": "https://x/y.docx"},  # mime + name missing -> defaults
-        ],
-    }
+def test_attachments_are_ignored():
+    artifact = {"id": "a", "name": "n", "bodyMd": "b", "attachments": [{"fileRef": "f.pdf", "mime": "application/pdf"}]}
     contracts = artifact_to_contracts(artifact)
-    types = [c.type for c in contracts]
-    assert types == [ContractType.DYNAMIC_PAGE, ContractType.DOCUMENT, ContractType.DOCUMENT]
-
-    doc1, doc2 = contracts[1], contracts[2]
-    assert doc1.payload == {"file_ref": "files/guide.pdf", "mime": "application/pdf"}
-    assert doc1.title == "Guide"
-    assert doc1.source.kb_id == "art-2:files/guide.pdf"  # distinct from the page's kb_id
-    assert doc2.payload == {"file_ref": "https://x/y.docx", "mime": "application/octet-stream"}
-    assert doc2.source.kb_id == "art-2:https://x/y.docx"
-    assert doc2.title == "https://x/y.docx"
+    assert [c.type for c in contracts] == [ContractType.DYNAMIC_PAGE]
 
 
 def test_blank_body_md_produces_no_page():
     artifact = {"id": "art-3", "name": "Empty", "bodyMd": "   ", "sourceSha": "s"}
     assert artifact_to_contracts(artifact) == []
-
-
-def test_attachment_without_file_ref_is_skipped():
-    artifact = {"id": "a", "name": "n", "bodyMd": "b", "attachments": [{"mime": "application/pdf"}]}
-    contracts = artifact_to_contracts(artifact)
-    assert [c.type for c in contracts] == [ContractType.DYNAMIC_PAGE]
 
 
 def test_artifact_without_id_returns_empty():
@@ -102,11 +78,8 @@ class FakeActivityStore:
         raise AssertionError("update target missing")
 
 
-def _artifact(sha="sha-1", with_attachment=False):
-    a = {"id": "art-1", "name": "Lesson", "bodyMd": "# Body", "sourceSha": sha}
-    if with_attachment:
-        a["attachments"] = [{"fileRef": "f.pdf", "mime": "application/pdf"}]
-    return a
+def _artifact(sha="sha-1"):
+    return {"id": "art-1", "name": "Lesson", "bodyMd": "# Body", "sourceSha": sha}
 
 
 @pytest.mark.asyncio
@@ -129,12 +102,10 @@ async def test_ingest_creates_then_skips_then_updates():
 
 
 @pytest.mark.asyncio
-async def test_ingest_writes_page_and_document_separately():
+async def test_ingest_writes_single_page_activity():
     store = FakeActivityStore()
     report = IngestReport()
-    await ingest_artifact(_artifact(with_attachment=True), course_id=100, chapter_id=5, org_id=1, store=store, report=report)
-    assert report.created == 2  # page + document
-    kb_ids = sorted((r.extra_metadata or {}).get("kb_id") for r in store.rows)
-    assert kb_ids == ["art-1", "art-1:f.pdf"]
-    page = next(r for r in store.rows if (r.extra_metadata or {}).get("kb_id") == "art-1")
-    assert page.content == {"markdown": "# Body"}
+    await ingest_artifact(_artifact(), course_id=100, chapter_id=5, org_id=1, store=store, report=report)
+    assert report.created == 1
+    assert [(r.extra_metadata or {}).get("kb_id") for r in store.rows] == ["art-1"]
+    assert store.rows[0].content == {"markdown": "# Body"}
