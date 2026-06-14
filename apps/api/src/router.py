@@ -32,7 +32,7 @@ from src.routers.playgrounds import playgrounds_generator as playgrounds_generat
 from src.core.ee_hooks import register_ee_routers
 from src.services.dev.dev import isDevModeEnabledOrRaise
 from src.routers.utils import router as utils_router
-from src.security.auth import get_current_user
+from src.security.auth import get_authenticated_user, get_current_user
 from src.security.api_token_utils import (
     get_authenticated_non_api_token_user,
     require_non_api_token_user,
@@ -167,7 +167,11 @@ v1_router.include_router(
     assignments.router,
     prefix="/assignments",
     tags=["assignments"],
-    dependencies=[Depends(require_authenticated_user)]
+    # OG: admit API tokens (get_authenticated_user) instead of rejecting them
+    # (require_authenticated_user) so the og-lms-service sidecar can create
+    # assignments with its automation-user API token. Still rejects anonymous;
+    # per-resource RBAC in the service layer continues to run off the token.
+    dependencies=[Depends(get_authenticated_user)]
 )
 v1_router.include_router(chapters.router, prefix="/chapters", tags=["chapters"])
 v1_router.include_router(activities.router, prefix="/activities", tags=["activities"])
