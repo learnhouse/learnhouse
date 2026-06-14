@@ -32,7 +32,6 @@ from src.routers.playgrounds import playgrounds_generator as playgrounds_generat
 from src.core.ee_hooks import register_ee_routers
 from src.services.dev.dev import isDevModeEnabledOrRaise
 from src.routers.utils import router as utils_router
-from src.routers import og_activity as og_activity_router_module
 from src.security.auth import get_current_user
 from src.security.api_token_utils import (
     get_authenticated_non_api_token_user,
@@ -321,13 +320,6 @@ v1_router.include_router(
     prefix="/utils",
     tags=["utils"],
     dependencies=[Depends(require_authenticated_user)]
-)
-
-v1_router.include_router(
-    og_activity_router_module.router,
-    prefix="/og",
-    tags=["og-activity"],
-    dependencies=[Depends(require_authenticated_user)],
 )
 
 # Video Streaming Routes
