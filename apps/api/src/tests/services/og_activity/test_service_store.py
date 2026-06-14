@@ -3,6 +3,8 @@ from unittest.mock import AsyncMock, patch
 import pytest
 
 from src.db.courses.activities import ActivityTypeEnum, ActivitySubTypeEnum
+from src.services.og_activity.contract import ActivityContract
+from src.services.og_activity.adapter import upsert_activity
 from src.services.og_activity.spec import LearnHouseActivitySpec
 from src.services.og_activity.store import ServiceActivityStore
 from src.services.og_activity.registry import _REGISTRY
@@ -59,3 +61,42 @@ async def test_update_changes_content(mock_request, db, org, course, chapter, ad
         )
     assert updated.content == {"type": "doc", "content": [{"x": 1}]}
     assert updated.extra_metadata.get("kb_sha") == "sha-2"
+
+
+# (built-in types are registered by the autouse _register_builtins fixture above)
+
+
+def _dyn_contract(kb_sha="sha-1", blocks=None):
+    return ActivityContract.model_validate(
+        {
+            "type": "dynamic_page",
+            "title": "Permitting 101",
+            "source": {"origin": "kb", "kb_id": "kb-e2e", "kb_sha": kb_sha},
+            "payload": {"blocks": blocks or []},
+        }
+    )
+
+
+@pytest.mark.asyncio
+async def test_e2e_create_skip_update(mock_request, db, org, course, chapter, admin_user):
+    store = ServiceActivityStore(mock_request, admin_user, db)
+    with patch(_PATCH_RBAC, new_callable=AsyncMock):
+        first = await upsert_activity(
+            _dyn_contract(), chapter_id=chapter.id, course_id=course.id, org_id=org.id, store=store
+        )
+        assert first.action == "created"
+
+        again = await upsert_activity(
+            _dyn_contract(), chapter_id=chapter.id, course_id=course.id, org_id=org.id, store=store
+        )
+        assert again.action == "skipped"
+
+        changed = await upsert_activity(
+            _dyn_contract(kb_sha="sha-2", blocks=[{"type": "paragraph"}]),
+            chapter_id=chapter.id, course_id=course.id, org_id=org.id, store=store,
+        )
+        assert changed.action == "updated"
+        assert changed.activity.content == {"type": "doc", "content": [{"type": "paragraph"}]}
+
+    found = await store.find_by_kb_id(course.id, "kb-e2e")
+    assert found is not None
