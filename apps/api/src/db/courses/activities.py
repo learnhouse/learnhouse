@@ -22,6 +22,9 @@ class ActivitySubTypeEnum(str, Enum):
     # Video
     SUBTYPE_VIDEO_YOUTUBE = "SUBTYPE_VIDEO_YOUTUBE"
     SUBTYPE_VIDEO_HOSTED = "SUBTYPE_VIDEO_HOSTED"
+    # Audio (podcast / audio-overview) rides TYPE_VIDEO; named SUBTYPE_AUDIO (not
+    # SUBTYPE_VIDEO_AUDIO) to match the OG activity contract used by the sidecar.
+    SUBTYPE_AUDIO = "SUBTYPE_AUDIO"
     # Document
     SUBTYPE_DOCUMENT_PDF = "SUBTYPE_DOCUMENT_PDF"
     SUBTYPE_DOCUMENT_DOC = "SUBTYPE_DOCUMENT_DOC"
