@@ -30,6 +30,40 @@ body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
+/* ---- Buttons & icons → Capital Design System -------------------------- */
+/* shadcn <Button> (components/ui/button.tsx) default/link variants and focus
+   rings derive from these HSL tuples in globals.css. Repoint primary + ring to
+   Capital blurple700 (#4B3FFF ≈ hsl(244 100% 62%)); shadcn's hover:bg-primary/90
+   then darkens toward blurple on hover. This unlayered :root beats globals.css's
+   @layer base :root. */
+:root {
+  --primary: 244 100% 62%;
+  --primary-foreground: 0 0% 100%;
+  --ring: 244 100% 62%;
+}
+/* LearnHouse-native primary buttons are bare Tailwind (e.g. NewCourseButton):
+   a black, white-text, shadowed box. Recolor to the Capital action color and
+   darken on hover (blurple900 #19009B) — Capital buttons darken, they don't do
+   LH's scale bounce. */
+.bg-black.text-white.nice-shadow { background-color: #4B3FFF !important; }
+.bg-black.text-white.nice-shadow:hover {
+  background-color: #19009B !important;
+  transform: none !important;
+}
+.bg-black.text-white.nice-shadow .bg-neutral-800 {
+  background-color: rgba(255, 255, 255, 0.24) !important;
+}
+/* Soften LH's pure-black Lucide glyphs to the Capital body-text neutral (icons
+   are currentColor; intentionally-colored icons are left untouched). */
+svg.lucide.text-black { color: rgba(0, 0, 0, 0.87) !important; }
+/* Strip the boxed white/shadow chip around icons — Capital shows glyphs inline,
+   not in an elevated tile. :has(> svg.lucide) limits this to small surfaces that
+   directly wrap a glyph, so real cards/menus keep their elevation. */
+.bg-white.nice-shadow:has(> svg.lucide) {
+  background: transparent !important;
+  box-shadow: none !important;
+  outline: none !important;
+}
 /* Hide top-nav link icons (LH ships Phosphor, which is not a CDS icon set). */
 nav[aria-label="Top navigation"] ul li svg { display: none !important; }
 /* Top-nav menu links — Capital NavBar tab style: 4px bottom bar, blurple700
