@@ -18,6 +18,7 @@ interface VideoActivityProps {
     content: {
       filename?: string
       uri?: string
+      audio_ref?: string
     }
     details?: VideoDetails
   }
@@ -95,6 +96,18 @@ function VideoActivity({ activity, course, orgUuid }: VideoActivityProps) {
                   }}
                 />
               </div>
+            </div>
+          )}
+          {activity.activity_sub_type === 'SUBTYPE_AUDIO' && (
+            <div className="my-0 sm:my-3 md:my-5 w-full">
+              {activity.content?.audio_ref ? (
+                <audio
+                  key={activity.activity_uuid}
+                  className="w-full"
+                  controls
+                  src={activity.content.audio_ref}
+                />
+              ) : null}
             </div>
           )}
         </>
