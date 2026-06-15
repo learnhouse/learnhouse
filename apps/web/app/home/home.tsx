@@ -47,6 +47,15 @@ function HomeClient() {
     }
   }, [isLoading, isAuthenticated, router])
 
+  // When there's exactly one org to choose from, skip the picker entirely
+  // and route straight into it.
+  const willAutoRedirect = isAuthenticated && !!orgs && orgs.length === 1
+  useEffect(() => {
+    if (willAutoRedirect) {
+      router.replace(getUriWithOrg(orgs[0].slug, '/'))
+    }
+  }, [willAutoRedirect, orgs, router])
+
   return (
     <div className="fixed inset-0 z-[100] bg-white overflow-y-auto">
       <div className="relative min-h-screen">
@@ -158,7 +167,7 @@ function HomeClient() {
 
             {/* Org list */}
             <div className="w-full space-y-2.5">
-              {(isLoading || (isAuthenticated && orgsLoading)) && (
+              {(isLoading || (isAuthenticated && orgsLoading) || willAutoRedirect) && (
                 <>
                   {[0, 1, 2].map((i) => (
                     <div
@@ -190,6 +199,7 @@ function HomeClient() {
 
               {isAuthenticated &&
                 orgs &&
+                !willAutoRedirect &&
                 orgs.map((org: any) => {
                   const initial = (org.name || org.slug || '?').trim().charAt(0).toUpperCase()
                   return (
