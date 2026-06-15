@@ -45,10 +45,15 @@ nav[aria-label="Top navigation"] ul a li {
 nav[aria-label="Top navigation"] ul a:hover li { border-bottom-color: #EEF1FC; }
 nav[aria-label="Top navigation"] ul a[data-og-nav-active] li { border-bottom-color: #4B3FFF; }
 /* Replace the org logo with a "Product Enablement" wordmark — sized/colored like
-   the Capital NavBar app title (h3 20px, semiBold 600, blurple700). */
+   the Capital NavBar app title (h3 20px, semiBold 600, blurple700). Keep the
+   logo's home link in the a11y tree: hide only the graphic inside it (not the
+   <a>), and hang the wordmark off the anchor so the generated text becomes the
+   link's accessible name (announced by screen readers; the home link stays
+   focusable). */
 nav[aria-label="Top navigation"] .logo { justify-content: flex-start !important; }
-nav[aria-label="Top navigation"] .logo > a { display: none !important; }
-nav[aria-label="Top navigation"] .logo::after {
+nav[aria-label="Top navigation"] .logo > a img,
+nav[aria-label="Top navigation"] .logo > a svg { display: none !important; }
+nav[aria-label="Top navigation"] .logo > a::after {
   content: "Product Enablement";
   font-weight: 600;
   font-size: 20px;
