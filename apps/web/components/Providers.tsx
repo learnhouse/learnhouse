@@ -41,16 +41,17 @@ body {
   --primary-foreground: 0 0% 100%;
   --ring: 244 100% 62%;
 }
-/* LearnHouse-native primary buttons are bare Tailwind (e.g. NewCourseButton):
-   a black, white-text, shadowed box. Recolor to the Capital action color and
-   darken on hover (blurple900 #19009B) — Capital buttons darken, they don't do
-   LH's scale bounce. */
-.bg-black.text-white.nice-shadow { background-color: #4B3FFF !important; }
-.bg-black.text-white.nice-shadow:hover {
+/* LearnHouse-native primary buttons are bare Tailwind (New Course/Collection/
+   Podcast): a rounded, black, bold, white-text CTA — keyed on those shared
+   classes because the shadow class varies (nice-shadow vs drop-shadow-lg).
+   Recolor to the Capital action color and darken on hover (blurple900 #19009B)
+   — Capital buttons darken, they don't do LH's scale bounce. */
+.rounded-lg.bg-black.text-white.font-bold { background-color: #4B3FFF !important; }
+.rounded-lg.bg-black.text-white.font-bold:hover {
   background-color: #19009B !important;
   transform: none !important;
 }
-.bg-black.text-white.nice-shadow .bg-neutral-800 {
+.rounded-lg.bg-black.text-white.font-bold .bg-neutral-800 {
   background-color: rgba(255, 255, 255, 0.24) !important;
 }
 /* Soften LH's pure-black Lucide glyphs to the Capital body-text neutral (icons
@@ -85,8 +86,16 @@ nav[aria-label="Top navigation"] ul a[data-og-nav-active] li { border-bottom-col
    link's accessible name (announced by screen readers; the home link stays
    focusable). */
 nav[aria-label="Top navigation"] .logo { justify-content: flex-start !important; }
+/* Drop the logo graphic AND its h-9/py-1 wrapper box — leaving the wrapper made
+   it an empty 36px block that pushed the ::after wordmark onto the next line.
+   Lay the anchor out as a centered inline-flex so only the wordmark shows. */
+nav[aria-label="Top navigation"] .logo > a > div,
 nav[aria-label="Top navigation"] .logo > a img,
 nav[aria-label="Top navigation"] .logo > a svg { display: none !important; }
+nav[aria-label="Top navigation"] .logo > a {
+  display: inline-flex;
+  align-items: center;
+}
 nav[aria-label="Top navigation"] .logo > a::after {
   content: "Product Enablement";
   font-weight: 600;
