@@ -30,6 +30,10 @@ body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
+/* LH sets scrollbar-gutter: stable on html/body, which reserves a permanent
+   ~15px track that reads as right padding inside the full-width embed iframe
+   (esp. on overlay-scrollbar OSes). Let the scrollbar overlay/appear on demand. */
+html, body { scrollbar-gutter: auto !important; }
 /* ---- Buttons & icons → Capital Design System -------------------------- */
 /* shadcn <Button> (components/ui/button.tsx) default/link variants and focus
    rings derive from these HSL tuples in globals.css. Repoint primary + ring to
