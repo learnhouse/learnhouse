@@ -299,6 +299,79 @@ class TestAnalyticsHelpers:
         assert result["data"][0]["negative"] is None
         set_cached.assert_called_once()
 
+    def test_write_xlsx_sheet_empty_rows(self):
+        from openpyxl import Workbook
+        from src.routers.analytics import _write_xlsx_sheet
+
+        wb = Workbook()
+        ws = wb.active
+        _write_xlsx_sheet(ws, [])
+
+        assert ws.cell(1, 1).value == "Nessun dato"
+        assert ws.cell(2, 1).value is None
+
+
+    def test_write_xlsx_sheet_non_bool_and_bool_columns(self):
+        from openpyxl import Workbook
+        from src.routers.analytics import (
+            _write_xlsx_sheet, _BOOL_HIGHLIGHT_COLS, _GRN_FILL, _RED_FILL,
+        )
+
+        wb = Workbook()
+        ws = wb.active
+        bool_col = next(iter(_BOOL_HIGHLIGHT_COLS))
+        rows = [
+            {"Name": "Alice", bool_col: "Sì"},
+            {"Name": "Bob",   bool_col: "No"},
+        ]
+        _write_xlsx_sheet(ws, rows)
+
+        # colonna non-bool: nessun fill colorato
+        assert ws.cell(2, 1).fill != _GRN_FILL
+        assert ws.cell(2, 1).fill != _RED_FILL
+        # colonna bool: fill verde/rosso
+        assert ws.cell(2, 2).fill == _GRN_FILL
+        assert ws.cell(3, 2).fill == _RED_FILL
+
+
+    def test_build_xlsx_course_users_structure(self):
+        from src.routers.analytics import _build_xlsx_course_users
+
+        flat = [
+            {"Groups": "Alpha",       "Subscribed": "Yes", "Completed course": "Yes", "Name": "Alice"},
+            {"Groups": "Alpha, Beta", "Subscribed": "Yes", "Completed course": "No",  "Name": "Bob"},
+            {"Groups": "None",        "Subscribed": "No",  "Completed course": "No",  "Name": "Carlo"},
+        ]
+        wb = _build_xlsx_course_users(flat)
+
+        assert "Summary"   in wb.sheetnames
+        assert "All"       in wb.sheetnames
+        assert "Alpha"     in wb.sheetnames
+        assert "Beta"      in wb.sheetnames
+        assert "No groups" in wb.sheetnames
+
+
+    def test_build_xlsx_course_users_sheet_name_truncated(self):
+        from src.routers.analytics import _build_xlsx_course_users
+
+        long_name = "A" * 40
+        flat = [{"Groups": long_name, "Subscribed": "No", "Completed course": "No", "Name": "X"}]
+        wb = _build_xlsx_course_users(flat)
+
+        assert long_name[:31] in wb.sheetnames
+
+
+    def test_flat_to_csv_with_data_and_empty(self):
+        from src.routers.analytics import _flat_to_csv
+
+        flat = [{"Name": "Alice", "Subscribed": "Yes"}, {"Name": "Bob", "Subscribed": "No"}]
+        result = _flat_to_csv(flat)
+        assert "Name,Subscribed" in result
+        assert "Alice,Yes"       in result
+        assert "Bob,No"          in result
+
+        assert _flat_to_csv([]) == ""
+
 
 class TestAnalyticsRouter:
     async def test_status_and_plan_info(self, client, app):
@@ -595,7 +668,7 @@ class TestAnalyticsRouter:
             )
         assert response.status_code == 400
 
-    async def test_export_json_csv_and_errors(self, client):
+    async def test_export_json_csv_xlsx_and_errors(self, client):
         with _analytics_guard_patches(), patch(
             "src.routers.analytics._enrich_with_metadata",
             new_callable=AsyncMock,
@@ -605,7 +678,7 @@ class TestAnalyticsRouter:
             new_callable=AsyncMock,
             return_value={"data": [{"course_uuid": "course_1", "user_id": 1}], "rows": 1, "meta": []},
         ):
-            response = await client.get("/api/v1/analytics/export?org_id=1&format=json&queries=daily_active_users")
+            response = await client.get("/api/v1/analytics/export?org_id=1&format=json")
         assert response.status_code == 200
         assert response.json()["daily_active_users"]["rows"] == 1
 
@@ -619,19 +692,11 @@ class TestAnalyticsRouter:
             return_value={"data": [{"course_uuid": "course_1", "user_id": 1}], "rows": 1, "meta": []},
         ):
             response = await client.get(
-                "/api/v1/analytics/export?org_id=1&format=csv&queries=daily_active_users"
+                "/api/v1/analytics/export?org_id=1&format=csv"
             )
         assert response.status_code == 200
         assert "# daily_active_users" in response.text
 
-        with _analytics_guard_patches():
-            response = await client.get("/api/v1/analytics/export?org_id=1&format=xml&queries=daily_active_users")
-        assert response.status_code == 400
-
-        with _analytics_guard_patches():
-            response = await client.get("/api/v1/analytics/export?org_id=1&format=json")
-        assert response.status_code == 400
-
         with _analytics_guard_patches(), patch(
             "src.routers.analytics._enrich_with_metadata",
             new_callable=AsyncMock,
@@ -641,28 +706,27 @@ class TestAnalyticsRouter:
             new_callable=AsyncMock,
             return_value={"data": [{"course_uuid": "course_1", "user_id": 1}], "rows": 1, "meta": []},
         ):
-            response = await client.get(
-                "/api/v1/analytics/export?org_id=1&format=json&queries=daily_active_users,unknown_query"
-            )
+            response = await client.get("/api/v1/analytics/export?org_id=1&format=xlsx")
         assert response.status_code == 200
+        assert response.headers["content-type"] == "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
 
         with _analytics_guard_patches():
-            response = await client.get("/api/v1/analytics/export?org_id=1&format=json&queries=daily_active_users&days=bad")
+            response = await client.get("/api/v1/analytics/export?org_id=1&format=xml")
         assert response.status_code == 400
 
-        with _analytics_guard_patches(), patch(
-            "src.routers.analytics._enrich_with_metadata",
-            new_callable=AsyncMock,
-            side_effect=lambda rows, db: rows,
-        ), patch(
-            "src.routers.analytics._execute_tinybird_query",
-            new_callable=AsyncMock,
-            return_value={"data": [{"course_uuid": "course_1", "user_id": 1}], "rows": 1, "meta": []},
-        ):
-            response = await client.get(
-                "/api/v1/analytics/export?org_id=1&format=json&queries=daily_active_users&course_uuid=course_1"
-            )
-        assert response.status_code == 200
+    async def test_export_days_and_limit_validation(self, client):
+        with _analytics_guard_patches():
+            response = await client.get("/api/v1/analytics/export?org_id=1&days=99999")
+        assert response.status_code == 400
+        assert "days" in response.json()["detail"].lower()
+
+        with _analytics_guard_patches():
+            response = await client.get("/api/v1/analytics/export?org_id=1&limit=0")
+        assert response.status_code == 400
+
+        with _analytics_guard_patches():
+            response = await client.get("/api/v1/analytics/export?org_id=1&limit=-5")
+        assert response.status_code == 400
 
     async def test_dashboard_unknown_and_course_plan_and_query_validation(self, client):
         with _analytics_guard_patches():
