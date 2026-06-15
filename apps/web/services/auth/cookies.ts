@@ -49,11 +49,36 @@ export function getCookieDomain(request: NextRequest): string | undefined {
   return undefined
 }
 
+/**
+ * Cross-site cookie attributes for the PSP shell embed (cross-origin iframe).
+ *
+ * When embedded, the LMS runs in a third-party iframe under the PSP shell, so:
+ *   - SameSite=None + Secure → the browser sends the cookie on cross-site subrequests.
+ *   - Partitioned (CHIPS)    → the cookie survives third-party-cookie blocking
+ *                              (the default in modern Chrome). Without it,
+ *                              SameSite=None cookies are dropped inside a
+ *                              cross-site iframe and the session never
+ *                              establishes ("bounced to login").
+ *
+ * CHIPS requires Secure + SameSite=None + host-only (no Domain) — all true in
+ * embed mode, which only runs in single-tenancy host-only cookie config.
+ * Returns {} when not embedded, so standalone LearnHouse keeps its stricter
+ * Lax defaults. Shared by getCookieOptions (auth cookies) and proxy.ts
+ * (tenancy/org cookies) so both honor embed mode identically.
+ */
+export function getEmbedCookieAttrs():
+  | { secure: true; sameSite: 'none'; partitioned: true }
+  | Record<string, never> {
+  const embedMode = getConfig('NEXT_PUBLIC_LEARNHOUSE_EMBED_MODE') === 'true'
+  return embedMode ? { secure: true, sameSite: 'none', partitioned: true } : {}
+}
+
 export function getCookieOptions(request: NextRequest) {
   const isSecure = request.nextUrl.protocol === 'https:'
   const domain = getCookieDomain(request)
   // Embedded in the PSP shell (cross-origin iframe): browsers only send cookies
-  // on cross-site subrequests when SameSite=None; Secure. Gated by env so
+  // on cross-site subrequests when SameSite=None; Secure, and only keep them at
+  // all (under third-party-cookie blocking) when Partitioned. Gated by env so
   // standalone LearnHouse keeps its stricter Lax default. SameSite=None REQUIRES
   // Secure, so force secure in embed mode (the shell is always HTTPS).
   const embedMode = getConfig('NEXT_PUBLIC_LEARNHOUSE_EMBED_MODE') === 'true'
@@ -61,6 +86,7 @@ export function getCookieOptions(request: NextRequest) {
     httpOnly: true,
     secure: embedMode ? true : isSecure,
     sameSite: embedMode ? ('none' as const) : ('lax' as const),
+    ...(embedMode ? { partitioned: true as const } : {}),
     path: '/',
     ...(domain ? { domain } : {}),
   }
