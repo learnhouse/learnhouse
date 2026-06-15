@@ -56,6 +56,28 @@ function HomeClient() {
     }
   }, [willAutoRedirect, orgs, router])
 
+  // Until we know the final outcome — session still loading, orgs still
+  // loading, or we're about to auto-redirect into a single org — show a
+  // neutral branded loader rather than the org picker chrome, so the
+  // "Your organizations" screen never flashes for users who don't need it.
+  const isResolving =
+    isLoading || (isAuthenticated && (orgsLoading || !orgs)) || willAutoRedirect
+
+  if (isResolving) {
+    return (
+      <div className="fixed inset-0 z-[100] bg-white flex items-center justify-center">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src="/lrn.svg"
+          alt="LearnHouse"
+          width={44}
+          height={44}
+          className="opacity-90 animate-pulse"
+        />
+      </div>
+    )
+  }
+
   return (
     <div className="fixed inset-0 z-[100] bg-white overflow-y-auto">
       <div className="relative min-h-screen">
@@ -167,17 +189,6 @@ function HomeClient() {
 
             {/* Org list */}
             <div className="w-full space-y-2.5">
-              {(isLoading || (isAuthenticated && orgsLoading) || willAutoRedirect) && (
-                <>
-                  {[0, 1, 2].map((i) => (
-                    <div
-                      key={i}
-                      className="h-[68px] w-full rounded-2xl bg-black/[0.03] animate-pulse"
-                    />
-                  ))}
-                </>
-              )}
-
               {!isLoading && !isAuthenticated && (
                 <Link
                   href="/login"
@@ -199,7 +210,6 @@ function HomeClient() {
 
               {isAuthenticated &&
                 orgs &&
-                !willAutoRedirect &&
                 orgs.map((org: any) => {
                   const initial = (org.name || org.slug || '?').trim().charAt(0).toUpperCase()
                   return (
