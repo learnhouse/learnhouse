@@ -4475,6 +4475,7 @@
     "export": {
       "button": "エクスポート",
       "csv": "CSVをダウンロード",
+      "xlsx": "XLSXをダウンロード",
       "downloading": "エクスポート中...",
       "json": "JSONをダウンロード"
     }

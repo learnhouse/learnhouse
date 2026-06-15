@@ -4541,6 +4541,7 @@
     "export": {
       "button": "Exporter",
       "csv": "Télécharger CSV",
+      "xlsx": "Télécharger XLSX",
       "downloading": "Exportation...",
       "json": "Télécharger JSON"
     }

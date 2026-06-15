@@ -4477,6 +4477,7 @@
     "export": {
       "button": "내보내기",
       "csv": "CSV 다운로드",
+      "xlsx": "XLSX 다운로드",
       "downloading": "내보내는 중...",
       "json": "JSON 다운로드"
     }

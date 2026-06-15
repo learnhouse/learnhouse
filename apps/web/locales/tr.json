@@ -4490,6 +4490,7 @@
     "export": {
       "button": "Dışa Aktar",
       "csv": "CSV İndir",
+      "xlsx": "XLSX İndir",
       "downloading": "Dışa aktarılıyor...",
       "json": "JSON İndir"
     }
