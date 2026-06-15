@@ -1,4 +1,5 @@
 import { getAPIUrl } from './services/config/config'
+import { getEmbedCookieAttrs } from './services/auth/cookies'
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 import { isLocalhost as isLocalhostCheck } from './services/utils/ts/hostUtils'
@@ -151,28 +152,36 @@ function setOrgCookies(
   instance: InstanceInfo,
 ) {
   const domain = cookieDomainFor(instance, resolved.customDomain)
+  // In the PSP embed these cross-site cookies need SameSite=None;Secure;Partitioned
+  // (CHIPS) or the browser drops them in the iframe. No-op standalone. Embed mode
+  // only runs single-tenancy (domain===''), so Partitioned's host-only rule holds.
+  const embed = getEmbedCookieAttrs()
   response.cookies.set({
     name: 'LH_org',
     value: resolved.slug,
     domain,
     path: '/',
+    ...embed,
   })
   if (resolved.customDomain) {
     response.cookies.set({
       name: 'LH_custom_domain',
       value: resolved.customDomain,
       path: '/',
+      ...embed,
     })
     response.headers.set('x-custom-domain', resolved.customDomain)
   }
 }
 
 function setInstanceCookies(response: NextResponse, info: InstanceInfo) {
-  response.cookies.set({ name: 'LH_tenancy', value: info.tenancy, path: '/' })
-  response.cookies.set({ name: 'LH_default_org', value: info.default_org_slug, path: '/' })
-  response.cookies.set({ name: 'LH_frontend_domain', value: info.frontend_domain, path: '/' })
-  response.cookies.set({ name: 'LH_top_domain', value: info.top_domain, path: '/' })
-  response.cookies.set({ name: 'LH_mode', value: info.mode, path: '/' })
+  // See setOrgCookies: cross-site iframe needs CHIPS-partitioned cookies; no-op standalone.
+  const embed = getEmbedCookieAttrs()
+  response.cookies.set({ name: 'LH_tenancy', value: info.tenancy, path: '/', ...embed })
+  response.cookies.set({ name: 'LH_default_org', value: info.default_org_slug, path: '/', ...embed })
+  response.cookies.set({ name: 'LH_frontend_domain', value: info.frontend_domain, path: '/', ...embed })
+  response.cookies.set({ name: 'LH_top_domain', value: info.top_domain, path: '/', ...embed })
+  response.cookies.set({ name: 'LH_mode', value: info.mode, path: '/', ...embed })
   return response
 }
 
