@@ -194,8 +194,7 @@ function MathEquationBlockComponent(props: any) {
             <div className="flex flex-wrap gap-2">
               {/* Templates Dropdown */}
               <div ref={templatesRef} className="relative">
-                <button
-                  onClick={() => setShowTemplates(!showTemplates)}
+                <button type="button"                   onClick={() => setShowTemplates(!showTemplates)}
                   className="flex items-center gap-1.5 px-3 py-1.5 bg-neutral-200 hover:bg-neutral-300 text-neutral-700 rounded-lg text-sm transition-colors outline-none"
                 >
                   <BookOpen size={14} />
@@ -226,8 +225,7 @@ function MathEquationBlockComponent(props: any) {
 
               {/* Symbols Dropdown */}
               <div ref={symbolsRef} className="relative">
-                <button
-                  onClick={() => setShowSymbols(!showSymbols)}
+                <button type="button"                   onClick={() => setShowSymbols(!showSymbols)}
                   className="flex items-center gap-1.5 px-3 py-1.5 bg-neutral-200 hover:bg-neutral-300 text-neutral-700 rounded-lg text-sm transition-colors outline-none"
                 >
                   <Sigma size={14} />
@@ -242,8 +240,7 @@ function MathEquationBlockComponent(props: any) {
                     </div>
                     <div className="flex flex-wrap p-2 gap-1">
                       {mathSymbols.map((symbol, index) => (
-                        <button
-                          key={index}
+                        <button type="button"                           key={index}
                           onClick={() => insertSymbol(symbol.symbol)}
                           title={symbol.symbol}
                           className="w-8 h-8 flex items-center justify-center bg-neutral-100 hover:bg-neutral-200 rounded text-base text-neutral-700 transition-colors"
@@ -258,8 +255,7 @@ function MathEquationBlockComponent(props: any) {
 
               {/* Help Dropdown */}
               <div ref={helpRef} className="relative">
-                <button
-                  onClick={() => setShowHelp(!showHelp)}
+                <button type="button"                   onClick={() => setShowHelp(!showHelp)}
                   className="flex items-center gap-1.5 px-3 py-1.5 bg-neutral-200 hover:bg-neutral-300 text-neutral-700 rounded-lg text-sm transition-colors outline-none"
                 >
                   <Lightbulb size={14} />
@@ -317,8 +313,7 @@ function MathEquationBlockComponent(props: any) {
                 type="text"
                 className="flex-1 px-3 py-2 text-sm text-neutral-700 placeholder-slate-400 bg-transparent border-none outline-none"
               />
-              <button
-                onClick={() => saveEquation()}
+              <button type="button"                 onClick={() => saveEquation()}
                 className="flex items-center justify-center w-8 h-8 bg-neutral-100 hover:bg-neutral-200 text-neutral-600 rounded-md transition-colors"
               >
                 <Save size={15} />

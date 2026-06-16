@@ -1032,8 +1032,7 @@ function AIEditorSidePanel(props: AIEditorSidePanelProps) {
           </div>
           <div className="flex space-x-1 items-center">
             {aiEditorState.messages.length > 0 && (
-              <button
-                onClick={clearChat}
+              <button type="button"                 onClick={clearChat}
                 title={t('editor.ai_panel.clear_chat')}
                 className="text-white/50 hover:text-white/70 hover:cursor-pointer bg-white/10 p-1 rounded-full items-center transition-colors"
               >
@@ -1219,8 +1218,7 @@ function AIEditorSidePanel(props: AIEditorSidePanelProps) {
                     >
                       {aiEditorState.followUpSuggestions.map(
                         (suggestion, idx) => (
-                          <button
-                            key={idx}
+                          <button type="button"                             key={idx}
                             onClick={() => sendMessage(suggestion)}
                             disabled={isInputDisabled}
                             className="px-3 py-1.5 text-xs bg-white/5 text-white/60 rounded-full hover:bg-white/10 hover:text-white/80 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
@@ -1261,8 +1259,7 @@ function AIEditorSidePanel(props: AIEditorSidePanelProps) {
         <div className="px-4 py-2 border-t border-white/5">
           <div className="flex flex-wrap gap-2">
             {quickActions.map((action, idx) => (
-              <button
-                key={idx}
+              <button type="button"                 key={idx}
                 onClick={() => sendMessage(action.prompt)}
                 disabled={isInputDisabled}
                 className="flex items-center gap-1.5 px-3 py-1 text-xs bg-white/5 text-white/60 rounded-full hover:bg-white/10 hover:text-white/80 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
@@ -1299,8 +1296,7 @@ function AIEditorSidePanel(props: AIEditorSidePanelProps) {
                       return ''
                     })()}
                   </span>
-                  <button
-                    onClick={clearSelectionHighlight}
+                  <button type="button"                     onClick={clearSelectionHighlight}
                     className="ml-auto p-1 rounded hover:bg-purple-500/20 transition-colors"
                     title={t('editor.ai_panel.clear_selection')}
                   >
@@ -1329,8 +1325,7 @@ function AIEditorSidePanel(props: AIEditorSidePanelProps) {
                       {t('editor.ai_panel.block_selected')}
                     </span>
                   </div>
-                  <button
-                    onClick={clearSelectionHighlight}
+                  <button type="button"                     onClick={clearSelectionHighlight}
                     className="ml-auto p-1 rounded hover:bg-violet-500/20 transition-colors"
                     title={t('editor.ai_panel.clear_selection')}
                   >
@@ -1368,8 +1363,7 @@ function AIEditorSidePanel(props: AIEditorSidePanelProps) {
               />
             </div>
             <div className="pb-1">
-              <button
-                onClick={() => sendMessage(aiEditorState.chatInputValue)}
+              <button type="button"                 onClick={() => sendMessage(aiEditorState.chatInputValue)}
                 disabled={isInputDisabled || !aiEditorState.chatInputValue.trim()}
                 className="p-2 rounded-lg bg-purple-500/20 hover:bg-purple-500/30 text-purple-300 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
               >
@@ -1512,8 +1506,7 @@ const AIEditorSidePanelPlaceholder = (props: { sendMessage: (msg: string) => voi
             className="questions flex flex-col space-y-2 mx-auto pt-6"
           >
             {predefinedQuestions.map((q, idx) => (
-              <button
-                key={idx}
+              <button type="button"                 key={idx}
                 onClick={() => props.sendMessage(q.prompt)}
                 className="flex items-center justify-center space-x-1.5 bg-white/5 cursor-pointer px-4 py-2 rounded-xl outline outline-1 outline-neutral-100/10 text-xs font-semibold text-white/40 hover:text-white/60 hover:bg-white/10 hover:outline-neutral-200/40 delay-75 ease-linear transition-all"
               >
