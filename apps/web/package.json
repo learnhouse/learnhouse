@@ -102,6 +102,7 @@
     "motion": "^12.34.3",
     "next": "^16.2.6",
     "nextjs-toploader": "^3.9.17",
+    "posthog-js": "^1.387.0",
     "prosemirror-state": "^1.4.4",
     "qrcode": "^1.5.4",
     "re-resizable": "^6.11.2",
