@@ -45,9 +45,12 @@ from src.db.courses.certifications import CertificateUser, Certifications
 from src.db.trail_runs import TrailRun
 from src.db.trail_steps import TrailStep
 from src.db.trails import Trail
-from src.db.users import APITokenUser
+from src.db.users import APITokenUser, SuperadminAPITokenUser
+from src.security.rbac import AccessAction
 from src.services.courses.activities.assignments import (
+    _authorize_assignment_authoring,
     _block_api_tokens,
+    _block_org_api_tokens,
     _is_assignment_past_due,
     create_assignment,
     create_assignment_submission,
@@ -274,8 +277,58 @@ class TestBlockApiTokens:
             _block_api_tokens(token_user)
         assert exc.value.status_code == 403
 
+    def test_raises_403_for_superadmin_api_token_user(self):
+        # Default gate (submission/grade endpoints) blocks superadmin tokens too —
+        # only the authoring functions admit them, via _block_org_api_tokens.
+        sa_user = SuperadminAPITokenUser(id=1)
+        with pytest.raises(HTTPException) as exc:
+            _block_api_tokens(sa_user)
+        assert exc.value.status_code == 403
+
     def test_passes_for_public_user(self, regular_user):
         _block_api_tokens(regular_user)  # should not raise
+
+
+# ---------------------------------------------------------------------------
+# _block_org_api_tokens  (authoring-only token gate)
+# ---------------------------------------------------------------------------
+
+
+class TestBlockOrgApiTokens:
+    def test_raises_403_for_org_api_token_user(self):
+        token_user = APITokenUser(id=1, org_id=1)
+        with pytest.raises(HTTPException) as exc:
+            _block_org_api_tokens(token_user)
+        assert exc.value.status_code == 403
+
+    def test_passes_for_superadmin_api_token_user(self):
+        # Superadmin tokens are admitted to authoring functions.
+        _block_org_api_tokens(SuperadminAPITokenUser(id=1))  # should not raise
+
+    def test_passes_for_public_user(self, regular_user):
+        _block_org_api_tokens(regular_user)  # should not raise
+
+
+# ---------------------------------------------------------------------------
+# _authorize_assignment_authoring  (course-level authoring authorization)
+# ---------------------------------------------------------------------------
+
+
+class TestAuthorizeAssignmentAuthoring:
+    async def test_superadmin_bypasses_rbac(self, mock_request, db):
+        # Superadmin tokens must NOT hit check_resource_access (which has no
+        # branch for them and would 403). Patch it to explode if called.
+        with patch(_PATCH_RBAC, side_effect=AssertionError("RBAC should be bypassed")):
+            await _authorize_assignment_authoring(
+                mock_request, db, SuperadminAPITokenUser(id=1), "course_x", AccessAction.CREATE
+            )  # should not raise
+
+    async def test_regular_user_goes_through_rbac(self, mock_request, db, regular_user):
+        with patch(_PATCH_RBAC) as rbac:
+            await _authorize_assignment_authoring(
+                mock_request, db, regular_user, "course_x", AccessAction.CREATE
+            )
+        rbac.assert_awaited_once()
 
 
 # ---------------------------------------------------------------------------

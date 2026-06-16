@@ -3,7 +3,7 @@
 import asyncio
 import os
 import sys
-from typing import Annotated
+from typing import Annotated, Optional
 
 # Force UTF-8 so install messages with emoji don't crash cp1252 consoles (Windows).
 for _stream in (sys.stdout, sys.stderr):
@@ -15,12 +15,14 @@ for _stream in (sys.stdout, sys.stderr):
 
 from sqlalchemy import create_engine
 from sqlalchemy.ext.asyncio import create_async_engine
-from sqlmodel import SQLModel
+from sqlmodel import SQLModel, select
 from sqlmodel.ext.asyncio.session import AsyncSession
 import typer
 from config.config import get_learnhouse_config
 from src.db.organizations import OrganizationCreate
-from src.db.users import UserCreate
+from src.db.superadmin_api_tokens import SuperadminAPITokenCreate
+from src.db.users import User, UserCreate
+from src.services.api_tokens.superadmin_api_tokens import create_superadmin_token
 from src.services.setup.setup import (
     install_create_organization,
     install_create_organization_user,
@@ -179,6 +181,58 @@ async def _install_async(short: bool) -> None:
         await async_engine.dispose()
 
 
+
+
+@cli.command()
+def mint_superadmin_token(
+    name: Annotated[
+        str, typer.Option(help="Label for the token (unique per superadmin user)")
+    ] = "enablement-sidecar",
+    user_email: Annotated[
+        Optional[str],
+        typer.Option(help="Superadmin user to attribute the token to; defaults to the first one"),
+    ] = None,
+):
+    """Mint a superadmin API token (lh_sa_...) and print it ONCE.
+
+    Point LEARNHOUSE_SQL_CONNECTION_STRING at the target database, then run.
+    The plaintext token is shown only here — copy it into the sidecar's
+    LH_SA_API_TOKEN env. There is no API route for this by design.
+    """
+    asyncio.run(_mint_superadmin_token_async(name, user_email))
+
+
+async def _mint_superadmin_token_async(name: str, user_email: Optional[str]) -> None:
+    learnhouse_config = get_learnhouse_config()
+    sql_url = learnhouse_config.database_config.sql_connection_string  # type: ignore
+    async_engine = create_async_engine(_to_async_url(sql_url), echo=False, pool_pre_ping=True)
+    try:
+        async with AsyncSession(async_engine, expire_on_commit=False) as db_session:
+            stmt = select(User).where(User.is_superadmin == True)  # noqa: E712
+            if user_email:
+                stmt = stmt.where(User.email == user_email)
+            user = (await db_session.execute(stmt)).scalars().first()
+            if not user:
+                target = f" with email {user_email}" if user_email else ""
+                print(f"❌ No superadmin user found{target}. Run `install` first or pass --user-email.")
+                raise typer.Exit(code=1)
+
+            resp = await create_superadmin_token(
+                db_session,
+                SuperadminAPITokenCreate(name=name),
+                created_by_user_id=user.id,  # type: ignore
+            )
+            print("✅ Superadmin token minted — store it now, it is shown only once:")
+            print("")
+            print(resp.token)
+            print("")
+            print(
+                f"name={resp.name}  token_uuid={resp.token_uuid}  "
+                f"prefix={resp.token_prefix}  created_by_user_id={resp.created_by_user_id}"
+            )
+            print("Set it on the sidecar as: LH_SA_API_TOKEN=<the token above>")
+    finally:
+        await async_engine.dispose()
 
 
 @cli.command()

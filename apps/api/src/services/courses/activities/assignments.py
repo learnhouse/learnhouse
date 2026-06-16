@@ -34,7 +34,7 @@ from src.db.courses.courses import Course
 from src.db.organizations import Organization
 from src.db.trail_runs import TrailRun
 from src.db.trail_steps import TrailStep
-from src.db.users import AnonymousUser, PublicUser, User, APITokenUser
+from src.db.users import AnonymousUser, PublicUser, User, APITokenUser, SuperadminAPITokenUser
 from src.security.features_utils.usage import (
     check_limits_with_usage,
     decrease_feature_usage,
@@ -58,18 +58,62 @@ from src.services.webhooks.dispatch import dispatch_webhooks
 logger = logging.getLogger(__name__)
 
 
-def _block_api_tokens(current_user: PublicUser | AnonymousUser | APITokenUser) -> None:
+def _block_api_tokens(
+    current_user: PublicUser | AnonymousUser | APITokenUser | SuperadminAPITokenUser,
+) -> None:
     """
-    Block API tokens from accessing assignments.
+    Block ALL API tokens (org-scoped AND superadmin) from accessing assignments.
 
     SECURITY: Assignments contain sensitive user submission data and grades.
-    API tokens are not allowed to access this data - only user authentication is permitted.
+    No API token may access this data - only user authentication is permitted.
+    This is the default gate for every assignment endpoint. The narrow exception
+    is authoring (assignment/task definitions), which uses
+    ``_block_org_api_tokens`` + ``_authorize_assignment_authoring`` to admit a
+    superadmin token while still keeping submission/grade endpoints closed to it.
+    """
+    if isinstance(current_user, (APITokenUser, SuperadminAPITokenUser)):
+        raise HTTPException(
+            status_code=403,
+            detail="API tokens cannot access assignments. Only user authentication is allowed.",
+        )
+
+
+def _block_org_api_tokens(
+    current_user: PublicUser | AnonymousUser | APITokenUser | SuperadminAPITokenUser,
+) -> None:
+    """Authoring-only token gate: reject org-scoped API tokens (``lh_...``) but
+    let a superadmin token (``lh_sa_...``) through.
+
+    Used solely by the assignment/task *authoring* functions so the enablement
+    sidecar can provision quizzes with a superadmin token. Submission/grade
+    functions keep using ``_block_api_tokens`` (rejects both token kinds), so a
+    superadmin token can never read or write learner submissions/grades.
     """
     if isinstance(current_user, APITokenUser):
         raise HTTPException(
             status_code=403,
             detail="API tokens cannot access assignments. Only user authentication is allowed.",
         )
+
+
+async def _authorize_assignment_authoring(
+    request: Request,
+    db_session: AsyncSession,
+    current_user: PublicUser | AnonymousUser | APITokenUser | SuperadminAPITokenUser,
+    course_uuid: str,
+    action: AccessAction,
+) -> None:
+    """Course-level authorization for assignment/task authoring.
+
+    A superadmin API token is permitted to author assignment/task *definitions*
+    (it has already cleared ``_block_org_api_tokens``); the generic
+    ``check_resource_access`` has no branch for ``SuperadminAPITokenUser`` and
+    would otherwise fall through to the no-role user path and 403. Every other
+    principal is subject to the normal RBAC course check unchanged.
+    """
+    if isinstance(current_user, SuperadminAPITokenUser):
+        return
+    await check_resource_access(request, db_session, current_user, course_uuid, action)
 
 
 def _is_assignment_past_due(assignment: Assignment) -> bool:
@@ -647,10 +691,10 @@ def compute_assignment_grade(
 async def create_assignment(
     request: Request,
     assignment_object: AssignmentCreate,
-    current_user: PublicUser | AnonymousUser | APITokenUser,
+    current_user: PublicUser | AnonymousUser | APITokenUser | SuperadminAPITokenUser,
     db_session: AsyncSession,
 ):
-    _block_api_tokens(current_user)
+    _block_org_api_tokens(current_user)
     # Check if org exists
     statement = select(Course).where(Course.id == assignment_object.course_id)
     course = (await db_session.execute(statement)).scalars().first()
@@ -661,8 +705,8 @@ async def create_assignment(
             detail="Course not found",
         )
 
-    # RBAC check
-    await check_resource_access(request, db_session, current_user, course.course_uuid, AccessAction.CREATE)
+    # RBAC check (superadmin tokens may author assignment definitions)
+    await _authorize_assignment_authoring(request, db_session, current_user, course.course_uuid, AccessAction.CREATE)
 
     # Usage check
     await check_limits_with_usage("assignments", course.org_id, db_session)
@@ -721,10 +765,10 @@ async def read_assignment(
 async def read_assignment_from_activity_uuid(
     request: Request,
     activity_uuid: str,
-    current_user: PublicUser | AnonymousUser | APITokenUser,
+    current_user: PublicUser | AnonymousUser | APITokenUser | SuperadminAPITokenUser,
     db_session: AsyncSession,
 ):
-    _block_api_tokens(current_user)
+    _block_org_api_tokens(current_user)
     statement = (
         select(Assignment, Course.course_uuid, Activity.activity_uuid)
         .join(Activity, Activity.id == Assignment.activity_id)  # type: ignore
@@ -741,7 +785,7 @@ async def read_assignment_from_activity_uuid(
 
     assignment, course_uuid, activity_uuid_val = row
 
-    await check_resource_access(request, db_session, current_user, course_uuid, AccessAction.READ)
+    await _authorize_assignment_authoring(request, db_session, current_user, course_uuid, AccessAction.READ)
 
     result = AssignmentRead.model_validate(assignment)
     result.course_uuid = course_uuid
@@ -753,10 +797,10 @@ async def update_assignment(
     request: Request,
     assignment_uuid: str,
     assignment_object: AssignmentUpdate,
-    current_user: PublicUser | AnonymousUser | APITokenUser,
+    current_user: PublicUser | AnonymousUser | APITokenUser | SuperadminAPITokenUser,
     db_session: AsyncSession,
 ):
-    _block_api_tokens(current_user)
+    _block_org_api_tokens(current_user)
     # Check if assignment exists
     statement = select(Assignment).where(Assignment.assignment_uuid == assignment_uuid)
     assignment = (await db_session.execute(statement)).scalars().first()
@@ -777,8 +821,8 @@ async def update_assignment(
             detail="Course not found",
         )
 
-    # RBAC check
-    await check_resource_access(request, db_session, current_user, course.course_uuid, AccessAction.UPDATE)
+    # RBAC check (superadmin tokens may author assignment definitions)
+    await _authorize_assignment_authoring(request, db_session, current_user, course.course_uuid, AccessAction.UPDATE)
 
     # Update only the fields that were passed in
     for var, value in vars(assignment_object).items():
@@ -894,10 +938,10 @@ async def create_assignment_task(
     request: Request,
     assignment_uuid: str,
     assignment_task_object: AssignmentTaskCreate,
-    current_user: PublicUser | AnonymousUser | APITokenUser,
+    current_user: PublicUser | AnonymousUser | APITokenUser | SuperadminAPITokenUser,
     db_session: AsyncSession,
 ):
-    _block_api_tokens(current_user)
+    _block_org_api_tokens(current_user)
     # Check if assignment exists
     statement = select(Assignment).where(Assignment.assignment_uuid == assignment_uuid)
     assignment = (await db_session.execute(statement)).scalars().first()
@@ -918,8 +962,8 @@ async def create_assignment_task(
             detail="Course not found",
         )
 
-    # RBAC check
-    await check_resource_access(request, db_session, current_user, course.course_uuid, AccessAction.CREATE)
+    # RBAC check (superadmin tokens may author assignment definitions)
+    await _authorize_assignment_authoring(request, db_session, current_user, course.course_uuid, AccessAction.CREATE)
 
     # Create Assignment Task
     assignment_task = AssignmentTask(**assignment_task_object.model_dump())
@@ -945,10 +989,10 @@ async def create_assignment_task(
 async def read_assignment_tasks(
     request: Request,
     assignment_uuid: str,
-    current_user: PublicUser | AnonymousUser | APITokenUser,
+    current_user: PublicUser | AnonymousUser | APITokenUser | SuperadminAPITokenUser,
     db_session: AsyncSession,
 ):
-    _block_api_tokens(current_user)
+    _block_org_api_tokens(current_user)
     # Find assignment
     statement = select(Assignment).where(Assignment.assignment_uuid == assignment_uuid)
     assignment = (await db_session.execute(statement)).scalars().first()
@@ -976,8 +1020,8 @@ async def read_assignment_tasks(
         .order_by(AssignmentTask.creation_date.desc(), AssignmentTask.id.desc())
     )
 
-    # RBAC check
-    await check_resource_access(request, db_session, current_user, course.course_uuid, AccessAction.READ)
+    # RBAC check (superadmin tokens may author assignment definitions)
+    await _authorize_assignment_authoring(request, db_session, current_user, course.course_uuid, AccessAction.READ)
 
     # return assignment tasks read
     return [
@@ -1240,10 +1284,10 @@ async def update_assignment_task(
 async def delete_assignment_task(
     request: Request,
     assignment_task_uuid: str,
-    current_user: PublicUser | AnonymousUser | APITokenUser,
+    current_user: PublicUser | AnonymousUser | APITokenUser | SuperadminAPITokenUser,
     db_session: AsyncSession,
 ):
-    _block_api_tokens(current_user)
+    _block_org_api_tokens(current_user)
     # Check if assignment task exists
     statement = select(AssignmentTask).where(
         AssignmentTask.assignment_task_uuid == assignment_task_uuid
@@ -1276,8 +1320,8 @@ async def delete_assignment_task(
             detail="Course not found",
         )
 
-    # RBAC check
-    await check_resource_access(request, db_session, current_user, course.course_uuid, AccessAction.DELETE)
+    # RBAC check (superadmin tokens may author assignment definitions)
+    await _authorize_assignment_authoring(request, db_session, current_user, course.course_uuid, AccessAction.DELETE)
 
     # Delete Assignment Task
     await db_session.delete(assignment_task)
