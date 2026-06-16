@@ -396,7 +396,7 @@ const CourseClient = (props: any) => {
                         }}
                       >
                         {/* Hidden img with fetchpriority="high" so the browser fetches this LCP image immediately */}
-                        { }
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
                         <img
                           src={getCourseThumbnailMediaDirectory(org?.org_uuid, course?.course_uuid, course?.thumbnail_image)}
                           alt=""

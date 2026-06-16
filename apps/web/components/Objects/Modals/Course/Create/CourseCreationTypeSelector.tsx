@@ -1,6 +1,6 @@
 'use client'
 import React from 'react'
-import { PenLine, Lock, Upload } from 'lucide-react'
+import { PenLine, Sparkles, Lock, Upload } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import PlanBadge from '@components/Dashboard/Shared/PlanRestricted/PlanBadge'
 import { PlanLevel } from '@services/plans/plans'

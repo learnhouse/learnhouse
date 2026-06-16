@@ -12,6 +12,7 @@ import {
   Question,
   Gear,
   SignOut,
+  Package,
   SidebarSimple,
   Check,
   CaretDown,
@@ -48,7 +49,7 @@ import React, { useEffect, useState } from 'react'
 import UserAvatar from '../../Objects/UserAvatar'
 import AdminAuthorization from '@components/Security/AdminAuthorization'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
-import { getUriWithOrg, getAPIUrl } from '@services/config/config'
+import { getUriWithOrg, getUriWithoutOrg, getAPIUrl } from '@services/config/config'
 import { useTranslation } from 'react-i18next'
 import { changeLanguage } from '@/lib/i18n'
 import {

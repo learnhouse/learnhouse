@@ -29,6 +29,7 @@ import {
   SSOProvider,
 } from '@services/auth/sso'
 import {
+  Shield,
   Settings2,
   ExternalLink,
   Trash2,
