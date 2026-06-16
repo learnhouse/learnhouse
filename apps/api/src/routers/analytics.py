@@ -124,6 +124,11 @@ async def _execute_tinybird_query(
         if any(s in error_msg for s in ("UNKNOWN_TABLE", "doesn't exist", "not found")):
             return empty_response
         raise HTTPException(status_code=502, detail="Analytics query failed")
+    except (httpx.TimeoutException, httpx.TransportError) as exc:
+        logger.warning(
+            "Tinybird query '%s' unavailable (transient): %s", query_name, str(exc)[:500]
+        )
+        raise HTTPException(status_code=503, detail="Analytics temporarily unavailable")
     except Exception as exc:
         logger.warning("Tinybird query '%s' failed: %s", query_name, str(exc)[:500])
         raise HTTPException(status_code=502, detail="Analytics query failed")
