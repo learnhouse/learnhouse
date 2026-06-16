@@ -35,21 +35,14 @@ jobs:
           fi
           echo "ESLint ran to completion (exit ${EXIT_CODE:-0}); lint debt is reported above but not enforced yet."
         working-directory: ./apps/web
-      # Strict gate: files changed in a PR must be lint-clean. This stops new
-      # debt while the backlog shrinks, without blocking on pre-existing issues.
-      - name: Strict lint on changed files (PRs)
+      # Strict gate: stops *new* lint debt without blocking on pre-existing
+      # issues. Diff-aware — it lints the files a PR touches but only fails on
+      # errors that land on lines the PR added/modified, so a PR that merely
+      # edits a file carrying old debt is not punished for that debt. The
+      # report-only full-project step above still surfaces the backlog.
+      - name: Strict lint on changed lines (PRs)
         if: github.event_name == 'pull_request'
         working-directory: ./apps/web
-        run: |
-          # Pathspecs are resolved relative to working-directory (apps/web),
-          # while --name-only output stays repo-root-relative — hence the sed.
-          CHANGED=$(git diff --name-only --diff-filter=ACMR "origin/${GITHUB_BASE_REF}...HEAD" -- \
-            '**/*.ts' '**/*.tsx' '**/*.js' '**/*.jsx' '**/*.mjs' \
-            | sed 's|^apps/web/||')
-          if [ -z "$CHANGED" ]; then
-            echo "No changed lintable files."
-            exit 0
-          fi
-          echo "Strict-linting changed files:"
-          echo "$CHANGED"
-          echo "$CHANGED" | xargs bun run lint:strict --no-error-on-unmatched-pattern
+        env:
+          LINT_DIFF_BASE: origin/${{ github.base_ref }}
+        run: node scripts/lint-changed-lines.mjs
