@@ -57,7 +57,7 @@ const ALL_TABS = [
   { id: 'analytics', label: 'Analytics', icon: ChartBar },
   { id: 'plan', label: 'Plan', icon: CreditCard },
   { id: 'features', label: 'Features', icon: SlidersHorizontal },
-  { id: 'settings', label: 'Settings', icon: GearSix },
+  { id: 'settings', label: 'Admin Controls', icon: GearSix },
 ] as const
 
 type TabId = (typeof ALL_TABS)[number]['id']
@@ -171,7 +171,7 @@ export default function OrgDetailPage() {
               <Buildings size={24} weight="fill" className="text-white/30" />
             </div>
           )}
-          <div>
+          <div className="flex-1 min-w-0">
             <h1 className="text-2xl font-bold text-white">{org.name}</h1>
             <div className="flex items-center gap-3 mt-1">
               <span className="text-sm text-white/40 font-mono">{org.slug}</span>
@@ -192,6 +192,15 @@ export default function OrgDetailPage() {
               )}
             </div>
           </div>
+          <a
+            href={`${typeof window !== 'undefined' ? window.location.protocol : 'http:'}//${org.slug}.${getFrontendDomain()}/dash`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-1.5 text-xs text-white/50 hover:text-white bg-white/[0.06] hover:bg-white/[0.10] border border-white/[0.08] px-3 py-2 rounded-lg transition-all shrink-0"
+          >
+            <ArrowSquareOut size={14} weight="bold" />
+            Open Dashboard
+          </a>
         </div>
       </div>
 
@@ -1542,10 +1551,28 @@ function SettingsTab({
     }
   }
 
+  const protocol = typeof window !== 'undefined' ? window.location.protocol : 'http:'
+  const dashSettingsUrl = `${protocol}//${org.slug}.${getFrontendDomain()}/dash/org/settings/general`
+
   return (
     <div className="max-w-2xl space-y-6">
+      <a
+        href={dashSettingsUrl}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="flex items-center gap-3 p-4 bg-white/[0.04] border border-white/[0.08] rounded-xl hover:bg-white/[0.07] hover:border-white/[0.14] transition-all group"
+      >
+        <div className="h-8 w-8 rounded-lg bg-white/[0.06] flex items-center justify-center shrink-0">
+          <GearSix size={16} weight="fill" className="text-white/50 group-hover:text-white/80 transition-colors" />
+        </div>
+        <div className="flex-1 min-w-0">
+          <p className="text-sm font-medium text-white">Full Organization Settings</p>
+          <p className="text-xs text-white/40 mt-0.5">Branding, features, AI, domains, SSO, API access, and more</p>
+        </div>
+        <ArrowSquareOut size={16} weight="bold" className="text-white/30 group-hover:text-white/60 shrink-0 transition-colors" />
+      </a>
       <div>
-        <h3 className="text-sm font-medium text-white/60 mb-4">Organization Settings</h3>
+        <h3 className="text-sm font-medium text-white/40 mb-4 uppercase tracking-wider text-xs">Platform Admin Controls</h3>
         <div className="space-y-4">
           <Field label="Name" value={form.name} onChange={(v) => setForm({ ...form, name: v })} />
           <Field
