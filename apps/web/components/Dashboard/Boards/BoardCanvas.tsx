@@ -114,6 +114,7 @@ function BoardEditorInner({
   const panRafRef = useRef(0)
   const prevToolModeRef = useRef<typeof toolMode | null>(null)
   const toolModeRef = useRef(toolMode)
+  // eslint-disable-next-line react-hooks/refs
   toolModeRef.current = toolMode
   const [mousePos, setMousePos] = useState<{ x: number; y: number } | null>(null)
 
@@ -698,23 +699,25 @@ function BoardEditorInner({
       const startMidX = (touchRef.current.startTouches[0].x + touchRef.current.startTouches[1].x) / 2
       const startMidY = (touchRef.current.startTouches[0].y + touchRef.current.startTouches[1].y) / 2
 
+      const startPan = touchRef.current.startPan
       cancelAnimationFrame(panRafRef.current)
       panRafRef.current = requestAnimationFrame(() => {
         setZoom(newZoom)
         setPan({
-          x: touchRef.current!.startPan.x + (midX - startMidX),
-          y: touchRef.current!.startPan.y + (midY - startMidY),
+          x: startPan.x + (midX - startMidX),
+          y: startPan.y + (midY - startMidY),
         })
       })
     } else if (touches.length === 1 && touchRef.current.startTouches.length === 1) {
       // Single finger pan
       const dx = touches[0].x - touchRef.current.startTouches[0].x
       const dy = touches[0].y - touchRef.current.startTouches[0].y
+      const startPan = touchRef.current.startPan
       cancelAnimationFrame(panRafRef.current)
       panRafRef.current = requestAnimationFrame(() => {
         setPan({
-          x: touchRef.current!.startPan.x + dx,
-          y: touchRef.current!.startPan.y + dy,
+          x: startPan.x + dx,
+          y: startPan.y + dy,
         })
       })
     }
@@ -918,10 +921,12 @@ export default function BoardCanvas({ board, accessToken, orgslug, username, org
       },
     })
 
+    /* eslint-disable react-hooks/set-state-in-effect */
     setYdoc(doc)
     setProvider(prov)
     setAuthFailed(false)
     setConnStatus('connecting')
+    /* eslint-enable react-hooks/set-state-in-effect */
 
     return () => {
       prov.destroy()
