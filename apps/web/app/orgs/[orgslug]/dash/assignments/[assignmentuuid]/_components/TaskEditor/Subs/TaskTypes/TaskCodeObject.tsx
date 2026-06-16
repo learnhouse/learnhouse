@@ -31,6 +31,7 @@ import {
   ChevronRight,
   ShieldCheck,
   BookOpen,
+  Lock,
   Settings2,
 } from 'lucide-react'
 import React, { useEffect, useState } from 'react'
