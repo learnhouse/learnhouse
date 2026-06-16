@@ -16,7 +16,6 @@ import { useOrg, useOrgMembership } from '@components/Contexts/OrgContext'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { queryKeys } from '@/lib/query/keys'
 import { useTranslation } from 'react-i18next'
-import Link from 'next/link'
 
 interface CourseRun {
   status: string
@@ -393,7 +392,7 @@ function CoursesActions({ courseuuid, orgslug, course, trailData }: CourseAction
 
   if (linkedOffers.length > 0) {
     // User already enrolled / started — show "you own this" notice + leave button
-    if (!!isStarted) {
+    if (isStarted) {
       return (
         <div className="bg-white nice-shadow rounded-lg overflow-hidden p-4">
           <div className="space-y-4">
