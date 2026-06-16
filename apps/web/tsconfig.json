@@ -50,6 +50,12 @@
       ],
       "@/*": [
         "./*"
+      ],
+      "@learnhouse/reader-react": [
+        "./packages/reader-react/src/index.ts"
+      ],
+      "@learnhouse/reader-react/*": [
+        "./packages/reader-react/src/*"
       ]
     }
   },

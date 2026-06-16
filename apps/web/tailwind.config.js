@@ -6,6 +6,7 @@ module.exports = {
     './components/**/*.{ts,tsx}',
     './app/**/*.{ts,tsx}',
     './src/**/*.{ts,tsx}',
+    './packages/reader-react/src/**/*.{ts,tsx}',
   ],
   theme: {
     container: {

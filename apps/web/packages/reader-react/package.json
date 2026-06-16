@@ -1,0 +1,94 @@
+{
+  "name": "@learnhouse/reader-react",
+  "version": "0.1.0",
+  "description": "Native React reader for LearnHouse course activities — a drop-in alternative to the iframe embed.",
+  "license": "MIT",
+  "type": "module",
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs"
+    },
+    "./styles.css": "./dist/styles.css"
+  },
+  "files": [
+    "dist",
+    "README.md"
+  ],
+  "sideEffects": [
+    "**/*.css"
+  ],
+  "scripts": {
+    "build": "tsup",
+    "build:css": "tailwindcss -i ./src/styles.css -o ./dist/styles.css --minify",
+    "dev": "tsup --watch",
+    "clean": "rm -rf dist",
+    "prepublishOnly": "bun run clean && bun run build && bun run build:css"
+  },
+  "peerDependencies": {
+    "react": ">=18",
+    "react-dom": ">=18",
+    "@tanstack/react-query": ">=5",
+    "@tiptap/core": ">=3",
+    "@tiptap/pm": ">=3",
+    "@tiptap/react": ">=3",
+    "@tiptap/starter-kit": ">=3"
+  },
+  "dependencies": {
+    "@tiptap/extension-bullet-list": "^3.10.1",
+    "@tiptap/extension-code-block-lowlight": "^3.10.1",
+    "@tiptap/extension-heading": "^3.10.1",
+    "@tiptap/extension-link": "^3.10.1",
+    "@tiptap/extension-list-item": "^3.10.1",
+    "@tiptap/extension-ordered-list": "^3.10.1",
+    "@tiptap/extension-table": "^3.10.1",
+    "@tiptap/extension-table-cell": "^3.10.1",
+    "@tiptap/extension-table-header": "^3.10.1",
+    "@tiptap/extension-table-row": "^3.10.1",
+    "@tiptap/extension-youtube": "^3.10.1",
+    "github-markdown-css": "^5",
+    "highlight.js": "^11",
+    "katex": "^0.16",
+    "lowlight": "^3",
+    "react-katex": "^3",
+    "react-markdown": "^9",
+    "rehype-highlight": "^7",
+    "rehype-raw": "^7",
+    "rehype-sanitize": "^6",
+    "remark-gfm": "^4"
+  },
+  "devDependencies": {
+    "@tanstack/react-query": "^5",
+    "@tiptap/core": "^3",
+    "@tiptap/pm": "^3",
+    "@tiptap/react": "^3",
+    "@tiptap/starter-kit": "^3",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "react": "^19",
+    "react-dom": "^19",
+    "tailwindcss": "^3",
+    "tsup": "^8",
+    "typescript": "^5"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/learnhouse/learnhouse.git",
+    "directory": "apps/web/packages/reader-react"
+  },
+  "keywords": [
+    "learnhouse",
+    "react",
+    "course",
+    "reader",
+    "embed",
+    "tiptap"
+  ]
+}

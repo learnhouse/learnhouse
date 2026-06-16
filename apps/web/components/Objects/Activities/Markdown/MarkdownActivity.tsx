@@ -4,11 +4,33 @@ import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
 import rehypeHighlight from 'rehype-highlight'
 import rehypeRaw from 'rehype-raw'
+import rehypeSanitize, { defaultSchema as defaultSanitizeSchema } from 'rehype-sanitize'
 import { WarningCircle, ArrowClockwise, FloppyDisk, MarkdownLogo, SpinnerGap } from '@phosphor-icons/react'
 import { updateActivity } from '@services/courses/activities'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
 import toast from 'react-hot-toast'
 import 'github-markdown-css/github-markdown-light.css'
+
+// Extend the default sanitize schema to preserve the className attrs that
+// rehype-highlight adds (`hljs`, `hljs-*`, `language-*`). Without this, the
+// sanitize step strips those classes and code blocks render colorless.
+// SECURITY: never relax this schema for tags like `script`, `iframe`, `style`,
+// or `on*=` attrs — the markdown URL is author-controlled and previously
+// allowed `<script>` execution via rehype-raw with no sanitize step.
+const SANITIZE_SCHEMA = {
+  ...defaultSanitizeSchema,
+  attributes: {
+    ...(defaultSanitizeSchema.attributes ?? {}),
+    code: [
+      ...(defaultSanitizeSchema.attributes?.code ?? []),
+      ['className', /^hljs($|[- ])/, /^language-[\w-]+$/],
+    ],
+    span: [
+      ...(defaultSanitizeSchema.attributes?.span ?? []),
+      ['className', /^hljs($|[- ])/],
+    ],
+  },
+}
 
 function toRawUrl(url: string): string {
   // GitHub: github.com/user/repo/blob/branch/path -> raw.githubusercontent.com/user/repo/branch/path
@@ -149,7 +171,10 @@ function MarkdownActivity({ activity, editable = false, style }: MarkdownActivit
       )}
 
       <div className="markdown-body" style={style ? { backgroundColor: 'transparent', color: 'inherit' } : undefined}>
-        <ReactMarkdown remarkPlugins={[remarkGfm]} rehypePlugins={[rehypeRaw, rehypeHighlight]}>
+        <ReactMarkdown
+          remarkPlugins={[remarkGfm]}
+          rehypePlugins={[rehypeRaw, [rehypeSanitize, SANITIZE_SCHEMA], rehypeHighlight]}
+        >
           {markdown || ''}
         </ReactMarkdown>
       </div>
