@@ -2,7 +2,6 @@
 import React, { useState, useMemo } from 'react'
 import dynamic from 'next/dynamic'
 import { useTranslation } from 'react-i18next'
-import { ChartBar } from '@phosphor-icons/react'
 import { useOrg } from '@components/Contexts/OrgContext'
 import { useCourse } from '@components/Contexts/CourseContext'
 import { isFeatureAvailable } from '@services/plans/plans'
