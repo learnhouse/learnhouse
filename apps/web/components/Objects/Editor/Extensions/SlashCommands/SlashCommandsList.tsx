@@ -111,8 +111,7 @@ const SlashCommandsList = forwardRef<SlashCommandsListRef, SlashCommandsListProp
               overallIndex++
               const available = isCommandAvailable(item)
               return (
-                <button
-                  key={item.id}
+                <button type="button"                   key={item.id}
                   ref={(el) => {
                     if (el) {
                       itemRefs.current.set(currentIndex, el)

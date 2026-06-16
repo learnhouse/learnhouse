@@ -83,15 +83,13 @@ const ScenariosExtension: React.FC = (props: any) => {
 
           {/* Action buttons */}
           {isEditable ? (
-            <button
-              onClick={() => setIsModalOpen(true)}
+            <button type="button"               onClick={() => setIsModalOpen(true)}
               className="bg-neutral-200 hover:bg-neutral-300 text-neutral-700 font-medium py-1.5 px-3 rounded-lg text-xs transition-colors outline-none"
             >
               Edit Scenarios
             </button>
           ) : (
-            <button
-              onClick={resetScenario}
+            <button type="button"               onClick={resetScenario}
               className="p-1.5 rounded-md hover:bg-neutral-200 transition-colors"
               title="Reset scenario"
             >
@@ -131,8 +129,7 @@ const ScenariosExtension: React.FC = (props: any) => {
             <p className="text-neutral-600 mb-6 leading-relaxed max-w-md mx-auto">
               You've successfully navigated through this interactive scenario.
             </p>
-            <button
-              onClick={resetScenario}
+            <button type="button"               onClick={resetScenario}
               className="inline-flex items-center gap-2 px-4 py-2 bg-neutral-700 hover:bg-neutral-800 text-white rounded-lg transition-colors font-medium text-sm"
             >
               <RotateCcw size={16} />
@@ -179,8 +176,7 @@ const ScenariosExtension: React.FC = (props: any) => {
                   {/* Response Options */}
                   <div className="space-y-2">
                     {currentScenario.options.map((option, index) => (
-                      <button
-                        key={option.id}
+                      <button type="button"                         key={option.id}
                         onClick={() => handleOptionClick(option.nextScenarioId)}
                         className="w-full bg-white border border-neutral-200 hover:border-blue-300 hover:bg-blue-50 rounded-lg p-3 transition-all group text-left nice-shadow"
                       >

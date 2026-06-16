@@ -226,16 +226,14 @@ function ImageBlockComponent(props: any) {
                 className="rounded-lg max-w-full h-auto w-full"
               />
               <div className="absolute top-2 right-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                <button
-                  onClick={handleExpand}
+                <button type="button"                   onClick={handleExpand}
                   className="p-2 outline-none bg-black/50 hover:bg-black/70 rounded-lg transition-colors"
                   title={t('editor.blocks.image_block.expand_image')}
                 >
                   <Expand className="w-4 h-4 text-white" />
                 </button>
                 {blockObject && (
-                  <button
-                    onClick={handleDownload}
+                  <button type="button"                     onClick={handleDownload}
                     className="p-2 outline-none bg-black/50 hover:bg-black/70 rounded-lg transition-colors"
                     title={t('editor.blocks.image_block.download_image')}
                   >
@@ -408,30 +406,26 @@ function ImageBlockComponent(props: any) {
                     style={{ width: '100%' }}
                   />
                   <div className="absolute top-2 right-2 flex items-center gap-1 bg-white/90 backdrop-blur-sm rounded-lg p-1 opacity-80 hover:opacity-100 transition-opacity">
-                    <button
-                      onClick={() => handleAlignmentChange('left')}
+                    <button type="button"                       onClick={() => handleAlignmentChange('left')}
                       className={`p-1.5 rounded-md transition-colors outline-none ${alignment === 'left' ? 'bg-neutral-200 text-neutral-700' : 'hover:bg-neutral-100 text-neutral-500'}`}
                       title={t('editor.blocks.common.align_left')}
                     >
                       <AlignLeft size={14} />
                     </button>
-                    <button
-                      onClick={() => handleAlignmentChange('center')}
+                    <button type="button"                       onClick={() => handleAlignmentChange('center')}
                       className={`p-1.5 rounded-md transition-colors outline-none ${alignment === 'center' ? 'bg-neutral-200 text-neutral-700' : 'hover:bg-neutral-100 text-neutral-500'}`}
                       title={t('editor.blocks.common.align_center')}
                     >
                       <AlignCenter size={14} />
                     </button>
-                    <button
-                      onClick={() => handleAlignmentChange('right')}
+                    <button type="button"                       onClick={() => handleAlignmentChange('right')}
                       className={`p-1.5 rounded-md transition-colors outline-none ${alignment === 'right' ? 'bg-neutral-200 text-neutral-700' : 'hover:bg-neutral-100 text-neutral-500'}`}
                       title={t('editor.blocks.common.align_right')}
                     >
                       <AlignRight size={14} />
                     </button>
                     <div className="w-px h-4 bg-neutral-200 mx-0.5"></div>
-                    <button
-                      onClick={handleExpand}
+                    <button type="button"                       onClick={handleExpand}
                       className="p-1.5 rounded-md hover:bg-neutral-100 text-neutral-500 transition-colors outline-none"
                       title={t('editor.blocks.image_block.expand_image')}
                     >
