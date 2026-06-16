@@ -143,7 +143,7 @@ const BadgesExtension: React.FC = (props: any) => {
           <div className="flex items-center justify-center space-x-1">
             <span className='text'>{emoji}</span>
             {isEditable && (
-              <button onClick={() => setShowEmojiPicker(!showEmojiPicker)}>
+              <button type="button" onClick={() => setShowEmojiPicker(!showEmojiPicker)}>
                 <ChevronDown size={14} />
               </button>
             )}
@@ -155,15 +155,14 @@ const BadgesExtension: React.FC = (props: any) => {
           </NodeViewContent>
           {isEditable && (
             <div className="flex items-center justify-center space-x-2 relative">
-              <button onClick={() => setShowColorPicker(!showColorPicker)}>
+              <button type="button" onClick={() => setShowColorPicker(!showColorPicker)}>
                 <Palette size={14} />
               </button>
               {showColorPicker && (
                 <div ref={colorPickerRef} className="absolute left-full ml-2 p-2 bg-white rounded-full nice-shadow">
                   <div className="flex space-x-2">
                     {colors.map((c) => (
-                      <button
-                        key={c}
+                      <button type="button"                         key={c}
                         className={`w-8 h-8 rounded-full ${getBadgeColor(c)} hover:ring-2 hover:ring-opacity-50 focus:outline-hidden focus:ring-2 focus:ring-opacity-50`}
                         onClick={() => handleColorSelect(c)}
                       />
@@ -176,8 +175,7 @@ const BadgesExtension: React.FC = (props: any) => {
         </div>
         
         {isEditable && (
-          <button
-            onClick={() => setShowPredefinedCallouts(!showPredefinedCallouts)}
+          <button type="button"             onClick={() => setShowPredefinedCallouts(!showPredefinedCallouts)}
             className="text-neutral-300 hover:text-neutral-400 transition-colors"
           >
             <ChevronRight size={16} />
@@ -187,8 +185,7 @@ const BadgesExtension: React.FC = (props: any) => {
         {isEditable && showPredefinedCallouts && (
           <div className='flex flex-wrap gap-2 absolute top-full mt-2 left-0 bg-white/90 backdrop-blur-md p-2 rounded-lg nice-shadow z-10'>
             {predefinedBadges.map((badge, index) => (
-              <button
-                key={index}
+              <button type="button"                 key={index}
                 onClick={() => handlePredefinedBadgeSelect(badge)}
                 className={`flex text-xs items-center px-3 py-1 rounded-xl space-x-2 ${getBadgeColor(badge.color)} text-gray-600 font-bold light-shadow hover:opacity-80 transition-all duration-100 ease-linear`}
               >

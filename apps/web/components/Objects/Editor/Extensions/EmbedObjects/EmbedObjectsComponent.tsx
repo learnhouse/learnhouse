@@ -366,8 +366,7 @@ function EmbedObjectsComponent(props: any) {
             </span>
           </div>
           {(embedUrl || sanitizedEmbedCode) && isEditable && (
-            <button
-              onClick={handleRemove}
+            <button type="button"               onClick={handleRemove}
               className="text-neutral-400 hover:text-red-500 transition-colors"
             >
               <X size={16} />
@@ -391,8 +390,7 @@ function EmbedObjectsComponent(props: any) {
               {/* Toolbar for existing embeds */}
               {isEditable && (
                 <div className="absolute top-2 right-2 flex items-center gap-1 bg-white/90 backdrop-blur-sm rounded-lg p-1 opacity-70 hover:opacity-100 transition-opacity">
-                  <button
-                    onClick={() => setActiveInput(embedType)}
+                  <button type="button"                     onClick={() => setActiveInput(embedType)}
                     className="p-1.5 rounded-md hover:bg-neutral-100 text-neutral-600"
                     title={t('editor.blocks.embed_block.edit_embed')}
                   >
@@ -400,8 +398,7 @@ function EmbedObjectsComponent(props: any) {
                       <path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3Z"></path>
                     </svg>
                   </button>
-                  <button
-                    onClick={handleCenterBlock}
+                  <button type="button"                     onClick={handleCenterBlock}
                     className="p-1.5 rounded-md hover:bg-neutral-100 text-neutral-600"
                     title={alignment === 'center' ? t('editor.blocks.common.align_left') : t('editor.blocks.common.align_center')}
                   >
@@ -415,8 +412,7 @@ function EmbedObjectsComponent(props: any) {
               <p className="text-neutral-500 mb-4 font-medium text-base text-center">{t('editor.blocks.embed_block.add_embed_from')}</p>
               <div className="flex flex-wrap gap-3 sm:gap-4 justify-center mb-4">
                 {supportedProducts.map((product) => (
-                  <button
-                    key={product.name}
+                  <button type="button"                     key={product.name}
                     className="flex flex-col items-center group transition-transform hover:scale-110"
                     onClick={() => handleProductSelection(product)}
                     title={`Add ${product.name} embed`}
@@ -438,8 +434,7 @@ function EmbedObjectsComponent(props: any) {
 
               {isEditable && (
                 <div className="flex gap-2 justify-center">
-                  <button
-                    onClick={() => {
+                  <button type="button"                     onClick={() => {
                       setEmbedType('url');
                       setActiveInput('url');
                     }}
@@ -448,8 +443,7 @@ function EmbedObjectsComponent(props: any) {
                     <LinkIcon size={14} />
                     <span>URL</span>
                   </button>
-                  <button
-                    onClick={() => {
+                  <button type="button"                     onClick={() => {
                       setEmbedType('code');
                       setActiveInput('code');
                     }}

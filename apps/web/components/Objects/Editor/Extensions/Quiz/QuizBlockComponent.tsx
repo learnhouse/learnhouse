@@ -233,23 +233,20 @@ function QuizBlockComponent(props: any) {
 
           {/* Action buttons */}
           {isEditable ? (
-            <button
-              onClick={addSampleQuestion}
+            <button type="button"               onClick={addSampleQuestion}
               className="bg-neutral-200 hover:bg-neutral-300 text-neutral-700 font-medium py-1.5 px-3 rounded-lg text-xs transition-colors outline-none"
             >
               {t('editor.blocks.quiz_block.add_question')}
             </button>
           ) : (
             <div className="flex items-center gap-1">
-              <button
-                onClick={() => refreshUserSubmission()}
+              <button type="button"                 onClick={() => refreshUserSubmission()}
                 className="p-1.5 rounded-md hover:bg-neutral-200 transition-colors"
                 title={t('editor.blocks.quiz_block.reset_answers')}
               >
                 <RefreshCcw className="text-neutral-500" size={15} />
               </button>
-              <button
-                onClick={() => handleUserSubmission()}
+              <button type="button"                 onClick={() => handleUserSubmission()}
                 className="bg-neutral-200 hover:bg-neutral-300 text-neutral-700 font-medium py-1.5 px-3 rounded-lg text-xs transition-colors outline-none"
               >
                 {t('editor.blocks.quiz_block.submit')}
@@ -284,8 +281,7 @@ function QuizBlockComponent(props: any) {
                   )}
                 </div>
                 {isEditable && (
-                  <button
-                    onClick={() => deleteQuestion(question.question_id)}
+                  <button type="button"                     onClick={() => deleteQuestion(question.question_id)}
                     className="w-7 h-7 flex items-center justify-center rounded-lg bg-neutral-100 hover:bg-neutral-200 transition-colors"
                   >
                     <Minus className="text-neutral-500" size={14} />
@@ -372,8 +368,7 @@ function QuizBlockComponent(props: any) {
                       {/* Edit Actions */}
                       {isEditable && (
                         <div className="flex items-center gap-1 px-2">
-                          <button
-                            onClick={(e) => {
+                          <button type="button"                             onClick={(e) => {
                               e.stopPropagation();
                               markAnswerCorrect(question.question_id, answer.answer_id);
                             }}
@@ -382,8 +377,7 @@ function QuizBlockComponent(props: any) {
                           >
                             <Check className="text-emerald-700" size={14} />
                           </button>
-                          <button
-                            onClick={(e) => {
+                          <button type="button"                             onClick={(e) => {
                               e.stopPropagation();
                               deleteAnswer(question.question_id, answer.answer_id);
                             }}
@@ -400,8 +394,7 @@ function QuizBlockComponent(props: any) {
 
                 {/* Add Answer Button */}
                 {isEditable && (
-                  <button
-                    onClick={() => addAnswer(question.question_id)}
+                  <button type="button"                     onClick={() => addAnswer(question.question_id)}
                     className="w-full flex items-center justify-center gap-1 h-11 border-2 border-dashed border-neutral-200 rounded-lg text-neutral-600 hover:border-neutral-300 hover:bg-neutral-50 transition-colors"
                   >
                     <Plus size={15} />
