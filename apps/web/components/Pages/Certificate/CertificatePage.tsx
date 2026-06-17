@@ -6,9 +6,21 @@ import { useLHSession } from '@components/Contexts/LHSessionContext';
 import { useOrg } from '@components/Contexts/OrgContext';
 import { getUserCertificates } from '@services/courses/certifications';
 import CertificatePreview from '@components/Dashboard/Pages/Course/EditCourseCertification/CertificatePreview';
-import { ArrowLeft, Download } from 'lucide-react';
+import { ArrowLeft, Download, Link as LinkIcon } from 'lucide-react';
 import Link from 'next/link';
 import { getUriWithOrg } from '@services/config/config';
+
+const LinkedinIcon = ({ className }: { className?: string }) => (
+  <svg className={className} fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+    <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/>
+  </svg>
+);
+
+const XIcon = ({ className }: { className?: string }) => (
+  <svg className={className} fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+    <path d="M18.901 1.153h3.68l-8.04 9.19L24 22.846h-7.406l-5.8-7.584-6.638 7.584H.474l8.6-9.83L0 1.154h7.594l5.243 6.932ZM17.61 20.644h2.039L6.486 3.24H4.298Z"/>
+  </svg>
+);
 
 interface CertificatePageProps {
   orgslug: string;
@@ -321,6 +333,10 @@ const CertificatePage: React.FC<CertificatePageProps> = ({ orgslug, courseid, qr
       toast.error('Failed to generate PDF. Please try again.');
     }
   };
+  const handleCopyLink = () => {
+    navigator.clipboard.writeText(qrCodeLink);
+    toast.success('Certificate link copied to clipboard!');
+  };
 
   if (isLoading) {
     return (
@@ -375,6 +391,17 @@ const CertificatePage: React.FC<CertificatePageProps> = ({ orgslug, courseid, qr
     );
   }
 
+ const certName = encodeURIComponent(userCertificate?.certification?.config?.certification_name || 'Certificate');
+  const orgName = encodeURIComponent(org?.name || orgslug || 'LearnHouse');
+  
+  const issueDate = new Date(userCertificate?.certificate_user?.created_at);
+  const issueYear = issueDate.getFullYear();
+  const issueMonth = issueDate.getMonth() + 1; // Months are 0-indexed in JS
+  const encodedCertUrl = encodeURIComponent(qrCodeLink);
+
+  const linkedinShareUrl = `https://www.linkedin.com/profile/add?startTask=CERTIFICATION_NAME&name=${certName}&organizationName=${orgName}&issueYear=${issueYear}&issueMonth=${issueMonth}&certUrl=${encodedCertUrl}`;
+  const twitterShareUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(`I just earned my ${userCertificate?.certification?.config?.certification_name} certificate!`)}&url=${encodedCertUrl}`;
+
   return (
     <div className="min-h-screen bg-gray-50 py-8">
       <div className="max-w-4xl mx-auto px-4">
@@ -388,13 +415,48 @@ const CertificatePage: React.FC<CertificatePageProps> = ({ orgslug, courseid, qr
             <span>Back to Course</span>
           </Link>
           
-          <div className="flex items-center space-x-4">
+          <div className="flex items-center space-x-3">
+            {/* Share to LinkedIn */}
+            <a
+              href={linkedinShareUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label="Share on LinkedIn"
+              className="inline-flex items-center space-x-2 bg-[#0A66C2] text-white px-4 py-2 rounded-full hover:bg-[#004182] transition duration-200"
+            >
+              <LinkedinIcon className="w-4 h-4" />
+              <span className="hidden sm:inline text-sm font-medium">LinkedIn</span>
+            </a>
+
+            {/* Share to X (Twitter) */}
+            <a
+              href={twitterShareUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label="Share on X"
+              className="inline-flex items-center space-x-2 bg-black text-white px-4 py-2 rounded-full hover:bg-gray-800 transition duration-200"
+            >
+              <XIcon className="w-4 h-4" />
+              <span className="hidden sm:inline text-sm font-medium">Post</span>
+            </a>
+
+            {/* Copy Link Button */}
+            <button
+              onClick={handleCopyLink}
+              aria-label="Copy Certificate Link"
+              className="inline-flex items-center space-x-2 bg-gray-200 text-gray-700 px-4 py-2 rounded-full hover:bg-gray-300 transition duration-200"
+            >
+              <LinkIcon className="w-4 h-4" />
+              <span className="hidden sm:inline text-sm font-medium">Copy</span>
+            </button>
+
+            {/* Existing Download Button */}
             <button
               onClick={downloadCertificate}
-              className="inline-flex items-center space-x-2 bg-green-600 text-white px-6 py-3 rounded-full hover:bg-green-700 transition duration-200"
+              className="inline-flex items-center space-x-2 bg-green-600 text-white px-5 py-2 rounded-full hover:bg-green-700 transition duration-200"
             >
-              <Download className="w-5 h-5" />
-              <span>Download PDF</span>
+              <Download className="w-4 h-4" />
+              <span className="text-sm font-medium">Download PDF</span>
             </button>
           </div>
         </div>
