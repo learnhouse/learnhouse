@@ -3,6 +3,8 @@ import csv
 import io
 import logging
 import re
+import json as _json
+
 from collections import defaultdict
 from datetime import datetime, timezone
 
@@ -259,7 +261,6 @@ async def _execute_tinybird_query(
         if cached is not None:
             return cached
 
-    cached = get_cached_result(query_name, org_id, days, course_id)
 
     client = _get_read_client()
     if client is None:
@@ -375,7 +376,10 @@ _ALT_FILL = PatternFill("solid", start_color="EEF2F7")
 _NRM_FILL = PatternFill("solid", start_color="FFFFFF")
 _GRN_FILL = PatternFill("solid", start_color="C6EFCE")
 _RED_FILL = PatternFill("solid", start_color="FFCCCC")
+_YLW_FILL = PatternFill("solid", start_color="FFF2CC")  # section header
+_SEC_FILL = PatternFill("solid", start_color="D9E1F2")  # sub-section
 _CELL_FNT = Font(name="Arial", size=10)
+_SEC_FONT = Font(bold=True, name="Arial", size=10, color="1F3864")
 _CENTER   = Alignment(horizontal="center", vertical="center")
 _LEFT     = Alignment(horizontal="left", vertical="center", wrap_text=True)
 _THIN     = Side(style="thin", color="C0C0C0")
@@ -384,136 +388,488 @@ _BRD      = Border(left=_THIN, right=_THIN, top=_THIN, bottom=_THIN)
 # Column names that get green/red highlight based on "Sì"/"No" value
 _BOOL_HIGHLIGHT_COLS = {"Corso completato", "Iscritto al corso"}
 
+def _sanitize(val):
+    if isinstance(val, (list, dict)):
+        return str(val)
+    if isinstance(val, float) and (val != val or val in (float("inf"), float("-inf"))):
+        return None
+    return val
 
-def _write_xlsx_sheet(ws, rows: list[dict]) -> None:
-    """Write a list of dicts to an openpyxl worksheet with styled headers."""
-    if not rows:
-        ws.append(["Nessun dato"])
-        return
+_UUID_FIELDS_TO_STRIP = {"course_uuid", "activity_uuid", "last_activity_uuid"}
 
-    headers = list(rows[0].keys())
-    ws.append(headers)
 
-    for ci in range(1, len(headers) + 1):
-        c = ws.cell(1, ci)
+def _strip_uuids(rows: list[dict]) -> list[dict]:
+    return [
+        {k: v for k, v in row.items() if k not in _UUID_FIELDS_TO_STRIP}
+        for row in rows
+    ]
+
+def _style_header_row(ws, n_cols: int, row: int = 1):
+    for ci in range(1, n_cols + 1):
+        c = ws.cell(row, ci)
         c.fill, c.font, c.alignment, c.border = _HDR_FILL, _HDR_FONT, _CENTER, _BRD
-    ws.row_dimensions[1].height = 22
+    ws.row_dimensions[row].height = 22
 
-    for ri, rec in enumerate(rows, 2):
-        base_fill = _ALT_FILL if ri % 2 == 0 else _NRM_FILL
-        for ci, k in enumerate(headers, 1):
-            val = rec.get(k, "")
-            if isinstance(val, (list, dict)):
-                val = str(val)
-            c   = ws.cell(ri, ci, value=val)
-            if k in _BOOL_HIGHLIGHT_COLS:
-                c.fill = _GRN_FILL if val == "Sì" else _RED_FILL
-            else:
-                c.fill = base_fill
-            c.font      = _CELL_FNT
-            c.border    = _BRD
-            c.alignment = _CENTER if ci == 1 else _LEFT
-        ws.row_dimensions[ri].height = 18
 
+def _style_section_row(ws, label: str, n_cols: int, row: int):
+    ws.merge_cells(start_row=row, start_column=1, end_row=row, end_column=n_cols)
+    c = ws.cell(row, 1, value=label)
+    c.fill = _SEC_FILL
+    c.font = _SEC_FONT
+    c.alignment = _LEFT
+    c.border = _BRD
+    ws.row_dimensions[row].height = 18
+
+def _autofit(ws, rows: list[dict], headers: list[str]):
     for ci, h in enumerate(headers, 1):
-        col   = get_column_letter(ci)
+        col = get_column_letter(ci)
         max_w = max(
             len(str(h)),
-            max((len(str(r.get(h) or "")) for r in rows), default=0),
+            max((len(str(_sanitize(r.get(h)) or "")) for r in rows), default=0),
         )
         ws.column_dimensions[col].width = min(max_w + 4, 40)
 
+def _write_xlsx_sheet(ws, rows: list[dict]) -> None:
+    """Write a list of dicts to a worksheet with styled headers. (unchanged)"""
+    if not rows:
+        ws.append(["No data"])
+        return
+ 
+    headers = list(rows[0].keys())
+    ws.append(headers)
+    _style_header_row(ws, len(headers))
+ 
+    for ri, rec in enumerate(rows, 2):
+        base_fill = _ALT_FILL if ri % 2 == 0 else _NRM_FILL
+        for ci, k in enumerate(headers, 1):
+            val = _sanitize(rec.get(k, ""))
+            c = ws.cell(ri, ci, value=val)
+            if k in _BOOL_HIGHLIGHT_COLS:
+                c.fill = _GRN_FILL if val in ("Yes", "Sì") else _RED_FILL
+            else:
+                c.fill = base_fill
+            c.font = _CELL_FNT
+            c.border = _BRD
+            c.alignment = _CENTER if ci == 1 else _LEFT
+        ws.row_dimensions[ri].height = 18
+ 
+    _autofit(ws, rows, headers)
     ws.freeze_panes = "A2"
     ws.auto_filter.ref = f"A1:{get_column_letter(len(headers))}1"
 
+def _kpi_block(ws, start_row: int, start_col: int, label: str, value, unit: str = ""):
+    lc = ws.cell(start_row, start_col, value=label)
+    lc.font = Font(bold=True, name="Arial", size=9, color="555555")
+    lc.alignment = _CENTER
+    vc = ws.cell(start_row + 1, start_col, value=str(value) + (f" {unit}" if unit else ""))
+    vc.font = Font(bold=True, name="Arial", size=14, color="1F3864")
+    vc.alignment = _CENTER
+
+def _write_overview_sheet(ws, results: dict, generated_at: str):
+    ws.column_dimensions["A"].width = 28
+    for col in ["B", "C", "D", "E"]:
+        ws.column_dimensions[col].width = 22
+
+    ws.merge_cells("A1:E1")
+    t = ws.cell(1, 1, value="📊 Analytics Overview")
+    t.font = Font(bold=True, name="Arial", size=14, color="FFFFFF")
+    t.fill = _HDR_FILL
+    t.alignment = _CENTER
+    ws.row_dimensions[1].height = 30
+
+    ws.merge_cells("A2:E2")
+    s = ws.cell(2, 1, value=f"Generated: {generated_at}")
+    s.font = Font(name="Arial", size=9, color="888888")
+    s.alignment = _CENTER
+    ws.row_dimensions[2].height = 16
+
+    funnel = results.get("enrollment_funnel", {}).get("data", [{}])
+    f = funnel[0] if funnel else {}
+
+    growth = results.get("org_growth_trend", {}).get("data", [])
+    total_signups   = sum(r.get("signups", 0) or 0 for r in growth)
+    total_enrolls   = sum(r.get("enrollments", 0) or 0 for r in growth)
+    total_completes = sum(r.get("completions", 0) or 0 for r in growth)
+
+    ws.merge_cells("A4:E4")
+    sec = ws.cell(4, 1, value="Key Performance Indicators")
+    sec.fill = _SEC_FILL
+    sec.font = _SEC_FONT
+    sec.alignment = _LEFT
+    sec.border = _BRD
+    ws.row_dimensions[4].height = 18
+
+    kpis = [
+        ("Signups", total_signups),
+        ("Enrollments", total_enrolls),
+        ("Completions", total_completes),
+        ("Completion Rate", (
+            f"{round(f.get('completions',0)/f.get('enrollments',1)*100,1)}%"
+            if f.get("enrollments") else "N/A"
+        )),
+    ]
+    for ci, (label, value) in enumerate(kpis, 1):
+        _kpi_block(ws, 5, ci, label, value)
+    ws.row_dimensions[5].height = 16
+    ws.row_dimensions[6].height = 24
+
+    ws.merge_cells("A8:E8")
+    s2 = ws.cell(8, 1, value="Enrollment Funnel")
+    s2.fill = _SEC_FILL
+    s2.font = _SEC_FONT
+    s2.alignment = _LEFT
+    ws.row_dimensions[8].height = 18
+
+    funnel_headers = ["Page Views", "Course Views", "Enrollments", "Completions", "Enroll→Complete %"]
+    for ci, h in enumerate(funnel_headers, 1):
+        c = ws.cell(9, ci, h)
+        c.fill = _HDR_FILL
+        c.font = _HDR_FONT
+        c.alignment = _CENTER
+        c.border = _BRD
+
+    enrollments = f.get("enrollments") or 0
+    completions = f.get("completions") or 0
+    conv = f"{round(completions/enrollments*100,1)}%" if enrollments else "N/A"
+    row_vals = [f.get("page_views", ""), f.get("course_views", ""), enrollments, completions, conv]
+    for ci, v in enumerate(row_vals, 1):
+        c = ws.cell(10, ci, value=v)
+        c.fill = _NRM_FILL
+        c.font = _CELL_FNT
+        c.alignment = _CENTER
+        c.border = _BRD
+    ws.row_dimensions[9].height = 20
+    ws.row_dimensions[10].height = 18
+
+    ws.merge_cells("A12:E12")
+    s3 = ws.cell(12, 1, value="Growth Trend (by week)")
+    s3.fill = _SEC_FILL
+    s3.font = _SEC_FONT
+    s3.alignment = _LEFT
+    ws.row_dimensions[12].height = 18
+
+    gt_headers = ["Week", "Signups", "Enrollments", "Completions"]
+    for ci, h in enumerate(gt_headers, 1):
+        c = ws.cell(13, ci, h)
+        c.fill = _HDR_FILL
+        c.font = _HDR_FONT
+        c.alignment = _CENTER
+        c.border = _BRD
+    ws.row_dimensions[13].height = 20
+
+    for ri, row in enumerate(growth[-12:], 14):
+        fill = _ALT_FILL if ri % 2 == 0 else _NRM_FILL
+        for ci, k in enumerate(["week", "signups", "enrollments", "completions"], 1):
+            c = ws.cell(ri, ci, value=_sanitize(row.get(k, "")))
+            c.fill = fill
+            c.font = _CELL_FNT
+            c.alignment = _CENTER
+            c.border = _BRD
+        ws.row_dimensions[ri].height = 16
+
+    ws.freeze_panes = "A3"
+ 
+def _write_learners_sheet(ws, results: dict):
+    """
+    Sheet 2 — Learners & Growth
+    daily_active_users, new_vs_returning, cohort_retention, peak_usage_hours
+    """
+    ws.column_dimensions["A"].width = 20
+    for col in ["B", "C", "D", "E", "F", "G", "H"]:
+        ws.column_dimensions[col].width = 16
+ 
+    # Title
+    ws.merge_cells("A1:H1")
+    t = ws.cell(1, 1, value="Learners & Growth")
+    t.font = Font(bold=True, name="Arial", size=13, color="FFFFFF")
+    t.fill = _HDR_FILL
+    t.alignment = _CENTER
+    ws.row_dimensions[1].height = 28
+ 
+    current_row = 3
+ 
+    # --- Daily Active Users ---
+    dau = results.get("daily_active_users", {}).get("data", [])
+    _style_section_row(ws, "Daily Active Users", 8, current_row)
+    current_row += 1
+    if dau:
+        headers = ["Date", "DAU"]
+        for ci, h in enumerate(headers, 1):
+            c = ws.cell(current_row, ci, h)
+            c.fill = _HDR_FILL; c.font = _HDR_FONT; c.alignment = _CENTER; c.border = _BRD
+        current_row += 1
+        for ri, row in enumerate(dau):
+            fill = _ALT_FILL if ri % 2 == 0 else _NRM_FILL
+            ws.cell(current_row, 1, value=str(row.get("date", ""))).fill = fill
+            ws.cell(current_row, 2, value=row.get("dau", "")).fill = fill
+            for ci in range(1, 3):
+                ws.cell(current_row, ci).font = _CELL_FNT
+                ws.cell(current_row, ci).alignment = _CENTER
+                ws.cell(current_row, ci).border = _BRD
+            current_row += 1
+    else:
+        ws.cell(current_row, 1, value="No data").font = _CELL_FNT
+        current_row += 1
+ 
+    current_row += 1  # blank row
+ 
+    # --- New vs Returning ---
+    nvr = results.get("new_vs_returning", {}).get("data", [])
+    _style_section_row(ws, "New vs Returning Users", 8, current_row)
+    current_row += 1
+    if nvr:
+        headers = ["Date", "New Users", "Returning Users"]
+        for ci, h in enumerate(headers, 1):
+            c = ws.cell(current_row, ci, h)
+            c.fill = _HDR_FILL; c.font = _HDR_FONT; c.alignment = _CENTER; c.border = _BRD
+        current_row += 1
+        for ri, row in enumerate(nvr):
+            fill = _ALT_FILL if ri % 2 == 0 else _NRM_FILL
+            for ci, k in enumerate(["date", "new_users", "returning_users"], 1):
+                c = ws.cell(current_row, ci, value=str(row.get(k, "")))
+                c.fill = fill; c.font = _CELL_FNT; c.alignment = _CENTER; c.border = _BRD
+            current_row += 1
+    else:
+        ws.cell(current_row, 1, value="No data").font = _CELL_FNT
+        current_row += 1
+ 
+    current_row += 1
+ 
+    # --- Cohort Retention ---
+    cohort = results.get("cohort_retention", {}).get("data", [])
+    _style_section_row(ws, "Cohort Retention (W1 / W2 / W4 / W8)", 8, current_row)
+    current_row += 1
+    if cohort:
+        headers = ["Cohort Week", "Cohort Size", "W1", "W2", "W4", "W8"]
+        for ci, h in enumerate(headers, 1):
+            c = ws.cell(current_row, ci, h)
+            c.fill = _HDR_FILL; c.font = _HDR_FONT; c.alignment = _CENTER; c.border = _BRD
+        current_row += 1
+        for ri, row in enumerate(cohort):
+            fill = _ALT_FILL if ri % 2 == 0 else _NRM_FILL
+            for ci, k in enumerate(["cohort_week", "cohort_size", "week_1", "week_2", "week_4", "week_8"], 1):
+                c = ws.cell(current_row, ci, value=_sanitize(row.get(k, "")))
+                c.fill = fill; c.font = _CELL_FNT; c.alignment = _CENTER; c.border = _BRD
+            current_row += 1
+    else:
+        ws.cell(current_row, 1, value="No data").font = _CELL_FNT
+        current_row += 1
+ 
+    current_row += 1
+ 
+    # --- Peak Usage Hours (compact: day x hour heatmap summary) ---
+    peak = results.get("peak_usage_hours", {}).get("data", [])
+    _style_section_row(ws, "Peak Usage Hours (events by day of week)", 8, current_row)
+    current_row += 1
+    if peak:
+        # Aggregate by day_of_week
+        by_day: dict[int, int] = defaultdict(int)
+        for row in peak:
+            by_day[row.get("day_of_week", 0)] += row.get("event_count", 0) or 0
+        day_names = {1: "Mon", 2: "Tue", 3: "Wed", 4: "Thu", 5: "Fri", 6: "Sat", 7: "Sun"}
+        headers = ["Day", "Total Events"]
+        for ci, h in enumerate(headers, 1):
+            c = ws.cell(current_row, ci, h)
+            c.fill = _HDR_FILL; c.font = _HDR_FONT; c.alignment = _CENTER; c.border = _BRD
+        current_row += 1
+        for ri, (day, count) in enumerate(sorted(by_day.items())):
+            fill = _ALT_FILL if ri % 2 == 0 else _NRM_FILL
+            ws.cell(current_row, 1, value=day_names.get(day, str(day))).fill = fill
+            ws.cell(current_row, 2, value=count).fill = fill
+            for ci in range(1, 3):
+                ws.cell(current_row, ci).font = _CELL_FNT
+                ws.cell(current_row, ci).alignment = _CENTER
+                ws.cell(current_row, ci).border = _BRD
+            current_row += 1
+    else:
+        ws.cell(current_row, 1, value="No data").font = _CELL_FNT
+ 
+    ws.freeze_panes = "A2"
+ 
+ 
+def _write_courses_sheet(ws, results: dict):
+    """
+    Sheet 3 — Courses & Content
+    top_courses, course_rating_by_completion, time_to_completion,
+    content_type_effectiveness, course_dropoff, completion_velocity
+    """
+    ws.column_dimensions["A"].width = 36
+    for col in ["B", "C", "D", "E", "F"]:
+        ws.column_dimensions[col].width = 18
+ 
+    ws.merge_cells("A1:F1")
+    t = ws.cell(1, 1, value="Courses & Content")
+    t.font = Font(bold=True, name="Arial", size=13, color="FFFFFF")
+    t.fill = _HDR_FILL
+    t.alignment = _CENTER
+    ws.row_dimensions[1].height = 28
+ 
+    current_row = 3
+    
+    sections = [
+        ("Top Courses", "top_courses",
+         ["course_name", "views", "enrollments", "completions"],
+         ["Course", "Views", "Enrollments", "Completions"]),
+        ("Course Effectiveness (Enrollment ≥ 5)", "course_rating_by_completion",
+         ["course_name", "enrollments", "completions", "completion_rate"],
+         ["Course", "Enrollments", "Completions", "Completion Rate %"]),
+        ("Time to Completion (days)", "time_to_completion",
+         ["course_name", "median_days", "completions_count"],
+         ["Course", "Median Days", "Completions"]),
+        ("Content Type Effectiveness", "content_type_effectiveness",
+         ["activity_type", "view_count", "completion_count", "completion_rate"],
+         ["Type", "Views", "Completions", "Rate %"]),
+        ("Course Dropoff Points", "course_dropoff",
+         ["course_name", "last_activity_name", "dropoff_count"],
+         ["Course", "Last Activity", "Drop-offs"]),
+        ("Completion Velocity (avg hrs between activities)", "completion_velocity",
+         ["course_name", "avg_hours_between", "transitions"],
+         ["Course", "Avg Hours Between", "Transitions"]),
+    ]
+    
+    for section_label, query_key, data_keys, col_labels in sections:
+        rows = results.get(query_key, {}).get("data", [])
+        _style_section_row(ws, section_label, 6, current_row)
+        current_row += 1
+ 
+        for ci, h in enumerate(col_labels, 1):
+            c = ws.cell(current_row, ci, h)
+            c.fill = _HDR_FILL; c.font = _HDR_FONT; c.alignment = _CENTER; c.border = _BRD
+        current_row += 1
+ 
+        if rows:
+            for ri, row in enumerate(rows):
+                fill = _ALT_FILL if ri % 2 == 0 else _NRM_FILL
+                for ci, k in enumerate(data_keys, 1):
+                    c = ws.cell(current_row, ci, value=_sanitize(row.get(k, "")))
+                    c.fill = fill; c.font = _CELL_FNT; c.alignment = _LEFT; c.border = _BRD
+                current_row += 1
+        else:
+            ws.cell(current_row, 1, value="No data").font = _CELL_FNT
+            current_row += 1
+ 
+        current_row += 1  # blank between sections
+ 
+    ws.freeze_panes = "A2"
+ 
 
 def _build_xlsx_global(results: dict[str, dict]) -> Workbook:
     """
-    Workbook for global (non-course) export.
-    One summary sheet + one sheet per query.
+    4-sheet workbook for org-level export:
+      1. Overview       — KPI cards + funnel + growth trend
+      2. Learners       — DAU, new vs returning, cohort retention, peak hours
+      3. Courses        — top courses, effectiveness, time-to-complete, dropoff
+      4. Acquisition    — country, device, referrer
     """
     wb = Workbook()
     wb.remove(wb.active)
-
-    ws_s = wb.create_sheet("Riepilogo")
-    summary_headers = ["Query", "Rows N.", "Exported"]
-    ws_s.append(summary_headers)
-    for ci in range(1, len(summary_headers) + 1):
-        c = ws_s.cell(1, ci)
-        c.fill, c.font, c.alignment, c.border = _HDR_FILL, _HDR_FONT, _CENTER, _BRD
-    ws_s.row_dimensions[1].height = 22
-
-    now_str = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M UTC")
-    for i, (qname, result) in enumerate(results.items(), 2):
-        n_rows = len(result.get("data", []))
-        ws_s.append([qname, n_rows, now_str])
-        fill = _ALT_FILL if i % 2 == 0 else _NRM_FILL
-        for ci in range(1, len(summary_headers) + 1):
-            ws_s.cell(i, ci).fill      = fill
-            ws_s.cell(i, ci).font      = _CELL_FNT
-            ws_s.cell(i, ci).alignment = _CENTER
-            ws_s.cell(i, ci).border    = _BRD
-
-    for col, w in zip(["A", "B", "C"], [40, 12, 22]):
-        ws_s.column_dimensions[col].width = w
-    ws_s.freeze_panes = "A2"
-
-    for qname, result in results.items():
-        ws = wb.create_sheet(qname[:31])
-        _write_xlsx_sheet(ws, result.get("data", []))
-
+ 
+    generated_at = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M UTC")
+ 
+    ws1 = wb.create_sheet("Overview")
+    _write_overview_sheet(ws1, results, generated_at)
+ 
+    ws2 = wb.create_sheet("Learners & Growth")
+    _write_learners_sheet(ws2, results)
+ 
+    ws3 = wb.create_sheet("Courses & Content")
+    _write_courses_sheet(ws3, results)
+ 
     return wb
 
 
 def _build_xlsx_course_users(flat: list[dict]) -> Workbook:
     """
-    Workbook for course×users export.
-    Sheets: Riepilogo, Tutti, one sheet per group.
+    Course×users workbook:
+      1. Summary   — group-level stats
+      2. All Users — full flat list
+      3. One sheet per group
     """
     wb = Workbook()
     wb.remove(wb.active)
-
+ 
     groups: dict[str, list[dict]] = defaultdict(list)
     for row in flat:
         raw = row.get("Groups", "None")
-        gs  = [g.strip() for g in raw.split(",")] if raw != "None" else ["No groups"]
+        gs  = [g.strip() for g in raw.split(",")] if raw and raw != "None" else ["No Group"]
         for g in gs:
             if g:
                 groups[g].append(row)
-
-    # Riepilogo
+ 
+    # --- Summary sheet ---
     ws_s = wb.create_sheet("Summary")
-    hdr  = ["Group", "Users N.", "Subscribed", "Completed"]
-    ws_s.append(hdr)
-    for ci in range(1, len(hdr) + 1):
-        c = ws_s.cell(1, ci)
-        c.fill, c.font, c.alignment, c.border = _HDR_FILL, _HDR_FONT, _CENTER, _BRD
-    ws_s.row_dimensions[1].height = 22
-
-    for i, (g, members) in enumerate(sorted(groups.items()), 2):
+    ws_s.column_dimensions["A"].width = 28
+    for col in ["B", "C", "D", "E"]:
+        ws_s.column_dimensions[col].width = 16
+ 
+    ws_s.merge_cells("A1:E1")
+    t = ws_s.cell(1, 1, value="📋 Course Export — Summary")
+    t.font = Font(bold=True, name="Arial", size=13, color="FFFFFF")
+    t.fill = _HDR_FILL
+    t.alignment = _CENTER
+    ws_s.row_dimensions[1].height = 28
+ 
+    generated_at = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M UTC")
+    ws_s.merge_cells("A2:E2")
+    s = ws_s.cell(2, 1, value=f"Generated: {generated_at}  |  Total users: {len(flat)}")
+    s.font = Font(name="Arial", size=9, color="888888")
+    s.alignment = _CENTER
+ 
+    # KPI row
+    enrolled_total  = sum(1 for r in flat if r.get("Subscribed") == "Yes")
+    completed_total = sum(1 for r in flat if r.get("Completed Course") == "Yes")
+    conv = f"{round(completed_total/enrolled_total*100,1)}%" if enrolled_total else "N/A"
+ 
+    kpis = [
+        ("Total Users", len(flat)),
+        ("Enrolled", enrolled_total),
+        ("Completed", completed_total),
+        ("Completion Rate", conv),
+        ("Groups", len(groups)),
+    ]
+    ws_s.merge_cells("A4:E4")
+    sec = ws_s.cell(4, 1, value="Key Metrics")
+    sec.fill = _SEC_FILL; sec.font = _SEC_FONT; sec.alignment = _LEFT; sec.border = _BRD
+    ws_s.row_dimensions[4].height = 18
+ 
+    for ci, (label, value) in enumerate(kpis, 1):
+        _kpi_block(ws_s, 5, ci, label, value)
+    ws_s.row_dimensions[5].height = 16
+    ws_s.row_dimensions[6].height = 24
+ 
+    # Group table
+    ws_s.merge_cells("A8:E8")
+    sec2 = ws_s.cell(8, 1, value="By Group")
+    sec2.fill = _SEC_FILL; sec2.font = _SEC_FONT; sec2.alignment = _LEFT; sec2.border = _BRD
+    ws_s.row_dimensions[8].height = 18
+ 
+    hdr = ["Group", "Total Users", "Enrolled", "Completed", "Completion Rate"]
+    for ci, h in enumerate(hdr, 1):
+        c = ws_s.cell(9, ci, h)
+        c.fill = _HDR_FILL; c.font = _HDR_FONT; c.alignment = _CENTER; c.border = _BRD
+    ws_s.row_dimensions[9].height = 20
+ 
+    for ri, (g, members) in enumerate(sorted(groups.items()), 10):
         enrolled  = sum(1 for m in members if m.get("Subscribed") == "Yes")
-        completed = sum(1 for m in members if m.get("Completed course")  == "Yes")
-        ws_s.append([g, len(members), enrolled, completed])
-        fill = _ALT_FILL if i % 2 == 0 else _NRM_FILL
-        for ci in range(1, len(hdr) + 1):
-            ws_s.cell(i, ci).fill      = fill
-            ws_s.cell(i, ci).font      = _CELL_FNT
-            ws_s.cell(i, ci).alignment = _CENTER
-            ws_s.cell(i, ci).border    = _BRD
-
-    for col, w in zip(["A", "B", "C", "D"], [30, 14, 20, 16]):
-        ws_s.column_dimensions[col].width = w
-    ws_s.freeze_panes = "A2"
-
-    # Tutti
-    ws_a = wb.create_sheet("All")
+        completed = sum(1 for m in members if m.get("Completed Course") == "Yes")
+        rate = f"{round(completed/enrolled*100,1)}%" if enrolled else "N/A"
+        fill = _ALT_FILL if ri % 2 == 0 else _NRM_FILL
+        for ci, v in enumerate([g, len(members), enrolled, completed, rate], 1):
+            c = ws_s.cell(ri, ci, value=v)
+            c.fill = fill; c.font = _CELL_FNT; c.alignment = _CENTER; c.border = _BRD
+        ws_s.row_dimensions[ri].height = 16
+ 
+    ws_s.freeze_panes = "A10"
+ 
+    # --- All Users sheet ---
+    ws_a = wb.create_sheet("All Users")
     _write_xlsx_sheet(ws_a, flat)
-
-    # One sheet per group
+ 
+    # --- One sheet per group ---
     for g in sorted(groups.keys()):
         ws = wb.create_sheet(g[:31])
         _write_xlsx_sheet(ws, groups[g])
-
+ 
     return wb
 
 
@@ -647,31 +1003,150 @@ async def _fetch_course_users_flat(
 # Export serializers
 # ---------------------------------------------------------------------------
 
+# ---------------------------------------------------------------------------
+# Export constants and JSON helpers
+# ---------------------------------------------------------------------------
+
+_QUERY_LABELS = {
+    "org_growth_trend":            "Org Growth Trend",
+    "enrollment_funnel":           "Enrollment Funnel",
+    "daily_active_users":          "Daily Active Users",
+    "new_vs_returning":            "New vs Returning Users",
+    "cohort_retention":            "Cohort Retention",
+    "peak_usage_hours":            "Peak Usage Hours",
+    "top_courses":                 "Top Courses",
+    "course_rating_by_completion": "Course Effectiveness",
+    "time_to_completion":          "Time to Completion",
+    "course_dropoff":              "Course Dropoff",
+    "content_type_effectiveness":  "Content Type Effectiveness",
+    "completion_velocity":         "Completion Velocity",
+}
+
+_CSV_ORG_QUERIES = {
+    "org_growth_trend",
+    "enrollment_funnel",
+    "daily_active_users",
+    "new_vs_returning",
+    "cohort_retention",
+    "peak_usage_hours",
+    "top_courses",
+    "course_rating_by_completion",
+    "time_to_completion",
+    "course_dropoff",
+    "content_type_effectiveness",
+    "completion_velocity",
+}
+
+
+def _json_response(data: dict) -> Response:
+    body = _json.dumps(data, indent=2, ensure_ascii=False, default=str)
+    return Response(content=body, media_type="application/json")
+
+def _json_org_export(results: dict, org_id: int, days: int) -> dict:
+    now = datetime.now(timezone.utc).isoformat()
+    filtered = {k: v for k, v in results.items() if k in _CSV_ORG_QUERIES}
+    return {
+        "meta": {
+            "org_id":       org_id,
+            "days":         days,
+            "generated_at": now,
+            "query_count":  len(filtered),
+        },
+        "sections": {
+            "overview": {
+                "org_growth_trend":  filtered.get("org_growth_trend", {}),
+                "enrollment_funnel": filtered.get("enrollment_funnel", {}),
+                "daily_active_users": filtered.get("daily_active_users", {}),
+            },
+            "learners": {
+                "new_vs_returning": filtered.get("new_vs_returning", {}),
+                "cohort_retention":  filtered.get("cohort_retention", {}),
+                "peak_usage_hours":  filtered.get("peak_usage_hours", {}),
+            },
+            "courses": {
+                "top_courses":                 filtered.get("top_courses", {}),
+                "course_rating_by_completion": filtered.get("course_rating_by_completion", {}),
+                "time_to_completion":          filtered.get("time_to_completion", {}),
+                "course_dropoff":              filtered.get("course_dropoff", {}),
+                "content_type_effectiveness":  filtered.get("content_type_effectiveness", {}),
+                "completion_velocity":         filtered.get("completion_velocity", {}),
+            },
+        },
+    }
+
+
+def _json_course_export(flat: list[dict], org_id: int, days: int, course_uuid: str) -> dict:
+    now = datetime.now(timezone.utc).isoformat()
+    enrolled  = sum(1 for r in flat if r.get("Subscribed") == "Yes")
+    completed = sum(1 for r in flat if r.get("Completed Course") == "Yes")
+    return {
+        "meta": {
+            "org_id":          org_id,
+            "course_uuid":     course_uuid,
+            "days":            days,
+            "generated_at":    now,
+            "total_users":     len(flat),
+            "enrolled":        enrolled,
+            "completed":       completed,
+            "completion_rate": round(completed / enrolled * 100, 1) if enrolled else None,
+        },
+        "users": flat,
+    }
+
 def _flat_to_csv(flat: list[dict]) -> str:
     output = io.StringIO()
-    if flat:
-        writer = csv.DictWriter(output, fieldnames=flat[0].keys())
-        writer.writeheader()
-        writer.writerows(flat)
+ 
+    now = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M UTC")
+    output.write(f"# LearnHouse Course Export\n")
+    output.write(f"# Generated: {now}\n")
+    output.write(f"# Total users: {len(flat)}\n\n")
+ 
+    if not flat:
+        output.write("# No data\n")
+        return output.getvalue()
+ 
+    sanitized = [
+        {k: str(v) if isinstance(v, (list, dict)) else v for k, v in row.items()}
+        for row in flat
+    ]
+    all_keys = dict.fromkeys(k for row in sanitized for k in row)
+    writer = csv.DictWriter(output, fieldnames=all_keys, extrasaction="ignore")
+    writer.writeheader()
+    writer.writerows(sanitized)
     return output.getvalue()
 
 
 def _results_to_csv(results: dict[str, dict]) -> str:
     output = io.StringIO()
+ 
+    # Metadata header
+    now = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M UTC")
+    output.write(f"# LearnHouse Analytics Export\n")
+    output.write(f"# Generated: {now}\n")
+    output.write(f"# Sections: {len(results)}\n\n")
+ 
     for qname, result in results.items():
+        if qname not in _CSV_ORG_QUERIES:
+            continue
+ 
         rows = result.get("data", [])
-        output.write(f"# {qname}\n")
-        if rows:
-            sanitized = [
-                {k: str(v) if isinstance(v, (list, dict)) else v for k, v in row.items()}
-                for row in rows
-            ]
-            # Raccogli tutte le chiavi da tutte le righe, non solo dalla prima
-            all_keys = dict.fromkeys(k for row in sanitized for k in row)
-            writer = csv.DictWriter(output, fieldnames=all_keys, extrasaction="ignore")
-            writer.writeheader()
-            writer.writerows(sanitized)
+        label = _QUERY_LABELS.get(qname, qname)
+        output.write(f"## {label}\n")
+ 
+        if not rows:
+            output.write("# No data\n\n")
+            continue
+ 
+        sanitized = [
+            {k: str(v) if isinstance(v, (list, dict)) else v for k, v in row.items()}
+            for row in rows
+        ]
+        all_keys = dict.fromkeys(k for row in sanitized for k in row)
+        writer = csv.DictWriter(output, fieldnames=all_keys, extrasaction="ignore")
+        writer.writeheader()
+        writer.writerows(sanitized)
         output.write("\n")
+ 
     return output.getvalue()
 
 
@@ -1143,22 +1618,13 @@ async def export_analytics(
     safe_org_id = int(org_id)
     safe_days   = _validate_days(request.query_params.get("days"), _MAX_SAFE_DAYS)
 
-    limit_param = request.query_params.get("limit")
-    if limit_param is not None:
-        try:
-            safe_limit = int(limit_param)
-        except (ValueError, TypeError):
-            raise HTTPException(status_code=400, detail="Invalid 'limit' parameter")
-        if safe_limit <= 0:
-            raise HTTPException(status_code=400, detail="'limit' must be greater than 0")
-
     # ── Course export: one row per user ───────────────────────────────────────
     if safe_course_uuid:
         flat = await _fetch_course_users_flat(safe_org_id, safe_days, safe_course_uuid, db_session, for_export=True)
         
 
         if fmt == "json":
-            return flat
+            return _json_response(_json_course_export(flat, safe_org_id, safe_days, safe_course_uuid))
 
         if fmt == "csv":
             return _csv_response(_flat_to_csv(flat))
@@ -1167,7 +1633,10 @@ async def export_analytics(
         return _xlsx_response(_build_xlsx_course_users(flat))
 
     # ── Global export: aggregated org analytics ───────────────────────────────
-    export_queries = {**CORE_QUERIES, **ADVANCED_QUERIES}
+    export_queries = {
+        k: v for k, v in {**CORE_QUERIES, **ADVANCED_QUERIES}.items()
+        if k in _CSV_ORG_QUERIES
+    }
     results: dict[str, dict] = {}
 
     for qname, (sql_template, default_days) in export_queries.items():
@@ -1176,12 +1645,13 @@ async def export_analytics(
         try:
             result = await _execute_tinybird_query(qname, sql, safe_org_id, d)
             result["data"] = await _enrich_with_metadata(result.get("data", []), db_session)
+            result["data"] = _strip_uuids(result["data"])
         except HTTPException:
             result = {"data": [], "rows": 0, "meta": []}
         results[qname] = result
 
     if fmt == "json":
-        return results
+        return _json_response(_json_org_export(results, safe_org_id, safe_days))
 
     if fmt == "csv":
         return _csv_response(_results_to_csv(results))
