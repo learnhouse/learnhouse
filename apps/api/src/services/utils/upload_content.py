@@ -87,14 +87,13 @@ async def upload_content(
                 detail=f"File format {file_format} not allowed",
             )
 
-    ensure_directory_exists(f"content/{type_of_dir}/{uuid}/{directory}")
+    object_path = f"content/{type_of_dir}/{uuid}/{directory}/{file_and_format}"
 
     if content_delivery == "filesystem":
-        # upload file to server
-        with open(
-            f"content/{type_of_dir}/{uuid}/{directory}/{file_and_format}",
-            "wb",
-        ) as f:
+        # Local/self-hosted only. This writes under the working directory, which
+        # is read-only on serverless runtimes (Vercel) — deploy with s3api there.
+        ensure_directory_exists(f"content/{type_of_dir}/{uuid}/{directory}")
+        with open(object_path, "wb") as f:
             f.write(file_binary)
             f.close()
 
@@ -106,23 +105,17 @@ async def upload_content(
         )
 
         bucket_name = learnhouse_config.hosting_config.content_delivery.s3api.bucket_name or "learnhouse-media"
-        local_path = f"content/{type_of_dir}/{uuid}/{directory}/{file_and_format}"
-        s3_key = local_path
+        s3_key = object_path
 
-        # Write to local temp file for S3 upload
-        with open(local_path, "wb") as f:
-            f.write(file_binary)
-
+        # Upload the bytes straight to S3 — never stage a local file. The
+        # serverless filesystem (Vercel) is read-only except /tmp, so the
+        # previous local-staging write raised OSError and 500'd every block-media
+        # upload (images/video/pdf/audio). put_object keeps the whole operation
+        # in memory and writes nothing to disk.
         try:
-            s3.upload_file(local_path, bucket_name, s3_key)
+            s3.put_object(Bucket=bucket_name, Key=s3_key, Body=file_binary)
             s3.head_object(Bucket=bucket_name, Key=s3_key)
             logger.debug("S3 upload successful: %s", s3_key)
         except ClientError as e:
             logger.error("S3 upload failed: %s", e)
             raise HTTPException(status_code=500, detail="File upload to storage failed")
-        finally:
-            # Clean up local temp file after S3 upload
-            try:
-                os.remove(local_path)
-            except OSError as cleanup_err:
-                logger.error("Failed to clean up temp file %s: %s", local_path, cleanup_err)

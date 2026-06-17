@@ -128,15 +128,15 @@ class TestUploadContentService:
                     file_binary=b"ok",
                     file_and_format="logo.png",
                 )
-            s3_client.upload_file.assert_called_once()
+            s3_client.put_object.assert_called_once()
             s3_client.head_object.assert_called_once()
 
             s3_client = Mock()
             from botocore.exceptions import ClientError
 
-            s3_client.upload_file.side_effect = ClientError(
+            s3_client.put_object.side_effect = ClientError(
                 {"Error": {"Code": "500", "Message": "boom"}},
-                "upload_file",
+                "put_object",
             )
             with patch(
                 "src.services.utils.upload_content.get_learnhouse_config",
@@ -159,41 +159,54 @@ class TestUploadContentService:
         assert exc.value.status_code == 500
 
     @pytest.mark.asyncio
-    async def test_upload_content_s3_cleanup_oserror_is_swallowed(self, tmp_path):
+    async def test_upload_content_s3_succeeds_on_readonly_filesystem(self):
+        """s3api must never write to the local filesystem.
+
+        On a serverless runtime (Vercel) the working directory is read-only
+        except /tmp, so the previous implementation — which staged the bytes to a
+        relative ``content/...`` path before ``s3.upload_file`` — raised OSError
+        and 500'd every block-media upload (the reason Drive-imported course
+        images never appeared). The upload must go straight to S3 in memory.
+        """
         fake_config = SimpleNamespace(
             hosting_config=SimpleNamespace(
                 content_delivery=SimpleNamespace(
                     type="s3api",
                     s3api=SimpleNamespace(
-                        endpoint_url="http://s3.test",
-                        bucket_name="bucket",
+                        endpoint_url="https://s3.test", bucket_name="bucket"
                     ),
                 )
             )
         )
         s3_client = Mock()
 
-        import os
-        old_cwd = os.getcwd()
-        os.chdir(tmp_path)
-        try:
-            with patch(
-                "src.services.utils.upload_content.get_learnhouse_config",
-                return_value=fake_config,
-            ), patch(
-                "src.services.utils.upload_content.boto3.client",
-                return_value=s3_client,
-            ), patch(
-                "src.services.utils.upload_content.os.remove",
-                side_effect=OSError("cleanup failed"),
-            ):
-                await upload_content(
-                    directory="logos",
-                    type_of_dir="orgs",
-                    uuid="org_uuid",
-                    file_binary=b"ok",
-                    file_and_format="logo.png",
-                )
-            s3_client.upload_file.assert_called_once()
-        finally:
-            os.chdir(old_cwd)
+        def _readonly(*_args, **_kwargs):
+            raise OSError("[Errno 30] Read-only file system")
+
+        # Simulate the read-only serverless FS: any attempt to create a directory
+        # or open a local file for writing fails hard.
+        with patch(
+            "src.services.utils.upload_content.get_learnhouse_config",
+            return_value=fake_config,
+        ), patch(
+            "src.services.utils.upload_content.boto3.client",
+            return_value=s3_client,
+        ), patch(
+            "src.services.utils.upload_content.ensure_directory_exists",
+            side_effect=_readonly,
+        ), patch("builtins.open", side_effect=_readonly):
+            await upload_content(
+                directory="courses/c/activities/a/dynamic/blocks/imageBlock/b",
+                type_of_dir="orgs",
+                uuid="org_uuid",
+                file_binary=b"image-bytes",
+                file_and_format="block_x.png",
+            )
+
+        # Bytes uploaded directly, no local staging file.
+        s3_client.put_object.assert_called_once()
+        _, kwargs = s3_client.put_object.call_args
+        assert kwargs["Bucket"] == "bucket"
+        assert kwargs["Body"] == b"image-bytes"
+        s3_client.upload_file.assert_not_called()
+
