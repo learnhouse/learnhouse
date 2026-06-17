@@ -38,10 +38,12 @@ from src.services.admin.admin import (
     bulk_unenroll_users,
     change_user_role,
     consume_magic_link_token,
+    enroll_user,
     get_course_analytics,
     list_course_enrollments,
     remove_user_from_org_admin,
     revoke_certificate,
+    unenroll_user,
     update_user_profile,
 )
 
@@ -156,6 +158,157 @@ async def _create_trail_run(db, user: User, course: Course, org) -> TrailRun:
     await db.commit()
     await db.refresh(tr)
     return tr
+
+
+# ---------------------------------------------------------------------------
+# Course enrollment lifecycle
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.asyncio
+async def test_enroll_user_creates_trail_and_run_for_published_course(
+    db,
+    org,
+    course,
+    regular_user,
+    mock_request,
+):
+    """Enrolling a user in a published course creates exactly one TrailRun."""
+    from sqlmodel import select as sql_select
+
+    token_user = _make_token_user(org.id)
+
+    with patch("src.services.admin.admin.track", new_callable=AsyncMock) as mock_track:
+        result = await enroll_user(
+            mock_request,
+            token_user,
+            regular_user.id,
+            course.course_uuid,
+            db,
+        )
+
+    trail_runs = (
+        await db.execute(
+            sql_select(TrailRun).where(
+                TrailRun.course_id == course.id,
+                TrailRun.user_id == regular_user.id,
+                TrailRun.org_id == org.id,
+            )
+        )
+    ).scalars().all()
+
+    assert result.user_id == regular_user.id
+    assert len(result.runs) == 1
+    assert len(trail_runs) == 1
+    assert trail_runs[0].status == StatusEnum.STATUS_IN_PROGRESS
+    mock_track.assert_awaited_once()
+
+
+@pytest.mark.asyncio
+async def test_enroll_user_rejects_duplicate_enrollment(
+    db,
+    org,
+    course,
+    regular_user,
+    mock_request,
+):
+    """A second enrollment attempt for the same user/course is rejected."""
+    token_user = _make_token_user(org.id)
+
+    with patch("src.services.admin.admin.track", new_callable=AsyncMock):
+        await enroll_user(mock_request, token_user, regular_user.id, course.course_uuid, db)
+
+        with pytest.raises(HTTPException) as exc_info:
+            await enroll_user(mock_request, token_user, regular_user.id, course.course_uuid, db)
+
+    assert exc_info.value.status_code == 400
+    assert "already enrolled" in exc_info.value.detail.lower()
+
+
+@pytest.mark.asyncio
+async def test_unenroll_user_deletes_trail_run_and_steps(
+    db,
+    org,
+    course,
+    regular_user,
+    activity,
+):
+    """Unenrolling removes the user's TrailRun and course TrailSteps."""
+    from sqlmodel import select as sql_select
+
+    token_user = _make_token_user(org.id)
+    trail_run = await _create_trail_run(db, regular_user, course, org)
+
+    step = TrailStep(
+        complete=True,
+        teacher_verified=False,
+        grade="",
+        data={},
+        trailrun_id=trail_run.id,
+        trail_id=trail_run.trail_id,
+        activity_id=activity.id,
+        course_id=course.id,
+        org_id=org.id,
+        user_id=regular_user.id,
+        creation_date=str(datetime.now()),
+        update_date=str(datetime.now()),
+    )
+    db.add(step)
+    await db.commit()
+    await db.refresh(step)
+
+    result = await unenroll_user(token_user, regular_user.id, course.course_uuid, db)
+
+    remaining_run = (
+        await db.execute(sql_select(TrailRun).where(TrailRun.id == trail_run.id))
+    ).scalars().first()
+    remaining_step = (
+        await db.execute(sql_select(TrailStep).where(TrailStep.id == step.id))
+    ).scalars().first()
+
+    assert result == {"detail": "User unenrolled successfully"}
+    assert remaining_run is None
+    assert remaining_step is None
+
+
+@pytest.mark.asyncio
+async def test_enroll_user_allows_reenrollment_after_unenrollment(
+    db,
+    org,
+    course,
+    regular_user,
+    mock_request,
+):
+    """After unenrollment, the same user can enroll in the course again."""
+    from sqlmodel import select as sql_select
+
+    token_user = _make_token_user(org.id)
+
+    with patch("src.services.admin.admin.track", new_callable=AsyncMock):
+        await enroll_user(mock_request, token_user, regular_user.id, course.course_uuid, db)
+        await unenroll_user(token_user, regular_user.id, course.course_uuid, db)
+        result = await enroll_user(
+            mock_request,
+            token_user,
+            regular_user.id,
+            course.course_uuid,
+            db,
+        )
+
+    trail_runs = (
+        await db.execute(
+            sql_select(TrailRun).where(
+                TrailRun.course_id == course.id,
+                TrailRun.user_id == regular_user.id,
+                TrailRun.org_id == org.id,
+            )
+        )
+    ).scalars().all()
+
+    assert result.user_id == regular_user.id
+    assert len(result.runs) == 1
+    assert len(trail_runs) == 1
+    assert trail_runs[0].status == StatusEnum.STATUS_IN_PROGRESS
 
 
 # ---------------------------------------------------------------------------
