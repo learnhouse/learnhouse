@@ -55,6 +55,7 @@ function ImageBlockComponent(props: any) {
     const file = event.target.files?.[0]
     if (file) {
       setImage(file)
+      setError(null)
       handleUpload(file)
     }
   }
@@ -77,9 +78,9 @@ function ImageBlockComponent(props: any) {
       })
       setImage(null)
     } catch (err: any) {
-      const errorMessage = err?.message || 'Failed to upload image. Please try again.'
+      const errorMessage = err?.message || 'Upload failed — please try again'
       setError(errorMessage)
-      toast.error(errorMessage)
+      toast.error(errorMessage.includes('Upload failed') ? errorMessage : `Upload failed — please try again: ${errorMessage}`)
     } finally {
       setIsLoading(false)
     }
@@ -299,7 +300,13 @@ function ImageBlockComponent(props: any) {
                 onDrop={handleDrop}
                 className={`
                   border-2 border-dashed rounded-lg p-6 text-center cursor-pointer transition-all flex flex-col items-center justify-center min-h-[160px]
-                  ${isDragging ? 'border-neutral-400 bg-neutral-100' : 'border-neutral-200 bg-white hover:border-neutral-400 hover:bg-neutral-50'}
+                  ${
+                    error
+                      ? 'border-red-300 bg-red-50/30 hover:border-red-400 hover:bg-red-50/50'
+                      : isDragging
+                      ? 'border-neutral-400 bg-neutral-100'
+                      : 'border-neutral-200 bg-white hover:border-neutral-400 hover:bg-neutral-50'
+                  }
                 `}
               >
                 <input
