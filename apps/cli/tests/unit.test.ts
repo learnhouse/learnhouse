@@ -447,6 +447,14 @@ vi.mock('../src/services/docker.js', async () => {
   return { ...actual, isContainerRunning: vi.fn(() => false) }
 })
 
+// Stub child_process so the docker helpers below build their command
+// strings without shelling out to a real Docker daemon. importActual keeps
+// spawn/spawnSync intact; only execSync is captured.
+vi.mock('node:child_process', async () => {
+  const actual = await vi.importActual<typeof import('node:child_process')>('node:child_process')
+  return { ...actual, execSync: vi.fn(() => Buffer.from('')) }
+})
+
 describe('findInstallDir — picks the running install over a stale one', () => {
   const fakeHome = path.join(os.tmpdir(), 'lh-findinstall-' + Date.now())
   const lhBase = path.join(fakeHome, '.learnhouse')
@@ -564,5 +572,60 @@ describe('validateEmail — reserved TLDs', () => {
 
   it('is case-insensitive on the TLD', () => {
     expect(validateEmail('admin@SCHOOL.LOCAL')).toMatch(/RFC 6761|reserved/i)
+  })
+})
+
+// ─── Regression: `update` must pull the new image, not reuse cache ──
+//
+// The update command rewrote docker-compose.yml with the new tag but
+// skipped the pull, so `docker compose up -d` reused the cached layer
+// and the container restarted on the OLD image (reported on Discord by
+// Pierluigi2497 after 1.2.2 → 1.2.6: app.py still read version="1.2.2").
+//
+// The fix calls dockerComposePull() explicitly and recreates the
+// container from the freshly-pulled image (dockerComposeUp with
+// forceRecreate=true). These tests lock in the command strings so the
+// pull/recreate flags can't silently regress again.
+
+describe('docker compose helpers — update pull/recreate flags', () => {
+  let execSync: ReturnType<typeof vi.fn>
+  let dockerComposeUp: typeof import('../src/services/docker.js').dockerComposeUp
+  let dockerComposePull: typeof import('../src/services/docker.js').dockerComposePull
+
+  beforeEach(async () => {
+    const cp = await import('node:child_process')
+    execSync = cp.execSync as unknown as ReturnType<typeof vi.fn>
+    execSync.mockClear()
+    ;({ dockerComposeUp, dockerComposePull } = await import('../src/services/docker.js'))
+  })
+
+  const lastCmd = () => execSync.mock.calls.at(-1)?.[0] as string
+  const lastOpts = () => execSync.mock.calls.at(-1)?.[1] as { cwd?: string }
+
+  it('plain up uses neither --pull nor --force-recreate', () => {
+    dockerComposeUp('/srv/lh')
+    expect(lastCmd()).toBe('docker compose up -d')
+    expect(lastOpts().cwd).toBe('/srv/lh')
+  })
+
+  it('pull=true adds --pull always', () => {
+    dockerComposeUp('/srv/lh', true)
+    expect(lastCmd()).toBe('docker compose up -d --pull always')
+  })
+
+  it('forceRecreate=true adds --force-recreate (the update path)', () => {
+    dockerComposeUp('/srv/lh', false, true)
+    expect(lastCmd()).toBe('docker compose up -d --force-recreate')
+  })
+
+  it('both flags compose in a stable order', () => {
+    dockerComposeUp('/srv/lh', true, true)
+    expect(lastCmd()).toBe('docker compose up -d --pull always --force-recreate')
+  })
+
+  it('dockerComposePull runs `docker compose pull` in the install dir', () => {
+    dockerComposePull('/srv/lh')
+    expect(lastCmd()).toBe('docker compose pull')
+    expect(lastOpts().cwd).toBe('/srv/lh')
   })
 })
