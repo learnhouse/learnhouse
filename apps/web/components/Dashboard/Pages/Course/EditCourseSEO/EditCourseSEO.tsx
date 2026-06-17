@@ -87,6 +87,14 @@ const isValidUrl = (url: string) => {
   }
 };
 
+// Module-level so React keeps a stable component identity — defining this
+// inside EditCourseSEO would remount the counter on every keystroke.
+const CharacterCounter = ({ current, max }: { current: number, max: number }) => (
+  <span className={`text-xs ${current > max ? 'text-red-500' : 'text-gray-400'}`}>
+    {current}/{max}
+  </span>
+);
+
 function EditCourseSEO(props: EditCourseSEOProps) {
   const { t } = useTranslation()
   const [error, setError] = React.useState('');
@@ -215,12 +223,6 @@ function EditCourseSEO(props: EditCourseSEOProps) {
       </div>
     );
   }
-
-  const CharacterCounter = ({ current, max }: { current: number, max: number }) => (
-    <span className={`text-xs ${current > max ? 'text-red-500' : 'text-gray-400'}`}>
-      {current}/{max}
-    </span>
-  );
 
   return (
     <div>

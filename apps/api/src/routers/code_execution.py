@@ -3,6 +3,7 @@ import base64
 import io
 import logging
 import os
+import re
 import zipfile
 
 from fastapi import APIRouter, Depends, HTTPException, Request, UploadFile, Form
@@ -119,7 +120,10 @@ def _validate_storage_path(file_path: str) -> str:
     # Resolve to absolute and verify containment within content/
     base_real = os.path.realpath("content")
     full_real = os.path.realpath(full_path)
-    if not full_real.startswith(base_real + os.sep) and full_real != base_real:
+    try:
+        if os.path.commonpath([base_real, full_real]) != base_real:
+            raise HTTPException(status_code=400, detail="Invalid file path")
+    except ValueError:
         raise HTTPException(status_code=400, detail="Invalid file path")
     return full_path
 
@@ -177,7 +181,10 @@ def _read_storage_file(file_path: str) -> bytes:
         # the realpath check to be visible immediately before the file operation).
         base_real = os.path.realpath("content")
         resolved = os.path.realpath(safe_path)  # noqa: S108
-        if not resolved.startswith(base_real + os.sep):
+        try:
+            if os.path.commonpath([base_real, resolved]) != base_real:
+                raise HTTPException(status_code=400, detail="Invalid file path")
+        except ValueError:
             raise HTTPException(status_code=400, detail="Invalid file path")
         if not os.path.isfile(resolved):
             raise HTTPException(status_code=404, detail="SQLite database file not found")
@@ -403,7 +410,32 @@ async def upload_sqlite_db(
     if not course_uuid.startswith("course_"):
         raise HTTPException(status_code=400, detail="Invalid course_uuid")
 
+    _SAFE_SEGMENT = re.compile(r"^[A-Za-z0-9_-]+$")
+    for _label, _value in (
+        ("org_uuid", org_uuid),
+        ("activity_uuid", activity_uuid),
+        ("block_id", block_id),
+    ):
+        if not _value or not _SAFE_SEGMENT.match(_value):
+            raise HTTPException(status_code=400, detail=f"Invalid {_label}")
+
     await _require_course_access(request, current_user, course_uuid, "update", db_session)
+
+    from sqlmodel import select
+    from src.db.courses.courses import Course
+    from src.db.organizations import Organization
+
+    course_org_uuid = (
+        await db_session.execute(
+            select(Organization.org_uuid)
+            .join(Course, Course.org_id == Organization.id)
+            .where(Course.course_uuid == course_uuid)
+        )
+    ).scalars().first()
+    if course_org_uuid is None:
+        raise HTTPException(status_code=404, detail="Course not found")
+    if course_org_uuid != org_uuid:
+        raise HTTPException(status_code=400, detail="org_uuid does not match course organization")
 
     directory = f"courses/{course_uuid}/activities/{activity_uuid}/dynamic/blocks/codePlayground/{block_id}"
 

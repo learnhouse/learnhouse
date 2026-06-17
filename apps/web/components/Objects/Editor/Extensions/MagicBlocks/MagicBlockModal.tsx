@@ -205,8 +205,7 @@ function MagicBlockModal({
                 </div>
               </div>
               <div className="flex items-center gap-3">
-                <button
-                  onClick={handleSave}
+                <button type="button"                   onClick={handleSave}
                   disabled={!htmlContent}
                   className={cn(
                     "flex items-center gap-2 px-4 py-1.5 rounded-xl text-xs font-semibold transition-all delay-75 ease-linear outline outline-1",

@@ -70,7 +70,7 @@ function HomeClient() {
           <div className="w-full max-w-md flex flex-col items-center">
             {/* Brand */}
             <div className="flex flex-col items-center mb-10">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
+              { }
               <img
                 src="/lrn.svg"
                 alt="LearnHouse"
@@ -199,7 +199,7 @@ function HomeClient() {
                     className="flex items-center p-4 bg-white rounded-2xl nice-shadow hover:shadow-lg transition-all group"
                   >
                     {org.logo_image ? (
-                      // eslint-disable-next-line @next/next/no-img-element
+                       
                       <img
                         src={getOrgLogoMediaDirectory(org.org_uuid, org.logo_image)}
                         alt={org.name}

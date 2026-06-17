@@ -111,18 +111,56 @@ class TestEmailUtilsService:
             assert await get_org_signup_base_url("acme", request) == "https://fallback.test"
             mock_base_url.assert_called_once_with(request)
 
-    def test_is_allowed_base_url_accepts_request_host_in_single_tenancy(self):
-        # In single tenancy the operator's host is authoritative — any
-        # http(s) URL with a non-empty hostname is acceptable, so VPS
-        # deployments don't need to enumerate `allowed_origins`.
+    def test_is_allowed_base_url_pins_to_configured_host_in_single_tenancy(self):
         with patch(
             "src.services.email.utils.get_learnhouse_config",
             return_value=_config(tenancy="single"),
         ):
-            assert _is_allowed_base_url("https://learn.example.org")
-            assert _is_allowed_base_url("http://localhost:3000")
+            assert _is_allowed_base_url("https://app.learnhouse.app")
+            assert _is_allowed_base_url("https://learnhouse.app")
+            assert _is_allowed_base_url("https://www.learnhouse.app")
+            assert not _is_allowed_base_url("https://learn.example.org")
             assert not _is_allowed_base_url("javascript:alert(1)")
             assert not _is_allowed_base_url("https://")
+            assert not _is_allowed_base_url("http://localhost:3000")
+
+        with patch(
+            "src.services.email.utils.get_learnhouse_config",
+            return_value=_config(tenancy="single", development_mode=True),
+        ):
+            assert _is_allowed_base_url("http://localhost:3000")
+
+    def test_is_allowed_base_url_accepts_host_with_port_config_in_single_tenancy(self):
+        # The shipped default config uses schemeless "host:port" values
+        # (e.g. "localhost:3000"). The configured host must still match the
+        # always-port-less request host instead of being silently rejected.
+        with patch(
+            "src.services.email.utils.get_learnhouse_config",
+            return_value=_config(
+                tenancy="single",
+                frontend_domain="localhost:3000",
+                domain="learn.myschool.org:8443",
+            ),
+        ):
+            assert _is_allowed_base_url("http://localhost:3000")
+            assert _is_allowed_base_url("https://learn.myschool.org:8443")
+            assert _is_allowed_base_url("https://learn.myschool.org")
+            assert not _is_allowed_base_url("https://evil.example.org")
+
+    def test_is_allowed_base_url_skips_blank_configured_host_in_single_tenancy(self):
+        # Line 36: a blank/whitespace configured value (here frontend_domain) is
+        # skipped via `continue`; only the non-empty `domain` is honored.
+        with patch(
+            "src.services.email.utils.get_learnhouse_config",
+            return_value=_config(
+                tenancy="single",
+                frontend_domain="   ",
+                domain="learnhouse.app",
+            ),
+        ):
+            assert _is_allowed_base_url("https://learnhouse.app")
+            # The blank frontend_domain contributed no allowed host.
+            assert not _is_allowed_base_url("https://other.example.org")
 
     @pytest.mark.asyncio
     @pytest.mark.parametrize(

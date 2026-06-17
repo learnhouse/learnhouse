@@ -1205,18 +1205,19 @@ def _validate_magic_link_redirect(redirect_to: Optional[str]) -> Optional[str]:
     if not value:
         return None
 
-    lowered = value.lower()
-    if "://" in lowered or lowered.startswith("//") or lowered.startswith("\\\\"):
-        raise HTTPException(
-            status_code=400,
-            detail="redirect_to must be a same-origin path starting with '/'",
-        )
+    from urllib.parse import urlsplit
+
+    detail = "redirect_to must be a same-origin path starting with '/'"
 
     if not value.startswith("/"):
-        raise HTTPException(
-            status_code=400,
-            detail="redirect_to must be a same-origin path starting with '/'",
-        )
+        raise HTTPException(status_code=400, detail=detail)
+
+    if len(value) >= 2 and value[1] in ("/", "\\"):
+        raise HTTPException(status_code=400, detail=detail)
+
+    parts = urlsplit(value.replace("\\", "/"))
+    if parts.scheme or parts.netloc:  # pragma: no cover
+        raise HTTPException(status_code=400, detail=detail)
 
     return value
 

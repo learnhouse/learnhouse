@@ -157,7 +157,7 @@ def set_auth_cookies(response: Response, access_token: str, refresh_token: str, 
         secure=is_secure,
         samesite="lax",
         domain=cookie_domain,
-        expires=int(timedelta(hours=8).total_seconds()),
+        max_age=int(timedelta(hours=8).total_seconds()),
     )
     response.set_cookie(
         key=JWT_REFRESH_COOKIE_NAME,
@@ -166,7 +166,7 @@ def set_auth_cookies(response: Response, access_token: str, refresh_token: str, 
         secure=is_secure,
         samesite="lax",
         domain=cookie_domain,
-        expires=int(timedelta(days=30).total_seconds()),
+        max_age=int(timedelta(days=30).total_seconds()),
     )
 
 
@@ -273,7 +273,7 @@ async def refresh(
         secure=is_secure,
         samesite="lax",
         domain=cookie_domain,
-        expires=int(timedelta(hours=8).total_seconds()),
+        max_age=int(timedelta(hours=8).total_seconds()),
     )
     response.set_cookie(
         key=JWT_REFRESH_COOKIE_NAME,
@@ -282,7 +282,7 @@ async def refresh(
         secure=is_secure,
         samesite="lax",
         domain=cookie_domain,
-        expires=int(JWT_REFRESH_TOKEN_EXPIRES.total_seconds()),
+        max_age=int(JWT_REFRESH_TOKEN_EXPIRES.total_seconds()),
     )
     # Return the rotated refresh token in the body so a Next.js route handler
     # acting as a proxy can mirror the rotation onto its own cookies. Without
@@ -485,11 +485,18 @@ async def third_party_login(
             )
             org_id = None
 
+    user = None
+
     # Google
     if body.provider == "google":
 
         user = await signWithGoogle(
             request, body.access_token, body.email, org_id, current_user, db_session
+        )
+    else:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Unsupported provider",
         )
 
     if not user:

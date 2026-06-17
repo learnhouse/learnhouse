@@ -1,0 +1,175 @@
+import { Callout } from 'nextra/components'
+
+# Commands
+
+Full reference for all LearnHouse CLI commands.
+
+## `setup`
+
+Interactive wizard that generates a complete Docker Compose deployment. See [Setup Wizard](/cli/setup-wizard) for details.
+
+```bash
+npx learnhouse@latest setup
+```
+
+## `start`
+
+Start all Docker containers for your deployment.
+
+```bash
+npx learnhouse start
+```
+
+## `stop`
+
+Stop all running containers.
+
+```bash
+npx learnhouse stop
+```
+
+## `logs`
+
+Stream logs from all containers in real-time.
+
+```bash
+npx learnhouse logs
+```
+
+## `config`
+
+Display current installation metadata — version, directory, URL, organization slug, and file locations.
+
+```bash
+npx learnhouse config
+```
+
+## `doctor`
+
+Run comprehensive diagnostics to identify issues. Checks:
+
+- Docker installation and daemon status
+- Docker Compose v2 availability
+- Container health and restart counts
+- Port availability
+- DNS resolution (for non-localhost domains)
+- Disk space (warns below 1 GB)
+- Docker volume sizes
+- Log analysis (scans for errors)
+- `.env` validation (required variables, secret length)
+- Image freshness
+
+```bash
+npx learnhouse doctor
+```
+
+## `backup`
+
+Create a database backup as a `.tar.gz` archive containing a `pg_dump` and optionally your `.env` file.
+
+```bash
+npx learnhouse backup
+```
+
+Backups are saved to `{installDir}/backups/learnhouse-backup-{timestamp}.tar.gz`.
+
+### Restore
+
+Restore a database from a backup archive. This overwrites the current database.
+
+```bash
+npx learnhouse restore <archive.tar.gz>
+npx learnhouse backup --restore <archive.tar.gz>
+```
+
+<Callout type="warning">
+Restore only works with local (Docker) databases, not external connections. Restart services after restoring.
+</Callout>
+
+## `deployments`
+
+View and manage deployments on the current machine.
+
+```bash
+npx learnhouse deployments
+```
+
+Features:
+- List all LearnHouse deployments with container status
+- Scale memory limits for `learnhouse-app`, `db`, and `redis`
+- View current resource usage via `docker stats`
+
+## `shell`
+
+Open an interactive shell (`/bin/sh`) inside a running container.
+
+```bash
+npx learnhouse shell
+```
+
+Displays a list of running containers to choose from.
+
+## `env`
+
+Interactive environment variable editor. Edit variables by category:
+
+- Domain & Hosting
+- Database & Redis
+- Security
+- AI
+- Email (Resend only — edit `.env` directly to set SMTP credentials)
+- S3 Storage
+- OAuth
+
+```bash
+npx learnhouse env
+```
+
+Secret values are masked in the display. Optionally restart services after changes.
+
+## `health`
+
+Run health checks against the running deployment.
+
+```bash
+npx learnhouse health
+```
+
+Checks container status, PostgreSQL connection, Redis ping, HTTP health endpoint, disk usage, and resource consumption.
+
+## `dev`
+
+Start a local development environment. See [Dev Mode](/cli/dev-mode) for details.
+
+```bash
+npx learnhouse dev
+```
+
+| Flag | Description |
+| --- | --- |
+| `--ee` | Enable Enterprise Edition features (keeps the `ee/` folder active) |
+| `--admin-email <email>` | Admin email (default: `admin@school.dev`) |
+| `--admin-password <password>` | Admin password (skips the interactive prompt) |
+
+## `update`
+
+Update LearnHouse to the latest release or a specific version. See [Updates](/self-hosting/maintenance/updates) for details.
+
+```bash
+npx learnhouse update
+npx learnhouse update --version 1.4.2
+```
+
+| Flag | Description |
+| --- | --- |
+| `--version <tag>` | Pull a specific image tag from `ghcr.io/learnhouse/app` |
+| `--migrate` | Run database migrations without prompting |
+| `--no-migrate` | Skip database migrations without prompting |
+
+## `status`
+
+Show the status of each LearnHouse service.
+
+```bash
+npx learnhouse status
+```

@@ -27,8 +27,9 @@ function AICanvaToolkit(props: AICanvaToolkitProps) {
   const pathname = usePathname()
   const is_ai_feature_enabled = useGetAIFeatures({ feature: 'activity_ask' })
 
-  // Never show the AI bubble in embedded views
-  if (pathname?.startsWith('/embed/')) return null
+  // Never show the AI bubble in embedded views. Checked after the hooks
+  // below so the hook order stays stable when navigating in/out of /embed/.
+  const isEmbedView = pathname?.startsWith('/embed/') ?? false
   const [bubbleState, setBubbleState] = useState({
     visible: false,
     top: 0,
@@ -87,7 +88,7 @@ function AICanvaToolkit(props: AICanvaToolkitProps) {
   }, [props.editor])
 
   useEffect(() => {
-    if (!props.editor || !is_ai_feature_enabled) return
+    if (!props.editor || !is_ai_feature_enabled || isEmbedView) return
 
     const handleSelectionUpdate = () => {
       // Small delay to ensure DOM is updated
@@ -125,9 +126,9 @@ function AICanvaToolkit(props: AICanvaToolkitProps) {
       window.removeEventListener('scroll', handleScroll, true)
       document.removeEventListener('mousedown', handleClickOutside)
     }
-  }, [props.editor, is_ai_feature_enabled, updateBubblePosition])
+  }, [props.editor, is_ai_feature_enabled, isEmbedView, updateBubblePosition])
 
-  if (!is_ai_feature_enabled || !bubbleState.visible) {
+  if (isEmbedView || !is_ai_feature_enabled || !bubbleState.visible) {
     return null
   }
 

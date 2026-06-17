@@ -1096,12 +1096,14 @@ async def update_org_default_language_config(
     current_user: PublicUser | AnonymousUser,
     db_session: AsyncSession,
 ):
-    from src.services.email.translations import SUPPORTED_LANGUAGES
+    # Validate against the selectable UI languages, not the email-translation
+    # set (a UI language need not have an email bundle).
+    from src.services.email.translations import SUPPORTED_UI_LANGUAGES
 
-    if default_language not in SUPPORTED_LANGUAGES:
+    if default_language not in SUPPORTED_UI_LANGUAGES:
         raise HTTPException(
             status_code=400,
-            detail=f"Unsupported language code. Supported: {', '.join(SUPPORTED_LANGUAGES)}",
+            detail=f"Unsupported language code. Supported: {', '.join(SUPPORTED_UI_LANGUAGES)}",
         )
 
     statement = select(Organization).where(Organization.id == org_id)

@@ -15,12 +15,34 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
       - uses: oven-sh/setup-bun@v2
         with:
           bun-version: latest
       - name: Install dependencies
         run: bun install --frozen-lockfile
         working-directory: ./apps/web
-      - name: Lint
-        run: bun run lint
+      # Full-project lint stays report-only while the existing lint backlog
+      # is being worked off (see #800). It must still *run*, so a broken
+      # ESLint setup fails here instead of being masked by `|| true`.
+      - name: Lint (full project, report-only)
+        run: |
+          bunx eslint . || EXIT_CODE=$?
+          if [ "${EXIT_CODE:-0}" -eq 2 ]; then
+            echo "ESLint crashed (exit 2) — failing the workflow."
+            exit 2
+          fi
+          echo "ESLint ran to completion (exit ${EXIT_CODE:-0}); lint debt is reported above but not enforced yet."
         working-directory: ./apps/web
+      # Strict gate: stops *new* lint debt without blocking on pre-existing
+      # issues. Diff-aware — it lints the files a PR touches but only fails on
+      # errors that land on lines the PR added/modified, so a PR that merely
+      # edits a file carrying old debt is not punished for that debt. The
+      # report-only full-project step above still surfaces the backlog.
+      - name: Strict lint on changed lines (PRs)
+        if: github.event_name == 'pull_request'
+        working-directory: ./apps/web
+        env:
+          LINT_DIFF_BASE: origin/${{ github.base_ref }}
+        run: node scripts/lint-changed-lines.mjs

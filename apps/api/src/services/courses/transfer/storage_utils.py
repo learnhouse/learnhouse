@@ -23,6 +23,37 @@ logger = logging.getLogger(__name__)
 _s3_client = None
 _s3_client_lock = threading.Lock()
 
+_CONTENT_ROOT = "content"
+
+
+def _validate_local_path(file_path: str) -> Optional[str]:
+    """Validate a local filesystem path for reading.
+
+    Rejects NUL bytes, ``..`` traversal components and absolute paths, then
+    verifies the resolved real path stays within the content root. Returns the
+    path to open on success, or None if the path is unsafe / out of bounds
+    (callers treat None as "not found").
+    """
+    if not file_path or "\x00" in file_path:
+        return None
+
+    normalized = file_path.replace("\\", "/")
+
+    if normalized.startswith("/") or os.path.isabs(file_path):
+        return None
+    if ".." in normalized.split("/"):
+        return None
+
+    base_real = os.path.realpath(_CONTENT_ROOT)
+    full_real = os.path.realpath(file_path)
+    try:
+        if os.path.commonpath([base_real, full_real]) != base_real:
+            return None
+    except ValueError:
+        return None
+
+    return file_path
+
 
 @functools.cache
 def get_content_delivery_type() -> str:
@@ -107,9 +138,12 @@ def read_file_content(file_path: str) -> Optional[bytes]:
                 return None
         return None
     else:
-        # Read from local filesystem
-        if os.path.exists(file_path):
-            with open(file_path, 'rb') as f:
+        safe_path = _validate_local_path(file_path)
+        if safe_path is None:
+            logger.warning("Rejected unsafe local file path: %s", file_path)
+            return None
+        if os.path.isfile(safe_path):
+            with open(safe_path, 'rb') as f:
                 return f.read()
         return None
 
@@ -257,7 +291,9 @@ def walk_directory(base_path: str):
 
         # Yield subdirectories
         for dir_rel in sorted(all_dirs):
-            dir_path = os.path.join(base_path, dir_rel)
+            # POSIX join: S3 keys always use '/', and os.path.join would
+            # produce a backslash on Windows (mixed-separator paths, #814)
+            dir_path = f"{base_path.rstrip('/')}/{dir_rel}"
             files = sorted(dir_files.get(dir_rel, set()))
             # Find immediate subdirs
             subdirs = sorted([
@@ -267,10 +303,11 @@ def walk_directory(base_path: str):
             ])
             yield dir_path, subdirs, files
     else:
-        # Walk local filesystem
+        # Walk local filesystem. Normalize roots to '/' so consumers (and
+        # S3 key builders downstream) see one canonical separator (#814)
         if os.path.exists(base_path):
             for root, dirs, files in os.walk(base_path):
-                yield root, dirs, files
+                yield root.replace(os.sep, '/'), dirs, files
 
 
 def upload_to_s3(file_path: str, content: bytes) -> bool:

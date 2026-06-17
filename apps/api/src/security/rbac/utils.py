@@ -195,4 +195,8 @@ async def get_element_organization_id(
         from src.db.boards import Board
         return (await db_session.execute(select(Board.org_id).where(Board.board_uuid == element_uuid))).scalars().first()
 
+    elif element_type == "playgrounds":
+        from src.db.playgrounds import Playground
+        return (await db_session.execute(select(Playground.org_id).where(Playground.playground_uuid == element_uuid))).scalars().first()
+
     return None

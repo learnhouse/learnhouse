@@ -1,0 +1,81 @@
+import { Callout } from 'nextra/components'
+
+# Dev Mode
+
+The `dev` command starts a full local development environment with hot reload for all services.
+
+```bash
+npx learnhouse dev
+```
+
+## How It Works
+
+The command splits infrastructure and application services:
+
+- **Infrastructure** (Docker): PostgreSQL with pgvector + Redis run in containers via `.learnhouse/docker-compose.dev.yml`
+- **Application** (local): API, Web, and Collab servers run directly on your machine with hot reload
+
+## Requirements
+
+- Docker (for database and Redis)
+- [bun](https://bun.sh/) (for web and collab dependencies)
+- [uv](https://docs.astral.sh/uv/) (for Python API dependencies)
+
+<Callout type="warning">
+`bun` and `uv` must be installed beforehand. The CLI runs `bun install` and `uv sync` to install project dependencies, but it does not install the package managers themselves.
+</Callout>
+
+## Startup Flow
+
+1. **Detect project root** — Looks for the monorepo structure (`apps/api`, `apps/web`, `apps/collab`)
+2. **Start infrastructure** — Launches PostgreSQL and Redis containers (reuses existing ones if running)
+3. **Health checks** — Waits for database and Redis to be ready
+4. **Admin setup** — When the database and Redis containers are created for the first time, prompts for an admin email and password. On subsequent runs with existing containers, the prompt is skipped and the existing credentials remain valid. You can also pass `--admin-email` and `--admin-password` to skip the prompt.
+5. **Install dependencies** — Runs `bun install` and `uv sync` if needed
+6. **Start services** — Launches API, Web, and Collab with color-coded output
+
+## Services
+
+| Service | Command | Port |
+| --- | --- | --- |
+| API | `uv run python app.py` | 1338 |
+| Web | `next dev --turbopack` | 3000 |
+| Collab | `tsx watch src/index.ts` | 4000 |
+
+## Interactive Controls
+
+While running, you can type commands to manage services:
+
+| Key | Action |
+| --- | --- |
+| `ra` | Restart API |
+| `rw` | Restart Web |
+| `rc` | Restart Collab |
+| `rb` | Restart all services |
+| `q` | Quit (graceful shutdown) |
+
+## Enterprise Edition
+
+Use the `--ee` flag to enable Enterprise Edition features:
+
+```bash
+npx learnhouse dev --ee
+```
+
+Without the flag, the `apps/api/ee/` directory is temporarily hidden during development.
+
+## Shutdown
+
+When you quit (`q` or Ctrl+C):
+
+- Local services (API, Web, Collab) are stopped
+- Docker containers (PostgreSQL, Redis) keep running for the next session
+- To fully stop infrastructure:
+
+```bash
+docker compose -f .learnhouse/docker-compose.dev.yml -p learnhouse-dev down
+```
+
+<Callout type="info">
+Database data persists across dev sessions via Docker volumes. Your data is safe between restarts.
+</Callout>

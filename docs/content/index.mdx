@@ -1,0 +1,50 @@
+---
+title: Home
+---
+
+import { Callout } from 'nextra/components'
+import HomeCards from '../components/HomeCards/HomeCards'
+import FeaturesGrid from '../components/FeaturesGrid/FeaturesGrid'
+
+<img src="/img/pages/learnhouse-github.png" alt="LearnHouse" className="no-border" style={{ borderRadius: '12px', marginBottom: '2rem' }} />
+
+<HomeCards />
+
+## Platform Features
+
+<FeaturesGrid />
+
+## Tech Stack
+
+| Layer | Technology |
+| --- | --- |
+| Frontend | Next.js 16, React 19, Tailwind CSS v4, Tiptap |
+| Backend | FastAPI, Python, SQLModel, Alembic |
+| Collaboration | Hocuspocus (Yjs/CRDT) |
+| Database | PostgreSQL 16 + pgvector |
+| Cache | Redis |
+| AI | Google Gemini, LlamaIndex |
+| CLI | Commander (Node.js) |
+
+<Callout type="info">
+New to LearnHouse? Start with the [Quickstart guide](/getting-started/quickstart) to get a running instance in under 5 minutes.
+</Callout>
+
+## Explore by Topic
+
+### For Educators & Admins
+- [Creating Courses](/platform/courses) — Chapters, activities, and collections
+- [Using the Editor](/platform/editor) — Blocks, collaboration, and content creation
+- [AI Features](/platform/ai) — AI tutoring for students and teaching assistants
+- [User Management](/platform/users) — Roles, permissions, and authentication
+- [Organizations](/platform/organizations) — Multi-tenancy and org settings
+
+### For DevOps & Self-Hosters
+- [Quick Install](/self-hosting/installation/quick-install) — One command setup with `npx learnhouse@latest setup`
+- [Configuration](/self-hosting/configuration) — Environment variables, AI, email, and storage
+- [Maintenance](/self-hosting/maintenance) — Updates, backups, monitoring, and troubleshooting
+
+### For Developers
+- [Architecture Overview](/developers/architecture) — How the system fits together
+- [API Reference](/developers/api) — REST endpoints, authentication, and examples
+- [Contributing](/developers/contributing) — Dev environment setup and guidelines

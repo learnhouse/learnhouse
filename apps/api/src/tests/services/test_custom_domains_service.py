@@ -25,6 +25,7 @@ from src.services.orgs.custom_domains import (
     get_custom_domain,
     get_domain_verification_info,
     get_verification_instructions,
+    is_own_agency_subdomain,
     is_reserved_domain,
     is_valid_domain,
     list_all_verified_domains,
@@ -964,3 +965,66 @@ class TestResolveAndSslStatus:
         assert info_domain_exc.value.status_code == 404
         assert verify_domain_exc.value.status_code == 404
         assert ssl_domain_exc.value.status_code == 404
+
+
+class TestAgencySubdomainAutoVerify:
+    """The org's own `{slug}.{agency-apex}` host is auto-verified (wildcard
+    DNS+TLS already proves operator control); the apex and every other label
+    must still go through the DNS TXT flow."""
+
+    def test_is_own_agency_subdomain_matches_only_the_orgs_own_slug_host(self):
+        with patch.object(custom_domains_service, "LEARNHOUSE_DOMAIN", "acme.com"):
+            # The org's own slug host -> auto-verifiable.
+            assert is_own_agency_subdomain("test-org.acme.com", "test-org") is True
+            assert is_own_agency_subdomain("TEST-ORG.ACME.COM", "test-org") is True
+            assert is_own_agency_subdomain("test-org.acme.com:443", "test-org") is True
+            # The bare apex and other orgs' labels must NOT auto-verify.
+            assert is_own_agency_subdomain("acme.com", "test-org") is False
+            assert is_own_agency_subdomain("victim.acme.com", "test-org") is False
+            assert is_own_agency_subdomain("deep.test-org.acme.com", "test-org") is False
+            # Unrelated domain, and a missing slug, never auto-verify.
+            assert is_own_agency_subdomain("learn.theircompany.com", "test-org") is False
+            assert is_own_agency_subdomain("test-org.acme.com", "") is False
+
+    def test_is_own_agency_subdomain_disabled_for_default_or_dev_apex(self):
+        # No real agency domain configured -> never auto-verify (unsafe otherwise).
+        for base in ("learnhouse.io", "localhost", ""):
+            with patch.object(custom_domains_service, "LEARNHOUSE_DOMAIN", base):
+                assert is_own_agency_subdomain(f"test-org.{base}", "test-org") is False
+
+    @pytest.mark.asyncio
+    async def test_verify_domain_dns_auto_verifies_own_agency_subdomain(self, db, org):
+        # org fixture slug is "test-org".
+        domain = await _make_custom_domain(
+            db,
+            org.id,
+            domain=f"{org.slug}.acme.com",
+            status="pending",
+            verification_token="token-agency",
+        )
+
+        with patch.object(custom_domains_service, "LEARNHOUSE_DOMAIN", "acme.com"):
+            success, message = await verify_domain_dns(domain, db, org.slug)
+
+        assert success is True
+        assert "automatically" in message.lower()
+        assert domain.status == "verified"
+        assert domain.verified_at is not None
+        assert domain.check_error is None
+
+    @pytest.mark.asyncio
+    async def test_add_custom_domain_auto_verifies_own_agency_subdomain(
+        self, mock_request, db, org, admin_user
+    ):
+        with patch.object(custom_domains_service, "LEARNHOUSE_DOMAIN", "acme.com"):
+            result = await add_custom_domain(
+                mock_request,
+                db,
+                custom_domains_service.CustomDomainCreate(domain=f"{org.slug}.acme.com"),
+                org.id,
+                admin_user,
+            )
+
+        assert result.domain == f"{org.slug}.acme.com"
+        assert result.status == "verified"
+        assert result.verified_at is not None

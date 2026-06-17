@@ -21,9 +21,16 @@ from src.services.boards.schemas.boards_playground import (
 )
 
 
-class _Chunk:
-    def __init__(self, text):
-        self.text = text
+def _fake_stream(chunks, recorder=None, raise_exc=None):
+    """Build a stand-in for llm.generate_stream: an async generator over `chunks`."""
+    async def _gen(**kwargs):
+        if recorder is not None:
+            recorder.update(kwargs)
+        if raise_exc is not None:
+            raise raise_exc
+        for chunk in chunks:
+            yield chunk
+    return _gen
 
 
 class TestBoardsPlaygroundService:
@@ -153,17 +160,9 @@ class TestBoardsPlaygroundService:
             current_html=None,
             context=context,
         )
-        fake_client = SimpleNamespace(
-            models=SimpleNamespace(
-                generate_content_stream=lambda **_: iter(
-                    [_Chunk("<!DOCTYPE html>"), _Chunk("<html>ok</html>")]
-                )
-            )
-        )
-
         with patch(
-            "src.services.boards.boards_playground.get_gemini_client",
-            return_value=fake_client,
+            "src.services.boards.boards_playground.generate_stream",
+            _fake_stream(["<!DOCTYPE html>", "<html>ok</html>"]),
         ), patch(
             "src.services.boards.boards_playground.save_boards_playground_session"
         ) as save_session:
@@ -180,8 +179,8 @@ class TestBoardsPlaygroundService:
         save_session.assert_called_once()
 
         with patch(
-            "src.services.boards.boards_playground.get_gemini_client",
-            side_effect=RuntimeError("boom"),
+            "src.services.boards.boards_playground.generate_stream",
+            _fake_stream([], raise_exc=RuntimeError("boom")),
         ):
             error_chunks = [
                 chunk
@@ -210,16 +209,11 @@ class TestBoardsPlaygroundService:
             current_html="<html>current</html>",
             context=context,
         )
-        generate_mock = Mock(
-            return_value=iter([_Chunk("<!DOCTYPE html>"), _Chunk("<html>updated</html>")])
-        )
-        fake_client = SimpleNamespace(
-            models=SimpleNamespace(generate_content_stream=generate_mock)
-        )
+        captured: dict = {}
 
         with patch(
-            "src.services.boards.boards_playground.get_gemini_client",
-            return_value=fake_client,
+            "src.services.boards.boards_playground.generate_stream",
+            _fake_stream(["<!DOCTYPE html>", "<html>updated</html>"], recorder=captured),
         ), patch(
             "src.services.boards.boards_playground.save_boards_playground_session"
         ) as save_session:
@@ -235,9 +229,9 @@ class TestBoardsPlaygroundService:
         assert session.current_html == "<!DOCTYPE html><html>updated</html>"
         assert len(session.message_history) == 12
         assert any(msg.content == "msg-12" for msg in session.message_history)
-        call_kwargs = generate_mock.call_args.kwargs
-        assert call_kwargs["model"] == "gemini-2.0-flash"
-        iteration_prompt = call_kwargs["contents"][-1]["parts"][0]["text"]
+        # No explicit model -> resolves to the fast tier default (interactive widgets).
+        assert captured["model_name"] == "gemini-3.1-flash-lite"
+        iteration_prompt = captured["user_prompt"]
         assert "CURRENT HTML CODE" in iteration_prompt
         assert "Update it" in iteration_prompt
         save_session.assert_called_once()

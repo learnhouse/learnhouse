@@ -34,6 +34,7 @@ from src.security.superadmin import is_user_superadmin
 from src.services.analytics.analytics import track
 from src.services.analytics.cache import get_cached_result, set_cached_result
 from src.services.analytics.events import ALLOWED_FRONTEND_EVENTS
+from src.services.orgs.users import _csv_safe
 from src.services.analytics.queries import (
     ADVANCED_QUERIES,
     ALL_QUERIES,
@@ -148,6 +149,27 @@ def _build_sql(
         if not _SAFE_COURSE_UUID.match(course_uuid) or len(course_uuid) > 100:
             raise HTTPException(status_code=400, detail="Invalid course_uuid")
         params["course_uuid"] = course_uuid
+    try:
+        resp = await client.post("/v0/sql", content=sql + " FORMAT JSON")
+        resp.raise_for_status()
+        result = resp.json()
+    except httpx.HTTPStatusError as exc:
+        error_msg = exc.response.text[:500]
+        logger.warning(
+            "Tinybird query '%s' failed (%s): %s",
+            query_name, exc.response.status_code, error_msg,
+        )
+        if any(s in error_msg for s in ("UNKNOWN_TABLE", "doesn't exist", "not found")):
+            return empty_response
+        raise HTTPException(status_code=502, detail="Analytics query failed")
+    except (httpx.TimeoutException, httpx.TransportError) as exc:
+        logger.warning(
+            "Tinybird query '%s' unavailable (transient): %s", query_name, str(exc)[:500]
+        )
+        raise HTTPException(status_code=503, detail="Analytics temporarily unavailable")
+    except Exception as exc:
+        logger.warning("Tinybird query '%s' failed: %s", query_name, str(exc)[:500])
+        raise HTTPException(status_code=502, detail="Analytics query failed")
 
     if limit is not None:
         if not isinstance(limit, int) or limit < 1:
@@ -1497,8 +1519,15 @@ async def query_course_dashboard_detail(
                 .order_by(TrailRun.id.desc())  # type: ignore
                 .limit(50)
             )).scalars().all()
-            ch_data = [{"user_id": tr.user_id, "timestamp": tr.creation_date} for tr in trail_runs]
+            ch_data = [
+                {
+                    "user_id": tr.user_id,
+                    "enrolled_at": tr.creation_date,
+                }
+                for tr in trail_runs
+            ]
 
+    # Enrich with course/activity metadata from PostgreSQL
     ch_data = await _enrich_with_metadata(ch_data, db_session)
 
     user_ids = list({int(row["user_id"]) for row in ch_data if row.get("user_id")})

@@ -44,10 +44,11 @@ async def upload_file(
     from src.security.file_validation import get_safe_filename
     
     # Validate the file
-    _, content = validate_upload(file, allowed_types, max_size)
-    
-    # Generate safe filename
-    filename = get_safe_filename(file.filename, f"{uuid4()}_{filename_prefix}")
+    content_type, content = validate_upload(file, allowed_types, max_size)
+
+    filename = get_safe_filename(
+        file.filename, f"{uuid4()}_{filename_prefix}", content_type=content_type
+    )
     
     # Save the file
     await upload_content(

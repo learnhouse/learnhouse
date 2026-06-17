@@ -1,0 +1,91 @@
+import {
+  Paragraph,
+  TextHOne,
+  TextHTwo,
+  TextHThree,
+  TextHFour,
+  TextHFive,
+  TextHSix,
+  ListBullets,
+  ListNumbers,
+  CodeBlock,
+  Image,
+  Video,
+  SpeakerHigh,
+  FilePdf,
+  Globe,
+  Browser,
+  Question,
+  Terminal,
+  Sparkle,
+  MathOperations,
+  Cards,
+  FlowArrow,
+  Tag,
+  Info,
+  Warning,
+  Table,
+  Minus,
+} from '@phosphor-icons/react/dist/ssr'
+
+export const Block = ({ icon: Icon, name, description }) => (
+  <li style={{ display: 'flex', alignItems: 'center', gap: 8, listStyle: 'none' }}>
+    <Icon size={18} weight="fill" style={{ flexShrink: 0, opacity: 0.6 }} />
+    <span><strong>{name}</strong> — {description}</span>
+  </li>
+)
+
+# Blocks
+
+The LearnHouse editor supports a wide range of block types for building rich course content. You can insert any block by typing `/` and selecting from the menu.
+
+## Text Blocks
+
+<ul style={{ listStyle: 'none', padding: 0, display: 'flex', flexDirection: 'column', gap: 8 }}>
+  <Block icon={Paragraph} name="Paragraph" description="Standard body text with full inline formatting support." />
+  <Block icon={TextHOne} name="Heading 1" description="Top-level heading for major sections." />
+  <Block icon={TextHTwo} name="Heading 2" description="Second-level heading for subsections." />
+  <Block icon={TextHThree} name="Heading 3" description="Third-level heading for smaller sections." />
+  <Block icon={TextHFour} name="Heading 4" description="Fourth-level heading." />
+  <Block icon={TextHFive} name="Heading 5" description="Fifth-level heading." />
+  <Block icon={TextHSix} name="Heading 6" description="Sixth-level heading." />
+  <Block icon={ListBullets} name="Bullet List" description="Unordered list for grouping items." />
+  <Block icon={ListNumbers} name="Numbered List" description="Ordered list for sequential items." />
+  <Block icon={CodeBlock} name="Code Block" description="Syntax-highlighted code with language selection." />
+</ul>
+
+## Media Blocks
+
+<ul style={{ listStyle: 'none', padding: 0, display: 'flex', flexDirection: 'column', gap: 8 }}>
+  <Block icon={Image} name="Image" description="Upload images or insert by URL." />
+  <Block icon={Video} name="Video" description="Upload video files or embed from YouTube and other sources." />
+  <Block icon={SpeakerHigh} name="Audio" description="Upload or embed audio content." />
+  <Block icon={FilePdf} name="PDF" description="Embed PDF documents with a built-in viewer." />
+  <Block icon={Globe} name="Embed" description="Embed external content via URL (iframes)." />
+  <Block icon={Browser} name="Web Preview" description="Preview a web page with metadata." />
+</ul>
+
+## Interactive Blocks
+
+<ul style={{ listStyle: 'none', padding: 0, display: 'flex', flexDirection: 'column', gap: 8 }}>
+  <Block icon={Question} name="Quiz" description="Interactive quiz with questions to test understanding." />
+  <Block icon={Terminal} name="Code Playground" description="Runnable code with test cases and execution." />
+  <Block icon={Sparkle} name="Magic Block" description="AI-generated interactive content." />
+  <Block icon={MathOperations} name="Math Equation" description="Render mathematical notation using LaTeX syntax." />
+  <Block icon={Cards} name="Flip Card" description="Flashcard for learning and memorization." />
+  <Block icon={FlowArrow} name="Scenarios" description="Interactive branching scenarios with choices." />
+</ul>
+
+## UI Blocks
+
+<ul style={{ listStyle: 'none', padding: 0, display: 'flex', flexDirection: 'column', gap: 8 }}>
+  <Block icon={Info} name="Callout Info" description="Information callout box for tips and notes." />
+  <Block icon={Warning} name="Callout Warning" description="Warning callout box for important alerts." />
+  <Block icon={Tag} name="Badge" description="Styled badge or label element." />
+  <Block icon={Table} name="Table" description="Resizable tables for structured data." />
+  <Block icon={Minus} name="Divider" description="Horizontal rule to visually separate sections (type `---` to insert)." />
+</ul>
+
+## Using Blocks
+
+Each block can be individually moved, duplicated, or deleted. Click the handle on the left side of a block to drag it to a new position, or use the block menu for additional options.

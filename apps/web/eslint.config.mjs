@@ -15,6 +15,17 @@ export default [
             "@next/next/no-img-element": "off",
             "unused-imports/no-unused-imports": "warn",
             "no-console": "warn",
+            "no-unused-vars": ["error", { "argsIgnorePattern": "^_", "varsIgnorePattern": "^_", "caughtErrorsIgnorePattern": "^_" }],
+        },
+    },
+    {
+        // tsc already checks undefined identifiers in TS files; ESLint's
+        // no-undef has no knowledge of TS global types (React, NodeJS,
+        // RequestInit, ...) and only produces false positives here.
+        // https://typescript-eslint.io/troubleshooting/faqs/eslint/#i-get-errors-from-the-no-undef-rule-about-global-variables-not-being-defined-even-though-there-are-no-typescript-errors
+        files: ["**/*.ts", "**/*.tsx"],
+        rules: {
+            "no-undef": "off",
         },
     },
 ];

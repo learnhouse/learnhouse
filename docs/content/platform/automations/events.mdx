@@ -1,0 +1,426 @@
+import { Callout } from 'nextra/components'
+
+# Event Catalogue
+
+Every event that can fire from LearnHouse, grouped by category. Each event delivers the same envelope (`event`, `delivery_id`, `timestamp`, `org_id`, `data`) — only the shape of `data` varies.
+
+<Callout type="info">
+The event registry is the single source of truth. At runtime, dispatched payloads are validated against these schemas and any drift is logged as a warning. You can also fetch the live registry from your LearnHouse instance:
+```http
+GET /api/v1/{org_id}/webhooks/events
+```
+</Callout>
+
+## System
+
+### `ping`
+
+Test event sent to verify endpoint connectivity. Fired by the **Send test event** button and the `POST /webhooks/{uuid}/test` endpoint.
+
+```json
+{ "message": "string" }
+```
+
+## Learning progress
+
+### `course_completed`
+
+Triggered when a user completes every activity in a course.
+
+```json
+{
+  "user":   { "user_uuid": "string", "email": "string", "username": "string" },
+  "course": { "course_uuid": "string", "name": "string" }
+}
+```
+
+### `course_enrolled`
+
+Triggered when a user enrols in a course.
+
+```json
+{
+  "user":   { "user_uuid": "string", "email": "string", "username": "string" },
+  "course": { "course_uuid": "string", "name": "string" }
+}
+```
+
+### `activity_completed`
+
+Triggered when a user completes an activity.
+
+```json
+{
+  "user":     { "user_uuid": "string", "email": "string", "username": "string" },
+  "activity": { "activity_uuid": "string", "activity_type": "string" },
+  "course":   { "course_uuid": "string", "name": "string" }
+}
+```
+
+### `assignment_submitted`
+
+Triggered when a user submits an assignment.
+
+```json
+{
+  "user":       { "user_uuid": "string", "email": "string", "username": "string" },
+  "assignment": { "assignment_uuid": "string" },
+  "course":     { "course_uuid": "string", "name": "string" }
+}
+```
+
+### `assignment_graded`
+
+Triggered when an instructor grades an assignment submission.
+
+```json
+{
+  "user_id": "integer",
+  "assignment_uuid": "string",
+  "course_uuid": "string",
+  "grade": "integer"
+}
+```
+
+### `certificate_claimed`
+
+Triggered when a user receives a certificate.
+
+```json
+{
+  "user":        { "user_uuid": "string", "email": "string", "username": "string" },
+  "course":      { "course_uuid": "string", "name": "string" },
+  "certificate": { "user_certification_uuid": "string" }
+}
+```
+
+## User & access
+
+### `user_signed_up`
+
+Triggered when a new user signs up for the organization.
+
+```json
+{
+  "user": {
+    "user_uuid": "string",
+    "email": "string",
+    "username": "string",
+    "first_name": "string",
+    "last_name": "string"
+  },
+  "signup_method": "string"
+}
+```
+
+### `user_email_verified`
+
+Triggered when a user verifies their email address.
+
+```json
+{ "user_uuid": "string", "email": "string" }
+```
+
+### `user_role_changed`
+
+Triggered when a user's role is changed in the organization.
+
+```json
+{ "user_id": "integer", "org_id": "integer", "new_role_uuid": "string" }
+```
+
+### `user_invited_to_org`
+
+Triggered when users are invited to the organization. A single event is fired per invite batch.
+
+```json
+{
+  "org_id": "integer",
+  "emails": "list[string]",
+  "invite_code_uuid": "string",
+  "invited_by": "string"
+}
+```
+
+### `user_removed_from_org`
+
+Triggered when a user is removed from the organization.
+
+```json
+{ "user_id": "integer", "org_id": "integer" }
+```
+
+## Course lifecycle
+
+### `course_created`
+
+Triggered when a new course is created.
+
+```json
+{ "course_uuid": "string", "name": "string", "org_id": "integer" }
+```
+
+### `course_published`
+
+Triggered when a course is published or unpublished.
+
+```json
+{ "course_uuid": "string", "name": "string", "published": "boolean" }
+```
+
+### `course_deleted`
+
+Triggered when a course is deleted.
+
+```json
+{ "course_uuid": "string", "name": "string" }
+```
+
+### `course_update_published`
+
+Triggered when an announcement is posted to a course.
+
+```json
+{ "courseupdate_uuid": "string", "course_uuid": "string" }
+```
+
+## Content management
+
+### `activity_version_created`
+
+Triggered when an activity version snapshot is created.
+
+```json
+{ "activity_id": "integer", "version_number": "integer", "created_by_id": "integer" }
+```
+
+### `activity_version_restored`
+
+Triggered when an activity is restored to a previous version.
+
+```json
+{
+  "activity_uuid": "string",
+  "restored_version_number": "integer",
+  "new_version_number": "integer"
+}
+```
+
+### `course_contributor_added`
+
+Triggered when contributors are added to a course.
+
+```json
+{ "course_uuid": "string", "contributors": "list[object]" }
+```
+
+### `course_contributor_removed`
+
+Triggered when contributors are removed from a course.
+
+```json
+{ "course_uuid": "string", "contributors": "list[object]" }
+```
+
+### `collection_created`
+
+Triggered when a new course collection is created.
+
+```json
+{ "collection_uuid": "string", "name": "string" }
+```
+
+### `podcast_episode_created`
+
+Triggered when a new podcast episode is added.
+
+```json
+{
+  "episode_uuid": "string",
+  "podcast_uuid": "string",
+  "title": "string",
+  "episode_number": "integer"
+}
+```
+
+## Collaboration
+
+### `board_created`
+
+Triggered when a new whiteboard is created.
+
+```json
+{ "board_uuid": "string", "name": "string", "created_by": "integer" }
+```
+
+### `board_member_added`
+
+Triggered when a member is added to a whiteboard.
+
+```json
+{ "board_uuid": "string", "user_id": "integer", "role": "string" }
+```
+
+### `playground_created`
+
+Triggered when a new playground is created.
+
+```json
+{ "playground_uuid": "string", "name": "string", "created_by": "integer" }
+```
+
+## Community
+
+### `discussion_posted`
+
+Triggered when a user creates a discussion.
+
+```json
+{
+  "user":       { "user_uuid": "string", "email": "string", "username": "string" },
+  "discussion": { "discussion_uuid": "string", "title": "string" },
+  "community":  { "community_uuid": "string" }
+}
+```
+
+### `comment_created`
+
+Triggered when a user posts a comment on a discussion.
+
+```json
+{
+  "user":       { "user_uuid": "string", "email": "string", "username": "string" },
+  "comment":    { "comment_uuid": "string" },
+  "discussion": { "discussion_uuid": "string", "title": "string" },
+  "community":  { "community_uuid": "string" }
+}
+```
+
+### `discussion_pinned`
+
+Triggered when a discussion is pinned or unpinned.
+
+```json
+{
+  "discussion_uuid": "string",
+  "title": "string",
+  "is_pinned": "boolean",
+  "community_uuid": "string"
+}
+```
+
+### `discussion_locked`
+
+Triggered when a discussion is locked or unlocked.
+
+```json
+{
+  "discussion_uuid": "string",
+  "title": "string",
+  "is_locked": "boolean",
+  "community_uuid": "string"
+}
+```
+
+### `discussion_vote_cast`
+
+Triggered when a user upvotes a discussion.
+
+```json
+{ "discussion_uuid": "string", "user_id": "integer", "upvote_count": "integer" }
+```
+
+## Groups
+
+### `usergroup_created`
+
+Triggered when a new user group is created.
+
+```json
+{ "usergroup_uuid": "string", "name": "string" }
+```
+
+### `usergroup_deleted`
+
+Triggered when a user group is deleted.
+
+```json
+{ "usergroup_uuid": "string", "name": "string" }
+```
+
+### `usergroup_users_added`
+
+Triggered when users are added to a user group.
+
+```json
+{
+  "usergroup_id": "integer",
+  "usergroup_uuid": "string",
+  "user_ids": "list[integer]"
+}
+```
+
+### `usergroup_resources_added`
+
+Triggered when resources are assigned to a user group.
+
+```json
+{
+  "usergroup_id": "integer",
+  "usergroup_uuid": "string",
+  "resource_uuids": "list[string]"
+}
+```
+
+## Subscriptions
+
+### `pack_activated`
+
+Triggered when a subscription pack is activated.
+
+```json
+{
+  "pack_id": "string",
+  "pack_type": "string",
+  "quantity": "integer",
+  "platform_subscription_id": "string"
+}
+```
+
+### `pack_deactivated`
+
+Triggered when a subscription pack is cancelled.
+
+```json
+{
+  "pack_id": "string",
+  "pack_type": "string",
+  "platform_subscription_id": "string"
+}
+```
+
+## Organization
+
+### `org_signup_method_changed`
+
+Triggered when the organization signup method is changed.
+
+```json
+{ "signup_mechanism": "string" }
+```
+
+### `org_ai_config_changed`
+
+Triggered when the organization AI configuration is updated.
+
+```json
+{ "ai_enabled": "boolean", "copilot_enabled": "boolean" }
+```
+
+### `org_payments_config_changed`
+
+Triggered when the organization payments configuration is updated.
+
+```json
+{ "payments_enabled": "boolean" }
+```

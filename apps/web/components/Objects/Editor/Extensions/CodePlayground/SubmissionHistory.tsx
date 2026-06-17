@@ -93,8 +93,7 @@ export default function SubmissionHistory({
     return (
       <div className="text-sm text-red-500 text-center py-8">
         {error}
-        <button
-          onClick={fetchHistory}
+        <button type="button"           onClick={fetchHistory}
           className="ml-2 underline text-neutral-500 hover:text-neutral-700"
         >
           Retry
@@ -132,8 +131,7 @@ export default function SubmissionHistory({
             className="border border-neutral-200 rounded-lg bg-neutral-50/50 overflow-hidden"
           >
             {/* Header row */}
-            <button
-              onClick={() => setExpandedId(isExpanded ? null : sub.id)}
+            <button type="button"               onClick={() => setExpandedId(isExpanded ? null : sub.id)}
               className="w-full flex items-center gap-2 px-3 py-2.5 text-left hover:bg-neutral-100/60 transition-colors"
             >
               {isExpanded ? (
@@ -171,8 +169,7 @@ export default function SubmissionHistory({
                   {sub.source_code}
                 </pre>
                 <div className="flex justify-end p-2 border-t border-neutral-100">
-                  <button
-                    onClick={() => onRestoreCode(sub.source_code)}
+                  <button type="button"                     onClick={() => onRestoreCode(sub.source_code)}
                     className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-neutral-600 hover:text-neutral-800 bg-neutral-100 hover:bg-neutral-200 rounded-md transition-colors"
                   >
                     <RotateCcw size={12} />
@@ -190,8 +187,7 @@ export default function SubmissionHistory({
         const totalPages = Math.ceil(data.total / limit)
         return (
           <div className="flex items-center justify-between pt-3">
-            <button
-              disabled={page <= 1}
+            <button type="button"               disabled={page <= 1}
               onClick={() => setPage((p) => p - 1)}
               className="flex items-center gap-1 text-xs text-neutral-500 hover:text-neutral-700 disabled:opacity-30 disabled:cursor-not-allowed"
             >
@@ -201,8 +197,7 @@ export default function SubmissionHistory({
             <span className="text-[11px] text-neutral-400">
               Page {page} of {totalPages}
             </span>
-            <button
-              disabled={page >= totalPages}
+            <button type="button"               disabled={page >= totalPages}
               onClick={() => setPage((p) => p + 1)}
               className="flex items-center gap-1 text-xs text-neutral-500 hover:text-neutral-700 disabled:opacity-30 disabled:cursor-not-allowed"
             >

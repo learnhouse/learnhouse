@@ -114,6 +114,7 @@ export function AnimatedNumber({ value, suffix = '' }: { value: number; suffix?:
     const duration = 600
     const start = performance.now()
     const from = 0
+    let rafId = 0
 
     function tick(now: number) {
       const elapsed = now - start
@@ -121,9 +122,11 @@ export function AnimatedNumber({ value, suffix = '' }: { value: number; suffix?:
       // ease out cubic
       const eased = 1 - Math.pow(1 - progress, 3)
       setDisplay(Math.round(from + (value - from) * eased))
-      if (progress < 1) requestAnimationFrame(tick)
+      if (progress < 1) rafId = requestAnimationFrame(tick)
     }
-    requestAnimationFrame(tick)
+    rafId = requestAnimationFrame(tick)
+
+    return () => cancelAnimationFrame(rafId)
   }, [value])
 
   return <span ref={ref}>{display.toLocaleString()}{suffix}</span>

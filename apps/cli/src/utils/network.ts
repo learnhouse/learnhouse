@@ -1,5 +1,25 @@
 import net from 'node:net'
 
+/** Best-effort public IPv4 of this host (for printing DNS records). */
+export async function getPublicIp(): Promise<string | null> {
+  const sources = [
+    'http://169.254.169.254/metadata/v1/interfaces/public/0/ipv4/address', // DO/cloud metadata
+    'https://api.ipify.org',
+    'https://ifconfig.co/ip',
+  ]
+  for (const url of sources) {
+    try {
+      const res = await fetch(url, { signal: AbortSignal.timeout(4000) })
+      if (!res.ok) continue
+      const txt = (await res.text()).trim()
+      if (/^\d{1,3}(\.\d{1,3}){3}$/.test(txt)) return txt
+    } catch {
+      // try next source
+    }
+  }
+  return null
+}
+
 export function checkPort(port: number): Promise<boolean> {
   return new Promise((resolve) => {
     const server = net.createServer()

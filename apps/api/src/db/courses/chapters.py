@@ -46,8 +46,6 @@ class ChapterUpdate(SQLModel):
     description: Optional[str] = None
     thumbnail_image: Optional[str] = None
     lock_type: Optional[LockType] = None
-    course_id: Optional[int] = None
-    org_id: Optional[int] = None
     extra_metadata: Optional[dict] = None
 
 
