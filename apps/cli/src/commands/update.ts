@@ -3,7 +3,7 @@ import { join } from 'node:path'
 import * as p from '@clack/prompts'
 import pc from 'picocolors'
 import { findInstallDir, readConfig } from '../services/config-store.js'
-import { dockerComposeDown, dockerComposeUp } from '../services/docker.js'
+import { dockerComposeDown, dockerComposeUp, dockerComposePull } from '../services/docker.js'
 import { migrateContentVolume } from '../services/content-volume-migration.js'
 import { waitForHealth } from '../services/health.js'
 import {
@@ -135,8 +135,8 @@ export async function updateCommand(options: { version?: string; migrate?: boole
     writeFileSync(composePath, updatedCompose)
 
     s.start('Pulling image')
-    // docker compose up with --pull always handles the pull
-    s.stop('Image reference updated')
+    dockerComposePull(config.installDir)
+    s.stop('Image pulled')
 
     // Preserve any uploaded media before the container is recreated.
     s.start('Checking content storage')
@@ -169,7 +169,7 @@ export async function updateCommand(options: { version?: string; migrate?: boole
 
     s.start('Restarting services')
     dockerComposeDown(config.installDir)
-    dockerComposeUp(config.installDir)
+    dockerComposeUp(config.installDir, false, true)
     s.stop('Services restarted')
 
     // 4) Wait for the app, then run migrations via the shared helper.

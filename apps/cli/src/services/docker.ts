@@ -26,8 +26,10 @@ export function isDockerRunning(): boolean {
   }
 }
 
-export function dockerComposeUp(cwd: string, pull = false): void {
-  const cmd = pull ? 'docker compose up -d --pull always' : 'docker compose up -d'
+export function dockerComposeUp(cwd: string, pull = false, forceRecreate = false): void {
+  let cmd = 'docker compose up -d'
+  if (pull) cmd += ' --pull always'
+  if (forceRecreate) cmd += ' --force-recreate'
   execSync(cmd, {
     cwd,
     stdio: 'inherit',
