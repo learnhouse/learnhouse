@@ -1,0 +1,69 @@
+name: E2E Assignments
+
+permissions:
+  contents: read
+
+# Heavy job: boots a full self-host via the LearnHouse CLI (pulling the
+# published image) and drives the assignments UI with Playwright. Runs on
+# assignment-related changes and on demand.
+on:
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - 'apps/web/**'
+      - 'apps/api/**'
+      - 'apps/cli/**'
+      - 'apps/e2e/**'
+
+jobs:
+  e2e:
+    name: Assignments UI E2E
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      # Build the CLI from this branch so the suite installs the self-host with
+      # the branch's CLI (it still pulls the published app image).
+      - name: Build CLI
+        working-directory: apps/cli
+        run: |
+          bun install --frozen-lockfile
+          bun run build
+
+      - name: Install E2E deps
+        working-directory: apps/e2e
+        run: bun install
+
+      - name: Install Playwright Chromium
+        working-directory: apps/e2e
+        run: bunx playwright install --with-deps chromium
+
+      - name: Run E2E assignment suite
+        working-directory: apps/e2e
+        env:
+          # Use the branch-built CLI to boot the self-host.
+          E2E_CLI: node ${{ github.workspace }}/apps/cli/dist/bin/learnhouse.js
+          E2E_ADMIN_PASSWORD: E2eTestAdmin!234
+          E2E_PORT: '8080'
+        run: bun run test
+
+      - name: Upload Playwright report
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: apps/e2e/playwright-report/
+          retention-days: 7
+
+      - name: Upload traces & videos
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-test-results
+          path: apps/e2e/test-results/
+          retention-days: 7
