@@ -9,8 +9,7 @@
     "start": "next start",
     "lint": "eslint . || true",
     "lint:fix": "eslint --fix . || true",
-    "lint:strict": "eslint",
-    "lint:changed": "node scripts/lint-changed-lines.mjs"
+    "lint:strict": "eslint"
   },
   "dependencies": {
     "@codemirror/autocomplete": "^6.18.4",

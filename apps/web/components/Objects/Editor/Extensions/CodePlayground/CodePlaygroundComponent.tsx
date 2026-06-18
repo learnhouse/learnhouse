@@ -996,7 +996,8 @@ const CodePlaygroundComponent: React.FC = (props: any) => {
   const CopyButton: React.FC<{ text: string; className?: string }> = ({ text, className = '' }) => {
     const { copied, copy } = useCopyToClipboard()
     return (
-      <button type="button"         onClick={() => copy(text)}
+      <button
+        onClick={() => copy(text)}
         className={`p-1 rounded-md transition-colors ${copied ? 'text-emerald-400' : 'text-neutral-500 hover:text-neutral-300'} ${className}`}
         title="Copy to clipboard"
       >
@@ -1030,7 +1031,8 @@ const CodePlaygroundComponent: React.FC = (props: any) => {
               {(['easy', 'medium', 'hard'] as Difficulty[]).map((d) => {
                 const c = DIFFICULTY_CONFIG[d]
                 return (
-                  <button type="button"                     key={d}
+                  <button
+                    key={d}
                     onClick={() => updateAttributes({ difficulty: d })}
                     className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[12px] font-semibold transition-all border ${
                       difficulty === d
@@ -1048,7 +1050,7 @@ const CodePlaygroundComponent: React.FC = (props: any) => {
           <div>
             <div className="flex items-center justify-between mb-1.5">
               <label className="text-[11px] font-semibold text-neutral-400 uppercase tracking-wider">Hints</label>
-              <button type="button" onClick={addHint} className="flex items-center gap-1 text-[11px] font-medium text-neutral-400 hover:text-neutral-600 transition-colors">
+              <button onClick={addHint} className="flex items-center gap-1 text-[11px] font-medium text-neutral-400 hover:text-neutral-600 transition-colors">
                 <Plus size={11} /> Add
               </button>
             </div>
@@ -1060,7 +1062,7 @@ const CodePlaygroundComponent: React.FC = (props: any) => {
                   className="flex-1 text-[12px] text-neutral-700 bg-neutral-50 border border-neutral-200 rounded-lg px-3 py-2 outline-none focus:border-neutral-300 transition-colors nice-shadow"
                   placeholder={`Hint ${i + 1}...`}
                 />
-                <button type="button" onClick={() => removeHint(i)} className="p-1.5 hover:bg-red-50 rounded-lg transition-colors">
+                <button onClick={() => removeHint(i)} className="p-1.5 hover:bg-red-50 rounded-lg transition-colors">
                   <Trash2 size={12} className="text-red-400" />
                 </button>
               </div>
@@ -1077,7 +1079,8 @@ const CodePlaygroundComponent: React.FC = (props: any) => {
                 <div className="flex items-center gap-2 bg-neutral-50 border border-neutral-200 rounded-lg px-3 py-2.5 nice-shadow">
                   <Database size={14} className="text-neutral-500 shrink-0" />
                   <span className="text-[12px] text-neutral-700 truncate flex-1">{sqliteDbName || 'database.sqlite'}</span>
-                  <button type="button"                     onClick={removeSqliteDb}
+                  <button
+                    onClick={removeSqliteDb}
                     className="p-1 hover:bg-red-50 rounded transition-colors shrink-0"
                   >
                     <Trash2 size={12} className="text-red-400" />
@@ -1113,7 +1116,8 @@ const CodePlaygroundComponent: React.FC = (props: any) => {
 
           {/* Advanced */}
           <div className="border-t border-neutral-100 pt-3">
-            <button type="button"               onClick={() => setShowAdvanced(!showAdvanced)}
+            <button
+              onClick={() => setShowAdvanced(!showAdvanced)}
               className="flex items-center gap-2 text-[11px] font-semibold text-neutral-400 uppercase tracking-wider hover:text-neutral-600 transition-colors w-full"
             >
               <Settings2 size={12} />
@@ -1165,7 +1169,8 @@ const CodePlaygroundComponent: React.FC = (props: any) => {
                     <label className="text-[11px] font-semibold text-neutral-400 uppercase tracking-wider mb-1 block">Timed Challenge</label>
                     <p className="text-[10px] text-neutral-400">Add a countdown timer to the challenge.</p>
                   </div>
-                  <button type="button"                     onClick={() => updateAttributes({ timedMode: !timedMode })}
+                  <button
+                    onClick={() => updateAttributes({ timedMode: !timedMode })}
                     className={`w-10 h-5 rounded-full transition-colors ${timedMode ? 'bg-blue-500' : 'bg-neutral-200'}`}
                   >
                     <span className={`block w-4 h-4 rounded-full bg-white transition-transform shadow-sm ${timedMode ? 'translate-x-5' : 'translate-x-0.5'}`} />
@@ -1187,7 +1192,7 @@ const CodePlaygroundComponent: React.FC = (props: any) => {
                 <div>
                   <div className="flex items-center justify-between mb-1.5">
                     <label className="text-[11px] font-semibold text-neutral-400 uppercase tracking-wider">Additional Files</label>
-                    <button type="button" onClick={addAdditionalFile} className="flex items-center gap-1 text-[11px] font-medium text-neutral-400 hover:text-neutral-600 transition-colors">
+                    <button onClick={addAdditionalFile} className="flex items-center gap-1 text-[11px] font-medium text-neutral-400 hover:text-neutral-600 transition-colors">
                       <Plus size={11} /> Add File
                     </button>
                   </div>
@@ -1201,7 +1206,7 @@ const CodePlaygroundComponent: React.FC = (props: any) => {
                           className="flex-1 text-[11px] font-mono text-neutral-700 bg-white border border-neutral-200 rounded px-2 py-1 outline-none focus:border-neutral-300"
                           placeholder="filename.ext"
                         />
-                        <button type="button" onClick={() => removeAdditionalFile(i)} className="p-1 hover:bg-red-50 rounded transition-colors">
+                        <button onClick={() => removeAdditionalFile(i)} className="p-1 hover:bg-red-50 rounded transition-colors">
                           <Trash2 size={11} className="text-red-400" />
                         </button>
                       </div>
@@ -1270,7 +1275,8 @@ const CodePlaygroundComponent: React.FC = (props: any) => {
           {solutionCode && (
             <div className="space-y-2">
               {canRevealSolution ? (
-                <button type="button"                   onClick={() => setShowSolution(!showSolution)}
+                <button
+                  onClick={() => setShowSolution(!showSolution)}
                   className="flex items-center gap-2 px-3 py-2 rounded-lg text-[12px] font-semibold text-neutral-700 bg-neutral-50 border border-neutral-200 hover:bg-neutral-100 transition-colors nice-shadow"
                 >
                   <Eye size={13} />
@@ -1285,12 +1291,14 @@ const CodePlaygroundComponent: React.FC = (props: any) => {
               {showSolution && canRevealSolution && (
                 <div className="space-y-2">
                   <div className="flex gap-1">
-                    <button type="button"                       onClick={() => setSolutionView('diff')}
+                    <button
+                      onClick={() => setSolutionView('diff')}
                       className={`text-[10px] font-semibold px-2 py-1 rounded transition-colors ${solutionView === 'diff' ? 'bg-neutral-200 text-neutral-700' : 'text-neutral-400 hover:text-neutral-600'}`}
                     >
                       Diff
                     </button>
-                    <button type="button"                       onClick={() => setSolutionView('solution')}
+                    <button
+                      onClick={() => setSolutionView('solution')}
                       className={`text-[10px] font-semibold px-2 py-1 rounded transition-colors ${solutionView === 'solution' ? 'bg-neutral-200 text-neutral-700' : 'text-neutral-400 hover:text-neutral-600'}`}
                     >
                       Solution
@@ -1316,7 +1324,7 @@ const CodePlaygroundComponent: React.FC = (props: any) => {
                 <Lightbulb size={12} className="text-amber-400" /> Hints
               </span>
               {hints.map((hint, i) => (
-                <button type="button" key={i} onClick={() => toggleHint(i)} className="w-full text-left">
+                <button key={i} onClick={() => toggleHint(i)} className="w-full text-left">
                   <div className="flex items-center gap-2.5 px-3 py-2 rounded-lg bg-amber-50/60 border border-amber-100 hover:bg-amber-50 transition-colors nice-shadow">
                     <Lightbulb size={12} className="text-amber-400 flex-shrink-0" />
                     <span className="text-[12px] font-medium text-amber-700 flex-1">Hint {i + 1}</span>
@@ -1339,7 +1347,7 @@ const CodePlaygroundComponent: React.FC = (props: any) => {
     <div className="p-5 space-y-3 overflow-y-auto h-full">
       {isEditable && (
         <div className="flex justify-end mb-1">
-          <button type="button" onClick={addTestCase} className="flex items-center gap-1 text-[11px] font-medium text-neutral-400 hover:text-neutral-600 transition-colors">
+          <button onClick={addTestCase} className="flex items-center gap-1 text-[11px] font-medium text-neutral-400 hover:text-neutral-600 transition-colors">
             <Plus size={12} /> Add Test Case
           </button>
         </div>
@@ -1375,7 +1383,7 @@ const CodePlaygroundComponent: React.FC = (props: any) => {
                   <div className="flex items-center gap-2 flex-shrink-0">
                     {r?.time && <span className="text-[10px] text-neutral-400 font-mono">{r.time}s</span>}
                     {isEditable && (
-                      <button type="button" onClick={() => removeTestCase(tc.id)} className="p-1 hover:bg-red-50 rounded-lg transition-colors">
+                      <button onClick={() => removeTestCase(tc.id)} className="p-1 hover:bg-red-50 rounded-lg transition-colors">
                         <Trash2 size={12} className="text-red-400" />
                       </button>
                     )}
@@ -1416,7 +1424,8 @@ const CodePlaygroundComponent: React.FC = (props: any) => {
             <label className="text-[11px] font-semibold text-neutral-400 uppercase tracking-wider">
               Your Test Cases
             </label>
-            <button type="button"               onClick={addStudentTestCase}
+            <button
+              onClick={addStudentTestCase}
               className="flex items-center gap-1 text-[11px] font-medium text-blue-500 hover:text-blue-600 transition-colors"
             >
               <Plus size={11} /> Add
@@ -1433,7 +1442,7 @@ const CodePlaygroundComponent: React.FC = (props: any) => {
                   onChange={(e) => updateStudentTestCase(tc.id, 'label', e.target.value)}
                   className="flex-1 text-[12px] font-medium text-neutral-700 bg-white border border-neutral-200 rounded px-2 py-1 outline-none focus:border-blue-300"
                 />
-                <button type="button" onClick={() => removeStudentTestCase(tc.id)} className="p-1 hover:bg-red-50 rounded transition-colors">
+                <button onClick={() => removeStudentTestCase(tc.id)} className="p-1 hover:bg-red-50 rounded transition-colors">
                   <Trash2 size={11} className="text-red-400" />
                 </button>
               </div>
@@ -1662,7 +1671,8 @@ const CodePlaygroundComponent: React.FC = (props: any) => {
               <span className="text-[12px] text-neutral-400">
                 You have {Math.floor(timedDurationMs / 60000)} minutes to complete this challenge.
               </span>
-              <button type="button"                 onClick={() => { setChallengeStarted(true); setChallengeTimeLeft(timedDurationMs) }}
+              <button
+                onClick={() => { setChallengeStarted(true); setChallengeTimeLeft(timedDurationMs) }}
                 className="px-5 py-2.5 bg-white/10 hover:bg-white/15 text-neutral-200 rounded-lg text-[13px] font-semibold transition-all"
               >
                 Start Challenge
@@ -1703,7 +1713,8 @@ const CodePlaygroundComponent: React.FC = (props: any) => {
               <div className="flex items-center gap-1.5">
                 {isEditable ? (
                   <div className="relative">
-                    <button type="button"                       onClick={() => setShowLangDropdown(!showLangDropdown)}
+                    <button
+                      onClick={() => setShowLangDropdown(!showLangDropdown)}
                       className="flex items-center gap-1.5 text-neutral-500 hover:text-neutral-300 font-medium py-1.5 px-1 text-[12px] transition-colors outline-none"
                     >
                       {languageName}
@@ -1712,7 +1723,8 @@ const CodePlaygroundComponent: React.FC = (props: any) => {
                     {showLangDropdown && (
                       <div className="absolute right-0 top-full mt-1 bg-[#24283b] rounded-lg py-1 z-50 max-h-60 overflow-y-auto w-44 border border-white/[0.08] shadow-xl">
                         {PLAYGROUND_LANGUAGES.map((lang) => (
-                          <button type="button"                             key={lang.id}
+                          <button
+                            key={lang.id}
                             onClick={() => handleLanguageChange(lang.id)}
                             className={`w-full text-left px-3.5 py-2 text-[12px] transition-colors ${
                               lang.id === languageId
@@ -1732,7 +1744,8 @@ const CodePlaygroundComponent: React.FC = (props: any) => {
                   </span>
                 )}
                 {!isEditable && (
-                  <button type="button"                     onClick={resetCode}
+                  <button
+                    onClick={resetCode}
                     className="flex items-center text-neutral-500 hover:text-neutral-300 py-1.5 px-1 text-[12px] transition-colors outline-none"
                     title="Reset code"
                   >
@@ -1744,7 +1757,8 @@ const CodePlaygroundComponent: React.FC = (props: any) => {
             {/* File tabs — VS Code style */}
             {additionalFiles.length > 0 && (
               <div className="flex items-center bg-[#16161e] border-b border-white/[0.06] overflow-x-auto shrink-0">
-                <button type="button"                   onClick={() => setActiveFileTab('main')}
+                <button
+                  onClick={() => setActiveFileTab('main')}
                   className={`flex items-center gap-1.5 px-3.5 py-2 text-[11px] font-medium border-r border-white/[0.06] whitespace-nowrap transition-colors ${
                     activeFileTab === 'main'
                       ? 'bg-[#1a1b26] text-neutral-200 border-b-2 border-b-blue-500'
@@ -1755,7 +1769,8 @@ const CodePlaygroundComponent: React.FC = (props: any) => {
                   main
                 </button>
                 {additionalFiles.map((file, i) => (
-                  <button type="button"                     key={i}
+                  <button
+                    key={i}
                     onClick={() => setActiveFileTab(i)}
                     className={`flex items-center gap-1.5 px-3.5 py-2 text-[11px] font-medium border-r border-white/[0.06] whitespace-nowrap transition-colors ${
                       activeFileTab === i
@@ -1819,7 +1834,8 @@ const CodePlaygroundComponent: React.FC = (props: any) => {
                 </div>
               )}
               <div className="flex items-center gap-3 px-4 py-2.5">
-                <button type="button"                   onClick={runCode}
+                <button
+                  onClick={runCode}
                   disabled={isRunning || !accessToken}
                   className={`flex items-center gap-2 px-4 py-2 rounded-lg text-[13px] font-semibold transition-all ${
                     isRunning
@@ -1864,7 +1880,8 @@ const CodePlaygroundComponent: React.FC = (props: any) => {
             {/* Tab bar */}
             <div className="flex items-center border-b border-neutral-200/60 bg-white px-1 shrink-0">
               {visibleTabs.map((tab) => (
-                <button type="button"                   key={tab.id}
+                <button
+                  key={tab.id}
                   onClick={() => setActiveTab(tab.id)}
                   className={`flex items-center gap-1.5 px-3.5 py-3 text-[12px] font-semibold transition-all relative ${
                     activeTab === tab.id

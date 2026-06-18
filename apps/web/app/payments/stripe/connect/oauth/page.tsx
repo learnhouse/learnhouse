@@ -1,5 +1,5 @@
 'use client'
-import React, { Suspense, useEffect, useRef, useState } from 'react'
+import React, { Suspense, useEffect, useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
 import { Check, Loader2, AlertTriangle } from 'lucide-react'
@@ -17,7 +17,6 @@ function StripeConnectCallbackInner() {
   const session = useLHSession() as any
   const [status, setStatus] = useState<'processing' | 'success' | 'error'>('processing')
   const [message, setMessage] = useState('')
-  const hasProcessedRef = useRef(false)
 
   useEffect(() => {
     const verifyConnection = async () => {
@@ -30,7 +29,7 @@ function StripeConnectCallbackInner() {
           throw new Error('Missing required parameters')
         }
 
-        await verifyStripeConnection(
+        const response = await verifyStripeConnection(
           parseInt(orgId),
           code,
           session?.data?.tokens?.access_token
@@ -57,8 +56,7 @@ function StripeConnectCallbackInner() {
       }
     }
 
-    if (session && !hasProcessedRef.current) {
-      hasProcessedRef.current = true
+    if (session) {
       verifyConnection()
     }
   }, [session, router, searchParams])

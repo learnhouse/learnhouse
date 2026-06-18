@@ -257,7 +257,7 @@ const CourseActionsMobile = ({ courseuuid, orgslug, course, trailData }: CourseA
 
           return (
             <div className="space-y-3">
-              {isStarted ? (
+              {!!isStarted ? (
                 <>
                   <div className="p-3 bg-green-50 border border-green-200 rounded-lg">
                     <div className="flex items-center gap-2">

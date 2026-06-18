@@ -99,7 +99,8 @@ const ButtonsExtension: React.FC = (props: any) => {
   return (
     <NodeViewWrapper className={`block-button ${getAlignmentClass()}`}>
       <div className='inline-block'>
-        <button type="button"           onClick={isEditable ? undefined : () => window.open(link, '_blank')}
+        <button
+          onClick={isEditable ? undefined : () => window.open(link, '_blank')}
           className={twMerge(
             'flex items-center space-x-2 py-2 px-4 rounded-xl text-white transition-colors',
             getButtonColor(color),
@@ -113,22 +114,22 @@ const ButtonsExtension: React.FC = (props: any) => {
         </button>
         {isEditable && (
           <div className="flex mt-2 space-x-2">
-            <button type="button" onClick={() => setShowEmojiPicker(!showEmojiPicker)} className="p-1 bg-gray-200 rounded-md">
+            <button onClick={() => setShowEmojiPicker(!showEmojiPicker)} className="p-1 bg-gray-200 rounded-md">
               <ChevronDown size={14} />
             </button>
-            <button type="button" onClick={() => setShowLinkInput(!showLinkInput)} className="p-1 bg-gray-200 rounded-md">
+            <button onClick={() => setShowLinkInput(!showLinkInput)} className="p-1 bg-gray-200 rounded-md">
               <Link size={14} />
             </button>
-            <button type="button" onClick={() => handleAlignmentChange('left')} className="p-1 bg-gray-200 rounded-md">
+            <button onClick={() => handleAlignmentChange('left')} className="p-1 bg-gray-200 rounded-md">
               <AlignLeft size={14} />
             </button>
-            <button type="button" onClick={() => handleAlignmentChange('center')} className="p-1 bg-gray-200 rounded-md">
+            <button onClick={() => handleAlignmentChange('center')} className="p-1 bg-gray-200 rounded-md">
               <AlignCenter size={14} />
             </button>
-            <button type="button" onClick={() => handleAlignmentChange('right')} className="p-1 bg-gray-200 rounded-md">
+            <button onClick={() => handleAlignmentChange('right')} className="p-1 bg-gray-200 rounded-md">
               <AlignRight size={14} />
             </button>
-            <button type="button" onClick={() => setShowColorPicker(!showColorPicker)} className="p-1 bg-gray-200 rounded-md">
+            <button onClick={() => setShowColorPicker(!showColorPicker)} className="p-1 bg-gray-200 rounded-md">
               <Palette size={14} />
             </button>
           </div>
@@ -155,7 +156,8 @@ const ButtonsExtension: React.FC = (props: any) => {
         <div ref={colorPickerRef} className="absolute mt-2 p-2 bg-white rounded-md nice-shadow">
           <div className="flex flex-wrap gap-2">
             {colors.map((c) => (
-              <button type="button"                 key={c}
+              <button
+                key={c}
                 className={`w-6 h-6 rounded-full ${getButtonColor(c)} hover:ring-2 hover:ring-opacity-50 focus:outline-hidden focus:ring-2 focus:ring-opacity-50`}
                 onClick={() => handleColorSelect(c)}
               />

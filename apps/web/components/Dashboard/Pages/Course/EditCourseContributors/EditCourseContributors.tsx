@@ -83,7 +83,7 @@ const formatDate = (dateString: string) => {
     });
 };
 
-function EditCourseContributors(_props: EditCourseContributorsProps) {
+function EditCourseContributors(props: EditCourseContributorsProps) {
     const { t } = useTranslation()
     const session = useLHSession() as any;
     const access_token = session?.data?.tokens?.access_token;
@@ -112,7 +112,6 @@ function EditCourseContributors(_props: EditCourseContributorsProps) {
 
     useEffect(() => {
         if (!isLoading && courseStructure?.open_to_contributors !== undefined) {
-            // eslint-disable-next-line react-hooks/set-state-in-effect
             setIsOpenToContributors(courseStructure.open_to_contributors);
         }
     }, [isLoading, courseStructure]);
@@ -173,7 +172,6 @@ function EditCourseContributors(_props: EditCourseContributorsProps) {
     useEffect(() => {
         if (contributors) {
             const nonCreatorContributors = contributors.filter(c => c.authorship !== 'CREATOR');
-            // eslint-disable-next-line react-hooks/set-state-in-effect
             setMasterCheckboxChecked(
                 nonCreatorContributors.length > 0 && 
                 selectedContributors.length === nonCreatorContributors.length
@@ -245,7 +243,7 @@ function EditCourseContributors(_props: EditCourseContributorsProps) {
             } else {
                 toast.error(t('dashboard.courses.contributors.toasts.update_error', { detail: res.data?.detail || t('dashboard.courses.contributors.toasts.update_failed') }));
             }
-        } catch {
+        } catch (error) {
             toast.error(t('dashboard.courses.contributors.toasts.update_failed'));
         }
     };
@@ -318,8 +316,8 @@ function EditCourseContributors(_props: EditCourseContributorsProps) {
     };
 
     const sortContributors = (contributors: Contributor[] | undefined) => {
-        if (!Array.isArray(contributors)) return [];
-
+        if (!contributors) return [];
+        
         // Find the creator and other contributors
         const creator = contributors.find(c => c.authorship === 'CREATOR');
         const otherContributors = contributors.filter(c => c.authorship !== 'CREATOR');

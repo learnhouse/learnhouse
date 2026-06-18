@@ -6,7 +6,7 @@ import { getUriWithOrg } from '@services/config/config'
 import { deleteCollection } from '@services/courses/collections'
 import { getCourseThumbnailMediaDirectory } from '@services/media/media'
 import { revalidateTags } from '@services/utils/ts/requests'
-import { MoreVertical, Library, BookCopy, Trash2 } from 'lucide-react'
+import { X, MoreVertical, Library, BookCopy, Trash2 } from 'lucide-react'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
@@ -20,6 +20,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@components/ui/dropdown-menu"
+import { motion } from 'motion/react'
 
 type PropsType = {
   collection: any
