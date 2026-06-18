@@ -461,13 +461,23 @@ class TestDeleteCourse:
 
 
 class TestContributorEndpoints:
-    async def test_apply_course_contributor(self, client):
+    async def test_apply_course_contributor(self, client, db, org):
+        # The endpoint now honours the course's open_to_contributors flag, so a
+        # course that is actually open to contributors must exist.
+        from datetime import datetime
+        from src.db.courses.courses import Course
+        db.add(Course(
+            id=777, name="Open Course", description="d", public=True, published=True,
+            open_to_contributors=True, org_id=org.id, course_uuid="course_open_contrib",
+            creation_date=str(datetime.now()), update_date=str(datetime.now()),
+        ))
+        await db.commit()
         with patch(
             "src.routers.courses.courses.apply_course_contributor",
             new_callable=AsyncMock,
             return_value={"detail": "applied"},
         ):
-            response = await client.post("/api/v1/courses/course_test/apply-contributor")
+            response = await client.post("/api/v1/courses/course_open_contrib/apply-contributor")
 
         assert response.status_code == 200
         assert response.json()["detail"] == "applied"
@@ -542,6 +552,10 @@ class TestCourseUpdateEndpoints:
             "src.routers.courses.courses.get_updates_by_course_uuid",
             new_callable=AsyncMock,
             return_value=[_mock_course_update_read()],
+        ), patch(
+            # The endpoint now enforces READ access on the parent course.
+            "src.routers.courses.courses.check_resource_access",
+            new_callable=AsyncMock,
         ):
             response = await client.get("/api/v1/courses/course_test/updates")
 

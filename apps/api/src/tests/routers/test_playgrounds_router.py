@@ -638,6 +638,7 @@ class TestPlaygroundsRouter:
             iteration_count=1,
             max_iterations=3,
             current_html="<div>done</div>",
+            playground_uuid="playground_test",
             message_history=[SimpleNamespace(role="user", content="Build it")],
         )
         with patch(

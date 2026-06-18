@@ -161,9 +161,13 @@ async def _check_content_access(
     if len(parts) >= 2 and parts[0] == 'users':
         return
 
-    # Unknown path pattern — require auth as a safe default
+    # Unknown path pattern — deny by default. Previously this only blocked
+    # anonymous users and silently served the file to any authenticated user,
+    # which leaked content across tenants for any path layout that didn't match
+    # the recognised org/user prefixes. Mirror the S3 router and deny.
     if isinstance(current_user, AnonymousUser):
         raise HTTPException(status_code=401, detail="Authentication required")
+    raise HTTPException(status_code=403, detail="Access denied")
 
 
 # MIME type mapping
@@ -218,7 +222,14 @@ async def serve_local_content(
     if resolved is None:
         raise HTTPException(status_code=400, detail="Invalid path")
 
-    await _check_content_access(file_path, current_user, db_session, request=request)
+    # Run the access check against the same fully-decoded, content-relative path
+    # that the filesystem lookup resolves to. Using the raw ``file_path`` here
+    # would let an attacker URL-encode path segments so the access-control
+    # pattern matching fails to recognise private activity/podcast content while
+    # the resolved path still points at the real file (auth bypass / IDOR).
+    base_real = os.path.realpath(str(CONTENT_DIR))
+    rel_path = os.path.relpath(str(resolved), base_real).replace(os.sep, '/')
+    await _check_content_access(rel_path, current_user, db_session, request=request)
 
     if not resolved.is_file():
         raise HTTPException(status_code=404, detail="File not found")
@@ -259,7 +270,11 @@ async def head_local_content(
     if resolved is None:
         raise HTTPException(status_code=400, detail="Invalid path")
 
-    await _check_content_access(file_path, current_user, db_session, request=request)
+    # See serve_local_content: check access against the resolved content-relative
+    # path, not the raw (possibly URL-encoded) request path.
+    base_real = os.path.realpath(str(CONTENT_DIR))
+    rel_path = os.path.relpath(str(resolved), base_real).replace(os.sep, '/')
+    await _check_content_access(rel_path, current_user, db_session, request=request)
 
     if not resolved.is_file():
         raise HTTPException(status_code=404, detail="File not found")

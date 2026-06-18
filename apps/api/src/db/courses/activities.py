@@ -87,8 +87,6 @@ class ActivityUpdate(SQLModel):
     activity_sub_type: Optional[ActivitySubTypeEnum] = None
     details: Optional[dict] = None
     published: Optional[bool] = None
-    published_version: Optional[int] = None
-    version: Optional[int] = None
     lock_type: Optional[ActivityLockType] = None
     extra_metadata: Optional[dict] = None
 

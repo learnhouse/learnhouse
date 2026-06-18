@@ -867,18 +867,25 @@ async def reserve_ai_credit(
     org_plan = _get_org_plan(org_config)
     base_credits = get_ai_credit_limit(org_plan)
 
-    if base_credits == 0:
-        raise HTTPException(
-            status_code=403,
-            detail="AI credits are not available on the free plan. Please upgrade to Standard or Pro.",
-        )
-
     config = org_config.config or {}
     extra = 0
     if config.get("config_version", "1.0").startswith("2"):
         extra = config.get("overrides", {}).get("ai", {}).get("extra_limit", 0) or 0
 
     r = _get_redis_client()
+
+    if base_credits == 0:
+        # The plan grants no base credits, but the org may still have *purchased*
+        # AI credit packs (or been granted an override extra_limit). Only reject
+        # when there is genuinely no available capacity — otherwise a paying
+        # customer would be denied access to credits they already bought.
+        purchased = int(r.get(f"ai_credits_purchased:{org_id}") or 0)
+        if extra + purchased <= 0:
+            raise HTTPException(
+                status_code=403,
+                detail="AI credits are not available on the free plan. Please upgrade to Standard or Pro.",
+            )
+
     unlimited = "1" if base_credits == -1 else "0"
 
     try:

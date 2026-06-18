@@ -141,8 +141,18 @@ class TestCommunityCommentsAndVotes:
         assert created.content == "First comment"
         assert comments[0].author.username == regular_user.username
         assert updated.content == "Edited comment"
-        assert await get_comment_count(discussion.discussion_uuid, db) == 1
-        assert await get_comment_count("missing", db) == 0
+        # get_comment_count now enforces community read access; mock it for the
+        # count assertions. A missing discussion raises 404 (was: returned 0).
+        with patch(
+            "src.services.communities.comments.check_resource_access",
+            new_callable=AsyncMock,
+        ):
+            assert await get_comment_count(
+                mock_request, discussion.discussion_uuid, regular_user, db
+            ) == 1
+            with pytest.raises(HTTPException) as missing_exc:
+                await get_comment_count(mock_request, "missing", regular_user, db)
+            assert missing_exc.value.status_code == 404
 
     @pytest.mark.asyncio
     async def test_comment_error_and_delete_paths(

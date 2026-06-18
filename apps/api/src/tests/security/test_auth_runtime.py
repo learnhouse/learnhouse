@@ -22,6 +22,7 @@ def _mock_request(auth_header: str = "", cookies: dict | None = None, path_param
     request.headers.get = Mock(return_value=auth_header)
     request.cookies = cookies or {}
     request.path_params = path_params or {}
+    request.query_params = {}
     request.state = SimpleNamespace()
     return request
 

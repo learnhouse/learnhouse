@@ -83,7 +83,10 @@ async def rag_chat_event_generator(
     org_id: Optional[int] = None,
 ):
     """Convert async generator to SSE format with source references."""
+    from src.security.features_utils.usage import refund_ai_credit
+
     full_response = ""
+    stream_failed = False
     try:
         # Send start event
         yield f"data: {json.dumps({'type': 'start', 'aichat_uuid': aichat_uuid})}\n\n"
@@ -119,8 +122,18 @@ async def rag_chat_event_generator(
             yield f"data: {json.dumps({'type': 'session_title', 'title': title})}\n\n"
 
     except Exception:
+        stream_failed = True
         logger.exception("Error in rag_chat_event_generator")
         yield f"data: {json.dumps({'type': 'error', 'message': 'An internal error occurred while processing the AI chat request.'})}\n\n"
+    finally:
+        # Refund the 2 reserved credits if the stream produced nothing useful
+        # (upstream error before any model output). Without this a flaky
+        # embedding/generation call permanently drains the org's quota.
+        if org_id is not None and (stream_failed or not full_response):
+            try:
+                refund_ai_credit(org_id, 2)
+            except Exception:
+                logger.debug("RAG AI credit refund failed", exc_info=True)
 
 
 # ============================================================================
@@ -220,15 +233,19 @@ async def api_rag_chat(
     from src.services.security.rate_limiting import enforce_ai_rate_limit
     enforce_ai_rate_limit(chat_acting_user_id, org_id)
 
-    # Atomic credit reservation — RAG chat makes 2 API calls (embedding + generation)
-    await reserve_ai_credit(org_id, db_session, amount=2)
-
-    # Get or create chat session
+    # Validate session ownership BEFORE reserving credits. Reserving first means
+    # a request that targets someone else's session (or probes random UUIDs)
+    # still raises 404 but silently burns the org's credits with no refund.
     is_new_session = chat_request.aichat_uuid is None
     if not is_new_session and not chat_session_belongs_to_user(
         chat_request.aichat_uuid, chat_acting_user_id
     ):
         raise HTTPException(status_code=404, detail="Chat session not found")
+
+    # Atomic credit reservation — RAG chat makes 2 API calls (embedding + generation)
+    await reserve_ai_credit(org_id, db_session, amount=2)
+
+    # Get or create chat session
     chat_session = get_chat_session_history(chat_request.aichat_uuid)
 
     # Perform RAG query with streaming

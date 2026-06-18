@@ -19,6 +19,7 @@ from src.db.boards import (
 )
 from src.db.resource_authors import ResourceAuthor
 from src.db.users import User
+from src.db.user_organizations import UserOrganization
 from src.services.boards.boards import (
     add_board_member,
     add_board_members_batch,
@@ -37,7 +38,7 @@ from src.services.boards.boards import (
 )
 
 
-async def _make_user(db, *, id, email, username):
+async def _make_user(db, *, id, email, username, org=None):
     user = User(
         id=id,
         username=username,
@@ -52,6 +53,12 @@ async def _make_user(db, *, id, email, username):
     db.add(user)
     await db.commit()
     await db.refresh(user)
+    if org is not None:
+        db.add(UserOrganization(
+            user_id=user.id, org_id=org.id, role_id=3,
+            creation_date=str(datetime.now()), update_date=str(datetime.now()),
+        ))
+        await db.commit()
     return user
 
 
@@ -165,9 +172,9 @@ class TestBoardsService:
     ):
         board = await _make_board(db, org, admin_user)
         await _make_member(db, board.id, admin_user.id, BoardMemberRole.OWNER)
-        await _make_user(db, id=21, email="first@test.com", username="first")
-        await _make_user(db, id=22, email="second@test.com", username="second")
-        await _make_user(db, id=23, email="third@test.com", username="third")
+        await _make_user(db, id=21, email="first@test.com", username="first", org=org)
+        await _make_user(db, id=22, email="second@test.com", username="second", org=org)
+        await _make_user(db, id=23, email="third@test.com", username="third", org=org)
         member_create = BoardMemberCreate(user_id=21, role=BoardMemberRole.EDITOR)
         member_create.role = BoardMemberRole.EDITOR
         batch_create = BoardMemberBatchCreate(
@@ -212,7 +219,7 @@ class TestBoardsService:
     ):
         board = await _make_board(db, org, admin_user)
         await _make_member(db, board.id, admin_user.id, BoardMemberRole.OWNER)
-        await _make_user(db, id=30, email="dup@test.com", username="dup")
+        await _make_user(db, id=30, email="dup@test.com", username="dup", org=org)
         await _make_member(db, board.id, 30)
 
         with patch(
@@ -232,10 +239,10 @@ class TestBoardsService:
 
         for user_id in range(31, 39):
             await _make_user(
-                db, id=user_id, email=f"user{user_id}@test.com", username=f"user{user_id}"
+                db, id=user_id, email=f"user{user_id}@test.com", username=f"user{user_id}", org=org
             )
             await _make_member(db, board.id, user_id)
-        await _make_user(db, id=39, email="overflow@test.com", username="overflow")
+        await _make_user(db, id=39, email="overflow@test.com", username="overflow", org=org)
 
         with patch(
             "src.services.boards.boards.check_resource_access",
@@ -450,12 +457,12 @@ class TestBoardsService:
         continue` branch in add_board_members_batch)."""
         board = await _make_board(db, org, admin_user, board_uuid="board_batch_dup")
         existing_user = await _make_user(
-            db, id=301, email="existing301@test.com", username="existing301"
+            db, id=301, email="existing301@test.com", username="existing301", org=org
         )
         await _make_member(db, board.id, existing_user.id)
 
         new_user = await _make_user(
-            db, id=302, email="new302@test.com", username="new302"
+            db, id=302, email="new302@test.com", username="new302", org=org
         )
         batch = BoardMemberBatchCreate(
             members=[

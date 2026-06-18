@@ -1,7 +1,7 @@
-from fastapi import APIRouter, Depends, Request
+from fastapi import APIRouter, Depends, HTTPException, Request
 from sqlmodel.ext.asyncio.session import AsyncSession
 from src.db.usergroups import UserGroupCreate, UserGroupRead, UserGroupUpdate
-from src.db.users import PublicUser, UserRead
+from src.db.users import PublicUser, UserReadPublic
 from src.services.users.usergroups import (
     add_resources_to_usergroup,
     add_users_to_usergroup,
@@ -77,12 +77,12 @@ async def api_get_usergroup(
 
 @router.get(
     "/{usergroup_id}/users",
-    response_model=list[UserRead],
+    response_model=list[UserReadPublic],
     tags=["usergroups"],
     summary="List users in a usergroup",
-    description="Retrieve the list of users that belong to a specific usergroup.",
+    description="Retrieve the list of users that belong to a specific usergroup. Sensitive fields (is_superadmin, signup_method) are excluded.",
     responses={
-        200: {"description": "Users linked to the usergroup.", "model": list[UserRead]},
+        200: {"description": "Users linked to the usergroup.", "model": list[UserReadPublic]},
         401: {"description": "Authentication required"},
         403: {"description": "User lacks permission to view usergroup members"},
         404: {"description": "Usergroup not found"},
@@ -94,7 +94,7 @@ async def api_get_users_linked_to_usergroup(
     db_session: AsyncSession = Depends(get_db_session),
     current_user: PublicUser = Depends(get_current_user),
     usergroup_id: int,
-) -> list[UserRead]:
+) -> list[UserReadPublic]:
     """
     Get Users linked to UserGroup
     """
@@ -262,6 +262,15 @@ async def api_add_users_to_usergroup(
     """
     Add Users to UserGroup
     """
+    # Validate the comma-separated id list before it reaches the service, which
+    # does int(uid) unconditionally and would otherwise raise an unhandled 500
+    # on any non-numeric (or empty) input.
+    parts = [uid.strip() for uid in user_ids.split(",")]
+    if not all(part.isdigit() for part in parts):
+        raise HTTPException(
+            status_code=422,
+            detail="user_ids must be a comma-separated list of integer user IDs",
+        )
     return await add_users_to_usergroup(
         request, db_session, current_user, usergroup_id, user_ids
     )
@@ -290,6 +299,14 @@ async def api_delete_users_from_usergroup(
     """
     Delete Users from UserGroup
     """
+    # Validate before the service does int(uid) on each part, which would
+    # otherwise raise an unhandled 500 on non-numeric / empty input.
+    parts = [uid.strip() for uid in user_ids.split(",")]
+    if not all(part.isdigit() for part in parts):
+        raise HTTPException(
+            status_code=422,
+            detail="user_ids must be a comma-separated list of integer user IDs",
+        )
     return await remove_users_from_usergroup(
         request, db_session, current_user, usergroup_id, user_ids
     )

@@ -5,7 +5,7 @@ from datetime import datetime, timezone
 from typing import Optional
 from fastapi import Depends, HTTPException, Request
 import httpx
-from sqlmodel import select
+from sqlmodel import select, func
 from sqlmodel.ext.asyncio.session import AsyncSession
 from src.core.events.database import get_db_session
 from src.db.users import User, UserCreate, UserRead
@@ -113,7 +113,19 @@ async def signWithGoogle(
     # but is no longer used for identity resolution.
     google_email = google_user.get("email")
     google_email_verified = google_user.get("email_verified")
-    if not google_email or not google_email_verified:
+    # SECURITY: Google's userinfo/tokeninfo endpoints sometimes serialise
+    # ``email_verified`` as the JSON *string* ``"true"``/``"false"`` (notably
+    # the v1/v2 userinfo and some Workspace federated accounts) rather than a
+    # native boolean. A plain truthiness test (``not google_email_verified``)
+    # treats the string ``"false"`` as verified, which would let an attacker
+    # who controls an *unverified* Google account matching a victim's address
+    # take over the LearnHouse account. Accept only an explicit boolean ``True``
+    # or the string ``"true"`` (case-insensitive).
+    if isinstance(google_email_verified, str):
+        email_is_verified = google_email_verified.strip().lower() == "true"
+    else:
+        email_is_verified = google_email_verified is True
+    if not google_email or not email_is_verified:
         raise HTTPException(
             status_code=401,
             detail="Google did not return a verified email for this account",
@@ -121,8 +133,14 @@ async def signWithGoogle(
     # Normalise to lower-case to match the DB unique-ish invariant on email.
     user_email = google_email.strip().lower()
 
+    # Match existing accounts case-insensitively. Local email/password signups
+    # store the email exactly as submitted (no lower-casing), so an account
+    # registered as "Victim@Gmail.com" would NOT be matched by an exact compare
+    # against the lower-cased Google address. That mismatch would silently
+    # create a duplicate account (or raise on a case-insensitive unique index),
+    # stranding the user in an empty second account or breaking OAuth login.
     user = (await db_session.execute(
-        select(User).where(User.email == user_email)
+        select(User).where(func.lower(User.email) == user_email)
     )).scalars().first()
 
     if not user:
@@ -148,7 +166,13 @@ async def signWithGoogle(
         if not username_parts:
             username_parts.append("user")
 
-        username = "".join(username_parts) + str(random.randint(10, 99))
+        # Use a wide random suffix to make username collisions vanishingly
+        # unlikely. The previous 2-digit suffix (only 90 possible values) made
+        # collisions probable for common names/email prefixes; a collision
+        # bubbles up from create_user[_without_org] as a 400 "already in use",
+        # which permanently blocks an otherwise-new Google account from signing
+        # up because the conflict is on the generated username, not the email.
+        username = "".join(username_parts) + str(random.randint(100000, 999999))
 
         user_object = UserCreate(
             email=user_email,
@@ -188,6 +212,42 @@ async def signWithGoogle(
         db_session.add(user)
         await db_session.commit()
         await db_session.refresh(user)
+
+    # If the caller supplied (and the router validated, via a pending invite)
+    # an ``org_id``, an *existing* user signing in with Google must still be
+    # added to that organization. The new-user branch above does this through
+    # ``create_user``; previously the existing-user branch dropped ``org_id``
+    # entirely, so a person who already had a LearnHouse account and accepted
+    # an org invite via Google was authenticated but never actually joined the
+    # org. We mirror create_user's behaviour: enforce the member quota, avoid
+    # double-counting on repeat logins, then create the membership link.
+    if org_id is not None and user.id is not None:
+        from src.db.user_organizations import UserOrganization
+        from src.security.features_utils.usage import (
+            check_limits_with_usage,
+            increase_feature_usage,
+        )
+
+        existing_membership = (await db_session.execute(
+            select(UserOrganization).where(
+                (UserOrganization.user_id == user.id)
+                & (UserOrganization.org_id == org_id)
+            )
+        )).scalars().first()
+
+        if not existing_membership:
+            await check_limits_with_usage("members", org_id, db_session)
+            user_organization = UserOrganization(
+                user_id=user.id,
+                org_id=org_id,
+                role_id=4,
+                creation_date=str(datetime.now()),
+                update_date=str(datetime.now()),
+            )
+            db_session.add(user_organization)
+            await db_session.commit()
+            await db_session.refresh(user_organization)
+            await increase_feature_usage("members", org_id, db_session)
 
     # Update last login info
     client_ip = get_client_ip(request)

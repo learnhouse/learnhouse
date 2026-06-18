@@ -2063,17 +2063,38 @@ class TestUpdateUserProfile:
 
 class TestChangeUserRole:
 
-    async def test_changes_role(self, token_user, user, student_role, admin_role, db):
-        result = await change_user_role(token_user, user.id, admin_role.id, db)
-        assert result["role_id"] == admin_role.id
+    async def test_changes_role(self, token_user, user, student_role, db):
+        # Change a separate (non-admin) member's role; `user` stays the org admin
+        # so the last-admin guard is not triggered.
+        target = User(
+            id=50, username="target50", first_name="T", last_name="U",
+            email="target50@example.com", password="hashed", user_uuid="user_target50",
+        )
+        db.add(target)
+        await db.commit()
+        await db.refresh(target)
+        db.add(UserOrganization(
+            user_id=target.id, org_id=token_user.org_id, role_id=3,
+            creation_date=str(datetime.now()), update_date=str(datetime.now()),
+        ))
+        await db.commit()
+
+        result = await change_user_role(token_user, target.id, student_role.id, db)
+        assert result["role_id"] == student_role.id
 
         membership = (await db.execute(
             select(UserOrganization).where(
-                UserOrganization.user_id == user.id,
+                UserOrganization.user_id == target.id,
                 UserOrganization.org_id == token_user.org_id,
             )
         )).scalars().first()
-        assert membership.role_id == admin_role.id
+        assert membership.role_id == student_role.id
+
+    async def test_api_token_cannot_grant_admin_role(self, token_user, user, admin_role, db):
+        # API tokens must never be able to mint org admins/maintainers.
+        with pytest.raises(HTTPException) as exc:
+            await change_user_role(token_user, user.id, admin_role.id, db)
+        assert exc.value.status_code == 403
 
     async def test_role_not_found(self, token_user, user, db):
         with pytest.raises(HTTPException) as exc:

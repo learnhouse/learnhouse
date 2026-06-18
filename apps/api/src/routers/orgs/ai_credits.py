@@ -121,6 +121,14 @@ async def get_org_ai_credits(
     if not org:
         raise HTTPException(status_code=404, detail="Organization not found")
 
+    # API tokens are scoped to a single org; do not let a token authenticate
+    # against a different org just because its creator is a member there.
+    if isinstance(current_user, APITokenUser) and current_user.org_id != org_id:
+        raise HTTPException(
+            status_code=403,
+            detail="API token is not scoped to this organization",
+        )
+
     # Verify user is a member of the organization
     if not await verify_user_is_org_member(resolve_acting_user_id(current_user), org_id, db_session):
         raise HTTPException(
@@ -139,15 +147,16 @@ async def get_org_ai_credits(
 @router.post(
     "/{org_id}/ai-credits/add",
     response_model=AddCreditsResponse,
-    summary="Add purchased AI credits",
+    summary="Add purchased AI credits (superadmin only)",
     description=(
-        "Add purchased AI credits to an organization. Only organization admins "
-        "can add credits and the amount must be a positive integer."
+        "Add purchased AI credits to an organization. Restricted to superadmins "
+        "because it grants paid quota with no payment verification; the amount "
+        "must be a positive integer."
     ),
     responses={
         200: {"description": "Credits added and new purchased total returned.", "model": AddCreditsResponse},
         400: {"description": "Credit amount must be a positive number"},
-        403: {"description": "Only organization admins can add AI credits"},
+        403: {"description": "Superadmin access required"},
         404: {"description": "Organization not found"},
     },
 )
@@ -160,7 +169,7 @@ async def add_org_ai_credits(
     """
     Add purchased AI credits to an organization.
 
-    Only organization admins can add credits.
+    Restricted to superadmins (grants paid quota with no payment check).
 
     Args:
         org_id: The organization ID
@@ -176,11 +185,16 @@ async def add_org_ai_credits(
     if not org:
         raise HTTPException(status_code=404, detail="Organization not found")
 
-    # Verify user is an admin of the organization
-    if not await verify_user_is_org_admin(resolve_acting_user_id(current_user), org_id, db_session):
+    # Granting "purchased" AI credits adds paid quota for an arbitrary,
+    # client-supplied amount with NO payment verification. Allowing any org
+    # admin here lets a tenant mint unlimited free AI credits for itself
+    # (revenue/quota bypass), so this must be a billing-platform / superadmin
+    # operation — same posture as the /set endpoint.
+    user_id = resolve_acting_user_id(current_user)
+    if not user_id or not await is_user_superadmin(user_id, db_session):
         raise HTTPException(
             status_code=403,
-            detail="Only organization admins can add AI credits",
+            detail="Superadmin access required",
         )
 
     # Validate amount
@@ -203,14 +217,15 @@ async def add_org_ai_credits(
 @router.post(
     "/{org_id}/ai-credits/reset",
     response_model=ResetCreditsResponse,
-    summary="Reset AI credits usage",
+    summary="Reset AI credits usage (superadmin only)",
     description=(
         "Reset AI credits usage for an organization. Typically used at the "
-        "start of a new billing period. Only organization admins can reset credits."
+        "start of a new billing period. Restricted to superadmins because it "
+        "clears metered usage and would otherwise let a tenant bypass its quota."
     ),
     responses={
         200: {"description": "AI credits usage reset to zero.", "model": ResetCreditsResponse},
-        403: {"description": "Only organization admins can reset AI credits"},
+        403: {"description": "Superadmin access required"},
         404: {"description": "Organization not found"},
     },
 )
@@ -223,7 +238,7 @@ async def reset_org_ai_credits(
     Reset AI credits usage for an organization.
 
     This is typically used at the start of a new billing period.
-    Only organization admins can reset credits.
+    Restricted to superadmins (clears metered usage / quota).
 
     Args:
         org_id: The organization ID
@@ -238,11 +253,14 @@ async def reset_org_ai_credits(
     if not org:
         raise HTTPException(status_code=404, detail="Organization not found")
 
-    # Verify user is an admin of the organization
-    if not await verify_user_is_org_admin(resolve_acting_user_id(current_user), org_id, db_session):
+    # Resetting consumed usage effectively grants free metered AI usage, letting
+    # a tenant zero out its own usage at will and bypass the plan's AI quota.
+    # This is a billing-platform / superadmin operation (same posture as /set).
+    user_id = resolve_acting_user_id(current_user)
+    if not user_id or not await is_user_superadmin(user_id, db_session):
         raise HTTPException(
             status_code=403,
-            detail="Only organization admins can reset AI credits",
+            detail="Superadmin access required",
         )
 
     # Reset usage

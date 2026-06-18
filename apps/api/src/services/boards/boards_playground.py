@@ -21,11 +21,21 @@ SESSION_TTL = 2160000  # 25 days
 MAX_ITERATIONS = 6
 
 
+_redis_client = None
+
+
 def get_redis_connection():
+    # Reuse a single client (and its connection pool) across calls. Creating a
+    # new redis.from_url() client on every session read/write — as the playground
+    # hot path does — spawns a fresh connection pool each time and leaks sockets.
+    global _redis_client
+    if _redis_client is not None:
+        return _redis_client
     redis_conn_string = LH_CONFIG.redis_config.redis_connection_string
     if redis_conn_string:
         try:
-            return redis.from_url(redis_conn_string)
+            _redis_client = redis.from_url(redis_conn_string)
+            return _redis_client
         except Exception as e:
             logger.error("Failed to connect to Redis: %s", e, exc_info=True)
     return None

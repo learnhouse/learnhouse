@@ -57,13 +57,28 @@ class UserRead(UserBase):
     is_superadmin: bool = False
 
 
-class UserReadPublic(UserBase):
-    """User model for public-facing endpoints — excludes sensitive fields."""
+class UserReadPublic(SQLModel):
+    """User model for public-facing endpoints — excludes sensitive fields.
+
+    SECURITY: This is the view returned to *any* authenticated user when they
+    look up *another* user (by id/uuid/username, or via usergroup member lists).
+    It must therefore NOT inherit from ``UserBase``, because ``UserBase`` (and
+    ``UserRead``) expose PII / internal fields — ``email``, ``signup_method``,
+    ``is_superadmin``, ``extra_metadata`` — that would leak to anyone who can
+    enumerate user ids. ``details`` and ``profile`` ARE included: they are the
+    user's own public profile content (bio extension, links, etc.) that the
+    public profile page renders, so they are intentionally exposed.
+    """
     id: int
     user_uuid: str
+    username: str
+    first_name: str
+    last_name: str
     email_verified: bool = False
     avatar_image: Optional[str] = ""
     bio: Optional[str] = ""
+    details: Optional[dict] = None
+    profile: Optional[dict] = None
 
 
 class PublicUser(UserRead):

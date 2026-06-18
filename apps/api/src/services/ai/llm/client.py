@@ -83,7 +83,15 @@ def attachments_to_parts(attachments: Any) -> list:
         if a_type == "youtube" and url:
             parts.append(VideoUrl(url=url))
         elif a_type in ("image", "file") and b64 and mime:
-            parts.append(BinaryContent(data=base64.b64decode(b64), media_type=mime))
+            # content_base64 is user-supplied; a malformed/truncated value would
+            # raise binascii.Error and surface as an unhandled 500. Skip the bad
+            # attachment instead of crashing the whole request.
+            try:
+                decoded = base64.b64decode(b64)
+            except Exception:
+                logger.warning("Skipping attachment with invalid base64 content")
+                continue
+            parts.append(BinaryContent(data=decoded, media_type=mime))
         elif a_type == "image" and url:
             parts.append(ImageUrl(url=url))
         elif a_type == "file" and url:

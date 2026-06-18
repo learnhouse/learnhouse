@@ -1,6 +1,7 @@
 from typing import List, Union
 from uuid import uuid4
 from datetime import datetime, timezone
+from sqlalchemy.exc import IntegrityError
 from sqlmodel import select
 from sqlmodel.ext.asyncio.session import AsyncSession
 from fastapi import HTTPException, Request
@@ -12,6 +13,7 @@ from src.db.playground_reactions import (
     PlaygroundReactionSummary,
     ReactionUser,
 )
+from src.security.auth import resolve_acting_user_id
 from src.services.playgrounds.playgrounds import _check_read_access
 
 
@@ -28,6 +30,15 @@ async def get_playground_reactions(
         raise HTTPException(status_code=404, detail="Playground not found")
 
     await _check_read_access(playground, current_user, db_session)
+
+    # Resolve the real user id: an API token's .id is the token id, not a user
+    # id, so comparing it against reaction.user_id would yield a wrong
+    # has_reacted flag.
+    viewer_user_id = (
+        None
+        if isinstance(current_user, AnonymousUser)
+        else resolve_acting_user_id(current_user)
+    )
 
     reactions = (await db_session.execute(
         select(PlaygroundReaction).where(
@@ -54,11 +65,7 @@ async def get_playground_reactions(
             )
             for u in users
         ]
-        has_reacted = (
-            current_user.id in user_ids
-            if not isinstance(current_user, AnonymousUser)
-            else False
-        )
+        has_reacted = viewer_user_id is not None and viewer_user_id in user_ids
         summaries.append(
             PlaygroundReactionSummary(
                 emoji=emoji,
@@ -90,10 +97,14 @@ async def toggle_playground_reaction(
 
     await _check_read_access(playground, current_user, db_session)
 
+    # An API token's .id is the token id, not a user id; reaction.user_id is a FK
+    # to user.id, so we must record/match against the real acting user.
+    acting_user_id = resolve_acting_user_id(current_user)
+
     existing = (await db_session.execute(
         select(PlaygroundReaction).where(
             PlaygroundReaction.playground_id == playground.id,
-            PlaygroundReaction.user_id == current_user.id,
+            PlaygroundReaction.user_id == acting_user_id,
             PlaygroundReaction.emoji == emoji,
         )
     )).scalars().first()
@@ -105,11 +116,18 @@ async def toggle_playground_reaction(
 
     reaction = PlaygroundReaction(
         playground_id=playground.id,
-        user_id=current_user.id,
+        user_id=acting_user_id,
         emoji=emoji,
         reaction_uuid=f"reaction_{uuid4()}",
         creation_date=str(datetime.now(timezone.utc).replace(tzinfo=None)),
     )
     db_session.add(reaction)
-    await db_session.commit()
+    try:
+        await db_session.commit()
+    except IntegrityError:
+        # Concurrent duplicate insert (e.g. rapid double-click) violates the
+        # (playground_id, user_id, emoji) unique constraint. Without this guard
+        # the request fails with an unhandled 500; treat it as an idempotent
+        # "already added" instead.
+        await db_session.rollback()
     return {"action": "added", "emoji": emoji}

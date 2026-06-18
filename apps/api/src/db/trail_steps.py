@@ -1,7 +1,7 @@
 from enum import Enum
 from typing import Optional
 from sqlmodel import Field, SQLModel
-from sqlalchemy import ForeignKey, JSON, Column, Index, Integer
+from sqlalchemy import ForeignKey, JSON, Column, Index, Integer, UniqueConstraint
 
 
 class TrailStepTypeEnum(str, Enum):
@@ -13,6 +13,15 @@ class TrailStepTypeEnum(str, Enum):
 class TrailStep(SQLModel, table=True):
     __table_args__ = (
         Index("ix_trailstep_trailrun_user", "trailrun_id", "user_id"),
+        # One completion step per (run, activity, user). The service does a
+        # racy check-then-insert; without this constraint concurrent requests
+        # create duplicate steps, which inflates completion counts and can
+        # trigger duplicate certificate issuance / COURSE_COMPLETED webhooks.
+        # (Requires a matching migration to apply to the live DB.)
+        UniqueConstraint(
+            "trailrun_id", "activity_id", "user_id",
+            name="uq_trailstep_run_activity_user",
+        ),
     )
     id: Optional[int] = Field(default=None, primary_key=True)
     complete: bool

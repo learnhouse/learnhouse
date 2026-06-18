@@ -33,7 +33,13 @@ async def get_user_org(user_id: int, org_id: int, db_session: AsyncSession) -> O
         UserOrganization.org_id == org_id,
     )
     result = (await db_session.execute(statement)).scalars().first()
-    _cache[key] = result
+    # Only cache positive memberships. Caching a None ("not a member") result
+    # is unsafe: a membership granted later within the same request/session
+    # (e.g. add-to-org immediately followed by an authz check) would otherwise
+    # keep returning the stale "not a member" answer and incorrectly deny
+    # access. Positive rows are safe to memoize for the request's lifetime.
+    if result is not None:
+        _cache[key] = result
     return result
 
 

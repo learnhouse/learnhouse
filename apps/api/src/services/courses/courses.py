@@ -190,9 +190,17 @@ async def get_course_meta(
         context=AccessContext.DASHBOARD,
     )
 
-    # Permission check passed — try Redis cache for the heavy data
-    # (shared across all authorized users for this course)
-    if course.published and not with_unpublished_activities:
+    # Permission check passed — try Redis cache for the heavy data.
+    # SECURITY: chapter/activity content is lock-stripped PER USER in
+    # _apply_locks_to_chapters (restricted items are blanked for users not in
+    # the right usergroup, while admins/members see everything). The meta cache
+    # is keyed only by course_uuid+slim and shared across users, so caching an
+    # authenticated user's view would leak restricted content to others (or
+    # hide it from those who should see it). Only the anonymous view is uniform
+    # (always the public, fully-stripped projection), so restrict the shared
+    # cache to anonymous readers.
+    is_anonymous = isinstance(current_user, AnonymousUser)
+    if is_anonymous and course.published and not with_unpublished_activities:
         from src.services.courses.cache import get_cached_course_meta
         cached = get_cached_course_meta(course_uuid, slim)
         if cached is not None:
@@ -232,8 +240,9 @@ async def get_course_meta(
         chapters=chapters
     )
 
-    # Cache for published courses (safe to share across users)
-    if course.published and not with_unpublished_activities:
+    # Cache only the anonymous (public, uniformly-stripped) view. See the read
+    # path above for why per-user views must not populate this shared key.
+    if is_anonymous and course.published and not with_unpublished_activities:
         from src.services.courses.cache import set_cached_course_meta
         set_cached_course_meta(course_uuid, slim, course_read.model_dump())
 
@@ -922,9 +931,6 @@ async def delete_course(
     # RBAC check
     await check_resource_access(request, db_session, current_user, course.course_uuid, AccessAction.DELETE)
 
-    # Feature usage
-    await decrease_feature_usage("courses", course.org_id, db_session)
-
     # Clean up content files from storage
     org_statement = select(Organization).where(Organization.id == course.org_id)
     org = (await db_session.execute(org_statement)).scalars().first()
@@ -939,6 +945,13 @@ async def delete_course(
 
     await db_session.delete(course)
     await db_session.commit()
+
+    # Feature usage — decrement only AFTER the row is actually gone. The usage
+    # counter lives in Redis and is written immediately/irreversibly; doing it
+    # before the delete meant a failed delete/commit (or storage error) left the
+    # org's course count permanently under-counted, letting them create an extra
+    # course past their plan limit.
+    await decrease_feature_usage("courses", course_org_id, db_session)
 
     await dispatch_webhooks(
         event_name="course_deleted",
@@ -962,7 +975,18 @@ async def get_user_courses(
 ) -> List[CourseRead]:
     # Verify user is not anonymous
     await authorization_verify_if_user_is_anon(current_user.id)
-    
+
+    # SECURITY: This endpoint takes an arbitrary target user_id. Without a
+    # visibility filter, any logged-in user could enumerate another user's
+    # UNPUBLISHED / private courses just by passing their id (IDOR / content
+    # disclosure). A caller may only see another user's unpublished courses if
+    # they are that user or a superadmin; everyone else is limited to the
+    # published + public courses that user authored.
+    can_see_unpublished = (
+        int(current_user.id) == int(user_id)
+        or await is_user_superadmin(int(current_user.id), db_session)
+    )
+
     # Fetch courses the user has authored using a single JOIN query with pagination
     statement = (
         select(Course)
@@ -971,6 +995,11 @@ async def get_user_courses(
             ResourceAuthor.user_id == user_id,
             ResourceAuthor.authorship_status == ResourceAuthorshipStatusEnum.ACTIVE,
         )
+    )
+    if not can_see_unpublished:
+        statement = statement.where(Course.published == True, Course.public == True)
+    statement = (
+        statement
         .offset((page - 1) * limit)
         .limit(limit)
     )
@@ -1134,6 +1163,16 @@ async def clone_course(
 
     # Also check if user can create courses
     await check_resource_access(request, db_session, current_user, "course_x", AccessAction.CREATE)
+
+    # SECURITY: The clone is written into the ORIGINAL course's org. READ access
+    # to that course can come from it simply being public, and the "course_x"
+    # create check is not bound to a concrete org. Without an explicit membership
+    # check, a user from org A who can merely view a public course in org B could
+    # clone it (with all its content + files) into org B and make themselves its
+    # creator. Require membership in the target org, consistent with create_course.
+    await require_org_membership(
+        resolve_acting_user_id(current_user), original_course.org_id, db_session
+    )
 
     # Usage check for creating new course
     await check_limits_with_usage("courses", original_course.org_id, db_session)

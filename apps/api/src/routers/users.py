@@ -556,6 +556,15 @@ async def api_send_password_reset_email_v2(
     current_user: PublicUser = Depends(get_current_user),
     body: SendResetCodeRequest,
 ):
+    # Rate limit: 5 attempts per 5 minutes per email. Without this an attacker
+    # can spam reset-code emails to any address (email bombing) and probe for
+    # registered accounts. Mirrors the platform send endpoint.
+    is_allowed, retry_after = check_password_reset_rate_limit(body.email)
+    if not is_allowed:
+        raise HTTPException(
+            status_code=429,
+            detail=f"Too many password reset attempts. Please try again in {retry_after // 60} minutes.",
+        )
     return await send_reset_password_code(
         request, db_session, current_user, body.org_id, body.email
     )
@@ -580,6 +589,14 @@ async def api_send_password_reset_email(
     email: EmailStr,
     org_id: int,
 ):
+    # Rate limit: 5 attempts per 5 minutes per email (email bombing / account
+    # probing protection), matching the body-based and platform variants.
+    is_allowed, retry_after = check_password_reset_rate_limit(email)
+    if not is_allowed:
+        raise HTTPException(
+            status_code=429,
+            detail=f"Too many password reset attempts. Please try again in {retry_after // 60} minutes.",
+        )
     return await send_reset_password_code(
         request, db_session, current_user, org_id, email
     )

@@ -5,6 +5,7 @@ from fastapi import APIRouter, Depends, HTTPException, UploadFile, Form, Request
 from fastapi.responses import FileResponse
 from pydantic import BaseModel, field_validator
 
+from sqlmodel import select
 from sqlmodel.ext.asyncio.session import AsyncSession
 from src.core.events.database import get_db_session
 from src.db.courses.course_updates import (
@@ -14,6 +15,7 @@ from src.db.courses.course_updates import (
 )
 from src.db.users import PublicUser
 from src.db.courses.courses import (
+    Course,
     CourseCreate,
     CourseRead,
     CourseUpdate,
@@ -22,6 +24,7 @@ from src.db.courses.courses import (
 )
 from src.security.auth import get_current_user
 from src.security.features_utils.dependencies import require_courses_feature
+from src.security.rbac import check_resource_access, AccessAction
 from src.services.courses.courses import (
     create_course,
     get_course,
@@ -429,6 +432,24 @@ async def api_get_course_meta(
     Get single Course Metadata (chapters, activities) by course_uuid.
     Use slim=true to exclude heavy activity content/details (useful for navigation).
     """
+    # SECURITY: with_unpublished_activities is client-controlled and is passed
+    # straight through to the data layer without any privilege gating. Only
+    # users who can edit the course (authors/admins) should be able to see
+    # unpublished/draft activities; otherwise any reader of a public course
+    # could leak drafts via ?with_unpublished_activities=true. Downgrade the
+    # flag to False for callers without UPDATE access.
+    if with_unpublished_activities:
+        decision = await check_resource_access(
+            request,
+            db_session,
+            current_user,
+            course_uuid,
+            AccessAction.UPDATE,
+            raise_on_deny=False,
+        )
+        if not decision.allowed:
+            with_unpublished_activities = False
+
     return await get_course_meta(
         request, course_uuid, with_unpublished_activities, current_user=current_user, db_session=db_session, slim=slim
     )
@@ -692,6 +713,22 @@ async def api_apply_course_contributor(
     """
     Apply to be a contributor for a course
     """
+    # SECURITY: Respect the course owner's "open_to_contributors" setting. The
+    # underlying service never checks this flag, so without this guard any
+    # authenticated user could submit contributor applications to courses whose
+    # owners have explicitly closed them to outside contributors.
+    course = (
+        await db_session.execute(
+            select(Course).where(Course.course_uuid == course_uuid)
+        )
+    ).scalars().first()
+    if not course:
+        raise HTTPException(status_code=404, detail="Course not found")
+    if not course.open_to_contributors:
+        raise HTTPException(
+            status_code=403, detail="This course is not open to contributors"
+        )
+
     return await apply_course_contributor(request, course_uuid, current_user, db_session)
 
 
@@ -715,6 +752,14 @@ async def api_get_course_updates(
     """
     Get Course Updates by course_uuid
     """
+
+    # SECURITY: Enforce read access on the parent course before returning its
+    # updates. The underlying service only checks course existence, so without
+    # this guard any user (including anonymous) could read updates of private /
+    # unpublished courses.
+    await check_resource_access(
+        request, db_session, current_user, course_uuid, AccessAction.READ
+    )
 
     return await get_updates_by_course_uuid(
         request, course_uuid, current_user, db_session

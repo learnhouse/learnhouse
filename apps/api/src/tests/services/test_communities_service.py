@@ -204,6 +204,7 @@ class TestCommunitiesService:
             UserGroupUser(
                 usergroup_id=usergroup.id,
                 user_id=regular_user.id,
+                org_id=usergroup.org_id,
                 creation_date=str(datetime.now()),
                 update_date=str(datetime.now()),
             )

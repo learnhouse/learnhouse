@@ -321,10 +321,22 @@ class AssignmentUserSubmissionBase(SQLModel):
 
 
 class AssignmentUserSubmissionCreate(SQLModel):
-    """Model for creating a new assignment user submission."""
+    """Model for creating/updating an assignment user submission.
+
+    Carries the editable submission fields so the instructor update endpoint
+    can actually persist them. These are Optional because the update path only
+    applies non-None values and strips the privileged ones for students.
+    """
 
     assignment_id: int
-    pass  # Inherits all fields from AssignmentUserSubmissionBase
+    # Only the fields the update endpoint guards for students are exposed here.
+    # attempt_number / overall_feedback are intentionally NOT settable through
+    # this model: the update service does not strip them for non-instructors,
+    # so exposing them would let a student reset their own retry counter
+    # (attempt_number) or overwrite the instructor's feedback.
+    submission_status: Optional[AssignmentUserSubmissionStatus] = None
+    grade: Optional[int] = None
+    user_id: Optional[int] = None
 
 
 class AssignmentUserSubmissionRead(AssignmentUserSubmissionBase):
@@ -339,7 +351,7 @@ class AssignmentUserSubmissionUpdate(SQLModel):
     """Model for updating an assignment user submission."""
 
     submission_status: Optional[AssignmentUserSubmissionStatus] = None
-    grade: Optional[str] = None
+    grade: Optional[int] = None
     overall_feedback: Optional[str] = None
     attempt_number: Optional[int] = None
     user_id: Optional[int] = None

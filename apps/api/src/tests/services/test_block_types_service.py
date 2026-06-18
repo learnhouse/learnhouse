@@ -35,15 +35,19 @@ def _mock_upload_file() -> MagicMock:
 class TestCreateAudioBlock:
     @pytest.mark.asyncio
     async def test_creates_audio_block_and_persists(
-        self, mock_request, db, org, course, activity
+        self, mock_request, db, org, course, activity, admin_user
     ):
         block_file = _fake_block_file("audio", "mp3", activity.activity_uuid)
         with patch(
             "src.services.blocks.block_types.audioBlock.audioBlock.upload_file_and_return_file_object",
             new=AsyncMock(return_value=block_file),
+        ), patch(
+            "src.services.blocks.block_types.audioBlock.audioBlock.check_resource_access",
+            new_callable=AsyncMock,
         ):
             result = await _import_and_call_create_audio(
-                mock_request, _mock_upload_file(), activity.activity_uuid, db
+                mock_request, _mock_upload_file(), activity.activity_uuid, db,
+                current_user=admin_user,
             )
 
         assert isinstance(result, BlockRead)
@@ -66,15 +70,19 @@ class TestCreateAudioBlock:
 class TestCreateImageBlock:
     @pytest.mark.asyncio
     async def test_creates_image_block_and_persists(
-        self, mock_request, db, org, course, activity
+        self, mock_request, db, org, course, activity, admin_user
     ):
         block_file = _fake_block_file("image", "png", activity.activity_uuid)
         with patch(
             "src.services.blocks.block_types.imageBlock.imageBlock.upload_file_and_return_file_object",
             new=AsyncMock(return_value=block_file),
+        ), patch(
+            "src.services.blocks.block_types.imageBlock.imageBlock.check_resource_access",
+            new_callable=AsyncMock,
         ):
             result = await _import_and_call_create_image(
-                mock_request, _mock_upload_file(), activity.activity_uuid, db
+                mock_request, _mock_upload_file(), activity.activity_uuid, db,
+                current_user=admin_user,
             )
 
         assert isinstance(result, BlockRead)
@@ -84,15 +92,19 @@ class TestCreateImageBlock:
 class TestCreatePdfBlock:
     @pytest.mark.asyncio
     async def test_creates_pdf_block_and_persists(
-        self, mock_request, db, org, course, activity
+        self, mock_request, db, org, course, activity, admin_user
     ):
         block_file = _fake_block_file("document", "pdf", activity.activity_uuid)
         with patch(
             "src.services.blocks.block_types.pdfBlock.pdfBlock.upload_file_and_return_file_object",
             new=AsyncMock(return_value=block_file),
+        ), patch(
+            "src.services.blocks.block_types.pdfBlock.pdfBlock.check_resource_access",
+            new_callable=AsyncMock,
         ):
             result = await _import_and_call_create_pdf(
-                mock_request, _mock_upload_file(), activity.activity_uuid, db
+                mock_request, _mock_upload_file(), activity.activity_uuid, db,
+                current_user=admin_user,
             )
 
         assert isinstance(result, BlockRead)
@@ -102,15 +114,19 @@ class TestCreatePdfBlock:
 class TestCreateVideoBlock:
     @pytest.mark.asyncio
     async def test_creates_video_block_and_persists(
-        self, mock_request, db, org, course, activity
+        self, mock_request, db, org, course, activity, admin_user
     ):
         block_file = _fake_block_file("video", "mp4", activity.activity_uuid)
         with patch(
             "src.services.blocks.block_types.videoBlock.videoBlock.upload_file_and_return_file_object",
             new=AsyncMock(return_value=block_file),
+        ), patch(
+            "src.services.blocks.block_types.videoBlock.videoBlock.check_resource_access",
+            new_callable=AsyncMock,
         ):
             result = await _import_and_call_create_video(
-                mock_request, _mock_upload_file(), activity.activity_uuid, db
+                mock_request, _mock_upload_file(), activity.activity_uuid, db,
+                current_user=admin_user,
             )
 
         assert isinstance(result, BlockRead)
@@ -121,21 +137,21 @@ class TestCreateVideoBlock:
 # Thin import helpers so module-level imports don't pollute coverage counts
 # ---------------------------------------------------------------------------
 
-async def _import_and_call_create_audio(request, file, activity_uuid, db):
+async def _import_and_call_create_audio(request, file, activity_uuid, db, current_user=None):
     from src.services.blocks.block_types.audioBlock.audioBlock import create_audio_block
-    return await create_audio_block(request, file, activity_uuid, db, current_user=None)
+    return await create_audio_block(request, file, activity_uuid, db, current_user=current_user)
 
 
-async def _import_and_call_create_image(request, file, activity_uuid, db):
+async def _import_and_call_create_image(request, file, activity_uuid, db, current_user=None):
     from src.services.blocks.block_types.imageBlock.imageBlock import create_image_block
-    return await create_image_block(request, file, activity_uuid, db, current_user=None)
+    return await create_image_block(request, file, activity_uuid, db, current_user=current_user)
 
 
-async def _import_and_call_create_pdf(request, file, activity_uuid, db):
+async def _import_and_call_create_pdf(request, file, activity_uuid, db, current_user=None):
     from src.services.blocks.block_types.pdfBlock.pdfBlock import create_pdf_block
-    return await create_pdf_block(request, file, activity_uuid, db, current_user=None)
+    return await create_pdf_block(request, file, activity_uuid, db, current_user=current_user)
 
 
-async def _import_and_call_create_video(request, file, activity_uuid, db):
+async def _import_and_call_create_video(request, file, activity_uuid, db, current_user=None):
     from src.services.blocks.block_types.videoBlock.videoBlock import create_video_block
-    return await create_video_block(request, file, activity_uuid, db, current_user=None)
+    return await create_video_block(request, file, activity_uuid, db, current_user=current_user)

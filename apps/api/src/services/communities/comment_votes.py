@@ -3,6 +3,8 @@ from uuid import uuid4
 from datetime import datetime
 from sqlmodel import select
 from sqlmodel.ext.asyncio.session import AsyncSession
+from sqlalchemy import update as sql_update
+from sqlalchemy.exc import IntegrityError
 from fastapi import HTTPException, Request
 
 from src.db.users import PublicUser, AnonymousUser, APITokenUser
@@ -83,13 +85,26 @@ async def upvote_comment(
         creation_date=str(datetime.now()),
     )
 
-    db_session.add(vote)
+    try:
+        db_session.add(vote)
+        # Atomic increment to avoid lost updates when multiple users upvote
+        # concurrently (read-modify-write on the Python object would clobber
+        # parallel increments and undercount).
+        await db_session.execute(
+            sql_update(DiscussionComment)
+            .where(DiscussionComment.id == comment.id)
+            .values(upvote_count=DiscussionComment.upvote_count + 1)
+        )
+        await db_session.commit()
+    except IntegrityError:
+        # Lost the race against a concurrent vote from the same user; the unique
+        # (comment_id, user_id) constraint rejected the duplicate insert.
+        await db_session.rollback()
+        raise HTTPException(
+            status_code=400,
+            detail="You have already upvoted this comment",
+        )
 
-    # Increment upvote count
-    comment.upvote_count += 1
-    db_session.add(comment)
-
-    await db_session.commit()
     await db_session.refresh(vote)
 
     return DiscussionCommentVoteRead.model_validate(vote.model_dump())
@@ -134,9 +149,12 @@ async def remove_comment_upvote(
     # Delete vote
     await db_session.delete(vote)
 
-    # Decrement upvote count (minimum 0)
-    comment.upvote_count = max(0, comment.upvote_count - 1)
-    db_session.add(comment)
+    # Atomic decrement (floored at 0) to avoid lost updates under concurrency.
+    await db_session.execute(
+        sql_update(DiscussionComment)
+        .where(DiscussionComment.id == comment.id, DiscussionComment.upvote_count > 0)
+        .values(upvote_count=DiscussionComment.upvote_count - 1)
+    )
 
     await db_session.commit()
 

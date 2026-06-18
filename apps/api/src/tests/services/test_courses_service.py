@@ -30,7 +30,7 @@ from src.db.resource_authors import (
     ResourceAuthorshipEnum,
     ResourceAuthorshipStatusEnum,
 )
-from src.db.users import APITokenUser
+from src.db.users import APITokenUser, AnonymousUser
 from src.security.rbac import AccessAction, AccessContext
 from src.services.courses.courses import (
     clone_course,
@@ -165,11 +165,13 @@ class TestGetCourseMeta:
             "src.services.courses.chapters.get_course_chapters",
             new_callable=AsyncMock,
         ) as mock_chapters:
+            # The shared meta cache is only served to anonymous viewers (per-user
+            # lock-stripping means authenticated views must not be cached).
             result = await get_course_meta(
                 mock_request,
                 "course_test",
                 False,
-                admin_user,
+                AnonymousUser(),
                 db,
                 slim=True,
             )
@@ -195,11 +197,12 @@ class TestGetCourseMeta:
             new_callable=AsyncMock,
             return_value=[],
         ) as mock_chapters:
+            anon = AnonymousUser()
             result = await get_course_meta(
                 mock_request,
                 "course_test",
                 False,
-                admin_user,
+                anon,
                 db,
                 slim=True,
             )
@@ -207,7 +210,7 @@ class TestGetCourseMeta:
         assert result.org_uuid == "org_test"
         mock_chapters.assert_awaited_once()
         call = mock_chapters.await_args
-        assert call.args[:5] == (mock_request, course.id, db, admin_user, False)
+        assert call.args[:5] == (mock_request, course.id, db, anon, False)
         assert call.kwargs["slim"] is True
         assert call.kwargs["course"].id == course.id
         mock_set_cache.assert_called_once_with("course_test", True, result.model_dump())
@@ -656,8 +659,10 @@ class TestCourseMutationsAndRights:
                 thumbnail_type=ThumbnailType.IMAGE,
             )
 
+        # Query as the owner: a user may see their own unpublished courses, while
+        # other non-superadmin users only see the author's published+public ones.
         user_courses = await get_user_courses(
-            mock_request, regular_user, admin_user.id, db
+            mock_request, admin_user, admin_user.id, db
         )
 
         assert created.name == "Created Course"
@@ -1182,7 +1187,10 @@ class TestCourseMutationsAndRights:
                     db,
                 )
 
-        assert missing_org_exc.value.status_code == 404
+        # The orphan course belongs to a foreign/non-existent org (999); cloning
+        # now requires membership in the source course's org, so a non-member is
+        # rejected with 403 before the org-existence check.
+        assert missing_org_exc.value.status_code == 403
 
     @pytest.mark.asyncio
     async def test_clone_course_regular_user_and_storage_helpers(

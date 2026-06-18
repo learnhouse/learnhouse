@@ -63,7 +63,11 @@ async def event_generator(
         # Send completion event
         yield f"data: {json.dumps({'type': 'done', 'session_uuid': session_uuid})}\n\n"
     except asyncio.CancelledError:
-        stream_failed = True
+        # Client disconnect / cancellation. Do NOT force a refund here: if the
+        # model already produced output the credits were legitimately spent.
+        # The finally block still refunds when nothing was produced
+        # (produced_content False), so a disconnect *after* output can't be
+        # abused to get free generations. Re-raise so Starlette observes it.
         raise
     except Exception:
         stream_failed = True

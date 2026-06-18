@@ -634,7 +634,10 @@ async def get_orgs_by_user_admin(
             UserOrganization.user_id == user_id,
             UserOrganization.role_id == ADMIN_ROLE_ID,  # Only where the user is admin
             UserOrganization.org_id == Organization.id,
-            OrganizationConfig.org_id == Organization.id
+            # NOTE: the OrganizationConfig join predicate must NOT live in WHERE.
+            # Placing it here filters out rows where the outer-joined config is
+            # NULL, silently turning the OUTER join into an INNER join and
+            # dropping any org that has no config row from the admin's list.
         )
         .offset((page - 1) * limit)
         .limit(limit)
@@ -668,7 +671,10 @@ async def get_orgs_by_user(
         .where(
             UserOrganization.user_id == user_id,
             UserOrganization.org_id == Organization.id,
-            OrganizationConfig.org_id == Organization.id
+            # NOTE: the OrganizationConfig join predicate must NOT live in WHERE.
+            # Placing it here filters out rows where the outer-joined config is
+            # NULL, silently turning the OUTER join into an INNER join and
+            # dropping any org that has no config row from the user's list.
         )
         .offset((page - 1) * limit)
         .limit(limit)

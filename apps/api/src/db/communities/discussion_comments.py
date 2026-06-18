@@ -1,5 +1,5 @@
 from typing import Optional
-from sqlalchemy import Column, ForeignKey, Integer, Text
+from sqlalchemy import Column, ForeignKey, Integer, Text, Index
 from sqlmodel import Field, SQLModel
 from src.db.users import UserRead
 
@@ -10,6 +10,9 @@ class DiscussionCommentBase(SQLModel):
 
 class DiscussionComment(DiscussionCommentBase, table=True):
     __tablename__ = "discussioncomment"
+    __table_args__ = (
+        Index("ix_discussioncomment_discussion_id", "discussion_id"),
+    )
 
     id: Optional[int] = Field(default=None, primary_key=True)
     discussion_id: int = Field(
@@ -18,7 +21,7 @@ class DiscussionComment(DiscussionCommentBase, table=True):
     author_id: int = Field(
         sa_column=Column(Integer, ForeignKey("user.id", ondelete="CASCADE"))
     )
-    comment_uuid: str = ""
+    comment_uuid: str = Field(default="", index=True)
     upvote_count: int = 0
     creation_date: str = ""
     update_date: str = ""

@@ -1,5 +1,5 @@
 from typing import List
-from fastapi import APIRouter, Depends, HTTPException, Request
+from fastapi import APIRouter, Depends, HTTPException, Query, Request
 from sqlmodel.ext.asyncio.session import AsyncSession
 
 from src.core.events.database import get_db_session
@@ -261,7 +261,7 @@ async def api_get_webhook_deliveries(
     request: Request,
     org_id: int,
     webhook_uuid: str,
-    limit: int = 50,
+    limit: int = Query(50, ge=1, le=200),
     current_user: PublicUser = Depends(get_current_user),
     db_session: AsyncSession = Depends(get_db_session),
 ) -> List[WebhookDeliveryLogRead]:

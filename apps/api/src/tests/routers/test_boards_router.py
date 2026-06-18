@@ -690,6 +690,7 @@ class TestBoardsRouter:
             iteration_count=1,
             max_iterations=3,
             current_html="<div>done</div>",
+            board_uuid="board_test",
             message_history=[SimpleNamespace(role="user", content="Prompt")],
         )
         with patch(

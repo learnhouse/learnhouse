@@ -1,5 +1,5 @@
 from typing import List, Optional
-from fastapi import APIRouter, Depends, File, Form, Request, UploadFile
+from fastapi import APIRouter, Depends, File, Form, Path, Request, UploadFile
 from sqlmodel.ext.asyncio.session import AsyncSession
 from src.db.podcasts.podcasts import (
     PodcastRead,
@@ -132,8 +132,11 @@ async def api_get_podcast_meta(
 async def api_get_podcasts_orgslug(
     request: Request,
     org_slug: str,
-    page: int,
-    limit: int,
+    # page must be >= 1: the service computes offset = (page - 1) * limit, so
+    # page=0 or negative produces a negative SQL OFFSET and a 500. limit is
+    # bounded to avoid an unbounded/expensive query (DoS) from a huge value.
+    page: int = Path(ge=1),
+    limit: int = Path(ge=1, le=100),
     include_unpublished: bool = False,
     current_user=Depends(get_current_user),
     db_session: AsyncSession = Depends(get_db_session),
@@ -287,6 +290,7 @@ async def api_get_podcast_episodes(
     """Get all episodes for a podcast"""
     from sqlmodel import select
     from src.db.podcasts.podcasts import Podcast
+    from src.security.rbac import check_resource_access, AccessAction
 
     # Get the podcast
     podcast_statement = select(Podcast).where(Podcast.podcast_uuid == podcast_uuid)
@@ -295,6 +299,15 @@ async def api_get_podcast_episodes(
     if not podcast:
         from fastapi import HTTPException
         raise HTTPException(status_code=404, detail="Podcast not found")
+
+    # SECURITY: enforce read access on the parent podcast before listing its
+    # episodes. get_episodes_by_podcast() only filters unpublished episodes and
+    # does NOT run an RBAC read check, so without this any caller could
+    # enumerate episodes of private/cross-org podcasts (every other episode
+    # endpoint performs this check).
+    await check_resource_access(
+        request, db_session, current_user, podcast.podcast_uuid, AccessAction.READ
+    )
 
     episodes = await get_episodes_by_podcast(
         request, podcast.id, db_session, current_user, include_unpublished

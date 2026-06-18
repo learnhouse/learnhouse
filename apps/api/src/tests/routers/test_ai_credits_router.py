@@ -105,8 +105,9 @@ class TestAICreditsRouter:
         assert response.status_code == 404
 
     async def test_add_org_ai_credits_success_and_validation(self, client, org):
+        # Adding "purchased" credits has no payment check, so it is superadmin-only.
         with patch(
-            "src.routers.orgs.ai_credits.verify_user_is_org_admin",
+            "src.routers.orgs.ai_credits.is_user_superadmin",
             new_callable=AsyncMock,
             return_value=True,
         ), patch(
@@ -122,7 +123,7 @@ class TestAICreditsRouter:
         assert response.json()["new_purchased_total"] == 250
 
         with patch(
-            "src.routers.orgs.ai_credits.verify_user_is_org_admin",
+            "src.routers.orgs.ai_credits.is_user_superadmin",
             new_callable=AsyncMock,
             return_value=True,
         ):
@@ -139,8 +140,9 @@ class TestAICreditsRouter:
         )
         assert response.status_code == 404
 
+        # A mere org admin (non-superadmin) must be rejected.
         with patch(
-            "src.routers.orgs.ai_credits.verify_user_is_org_admin",
+            "src.routers.orgs.ai_credits.is_user_superadmin",
             new_callable=AsyncMock,
             return_value=False,
         ):
@@ -152,7 +154,7 @@ class TestAICreditsRouter:
 
     async def test_reset_org_ai_credits_success_and_forbidden(self, client, org):
         with patch(
-            "src.routers.orgs.ai_credits.verify_user_is_org_admin",
+            "src.routers.orgs.ai_credits.is_user_superadmin",
             new_callable=AsyncMock,
             return_value=True,
         ), patch("src.routers.orgs.ai_credits.reset_ai_credits_usage") as reset_mock:
@@ -161,8 +163,9 @@ class TestAICreditsRouter:
         assert response.status_code == 200
         reset_mock.assert_called_once_with(org.id)
 
+        # A mere org admin (non-superadmin) must be rejected.
         with patch(
-            "src.routers.orgs.ai_credits.verify_user_is_org_admin",
+            "src.routers.orgs.ai_credits.is_user_superadmin",
             new_callable=AsyncMock,
             return_value=False,
         ):

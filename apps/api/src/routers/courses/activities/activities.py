@@ -68,6 +68,23 @@ def _parse_extra_metadata(raw: Optional[str]) -> Optional[dict]:
     return parsed
 
 
+def _validate_details(raw: str) -> str:
+    """Validate that a ``details`` form field is a JSON object before it is
+    handed to the service layer (which calls ``json.loads`` unguarded). Without
+    this, malformed JSON would surface as an unhandled 500 instead of a 422."""
+    try:
+        parsed = json.loads(raw)
+    except json.JSONDecodeError:
+        raise HTTPException(
+            status_code=422, detail="details must be a JSON object"
+        )
+    if not isinstance(parsed, dict):
+        raise HTTPException(
+            status_code=422, detail="details must be a JSON object"
+        )
+    return raw
+
+
 @router.post(
     "/",
     response_model=ActivityRead,
@@ -115,8 +132,8 @@ async def api_create_activity(
 async def api_get_activity_versions(
     request: Request,
     activity_uuid: str,
-    limit: int = Query(default=20, le=100),
-    offset: int = Query(default=0),
+    limit: int = Query(default=20, ge=1, le=100),
+    offset: int = Query(default=0, ge=0),
     current_user: PublicUser = Depends(get_current_user),
     db_session=Depends(get_db_session),
 ) -> List[ActivityVersionRead]:
@@ -405,7 +422,7 @@ async def api_create_video_activity(
         current_user,
         db_session,
         video_file,
-        details,
+        _validate_details(details),
         extra_metadata=_parse_extra_metadata(extra_metadata),
     )
 
@@ -504,9 +521,9 @@ async def api_update_video_activity(
     if end_time is not None:
         details_dict["endTime"] = end_time
     if autoplay is not None:
-        details_dict["autoplay"] = autoplay.lower() == "true"
+        details_dict["autoplay"] = autoplay.strip().lower() in ("true", "1", "yes", "on")
     if muted is not None:
-        details_dict["muted"] = muted.lower() == "true"
+        details_dict["muted"] = muted.strip().lower() in ("true", "1", "yes", "on")
     details_str = json.dumps(details_dict) if details_dict else None
     return await update_video_activity(
         request, activity_uuid, current_user, db_session, name, video_file, details_str

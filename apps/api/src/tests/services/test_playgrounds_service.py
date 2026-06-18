@@ -188,6 +188,7 @@ class TestPlaygroundsService:
             UserGroupUser(
                 usergroup_id=usergroup.id,
                 user_id=regular_user.id,
+                org_id=usergroup.org_id,
                 creation_date=str(datetime.now()),
                 update_date=str(datetime.now()),
             )
@@ -626,6 +627,7 @@ class TestPlaygroundsService:
         membership = UserGroupUser(
             usergroup_id=usergroup.id,
             user_id=admin_user.id,
+            org_id=usergroup.org_id,
             creation_date=str(datetime.now()),
             update_date=str(datetime.now()),
         )

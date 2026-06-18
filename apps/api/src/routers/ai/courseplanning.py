@@ -601,17 +601,24 @@ async def save_activity_content(
     logger.info("[Save Activity Content] === START ===")
     logger.info(f"[Save Activity Content] Activity UUID: {activity_uuid}")
     logger.info(f"[Save Activity Content] Content type: {type(content)}")
-    if isinstance(content, dict):
-        logger.info(f"[Save Activity Content] Content keys: {list(content.keys())}")
-        content_str = json.dumps(content)
-        logger.info(f"[Save Activity Content] Content size: {len(content_str)} bytes")
-        logger.info(f"[Save Activity Content] Content preview: {content_str[:500]}")
+    # Content MUST be a ProseMirror document object. A non-dict payload (list,
+    # string, etc.) previously skipped validation entirely and got written
+    # straight into activity.content, corrupting the activity so the editor
+    # fails to render it. Reject it up front.
+    if not isinstance(content, dict):
+        logger.error(f"[Save Activity Content] Content is not an object: {type(content)}")
+        raise HTTPException(status_code=400, detail="Invalid content structure: Content must be a JSON object")
 
-        # Validate ProseMirror structure
-        is_valid, validation_error = validate_prosemirror_content(content)
-        if not is_valid:
-            logger.error(f"[Save Activity Content] Validation failed: {validation_error}")
-            raise HTTPException(status_code=400, detail=f"Invalid content structure: {validation_error}")
+    logger.info(f"[Save Activity Content] Content keys: {list(content.keys())}")
+    content_str = json.dumps(content)
+    logger.info(f"[Save Activity Content] Content size: {len(content_str)} bytes")
+    logger.info(f"[Save Activity Content] Content preview: {content_str[:500]}")
+
+    # Validate ProseMirror structure
+    is_valid, validation_error = validate_prosemirror_content(content)
+    if not is_valid:
+        logger.error(f"[Save Activity Content] Validation failed: {validation_error}")
+        raise HTTPException(status_code=400, detail=f"Invalid content structure: {validation_error}")
 
     # Validate activity exists first
     statement = select(Activity).where(Activity.activity_uuid == activity_uuid)
@@ -700,6 +707,14 @@ async def get_session_state(
     session = get_course_planning_session(session_uuid)
 
     if not session:
+        raise HTTPException(status_code=404, detail="Session not found")
+
+    # Cross-tenant IDOR guard: without this, any authenticated user can read
+    # ANY planning session by UUID — leaking another org's full course plan and
+    # the entire AI message history. Require membership of the session's org.
+    if not await verify_user_org_membership(
+        resolve_acting_user_id(current_user), session.org_id, db_session
+    ):
         raise HTTPException(status_code=404, detail="Session not found")
 
     return CoursePlanningSessionResponse(

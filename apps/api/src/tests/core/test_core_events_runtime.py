@@ -70,7 +70,7 @@ async def test_auto_install_branches(monkeypatch):
         refreshes.append(db)
 
     monkeypatch.setattr(autoinstall, "get_learnhouse_config", lambda: fake_config)
-    monkeypatch.setattr(autoinstall, "create_engine", lambda *args, **kwargs: object())
+    monkeypatch.setattr(autoinstall, "create_engine", lambda *args, **kwargs: SimpleNamespace(dispose=lambda: None))
     monkeypatch.setattr(autoinstall, "create_async_engine", lambda *args, **kwargs: _FakeAsyncEngine())
     monkeypatch.setattr(autoinstall, "async_sessionmaker", lambda *args, **kwargs: _FakeAsyncSessionmaker())
     monkeypatch.setattr(

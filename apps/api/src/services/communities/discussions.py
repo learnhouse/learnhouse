@@ -132,6 +132,23 @@ async def create_discussion(
     )
 
     db_session.add(discussion)
+    # Flush to assign discussion.id without ending the transaction, so the
+    # author's auto-upvote vote row is written atomically with the discussion.
+    # Previously the vote was committed in a *second* transaction after the
+    # discussion was already persisted; if that second commit failed the
+    # discussion was left with upvote_count=1 but no matching vote row — a
+    # permanently inflated, unremovable phantom upvote.
+    await db_session.flush()
+
+    # Create auto-upvote from author in the same transaction
+    vote = DiscussionVote(
+        discussion_id=discussion.id,
+        user_id=current_user.id,
+        vote_uuid=f"vote_{uuid4()}",
+        creation_date=str(datetime.now()),
+    )
+    db_session.add(vote)
+
     await db_session.commit()
     await db_session.refresh(discussion)
 
@@ -155,16 +172,6 @@ async def create_discussion(
             "community": {"community_uuid": community_uuid},
         },
     )
-
-    # Create auto-upvote from author
-    vote = DiscussionVote(
-        discussion_id=discussion.id,
-        user_id=current_user.id,
-        vote_uuid=f"vote_{uuid4()}",
-        creation_date=str(datetime.now()),
-    )
-    db_session.add(vote)
-    await db_session.commit()
 
     # Get author info
     author_statement = select(User).where(User.id == discussion.author_id)

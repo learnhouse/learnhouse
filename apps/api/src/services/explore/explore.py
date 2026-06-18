@@ -90,7 +90,7 @@ async def get_courses_for_an_org_explore(
 
     statement = (
         select(Course)
-        .where(Course.org_id == org.id, Course.public == True)
+        .where(Course.org_id == org.id, Course.public == True, Course.published == True)
         .offset((page - 1) * limit)
         .limit(limit)
     )
@@ -102,7 +102,11 @@ async def get_course_for_explore(
     course_id: int,
     db_session: AsyncSession,
 ) -> CourseRead:
-    statement = select(Course).where(Course.id == course_id)
+    statement = select(Course).where(
+        Course.id == course_id,
+        Course.public == True,
+        Course.published == True,
+    )
     result = await db_session.execute(statement)
 
     course = result.scalars().first()
@@ -146,6 +150,11 @@ async def search_orgs_for_explore(
 ) -> list[OrganizationRead]:
     # Tokenize on unicode whitespace after NFC-normalizing so emoji + diacritics
     # in the query don't drop terms or split mid-grapheme.
+    # Enforce maximum limit to prevent data dumping and clamp page to avoid a
+    # negative OFFSET (Postgres rejects negative OFFSET, which would 500).
+    limit = min(max(limit, 1), 50)
+    page = max(page, 1)
+
     search_terms = normalize_search_term(search_query).split()
     search_conditions = []
 

@@ -434,6 +434,11 @@ async def test_change_user_role_invalidate_cache_raises_is_swallowed(db, org, ad
     """Lines 1561-1562: _invalidate_session_cache raises → swallowed, role updated."""
     token_user = _make_token_user(org.id)
 
+    # The token's creator (created_by_user_id=1) must still be a member of the
+    # org for the token to assign roles (defense-in-depth guard).
+    creator = await _create_user(db, user_id=1, username="creator1", email="creator1@test.com")
+    await _add_user_to_org(db, creator, org, role_id=admin_role.id)
+
     # Need at least two admins so we can demote without triggering last-admin guard
     admin1 = await _create_user(db, user_id=81, username="admin81", email="admin81@test.com")
     await _add_user_to_org(db, admin1, org, role_id=admin_role.id)

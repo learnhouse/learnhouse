@@ -1,5 +1,5 @@
 from typing import List, Literal, Optional, Union
-from fastapi import APIRouter, Depends, Request, UploadFile, Query
+from fastapi import APIRouter, Depends, Request, UploadFile, Query, Path, HTTPException
 from sqlmodel.ext.asyncio.session import AsyncSession
 from src.services.orgs.invites import (
     create_invite_code,
@@ -118,6 +118,14 @@ async def api_create_org_withconfig(
     """
     Create new organization
     """
+    # SECURITY: create_org_with_config() persists the client-supplied config
+    # verbatim. The config carries the org's billing plan (cloud.plan), so a
+    # self-service caller could otherwise mint a free "enterprise"/"pro" org and
+    # unlock every paid feature/limit without paying. The standard create_org
+    # path always provisions a "free" plan; force the same here so the plan can
+    # only ever be elevated through the billing system, not the request body.
+    if config_object.cloud is not None:
+        config_object.cloud.plan = "free"
     return await create_org_with_config(
         request, org_object, current_user, db_session, config_object
     )
@@ -238,12 +246,24 @@ async def api_get_org_users(
 async def api_join_an_org(
     request: Request,
     args: JoinOrg,
-    current_user: PublicUser = Depends(get_current_user),
+    current_user: PublicUser = Depends(get_authenticated_user),
     db_session: AsyncSession = Depends(get_db_session),
 ):
     """
     Get single Org by ID
     """
+    # SECURITY: the downstream join_org() trusts the body-supplied user_id and
+    # joins THAT user into the org without verifying it is the caller. Without
+    # this guard any authenticated user could force-add (or, on an "open" org,
+    # silently enroll) an arbitrary other account into an organization. Pin the
+    # join to the authenticated identity. user_id in the body may be either the
+    # numeric id or the user_uuid, so accept either form of the caller's own id.
+    target = str(args.user_id)
+    if target not in (str(current_user.id), str(getattr(current_user, "user_uuid", ""))):
+        raise HTTPException(
+            status_code=403,
+            detail="You can only join an organization as yourself.",
+        )
     return await join_org(request, args, current_user, db_session)
 
 
@@ -1161,8 +1181,8 @@ async def api_update_org_preview(
 )
 async def api_user_orgs(
     request: Request,
-    page: int,
-    limit: int,
+    page: int = Path(..., ge=1, description="Page number (1-based)"),
+    limit: int = Path(..., ge=1, le=100, description="Items per page (max 100)"),
     current_user: Union[PublicUser, AnonymousUser] = Depends(get_current_user),
     db_session: AsyncSession = Depends(get_db_session),
 ) -> List[OrganizationRead]:
@@ -1186,8 +1206,8 @@ async def api_user_orgs(
 )
 async def api_user_orgs_admin(
     request: Request,
-    page: int,
-    limit: int,
+    page: int = Path(..., ge=1, description="Page number (1-based)"),
+    limit: int = Path(..., ge=1, le=100, description="Items per page (max 100)"),
     current_user: Union[PublicUser, AnonymousUser] = Depends(get_current_user),
     db_session: AsyncSession = Depends(get_db_session),
 ) -> List[OrganizationRead]:
@@ -1327,6 +1347,15 @@ async def api_get_org_usage(
     Get organization usage and limits for plan-based features.
     Returns current usage, limits, and remaining quota.
     """
+    # SECURITY: usage data (plan, member/course counts, billing limits) is
+    # tenant-scoped. The downstream service only checks that the caller is
+    # authenticated, not that they belong to this org, so enforce membership
+    # here to prevent cross-tenant data leakage via /{org_id}/usage.
+    from src.security.auth import resolve_acting_user_id
+    from src.security.org_auth import require_org_membership
+    await require_org_membership(
+        resolve_acting_user_id(current_user), org_id, db_session
+    )
     from src.services.orgs.usage import get_org_usage_and_limits
     return await get_org_usage_and_limits(request, org_id, current_user, db_session)
 

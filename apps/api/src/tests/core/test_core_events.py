@@ -54,7 +54,7 @@ async def test_auto_install_triggers_install_when_no_orgs_exist(monkeypatch):
         installs.append(short)
 
     monkeypatch.setattr(autoinstall, "get_learnhouse_config", lambda: config)
-    monkeypatch.setattr(autoinstall, "create_engine", lambda *args, **kwargs: created_engines.append((args, kwargs)) or object())
+    monkeypatch.setattr(autoinstall, "create_engine", lambda *args, **kwargs: created_engines.append((args, kwargs)) or SimpleNamespace(dispose=lambda: None))
     monkeypatch.setattr(autoinstall.SQLModel.metadata, "create_all", lambda engine: created_tables.append(engine))
     monkeypatch.setattr(autoinstall, "Session", lambda engine: _FakeSession(engine, row=None))
     monkeypatch.setattr(autoinstall, "_install_async", fake_install_async)
@@ -95,7 +95,7 @@ async def test_auto_install_refreshes_default_roles_when_any_org_exists(monkeypa
         installs.append(short)
 
     monkeypatch.setattr(autoinstall, "get_learnhouse_config", lambda: config)
-    monkeypatch.setattr(autoinstall, "create_engine", lambda *args, **kwargs: object())
+    monkeypatch.setattr(autoinstall, "create_engine", lambda *args, **kwargs: SimpleNamespace(dispose=lambda: None))
     monkeypatch.setattr(autoinstall, "create_async_engine", lambda *args, **kwargs: _FakeAsyncEngine())
     monkeypatch.setattr(autoinstall, "async_sessionmaker", lambda *args, **kwargs: _FakeAsyncSessionmaker())
     monkeypatch.setattr(autoinstall.SQLModel.metadata, "create_all", lambda engine: created_tables.append(engine))

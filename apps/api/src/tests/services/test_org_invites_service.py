@@ -406,7 +406,7 @@ class TestOrgInvitesService:
             result = await delete_invite_code(
                 mock_request,
                 org.id,
-                "org_invite_code_test",
+                "org_invite_code_12345678-1234-1234-1234-1234567890ab",
                 admin_user,
                 db,
             )
@@ -428,7 +428,7 @@ class TestOrgInvitesService:
                 await delete_invite_code(
                     mock_request,
                     org.id,
-                    "org_invite_code_missing",
+                    "org_invite_code_99999999-9999-9999-9999-999999999999",
                     admin_user,
                     db,
                 )
