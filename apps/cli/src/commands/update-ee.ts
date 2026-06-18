@@ -140,6 +140,31 @@ export function runAlembicUpgrade(dir: string, layout: EditionLayout, ui: Update
       ui.ok('Database already at head — no migrations needed')
       return true
     }
+
+    // If the DB has no tracked revision it was bootstrapped via create_all (not
+    // by running migrations). Attempt the normal upgrade first; if it fails
+    // because the initial tables already exist, stamp at heads instead.
+    // The app's create_all ensures any tables added in later migrations also
+    // exist (it is called on every startup), so stamping at the tip is safe.
+    if (revLines.length === 0) {
+      try {
+        const out = alembic(dir, layout, 'upgrade heads')
+        const applied = out.split('\n').filter((l) => /Running upgrade/.test(l)).length
+        ui.ok(applied ? `Applied ${applied} migration(s)` : 'Database migrated to head')
+        return true
+      } catch (upgradeErr) {
+        const e2 = upgradeErr as { stderr?: { toString(): string }; stdout?: { toString(): string } }
+        const upgradeOut = (e2.stderr?.toString() ?? '') + (e2.stdout?.toString() ?? '')
+        // "already exists" → schema was created via create_all; stamp and continue
+        if (/already exists|DuplicateTable/i.test(upgradeOut)) {
+          alembic(dir, layout, 'stamp heads')
+          ui.ok('Schema created via create_all — stamped Alembic at current heads')
+          return true
+        }
+        throw upgradeErr
+      }
+    }
+
     const out = alembic(dir, layout, 'upgrade heads')
     const applied = out.split('\n').filter((l) => /Running upgrade/.test(l)).length
     ui.ok(applied ? `Applied ${applied} migration(s)` : 'Database migrated to head')
