@@ -102,7 +102,8 @@ function MagicBlockChat({
             </p>
             <div className="flex flex-wrap gap-2 justify-center">
               {SUGGESTION_CHIPS.map((chip) => (
-                <button type="button"                   key={chip.label}
+                <button
+                  key={chip.label}
                   onClick={() => handleSuggestionClick(chip.prompt)}
                   className="px-4 py-1.5 text-xs font-semibold bg-white/5 text-white/40 rounded-xl hover:text-white/60 hover:bg-white/10 transition-all outline outline-1 outline-neutral-100/10 hover:outline-neutral-200/40 delay-75 ease-linear"
                 >

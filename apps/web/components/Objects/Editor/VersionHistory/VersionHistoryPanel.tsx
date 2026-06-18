@@ -111,7 +111,8 @@ function VersionHistoryPanel({
                 {t('editor.versioning.version_history')}
               </h2>
             </div>
-            <button type="button"               onClick={onClose}
+            <button
+              onClick={onClose}
               className="p-1 hover:bg-gray-100 rounded-md transition-colors"
             >
               <X size={20} className="text-gray-500" />
@@ -183,13 +184,15 @@ function VersionHistoryPanel({
                     )}
                   </div>
                   <div className="flex items-center gap-1">
-                    <button type="button"                       onClick={() => setPreviewVersion(version)}
+                    <button
+                      onClick={() => setPreviewVersion(version)}
                       className="p-1.5 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-md transition-colors"
                       title={t('editor.versioning.preview')}
                     >
                       <Eye size={16} />
                     </button>
-                    <button type="button"                       onClick={() => handleRestore(version)}
+                    <button
+                      onClick={() => handleRestore(version)}
                       disabled={restoringVersion !== null}
                       className="p-1.5 text-gray-400 hover:text-sky-600 hover:bg-sky-50 rounded-md transition-colors disabled:opacity-50"
                       title={t('editor.versioning.restore_version')}
@@ -259,7 +262,8 @@ function VersionPreviewModal({ version, onClose, onRestore, activity, courseUuid
               )}
             </div>
           </div>
-          <button type="button"             onClick={onClose}
+          <button
+            onClick={onClose}
             className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
           >
             <X size={20} className="text-gray-500" />
@@ -277,12 +281,14 @@ function VersionPreviewModal({ version, onClose, onRestore, activity, courseUuid
           </div>
         </div>
         <div className="flex items-center justify-end gap-3 p-4 border-t border-gray-200">
-          <button type="button"             onClick={onClose}
+          <button
+            onClick={onClose}
             className="px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-200 rounded-lg transition-colors"
           >
             {t('editor.versioning.close')}
           </button>
-          <button type="button"             onClick={onRestore}
+          <button
+            onClick={onRestore}
             className="px-5 py-2 text-sm font-medium text-white bg-sky-600 hover:bg-sky-700 rounded-lg transition-colors flex items-center gap-2"
           >
             <RotateCcw size={16} />

@@ -1,5 +1,6 @@
 import {
   AlertCircle,
+  AlertTriangle,
   BadgeHelp,
   Code,
   CodeSquare,

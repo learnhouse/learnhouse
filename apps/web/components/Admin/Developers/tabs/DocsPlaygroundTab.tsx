@@ -1,6 +1,6 @@
 'use client'
 import React, { useState } from 'react'
-import { Eye, EyeSlash, CodeSimple } from '@phosphor-icons/react'
+import { Eye, EyeSlash, Key, CodeSimple } from '@phosphor-icons/react'
 import { ENDPOINTS } from '@components/Admin/Developers/catalog'
 import EndpointList from '@components/Admin/Developers/playground/EndpointList'
 import EndpointDetail from '@components/Admin/Developers/playground/EndpointDetail'

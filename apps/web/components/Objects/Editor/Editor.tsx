@@ -460,17 +460,20 @@ function Editor(props: Editor) {
                         </div>
                       </div>
                       <div className="space-y-2">
-                        <button type="button"                           className="w-full px-3 py-2.5 text-sm font-medium text-white bg-sky-600 hover:bg-sky-700 rounded-lg transition-colors"
+                        <button
+                          className="w-full px-3 py-2.5 text-sm font-medium text-white bg-sky-600 hover:bg-sky-700 rounded-lg transition-colors"
                           onClick={() => handleSave(true)}
                         >
                           {t('editor.versioning.conflict.overwrite_mine')}
                         </button>
-                        <button type="button"                           className="w-full px-3 py-2.5 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg border border-gray-200 transition-colors"
+                        <button
+                          className="w-full px-3 py-2.5 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg border border-gray-200 transition-colors"
                           onClick={handleReloadRemote}
                         >
                           {t('editor.versioning.conflict.discard_mine')}
                         </button>
-                        <button type="button"                           className="w-full px-3 py-2 text-xs font-medium text-sky-600 hover:text-sky-700 hover:underline transition-colors flex items-center justify-center gap-1"
+                        <button
+                          className="w-full px-3 py-2 text-xs font-medium text-sky-600 hover:text-sky-700 hover:underline transition-colors flex items-center justify-center gap-1"
                           onClick={handleOpenMerge}
                           disabled={isLoadingRemote}
                         >

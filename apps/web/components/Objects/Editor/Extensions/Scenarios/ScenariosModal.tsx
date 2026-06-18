@@ -190,13 +190,15 @@ const ScenariosModal: React.FC<ScenariosModalProps> = ({
               </div>
             </div>
             <div className="flex items-center gap-2">
-              <button type="button"                 onClick={resetPreview}
+              <button
+                onClick={resetPreview}
                 className="flex items-center gap-2 px-3 py-2 bg-white hover:bg-slate-50 text-slate-700 border border-slate-300 rounded-lg transition-all text-sm font-medium shadow-sm"
               >
                 <RotateCcw size={14} />
                 Reset
               </button>
-              <button type="button"                 onClick={() => setShowPreview(false)}
+              <button
+                onClick={() => setShowPreview(false)}
                 className="flex items-center gap-2 px-3 py-2 bg-slate-900 hover:bg-slate-800 text-white rounded-lg transition-all text-sm font-medium shadow-sm"
               >
                 <Settings size={14} />
@@ -217,7 +219,8 @@ const ScenariosModal: React.FC<ScenariosModalProps> = ({
               <p className="text-slate-600 mb-6 leading-relaxed">
                 You've successfully navigated through this interactive scenario.
               </p>
-              <button type="button"                 onClick={resetPreview}
+              <button
+                onClick={resetPreview}
                 className="flex items-center gap-2 px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white rounded-lg transition-all font-medium text-sm shadow-sm hover:shadow-md mx-auto"
               >
                 <RotateCcw size={16} />
@@ -248,7 +251,8 @@ const ScenariosModal: React.FC<ScenariosModalProps> = ({
               {/* Response Options */}
               <div className="space-y-2">
                 {previewScenario.options.map((option, index) => (
-                  <button type="button"                     key={option.id}
+                  <button
+                    key={option.id}
                     onClick={() => handleOptionClick(option.nextScenarioId)}
                     className="w-full bg-white border border-slate-200 hover:border-blue-300 hover:bg-blue-50 rounded-lg p-3 transition-all group text-left shadow-sm hover:shadow-md"
                   >
@@ -305,13 +309,15 @@ const ScenariosModal: React.FC<ScenariosModalProps> = ({
                 {scenarios.length}/40
               </span>
             </div>
-            <button type="button"               onClick={() => setShowPreview(true)}
+            <button
+              onClick={() => setShowPreview(true)}
               className="flex items-center gap-2 px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-all font-medium text-sm shadow-sm hover:shadow-md"
             >
               <Play size={14} />
               Preview
             </button>
-            <button type="button"               onClick={addNewScenario}
+            <button
+              onClick={addNewScenario}
               disabled={scenarios.length >= 40}
               className="flex items-center gap-2 px-3 py-2 bg-slate-900 hover:bg-slate-800 text-white rounded-lg transition-all font-medium text-sm shadow-sm hover:shadow-md disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-slate-900"
             >
@@ -346,7 +352,8 @@ const ScenariosModal: React.FC<ScenariosModalProps> = ({
                       </div>
                     </div>
                     <div className="flex items-center gap-1">
-                      <button type="button"                         onClick={() => setCurrentScenarioId(scenario.id)}
+                      <button
+                        onClick={() => setCurrentScenarioId(scenario.id)}
                         className={`px-2 py-1 rounded-md transition-all text-xs font-medium ${
                           scenario.id === currentScenarioId 
                             ? 'bg-emerald-500 text-white shadow-sm' 
@@ -356,7 +363,8 @@ const ScenariosModal: React.FC<ScenariosModalProps> = ({
                       >
                         {scenario.id === currentScenarioId ? 'Start' : 'Set Start'}
                       </button>
-                      <button type="button"                         onClick={() => deleteScenario(scenario.id)}
+                      <button
+                        onClick={() => deleteScenario(scenario.id)}
                         disabled={scenarios.length <= 1}
                         className="p-1.5 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-md transition-all disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:text-slate-400 disabled:hover:bg-transparent"
                         title="Delete scenario"
@@ -375,7 +383,8 @@ const ScenariosModal: React.FC<ScenariosModalProps> = ({
                       <label className="text-sm font-medium text-slate-700">
                         Scenario Description
                       </label>
-                      <button type="button"                         onClick={() => toggleImageInput(scenario.id)}
+                      <button
+                        onClick={() => toggleImageInput(scenario.id)}
                         className={`flex items-center gap-2 px-3 py-1.5 rounded-lg transition-all text-xs font-medium border ${
                           showImageInputs[scenario.id] 
                             ? 'text-blue-700 bg-blue-50 border-blue-200 hover:bg-blue-100 shadow-sm' 
@@ -439,7 +448,8 @@ const ScenariosModal: React.FC<ScenariosModalProps> = ({
                       <label className="text-sm font-medium text-slate-700">
                         Response Options ({scenario.options.length}/4)
                       </label>
-                      <button type="button"                         onClick={() => addOption(scenario.id)}
+                      <button
+                        onClick={() => addOption(scenario.id)}
                         disabled={scenario.options.length >= 4}
                         className="flex items-center gap-1 px-2 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-md transition-all text-xs font-medium disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-slate-100"
                         title="Add response option"
@@ -484,7 +494,8 @@ const ScenariosModal: React.FC<ScenariosModalProps> = ({
                                 </select>
                               </div>
                             </div>
-                            <button type="button"                               onClick={() => deleteOption(scenario.id, option.id)}
+                            <button
+                              onClick={() => deleteOption(scenario.id, option.id)}
                               disabled={scenario.options.length <= 1}
                               className="p-1 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded transition-all opacity-0 group-hover:opacity-100 disabled:opacity-0 disabled:cursor-not-allowed flex-shrink-0"
                               title="Delete option"
@@ -507,7 +518,8 @@ const ScenariosModal: React.FC<ScenariosModalProps> = ({
                 </div>
                 <h3 className="text-base font-medium text-slate-900 mb-2">No scenarios yet</h3>
                 <p className="text-slate-500 text-sm mb-4">Create your first scenario to get started.</p>
-                <button type="button"                   onClick={addNewScenario}
+                <button
+                  onClick={addNewScenario}
                   className="flex items-center gap-2 px-3 py-2 bg-slate-900 hover:bg-slate-800 text-white rounded-lg transition-all font-medium text-sm shadow-sm hover:shadow-md mx-auto"
                 >
                   <Plus size={14} />

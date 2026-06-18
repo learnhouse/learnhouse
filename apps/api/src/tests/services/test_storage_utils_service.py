@@ -330,11 +330,10 @@ class TestDirectoryHelpers:
         ):
             walked = list(storage_utils.walk_directory(str(base_dir)))
 
-        # walk_directory yields POSIX-style roots on every platform (#814)
         assert walked == [
-            (base_dir.as_posix(), ["nested"], ["root.txt"]),
-            (nested_dir.as_posix(), ["deeper"], ["child.md"]),
-            (deeper_dir.as_posix(), [], ["deep.pdf"]),
+            (str(base_dir), ["nested"], ["root.txt"]),
+            (str(nested_dir), ["deeper"], ["child.md"]),
+            (str(deeper_dir), [], ["deep.pdf"]),
         ]
 
         s3_client = Mock()

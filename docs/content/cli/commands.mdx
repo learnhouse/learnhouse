@@ -12,6 +12,26 @@ Interactive wizard that generates a complete Docker Compose deployment. See [Set
 npx learnhouse@latest setup
 ```
 
+| Flag | Description |
+|---|---|
+| `--ci` | Non-interactive mode with defaults (for CI/automation) |
+| `--name <name>` | Installation name (default: `default`) |
+| `--domain <domain>` | Domain name (default: `localhost`) |
+| `--port <port>` | HTTP port (default: `80`) |
+| `--admin-email <email>` | Admin email (default: `admin@school.dev`) |
+| `--admin-password <password>` | Admin password (required in `--ci` mode) |
+| `--org-name <name>` | Organization display name (default: `Default Organization`) |
+| `--org-slug <slug>` | Organization slug used in URLs (default: `default`) |
+| `--channel <channel>` | Release channel: `stable` or `dev` (default: `stable`) |
+| `--no-start` | Skip starting services after setup |
+| `--external-db <uri>` | Use an external Postgres instead of the in-container DB |
+| `--external-redis <uri>` | Use an external Redis instead of the in-container Redis |
+| `--docker-ipv6` | Enable IPv6 on the compose network (needed for IPv6-only external DBs) |
+
+<Callout type="info">
+Use `--org-slug` to set a custom URL prefix (e.g. `--org-slug acme` → users browse `/orgs/acme`). The default is `default`.
+</Callout>
+
 ## `start`
 
 Start all Docker containers for your deployment.
@@ -22,11 +42,37 @@ npx learnhouse start
 
 ## `stop`
 
-Stop all running containers.
+Stop all running containers without removing data volumes.
 
 ```bash
 npx learnhouse stop
 ```
+
+## `status`
+
+Show the live status of each LearnHouse container.
+
+```bash
+npx learnhouse status
+```
+
+Displays each service name, container state, health check result, and restart count.
+
+## `health`
+
+Run health checks against the running deployment and report the results.
+
+```bash
+npx learnhouse health
+```
+
+Checks:
+- Container running state and health
+- PostgreSQL connectivity (TCP + query)
+- Redis ping
+- HTTP health endpoint (`/api/v1/health`)
+- Disk usage
+- Memory and CPU consumption
 
 ## `logs`
 
@@ -44,24 +90,41 @@ Display current installation metadata — version, directory, URL, organization 
 npx learnhouse config
 ```
 
-## `doctor`
+## `update`
 
-Run comprehensive diagnostics to identify issues. Checks:
-
-- Docker installation and daemon status
-- Docker Compose v2 availability
-- Container health and restart counts
-- Port availability
-- DNS resolution (for non-localhost domains)
-- Disk space (warns below 1 GB)
-- Docker volume sizes
-- Log analysis (scans for errors)
-- `.env` validation (required variables, secret length)
-- Image freshness
+Update LearnHouse to the latest release or a specific version. See [Updates](/self-hosting/maintenance/updates) for details.
 
 ```bash
-npx learnhouse doctor
+# Update to latest
+npx learnhouse update
+
+# Update to a specific version
+npx learnhouse update --to 1.4.2
+# or using the short form:
+npx learnhouse update -v 1.4.2
 ```
+
+| Flag | Description |
+|---|---|
+| `-v, --to <version>` | Pull a specific image tag from `ghcr.io/learnhouse/app` (e.g. `1.4.2`, `v1.4.2`). Defaults to `latest`. |
+| `--migrate` | Run database migrations automatically after restart (no prompt) |
+| `--no-migrate` | Skip database migrations without prompting |
+| `--no-backup` | Skip the pre-upgrade database backup (not recommended for production) |
+
+**What `update` does, in order:**
+
+1. Creates a database backup (unless `--no-backup`)
+2. Stamps an Alembic baseline if your DB was never migrated (installs created before v1.3)
+3. Rewrites the image tag in `docker-compose.yml`
+4. Migrates uploaded media to a persistent Docker volume (one-time, idempotent)
+5. Pulls the new image (`docker compose pull`)
+6. Restarts the stack with `--pull always`
+7. Waits for the health endpoint to respond
+8. Runs `alembic upgrade head` (unless `--no-migrate`)
+
+<Callout type="warning">
+If the migration step fails, the CLI prints the rollback command and exits with a non-zero code. Your pre-upgrade backup is in `{installDir}/backups/`. To roll back: restore the backup, revert the image tag in `docker-compose.yml`, and run `npx learnhouse start`.
+</Callout>
 
 ## `backup`
 
@@ -73,18 +136,47 @@ npx learnhouse backup
 
 Backups are saved to `{installDir}/backups/learnhouse-backup-{timestamp}.tar.gz`.
 
-### Restore
+The backup prompt lets you choose between creating a new backup or restoring from an existing one. Pass `--restore` to skip the prompt.
+
+## `restore`
 
 Restore a database from a backup archive. This overwrites the current database.
 
 ```bash
 npx learnhouse restore <archive.tar.gz>
+```
+
+Alternatively:
+
+```bash
 npx learnhouse backup --restore <archive.tar.gz>
 ```
 
 <Callout type="warning">
-Restore only works with local (Docker) databases, not external connections. Restart services after restoring.
+Restore only works with local (Docker) databases, not external Postgres connections. Restart services after restoring: `npx learnhouse stop && npx learnhouse start`.
 </Callout>
+
+The dump uses `--clean --if-exists` so it can be replayed into an existing database without errors (tables are dropped and recreated). If the `.env` file was included in the backup, you will be prompted whether to restore it.
+
+## `doctor`
+
+Run comprehensive diagnostics to identify issues.
+
+```bash
+npx learnhouse doctor
+```
+
+Checks:
+- Docker installation and daemon status
+- Docker Compose v2 availability
+- Container health and restart counts
+- Port availability
+- DNS resolution (for non-localhost domains)
+- Disk space (warns below 1 GB)
+- Docker volume sizes
+- Log analysis (scans for recent errors)
+- `.env` validation (required variables, secret length)
+- Image freshness (compares local digest against registry)
 
 ## `deployments`
 
@@ -98,16 +190,6 @@ Features:
 - List all LearnHouse deployments with container status
 - Scale memory limits for `learnhouse-app`, `db`, and `redis`
 - View current resource usage via `docker stats`
-
-## `shell`
-
-Open an interactive shell (`/bin/sh`) inside a running container.
-
-```bash
-npx learnhouse shell
-```
-
-Displays a list of running containers to choose from.
 
 ## `env`
 
@@ -127,15 +209,15 @@ npx learnhouse env
 
 Secret values are masked in the display. Optionally restart services after changes.
 
-## `health`
+## `shell`
 
-Run health checks against the running deployment.
+Open an interactive shell (`/bin/sh`) inside a running container.
 
 ```bash
-npx learnhouse health
+npx learnhouse shell
 ```
 
-Checks container status, PostgreSQL connection, Redis ping, HTTP health endpoint, disk usage, and resource consumption.
+Displays a list of running containers to choose from.
 
 ## `dev`
 
@@ -146,30 +228,47 @@ npx learnhouse dev
 ```
 
 | Flag | Description |
-| --- | --- |
+|---|---|
 | `--ee` | Enable Enterprise Edition features (keeps the `ee/` folder active) |
 | `--admin-email <email>` | Admin email (default: `admin@school.dev`) |
 | `--admin-password <password>` | Admin password (skips the interactive prompt) |
 
-## `update`
+## Troubleshooting
 
-Update LearnHouse to the latest release or a specific version. See [Updates](/self-hosting/maintenance/updates) for details.
+### Containers restart in a loop
+
+Run `npx learnhouse doctor` — it scans logs and surfaces the root cause. Common causes:
+- Missing required env var in `.env`
+- Port conflict (another process is using port 80 or 5432)
+- Postgres volume corruption (restore from backup)
+
+### `update` migration fails
+
+If `npx learnhouse update` reports a migration failure:
 
 ```bash
-npx learnhouse update
-npx learnhouse update --version 1.4.2
+# 1. Restore your pre-upgrade backup
+npx learnhouse restore backups/db-pre-upgrade-*.sql.gz
+
+# 2. Revert the image tag in docker-compose.yml to the previous version
+# (open the file and change image: ghcr.io/learnhouse/app:<new> back to <old>)
+
+# 3. Restart on the old image
+npx learnhouse start
 ```
 
-| Flag | Description |
-| --- | --- |
-| `--version <tag>` | Pull a specific image tag from `ghcr.io/learnhouse/app` |
-| `--migrate` | Run database migrations without prompting |
-| `--no-migrate` | Skip database migrations without prompting |
+Then check the [LearnHouse releases page](https://github.com/learnhouse/learnhouse/releases) and the [GitHub issues](https://github.com/learnhouse/learnhouse/issues) for your version before retrying.
 
-## `status`
+### Database unreachable after update
 
-Show the status of each LearnHouse service.
+The `learnhouse-db` container may need a moment after startup. Wait 20-30 seconds and run `npx learnhouse health`. If health checks keep failing, run `npx learnhouse logs` to see the Postgres logs.
+
+### `restore` errors: "relation already exists"
+
+The restore command uses `pg_dump --clean --if-exists`, which drops existing tables before recreating them. If you see this error, your backup was created with an older CLI version (before v1.4.8). As a workaround:
 
 ```bash
-npx learnhouse status
+# Drop and recreate the database, then restore
+docker compose exec db psql -U learnhouse -c "DROP DATABASE learnhouse; CREATE DATABASE learnhouse;"
+npx learnhouse restore <backup.tar.gz>
 ```

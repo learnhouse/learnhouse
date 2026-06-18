@@ -200,7 +200,8 @@ function MagicBlockComponent(props: ExtendedNodeViewProps) {
             <div className="rounded-xl overflow-hidden nice-shadow" style={{ height: `${height}px` }}>
               <MagicBlockPreview htmlContent={htmlContent} />
             </div>
-            <button type="button"               onClick={() => setIsPreviewModalOpen(true)}
+            <button
+              onClick={() => setIsPreviewModalOpen(true)}
               className="absolute top-2 right-2 p-2 bg-black/50 hover:bg-black/70 rounded-lg transition-colors opacity-0 group-hover:opacity-100"
               title={t('editor.blocks.common.expand')}
             >
@@ -293,7 +294,8 @@ function MagicBlockComponent(props: ExtendedNodeViewProps) {
                       {t('editor.blocks.magic_block_content.generate_description')}
                     </p>
                   </div>
-                  <button type="button"                     onClick={() => setIsModalOpen(true)}
+                  <button
+                    onClick={() => setIsModalOpen(true)}
                     style={{
                       background: 'conic-gradient(from 32deg at 53.75% 50%, rgb(35, 40, 93) 4deg, rgba(20, 0, 52, 0.95) 59deg, rgba(164, 45, 238, 0.88) 281deg)',
                     }}
@@ -349,7 +351,8 @@ function MagicBlockComponent(props: ExtendedNodeViewProps) {
                   {/* Preset heights */}
                   <div className="flex items-center gap-1">
                     {PRESET_HEIGHTS.map((preset) => (
-                      <button type="button"                         key={preset.label}
+                      <button
+                        key={preset.label}
                         onClick={() => handlePresetHeight(preset.value)}
                         className={cn(
                           "px-2 py-0.5 text-xs font-medium rounded transition-colors",
@@ -377,14 +380,16 @@ function MagicBlockComponent(props: ExtendedNodeViewProps) {
                   </div>
                 </div>
                 <div className="flex gap-2">
-                  <button type="button"                     onClick={() => setIsPreviewModalOpen(true)}
+                  <button
+                    onClick={() => setIsPreviewModalOpen(true)}
                     className="flex space-x-1.5 items-center bg-white/5 cursor-pointer px-4 py-1.5 rounded-xl outline outline-1 outline-neutral-100/10 text-xs font-semibold text-white/40 hover:text-white/60 hover:bg-white/10 hover:outline-neutral-200/40 delay-75 ease-linear transition-all"
                   >
                     <Expand className="w-4 h-4" />
                     <span>{t('editor.blocks.common.expand')}</span>
                   </button>
                   {iterationCount < 6 && (
-                    <button type="button"                       onClick={() => setIsModalOpen(true)}
+                    <button
+                      onClick={() => setIsModalOpen(true)}
                       className="flex space-x-1.5 items-center bg-white/5 cursor-pointer px-4 py-1.5 rounded-xl outline outline-1 outline-neutral-100/10 text-xs font-semibold text-white/40 hover:text-white/60 hover:bg-white/10 hover:outline-neutral-200/40 delay-75 ease-linear transition-all"
                     >
                       <Edit3 className="w-4 h-4" />

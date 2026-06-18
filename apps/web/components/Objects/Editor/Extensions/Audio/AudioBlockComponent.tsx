@@ -183,7 +183,8 @@ function InlineAudioPlayer({ src, title }: { src: string; title?: string }) {
       {/* Player controls */}
       <div className="px-4 py-3 flex items-center gap-3">
         {/* Skip back */}
-        <button type="button"           onClick={() => skip(-15)}
+        <button
+          onClick={() => skip(-15)}
           className="p-1.5 rounded-full hover:bg-gray-100 transition-colors outline-none"
           title="Skip back 15s"
         >
@@ -191,7 +192,8 @@ function InlineAudioPlayer({ src, title }: { src: string; title?: string }) {
         </button>
 
         {/* Play/Pause */}
-        <button type="button"           onClick={togglePlay}
+        <button
+          onClick={togglePlay}
           className="rounded-full bg-gray-900 hover:bg-gray-800 p-2.5 transition-colors outline-none"
         >
           {isPlaying ? (
@@ -202,7 +204,8 @@ function InlineAudioPlayer({ src, title }: { src: string; title?: string }) {
         </button>
 
         {/* Skip forward */}
-        <button type="button"           onClick={() => skip(15)}
+        <button
+          onClick={() => skip(15)}
           className="p-1.5 rounded-full hover:bg-gray-100 transition-colors outline-none"
           title="Skip forward 15s"
         >
@@ -234,7 +237,8 @@ function InlineAudioPlayer({ src, title }: { src: string; title?: string }) {
         </span>
 
         {/* Volume */}
-        <button type="button"           onClick={toggleMute}
+        <button
+          onClick={toggleMute}
           className="p-1.5 rounded-full hover:bg-gray-100 transition-colors outline-none"
         >
           {isMuted || volume === 0 ? (
@@ -405,11 +409,12 @@ function PlaylistPlayer({
 
           {/* Controls row */}
           <div className="flex items-center gap-2">
-            <button type="button" onClick={() => skip(-15)} className="p-1 rounded-full hover:bg-gray-200 transition-colors outline-none">
+            <button onClick={() => skip(-15)} className="p-1 rounded-full hover:bg-gray-200 transition-colors outline-none">
               <SkipBack size={14} className="text-gray-600" />
             </button>
 
-            <button type="button"               onClick={togglePlay}
+            <button
+              onClick={togglePlay}
               className="rounded-full bg-gray-900 hover:bg-gray-800 p-2 transition-colors outline-none"
             >
               {isPlaying ? (
@@ -419,7 +424,7 @@ function PlaylistPlayer({
               )}
             </button>
 
-            <button type="button" onClick={() => skip(15)} className="p-1 rounded-full hover:bg-gray-200 transition-colors outline-none">
+            <button onClick={() => skip(15)} className="p-1 rounded-full hover:bg-gray-200 transition-colors outline-none">
               <SkipForward size={14} className="text-gray-600" />
             </button>
 
@@ -723,7 +728,7 @@ function AudioBlockComponent(props: ExtendedNodeViewProps) {
             <span className="uppercase tracking-widest text-xs font-bold text-neutral-400">Audio</span>
           </div>
           {blockObject && (
-            <button type="button" onClick={handleRemove} className="text-neutral-400 hover:text-red-500 transition-colors">
+            <button onClick={handleRemove} className="text-neutral-400 hover:text-red-500 transition-colors">
               <X size={16} />
             </button>
           )}
@@ -739,7 +744,8 @@ function AudioBlockComponent(props: ExtendedNodeViewProps) {
                 { key: 'episode' as TabType, icon: Music, label: 'Episode' },
                 { key: 'podcast' as TabType, icon: List, label: 'Playlist' },
               ]).map((tab) => (
-                <button type="button"                   key={tab.key}
+                <button
+                  key={tab.key}
                   onClick={() => setActiveTab(tab.key)}
                   className={cn(
                     'flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm transition-colors flex-1 justify-center outline-none',
@@ -817,7 +823,8 @@ function AudioBlockComponent(props: ExtendedNodeViewProps) {
                   </div>
                 ) : (
                   <div className="space-y-2">
-                    <button type="button"                       onClick={() => { setSelectedPodcast(null); setEpisodes([]) }}
+                    <button
+                      onClick={() => { setSelectedPodcast(null); setEpisodes([]) }}
                       className="text-xs text-blue-500 hover:text-blue-600 flex items-center gap-1 outline-none"
                     >
                       &larr; Back to podcasts
@@ -900,7 +907,8 @@ function AudioBlockComponent(props: ExtendedNodeViewProps) {
                 Size:
               </div>
               {(Object.keys(AUDIO_SIZES) as AudioSize[]).map((size) => (
-                <button type="button"                   key={size}
+                <button
+                  key={size}
                   onClick={() => setSelectedSize(size)}
                   className={cn(
                     'flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm transition-colors outline-none',

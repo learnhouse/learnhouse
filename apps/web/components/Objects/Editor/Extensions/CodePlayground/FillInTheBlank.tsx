@@ -1,4 +1,4 @@
-import { EditorView, Decoration } from '@codemirror/view'
+import { EditorView, Decoration, DecorationSet } from '@codemirror/view'
 import { EditorState, StateField, RangeSetBuilder } from '@codemirror/state'
 
 const BLANK_MARKER = '// --- blank ---'
