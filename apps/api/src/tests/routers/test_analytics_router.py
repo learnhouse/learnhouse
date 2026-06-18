@@ -327,7 +327,7 @@ class TestAnalyticsHelpers:
         ws = wb.active
         _write_xlsx_sheet(ws, [])
 
-        assert ws.cell(1, 1).value == "Nessun dato"
+        assert ws.cell(1, 1).value == "No data"
         assert ws.cell(2, 1).value is None
 
 
@@ -700,7 +700,7 @@ class TestAnalyticsRouter:
         ):
             response = await client.get("/api/v1/analytics/export?org_id=1&format=json")
         assert response.status_code == 200
-        assert response.json()["daily_active_users"]["rows"] == 1
+        assert response.json()["sections"]["overview"]["daily_active_users"]["rows"] == 1
 
         with _analytics_guard_patches(), patch(
             "src.routers.analytics._enrich_with_metadata",
@@ -735,15 +735,19 @@ class TestAnalyticsRouter:
         assert response.status_code == 400
 
     async def test_export_days_and_limit_validation(self, client):
-        with _analytics_guard_patches():
+        with _analytics_guard_patches(), patch(
+            "src.routers.analytics._execute_tinybird_query",
+            new_callable=AsyncMock,
+            return_value={"data": [], "rows": 0, "meta": []},
+        ):
             response = await client.get("/api/v1/analytics/export?org_id=1&days=99999")
         assert response.status_code == 400
         assert "days" in response.json()["detail"].lower()
-
+    
         with _analytics_guard_patches():
             response = await client.get("/api/v1/analytics/export?org_id=1&limit=0")
         assert response.status_code == 400
-
+    
         with _analytics_guard_patches():
             response = await client.get("/api/v1/analytics/export?org_id=1&limit=-5")
         assert response.status_code == 400

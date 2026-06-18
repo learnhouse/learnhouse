@@ -301,6 +301,20 @@ async def _execute_tinybird_query(
         if any(s in error_msg for s in ("UNKNOWN_TABLE", "doesn't exist", "not found")):
             return empty_response
         raise HTTPException(status_code=502, detail="Analytics query failed")
+    except httpx.HTTPStatusError as exc:
+        error_msg = exc.response.text[:500]
+        logger.warning(
+            "Tinybird query '%s' failed (%s): %s",
+            query_name, exc.response.status_code, error_msg,
+        )
+        if any(s in error_msg for s in ("UNKNOWN_TABLE", "doesn't exist", "not found")):
+            return empty_response
+        raise HTTPException(status_code=502, detail="Analytics query failed")
+    except (httpx.TimeoutException, httpx.TransportError) as exc:
+        logger.warning(
+            "Tinybird query '%s' unavailable (transient): %s", query_name, str(exc)[:500]
+        )
+        raise HTTPException(status_code=503, detail="Analytics temporarily unavailable")
     except Exception as exc:
         logger.warning("Tinybird query '%s' failed: %s", query_name, str(exc)[:500])
         raise HTTPException(status_code=502, detail="Analytics query failed")
@@ -813,7 +827,7 @@ def _build_xlsx_course_users(flat: list[dict]) -> Workbook:
     groups: dict[str, list[dict]] = defaultdict(list)
     for row in flat:
         raw = row.get("Groups", "None")
-        gs  = [g.strip() for g in raw.split(",")] if raw and raw != "None" else ["No Group"]
+        gs  = [g.strip() for g in raw.split(",")] if raw and raw != "None" else ["No groups"]
         for g in gs:
             if g:
                 groups[g].append(row)
@@ -825,7 +839,7 @@ def _build_xlsx_course_users(flat: list[dict]) -> Workbook:
         ws_s.column_dimensions[col].width = 16
  
     ws_s.merge_cells("A1:E1")
-    t = ws_s.cell(1, 1, value="📋 Course Export — Summary")
+    t = ws_s.cell(1, 1, value="Course Export — Summary")
     t.font = Font(bold=True, name="Arial", size=13, color="FFFFFF")
     t.fill = _HDR_FILL
     t.alignment = _CENTER
@@ -884,7 +898,7 @@ def _build_xlsx_course_users(flat: list[dict]) -> Workbook:
     ws_s.freeze_panes = "A10"
  
     # --- All Users sheet ---
-    ws_a = wb.create_sheet("All Users")
+    ws_a = wb.create_sheet("All")
     _write_xlsx_sheet(ws_a, flat)
  
     # --- One sheet per group ---
@@ -1116,16 +1130,14 @@ def _json_course_export(flat: list[dict], org_id: int, days: int, course_uuid: s
     }
 
 def _flat_to_csv(flat: list[dict]) -> str:
+    if not flat:
+        return ""
+
     output = io.StringIO()
- 
     now = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M UTC")
     output.write(f"# LearnHouse Course Export\n")
     output.write(f"# Generated: {now}\n")
     output.write(f"# Total users: {len(flat)}\n\n")
- 
-    if not flat:
-        output.write("# No data\n")
-        return output.getvalue()
  
     sanitized = [
         {k: str(v) if isinstance(v, (list, dict)) else v for k, v in row.items()}
@@ -1152,8 +1164,7 @@ def _results_to_csv(results: dict[str, dict]) -> str:
             continue
  
         rows = result.get("data", [])
-        label = _QUERY_LABELS.get(qname, qname)
-        output.write(f"## {label}\n")
+        output.write(f"# {qname}\n")
  
         if not rows:
             output.write("# No data\n\n")
@@ -1634,23 +1645,33 @@ async def export_analytics(
     if isinstance(current_user, AnonymousUser):
         raise HTTPException(status_code=401, detail="Authentication required")
 
-    await _verify_org_membership(resolve_acting_user_id(current_user), org_id, db_session)
-    await _verify_org_admin(resolve_acting_user_id(current_user), org_id, db_session)
-
+    # ── Valida i parametri prima dei check di autorizzazione ─────────────────
     fmt = request.query_params.get("format", "json")
     if fmt not in ("json", "csv", "xlsx"):
         raise HTTPException(status_code=400, detail="format must be 'json', 'csv', or 'xlsx'")
+
+    safe_days = _validate_days(request.query_params.get("days"), _MAX_SAFE_DAYS)
+
+    limit_param = request.query_params.get("limit")
+    if limit_param is not None:
+        try:
+            limit_val = int(limit_param)
+        except (ValueError, TypeError):
+            raise HTTPException(status_code=400, detail="Invalid 'limit' parameter")
+        if limit_val < 1:
+            raise HTTPException(status_code=400, detail="'limit' must be >= 1")
+
+    await _verify_org_membership(resolve_acting_user_id(current_user), org_id, db_session)
+    await _verify_org_admin(resolve_acting_user_id(current_user), org_id, db_session)
 
     course_uuid = request.query_params.get("course_uuid")
     safe_course_uuid = _validate_course_uuid(course_uuid) if course_uuid else None
 
     safe_org_id = int(org_id)
-    safe_days   = _validate_days(request.query_params.get("days"), _MAX_SAFE_DAYS)
 
     # ── Course export: one row per user ───────────────────────────────────────
     if safe_course_uuid:
         flat = await _fetch_course_users_flat(safe_org_id, safe_days, safe_course_uuid, db_session, for_export=True)
-        
 
         if fmt == "json":
             return _json_response(_json_course_export(flat, safe_org_id, safe_days, safe_course_uuid))
