@@ -34,7 +34,6 @@ from src.security.superadmin import is_user_superadmin
 from src.services.analytics.analytics import track
 from src.services.analytics.cache import get_cached_result, set_cached_result
 from src.services.analytics.events import ALLOWED_FRONTEND_EVENTS
-from src.services.orgs.users import _csv_safe
 from src.services.analytics.queries import (
     ADVANCED_QUERIES,
     ALL_QUERIES,
@@ -283,7 +282,6 @@ async def _execute_tinybird_query(
         if cached is not None:
             return cached
 
-
     client = _get_read_client()
     if client is None:
         raise HTTPException(status_code=503, detail="Analytics not configured")
@@ -292,15 +290,6 @@ async def _execute_tinybird_query(
         resp = await client.post("/v0/sql", content=sql + " FORMAT JSON")
         resp.raise_for_status()
         result = resp.json()
-    except httpx.HTTPStatusError as exc:
-        error_msg = exc.response.text[:500]
-        logger.warning(
-            "Tinybird query '%s' failed (%s): %s",
-            query_name, exc.response.status_code, error_msg,
-        )
-        if any(s in error_msg for s in ("UNKNOWN_TABLE", "doesn't exist", "not found")):
-            return empty_response
-        raise HTTPException(status_code=502, detail="Analytics query failed")
     except httpx.HTTPStatusError as exc:
         error_msg = exc.response.text[:500]
         logger.warning(
@@ -632,7 +621,10 @@ def _write_learners_sheet(ws, results: dict):
         headers = ["Date", "DAU"]
         for ci, h in enumerate(headers, 1):
             c = ws.cell(current_row, ci, h)
-            c.fill = _HDR_FILL; c.font = _HDR_FONT; c.alignment = _CENTER; c.border = _BRD
+            c.fill = _HDR_FILL
+            c.font = _HDR_FONT
+            c.alignment = _CENTER
+            c.border = _BRD
         current_row += 1
         for ri, row in enumerate(dau):
             fill = _ALT_FILL if ri % 2 == 0 else _NRM_FILL
@@ -657,13 +649,19 @@ def _write_learners_sheet(ws, results: dict):
         headers = ["Date", "New Users", "Returning Users"]
         for ci, h in enumerate(headers, 1):
             c = ws.cell(current_row, ci, h)
-            c.fill = _HDR_FILL; c.font = _HDR_FONT; c.alignment = _CENTER; c.border = _BRD
+            c.fill = _HDR_FILL
+            c.font = _HDR_FONT
+            c.alignment = _CENTER
+            c.border = _BRD
         current_row += 1
         for ri, row in enumerate(nvr):
             fill = _ALT_FILL if ri % 2 == 0 else _NRM_FILL
             for ci, k in enumerate(["date", "new_users", "returning_users"], 1):
                 c = ws.cell(current_row, ci, value=str(row.get(k, "")))
-                c.fill = fill; c.font = _CELL_FNT; c.alignment = _CENTER; c.border = _BRD
+                c.fill = fill
+                c.font = _CELL_FNT
+                c.alignment = _CENTER
+                c.border = _BRD
             current_row += 1
     else:
         ws.cell(current_row, 1, value="No data").font = _CELL_FNT
@@ -679,13 +677,19 @@ def _write_learners_sheet(ws, results: dict):
         headers = ["Cohort Week", "Cohort Size", "W1", "W2", "W4", "W8"]
         for ci, h in enumerate(headers, 1):
             c = ws.cell(current_row, ci, h)
-            c.fill = _HDR_FILL; c.font = _HDR_FONT; c.alignment = _CENTER; c.border = _BRD
+            c.fill = _HDR_FILL
+            c.font = _HDR_FONT
+            c.alignment = _CENTER
+            c.border = _BRD
         current_row += 1
         for ri, row in enumerate(cohort):
             fill = _ALT_FILL if ri % 2 == 0 else _NRM_FILL
             for ci, k in enumerate(["cohort_week", "cohort_size", "week_1", "week_2", "week_4", "week_8"], 1):
                 c = ws.cell(current_row, ci, value=_sanitize(row.get(k, "")))
-                c.fill = fill; c.font = _CELL_FNT; c.alignment = _CENTER; c.border = _BRD
+                c.fill = fill
+                c.font = _CELL_FNT
+                c.alignment = _CENTER
+                c.border = _BRD
             current_row += 1
     else:
         ws.cell(current_row, 1, value="No data").font = _CELL_FNT
@@ -706,7 +710,10 @@ def _write_learners_sheet(ws, results: dict):
         headers = ["Day", "Total Events"]
         for ci, h in enumerate(headers, 1):
             c = ws.cell(current_row, ci, h)
-            c.fill = _HDR_FILL; c.font = _HDR_FONT; c.alignment = _CENTER; c.border = _BRD
+            c.fill = _HDR_FILL
+            c.font = _HDR_FONT
+            c.alignment = _CENTER
+            c.border = _BRD
         current_row += 1
         for ri, (day, count) in enumerate(sorted(by_day.items())):
             fill = _ALT_FILL if ri % 2 == 0 else _NRM_FILL
@@ -770,7 +777,10 @@ def _write_courses_sheet(ws, results: dict):
  
         for ci, h in enumerate(col_labels, 1):
             c = ws.cell(current_row, ci, h)
-            c.fill = _HDR_FILL; c.font = _HDR_FONT; c.alignment = _CENTER; c.border = _BRD
+            c.fill = _HDR_FILL
+            c.font = _HDR_FONT
+            c.alignment = _CENTER
+            c.border = _BRD
         current_row += 1
  
         if rows:
@@ -778,7 +788,10 @@ def _write_courses_sheet(ws, results: dict):
                 fill = _ALT_FILL if ri % 2 == 0 else _NRM_FILL
                 for ci, k in enumerate(data_keys, 1):
                     c = ws.cell(current_row, ci, value=_sanitize(row.get(k, "")))
-                    c.fill = fill; c.font = _CELL_FNT; c.alignment = _LEFT; c.border = _BRD
+                    c.fill = fill
+                    c.font = _CELL_FNT
+                    c.alignment = _LEFT
+                    c.border = _BRD
                 current_row += 1
         else:
             ws.cell(current_row, 1, value="No data").font = _CELL_FNT
@@ -865,7 +878,10 @@ def _build_xlsx_course_users(flat: list[dict]) -> Workbook:
     ]
     ws_s.merge_cells("A4:E4")
     sec = ws_s.cell(4, 1, value="Key Metrics")
-    sec.fill = _SEC_FILL; sec.font = _SEC_FONT; sec.alignment = _LEFT; sec.border = _BRD
+    sec.fill = _SEC_FILL
+    sec.font = _SEC_FONT
+    sec.alignment = _LEFT
+    sec.border = _BRD
     ws_s.row_dimensions[4].height = 18
  
     for ci, (label, value) in enumerate(kpis, 1):
@@ -876,13 +892,19 @@ def _build_xlsx_course_users(flat: list[dict]) -> Workbook:
     # Group table
     ws_s.merge_cells("A8:E8")
     sec2 = ws_s.cell(8, 1, value="By Group")
-    sec2.fill = _SEC_FILL; sec2.font = _SEC_FONT; sec2.alignment = _LEFT; sec2.border = _BRD
+    sec2.fill = _SEC_FILL
+    sec2.font = _SEC_FONT
+    sec2.alignment = _LEFT
+    sec2.border = _BRD
     ws_s.row_dimensions[8].height = 18
  
     hdr = ["Group", "Total Users", "Enrolled", "Completed", "Completion Rate"]
     for ci, h in enumerate(hdr, 1):
         c = ws_s.cell(9, ci, h)
-        c.fill = _HDR_FILL; c.font = _HDR_FONT; c.alignment = _CENTER; c.border = _BRD
+        c.fill = _HDR_FILL
+        c.font = _HDR_FONT
+        c.alignment = _CENTER
+        c.border = _BRD
     ws_s.row_dimensions[9].height = 20
  
     for ri, (g, members) in enumerate(sorted(groups.items()), 10):
@@ -892,7 +914,10 @@ def _build_xlsx_course_users(flat: list[dict]) -> Workbook:
         fill = _ALT_FILL if ri % 2 == 0 else _NRM_FILL
         for ci, v in enumerate([g, len(members), enrolled, completed, rate], 1):
             c = ws_s.cell(ri, ci, value=v)
-            c.fill = fill; c.font = _CELL_FNT; c.alignment = _CENTER; c.border = _BRD
+            c.fill = fill
+            c.font = _CELL_FNT
+            c.alignment = _CENTER
+            c.border = _BRD
         ws_s.row_dimensions[ri].height = 16
  
     ws_s.freeze_panes = "A10"
@@ -1135,7 +1160,7 @@ def _flat_to_csv(flat: list[dict]) -> str:
 
     output = io.StringIO()
     now = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M UTC")
-    output.write(f"# LearnHouse Course Export\n")
+    output.write("# LearnHouse Course Export\n")
     output.write(f"# Generated: {now}\n")
     output.write(f"# Total users: {len(flat)}\n\n")
  
@@ -1155,7 +1180,7 @@ def _results_to_csv(results: dict[str, dict]) -> str:
  
     # Metadata header
     now = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M UTC")
-    output.write(f"# LearnHouse Analytics Export\n")
+    output.write("# LearnHouse Analytics Export\n")
     output.write(f"# Generated: {now}\n")
     output.write(f"# Sections: {len(results)}\n\n")
  
