@@ -1,5 +1,5 @@
 import * as p from '../utils/prompt.js'
-import { validateRequired } from '../utils/validators.js'
+import { validateRequired, validateSlug } from '../utils/validators.js'
 
 export interface OrgConfig {
   orgName: string
@@ -22,13 +22,9 @@ export async function promptOrganization(): Promise<OrgConfig> {
     message: 'Organization slug? (used in URLs like /orgs/<slug> — keep "default" unless you know you need to change it)',
     placeholder: 'default',
     defaultValue: 'default',
-    validate: (value) => {
-      if (!value) return 'Slug is required'
-      if (!/^[a-z0-9][a-z0-9-]*[a-z0-9]?$/.test(value)) {
-        return 'Lowercase letters, numbers and hyphens only'
-      }
-      return undefined
-    },
+    // Use the canonical slug rule (rejects leading/trailing/double hyphens) so
+    // the wizard can't accept a slug the API seeder / URLs would choke on.
+    validate: validateSlug,
   })
   if (p.isCancel(orgSlug)) { p.cancel(); process.exit(0) }
 

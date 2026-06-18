@@ -60,7 +60,10 @@ export function dockerLogin(registry: string, username: string, password: string
   }
 }
 
-/** Run a command inside a compose service (no TTY). Returns combined stdout. */
+/** Run a command inside a compose service (no TTY). Returns combined stdout.
+ *  `-T` disables pseudo-TTY allocation — required because callers capture
+ *  stdout non-interactively; without it `docker compose exec` can abort with
+ *  "the input device is not a TTY" on setups that allocate a TTY when piped. */
 export function dockerComposeExec(cwd: string, service: string, command: string): string {
   return execSync(`docker compose exec -T ${service} ${command}`, {
     cwd,
