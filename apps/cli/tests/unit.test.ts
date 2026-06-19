@@ -1899,6 +1899,9 @@ describe('docker output parsers', () => {
     it('pulls the hex id from the first learnhouse-app container', () => {
       execSync.mockReturnValue(Buffer.from('learnhouse-app-ab12cd34\n'))
       expect(autoDetectDeploymentId()).toBe('ab12cd34')
+      // The detection MUST filter on the learnhouse-app- name prefix, otherwise it
+      // would latch onto db/redis/unrelated containers. Pin the actual filter string.
+      expect(execSync.mock.calls.at(-1)?.[0]).toContain('name=learnhouse-app-')
     })
 
     it('uses the first line when several containers exist', () => {
@@ -2183,6 +2186,15 @@ describe('network — port and connectivity probes', () => {
       vi.spyOn(globalThis, 'fetch').mockRejectedValue(new Error('offline'))
       expect(await getPublicIp()).toBeNull()
     })
+
+    it('rejects a body that merely contains an IP (regex is anchored)', async () => {
+      // "<p>1.2.3.4</p>" embeds a valid IPv4 but is not a bare IP. The anchored
+      // ^…$ regex must reject it; a de-anchored regex would wrongly return the junk.
+      vi.spyOn(globalThis, 'fetch').mockResolvedValue(
+        new Response('<p>1.2.3.4</p>', { status: 200 }),
+      )
+      expect(await getPublicIp()).toBeNull()
+    })
   })
 })
 
@@ -2357,6 +2369,15 @@ describe('docker.ts command builders', () => {
     expect(() => dockerComposeUpRetry('/srv/lh', 1)).toThrow(/still unhealthy/)
   })
 
+  it('dockerComposeUpRetry defaults to 3 attempts when not specified', () => {
+    // Fail the first two `up`s, succeed on the third. With the DEFAULT attempts
+    // this must recover; a smaller default (e.g. 1) would rethrow on attempt 1.
+    let n = 0
+    execSync.mockImplementation(() => { n++; if (n < 3) throw new Error('dependency is unhealthy'); return Buffer.from('') })
+    dockerComposeUpRetry('/srv/lh') // no attempts arg → exercises the default
+    expect(n).toBe(3) // proves the default allows three attempts
+  }, 40_000)
+
   it('installDockerLinux tolerates a missing systemctl (non-systemd host)', () => {
     execSync.mockImplementation((c: string) => {
       if (c.includes('pgrep')) throw new Error('lock free')
@@ -2437,6 +2458,20 @@ describe('checkForUpdates', () => {
     await checkForUpdates()
     expect(spy).not.toHaveBeenCalled()
     spy.mockRestore()
+  })
+
+  it('notices a newer PATCH/MINOR release, not just a newer major', async () => {
+    // Bump only the patch segment. compareVersions must walk past the equal
+    // major/minor segments to see the newer patch — a major-only comparison misses it.
+    const [maj, min, pat] = VERSION.split('.').map(Number)
+    const newerPatch = `${maj}.${min}.${(pat || 0) + 1}`
+    vi.spyOn(globalThis, 'fetch').mockResolvedValue(
+      new Response(JSON.stringify({ 'dist-tags': { latest: newerPatch } }), { status: 200 }))
+    const logs: string[] = []
+    const spy = vi.spyOn(console, 'log').mockImplementation((m?: unknown) => { logs.push(String(m ?? '')) })
+    await checkForUpdates()
+    spy.mockRestore()
+    expect(logs.join('\n')).toMatch(/Update available/)
   })
 
   it('stays silent when the registry version exactly equals the current one', async () => {
@@ -2539,8 +2574,26 @@ describe('config-store edge cases', () => {
 })
 
 describe('checkTcpConnection — timeout', () => {
-  it('resolves false when the connection neither connects nor refuses in time', async () => {
-    // 192.0.2.1 is RFC 5737 TEST-NET-1 (unroutable) → the attempt hangs → timeout path.
-    expect(await checkTcpConnection('192.0.2.1', 80, 150)).toBe(false)
+  afterEach(() => { vi.restoreAllMocks() })
+
+  it('resolves false and tears down the socket when neither connect nor error fires in time', async () => {
+    // Deterministic (no live network): a socket that never emits 'connect' or
+    // 'error' must hit the timeout branch → resolve false AND destroy the socket.
+    // The old version dialed RFC-5737 192.0.2.1 and was flaky on networks that
+    // intercept/route it (it could spuriously 'connect').
+    const fakeSocket = { once: vi.fn(), destroy: vi.fn() }
+    const spy = vi.spyOn(net, 'createConnection').mockReturnValue(fakeSocket as never)
+    expect(await checkTcpConnection('10.255.255.1', 80, 80)).toBe(false)
+    expect(spy).toHaveBeenCalledWith({ host: '10.255.255.1', port: 80 })
+    expect(fakeSocket.destroy).toHaveBeenCalled() // timeout path cleaned up the socket
+  })
+
+  it('resolves true when the socket connects before the timeout', async () => {
+    const fakeSocket = {
+      once: (ev: string, cb: () => void) => { if (ev === 'connect') cb() },
+      destroy: vi.fn(),
+    }
+    vi.spyOn(net, 'createConnection').mockReturnValue(fakeSocket as never)
+    expect(await checkTcpConnection('127.0.0.1', 5432, 80)).toBe(true)
   })
 })

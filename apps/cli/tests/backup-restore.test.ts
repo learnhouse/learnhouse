@@ -75,6 +75,14 @@ describe('backup / restore — real tar, stubbed database', () => {
   it('backup creates a real .tar.gz containing the dump and .env', async () => {
     await backupCommand() // non-TTY → createBackup
 
+    // Pin the exact pg_dump invocation: it MUST target the deployment's db
+    // container and pass --clean --if-exists so the restore is idempotent.
+    expect(dockerMock.dockerExecToFile).toHaveBeenCalledWith(
+      'learnhouse-db-dep1',
+      'pg_dump -U learnhouse --clean --if-exists learnhouse',
+      expect.stringMatching(/database\.sql$/),
+    )
+
     const backupsDir = path.join(installDir, 'backups')
     const archives = fs.readdirSync(backupsDir).filter((f) => f.endsWith('.tar.gz'))
     expect(archives).toHaveLength(1)
@@ -174,7 +182,11 @@ describe('backup / restore — real tar, stubbed database', () => {
       installDir, domain: 'localhost', httpPort: 8080,
       useHttps: false, autoSsl: false, useExternalDb: true, orgSlug: 'default',
     }))
-    await expect(backupCommand(archive, { restore: true })).rejects.toBeInstanceOf(ProcessExit) // 115-117
+    dockerMock.dockerExecFromFile.mockClear()
+    const err = await backupCommand(archive, { restore: true }).catch((e) => e) // 115-117
+    expect(err).toBeInstanceOf(ProcessExit)
+    expect(err.code).toBe(1)                                  // hard failure, not a clean exit
+    expect(dockerMock.dockerExecFromFile).not.toHaveBeenCalled() // guard fired BEFORE any restore
   })
 
   it('backupCommand --restore exits when the database container is not running', async () => {
@@ -182,15 +194,23 @@ describe('backup / restore — real tar, stubbed database', () => {
     const backupsDir = path.join(installDir, 'backups')
     const archive = path.join(backupsDir, fs.readdirSync(backupsDir).find((f) => f.endsWith('.tar.gz'))!)
     dockerMock.isContainerRunning.mockReturnValue(false) // restore guard → exit (122-123)
-    await expect(backupCommand(archive, { restore: true })).rejects.toBeInstanceOf(ProcessExit)
+    dockerMock.dockerExecFromFile.mockClear()
+    const err = await backupCommand(archive, { restore: true }).catch((e) => e)
+    expect(err).toBeInstanceOf(ProcessExit)
+    expect(err.code).toBe(1)
+    expect(dockerMock.dockerExecFromFile).not.toHaveBeenCalled() // never attempts psql on a stopped db
   })
 
-  it('backupCommand --restore cancels when the confirmation is declined', async () => {
+  it('backupCommand --restore cancels cleanly (exit 0) when the confirmation is declined', async () => {
     await backupCommand()
     const backupsDir = path.join(installDir, 'backups')
     const archive = path.join(backupsDir, fs.readdirSync(backupsDir).find((f) => f.endsWith('.tar.gz'))!)
     promptStub._s.confirmValue = false // decline the "are you sure" prompt → exit(0) (133-134)
-    await expect(backupCommand(archive, { restore: true })).rejects.toBeInstanceOf(ProcessExit)
+    dockerMock.dockerExecFromFile.mockClear()
+    const err = await backupCommand(archive, { restore: true }).catch((e) => e)
+    expect(err).toBeInstanceOf(ProcessExit)
+    expect(err.code).toBe(0)                                  // user cancel is a CLEAN exit, not an error
+    expect(dockerMock.dockerExecFromFile).not.toHaveBeenCalled() // declining must not touch the database
   })
 
   it('backupCommand --restore exits when the archive cannot be extracted', async () => {
@@ -217,8 +237,14 @@ describe('backup / restore — real tar, stubbed database', () => {
     Object.defineProperty(process.stdout, 'isTTY', { value: true, configurable: true })
     promptStub._s.selectValue = 'restore' // menu → restore
     promptStub._s.textValue = archive      // prompt for the archive path
+    dockerMock.dockerExecFromFile.mockClear()
     try {
       await backupCommand()
+      // Prove the menu actually ROUTED to restore (ran psql) rather than no-opping —
+      // the previous version of this test had no assertion at all.
+      expect(dockerMock.dockerExecFromFile).toHaveBeenCalledWith(
+        'learnhouse-db-dep1', 'psql -U learnhouse -d learnhouse', expect.stringMatching(/database\.sql$/),
+      )
     } finally {
       Object.defineProperty(process.stdout, 'isTTY', { value: orig, configurable: true })
     }
@@ -228,7 +254,15 @@ describe('backup / restore — real tar, stubbed database', () => {
     await backupCommand()
     const backupsDir = path.join(installDir, 'backups')
     const archive = path.join(backupsDir, fs.readdirSync(backupsDir).find((f) => f.endsWith('.tar.gz'))!)
+    dockerMock.dockerExecFromFile.mockClear()
     await expect(backupCommand(archive, { restore: true })).resolves.toBeUndefined()
+    // Prove the restore ACTUALLY ran psql against the right container with the
+    // extracted dump — not merely that the command returned without throwing.
+    expect(dockerMock.dockerExecFromFile).toHaveBeenCalledWith(
+      'learnhouse-db-dep1',
+      'psql -U learnhouse -d learnhouse',
+      expect.stringMatching(/database\.sql$/),
+    )
   })
 
   it('backup exits and cleans up when the pg_dump fails', async () => {
