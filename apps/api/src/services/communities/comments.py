@@ -5,7 +5,7 @@ from sqlmodel import select
 from sqlmodel.ext.asyncio.session import AsyncSession
 from fastapi import HTTPException, Request
 
-from src.db.users import PublicUser, AnonymousUser, APITokenUser, User, UserRead
+from src.db.users import PublicUser, AnonymousUser, APITokenUser, User, UserReadAuthor
 from src.db.communities.communities import Community
 from src.db.communities.discussions import Discussion
 from src.db.communities.discussion_comments import (
@@ -100,7 +100,7 @@ async def create_comment(
 
     return DiscussionCommentReadWithVoteStatus(
         **comment.model_dump(),
-        author=UserRead.model_validate(author.model_dump()) if author else None,
+        author=UserReadAuthor.model_validate(author.model_dump()) if author else None,
         has_voted=False,  # User just created it, hasn't voted yet
     )
 
@@ -170,7 +170,7 @@ async def get_comments_by_discussion(
         result.append(
             DiscussionCommentReadWithVoteStatus(
                 **comment.model_dump(),
-                author=UserRead.model_validate(author.model_dump()) if author else None,
+                author=UserReadAuthor.model_validate(author.model_dump()) if author else None,
                 has_voted=user_votes.get(comment.id, False),
             )
         )
@@ -241,7 +241,7 @@ async def update_comment(
 
     return DiscussionCommentReadWithVoteStatus(
         **comment.model_dump(),
-        author=UserRead.model_validate(author.model_dump()) if author else None,
+        author=UserReadAuthor.model_validate(author.model_dump()) if author else None,
         has_voted=user_votes.get(comment.id, False),
     )
 

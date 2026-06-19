@@ -1,7 +1,7 @@
 from typing import Optional
 from sqlalchemy import Column, ForeignKey, Integer, Text, Boolean, String, Index
 from sqlmodel import Field, SQLModel
-from src.db.users import UserRead
+from src.db.users import UserReadAuthor
 
 
 # Available discussion labels
@@ -88,7 +88,7 @@ class DiscussionRead(SQLModel):
 
 
 class DiscussionReadWithAuthor(DiscussionRead):
-    author: Optional[UserRead] = None
+    author: Optional[UserReadAuthor] = None
 
 
 class DiscussionReadWithVoteStatus(DiscussionReadWithAuthor):

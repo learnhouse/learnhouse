@@ -1,7 +1,7 @@
 from typing import Optional
 from sqlalchemy import Column, ForeignKey, Integer, Text, Index
 from sqlmodel import Field, SQLModel
-from src.db.users import UserRead
+from src.db.users import UserReadAuthor
 
 
 class DiscussionCommentBase(SQLModel):
@@ -47,7 +47,7 @@ class DiscussionCommentRead(DiscussionCommentBase):
 
 
 class DiscussionCommentReadWithAuthor(DiscussionCommentRead):
-    author: Optional[UserRead] = None
+    author: Optional[UserReadAuthor] = None
 
 
 class DiscussionCommentReadWithVoteStatus(DiscussionCommentReadWithAuthor):

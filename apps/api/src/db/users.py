@@ -81,6 +81,23 @@ class UserReadPublic(SQLModel):
     profile: Optional[dict] = None
 
 
+class UserReadAuthor(SQLModel):
+    """Minimal author projection for community comments/discussions.
+
+    SECURITY: comment/discussion authors are returned to *every* reader of a
+    thread (often anonymous). It must therefore expose ONLY the fields needed to
+    render an author chip — never ``email``, ``is_superadmin``, ``signup_method``
+    or the raw ``details``/``profile``/``extra_metadata`` blobs that ``UserRead``
+    carries. The frontend reads only id/user_uuid/username/name/avatar.
+    """
+    id: int
+    user_uuid: str
+    username: str
+    first_name: str
+    last_name: str
+    avatar_image: Optional[str] = ""
+
+
 class PublicUser(UserRead):
     pass
 
