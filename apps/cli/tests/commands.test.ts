@@ -261,6 +261,10 @@ describe('checkDevEnv', () => {
     expect(fs.existsSync(path.join(root, 'apps/api/.env'))).toBe(true)
     expect(fs.readFileSync(path.join(root, 'apps/api/.env'), 'utf-8'))
       .toContain('LEARNHOUSE_AUTH_JWT_SECRET_KEY=')
+    // Assert an actual DEFAULT VALUE is written (not just that the file exists):
+    // the collab WebSocket port default must be 4000, the value the dev stack expects.
+    expect(fs.readFileSync(path.join(root, 'apps/collab/.env'), 'utf-8'))
+      .toContain('COLLAB_PORT=4000')
   })
 
   it('appends defaults to an existing env file that lacks a trailing newline', async () => {
