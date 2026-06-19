@@ -79,14 +79,14 @@ function useContentReady(activityType: string, activitySubType?: string) {
     // For dynamic content, ensure the editor actually has child nodes (content rendered)
     if (activityType === 'TYPE_DYNAMIC' && target.childNodes.length === 0) return false
     return true
-  }, [activityType])
+  }, [activityType, activitySubType])
 
   useEffect(() => {
     if (ready) return
 
     // Check immediately
     if (checkReady()) {
-      setReady(true)
+      requestAnimationFrame(() => setReady(true))
       return
     }
 
@@ -164,8 +164,14 @@ function EmbedActivityClient({ activityId, courseuuid, orgslug, bgcolor }: Embed
 
   if (!isEmbeddable) {
     return (
-      <div className="min-h-screen bg-gray-100 flex flex-col items-center justify-center p-8">
-        <div className="bg-white rounded-2xl nice-shadow p-8 max-w-md w-full text-center">
+      <div
+        className="min-h-screen flex flex-col items-center justify-center p-8"
+        style={{ backgroundColor: 'var(--embed-bg)', color: 'var(--embed-fg)' }}
+      >
+        <div
+          className="rounded-2xl nice-shadow p-8 max-w-md w-full text-center"
+          style={{ backgroundColor: 'var(--embed-surface)', color: 'var(--embed-surface-fg)' }}
+        >
           <div className="mb-6">
             <Image
               src="/learnhouse_bigicon.png"
@@ -175,10 +181,10 @@ function EmbedActivityClient({ activityId, courseuuid, orgslug, bgcolor }: Embed
               className="mx-auto"
             />
           </div>
-          <h1 className="text-xl font-bold text-gray-900 mb-2">
+          <h1 className="text-xl font-bold mb-2">
             {t('embed.not_supported_title')}
           </h1>
-          <p className="text-gray-600 mb-6">
+          <p className="mb-6" style={{ color: 'var(--embed-muted-fg)' }}>
             {t('embed.not_supported_description')}
           </p>
           <a
@@ -195,17 +201,12 @@ function EmbedActivityClient({ activityId, courseuuid, orgslug, bgcolor }: Embed
     )
   }
 
-  const defaultBg = activity.activity_type === 'TYPE_DYNAMIC' ? '#ffffff' : '#09090b'
-
   const customStyles: React.CSSProperties = {
-    backgroundColor: bgcolor ?? defaultBg,
-    // Prevent browser auto-dark-mode from inverting text inside the embed container
-    colorScheme: 'light',
+    backgroundColor: bgcolor ?? 'var(--embed-bg)',
+    colorScheme: 'light dark',
     ...(textColor
       ? { color: `#${textColor}` }
-      : activity.activity_type === 'TYPE_DYNAMIC'
-        ? { color: '#000000' }
-        : {}),
+      : { color: 'var(--embed-fg)' }),
   }
 
   const renderActivityContent = () => {
