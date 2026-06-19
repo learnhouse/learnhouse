@@ -220,6 +220,8 @@ class TestUsergroupsService:
         ), patch(
             "src.services.users.usergroups.increase_feature_usage"
         ), patch(
+            "src.services.users.usergroups.decrease_feature_usage"
+        ), patch(
             "src.services.users.usergroups.dispatch_webhooks",
             new_callable=AsyncMock,
         ):

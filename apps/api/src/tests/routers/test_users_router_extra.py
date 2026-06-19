@@ -478,6 +478,10 @@ class TestPasswordResetEndpoints:
     async def test_send_password_reset_code_success(self, client):
         with (
             patch(
+                "src.routers.users.check_password_reset_rate_limit",
+                return_value=(True, 0),
+            ),
+            patch(
                 "src.routers.users.send_reset_password_code",
                 new_callable=AsyncMock,
                 return_value={"detail": "sent"},
