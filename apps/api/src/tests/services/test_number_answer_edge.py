@@ -17,7 +17,6 @@ Reference behavior (assignments.py lines 197-222):
     return abs(parsed - correct) <= tol
 """
 
-import math
 
 import pytest
 

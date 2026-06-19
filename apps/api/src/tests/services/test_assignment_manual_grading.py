@@ -14,7 +14,6 @@ pin both halves of that contract.
 
 from datetime import datetime
 
-import pytest
 from unittest.mock import AsyncMock, patch
 
 from src.db.courses.assignments import (

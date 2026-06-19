@@ -50,15 +50,8 @@ from src.services.courses.activities.assignments import (
     update_assignment,
 )
 
-# Reuse the assignment / submission / task fixtures defined in the sibling
-# service test module so we get identical inline-row setup.
-from src.tests.services.test_assignments_service import (  # noqa: F401
-    assignment,
-    assignment_task,
-    graded_submission,
-    task_submission,
-    user_submission,
-)
+# The assignment / submission / task fixtures come from the services-level
+# conftest.py (auto-discovered) — no cross-module import needed.
 
 _PATCH_RBAC = "src.services.courses.activities.assignments.check_resource_access"
 _PATCH_LIMITS = "src.services.courses.activities.assignments.check_limits_with_usage"
