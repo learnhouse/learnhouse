@@ -21,14 +21,14 @@ import {
   PORT,
   SKIP_BOOT,
   makeStudent,
-} from './helpers/instance'
-import * as api from './helpers/api'
+} from './core/instance'
+import * as api from './core/client'
 import {
   ADMIN_STATE,
   STUDENT_STATE,
   ensureAuthDir,
   writeSharedStudent,
-} from './helpers/sharedAuth'
+} from './core/sharedAuth'
 
 const BOOT_TIMEOUT_MS = 8 * 60 * 1000 // image pull + first-run install can be slow
 const POLL_INTERVAL_MS = 3000

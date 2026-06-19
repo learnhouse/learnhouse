@@ -1,0 +1,71 @@
+name: E2E
+
+permissions:
+  contents: read
+
+# End-to-end UI acceptance suite (apps/e2e). It boots a full LearnHouse
+# self-host via the LearnHouse CLI — pulling the PUBLISHED app image — and
+# drives the UI with Playwright across every feature module under
+# apps/e2e/features/.
+#
+# Because it validates the *published image*, it is intentionally NOT a
+# per-PR gate (a PR's own code isn't in that image yet — chicken-and-egg).
+# It runs on demand and nightly, so it catches regressions in the shipped
+# self-host. To gate a PR on E2E, run it against an image built from the
+# branch (future enhancement).
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '0 3 * * *' # nightly at 03:00 UTC
+
+jobs:
+  e2e:
+    name: E2E (self-host acceptance)
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      # Build the CLI from this repo so the suite installs the self-host with
+      # the current CLI (it still pulls the published app image).
+      - name: Build CLI
+        working-directory: apps/cli
+        run: |
+          bun install --frozen-lockfile
+          bun run build
+
+      - name: Install E2E deps
+        working-directory: apps/e2e
+        run: bun install
+
+      - name: Install Playwright Chromium
+        working-directory: apps/e2e
+        run: bunx playwright install --with-deps chromium
+
+      - name: Run E2E suite (all feature modules)
+        working-directory: apps/e2e
+        env:
+          E2E_CLI: node ${{ github.workspace }}/apps/cli/dist/bin/learnhouse.js
+          E2E_ADMIN_PASSWORD: E2eTestAdmin!234
+          E2E_PORT: '8080'
+        run: bun run test
+
+      - name: Upload Playwright report
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: apps/e2e/playwright-report/
+          retention-days: 7
+
+      - name: Upload traces & videos
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-test-results
+          path: apps/e2e/test-results/
+          retention-days: 7

@@ -1,15 +1,17 @@
 import { defineConfig, devices } from '@playwright/test'
-import { BASE_URL } from './helpers/instance'
+import { BASE_URL } from './core/instance'
 
 /**
- * E2E config for the LearnHouse assignments acceptance suite.
+ * E2E config for the LearnHouse UI acceptance suite.
  *
- * Tests drive a real self-host (booted in global-setup) like a human would.
- * Specs run serially (workers: 1) because they share one instance/org and
- * create courses + users that would otherwise race.
+ * Specs live under feature modules (apps/e2e/features/<area>/tests) and drive a
+ * real self-host (booted in global-setup) like a human would. They run serially
+ * (workers: 1) because they share one instance/org and create courses + users
+ * that would otherwise race. `testDir: './features'` auto-discovers every
+ * feature module's specs.
  */
 export default defineConfig({
-  testDir: './tests',
+  testDir: './features',
   globalSetup: './global-setup.ts',
   globalTeardown: './global-teardown.ts',
   // Multi-user UI flows are slow; give each test room and only one at a time.

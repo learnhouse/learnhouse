@@ -14,7 +14,7 @@ import { spawnSync } from 'node:child_process'
 import { existsSync } from 'node:fs'
 import { homedir } from 'node:os'
 import { join } from 'node:path'
-import { INSTALL_NAME, SKIP_BOOT } from './helpers/instance'
+import { INSTALL_NAME, SKIP_BOOT } from './core/instance'
 
 export default async function globalTeardown(): Promise<void> {
   if (SKIP_BOOT) {
