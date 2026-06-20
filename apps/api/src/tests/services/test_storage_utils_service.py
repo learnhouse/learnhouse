@@ -336,6 +336,7 @@ class TestDirectoryHelpers:
             (nested_dir.as_posix(), ["deeper"], ["child.md"]),
             (deeper_dir.as_posix(), [], ["deep.pdf"]),
         ]
+        assert all("\\" not in root for root, _, _ in walked)
 
         s3_client = Mock()
         paginator = Mock()
@@ -371,6 +372,7 @@ class TestDirectoryHelpers:
             ("content/transfer/nested", ["deeper"], ["child.md"]),
             ("content/transfer/nested/deeper", [], ["deep.pdf"]),
         ]
+        assert all("\\" not in root for root, _, _ in walked)
 
         s3_client.get_paginator.side_effect = _client_error("500", "list_objects_v2")
         with patch.object(
@@ -648,6 +650,7 @@ class TestUploadAndDeleteHelpers:
             "content/course/root.txt",
             "content/course/nested/child.md",
         }
+        assert all("\\" not in key for key in uploaded_paths)
 
     def test_get_storage_client_returns_cached_client_inside_lock(self):
         """Cover line 48: inner double-check guard inside the lock returns cached client."""
