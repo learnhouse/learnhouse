@@ -80,14 +80,22 @@ export function composeDown(cwd: string): void {
   spawnSync('docker', ['compose', 'down', '-v'], { cwd, stdio: 'pipe' })
 }
 
-/** Polls a URL until it returns 2xx or timeout */
+/** Polls a URL until it returns 2xx on TWO consecutive checks, or times out.
+ *  Requiring consecutive successes avoids returning during a brief up-blip while
+ *  a freshly-installed/just-upgraded stack's nginx upstream is still flapping. */
 export async function waitForUrl(url: string, timeoutMs = 120_000): Promise<boolean> {
   const deadline = Date.now() + timeoutMs
+  let consecutive = 0
   while (Date.now() < deadline) {
     try {
       const res = await fetch(url, { signal: AbortSignal.timeout(4000) })
-      if (res.ok) return true
-    } catch { /* not ready */ }
+      if (res.ok) {
+        if (++consecutive >= 2) return true
+        await new Promise((r) => setTimeout(r, 750)) // confirm stability quickly
+        continue
+      }
+      consecutive = 0 // a non-2xx (e.g. 502) resets the streak
+    } catch { consecutive = 0 /* not ready */ }
     await new Promise((r) => setTimeout(r, 1500))
   }
   return false
@@ -139,14 +147,34 @@ export async function apiLogin(port: number, email: string, password: string): P
   throw new Error(`Login failed after ${maxAttempts} attempts (last: ${lastErr})`)
 }
 
-/** GET a JSON endpoint with an optional bearer token */
+/** GET a JSON endpoint with an optional bearer token.
+ *  Retries on 5xx and network errors: on a CI box the freshly-installed/just-
+ *  upgraded stack's nginx upstream can flap (answer, then briefly 502) even right
+ *  after a readiness poll succeeded. Real 4xx responses fail fast. */
 export async function apiGet<T = unknown>(port: number, path: string, token?: string): Promise<T> {
-  const res = await fetch(`http://localhost:${port}${path}`, {
-    headers: token ? { Authorization: `Bearer ${token}` } : {},
-    signal: AbortSignal.timeout(10_000),
-  })
-  if (!res.ok) throw new Error(`GET ${path} returned ${res.status}`)
-  return res.json() as Promise<T>
+  const maxAttempts = 6
+  let lastErr = ''
+  for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+    let res: Response
+    try {
+      res = await fetch(`http://localhost:${port}${path}`, {
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
+        signal: AbortSignal.timeout(10_000),
+      })
+    } catch (err) {
+      lastErr = `network error: ${(err as Error)?.message ?? err}`
+      if (attempt < maxAttempts) { await new Promise((r) => setTimeout(r, 2000)); continue }
+      throw new Error(`GET ${path} failed after ${maxAttempts} attempts (${lastErr})`)
+    }
+    if (res.ok) return res.json() as Promise<T>
+    if (res.status >= 500 && attempt < maxAttempts) { // upstream still settling → retry
+      lastErr = `${res.status}`
+      await new Promise((r) => setTimeout(r, 2000))
+      continue
+    }
+    throw new Error(`GET ${path} returned ${res.status}`) // 4xx (or final 5xx) → real failure
+  }
+  throw new Error(`GET ${path} failed after ${maxAttempts} attempts (last: ${lastErr})`)
 }
 
 export const TEST_NAME = 'cli-test'
