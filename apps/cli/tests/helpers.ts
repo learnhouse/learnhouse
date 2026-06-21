@@ -99,20 +99,44 @@ export async function waitForOrgSeed(port: number, orgSlug = 'default', timeoutM
 }
 
 /** Login and return access token.
- *  The API uses OAuth2 password flow (form-encoded, username field = email). */
+ *  The API uses OAuth2 password flow (form-encoded, username field = email).
+ *
+ *  A freshly-booted stack can return a transient 5xx (nginx upstream not yet
+ *  ready / a worker recycling) even right after the org route answers OK, so we
+ *  retry on 5xx and network errors. Real auth failures (4xx) fail immediately. */
 export async function apiLogin(port: number, email: string, password: string): Promise<string> {
-  const res = await fetch(`http://localhost:${port}/api/v1/auth/login`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-    body: new URLSearchParams({ username: email, password }).toString(),
-    signal: AbortSignal.timeout(10_000),
-  })
-  if (!res.ok) throw new Error(`Login failed: ${res.status}`)
-  // API returns { tokens: { access_token } } (nested) or { access_token } (flat)
-  const data = (await res.json()) as { tokens?: { access_token: string }; access_token?: string }
-  const token = data.tokens?.access_token ?? data.access_token
-  if (!token) throw new Error('Login response missing access_token')
-  return token
+  const maxAttempts = 6
+  let lastErr = ''
+  for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+    let res: Response
+    try {
+      res = await fetch(`http://localhost:${port}/api/v1/auth/login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: new URLSearchParams({ username: email, password }).toString(),
+        signal: AbortSignal.timeout(10_000),
+      })
+    } catch (err) {
+      lastErr = `network error: ${(err as Error)?.message ?? err}` // proxy/upstream not reachable yet
+      if (attempt < maxAttempts) { await new Promise((r) => setTimeout(r, 2000)); continue }
+      throw new Error(`Login failed after ${maxAttempts} attempts (${lastErr})`)
+    }
+    if (res.ok) {
+      // API returns { tokens: { access_token } } (nested) or { access_token } (flat)
+      const data = (await res.json()) as { tokens?: { access_token: string }; access_token?: string }
+      const token = data.tokens?.access_token ?? data.access_token
+      if (!token) throw new Error('Login response missing access_token')
+      return token
+    }
+    // 5xx = stack still settling → retry; 4xx = a real auth/route failure → stop now.
+    if (res.status >= 500 && attempt < maxAttempts) {
+      lastErr = `${res.status}`
+      await new Promise((r) => setTimeout(r, 2000))
+      continue
+    }
+    throw new Error(`Login failed: ${res.status}`)
+  }
+  throw new Error(`Login failed after ${maxAttempts} attempts (last: ${lastErr})`)
 }
 
 /** GET a JSON endpoint with an optional bearer token */
