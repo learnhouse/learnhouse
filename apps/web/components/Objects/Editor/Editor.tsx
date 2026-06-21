@@ -71,6 +71,11 @@ import { useOrg } from '@components/Contexts/OrgContext'
 const VersionHistoryPanel = dynamic(() => import('./VersionHistory/VersionHistoryPanel'), { ssr: false, loading: () => null })
 const MergeConflictModal = dynamic(() => import('./VersionHistory/MergeConflictModal'), { ssr: false, loading: () => null })
 import { usePlan } from '@components/Hooks/usePlan'
+import {
+  createBeforeUnloadHandler,
+  getEditorContentSnapshot,
+  hasEditorContentChanged,
+} from './unsavedChangesGuard'
 
 interface ConflictInfo {
   hasConflict: boolean
@@ -99,6 +104,8 @@ function Editor(props: Editor) {
   const aiEditorState = useAIEditor() as AIEditorStateTypes
   const is_ai_feature_enabled = useGetAIFeatures({ feature: 'editor' })
   const [editorReady, setEditorReady] = React.useState(false)
+  const [hasUnsavedChanges, setHasUnsavedChanges] = React.useState(false)
+  const savedContentSnapshotRef = React.useRef(getEditorContentSnapshot(props.content))
 
   // Conflict detection state
   const [conflictInfo, setConflictInfo] = React.useState<ConflictInfo | null>(null)
@@ -190,6 +197,29 @@ function Editor(props: Editor) {
     [stableActivity, currentPlan, getAccessToken]
   )
 
+  React.useEffect(() => {
+    savedContentSnapshotRef.current = getEditorContentSnapshot(props.content)
+    setHasUnsavedChanges(false)
+  }, [props.activity.activity_uuid, props.content])
+
+  React.useEffect(() => {
+    if (!hasUnsavedChanges) {
+      return
+    }
+
+    const handler = createBeforeUnloadHandler(() => true)
+    window.addEventListener('beforeunload', handler)
+
+    return () => {
+      window.removeEventListener('beforeunload', handler)
+    }
+  }, [hasUnsavedChanges])
+
+  const markEditorContentSaved = React.useCallback((content: unknown) => {
+    savedContentSnapshotRef.current = getEditorContentSnapshot(content)
+    setHasUnsavedChanges(false)
+  }, [])
+
   const editor: any = useEditor({
     editable: true,
     extensions,
@@ -200,6 +230,11 @@ function Editor(props: Editor) {
         setEditorReady(true)
         props.onReady?.()
       }, 0)
+    },
+    onUpdate: ({ editor }) => {
+      setHasUnsavedChanges(
+        hasEditorContentChanged(savedContentSnapshotRef.current, editor.getJSON())
+      )
     },
   })
 
@@ -228,14 +263,18 @@ function Editor(props: Editor) {
       return
     }
 
-    const result = await props.setContent(editor.getJSON(), forceOverwrite)
+    const currentContent = editor.getJSON()
+    const result = await props.setContent(currentContent, forceOverwrite)
 
     // If save was successful, clear conflict info
     if (!result?.hasConflict) {
       setConflictInfo(null)
       setShowConflictModal(false)
     }
-  }, [editor, conflictInfo, props.setContent])
+    if (result?.result && !result.hasConflict) {
+      markEditorContentSaved(currentContent)
+    }
+  }, [editor, conflictInfo, props.setContent, markEditorContentSaved])
 
   // Handler to reload with remote changes
   const handleReloadRemote = React.useCallback(() => {
@@ -276,7 +315,10 @@ function Editor(props: Editor) {
       setConflictInfo(null)
       setShowMergeModal(false)
     }
-  }, [editor, props.setContent])
+    if (result?.result && !result.hasConflict) {
+      markEditorContentSaved(mergedContent)
+    }
+  }, [editor, props.setContent, markEditorContentSaved])
 
   const isMobile = useMediaQuery('(max-width: 767px)')
   if (isMobile) {
