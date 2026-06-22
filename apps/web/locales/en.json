@@ -2404,6 +2404,7 @@
             "create_success": "Activity created successfully",
             "uploading": "Uploading file and creating activity...",
             "upload_success": "File uploaded successfully",
+            "upload_error": "Failed to upload file",
             "creating_uploading": "Creating activity and uploading file...",
             "update_error": "Failed to update activity"
           },
