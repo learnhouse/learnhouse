@@ -9,7 +9,10 @@ server {
     listen 80;
     listen [::]:80;
     server_name _;
-    client_max_body_size 500M;
+    # Must match the app container's internal nginx (6G). A lower value here
+    # makes the outer proxy reject large uploads (e.g. videos) with a 413
+    # before the request ever reaches the app — see docker/nginx.conf.
+    client_max_body_size 6G;
 
     # Increase header buffer size
     large_client_header_buffers 4 32k;
