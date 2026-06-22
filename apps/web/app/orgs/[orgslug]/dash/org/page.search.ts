@@ -8,7 +8,6 @@ import {
   Lightning,
   Key,
   Lock,
-  Sliders,
   ChartBar,
   DotsThree,
 } from '@phosphor-icons/react'
@@ -31,15 +30,6 @@ export const searchMetas: SearchMeta[] = [
     keywordsKey: 'dashboard.search.entries.org_branding.keywords',
     icon: Palette,
     href: '/dash/org/settings/branding',
-    group: 'settings',
-  },
-  {
-    id: 'dash.org.features',
-    titleKey: 'dashboard.organization.settings.tabs.features',
-    descriptionKey: 'dashboard.search.entries.org_features.description',
-    keywordsKey: 'dashboard.search.entries.org_features.keywords',
-    icon: Sliders,
-    href: '/dash/org/settings/features',
     group: 'settings',
   },
   {

@@ -1,7 +1,7 @@
 'use client'
 import { Breadcrumbs } from '@components/Objects/Breadcrumbs/Breadcrumbs'
 import { getUriWithOrg } from '@services/config/config'
-import { TextIcon, LucideIcon, LayoutDashboardIcon, CodeIcon, KeyIcon, Palette, School, ToggleRight, Shield, Globe, Search, BarChart3, Zap } from 'lucide-react'
+import { TextIcon, LucideIcon, LayoutDashboardIcon, CodeIcon, KeyIcon, Palette, School, Shield, Globe, Search, BarChart3, Zap, Menu as MenuIcon } from 'lucide-react'
 import React, { useEffect, use } from 'react';
 import { motion } from 'motion/react'
 import Image from 'next/image'
@@ -11,12 +11,12 @@ import OrgEditLanding from '@components/Dashboard/Pages/Org/OrgEditLanding/OrgEd
 import OrgEditOther from '@components/Dashboard/Pages/Org/OrgEditOther/OrgEditOther'
 import OrgEditAPIAccess from '@components/Dashboard/Pages/Org/OrgEditAPIAccess/OrgEditAPIAccess'
 import OrgEditAI from '@components/Dashboard/Pages/Org/OrgEditAI/OrgEditAI'
-import OrgEditFeatures from '@components/Dashboard/Pages/Org/OrgEditFeatures/OrgEditFeatures'
 import OrgEditSSO from '@components/Dashboard/Pages/Org/OrgEditSSO/OrgEditSSO'
 import OrgEditDomains from '@components/Dashboard/Pages/Org/OrgEditDomains/OrgEditDomains'
 import OrgEditSEO from '@components/Dashboard/Pages/Org/OrgEditSEO/OrgEditSEO'
 import OrgEditUsage from '@components/Dashboard/Pages/Org/OrgEditUsage/OrgEditUsage'
 import OrgEditAutomations from '@components/Dashboard/Pages/Org/OrgEditAutomations/OrgEditAutomations'
+import OrgEditMenu from '@components/Dashboard/Pages/Org/OrgEditMenu/OrgEditMenu'
 import { useTranslation } from 'react-i18next'
 import { PlanLevel } from '@services/plans/plans'
 import { DashTabBar, DashTabItem } from '@components/Dashboard/Shared/DashTabBar/DashTabBar'
@@ -37,7 +37,7 @@ interface TabConfig {
 const getSettingTabs = (t: any): TabConfig[] => [
   { id: 'general', label: t('dashboard.organization.settings.tabs.general'), icon: TextIcon },
   { id: 'branding', label: t('dashboard.organization.settings.tabs.branding'), icon: Palette },
-  { id: 'features', label: t('dashboard.organization.settings.tabs.features') || 'Features', icon: ToggleRight },
+  { id: 'menu', label: t('dashboard.organization.settings.tabs.menu') || 'Menu', icon: MenuIcon },
   { id: 'landing', label: t('dashboard.organization.settings.tabs.landing'), icon: LayoutDashboardIcon },
   { id: 'seo', label: 'SEO', icon: Search },
   { id: 'ai', label: t('dashboard.organization.settings.tabs.ai') || 'AI', customIcon: '/learnhouse_ai_simple_colored.png', requiredPlan: 'standard' },
@@ -60,12 +60,12 @@ function OrgPage(props: { params: Promise<OrgParams> }) {
     if (params.subpage == 'general') {
       setH1Label(t('dashboard.organization.settings.pages.general.title'))
       setH2Label(t('dashboard.organization.settings.pages.general.subtitle'))
-    } else if (params.subpage == 'features') {
-      setH1Label(t('dashboard.organization.settings.pages.features.title') || 'Features')
-      setH2Label(t('dashboard.organization.settings.pages.features.subtitle') || 'Enable or disable features for your organization')
     } else if (params.subpage == 'branding') {
       setH1Label(t('dashboard.organization.settings.pages.branding.title'))
       setH2Label(t('dashboard.organization.settings.pages.branding.subtitle'))
+    } else if (params.subpage == 'menu') {
+      setH1Label(t('dashboard.organization.settings.pages.menu.title') || 'Public menu')
+      setH2Label(t('dashboard.organization.settings.pages.menu.subtitle') || 'Choose and order the links shown in your public navigation')
     } else if (params.subpage == 'landing') {
       setH1Label(t('dashboard.organization.settings.pages.landing.title'))
       setH2Label(t('dashboard.organization.settings.pages.landing.subtitle'))
@@ -97,6 +97,7 @@ function OrgPage(props: { params: Promise<OrgParams> }) {
   }
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     handleLabels()
   }, [params.subpage, params, t])
 
@@ -142,8 +143,8 @@ function OrgPage(props: { params: Promise<OrgParams> }) {
         className="flex-1 overflow-y-auto"
       >
         {params.subpage == 'general' ? <OrgEditGeneral /> : ''}
-        {params.subpage == 'features' ? <OrgEditFeatures /> : ''}
         {params.subpage == 'branding' ? <OrgEditBranding /> : ''}
+        {params.subpage == 'menu' ? <OrgEditMenu /> : ''}
         {params.subpage == 'landing' ? <OrgEditLanding /> : ''}
         {params.subpage == 'seo' ? <OrgEditSEO /> : ''}
         {params.subpage == 'ai' ? <OrgEditAI /> : ''}

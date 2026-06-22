@@ -143,7 +143,6 @@
         "enable_feature": "Prejsť do nastavení",
         "names": {
           "courses": "Kurzy",
-          "collections": "Kolekcie",
           "communities": "Komunity",
           "podcasts": "Podcasty",
           "payments": "Platby",
@@ -1136,35 +1135,6 @@
       }
     }
   },
-  "collections": {
-    "collections": "Kolekcie",
-    "no_collections": "Zatiaľ žiadne kolekcie",
-    "create_collections_placeholder": "Vytvorte kolekcie pre zoskupenie kurzov",
-    "collection": "Kolekcia",
-    "new_collection": "Nová kolekcia",
-    "enter_collection_name": "Zadajte názov kolekcie",
-    "collection_created_success": "Kolekcia bola úspešne vytvorená!",
-    "failed_to_create_collection": "Nepodarilo sa vytvoriť kolekciu. Skúste to znova.",
-    "create_new_collection": "Vytvoriť novú kolekciu",
-    "create_collection_desc": "Zoskupte kurzy do kolekcie pre jednoduchšie vyhľadávanie a správu.",
-    "collection_name": "Názov kolekcie",
-    "enter_collection_name_placeholder": "Zadajte názov kolekcie",
-    "public_collection_desc": "Verejná kolekcia - Viditeľná pre všetkých",
-    "private_collection_desc": "Súkromná kolekcia - Viditeľná len pre členov organizácie",
-    "description": "Popis",
-    "enter_collection_description_placeholder": "Zadajte popis kolekcie",
-    "select_courses": "Vybrať kurzy",
-    "no_courses_available_desc": "Žiadne kurzy nie sú dostupné. Najprv vytvorte kurzy.",
-    "selected_courses_count": "Vybrané kurzy: {{count}}",
-    "create_collection_btn": "Vytvoriť kolekciu",
-    "delete_collection_confirm": "Ste si istí, že chcete odstrániť túto kolekciu?",
-    "delete_collection_title": "Odstrániť {{name}}?",
-    "delete_collection": "Odstrániť kolekciu",
-    "enter_description": "Zadajte popis",
-    "select_at_least_one_course": "Vyberte aspoň jeden kurz",
-    "visibility": "Viditeľnosť",
-    "empty_collection": "Prázdna kolekcia"
-  },
   "activities": {
     "video": "Video",
     "document": "Dokument",
@@ -1313,7 +1283,6 @@
     "types": {
       "all": "Všetko",
       "courses": "Kurzy",
-      "collections": "Kolekcie",
       "users": "Členovia",
       "communities": "Komunity",
       "discussions": "Diskusie",
@@ -2467,7 +2436,9 @@
           "usage": "Využitie",
           "other": "Iné",
           "seo": "SEO",
-          "automations": "Automatizácie"
+          "automations": "Automatizácie",
+          "api": "API Access",
+          "menu": "Menu"
         },
         "pages": {
           "general": {
@@ -2505,6 +2476,14 @@
           "usage": {
             "title": "Využitie",
             "subtitle": "Monitorujte využitie zdrojov a limity plánu vašej organizácie"
+          },
+          "api": {
+            "title": "API Access",
+            "subtitle": "Manage API tokens and programmatic access"
+          },
+          "menu": {
+            "title": "Public menu",
+            "subtitle": "Choose and order the links shown in your public navigation"
           }
         },
         "name": "Názov organizácie",
@@ -2740,10 +2719,6 @@
             "title": "Platby",
             "description": "Zapnúť spracovanie platieb za kurzy a predplatné"
           },
-          "collections": {
-            "title": "Kolekcie",
-            "description": "Povoliť organizovanie kurzov do kolekcií"
-          },
           "podcasts": {
             "title": "Podcasty",
             "description": "Zapnúť tvorbu podcastov a audio obsahu pre vašu organizáciu"
@@ -2972,7 +2947,8 @@
           "selected": "Vybrané",
           "select": "Vybrať"
         },
-        "org_id_not_found": "ID organizácie sa nenašlo"
+        "org_id_not_found": "ID organizácie sa nenašlo",
+        "unknown_section_type": "Unknown section type"
       },
       "seo": {
         "org_seo": {
@@ -3082,6 +3058,59 @@
         "purchased": "Zakúpené",
         "used": "Použité",
         "remaining": "Zostávajúce"
+      },
+      "api_access": {
+        "title": "API Access",
+        "api_tokens": "API Tokens",
+        "docs_playground": "Documentation & Playground",
+        "something_not_working": "Something not working as expected?",
+        "tokens_description": "API tokens allow external applications to access your organization's data securely.",
+        "create_token": "Create Token",
+        "no_tokens_yet": "No API tokens yet",
+        "create_first_token": "Create your first token to get started",
+        "create_api_token": "Create API Token",
+        "token_name": "Token Name *",
+        "expires": "Expires",
+        "never": "Never",
+        "revoked": "Revoked",
+        "revoke": "Revoke",
+        "api_docs_title": "API Documentation & Playground",
+        "create_token_desc": "Create a new API token for programmatic access. The token will only be shown once.",
+        "token_name_label": "Token Name *",
+        "description_label": "Description",
+        "expiration_label": "Expiration Date (optional)",
+        "expiration_hint": "Leave empty for a token that never expires",
+        "permissions_label": "Permissions",
+        "read_only": "Read Only",
+        "full_access": "Full Access",
+        "custom": "Custom",
+        "cancel": "Cancel",
+        "save_token_warning": "Save your token now!",
+        "save_token_hint": "This is the only time you'll see this token. Copy it and store it securely.",
+        "your_api_token": "Your API Token",
+        "done": "Done"
+      },
+      "general": {
+        "validation": {
+          "short_description_required": "Short description is required",
+          "short_description_max": "Short description must be 100 characters or less",
+          "about_max": "About text must be 400 characters or less",
+          "label_required": "Organization label is required"
+        }
+      },
+      "menu": {
+        "title": "Public navigation",
+        "subtitle": "Toggle, reorder, rename links and add your own. Links only appear if the related feature is on your plan and enabled.",
+        "save": "Save changes",
+        "saving": "Saving menu…",
+        "saved": "Menu updated",
+        "error": "Couldn't update the menu",
+        "add_custom": "Add a custom link",
+        "add": "Add",
+        "label_placeholder": "Label",
+        "custom_required": "A label and a URL are required",
+        "plan_locked": "Requires {{plan}} plan",
+        "feature_off": "Feature is off"
       }
     },
     "users": {
@@ -3488,7 +3517,6 @@
                 "courses": "Kurzy",
                 "users": "Používatelia",
                 "usergroups": "Skupiny používateľov",
-                "collections": "Kolekcie",
                 "organizations": "Organizácie",
                 "coursechapters": "Kapitoly kurzov",
                 "activities": "Aktivity",
@@ -3531,7 +3559,6 @@
                 "courses": "Kurzy",
                 "users": "Používatelia",
                 "usergroups": "Skupiny používateľov",
-                "collections": "Kolekcie",
                 "organizations": "Organizácie",
                 "coursechapters": "Kapitoly kurzov",
                 "activities": "Aktivity",
@@ -3579,7 +3606,6 @@
             "courses": "Kurzy",
             "users": "Používatelia",
             "usergroups": "Skupiny používateľov",
-            "collections": "Kolekcie",
             "organizations": "Organizácie",
             "coursechapters": "Kapitoly kurzov",
             "activities": "Aktivity",
@@ -3997,7 +4023,6 @@
       "groups": {
         "pages": "Stránky",
         "courses": "Kurzy",
-        "collections": "Kolekcie",
         "users": "Používatelia",
         "communities": "Komunity",
         "discussions": "Diskusie",
@@ -5068,6 +5093,158 @@
       "reactions": "Reakcie",
       "exit_fullscreen": "Ukončiť",
       "fullscreen": "Celá obrazovka"
+    }
+  },
+  "library": {
+    "library": "Library",
+    "my_library": "My Library",
+    "new_folder": "New Folder",
+    "tabs": {
+      "courses": "Courses",
+      "podcasts": "Podcasts",
+      "communities": "Communities",
+      "boards": "Boards",
+      "playgrounds": "Playgrounds",
+      "media": "Media"
+    },
+    "add_content": "Add content",
+    "upload_media": "Upload media",
+    "empty_folder": "This folder is empty",
+    "error_loading": "Couldn't load the library. Please refresh to try again.",
+    "folder": "Folder",
+    "folders": "Folders",
+    "items": "items",
+    "move": "Move",
+    "rename": "Rename",
+    "manage_access": "Manage access",
+    "delete_folder": "Delete folder",
+    "delete_folder_confirm": "Are you sure you want to delete this folder and everything inside it?",
+    "folder_name": "Folder name",
+    "enter_folder_name": "Enter folder name",
+    "create_folder": "Create folder",
+    "description": "Description",
+    "add": "Add",
+    "added": "Added",
+    "content_add_error": "Failed to add content",
+    "content_added": "Content added",
+    "content_remove_error": "Failed to remove content",
+    "content_removed": "Content removed",
+    "creating_folder": "Creating folder…",
+    "deleting_folder": "Deleting folder…",
+    "empty_folder_description": "Add sub-folders or content to get started.",
+    "folder_created_error": "Failed to create folder",
+    "folder_created_success": "Folder created",
+    "folder_deleted_error": "Failed to delete folder",
+    "folder_deleted_success": "Folder deleted",
+    "folder_name_required": "Folder name is required",
+    "folder_not_found": "Folder not found",
+    "folder_updated_error": "Failed to update folder",
+    "folder_updated_success": "Folder updated",
+    "no_items": "Your library is empty",
+    "no_items_description": "Create a folder or upload media to organize your content.",
+    "no_resources": "No resources available",
+    "open": "Open",
+    "private": "Private",
+    "public": "Public",
+    "remove_from_folder": "Remove from folder",
+    "remove_from_folder_confirm": "Remove this item from the folder? The item itself won't be deleted.",
+    "removing_content": "Removing…",
+    "rename_folder": "Rename folder",
+    "save": "Save",
+    "saving_folder": "Saving…",
+    "search": "Search",
+    "untitled": "Untitled",
+    "visibility": "Visibility",
+    "resources_label": "Resources",
+    "no_results": "No results",
+    "color": "Color",
+    "thumbnail": "Cover image",
+    "remove_thumbnail": "Remove cover",
+    "filters": {
+      "all": "All",
+      "folders": "Folders",
+      "courses": "Courses",
+      "media": "Media"
+    },
+    "edit": "Edit",
+    "edit_folder": "Edit folder",
+    "share": "Share",
+    "copy_link": "Copy link",
+    "link_copied": "Link copied to clipboard",
+    "link_copy_error": "Couldn't copy the link",
+    "thumbnail_error": "Couldn't upload the cover image",
+    "open_resource": "Open",
+    "replace_cover": "Replace",
+    "cover_hint": "PNG, JPG, WEBP"
+  },
+  "media": {
+    "media": "Media",
+    "file": "File",
+    "embed": "Embed",
+    "download": "Download",
+    "add_media": "Add media",
+    "upload": "Upload",
+    "media_name": "Media name",
+    "media_url": "URL",
+    "delete_media": "Delete media",
+    "delete_media_confirm": "Are you sure you want to delete this media?",
+    "choose_file": "Choose a file",
+    "deleting_media": "Deleting…",
+    "description": "Description",
+    "file_required": "A file is required",
+    "media_deleted_error": "Failed to delete media",
+    "media_deleted_success": "Media deleted",
+    "media_uploaded_error": "Failed to add media",
+    "media_uploaded_success": "Media added",
+    "name": "Name",
+    "name_required": "Name is required",
+    "public": "Public",
+    "upload_file": "Upload file",
+    "upload_media": "Upload media",
+    "uploading_media": "Uploading…",
+    "url": "URL",
+    "url_required": "A URL is required",
+    "upload_hint": "Images, video, audio, PDF, Office docs & ZIP",
+    "remove": "Remove"
+  },
+  "access": {
+    "public": {
+      "title": "Public",
+      "description": "Anyone can view this.",
+      "confirmation_title": "Make public?",
+      "confirmation_message": "This will be visible to everyone.",
+      "confirmation_button": "Make public"
+    },
+    "users_only": {
+      "title": "Users only",
+      "description": "Only signed-in members (and selected groups) can view this.",
+      "confirmation_title": "Restrict access?",
+      "confirmation_message": "Only authenticated users and linked groups will be able to view this.",
+      "confirmation_button": "Restrict access"
+    },
+    "active": "Active",
+    "visibility_update_error": "Failed to update visibility",
+    "visibility_updated": "Visibility updated",
+    "usergroups": {
+      "title": "User groups",
+      "subtitle": "Restrict access to specific user groups.",
+      "link_to_usergroup": "Link a user group",
+      "table_name": "Name",
+      "table_actions": "Actions",
+      "usergroup_name": "Group",
+      "delete_link": "Unlink",
+      "warning": "Members of linked groups will be able to access this resource.",
+      "no_usergroups": "No user groups linked yet.",
+      "create_usergroup": "Create a user group",
+      "link_button": "Link",
+      "link_title": "Link a user group",
+      "link_success": "User group linked",
+      "link_error": "Failed to link user group",
+      "unlink_button": "Unlink",
+      "unlink_title": "Unlink user group",
+      "unlink_message": "Remove this group's access?",
+      "unlink_success": "User group unlinked",
+      "unlink_error": "Failed to unlink user group"
     }
   }
 }

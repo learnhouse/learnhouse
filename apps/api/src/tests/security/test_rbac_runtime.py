@@ -90,7 +90,13 @@ def _role_with_object_rights() -> Role:
                 action_update=False,
                 action_delete=False,
             ),
-            collections=Permission(
+            folders=Permission(
+                action_create=False,
+                action_read=False,
+                action_update=False,
+                action_delete=False,
+            ),
+            media=Permission(
                 action_create=False,
                 action_read=False,
                 action_update=False,
@@ -223,15 +229,15 @@ class TestRBACRuntime:
         }
 
     @pytest.mark.asyncio
-    async def test_authorization_verify_if_element_is_public_covers_podcast_and_collection_failures(self):
+    async def test_authorization_verify_if_element_is_public_covers_podcast_and_folder_failures(self):
         with patch("src.security.rbac.rbac.check_element_type", new_callable=AsyncMock) as mock_check_type:
-            mock_check_type.return_value = "collections"
+            mock_check_type.return_value = "folders"
             session = _session_with_results(_result(first=None))
 
             with pytest.raises(HTTPException) as exc_info:
                 await authorization_verify_if_element_is_public(
                     request=_request(),
-                    element_uuid="collection_1",
+                    element_uuid="folder_1",
                     action="read",
                     db_session=session,
             )
@@ -394,7 +400,7 @@ class TestRBACRuntime:
         token_rights = {
             "courses": {"action_read": True},
             "search": {"action_read": True},
-            "collections": {"action_update": True},
+            "folders": {"action_update": True},
         }
         token_with_dict_rights = APITokenUser(
             org_id=7,
@@ -405,7 +411,7 @@ class TestRBACRuntime:
         token_with_objects.rights = SimpleNamespace(
             courses=SimpleNamespace(action_read=True, action_update=False, action_create=False, action_delete=False),
             search=SimpleNamespace(action_read=True, action_update=True, action_create=False, action_delete=False),
-            collections=SimpleNamespace(action_read=False, action_update=True, action_create=False, action_delete=False),
+            folders=SimpleNamespace(action_read=False, action_update=True, action_create=False, action_delete=False),
         )
 
         with patch("src.security.rbac.rbac.check_element_type", new_callable=AsyncMock, return_value="users"):
@@ -506,14 +512,14 @@ class TestRBACRuntime:
                 is True
             )
 
-        with patch("src.security.rbac.rbac.check_element_type", new_callable=AsyncMock, return_value="collections"), \
+        with patch("src.security.rbac.rbac.check_element_type", new_callable=AsyncMock, return_value="folders"), \
             patch("src.security.rbac.rbac.get_element_organization_id", new_callable=AsyncMock, return_value=7):
             assert (
                 await authorization_verify_api_token_permissions(
                     request=_request(),
                     api_token_user=token_with_dict_rights,
                     action="update",
-                    element_uuid="collection_1",
+                    element_uuid="folder_1",
                     db_session=session,
                 )
                 is True
@@ -532,14 +538,14 @@ class TestRBACRuntime:
                 is True
             )
 
-        with patch("src.security.rbac.rbac.check_element_type", new_callable=AsyncMock, return_value="collections"), \
+        with patch("src.security.rbac.rbac.check_element_type", new_callable=AsyncMock, return_value="folders"), \
             patch("src.security.rbac.rbac.get_element_organization_id", new_callable=AsyncMock, return_value=7):
             assert (
                 await authorization_verify_api_token_permissions(
                     request=_request(),
                     api_token_user=token_with_objects,
                     action="update",
-                    element_uuid="collection_1",
+                    element_uuid="folder_1",
                     db_session=session,
                 )
                 is True

@@ -64,7 +64,7 @@ class TestSearchRouter:
         assert response.status_code == 200
         body = response.json()
         assert "courses" in body
-        assert "collections" in body
+        assert "folders" in body
         assert "users" in body
 
     async def test_search_missing_query_returns_422(self, client, org):
@@ -91,5 +91,5 @@ class TestSearchRouter:
         assert response.status_code == 200
         body = response.json()
         assert body["courses"] == []
-        assert body["collections"] == []
+        assert body["folders"] == []
         assert body["users"] == []

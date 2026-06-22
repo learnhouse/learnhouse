@@ -140,7 +140,6 @@
         "enable_feature": "Ayarlara Git",
         "names": {
           "courses": "Kurslar",
-          "collections": "Koleksiyonlar",
           "communities": "Topluluklar",
           "podcasts": "Podcastler",
           "payments": "Ödemeler",
@@ -903,35 +902,6 @@
     "podcast_visibility": "Görünürlük",
     "search_results": "\"{{query}}\" için {{count}} podcast bulundu"
   },
-  "collections": {
-    "collections": "Koleksiyonlar",
-    "no_collections": "Henüz koleksiyon yok",
-    "create_collections_placeholder": "Kursları gruplandırmak için koleksiyonlar oluşturun",
-    "collection": "Koleksiyon",
-    "new_collection": "Yeni Koleksiyon",
-    "enter_collection_name": "Lütfen bir koleksiyon adı girin",
-    "collection_created_success": "Koleksiyon başarıyla oluşturuldu!",
-    "failed_to_create_collection": "Koleksiyon oluşturulamadı. Lütfen tekrar deneyin.",
-    "create_new_collection": "Yeni Koleksiyon Oluştur",
-    "create_collection_desc": "Kurslarınızı bulmayı ve yönetmeyi kolaylaştırmak için bir koleksiyonda gruplandırın.",
-    "collection_name": "Koleksiyon Adı",
-    "enter_collection_name_placeholder": "Koleksiyon adını girin",
-    "public_collection_desc": "Genel Koleksiyon - Herkes görebilir",
-    "private_collection_desc": "Özel Koleksiyon - Sadece organizasyon üyeleri görebilir",
-    "description": "Açıklama",
-    "enter_collection_description_placeholder": "Koleksiyon açıklamasını girin",
-    "select_courses": "Kursları Seç",
-    "no_courses_available_desc": "Kurs mevcut değil. Önce bazı kurslar oluşturun.",
-    "selected_courses_count": "Seçilen kurslar: {{count}}",
-    "create_collection_btn": "Koleksiyon Oluştur",
-    "delete_collection_confirm": "Bu koleksiyonu silmek istediğinizden emin misiniz?",
-    "delete_collection_title": "{{name}} silinsin mi?",
-    "delete_collection": "Koleksiyonu Sil",
-    "enter_description": "Lütfen bir açıklama girin",
-    "select_at_least_one_course": "Lütfen en az bir kurs seçin",
-    "visibility": "Görünürlük",
-    "empty_collection": "Boş Koleksiyon"
-  },
   "activities": {
     "video": "Video",
     "document": "Doküman",
@@ -1065,7 +1035,6 @@
     "types": {
       "all": "Tümü",
       "courses": "Kurslar",
-      "collections": "Koleksiyonlar",
       "users": "Üyeler",
       "communities": "Topluluklar",
       "discussions": "Tartışmalar",
@@ -2217,7 +2186,9 @@
           "sso": "SSO",
           "usage": "Kullanım",
           "seo": "SEO",
-          "automations": "Otomasyonlar"
+          "automations": "Otomasyonlar",
+          "api": "API Access",
+          "menu": "Menu"
         },
         "pages": {
           "general": {
@@ -2255,6 +2226,14 @@
           "usage": {
             "subtitle": "Organizasyonunuzun kaynak kullanımını ve plan limitlerini izleyin",
             "title": "Kullanım"
+          },
+          "api": {
+            "title": "API Access",
+            "subtitle": "Manage API tokens and programmatic access"
+          },
+          "menu": {
+            "title": "Public menu",
+            "subtitle": "Choose and order the links shown in your public navigation"
           }
         },
         "name": "Organizasyon Adı",
@@ -2394,7 +2373,12 @@
         "toasts": {
           "save_success": "Yapay zeka ayarları başarıyla güncellendi",
           "save_error": "Yapay zeka ayarları güncellenemedi"
-        }
+        },
+        "ai_copilot": "AI Copilot",
+        "ai_copilot_description": "Let learners ask questions about course content. Uses indexed material to provide grounded answers with source citations.",
+        "feature_editor_description": "AI-powered content editing assistance for course creators.",
+        "feature_activity_description": "AI assistant available within activities to help learners.",
+        "always_on": "Always on"
       },
       "features": {
         "title": "Özellik Ayarları",
@@ -2409,10 +2393,6 @@
           "payments": {
             "title": "Ödemeler",
             "description": "Kurslar ve abonelikler için ödeme işlemlerini etkinleştir"
-          },
-          "collections": {
-            "title": "Koleksiyonlar",
-            "description": "Kursları koleksiyonlar halinde düzenlemeye izin ver"
           },
           "courses": {
             "description": "Organizasyonunuz için kursları ve ilerleme takibini etkinleştirin",
@@ -2646,7 +2626,8 @@
           "selected": "Seçildi",
           "select": "Seç"
         },
-        "org_id_not_found": "Organizasyon kimliği bulunamadı"
+        "org_id_not_found": "Organizasyon kimliği bulunamadı",
+        "unknown_section_type": "Unknown section type"
       },
       "theme": {
         "primary_color": "Ana Renk",
@@ -2723,9 +2704,39 @@
       },
       "seo": {
         "copied_to_clipboard": "Panoya kopyalandı",
-        "save_failed": "SEO ayarları kaydedilemedi"
+        "save_failed": "SEO ayarları kaydedilemedi",
+        "org_seo": {
+          "quick_links": "Quick Links",
+          "important_seo_urls": "Important SEO URLs for your organization",
+          "sitemap": "Sitemap:",
+          "robots_txt": "Robots.txt:",
+          "default_meta_tags": "Default Meta Tags",
+          "set_default_metadata": "Set default metadata for all pages",
+          "title_suffix": "Title Suffix",
+          "title_suffix_hint": "Appended to all page titles, e.g. \" | My Academy\"",
+          "default_description": "Default Description",
+          "default_description_hint": "Fallback description when a page has no specific one",
+          "social_open_graph": "Social & Open Graph",
+          "social_open_graph_hint": "Control how your pages appear when shared on social media",
+          "default_og_image": "Default OG Image",
+          "default_og_image_hint": "Default sharing image for social media (1200x630 recommended)",
+          "twitter_handle": "Twitter Handle",
+          "twitter_handle_hint": "Shown on Twitter cards as the site account",
+          "search_engine_verification": "Search Engine Verification",
+          "search_engine_verification_hint": "Verify ownership with search engines",
+          "google_search_console": "Google Search Console",
+          "google_search_console_hint": "Verification code from Google Search Console",
+          "indexing_controls": "Indexing Controls",
+          "indexing_controls_hint": "Control which pages search engines can index",
+          "hide_communities": "Hide Communities",
+          "hide_communities_hint": "Hide community pages from search engines"
+        }
       },
-      "automations": {},
+      "automations": {
+        "webhooks_title": "Webhooks",
+        "webhooks_subtitle": "Send real-time event notifications to external services like Make.com, n8n, or your own API",
+        "webhooks_description": "Webhook endpoints receive HTTP POST requests when events happen in your organization."
+      },
       "domains": {
         "domain_required": "Alan adı gereklidir",
         "domain_added_success": "Alan adı başarıyla eklendi",
@@ -2757,7 +2768,101 @@
         "delete_domain": "Alan Adını Sil",
         "verify_domain_desc": "Sahipliği doğrulamak için alan adı sağlayıcınızda aşağıdaki DNS kayıtlarını ekleyin.",
         "issuer": "Veren",
-        "expires": "Sona eriyor"
+        "expires": "Sona eriyor",
+        "title": "Custom Domains",
+        "subtitle": "Configure custom domains to access your organization",
+        "empty_description": "Add your own domain to provide a branded experience for your learners.",
+        "add_domain": "Add Domain",
+        "domain_name": "Domain Name",
+        "enter_domain": "Enter your domain",
+        "verify": "Verify",
+        "verify_domain": "Verify Domain",
+        "verifying": "Verifying...",
+        "verify_dns": "Verify DNS",
+        "remove": "Remove",
+        "pending": "Pending",
+        "active": "Active",
+        "failed": "Failed",
+        "ssl_active": "SSL Active",
+        "failed_add": "Failed to add domain",
+        "failed_delete": "Failed to delete domain",
+        "failed_verify": "Failed to verify domain",
+        "verifying_domain": "Verifying domain...",
+        "domain_verified": "Domain verified successfully",
+        "domain_added": "Domain added",
+        "domain_removed": "Domain removed",
+        "no_domains_yet": "No custom domains yet",
+        "add_first_domain": "Add your first domain to get started",
+        "add_custom_domain": "Add Custom Domain",
+        "add_custom_domain_desc": "Enter the domain you want to use for your organization.",
+        "domain_label": "Domain",
+        "domain_hint": "Enter a domain or subdomain (e.g., learn.mycompany.com or academy.example.org)"
+      },
+      "api_access": {
+        "title": "API Access",
+        "api_tokens": "API Tokens",
+        "docs_playground": "Documentation & Playground",
+        "something_not_working": "Something not working as expected?",
+        "tokens_description": "API tokens allow external applications to access your organization's data securely.",
+        "create_token": "Create Token",
+        "no_tokens_yet": "No API tokens yet",
+        "create_first_token": "Create your first token to get started",
+        "create_api_token": "Create API Token",
+        "token_name": "Token Name *",
+        "expires": "Expires",
+        "never": "Never",
+        "revoked": "Revoked",
+        "revoke": "Revoke",
+        "api_docs_title": "API Documentation & Playground",
+        "create_token_desc": "Create a new API token for programmatic access. The token will only be shown once.",
+        "token_name_label": "Token Name *",
+        "description_label": "Description",
+        "expiration_label": "Expiration Date (optional)",
+        "expiration_hint": "Leave empty for a token that never expires",
+        "permissions_label": "Permissions",
+        "read_only": "Read Only",
+        "full_access": "Full Access",
+        "custom": "Custom",
+        "cancel": "Cancel",
+        "save_token_warning": "Save your token now!",
+        "save_token_hint": "This is the only time you'll see this token. Copy it and store it securely.",
+        "your_api_token": "Your API Token",
+        "done": "Done"
+      },
+      "usage": {
+        "plan_resource_usage": "Plan & Resource Usage",
+        "courses": "Courses",
+        "members_label": "Members",
+        "admin_seats": "Admin Seats",
+        "unlimited": "Unlimited",
+        "ai_credits": "AI Credits",
+        "credit_usage": "Credit Usage",
+        "base_credits": "Base Credits",
+        "purchased": "Purchased",
+        "used": "Used",
+        "remaining": "Remaining"
+      },
+      "general": {
+        "validation": {
+          "short_description_required": "Short description is required",
+          "short_description_max": "Short description must be 100 characters or less",
+          "about_max": "About text must be 400 characters or less",
+          "label_required": "Organization label is required"
+        }
+      },
+      "menu": {
+        "title": "Public navigation",
+        "subtitle": "Toggle, reorder, rename links and add your own. Links only appear if the related feature is on your plan and enabled.",
+        "save": "Save changes",
+        "saving": "Saving menu…",
+        "saved": "Menu updated",
+        "error": "Couldn't update the menu",
+        "add_custom": "Add a custom link",
+        "add": "Add",
+        "label_placeholder": "Label",
+        "custom_required": "A label and a URL are required",
+        "plan_locked": "Requires {{plan}} plan",
+        "feature_off": "Feature is off"
       }
     },
     "users": {
@@ -3164,7 +3269,6 @@
                 "courses": "Kurslar",
                 "users": "Kullanıcılar",
                 "usergroups": "Kullanıcı Grupları",
-                "collections": "Koleksiyonlar",
                 "organizations": "Organizasyonlar",
                 "coursechapters": "Kurs Bölümleri",
                 "activities": "Aktiviteler",
@@ -3226,7 +3330,6 @@
               "deselect_all": "Tümünün Seçimini Kaldır",
               "sections": {
                 "activities": "Aktiviteler",
-                "collections": "Koleksiyonlar",
                 "coursechapters": "Kurs Bölümleri",
                 "courses": "Kurslar",
                 "dashboard": "Panel",
@@ -3258,7 +3361,6 @@
         "rights": {
           "resources": {
             "activities": "Etkinlikler",
-            "collections": "Koleksiyonlar",
             "coursechapters": "Kurs Bölümleri",
             "courses": "Kurslar",
             "dashboard": "Kontrol Paneli",
@@ -3668,7 +3770,6 @@
       "groups": {
         "pages": "Sayfalar",
         "courses": "Kurslar",
-        "collections": "Koleksiyonlar",
         "users": "Kullanıcılar",
         "communities": "Topluluklar",
         "discussions": "Tartışmalar",
@@ -5001,6 +5102,158 @@
       "reactions": "Tepkiler",
       "exit_fullscreen": "Çık",
       "fullscreen": "Tam ekran"
+    }
+  },
+  "library": {
+    "library": "Library",
+    "my_library": "My Library",
+    "new_folder": "New Folder",
+    "tabs": {
+      "courses": "Courses",
+      "podcasts": "Podcasts",
+      "communities": "Communities",
+      "boards": "Boards",
+      "playgrounds": "Playgrounds",
+      "media": "Media"
+    },
+    "add_content": "Add content",
+    "upload_media": "Upload media",
+    "empty_folder": "This folder is empty",
+    "error_loading": "Couldn't load the library. Please refresh to try again.",
+    "folder": "Folder",
+    "folders": "Folders",
+    "items": "items",
+    "move": "Move",
+    "rename": "Rename",
+    "manage_access": "Manage access",
+    "delete_folder": "Delete folder",
+    "delete_folder_confirm": "Are you sure you want to delete this folder and everything inside it?",
+    "folder_name": "Folder name",
+    "enter_folder_name": "Enter folder name",
+    "create_folder": "Create folder",
+    "description": "Description",
+    "add": "Add",
+    "added": "Added",
+    "content_add_error": "Failed to add content",
+    "content_added": "Content added",
+    "content_remove_error": "Failed to remove content",
+    "content_removed": "Content removed",
+    "creating_folder": "Creating folder…",
+    "deleting_folder": "Deleting folder…",
+    "empty_folder_description": "Add sub-folders or content to get started.",
+    "folder_created_error": "Failed to create folder",
+    "folder_created_success": "Folder created",
+    "folder_deleted_error": "Failed to delete folder",
+    "folder_deleted_success": "Folder deleted",
+    "folder_name_required": "Folder name is required",
+    "folder_not_found": "Folder not found",
+    "folder_updated_error": "Failed to update folder",
+    "folder_updated_success": "Folder updated",
+    "no_items": "Your library is empty",
+    "no_items_description": "Create a folder or upload media to organize your content.",
+    "no_resources": "No resources available",
+    "open": "Open",
+    "private": "Private",
+    "public": "Public",
+    "remove_from_folder": "Remove from folder",
+    "remove_from_folder_confirm": "Remove this item from the folder? The item itself won't be deleted.",
+    "removing_content": "Removing…",
+    "rename_folder": "Rename folder",
+    "save": "Save",
+    "saving_folder": "Saving…",
+    "search": "Search",
+    "untitled": "Untitled",
+    "visibility": "Visibility",
+    "resources_label": "Resources",
+    "no_results": "No results",
+    "color": "Color",
+    "thumbnail": "Cover image",
+    "remove_thumbnail": "Remove cover",
+    "filters": {
+      "all": "All",
+      "folders": "Folders",
+      "courses": "Courses",
+      "media": "Media"
+    },
+    "edit": "Edit",
+    "edit_folder": "Edit folder",
+    "share": "Share",
+    "copy_link": "Copy link",
+    "link_copied": "Link copied to clipboard",
+    "link_copy_error": "Couldn't copy the link",
+    "thumbnail_error": "Couldn't upload the cover image",
+    "open_resource": "Open",
+    "replace_cover": "Replace",
+    "cover_hint": "PNG, JPG, WEBP"
+  },
+  "media": {
+    "media": "Media",
+    "file": "File",
+    "embed": "Embed",
+    "download": "Download",
+    "add_media": "Add media",
+    "upload": "Upload",
+    "media_name": "Media name",
+    "media_url": "URL",
+    "delete_media": "Delete media",
+    "delete_media_confirm": "Are you sure you want to delete this media?",
+    "choose_file": "Choose a file",
+    "deleting_media": "Deleting…",
+    "description": "Description",
+    "file_required": "A file is required",
+    "media_deleted_error": "Failed to delete media",
+    "media_deleted_success": "Media deleted",
+    "media_uploaded_error": "Failed to add media",
+    "media_uploaded_success": "Media added",
+    "name": "Name",
+    "name_required": "Name is required",
+    "public": "Public",
+    "upload_file": "Upload file",
+    "upload_media": "Upload media",
+    "uploading_media": "Uploading…",
+    "url": "URL",
+    "url_required": "A URL is required",
+    "upload_hint": "Images, video, audio, PDF, Office docs & ZIP",
+    "remove": "Remove"
+  },
+  "access": {
+    "public": {
+      "title": "Public",
+      "description": "Anyone can view this.",
+      "confirmation_title": "Make public?",
+      "confirmation_message": "This will be visible to everyone.",
+      "confirmation_button": "Make public"
+    },
+    "users_only": {
+      "title": "Users only",
+      "description": "Only signed-in members (and selected groups) can view this.",
+      "confirmation_title": "Restrict access?",
+      "confirmation_message": "Only authenticated users and linked groups will be able to view this.",
+      "confirmation_button": "Restrict access"
+    },
+    "active": "Active",
+    "visibility_update_error": "Failed to update visibility",
+    "visibility_updated": "Visibility updated",
+    "usergroups": {
+      "title": "User groups",
+      "subtitle": "Restrict access to specific user groups.",
+      "link_to_usergroup": "Link a user group",
+      "table_name": "Name",
+      "table_actions": "Actions",
+      "usergroup_name": "Group",
+      "delete_link": "Unlink",
+      "warning": "Members of linked groups will be able to access this resource.",
+      "no_usergroups": "No user groups linked yet.",
+      "create_usergroup": "Create a user group",
+      "link_button": "Link",
+      "link_title": "Link a user group",
+      "link_success": "User group linked",
+      "link_error": "Failed to link user group",
+      "unlink_button": "Unlink",
+      "unlink_title": "Unlink user group",
+      "unlink_message": "Remove this group's access?",
+      "unlink_success": "User group unlinked",
+      "unlink_error": "Failed to unlink user group"
     }
   }
 }

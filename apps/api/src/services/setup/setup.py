@@ -53,7 +53,13 @@ async def install_default_elements(db_session: AsyncSession):
                 action_update=True,
                 action_delete=True,
             ),
-            collections=Permission(
+            folders=Permission(
+                action_create=True,
+                action_read=True,
+                action_update=True,
+                action_delete=True,
+            ),
+            media=Permission(
                 action_create=True,
                 action_read=True,
                 action_update=True,
@@ -161,7 +167,13 @@ async def install_default_elements(db_session: AsyncSession):
                 action_update=True,
                 action_delete=True,
             ),
-            collections=Permission(
+            folders=Permission(
+                action_create=True,
+                action_read=True,
+                action_update=True,
+                action_delete=True,
+            ),
+            media=Permission(
                 action_create=True,
                 action_read=True,
                 action_update=True,
@@ -269,7 +281,13 @@ async def install_default_elements(db_session: AsyncSession):
                 action_update=False,
                 action_delete=False,
             ),
-            collections=Permission(
+            folders=Permission(
+                action_create=True,
+                action_read=True,
+                action_update=False,
+                action_delete=False,
+            ),
+            media=Permission(
                 action_create=True,
                 action_read=True,
                 action_update=False,
@@ -377,7 +395,13 @@ async def install_default_elements(db_session: AsyncSession):
                 action_update=False,
                 action_delete=False,
             ),
-            collections=Permission(
+            folders=Permission(
+                action_create=False,
+                action_read=True,
+                action_update=False,
+                action_delete=False,
+            ),
+            media=Permission(
                 action_create=False,
                 action_read=True,
                 action_update=False,

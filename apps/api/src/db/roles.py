@@ -40,7 +40,18 @@ class Rights(BaseModel):
     courses: PermissionsWithOwn
     users: Permission
     usergroups : Permission
-    collections: Permission
+    folders: Permission = Permission(
+        action_create=False,
+        action_read=True,
+        action_update=False,
+        action_delete=False,
+    )  # Default: read-only for backward compat with existing roles
+    media: Permission = Permission(
+        action_create=False,
+        action_read=True,
+        action_update=False,
+        action_delete=False,
+    )  # Default: read-only for backward compat with existing roles
     organizations: Permission
     coursechapters: Permission
     activities: Permission

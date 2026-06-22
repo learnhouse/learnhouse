@@ -88,7 +88,7 @@ function CreatePodcastModal({ closeModal, orgslug }: any) {
               : t('podcasts.failed_to_create_podcast')
           toast.error(errorMessage)
         }
-      } catch (error) {
+      } catch (_error) {
         toast.dismiss(toast_loading)
         toast.error(t('podcasts.failed_to_create_podcast'))
       } finally {
@@ -125,7 +125,7 @@ function CreatePodcastModal({ closeModal, orgslug }: any) {
       const blob = await response.blob()
       const file = new File([blob], 'unsplash_image.jpg', { type: 'image/jpeg' })
       formik.setFieldValue('thumbnail', file)
-    } catch (error) {
+    } catch (_error) {
       toast.error('Failed to load image from Unsplash')
     }
     setIsUploading(false)
@@ -150,7 +150,7 @@ function CreatePodcastModal({ closeModal, orgslug }: any) {
 
       <FormField name="description">
         <FormLabelAndMessage
-          label={t('collections.description')}
+          label={t('library.description')}
           message={formik.errors.description}
         />
         <Form.Control asChild>

@@ -493,7 +493,7 @@ async def validate_rights_structure(
 
     # Validate required keys - API tokens are restricted to specific resources
     required_rights = [
-        'courses', 'activities', 'coursechapters', 'collections',
+        'courses', 'activities', 'coursechapters', 'folders', 'media',
         'certifications', 'usergroups', 'payments', 'search'
     ]
 

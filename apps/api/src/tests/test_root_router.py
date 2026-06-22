@@ -60,6 +60,8 @@ def _install_stub_modules(monkeypatch: pytest.MonkeyPatch) -> None:
     install_package("src.routers.boards")
     install_package("src.routers.orgs")
     install_package("src.routers.courses")
+    install_package("src.routers.folders")
+    install_package("src.routers.media")
     install_package("src.routers.courses.activities")
     install_package("src.routers.communities")
     install_package("src.routers.podcasts")
@@ -153,7 +155,10 @@ def _install_stub_modules(monkeypatch: pytest.MonkeyPatch) -> None:
 
     install_router_module("src.routers.courses.chapters", "src.routers.courses.chapters")
     install_router_module(
-        "src.routers.courses.collections", "src.routers.courses.collections"
+        "src.routers.folders.folders", "src.routers.folders.folders"
+    )
+    install_router_module(
+        "src.routers.media.media", "src.routers.media.media"
     )
     install_router_module("src.routers.courses.courses", "src.routers.courses.courses")
     install_router_module(
@@ -174,8 +179,11 @@ def _install_stub_modules(monkeypatch: pytest.MonkeyPatch) -> None:
     sys.modules["src.routers.courses"].chapters = sys.modules[
         "src.routers.courses.chapters"
     ]
-    sys.modules["src.routers.courses"].collections = sys.modules[
-        "src.routers.courses.collections"
+    sys.modules["src.routers.folders"].folders = sys.modules[
+        "src.routers.folders.folders"
+    ]
+    sys.modules["src.routers.media"].media = sys.modules[
+        "src.routers.media.media"
     ]
     sys.modules["src.routers.courses"].courses = sys.modules["src.routers.courses.courses"]
     sys.modules["src.routers.courses"].assignments = sys.modules[

@@ -102,7 +102,7 @@ async def create_role(
 
         # Validate rights structure - check for required top-level keys
         required_rights = [
-            'courses', 'users', 'usergroups', 'collections',
+            'courses', 'users', 'usergroups', 'folders', 'media',
             'organizations', 'coursechapters', 'activities',
             'roles', 'dashboard'
         ]
@@ -141,7 +141,7 @@ async def create_role(
                         )
 
             # Validate other permissions (standard permissions)
-            elif required_right in ['users', 'usergroups', 'collections', 'organizations', 'coursechapters', 'activities', 'roles']:
+            elif required_right in ['users', 'usergroups', 'folders', 'media', 'organizations', 'coursechapters', 'activities', 'roles']:
                 required_permissions = ['action_create', 'action_read', 'action_update', 'action_delete']
                 for perm in required_permissions:
                     if perm not in right_data:
@@ -407,7 +407,7 @@ async def update_role(
 
         # Validate rights structure - check for required top-level keys
         required_rights = [
-            'courses', 'users', 'usergroups', 'collections',
+            'courses', 'users', 'usergroups', 'folders', 'media',
             'organizations', 'coursechapters', 'activities',
             'roles', 'dashboard'
         ]
@@ -446,7 +446,7 @@ async def update_role(
                         )
 
             # Validate other permissions (standard permissions)
-            elif required_right in ['users', 'usergroups', 'collections', 'organizations', 'coursechapters', 'activities', 'roles']:
+            elif required_right in ['users', 'usergroups', 'folders', 'media', 'organizations', 'coursechapters', 'activities', 'roles']:
                 required_permissions = ['action_create', 'action_read', 'action_update', 'action_delete']
                 for perm in required_permissions:
                     if perm not in right_data:

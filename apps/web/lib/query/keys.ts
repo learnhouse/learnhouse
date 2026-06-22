@@ -27,9 +27,13 @@ export const queryKeys = {
   trail: {
     org: (orgId: number) => ['trail', 'org', orgId] as const,
   },
-  collections: {
-    list: (orgId: number) => ['collections', orgId] as const,
-    detail: (uuid: string) => ['collection', uuid] as const,
+  folders: {
+    list: (orgId: number) => ['folders', orgId] as const,
+    detail: (uuid: string) => ['folder', uuid] as const,
+  },
+  media: {
+    list: (orgId: number) => ['media', orgId] as const,
+    detail: (uuid: string) => ['media', uuid] as const,
   },
   community: {
     list: (orgId: number, page?: number) => ['communities', orgId, page] as const,

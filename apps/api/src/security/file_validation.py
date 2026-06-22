@@ -105,6 +105,17 @@ def validate_zip_content(content: bytes) -> bool:
     return True
 
 
+def validate_ole_content(content: bytes) -> bool:
+    """Validate a legacy MS Office (OLE2 compound) file via magic bytes.
+
+    Covers the binary .doc/.xls/.ppt formats. These can embed VBA macros, but
+    media files are only ever served as downloads (never executed server-side
+    or rendered inline), so the residual risk is the same as any file-share —
+    the user must explicitly open and enable macros locally.
+    """
+    return content[:8] == b'\xd0\xcf\x11\xe0\xa1\xb1\x1a\xe1'
+
+
 # Per-type size caps. Storage-fill DoS is the main risk; caps here are the
 # last line of defence in addition to any edge/nginx client_max_body_size.
 # Limits match or exceed the frontend's own client-side caps (including the
@@ -150,13 +161,33 @@ FILE_TYPES = {
         'validator': lambda content: content[:16].startswith(b'SQLite format 3\x00')
     },
     'office': {
-        'extensions': ['.docx', '.pptx'],
+        # Modern, macro-free OOXML (Word / Excel / PowerPoint). Macro-enabled
+        # variants (.docm/.xlsm/.pptm) are intentionally excluded.
+        'extensions': ['.docx', '.xlsx', '.pptx'],
         'mime_types': [
             'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+            'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
             'application/vnd.openxmlformats-officedocument.presentationml.presentation',
         ],
         'max_size': 500 * _MB,
         'validator': validate_zip_content  # OOXML formats are ZIP-based
+    },
+    'office_legacy': {
+        # Binary OLE2 Word / Excel / PowerPoint.
+        'extensions': ['.doc', '.xls', '.ppt'],
+        'mime_types': [
+            'application/msword',
+            'application/vnd.ms-excel',
+            'application/vnd.ms-powerpoint',
+        ],
+        'max_size': 100 * _MB,
+        'validator': validate_ole_content
+    },
+    'archive': {
+        'extensions': ['.zip'],
+        'mime_types': ['application/zip', 'application/x-zip-compressed'],
+        'max_size': 2 * _GB,  # bounded further by the zip-bomb guard
+        'validator': validate_zip_content
     }
 }
 
@@ -179,7 +210,11 @@ EXT_TO_CANONICAL_MIME = {
     '.db': 'application/vnd.sqlite3',
     '.sqlite3': 'application/vnd.sqlite3',
     '.docx': 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+    '.xlsx': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
     '.pptx': 'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+    '.doc': 'application/msword',
+    '.xls': 'application/vnd.ms-excel',
+    '.ppt': 'application/vnd.ms-powerpoint',
 }
 
 
@@ -201,7 +236,11 @@ MIME_TO_SAFE_EXT = {
     'application/x-sqlite3': 'sqlite3',
     'application/octet-stream': 'bin',
     'application/vnd.openxmlformats-officedocument.wordprocessingml.document': 'docx',
+    'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet': 'xlsx',
     'application/vnd.openxmlformats-officedocument.presentationml.presentation': 'pptx',
+    'application/msword': 'doc',
+    'application/vnd.ms-excel': 'xls',
+    'application/vnd.ms-powerpoint': 'ppt',
 }
 
 
