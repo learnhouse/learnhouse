@@ -37,7 +37,13 @@ interface Rights {
         action_update: boolean;
         action_delete: boolean;
     };
-    collections: {
+    folders: {
+        action_create: boolean;
+        action_read: boolean;
+        action_update: boolean;
+        action_delete: boolean;
+    };
+    media: {
         action_create: boolean;
         action_read: boolean;
         action_update: boolean;
@@ -107,7 +113,13 @@ function extractRightsFromRoles(userRoles: Role[], orgId: number): Rights | null
             action_update: false,
             action_delete: false
         },
-        collections: {
+        folders: {
+            action_create: false,
+            action_read: false,
+            action_update: false,
+            action_delete: false
+        },
+        media: {
             action_create: false,
             action_read: false,
             action_update: false,
@@ -164,7 +176,8 @@ const SUPERADMIN_RIGHTS: Rights = {
     courses: { action_create: true, action_read: true, action_read_own: true, action_update: true, action_update_own: true, action_delete: true, action_delete_own: true },
     users: { action_create: true, action_read: true, action_update: true, action_delete: true },
     usergroups: { action_create: true, action_read: true, action_update: true, action_delete: true },
-    collections: { action_create: true, action_read: true, action_update: true, action_delete: true },
+    folders: { action_create: true, action_read: true, action_update: true, action_delete: true },
+    media: { action_create: true, action_read: true, action_update: true, action_delete: true },
     organizations: { action_create: true, action_read: true, action_update: true, action_delete: true },
     coursechapters: { action_create: true, action_read: true, action_update: true, action_delete: true },
     activities: { action_create: true, action_read: true, action_update: true, action_delete: true },

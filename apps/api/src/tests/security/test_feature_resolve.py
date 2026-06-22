@@ -267,7 +267,7 @@ class TestFeatureResolve:
             "audit_logs",
             "boards",
             "collaboration",
-            "collections",
+            "folders",
             "communities",
             "courses",
             "members",

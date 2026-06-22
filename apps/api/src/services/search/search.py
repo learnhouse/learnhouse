@@ -1,13 +1,12 @@
-from typing import Any, Iterable, List, Sequence
+from typing import Any, List, Sequence
 from fastapi import Request
 from sqlalchemy import ColumnElement, func, true as sa_true
 from sqlmodel import select, or_, and_
 from sqlmodel.ext.asyncio.session import AsyncSession
 from pydantic import BaseModel, ConfigDict
 from src.db.users import PublicUser, AnonymousUser, UserRead, User, APITokenUser
-from src.db.courses.courses import Course, CourseRead
-from src.db.collections import Collection, CollectionRead
-from src.db.collections_courses import CollectionCourse
+from src.db.courses.courses import CourseRead
+from src.db.folders.folders import Folder, FolderRead
 from src.db.organizations import Organization
 from src.db.user_organizations import UserOrganization
 from src.db.communities.communities import Community, CommunityRead
@@ -41,7 +40,7 @@ class SearchResult(BaseModel):
     model_config = ConfigDict(arbitrary_types_allowed=True)
 
     courses: List[CourseRead]
-    collections: List[CollectionRead]
+    folders: List[FolderRead]
     users: List[UserRead]
     communities: List[CommunityRead]
     discussions: List[SearchDiscussionRead]
@@ -49,7 +48,7 @@ class SearchResult(BaseModel):
     podcasts: List[PodcastRead]
 
     total_courses: int = 0
-    total_collections: int = 0
+    total_folders: int = 0
     total_users: int = 0
     total_communities: int = 0
     total_discussions: int = 0
@@ -60,7 +59,7 @@ class SearchResult(BaseModel):
 def _empty_result() -> SearchResult:
     return SearchResult(
         courses=[],
-        collections=[],
+        folders=[],
         users=[],
         communities=[],
         discussions=[],
@@ -189,16 +188,16 @@ async def search_across_org(
     )
     total_courses = len(courses)
 
-    # ── Collections ──────────────────────────────────────────────────────────
-    collections_q = (
-        select(Collection)
-        .where(Collection.org_id == org.id)
-        .where(_ilike_any([Collection.name, Collection.description], pattern))
+    # ── Folders ──────────────────────────────────────────────────────────────
+    folders_q = (
+        select(Folder)
+        .where(Folder.org_id == org.id)
+        .where(_ilike_any([Folder.name, Folder.description], pattern))
     )
     if is_anon:
-        collections_q = collections_q.where(Collection.public == sa_true())
-    collections, total_collections = await _paginate_and_count(
-        db_session, collections_q, page, limit
+        folders_q = folders_q.where(Folder.public == sa_true())
+    folders, total_folders = await _paginate_and_count(
+        db_session, folders_q, page, limit
     )
 
     # ── Users (org members only; anonymous and non-member traffic is denied) ─
@@ -281,7 +280,7 @@ async def search_across_org(
         db_session, podcasts_q, page, limit
     )
 
-    collection_reads = await _build_collection_reads(db_session, collections)
+    folder_reads = [FolderRead.model_validate(f) for f in folders]
 
     user_reads = [UserRead.model_validate(u) for u in users]
     community_reads = [CommunityRead.model_validate(c) for c in communities]
@@ -304,51 +303,17 @@ async def search_across_org(
 
     return SearchResult(
         courses=courses,
-        collections=collection_reads,
+        folders=folder_reads,
         users=user_reads,
         communities=community_reads,
         discussions=discussion_reads,
         playgrounds=playground_reads,
         podcasts=podcast_reads,
         total_courses=total_courses,
-        total_collections=total_collections,
+        total_folders=total_folders,
         total_users=total_users,
         total_communities=total_communities,
         total_discussions=total_discussions,
         total_playgrounds=total_playgrounds,
         total_podcasts=total_podcasts,
     )
-
-
-async def _build_collection_reads(
-    db_session: AsyncSession, collections: Iterable[Collection]
-) -> list[CollectionRead]:
-    """Hydrate each collection with its course list in a single batched query."""
-    collections = list(collections)
-    if not collections:
-        return []
-
-    collection_ids = [c.id for c in collections]
-    batch = (await db_session.execute(
-        select(CollectionCourse, Course)
-        .join(Course, CollectionCourse.course_id == Course.id)  # type: ignore[arg-type]
-        .where(CollectionCourse.collection_id.in_(collection_ids))  # type: ignore[attr-defined]
-        .distinct()
-    )).all()
-
-    courses_by_collection: dict[int, list[Course]] = {}
-    seen: set[tuple[int, int]] = set()
-    for cc, course in batch:
-        key = (cc.collection_id, course.id)
-        if key in seen:
-            continue
-        seen.add(key)
-        courses_by_collection.setdefault(cc.collection_id, []).append(course)
-
-    return [
-        CollectionRead(
-            **c.model_dump(),
-            courses=courses_by_collection.get(c.id, []),
-        )
-        for c in collections
-    ]

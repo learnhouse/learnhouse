@@ -42,7 +42,8 @@ class TestRightsModel:
             "courses": self.get_valid_permission_with_own(),
             "users": self.get_valid_permission(),
             "usergroups": self.get_valid_permission(),
-            "collections": self.get_valid_permission(),
+            "folders": self.get_valid_permission(),
+            "media": self.get_valid_permission(),
             "organizations": self.get_valid_permission(),
             "coursechapters": self.get_valid_permission(),
             "activities": self.get_valid_permission(),
@@ -62,7 +63,8 @@ class TestRightsModel:
         assert rights.courses is not None
         assert rights.users is not None
         assert rights.usergroups is not None
-        assert rights.collections is not None
+        assert rights.folders is not None
+        assert rights.media is not None
         assert rights.organizations is not None
         assert rights.coursechapters is not None
         assert rights.activities is not None
@@ -189,7 +191,7 @@ class TestRightsModel:
         assert "communities" in dumped
         assert "discussions" in dumped
         assert "podcasts" in dumped
-        assert len(dumped) == 14  # All 14 fields
+        assert len(dumped) == 15  # All 15 fields
 
 
 class TestPermissionModels:
@@ -244,7 +246,8 @@ class TestDefaultRolesValidation:
         "courses",
         "users",
         "usergroups",
-        "collections",
+        "folders",
+        "media",
         "organizations",
         "coursechapters",
         "activities",
@@ -295,7 +298,13 @@ class TestDefaultRolesValidation:
                 action_update=True,
                 action_delete=True,
             ),
-            collections=Permission(
+            folders=Permission(
+                action_create=True,
+                action_read=True,
+                action_update=True,
+                action_delete=True,
+            ),
+            media=Permission(
                 action_create=True,
                 action_read=True,
                 action_update=True,
@@ -384,7 +393,13 @@ class TestDefaultRolesValidation:
                 action_update=False,
                 action_delete=False,
             ),
-            collections=Permission(
+            folders=Permission(
+                action_create=False,
+                action_read=True,
+                action_update=False,
+                action_delete=False,
+            ),
+            media=Permission(
                 action_create=False,
                 action_read=True,
                 action_update=False,
@@ -471,7 +486,13 @@ class TestDefaultRolesValidation:
                 action_update=True,
                 action_delete=True,
             ),
-            collections=Permission(
+            folders=Permission(
+                action_create=True,
+                action_read=True,
+                action_update=True,
+                action_delete=True,
+            ),
+            media=Permission(
                 action_create=True,
                 action_read=True,
                 action_update=True,
@@ -552,7 +573,8 @@ class TestRightsFieldConsistency:
             "courses",
             "users",
             "usergroups",
-            "collections",
+            "folders",
+            "media",
             "organizations",
             "coursechapters",
             "activities",

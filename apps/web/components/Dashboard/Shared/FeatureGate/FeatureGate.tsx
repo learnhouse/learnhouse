@@ -1,13 +1,11 @@
 'use client'
 
 import React from 'react'
-import Link from 'next/link'
 import { useTranslation } from 'react-i18next'
-import { GearSix } from '@phosphor-icons/react'
 
 import { useOrg } from '@components/Contexts/OrgContext'
 import { useResolvedFeature } from '@components/Hooks/useResolvedFeature'
-import { getUpgradeUrl, getUriWithOrg } from '@services/config/config'
+import { getUpgradeUrl } from '@services/config/config'
 import {
   FEATURE_METADATA,
   FeatureKey,
@@ -69,7 +67,6 @@ export default function FeatureGate({
     return (
       <DisabledCard
         feature={feature}
-        orgslug={resolvedSlug}
         context={context}
         t={t}
       />
@@ -80,7 +77,7 @@ export default function FeatureGate({
     <UpgradeCard
       feature={feature}
       currentPlan={state.currentPlan}
-      orgSlug={org?.slug || 'default'}
+      orgSlug={resolvedSlug}
       t={t}
     />
   )
@@ -151,12 +148,10 @@ function UpgradeCard({
 
 function DisabledCard({
   feature,
-  orgslug,
   context,
   t,
 }: {
   feature: FeatureKey
-  orgslug: string
   context: 'dashboard' | 'public'
   t: ReturnType<typeof useTranslation>['t']
 }) {
@@ -186,19 +181,9 @@ function DisabledCard({
             : t('common.features.disabled.dashboard.description')}
         </p>
 
-        {context === 'dashboard' ? (
-          <Link
-            href={getUriWithOrg(orgslug, '/dash/org/settings/features')}
-            className="flex items-center gap-2 px-4 py-2 bg-black text-white rounded-lg text-sm font-medium hover:bg-gray-800 transition-colors"
-          >
-            <GearSix size={16} weight="bold" />
-            {t('common.features.disabled.enable_feature')}
-          </Link>
-        ) : (
-          <div className="bg-gray-100 text-gray-600 px-4 py-2 rounded-lg text-sm font-medium">
-            {t('common.features.disabled.status')}
-          </div>
-        )}
+        <div className="bg-gray-100 text-gray-600 px-4 py-2 rounded-lg text-sm font-medium">
+          {t('common.features.disabled.status')}
+        </div>
       </GateCard>
     </GateShell>
   )

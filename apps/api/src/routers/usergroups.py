@@ -134,7 +134,7 @@ async def api_get_usergroups(
     response_model=list[str],
     tags=["usergroups"],
     summary="List resources linked to a usergroup",
-    description="Return the UUIDs of resources (courses, collections, etc.) that are linked to a usergroup.",
+    description="Return the UUIDs of resources (courses, folders, etc.) that are linked to a usergroup.",
     responses={
         200: {"description": "Resource UUIDs linked to the usergroup.", "model": list[str]},
         401: {"description": "Authentication required"},
@@ -299,7 +299,7 @@ async def api_delete_users_from_usergroup(
     "/{usergroup_id}/add_resources",
     tags=["usergroups"],
     summary="Add resources to a usergroup",
-    description="Link one or more resources (courses, collections, etc.) to a usergroup. Resource UUIDs should be provided as a comma-separated string.",
+    description="Link one or more resources (courses, folders, etc.) to a usergroup. Resource UUIDs should be provided as a comma-separated string.",
     responses={
         200: {"description": "Resources linked to the usergroup."},
         401: {"description": "Authentication required"},

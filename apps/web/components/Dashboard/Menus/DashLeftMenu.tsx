@@ -12,7 +12,6 @@ import {
   Question,
   Gear,
   SignOut,
-  Package,
   SidebarSimple,
   Check,
   CaretDown,
@@ -33,13 +32,13 @@ import {
   LinkSimple,
   Key,
   Lock,
-  ToggleRight,
   Wrench,
   ChartLine,
   MagnifyingGlass,
   ChalkboardSimple,
   Cube,
   ShoppingBag,
+  FolderSimple,
 } from '@phosphor-icons/react'
 import { DiscordIcon } from '@components/Objects/Icons/DiscordIcon'
 import CommandPaletteTrigger from '@components/Dashboard/CommandPalette/CommandPaletteTrigger'
@@ -49,7 +48,7 @@ import React, { useEffect, useState } from 'react'
 import UserAvatar from '../../Objects/UserAvatar'
 import AdminAuthorization from '@components/Security/AdminAuthorization'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
-import { getUriWithOrg, getUriWithoutOrg, getAPIUrl } from '@services/config/config'
+import { getUriWithOrg, getAPIUrl } from '@services/config/config'
 import { useTranslation } from 'react-i18next'
 import { changeLanguage } from '@/lib/i18n'
 import {
@@ -138,6 +137,7 @@ function DashLeftMenu() {
     if (typeof window !== 'undefined') {
       const saved = localStorage.getItem('dash-menu-collapsed')
       if (saved !== null) {
+        // eslint-disable-next-line react-hooks/set-state-in-effect
         setIsCollapsed(saved === 'true')
       }
     }
@@ -168,6 +168,7 @@ function DashLeftMenu() {
   const rf = org?.config?.config?.resolved_features
   const isEnabled = (feature: string) => rf?.[feature]?.enabled === true
 
+  const showLibrary = isEnabled('folders')
   const showCommunities = isEnabled('communities')
   const showPodcasts = isEnabled('podcasts')
   const showBoards = isEnabled('boards')
@@ -397,6 +398,15 @@ function DashLeftMenu() {
               })()}
             </HoverMenu>
             </div>
+            {showLibrary && (
+              <MenuLink
+                href="/dash/library"
+                icon={<FolderSimple size={20} weight="fill" />}
+                label={t('library.library')}
+                isCollapsed={isCollapsed}
+                active={isActivePath('/dash/library')}
+              />
+            )}
             {showCommunities && (
               <MenuLink
                 href="/dash/communities"
@@ -536,12 +546,6 @@ function DashLeftMenu() {
                     <Link href="/dash/org/settings/branding" className="flex items-center gap-2 px-3 py-2 text-sm text-white/70 hover:text-white hover:bg-white/[0.08] cursor-pointer transition-colors">
                       <Palette size={16} weight="fill" />
                       <span>{t('dashboard.organization.settings.tabs.branding')}</span>
-                    </Link>
-                  </HoverMenuItem>
-                  <HoverMenuItem asChild>
-                    <Link href="/dash/org/settings/features" className="flex items-center gap-2 px-3 py-2 text-sm text-white/70 hover:text-white hover:bg-white/[0.08] cursor-pointer transition-colors">
-                      <ToggleRight size={16} weight="fill" />
-                      <span>{t('dashboard.organization.settings.tabs.features')}</span>
                     </Link>
                   </HoverMenuItem>
                   <HoverMenuItem asChild>

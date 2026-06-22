@@ -5,7 +5,7 @@ import { useSearchParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
 import {
   BookCopy,
-  SquareLibrary,
+  Folder,
   Users as UsersIcon,
   Search as SearchIcon,
   MessagesSquare,
@@ -90,10 +90,10 @@ interface ApiCourse {
   authors?: ApiAuthor[]
 }
 
-interface ApiCollection {
+interface ApiFolder {
   name: string
   description?: string
-  collection_uuid: string
+  folder_uuid: string
 }
 
 interface ApiCommunity {
@@ -131,14 +131,14 @@ interface ApiPodcast {
 
 interface SearchResults {
   courses: ApiCourse[]
-  collections: ApiCollection[]
+  folders: ApiFolder[]
   users: ApiUser[]
   communities: ApiCommunity[]
   discussions: ApiDiscussion[]
   playgrounds: ApiPlayground[]
   podcasts: ApiPodcast[]
   total_courses: number
-  total_collections: number
+  total_folders: number
   total_users: number
   total_communities: number
   total_discussions: number
@@ -148,14 +148,14 @@ interface SearchResults {
 
 const EMPTY_RESULTS: SearchResults = {
   courses: [],
-  collections: [],
+  folders: [],
   users: [],
   communities: [],
   discussions: [],
   playgrounds: [],
   podcasts: [],
   total_courses: 0,
-  total_collections: 0,
+  total_folders: 0,
   total_users: 0,
   total_communities: 0,
   total_discussions: 0,
@@ -165,7 +165,7 @@ const EMPTY_RESULTS: SearchResults = {
 
 type ResourceKey =
   | 'courses'
-  | 'collections'
+  | 'folders'
   | 'users'
   | 'communities'
   | 'discussions'
@@ -182,10 +182,10 @@ type TabKey = 'all' | ResourceKey
 interface SectionDescriptor<T> {
   key: ResourceKey
   icon: React.ComponentType<any>
-  items: (results: SearchResults) => T[]
-  total: (results: SearchResults) => number
-  renderCard: (item: T, ctx: RenderContext) => React.ReactNode
-  itemKey: (item: T) => string
+  items: (_results: SearchResults) => T[]
+  total: (_results: SearchResults) => number
+  renderCard: (_item: T, _ctx: RenderContext) => React.ReactNode
+  itemKey: (_item: T) => string
 }
 
 interface RenderContext {
@@ -233,20 +233,20 @@ const sections: SectionDescriptor<any>[] = [
     ),
   },
   {
-    key: 'collections',
-    icon: SquareLibrary,
-    items: (r) => r.collections,
-    total: (r) => r.total_collections,
-    itemKey: (c: ApiCollection) => c.collection_uuid,
-    renderCard: (collection: ApiCollection, ctx) => (
+    key: 'folders',
+    icon: Folder,
+    items: (r) => r.folders,
+    total: (r) => r.total_folders,
+    itemKey: (f: ApiFolder) => f.folder_uuid,
+    renderCard: (folder: ApiFolder, ctx) => (
       <InlineCard
         href={getUriWithOrg(
           ctx.orgSlug,
-          `/collection/${collection.collection_uuid.replace('collection_', '')}`,
+          `/library/folder/${folder.folder_uuid.replace('folder_', '')}`,
         )}
-        icon={SquareLibrary}
-        title={collection.name}
-        subtitle={collection.description}
+        icon={Folder}
+        title={folder.name}
+        subtitle={folder.description}
       />
     ),
   },
@@ -386,6 +386,7 @@ function SearchPage() {
   const [results, setResults] = useState<SearchResults>(EMPTY_RESULTS)
   const [isLoading, setIsLoading] = useState(false)
 
+  // eslint-disable-next-line react-hooks/set-state-in-effect
   useEffect(() => setInputValue(urlQuery), [urlQuery])
 
   const updateParams = useCallback(
@@ -412,6 +413,7 @@ function SearchPage() {
 
   useEffect(() => {
     if (!urlQuery.trim() || !org?.slug) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setResults(EMPTY_RESULTS)
       return
     }
@@ -702,7 +704,7 @@ function LoadingGrid() {
   )
 }
 
-function EmptyState({ query, t }: { query: string; t: (k: string, o?: any) => string }) {
+function EmptyState({ query, t }: { query: string; t: (_k: string, _o?: any) => string }) {
   return (
     <div className="flex flex-col items-center justify-center py-16 text-center">
       <div className="mb-4 p-4 bg-black/5 rounded-full">
@@ -737,8 +739,8 @@ function Pagination({
 }: {
   page: number
   totalPages: number
-  onChange: (p: number) => void
-  t: (k: string) => string
+  onChange: (_p: number) => void
+  t: (_k: string) => string
 }) {
   const windowSize = 5
   const half = Math.floor(windowSize / 2)
@@ -789,8 +791,8 @@ function Pagination({
 }
 
 function gridClass(key: ResourceKey): string {
-  // Dense list for inline types (collections/discussions), card grid for rich types.
-  if (key === 'collections' || key === 'discussions' || key === 'users') {
+  // Dense list for inline types (folders/discussions), card grid for rich types.
+  if (key === 'folders' || key === 'discussions' || key === 'users') {
     return 'grid gap-3 md:grid-cols-2 lg:grid-cols-3'
   }
   return 'grid gap-4 md:grid-cols-2 lg:grid-cols-3'

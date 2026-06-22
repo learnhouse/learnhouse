@@ -18,7 +18,7 @@ import {
   Certificate,
   Cube,
   CreditCard,
-  Files,
+  FolderSimple,
   Globe,
   Key,
   Lightning,
@@ -31,6 +31,7 @@ import {
   UsersThree,
 } from '@phosphor-icons/react'
 import type { IconProps } from '@phosphor-icons/react'
+import type { ComponentType } from 'react'
 
 import { PlanLevel } from '@services/plans/plans'
 
@@ -56,7 +57,7 @@ export type FeatureKey =
   // Features that are never plan-gated but can be admin-toggled off. Listed
   // here so FeatureGate can render the disabled card with the right icon.
   | 'courses'
-  | 'collections'
+  | 'folders'
   | 'trail'
 
 export interface FeatureMeta {
@@ -65,7 +66,7 @@ export interface FeatureMeta {
   /** i18n key for the explanation paragraph. */
   descriptionKey: string
   /** Phosphor icon component. */
-  Icon: React.ComponentType<IconProps>
+  Icon: ComponentType<IconProps>
   /**
    * Plan tier displayed in the upsell badge. Independent of the gate's actual
    * minimum requirement — used for marketing alignment (e.g. Boards gates at
@@ -192,10 +193,10 @@ export const FEATURE_METADATA: Record<FeatureKey, FeatureMeta> = {
     Icon: BookOpen,
     upsellPlan: 'free',
   },
-  collections: {
-    titleKey: 'common.features.disabled.names.collections',
+  folders: {
+    titleKey: 'common.features.disabled.names.folders',
     descriptionKey: 'common.features.disabled.public.description',
-    Icon: Files,
+    Icon: FolderSimple,
     upsellPlan: 'free',
   },
   trail: {

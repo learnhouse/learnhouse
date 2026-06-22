@@ -14,7 +14,7 @@ import { queryKeys } from '@/lib/query/keys'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
 import { useFormik } from 'formik'
 import toast from 'react-hot-toast'
-import { Shield, BookOpen, Users, UserCheck, FolderOpen, Building, FileText, Activity, Monitor, CheckSquare, Square } from 'lucide-react'
+import { Shield, BookOpen, Users, UserCheck, FolderOpen, Image, Building, FileText, Activity, Monitor, CheckSquare, Square } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 
 type AddRoleProps = {
@@ -43,7 +43,13 @@ interface Rights {
         action_update: boolean;
         action_delete: boolean;
     };
-    collections: {
+    folders: {
+        action_create: boolean;
+        action_read: boolean;
+        action_update: boolean;
+        action_delete: boolean;
+    };
+    media: {
         action_create: boolean;
         action_read: boolean;
         action_update: boolean;
@@ -118,7 +124,13 @@ const defaultRights: Rights = {
         action_update: false,
         action_delete: false
     },
-    collections: {
+    folders: {
+        action_create: false,
+        action_read: false,
+        action_update: false,
+        action_delete: false
+    },
+    media: {
         action_create: false,
         action_read: false,
         action_update: false,
@@ -161,7 +173,8 @@ const predefinedRoles = {
             courses: { action_create: true, action_read: true, action_read_own: true, action_update: true, action_update_own: true, action_delete: true, action_delete_own: true },
             users: { action_create: true, action_read: true, action_update: true, action_delete: true },
             usergroups: { action_create: true, action_read: true, action_update: true, action_delete: true },
-            collections: { action_create: true, action_read: true, action_update: true, action_delete: true },
+            folders: { action_create: true, action_read: true, action_update: true, action_delete: true },
+            media: { action_create: true, action_read: true, action_update: true, action_delete: true },
             organizations: { action_create: true, action_read: true, action_update: true, action_delete: true },
             coursechapters: { action_create: true, action_read: true, action_update: true, action_delete: true },
             activities: { action_create: true, action_read: true, action_update: true, action_delete: true },
@@ -176,7 +189,8 @@ const predefinedRoles = {
             courses: { action_create: true, action_read: true, action_read_own: true, action_update: true, action_update_own: true, action_delete: false, action_delete_own: true },
             users: { action_create: false, action_read: true, action_update: false, action_delete: false },
             usergroups: { action_create: false, action_read: true, action_update: false, action_delete: false },
-            collections: { action_create: true, action_read: true, action_update: true, action_delete: false },
+            folders: { action_create: true, action_read: true, action_update: true, action_delete: false },
+            media: { action_create: true, action_read: true, action_update: true, action_delete: false },
             organizations: { action_create: false, action_read: false, action_update: false, action_delete: false },
             coursechapters: { action_create: true, action_read: true, action_update: true, action_delete: false },
             activities: { action_create: true, action_read: true, action_update: true, action_delete: false },
@@ -191,7 +205,8 @@ const predefinedRoles = {
             courses: { action_create: true, action_read: true, action_read_own: true, action_update: false, action_update_own: true, action_delete: false, action_delete_own: true },
             users: { action_create: false, action_read: false, action_update: false, action_delete: false },
             usergroups: { action_create: false, action_read: false, action_update: false, action_delete: false },
-            collections: { action_create: false, action_read: true, action_update: false, action_delete: false },
+            folders: { action_create: false, action_read: true, action_update: false, action_delete: false },
+            media: { action_create: false, action_read: true, action_update: false, action_delete: false },
             organizations: { action_create: false, action_read: false, action_update: false, action_delete: false },
             coursechapters: { action_create: true, action_read: true, action_update: false, action_delete: false },
             activities: { action_create: true, action_read: true, action_update: false, action_delete: false },
@@ -206,7 +221,8 @@ const predefinedRoles = {
             courses: { action_create: false, action_read: true, action_read_own: true, action_update: false, action_update_own: false, action_delete: false, action_delete_own: false },
             users: { action_create: false, action_read: false, action_update: false, action_delete: false },
             usergroups: { action_create: false, action_read: false, action_update: false, action_delete: false },
-            collections: { action_create: false, action_read: true, action_update: false, action_delete: false },
+            folders: { action_create: false, action_read: true, action_update: false, action_delete: false },
+            media: { action_create: false, action_read: true, action_update: false, action_delete: false },
             organizations: { action_create: false, action_read: false, action_update: false, action_delete: false },
             coursechapters: { action_create: false, action_read: true, action_update: false, action_delete: false },
             activities: { action_create: false, action_read: true, action_update: false, action_delete: false },
@@ -221,7 +237,8 @@ const predefinedRoles = {
             courses: { action_create: true, action_read: true, action_read_own: true, action_update: true, action_update_own: true, action_delete: false, action_delete_own: false },
             users: { action_create: false, action_read: false, action_update: false, action_delete: false },
             usergroups: { action_create: false, action_read: false, action_update: false, action_delete: false },
-            collections: { action_create: true, action_read: true, action_update: true, action_delete: false },
+            folders: { action_create: true, action_read: true, action_update: true, action_delete: false },
+            media: { action_create: true, action_read: true, action_update: true, action_delete: false },
             organizations: { action_create: false, action_read: false, action_update: false, action_delete: false },
             coursechapters: { action_create: true, action_read: true, action_update: true, action_delete: false },
             activities: { action_create: true, action_read: true, action_update: true, action_delete: false },
@@ -236,7 +253,8 @@ const predefinedRoles = {
             courses: { action_create: false, action_read: true, action_read_own: true, action_update: false, action_update_own: false, action_delete: false, action_delete_own: false },
             users: { action_create: true, action_read: true, action_update: true, action_delete: true },
             usergroups: { action_create: true, action_read: true, action_update: true, action_delete: true },
-            collections: { action_create: false, action_read: true, action_update: false, action_delete: false },
+            folders: { action_create: false, action_read: true, action_update: false, action_delete: false },
+            media: { action_create: false, action_read: true, action_update: false, action_delete: false },
             organizations: { action_create: false, action_read: false, action_update: false, action_delete: false },
             coursechapters: { action_create: false, action_read: true, action_update: false, action_delete: false },
             activities: { action_create: false, action_read: true, action_update: false, action_delete: false },
@@ -251,7 +269,8 @@ const predefinedRoles = {
             courses: { action_create: false, action_read: true, action_read_own: true, action_update: false, action_update_own: false, action_delete: false, action_delete_own: false },
             users: { action_create: false, action_read: true, action_update: false, action_delete: false },
             usergroups: { action_create: false, action_read: true, action_update: false, action_delete: false },
-            collections: { action_create: false, action_read: true, action_update: true, action_delete: false },
+            folders: { action_create: false, action_read: true, action_update: true, action_delete: false },
+            media: { action_create: false, action_read: true, action_update: true, action_delete: false },
             organizations: { action_create: false, action_read: false, action_update: false, action_delete: false },
             coursechapters: { action_create: false, action_read: true, action_update: true, action_delete: false },
             activities: { action_create: false, action_read: true, action_update: true, action_delete: false },
@@ -266,7 +285,8 @@ const predefinedRoles = {
             courses: { action_create: false, action_read: true, action_read_own: true, action_update: false, action_update_own: false, action_delete: false, action_delete_own: false },
             users: { action_create: false, action_read: true, action_update: false, action_delete: false },
             usergroups: { action_create: false, action_read: true, action_update: false, action_delete: false },
-            collections: { action_create: false, action_read: true, action_update: false, action_delete: false },
+            folders: { action_create: false, action_read: true, action_update: false, action_delete: false },
+            media: { action_create: false, action_read: true, action_update: false, action_delete: false },
             organizations: { action_create: false, action_read: true, action_update: false, action_delete: false },
             coursechapters: { action_create: false, action_read: true, action_update: false, action_delete: false },
             activities: { action_create: false, action_read: true, action_update: false, action_delete: false },
@@ -281,7 +301,8 @@ const predefinedRoles = {
             courses: { action_create: false, action_read: true, action_read_own: false, action_update: false, action_update_own: false, action_delete: false, action_delete_own: false },
             users: { action_create: false, action_read: false, action_update: false, action_delete: false },
             usergroups: { action_create: false, action_read: false, action_update: false, action_delete: false },
-            collections: { action_create: false, action_read: true, action_update: false, action_delete: false },
+            folders: { action_create: false, action_read: true, action_update: false, action_delete: false },
+            media: { action_create: false, action_read: true, action_update: false, action_delete: false },
             organizations: { action_create: false, action_read: false, action_update: false, action_delete: false },
             coursechapters: { action_create: false, action_read: true, action_update: false, action_delete: false },
             activities: { action_create: false, action_read: true, action_update: false, action_delete: false },
@@ -376,11 +397,17 @@ function AddRole(props: AddRoleProps) {
                     action_update: rights.usergroups?.action_update || false,
                     action_delete: rights.usergroups?.action_delete || false
                 },
-                collections: {
-                    action_create: rights.collections?.action_create || false,
-                    action_read: rights.collections?.action_read || false,
-                    action_update: rights.collections?.action_update || false,
-                    action_delete: rights.collections?.action_delete || false
+                folders: {
+                    action_create: rights.folders?.action_create || false,
+                    action_read: rights.folders?.action_read || false,
+                    action_update: rights.folders?.action_update || false,
+                    action_delete: rights.folders?.action_delete || false
+                },
+                media: {
+                    action_create: rights.media?.action_create || false,
+                    action_read: rights.media?.action_read || false,
+                    action_update: rights.media?.action_update || false,
+                    action_delete: rights.media?.action_delete || false
                 },
                 organizations: {
                     action_create: rights.organizations?.action_create || false,
@@ -545,9 +572,20 @@ function AddRole(props: AddRoleProps) {
                         />
                         
                         <PermissionSection
-                            title={t('dashboard.users.roles.modals.create.permissions.sections.collections')}
+                            title={t('dashboard.users.roles.modals.create.permissions.sections.folders')}
                             icon={FolderOpen}
-                            section="collections"
+                            section="folders"
+                            permissions={['action_create', 'action_read', 'action_update', 'action_delete']}
+                            rights={rights}
+                            t={t}
+                            handleSelectAll={handleSelectAll}
+                            handleRightChange={handleRightChange}
+                        />
+
+                        <PermissionSection
+                            title={t('dashboard.users.roles.modals.create.permissions.sections.media')}
+                            icon={Image}
+                            section="media"
                             permissions={['action_create', 'action_read', 'action_update', 'action_delete']}
                             rights={rights}
                             t={t}

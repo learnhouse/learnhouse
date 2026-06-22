@@ -386,13 +386,13 @@ function ScormCourseImport({ orgId, orgslug, closeModal }: ScormCourseImportProp
               </div>
               <div>
                 <Label htmlFor="course-description" className="text-sm font-medium text-gray-700">
-                  {t('collections.description')}
+                  {t('library.description')}
                 </Label>
                 <Input
                   id="course-description"
                   value={courseDescription}
                   onChange={(e) => setCourseDescription(e.target.value)}
-                  placeholder={t('collections.description')}
+                  placeholder={t('library.description')}
                   className="mt-1.5"
                 />
               </div>

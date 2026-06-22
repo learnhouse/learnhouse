@@ -43,7 +43,7 @@ from src.services.orgs.orgs import (
     update_org_ai_config,
     update_org_communities_config,
     update_org_payments_config,
-    update_org_collections_config,
+    update_org_folders_config,
     update_org_courses_config,
     update_org_podcasts_config,
     update_org_boards_config,
@@ -57,6 +57,7 @@ from src.services.orgs.orgs import (
     update_org_landing,
     upload_org_landing_content_service,
     update_org_auth_branding_config,
+    update_org_menu_config,
     upload_org_auth_background_service,
     update_org_seo_config,
     upload_org_og_image_service,
@@ -463,28 +464,28 @@ async def api_update_org_courses_config(
 
 
 @feature_config_router.put(
-    "/{org_id}/config/collections",
-    summary="Update organization collections config",
-    description="Enable or disable the collections feature for the organization. Admin only.",
+    "/{org_id}/config/folders",
+    summary="Update organization folders config",
+    description="Enable or disable the folders feature for the organization. Admin only.",
     responses={
-        200: {"description": "Collections configuration updated."},
+        200: {"description": "Folders configuration updated."},
         401: {"description": "Not authenticated"},
         403: {"description": "Caller is not an organization administrator"},
         404: {"description": "Organization not found"},
     },
 )
-async def api_update_org_collections_config(
+async def api_update_org_folders_config(
     request: Request,
     org_id: int,
-    collections_enabled: bool,
+    folders_enabled: bool,
     current_user: PublicUser = Depends(get_current_user),
     db_session: AsyncSession = Depends(get_db_session),
 ):
     """
-    Update organization collections configuration (admin-only)
+    Update organization folders configuration (admin-only)
     """
-    return await update_org_collections_config(
-        request, collections_enabled, org_id, current_user, db_session
+    return await update_org_folders_config(
+        request, folders_enabled, org_id, current_user, db_session
     )
 
 
@@ -721,6 +722,32 @@ async def api_update_org_auth_branding_config(
     """
     return await update_org_auth_branding_config(
         request, auth_branding, org_id, current_user, db_session
+    )
+
+
+@router.put(
+    "/{org_id}/config/menu",
+    summary="Update public menu config",
+    description="Customize which links appear in the public organization navigation, their order, labels, and custom links.",
+    responses={
+        200: {"description": "Menu configuration updated."},
+        401: {"description": "Not authenticated"},
+        403: {"description": "Caller is not an organization administrator"},
+        404: {"description": "Organization not found"},
+    },
+)
+async def api_update_org_menu_config(
+    request: Request,
+    org_id: int,
+    menu_config: dict,
+    current_user: PublicUser = Depends(get_current_user),
+    db_session: AsyncSession = Depends(get_db_session),
+):
+    """
+    Update organization public menu configuration (admin-only)
+    """
+    return await update_org_menu_config(
+        request, menu_config, org_id, current_user, db_session
     )
 
 
