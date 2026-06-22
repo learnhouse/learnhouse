@@ -371,6 +371,176 @@ class TestAnalyticsHelpers:
         assert "Bob,No"          in result
 
         assert _flat_to_csv([]) == ""
+        
+    def test_build_sql_with_limit_valid_and_invalid(self):
+        template = "SELECT {org_id} AS org_id, {days} AS days, {limit} AS limit"
+
+        # limit valido
+        result = analytics_router_module._build_sql(template, 1, 7, limit=10)
+        assert result == "SELECT 1 AS org_id, 7 AS days, 10 AS limit"
+
+        # limit = 0 → invalid
+        with pytest.raises(HTTPException, match="Invalid limit"):
+            analytics_router_module._build_sql(template, 1, 7, limit=0)
+
+        # limit negativo → invalid
+        with pytest.raises(HTTPException, match="Invalid limit"):
+            analytics_router_module._build_sql(template, 1, 7, limit=-1)
+
+    def test_sanitize_function(self):
+        from src.routers.analytics import _sanitize
+
+        # list e dict → stringa
+        assert _sanitize([1, 2, 3]) == "[1, 2, 3]"
+        assert _sanitize({"a": 1}) == "{'a': 1}"
+
+        # float NaN/Inf → None
+        assert _sanitize(float("nan")) is None
+        assert _sanitize(float("inf")) is None
+        assert _sanitize(float("-inf")) is None
+
+        # valori normali → invariati
+        assert _sanitize("hello") == "hello"
+        assert _sanitize(42) == 42
+        assert _sanitize(None) is None
+
+    def test_write_learners_sheet_with_data(self):
+        from openpyxl import Workbook
+        from src.routers.analytics import _write_learners_sheet
+
+        results = {
+            "daily_active_users": {"data": [{"date": "2024-01-01", "dau": 10}]},
+            "new_vs_returning":   {"data": [{"date": "2024-01-01", "new_users": 5, "returning_users": 3}]},
+            "cohort_retention":   {"data": [{"cohort_week": "2024-W01", "cohort_size": 20, "week_1": 15, "week_2": 10, "week_4": 8, "week_8": 5}]},
+            "peak_usage_hours":   {"data": [{"day_of_week": 1, "event_count": 100}, {"day_of_week": 2, "event_count": 80}]},
+        }
+        wb = Workbook()
+        ws = wb.active
+        _write_learners_sheet(ws, results)
+        # verifica che la sheet abbia contenuto
+        assert ws.cell(1, 1).value == "Learners & Growth"
+
+    def test_write_learners_sheet_empty_data(self):
+        from openpyxl import Workbook
+        from src.routers.analytics import _write_learners_sheet
+
+        # tutti i dataset vuoti → branch "else: No data" per ogni sezione
+        results = {
+            "daily_active_users": {"data": []},
+            "new_vs_returning":   {"data": []},
+            "cohort_retention":   {"data": []},
+            "peak_usage_hours":   {"data": []},
+        }
+        wb = Workbook()
+        ws = wb.active
+        _write_learners_sheet(ws, results)
+        assert ws.cell(1, 1).value == "Learners & Growth"
+
+    def test_write_courses_sheet_with_and_without_data(self):
+        from openpyxl import Workbook
+        from src.routers.analytics import _write_courses_sheet
+
+        # con dati → branch "if rows"
+        results_with_data = {
+            "top_courses":                 {"data": [{"course_name": "Course A", "views": 10, "enrollments": 5, "completions": 2}]},
+            "course_rating_by_completion": {"data": []},
+            "time_to_completion":          {"data": []},
+            "content_type_effectiveness":  {"data": []},
+            "course_dropoff":              {"data": []},
+            "completion_velocity":         {"data": []},
+        }
+        wb = Workbook()
+        ws = wb.active
+        _write_courses_sheet(ws, results_with_data)
+        assert ws.cell(1, 1).value == "Courses & Content"
+
+        # tutti vuoti → branch "else: No data" per ogni sezione
+        results_empty = {k: {"data": []} for k in results_with_data}
+        wb2 = Workbook()
+        ws2 = wb2.active
+        _write_courses_sheet(ws2, results_empty)
+        assert ws2.cell(1, 1).value == "Courses & Content"
+
+    def test_json_course_export_structure(self):
+        from src.routers.analytics import _json_course_export
+
+        flat = [
+            {"Subscribed": "Yes", "Completed Course": "Yes", "Name": "Alice"},
+            {"Subscribed": "Yes", "Completed Course": "No",  "Name": "Bob"},
+            {"Subscribed": "No",  "Completed Course": "No",  "Name": "Carlo"},
+        ]
+        result = _json_course_export(flat, org_id=1, days=30, course_uuid="course_1")
+
+        assert result["meta"]["org_id"] == 1
+        assert result["meta"]["total_users"] == 3
+        assert result["meta"]["enrolled"] == 2
+        assert result["meta"]["completed"] == 1
+        assert result["meta"]["completion_rate"] == 50.0
+        assert result["users"] == flat
+
+        # lista vuota → completion_rate None
+        empty = _json_course_export([], org_id=1, days=30, course_uuid="course_1")
+        assert empty["meta"]["completion_rate"] is None
+
+    def test_results_to_csv_includes_query_name_and_skips_unknown(self):
+        from src.routers.analytics import _results_to_csv
+
+        results = {
+            "daily_active_users": {"data": [{"date": "2024-01-01", "dau": 5}]},
+            "unknown_query":      {"data": [{"foo": "bar"}]},          # non in _CSV_ORG_QUERIES → skippato
+            "enrollment_funnel":  {"data": []},                        # in _CSV_ORG_QUERIES ma vuoto
+        }
+        csv_text = _results_to_csv(results)
+
+        assert "# daily_active_users" in csv_text
+        assert "unknown_query" not in csv_text
+        assert "# enrollment_funnel" in csv_text
+        assert "# No data" in csv_text
+
+    async def test_export_with_course_uuid_json_csv_xlsx(self, client):
+        flat_mock = [
+            {
+                "ID": 1, "Username": "alice", "First Name": "Alice", "Last Name": "Smith",
+                "Email": "alice@test.com", "Role": "student", "Signup Method": "email",
+                "Verified Mail": "Sì", "Last Login": "", "Signup Date": "",
+                "Groups": "None", "Subscribed": "Yes", "Subscription Date": "",
+                "Completed Course": "Yes", "Completion Date": "",
+                "Completed Activities": 5, "Total Seconds": 3600,
+            }
+        ]
+        with _analytics_guard_patches(), patch(
+            "src.routers.analytics._fetch_course_users_flat",
+            new_callable=AsyncMock,
+            return_value=flat_mock,
+        ):
+            response = await client.get(
+                "/api/v1/analytics/export?org_id=1&format=json&course_uuid=course_1"
+            )
+        assert response.status_code == 200
+        assert response.json()["meta"]["course_uuid"] == "course_1"
+        assert response.json()["meta"]["enrolled"] == 1
+
+        with _analytics_guard_patches(), patch(
+            "src.routers.analytics._fetch_course_users_flat",
+            new_callable=AsyncMock,
+            return_value=flat_mock,
+        ):
+            response = await client.get(
+                "/api/v1/analytics/export?org_id=1&format=csv&course_uuid=course_1"
+            )
+        assert response.status_code == 200
+        assert "Alice" in response.text
+
+        with _analytics_guard_patches(), patch(
+            "src.routers.analytics._fetch_course_users_flat",
+            new_callable=AsyncMock,
+            return_value=flat_mock,
+        ):
+            response = await client.get(
+                "/api/v1/analytics/export?org_id=1&format=xlsx&course_uuid=course_1"
+            )
+        assert response.status_code == 200
+        assert response.headers["content-type"] == "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
 
 
 class TestAnalyticsRouter:
