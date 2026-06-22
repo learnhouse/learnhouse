@@ -334,6 +334,11 @@
     --chart-4: 43 74% 66%;
     --chart-5: 27 87% 67%;
     --radius: 0.5rem;
+    --embed-bg: #09090b;
+    --embed-fg: #ffffff;
+    --embed-surface: #18181b;
+    --embed-surface-fg: #f9fafb;
+    --embed-muted-fg: #d4d4d8;
 
     /* Z-Index Layering System */
     --z-behind: -10;
@@ -361,6 +366,17 @@
     --z-critical: 400;
     --z-max: 9999;
   }
+
+  @media (prefers-color-scheme: light) {
+    :root {
+      --embed-bg: #ffffff;
+      --embed-fg: #09090b;
+      --embed-surface: #ffffff;
+      --embed-surface-fg: #111827;
+      --embed-muted-fg: #4b5563;
+    }
+  }
+
   .dark {
     --background: 0 0% 3.9%;
     --foreground: 0 0% 98%;
