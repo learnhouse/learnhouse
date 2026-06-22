@@ -1,6 +1,6 @@
 {
   "name": "learnhouse",
-  "version": "1.2.6",
+  "version": "1.2.7",
   "private": true,
   "scripts": {
     "dev": "next dev --turbopack",
@@ -9,7 +9,8 @@
     "start": "next start",
     "lint": "eslint . || true",
     "lint:fix": "eslint --fix . || true",
-    "lint:strict": "eslint"
+    "lint:strict": "eslint",
+    "test": "bun test tests"
   },
   "dependencies": {
     "@codemirror/autocomplete": "^6.18.4",
@@ -59,8 +60,8 @@
     "@tiptap/core": "^3.10.1",
     "@tiptap/extension-bullet-list": "^3.10.1",
     "@tiptap/extension-code-block-lowlight": "^3.10.1",
-    "@tiptap/extension-collaboration": "3.26.0",
-    "@tiptap/extension-collaboration-caret": "3.26.0",
+    "@tiptap/extension-collaboration": "3.27.1",
+    "@tiptap/extension-collaboration-caret": "3.27.1",
     "@tiptap/extension-heading": "^3.10.1",
     "@tiptap/extension-link": "^3.10.1",
     "@tiptap/extension-list-item": "^3.10.1",
@@ -100,7 +101,7 @@
     "lowlight": "^3.3.0",
     "lucide-react": "^1.0.0",
     "motion": "^12.34.3",
-    "next": "^16.2.6",
+    "next": "^16.2.9",
     "nextjs-toploader": "^3.9.17",
     "prosemirror-state": "^1.4.4",
     "qrcode": "^1.5.4",
@@ -120,7 +121,7 @@
     "remark-gfm": "^4.0.1",
     "require-in-the-middle": "^8.0.1",
     "screenfull": "^6.0.2",
-    "sharp": "^0.34.4",
+    "sharp": "^0.35.0",
     "swr": "^2.3.6",
     "tailwind-merge": "^3.3.1",
     "tailwindcss-animate": "^1.0.7",
@@ -136,13 +137,13 @@
   "devDependencies": {
     "@eslint/js": "^9.39.4",
     "@tailwindcss/postcss": "^4.1.16",
-    "@types/node": "25.9.2",
+    "@types/node": "25.9.4",
     "@types/qrcode": "^1.5.6",
     "@types/react": "19.2.17",
     "@types/react-dom": "19.2.3",
     "@types/react-katex": "^3.0.4",
     "eslint": "^9.39.4",
-    "eslint-config-next": "16.2.7",
+    "eslint-config-next": "16.2.9",
     "eslint-plugin-unused-imports": "^4.3.0",
     "postcss": "^8.5.6",
     "tailwindcss": "^4.1.16",
@@ -156,6 +157,7 @@
     "preact": ">=10.27.3",
     "js-yaml": ">=4.1.1",
     "jspdf": ">=4.0.0",
-    "prosemirror-view": "1.41.8"
+    "prosemirror-view": "1.41.9",
+    "prosemirror-model": "1.25.9"
   }
 }

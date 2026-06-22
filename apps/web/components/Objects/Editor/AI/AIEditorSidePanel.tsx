@@ -410,13 +410,6 @@ function AIEditorSidePanel(props: AIEditorSidePanelProps) {
   }
 
   /**
-   * Check if a node type is atomic (no content, just attrs)
-   */
-  const isAtomicBlock = (type: string): boolean => {
-    return ATOMIC_BLOCK_TYPES.includes(type)
-  }
-
-  /**
    * Check if a node type is a special block (needs direct insertion)
    */
   const isSpecialBlock = (type: string): boolean => {
@@ -479,7 +472,7 @@ function AIEditorSidePanel(props: AIEditorSidePanelProps) {
   /**
    * Insert a single TipTap JSON node with appropriate handling
    */
-  const insertSingleNode = (node: any, startPos: number): number => {
+  const insertSingleNode = (node: any, _startPos: number): number => {
     const isSpecial = node.type && isSpecialBlock(node.type)
 
     // For special blocks (atomic or with React node views), insert directly
@@ -699,6 +692,8 @@ function AIEditorSidePanel(props: AIEditorSidePanelProps) {
         // Clean up the content - remove extra whitespace and newlines
         let cleanContent = fullContent.trim()
         cleanContent = cleanContent.replace(/^\n+|\n+$/g, '').trim()
+        // Intentionally strip ASCII control characters from streamed AI output before JSON parsing.
+        // eslint-disable-next-line no-control-regex
         cleanContent = cleanContent.replace(/[\x00-\x1F\x7F]/g, '')
         cleanContent = cleanContent.trim()
         cleanContent = cleanContent.replace(/,(\s*[\]}])/g, '$1')
@@ -1438,7 +1433,7 @@ function AIEditorMessageComponent({
   )
 }
 
-const AIEditorSidePanelPlaceholder = (props: { sendMessage: (msg: string) => void }) => {
+const AIEditorSidePanelPlaceholder = (props: { sendMessage: (_msg: string) => void }) => {
   const session = useLHSession() as any
   const aiEditorState = useAIEditor() as AIEditorStateTypes
   const { t } = useTranslation()

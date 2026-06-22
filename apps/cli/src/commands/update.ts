@@ -3,9 +3,10 @@ import { join } from 'node:path'
 import * as p from '@clack/prompts'
 import pc from 'picocolors'
 import { findInstallDir, readConfig } from '../services/config-store.js'
-import { dockerComposeDown, dockerComposeUp } from '../services/docker.js'
+import { dockerComposeDown, dockerComposeUp, dockerComposePull } from '../services/docker.js'
 import { migrateContentVolume } from '../services/content-volume-migration.js'
 import { waitForHealth } from '../services/health.js'
+import { replaceComposeImageTag } from '../services/compose-utils.js'
 import {
   updateEnterprise,
   backupDatabase,
@@ -128,15 +129,7 @@ export async function updateCommand(options: { version?: string; migrate?: boole
     // Update the image in docker-compose.yml
     const composePath = join(config.installDir, 'docker-compose.yml')
     const composeContent = readFileSync(composePath, 'utf-8')
-    const updatedCompose = composeContent.replace(
-      /image:\s*ghcr\.io\/learnhouse\/app:\S+/,
-      `image: ${targetImage}`,
-    )
-    writeFileSync(composePath, updatedCompose)
-
-    s.start('Pulling image')
-    // docker compose up with --pull always handles the pull
-    s.stop('Image reference updated')
+    writeFileSync(composePath, replaceComposeImageTag(composeContent, targetImage))
 
     // Preserve any uploaded media before the container is recreated.
     s.start('Checking content storage')
@@ -167,9 +160,13 @@ export async function updateCommand(options: { version?: string; migrate?: boole
       p.log.warn(`Could not migrate uploaded content: ${msg}`)
     }
 
+    s.start('Pulling new image (this may take a minute)')
+    dockerComposePull(config.installDir)
+    s.stop('Image pulled')
+
     s.start('Restarting services')
     dockerComposeDown(config.installDir)
-    dockerComposeUp(config.installDir)
+    dockerComposeUp(config.installDir, true)
     s.stop('Services restarted')
 
     // 4) Wait for the app, then run migrations via the shared helper.
@@ -200,7 +197,7 @@ export async function updateCommand(options: { version?: string; migrate?: boole
   }
 }
 
-function formatBytes(bytes: number): string {
+export function formatBytes(bytes: number): string {
   if (bytes < 1024) return `${bytes} B`
   if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`
   if (bytes < 1024 * 1024 * 1024) return `${(bytes / 1024 / 1024).toFixed(1)} MB`

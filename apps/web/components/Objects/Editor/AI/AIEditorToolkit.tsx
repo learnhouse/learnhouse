@@ -494,7 +494,6 @@ const UserFeedbackModal = (props: AIEditorToolkitProps) => {
 
 const AiEditorToolButton = (props: any) => {
   const dispatchAIEditor = useAIEditorDispatch() as any
-  const aiEditorState = useAIEditor() as AIEditorStateTypes
 
   const handleToolButtonClick = async (
     label:

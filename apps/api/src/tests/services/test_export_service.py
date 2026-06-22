@@ -19,6 +19,7 @@ from src.db.organizations import Organization
 from src.security.rbac import AccessAction
 from src.services.courses.transfer.export_service import (
     _build_export_zip,
+    _export_directory_to_zip,
     _load_course_export_data,
     _stored_zipinfo,
     export_course,
@@ -557,6 +558,58 @@ class TestBuildExportZip:
                 _build_export_zip([("course-1", "Course 1", {}, [])], "org-1")
 
         assert not zip_path.exists()
+
+
+class TestExportDirectoryToZip:
+    def test_export_directory_to_zip_writes_posix_entries_from_windows_roots(self):
+        """ZIP entry names stay POSIX even when walk_directory roots arrive
+        with a Windows-style '\\' separator from a downstream join (#842)."""
+        from io import BytesIO
+
+        buffer = BytesIO()
+
+        def _walk_directory(source_path: str):
+            return [
+                (
+                    "content/orgs/org-1/courses/course-1/activities/activity-1",
+                    ["nested"],
+                    ["root.txt"],
+                ),
+                (
+                    "content/orgs/org-1/courses/course-1/activities/activity-1\\nested",
+                    [],
+                    ["child.txt"],
+                ),
+            ]
+
+        def _read_file_content(path: str):
+            normalized = path.replace("\\", "/")
+            mapping = {
+                "content/orgs/org-1/courses/course-1/activities/activity-1/root.txt": b"root",
+                "content/orgs/org-1/courses/course-1/activities/activity-1/nested/child.txt": b"child",
+            }
+            return mapping.get(normalized, b"")
+
+        with patch(
+            "src.services.courses.transfer.export_service.walk_directory",
+            side_effect=_walk_directory,
+        ), patch(
+            "src.services.courses.transfer.export_service.read_file_content",
+            side_effect=_read_file_content,
+        ):
+            with zipfile.ZipFile(buffer, "w") as zip_file:
+                _export_directory_to_zip(
+                    zip_file,
+                    "content/orgs/org-1/courses/course-1/activities/activity-1",
+                    "courses/course-1/chapters/chapter-1/activities/activity-1/files",
+                )
+
+        with zipfile.ZipFile(buffer) as zip_file:
+            assert set(zip_file.namelist()) == {
+                "courses/course-1/chapters/chapter-1/activities/activity-1/files/root.txt",
+                "courses/course-1/chapters/chapter-1/activities/activity-1/files/nested/child.txt",
+            }
+            assert all("\\" not in name for name in zip_file.namelist())
 
 
 class TestStoredZipInfo:

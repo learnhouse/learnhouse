@@ -281,6 +281,18 @@ function PlaylistPlayer({
   const [currentTime, setCurrentTime] = React.useState(0)
   const [duration, setDuration] = React.useState(0)
 
+  const playEpisode = (episode: PodcastEpisode) => {
+    const url = getPodcastAudioStreamUrl(orgUUID, podcastUUID, episode.episode_uuid, episode.audio_file)
+    setActiveEpisode(episode)
+    setCurrentTime(0)
+    setDuration(0)
+    if (audioRef.current) {
+      audioRef.current.src = url
+      audioRef.current.play()
+      setIsPlaying(true)
+    }
+  }
+
   React.useEffect(() => {
     const audio = audioRef.current
     if (!audio) return
@@ -304,19 +316,8 @@ function PlaylistPlayer({
       audio.removeEventListener('loadedmetadata', onLoadedMetadata)
       audio.removeEventListener('ended', onEnded)
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeEpisode])
-
-  const playEpisode = (episode: PodcastEpisode) => {
-    const url = getPodcastAudioStreamUrl(orgUUID, podcastUUID, episode.episode_uuid, episode.audio_file)
-    setActiveEpisode(episode)
-    setCurrentTime(0)
-    setDuration(0)
-    if (audioRef.current) {
-      audioRef.current.src = url
-      audioRef.current.play()
-      setIsPlaying(true)
-    }
-  }
 
   const togglePlay = () => {
     const audio = audioRef.current

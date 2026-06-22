@@ -6,7 +6,6 @@ import { useLHSession } from '@components/Contexts/LHSessionContext'
 import { toast } from 'react-hot-toast'
 import { Button } from '@components/ui/button'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
-import { queryKeys } from '@/lib/query/keys'
 import {
   Table,
   TableBody,
@@ -188,7 +187,7 @@ const OrgEditDomains: React.FC = () => {
   }, [org?.id, access_token])
 
   // Auto-check SSL for all verified domains on load and every 30s
-  const intervalRef = useRef<NodeJS.Timeout | null>(null)
+  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null)
 
   useEffect(() => {
     if (!domains || !access_token || !org?.id) return

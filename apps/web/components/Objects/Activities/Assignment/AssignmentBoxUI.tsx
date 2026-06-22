@@ -59,6 +59,19 @@ function AssignmentBoxUI({ type, view, currentPoints, currentFeedback, maxPoints
     // Check if user is authenticated
     const isAuthenticated = session?.status === 'authenticated'
 
+    // The student can still save/draft their answers as long as they haven't
+    // SUBMITTED or been GRADED yet. We must NOT gate this on the mere existence
+    // of an AssignmentUserSubmission row: a retry keeps that row in place and
+    // flips it back to PENDING, so gating on `submission.length` would wrongly
+    // hide the save control on every retry attempt and leave students unable to
+    // save their new answers (they'd then submit an empty/old answer and score 0).
+    const latestSubmissionStatus =
+        Array.isArray(submission) && submission.length > 0
+            ? submission[0]?.submission_status
+            : null
+    const canStudentSave =
+        latestSubmissionStatus !== 'SUBMITTED' && latestSubmissionStatus !== 'GRADED'
+
     return (
         <div className='flex flex-col px-3 sm:px-6 py-4 nice-shadow rounded-md bg-slate-100/30'>
             <div className='flex flex-col sm:flex-row sm:justify-between sm:space-x-2 pb-2 text-slate-400 sm:items-center'>
@@ -123,8 +136,8 @@ function AssignmentBoxUI({ type, view, currentPoints, currentFeedback, maxPoints
                         </div>
                     }
 
-                    {/* Student button - only show if authenticated */}
-                    {view === 'student' && isAuthenticated && submission && submission.length <= 0 &&
+                    {/* Student button - only show if authenticated and not yet submitted/graded */}
+                    {view === 'student' && isAuthenticated && canStudentSave &&
                         <div
                             onClick={() => submitFC && submitFC()}
                             className='flex px-2 py-1 cursor-pointer rounded-md space-x-2 items-center justify-center mx-auto w-full sm:w-auto bg-linear-to-bl text-emerald-700 bg-emerald-300/20 hover:bg-emerald-300/10 hover:outline-offset-4 active:outline-offset-1 linear transition-all outline-offset-2 outline-dashed outline-emerald-500/60'>

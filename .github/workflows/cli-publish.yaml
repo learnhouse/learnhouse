@@ -1,12 +1,27 @@
 name: Publish CLI to npm
 
+# Publishing is irreversible (npm versions can't be truly unpublished after 72h
+# and reach every self-hoster), so this workflow is fail-safe: it ABORTS before
+# `npm publish` if the build breaks, any unit test fails, or the tag, package.json
+# and the version compiled into the built binary disagree.
+
 on:
   push:
     tags:
+      # e.g. `cli-1.4.9` — NOT `cli-v1.4.9`. The version (everything after `cli-`)
+      # must equal apps/cli/package.json "version".
       - 'cli-[0-9]*'
 
+# Never run two publishes for the same tag concurrently, and never cancel one
+# mid-flight (interrupting the publish step is the one thing we must not do).
+concurrency:
+  group: cli-publish-${{ github.ref }}
+  cancel-in-progress: false
+
+# Least privilege: this job pushes nothing back to the repo. `id-token: write`
+# is used only to attach npm provenance (supply-chain attestation).
 permissions:
-  contents: write
+  contents: read
   id-token: write
 
 defaults:
@@ -15,10 +30,10 @@ defaults:
 
 jobs:
   publish:
-    name: Build & Publish
+    name: Build, Test & Publish
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
 
       - uses: actions/setup-node@v6
         with:
@@ -32,24 +47,45 @@ jobs:
       - name: Install dependencies
         run: bun install --frozen-lockfile
 
-      - name: Build
-        run: bun run build
+      # ── Safety gate 1: build + full unit suite. `bun run test` builds the
+      # package and runs the same 608-test suite the CLI Tests workflow gates on.
+      # If anything is red the job stops here and NOTHING is published.
+      - name: Build & test (gate the publish)
+        run: bun run test
 
       - name: Extract version from tag
         id: version
-        run: echo "version=${GITHUB_REF_NAME#cli-}" >> $GITHUB_OUTPUT
+        run: echo "version=${GITHUB_REF_NAME#cli-}" >> "$GITHUB_OUTPUT"
 
-      - name: Verify version matches package.json
+      # ── Safety gate 2: the tag, package.json and the version compiled into the
+      # freshly-built binary must all agree. Executing dist/ catches both a broken
+      # bundle AND a drift between package.json and src/constants.ts (the binary
+      # prints its VERSION constant), in one check.
+      - name: Verify version (tag == package.json == built binary)
+        # Pass the tag-derived version through env (NOT inline ${{ }} in the shell)
+        # so a tag containing shell metacharacters can't inject commands.
+        env:
+          TAG_VERSION: ${{ steps.version.outputs.version }}
         run: |
-          PKG_VERSION=$(node -p "require('./package.json').version")
-          TAG_VERSION="${{ steps.version.outputs.version }}"
+          PKG_VERSION="$(node -p "require('./package.json').version")"
           if [ "$PKG_VERSION" != "$TAG_VERSION" ]; then
-            echo "Version mismatch: package.json=$PKG_VERSION tag=$TAG_VERSION"
+            echo "::error::Version mismatch: package.json=$PKG_VERSION tag=$TAG_VERSION"
             exit 1
           fi
+          BIN_VERSION="$(node dist/bin/learnhouse.js --version)"
+          if [ "$BIN_VERSION" != "$TAG_VERSION" ]; then
+            echo "::error::Built binary reports '$BIN_VERSION' but the tag is '$TAG_VERSION' — is src/constants.ts out of sync with package.json?"
+            exit 1
+          fi
+          echo "Versions agree: $TAG_VERSION"
+
+      # ── Safety gate 3: pack the exact tarball and validate it would publish
+      # (file list, metadata) WITHOUT uploading anything.
+      - name: Publish dry-run (validate the package)
+        run: npm publish --dry-run
 
       - name: Publish to npm
-        run: npm publish --no-git-checks
+        run: npm publish --provenance --access public
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 

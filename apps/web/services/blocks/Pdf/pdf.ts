@@ -35,10 +35,22 @@ export async function uploadNewPDFFile(
 
 export async function getPDFFile(file_id: string, access_token: string) {
   // todo : add course id to url
-  return fetch(
+  const result = await fetch(
     `${getAPIUrl()}blocks/pdf?file_id=${file_id}`,
     RequestBodyWithAuthHeader('GET', null, null, access_token)
   )
-    .then((result) => result.json())
-    .catch((error) => console.log('error', error))
+
+  const data = await result.json()
+
+  if (!result.ok) {
+    const errorMessage = typeof data?.detail === 'string'
+      ? data.detail
+      : Array.isArray(data?.detail)
+        ? data.detail.map((e: any) => e.msg).join(', ')
+        : 'Failed to retrieve PDF'
+    throw new Error(errorMessage)
+  }
+
+  return data
 }
+
