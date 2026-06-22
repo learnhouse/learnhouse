@@ -10,7 +10,8 @@
     "lint": "eslint . || true",
     "lint:fix": "eslint --fix . || true",
     "lint:strict": "eslint",
-    "lint:changed": "node scripts/lint-changed-lines.mjs"
+    "lint:changed": "node scripts/lint-changed-lines.mjs",
+    "test": "bun test tests"
   },
   "dependencies": {
     "@codemirror/autocomplete": "^6.18.4",
