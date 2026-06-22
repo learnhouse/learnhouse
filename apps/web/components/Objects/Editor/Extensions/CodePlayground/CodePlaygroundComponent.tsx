@@ -501,9 +501,6 @@ const CodePlaygroundComponent: React.FC = (props: any) => {
   // Student custom test cases
   const [studentTestCases, setStudentTestCases] = useState<TestCase[]>([])
 
-  // Feature 17: Copy output
-  const outputCopy = useCopyToClipboard()
-
   // Load CodeMirror extensions
   useEffect(() => {
     const lang = getLanguageById(languageId)

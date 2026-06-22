@@ -18,7 +18,7 @@ import { useTranslation } from 'react-i18next'
 interface MagicBlockModalProps {
   isOpen: boolean
   onClose: () => void
-  onSave: (htmlContent: string, sessionUuid: string, iterationCount: number) => void
+  onSave: (_htmlContent: string, _sessionUuid: string, _iterationCount: number) => void
   blockUuid: string
   activityUuid: string
   context: MagicBlockContext

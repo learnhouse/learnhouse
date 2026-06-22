@@ -34,7 +34,7 @@ interface Props {
   activityUuid: string
   blockId: string
   accessToken: string
-  onRestoreCode: (code: string) => void
+  onRestoreCode: (_code: string) => void
 }
 
 export default function SubmissionHistory({

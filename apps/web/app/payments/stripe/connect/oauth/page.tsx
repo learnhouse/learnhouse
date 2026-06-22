@@ -29,7 +29,7 @@ function StripeConnectCallbackInner() {
           throw new Error('Missing required parameters')
         }
 
-        const response = await verifyStripeConnection(
+        await verifyStripeConnection(
           parseInt(orgId),
           code,
           session?.data?.tokens?.access_token

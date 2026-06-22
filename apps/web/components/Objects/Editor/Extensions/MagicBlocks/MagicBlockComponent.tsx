@@ -78,7 +78,6 @@ function MagicBlockComponent(props: ExtendedNodeViewProps) {
   const sessionUuid = node.attrs.sessionUuid
   const htmlContent = node.attrs.htmlContent
   const iterationCount = node.attrs.iterationCount || 0
-  const title = node.attrs.title || 'Interactive Element'
   const height = node.attrs.height || 400
 
   // Predefined height options
