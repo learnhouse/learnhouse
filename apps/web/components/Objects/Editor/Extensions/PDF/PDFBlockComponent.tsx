@@ -38,6 +38,7 @@ function PDFBlockComponent(props: any) {
     const file = event.target.files?.[0]
     if (file) {
       setPDF(file)
+      setError(null)
     }
   }
 
@@ -57,9 +58,9 @@ function PDFBlockComponent(props: any) {
       })
       setPDF(null)
     } catch (err: any) {
-      const errorMessage = err?.message || 'Failed to upload PDF. Please try again.'
+      const errorMessage = err?.message || 'Upload failed — please try again'
       setError(errorMessage)
-      toast.error(errorMessage)
+      toast.error(errorMessage.includes('Upload failed') ? errorMessage : `Upload failed — please try again: ${errorMessage}`)
     } finally {
       setIsLoading(false)
     }
@@ -185,7 +186,11 @@ function PDFBlockComponent(props: any) {
             <form onSubmit={handleSubmit}>
               <div
                 onClick={() => fileInputRef.current?.click()}
-                className="border-2 border-dashed rounded-lg p-8 text-center cursor-pointer transition-all border-neutral-200 bg-white hover:border-blue-400 hover:bg-blue-50/50"
+                className={`border-2 border-dashed rounded-lg p-8 text-center cursor-pointer transition-all ${
+                  error
+                    ? 'border-red-300 bg-red-50/30 hover:border-red-400 hover:bg-red-50/50'
+                    : 'border-neutral-200 bg-white hover:border-blue-400 hover:bg-blue-50/50'
+                }`}
               >
                 <input
                   ref={fileInputRef}
