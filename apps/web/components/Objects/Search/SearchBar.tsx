@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
-import { Search, ArrowRight, Sparkles, BookCopy, SquareLibrary, ArrowUpRight, TextSearch, ScanSearch, Users } from 'lucide-react';
+import { Search, ArrowRight, Sparkles, BookCopy, Folder, ArrowUpRight, TextSearch, ScanSearch, Users } from 'lucide-react';
 import { searchOrgContent } from '@services/search/search';
 import { useLHSession } from '@components/Contexts/LHSessionContext';
 import Link from 'next/link';
@@ -51,20 +51,20 @@ interface Course {
   update_date: string;
 }
 
-interface Collection {
+interface FolderResult {
   name: string;
   public: boolean;
   description: string;
   id: number;
   courses: string[];
-  collection_uuid: string;
+  folder_uuid: string;
   creation_date: string;
   update_date: string;
 }
 
 interface SearchResults {
   courses: Course[];
-  collections: Collection[];
+  folders: FolderResult[];
   users: User[];
 }
 
@@ -108,7 +108,7 @@ export const SearchBar: React.FC<SearchBarProps> = ({
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState<SearchResults>({
     courses: [],
-    collections: [],
+    folders: [],
     users: []
   });
   const [isLoading, setIsLoading] = useState(false);
@@ -137,7 +137,7 @@ export const SearchBar: React.FC<SearchBarProps> = ({
     const fetchResults = async () => {
       if (debouncedSearch.trim().length === 0) {
         if (!stale) {
-          setSearchResults({ courses: [], collections: [], users: [] });
+          setSearchResults({ courses: [], folders: [], users: [] });
           setIsLoading(false);
         }
         return;
@@ -162,13 +162,13 @@ export const SearchBar: React.FC<SearchBarProps> = ({
         // Ensure we have the correct structure and handle potential undefined values
         const processedResults: SearchResults = {
           courses: Array.isArray(typedResponse?.courses) ? typedResponse.courses : [],
-          collections: Array.isArray(typedResponse?.collections) ? typedResponse.collections : [],
+          folders: Array.isArray(typedResponse?.folders) ? typedResponse.folders : [],
           users: Array.isArray(typedResponse?.users) ? typedResponse.users : []
         };
 
         setSearchResults(processedResults);
 
-        const totalResults = processedResults.courses.length + processedResults.collections.length + processedResults.users.length;
+        const totalResults = processedResults.courses.length + processedResults.folders.length + processedResults.users.length;
         track('search_query', {
           query: debouncedSearch,
           results_count: totalResults,
@@ -176,7 +176,7 @@ export const SearchBar: React.FC<SearchBarProps> = ({
       } catch (error) {
         console.error('Error searching content:', error);
         if (!stale) {
-          setSearchResults({ courses: [], collections: [], users: [] });
+          setSearchResults({ courses: [], folders: [], users: [] });
         }
       }
       if (!stale) {
@@ -216,7 +216,7 @@ export const SearchBar: React.FC<SearchBarProps> = ({
   const searchTerms = useMemo(() => [
     { term: searchQuery, type: 'exact', icon: <Search size={14} className="text-black/40" /> },
     { term: `${searchQuery} courses`, type: 'courses', icon: <BookCopy size={14} className="text-black/40" /> },
-    { term: `${searchQuery} collections`, type: 'collections', icon: <SquareLibrary size={14} className="text-black/40" /> },
+    { term: `${searchQuery} folders`, type: 'folders', icon: <Folder size={14} className="text-black/40" /> },
   ], [searchQuery]);
 
   const MemoizedSearchSuggestions = useMemo(() => {
@@ -249,8 +249,8 @@ export const SearchBar: React.FC<SearchBarProps> = ({
   }, [searchQuery, searchTerms, orgslug, t]);
 
   const MemoizedQuickResults = useMemo(() => {
-    const hasResults = searchResults.courses.length > 0 || 
-                      searchResults.collections.length > 0 || 
+    const hasResults = searchResults.courses.length > 0 ||
+                      searchResults.folders.length > 0 ||
                       searchResults.users.length > 0;
     
     if (!hasResults) return null;
@@ -303,28 +303,28 @@ export const SearchBar: React.FC<SearchBarProps> = ({
           </div>
         )}
 
-        {/* Collections Section */}
-        {searchResults.collections.length > 0 && (
+        {/* Folders Section */}
+        {searchResults.folders.length > 0 && (
           <div className="mb-2">
             <div className="flex items-center gap-2 px-2 py-1 text-xs text-black/40">
-              <SquareLibrary size={12} />
-              <span>{t('collections.collections')}</span>
+              <Folder size={12} />
+              <span>{t('folders.folders')}</span>
             </div>
-            {searchResults.collections.map((collection) => (
+            {searchResults.folders.map((folder) => (
               <Link
-                key={collection.collection_uuid}
-                href={getUriWithOrg(orgslug, `/collection/${collection.collection_uuid}`)}
+                key={folder.folder_uuid}
+                href={getUriWithOrg(orgslug, `/library/folder/${folder.folder_uuid.replace('folder_', '')}`)}
                 className="flex items-center gap-3 p-2 hover:bg-black/[0.02] rounded-lg transition-colors"
               >
                 <div className="w-10 h-10 bg-black/5 rounded-lg flex items-center justify-center">
-                  <SquareLibrary size={20} className="text-black/40" />
+                  <Folder size={20} className="text-black/40" />
                 </div>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2">
-                    <h3 className="text-sm font-medium text-black/80 truncate">{collection.name}</h3>
-                    <span className="text-[10px] font-medium text-black/40 uppercase tracking-wide whitespace-nowrap">{t('collections.collection')}</span>
+                    <h3 className="text-sm font-medium text-black/80 truncate">{folder.name}</h3>
+                    <span className="text-[10px] font-medium text-black/40 uppercase tracking-wide whitespace-nowrap">{t('folders.folder')}</span>
                   </div>
-                  <p className="text-xs text-black/50 truncate">{collection.description}</p>
+                  <p className="text-xs text-black/50 truncate">{folder.description}</p>
                 </div>
               </Link>
             ))}
@@ -411,9 +411,9 @@ export const SearchBar: React.FC<SearchBarProps> = ({
             ) : (
               <>
                 {MemoizedQuickResults}
-                {((searchResults.courses.length > 0 || 
-                   searchResults.collections.length > 0 || 
-                   searchResults.users.length > 0) || 
+                {((searchResults.courses.length > 0 ||
+                   searchResults.folders.length > 0 ||
+                   searchResults.users.length > 0) ||
                    searchQuery.trim()) && (
                   <Link
                     href={getUriWithOrg(orgslug, `/search?q=${encodeURIComponent(searchQuery)}`)}

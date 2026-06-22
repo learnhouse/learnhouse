@@ -155,6 +155,28 @@ export async function updateOrgAuthBrandingConfig(
   return res
 }
 
+export interface MenuLinkItem {
+  type: string
+  enabled: boolean
+  order: number
+  label?: string
+  url?: string
+  icon?: string
+}
+
+export async function updateOrgMenuConfig(
+  org_id: string,
+  menu_config: { items: MenuLinkItem[] },
+  access_token: string
+) {
+  const result: any = await fetch(
+    `${getAPIUrl()}orgs/${org_id}/config/menu`,
+    RequestBodyWithAuthHeader('PUT', menu_config, null, access_token)
+  )
+  const res = await errorHandling(result)
+  return res
+}
+
 export interface SeoOrgConfig {
   default_meta_title_suffix: string
   default_meta_description: string

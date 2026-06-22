@@ -25,7 +25,7 @@ logger = logging.getLogger(__name__)
 # (storage, usergroups, assignments, courses are always-on — no toggle)
 ALL_FEATURES = [
     "ai", "analytics", "api", "boards", "collaboration",
-    "collections", "communities", "members", "payments", "playgrounds", "podcasts",
+    "folders", "communities", "members", "payments", "playgrounds", "podcasts",
 ]
 
 
@@ -150,9 +150,9 @@ async def _v2_migrate_all_configs(db_session, batch_size: int = 50) -> int:
                 if deprecated in toggles:
                     del toggles[deprecated]
                     patched = True
-            # Ensure collections toggle exists (was briefly removed, now restored)
-            if "collections" not in toggles:
-                toggles["collections"] = {"disabled": False}
+            # Ensure folders toggle exists (was briefly removed, now restored)
+            if "folders" not in toggles:
+                toggles["folders"] = {"disabled": False}
                 patched = True
             if patched:
                 org_config.config = config

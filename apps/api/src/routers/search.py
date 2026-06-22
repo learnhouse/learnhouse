@@ -13,7 +13,7 @@ router = APIRouter()
     "/org_slug/{org_slug}",
     response_model=SearchResult,
     summary="Search within an organization",
-    description="Performs a paginated search across courses, collections, and users within the given organization. Query length and page size are capped to prevent data dumping. Requires authentication.",
+    description="Performs a paginated search across courses, folders, and users within the given organization. Query length and page size are capped to prevent data dumping. Requires authentication.",
     responses={
         200: {"description": "Search results grouped by resource type", "model": SearchResult},
         401: {"description": "Authentication required"},
@@ -31,7 +31,7 @@ async def api_search_across_org(
     current_user: Union[PublicUser, APITokenUser] = Depends(get_current_user),
 ) -> SearchResult:
     """
-    Search across courses, collections and users within an organization.
+    Search across courses, folders and users within an organization.
 
     SECURITY:
     - Maximum limit is 50 to prevent data dumping attacks

@@ -8,13 +8,8 @@ import { Input } from '@components/ui/input'
 import { Textarea } from '@components/ui/textarea'
 import { Label } from '@components/ui/label'
 import { Badge } from '@components/ui/badge'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@components/ui/select'
+
+
 import {
   ChevronDown,
   ChevronRight,
@@ -112,7 +107,8 @@ const ALLOWED_API_TAGS = [
   'activities',
   'coursechapters',
   'chapters',
-  'collections',
+  'folders',
+  'media',
   'certifications',
   'usergroups',
   'user-groups',
@@ -121,7 +117,7 @@ const ALLOWED_API_TAGS = [
 ]
 
 const APIDocumentation: React.FC = () => {
-  const session = useLHSession() as any
+  const _session = useLHSession() as any
   const org = useOrg() as any
   const [spec, setSpec] = useState<OpenAPISpec | null>(null)
   const [loading, setLoading] = useState(true)
@@ -457,6 +453,7 @@ const APIDocumentation: React.FC = () => {
 
     try {
       const url = buildUrl()
+      // eslint-disable-next-line no-undef -- RequestInit is a DOM lib type
       const options: RequestInit = {
         method: selectedEndpoint.method,
         headers: {

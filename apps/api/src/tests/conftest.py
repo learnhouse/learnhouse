@@ -42,8 +42,8 @@ from src.db.courses.chapter_activities import ChapterActivity
 from src.db.courses.chapters import Chapter
 from src.db.courses.course_chapters import CourseChapter
 from src.db.courses.courses import Course
-from src.db.collections import Collection
-from src.db.collections_courses import CollectionCourse
+from src.db.folders.folders import Folder
+from src.db.folders.folder_content import FolderContent
 from src.db.organizations import Organization
 from src.db.roles import (
     DashboardPermission,
@@ -107,7 +107,8 @@ ADMIN_RIGHTS = Rights(
     courses=_full_permission_with_own(),
     users=_full_permission(),
     usergroups=_full_permission(),
-    collections=_full_permission(),
+    folders=_full_permission(),
+    media=_full_permission(),
     organizations=_full_permission(),
     coursechapters=_full_permission(),
     activities=_full_permission(),
@@ -124,7 +125,8 @@ USER_RIGHTS = Rights(
     courses=_readonly_permission_with_own(),
     users=_readonly_permission(),
     usergroups=_readonly_permission(),
-    collections=_readonly_permission(),
+    folders=_readonly_permission(),
+    media=_readonly_permission(),
     organizations=_readonly_permission(),
     coursechapters=_readonly_permission(),
     activities=_readonly_permission(),
@@ -421,35 +423,36 @@ async def activity(db, org, course, chapter):
 
 
 # ---------------------------------------------------------------------------
-# Collection fixture
+# Folder fixture
 # ---------------------------------------------------------------------------
 
 @pytest.fixture
-async def collection(db, org, course):
-    """A public collection containing the test course."""
-    c = Collection(
+async def folder(db, org, course):
+    """A public folder containing the test course."""
+    f = Folder(
         id=1,
-        name="Test Collection",
-        description="A test collection",
+        name="Test Folder",
+        description="A test folder",
         public=True,
         org_id=org.id,
-        collection_uuid="collection_test",
+        folder_uuid="folder_test",
         creation_date=str(datetime.now()),
         update_date=str(datetime.now()),
     )
-    db.add(c)
+    db.add(f)
     await db.commit()
-    await db.refresh(c)
-    link = CollectionCourse(
-        collection_id=c.id,
-        course_id=course.id,
+    await db.refresh(f)
+    link = FolderContent(
+        folder_id=f.id,
+        resource_uuid=course.course_uuid,
         org_id=org.id,
+        position=0,
         creation_date=str(datetime.now()),
         update_date=str(datetime.now()),
     )
     db.add(link)
     await db.commit()
-    return c
+    return f
 
 
 # ---------------------------------------------------------------------------

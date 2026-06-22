@@ -54,7 +54,7 @@ class CommunitiesOrgConfig(BaseModel):
     enabled: bool = True
 
 
-class CollectionsOrgConfig(BaseModel):
+class FoldersOrgConfig(BaseModel):
     enabled: bool = True
 
 
@@ -98,7 +98,7 @@ class OrgFeatureConfig(BaseModel):
     payments: PaymentOrgConfig = PaymentOrgConfig()
     discussions: DiscussionOrgConfig = DiscussionOrgConfig()
     communities: CommunitiesOrgConfig = CommunitiesOrgConfig()
-    collections: CollectionsOrgConfig = CollectionsOrgConfig()
+    folders: FoldersOrgConfig = FoldersOrgConfig()
     analytics: AnalyticsOrgConfig = AnalyticsOrgConfig()
     collaboration: CollaborationOrgConfig = CollaborationOrgConfig()
     api: APIOrgConfig = APIOrgConfig()
@@ -131,7 +131,7 @@ class AdminToggles(BaseModel):
     api: FeatureAdminToggle = FeatureAdminToggle()
     boards: FeatureAdminToggle = FeatureAdminToggle()
     collaboration: FeatureAdminToggle = FeatureAdminToggle()
-    collections: FeatureAdminToggle = FeatureAdminToggle()
+    folders: FeatureAdminToggle = FeatureAdminToggle()
     communities: FeatureAdminToggle = FeatureAdminToggle()
     members: MembersAdminToggle = MembersAdminToggle()
     payments: FeatureAdminToggle = FeatureAdminToggle()
@@ -188,11 +188,28 @@ class SeoOrgConfig(BaseModel):
     noindex_communities: bool = False
 
 
+class MenuLinkItem(BaseModel):
+    # Built-in types: courses | library | podcasts | communities | playgrounds | store
+    # plus "custom" for an admin-defined external/internal link.
+    type: str
+    enabled: bool = True
+    order: int = 0
+    label: str = ""       # optional label override (empty -> default translation)
+    url: str = ""         # for type == "custom"
+    icon: str = ""        # for type == "custom" (phosphor icon name)
+
+
+class MenuConfig(BaseModel):
+    # When items is empty, the public menu falls back to its feature-driven defaults.
+    items: list[MenuLinkItem] = Field(default_factory=list)
+
+
 class CustomizationConfig(BaseModel):
     general: GeneralCustomization = GeneralCustomization()
     auth_branding: AuthBrandingConfig = AuthBrandingConfig()
     seo: SeoOrgConfig = SeoOrgConfig()
     landing: dict = Field(default_factory=dict)
+    menu: MenuConfig = MenuConfig()
 
 
 # ============================================================================

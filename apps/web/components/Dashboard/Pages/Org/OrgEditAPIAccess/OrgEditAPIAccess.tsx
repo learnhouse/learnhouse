@@ -6,7 +6,6 @@ import { toast } from 'react-hot-toast'
 import { Button } from '@components/ui/button'
 import { getPlatformUrl } from '@services/config/config'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
-import { queryKeys } from '@/lib/query/keys'
 import { useTranslation } from 'react-i18next'
 import {
   Table,
@@ -40,8 +39,6 @@ import {
   AlertTriangle,
   Check,
   BookOpen,
-  Clock,
-  Shield,
   LifeBuoy,
 } from 'lucide-react'
 import {
@@ -701,14 +698,15 @@ const OrgEditAPIAccess: React.FC = () => {
 // Permissions Editor Component
 const PermissionsEditor: React.FC<{
   rights: APITokenRights
-  onChange: (rights: APITokenRights) => void
+  onChange: (_rights: APITokenRights) => void
 }> = ({ rights, onChange }) => {
   // API Token access is restricted to specific resources
   const resources = [
     { key: 'courses', label: 'Courses', hasCrud: true },
     { key: 'activities', label: 'Activities', hasCrud: true },
     { key: 'coursechapters', label: 'Chapters', hasCrud: true },
-    { key: 'collections', label: 'Collections', hasCrud: true },
+    { key: 'folders', label: 'Folders', hasCrud: true },
+    { key: 'media', label: 'Media', hasCrud: true },
     { key: 'certifications', label: 'Certifications', hasCrud: true },
     { key: 'usergroups', label: 'User Groups', hasCrud: true },
     { key: 'payments', label: 'Payments', hasCrud: true },
@@ -798,7 +796,8 @@ const PermissionsViewer: React.FC<{ rights: APITokenRights }> = ({ rights }) => 
       <div>Courses: {getPermissionSummary(rights.courses)}</div>
       <div>Activities: {getPermissionSummary(rights.activities)}</div>
       <div>Chapters: {getPermissionSummary(rights.coursechapters)}</div>
-      <div>Collections: {getPermissionSummary(rights.collections)}</div>
+      <div>Folders: {getPermissionSummary(rights.folders)}</div>
+      <div>Media: {getPermissionSummary(rights.media)}</div>
       <div>Certs: {getPermissionSummary(rights.certifications)}</div>
       <div>Groups: {getPermissionSummary(rights.usergroups)}</div>
       <div>Payments: {getPermissionSummary(rights.payments)}</div>

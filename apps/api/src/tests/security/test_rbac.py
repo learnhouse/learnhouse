@@ -10,7 +10,7 @@ from src.security.rbac.rbac import (
     authorization_verify_if_user_is_anon,
 )
 from src.db.courses.courses import Course
-from src.db.collections import Collection
+from src.db.folders.folders import Folder
 from src.db.resource_authors import ResourceAuthor, ResourceAuthorshipEnum, ResourceAuthorshipStatusEnum
 from src.db.roles import Role
 from unittest.mock import Mock
@@ -40,12 +40,12 @@ class TestRBAC:
         return course
 
     @pytest.fixture
-    def mock_collection(self):
-        """Create a mock collection object"""
-        collection = Mock(spec=Collection)
-        collection.collection_uuid = "collection_123"
-        collection.public = True
-        return collection
+    def mock_folder(self):
+        """Create a mock folder object"""
+        folder = Mock(spec=Folder)
+        folder.folder_uuid = "folder_123"
+        folder.public = True
+        return folder
 
     @pytest.fixture
     def mock_resource_author(self):
@@ -88,7 +88,13 @@ class TestRBAC:
                 action_update=False,
                 action_delete=False,
             ),
-            collections=Permission(
+            folders=Permission(
+                action_create=False,
+                action_read=True,
+                action_update=False,
+                action_delete=False,
+            ),
+            media=Permission(
                 action_create=False,
                 action_read=True,
                 action_update=False,
@@ -191,17 +197,17 @@ class TestRBAC:
             assert "You don't have the right to perform this action" in exc_info.value.detail
 
     @pytest.mark.asyncio
-    async def test_authorization_verify_if_element_is_public_collection_success(self, mock_request, mock_db_session, mock_collection):
-        """Test public collection authorization success"""
+    async def test_authorization_verify_if_element_is_public_folder_success(self, mock_request, mock_db_session, mock_folder):
+        """Test public folder authorization success"""
         with patch('src.security.rbac.rbac.check_element_type', new_callable=AsyncMock) as mock_check_type:
-            mock_check_type.return_value = "collections"
-            
+            mock_check_type.return_value = "folders"
+
             # Mock database query
-            mock_db_session.execute.return_value.scalars.return_value.first.return_value = mock_collection
-            
+            mock_db_session.execute.return_value.scalars.return_value.first.return_value = mock_folder
+
             result = await authorization_verify_if_element_is_public(
                 request=mock_request,
-                element_uuid="collection_123",
+                element_uuid="folder_123",
                 action="read",
                 db_session=mock_db_session
             )

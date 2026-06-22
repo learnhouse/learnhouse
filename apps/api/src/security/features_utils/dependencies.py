@@ -19,7 +19,7 @@ from typing import Literal
 
 FeatureName = Literal[
     "courses",
-    "collections",
+    "folders",
     "communities",
     "podcasts",
     "boards",

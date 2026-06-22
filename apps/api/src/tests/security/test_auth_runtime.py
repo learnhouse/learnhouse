@@ -54,7 +54,7 @@ def _required_rights() -> dict:
         "courses": {},
         "activities": {},
         "coursechapters": {},
-        "collections": {},
+        "folders": {},
         "certifications": {},
         "usergroups": {},
         "payments": {},
@@ -99,7 +99,7 @@ class TestAuthRuntime:
                 "courses": _ModelDumpOnly(),
                 "activities": _DictOnly(),
                 "coursechapters": "plain",
-                "collections": 1,
+                "folders": 1,
                 "certifications": None,
                 "usergroups": True,
                 "payments": False,
@@ -121,7 +121,7 @@ class TestAuthRuntime:
         assert result.rights["courses"] == {"model_dump": True}
         assert result.rights["activities"] == {"dict": True}
         assert result.rights["coursechapters"] == "plain"
-        assert result.rights["collections"] == 1
+        assert result.rights["folders"] == 1
 
     @pytest.mark.asyncio
     async def test_get_current_user_api_token_rejected_when_invalid(self):
@@ -192,7 +192,7 @@ class TestAuthRuntime:
                 "courses": _ModelDumpOnly(),
                 "activities": _DictOnly(),
                 "coursechapters": 9,
-                "collections": "value",
+                "folders": "value",
                 "certifications": None,
                 "usergroups": True,
                 "payments": False,
@@ -208,7 +208,7 @@ class TestAuthRuntime:
         assert result.rights["courses"] == {"model_dump": True}
         assert result.rights["activities"] == {"dict": True}
         assert result.rights["coursechapters"] == 9
-        assert result.rights["collections"] == "value"
+        assert result.rights["folders"] == "value"
         assert result.token_name == "Test Token"
         assert result.created_by_user_id == 22
 
@@ -220,7 +220,7 @@ class TestAuthRuntime:
                 "courses": {"scope": "read"},
                 "activities": {},
                 "coursechapters": {"scope": "write"},
-                "collections": {},
+                "folders": {},
                 "certifications": {},
                 "usergroups": {},
                 "payments": {},

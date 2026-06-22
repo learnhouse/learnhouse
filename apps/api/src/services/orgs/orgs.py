@@ -610,7 +610,7 @@ async def delete_org(
         _invalidate_session_cache(uid)
 
     # Delete the organization
-    # Related data (UserOrganization, Courses, Collections, etc.) will be
+    # Related data (UserOrganization, Courses, Folders, etc.) will be
     # automatically deleted via CASCADE constraints in the database
     await db_session.delete(org)
     await db_session.commit()
@@ -904,15 +904,15 @@ async def update_org_payments_config(
     return result
 
 
-async def update_org_collections_config(
+async def update_org_folders_config(
     request: Request,
-    collections_enabled: bool,
+    folders_enabled: bool,
     org_id: int,
     current_user: PublicUser | AnonymousUser,
     db_session: AsyncSession,
 ):
     return await _update_feature_toggle(
-        request, "collections", collections_enabled, org_id, current_user, db_session,
+        request, "folders", folders_enabled, org_id, current_user, db_session,
         v1_default={"enabled": True},
     )
 
@@ -1195,6 +1195,49 @@ async def update_org_watermark_config(
     await db_session.refresh(org_config)
 
     return {"detail": "Watermark configuration updated"}
+
+
+async def update_org_menu_config(
+    request: Request,
+    menu_config: dict,
+    org_id: int,
+    current_user: PublicUser | AnonymousUser,
+    db_session: AsyncSession,
+):
+    statement = select(Organization).where(Organization.id == org_id)
+    org = (await db_session.execute(statement)).scalars().first()
+
+    if not org:
+        raise HTTPException(status_code=404, detail="Organization not found")
+
+    await rbac_check(request, org.org_uuid, current_user, "update", db_session)
+
+    statement = select(OrganizationConfig).where(OrganizationConfig.org_id == org.id)
+    org_config = (await db_session.execute(statement)).scalars().first()
+
+    if org_config is None:
+        raise HTTPException(status_code=404, detail="Organization config not found")
+
+    # Validate/normalise via the pydantic model (drops unknown keys, fills defaults)
+    from src.db.organization_config import MenuConfig
+    menu_data = json.loads(MenuConfig(**(menu_config or {})).model_dump_json())
+
+    updated_config = _deep_copy_config(org_config)
+    if _is_v2_config(updated_config):
+        updated_config.setdefault("customization", {})
+        updated_config["customization"]["menu"] = menu_data
+    else:
+        updated_config.setdefault("general", {"enabled": True})
+        updated_config["general"]["menu"] = menu_data
+
+    org_config.config = updated_config
+    org_config.update_date = str(datetime.now())
+
+    db_session.add(org_config)
+    await db_session.commit()
+    await db_session.refresh(org_config)
+
+    return {"detail": "Menu configuration updated"}
 
 
 async def update_org_auth_branding_config(
