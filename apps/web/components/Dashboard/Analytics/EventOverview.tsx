@@ -1,6 +1,7 @@
 'use client'
 import React, { useMemo, useState } from 'react'
 import { useAnalyticsPipe } from './useAnalyticsDashboard'
+import { AnalyticsEmptyState } from '@components/Analytics/AnalyticsEmptyState'
 import {
   AnalyticsDetailModal,
   LiveUsersDetail,
@@ -119,6 +120,9 @@ export default function EventOverview({ days = '30' }: { days?: string }) {
   const countryRows: any[] = countryData?.data ?? []
   const deviceRows: any[] = deviceData?.data ?? []
   const referrerRows: any[] = referrerData?.data ?? []
+  const hasDauData = dauRows.some((row: any) => Number(row.dau ?? 0) > 0)
+  const emptyStateTitle = t('analytics.empty_state.title')
+  const emptyStateDescription = t('analytics.empty_state.description')
 
   const breakdownMap = useMemo(() => {
     const map: Record<string, any> = {}
@@ -243,10 +247,12 @@ export default function EventOverview({ days = '30' }: { days?: string }) {
           <div className="h-[240px] flex items-center justify-center text-gray-300">
             {t('analytics.common.loading')}
           </div>
-        ) : dauRows.length === 0 ? (
-          <div className="h-[240px] flex items-center justify-center text-gray-300">
-            {t('analytics.common.no_data')}
-          </div>
+        ) : !hasDauData ? (
+          <AnalyticsEmptyState
+            title={emptyStateTitle}
+            description={emptyStateDescription}
+            heightClassName="h-[240px]"
+          />
         ) : (
           <div style={{ height: 240 }}>
             <ResponsiveContainer width="100%" height={240}>

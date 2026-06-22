@@ -2,6 +2,7 @@
 import React, { useState } from 'react'
 import { useAnalyticsPipe } from './useAnalyticsDashboard'
 import { useOrg } from '@components/Contexts/OrgContext'
+import { AnalyticsEmptyState } from '@components/Analytics/AnalyticsEmptyState'
 import { getCourseThumbnailMediaDirectory } from '@services/media/media'
 import Link from 'next/link'
 import {
@@ -76,6 +77,9 @@ export default function CoreWidgetsRow({ days = '30' }: { days?: string }) {
 
   const courseRows = coursesData?.data ?? []
   const activityRows = activityData?.data ?? []
+  const hasFunnelData = chartData.some((item) => Number(item.value ?? 0) > 0)
+  const emptyStateTitle = t('analytics.empty_state.title')
+  const emptyStateDescription = t('analytics.empty_state.description')
 
   return (
     <>
@@ -95,10 +99,11 @@ export default function CoreWidgetsRow({ days = '30' }: { days?: string }) {
             <div className="h-[220px] flex items-center justify-center text-gray-300">
               {t('analytics.common.loading')}
             </div>
-          ) : chartData.length === 0 ? (
-            <div className="h-[220px] flex items-center justify-center text-gray-300">
-              {t('analytics.common.no_data')}
-            </div>
+          ) : !hasFunnelData ? (
+            <AnalyticsEmptyState
+              title={emptyStateTitle}
+              description={emptyStateDescription}
+            />
           ) : (
             <div style={{ height: 220 }}>
               <ResponsiveContainer width="100%" height={220}>
@@ -203,8 +208,12 @@ export default function CoreWidgetsRow({ days = '30' }: { days?: string }) {
         title="{t('analytics.overview.enrollment_funnel')}"
         icon={<Funnel size={20} weight="duotone" className="text-indigo-400" />}
       >
-        {chartData.length === 0 ? (
-          <div className="text-center text-gray-300 py-12">{t('analytics.common.no_data')}</div>
+        {!hasFunnelData ? (
+          <AnalyticsEmptyState
+            title={emptyStateTitle}
+            description={emptyStateDescription}
+            heightClassName="min-h-[260px]"
+          />
         ) : (
           <div className="space-y-6">
             <div style={{ height: 300 }}>
