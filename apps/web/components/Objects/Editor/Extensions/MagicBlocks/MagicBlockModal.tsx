@@ -18,7 +18,7 @@ import { useTranslation } from 'react-i18next'
 interface MagicBlockModalProps {
   isOpen: boolean
   onClose: () => void
-  onSave: (htmlContent: string, sessionUuid: string, iterationCount: number) => void
+  onSave: (_htmlContent: string, _sessionUuid: string, _iterationCount: number) => void
   blockUuid: string
   activityUuid: string
   context: MagicBlockContext
@@ -205,7 +205,8 @@ function MagicBlockModal({
                 </div>
               </div>
               <div className="flex items-center gap-3">
-                <button type="button"                   onClick={handleSave}
+                <button
+                  onClick={handleSave}
                   disabled={!htmlContent}
                   className={cn(
                     "flex items-center gap-2 px-4 py-1.5 rounded-xl text-xs font-semibold transition-all delay-75 ease-linear outline outline-1",

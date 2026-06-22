@@ -7,7 +7,7 @@ import { autoDetectDeploymentId, dockerComposeDown, dockerComposeUp, dockerStats
 
 const SERVICES = ['learnhouse-app', 'db', 'redis'] as const
 
-function parseMemLimit(composePath: string): Map<string, string> {
+export function parseMemLimit(composePath: string): Map<string, string> {
   const content = fs.readFileSync(composePath, 'utf-8')
   const limits = new Map<string, string>()
   let currentService: string | null = null
@@ -31,7 +31,7 @@ function parseMemLimit(composePath: string): Map<string, string> {
   return limits
 }
 
-function setMemLimit(content: string, service: string, limit: string): string {
+export function setMemLimit(content: string, service: string, limit: string): string {
   const lines = content.split('\n')
   const result: string[] = []
   let currentService: string | null = null

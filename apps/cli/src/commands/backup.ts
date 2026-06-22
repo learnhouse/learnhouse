@@ -48,7 +48,7 @@ async function createBackup() {
     const dumpPath = path.join(tmpDir, 'database.sql')
     dockerExecToFile(
       dbContainer,
-      'pg_dump -U learnhouse learnhouse',
+      'pg_dump -U learnhouse --clean --if-exists learnhouse',
       dumpPath,
     )
     s.stop('Database dump created')
@@ -211,8 +211,13 @@ export async function backupCommand(archivePath?: string, options?: { restore?: 
     return
   }
 
-  // No flag — prompt for action
+  // No flag — in non-interactive mode default to create, otherwise prompt
   p.intro(pc.cyan('LearnHouse Backup'))
+
+  if (!process.stdout.isTTY) {
+    await createBackup()
+    return
+  }
 
   const action = await p.select({
     message: 'What would you like to do?',

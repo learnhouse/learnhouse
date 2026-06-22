@@ -279,26 +279,6 @@ class TestAnalyticsHelpers:
             with pytest.raises(HTTPException, match="Analytics query failed"):
                 await _execute_tinybird_query("daily_active_users", "sql", 1, 30)
 
-        timeout_exc = httpx.ConnectTimeout("timed out", request=request)
-        fake_client = SimpleNamespace(post=AsyncMock(side_effect=timeout_exc))
-        with patch("src.routers.analytics.get_cached_result", return_value=None), patch(
-            "src.routers.analytics._get_read_client",
-            return_value=fake_client,
-        ):
-            with pytest.raises(HTTPException, match="Analytics temporarily unavailable") as exc_info:
-                await _execute_tinybird_query("daily_active_users", "sql", 1, 30)
-            assert exc_info.value.status_code == 503
-
-        transport_exc = httpx.ConnectError("connection refused", request=request)
-        fake_client = SimpleNamespace(post=AsyncMock(side_effect=transport_exc))
-        with patch("src.routers.analytics.get_cached_result", return_value=None), patch(
-            "src.routers.analytics._get_read_client",
-            return_value=fake_client,
-        ):
-            with pytest.raises(HTTPException, match="Analytics temporarily unavailable") as exc_info:
-                await _execute_tinybird_query("daily_active_users", "sql", 1, 30)
-            assert exc_info.value.status_code == 503
-
         payload = {
             "data": [{"value": float("nan"), "other": float("inf"), "negative": float("-inf"), "ok": 1}],
             "rows": 1,

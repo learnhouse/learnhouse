@@ -26,7 +26,6 @@ export const AVAILABLE_LANGUAGES: Language[] = [
   { code: 'th', translationKey: 'common.thai', nativeName: 'ไทย' },
   { code: 'bn', translationKey: 'common.bengali', nativeName: 'বাংলা' },
   { code: 'sk', translationKey: 'common.slovak', nativeName: 'Slovenčina' },
-  { code: 'fa', translationKey: 'common.persian', nativeName: 'فارسی' },
 ]
 
 export const getLanguageByCode = (code: string): Language | undefined => {

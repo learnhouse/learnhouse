@@ -1,0 +1,20 @@
+{
+  "name": "@learnhouse/e2e",
+  "version": "0.1.0",
+  "private": true,
+  "description": "End-to-end UI acceptance tests for LearnHouse, driving a CLI-installed self-host like a human.",
+  "type": "module",
+  "scripts": {
+    "test": "playwright test",
+    "test:headed": "playwright test --headed",
+    "test:ui": "playwright test --ui",
+    "report": "playwright show-report",
+    "install-browsers": "playwright install chromium",
+    "typecheck": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.49.1",
+    "@types/node": "^20.19.0",
+    "typescript": "^5.7.2"
+  }
+}
