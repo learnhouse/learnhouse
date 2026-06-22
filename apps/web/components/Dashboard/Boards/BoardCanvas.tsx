@@ -114,7 +114,9 @@ function BoardEditorInner({
   const panRafRef = useRef(0)
   const prevToolModeRef = useRef<typeof toolMode | null>(null)
   const toolModeRef = useRef(toolMode)
-  toolModeRef.current = toolMode
+  useEffect(() => {
+    toolModeRef.current = toolMode
+  }, [toolMode])
   const [mousePos, setMousePos] = useState<{ x: number; y: number } | null>(null)
 
   // Multi-select state
@@ -139,8 +141,11 @@ function BoardEditorInner({
   }
   const activePlacement = placementTools[toolMode] ?? null
 
-  // Clear stale mouse position when leaving a placement tool
+  // Clear stale mouse position when leaving a placement tool.
+  // Resets a piece of UI state once when the placement mode turns off; it cannot
+  // loop because the only dependency (activePlacement) does not derive from mousePos.
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     if (!activePlacement) setMousePos(null)
   }, [activePlacement])
 
@@ -651,7 +656,7 @@ function BoardEditorInner({
       setDrawingPath('')
       drawPointsRef.current = []
     }
-  }, [isPanning, isDrawing, editor, drawColor, drawWidth])
+  }, [isPanning, isDrawing, editor, drawColor, drawWidth, pan.x, pan.y, zoom])
 
   const handleZoomIn = () => setZoom((z) => Math.min(z + 0.1, 3))
   const handleZoomOut = () => setZoom((z) => Math.max(z - 0.1, 0.25))
@@ -918,6 +923,10 @@ export default function BoardCanvas({ board, accessToken, orgslug, username, org
       },
     })
 
+    // The Y.Doc / HocuspocusProvider are external systems created in this effect;
+    // storing them in state once per board/token is the intended synchronization,
+    // not a cascading render loop.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setYdoc(doc)
     setProvider(prov)
     setAuthFailed(false)

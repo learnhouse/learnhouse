@@ -80,7 +80,7 @@ function QuizBlockComponent(props: any) {
     setSubmissionMessage(correctAnswers ? 'correct' : 'incorrect');
   }
 
-  const getAnswerID = (answerIndex: number, questionId: string) => {
+  const getAnswerID = (answerIndex: number, _questionId: string) => {
     const alphabet = Array.from({ length: 26 }, (_, i) =>
       String.fromCharCode('A'.charCodeAt(0) + i)
     )
@@ -303,7 +303,6 @@ function QuizBlockComponent(props: any) {
                   );
                   const isCorrectAnswer = answer.correct;
                   const isIncorrectSelection = submitted && isSelected && !isCorrectAnswer;
-                  const isCorrectSelection = submitted && isCorrectAnswer;
 
                   return (
                     <div

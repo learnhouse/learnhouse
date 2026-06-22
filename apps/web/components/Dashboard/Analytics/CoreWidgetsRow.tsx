@@ -23,7 +23,6 @@ import {
   XAxis,
   YAxis,
   Tooltip,
-  CartesianGrid,
   Cell,
 } from 'recharts'
 import AnalyticsDetailModal from './AnalyticsDetailModal'

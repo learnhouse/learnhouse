@@ -28,7 +28,7 @@ function ImageBlockComponent(props: any) {
   const fileInputRef = React.useRef<HTMLInputElement>(null)
 
   const isEditable = editorState.isEditable
-  const [image, setImage] = React.useState<File | null>(null)
+  const [, setImage] = React.useState<File | null>(null)
   const [isLoading, setIsLoading] = React.useState(false)
   const [isDragging, setIsDragging] = React.useState(false)
   const [error, setError] = React.useState<string | null>(null)
@@ -190,17 +190,6 @@ function ImageBlockComponent(props: any) {
 
   useEffect(() => {}, [course, org])
 
-  const getAlignmentClass = () => {
-    switch (alignment) {
-      case 'left':
-        return 'justify-start';
-      case 'right':
-        return 'justify-end';
-      default:
-        return 'justify-center';
-    }
-  };
-
   const getItemsAlignmentClass = () => {
     switch (alignment) {
       case 'left':
@@ -284,6 +273,7 @@ function ImageBlockComponent(props: any) {
         <div className="bg-neutral-50 rounded-xl px-5 py-4 nice-shadow transition-all ease-linear">
           {/* Header */}
           <div className="flex items-center gap-2 mb-3">
+            {/* eslint-disable-next-line jsx-a11y/alt-text -- `Image` is a lucide-react icon, not an <img> element */}
             <Image className="text-neutral-400" size={16} />
             <span className="uppercase tracking-widest text-xs font-bold text-neutral-400">
               {t('editor.blocks.image')}

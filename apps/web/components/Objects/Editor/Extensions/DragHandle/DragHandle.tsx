@@ -66,7 +66,7 @@ function createDragHandlePlugin() {
 
     // Event listeners on drag handle
     const dragGrip = dragHandle.querySelector('.drag-grip') as HTMLElement
-    const actionButtons = dragHandle.querySelectorAll('.action-btn') as NodeListOf<HTMLElement>
+    const actionButtons = dragHandle.querySelectorAll<HTMLElement>('.action-btn')
 
     dragHandle.addEventListener('mouseenter', handleHandleEnter)
     dragHandle.addEventListener('mouseleave', handleHandleLeave)
@@ -314,14 +314,6 @@ function createDragHandlePlugin() {
 
         if (index === -1) return null
 
-        // Calculate position by summing up previous node sizes
-        let pos = 0
-        view.state.doc.forEach((node, offset, i) => {
-          if (i < index) {
-            pos = offset + node.nodeSize
-          }
-        })
-
         // Verify this position has a node
         if (index === 0) {
           return 0
@@ -358,7 +350,6 @@ function createDragHandlePlugin() {
         // Calculate distance to top and bottom edges
         const distanceToTop = Math.abs(clientY - rect.top)
         const distanceToBottom = Math.abs(clientY - rect.bottom)
-        const distanceToMid = Math.abs(clientY - midY)
 
         // Check if we're close to this block
         if (clientY >= rect.top - 30 && clientY <= rect.bottom + 30) {
@@ -434,7 +425,7 @@ function createDragHandlePlugin() {
     return {
       destroy() {
         const dragGrip = dragHandle?.querySelector('.drag-grip') as HTMLElement
-        const actionButtons = dragHandle?.querySelectorAll('.action-btn') as NodeListOf<HTMLElement>
+        const actionButtons = dragHandle?.querySelectorAll<HTMLElement>('.action-btn')
 
         view.dom.removeEventListener('mousemove', handleMouseMove)
         view.dom.removeEventListener('mouseleave', handleMouseLeave)

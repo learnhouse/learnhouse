@@ -28,7 +28,7 @@ import ImageBlock from './Extensions/Image/ImageBlock'
 import Youtube from '@tiptap/extension-youtube'
 import VideoBlock from './Extensions/Video/VideoBlock'
 import AudioBlock from './Extensions/Audio/AudioBlock'
-import { Eye, Monitor, History, AlertTriangle, RefreshCw, GitMerge, Loader2 } from 'lucide-react'
+import { Eye, Monitor, History, AlertTriangle, RefreshCw, Loader2 } from 'lucide-react'
 import MathEquationBlock from './Extensions/MathEquation/MathEquationBlock'
 import PDFBlock from './Extensions/PDF/PDFBlock'
 import QuizBlock from './Extensions/Quiz/QuizBlock'
@@ -80,20 +80,20 @@ interface ConflictInfo {
   lastModifiedAt: string | null
 }
 
-interface Editor {
+interface EditorProps {
   content: string
   activity: any
   course: any
   org: any
   session: any
-  setContent: (content: any, forceOverwrite?: boolean) => Promise<any>
+  setContent: (_content: any, _forceOverwrite?: boolean) => Promise<any>
   checkForConflicts: () => Promise<ConflictInfo | null>
   fetchRemoteContent: () => Promise<any>
   localVersion: number
   onReady?: () => void
 }
 
-function Editor(props: Editor) {
+function Editor(props: EditorProps) {
   const { t } = useTranslation()
   const dispatchAIEditor = useAIEditorDispatch() as any
   const aiEditorState = useAIEditor() as AIEditorStateTypes

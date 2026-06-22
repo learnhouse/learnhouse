@@ -126,7 +126,8 @@ function VideoBlockComponent(props: ExtendedNodeViewProps) {
     return convertLegacyBlock(node.attrs.blockObject as LegacyVideoBlockObject)
   }, [node.attrs.blockObject, convertLegacyBlock])
 
-  const [video, setVideo] = React.useState<File | null>(null)
+  // `_video` value is intentionally unused; only the setter tracks selected-file state
+  const [_video, setVideo] = React.useState<File | null>(null)
   const [isLoading, setIsLoading] = React.useState(false)
   const [error, setError] = React.useState<string | null>(null)
   const [isDragging, setIsDragging] = React.useState(false)

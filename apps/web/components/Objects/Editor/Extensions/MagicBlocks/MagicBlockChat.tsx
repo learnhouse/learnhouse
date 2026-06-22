@@ -11,7 +11,7 @@ interface MagicBlockChatProps {
   iterationCount: number
   maxIterations: number
   isLoading: boolean
-  onSendMessage: (message: string) => void
+  onSendMessage: (_message: string) => void
 }
 
 function MagicBlockChat({
