@@ -4489,6 +4489,7 @@
     "export": {
       "button": "Ekspor",
       "csv": "Unduh CSV",
+      "xlsx": "Unduh XLSX",
       "downloading": "Mengekspor...",
       "json": "Unduh JSON"
     }

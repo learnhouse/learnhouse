@@ -648,7 +648,7 @@ WHERE
     AND user_id != 0
 GROUP BY user_id, course_uuid
 ORDER BY enrolled_at DESC
-LIMIT 200
+LIMIT {limit}
 """
 
 DETAIL_COMPLETIONS = """
@@ -663,7 +663,7 @@ WHERE
     AND timestamp >= now() - INTERVAL {days} DAY
     AND user_id != 0
 ORDER BY timestamp DESC
-LIMIT 200
+LIMIT {limit}
 """
 
 DETAIL_QUERIES: dict[str, tuple[str, int]] = {
@@ -1019,7 +1019,7 @@ WHERE
     AND user_id != 0
 GROUP BY user_id
 ORDER BY completions DESC, views DESC
-LIMIT 20
+LIMIT {limit}
 """
 
 COURSE_ACTIVITY_DROPOFF = """
@@ -1136,7 +1136,6 @@ WHERE
     ({org_id} = 0 OR org_id = {org_id})
     AND JSONExtractString(properties, 'course_uuid') = '{course_uuid}'
     AND event_name = 'course_enrolled'
-    AND timestamp >= now() - INTERVAL {days} DAY
     AND user_id != 0
 GROUP BY user_id
 ORDER BY enrolled_at DESC

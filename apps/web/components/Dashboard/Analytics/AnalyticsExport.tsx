@@ -6,7 +6,7 @@ import { getAPIUrl } from '@services/config/config'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
 import { useOrg } from '@components/Contexts/OrgContext'
 
-type ExportFormat = 'json' | 'csv'
+type ExportFormat = 'json' | 'csv' | 'xlsx'
 
 interface ExportAnalyticsButtonProps {
   days: string
@@ -16,7 +16,6 @@ interface ExportAnalyticsButtonProps {
 
 export default function ExportAnalyticsButton({
   days,
-  queries,
   courseId,
 }: ExportAnalyticsButtonProps) {
   const { t } = useTranslation()
@@ -48,8 +47,7 @@ export default function ExportAnalyticsButton({
       const params = new URLSearchParams({
         org_id: String(orgId),
         days,
-        format,
-        queries: queries.join(','),
+        format
       })
       if (courseId) params.set('course_uuid', courseId)
 
@@ -60,8 +58,9 @@ export default function ExportAnalyticsButton({
       if (!resp.ok) throw new Error(`Export failed: ${resp.status}`)
 
       const blob = await resp.blob()
-      const ext = format === 'csv' ? 'csv' : 'json'
-      const filename = `analytics_${days}d.${ext}`
+      const ext = format === 'csv' ? 'csv' : format === 'xlsx' ? 'xlsx' : 'json'
+      const date = new Date().toISOString().slice(0, 10) // "2026-06-05"
+      const filename = `analytics_${orgId}_${days}d_${date}.${ext}`
 
       const url = URL.createObjectURL(blob)
       const a = document.createElement('a')
@@ -102,11 +101,17 @@ export default function ExportAnalyticsButton({
           </button>
           <button
             onClick={() => handleExport('csv')}
-            className="w-full text-left px-3 py-2 text-xs font-medium text-gray-700 hover:bg-gray-50 rounded-b-lg"
+            className="w-full text-left px-3 py-2 text-xs font-medium text-gray-700 hover:bg-gray-50 rounded-none"
           >
             {t('analytics.export.csv')}
           </button>
-        </div>
+          <button
+            onClick={() => handleExport('xlsx')}
+            className="w-full text-left px-3 py-2 text-xs font-medium text-gray-700 hover:bg-gray-50 rounded-b-lg"
+          >
+            {t('analytics.export.xlsx')}
+          </button>
+          </div>
       )}
     </div>
   )

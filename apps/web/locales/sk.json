@@ -4467,6 +4467,7 @@
       "button": "Exportovať",
       "json": "Stiahnuť JSON",
       "csv": "Stiahnuť CSV",
+      "xlsx": "Stiahnuť XLSX",
       "downloading": "Exportuje sa..."
     },
     "overview": {

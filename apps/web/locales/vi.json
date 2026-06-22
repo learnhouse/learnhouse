@@ -4491,6 +4491,7 @@
     "export": {
       "button": "Xuất",
       "csv": "Tải xuống CSV",
+      "xlsx": "Tải xuống XLSX",
       "downloading": "Đang xuất...",
       "json": "Tải xuống JSON"
     }

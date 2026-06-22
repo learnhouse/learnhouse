@@ -4478,6 +4478,7 @@
     "export": {
       "button": "导出",
       "csv": "下载 CSV",
+      "xlsx": "下载 XLSX",
       "downloading": "导出中...",
       "json": "下载 JSON"
     }

@@ -4520,6 +4520,7 @@
       "button": "Export",
       "json": "Download JSON",
       "csv": "Download CSV",
+      "xlsx": "Download XLSX",
       "downloading": "Exporting..."
     },
     "overview": {
