@@ -14,7 +14,7 @@ interface MergeConflictModalProps {
   localVersion: number
   remoteVersion: number
   remoteAuthor: string | null
-  onMergeComplete: (mergedContent: any) => void
+  onMergeComplete: (_mergedContent: any) => void
   activity?: any
   courseUuid?: string
 }
@@ -103,7 +103,8 @@ function MergeConflictModal({
                 </p>
               </div>
             </div>
-            <button type="button"               onClick={onClose}
+            <button
+              onClick={onClose}
               className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
             >
               <X size={20} className="text-gray-500" />
@@ -112,7 +113,8 @@ function MergeConflictModal({
 
           {/* Tab Navigation */}
           <div className="flex border-b border-gray-200">
-            <button type="button"               onClick={() => setActiveTab('mine')}
+            <button
+              onClick={() => setActiveTab('mine')}
               className={`flex-1 px-4 py-3 text-sm font-medium transition-colors flex items-center justify-center gap-2 ${
                 activeTab === 'mine'
                   ? 'text-sky-600 border-b-2 border-sky-600 bg-sky-50'
@@ -122,7 +124,8 @@ function MergeConflictModal({
               <User size={16} />
               {t('editor.versioning.conflict.your_version')} (v{localVersion})
             </button>
-            <button type="button"               onClick={() => setActiveTab('theirs')}
+            <button
+              onClick={() => setActiveTab('theirs')}
               className={`flex-1 px-4 py-3 text-sm font-medium transition-colors flex items-center justify-center gap-2 ${
                 activeTab === 'theirs'
                   ? 'text-sky-600 border-b-2 border-sky-600 bg-sky-50'
@@ -149,25 +152,29 @@ function MergeConflictModal({
 
           {/* Footer with Actions */}
           <div className="flex items-center justify-between p-4 border-t border-gray-200 bg-gray-50">
-            <button type="button"               onClick={onClose}
+            <button
+              onClick={onClose}
               className="px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
             >
               {t('editor.versioning.close')}
             </button>
             <div className="flex items-center gap-2">
-              <button type="button"                 onClick={handleKeepBoth}
+              <button
+                onClick={handleKeepBoth}
                 className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 hover:bg-gray-50 rounded-lg transition-colors flex items-center gap-2"
               >
                 <GitMerge size={16} />
                 {t('editor.versioning.conflict.keep_both')}
               </button>
-              <button type="button"                 onClick={handleKeepTheirs}
+              <button
+                onClick={handleKeepTheirs}
                 className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 hover:bg-gray-50 rounded-lg transition-colors flex items-center gap-2"
               >
                 <Clock size={16} />
                 {t('editor.versioning.conflict.keep_theirs')}
               </button>
-              <button type="button"                 onClick={handleKeepMine}
+              <button
+                onClick={handleKeepMine}
                 className="px-4 py-2 text-sm font-medium text-white bg-sky-600 hover:bg-sky-700 rounded-lg transition-colors flex items-center gap-2"
               >
                 <Check size={16} />

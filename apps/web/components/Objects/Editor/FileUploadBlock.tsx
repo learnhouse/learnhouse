@@ -29,7 +29,8 @@ const FileUploadBlockButton: React.FC<
   ButtonHTMLAttributes<HTMLButtonElement>
 > = ({ onClick, className, ...props }) => {
   return (
-    <button type="button"       className={cn(
+    <button
+      className={cn(
         'p-2 px-4 bg-slate-700 hover:bg-slate-800 rounded-lg text-white enabled:hover:bg-slate-800 transition-colors gap-2 items-center flex disabled:opacity-50 disabled:cursor-not-allowed text-sm font-medium',
         className
       )}

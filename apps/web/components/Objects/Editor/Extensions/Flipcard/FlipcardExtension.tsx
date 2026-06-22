@@ -180,7 +180,8 @@ const FlipcardExtension: React.FC = (props: any) => {
                 <div className={cn("text-center font-medium leading-relaxed flex items-center justify-center select-none", getFontSizeClass())}>
                   <span className="select-none pointer-events-none">{question}</span>
                   {isEditable && (
-                    <button type="button"                       onClick={(e) => {
+                    <button
+                      onClick={(e) => {
                         e.stopPropagation()
                         handleQuestionEdit()
                       }}
@@ -221,7 +222,8 @@ const FlipcardExtension: React.FC = (props: any) => {
                 <div className={cn("text-center font-medium leading-relaxed flex items-center justify-center select-none", getFontSizeClass())}>
                   <span className="select-none pointer-events-none">{answer}</span>
                   {isEditable && (
-                    <button type="button"                       onClick={(e) => {
+                    <button
+                      onClick={(e) => {
                         e.stopPropagation()
                         handleAnswerEdit()
                       }}
@@ -243,7 +245,8 @@ const FlipcardExtension: React.FC = (props: any) => {
         {isEditable && (
           <div className="flex mt-3 gap-1 justify-center opacity-60 hover:opacity-100 transition-opacity">
             {/* Alignment Controls */}
-            <button type="button"               onClick={(e) => {
+            <button
+              onClick={(e) => {
                 e.stopPropagation()
                 handleAlignmentChange('left')
               }}
@@ -255,7 +258,8 @@ const FlipcardExtension: React.FC = (props: any) => {
             >
               <AlignLeft size={12} />
             </button>
-            <button type="button"               onClick={(e) => {
+            <button
+              onClick={(e) => {
                 e.stopPropagation()
                 handleAlignmentChange('center')
               }}
@@ -267,7 +271,8 @@ const FlipcardExtension: React.FC = (props: any) => {
             >
               <AlignCenter size={12} />
             </button>
-            <button type="button"               onClick={(e) => {
+            <button
+              onClick={(e) => {
                 e.stopPropagation()
                 handleAlignmentChange('right')
               }}
@@ -283,7 +288,8 @@ const FlipcardExtension: React.FC = (props: any) => {
             <div className="w-px h-4 bg-neutral-300 self-center mx-1"></div>
 
             {/* Size Controls */}
-            <button type="button"               onClick={(e) => {
+            <button
+              onClick={(e) => {
                 e.stopPropagation()
                 handleSizeChange('small')
               }}
@@ -295,7 +301,8 @@ const FlipcardExtension: React.FC = (props: any) => {
             >
               <Minimize2 size={12} />
             </button>
-            <button type="button"               onClick={(e) => {
+            <button
+              onClick={(e) => {
                 e.stopPropagation()
                 handleSizeChange('medium')
               }}
@@ -307,7 +314,8 @@ const FlipcardExtension: React.FC = (props: any) => {
             >
               <Square size={12} />
             </button>
-            <button type="button"               onClick={(e) => {
+            <button
+              onClick={(e) => {
                 e.stopPropagation()
                 handleSizeChange('large')
               }}
@@ -323,7 +331,8 @@ const FlipcardExtension: React.FC = (props: any) => {
             <div className="w-px h-4 bg-neutral-300 self-center mx-1"></div>
 
             {/* Color & Flip */}
-            <button type="button"               onClick={(e) => {
+            <button
+              onClick={(e) => {
                 e.stopPropagation()
                 setShowColorPicker(!showColorPicker)
               }}
@@ -332,7 +341,8 @@ const FlipcardExtension: React.FC = (props: any) => {
             >
               <Palette size={12} />
             </button>
-            <button type="button"               onClick={(e) => {
+            <button
+              onClick={(e) => {
                 e.stopPropagation()
                 setIsFlipped(!isFlipped)
               }}
@@ -349,7 +359,8 @@ const FlipcardExtension: React.FC = (props: any) => {
           <div ref={colorPickerRef} className="absolute top-full mt-2 left-1/2 transform -translate-x-1/2 p-3 bg-white rounded-lg nice-shadow z-10 border border-neutral-200">
             <div className="flex flex-wrap gap-2 max-w-xs">
               {colors.map((c) => (
-                <button type="button"                   key={c}
+                <button
+                  key={c}
                   className={cn(
                     "w-8 h-8 rounded-full border-2 border-white hover:scale-110 transform transition-transform",
                     getCardColor(c),

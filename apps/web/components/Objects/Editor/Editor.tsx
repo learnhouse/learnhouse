@@ -28,7 +28,7 @@ import ImageBlock from './Extensions/Image/ImageBlock'
 import Youtube from '@tiptap/extension-youtube'
 import VideoBlock from './Extensions/Video/VideoBlock'
 import AudioBlock from './Extensions/Audio/AudioBlock'
-import { Eye, Monitor, History, AlertTriangle, RefreshCw, GitMerge, Loader2 } from 'lucide-react'
+import { Eye, Monitor, History, AlertTriangle, RefreshCw, Loader2 } from 'lucide-react'
 import MathEquationBlock from './Extensions/MathEquation/MathEquationBlock'
 import PDFBlock from './Extensions/PDF/PDFBlock'
 import QuizBlock from './Extensions/Quiz/QuizBlock'
@@ -80,20 +80,20 @@ interface ConflictInfo {
   lastModifiedAt: string | null
 }
 
-interface Editor {
+interface EditorProps {
   content: string
   activity: any
   course: any
   org: any
   session: any
-  setContent: (content: any, forceOverwrite?: boolean) => Promise<any>
+  setContent: (_content: any, _forceOverwrite?: boolean) => Promise<any>
   checkForConflicts: () => Promise<ConflictInfo | null>
   fetchRemoteContent: () => Promise<any>
   localVersion: number
   onReady?: () => void
 }
 
-function Editor(props: Editor) {
+function Editor(props: EditorProps) {
   const { t } = useTranslation()
   const dispatchAIEditor = useAIEditorDispatch() as any
   const aiEditorState = useAIEditor() as AIEditorStateTypes
@@ -460,17 +460,20 @@ function Editor(props: Editor) {
                         </div>
                       </div>
                       <div className="space-y-2">
-                        <button type="button"                           className="w-full px-3 py-2.5 text-sm font-medium text-white bg-sky-600 hover:bg-sky-700 rounded-lg transition-colors"
+                        <button
+                          className="w-full px-3 py-2.5 text-sm font-medium text-white bg-sky-600 hover:bg-sky-700 rounded-lg transition-colors"
                           onClick={() => handleSave(true)}
                         >
                           {t('editor.versioning.conflict.overwrite_mine')}
                         </button>
-                        <button type="button"                           className="w-full px-3 py-2.5 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg border border-gray-200 transition-colors"
+                        <button
+                          className="w-full px-3 py-2.5 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg border border-gray-200 transition-colors"
                           onClick={handleReloadRemote}
                         >
                           {t('editor.versioning.conflict.discard_mine')}
                         </button>
-                        <button type="button"                           className="w-full px-3 py-2 text-xs font-medium text-sky-600 hover:text-sky-700 hover:underline transition-colors flex items-center justify-center gap-1"
+                        <button
+                          className="w-full px-3 py-2 text-xs font-medium text-sky-600 hover:text-sky-700 hover:underline transition-colors flex items-center justify-center gap-1"
                           onClick={handleOpenMerge}
                           disabled={isLoadingRemote}
                         >

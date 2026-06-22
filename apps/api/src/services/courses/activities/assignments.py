@@ -2569,22 +2569,30 @@ async def _apply_grade_and_finalize(
             task_submissions_by_task_id[ts.assignment_task_id] = ts
 
     # Server-side re-verification for task types where we don't trust the
-    # client's computed grade (SHORT_ANSWER, NUMBER_ANSWER). If the
-    # verified grade differs from what the client submitted, overwrite it
-    # so tampering is caught and future reads see the correct number.
-    for task in assignment_tasks:
-        ts = task_submissions_by_task_id.get(task.id)
-        verified = await _server_verified_task_grade(task, ts)
-        if verified is None or ts is None:
-            continue
-        if int(ts.grade or 0) != verified:
-            ts.grade = verified
-            ts.task_submission_grade_feedback = (
-                "Server-verified: correct"
-                if verified > 0
-                else "Server-verified: incorrect"
-            )
-            db_session.add(ts)
+    # client's computed grade (SHORT_ANSWER, NUMBER_ANSWER, QUIZ, FORM, CODE).
+    # If the verified grade differs from what the client submitted, overwrite
+    # it so tampering is caught and future reads see the correct number.
+    #
+    # This ONLY runs on the auto-grade path. On the teacher's manual grading
+    # path (auto_graded=False) the instructor has explicitly set per-task
+    # grades via the dashboard, and those overrides must win — re-deriving the
+    # grade from the student's answer here would silently discard a teacher's
+    # legitimate grade (e.g. awarding credit for a short-answer the exact
+    # matcher would mark wrong).
+    if auto_graded:
+        for task in assignment_tasks:
+            ts = task_submissions_by_task_id.get(task.id)
+            verified = await _server_verified_task_grade(task, ts)
+            if verified is None or ts is None:
+                continue
+            if int(ts.grade or 0) != verified:
+                ts.grade = verified
+                ts.task_submission_grade_feedback = (
+                    "Server-verified: correct"
+                    if verified > 0
+                    else "Server-verified: incorrect"
+                )
+                db_session.add(ts)
 
     raw_grade = 0
     for ts in task_submissions_by_task_id.values():

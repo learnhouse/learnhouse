@@ -410,13 +410,6 @@ function AIEditorSidePanel(props: AIEditorSidePanelProps) {
   }
 
   /**
-   * Check if a node type is atomic (no content, just attrs)
-   */
-  const isAtomicBlock = (type: string): boolean => {
-    return ATOMIC_BLOCK_TYPES.includes(type)
-  }
-
-  /**
    * Check if a node type is a special block (needs direct insertion)
    */
   const isSpecialBlock = (type: string): boolean => {
@@ -479,7 +472,7 @@ function AIEditorSidePanel(props: AIEditorSidePanelProps) {
   /**
    * Insert a single TipTap JSON node with appropriate handling
    */
-  const insertSingleNode = (node: any, startPos: number): number => {
+  const insertSingleNode = (node: any, _startPos: number): number => {
     const isSpecial = node.type && isSpecialBlock(node.type)
 
     // For special blocks (atomic or with React node views), insert directly
@@ -699,6 +692,8 @@ function AIEditorSidePanel(props: AIEditorSidePanelProps) {
         // Clean up the content - remove extra whitespace and newlines
         let cleanContent = fullContent.trim()
         cleanContent = cleanContent.replace(/^\n+|\n+$/g, '').trim()
+        // Intentionally strip ASCII control characters from streamed AI output before JSON parsing.
+        // eslint-disable-next-line no-control-regex
         cleanContent = cleanContent.replace(/[\x00-\x1F\x7F]/g, '')
         cleanContent = cleanContent.trim()
         cleanContent = cleanContent.replace(/,(\s*[\]}])/g, '$1')
@@ -1032,7 +1027,8 @@ function AIEditorSidePanel(props: AIEditorSidePanelProps) {
           </div>
           <div className="flex space-x-1 items-center">
             {aiEditorState.messages.length > 0 && (
-              <button type="button"                 onClick={clearChat}
+              <button
+                onClick={clearChat}
                 title={t('editor.ai_panel.clear_chat')}
                 className="text-white/50 hover:text-white/70 hover:cursor-pointer bg-white/10 p-1 rounded-full items-center transition-colors"
               >
@@ -1218,7 +1214,8 @@ function AIEditorSidePanel(props: AIEditorSidePanelProps) {
                     >
                       {aiEditorState.followUpSuggestions.map(
                         (suggestion, idx) => (
-                          <button type="button"                             key={idx}
+                          <button
+                            key={idx}
                             onClick={() => sendMessage(suggestion)}
                             disabled={isInputDisabled}
                             className="px-3 py-1.5 text-xs bg-white/5 text-white/60 rounded-full hover:bg-white/10 hover:text-white/80 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
@@ -1259,7 +1256,8 @@ function AIEditorSidePanel(props: AIEditorSidePanelProps) {
         <div className="px-4 py-2 border-t border-white/5">
           <div className="flex flex-wrap gap-2">
             {quickActions.map((action, idx) => (
-              <button type="button"                 key={idx}
+              <button
+                key={idx}
                 onClick={() => sendMessage(action.prompt)}
                 disabled={isInputDisabled}
                 className="flex items-center gap-1.5 px-3 py-1 text-xs bg-white/5 text-white/60 rounded-full hover:bg-white/10 hover:text-white/80 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
@@ -1296,7 +1294,8 @@ function AIEditorSidePanel(props: AIEditorSidePanelProps) {
                       return ''
                     })()}
                   </span>
-                  <button type="button"                     onClick={clearSelectionHighlight}
+                  <button
+                    onClick={clearSelectionHighlight}
                     className="ml-auto p-1 rounded hover:bg-purple-500/20 transition-colors"
                     title={t('editor.ai_panel.clear_selection')}
                   >
@@ -1325,7 +1324,8 @@ function AIEditorSidePanel(props: AIEditorSidePanelProps) {
                       {t('editor.ai_panel.block_selected')}
                     </span>
                   </div>
-                  <button type="button"                     onClick={clearSelectionHighlight}
+                  <button
+                    onClick={clearSelectionHighlight}
                     className="ml-auto p-1 rounded hover:bg-violet-500/20 transition-colors"
                     title={t('editor.ai_panel.clear_selection')}
                   >
@@ -1363,7 +1363,8 @@ function AIEditorSidePanel(props: AIEditorSidePanelProps) {
               />
             </div>
             <div className="pb-1">
-              <button type="button"                 onClick={() => sendMessage(aiEditorState.chatInputValue)}
+              <button
+                onClick={() => sendMessage(aiEditorState.chatInputValue)}
                 disabled={isInputDisabled || !aiEditorState.chatInputValue.trim()}
                 className="p-2 rounded-lg bg-purple-500/20 hover:bg-purple-500/30 text-purple-300 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
               >
@@ -1432,7 +1433,7 @@ function AIEditorMessageComponent({
   )
 }
 
-const AIEditorSidePanelPlaceholder = (props: { sendMessage: (msg: string) => void }) => {
+const AIEditorSidePanelPlaceholder = (props: { sendMessage: (_msg: string) => void }) => {
   const session = useLHSession() as any
   const aiEditorState = useAIEditor() as AIEditorStateTypes
   const { t } = useTranslation()
@@ -1506,7 +1507,8 @@ const AIEditorSidePanelPlaceholder = (props: { sendMessage: (msg: string) => voi
             className="questions flex flex-col space-y-2 mx-auto pt-6"
           >
             {predefinedQuestions.map((q, idx) => (
-              <button type="button"                 key={idx}
+              <button
+                key={idx}
                 onClick={() => props.sendMessage(q.prompt)}
                 className="flex items-center justify-center space-x-1.5 bg-white/5 cursor-pointer px-4 py-2 rounded-xl outline outline-1 outline-neutral-100/10 text-xs font-semibold text-white/40 hover:text-white/60 hover:bg-white/10 hover:outline-neutral-200/40 delay-75 ease-linear transition-all"
               >

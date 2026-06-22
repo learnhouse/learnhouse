@@ -196,7 +196,8 @@ function CalloutComponent(props: any) {
 
         {/* Dismiss button */}
         {dismissible && !isEditable && (
-          <button type="button"             contentEditable={false}
+          <button
+            contentEditable={false}
             onClick={() => setDismissed(true)}
             className="shrink-0 mt-0.5 cursor-pointer p-0.5 rounded-full hover:bg-black/10 transition-colors"
           >
