@@ -1,6 +1,6 @@
 {
   "name": "learnhouse",
-  "version": "1.2.6",
+  "version": "1.2.7",
   "private": true,
   "scripts": {
     "dev": "next dev --turbopack",
