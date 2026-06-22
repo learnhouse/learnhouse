@@ -494,7 +494,6 @@ const UserFeedbackModal = (props: AIEditorToolkitProps) => {
 
 const AiEditorToolButton = (props: any) => {
   const dispatchAIEditor = useAIEditorDispatch() as any
-  const aiEditorState = useAIEditor() as AIEditorStateTypes
 
   const handleToolButtonClick = async (
     label:
@@ -532,7 +531,8 @@ const AiEditorToolButton = (props: any) => {
   }
 
   return (
-    <button type="button"       onClick={() => handleToolButtonClick(props.label)}
+    <button
+      onClick={() => handleToolButtonClick(props.label)}
       className="flex space-x-1.5 items-center bg-white/10 px-2 py-0.5 rounded-md outline outline-1 outline-neutral-200/20 text-sm font-semibold text-white/70 hover:bg-white/20 hover:outline-neutral-200/40 delay-75 ease-linear transition-all"
     >
       {props.label === 'Writer' && <Feather size={14} />}

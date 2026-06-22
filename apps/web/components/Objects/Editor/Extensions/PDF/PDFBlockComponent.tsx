@@ -129,13 +129,15 @@ function PDFBlockComponent(props: any) {
               title={t('editor.blocks.pdf_block.document_title')}
             />
             <div className="absolute top-2 right-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-              <button type="button"                 onClick={handleExpand}
+              <button
+                onClick={handleExpand}
                 className="p-2 outline-none bg-black/50 hover:bg-black/70 rounded-lg transition-colors"
                 title={t('editor.blocks.pdf_block.expand_pdf')}
               >
                 <Expand className="w-4 h-4 text-white" />
               </button>
-              <button type="button"                 onClick={handleDownload}
+              <button
+                onClick={handleDownload}
                 className="p-2 outline-none bg-black/50 hover:bg-black/70 rounded-lg transition-colors"
                 title={t('editor.blocks.pdf_block.download_pdf')}
               >
@@ -241,13 +243,15 @@ function PDFBlockComponent(props: any) {
                 title={t('editor.blocks.pdf_block.document_title')}
               />
               <div className="absolute top-2 right-2 flex gap-1">
-                <button type="button"                   onClick={handleExpand}
+                <button
+                  onClick={handleExpand}
                   className="p-2 outline-none bg-black/50 hover:bg-black/70 rounded-lg transition-colors"
                   title={t('editor.blocks.pdf_block.expand_pdf')}
                 >
                   <Expand className="w-4 h-4 text-white" />
                 </button>
-                <button type="button"                   onClick={handleDownload}
+                <button
+                  onClick={handleDownload}
                   className="p-2 outline-none bg-black/50 hover:bg-black/70 rounded-lg transition-colors"
                   title={t('editor.blocks.pdf_block.download_pdf')}
                 >

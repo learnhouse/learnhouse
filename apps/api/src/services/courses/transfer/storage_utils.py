@@ -291,9 +291,7 @@ def walk_directory(base_path: str):
 
         # Yield subdirectories
         for dir_rel in sorted(all_dirs):
-            # POSIX join: S3 keys always use '/', and os.path.join would
-            # produce a backslash on Windows (mixed-separator paths, #814)
-            dir_path = f"{base_path.rstrip('/')}/{dir_rel}"
+            dir_path = os.path.join(base_path, dir_rel)
             files = sorted(dir_files.get(dir_rel, set()))
             # Find immediate subdirs
             subdirs = sorted([
@@ -303,11 +301,10 @@ def walk_directory(base_path: str):
             ])
             yield dir_path, subdirs, files
     else:
-        # Walk local filesystem. Normalize roots to '/' so consumers (and
-        # S3 key builders downstream) see one canonical separator (#814)
+        # Walk local filesystem
         if os.path.exists(base_path):
             for root, dirs, files in os.walk(base_path):
-                yield root.replace(os.sep, '/'), dirs, files
+                yield root, dirs, files
 
 
 def upload_to_s3(file_path: str, content: bytes) -> bool:

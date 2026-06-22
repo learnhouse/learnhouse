@@ -101,34 +101,35 @@ function EditCourseContributors(_props: EditCourseContributorsProps) {
         staleTime: 60_000,
     });
 
-    const [isOpenToContributors, setIsOpenToContributors] = useState<boolean | undefined>(undefined);
     const [searchQuery, setSearchQuery] = useState('');
     const [searchResults, setSearchResults] = useState<SearchUser[]>([]);
     const [selectedUsers, setSelectedUsers] = useState<string[]>([]);
     const [isSearching, setIsSearching] = useState(false);
     const debouncedSearch = useDebounce(searchQuery, 300);
     const [selectedContributors, setSelectedContributors] = useState<string[]>([]);
-    const [masterCheckboxChecked, setMasterCheckboxChecked] = useState(false);
 
-    useEffect(() => {
-        if (!isLoading && courseStructure?.open_to_contributors !== undefined) {
-            // eslint-disable-next-line react-hooks/set-state-in-effect
-            setIsOpenToContributors(courseStructure.open_to_contributors);
-        }
-    }, [isLoading, courseStructure]);
+    // Derived during render: the master checkbox is checked when every
+    // non-creator contributor is currently selected (and there is at least one).
+    const nonCreatorContributors = contributors?.filter(c => c.authorship !== 'CREATOR') ?? [];
+    const masterCheckboxChecked =
+        nonCreatorContributors.length > 0 &&
+        selectedContributors.length === nonCreatorContributors.length;
 
-    useEffect(() => {
-        if (!isLoading && courseStructure?.open_to_contributors !== undefined && isOpenToContributors !== undefined) {
-            if (isOpenToContributors !== courseStructure.open_to_contributors) {
-                dispatchCourse({ type: 'setIsNotSaved' });
-                const updatedCourse = {
-                    ...courseStructure,
-                    open_to_contributors: isOpenToContributors,
-                };
-                dispatchCourse({ type: 'setCourseStructure', payload: updatedCourse });
-            }
-        }
-    }, [isLoading, isOpenToContributors, courseStructure, dispatchCourse]);
+    // The "open to contributors" flag is owned by the course store; read it
+    // directly so the UI always mirrors the canonical course structure.
+    const isOpenToContributors: boolean | undefined = courseStructure?.open_to_contributors;
+
+    // Toggle the flag by writing back to the course store (was previously a
+    // local-state mirror + sync effect). Only dispatch when the value changes.
+    const setIsOpenToContributors = (value: boolean) => {
+        if (isLoading || !courseStructure) return;
+        if (courseStructure.open_to_contributors === value) return;
+        dispatchCourse({ type: 'setIsNotSaved' });
+        dispatchCourse({
+            type: 'setCourseStructure',
+            payload: { ...courseStructure, open_to_contributors: value },
+        });
+    };
 
     useEffect(() => {
         const searchUsers = async () => {
@@ -158,8 +159,7 @@ function EditCourseContributors(_props: EditCourseContributorsProps) {
                 } else {
                     setSearchResults([]);
                 }
-            } catch (error) {
-                console.error('Error searching users:', error);
+            } catch (_error) {
                 setSearchResults([]);
             }
             setIsSearching(false);
@@ -169,17 +169,6 @@ function EditCourseContributors(_props: EditCourseContributorsProps) {
             searchUsers();
         }
     }, [debouncedSearch, org?.slug, access_token]);
-
-    useEffect(() => {
-        if (contributors) {
-            const nonCreatorContributors = contributors.filter(c => c.authorship !== 'CREATOR');
-            // eslint-disable-next-line react-hooks/set-state-in-effect
-            setMasterCheckboxChecked(
-                nonCreatorContributors.length > 0 && 
-                selectedContributors.length === nonCreatorContributors.length
-            );
-        }
-    }, [contributors, selectedContributors]);
 
     const handleUserSelect = (username: string) => {
         setSelectedUsers(prev => {
@@ -214,8 +203,7 @@ function EditCourseContributors(_props: EditCourseContributorsProps) {
                 setSelectedUsers([]);
                 setSearchQuery('');
             }
-        } catch (error) {
-            console.error('Error adding contributors:', error);
+        } catch (_error) {
             toast.error(t('dashboard.courses.contributors.toasts.add_failed'));
         }
     };
@@ -245,7 +233,7 @@ function EditCourseContributors(_props: EditCourseContributorsProps) {
             } else {
                 toast.error(t('dashboard.courses.contributors.toasts.update_error', { detail: res.data?.detail || t('dashboard.courses.contributors.toasts.update_failed') }));
             }
-        } catch {
+        } catch (_error) {
             toast.error(t('dashboard.courses.contributors.toasts.update_failed'));
         }
     };
@@ -318,8 +306,8 @@ function EditCourseContributors(_props: EditCourseContributorsProps) {
     };
 
     const sortContributors = (contributors: Contributor[] | undefined) => {
-        if (!Array.isArray(contributors)) return [];
-
+        if (!contributors) return [];
+        
         // Find the creator and other contributors
         const creator = contributors.find(c => c.authorship === 'CREATOR');
         const otherContributors = contributors.filter(c => c.authorship !== 'CREATOR');
@@ -359,8 +347,7 @@ function EditCourseContributors(_props: EditCourseContributorsProps) {
                 // Clear selection
                 setSelectedContributors([]);
             }
-        } catch (error) {
-            console.error('Error removing contributors:', error);
+        } catch (_error) {
             toast.error(t('dashboard.courses.contributors.toasts.remove_failed'));
         }
     };
@@ -626,14 +613,12 @@ function EditCourseContributors(_props: EditCourseContributorsProps) {
                                                         type="checkbox"
                                                         checked={masterCheckboxChecked}
                                                         onChange={(e) => {
-                                                            setMasterCheckboxChecked(e.target.checked);
                                                             if (contributors) {
                                                                 if (e.target.checked) {
                                                                     // Select all non-creator contributors
-                                                                    const nonCreatorContributors = contributors
-                                                                        .filter(c => c.authorship !== 'CREATOR')
-                                                                        .map(c => c.user_id);
-                                                                    setSelectedContributors(nonCreatorContributors);
+                                                                    setSelectedContributors(
+                                                                        nonCreatorContributors.map(c => c.user_id)
+                                                                    );
                                                                 } else {
                                                                     setSelectedContributors([]);
                                                                 }

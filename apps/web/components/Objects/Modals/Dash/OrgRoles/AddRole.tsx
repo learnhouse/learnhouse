@@ -1,4 +1,4 @@
-﻿'use client'
+'use client'
 import FormLayout, {
     FormField,
     FormLabelAndMessage,
@@ -14,9 +14,8 @@ import { queryKeys } from '@/lib/query/keys'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
 import { useFormik } from 'formik'
 import toast from 'react-hot-toast'
-import { Shield, BookOpen, Users, UserCheck, FolderOpen, Building, FileText, Activity, Monitor } from 'lucide-react'
+import { Shield, BookOpen, Users, UserCheck, FolderOpen, Building, FileText, Activity, Monitor, CheckSquare, Square } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
-import PermissionSection from './PermissionSection'
 
 type AddRoleProps = {
     setCreateRoleModal: any
@@ -292,6 +291,47 @@ const predefinedRoles = {
     }
 }
 
+const PermissionSection = ({ title, icon: Icon, section, permissions, rights, t, handleSelectAll, handleRightChange }: { title: string, icon: any, section: keyof Rights, permissions: string[], rights: Rights, t: any, handleSelectAll: (_section: keyof Rights, _value: boolean) => void, handleRightChange: (_section: keyof Rights, _action: string, _value: boolean) => void }) => {
+    const sectionRights = rights[section] as any
+    const allSelected = permissions.every(perm => sectionRights[perm])
+    const someSelected = permissions.some(perm => sectionRights[perm]) && !allSelected
+
+    return (
+        <div className="border border-gray-200 rounded-lg p-4 mb-4 bg-white shadow-sm">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-3 gap-2">
+                <div className="flex items-center space-x-2">
+                    <Icon className="w-4 h-4 text-gray-500" />
+                    <h3 className="font-semibold text-gray-800 text-sm sm:text-base">{title}</h3>
+                </div>
+                <button
+                    type="button"
+                    onClick={() => handleSelectAll(section, !allSelected)}
+                    className="flex items-center space-x-2 text-sm text-blue-600 hover:text-blue-700 font-medium self-start sm:self-auto transition-colors"
+                >
+                    {allSelected ? <CheckSquare className="w-4 h-4" /> : someSelected ? <Square className="w-4 h-4" /> : <Square className="w-4 h-4" />}
+                    <span className="hidden sm:inline">{allSelected ? t('dashboard.users.roles.modals.create.permissions.deselect_all') : t('dashboard.users.roles.modals.create.permissions.select_all')}</span>
+                    <span className="sm:hidden">{allSelected ? t('dashboard.users.roles.modals.create.permissions.deselect') : t('dashboard.users.roles.modals.create.permissions.select')}</span>
+                </button>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                {permissions.map((permission) => (
+                    <label key={permission} className="flex items-center space-x-2 cursor-pointer p-2 rounded-md hover:bg-gray-50 transition-colors">
+                        <input
+                            type="checkbox"
+                            checked={rights[section]?.[permission as keyof typeof rights[typeof section]] || false}
+                            onChange={(e) => handleRightChange(section, permission, e.target.checked)}
+                            className="rounded border-gray-300 text-blue-600 focus:ring-blue-500 focus:ring-2"
+                        />
+                        <span className="text-sm text-gray-700 capitalize">
+                            {t(`dashboard.users.roles.modals.create.permissions.actions.${permission.replace('action_', '').replace(/_/g, '_')}`)}
+                        </span>
+                    </label>
+                ))}
+            </div>
+        </div>
+    )
+}
+
 function AddRole(props: AddRoleProps) {
     const { t } = useTranslation()
     const org = useOrg() as any;
@@ -418,14 +458,6 @@ function AddRole(props: AddRoleProps) {
         }
     }
 
-    const permissionSectionProps = {
-        rights,
-        i18nPrefix: 'dashboard.users.roles.modals.create.permissions',
-        t,
-        onSelectAll: handleSelectAll,
-        onRightChange: handleRightChange,
-    }
-
     return (
         <div className="py-3 max-w-6xl mx-auto px-2 sm:px-0">
             <FormLayout onSubmit={formik.handleSubmit}>
@@ -480,75 +512,102 @@ function AddRole(props: AddRoleProps) {
                         <h3 className="text-lg font-semibold text-gray-800 mb-4">{t('dashboard.users.roles.modals.create.permissions.title')}</h3>
                         
                         <PermissionSection
-                            {...permissionSectionProps}
                             title={t('dashboard.users.roles.modals.create.permissions.sections.courses')}
                             icon={BookOpen}
                             section="courses"
                             permissions={['action_create', 'action_read', 'action_read_own', 'action_update', 'action_update_own', 'action_delete', 'action_delete_own']}
+                            rights={rights}
+                            t={t}
+                            handleSelectAll={handleSelectAll}
+                            handleRightChange={handleRightChange}
                         />
                         
                         <PermissionSection
-                            {...permissionSectionProps}
                             title={t('dashboard.users.roles.modals.create.permissions.sections.users')}
                             icon={Users}
                             section="users"
                             permissions={['action_create', 'action_read', 'action_update', 'action_delete']}
+                            rights={rights}
+                            t={t}
+                            handleSelectAll={handleSelectAll}
+                            handleRightChange={handleRightChange}
                         />
                         
                         <PermissionSection
-                            {...permissionSectionProps}
                             title={t('dashboard.users.roles.modals.create.permissions.sections.usergroups')}
                             icon={UserCheck}
                             section="usergroups"
                             permissions={['action_create', 'action_read', 'action_update', 'action_delete']}
+                            rights={rights}
+                            t={t}
+                            handleSelectAll={handleSelectAll}
+                            handleRightChange={handleRightChange}
                         />
                         
                         <PermissionSection
-                            {...permissionSectionProps}
                             title={t('dashboard.users.roles.modals.create.permissions.sections.collections')}
                             icon={FolderOpen}
                             section="collections"
                             permissions={['action_create', 'action_read', 'action_update', 'action_delete']}
+                            rights={rights}
+                            t={t}
+                            handleSelectAll={handleSelectAll}
+                            handleRightChange={handleRightChange}
                         />
                         
                         <PermissionSection
-                            {...permissionSectionProps}
                             title={t('dashboard.users.roles.modals.create.permissions.sections.organizations')}
                             icon={Building}
                             section="organizations"
                             permissions={['action_create', 'action_read', 'action_update', 'action_delete']}
+                            rights={rights}
+                            t={t}
+                            handleSelectAll={handleSelectAll}
+                            handleRightChange={handleRightChange}
                         />
                         
                         <PermissionSection
-                            {...permissionSectionProps}
                             title={t('dashboard.users.roles.modals.create.permissions.sections.coursechapters')}
                             icon={FileText}
                             section="coursechapters"
                             permissions={['action_create', 'action_read', 'action_update', 'action_delete']}
+                            rights={rights}
+                            t={t}
+                            handleSelectAll={handleSelectAll}
+                            handleRightChange={handleRightChange}
                         />
                         
                         <PermissionSection
-                            {...permissionSectionProps}
                             title={t('dashboard.users.roles.modals.create.permissions.sections.activities')}
                             icon={Activity}
                             section="activities"
                             permissions={['action_create', 'action_read', 'action_update', 'action_delete']}
+                            rights={rights}
+                            t={t}
+                            handleSelectAll={handleSelectAll}
+                            handleRightChange={handleRightChange}
                         />
                         
                         <PermissionSection
-                            {...permissionSectionProps}
                             title={t('dashboard.users.roles.modals.create.permissions.sections.roles')}
                             icon={Shield}
                             section="roles"
                             permissions={['action_create', 'action_read', 'action_update', 'action_delete']}
+                            rights={rights}
+                            t={t}
+                            handleSelectAll={handleSelectAll}
+                            handleRightChange={handleRightChange}
                         />
                         
                         <PermissionSection
-                            {...permissionSectionProps}
                             title={t('dashboard.users.roles.modals.create.permissions.sections.dashboard')}
                             icon={Monitor}
                             section="dashboard"
                             permissions={['action_access']}
+                            rights={rights}
+                            t={t}
+                            handleSelectAll={handleSelectAll}
+                            handleRightChange={handleRightChange}
                         />
                     </div>
                 </div>

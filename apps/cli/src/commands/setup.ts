@@ -21,7 +21,7 @@ import { dockerComposeUp } from '../services/docker.js'
 import { waitForHealth, waitForOrgSeed } from '../services/health.js'
 import { checkPort, findAvailablePort } from '../utils/network.js'
 import { resolveAppImage } from '../services/version-check.js'
-import { validateEmail } from '../utils/validators.js'
+import { validateEmail, validatePassword, validatePort, validateDomain } from '../utils/validators.js'
 import { setupEnterprise, type EeSetupOptions } from './setup-ee.js'
 
 const STEP_NAMES = [
@@ -178,10 +178,32 @@ export async function setupCommand(options: SetupOptions) {
       process.exit(1)
     }
 
+    const pwErr = validatePassword(options.adminPassword)
+    if (pwErr) {
+      console.error(`Error: --admin-password — ${pwErr}`)
+      process.exit(1)
+    }
+
     if (options.adminEmail) {
       const emailErr = validateEmail(options.adminEmail)
       if (emailErr) {
         console.error(`Error: --admin-email "${options.adminEmail}" — ${emailErr}`)
+        process.exit(1)
+      }
+    }
+
+    if (options.domain && options.domain !== 'localhost') {
+      const domainErr = validateDomain(options.domain)
+      if (domainErr) {
+        console.error(`Error: --domain "${options.domain}" — ${domainErr}`)
+        process.exit(1)
+      }
+    }
+
+    if (options.port !== undefined) {
+      const portErr = validatePort(String(options.port))
+      if (portErr) {
+        console.error(`Error: --port ${options.port} — ${portErr}`)
         process.exit(1)
       }
     }
@@ -265,12 +287,12 @@ export async function setupCommand(options: SetupOptions) {
         dockerComposeUp(resolvedDir)
         const healthy = await waitForHealth(`http://localhost:${config.httpPort}`)
         if (healthy) {
-          const seeded = await waitForOrgSeed(`http://localhost:${config.httpPort}`, 'default')
+          const seeded = await waitForOrgSeed(`http://localhost:${config.httpPort}`, config.orgSlug)
           if (seeded) {
             console.log('LearnHouse is ready!')
           } else {
             console.error('')
-            console.error('API is healthy but the default organization was not seeded.')
+            console.error(`API is healthy but organization "${config.orgSlug}" was not seeded.`)
             console.error('Run `npx learnhouse logs` to inspect; pin a different image tag and re-run.')
             console.error('')
             process.exit(1)
@@ -606,13 +628,13 @@ export async function setupCommand(options: SetupOptions) {
     const healthy = await waitForHealth(`http://localhost:${config.httpPort}`)
 
     if (healthy) {
-      const seeded = await waitForOrgSeed(`http://localhost:${config.httpPort}`, 'default')
+      const seeded = await waitForOrgSeed(`http://localhost:${config.httpPort}`, config.orgSlug)
       if (seeded) {
         s3.stop('LearnHouse is ready!')
       } else {
-        s3.stop('API is healthy but the default organization was not seeded')
+        s3.stop(`API is healthy but organization "${config.orgSlug}" was not seeded`)
         p.log.error(
-          '`/api/v1/orgs/slug/default` returns no org. Run `learnhouse logs` to inspect, ' +
+          `\`/api/v1/orgs/slug/${config.orgSlug}\` returns no org. Run \`learnhouse logs\` to inspect, ` +
           'pin a different image tag, and re-run setup.',
         )
         process.exit(1)
