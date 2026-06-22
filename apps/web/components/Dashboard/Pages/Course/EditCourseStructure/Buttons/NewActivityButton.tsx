@@ -31,11 +31,10 @@ function NewActivityButton(props: NewActivityButtonProps) {
   const course = useCourse() as any
   const session = useLHSession() as any;
   const access_token = session?.data?.tokens?.access_token;
-  const withUnpublishedActivities = course ? course.withUnpublishedActivities : false
   const queryClient = useQueryClient()
   const cleanCourseUuid = (id: string) => id?.replace(/^course_/, '') ?? id
 
-  const openNewActivityModal = async (chapterId: any) => {
+  const openNewActivityModal = async (_chapterId: any) => {
     setSelectedView('home')
     setNewActivityModal(true)
   }
@@ -67,11 +66,19 @@ function NewActivityButton(props: NewActivityButtonProps) {
     activity: any,
     chapterId: string
   ) => {
-    toast.loading(t('dashboard.courses.structure.activity.toasts.uploading'))
-    await createFileActivity(file, type, activity, chapterId, access_token)
+    const toast_loading = toast.loading(t('dashboard.courses.structure.activity.toasts.uploading'))
+    try {
+      await createFileActivity(file, type, activity, chapterId, access_token)
+    } catch (error: any) {
+      // Without this, an upload failure (e.g. a 413 from the proxy on a large
+      // video) left the loading toast spinning forever with no feedback.
+      toast.dismiss(toast_loading)
+      toast.error(error?.message || t('dashboard.courses.structure.activity.toasts.upload_error'))
+      return
+    }
     queryClient.invalidateQueries({ queryKey: queryKeys.courses.meta(cleanCourseUuid(course.courseStructure.course_uuid)) })
     setNewActivityModal(false)
-    toast.dismiss()
+    toast.dismiss(toast_loading)
     toast.success(t('dashboard.courses.structure.activity.toasts.upload_success'))
     toast.success(t('dashboard.courses.structure.activity.toasts.create_success'))
     await revalidateTags(['courses'], props.orgslug)
@@ -82,7 +89,7 @@ function NewActivityButton(props: NewActivityButtonProps) {
   const submitExternalVideo = async (
     external_video_data: any,
     activity: any,
-    chapterId: string
+    _chapterId: string
   ) => {
     const toast_loading = toast.loading(t('dashboard.courses.structure.activity.toasts.creating_uploading'))
     await createExternalVideoActivity(

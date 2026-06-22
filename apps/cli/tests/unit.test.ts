@@ -241,6 +241,15 @@ describe('generateNginxConf', () => {
     expect(conf).toContain('proxy_pass')
     expect(conf).toContain('listen')
   })
+
+  // Regression: the outer proxy must allow large uploads (videos). A 500M cap
+  // here rejected oversized bodies with a 413 before they reached the app,
+  // while the app's internal nginx already allows 6G.
+  it('allows large request bodies to match the internal nginx (6G)', () => {
+    const conf = generateNginxConf()
+    expect(conf).toContain('client_max_body_size 6G;')
+    expect(conf).not.toContain('client_max_body_size 500M;')
+  })
 })
 
 // ─── Caddyfile template ─────────────────────────────────────
