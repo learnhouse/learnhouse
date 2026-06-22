@@ -18,13 +18,11 @@ import {
 import { useLHSession } from '@components/Contexts/LHSessionContext'
 import { constructAcceptValue } from '@/lib/constants'
 import { revalidateTags } from '@services/utils/ts/requests'
-import toast from 'react-hot-toast'
 import { useRouter } from 'next/navigation'
 import { useTranslation } from 'react-i18next'
 import {
   analyzeImportPackage,
   importCourses,
-  ImportCourseInfo,
   ImportAnalysisResponse,
 } from '@services/courses/transfer'
 

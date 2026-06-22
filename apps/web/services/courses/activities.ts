@@ -61,6 +61,16 @@ export async function createFileActivity(
     endpoint,
     RequestBodyFormWithAuthHeader('POST', formData, null, access_token)
   )
+  if (!result.ok) {
+    // A too-large body is rejected by the reverse proxy (nginx) with a 413
+    // and an HTML error page — not JSON — so surface a clear error instead of
+    // letting `result.json()` blow up with "Unexpected token '<'".
+    if (result.status === 413) {
+      throw new Error('The file is too large to upload.')
+    }
+    const detail = await result.json().catch(() => null)
+    throw new Error(detail?.detail || `Upload failed (HTTP ${result.status})`)
+  }
   const res = await result.json()
   return res
 }

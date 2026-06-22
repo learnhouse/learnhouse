@@ -14,7 +14,7 @@ interface MergeConflictModalProps {
   localVersion: number
   remoteVersion: number
   remoteAuthor: string | null
-  onMergeComplete: (mergedContent: any) => void
+  onMergeComplete: (_mergedContent: any) => void
   activity?: any
   courseUuid?: string
 }

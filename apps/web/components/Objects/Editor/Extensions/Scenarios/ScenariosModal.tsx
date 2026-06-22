@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState } from 'react'
 import toast from 'react-hot-toast'
-import { Plus, Trash2, Settings, Play, RotateCcw, ArrowRight, CheckCircle, Save, GitBranch, Image } from 'lucide-react'
+import { Plus, Trash2, Settings, Play, RotateCcw, ArrowRight, CheckCircle, Save, GitBranch, Image as ImageIcon } from 'lucide-react'
 import Modal from '@components/Objects/StyledElements/Modal/Modal'
 import { ButtonBlack } from '@components/Objects/StyledElements/Form/Form'
 
@@ -23,7 +23,7 @@ interface ScenariosModalProps {
   title: string
   scenarios: Scenario[]
   currentScenarioId: string
-  onSave: (title: string, scenarios: Scenario[], currentScenarioId: string) => void
+  onSave: (_title: string, _scenarios: Scenario[], _currentScenarioId: string) => void
 }
 
 const ScenariosModal: React.FC<ScenariosModalProps> = ({
@@ -41,13 +41,32 @@ const ScenariosModal: React.FC<ScenariosModalProps> = ({
   const [previewCurrentId, setPreviewCurrentId] = useState('1')
   const [showImageInputs, setShowImageInputs] = useState<Record<string, boolean>>({})
 
-  useEffect(() => {
+  // Re-sync editing state from props during render whenever the incoming props change
+  // (e.g. the modal is reopened with different data). This uses the supported
+  // "adjusting state when a prop changes" pattern instead of an effect, which avoids
+  // the cascading-render hazard of calling setState inside useEffect.
+  // See: https://react.dev/learn/you-might-not-need-an-effect
+  const [syncedProps, setSyncedProps] = useState({
+    initialTitle,
+    initialScenarios,
+    initialCurrentScenarioId,
+  })
+  if (
+    syncedProps.initialTitle !== initialTitle ||
+    syncedProps.initialScenarios !== initialScenarios ||
+    syncedProps.initialCurrentScenarioId !== initialCurrentScenarioId
+  ) {
+    setSyncedProps({
+      initialTitle,
+      initialScenarios,
+      initialCurrentScenarioId,
+    })
     setTitle(initialTitle)
     setScenarios(initialScenarios)
     setCurrentScenarioId(initialCurrentScenarioId)
     setPreviewCurrentId(initialCurrentScenarioId)
     setShowImageInputs({})
-  }, [initialTitle, initialScenarios, initialCurrentScenarioId])
+  }
 
   const handleSave = () => {
     onSave(title, scenarios, currentScenarioId)
@@ -394,7 +413,7 @@ const ScenariosModal: React.FC<ScenariosModalProps> = ({
                         }`}
                         title={scenario.imageUrl && scenario.imageUrl.trim() !== '' ? "Edit image" : "Add image"}
                       >
-                        <Image size={14} />
+                        <ImageIcon size={14} />
                         <span>
                           {scenario.imageUrl && scenario.imageUrl.trim() !== '' ? 'Image' : 'Add Image'}
                         </span>

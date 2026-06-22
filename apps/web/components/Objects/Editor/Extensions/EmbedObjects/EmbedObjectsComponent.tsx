@@ -29,7 +29,7 @@ const getYouTubeEmbedUrl = (url: string): string => {
       return url;
     }
 
-    const youtubeRegex = /(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/i;
+    const youtubeRegex = /(?:youtube\.com\/(?:[^/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?/\s]{11})/i;
     const match = url.match(youtubeRegex);
 
     if (match && match[1]) {
@@ -40,7 +40,7 @@ const getYouTubeEmbedUrl = (url: string): string => {
     }
 
     return url;
-  } catch (e) {
+  } catch {
     return url;
   }
 };
@@ -81,7 +81,7 @@ const MemoizedEmbed = React.memo(({ embedUrl, sanitizedEmbedCode, embedType }: {
         url.hostname === 'www.youtube.com' ||
         url.hostname === 'youtu.be' ||
         url.hostname === 'www.youtu.be';
-    } catch (e) {
+    } catch {
       isYoutubeUrl = false;
     }
 
@@ -173,20 +173,24 @@ function EmbedObjectsComponent(props: any) {
     { name: 'Giphy', icon: SiGiphy, color: '#FF6666', guide: 'https://developers.giphy.com/docs/embed/' },
   ]
 
-  const [sanitizedEmbedCode, setSanitizedEmbedCode] = useState('')
-
-  useEffect(() => {
-    if (embedType === 'code' && embedCode) {
-      const sanitized = DOMPurify.sanitize(embedCode, {
-        ADD_TAGS: ['iframe'],
-        ALLOWED_ATTR: [
-          'src', 'frameborder', 'allowfullscreen', 'allow', 'width', 'height',
-          'style', 'class', 'title', 'loading', 'referrerpolicy', 'scrolling', 'name',
-        ],
-      })
-      setSanitizedEmbedCode(sanitized)
+  // Derive the sanitized embed code during render instead of via an effect that
+  // called setState (which triggered cascading renders). DOMPurify runs only
+  // when there is embed code; the `embedType === 'code'` gating is applied at
+  // render time (in MemoizedEmbed and the surrounding conditionals), matching
+  // the original behavior where the sanitized value was populated whenever code
+  // had been entered.
+  const sanitizedEmbedCode = useMemo(() => {
+    if (!embedCode) {
+      return ''
     }
-  }, [embedCode, embedType])
+    return DOMPurify.sanitize(embedCode, {
+      ADD_TAGS: ['iframe'],
+      ALLOWED_ATTR: [
+        'src', 'frameborder', 'allowfullscreen', 'allow', 'width', 'height',
+        'style', 'class', 'title', 'loading', 'referrerpolicy', 'scrolling', 'name',
+      ],
+    })
+  }, [embedCode])
 
   const handleUrlChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const newUrl = event.target.value;
@@ -203,7 +207,7 @@ function EmbedObjectsComponent(props: any) {
             url.protocol = 'https:';
             validatedUrl = url.toString();
           }
-        } catch (e) {
+        } catch {
           if (sanitizedUrl && !sanitizedUrl.match(/^[a-zA-Z]+:\/\//)) {
             validatedUrl = `https://${sanitizedUrl}`;
           }

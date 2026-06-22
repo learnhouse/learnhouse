@@ -15,6 +15,9 @@ import {
   escapeEnvValue,
   isAgency,
   eeDomainVar,
+  isExternalDb,
+  isCloudflareDns,
+  generateCaddyDockerfile,
 } from '../src/templates/ee.js'
 import { writeConfig } from '../src/services/config-store.js'
 import { quoteEnvValue } from '../src/utils/env-quote.js'
@@ -308,5 +311,28 @@ describe('setup --ci --edition enterprise (file generation)', () => {
     expect(id1).toBeTruthy()
     expect(id2).toBe(id1)
     expect(composeName2).toBe(composeName1)
+  })
+})
+
+// ─── EE config predicates & Caddy image ─────────────────────
+
+describe('EE predicates', () => {
+  it('isExternalDb reflects an externalDbUrl being set', () => {
+    expect(isExternalDb(baseEe())).toBe(false)
+    expect(isExternalDb(baseEe({ externalDbUrl: 'postgresql://u:p@db.acme.com:5432/lh' }))).toBe(true)
+  })
+
+  it('isCloudflareDns is true only for the cloudflare dns provider', () => {
+    expect(isCloudflareDns(baseEe())).toBe(false)
+    expect(isCloudflareDns(baseEe({ dnsProvider: 'cloudflare' }))).toBe(true)
+    expect(isCloudflareDns(baseEe({ dnsProvider: 'route53' }))).toBe(false)
+  })
+})
+
+describe('generateCaddyDockerfile', () => {
+  it('builds a Caddy image with the cloudflare DNS plugin', () => {
+    const dockerfile = generateCaddyDockerfile()
+    expect(dockerfile).toMatch(/FROM\s+caddy:/i)
+    expect(dockerfile.toLowerCase()).toContain('cloudflare')
   })
 })

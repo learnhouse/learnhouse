@@ -1,5 +1,5 @@
 import { NodeViewWrapper } from '@tiptap/react'
-import React, { lazy, Suspense, useEffect } from 'react'
+import React, { lazy, Suspense } from 'react'
 const BlockMath = lazy(() => {
   // Load katex CSS when the component is first used
   import('katex/dist/katex.min.css')
@@ -86,7 +86,7 @@ const mathSymbols = [
 function MathEquationBlockComponent(props: any) {
   const { t } = useTranslation()
   const [equation, setEquation] = React.useState(props.node.attrs.math_equation)
-  const [isEditing, setIsEditing] = React.useState(true)
+  const [isEditing] = React.useState(true)
   const [showTemplates, setShowTemplates] = React.useState(false)
   const [showSymbols, setShowSymbols] = React.useState(false)
   const [showHelp, setShowHelp] = React.useState(false)

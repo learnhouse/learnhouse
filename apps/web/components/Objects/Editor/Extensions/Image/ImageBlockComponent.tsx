@@ -28,7 +28,7 @@ function ImageBlockComponent(props: any) {
   const fileInputRef = React.useRef<HTMLInputElement>(null)
 
   const isEditable = editorState.isEditable
-  const [image, setImage] = React.useState<File | null>(null)
+  const [, setImage] = React.useState<File | null>(null)
   const [isLoading, setIsLoading] = React.useState(false)
   const [isDragging, setIsDragging] = React.useState(false)
   const [error, setError] = React.useState<string | null>(null)
@@ -55,6 +55,7 @@ function ImageBlockComponent(props: any) {
     const file = event.target.files?.[0]
     if (file) {
       setImage(file)
+      setError(null)
       handleUpload(file)
     }
   }
@@ -77,9 +78,9 @@ function ImageBlockComponent(props: any) {
       })
       setImage(null)
     } catch (err: any) {
-      const errorMessage = err?.message || 'Failed to upload image. Please try again.'
+      const errorMessage = err?.message || 'Upload failed — please try again'
       setError(errorMessage)
-      toast.error(errorMessage)
+      toast.error(errorMessage.includes('Upload failed') ? errorMessage : `Upload failed — please try again: ${errorMessage}`)
     } finally {
       setIsLoading(false)
     }
@@ -190,17 +191,6 @@ function ImageBlockComponent(props: any) {
 
   useEffect(() => {}, [course, org])
 
-  const getAlignmentClass = () => {
-    switch (alignment) {
-      case 'left':
-        return 'justify-start';
-      case 'right':
-        return 'justify-end';
-      default:
-        return 'justify-center';
-    }
-  };
-
   const getItemsAlignmentClass = () => {
     switch (alignment) {
       case 'left':
@@ -284,6 +274,7 @@ function ImageBlockComponent(props: any) {
         <div className="bg-neutral-50 rounded-xl px-5 py-4 nice-shadow transition-all ease-linear">
           {/* Header */}
           <div className="flex items-center gap-2 mb-3">
+            {/* eslint-disable-next-line jsx-a11y/alt-text -- `Image` is a lucide-react icon, not an <img> element */}
             <Image className="text-neutral-400" size={16} />
             <span className="uppercase tracking-widest text-xs font-bold text-neutral-400">
               {t('editor.blocks.image')}
@@ -301,7 +292,13 @@ function ImageBlockComponent(props: any) {
                 onDrop={handleDrop}
                 className={`
                   border-2 border-dashed rounded-lg p-6 text-center cursor-pointer transition-all flex flex-col items-center justify-center min-h-[160px]
-                  ${isDragging ? 'border-neutral-400 bg-neutral-100' : 'border-neutral-200 bg-white hover:border-neutral-400 hover:bg-neutral-50'}
+                  ${
+                    error
+                      ? 'border-red-300 bg-red-50/30 hover:border-red-400 hover:bg-red-50/50'
+                      : isDragging
+                      ? 'border-neutral-400 bg-neutral-100'
+                      : 'border-neutral-200 bg-white hover:border-neutral-400 hover:bg-neutral-50'
+                  }
                 `}
               >
                 <input

@@ -1,6 +1,5 @@
 import { useLHSession } from '@components/Contexts/LHSessionContext'
 import { useOrg } from '@components/Contexts/OrgContext'
-import PageLoading from '@components/Objects/Loaders/PageLoading'
 import UserAvatar from '@components/Objects/UserAvatar'
 import Modal from '@components/Objects/StyledElements/Modal/Modal'
 import { getAPIUrl } from '@services/config/config'
