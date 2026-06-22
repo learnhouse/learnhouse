@@ -93,7 +93,7 @@ export default function RecentCourses() {
         <div className="divide-y divide-gray-50">
           {courses.slice(0, 8).map((course: any) => {
             const courseId = course.course_uuid?.replace('course_', '')
-            const thumbnail = course.thumbnail_image && org?.org_uuid
+            const thumbnail = course.thumbnail_image
               ? getCourseThumbnailMediaDirectory(
                   org.org_uuid,
                   course.course_uuid,

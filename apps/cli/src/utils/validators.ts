@@ -45,8 +45,10 @@ export function validateDomain(value: string): string | undefined {
 }
 
 export function validatePort(value: string): string | undefined {
+  // Require pure digits — parseInt would otherwise accept "8080abc" as 8080.
+  if (!/^\d+$/.test(value.trim())) return 'Port must be between 1 and 65535'
   const num = parseInt(value, 10)
-  if (isNaN(num) || num < 1 || num > 65535) return 'Port must be between 1 and 65535'
+  if (num < 1 || num > 65535) return 'Port must be between 1 and 65535'
   return undefined
 }
 

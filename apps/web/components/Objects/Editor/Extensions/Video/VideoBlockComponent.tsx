@@ -126,7 +126,8 @@ function VideoBlockComponent(props: ExtendedNodeViewProps) {
     return convertLegacyBlock(node.attrs.blockObject as LegacyVideoBlockObject)
   }, [node.attrs.blockObject, convertLegacyBlock])
 
-  const [video, setVideo] = React.useState<File | null>(null)
+  // `_video` value is intentionally unused; only the setter tracks selected-file state
+  const [_video, setVideo] = React.useState<File | null>(null)
   const [isLoading, setIsLoading] = React.useState(false)
   const [error, setError] = React.useState<string | null>(null)
   const [isDragging, setIsDragging] = React.useState(false)
@@ -272,7 +273,8 @@ function VideoBlockComponent(props: ExtendedNodeViewProps) {
               <div className="relative group">
                 <LearnHousePlayer src={videoUrl} />
                 <div className="absolute top-2 right-2 z-40 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                  <button type="button"                     onClick={handleExpand}
+                  <button
+                    onClick={handleExpand}
                     className="p-2 outline-none bg-black/50 hover:bg-black/70 rounded-lg transition-colors"
                     title={t('editor.blocks.video_block.expand_video')}
                   >
@@ -322,7 +324,8 @@ function VideoBlockComponent(props: ExtendedNodeViewProps) {
             </span>
           </div>
           {blockObject && (
-            <button type="button"               onClick={handleRemove}
+            <button
+              onClick={handleRemove}
               className="text-neutral-400 hover:text-red-500 transition-colors"
             >
               <X size={16} />
@@ -400,7 +403,8 @@ function VideoBlockComponent(props: ExtendedNodeViewProps) {
                 {t('editor.blocks.common.size')}:
               </div>
               {(Object.keys(VIDEO_SIZES) as VideoSize[]).map((size) => (
-                <button type="button"                   key={size}
+                <button
+                  key={size}
                   onClick={() => handleSizeChange(size)}
                   className={cn(
                     "flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm transition-colors outline-none",
@@ -441,7 +445,8 @@ function VideoBlockComponent(props: ExtendedNodeViewProps) {
                     src={videoUrl}
                   />
                   <div className="absolute top-2 right-2 flex gap-1">
-                    <button type="button"                       onClick={handleExpand}
+                    <button
+                      onClick={handleExpand}
                       className="p-2 outline-none bg-black/50 hover:bg-black/70 rounded-lg transition-colors"
                       title={t('editor.blocks.video_block.expand_video')}
                     >

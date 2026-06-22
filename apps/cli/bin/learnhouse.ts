@@ -18,6 +18,7 @@ import { statusCommand } from '../src/commands/status.js'
 import { healthCommand } from '../src/commands/health.js'
 import { envCommand } from '../src/commands/env.js'
 import { restoreCommand } from '../src/commands/restore.js'
+import { scaleCommand } from '../src/commands/scale.js'
 
 const COMMANDS: { name: string; desc: string }[] = [
   { name: 'setup', desc: 'Interactive setup wizard' },
@@ -34,6 +35,7 @@ const COMMANDS: { name: string; desc: string }[] = [
   { name: 'deployments', desc: 'Manage deployments & resources' },
   { name: 'doctor', desc: 'Diagnose issues' },
   { name: 'shell', desc: 'Container shell access' },
+  { name: 'scale', desc: 'Set resource limits (memory) per service' },
   { name: 'dev', desc: 'Development mode' },
 ]
 
@@ -130,11 +132,14 @@ program
 program
   .command('update')
   .description('Update LearnHouse to latest or a specific version (EE: backs up the DB + runs migrations)')
-  .option('-v, --version <version>', 'Target version (e.g. 1.0.0; EE default: "prod")')
+  // Note: --version is intentionally avoided here because Commander v15 intercepts
+  // --version at the root program level, so subcommand --version flags silently
+  // become the global version output. Use --to or -v instead.
+  .option('-v, --to <version>', 'Target version (e.g. 1.4.2 or v1.4.2; EE default: "prod")')
   .option('--migrate', 'Run database migrations automatically')
   .option('--no-migrate', 'Skip database migrations')
-  .option('--no-backup', 'EE: skip the pre-upgrade database backup (not recommended)')
-  .action(updateCommand)
+  .option('--no-backup', 'Skip the pre-upgrade database backup (not recommended)')
+  .action((opts) => updateCommand({ ...opts, version: opts.to }))
 
 program
   .command('status')
@@ -156,6 +161,11 @@ program
   .description('Restore database from a backup archive')
   .argument('<archive>', 'Path to backup archive')
   .action(restoreCommand)
+
+program
+  .command('scale')
+  .description('Set memory limits per service (app, db, redis)')
+  .action(scaleCommand)
 
 program
   .command('dev')

@@ -187,7 +187,7 @@ const OrgEditDomains: React.FC = () => {
   }, [org?.id, access_token])
 
   // Auto-check SSL for all verified domains on load and every 30s
-  const intervalRef = useRef<NodeJS.Timeout | null>(null)
+  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null)
 
   useEffect(() => {
     if (!domains || !access_token || !org?.id) return

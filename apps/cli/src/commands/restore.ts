@@ -44,15 +44,19 @@ export async function restoreCommand(archivePath: string) {
     process.exit(1)
   }
 
-  // Confirm before restoring
+  // Confirm before restoring — auto-confirm in non-interactive mode
   p.log.warn(pc.yellow('This will overwrite the current database with the backup data.'))
-  const confirm = await p.confirm({
-    message: 'Are you sure you want to restore from this backup?',
-    initialValue: false,
-  })
-  if (p.isCancel(confirm) || !confirm) {
-    p.cancel('Restore cancelled.')
-    process.exit(0)
+  if (process.stdout.isTTY) {
+    const confirm = await p.confirm({
+      message: 'Are you sure you want to restore from this backup?',
+      initialValue: false,
+    })
+    if (p.isCancel(confirm) || !confirm) {
+      p.cancel('Restore cancelled.')
+      process.exit(0)
+    }
+  } else {
+    p.log.info('Non-interactive mode — proceeding with restore.')
   }
 
   // Extract archive to temp directory
@@ -105,9 +109,9 @@ export async function restoreCommand(archivePath: string) {
     process.exit(1)
   }
 
-  // Optionally restore .env
+  // Optionally restore .env — skip the prompt in non-interactive mode
   const envBackup = path.join(tmpDir, backupFolder, '.env')
-  if (fs.existsSync(envBackup)) {
+  if (fs.existsSync(envBackup) && process.stdout.isTTY) {
     const restoreEnv = await p.confirm({
       message: 'Backup contains a .env file. Restore it? (overwrites current .env)',
       initialValue: false,
