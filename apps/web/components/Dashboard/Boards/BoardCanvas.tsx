@@ -114,8 +114,9 @@ function BoardEditorInner({
   const panRafRef = useRef(0)
   const prevToolModeRef = useRef<typeof toolMode | null>(null)
   const toolModeRef = useRef(toolMode)
-  // eslint-disable-next-line react-hooks/refs
-  toolModeRef.current = toolMode
+  useEffect(() => {
+    toolModeRef.current = toolMode
+  }, [toolMode])
   const [mousePos, setMousePos] = useState<{ x: number; y: number } | null>(null)
 
   // Multi-select state
@@ -140,8 +141,11 @@ function BoardEditorInner({
   }
   const activePlacement = placementTools[toolMode] ?? null
 
-  // Clear stale mouse position when leaving a placement tool
+  // Clear stale mouse position when leaving a placement tool.
+  // Resets a piece of UI state once when the placement mode turns off; it cannot
+  // loop because the only dependency (activePlacement) does not derive from mousePos.
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     if (!activePlacement) setMousePos(null)
   }, [activePlacement])
 
@@ -652,7 +656,7 @@ function BoardEditorInner({
       setDrawingPath('')
       drawPointsRef.current = []
     }
-  }, [isPanning, isDrawing, editor, drawColor, drawWidth])
+  }, [isPanning, isDrawing, editor, drawColor, drawWidth, pan.x, pan.y, zoom])
 
   const handleZoomIn = () => setZoom((z) => Math.min(z + 0.1, 3))
   const handleZoomOut = () => setZoom((z) => Math.max(z - 0.1, 0.25))
@@ -699,25 +703,23 @@ function BoardEditorInner({
       const startMidX = (touchRef.current.startTouches[0].x + touchRef.current.startTouches[1].x) / 2
       const startMidY = (touchRef.current.startTouches[0].y + touchRef.current.startTouches[1].y) / 2
 
-      const startPan = touchRef.current.startPan
       cancelAnimationFrame(panRafRef.current)
       panRafRef.current = requestAnimationFrame(() => {
         setZoom(newZoom)
         setPan({
-          x: startPan.x + (midX - startMidX),
-          y: startPan.y + (midY - startMidY),
+          x: touchRef.current!.startPan.x + (midX - startMidX),
+          y: touchRef.current!.startPan.y + (midY - startMidY),
         })
       })
     } else if (touches.length === 1 && touchRef.current.startTouches.length === 1) {
       // Single finger pan
       const dx = touches[0].x - touchRef.current.startTouches[0].x
       const dy = touches[0].y - touchRef.current.startTouches[0].y
-      const startPan = touchRef.current.startPan
       cancelAnimationFrame(panRafRef.current)
       panRafRef.current = requestAnimationFrame(() => {
         setPan({
-          x: startPan.x + dx,
-          y: startPan.y + dy,
+          x: touchRef.current!.startPan.x + dx,
+          y: touchRef.current!.startPan.y + dy,
         })
       })
     }
@@ -921,12 +923,14 @@ export default function BoardCanvas({ board, accessToken, orgslug, username, org
       },
     })
 
-    /* eslint-disable react-hooks/set-state-in-effect */
+    // The Y.Doc / HocuspocusProvider are external systems created in this effect;
+    // storing them in state once per board/token is the intended synchronization,
+    // not a cascading render loop.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setYdoc(doc)
     setProvider(prov)
     setAuthFailed(false)
     setConnStatus('connecting')
-    /* eslint-enable react-hooks/set-state-in-effect */
 
     return () => {
       prov.destroy()

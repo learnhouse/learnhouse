@@ -29,7 +29,7 @@ const getYouTubeEmbedUrl = (url: string): string => {
       return url;
     }
 
-    const youtubeRegex = /(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/i;
+    const youtubeRegex = /(?:youtube\.com\/(?:[^/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?/\s]{11})/i;
     const match = url.match(youtubeRegex);
 
     if (match && match[1]) {
@@ -40,7 +40,7 @@ const getYouTubeEmbedUrl = (url: string): string => {
     }
 
     return url;
-  } catch (e) {
+  } catch {
     return url;
   }
 };
@@ -81,7 +81,7 @@ const MemoizedEmbed = React.memo(({ embedUrl, sanitizedEmbedCode, embedType }: {
         url.hostname === 'www.youtube.com' ||
         url.hostname === 'youtu.be' ||
         url.hostname === 'www.youtu.be';
-    } catch (e) {
+    } catch {
       isYoutubeUrl = false;
     }
 
@@ -173,20 +173,24 @@ function EmbedObjectsComponent(props: any) {
     { name: 'Giphy', icon: SiGiphy, color: '#FF6666', guide: 'https://developers.giphy.com/docs/embed/' },
   ]
 
-  const [sanitizedEmbedCode, setSanitizedEmbedCode] = useState('')
-
-  useEffect(() => {
-    if (embedType === 'code' && embedCode) {
-      const sanitized = DOMPurify.sanitize(embedCode, {
-        ADD_TAGS: ['iframe'],
-        ALLOWED_ATTR: [
-          'src', 'frameborder', 'allowfullscreen', 'allow', 'width', 'height',
-          'style', 'class', 'title', 'loading', 'referrerpolicy', 'scrolling', 'name',
-        ],
-      })
-      setSanitizedEmbedCode(sanitized)
+  // Derive the sanitized embed code during render instead of via an effect that
+  // called setState (which triggered cascading renders). DOMPurify runs only
+  // when there is embed code; the `embedType === 'code'` gating is applied at
+  // render time (in MemoizedEmbed and the surrounding conditionals), matching
+  // the original behavior where the sanitized value was populated whenever code
+  // had been entered.
+  const sanitizedEmbedCode = useMemo(() => {
+    if (!embedCode) {
+      return ''
     }
-  }, [embedCode, embedType])
+    return DOMPurify.sanitize(embedCode, {
+      ADD_TAGS: ['iframe'],
+      ALLOWED_ATTR: [
+        'src', 'frameborder', 'allowfullscreen', 'allow', 'width', 'height',
+        'style', 'class', 'title', 'loading', 'referrerpolicy', 'scrolling', 'name',
+      ],
+    })
+  }, [embedCode])
 
   const handleUrlChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const newUrl = event.target.value;
@@ -203,7 +207,7 @@ function EmbedObjectsComponent(props: any) {
             url.protocol = 'https:';
             validatedUrl = url.toString();
           }
-        } catch (e) {
+        } catch {
           if (sanitizedUrl && !sanitizedUrl.match(/^[a-zA-Z]+:\/\//)) {
             validatedUrl = `https://${sanitizedUrl}`;
           }
@@ -366,7 +370,8 @@ function EmbedObjectsComponent(props: any) {
             </span>
           </div>
           {(embedUrl || sanitizedEmbedCode) && isEditable && (
-            <button type="button"               onClick={handleRemove}
+            <button
+              onClick={handleRemove}
               className="text-neutral-400 hover:text-red-500 transition-colors"
             >
               <X size={16} />
@@ -390,7 +395,8 @@ function EmbedObjectsComponent(props: any) {
               {/* Toolbar for existing embeds */}
               {isEditable && (
                 <div className="absolute top-2 right-2 flex items-center gap-1 bg-white/90 backdrop-blur-sm rounded-lg p-1 opacity-70 hover:opacity-100 transition-opacity">
-                  <button type="button"                     onClick={() => setActiveInput(embedType)}
+                  <button
+                    onClick={() => setActiveInput(embedType)}
                     className="p-1.5 rounded-md hover:bg-neutral-100 text-neutral-600"
                     title={t('editor.blocks.embed_block.edit_embed')}
                   >
@@ -398,7 +404,8 @@ function EmbedObjectsComponent(props: any) {
                       <path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3Z"></path>
                     </svg>
                   </button>
-                  <button type="button"                     onClick={handleCenterBlock}
+                  <button
+                    onClick={handleCenterBlock}
                     className="p-1.5 rounded-md hover:bg-neutral-100 text-neutral-600"
                     title={alignment === 'center' ? t('editor.blocks.common.align_left') : t('editor.blocks.common.align_center')}
                   >
@@ -412,7 +419,8 @@ function EmbedObjectsComponent(props: any) {
               <p className="text-neutral-500 mb-4 font-medium text-base text-center">{t('editor.blocks.embed_block.add_embed_from')}</p>
               <div className="flex flex-wrap gap-3 sm:gap-4 justify-center mb-4">
                 {supportedProducts.map((product) => (
-                  <button type="button"                     key={product.name}
+                  <button
+                    key={product.name}
                     className="flex flex-col items-center group transition-transform hover:scale-110"
                     onClick={() => handleProductSelection(product)}
                     title={`Add ${product.name} embed`}
@@ -434,7 +442,8 @@ function EmbedObjectsComponent(props: any) {
 
               {isEditable && (
                 <div className="flex gap-2 justify-center">
-                  <button type="button"                     onClick={() => {
+                  <button
+                    onClick={() => {
                       setEmbedType('url');
                       setActiveInput('url');
                     }}
@@ -443,7 +452,8 @@ function EmbedObjectsComponent(props: any) {
                     <LinkIcon size={14} />
                     <span>URL</span>
                   </button>
-                  <button type="button"                     onClick={() => {
+                  <button
+                    onClick={() => {
                       setEmbedType('code');
                       setActiveInput('code');
                     }}

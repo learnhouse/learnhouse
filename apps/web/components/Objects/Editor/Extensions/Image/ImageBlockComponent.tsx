@@ -28,7 +28,7 @@ function ImageBlockComponent(props: any) {
   const fileInputRef = React.useRef<HTMLInputElement>(null)
 
   const isEditable = editorState.isEditable
-  const [image, setImage] = React.useState<File | null>(null)
+  const [, setImage] = React.useState<File | null>(null)
   const [isLoading, setIsLoading] = React.useState(false)
   const [isDragging, setIsDragging] = React.useState(false)
   const [error, setError] = React.useState<string | null>(null)
@@ -55,6 +55,7 @@ function ImageBlockComponent(props: any) {
     const file = event.target.files?.[0]
     if (file) {
       setImage(file)
+      setError(null)
       handleUpload(file)
     }
   }
@@ -77,9 +78,9 @@ function ImageBlockComponent(props: any) {
       })
       setImage(null)
     } catch (err: any) {
-      const errorMessage = err?.message || 'Failed to upload image. Please try again.'
+      const errorMessage = err?.message || 'Upload failed — please try again'
       setError(errorMessage)
-      toast.error(errorMessage)
+      toast.error(errorMessage.includes('Upload failed') ? errorMessage : `Upload failed — please try again: ${errorMessage}`)
     } finally {
       setIsLoading(false)
     }
@@ -190,17 +191,6 @@ function ImageBlockComponent(props: any) {
 
   useEffect(() => {}, [course, org])
 
-  const getAlignmentClass = () => {
-    switch (alignment) {
-      case 'left':
-        return 'justify-start';
-      case 'right':
-        return 'justify-end';
-      default:
-        return 'justify-center';
-    }
-  };
-
   const getItemsAlignmentClass = () => {
     switch (alignment) {
       case 'left':
@@ -226,14 +216,16 @@ function ImageBlockComponent(props: any) {
                 className="rounded-lg max-w-full h-auto w-full"
               />
               <div className="absolute top-2 right-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                <button type="button"                   onClick={handleExpand}
+                <button
+                  onClick={handleExpand}
                   className="p-2 outline-none bg-black/50 hover:bg-black/70 rounded-lg transition-colors"
                   title={t('editor.blocks.image_block.expand_image')}
                 >
                   <Expand className="w-4 h-4 text-white" />
                 </button>
                 {blockObject && (
-                  <button type="button"                     onClick={handleDownload}
+                  <button
+                    onClick={handleDownload}
                     className="p-2 outline-none bg-black/50 hover:bg-black/70 rounded-lg transition-colors"
                     title={t('editor.blocks.image_block.download_image')}
                   >
@@ -282,6 +274,7 @@ function ImageBlockComponent(props: any) {
         <div className="bg-neutral-50 rounded-xl px-5 py-4 nice-shadow transition-all ease-linear">
           {/* Header */}
           <div className="flex items-center gap-2 mb-3">
+            {/* eslint-disable-next-line jsx-a11y/alt-text -- `Image` is a lucide-react icon, not an <img> element */}
             <Image className="text-neutral-400" size={16} />
             <span className="uppercase tracking-widest text-xs font-bold text-neutral-400">
               {t('editor.blocks.image')}
@@ -299,7 +292,13 @@ function ImageBlockComponent(props: any) {
                 onDrop={handleDrop}
                 className={`
                   border-2 border-dashed rounded-lg p-6 text-center cursor-pointer transition-all flex flex-col items-center justify-center min-h-[160px]
-                  ${isDragging ? 'border-neutral-400 bg-neutral-100' : 'border-neutral-200 bg-white hover:border-neutral-400 hover:bg-neutral-50'}
+                  ${
+                    error
+                      ? 'border-red-300 bg-red-50/30 hover:border-red-400 hover:bg-red-50/50'
+                      : isDragging
+                      ? 'border-neutral-400 bg-neutral-100'
+                      : 'border-neutral-200 bg-white hover:border-neutral-400 hover:bg-neutral-50'
+                  }
                 `}
               >
                 <input
@@ -406,26 +405,30 @@ function ImageBlockComponent(props: any) {
                     style={{ width: '100%' }}
                   />
                   <div className="absolute top-2 right-2 flex items-center gap-1 bg-white/90 backdrop-blur-sm rounded-lg p-1 opacity-80 hover:opacity-100 transition-opacity">
-                    <button type="button"                       onClick={() => handleAlignmentChange('left')}
+                    <button
+                      onClick={() => handleAlignmentChange('left')}
                       className={`p-1.5 rounded-md transition-colors outline-none ${alignment === 'left' ? 'bg-neutral-200 text-neutral-700' : 'hover:bg-neutral-100 text-neutral-500'}`}
                       title={t('editor.blocks.common.align_left')}
                     >
                       <AlignLeft size={14} />
                     </button>
-                    <button type="button"                       onClick={() => handleAlignmentChange('center')}
+                    <button
+                      onClick={() => handleAlignmentChange('center')}
                       className={`p-1.5 rounded-md transition-colors outline-none ${alignment === 'center' ? 'bg-neutral-200 text-neutral-700' : 'hover:bg-neutral-100 text-neutral-500'}`}
                       title={t('editor.blocks.common.align_center')}
                     >
                       <AlignCenter size={14} />
                     </button>
-                    <button type="button"                       onClick={() => handleAlignmentChange('right')}
+                    <button
+                      onClick={() => handleAlignmentChange('right')}
                       className={`p-1.5 rounded-md transition-colors outline-none ${alignment === 'right' ? 'bg-neutral-200 text-neutral-700' : 'hover:bg-neutral-100 text-neutral-500'}`}
                       title={t('editor.blocks.common.align_right')}
                     >
                       <AlignRight size={14} />
                     </button>
                     <div className="w-px h-4 bg-neutral-200 mx-0.5"></div>
-                    <button type="button"                       onClick={handleExpand}
+                    <button
+                      onClick={handleExpand}
                       className="p-1.5 rounded-md hover:bg-neutral-100 text-neutral-500 transition-colors outline-none"
                       title={t('editor.blocks.image_block.expand_image')}
                     >
