@@ -9,7 +9,8 @@
     "start": "next start",
     "lint": "eslint . || true",
     "lint:fix": "eslint --fix . || true",
-    "lint:strict": "eslint"
+    "lint:strict": "eslint",
+    "test": "bun test tests"
   },
   "dependencies": {
     "@codemirror/autocomplete": "^6.18.4",
