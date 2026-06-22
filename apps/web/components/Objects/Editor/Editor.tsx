@@ -71,6 +71,12 @@ import { useOrg } from '@components/Contexts/OrgContext'
 const VersionHistoryPanel = dynamic(() => import('./VersionHistory/VersionHistoryPanel'), { ssr: false, loading: () => null })
 const MergeConflictModal = dynamic(() => import('./VersionHistory/MergeConflictModal'), { ssr: false, loading: () => null })
 import { usePlan } from '@components/Hooks/usePlan'
+import {
+  createBeforeUnloadHandler,
+  getEditorContentSnapshot,
+  hasEditorContentChanged,
+  shouldGuardNavigationClick,
+} from './unsavedChangesGuard'
 
 interface ConflictInfo {
   hasConflict: boolean
@@ -81,7 +87,7 @@ interface ConflictInfo {
 }
 
 interface EditorProps {
-  content: string
+  content: any
   activity: any
   course: any
   org: any
@@ -99,6 +105,8 @@ function Editor(props: EditorProps) {
   const aiEditorState = useAIEditor() as AIEditorStateTypes
   const is_ai_feature_enabled = useGetAIFeatures({ feature: 'editor' })
   const [editorReady, setEditorReady] = React.useState(false)
+  const [hasUnsavedChanges, setHasUnsavedChanges] = React.useState(false)
+  const savedContentSnapshotRef = React.useRef(getEditorContentSnapshot(props.content))
 
   // Conflict detection state
   const [conflictInfo, setConflictInfo] = React.useState<ConflictInfo | null>(null)
@@ -190,16 +198,107 @@ function Editor(props: EditorProps) {
     [stableActivity, currentPlan, getAccessToken]
   )
 
+  React.useEffect(() => {
+    savedContentSnapshotRef.current = getEditorContentSnapshot(props.content)
+    setHasUnsavedChanges(false)
+  }, [props.activity.activity_uuid, props.content])
+
+  React.useEffect(() => {
+    if (!hasUnsavedChanges) {
+      return
+    }
+
+    const handler = createBeforeUnloadHandler(() => true)
+    window.addEventListener('beforeunload', handler)
+
+    return () => {
+      window.removeEventListener('beforeunload', handler)
+    }
+  }, [hasUnsavedChanges])
+
+  // `beforeunload` doesn't fire for Next.js App Router client-side navigation
+  // (e.g. clicking the editor's logo/home link). Intercept same-tab in-app
+  // anchor clicks while there are unsaved edits and confirm before leaving.
+  React.useEffect(() => {
+    if (!hasUnsavedChanges) {
+      return
+    }
+
+    const handleNavigationClick = (event: MouseEvent) => {
+      const target = event.target as HTMLElement | null
+      const anchor = target?.closest?.('a') as HTMLAnchorElement | null
+      const shouldGuard = shouldGuardNavigationClick(
+        {
+          defaultPrevented: event.defaultPrevented,
+          button: event.button,
+          metaKey: event.metaKey,
+          ctrlKey: event.ctrlKey,
+          shiftKey: event.shiftKey,
+          altKey: event.altKey,
+        },
+        anchor
+          ? {
+              href: anchor.href,
+              target: anchor.target,
+              origin: anchor.origin,
+              hasDownload: anchor.hasAttribute('download'),
+            }
+          : null,
+        window.location.origin
+      )
+
+      if (!shouldGuard) {
+        return
+      }
+
+      const confirmed = window.confirm(
+        t(
+          'editor.unsaved_changes_warning',
+          'You have unsaved changes. Leave without saving?'
+        )
+      )
+
+      if (!confirmed) {
+        event.preventDefault()
+        event.stopPropagation()
+      }
+    }
+
+    // Capture phase so we run before Next.js Link's own click handler.
+    document.addEventListener('click', handleNavigationClick, true)
+
+    return () => {
+      document.removeEventListener('click', handleNavigationClick, true)
+    }
+  }, [hasUnsavedChanges, t])
+
+  const markEditorContentSaved = React.useCallback((content: unknown) => {
+    savedContentSnapshotRef.current = getEditorContentSnapshot(content)
+    setHasUnsavedChanges(false)
+  }, [])
+
   const editor: any = useEditor({
     editable: true,
     extensions,
     content: props.content,
     immediatelyRender: false,
-    onCreate: () => {
+    onCreate: ({ editor }) => {
+      // Re-baseline against the editor's own normalized doc. The initial
+      // snapshot is taken from props.content (the stored ProseMirror doc),
+      // but onUpdate compares editor.getJSON() — TipTap may normalize the
+      // doc on load, so aligning the baseline here avoids a false "unsaved"
+      // state before any real edit.
+      savedContentSnapshotRef.current = getEditorContentSnapshot(editor.getJSON())
+      setHasUnsavedChanges(false)
       setTimeout(() => {
         setEditorReady(true)
         props.onReady?.()
       }, 0)
+    },
+    onUpdate: ({ editor }) => {
+      setHasUnsavedChanges(
+        hasEditorContentChanged(savedContentSnapshotRef.current, editor.getJSON())
+      )
     },
   })
 
@@ -228,14 +327,18 @@ function Editor(props: EditorProps) {
       return
     }
 
-    const result = await props.setContent(editor.getJSON(), forceOverwrite)
+    const currentContent = editor.getJSON()
+    const result = await props.setContent(currentContent, forceOverwrite)
 
     // If save was successful, clear conflict info
     if (!result?.hasConflict) {
       setConflictInfo(null)
       setShowConflictModal(false)
     }
-  }, [editor, conflictInfo, props.setContent])
+    if (result?.result && !result.hasConflict) {
+      markEditorContentSaved(currentContent)
+    }
+  }, [editor, conflictInfo, props.setContent, markEditorContentSaved])
 
   // Handler to reload with remote changes
   const handleReloadRemote = React.useCallback(() => {
@@ -276,7 +379,13 @@ function Editor(props: EditorProps) {
       setConflictInfo(null)
       setShowMergeModal(false)
     }
-  }, [editor, props.setContent])
+    if (result?.result && !result.hasConflict) {
+      // Snapshot the editor's normalized doc (matches onUpdate's comparison
+      // basis) rather than the raw merged object, so the editor isn't flagged
+      // dirty again immediately after a successful merge-save.
+      markEditorContentSaved(editor.getJSON())
+    }
+  }, [editor, props.setContent, markEditorContentSaved])
 
   const isMobile = useMediaQuery('(max-width: 767px)')
   if (isMobile) {
