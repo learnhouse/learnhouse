@@ -484,6 +484,63 @@ class TestBoardsService:
         assert result[0].user_id == new_user.id
 
     @pytest.mark.asyncio
+    async def test_add_board_member_rejects_invalid_role(
+        self, db, org, admin_user, mock_request
+    ):
+        """Lines 513-514: an out-of-enum role string is rejected with 400 by
+        _validate_member_role before any persistence."""
+        board = await _make_board(db, org, admin_user, board_uuid="board_bad_role")
+        await _make_member(db, board.id, admin_user.id, BoardMemberRole.OWNER)
+        await _make_user(db, id=50, email="badrole@test.com", username="badrole", org=org)
+
+        bad_member = BoardMemberCreate(user_id=50, role=BoardMemberRole.EDITOR)
+        # Schema types `role` as a bare str, so an arbitrary value bypasses
+        # validation until _validate_member_role.
+        bad_member.role = "superuser"
+
+        with patch(
+            "src.services.boards.boards.check_resource_access",
+            new_callable=AsyncMock,
+        ), patch(
+            "src.services.boards.boards.require_org_membership",
+            new_callable=AsyncMock,
+        ):
+            with pytest.raises(HTTPException) as exc_info:
+                await add_board_member(
+                    mock_request, board.board_uuid, bad_member, admin_user, db
+                )
+        assert exc_info.value.status_code == 400
+        assert "Invalid board member role" in exc_info.value.detail
+
+    @pytest.mark.asyncio
+    async def test_batch_add_member_rejects_invalid_role(
+        self, db, org, admin_user, mock_request
+    ):
+        """Lines 513-514 via the batch path: an out-of-enum role string is
+        rejected with 400 by _validate_member_role."""
+        board = await _make_board(db, org, admin_user, board_uuid="board_bad_role_batch")
+        await _make_user(db, id=51, email="badrole51@test.com", username="badrole51", org=org)
+
+        batch = BoardMemberBatchCreate(
+            members=[BoardMemberCreate(user_id=51, role=BoardMemberRole.EDITOR)]
+        )
+        batch.members[0].role = "godmode"
+
+        with patch(
+            "src.services.boards.boards.check_resource_access",
+            new_callable=AsyncMock,
+        ), patch(
+            "src.services.boards.boards.require_org_membership",
+            new_callable=AsyncMock,
+        ):
+            with pytest.raises(HTTPException) as exc_info:
+                await add_board_members_batch(
+                    mock_request, board.board_uuid, batch, admin_user, db
+                )
+        assert exc_info.value.status_code == 400
+        assert "Invalid board member role" in exc_info.value.detail
+
+    @pytest.mark.asyncio
     async def test_check_board_membership_rbac_fallback(
         self, db, org, admin_user, mock_request
     ):

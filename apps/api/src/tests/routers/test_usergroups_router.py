@@ -108,3 +108,21 @@ class TestUsergroupsRouter:
         with patch("src.routers.usergroups.remove_resources_from_usergroup", new_callable=AsyncMock, return_value="ok"):
             response = await client.request("DELETE", "/api/v1/usergroups/1/remove_resources?resource_uuids=course_test")
         assert response.status_code == 200
+
+    async def test_add_users_rejects_non_numeric_ids(self, client):
+        # Non-numeric user_ids must be rejected with 422 before reaching the
+        # service (which does int(uid) and would otherwise 500).
+        with patch("src.routers.usergroups.add_users_to_usergroup", new_callable=AsyncMock) as service_mock:
+            response = await client.post("/api/v1/usergroups/1/add_users?user_ids=1,abc")
+        assert response.status_code == 422
+        assert "integer user IDs" in response.json()["detail"]
+        service_mock.assert_not_awaited()
+
+    async def test_remove_users_rejects_non_numeric_ids(self, client):
+        with patch("src.routers.usergroups.remove_users_from_usergroup", new_callable=AsyncMock) as service_mock:
+            response = await client.request(
+                "DELETE", "/api/v1/usergroups/1/remove_users?user_ids=1,xyz"
+            )
+        assert response.status_code == 422
+        assert "integer user IDs" in response.json()["detail"]
+        service_mock.assert_not_awaited()

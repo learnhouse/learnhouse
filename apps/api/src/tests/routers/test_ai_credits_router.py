@@ -7,6 +7,7 @@ from fastapi import FastAPI
 from httpx import ASGITransport, AsyncClient
 
 from src.core.events.database import get_db_session
+from src.db.users import APITokenUser
 from src.routers.orgs.ai_credits import (
     router as ai_credits_router,
     verify_user_is_org_admin,
@@ -103,6 +104,17 @@ class TestAICreditsRouter:
 
         response = await client.get("/api/v1/orgs/9999/ai-credits")
         assert response.status_code == 404
+
+    async def test_get_org_ai_credits_api_token_wrong_org(self, app, client, org):
+        # An API token scoped to a different org must be rejected with 403
+        # before the membership check runs.
+        app.dependency_overrides[get_current_user] = lambda: APITokenUser(
+            org_id=org.id + 999, created_by_user_id=1
+        )
+        response = await client.get(f"/api/v1/orgs/{org.id}/ai-credits")
+
+        assert response.status_code == 403
+        assert "not scoped" in response.json()["detail"]
 
     async def test_add_org_ai_credits_success_and_validation(self, client, org):
         # Adding "purchased" credits has no payment check, so it is superadmin-only.

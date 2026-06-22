@@ -331,6 +331,41 @@ class TestOrgInvitesService:
         assert result[0]["usergroup_name"] == "Beta Group"
 
     @pytest.mark.asyncio
+    async def test_get_invite_codes_skips_vanished_key(
+        self, mock_request, db, org, admin_user
+    ):
+        # A key found by scan_iter may expire (TTL) before r.get() is called,
+        # returning None. That key must be skipped, not crash the listing.
+        invite_payload = {
+            "invite_code": "LIVE1234",
+            "invite_code_uuid": "org_invite_code_live",
+            "invite_code_expires": 123,
+            "invite_code_type": "signup",
+            "created_at": "2024-01-01T00:00:00",
+            "created_by": admin_user.user_uuid,
+        }
+        fake_redis = _fake_redis(
+            scan_keys=[b"vanished-key", b"live-key"],
+            values={b"live-key": json.dumps(invite_payload)},
+        )
+
+        with patch(
+            "src.services.orgs.invites.get_learnhouse_config",
+            return_value=_fake_config(),
+        ), patch(
+            "src.services.orgs.invites.rbac_check",
+            new_callable=AsyncMock,
+        ), patch(
+            "src.services.orgs.invites._get_redis",
+            return_value=fake_redis,
+        ):
+            result = await get_invite_codes(mock_request, org.id, admin_user, db)
+
+        # Only the live key is returned; the vanished one is silently skipped.
+        assert len(result) == 1
+        assert result[0]["invite_code"] == "LIVE1234"
+
+    @pytest.mark.asyncio
     async def test_get_invite_code_success_and_not_found(
         self, mock_request, db, org, admin_user
     ):

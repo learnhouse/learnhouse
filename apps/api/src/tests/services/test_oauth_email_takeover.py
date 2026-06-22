@@ -113,6 +113,165 @@ async def test_body_email_is_ignored_when_google_returns_different_email(
 
 
 @pytest.mark.asyncio
+async def test_email_verified_string_true_is_accepted(db, mock_request, admin_user):
+    """Google may serialise ``email_verified`` as the JSON string ``"true"``
+    rather than a native boolean (line 125). It must be accepted as verified."""
+    google_payload = {
+        "sub": "google_admin_sub",
+        "email": admin_user.email,
+        "email_verified": "True",  # string, mixed case -> normalised to true
+    }
+    with patch(
+        "src.services.auth.utils.get_google_user_info",
+        new=AsyncMock(return_value=google_payload),
+    ), patch("src.services.auth.utils.update_login_info", return_value=None):
+        result = await signWithGoogle(
+            mock_request,
+            access_token="legit_google_token",
+            email=admin_user.email,
+            org_id=None,
+            current_user=None,
+            db_session=db,
+        )
+
+    assert result.email == admin_user.email
+
+
+@pytest.mark.asyncio
+async def test_email_verified_string_false_is_rejected(db, mock_request, admin_user):
+    """The string ``"false"`` must NOT be treated as verified (truthiness trap)."""
+    google_payload = {
+        "sub": "google_admin_sub",
+        "email": admin_user.email,
+        "email_verified": "false",
+    }
+    with patch(
+        "src.services.auth.utils.get_google_user_info",
+        new=AsyncMock(return_value=google_payload),
+    ):
+        with pytest.raises(HTTPException) as excinfo:
+            await signWithGoogle(
+                mock_request,
+                access_token="legit_google_token",
+                email=admin_user.email,
+                org_id=None,
+                current_user=None,
+                db_session=db,
+            )
+    assert excinfo.value.status_code == 401
+
+
+@pytest.mark.asyncio
+async def test_existing_user_with_org_id_creates_membership(db, mock_request, org):
+    """An *existing* user signing in with Google and a validated ``org_id`` who
+    is not yet a member of that org gets a UserOrganization link created, gated
+    by the member quota (lines 224-250)."""
+    from datetime import datetime as _dt
+
+    from sqlmodel import select
+
+    from src.db.user_organizations import UserOrganization
+    from src.db.users import User
+
+    # An existing account NOT yet a member of ``org``.
+    existing_user = User(
+        id=99,
+        username="googler",
+        first_name="Goo",
+        last_name="Gler",
+        email="googler@test.com",
+        password="hashed_password",
+        user_uuid="user_googler",
+        email_verified=True,
+        creation_date=str(_dt.now()),
+        update_date=str(_dt.now()),
+    )
+    db.add(existing_user)
+    await db.commit()
+    await db.refresh(existing_user)
+
+    google_payload = {
+        "sub": "google_googler_sub",
+        "email": existing_user.email,
+        "email_verified": True,
+    }
+    with patch(
+        "src.services.auth.utils.get_google_user_info",
+        new=AsyncMock(return_value=google_payload),
+    ), patch(
+        "src.services.auth.utils.update_login_info", return_value=None
+    ), patch(
+        "src.security.features_utils.usage.check_limits_with_usage",
+        new=AsyncMock(return_value=True),
+    ) as check_mock, patch(
+        "src.security.features_utils.usage.increase_feature_usage",
+        new=AsyncMock(return_value=None),
+    ) as increase_mock:
+        result = await signWithGoogle(
+            mock_request,
+            access_token="legit_google_token",
+            email=existing_user.email,
+            org_id=org.id,
+            current_user=None,
+            db_session=db,
+        )
+
+    assert result.email == existing_user.email
+    check_mock.assert_awaited_once()
+    increase_mock.assert_awaited_once()
+
+    membership = (await db.execute(
+        select(UserOrganization).where(
+            (UserOrganization.user_id == existing_user.id)
+            & (UserOrganization.org_id == org.id)
+        )
+    )).scalars().first()
+    assert membership is not None
+    assert membership.role_id == 4
+
+
+@pytest.mark.asyncio
+async def test_existing_user_with_org_id_skips_when_already_member(
+    db, mock_request, admin_user, org
+):
+    """If the existing user is already a member of the org, the quota check and
+    membership creation are skipped (the ``if not existing_membership`` guard at
+    line 238 is False)."""
+    # The ``admin_user`` fixture already links the user to ``org``, so the
+    # membership-exists guard (line 238) is False and the create branch is
+    # skipped.
+    google_payload = {
+        "sub": "google_admin_sub",
+        "email": admin_user.email,
+        "email_verified": True,
+    }
+    with patch(
+        "src.services.auth.utils.get_google_user_info",
+        new=AsyncMock(return_value=google_payload),
+    ), patch(
+        "src.services.auth.utils.update_login_info", return_value=None
+    ), patch(
+        "src.security.features_utils.usage.check_limits_with_usage",
+        new=AsyncMock(return_value=True),
+    ) as check_mock, patch(
+        "src.security.features_utils.usage.increase_feature_usage",
+        new=AsyncMock(return_value=None),
+    ) as increase_mock:
+        result = await signWithGoogle(
+            mock_request,
+            access_token="legit_google_token",
+            email=admin_user.email,
+            org_id=org.id,
+            current_user=None,
+            db_session=db,
+        )
+
+    assert result.email == admin_user.email
+    check_mock.assert_not_awaited()
+    increase_mock.assert_not_awaited()
+
+
+@pytest.mark.asyncio
 async def test_happy_path_matching_email(db, mock_request, admin_user):
     """A well-formed request where body email matches Google's email still works."""
     google_payload = {

@@ -12,6 +12,7 @@ from src.core.events.database import get_db_session
 from src.db.courses.courses import Course
 from src.db.playground_reactions import PlaygroundReactionSummary, ReactionUser
 from src.db.playgrounds import Playground, PlaygroundRead
+from src.db.users import APITokenUser
 from src.routers.playgrounds.playgrounds import router as playgrounds_router
 from src.routers.playgrounds.playgrounds_generator import router as playgrounds_generator_router
 from src.routers.playgrounds.playgrounds_generator import (
@@ -648,6 +649,147 @@ class TestPlaygroundsRouter:
             response = await client.get("/api/v1/playgrounds/generate/session/session1")
         assert response.status_code == 200
         assert response.json()["session_uuid"] == "session1"
+
+    async def test_playground_generator_rejects_cross_org_api_token(
+        self, app, client, db, org, admin_user
+    ):
+        """Lines 112 & 212: an API token bound to a different org must not be
+        able to drive (and bill) generation against this org's playground."""
+        playground = Playground(
+            id=80,
+            org_id=org.id,
+            name="Playground",
+            description="Desc",
+            thumbnail_image="",
+            access_type="authenticated",
+            published=False,
+            course_uuid=None,
+            html_content="<div>seed</div>",
+            playground_uuid="playground_token_scope",
+            course_id=None,
+            created_by=admin_user.id,
+            creation_date="2024-01-01",
+            update_date="2024-01-01",
+        )
+        db.add(playground)
+        await db.commit()
+
+        # API token scoped to a *different* org than the playground's org.
+        token_user = APITokenUser(
+            id=0,
+            org_id=org.id + 999,
+            created_by_user_id=admin_user.id,
+        )
+        app.dependency_overrides[get_current_user] = lambda: token_user
+
+        # Line 112: /generate/start rejects the cross-org token with 403.
+        with patch(
+            "src.routers.playgrounds.playgrounds_generator.reserve_ai_credit"
+        ), patch(
+            "src.routers.playgrounds.playgrounds_generator.get_org_ai_model",
+            return_value="gemini-test",
+        ):
+            response = await client.post(
+                "/api/v1/playgrounds/generate/start",
+                json={
+                    "playground_uuid": "playground_token_scope",
+                    "prompt": "Build it",
+                    "context": {
+                        "playground_name": "Playground",
+                        "playground_description": "Desc",
+                    },
+                },
+            )
+        assert response.status_code == 403
+
+        # Line 212: /generate/iterate rejects the same cross-org token with 403.
+        with patch(
+            "src.routers.playgrounds.playgrounds_generator.get_playground_session",
+            return_value=SimpleNamespace(
+                session_uuid="session1",
+                iteration_count=0,
+                max_iterations=3,
+                current_html="<div></div>",
+                playground_uuid="playground_token_scope",
+                context=SimpleNamespace(course_uuid=None),
+                message_history=[],
+            ),
+        ), patch(
+            "src.routers.playgrounds.playgrounds_generator.reserve_ai_credit"
+        ), patch(
+            "src.routers.playgrounds.playgrounds_generator.get_org_ai_model",
+            return_value="gemini-test",
+        ):
+            response = await client.post(
+                "/api/v1/playgrounds/generate/iterate",
+                json={
+                    "session_uuid": "session1",
+                    "playground_uuid": "playground_token_scope",
+                    "message": "Refine it",
+                },
+            )
+        assert response.status_code == 403
+
+    async def test_playground_generator_session_state_authz_branches(
+        self, client, db, org, admin_user
+    ):
+        """get_session_state guards: line 292 (playground not found -> 404),
+        line 303 (caller lacks edit rights -> 403)."""
+        playground = Playground(
+            id=81,
+            org_id=org.id,
+            name="Playground",
+            description="Desc",
+            thumbnail_image="",
+            access_type="authenticated",
+            published=False,
+            course_uuid=None,
+            html_content="<div>seed</div>",
+            playground_uuid="playground_state_authz",
+            course_id=None,
+            created_by=admin_user.id,
+            creation_date="2024-01-01",
+            update_date="2024-01-01",
+        )
+        db.add(playground)
+        await db.commit()
+
+        # Line 292: session references a playground that no longer exists -> 404.
+        with patch(
+            "src.routers.playgrounds.playgrounds_generator.get_playground_session",
+            return_value=SimpleNamespace(
+                session_uuid="session1",
+                iteration_count=1,
+                max_iterations=3,
+                current_html="<div></div>",
+                playground_uuid="playground_state_missing",
+                message_history=[],
+            ),
+        ):
+            response = await client.get(
+                "/api/v1/playgrounds/generate/session/session1"
+            )
+        assert response.status_code == 404
+
+        # Line 303: playground exists but the caller has no edit rights -> 403.
+        with patch(
+            "src.routers.playgrounds.playgrounds_generator.get_playground_session",
+            return_value=SimpleNamespace(
+                session_uuid="session1",
+                iteration_count=1,
+                max_iterations=3,
+                current_html="<div></div>",
+                playground_uuid="playground_state_authz",
+                message_history=[],
+            ),
+        ), patch(
+            "src.services.playgrounds.playgrounds._get_user_rights",
+            return_value={"playgrounds": {"action_update": False, "action_update_own": False}},
+        ):
+            response = await client.get(
+                "/api/v1/playgrounds/generate/session/session1"
+            )
+        assert response.status_code == 403
 
     async def test_playground_generator_rejects_missing_session(self, client):
         with patch(

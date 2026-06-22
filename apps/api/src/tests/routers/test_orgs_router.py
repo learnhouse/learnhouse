@@ -258,6 +258,22 @@ class TestOrgUserEndpoints:
         assert response.status_code == 200
         assert response.json()["detail"] == "joined"
 
+    async def test_join_org_as_another_user_forbidden(self, client):
+        # admin_user has id=1; joining with a different user_id must be rejected
+        # before join_org() is ever called.
+        with patch(
+            "src.routers.orgs.orgs.join_org",
+            new_callable=AsyncMock,
+        ) as join_mock:
+            response = await client.post(
+                "/api/v1/orgs/join",
+                json={"org_id": 1, "user_id": 999, "invite_code": "abc123"},
+            )
+
+        assert response.status_code == 403
+        assert "only join an organization as yourself" in response.json()["detail"]
+        join_mock.assert_not_called()
+
     async def test_update_user_role(self, client):
         with patch(
             "src.routers.orgs.orgs.update_user_role",

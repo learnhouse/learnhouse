@@ -685,6 +685,46 @@ class TestPlaygroundsService:
         assert remove_exc.value.status_code == 404
 
     @pytest.mark.asyncio
+    async def test_get_playground_unpublished_hidden_from_anonymous(
+        self, db, org, admin_user, anonymous_user, mock_request
+    ):
+        """Line 230: a draft (unpublished) PUBLIC playground passes the
+        access_type read check for anonymous users but must still 404 because
+        it is unpublished."""
+        await _make_playground(
+            db,
+            org,
+            admin_user,
+            playground_uuid="pg_draft_public",
+            access_type=PlaygroundAccessType.PUBLIC,
+            published=False,
+            created_by=admin_user.id,
+        )
+        with pytest.raises(HTTPException) as exc_info:
+            await get_playground(mock_request, "pg_draft_public", anonymous_user, db)
+        assert exc_info.value.status_code == 404
+
+    @pytest.mark.asyncio
+    async def test_get_playground_unpublished_hidden_from_non_owner_non_admin(
+        self, db, org, admin_user, regular_user, mock_request
+    ):
+        """Line 235: a draft PUBLIC playground readable by access_type is still
+        hidden (404) from an authenticated user who is neither the owner nor an
+        org admin."""
+        await _make_playground(
+            db,
+            org,
+            admin_user,
+            playground_uuid="pg_draft_public_other",
+            access_type=PlaygroundAccessType.PUBLIC,
+            published=False,
+            created_by=admin_user.id,  # regular_user is not the owner
+        )
+        with pytest.raises(HTTPException) as exc_info:
+            await get_playground(mock_request, "pg_draft_public_other", regular_user, db)
+        assert exc_info.value.status_code == 404
+
+    @pytest.mark.asyncio
     async def test_list_org_playgrounds_empty_returns_empty(
         self, db, org, admin_user, mock_request
     ):

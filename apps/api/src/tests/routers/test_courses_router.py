@@ -390,6 +390,59 @@ class TestCourseDetailEndpoints:
         assert response.status_code == 200
         assert response.json()["course_uuid"] == "course_test"
 
+    async def test_get_course_meta_downgrades_unpublished_flag_when_denied(self, client):
+        # SECURITY (courses.py:451): a caller without UPDATE access must not see
+        # unpublished activities; the router downgrades the flag to False before
+        # calling get_course_meta.
+        from src.security.rbac.types import AccessDecision
+
+        captured = {}
+
+        async def _fake_get_course_meta(request, course_uuid, with_unpublished_activities, **kwargs):
+            captured["with_unpublished_activities"] = with_unpublished_activities
+            return _mock_full_course_read()
+
+        with patch(
+            "src.routers.courses.courses.check_resource_access",
+            new_callable=AsyncMock,
+            return_value=AccessDecision(allowed=False, reason="no update access"),
+        ), patch(
+            "src.routers.courses.courses.get_course_meta",
+            side_effect=_fake_get_course_meta,
+        ):
+            response = await client.get(
+                "/api/v1/courses/course_test/meta?with_unpublished_activities=true"
+            )
+
+        assert response.status_code == 200
+        assert captured["with_unpublished_activities"] is False
+
+    async def test_get_course_meta_keeps_unpublished_flag_when_allowed(self, client):
+        # When UPDATE access is granted the flag is preserved (covers the allowed
+        # branch alongside the deny path).
+        from src.security.rbac.types import AccessDecision
+
+        captured = {}
+
+        async def _fake_get_course_meta(request, course_uuid, with_unpublished_activities, **kwargs):
+            captured["with_unpublished_activities"] = with_unpublished_activities
+            return _mock_full_course_read()
+
+        with patch(
+            "src.routers.courses.courses.check_resource_access",
+            new_callable=AsyncMock,
+            return_value=AccessDecision(allowed=True, reason="ok"),
+        ), patch(
+            "src.routers.courses.courses.get_course_meta",
+            side_effect=_fake_get_course_meta,
+        ):
+            response = await client.get(
+                "/api/v1/courses/course_test/meta?with_unpublished_activities=true"
+            )
+
+        assert response.status_code == 200
+        assert captured["with_unpublished_activities"] is True
+
     async def test_search_courses(self, client):
         with patch(
             "src.routers.courses.courses.search_courses",
@@ -481,6 +534,41 @@ class TestContributorEndpoints:
 
         assert response.status_code == 200
         assert response.json()["detail"] == "applied"
+
+    async def test_apply_course_contributor_missing_course_returns_404(self, client):
+        # courses.py:726 - applying to a non-existent course yields a clean 404.
+        response = await client.post(
+            "/api/v1/courses/course_does_not_exist/apply-contributor"
+        )
+        assert response.status_code == 404
+        assert response.json()["detail"] == "Course not found"
+
+    async def test_apply_course_contributor_closed_course_returns_403(self, client, db, org):
+        # courses.py:728 - a course that is NOT open to contributors must reject
+        # applications with 403 even for an authenticated user.
+        from datetime import datetime
+        from src.db.courses.courses import Course
+
+        db.add(Course(
+            id=778, name="Closed Course", description="d", public=True, published=True,
+            open_to_contributors=False, org_id=org.id, course_uuid="course_closed_contrib",
+            creation_date=str(datetime.now()), update_date=str(datetime.now()),
+        ))
+        await db.commit()
+
+        with patch(
+            "src.routers.courses.courses.apply_course_contributor",
+            new_callable=AsyncMock,
+            return_value={"detail": "applied"},
+        ) as mock_apply:
+            response = await client.post(
+                "/api/v1/courses/course_closed_contrib/apply-contributor"
+            )
+
+        assert response.status_code == 403
+        assert response.json()["detail"] == "This course is not open to contributors"
+        # The guard must short-circuit before the service is ever called.
+        mock_apply.assert_not_called()
 
     async def test_get_course_contributors(self, client):
         with patch(
