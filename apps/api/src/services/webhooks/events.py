@@ -208,11 +208,27 @@ WEBHOOK_EVENTS: dict[str, dict] = {
             "contributors": "list[object]",
         },
     },
-    "collection_created": {
+    "folder_created": {
         "category": "Content Management",
-        "description": "Triggered when a new course collection is created",
+        "description": "Triggered when a new folder is created",
         "data_schema": {
-            "collection_uuid": "string",
+            "folder_uuid": "string",
+            "name": "string",
+        },
+    },
+    "folder_updated": {
+        "category": "Content Management",
+        "description": "Triggered when a folder is updated",
+        "data_schema": {
+            "folder_uuid": "string",
+            "name": "string",
+        },
+    },
+    "folder_deleted": {
+        "category": "Content Management",
+        "description": "Triggered when a folder is deleted",
+        "data_schema": {
+            "folder_uuid": "string",
             "name": "string",
         },
     },

@@ -6,7 +6,6 @@ import { Command } from 'cmdk'
 import * as DialogPrimitive from '@radix-ui/react-dialog'
 import {
   BookOpen,
-  Stack,
   User as UserIcon,
   ChatsCircle,
   ChatCircle,
@@ -28,7 +27,6 @@ import { normalizeForSearch } from '@/lib/search/normalize'
 
 const CONTENT_TYPE_ICON: Record<ContentResultType, SearchMeta['icon']> = {
   course: BookOpen,
-  collection: Stack,
   user: UserIcon,
   community: ChatsCircle,
   discussion: ChatCircle,
@@ -38,7 +36,6 @@ const CONTENT_TYPE_ICON: Record<ContentResultType, SearchMeta['icon']> = {
 
 const CONTENT_TYPE_GROUP_KEY: Record<ContentResultType, string> = {
   course: 'dashboard.search.groups.courses',
-  collection: 'dashboard.search.groups.collections',
   user: 'dashboard.search.groups.users',
   community: 'dashboard.search.groups.communities',
   discussion: 'dashboard.search.groups.discussions',
@@ -48,7 +45,6 @@ const CONTENT_TYPE_GROUP_KEY: Record<ContentResultType, string> = {
 
 const CONTENT_TYPE_ORDER: ContentResultType[] = [
   'course',
-  'collection',
   'user',
   'community',
   'discussion',
@@ -74,7 +70,6 @@ function usePagesFiltered(): SearchMeta[] {
 function groupContentResults(results: ContentResult[]): Record<ContentResultType, ContentResult[]> {
   const groups: Record<ContentResultType, ContentResult[]> = {
     course: [],
-    collection: [],
     user: [],
     community: [],
     discussion: [],
@@ -97,6 +92,7 @@ export default function CommandPalette() {
 
   // Reset state when palette closes.
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     if (!open) setQuery('')
   }, [open])
 

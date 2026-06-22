@@ -4,7 +4,6 @@ from fastapi import HTTPException, status, Request
 from sqlalchemy import null
 from sqlmodel import select
 from sqlmodel.ext.asyncio.session import AsyncSession
-from src.db.collections import Collection
 from src.db.courses.courses import Course
 from src.db.resource_authors import ResourceAuthor, ResourceAuthorshipEnum, ResourceAuthorshipStatusEnum
 from src.db.roles import Role
@@ -141,12 +140,27 @@ async def authorization_verify_if_element_is_public(
                 detail="User rights : You don't have the right to perform this action",
             )
 
-    elif element_nature == "collections" and action == "read":
-        statement = select(Collection).where(
-            Collection.public == True, Collection.collection_uuid == element_uuid
+    elif element_nature == "folders" and action == "read":
+        from src.db.folders.folders import Folder
+        statement = select(Folder).where(
+            Folder.public == True, Folder.folder_uuid == element_uuid
         )
-        collection = (await db_session.execute(statement)).scalars().first()
-        if collection:
+        folder = (await db_session.execute(statement)).scalars().first()
+        if folder:
+            return True
+        else:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="User rights : You don't have the right to perform this action",
+            )
+
+    elif element_nature == "media" and action == "read":
+        from src.db.media.media import Media
+        statement = select(Media).where(
+            Media.public == True, Media.media_uuid == element_uuid
+        )
+        media = (await db_session.execute(statement)).scalars().first()
+        if media:
             return True
         else:
             raise HTTPException(
@@ -446,7 +460,7 @@ async def authorization_verify_api_token_permissions(
     access resources within their organization.
 
     API tokens are restricted to these resources:
-    - courses, activities, coursechapters, collections, certifications,
+    - courses, activities, coursechapters, folders, media, certifications,
     - usergroups, payments, search
 
     Args:
@@ -466,7 +480,7 @@ async def authorization_verify_api_token_permissions(
 
     # API tokens are restricted to specific resource types
     allowed_resource_types = [
-        'courses', 'activities', 'coursechapters', 'collections',
+        'courses', 'activities', 'coursechapters', 'folders', 'media',
         'certifications', 'usergroups', 'payments', 'search'
     ]
 

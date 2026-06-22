@@ -1,7 +1,7 @@
 """
 Tests for src/services/search/search.py
 
-Covers: _escape_like_wildcards, search_across_org (collections, users,
+Covers: _escape_like_wildcards, search_across_org (folders, users,
         anonymous vs authenticated visibility).
 """
 
@@ -11,10 +11,9 @@ from unittest.mock import AsyncMock, patch
 
 import pytest
 
-from src.db.collections import Collection
+from src.db.folders.folders import Folder
 from src.db.users import APITokenUser
 from src.db.courses.courses import Course
-from src.db.collections_courses import CollectionCourse
 from src.db.playgrounds import Playground, PlaygroundAccessType
 from src.services.search.search import SearchResult, _escape_like_wildcards, search_across_org
 from src.services.search.normalization import (
@@ -45,23 +44,23 @@ async def _make_course(db, org, *, id, name="Extra Course", course_uuid=None,
     return c
 
 
-async def _make_collection(db, org, *, id, name="Extra Collection",
-                     collection_uuid=None, public=True):
-    """Helper to insert an additional collection."""
-    c = Collection(
+async def _make_folder(db, org, *, id, name="Extra Folder",
+                     folder_uuid=None, public=True):
+    """Helper to insert an additional folder."""
+    f = Folder(
         id=id,
         name=name,
         description=f"Description for {name}",
         public=public,
         org_id=org.id,
-        collection_uuid=collection_uuid or f"collection_{id}",
+        folder_uuid=folder_uuid or f"folder_{id}",
         creation_date=str(datetime.now()),
         update_date=str(datetime.now()),
     )
-    db.add(c)
+    db.add(f)
     await db.commit()
-    await db.refresh(c)
-    return c
+    await db.refresh(f)
+    return f
 
 
 class TestEscapeLikeWildcards:
@@ -93,16 +92,16 @@ class TestSearchAcrossOrg:
 
         assert isinstance(result, SearchResult)
         assert result.courses == []
-        assert result.collections == []
+        assert result.folders == []
         assert result.users == []
 
     @pytest.mark.asyncio
-    async def test_search_finds_collections_by_name(
+    async def test_search_finds_folders_by_name(
         self, db, org, anonymous_user, mock_request
     ):
-        await _make_collection(
+        await _make_folder(
             db, org, id=70, name="Searchable Bundle",
-            collection_uuid="collection_searchable", public=True,
+            folder_uuid="folder_searchable", public=True,
         )
 
         with patch(
@@ -113,8 +112,8 @@ class TestSearchAcrossOrg:
                 mock_request, anonymous_user, "test-org", "Searchable", db
             )
 
-        collection_names = [c.name for c in result.collections]
-        assert "Searchable Bundle" in collection_names
+        folder_names = [f.name for f in result.folders]
+        assert "Searchable Bundle" in folder_names
 
     @pytest.mark.asyncio
     async def test_search_anonymous_no_users(
@@ -184,7 +183,7 @@ class TestSearchAcrossOrg:
             )
 
         assert result.courses == []
-        assert result.collections == []
+        assert result.folders == []
         assert result.users == []
 
     @pytest.mark.asyncio
@@ -283,7 +282,7 @@ class TestSearchAcrossOrg:
                 mock_request, allowed_token, "test-org", "Test", db
             )
 
-        assert allowed.collections == []
+        assert allowed.folders == []
 
         with patch(
             "src.services.search.search.search_courses",
@@ -326,34 +325,6 @@ class TestSearchAcrossOrg:
 
         playground_names = [p.name for p in result.playgrounds]
         assert "Searchable Playground" in playground_names
-
-    @pytest.mark.asyncio
-    async def test_search_deduplicates_collection_courses(
-        self, db, org, anonymous_user, mock_request, collection, course
-    ):
-        db.add(
-            CollectionCourse(
-                collection_id=collection.id,
-                course_id=course.id,
-                org_id=org.id,
-                creation_date=str(datetime.now()),
-                update_date=str(datetime.now()),
-            )
-        )
-        await db.commit()
-
-        with patch(
-            "src.services.search.search.search_courses",
-            new_callable=AsyncMock,
-            return_value=[],
-        ):
-            result = await search_across_org(
-                mock_request, anonymous_user, "test-org", "Test", db
-            )
-
-        assert len(result.collections) == 1
-        assert len(result.collections[0].courses) == 1
-
 
 class TestUnicodeNormalization:
     """Helper-level tests for normalize_search_term / build_like_pattern.
@@ -406,13 +377,13 @@ class TestSearchUnicodeMatching:
     """
 
     @pytest.mark.asyncio
-    async def test_search_finds_collection_with_emoji_in_name(
+    async def test_search_finds_folder_with_emoji_in_name(
         self, db, org, anonymous_user, mock_request
     ):
-        await _make_collection(
+        await _make_folder(
             db, org, id=71,
             name="Rocket Bundle \U0001f680",
-            collection_uuid="collection_emoji",
+            folder_uuid="folder_emoji",
             public=True,
         )
 
@@ -424,7 +395,7 @@ class TestSearchUnicodeMatching:
                 mock_request, anonymous_user, "test-org", "\U0001f680", db
             )
 
-        names = [c.name for c in result.collections]
+        names = [f.name for f in result.folders]
         assert "Rocket Bundle \U0001f680" in names
 
     @pytest.mark.asyncio
@@ -432,10 +403,10 @@ class TestSearchUnicodeMatching:
         self, db, org, anonymous_user, mock_request
     ):
         # Stored as NFC ("café"); user query is NFD ("cafe" + U+0301).
-        await _make_collection(
+        await _make_folder(
             db, org, id=72,
             name="café club",
-            collection_uuid="collection_cafe",
+            folder_uuid="folder_cafe",
             public=True,
         )
 
@@ -447,5 +418,5 @@ class TestSearchUnicodeMatching:
                 mock_request, anonymous_user, "test-org", "café", db
             )
 
-        names = [c.name for c in result.collections]
+        names = [f.name for f in result.folders]
         assert "café club" in names

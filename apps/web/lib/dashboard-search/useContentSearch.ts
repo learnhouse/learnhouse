@@ -7,7 +7,6 @@ import { searchOrgContent } from '@services/search/search'
 
 export type ContentResultType =
   | 'course'
-  | 'collection'
   | 'user'
   | 'community'
   | 'discussion'
@@ -36,15 +35,6 @@ function normalize(data: any): ContentResult[] {
       title: c.name,
       subtitle: c.description ?? undefined,
       href: `/dash/courses/course/${stripPrefix(c.course_uuid, 'course_')}/general`,
-    })
-  }
-  for (const col of data.collections ?? []) {
-    out.push({
-      id: col.collection_uuid,
-      type: 'collection',
-      title: col.name,
-      subtitle: col.description ?? undefined,
-      href: `/dash/courses?collection=${stripPrefix(col.collection_uuid, 'collection_')}`,
     })
   }
   for (const u of data.users ?? []) {

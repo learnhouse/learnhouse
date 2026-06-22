@@ -389,7 +389,7 @@ class TestParentResourceResolution:
 
     def test_primary_resources_have_no_parent(self):
         """Test that primary resources don't have parent configuration."""
-        primary_resources = ["course_123", "podcast_123", "community_123", "collection_123"]
+        primary_resources = ["course_123", "podcast_123", "community_123", "folder_123"]
 
         for resource_uuid in primary_resources:
             config = get_resource_config(resource_uuid)

@@ -8,7 +8,8 @@ interface AuthenticatedClientElementProps {
   checkMethod: 'authentication' | 'roles'
   orgId?: string | number
   ressourceType?:
-  | 'collections'
+  | 'folders'
+  | 'media'
   | 'courses'
   | 'activities'
   | 'users'

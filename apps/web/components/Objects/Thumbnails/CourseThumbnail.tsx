@@ -2,7 +2,9 @@
 import { useOrg } from '@components/Contexts/OrgContext'
 import AuthenticatedClientElement from '@components/Security/AuthenticatedClientElement'
 import ConfirmationModal from '@components/Objects/StyledElements/ConfirmationModal/ConfirmationModal'
-import { getUriWithOrg, getAPIUrl } from '@services/config/config'
+import Modal from '@components/Objects/StyledElements/Modal/Modal'
+import ManageAccessPopover from '@components/Dashboard/Library/ManageAccessPopover'
+import { getUriWithOrg } from '@services/config/config'
 import { deleteCourseFromBackend, cloneCourse } from '@services/courses/courses'
 import { exportCourse, downloadBlob, ExportStatus } from '@services/courses/transfer'
 import { exportToast } from '@components/Objects/StyledElements/Toast/ExportToast'
@@ -10,7 +12,7 @@ import { getCourseThumbnailMediaDirectory, getUserAvatarMediaDirectory } from '@
 import { useQueryClient } from '@tanstack/react-query'
 import { queryKeys } from '@/lib/query/keys'
 import { getCourseMetadata } from '@services/courses/courses'
-import { BookMinus, FilePenLine, Settings2, MoreVertical, Copy, Download, CheckSquare, Square } from 'lucide-react'
+import { BookMinus, FilePenLine, Settings2, MoreVertical, Copy, Download, CheckSquare, Square, Lock } from 'lucide-react'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
 import Link from 'next/link'
 import React from 'react'
@@ -53,7 +55,7 @@ type PropsType = {
   customLink?: string
   isDashboard?: boolean
   isSelected?: boolean
-  onToggleSelect?: (courseUuid: string) => void
+  onToggleSelect?: (_courseUuid: string) => void
   isPriority?: boolean
 }
 
@@ -93,7 +95,7 @@ function CourseThumbnail({ course, orgslug, customLink, isDashboard = false, isS
       await deleteCourseFromBackend(course.course_uuid, session.data?.tokens?.access_token)
       queryClient.invalidateQueries({ queryKey: ['courses'] })
       toast.success(t('courses.course_deleted_success'))
-    } catch (error) {
+    } catch (_error) {
       toast.error(t('courses.course_deleted_error'))
     } finally {
       toast.dismiss(toastId)
@@ -110,7 +112,7 @@ function CourseThumbnail({ course, orgslug, customLink, isDashboard = false, isS
       } else {
         toast.error(result.HTTPmessage || t('courses.course_cloned_error'))
       }
-    } catch (error) {
+    } catch (_error) {
       toast.error(t('courses.course_cloned_error'))
     } finally {
       toast.dismiss(toastId)
@@ -174,7 +176,7 @@ function CourseThumbnail({ course, orgslug, customLink, isDashboard = false, isS
       <Link prefetch={false} href={courseLink} className="block relative aspect-video overflow-hidden bg-gray-50">
         {/* Hidden img gives the browser a real resource hint so it can fetch the background-image early as an LCP candidate */}
         {isPriority && (
-          // eslint-disable-next-line @next/next/no-img-element
+           
           <img
             src={thumbnailImage}
             alt=""
@@ -281,6 +283,7 @@ const AdminEditOptions = ({ course, orgSlug, deleteCourse, cloneCourse, exportCo
 }) => {
   const { t } = useTranslation()
   const [isOpen, setIsOpen] = React.useState(false)
+  const [accessOpen, setAccessOpen] = React.useState(false)
 
   return (
     <AuthenticatedClientElement
@@ -332,6 +335,14 @@ const AdminEditOptions = ({ course, orgSlug, deleteCourse, cloneCourse, exportCo
               </button>
             </DropdownMenuItem>
             <DropdownMenuItem asChild>
+              <button
+                onClick={() => setAccessOpen(true)}
+                className="w-full text-left flex items-center px-2 py-1.5 text-sm text-gray-700 hover:bg-gray-50 rounded-md transition-colors"
+              >
+                <Lock className="mr-2 h-4 w-4" /> {t('library.manage_access')}
+              </button>
+            </DropdownMenuItem>
+            <DropdownMenuItem asChild>
               <ConfirmationModal
                 confirmationButtonText={t('courses.delete_course')}
                 confirmationMessage={t('courses.delete_course_confirm')}
@@ -347,6 +358,21 @@ const AdminEditOptions = ({ course, orgSlug, deleteCourse, cloneCourse, exportCo
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
+
+        <Modal
+          isDialogOpen={accessOpen}
+          onOpenChange={setAccessOpen}
+          minHeight="no-min"
+          minWidth="md"
+          dialogTitle={t('library.manage_access')}
+          dialogContent={
+            <ManageAccessPopover
+              resource_uuid={course.course_uuid}
+              resourceType="courses"
+              orgslug={orgSlug}
+            />
+          }
+        />
       </div>
     </AuthenticatedClientElement>
   )

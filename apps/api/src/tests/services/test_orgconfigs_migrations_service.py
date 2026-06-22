@@ -88,7 +88,7 @@ async def test_v2_migrate_all_configs_migrates_and_patches_existing_v2(db):
     assert v2_config.config["customization"]["general"]["watermark"] is True
     assert v2_config.config["customization"]["general"]["color"] == ""
     assert "discussions" not in v2_config.config["admin_toggles"]
-    assert v2_config.config["admin_toggles"]["collections"] == {"disabled": False}
+    assert v2_config.config["admin_toggles"]["folders"] == {"disabled": False}
 
 
 @pytest.mark.asyncio

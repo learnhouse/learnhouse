@@ -16,11 +16,11 @@ export async function GET(request: NextRequest) {
   // Revalidate the requested tag
   revalidateTag(tag, {})
 
-  // When organizations change, also bust course/collection caches since they
+  // When organizations change, also bust course/folder caches since they
   // embed org data (config, features, etc.)
   if (tag === 'organizations') {
     revalidateTag('courses', {})
-    revalidateTag('collections', {})
+    revalidateTag('folders', {})
   }
 
   return NextResponse.json(

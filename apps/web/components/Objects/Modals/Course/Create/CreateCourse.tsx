@@ -24,7 +24,7 @@ import UnsplashImagePicker from "@components/Dashboard/Pages/Course/EditCourseGe
 import FormTagInput from "@components/Objects/StyledElements/Form/TagInput"
 import { useTranslation } from "react-i18next"
 
-const validationSchema = Yup.object().shape({
+const _validationSchema = Yup.object().shape({
   name: Yup.string()
     .required('Course name is required')
     .max(100, 'Must be 100 characters or less'),
@@ -104,7 +104,7 @@ function CreateCourseModal({ closeModal, orgslug }: any) {
               : t('courses.failed_to_create_course')
           toast.error(errorMessage)
         }
-      } catch (error) {
+      } catch (_error) {
         toast.error(t('courses.failed_to_create_course'))
       } finally {
         setSubmitting(false)
@@ -140,7 +140,7 @@ function CreateCourseModal({ closeModal, orgslug }: any) {
       const blob = await response.blob()
       const file = new File([blob], 'unsplash_image.jpg', { type: 'image/jpeg' })
       formik.setFieldValue('thumbnail', file)
-    } catch (error) {
+    } catch (_error) {
       toast.error('Failed to load image from Unsplash')
     }
     setIsUploading(false)
@@ -165,7 +165,7 @@ function CreateCourseModal({ closeModal, orgslug }: any) {
 
       <FormField name="description">
         <FormLabelAndMessage
-          label={t('collections.description')}
+          label={t('library.description')}
           message={formik.errors.description}
         />
         <Form.Control asChild>
