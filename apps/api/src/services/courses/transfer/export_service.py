@@ -343,10 +343,13 @@ def _export_directory_to_zip(
     Reads from configured storage (filesystem or S3) based on content_delivery setting.
     Skips re-compression for already-compressed media files to save CPU.
     """
+    # walk_directory yields POSIX roots (#842); normalize defensively and join
+    # with '/' so ZIP entry names never pick up os.sep ('\') on Windows.
+    source_prefix = source_path.replace("\\", "/").rstrip("/") + "/"
     for root, dirs, files in walk_directory(source_path):
         for filename in files:
-            file_path = os.path.join(root, filename)
-            rel_path = os.path.relpath(file_path, source_path)
+            file_path = f"{root.rstrip('/')}/{filename}".replace("\\", "/")
+            rel_path = file_path.removeprefix(source_prefix)
             content = read_file_content(file_path)
             if content:
                 entry_path = f"{zip_path}/{rel_path}"

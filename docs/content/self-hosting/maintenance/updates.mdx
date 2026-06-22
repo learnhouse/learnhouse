@@ -6,59 +6,114 @@ Keeping LearnHouse up to date ensures you have the latest features, bug fixes, a
 
 ## Updating LearnHouse
 
-Use the built-in `update` command. It pulls the target image, rewrites the image tag in `docker-compose.yml`, restarts the stack, and prompts for database migrations.
+Use the built-in `update` command. It backs up your database, pulls the new image, migrates uploaded content to a persistent volume, restarts the stack, and applies database migrations.
 
 ```bash
 # Update to the latest version
-learnhouse update
+npx learnhouse update
 
 # Update to a specific version
-learnhouse update --version 1.4.2
+npx learnhouse update --to 1.4.2
+# or using the short form:
+npx learnhouse update -v 1.4.2
 ```
-
-Flags:
 
 | Flag | Description |
 |---|---|
-| `--version <tag>` | Pull a specific image tag from `ghcr.io/learnhouse/app`. Defaults to `latest`. |
-| `--migrate` | Run database migrations without prompting. |
-| `--no-migrate` | Skip database migrations without prompting. |
+| `-v, --to <version>` | Pull a specific image tag (e.g. `1.4.2`, `v1.4.2`). Defaults to `latest`. |
+| `--migrate` | Run database migrations without prompting |
+| `--no-migrate` | Skip database migrations without prompting |
+| `--no-backup` | Skip the pre-upgrade database backup (not recommended for production) |
 
-<Callout type="warning">
-Always create a backup before updating. This allows you to roll back if anything goes wrong.
+<Callout type="info">
+The update command creates a database backup automatically before making any changes. The backup is saved to `{installDir}/backups/db-pre-upgrade-{timestamp}.sql.gz`.
 </Callout>
+
+## What `update` Does
+
+The command runs these steps in order:
+
+1. **Database backup** — `pg_dump` to `./backups/` (skipped with `--no-backup`)
+2. **Alembic baseline** — stamps the current schema for installs that pre-date Alembic tracking (one-time, idempotent)
+3. **Image tag update** — rewrites the tag in `docker-compose.yml`
+4. **Content volume migration** — moves uploaded media into a named Docker volume so it survives future container recreations (one-time, idempotent)
+5. **Image pull** — `docker compose pull` fetches the new image
+6. **Stack restart** — `docker compose down && docker compose up -d --pull always`
+7. **Health wait** — polls `/api/v1/health` until the app responds
+8. **Database migrations** — `alembic upgrade head` (prompted unless `--migrate`/`--no-migrate` passed)
 
 ## Recommended Update Procedure
 
 ```bash
-# 1. Create a backup
-learnhouse backup
+# 1. Review the release notes
+# https://github.com/learnhouse/learnhouse/releases
 
-# 2. Run the update
-learnhouse update
+# 2. Run the update (backup is created automatically)
+npx learnhouse update
 
 # 3. Verify all services are healthy
-learnhouse doctor
+npx learnhouse doctor
 
 # 4. Check logs for any errors
-learnhouse logs
+npx learnhouse logs
 ```
 
+## Database Migrations
+
+LearnHouse uses [Alembic](https://alembic.sqlalchemy.org/) to evolve the database schema between versions. After the new container starts, the CLI prompts:
+
+```
+? Run database migrations now? › Yes / No
+```
+
+- **Yes** — runs `alembic upgrade head` in the app container. Recommended.
+- **No** — skips migrations. You can run them later manually.
+
+To skip the prompt, pass `--migrate` (always run) or `--no-migrate` (always skip).
+
+<Callout type="warning">
+If you skip migrations, the new version of the app may error until they are applied. Run them manually when ready:
+
+```bash
+docker compose exec learnhouse-app sh -c "cd /app/api && uv run alembic upgrade head"
+```
+</Callout>
+
+### Installs Created Before v1.3
+
+Early LearnHouse installs created their schema via SQLAlchemy's `create_all` without Alembic tracking. The update command detects this automatically and stamps the current schema as the baseline before running any delta migrations — so `upgrade head` applies only new changes instead of replaying everything.
+
+## Rolling Back
+
+If an update causes issues, restore from the pre-upgrade backup:
+
+```bash
+# List available backups
+ls {installDir}/backups/
+
+# Restore the database
+npx learnhouse restore backups/db-pre-upgrade-<timestamp>.sql.gz
+
+# Revert the image tag in docker-compose.yml to the previous version
+# (edit the file: change image: ghcr.io/learnhouse/app:<new> back to <old>)
+
+# Restart on the old image
+npx learnhouse start
+```
+
+Backups are named `db-pre-upgrade-{timestamp}.sql.gz` when created by `update`, and `learnhouse-backup-{timestamp}.tar.gz` when created by the `backup` command. The pre-upgrade backup created by `update` includes only the database dump; to also preserve your `.env`, run `npx learnhouse backup` manually before updating.
+
+<Callout type="warning">
+Uploaded files stored on the filesystem (in the `learnhouse_content_*` Docker volume) are **not** included in the database backup. To back up uploaded files, use `docker volume export` or a volume-level snapshot provided by your hosting platform.
+</Callout>
+
 ## Checking for Updates
+
+The CLI automatically checks for a new version each time you run a command and prints a notice if one is available.
 
 Review the [LearnHouse release notes](https://github.com/learnhouse/learnhouse/releases) before updating to understand what has changed. Some updates may include:
 
 - New features or UI changes
 - Database migrations (applied automatically when you accept the prompt or pass `--migrate`)
 - Configuration changes that may require updating your `.env` file
-- Breaking changes (rare, but documented in release notes)
-
-## Rolling Back
-
-If an update causes issues, restore from your latest backup:
-
-```bash
-learnhouse restore <archive.tar.gz>
-```
-
-Backups live under `<installDir>/backups/` and are named `learnhouse-backup-<timestamp>.tar.gz`. The restore command replays the database dump and optionally restores the `.env` file — uploaded files on the filesystem are **not** restored (they are not included in the backup).
+- Breaking changes (rare, documented in release notes with a migration guide)

@@ -28,21 +28,21 @@ function createDragHandlePlugin() {
           <circle cx="15" cy="19" r="2"/>
         </svg>
       </div>
-      <button type="button" class="action-btn clear-btn" data-action="clear">
+      <button class="action-btn clear-btn" data-action="clear">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/>
           <path d="M3 3v5h5"/>
         </svg>
         <span class="tooltip-text">Clear</span>
       </button>
-      <button type="button" class="action-btn duplicate-btn" data-action="duplicate">
+      <button class="action-btn duplicate-btn" data-action="duplicate">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <rect width="14" height="14" x="8" y="8" rx="2" ry="2"/>
           <path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/>
         </svg>
         <span class="tooltip-text">Duplicate</span>
       </button>
-      <button type="button" class="action-btn delete-btn" data-action="delete">
+      <button class="action-btn delete-btn" data-action="delete">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <path d="M3 6h18"/>
           <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/>
@@ -66,7 +66,7 @@ function createDragHandlePlugin() {
 
     // Event listeners on drag handle
     const dragGrip = dragHandle.querySelector('.drag-grip') as HTMLElement
-    const actionButtons = dragHandle.querySelectorAll('.action-btn') as NodeListOf<HTMLElement>
+    const actionButtons = dragHandle.querySelectorAll<HTMLElement>('.action-btn')
 
     dragHandle.addEventListener('mouseenter', handleHandleEnter)
     dragHandle.addEventListener('mouseleave', handleHandleLeave)
@@ -314,14 +314,6 @@ function createDragHandlePlugin() {
 
         if (index === -1) return null
 
-        // Calculate position by summing up previous node sizes
-        let pos = 0
-        view.state.doc.forEach((node, offset, i) => {
-          if (i < index) {
-            pos = offset + node.nodeSize
-          }
-        })
-
         // Verify this position has a node
         if (index === 0) {
           return 0
@@ -358,7 +350,6 @@ function createDragHandlePlugin() {
         // Calculate distance to top and bottom edges
         const distanceToTop = Math.abs(clientY - rect.top)
         const distanceToBottom = Math.abs(clientY - rect.bottom)
-        const distanceToMid = Math.abs(clientY - midY)
 
         // Check if we're close to this block
         if (clientY >= rect.top - 30 && clientY <= rect.bottom + 30) {
@@ -434,7 +425,7 @@ function createDragHandlePlugin() {
     return {
       destroy() {
         const dragGrip = dragHandle?.querySelector('.drag-grip') as HTMLElement
-        const actionButtons = dragHandle?.querySelectorAll('.action-btn') as NodeListOf<HTMLElement>
+        const actionButtons = dragHandle?.querySelectorAll<HTMLElement>('.action-btn')
 
         view.dom.removeEventListener('mousemove', handleMouseMove)
         view.dom.removeEventListener('mouseleave', handleMouseLeave)
