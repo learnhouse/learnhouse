@@ -13,6 +13,7 @@ import Modal from '@components/Objects/StyledElements/Modal/Modal'
 import { useTranslation } from 'react-i18next'
 
 const SUPPORTED_FILES = constructAcceptValue(['pdf'])
+const MIN_PROGRESS_FILE_SIZE = 100 * 1024
 
 function PDFBlockComponent(props: any) {
   const { t } = useTranslation()
@@ -22,6 +23,7 @@ function PDFBlockComponent(props: any) {
   const access_token = session?.data?.tokens?.access_token;
   const [pdf, setPDF] = React.useState<File | null>(null)
   const [isLoading, setIsLoading] = React.useState(false)
+  const [uploadProgress, setUploadProgress] = React.useState<number | null>(null)
   const [blockObject, setblockObject] = React.useState(
     props.node.attrs.blockObject
   )
@@ -35,6 +37,7 @@ function PDFBlockComponent(props: any) {
   const isEditable = editorState.isEditable
 
   const handlePDFChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    if (isLoading) return
     const file = event.target.files?.[0]
     if (file) {
       setPDF(file)
@@ -45,12 +48,16 @@ function PDFBlockComponent(props: any) {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!pdf) return
+    const shouldShowProgress = pdf.size >= MIN_PROGRESS_FILE_SIZE
     setIsLoading(true)
+    setUploadProgress(shouldShowProgress ? 0 : null)
     setError(null)
     try {
       let object = await uploadNewPDFFile(
         pdf,
-        props.extension.options.activity.activity_uuid, access_token
+        props.extension.options.activity.activity_uuid,
+        access_token,
+        shouldShowProgress ? ({ percentage }) => setUploadProgress(percentage) : undefined
       )
       setblockObject(object)
       props.updateAttributes({
@@ -63,6 +70,7 @@ function PDFBlockComponent(props: any) {
       toast.error(errorMessage.includes('Upload failed') ? errorMessage : `Upload failed — please try again: ${errorMessage}`)
     } finally {
       setIsLoading(false)
+      setUploadProgress(null)
     }
   }
 
@@ -185,7 +193,9 @@ function PDFBlockComponent(props: any) {
           {!blockObject && (
             <form onSubmit={handleSubmit}>
               <div
-                onClick={() => fileInputRef.current?.click()}
+                onClick={() => {
+                  if (!isLoading) fileInputRef.current?.click()
+                }}
                 className={`border-2 border-dashed rounded-lg p-8 text-center cursor-pointer transition-all ${
                   error
                     ? 'border-red-300 bg-red-50/30 hover:border-red-400 hover:bg-red-50/50'
@@ -197,12 +207,30 @@ function PDFBlockComponent(props: any) {
                   type="file"
                   onChange={handlePDFChange}
                   accept={SUPPORTED_FILES}
+                  disabled={isLoading}
                   className="hidden"
                 />
                 {isLoading ? (
                   <div className="space-y-3">
                     <Loader2 className="w-8 h-8 animate-spin mx-auto text-blue-500" />
-                    <p className="text-sm text-neutral-600">{t('editor.blocks.pdf_block.uploading')}</p>
+                    <p className="text-sm text-neutral-600">
+                      {t('editor.blocks.pdf_block.uploading')}
+                      {uploadProgress !== null ? ` ${uploadProgress}%` : ''}
+                    </p>
+                    {uploadProgress !== null && (
+                      <div
+                        className="w-48 h-1 bg-neutral-200 rounded-full mx-auto overflow-hidden"
+                        role="progressbar"
+                        aria-valuemin={0}
+                        aria-valuemax={100}
+                        aria-valuenow={uploadProgress}
+                      >
+                        <div
+                          className="h-full bg-blue-500 rounded-full transition-all duration-200"
+                          style={{ width: `${uploadProgress}%` }}
+                        />
+                      </div>
+                    )}
                   </div>
                 ) : (
                   <div className="space-y-3">

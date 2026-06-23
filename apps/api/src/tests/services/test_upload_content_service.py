@@ -14,6 +14,7 @@ class TestUploadContentService:
     def test_ensure_directory_exists(self, tmp_path):
         target = tmp_path / "nested" / "dir"
         ensure_directory_exists(str(target))
+        ensure_directory_exists(str(target))
         assert target.exists()
 
     @pytest.mark.asyncio
@@ -95,6 +96,47 @@ class TestUploadContentService:
                 os.chdir(old_cwd)
 
         assert file_path.read_bytes() == b"ok"
+
+    @pytest.mark.asyncio
+    async def test_upload_content_creates_nested_filesystem_directory(self, tmp_path):
+        fake_config = SimpleNamespace(
+            hosting_config=SimpleNamespace(
+                content_delivery=SimpleNamespace(type="filesystem")
+            )
+        )
+
+        import os
+        old_cwd = os.getcwd()
+        os.chdir(tmp_path)
+        try:
+            with patch(
+                "src.services.utils.upload_content.get_learnhouse_config",
+                return_value=fake_config,
+            ):
+                await upload_content(
+                    directory="courses/course_1/activities/activity_1/documentpdf",
+                    type_of_dir="orgs",
+                    uuid="org_uuid",
+                    file_binary=b"pdf",
+                    file_and_format="documentpdf.pdf",
+                    allowed_formats=["pdf"],
+                )
+        finally:
+            os.chdir(old_cwd)
+
+        file_path = (
+            tmp_path
+            / "content"
+            / "orgs"
+            / "org_uuid"
+            / "courses"
+            / "course_1"
+            / "activities"
+            / "activity_1"
+            / "documentpdf"
+            / "documentpdf.pdf"
+        )
+        assert file_path.read_bytes() == b"pdf"
 
     @pytest.mark.asyncio
     async def test_upload_content_s3_success_and_failure(self, tmp_path):

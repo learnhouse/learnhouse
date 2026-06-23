@@ -12,8 +12,7 @@ logger = logging.getLogger(__name__)
 
 
 def ensure_directory_exists(directory: str):
-    if not os.path.exists(directory):
-        os.makedirs(directory)
+    os.makedirs(directory, exist_ok=True)
 
 
 async def upload_file(
@@ -87,14 +86,13 @@ async def upload_content(
                 detail=f"File format {file_format} not allowed",
             )
 
-    ensure_directory_exists(f"content/{type_of_dir}/{uuid}/{directory}")
+    target_dir = f"content/{type_of_dir}/{uuid}/{directory}"
+    target_path = f"{target_dir}/{file_and_format}"
+    ensure_directory_exists(target_dir)
 
     if content_delivery == "filesystem":
         # upload file to server
-        with open(
-            f"content/{type_of_dir}/{uuid}/{directory}/{file_and_format}",
-            "wb",
-        ) as f:
+        with open(target_path, "wb") as f:
             f.write(file_binary)
             f.close()
 
@@ -106,7 +104,7 @@ async def upload_content(
         )
 
         bucket_name = learnhouse_config.hosting_config.content_delivery.s3api.bucket_name or "learnhouse-media"
-        local_path = f"content/{type_of_dir}/{uuid}/{directory}/{file_and_format}"
+        local_path = target_path
         s3_key = local_path
 
         # Write to local temp file for S3 upload

@@ -15,6 +15,7 @@ import { useTranslation } from 'react-i18next'
 import UnsplashImagePicker, { UnsplashPhotoMeta } from '@components/Dashboard/Pages/Course/EditCourseGeneral/UnsplashImagePicker'
 
 const SUPPORTED_FILES = constructAcceptValue(['jpg', 'png', 'webp', 'gif'])
+const MIN_PROGRESS_FILE_SIZE = 100 * 1024
 const UNSPLASH_UTM = '?utm_source=LearnHouse&utm_medium=referral'
 const withUtm = (url?: string | null) => (url ? `${url}${UNSPLASH_UTM}` : '')
 
@@ -30,6 +31,7 @@ function ImageBlockComponent(props: any) {
   const isEditable = editorState.isEditable
   const [, setImage] = React.useState<File | null>(null)
   const [isLoading, setIsLoading] = React.useState(false)
+  const [uploadProgress, setUploadProgress] = React.useState<number | null>(null)
   const [isDragging, setIsDragging] = React.useState(false)
   const [error, setError] = React.useState<string | null>(null)
   const [blockObject, setblockObject] = React.useState(
@@ -52,6 +54,7 @@ function ImageBlockComponent(props: any) {
     : null
 
   const handleImageChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    if (isLoading) return
     const file = event.target.files?.[0]
     if (file) {
       setImage(file)
@@ -62,13 +65,16 @@ function ImageBlockComponent(props: any) {
 
   const handleUpload = async (file: File) => {
     if (!access_token) return
+    const shouldShowProgress = file.size >= MIN_PROGRESS_FILE_SIZE
     setIsLoading(true)
+    setUploadProgress(shouldShowProgress ? 0 : null)
     setError(null)
     try {
       let object = await uploadNewImageFile(
         file,
         props.extension.options.activity.activity_uuid,
-        access_token
+        access_token,
+        shouldShowProgress ? ({ percentage }) => setUploadProgress(percentage) : undefined
       )
       setblockObject(object)
       props.updateAttributes({
@@ -83,6 +89,7 @@ function ImageBlockComponent(props: any) {
       toast.error(errorMessage.includes('Upload failed') ? errorMessage : `Upload failed — please try again: ${errorMessage}`)
     } finally {
       setIsLoading(false)
+      setUploadProgress(null)
     }
   }
 
@@ -101,6 +108,7 @@ function ImageBlockComponent(props: any) {
   const handleDrop = (e: React.DragEvent) => {
     e.preventDefault()
     e.stopPropagation()
+    if (isLoading) return
     setIsDragging(false)
     const file = e.dataTransfer.files[0]
     if (file && ['image/jpeg', 'image/png', 'image/webp', 'image/gif'].includes(file.type)) {
@@ -285,7 +293,9 @@ function ImageBlockComponent(props: any) {
           {!blockObject && !unsplashUrl && isEditable && (
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div
-                onClick={() => fileInputRef.current?.click()}
+                onClick={() => {
+                  if (!isLoading) fileInputRef.current?.click()
+                }}
                 onDragEnter={handleDragEnter}
                 onDragOver={handleDragEnter}
                 onDragLeave={handleDragLeave}
@@ -306,12 +316,30 @@ function ImageBlockComponent(props: any) {
                   type="file"
                   onChange={handleImageChange}
                   accept={SUPPORTED_FILES}
+                  disabled={isLoading}
                   className="hidden"
                 />
                 {isLoading ? (
                   <div className="space-y-3">
                     <Loader2 className="w-8 h-8 animate-spin mx-auto text-neutral-500" />
-                    <p className="text-sm text-neutral-600">{t('editor.blocks.image_block.uploading')}</p>
+                    <p className="text-sm text-neutral-600">
+                      {t('editor.blocks.image_block.uploading')}
+                      {uploadProgress !== null ? ` ${uploadProgress}%` : ''}
+                    </p>
+                    {uploadProgress !== null && (
+                      <div
+                        className="w-48 h-1 bg-neutral-200 rounded-full mx-auto overflow-hidden"
+                        role="progressbar"
+                        aria-valuemin={0}
+                        aria-valuemax={100}
+                        aria-valuenow={uploadProgress}
+                      >
+                        <div
+                          className="h-full bg-blue-500 rounded-full transition-all duration-200"
+                          style={{ width: `${uploadProgress}%` }}
+                        />
+                      </div>
+                    )}
                   </div>
                 ) : (
                   <div className="space-y-2">

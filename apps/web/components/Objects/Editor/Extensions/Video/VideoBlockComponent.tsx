@@ -19,6 +19,7 @@ import LearnHousePlayer from '@components/Objects/Activities/Video/LearnHousePla
 import { useTranslation } from 'react-i18next'
 
 const SUPPORTED_FILES = constructAcceptValue(['webm', 'mp4'])
+const MIN_PROGRESS_FILE_SIZE = 100 * 1024
 
 const VIDEO_SIZES = {
   small: { width: 480, label: 'Small' },
@@ -131,7 +132,7 @@ function VideoBlockComponent(props: ExtendedNodeViewProps) {
   const [isLoading, setIsLoading] = React.useState(false)
   const [error, setError] = React.useState<string | null>(null)
   const [isDragging, setIsDragging] = React.useState(false)
-  const [uploadProgress, setUploadProgress] = React.useState(0)
+  const [uploadProgress, setUploadProgress] = React.useState<number | null>(null)
   const [blockObject, setBlockObject] = React.useState<VideoBlockObject | null>(initialBlockObject)
   const [selectedSize, setSelectedSize] = React.useState<VideoSize>(initialBlockObject?.size || 'medium')
   const [isModalOpen, setIsModalOpen] = React.useState(false)
@@ -153,6 +154,7 @@ function VideoBlockComponent(props: ExtendedNodeViewProps) {
   const fileId = blockObject?.content?.file_id ? `${blockObject.content.file_id}.${blockObject.content.file_format}` : null
 
   const handleVideoChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    if (isLoading) return
     const file = event.target.files?.[0]
     if (file) {
       setVideo(file)
@@ -178,6 +180,7 @@ function VideoBlockComponent(props: ExtendedNodeViewProps) {
   const handleDrop = (e: React.DragEvent) => {
     e.preventDefault()
     e.stopPropagation()
+    if (isLoading) return
     setIsDragging(false)
 
     const file = e.dataTransfer.files[0]
@@ -194,24 +197,19 @@ function VideoBlockComponent(props: ExtendedNodeViewProps) {
 
   const handleUpload = async (file: File) => {
     if (!access_token) return
+    const shouldShowProgress = file.size >= MIN_PROGRESS_FILE_SIZE
 
     try {
       setIsLoading(true)
       setError(null)
-      setUploadProgress(0)
-
-      const progressInterval = setInterval(() => {
-        setUploadProgress(prev => Math.min(prev + 10, 90))
-      }, 200)
+      setUploadProgress(shouldShowProgress ? 0 : null)
 
       const object = await uploadNewVideoFile(
         file,
         extension.options.activity.activity_uuid,
-        access_token
+        access_token,
+        shouldShowProgress ? ({ percentage }) => setUploadProgress(percentage) : undefined
       )
-
-      clearInterval(progressInterval)
-      setUploadProgress(100)
 
       const newBlockObject = {
         ...object,
@@ -220,16 +218,13 @@ function VideoBlockComponent(props: ExtendedNodeViewProps) {
       setBlockObject(newBlockObject)
       updateAttributes({ blockObject: newBlockObject })
       setVideo(null)
-
-      setTimeout(() => {
-        setUploadProgress(0)
-      }, 1000)
     } catch (err: any) {
       const errorMessage = err?.message || 'Failed to upload video. Please try again.'
       setError(errorMessage)
       toast.error(errorMessage)
     } finally {
       setIsLoading(false)
+      setUploadProgress(null)
     }
   }
 
@@ -238,7 +233,7 @@ function VideoBlockComponent(props: ExtendedNodeViewProps) {
     updateAttributes({ blockObject: null })
     setVideo(null)
     setError(null)
-    setUploadProgress(0)
+    setUploadProgress(null)
   }
 
   const handleSizeChange = (size: VideoSize) => {
@@ -341,12 +336,15 @@ function VideoBlockComponent(props: ExtendedNodeViewProps) {
               type="file"
               onChange={handleVideoChange}
               accept={SUPPORTED_FILES}
+              disabled={isLoading}
               className="hidden"
             />
 
             <div
               ref={uploadZoneRef}
-              onClick={() => fileInputRef.current?.click()}
+              onClick={() => {
+                if (!isLoading) fileInputRef.current?.click()
+              }}
               onDragEnter={handleDragEnter}
               onDragOver={handleDragEnter}
               onDragLeave={handleDragLeave}
@@ -361,13 +359,24 @@ function VideoBlockComponent(props: ExtendedNodeViewProps) {
               {isLoading ? (
                 <div className="space-y-3">
                   <Loader2 className="w-8 h-8 animate-spin mx-auto text-blue-500" />
-                  <p className="text-sm text-neutral-600">{t('editor.blocks.video_block.uploading')} {uploadProgress}%</p>
-                  <div className="w-48 h-1 bg-neutral-200 rounded-full mx-auto overflow-hidden">
+                  <p className="text-sm text-neutral-600">
+                    {t('editor.blocks.video_block.uploading')}
+                    {uploadProgress !== null ? ` ${uploadProgress}%` : ''}
+                  </p>
+                  {uploadProgress !== null && (
                     <div
-                      className="h-full bg-blue-500 rounded-full transition-all duration-200"
-                      style={{ width: `${uploadProgress}%` }}
-                    />
-                  </div>
+                      className="w-48 h-1 bg-neutral-200 rounded-full mx-auto overflow-hidden"
+                      role="progressbar"
+                      aria-valuemin={0}
+                      aria-valuemax={100}
+                      aria-valuenow={uploadProgress}
+                    >
+                      <div
+                        className="h-full bg-blue-500 rounded-full transition-all duration-200"
+                        style={{ width: `${uploadProgress}%` }}
+                      />
+                    </div>
+                  )}
                 </div>
               ) : (
                 <div className="space-y-3">

@@ -1,36 +1,28 @@
 import { getAPIUrl } from '@services/config/config'
 import {
-  RequestBodyFormWithAuthHeader,
   RequestBodyWithAuthHeader,
 } from '@services/utils/ts/requests'
+import { uploadFormDataWithProgress } from '@services/utils/ts/upload'
+import type { UploadProgress } from '@services/utils/ts/upload'
 
 export async function uploadNewPDFFile(
   file: any,
   activity_uuid: string,
-  access_token: string
+  access_token: string,
+  onProgress?: (_progress: UploadProgress) => void
 ) {
   // Send file thumbnail as form data
   const formData = new FormData()
   formData.append('file_object', file)
   formData.append('activity_uuid', activity_uuid)
 
-  const result = await fetch(
-    `${getAPIUrl()}blocks/pdf`,
-    RequestBodyFormWithAuthHeader('POST', formData, null, access_token)
-  )
-
-  const data = await result.json()
-
-  if (!result.ok) {
-    const errorMessage = typeof data?.detail === 'string'
-      ? data.detail
-      : Array.isArray(data?.detail)
-        ? data.detail.map((e: any) => e.msg).join(', ')
-        : 'Upload failed'
-    throw new Error(errorMessage)
-  }
-
-  return data
+  return uploadFormDataWithProgress({
+    url: `${getAPIUrl()}blocks/pdf`,
+    method: 'POST',
+    formData,
+    accessToken: access_token,
+    onProgress,
+  })
 }
 
 export async function getPDFFile(file_id: string, access_token: string) {
