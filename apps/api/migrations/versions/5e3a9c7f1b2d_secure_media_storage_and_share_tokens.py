@@ -5,7 +5,7 @@ Adds `media.storage_key` (randomized, server-only storage path for uploads) and 
 idempotent so re-running on partially-migrated DBs is safe.
 
 Revision ID: 5e3a9c7f1b2d
-Revises: d4e5f6a7b8c9
+Revises: f7a8b9c0d1e2
 Create Date: 2026-06-23
 
 """
@@ -18,7 +18,7 @@ import sqlmodel  # noqa: F401
 
 # revision identifiers, used by Alembic.
 revision: str = '5e3a9c7f1b2d'
-down_revision: Union[str, None] = 'd4e5f6a7b8c9'
+down_revision: Union[str, None] = 'f7a8b9c0d1e2'
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 
