@@ -90,32 +90,18 @@ export default function PdfThumbnail({ url }: { url: string }) {
   }, [url])
 
   if (state === 'error') {
-    // Page-1 render failed (unreachable file / blocked cross-origin fetch).
-    // Only offer a clickable link for http(s) URLs — never bind an untrusted
-    // scheme (e.g. javascript:) to href. Otherwise fall back to a plain tile.
-    const isHttp = /^https?:\/\//i.test(url)
-    if (!isHttp) {
-      return (
-        <div className="relative aspect-video flex items-center justify-center bg-amber-50 text-amber-500">
-          <FilePdf size={46} weight="fill" />
-        </div>
-      )
-    }
+    // Page-1 render failed (unreachable file / blocked fetch). The media card
+    // that wraps this thumbnail is ALREADY a link to the file, so render a
+    // non-interactive tile here — a nested <a> inside the card's <a> is invalid
+    // HTML and causes a hydration error.
     return (
-      <a
-        href={url}
-        target="_blank"
-        rel="noopener noreferrer"
-        onClick={(e) => e.stopPropagation()}
-        title={t('media.open_pdf')}
-        className="group relative aspect-video flex flex-col items-center justify-center gap-1.5 bg-amber-50 text-amber-500 hover:bg-amber-100 transition-colors"
-      >
+      <div className="relative aspect-video flex flex-col items-center justify-center gap-1.5 bg-amber-50 text-amber-500">
         <FilePdf size={42} weight="fill" />
-        <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-amber-600/80 group-hover:text-amber-700">
+        <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-amber-600/80">
           {t('media.open_pdf')}
           <ArrowSquareOut size={11} weight="bold" />
         </span>
-      </a>
+      </div>
     )
   }
 
