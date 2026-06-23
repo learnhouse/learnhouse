@@ -1,6 +1,7 @@
 'use client'
 import React, { useMemo, useState } from 'react'
 import { useAnalyticsPipe } from './useAnalyticsDashboard'
+import { AnalyticsEmptyState } from '@components/Analytics/AnalyticsEmptyState'
 import {
   AnalyticsDetailModal,
   LiveUsersDetail,
@@ -82,6 +83,71 @@ const DEVICE_ICONS: Record<string, React.ReactNode> = {
   unknown: <Devices size={13} weight="duotone" className="text-gray-400" />,
 }
 
+type DauTooltipContentProps = {
+  active?: boolean
+  payload?: Array<{ value?: number }>
+  label?: string
+  breakdownMap: Record<string, any>
+  t: (_key: string) => string
+}
+
+function DauTooltipContent({
+  active,
+  payload,
+  label,
+  breakdownMap,
+  t,
+}: DauTooltipContentProps) {
+  if (!active || !payload?.length || !label) return null
+  const dateStr = new Date(label).toLocaleDateString('en-US', {
+    month: 'long',
+    day: 'numeric',
+    year: 'numeric',
+  })
+  const bd = breakdownMap[label]
+  return (
+    <div
+      style={{
+        borderRadius: 12,
+        border: '1px solid #f3f4f6',
+        boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)',
+        background: '#fff',
+        padding: 12,
+      }}
+    >
+      <p style={{ fontSize: 11, color: '#6b7280', margin: 0 }}>{dateStr}</p>
+      <p style={{ fontSize: 13, fontWeight: 'bold', color: '#111827', margin: '4px 0 0' }}>
+        {t('analytics.overview.active_users')}: {payload[0].value?.toLocaleString()}
+      </p>
+      {bd && (
+        <>
+          <p style={{ fontSize: 11, color: '#6b7280', margin: '6px 0 0' }}>
+            {t('analytics.overview.desktop')}: {(bd.desktop ?? 0).toLocaleString()}
+          </p>
+          <p style={{ fontSize: 11, color: '#6b7280', margin: '2px 0 0' }}>
+            {t('analytics.overview.mobile')}: {(bd.mobile ?? 0).toLocaleString()}
+          </p>
+          {(bd.tablet ?? 0) > 0 && (
+            <p style={{ fontSize: 11, color: '#6b7280', margin: '2px 0 0' }}>
+              {t('analytics.overview.tablet')}: {bd.tablet.toLocaleString()}
+            </p>
+          )}
+          {bd.top_countries?.length > 0 && bd.top_countries.some((c: string) => c) && (
+            <p style={{ fontSize: 11, color: '#6b7280', margin: '6px 0 0' }}>
+              {t('analytics.overview.top_countries')}: {bd.top_countries.filter((c: string) => c).join(', ')}
+            </p>
+          )}
+          {bd.top_referrer?.length > 0 && bd.top_referrer[0] && (
+            <p style={{ fontSize: 11, color: '#6b7280', margin: '2px 0 0' }}>
+              {t('analytics.overview.top_referrer')}: {bd.top_referrer[0]}
+            </p>
+          )}
+        </>
+      )}
+    </div>
+  )
+}
+
 export default function EventOverview({ days = '30' }: { days?: string }) {
   const { t } = useTranslation()
   const { data, isLoading } = useAnalyticsPipe('event_counts', { days })
@@ -119,6 +185,9 @@ export default function EventOverview({ days = '30' }: { days?: string }) {
   const countryRows: any[] = countryData?.data ?? []
   const deviceRows: any[] = deviceData?.data ?? []
   const referrerRows: any[] = referrerData?.data ?? []
+  const hasDauData = dauRows.some((row: any) => Number(row.dau ?? 0) > 0)
+  const emptyStateTitle = t('analytics.empty_state.title')
+  const emptyStateDescription = t('analytics.empty_state.description')
 
   const breakdownMap = useMemo(() => {
     const map: Record<string, any> = {}
@@ -139,58 +208,6 @@ export default function EventOverview({ days = '30' }: { days?: string }) {
     fill: DEVICE_COLORS[r.device_type] || DEVICE_COLORS.unknown,
   }))
   const totalDeviceVisits = devicePieData.reduce((s: number, d: any) => s + d.value, 0)
-
-  // Custom tooltip for the DAU chart
-  const DauTooltipContent = ({ active, payload, label }: any) => {
-    if (!active || !payload?.length) return null
-    const dateStr = new Date(label).toLocaleDateString('en-US', {
-      month: 'long',
-      day: 'numeric',
-      year: 'numeric',
-    })
-    const bd = breakdownMap[label]
-    return (
-      <div
-        style={{
-          borderRadius: 12,
-          border: '1px solid #f3f4f6',
-          boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)',
-          background: '#fff',
-          padding: 12,
-        }}
-      >
-        <p style={{ fontSize: 11, color: '#6b7280', margin: 0 }}>{dateStr}</p>
-        <p style={{ fontSize: 13, fontWeight: 'bold', color: '#111827', margin: '4px 0 0' }}>
-          {t('analytics.overview.active_users')}: {payload[0].value?.toLocaleString()}
-        </p>
-        {bd && (
-          <>
-            <p style={{ fontSize: 11, color: '#6b7280', margin: '6px 0 0' }}>
-              {t('analytics.overview.desktop')}: {(bd.desktop ?? 0).toLocaleString()}
-            </p>
-            <p style={{ fontSize: 11, color: '#6b7280', margin: '2px 0 0' }}>
-              {t('analytics.overview.mobile')}: {(bd.mobile ?? 0).toLocaleString()}
-            </p>
-            {(bd.tablet ?? 0) > 0 && (
-              <p style={{ fontSize: 11, color: '#6b7280', margin: '2px 0 0' }}>
-                {t('analytics.overview.tablet')}: {bd.tablet.toLocaleString()}
-              </p>
-            )}
-            {bd.top_countries?.length > 0 && bd.top_countries.some((c: string) => c) && (
-              <p style={{ fontSize: 11, color: '#6b7280', margin: '6px 0 0' }}>
-                {t('analytics.overview.top_countries')}: {bd.top_countries.filter((c: string) => c).join(', ')}
-              </p>
-            )}
-            {bd.top_referrer?.length > 0 && bd.top_referrer[0] && (
-              <p style={{ fontSize: 11, color: '#6b7280', margin: '2px 0 0' }}>
-                {t('analytics.overview.top_referrer')}: {bd.top_referrer[0]}
-              </p>
-            )}
-          </>
-        )}
-      </div>
-    )
-  }
 
   return (
     <>
@@ -243,10 +260,12 @@ export default function EventOverview({ days = '30' }: { days?: string }) {
           <div className="h-[240px] flex items-center justify-center text-gray-300">
             {t('analytics.common.loading')}
           </div>
-        ) : dauRows.length === 0 ? (
-          <div className="h-[240px] flex items-center justify-center text-gray-300">
-            {t('analytics.common.no_data')}
-          </div>
+        ) : !hasDauData ? (
+          <AnalyticsEmptyState
+            title={emptyStateTitle}
+            description={emptyStateDescription}
+            heightClassName="h-[240px]"
+          />
         ) : (
           <div style={{ height: 240 }}>
             <ResponsiveContainer width="100%" height={240}>
@@ -274,7 +293,7 @@ export default function EventOverview({ days = '30' }: { days?: string }) {
                   tickLine={false}
                   allowDecimals={false}
                 />
-                <Tooltip content={<DauTooltipContent />} />
+                <Tooltip content={<DauTooltipContent breakdownMap={breakdownMap} t={t} />} />
                 <Area
                   type="monotone"
                   dataKey="dau"

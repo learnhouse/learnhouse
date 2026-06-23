@@ -4660,6 +4660,10 @@
       "score": "Score",
       "unique_users": "unique users"
     },
+    "empty_state": {
+      "title": "No analytics data yet",
+      "description": "Share a course link to start seeing page views, enrollments, and completions."
+    },
     "export": {
       "button": "Export",
       "json": "Download JSON",
