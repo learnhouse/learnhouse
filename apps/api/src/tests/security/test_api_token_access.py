@@ -319,8 +319,8 @@ class TestAllowedEndpoints:
         """Test that /activities router allows API tokens"""
         assert isinstance(mock_api_token_user, APITokenUser)
 
-    def test_collections_router_allows_api_tokens(self, mock_api_token_user):
-        """Test that /collections router allows API tokens"""
+    def test_folders_router_allows_api_tokens(self, mock_api_token_user):
+        """Test that /folders router allows API tokens"""
         assert isinstance(mock_api_token_user, APITokenUser)
 
     def test_certifications_router_allows_api_tokens(self, mock_api_token_user):

@@ -140,7 +140,6 @@
         "enable_feature": "설정으로 이동",
         "names": {
           "courses": "코스",
-          "collections": "컬렉션",
           "communities": "커뮤니티",
           "podcasts": "팟캐스트",
           "payments": "결제",
@@ -890,35 +889,6 @@
     "podcast_visibility": "공개 설정",
     "search_results": "\"{{query}}\"에 대해 {{count}}개의 팟캐스트를 찾았습니다"
   },
-  "collections": {
-    "collections": "컬렉션",
-    "no_collections": "아직 컬렉션이 없습니다",
-    "create_collections_placeholder": "컬렉션을 생성하여 코스를 그룹화해 보세요",
-    "collection": "컬렉션",
-    "new_collection": "새 컬렉션",
-    "enter_collection_name": "컬렉션 이름을 입력하세요",
-    "collection_created_success": "컬렉션이 성공적으로 생성되었습니다!",
-    "failed_to_create_collection": "컬렉션 생성 실패. 다시 시도해 주세요.",
-    "create_new_collection": "새 컬렉션 생성",
-    "create_collection_desc": "코스를 컬렉션으로 묶어 더 쉽게 찾고 관리할 수 있습니다.",
-    "collection_name": "컬렉션 이름",
-    "enter_collection_name_placeholder": "컬렉션 이름 입력",
-    "public_collection_desc": "공개 컬렉션 - 모든 사용자에게 표시",
-    "private_collection_desc": "비공개 컬렉션 - 조직 멤버에게만 표시",
-    "description": "설명",
-    "enter_collection_description_placeholder": "컬렉션 설명 입력",
-    "select_courses": "코스 선택",
-    "no_courses_available_desc": "이용 가능한 코스가 없습니다. 먼저 코스를 생성해 주세요.",
-    "selected_courses_count": "선택된 코스: {{count}}",
-    "create_collection_btn": "컬렉션 생성",
-    "delete_collection_confirm": "정말로 이 컬렉션을 삭제하시겠습니까?",
-    "delete_collection_title": "{{name}} 컬렉션을 삭제하시겠습니까?",
-    "delete_collection": "컬렉션 삭제",
-    "enter_description": "설명을 입력해 주세요",
-    "select_at_least_one_course": "적어도 하나의 코스를 선택해 주세요",
-    "visibility": "공개 설정",
-    "empty_collection": "빈 컬렉션"
-  },
   "activities": {
     "video": "동영상",
     "document": "문서",
@@ -1052,7 +1022,6 @@
     "types": {
       "all": "전체",
       "courses": "코스",
-      "collections": "컬렉션",
       "users": "멤버",
       "communities": "커뮤니티",
       "discussions": "토론",
@@ -2204,7 +2173,9 @@
           "sso": "SSO",
           "usage": "사용량",
           "seo": "SEO",
-          "automations": "자동화"
+          "automations": "자동화",
+          "api": "API Access",
+          "menu": "Menu"
         },
         "pages": {
           "general": {
@@ -2242,6 +2213,14 @@
           "usage": {
             "subtitle": "조직의 리소스 사용량 및 플랜 제한 모니터링",
             "title": "사용량"
+          },
+          "api": {
+            "title": "API Access",
+            "subtitle": "Manage API tokens and programmatic access"
+          },
+          "menu": {
+            "title": "Public menu",
+            "subtitle": "Choose and order the links shown in your public navigation"
           }
         },
         "name": "조직 이름",
@@ -2405,7 +2384,12 @@
         "toasts": {
           "save_success": "AI 설정이 성공적으로 업데이트되었습니다",
           "save_error": "AI 설정 업데이트에 실패했습니다"
-        }
+        },
+        "ai_copilot": "AI Copilot",
+        "ai_copilot_description": "Let learners ask questions about course content. Uses indexed material to provide grounded answers with source citations.",
+        "feature_editor_description": "AI-powered content editing assistance for course creators.",
+        "feature_activity_description": "AI assistant available within activities to help learners.",
+        "always_on": "Always on"
       },
       "features": {
         "title": "기능 설정",
@@ -2420,10 +2404,6 @@
           "payments": {
             "title": "결제",
             "description": "코스 및 구독에 대한 결제 처리 활성화"
-          },
-          "collections": {
-            "title": "컬렉션",
-            "description": "코스를 컬렉션으로 정리 허용"
           },
           "courses": {
             "description": "조직의 코스 및 진행 추적 활성화",
@@ -2657,7 +2637,8 @@
           "selected": "선택됨",
           "select": "선택"
         },
-        "org_id_not_found": "조직 ID를 찾을 수 없습니다"
+        "org_id_not_found": "조직 ID를 찾을 수 없습니다",
+        "unknown_section_type": "Unknown section type"
       },
       "theme": {
         "primary_color": "기본 색상",
@@ -2710,9 +2691,39 @@
       },
       "seo": {
         "copied_to_clipboard": "클립보드에 복사되었습니다",
-        "save_failed": "SEO 설정 저장에 실패했습니다"
+        "save_failed": "SEO 설정 저장에 실패했습니다",
+        "org_seo": {
+          "quick_links": "Quick Links",
+          "important_seo_urls": "Important SEO URLs for your organization",
+          "sitemap": "Sitemap:",
+          "robots_txt": "Robots.txt:",
+          "default_meta_tags": "Default Meta Tags",
+          "set_default_metadata": "Set default metadata for all pages",
+          "title_suffix": "Title Suffix",
+          "title_suffix_hint": "Appended to all page titles, e.g. \" | My Academy\"",
+          "default_description": "Default Description",
+          "default_description_hint": "Fallback description when a page has no specific one",
+          "social_open_graph": "Social & Open Graph",
+          "social_open_graph_hint": "Control how your pages appear when shared on social media",
+          "default_og_image": "Default OG Image",
+          "default_og_image_hint": "Default sharing image for social media (1200x630 recommended)",
+          "twitter_handle": "Twitter Handle",
+          "twitter_handle_hint": "Shown on Twitter cards as the site account",
+          "search_engine_verification": "Search Engine Verification",
+          "search_engine_verification_hint": "Verify ownership with search engines",
+          "google_search_console": "Google Search Console",
+          "google_search_console_hint": "Verification code from Google Search Console",
+          "indexing_controls": "Indexing Controls",
+          "indexing_controls_hint": "Control which pages search engines can index",
+          "hide_communities": "Hide Communities",
+          "hide_communities_hint": "Hide community pages from search engines"
+        }
       },
-      "automations": {},
+      "automations": {
+        "webhooks_title": "Webhooks",
+        "webhooks_subtitle": "Send real-time event notifications to external services like Make.com, n8n, or your own API",
+        "webhooks_description": "Webhook endpoints receive HTTP POST requests when events happen in your organization."
+      },
       "domains": {
         "domain_required": "도메인은 필수입니다",
         "domain_added_success": "도메인이 성공적으로 추가되었습니다",
@@ -2744,7 +2755,101 @@
         "delete_domain": "도메인 삭제",
         "verify_domain_desc": "소유권을 확인하기 위해 도메인 제공업체에서 다음 DNS 레코드를 추가하세요.",
         "issuer": "발급자",
-        "expires": "만료"
+        "expires": "만료",
+        "title": "Custom Domains",
+        "subtitle": "Configure custom domains to access your organization",
+        "empty_description": "Add your own domain to provide a branded experience for your learners.",
+        "add_domain": "Add Domain",
+        "domain_name": "Domain Name",
+        "enter_domain": "Enter your domain",
+        "verify": "Verify",
+        "verify_domain": "Verify Domain",
+        "verifying": "Verifying...",
+        "verify_dns": "Verify DNS",
+        "remove": "Remove",
+        "pending": "Pending",
+        "active": "Active",
+        "failed": "Failed",
+        "ssl_active": "SSL Active",
+        "failed_add": "Failed to add domain",
+        "failed_delete": "Failed to delete domain",
+        "failed_verify": "Failed to verify domain",
+        "verifying_domain": "Verifying domain...",
+        "domain_verified": "Domain verified successfully",
+        "domain_added": "Domain added",
+        "domain_removed": "Domain removed",
+        "no_domains_yet": "No custom domains yet",
+        "add_first_domain": "Add your first domain to get started",
+        "add_custom_domain": "Add Custom Domain",
+        "add_custom_domain_desc": "Enter the domain you want to use for your organization.",
+        "domain_label": "Domain",
+        "domain_hint": "Enter a domain or subdomain (e.g., learn.mycompany.com or academy.example.org)"
+      },
+      "api_access": {
+        "title": "API Access",
+        "api_tokens": "API Tokens",
+        "docs_playground": "Documentation & Playground",
+        "something_not_working": "Something not working as expected?",
+        "tokens_description": "API tokens allow external applications to access your organization's data securely.",
+        "create_token": "Create Token",
+        "no_tokens_yet": "No API tokens yet",
+        "create_first_token": "Create your first token to get started",
+        "create_api_token": "Create API Token",
+        "token_name": "Token Name *",
+        "expires": "Expires",
+        "never": "Never",
+        "revoked": "Revoked",
+        "revoke": "Revoke",
+        "api_docs_title": "API Documentation & Playground",
+        "create_token_desc": "Create a new API token for programmatic access. The token will only be shown once.",
+        "token_name_label": "Token Name *",
+        "description_label": "Description",
+        "expiration_label": "Expiration Date (optional)",
+        "expiration_hint": "Leave empty for a token that never expires",
+        "permissions_label": "Permissions",
+        "read_only": "Read Only",
+        "full_access": "Full Access",
+        "custom": "Custom",
+        "cancel": "Cancel",
+        "save_token_warning": "Save your token now!",
+        "save_token_hint": "This is the only time you'll see this token. Copy it and store it securely.",
+        "your_api_token": "Your API Token",
+        "done": "Done"
+      },
+      "usage": {
+        "plan_resource_usage": "Plan & Resource Usage",
+        "courses": "Courses",
+        "members_label": "Members",
+        "admin_seats": "Admin Seats",
+        "unlimited": "Unlimited",
+        "ai_credits": "AI Credits",
+        "credit_usage": "Credit Usage",
+        "base_credits": "Base Credits",
+        "purchased": "Purchased",
+        "used": "Used",
+        "remaining": "Remaining"
+      },
+      "general": {
+        "validation": {
+          "short_description_required": "Short description is required",
+          "short_description_max": "Short description must be 100 characters or less",
+          "about_max": "About text must be 400 characters or less",
+          "label_required": "Organization label is required"
+        }
+      },
+      "menu": {
+        "title": "Public navigation",
+        "subtitle": "Toggle, reorder, rename links and add your own. Links only appear if the related feature is on your plan and enabled.",
+        "save": "Save changes",
+        "saving": "Saving menu…",
+        "saved": "Menu updated",
+        "error": "Couldn't update the menu",
+        "add_custom": "Add a custom link",
+        "add": "Add",
+        "label_placeholder": "Label",
+        "custom_required": "A label and a URL are required",
+        "plan_locked": "Requires {{plan}} plan",
+        "feature_off": "Feature is off"
       }
     },
     "users": {
@@ -3151,7 +3256,6 @@
                 "courses": "코스",
                 "users": "사용자",
                 "usergroups": "사용자 그룹",
-                "collections": "컬렉션",
                 "organizations": "조직",
                 "coursechapters": "코스 장",
                 "activities": "활동",
@@ -3213,7 +3317,6 @@
               "deselect_all": "전체 선택 해제",
               "sections": {
                 "activities": "활동",
-                "collections": "컬렉션",
                 "coursechapters": "코스 장",
                 "courses": "코스",
                 "dashboard": "대시보드",
@@ -3245,7 +3348,6 @@
         "rights": {
           "resources": {
             "activities": "활동",
-            "collections": "컬렉션",
             "coursechapters": "코스 챕터",
             "courses": "코스",
             "dashboard": "대시보드",
@@ -3655,7 +3757,6 @@
       "groups": {
         "pages": "페이지",
         "courses": "강좌",
-        "collections": "컬렉션",
         "users": "사용자",
         "communities": "커뮤니티",
         "discussions": "토론",
@@ -4988,6 +5089,159 @@
       "reactions": "반응",
       "exit_fullscreen": "종료",
       "fullscreen": "전체 화면"
+    }
+  },
+  "library": {
+    "library": "Library",
+    "my_library": "My Library",
+    "new_folder": "New Folder",
+    "tabs": {
+      "courses": "Courses",
+      "podcasts": "Podcasts",
+      "communities": "Communities",
+      "boards": "Boards",
+      "playgrounds": "Playgrounds",
+      "media": "Media"
+    },
+    "add_content": "Add content",
+    "upload_media": "Upload media",
+    "empty_folder": "This folder is empty",
+    "error_loading": "Couldn't load the library. Please refresh to try again.",
+    "folder": "Folder",
+    "folders": "Folders",
+    "items": "items",
+    "move": "Move",
+    "rename": "Rename",
+    "manage_access": "Manage access",
+    "delete_folder": "Delete folder",
+    "delete_folder_confirm": "Are you sure you want to delete this folder and everything inside it?",
+    "folder_name": "Folder name",
+    "enter_folder_name": "Enter folder name",
+    "create_folder": "Create folder",
+    "description": "Description",
+    "add": "Add",
+    "added": "Added",
+    "content_add_error": "Failed to add content",
+    "content_added": "Content added",
+    "content_remove_error": "Failed to remove content",
+    "content_removed": "Content removed",
+    "creating_folder": "Creating folder…",
+    "deleting_folder": "Deleting folder…",
+    "empty_folder_description": "Add sub-folders or content to get started.",
+    "folder_created_error": "Failed to create folder",
+    "folder_created_success": "Folder created",
+    "folder_deleted_error": "Failed to delete folder",
+    "folder_deleted_success": "Folder deleted",
+    "folder_name_required": "Folder name is required",
+    "folder_not_found": "Folder not found",
+    "folder_updated_error": "Failed to update folder",
+    "folder_updated_success": "Folder updated",
+    "no_items": "Your library is empty",
+    "no_items_description": "Create a folder or upload media to organize your content.",
+    "no_resources": "No resources available",
+    "open": "Open",
+    "private": "Private",
+    "public": "Public",
+    "remove_from_folder": "Remove from folder",
+    "remove_from_folder_confirm": "Remove this item from the folder? The item itself won't be deleted.",
+    "removing_content": "Removing…",
+    "rename_folder": "Rename folder",
+    "save": "Save",
+    "saving_folder": "Saving…",
+    "search": "Search",
+    "untitled": "Untitled",
+    "visibility": "Visibility",
+    "resources_label": "Resources",
+    "no_results": "No results",
+    "color": "Color",
+    "thumbnail": "Cover image",
+    "remove_thumbnail": "Remove cover",
+    "filters": {
+      "all": "All",
+      "folders": "Folders",
+      "courses": "Courses",
+      "media": "Media"
+    },
+    "edit": "Edit",
+    "edit_folder": "Edit folder",
+    "share": "Share",
+    "copy_link": "Copy link",
+    "link_copied": "Link copied to clipboard",
+    "link_copy_error": "Couldn't copy the link",
+    "thumbnail_error": "Couldn't upload the cover image",
+    "open_resource": "Open",
+    "replace_cover": "Replace",
+    "cover_hint": "PNG, JPG, WEBP"
+  },
+  "media": {
+    "media": "Media",
+    "file": "File",
+    "embed": "Embed",
+    "download": "Download",
+    "add_media": "Add media",
+    "upload": "Upload",
+    "media_name": "Media name",
+    "media_url": "URL",
+    "delete_media": "Delete media",
+    "delete_media_confirm": "Are you sure you want to delete this media?",
+    "choose_file": "Choose a file",
+    "deleting_media": "Deleting…",
+    "description": "Description",
+    "file_required": "A file is required",
+    "media_deleted_error": "Failed to delete media",
+    "media_deleted_success": "Media deleted",
+    "media_uploaded_error": "Failed to add media",
+    "media_uploaded_success": "Media added",
+    "name": "Name",
+    "name_required": "Name is required",
+    "public": "Public",
+    "upload_file": "Upload file",
+    "upload_media": "Upload media",
+    "uploading_media": "Uploading…",
+    "url": "URL",
+    "url_required": "A URL is required",
+    "upload_hint": "Images, video, audio, PDF, Office docs & ZIP",
+    "remove": "Remove",
+    "open_pdf": "Open PDF"
+  },
+  "access": {
+    "public": {
+      "title": "Public",
+      "description": "Anyone can view this.",
+      "confirmation_title": "Make public?",
+      "confirmation_message": "This will be visible to everyone.",
+      "confirmation_button": "Make public"
+    },
+    "users_only": {
+      "title": "Users only",
+      "description": "Only signed-in members (and selected groups) can view this.",
+      "confirmation_title": "Restrict access?",
+      "confirmation_message": "Only authenticated users and linked groups will be able to view this.",
+      "confirmation_button": "Restrict access"
+    },
+    "active": "Active",
+    "visibility_update_error": "Failed to update visibility",
+    "visibility_updated": "Visibility updated",
+    "usergroups": {
+      "title": "User groups",
+      "subtitle": "Restrict access to specific user groups.",
+      "link_to_usergroup": "Link a user group",
+      "table_name": "Name",
+      "table_actions": "Actions",
+      "usergroup_name": "Group",
+      "delete_link": "Unlink",
+      "warning": "Members of linked groups will be able to access this resource.",
+      "no_usergroups": "No user groups linked yet.",
+      "create_usergroup": "Create a user group",
+      "link_button": "Link",
+      "link_title": "Link a user group",
+      "link_success": "User group linked",
+      "link_error": "Failed to link user group",
+      "unlink_button": "Unlink",
+      "unlink_title": "Unlink user group",
+      "unlink_message": "Remove this group's access?",
+      "unlink_success": "User group unlinked",
+      "unlink_error": "Failed to unlink user group"
     }
   }
 }

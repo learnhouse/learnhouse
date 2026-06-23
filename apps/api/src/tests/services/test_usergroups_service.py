@@ -147,7 +147,7 @@ class TestUsergroupsService:
         for resource_type, resource_uuid in (
             ("podcasts", "podcast_x"),
             ("communities", "community_x"),
-            ("collections", "collection_x"),
+            ("folders", "folder_x"),
             ("boards", "board_x"),
         ):
             with patch(

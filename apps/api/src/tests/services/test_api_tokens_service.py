@@ -39,7 +39,8 @@ def _token_rights(*, grant_create: bool = False) -> dict:
         "courses": courses,
         "activities": dict(empty),
         "coursechapters": dict(empty),
-        "collections": dict(empty),
+        "folders": dict(empty),
+        "media": dict(empty),
         "certifications": dict(empty),
         "usergroups": dict(empty),
         "payments": dict(empty),
@@ -99,7 +100,8 @@ class TestTokenHelpersAndValidation:
             courses=_po,
             users=_p,
             usergroups=_p,
-            collections=_p,
+            folders=_p,
+            media=_p,
             organizations=_p,
             coursechapters=_p,
             activities=_p,
@@ -493,7 +495,7 @@ class TestUpdateApiTokenRightsObject:
 
         rights_obj = Rights(
             courses=_full_po(), users=_full_p(), usergroups=_full_p(),
-            collections=_full_p(), organizations=_full_p(), coursechapters=_full_p(),
+            folders=_full_p(), media=_full_p(), organizations=_full_p(), coursechapters=_full_p(),
             activities=_full_p(), roles=_full_p(),
             dashboard=DashboardPermission(action_access=True),
             communities=_full_p(), discussions=_full_po(), podcasts=_full_po(),

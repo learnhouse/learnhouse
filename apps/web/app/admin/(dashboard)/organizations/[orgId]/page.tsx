@@ -944,7 +944,7 @@ function PlanTab({
       // Refresh org data so currentPlan updates
       queryClient.invalidateQueries({ queryKey: queryKeys.org.detail(orgId) })
       setTimeout(() => setSaved(false), 2000)
-    } catch (err) {
+    } catch (_err) {
       setError('Network error')
     } finally {
       setSaving(false)
@@ -1211,7 +1211,7 @@ type AdminToggles = {
   api: FeatureToggle
   boards: FeatureToggle
   collaboration: FeatureToggle
-  collections: FeatureToggle
+  folders: FeatureToggle
   communities: FeatureToggle
   members: MembersToggle
   payments: FeatureToggle
@@ -1225,7 +1225,7 @@ const DEFAULT_ADMIN_TOGGLES: AdminToggles = {
   api: { disabled: false },
   boards: { disabled: false },
   collaboration: { disabled: false },
-  collections: { disabled: false },
+  folders: { disabled: false },
   communities: { disabled: false },
   members: { disabled: false, signup_mode: 'open' },
   payments: { disabled: false },
@@ -1239,7 +1239,7 @@ const FEATURE_ORDER: { key: keyof AdminToggles; label: string; description: stri
   { key: 'api', label: 'API', description: 'API tokens and programmatic access' },
   { key: 'boards', label: 'Boards', description: 'Kanban-style learning boards' },
   { key: 'collaboration', label: 'Collaboration', description: 'Real-time co-editing' },
-  { key: 'collections', label: 'Collections', description: 'Group courses into collections' },
+  { key: 'folders', label: 'Folders', description: 'Organize courses and media into folders' },
   { key: 'communities', label: 'Communities', description: 'Public/private community spaces' },
   { key: 'members', label: 'Members', description: 'Member directory and roles' },
   { key: 'payments', label: 'Payments', description: 'Paid courses and checkout' },
@@ -1253,7 +1253,7 @@ function ToggleSwitch({
   disabled,
 }: {
   enabled: boolean
-  onChange: (v: boolean) => void
+  onChange: (_v: boolean) => void
   disabled?: boolean
 }) {
   return (
@@ -1535,7 +1535,7 @@ function SettingsTab({
       setSaved(true)
       queryClient.invalidateQueries({ queryKey: queryKeys.org.detail(orgId) })
       setTimeout(() => setSaved(false), 2000)
-    } catch (err) {
+    } catch (_err) {
       setError('Network error')
     } finally {
       setSaving(false)
@@ -1608,7 +1608,7 @@ function Field({
 }: {
   label: string
   value: string
-  onChange: (v: string) => void
+  onChange: (_v: string) => void
   mono?: boolean
   hint?: string
 }) {
@@ -1636,7 +1636,7 @@ function Pagination({
 }: {
   page: number
   totalPages: number
-  onPageChange: (p: number) => void
+  onPageChange: (_p: number) => void
 }) {
   return (
     <div className="flex items-center justify-between mt-4 px-4">

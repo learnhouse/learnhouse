@@ -6,7 +6,7 @@ from sqlmodel.ext.asyncio.session import AsyncSession
 
 async def check_element_type(element_uuid):
     """
-    Check if the element is a course, a user, a house or a collection, by checking its prefix
+    Check the element type (course, user, house, folder, media, …) by its UUID prefix
     """
     if element_uuid.startswith("course_") or element_uuid.startswith("courseupdate_"):
         return "courses"
@@ -20,8 +20,10 @@ async def check_element_type(element_uuid):
         return "organizations"
     elif element_uuid.startswith("chapter_"):
         return "coursechapters"
-    elif element_uuid.startswith("collection_"):
-        return "collections"
+    elif element_uuid.startswith("folder_"):
+        return "folders"
+    elif element_uuid.startswith("media_"):
+        return "media"
     elif element_uuid.startswith("activity_"):
         return "activities"
     elif element_uuid.startswith("role_"):
@@ -90,6 +92,8 @@ async def get_singular_form_of_element(element_uuid):
 
     if element_type == "activities":
         return "activity"
+    elif element_type == "media":
+        return "media"
     else:
         singular_form_element = element_type[:-1]
         return singular_form_element
@@ -125,7 +129,6 @@ async def get_element_organization_id(
     from src.db.courses.courses import Course
     from src.db.courses.chapters import Chapter
     from src.db.courses.activities import Activity
-    from src.db.collections import Collection
     from src.db.organizations import Organization
     from src.db.roles import Role
     from src.db.usergroups import UserGroup
@@ -143,8 +146,13 @@ async def get_element_organization_id(
         # Activity stores org_id directly, no need to join Course
         return (await db_session.execute(select(Activity.org_id).where(Activity.activity_uuid == element_uuid))).scalars().first()
 
-    elif element_type == "collections":
-        return (await db_session.execute(select(Collection.org_id).where(Collection.collection_uuid == element_uuid))).scalars().first()
+    elif element_type == "folders":
+        from src.db.folders.folders import Folder
+        return (await db_session.execute(select(Folder.org_id).where(Folder.folder_uuid == element_uuid))).scalars().first()
+
+    elif element_type == "media":
+        from src.db.media.media import Media
+        return (await db_session.execute(select(Media.org_id).where(Media.media_uuid == element_uuid))).scalars().first()
 
     elif element_type == "organizations":
         return (await db_session.execute(select(Organization.id).where(Organization.org_uuid == element_uuid))).scalars().first()

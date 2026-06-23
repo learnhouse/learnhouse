@@ -53,10 +53,10 @@ class TestRBACUtils:
         assert result == "coursechapters"
 
     @pytest.mark.asyncio
-    async def test_check_element_type_collection(self):
-        """Test element type checking for collection"""
-        result = await check_element_type("collection_123")
-        assert result == "collections"
+    async def test_check_element_type_folder(self):
+        """Test element type checking for folder"""
+        result = await check_element_type("folder_123")
+        assert result == "folders"
 
     @pytest.mark.asyncio
     async def test_check_element_type_activity(self):
@@ -107,10 +107,10 @@ class TestRBACUtils:
         assert result == "user"
 
     @pytest.mark.asyncio
-    async def test_get_singular_form_of_element_collection(self):
-        """Test getting singular form for collection"""
-        result = await get_singular_form_of_element("collection_123")
-        assert result == "collection"
+    async def test_get_singular_form_of_element_folder(self):
+        """Test getting singular form for folder"""
+        result = await get_singular_form_of_element("folder_123")
+        assert result == "folder"
 
     @pytest.mark.asyncio
     async def test_get_singular_form_of_element_organization(self):
@@ -143,10 +143,10 @@ class TestRBACUtils:
         assert result == "org_id"
 
     @pytest.mark.asyncio
-    async def test_get_id_identifier_of_element_collection(self):
-        """Test getting ID identifier for collection"""
-        result = await get_id_identifier_of_element("collection_123")
-        assert result == "collection_id"
+    async def test_get_id_identifier_of_element_folder(self):
+        """Test getting ID identifier for folder"""
+        result = await get_id_identifier_of_element("folder_123")
+        assert result == "folder_id"
 
     @pytest.mark.asyncio
     async def test_element_type_consistency(self):
@@ -154,7 +154,7 @@ class TestRBACUtils:
         test_cases = [
             ("course_123", "courses", "course"),
             ("user_123", "users", "user"),
-            ("collection_123", "collections", "collection"),
+            ("folder_123", "folders", "folder"),
             ("activity_123", "activities", "activity"),
             ("org_123", "organizations", "organization"),
         ]
@@ -172,7 +172,7 @@ class TestRBACUtils:
         test_cases = [
             ("course_123", "course_id"),
             ("user_123", "user_id"),
-            ("collection_123", "collection_id"),
+            ("folder_123", "folder_id"),
             ("activity_123", "activity_id"),
             ("org_123", "org_id"),
         ]

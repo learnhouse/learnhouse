@@ -643,7 +643,7 @@ class TestResourceAccessRuntime:
             ("courses", "course_uuid", "course_1"),
             ("podcasts", "podcast_uuid", "podcast_1"),
             ("communities", "community_uuid", "community_1"),
-            ("collections", "collection_uuid", "collection_1"),
+            ("folders", "folder_uuid", "folder_1"),
             ("coursechapters", "chapter_uuid", "chapter_1"),
             ("activities", "activity_uuid", "activity_1"),
             ("episodes", "episode_uuid", "episode_1"),
@@ -674,7 +674,6 @@ class TestResourceAccessRuntime:
             ("podcasts", "podcast_uuid"),
             ("communities", "community_uuid"),
             ("coursechapters", "chapter_uuid"),
-            ("collections", "collection_uuid"),
         ],
     )
     async def test_get_parent_uuid_by_id_branches(self, mock_request, session, public_user, resource_type, expected_attr):

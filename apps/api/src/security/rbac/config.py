@@ -39,14 +39,23 @@ RESOURCE_CONFIGS: dict[str, ResourceConfig] = {
         model_name="Community",
         uuid_field="community_uuid",
     ),
-    "collections": ResourceConfig(
-        resource_type="collections",
-        uuid_prefix="collection_",
-        has_published_field=False,  # Collections use only public flag
-        supports_usergroups=False,
-        supports_authorship=False,
-        model_name="Collection",
-        uuid_field="collection_uuid",
+    "folders": ResourceConfig(
+        resource_type="folders",
+        uuid_prefix="folder_",
+        has_published_field=False,  # Folders use only the public flag
+        supports_usergroups=True,
+        supports_authorship=True,
+        model_name="Folder",
+        uuid_field="folder_uuid",
+    ),
+    "media": ResourceConfig(
+        resource_type="media",
+        uuid_prefix="media_",
+        has_published_field=False,  # Media uses only the public flag
+        supports_usergroups=True,
+        supports_authorship=True,
+        model_name="Media",
+        uuid_field="media_uuid",
     ),
 
     "boards": ResourceConfig(

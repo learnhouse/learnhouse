@@ -705,12 +705,6 @@ class ResourceAccessChecker:
             parent = (await self.db_session.execute(statement)).scalars().first()
             return parent.chapter_uuid if parent else None
 
-        elif parent_config.resource_type == "collections":
-            from src.db.collections import Collection
-            statement = select(Collection).where(Collection.id == parent_id)
-            parent = (await self.db_session.execute(statement)).scalars().first()
-            return parent.collection_uuid if parent else None
-
         return None
 
     async def _is_public_and_published(
@@ -842,9 +836,24 @@ class ResourceAccessChecker:
             statement = select(Community).where(Community.community_uuid == resource_uuid)
             resource = (await self.db_session.execute(statement)).scalars().first()
 
-        elif config.resource_type == "collections":
-            from src.db.collections import Collection
-            statement = select(Collection).where(Collection.collection_uuid == resource_uuid)
+        elif config.resource_type == "folders":
+            from src.db.folders.folders import Folder
+            statement = select(Folder).where(Folder.folder_uuid == resource_uuid)
+            resource = (await self.db_session.execute(statement)).scalars().first()
+
+        elif config.resource_type == "media":
+            from src.db.media.media import Media
+            statement = select(Media).where(Media.media_uuid == resource_uuid)
+            resource = (await self.db_session.execute(statement)).scalars().first()
+
+        elif config.resource_type == "boards":
+            from src.db.boards import Board
+            statement = select(Board).where(Board.board_uuid == resource_uuid)
+            resource = (await self.db_session.execute(statement)).scalars().first()
+
+        elif config.resource_type == "playgrounds":
+            from src.db.playgrounds import Playground
+            statement = select(Playground).where(Playground.playground_uuid == resource_uuid)
             resource = (await self.db_session.execute(statement)).scalars().first()
 
         # Child resources

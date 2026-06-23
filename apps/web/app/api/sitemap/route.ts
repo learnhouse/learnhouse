@@ -1,6 +1,6 @@
 import { getOrgCourses, getCourseMetadata } from '@services/courses/courses'
 import { getOrganizationContextInfo } from '@services/organizations/orgs'
-import { getOrgCollections } from '@services/courses/collections'
+import { getOrgFolders } from '@services/folders/folders'
 import { getOrgPodcasts } from '@services/podcasts/podcasts'
 import { getCommunities } from '@services/communities/communities'
 import { NextRequest, NextResponse } from 'next/server'
@@ -41,7 +41,7 @@ export async function GET(request: NextRequest) {
       sitemapUrls = [
         { loc: baseUrl, priority: 1.0, changefreq: 'daily' },
         { loc: `${baseUrl}courses`, priority: 0.9, changefreq: 'weekly' },
-        { loc: `${baseUrl}collections`, priority: 0.9, changefreq: 'weekly' },
+        { loc: `${baseUrl}library`, priority: 0.9, changefreq: 'weekly' },
         { loc: `${baseUrl}podcasts`, priority: 0.9, changefreq: 'weekly' },
         { loc: `${baseUrl}communities`, priority: 0.9, changefreq: 'weekly' },
       ]
@@ -92,14 +92,14 @@ export async function GET(request: NextRequest) {
       }
       break
     }
-    case 'collections': {
-      const collections = await getOrgCollections(orgInfo.id).catch(() => [])
-      for (const collection of collections) {
+    case 'folders': {
+      const folders = await getOrgFolders(orgInfo.id).catch(() => [])
+      for (const folder of folders) {
         sitemapUrls.push({
-          loc: `${baseUrl}collections/${collection.collection_uuid.replace('collection_', '')}`,
+          loc: `${baseUrl}library/folder/${folder.folder_uuid.replace('folder_', '')}`,
           priority: 0.6,
           changefreq: 'weekly',
-          lastmod: collection.update_date,
+          lastmod: folder.update_date,
         })
       }
       break
@@ -146,7 +146,7 @@ interface SitemapUrl {
   lastmod?: string
 }
 
-const SITEMAP_TYPES = ['pages', 'courses', 'activities', 'collections', 'podcasts', 'communities']
+const SITEMAP_TYPES = ['pages', 'courses', 'activities', 'folders', 'podcasts', 'communities']
 
 function generateSitemapIndex(baseUrl: string): string {
   const sitemaps = SITEMAP_TYPES.map(type => `

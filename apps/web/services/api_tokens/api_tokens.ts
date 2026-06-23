@@ -28,7 +28,13 @@ export interface APITokenRights {
     action_update: boolean
     action_delete: boolean
   }
-  collections: {
+  folders: {
+    action_create: boolean
+    action_read: boolean
+    action_update: boolean
+    action_delete: boolean
+  }
+  media: {
     action_create: boolean
     action_read: boolean
     action_update: boolean
@@ -114,7 +120,13 @@ export const getDefaultRights = (): APITokenRights => ({
     action_update: false,
     action_delete: false,
   },
-  collections: {
+  folders: {
+    action_create: false,
+    action_read: false,
+    action_update: false,
+    action_delete: false,
+  },
+  media: {
     action_create: false,
     action_read: false,
     action_update: false,
@@ -166,7 +178,13 @@ export const getFullRights = (): APITokenRights => ({
     action_update: true,
     action_delete: true,
   },
-  collections: {
+  folders: {
+    action_create: true,
+    action_read: true,
+    action_update: true,
+    action_delete: true,
+  },
+  media: {
     action_create: true,
     action_read: true,
     action_update: true,
@@ -218,7 +236,13 @@ export const getReadOnlyRights = (): APITokenRights => ({
     action_update: false,
     action_delete: false,
   },
-  collections: {
+  folders: {
+    action_create: false,
+    action_read: true,
+    action_update: false,
+    action_delete: false,
+  },
+  media: {
     action_create: false,
     action_read: true,
     action_update: false,
@@ -343,7 +367,7 @@ export async function regenerateAPIToken(
 export async function fetchOpenAPISpec(accessToken?: string) {
   const url = `${getAPIUrl().replace('/api/v1/', '')}/openapi.json`
 
-  const headers: HeadersInit = {
+  const headers: Record<string, string> = {
     'Content-Type': 'application/json',
   }
   if (accessToken) {
