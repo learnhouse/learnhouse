@@ -6,6 +6,7 @@ authorizers — not the byte streaming.
 """
 
 from datetime import datetime
+from unittest.mock import AsyncMock, patch
 
 import pytest
 from fastapi import HTTPException
@@ -123,3 +124,35 @@ class TestMediaShareLink:
         with pytest.raises(HTTPException) as exc:
             await authorize_share_token(mock_request, "doesnotexist", anonymous_user, db)
         assert exc.value.status_code == 404
+
+
+class TestCheckContentAccessMediaBranch:
+    """The legacy /content/...media... gate in both serving routers."""
+
+    @pytest.mark.parametrize("module", [
+        "src.routers.content_files",
+        "src.routers.local_content",
+    ])
+    @pytest.mark.asyncio
+    async def test_legacy_media_path_checks_access(self, db, org, admin_user, mock_request, module):
+        import importlib
+        mod = importlib.import_module(module)
+        m = await _mk_media(db, org, public=True, name="gated")
+        path = f"orgs/{org.org_uuid}/media/{m.media_uuid}/file.pdf"
+        with patch("src.security.rbac.check_resource_access", new_callable=AsyncMock) as chk:
+            await mod._check_content_access(path, admin_user, db, request=mock_request)
+            assert chk.await_count == 1  # media access was enforced
+
+    @pytest.mark.parametrize("module", [
+        "src.routers.content_files",
+        "src.routers.local_content",
+    ])
+    @pytest.mark.asyncio
+    async def test_randomized_media_key_denied(self, db, org, admin_user, mock_request, module):
+        import importlib
+        mod = importlib.import_module(module)
+        # A randomized storage dir (not 'media_...') is never resolvable by path → denied.
+        path = f"orgs/{org.org_uuid}/media/randomtoken123/file.pdf"
+        with pytest.raises(HTTPException) as exc:
+            await mod._check_content_access(path, admin_user, db, request=mock_request)
+        assert exc.value.status_code == 403
