@@ -4,7 +4,9 @@ import ConfirmationModal from '@components/Objects/StyledElements/ConfirmationMo
 import Modal from '@components/Objects/StyledElements/Modal/Modal'
 import ManageAccessPopover from '@components/Dashboard/Library/ManageAccessPopover'
 import MediaPreview from '@components/Dashboard/Library/MediaPreview'
+import { resourceHref, safeExternalUrl } from '@components/Dashboard/Library/resourceLink'
 import { getMediaFileDirectory } from '@services/media/media-resource'
+import Link from 'next/link'
 import {
   MicrophoneStage,
   ChatsCircle,
@@ -81,12 +83,16 @@ export default function LibraryItemCard({ item, orgslug, onRemove }: Props) {
   const Icon = typeIcon(type, resource)
   const isUploadMedia = type === 'media' && resource.media_type !== 'EMBED'
 
-  let href: string | null = null
+  let href: string | null = null          // external (media file / embed url)
+  let internalHref: string | null = null  // resource detail page (same-tab)
   let fileUrl: string | null = null
   if (type === 'media') {
     if (resource.file_id) fileUrl = getMediaFileDirectory(org?.org_uuid, resource.media_uuid || item.resource_uuid, resource.file_id)
-    if (resource.media_type === 'EMBED' && resource.url) href = resource.url
+    if (resource.media_type === 'EMBED' && resource.url) href = safeExternalUrl(resource.url)
     else if (fileUrl) href = fileUrl
+  } else {
+    // Podcasts, communities, boards, playgrounds → their dashboard page.
+    internalHref = resourceHref(type, resource, orgslug, 'dashboard')
   }
   const typeLabel = t(`library.tabs.${type}`)
 
@@ -104,7 +110,7 @@ export default function LibraryItemCard({ item, orgslug, onRemove }: Props) {
         <h3 className="text-base font-bold text-gray-900 leading-tight line-clamp-1">{name}</h3>
         <div className="pt-1.5 flex items-center justify-between border-t border-gray-100">
           <span className="text-[10px] font-bold uppercase tracking-wider text-gray-400">{typeLabel}</span>
-          {href && (
+          {(href || internalHref) && (
             <span className="text-[10px] font-bold uppercase tracking-wider text-gray-400 inline-flex items-center gap-1">
               {isUploadMedia ? t('media.download') : t('library.open_resource')}
               {isUploadMedia ? <DownloadSimple size={11} /> : <ArrowSquareOut size={11} />}
@@ -161,6 +167,10 @@ export default function LibraryItemCard({ item, orgslug, onRemove }: Props) {
         <a href={href} target="_blank" rel="noopener noreferrer" className="block">
           {body}
         </a>
+      ) : internalHref ? (
+        <Link href={internalHref} className="block">
+          {body}
+        </Link>
       ) : (
         <div>{body}</div>
       )}
