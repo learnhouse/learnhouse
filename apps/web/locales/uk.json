@@ -5221,7 +5221,8 @@
     "url": "URL",
     "url_required": "A URL is required",
     "upload_hint": "Images, video, audio, PDF, Office docs & ZIP",
-    "remove": "Remove"
+    "remove": "Remove",
+    "open_pdf": "Open PDF"
   },
   "access": {
     "public": {
