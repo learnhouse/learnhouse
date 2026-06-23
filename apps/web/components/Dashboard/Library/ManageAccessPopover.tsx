@@ -8,7 +8,7 @@ import {
   unLinkResourcesToUserGroup,
 } from '@services/usergroups/usergroups'
 import { updateFolder, getFolderById } from '@services/folders/folders'
-import { updateMedia } from '@services/media/media-resource'
+import { updateMedia, getMediaById } from '@services/media/media-resource'
 import { updateCourse, getCourse } from '@services/courses/courses'
 import { apiFetch } from '@services/utils/ts/requests'
 import { Check, Globe, Info, SquareUserRound, Users, X } from 'lucide-react'
@@ -196,6 +196,7 @@ function ManageAccessPopover({ resource_uuid, resourceType }: Props) {
     async () => {
       if (resourceType === 'folders') return getFolderById(resource_uuid, access_token)
       if (resourceType === 'courses') return getCourse(resource_uuid, null, access_token)
+      if (resourceType === 'media') return getMediaById(resource_uuid, access_token)
       return null
     }
   )
