@@ -58,6 +58,7 @@ async def _check_content_access(
     file_path: str,
     current_user: PublicUser | AnonymousUser | APITokenUser,
     db_session: AsyncSession,
+    request: Request | None = None,
 ) -> None:
     """
     Check if the user has access to the requested content.
@@ -136,6 +137,20 @@ async def _check_content_access(
             raise HTTPException(status_code=403, detail="Access denied")
         return
 
+    # Library media content: enforce the media's (folder-aware) access. Closes
+    # the legacy hole where orgs/{}/media/... fell through to the public branch.
+    if len(parts) >= 4 and parts[0] == 'orgs' and parts[2] == 'media':
+        from src.security.rbac import check_resource_access, AccessAction
+        media_uuid = parts[3]  # legacy keys embed media_uuid as the directory
+        if media_uuid.startswith('media_'):
+            await check_resource_access(
+                request, db_session, current_user, media_uuid, AccessAction.READ
+            )
+            return
+        # Randomized keys don't embed the media_uuid → deny direct /content
+        # access (these are only served via /media/{uuid}/file).
+        raise HTTPException(status_code=403, detail="Access denied")
+
     # Course metadata (thumbnails, etc.) and org-level content — always public
     # These are displayed on listing pages to all users
     if len(parts) >= 2 and parts[0] == 'orgs':
@@ -203,7 +218,7 @@ async def serve_local_content(
     if resolved is None:
         raise HTTPException(status_code=400, detail="Invalid path")
 
-    await _check_content_access(file_path, current_user, db_session)
+    await _check_content_access(file_path, current_user, db_session, request=request)
 
     if not resolved.is_file():
         raise HTTPException(status_code=404, detail="File not found")
@@ -244,7 +259,7 @@ async def head_local_content(
     if resolved is None:
         raise HTTPException(status_code=400, detail="Invalid path")
 
-    await _check_content_access(file_path, current_user, db_session)
+    await _check_content_access(file_path, current_user, db_session, request=request)
 
     if not resolved.is_file():
         raise HTTPException(status_code=404, detail="File not found")

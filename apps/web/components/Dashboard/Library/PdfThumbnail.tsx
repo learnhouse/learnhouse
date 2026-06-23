@@ -46,7 +46,9 @@ export default function PdfThumbnail({ url }: { url: string }) {
         const pdfjs = await loadPdfjs()
         if (cancelled) return
         // pdfjs v6 requires an options object; a bare url string is rejected.
-        const loadingTask = pdfjs.getDocument({ url })
+        // withCredentials so the session cookie is sent to the authenticated
+        // media endpoint (private PDFs are access-checked server-side).
+        const loadingTask = pdfjs.getDocument({ url, withCredentials: true })
         pdfDoc = await loadingTask.promise
         if (cancelled) return
         const page = await pdfDoc.getPage(1)

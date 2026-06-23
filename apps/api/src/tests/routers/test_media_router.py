@@ -104,7 +104,9 @@ class TestMediaRouter:
             )
         assert res.status_code == 200, res.text
         body = res.json()
-        assert body["file_id"] == "abc_media.pdf"
+        # file_id / storage_key are intentionally NOT exposed to clients now.
+        assert "file_id" not in body
+        assert "storage_key" not in body
         assert body["file_format"] == "pdf"
 
     async def test_create_upload_without_file_400(self, client, org):

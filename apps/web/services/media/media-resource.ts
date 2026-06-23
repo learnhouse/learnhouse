@@ -1,5 +1,4 @@
 import { getAPIUrl } from '@services/config/config'
-import { getBackendUrl, getConfig } from '@services/config/config'
 import {
   RequestBodyFormWithAuthHeader,
   RequestBodyWithAuthHeader,
@@ -15,26 +14,39 @@ import {
  not be overwritten. This file holds the Media resource API service.
 */
 
-function getMediaUrl() {
-  const mediaUrl = getConfig('NEXT_PUBLIC_LEARNHOUSE_MEDIA_URL')
-  if (mediaUrl) {
-    return mediaUrl
-  } else {
-    return getBackendUrl()
-  }
+/**
+ * Build the media file URL for an uploaded media resource.
+ *
+ * SECURITY: this now points at the authenticated, access-checked API endpoint
+ * (GET /api/v1/media/{uuid}/file) — NOT the public storage/CDN URL. The browser
+ * sends the session cookie (same-origin), so private-folder files are only
+ * served to authorized users, and the storage path is never exposed. The
+ * orgUuid/fileId params are kept for signature stability but unused.
+ */
+export function getMediaFileDirectory(
+  _orgUuid: string,
+  mediaUuid: string,
+  _fileId?: string
+) {
+  return `${getAPIUrl()}media/${mediaUuid}/file`
 }
 
 /**
- * Build the direct media file URL for an uploaded media resource.
- * Mirrors the thumbnail-directory helpers in services/media/media.ts.
+ * Create a fresh, random share link for a media file. Each call mints a NEW
+ * token (the URL is unique every time) and is revocable server-side. The link
+ * still enforces the recipient's access — it is not a public capability.
  */
-export function getMediaFileDirectory(
-  orgUuid: string,
-  mediaUuid: string,
-  fileId: string
-) {
-  let uri = `${getMediaUrl()}content/orgs/${orgUuid}/media/${mediaUuid}/${fileId}`
-  return uri
+export async function createMediaShareLink(media_uuid: string, access_token: string) {
+  const result = await fetch(
+    `${getAPIUrl()}media/${media_uuid}/share-link`,
+    RequestBodyWithAuthHeader('POST', {}, null, access_token)
+  )
+  return errorHandling(result) // { token }
+}
+
+/** Build the shareable, token-based file URL (random + unique every time). */
+export function getMediaShareFileUrl(token: string) {
+  return `${getAPIUrl()}media/shared/${token}/file`
 }
 
 export async function getOrgMedia(

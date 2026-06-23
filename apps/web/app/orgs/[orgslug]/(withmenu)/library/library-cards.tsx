@@ -11,6 +11,7 @@ import { getFolderThumbnailMediaDirectory } from '@services/media/media'
 import { getMediaFileDirectory } from '@services/media/media-resource'
 import { folderTone } from '@components/Dashboard/Library/LibraryToolbar'
 import { shareFolderLink } from '@components/Dashboard/Library/shareFolder'
+import { resourceHref, safeExternalUrl } from '@components/Dashboard/Library/resourceLink'
 import MediaPreview from '@components/Dashboard/Library/MediaPreview'
 import {
   FolderSimple,
@@ -120,12 +121,13 @@ export function LibraryItemCard({ item, orgslug }: { item: any; orgslug: string 
   let href: string | null = null
   let external = false
   let fileUrl: string | null = null
-  if (type === 'podcasts') {
-    href = getUriWithOrg(orgslug, `/podcasts`)
-  } else if (type === 'media') {
+  if (type === 'media') {
     if (resource.file_id) fileUrl = getMediaFileDirectory(org?.org_uuid, resource.media_uuid || item.resource_uuid, resource.file_id)
-    if (resource.media_type === 'EMBED' && resource.url) { href = resource.url; external = true }
+    if (resource.media_type === 'EMBED' && resource.url) { href = safeExternalUrl(resource.url); external = !!href }
     else if (fileUrl) { href = fileUrl; external = true }
+  } else {
+    // Podcasts, communities, boards, playgrounds → their own resource page.
+    href = resourceHref(type, resource, orgslug, 'public')
   }
   const isUpload = type === 'media' && resource.media_type !== 'EMBED'
 
