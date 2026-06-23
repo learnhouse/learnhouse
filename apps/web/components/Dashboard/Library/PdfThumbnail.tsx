@@ -1,7 +1,8 @@
 'use client'
 
 import React from 'react'
-import { FilePdf } from '@phosphor-icons/react'
+import { FilePdf, ArrowSquareOut } from '@phosphor-icons/react'
+import { useTranslation } from 'react-i18next'
 
 /**
  * Renders the FIRST PAGE of a PDF as a thumbnail image inside an
@@ -9,7 +10,8 @@ import { FilePdf } from '@phosphor-icons/react'
  * to render page 1 to a <canvas>.
  *
  * - Shows a subtle shimmer while loading.
- * - Falls back to a FilePdf icon tile on any error.
+ * - On any error (e.g. the file host is unreachable or blocks the cross-origin
+ *   fetch), falls back to a clickable "Open PDF" tile rather than a dead icon.
  */
 
 // pdfjs-dist is a heavy, browser-only dependency: import it lazily and keep a
@@ -28,6 +30,7 @@ function loadPdfjs() {
 }
 
 export default function PdfThumbnail({ url }: { url: string }) {
+  const { t } = useTranslation()
   const canvasRef = React.useRef<HTMLCanvasElement | null>(null)
   const [state, setState] = React.useState<'loading' | 'done' | 'error'>('loading')
 
@@ -85,10 +88,32 @@ export default function PdfThumbnail({ url }: { url: string }) {
   }, [url])
 
   if (state === 'error') {
+    // Page-1 render failed (unreachable file / blocked cross-origin fetch).
+    // Only offer a clickable link for http(s) URLs — never bind an untrusted
+    // scheme (e.g. javascript:) to href. Otherwise fall back to a plain tile.
+    const isHttp = /^https?:\/\//i.test(url)
+    if (!isHttp) {
+      return (
+        <div className="relative aspect-video flex items-center justify-center bg-amber-50 text-amber-500">
+          <FilePdf size={46} weight="fill" />
+        </div>
+      )
+    }
     return (
-      <div className="relative aspect-video flex items-center justify-center bg-amber-50 text-amber-500">
-        <FilePdf size={46} weight="fill" />
-      </div>
+      <a
+        href={url}
+        target="_blank"
+        rel="noopener noreferrer"
+        onClick={(e) => e.stopPropagation()}
+        title={t('media.open_pdf')}
+        className="group relative aspect-video flex flex-col items-center justify-center gap-1.5 bg-amber-50 text-amber-500 hover:bg-amber-100 transition-colors"
+      >
+        <FilePdf size={42} weight="fill" />
+        <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-amber-600/80 group-hover:text-amber-700">
+          {t('media.open_pdf')}
+          <ArrowSquareOut size={11} weight="bold" />
+        </span>
+      </a>
     )
   }
 
