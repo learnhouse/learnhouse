@@ -122,7 +122,9 @@ export function LibraryItemCard({ item, orgslug }: { item: any; orgslug: string 
   let external = false
   let fileUrl: string | null = null
   if (type === 'media') {
-    if (resource.file_id) fileUrl = getMediaFileDirectory(org?.org_uuid, resource.media_uuid || item.resource_uuid, resource.file_id)
+    // file_id is no longer exposed; uploaded media is served via the authed
+    // /media/{uuid}/file endpoint keyed only by media_uuid.
+    if (resource.media_type !== 'EMBED') fileUrl = getMediaFileDirectory(org?.org_uuid, resource.media_uuid || item.resource_uuid)
     if (resource.media_type === 'EMBED' && resource.url) { href = safeExternalUrl(resource.url); external = !!href }
     else if (fileUrl) { href = fileUrl; external = true }
   } else {
