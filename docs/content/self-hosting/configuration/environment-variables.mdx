@@ -20,7 +20,7 @@ optional: the feature stays disabled or uses a runtime fallback when the variabl
 | `LEARNHOUSE_SITE_DESCRIPTION` | Short instance description returned by the API. | string | `LearnHouse is an open-source platform tailored for learning experiences.` | API |
 | `LEARNHOUSE_CONTACT_EMAIL` | Contact email for the instance. | email | `hi@learnhouse.app` | API |
 | `LEARNHOUSE_ENV` | Environment label for backend and Sentry reporting. | string | `dev` | API, Web |
-| `LEARNHOUSE_DEVELOPMENT_MODE` | Enables development-only API behavior such as docs routes and EE dev override. | boolean | `false` | API, CLI dev |
+| `LEARNHOUSE_DEVELOPMENT_MODE` | Enables development-only API behavior such as docs routes and EE dev override. | boolean | `false` | API, CLI |
 | `LEARNHOUSE_SAAS` | Enables SaaS deployment mode, plan gating, and platform endpoint warnings. | boolean | `false` | API |
 | `LEARNHOUSE_SELF_HOSTED` | Legacy self-hosting flag used in tenancy inference. Prefer `LEARNHOUSE_TENANCY`. Parsed loosely: any non-empty value (including the string `false`) enables it, so leave it unset to keep it off. | boolean-like string | unset (off) | API |
 | `LEARNHOUSE_USE_DEFAULT_ORG` | Legacy default-org flag used in tenancy inference. Prefer `LEARNHOUSE_TENANCY`. Parsed loosely: any non-empty value (including the string `false`) enables it, so leave it unset to keep it off. | boolean-like string | unset (off) | API |
@@ -33,8 +33,8 @@ optional: the feature stays disabled or uses a runtime fallback when the variabl
 | `LEARNHOUSE_ALLOWED_REGEXP` | Additional CORS origin regex used by multi-tenant deployments. | regex string | `\b((?:https?://)[^\s/$.?#].[^\s]*)\b` | API |
 | `LEARNHOUSE_COOKIE_DOMAIN` | Cookie domain for auth cookies. Use a leading dot only when subdomains must share auth. | hostname | `.localhost` | API, CLI |
 | `LEARNHOUSE_COOKIE_DOMAIN_ALLOW_BROAD` | Acknowledges intentionally broad cookie domains such as `.example.com` and silences the safety warning. | boolean | `false` | API, EE CLI |
-| `LEARNHOUSE_CUSTOM_DOMAIN_DEV_MODE` | Auto-verifies custom domains when they are under the configured LearnHouse domain. Development/testing only. | boolean | `false` | API |
-| `LEARNHOUSE_PUBLIC` | Docker build argument that removes enterprise code from community images. | boolean | `false` | API Dockerfile, Web Dockerfile |
+| `LEARNHOUSE_CUSTOM_DOMAIN_DEV_MODE` | Skips DNS verification for all custom domains and marks them verified immediately. Development/testing only. | boolean | `false` | API |
+| `LEARNHOUSE_PUBLIC` | Docker build argument that produces a community build by excluding non-community code. | boolean | `false` | Dockerfiles (root, API, Web) |
 | `LEARNHOUSE_PLATFORM_URL` | Base URL for LearnHouse platform links, upgrade URLs, and email allowlist checks. | URL | unset; backend flows fall back to `https://www.learnhouse.app` and the web token-exchange to `https://learnhouse.app` | API, Web |
 | `LEARNHOUSE_PLATFORM_API_KEY` | Shared secret for platform-only internal endpoints such as packs. | secret string | required for SaaS/platform endpoints | API |
 | `CLOUD_INTERNAL_KEY` | Shared secret for SaaS-internal endpoints (custom-domain sync and the `cloud_internal` router). When unset, those endpoints reject every request and the API logs a startup warning. | secret string | unset; required for SaaS custom-domain provisioning | API |
@@ -75,7 +75,7 @@ optional: the feature stays disabled or uses a runtime fallback when the variabl
 | `NEXT_PUBLIC_LEARNHOUSE_DEFAULT_ORG` | Default organization slug used by frontend routing fallbacks. | slug string | `default` | Web, CLI |
 | `NEXT_PUBLIC_LEARNHOUSE_HTTPS` | Selects `https://` instead of `http://` in frontend URL helpers. | boolean | `false` | Web, CLI |
 | `NEXT_PUBLIC_LEARNHOUSE_MEDIA_URL` | Base URL for direct media links. If unset, media URLs use the backend URL. | URL | unset, falls back to backend URL | Web |
-| `NEXT_PUBLIC_UNSPLASH_ACCESS_KEY` | Unsplash API access key that enables the in-editor Unsplash image picker (course thumbnails, cover images, auth branding). The picker is hidden when unset. | string | unset | Web |
+| `NEXT_PUBLIC_UNSPLASH_ACCESS_KEY` | Unsplash API access key for the in-editor Unsplash image picker (course thumbnails, board/community thumbnails, editor image blocks, and more). The picker still renders when unset, but Unsplash searches return nothing. | string | unset | Web, CLI |
 | `NEXT_PUBLIC_LEARNHOUSE_PLATFORM_URL` | Browser-safe platform base URL for upgrade and auth exchange flows. | URL | unset | Web |
 | `NEXT_PUBLIC_LEARNHOUSE_SENTRY_DSN` | Browser/server Sentry DSN for the web app. | URL | unset | Web |
 | `NEXT_PUBLIC_LEARNHOUSE_ENV` | Web Sentry environment label. | string | `dev` | Web |
@@ -135,15 +135,15 @@ optional: the feature stays disabled or uses a runtime fallback when the variabl
 | `LEARNHOUSE_JUDGE0_CLIENT_ID` | Optional Judge0 client ID. | string | unset | API |
 | `LEARNHOUSE_JUDGE0_CLIENT_SECRET` | Optional Judge0 client secret. | secret string | unset | API |
 | `LEARNHOUSE_TINYBIRD_API_URL` | Tinybird regional API URL. Setting it enables analytics config. | URL | unset | API |
-| `LEARNHOUSE_TINYBIRD_INGEST_TOKEN` | Tinybird token with ingest/write permissions. | secret string | unset; required for event ingestion | API, Web messaging |
-| `LEARNHOUSE_TINYBIRD_READ_TOKEN` | Tinybird token with read/query permissions. | secret string | unset; required for analytics reads | API, Web messaging |
+| `LEARNHOUSE_TINYBIRD_INGEST_TOKEN` | Tinybird token with ingest/write permissions. | secret string | unset; required for event ingestion | API |
+| `LEARNHOUSE_TINYBIRD_READ_TOKEN` | Tinybird token with read/query permissions. | secret string | unset; required for analytics reads | API |
 
 ## Observability
 
 | Variable | Description | Type | Default / required | Used by |
 | --- | --- | --- | --- | --- |
 | `LEARNHOUSE_SENTRY_DSN` | Backend Sentry DSN; also used by the web edge Sentry config as a non-public fallback. | URL | unset | API, Web edge |
-| `LEARNHOUSE_LOGFIRE_ENABLED` | CLI-generated Logfire flag. The current OSS runtime does not read it directly. | boolean | `false` in CLI-generated `.env` | CLI |
+| `LEARNHOUSE_LOGFIRE_ENABLED` | CLI-generated Logfire flag. The current OSS runtime does not read it directly. | boolean | `False` in CLI-generated `.env` | CLI |
 
 ## Enterprise and development controls
 
@@ -158,7 +158,7 @@ optional: the feature stays disabled or uses a runtime fallback when the variabl
 | `WORKOS_API_KEY` | WorkOS API key for Enterprise SSO. Required (with `WORKOS_CLIENT_ID`) to enable WorkOS-backed SSO. | secret string | unset; required for SSO | EE backend |
 | `WORKOS_CLIENT_ID` | WorkOS client ID for Enterprise SSO. | string | unset; required for SSO | EE backend |
 | `SSO_REDIRECT_URI` | Full SSO callback URL override. When set, it is used as-is. | URL | unset; derived from `SSO_REDIRECT_URI_BASE` / the configured domain | EE backend |
-| `SSO_REDIRECT_URI_BASE` | Base URL used to build the SSO callback when `SSO_REDIRECT_URI` is not set. | URL | unset; falls back to the configured frontend domain | EE backend |
+| `SSO_REDIRECT_URI_BASE` | Base URL used to build the SSO callback when `SSO_REDIRECT_URI` is not set. | URL | unset; falls back to `LEARNHOUSE_DOMAIN`, then to `http://localhost:4000` | EE backend |
 
 ## Related generated variables
 
