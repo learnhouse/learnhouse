@@ -125,6 +125,24 @@ class TestMediaShareLink:
             await authorize_share_token(mock_request, "doesnotexist", anonymous_user, db)
         assert exc.value.status_code == 404
 
+    @pytest.mark.asyncio
+    async def test_share_link_missing_media_404(self, db, admin_user, mock_request):
+        with pytest.raises(HTTPException) as exc:
+            await create_media_share_link(mock_request, "media_nope", admin_user, db)
+        assert exc.value.status_code == 404
+
+    @pytest.mark.asyncio
+    async def test_share_token_to_deleted_media_404(self, db, org, admin_user, mock_request):
+        from src.db.media.media_share_token import MediaShareToken
+        db.add(MediaShareToken(
+            token="danglingtok", media_uuid="media_deleted", org_id=org.id,
+            revoked=False, creation_date=str(datetime.now()), update_date=str(datetime.now()),
+        ))
+        await db.commit()
+        with pytest.raises(HTTPException) as exc:
+            await authorize_share_token(mock_request, "danglingtok", admin_user, db)
+        assert exc.value.status_code == 404
+
 
 class TestCheckContentAccessMediaBranch:
     """The legacy /content/...media... gate in both serving routers."""

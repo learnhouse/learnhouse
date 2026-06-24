@@ -194,3 +194,96 @@ class TestShareEndpoints:
     async def test_unknown_token_404(self, client):
         res = await client.get("/api/v1/media/shared/nope/file")
         assert res.status_code == 404
+
+
+class TestServeEdges:
+    async def test_range_suffix(self, client, db, org, fs_file):
+        m = await _mk_media(db, org, storage_key=fs_file, name="suffix")
+        res = await client.get(f"/api/v1/media/{m.media_uuid}/file", headers={"Range": "bytes=-100"})
+        assert res.status_code == 206
+        assert res.content == PDF_BYTES[-100:]
+
+    async def test_range_prefix_open_ended(self, client, db, org, fs_file):
+        m = await _mk_media(db, org, storage_key=fs_file, name="prefix")
+        start = len(PDF_BYTES) - 50
+        res = await client.get(f"/api/v1/media/{m.media_uuid}/file", headers={"Range": f"bytes={start}-"})
+        assert res.status_code == 206
+        assert res.content == PDF_BYTES[start:]
+
+    async def test_unknown_extension_uses_octet_stream(self, client, db, org):
+        rel = "orgs/org_test/media/randdir/blob.xyz"
+        path = Path("content") / rel
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_bytes(b"raw bytes")
+        m = Media(
+            name="blob", media_type=MediaTypeEnum.UPLOAD, public=True, org_id=org.id,
+            media_uuid="media_blob", file_id="blob.xyz", storage_key=rel,
+            file_format="xyz", file_mime="",  # empty mime -> _mime_for fallback
+            creation_date=str(datetime.now()), update_date=str(datetime.now()),
+        )
+        db.add(m)
+        await db.commit()
+        try:
+            res = await client.get(f"/api/v1/media/{m.media_uuid}/file")
+            assert res.status_code == 200
+            assert res.headers["content-type"].startswith("application/octet-stream")
+        finally:
+            shutil.rmtree(Path("content") / "orgs" / "org_test", ignore_errors=True)
+
+    async def test_legacy_no_file_id_404(self, client, db, org):
+        m = Media(
+            name="nofile", media_type=MediaTypeEnum.UPLOAD, public=True, org_id=org.id,
+            media_uuid="media_nofile", file_id="", storage_key="",
+            creation_date=str(datetime.now()), update_date=str(datetime.now()),
+        )
+        db.add(m)
+        await db.commit()
+        res = await client.get(f"/api/v1/media/{m.media_uuid}/file")
+        assert res.status_code == 404
+
+    async def test_legacy_org_not_found_404(self, client, db, org):
+        m = Media(
+            name="noorg", media_type=MediaTypeEnum.UPLOAD, public=True, org_id=999999,
+            media_uuid="media_noorg", file_id="x.pdf", storage_key="",
+            creation_date=str(datetime.now()), update_date=str(datetime.now()),
+        )
+        db.add(m)
+        await db.commit()
+        res = await client.get(f"/api/v1/media/{m.media_uuid}/file")
+        assert res.status_code == 404
+
+
+class TestServeS3Errors:
+    async def _media(self, db, org):
+        m = await _mk_media(db, org, storage_key="orgs/x/media/r/f.pdf", name="s3err")
+        return m
+
+    async def test_no_storage_client_500(self, client, db, org):
+        m = await self._media(db, org)
+        with patch("src.services.media.media_serve.get_content_delivery_type", return_value="s3api"), \
+             patch("src.services.media.media_serve.get_storage_client", return_value=None), \
+             patch("src.services.media.media_serve.get_s3_bucket_name", return_value="b"):
+            res = await client.get(f"/api/v1/media/{m.media_uuid}/file")
+        assert res.status_code == 500
+
+    @pytest.mark.parametrize("code,expected", [("AccessDenied", 403), ("InternalError", 502)])
+    async def test_s3_client_errors(self, client, db, org, code, expected):
+        from botocore.exceptions import ClientError
+        m = await self._media(db, org)
+        s3 = MagicMock()
+        s3.head_object.side_effect = ClientError({"Error": {"Code": code}}, "HeadObject")
+        with patch("src.services.media.media_serve.get_content_delivery_type", return_value="s3api"), \
+             patch("src.services.media.media_serve.get_storage_client", return_value=s3), \
+             patch("src.services.media.media_serve.get_s3_bucket_name", return_value="b"):
+            res = await client.get(f"/api/v1/media/{m.media_uuid}/file")
+        assert res.status_code == expected
+
+    async def test_s3_unexpected_exception_502(self, client, db, org):
+        m = await self._media(db, org)
+        s3 = MagicMock()
+        s3.head_object.side_effect = RuntimeError("boom")
+        with patch("src.services.media.media_serve.get_content_delivery_type", return_value="s3api"), \
+             patch("src.services.media.media_serve.get_storage_client", return_value=s3), \
+             patch("src.services.media.media_serve.get_s3_bucket_name", return_value="b"):
+            res = await client.get(f"/api/v1/media/{m.media_uuid}/file")
+        assert res.status_code == 502
