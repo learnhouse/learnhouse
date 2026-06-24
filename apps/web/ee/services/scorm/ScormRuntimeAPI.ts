@@ -60,6 +60,7 @@ export class ScormRuntimeAPI {
   private lastError: string = '0'
   private commitInterval: number | null = null
   private pendingChanges: boolean = false
+  private saveStatusHandler: ((ok: boolean) => void) | null = null
 
   constructor(
     activityUuid: string,
@@ -71,6 +72,18 @@ export class ScormRuntimeAPI {
     this.scormVersion = scormVersion
     this.accessToken = accessToken
     this.apiUrl = apiUrl
+  }
+
+  /** Subscribe to save success/failure so the UI can warn the learner when
+   * progress stops persisting (otherwise a failing commit is silent). */
+  setSaveStatusHandler(fn: (ok: boolean) => void) {
+    this.saveStatusHandler = fn
+  }
+
+  /** True when this launch is resuming a previous attempt (entry === "resume"). */
+  isResuming(): boolean {
+    const entry = this.cmiData['cmi.core.entry'] || this.cmiData['cmi.entry']
+    return entry === 'resume'
   }
 
   /**
@@ -107,8 +120,12 @@ export class ScormRuntimeAPI {
         }
       }, 60000)
 
-      // Set up beforeunload handler
+      // Persist on tab close / navigation / backgrounding. pagehide + the
+      // hidden visibilitychange are far more reliable than beforeunload alone
+      // (especially on mobile Safari, where beforeunload often never fires).
+      window.addEventListener('pagehide', this.handleBeforeUnload)
       window.addEventListener('beforeunload', this.handleBeforeUnload)
+      document.addEventListener('visibilitychange', this.handleVisibilityChange)
 
       return true
     } catch (error) {
@@ -145,8 +162,10 @@ export class ScormRuntimeAPI {
         this.commitInterval = null
       }
 
-      // Remove beforeunload handler
+      // Remove unload handlers
+      window.removeEventListener('pagehide', this.handleBeforeUnload)
       window.removeEventListener('beforeunload', this.handleBeforeUnload)
+      document.removeEventListener('visibilitychange', this.handleVisibilityChange)
 
       // Send final commit to backend
       const response = await fetch(
@@ -275,27 +294,51 @@ export class ScormRuntimeAPI {
 
       this.pendingChanges = false
       this.lastError = '0'
+      this.saveStatusHandler?.(true)
       return true
     } catch (error) {
       console.error('SCORM commit error:', error)
       this.lastError = this.scormVersion === 'SCORM_2004'
         ? SCORM_2004_ERRORS.GENERAL_COMMIT_FAILURE
         : SCORM_12_ERRORS.GENERAL_EXCEPTION
+      this.saveStatusHandler?.(false)
       return false
     }
   }
 
   /**
-   * Handle beforeunload event
+   * Persist the latest CMI data when the page is being hidden/unloaded.
+   *
+   * Uses fetch({ keepalive: true }) rather than navigator.sendBeacon: the commit
+   * endpoint requires an Authorization header, and sendBeacon cannot set headers,
+   * so a beacon request would 401 and the learner's final progress would be lost.
+   * keepalive lets the request outlive the page while still sending the token.
    */
-  private handleBeforeUnload = (event: BeforeUnloadEvent) => {
+  private handleBeforeUnload = () => {
     if (this.pendingChanges && this.isInitialized && !this.isTerminated) {
-      // Attempt synchronous commit using sendBeacon
-      const data = JSON.stringify(this.cmiData)
-      navigator.sendBeacon(
-        `${this.apiUrl}scorm/${this.activityUuid}/runtime/commit`,
-        new Blob([data], { type: 'application/json' })
-      )
+      try {
+        fetch(`${this.apiUrl}scorm/${this.activityUuid}/runtime/commit`, {
+          method: 'POST',
+          keepalive: true,
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${this.accessToken}`,
+          },
+          body: JSON.stringify(this.cmiData),
+        })
+        this.pendingChanges = false
+      } catch {
+        // Best-effort during unload; nothing more we can do here.
+      }
+    }
+  }
+
+  /**
+   * Persist when the tab is backgrounded (mobile/SPA-friendly unload signal).
+   */
+  private handleVisibilityChange = () => {
+    if (typeof document !== 'undefined' && document.visibilityState === 'hidden') {
+      this.handleBeforeUnload()
     }
   }
 
@@ -406,6 +449,55 @@ export class ScormRuntimeAPI {
   }
 
   /**
+   * Synchronously accept a commit request and persist in the background.
+   *
+   * The SCORM JS API is synchronous, so the return value must reflect whether
+   * the call is valid *right now* — not the result of the async network commit.
+   * The previous code returned based on a stale `lastError` read before the
+   * fetch resolved, misreporting success/failure. A network failure now surfaces
+   * via getLastError on the next call and is retried by the auto-commit loop and
+   * the unload handler.
+   */
+  private requestCommit(): string {
+    if (!this.isInitialized) {
+      this.lastError = this.scormVersion === 'SCORM_2004'
+        ? SCORM_2004_ERRORS.COMMIT_BEFORE_INITIALIZATION
+        : SCORM_12_ERRORS.NOT_INITIALIZED
+      return 'false'
+    }
+    if (this.isTerminated) {
+      this.lastError = this.scormVersion === 'SCORM_2004'
+        ? SCORM_2004_ERRORS.COMMIT_AFTER_TERMINATION
+        : SCORM_12_ERRORS.GENERAL_EXCEPTION
+      return 'false'
+    }
+    this.lastError = '0'
+    void this.commitToBackend()
+    return 'true'
+  }
+
+  /**
+   * Synchronously accept a terminate request and finalize in the background.
+   */
+  private requestTerminate(): string {
+    if (!this.isInitialized) {
+      this.lastError = this.scormVersion === 'SCORM_2004'
+        ? SCORM_2004_ERRORS.TERMINATION_BEFORE_INITIALIZATION
+        : SCORM_12_ERRORS.NOT_INITIALIZED
+      return 'false'
+    }
+    if (this.isTerminated) {
+      this.lastError = this.scormVersion === 'SCORM_2004'
+        ? SCORM_2004_ERRORS.TERMINATION_AFTER_TERMINATION
+        : SCORM_12_ERRORS.GENERAL_EXCEPTION
+      return 'false'
+    }
+    this.lastError = '0'
+    void this.terminate()
+    return 'true'
+  }
+
+  /**
    * Get SCORM 1.2 API object for injection
    */
   getScorm12API() {
@@ -416,8 +508,7 @@ export class ScormRuntimeAPI {
         return 'true'
       },
       LMSFinish: (_: string) => {
-        this.terminate()
-        return this.lastError === '0' ? 'true' : 'false'
+        return this.requestTerminate()
       },
       LMSGetValue: (element: string) => {
         return this.getValue(element)
@@ -426,8 +517,7 @@ export class ScormRuntimeAPI {
         return this.setValue(element, value) ? 'true' : 'false'
       },
       LMSCommit: (_: string) => {
-        this.commit()
-        return this.lastError === '0' ? 'true' : 'false'
+        return this.requestCommit()
       },
       LMSGetLastError: () => {
         return this.getLastError()
@@ -452,8 +542,7 @@ export class ScormRuntimeAPI {
         return 'true'
       },
       Terminate: (_: string) => {
-        this.terminate()
-        return this.lastError === '0' ? 'true' : 'false'
+        return this.requestTerminate()
       },
       GetValue: (element: string) => {
         return this.getValue(element)
@@ -462,8 +551,7 @@ export class ScormRuntimeAPI {
         return this.setValue(element, value) ? 'true' : 'false'
       },
       Commit: (_: string) => {
-        this.commit()
-        return this.lastError === '0' ? 'true' : 'false'
+        return this.requestCommit()
       },
       GetLastError: () => {
         return this.getLastError()
