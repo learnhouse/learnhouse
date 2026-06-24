@@ -35,6 +35,16 @@ function ScormActivity({ activity, course }: ScormActivityProps) {
   const [error, setError] = useState<string | null>(null)
   const [initialized, setInitialized] = useState(false)
   const [apiInjected, setApiInjected] = useState(false)
+  const [needsAuth, setNeedsAuth] = useState(false)
+  const [saveError, setSaveError] = useState(false)
+  const [resuming, setResuming] = useState(false)
+
+  // Auto-dismiss the "resuming" indicator after a few seconds.
+  useEffect(() => {
+    if (!resuming) return
+    const t = window.setTimeout(() => setResuming(false), 4000)
+    return () => window.clearTimeout(t)
+  }, [resuming])
 
   // Get the content URL for the SCORM entry point
   const getContentUrl = useCallback(() => {
@@ -51,8 +61,14 @@ function ScormActivity({ activity, course }: ScormActivityProps) {
 
   // Initialize SCORM runtime
   useEffect(() => {
-    // Use ref to prevent double initialization
-    if (!access_token || !activity?.activity_uuid || initStartedRef.current) return
+    if (!activity?.activity_uuid || initStartedRef.current) return
+    // SCORM tracking requires an authenticated session. Without a token, show a
+    // clear sign-in prompt instead of an endless "Initializing…" spinner.
+    if (!access_token) {
+      setNeedsAuth(true)
+      return
+    }
+    setNeedsAuth(false)
     initStartedRef.current = true
 
     const initializeRuntime = async () => {
@@ -67,6 +83,9 @@ function ScormActivity({ activity, course }: ScormActivityProps) {
           apiUrl
         )
 
+        // Surface save failures to the learner so silent data loss is visible.
+        runtime.setSaveStatusHandler((ok: boolean) => setSaveError(!ok))
+
         // Initialize the session
         const success = await runtime.initialize()
         if (!success) {
@@ -74,6 +93,7 @@ function ScormActivity({ activity, course }: ScormActivityProps) {
         }
 
         runtimeRef.current = runtime
+        setResuming(runtime.isResuming())
 
         setInitialized(true)
         setError(null)
@@ -359,7 +379,7 @@ function ScormActivity({ activity, course }: ScormActivityProps) {
                 // Append to end of head for higher cascade priority
                 nestedIframe.contentDocument.head.appendChild(nestedStyle)
               }
-            } catch (e) {
+            } catch {
               // Nested iframe might have different origin
             }
           })
@@ -403,7 +423,7 @@ function ScormActivity({ activity, course }: ScormActivityProps) {
         ;(iframe as any)._scormObserver = observer
         ;(iframe as any)._scormStyleInterval = styleEnforcementInterval
       }
-    } catch (err) {
+    } catch {
       // Cross-origin restriction - can't inject styles
       console.log('[SCORM] Could not inject styles (cross-origin restriction)')
     }
@@ -424,6 +444,28 @@ function ScormActivity({ activity, course }: ScormActivityProps) {
   }
 
   const contentUrl = getContentUrl()
+
+  if (needsAuth) {
+    return (
+      <div
+        className="w-full flex items-center justify-center bg-neutral-50 dark:bg-neutral-900"
+        style={{ height: 'calc(100vh - 140px)', minHeight: '500px' }}
+        role="status"
+      >
+        <div className="text-center space-y-4 p-8 max-w-sm">
+          <div className="w-14 h-14 mx-auto rounded-full bg-neutral-100 dark:bg-neutral-800 flex items-center justify-center">
+            <AlertCircle size={28} className="text-neutral-500" />
+          </div>
+          <div className="space-y-2">
+            <h3 className="text-base font-semibold text-neutral-900 dark:text-white">Sign in to start</h3>
+            <p className="text-neutral-500 dark:text-neutral-400 text-sm">
+              This SCORM activity tracks your progress, so you need to be signed in to launch it.
+            </p>
+          </div>
+        </div>
+      </div>
+    )
+  }
 
   if (error) {
     return (
@@ -450,6 +492,27 @@ function ScormActivity({ activity, course }: ScormActivityProps) {
 
   return (
     <div className="relative w-full bg-white dark:bg-neutral-950">
+      {/* Save-failure warning — makes silent progress loss visible */}
+      {saveError && (
+        <div
+          role="alert"
+          className="absolute top-3 left-1/2 -translate-x-1/2 z-20 px-3 py-1.5 rounded-full bg-amber-500 text-white text-xs font-medium shadow-lg flex items-center gap-1.5"
+        >
+          <AlertCircle size={13} />
+          <span>Progress isn’t saving — check your connection. We’ll keep retrying.</span>
+        </div>
+      )}
+
+      {/* Resume indicator */}
+      {resuming && !saveError && (
+        <div
+          role="status"
+          className="absolute top-3 right-3 z-20 px-3 py-1.5 rounded-full bg-neutral-900/90 text-white text-xs font-medium shadow-lg"
+        >
+          Resuming where you left off
+        </div>
+      )}
+
       {/* SCORM Content iframe - Full viewport */}
       {contentUrl && apiInjected && (
         <iframe
@@ -474,7 +537,7 @@ function ScormActivity({ activity, course }: ScormActivityProps) {
 
       {/* Loading overlay */}
       {isLoading && apiInjected && (
-        <div className="absolute inset-0 flex items-center justify-center bg-white dark:bg-neutral-950 z-10">
+        <div role="status" aria-live="polite" className="absolute inset-0 flex items-center justify-center bg-white dark:bg-neutral-950 z-10">
           <div className="text-center space-y-4">
             <div className="relative w-10 h-10 mx-auto">
               <div className="absolute inset-0 rounded-full border-2 border-neutral-200 dark:border-neutral-800"></div>
@@ -487,7 +550,7 @@ function ScormActivity({ activity, course }: ScormActivityProps) {
 
       {/* Initializing state */}
       {!apiInjected && !error && (
-        <div className="flex items-center justify-center bg-neutral-50 dark:bg-neutral-900" style={{ height: 'calc(100vh - 140px)', minHeight: '500px' }}>
+        <div role="status" aria-live="polite" className="flex items-center justify-center bg-neutral-50 dark:bg-neutral-900" style={{ height: 'calc(100vh - 140px)', minHeight: '500px' }}>
           <div className="text-center space-y-4">
             <div className="relative w-10 h-10 mx-auto">
               <div className="absolute inset-0 rounded-full border-2 border-neutral-200 dark:border-neutral-800"></div>
