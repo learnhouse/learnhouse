@@ -22,8 +22,8 @@ optional: the feature stays disabled or uses a runtime fallback when the variabl
 | `LEARNHOUSE_ENV` | Environment label for backend and Sentry reporting. | string | `dev` | API, Web |
 | `LEARNHOUSE_DEVELOPMENT_MODE` | Enables development-only API behavior such as docs routes and EE dev override. | boolean | `false` | API, CLI dev |
 | `LEARNHOUSE_SAAS` | Enables SaaS deployment mode, plan gating, and platform endpoint warnings. | boolean | `false` | API |
-| `LEARNHOUSE_SELF_HOSTED` | Legacy self-hosting flag used in tenancy inference. Prefer `LEARNHOUSE_TENANCY`. | boolean | `false` | API |
-| `LEARNHOUSE_USE_DEFAULT_ORG` | Legacy default-org flag used in tenancy inference. Prefer `LEARNHOUSE_TENANCY`. | boolean | `false` | API |
+| `LEARNHOUSE_SELF_HOSTED` | Legacy self-hosting flag used in tenancy inference. Prefer `LEARNHOUSE_TENANCY`. Parsed loosely: any non-empty value (including the string `false`) enables it, so leave it unset to keep it off. | boolean-like string | unset (off) | API |
+| `LEARNHOUSE_USE_DEFAULT_ORG` | Legacy default-org flag used in tenancy inference. Prefer `LEARNHOUSE_TENANCY`. Parsed loosely: any non-empty value (including the string `false`) enables it, so leave it unset to keep it off. | boolean-like string | unset (off) | API |
 | `LEARNHOUSE_TENANCY` | Selects `single` host tenancy or `multi` subdomain tenancy. Multi-tenancy requires EE or SaaS mode. | enum: `single`, `multi` | `single` unless inferred as multi-tenant | API, EE CLI |
 | `LEARNHOUSE_DOMAIN` | Public domain used for org routing, cookie decisions, and custom-domain CNAME targets. Include the port for local development. | hostname | `localhost:3000` | API, CLI |
 | `LEARNHOUSE_FRONTEND_DOMAIN` | Frontend host used by the API when it needs the public frontend domain separately from the backend host. | hostname | `localhost:3000` | API, EE CLI |
@@ -35,8 +35,9 @@ optional: the feature stays disabled or uses a runtime fallback when the variabl
 | `LEARNHOUSE_COOKIE_DOMAIN_ALLOW_BROAD` | Acknowledges intentionally broad cookie domains such as `.example.com` and silences the safety warning. | boolean | `false` | API, EE CLI |
 | `LEARNHOUSE_CUSTOM_DOMAIN_DEV_MODE` | Auto-verifies custom domains when they are under the configured LearnHouse domain. Development/testing only. | boolean | `false` | API |
 | `LEARNHOUSE_PUBLIC` | Docker build argument that removes enterprise code from community images. | boolean | `false` | API Dockerfile, Web Dockerfile |
-| `LEARNHOUSE_PLATFORM_URL` | Base URL for LearnHouse platform links, upgrade URLs, and email allowlist checks. | URL | unset; some platform flows fall back to `https://learnhouse.app` | API, Web |
+| `LEARNHOUSE_PLATFORM_URL` | Base URL for LearnHouse platform links, upgrade URLs, and email allowlist checks. | URL | unset; backend flows fall back to `https://www.learnhouse.app` and the web token-exchange to `https://learnhouse.app` | API, Web |
 | `LEARNHOUSE_PLATFORM_API_KEY` | Shared secret for platform-only internal endpoints such as packs. | secret string | required for SaaS/platform endpoints | API |
+| `CLOUD_INTERNAL_KEY` | Shared secret for SaaS-internal endpoints (custom-domain sync and the `cloud_internal` router). When unset, those endpoints reject every request and the API logs a startup warning. | secret string | unset; required for SaaS custom-domain provisioning | API |
 
 ## Database, Redis, and collaboration
 
@@ -74,6 +75,7 @@ optional: the feature stays disabled or uses a runtime fallback when the variabl
 | `NEXT_PUBLIC_LEARNHOUSE_DEFAULT_ORG` | Default organization slug used by frontend routing fallbacks. | slug string | `default` | Web, CLI |
 | `NEXT_PUBLIC_LEARNHOUSE_HTTPS` | Selects `https://` instead of `http://` in frontend URL helpers. | boolean | `false` | Web, CLI |
 | `NEXT_PUBLIC_LEARNHOUSE_MEDIA_URL` | Base URL for direct media links. If unset, media URLs use the backend URL. | URL | unset, falls back to backend URL | Web |
+| `NEXT_PUBLIC_UNSPLASH_ACCESS_KEY` | Unsplash API access key that enables the in-editor Unsplash image picker (course thumbnails, cover images, auth branding). The picker is hidden when unset. | string | unset | Web |
 | `NEXT_PUBLIC_LEARNHOUSE_PLATFORM_URL` | Browser-safe platform base URL for upgrade and auth exchange flows. | URL | unset | Web |
 | `NEXT_PUBLIC_LEARNHOUSE_SENTRY_DSN` | Browser/server Sentry DSN for the web app. | URL | unset | Web |
 | `NEXT_PUBLIC_LEARNHOUSE_ENV` | Web Sentry environment label. | string | `dev` | Web |
@@ -147,11 +149,16 @@ optional: the feature stays disabled or uses a runtime fallback when the variabl
 
 | Variable | Description | Type | Default / required | Used by |
 | --- | --- | --- | --- | --- |
-| `LEARNHOUSE_LICENSE_KEY` | Enterprise license key. | secret string | required for EE installs and updates | EE CLI, Web EE messaging |
-| `LEARNHOUSE_LICENSE_SERVER_URL` | Enterprise license server URL. | URL | `https://partners.learnhouse.app` | EE CLI |
+| `LEARNHOUSE_LICENSE_KEY` | Enterprise license key. Validated by the EE backend at runtime; the CLI passes it through during install/update. | secret string | required for EE installs and updates | EE backend, EE CLI |
+| `LEARNHOUSE_LICENSE_SERVER_URL` | Enterprise license server URL. | URL | `https://partners.learnhouse.app` | EE backend, EE CLI |
+| `LEARNHOUSE_LICENSE_GRACE_HOURS` | Offline grace period (hours) the EE backend allows before an unvalidated license is rejected. | integer | `25` (max `168`) | EE backend |
 | `LEARNHOUSE_DATA_DIR` | Data directory path inside the Enterprise backend container. | path | `/app/data` | EE backend container |
 | `LEARNHOUSE_DISABLE_EE` | Disables local Enterprise hooks even if the `ee/` folder exists. | boolean-like string | unset; CLI dev sets `1` unless `--ee` is used | API, CLI dev |
 | `LEARNHOUSE_FORCE_EE` | Forces EE mode during development when EE code is present. Ignored unless development mode is enabled. | boolean-like string | unset | API, CLI dev |
+| `WORKOS_API_KEY` | WorkOS API key for Enterprise SSO. Required (with `WORKOS_CLIENT_ID`) to enable WorkOS-backed SSO. | secret string | unset; required for SSO | EE backend |
+| `WORKOS_CLIENT_ID` | WorkOS client ID for Enterprise SSO. | string | unset; required for SSO | EE backend |
+| `SSO_REDIRECT_URI` | Full SSO callback URL override. When set, it is used as-is. | URL | unset; derived from `SSO_REDIRECT_URI_BASE` / the configured domain | EE backend |
+| `SSO_REDIRECT_URI_BASE` | Base URL used to build the SSO callback when `SSO_REDIRECT_URI` is not set. | URL | unset; falls back to the configured frontend domain | EE backend |
 
 ## Related generated variables
 
@@ -166,6 +173,7 @@ These variables do not use the `LEARNHOUSE_` prefix, but the CLI writes them int
 | `COLLAB_INTERNAL_KEY` | Shared key for API-to-collaboration-server internal auth. | secret string | required for dev and production collab auth | API, Collab, CLI |
 | `NEXT_PUBLIC_COLLAB_URL` | Public WebSocket URL for the collaboration server. | WebSocket URL | generated from the configured domain | Web, CLI |
 | `COLLAB_PORT` | Local collaboration server port. | integer | `4000` in local dev checker | Collab, CLI dev |
+| `COLLAB_TRUST_PROXY` | Set to `true` when the collaboration server runs behind a reverse proxy so client IPs (used for WebSocket rate limiting) are read from `X-Forwarded-For`. | boolean | `false` | Collab |
 | `POSTGRES_USER` | PostgreSQL user for generated non-external database installs. | string | `learnhouse` | CLI-generated compose |
 | `POSTGRES_PASSWORD` | PostgreSQL password for generated non-external database installs. | secret string | generated by CLI setup | CLI-generated compose |
 | `POSTGRES_DB` | PostgreSQL database name for generated non-external database installs. | string | `learnhouse` | CLI-generated compose |
@@ -180,7 +188,7 @@ NEXT_PUBLIC_LEARNHOUSE_BACKEND_URL=https://learn.example.com/
 NEXT_PUBLIC_LEARNHOUSE_API_URL=https://learn.example.com/api/v1/
 NEXT_PUBLIC_LEARNHOUSE_DOMAIN=learn.example.com
 NEXT_PUBLIC_LEARNHOUSE_TOP_DOMAIN=example.com
-NEXT_PUBLIC_LEARNHOUSE_HTTPS=True
+NEXT_PUBLIC_LEARNHOUSE_HTTPS=true
 NEXT_PUBLIC_LEARNHOUSE_DEFAULT_ORG=default
 
 # Backend
