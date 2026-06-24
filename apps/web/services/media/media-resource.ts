@@ -24,10 +24,12 @@ import {
  * orgUuid/fileId params are kept for signature stability but unused.
  */
 export function getMediaFileDirectory(
-  _orgUuid: string,
-  mediaUuid: string,
+  _orgUuid?: string,
+  mediaUuid?: string,
   _fileId?: string
 ) {
+  // _orgUuid/_fileId are accepted for backward-compatible call sites but no
+  // longer used: media is served via the authed endpoint keyed by media_uuid.
   return `${getAPIUrl()}media/${mediaUuid}/file`
 }
 
