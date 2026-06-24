@@ -6,7 +6,7 @@ import { useLHSession } from '@components/Contexts/LHSessionContext';
 import { useOrg } from '@components/Contexts/OrgContext';
 import { getUserCertificates } from '@services/courses/certifications';
 import CertificatePreview from '@components/Dashboard/Pages/Course/EditCourseCertification/CertificatePreview';
-import { ArrowLeft, Download } from 'lucide-react';
+import { ArrowLeft, Download, Share2, Copy, Check } from 'lucide-react';
 import Link from 'next/link';
 import { getUriWithOrg } from '@services/config/config';
 
@@ -22,6 +22,7 @@ const CertificatePage: React.FC<CertificatePageProps> = ({ orgslug, courseid, qr
   const [userCertificate, setUserCertificate] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [linkCopied, setLinkCopied] = useState(false);
 
   // Fetch user certificate
   useEffect(() => {
@@ -322,6 +323,45 @@ const CertificatePage: React.FC<CertificatePageProps> = ({ orgslug, courseid, qr
     }
   };
 
+  // Open LinkedIn's "Add to Profile" flow, pre-filled with the certificate details
+  const shareToLinkedIn = () => {
+    if (!userCertificate) return;
+
+    const config = userCertificate.certification.config;
+    const awardedAt = new Date(userCertificate.certificate_user.created_at);
+
+    const params = new URLSearchParams({
+      startTask: 'CERTIFICATION_NAME',
+      name: config.certification_name,
+      organizationName: org?.name || '',
+      issueYear: String(awardedAt.getFullYear()),
+      issueMonth: String(awardedAt.getMonth() + 1),
+      certId: userCertificate.certificate_user.user_certification_uuid,
+      certUrl: qrCodeLink,
+    });
+
+    window.open(
+      `https://www.linkedin.com/profile/add?${params.toString()}`,
+      '_blank',
+      'noopener,noreferrer'
+    );
+  };
+
+  // Copy the public certificate verification link to the clipboard
+  const copyVerificationLink = async () => {
+    if (!qrCodeLink) return;
+
+    try {
+      await navigator.clipboard.writeText(qrCodeLink);
+      setLinkCopied(true);
+      toast.success('Verification link copied to clipboard');
+      setTimeout(() => setLinkCopied(false), 2000);
+    } catch (error) {
+      console.error('Error copying verification link:', error);
+      toast.error('Failed to copy link. Please try again.');
+    }
+  };
+
   if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -388,9 +428,26 @@ const CertificatePage: React.FC<CertificatePageProps> = ({ orgslug, courseid, qr
             <span>Back to Course</span>
           </Link>
           
-          <div className="flex items-center space-x-4">
+          <div className="flex items-center space-x-3">
+            <button
+              onClick={copyVerificationLink}
+              aria-label="Copy certificate verification link"
+              className="inline-flex items-center space-x-2 bg-gray-100 text-gray-700 px-5 py-3 rounded-full hover:bg-gray-200 transition duration-200"
+            >
+              {linkCopied ? <Check className="w-5 h-5" /> : <Copy className="w-5 h-5" />}
+              <span>{linkCopied ? 'Copied' : 'Copy link'}</span>
+            </button>
+            <button
+              onClick={shareToLinkedIn}
+              aria-label="Add this certificate to your LinkedIn profile"
+              className="inline-flex items-center space-x-2 bg-[#0a66c2] text-white px-6 py-3 rounded-full hover:bg-[#004182] transition duration-200"
+            >
+              <Share2 className="w-5 h-5" />
+              <span>Share on LinkedIn</span>
+            </button>
             <button
               onClick={downloadCertificate}
+              aria-label="Download certificate as PDF"
               className="inline-flex items-center space-x-2 bg-green-600 text-white px-6 py-3 rounded-full hover:bg-green-700 transition duration-200"
             >
               <Download className="w-5 h-5" />
