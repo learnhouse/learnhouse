@@ -1,11 +1,19 @@
 'use client'
 import React, { useState } from 'react'
+import dynamic from 'next/dynamic'
 import LearnHouseSpinner from '@components/Objects/Loaders/LearnHouseSpinner'
 import { Package } from 'lucide-react'
 import { updateActivity } from '@services/courses/activities'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
 import toast from 'react-hot-toast'
 import { mutate } from 'swr'
+
+// EE component — dynamically imported so OSS builds (no ee/) degrade gracefully,
+// mirroring how the activity page lazy-loads ScormActivity.
+const ScormResults = dynamic(
+  () => import('../../../../../ee/components/Activities/ScormResults'),
+  { ssr: false },
+)
 
 interface EditScormActivityModalProps {
   activity: any
@@ -14,7 +22,7 @@ interface EditScormActivityModalProps {
   onClose: () => void
 }
 
-function EditScormActivityModal({ activity, courseUuid, orgSlug, onClose }: EditScormActivityModalProps) {
+function EditScormActivityModal({ activity, onClose }: EditScormActivityModalProps) {
   const session = useLHSession() as any
   const access_token = session?.data?.tokens?.access_token
 
@@ -74,6 +82,11 @@ function EditScormActivityModal({ activity, courseUuid, orgSlug, onClose }: Edit
             className="w-full h-9 px-3 text-sm rounded-lg bg-gray-50 border border-gray-200 outline-none focus:border-gray-300 focus:ring-1 focus:ring-gray-200 transition-colors"
           />
         </div>
+      </div>
+
+      {/* Learner results (instructor reporting) */}
+      <div className="rounded-xl nice-shadow p-4">
+        <ScormResults activityUuid={activity.activity_uuid} />
       </div>
 
       <div className="flex justify-end">
