@@ -267,7 +267,13 @@ def validate_video_path(base_content_dir: str, *path_parts: str) -> Optional[str
             resolved_path = os.path.realpath(full_path)
             base_resolved = os.path.realpath(base_content_dir)
 
-            if not resolved_path.startswith(base_resolved):
+            # Use commonpath rather than a bare startswith: a plain prefix check
+            # treats "/data/content-secret" as inside "/data/content", letting a
+            # crafted path escape the content dir into a sibling directory.
+            if (
+                resolved_path != base_resolved
+                and os.path.commonpath([resolved_path, base_resolved]) != base_resolved
+            ):
                 return None
 
             return resolved_path

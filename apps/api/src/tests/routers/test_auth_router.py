@@ -226,6 +226,9 @@ class TestAuthRouter:
             "src.routers.auth._is_token_revoked_for_user",
             return_value=False,
         ), patch(
+            "src.routers.auth._mark_refresh_jti_used",
+            return_value=True,
+        ), patch(
             "src.routers.auth.create_access_token",
             return_value="new-access-token",
         ), patch(
@@ -248,6 +251,42 @@ class TestAuthRouter:
 
         assert response.status_code == 200
         assert response.json()["access_token"] == "new-access-token"
+
+    async def test_refresh_replay_revokes_sessions_and_401(self, client, auth_user):
+        """Replay detection: presenting an already-consumed refresh token
+        (``_mark_refresh_jti_used`` returns False) must revoke every session for
+        the user and reject the request with 401."""
+        with patch(
+            "src.routers.auth.check_refresh_rate_limit",
+            return_value=(True, None),
+        ), patch(
+            "src.routers.auth.decode_refresh_token",
+            return_value={
+                "sub": auth_user.email,
+                "iat": 1,
+                "exp": 9_999_999_999,
+                "jti": "replayed-jti",
+            },
+        ), patch(
+            "src.routers.auth.security_get_user",
+            new_callable=AsyncMock,
+            return_value=auth_user,
+        ), patch(
+            "src.routers.auth._is_token_revoked_for_user",
+            return_value=False,
+        ), patch(
+            "src.routers.auth._mark_refresh_jti_used",
+            return_value=False,
+        ), patch(
+            "src.routers.auth.revoke_user_sessions_before",
+        ) as revoke_mock:
+            response = await client.get(
+                "/api/v1/auth/refresh",
+                cookies={JWT_REFRESH_COOKIE_NAME: "refresh-token"},
+            )
+
+        assert response.status_code == 401
+        revoke_mock.assert_called_once_with(auth_user.id)
 
     async def test_refresh_invalid_token(self, client):
         with patch(
@@ -553,6 +592,71 @@ class TestAuthRouter:
                 },
             )
         assert response.status_code == 401
+
+    async def test_oauth_org_id_google_unverified_email_returns_401(self, client, db, org):
+        """OAuth org_id invite gate for provider=google: when Google does not
+        return a verified email the request is rejected with 401 (lines 493-499)."""
+        with patch(
+            "src.routers.auth.get_google_user_info",
+            new_callable=AsyncMock,
+            return_value={"email": "", "email_verified": False},
+        ):
+            response = await client.post(
+                "/api/v1/auth/oauth",
+                params={"org_id": 1},
+                json={
+                    "email": "user@test.com",
+                    "provider": "google",
+                    "access_token": "google-token",
+                },
+            )
+        assert response.status_code == 401
+        assert "verified email" in response.json()["detail"].lower()
+
+    async def test_oauth_org_id_google_verified_checks_invite_and_closes_redis(
+        self, client, db, org
+    ):
+        """Google returns a verified email -> the invite email is normalised
+        (line 500), the Redis invite key is read (lines 506-513) and the Redis
+        connection is closed in the finally block (lines 520-524). The invite is
+        not found here, so org_id is cleared and signWithGoogle returns None ->
+        401."""
+        # close() raising must be swallowed by the finally block's
+        # ``except Exception: pass`` (lines 523-524).
+        close_mock = Mock(side_effect=RuntimeError("close failed"))
+        mock_redis = Mock(get=Mock(return_value=None), close=close_mock)
+        mock_config = SimpleNamespace(
+            redis_config=SimpleNamespace(redis_connection_string="redis://localhost:6379")
+        )
+        with patch(
+            "src.routers.auth.get_google_user_info",
+            new_callable=AsyncMock,
+            return_value={"email": "User@Test.com", "email_verified": True},
+        ), patch(
+            "src.routers.auth.get_learnhouse_config", return_value=mock_config
+        ), patch(
+            "redis.Redis.from_url", return_value=mock_redis
+        ) as from_url_mock, patch(
+            "src.routers.auth.signWithGoogle",
+            new_callable=AsyncMock,
+            return_value=None,
+        ):
+            response = await client.post(
+                "/api/v1/auth/oauth",
+                params={"org_id": 1},
+                json={
+                    "email": "user@test.com",
+                    "provider": "google",
+                    "access_token": "google-token",
+                },
+            )
+
+        assert response.status_code == 401
+        # Invite key was looked up using the lower-cased Google email.
+        mock_redis.get.assert_called_once_with("invited_user:user@test.com:org:org_test")
+        # The Redis connection from from_url was always closed (finally block).
+        from_url_mock.assert_called_once()
+        close_mock.assert_called_once()
 
     async def test_verify_email_rate_limited_and_logout_unauthenticated(self, client):
         with patch(

@@ -151,6 +151,29 @@ class TestValidateUpload:
         assert exc_info.value.status_code == 413
         assert "File too large" in exc_info.value.detail
 
+    def test_validate_upload_reads_whole_file_when_no_size_limit(self):
+        # file_validation.py:261 - when neither the max_size arg nor the config's
+        # 'max_size' is set, the function takes the unbounded-read else branch and
+        # reads the whole file.
+        from src.security import file_validation
+
+        content = b"\x89PNG\r\n\x1a\n" + b"0" * 16
+        upload = _upload("photo.png", content, "image/png")
+        patched_types = {
+            "image": {
+                "extensions": [".png"],
+                "max_size": None,
+                "validator": file_validation.validate_image_content,
+            }
+        }
+        with patch.object(file_validation, "FILE_TYPES", patched_types):
+            returned_type, returned_content = file_validation.validate_upload(
+                upload, ["image"]
+            )
+
+        assert returned_content == content
+        assert upload.file.tell() == 0
+
     def test_validate_upload_rejects_invalid_content(self):
         upload = _upload("photo.png", b"not-a-valid-png", "image/png")
         with pytest.raises(HTTPException) as exc_info:

@@ -141,8 +141,18 @@ class TestCommunityCommentsAndVotes:
         assert created.content == "First comment"
         assert comments[0].author.username == regular_user.username
         assert updated.content == "Edited comment"
-        assert await get_comment_count(discussion.discussion_uuid, db) == 1
-        assert await get_comment_count("missing", db) == 0
+        # get_comment_count now enforces community read access; mock it for the
+        # count assertions. A missing discussion raises 404 (was: returned 0).
+        with patch(
+            "src.services.communities.comments.check_resource_access",
+            new_callable=AsyncMock,
+        ):
+            assert await get_comment_count(
+                mock_request, discussion.discussion_uuid, regular_user, db
+            ) == 1
+            with pytest.raises(HTTPException) as missing_exc:
+                await get_comment_count(mock_request, "missing", regular_user, db)
+            assert missing_exc.value.status_code == 404
 
     @pytest.mark.asyncio
     async def test_comment_error_and_delete_paths(
@@ -540,6 +550,89 @@ class TestCommunityCommentsAndVotes:
         assert "already upvoted" in exc.value.detail
         # safety-net rolled the failed transaction back
         assert rollback_calls, "expected db_session.rollback() to be called"
+
+    @pytest.mark.asyncio
+    async def test_upvote_comment_integrity_error_race_rolls_back_and_400(
+        self, db, org, admin_user, regular_user, mock_request
+    ):
+        """Covers comment_votes lines 99,102,103: if the INSERT+UPDATE commit
+        hits an IntegrityError (concurrent duplicate vote race), the service
+        rolls back and raises HTTPException 400 instead of leaking a 500."""
+        community = await _make_community(db, org, community_uuid="community_comment_race")
+        discussion = await _make_discussion(
+            db,
+            community,
+            org,
+            author_id=admin_user.id,
+            discussion_uuid="discussion_comment_race",
+        )
+        comment = await _make_comment(
+            db, discussion, author_id=admin_user.id, comment_uuid="comment_race"
+        )
+
+        original_rollback = db.rollback
+        rollback_calls = []
+
+        async def failing_commit(*args, **kwargs):
+            raise IntegrityError("INSERT", {}, Exception("duplicate key"))
+
+        async def tracking_rollback(*args, **kwargs):
+            rollback_calls.append(True)
+            return await original_rollback(*args, **kwargs)
+
+        with patch(
+            "src.services.communities.comment_votes.authorization_verify_if_user_is_anon",
+            new_callable=AsyncMock,
+        ), patch(
+            "src.services.communities.comment_votes.check_resource_access",
+            new_callable=AsyncMock,
+        ), patch.object(
+            db, "commit", side_effect=failing_commit
+        ), patch.object(
+            db, "rollback", side_effect=tracking_rollback
+        ):
+            with pytest.raises(HTTPException) as exc:
+                await upvote_comment(
+                    mock_request, comment.comment_uuid, regular_user, db
+                )
+
+        assert exc.value.status_code == 400
+        assert "already upvoted" in exc.value.detail
+        # safety-net rolled the failed transaction back
+        assert rollback_calls, "expected db_session.rollback() to be called"
+
+    @pytest.mark.asyncio
+    async def test_get_comment_count_missing_community_raises_404(
+        self, db, org, admin_user, regular_user, mock_request
+    ):
+        """Covers comments line 340: get_comment_count on a discussion whose
+        parent community no longer exists raises 404 (Community not found)."""
+        community = await _make_community(
+            db, org, community_uuid="community_count_orphan"
+        )
+        discussion = await _make_discussion(
+            db,
+            community,
+            org,
+            author_id=admin_user.id,
+            discussion_uuid="discussion_count_orphan",
+        )
+        # Point the discussion at a non-existent community so the community
+        # lookup in get_comment_count returns None.
+        discussion.community_id = 987654
+        db.add(discussion)
+        await db.commit()
+
+        with patch(
+            "src.services.communities.comments.check_resource_access",
+            new_callable=AsyncMock,
+        ):
+            with pytest.raises(HTTPException) as exc:
+                await get_comment_count(
+                    mock_request, discussion.discussion_uuid, regular_user, db
+                )
+        assert exc.value.status_code == 404
+        assert exc.value.detail == "Community not found"
 
     @pytest.mark.asyncio
     async def test_comment_creation_and_delete_error_branches(

@@ -824,10 +824,14 @@ async def export_analytics(
     course_uuid = request.query_params.get("course_uuid")
     safe_course_uuid = _validate_course_uuid(course_uuid) if course_uuid else None
 
-    days_param = request.query_params.get("days", "30")
+    # Only treat ``days`` as an explicit override when the caller actually
+    # passed it. Otherwise each query must fall back to its own default
+    # window (e.g. advanced queries default to 90/180 days) — hard-coding a
+    # 30-day default here silently truncated long-window exports.
+    days_param = request.query_params.get("days")
     try:
         safe_org_id = int(org_id)
-        safe_days = int(days_param)
+        safe_days = int(days_param) if days_param else None
     except (ValueError, TypeError):
         raise HTTPException(status_code=400, detail="Invalid parameter")
 
@@ -836,6 +840,32 @@ async def export_analytics(
         allowed = {**COURSE_QUERIES, **COURSE_DETAIL_QUERIES}
     else:
         allowed = {**ALL_QUERIES}
+
+    # Plan gating — /export must enforce the same plan limits as the
+    # individual dashboard endpoints, otherwise an admin on a free/lower
+    # plan could exfiltrate course-level (Pro) and advanced (Enterprise)
+    # analytics simply by exporting them.
+    from src.security.features_utils.plan_check import _check_mode_bypass
+
+    requested = [q for q in query_names if q in allowed]
+    if safe_course_uuid and requested:
+        # All course-scoped analytics require Pro or higher.
+        current_plan = await get_org_plan(org_id, db_session)
+        if not plan_meets_requirement(current_plan, "pro"):
+            raise HTTPException(
+                status_code=403,
+                detail="Course analytics requires a Pro plan or higher.",
+            )
+    elif any(q in ADVANCED_QUERIES for q in requested):
+        # Advanced queries require an Enterprise plan in SaaS mode.
+        bypass = _check_mode_bypass("analytics_advanced")
+        if bypass is None:
+            current_plan = await get_org_plan(org_id, db_session)
+            if not plan_meets_requirement(current_plan, "enterprise"):
+                raise HTTPException(
+                    status_code=403,
+                    detail="Advanced analytics requires an Enterprise plan or higher.",
+                )
 
     # Execute requested queries
     results: dict[str, dict] = {}
@@ -858,14 +888,26 @@ async def export_analytics(
         rows = result.get("data", [])
         output.write(f"# {qname}\n")
         if rows:
-            writer = csv.DictWriter(output, fieldnames=rows[0].keys())
+            # Rows can have heterogeneous keys after PostgreSQL enrichment
+            # (e.g. only some rows get course_name/activity_name). Build the
+            # header from the union of all keys and ignore extras so
+            # csv.DictWriter never raises ValueError on a row with a key not
+            # present in the first row.
+            fieldnames: list = []
+            seen: set = set()
+            for row in rows:
+                for k in row.keys():
+                    if k not in seen:
+                        seen.add(k)
+                        fieldnames.append(k)
+            writer = csv.DictWriter(output, fieldnames=fieldnames, extrasaction="ignore")
             writer.writeheader()
             writer.writerows(
                 {k: _csv_safe(v) for k, v in row.items()} for row in rows
             )
         output.write("\n")
 
-    filename = f"analytics_export_{safe_org_id}_{safe_days}d.csv"
+    filename = f"analytics_export_{safe_org_id}_{safe_days or 'default'}d.csv"
     return StreamingResponse(
         iter([output.getvalue()]),
         media_type="text/csv",

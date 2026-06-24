@@ -20,7 +20,6 @@ from src.security.rbac.rbac import (
     authorization_verify_if_user_is_anon,
 )
 from src.security.org_auth import (
-    require_org_membership,
     require_org_role_permission,
     get_user_org_role,
 )
@@ -241,10 +240,13 @@ async def get_api_token(
     # VERIFICATION 1: User must be authenticated
     await authorization_verify_if_user_is_anon(current_user.id)
 
-    # VERIFICATION 2: Membership (superadmins bypass)
-    await require_org_membership(current_user.id, org_id, db_session)
+    # VERIFICATION 2+3: Membership + permission (superadmins bypass).
+    # Reading a token record must require the same 'roles' read permission as
+    # listing them; otherwise any low-privilege org member could enumerate
+    # token metadata (rights, creator, expiry) by guessing UUIDs.
+    await require_org_role_permission(current_user.id, org_id, db_session, "roles", "action_read")
 
-    # VERIFICATION 3: Get the token
+    # VERIFICATION 4: Get the token
     statement = select(APIToken).where(
         APIToken.token_uuid == token_uuid,
         APIToken.org_id == org_id
@@ -521,10 +523,17 @@ async def validate_rights_structure(
 
                 for perm_key, perm_value in right_permissions.items():
                     if isinstance(perm_value, bool) and perm_value:
-                        if isinstance(user_right_permissions, dict) and perm_key in user_right_permissions:
-                            user_has_perm = user_right_permissions[perm_key]
-                            if not user_has_perm:
-                                raise HTTPException(
-                                    status_code=status.HTTP_403_FORBIDDEN,
-                                    detail=f"Cannot grant '{perm_key}' permission for '{right_key}' as you don't have this permission yourself",
-                                )
+                        # The user must explicitly hold this permission to grant
+                        # it. Previously, if the permission key was absent from
+                        # the user's own rights object the check was skipped,
+                        # letting a user mint a token with a permission they do
+                        # not possess. Treat absent/false alike as not-granted.
+                        user_has_perm = (
+                            isinstance(user_right_permissions, dict)
+                            and bool(user_right_permissions.get(perm_key))
+                        )
+                        if not user_has_perm:
+                            raise HTTPException(
+                                status_code=status.HTTP_403_FORBIDDEN,
+                                detail=f"Cannot grant '{perm_key}' permission for '{right_key}' as you don't have this permission yourself",
+                            )

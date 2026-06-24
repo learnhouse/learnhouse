@@ -54,6 +54,12 @@ def get_ttl_for_query(query_name: str) -> int:
         return CACHE_TTL_COURSE
     if query_name.startswith("detail_"):
         return CACHE_TTL_DETAIL
+    # Detail queries are not all prefixed with "detail_" (e.g.
+    # "learner_engagement_score"); they must still use the short detail TTL so
+    # the per-user drill-down data stays fresh instead of being cached as core.
+    from src.services.analytics.queries import DETAIL_QUERIES
+    if query_name in DETAIL_QUERIES:
+        return CACHE_TTL_DETAIL
     # Everything else — check if it's in the advanced set (imported lazily)
     from src.services.analytics.queries import ADVANCED_QUERIES
     if query_name in ADVANCED_QUERIES:

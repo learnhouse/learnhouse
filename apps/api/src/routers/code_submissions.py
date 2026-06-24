@@ -1,5 +1,5 @@
 from typing import Union
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Query
 from pydantic import BaseModel
 from sqlalchemy import func
 from sqlmodel import select, col
@@ -38,8 +38,8 @@ class SaveSubmissionRequest(BaseModel):
 async def get_submission_history(
     activity_uuid: str,
     block_id: str,
-    page: int = 1,
-    limit: int = 20,
+    page: int = Query(1, ge=1),
+    limit: int = Query(20, ge=1, le=100),
     current_user: Union[PublicUser, AnonymousUser] = Depends(get_current_user),
     db_session: AsyncSession = Depends(get_db_session),
 ) -> dict:

@@ -230,4 +230,4 @@ class TestPlaygroundsGeneratorService:
                 async for chunk in generate_playground_stream("Build it", session)
             ]
 
-        assert error_chunks == ["Error: boom"]
+        assert error_chunks == ["Error: An internal error occurred while generating content."]

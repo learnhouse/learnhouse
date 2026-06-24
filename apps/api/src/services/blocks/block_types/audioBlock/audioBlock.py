@@ -31,6 +31,11 @@ async def create_audio_block(
     statement = select(Organization).where(Organization.id == activity.org_id)
     org = (await db_session.execute(statement)).scalars().first()
 
+    if not org:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Organization not found"
+        )
+
     # get course
     statement = select(Course).where(Course.id == activity.course_id)
     course = (await db_session.execute(statement)).scalars().first()
@@ -40,8 +45,15 @@ async def create_audio_block(
             status_code=status.HTTP_404_NOT_FOUND, detail="Course not found"
         )
 
-    if current_user:
-        await check_resource_access(request, db_session, current_user, course.course_uuid, AccessAction.UPDATE)
+    # Require authentication and always enforce UPDATE access. current_user
+    # defaults to None, so a guarded check would silently fail open for any
+    # caller that omits it; reject None explicitly and let check_resource_access
+    # deny anonymous/unauthorized users.
+    if current_user is None:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED, detail="Authentication required"
+        )
+    await check_resource_access(request, db_session, current_user, course.course_uuid, AccessAction.UPDATE)
 
     # get block id
     block_uuid = str(f"block_{uuid4()}")

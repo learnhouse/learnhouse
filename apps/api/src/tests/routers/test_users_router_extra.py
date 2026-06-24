@@ -475,8 +475,73 @@ class TestPasswordResetEndpoints:
         assert response.status_code == 429
         assert "too many password reset attempts" in response.json()["detail"].lower()
 
+    async def test_send_password_reset_code_body_success(self, client):
+        with (
+            patch(
+                "src.routers.users.check_password_reset_rate_limit",
+                return_value=(True, 0),
+            ),
+            patch(
+                "src.routers.users.send_reset_password_code",
+                new_callable=AsyncMock,
+                return_value={"detail": "sent"},
+            ) as send_mock,
+        ):
+            response = await client.post(
+                "/api/v1/users/reset_password/send_reset_code",
+                json={"email": "user@test.com", "org_id": 1},
+            )
+
+        assert response.status_code == 200
+        assert response.json()["detail"] == "sent"
+        send_mock.assert_awaited_once()
+
+    async def test_send_password_reset_code_body_rate_limited(self, client):
+        with (
+            patch(
+                "src.routers.users.check_password_reset_rate_limit",
+                return_value=(False, 180),
+            ),
+            patch(
+                "src.routers.users.send_reset_password_code",
+                new_callable=AsyncMock,
+            ) as send_mock,
+        ):
+            response = await client.post(
+                "/api/v1/users/reset_password/send_reset_code",
+                json={"email": "user@test.com", "org_id": 1},
+            )
+
+        assert response.status_code == 429
+        assert "too many password reset attempts" in response.json()["detail"].lower()
+        send_mock.assert_not_awaited()
+
+    async def test_send_password_reset_code_legacy_rate_limited(self, client):
+        with (
+            patch(
+                "src.routers.users.check_password_reset_rate_limit",
+                return_value=(False, 240),
+            ),
+            patch(
+                "src.routers.users.send_reset_password_code",
+                new_callable=AsyncMock,
+            ) as send_mock,
+        ):
+            response = await client.post(
+                "/api/v1/users/reset_password/send_reset_code/user@test.com",
+                params={"org_id": 1},
+            )
+
+        assert response.status_code == 429
+        assert "too many password reset attempts" in response.json()["detail"].lower()
+        send_mock.assert_not_awaited()
+
     async def test_send_password_reset_code_success(self, client):
         with (
+            patch(
+                "src.routers.users.check_password_reset_rate_limit",
+                return_value=(True, 0),
+            ),
             patch(
                 "src.routers.users.send_reset_password_code",
                 new_callable=AsyncMock,

@@ -6,7 +6,7 @@ from sqlmodel import select
 from sqlmodel.ext.asyncio.session import AsyncSession
 from fastapi import HTTPException, Request
 
-from src.db.users import PublicUser, AnonymousUser, APITokenUser, User, UserRead
+from src.db.users import PublicUser, AnonymousUser, APITokenUser, User, UserReadAuthor
 from src.security.auth import resolve_acting_user_id
 from src.db.communities.communities import Community
 from src.services.analytics.analytics import track
@@ -132,6 +132,23 @@ async def create_discussion(
     )
 
     db_session.add(discussion)
+    # Flush to assign discussion.id without ending the transaction, so the
+    # author's auto-upvote vote row is written atomically with the discussion.
+    # Previously the vote was committed in a *second* transaction after the
+    # discussion was already persisted; if that second commit failed the
+    # discussion was left with upvote_count=1 but no matching vote row — a
+    # permanently inflated, unremovable phantom upvote.
+    await db_session.flush()
+
+    # Create auto-upvote from author in the same transaction
+    vote = DiscussionVote(
+        discussion_id=discussion.id,
+        user_id=current_user.id,
+        vote_uuid=f"vote_{uuid4()}",
+        creation_date=str(datetime.now()),
+    )
+    db_session.add(vote)
+
     await db_session.commit()
     await db_session.refresh(discussion)
 
@@ -156,23 +173,13 @@ async def create_discussion(
         },
     )
 
-    # Create auto-upvote from author
-    vote = DiscussionVote(
-        discussion_id=discussion.id,
-        user_id=current_user.id,
-        vote_uuid=f"vote_{uuid4()}",
-        creation_date=str(datetime.now()),
-    )
-    db_session.add(vote)
-    await db_session.commit()
-
     # Get author info
     author_statement = select(User).where(User.id == discussion.author_id)
     author = (await db_session.execute(author_statement)).scalars().first()
 
     return DiscussionReadWithVoteStatus(
         **discussion.model_dump(),
-        author=UserRead.model_validate(author.model_dump()) if author else None,
+        author=UserReadAuthor.model_validate(author.model_dump()) if author else None,
         has_voted=True,
     )
 
@@ -218,7 +225,7 @@ async def get_discussion(
 
     return DiscussionReadWithVoteStatus(
         **discussion.model_dump(),
-        author=UserRead.model_validate(author.model_dump()) if author else None,
+        author=UserReadAuthor.model_validate(author.model_dump()) if author else None,
         has_voted=has_voted,
     )
 
@@ -340,7 +347,7 @@ async def get_discussions_by_community(
         result.append(
             DiscussionReadWithVoteStatus(
                 **discussion.model_dump(),
-                author=UserRead.model_validate(author.model_dump()) if author else None,
+                author=UserReadAuthor.model_validate(author.model_dump()) if author else None,
                 has_voted=has_voted,
             )
         )
@@ -445,7 +452,7 @@ async def update_discussion(
 
     return DiscussionReadWithVoteStatus(
         **discussion.model_dump(),
-        author=UserRead.model_validate(author.model_dump()) if author else None,
+        author=UserReadAuthor.model_validate(author.model_dump()) if author else None,
         has_voted=vote is not None,
     )
 
@@ -514,7 +521,7 @@ async def pin_discussion(
 
     return DiscussionReadWithVoteStatus(
         **discussion.model_dump(),
-        author=UserRead.model_validate(author.model_dump()) if author else None,
+        author=UserReadAuthor.model_validate(author.model_dump()) if author else None,
         has_voted=vote is not None,
     )
 
@@ -583,7 +590,7 @@ async def lock_discussion(
 
     return DiscussionReadWithVoteStatus(
         **discussion.model_dump(),
-        author=UserRead.model_validate(author.model_dump()) if author else None,
+        author=UserReadAuthor.model_validate(author.model_dump()) if author else None,
         has_voted=vote is not None,
     )
 

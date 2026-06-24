@@ -70,7 +70,7 @@ async def test_auto_install_branches(monkeypatch):
         refreshes.append(db)
 
     monkeypatch.setattr(autoinstall, "get_learnhouse_config", lambda: fake_config)
-    monkeypatch.setattr(autoinstall, "create_engine", lambda *args, **kwargs: object())
+    monkeypatch.setattr(autoinstall, "create_engine", lambda *args, **kwargs: SimpleNamespace(dispose=lambda: None))
     monkeypatch.setattr(autoinstall, "create_async_engine", lambda *args, **kwargs: _FakeAsyncEngine())
     monkeypatch.setattr(autoinstall, "async_sessionmaker", lambda *args, **kwargs: _FakeAsyncSessionmaker())
     monkeypatch.setattr(
@@ -105,6 +105,82 @@ async def test_auto_install_branches(monkeypatch):
 
     assert installs == [True]
     assert len(refreshes) == 1  # existing-install path always refreshes
+
+
+@pytest.mark.parametrize(
+    "sync_conn,expected_async_conn",
+    [
+        # autoinstall.py:48-51 (psycopg2 prefix) — must be checked before the
+        # generic postgresql:// branch.
+        (
+            "postgresql+psycopg2://u:p@host:5432/db",
+            "postgresql+asyncpg://u:p@host:5432/db",
+        ),
+        # autoinstall.py:52-55 (generic postgresql:// prefix).
+        (
+            "postgresql://u:p@host:5432/db",
+            "postgresql+asyncpg://u:p@host:5432/db",
+        ),
+        # autoinstall.py:56-59 (postgres:// Heroku/Supabase alias).
+        (
+            "postgres://u:p@host:5432/db",
+            "postgresql+asyncpg://u:p@host:5432/db",
+        ),
+    ],
+)
+@pytest.mark.asyncio
+async def test_auto_install_normalises_async_connection_string(
+    monkeypatch, sync_conn, expected_async_conn
+):
+    captured_async_conn = []
+    refreshes = []
+
+    fake_config = SimpleNamespace(
+        database_config=SimpleNamespace(sql_connection_string=sync_conn)
+    )
+
+    fake_session = SimpleNamespace()
+
+    @contextlib.asynccontextmanager
+    async def fake_async_session_factory():
+        yield fake_session
+
+    class _FakeAsyncSessionmaker:
+        def __call__(self):
+            return fake_async_session_factory()
+
+    class _FakeAsyncEngine:
+        async def dispose(self):
+            pass
+
+    async def fake_install_default_elements(db):
+        refreshes.append(db)
+
+    def fake_create_async_engine(conn, *args, **kwargs):
+        captured_async_conn.append(conn)
+        return _FakeAsyncEngine()
+
+    monkeypatch.setattr(autoinstall, "get_learnhouse_config", lambda: fake_config)
+    monkeypatch.setattr(
+        autoinstall, "create_engine", lambda *a, **k: SimpleNamespace(dispose=lambda: None)
+    )
+    monkeypatch.setattr(autoinstall, "create_async_engine", fake_create_async_engine)
+    monkeypatch.setattr(
+        autoinstall, "async_sessionmaker", lambda *a, **k: _FakeAsyncSessionmaker()
+    )
+    monkeypatch.setattr(autoinstall.SQLModel.metadata, "create_all", lambda engine: None)
+    monkeypatch.setattr(
+        autoinstall, "install_default_elements", fake_install_default_elements
+    )
+    # An existing org forces the refresh path (which builds the async engine).
+    monkeypatch.setattr(
+        autoinstall, "Session", lambda engine: _FakeSession(SimpleNamespace(slug="x"))
+    )
+
+    await autoinstall.auto_install()
+
+    assert captured_async_conn == [expected_async_conn]
+    assert len(refreshes) == 1
 
 
 @pytest.mark.asyncio

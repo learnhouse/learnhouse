@@ -100,10 +100,16 @@ async def _build_trail_read(
 
 async def create_user_trail(
     request: Request,
-    user: PublicUser,
+    user: PublicUser | AnonymousUser,
     trail_object: TrailCreate,
     db_session: AsyncSession,
 ) -> Trail:
+    if isinstance(user, AnonymousUser):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Anonymous users cannot access this endpoint",
+        )
+
     statement = select(Trail).where(
         Trail.org_id == trail_object.org_id, Trail.user_id == user.id
     )
@@ -132,9 +138,15 @@ async def create_user_trail(
 
 async def get_user_trails(
     request: Request,
-    user: PublicUser,
+    user: PublicUser | AnonymousUser,
     db_session: AsyncSession,
 ) -> TrailRead:
+    if isinstance(user, AnonymousUser):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Anonymous users cannot access this endpoint",
+        )
+
     statement = select(Trail).where(Trail.user_id == user.id)
     trail = (await db_session.execute(statement)).scalars().first()
 
@@ -200,10 +212,16 @@ async def get_user_trail_with_orgid(
 
 async def add_activity_to_trail(
     request: Request,
-    user: PublicUser,
+    user: PublicUser | AnonymousUser,
     activity_uuid: str,
     db_session: AsyncSession,
 ) -> TrailRead:
+    if isinstance(user, AnonymousUser):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Anonymous users cannot access this endpoint",
+        )
+
     # Look for the activity
     statement = select(Activity).where(Activity.activity_uuid == activity_uuid)
     activity = (await db_session.execute(statement)).scalars().first()
@@ -346,10 +364,16 @@ async def add_activity_to_trail(
 
 async def remove_activity_from_trail(
     request: Request,
-    user: PublicUser,
+    user: PublicUser | AnonymousUser,
     activity_uuid: str,
     db_session: AsyncSession,
 ) -> TrailRead:
+    if isinstance(user, AnonymousUser):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Anonymous users cannot access this endpoint",
+        )
+
     # Look for the activity
     statement = select(Activity).where(Activity.activity_uuid == activity_uuid)
     activity = (await db_session.execute(statement)).scalars().first()
@@ -398,10 +422,16 @@ async def remove_activity_from_trail(
 
 async def add_course_to_trail(
     request: Request,
-    user: PublicUser,
+    user: PublicUser | AnonymousUser,
     course_uuid: str,
     db_session: AsyncSession,
 ) -> TrailRead:
+    if isinstance(user, AnonymousUser):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Anonymous users cannot access this endpoint",
+        )
+
     statement = select(Course).where(Course.course_uuid == course_uuid)
     course = (await db_session.execute(statement)).scalars().first()
 
@@ -477,10 +507,16 @@ async def add_course_to_trail(
 
 async def remove_course_from_trail(
     request: Request,
-    user: PublicUser,
+    user: PublicUser | AnonymousUser,
     course_uuid: str,
     db_session: AsyncSession,
 ) -> TrailRead:
+    if isinstance(user, AnonymousUser):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Anonymous users cannot access this endpoint",
+        )
+
     statement = select(Course).where(Course.course_uuid == course_uuid)
     course = (await db_session.execute(statement)).scalars().first()
 
@@ -506,9 +542,11 @@ async def remove_course_from_trail(
 
     if trail_run:
         await db_session.delete(trail_run)
-        await db_session.commit()
 
-    # Delete all trail steps for this course in a single statement
+    # Delete all trail steps for this course in a single statement.
+    # Both the TrailRun delete and the TrailStep delete are committed together
+    # so a failure cannot leave orphaned (and still "complete") TrailSteps that
+    # would resurrect the course's completion state if it is re-added later.
     await db_session.execute(
         sql_delete(TrailStep).where(
             TrailStep.course_id == course.id,

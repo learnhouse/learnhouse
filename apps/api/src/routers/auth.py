@@ -18,13 +18,14 @@ from src.security.auth import (
     extract_jwt_from_request,
     revoke_user_sessions_before,
     _is_token_revoked_for_user,
+    _mark_refresh_jti_used,
     JWT_ACCESS_TOKEN_EXPIRES,
     JWT_REFRESH_TOKEN_EXPIRES,
     JWT_REFRESH_COOKIE_NAME,
     JWT_COOKIE_NAME,
 )
 from src.services.users.users import security_get_user
-from src.services.auth.utils import signWithGoogle
+from src.services.auth.utils import signWithGoogle, get_google_user_info
 from src.services.dev.dev import isDevModeEnabled
 from src.services.security.rate_limiting import (
     check_login_rate_limit,
@@ -258,6 +259,21 @@ async def refresh(
     if _is_token_revoked_for_user(user.id, issued_at):
         raise credentials_exception
 
+    # One-time-use rotation with replay detection. Atomically mark this
+    # refresh token's jti as consumed. The FIRST presentation succeeds; any
+    # subsequent presentation of the SAME token (a replay) is treated as
+    # theft — we revoke every session for the user and reject the request.
+    # Without this, a stolen refresh token could be replayed indefinitely
+    # for its entire 30-day lifetime with no detection.
+    jti = payload.get("jti")
+    if jti:
+        first_use = _mark_refresh_jti_used(user.id, jti)
+        if not first_use:
+            # Replay of an already-consumed refresh token: revoke all sessions
+            # so neither the legitimate user's nor the attacker's tokens work.
+            revoke_user_sessions_before(user.id)
+            raise credentials_exception
+
     new_access_token = create_access_token(
         data={"sub": email},
         expires_delta=JWT_ACCESS_TOKEN_EXPIRES,
@@ -465,17 +481,47 @@ async def third_party_login(
                 detail="Invalid org_id",
             )
 
+        # SECURITY: resolve the identity from the Google-verified email, NOT
+        # from the attacker-controlled body.email. signWithGoogle keys the
+        # account on the Google-returned email but honors org_id to grant
+        # membership. If the invite gate trusted body.email, an attacker could
+        # supply a victim's invited address (passing the gate) while
+        # authenticating with their own Google token, and get their own account
+        # joined to an org they were never invited to. The invite must be
+        # checked against the same email that will own the account.
+        if body.provider == "google":
+            _google_user = await get_google_user_info(body.access_token)
+            _verified_email = _google_user.get("email")
+            if not _verified_email or not _google_user.get("email_verified"):
+                raise HTTPException(
+                    status_code=status.HTTP_401_UNAUTHORIZED,
+                    detail="Google did not return a verified email for this account",
+                )
+            _invite_email = _verified_email.strip().lower()
+        else:
+            _invite_email = body.email
+
         # Check that a pending email invite exists for this address in the org
         _invite_found = False
+        _r = None
         try:
             _lh_config = get_learnhouse_config()
             _redis_url = _lh_config.redis_config.redis_connection_string
             if _redis_url:
                 _r = _redis.Redis.from_url(_redis_url)
-                _invite_key = f"invited_user:{body.email}:org:{org_record.org_uuid}"
+                _invite_key = f"invited_user:{_invite_email}:org:{org_record.org_uuid}"
                 _invite_found = bool(_r.get(_invite_key))
         except Exception as e:
             _logger.error("Redis unavailable for invite validation, org_id will be ignored: %s", e)
+        finally:
+            # Always release the Redis connection pool created by from_url;
+            # otherwise every OAuth login leaks a connection pool/socket and
+            # the API eventually exhausts file descriptors / Redis connections.
+            if _r is not None:
+                try:
+                    _r.close()
+                except Exception:
+                    pass
 
         if not _invite_found:
             _logger.warning(
@@ -605,8 +651,14 @@ async def api_verify_email(
     """
     Verify user email with token.
     """
-    # Rate limit: 5 attempts per 5 minutes (keyed on email when provided, user_uuid otherwise)
-    is_allowed, retry_after = check_email_verification_rate_limit(body.email or body.user_uuid)
+    # Rate limit: 5 attempts per 5 minutes. Key strictly on the stable
+    # user_uuid (+ org_uuid) identity, NOT on the attacker-controllable
+    # ``email`` field. ``email`` is not used by verify_email_token at all, so
+    # keying on it let a caller bypass the limit entirely by rotating the
+    # email value while brute-forcing tokens for a fixed user_uuid.
+    is_allowed, retry_after = check_email_verification_rate_limit(
+        f"{body.user_uuid}:{body.org_uuid}"
+    )
     if not is_allowed:
         raise HTTPException(
             status_code=429,

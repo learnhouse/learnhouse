@@ -194,7 +194,7 @@ async def search_across_org(
         .where(Folder.org_id == org.id)
         .where(_ilike_any([Folder.name, Folder.description], pattern))
     )
-    if is_anon:
+    if only_public:
         folders_q = folders_q.where(Folder.public == sa_true())
     folders, total_folders = await _paginate_and_count(
         db_session, folders_q, page, limit

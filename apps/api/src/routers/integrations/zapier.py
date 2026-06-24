@@ -210,7 +210,7 @@ async def zapier_list_courses(
         select(Course)
         .where(Course.org_id == api_user.org_id)
         .order_by(col(Course.creation_date).desc())
-        .limit(min(limit, 500))
+        .limit(max(1, min(limit, 500)))
     )
     courses = (await db_session.execute(query)).scalars().all()
     return [
@@ -239,7 +239,7 @@ async def zapier_list_users(
         select(User)
         .join(UserOrganization, UserOrganization.user_id == User.id)  # type: ignore
         .where(UserOrganization.org_id == api_user.org_id)
-        .limit(min(limit, 500))
+        .limit(max(1, min(limit, 500)))
     )
     users = (await db_session.execute(query)).scalars().all()
     return [
@@ -274,7 +274,7 @@ async def zapier_list_usergroups(
     query = (
         select(UserGroup)
         .where(UserGroup.org_id == api_user.org_id)
-        .limit(min(limit, 500))
+        .limit(max(1, min(limit, 500)))
     )
     groups = (await db_session.execute(query)).scalars().all()
     return [

@@ -141,13 +141,26 @@ async def get_communities_by_org(
         return [CommunityRead.model_validate(c.model_dump()) for c in communities]
 
     # Check if user has admin-level permissions (can read all communities)
-    # First check role-based permissions, then fall back to org admin status
+    # First check role-based permissions, then fall back to org admin status.
+    # NOTE: the RBAC helpers resolve the target org by UUID, so we must pass the
+    # organization's org_uuid (e.g. "org_<uuid>"), not the numeric org_id.
+    # Passing "org_<int>"/"community_<int>" never resolves an org, which made
+    # both checks silently return False and dropped org admins/moderators into
+    # the restricted member view (they could not see private communities).
+    org_lookup = (
+        await db_session.execute(select(Organization).where(Organization.id == org_id))
+    ).scalars().first()
+    if not org_lookup:
+        raise HTTPException(status_code=404, detail="Organization not found")
+
     has_admin_read = await authorization_verify_based_on_roles(
-        request, acting_user_id, "update", f"community_{org_id}", db_session
+        request, acting_user_id, "update", f"community_{org_lookup.org_uuid}", db_session
     )
     is_admin_or_maintainer = has_admin_read or await authorization_verify_based_on_org_admin_status(
-        request, acting_user_id, "read", f"org_{org_id}", db_session
+        request, acting_user_id, "read", org_lookup.org_uuid, db_session
     )
+    # ``org_lookup.org_uuid`` already carries the "org_" prefix expected by the
+    # RBAC org resolver, so it is passed through unchanged above.
 
     if is_admin_or_maintainer:
         # Admins see all communities

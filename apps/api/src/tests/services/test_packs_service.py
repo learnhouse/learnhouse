@@ -215,6 +215,58 @@ class TestPackLifecycle:
         background_tasks.discard.assert_called()
 
     @pytest.mark.asyncio
+    async def test_activate_pack_reactivates_cancelled_ai_credits(self, db, org):
+        # Reactivating a cancelled AI-credits pack must re-add the stored
+        # quantity of AI credits to Redis (the ai_credits branch).
+        redis = FakeRedis()
+        background_tasks = Mock()
+        fake_task = FakeTask()
+
+        await _make_pack(
+            db,
+            org,
+            id=40,
+            pack_id="ai_500",
+            pack_type=PackTypeEnum.ai_credits,
+            quantity=500,
+            status=PackStatusEnum.cancelled,
+            platform_subscription_id="sub_ai_reactivate",
+            cancelled_at=datetime(2024, 2, 1),
+            cancel_at_period_end=True,
+        )
+
+        with patch(
+            "src.services.packs.packs._get_redis_client",
+            return_value=redis,
+        ), patch(
+            "src.services.packs.packs.add_ai_credits",
+            side_effect=lambda org_id, amount: redis.incrby(
+                f"ai_credits_purchased:{org_id}", amount
+            ),
+        ) as add_ai_credits, patch(
+            "src.services.packs.packs.dispatch_webhooks",
+            new=Mock(),
+        ), patch(
+            "src.services.packs.packs.asyncio.create_task",
+            side_effect=_fake_create_task(fake_task),
+        ), patch(
+            "src.services.packs.packs._background_tasks",
+            new=background_tasks,
+        ):
+            reactivated = await activate_pack(
+                org.id,
+                "ai_500",
+                "sub_ai_reactivate",
+                db,
+            )
+
+        assert reactivated.status == PackStatusEnum.active
+        assert reactivated.cancel_at_period_end is False
+        assert reactivated.cancelled_at is None
+        add_ai_credits.assert_called_once_with(org.id, 500)
+        assert redis.values["ai_credits_purchased:1"] == 500
+
+    @pytest.mark.asyncio
     async def test_deactivate_pack_and_deactivate_all(self, db, org):
         redis = FakeRedis(
             {

@@ -48,7 +48,9 @@ async def submit_feedback(
     for upload in files:
         if not upload or not upload.filename:
             continue
-        data = await upload.read()
+        # Bound the read itself: reading the whole upload before truncating
+        # would let a single multi-gigabyte attachment exhaust server memory.
+        data = await upload.read(_MAX_ATTACHMENT_BYTES + 1)
         if not data:
             continue
         if len(data) > _MAX_ATTACHMENT_BYTES:

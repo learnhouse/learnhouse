@@ -125,8 +125,14 @@ def check_rate_limit(
         # Rate limit exceeded
         return False, current_count, ttl if ttl > 0 else window_seconds
 
-    # Increment counter
+    # Increment counter atomically. If the key expired between the GET above
+    # and this INCR, Redis recreates it WITHOUT a TTL, which would leave a
+    # counter that never resets and permanently blocks the key. Re-assert the
+    # expiry whenever the key has no TTL so the window always rolls over.
     new_count = r.incr(rate_limit_key)
+    if new_count == 1 or ttl is None or ttl < 0:
+        r.expire(rate_limit_key, window_seconds)
+        ttl = window_seconds
     return True, new_count, ttl if ttl > 0 else window_seconds
 
 

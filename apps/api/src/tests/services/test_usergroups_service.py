@@ -220,6 +220,8 @@ class TestUsergroupsService:
         ), patch(
             "src.services.users.usergroups.increase_feature_usage"
         ), patch(
+            "src.services.users.usergroups.decrease_feature_usage"
+        ), patch(
             "src.services.users.usergroups.dispatch_webhooks",
             new_callable=AsyncMock,
         ):
@@ -449,6 +451,46 @@ class TestUsergroupsService:
         assert remove_users_result == "Users removed from UserGroup successfully"
         assert remove_resources_result == "Resources removed from UserGroup successfully"
         assert log_error.call_count >= 4
+
+    @pytest.mark.asyncio
+    async def test_add_remove_users_reject_non_integer_ids(
+        self, mock_request, db, org, admin_user
+    ):
+        with patch(
+            "src.services.users.usergroups.rbac_check",
+            new_callable=AsyncMock,
+        ), patch(
+            "src.services.users.usergroups.check_limits_with_usage"
+        ), patch(
+            "src.services.users.usergroups.increase_feature_usage"
+        ), patch(
+            "src.services.users.usergroups.dispatch_webhooks",
+            new_callable=AsyncMock,
+        ):
+            usergroup = await create_usergroup(
+                mock_request,
+                db,
+                admin_user,
+                UserGroupCreate(name="UG", description="Desc", org_id=org.id),
+            )
+
+        with patch(
+            "src.services.users.usergroups.rbac_check",
+            new_callable=AsyncMock,
+        ):
+            with pytest.raises(HTTPException) as add_exc:
+                await add_users_to_usergroup(
+                    mock_request, db, admin_user, usergroup.id, "1,abc"
+                )
+            with pytest.raises(HTTPException) as remove_exc:
+                await remove_users_from_usergroup(
+                    mock_request, db, admin_user, usergroup.id, "1,xyz"
+                )
+
+        assert add_exc.value.status_code == 400
+        assert "comma-separated list of integers" in add_exc.value.detail
+        assert remove_exc.value.status_code == 400
+        assert "comma-separated list of integers" in remove_exc.value.detail
 
     @pytest.mark.asyncio
     async def test_usergroup_user_and_resource_links(

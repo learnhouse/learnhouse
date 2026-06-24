@@ -1,7 +1,8 @@
-from unittest.mock import patch
+from unittest.mock import AsyncMock, patch
 
 import pytest
 from fastapi import HTTPException
+from sqlalchemy.exc import IntegrityError
 
 from src.db.playground_reactions import PlaygroundReaction
 from src.db.playgrounds import Playground, PlaygroundAccessType
@@ -168,6 +169,46 @@ async def test_toggle_playground_reaction_adds_and_removes(db, playground, react
 
     assert added == {"action": "added", "emoji": ":+1:"}
     assert removed == {"action": "removed", "emoji": ":+1:"}
+
+
+@pytest.mark.asyncio
+async def test_toggle_playground_reaction_concurrent_duplicate_is_idempotent(
+    db, playground, reactor
+):
+    """Lines 127, 132: a concurrent duplicate insert raises IntegrityError on
+    commit; the guard rolls back and still reports the reaction as added
+    (idempotent) instead of surfacing a 500."""
+    current_user, _ = reactor
+
+    real_commit = db.commit
+    real_rollback = db.rollback
+    rollback_calls = {"count": 0}
+
+    async def _raising_commit():
+        # Simulate the unique-constraint violation from a racing insert.
+        raise IntegrityError("INSERT", {}, Exception("duplicate key"))
+
+    async def _tracking_rollback():
+        rollback_calls["count"] += 1
+        await real_rollback()
+
+    with patch("src.services.playgrounds.playground_reactions._check_read_access"), \
+        patch.object(db, "commit", AsyncMock(side_effect=_raising_commit)), \
+        patch.object(db, "rollback", AsyncMock(side_effect=_tracking_rollback)):
+        result = await toggle_playground_reaction(
+            request=None,
+            playground_uuid=playground.playground_uuid,
+            emoji=":+1:",
+            current_user=PublicUser.model_validate(current_user),
+            db_session=db,
+        )
+
+    assert result == {"action": "added", "emoji": ":+1:"}
+    assert rollback_calls["count"] == 1
+
+    # Restore the real session methods for any later teardown.
+    db.commit = real_commit
+    db.rollback = real_rollback
 
 
 @pytest.mark.asyncio

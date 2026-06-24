@@ -407,6 +407,15 @@ async def authorization_verify_based_on_roles_and_authorship(
     )
     logger.info("[RBAC] isRole=%s", isRole)
 
+    # Authors and role-holders (e.g. course admins/maintainers) must never be
+    # blocked by the paywall on a resource they own or manage. Grant access
+    # immediately so the UserGroup/paid-offer check below cannot raise a 402
+    # against them (check_usergroup_access raises HTTP 402 for paid offers, which
+    # would otherwise lock the author/admin out of their own paid resource).
+    if isAuthor or isRole:
+        logger.info("[RBAC] Access GRANTED via author/role before usergroup check")
+        return True
+
     # For read actions, also check UserGroup membership
     # UserGroups allow access to resources that are not public but restricted to group members
     hasUserGroupAccess = False

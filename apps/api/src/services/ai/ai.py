@@ -50,6 +50,12 @@ async def ai_start_activity_chat_session(
     )
     activity = (await db_session.execute(statement)).scalars().first()
 
+    if not activity:
+        raise HTTPException(
+            status_code=404,
+            detail="Activity not found",
+        )
+
     activity = ActivityRead.model_validate(activity)
 
     # Get the Course with authors
@@ -111,12 +117,6 @@ async def ai_start_activity_chat_session(
 
     # Reserve credit atomically before the AI call; refund below on failure.
     await reserve_ai_credit(org.id, db_session)
-
-    if not activity:
-        raise HTTPException(
-            status_code=404,
-            detail="Activity not found",
-        )
 
     # Get Activity Content Blocks
     content = activity.content
@@ -200,6 +200,12 @@ async def ai_send_activity_chat_message(
     )
     activity = (await db_session.execute(statement)).scalars().first()
 
+    if not activity:
+        raise HTTPException(
+            status_code=404,
+            detail="Activity not found",
+        )
+
     activity = ActivityRead.model_validate(activity)
 
     # Get the Course with authors
@@ -253,12 +259,6 @@ async def ai_send_activity_chat_message(
 
     # Reserve credit atomically before the AI call; refund below on failure.
     await reserve_ai_credit(course.org_id, db_session)
-
-    if not activity:
-        raise HTTPException(
-            status_code=404,
-            detail="Activity not found",
-        )
 
     # Get Activity Content Blocks
     content = activity.content

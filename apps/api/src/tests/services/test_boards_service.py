@@ -19,6 +19,7 @@ from src.db.boards import (
 )
 from src.db.resource_authors import ResourceAuthor
 from src.db.users import User
+from src.db.user_organizations import UserOrganization
 from src.services.boards.boards import (
     add_board_member,
     add_board_members_batch,
@@ -37,7 +38,7 @@ from src.services.boards.boards import (
 )
 
 
-async def _make_user(db, *, id, email, username):
+async def _make_user(db, *, id, email, username, org=None):
     user = User(
         id=id,
         username=username,
@@ -52,6 +53,12 @@ async def _make_user(db, *, id, email, username):
     db.add(user)
     await db.commit()
     await db.refresh(user)
+    if org is not None:
+        db.add(UserOrganization(
+            user_id=user.id, org_id=org.id, role_id=3,
+            creation_date=str(datetime.now()), update_date=str(datetime.now()),
+        ))
+        await db.commit()
     return user
 
 
@@ -165,9 +172,9 @@ class TestBoardsService:
     ):
         board = await _make_board(db, org, admin_user)
         await _make_member(db, board.id, admin_user.id, BoardMemberRole.OWNER)
-        await _make_user(db, id=21, email="first@test.com", username="first")
-        await _make_user(db, id=22, email="second@test.com", username="second")
-        await _make_user(db, id=23, email="third@test.com", username="third")
+        await _make_user(db, id=21, email="first@test.com", username="first", org=org)
+        await _make_user(db, id=22, email="second@test.com", username="second", org=org)
+        await _make_user(db, id=23, email="third@test.com", username="third", org=org)
         member_create = BoardMemberCreate(user_id=21, role=BoardMemberRole.EDITOR)
         member_create.role = BoardMemberRole.EDITOR
         batch_create = BoardMemberBatchCreate(
@@ -212,7 +219,7 @@ class TestBoardsService:
     ):
         board = await _make_board(db, org, admin_user)
         await _make_member(db, board.id, admin_user.id, BoardMemberRole.OWNER)
-        await _make_user(db, id=30, email="dup@test.com", username="dup")
+        await _make_user(db, id=30, email="dup@test.com", username="dup", org=org)
         await _make_member(db, board.id, 30)
 
         with patch(
@@ -232,10 +239,10 @@ class TestBoardsService:
 
         for user_id in range(31, 39):
             await _make_user(
-                db, id=user_id, email=f"user{user_id}@test.com", username=f"user{user_id}"
+                db, id=user_id, email=f"user{user_id}@test.com", username=f"user{user_id}", org=org
             )
             await _make_member(db, board.id, user_id)
-        await _make_user(db, id=39, email="overflow@test.com", username="overflow")
+        await _make_user(db, id=39, email="overflow@test.com", username="overflow", org=org)
 
         with patch(
             "src.services.boards.boards.check_resource_access",
@@ -450,12 +457,12 @@ class TestBoardsService:
         continue` branch in add_board_members_batch)."""
         board = await _make_board(db, org, admin_user, board_uuid="board_batch_dup")
         existing_user = await _make_user(
-            db, id=301, email="existing301@test.com", username="existing301"
+            db, id=301, email="existing301@test.com", username="existing301", org=org
         )
         await _make_member(db, board.id, existing_user.id)
 
         new_user = await _make_user(
-            db, id=302, email="new302@test.com", username="new302"
+            db, id=302, email="new302@test.com", username="new302", org=org
         )
         batch = BoardMemberBatchCreate(
             members=[
@@ -475,6 +482,63 @@ class TestBoardsService:
         # Only the non-duplicate new_user was added
         assert len(result) == 1
         assert result[0].user_id == new_user.id
+
+    @pytest.mark.asyncio
+    async def test_add_board_member_rejects_invalid_role(
+        self, db, org, admin_user, mock_request
+    ):
+        """Lines 513-514: an out-of-enum role string is rejected with 400 by
+        _validate_member_role before any persistence."""
+        board = await _make_board(db, org, admin_user, board_uuid="board_bad_role")
+        await _make_member(db, board.id, admin_user.id, BoardMemberRole.OWNER)
+        await _make_user(db, id=50, email="badrole@test.com", username="badrole", org=org)
+
+        bad_member = BoardMemberCreate(user_id=50, role=BoardMemberRole.EDITOR)
+        # Schema types `role` as a bare str, so an arbitrary value bypasses
+        # validation until _validate_member_role.
+        bad_member.role = "superuser"
+
+        with patch(
+            "src.services.boards.boards.check_resource_access",
+            new_callable=AsyncMock,
+        ), patch(
+            "src.services.boards.boards.require_org_membership",
+            new_callable=AsyncMock,
+        ):
+            with pytest.raises(HTTPException) as exc_info:
+                await add_board_member(
+                    mock_request, board.board_uuid, bad_member, admin_user, db
+                )
+        assert exc_info.value.status_code == 400
+        assert "Invalid board member role" in exc_info.value.detail
+
+    @pytest.mark.asyncio
+    async def test_batch_add_member_rejects_invalid_role(
+        self, db, org, admin_user, mock_request
+    ):
+        """Lines 513-514 via the batch path: an out-of-enum role string is
+        rejected with 400 by _validate_member_role."""
+        board = await _make_board(db, org, admin_user, board_uuid="board_bad_role_batch")
+        await _make_user(db, id=51, email="badrole51@test.com", username="badrole51", org=org)
+
+        batch = BoardMemberBatchCreate(
+            members=[BoardMemberCreate(user_id=51, role=BoardMemberRole.EDITOR)]
+        )
+        batch.members[0].role = "godmode"
+
+        with patch(
+            "src.services.boards.boards.check_resource_access",
+            new_callable=AsyncMock,
+        ), patch(
+            "src.services.boards.boards.require_org_membership",
+            new_callable=AsyncMock,
+        ):
+            with pytest.raises(HTTPException) as exc_info:
+                await add_board_members_batch(
+                    mock_request, board.board_uuid, batch, admin_user, db
+                )
+        assert exc_info.value.status_code == 400
+        assert "Invalid board member role" in exc_info.value.detail
 
     @pytest.mark.asyncio
     async def test_check_board_membership_rbac_fallback(

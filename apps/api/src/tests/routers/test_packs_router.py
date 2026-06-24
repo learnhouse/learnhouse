@@ -10,6 +10,7 @@ from httpx import ASGITransport, AsyncClient
 
 from src.core.events.database import get_db_session
 from src.db.packs import OrgPackRead
+from src.db.users import APITokenUser
 from src.routers.orgs.packs import internal_router, router as packs_router
 from src.security.auth import get_current_user
 
@@ -225,3 +226,23 @@ class TestOrgPacksRouter:
         response = await client.get("/api/v1/orgs/999/packs/summary")
 
         assert response.status_code == 404
+
+    async def test_get_org_packs_api_token_wrong_org(self, app, client, org):
+        # An API token scoped to a different org must not act against this org,
+        # even before the admin check runs.
+        app.dependency_overrides[get_current_user] = lambda: APITokenUser(
+            org_id=org.id + 999, created_by_user_id=1
+        )
+        response = await client.get(f"/api/v1/orgs/{org.id}/packs")
+
+        assert response.status_code == 403
+        assert "not scoped" in response.json()["detail"]
+
+    async def test_get_org_pack_summary_api_token_wrong_org(self, app, client, org):
+        app.dependency_overrides[get_current_user] = lambda: APITokenUser(
+            org_id=org.id + 999, created_by_user_id=1
+        )
+        response = await client.get(f"/api/v1/orgs/{org.id}/packs/summary")
+
+        assert response.status_code == 403
+        assert "not scoped" in response.json()["detail"]

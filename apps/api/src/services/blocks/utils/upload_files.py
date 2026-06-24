@@ -41,10 +41,15 @@ async def upload_file_and_return_file_object(
         filename_prefix=f"block_{file_id}"
     )
 
-    # Get file metadata
-    file.file.seek(0)
-    content = await file.read()
-    
+    # Get file metadata. Use the size already known from the multipart parse
+    # instead of reading the whole file into memory again (videos can be up to
+    # several GB, so a second full read would double peak memory usage).
+    if file.size is not None:
+        file_size = file.size
+    else:
+        file.file.seek(0)
+        file_size = len(await file.read())
+
     # Extract actual name on disk and extension
     parts = filename.rsplit(".", 1)
     name_on_disk = parts[0]
@@ -53,8 +58,8 @@ async def upload_file_and_return_file_object(
     return BlockFile(
         file_id=name_on_disk,
         file_format=ext,
-        file_name=file.filename,
-        file_size=len(content),
-        file_type=file.content_type,
+        file_name=file.filename or name_on_disk,
+        file_size=file_size,
+        file_type=file.content_type or "application/octet-stream",
         activity_uuid=activity_uuid,
     )

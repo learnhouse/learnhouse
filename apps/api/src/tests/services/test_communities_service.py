@@ -204,6 +204,7 @@ class TestCommunitiesService:
             UserGroupUser(
                 usergroup_id=usergroup.id,
                 user_id=regular_user.id,
+                org_id=usergroup.org_id,
                 creation_date=str(datetime.now()),
                 update_date=str(datetime.now()),
             )
@@ -532,6 +533,22 @@ class TestCommunitiesService:
         with pytest.raises(HTTPException) as rights_exc:
             await get_community_user_rights(mock_request, "missing", admin_user, db)
         assert rights_exc.value.status_code == 404
+
+    @pytest.mark.asyncio
+    async def test_get_communities_by_org_missing_org_raises_404(
+        self, db, org, admin_user, mock_request
+    ):
+        """Covers communities service line 154: a non-superadmin listing
+        communities for an org_id that resolves to no Organization gets a 404
+        rather than silently dropping into the restricted member view."""
+        with patch(
+            "src.services.communities.communities.is_user_superadmin",
+            return_value=False,
+        ):
+            with pytest.raises(HTTPException) as exc:
+                await get_communities_by_org(mock_request, 987654, admin_user, db)
+        assert exc.value.status_code == 404
+        assert exc.value.detail == "Organization not found"
 
 
 class TestDiscussionsService:

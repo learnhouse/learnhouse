@@ -1,6 +1,6 @@
 from typing import Optional
 from pydantic import BaseModel
-from sqlalchemy import JSON, Column, ForeignKey, Integer
+from sqlalchemy import JSON, Column, ForeignKey, Integer, UniqueConstraint
 from sqlmodel import Field, SQLModel
 from enum import Enum
 
@@ -19,7 +19,18 @@ class StatusEnum(str, Enum):
 
 
 class TrailRun(SQLModel, table=True):
-    __table_args__ = {"extend_existing": True}
+    # A user can have at most one run per course inside a trail. The service
+    # does a check-then-insert (select existing, else create), which races
+    # under concurrent requests (e.g. double-clicking "enroll"), producing
+    # duplicate runs that corrupt progress display and make .first() lookups
+    # nondeterministic. The DB constraint closes that window. (Requires a
+    # matching migration to apply to the live DB.)
+    __table_args__ = (
+        UniqueConstraint(
+            "trail_id", "course_id", "user_id", name="uq_trailrun_trail_course_user"
+        ),
+        {"extend_existing": True},
+    )
     id: Optional[int] = Field(default=None, primary_key=True)
     data: dict = Field(default_factory=dict, sa_column=Column(JSON))
     status: StatusEnum = StatusEnum.STATUS_IN_PROGRESS

@@ -699,7 +699,7 @@ async def complete_course(
         "completed_count": new_count,
         "already_completed_count": len(already_completed),
         "total_activities": len(activity_ids),
-        "course_completed": True,
+        "course_completed": course_completed,
         "certificate_awarded": course_completed,
     }
 
@@ -1897,6 +1897,12 @@ async def change_user_role(
     )).scalars().first()
     if not membership:
         raise HTTPException(status_code=404, detail="User not in org")
+
+    # Defense-in-depth: API tokens must never be able to mint Admin/Maintainer
+    # or grant a role above their creator's privilege — same guard enforced at
+    # provisioning time. Without this, a low-privilege token could escalate any
+    # member to org Admin via this endpoint.
+    await _check_token_can_assign_role(token_user, role, db_session)
 
     if membership.role_id == ADMIN_ROLE_ID and new_role_id != ADMIN_ROLE_ID:
         admin_count = len((await db_session.execute(

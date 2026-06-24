@@ -243,8 +243,12 @@ Please modify the HTML code above according to the user's request. Output ONLY t
 
         save_playground_session(session)
 
-    except Exception as e:
-        yield f"Error: {str(e)}"
+    except Exception:
+        # Never surface raw exception text to the client stream: it can contain
+        # internal details (provider error bodies, keys, stack context). Log it
+        # server-side and emit a generic message instead.
+        logger.exception("Playground generation stream failed")
+        yield "Error: An internal error occurred while generating content."
 
 
 def extract_html_from_response(response: str) -> str:

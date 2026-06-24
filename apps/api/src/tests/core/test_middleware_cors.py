@@ -61,6 +61,31 @@ class TestGetCorsOriginRegex:
         ):
             assert get_cors_origin_regex() == configured
 
+    def test_multi_tenancy_falls_back_to_domain_when_regexp_empty(self):
+        # cors.py:80-82 - with no allowed_regexp configured, multi mode must
+        # derive a domain-and-subdomain regex from the base domain rather than
+        # returning an empty value (which would take the SaaS frontend offline).
+        with patch(
+            "src.core.middleware.cors.get_learnhouse_config",
+            return_value=_config("multi", allowed_regexp="", domain="learnhouse.io"),
+        ):
+            regex = get_cors_origin_regex()
+            assert re.fullmatch(regex, "https://learnhouse.io")
+            assert re.fullmatch(regex, "https://acme.learnhouse.io")
+            assert re.fullmatch(regex, "https://deep.sub.learnhouse.io:8443")
+            assert not re.fullmatch(regex, "https://evil.example.org")
+
+    def test_multi_tenancy_falls_back_to_localhost_when_regexp_and_domain_empty(self):
+        # cors.py:83 - with neither allowed_regexp nor domain configured, multi
+        # mode falls back to the localhost regex.
+        with patch(
+            "src.core.middleware.cors.get_learnhouse_config",
+            return_value=_config("multi", allowed_regexp="", domain=""),
+        ):
+            regex = get_cors_origin_regex()
+            assert regex == _SINGLE_TENANCY_LOCALHOST_REGEX
+            assert re.fullmatch(regex, "http://localhost:3000")
+
 
 class TestSingleTenancyRegex:
     """The single-mode regex must accept the configured operator origin(s)

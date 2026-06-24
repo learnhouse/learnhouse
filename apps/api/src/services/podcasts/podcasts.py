@@ -681,8 +681,14 @@ async def update_podcast(
             )
 
     # Update only the fields that were passed in
+    # Skip empty strings for the thumbnail field to prevent accidental clearing
+    # (PodcastUpdate.thumbnail_image defaults to "", not None, so an unchanged
+    # value would otherwise wipe the existing thumbnail on every partial update).
+    file_fields = {"thumbnail_image"}
     for var, value in vars(podcast_object).items():
         if value is not None:
+            if var in file_fields and value == "":
+                continue
             setattr(podcast, var, value)
 
     # Complete the podcast object
@@ -848,7 +854,7 @@ async def get_podcast_user_rights(
         rights["roles"]["is_instructor"] = True
 
     has_user_permissions = await authorization_verify_based_on_roles(
-        request, current_user.id, "read", podcast_uuid, db_session
+        request, acting_user_id, "read", podcast_uuid, db_session
     )
 
     if has_user_permissions:

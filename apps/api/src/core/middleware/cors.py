@@ -36,7 +36,11 @@ def _single_tenancy_origin_regex(config) -> str:
         config.hosting_config.domain,
     ):
         host = _host_from(cfg_value)
-        if host and "localhost" not in host:
+        # Exclude only the loopback hosts themselves (added separately below).
+        # Use an exact match, not a substring check, so a legitimate operator
+        # domain that merely contains "localhost" (e.g. "my-localhost-app.com")
+        # is not silently dropped — which would break CORS for their frontend.
+        if host and host not in ("localhost", "127.0.0.1"):
             hosts.add(host)
 
     if not hosts:
@@ -65,7 +69,18 @@ def get_cors_origin_regex() -> str:
     config = get_learnhouse_config()
     if config.hosting_config.tenancy == "single":
         return _single_tenancy_origin_regex(config)
-    return config.hosting_config.allowed_regexp
+    # Multi-tenancy: use the configured regexp. If the operator left it empty
+    # (it is not required for multi mode, only the base domain is), fall back to
+    # a domain-and-subdomain regex derived from the configured domain. Returning
+    # an empty/None value here makes CORSMiddleware reject every cross-origin
+    # request with credentials, taking the whole SaaS frontend offline.
+    allowed_regexp = config.hosting_config.allowed_regexp
+    if allowed_regexp:
+        return allowed_regexp
+    domain = _host_from(config.hosting_config.domain)
+    if domain:
+        return rf"^https?://(?:[a-z0-9-]+\.)*{re.escape(domain)}(:\d+)?$"
+    return _SINGLE_TENANCY_LOCALHOST_REGEX
 
 
 def configure_cors(app: FastAPI) -> None:

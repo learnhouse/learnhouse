@@ -229,7 +229,8 @@ async def create_user_with_invite(
             str(user.id),
         )
 
-    await increase_feature_usage("members", org_id, db_session)
+    # NOTE: members usage is already incremented inside create_user(); do not
+    # increment again here or every invited signup double-counts the member quota.
 
     # Mark the invitation as no longer pending in Redis
     try:
@@ -376,7 +377,7 @@ async def update_user(
     conflict = (await db_session.execute(
         select(User).where(
             ((User.username == user_object.username) | (User.email == user_object.email))
-            & (User.id != current_user.id)
+            & (User.id != user.id)
         )
     )).scalars().first()
 

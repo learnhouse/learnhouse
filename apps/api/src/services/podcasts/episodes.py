@@ -20,6 +20,7 @@ from fastapi import HTTPException, Request, UploadFile
 from datetime import datetime
 from src.security.rbac import check_resource_access, AccessAction
 from src.security.rbac.constants import ADMIN_OR_MAINTAINER_ROLE_IDS
+from src.security.features_utils.usage import check_feature_access
 from src.services.webhooks.dispatch import dispatch_webhooks
 from src.security.superadmin import is_user_superadmin
 
@@ -130,9 +131,13 @@ async def get_episodes_by_podcast(
     # Check if user can view unpublished episodes
     can_view_unpublished = False
     if include_unpublished and not isinstance(current_user, AnonymousUser):
+        # Resolve API-token callers to their creator (tokens have id=0) so the
+        # author / org-role checks run against a real user_id instead of 0.
+        acting_user_id = resolve_acting_user_id(current_user)
+
         author_statement = select(ResourceAuthor).where(
             ResourceAuthor.resource_uuid == podcast.podcast_uuid,
-            ResourceAuthor.user_id == current_user.id,
+            ResourceAuthor.user_id == acting_user_id,
             ResourceAuthor.authorship_status == ResourceAuthorshipStatusEnum.ACTIVE
         )
         is_author = (await db_session.execute(author_statement)).scalars().first()
@@ -144,7 +149,7 @@ async def get_episodes_by_podcast(
                 select(Role)
                 .join(UserOrganization)
                 .where(UserOrganization.org_id == podcast.org_id)
-                .where(UserOrganization.user_id == current_user.id)
+                .where(UserOrganization.user_id == acting_user_id)
             )
             user_roles = (await db_session.execute(role_statement)).scalars().all()
             for role in user_roles:
@@ -186,6 +191,11 @@ async def create_episode(
 
     # RBAC check
     await check_resource_access(request, db_session, current_user, podcast.podcast_uuid, AccessAction.CREATE)
+
+    # Plan access check (podcasts require standard+ plan). Without this, an org
+    # whose plan no longer includes podcasts could keep adding episodes to
+    # existing podcasts, bypassing the plan gate enforced on podcast creation.
+    await check_feature_access("podcasts", podcast.org_id, db_session)
 
     # Get organization
     org_statement = select(Organization).where(Organization.id == podcast.org_id)

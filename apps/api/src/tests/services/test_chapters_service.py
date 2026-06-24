@@ -368,6 +368,24 @@ class TestCourseChapters:
         assert activity.activity_uuid in legacy_result["activities"]
 
     @pytest.mark.asyncio
+    async def test_get_course_chapters_missing_course_raises_404(
+        self, db, admin_user, mock_request
+    ):
+        # chapters.py:251 - when no `course` is supplied and the course_id does
+        # not exist, the lookup returns None and the function must raise a clean
+        # 404 instead of dereferencing None (which would 500).
+        with pytest.raises(HTTPException) as exc_info:
+            await get_course_chapters(
+                mock_request,
+                999999,
+                db,
+                admin_user,
+                with_unpublished_activities=False,
+            )
+
+        assert exc_info.value.status_code == 404
+
+    @pytest.mark.asyncio
     async def test_deprecated_get_course_chapters_missing_course_raises(
         self, db, admin_user, mock_request
     ):
