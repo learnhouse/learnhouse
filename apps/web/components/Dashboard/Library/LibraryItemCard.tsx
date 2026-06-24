@@ -1,10 +1,14 @@
 'use client'
 import { useOrg } from '@components/Contexts/OrgContext'
+import { useLHSession } from '@components/Contexts/LHSessionContext'
 import ConfirmationModal from '@components/Objects/StyledElements/ConfirmationModal/ConfirmationModal'
 import Modal from '@components/Objects/StyledElements/Modal/Modal'
 import ManageAccessPopover from '@components/Dashboard/Library/ManageAccessPopover'
 import MediaPreview from '@components/Dashboard/Library/MediaPreview'
+import { resourceHref, safeExternalUrl } from '@components/Dashboard/Library/resourceLink'
+import { shareMediaLink } from '@components/Dashboard/Library/shareFolder'
 import { getMediaFileDirectory } from '@services/media/media-resource'
+import Link from 'next/link'
 import {
   MicrophoneStage,
   ChatsCircle,
@@ -71,6 +75,8 @@ type Props = {
 export default function LibraryItemCard({ item, orgslug, onRemove }: Props) {
   const { t } = useTranslation()
   const org = useOrg() as any
+  const session = useLHSession() as any
+  const access_token = session?.data?.tokens?.access_token
   const [isMenuOpen, setIsMenuOpen] = React.useState(false)
   const [accessOpen, setAccessOpen] = React.useState(false)
 
@@ -81,12 +87,18 @@ export default function LibraryItemCard({ item, orgslug, onRemove }: Props) {
   const Icon = typeIcon(type, resource)
   const isUploadMedia = type === 'media' && resource.media_type !== 'EMBED'
 
-  let href: string | null = null
+  let href: string | null = null          // external (media file / embed url)
+  let internalHref: string | null = null  // resource detail page (same-tab)
   let fileUrl: string | null = null
   if (type === 'media') {
-    if (resource.file_id) fileUrl = getMediaFileDirectory(org?.org_uuid, resource.media_uuid || item.resource_uuid, resource.file_id)
-    if (resource.media_type === 'EMBED' && resource.url) href = resource.url
+    // file_id is no longer exposed; uploaded media is served via the authed
+    // /media/{uuid}/file endpoint keyed only by media_uuid.
+    if (isUploadMedia) fileUrl = getMediaFileDirectory(org?.org_uuid, resource.media_uuid || item.resource_uuid)
+    if (resource.media_type === 'EMBED' && resource.url) href = safeExternalUrl(resource.url)
     else if (fileUrl) href = fileUrl
+  } else {
+    // Podcasts, communities, boards, playgrounds → their dashboard page.
+    internalHref = resourceHref(type, resource, orgslug, 'dashboard')
   }
   const typeLabel = t(`library.tabs.${type}`)
 
@@ -104,7 +116,7 @@ export default function LibraryItemCard({ item, orgslug, onRemove }: Props) {
         <h3 className="text-base font-bold text-gray-900 leading-tight line-clamp-1">{name}</h3>
         <div className="pt-1.5 flex items-center justify-between border-t border-gray-100">
           <span className="text-[10px] font-bold uppercase tracking-wider text-gray-400">{typeLabel}</span>
-          {href && (
+          {(href || internalHref) && (
             <span className="text-[10px] font-bold uppercase tracking-wider text-gray-400 inline-flex items-center gap-1">
               {isUploadMedia ? t('media.download') : t('library.open_resource')}
               {isUploadMedia ? <DownloadSimple size={11} /> : <ArrowSquareOut size={11} />}
@@ -130,6 +142,23 @@ export default function LibraryItemCard({ item, orgslug, onRemove }: Props) {
                 <a href={href} target="_blank" rel="noopener noreferrer" className="flex items-center cursor-pointer">
                   {isUploadMedia ? (<><DownloadSimple className="mr-2 h-4 w-4" /> {t('media.download')}</>) : (<><ArrowSquareOut className="mr-2 h-4 w-4" /> {t('library.open')}</>)}
                 </a>
+              </DropdownMenuItem>
+            )}
+            {isUploadMedia && (
+              <DropdownMenuItem asChild>
+                <button
+                  onClick={() =>
+                    shareMediaLink(
+                      resource.media_uuid || item.resource_uuid,
+                      access_token,
+                      t('library.link_copied'),
+                      t('library.link_copy_error'),
+                    )
+                  }
+                  className="w-full text-left flex items-center px-2 py-1.5 text-sm text-gray-700 hover:bg-gray-50 rounded-md transition-colors"
+                >
+                  <LinkSimple className="mr-2 h-4 w-4" /> {t('library.copy_link')}
+                </button>
               </DropdownMenuItem>
             )}
             {type === 'media' && (
@@ -161,6 +190,10 @@ export default function LibraryItemCard({ item, orgslug, onRemove }: Props) {
         <a href={href} target="_blank" rel="noopener noreferrer" className="block">
           {body}
         </a>
+      ) : internalHref ? (
+        <Link href={internalHref} className="block">
+          {body}
+        </Link>
       ) : (
         <div>{body}</div>
       )}

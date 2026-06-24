@@ -218,12 +218,10 @@ export default function MediaPreview({
     return <EmbedPreview url={url} video={isVimeo(url)} />
   }
 
-  // UPLOAD: build the file url.
+  // UPLOAD: build the file url. file_id is no longer exposed by the API; the
+  // authed /media/{uuid}/file endpoint is keyed only by media_uuid.
   const mediaUuid = resource?.media_uuid || resourceUuid
-  const fileUrl =
-    resource?.file_id && orgUuid && mediaUuid
-      ? getMediaFileDirectory(orgUuid, mediaUuid, resource.file_id)
-      : null
+  const fileUrl = mediaUuid ? getMediaFileDirectory(orgUuid, mediaUuid) : null
   const fmt = (resource?.file_format || '').toLowerCase()
 
   if (fileUrl && IMAGE_FORMATS.includes(fmt)) {
