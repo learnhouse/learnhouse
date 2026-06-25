@@ -184,6 +184,7 @@ def get_language_name(language_code: str) -> str:
         "id": "Indonesian",
         "th": "Thai",
         "bn": "Bengali",
+        "fa": "Persian",
     }
     return language_names.get(language_code, "English")
 
