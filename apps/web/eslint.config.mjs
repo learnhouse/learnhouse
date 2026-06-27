@@ -6,6 +6,20 @@ export default [
     js.configs.recommended,
     ...nextConfig,
     {
+        // DOM lib type-only names (used purely in TS type positions, with no
+        // runtime global counterpart) are otherwise reported as `no-undef`
+        // false positives. Declaring them keeps type annotations like
+        // `HeadersInit` / `RequestInit` lint-clean.
+        languageOptions: {
+            globals: {
+                HeadersInit: "readonly",
+                BodyInit: "readonly",
+                RequestInit: "readonly",
+                ResponseInit: "readonly",
+                RequestInfo: "readonly",
+                RequestCredentials: "readonly",
+            },
+        },
         plugins: {
             "unused-imports": unusedImports,
         },

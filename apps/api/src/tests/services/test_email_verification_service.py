@@ -1,6 +1,7 @@
 """Tests for src/services/users/email_verification.py."""
 
 import json
+import os
 from datetime import datetime, timezone
 from types import SimpleNamespace
 from unittest.mock import AsyncMock, MagicMock, Mock, patch
@@ -180,6 +181,44 @@ class TestEmailVerificationService:
         assert send_exc.value.status_code == 500
 
     @pytest.mark.asyncio
+    async def test_send_verification_email_platform_uses_platform_url(
+        self, mock_request, db
+    ):
+        """Org-less (platform) signup without a trusted origin builds the link on
+        LEARNHOUSE_PLATFORM_URL, not the frontend_domain fallback."""
+        user = await _make_user(
+            db,
+            id=23,
+            username="platformuser",
+            email="platformuser@test.com",
+            user_uuid="user_platform",
+        )
+        fake_redis = Mock()
+        fake_redis.setex = Mock()
+
+        with patch.dict(
+            os.environ, {"LEARNHOUSE_PLATFORM_URL": "https://www.learnhouse.app"}
+        ), patch(
+            "src.services.users.email_verification.get_redis_connection",
+            return_value=fake_redis,
+        ), patch(
+            "src.services.users.email_verification.generate_verification_token",
+            return_value="verification-token",
+        ), patch(
+            "src.services.users.email_verification.get_base_url_from_request",
+            return_value="https://learnhouse.io",
+        ), patch(
+            "src.services.users.email_verification.send_email_verification_email",
+            return_value=True,
+        ) as mock_send:
+            result = await send_verification_email(mock_request, db, user, None)
+
+        assert result == "Verification email sent"
+        # mock_request has no Origin/Referer, so the trusted-origin step yields
+        # nothing and the platform URL must win over the (patched) fallback.
+        assert mock_send.call_args.kwargs["base_url"] == "https://www.learnhouse.app"
+
+    @pytest.mark.asyncio
     async def test_verify_email_token_paths(
         self, mock_request, db, org, regular_user
     ):
@@ -262,7 +301,7 @@ class TestEmailVerificationService:
             "src.services.users.email_verification.dispatch_webhooks",
             new_callable=AsyncMock,
         ) as mock_dispatch:
-            result = await verify_email_token(
+            returned_user, result = await verify_email_token(
                 mock_request,
                 db,
                 base_token,
@@ -270,6 +309,7 @@ class TestEmailVerificationService:
                 org.org_uuid,
             )
         assert result == "Email verified successfully"
+        assert returned_user.user_uuid == user.user_uuid
         mock_dispatch.assert_awaited_once()
         assert (await db.execute(
             select(User).where(User.user_uuid == user.user_uuid)
@@ -309,7 +349,7 @@ class TestEmailVerificationService:
             "src.services.users.email_verification.get_redis_connection",
             return_value=fake_redis,
         ):
-            already_verified = await verify_email_token(
+            already_verified_user, already_verified = await verify_email_token(
                 mock_request,
                 db,
                 token,
@@ -317,6 +357,7 @@ class TestEmailVerificationService:
                 org.org_uuid,
             )
         assert already_verified == "Email already verified"
+        assert already_verified_user.user_uuid == verified_user.user_uuid
         assert fake_redis.delete.called
 
         fake_redis.get.return_value = None
@@ -353,7 +394,7 @@ class TestEmailVerificationService:
             "src.services.users.email_verification.dispatch_webhooks",
             new_callable=AsyncMock,
         ) as mock_dispatch:
-            result = await verify_email_token(
+            _result_user, result = await verify_email_token(
                 mock_request,
                 db,
                 token,
