@@ -12,6 +12,7 @@ import { CreateDiscussionModal } from '@components/Objects/Modals/Communities/Cr
 import { Community } from '@services/communities/communities'
 import { DiscussionWithAuthor } from '@services/communities/discussions'
 import { useMediaQuery } from 'usehooks-ts'
+import { useTrackView, AnalyticsEvent } from '@services/analytics'
 
 interface CommunityClientProps {
   community: Community
@@ -28,6 +29,11 @@ const CommunityClient = ({
 }: CommunityClientProps) => {
   const [isCreateDiscussionModalOpen, setIsCreateDiscussionModalOpen] = useState(false)
   const isMobile = useMediaQuery('(max-width: 768px)')
+
+  useTrackView(AnalyticsEvent.CommunityViewed, {
+    is_public: community.public,
+    initial_discussion_count: initialDiscussions.length,
+  })
 
   return (
     <>

@@ -26,6 +26,7 @@ import { useTranslation } from 'react-i18next'
 import { changeLanguage } from '@/lib/i18n'
 import { AVAILABLE_LANGUAGES } from '@/lib/languages'
 import LanguageSwitcher from '@components/Utils/LanguageSwitcher'
+import { useLHAnalytics, AnalyticsEvent } from '@services/analytics'
 import { getMenuColorClasses } from '@services/utils/ts/colorUtils'
 
 interface RoleInfo {
@@ -46,6 +47,7 @@ export const HeaderProfileBox = ({ primaryColor = '' }: { primaryColor?: string 
   const { isAdmin, loading, userRoles, rights } = useAdminStatus()
   const org = useOrg() as any
   const { t, i18n } = useTranslation()
+  const { track } = useLHAnalytics()
   const colors = getMenuColorClasses(primaryColor)
 
 
@@ -259,7 +261,10 @@ export const HeaderProfileBox = ({ primaryColor = '' }: { primaryColor?: string 
                 </DropdownMenuSub>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem
-                  onClick={() => signOut({ callbackUrl: '/' })}
+                  onClick={() => {
+                    track(AnalyticsEvent.LogoutClicked, { source: 'header_profile' })
+                    signOut({ callbackUrl: '/' })
+                  }}
                   className="flex items-center space-x-2 text-red-600 focus:text-red-600"
                 >
                   <SignOut size={16} weight="fill" />

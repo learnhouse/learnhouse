@@ -6,6 +6,7 @@ import { queryKeys } from '@/lib/query/keys'
 import { getBoard } from '@services/boards/boards'
 import { getOrganizationContextInfo } from '@services/organizations/orgs'
 import BoardCanvas from '@components/Dashboard/Boards/BoardCanvas'
+import { useTrackView, AnalyticsEvent } from '@services/analytics'
 
 interface BoardCanvasClientProps {
   boardUuid: string
@@ -29,6 +30,13 @@ export default function BoardCanvasClient({ boardUuid, accessToken, orgslug, use
     enabled: !!orgslug,
     staleTime: 60_000,
   })
+
+  useTrackView(
+    AnalyticsEvent.BoardViewed,
+    { is_public: board?.public ?? false },
+    !isLoading && !!board,
+    'learner',
+  )
 
   if (isLoading) {
     return (

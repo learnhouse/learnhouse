@@ -6,6 +6,7 @@ import { usePlan } from '@components/Hooks/usePlan'
 import { useOrg } from '@components/Contexts/OrgContext'
 import { getUpgradeUrl } from '@services/config/config'
 import { useTranslation } from 'react-i18next'
+import { useLHAnalytics, AnalyticsEvent } from '@services/analytics'
 import UpgradeModal from './UpgradeModal'
 
 export default function FreePlanUpgradeBanner() {
@@ -14,6 +15,7 @@ export default function FreePlanUpgradeBanner() {
   const org = useOrg() as any
   const upgradeUrl = getUpgradeUrl(org?.slug || 'default')
   const [modalOpen, setModalOpen] = useState(false)
+  const { track } = useLHAnalytics('dashboard')
 
   if (plan !== 'free' || !upgradeUrl) return null
 
@@ -33,7 +35,10 @@ export default function FreePlanUpgradeBanner() {
           {t('banner.free_plan_upgrade')}
         </p>
         <button
-          onClick={() => setModalOpen(true)}
+          onClick={() => {
+            track(AnalyticsEvent.UpgradeBannerCtaClicked, { upgrade_url_present: !!upgradeUrl })
+            setModalOpen(true)
+          }}
           className="relative text-xs font-semibold text-white bg-sky-600 hover:bg-sky-700 px-3 py-1 rounded-md flex-shrink-0 transition-colors cursor-pointer"
         >
           {t('banner.free_plan_upgrade_button')}

@@ -20,6 +20,7 @@ import {
   DialogTitle,
 } from '@components/ui/dialog'
 import { cn } from '@/lib/utils'
+import { useLHAnalytics, AnalyticsEvent } from '@services/analytics'
 import { useTranslation } from 'react-i18next'
 import { getAPIUrl } from '@services/config/config'
 
@@ -39,6 +40,7 @@ export function FeedbackModal({
   userEmail,
 }: FeedbackModalProps) {
   const { t } = useTranslation()
+  const { track } = useLHAnalytics()
   const [feedbackMessage, setFeedbackMessage] = useState('')
   const [feedbackSubmitting, setFeedbackSubmitting] = useState(false)
   const [feedbackSubmitted, setFeedbackSubmitted] = useState(false)
@@ -110,6 +112,11 @@ export function FeedbackModal({
         throw new Error(`Feedback submission failed: ${response.status}`)
       }
 
+      track(AnalyticsEvent.FeedbackSubmitted, {
+        reaction: feedbackReaction ?? 'none',
+        has_message: !!feedbackMessage.trim(),
+        attachment_count: feedbackImages.length,
+      })
       setFeedbackSubmitted(true)
       resetForm()
       setTimeout(() => {

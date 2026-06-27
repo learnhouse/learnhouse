@@ -39,7 +39,7 @@ import GeneralWrapperStyled from '@components/Objects/StyledElements/Wrappers/Ge
 import ActivityIndicators from '@components/Pages/Courses/ActivityIndicators'
 import UserAvatar from '@components/Objects/UserAvatar'
 import { useTranslation } from 'react-i18next'
-import { useAnalytics } from '@/hooks/useAnalytics'
+import { useLHAnalytics, AnalyticsEvent } from '@services/analytics'
 
 const ReactConfetti = dynamic(() => import('react-confetti'), { ssr: false })
 
@@ -246,7 +246,7 @@ function ActivityClient(props: ActivityClientProps) {
   const { contributorStatus } = useContributorStatus(courseuuid);
   const router = useRouter();
 
-  const { track } = useAnalytics()
+  const { track } = useLHAnalytics('learner')
   const activityStartTime = useRef(Date.now())
 
   // Track activity view on mount, time_on_activity on unmount
@@ -256,7 +256,7 @@ function ActivityClient(props: ActivityClientProps) {
   useEffect(() => {
     if (activityUuidForTracking && courseUuidForTracking) {
       activityStartTime.current = Date.now()
-      track('activity_view', {
+      track(AnalyticsEvent.ActivityViewed, {
         activity_uuid: activityUuidForTracking,
         course_uuid: courseUuidForTracking,
         activity_type: activityTypeForTracking,
@@ -266,7 +266,7 @@ function ActivityClient(props: ActivityClientProps) {
       if (activityUuidForTracking && courseUuidForTracking) {
         const seconds = Math.round((Date.now() - activityStartTime.current) / 1000)
         if (seconds > 0) {
-          track('time_on_activity', {
+          track(AnalyticsEvent.TimeOnActivity, {
             activity_uuid: activityUuidForTracking,
             course_uuid: courseUuidForTracking,
             seconds_spent: seconds,
@@ -1031,6 +1031,7 @@ export function MarkStatus(props: {
   const org = useOrg() as any;
   const { isUserPartOfTheOrg } = useOrgMembership();
   const queryClient = useQueryClient();
+  const { track } = useLHAnalytics('learner');
   const isMobile = useMediaQuery('(max-width: 768px)')
   const [isLoading, setIsLoading] = React.useState(false);
   const [showMarkedTooltip, setShowMarkedTooltip] = React.useState(false);
@@ -1132,6 +1133,20 @@ export function MarkStatus(props: {
       );
 
       await queryClient.invalidateQueries({ queryKey: queryKeys.trail.org(org?.id) });
+
+      track(AnalyticsEvent.ActivityMarkedComplete, {
+        activity_uuid: props.activity.activity_uuid,
+        course_uuid: props.course.course_uuid,
+        activity_type: props.activity.activity_type,
+        will_complete_course: willCompleteAll,
+        has_next_activity: !!nextActivity,
+      });
+      // North-star terminal event: the learner just finished the whole course.
+      if (willCompleteAll) {
+        track(AnalyticsEvent.CourseCompleted, {
+          course_uuid: props.course.course_uuid,
+        });
+      }
 
       const cleanCourseUuid = props.course.course_uuid.replace('course_', '');
       await queryClient.invalidateQueries({ queryKey: queryKeys.courses.meta(cleanCourseUuid) });

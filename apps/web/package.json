@@ -14,6 +14,7 @@
   },
   "dependencies": {
     "@codemirror/autocomplete": "^6.18.4",
+    "@codemirror/language": "^6.12.4",
     "@codemirror/lang-cpp": "^6.0.3",
     "@codemirror/lang-go": "^6.0.1",
     "@codemirror/lang-java": "^6.0.2",
@@ -104,6 +105,7 @@
     "next": "^16.2.9",
     "nextjs-toploader": "^3.9.17",
     "pdfjs-dist": "^6.0.227",
+    "posthog-js": "^1.395.0",
     "prosemirror-state": "^1.4.4",
     "qrcode": "^1.5.4",
     "re-resizable": "^6.11.2",

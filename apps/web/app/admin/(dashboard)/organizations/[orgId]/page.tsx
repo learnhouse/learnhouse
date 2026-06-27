@@ -34,6 +34,7 @@ import {
   ArrowClockwise,
   SlidersHorizontal,
 } from '@phosphor-icons/react'
+import { useLHAnalytics, AnalyticsEvent } from '@services/analytics'
 
 function getLogoUrl(orgUuid: string, logoImage: string): string {
   if (logoImage.startsWith('http')) return logoImage
@@ -889,6 +890,7 @@ function PlanTab({
   config: any
 }) {
   const queryClient = useQueryClient()
+  const { track } = useLHAnalytics('admin')
   const [selectedPlan, setSelectedPlan] = useState(currentPlan)
   const [saving, setSaving] = useState(false)
   const [saved, setSaved] = useState(false)
@@ -941,6 +943,10 @@ function PlanTab({
         return
       }
       setSaved(true)
+      track(AnalyticsEvent.OrganizationPlanUpdated, {
+        from_plan: currentPlan,
+        to_plan: selectedPlan,
+      })
       // Refresh org data so currentPlan updates
       queryClient.invalidateQueries({ queryKey: queryKeys.org.detail(orgId) })
       setTimeout(() => setSaved(false), 2000)

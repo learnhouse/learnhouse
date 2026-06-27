@@ -10,6 +10,7 @@ import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { queryKeys } from '@/lib/query/keys'
 import Link from 'next/link'
 import { useTranslation } from 'react-i18next'
+import { useLHAnalytics, AnalyticsEvent } from '@services/analytics'
 
 type OrgInviteCodeGenerateProps = {
     setInvitesModal: any
@@ -23,6 +24,7 @@ function OrgInviteCodeGenerate(props: OrgInviteCodeGenerateProps) {
     const queryClient = useQueryClient()
     const [mode, setMode] = React.useState<'normal' | 'usergroup'>('normal');
     const [usergroup_id, setUsergroup_id] = React.useState(0);
+    const { track } = useLHAnalytics('dashboard')
 
     const { data: usergroups } = useQuery({
         queryKey: queryKeys.usergroups.list(org?.id),
@@ -36,6 +38,7 @@ function OrgInviteCodeGenerate(props: OrgInviteCodeGenerateProps) {
         const ugId = mode === 'usergroup' && usergroup_id ? usergroup_id : undefined
         let res = await createInviteCode(org.id, session.data?.tokens?.access_token, ugId)
         if (res.status == 200) {
+            track(AnalyticsEvent.InviteCodeCreated, { mode, usergroup_id: ugId })
             queryClient.invalidateQueries({ queryKey: queryKeys.org.inviteCodes(org.id) })
             props.setInvitesModal(false)
         } else {

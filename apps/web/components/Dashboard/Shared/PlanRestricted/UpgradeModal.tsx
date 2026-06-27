@@ -1,6 +1,6 @@
 'use client'
 
-import React from 'react'
+import React, { useEffect } from 'react'
 import { motion, AnimatePresence } from 'motion/react'
 import {
   X,
@@ -24,6 +24,7 @@ import { getUpgradeUrl } from '@services/config/config'
 import { usePlan } from '@components/Hooks/usePlan'
 import PlanBadge from './PlanBadge'
 import { useTranslation } from 'react-i18next'
+import { useLHAnalytics, AnalyticsEvent } from '@services/analytics'
 
 const ease = [0.16, 1, 0.3, 1] as const
 
@@ -57,6 +58,14 @@ export default function UpgradeModal({ open, onClose }: UpgradeModalProps) {
   const org = useOrg() as any
   const upgradeUrl = getUpgradeUrl(org?.slug || 'default')
   const currentPlan = usePlan()
+  const { track } = useLHAnalytics('dashboard')
+
+  useEffect(() => {
+    if (open) {
+      track(AnalyticsEvent.UpgradeModalViewed, { source: 'free_plan_banner' })
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open])
 
   return (
     <AnimatePresence>
@@ -139,6 +148,7 @@ export default function UpgradeModal({ open, onClose }: UpgradeModalProps) {
                         href={upgradeUrl || '#'}
                         target="_blank"
                         rel="noopener noreferrer"
+                        onClick={() => track(AnalyticsEvent.UpgradePlanSelected, { selected_plan: 'standard' })}
                         className="mt-5 w-full flex items-center justify-center gap-2 py-2.5 text-xs font-semibold rounded-lg transition-colors bg-black hover:bg-gray-800 text-white"
                       >
                         {t('upgrade_modal.choose_plan', { plan: 'Standard' })}
@@ -185,6 +195,7 @@ export default function UpgradeModal({ open, onClose }: UpgradeModalProps) {
                         href={upgradeUrl || '#'}
                         target="_blank"
                         rel="noopener noreferrer"
+                        onClick={() => track(AnalyticsEvent.UpgradePlanSelected, { selected_plan: 'pro' })}
                         className="mt-5 w-full flex items-center justify-center gap-2 py-2.5 text-xs font-semibold rounded-lg transition-colors bg-black hover:bg-gray-800 text-white"
                       >
                         {t('upgrade_modal.choose_plan', { plan: 'Pro' })}

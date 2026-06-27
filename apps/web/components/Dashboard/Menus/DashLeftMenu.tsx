@@ -75,11 +75,13 @@ import { getAssignmentsFromACourse } from '@services/courses/assignments'
 import { getDeploymentMode } from '@services/config/config'
 import PlanBadge from '@components/Dashboard/Shared/PlanRestricted/PlanBadge'
 import { usePlan } from '@components/Hooks/usePlan'
+import { useLHAnalytics, AnalyticsEvent } from '@services/analytics'
 
 function DashLeftMenu() {
   const org = useOrg() as any
   const session = useLHSession() as any
   const { t, i18n } = useTranslation()
+  const { track } = useLHAnalytics('dashboard')
   const pathname = usePathname() || ''
   const [isCollapsed, setIsCollapsed] = useState(false)
 
@@ -252,6 +254,7 @@ function DashLeftMenu() {
               label={t('common.home')}
               isCollapsed={isCollapsed}
               active={isActivePath('/dash')}
+              onClick={() => track(AnalyticsEvent.DashboardNavClicked, { section: 'home' })}
             />
 
             {/* Courses with hover menu */}
@@ -964,13 +967,14 @@ function DashLeftMenu() {
   )
 }
 
-const MenuLink = ({ href, icon, label, isCollapsed, isExternal, active }: {
+const MenuLink = ({ href, icon, label, isCollapsed, isExternal, active, onClick }: {
   href: string
   icon: React.ReactNode
   label: string
   isCollapsed: boolean
   isExternal?: boolean
   active?: boolean
+  onClick?: () => void
 }) => {
   const content = (
     <div
@@ -997,11 +1001,11 @@ const MenuLink = ({ href, icon, label, isCollapsed, isExternal, active }: {
 
   const ariaCurrent = active ? 'page' : undefined
   const linkElement = isExternal ? (
-    <a href={href} target="_blank" rel="noopener noreferrer" aria-label={label}>
+    <a href={href} target="_blank" rel="noopener noreferrer" aria-label={label} onClick={onClick}>
       {content}
     </a>
   ) : (
-    <Link aria-label={label} aria-current={ariaCurrent} href={href}>
+    <Link aria-label={label} aria-current={ariaCurrent} href={href} onClick={onClick}>
       {content}
     </Link>
   )

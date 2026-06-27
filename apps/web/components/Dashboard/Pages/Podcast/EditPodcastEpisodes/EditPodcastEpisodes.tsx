@@ -14,6 +14,7 @@ import {
   formatDuration,
 } from '@services/podcasts/episodes'
 import { getEpisodeAudioMediaDirectory, getEpisodeThumbnailMediaDirectory } from '@services/media/media'
+import { useLHAnalytics, AnalyticsEvent } from '@services/analytics'
 import { revalidateTags } from '@services/utils/ts/requests'
 import { useTranslation } from 'react-i18next'
 import {
@@ -50,6 +51,7 @@ function EditPodcastEpisodes({ orgslug, podcastuuid }: EditPodcastEpisodesProps)
   const org = useOrg() as any
   const accessToken = session?.data?.tokens?.access_token
   const queryClient = useQueryClient()
+  const { track } = useLHAnalytics('dashboard')
 
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false)
   const [editingEpisode, setEditingEpisode] = useState<PodcastEpisode | null>(null)
@@ -101,6 +103,7 @@ function EditPodcastEpisodes({ orgslug, podcastuuid }: EditPodcastEpisodesProps)
     const toastId = toast.loading(t('podcasts.dashboard.episodes.updating'))
     try {
       await updateEpisode(episode.episode_uuid, { published: !episode.published }, accessToken)
+      track(AnalyticsEvent.EpisodePublishToggled, { new_state: !episode.published })
       await revalidateTags(['podcasts'], orgslug)
       await refreshPodcast()
       queryClient.invalidateQueries({ queryKey: queryKeys.podcasts.episodes(podcastuuid) })
@@ -213,6 +216,7 @@ function EditPodcastEpisodes({ orgslug, podcastuuid }: EditPodcastEpisodesProps)
         orgslug={orgslug}
         accessToken={accessToken}
         onSuccess={refreshPodcast}
+        currentEpisodeCount={episodes.length}
       />
 
       {editingEpisode && (
@@ -357,6 +361,7 @@ function CreateEpisodeModal({
   orgslug,
   accessToken,
   onSuccess,
+  currentEpisodeCount,
 }: {
   isOpen: boolean
   onClose: () => void
@@ -364,9 +369,11 @@ function CreateEpisodeModal({
   orgslug: string
   accessToken: string
   onSuccess: () => Promise<void>
+  currentEpisodeCount: number
 }) {
   const { t } = useTranslation()
   const queryClient = useQueryClient()
+  const { track } = useLHAnalytics('dashboard')
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [title, setTitle] = useState('')
   const [description, setDescription] = useState('')
@@ -401,6 +408,10 @@ function CreateEpisodeModal({
         throw new Error(errorMessage)
       }
 
+      track(AnalyticsEvent.EpisodeCreated, {
+        has_audio_file: !!audioFile,
+        resulting_episode_count: currentEpisodeCount + 1,
+      })
       await revalidateTags(['podcasts'], orgslug)
       await onSuccess()
       queryClient.invalidateQueries({ queryKey: queryKeys.podcasts.episodes(podcastuuid) })

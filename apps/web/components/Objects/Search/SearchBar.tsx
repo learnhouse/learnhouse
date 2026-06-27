@@ -10,7 +10,7 @@ import { getUriWithOrg } from '@services/config/config';
 import { removeCoursePrefix } from '../Thumbnails/CourseThumbnail';
 import UserAvatar from '../UserAvatar';
 import { useTranslation } from 'react-i18next';
-import { useAnalytics } from '@/hooks/useAnalytics';
+import { useLHAnalytics, AnalyticsEvent } from '@services/analytics';
 import { getMenuColorClasses } from '@services/utils/ts/colorUtils';
 
 interface User {
@@ -103,7 +103,7 @@ export const SearchBar: React.FC<SearchBarProps> = ({
 }) => {
   const { t } = useTranslation();
   const org = useOrg() as any;
-  const { track } = useAnalytics();
+  const { track } = useLHAnalytics('learner');
   const colors = getMenuColorClasses(primaryColor);
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState<SearchResults>({
@@ -169,7 +169,7 @@ export const SearchBar: React.FC<SearchBarProps> = ({
         setSearchResults(processedResults);
 
         const totalResults = processedResults.courses.length + processedResults.folders.length + processedResults.users.length;
-        track('search_query', {
+        track(AnalyticsEvent.SearchQuery, {
           query: debouncedSearch,
           results_count: totalResults,
         });

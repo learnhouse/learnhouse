@@ -19,6 +19,7 @@ import { PlanLevel } from '@services/plans/plans'
 import { getUserGroups, getUserGroupResources } from '@services/usergroups/usergroups'
 import { usePlan } from '@components/Hooks/usePlan'
 import { useCourses } from '@/hooks/queries/useCourses'
+import { useLHAnalytics, AnalyticsEvent } from '@services/analytics'
 
 interface CourseProps {
   orgslug: string
@@ -35,6 +36,7 @@ function Courses(props: CourseProps) {
   const session = useLHSession() as any
   const access_token = session?.data?.tokens?.access_token
   const currentPlan = usePlan()
+  const { track } = useLHAnalytics('learner')
   const { data: coursesData, isLoading: coursesLoading } = useCourses(orgslug)
 
   const allCourses = coursesData || []
@@ -110,6 +112,19 @@ function Courses(props: CourseProps) {
 
     return courses
   }, [allCourses, searchQuery, usergroupResourceUuids])
+
+  // Track non-empty searches (debounced so we don't fire on every keystroke)
+  useEffect(() => {
+    const query = searchQuery.trim()
+    if (!query) return
+    const timer = setTimeout(() => {
+      track(AnalyticsEvent.CourseSearched, {
+        results_count: filteredCourses.length,
+        total_courses: allCourses.length,
+      })
+    }, 500)
+    return () => clearTimeout(timer)
+  }, [searchQuery, filteredCourses.length, allCourses.length, track])
 
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1)

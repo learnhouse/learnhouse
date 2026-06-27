@@ -36,6 +36,7 @@ import AssignmentEditorSubPage from './subpages/AssignmentEditorSubPage';
 import { useMediaQuery } from 'usehooks-ts';
 import EditAssignmentModal from '@components/Objects/Modals/Activities/Assignments/EditAssignmentModal';
 import { useTranslation } from 'react-i18next';
+import { useLHAnalytics, AnalyticsEvent } from '@services/analytics';
 const AssignmentSubmissionsSubPage = dynamic(() => import('./subpages/AssignmentSubmissionsSubPage'))
 const AssignmentAnalyticsSubPage = dynamic(() => import('./subpages/AssignmentAnalyticsSubPage'))
 
@@ -45,6 +46,15 @@ function AssignmentEdit() {
     const searchParams = useSearchParams()
     const [selectedSubPage, setSelectedSubPage] = React.useState(searchParams.get('subpage') || 'editor')
     const isMobile = useMediaQuery('(max-width: 767px)')
+    const { track } = useLHAnalytics('dashboard')
+
+    useEffect(() => {
+        if (selectedSubPage === 'submissions') {
+            track(AnalyticsEvent.AssignmentSubmissionsViewed, {})
+        }
+        // Fire one impression each time the submissions subpage is selected.
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [selectedSubPage])
 
     if (isMobile) {
         // TODO: Work on a better mobile experience
@@ -152,16 +162,22 @@ function PublishingState() {
     const session = useLHSession() as any;
     const access_token = session?.data?.tokens?.access_token;
     const queryClient = useQueryClient();
+    const { track } = useLHAnalytics('dashboard');
     const [isEditModalOpen, setIsEditModalOpen] = React.useState(false);
 
     async function updateAssignmentPublishState(assignmentUUID: string) {
-        const res = await updateAssignment({ published: !assignment?.assignment_object?.published }, assignmentUUID, access_token)
-        const res2 = await updateActivity({ published: !assignment?.assignment_object?.published }, assignment?.activity_object?.activity_uuid, access_token)
+        const nextPublished = !assignment?.assignment_object?.published
+        const res = await updateAssignment({ published: nextPublished }, assignmentUUID, access_token)
+        const res2 = await updateActivity({ published: nextPublished }, assignment?.activity_object?.activity_uuid, access_token)
         const toast_loading = toast.loading(t('dashboard.assignments.detail.publishing.toasts.updating'))
         if (res.success && res2) {
             queryClient.invalidateQueries({ queryKey: queryKeys.assignments.detail(assignmentUUID) })
             toast.success(t('dashboard.assignments.detail.publishing.toasts.update_success'))
             toast.dismiss(toast_loading)
+            track(AnalyticsEvent.AssignmentPublishToggled, {
+                published: nextPublished,
+                task_count: assignment?.assignment_tasks?.length ?? 0,
+            })
         }
         else {
             toast.error(t('dashboard.assignments.detail.publishing.toasts.update_error'))

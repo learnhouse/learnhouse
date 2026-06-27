@@ -35,6 +35,7 @@ import { Breadcrumbs } from '@components/Objects/Breadcrumbs/Breadcrumbs'
 import AuthenticatedClientElement from '@components/Security/AuthenticatedClientElement'
 import FeatureGate from '@components/Dashboard/Shared/FeatureGate/FeatureGate'
 import { searchMatchesAny } from '@/lib/search/normalize'
+import { useLHAnalytics, AnalyticsEvent } from '@services/analytics'
 
 interface PlaygroundsListClientProps {
   org_id: number
@@ -48,6 +49,7 @@ export default function PlaygroundsListClient({ org_id, orgslug }: PlaygroundsLi
   const queryClient = useQueryClient()
   const router = useRouter()
   const { t } = useTranslation()
+  const { track } = useLHAnalytics('dashboard')
 
   const [searchQuery, setSearchQuery] = useState('')
   const [currentPage, setCurrentPage] = useState(1)
@@ -133,6 +135,10 @@ export default function PlaygroundsListClient({ org_id, orgslug }: PlaygroundsLi
     setShowNameModal(false)
     try {
       const pg = await createPlayground(org_id, { name, access_type: 'authenticated' }, access_token)
+      track(AnalyticsEvent.PlaygroundCreated, {
+        name_provided: newName.trim().length > 0,
+        source: 'dashboard',
+      })
       queryClient.invalidateQueries({ queryKey: queryKeys.playgrounds.list(orgslug) })
       router.push(`/editor/playground/${pg.playground_uuid}/edit`)
     } catch {

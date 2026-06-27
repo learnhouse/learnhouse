@@ -32,6 +32,7 @@ import toast from 'react-hot-toast'
 import FeatureGate from '@components/Dashboard/Shared/FeatureGate/FeatureGate'
 import { usePlan } from '@components/Hooks/usePlan'
 import { searchMatchesAny } from '@/lib/search/normalize'
+import { useLHAnalytics, AnalyticsEvent } from '@services/analytics'
 
 type CourseProps = {
   orgslug: string
@@ -39,6 +40,7 @@ type CourseProps = {
 
 function CoursesHome(params: CourseProps) {
   const { t } = useTranslation()
+  const { track } = useLHAnalytics('dashboard')
   const searchParams = useSearchParams()
   const isCreatingCourse = searchParams.get('new') ? true : false
   const [newCourseModal, setNewCourseModal] = React.useState(isCreatingCourse)
@@ -188,6 +190,7 @@ function CoursesHome(params: CourseProps) {
   const router = useRouter()
 
   const handleCreationTypeSelect = (type: 'scratch' | 'ai' | 'migrate') => {
+    track(AnalyticsEvent.CourseCreationTypeSelected, { creation_type: type })
     if (type === 'ai') {
       setNewCourseModal(false)
       setAiCourseModalOpen(true)

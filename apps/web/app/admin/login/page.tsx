@@ -3,10 +3,12 @@ import React, { useState } from 'react'
 import { useAuth } from '@components/Contexts/AuthContext'
 import { useRouter } from 'next/navigation'
 import { Shield } from 'lucide-react'
+import { useLHAnalytics, AnalyticsEvent } from '@services/analytics'
 
 export default function AdminLoginPage() {
   const { signIn } = useAuth()
   const router = useRouter()
+  const { track } = useLHAnalytics('admin')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
@@ -25,11 +27,14 @@ export default function AdminLoginPage() {
       })
 
       if (result?.error) {
+        track(AnalyticsEvent.AdminLoginSubmitted, { outcome: 'error' })
         setError('Invalid email or password')
       } else {
+        track(AnalyticsEvent.AdminLoginSubmitted, { outcome: 'success' })
         window.location.href = '/admin'
       }
     } catch {
+      track(AnalyticsEvent.AdminLoginSubmitted, { outcome: 'error' })
       setError('An error occurred. Please try again.')
     } finally {
       setIsLoading(false)

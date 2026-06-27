@@ -11,6 +11,7 @@ import { ChalkboardSimple } from '@phosphor-icons/react'
 import { useTranslation } from 'react-i18next'
 import FeatureGate from '@components/Dashboard/Shared/FeatureGate/FeatureGate'
 import { searchMatchesAny } from '@/lib/search/normalize'
+import { useLHAnalytics, AnalyticsEvent } from '@services/analytics'
 
 interface BoardsPublicClientProps {
   orgslug: string
@@ -127,7 +128,7 @@ export default function BoardsPublicClient({
 
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
             {paginatedBoards.map((board: any) => (
-              <PublicBoardCard key={board.board_uuid} board={board} orgUuid={org?.org_uuid} />
+              <PublicBoardCard key={board.board_uuid} board={board} orgUuid={org?.org_uuid} fromSearch={!!searchQuery.trim()} />
             ))}
 
             {/* No search results */}
@@ -215,7 +216,8 @@ export default function BoardsPublicClient({
   )
 }
 
-function PublicBoardCard({ board, orgUuid }: { board: any; orgUuid: string }) {
+function PublicBoardCard({ board, orgUuid, fromSearch }: { board: any; orgUuid: string; fromSearch: boolean }) {
+  const { track } = useLHAnalytics('learner')
   const thumbnailImage = board.thumbnail_image
     ? getBoardThumbnailMediaDirectory(orgUuid, board.board_uuid, board.thumbnail_image)
     : '/empty_thumbnail.png'
@@ -223,6 +225,7 @@ function PublicBoardCard({ board, orgUuid }: { board: any; orgUuid: string }) {
   return (
     <Link
       href={`/board/${board.board_uuid.replace('board_', '')}`}
+      onClick={() => track(AnalyticsEvent.BoardOpened, { member_count: board.member_count, from_search: fromSearch })}
       className="group relative flex flex-col bg-white rounded-xl nice-shadow overflow-hidden w-full transition-all duration-300 hover:scale-[1.01]"
     >
       <div className="block relative aspect-video overflow-hidden bg-gray-50">

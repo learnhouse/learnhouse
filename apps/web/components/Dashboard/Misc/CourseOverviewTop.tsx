@@ -20,6 +20,7 @@ import { useQueryClient } from '@tanstack/react-query'
 import { queryKeys } from '@/lib/query/keys'
 import toast from 'react-hot-toast'
 import { useState, useCallback } from 'react'
+import { useLHAnalytics, AnalyticsEvent } from '@services/analytics'
 
 export function CourseOverviewTop({
   params,
@@ -27,6 +28,7 @@ export function CourseOverviewTop({
   params: CourseOverviewParams
 }) {
   const { t } = useTranslation()
+  const { track } = useLHAnalytics('dashboard')
   const course = useCourse() as any
   const dispatchCourse = useCourseDispatch() as any
   const org = useOrg() as any
@@ -104,6 +106,8 @@ export function CourseOverviewTop({
       // Revalidate server-side cache
       await revalidateTags(['courses'], params.orgslug)
 
+      track(AnalyticsEvent.CoursePublishedToggled, { new_published_status: newPublishedStatus })
+
       toast.dismiss(toastId)
       toast.success(
         newPublishedStatus
@@ -131,6 +135,7 @@ export function CourseOverviewTop({
     dispatchCourse,
     params.orgslug,
     params.courseuuid,
+    track,
     t
   ])
 

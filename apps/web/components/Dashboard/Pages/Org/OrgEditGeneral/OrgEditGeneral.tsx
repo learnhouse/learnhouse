@@ -21,6 +21,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useQueryClient } from '@tanstack/react-query'
 import { queryKeys } from '@/lib/query/keys'
 import { useTranslation } from 'react-i18next'
+import { useLHAnalytics, AnalyticsEvent } from '@services/analytics'
 
 const ORG_LABELS = [
   { value: 'languages', label: '🌐 Languages' },
@@ -81,6 +82,7 @@ const OrgEditGeneral: React.FC = () => {
   const access_token = session?.data?.tokens?.access_token
   const org = useOrg() as any
   const queryClient = useQueryClient()
+  const { track } = useLHAnalytics('dashboard')
 
   // Footer text state
   const [footerText, setFooterText] = React.useState<string>(org?.config?.config?.customization?.general?.footer_text || org?.config?.config?.general?.footer_text || '')
@@ -110,6 +112,7 @@ const OrgEditGeneral: React.FC = () => {
       await updateOrgDefaultLanguageConfig(org.id, defaultLanguage, access_token)
       await revalidateTags(['organizations'], org.slug)
       queryClient.invalidateQueries({ queryKey: queryKeys.org.detail(org.slug) })
+      track(AnalyticsEvent.OrgGeneralSettingsUpdated, { default_language: defaultLanguage })
       toast.success(t('dashboard.organization.settings.update_success'), { id: loadingToast })
     } catch (err) {
       toast.error(t('dashboard.organization.settings.update_error'), { id: loadingToast })

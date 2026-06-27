@@ -18,6 +18,7 @@ import Modal from '@components/Objects/StyledElements/Modal/Modal'
 import NewChapterModal from '@components/Objects/Modals/Chapters/NewChapter'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
 import { useTranslation } from 'react-i18next'
+import { useLHAnalytics, AnalyticsEvent } from '@services/analytics'
 
 type EditCourseStructureProps = {
   orgslug: string
@@ -41,6 +42,7 @@ export type OrderPayload =
 
 const EditCourseStructure = (props: EditCourseStructureProps) => {
   const { t } = useTranslation()
+  const { track } = useLHAnalytics('dashboard')
   const router = useRouter()
   const session = useLHSession() as any;
   const access_token = session?.data?.tokens?.access_token;
@@ -66,6 +68,9 @@ const EditCourseStructure = (props: EditCourseStructureProps) => {
   // Submit new chapter
   const submitChapter = async (chapter: any) => {
     await createChapter(chapter,access_token)
+    track(AnalyticsEvent.ChapterCreated, {
+      chapter_count_after: (course_structure?.chapters?.length ?? 0) + 1,
+    })
     await queryClient.invalidateQueries({ queryKey: queryKeys.courses.meta(cleanCourseUuid(course.courseStructure.course_uuid)) })
     await revalidateTags(['courses'], props.orgslug)
     router.refresh()
@@ -109,6 +114,8 @@ const EditCourseStructure = (props: EditCourseStructureProps) => {
       payload: newCourseStructure,
     })
     dispatchCourse({ type: 'setIsNotSaved' })
+
+    track(AnalyticsEvent.CourseStructureReordered, { reorder_type: type })
   }
 
   useEffect(() => {

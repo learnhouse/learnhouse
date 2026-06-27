@@ -10,6 +10,7 @@ import { useLHSession } from '@components/Contexts/LHSessionContext'
 import { createActivity, deleteActivity } from '@services/courses/activities'
 import toast from 'react-hot-toast'
 import { useTranslation } from 'react-i18next'
+import { useLHAnalytics, AnalyticsEvent } from '@services/analytics'
 import {
   ALargeSmall,
   Hash,
@@ -29,6 +30,7 @@ function NewAssignment({ submitActivity, chapterId, course, closeModal }: any) {
   const org = useOrg() as any
   const session = useLHSession() as any
   const queryClient = useQueryClient()
+  const { track } = useLHAnalytics('dashboard')
   const cleanCourseUuid = (id: string) => id?.replace(/^course_/, '') ?? id
   const withUnpublishedActivities = course
     ? course.withUnpublishedActivities
@@ -87,6 +89,12 @@ function NewAssignment({ submitActivity, chapterId, course, closeModal }: any) {
     if (res.success) {
       toast.dismiss(toast_loading)
       toast.success(t('dashboard.assignments.modals.create.toasts.success'))
+      track(AnalyticsEvent.AssignmentCreated, {
+        grading_type: gradingType,
+        auto_grading: autoGrading,
+        allow_retries: allowRetries,
+        has_due_date: !!dueDate,
+      })
     } else {
       toast.error(res.data.detail)
       await deleteActivity(

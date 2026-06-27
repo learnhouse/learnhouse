@@ -6,6 +6,7 @@ import { queryKeys } from '@/lib/query/keys'
 import { getAPIUrl, getDeploymentMode } from '@services/config/config'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
 import { X, Buildings } from '@phosphor-icons/react'
+import { useLHAnalytics, AnalyticsEvent } from '@services/analytics'
 
 function slugify(s: string): string {
   return s
@@ -28,6 +29,7 @@ export default function CreateOrganizationModal({
   const queryClient = useQueryClient()
   const router = useRouter()
   const isSaaS = getDeploymentMode() === 'saas'
+  const { track } = useLHAnalytics('admin')
 
   const [name, setName] = useState('')
   const [slug, setSlug] = useState('')
@@ -81,9 +83,19 @@ export default function CreateOrganizationModal({
       })
       const data = await res.json().catch(() => ({}))
       if (!res.ok) {
+        track(AnalyticsEvent.OrganizationCreated, {
+          plan: isSaaS ? plan : null,
+          is_saas: isSaaS,
+          outcome: 'error',
+        })
         setError(data?.detail || `Failed to create organization (${res.status})`)
         return
       }
+      track(AnalyticsEvent.OrganizationCreated, {
+        plan: isSaaS ? plan : null,
+        is_saas: isSaaS,
+        outcome: 'success',
+      })
       queryClient.invalidateQueries({ queryKey: queryKeys.superadmin.orgs() })
       onClose()
       if (data?.id) router.push(`/admin/organizations/${data.id}`)

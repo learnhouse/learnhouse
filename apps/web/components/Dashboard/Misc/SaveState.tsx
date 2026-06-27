@@ -18,6 +18,7 @@ import { useLHSession } from '@components/Contexts/LHSessionContext'
 import { useOrg } from '@components/Contexts/OrgContext'
 import toast from 'react-hot-toast'
 import { useTranslation } from 'react-i18next'
+import { useLHAnalytics, AnalyticsEvent } from '@services/analytics'
 
 interface SaveResult {
   success: boolean
@@ -27,6 +28,7 @@ interface SaveResult {
 
 function SaveState(props: { orgslug: string }) {
   const { t } = useTranslation()
+  const { track } = useLHAnalytics('dashboard')
   const queryClient = useQueryClient()
   const course = useCourse() as any
   const session = useLHSession() as any
@@ -145,6 +147,12 @@ function SaveState(props: { orgslug: string }) {
 
       // Show success feedback
       const allSucceeded = results.every(r => r.success)
+
+      track(AnalyticsEvent.CourseChangesSaved, {
+        order_changed: results.some(r => r.operation === 'order'),
+        metadata_changed: results.some(r => r.operation === 'metadata'),
+        save_succeeded: allSucceeded,
+      })
       if (allSucceeded) {
         toast.success(t('dashboard.courses.save.success') || 'Changes saved successfully')
       } else {
@@ -200,6 +208,7 @@ function SaveState(props: { orgslug: string }) {
     dispatchCourse,
     router,
     props.orgslug,
+    track,
     t
   ])
 

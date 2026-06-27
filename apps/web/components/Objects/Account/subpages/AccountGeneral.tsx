@@ -44,6 +44,7 @@ import { signOut } from '@components/Contexts/AuthContext'
 import { getUriWithoutOrg } from '@services/config/config';
 import { useDebounce } from '@/hooks/useDebounce';
 import { useTranslation } from 'react-i18next';
+import { useLHAnalytics, AnalyticsEvent } from '@services/analytics';
 
 const SUPPORTED_FILES = constructAcceptValue(['jpg', 'png', 'webp', 'gif'])
 
@@ -536,6 +537,7 @@ function AccountGeneral() {
   const [success, setSuccess] = React.useState('') as any
   const [userData, setUserData] = useState<any>(null);
   const { t } = useTranslation();
+  const { track } = useLHAnalytics('learner');
 
   useEffect(() => {
     const fetchUserData = async () => {
@@ -617,6 +619,10 @@ function AccountGeneral() {
             updateProfile(values, userData.id, access_token)
               .then(() => {
                 toast.dismiss(loadingToast)
+                track(AnalyticsEvent.AccountProfileUpdated, {
+                  email_changed: isEmailChanged,
+                  has_bio: !!values.bio?.trim(),
+                })
                 if (isEmailChanged) {
                   handleEmailChange(values.email)
                 } else {

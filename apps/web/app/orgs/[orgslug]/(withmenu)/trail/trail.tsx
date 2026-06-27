@@ -16,6 +16,7 @@ import ConfirmationModal from '@components/Objects/StyledElements/ConfirmationMo
 import { BookOpen, Signpost } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import FeatureGate from '@components/Dashboard/Shared/FeatureGate/FeatureGate'
+import { useTrackView, AnalyticsEvent } from '@services/analytics'
 
 function Trail(params: any) {
   const { t } = useTranslation()
@@ -34,6 +35,8 @@ function Trail(params: any) {
 
   // Only fetch trail data if courses feature is enabled; shares cache with course/activity pages
   const { data: trail, error } = useTrail(isCoursesEnabled ? orgID : undefined)
+
+  useTrackView(AnalyticsEvent.TrailViewed, { runs_count: trail?.runs?.length ?? 0 }, !!trail)
 
   const handleQuitAllCourses = async () => {
     if (!trail?.runs?.length || isQuittingAll) return;

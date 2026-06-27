@@ -45,6 +45,7 @@ import {
 import { Extension } from '@tiptap/core'
 import { BoardYjsProvider } from './BoardYjsContext'
 import { BoardSelectionProvider } from './BoardSelectionContext'
+import { useLHAnalytics, AnalyticsEvent } from '@services/analytics'
 
 
 interface BoardCanvasProps {
@@ -98,6 +99,7 @@ function BoardEditorInner({
   ydoc: Y.Doc
   provider: HocuspocusProvider
 }) {
+  const { track } = useLHAnalytics('dashboard')
   const [toolMode, setToolMode] = useState<'select' | 'pan' | 'draw' | 'card' | 'youtube' | 'playground' | 'activity' | 'embed' | 'webpage' | 'sticker' | 'frame' | 'note' | 'todo' | 'podcast'>('select')
   const [zoom, setZoom] = useState(() =>
     typeof window !== 'undefined' && window.innerWidth <= 768 ? 0.6 : 1
@@ -369,6 +371,7 @@ function BoardEditorInner({
         content: [{ type: 'paragraph', content: [{ type: 'text', text: 'New card' }] }],
       }).run()
       setToolMode('select')
+      track(AnalyticsEvent.BoardBlockAdded, { block_type: 'card' })
     } else if (mode === 'youtube' && editor) {
       const rect = canvasRef.current?.getBoundingClientRect()
       if (!rect) return
@@ -381,6 +384,7 @@ function BoardEditorInner({
         attrs: { x: Math.round(x), y: Math.round(y), width: 480, height: 270 },
       }).run()
       setToolMode('select')
+      track(AnalyticsEvent.BoardBlockAdded, { block_type: 'youtube' })
     } else if (mode === 'playground' && editor) {
       const rect = canvasRef.current?.getBoundingClientRect()
       if (!rect) return
@@ -399,6 +403,7 @@ function BoardEditorInner({
         },
       }).run()
       setToolMode('select')
+      track(AnalyticsEvent.BoardBlockAdded, { block_type: 'playground' })
     } else if (mode === 'activity' && editor) {
       const rect = canvasRef.current?.getBoundingClientRect()
       if (!rect) return
@@ -416,6 +421,7 @@ function BoardEditorInner({
         },
       }).run()
       setToolMode('select')
+      track(AnalyticsEvent.BoardBlockAdded, { block_type: 'activity' })
     } else if (mode === 'embed' && editor) {
       const rect = canvasRef.current?.getBoundingClientRect()
       if (!rect) return
@@ -433,6 +439,7 @@ function BoardEditorInner({
         },
       }).run()
       setToolMode('select')
+      track(AnalyticsEvent.BoardBlockAdded, { block_type: 'embed' })
     } else if (mode === 'webpage' && editor) {
       const rect = canvasRef.current?.getBoundingClientRect()
       if (!rect) return
@@ -450,6 +457,7 @@ function BoardEditorInner({
         },
       }).run()
       setToolMode('select')
+      track(AnalyticsEvent.BoardBlockAdded, { block_type: 'webpage' })
     } else if (mode === 'note' && editor) {
       const rect = canvasRef.current?.getBoundingClientRect()
       if (!rect) return
@@ -463,6 +471,7 @@ function BoardEditorInner({
         content: [{ type: 'paragraph', content: [{ type: 'text', text: 'New note' }] }],
       }).run()
       setToolMode('select')
+      track(AnalyticsEvent.BoardBlockAdded, { block_type: 'note' })
     } else if (mode === 'sticker' && editor) {
       const rect = canvasRef.current?.getBoundingClientRect()
       if (!rect) return
@@ -479,6 +488,7 @@ function BoardEditorInner({
         },
       }).run()
       setToolMode('select')
+      track(AnalyticsEvent.BoardBlockAdded, { block_type: 'sticker' })
     } else if (mode === 'todo' && editor) {
       const rect = canvasRef.current?.getBoundingClientRect()
       if (!rect) return
@@ -491,6 +501,7 @@ function BoardEditorInner({
         attrs: { x: Math.round(x), y: Math.round(y), width: 260, height: 260 },
       }).run()
       setToolMode('select')
+      track(AnalyticsEvent.BoardBlockAdded, { block_type: 'todo' })
     } else if (mode === 'podcast' && editor) {
       const rect = canvasRef.current?.getBoundingClientRect()
       if (!rect) return
@@ -503,6 +514,7 @@ function BoardEditorInner({
         attrs: { x: Math.round(x), y: Math.round(y), width: 400, height: 280 },
       }).run()
       setToolMode('select')
+      track(AnalyticsEvent.BoardBlockAdded, { block_type: 'podcast' })
     } else if (mode === 'frame' && editor) {
       const rect = canvasRef.current?.getBoundingClientRect()
       if (!rect) return
@@ -521,8 +533,9 @@ function BoardEditorInner({
         },
       }).run()
       setToolMode('select')
+      track(AnalyticsEvent.BoardBlockAdded, { block_type: 'frame' })
     }
-  }, [pan, zoom, editor])
+  }, [pan, zoom, editor, track])
 
   const handleMouseMove = useCallback((e: React.MouseEvent) => {
     // Track mouse position for placement ghost preview

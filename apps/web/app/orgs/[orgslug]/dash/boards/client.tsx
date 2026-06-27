@@ -25,6 +25,7 @@ import {
 } from "@components/ui/dropdown-menu"
 import Modal from '@components/Objects/StyledElements/Modal/Modal'
 import { searchMatchesAny } from '@/lib/search/normalize'
+import { useLHAnalytics, AnalyticsEvent } from '@services/analytics'
 
 interface BoardListClientProps {
   org_id: number
@@ -37,6 +38,7 @@ function CreateBoardForm({ onCreated, orgId, accessToken }: {
   accessToken: string
 }) {
   const { t } = useTranslation()
+  const { track } = useLHAnalytics('dashboard')
   const [name, setName] = useState('')
   const [description, setDescription] = useState('')
 
@@ -45,6 +47,7 @@ function CreateBoardForm({ onCreated, orgId, accessToken }: {
     if (!name.trim()) return
     try {
       await createBoard(orgId, { name, description }, accessToken)
+      track(AnalyticsEvent.BoardCreated, { has_description: !!description.trim() })
       toast.success(t('boards.board_created'))
       setName('')
       setDescription('')

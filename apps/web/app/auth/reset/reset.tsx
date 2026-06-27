@@ -14,6 +14,7 @@ import { resetPassword } from '@services/auth/auth'
 import { useTranslation } from 'react-i18next'
 import AuthLayout from '@components/Auth/AuthLayout'
 import { PasswordStrengthIndicator, validatePasswordStrength } from '@components/Auth/PasswordStrengthIndicator'
+import { useLHAnalytics, AnalyticsEvent } from '@services/analytics'
 
 const validate = (values: any, t: any) => {
     const errors: any = {}
@@ -53,6 +54,7 @@ interface ResetPasswordClientProps {
 
 function ResetPasswordClient({ org }: ResetPasswordClientProps) {
     const { t } = useTranslation();
+    const { track } = useLHAnalytics('public')
     const [isSubmitting, setIsSubmitting] = React.useState(false)
     const searchParams = useSearchParams()
     const reset_code = searchParams.get('resetCode') || ''
@@ -75,6 +77,7 @@ function ResetPasswordClient({ org }: ResetPasswordClientProps) {
             setError('')
             setMessage('')
             setShowMessage(false)
+            track(AnalyticsEvent.PasswordResetSubmitted, { came_from_email_link: Boolean(reset_code) })
             let res = await resetPassword(values.email, values.new_password, org?.id, values.reset_code)
             if (res.status == 200) {
                 setMessage(res.data)

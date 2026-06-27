@@ -77,6 +77,7 @@ import {
   getWebhookDeliveryLogs,
 } from '@services/webhooks/webhooks'
 import FeatureGate from '@components/Dashboard/Shared/FeatureGate/FeatureGate'
+import { useLHAnalytics, AnalyticsEvent } from '@services/analytics'
 
 // Types for API-driven event registry
 interface EventInfo {
@@ -113,6 +114,7 @@ const OrgEditAutomations: React.FC = () => {
   const org = useOrg() as any
   const { t } = useTranslation()
   const queryClient = useQueryClient()
+  const { track } = useLHAnalytics('dashboard')
 
   // Fetch event registry from API
   const { data: eventsData } = useQuery<{ events: Record<string, EventInfo> }>({
@@ -190,6 +192,7 @@ const OrgEditAutomations: React.FC = () => {
       if (response.success) {
         setNewSecret(response.data.secret)
         setShowSecret(true)
+        track(AnalyticsEvent.WebhookCreated, { events_count: createEvents.length })
         queryClient.invalidateQueries({ queryKey: queryKeys.org.automations(org.id) })
         toast.success('Webhook created', { id: loadingToast })
         resetCreateForm()

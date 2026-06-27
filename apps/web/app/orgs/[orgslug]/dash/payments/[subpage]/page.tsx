@@ -15,6 +15,7 @@ import PaymentsGroupsPage from '@components/Dashboard/Pages/Payments/PaymentsGro
 import FeatureGate from '@components/Dashboard/Shared/FeatureGate/FeatureGate'
 import { isOSSMode } from '@services/config/config'
 import { DashTabBar, DashTabItem } from '@components/Dashboard/Shared/DashTabBar/DashTabBar'
+import { useTrackView, AnalyticsEvent } from '@services/analytics'
 
 export type PaymentsParams = {
   subpage: string
@@ -58,6 +59,14 @@ function PaymentsPage(props: { params: Promise<PaymentsParams> }) {
 
   const { h1, h2 } = getPageTitle()
   const paymentsEnabled = org?.config?.config?.resolved_features?.payments?.enabled ?? org?.config?.config?.features?.payments?.enabled !== false
+
+  // Fire the gate-blocked impression for the deterministic OSS block.
+  useTrackView(
+    AnalyticsEvent.PaymentsFeatureGateBlocked,
+    { is_oss: true, subpage },
+    isOSSMode(),
+    'dashboard',
+  )
 
   // Gate 1: OSS deployment → payments is EE-only, blocked entirely
   if (isOSSMode()) {

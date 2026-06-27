@@ -25,7 +25,7 @@ import { getActivityWithAuthHeader } from '@services/courses/activities'
 import { useTranslation } from 'react-i18next'
 import CourseCommunitySection from '@components/Objects/Communities/CourseCommunitySection'
 import CourseShare from '@components/Objects/Courses/CourseShare/CourseShare'
-import { useAnalytics } from '@/hooks/useAnalytics'
+import { useLHAnalytics, AnalyticsEvent } from '@services/analytics'
 
 const CourseClient = (props: any) => {
   const { t } = useTranslation()
@@ -53,14 +53,14 @@ const CourseClient = (props: any) => {
 
   const course = initialCourse || clientCourseData;
 
-  const { track } = useAnalytics()
+  const { track } = useLHAnalytics('learner')
 
   // Track course view
   const courseId = course?.id
   const courseUuidForTracking = course?.course_uuid
   useEffect(() => {
     if (courseId && courseUuidForTracking) {
-      track('course_view', {
+      track(AnalyticsEvent.CourseViewed, {
         course_uuid: courseUuidForTracking,
       })
     }

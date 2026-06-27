@@ -8,6 +8,7 @@ import { cn } from '@/lib/utils'
 import { useRouter } from 'next/navigation'
 import { useTranslation } from 'react-i18next'
 import toast from 'react-hot-toast'
+import { useLHAnalytics, AnalyticsEvent } from '@services/analytics'
 import lrnaiIcon from 'public/lrnai_icon.png'
 import AICoursePreview from './AICoursePreview'
 import AICourseChat from './AICourseChat'
@@ -38,6 +39,7 @@ function AICourseCreationModal({
   accessToken,
 }: AICourseCreationModalProps) {
   const { t, i18n } = useTranslation()
+  const { track } = useLHAnalytics('dashboard')
   const router = useRouter()
 
   const [sessionUuid, setSessionUuid] = React.useState<string | null>(null)
@@ -157,6 +159,9 @@ function AICourseCreationModal({
       if (result.success && result.data) {
         setCourseUuid(result.data.course_uuid)
         setCreatedChapters(result.data.chapters)
+        track(AnalyticsEvent.AiCourseCreated, {
+          chapters_created: result.data.chapters?.length ?? 0,
+        })
         toast.success(t('courses.create.ai.course_created_success'))
       } else {
         setError(result.error || 'Failed to create course')

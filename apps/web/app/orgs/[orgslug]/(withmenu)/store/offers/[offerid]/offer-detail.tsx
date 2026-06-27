@@ -11,6 +11,7 @@ import {
   Mic, Puzzle, AlertCircle, Loader2, ShoppingBag
 } from 'lucide-react'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
+import { useLHAnalytics, useTrackView, AnalyticsEvent } from '@services/analytics'
 import toast from 'react-hot-toast'
 
 interface Resource {
@@ -99,6 +100,18 @@ export default function OfferDetailClient({ orgslug, orgId, offerUuid, offer, ac
   const token = session?.data?.tokens?.access_token ?? access_token
   const router = useRouter()
   const [loading, setLoading] = useState(false)
+  const { track } = useLHAnalytics('learner')
+
+  useTrackView(
+    AnalyticsEvent.OfferViewed,
+    {
+      offer_type: offer?.offer_type,
+      included_resources_count: offer?.included_resources?.length ?? 0,
+      is_authenticated: !!token,
+    },
+    !!offer,
+    'learner',
+  )
 
   if (!offer) {
     return (
@@ -122,20 +135,30 @@ export default function OfferDetailClient({ orgslug, orgId, offerUuid, offer, ac
 
   const handleCheckout = async () => {
     if (!token) {
+      track(AnalyticsEvent.CheckoutLoginRedirected, { redirect_target: `/store/offers/${offerUuid}` })
       router.push(getUriWithOrg(orgslug, `/login?redirect=/store/offers/${offerUuid}`))
       return
     }
+    track(AnalyticsEvent.OfferCheckoutStarted, {
+      offer_uuid: offerUuid,
+      offer_type: offer.offer_type,
+      amount: offer.amount,
+      currency: offer.currency,
+    })
     setLoading(true)
     try {
       const redirectUri = window.location.href
       const result = await getOfferCheckoutSession(orgId, offerUuid, redirectUri, token)
       const url = result?.data?.checkout_url
       if (url) {
+        track(AnalyticsEvent.CheckoutSessionCreated, { offer_type: offer.offer_type, amount: offer.amount })
         window.location.href = url
       } else {
+        track(AnalyticsEvent.CheckoutSessionFailed, { failure_reason: 'no_checkout_url' })
         toast.error('Could not start checkout. Please try again.')
       }
     } catch {
+      track(AnalyticsEvent.CheckoutSessionFailed, { failure_reason: 'exception' })
       toast.error('An error occurred. Please try again.')
     } finally {
       setLoading(false)

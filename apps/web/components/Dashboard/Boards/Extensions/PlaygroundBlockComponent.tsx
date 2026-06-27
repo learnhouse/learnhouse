@@ -22,6 +22,7 @@ import {
   iterateBoardsPlayground,
 } from '@services/boards/playground'
 import { useDragResize } from './useDragResize'
+import { useLHAnalytics, AnalyticsEvent } from '@services/analytics'
 
 // ─── Constants ───────────────────────────────────────────────────────────────
 
@@ -107,6 +108,7 @@ export default function PlaygroundBlockComponent({
   getPos,
 }: any) {
   const { t } = useTranslation()
+  const { track } = useLHAnalytics('dashboard')
   const { blockUuid, x, y, width, height, htmlContent, sessionUuid, iterationCount } = node.attrs
 
   const iframeRef = useRef<HTMLIFrameElement>(null)
@@ -158,6 +160,7 @@ export default function PlaygroundBlockComponent({
     streamRef.current = ''
     setStreamingContent('')
     setMessages((prev) => [...prev, { role: 'user', content: message }])
+    track(AnalyticsEvent.BoardAiPromptSent, { iteration_count: localIterCount, prompt_length: message.length })
 
     const boardUuid = boardCtx?.boardUuid || ''
     const context = {

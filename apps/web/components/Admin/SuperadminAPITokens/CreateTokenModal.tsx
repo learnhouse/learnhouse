@@ -6,6 +6,7 @@ import { getAPIUrl } from '@services/config/config'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
 import { Key, X } from '@phosphor-icons/react'
 import type { CreatedToken } from '@components/Admin/SuperadminAPITokens/TokenCreatedDialog'
+import { useLHAnalytics, AnalyticsEvent } from '@services/analytics'
 
 export default function CreateTokenModal({
   open,
@@ -19,6 +20,7 @@ export default function CreateTokenModal({
   const session = useLHSession() as any
   const accessToken = session?.data?.tokens?.access_token
   const queryClient = useQueryClient()
+  const { track } = useLHAnalytics('admin')
 
   const [name, setName] = useState('')
   const [description, setDescription] = useState('')
@@ -66,6 +68,7 @@ export default function CreateTokenModal({
         setError(data?.detail || `Failed to create token (${res.status})`)
         return
       }
+      track(AnalyticsEvent.SuperadminTokenCreated, { has_expiry: !neverExpires })
       queryClient.invalidateQueries({ queryKey: queryKeys.superadmin.apiTokens() })
       onCreated(data as CreatedToken)
     } catch {

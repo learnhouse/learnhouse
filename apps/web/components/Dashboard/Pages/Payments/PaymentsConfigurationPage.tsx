@@ -24,6 +24,7 @@ import { queryKeys } from '@/lib/query/keys';
 import ConfirmationModal from '@components/Objects/StyledElements/ConfirmationModal/ConfirmationModal';
 import { Button } from '@components/ui/button';
 import { getMainDomainUri } from '@services/config/config';
+import { useLHAnalytics, AnalyticsEvent } from '@services/analytics';
 import { SiStripe } from '@icons-pack/react-simple-icons';
 
 // ---------------------------------------------------------------------------
@@ -142,12 +143,17 @@ interface ProviderCardProps {
 
 const ProviderCard: React.FC<ProviderCardProps> = ({ provider, config, orgId, accessToken }) => {
   const queryClient = useQueryClient();
+  const { track } = useLHAnalytics('dashboard');
   const [isConnecting, setIsConnecting] = useState(false);
   const [disconnectError, setDisconnectError] = useState<{ count: number } | null>(null);
   const isConnected = !!(config?.provider_specific_id && config?.active);
 
   const handleConnect = async () => {
     try {
+      track(AnalyticsEvent.PaymentProviderConnectClicked, {
+        is_reconnect: isConnected,
+        had_existing_config: !!config,
+      });
       setIsConnecting(true);
       if (!config) {
         await initializePaymentConfig(orgId, { provider: provider.id, enabled: true }, provider.id, accessToken);

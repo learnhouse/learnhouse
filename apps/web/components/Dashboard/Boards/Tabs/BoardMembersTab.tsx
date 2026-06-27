@@ -17,6 +17,7 @@ import Modal from '@components/Objects/StyledElements/Modal/Modal'
 import UserAvatar from '@components/Objects/UserAvatar'
 import toast from 'react-hot-toast'
 import { useTranslation } from 'react-i18next'
+import { useLHAnalytics, AnalyticsEvent } from '@services/analytics'
 
 interface BoardMembersTabProps {
   boardUuid: string
@@ -205,6 +206,7 @@ function AddBoardMember({ boardUuid, orgId, accessToken, setModalOpen }: {
   setModalOpen: (open: boolean) => void
 }) {
   const { t } = useTranslation()
+  const { track } = useLHAnalytics('dashboard')
   const queryClient = useQueryClient()
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedUserIds, setSelectedUserIds] = useState<Set<number>>(new Set())
@@ -311,6 +313,7 @@ function AddBoardMember({ boardUuid, orgId, accessToken, setModalOpen }: {
     try {
       const members = Array.from(selectedUserIds).map((user_id) => ({ user_id, role }))
       await addBoardMembersBatch(boardUuid, members, accessToken)
+      track(AnalyticsEvent.BoardMemberAdded, { added_count: members.length, role })
       toast.success(t('boards.members.member_added'))
       setModalOpen(false)
       queryClient.invalidateQueries({ queryKey: queryKeys.boards.members(boardUuid) })

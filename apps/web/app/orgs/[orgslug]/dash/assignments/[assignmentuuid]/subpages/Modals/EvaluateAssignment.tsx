@@ -18,6 +18,7 @@ import { deleteUserSubmission, getFinalGrade, markActivityAsDoneForUser, putFina
 import { useLHSession } from '@components/Contexts/LHSessionContext';
 import toast from 'react-hot-toast';
 import { useTranslation } from 'react-i18next';
+import { useLHAnalytics, AnalyticsEvent } from '@services/analytics';
 
 function EvaluateAssignment({ user_id }: any) {
     const { t } = useTranslation()
@@ -26,6 +27,7 @@ function EvaluateAssignment({ user_id }: any) {
     const org = useOrg() as any;
     const access_token = session?.data?.tokens?.access_token;
     const queryClient = useQueryClient();
+    const { track } = useLHAnalytics('dashboard');
 
     // Overall feedback the teacher types. `undefined` means "not touched yet"
     // so we don't clobber existing server-side feedback with an empty string.
@@ -59,6 +61,11 @@ function EvaluateAssignment({ user_id }: any) {
         if (res.success) {
             setGradePreview(res.data);
             toast.success(res.data.message)
+            track(AnalyticsEvent.SubmissionGraded, {
+                has_feedback: !!(feedback && feedback.trim()),
+                passed: res.data.passed,
+                display_grade: res.data.display_grade,
+            })
             const rawUuid = assignmentUuid?.replace('assignment_', '') ?? ''
             queryClient.invalidateQueries({ queryKey: queryKeys.assignments.allSubmissions(rawUuid) })
             queryClient.invalidateQueries({ queryKey: queryKeys.assignments.analytics(rawUuid) })
@@ -78,6 +85,10 @@ function EvaluateAssignment({ user_id }: any) {
         const doneRes = await markActivityAsDoneForUser(user_id, assignmentUuid, access_token)
         if (doneRes.success) {
             toast.success(t('dashboard.assignments.submissions.toasts.finalize_success'))
+            track(AnalyticsEvent.SubmissionFinalized, {
+                passed: gradeRes.data.passed,
+                display_grade: gradeRes.data.display_grade,
+            })
             const rawUuid = assignmentUuid?.replace('assignment_', '') ?? ''
             queryClient.invalidateQueries({ queryKey: queryKeys.assignments.allSubmissions(rawUuid) })
             queryClient.invalidateQueries({ queryKey: queryKeys.assignments.analytics(rawUuid) })

@@ -19,6 +19,7 @@ import {
   useAIEditorDispatch,
 } from '@components/Contexts/AI/AIEditorContext'
 import { useTranslation } from 'react-i18next'
+import { useLHAnalytics, AnalyticsEvent } from '@services/analytics'
 
 // Extensions
 import InfoCallout from './Extensions/Callout/Info/InfoCallout'
@@ -101,6 +102,7 @@ interface EditorProps {
 
 function Editor(props: EditorProps) {
   const { t } = useTranslation()
+  const { track } = useLHAnalytics('editor')
   const dispatchAIEditor = useAIEditorDispatch() as any
   const aiEditorState = useAIEditor() as AIEditorStateTypes
   const is_ai_feature_enabled = useGetAIFeatures({ feature: 'editor' })
@@ -290,6 +292,7 @@ function Editor(props: EditorProps) {
       // state before any real edit.
       savedContentSnapshotRef.current = getEditorContentSnapshot(editor.getJSON())
       setHasUnsavedChanges(false)
+      track(AnalyticsEvent.ActivityEditorOpened, { ai_enabled: canUseAI })
       setTimeout(() => {
         setEditorReady(true)
         props.onReady?.()
@@ -465,13 +468,16 @@ function Editor(props: EditorProps) {
                 <div className="transition-all ease-linear text-teal-100 rounded-md hover:cursor-pointer">
                   {isButtonAvailable && canUseAI && (
                     <div
-                      onClick={() =>
+                      onClick={() => {
+                        if (!aiEditorState.isSidePanelOpen) {
+                          track(AnalyticsEvent.AiEditorPanelOpened)
+                        }
                         dispatchAIEditor({
                           type: aiEditorState.isSidePanelOpen
                             ? 'setSidePanelClose'
                             : 'setSidePanelOpen',
                         })
-                      }
+                      }}
                       style={{
                         background:
                           'conic-gradient(from 32deg at 53.75% 50%, rgb(35, 40, 93) 4deg, rgba(20, 0, 52, 0.95) 59deg, rgba(164, 45, 238, 0.88) 281deg)',

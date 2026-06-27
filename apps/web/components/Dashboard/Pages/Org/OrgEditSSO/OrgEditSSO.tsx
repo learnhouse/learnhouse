@@ -38,9 +38,11 @@ import {
   CheckCircle2,
   Info,
 } from 'lucide-react'
+import { useLHAnalytics, AnalyticsEvent } from '@services/analytics'
 
 const OrgEditSSO: React.FC = () => {
   const { t } = useTranslation()
+  const { track } = useLHAnalytics('dashboard')
   const session = useLHSession() as any
   const access_token = session?.data?.tokens?.access_token
   const org = useOrg() as any
@@ -142,6 +144,7 @@ const OrgEditSSO: React.FC = () => {
         provider_config: providerConfig,
       }
 
+      const isNewConfig = !config
       if (config) {
         // Update existing config
         const updated = await updateSSOConfig(org.id, data, access_token)
@@ -151,6 +154,11 @@ const OrgEditSSO: React.FC = () => {
         const created = await createSSOConfig(org.id, data, access_token)
         setConfig(created)
       }
+
+      track(AnalyticsEvent.SsoConfigSaved, {
+        provider: selectedProvider,
+        is_new_config: isNewConfig,
+      })
 
       toast.success(t('dashboard.organization.sso.save_success'), {
         id: loadingToast,

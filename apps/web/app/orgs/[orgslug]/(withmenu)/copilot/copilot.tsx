@@ -22,6 +22,7 @@ import { getUriWithOrg } from '@services/config/config'
 import { getOrgCourses } from '@services/courses/courses'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { queryKeys } from '@/lib/query/keys'
+import { useLHAnalytics, AnalyticsEvent } from '@services/analytics'
 import {
   PaperPlaneRight,
   CaretDown,
@@ -93,6 +94,7 @@ export function CopilotChat({ orgslug }: CopilotProps) {
   const accessToken = session?.data?.tokens?.access_token
   const searchParams = useSearchParams()
   const initialChatUuid = searchParams.get('chat')
+  const { track } = useLHAnalytics('learner')
 
   // All messages including the current streaming one (appended live)
   const [messages, setMessages] = useState<ChatMessage[]>([])
@@ -290,6 +292,12 @@ export function CopilotChat({ orgslug }: CopilotProps) {
 
     const wasNewChat = isNewChatRef.current
 
+    track(AnalyticsEvent.CopilotMessageSent, {
+      chat_mode: chatMode,
+      has_course_filter: !!selectedCourse,
+      is_new_chat: wasNewChat,
+    })
+
     const callbacks: StreamCallbacks = {
       onStart: (data) => {
         setIsWaiting(false)
@@ -322,6 +330,7 @@ export function CopilotChat({ orgslug }: CopilotProps) {
         streamingIndexRef.current = -1
         if (data.aichat_uuid) setAichatUuid(data.aichat_uuid)
         isNewChatRef.current = false
+        track(AnalyticsEvent.CopilotResponseCompleted)
         // Refresh sidebar after first response in a new chat
         if (wasNewChat) {
           // Set title from first user message
@@ -345,6 +354,7 @@ export function CopilotChat({ orgslug }: CopilotProps) {
         setIsLoadingFollowUps(false)
         streamingIndexRef.current = -1
         setError(errorMsg)
+        track(AnalyticsEvent.CopilotResponseFailed)
       },
     }
 
@@ -353,7 +363,7 @@ export function CopilotChat({ orgslug }: CopilotProps) {
     } else {
       await startRAGChatStream(message, accessToken, callbacks, selectedCourse || undefined, chatMode, orgslug)
     }
-  }, [accessToken, aichatUuid, selectedCourse, chatMode, mutateSessions, orgslug])
+  }, [accessToken, aichatUuid, selectedCourse, chatMode, mutateSessions, orgslug, track])
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter' && !e.shiftKey) {

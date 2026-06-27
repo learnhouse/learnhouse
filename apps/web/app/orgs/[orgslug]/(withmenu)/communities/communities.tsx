@@ -12,6 +12,7 @@ import ContentPlaceHolderIfUserIsNotAdmin from '@components/Objects/ContentPlace
 import { Users, Plus } from 'lucide-react'
 import { Community } from '@services/communities/communities'
 import FeatureGate from '@components/Dashboard/Shared/FeatureGate/FeatureGate'
+import { useTrackView, AnalyticsEvent } from '@services/analytics'
 
 interface CommunitiesClientProps {
   communities: Community[]
@@ -23,6 +24,10 @@ const CommunitiesClient = ({ communities, orgslug, org_id }: CommunitiesClientPr
   const { t } = useTranslation()
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false)
   const [editingCommunity, setEditingCommunity] = useState<Community | null>(null)
+
+  useTrackView(AnalyticsEvent.CommunitiesListViewed, {
+    communities_count: communities.length,
+  })
 
   return (
     <FeatureGate feature="communities" orgslug={orgslug} context="public">

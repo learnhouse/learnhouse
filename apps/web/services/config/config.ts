@@ -104,7 +104,9 @@ const getLEARNHOUSE_TOP_DOMAIN = () => {
   const domain = getLEARNHOUSE_DOMAIN()
   return domain.split(':')[0]
 }
-const getLEARNHOUSE_TELEMETRY_DISABLED = () => getConfig('NEXT_TELEMETRY_DISABLED', 'true').toLowerCase();
+// PostHog product analytics — opt-in. Telemetry is OFF unless this key is set
+// in the deployment env. No separate enable flag: presence of the key IS the switch.
+const getPOSTHOG_KEY = () => getConfig('NEXT_PUBLIC_POSTHOG_KEY', '');
 const getLEARNHOUSE_PLATFORM_URL = (): string | null => {
   // NEXT_PUBLIC_ variant (available client-side via runtime config)
   const pubVal = getConfig('NEXT_PUBLIC_LEARNHOUSE_PLATFORM_URL')
@@ -120,7 +122,7 @@ export const getLEARNHOUSE_HTTP_PROTOCOL_VAL = getLEARNHOUSE_HTTP_PROTOCOL
 export const getLEARNHOUSE_BACKEND_URL_VAL = getLEARNHOUSE_BACKEND_URL
 export const getLEARNHOUSE_DOMAIN_VAL = getLEARNHOUSE_DOMAIN
 export const getLEARNHOUSE_TOP_DOMAIN_VAL = getLEARNHOUSE_TOP_DOMAIN
-export const getLEARNHOUSE_TELEMETRY_DISABLED_VAL = getLEARNHOUSE_TELEMETRY_DISABLED
+export const getPOSTHOG_KEY_VAL = getPOSTHOG_KEY
 export const getLEARNHOUSE_PLATFORM_URL_VAL = getLEARNHOUSE_PLATFORM_URL
 
 // Export constants for backward compatibility

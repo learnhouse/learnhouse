@@ -8,6 +8,7 @@ import { OrgProvider } from '@components/Contexts/OrgContext'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
 import { useTranslation } from 'react-i18next'
 import { preloadComponentsForContent } from './editorPreload'
+import { useLHAnalytics, AnalyticsEvent } from '@services/analytics'
 
 /**
  * Transforms ProseMirror JSON content to fix mark type names.
@@ -66,6 +67,7 @@ interface EditorWrapperProps {
 
 function EditorWrapper(props: EditorWrapperProps): JSX.Element {
   const { t } = useTranslation()
+  const { track } = useLHAnalytics('editor')
   const session = useLHSession() as any
   const access_token = session?.data?.tokens?.access_token;
 
@@ -170,6 +172,10 @@ function EditorWrapper(props: EditorWrapperProps): JSX.Element {
             setLocalVersion(res.data.current_version);
             setLocalUpdateDate(res.data.update_date);
           }
+          track(AnalyticsEvent.ActivityContentSaved, {
+            new_version: res.data?.current_version,
+            had_conflict: false,
+          });
           return res;
         }),
         {

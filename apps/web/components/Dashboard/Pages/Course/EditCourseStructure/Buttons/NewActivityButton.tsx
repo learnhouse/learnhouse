@@ -17,6 +17,7 @@ import { useQueryClient } from '@tanstack/react-query'
 import { queryKeys } from '@lib/query/keys'
 import toast from 'react-hot-toast'
 import { useTranslation } from 'react-i18next'
+import { useLHAnalytics, AnalyticsEvent } from '@services/analytics'
 
 type NewActivityButtonProps = {
   chapterId: string
@@ -25,6 +26,7 @@ type NewActivityButtonProps = {
 
 function NewActivityButton(props: NewActivityButtonProps) {
   const { t } = useTranslation()
+  const { track } = useLHAnalytics('dashboard')
   const [newActivityModal, setNewActivityModal] = React.useState(false)
   const [selectedView, setSelectedView] = React.useState('home')
   const router = useRouter()
@@ -51,6 +53,7 @@ function NewActivityButton(props: NewActivityButtonProps) {
     )
     const toast_loading = toast.loading(t('dashboard.courses.structure.activity.toasts.creating'))
     await createActivity(activity, props.chapterId, org.id, access_token)
+    track(AnalyticsEvent.ActivityCreated, { activity_type: activity?.type ?? activity?.activity_type })
     queryClient.invalidateQueries({ queryKey: queryKeys.courses.meta(cleanCourseUuid(course.courseStructure.course_uuid)) })
     toast.dismiss(toast_loading)
     toast.success(t('dashboard.courses.structure.activity.toasts.create_success'))
@@ -72,10 +75,12 @@ function NewActivityButton(props: NewActivityButtonProps) {
     } catch (error: any) {
       // Without this, an upload failure (e.g. a 413 from the proxy on a large
       // video) left the loading toast spinning forever with no feedback.
+      track(AnalyticsEvent.ActivityFileUploaded, { file_type: type, upload_succeeded: false })
       toast.dismiss(toast_loading)
       toast.error(error?.message || t('dashboard.courses.structure.activity.toasts.upload_error'))
       return
     }
+    track(AnalyticsEvent.ActivityFileUploaded, { file_type: type, upload_succeeded: true })
     queryClient.invalidateQueries({ queryKey: queryKeys.courses.meta(cleanCourseUuid(course.courseStructure.course_uuid)) })
     setNewActivityModal(false)
     toast.dismiss(toast_loading)
@@ -97,6 +102,7 @@ function NewActivityButton(props: NewActivityButtonProps) {
       activity,
       props.chapterId, access_token
     )
+    track(AnalyticsEvent.ActivityFileUploaded, { file_type: 'video', upload_succeeded: true })
     queryClient.invalidateQueries({ queryKey: queryKeys.courses.meta(cleanCourseUuid(course.courseStructure.course_uuid)) })
     setNewActivityModal(false)
     toast.dismiss(toast_loading)
