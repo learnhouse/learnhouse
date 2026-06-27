@@ -2,14 +2,14 @@
   "common": {
     "hello": "Ahoj",
     "home": "Domov",
-    "back_to_home": "Späť na domov",
+    "back_to_home": "Späť domov",
     "your_organization": "Vaša organizácia",
     "your_organizations": "Vaše organizácie",
-    "no_orgs_message": "Zdá sa, že ešte nie ste súčasťou žiadnej organizácie. Pripojte sa k jednej, aby ste ju tu videli.",
+    "no_orgs_message": "Zdá sa, že ešte nie ste súčasťou žiadnej organizácie. Pridajte sa do jednej, aby ste ju tu videli.",
     "assignments": "Úlohy",
     "boards": "Tabule",
     "payments": "Platby",
-    "playgrounds": "Ihriská",
+    "playgrounds": "Playgrounds",
     "organization": "Organizácia",
     "analytics": "Analytika",
     "dashboard": "Nástenka",
@@ -64,77 +64,77 @@
     },
     "plans": {
       "label": "Plány",
-      "upgrade_button": "Inovovať na {{plan}}",
-      "upgrade_to": "Inovovať na",
+      "upgrade_button": "Navýšiť na {{plan}}",
+      "upgrade_to": "Navýšiť plán na",
       "current_plan": "Aktuálny plán",
       "feature_restricted": {
         "payments": {
           "title": "Štandardná funkcia",
-          "description": "Platby sú prémiová funkcia dostupná len pre organizácie na pláne Standard alebo vyššom. Inovujte pre odomknutie spracovania platieb a monetizácie."
+          "description": "Platby sú prémiová funkcia dostupná len pre organizácie na pláne Standard alebo vyššom. Navýšte si plán a odomknite spracovanie platieb a monetizáciu."
         },
         "usergroups": {
           "title": "Štandardná funkcia",
-          "description": "Skupiny používateľov sú prémiová funkcia dostupná len pre organizácie na pláne Standard alebo vyššom. Inovujte pre organizovanie používateľov do skupín."
+          "description": "Skupiny používateľov sú prémiová funkcia dostupná len pre organizácie na pláne Standard alebo vyššom. Navýšte si plán, aby ste mohli organizovať používateľov do skupín."
         },
         "roles": {
           "title": "Pro funkcia",
-          "description": "Vytváranie vlastných rolí je prémiová funkcia dostupná len pre organizácie na pláne Pro alebo vyššom. Inovujte pre vytváranie rolí so špecifickými oprávneniami."
+          "description": "Vytváranie vlastných rolí je prémiová funkcia dostupná len pre organizácie na pláne Pro alebo vyššom. Navýšte si plán, aby ste mohli vytvárať roly so špecifickými oprávneniami."
         },
         "ai": {
           "title": "Štandardná funkcia",
-          "description": "AI funkcie sú dostupné len pre organizácie na pláne Standard alebo vyššom. Inovujte pre odomknutie AI tvorby obsahu a asistencie pri učení."
+          "description": "AI funkcie sú dostupné len pre organizácie na pláne Standard alebo vyššom. Navýšte si plán a odomknite AI tvorbu obsahu a asistenciu pri učení."
         },
         "communities": {
           "title": "Štandardná funkcia",
-          "description": "Komunity sú prémiová funkcia dostupná len pre organizácie na pláne Standard alebo vyššom. Inovujte pre odomknutie diskusných komunít pre vašich členov."
+          "description": "Komunity sú prémiová funkcia dostupná len pre organizácie na pláne Standard alebo vyššom. Navýšte si plán a odomknite diskusné komunity pre vašich členov."
         },
         "podcasts": {
           "title": "Štandardná funkcia",
-          "description": "Podcasty sú prémiová funkcia dostupná len pre organizácie na pláne Standard alebo vyššom. Inovujte pre vytváranie a zdieľanie podcastov s vašimi členmi."
+          "description": "Podcasty sú prémiová funkcia dostupná len pre organizácie na pláne Standard alebo vyššom. Navýšte si plán, aby ste mohli vytvárať a zdieľať podcasty s vašimi členmi."
         },
         "audit_logs": {
           "title": "Enterprise funkcia",
-          "description": "Auditné záznamy sú prémiová funkcia dostupná len pre organizácie na pláne Enterprise. Inovujte pre úplný prehľad o aktivitách vašej organizácie."
+          "description": "Auditné záznamy sú prémiová funkcia dostupná len pre organizácie na pláne Enterprise. Navýšte si plán, čím získate úplný prehľad o aktivitách vašej organizácie."
         },
         "certifications": {
           "title": "Pro funkcia",
-          "description": "Certifikáty sú prémiová funkcia dostupná len pre organizácie na pláne Pro alebo vyššom. Inovujte pre vydávanie certifikátov študentom, ktorí dokončia vaše kurzy."
+          "description": "Certifikáty sú prémiová funkcia dostupná len pre organizácie na pláne Pro alebo vyššom. Navýšte si plán, aby ste mohli vydávať certifikáty študentom, ktorí dokončia vaše kurzy."
         },
         "seo": {
           "title": "Štandardná funkcia",
-          "description": "Nástroje SEO optimalizácie sú dostupné len pre organizácie na pláne Standard alebo vyššom. Inovujte pre prispôsobenie vzhľadu vo vyhľadávačoch a zdieľania na sociálnych sieťach."
+          "description": "Nástroje SEO optimalizácie sú dostupné len pre organizácie na pláne Standard alebo vyššom. Navýšte si plán a prispôsobte si vzhľad vo vyhľadávačoch a zdieľanie na sociálnych sieťach."
         },
         "sso": {
           "title": "Enterprise funkcia",
-          "description": "Jednotné prihlásenie (SSO) je prémiová funkcia dostupná len pre organizácie na pláne Enterprise. Inovujte pre bezpečnú autentifikáciu cez poskytovateľa identity vašej organizácie."
+          "description": "Jednotné prihlásenie (SSO) je prémiová funkcia dostupná len pre organizácie na pláne Enterprise. Navýšte si plán a získajte bezpečnú autentifikáciu cez poskytovateľa identity vašej organizácie."
         },
         "custom_domains": {
           "title": "Štandardná funkcia",
-          "description": "Vlastné domény sú prémiová funkcia dostupná len pre organizácie na pláne Standard alebo vyššom. Inovujte pre používanie vlastnej domény."
+          "description": "Vlastné domény sú prémiová funkcia dostupná len pre organizácie na pláne Standard alebo vyššom. Navýšte si plán, aby ste mohli používať vlastnú doménu."
         },
         "analytics": {
           "title": "Štandardná funkcia",
-          "description": "Analytika je prémiová funkcia dostupná len pre organizácie na pláne Standard alebo vyššom. Inovujte pre prehľady o vašich študentoch a obsahu."
+          "description": "Analytika je prémiová funkcia dostupná len pre organizácie na pláne Standard alebo vyššom. Navýšte si plán, čím získate prehľady o vašich študentoch a obsahu."
         },
         "course_analytics": {
           "title": "Pro funkcia",
-          "description": "Analytika kurzov je prémiová funkcia dostupná len pre organizácie na pláne Pro alebo vyššom. Inovujte pre podrobné údaje o zapojení, trendoch zápisov a pokroku študentov."
+          "description": "Analytika kurzov je prémiová funkcia dostupná len pre organizácie na pláne Pro alebo vyššom. Navýšte si plán, čím získate podrobné údaje o zapojení, trendoch zápisov a pokroku študentov."
         },
         "boards": {
           "title": "Štandardná funkcia",
-          "description": "Tabule sú prémiová funkcia dostupná len pre organizácie na pláne Standard alebo vyššom. Inovujte pre odomknutie kolaboratívnych tabúľ pre brainstorming a plánovanie."
+          "description": "Tabule sú prémiová funkcia dostupná len pre organizácie na pláne Standard alebo vyššom. Navýšte si plán a odomknite kolaboratívne tabule pre brainstorming a plánovanie."
         },
         "playgrounds": {
           "title": "Štandardná funkcia",
-          "description": "Ihriská sú prémiová funkcia dostupná len pre organizácie na pláne Standard alebo vyššom. Inovujte pre vytváranie interaktívnych AI zážitkov pre vašich študentov."
+          "description": "Playgrounds sú prémiová funkcia dostupná len pre organizácie na pláne Standard alebo vyššom. Navýšte si plán, aby ste mohli vytvárať interaktívne AI zážitky pre vašich študentov."
         },
         "scorm": {
           "title": "Enterprise funkcia",
-          "description": "Podpora SCORM je prémiová funkcia dostupná len pre organizácie na pláne Enterprise. Inovujte pre import a doručovanie SCORM balíkov spolu s vašimi kurzami."
+          "description": "Podpora SCORM je prémiová funkcia dostupná len pre organizácie na pláne Enterprise. Navýšte si plán, aby ste mohli importovať a doručovať SCORM balíky spolu s vašimi kurzami."
         },
         "webhooks": {
           "title": "Pro funkcia",
-          "description": "Automatizácie sú prémiová funkcia dostupná len pre organizácie na pláne Pro alebo vyššom. Inovujte pre prepojenie kurzov s webhookmi a externými integráciami."
+          "description": "Automatizácie sú prémiová funkcia dostupná len pre organizácie na pláne Pro alebo vyššom. Navýšte si plán a prepojte kurzy s webhookmi a externými integráciami."
         }
       }
     },
@@ -149,7 +149,7 @@
           "payments": "Platby",
           "trail": "Sledovanie pokroku",
           "boards": "Tabule",
-          "playgrounds": "Ihriská"
+          "playgrounds": "Playgrounds"
         },
         "public": {
           "title": "{{feature}} nie je dostupné",
@@ -182,7 +182,7 @@
     "hi": "Ahoj",
     "about": "O nás",
     "present": "Súčasnosť",
-    "made_with": "Vytvorené s",
+    "made_with": "Tvorca:",
     "something_went_wrong": "Niečo sa pokazilo",
     "something_wrong_happened": "Niečo sa pokazilo",
     "error_request": "Pri spracovaní vašej požiadavky došlo k chybe",
@@ -199,20 +199,20 @@
     "add": "Pridať",
     "for": "pre",
     "results": "výsledok",
-    "powered_by": "Poháňané",
-    "choose_an_organization_to_continue": "Vyberte organizáciu pre pokračovanie",
+    "powered_by": "Používa technológiu",
+    "choose_an_organization_to_continue": "Pre pokračovanie vyberte organizáciu",
     "slovak": "Slovenčina",
-    "no_content_yet": "Zatiaľ žiadny obsah",
+    "no_content_yet": "Zatiaľ tu nie je žiadny obsah",
     "other": "Ostatné",
     "disabled": "Vypnuté",
     "store": "Obchod"
   },
   "banner": {
     "viewing_as_guest": "Prezeráte si {{name}} ako hosť.",
-    "join_organization": "Pripojiť sa k tejto organizácii",
-    "to_access_features": "pre prístup ku všetkým funkciám.",
-    "free_plan_upgrade": "Ste na bezplatnom pláne. Inovujte pre odomknutie kompletného zážitku.",
-    "free_plan_upgrade_button": "Inovovať"
+    "join_organization": "Pridať sa do tejto organizácie",
+    "to_access_features": "na získanie prístupu ku všetkým funkciám.",
+    "free_plan_upgrade": "Ste na bezplatnom pláne. Navýšte si plán a odomknite kompletný zážitok.",
+    "free_plan_upgrade_button": "Navýšiť plán"
   },
   "auth": {
     "login": "Prihlásenie",
@@ -224,13 +224,13 @@
     "sign_up": "Registrácia",
     "sign_in_with_google": "Prihlásiť sa cez Google",
     "wrong_email_password": "Nesprávny e-mail alebo heslo",
-    "error_generic": "Niečo sa pokazilo. Skúste to znova.",
+    "error_generic": "Niečo sa pokazilo. Skúste to prosím znova.",
     "invited_to_join": "Začnite svoju vzdelávaciu cestu",
-    "join": "Pripojiť sa",
-    "invite_code_required": "Na pripojenie je potrebný kód pozvánky",
-    "enter_invite_code": "Zadajte kód pozvánky",
-    "invite_code_valid": "Kód pozvánky je platný, budete presmerovaní na registračnú stránku",
-    "invite_code_invalid": "Kód pozvánky je neplatný",
+    "join": "Pridať sa",
+    "invite_code_required": "Na pridanie sa je potrebný pozývací kód",
+    "enter_invite_code": "Zadajte pozývací kód",
+    "invite_code_valid": "Pozývací kód je platný, budete presmerovaní na registračnú stránku",
+    "invite_code_invalid": "Pozývací kód je neplatný",
     "forgot_password_title": "Zabudnuté heslo",
     "forgot_password_description": "Zadajte svoju e-mailovú adresu a pošleme vám odkaz na obnovenie hesla",
     "send_reset_link": "Odoslať odkaz na obnovenie",
@@ -245,13 +245,13 @@
     "login_again_message": "Prihláste sa znova s novým heslom",
     "signup_to": "Registrovať sa do",
     "create_account": "Vytvoriť účet",
-    "create_account_and_join": "Vytvoriť účet a pripojiť sa",
+    "create_account_and_join": "Vytvoriť účet a pridať sa",
     "account_created_success": "Váš účet bol úspešne vytvorený",
     "login_to_your_account": "Prihláste sa do svojho účtu",
-    "authenticate_to_contribute": "Prihláste sa pre prispievanie",
-    "sign_up_to_contribute": "Zaregistrujte sa pre prispievanie",
+    "authenticate_to_contribute": "Prihláste sa, aby ste mohli prispievať",
+    "sign_up_to_contribute": "Zaregistrujte sa, aby ste mohli prispievať",
     "verify_email_title": "Overte svoj e-mail",
-    "verifying_email": "Overuje sa vaša e-mailová adresa...",
+    "verifying_email": "Vaša e-mailová adresa sa overuje...",
     "verification_failed": "Overenie zlyhalo",
     "verification_missing_params": "Chýbajú parametre overenia. Skontrolujte odkaz na overenie.",
     "verification_trouble": "Máte problémy? Skúste požiadať o nový overovací e-mail z prihlasovacej stránky.",
@@ -261,7 +261,7 @@
     "proceed_to_login": "Pokračovať na prihlásenie",
     "check_email_for_verification": "Skontrolujte si e-mail",
     "verification_email_sent_message": "Poslali sme vám overovací e-mail. Kliknite na odkaz v e-maile pre overenie účtu.",
-    "email_not_verified": "E-mail neoverený",
+    "email_not_verified": "E-mail nebol overený",
     "email_not_verified_message": "Overte svoju e-mailovú adresu pred prihlásením. Skontrolujte si doručenú poštu.",
     "resend_verification_email": "Znovu odoslať overovací e-mail",
     "resend_verification_failed": "Nepodarilo sa znovu odoslať overovací e-mail. Skúste to znova.",
@@ -272,13 +272,13 @@
     "no_account": "Nemáte účet?",
     "already_have_account": "Už máte účet?",
     "create_your_account": "Vytvorte si účet",
-    "fill_in_details": "Vyplňte svoje údaje pre začatie",
+    "fill_in_details": "Vyplňte svoje údaje, aby ste mohli začať",
     "reset_your_password": "Obnovte svoje heslo",
     "create_new_password": "Vytvorte nové heslo",
     "remember_password": "Pamätáte si heslo?",
-    "verifying_your_email": "Overuje sa váš e-mail",
+    "verifying_your_email": "Váš e-mail sa overuje",
     "account_locked": "Účet zablokovaný",
-    "account_locked_message": "Váš účet bol dočasne zablokovaný kvôli príliš veľa neúspešným pokusom o prihlásenie. Skúste to neskôr.",
+    "account_locked_message": "Váš účet bol dočasne zablokovaný kvôli veľkému množstvu neúspešných pokusov o prihlásenie. Skúste to neskôr.",
     "rate_limited": "Príliš veľa požiadaviek",
     "rate_limited_message": "Uskutočnili ste príliš veľa pokusov o prihlásenie. Počkajte niekoľko minút.",
     "password_requirements_not_met": "Heslo nespĺňa požiadavky",
@@ -320,14 +320,14 @@
     "login_failed": "Prihlásenie zlyhalo",
     "try_again_in": "skúste znova o {{minutes}} min",
     "email_verification_required": "Vyžaduje sa overenie e-mailu",
-    "email_verification_required_join": "Overte svoju e-mailovú adresu pred pripojením k organizácii.",
-    "join_organization": "Pripojiť sa k organizácii",
-    "join_organization_desc": "Chystáte sa pripojiť k tejto organizácii",
-    "join_organization_success": "Úspešne ste sa pripojili k organizácii",
-    "joining": "Pripája sa",
+    "email_verification_required_join": "Overte svoju e-mailovú adresu pred pridaním sa do organizácie.",
+    "join_organization": "Pridať sa do organizácie",
+    "join_organization_desc": "Chystáte sa pridať do tejto organizácie",
+    "join_organization_success": "Boli ste úspešne pridaní do organizácie",
+    "joining": "Pridávame vás...",
     "invite_required": "Vyžaduje sa pozvánka",
-    "invite_required_desc": "Na pripojenie k {{org}} je potrebný kód pozvánky",
-    "invite_code": "Kód pozvánky",
+    "invite_required_desc": "Na pridanie sa do {{org}} je potrebný pozývací kód",
+    "invite_code": "Pozývací kód",
     "validate_invite": "Overiť pozvánku"
   },
   "validation": {
@@ -343,7 +343,7 @@
     "courses": "Kurzy",
     "view_all_courses": "Zobraziť všetky kurzy",
     "no_courses": "Zatiaľ žiadne kurzy",
-    "create_courses_placeholder": "Vytvorte kurzy pre pridanie obsahu",
+    "create_courses_placeholder": "Vytvorte kurzy, aby ste mohli pridať obsah",
     "loading_courses": "Načítavajú sa kurzy...",
     "no_featured_courses": "Žiadne vybrané kurzy",
     "start_course": "Začať kurz",
@@ -355,12 +355,12 @@
     "you_own_this_course": "Vlastníte tento kurz",
     "you_own_this_course_description": "Zakúpili ste tento kurz a máte plný prístup ku všetkému obsahu.",
     "paid_course": "Platený kurz",
-    "paid_course_description": "Tento kurz vyžaduje zakúpenie pre prístup k obsahu.",
+    "paid_course_description": "Tento kurz vyžaduje zakúpenie, aby ste získali prístup k obsahu.",
     "join_org_required": "Vyžaduje sa členstvo v organizácii",
-    "join_org_required_description": "Musíte sa pripojiť k tejto organizácii pre zápis do kurzov.",
-    "join_organization": "Pripojiť sa k organizácii",
+    "join_org_required_description": "Musíte sa pridať do tejto organizácie, aby ste sa mohli zapísať do kurzov.",
+    "join_organization": "Pridať sa do organizácie",
     "purchase_course_title": "Zakúpiť kurz",
-    "purchase_course_description": "Vyberte možnosť platby pre prístup k tomuto kurzu",
+    "purchase_course_description": "Vyberte možnosť platby, aby ste získali prístup k tomuto kurzu",
     "ready_to_begin": "Pripravení začať?",
     "start_learning_journey": "Začnite svoju vzdelávaciu cestu s {{count}} aktivitami",
     "course_progress": "Priebeh kurzu",
@@ -377,7 +377,7 @@
     "course_name": "Názov kurzu",
     "course_thumbnail": "Náhľad kurzu",
     "course_learnings": "Čo sa naučíte",
-    "course_learnings_desc": "Čo budete učiť? (Stlačte Enter pre pridanie)",
+    "course_learnings_desc": "Čo budete učiť? (Stlačte Enter, aby ste mohli pridať)",
     "course_tags": "Štítky kurzu",
     "course_visibility": "Viditeľnosť kurzu",
     "create_course_btn": "Vytvoriť kurz",
@@ -411,7 +411,7 @@
     "share_course": "Zdieľať kurz",
     "copy_link": "Kopírovať odkaz",
     "copied": "Skopírované!",
-    "unlock_certificate_message": "Dokončite všetky aktivity pre odomknutie certifikátu",
+    "unlock_certificate_message": "Dokončite všetky aktivity, aby ste odomkli certifikát",
     "chapter": "Kapitola",
     "chapters": "Kapitoly",
     "co_created_by": "Spolutvorené",
@@ -424,7 +424,7 @@
     "image": "Obrázok",
     "upload_image": "Nahrať obrázok",
     "choose_from_gallery": "Vybrať z galérie",
-    "enter_to_add": "Enter pre pridanie...",
+    "enter_to_add": "Enter, aby ste mohli pridať...",
     "select_visibility": "Vybrať viditeľnosť",
     "and_x_more": "a {{count}} ďalších",
     "update": "aktualizácia",
@@ -446,7 +446,7 @@
     "congratulations": "Gratulujeme! 🎉",
     "successfully_completed": "Úspešne ste dokončili",
     "keep_going": "Pokračujte! 💪",
-    "keep_going_description": "Darí sa vám! Dokončite zostávajúce aktivity pre odomknutie certifikátu o dokončení kurzu.",
+    "keep_going_description": "Darí sa vám! Dokončite zostávajúce aktivity, aby ste odomkli certifikát o dokončení kurzu.",
     "making_great_progress": "Robíte skvelý pokrok v",
     "continue_learning": "Pokračovať v učení",
     "back_to_course": "Späť na kurz",
@@ -473,10 +473,10 @@
     "search_courses": "Hľadať kurzy...",
     "search_results": "Nájdených {{count}} kurzov pre \"{{query}}\"",
     "no_search_results": "Žiadne kurzy nenájdené",
-    "try_different_search": "Skúste iný vyhľadávací výraz",
+    "try_different_search": "Skúste vyhľadať iné slovo",
     "select_courses": "Vybrať",
     "select_all": "Vybrať všetko",
-    "clear_selection": "Zrušiť",
+    "clear_selection": "Zrušiť výber",
     "selected_count": "{{count}} vybraných",
     "clone_selected": "Klonovať vybrané",
     "clone_selected_confirm": "Vytvoria sa kópie {{count}} kurzov. Všetky klonované kurzy budú súkromné. Pokračovať?",
@@ -626,7 +626,7 @@
     "title": "Komunity",
     "new_community": "Nová komunita",
     "no_communities": "Zatiaľ žiadne komunity",
-    "no_communities_description": "Vytvorte komunitu pre začatie diskusií",
+    "no_communities_description": "Vytvorte komunitu, aby ste mohli začať diskusie",
     "public": "Verejná",
     "private": "Súkromná",
     "discussions": "diskusie",
@@ -696,7 +696,7 @@
     "comments": {
       "no_replies": "Zatiaľ žiadne odpovede",
       "locked": "Táto diskusia je zamknutá",
-      "join_org_to_reply": "Pripojte sa k tejto organizácii pre účasť v diskusiách",
+      "join_org_to_reply": "Pridajte sa do tejto organizácie pre účasť v diskusiách",
       "sign_in_to_reply": "Prihláste sa",
       "to_reply": "pre odpoveď",
       "write_reply": "Napíšte odpoveď...",
@@ -730,7 +730,7 @@
       "title_label": "Názov diskusie",
       "title_placeholder": "O čom by ste chceli diskutovať?",
       "emoji_selected": "Vlastné emoji vybrané",
-      "emoji_hint": "Kliknite na + pre pridanie vlastného emoji (voliteľné)",
+      "emoji_hint": "Kliknite na +, aby ste mohli pridať vlastné emoji (voliteľné)",
       "details_label": "Podrobnosti (voliteľné)",
       "details_placeholder": "Pridajte viac kontextu alebo podrobností k vašej diskusii...",
       "editor_hint": "Použite panel nástrojov pre formátovanie textu tučným, kurzívou, zoznamami a ďalšími.",
@@ -772,7 +772,7 @@
     "search_placeholder": "Hľadať tabule...",
     "no_boards_found": "Žiadne tabule nenájdené",
     "no_search_results": "Žiadne tabule nenájdené",
-    "try_different_search": "Skúste iný vyhľadávací výraz",
+    "try_different_search": "Skúste vyhľadať iné slovo",
     "no_boards_yet": "Zatiaľ žiadne tabule",
     "no_boards": "Zatiaľ žiadne tabule",
     "no_boards_description": "Vytvorte svoju prvú kolaboratívnu tabuľu.",
@@ -796,7 +796,7 @@
     "board_deleted_error": "Nepodarilo sa odstrániť tabuľu",
     "selected_count": "{{count}} vybraných",
     "select_all": "Vybrať všetko",
-    "clear_selection": "Zrušiť",
+    "clear_selection": "Zrušiť výber",
     "delete_selected": "Odstrániť vybrané",
     "delete_boards_title": "Odstrániť tabule",
     "delete_selected_confirm": "Ste si istí, že chcete odstrániť {{count}} tabúľ? Táto akcia sa nedá vrátiť.",
@@ -876,7 +876,7 @@
       "no_members": "Zatiaľ žiadni členovia",
       "member_limit_reached": "Limit členov dosiahnutý (max 10)",
       "add_member": "Pridať člena",
-      "add_member_description": "Vyhľadajte člena organizácie pre pridanie na tabuľu",
+      "add_member_description": "Vyhľadajte člena organizácie, ktorého chcete pridať na tabuľu",
       "search_placeholder": "Hľadať podľa mena alebo e-mailu...",
       "no_users_found": "Žiadni používatelia nenájdení",
       "role_label": "Rola:",
@@ -900,7 +900,7 @@
       "todo": "Úloha",
       "sticker": "Nálepka",
       "youtube": "YouTube",
-      "ai_playground": "AI ihrisko",
+      "ai_playground": "AI Playground",
       "activity": "Aktivita",
       "embed": "Vložiť",
       "webpage": "Webstránka",
@@ -979,7 +979,7 @@
       "open_in_new_tab": "Otvoriť v novej záložke"
     },
     "playground_block": {
-      "title": "AI ihrisko",
+      "title": "AI Playground",
       "description": "Generujte interaktívne prvky pomocou AI",
       "generate": "Generovať",
       "edit": "Upraviť",
@@ -987,7 +987,7 @@
       "generating": "Generuje sa interaktívny obsah...",
       "streaming": "Generuje sa...",
       "empty_state": "Opíšte, čo chcete vytvoriť a sledujte, ako to ožíva",
-      "chat_header": "AI ihrisko",
+      "chat_header": "AI Playground",
       "prompt_text": "Opíšte interaktívny prvok na vygenerovanie",
       "ai_content": "AI vygenerovaný obsah",
       "check_preview": "Skontrolujte náhľad vľavo",
@@ -1026,7 +1026,7 @@
     "no_podcasts_description": "Momentálne nie sú dostupné žiadne podcasty",
     "create_podcasts_placeholder": "Vytvorte podcasty pre zdieľanie audio obsahu s vaším publikom",
     "no_search_results": "Žiadne podcasty nenájdené",
-    "try_different_search": "Skúste iný vyhľadávací výraz",
+    "try_different_search": "Skúste vyhľadať iné slovo",
     "search_results": "Nájdených {{count}} podcastov pre \"{{query}}\"",
     "podcast_name": "Názov podcastu",
     "podcast_name_required": "Názov podcastu je povinný",
@@ -1193,7 +1193,7 @@
     "not_supported_title": "Táto aktivita nie je podporovaná",
     "not_supported_description": "Tento typ aktivity vyžaduje autentifikáciu a nemôže byť vložený.",
     "visit_activity": "Navštíviť stránku aktivity",
-    "powered_by": "Poháňané LearnHouse"
+    "powered_by": "Používa technológiu LearnHouse"
   },
   "assignments": {
     "submit_assignment": "Odovzdať úlohu",
@@ -1287,7 +1287,7 @@
       "users": "Členovia",
       "communities": "Komunity",
       "discussions": "Diskusie",
-      "playgrounds": "Ihriská",
+      "playgrounds": "Playgrounds",
       "podcasts": "Podcasty"
     },
     "course": "Kurz",
@@ -1667,7 +1667,7 @@
       "import_learnhouse_description": "Importovať kurz exportovaný z LearnHouse",
       "import_select_type": "Vyberte typ kurzu na import",
       "no_courses": "Zatiaľ žiadne kurzy",
-      "create_course_placeholder": "Vytvorte kurz pre pridanie obsahu",
+      "create_course_placeholder": "Vytvorte kurz, aby ste mohli pridať obsah",
       "no_courses_available": "Zatiaľ nie sú dostupné žiadne kurzy",
       "limit_reached": "Limit kurzov dosiahnutý ({{limit}})",
       "publishing": "Publikuje sa kurz...",
@@ -1734,7 +1734,7 @@
           "learnings_empty_text": "Všetky položky učiva musia mať text",
           "learnings_invalid_json": "Neplatný formát JSON",
           "tags_label": "Štítky",
-          "tags_placeholder": "Enter pre pridanie...",
+          "tags_placeholder": "Enter, aby ste mohli pridať...",
           "thumbnail_type_label": "Typ náhľadu",
           "thumbnail_type_image": "Obrázok",
           "thumbnail_type_video": "Video",
@@ -2054,7 +2054,7 @@
         "title": "Komunity",
         "new_community": "Nová komunita",
         "no_communities": "Zatiaľ žiadne komunity",
-        "no_communities_description": "Vytvorte svoju prvú komunitu pre začatie diskusií",
+        "no_communities_description": "Vytvorte svoju prvú komunitu, aby ste mohli začať diskusie",
         "card": {
           "open_settings": "Otvoriť nastavenia",
           "view_community": "Zobraziť komunitu",
@@ -2578,7 +2578,7 @@
         "welcome_message": "Uvítacia správa",
         "welcome_placeholder": "Zadajte vlastnú uvítaciu správu pre prihlasovaciu stránku...",
         "welcome_desc": "Táto správa sa zobrazí na prihlasovacích a registračných stránkach. Nechajte prázdne pre predvolené.",
-        "default_welcome": "Prihláste sa pre prístup k obsahu výučby",
+        "default_welcome": "Prihláste sa, aby ste získali prístup k obsahu výučby",
         "background_type": "Typ pozadia",
         "bg_gradient": "Gradient",
         "bg_custom": "Vlastné",
@@ -2630,7 +2630,7 @@
         "warning": "Pre bezpečnosť vašej organizácie sa uistite, že dôverujete a rozumiete akýmkoľvek skriptom pred ich pridaním. Skripty môžu interagovať so stránkami vašej organizácie.",
         "add_script": "Pridať skript",
         "no_scripts": "Zatiaľ žiadne skripty",
-        "add_first_script": "Pridajte prvý skript pre začatie",
+        "add_first_script": "Pridajte prvý skript, aby ste mohli začať",
         "script_name": "Názov skriptu",
         "script_content": "Obsah skriptu",
         "placeholders": {
@@ -2706,7 +2706,7 @@
         "title": "Nastavenia funkcií",
         "subtitle": "Zapnite alebo vypnite funkcie pre vašu organizáciu",
         "admin_only": "Iba administrátori organizácie môžu upravovať nastavenia funkcií.",
-        "upgrade_notice": "Inovujte na plán {{plan}} pre aktiváciu tejto funkcie",
+        "upgrade_notice": "Navýšte na plán {{plan}} pre aktiváciu tejto funkcie",
         "toggles": {
           "courses": {
             "title": "Kurzy",
@@ -2729,7 +2729,7 @@
             "description": "Vytvárajte kolaboratívne tabule so zoznamami a kartami pre riadenie projektov"
           },
           "playgrounds": {
-            "title": "Ihriská",
+            "title": "Playgrounds",
             "description": "Vytvárajte interaktívne AI zážitky pre vašich študentov"
           }
         },
@@ -2785,8 +2785,8 @@
         },
         "enterprise_only": "Záznamy auditu sú dostupné iba na pláne Enterprise",
         "enterprise_feature": "Enterprise funkcia",
-        "enterprise_description": "Záznamy auditu sú prémiová funkcia dostupná iba organizáciám na našom pláne Enterprise. Inovujte pre úplný prehľad o aktivitách vašej organizácie.",
-        "upgrade_button": "Inovovať na Enterprise",
+        "enterprise_description": "Záznamy auditu sú prémiová funkcia dostupná iba organizáciám na našom pláne Enterprise. Navýšte si plán, čím získate úplný prehľad o aktivitách vašej organizácie.",
+        "upgrade_button": "Navýšiť na Enterprise",
         "modals": {
           "payload": {
             "title": "Payload udalosti",
@@ -2983,7 +2983,7 @@
       },
       "domains": {
         "title": "Vlastné domény",
-        "subtitle": "Nakonfigurujte vlastné domény pre prístup k vašej organizácii",
+        "subtitle": "Nakonfigurujte vlastné domény, aby ste získali prístup k vašej organizácii",
         "empty_description": "Pridajte vlastnú doménu pre značkový zážitok pre vašich študentov.",
         "add_domain": "Pridať doménu",
         "domain_name": "Názov domény",
@@ -3005,7 +3005,7 @@
         "domain_added": "Doména pridaná",
         "domain_removed": "Doména odstránená",
         "no_domains_yet": "Zatiaľ žiadne vlastné domény",
-        "add_first_domain": "Pridajte svoju prvú doménu pre začatie",
+        "add_first_domain": "Pridajte svoju prvú doménu, aby ste mohli začať",
         "add_custom_domain": "Pridať vlastnú doménu",
         "add_custom_domain_desc": "Zadajte doménu, ktorú chcete použiť pre vašu organizáciu.",
         "domain_label": "Doména",
@@ -3230,14 +3230,14 @@
           "actions": {
             "delete_code": "Odstrániť kód",
             "delete_confirmation_title": "Odstrániť kód?",
-            "delete_confirmation_message": "Ste si istí, že chcete odstrániť tento kód pozvánky?",
-            "generate": "Vygenerovať kód pozvánky",
-            "generate_title": "Vygenerovať kód pozvánky",
-            "generate_description": "Vygenerovať nový kód pozvánky pre vašu organizáciu"
+            "delete_confirmation_message": "Ste si istí, že chcete odstrániť tento pozývací kód?",
+            "generate": "Vygenerovať pozývací kód",
+            "generate_title": "Vygenerovať pozývací kód",
+            "generate_description": "Vygenerovať nový pozývací kód pre vašu organizáciu"
           },
           "toasts": {
             "deleting": "Odstraňuje sa...",
-            "delete_success": "Kód pozvánky odstránený",
+            "delete_success": "Pozývací kód odstránený",
             "delete_error": "Chyba pri odstraňovaní",
             "changing_method": "Mení sa spôsob pripojenia...",
             "change_success": "Spôsob pripojenia zmenený na {{method}}",
@@ -3245,9 +3245,9 @@
           }
         },
         "generate_modal": {
-          "linked_title": "Kód pozvánky prepojený so skupinou",
+          "linked_title": "Pozývací kód prepojený so skupinou",
           "linked_description": "Pri registrácii budú používatelia automaticky prepojení so skupinou podľa vášho výberu",
-          "normal_title": "Normálny kód pozvánky",
+          "normal_title": "Normálny pozývací kód",
           "normal_description": "Pri registrácii používateľ nebude prepojený so žiadnou skupinou",
           "generate_button": "Vygenerovať",
           "no_usergroups": "Žiadne dostupné skupiny",
@@ -3261,8 +3261,8 @@
         "title": "Pozvať používateľov do vašej organizácie",
         "subtitle": "Poslať pozvánku e-mailom, oddelené čiarkou",
         "email_placeholder": "Example : spike.spiegel@bepop.space, michael.scott@dundermifflin.com",
-        "invite_code_label": "Kód pozvánky",
-        "invite_code_tooltip": "Voliteľne priložiť kód pozvánky vygenerovaný zo stránky prístupu k registrácii",
+        "invite_code_label": "Pozývací kód",
+        "invite_code_tooltip": "Voliteľne priložiť pozývací kód vygenerovaný zo stránky prístupu k registrácii",
         "no_invite_code": "Žiadny",
         "send_button": "Poslať pozvánky e-mailom",
         "results": {
@@ -4027,7 +4027,7 @@
         "users": "Používatelia",
         "communities": "Komunity",
         "discussions": "Diskusie",
-        "playgrounds": "Ihriská",
+        "playgrounds": "Playgrounds",
         "podcasts": "Podcasty"
       },
       "entries": {
@@ -4056,7 +4056,7 @@
           "keywords": "kanban, projekt, úlohy"
         },
         "playgrounds": {
-          "description": "Programovacie ihriská",
+          "description": "Programovacie Playgrounds",
           "keywords": "kód, sandbox, programovanie"
         },
         "analytics": {
@@ -4382,7 +4382,7 @@
       "embed_block": {
         "edit_embed": "Upraviť vloženie",
         "add_embed_from": "Pridať vloženie z:",
-        "click_service": "Kliknite na službu pre pridanie vloženia",
+        "click_service": "Kliknite na službu, aby ste mohli pridať vloženie",
         "add_embed": "Pridať {{name}} vloženie",
         "add_embed_url": "Pridať URL vloženia",
         "add_embed_code": "Pridať kód vloženia",
@@ -4430,7 +4430,7 @@
         "create_interactive": "Vytvoriť interaktívny obsah",
         "generate_description": "Generujte kvízy, simulácie, grafy a viac s AI",
         "generate_with_ai": "Generovať s AI",
-        "upgrade_required": "Inovujte na plán Standard pre generovanie interaktívneho obsahu s AI",
+        "upgrade_required": "Navýšte na plán Standard pre generovanie interaktívneho obsahu s AI",
         "drag_resize": "Ťahajte pre zmenu veľkosti",
         "edit_left": "Upraviť (zostáva {{count}})",
         "experimental": "Experimentálne",
@@ -4471,7 +4471,7 @@
     },
     "advanced_gate": {
       "requires": "Vyžaduje",
-      "upgrade_description": "Inovujte pre odomknutie pokročilej analytiky"
+      "upgrade_description": "Navýšte si plán a odomknite pokročilú analytiku"
     },
     "common": {
       "loading": "Načítava sa...",
@@ -4876,11 +4876,11 @@
     "created_summary": "Vytvorených {{chapters}} kapitol a {{activities}} aktivít",
     "go_to_course": "Prejsť na kurz",
     "creation_failed": "Vytvorenie kurzu zlyhalo",
-    "creation_error_generic": "Niečo sa pokazilo. Skúste to znova.",
+    "creation_error_generic": "Niečo sa pokazilo. Skúste to prosím znova.",
     "try_again": "Skúsiť znova",
     "ai_failed": "Návrh AI zlyhal, prepínanie na ručné usporiadanie",
     "upload_failed": "Nahrávanie súboru zlyhalo",
-    "click_to_add_more": "Kliknite pre pridanie ďalších súborov",
+    "click_to_add_more": "Kliknite, aby ste mohli pridať ďalšie súbory",
     "uploading_files": "Nahrávajú sa súbory",
     "step_upload": "Nahrať",
     "step_organize": "Usporiadať",
@@ -5029,8 +5029,8 @@
     "locked": "Zamknuté",
     "locked_title": "Táto aktivita je zamknutá",
     "locked_auth_required": "Pre prístup k tejto aktivite sa musíte prihlásiť.",
-    "locked_restricted": "Musíte byť členom správnej skupiny používateľov pre prístup k tejto aktivite.",
-    "activity_locked_hint": "Prihláste sa alebo sa pridajte do správnej skupiny pre odomknutie.",
+    "locked_restricted": "Musíte byť členom správnej skupiny používateľov, aby ste získali prístup k tejto aktivite.",
+    "activity_locked_hint": "Prihláste sa alebo sa pridajte do správnej skupiny, aby ste ju odomkli.",
     "back_to_course": "Späť na kurz",
     "lock": {
       "header_access": "Prístup",
@@ -5066,22 +5066,22 @@
     "showing_page": "Zobrazuje sa strana {{current}} z {{total}}"
   },
   "playgrounds": {
-    "no_playgrounds_yet": "Zatiaľ žiadne ihriská",
+    "no_playgrounds_yet": "Zatiaľ žiadne Playgrounds",
     "playgrounds_description": "Vytvárajte interaktívne AI zážitky pre vašich študentov.",
-    "new_playground": "Nové ihrisko",
-    "search_placeholder": "Hľadať ihriská...",
+    "new_playground": "Nové Playground",
+    "search_placeholder": "Hľadať Playgrounds...",
     "no_results_for": "Žiadne výsledky pre",
-    "try_different_search": "Skúste iný vyhľadávací výraz",
-    "new_playground_modal_title": "Nové ihrisko",
-    "new_playground_modal_desc": "Pomenujte svoje ihrisko pre začatie.",
+    "try_different_search": "Skúste vyhľadať iné slovo",
+    "new_playground_modal_title": "Nové Playground",
+    "new_playground_modal_desc": "Pomenujte svoje Playground, aby ste mohli začať.",
     "creating": "Vytvára sa...",
     "create": "Vytvoriť",
-    "failed_create": "Nepodarilo sa vytvoriť ihrisko",
+    "failed_create": "Nepodarilo sa vytvoriť Playground",
     "view": {
       "open_editor_to_generate": "Otvorte editor na vygenerovanie obsahu.",
       "check_back_later": "Skúste to neskôr.",
       "open_editor": "Otvoriť editor",
-      "breadcrumb": "Ihriská",
+      "breadcrumb": "Playgrounds",
       "about": "O projekte",
       "author": "Autor",
       "access": "Prístup",
