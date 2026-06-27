@@ -34,7 +34,6 @@ from src.db.courses.assignments import AssignmentTaskSubmissionUpdate
 from src.db.users import APITokenUser, User
 from src.services.courses.activities.assignments import (
     create_assignment,
-    create_assignment_submission,
     grade_assignment_submission,
     handle_assignment_task_submission,
     read_assignment,
