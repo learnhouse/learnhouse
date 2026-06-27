@@ -5,7 +5,7 @@ from typing import Literal
 from uuid import uuid4
 from fastapi import HTTPException, Request, UploadFile, status
 import redis
-from sqlmodel import select
+from sqlmodel import select, func
 from sqlmodel.ext.asyncio.session import AsyncSession
 from config.config import get_learnhouse_config
 from src.security.features_utils.usage import (
@@ -41,6 +41,7 @@ from src.db.users import (
     UserUpdatePassword,
 )
 from src.db.user_organizations import UserOrganization
+from src.security.rbac.constants import ADMIN_ROLE_ID
 from src.security.security import security_hash_password, security_verify_password
 from src.services.security.password_validation import validate_password_complexity
 from src.services.analytics.analytics import track
@@ -700,7 +701,59 @@ async def delete_user_by_id(
     # RBAC check
     await rbac_check(request, current_user, "delete", user.user_uuid, db_session)
 
-    # Remove org memberships first (no CASCADE on this FK)
+    from src.routers.users import _invalidate_session_cache
+
+    # Delete organizations the user is the SOLE admin of, so we don't leave
+    # behind orphaned, admin-less organizations when an account goes away.
+    # An org is deleted only when the user is one of its admins (role_id=1) AND
+    # no other admin remains. Orgs that still have another admin are kept; the
+    # user is simply removed from them via the membership cleanup below.
+    admin_org_ids = (await db_session.execute(
+        select(UserOrganization.org_id).where(
+            UserOrganization.user_id == user_id,
+            UserOrganization.role_id == ADMIN_ROLE_ID,
+        )
+    )).scalars().all()
+
+    for org_id in admin_org_ids:
+        other_admins = (await db_session.execute(
+            select(func.count()).select_from(UserOrganization).where(
+                UserOrganization.org_id == org_id,
+                UserOrganization.role_id == ADMIN_ROLE_ID,
+                UserOrganization.user_id != user_id,
+            )
+        )).scalar_one()
+
+        if other_admins:
+            # Another admin remains — keep the org, only drop this membership.
+            continue
+
+        org = (await db_session.execute(
+            select(Organization).where(Organization.id == org_id)
+        )).scalars().first()
+        if not org:
+            continue
+
+        # Capture every member so we can invalidate their cached sessions; their
+        # UserOrganization rows are removed via the CASCADE on the org FK.
+        member_ids = (await db_session.execute(
+            select(UserOrganization.user_id).where(UserOrganization.org_id == org_id)
+        )).scalars().all()
+
+        logging.warning(
+            "AUDIT: Organization auto-deleted on user deletion - "
+            f"org_id={org_id}, org_uuid={org.org_uuid}, org_name={org.name}, "
+            f"triggered_by_user_id={user_id}"
+        )
+
+        await db_session.delete(org)
+        await db_session.flush()
+
+        for member_id in member_ids:
+            _invalidate_session_cache(member_id)
+
+    # Remove any remaining org memberships (no CASCADE on this FK). Memberships
+    # of orgs deleted above are already gone via the org-level CASCADE.
     user_orgs = (await db_session.execute(
         select(UserOrganization).where(UserOrganization.user_id == user_id)
     )).scalars().all()

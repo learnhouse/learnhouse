@@ -618,6 +618,63 @@ async def delete_org(
     return {"detail": "Organization deleted", "org_id": org_id, "org_name": org_name}
 
 
+async def wipe_org_content(
+    request: Request,
+    org_id: int,
+    current_user: PublicUser | AnonymousUser,
+    db_session: AsyncSession,
+):
+    """
+    Delete all courses (and their cascaded content) in an organization while
+    keeping the organization and its members intact.
+
+    SECURITY: Only organization admins can wipe their org's content (enforced by
+    the RBAC check below). Course-related data (chapters, activities, etc.) is
+    removed via the database CASCADE constraints on the course foreign keys.
+    """
+    from src.db.courses.courses import Course
+    from src.services.courses.transfer.storage_utils import delete_storage_directory
+    from src.security.features_utils.usage import decrease_feature_usage
+
+    statement = select(Organization).where(Organization.id == org_id)
+    org = (await db_session.execute(statement)).scalars().first()
+
+    if not org:
+        raise HTTPException(
+            status_code=404,
+            detail="Organization not found",
+        )
+
+    # RBAC check - verifies the caller is an admin of THIS organization
+    await rbac_check(request, org.org_uuid, current_user, "delete", db_session)
+
+    courses = (await db_session.execute(
+        select(Course).where(Course.org_id == org_id)
+    )).scalars().all()
+
+    user_id = current_user.id if hasattr(current_user, "id") else "unknown"
+    logging.warning(
+        f"AUDIT: Organization content wipe - org_id={org_id}, org_uuid={org.org_uuid}, "
+        f"course_count={len(courses)}, triggered_by_user_id={user_id}"
+    )
+
+    deleted_count = 0
+    for course in courses:
+        # Clean up content files from storage before removing the row.
+        content_path = f"content/orgs/{org.org_uuid}/courses/{course.course_uuid}"
+        delete_storage_directory(content_path)
+        await db_session.delete(course)
+        deleted_count += 1
+
+    await db_session.commit()
+
+    # Decrement usage AFTER the rows are gone, mirroring delete_course().
+    for _ in range(deleted_count):
+        await decrease_feature_usage("courses", org_id, db_session)
+
+    return {"detail": "Organization content wiped", "deleted_courses": deleted_count}
+
+
 async def get_orgs_by_user_admin(
     request: Request,
     db_session: AsyncSession,
