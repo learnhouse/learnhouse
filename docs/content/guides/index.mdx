@@ -1,0 +1,32 @@
+---
+title: Guides
+description: Hands-on, end-to-end guides for building with LearnHouse — ship your own headless learning platform with Next.js, drive the API, and react to events with webhooks.
+---
+
+import { Callout } from 'nextra/components'
+import GuideCards from '../../components/GuideCards/GuideCards'
+
+# Guides
+
+The rest of the docs explain *what* LearnHouse is and *how each feature works*. **Guides** are different: each one walks you all the way through **building something real** with LearnHouse, end to end.
+
+Every guide is written to be followed top to bottom, with copy-paste commands and code, and is tested against a real LearnHouse instance. Where there's a faster path, you'll get a choice: do it yourself, or hand the work to a coding agent.
+
+<GuideCards set="index" />
+
+## What you'll find here
+
+- **[Build a learning platform](/guides/build-learning-platform)** — Create your own web learning platform on top of the LearnHouse API with Next.js. You start with a fully anonymous public catalogue, then layer on authentication, enrollment, and progress tracking. Pick the **do-it-yourself** path or have an **agent** build it from a ready-made spec.
+- **[Custom features & webhooks](/guides/custom-features)** — Go beyond the official frontend: authenticate with API tokens, create and query content programmatically, and subscribe to webhooks to react to learning activity in real time.
+
+<Callout type="info">
+New to LearnHouse? Start with the [Quickstart](/getting-started/quickstart) to get an instance running, then come back here to build on top of it. The guides assume you have an organization and at least one course.
+</Callout>
+
+## Before you start
+
+These guides interact with the LearnHouse REST API, documented in the [Developers → API Reference](/developers/api). You'll get the most out of them if you're comfortable with:
+
+- **HTTP & REST** — the API is a standard JSON REST API under `/api/v1/`.
+- **A running LearnHouse instance** — local ([self-hosting](/self-hosting)) or [Cloud](https://learnhouse.app). The examples use `http://localhost:1338` as the API base.
+- **JavaScript / TypeScript** — the build guide uses Next.js, but the API calls are framework-agnostic.
