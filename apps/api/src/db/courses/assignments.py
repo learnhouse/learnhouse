@@ -215,6 +215,10 @@ class AssignmentTaskSubmissionBase(SQLModel):
     task_submission: Dict = Field(default_factory=dict, sa_column=Column(JSON))
     grade: int = 0  # Task-local raw score; aggregated into AssignmentUserSubmission.grade
     task_submission_grade_feedback: str
+    # True when a teacher set this task's grade through the manual grading UI.
+    # The aggregate grading pass skips server-side re-verification for these
+    # rows so the teacher's deliberate override is not overwritten.
+    manually_graded: bool = False
     assignment_type: AssignmentTaskTypeEnum
 
     user_id: int
@@ -246,6 +250,7 @@ class AssignmentTaskSubmissionUpdate(SQLModel):
     task_submission: Optional[Dict] = Field(default=None, sa_column=Column(JSON))
     grade: Optional[int] = None
     task_submission_grade_feedback: Optional[str] = None
+    manually_graded: Optional[bool] = None
     assignment_type: Optional[AssignmentTaskTypeEnum] = None
 
 
@@ -257,6 +262,7 @@ class AssignmentTaskSubmission(AssignmentTaskSubmissionBase, table=True):
     task_submission: Dict = Field(default_factory=dict, sa_column=Column(JSON))
     grade: int = 0  # Task-local raw score; aggregated into AssignmentUserSubmission.grade
     task_submission_grade_feedback: str
+    manually_graded: bool = Field(default=False, nullable=False)
     assignment_type: AssignmentTaskTypeEnum
 
     user_id: int = Field(

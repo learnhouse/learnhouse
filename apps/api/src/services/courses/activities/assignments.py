@@ -552,6 +552,7 @@ def _build_tasks_breakdown(
                 "points_summary": f"{task_raw}/{task_max}",
                 "passed": task_percentage >= passing_threshold,
                 "feedback": ts.task_submission_grade_feedback if ts else None,
+                "manually_graded": bool(ts.manually_graded) if ts else False,
             }
         )
     return rows
@@ -1348,10 +1349,24 @@ async def handle_assignment_task_submission(
                 detail="Assignment deadline has passed",
             )
 
+        # SECURITY: Regular users cannot update grades - only check if actual values are being set
+        if (assignment_task_submission_object.grade is not None and assignment_task_submission_object.grade != 0) or \
+           (assignment_task_submission_object.task_submission_grade_feedback is not None and assignment_task_submission_object.task_submission_grade_feedback != ""):
+            raise HTTPException(
+                status_code=403,
+                detail="You do not have permission to update grades"
+            )
+
         assignment_task_submission_object.grade = None
         assignment_task_submission_object.task_submission_grade_feedback = None
         assignment_task_submission_object.assignment_task_id = None
         assignment_task_submission_object.assignment_type = None
+
+        # Students cannot flag a submission as manually graded — that's
+        # exclusively a teacher action. Also force-clear any prior flag so a
+        # student edit invalidates the teacher's earlier manual grade and the
+        # task re-enters the server-verified pool on the next grading pass.
+        assignment_task_submission_object.manually_graded = False
 
         # Only need read permission for submissions
         await check_resource_access(request, db_session, current_user, course.course_uuid, AccessAction.READ)
@@ -2573,26 +2588,27 @@ async def _apply_grade_and_finalize(
     # If the verified grade differs from what the client submitted, overwrite
     # it so tampering is caught and future reads see the correct number.
     #
-    # This ONLY runs on the auto-grade path. On the teacher's manual grading
-    # path (auto_graded=False) the instructor has explicitly set per-task
-    # grades via the dashboard, and those overrides must win — re-deriving the
-    # grade from the student's answer here would silently discard a teacher's
-    # legitimate grade (e.g. awarding credit for a short-answer the exact
-    # matcher would mark wrong).
-    if auto_graded:
-        for task in assignment_tasks:
-            ts = task_submissions_by_task_id.get(task.id)
-            verified = await _server_verified_task_grade(task, ts)
-            if verified is None or ts is None:
-                continue
-            if int(ts.grade or 0) != verified:
-                ts.grade = verified
-                ts.task_submission_grade_feedback = (
-                    "Server-verified: correct"
-                    if verified > 0
-                    else "Server-verified: incorrect"
-                )
-                db_session.add(ts)
+    # Tasks that a teacher has manually graded (``manually_graded``) are skipped
+    # so the deliberate override is not clobbered by the auto-grader — e.g. a
+    # teacher awarding credit for a short-answer the exact matcher would mark
+    # wrong. This is the per-task replacement for the old whole-pass
+    # ``auto_graded`` gate: non-manual tasks are still re-verified even when a
+    # teacher is grading the submission, while manual overrides always win.
+    for task in assignment_tasks:
+        ts = task_submissions_by_task_id.get(task.id)
+        if ts is not None and ts.manually_graded:
+            continue
+        verified = await _server_verified_task_grade(task, ts)
+        if verified is None or ts is None:
+            continue
+        if int(ts.grade or 0) != verified:
+            ts.grade = verified
+            ts.task_submission_grade_feedback = (
+                "Server-verified: correct"
+                if verified > 0
+                else "Server-verified: incorrect"
+            )
+            db_session.add(ts)
 
     raw_grade = 0
     for ts in task_submissions_by_task_id.values():
