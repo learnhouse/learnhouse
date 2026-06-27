@@ -494,8 +494,8 @@ class TestAuthRouter:
         ), patch(
             "src.routers.auth.verify_email_token",
             new_callable=AsyncMock,
-            return_value="Email verified",
-        ):
+            return_value=(auth_user, "Email verified"),
+        ), patch("src.routers.auth.set_auth_cookies") as verify_cookies_mock:
             response = await client.post(
                 "/api/v1/auth/verify-email",
                 json={
@@ -505,6 +505,12 @@ class TestAuthRouter:
                 },
             )
         assert response.status_code == 200
+        # Successful verification auto-signs-in: cookies set + tokens returned.
+        verify_cookies_mock.assert_called_once()
+        verify_body = response.json()
+        assert verify_body["message"] == "Email verified"
+        assert verify_body["tokens"]["access_token"]
+        assert verify_body["tokens"]["refresh_token"]
 
         with patch(
             "src.routers.auth.resend_verification_email",

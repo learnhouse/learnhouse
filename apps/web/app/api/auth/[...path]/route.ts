@@ -13,7 +13,9 @@ import {
 const BACKEND_URL = (getConfig('NEXT_PUBLIC_LEARNHOUSE_BACKEND_URL') || 'http://localhost:1338').replace(/\/+$/, '')
 
 // Paths that return tokens in response body (relative to /api/v1/auth/)
-const TOKEN_RESPONSE_PATHS = ['login', 'refresh', 'oauth', 'signup']
+// `verify-email` auto-signs-in the user on successful email verification, so
+// it returns tokens just like login/signup and its cookies must be mirrored.
+const TOKEN_RESPONSE_PATHS = ['login', 'refresh', 'oauth', 'signup', 'verify-email']
 
 function shouldExtractTokens(path: string): boolean {
   return TOKEN_RESPONSE_PATHS.some(p => path.startsWith(p))

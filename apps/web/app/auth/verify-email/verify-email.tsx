@@ -37,11 +37,17 @@ function VerifyEmailClient({ org }: VerifyEmailClientProps) {
                 if (res.success) {
                     setSuccess(true)
                     setShowMessage(true)
+                    // Verification also signs the user in (session cookies were
+                    // set via the auth proxy). Send them straight into the app —
+                    // a full navigation lets auth bootstrap from the new cookies.
+                    setTimeout(() => {
+                        window.location.assign('/')
+                    }, 1200)
                 } else {
                     setError(res.error || t('auth.verification_failed'))
                     setShowMessage(true)
                 }
-            } catch (err) {
+            } catch {
                 setError(t('auth.verification_failed'))
                 setShowMessage(true)
             } finally {
@@ -68,7 +74,7 @@ function VerifyEmailClient({ org }: VerifyEmailClientProps) {
                                 </span>
                                 {success && (
                                     <span className="text-sm ml-2">
-                                        · <Link href="/login" className="underline hover:no-underline">{t('auth.proceed_to_login')}</Link>
+                                        · <Link href="/" className="underline hover:no-underline">{t('auth.proceed_to_login')}</Link>
                                     </span>
                                 )}
                             </div>
@@ -140,7 +146,7 @@ function VerifyEmailClient({ org }: VerifyEmailClientProps) {
                                     </div>
                                 </div>
                                 <Link
-                                    href="/login"
+                                    href="/"
                                     className="block w-full bg-black text-white font-semibold text-center py-2.5 rounded-lg hover:bg-gray-800 transition-colors"
                                 >
                                     {t('auth.proceed_to_login')}
