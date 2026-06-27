@@ -130,6 +130,10 @@
         "webhooks": {
           "title": "Pro Feature",
           "description": "Automations is a premium feature available only to organizations on our Pro plan or higher. Upgrade to wire your courses up to webhooks and external integrations."
+        },
+        "api_access": {
+          "title": "프로 기능",
+          "description": "API 접근은 프로 플랜 이상의 조직에서만 사용할 수 있는 프리미엄 기능입니다. 업그레이드하여 조직 데이터에 대한 프로그래밍 방식의 접근을 잠금 해제하세요."
         }
       },
       "current_plan": "현재 플랜",
@@ -146,7 +150,9 @@
           "payments": "결제",
           "trail": "진행 상황 추적",
           "boards": "보드",
-          "playgrounds": "Playgrounds"
+          "playgrounds": "Playgrounds",
+          "library": "라이브러리",
+          "folders": "라이브러리"
         },
         "public": {
           "title": "{{feature}} 사용 불가",
@@ -972,7 +978,18 @@
     "quiz": {
       "correct_answer": "정답",
       "incorrect_answer": "오답"
-    }
+    },
+    "attempt_label": "시도",
+    "attempt_count": "{{current}}번째 시도",
+    "attempt_count_bounded": "{{current}}번째 시도 / 총 {{max}}회",
+    "retry_assignment": "다시 시도",
+    "retry_assignment_title": "이 과제를 다시 시도하시겠어요?",
+    "retry_assignment_confirm": "현재 제출물과 답안이 초기화되어 처음부터 다시 시작할 수 있습니다. 다시 제출하면 이전 성적이 대체됩니다.",
+    "retry_assignment_remaining": "이번 시도 이후 {{remaining}}번의 시도가 남습니다.",
+    "retry_assignment_last": "마지막 시도입니다 — 신중하게 작성하세요.",
+    "retry_assignment_success": "작업이 초기화되었습니다 — 다시 도전해 보세요.",
+    "retry_assignment_failed": "제출물을 초기화하지 못했습니다. 다시 시도해 주세요.",
+    "retry_no_attempts_left": "남은 재시도가 없습니다"
   },
   "certificate": {
     "certificate": "수료증",
@@ -2039,7 +2056,8 @@
             "uploading": "파일 업로드 및 활동 생성 중...",
             "upload_success": "파일이 성공적으로 업로드되었습니다",
             "creating_uploading": "활동 생성 및 파일 업로드 중...",
-            "update_error": "활동 업데이트에 실패했습니다"
+            "update_error": "활동 업데이트에 실패했습니다",
+            "upload_error": "파일 업로드에 실패했습니다"
           },
           "versioning": {
             "version_history": "버전 기록",
@@ -3697,7 +3715,12 @@
             "grading_type_hint": "학생에게 성적이 표시되는 방식",
             "grading_options_hint": "제출 시 동작",
             "show_correct_answers_description": "제출물이 채점되면 학생에게 자신의 답변과 함께 정답을 표시합니다. 어떤 퀴즈 선택지가 정답이었는지, 예상되는 단답형 또는 숫자 답변, 그리고 양식 빈칸의 정답이 표시됩니다.",
-            "show_correct_answers_label": "채점 후 정답 공개"
+            "show_correct_answers_label": "채점 후 정답 공개",
+            "allow_retries_label": "재시도 허용",
+            "allow_retries_description": "채점 후 학습자가 과제를 초기화하고 다시 시도할 수 있도록 허용합니다. 재시도할 때마다 이전 답안이 삭제되며 새로운 시도로 집계됩니다.",
+            "max_retries_label": "최대 시도 횟수",
+            "max_retries_unlimited": "0은 무제한 시도를 의미합니다",
+            "max_retries_bounded": "채점되는 총 시도 횟수 (최초 제출 + 재시도)"
           },
           "toasts": {
             "updating": "과제 업데이트 중...",
@@ -3910,6 +3933,10 @@
         "account_purchases": {
           "description": "내 구매 및 구독",
           "keywords": "구매, 구독, 결제, 기록, 영수증"
+        },
+        "org_api": {
+          "description": "API 토큰 및 프로그래밍 방식 접근",
+          "keywords": "api, 토큰, 접근, 프로그래밍, 키"
         }
       }
     }
@@ -5016,7 +5043,9 @@
           "custom_domain": "커스텀 도메인",
           "custom_domain_desc": "브랜드 아카데미를 위해 자체 도메인을 사용하세요.",
           "roles": "맞춤 역할 및 권한",
-          "roles_desc": "조직에서 누가 무엇을 할 수 있는지 정확하게 제어하세요."
+          "roles_desc": "조직에서 누가 무엇을 할 수 있는지 정확하게 제어하세요.",
+          "api": "API 접근 및 웹훅",
+          "api_desc": "기존 도구와 통합하고 워크플로를 자동화하세요."
         }
       }
     }
@@ -5244,5 +5273,13 @@
       "unlink_success": "User group unlinked",
       "unlink_error": "Failed to unlink user group"
     }
+  },
+  "folders": {
+    "folder": "폴더",
+    "folders": "폴더",
+    "folder_count": "{{count}}개 폴더",
+    "folder_count_one": "{{count}}개 폴더",
+    "item_count": "{{count}}개 항목",
+    "item_count_one": "{{count}}개 항목"
   }
 }

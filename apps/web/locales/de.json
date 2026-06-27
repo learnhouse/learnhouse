@@ -132,6 +132,10 @@
         "webhooks": {
           "title": "Pro Feature",
           "description": "Automations is a premium feature available only to organizations on our Pro plan or higher. Upgrade to wire your courses up to webhooks and external integrations."
+        },
+        "api_access": {
+          "title": "Pro-Funktion",
+          "description": "Der API-Zugriff ist eine Premium-Funktion, die nur für Organisationen mit unserem Pro-Plan oder höher verfügbar ist. Führen Sie ein Upgrade durch, um programmatischen Zugriff auf die Daten Ihrer Organisation freizuschalten."
         }
       },
       "current_plan": "Aktueller Plan",
@@ -148,7 +152,9 @@
           "payments": "Zahlungen",
           "trail": "Fortschrittsverfolgung",
           "boards": "Boards",
-          "playgrounds": "Playgrounds"
+          "playgrounds": "Playgrounds",
+          "library": "Bibliothek",
+          "folders": "Bibliothek"
         },
         "public": {
           "title": "{{feature}} nicht verfügbar",
@@ -962,7 +968,18 @@
     "quiz": {
       "correct_answer": "Richtig",
       "incorrect_answer": "Falsch"
-    }
+    },
+    "attempt_label": "Versuch",
+    "attempt_count": "Versuch {{current}}",
+    "attempt_count_bounded": "Versuch {{current}} von {{max}}",
+    "retry_assignment": "Erneut versuchen",
+    "retry_assignment_title": "Diese Aufgabe erneut versuchen?",
+    "retry_assignment_confirm": "Ihre aktuelle Abgabe und Ihre Antworten werden zurückgesetzt, sodass Sie von vorne beginnen können. Ihre bisherige Note wird ersetzt, sobald Sie erneut abgeben.",
+    "retry_assignment_remaining": "Nach diesem Versuch haben Sie noch {{remaining}} Versuch{{plural}} übrig.",
+    "retry_assignment_last": "Dies ist Ihr letzter Versuch – nutzen Sie ihn gut.",
+    "retry_assignment_success": "Ihre Arbeit wurde zurückgesetzt – versuchen Sie es erneut.",
+    "retry_assignment_failed": "Ihre Abgabe konnte nicht zurückgesetzt werden. Bitte versuchen Sie es erneut.",
+    "retry_no_attempts_left": "Keine Versuche mehr übrig"
   },
   "certificate": {
     "certificate": "Zertifikat",
@@ -2029,7 +2046,8 @@
             "uploading": "Datei wird hochgeladen und Aktivität erstellt...",
             "upload_success": "Datei erfolgreich hochgeladen",
             "creating_uploading": "Aktivität wird erstellt und Datei hochgeladen...",
-            "update_error": "Aktivität konnte nicht aktualisiert werden"
+            "update_error": "Aktivität konnte nicht aktualisiert werden",
+            "upload_error": "Datei konnte nicht hochgeladen werden"
           },
           "versioning": {
             "version_history": "Versionsverlauf",
@@ -3685,7 +3703,12 @@
             "grading_type_hint": "Wie Noten den Schülern angezeigt werden",
             "grading_options_hint": "Verhalten bei Einreichung",
             "show_correct_answers_description": "Sobald die Einreichung bewertet ist, werden Schülern die richtigen Antworten neben ihren eigenen angezeigt — welche Quiz-Optionen korrekt waren, die erwartete Kurzantwort oder Zahl und die korrekten Formularlücken.",
-            "show_correct_answers_label": "Richtige Antworten nach Bewertung anzeigen"
+            "show_correct_answers_label": "Richtige Antworten nach Bewertung anzeigen",
+            "allow_retries_label": "Wiederholungen zulassen",
+            "allow_retries_description": "Erlauben Sie Lernenden, die Aufgabe nach der Bewertung zurückzusetzen und erneut zu bearbeiten. Bei jeder Wiederholung werden die bisherigen Antworten gelöscht und sie zählt als neuer Versuch.",
+            "max_retries_label": "Maximale Versuche",
+            "max_retries_unlimited": "0 bedeutet unbegrenzte Versuche",
+            "max_retries_bounded": "Bewertete Versuche insgesamt (erste Abgabe + Wiederholungen)"
           },
           "toasts": {
             "updating": "Aufgabe wird aktualisiert...",
@@ -3898,6 +3921,10 @@
         "account_purchases": {
           "description": "Ihre Käufe und Abonnements",
           "keywords": "käufe, abonnements, abrechnung, verlauf, belege"
+        },
+        "org_api": {
+          "description": "API-Tokens und programmatischer Zugriff",
+          "keywords": "api, tokens, zugriff, programmatisch, schlüssel"
         }
       }
     }
@@ -5004,7 +5031,9 @@
           "custom_domain": "Eigene Domain",
           "custom_domain_desc": "Nutzen Sie Ihre eigene Domain für eine gebrandete Akademie.",
           "roles": "Rollen & Berechtigungen",
-          "roles_desc": "Kontrollieren Sie genau, wer was in Ihrer Organisation tun kann."
+          "roles_desc": "Kontrollieren Sie genau, wer was in Ihrer Organisation tun kann.",
+          "api": "API-Zugriff & Webhooks",
+          "api_desc": "Integrieren Sie Ihre vorhandenen Tools und automatisieren Sie Arbeitsabläufe."
         }
       }
     }
@@ -5232,5 +5261,13 @@
       "unlink_success": "User group unlinked",
       "unlink_error": "Failed to unlink user group"
     }
+  },
+  "folders": {
+    "folder": "Ordner",
+    "folders": "Ordner",
+    "folder_count": "{{count}} Ordner",
+    "folder_count_one": "{{count}} Ordner",
+    "item_count": "{{count}} Elemente",
+    "item_count_one": "{{count}} Element"
   }
 }
