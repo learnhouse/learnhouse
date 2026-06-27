@@ -37,7 +37,7 @@ interface PaymentProviderDef {
   tagline: string;
   docsUrl: string;
   callbackPath: string;
-  getConnectUrl: (orgId: number, accessToken: string, redirectUri: string) => Promise<string>;
+  getConnectUrl: (_orgId: number, _accessToken: string, _redirectUri: string) => Promise<string>;
 }
 
 const PAYMENT_PROVIDERS: PaymentProviderDef[] = [
@@ -178,7 +178,7 @@ const ProviderCard: React.FC<ProviderCardProps> = ({ provider, config, orgId, ac
     } catch (err: any) {
       if (err?.status === 409 || err?.response?.status === 409) {
         let detail: any = err?.detail ?? err?.response?.data?.detail;
-        try { detail = JSON.parse(detail); } catch {}
+        try { detail = JSON.parse(detail); } catch { /* ignore */ }
         if (detail?.code === 'ACTIVE_SUBSCRIPTIONS_EXIST') {
           setDisconnectError({ count: detail.count });
           return;

@@ -130,6 +130,10 @@
         "webhooks": {
           "title": "Pro Feature",
           "description": "Automations is a premium feature available only to organizations on our Pro plan or higher. Upgrade to wire your courses up to webhooks and external integrations."
+        },
+        "api_access": {
+          "title": "Pro Özellik",
+          "description": "API Erişimi, yalnızca Pro veya üzeri plandaki kuruluşlar için kullanılabilen premium bir özelliktir. Kuruluşunuzun verilerine programatik erişimi açmak için yükseltin."
         }
       },
       "current_plan": "Mevcut plan",
@@ -146,7 +150,9 @@
           "payments": "Ödemeler",
           "trail": "İlerleme Takibi",
           "boards": "Panolar",
-          "playgrounds": "Playgrounds"
+          "playgrounds": "Playgrounds",
+          "library": "Kütüphane",
+          "folders": "Kütüphane"
         },
         "public": {
           "title": "{{feature}} mevcut değil",
@@ -985,7 +991,18 @@
     "quiz": {
       "correct_answer": "Doğru",
       "incorrect_answer": "Yanlış"
-    }
+    },
+    "attempt_label": "Deneme",
+    "attempt_count": "Deneme {{current}}",
+    "attempt_count_bounded": "Deneme {{current}} / {{max}}",
+    "retry_assignment": "Tekrar dene",
+    "retry_assignment_title": "Bu ödevi tekrar denemek ister misiniz?",
+    "retry_assignment_confirm": "Mevcut gönderiminiz ve yanıtlarınız sıfırlanacak, böylece baştan başlayabilirsiniz. Yeniden gönderdiğinizde önceki notunuz değiştirilecektir.",
+    "retry_assignment_remaining": "Bu denemeden sonra {{remaining}} deneme hakkınız kalıyor.",
+    "retry_assignment_last": "Bu son denemeniz — iyi değerlendirin.",
+    "retry_assignment_success": "Çalışmanız sıfırlandı — bir kez daha deneyin.",
+    "retry_assignment_failed": "Gönderiminiz sıfırlanamadı. Lütfen tekrar deneyin.",
+    "retry_no_attempts_left": "Deneme hakkı kalmadı"
   },
   "certificate": {
     "certificate": "Sertifika",
@@ -2052,7 +2069,8 @@
             "uploading": "Dosya yükleniyor ve aktivite oluşturuluyor...",
             "upload_success": "Dosya başarıyla yüklendi",
             "creating_uploading": "Aktivite oluşturuluyor ve dosya yükleniyor...",
-            "update_error": "Aktivite güncellenemedi"
+            "update_error": "Aktivite güncellenemedi",
+            "upload_error": "Dosya yüklenemedi"
           },
           "versioning": {
             "version_history": "Sürüm Geçmişi",
@@ -3710,7 +3728,12 @@
             "grading_type_hint": "Notların öğrencilere nasıl gösterildiği",
             "grading_options_hint": "Gönderimde davranış",
             "show_correct_answers_description": "Gönderim notlandırıldıktan sonra, öğrencilere kendi cevaplarının yanında doğru cevapları gösterin — hangi quiz seçeneklerinin doğru olduğunu, beklenen kısa veya sayısal cevabı ve doğru form boşluklarını.",
-            "show_correct_answers_label": "Notlandırmadan sonra doğru cevapları göster"
+            "show_correct_answers_label": "Notlandırmadan sonra doğru cevapları göster",
+            "allow_retries_label": "Tekrar denemelere izin ver",
+            "allow_retries_description": "Öğrencilerin ödevi notlandırıldıktan sonra sıfırlayıp yeniden denemesine izin verin. Her tekrar deneme önceki yanıtlarını siler ve yeni bir deneme olarak sayılır.",
+            "max_retries_label": "Maksimum deneme",
+            "max_retries_unlimited": "0, sınırsız deneme anlamına gelir",
+            "max_retries_bounded": "Toplam notlandırılan deneme (ilk gönderim + tekrar denemeler)"
           },
           "toasts": {
             "updating": "Ödev güncelleniyor...",
@@ -3923,6 +3946,10 @@
         "account_purchases": {
           "description": "Satın alımlarınız ve abonelikleriniz",
           "keywords": "satın alımlar, abonelikler, faturalandırma, geçmiş, makbuzlar"
+        },
+        "org_api": {
+          "description": "API belirteçleri ve programatik erişim",
+          "keywords": "api, belirteç, erişim, programatik, anahtar"
         }
       }
     }
@@ -5029,7 +5056,9 @@
           "custom_domain": "Özel alan adı",
           "custom_domain_desc": "Markalı bir akademi için kendi alan adınızı kullanın.",
           "roles": "Özel roller ve izinler",
-          "roles_desc": "Organizasyonunuzda kimin ne yapabileceğini tam olarak kontrol edin."
+          "roles_desc": "Organizasyonunuzda kimin ne yapabileceğini tam olarak kontrol edin.",
+          "api": "API erişimi ve webhook'lar",
+          "api_desc": "Mevcut araçlarınızla entegre olun ve iş akışlarını otomatikleştirin."
         }
       }
     }
@@ -5257,5 +5286,13 @@
       "unlink_success": "User group unlinked",
       "unlink_error": "Failed to unlink user group"
     }
+  },
+  "folders": {
+    "folder": "Klasör",
+    "folders": "Klasörler",
+    "folder_count": "{{count}} klasör",
+    "folder_count_one": "{{count}} klasör",
+    "item_count": "{{count}} öğe",
+    "item_count_one": "{{count}} öğe"
   }
 }

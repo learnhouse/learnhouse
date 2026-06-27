@@ -52,7 +52,7 @@ import { useLHAnalytics, AnalyticsEvent } from '@services/analytics'
 export const OrgMenu = (props: any) => {
   const orgslug = props.orgslug
   const session = useLHSession() as any;
-  const access_token = session?.data?.tokens?.access_token;
+  const _access_token = session?.data?.tokens?.access_token;
   const org = useOrg() as any;
   const [isMenuOpen, setIsMenuOpen] = React.useState(false)
   const [isFocusMode, setIsFocusMode] = useState(false)
@@ -434,9 +434,9 @@ const CopilotMenuButton = ({
   orgslug: string
   iconBtnClass: string
   isBubbleMode: boolean
-  onToggleBubbleMode: (v: boolean) => void
+  onToggleBubbleMode: (_v: boolean) => void
   bubbleOpen: boolean
-  onOpenBubble: (sessionUuid?: string) => void
+  onOpenBubble: (_sessionUuid?: string) => void
 }) => {
   const session = useLHSession() as any
   const accessToken = session?.data?.tokens?.access_token

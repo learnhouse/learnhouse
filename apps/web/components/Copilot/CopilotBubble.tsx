@@ -50,7 +50,7 @@ type ChatMessage = {
 interface CopilotBubbleProps {
   orgslug: string
   open: boolean
-  onOpenChange: (open: boolean) => void
+  onOpenChange: (_open: boolean) => void
   sessionToLoad?: string | null
 }
 
@@ -90,7 +90,7 @@ function BubbleInner({ orgslug, open, onOpenChange, sessionToLoad }: CopilotBubb
   const [error, setError] = useState<string | null>(null)
   const [isLoadingSession, setIsLoadingSession] = useState(false)
   const [followUps, setFollowUps] = useState<string[]>([])
-  const [isLoadingFollowUps, setIsLoadingFollowUps] = useState(false)
+  const [_isLoadingFollowUps, setIsLoadingFollowUps] = useState(false)
 
   const messagesContainerRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLInputElement>(null)

@@ -9,7 +9,7 @@ import { getCourseThumbnailMediaDirectory } from '@services/media/media'
 import Link from 'next/link'
 import Image from 'next/image'
 import EmptyThumbnailImage from '../../../public/empty_thumbnail.png'
-import { BookCopy, BrainCircuit, Eye, Globe, GlobeLock, Loader2, Check, Info } from 'lucide-react'
+import { BookCopy, BrainCircuit, Eye, Globe, GlobeLock, Loader2, Check } from 'lucide-react'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@components/ui/tooltip'
 import { useTranslation } from 'react-i18next'
 import { updateCourse } from '@services/courses/courses'
@@ -114,7 +114,7 @@ export function CourseOverviewTop({
           ? t('dashboard.courses.published_success')
           : t('dashboard.courses.unpublished_success')
       )
-    } catch (error) {
+    } catch (_error) {
       // Rollback on error
       dispatchCourse({
         type: 'mergePendingChanges',

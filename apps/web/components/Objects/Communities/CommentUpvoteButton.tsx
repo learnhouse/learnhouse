@@ -12,7 +12,7 @@ interface CommentUpvoteButtonProps {
   commentUuid: string
   initialVoteCount: number
   initialHasVoted: boolean
-  onVoteChange?: (newCount: number, hasVoted: boolean) => void
+  onVoteChange?: (_newCount: number, _hasVoted: boolean) => void
 }
 
 export function CommentUpvoteButton({

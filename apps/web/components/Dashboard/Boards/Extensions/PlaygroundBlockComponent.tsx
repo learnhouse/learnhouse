@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useCallback, useEffect, useRef, useState } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { useTranslation } from 'react-i18next'
 import {
@@ -361,10 +361,10 @@ interface PlaygroundModalProps {
   localHtml: string | null
   messages: ChatMessage[]
   chatInput: string
-  setChatInput: (v: string) => void
+  setChatInput: (_v: string) => void
   error: string | null
   localIterCount: number
-  onSend: (msg: string) => void
+  onSend: (_msg: string) => void
   onSave: () => void
   onClose: () => void
 }

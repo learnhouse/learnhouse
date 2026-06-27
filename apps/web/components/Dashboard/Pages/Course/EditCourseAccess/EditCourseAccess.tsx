@@ -87,7 +87,7 @@ function SkeletonCard() {
     )
 }
 
-function EditCourseAccess(props: EditCourseAccessProps) {
+function EditCourseAccess(_props: EditCourseAccessProps) {
     const { t } = useTranslation()
     const { track } = useLHAnalytics('dashboard')
     const session = useLHSession() as any;
@@ -101,7 +101,7 @@ function EditCourseAccess(props: EditCourseAccessProps) {
         isSaving,
     } = useCourseFieldSync('editCourseAccess');
 
-    const queryClient = useQueryClient()
+    const _queryClient = useQueryClient()
 
     const { data: usergroups } = useQuery({
         queryKey: queryKeys.courseUsergroups.resources(courseStructure?.course_uuid ?? '', org?.id ?? 0),

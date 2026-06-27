@@ -473,9 +473,9 @@ function BoardCard({ board, orgslug, orgUuid, orgId, isSelected, onToggleSelect,
   orgUuid: string
   orgId: number
   isSelected: boolean
-  onToggleSelect: (boardUuid: string) => void
-  onDuplicate: (boardUuid: string) => Promise<void>
-  onDelete: (boardUuid: string) => Promise<void>
+  onToggleSelect: (_boardUuid: string) => void
+  onDuplicate: (_boardUuid: string) => Promise<void>
+  onDelete: (_boardUuid: string) => Promise<void>
 }) {
   const { t } = useTranslation()
   const thumbnailImage = board.thumbnail_image
@@ -576,8 +576,8 @@ function BoardCardOptions({ board, orgslug, orgId, onDuplicate, onDelete }: {
   board: any
   orgslug: string
   orgId: number
-  onDuplicate: (boardUuid: string) => Promise<void>
-  onDelete: (boardUuid: string) => Promise<void>
+  onDuplicate: (_boardUuid: string) => Promise<void>
+  onDelete: (_boardUuid: string) => Promise<void>
 }) {
   const { t } = useTranslation()
   const [isOpen, setIsOpen] = useState(false)

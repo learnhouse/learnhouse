@@ -24,7 +24,7 @@ export type PaymentsParams = {
 
 function PaymentsPage(props: { params: Promise<PaymentsParams> }) {
   const params = use(props.params);
-  const session = useLHSession() as any
+  const _session = useLHSession() as any
   const org = useOrg() as any
   const subpage = params.subpage || 'overview'
   const getPageTitle = () => {

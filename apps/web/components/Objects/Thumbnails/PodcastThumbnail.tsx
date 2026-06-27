@@ -77,7 +77,7 @@ function PodcastThumbnail({ podcast, orgslug, customLink, isDashboard = false }:
       await deletePodcast(podcast.podcast_uuid, session.data?.tokens?.access_token)
       queryClient.invalidateQueries({ queryKey: ['podcasts'] })
       toast.success(t('podcasts.podcast_deleted_success'))
-    } catch (error) {
+    } catch (_error) {
       toast.error(t('podcasts.podcast_deleted_error'))
     } finally {
       toast.dismiss(toastId)

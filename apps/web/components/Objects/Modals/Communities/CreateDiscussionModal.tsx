@@ -4,7 +4,7 @@ import { useRouter } from 'next/navigation'
 import { useTranslation } from 'react-i18next'
 import toast from 'react-hot-toast'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
-import { createDiscussion, DISCUSSION_LABELS, DiscussionLabelId } from '@services/communities/discussions'
+import { createDiscussion, DISCUSSION_LABELS } from '@services/communities/discussions'
 import { useMutateDiscussions } from '@components/Hooks/useDiscussions'
 import Modal from '@components/Objects/StyledElements/Modal/Modal'
 import { DiscussionEditor } from '@components/Objects/Communities/DiscussionEditor'
@@ -39,11 +39,11 @@ export function CreateDiscussionModal({
   isOpen,
   onClose,
   communityUuid,
-  orgSlug,
+  orgSlug: _orgSlug,
 }: CreateDiscussionModalProps) {
   const { t } = useTranslation()
   const session = useLHSession() as any
-  const router = useRouter()
+  const _router = useRouter()
   const mutateDiscussions = useMutateDiscussions()
   const { track } = useLHAnalytics('learner')
   const [isSubmitting, setIsSubmitting] = useState(false)

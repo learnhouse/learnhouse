@@ -1,5 +1,4 @@
 'use client'
-import { getAPIUrl } from '@services/config/config'
 import { revalidateTags } from '@services/utils/ts/requests'
 import React, { useEffect, useState } from 'react'
 import { DragDropContext, Droppable } from '@hello-pangea/dnd'
@@ -53,11 +52,11 @@ const EditCourseStructure = (props: EditCourseStructureProps) => {
 
   const dispatchCourse = useCourseDispatch() as any
 
-  const [order, setOrder] = useState<OrderPayload>()
+  const [_order, _setOrder] = useState<OrderPayload>()
   const course = useCourse() as any
   const course_structure = course ? course.courseStructure : {}
   const course_uuid = course ? course.courseStructure.course_uuid : ''
-  const withUnpublishedActivities = course ? course.withUnpublishedActivities : false
+  const _withUnpublishedActivities = course ? course.withUnpublishedActivities : false
   // New Chapter creation
   const [newChapterModal, setNewChapterModal] = useState(false)
 
@@ -78,7 +77,7 @@ const EditCourseStructure = (props: EditCourseStructureProps) => {
   }
 
   const updateStructure = (result: any) => {
-    const { destination, source, draggableId, type } = result
+    const { destination, source, type } = result
     if (!destination) return
     if (
       destination.droppableId === source.droppableId &&

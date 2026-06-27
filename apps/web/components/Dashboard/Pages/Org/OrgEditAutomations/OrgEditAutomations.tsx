@@ -66,7 +66,6 @@ const ZapierLogo: React.FC<{ size?: number; className?: string }> = ({
 )
 import {
   WebhookEndpoint,
-  WebhookEndpointCreated,
   WebhookDeliveryLog,
   WebhookCreateRequest,
   createWebhookEndpoint,
@@ -343,11 +342,14 @@ const OrgEditAutomations: React.FC = () => {
     }
   }
 
+  // Zapier hero card stays hidden until the LearnHouse Zapier app is live
+  const showZapierHeroCard = false
+
   return (
     <FeatureGate feature="webhooks">
       <>
         {/* ── Zapier hero card (hidden until the LearnHouse Zapier app is live) ────────────────────── */}
-        {false && (
+        {showZapierHeroCard && (
         <div className="sm:mx-10 mx-0 mb-6 bg-white rounded-xl nice-shadow overflow-hidden">
           <div className="px-5 py-4 flex items-center gap-4">
             <div className="flex-shrink-0 w-10 h-10 rounded-lg overflow-hidden nice-shadow">
@@ -780,9 +782,9 @@ const WebhookCard: React.FC<{
   editUrl: string
   editDescription: string
   editEvents: string[]
-  onEditUrl: (v: string) => void
-  onEditDescription: (v: string) => void
-  onEditEvents: (v: string[]) => void
+  onEditUrl: (_v: string) => void
+  onEditDescription: (_v: string) => void
+  onEditEvents: (_v: string[]) => void
   onStartEdit: () => void
   onSaveEdit: () => void
   onCancelEdit: () => void
@@ -791,7 +793,7 @@ const WebhookCard: React.FC<{
   onViewLogs: () => void
   onRegenerate: () => void
   onDelete: () => void
-  formatDate: (d: string) => string
+  formatDate: (_d: string) => string
   eventCategories: EventCategory[]
   eventRegistry: Record<string, EventInfo>
 }> = ({
@@ -947,7 +949,7 @@ const EventPayloadRow: React.FC<{
 const EventSelector: React.FC<{
   categories: EventCategory[]
   selectedEvents: string[]
-  onChangeEvents: (events: string[]) => void
+  onChangeEvents: (_events: string[]) => void
 }> = ({ categories, selectedEvents, onChangeEvents }) => {
   const [previewEvent, setPreviewEvent] = useState<string | null>(null)
 

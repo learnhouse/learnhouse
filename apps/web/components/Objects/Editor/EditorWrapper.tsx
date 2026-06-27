@@ -75,7 +75,7 @@ function EditorWrapper(props: EditorWrapperProps): JSX.Element {
   const [localVersion, setLocalVersion] = React.useState<number>(
     props.activity.current_version || 1
   )
-  const [localUpdateDate, setLocalUpdateDate] = React.useState<string>(
+  const [_localUpdateDate, setLocalUpdateDate] = React.useState<string>(
     props.activity.update_date || ''
   )
 
@@ -91,7 +91,7 @@ function EditorWrapper(props: EditorWrapperProps): JSX.Element {
       const needsNormalization = /"type"\s*:\s*"(?:strong|em)"/.test(rawForScan);
       const parsed = isString ? JSON.parse(props.content) : props.content;
       return needsNormalization ? normalizeMarkTypes(parsed) : parsed;
-    } catch (e) {
+    } catch (_e) {
       // If parsing fails, return original content
       return props.content;
     }

@@ -26,7 +26,7 @@ import { getAPIUrl } from '@services/config/config'
 
 interface FeedbackModalProps {
   open: boolean
-  onOpenChange: (open: boolean) => void
+  onOpenChange: (_open: boolean) => void
   theme?: 'light' | 'dark'
   userName?: string
   userEmail?: string

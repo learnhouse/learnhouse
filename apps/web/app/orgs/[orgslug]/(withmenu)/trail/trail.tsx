@@ -13,7 +13,7 @@ import { removeCourse } from '@services/courses/activity'
 import { revalidateTags } from '@services/utils/ts/requests'
 import { useRouter } from 'next/navigation'
 import ConfirmationModal from '@components/Objects/StyledElements/ConfirmationModal/ConfirmationModal'
-import { BookOpen, Signpost } from 'lucide-react'
+import { BookOpen } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import FeatureGate from '@components/Dashboard/Shared/FeatureGate/FeatureGate'
 import { useTrackView, AnalyticsEvent } from '@services/analytics'
@@ -34,7 +34,7 @@ function Trail(params: any) {
   const isCoursesEnabled = org?.config?.config?.resolved_features?.courses?.enabled ?? org?.config?.config?.features?.courses?.enabled !== false
 
   // Only fetch trail data if courses feature is enabled; shares cache with course/activity pages
-  const { data: trail, error } = useTrail(isCoursesEnabled ? orgID : undefined)
+  const { data: trail } = useTrail(isCoursesEnabled ? orgID : undefined)
 
   useTrackView(AnalyticsEvent.TrailViewed, { runs_count: trail?.runs?.length ?? 0 }, !!trail)
 

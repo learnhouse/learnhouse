@@ -130,6 +130,10 @@
         "webhooks": {
           "title": "Pro Feature",
           "description": "Automations is a premium feature available only to organizations on our Pro plan or higher. Upgrade to wire your courses up to webhooks and external integrations."
+        },
+        "api_access": {
+          "title": "专业版功能",
+          "description": "API 访问是仅适用于专业版或更高版本组织的高级功能。升级以解锁对组织数据的程序化访问。"
         }
       },
       "current_plan": "当前方案",
@@ -146,7 +150,9 @@
           "payments": "支付",
           "trail": "进度跟踪",
           "boards": "面板",
-          "playgrounds": "Playgrounds"
+          "playgrounds": "Playgrounds",
+          "library": "资料库",
+          "folders": "资料库"
         },
         "public": {
           "title": "{{feature}}不可用",
@@ -972,7 +978,18 @@
     "quiz": {
       "correct_answer": "正确",
       "incorrect_answer": "错误"
-    }
+    },
+    "attempt_label": "尝试",
+    "attempt_count": "第 {{current}} 次尝试",
+    "attempt_count_bounded": "第 {{current}} 次尝试，共 {{max}} 次",
+    "retry_assignment": "重试",
+    "retry_assignment_title": "重新尝试此作业？",
+    "retry_assignment_confirm": "您当前的提交和答案将被重置，以便您重新开始。重新提交后，您之前的成绩将被替换。",
+    "retry_assignment_remaining": "本次之后您还剩 {{remaining}} 次尝试机会。",
+    "retry_assignment_last": "这是您的最后一次尝试——请认真对待。",
+    "retry_assignment_success": "您的作答已重置——再试一次吧。",
+    "retry_assignment_failed": "无法重置您的提交。请重试。",
+    "retry_no_attempts_left": "没有剩余的重试机会"
   },
   "certificate": {
     "certificate": "证书",
@@ -2039,7 +2056,8 @@
             "uploading": "正在上传文件并创建活动...",
             "upload_success": "文件上传成功",
             "creating_uploading": "正在创建活动并上传文件...",
-            "update_error": "更新活动失败"
+            "update_error": "更新活动失败",
+            "upload_error": "文件上传失败"
           },
           "versioning": {
             "version_history": "版本历史",
@@ -3697,7 +3715,12 @@
             "grading_type_hint": "成绩如何向学生显示",
             "grading_options_hint": "提交时的行为",
             "show_correct_answers_description": "提交评分后，向学生显示其答案旁的正确答案——包括正确的测验选项、预期的简答或数字答案，以及正确的填空内容。",
-            "show_correct_answers_label": "评分后显示正确答案"
+            "show_correct_answers_label": "评分后显示正确答案",
+            "allow_retries_label": "允许重试",
+            "allow_retries_description": "允许学员在作业评分后重置并重新作答。每次重试都会清除其之前的答案，并计为一次新的尝试。",
+            "max_retries_label": "最大尝试次数",
+            "max_retries_unlimited": "0 表示尝试次数不限",
+            "max_retries_bounded": "评分尝试总数（首次提交 + 重试）"
           },
           "toasts": {
             "updating": "正在更新作业...",
@@ -3910,6 +3933,10 @@
         "account_purchases": {
           "description": "您的购买和订阅",
           "keywords": "购买, 订阅, 账单, 历史, 收据"
+        },
+        "org_api": {
+          "description": "API 令牌和程序化访问",
+          "keywords": "api, 令牌, 访问, 程序化, 密钥"
         }
       }
     }
@@ -5016,7 +5043,9 @@
           "custom_domain": "自定义域名",
           "custom_domain_desc": "使用您自己的域名打造品牌学院。",
           "roles": "自定义角色和权限",
-          "roles_desc": "精确控制组织中谁可以做什么。"
+          "roles_desc": "精确控制组织中谁可以做什么。",
+          "api": "API 访问和 Webhook",
+          "api_desc": "与您现有的工具集成并自动化工作流程。"
         }
       }
     }
@@ -5244,5 +5273,13 @@
       "unlink_success": "User group unlinked",
       "unlink_error": "Failed to unlink user group"
     }
+  },
+  "folders": {
+    "folder": "文件夹",
+    "folders": "文件夹",
+    "folder_count": "{{count}} 个文件夹",
+    "folder_count_one": "{{count}} 个文件夹",
+    "item_count": "{{count}} 个项目",
+    "item_count_one": "{{count}} 个项目"
   }
 }

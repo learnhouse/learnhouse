@@ -3,7 +3,6 @@
 import React, { useState, useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
 import {
-  Plus,
   Search,
   X,
   Globe,
@@ -43,7 +42,7 @@ interface PlaygroundsListClientProps {
 }
 
 export default function PlaygroundsListClient({ org_id, orgslug }: PlaygroundsListClientProps) {
-  const org = useOrg() as any
+  const _org = useOrg() as any
   const session = useLHSession() as any
   const access_token = session?.data?.tokens?.access_token
   const queryClient = useQueryClient()

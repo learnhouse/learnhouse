@@ -1,4 +1,4 @@
-/* eslint-disable no-unused-vars, @typescript-eslint/no-unused-vars --
+/* eslint-disable no-unused-vars --
    Enum members are the public API of this registry; they are referenced by
    call-sites across the app, not within this file. */
 /**
@@ -214,12 +214,7 @@ export enum AnalyticsEvent {
   OfferCreated = 'offer_created',
   PaymentsFeatureGateBlocked = 'payments_feature_gate_blocked',
 
-  // ── Super-admin (cross-org) ──────────────────────────────────────────────
-  OrganizationCreated = 'organization_created',
-  OrganizationPlanUpdated = 'organization_plan_updated',
-  SuperadminTokenCreated = 'superadmin_token_created',
-  AdminLoginSubmitted = 'admin_login_submitted',
-  GlobalAnalyticsViewed = 'global_analytics_viewed',
+  // Super-admin (/admin) is intentionally NOT tracked — see PostHogAdminGuard.
 
   // ── Global navigation & cross-cutting ────────────────────────────────────
   CommandPaletteOpened = 'command_palette_opened',

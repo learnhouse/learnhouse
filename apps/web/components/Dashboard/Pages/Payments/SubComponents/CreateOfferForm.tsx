@@ -106,7 +106,7 @@ const CreateOfferForm: React.FC<{ onSuccess: () => void }> = ({ onSuccess }) => 
       } else {
         toast.error(res.data?.detail || 'Failed to create offer');
       }
-    } catch (error) {
+    } catch (_error) {
       toast.error('An error occurred while creating the offer');
     } finally {
       setSubmitting(false);

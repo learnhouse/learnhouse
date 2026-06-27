@@ -1,4 +1,5 @@
 import '../styles/globals.css'
+import React from 'react'
 import Providers from '@components/Providers'
 import { Wix_Madefor_Text } from 'next/font/google'
 

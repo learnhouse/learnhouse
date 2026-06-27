@@ -1,0 +1,767 @@
+---
+title: Build It Yourself
+description: A complete, tested, step-by-step guide to building a headless learning platform with Next.js and the LearnHouse API — public catalogue first, then authentication, enrollment, and progress tracking.
+---
+
+import { Callout, Tabs } from 'nextra/components'
+import AuthFlowDiagram from '../../../components/diagrams/AuthFlowDiagram'
+
+# Build It Yourself
+
+This is the full build. By the end you'll have a Next.js app that browses your courses, plays their content, signs learners in, enrolls them, and tracks progress — all on top of the LearnHouse API.
+
+It's split into two parts. **Part 1 is completely anonymous** — no login, no tokens, just public reads — and gets you a working public site. **Part 2 layers authentication on top** without rewriting anything from Part 1.
+
+<Callout type="info">
+**Prerequisites** (from the [overview](/guides/build-learning-platform)): Node 18+, a running LearnHouse instance at `http://localhost:1338`, your **org slug**, and at least one **public, published course** with content. Everything reads the API base from one env var, so adjust it if your instance is elsewhere.
+</Callout>
+
+---
+
+# Part 1 — A public learning site (no auth)
+
+## Step 1 — Scaffold the app
+
+Create a new Next.js app with the App Router, TypeScript, and Tailwind:
+
+```bash
+npx create-next-app@latest my-learning-platform \
+  --typescript --app --tailwind --eslint --src-dir --use-npm
+cd my-learning-platform
+```
+
+Add a `.env.local` with your API base and organization slug. Both are safe to expose to the browser (the org slug is public and reads are anonymous), so we prefix them with `NEXT_PUBLIC_`:
+
+```bash filename=".env.local"
+NEXT_PUBLIC_LEARNHOUSE_API_URL=http://localhost:1338/api/v1
+NEXT_PUBLIC_LEARNHOUSE_ORG_SLUG=your-org-slug
+```
+
+<Callout type="warning">
+Replace `your-org-slug` with your real slug. You can confirm it resolves by opening `http://localhost:1338/api/v1/orgs/slug/your-org-slug` in your browser — you should get the organization JSON back.
+</Callout>
+
+## Step 2 — A tiny API client
+
+Every call to LearnHouse goes through one small helper. Create `src/lib/learnhouse.ts`. This mirrors the pattern the official frontend uses in `apps/web/services/utils/ts/requests.ts` — a thin `fetch` wrapper that surfaces the API's `{ "detail": "..." }` error shape.
+
+```ts filename="src/lib/learnhouse.ts"
+export const API_URL = process.env.NEXT_PUBLIC_LEARNHOUSE_API_URL!
+export const ORG_SLUG = process.env.NEXT_PUBLIC_LEARNHOUSE_ORG_SLUG!
+
+/**
+ * Fetch JSON from the LearnHouse API.
+ * Pass an access token to authenticate (Part 2); omit it for public reads.
+ */
+export async function lhFetch<T = any>(
+  path: string,
+  { token, ...init }: RequestInit & { token?: string } = {}
+): Promise<T> {
+  const res = await fetch(`${API_URL}/${path.replace(/^\//, '')}`, {
+    ...init,
+    headers: {
+      Accept: 'application/json',
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      ...init.headers,
+    },
+    // Access state can change at any time, so never cache API responses.
+    cache: 'no-store',
+  })
+
+  if (!res.ok) {
+    let detail = res.statusText
+    try {
+      detail = (await res.json()).detail ?? detail
+    } catch {
+      /* non-JSON error body */
+    }
+    throw new Error(`LearnHouse API ${res.status}: ${detail}`)
+  }
+  return res.json()
+}
+
+// Media is served from the backend ROOT (not under /api/v1), at org/course-
+// scoped paths. Derive the backend base by stripping the /api/v1 suffix.
+export const BACKEND_URL = API_URL.replace(/\/api\/v1\/?$/, '')
+
+/**
+ * URL for a course thumbnail. The API stores `thumbnail_image` as a bare
+ * filename, so the full path is org/course-scoped. Absolute URLs (S3) are
+ * returned as-is.
+ */
+export function courseThumbnail(orgUuid: string, course: Course): string | null {
+  const file = course.thumbnail_image
+  if (!file) return null
+  if (/^https?:\/\//.test(file)) return file
+  return `${BACKEND_URL}/content/orgs/${orgUuid}/courses/${course.course_uuid}/thumbnails/${file}`
+}
+
+/**
+ * URL for hosted activity media (kind = 'video' | 'documentpdf'). `fileId` is
+ * the stored filename from the activity's `content`.
+ */
+export function activityMedia(
+  orgUuid: string,
+  courseUuid: string,
+  activityUuid: string,
+  kind: 'video' | 'documentpdf',
+  fileId: string
+): string {
+  return `${BACKEND_URL}/content/orgs/${orgUuid}/courses/${courseUuid}/activities/${activityUuid}/${kind}/${fileId}`
+}
+```
+
+<Callout type="info">
+The content-delivery endpoint lives at the backend **root** (`http://localhost:1338/content/…`), *not* under `/api/v1`. And `thumbnail_image` is just a filename — the real path is `content/orgs/{org_uuid}/courses/{course_uuid}/thumbnails/{filename}`. This mirrors the official frontend's media service.
+</Callout>
+
+It also defines a few types you'll reuse. Add them to the same file:
+
+```ts filename="src/lib/learnhouse.ts (continued)"
+export type Course = {
+  course_uuid: string
+  name: string
+  description: string
+  thumbnail_image?: string
+  public: boolean
+  published: boolean
+}
+
+export type Activity = {
+  id: number                 // numeric id — progress steps are keyed by this
+  activity_uuid: string
+  name: string
+  activity_type: string      // TYPE_VIDEO | TYPE_DOCUMENT | TYPE_DYNAMIC | ...
+  activity_sub_type: string
+  content: any
+  published: boolean
+}
+
+export type Chapter = {
+  chapter_uuid: string
+  name: string
+  description?: string
+  activities: Activity[]
+}
+
+export type CourseMeta = Course & {
+  org_id: number
+  chapters: Chapter[]
+}
+```
+
+## Step 3 — The course catalogue
+
+The list endpoint returns a plain JSON array of courses for an organization, **and it works anonymously** for public courses — no token required. Replace `src/app/page.tsx`:
+
+```tsx filename="src/app/page.tsx"
+import Link from 'next/link'
+import { lhFetch, courseThumbnail, ORG_SLUG, type Course } from '@/lib/learnhouse'
+
+export default async function CataloguePage() {
+  // Fetch the org (for its org_uuid, needed to build thumbnail URLs) and the
+  // course list together. Both are anonymous reads.
+  const [org, courses] = await Promise.all([
+    lhFetch<{ org_uuid: string }>(`orgs/slug/${ORG_SLUG}`),
+    lhFetch<Course[]>(`courses/org_slug/${ORG_SLUG}/page/1/limit/50`),
+  ])
+
+  return (
+    <main className="mx-auto max-w-5xl p-8">
+      <h1 className="mb-8 text-3xl font-bold">Courses</h1>
+      <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+        {courses.map((course) => {
+          const thumb = courseThumbnail(org.org_uuid, course)
+          return (
+            <Link
+              key={course.course_uuid}
+              href={`/courses/${course.course_uuid}`}
+              className="overflow-hidden rounded-xl border transition hover:shadow-lg"
+            >
+              {thumb && (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={thumb} alt={course.name} className="h-40 w-full object-cover" />
+              )}
+              <div className="p-4">
+                <h2 className="font-semibold">{course.name}</h2>
+                <p className="mt-1 line-clamp-2 text-sm text-gray-500">
+                  {course.description}
+                </p>
+              </div>
+            </Link>
+          )
+        })}
+      </div>
+    </main>
+  )
+}
+```
+
+Start the dev server:
+
+```bash
+npm run dev
+```
+
+Open [http://localhost:3000](http://localhost:3000) and you'll see your courses. (If LearnHouse is also on `:3000`, run the API on its usual port and Next will pick `:3001` — or set `PORT`.)
+
+<Callout type="info">
+The path segment after `courses/` is the **full** `course_uuid` exactly as returned by the list — it already includes the `course_` prefix (e.g. `course_3f2a…`). Pass it through verbatim; don't add or strip anything.
+</Callout>
+
+## Step 4 — The course page
+
+`GET /api/v1/courses/{course_uuid}/meta` returns the whole content tree in one call: the course plus its `chapters`, each with its `activities`. Create `src/app/courses/[uuid]/page.tsx`:
+
+```tsx filename="src/app/courses/[uuid]/page.tsx"
+import Link from 'next/link'
+import { lhFetch, type CourseMeta } from '@/lib/learnhouse'
+
+export default async function CoursePage({
+  params,
+}: {
+  params: Promise<{ uuid: string }>
+}) {
+  const { uuid } = await params
+  const course = await lhFetch<CourseMeta>(`courses/${uuid}/meta`)
+
+  return (
+    <main className="mx-auto max-w-3xl p-8">
+      <Link href="/" className="text-sm text-gray-500">← All courses</Link>
+      <h1 className="mt-4 text-3xl font-bold">{course.name}</h1>
+      <p className="mt-2 text-gray-600">{course.description}</p>
+
+      <div className="mt-8 space-y-6">
+        {course.chapters.map((chapter) => (
+          <section key={chapter.chapter_uuid}>
+            <h2 className="mb-2 text-lg font-semibold">{chapter.name}</h2>
+            <ul className="space-y-1">
+              {chapter.activities
+                .filter((a) => a.published)
+                .map((activity) => (
+                  <li key={activity.activity_uuid}>
+                    <Link
+                      href={`/courses/${uuid}/${activity.activity_uuid}`}
+                      className="text-blue-600 hover:underline"
+                    >
+                      {activity.name}
+                    </Link>
+                  </li>
+                ))}
+            </ul>
+          </section>
+        ))}
+      </div>
+    </main>
+  )
+}
+```
+
+<Callout type="info">
+`meta` accepts a `with_unpublished_activities` query flag, but that only returns drafts to a user with edit permission. For a public site, leave it off and filter on `activity.published` as above.
+</Callout>
+
+## Step 5 — The activity viewer
+
+Each activity carries an `activity_type` and a `content` object. Render per type. Create `src/app/courses/[uuid]/[activityUuid]/page.tsx`:
+
+```tsx filename="src/app/courses/[uuid]/[activityUuid]/page.tsx"
+import { lhFetch, activityMedia, ORG_SLUG, type Activity } from '@/lib/learnhouse'
+
+export default async function ActivityPage({
+  params,
+}: {
+  params: Promise<{ uuid: string; activityUuid: string }>
+}) {
+  const { uuid, activityUuid } = await params
+  // Hosted media is org/course/activity-scoped, so we need the org_uuid too.
+  const [org, activity] = await Promise.all([
+    lhFetch<{ org_uuid: string }>(`orgs/slug/${ORG_SLUG}`),
+    lhFetch<Activity>(`activities/${activityUuid}`),
+  ])
+
+  return (
+    <main className="mx-auto max-w-3xl p-8">
+      <h1 className="mb-6 text-2xl font-bold">{activity.name}</h1>
+      <ActivityBody activity={activity} orgUuid={org.org_uuid} courseUuid={uuid} activityUuid={activityUuid} />
+    </main>
+  )
+}
+
+function ActivityBody({
+  activity, orgUuid, courseUuid, activityUuid,
+}: {
+  activity: Activity; orgUuid: string; courseUuid: string; activityUuid: string
+}) {
+  switch (activity.activity_type) {
+    case 'TYPE_VIDEO': {
+      // YouTube videos store a watch URL; hosted videos store a filename in content.
+      const c = activity.content ?? {}
+      if (activity.activity_sub_type === 'SUBTYPE_VIDEO_YOUTUBE' && c.uri) {
+        const id = new URL(c.uri).searchParams.get('v') ?? c.uri.split('/').pop()
+        return (
+          <div className="aspect-video">
+            <iframe
+              className="h-full w-full rounded-lg"
+              src={`https://www.youtube.com/embed/${id}`}
+              allowFullScreen
+            />
+          </div>
+        )
+      }
+      const fileId = c.filename // inspect your activity's `content` for the real key
+      return fileId
+        ? <video controls src={activityMedia(orgUuid, courseUuid, activityUuid, 'video', fileId)} className="w-full rounded-lg" />
+        : <Unsupported />
+    }
+    case 'TYPE_DOCUMENT': {
+      const fileId = activity.content?.filename
+      return fileId
+        ? <iframe src={activityMedia(orgUuid, courseUuid, activityUuid, 'documentpdf', fileId)} className="h-[80vh] w-full rounded-lg border" />
+        : <Unsupported />
+    }
+    case 'TYPE_DYNAMIC':
+      // Dynamic pages are a structured block document (see /platform/editor).
+      // Render your own block components here; for now show the raw structure.
+      return (
+        <pre className="overflow-auto rounded-lg bg-gray-50 p-4 text-xs">
+          {JSON.stringify(activity.content, null, 2)}
+        </pre>
+      )
+    default:
+      return <Unsupported />
+  }
+}
+
+function Unsupported() {
+  return <p className="text-gray-500">This activity type isn’t rendered yet.</p>
+}
+```
+
+<Callout type="warning">
+The exact keys inside `content` depend on the activity sub-type and your editor version. Inspect a real activity (`GET /api/v1/activities/{activity_uuid}`) on your instance and adjust the field names above to match. Dynamic pages in particular are a rich block document — see the [Editor docs](/platform/editor) for the block model.
+</Callout>
+
+### ✅ Checkpoint
+
+You now have a **fully browsable public learning site** — catalogue, course pages, and an activity viewer — with **zero authentication**. This is already useful for any course you've marked public. Everything from here is additive.
+
+---
+
+# Part 2 — Authentication, enrollment & progress
+
+Now we add accounts. The golden rule: **LearnHouse tokens never reach the browser.** Your Next.js app logs in on the server, stores the tokens in its *own* httpOnly cookie, and attaches them when calling the API. This is the Backend-for-Frontend (BFF) pattern.
+
+<AuthFlowDiagram />
+
+<Callout type="warning">
+**The refresh gotcha.** `POST /api/v1/auth/login` returns `access_token` **and** `refresh_token` in the JSON body. But `GET /api/v1/auth/refresh` reads the refresh token **only from the `LH_refresh` cookie** — not a header and not the body. So when your server refreshes, it must send the stored refresh token *as the `LH_refresh` cookie*. We handle this in `lib/session.ts` below.
+</Callout>
+
+## Step 6 — A server-side session
+
+Create `src/lib/session.ts` to read and write the session cookie. It stores the LearnHouse tokens, encrypted-at-rest concerns aside, in an httpOnly cookie that the browser can't read from JavaScript.
+
+```ts filename="src/lib/session.ts"
+import { cookies } from 'next/headers'
+
+const SESSION_COOKIE = 'lh_session'
+
+export type Session = {
+  access_token: string
+  refresh_token: string
+  user: { user_uuid: string; username: string; email: string }
+}
+
+export async function getSession(): Promise<Session | null> {
+  const raw = (await cookies()).get(SESSION_COOKIE)?.value
+  return raw ? (JSON.parse(raw) as Session) : null
+}
+
+export async function setSession(session: Session) {
+  ;(await cookies()).set(SESSION_COOKIE, JSON.stringify(session), {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: 'lax',
+    path: '/',
+    maxAge: 60 * 60 * 24 * 30, // 30 days, matches the refresh-token lifetime
+  })
+}
+
+export async function clearSession() {
+  ;(await cookies()).delete(SESSION_COOKIE)
+}
+```
+
+## Step 7 — Signup & login Route Handlers (the BFF)
+
+The login endpoint expects **form-encoded** fields `username` (the email) and `password`. Create `src/app/api/auth/login/route.ts`:
+
+```ts filename="src/app/api/auth/login/route.ts"
+import { NextRequest, NextResponse } from 'next/server'
+import { API_URL } from '@/lib/learnhouse'
+import { setSession } from '@/lib/session'
+
+export async function POST(req: NextRequest) {
+  const { email, password } = await req.json()
+
+  const form = new URLSearchParams({ username: email, password })
+  const res = await fetch(`${API_URL}/auth/login`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body: form,
+  })
+
+  if (!res.ok) {
+    const { detail } = await res.json().catch(() => ({ detail: 'Login failed' }))
+    return NextResponse.json({ error: detail }, { status: res.status })
+  }
+
+  const { user, tokens } = await res.json()
+  await setSession({
+    access_token: tokens.access_token,
+    refresh_token: tokens.refresh_token,
+    user,
+  })
+  return NextResponse.json({ ok: true })
+}
+```
+
+Signup creates a user in your organization with `POST /api/v1/users/{org_id}` (JSON body). Create `src/app/api/auth/signup/route.ts`:
+
+```ts filename="src/app/api/auth/signup/route.ts"
+import { NextRequest, NextResponse } from 'next/server'
+import { API_URL, lhFetch, ORG_SLUG } from '@/lib/learnhouse'
+
+export async function POST(req: NextRequest) {
+  const body = await req.json() // { email, password, username, first_name, last_name }
+
+  // Resolve the org slug to its numeric id (the create-user route is keyed by id).
+  const org = await lhFetch<{ id: number }>(`orgs/slug/${ORG_SLUG}`)
+
+  const res = await fetch(`${API_URL}/users/${org.id}`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body),
+  })
+
+  if (!res.ok) {
+    const { detail } = await res.json().catch(() => ({ detail: 'Signup failed' }))
+    return NextResponse.json({ error: detail }, { status: res.status })
+  }
+  return NextResponse.json({ ok: true })
+}
+```
+
+<Callout type="info">
+On SaaS deployments, new accounts must verify their email before they can log in. On a local self-hosted instance this is usually disabled, so signup → login works immediately. See [Authentication](/developers/api/authentication) for the verification endpoints.
+</Callout>
+
+A logout handler clears the cookie — `src/app/api/auth/logout/route.ts`:
+
+```ts filename="src/app/api/auth/logout/route.ts"
+import { NextResponse } from 'next/server'
+import { API_URL } from '@/lib/learnhouse'
+import { getSession, clearSession } from '@/lib/session'
+
+export async function POST() {
+  const session = await getSession()
+  if (session) {
+    // Best-effort server-side revocation.
+    await fetch(`${API_URL}/auth/logout`, {
+      method: 'DELETE',
+      headers: { Authorization: `Bearer ${session.access_token}` },
+    }).catch(() => {})
+  }
+  await clearSession()
+  return NextResponse.json({ ok: true })
+}
+```
+
+### A login form
+
+A minimal client form that posts to your BFF — `src/app/login/page.tsx`:
+
+```tsx filename="src/app/login/page.tsx"
+'use client'
+
+import { useState } from 'react'
+import { useRouter } from 'next/navigation'
+
+export default function LoginPage() {
+  const router = useRouter()
+  const [error, setError] = useState('')
+
+  async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault()
+    const data = Object.fromEntries(new FormData(e.currentTarget))
+    const res = await fetch('/api/auth/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data),
+    })
+    if (res.ok) router.push('/')
+    else setError((await res.json()).error ?? 'Login failed')
+  }
+
+  return (
+    <main className="mx-auto max-w-sm p-8">
+      <h1 className="mb-6 text-2xl font-bold">Log in</h1>
+      <form onSubmit={onSubmit} className="space-y-4">
+        <input name="email" type="email" placeholder="Email" required className="w-full rounded border p-2" />
+        <input name="password" type="password" placeholder="Password" required className="w-full rounded border p-2" />
+        <button className="w-full rounded bg-blue-600 p-2 text-white">Log in</button>
+        {error && <p className="text-sm text-red-600">{error}</p>}
+      </form>
+      <p className="mt-4 text-sm text-gray-500">
+        No account? <a href="/signup" className="text-blue-600">Sign up</a>.
+      </p>
+    </main>
+  )
+}
+```
+
+### A signup form
+
+Signup collects a few more fields and posts to the signup handler, then logs in. Create `src/app/signup/page.tsx`:
+
+```tsx filename="src/app/signup/page.tsx"
+'use client'
+
+import { useState } from 'react'
+import { useRouter } from 'next/navigation'
+
+export default function SignupPage() {
+  const router = useRouter()
+  const [error, setError] = useState('')
+
+  async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault()
+    const data = Object.fromEntries(new FormData(e.currentTarget))
+
+    const signup = await fetch('/api/auth/signup', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data),
+    })
+    if (!signup.ok) return setError((await signup.json()).error ?? 'Signup failed')
+
+    // Log straight in with the same credentials.
+    const login = await fetch('/api/auth/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email: data.email, password: data.password }),
+    })
+    if (login.ok) router.push('/')
+    else router.push('/login') // e.g. email verification required
+  }
+
+  return (
+    <main className="mx-auto max-w-sm p-8">
+      <h1 className="mb-6 text-2xl font-bold">Create an account</h1>
+      <form onSubmit={onSubmit} className="space-y-4">
+        <input name="first_name" placeholder="First name" required className="w-full rounded border p-2" />
+        <input name="last_name" placeholder="Last name" required className="w-full rounded border p-2" />
+        <input name="username" placeholder="Username" required className="w-full rounded border p-2" />
+        <input name="email" type="email" placeholder="Email" required className="w-full rounded border p-2" />
+        <input name="password" type="password" placeholder="Password" required className="w-full rounded border p-2" />
+        <button className="w-full rounded bg-blue-600 p-2 text-white">Sign up</button>
+        {error && <p className="text-sm text-red-600">{error}</p>}
+      </form>
+    </main>
+  )
+}
+```
+
+## Step 8 — Authenticated requests & refresh
+
+Add a helper that pulls the token from the session and refreshes it when it has expired. Append to `src/lib/session.ts`:
+
+```ts filename="src/lib/session.ts (continued)"
+import { API_URL } from '@/lib/learnhouse'
+
+/**
+ * Run an API call as the logged-in user. On a 401, transparently refresh the
+ * token and retry once. Returns null if there is no session.
+ */
+export async function authedFetch<T = any>(
+  path: string,
+  init: RequestInit = {}
+): Promise<T | null> {
+  const session = await getSession()
+  if (!session) return null
+
+  const call = (token: string) =>
+    fetch(`${API_URL}/${path.replace(/^\//, '')}`, {
+      ...init,
+      headers: { Accept: 'application/json', Authorization: `Bearer ${token}`, ...init.headers },
+      cache: 'no-store',
+    })
+
+  let res = await call(session.access_token)
+
+  if (res.status === 401) {
+    // /auth/refresh reads the refresh token from the LH_refresh *cookie*,
+    // so send it as one (not as a header or body).
+    const refreshed = await fetch(`${API_URL}/auth/refresh`, {
+      headers: { Cookie: `LH_refresh=${session.refresh_token}` },
+    })
+    if (refreshed.ok) {
+      const tokens = await refreshed.json()
+      await setSession({ ...session, access_token: tokens.access_token, refresh_token: tokens.refresh_token })
+      res = await call(tokens.access_token)
+    }
+  }
+
+  if (!res.ok) throw new Error(`LearnHouse API ${res.status}`)
+  return res.json()
+}
+```
+
+## Step 9 — Enrollment
+
+A learner's enrollments and progress live on a **Trail** (one per user per organization). Adding a course to the trail is `POST /api/v1/trail/add_course/{course_uuid}` — but the trail must **exist first**, or you'll get a `404 Trail not found`. The simplest way to guarantee it: read the trail once (`GET /api/v1/trail/org/{org_id}/trail` creates it lazily) right before enrolling.
+
+Add a Server Action and wire it to a button. Create `src/app/courses/[uuid]/actions.ts`:
+
+```ts filename="src/app/courses/[uuid]/actions.ts"
+'use server'
+
+import { revalidatePath } from 'next/cache'
+import { authedFetch } from '@/lib/session'
+
+export async function enroll(courseUuid: string, orgId: number) {
+  // Reading the trail creates it if it doesn't exist yet — required before a
+  // course can be added. orgId comes from the course `meta` response.
+  await authedFetch(`trail/org/${orgId}/trail`)
+  await authedFetch(`trail/add_course/${courseUuid}`, { method: 'POST' })
+  revalidatePath(`/courses/${courseUuid}`)
+}
+
+export async function markActivityDone(courseUuid: string, activityUuid: string) {
+  // add_activity creates the trail/run on the fly, so no pre-step is needed here.
+  await authedFetch(`trail/add_activity/${activityUuid}`, { method: 'POST' })
+  revalidatePath(`/courses/${courseUuid}`)
+}
+```
+
+Now a small client component for the button. It calls the Server Action and shows a pending state. Create `src/app/courses/[uuid]/EnrollButton.tsx`:
+
+```tsx filename="src/app/courses/[uuid]/EnrollButton.tsx"
+'use client'
+
+import { useTransition } from 'react'
+import { enroll } from './actions'
+
+export default function EnrollButton({
+  courseUuid,
+  orgId,
+  loggedIn,
+}: {
+  courseUuid: string
+  orgId: number
+  loggedIn: boolean
+}) {
+  const [pending, start] = useTransition()
+
+  if (!loggedIn) {
+    return <a href="/login" className="rounded bg-blue-600 px-4 py-2 text-white">Log in to enroll</a>
+  }
+
+  return (
+    <button
+      disabled={pending}
+      onClick={() => start(() => enroll(courseUuid, orgId))}
+      className="rounded bg-blue-600 px-4 py-2 text-white disabled:opacity-50"
+    >
+      {pending ? 'Enrolling…' : 'Enroll'}
+    </button>
+  )
+}
+```
+
+## Step 10 — Progress
+
+A learner's progress lives on their **Trail**. Fetch it for the current org with `GET /api/v1/trail/org/{org_id}/trail`; it returns a `runs` array (one per enrolled course), each with `steps` (one per completed activity, keyed by numeric `activity_id`) and a `course_total_steps` count.
+
+Now wire it all together. Update the course page from Step 4 to fetch the trail for a logged-in user, show the **Enroll** button, and render a ✓ next to completed activities:
+
+```tsx filename="src/app/courses/[uuid]/page.tsx (updated)"
+import Link from 'next/link'
+import { lhFetch, type CourseMeta } from '@/lib/learnhouse'
+import { getSession, authedFetch } from '@/lib/session'
+import EnrollButton from './EnrollButton'
+
+export default async function CoursePage({
+  params,
+}: {
+  params: Promise<{ uuid: string }>
+}) {
+  const { uuid } = await params
+  const course = await lhFetch<CourseMeta>(`courses/${uuid}/meta`)
+
+  // Logged-in extras: enrollment + completed activities.
+  const session = await getSession()
+  let completed = new Set<number>()
+  if (session) {
+    const trail = await authedFetch<{ runs: any[] }>(`trail/org/${course.org_id}/trail`)
+    const run = trail?.runs.find((r) => r.course?.course_uuid === course.course_uuid)
+    completed = new Set(run?.steps?.map((s: any) => s.activity_id) ?? [])
+  }
+
+  return (
+    <main className="mx-auto max-w-3xl p-8">
+      <Link href="/" className="text-sm text-gray-500">← All courses</Link>
+      <div className="mt-4 flex items-center justify-between gap-4">
+        <h1 className="text-3xl font-bold">{course.name}</h1>
+        <EnrollButton courseUuid={course.course_uuid} orgId={course.org_id} loggedIn={!!session} />
+      </div>
+      <p className="mt-2 text-gray-600">{course.description}</p>
+
+      <div className="mt-8 space-y-6">
+        {course.chapters.map((chapter) => (
+          <section key={chapter.chapter_uuid}>
+            <h2 className="mb-2 text-lg font-semibold">{chapter.name}</h2>
+            <ul className="space-y-1">
+              {chapter.activities
+                .filter((a) => a.published)
+                .map((activity) => (
+                  <li key={activity.activity_uuid} className="flex items-center gap-2">
+                    <span>{completed.has(activity.id) ? '✓' : '○'}</span>
+                    <Link
+                      href={`/courses/${uuid}/${activity.activity_uuid}`}
+                      className="text-blue-600 hover:underline"
+                    >
+                      {activity.name}
+                    </Link>
+                  </li>
+                ))}
+            </ul>
+          </section>
+        ))}
+      </div>
+    </main>
+  )
+}
+```
+
+Finally, call `markActivityDone(course_uuid, activity_uuid)` from the activity viewer when a learner finishes — e.g. a "Mark as complete" button (a client component using the same `useTransition` pattern as `EnrollButton`).
+
+<Callout type="info">
+`steps` are keyed by the activity's numeric `id`, so the completed-set check uses `activity.id`. The `meta` response includes both `id` and `activity_uuid` on each activity — `id` for matching progress, `activity_uuid` for routing.
+</Callout>
+
+### ✅ Checkpoint
+
+You now have the full loop: **browse → sign up → log in → enroll → learn → track progress**, all on your own Next.js frontend, with tokens safely server-side.
+
+---
+
+## Where to go next
+
+- **Make it yours** — swap in real block rendering for dynamic activities ([Editor model](/platform/editor)), add search (`GET /api/v1/courses/org_slug/{slug}/search?query=…`), and collections.
+- **React to events** — add [webhooks](/guides/custom-features/webhooks) so your platform (or an external tool) reacts when a learner completes a course.
+- **Go deeper on the API** — the [API Reference](/developers/api) and the interactive Swagger UI at `http://localhost:1338/docs` (dev mode) list every endpoint and schema.
+- **Compare with the reference** — see [`learnhouse/headless-examples`](https://github.com/learnhouse/headless-examples) for a complete project.
+
+Prefer to skip the typing? **[Let an agent build all of this](/guides/build-learning-platform/with-an-agent)** from a ready-made spec.

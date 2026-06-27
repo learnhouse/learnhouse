@@ -20,7 +20,7 @@ const accessConfig = {
   restricted: { icon: Users, label: 'Restricted', className: 'bg-amber-100 text-amber-700' },
 }
 
-export default function PlaygroundCard({ playground, orgslug, canEdit }: PlaygroundCardProps) {
+export default function PlaygroundCard({ playground, orgslug: _orgslug, canEdit }: PlaygroundCardProps) {
   const { track } = useLHAnalytics('learner')
   const access = accessConfig[playground.access_type as keyof typeof accessConfig] || accessConfig.authenticated
   const AccessIcon = access.icon

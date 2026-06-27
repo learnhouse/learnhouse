@@ -15,7 +15,7 @@ import {
 import { getMenuColorClasses } from '@services/utils/ts/colorUtils'
 
 const LanguageSwitcher = ({ primaryColor = '' }: { primaryColor?: string }) => {
-  const { i18n, t } = useTranslation()
+  const { i18n } = useTranslation()
   const { track } = useLHAnalytics()
   const colors = getMenuColorClasses(primaryColor)
   const [mounted, setMounted] = React.useState(false)
@@ -44,7 +44,7 @@ const LanguageSwitcher = ({ primaryColor = '' }: { primaryColor?: string }) => {
             onClick={() => {
               try {
                 localStorage.setItem('i18nextLng_userPicked', '1')
-              } catch {}
+              } catch { /* ignore */ }
               track(AnalyticsEvent.LanguageChanged, {
                 language_code: language.code,
                 source: 'language_switcher',

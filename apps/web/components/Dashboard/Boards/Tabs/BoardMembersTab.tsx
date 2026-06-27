@@ -2,7 +2,6 @@
 
 import React, { useState } from 'react'
 import { UserPlus, Trash2, Search, Check, User, Users } from 'lucide-react'
-import { useOrg } from '@components/Contexts/OrgContext'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
 import { getAPIUrl } from '@services/config/config'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
@@ -203,7 +202,7 @@ function AddBoardMember({ boardUuid, orgId, accessToken, setModalOpen }: {
   boardUuid: string
   orgId: number
   accessToken: string
-  setModalOpen: (open: boolean) => void
+  setModalOpen: (_open: boolean) => void
 }) {
   const { t } = useTranslation()
   const { track } = useLHAnalytics('dashboard')

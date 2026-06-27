@@ -30,7 +30,6 @@ import {
   SpinnerGap,
   Sparkle,
   ArrowRight,
-  CaretRight,
   Books,
   Plus,
   Trash,
@@ -661,7 +660,7 @@ export function CopilotChat({ orgslug }: CopilotProps) {
 export function ChatTopBar({ title, isFavorite, onRename, onToggleFavorite, onToggleSidebar, showMenuButton }: {
   title: string
   isFavorite: boolean
-  onRename: (newTitle: string) => void
+  onRename: (_newTitle: string) => void
   onToggleFavorite: () => void
   onToggleSidebar?: () => void
   showMenuButton?: boolean
@@ -953,7 +952,7 @@ export function CopilotMarkdown({ content, sources = [], orgslug, isStreaming = 
 export function CourseDropdown({ courses, selectedCourse, onSelect, position = 'bottom' }: {
   courses: any[]
   selectedCourse: string | null
-  onSelect: (uuid: string | null) => void
+  onSelect: (_uuid: string | null) => void
   position?: 'top' | 'bottom'
 }) {
   const positionClass = position === 'top' ? 'bottom-full mb-1' : 'top-full mt-1'

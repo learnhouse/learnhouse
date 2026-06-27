@@ -7,7 +7,6 @@ import { useLHSession } from '@components/Contexts/LHSessionContext'
 import PageLoading from '@components/Objects/Loaders/PageLoading'
 import { ChartBar } from '@phosphor-icons/react'
 import { queryKeys } from '@/lib/query/keys'
-import { useTrackView, AnalyticsEvent } from '@services/analytics'
 
 export default function GlobalAnalytics({ days = 30 }: { days?: number }) {
   const session = useLHSession() as any
@@ -19,8 +18,6 @@ export default function GlobalAnalytics({ days = 30 }: { days?: number }) {
     enabled: !!accessToken,
     staleTime: 60_000,
   })
-
-  useTrackView(AnalyticsEvent.GlobalAnalyticsViewed, { days }, !isLoading && !!data, 'admin')
 
   if (isLoading) return <PageLoading />
 

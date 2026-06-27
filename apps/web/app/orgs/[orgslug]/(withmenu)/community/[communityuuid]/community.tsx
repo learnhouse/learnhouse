@@ -25,7 +25,6 @@ const CommunityClient = ({
   community,
   initialDiscussions,
   orgslug,
-  org_id,
 }: CommunityClientProps) => {
   const [isCreateDiscussionModalOpen, setIsCreateDiscussionModalOpen] = useState(false)
   const isMobile = useMediaQuery('(max-width: 768px)')

@@ -645,11 +645,17 @@ class VerifyEmailRequest(BaseModel):
 )
 async def api_verify_email(
     request: Request,
+    response: Response,
     body: VerifyEmailRequest,
     db_session: AsyncSession = Depends(get_db_session),
 ):
     """
     Verify user email with token.
+
+    On success the user is also signed in automatically: access/refresh cookies
+    are set (same as ``/login``) and the tokens are returned in the body so a
+    same-origin proxy can mirror them. This spares newly-verified users from
+    re-entering their password right after confirming their email.
     """
     # Rate limit: 5 attempts per 5 minutes. Key strictly on the stable
     # user_uuid (+ org_uuid) identity, NOT on the attacker-controllable
@@ -665,14 +671,33 @@ async def api_verify_email(
             detail=f"Too many verification attempts. Please try again in {retry_after // 60} minutes.",
         )
 
-    result = await verify_email_token(
+    # On invalid/expired/mismatched tokens this raises (4xx) and no session is
+    # issued — only a fresh, valid verification reaches the token-minting below.
+    user, message = await verify_email_token(
         request=request,
         db_session=db_session,
         token=body.token,
         user_uuid=body.user_uuid,
         org_uuid=body.org_uuid,
     )
-    return {"message": result}
+
+    # Auto sign-in: issue a session exactly like /login (sub = email).
+    access_token = create_access_token(
+        data={"sub": user.email},
+        expires_delta=JWT_ACCESS_TOKEN_EXPIRES,
+    )
+    refresh_token = create_refresh_token(data={"sub": user.email})
+    set_auth_cookies(response, access_token, refresh_token, request)
+
+    return {
+        "message": message,
+        "user": UserRead.model_validate(user),
+        "tokens": {
+            "access_token": access_token,
+            "refresh_token": refresh_token,
+            "expiry": get_token_expiry_ms(),
+        },
+    }
 
 
 class ResendVerificationRequest(BaseModel):

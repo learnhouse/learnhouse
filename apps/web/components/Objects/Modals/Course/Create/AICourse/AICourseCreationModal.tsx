@@ -35,7 +35,7 @@ function AICourseCreationModal({
   isOpen,
   onClose,
   orgId,
-  orgslug,
+  orgslug: _orgslug,
   accessToken,
 }: AICourseCreationModalProps) {
   const { t, i18n } = useTranslation()

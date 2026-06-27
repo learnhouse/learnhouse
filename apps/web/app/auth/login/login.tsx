@@ -30,8 +30,8 @@ const LoginClient = (props: LoginClientProps) => {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [ssoEnabled, setSsoEnabled] = useState(false)
   const [ssoLoading, setSsoLoading] = useState(false)
-  const router = useRouter();
-  const session = useLHSession() as any;
+  const _router = useRouter();
+  const _session = useLHSession() as any;
 
   // Error state with type information
   const [error, setError] = useState('')
@@ -123,7 +123,7 @@ const LoginClient = (props: LoginClientProps) => {
       } else {
         setError(res.error || t('auth.resend_verification_failed'))
       }
-    } catch (err) {
+    } catch (_err) {
       setError(t('auth.resend_verification_failed'))
     } finally {
       setIsResendingVerification(false)

@@ -162,10 +162,10 @@ function useActivityPosition(course: any, activityId: string) {
 
 function ActivityActions({ activity, activityid, course, orgslug, assignment, showNavigation = true, trailData }: ActivityActionsProps) {
 
-  const { t } = useTranslation();
-  const org = useOrg() as any;
+  const { t: _t } = useTranslation();
+  const _org = useOrg() as any;
   const session = useLHSession() as any;
-  const access_token = session?.data?.tokens?.access_token;
+  const _access_token = session?.data?.tokens?.access_token;
 
 
   return (
@@ -240,7 +240,7 @@ function ActivityClient(props: ActivityClientProps) {
   const access_token = session?.data?.tokens?.access_token;
   const [bgColor, setBgColor] = React.useState('bg-white nice-shadow')
   const [assignment, setAssignment] = React.useState(null) as any;
-  const [markStatusButtonActive, setMarkStatusButtonActive] = React.useState(false);
+  const [_markStatusButtonActive, setMarkStatusButtonActive] = React.useState(false);
   const [isFocusMode, setIsFocusMode] = React.useState(false);
   const isInitialRender = useRef(true);
   const { contributorStatus } = useContributorStatus(courseuuid);
@@ -276,7 +276,7 @@ function ActivityClient(props: ActivityClientProps) {
     }
   }, [activityid, activityUuidForTracking, courseUuidForTracking, activityTypeForTracking, track])
 
-  const queryClient = useQueryClient()
+  const _queryClient = useQueryClient()
 
   // Fetch trail data — shares cache key with course page trail query
   const { data: trailData } = useTrail(org?.id)
@@ -1032,7 +1032,7 @@ export function MarkStatus(props: {
   const { isUserPartOfTheOrg } = useOrgMembership();
   const queryClient = useQueryClient();
   const { track } = useLHAnalytics('learner');
-  const isMobile = useMediaQuery('(max-width: 768px)')
+  const _isMobile = useMediaQuery('(max-width: 768px)')
   const [isLoading, setIsLoading] = React.useState(false);
   const [showMarkedTooltip, setShowMarkedTooltip] = React.useState(false);
   const [showUnmarkedTooltip, setShowUnmarkedTooltip] = React.useState(false);
@@ -1177,7 +1177,7 @@ export function MarkStatus(props: {
 
       await queryClient.invalidateQueries({ queryKey: queryKeys.trail.org(org?.id) });
       await queryClient.invalidateQueries({ queryKey: queryKeys.courses.meta(props.course.course_uuid.replace('course_', '')) });
-    } catch (error) {
+    } catch (_error) {
       toast.error(t('activities.failed_unmark_complete'));
     } finally {
       setIsLoading(false);
@@ -1320,7 +1320,7 @@ export function MarkStatus(props: {
 function NextActivityButton({ course, currentActivityId, orgslug }: { course: any, currentActivityId: string, orgslug: string }) {
   const { t } = useTranslation();
   const router = useRouter();
-  const isMobile = useMediaQuery('(max-width: 768px)');
+  const _isMobile = useMediaQuery('(max-width: 768px)');
 
   const findNextActivity = () => {
     let allActivities: any[] = [];
@@ -1373,7 +1373,7 @@ function NextActivityButton({ course, currentActivityId, orgslug }: { course: an
 function PreviousActivityButton({ course, currentActivityId, orgslug }: { course: any, currentActivityId: string, orgslug: string }) {
   const { t } = useTranslation();
   const router = useRouter();
-  const isMobile = useMediaQuery('(max-width: 768px)');
+  const _isMobile = useMediaQuery('(max-width: 768px)');
 
   const findPreviousActivity = () => {
     let allActivities: any[] = [];

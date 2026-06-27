@@ -26,7 +26,6 @@ interface PodcastClientProps {
 
 export default function PodcastClient({
   orgslug,
-  org_id,
   podcastUuid,
   initialPodcast,
   initialEpisodes,

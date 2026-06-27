@@ -21,7 +21,6 @@ interface BoardsPublicClientProps {
 
 export default function BoardsPublicClient({
   orgslug,
-  org_id,
   initialBoards,
 }: BoardsPublicClientProps) {
   const { t } = useTranslation()

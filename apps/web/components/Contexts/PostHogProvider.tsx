@@ -30,6 +30,28 @@ function initPostHog(key: string) {
   })
 }
 
+/**
+ * Disables ALL PostHog capture (autocapture, pageviews, session replay) while
+ * the user is in the super-admin area (/admin) — that's the platform owner's
+ * internal dashboard and is intentionally untracked. Re-enables elsewhere.
+ */
+function PostHogAdminGuard() {
+  const posthogClient = usePostHog()
+  const pathname = usePathname()
+
+  useEffect(() => {
+    if (!posthogClient) return
+    const isAdmin = pathname?.startsWith('/admin')
+    if (isAdmin) {
+      if (!posthogClient.has_opted_out_capturing()) posthogClient.opt_out_capturing()
+    } else if (posthogClient.has_opted_out_capturing()) {
+      posthogClient.opt_in_capturing()
+    }
+  }, [posthogClient, pathname])
+
+  return null
+}
+
 /** Fires PostHog's native $pageview on every App Router navigation. */
 function PostHogPageView() {
   const posthogClient = usePostHog()
@@ -38,6 +60,8 @@ function PostHogPageView() {
 
   useEffect(() => {
     if (!posthogClient || !pathname) return
+    // Never emit pageviews for the super-admin area.
+    if (pathname.startsWith('/admin')) return
     let url = window.origin + pathname
     const qs = searchParams?.toString()
     if (qs) url += `?${qs}`
@@ -97,6 +121,7 @@ export default function PostHogProvider({ children }: { children: React.ReactNod
 
   return (
     <PHProvider client={posthog}>
+      <PostHogAdminGuard />
       <Suspense fallback={null}>
         <PostHogPageView />
       </Suspense>

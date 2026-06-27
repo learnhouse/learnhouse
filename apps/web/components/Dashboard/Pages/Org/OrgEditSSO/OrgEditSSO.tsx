@@ -29,7 +29,6 @@ import {
   SSOProvider,
 } from '@services/auth/sso'
 import {
-  Shield,
   Settings2,
   ExternalLink,
   Trash2,
@@ -211,7 +210,7 @@ const OrgEditSSO: React.FC = () => {
       } else {
         toast.error(t('dashboard.organization.sso.setup_not_available'))
       }
-    } catch (error) {
+    } catch (_error) {
       toast.error(t('dashboard.organization.sso.setup_error'))
     }
   }

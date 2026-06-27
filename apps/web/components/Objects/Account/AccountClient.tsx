@@ -22,7 +22,7 @@ interface AccountClientProps {
   subpage: string
 }
 
-const getSubpageTitle = (subpage: string, t: (key: string) => string): string => {
+const getSubpageTitle = (subpage: string, t: (_key: string) => string): string => {
   const titles: Record<string, string> = {
     'general': t('account.general'),
     'profile': t('account.profile'),

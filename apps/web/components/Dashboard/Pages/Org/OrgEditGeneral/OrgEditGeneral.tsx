@@ -77,7 +77,7 @@ interface OrganizationValues {
 
 const OrgEditGeneral: React.FC = () => {
   const { t } = useTranslation()
-  const router = useRouter()
+  const _router = useRouter()
   const session = useLHSession() as any
   const access_token = session?.data?.tokens?.access_token
   const org = useOrg() as any
@@ -86,7 +86,7 @@ const OrgEditGeneral: React.FC = () => {
 
   // Footer text state
   const [footerText, setFooterText] = React.useState<string>(org?.config?.config?.customization?.general?.footer_text || org?.config?.config?.general?.footer_text || '')
-  const [isFooterSaving, setIsFooterSaving] = React.useState(false)
+  const [_isFooterSaving, _setIsFooterSaving] = React.useState(false)
 
   // Default language state
   const [defaultLanguage, setDefaultLanguage] = React.useState<string>(
@@ -114,7 +114,7 @@ const OrgEditGeneral: React.FC = () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.org.detail(org.slug) })
       track(AnalyticsEvent.OrgGeneralSettingsUpdated, { default_language: defaultLanguage })
       toast.success(t('dashboard.organization.settings.update_success'), { id: loadingToast })
-    } catch (err) {
+    } catch (_err) {
       toast.error(t('dashboard.organization.settings.update_error'), { id: loadingToast })
     }
   }

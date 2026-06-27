@@ -13,6 +13,7 @@ from src.services.orgs.users import (
     get_list_of_invited_users,
     get_organization_users,
     invite_batch_users,
+    remove_all_users_from_org,
     remove_batch_users_from_org,
     remove_invited_user,
     remove_user_from_org,
@@ -32,6 +33,7 @@ from src.services.orgs.orgs import (
     create_org,
     create_org_with_config,
     delete_org,
+    wipe_org_content,
     get_organization_by_uuid,
     get_organization_by_slug,
     get_orgs_by_user,
@@ -318,6 +320,60 @@ async def api_remove_batch_users_from_org(
     return await remove_batch_users_from_org(
         request, org_id, user_ids, db_session, current_user
     )
+
+
+@router.delete(
+    "/{org_id}/users/all",
+    summary="Remove all users from organization",
+    description=(
+        "Remove every member from the organization except the caller. The "
+        "organization and its content are kept. Admin only."
+    ),
+    responses={
+        200: {"description": "All other users removed from the organization."},
+        401: {"description": "Not authenticated"},
+        403: {"description": "Caller is not an organization administrator"},
+        404: {"description": "Organization not found"},
+    },
+)
+async def api_remove_all_users_from_org(
+    request: Request,
+    org_id: int,
+    current_user: PublicUser = Depends(get_current_user),
+    db_session: AsyncSession = Depends(get_db_session),
+):
+    """
+    Remove all users from the org except the caller (danger zone)
+    """
+    return await remove_all_users_from_org(
+        request, org_id, db_session, current_user
+    )
+
+
+@router.delete(
+    "/{org_id}/content",
+    summary="Wipe all organization content",
+    description=(
+        "Delete all courses (and their cascaded content) in the organization "
+        "while keeping the organization and its members. Admin only."
+    ),
+    responses={
+        200: {"description": "Organization content wiped."},
+        401: {"description": "Not authenticated"},
+        403: {"description": "Caller is not an organization administrator"},
+        404: {"description": "Organization not found"},
+    },
+)
+async def api_wipe_org_content(
+    request: Request,
+    org_id: int,
+    current_user: PublicUser = Depends(get_current_user),
+    db_session: AsyncSession = Depends(get_db_session),
+):
+    """
+    Wipe all content (courses) of the org (danger zone)
+    """
+    return await wipe_org_content(request, org_id, current_user, db_session)
 
 
 @router.delete(
