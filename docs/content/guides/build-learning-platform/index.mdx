@@ -1,0 +1,77 @@
+---
+title: Build a Learning Platform
+description: Build your own headless learning platform on the web with Next.js and the LearnHouse API. Start with an anonymous public catalogue, then add authentication, enrollment, and progress tracking.
+---
+
+import { Callout, Tabs } from 'nextra/components'
+import GuideCards from '../../../components/GuideCards/GuideCards'
+import HeadlessArchitecture from '../../../components/diagrams/HeadlessArchitecture'
+import ResourceModelDiagram from '../../../components/diagrams/ResourceModelDiagram'
+
+# Build a Learning Platform
+
+LearnHouse is **API-first**. The official web app is just one client of a public REST API — which means you can build your *own* learning platform on top of the same API, with your own design, your own routing, and your own brand.
+
+This guide takes you from an empty folder to a working **headless learning platform**: a Next.js app that lists your courses, plays your content, signs users in, enrolls them, and tracks their progress — all powered by the LearnHouse API. It's the kind of result you'll find in the [`learnhouse/headless-examples`](https://github.com/learnhouse/headless-examples) repository.
+
+## Pick your path
+
+<GuideCards set="build" />
+
+- **[Do it yourself](/guides/build-learning-platform/do-it-yourself)** — Follow the build step by step. Every command and file is provided, and the whole thing is tested end to end. This is the best way to actually understand how the API fits together.
+- **[Let an agent build it](/guides/build-learning-platform/with-an-agent)** — Hand a coding agent (Claude Code, Cursor, etc.) a self-contained [spec](/guides/build-learning-platform/agent-spec) and let it generate the app for you, then review and run it.
+
+## What you'll build
+
+A learning platform you reach in two stages — **anonymous first, authenticated second**. You'll have a working public site before you touch a single token.
+
+<Tabs items={['Stage 1 — Anonymous', 'Stage 2 — Authenticated']}>
+  <Tabs.Tab>
+    No login, no tokens. Public content only:
+    - A **course catalogue** listing every public course in your organization.
+    - A **course page** showing chapters and activities.
+    - An **activity viewer** that renders dynamic pages, videos, and documents.
+  </Tabs.Tab>
+  <Tabs.Tab>
+    Layered on top of stage 1, without rewriting it:
+    - **Signup & login** with the LearnHouse auth endpoints.
+    - **Enrollment** — learners join a course.
+    - **Progress tracking** — mark activities complete and show how far a learner has come.
+  </Tabs.Tab>
+</Tabs>
+
+## Architecture
+
+Your Next.js app is a thin, fast client in front of the LearnHouse API. Reads happen in **Server Components**; anything involving a token goes through a **Route Handler acting as a Backend-for-Frontend (BFF)**, so LearnHouse tokens never reach the browser. Media is streamed straight from the API's content-delivery endpoint.
+
+<HeadlessArchitecture />
+
+<Callout type="info">
+Using a server-side BFF isn't just for security — it also sidesteps CORS entirely. Your browser only ever talks to your own Next.js origin, and your server talks to LearnHouse.
+</Callout>
+
+## The resources you'll touch
+
+Everything in LearnHouse hangs off an **Organization**. Content is a tree of **Course → Chapter → Activity**. A learner's progress is a separate tree: each **User** has a **Trail**, which holds a **Run** per enrolled course, which holds a **Step** per completed activity.
+
+<ResourceModelDiagram />
+
+| Resource | What it is | Key endpoint |
+| --- | --- | --- |
+| Organization | Top-level tenant, addressed by `org_slug` | `GET /api/v1/orgs/slug/{org_slug}` |
+| Course | A course, addressed by `course_uuid` | `GET /api/v1/courses/org_slug/{org_slug}/page/{page}/limit/{limit}` |
+| Chapter + Activity | The course's content tree | `GET /api/v1/courses/{course_uuid}/meta` |
+| Trail / Run / Step | A learner's enrollment & progress | `GET /api/v1/trail/org/{org_id}/trail` |
+
+## Prerequisites
+
+- **Node.js 18+** and a package manager (`npm`, `pnpm`, or `bun`).
+- **A running LearnHouse instance.** Spin one up locally with the [Quickstart](/getting-started/quickstart) or [self-hosting guide](/self-hosting), or use [LearnHouse Cloud](https://learnhouse.app). The examples assume the API is at `http://localhost:1338`.
+- **Your organization slug** and **at least one public, published course** with some content. Create one in the dashboard if you don't have it yet.
+- Basic familiarity with the [API Reference](/developers/api).
+
+<Callout type="warning">
+Throughout this guide the API base URL is `http://localhost:1338/api/v1`. If your instance lives elsewhere (a custom port, a domain, or Cloud), substitute your own base URL — every example reads it from a single environment variable.
+</Callout>
+
+Ready? Head to **[Do It Yourself](/guides/build-learning-platform/do-it-yourself)** to start building, or **[Let an Agent Build It](/guides/build-learning-platform/with-an-agent)** to delegate.
