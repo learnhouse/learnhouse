@@ -256,6 +256,50 @@ class TestDeleteUserById:
             await db.exec(select(UserOrganization).where(UserOrganization.user_id == 20))
         ).first() is None
 
+    @pytest.mark.asyncio
+    @patch(
+        "src.services.users.users.authorization_verify_if_user_is_anon",
+        new_callable=AsyncMock,
+    )
+    @patch(
+        "src.services.users.users.authorization_verify_based_on_roles_and_authorship",
+        new_callable=AsyncMock,
+    )
+    async def test_delete_user_skips_missing_admin_org(
+        self, mock_rbac_roles, mock_rbac_anon, mock_request, db, admin_user
+    ):
+        """An admin membership pointing at a missing org is safely skipped."""
+        user_to_delete = User(
+            id=30,
+            username="orphanadmin",
+            first_name="Orphan",
+            last_name="Admin",
+            email="orphanadmin@test.com",
+            password="hashed",
+            user_uuid="user_orphanadmin",
+            creation_date=str(datetime.now()),
+            update_date=str(datetime.now()),
+        )
+        db.add(user_to_delete)
+        await db.commit()
+
+        # Admin membership referencing an org row that does not exist. FK
+        # enforcement is off in the test engine, so this orphaned link exercises
+        # the defensive "org already gone" guard in delete_user_by_id.
+        db.add(UserOrganization(
+            user_id=30, org_id=99999, role_id=1,
+            creation_date=str(datetime.now()), update_date=str(datetime.now()),
+        ))
+        await db.commit()
+
+        result = await delete_user_by_id(mock_request, db, admin_user, 30)
+        assert result == {"detail": "User deleted successfully"}
+
+        assert (await db.exec(select(User).where(User.id == 30))).first() is None
+        assert (
+            await db.exec(select(UserOrganization).where(UserOrganization.user_id == 30))
+        ).first() is None
+
 
 class TestCreateAndUpdateUser:
     @pytest.mark.asyncio
