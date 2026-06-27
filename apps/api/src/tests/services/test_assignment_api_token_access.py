@@ -32,8 +32,10 @@ from src.db.courses.assignments import (
 )
 from src.db.courses.assignments import AssignmentTaskSubmissionUpdate
 from src.db.users import APITokenUser, User
+from src.db.trails import Trail
 from src.services.courses.activities.assignments import (
     create_assignment,
+    create_assignment_submission,
     grade_assignment_submission,
     handle_assignment_task_submission,
     read_assignment,
@@ -41,6 +43,14 @@ from src.services.courses.activities.assignments import (
     retry_assignment_submission,
 )
 from sqlmodel import select
+
+_PATCH_TRAIL_PRESENCE = "src.services.courses.activities.assignments.check_trail_presence"
+_PATCH_CERT_CHECK = (
+    "src.services.courses.activities.assignments."
+    "check_course_completion_and_create_certificate"
+)
+_PATCH_TRACK = "src.services.courses.activities.assignments.track"
+_PATCH_DISPATCH = "src.services.courses.activities.assignments.dispatch_webhooks"
 
 _PATCH_LIMITS = "src.services.courses.activities.assignments.check_limits_with_usage"
 _PATCH_INCREASE = "src.services.courses.activities.assignments.increase_feature_usage"
@@ -367,6 +377,43 @@ class TestTokenSubmitOnBehalf:
                 on_behalf_of_user_id=outsider.id,
             )
         assert exc.value.status_code == 403
+
+    async def test_token_submit_unknown_learner_404(
+        self, mock_request, db, org, course, chapter, activity
+    ):
+        await self._seed_task(db, org, course, chapter, activity)
+        token = _token(assignments=_assignments_rights(create=True))
+        body = AssignmentTaskSubmissionUpdate(task_submission={"answer": "x"})
+        with pytest.raises(HTTPException) as exc:
+            await handle_assignment_task_submission(
+                mock_request, "assignmenttask_obo_test", body, token, db,
+                on_behalf_of_user_id=999999,
+            )
+        assert exc.value.status_code == 404
+
+    async def test_token_creates_assignment_submission_for_learner(
+        self, mock_request, db, org, course, chapter, activity, regular_user
+    ):
+        await _make_assignment(db, org, course, chapter, activity)
+        trail = Trail(
+            org_id=org.id, user_id=regular_user.id, trail_uuid="trail_obo_test",
+            creation_date=str(datetime.now()), update_date=str(datetime.now()),
+        )
+        db.add(trail)
+        await db.commit()
+        await db.refresh(trail)
+        token = _token(assignments=_assignments_rights(create=True))
+        with patch(_PATCH_TRAIL_PRESENCE, new_callable=AsyncMock, return_value=trail), \
+             patch(_PATCH_CERT_CHECK, new_callable=AsyncMock), \
+             patch(_PATCH_TRACK, new_callable=AsyncMock), \
+             patch(_PATCH_DISPATCH, new_callable=AsyncMock):
+            result = await create_assignment_submission(
+                mock_request, "assignment_token_test", token, db,
+                on_behalf_of_user_id=regular_user.id,
+            )
+        # Aggregate submission created for the LEARNER and marked submitted.
+        assert result.submission_status == AssignmentUserSubmissionStatus.SUBMITTED
+        assert result.user_id == regular_user.id
 
 
 class TestSessionOnlyEndpointsStillBlockTokens:
