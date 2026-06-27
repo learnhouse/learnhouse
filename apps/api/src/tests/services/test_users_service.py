@@ -10,6 +10,7 @@ import pytest
 from fastapi import HTTPException, UploadFile
 from sqlmodel import select
 
+from src.db.organizations import Organization
 from src.db.roles import RoleRead
 from src.db.user_organizations import UserOrganization
 from src.db.users import (
@@ -181,6 +182,79 @@ class TestDeleteUserById:
             )).first()
             is None
         )
+
+        # The org still has another admin (admin_user), so it must be kept.
+        assert (
+            await db.exec(select(Organization).where(Organization.id == org.id))
+        ).first() is not None
+
+    @pytest.mark.asyncio
+    @patch(
+        "src.services.users.users.authorization_verify_if_user_is_anon",
+        new_callable=AsyncMock,
+    )
+    @patch(
+        "src.services.users.users.authorization_verify_based_on_roles_and_authorship",
+        new_callable=AsyncMock,
+    )
+    async def test_delete_user_deletes_sole_admin_org_only(
+        self, mock_rbac_roles, mock_rbac_anon, mock_request, db, admin_user, org
+    ):
+        """Deleting a user wipes orgs they solely administer, keeps the rest."""
+        # org (id=1) already has admin_user as admin. Add a second org where the
+        # user-to-delete is the ONLY admin — that one should be deleted with them.
+        solo_org = Organization(
+            id=777,
+            name="Solo Org",
+            slug="solo-org",
+            email="solo@org.com",
+            org_uuid="org_solo",
+            creation_date=str(datetime.now()),
+            update_date=str(datetime.now()),
+        )
+        db.add(solo_org)
+        await db.commit()
+
+        user_to_delete = User(
+            id=20,
+            username="soloadmin",
+            first_name="Solo",
+            last_name="Admin",
+            email="soloadmin@test.com",
+            password="hashed",
+            user_uuid="user_soloadmin",
+            creation_date=str(datetime.now()),
+            update_date=str(datetime.now()),
+        )
+        db.add(user_to_delete)
+        await db.commit()
+
+        # Sole admin of solo_org, and a plain (non-admin) member of the shared org.
+        db.add(UserOrganization(
+            user_id=20, org_id=solo_org.id, role_id=1,
+            creation_date=str(datetime.now()), update_date=str(datetime.now()),
+        ))
+        db.add(UserOrganization(
+            user_id=20, org_id=org.id, role_id=3,
+            creation_date=str(datetime.now()), update_date=str(datetime.now()),
+        ))
+        await db.commit()
+
+        result = await delete_user_by_id(mock_request, db, admin_user, 20)
+        assert result == {"detail": "User deleted successfully"}
+
+        # The sole-admin org is gone...
+        assert (
+            await db.exec(select(Organization).where(Organization.id == solo_org.id))
+        ).first() is None
+        # ...while the shared org (still has admin_user) survives.
+        assert (
+            await db.exec(select(Organization).where(Organization.id == org.id))
+        ).first() is not None
+        # And no dangling memberships for the deleted user remain.
+        assert (
+            await db.exec(select(UserOrganization).where(UserOrganization.user_id == 20))
+        ).first() is None
 
 
 class TestCreateAndUpdateUser:

@@ -1,7 +1,7 @@
 'use client'
 import { Breadcrumbs } from '@components/Objects/Breadcrumbs/Breadcrumbs'
 import { getUriWithOrg } from '@services/config/config'
-import { TextIcon, LucideIcon, LayoutDashboardIcon, CodeIcon, KeyIcon, Palette, School, Shield, Globe, Search, BarChart3, Zap, Menu as MenuIcon } from 'lucide-react'
+import { TextIcon, LucideIcon, LayoutDashboardIcon, CodeIcon, KeyIcon, Palette, School, Shield, Globe, Search, BarChart3, Zap, Menu as MenuIcon, AlertTriangle } from 'lucide-react'
 import React, { useEffect, use } from 'react';
 import { motion } from 'motion/react'
 import Image from 'next/image'
@@ -17,6 +17,7 @@ import OrgEditSEO from '@components/Dashboard/Pages/Org/OrgEditSEO/OrgEditSEO'
 import OrgEditUsage from '@components/Dashboard/Pages/Org/OrgEditUsage/OrgEditUsage'
 import OrgEditAutomations from '@components/Dashboard/Pages/Org/OrgEditAutomations/OrgEditAutomations'
 import OrgEditMenu from '@components/Dashboard/Pages/Org/OrgEditMenu/OrgEditMenu'
+import OrgEditDangerZone from '@components/Dashboard/Pages/Org/OrgEditDangerZone/OrgEditDangerZone'
 import { useTranslation } from 'react-i18next'
 import { PlanLevel } from '@services/plans/plans'
 import { DashTabBar, DashTabItem } from '@components/Dashboard/Shared/DashTabBar/DashTabBar'
@@ -47,6 +48,7 @@ const getSettingTabs = (t: any): TabConfig[] => [
   { id: 'sso', label: t('dashboard.organization.settings.tabs.sso') || 'SSO', icon: Shield, requiredPlan: 'enterprise' },
   { id: 'usage', label: t('dashboard.organization.settings.tabs.usage') || 'Usage', icon: BarChart3 },
   { id: 'other', label: t('dashboard.organization.settings.tabs.other'), icon: CodeIcon },
+  { id: 'danger', label: t('dashboard.organization.settings.tabs.danger') || 'Danger Zone', icon: AlertTriangle },
 ]
 
 function OrgPage(props: { params: Promise<OrgParams> }) {
@@ -93,6 +95,9 @@ function OrgPage(props: { params: Promise<OrgParams> }) {
     } else if (params.subpage == 'other') {
       setH1Label(t('dashboard.organization.settings.pages.other.title'))
       setH2Label(t('dashboard.organization.settings.pages.other.subtitle'))
+    } else if (params.subpage == 'danger') {
+      setH1Label(t('dashboard.organization.settings.pages.danger.title') || 'Danger Zone')
+      setH2Label(t('dashboard.organization.settings.pages.danger.subtitle') || 'Irreversible and destructive actions for this organization')
     }
   }
 
@@ -154,6 +159,7 @@ function OrgPage(props: { params: Promise<OrgParams> }) {
         {params.subpage == 'sso' ? <OrgEditSSO /> : ''}
         {params.subpage == 'usage' ? <OrgEditUsage /> : ''}
         {params.subpage == 'other' ? <OrgEditOther /> : ''}
+        {params.subpage == 'danger' ? <OrgEditDangerZone /> : ''}
       </motion.div>
     </div>
   )

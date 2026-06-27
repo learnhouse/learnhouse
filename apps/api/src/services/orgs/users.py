@@ -540,6 +540,56 @@ async def remove_batch_users_from_org(
     return {"detail": f"{removed_count} user(s) removed from org"}
 
 
+async def remove_all_users_from_org(
+    request: Request,
+    org_id: int,
+    db_session: AsyncSession,
+    current_user: PublicUser | AnonymousUser,
+):
+    """
+    Remove every member from the organization except the caller.
+
+    The organization and all of its content are kept intact. The acting admin
+    is preserved so the org is never left without an administrator. Use the
+    delete-organization endpoint to remove the org entirely.
+    """
+    statement = select(Organization).where(Organization.id == org_id)
+    org = (await db_session.execute(statement)).scalars().first()
+
+    if not org:
+        raise HTTPException(
+            status_code=404,
+            detail="Organization not found",
+        )
+
+    # RBAC check
+    await rbac_check(request, org.org_uuid, current_user, "delete", db_session)
+
+    # Keep the caller so the org always retains at least one admin.
+    keep_user_id = resolve_acting_user_id(current_user)
+
+    remove_stmt = select(UserOrganization).where(
+        UserOrganization.org_id == org.id,
+        UserOrganization.user_id != keep_user_id,
+    )
+    user_orgs_to_remove = (await db_session.execute(remove_stmt)).scalars().all()
+
+    removed_user_ids = [uo.user_id for uo in user_orgs_to_remove]
+    for user_org in user_orgs_to_remove:
+        await db_session.delete(user_org)
+
+    await db_session.commit()
+
+    from src.routers.users import _invalidate_session_cache
+    for uid in removed_user_ids:
+        _invalidate_session_cache(uid)
+
+    for _ in removed_user_ids:
+        await decrease_feature_usage("members", org_id, db_session)
+
+    return {"detail": f"{len(removed_user_ids)} user(s) removed from org"}
+
+
 async def update_user_role(
     request: Request,
     org_id: int,
