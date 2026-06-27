@@ -236,13 +236,6 @@ class TestRouterLevelProtection:
         assert exc_info.value.status_code == 403
 
     @pytest.mark.asyncio
-    async def test_assignments_router_protection(self, mock_api_token_user):
-        """Test that /assignments router is protected from API tokens"""
-        with pytest.raises(HTTPException) as exc_info:
-            await require_non_api_token_user(mock_api_token_user)
-        assert exc_info.value.status_code == 403
-
-    @pytest.mark.asyncio
     async def test_trail_router_protection(self, mock_api_token_user):
         """Test that /trail router is protected from API tokens"""
         with pytest.raises(HTTPException) as exc_info:
@@ -334,6 +327,18 @@ class TestAllowedEndpoints:
     def test_payments_router_allows_api_tokens(self, mock_api_token_user):
         """Test that /payments router allows API tokens (EE)"""
         assert isinstance(mock_api_token_user, APITokenUser)
+
+    def test_assignments_router_allows_api_tokens(self, mock_api_token_user):
+        """The /assignments router now admits API tokens (headless assignments).
+
+        It mounts ``require_authenticated_user_or_api_token`` instead of
+        ``require_authenticated_user``: tokens reach the handlers, where
+        authoring + grading go through ``authorize_assignment_access`` (the
+        ``assignments`` rights bucket) and the learner ``/me`` / submission /
+        retry endpoints keep their own ``_block_api_tokens`` guard.
+        """
+        assert isinstance(mock_api_token_user, APITokenUser)
+        assert mock_api_token_user.org_id is not None
 
 
 class TestEERouterProtection:

@@ -1,0 +1,153 @@
+import { Callout } from 'nextra/components'
+
+# Headless Assignments
+
+LearnHouse assignments can be driven entirely from your own frontend. With an API token you can author assignments and tasks, store an arbitrary custom data object on each task, read submissions and grades, submit answers on behalf of your learners, and grade them — all over the standard REST API, no LearnHouse UI required.
+
+<Callout type="info">
+API tokens are available on the **Pro plan**. Create one under **Organization Settings → API Access** and grant it the **Assignments** permission. Tokens are prefixed with `lh_` and are scoped to a single organization.
+</Callout>
+
+## Permissions
+
+Assignment access is controlled by a single `assignments` rights bucket on the token. The four actions map to capabilities like this:
+
+| Action | What it allows |
+| --- | --- |
+| `create` | Create assignments and tasks (including the custom `contents` data object), upload reference files, and submit answers on behalf of learners |
+| `read` | Read assignments, tasks, submissions, and computed grades |
+| `update` | Update assignments and tasks, and grade submissions (set the grade, feedback, and status) |
+| `delete` | Delete assignments and tasks |
+
+Grant only what your integration needs — a read-only dashboard wants `read`; a grading bot wants `read` + `update`; a fully custom assignment frontend wants `create` + `read` + `update`.
+
+All requests are scoped to the token's organization: trying to touch an assignment in another org returns `403`.
+
+```bash
+curl http://localhost:1338/api/v1/assignments/{assignment_uuid} \
+  -H "Authorization: Bearer lh_your_api_token_here"
+```
+
+## Authoring
+
+These endpoints create and manage assignments and their tasks. An assignment is attached to a course activity, so you provide `org_id`, `course_id`, `chapter_id`, and `activity_id` when creating one.
+
+| Method | Endpoint | Action |
+| --- | --- | --- |
+| `POST` | `/api/v1/assignments/` | `create` |
+| `GET` | `/api/v1/assignments/{assignment_uuid}` | `read` |
+| `GET` | `/api/v1/assignments/activity/{activity_uuid}` | `read` |
+| `GET` | `/api/v1/assignments/course/{course_uuid}` | `read` |
+| `PUT` | `/api/v1/assignments/{assignment_uuid}` | `update` |
+| `DELETE` | `/api/v1/assignments/{assignment_uuid}` | `delete` |
+| `POST` | `/api/v1/assignments/{assignment_uuid}/tasks` | `create` |
+| `GET` | `/api/v1/assignments/{assignment_uuid}/tasks` | `read` |
+| `GET` | `/api/v1/assignments/task/{assignment_task_uuid}` | `read` |
+| `PUT` | `/api/v1/assignments/{assignment_uuid}/tasks/{assignment_task_uuid}` | `update` |
+| `DELETE` | `/api/v1/assignments/{assignment_uuid}/tasks/{assignment_task_uuid}` | `delete` |
+| `POST` | `/api/v1/assignments/{assignment_uuid}/tasks/{assignment_task_uuid}/ref_file` | `create` |
+
+```bash
+curl -X POST http://localhost:1338/api/v1/assignments/ \
+  -H "Authorization: Bearer lh_your_api_token_here" \
+  -H "Content-Type: application/json" \
+  -d '{
+        "title": "Field Report",
+        "description": "Submit your findings",
+        "due_date": "2030-01-01",
+        "grading_type": "NUMERIC",
+        "org_id": 1,
+        "course_id": 12,
+        "chapter_id": 34,
+        "activity_id": 56
+      }'
+```
+
+## Custom tasks — bring your own data object
+
+Each task has an `assignment_type` and a free-form `contents` JSON object. For a fully custom assignment, use the `CUSTOM` type: LearnHouse stores your `contents` (the task definition) and the learner's `task_submission` (their answer) as an arbitrary, caller-owned JSON object. The server never interprets or auto-grades it — it's yours to render and grade however you like.
+
+```bash
+curl -X POST http://localhost:1338/api/v1/assignments/{assignment_uuid}/tasks \
+  -H "Authorization: Bearer lh_your_api_token_here" \
+  -H "Content-Type: application/json" \
+  -d '{
+        "title": "Interactive Map Challenge",
+        "description": "Place the pins",
+        "assignment_type": "CUSTOM",
+        "max_grade_value": 100,
+        "contents": {
+          "widget": "interactive-map",
+          "config": { "regions": ["north", "south"], "maxPins": 7 },
+          "rubric": [ { "id": "r1", "label": "Accuracy", "points": 80 } ]
+        }
+      }'
+```
+
+The `contents` you send back out of `GET /assignments/task/{uuid}` is byte-for-byte what you stored.
+
+<Callout type="info">
+The built-in task types — `QUIZ`, `FORM`, `CODE`, `SHORT_ANSWER`, `NUMBER_ANSWER` — are auto-graded by LearnHouse against their `contents` schema. `CUSTOM` (and `FILE_SUBMISSION`) are **not** auto-graded and are graded manually.
+</Callout>
+
+## Submissions and grading
+
+Learners are referenced by their existing LearnHouse `user_id`. These endpoints let you read submissions, write a learner's answer on their behalf, and finalize grades.
+
+| Method | Endpoint | Action |
+| --- | --- | --- |
+| `GET` | `/api/v1/assignments/{assignment_uuid}/submissions` | `read` |
+| `GET` | `/api/v1/assignments/{assignment_uuid}/submissions/{user_id}` | `read` |
+| `GET` | `/api/v1/assignments/{assignment_uuid}/tasks/{assignment_task_uuid}/submissions` | `read` |
+| `GET` | `/api/v1/assignments/{assignment_uuid}/tasks/{assignment_task_uuid}/submissions/user/{user_id}` | `read` |
+| `PUT` | `/api/v1/assignments/{assignment_uuid}/tasks/{assignment_task_uuid}/submissions` | `create` (submit on behalf) |
+| `POST` | `/api/v1/assignments/{assignment_uuid}/submissions` | `create` (submit on behalf) |
+| `GET` | `/api/v1/assignments/{assignment_uuid}/submissions/{user_id}/grade` | `read` |
+| `POST` | `/api/v1/assignments/{assignment_uuid}/submissions/{user_id}/grade` | `update` |
+| `PUT` | `/api/v1/assignments/{assignment_uuid}/submissions/{user_id}` | `update` |
+
+### Submitting on behalf of a learner
+
+To write a learner's answer, pass their LearnHouse id as `on_behalf_of_user_id`. The learner must already be a member of the token's organization.
+
+```bash
+# Save a learner's answer for a task
+curl -X PUT "http://localhost:1338/api/v1/assignments/{assignment_uuid}/tasks/{task_uuid}/submissions?on_behalf_of_user_id=42" \
+  -H "Authorization: Bearer lh_your_api_token_here" \
+  -H "Content-Type: application/json" \
+  -d '{ "task_submission": { "answer": "my custom answer" } }'
+
+# Mark the assignment as submitted for that learner
+curl -X POST "http://localhost:1338/api/v1/assignments/{assignment_uuid}/submissions?on_behalf_of_user_id=42" \
+  -H "Authorization: Bearer lh_your_api_token_here"
+```
+
+### Grading
+
+Two ways to grade, both gated by `update`:
+
+- `POST .../submissions/{user_id}/grade` recomputes the grade from the task submissions (auto-gradable types are re-verified server-side) and accepts an optional `overall_feedback` in the body.
+- `PUT .../submissions/{user_id}` sets the grade, status, and feedback directly — useful for custom tasks you scored yourself.
+
+```bash
+curl -X POST http://localhost:1338/api/v1/assignments/{assignment_uuid}/submissions/42/grade \
+  -H "Authorization: Bearer lh_your_api_token_here" \
+  -H "Content-Type: application/json" \
+  -d '{ "overall_feedback": "Great work" }'
+```
+
+<Callout type="info">
+Some submission endpoints are **session-only** and cannot be called with a token: the learner-facing "my own submission" reads (`.../submissions/me`), the retry endpoint, and the "mark activity done" endpoint. A token always acts on an explicit `user_id` instead of an implicit "me".
+</Callout>
+
+## End-to-end example
+
+A custom frontend can run the whole lifecycle with one token (`create` + `read` + `update`):
+
+1. `POST /assignments/` — create the assignment on a course activity.
+2. `POST /assignments/{uuid}/tasks` — add a `CUSTOM` task with your data object.
+3. `PUT  /assignments/{uuid}/tasks/{task}/submissions?on_behalf_of_user_id=42` — store a learner's answer.
+4. `POST /assignments/{uuid}/submissions?on_behalf_of_user_id=42` — mark it submitted.
+5. `PUT  /assignments/{uuid}/submissions/42` — set the grade and feedback.
+
+See [Authentication](/developers/api/authentication) for how to create and use API tokens, and the [Assignments platform guide](/platform/assignments) for the in-app workflow.

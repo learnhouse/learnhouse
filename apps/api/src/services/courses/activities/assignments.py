@@ -42,6 +42,7 @@ from src.security.features_utils.usage import (
 )
 from src.security.rbac import (
     authorization_verify_based_on_roles,
+    authorization_verify_api_token_permissions,
     check_resource_access,
     AccessAction,
 )
@@ -64,12 +65,78 @@ def _block_api_tokens(current_user: PublicUser | AnonymousUser | APITokenUser) -
 
     SECURITY: Assignments contain sensitive user submission data and grades.
     API tokens are not allowed to access this data - only user authentication is permitted.
+
+    Still used on the learner-centric, session-only endpoints (the ``/me`` reads,
+    student submission upsert, file uploads, retry, "done"). The instructor-style
+    endpoints (authoring, reading submissions, grading) instead go through
+    ``authorize_assignment_access`` so API tokens with the ``assignments`` rights
+    bucket can drive assignments headlessly.
     """
     if isinstance(current_user, APITokenUser):
         raise HTTPException(
             status_code=403,
             detail="API tokens cannot access assignments. Only user authentication is allowed.",
         )
+
+
+_ACCESS_ACTION_TO_TOKEN_ACTION = {
+    AccessAction.CREATE: "create",
+    AccessAction.READ: "read",
+    AccessAction.UPDATE: "update",
+    AccessAction.DELETE: "delete",
+}
+
+
+async def authorize_assignment_access(
+    request: Request,
+    db_session: AsyncSession,
+    current_user: PublicUser | AnonymousUser | APITokenUser,
+    course_uuid: str,
+    access_action: AccessAction,
+    token_action: str | None = None,
+) -> None:
+    """Authorize an assignment operation for either a user session or an API token.
+
+    Sessions keep the existing course-scoped RBAC (``check_resource_access``).
+    API tokens are authorized against the single ``assignments`` rights bucket,
+    with the organization boundary enforced via the parent course UUID.
+
+    ``token_action`` overrides the rights action checked for tokens when it should
+    differ from the session ``access_action`` (e.g. listing per-task submissions
+    requires instructor UPDATE for a session but is a ``read`` for a token; an
+    authoring token attaches reference files as part of ``create``).
+    """
+    if isinstance(current_user, APITokenUser):
+        action = token_action or _ACCESS_ACTION_TO_TOKEN_ACTION[access_action]
+        await authorization_verify_api_token_permissions(
+            request,
+            current_user,
+            action,
+            course_uuid,
+            db_session,
+            resource_type_override="assignments",
+        )
+        return
+    await check_resource_access(request, db_session, current_user, course_uuid, access_action)
+
+
+async def _is_assignment_instructor(
+    request: Request,
+    current_user: PublicUser | AnonymousUser | APITokenUser,
+    course_uuid: str,
+    db_session: AsyncSession,
+) -> bool:
+    """Whether the principal has instructor-level (grading) authority on the course.
+
+    An API token that has already passed ``authorize_assignment_access`` for the
+    ``assignments`` bucket acts with instructor visibility (only org admins can
+    mint such tokens). Sessions fall back to the role check.
+    """
+    if isinstance(current_user, APITokenUser):
+        return True
+    return await authorization_verify_based_on_roles(
+        request, current_user.id, "update", course_uuid, db_session
+    )
 
 
 def _is_assignment_past_due(assignment: Assignment) -> bool:
@@ -651,7 +718,6 @@ async def create_assignment(
     current_user: PublicUser | AnonymousUser | APITokenUser,
     db_session: AsyncSession,
 ):
-    _block_api_tokens(current_user)
     # Check if org exists
     statement = select(Course).where(Course.id == assignment_object.course_id)
     course = (await db_session.execute(statement)).scalars().first()
@@ -663,7 +729,7 @@ async def create_assignment(
         )
 
     # RBAC check
-    await check_resource_access(request, db_session, current_user, course.course_uuid, AccessAction.CREATE)
+    await authorize_assignment_access(request, db_session, current_user, course.course_uuid, AccessAction.CREATE)
 
     # Usage check
     await check_limits_with_usage("assignments", course.org_id, db_session)
@@ -694,7 +760,6 @@ async def read_assignment(
     current_user: PublicUser | AnonymousUser | APITokenUser,
     db_session: AsyncSession,
 ):
-    _block_api_tokens(current_user)
     statement = (
         select(Assignment, Course.course_uuid, Activity.activity_uuid)
         .join(Course, Course.id == Assignment.course_id)  # type: ignore
@@ -711,7 +776,7 @@ async def read_assignment(
 
     assignment, course_uuid, activity_uuid = row
 
-    await check_resource_access(request, db_session, current_user, course_uuid, AccessAction.READ)
+    await authorize_assignment_access(request, db_session, current_user, course_uuid, AccessAction.READ)
 
     result = AssignmentRead.model_validate(assignment)
     result.course_uuid = course_uuid
@@ -725,7 +790,6 @@ async def read_assignment_from_activity_uuid(
     current_user: PublicUser | AnonymousUser | APITokenUser,
     db_session: AsyncSession,
 ):
-    _block_api_tokens(current_user)
     statement = (
         select(Assignment, Course.course_uuid, Activity.activity_uuid)
         .join(Activity, Activity.id == Assignment.activity_id)  # type: ignore
@@ -742,7 +806,7 @@ async def read_assignment_from_activity_uuid(
 
     assignment, course_uuid, activity_uuid_val = row
 
-    await check_resource_access(request, db_session, current_user, course_uuid, AccessAction.READ)
+    await authorize_assignment_access(request, db_session, current_user, course_uuid, AccessAction.READ)
 
     result = AssignmentRead.model_validate(assignment)
     result.course_uuid = course_uuid
@@ -757,7 +821,6 @@ async def update_assignment(
     current_user: PublicUser | AnonymousUser | APITokenUser,
     db_session: AsyncSession,
 ):
-    _block_api_tokens(current_user)
     # Check if assignment exists
     statement = select(Assignment).where(Assignment.assignment_uuid == assignment_uuid)
     assignment = (await db_session.execute(statement)).scalars().first()
@@ -779,7 +842,7 @@ async def update_assignment(
         )
 
     # RBAC check
-    await check_resource_access(request, db_session, current_user, course.course_uuid, AccessAction.UPDATE)
+    await authorize_assignment_access(request, db_session, current_user, course.course_uuid, AccessAction.UPDATE)
 
     # Update only the fields that were passed in
     for var, value in vars(assignment_object).items():
@@ -802,7 +865,6 @@ async def delete_assignment(
     current_user: PublicUser | AnonymousUser | APITokenUser,
     db_session: AsyncSession,
 ):
-    _block_api_tokens(current_user)
     # Check if assignment exists
     statement = select(Assignment).where(Assignment.assignment_uuid == assignment_uuid)
     assignment = (await db_session.execute(statement)).scalars().first()
@@ -824,7 +886,7 @@ async def delete_assignment(
         )
 
     # RBAC check
-    await check_resource_access(request, db_session, current_user, course.course_uuid, AccessAction.DELETE)
+    await authorize_assignment_access(request, db_session, current_user, course.course_uuid, AccessAction.DELETE)
 
     # Feature usage
     await decrease_feature_usage("assignments", course.org_id, db_session)
@@ -842,7 +904,6 @@ async def delete_assignment_from_activity_uuid(
     current_user: PublicUser | AnonymousUser | APITokenUser,
     db_session: AsyncSession,
 ):
-    _block_api_tokens(current_user)
     # Check if activity exists
     statement = select(Activity).where(Activity.activity_uuid == activity_uuid)
 
@@ -875,7 +936,7 @@ async def delete_assignment_from_activity_uuid(
         )
 
     # RBAC check
-    await check_resource_access(request, db_session, current_user, course.course_uuid, AccessAction.DELETE)
+    await authorize_assignment_access(request, db_session, current_user, course.course_uuid, AccessAction.DELETE)
 
      # Feature usage
     await decrease_feature_usage("assignments", course.org_id, db_session)
@@ -898,7 +959,6 @@ async def create_assignment_task(
     current_user: PublicUser | AnonymousUser | APITokenUser,
     db_session: AsyncSession,
 ):
-    _block_api_tokens(current_user)
     # Check if assignment exists
     statement = select(Assignment).where(Assignment.assignment_uuid == assignment_uuid)
     assignment = (await db_session.execute(statement)).scalars().first()
@@ -920,7 +980,7 @@ async def create_assignment_task(
         )
 
     # RBAC check
-    await check_resource_access(request, db_session, current_user, course.course_uuid, AccessAction.CREATE)
+    await authorize_assignment_access(request, db_session, current_user, course.course_uuid, AccessAction.CREATE)
 
     # Create Assignment Task
     assignment_task = AssignmentTask(**assignment_task_object.model_dump())
@@ -949,7 +1009,6 @@ async def read_assignment_tasks(
     current_user: PublicUser | AnonymousUser | APITokenUser,
     db_session: AsyncSession,
 ):
-    _block_api_tokens(current_user)
     # Find assignment
     statement = select(Assignment).where(Assignment.assignment_uuid == assignment_uuid)
     assignment = (await db_session.execute(statement)).scalars().first()
@@ -978,7 +1037,7 @@ async def read_assignment_tasks(
     )
 
     # RBAC check
-    await check_resource_access(request, db_session, current_user, course.course_uuid, AccessAction.READ)
+    await authorize_assignment_access(request, db_session, current_user, course.course_uuid, AccessAction.READ)
 
     # return assignment tasks read
     return [
@@ -993,7 +1052,6 @@ async def read_assignment_task(
     current_user: PublicUser | AnonymousUser | APITokenUser,
     db_session: AsyncSession,
 ):
-    _block_api_tokens(current_user)
     # Find assignment
     statement = select(AssignmentTask).where(
         AssignmentTask.assignment_task_uuid == assignment_task_uuid
@@ -1027,7 +1085,7 @@ async def read_assignment_task(
         )
 
     # RBAC check
-    await check_resource_access(request, db_session, current_user, course.course_uuid, AccessAction.READ)
+    await authorize_assignment_access(request, db_session, current_user, course.course_uuid, AccessAction.READ)
 
     # return assignment task read
     return AssignmentTaskRead.model_validate(assignmenttask)
@@ -1040,7 +1098,6 @@ async def put_assignment_task_reference_file(
     current_user: PublicUser | AnonymousUser | APITokenUser,
     reference_file: UploadFile | None = None,
 ):
-    _block_api_tokens(current_user)
     # Check if assignment task exists
     statement = select(AssignmentTask).where(
         AssignmentTask.assignment_task_uuid == assignment_task_uuid
@@ -1082,7 +1139,7 @@ async def put_assignment_task_reference_file(
     org = (await db_session.execute(org_statement)).scalars().first()
 
     # RBAC check
-    await check_resource_access(request, db_session, current_user, course.course_uuid, AccessAction.UPDATE)
+    await authorize_assignment_access(request, db_session, current_user, course.course_uuid, AccessAction.UPDATE, token_action="create")
 
     # Upload reference file
     if reference_file and reference_file.filename and activity and org:
@@ -1187,7 +1244,6 @@ async def update_assignment_task(
     current_user: PublicUser | AnonymousUser | APITokenUser,
     db_session: AsyncSession,
 ):
-    _block_api_tokens(current_user)
     # Check if assignment task exists
     statement = select(AssignmentTask).where(
         AssignmentTask.assignment_task_uuid == assignment_task_uuid
@@ -1221,7 +1277,7 @@ async def update_assignment_task(
         )
 
     # RBAC check
-    await check_resource_access(request, db_session, current_user, course.course_uuid, AccessAction.UPDATE)
+    await authorize_assignment_access(request, db_session, current_user, course.course_uuid, AccessAction.UPDATE)
 
     # Update only the fields that were passed in
     for var, value in vars(assignment_task_object).items():
@@ -1244,7 +1300,6 @@ async def delete_assignment_task(
     current_user: PublicUser | AnonymousUser | APITokenUser,
     db_session: AsyncSession,
 ):
-    _block_api_tokens(current_user)
     # Check if assignment task exists
     statement = select(AssignmentTask).where(
         AssignmentTask.assignment_task_uuid == assignment_task_uuid
@@ -1278,7 +1333,7 @@ async def delete_assignment_task(
         )
 
     # RBAC check
-    await check_resource_access(request, db_session, current_user, course.course_uuid, AccessAction.DELETE)
+    await authorize_assignment_access(request, db_session, current_user, course.course_uuid, AccessAction.DELETE)
 
     # Delete Assignment Task
     await db_session.delete(assignment_task)
@@ -1290,14 +1345,58 @@ async def delete_assignment_task(
 ## > Assignments Tasks Submissions CRUD
 
 
+async def _resolve_token_submission_user(
+    request: Request,
+    db_session: AsyncSession,
+    current_user: PublicUser | AnonymousUser | APITokenUser,
+    course,
+    on_behalf_of_user_id: int | None,
+):
+    """Resolve the learner an API token is submitting on behalf of.
+
+    Submit-on-behalf lets a headless/custom frontend write a learner's answer
+    via a token. The token must hold ``assignments.create`` and pass an explicit
+    ``on_behalf_of_user_id``; the target learner must already be a member of the
+    token's organization (learners are referenced by existing LearnHouse id).
+
+    Returns the learner as a ``PublicUser`` to act as, or ``None`` for non-token
+    callers (sessions act as themselves).
+    """
+    if not isinstance(current_user, APITokenUser):
+        return None
+    if on_behalf_of_user_id is None:
+        raise HTTPException(
+            status_code=400,
+            detail="API tokens must set on_behalf_of_user_id to submit on behalf of a learner",
+        )
+    # assignments.create gates writing learner submission data + enforces the
+    # org boundary via the parent course.
+    await authorize_assignment_access(
+        request, db_session, current_user, course.course_uuid, AccessAction.CREATE
+    )
+    from src.security.org_auth import is_org_member
+
+    learner = (
+        await db_session.execute(select(User).where(User.id == on_behalf_of_user_id))
+    ).scalars().first()
+    if not learner:
+        raise HTTPException(status_code=404, detail="Learner not found")
+    if not await is_org_member(learner.id, course.org_id, db_session):
+        raise HTTPException(
+            status_code=403,
+            detail="Learner is not a member of this organization",
+        )
+    return PublicUser(**learner.model_dump())
+
+
 async def handle_assignment_task_submission(
     request: Request,
     assignment_task_uuid: str,
     assignment_task_submission_object: AssignmentTaskSubmissionUpdate,
     current_user: PublicUser | AnonymousUser | APITokenUser,
     db_session: AsyncSession,
+    on_behalf_of_user_id: int | None = None,
 ):
-    _block_api_tokens(current_user)
     assignment_task_submission_uuid = assignment_task_submission_object.assignment_task_submission_uuid
     # Check if assignment task exists
     statement = select(AssignmentTask).where(
@@ -1331,25 +1430,42 @@ async def handle_assignment_task_submission(
             detail="Course not found",
         )
 
-    # SECURITY: Check if user has instructor/admin permissions for grading
-    is_instructor = await authorization_verify_based_on_roles(request, current_user.id, "update", course.course_uuid, db_session)
+    # Resolve who the submission is for. API tokens submit on behalf of a learner
+    # (assignments.create + explicit on_behalf_of_user_id); sessions act as self.
+    token_submitter = await _resolve_token_submission_user(
+        request, db_session, current_user, course, on_behalf_of_user_id
+    )
+    if token_submitter is not None:
+        submitter = token_submitter
+        is_instructor = False
+        is_token_submit = True
+    else:
+        _block_api_tokens(current_user)
+        submitter = current_user
+        # SECURITY: Check if user has instructor/admin permissions for grading
+        is_instructor = await authorization_verify_based_on_roles(request, current_user.id, "update", course.course_uuid, db_session)
+        is_token_submit = False
 
-    # For regular users, ensure they can only submit their own work
+    # For non-instructors (session students AND token submit-on-behalf), the call
+    # writes a learner ANSWER, never a grade.
     if not is_instructor:
-        # Check if user is enrolled in the course
-        if not await authorization_verify_based_on_roles(request, current_user.id, "read", course.course_uuid, db_session):
-            raise HTTPException(
-                status_code=403,
-                detail="You must be enrolled in this course to submit assignments"
-            )
+        if not is_token_submit:
+            # Session students must be enrolled and within the deadline. A token
+            # acting for a learner is an authorized external writer — the custom
+            # frontend owns enrollment/deadline, so those gates are skipped.
+            if not await authorization_verify_based_on_roles(request, current_user.id, "read", course.course_uuid, db_session):
+                raise HTTPException(
+                    status_code=403,
+                    detail="You must be enrolled in this course to submit assignments"
+                )
 
-        if _is_assignment_past_due(assignment):
-            raise HTTPException(
-                status_code=403,
-                detail="Assignment deadline has passed",
-            )
+            if _is_assignment_past_due(assignment):
+                raise HTTPException(
+                    status_code=403,
+                    detail="Assignment deadline has passed",
+                )
 
-        # SECURITY: Regular users cannot update grades - only check if actual values are being set
+        # SECURITY: answer submissions cannot carry grades - only check if actual values are being set
         if (assignment_task_submission_object.grade is not None and assignment_task_submission_object.grade != 0) or \
            (assignment_task_submission_object.task_submission_grade_feedback is not None and assignment_task_submission_object.task_submission_grade_feedback != ""):
             raise HTTPException(
@@ -1362,14 +1478,16 @@ async def handle_assignment_task_submission(
         assignment_task_submission_object.assignment_task_id = None
         assignment_task_submission_object.assignment_type = None
 
-        # Students cannot flag a submission as manually graded — that's
-        # exclusively a teacher action. Also force-clear any prior flag so a
-        # student edit invalidates the teacher's earlier manual grade and the
+        # Neither students nor tokens can flag a submission as manually graded —
+        # that's exclusively a teacher action. Also force-clear any prior flag so
+        # a new answer invalidates the teacher's earlier manual grade and the
         # task re-enters the server-verified pool on the next grading pass.
         assignment_task_submission_object.manually_graded = False
 
-        # Only need read permission for submissions
-        await check_resource_access(request, db_session, current_user, course.course_uuid, AccessAction.READ)
+        if not is_token_submit:
+            # Session students need READ on the course; the token was already
+            # authorized via assignments.create in _resolve_token_submission_user.
+            await check_resource_access(request, db_session, current_user, course.course_uuid, AccessAction.READ)
     else:
         # SECURITY: Instructors/admins need update permission to grade
         await check_resource_access(request, db_session, current_user, course.course_uuid, AccessAction.UPDATE)
@@ -1377,7 +1495,7 @@ async def handle_assignment_task_submission(
     # Try to find existing submission by user_id and assignment_task_id first (for save progress functionality)
     statement = select(AssignmentTaskSubmission).where(
         AssignmentTaskSubmission.assignment_task_id == assignment_task.id,
-        AssignmentTaskSubmission.user_id == current_user.id,
+        AssignmentTaskSubmission.user_id == submitter.id,
     )
     assignment_task_submission = (await db_session.execute(statement)).scalars().first()
     
@@ -1390,8 +1508,9 @@ async def handle_assignment_task_submission(
 
     # If submission exists, update it
     if assignment_task_submission:
-        # SECURITY: For regular users, ensure they can only update their own submissions
-        if not is_instructor and assignment_task_submission.user_id != current_user.id:
+        # SECURITY: non-instructors (students / token submit-on-behalf) can only
+        # touch the submitter's own submission row.
+        if not is_instructor and assignment_task_submission.user_id != submitter.id:
             raise HTTPException(
                 status_code=403,
                 detail="You can only update your own submissions"
@@ -1425,7 +1544,7 @@ async def handle_assignment_task_submission(
             activity_id=assignment.activity_id,
             course_id=assignment.course_id,
             chapter_id=assignment.chapter_id,
-            user_id=current_user.id,
+            user_id=submitter.id,
             creation_date=current_time,
             update_date=current_time,
         )
@@ -1446,7 +1565,6 @@ async def read_user_assignment_task_submissions(
     current_user: PublicUser | AnonymousUser | APITokenUser,
     db_session: AsyncSession,
 ):
-    _block_api_tokens(current_user)
     # Check if assignment task exists
     statement = select(AssignmentTask).where(
         AssignmentTask.assignment_task_uuid == assignment_task_uuid
@@ -1480,12 +1598,10 @@ async def read_user_assignment_task_submissions(
         )
 
     # RBAC check
-    await check_resource_access(request, db_session, current_user, course.course_uuid, AccessAction.READ)
+    await authorize_assignment_access(request, db_session, current_user, course.course_uuid, AccessAction.READ)
 
     # Ownership check: non-instructors may only read their own submissions
-    is_instructor = await authorization_verify_based_on_roles(
-        request, current_user.id, "update", course.course_uuid, db_session
-    )
+    is_instructor = await _is_assignment_instructor(request, current_user, course.course_uuid, db_session)
     if not is_instructor and int(user_id) != int(current_user.id):
         raise HTTPException(
             status_code=403,
@@ -1625,7 +1741,6 @@ async def read_assignment_task_submissions(
     limit: int = 50,
     offset: int = 0,
 ):
-    _block_api_tokens(current_user)
     # Check if assignment task exists
     statement = select(AssignmentTask).where(
         AssignmentTask.assignment_task_uuid == assignment_task_uuid,
@@ -1659,7 +1774,7 @@ async def read_assignment_task_submissions(
         )
 
     # Only instructors may list all submissions for a task
-    await check_resource_access(request, db_session, current_user, course.course_uuid, AccessAction.UPDATE)
+    await authorize_assignment_access(request, db_session, current_user, course.course_uuid, AccessAction.UPDATE, token_action="read")
 
     statement = select(AssignmentTaskSubmission).where(
         AssignmentTaskSubmission.assignment_task_id == assignment_task.id
@@ -1824,8 +1939,8 @@ async def create_assignment_submission(
     assignment_uuid: str,
     current_user: PublicUser | AnonymousUser | APITokenUser,
     db_session: AsyncSession,
+    on_behalf_of_user_id: int | None = None,
 ):
-    _block_api_tokens(current_user)
     # Check if assignment exists
     statement = select(Assignment).where(Assignment.assignment_uuid == assignment_uuid)
     assignment = (await db_session.execute(statement)).scalars().first()
@@ -1836,15 +1951,52 @@ async def create_assignment_submission(
             detail="Assignment not found",
         )
 
+    # Check if course exists
+    statement = select(Course).where(Course.id == assignment.course_id)
+    course = (await db_session.execute(statement)).scalars().first()
+
+    if not course:
+        raise HTTPException(
+            status_code=404,
+            detail="Course not found",
+        )
+
+    # Resolve who is submitting. API tokens submit on behalf of a learner
+    # (assignments.create + explicit on_behalf_of_user_id); sessions act as self.
+    token_submitter = await _resolve_token_submission_user(
+        request, db_session, current_user, course, on_behalf_of_user_id
+    )
+    if token_submitter is not None:
+        submitter = token_submitter
+        is_instructor = False
+        is_token_submit = True
+    else:
+        _block_api_tokens(current_user)
+        submitter = current_user
+        # RBAC check
+        await check_resource_access(request, db_session, current_user, course.course_uuid, AccessAction.READ)
+        is_instructor = await authorization_verify_based_on_roles(
+            request, current_user.id, "update", course.course_uuid, db_session
+        )
+        is_token_submit = False
+
+    # Session students are bound by the deadline; a token writing on behalf of a
+    # learner is an authorized external writer (the custom frontend owns it).
+    if not is_instructor and not is_token_submit and _is_assignment_past_due(assignment):
+        raise HTTPException(
+            status_code=403,
+            detail="Assignment deadline has passed",
+        )
+
     # Check if the submission has already been made. A row in PENDING /
-    # NOT_SUBMITTED state means the student previously hit "Try again":
+    # NOT_SUBMITTED state means the learner previously hit "Try again":
     # retry_assignment_submission left the row in place so the attempt
     # counter survives, but cleared everything else. Treat that as a
     # fresh-submission slot — flip status to SUBMITTED and reuse the row
     # — instead of erroring out on the existing row.
     statement = select(AssignmentUserSubmission).where(
         AssignmentUserSubmission.assignment_id == assignment.id,
-        AssignmentUserSubmission.user_id == current_user.id,
+        AssignmentUserSubmission.user_id == submitter.id,
     )
 
     assignment_user_submission = (await db_session.execute(statement)).scalars().first()
@@ -1859,28 +2011,6 @@ async def create_assignment_submission(
                 status_code=400,
                 detail="Assignment User Submission already exists",
             )
-
-    # Check if course exists
-    statement = select(Course).where(Course.id == assignment.course_id)
-    course = (await db_session.execute(statement)).scalars().first()
-
-    if not course:
-        raise HTTPException(
-            status_code=404,
-            detail="Course not found",
-        )
-
-    # RBAC check
-    await check_resource_access(request, db_session, current_user, course.course_uuid, AccessAction.READ)
-
-    is_instructor = await authorization_verify_based_on_roles(
-        request, current_user.id, "update", course.course_uuid, db_session
-    )
-    if not is_instructor and _is_assignment_past_due(assignment):
-        raise HTTPException(
-            status_code=403,
-            detail="Assignment deadline has passed",
-        )
 
     # Either reuse the existing PENDING row (retry path) or create a fresh
     # submission. On the retry path we keep the original
@@ -1898,7 +2028,7 @@ async def create_assignment_submission(
         assignment_user_submission.update_date = str(datetime.now())
     else:
         assignment_user_submission = AssignmentUserSubmission(
-            user_id=current_user.id,
+            user_id=submitter.id,
             assignment_id=assignment.id,  # type: ignore
             grade=0,
             assignmentusersubmission_uuid=str(f"assignmentusersubmission_{uuid4()}"),
@@ -1919,7 +2049,7 @@ async def create_assignment_submission(
     await track(
         event_name=analytics_events.ASSIGNMENT_SUBMITTED,
         org_id=course.org_id,
-        user_id=current_user.id,
+        user_id=submitter.id,
         properties={
             "assignment_uuid": assignment_uuid,
             "course_uuid": course.course_uuid,
@@ -1930,15 +2060,15 @@ async def create_assignment_submission(
         event_name=analytics_events.ASSIGNMENT_SUBMITTED,
         org_id=course.org_id,
         data={
-            "user": {"user_uuid": current_user.user_uuid, "email": current_user.email, "username": current_user.username},
+            "user": {"user_uuid": submitter.user_uuid, "email": submitter.email, "username": submitter.username},
             "assignment": {"assignment_uuid": assignment_uuid},
             "course": {"course_uuid": course.course_uuid, "name": course.name},
             "attempt_number": submitted_attempt_number,
         },
     )
 
-    # User
-    statement = select(User).where(User.id == current_user.id)
+    # User (the learner the submission belongs to)
+    statement = select(User).where(User.id == submitter.id)
     user = (await db_session.execute(statement)).scalars().first()
 
     if not user:
@@ -2045,7 +2175,7 @@ async def create_assignment_submission(
             await _apply_grade_and_finalize(
                 assignment=assignment,
                 course=course,
-                user_id=int(current_user.id),
+                user_id=int(submitter.id),
                 assignment_user_submission=assignment_user_submission,
                 db_session=db_session,
                 overall_feedback=None,
@@ -2077,7 +2207,6 @@ async def read_assignment_submissions(
     limit: int = 50,
     offset: int = 0,
 ):
-    _block_api_tokens(current_user)
     # Find assignment
     statement = select(Assignment).where(Assignment.assignment_uuid == assignment_uuid)
     assignment = (await db_session.execute(statement)).scalars().first()
@@ -2099,12 +2228,10 @@ async def read_assignment_submissions(
         )
 
     # RBAC check
-    await check_resource_access(request, db_session, current_user, course.course_uuid, AccessAction.READ)
+    await authorize_assignment_access(request, db_session, current_user, course.course_uuid, AccessAction.READ)
 
     # Check if user has instructor/admin privileges on this course
-    is_instructor = await authorization_verify_based_on_roles(
-        request, current_user.id, "update", course.course_uuid, db_session
-    )
+    is_instructor = await _is_assignment_instructor(request, current_user, course.course_uuid, db_session)
 
     # Non-instructors can only see their own submissions
     statement = select(AssignmentUserSubmission).where(
@@ -2150,7 +2277,6 @@ async def read_user_assignment_submissions(
     current_user: PublicUser | AnonymousUser | APITokenUser,
     db_session: AsyncSession,
 ):
-    _block_api_tokens(current_user)
     # Find assignment
     statement = select(Assignment).where(Assignment.assignment_uuid == assignment_uuid)
     assignment = (await db_session.execute(statement)).scalars().first()
@@ -2172,12 +2298,10 @@ async def read_user_assignment_submissions(
         )
 
     # RBAC check
-    await check_resource_access(request, db_session, current_user, course.course_uuid, AccessAction.READ)
+    await authorize_assignment_access(request, db_session, current_user, course.course_uuid, AccessAction.READ)
 
     # Ownership check: non-instructors may only read their own submissions
-    is_instructor = await authorization_verify_based_on_roles(
-        request, current_user.id, "update", course.course_uuid, db_session
-    )
+    is_instructor = await _is_assignment_instructor(request, current_user, course.course_uuid, db_session)
     if not is_instructor and int(user_id) != int(current_user.id):
         raise HTTPException(
             status_code=403,
@@ -2221,7 +2345,6 @@ async def update_assignment_submission(
     current_user: PublicUser | AnonymousUser | APITokenUser,
     db_session: AsyncSession,
 ):
-    _block_api_tokens(current_user)
     # Check if assignment exists
     statement = select(Assignment).where(Assignment.assignment_uuid == assignment_uuid)
     assignment = (await db_session.execute(statement)).scalars().first()
@@ -2256,16 +2379,14 @@ async def update_assignment_submission(
         )
 
     # Check if user is an instructor/admin (has UPDATE permission)
-    is_instructor = await authorization_verify_based_on_roles(
-        request, current_user.id, "update", course.course_uuid, db_session
-    )
+    is_instructor = await _is_assignment_instructor(request, current_user, course.course_uuid, db_session)
 
     if is_instructor:
         # Instructors/admins can update any submission (e.g., for grading)
-        await check_resource_access(request, db_session, current_user, course.course_uuid, AccessAction.UPDATE)
+        await authorize_assignment_access(request, db_session, current_user, course.course_uuid, AccessAction.UPDATE)
     else:
         # Regular users need READ access and can only update their own submissions
-        await check_resource_access(request, db_session, current_user, course.course_uuid, AccessAction.READ)
+        await authorize_assignment_access(request, db_session, current_user, course.course_uuid, AccessAction.READ)
         if str(assignment_user_submission.user_id) != str(current_user.id):
             raise HTTPException(
                 status_code=403,
@@ -2670,7 +2791,6 @@ async def grade_assignment_submission(
     db_session: AsyncSession,
     overall_feedback: str | None = None,
 ):
-    _block_api_tokens(current_user)
     # SECURITY: This function should only be accessible by course owners or instructors
     # Check if assignment exists
     statement = select(Assignment).where(Assignment.assignment_uuid == assignment_uuid)
@@ -2692,7 +2812,7 @@ async def grade_assignment_submission(
         )
 
     # SECURITY: Require course ownership or instructor role for grading
-    await check_resource_access(request, db_session, current_user, course.course_uuid, AccessAction.UPDATE)
+    await authorize_assignment_access(request, db_session, current_user, course.course_uuid, AccessAction.UPDATE)
 
     # Check if assignment user submission exists
     statement = select(AssignmentUserSubmission).where(
@@ -2730,7 +2850,6 @@ async def get_grade_assignment_submission(
     current_user: PublicUser | AnonymousUser | APITokenUser,
     db_session: AsyncSession,
 ):
-    _block_api_tokens(current_user)
     # Check if assignment exists
     statement = select(Assignment).where(Assignment.assignment_uuid == assignment_uuid)
     assignment = (await db_session.execute(statement)).scalars().first()
@@ -2752,12 +2871,10 @@ async def get_grade_assignment_submission(
         )
 
     # RBAC check
-    await check_resource_access(request, db_session, current_user, course.course_uuid, AccessAction.READ)
+    await authorize_assignment_access(request, db_session, current_user, course.course_uuid, AccessAction.READ)
 
     # Ownership check: non-instructors may only read their own grade
-    is_instructor = await authorization_verify_based_on_roles(
-        request, current_user.id, "update", course.course_uuid, db_session
-    )
+    is_instructor = await _is_assignment_instructor(request, current_user, course.course_uuid, db_session)
     if not is_instructor and str(user_id) != str(current_user.id):
         raise HTTPException(
             status_code=403,
@@ -2904,7 +3021,6 @@ async def get_assignments_from_course(
     current_user: PublicUser | AnonymousUser | APITokenUser,
     db_session: AsyncSession,
 ):
-    _block_api_tokens(current_user)
     # Find course
     statement = select(Course).where(Course.course_uuid == course_uuid)
     course = (await db_session.execute(statement)).scalars().first()
@@ -2920,7 +3036,7 @@ async def get_assignments_from_course(
     assignments = (await db_session.execute(statement)).scalars().all()
 
     # RBAC check
-    await check_resource_access(request, db_session, current_user, course.course_uuid, AccessAction.READ)
+    await authorize_assignment_access(request, db_session, current_user, course.course_uuid, AccessAction.READ)
 
     # return assignments read
     return [AssignmentRead.model_validate(assignment) for assignment in assignments]

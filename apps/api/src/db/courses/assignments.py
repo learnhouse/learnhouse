@@ -129,6 +129,11 @@ class AssignmentTaskTypeEnum(str, Enum):
     CODE = "CODE"
     SHORT_ANSWER = "SHORT_ANSWER"
     NUMBER_ANSWER = "NUMBER_ANSWER"
+    # Headless/custom task: the `contents` JSON (the task definition) and the
+    # `task_submission` JSON (the learner answer) are an arbitrary, caller-owned
+    # data object. The server never interprets or auto-grades it — it is graded
+    # manually (or left ungraded), so custom frontends fully control the schema.
+    CUSTOM = "CUSTOM"
     OTHER = "OTHER"
 
 
