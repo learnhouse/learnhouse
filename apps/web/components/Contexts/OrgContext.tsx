@@ -17,9 +17,15 @@ export const OrgContext = createContext<OrgContextValue | null>(null)
 export function OrgProvider({
   children,
   orgslug,
+  errorMessage = 'An error occurred while fetching data',
+  errorSubmessage,
+  inactiveMessage = 'This organization is no longer active',
 }: {
   children: React.ReactNode
   orgslug: string
+  errorMessage?: string
+  errorSubmessage?: string
+  inactiveMessage?: string
 }) {
   const session = useLHSession() as any
   const accessToken = session?.data?.tokens?.access_token
@@ -57,8 +63,12 @@ export function OrgProvider({
     orgslug,
   }), [org, isUserPartOfTheOrg, orgslug])
 
-  if (orgError) return <ErrorUI message='An error occurred while fetching data' />
-  if (!isLoading && org && !isOrgActive) return <ErrorUI message='This organization is no longer active' />
+  if (orgError) {
+    return <ErrorUI message={errorMessage} submessage={errorSubmessage} />
+  }
+  if (!isLoading && org && !isOrgActive) {
+    return <ErrorUI message={inactiveMessage} />
+  }
 
   return <OrgContext.Provider value={contextValue}>{children}</OrgContext.Provider>
 }
