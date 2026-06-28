@@ -596,10 +596,14 @@ export function SessionProvider({
             timestamp: Date.now(),
           }
 
-          // For custom domains, embed returnOrigin so the main domain callback can bounce back
-          if (isCustomDomain()) {
-            stateData.returnOrigin = window.location.origin
-          }
+          // Always embed returnOrigin so the registered Google callback host can
+          // bounce the code+state back to the origin the user actually started on.
+          // Gating this on isCustomDomain() made recovery depend on the configured
+          // main domain: when that domain is stale (e.g. still .io while the app
+          // runs on .app), an app-domain user could be stranded on the callback
+          // host. When login starts on the registered host the origins match and
+          // the callback skips the bounce, so this is a no-op there.
+          stateData.returnOrigin = window.location.origin
 
           const state = btoa(JSON.stringify(stateData))
 
@@ -797,10 +801,10 @@ export async function signIn(
       timestamp: Date.now(),
     }
 
-    // For custom domains, embed returnOrigin so the main domain callback can bounce back
-    if (isCustomDomain()) {
-      stateData.returnOrigin = window.location.origin
-    }
+    // Always embed returnOrigin (see handleSignIn for rationale) so the callback
+    // can bounce the code+state back to the user's own origin regardless of the
+    // configured main domain. No-op when login starts on the registered host.
+    stateData.returnOrigin = window.location.origin
 
     const state = btoa(JSON.stringify(stateData))
 
