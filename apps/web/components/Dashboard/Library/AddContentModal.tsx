@@ -19,6 +19,7 @@ import React from 'react'
 import toast from 'react-hot-toast'
 import useSWR from 'swr'
 import { useTranslation } from 'react-i18next'
+import { useLHAnalytics, AnalyticsEvent } from '@services/analytics'
 
 type Props = {
   folderUuid?: string
@@ -67,6 +68,7 @@ function ResourceList({
   const org = useOrg() as any
   const session = useLHSession() as any
   const access_token = session?.data?.tokens?.access_token
+  const { track } = useLHAnalytics('dashboard')
   const [query, setQuery] = React.useState('')
   const [added, setAdded] = React.useState<Set<string>>(new Set())
   const [pending, setPending] = React.useState<string | null>(null)
@@ -92,6 +94,10 @@ function ResourceList({
         await addOrgRootContent(org?.id, resourceUuid, access_token)
       }
       setAdded((prev) => new Set(prev).add(resourceUuid))
+      track(AnalyticsEvent.LibraryContentAdded, {
+        resource_type: tab,
+        target: folderUuid ? 'folder' : 'root',
+      })
       toast.success(t('library.content_added'))
       onChanged?.()
     } catch (error: any) {

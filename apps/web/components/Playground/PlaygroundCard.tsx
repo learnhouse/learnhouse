@@ -6,6 +6,7 @@ import { Globe, Lock, Users, Pencil } from 'lucide-react'
 import { Cube } from '@phosphor-icons/react'
 import { Playground } from '@services/playgrounds/playgrounds'
 import { getPlaygroundThumbnailMediaDirectory } from '@services/media/media'
+import { useLHAnalytics, AnalyticsEvent } from '@services/analytics'
 
 interface PlaygroundCardProps {
   playground: Playground
@@ -19,9 +20,18 @@ const accessConfig = {
   restricted: { icon: Users, label: 'Restricted', className: 'bg-amber-100 text-amber-700' },
 }
 
-export default function PlaygroundCard({ playground, orgslug, canEdit }: PlaygroundCardProps) {
+export default function PlaygroundCard({ playground, orgslug: _orgslug, canEdit }: PlaygroundCardProps) {
+  const { track } = useLHAnalytics('learner')
   const access = accessConfig[playground.access_type as keyof typeof accessConfig] || accessConfig.authenticated
   const AccessIcon = access.icon
+
+  const handleOpen = () => {
+    track(AnalyticsEvent.PlaygroundOpened, {
+      access_type: playground.access_type,
+      published: playground.published,
+      source: 'card',
+    })
+  }
 
   const thumbnailUrl =
     playground.thumbnail_image && playground.org_uuid
@@ -50,7 +60,7 @@ export default function PlaygroundCard({ playground, orgslug, canEdit }: Playgro
       )}
 
       {/* Thumbnail */}
-      <Link href={playgroundLink} className="block relative aspect-video overflow-hidden bg-gray-50">
+      <Link href={playgroundLink} onClick={handleOpen} className="block relative aspect-video overflow-hidden bg-gray-50">
         {thumbnailUrl ? (
           <div
             className="w-full h-full bg-cover bg-center transition-transform duration-500 group-hover:scale-105"
@@ -81,6 +91,7 @@ export default function PlaygroundCard({ playground, orgslug, canEdit }: Playgro
       <div className="p-3 flex flex-col space-y-1.5">
         <Link
           href={playgroundLink}
+          onClick={handleOpen}
           className="text-base font-bold text-gray-900 leading-tight hover:text-black transition-colors line-clamp-1"
         >
           {playground.name}
@@ -95,6 +106,7 @@ export default function PlaygroundCard({ playground, orgslug, canEdit }: Playgro
         <div className="pt-1.5 flex items-center justify-end border-t border-gray-100">
           <Link
             href={playgroundLink}
+            onClick={handleOpen}
             className="text-[10px] font-bold text-gray-400 hover:text-gray-900 transition-colors uppercase tracking-wider"
           >
             Open Playground →

@@ -14,7 +14,7 @@ export default function CreateTokenModal({
 }: {
   open: boolean
   onClose: () => void
-  onCreated: (token: CreatedToken) => void
+  onCreated: (_token: CreatedToken) => void
 }) {
   const session = useLHSession() as any
   const accessToken = session?.data?.tokens?.access_token

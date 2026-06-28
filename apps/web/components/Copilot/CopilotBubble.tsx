@@ -1,6 +1,7 @@
 'use client'
 
 import React, { useCallback, useEffect, useRef, useState } from 'react'
+import { usePathname } from 'next/navigation'
 import { useOrg } from '@components/Contexts/OrgContext'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
 import {
@@ -38,6 +39,7 @@ import {
   groupSessionsByDate,
 } from '@/app/orgs/[orgslug]/(withmenu)/copilot/copilot'
 import AuthenticatedClientElement from '@components/Security/AuthenticatedClientElement'
+import { useLHAnalytics, AnalyticsEvent } from '@services/analytics'
 
 type ChatMessage = {
   role: 'user' | 'assistant'
@@ -48,7 +50,7 @@ type ChatMessage = {
 interface CopilotBubbleProps {
   orgslug: string
   open: boolean
-  onOpenChange: (open: boolean) => void
+  onOpenChange: (_open: boolean) => void
   sessionToLoad?: string | null
 }
 
@@ -73,6 +75,8 @@ function BubbleInner({ orgslug, open, onOpenChange, sessionToLoad }: CopilotBubb
   const session = useLHSession() as any
   const org = useOrg() as any
   const accessToken = session?.data?.tokens?.access_token
+  const pathname = usePathname()
+  const { track } = useLHAnalytics('learner')
 
   const [showSessions, setShowSessions] = useState(false)
   const [messages, setMessages] = useState<ChatMessage[]>([])
@@ -86,7 +90,7 @@ function BubbleInner({ orgslug, open, onOpenChange, sessionToLoad }: CopilotBubb
   const [error, setError] = useState<string | null>(null)
   const [isLoadingSession, setIsLoadingSession] = useState(false)
   const [followUps, setFollowUps] = useState<string[]>([])
-  const [isLoadingFollowUps, setIsLoadingFollowUps] = useState(false)
+  const [_isLoadingFollowUps, setIsLoadingFollowUps] = useState(false)
 
   const messagesContainerRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLInputElement>(null)
@@ -210,6 +214,8 @@ function BubbleInner({ orgslug, open, onOpenChange, sessionToLoad }: CopilotBubb
     setIsStreaming(true)
     const wasNewChat = isNewChatRef.current
 
+    track(AnalyticsEvent.CopilotBubbleMessageSent, { chat_mode: chatMode })
+
     const callbacks: StreamCallbacks = {
       onStart: (data) => { setIsWaiting(false); if (data.aichat_uuid) setAichatUuid(data.aichat_uuid) },
       onChunk: (chunk) => {
@@ -258,7 +264,7 @@ function BubbleInner({ orgslug, open, onOpenChange, sessionToLoad }: CopilotBubb
     } else {
       await startRAGChatStream(message, accessToken, callbacks, selectedCourse || undefined, chatMode, orgslug)
     }
-  }, [accessToken, aichatUuid, selectedCourse, chatMode, mutateSessions, orgslug])
+  }, [accessToken, aichatUuid, selectedCourse, chatMode, mutateSessions, orgslug, track])
 
   const isInputDisabled = isWaiting || isLoadingSession
 
@@ -506,7 +512,10 @@ function BubbleInner({ orgslug, open, onOpenChange, sessionToLoad }: CopilotBubb
 
       {/* FAB */}
       <button
-        onClick={() => onOpenChange(!open)}
+        onClick={() => {
+          if (!open) track(AnalyticsEvent.CopilotBubbleOpened, { current_path: pathname })
+          onOpenChange(!open)
+        }}
         className="fixed bottom-4 right-4 z-[9999] flex items-center justify-center rounded-full bg-violet-600 hover:bg-violet-700 text-white transition-all duration-200 hover:scale-105 active:scale-95 nice-shadow"
         style={{ width: 44, height: 44 }}
         aria-label="Open Copilot"

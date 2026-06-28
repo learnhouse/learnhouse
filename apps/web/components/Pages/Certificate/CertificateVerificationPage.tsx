@@ -8,6 +8,7 @@ import Link from 'next/link';
 import { getUriWithOrg } from '@services/config/config';
 import { getCourseThumbnailMediaDirectory } from '@services/media/media';
 import { useOrg } from '@components/Contexts/OrgContext';
+import { useTrackView, AnalyticsEvent } from '@services/analytics';
 
 interface CertificateVerificationPageProps {
   certificateUuid: string;
@@ -19,6 +20,8 @@ const CertificateVerificationPage: React.FC<CertificateVerificationPageProps> = 
   const [error, setError] = useState<string | null>(null);
   const [verificationStatus, setVerificationStatus] = useState<'valid' | 'invalid' | 'loading'>('loading');
   const org = useOrg() as any;
+
+  useTrackView(AnalyticsEvent.CertificateVerificationViewed, { verification_status: verificationStatus }, !isLoading);
 
   // Fetch certificate data
   useEffect(() => {

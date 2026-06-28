@@ -6,6 +6,7 @@ import { useSearchParams } from 'next/navigation'
 import { verifyEmail } from '@services/auth/auth'
 import { useTranslation } from 'react-i18next'
 import AuthLayout from '@components/Auth/AuthLayout'
+import { useLHAnalytics, AnalyticsEvent } from '@services/analytics'
 
 interface VerifyEmailClientProps {
     org: any
@@ -13,6 +14,7 @@ interface VerifyEmailClientProps {
 
 function VerifyEmailClient({ org }: VerifyEmailClientProps) {
     const { t } = useTranslation();
+    const { track } = useLHAnalytics('public')
     const searchParams = useSearchParams()
     const token = searchParams.get('token') || ''
     const userUuid = searchParams.get('user') || ''
@@ -26,6 +28,7 @@ function VerifyEmailClient({ org }: VerifyEmailClientProps) {
     useEffect(() => {
         const verify = async () => {
             if (!token || !userUuid || !orgUuid) {
+                track(AnalyticsEvent.EmailVerificationCompleted, { result: 'fail' })
                 setError(t('auth.verification_missing_params'))
                 setIsVerifying(false)
                 setShowMessage(true)
@@ -35,6 +38,7 @@ function VerifyEmailClient({ org }: VerifyEmailClientProps) {
             try {
                 const res = await verifyEmail(token, userUuid, orgUuid)
                 if (res.success) {
+                    track(AnalyticsEvent.EmailVerificationCompleted, { result: 'success' })
                     setSuccess(true)
                     setShowMessage(true)
                     // Verification also signs the user in (session cookies were
@@ -44,10 +48,12 @@ function VerifyEmailClient({ org }: VerifyEmailClientProps) {
                         window.location.assign('/')
                     }, 1200)
                 } else {
+                    track(AnalyticsEvent.EmailVerificationCompleted, { result: 'fail' })
                     setError(res.error || t('auth.verification_failed'))
                     setShowMessage(true)
                 }
             } catch {
+                track(AnalyticsEvent.EmailVerificationCompleted, { result: 'fail' })
                 setError(t('auth.verification_failed'))
                 setShowMessage(true)
             } finally {
@@ -56,7 +62,7 @@ function VerifyEmailClient({ org }: VerifyEmailClientProps) {
         }
 
         verify()
-    }, [token, userUuid, orgUuid, t])
+    }, [token, userUuid, orgUuid, t, track])
 
     return (
         <AuthLayout org={org} welcomeText={t('auth.verifying_your_email')}>

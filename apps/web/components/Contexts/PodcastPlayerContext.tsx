@@ -2,6 +2,7 @@
 
 import React, { createContext, useContext, useReducer, useCallback, useRef, useEffect, useMemo } from 'react'
 import { Podcast, PodcastEpisode } from '@services/podcasts/podcasts'
+import { useLHAnalytics, AnalyticsEvent } from '@services/analytics'
 
 interface PodcastPlayerState {
   currentEpisode: PodcastEpisode | null
@@ -92,16 +93,16 @@ function podcastPlayerReducer(
 
 interface PodcastPlayerContextValue {
   state: PodcastPlayerState
-  playEpisode: (episode: PodcastEpisode, podcast: Podcast) => void
+  playEpisode: (_episode: PodcastEpisode, _podcast: Podcast) => void
   play: () => void
   pause: () => void
   togglePlay: () => void
-  setTime: (time: number) => void
-  setDuration: (duration: number) => void
-  setVolume: (volume: number) => void
+  setTime: (_time: number) => void
+  setDuration: (_duration: number) => void
+  setVolume: (_volume: number) => void
   toggleMinimize: () => void
   closePlayer: () => void
-  seekTo: (time: number) => void
+  seekTo: (_time: number) => void
   audioRef: React.RefObject<HTMLAudioElement | null>
 }
 
@@ -110,6 +111,11 @@ const PodcastPlayerContext = createContext<PodcastPlayerContextValue | null>(nul
 export function PodcastPlayerProvider({ children }: { children: React.ReactNode }) {
   const [state, dispatch] = useReducer(podcastPlayerReducer, initialState)
   const audioRef = useRef<HTMLAudioElement | null>(null)
+  const { track } = useLHAnalytics('learner')
+  const trackRef = useRef(track)
+  useEffect(() => {
+    trackRef.current = track
+  }, [track])
 
   const playEpisode = useCallback((episode: PodcastEpisode, podcast: Podcast) => {
     dispatch({ type: 'SET_EPISODE', payload: { episode, podcast } })
@@ -179,6 +185,7 @@ export function PodcastPlayerProvider({ children }: { children: React.ReactNode 
     }
 
     const handleEnded = () => {
+      trackRef.current(AnalyticsEvent.EpisodeCompleted, { duration: audio.duration })
       dispatch({ type: 'PAUSE' })
     }
 

@@ -1,6 +1,6 @@
 'use client'
 
-import React from 'react'
+import React, { useEffect, useRef } from 'react'
 import GeneralWrapperStyled from '@components/Objects/StyledElements/Wrappers/GeneralWrapper'
 import { Breadcrumbs } from '@components/Objects/Breadcrumbs/Breadcrumbs'
 import { AccountSidebar } from '@components/Objects/Account/AccountSidebar'
@@ -14,6 +14,7 @@ import AccountGeneral from '@components/Objects/Account/subpages/AccountGeneral'
 import AccountProfile from '@components/Objects/Account/subpages/AccountProfile'
 import AccountSecurity from '@components/Objects/Account/subpages/AccountSecurity'
 import AccountPurchases from '@components/Objects/Account/subpages/AccountPurchases'
+import { useLHAnalytics, AnalyticsEvent } from '@services/analytics'
 
 interface AccountClientProps {
   orgslug: string
@@ -21,7 +22,7 @@ interface AccountClientProps {
   subpage: string
 }
 
-const getSubpageTitle = (subpage: string, t: (key: string) => string): string => {
+const getSubpageTitle = (subpage: string, t: (_key: string) => string): string => {
   const titles: Record<string, string> = {
     'general': t('account.general'),
     'profile': t('account.profile'),
@@ -36,6 +37,17 @@ const AccountClient = ({ orgslug, org_id, subpage }: AccountClientProps) => {
   const session = useLHSession() as any
   const user = session?.data?.user
   const { t } = useTranslation()
+  const { track } = useLHAnalytics('learner')
+
+  // Fire one impression per distinct subpage (component stays mounted across
+  // subpage changes, so guard on the value rather than relying on remount).
+  const lastSubpageRef = useRef<string | null>(null)
+  useEffect(() => {
+    if (lastSubpageRef.current === subpage) return
+    lastSubpageRef.current = subpage
+    track(AnalyticsEvent.AccountSubpageViewed, { subpage })
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [subpage])
 
   const renderSubpage = () => {
     switch (subpage) {

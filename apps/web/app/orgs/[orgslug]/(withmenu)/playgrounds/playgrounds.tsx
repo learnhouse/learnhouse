@@ -12,6 +12,7 @@ import GeneralWrapperStyled from '@components/Objects/StyledElements/Wrappers/Ge
 import TypeOfContentTitle from '@components/Objects/StyledElements/Titles/TypeOfContentTitle'
 import PlaygroundCard from '@components/Playground/PlaygroundCard'
 import { Playground, createPlayground } from '@services/playgrounds/playgrounds'
+import { useLHAnalytics, AnalyticsEvent } from '@services/analytics'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
 import FeatureGate from '@components/Dashboard/Shared/FeatureGate/FeatureGate'
 import useAdminStatus from '@components/Hooks/useAdminStatus'
@@ -33,6 +34,7 @@ export default function PlaygroundsClient({
   const access_token = session?.data?.tokens?.access_token
   const { isAdmin: isUserAdmin } = useAdminStatus()
   const queryClient = useQueryClient()
+  const { track } = useLHAnalytics('learner')
 
   const [playgrounds, setPlaygrounds] = useState<Playground[]>(initialPlaygrounds)
   const [searchQuery, setSearchQuery] = useState('')
@@ -103,6 +105,10 @@ export default function PlaygroundsClient({
         access_token
       )
       setPlaygrounds((prev) => [newPlayground, ...prev])
+      track(AnalyticsEvent.PlaygroundCreated, {
+        name_provided: newName.trim().length > 0,
+        source: 'learner',
+      })
       queryClient.invalidateQueries({ queryKey: queryKeys.playgrounds.list(orgslug) })
       router.push(`/editor/playground/${newPlayground.playground_uuid}/edit`)
     } catch {

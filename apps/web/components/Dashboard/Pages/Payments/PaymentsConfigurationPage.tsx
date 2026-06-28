@@ -24,6 +24,7 @@ import { queryKeys } from '@/lib/query/keys';
 import ConfirmationModal from '@components/Objects/StyledElements/ConfirmationModal/ConfirmationModal';
 import { Button } from '@components/ui/button';
 import { getMainDomainUri } from '@services/config/config';
+import { useLHAnalytics, AnalyticsEvent } from '@services/analytics';
 import { SiStripe } from '@icons-pack/react-simple-icons';
 
 // ---------------------------------------------------------------------------
@@ -36,7 +37,7 @@ interface PaymentProviderDef {
   tagline: string;
   docsUrl: string;
   callbackPath: string;
-  getConnectUrl: (orgId: number, accessToken: string, redirectUri: string) => Promise<string>;
+  getConnectUrl: (_orgId: number, _accessToken: string, _redirectUri: string) => Promise<string>;
 }
 
 const PAYMENT_PROVIDERS: PaymentProviderDef[] = [
@@ -142,12 +143,17 @@ interface ProviderCardProps {
 
 const ProviderCard: React.FC<ProviderCardProps> = ({ provider, config, orgId, accessToken }) => {
   const queryClient = useQueryClient();
+  const { track } = useLHAnalytics('dashboard');
   const [isConnecting, setIsConnecting] = useState(false);
   const [disconnectError, setDisconnectError] = useState<{ count: number } | null>(null);
   const isConnected = !!(config?.provider_specific_id && config?.active);
 
   const handleConnect = async () => {
     try {
+      track(AnalyticsEvent.PaymentProviderConnectClicked, {
+        is_reconnect: isConnected,
+        had_existing_config: !!config,
+      });
       setIsConnecting(true);
       if (!config) {
         await initializePaymentConfig(orgId, { provider: provider.id, enabled: true }, provider.id, accessToken);
@@ -172,7 +178,7 @@ const ProviderCard: React.FC<ProviderCardProps> = ({ provider, config, orgId, ac
     } catch (err: any) {
       if (err?.status === 409 || err?.response?.status === 409) {
         let detail: any = err?.detail ?? err?.response?.data?.detail;
-        try { detail = JSON.parse(detail); } catch {}
+        try { detail = JSON.parse(detail); } catch { /* ignore */ }
         if (detail?.code === 'ACTIVE_SUBSCRIPTIONS_EXIST') {
           setDisconnectError({ count: detail.count });
           return;

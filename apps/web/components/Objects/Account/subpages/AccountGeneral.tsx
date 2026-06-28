@@ -44,6 +44,7 @@ import { signOut } from '@components/Contexts/AuthContext'
 import { getUriWithoutOrg } from '@services/config/config';
 import { useDebounce } from '@/hooks/useDebounce';
 import { useTranslation } from 'react-i18next';
+import { useLHAnalytics, AnalyticsEvent } from '@services/analytics';
 
 const SUPPORTED_FILES = constructAcceptValue(['jpg', 'png', 'webp', 'gif'])
 
@@ -128,9 +129,9 @@ const DetailCard = React.memo(({
 }: {
   id: string;
   detail: DetailItem;
-  onUpdate: (id: string, field: keyof DetailItem, value: string) => void;
-  onRemove: (id: string) => void;
-  onLabelChange: (id: string, newLabel: string) => void;
+  onUpdate: (_id: string, _field: keyof DetailItem, _value: string) => void;
+  onRemove: (_id: string) => void;
+  onLabelChange: (_id: string, _newLabel: string) => void;
 }) => {
   const { t } = useTranslation();
   const [localLabel, setLocalLabel] = useState(detail.label);
@@ -240,8 +241,8 @@ const UserEditForm = ({
   profilePicture
 }: {
   values: FormValues;
-  setFieldValue: (field: string, value: any) => void;
-  handleChange: (e: React.ChangeEvent<any>) => void;
+  setFieldValue: (_field: string, _value: any) => void;
+  handleChange: (_e: React.ChangeEvent<any>) => void;
   errors: any;
   touched: any;
   isSubmitting: boolean;
@@ -250,7 +251,7 @@ const UserEditForm = ({
     success: string;
     isLoading: boolean;
     localAvatar: File | null;
-    handleFileChange: (event: any) => Promise<void>;
+    handleFileChange: (_event: any) => Promise<void>;
   };
 }) => {
   const { t } = useTranslation();
@@ -536,6 +537,7 @@ function AccountGeneral() {
   const [success, setSuccess] = React.useState('') as any
   const [userData, setUserData] = useState<any>(null);
   const { t } = useTranslation();
+  const { track } = useLHAnalytics('learner');
 
   useEffect(() => {
     const fetchUserData = async () => {
@@ -572,7 +574,7 @@ function AccountGeneral() {
   const handleEmailChange = async (newEmail: string) => {
     toast.success(t('user.settings.general.profile_updated'), { duration: 4000 })
 
-    toast((t_toast: any) => (
+    toast((_t_toast: any) => (
       <div className="flex items-center gap-2">
         <span>{t('user.settings.general.relogin_message', { email: newEmail })}</span>
       </div>
@@ -617,6 +619,10 @@ function AccountGeneral() {
             updateProfile(values, userData.id, access_token)
               .then(() => {
                 toast.dismiss(loadingToast)
+                track(AnalyticsEvent.AccountProfileUpdated, {
+                  email_changed: isEmailChanged,
+                  has_bio: !!values.bio?.trim(),
+                })
                 if (isEmailChanged) {
                   handleEmailChange(values.email)
                 } else {

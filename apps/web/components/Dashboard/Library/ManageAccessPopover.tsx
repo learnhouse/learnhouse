@@ -1,4 +1,5 @@
 'use client'
+import { useLHAnalytics, AnalyticsEvent } from '@services/analytics'
 import ConfirmationModal from '@components/Objects/StyledElements/ConfirmationModal/ConfirmationModal'
 import Modal from '@components/Objects/StyledElements/Modal/Modal'
 import { getAPIUrl, getUriWithOrg } from '@services/config/config'
@@ -105,6 +106,7 @@ function LinkUserGroup({
   const session = useLHSession() as any
   const access_token = session?.data?.tokens?.access_token
 
+  const { track } = useLHAnalytics('dashboard')
   const { data } = useSWR(
     org?.id ? ['usergroups', org.id] : null,
     () => getUserGroups(org.id, access_token)
@@ -123,6 +125,7 @@ function LinkUserGroup({
     const res = await linkResourcesToUserGroup(selected, resource_uuid, org.id, access_token)
     if (res.status === 200) {
       closeModal()
+      track(AnalyticsEvent.UsergroupLinked, { resource_uuid, usergroup_id: selected })
       toast.success(t('access.usergroups.link_success'))
       onLinked()
     } else {
@@ -201,6 +204,7 @@ function ManageAccessPopover({ resource_uuid, resourceType }: Props) {
     }
   )
 
+  const { track } = useLHAnalytics('dashboard')
   const [isClientPublic, setIsClientPublic] = useState<boolean | undefined>(undefined)
   const [isSaving, setIsSaving] = useState(false)
 
@@ -224,6 +228,11 @@ function ManageAccessPopover({ resource_uuid, resourceType }: Props) {
       }
       setIsClientPublic(value)
       mutateResource()
+      track(AnalyticsEvent.ResourceVisibilityChanged, {
+        resource_type: resourceType,
+        resource_uuid,
+        is_public: value,
+      })
       toast.success(t('access.visibility_updated'))
     } catch (error: any) {
       toast.error(error?.message || t('access.visibility_update_error'))

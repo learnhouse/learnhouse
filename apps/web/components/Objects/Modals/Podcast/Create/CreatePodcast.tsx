@@ -8,6 +8,7 @@ import FormLayout, {
 } from '@components/Objects/StyledElements/Form/Form'
 import * as Form from '@radix-ui/react-form'
 import { createPodcast } from '@services/podcasts/podcasts'
+import { useLHAnalytics, AnalyticsEvent } from '@services/analytics'
 import { getOrganizationContextInfoWithoutCredentials } from '@services/organizations/orgs'
 import React, { useEffect } from 'react'
 import { BarLoader } from 'react-spinners'
@@ -29,6 +30,7 @@ function CreatePodcastModal({ closeModal, orgslug }: any) {
   const router = useRouter()
   const session = useLHSession() as any
   const queryClient = useQueryClient()
+  const { track } = useLHAnalytics('learner')
   const [orgId, setOrgId] = React.useState(null) as any
   const [showUnsplashPicker, setShowUnsplashPicker] = React.useState(false)
   const [isUploading, setIsUploading] = React.useState(false)
@@ -70,6 +72,11 @@ function CreatePodcastModal({ closeModal, orgslug }: any) {
         )
 
         if (res.success) {
+          track(AnalyticsEvent.PodcastCreated, {
+            is_public: values.visibility,
+            has_thumbnail: !!values.thumbnail,
+            source: 'create_modal',
+          })
           await revalidateTags(['podcasts'], orgslug)
           queryClient.invalidateQueries({ queryKey: queryKeys.podcasts.list(orgslug) })
           toast.dismiss(toast_loading)

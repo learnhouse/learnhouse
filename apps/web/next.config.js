@@ -2,15 +2,20 @@ const { withSentryConfig } = require("@sentry/nextjs");
 
 /** @type {import('common.next').NextConfig} */
 const nextConfig = {
+  // Required by PostHog's reverse-proxy rewrites below so the trailing-slash
+  // handling on /ingest/* doesn't 308-redirect ingestion requests.
+  skipTrailingSlashRedirect: true,
   async rewrites() {
     return [
+      // PostHog reverse proxy (EU cloud) — served same-origin so adblockers
+      // don't strip ingestion. The client SDK points at api_host: '/ingest'.
       {
-        source: '/umami/script.js',
-        destination: `https://eu.umami.is/script.js`,
+        source: '/ingest/static/:path*',
+        destination: 'https://eu-assets.i.posthog.com/static/:path*',
       },
       {
-        source: '/umami/api/send',
-        destination: `https://eu.umami.is/api/send`,
+        source: '/ingest/:path*',
+        destination: 'https://eu.i.posthog.com/:path*',
       },
     ]
   },

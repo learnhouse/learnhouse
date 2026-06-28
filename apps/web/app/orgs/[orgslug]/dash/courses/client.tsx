@@ -3,7 +3,7 @@ import { Breadcrumbs } from '@components/Objects/Breadcrumbs/Breadcrumbs'
 import CreateCourseModal from '@components/Objects/Modals/Course/Create/CreateCourse'
 import CourseCreationTypeSelector from '@components/Objects/Modals/Course/Create/CourseCreationTypeSelector'
 import AICourseCreationModal from '@components/Objects/Modals/Course/Create/AICourse/AICourseCreationModal'
-import { BookCopy, Search, X, Trash2, ChevronLeft, ChevronRight, Upload, Users, Info } from 'lucide-react'
+import { BookCopy, Search, X, Trash2, ChevronLeft, ChevronRight, Users, Info } from 'lucide-react'
 import ScormCourseImport from '../../../../../ee/components/Modals/ScormCourseImport'
 import { ImportTypeSelector, LearnHouseCourseImport } from '@components/Objects/Modals/Course/Import'
 import CourseThumbnail, { removeCoursePrefix } from '@components/Objects/Thumbnails/CourseThumbnail'
@@ -18,7 +18,6 @@ import { getAPIUrl, getUriWithOrg } from '@services/config/config'
 import { useOrg } from '@components/Contexts/OrgContext'
 import { Download, Copy } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
-import { PlanLevel } from '@services/plans/plans'
 import { OrgUsageResponse, orgUsageFetcher } from '@services/orgs/usage'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
 import { deleteCourseFromBackend, cloneCourse } from '@services/courses/courses'
@@ -32,6 +31,7 @@ import toast from 'react-hot-toast'
 import FeatureGate from '@components/Dashboard/Shared/FeatureGate/FeatureGate'
 import { usePlan } from '@components/Hooks/usePlan'
 import { searchMatchesAny } from '@/lib/search/normalize'
+import { useLHAnalytics, AnalyticsEvent } from '@services/analytics'
 
 type CourseProps = {
   orgslug: string
@@ -39,6 +39,7 @@ type CourseProps = {
 
 function CoursesHome(params: CourseProps) {
   const { t } = useTranslation()
+  const { track } = useLHAnalytics('dashboard')
   const searchParams = useSearchParams()
   const isCreatingCourse = searchParams.get('new') ? true : false
   const [newCourseModal, setNewCourseModal] = React.useState(isCreatingCourse)
@@ -188,6 +189,7 @@ function CoursesHome(params: CourseProps) {
   const router = useRouter()
 
   const handleCreationTypeSelect = (type: 'scratch' | 'ai' | 'migrate') => {
+    track(AnalyticsEvent.CourseCreationTypeSelected, { creation_type: type })
     if (type === 'ai') {
       setNewCourseModal(false)
       setAiCourseModalOpen(true)
@@ -324,7 +326,7 @@ function CoursesHome(params: CourseProps) {
       try {
         await deleteCourseFromBackend(courseUuid, access_token)
         successCount++
-      } catch (error) {
+      } catch (_error) {
         errorCount++
       }
     }
@@ -354,7 +356,7 @@ function CoursesHome(params: CourseProps) {
         } else {
           errorCount++
         }
-      } catch (error) {
+      } catch (_error) {
         errorCount++
       }
     }

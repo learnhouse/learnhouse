@@ -14,6 +14,7 @@ import { useLHSession } from '@components/Contexts/LHSessionContext'
 import { useFormik } from 'formik'
 import toast from 'react-hot-toast'
 import { useTranslation } from 'react-i18next'
+import { useLHAnalytics, AnalyticsEvent } from '@services/analytics'
 
 type AddUserGroupProps = {
     setCreateUserGroupModal: any
@@ -34,6 +35,7 @@ function AddUserGroup(props: AddUserGroupProps) {
     const session = useLHSession() as any
     const access_token = session?.data?.tokens?.access_token;
     const queryClient = useQueryClient()
+    const { track } = useLHAnalytics('dashboard')
     const [isSubmitting, setIsSubmitting] = React.useState(false)
 
     const formik = useFormik({
@@ -51,6 +53,7 @@ function AddUserGroup(props: AddUserGroupProps) {
             const res = await createUserGroup(submitValues, access_token)
             if (res.status == 200) {
                 setIsSubmitting(false)
+                track(AnalyticsEvent.UsergroupCreated)
                 queryClient.invalidateQueries({ queryKey: queryKeys.usergroups.list(org.id) })
                 props.setCreateUserGroupModal(false)
                 toast.success(t('dashboard.users.usergroups.modals.create.toasts.success'), {id:toastID})

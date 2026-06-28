@@ -24,6 +24,7 @@ import {
 import { useOrgMembership } from '@components/Contexts/OrgContext'
 import { isFeatureAvailable } from '@services/plans/plans'
 import { normalizeForSearch } from '@/lib/search/normalize'
+import { useLHAnalytics, AnalyticsEvent } from '@services/analytics'
 
 const CONTENT_TYPE_ICON: Record<ContentResultType, SearchMeta['icon']> = {
   course: BookOpen,
@@ -84,6 +85,7 @@ export default function CommandPalette() {
   const { t } = useTranslation()
   const { open, setOpen } = useCommandPalette()
   const router = useRouter()
+  const { track } = useLHAnalytics('dashboard')
   const [query, setQuery] = useState('')
 
   const pages = usePagesFiltered()
@@ -96,7 +98,17 @@ export default function CommandPalette() {
     if (!open) setQuery('')
   }, [open])
 
-  const onSelect = (href: string) => {
+  // Fire an open impression each time the palette opens.
+  useEffect(() => {
+    if (open) track(AnalyticsEvent.CommandPaletteOpened)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open])
+
+  const onSelect = (href: string, resultType: string, resultIndex: number) => {
+    track(AnalyticsEvent.CommandPaletteResultSelected, {
+      result_type: resultType,
+      result_index: resultIndex,
+    })
     setOpen(false)
     router.push(href)
   }
@@ -110,7 +122,7 @@ export default function CommandPalette() {
     window.open(href, '_blank', 'noopener,noreferrer')
   }
 
-  const renderPageItem = (p: SearchMeta) => {
+  const renderPageItem = (p: SearchMeta, index: number) => {
     const title = t(p.titleKey)
     const description = p.descriptionKey ? t(p.descriptionKey) : undefined
     const keywords = p.keywordsKey ? t(p.keywordsKey) : ''
@@ -119,7 +131,7 @@ export default function CommandPalette() {
       <Command.Item
         key={p.id}
         value={`${title} ${description ?? ''} ${keywords}`}
-        onSelect={() => onSelect(p.href)}
+        onSelect={() => onSelect(p.href, 'page', index)}
         className="group/item flex cursor-pointer items-center gap-3.5 rounded-lg px-3 py-2.5 text-white/70 transition-colors aria-selected:bg-white/[0.06] aria-selected:text-white"
         data-href={p.href}
       >
@@ -139,13 +151,13 @@ export default function CommandPalette() {
     )
   }
 
-  const renderContentItem = (r: ContentResult) => {
+  const renderContentItem = (r: ContentResult, index: number) => {
     const Icon = CONTENT_TYPE_ICON[r.type]
     return (
       <Command.Item
         key={`${r.type}-${r.id}`}
         value={`${r.title} ${r.subtitle ?? ''}`}
-        onSelect={() => onSelect(r.href)}
+        onSelect={() => onSelect(r.href, r.type, index)}
         className="group/item flex cursor-pointer items-center gap-3.5 rounded-lg px-3 py-2.5 text-white/70 transition-colors aria-selected:bg-white/[0.06] aria-selected:text-white"
         data-href={r.href}
       >

@@ -14,6 +14,7 @@ import { useTranslation } from 'react-i18next'
 import { useMediaQuery } from 'usehooks-ts'
 import { usePodcastPlayer } from '@components/Contexts/PodcastPlayerContext'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
+import { useTrackView, AnalyticsEvent } from '@services/analytics'
 
 interface PodcastClientProps {
   orgslug: string
@@ -25,7 +26,6 @@ interface PodcastClientProps {
 
 export default function PodcastClient({
   orgslug,
-  org_id,
   podcastUuid,
   initialPodcast,
   initialEpisodes,
@@ -49,6 +49,13 @@ export default function PodcastClient({
 
   const podcast = data?.podcast || initialPodcast
   const episodes = data?.episodes || initialEpisodes
+
+  useTrackView(
+    AnalyticsEvent.PodcastViewed,
+    { episode_count: episodes.length, is_published: podcast.published },
+    !!podcast,
+    'learner',
+  )
 
   // Add padding at bottom when player is visible
   const bottomPadding = state.isVisible ? (state.isMinimized ? 'pb-20' : 'pb-28') : ''

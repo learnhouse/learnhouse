@@ -15,6 +15,7 @@ import { Headphones, ChevronLeft, ChevronRight, Search, X } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import FeatureGate from '@components/Dashboard/Shared/FeatureGate/FeatureGate'
 import { searchMatchesAny } from '@/lib/search/normalize'
+import { useTrackView, AnalyticsEvent } from '@services/analytics'
 
 interface PodcastsClientProps {
   orgslug: string
@@ -33,6 +34,13 @@ export default function PodcastsClient({
   const isCreatingPodcast = searchParams.get('new') ? true : false
   const [newPodcastModal, setNewPodcastModal] = useState(isCreatingPodcast)
   const { isAdmin: isUserAdmin } = useAdminStatus()
+
+  useTrackView(
+    AnalyticsEvent.PodcastsListViewed,
+    { total_podcasts_count: allPodcasts.length },
+    true,
+    'learner',
+  )
 
   // Search state
   const [searchQuery, setSearchQuery] = useState('')

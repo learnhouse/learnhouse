@@ -17,6 +17,7 @@ import { signIn } from '@components/Contexts/AuthContext'
 import { getLEARNHOUSE_TOP_DOMAIN_VAL } from '@services/config/config'
 import { useTranslation } from 'react-i18next'
 import { PasswordStrengthIndicator, validatePasswordStrength } from '@components/Auth/PasswordStrengthIndicator'
+import { useLHAnalytics, AnalyticsEvent } from '@services/analytics'
 
 const validate = (values: any, t: any) => {
   const errors: any = {}
@@ -53,9 +54,10 @@ interface InviteOnlySignUpProps {
 
 function InviteOnlySignUpComponent(props: InviteOnlySignUpProps) {
   const { t } = useTranslation()
+  const { track } = useLHAnalytics('public')
   const [isSubmitting, setIsSubmitting] = React.useState(false)
   const org = useOrg() as any
-  const router = useRouter()
+  const _router = useRouter()
   const [error, setError] = React.useState('')
   const [message, setMessage] = React.useState<{ email_verified: boolean } | null>(null)
   const formik = useFormik({
@@ -75,9 +77,11 @@ function InviteOnlySignUpComponent(props: InviteOnlySignUpProps) {
       setError('')
       setMessage(null)
       setIsSubmitting(true)
+      track(AnalyticsEvent.SignupSubmitted, { invite_code_present: true, has_bio: !!values.bio })
       let res = await signUpWithInviteCode(values, props.inviteCode)
       let message = await res.json()
       if (res.status == 200) {
+        track(AnalyticsEvent.SignupSucceeded, { email_verified: message.email_verified })
         setMessage(message)
         setIsSubmitting(false)
       } else if (
@@ -86,9 +90,11 @@ function InviteOnlySignUpComponent(props: InviteOnlySignUpProps) {
         res.status == 404 ||
         res.status == 409
       ) {
+        track(AnalyticsEvent.SignupFailed, { status_code: res.status })
         setError(message.detail)
         setIsSubmitting(false)
       } else {
+        track(AnalyticsEvent.SignupFailed, { status_code: res.status })
         setError(t('common.something_went_wrong'))
         setIsSubmitting(false)
       }

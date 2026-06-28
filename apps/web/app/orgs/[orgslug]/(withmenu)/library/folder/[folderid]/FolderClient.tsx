@@ -13,6 +13,7 @@ import { getUriWithOrg } from '@services/config/config'
 import { shareFolderLink } from '@components/Dashboard/Library/shareFolder'
 import { FolderSimple, LinkSimple } from '@phosphor-icons/react'
 import { FolderCard, LibraryItemCard } from '../../library-cards'
+import { useTrackView, AnalyticsEvent } from '@services/analytics'
 
 function FolderClient({
   orgslug,
@@ -31,6 +32,16 @@ function FolderClient({
     queryFn: () => getFolderById(folderUuid, access_token),
     enabled: !!folderid,
   })
+
+  useTrackView(
+    AnalyticsEvent.FolderViewed,
+    {
+      folder_count: (folder?.subfolders || []).length,
+      is_empty: (folder?.subfolders || []).length === 0 && (folder?.items || []).length === 0,
+    },
+    !isLoading && !!folder,
+    'learner',
+  )
 
   if (isLoading && !folder) {
     return (

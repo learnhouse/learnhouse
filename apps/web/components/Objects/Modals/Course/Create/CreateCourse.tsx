@@ -23,6 +23,7 @@ import {  UploadCloud, Image as ImageIcon } from 'lucide-react'
 import UnsplashImagePicker from "@components/Dashboard/Pages/Course/EditCourseGeneral/UnsplashImagePicker"
 import FormTagInput from "@components/Objects/StyledElements/Form/TagInput"
 import { useTranslation } from "react-i18next"
+import { useLHAnalytics, AnalyticsEvent } from '@services/analytics'
 
 const _validationSchema = Yup.object().shape({
   name: Yup.string()
@@ -38,6 +39,7 @@ const _validationSchema = Yup.object().shape({
 
 function CreateCourseModal({ closeModal, orgslug }: any) {
   const { t } = useTranslation()
+  const { track } = useLHAnalytics('dashboard')
   const router = useRouter()
   const session = useLHSession() as any
   const queryClient = useQueryClient()
@@ -86,6 +88,16 @@ function CreateCourseModal({ closeModal, orgslug }: any) {
         )
 
         if (res.success) {
+          const thumbnailFile = values.thumbnail as File | null
+          track(AnalyticsEvent.CourseCreated, {
+            thumbnail_source: thumbnailFile
+              ? thumbnailFile.name === 'unsplash_image.jpg'
+                ? 'unsplash'
+                : 'upload'
+              : 'none',
+            visibility: values.visibility ? 'public' : 'private',
+            has_learnings: !!values.learnings?.trim(),
+          })
           await revalidateTags(['courses'], orgslug)
           // Refresh sidebar courses cache
           queryClient.invalidateQueries({ queryKey: queryKeys.courses.list(orgslug) })

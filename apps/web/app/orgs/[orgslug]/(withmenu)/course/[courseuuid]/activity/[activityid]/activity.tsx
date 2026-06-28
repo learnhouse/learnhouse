@@ -39,7 +39,7 @@ import GeneralWrapperStyled from '@components/Objects/StyledElements/Wrappers/Ge
 import ActivityIndicators from '@components/Pages/Courses/ActivityIndicators'
 import UserAvatar from '@components/Objects/UserAvatar'
 import { useTranslation } from 'react-i18next'
-import { useAnalytics } from '@/hooks/useAnalytics'
+import { useLHAnalytics, AnalyticsEvent } from '@services/analytics'
 
 const ReactConfetti = dynamic(() => import('react-confetti'), { ssr: false })
 
@@ -162,10 +162,10 @@ function useActivityPosition(course: any, activityId: string) {
 
 function ActivityActions({ activity, activityid, course, orgslug, assignment, showNavigation = true, trailData }: ActivityActionsProps) {
 
-  const { t } = useTranslation();
-  const org = useOrg() as any;
+  const { t: _t } = useTranslation();
+  const _org = useOrg() as any;
   const session = useLHSession() as any;
-  const access_token = session?.data?.tokens?.access_token;
+  const _access_token = session?.data?.tokens?.access_token;
 
 
   return (
@@ -240,13 +240,13 @@ function ActivityClient(props: ActivityClientProps) {
   const access_token = session?.data?.tokens?.access_token;
   const [bgColor, setBgColor] = React.useState('bg-white nice-shadow')
   const [assignment, setAssignment] = React.useState(null) as any;
-  const [markStatusButtonActive, setMarkStatusButtonActive] = React.useState(false);
+  const [_markStatusButtonActive, setMarkStatusButtonActive] = React.useState(false);
   const [isFocusMode, setIsFocusMode] = React.useState(false);
   const isInitialRender = useRef(true);
   const { contributorStatus } = useContributorStatus(courseuuid);
   const router = useRouter();
 
-  const { track } = useAnalytics()
+  const { track } = useLHAnalytics('learner')
   const activityStartTime = useRef(Date.now())
 
   // Track activity view on mount, time_on_activity on unmount
@@ -256,7 +256,7 @@ function ActivityClient(props: ActivityClientProps) {
   useEffect(() => {
     if (activityUuidForTracking && courseUuidForTracking) {
       activityStartTime.current = Date.now()
-      track('activity_view', {
+      track(AnalyticsEvent.ActivityViewed, {
         activity_uuid: activityUuidForTracking,
         course_uuid: courseUuidForTracking,
         activity_type: activityTypeForTracking,
@@ -266,7 +266,7 @@ function ActivityClient(props: ActivityClientProps) {
       if (activityUuidForTracking && courseUuidForTracking) {
         const seconds = Math.round((Date.now() - activityStartTime.current) / 1000)
         if (seconds > 0) {
-          track('time_on_activity', {
+          track(AnalyticsEvent.TimeOnActivity, {
             activity_uuid: activityUuidForTracking,
             course_uuid: courseUuidForTracking,
             seconds_spent: seconds,
@@ -276,7 +276,7 @@ function ActivityClient(props: ActivityClientProps) {
     }
   }, [activityid, activityUuidForTracking, courseUuidForTracking, activityTypeForTracking, track])
 
-  const queryClient = useQueryClient()
+  const _queryClient = useQueryClient()
 
   // Fetch trail data — shares cache key with course page trail query
   const { data: trailData } = useTrail(org?.id)
@@ -1031,7 +1031,8 @@ export function MarkStatus(props: {
   const org = useOrg() as any;
   const { isUserPartOfTheOrg } = useOrgMembership();
   const queryClient = useQueryClient();
-  const isMobile = useMediaQuery('(max-width: 768px)')
+  const { track } = useLHAnalytics('learner');
+  const _isMobile = useMediaQuery('(max-width: 768px)')
   const [isLoading, setIsLoading] = React.useState(false);
   const [showMarkedTooltip, setShowMarkedTooltip] = React.useState(false);
   const [showUnmarkedTooltip, setShowUnmarkedTooltip] = React.useState(false);
@@ -1133,6 +1134,20 @@ export function MarkStatus(props: {
 
       await queryClient.invalidateQueries({ queryKey: queryKeys.trail.org(org?.id) });
 
+      track(AnalyticsEvent.ActivityMarkedComplete, {
+        activity_uuid: props.activity.activity_uuid,
+        course_uuid: props.course.course_uuid,
+        activity_type: props.activity.activity_type,
+        will_complete_course: willCompleteAll,
+        has_next_activity: !!nextActivity,
+      });
+      // North-star terminal event: the learner just finished the whole course.
+      if (willCompleteAll) {
+        track(AnalyticsEvent.CourseCompleted, {
+          course_uuid: props.course.course_uuid,
+        });
+      }
+
       const cleanCourseUuid = props.course.course_uuid.replace('course_', '');
       await queryClient.invalidateQueries({ queryKey: queryKeys.courses.meta(cleanCourseUuid) });
       if (willCompleteAll || !nextActivity) {
@@ -1162,7 +1177,7 @@ export function MarkStatus(props: {
 
       await queryClient.invalidateQueries({ queryKey: queryKeys.trail.org(org?.id) });
       await queryClient.invalidateQueries({ queryKey: queryKeys.courses.meta(props.course.course_uuid.replace('course_', '')) });
-    } catch (error) {
+    } catch (_error) {
       toast.error(t('activities.failed_unmark_complete'));
     } finally {
       setIsLoading(false);
@@ -1305,7 +1320,7 @@ export function MarkStatus(props: {
 function NextActivityButton({ course, currentActivityId, orgslug }: { course: any, currentActivityId: string, orgslug: string }) {
   const { t } = useTranslation();
   const router = useRouter();
-  const isMobile = useMediaQuery('(max-width: 768px)');
+  const _isMobile = useMediaQuery('(max-width: 768px)');
 
   const findNextActivity = () => {
     let allActivities: any[] = [];
@@ -1358,7 +1373,7 @@ function NextActivityButton({ course, currentActivityId, orgslug }: { course: an
 function PreviousActivityButton({ course, currentActivityId, orgslug }: { course: any, currentActivityId: string, orgslug: string }) {
   const { t } = useTranslation();
   const router = useRouter();
-  const isMobile = useMediaQuery('(max-width: 768px)');
+  const _isMobile = useMediaQuery('(max-width: 768px)');
 
   const findPreviousActivity = () => {
     let allActivities: any[] = [];

@@ -22,6 +22,7 @@ import { PlaygroundReactionButton } from '@components/Playground/PlaygroundReact
 import UserAvatar from '@components/Objects/UserAvatar'
 import { Playground } from '@services/playgrounds/playgrounds'
 import { getPlaygroundThumbnailMediaDirectory, getUserAvatarMediaDirectory } from '@services/media/media'
+import { useTrackView, AnalyticsEvent } from '@services/analytics'
 
 dayjs.extend(relativeTime)
 
@@ -44,6 +45,13 @@ export default function PlaygroundViewClient({
   const { t } = useTranslation()
   const [isFullscreen, setIsFullscreen] = useState(false)
   const iframeContainerRef = useRef<HTMLDivElement>(null)
+
+  useTrackView(
+    AnalyticsEvent.PlaygroundViewed,
+    { has_content: !!playground.html_content, is_author: canEdit },
+    true,
+    'learner',
+  )
 
   const thumbnailUrl =
     playground.thumbnail_image && playground.org_uuid

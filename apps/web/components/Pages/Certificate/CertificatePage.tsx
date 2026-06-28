@@ -9,6 +9,7 @@ import CertificatePreview from '@components/Dashboard/Pages/Course/EditCourseCer
 import { ArrowLeft, Download, Share2, Copy, Check } from 'lucide-react';
 import Link from 'next/link';
 import { getUriWithOrg } from '@services/config/config';
+import { useLHAnalytics, useTrackView, AnalyticsEvent } from '@services/analytics';
 
 interface CertificatePageProps {
   orgslug: string;
@@ -23,6 +24,9 @@ const CertificatePage: React.FC<CertificatePageProps> = ({ orgslug, courseid, qr
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [linkCopied, setLinkCopied] = useState(false);
+  const { track } = useLHAnalytics('learner');
+
+  useTrackView(AnalyticsEvent.CertificateViewed, {}, !!userCertificate);
 
   // Fetch user certificate
   useEffect(() => {
@@ -317,6 +321,10 @@ const CertificatePage: React.FC<CertificatePageProps> = ({ orgslug, courseid, qr
       const fileName = `${userCertificate.certification.config.certification_name.replace(/[^a-zA-Z0-9]/g, '_')}_Certificate.pdf`;
       pdf.save(fileName);
 
+      track(AnalyticsEvent.CertificateDownloaded, {
+        certification_type: userCertificate.certification.config.certification_type,
+      });
+
     } catch (error) {
       console.error('Error generating PDF:', error);
       toast.error('Failed to generate PDF. Please try again.');
@@ -345,6 +353,10 @@ const CertificatePage: React.FC<CertificatePageProps> = ({ orgslug, courseid, qr
       '_blank',
       'noopener,noreferrer'
     );
+
+    track(AnalyticsEvent.CertificateSharedLinkedin, {
+      certification_name: config.certification_name,
+    });
   };
 
   // Copy the public certificate verification link to the clipboard
