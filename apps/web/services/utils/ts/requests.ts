@@ -1,4 +1,5 @@
 import { getUriWithOrg, getAPIUrl } from '@services/config/config'
+import { dispatchAuthExpired } from '@/lib/auth/events'
 
 /**
  * Validates that a URL is a safe API URL by checking it starts with the configured API base URL.
@@ -113,16 +114,8 @@ export const apiFetch = async (url: string, token?: string) => {
     credentials: 'include',
   }
 
-  try {
-    // Fetch the data
-    const request = await fetch(url, options)
-    let res = errorHandling(request)
-
-    // Return the data
-    return res
-  } catch (error: any) {
-    throw error
-  }
+  const request = await fetch(url, options)
+  return errorHandling(request)
 }
 
 export const errorHandling = async (res: any) => {
@@ -145,6 +138,12 @@ export const errorHandling = async (res: any) => {
     const error: any = new Error(message)
     error.status = res.status
     error.detail = detail
+    if (typeof window !== 'undefined' && res.status === 401) {
+      dispatchAuthExpired({
+        callbackUrl: window.location.pathname.startsWith('/admin') ? '/admin/login' : '/login',
+        reason: 'api_401',
+      })
+    }
     throw error
   }
   return res.json()

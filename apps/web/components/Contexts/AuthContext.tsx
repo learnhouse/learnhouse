@@ -14,6 +14,7 @@ import {
   getLEARNHOUSE_DOMAIN_VAL,
 } from '@services/config/config'
 import { isSubdomainOf, isSameHost, isLocalhost as isLocalhostCheck } from '@services/utils/ts/hostUtils'
+import { AUTH_EXPIRED_EVENT, AUTH_REFRESHED_EVENT } from '@/lib/auth/events'
 
 // Types matching NextAuth's session structure
 export interface Session {
@@ -151,6 +152,15 @@ function clearOAuthStateCookie(): void {
   document.cookie = `${OAUTH_STATE_COOKIE}=; path=/${sameSiteAttr}${secureAttr}${domainAttr}; expires=Thu, 01 Jan 1970 00:00:00 GMT`
 }
 
+function clearSessionMarker(): void {
+  if (typeof document === 'undefined') return
+
+  const { secureAttr, domainAttr, sameSiteAttr } = getCookieAttributes()
+  const expired = 'expires=Thu, 01 Jan 1970 00:00:00 GMT'
+  document.cookie = `LH_session=; path=/${sameSiteAttr}${secureAttr}${domainAttr}; ${expired}`
+  document.cookie = `LH_session=; path=/${sameSiteAttr}${secureAttr}; ${expired}`
+}
+
 // Session Provider Component
 interface SessionProviderProps {
   children: React.ReactNode
@@ -178,6 +188,19 @@ export function SessionProvider({
   // but still deduplicate within the same tab
   const refreshPromiseRef = useRef<Promise<{ access_token: string; expiry?: number } | null> | null>(null)
   const isRefreshingRef = useRef(false)
+  const authFailureHandledRef = useRef(false)
+
+  const clearAuthState = useCallback((clearMarker: boolean = true) => {
+    setSession(null)
+    setAccessToken(null)
+    setTokenExpiry(null)
+    setStatus('unauthenticated')
+    sessionCacheRef.current = null
+
+    if (clearMarker) {
+      clearSessionMarker()
+    }
+  }, [])
 
   // Set up BroadcastChannel for cross-tab communication
   useEffect(() => {
@@ -192,6 +215,7 @@ export function SessionProvider({
           setTokenExpiry(null)
           setStatus('unauthenticated')
           sessionCacheRef.current = null
+          clearSessionMarker()
         } else if (event.data.type === 'LOGIN') {
           // Another tab logged in, refresh our session
           refreshSessionInternalRef.current()
@@ -295,28 +319,42 @@ export function SessionProvider({
     return Date.now() + TOKEN_REFRESH_THRESHOLD >= expiry
   }, [])
 
+  const applySessionFromToken = useCallback(async (
+    token: string,
+    expiry?: number
+  ): Promise<boolean> => {
+    setAccessToken(token)
+    setTokenExpiry(expiry || null)
+
+    const sessionData = await fetchUserSession(token, expiry)
+    if (!sessionData) {
+      clearAuthState()
+      return false
+    }
+
+    setSession(sessionData)
+    setStatus('authenticated')
+    sessionCacheRef.current = {
+      data: sessionData,
+      timestamp: Date.now(),
+    }
+    return true
+  }, [clearAuthState, fetchUserSession])
+
   // Internal refresh session function (used by broadcast channel)
   const refreshSessionInternal = useCallback(async () => {
     try {
       const refreshResult = await refreshAccessToken()
       if (refreshResult) {
-        setAccessToken(refreshResult.access_token)
-        setTokenExpiry(refreshResult.expiry || null)
-
-        const sessionData = await fetchUserSession(refreshResult.access_token, refreshResult.expiry)
-        if (sessionData) {
-          setSession(sessionData)
-          setStatus('authenticated')
-          sessionCacheRef.current = {
-            data: sessionData,
-            timestamp: Date.now(),
-          }
-        }
+        await applySessionFromToken(refreshResult.access_token, refreshResult.expiry)
+      } else {
+        clearAuthState()
       }
     } catch (error) {
       console.error('Session refresh error:', error)
+      clearAuthState()
     }
-  }, [refreshAccessToken, fetchUserSession])
+  }, [applySessionFromToken, clearAuthState, refreshAccessToken])
 
   refreshSessionInternalRef.current = refreshSessionInternal
 
@@ -353,11 +391,7 @@ export function SessionProvider({
           setTokenExpiry(currentExpiry)
         } else {
           // No valid token, user is unauthenticated
-          setSession(null)
-          setStatus('unauthenticated')
-          setAccessToken(null)
-          setTokenExpiry(null)
-          sessionCacheRef.current = null
+          clearAuthState()
           return null
         }
       }
@@ -373,18 +407,15 @@ export function SessionProvider({
         }
         return currentToken
       } else {
-        setSession(null)
-        setStatus('unauthenticated')
-        sessionCacheRef.current = null
+        clearAuthState()
         return null
       }
     } catch (error) {
       console.error('Session refresh error:', error)
-      setSession(null)
-      setStatus('unauthenticated')
+      clearAuthState()
       return null
     }
-  }, [accessToken, tokenExpiry, fetchUserSession, isTokenExpiringSoon, refreshAccessToken])
+  }, [accessToken, tokenExpiry, fetchUserSession, isTokenExpiringSoon, refreshAccessToken, clearAuthState])
 
   // Initialize session on mount
   useEffect(() => {
@@ -393,7 +424,7 @@ export function SessionProvider({
     const initSession = async () => {
       // Skip entirely if no session marker — no httpOnly refresh token exists
       if (!hasSessionMarker()) {
-        setStatus('unauthenticated')
+        clearAuthState(false)
         return
       }
 
@@ -405,26 +436,10 @@ export function SessionProvider({
       if (!isMounted) return
 
       if (refreshResult) {
-        setAccessToken(refreshResult.access_token)
-        setTokenExpiry(refreshResult.expiry || null)
-
-        // Fetch full session
-        const sessionData = await fetchUserSession(refreshResult.access_token, refreshResult.expiry)
-
         if (!isMounted) return
-
-        if (sessionData) {
-          setSession(sessionData)
-          setStatus('authenticated')
-          sessionCacheRef.current = {
-            data: sessionData,
-            timestamp: Date.now(),
-          }
-        } else {
-          setStatus('unauthenticated')
-        }
+        await applySessionFromToken(refreshResult.access_token, refreshResult.expiry)
       } else {
-        setStatus('unauthenticated')
+        clearAuthState()
       }
     }
 
@@ -433,7 +448,7 @@ export function SessionProvider({
     return () => {
       isMounted = false
     }
-  }, []) // eslint-disable-line react-hooks/exhaustive-deps
+  }, [applySessionFromToken, clearAuthState, hasSessionMarker, refreshAccessToken])
 
   // Set up refetch interval
   useEffect(() => {
@@ -687,6 +702,7 @@ export function SessionProvider({
 
     // Clear OAuth state
     clearOAuthStateCookie()
+    clearSessionMarker()
 
     // Notify other tabs about logout
     broadcastChannelRef.current?.postMessage({ type: 'LOGOUT' })
@@ -700,6 +716,48 @@ export function SessionProvider({
       console.warn('Backend logout may have failed. User logged out locally.')
     }
   }, [])
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+
+    const onAuthExpired = (event: Event) => {
+      if (authFailureHandledRef.current) return
+      authFailureHandledRef.current = true
+
+      const detail = (event as CustomEvent<{ callbackUrl?: string }>).detail
+      const callbackUrl = detail?.callbackUrl
+        || (window.location.pathname.startsWith('/admin') ? '/admin/login' : '/login')
+
+      handleSignOut({ callbackUrl, redirect: true }).catch((error) => {
+        console.error('Forced sign-out failed:', error)
+        authFailureHandledRef.current = false
+      })
+    }
+
+    const onAuthRefreshed = (event: Event) => {
+      authFailureHandledRef.current = false
+      const detail = (event as CustomEvent<{ access_token?: string; expiry?: number }>).detail
+
+      if (detail?.access_token) {
+        applySessionFromToken(detail.access_token, detail.expiry).catch((error) => {
+          console.error('Post-refresh session sync failed:', error)
+        })
+        return
+      }
+
+      refreshSessionInternalRef.current().catch((error) => {
+        console.error('Post-refresh session sync failed:', error)
+      })
+    }
+
+    window.addEventListener(AUTH_EXPIRED_EVENT, onAuthExpired as EventListener)
+    window.addEventListener(AUTH_REFRESHED_EVENT, onAuthRefreshed)
+
+    return () => {
+      window.removeEventListener(AUTH_EXPIRED_EVENT, onAuthExpired as EventListener)
+      window.removeEventListener(AUTH_REFRESHED_EVENT, onAuthRefreshed)
+    }
+  }, [applySessionFromToken, handleSignOut])
 
   const contextValue: AuthContextValue = {
     session,
@@ -865,6 +923,7 @@ export async function signOut(options?: SignOutOptions): Promise<void> {
 
   // Clear OAuth state
   clearOAuthStateCookie()
+  clearSessionMarker()
 
   // Try to notify other tabs (if BroadcastChannel is available)
   try {

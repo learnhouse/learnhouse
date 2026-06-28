@@ -7,7 +7,7 @@ import { useTrackView, AnalyticsEvent } from '@services/analytics'
 
 export default function Error({
   error,
-  reset: _reset,
+  reset,
 }: {
   error: Error & { digest?: string }
   reset: () => void
@@ -36,5 +36,5 @@ export default function Error({
     }
   }, [error])
 
-  return <ErrorUI />
+  return <ErrorUI onRetry={reset} />
 }
