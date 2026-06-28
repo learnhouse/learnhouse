@@ -105,6 +105,7 @@ const ALLOWED_API_TAGS = [
   'admin',
   'courses',
   'activities',
+  'assignments',
   'coursechapters',
   'chapters',
   'folders',
