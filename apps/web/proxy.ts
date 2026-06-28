@@ -216,8 +216,10 @@ export const config = {
      * 5. /examples (inside /public)
      * 6. all root files inside /public (e.g. /favicon.ico)
      * 7. /embed (activity embeds)
+     * 8. /ingest (PostHog reverse proxy — must reach the next.config rewrite
+     *    untouched; otherwise the middleware mis-routes it and ingestion 404s)
      */
-    '/((?!api|_next|fonts|umami|examples|embed|monitoring|[\\w-]+\\.\\w+).*)',
+    '/((?!api|_next|fonts|umami|ingest|examples|embed|monitoring|[\\w-]+\\.\\w+).*)',
     '/sitemap.xml',
     '/robots.txt',
     '/payments/stripe/connect/oauth',
