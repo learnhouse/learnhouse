@@ -236,13 +236,6 @@ class TestRouterLevelProtection:
         assert exc_info.value.status_code == 403
 
     @pytest.mark.asyncio
-    async def test_assignments_router_protection(self, mock_api_token_user):
-        """Test that /assignments router is protected from API tokens"""
-        with pytest.raises(HTTPException) as exc_info:
-            await require_non_api_token_user(mock_api_token_user)
-        assert exc_info.value.status_code == 403
-
-    @pytest.mark.asyncio
     async def test_trail_router_protection(self, mock_api_token_user):
         """Test that /trail router is protected from API tokens"""
         with pytest.raises(HTTPException) as exc_info:
@@ -335,6 +328,18 @@ class TestAllowedEndpoints:
         """Test that /payments router allows API tokens (EE)"""
         assert isinstance(mock_api_token_user, APITokenUser)
 
+    def test_assignments_router_allows_api_tokens(self, mock_api_token_user):
+        """The /assignments router now admits API tokens (headless assignments).
+
+        It mounts ``require_authenticated_user_or_api_token`` instead of
+        ``require_authenticated_user``: tokens reach the handlers, where
+        authoring + grading go through ``authorize_assignment_access`` (the
+        ``assignments`` rights bucket) and the learner ``/me`` / submission /
+        retry endpoints keep their own ``_block_api_tokens`` guard.
+        """
+        assert isinstance(mock_api_token_user, APITokenUser)
+        assert mock_api_token_user.org_id is not None
+
 
 class TestEERouterProtection:
     """Test Enterprise Edition router protection"""
@@ -371,6 +376,40 @@ class TestEERouterProtection:
         with pytest.raises(HTTPException) as exc_info:
             await require_non_api_token_user(mock_api_token_user)
         assert exc_info.value.status_code == 403
+
+
+class TestRequireAuthenticatedUserOrApiToken:
+    """The dependency that admits API tokens but rejects anonymous callers,
+    used by the assignments router for headless access."""
+
+    @pytest.mark.asyncio
+    async def test_admits_api_token(self):
+        from unittest.mock import AsyncMock, patch
+        from src.security.api_token_utils import require_authenticated_user_or_api_token
+
+        token = APITokenUser(id=1, org_id=1)
+        with patch(
+            "src.security.auth.get_authenticated_user",
+            new=AsyncMock(return_value=token),
+        ):
+            result = await require_authenticated_user_or_api_token(
+                request=None, db_session=None
+            )
+        assert result is token
+
+    @pytest.mark.asyncio
+    async def test_rejects_anonymous(self):
+        from unittest.mock import AsyncMock, patch
+        from src.security.api_token_utils import require_authenticated_user_or_api_token
+
+        # get_authenticated_user raises 401 for anonymous; the dependency propagates it.
+        with patch(
+            "src.security.auth.get_authenticated_user",
+            new=AsyncMock(side_effect=HTTPException(status_code=401, detail="unauth")),
+        ):
+            with pytest.raises(HTTPException) as exc:
+                await require_authenticated_user_or_api_token(request=None, db_session=None)
+        assert exc.value.status_code == 401
 
 
 if __name__ == "__main__":

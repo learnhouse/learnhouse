@@ -101,3 +101,25 @@ async def get_authenticated_non_api_token_user(
             detail="API tokens cannot access this resource. Only user authentication is allowed.",
         )
     return user
+
+
+async def require_authenticated_user_or_api_token(
+    request: Request,
+    db_session: AsyncSession = Depends(get_db_session),
+):
+    """
+    FastAPI dependency that requires an authenticated session OR a valid API token.
+
+    Rejects anonymous callers (401) but — unlike ``get_authenticated_non_api_token_user`` —
+    admits API tokens. Use as the router-level dependency on routers that expose some
+    endpoints to headless API-token clients while still gating individual handlers
+    internally (e.g. assignments: authoring + grading are token-accessible, but the
+    learner ``/me`` / submission endpoints remain session-only).
+
+    Raises:
+        HTTPException 401 if the request is unauthenticated.
+    """
+    # Imported locally to avoid a circular dependency on auth.py.
+    from src.security.auth import get_authenticated_user
+
+    return await get_authenticated_user(request, db_session)

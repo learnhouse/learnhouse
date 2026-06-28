@@ -254,10 +254,14 @@ def _install_stub_modules(monkeypatch: pytest.MonkeyPatch) -> None:
     async def get_authenticated_non_api_token_user(request=None, db_session=None):
         return object()
 
+    async def require_authenticated_user_or_api_token(request=None, db_session=None):
+        return object()
+
     install(
         "src.security.api_token_utils",
         require_non_api_token_user=require_non_api_token_user,
         get_authenticated_non_api_token_user=get_authenticated_non_api_token_user,
+        require_authenticated_user_or_api_token=require_authenticated_user_or_api_token,
     )
 
     plan_module = _module(

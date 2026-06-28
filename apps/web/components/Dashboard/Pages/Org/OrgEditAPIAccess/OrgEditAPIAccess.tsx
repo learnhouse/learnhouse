@@ -704,6 +704,7 @@ const PermissionsEditor: React.FC<{
   const resources = [
     { key: 'courses', label: 'Courses', hasCrud: true },
     { key: 'activities', label: 'Activities', hasCrud: true },
+    { key: 'assignments', label: 'Assignments', hasCrud: true },
     { key: 'coursechapters', label: 'Chapters', hasCrud: true },
     { key: 'folders', label: 'Folders', hasCrud: true },
     { key: 'media', label: 'Media', hasCrud: true },
@@ -795,6 +796,7 @@ const PermissionsViewer: React.FC<{ rights: APITokenRights }> = ({ rights }) => 
     <div className="grid grid-cols-3 gap-2">
       <div>Courses: {getPermissionSummary(rights.courses)}</div>
       <div>Activities: {getPermissionSummary(rights.activities)}</div>
+      <div>Assignments: {getPermissionSummary(rights.assignments)}</div>
       <div>Chapters: {getPermissionSummary(rights.coursechapters)}</div>
       <div>Folders: {getPermissionSummary(rights.folders)}</div>
       <div>Media: {getPermissionSummary(rights.media)}</div>

@@ -36,6 +36,7 @@ from src.routers.utils import router as utils_router
 from src.security.auth import get_current_user
 from src.security.api_token_utils import (
     get_authenticated_non_api_token_user,
+    require_authenticated_user_or_api_token,
     require_non_api_token_user,
 )
 from src.security.features_utils.plan_check import require_plan, require_plan_for_boards, require_plan_for_certifications, require_plan_for_community, require_plan_for_usergroups, require_plan_for_playgrounds
@@ -167,7 +168,11 @@ v1_router.include_router(
     assignments.router,
     prefix="/assignments",
     tags=["assignments"],
-    dependencies=[Depends(require_authenticated_user)]
+    # Admit API tokens (headless assignments) while still rejecting anonymous.
+    # Individual handlers gate access: authoring + grading go through
+    # authorize_assignment_access (assignments rights bucket), while learner
+    # /me + submission endpoints keep _block_api_tokens (session-only).
+    dependencies=[Depends(require_authenticated_user_or_api_token)]
 )
 v1_router.include_router(chapters.router, prefix="/chapters", tags=["chapters"])
 v1_router.include_router(activities.router, prefix="/activities", tags=["activities"])
