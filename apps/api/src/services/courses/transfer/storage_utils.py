@@ -99,6 +99,41 @@ def is_s3_enabled() -> bool:
     return get_content_delivery_type() == "s3api"
 
 
+# Default presigned-URL lifetime (12h). Long enough to cover a full viewing
+# session plus seeking: the browser follows the redirect once and reuses the
+# resolved R2 URL for every subsequent Range request within the same load.
+PRESIGNED_URL_TTL_SECONDS = 12 * 60 * 60
+
+
+def generate_presigned_get_url(
+    s3_key: str, expires_in: int = PRESIGNED_URL_TTL_SECONDS
+) -> Optional[str]:
+    """
+    Generate a presigned GET URL for an object so the browser can fetch it
+    directly from S3/R2 (with native HTTP Range support) instead of proxying
+    every byte through the API.
+
+    Returns None when S3 is not enabled, the client is unavailable, or signing
+    fails — callers fall back to streaming the file through the API.
+    """
+    if not is_s3_enabled():
+        return None
+
+    s3_client = get_storage_client()
+    if not s3_client:
+        return None
+
+    try:
+        return s3_client.generate_presigned_url(
+            "get_object",
+            Params={"Bucket": get_s3_bucket_name(), "Key": s3_key},
+            ExpiresIn=expires_in,
+        )
+    except Exception as e:
+        logger.error("Failed to presign URL for %s: %s", s3_key, e)
+        return None
+
+
 def read_file_content(file_path: str) -> Optional[bytes]:
     """
     Read file content based on configured content delivery type.

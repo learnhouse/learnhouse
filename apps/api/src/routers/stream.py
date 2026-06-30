@@ -9,7 +9,7 @@ Anonymous users can only stream content from public+published resources.
 """
 
 from fastapi import APIRouter, Depends, HTTPException, Request, Path
-from fastapi.responses import StreamingResponse, Response
+from fastapi.responses import StreamingResponse, Response, RedirectResponse
 from sqlmodel import select
 from sqlmodel.ext.asyncio.session import AsyncSession
 
@@ -21,6 +21,10 @@ from src.db.users import AnonymousUser, PublicUser, APITokenUser
 from src.core.events.database import get_db_session
 from src.security.auth import get_current_user
 from src.security.rbac.resource_access import ResourceAccessChecker, AccessAction, AccessContext
+from src.services.courses.transfer.storage_utils import (
+    is_s3_enabled,
+    generate_presigned_get_url,
+)
 from src.services.utils.video_streaming import (
     stream_video_file,
     parse_range_header,
@@ -33,6 +37,34 @@ router = APIRouter()
 
 # Base content directory
 CONTENT_DIR = "content"
+
+# Sent on every redirect to a presigned URL so the browser always fetches a
+# fresh, non-expired link instead of caching one that may be about to lapse.
+_PRESIGNED_REDIRECT_HEADERS = {"Cache-Control": "private, max-age=0, no-store"}
+
+
+def _redirect_to_storage(file_path: str) -> RedirectResponse | None:
+    """
+    When S3/R2 is enabled, build a 302 redirect to a presigned URL so the
+    browser streams media directly from object storage (native Range support,
+    full edge throughput) instead of proxying every byte through this API.
+
+    Returns None when S3 isn't enabled or signing fails, so the caller falls
+    back to streaming the file through the API.
+
+    SECURITY: callers MUST run their RBAC check before calling this — the
+    presigned URL grants temporary unauthenticated read access to the object.
+    """
+    if not is_s3_enabled():
+        return None
+    presigned = generate_presigned_get_url(file_path)
+    if not presigned:
+        return None
+    return RedirectResponse(
+        url=presigned,
+        status_code=302,
+        headers=_PRESIGNED_REDIRECT_HEADERS,
+    )
 
 
 async def _verify_course_activity_access(
@@ -158,6 +190,12 @@ async def stream_activity_video(
     if not file_path:
         raise HTTPException(status_code=404, detail="Video not found")
 
+    # S3/R2: redirect to object storage so the browser streams directly. RBAC
+    # was already enforced above, so the short-lived presigned URL is safe.
+    redirect = _redirect_to_storage(file_path)
+    if redirect:
+        return redirect
+
     # Get file info
     file_size, mime_type, exists = get_file_info(file_path)
 
@@ -249,6 +287,12 @@ async def stream_block_audio(
 
     if not file_path:
         raise HTTPException(status_code=404, detail="Audio not found")
+
+    # S3/R2: redirect to object storage so the browser streams directly. RBAC
+    # was already enforced above, so the short-lived presigned URL is safe.
+    redirect = _redirect_to_storage(file_path)
+    if redirect:
+        return redirect
 
     # Get file info
     file_size, mime_type, exists = get_file_info(file_path)
@@ -406,6 +450,12 @@ async def stream_block_video(
 
     if not file_path:
         raise HTTPException(status_code=404, detail="Video not found")
+
+    # S3/R2: redirect to object storage so the browser streams directly. RBAC
+    # was already enforced above, so the short-lived presigned URL is safe.
+    redirect = _redirect_to_storage(file_path)
+    if redirect:
+        return redirect
 
     # Get file info
     file_size, mime_type, exists = get_file_info(file_path)
@@ -626,6 +676,12 @@ async def stream_podcast_audio(
 
     if not file_path:
         raise HTTPException(status_code=404, detail="Audio not found")
+
+    # S3/R2: redirect to object storage so the browser streams directly. RBAC
+    # was already enforced above, so the short-lived presigned URL is safe.
+    redirect = _redirect_to_storage(file_path)
+    if redirect:
+        return redirect
 
     # Get file info
     file_size, mime_type, exists = get_file_info(file_path)
