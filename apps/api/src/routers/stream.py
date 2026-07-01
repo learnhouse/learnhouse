@@ -8,6 +8,8 @@ SECURITY: All streaming endpoints validate resource access using the RBAC system
 Anonymous users can only stream content from public+published resources.
 """
 
+import os
+
 from fastapi import APIRouter, Depends, HTTPException, Request, Path
 from fastapi.responses import StreamingResponse, Response, RedirectResponse
 from sqlmodel import select
@@ -24,6 +26,7 @@ from src.security.rbac.resource_access import ResourceAccessChecker, AccessActio
 from src.services.courses.transfer.storage_utils import (
     is_s3_enabled,
     generate_presigned_get_url,
+    read_file_content,
 )
 from src.services.utils.video_streaming import (
     stream_video_file,
@@ -32,11 +35,36 @@ from src.services.utils.video_streaming import (
     validate_video_path,
     CHUNK_SIZE,
 )
+from src.services.utils.hls_playlist import rewrite_playlist
 
 router = APIRouter()
 
 # Base content directory
 CONTENT_DIR = "content"
+
+# HLS MIME types (not covered by the generic media maps).
+_HLS_MIME = {
+    ".m3u8": "application/vnd.apple.mpegurl",
+    ".ts": "video/mp2t",
+    ".m4s": "video/iso.segment",
+}
+
+
+def _safe_hls_relpath(hls_path: str) -> str | None:
+    """Validate the client-supplied HLS sub-path (playlist or segment).
+
+    Only bare filenames and single-level rendition dirs (e.g. `master.m3u8`,
+    `v720p/index.m3u8`, `v720p/seg_0003.ts`) are allowed. Rejects traversal,
+    absolute paths, and unexpected extensions.
+    """
+    if not hls_path or "\x00" in hls_path or hls_path.startswith("/"):
+        return None
+    parts = hls_path.split("/")
+    if any(p in ("", ".", "..") for p in parts):
+        return None
+    if os.path.splitext(parts[-1])[1].lower() not in _HLS_MIME:
+        return None
+    return "/".join(parts)
 
 # The 302 to the presigned URL is cacheable for a bounded window. This is
 # critical for smooth playback: without it (no-store) the browser re-resolves
@@ -244,6 +272,90 @@ async def stream_activity_video(
             headers=headers,
             media_type=mime_type,
         )
+
+
+@router.get(
+    "/hls/{org_uuid}/{course_uuid}/{activity_uuid}/{hls_path:path}",
+    summary="Serve an HLS playlist or segment for an activity video",
+    description=(
+        "Serves the adaptive-bitrate HLS assets for a hosted video activity. "
+        "Playlists (.m3u8) are returned after an RBAC check with every segment "
+        "URL rewritten to a presigned R2 URL, so the player fetches segments "
+        "directly from object storage. Segments are only served here in local "
+        "filesystem mode."
+    ),
+    responses={
+        200: {"description": "Playlist or segment returned"},
+        302: {"description": "Redirect to a presigned segment URL (S3/R2 mode)"},
+        403: {"description": "User is not permitted to read this course"},
+        404: {"description": "Activity, course, or HLS asset not found"},
+    },
+)
+async def stream_activity_hls(
+    request: Request,
+    org_uuid: str = Path(..., description="Organization UUID"),
+    course_uuid: str = Path(..., description="Course UUID"),
+    activity_uuid: str = Path(..., description="Activity UUID"),
+    hls_path: str = Path(..., description="HLS asset path (e.g. master.m3u8)"),
+    current_user: PublicUser | AnonymousUser | APITokenUser = Depends(get_current_user),
+    db_session: AsyncSession = Depends(get_db_session),
+):
+    """
+    Serve HLS playlists (rewriting segment URLs to presigned R2 URLs) and, in
+    local mode, the segments themselves.
+
+    SECURITY: RBAC runs before any content is read or any URL is signed.
+    """
+    await _verify_course_activity_access(request, course_uuid, activity_uuid, current_user, db_session)
+
+    rel = _safe_hls_relpath(hls_path)
+    if rel is None:
+        raise HTTPException(status_code=404, detail="HLS asset not found")
+
+    # S3 keys use forward slashes; the on-disk layout mirrors it.
+    base_key = f"{CONTENT_DIR}/orgs/{org_uuid}/courses/{course_uuid}/activities/{activity_uuid}/video/hls"
+    asset_key = f"{base_key}/{rel}"
+    ext = os.path.splitext(rel)[1].lower()
+
+    if ext == ".m3u8":
+        raw = read_file_content(asset_key)
+        if raw is None:
+            raise HTTPException(status_code=404, detail="Playlist not found")
+        playlist_dir_key = asset_key.rsplit("/", 1)[0]
+        # In S3 mode generate_presigned_get_url signs each segment; in local
+        # mode it returns None, so segment refs stay relative and come back here.
+        body = rewrite_playlist(
+            raw.decode("utf-8", errors="replace"),
+            playlist_dir_key,
+            generate_presigned_get_url,
+        )
+        return Response(
+            content=body,
+            media_type=_HLS_MIME[".m3u8"],
+            headers={
+                # Shorter than the presign TTL so cached playlists never carry
+                # expired segment URLs.
+                "Cache-Control": "private, max-age=300",
+                "X-Content-Type-Options": "nosniff",
+            },
+        )
+
+    # Segment request. In S3 mode the player uses presigned URLs directly, so
+    # this is only hit in local mode — but redirect defensively if S3 is on.
+    redirect = _redirect_to_storage(asset_key)
+    if redirect:
+        return redirect
+    raw = read_file_content(asset_key)
+    if raw is None:
+        raise HTTPException(status_code=404, detail="Segment not found")
+    return Response(
+        content=raw,
+        media_type=_HLS_MIME.get(ext, "application/octet-stream"),
+        headers={
+            "Cache-Control": "public, max-age=86400",
+            "X-Content-Type-Options": "nosniff",
+        },
+    )
 
 
 @router.get(

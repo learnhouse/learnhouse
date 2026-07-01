@@ -392,6 +392,9 @@ MIME_TYPES_BY_EXT = {
     ".webp": "image/webp",
     ".mp3": "audio/mpeg",
     ".wav": "audio/wav",
+    ".m3u8": "application/vnd.apple.mpegurl",
+    ".ts": "video/mp2t",
+    ".m4s": "video/iso.segment",
 }
 
 
