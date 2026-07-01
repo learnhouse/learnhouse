@@ -42,6 +42,15 @@ _LADDER: tuple[Rung, ...] = (
 HLS_SEGMENT_SECONDS = 6
 MASTER_PLAYLIST_NAME = "master.m3u8"
 
+# Hover-scrub preview sprite (a grid of small frames the player shows when the
+# user scrubs the progress bar, YouTube-style).
+THUMBS_DIR = "thumbnails"
+THUMBS_SPRITE = "sprite.jpg"
+THUMB_INTERVAL_SECONDS = 10
+THUMB_WIDTH = 160
+THUMB_HEIGHT = 90
+THUMB_COLUMNS = 10
+
 
 def _ffmpeg() -> Optional[str]:
     return shutil.which("ffmpeg")
@@ -114,20 +123,21 @@ def build_ffmpeg_args(
     return args
 
 
-async def _probe(src_path: str) -> tuple[int, bool]:
-    """Return (height, has_audio). Falls back to (1080, True) on probe failure."""
+async def _probe(src_path: str) -> tuple[int, bool, float]:
+    """Return (height, has_audio, duration_s). Falls back to (1080, True, 0.0)."""
     probe = _ffprobe()
     if not probe:
-        return 1080, True
+        return 1080, True, 0.0
     proc = await asyncio.create_subprocess_exec(
-        probe, "-v", "error", "-show_streams", "-of", "json", src_path,
+        probe, "-v", "error", "-show_streams", "-show_format", "-of", "json", src_path,
         stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE,
     )
     out, _ = await proc.communicate()
     try:
-        streams = json.loads(out.decode() or "{}").get("streams", [])
+        data = json.loads(out.decode() or "{}")
     except json.JSONDecodeError:
-        return 1080, True
+        return 1080, True, 0.0
+    streams = data.get("streams", [])
     height = 0
     has_audio = False
     for s in streams:
@@ -135,7 +145,72 @@ async def _probe(src_path: str) -> tuple[int, bool]:
             height = max(height, int(s.get("height") or 0))
         elif s.get("codec_type") == "audio":
             has_audio = True
-    return (height or 1080), has_audio
+    try:
+        duration = float(data.get("format", {}).get("duration") or 0.0)
+    except (TypeError, ValueError):
+        duration = 0.0
+    return (height or 1080), has_audio, duration
+
+
+def thumbnails_grid(duration_s: float, interval: int = THUMB_INTERVAL_SECONDS,
+                    columns: int = THUMB_COLUMNS) -> tuple[int, int]:
+    """Return (columns, rows) for a sprite covering the whole duration."""
+    import math
+    frames = max(1, math.ceil(max(duration_s, 0.0) / interval)) if duration_s else 1
+    rows = max(1, math.ceil(frames / columns))
+    return columns, rows
+
+
+async def generate_sprite_thumbnails(
+    src_path: str, out_dir: str, duration_s: float,
+    interval: int = THUMB_INTERVAL_SECONDS,
+    width: int = THUMB_WIDTH, height: int = THUMB_HEIGHT,
+    columns: int = THUMB_COLUMNS,
+) -> Optional[dict]:
+    """
+    Build a single sprite sheet of evenly-spaced frames for progress-bar hover
+    previews. Returns the videojs-sprite-thumbnails config (relative url,
+    interval, width, height, columns, rows) or None on failure. Never raises.
+    """
+    if not _ffmpeg():
+        return None
+    # For clips shorter than one interval, `fps=1/interval` yields zero frames.
+    # Shrink the interval so short videos still get a couple of preview cells.
+    if duration_s and duration_s < interval:
+        interval = max(1, int(duration_s // 2))
+    cols, rows = thumbnails_grid(duration_s, interval, columns)
+    dest_dir = os.path.join(out_dir, THUMBS_DIR)
+    os.makedirs(dest_dir, exist_ok=True)
+    sprite_path = os.path.join(dest_dir, THUMBS_SPRITE)
+    # One frame per `interval`s, letterboxed into uniform WxH cells, tiled to a
+    # grid. `format=yuvj420p` gives the mjpeg encoder the full-range YUV it needs
+    # (avoids "Non full-range YUV is non-standard" failures on some sources).
+    vf = (
+        f"fps=1/{interval},"
+        f"scale={width}:{height}:force_original_aspect_ratio=decrease,"
+        f"pad={width}:{height}:(ow-iw)/2:(oh-ih)/2,"
+        f"tile={cols}x{rows},"
+        f"format=yuvj420p"
+    )
+    try:
+        proc = await asyncio.create_subprocess_exec(
+            _ffmpeg(), "-y", "-loglevel", "error", "-i", src_path,
+            "-vf", vf, "-frames:v", "1", "-an", sprite_path,
+            stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE,
+        )
+        _, stderr = await proc.communicate()
+        if proc.returncode != 0 or not os.path.isfile(sprite_path):
+            logger.warning("Sprite thumbnail generation failed: %s",
+                           (stderr or b"").decode()[:500])
+            return None
+    except Exception as e:
+        logger.warning("Sprite thumbnail error for %s: %s", src_path, e)
+        return None
+    return {
+        "url": f"{THUMBS_DIR}/{THUMBS_SPRITE}",
+        "interval": interval, "width": width, "height": height,
+        "columns": cols, "rows": rows,
+    }
 
 
 async def transcode_source_to_hls(src_path: str, out_dir: str) -> Optional[dict]:
@@ -152,7 +227,7 @@ async def transcode_source_to_hls(src_path: str, out_dir: str) -> Optional[dict]
         logger.error("HLS source missing: %s", src_path)
         return None
 
-    height, has_audio = await _probe(src_path)
+    height, has_audio, duration = await _probe(src_path)
     rungs = select_ladder(height)
     os.makedirs(out_dir, exist_ok=True)
     for r in rungs:
@@ -178,4 +253,12 @@ async def transcode_source_to_hls(src_path: str, out_dir: str) -> Optional[dict]
     if not os.path.isfile(master):
         logger.error("HLS transcode produced no master playlist for %s", src_path)
         return None
-    return {"master": MASTER_PLAYLIST_NAME, "renditions": [r.name for r in rungs]}
+
+    # Best-effort hover-preview sprite; playback works fine without it.
+    thumbnails = await generate_sprite_thumbnails(src_path, out_dir, duration)
+
+    return {
+        "master": MASTER_PLAYLIST_NAME,
+        "renditions": [r.name for r in rungs],
+        "thumbnails": thumbnails,
+    }

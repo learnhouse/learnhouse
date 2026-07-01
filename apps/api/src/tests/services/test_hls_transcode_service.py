@@ -25,6 +25,14 @@ def test_select_ladder_never_empty_for_tiny_sources():
     assert [r.name for r in ht.select_ladder(0)] == ["360p"]
 
 
+def test_thumbnails_grid_math():
+    # interval 10s, 10 columns.
+    assert ht.thumbnails_grid(0) == (10, 1)          # unknown duration → one cell
+    assert ht.thumbnails_grid(100) == (10, 1)        # 10 frames → 1 row
+    assert ht.thumbnails_grid(105) == (10, 2)        # 11 frames → 2 rows
+    assert ht.thumbnails_grid(250) == (10, 3)        # 25 frames → 3 rows
+
+
 # --------------------------------------------------------------------------
 # ffmpeg argument construction
 # --------------------------------------------------------------------------
@@ -89,6 +97,13 @@ def test_transcode_source_to_hls_end_to_end(tmp_path):
         assert os.path.isfile(os.path.join(out, f"v{name}", "index.m3u8"))
         segs = [f for f in os.listdir(os.path.join(out, f"v{name}")) if f.endswith(".ts")]
         assert segs, f"no segments produced for {name}"
+
+    # Hover-preview sprite is generated and its config returned.
+    thumbs = result["thumbnails"]
+    assert thumbs is not None
+    assert thumbs["url"] == "thumbnails/sprite.jpg"
+    assert thumbs["columns"] == 10 and thumbs["width"] == 160 and thumbs["height"] == 90
+    assert os.path.isfile(os.path.join(out, "thumbnails", "sprite.jpg"))
 
 
 @pytest.mark.skipif(not _HAS_FFMPEG, reason="ffmpeg not installed")

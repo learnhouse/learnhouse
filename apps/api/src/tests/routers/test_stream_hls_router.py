@@ -107,6 +107,22 @@ def test_safe_hls_relpath_rejects_traversal_and_bad_types():
         assert stream_mod._safe_hls_relpath(bad) is None, bad
 
 
+async def test_thumbnail_sprite_redirects_to_presigned(
+    client_factory, monkeypatch, org, course, chapter, activity, anonymous_user
+):
+    monkeypatch.setattr(stream_mod, "is_s3_enabled", lambda: True)
+    monkeypatch.setattr(
+        stream_mod, "generate_presigned_get_url",
+        lambda key: f"https://r2.example/{key}?sig=abc",
+    )
+    client = await client_factory(anonymous_user)
+    r = await client.get(
+        _url(org, course, activity, "thumbnails/sprite.jpg"), follow_redirects=False
+    )
+    assert r.status_code == 302
+    assert r.headers["location"].endswith("thumbnails/sprite.jpg?sig=abc")
+
+
 async def test_bad_extension_returns_404_without_reading(
     client_factory, monkeypatch, org, course, chapter, activity, anonymous_user
 ):

@@ -42,11 +42,13 @@ router = APIRouter()
 # Base content directory
 CONTENT_DIR = "content"
 
-# HLS MIME types (not covered by the generic media maps).
+# HLS MIME types (not covered by the generic media maps). Includes the
+# hover-preview sprite (.jpg), which is served like a segment (presigned in S3).
 _HLS_MIME = {
     ".m3u8": "application/vnd.apple.mpegurl",
     ".ts": "video/mp2t",
     ".m4s": "video/iso.segment",
+    ".jpg": "image/jpeg",
 }
 
 

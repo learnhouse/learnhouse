@@ -155,6 +155,7 @@ async def transcode_activity(activity_uuid: str) -> bool:
         await _set_status(
             activity_uuid, "ready",
             master=result["master"], renditions=result["renditions"],
+            thumbnails=result.get("thumbnails"),
         )
         logger.info("HLS ready for activity %s (%s)", activity_uuid, ",".join(result["renditions"]))
         return True
