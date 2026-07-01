@@ -2,6 +2,7 @@
 
 import React, { useRef, useState, useCallback, useEffect } from 'react'
 import { useMediaQuery } from 'usehooks-ts'
+import { shouldSendHlsCredentials } from './videoSource'
 import {
   Play,
   Pause,
@@ -22,6 +23,8 @@ interface VideoDetails {
 
 interface LearnHousePlayerProps {
   src: string
+  /** When true, `src` is an HLS master playlist (.m3u8) served via hls.js. */
+  isHls?: boolean
   details?: VideoDetails
   onReady?: () => void
   poster?: string
@@ -42,13 +45,14 @@ const PLAYBACK_RATES = [0.5, 0.75, 1, 1.25, 1.5, 2]
 
 const LearnHousePlayer: React.FC<LearnHousePlayerProps> = ({
   src,
+  isHls = false,
   details,
   onReady,
   poster,
 }) => {
   const videoRef = useRef<HTMLVideoElement>(null)
   const containerRef = useRef<HTMLDivElement>(null)
-  const hideControlsTimeout = useRef<NodeJS.Timeout | null>(null)
+  const hideControlsTimeout = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   const [isReady, setIsReady] = useState(false)
   const [isPlaying, setIsPlaying] = useState(false)
@@ -89,7 +93,8 @@ const LearnHousePlayer: React.FC<LearnHousePlayerProps> = ({
     }
   }, [])
 
-  // Reset player state and reload video when src changes
+  // Reset player state and (re)attach the source when src changes.
+  // Progressive MP4 → set video.src directly. HLS → native on Safari, else hls.js.
   useEffect(() => {
     const video = videoRef.current
     if (!video) return
@@ -104,9 +109,49 @@ const LearnHousePlayer: React.FC<LearnHousePlayerProps> = ({
     setPlaybackRate(1)
     setShowSettings(false)
 
-    // Force the video element to reload with the new source
-    video.load()
-  }, [src])
+    let cancelled = false
+    let hls: { destroy: () => void } | null = null
+
+    const canPlayNativeHls = video.canPlayType('application/vnd.apple.mpegurl') !== ''
+
+    if (!isHls || canPlayNativeHls) {
+      // Progressive MP4, or Safari's native HLS: assign directly.
+      video.src = src
+      video.load()
+    } else {
+      // Adaptive HLS via hls.js (Chrome/Firefox/etc). Loaded lazily so it's
+      // only pulled in when a video actually needs it.
+      import('hls.js')
+        .then(({ default: Hls }) => {
+          if (cancelled) return
+          if (!Hls.isSupported()) {
+            video.src = src
+            video.load()
+            return
+          }
+          const instance = new Hls({
+            // Send the auth cookie only to our API playlist endpoint (RBAC);
+            // R2 segment requests use presigned URLs and must stay uncredentialed.
+            xhrSetup: (xhr: XMLHttpRequest, url: string) => {
+              if (shouldSendHlsCredentials(url)) xhr.withCredentials = true
+            },
+          })
+          hls = instance
+          instance.loadSource(src)
+          instance.attachMedia(video)
+        })
+        .catch(() => {
+          if (cancelled) return
+          video.src = src
+          video.load()
+        })
+    }
+
+    return () => {
+      cancelled = true
+      if (hls) hls.destroy()
+    }
+  }, [src, isHls])
 
   // Handle fullscreen changes
   useEffect(() => {
@@ -240,7 +285,6 @@ const LearnHousePlayer: React.FC<LearnHousePlayerProps> = ({
       {/* Video Element */}
       <video
         ref={videoRef}
-        src={src}
         poster={poster}
         className="absolute inset-0 w-full h-full object-contain"
         preload="metadata"

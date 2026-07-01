@@ -27,6 +27,19 @@ export function getActivityVideoStreamUrl(
 }
 
 /**
+ * Get the HLS master-playlist URL for an activity video.
+ * The API returns the playlist (after an RBAC check) with segment URLs
+ * presigned to R2, so hls.js streams segments directly from object storage.
+ */
+export function getActivityHlsMasterUrl(
+  orgUUID: string,
+  courseUUID: string,
+  activityUUID: string
+) {
+  return `${getApiUrl()}api/v1/stream/hls/${orgUUID}/${courseUUID}/${activityUUID}/master.m3u8`
+}
+
+/**
  * Get the streaming URL for a video block.
  * Uses the optimized streaming endpoint with proper Range request support.
  */

@@ -1,8 +1,8 @@
 import React from 'react'
 import YouTube from 'react-youtube'
-import { getActivityVideoStreamUrl } from '@services/media/media'
 import { useOrg } from '@components/Contexts/OrgContext'
 import LearnHousePlayer from './LearnHousePlayer'
+import { isActivityHlsReady, resolveActivityVideoSource } from './videoSource'
 
 interface VideoDetails {
   startTime?: number
@@ -20,6 +20,11 @@ interface VideoActivityProps {
       uri?: string
     }
     details?: VideoDetails
+    extra_metadata?: {
+      hls?: {
+        status?: string
+      }
+    } | null
   }
   course: {
     course_uuid: string
@@ -39,15 +44,18 @@ function VideoActivity({ activity, course, orgUuid }: VideoActivityProps) {
     }
   }, [activity, org])
 
-  const getVideoSrc = () => {
-    if (!activity.content?.filename) return ''
-    return getActivityVideoStreamUrl(
-      resolvedOrgUuid,
-      course?.course_uuid,
-      activity.activity_uuid,
-      activity.content.filename
-    )
-  }
+  // Prefer adaptive HLS once transcoding is ready; otherwise fall back to the
+  // (optimized) progressive MP4 so playback always works.
+  const hlsReady = isActivityHlsReady(activity)
+
+  const getVideoSource = () =>
+    resolveActivityVideoSource({
+      hlsReady,
+      orgUuid: resolvedOrgUuid,
+      courseUuid: course?.course_uuid,
+      activityUuid: activity.activity_uuid,
+      filename: activity.content?.filename,
+    })
 
   return (
     <div className="w-full max-w-full px-0 sm:px-4">
@@ -57,11 +65,12 @@ function VideoActivity({ activity, course, orgUuid }: VideoActivityProps) {
             <div className="my-0 sm:my-3 md:my-5 w-full">
               <div className="relative w-full aspect-video sm:rounded-lg overflow-hidden ring-0 sm:ring-1 sm:ring-gray-200/10 sm:dark:ring-gray-700/20 shadow-none">
                 {(() => {
-                  const src = getVideoSrc()
+                  const { src, isHls } = getVideoSource()
                   return src ? (
                     <LearnHousePlayer
-                      key={activity.activity_uuid}
+                      key={src}
                       src={src}
+                      isHls={isHls}
                       details={activity.details}
                     />
                   ) : null
