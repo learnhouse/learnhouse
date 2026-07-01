@@ -18,6 +18,7 @@ from src.routers.boards import boards_playground
 from src.routers.orgs import ai_credits
 from src.routers.orgs import custom_domains
 from src.routers.orgs import packs
+from src.routers.orgs import org_plan
 from src.routers.courses import chapters, courses, assignments, certifications
 from src.routers.folders import folders as folders_router_module
 from src.routers.media import media as media_router_module
@@ -31,6 +32,7 @@ from src.routers.boards import boards as boards_router_module
 from src.routers.playgrounds import playgrounds as playgrounds_router_module
 from src.routers.playgrounds import playgrounds_generator as playgrounds_generator_router
 from src.core.ee_hooks import register_ee_routers
+from src.core.deployment_mode import get_deployment_mode
 from src.services.dev.dev import isDevModeEnabledOrRaise
 from src.routers.utils import router as utils_router
 from src.security.auth import get_current_user
@@ -141,6 +143,14 @@ v1_router.include_router(
     tags=["packs"],
     dependencies=[Depends(require_authenticated_user)],
 )
+# Internal cloud plan-state endpoint (protected by cloud internal key).
+# SaaS-only: absent in oss/ee deployments.
+if get_deployment_mode() == 'saas':
+    v1_router.include_router(
+        org_plan.internal_router,
+        prefix="/cloud_internal",
+        tags=["cloud-internal"],
+    )
 v1_router.include_router(
     blocks.router,
     prefix="/blocks",

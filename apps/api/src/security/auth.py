@@ -303,6 +303,64 @@ def _mark_refresh_jti_used(user_id: int, jti: str) -> bool:
         return True
 
 
+# Grace window for benign refresh-token replays. A concurrent or retried
+# refresh (multiple browser tabs sharing the cookie jar, a network retry)
+# re-presents the SAME refresh jti within milliseconds. Without a grace
+# window, the second presentation trips one-time-use replay detection and
+# revokes EVERY session for the user — the classic "I keep getting logged
+# out" bug. Within this window we instead re-serve the exact rotated pair the
+# first call issued. Only a replay AFTER the window is treated as theft.
+REFRESH_GRACE_WINDOW_SECONDS = 30
+
+
+def _store_refresh_grace(
+    user_id: int, jti: str, access_token: str, refresh_token: str
+) -> None:
+    """Cache the rotated token pair issued when ``jti`` was first consumed, so
+    a concurrent/retried refresh re-presenting the same ``jti`` within
+    :data:`REFRESH_GRACE_WINDOW_SECONDS` can be served the same pair instead of
+    being treated as theft."""
+    r = _get_revocation_redis_client()
+    if r is None:
+        return
+    try:
+        import json as _json
+        r.setex(
+            f"refresh_grace:{user_id}:{jti}",
+            REFRESH_GRACE_WINDOW_SECONDS,
+            _json.dumps(
+                {"access_token": access_token, "refresh_token": refresh_token}
+            ),
+        )
+    except Exception:
+        return
+
+
+def _get_refresh_grace(user_id: int, jti: str) -> Optional[dict]:
+    """Return the cached rotated pair for a recently-consumed ``jti`` (issued
+    within the grace window), or ``None`` if there is no live grace entry."""
+    r = _get_revocation_redis_client()
+    if r is None:
+        return None
+    try:
+        import json as _json
+        raw = r.get(f"refresh_grace:{user_id}:{jti}")
+        if raw is None:
+            return None
+        if isinstance(raw, bytes):
+            raw = raw.decode("utf-8")
+        data = _json.loads(raw)
+        if (
+            isinstance(data, dict)
+            and data.get("access_token")
+            and data.get("refresh_token")
+        ):
+            return data
+        return None
+    except Exception:
+        return None
+
+
 async def _verify_api_token_org_boundary(
     request: Request,
     api_token_user: APITokenUser,
