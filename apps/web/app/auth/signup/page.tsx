@@ -1,5 +1,4 @@
 import { Metadata } from 'next'
-import { headers } from 'next/headers'
 import { getOrganizationContextInfo } from '@services/organizations/orgs'
 import { getAuthOrgSlug } from '@services/org/orgResolution'
 import SignUpClient from './signup'
@@ -28,21 +27,13 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 const SignUp = async () => {
-  let orgslug = await getAuthOrgSlug()
-  let fromDefaultOrg = false
+  const orgslug = await getAuthOrgSlug()
 
-  // On the org-less apex (learn.io/signup) there is no subdomain org, but signup
-  // still needs an org to create the account in. The proxy resolves the apex to
-  // the instance default org and injects it as the `x-lh-org` request header
-  // (available on the first cold visit, unlike the response-only cookie). Fall
-  // back to it. If even that is missing we render the org-less open-signup form
-  // (guarded in the client) rather than crashing.
-  if (!orgslug) {
-    const headerStore = await headers()
-    orgslug = headerStore.get('x-lh-org') || null
-    fromDefaultOrg = !!orgslug
-  }
-
+  // On the org-less apex (learn.io/signup) there is no subdomain org. We keep
+  // `org` null so the page renders the generic, org-less open-signup form —
+  // exactly like the apex login page. The account is still created against the
+  // instance default org, but that is resolved server-side in the signup API so
+  // the UI never shows an org here.
   let org: any = null
   if (orgslug) {
     try {
@@ -50,9 +41,8 @@ const SignUp = async () => {
     } catch {
       org = null
     }
-    // A missing subdomain org is a real 404; a missing default org on the apex
-    // is not — just fall through to the org-less form.
-    if (!org && !fromDefaultOrg) {
+    // A missing subdomain org is a real 404.
+    if (!org) {
       return <OrgNotFound />
     }
   }

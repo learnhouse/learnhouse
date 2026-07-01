@@ -12,6 +12,7 @@ import "server-only";
 // OSS / EE / unconfigured deployments). `isSaaSBillingEnabled()` is the
 // non-throwing variant for places that prefer a boolean.
 import { getServerAPIUrl } from "@services/config/config";
+import { getStripeSecretKey } from "./stripe";
 
 /** Thrown by assertSaaSBilling() when billing is not available on this deploy. */
 export class BillingUnavailableError extends Error {
@@ -56,7 +57,7 @@ async function getInstanceInfo(): Promise<InstanceInfo> {
  * Never throws.
  */
 export async function isSaaSBillingEnabled(): Promise<boolean> {
-  if (!process.env.STRIPE_SECRET_KEY) return false;
+  if (!getStripeSecretKey()) return false;
   const info = await getInstanceInfo();
   return info.mode === "saas";
 }

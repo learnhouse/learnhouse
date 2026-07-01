@@ -13,7 +13,7 @@ import { addContactWithLoops, sendLoopsEvent, LOOPS_SIGNED_USERS_GROUP } from '@
 // client. All add-ons degrade gracefully when their keys are unset.
 
 interface SignupBody {
-  org_id: string | number
+  org_id?: string | number
   org_slug?: string
   email: string
   password: string
@@ -35,7 +35,7 @@ export async function POST(request: NextRequest) {
 
   const { email, org_id, turnstileToken, inviteCode, ...rest } = body
 
-  if (!email || !org_id || !rest.password || !rest.username) {
+  if (!email || !rest.password || !rest.username) {
     return NextResponse.json({ detail: 'Missing required fields' }, { status: 400 })
   }
 
@@ -65,13 +65,38 @@ export async function POST(request: NextRequest) {
     }
   }
 
+  const base = getServerAPIUrl()
+
+  // Resolve the org to create the account in. On real org subdomains the client
+  // sends `org_id`. On the org-less apex it sends none, so we resolve the
+  // instance DEFAULT org server-side — the UI never shows an org there.
+  let resolvedOrgId: string | number | undefined = org_id
+  let usedDefaultOrg = false
+  if (!resolvedOrgId) {
+    try {
+      const instanceRes = await fetch(`${base}instance/info`, { cache: 'no-store' })
+      const instance = await instanceRes.json()
+      const defaultOrgSlug = instance?.default_org_slug
+      if (!defaultOrgSlug) throw new Error('no default_org_slug')
+
+      const orgRes = await fetch(`${base}orgs/slug/${defaultOrgSlug}`)
+      const org = await orgRes.json()
+      if (!org?.id) throw new Error('default org not found')
+
+      resolvedOrgId = org.id
+      usedDefaultOrg = true
+    } catch (err) {
+      console.error('[signup] default org resolution failed:', err)
+      return NextResponse.json({ detail: 'Signup is temporarily unavailable.' }, { status: 503 })
+    }
+  }
+
   // 3. Create the account on the backend. Forward only the user fields (never
   //    the turnstile token or invite code in the body).
-  const backendBody = { email, org_id, ...rest }
-  const base = getServerAPIUrl()
+  const backendBody = { email, org_id: resolvedOrgId, ...rest }
   const url = inviteCode
-    ? `${base}users/${org_id}/invite/${encodeURIComponent(inviteCode)}`
-    : `${base}users/${org_id}`
+    ? `${base}users/${resolvedOrgId}/invite/${encodeURIComponent(inviteCode)}`
+    : `${base}users/${resolvedOrgId}`
 
   let backendRes: Response
   try {
@@ -95,7 +120,7 @@ export async function POST(request: NextRequest) {
     }).catch(() => {})
     void sendLoopsEvent(email, 'user_signed_up', {
       username: rest.username,
-      has_org: Boolean(body.org_slug),
+      has_org: Boolean(body.org_slug) && !usedDefaultOrg,
     }).catch(() => {})
   }
 

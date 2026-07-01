@@ -26,10 +26,19 @@ import {
 import { updateOrganizationConfigInternally } from "./orgPlan";
 import { sendPlanSwitchMail, sendSubscriptionCanceledMail } from "./emails";
 
+// Resolve the Stripe secret key. Prefer the billing-specific STRIPE_SECRET_KEY,
+// but fall back to LEARNHOUSE_STRIPE_SECRET_KEY (the platform Stripe account's
+// secret key — the same account the SaaS subscription prices live in) so
+// deployments that only set the LEARNHOUSE_-prefixed var still work. Shared by
+// the lazy Stripe client here, the webhook route, and the billing guard.
+export function getStripeSecretKey(): string | undefined {
+  return process.env.STRIPE_SECRET_KEY || process.env.LEARNHOUSE_STRIPE_SECRET_KEY;
+}
+
 // Lazy Stripe client. The SDK throws if instantiated without a key, so we must
 // NOT create it at module load — that would crash `next build` (page-data
 // collection evaluates this module) and any non-SaaS deployment that imports it
-// without STRIPE_SECRET_KEY. The Proxy instantiates the real client on first
+// without a Stripe key. The Proxy instantiates the real client on first
 // property access (request time, after the SaaS/key guard has run).
 let _stripeClient: any = null;
 const stripe: any = new Proxy(
@@ -37,7 +46,7 @@ const stripe: any = new Proxy(
   {
     get(_t, prop) {
       if (!_stripeClient) {
-        const key = process.env.STRIPE_SECRET_KEY;
+        const key = getStripeSecretKey();
         if (!key) throw new Error("STRIPE_SECRET_KEY is not configured");
         _stripeClient = require("stripe")(key);
       }

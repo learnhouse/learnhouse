@@ -14,7 +14,7 @@ import {
   deactivateAllPacksInternally,
   markPackCancelingInternally,
 } from "@services/billing/packs";
-import { planForPriceId } from "@services/billing/stripe";
+import { planForPriceId, getStripeSecretKey } from "@services/billing/stripe";
 import {
   sendPurchaseCompleteMail,
   sendPackActivatedMail,
@@ -29,7 +29,7 @@ const stripe: any = new Proxy(
   {
     get(_t, prop) {
       if (!_stripeClient) {
-        const key = process.env.STRIPE_SECRET_KEY;
+        const key = getStripeSecretKey();
         if (!key) throw new Error("STRIPE_SECRET_KEY is not configured");
         _stripeClient = require("stripe")(key);
       }
