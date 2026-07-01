@@ -14,6 +14,8 @@ function ClientAdminLayout({
     children,
 }: {
     children: React.ReactNode
+    // Accepted (the server layout passes it) but unused here.
+    params?: any
 }) {
     const isMobile = useMediaQuery('(max-width: 1024px)')
 
