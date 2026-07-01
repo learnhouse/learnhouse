@@ -285,48 +285,29 @@ def backfill_faststart(
 
 
 @cli.command()
-def transcode_worker():
-    """Run the HLS transcoding worker: drains the Redis queue and transcodes
-    videos into adaptive-bitrate HLS. Meant to run as a dedicated process so
-    heavy ffmpeg work never touches the API pods. Runs until interrupted.
-
-    Handles SIGTERM (Kubernetes pod stop) and SIGINT for a clean shutdown."""
-    import signal
-    from src.services.utils.hls_jobs import run_worker
-
-    async def _main():
-        loop = asyncio.get_running_loop()
-        task = asyncio.ensure_future(run_worker())
-        for sig in (signal.SIGINT, signal.SIGTERM):
-            try:
-                loop.add_signal_handler(sig, task.cancel)
-            except (NotImplementedError, ValueError):
-                # add_signal_handler is unavailable on some platforms (e.g. Windows).
-                pass
-        try:
-            await task
-        except asyncio.CancelledError:
-            pass
-
-    try:
-        asyncio.run(_main())
-    except KeyboardInterrupt:
-        pass
-    print("HLS worker stopped.")
-
-
-@cli.command()
 def transcode_backfill(
     limit: Annotated[int, typer.Option(help="Max activities to process (0 = all)")] = 0,
+    inline: Annotated[bool, typer.Option(help="Transcode inline now instead of enqueuing")] = False,
 ):
-    """Transcode existing hosted-video activities into HLS (skips ones already
-    ready). Processes inline — run it where ffmpeg + storage creds are available."""
-    from src.services.utils.hls_jobs import backfill
-    result = asyncio.run(backfill(limit=limit))
-    print(
-        f"HLS backfill done. total={result['total']} "
-        f"done={result['done']} failed={result['failed']}"
-    )
+    """Queue existing not-yet-ready hosted videos for HLS transcoding.
+
+    Default: enqueue them to Redis — the running API's in-app background consumer
+    transcodes them (no worker process needed); returns immediately. Use --inline
+    to transcode synchronously here (e.g. a one-off box with ffmpeg + creds)."""
+    from src.services.utils.hls_jobs import backfill, enqueue_pending
+    if inline:
+        result = asyncio.run(backfill(limit=limit))
+        print(
+            f"HLS backfill (inline) done. total={result['total']} "
+            f"done={result['done']} failed={result['failed']}"
+        )
+    else:
+        result = asyncio.run(enqueue_pending(limit=limit))
+        print(
+            f"HLS enqueue done. pending={result['pending']} "
+            f"enqueued={result.get('enqueued', 0)} "
+            f"(the API's in-app consumer will transcode them)"
+        )
 
 
 @cli.command()

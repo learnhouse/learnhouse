@@ -42,9 +42,13 @@ logger = logging.getLogger(__name__)
 
 REDIS_QUEUE_KEY = "learnhouse:hls:queue"
 
-# In-process consumer state (dev/self-host only).
-_inprocess_sem = asyncio.Semaphore(1)
-_inprocess_tasks: set[asyncio.Task] = set()
+# In-app background consumer state. Transcoding runs INSIDE the API process as
+# an asyncio background task that drains the Redis queue — no separate worker
+# deployment. ffmpeg runs as an async subprocess and S3 I/O is offloaded to a
+# thread, so the event loop is never blocked; a semaphore caps how many
+# transcodes run at once per pod.
+_consumer_task: Optional["asyncio.Task"] = None
+_consumer_children: set = set()
 
 
 def _flag(name: str) -> bool:
@@ -55,8 +59,12 @@ def hls_enabled() -> bool:
     return _flag("LEARNHOUSE_HLS_ENABLED")
 
 
-def inprocess_worker_enabled() -> bool:
-    return _flag("LEARNHOUSE_HLS_INPROCESS_WORKER")
+def hls_concurrency() -> int:
+    """Max concurrent transcodes per API pod (LEARNHOUSE_HLS_CONCURRENCY, default 1)."""
+    try:
+        return max(1, int(os.environ.get("LEARNHOUSE_HLS_CONCURRENCY", "1")))
+    except (TypeError, ValueError):
+        return 1
 
 
 def _now() -> str:
@@ -179,86 +187,100 @@ async def transcode_activity(activity_uuid: str) -> bool:
         return False
 
 
-def _spawn_inprocess(activity_uuid: str) -> None:
-    async def _run():
-        async with _inprocess_sem:
-            await transcode_activity(activity_uuid)
-
-    task = asyncio.create_task(_run())
-    _inprocess_tasks.add(task)
-    task.add_done_callback(_inprocess_tasks.discard)
-
-
 def enqueue(activity_uuid: str) -> None:
     """Queue an activity for HLS transcoding (fire-and-forget, never raises).
 
-    Pushes to Redis (for a `transcode-worker`) and, when the in-process flag is
-    set, also runs it locally. No-op when HLS is disabled.
+    Just pushes to the Redis queue; the in-app background consumer (started at
+    app startup) drains and transcodes it. No-op when HLS is disabled.
     """
     if not hls_enabled():
         return
-    # NB: we deliberately do NOT pre-write a "queued" status here. A fire-and-
-    # forget status write can land AFTER the worker has already set
-    # "processing"/"ready", clobbering it. transcode_activity sets "processing"
-    # as its first action; until then the frontend uses the MP4 fallback.
-    client = get_redis_client()
-    if client:
-        try:
-            client.rpush(REDIS_QUEUE_KEY, activity_uuid)
-        except Exception as e:
-            logger.warning("HLS: could not enqueue %s to Redis: %s", activity_uuid, e)
-
-    if inprocess_worker_enabled():
-        try:
-            _spawn_inprocess(activity_uuid)
-        except RuntimeError:
-            # No running event loop (called from a sync context) — Redis push
-            # above still queued it for a dedicated worker.
-            logger.warning("HLS: in-process spawn skipped for %s (no event loop)", activity_uuid)
-    elif not client:
-        logger.warning(
-            "HLS enabled but no Redis queue and no in-process worker; "
-            "activity %s will not transcode until a worker runs.", activity_uuid,
-        )
-
-
-async def run_worker(poll_timeout: int = 5) -> None:
-    """Long-running worker: drain the Redis queue and transcode. For a dedicated
-    deployment. Runs until cancelled."""
     client = get_redis_client()
     if not client:
-        raise RuntimeError("HLS worker requires Redis (LEARNHOUSE_REDIS_CONNECTION_STRING)")
-    logger.info("HLS worker started; polling %s", REDIS_QUEUE_KEY)
-    while True:
+        logger.warning("HLS enabled but no Redis; cannot enqueue %s", activity_uuid)
+        return
+    try:
+        client.rpush(REDIS_QUEUE_KEY, activity_uuid)
+    except Exception as e:
+        logger.warning("HLS: could not enqueue %s to Redis: %s", activity_uuid, e)
+
+
+# ---------------------------------------------------------------------------
+# In-app background consumer (Redis queue → asyncio background tasks; no worker)
+# ---------------------------------------------------------------------------
+
+async def _consumer_loop(poll_timeout: int = 5) -> None:
+    """Drain the Redis queue and transcode, capped at hls_concurrency() jobs.
+
+    Acquires a permit BEFORE pulling the next item, so the queue is never
+    drained into memory and at most `concurrency` transcodes run at once.
+    """
+    client = get_redis_client()
+    if not client:
+        logger.warning("HLS consumer: Redis unavailable; not started")
+        return
+    sem = asyncio.Semaphore(hls_concurrency())
+    logger.info("HLS in-app consumer started (concurrency=%s)", hls_concurrency())
+
+    async def _run(uuid: str) -> None:
         try:
-            # Off the loop so blpop's blocking wait doesn't freeze the process.
+            await transcode_activity(uuid)
+        except Exception as e:
+            logger.error("HLS consumer: job %s failed: %s", uuid, e)
+        finally:
+            sem.release()
+
+    while True:
+        await sem.acquire()
+        try:
             item = await asyncio.to_thread(client.blpop, REDIS_QUEUE_KEY, poll_timeout)
         except asyncio.CancelledError:
+            sem.release()
             raise
         except Exception as e:
-            logger.error("HLS worker: Redis poll error: %s", e)
+            logger.error("HLS consumer: poll error: %s", e)
+            sem.release()
             await asyncio.sleep(poll_timeout)
             continue
         if not item:
+            sem.release()
             continue
-        _key, activity_uuid = item
-        if isinstance(activity_uuid, bytes):
-            activity_uuid = activity_uuid.decode()
-        logger.info("HLS worker: transcoding %s", activity_uuid)
+        activity_uuid = item[1].decode() if isinstance(item[1], bytes) else item[1]
+        task = asyncio.create_task(_run(activity_uuid))  # releases the permit when done
+        _consumer_children.add(task)
+        task.add_done_callback(_consumer_children.discard)
+
+
+def start_consumer() -> None:
+    """Start the in-app HLS consumer (call from app startup). Idempotent no-op
+    when HLS is disabled or Redis is unavailable."""
+    global _consumer_task
+    if not hls_enabled():
+        return
+    if _consumer_task and not _consumer_task.done():
+        return
+    if not get_redis_client():
+        logger.warning("HLS enabled but no Redis; in-app consumer not started")
+        return
+    _consumer_task = asyncio.create_task(_consumer_loop())
+
+
+async def stop_consumer() -> None:
+    """Cancel the consumer and wait for in-flight transcodes (call from shutdown)."""
+    global _consumer_task
+    if _consumer_task:
+        _consumer_task.cancel()
         try:
-            # A single job's unexpected failure must never kill the worker loop.
-            await transcode_activity(activity_uuid)
+            await _consumer_task
         except asyncio.CancelledError:
-            raise
-        except Exception as e:
-            logger.error("HLS worker: job %s crashed: %s", activity_uuid, e)
+            pass
+        _consumer_task = None
+    if _consumer_children:
+        await asyncio.gather(*list(_consumer_children), return_exceptions=True)
 
 
-async def backfill(limit: int = 0) -> dict:
-    """Transcode existing hosted-video activities that aren't already `ready`.
-
-    Processes inline (sequential) so running the CLI actually does the work.
-    """
+async def _pending_targets(limit: int = 0) -> list[str]:
+    """UUIDs of hosted-video activities that aren't `ready` and have a file."""
     async with _async_session_factory() as db:
         activities = (
             await db.execute(
@@ -267,17 +289,42 @@ async def backfill(limit: int = 0) -> dict:
                 )
             )
         ).scalars().all()
-        # ((... or {}).get("hls") or {}) guards against extra_metadata={"hls": None},
-        # where .get("hls", {}) would return None and .get("status") would crash.
+        # ((... or {}).get("hls") or {}) guards against extra_metadata={"hls": None}.
         targets = [
             a.activity_uuid
             for a in activities
             if ((a.extra_metadata or {}).get("hls") or {}).get("status") != "ready"
             and (a.content or {}).get("filename")
         ]
-
     if limit and limit > 0:
         targets = targets[:limit]
+    return targets
+
+
+async def enqueue_pending(limit: int = 0) -> dict:
+    """Enqueue every not-yet-ready hosted video for HLS. The in-app consumer
+    transcodes them in the background — this returns immediately."""
+    targets = await _pending_targets(limit)
+    client = get_redis_client()
+    if not client:
+        return {"pending": len(targets), "enqueued": 0, "error": "no_redis"}
+    enqueued = 0
+    for uuid in targets:
+        try:
+            client.rpush(REDIS_QUEUE_KEY, uuid)
+            enqueued += 1
+        except Exception as e:
+            logger.warning("HLS: could not enqueue %s: %s", uuid, e)
+    return {"pending": len(targets), "enqueued": enqueued}
+
+
+async def backfill(limit: int = 0) -> dict:
+    """Transcode existing not-ready hosted videos INLINE (sequential).
+
+    Kept for one-off CLI use / tests. The normal path is enqueue_pending(), which
+    hands work to the in-app background consumer instead of blocking here.
+    """
+    targets = await _pending_targets(limit)
     done = failed = 0
     for uuid in targets:
         if await transcode_activity(uuid):

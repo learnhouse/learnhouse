@@ -38,16 +38,23 @@ def _bind_session(monkeypatch, session):
 
 def test_flags_default_off(monkeypatch):
     monkeypatch.delenv("LEARNHOUSE_HLS_ENABLED", raising=False)
-    monkeypatch.delenv("LEARNHOUSE_HLS_INPROCESS_WORKER", raising=False)
+    monkeypatch.delenv("LEARNHOUSE_HLS_CONCURRENCY", raising=False)
     assert hls_jobs.hls_enabled() is False
-    assert hls_jobs.inprocess_worker_enabled() is False
+    assert hls_jobs.hls_concurrency() == 1  # default
 
 
 def test_flags_parse_true(monkeypatch):
     monkeypatch.setenv("LEARNHOUSE_HLS_ENABLED", "TRUE")
-    monkeypatch.setenv("LEARNHOUSE_HLS_INPROCESS_WORKER", "true")
     assert hls_jobs.hls_enabled() is True
-    assert hls_jobs.inprocess_worker_enabled() is True
+
+
+def test_hls_concurrency_parsing(monkeypatch):
+    monkeypatch.setenv("LEARNHOUSE_HLS_CONCURRENCY", "3")
+    assert hls_jobs.hls_concurrency() == 3
+    monkeypatch.setenv("LEARNHOUSE_HLS_CONCURRENCY", "0")
+    assert hls_jobs.hls_concurrency() == 1  # clamped to >=1
+    monkeypatch.setenv("LEARNHOUSE_HLS_CONCURRENCY", "bad")
+    assert hls_jobs.hls_concurrency() == 1  # invalid → 1
 
 
 def test_enqueue_is_noop_when_disabled(monkeypatch):
@@ -311,12 +318,11 @@ async def test_resolve_source_missing_activity(monkeypatch, db):
 
 
 # --------------------------------------------------------------------------
-# enqueue + run_worker
+# enqueue (Redis push only; the in-app consumer drains)
 # --------------------------------------------------------------------------
 
 def test_enqueue_pushes_to_redis_when_enabled(monkeypatch):
     monkeypatch.setattr(hls_jobs, "hls_enabled", lambda: True)
-    monkeypatch.setattr(hls_jobs, "inprocess_worker_enabled", lambda: False)
     pushed = []
 
     class _R:
@@ -328,7 +334,28 @@ def test_enqueue_pushes_to_redis_when_enabled(monkeypatch):
     assert pushed == [(hls_jobs.REDIS_QUEUE_KEY, "act1")]
 
 
-async def test_run_worker_processes_and_survives_job_errors(monkeypatch):
+def test_enqueue_redis_rpush_error_is_swallowed(monkeypatch):
+    monkeypatch.setattr(hls_jobs, "hls_enabled", lambda: True)
+
+    class _R:
+        def rpush(self, *a):
+            raise RuntimeError("redis down")
+
+    monkeypatch.setattr(hls_jobs, "get_redis_client", lambda: _R())
+    hls_jobs.enqueue("act1")  # must not raise
+
+
+def test_enqueue_no_redis_warns(monkeypatch):
+    monkeypatch.setattr(hls_jobs, "hls_enabled", lambda: True)
+    monkeypatch.setattr(hls_jobs, "get_redis_client", lambda: None)
+    hls_jobs.enqueue("act1")  # no-redis warning branch, must not raise
+
+
+# --------------------------------------------------------------------------
+# In-app consumer + enqueue_pending
+# --------------------------------------------------------------------------
+
+async def test_consumer_loop_drains_and_transcodes(monkeypatch):
     processed = []
     seq = iter([("k", b"a1"), ("k", b"a2")])
 
@@ -344,64 +371,19 @@ async def test_run_worker_processes_and_survives_job_errors(monkeypatch):
     async def _tr(uuid):
         processed.append(uuid)
         if uuid == "a1":
-            raise RuntimeError("boom")  # first job errors — worker must survive
+            raise RuntimeError("boom")  # one job errors — consumer must survive
         return True
 
     monkeypatch.setattr(hls_jobs, "transcode_activity", _tr)
     with pytest.raises(asyncio.CancelledError):
-        await hls_jobs.run_worker(poll_timeout=0)
-    assert processed == ["a1", "a2"]
-
-
-async def test_run_worker_requires_redis(monkeypatch):
-    monkeypatch.setattr(hls_jobs, "get_redis_client", lambda: None)
-    with pytest.raises(RuntimeError):
-        await hls_jobs.run_worker()
-
-
-# --------------------------------------------------------------------------
-# enqueue branch coverage
-# --------------------------------------------------------------------------
-
-def test_enqueue_redis_rpush_error_is_swallowed(monkeypatch):
-    monkeypatch.setattr(hls_jobs, "hls_enabled", lambda: True)
-    monkeypatch.setattr(hls_jobs, "inprocess_worker_enabled", lambda: False)
-
-    class _R:
-        def rpush(self, *a):
-            raise RuntimeError("redis down")
-
-    monkeypatch.setattr(hls_jobs, "get_redis_client", lambda: _R())
-    # Must not raise despite the Redis error.
-    hls_jobs.enqueue("act1")
-
-
-def test_enqueue_no_redis_no_inprocess_warns(monkeypatch):
-    monkeypatch.setattr(hls_jobs, "hls_enabled", lambda: True)
-    monkeypatch.setattr(hls_jobs, "inprocess_worker_enabled", lambda: False)
-    monkeypatch.setattr(hls_jobs, "get_redis_client", lambda: None)
-    hls_jobs.enqueue("act1")  # hits the "no queue, no worker" warning branch
-
-
-async def test_enqueue_spawns_inprocess_worker(monkeypatch):
-    monkeypatch.setattr(hls_jobs, "hls_enabled", lambda: True)
-    monkeypatch.setattr(hls_jobs, "inprocess_worker_enabled", lambda: True)
-    monkeypatch.setattr(hls_jobs, "get_redis_client", lambda: None)
-    processed = []
-
-    async def _tr(uuid):
-        processed.append(uuid)
-        return True
-
-    monkeypatch.setattr(hls_jobs, "transcode_activity", _tr)
-    hls_jobs.enqueue("act_inproc")
-    # Let the spawned task run.
+        await hls_jobs._consumer_loop(poll_timeout=0)
+    # give the spawned child tasks a chance to run
     for _ in range(5):
         await asyncio.sleep(0)
-    assert processed == ["act_inproc"]
+    assert set(processed) == {"a1", "a2"}
 
 
-async def test_run_worker_recovers_from_poll_error(monkeypatch):
+async def test_consumer_loop_recovers_from_poll_error(monkeypatch):
     calls = {"n": 0}
 
     class _R:
@@ -413,5 +395,49 @@ async def test_run_worker_recovers_from_poll_error(monkeypatch):
 
     monkeypatch.setattr(hls_jobs, "get_redis_client", lambda: _R())
     with pytest.raises(asyncio.CancelledError):
-        await hls_jobs.run_worker(poll_timeout=0)
+        await hls_jobs._consumer_loop(poll_timeout=0)
     assert calls["n"] == 2  # recovered from the first error, polled again
+
+
+async def test_consumer_loop_no_redis_returns(monkeypatch):
+    monkeypatch.setattr(hls_jobs, "get_redis_client", lambda: None)
+    await hls_jobs._consumer_loop()  # returns immediately, no raise
+
+
+def test_start_consumer_noop_when_disabled(monkeypatch):
+    monkeypatch.setattr(hls_jobs, "hls_enabled", lambda: False)
+    hls_jobs._consumer_task = None
+    hls_jobs.start_consumer()
+    assert hls_jobs._consumer_task is None
+
+
+def test_start_consumer_noop_without_redis(monkeypatch):
+    monkeypatch.setattr(hls_jobs, "hls_enabled", lambda: True)
+    monkeypatch.setattr(hls_jobs, "get_redis_client", lambda: None)
+    hls_jobs._consumer_task = None
+    hls_jobs.start_consumer()
+    assert hls_jobs._consumer_task is None
+
+
+async def test_enqueue_pending_pushes_all_targets(monkeypatch, db, org, course, chapter, activity):
+    _bind_session(monkeypatch, db)
+    await _add_video_activity(db, org, course, "p_todo", filename="a.mp4")
+    await _add_video_activity(db, org, course, "p_ready", filename="b.mp4", hls_status="ready")
+    pushed = []
+
+    class _R:
+        def rpush(self, key, val):
+            pushed.append(val)
+
+    monkeypatch.setattr(hls_jobs, "get_redis_client", lambda: _R())
+    result = await hls_jobs.enqueue_pending()
+    assert pushed == ["p_todo"]
+    assert result == {"pending": 1, "enqueued": 1}
+
+
+async def test_enqueue_pending_no_redis(monkeypatch, db, org, course, chapter, activity):
+    _bind_session(monkeypatch, db)
+    await _add_video_activity(db, org, course, "p1", filename="a.mp4")
+    monkeypatch.setattr(hls_jobs, "get_redis_client", lambda: None)
+    result = await hls_jobs.enqueue_pending()
+    assert result["enqueued"] == 0 and result.get("error") == "no_redis"
