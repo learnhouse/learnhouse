@@ -60,7 +60,10 @@ export interface VideoSource {
  */
 export function resolveActivityVideoSource(args: VideoSourceArgs): VideoSource {
   const { hlsReady, orgUuid, courseUuid, activityUuid, filename } = args
-  if (!filename) return { src: '', isHls: false }
+  // Guard against a missing filename (incl. whitespace-only) or any missing id —
+  // otherwise we'd build a URL containing the literal string "undefined".
+  if (!filename || !filename.trim()) return { src: '', isHls: false }
+  if (!orgUuid || !courseUuid || !activityUuid) return { src: '', isHls: false }
   if (hlsReady) {
     return { src: getActivityHlsMasterUrl(orgUuid, courseUuid, activityUuid), isHls: true }
   }
@@ -76,7 +79,10 @@ export function resolveActivityVideoSource(args: VideoSourceArgs): VideoSource {
  * must stay uncredentialed (R2 CORS rejects credentialed wildcard requests).
  */
 export function shouldSendHlsCredentials(url: string): boolean {
-  return url.includes('/api/v1/stream/hls/')
+  // Our authed playlist/key endpoint — but NEVER a presigned object-storage URL
+  // (those always carry X-Amz-* query params). Sending the cookie cross-origin
+  // to R2 would fail CORS and leak the cookie to storage.
+  return url.includes('/api/v1/stream/hls/') && !url.includes('X-Amz-')
 }
 
 export interface ThumbnailArgs {
@@ -95,15 +101,21 @@ export function resolveHlsThumbnails(
   ids: ThumbnailArgs
 ): HlsThumbnails | null {
   const t = activity?.extra_metadata?.hls?.thumbnails
-  if (!t || !t.url || !t.width || !t.height || !t.columns || !t.interval) {
+  if (!t || !t.url) return null
+  if (!ids.orgUuid || !ids.courseUuid || !ids.activityUuid) return null
+  // Every numeric field must be a positive number; reject 0/negative/NaN so the
+  // sprite plugin can't be handed a broken grid (which would mis-map or divide).
+  const pos = (n: unknown): n is number => typeof n === 'number' && Number.isFinite(n) && n > 0
+  if (!pos(t.interval) || !pos(t.width) || !pos(t.height) || !pos(t.columns)) {
     return null
   }
+  const rows = pos(t.rows) ? t.rows : 1
   return {
     url: getActivityHlsThumbnailsUrl(ids.orgUuid, ids.courseUuid, ids.activityUuid, t.url),
     interval: t.interval,
     width: t.width,
     height: t.height,
     columns: t.columns,
-    rows: t.rows ?? 1,
+    rows,
   }
 }

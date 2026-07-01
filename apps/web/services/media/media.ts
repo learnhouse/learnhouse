@@ -10,7 +10,10 @@ function getMediaUrl() {
 }
 
 function getApiUrl() {
-  return getBackendUrl();
+  // Normalize so URL building is correct whether or not the configured backend
+  // URL carries a trailing slash (otherwise we'd get "...ioapi/v1/...").
+  const base = getBackendUrl();
+  return base.endsWith('/') ? base : `${base}/`;
 }
 
 /**

@@ -52,7 +52,7 @@ const LearnHousePlayer: React.FC<LearnHousePlayerProps> = ({
   thumbnails,
 }) => {
   const containerRef = useRef<HTMLDivElement>(null)
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+   
   const playerRef = useRef<any>(null)
 
   useEffect(() => {
@@ -68,10 +68,10 @@ const LearnHousePlayer: React.FC<LearnHousePlayerProps> = ({
 
       // Send the auth cookie only to our API playlist endpoint (RBAC); presigned
       // R2 segment requests must stay uncredentialed (R2 CORS).
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+       
       const Vhs = (videojs as any).Vhs
       if (Vhs && !Vhs.__lhBeforeRequestSet) {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+         
         Vhs.xhr.beforeRequest = (options: any) => {
           if (options?.uri && shouldSendHlsCredentials(options.uri)) {
             options.withCredentials = true
@@ -121,7 +121,7 @@ const LearnHousePlayer: React.FC<LearnHousePlayerProps> = ({
 
       // Quality gear (populated from HLS renditions; harmless for MP4).
       try {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+         
         ;(player as any).hlsQualitySelector?.({ displayCurrentQuality: true })
       } catch {
         /* selector is best-effort */
@@ -130,7 +130,7 @@ const LearnHousePlayer: React.FC<LearnHousePlayerProps> = ({
       // Hover-scrub preview thumbnails.
       if (thumbnails?.url) {
         try {
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+           
           ;(player as any).spriteThumbnails?.({
             url: thumbnails.url,
             width: thumbnails.width,

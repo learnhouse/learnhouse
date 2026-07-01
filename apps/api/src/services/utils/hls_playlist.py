@@ -40,32 +40,72 @@ def rewrite_playlist(
     left as-is (the player will simply fail that segment rather than the load).
     """
     base = playlist_dir_key.rstrip("/")
+    # Containment root: nothing a playlist references may resolve above the
+    # activity's HLS dir (defense-in-depth against a tampered playlist using ../
+    # to presign cross-tenant objects).
+    idx = base.rfind("/hls")
+    root = base[: idx + len("/hls")] if idx != -1 else base
+
+    def _sign_relative(uri: str) -> str | None:
+        key = _resolve_key(base, uri, root)
+        return presign(key) if key else None
+
     out_lines: list[str] = []
     for line in text.splitlines():
         stripped = line.strip()
-        if not stripped or stripped.startswith("#"):
+        if not stripped:
             out_lines.append(line)
             continue
-        # Absolute URLs (already presigned or external) pass through.
-        if stripped.startswith("http://") or stripped.startswith("https://"):
+        if stripped.startswith("#"):
+            # Defense: fMP4 init segments live in an #EXT-X-MAP:URI="..." tag.
+            # (We emit TS, so this normally never fires — future-proofing.)
+            if stripped.upper().startswith("#EXT-X-MAP:"):
+                out_lines.append(_rewrite_map_tag(line, _sign_relative))
+            else:
+                out_lines.append(line)
+            continue
+        # Absolute or protocol-relative URLs pass through untouched.
+        low = stripped.lower()
+        if low.startswith("http://") or low.startswith("https://") or stripped.startswith("//"):
             out_lines.append(line)
             continue
 
-        lower = stripped.lower()
-        if lower.endswith(_SEGMENT_SUFFIXES):
-            key = _resolve_key(base, stripped)
-            signed = presign(key)
+        # Extension test ignores any ?query/#fragment on the URI.
+        path_part = stripped.split("?", 1)[0].split("#", 1)[0].lower()
+        if path_part.endswith(_SEGMENT_SUFFIXES):
+            signed = _sign_relative(stripped)
             out_lines.append(signed if signed else line)
-        elif lower.endswith(_PLAYLIST_SUFFIXES):
-            # Leave relative so the nested playlist re-enters the API endpoint.
-            out_lines.append(line)
         else:
+            # Nested playlists (.m3u8) and anything else stay relative so they
+            # re-enter the API endpoint.
             out_lines.append(line)
     return "\n".join(out_lines) + "\n"
 
 
-def _resolve_key(base_dir_key: str, relative: str) -> str:
-    """Join a relative URI (possibly with ../ or subdirs) onto a base key."""
+def _rewrite_map_tag(line: str, sign_relative) -> str:
+    """Presign the URI="..." of an #EXT-X-MAP tag, leaving the rest intact."""
+    import re
+    m = re.search(r'URI="([^"]+)"', line)
+    if not m:
+        return line
+    uri = m.group(1)
+    low = uri.lower()
+    if low.startswith("http://") or low.startswith("https://") or uri.startswith("//"):
+        return line
+    signed = sign_relative(uri)
+    if not signed:
+        return line
+    return line[: m.start(1)] + signed + line[m.end(1):]
+
+
+def _resolve_key(base_dir_key: str, relative: str, root: str | None = None) -> str | None:
+    """Join a relative URI onto a base key, resolving ./ and ../ segments.
+
+    Returns None if the result escapes `root` (when given) — callers treat that
+    like a failed presign and leave the line unchanged.
+    """
+    # Drop any query/fragment before resolving.
+    relative = relative.split("?", 1)[0].split("#", 1)[0]
     parts = base_dir_key.split("/")
     for part in relative.split("/"):
         if part in ("", "."):
@@ -75,4 +115,7 @@ def _resolve_key(base_dir_key: str, relative: str) -> str:
                 parts.pop()
             continue
         parts.append(part)
-    return "/".join(parts)
+    resolved = "/".join(parts)
+    if root is not None and not (resolved == root or resolved.startswith(root + "/")):
+        return None
+    return resolved

@@ -52,7 +52,9 @@ def _validate_local_path(file_path: str) -> Optional[str]:
     except ValueError:
         return None
 
-    return file_path
+    # Return the canonicalized, containment-checked path (not the original
+    # tainted string) so callers open the validated path.
+    return full_real
 
 
 @functools.cache
@@ -78,13 +80,16 @@ def get_storage_client():
         if _s3_client is not None:
             return _s3_client
         learnhouse_config = get_learnhouse_config()
+        # Cloudflare R2 requires SigV4 and the "auto" region; without this,
+        # botocore falls back to SigV2 for presigned URLs (the legacy
+        # AWSAccessKeyId/Signature/Expires form), which R2 rejects with 401.
+        # Overridable via LEARNHOUSE_S3_API_REGION for real AWS S3 / MinIO, which
+        # validate the region against the endpoint.
+        region = os.environ.get("LEARNHOUSE_S3_API_REGION") or "auto"
         _s3_client = boto3.client(
             "s3",
             endpoint_url=learnhouse_config.hosting_config.content_delivery.s3api.endpoint_url,
-            # Cloudflare R2 requires SigV4 and uses the "auto" region. Without
-            # this, botocore falls back to SigV2 for presigned URLs (the legacy
-            # AWSAccessKeyId/Signature/Expires form), which R2 rejects with 401.
-            region_name="auto",
+            region_name=region,
             config=botocore.config.Config(
                 signature_version="s3v4",
                 connect_timeout=10,

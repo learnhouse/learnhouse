@@ -8,6 +8,7 @@ SECURITY: All streaming endpoints validate resource access using the RBAC system
 Anonymous users can only stream content from public+published resources.
 """
 
+import asyncio
 import os
 
 from fastapi import APIRouter, Depends, HTTPException, Request, Path
@@ -31,6 +32,7 @@ from src.services.courses.transfer.storage_utils import (
 from src.services.utils.video_streaming import (
     stream_video_file,
     parse_range_header,
+    is_range_unsatisfiable,
     get_file_info,
     validate_video_path,
     CHUNK_SIZE,
@@ -228,20 +230,28 @@ async def stream_activity_video(
     if not file_path:
         raise HTTPException(status_code=404, detail="Video not found")
 
+    # Confirm the object exists first (offloaded head_object) so a missing file
+    # returns 404 consistently for GET and HEAD instead of redirecting to a dead
+    # presigned URL. The 302 is cached, so this runs ~once per viewing session.
+    file_size, mime_type, exists = await asyncio.to_thread(get_file_info, file_path)
+
+    if not exists:
+        raise HTTPException(status_code=404, detail="Video not found")
+
     # S3/R2: redirect to object storage so the browser streams directly. RBAC
     # was already enforced above, so the short-lived presigned URL is safe.
     redirect = _redirect_to_storage(file_path)
     if redirect:
         return redirect
 
-    # Get file info
-    file_size, mime_type, exists = get_file_info(file_path)
-
-    if not exists:
-        raise HTTPException(status_code=404, detail="Video not found")
-
     # Parse Range header if present
     range_header = request.headers.get("range")
+    if range_header and is_range_unsatisfiable(range_header, file_size):
+        # RFC 7233: unsatisfiable range (empty file / start past EOF) → 416.
+        return Response(
+            status_code=416,
+            headers={"Content-Range": f"bytes */{file_size}", "Accept-Ranges": "bytes"},
+        )
     start, end = parse_range_header(range_header, file_size)
 
     # Calculate content length for this range
@@ -322,7 +332,7 @@ async def stream_activity_hls(
     ext = os.path.splitext(rel)[1].lower()
 
     if ext == ".m3u8":
-        raw = read_file_content(asset_key)
+        raw = await asyncio.to_thread(read_file_content, asset_key)
         if raw is None:
             raise HTTPException(status_code=404, detail="Playlist not found")
         playlist_dir_key = asset_key.rsplit("/", 1)[0]
@@ -347,7 +357,7 @@ async def stream_activity_hls(
     if ext == ".key":
         # AES-128 decryption key: served ONLY through this authed endpoint,
         # never presigned/redirected, and never cached, so it stays gated by RBAC.
-        raw = read_file_content(asset_key)
+        raw = await asyncio.to_thread(read_file_content, asset_key)
         if raw is None:
             raise HTTPException(status_code=404, detail="Key not found")
         return Response(
@@ -361,7 +371,7 @@ async def stream_activity_hls(
     redirect = _redirect_to_storage(asset_key)
     if redirect:
         return redirect
-    raw = read_file_content(asset_key)
+    raw = await asyncio.to_thread(read_file_content, asset_key)
     if raw is None:
         raise HTTPException(status_code=404, detail="Segment not found")
     return Response(
@@ -422,20 +432,28 @@ async def stream_block_audio(
     if not file_path:
         raise HTTPException(status_code=404, detail="Audio not found")
 
+    # Confirm the object exists first (offloaded head_object) so a missing file
+    # returns 404 consistently for GET and HEAD instead of redirecting to a dead
+    # presigned URL. The 302 is cached, so this runs ~once per viewing session.
+    file_size, mime_type, exists = await asyncio.to_thread(get_file_info, file_path)
+
+    if not exists:
+        raise HTTPException(status_code=404, detail="Audio not found")
+
     # S3/R2: redirect to object storage so the browser streams directly. RBAC
     # was already enforced above, so the short-lived presigned URL is safe.
     redirect = _redirect_to_storage(file_path)
     if redirect:
         return redirect
 
-    # Get file info
-    file_size, mime_type, exists = get_file_info(file_path)
-
-    if not exists:
-        raise HTTPException(status_code=404, detail="Audio not found")
-
     # Parse Range header if present
     range_header = request.headers.get("range")
+    if range_header and is_range_unsatisfiable(range_header, file_size):
+        # RFC 7233: unsatisfiable range (empty file / start past EOF) → 416.
+        return Response(
+            status_code=416,
+            headers={"Content-Range": f"bytes */{file_size}", "Accept-Ranges": "bytes"},
+        )
     start, end = parse_range_header(range_header, file_size)
 
     # Calculate content length for this range
@@ -585,20 +603,28 @@ async def stream_block_video(
     if not file_path:
         raise HTTPException(status_code=404, detail="Video not found")
 
+    # Confirm the object exists first (offloaded head_object) so a missing file
+    # returns 404 consistently for GET and HEAD instead of redirecting to a dead
+    # presigned URL. The 302 is cached, so this runs ~once per viewing session.
+    file_size, mime_type, exists = await asyncio.to_thread(get_file_info, file_path)
+
+    if not exists:
+        raise HTTPException(status_code=404, detail="Video not found")
+
     # S3/R2: redirect to object storage so the browser streams directly. RBAC
     # was already enforced above, so the short-lived presigned URL is safe.
     redirect = _redirect_to_storage(file_path)
     if redirect:
         return redirect
 
-    # Get file info
-    file_size, mime_type, exists = get_file_info(file_path)
-
-    if not exists:
-        raise HTTPException(status_code=404, detail="Video not found")
-
     # Parse Range header if present
     range_header = request.headers.get("range")
+    if range_header and is_range_unsatisfiable(range_header, file_size):
+        # RFC 7233: unsatisfiable range (empty file / start past EOF) → 416.
+        return Response(
+            status_code=416,
+            headers={"Content-Range": f"bytes */{file_size}", "Accept-Ranges": "bytes"},
+        )
     start, end = parse_range_header(range_header, file_size)
 
     # Calculate content length for this range
@@ -811,20 +837,28 @@ async def stream_podcast_audio(
     if not file_path:
         raise HTTPException(status_code=404, detail="Audio not found")
 
+    # Confirm the object exists first (offloaded head_object) so a missing file
+    # returns 404 consistently for GET and HEAD instead of redirecting to a dead
+    # presigned URL. The 302 is cached, so this runs ~once per viewing session.
+    file_size, mime_type, exists = await asyncio.to_thread(get_file_info, file_path)
+
+    if not exists:
+        raise HTTPException(status_code=404, detail="Audio not found")
+
     # S3/R2: redirect to object storage so the browser streams directly. RBAC
     # was already enforced above, so the short-lived presigned URL is safe.
     redirect = _redirect_to_storage(file_path)
     if redirect:
         return redirect
 
-    # Get file info
-    file_size, mime_type, exists = get_file_info(file_path)
-
-    if not exists:
-        raise HTTPException(status_code=404, detail="Audio not found")
-
     # Parse Range header if present
     range_header = request.headers.get("range")
+    if range_header and is_range_unsatisfiable(range_header, file_size):
+        # RFC 7233: unsatisfiable range (empty file / start past EOF) → 416.
+        return Response(
+            status_code=416,
+            headers={"Content-Range": f"bytes */{file_size}", "Accept-Ranges": "bytes"},
+        )
     start, end = parse_range_header(range_header, file_size)
 
     # Calculate content length for this range

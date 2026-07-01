@@ -64,6 +64,31 @@ def encryption_enabled() -> bool:
     return os.environ.get("LEARNHOUSE_HLS_ENCRYPT", "true").strip().lower() == "true"
 
 
+# Subprocess timeouts so a malformed/hostile source can never hang the worker.
+PROBE_TIMEOUT_S = 120
+SPRITE_TIMEOUT_S = 30 * 60
+TRANSCODE_TIMEOUT_S = 6 * 60 * 60
+
+
+async def _communicate(proc, timeout: int):
+    """Await proc.communicate() with a hard timeout; kill the process on expiry.
+
+    Raises asyncio.TimeoutError (after reaping the process) if it overruns.
+    """
+    try:
+        return await asyncio.wait_for(proc.communicate(), timeout=timeout)
+    except asyncio.TimeoutError:
+        try:
+            proc.kill()
+        except ProcessLookupError:
+            pass
+        try:
+            await proc.wait()
+        except Exception:
+            pass
+        raise
+
+
 def _ffmpeg() -> Optional[str]:
     return shutil.which("ffmpeg")
 
@@ -142,19 +167,27 @@ def build_ffmpeg_args(
 
 
 async def _probe(src_path: str) -> tuple[int, bool, float]:
-    """Return (height, has_audio, duration_s). Falls back to (1080, True, 0.0)."""
+    """Return (height, has_audio, duration_s).
+
+    On any probe failure returns (0, False, 0.0): height 0 → a single lowest
+    rung (never upscale a source we can't measure), and has_audio False → no
+    audio maps (so a silent source can't fail the transcode with a bad a:0 map).
+    """
     probe = _ffprobe()
     if not probe:
-        return 1080, True, 0.0
-    proc = await asyncio.create_subprocess_exec(
-        probe, "-v", "error", "-show_streams", "-show_format", "-of", "json", src_path,
-        stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE,
-    )
-    out, _ = await proc.communicate()
+        return 0, False, 0.0
+    try:
+        proc = await asyncio.create_subprocess_exec(
+            probe, "-v", "error", "-show_streams", "-show_format", "-of", "json", src_path,
+            stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE,
+        )
+        out, _ = await _communicate(proc, PROBE_TIMEOUT_S)
+    except (asyncio.TimeoutError, Exception):
+        return 0, False, 0.0
     try:
         data = json.loads(out.decode() or "{}")
     except json.JSONDecodeError:
-        return 1080, True, 0.0
+        return 0, False, 0.0
     streams = data.get("streams", [])
     height = 0
     has_audio = False
@@ -167,16 +200,41 @@ async def _probe(src_path: str) -> tuple[int, bool, float]:
         duration = float(data.get("format", {}).get("duration") or 0.0)
     except (TypeError, ValueError):
         duration = 0.0
-    return (height or 1080), has_audio, duration
+    return height, has_audio, duration
+
+
+# Cap the sprite at a sane cell count so a multi-hour video can't produce a
+# gigantic JPEG shipped to every scrubbing viewer.
+MAX_THUMBNAILS = 400
 
 
 def thumbnails_grid(duration_s: float, interval: int = THUMB_INTERVAL_SECONDS,
                     columns: int = THUMB_COLUMNS) -> tuple[int, int]:
-    """Return (columns, rows) for a sprite covering the whole duration."""
+    """Return (columns, rows) for a sprite covering the whole duration.
+
+    Guards against interval/columns <= 0 (fall back to 1) so callers can't hit a
+    ZeroDivisionError.
+    """
     import math
+    interval = max(1, int(interval))
+    columns = max(1, int(columns))
     frames = max(1, math.ceil(max(duration_s, 0.0) / interval)) if duration_s else 1
     rows = max(1, math.ceil(frames / columns))
     return columns, rows
+
+
+def _sprite_interval(duration_s: float, interval: int, columns: int) -> int:
+    """Pick a sprite interval: shrink for short clips (so fps yields frames),
+    grow for very long clips so the sprite stays under MAX_THUMBNAILS cells."""
+    import math
+    interval = max(1, int(interval))
+    if duration_s and duration_s < interval:
+        return max(1, int(duration_s // 2) or 1)
+    if duration_s:
+        frames = math.ceil(duration_s / interval)
+        if frames > MAX_THUMBNAILS:
+            interval = max(interval, math.ceil(duration_s / MAX_THUMBNAILS))
+    return interval
 
 
 async def generate_sprite_thumbnails(
@@ -192,10 +250,9 @@ async def generate_sprite_thumbnails(
     """
     if not _ffmpeg():
         return None
-    # For clips shorter than one interval, `fps=1/interval` yields zero frames.
-    # Shrink the interval so short videos still get a couple of preview cells.
-    if duration_s and duration_s < interval:
-        interval = max(1, int(duration_s // 2))
+    # Shrink for short clips (fps must yield ≥1 frame) and grow for very long
+    # ones (keep the sprite under MAX_THUMBNAILS cells).
+    interval = _sprite_interval(duration_s, interval, columns)
     cols, rows = thumbnails_grid(duration_s, interval, columns)
     dest_dir = os.path.join(out_dir, THUMBS_DIR)
     os.makedirs(dest_dir, exist_ok=True)
@@ -216,11 +273,14 @@ async def generate_sprite_thumbnails(
             "-vf", vf, "-frames:v", "1", "-an", sprite_path,
             stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE,
         )
-        _, stderr = await proc.communicate()
+        _, stderr = await _communicate(proc, SPRITE_TIMEOUT_S)
         if proc.returncode != 0 or not os.path.isfile(sprite_path):
             logger.warning("Sprite thumbnail generation failed: %s",
                            (stderr or b"").decode()[:500])
             return None
+    except asyncio.TimeoutError:
+        logger.warning("Sprite thumbnail generation timed out for %s", src_path)
+        return None
     except Exception as e:
         logger.warning("Sprite thumbnail error for %s: %s", src_path, e)
         return None
@@ -271,11 +331,14 @@ async def transcode_source_to_hls(src_path: str, out_dir: str) -> Optional[dict]
         proc = await asyncio.create_subprocess_exec(
             *args, stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE,
         )
-        _, stderr = await proc.communicate()
+        _, stderr = await _communicate(proc, TRANSCODE_TIMEOUT_S)
         if proc.returncode != 0:
             logger.error("ffmpeg HLS transcode failed (rc=%s): %s",
                          proc.returncode, (stderr or b"").decode()[:1000])
             return None
+    except asyncio.TimeoutError:
+        logger.error("HLS transcode timed out for %s", src_path)
+        return None
     except Exception as e:
         logger.error("HLS transcode error for %s: %s", src_path, e)
         return None

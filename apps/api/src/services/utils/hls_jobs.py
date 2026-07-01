@@ -88,13 +88,25 @@ async def _resolve_source(activity_uuid: str) -> Optional[dict]:
         if not activity or activity.activity_sub_type != ActivitySubTypeEnum.SUBTYPE_VIDEO_HOSTED:
             return None
         filename = (activity.content or {}).get("filename")
-        if not filename:
+        if not filename or not _safe_filename(filename):
             return None
         org = (await db.execute(select(Organization).where(Organization.id == activity.org_id))).scalars().first()
         course = (await db.execute(select(Course).where(Course.id == activity.course_id))).scalars().first()
         if not org or not course:
             return None
         return {"org_uuid": org.org_uuid, "course_uuid": course.course_uuid, "filename": filename}
+
+
+def _safe_filename(filename: str) -> bool:
+    """A stored filename must be a bare name — reject path separators, traversal,
+    NUL, and absolute paths so it can't escape the activity's key/dir on join."""
+    if not filename or "\x00" in filename:
+        return False
+    if "/" in filename or "\\" in filename:
+        return False
+    if filename in (".", "..") or filename.startswith("."):
+        return False
+    return True
 
 
 def _fetch_source(src_key: str, local_path: str) -> bool:
@@ -132,8 +144,10 @@ async def transcode_activity(activity_uuid: str) -> bool:
     await _set_status(activity_uuid, "processing")
     try:
         with tempfile.TemporaryDirectory() as td:
-            local_src = os.path.join(td, filename)
-            if not _fetch_source(src_key, local_src):
+            # basename() is defensive belt-and-suspenders on top of _safe_filename.
+            local_src = os.path.join(td, os.path.basename(filename))
+            # Blocking I/O off the event loop (matters for the in-process worker).
+            if not await asyncio.to_thread(_fetch_source, src_key, local_src):
                 await _set_status(activity_uuid, "failed", error="source_unavailable")
                 return False
 
@@ -144,9 +158,9 @@ async def transcode_activity(activity_uuid: str) -> bool:
                 return False
 
             if is_s3_enabled():
-                ok = upload_directory_to_s3(out_dir, hls_prefix)
+                ok = await asyncio.to_thread(upload_directory_to_s3, out_dir, hls_prefix)
             else:
-                shutil.copytree(out_dir, hls_prefix, dirs_exist_ok=True)
+                await asyncio.to_thread(shutil.copytree, out_dir, hls_prefix, dirs_exist_ok=True)
                 ok = True
             if not ok:
                 await _set_status(activity_uuid, "failed", error="upload_failed")
@@ -183,29 +197,29 @@ def enqueue(activity_uuid: str) -> None:
     """
     if not hls_enabled():
         return
-    try:
-        # Mark queued so the UI can reflect it immediately.
-        task = asyncio.create_task(_set_status(activity_uuid, "queued"))
-        _inprocess_tasks.add(task)
-        task.add_done_callback(_inprocess_tasks.discard)
+    # NB: we deliberately do NOT pre-write a "queued" status here. A fire-and-
+    # forget status write can land AFTER the worker has already set
+    # "processing"/"ready", clobbering it. transcode_activity sets "processing"
+    # as its first action; until then the frontend uses the MP4 fallback.
+    client = get_redis_client()
+    if client:
+        try:
+            client.rpush(REDIS_QUEUE_KEY, activity_uuid)
+        except Exception as e:
+            logger.warning("HLS: could not enqueue %s to Redis: %s", activity_uuid, e)
 
-        client = get_redis_client()
-        if client:
-            try:
-                client.rpush(REDIS_QUEUE_KEY, activity_uuid)
-            except Exception as e:
-                logger.warning("HLS: could not enqueue %s to Redis: %s", activity_uuid, e)
-
-        if inprocess_worker_enabled():
+    if inprocess_worker_enabled():
+        try:
             _spawn_inprocess(activity_uuid)
-        elif not client:
-            logger.warning(
-                "HLS enabled but no Redis queue and no in-process worker; "
-                "activity %s will not transcode until a worker runs.", activity_uuid,
-            )
-    except RuntimeError:
-        # No running event loop (e.g. called from a sync context) — skip.
-        logger.warning("HLS: enqueue skipped for %s (no event loop)", activity_uuid)
+        except RuntimeError:
+            # No running event loop (called from a sync context) — Redis push
+            # above still queued it for a dedicated worker.
+            logger.warning("HLS: in-process spawn skipped for %s (no event loop)", activity_uuid)
+    elif not client:
+        logger.warning(
+            "HLS enabled but no Redis queue and no in-process worker; "
+            "activity %s will not transcode until a worker runs.", activity_uuid,
+        )
 
 
 async def run_worker(poll_timeout: int = 5) -> None:
@@ -217,19 +231,27 @@ async def run_worker(poll_timeout: int = 5) -> None:
     logger.info("HLS worker started; polling %s", REDIS_QUEUE_KEY)
     while True:
         try:
-            item = client.blpop(REDIS_QUEUE_KEY, timeout=poll_timeout)
+            # Off the loop so blpop's blocking wait doesn't freeze the process.
+            item = await asyncio.to_thread(client.blpop, REDIS_QUEUE_KEY, poll_timeout)
+        except asyncio.CancelledError:
+            raise
         except Exception as e:
             logger.error("HLS worker: Redis poll error: %s", e)
             await asyncio.sleep(poll_timeout)
             continue
         if not item:
-            await asyncio.sleep(0)  # yield
             continue
         _key, activity_uuid = item
         if isinstance(activity_uuid, bytes):
             activity_uuid = activity_uuid.decode()
         logger.info("HLS worker: transcoding %s", activity_uuid)
-        await transcode_activity(activity_uuid)
+        try:
+            # A single job's unexpected failure must never kill the worker loop.
+            await transcode_activity(activity_uuid)
+        except asyncio.CancelledError:
+            raise
+        except Exception as e:
+            logger.error("HLS worker: job %s crashed: %s", activity_uuid, e)
 
 
 async def backfill(limit: int = 0) -> dict:
@@ -245,14 +267,16 @@ async def backfill(limit: int = 0) -> dict:
                 )
             )
         ).scalars().all()
+        # ((... or {}).get("hls") or {}) guards against extra_metadata={"hls": None},
+        # where .get("hls", {}) would return None and .get("status") would crash.
         targets = [
             a.activity_uuid
             for a in activities
-            if (a.extra_metadata or {}).get("hls", {}).get("status") != "ready"
+            if ((a.extra_metadata or {}).get("hls") or {}).get("status") != "ready"
             and (a.content or {}).get("filename")
         ]
 
-    if limit:
+    if limit and limit > 0:
         targets = targets[:limit]
     done = failed = 0
     for uuid in targets:

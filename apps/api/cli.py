@@ -216,58 +216,70 @@ def backfill_faststart(
         print("❌ Could not build storage client.")
         raise typer.Exit(code=1)
 
-    scanned = processed = skipped = failed = 0
-    paginator = s3.get_paginator("list_objects_v2")
-    for page in paginator.paginate(Bucket=bucket, Prefix=prefix):
-        for obj in page.get("Contents", []):
-            key = obj["Key"]
-            if os.path.splitext(key)[1].lower() not in _FASTSTART_EXTENSIONS:
-                continue
-            scanned += 1
+    bounded = limit if limit and limit > 0 else 0  # negative/0 → no limit
+    scanned = processed = skipped = failed = attempted = 0
+    stop = False
+    try:
+        paginator = s3.get_paginator("list_objects_v2")
+        for page in paginator.paginate(Bucket=bucket, Prefix=prefix):
+            for obj in page.get("Contents", []):
+                key = obj["Key"]
+                if os.path.splitext(key)[1].lower() not in _FASTSTART_EXTENSIONS:
+                    continue
+                scanned += 1
 
-            # Cheap check: fetch just the head and look for moov before mdat.
-            try:
-                head = s3.get_object(Bucket=bucket, Key=key, Range="bytes=0-2097151")
-                head_bytes = head["Body"].read()
-                head["Body"].close()
-            except Exception as e:
-                print(f"  ⚠️  {key}: could not read head ({e})")
-                failed += 1
-                continue
-            moov, mdat = head_bytes.find(b"moov"), head_bytes.find(b"mdat")
-            if moov != -1 and (mdat == -1 or moov < mdat):
-                skipped += 1
-                continue
-
-            print(f"  → needs faststart: {key} ({obj['Size'] / 1e6:.0f} MB)")
-            if dry_run:
-                processed += 1
-            else:
-                with tempfile.TemporaryDirectory() as td:
-                    local = os.path.join(td, os.path.basename(key))
+                # Cheap check: fetch just the head and look for moov before mdat.
+                try:
+                    head = s3.get_object(Bucket=bucket, Key=key, Range="bytes=0-2097151")
+                    body = head["Body"]
                     try:
-                        s3.download_file(bucket, key, local)
-                        if ensure_faststart(local) and is_faststart(local):
-                            s3.upload_file(local, bucket, key)
-                            print(f"    ✅ remuxed & re-uploaded {key}")
-                            processed += 1
-                        else:
-                            print(f"    ⚠️  remux skipped/failed for {key}")
-                            failed += 1
-                    except Exception as e:
-                        print(f"    ❌ error on {key}: {e}")
-                        failed += 1
+                        head_bytes = body.read()
+                    finally:
+                        body.close()  # always release the connection back to the pool
+                except Exception as e:
+                    print(f"  ⚠️  {key}: could not read head ({e})")
+                    failed += 1
+                    continue
+                moov, mdat = head_bytes.find(b"moov"), head_bytes.find(b"mdat")
+                if moov != -1 and (mdat == -1 or moov < mdat):
+                    skipped += 1
+                    continue
 
-            if limit and processed >= limit:
-                print("Reached --limit; stopping.")
+                # This file needs work — counts toward the --limit budget whether
+                # or not the remux ultimately succeeds (bounds real download/CPU).
+                attempted += 1
+                print(f"  → needs faststart: {key} ({obj['Size'] / 1e6:.0f} MB)")
+                if dry_run:
+                    processed += 1
+                else:
+                    with tempfile.TemporaryDirectory() as td:
+                        local = os.path.join(td, os.path.basename(key))
+                        try:
+                            s3.download_file(bucket, key, local)
+                            if ensure_faststart(local) and is_faststart(local):
+                                s3.upload_file(local, bucket, key)
+                                print(f"    ✅ remuxed & re-uploaded {key}")
+                                processed += 1
+                            else:
+                                print(f"    ⚠️  remux skipped/failed for {key}")
+                                failed += 1
+                        except Exception as e:
+                            print(f"    ❌ error on {key}: {e}")
+                            failed += 1
+
+                if bounded and attempted >= bounded:
+                    print("Reached --limit; stopping.")
+                    stop = True
+                    break
+            if stop:
                 break
-        else:
-            continue
-        break
+    except Exception as e:
+        # A pagination/list error must not lose the summary of work already done.
+        print(f"⚠️  scan aborted early: {e}")
 
     verb = "would remux" if dry_run else "remuxed"
     print(
-        f"\nDone. scanned={scanned} {verb}={processed} "
+        f"\nDone. scanned={scanned} attempted={attempted} {verb}={processed} "
         f"already-faststart={skipped} failed={failed}"
     )
 
@@ -276,12 +288,31 @@ def backfill_faststart(
 def transcode_worker():
     """Run the HLS transcoding worker: drains the Redis queue and transcodes
     videos into adaptive-bitrate HLS. Meant to run as a dedicated process so
-    heavy ffmpeg work never touches the API pods. Runs until interrupted."""
+    heavy ffmpeg work never touches the API pods. Runs until interrupted.
+
+    Handles SIGTERM (Kubernetes pod stop) and SIGINT for a clean shutdown."""
+    import signal
     from src.services.utils.hls_jobs import run_worker
+
+    async def _main():
+        loop = asyncio.get_running_loop()
+        task = asyncio.ensure_future(run_worker())
+        for sig in (signal.SIGINT, signal.SIGTERM):
+            try:
+                loop.add_signal_handler(sig, task.cancel)
+            except (NotImplementedError, ValueError):
+                # add_signal_handler is unavailable on some platforms (e.g. Windows).
+                pass
+        try:
+            await task
+        except asyncio.CancelledError:
+            pass
+
     try:
-        asyncio.run(run_worker())
+        asyncio.run(_main())
     except KeyboardInterrupt:
-        print("HLS worker stopped.")
+        pass
+    print("HLS worker stopped.")
 
 
 @cli.command()
