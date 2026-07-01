@@ -182,6 +182,97 @@ async def _install_async(short: bool) -> None:
 
 
 @cli.command()
+def backfill_faststart(
+    prefix: Annotated[str, typer.Option(help="S3 key prefix to scan")] = "content/",
+    dry_run: Annotated[bool, typer.Option(help="Only report what would change")] = False,
+    limit: Annotated[int, typer.Option(help="Max files to process (0 = no limit)")] = 0,
+):
+    """Rewrite already-uploaded MP4 videos so their moov atom is at the front.
+
+    Streams the first 2MB of each MP4 to detect whether it is already faststart;
+    only non-faststart files are downloaded in full, remuxed with ffmpeg
+    (-c copy, lossless), and re-uploaded. Safe to re-run — faststart files are
+    skipped.
+    """
+    import tempfile
+    from src.services.courses.transfer.storage_utils import (
+        is_s3_enabled,
+        get_storage_client,
+        get_s3_bucket_name,
+    )
+    from src.services.utils.video_processing import (
+        ensure_faststart,
+        is_faststart,
+        _FASTSTART_EXTENSIONS,
+    )
+
+    if not is_s3_enabled():
+        print("❌ S3/R2 is not enabled; nothing to backfill.")
+        raise typer.Exit(code=1)
+
+    s3 = get_storage_client()
+    bucket = get_s3_bucket_name()
+    if not s3:
+        print("❌ Could not build storage client.")
+        raise typer.Exit(code=1)
+
+    scanned = processed = skipped = failed = 0
+    paginator = s3.get_paginator("list_objects_v2")
+    for page in paginator.paginate(Bucket=bucket, Prefix=prefix):
+        for obj in page.get("Contents", []):
+            key = obj["Key"]
+            if os.path.splitext(key)[1].lower() not in _FASTSTART_EXTENSIONS:
+                continue
+            scanned += 1
+
+            # Cheap check: fetch just the head and look for moov before mdat.
+            try:
+                head = s3.get_object(Bucket=bucket, Key=key, Range="bytes=0-2097151")
+                head_bytes = head["Body"].read()
+                head["Body"].close()
+            except Exception as e:
+                print(f"  ⚠️  {key}: could not read head ({e})")
+                failed += 1
+                continue
+            moov, mdat = head_bytes.find(b"moov"), head_bytes.find(b"mdat")
+            if moov != -1 and (mdat == -1 or moov < mdat):
+                skipped += 1
+                continue
+
+            print(f"  → needs faststart: {key} ({obj['Size'] / 1e6:.0f} MB)")
+            if dry_run:
+                processed += 1
+            else:
+                with tempfile.TemporaryDirectory() as td:
+                    local = os.path.join(td, os.path.basename(key))
+                    try:
+                        s3.download_file(bucket, key, local)
+                        if ensure_faststart(local) and is_faststart(local):
+                            s3.upload_file(local, bucket, key)
+                            print(f"    ✅ remuxed & re-uploaded {key}")
+                            processed += 1
+                        else:
+                            print(f"    ⚠️  remux skipped/failed for {key}")
+                            failed += 1
+                    except Exception as e:
+                        print(f"    ❌ error on {key}: {e}")
+                        failed += 1
+
+            if limit and processed >= limit:
+                print("Reached --limit; stopping.")
+                break
+        else:
+            continue
+        break
+
+    verb = "would remux" if dry_run else "remuxed"
+    print(
+        f"\nDone. scanned={scanned} {verb}={processed} "
+        f"already-faststart={skipped} failed={failed}"
+    )
+
+
+@cli.command()
 def main():
     cli()
 

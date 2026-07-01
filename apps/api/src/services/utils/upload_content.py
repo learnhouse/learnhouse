@@ -7,6 +7,7 @@ import os
 from fastapi import HTTPException, UploadFile
 from config.config import get_learnhouse_config
 from src.security.file_validation import validate_upload
+from src.services.utils.video_processing import ensure_faststart
 
 logger = logging.getLogger(__name__)
 
@@ -91,12 +92,13 @@ async def upload_content(
 
     if content_delivery == "filesystem":
         # upload file to server
-        with open(
-            f"content/{type_of_dir}/{uuid}/{directory}/{file_and_format}",
-            "wb",
-        ) as f:
+        fs_path = f"content/{type_of_dir}/{uuid}/{directory}/{file_and_format}"
+        with open(fs_path, "wb") as f:
             f.write(file_binary)
             f.close()
+        # Move the MP4 index atom to the front so long videos stream/seek
+        # smoothly over HTTP (no-op for non-MP4 and when ffmpeg is absent).
+        ensure_faststart(fs_path)
 
     elif content_delivery == "s3api":
         s3 = boto3.client(
@@ -112,6 +114,11 @@ async def upload_content(
         # Write to local temp file for S3 upload
         with open(local_path, "wb") as f:
             f.write(file_binary)
+
+        # Move the MP4 index atom to the front before uploading so long videos
+        # stream/seek smoothly from R2 (no-op for non-MP4 and when ffmpeg is
+        # absent). Done on the temp file so the uploaded object is faststart.
+        ensure_faststart(local_path)
 
         try:
             s3.upload_file(local_path, bucket_name, s3_key)
