@@ -1,0 +1,364 @@
+"""
+HLS transcoding.
+
+Turns a source video into an adaptive HLS ladder: a master playlist plus one
+rendition (index playlist + .ts segments) per quality level, so the player can
+switch quality to match live bandwidth instead of stalling.
+
+Everything here is CPU-heavy and slow — it is meant to run in a worker/CLI, not
+in a request. The ladder is *source-capped*: we never upscale, and the top rung
+never exceeds the source resolution.
+"""
+
+import asyncio
+import json
+import logging
+import os
+import shutil
+import tempfile
+from dataclasses import dataclass
+from typing import Optional
+
+logger = logging.getLogger(__name__)
+
+
+@dataclass(frozen=True)
+class Rung:
+    name: str          # e.g. "720p" → rendition dir "v720p"
+    height: int
+    v_bitrate: str     # target video bitrate
+    v_maxrate: str
+    v_bufsize: str
+
+
+# Standard 16:9 ladder. Widths are derived by ffmpeg (scale=-2:h) so non-16:9
+# sources keep their aspect ratio.
+_LADDER: tuple[Rung, ...] = (
+    Rung("1080p", 1080, "5000k", "5350k", "7500k"),
+    Rung("720p", 720, "2800k", "3000k", "4200k"),
+    Rung("480p", 480, "1400k", "1500k", "2100k"),
+    Rung("360p", 360, "800k", "856k", "1200k"),
+)
+
+HLS_SEGMENT_SECONDS = 6
+MASTER_PLAYLIST_NAME = "master.m3u8"
+
+# Hover-scrub preview sprite (a grid of small frames the player shows when the
+# user scrubs the progress bar, YouTube-style).
+THUMBS_DIR = "thumbnails"
+THUMBS_SPRITE = "sprite.jpg"
+THUMB_INTERVAL_SECONDS = 10
+THUMB_WIDTH = 160
+THUMB_HEIGHT = 90
+THUMB_COLUMNS = 10
+
+# AES-128 segment encryption. The key lives in the private bucket and is only
+# handed out by the authed key endpoint — a deterrent against casual segment
+# stitching (not DRM). The URI is relative so it resolves back to our API from
+# a rendition playlist at v{name}/index.m3u8.
+ENC_KEY_NAME = "enc.key"
+ENC_KEY_URI = f"../{ENC_KEY_NAME}"
+
+
+def encryption_enabled() -> bool:
+    return os.environ.get("LEARNHOUSE_HLS_ENCRYPT", "true").strip().lower() == "true"
+
+
+# Subprocess timeouts so a malformed/hostile source can never hang the worker.
+PROBE_TIMEOUT_S = 120
+SPRITE_TIMEOUT_S = 30 * 60
+TRANSCODE_TIMEOUT_S = 6 * 60 * 60
+
+
+async def _communicate(proc, timeout: int):
+    """Await proc.communicate() with a hard timeout; kill the process on expiry.
+
+    Raises asyncio.TimeoutError (after reaping the process) if it overruns.
+    """
+    try:
+        return await asyncio.wait_for(proc.communicate(), timeout=timeout)
+    except asyncio.TimeoutError:
+        try:
+            proc.kill()
+        except ProcessLookupError:
+            pass
+        try:
+            await proc.wait()
+        except Exception:
+            pass
+        raise
+
+
+def _ffmpeg() -> Optional[str]:
+    return shutil.which("ffmpeg")
+
+
+def _ffprobe() -> Optional[str]:
+    return shutil.which("ffprobe")
+
+
+def select_ladder(source_height: int) -> list[Rung]:
+    """Pick rungs no taller than the source; always keep at least the lowest.
+
+    A 1080p source yields all four rungs; a 540p source yields 480p+360p; a tiny
+    source yields just the smallest rung (never upscaled).
+    """
+    rungs = [r for r in _LADDER if r.height <= source_height]
+    if not rungs:
+        rungs = [_LADDER[-1]]  # smallest, for very small sources
+    return rungs
+
+
+def build_ffmpeg_args(
+    src_path: str, out_dir: str, rungs: list[Rung], has_audio: bool,
+    key_info_file: Optional[str] = None,
+) -> list[str]:
+    """Build the single-invocation ffmpeg command for the whole ladder.
+
+    Output layout under out_dir: master.m3u8, v{name}/index.m3u8, v{name}/seg_*.ts
+    (relative refs — master → rendition playlists, rendition → segments).
+
+    When key_info_file is given, segments are AES-128 encrypted and the playlists
+    carry an #EXT-X-KEY pointing at the (authed) key URI from that file.
+    """
+    n = len(rungs)
+    split_labels = "".join(f"[v{i}]" for i in range(n))
+    filters = [f"[0:v]split={n}{split_labels}"]
+    for i, r in enumerate(rungs):
+        # -2 keeps width even and aspect ratio intact.
+        filters.append(f"[v{i}]scale=-2:{r.height}[v{i}out]")
+    filter_complex = ";".join(filters)
+
+    args = [_ffmpeg() or "ffmpeg", "-y", "-loglevel", "error", "-i", src_path,
+            "-filter_complex", filter_complex]
+
+    for i, r in enumerate(rungs):
+        args += [
+            "-map", f"[v{i}out]",
+            f"-c:v:{i}", "libx264", "-preset", "veryfast",
+            f"-b:v:{i}", r.v_bitrate, f"-maxrate:v:{i}", r.v_maxrate,
+            f"-bufsize:v:{i}", r.v_bufsize,
+            f"-g:v:{i}", "48", f"-keyint_min:v:{i}", "48",
+            f"-sc_threshold:v:{i}", "0",
+        ]
+
+    var_parts = []
+    if has_audio:
+        for i in range(n):
+            args += ["-map", "a:0"]
+        args += ["-c:a", "aac", "-b:a", "128k", "-ac", "2"]
+        var_parts = [f"v:{i},a:{i},name:{r.name}" for i, r in enumerate(rungs)]
+    else:
+        var_parts = [f"v:{i},name:{r.name}" for i, r in enumerate(rungs)]
+
+    args += [
+        "-f", "hls",
+        "-hls_time", str(HLS_SEGMENT_SECONDS),
+        "-hls_playlist_type", "vod",
+        "-hls_flags", "independent_segments",
+        "-master_pl_name", MASTER_PLAYLIST_NAME,
+        "-hls_segment_filename", os.path.join(out_dir, "v%v", "seg_%04d.ts"),
+        "-var_stream_map", " ".join(var_parts),
+    ]
+    if key_info_file:
+        args += ["-hls_key_info_file", key_info_file]
+    args.append(os.path.join(out_dir, "v%v", "index.m3u8"))
+    return args
+
+
+async def _probe(src_path: str) -> tuple[int, bool, float]:
+    """Return (height, has_audio, duration_s).
+
+    On any probe failure returns (0, False, 0.0): height 0 → a single lowest
+    rung (never upscale a source we can't measure), and has_audio False → no
+    audio maps (so a silent source can't fail the transcode with a bad a:0 map).
+    """
+    probe = _ffprobe()
+    if not probe:
+        return 0, False, 0.0
+    try:
+        proc = await asyncio.create_subprocess_exec(
+            probe, "-v", "error", "-show_streams", "-show_format", "-of", "json", src_path,
+            stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE,
+        )
+        out, _ = await _communicate(proc, PROBE_TIMEOUT_S)
+    except (asyncio.TimeoutError, Exception):
+        return 0, False, 0.0
+    try:
+        data = json.loads(out.decode() or "{}")
+    except json.JSONDecodeError:
+        return 0, False, 0.0
+    streams = data.get("streams", [])
+    height = 0
+    has_audio = False
+    for s in streams:
+        if s.get("codec_type") == "video":
+            height = max(height, int(s.get("height") or 0))
+        elif s.get("codec_type") == "audio":
+            has_audio = True
+    try:
+        duration = float(data.get("format", {}).get("duration") or 0.0)
+    except (TypeError, ValueError):
+        duration = 0.0
+    return height, has_audio, duration
+
+
+# Cap the sprite at a sane cell count so a multi-hour video can't produce a
+# gigantic JPEG shipped to every scrubbing viewer.
+MAX_THUMBNAILS = 400
+
+
+def thumbnails_grid(duration_s: float, interval: int = THUMB_INTERVAL_SECONDS,
+                    columns: int = THUMB_COLUMNS) -> tuple[int, int]:
+    """Return (columns, rows) for a sprite covering the whole duration.
+
+    Guards against interval/columns <= 0 (fall back to 1) so callers can't hit a
+    ZeroDivisionError.
+    """
+    import math
+    interval = max(1, int(interval))
+    columns = max(1, int(columns))
+    frames = max(1, math.ceil(max(duration_s, 0.0) / interval)) if duration_s else 1
+    rows = max(1, math.ceil(frames / columns))
+    return columns, rows
+
+
+def _sprite_interval(duration_s: float, interval: int, columns: int) -> int:
+    """Pick a sprite interval: shrink for short clips (so fps yields frames),
+    grow for very long clips so the sprite stays under MAX_THUMBNAILS cells."""
+    import math
+    interval = max(1, int(interval))
+    if duration_s and duration_s < interval:
+        return max(1, int(duration_s // 2) or 1)
+    if duration_s:
+        frames = math.ceil(duration_s / interval)
+        if frames > MAX_THUMBNAILS:
+            interval = max(interval, math.ceil(duration_s / MAX_THUMBNAILS))
+    return interval
+
+
+async def generate_sprite_thumbnails(
+    src_path: str, out_dir: str, duration_s: float,
+    interval: int = THUMB_INTERVAL_SECONDS,
+    width: int = THUMB_WIDTH, height: int = THUMB_HEIGHT,
+    columns: int = THUMB_COLUMNS,
+) -> Optional[dict]:
+    """
+    Build a single sprite sheet of evenly-spaced frames for progress-bar hover
+    previews. Returns the videojs-sprite-thumbnails config (relative url,
+    interval, width, height, columns, rows) or None on failure. Never raises.
+    """
+    if not _ffmpeg():
+        return None
+    # Shrink for short clips (fps must yield ≥1 frame) and grow for very long
+    # ones (keep the sprite under MAX_THUMBNAILS cells).
+    interval = _sprite_interval(duration_s, interval, columns)
+    cols, rows = thumbnails_grid(duration_s, interval, columns)
+    dest_dir = os.path.join(out_dir, THUMBS_DIR)
+    os.makedirs(dest_dir, exist_ok=True)
+    sprite_path = os.path.join(dest_dir, THUMBS_SPRITE)
+    # One frame per `interval`s, letterboxed into uniform WxH cells, tiled to a
+    # grid. `format=yuvj420p` gives the mjpeg encoder the full-range YUV it needs
+    # (avoids "Non full-range YUV is non-standard" failures on some sources).
+    vf = (
+        f"fps=1/{interval},"
+        f"scale={width}:{height}:force_original_aspect_ratio=decrease,"
+        f"pad={width}:{height}:(ow-iw)/2:(oh-ih)/2,"
+        f"tile={cols}x{rows},"
+        f"format=yuvj420p"
+    )
+    try:
+        proc = await asyncio.create_subprocess_exec(
+            _ffmpeg(), "-y", "-loglevel", "error", "-i", src_path,
+            "-vf", vf, "-frames:v", "1", "-an", sprite_path,
+            stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE,
+        )
+        _, stderr = await _communicate(proc, SPRITE_TIMEOUT_S)
+        if proc.returncode != 0 or not os.path.isfile(sprite_path):
+            logger.warning("Sprite thumbnail generation failed: %s",
+                           (stderr or b"").decode()[:500])
+            return None
+    except asyncio.TimeoutError:
+        logger.warning("Sprite thumbnail generation timed out for %s", src_path)
+        return None
+    except Exception as e:
+        logger.warning("Sprite thumbnail error for %s: %s", src_path, e)
+        return None
+    return {
+        "url": f"{THUMBS_DIR}/{THUMBS_SPRITE}",
+        "interval": interval, "width": width, "height": height,
+        "columns": cols, "rows": rows,
+    }
+
+
+async def transcode_source_to_hls(src_path: str, out_dir: str) -> Optional[dict]:
+    """
+    Transcode src_path into an HLS ladder under out_dir.
+
+    Returns {"master": "master.m3u8", "renditions": ["720p", ...]} on success,
+    or None on failure (caller keeps the MP4 fallback). Never raises.
+    """
+    if not _ffmpeg():
+        logger.error("ffmpeg not available; cannot transcode %s", src_path)
+        return None
+    if not os.path.isfile(src_path):
+        logger.error("HLS source missing: %s", src_path)
+        return None
+
+    height, has_audio, duration = await _probe(src_path)
+    rungs = select_ladder(height)
+    os.makedirs(out_dir, exist_ok=True)
+    for r in rungs:
+        os.makedirs(os.path.join(out_dir, f"v{r.name}"), exist_ok=True)
+
+    # Optional AES-128 encryption: write a random key into out_dir (uploaded to
+    # the private bucket, served only via the authed key endpoint) and a keyinfo
+    # file (kept out of out_dir so it isn't uploaded).
+    keyinfo_path = None
+    if encryption_enabled():
+        key_path = os.path.join(out_dir, ENC_KEY_NAME)
+        with open(key_path, "wb") as kf:
+            kf.write(os.urandom(16))
+        fd, keyinfo_path = tempfile.mkstemp(suffix=".keyinfo")
+        with os.fdopen(fd, "w") as info:
+            info.write(f"{ENC_KEY_URI}\n{key_path}\n")
+
+    args = build_ffmpeg_args(src_path, out_dir, rungs, has_audio, key_info_file=keyinfo_path)
+    logger.info("Transcoding %s → HLS %s (%s%s)", src_path, out_dir,
+                ",".join(r.name for r in rungs),
+                ", encrypted" if keyinfo_path else "")
+    try:
+        proc = await asyncio.create_subprocess_exec(
+            *args, stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE,
+        )
+        _, stderr = await _communicate(proc, TRANSCODE_TIMEOUT_S)
+        if proc.returncode != 0:
+            logger.error("ffmpeg HLS transcode failed (rc=%s): %s",
+                         proc.returncode, (stderr or b"").decode()[:1000])
+            return None
+    except asyncio.TimeoutError:
+        logger.error("HLS transcode timed out for %s", src_path)
+        return None
+    except Exception as e:
+        logger.error("HLS transcode error for %s: %s", src_path, e)
+        return None
+    finally:
+        if keyinfo_path and os.path.exists(keyinfo_path):
+            try:
+                os.remove(keyinfo_path)
+            except OSError:
+                pass
+
+    master = os.path.join(out_dir, MASTER_PLAYLIST_NAME)
+    if not os.path.isfile(master):
+        logger.error("HLS transcode produced no master playlist for %s", src_path)
+        return None
+
+    # Best-effort hover-preview sprite; playback works fine without it.
+    thumbnails = await generate_sprite_thumbnails(src_path, out_dir, duration)
+
+    return {
+        "master": MASTER_PLAYLIST_NAME,
+        "renditions": [r.name for r in rungs],
+        "thumbnails": thumbnails,
+    }

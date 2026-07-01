@@ -79,6 +79,7 @@
     "@tiptap/suggestion": "^3.17.1",
     "@uiw/codemirror-theme-tokyo-night": "^4.25.4",
     "@uiw/react-codemirror": "^4.25.4",
+    "@videojs/themes": "^1",
     "avvvatars-react": "^0.4.2",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
@@ -131,6 +132,10 @@
     "unsplash-js": "^8.0.0",
     "usehooks-ts": "^3.1.1",
     "uuid": "^14.0.0",
+    "video.js": "^8.23.9",
+    "videojs-contrib-quality-levels": "^4",
+    "videojs-hls-quality-selector": "^2",
+    "videojs-sprite-thumbnails": "^2",
     "wavesurfer.js": "^7.12.1",
     "y-prosemirror": "^1.2.12",
     "yjs": "^13.6.20",
@@ -158,8 +163,25 @@
     "lodash-es": ">=4.17.23",
     "preact": ">=10.27.3",
     "js-yaml": ">=4.1.1",
-    "jspdf": ">=4.0.0",
+    "jspdf": ">=4.2.1",
     "prosemirror-view": "1.41.9",
-    "prosemirror-model": "1.25.9"
+    "prosemirror-model": "1.25.9",
+    "nth-check": ">=2.0.1",
+    "dompurify": ">=3.2.4",
+    "postcss": ">=8.4.31"
+  },
+  "pnpm": {
+    "overrides": {
+      "@types/react": "19.2.17",
+      "@types/react-dom": "19.2.3",
+      "preact": ">=10.27.3",
+      "js-yaml": ">=4.1.1",
+      "jspdf": ">=4.2.1",
+      "prosemirror-view": "1.41.9",
+      "prosemirror-model": "1.25.9",
+      "nth-check": ">=2.0.1",
+      "dompurify": ">=3.2.4",
+      "postcss": ">=8.4.31"
+    }
   }
 }

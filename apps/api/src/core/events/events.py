@@ -64,6 +64,11 @@ def startup_app(app: FastAPI) -> Callable:
         global _cleanup_task
         _cleanup_task = asyncio.create_task(_periodic_migration_cleanup())
 
+        # Start the in-app HLS transcoding consumer (drains the Redis queue as a
+        # background task; no separate worker). No-op unless LEARNHOUSE_HLS_ENABLED.
+        from src.services.utils.hls_jobs import start_consumer
+        start_consumer()
+
         # Start Enterprise Edition Startup tasks if available
         run_ee_startup(app)
 
@@ -78,6 +83,9 @@ def shutdown_app(app: FastAPI) -> Callable:
                 await _cleanup_task
             except asyncio.CancelledError:
                 pass
+        # Stop the in-app HLS consumer and wait for in-flight transcodes.
+        from src.services.utils.hls_jobs import stop_consumer
+        await stop_consumer()
         # Wait for in-flight webhook deliveries before closing the HTTP client
         from src.services.webhooks.dispatch import close_webhook_client, _background_tasks as _webhook_tasks
         if _webhook_tasks:  # pragma: no cover
