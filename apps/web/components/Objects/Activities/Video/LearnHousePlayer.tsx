@@ -145,13 +145,16 @@ const LearnHousePlayer: React.FC<LearnHousePlayerProps> = ({
         }
       }
 
-      // Honor per-video start/stop bounds.
-      if (details?.startTime) {
-        player.one('loadedmetadata', () => player.currentTime(details.startTime))
+      // Honor per-video start/stop bounds. video.js's currentTime() getter is
+      // typed number | undefined, so coalesce before comparing.
+      const startTime = details?.startTime
+      if (startTime) {
+        player.one('loadedmetadata', () => player.currentTime(startTime))
       }
-      if (details?.endTime) {
+      const endTime = details?.endTime
+      if (endTime) {
         player.on('timeupdate', () => {
-          if (player.currentTime() >= (details.endTime as number)) player.pause()
+          if ((player.currentTime() ?? 0) >= endTime) player.pause()
         })
       }
     })()

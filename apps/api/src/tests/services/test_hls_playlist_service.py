@@ -95,7 +95,7 @@ def test_rewrite_leaves_escaping_segment_untouched():
 def test_segment_with_query_params_is_presigned():
     out = rewrite_playlist("#EXTM3U\nseg_0000.ts?foo=bar\n", f"{_ROOT}/v480p", _presign)
     # Extension detection ignores the query; the whole ref is signed.
-    assert "https://r2.example/" in out
+    assert "sig=abc" in out  # segment was rewritten to the presigned URL
     assert "seg_0000.ts" in out
 
 
@@ -124,4 +124,4 @@ def test_ext_x_map_init_segment_is_presigned():
 
 def test_crlf_line_endings_handled():
     out = rewrite_playlist("#EXTM3U\r\nseg_0000.ts\r\n", f"{_ROOT}/v480p", _presign)
-    assert "https://r2.example/" in out
+    assert "sig=abc" in out  # segment was rewritten to the presigned URL
