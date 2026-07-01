@@ -1,5 +1,6 @@
 from typing import Literal, Optional
 import json
+import logging
 from src.db.courses.courses import Course
 from src.db.organizations import Organization
 
@@ -21,6 +22,8 @@ from fastapi import HTTPException, status, UploadFile, Request
 from uuid import uuid4
 from datetime import datetime
 from src.security.rbac import check_resource_access, AccessAction
+
+logger = logging.getLogger(__name__)
 
 
 async def create_video_activity(
@@ -153,6 +156,14 @@ async def create_video_activity(
     db_session.add(chapter_activity_object)
     await db_session.commit()
     await db_session.refresh(chapter_activity_object)
+
+    # Kick off HLS transcoding (no-op unless LEARNHOUSE_HLS_ENABLED). The MP4 is
+    # served as the fallback until HLS is ready.
+    try:
+        from src.services.utils.hls_jobs import enqueue as enqueue_hls
+        enqueue_hls(activity.activity_uuid)
+    except Exception:
+        logger.exception("Failed to enqueue HLS transcode for %s", activity.activity_uuid)
 
     return ActivityRead.model_validate(activity)
 

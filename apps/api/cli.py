@@ -273,6 +273,32 @@ def backfill_faststart(
 
 
 @cli.command()
+def transcode_worker():
+    """Run the HLS transcoding worker: drains the Redis queue and transcodes
+    videos into adaptive-bitrate HLS. Meant to run as a dedicated process so
+    heavy ffmpeg work never touches the API pods. Runs until interrupted."""
+    from src.services.utils.hls_jobs import run_worker
+    try:
+        asyncio.run(run_worker())
+    except KeyboardInterrupt:
+        print("HLS worker stopped.")
+
+
+@cli.command()
+def transcode_backfill(
+    limit: Annotated[int, typer.Option(help="Max activities to process (0 = all)")] = 0,
+):
+    """Transcode existing hosted-video activities into HLS (skips ones already
+    ready). Processes inline — run it where ffmpeg + storage creds are available."""
+    from src.services.utils.hls_jobs import backfill
+    result = asyncio.run(backfill(limit=limit))
+    print(
+        f"HLS backfill done. total={result['total']} "
+        f"done={result['done']} failed={result['failed']}"
+    )
+
+
+@cli.command()
 def main():
     cli()
 
