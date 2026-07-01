@@ -29,11 +29,31 @@ export function isTurnstileConfigured(): boolean {
  * Mount-safe variant for gating form submit buttons. Returns false during SSR
  * and the first client render, then the real value after mount — so the button's
  * disabled state never mismatches between server and client.
+ *
+ * The public site key comes from `window.__RUNTIME_CONFIG__`, injected by an
+ * external `/runtime-config.js` script that can execute AFTER React hydrates.
+ * A one-shot check on mount therefore races that script and can permanently
+ * capture an empty key. We poll briefly until the config is available (or a
+ * short timeout) so the widget reliably appears once the key loads.
  */
 export function useTurnstileRequired(): boolean {
   const [required, setRequired] = useState(false)
   useEffect(() => {
-    setRequired(isTurnstileConfigured())
+    if (isTurnstileConfigured()) {
+      setRequired(true)
+      return
+    }
+    let tries = 0
+    const id = setInterval(() => {
+      if (isTurnstileConfigured()) {
+        setRequired(true)
+        clearInterval(id)
+      } else if (++tries >= 40) {
+        // ~6s: runtime-config.js should have loaded by now; give up quietly.
+        clearInterval(id)
+      }
+    }, 150)
+    return () => clearInterval(id)
   }, [])
   return required
 }
