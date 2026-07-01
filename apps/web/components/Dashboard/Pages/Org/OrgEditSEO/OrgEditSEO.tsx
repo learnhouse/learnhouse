@@ -21,6 +21,7 @@ import { queryKeys } from '@/lib/query/keys'
 import { getOrgOgImageMediaDirectory } from '@services/media/media'
 import { Copy, ExternalLink, Upload, X } from 'lucide-react'
 import { getCanonicalUrl } from '@/lib/seo/utils'
+import FeatureGate from '@components/Dashboard/Shared/FeatureGate/FeatureGate'
 
 const OrgEditSEO: React.FC = () => {
   const { t } = useTranslation()
@@ -89,7 +90,7 @@ const OrgEditSEO: React.FC = () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.org.detail(org.slug) })
       setOgImageFile(null)
       toast.success('SEO settings saved successfully', { id: loadingToast })
-    } catch (err) {
+    } catch {
       toast.error(t('dashboard.organization.seo.save_failed'), { id: loadingToast })
     }
   }
@@ -100,6 +101,7 @@ const OrgEditSEO: React.FC = () => {
       : null
 
   return (
+    <FeatureGate feature="seo">
     <div className="sm:mx-10 mx-0 bg-white rounded-xl nice-shadow">
       <Formik
         enableReinitialize
@@ -357,6 +359,7 @@ const OrgEditSEO: React.FC = () => {
         )}
       </Formik>
     </div>
+    </FeatureGate>
   )
 }
 

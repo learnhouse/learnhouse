@@ -259,21 +259,24 @@ export default async function proxy(req: NextRequest) {
   }
 
   // -------------------------------------------------------------------------
-  // 1b. Admin path — direct /admin access works in any tenancy mode.
-  //     In single mode this is the only way to reach the admin panel; in
-  //     multi mode it's an alternative to the admin.{domain} subdomain.
+  // 2. Standard out-of-org paths (root hub)
+  //
+  //    These render at the apex/root and must NEVER fall into the tenant
+  //    catch-all (which would rewrite them to /orgs/{slug}/...). `/home` is the
+  //    org picker and works in every tenancy. The rest form the central
+  //    account + org-management hub (create / upgrade / delete an org, billing,
+  //    account) and only exist in `multi` tenancy (SaaS); the (hub) route-group
+  //    layout additionally enforces SaaS gating. We set instance cookies so the
+  //    hub's client components can read tenancy/mode/top-domain.
   // -------------------------------------------------------------------------
-  if (pathname === '/admin' || pathname.startsWith('/admin/')) {
+  const HUB_ROOT_PATHS = ['/home', '/organizations', '/account', '/billing', '/subscriptions', '/new']
+  const isHubRoot = HUB_ROOT_PATHS.some(
+    (p) => pathname === p || pathname.startsWith(`${p}/`),
+  )
+  if (pathname === '/home' || (instance.tenancy === 'multi' && isHubRoot)) {
     const response = NextResponse.rewrite(new URL(`${pathname}${search}`, req.url))
     setInstanceCookies(response, instance)
     return response
-  }
-
-  // -------------------------------------------------------------------------
-  // 2. Standard out-of-org paths
-  // -------------------------------------------------------------------------
-  if (pathname === '/home') {
-    return NextResponse.rewrite(new URL(`${pathname}${search}`, req.url))
   }
 
   // -------------------------------------------------------------------------
@@ -391,7 +394,15 @@ export default async function proxy(req: NextRequest) {
   }
 
   // -------------------------------------------------------------------------
-  // 10. Apex picker (multi tenancy only) — bare apex root → /home picker
+  // 10. Apex root (multi tenancy only) — login-first, then org picker.
+  //
+  //     The bare apex (learnhouse.io) is NOT org-scoped. An unauthenticated
+  //     visitor lands on the login page; once signed in they get the /home org
+  //     picker and choose an org — which lives on its own subdomain
+  //     ({slug}.learnhouse.io) or custom domain. Org content is ONLY served on
+  //     a subdomain/custom domain, never at the apex. Mirrors the platform's
+  //     "log in, then choose an org" flow. We branch on the non-httpOnly
+  //     LH_session marker cookie (best-effort; the page itself re-verifies).
   // -------------------------------------------------------------------------
   if (
     instance.tenancy === 'multi'
@@ -400,12 +411,15 @@ export default async function proxy(req: NextRequest) {
     && !isLocalhostCheck(fullhost)
     && !(await hostIsCustomDomain(fullhost, instance))
   ) {
-    // Only show the picker on the bare apex (not on a subdomain). The
-    // resolver returns source==='default' when no subdomain or custom
-    // domain matched and we're on the apex.
     const resolved = await resolveTenant(req, instance)
     if (resolved.source === 'default') {
-      const response = NextResponse.rewrite(new URL(`/home${search}`, req.url))
+      const hasSession = !!req.cookies.get('LH_session')?.value
+      const target = hasSession ? `/home${search}` : `/auth/login${search}`
+      const requestHeaders = tenantRequestHeaders(req, resolved, instance)
+      const response = NextResponse.rewrite(new URL(target, req.url), {
+        request: { headers: requestHeaders },
+      })
+      setOrgCookies(response, resolved, instance)
       setInstanceCookies(response, instance)
       return response
     }

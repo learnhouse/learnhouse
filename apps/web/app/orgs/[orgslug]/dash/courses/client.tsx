@@ -253,11 +253,13 @@ function CoursesHome(params: CourseProps) {
     switch (importType) {
       case 'scorm':
         return (
-          <ScormCourseImport
-            orgId={orgId!}
-            orgslug={orgslug}
-            closeModal={closeImportCourseModal}
-          />
+          <FeatureGate feature="scorm" orgslug={orgslug} context="dashboard">
+            <ScormCourseImport
+              orgId={orgId!}
+              orgslug={orgslug}
+              closeModal={closeImportCourseModal}
+            />
+          </FeatureGate>
         )
       case 'learnhouse':
         return (

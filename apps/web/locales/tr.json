@@ -211,7 +211,18 @@
     "no_content_yet": "Henüz içerik yok",
     "other": "Other",
     "disabled": "Disabled",
-    "store": "Store"
+    "store": "Store",
+    "organizations": "Organizasyonlar",
+    "billing": "Faturalandırma",
+    "create_organization": "Organizasyon oluştur",
+    "copyright": "© {{year}} LearnHouse, Inc.",
+    "delete_organization_error": "Bu organizasyon silinemedi. Lütfen tekrar deneyin.",
+    "org_actions": "Organizasyon işlemleri",
+    "manage_upgrade": "Yönet / Yükselt",
+    "delete_organization": "Organizasyonu sil",
+    "delete_organization_warning": "Bu işlem {{name}} organizasyonunu ve tüm verilerini kalıcı olarak siler. Bu işlem geri alınamaz.",
+    "delete_organization_confirm_label": "Onaylamak için {{slug}} yazın",
+    "deleting": "Siliniyor…"
   },
   "banner": {
     "viewing_as_guest": "{{name}} sitesini misafir olarak görüntülüyorsunuz.",
@@ -357,7 +368,21 @@
     "verify_email_title": "E-postanızı Doğrulayın",
     "verifying_email": "E-posta adresiniz doğrulanıyor...",
     "error_generic": "Bir şeyler ters gitti. Lütfen tekrar deneyin.",
-    "sign_in": "Giriş Yap"
+    "sign_in": "Giriş Yap",
+    "terms_text": "Devam ederek LearnHouse'un",
+    "terms_of_service": "Hizmet Şartları",
+    "and": "ve",
+    "privacy_policy": "Gizlilik Politikası",
+    "image_title_forgot": "Şifrenizi sıfırlayın.",
+    "image_subtitle_forgot": "Kısa sürede hesabınıza yeniden erişmenize yardımcı olacağız.",
+    "image_title_login": "LearnHouse'a tekrar hoş geldiniz.",
+    "image_subtitle_login": "Kaldığınız yerden devam edin — kurslarınız, öğrencileriniz ve araçlarınız sizi bekliyor.",
+    "image_title_reset": "Neredeyse tamam.",
+    "image_subtitle_reset": "Hesabınızı güvende tutmak için güçlü bir şifre oluşturun.",
+    "image_title_signup": "LearnHouse ile eğitime başlayın.",
+    "image_subtitle_signup": "Hesabınızı oluşturun ve ilk kursunuzu dakikalar içinde yayınlayın.",
+    "image_title_verify": "E-postanızı doğrulayın.",
+    "image_subtitle_verify": "Hesabınızı güvene almak ve başlamak için tek bir hızlı adım."
   },
   "validation": {
     "required": "Gerekli",
@@ -1002,7 +1027,13 @@
     "retry_assignment_last": "Bu son denemeniz — iyi değerlendirin.",
     "retry_assignment_success": "Çalışmanız sıfırlandı — bir kez daha deneyin.",
     "retry_assignment_failed": "Gönderiminiz sıfırlanamadı. Lütfen tekrar deneyin.",
-    "retry_no_attempts_left": "Deneme hakkı kalmadı"
+    "retry_no_attempts_left": "Deneme hakkı kalmadı",
+    "quick_grade": {
+      "full": "Tam",
+      "half": "Yarım",
+      "zero": "Sıfır"
+    },
+    "task_feedback_placeholder": "Bu görev için not (notla birlikte kaydedilir)"
   },
   "certificate": {
     "certificate": "Sertifika",
@@ -1099,7 +1130,23 @@
     "my_courses": "Kurslarım",
     "no_purchased_courses": "Henüz satın alınmış kurs yok",
     "purchased_courses_description": "Satın aldığınız veya abone olduğunuz kurslar burada görünecek",
-    "purchases": "Satın Alımlar"
+    "purchases": "Satın Alımlar",
+    "back_home": "Organizasyonlara dön",
+    "subtitle": "Profilinizi, güvenliğinizi ve hesabınızı yönetin",
+    "section": {
+      "profile": "Profil",
+      "security": "Güvenlik",
+      "danger": "Tehlikeli bölge"
+    },
+    "delete": {
+      "success": "Hesabınız silindi.",
+      "error": "Hesabınız silinemedi. Lütfen tekrar deneyin.",
+      "title": "Hesabı sil",
+      "description": "Hesabınızı kalıcı olarak silin ve erişiminizi kaldırın. Bu işlem geri alınamaz.",
+      "warning": "Bu işlem hesabınızı ve ilişkili tüm verileri kalıcı olarak siler. Bu işlem geri alınamaz.",
+      "confirm_label": "Onaylamak için {{username}} yazın",
+      "deleting": "Siliniyor…"
+    }
   },
   "user": {
     "user_settings": "Kullanıcı Ayarları",
@@ -3628,7 +3675,8 @@
           "current_grade": "Mevcut not",
           "passing": "Geçti",
           "not_passing": "Kaldı",
-          "not_submitted": "Gönderilmedi"
+          "not_submitted": "Gönderilmedi",
+          "manually_graded": "Manuel olarak notlandırıldı"
         },
         "feedback": {
           "label": "Genel geri bildirim",
@@ -4637,9 +4685,9 @@
     "done": "Tamam, hazırım!",
     "steps": {
       "create_course": {
-        "title": "İlk kursunuzu oluşturun",
-        "description": "Öğrencileriniz için yeni bir kurs oluşturarak başlayın.",
-        "action": "Kurs Oluştur"
+        "title": "İlk kursunuz yayında",
+        "description": "Öğrencilerin kaydolabileceği gerçek bir şeyler olması için bir kurs yayınlayın.",
+        "action": "Kurs oluştur"
       },
       "add_activities": {
         "title": "Kursunuza etkinlikler ekleyin",
@@ -4682,6 +4730,31 @@
         "classroom_desc": "Kurslarınızı nasıl büyüteceğinizi ve yöneteceğinizi öğrenin",
         "university": "LearnHouse Üniversitesi",
         "university_desc": "Kılavuzlar, ipuçları ve en iyi uygulamalar"
+      },
+      "add_content": {
+        "title": "Uğruna gelmeye değer bir ders",
+        "description": "Bir video, sayfa veya quiz ekleyin — öğrencilere kaydolmaları için gerçek bir neden verin.",
+        "action": "İçerik ekle"
+      },
+      "brand_school": {
+        "title": "Öğrencilerin güvendiği bir okul",
+        "description": "Logonuzu ve renklerinizi ekleyin; böylece güvenilir, profesyonel bir okul gibi görünsün.",
+        "action": "Markala"
+      },
+      "share_grow": {
+        "title": "Okulunuzun ön kapısı",
+        "description": "Yayına geçin ve paylaşılabilir bağlantınızı alın — her öğrenciyi göndereceğiniz yer.",
+        "action": "Okulumu aç"
+      },
+      "invite_learners": {
+        "title": "İlk öğrencinizi karşılayın",
+        "description": "Katılım bağlantınızı paylaşın veya insanları davet edin — o ilk öğrenciyi kapıdan içeri alın.",
+        "action": "Öğrenci davet et"
+      },
+      "build_community": {
+        "title": "Öğrencileri geri getirmeye devam edin",
+        "description": "Bir topluluk alanı açın; böylece öğrencileriniz aktif kalsın — ve arkadaşlarını getirsin.",
+        "action": "Topluluğu aç"
       }
     },
     "welcome": {
@@ -4716,7 +4789,15 @@
       "title": "Dünyaya öğretmeye hazırsınız",
       "description": "Her şey hazır. Öğrencileriniz harika bir şey bekliyor.",
       "button": "Öğretmeye başla"
-    }
+    },
+    "box_title": "Başlangıç",
+    "up_next": "Sırada",
+    "continue_setup": "Kuruluma devam et",
+    "done_label": "Tamamlandı",
+    "video_placeholder": "Tanıtım videosu yakında",
+    "dismiss": "Daha sonra tamamlayacağım",
+    "steps_done": "adım tamamlandı",
+    "back_to_dashboard": "Panoya dön"
   },
   "boards": {
     "access": {
@@ -5294,5 +5375,258 @@
     "folder_count_one": "{{count}} klasör",
     "item_count": "{{count}} öğe",
     "item_count_one": "{{count}} öğe"
+  },
+  "plan": {
+    "free_plan_title": "Ücretsiz plan",
+    "free_plan_cta": "Tüm platformun kilidini açın",
+    "free_plan_desc": "Eğitmek, satmak ve büyümek için ihtiyacınız olan her şey.",
+    "upgrade": "Yükselt"
+  },
+  "billing": {
+    "no_billing_account": "Faturalandırma hesabı bulunamadı. Önce bir plana abone olun.",
+    "portal_error": "Faturalandırma portalı açılamadı. Lütfen tekrar deneyin.",
+    "cancel_success": "Abonelik, faturalandırma döneminin sonunda iptal edilecek.",
+    "cancel_error": "Abonelik iptal edilemedi. Lütfen tekrar deneyin.",
+    "checkout_error": "Ödeme başlatılamadı.",
+    "plan_and_usage": "Plan ve Kullanım",
+    "plan_and_usage_subtitle": "Aboneliğinizi yönetin ve kaynak kullanımınızı izleyin.",
+    "billing": "Faturalandırma",
+    "org_inactive": "Organizasyonunuz pasif durumda. Erişimi geri kazanmak için planınızı yükseltin.",
+    "upgrade": "Yükselt",
+    "on_free_plan": "Ücretsiz plandasınız",
+    "free_upsell": "Yapay zeka özellikleri, özel alan adları ve daha fazlasının kilidini açmak için yükseltin.",
+    "managed_outside": "Bu plan, Stripe faturalandırması dışında yönetiliyor.",
+    "active": "Aktif",
+    "inactive": "Pasif",
+    "current_plan": "Mevcut plan",
+    "canceling": "İptal ediliyor",
+    "billed_annually": "yıllık faturalandırılır",
+    "billed_monthly": "aylık faturalandırılır",
+    "change_plan": "Planı değiştir",
+    "canceling_ellipsis": "İptal ediliyor...",
+    "cancel_plan": "Planı iptal et",
+    "cycle": "Dönem",
+    "access_until": "Erişim bitiş tarihi",
+    "next_payment": "Sonraki ödeme",
+    "status": "Durum",
+    "usage": "Kullanım",
+    "courses": "Kurslar",
+    "members": "Üyeler",
+    "admin_seats": "Yönetici koltukları",
+    "ai_credits": "Yapay Zeka Kredileri",
+    "addons": "Eklentiler",
+    "addons_subtitle": "Aylık abonelik olarak ek yapay zeka kredisi veya üye koltuğu satın alın.",
+    "active_subscriptions": "Aktif abonelikler",
+    "credits": "kredi",
+    "seats": "koltuk",
+    "available": "Mevcut",
+    "per_pack": "paket başına",
+    "add": "Ekle",
+    "recurring_subscription": "yinelenen abonelik",
+    "what_youre_getting": "Neler elde ediyorsunuz",
+    "pack_immediate": "Ödemeden hemen sonra geçerli olur",
+    "pack_cancel_anytime": "İstediğiniz zaman iptal edin — faturalandırma döneminin sonuna kadar aktif kalır",
+    "pack_credits_reset": "Krediler her faturalandırma döneminde sıfırlanır",
+    "after_purchase": "Satın alma sonrası",
+    "unlimited": "Sınırsız",
+    "pack_redirect_notice": "Ödemeyi tamamlamak için Stripe'a yönlendirileceksiniz. Aynı türden birden fazla paket satın alabilirsiniz.",
+    "cancel": "İptal",
+    "continue_to_payment": "Ödemeye devam et",
+    "step_choose_plan": "Plan Seç",
+    "step_confirm": "Onayla",
+    "step_done": "Tamamlandı",
+    "back": "Geri",
+    "switch_plan": "Plan Değiştir",
+    "upgrade_plan": "Planı Yükselt",
+    "switch_subtitle": "Yeni bir plan seçin. Değişiklikler otomatik olarak orantılanır.",
+    "upgrade_subtitle": "Başlamak için bir plan seçin.",
+    "your_plan": "Planınız",
+    "downgrade": "Düşür",
+    "upgrade_summary": "Yükseltme Özeti",
+    "downgrade_summary": "Düşürme Özeti",
+    "current": "Mevcut",
+    "new": "Yeni",
+    "annual_total": "Yıllık toplam",
+    "monthly_total": "Aylık toplam",
+    "prorated_billing": "Orantılı faturalandırma",
+    "prorated_desc": "Mevcut planınızdaki kullanılmayan süre için alacaklandırılacak ve yeni plan için aradaki fark size yansıtılacaktır. Değişiklik hemen geçerli olur.",
+    "subscription_cancellation": "Abonelik iptali",
+    "end_of_cycle_switch": "Dönem sonu geçişi",
+    "cancel_desc": "Aboneliğiniz mevcut faturalandırma döneminin sonunda iptal edilecek. O zamana kadar tam erişiminizi koruyacaksınız.",
+    "downgrade_desc": "Faturalandırma döneminin sonuna kadar mevcut planınızı koruyacaksınız. Mevcut döneminiz sona erdiğinde yeni plan otomatik olarak geçerli olacak.",
+    "whats_included": "Neler dahil",
+    "discount_code": "İndirim kodu",
+    "enter_code": "Kodu girin",
+    "checking": "Kontrol ediliyor...",
+    "apply": "Uygula",
+    "code_applied": "Kod uygulandı",
+    "invalid_code": "Geçersiz veya süresi dolmuş kod",
+    "canceling_subscription": "Abonelik iptal ediliyor...",
+    "switching_plan": "Plan değiştiriliyor...",
+    "redirecting": "Stripe'a yönlendiriliyor...",
+    "confirm_cancellation": "İptali onayla",
+    "confirm_upgrade": "Yükseltmeyi onayla",
+    "confirm_downgrade": "Düşürmeyi onayla",
+    "secure_checkout": "Stripe destekli güvenli ödeme",
+    "back_to_plans": "Planlara dön",
+    "plan_updated": "Plan güncellendi!",
+    "subscription_canceled": "Abonelik iptal edildi",
+    "downgrade_scheduled": "Düşürme zamanlandı",
+    "canceled_desc": "Aboneliğiniz mevcut faturalandırma döneminin sonunda iptal edilecek. O zamana kadar tam erişiminizi koruyacaksınız.",
+    "back_to_plan_usage": "Plan ve Kullanım'a dön",
+    "back_to_orgs": "Organizasyonlara dön"
+  },
+  "hub_new": {
+    "useType": {
+      "personal": {
+        "label": "Bireysel",
+        "subtitle": "Kendi alanınızı öğrenin ve oluşturun.",
+        "badge": "Yeni"
+      },
+      "organization": {
+        "label": "Organizasyon",
+        "subtitle": "Bir ekibe, okula veya kitleye eğitim verin."
+      }
+    },
+    "useCases": {
+      "personal": {
+        "title": "Kendi kendine öğrenme",
+        "description": "Kursları kendiniz için düzenleyin."
+      },
+      "creators": {
+        "title": "İçerik üreticileri",
+        "description": "Kurslarınızı kitlenize satın."
+      },
+      "business": {
+        "title": "İşletme",
+        "description": "Çalışanlarınızı eğitin."
+      }
+    },
+    "personalGoals": {
+      "learnSkills": "Beceri öğren",
+      "teachOthers": "Başkalarına öğret",
+      "coding": "Kodlama",
+      "creative": "Yaratıcılık",
+      "music": "Müzik",
+      "ai": "Yapay zeka",
+      "literature": "Edebiyat",
+      "science": "Bilim",
+      "business": "İş dünyası",
+      "health": "Sağlık",
+      "photography": "Fotoğrafçılık",
+      "writing": "Yazarlık",
+      "languages": "Diller",
+      "gaming": "Oyun"
+    },
+    "personalUsage": {
+      "title": "Ne öğrenmek istersiniz?",
+      "subtitle": "Size uyan her şeyi seçin."
+    },
+    "teamSizes": {
+      "solo": "Tek kişi",
+      "2-10": "2–10",
+      "11-50": "11–50",
+      "51-200": "51–200",
+      "200plus": "200+"
+    },
+    "orgUseCases": {
+      "employeeTraining": "Çalışan eğitimi",
+      "onlineCourses": "Çevrimiçi kurslar",
+      "customerEducation": "Müşteri eğitimi",
+      "academicPrograms": "Akademik programlar",
+      "developerDocs": "Geliştirici dokümanları",
+      "communityLearning": "Topluluk öğrenmesi"
+    },
+    "orgUsage": {
+      "teamSizeTitle": "Ekibiniz ne kadar büyük?",
+      "useCaseTitle": "Bunu ne için kullanacaksınız?"
+    },
+    "createOrg": {
+      "testHint": {
+        "title": "Denemek mi istiyorsunuz?",
+        "body": "Şuraya gidin:",
+        "link": "Geliştiriciler sayfası",
+        "suffix": "ve LearnHouse'u deneyin."
+      },
+      "validation": {
+        "required": "Zorunlu",
+        "lowercase": "Yalnızca küçük harf",
+        "noSpecialChars": "Yalnızca harf, rakam ve tire",
+        "reserved": "Bu kısa ad rezerve edilmiş",
+        "maxLength": "En fazla 20 karakter"
+      },
+      "fields": {
+        "name": "Organizasyon adı",
+        "description": "Açıklama (isteğe bağlı)",
+        "slug": "Adres"
+      },
+      "placeholders": {
+        "name": "Acme Akademi",
+        "description": "Organizasyonunuz ne hakkında?"
+      },
+      "submitting": "Oluşturuluyor…",
+      "submitPaid": "Oluştur ve ödemeye devam et",
+      "submit": "Organizasyon oluştur"
+    },
+    "success": {
+      "title": "Organizasyonunuz hazır",
+      "description": "Hemen başlayın ve kurslarınızı oluşturmaya koyulun.",
+      "goToOrg": "Organizasyona git",
+      "cta": "Organizasyonlara dön"
+    },
+    "toast": {
+      "creating": "Organizasyon oluşturuluyor…",
+      "created": "Organizasyon oluşturuldu!",
+      "checkoutFailed": "Organizasyon oluşturuldu — Plan ve Kullanım'dan yükseltebilirsiniz.",
+      "failed": "Organizasyon oluşturulamadı"
+    },
+    "steps": {
+      "useType": {
+        "title": "Ne oluşturuyorsunuz?",
+        "subtitle": "Bu, alanınızı size göre uyarlamamıza yardımcı olur."
+      },
+      "usage": {
+        "title": "Bize biraz daha bilgi verin",
+        "subtitle": "Böylece size doğru kurulumu önerebiliriz."
+      },
+      "choosePlan": {
+        "title": "Bir plan seçin",
+        "subtitle": "Bunu istediğiniz zaman değiştirebilirsiniz."
+      },
+      "createOrg": {
+        "title": "Organizasyonunuza ad verin",
+        "subtitle": "Bir ad ve web adresi seçin."
+      },
+      "success": {
+        "title": "Her şey hazır"
+      }
+    },
+    "topBar": {
+      "back": "Organizasyonlar"
+    },
+    "freeLimit": "1 ücretsiz organizasyon sınırına ulaşıldı",
+    "navigation": {
+      "back": "Geri",
+      "continue": "Devam et",
+      "skip": "Atla"
+    }
+  },
+  "subscriptions": {
+    "no_subscription": "Abonelik yok",
+    "cancels_on": "{{date}} tarihinde iptal edilir",
+    "cancels": "Dönem sonunda iptal edilir",
+    "status_active": "Aktif",
+    "status_trialing": "Deneme süresinde",
+    "status_past_due": "Vadesi geçmiş",
+    "status_canceled": "İptal edildi",
+    "status_unpaid": "Ödenmemiş",
+    "renews_on": "{{date}} tarihinde yenilenir",
+    "manage_plan": "Planı yönet",
+    "portal_error": "Faturalandırma portalı açılamadı. Lütfen tekrar deneyin.",
+    "back_home": "Ana sayfaya dön",
+    "title": "Abonelikler",
+    "subtitle": "Organizasyonlarınız genelinde planlar ve faturalandırma",
+    "opening": "Açılıyor…",
+    "manage_billing": "Faturalandırmayı yönet"
   }
 }

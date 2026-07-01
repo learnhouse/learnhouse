@@ -205,7 +205,18 @@
     "no_content_yet": "Zatiaľ tu nie je žiadny obsah",
     "other": "Ostatné",
     "disabled": "Vypnuté",
-    "store": "Obchod"
+    "store": "Obchod",
+    "organizations": "Organizácie",
+    "billing": "Fakturácia",
+    "create_organization": "Vytvoriť organizáciu",
+    "copyright": "© {{year}} LearnHouse, Inc.",
+    "delete_organization_error": "Túto organizáciu sa nepodarilo odstrániť. Skúste to znova.",
+    "org_actions": "Akcie organizácie",
+    "manage_upgrade": "Spravovať / Inovovať",
+    "delete_organization": "Odstrániť organizáciu",
+    "delete_organization_warning": "Týmto sa natrvalo odstráni {{name}} a všetky jej údaje. Túto akciu nie je možné vrátiť späť.",
+    "delete_organization_confirm_label": "Na potvrdenie napíšte {{slug}}",
+    "deleting": "Odstraňuje sa…"
   },
   "banner": {
     "viewing_as_guest": "Prezeráte si {{name}} ako hosť.",
@@ -328,7 +339,21 @@
     "invite_required": "Vyžaduje sa pozvánka",
     "invite_required_desc": "Na pridanie sa do {{org}} je potrebný pozývací kód",
     "invite_code": "Pozývací kód",
-    "validate_invite": "Overiť pozvánku"
+    "validate_invite": "Overiť pozvánku",
+    "terms_text": "Pokračovaním súhlasíte s podmienkami LearnHouse",
+    "terms_of_service": "Podmienky používania",
+    "and": "a",
+    "privacy_policy": "Zásady ochrany osobných údajov",
+    "image_title_forgot": "Obnovte si heslo.",
+    "image_subtitle_forgot": "Pomôžeme vám rýchlo sa vrátiť do vášho účtu.",
+    "image_title_login": "Vitajte späť v LearnHouse.",
+    "image_subtitle_login": "Pokračujte tam, kde ste skončili — vaše kurzy, študenti a nástroje čakajú.",
+    "image_title_reset": "Už takmer hotovo.",
+    "image_subtitle_reset": "Vytvorte si silné heslo, aby bol váš účet v bezpečí.",
+    "image_title_signup": "Začnite učiť s LearnHouse.",
+    "image_subtitle_signup": "Vytvorte si účet a spustite svoj prvý kurz za pár minút.",
+    "image_title_verify": "Overte svoj e-mail.",
+    "image_subtitle_verify": "Jeden rýchly krok na zabezpečenie účtu a môžete začať."
   },
   "validation": {
     "required": "Povinné",
@@ -1235,7 +1260,13 @@
     },
     "form": {
       "expected_answer": "Očakávané"
-    }
+    },
+    "quick_grade": {
+      "full": "Plný",
+      "half": "Polovičný",
+      "zero": "Nula"
+    },
+    "task_feedback_placeholder": "Poznámka k tejto úlohe (uloží sa spolu so známkou)"
   },
   "certificate": {
     "certificate": "Certifikát",
@@ -1332,7 +1363,23 @@
     "my_courses": "Moje kurzy",
     "purchases": "Nákupy",
     "no_purchased_courses": "Zatiaľ žiadne zakúpené kurzy",
-    "purchased_courses_description": "Kurzy, ktoré ste zakúpili alebo predplatili, sa zobrazia tu"
+    "purchased_courses_description": "Kurzy, ktoré ste zakúpili alebo predplatili, sa zobrazia tu",
+    "back_home": "Späť na organizácie",
+    "subtitle": "Spravujte svoj profil, zabezpečenie a účet",
+    "section": {
+      "profile": "Profil",
+      "security": "Zabezpečenie",
+      "danger": "Nebezpečná zóna"
+    },
+    "delete": {
+      "success": "Váš účet bol odstránený.",
+      "error": "Účet sa nepodarilo odstrániť. Skúste to znova.",
+      "title": "Odstrániť účet",
+      "description": "Trvalo odstráňte svoj účet a zrušte svoj prístup. Túto akciu nie je možné vrátiť späť.",
+      "warning": "Týmto sa natrvalo odstráni váš účet a všetky súvisiace údaje. Túto akciu nie je možné vrátiť späť.",
+      "confirm_label": "Na potvrdenie napíšte {{username}}",
+      "deleting": "Odstraňuje sa…"
+    }
   },
   "user": {
     "user_settings": "Nastavenia používateľa",
@@ -3832,7 +3879,8 @@
           "current_grade": "Aktuálna známka",
           "passing": "Vyhovujúce",
           "not_passing": "Nevyhovujúce",
-          "not_submitted": "Neodovzdané"
+          "not_submitted": "Neodovzdané",
+          "manually_graded": "Ohodnotené manuálne"
         },
         "feedback": {
           "label": "Celková spätná väzba",
@@ -4899,8 +4947,8 @@
     "done": "Hotovo, som pripravený!",
     "steps": {
       "create_course": {
-        "title": "Vytvorte svoj prvý kurz",
-        "description": "Začnite vytvorením nového kurzu pre vašich študentov.",
+        "title": "Váš prvý kurz je spustený",
+        "description": "Zverejnite kurz, aby sa študenti mali do čoho zapísať.",
         "action": "Vytvoriť kurz"
       },
       "add_activities": {
@@ -4944,6 +4992,31 @@
         "classroom_desc": "Naučte sa, ako rozvíjať a spravovať kurzy",
         "university": "LearnHouse University",
         "university_desc": "Príručky, tipy a osvedčené postupy"
+      },
+      "add_content": {
+        "title": "Lekcia, kvôli ktorej sa oplatí prísť",
+        "description": "Pridajte video, stránku alebo kvíz — dajte študentom skutočný dôvod sa zapísať.",
+        "action": "Pridať obsah"
+      },
+      "brand_school": {
+        "title": "Škola, ktorej študenti dôverujú",
+        "description": "Pridajte svoje logo a farby, aby pôsobila ako dôveryhodná, profesionálna škola.",
+        "action": "Pridať značku"
+      },
+      "share_grow": {
+        "title": "Vstupné dvere vašej školy",
+        "description": "Spustite ju naživo a získajte zdieľateľný odkaz — miesto, kam pošlete každého študenta.",
+        "action": "Otvoriť moju školu"
+      },
+      "invite_learners": {
+        "title": "Privítajte svojho prvého študenta",
+        "description": "Zdieľajte odkaz na pripojenie alebo pozvite ľudí — dostaňte prvého študenta dnu.",
+        "action": "Pozvať študentov"
+      },
+      "build_community": {
+        "title": "Udržte študentov, aby sa vracali",
+        "description": "Otvorte komunitný priestor, aby vaši študenti zostali aktívni — a priviedli aj svojich priateľov.",
+        "action": "Otvoriť komunitu"
       }
     },
     "welcome": {
@@ -4978,7 +5051,15 @@
       "title": "Ste pripravení učiť svet",
       "description": "Všetko je nastavené. Vaši študenti čakajú na niečo skvelé.",
       "button": "Začať učiť"
-    }
+    },
+    "box_title": "Úvodné nastavenie",
+    "up_next": "Nasleduje",
+    "continue_setup": "Pokračovať v nastavení",
+    "done_label": "Hotovo",
+    "video_placeholder": "Inštruktážne video čoskoro pribudne",
+    "dismiss": "Dokončím neskôr",
+    "steps_done": "krokov hotových",
+    "back_to_dashboard": "Späť na nástenku"
   },
   "upgrade_modal": {
     "title": "Odomknite svoj plný potenciál",
@@ -5248,5 +5329,258 @@
       "unlink_success": "User group unlinked",
       "unlink_error": "Failed to unlink user group"
     }
+  },
+  "plan": {
+    "free_plan_title": "Bezplatný plán",
+    "free_plan_cta": "Odomknite celú platformu",
+    "free_plan_desc": "Všetko, čo potrebujete na výučbu, predaj a rast.",
+    "upgrade": "Inovovať"
+  },
+  "billing": {
+    "no_billing_account": "Nenašiel sa žiadny fakturačný účet. Najprv si predplaťte plán.",
+    "portal_error": "Fakturačný portál sa nepodarilo otvoriť. Skúste to znova.",
+    "cancel_success": "Predplatné bude zrušené na konci fakturačného obdobia.",
+    "cancel_error": "Predplatné sa nepodarilo zrušiť. Skúste to znova.",
+    "checkout_error": "Nepodarilo sa spustiť pokladňu.",
+    "plan_and_usage": "Plán a využitie",
+    "plan_and_usage_subtitle": "Spravujte svoje predplatné a sledujte využitie zdrojov.",
+    "billing": "Fakturácia",
+    "org_inactive": "Vaša organizácia je neaktívna. Inovujte plán a obnovte prístup.",
+    "upgrade": "Inovovať",
+    "on_free_plan": "Máte bezplatný plán",
+    "free_upsell": "Inovujte a odomknite funkcie AI, vlastné domény a ďalšie.",
+    "managed_outside": "Tento plán sa spravuje mimo fakturácie cez Stripe.",
+    "active": "Aktívny",
+    "inactive": "Neaktívny",
+    "current_plan": "Aktuálny plán",
+    "canceling": "Ruší sa",
+    "billed_annually": "fakturované ročne",
+    "billed_monthly": "fakturované mesačne",
+    "change_plan": "Zmeniť plán",
+    "canceling_ellipsis": "Ruší sa...",
+    "cancel_plan": "Zrušiť plán",
+    "cycle": "Cyklus",
+    "access_until": "Prístup do",
+    "next_payment": "Ďalšia platba",
+    "status": "Stav",
+    "usage": "Využitie",
+    "courses": "Kurzy",
+    "members": "Členovia",
+    "admin_seats": "Miesta správcov",
+    "ai_credits": "AI kredity",
+    "addons": "Doplnky",
+    "addons_subtitle": "Dokúpte si ďalšie AI kredity alebo členské miesta ako mesačné predplatné.",
+    "active_subscriptions": "Aktívne predplatné",
+    "credits": "kredity",
+    "seats": "miesta",
+    "available": "Dostupné",
+    "per_pack": "za balík",
+    "add": "Pridať",
+    "recurring_subscription": "opakované predplatné",
+    "what_youre_getting": "Čo získate",
+    "pack_immediate": "Platí ihneď po zaplatení",
+    "pack_cancel_anytime": "Zrušte kedykoľvek — zostáva aktívne do konca fakturačného obdobia",
+    "pack_credits_reset": "Kredity sa obnovujú každý fakturačný cyklus",
+    "after_purchase": "Po nákupe",
+    "unlimited": "Neobmedzené",
+    "pack_redirect_notice": "Budete presmerovaní na Stripe na dokončenie platby. Môžete si kúpiť viacero balíkov rovnakého typu.",
+    "cancel": "Zrušiť",
+    "continue_to_payment": "Pokračovať k platbe",
+    "step_choose_plan": "Vyberte plán",
+    "step_confirm": "Potvrdiť",
+    "step_done": "Hotovo",
+    "back": "Späť",
+    "switch_plan": "Zmeniť plán",
+    "upgrade_plan": "Inovovať plán",
+    "switch_subtitle": "Vyberte si nový plán. Zmeny sa automaticky pomerne rozpočítajú.",
+    "upgrade_subtitle": "Vyberte si plán a začnite.",
+    "your_plan": "Váš plán",
+    "downgrade": "Znížiť plán",
+    "upgrade_summary": "Súhrn inovácie",
+    "downgrade_summary": "Súhrn zníženia plánu",
+    "current": "Aktuálny",
+    "new": "Nový",
+    "annual_total": "Ročná suma",
+    "monthly_total": "Mesačná suma",
+    "prorated_billing": "Pomerná fakturácia",
+    "prorated_desc": "Za nevyužitý čas na aktuálnom pláne vám pripíšeme kredit a doúčtujeme rozdiel za nový plán. Zmena nadobudne účinnosť ihneď.",
+    "subscription_cancellation": "Zrušenie predplatného",
+    "end_of_cycle_switch": "Zmena na konci cyklu",
+    "cancel_desc": "Vaše predplatné bude zrušené na konci aktuálneho fakturačného obdobia. Dovtedy si zachováte plný prístup.",
+    "downgrade_desc": "Aktuálny plán si zachováte do konca fakturačného obdobia. Nový plán nadobudne účinnosť automaticky po skončení aktuálneho cyklu.",
+    "whats_included": "Čo je zahrnuté",
+    "discount_code": "Zľavový kód",
+    "enter_code": "Zadajte kód",
+    "checking": "Overuje sa...",
+    "apply": "Použiť",
+    "code_applied": "Kód použitý",
+    "invalid_code": "Neplatný alebo expirovaný kód",
+    "canceling_subscription": "Ruší sa predplatné...",
+    "switching_plan": "Mení sa plán...",
+    "redirecting": "Presmerovanie na Stripe...",
+    "confirm_cancellation": "Potvrdiť zrušenie",
+    "confirm_upgrade": "Potvrdiť inováciu",
+    "confirm_downgrade": "Potvrdiť zníženie plánu",
+    "secure_checkout": "Bezpečná pokladňa poháňaná službou Stripe",
+    "back_to_plans": "Späť na plány",
+    "plan_updated": "Plán aktualizovaný!",
+    "subscription_canceled": "Predplatné zrušené",
+    "downgrade_scheduled": "Zníženie plánu naplánované",
+    "canceled_desc": "Vaše predplatné bude zrušené na konci aktuálneho fakturačného obdobia. Dovtedy si zachováte plný prístup.",
+    "back_to_plan_usage": "Späť na Plán a využitie",
+    "back_to_orgs": "Späť na organizácie"
+  },
+  "hub_new": {
+    "useType": {
+      "personal": {
+        "label": "Osobné",
+        "subtitle": "Učte sa a budujte svoj vlastný priestor.",
+        "badge": "Nové"
+      },
+      "organization": {
+        "label": "Organizácia",
+        "subtitle": "Učte tím, školu alebo publikum."
+      }
+    },
+    "useCases": {
+      "personal": {
+        "title": "Samoštúdium",
+        "description": "Organizujte kurzy pre seba."
+      },
+      "creators": {
+        "title": "Tvorcovia",
+        "description": "Predávajte kurzy svojmu publiku."
+      },
+      "business": {
+        "title": "Firmy",
+        "description": "Školte svojich zamestnancov."
+      }
+    },
+    "personalGoals": {
+      "learnSkills": "Učiť sa zručnosti",
+      "teachOthers": "Učiť ostatných",
+      "coding": "Programovanie",
+      "creative": "Kreativita",
+      "music": "Hudba",
+      "ai": "AI",
+      "literature": "Literatúra",
+      "science": "Veda",
+      "business": "Biznis",
+      "health": "Zdravie",
+      "photography": "Fotografia",
+      "writing": "Písanie",
+      "languages": "Jazyky",
+      "gaming": "Hranie hier"
+    },
+    "personalUsage": {
+      "title": "Čo by ste sa chceli naučiť?",
+      "subtitle": "Vyberte všetko, čo sa hodí."
+    },
+    "teamSizes": {
+      "solo": "Sám",
+      "2-10": "2–10",
+      "11-50": "11–50",
+      "51-200": "51–200",
+      "200plus": "200+"
+    },
+    "orgUseCases": {
+      "employeeTraining": "Školenie zamestnancov",
+      "onlineCourses": "Online kurzy",
+      "customerEducation": "Vzdelávanie zákazníkov",
+      "academicPrograms": "Akademické programy",
+      "developerDocs": "Dokumentácia pre vývojárov",
+      "communityLearning": "Komunitné vzdelávanie"
+    },
+    "orgUsage": {
+      "teamSizeTitle": "Aký veľký je váš tím?",
+      "useCaseTitle": "Na čo to budete používať?"
+    },
+    "createOrg": {
+      "testHint": {
+        "title": "Chcete to len vyskúšať?",
+        "body": "Prejdite na",
+        "link": "stránku pre vývojárov",
+        "suffix": "a vyskúšajte LearnHouse."
+      },
+      "validation": {
+        "required": "Povinné",
+        "lowercase": "Len malé písmená",
+        "noSpecialChars": "Len písmená, čísla a pomlčky",
+        "reserved": "Tento slug je rezervovaný",
+        "maxLength": "Maximálne 20 znakov"
+      },
+      "fields": {
+        "name": "Názov organizácie",
+        "description": "Popis (voliteľné)",
+        "slug": "Adresa"
+      },
+      "placeholders": {
+        "name": "Acme Academy",
+        "description": "O čom je vaša organizácia?"
+      },
+      "submitting": "Vytvára sa…",
+      "submitPaid": "Vytvoriť a pokračovať k platbe",
+      "submit": "Vytvoriť organizáciu"
+    },
+    "success": {
+      "title": "Vaša organizácia je pripravená",
+      "description": "Pustite sa do toho a začnite budovať svoje kurzy.",
+      "goToOrg": "Prejsť na organizáciu",
+      "cta": "Späť na organizácie"
+    },
+    "toast": {
+      "creating": "Vytvára sa organizácia…",
+      "created": "Organizácia vytvorená!",
+      "checkoutFailed": "Organizácia vytvorená — inováciu môžete vykonať v sekcii Plán a využitie.",
+      "failed": "Organizáciu sa nepodarilo vytvoriť"
+    },
+    "steps": {
+      "useType": {
+        "title": "Čo vytvárate?",
+        "subtitle": "Pomôže nám to prispôsobiť váš priestor."
+      },
+      "usage": {
+        "title": "Povedzte nám o niečo viac",
+        "subtitle": "Aby sme vám mohli odporučiť správne nastavenie."
+      },
+      "choosePlan": {
+        "title": "Vyberte si plán",
+        "subtitle": "Toto môžete kedykoľvek zmeniť."
+      },
+      "createOrg": {
+        "title": "Pomenujte svoju organizáciu",
+        "subtitle": "Vyberte si názov a webovú adresu."
+      },
+      "success": {
+        "title": "Hotovo"
+      }
+    },
+    "topBar": {
+      "back": "Organizácie"
+    },
+    "freeLimit": "Dosiahnutý limit 1 bezplatnej organizácie",
+    "navigation": {
+      "back": "Späť",
+      "continue": "Pokračovať",
+      "skip": "Preskočiť"
+    }
+  },
+  "subscriptions": {
+    "no_subscription": "Žiadne predplatné",
+    "cancels_on": "Ruší sa dňa {{date}}",
+    "cancels": "Ruší sa na konci obdobia",
+    "status_active": "Aktívne",
+    "status_trialing": "Skúšobná verzia",
+    "status_past_due": "Po splatnosti",
+    "status_canceled": "Zrušené",
+    "status_unpaid": "Nezaplatené",
+    "renews_on": "Obnovuje sa {{date}}",
+    "manage_plan": "Spravovať plán",
+    "portal_error": "Fakturačný portál sa nepodarilo otvoriť. Skúste to znova.",
+    "back_home": "Späť na domovskú stránku",
+    "title": "Predplatné",
+    "subtitle": "Plány a fakturácia naprieč vašimi organizáciami",
+    "opening": "Otvára sa…",
+    "manage_billing": "Spravovať fakturáciu"
   }
 }

@@ -57,8 +57,17 @@ export function OrgProvider({
     orgslug,
   }), [org, isUserPartOfTheOrg, orgslug])
 
-  if (orgError) return <ErrorUI message='An error occurred while fetching data' />
-  if (!isLoading && org && !isOrgActive) return <ErrorUI message='This organization is no longer active' />
+  // Pass the real SWR error so it's classified into a meaningful message
+  // (offline / server / not-found …) with the right recovery actions, instead
+  // of a flat "An error occurred while fetching data".
+  if (orgError) return <ErrorUI error={orgError} />
+  if (!isLoading && org && !isOrgActive) return (
+    <ErrorUI
+      message='This organization is no longer active'
+      submessage="The workspace has been deactivated. If you believe this is a mistake, contact the organization's owner or our support team."
+      resolutions={['home', 'signout', 'contact_support']}
+    />
+  )
 
   return <OrgContext.Provider value={contextValue}>{children}</OrgContext.Provider>
 }

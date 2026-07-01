@@ -1,22 +1,15 @@
 'use client' // Error components must be Client Components
 
-import { useEffect } from 'react'
+import BoundaryError from '@components/Objects/StyledElements/Error/BoundaryError'
 
 export default function Error({
   error,
   reset,
 }: {
-  error: Error
+  error: Error & { digest?: string }
   reset: () => void
 }) {
-  useEffect(() => {
-    // Log the error to an error reporting service
-    console.error(error)
-  }, [error])
-
-  return (
-    <div>
-      
-    </div>
-  )
+  // Previously rendered an empty <div> — a silent blank page. Now shows the
+  // meaningful ErrorUI with recovery actions and captures to Sentry.
+  return <BoundaryError error={error} reset={reset} />
 }

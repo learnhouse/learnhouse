@@ -11,6 +11,7 @@ import {
 } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { useLHAnalytics, AnalyticsEvent } from '@services/analytics'
+import { meaningfulMessage } from '@lib/errors/classify'
 
 interface AccountPurchasesProps {
   orgId: number
@@ -133,8 +134,8 @@ function AccountPurchases({ orgId, orgslug }: AccountPurchasesProps) {
       } else {
         toast.error('Could not open billing portal. Please try again.')
       }
-    } catch {
-      toast.error('An error occurred. Please try again.')
+    } catch (err) {
+      toast.error(meaningfulMessage(err))
     } finally {
       setBillingLoading(false)
     }

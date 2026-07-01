@@ -1,14 +1,15 @@
 import { getOrganizationContextInfo } from '@services/organizations/orgs'
-import { getOrgSlug } from '@services/org/orgResolution'
+import { getAuthOrgSlug } from '@services/org/orgResolution'
 import LoginClient from './login'
 import { Metadata } from 'next'
 import OrgNotFound from '@components/Objects/StyledElements/Error/OrgNotFound'
 
 export async function generateMetadata(): Promise<Metadata> {
-  const orgslug = await getOrgSlug()
+  const orgslug = await getAuthOrgSlug()
 
   if (!orgslug) {
-    return { title: 'Login — LearnHouse' }
+    // Apex (org-less) login.
+    return { title: 'Login — LearnHouse', robots: { index: false, follow: false } }
   }
 
   let org: any = null
@@ -28,24 +29,23 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 const Login = async () => {
-  const orgslug = await getOrgSlug()
+  const orgslug = await getAuthOrgSlug()
 
-  if (!orgslug) {
-    return <OrgNotFound />
-  }
-
+  // No org slug → bare apex (learn.io) → generic, org-less login.
   let org: any = null
-  try {
-    org = await getOrganizationContextInfo(orgslug, {
-      revalidate: 60,
-      tags: ['organizations'],
-    })
-  } catch {
-    return <OrgNotFound />
-  }
-
-  if (!org) {
-    return <OrgNotFound />
+  if (orgslug) {
+    try {
+      org = await getOrganizationContextInfo(orgslug, {
+        revalidate: 60,
+        tags: ['organizations'],
+      })
+    } catch {
+      org = null
+    }
+    // A subdomain (or single-tenancy) slug that can't be resolved is a real error.
+    if (!org) {
+      return <OrgNotFound />
+    }
   }
 
   return (

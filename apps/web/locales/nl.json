@@ -205,7 +205,18 @@
     "no_content_yet": "Nog geen inhoud",
     "other": "Other",
     "disabled": "Disabled",
-    "store": "Store"
+    "store": "Store",
+    "organizations": "Organisaties",
+    "billing": "Facturering",
+    "create_organization": "Organisatie aanmaken",
+    "copyright": "© {{year}} LearnHouse, Inc.",
+    "delete_organization_error": "Kan deze organisatie niet verwijderen. Probeer het opnieuw.",
+    "org_actions": "Organisatieacties",
+    "manage_upgrade": "Beheren / Upgraden",
+    "delete_organization": "Organisatie verwijderen",
+    "delete_organization_warning": "Hiermee worden {{name}} en alle bijbehorende gegevens permanent verwijderd. Deze actie kan niet ongedaan worden gemaakt.",
+    "delete_organization_confirm_label": "Typ {{slug}} om te bevestigen",
+    "deleting": "Bezig met verwijderen…"
   },
   "banner": {
     "viewing_as_guest": "Je bekijkt {{name}} als gast.",
@@ -328,7 +339,21 @@
     },
     "sso_error": "SSO-authenticatie mislukt. Probeer het opnieuw.",
     "error_generic": "Er is iets misgegaan. Probeer het opnieuw.",
-    "sign_in": "Inloggen"
+    "sign_in": "Inloggen",
+    "terms_text": "Door door te gaan, ga je akkoord met LearnHouse's",
+    "terms_of_service": "Servicevoorwaarden",
+    "and": "en",
+    "privacy_policy": "Privacybeleid",
+    "image_title_forgot": "Stel je wachtwoord opnieuw in.",
+    "image_subtitle_forgot": "We helpen je in een mum van tijd weer in je account.",
+    "image_title_login": "Welkom terug bij LearnHouse.",
+    "image_subtitle_login": "Ga verder waar je gebleven was — je cursussen, studenten en tools staan klaar.",
+    "image_title_reset": "Bijna klaar.",
+    "image_subtitle_reset": "Maak een sterk wachtwoord om je account veilig te houden.",
+    "image_title_signup": "Begin met lesgeven met LearnHouse.",
+    "image_subtitle_signup": "Maak je account aan en lanceer je eerste cursus in enkele minuten.",
+    "image_title_verify": "Verifieer je e-mailadres.",
+    "image_subtitle_verify": "Eén snelle stap om je account te beveiligen en aan de slag te gaan."
   },
   "validation": {
     "required": "Verplicht",
@@ -962,7 +987,13 @@
     "quiz": {
       "correct_answer": "Juist",
       "incorrect_answer": "Fout"
-    }
+    },
+    "quick_grade": {
+      "full": "Volledig",
+      "half": "Half",
+      "zero": "Nul"
+    },
+    "task_feedback_placeholder": "Notitie voor deze taak (opgeslagen met cijfer)"
   },
   "certificate": {
     "certificate": "Certificaat",
@@ -1059,7 +1090,23 @@
     "my_courses": "Mijn cursussen",
     "no_purchased_courses": "Nog geen cursussen gekocht",
     "purchased_courses_description": "Cursussen die je hebt gekocht of waarop je bent geabonneerd verschijnen hier",
-    "purchases": "Aankopen"
+    "purchases": "Aankopen",
+    "back_home": "Terug naar organisaties",
+    "subtitle": "Beheer je profiel, beveiliging en account",
+    "section": {
+      "profile": "Profiel",
+      "security": "Beveiliging",
+      "danger": "Gevarenzone"
+    },
+    "delete": {
+      "success": "Je account is verwijderd.",
+      "error": "Kan je account niet verwijderen. Probeer het opnieuw.",
+      "title": "Account verwijderen",
+      "description": "Verwijder je account permanent en trek je toegang in. Dit kan niet ongedaan worden gemaakt.",
+      "warning": "Hiermee worden je account en alle bijbehorende gegevens permanent verwijderd. Deze actie kan niet ongedaan worden gemaakt.",
+      "confirm_label": "Typ {{username}} om te bevestigen",
+      "deleting": "Bezig met verwijderen…"
+    }
   },
   "user": {
     "user_settings": "Gebruikersinstellingen",
@@ -3587,7 +3634,8 @@
           "current_grade": "Huidig cijfer",
           "passing": "Geslaagd",
           "not_passing": "Gezakt",
-          "not_submitted": "Niet ingediend"
+          "not_submitted": "Niet ingediend",
+          "manually_graded": "Handmatig beoordeeld"
         },
         "feedback": {
           "label": "Algemene feedback",
@@ -4587,9 +4635,9 @@
     "done": "Klaar, ik ben er helemaal klaar voor!",
     "steps": {
       "create_course": {
-        "title": "Maak je eerste cursus",
-        "description": "Begin met het maken van een nieuwe cursus voor je leerlingen.",
-        "action": "Cursus aanmaken"
+        "title": "Je eerste cursus staat live",
+        "description": "Publiceer een cursus zodat er iets echts is waarvoor cursisten zich kunnen inschrijven.",
+        "action": "Een cursus aanmaken"
       },
       "add_activities": {
         "title": "Voeg activiteiten toe aan je cursus",
@@ -4632,6 +4680,31 @@
         "classroom_desc": "Leer hoe je je cursussen kunt laten groeien en beheren",
         "university": "LearnHouse Universiteit",
         "university_desc": "Handleidingen, tips en best practices"
+      },
+      "add_content": {
+        "title": "Een les die de moeite waard is",
+        "description": "Voeg een video, pagina of quiz toe — geef cursisten een echte reden om zich in te schrijven.",
+        "action": "Inhoud toevoegen"
+      },
+      "brand_school": {
+        "title": "Een school die cursisten vertrouwen",
+        "description": "Voeg je logo en kleuren toe zodat het eruitziet als een geloofwaardige, professionele school.",
+        "action": "Geef het je merk"
+      },
+      "share_grow": {
+        "title": "De voordeur van je school",
+        "description": "Ga live en pak je deelbare link — de plek waar je elke cursist naartoe stuurt.",
+        "action": "Open mijn school"
+      },
+      "invite_learners": {
+        "title": "Verwelkom je eerste cursist",
+        "description": "Deel je deelnamelink of nodig mensen uit — krijg die eerste cursist binnen.",
+        "action": "Cursisten uitnodigen"
+      },
+      "build_community": {
+        "title": "Laat cursisten terugkomen",
+        "description": "Open een communityruimte zodat je cursisten actief blijven — en hun vrienden meebrengen.",
+        "action": "Community openen"
       }
     },
     "welcome": {
@@ -4666,7 +4739,15 @@
       "title": "Je bent klaar om de wereld te onderwijzen",
       "description": "Alles is ingesteld. Je leerlingen wachten op iets geweldigs.",
       "button": "Begin met lesgeven"
-    }
+    },
+    "box_title": "Onboarding",
+    "up_next": "Hierna",
+    "continue_setup": "Doorgaan met instellen",
+    "done_label": "Klaar",
+    "video_placeholder": "Instructievideo komt binnenkort",
+    "dismiss": "Ik maak het later af",
+    "steps_done": "stappen voltooid",
+    "back_to_dashboard": "Terug naar dashboard"
   },
   "boards": {
     "access": {
@@ -5234,5 +5315,258 @@
       "unlink_success": "User group unlinked",
       "unlink_error": "Failed to unlink user group"
     }
+  },
+  "plan": {
+    "free_plan_title": "Gratis abonnement",
+    "free_plan_cta": "Ontgrendel het volledige platform",
+    "free_plan_desc": "Alles wat je nodig hebt om les te geven, te verkopen en te groeien.",
+    "upgrade": "Upgraden"
+  },
+  "billing": {
+    "no_billing_account": "Geen factureringsaccount gevonden. Neem eerst een abonnement.",
+    "portal_error": "Kan het factureringsportaal niet openen. Probeer het opnieuw.",
+    "cancel_success": "Het abonnement wordt aan het einde van de factureringsperiode opgezegd.",
+    "cancel_error": "Opzeggen van het abonnement mislukt. Probeer het opnieuw.",
+    "checkout_error": "Starten van het afrekenen is mislukt.",
+    "plan_and_usage": "Abonnement & gebruik",
+    "plan_and_usage_subtitle": "Beheer je abonnement en volg je resourcegebruik.",
+    "billing": "Facturering",
+    "org_inactive": "Je organisatie is inactief. Upgrade je abonnement om de toegang te herstellen.",
+    "upgrade": "Upgraden",
+    "on_free_plan": "Je hebt het gratis abonnement",
+    "free_upsell": "Upgrade om AI-functies, aangepaste domeinen en meer te ontgrendelen.",
+    "managed_outside": "Dit abonnement wordt buiten de Stripe-facturering beheerd.",
+    "active": "Actief",
+    "inactive": "Inactief",
+    "current_plan": "Huidig abonnement",
+    "canceling": "Wordt opgezegd",
+    "billed_annually": "jaarlijks gefactureerd",
+    "billed_monthly": "maandelijks gefactureerd",
+    "change_plan": "Abonnement wijzigen",
+    "canceling_ellipsis": "Bezig met opzeggen...",
+    "cancel_plan": "Abonnement opzeggen",
+    "cycle": "Cyclus",
+    "access_until": "Toegang tot",
+    "next_payment": "Volgende betaling",
+    "status": "Status",
+    "usage": "Gebruik",
+    "courses": "Cursussen",
+    "members": "Leden",
+    "admin_seats": "Beheerderslicenties",
+    "ai_credits": "AI-credits",
+    "addons": "Add-ons",
+    "addons_subtitle": "Koop extra AI-credits of ledenlicenties als maandelijkse abonnementen.",
+    "active_subscriptions": "Actieve abonnementen",
+    "credits": "credits",
+    "seats": "licenties",
+    "available": "Beschikbaar",
+    "per_pack": "per pakket",
+    "add": "Toevoegen",
+    "recurring_subscription": "doorlopend abonnement",
+    "what_youre_getting": "Wat je krijgt",
+    "pack_immediate": "Gaat direct na betaling in",
+    "pack_cancel_anytime": "Altijd opzegbaar — blijft actief tot het einde van de factureringsperiode",
+    "pack_credits_reset": "Credits worden elke factureringscyclus opnieuw ingesteld",
+    "after_purchase": "Na aankoop",
+    "unlimited": "Onbeperkt",
+    "pack_redirect_notice": "Je wordt doorgestuurd naar Stripe om de betaling af te ronden. Je kunt meerdere pakketten van hetzelfde type kopen.",
+    "cancel": "Annuleren",
+    "continue_to_payment": "Doorgaan naar betaling",
+    "step_choose_plan": "Abonnement kiezen",
+    "step_confirm": "Bevestigen",
+    "step_done": "Klaar",
+    "back": "Terug",
+    "switch_plan": "Abonnement wisselen",
+    "upgrade_plan": "Abonnement upgraden",
+    "switch_subtitle": "Kies een nieuw abonnement. Wijzigingen worden automatisch verrekend.",
+    "upgrade_subtitle": "Kies een abonnement om te beginnen.",
+    "your_plan": "Jouw abonnement",
+    "downgrade": "Downgraden",
+    "upgrade_summary": "Upgrade-overzicht",
+    "downgrade_summary": "Downgrade-overzicht",
+    "current": "Huidig",
+    "new": "Nieuw",
+    "annual_total": "Jaarlijks totaal",
+    "monthly_total": "Maandelijks totaal",
+    "prorated_billing": "Verrekende facturering",
+    "prorated_desc": "Je krijgt krediet voor de ongebruikte tijd op je huidige abonnement en betaalt het verschil voor het nieuwe abonnement. De wijziging gaat direct in.",
+    "subscription_cancellation": "Abonnement opzeggen",
+    "end_of_cycle_switch": "Wisselen aan einde cyclus",
+    "cancel_desc": "Je abonnement wordt aan het einde van de huidige factureringsperiode opgezegd. Tot dan houd je volledige toegang.",
+    "downgrade_desc": "Je houdt je huidige abonnement tot het einde van de factureringsperiode. Het nieuwe abonnement gaat automatisch in wanneer je huidige cyclus afloopt.",
+    "whats_included": "Wat is inbegrepen",
+    "discount_code": "Kortingscode",
+    "enter_code": "Voer code in",
+    "checking": "Bezig met controleren...",
+    "apply": "Toepassen",
+    "code_applied": "Code toegepast",
+    "invalid_code": "Ongeldige of verlopen code",
+    "canceling_subscription": "Bezig met opzeggen van abonnement...",
+    "switching_plan": "Bezig met wisselen van abonnement...",
+    "redirecting": "Bezig met doorsturen naar Stripe...",
+    "confirm_cancellation": "Opzegging bevestigen",
+    "confirm_upgrade": "Upgrade bevestigen",
+    "confirm_downgrade": "Downgrade bevestigen",
+    "secure_checkout": "Veilig afrekenen mogelijk gemaakt door Stripe",
+    "back_to_plans": "Terug naar abonnementen",
+    "plan_updated": "Abonnement bijgewerkt!",
+    "subscription_canceled": "Abonnement opgezegd",
+    "downgrade_scheduled": "Downgrade gepland",
+    "canceled_desc": "Je abonnement wordt aan het einde van je huidige factureringsperiode opgezegd. Tot dan houd je volledige toegang.",
+    "back_to_plan_usage": "Terug naar Abonnement & gebruik",
+    "back_to_orgs": "Terug naar organisaties"
+  },
+  "hub_new": {
+    "useType": {
+      "personal": {
+        "label": "Persoonlijk",
+        "subtitle": "Leer en bouw je eigen ruimte.",
+        "badge": "Nieuw"
+      },
+      "organization": {
+        "label": "Organisatie",
+        "subtitle": "Geef les aan een team, school of publiek."
+      }
+    },
+    "useCases": {
+      "personal": {
+        "title": "Zelfstudie",
+        "description": "Organiseer cursussen voor jezelf."
+      },
+      "creators": {
+        "title": "Creators",
+        "description": "Verkoop cursussen aan je publiek."
+      },
+      "business": {
+        "title": "Bedrijf",
+        "description": "Train je medewerkers."
+      }
+    },
+    "personalGoals": {
+      "learnSkills": "Vaardigheden leren",
+      "teachOthers": "Anderen lesgeven",
+      "coding": "Programmeren",
+      "creative": "Creatief",
+      "music": "Muziek",
+      "ai": "AI",
+      "literature": "Literatuur",
+      "science": "Wetenschap",
+      "business": "Zakelijk",
+      "health": "Gezondheid",
+      "photography": "Fotografie",
+      "writing": "Schrijven",
+      "languages": "Talen",
+      "gaming": "Gaming"
+    },
+    "personalUsage": {
+      "title": "Wat zou je graag willen leren?",
+      "subtitle": "Kies alles wat van toepassing is."
+    },
+    "teamSizes": {
+      "solo": "Solo",
+      "2-10": "2–10",
+      "11-50": "11–50",
+      "51-200": "51–200",
+      "200plus": "200+"
+    },
+    "orgUseCases": {
+      "employeeTraining": "Medewerkerstraining",
+      "onlineCourses": "Online cursussen",
+      "customerEducation": "Klanteducatie",
+      "academicPrograms": "Academische programma's",
+      "developerDocs": "Ontwikkelaarsdocumentatie",
+      "communityLearning": "Community-leren"
+    },
+    "orgUsage": {
+      "teamSizeTitle": "Hoe groot is je team?",
+      "useCaseTitle": "Waarvoor ga je het gebruiken?"
+    },
+    "createOrg": {
+      "testHint": {
+        "title": "Wil je testen?",
+        "body": "Ga naar de",
+        "link": "Ontwikkelaarspagina",
+        "suffix": "om LearnHouse in plaats daarvan uit te proberen."
+      },
+      "validation": {
+        "required": "Verplicht",
+        "lowercase": "Alleen kleine letters",
+        "noSpecialChars": "Alleen letters, cijfers en streepjes",
+        "reserved": "Deze slug is gereserveerd",
+        "maxLength": "Maximaal 20 tekens"
+      },
+      "fields": {
+        "name": "Naam organisatie",
+        "description": "Beschrijving (optioneel)",
+        "slug": "Adres"
+      },
+      "placeholders": {
+        "name": "Acme Academy",
+        "description": "Waar gaat je organisatie over?"
+      },
+      "submitting": "Bezig met aanmaken…",
+      "submitPaid": "Aanmaken & doorgaan naar betaling",
+      "submit": "Organisatie aanmaken"
+    },
+    "success": {
+      "title": "Je organisatie is klaar",
+      "description": "Duik erin en begin met het bouwen van je cursussen.",
+      "goToOrg": "Ga naar organisatie",
+      "cta": "Terug naar organisaties"
+    },
+    "toast": {
+      "creating": "Bezig met aanmaken van organisatie…",
+      "created": "Organisatie aangemaakt!",
+      "checkoutFailed": "Organisatie aangemaakt — je kunt upgraden via Abonnement & gebruik.",
+      "failed": "Aanmaken van organisatie mislukt"
+    },
+    "steps": {
+      "useType": {
+        "title": "Wat ben je aan het maken?",
+        "subtitle": "Dit helpt ons je ruimte op maat te maken."
+      },
+      "usage": {
+        "title": "Vertel ons wat meer",
+        "subtitle": "Zodat we de juiste setup kunnen aanbevelen."
+      },
+      "choosePlan": {
+        "title": "Kies een abonnement",
+        "subtitle": "Je kunt dit altijd wijzigen."
+      },
+      "createOrg": {
+        "title": "Geef je organisatie een naam",
+        "subtitle": "Kies een naam en een webadres."
+      },
+      "success": {
+        "title": "Helemaal klaar"
+      }
+    },
+    "topBar": {
+      "back": "Organisaties"
+    },
+    "freeLimit": "Limiet van 1 gratis organisatie bereikt",
+    "navigation": {
+      "back": "Terug",
+      "continue": "Doorgaan",
+      "skip": "Overslaan"
+    }
+  },
+  "subscriptions": {
+    "no_subscription": "Geen abonnement",
+    "cancels_on": "Wordt opgezegd op {{date}}",
+    "cancels": "Wordt opgezegd aan einde periode",
+    "status_active": "Actief",
+    "status_trialing": "Proefperiode",
+    "status_past_due": "Achterstallig",
+    "status_canceled": "Opgezegd",
+    "status_unpaid": "Onbetaald",
+    "renews_on": "Verlengt op {{date}}",
+    "manage_plan": "Abonnement beheren",
+    "portal_error": "Kan het factureringsportaal niet openen. Probeer het opnieuw.",
+    "back_home": "Terug naar home",
+    "title": "Abonnementen",
+    "subtitle": "Abonnementen en facturering voor al je organisaties",
+    "opening": "Bezig met openen…",
+    "manage_billing": "Facturering beheren"
   }
 }

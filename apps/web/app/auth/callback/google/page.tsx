@@ -46,8 +46,23 @@ export default function GoogleCallbackPage() {
       // so CSRF validation and cookie-setting happen on the correct origin.
       try {
         const stateData = JSON.parse(atob(state))
-        if (stateData.returnOrigin && stateData.returnOrigin !== window.location.origin) {
-          const bounceUrl = new URL('/auth/callback/google', stateData.returnOrigin)
+        // Validate returnOrigin strictly before bouncing the OAuth code there.
+        // Parse it as a URL and use ONLY its origin (drops any path/query
+        // injection); require an http(s) scheme — rejects `javascript:`/`data:`,
+        // protocol-relative `//evil`, and malformed values that would otherwise
+        // be an open redirect / OAuth-code leak. (Full forgery protection needs
+        // HMAC-signed state — tracked as a follow-up.)
+        let bounceOrigin: string | null = null
+        if (typeof stateData.returnOrigin === 'string') {
+          try {
+            const u = new URL(stateData.returnOrigin)
+            if (u.protocol === 'http:' || u.protocol === 'https:') bounceOrigin = u.origin
+          } catch {
+            /* malformed returnOrigin — ignore, fall through to CSRF validation */
+          }
+        }
+        if (bounceOrigin && bounceOrigin !== window.location.origin) {
+          const bounceUrl = new URL('/auth/callback/google', bounceOrigin)
           // Forward all search params (code, state, scope, etc.)
           searchParams.forEach((value, key) => {
             bounceUrl.searchParams.set(key, value)

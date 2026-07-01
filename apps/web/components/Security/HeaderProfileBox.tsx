@@ -2,12 +2,13 @@
 import React, { useMemo } from 'react'
 
 import Link from 'next/link'
-import { Crown, Shield, User, Users, SignOut, CaretDown, Globe, Check, ShoppingBag } from '@phosphor-icons/react'
+import { Crown, Shield, User, Users, SignOut, CaretDown, Globe, Check, ShoppingBag, House, Buildings, Plus, CreditCard } from '@phosphor-icons/react'
 import UserAvatar from '@components/Objects/UserAvatar'
 import useAdminStatus from '@components/Hooks/useAdminStatus'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
 import { useOrg } from '@components/Contexts/OrgContext'
-import { getUriWithOrg } from '@services/config/config'
+import { getUriWithOrg, getMainDomainUri, isMultiOrgModeEnabled } from '@services/config/config'
+import { getOrgLogoMediaDirectory } from '@services/media/media'
 import Tooltip from '@components/Objects/StyledElements/Tooltip/Tooltip'
 import {
   DropdownMenu,
@@ -49,6 +50,21 @@ export const HeaderProfileBox = ({ primaryColor = '' }: { primaryColor?: string 
   const { t, i18n } = useTranslation()
   const { track } = useLHAnalytics()
   const colors = getMenuColorClasses(primaryColor)
+
+  // The user's organizations (deduped) from the session roles — used by the
+  // "My Organizations" submenu. Only relevant in multi-org (SaaS) mode, where
+  // the apex hub (/home, /new, /billing) exists.
+  const multiOrg = isMultiOrgModeEnabled()
+  const myOrgs = useMemo(() => {
+    const roles = session?.data?.roles || []
+    const seen = new Set<number>()
+    const orgs: any[] = []
+    for (const r of roles) {
+      const o = r?.org
+      if (o && o.id != null && !seen.has(o.id)) { seen.add(o.id); orgs.push(o) }
+    }
+    return orgs
+  }, [session?.data?.roles])
 
 
   const userRoleInfo = useMemo((): RoleInfo | null => {
@@ -238,9 +254,56 @@ export const HeaderProfileBox = ({ primaryColor = '' }: { primaryColor?: string 
                     <span>{t('account.purchases')}</span>
                   </Link>
                 </DropdownMenuItem>
+                {multiOrg && (
+                  <>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem asChild>
+                      <Link href={getMainDomainUri('/home')} className="flex items-center space-x-2">
+                        <House size={16} weight="fill" />
+                        <span>{t('common.home', { defaultValue: 'Home' })}</span>
+                      </Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem asChild>
+                      <Link href={getMainDomainUri(`/billing?org=${org?.slug ?? ''}`)} className="flex items-center space-x-2">
+                        <CreditCard size={16} weight="fill" />
+                        <span>{t('common.billing', { defaultValue: 'Billing' })}</span>
+                      </Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuSub>
+                      <DropdownMenuSubTrigger className="flex items-center gap-2 space-x-2">
+                        <Buildings size={16} weight="fill" />
+                        <span>{t('common.organizations', { defaultValue: 'Organizations' })}</span>
+                      </DropdownMenuSubTrigger>
+                      <DropdownMenuPortal>
+                        <DropdownMenuSubContent className="max-h-72 overflow-auto">
+                          {myOrgs.map((o: any) => (
+                            <DropdownMenuItem key={o.id} asChild>
+                              <Link href={getUriWithOrg(o.slug, '/')} className="flex items-center space-x-2">
+                                {o.logo_image ? (
+                                  <img src={getOrgLogoMediaDirectory(o.org_uuid, o.logo_image)} alt="" className="w-5 h-5 rounded object-cover shrink-0 ring-1 ring-inset ring-black/5" />
+                                ) : (
+                                  <span className="w-5 h-5 rounded bg-gray-100 text-gray-600 text-[10px] font-bold flex items-center justify-center shrink-0">{(o.name || '?').charAt(0).toUpperCase()}</span>
+                                )}
+                                <span className="truncate flex-1">{o.name}</span>
+                                {o.id === org?.id && <Check size={14} weight="bold" className="text-green-600 shrink-0" />}
+                              </Link>
+                            </DropdownMenuItem>
+                          ))}
+                          {myOrgs.length > 0 && <DropdownMenuSeparator />}
+                          <DropdownMenuItem asChild>
+                            <Link href={getMainDomainUri('/new')} className="flex items-center space-x-2 font-semibold">
+                              <Plus size={16} weight="bold" />
+                              <span>{t('common.create_organization', { defaultValue: 'Create organization' })}</span>
+                            </Link>
+                          </DropdownMenuItem>
+                        </DropdownMenuSubContent>
+                      </DropdownMenuPortal>
+                    </DropdownMenuSub>
+                  </>
+                )}
                 <DropdownMenuSeparator />
                 <DropdownMenuSub>
-                  <DropdownMenuSubTrigger className="flex items-center space-x-2">
+                  <DropdownMenuSubTrigger className="flex items-center gap-2 space-x-2">
                     <Globe size={14} weight="fill" />
                     <span>{t('common.language')}</span>
                   </DropdownMenuSubTrigger>

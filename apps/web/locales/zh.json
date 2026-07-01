@@ -211,7 +211,18 @@
     "no_content_yet": "暂无内容",
     "other": "Other",
     "disabled": "Disabled",
-    "store": "Store"
+    "store": "Store",
+    "organizations": "组织",
+    "billing": "账单",
+    "create_organization": "创建组织",
+    "copyright": "© {{year}} LearnHouse, Inc.",
+    "delete_organization_error": "无法删除此组织。请重试。",
+    "org_actions": "组织操作",
+    "manage_upgrade": "管理 / 升级",
+    "delete_organization": "删除组织",
+    "delete_organization_warning": "这将永久删除 {{name}} 及其所有数据。此操作无法撤销。",
+    "delete_organization_confirm_label": "输入 {{slug}} 以确认",
+    "deleting": "正在删除…"
   },
   "banner": {
     "viewing_as_guest": "您正在以访客身份浏览 {{name}}。",
@@ -334,7 +345,21 @@
     "sso_error": "SSO 认证失败。请重试。",
     "try_again_in": "{{minutes}}分钟后重试",
     "error_generic": "出现问题，请重试。",
-    "sign_in": "登录"
+    "sign_in": "登录",
+    "terms_text": "继续即表示你同意 LearnHouse 的",
+    "terms_of_service": "服务条款",
+    "and": "和",
+    "privacy_policy": "隐私政策",
+    "image_title_forgot": "重置你的密码。",
+    "image_subtitle_forgot": "我们会帮你快速重新登录账户。",
+    "image_title_login": "欢迎回到 LearnHouse。",
+    "image_subtitle_login": "从上次离开的地方继续 — 你的课程、学员和工具都在等你。",
+    "image_title_reset": "马上就好。",
+    "image_subtitle_reset": "设置一个强密码以保护你的账户安全。",
+    "image_title_signup": "用 LearnHouse 开始教学。",
+    "image_subtitle_signup": "创建你的账户，几分钟内发布你的第一门课程。",
+    "image_title_verify": "验证你的邮箱。",
+    "image_subtitle_verify": "一步即可保护账户安全并开始使用。"
   },
   "verify_email": {
     "title": "邮箱验证",
@@ -989,7 +1014,13 @@
     "retry_assignment_last": "这是您的最后一次尝试——请认真对待。",
     "retry_assignment_success": "您的作答已重置——再试一次吧。",
     "retry_assignment_failed": "无法重置您的提交。请重试。",
-    "retry_no_attempts_left": "没有剩余的重试机会"
+    "retry_no_attempts_left": "没有剩余的重试机会",
+    "quick_grade": {
+      "full": "满分",
+      "half": "半分",
+      "zero": "零分"
+    },
+    "task_feedback_placeholder": "此任务的备注（随评分一并保存）"
   },
   "certificate": {
     "certificate": "证书",
@@ -1086,7 +1117,23 @@
     "my_courses": "我的课程",
     "no_purchased_courses": "暂无已购课程",
     "purchased_courses_description": "您购买或订阅的课程将显示在这里",
-    "purchases": "购买记录"
+    "purchases": "购买记录",
+    "back_home": "返回组织",
+    "subtitle": "管理你的个人资料、安全与账户",
+    "section": {
+      "profile": "个人资料",
+      "security": "安全",
+      "danger": "危险操作区"
+    },
+    "delete": {
+      "success": "你的账户已删除。",
+      "error": "无法删除你的账户。请重试。",
+      "title": "删除账户",
+      "description": "永久删除你的账户并撤销访问权限。此操作无法撤销。",
+      "warning": "这将永久删除你的账户及所有相关数据。此操作无法撤销。",
+      "confirm_label": "输入 {{username}} 以确认",
+      "deleting": "正在删除…"
+    }
   },
   "user": {
     "user_settings": "用户设置",
@@ -3615,7 +3662,8 @@
           "current_grade": "当前成绩",
           "passing": "通过",
           "not_passing": "未通过",
-          "not_submitted": "未提交"
+          "not_submitted": "未提交",
+          "manually_graded": "人工评分"
         },
         "feedback": {
           "label": "总体反馈",
@@ -4624,8 +4672,8 @@
     "done": "完成，一切准备就绪！",
     "steps": {
       "create_course": {
-        "title": "创建您的第一个课程",
-        "description": "从为学员创建新课程开始。",
+        "title": "你的第一门课程已上线",
+        "description": "发布一门课程，让学员有真实的内容可以报名。",
         "action": "创建课程"
       },
       "add_activities": {
@@ -4669,6 +4717,31 @@
         "classroom_desc": "了解如何扩展和管理您的课程",
         "university": "LearnHouse 大学",
         "university_desc": "指南、技巧和最佳实践"
+      },
+      "add_content": {
+        "title": "一节值得专程来上的课",
+        "description": "添加视频、页面或测验 — 给学员一个报名的真实理由。",
+        "action": "添加内容"
+      },
+      "brand_school": {
+        "title": "一所让学员信赖的学校",
+        "description": "添加你的徽标和配色，让它看起来像一所可信、专业的学校。",
+        "action": "品牌化"
+      },
+      "share_grow": {
+        "title": "你学校的大门",
+        "description": "立即上线并获取可分享链接 — 你将把每位学员都引导到这里。",
+        "action": "打开我的学校"
+      },
+      "invite_learners": {
+        "title": "迎接你的第一位学员",
+        "description": "分享你的加入链接或邀请他人 — 让第一位学员走进门来。",
+        "action": "邀请学员"
+      },
+      "build_community": {
+        "title": "让学员持续回访",
+        "description": "开设一个社区空间，让你的学员保持活跃 — 并带上他们的朋友。",
+        "action": "打开社区"
       }
     },
     "welcome": {
@@ -4703,7 +4776,15 @@
       "title": "您已准备好教导世界",
       "description": "一切就绪。您的学习者正期待着精彩的内容。",
       "button": "开始教学"
-    }
+    },
+    "box_title": "新手引导",
+    "up_next": "接下来",
+    "continue_setup": "继续设置",
+    "done_label": "已完成",
+    "video_placeholder": "演示视频即将上线",
+    "dismiss": "稍后再完成",
+    "steps_done": "步已完成",
+    "back_to_dashboard": "返回仪表盘"
   },
   "boards": {
     "access": {
@@ -5281,5 +5362,258 @@
     "folder_count_one": "{{count}} 个文件夹",
     "item_count": "{{count}} 个项目",
     "item_count_one": "{{count}} 个项目"
+  },
+  "plan": {
+    "free_plan_title": "免费方案",
+    "free_plan_cta": "解锁完整平台",
+    "free_plan_desc": "教学、销售与成长所需的一切。",
+    "upgrade": "升级"
+  },
+  "billing": {
+    "no_billing_account": "未找到账单账户。请先订阅一个方案。",
+    "portal_error": "无法打开账单管理页面。请重试。",
+    "cancel_success": "订阅将在当前账单周期结束时取消。",
+    "cancel_error": "取消订阅失败。请重试。",
+    "checkout_error": "无法开始结账。",
+    "plan_and_usage": "方案与用量",
+    "plan_and_usage_subtitle": "管理你的订阅并监控资源用量。",
+    "billing": "账单",
+    "org_inactive": "你的组织当前未激活。升级方案以恢复访问。",
+    "upgrade": "升级",
+    "on_free_plan": "你正在使用免费方案",
+    "free_upsell": "升级以解锁 AI 功能、自定义域名等更多内容。",
+    "managed_outside": "此方案在 Stripe 账单之外管理。",
+    "active": "已激活",
+    "inactive": "未激活",
+    "current_plan": "当前方案",
+    "canceling": "正在取消",
+    "billed_annually": "按年计费",
+    "billed_monthly": "按月计费",
+    "change_plan": "更改方案",
+    "canceling_ellipsis": "正在取消...",
+    "cancel_plan": "取消方案",
+    "cycle": "周期",
+    "access_until": "可访问至",
+    "next_payment": "下次付款",
+    "status": "状态",
+    "usage": "用量",
+    "courses": "课程",
+    "members": "成员",
+    "admin_seats": "管理员席位",
+    "ai_credits": "AI 额度",
+    "addons": "附加项",
+    "addons_subtitle": "以月度订阅形式购买额外的 AI 额度或成员席位。",
+    "active_subscriptions": "有效订阅",
+    "credits": "额度",
+    "seats": "席位",
+    "available": "可用",
+    "per_pack": "每包",
+    "add": "添加",
+    "recurring_subscription": "周期性订阅",
+    "what_youre_getting": "你将获得",
+    "pack_immediate": "付款后立即生效",
+    "pack_cancel_anytime": "随时可取消 — 在账单周期结束前持续有效",
+    "pack_credits_reset": "额度在每个账单周期重置",
+    "after_purchase": "购买后",
+    "unlimited": "无限",
+    "pack_redirect_notice": "你将被跳转至 Stripe 完成付款。你可以购买多个同类型的包。",
+    "cancel": "取消",
+    "continue_to_payment": "继续付款",
+    "step_choose_plan": "选择方案",
+    "step_confirm": "确认",
+    "step_done": "完成",
+    "back": "返回",
+    "switch_plan": "切换方案",
+    "upgrade_plan": "升级方案",
+    "switch_subtitle": "选择一个新方案。变更将自动按比例计费。",
+    "upgrade_subtitle": "选择一个方案开始使用。",
+    "your_plan": "你的方案",
+    "downgrade": "降级",
+    "upgrade_summary": "升级摘要",
+    "downgrade_summary": "降级摘要",
+    "current": "当前",
+    "new": "新",
+    "annual_total": "年度合计",
+    "monthly_total": "月度合计",
+    "prorated_billing": "按比例计费",
+    "prorated_desc": "我们将为你当前方案中未使用的时间退还相应金额，并按新方案收取差额。变更将立即生效。",
+    "subscription_cancellation": "取消订阅",
+    "end_of_cycle_switch": "周期结束时切换",
+    "cancel_desc": "你的订阅将在当前账单周期结束时取消。在此之前你将保留完整访问权限。",
+    "downgrade_desc": "你将保留当前方案直至账单周期结束。当前周期结束时，新方案将自动生效。",
+    "whats_included": "包含内容",
+    "discount_code": "优惠码",
+    "enter_code": "输入优惠码",
+    "checking": "正在验证...",
+    "apply": "应用",
+    "code_applied": "优惠码已应用",
+    "invalid_code": "优惠码无效或已过期",
+    "canceling_subscription": "正在取消订阅...",
+    "switching_plan": "正在切换方案...",
+    "redirecting": "正在跳转至 Stripe...",
+    "confirm_cancellation": "确认取消",
+    "confirm_upgrade": "确认升级",
+    "confirm_downgrade": "确认降级",
+    "secure_checkout": "由 Stripe 提供的安全结账",
+    "back_to_plans": "返回方案",
+    "plan_updated": "方案已更新！",
+    "subscription_canceled": "订阅已取消",
+    "downgrade_scheduled": "降级已安排",
+    "canceled_desc": "你的订阅将在当前账单周期结束时取消。在此之前你将保留完整访问权限。",
+    "back_to_plan_usage": "返回方案与用量",
+    "back_to_orgs": "返回组织"
+  },
+  "hub_new": {
+    "useType": {
+      "personal": {
+        "label": "个人",
+        "subtitle": "学习并打造你自己的空间。",
+        "badge": "新"
+      },
+      "organization": {
+        "label": "组织",
+        "subtitle": "面向团队、学校或受众进行教学。"
+      }
+    },
+    "useCases": {
+      "personal": {
+        "title": "自主学习",
+        "description": "为自己整理课程。"
+      },
+      "creators": {
+        "title": "创作者",
+        "description": "向你的受众销售课程。"
+      },
+      "business": {
+        "title": "企业",
+        "description": "培训你的员工。"
+      }
+    },
+    "personalGoals": {
+      "learnSkills": "学习技能",
+      "teachOthers": "教授他人",
+      "coding": "编程",
+      "creative": "创意",
+      "music": "音乐",
+      "ai": "人工智能",
+      "literature": "文学",
+      "science": "科学",
+      "business": "商业",
+      "health": "健康",
+      "photography": "摄影",
+      "writing": "写作",
+      "languages": "语言",
+      "gaming": "游戏"
+    },
+    "personalUsage": {
+      "title": "你想学习什么？",
+      "subtitle": "选择所有适用项。"
+    },
+    "teamSizes": {
+      "solo": "单人",
+      "2-10": "2–10",
+      "11-50": "11–50",
+      "51-200": "51–200",
+      "200plus": "200+"
+    },
+    "orgUseCases": {
+      "employeeTraining": "员工培训",
+      "onlineCourses": "在线课程",
+      "customerEducation": "客户教育",
+      "academicPrograms": "学术课程",
+      "developerDocs": "开发者文档",
+      "communityLearning": "社区学习"
+    },
+    "orgUsage": {
+      "teamSizeTitle": "你的团队规模有多大？",
+      "useCaseTitle": "你将用它来做什么？"
+    },
+    "createOrg": {
+      "testHint": {
+        "title": "想先试用一下？",
+        "body": "前往",
+        "link": "开发者页面",
+        "suffix": "来体验 LearnHouse。"
+      },
+      "validation": {
+        "required": "必填",
+        "lowercase": "仅限小写",
+        "noSpecialChars": "仅限字母、数字和连字符",
+        "reserved": "此地址已被保留",
+        "maxLength": "最多 20 个字符"
+      },
+      "fields": {
+        "name": "组织名称",
+        "description": "描述（可选）",
+        "slug": "地址"
+      },
+      "placeholders": {
+        "name": "Acme Academy",
+        "description": "你的组织是关于什么的？"
+      },
+      "submitting": "正在创建…",
+      "submitPaid": "创建并继续付款",
+      "submit": "创建组织"
+    },
+    "success": {
+      "title": "你的组织已就绪",
+      "description": "立即开始构建你的课程。",
+      "goToOrg": "前往组织",
+      "cta": "返回组织"
+    },
+    "toast": {
+      "creating": "正在创建组织…",
+      "created": "组织已创建！",
+      "checkoutFailed": "组织已创建 — 你可以在“方案与用量”中升级。",
+      "failed": "创建组织失败"
+    },
+    "steps": {
+      "useType": {
+        "title": "你想创建什么？",
+        "subtitle": "这有助于我们为你定制空间。"
+      },
+      "usage": {
+        "title": "再多告诉我们一些",
+        "subtitle": "以便我们推荐合适的设置。"
+      },
+      "choosePlan": {
+        "title": "选择一个方案",
+        "subtitle": "你可以随时更改。"
+      },
+      "createOrg": {
+        "title": "为你的组织命名",
+        "subtitle": "选择一个名称和一个网址。"
+      },
+      "success": {
+        "title": "全部完成"
+      }
+    },
+    "topBar": {
+      "back": "组织"
+    },
+    "freeLimit": "已达到 1 个免费组织上限",
+    "navigation": {
+      "back": "返回",
+      "continue": "继续",
+      "skip": "跳过"
+    }
+  },
+  "subscriptions": {
+    "no_subscription": "无订阅",
+    "cancels_on": "将于 {{date}} 取消",
+    "cancels": "将在周期结束时取消",
+    "status_active": "已激活",
+    "status_trialing": "试用中",
+    "status_past_due": "已逾期",
+    "status_canceled": "已取消",
+    "status_unpaid": "未付款",
+    "renews_on": "{{date}} 续订",
+    "manage_plan": "管理方案",
+    "portal_error": "无法打开账单管理页面。请重试。",
+    "back_home": "返回主页",
+    "title": "订阅",
+    "subtitle": "你各组织的方案与账单",
+    "opening": "正在打开…",
+    "manage_billing": "管理账单"
   }
 }

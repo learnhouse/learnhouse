@@ -14,6 +14,7 @@ import {
   getLEARNHOUSE_DOMAIN_VAL,
 } from '@services/config/config'
 import { isSubdomainOf, isSameHost, isLocalhost as isLocalhostCheck } from '@services/utils/ts/hostUtils'
+import { safeRedirectUrl } from '@services/auth/redirects'
 
 // Types matching NextAuth's session structure
 export interface Session {
@@ -68,7 +69,11 @@ interface SessionCache {
   timestamp: number
 }
 
-const SESSION_CACHE_TTL = 10 * 60 * 1000 // 10 minutes
+// Keep this SHORT — the cached session carries the user's org roles, which the
+// admin feature-gating reads. A long TTL means revoked membership/roles linger
+// in the UI. 2 min balances freshness against redundant /users/session fetches
+// (the authenticated refetch interval is ~1 min).
+const SESSION_CACHE_TTL = 2 * 60 * 1000 // 2 minutes
 const TOKEN_REFRESH_THRESHOLD = 60 * 1000 // 1 minute before expiry
 const AUTH_BROADCAST_CHANNEL = 'learnhouse_auth_sync'
 const OAUTH_STATE_COOKIE = 'LH_oauth_state'
@@ -181,21 +186,37 @@ export function SessionProvider({
 
   // Set up BroadcastChannel for cross-tab communication
   useEffect(() => {
-    if (typeof window !== 'undefined' && 'BroadcastChannel' in window) {
+    if (typeof window === 'undefined' || !('BroadcastChannel' in window)) return
+    try {
       broadcastChannelRef.current = new BroadcastChannel(AUTH_BROADCAST_CHANNEL)
+    } catch (e) {
+      // Some privacy modes throw on BroadcastChannel — degrade gracefully.
+      console.warn('[auth] BroadcastChannel unavailable:', e)
+      return
+    }
 
-      broadcastChannelRef.current.onmessage = (event) => {
-        if (event.data.type === 'LOGOUT') {
-          // Another tab logged out, clear our state too
-          setSession(null)
-          setAccessToken(null)
-          setTokenExpiry(null)
-          setStatus('unauthenticated')
-          sessionCacheRef.current = null
-        } else if (event.data.type === 'LOGIN') {
-          // Another tab logged in, refresh our session
-          refreshSessionInternalRef.current()
+    broadcastChannelRef.current.onmessage = (event) => {
+      if (event.data.type === 'LOGOUT') {
+        // Another tab logged out, clear our state too
+        setSession(null)
+        setAccessToken(null)
+        setTokenExpiry(null)
+        setStatus('unauthenticated')
+        sessionCacheRef.current = null
+      } else if (event.data.type === 'LOGIN') {
+        // Another tab logged in. Refresh our session, but dedupe across tabs via
+        // a shared localStorage timestamp so N open tabs don't all fire
+        // /api/auth/refresh at once on a single login.
+        try {
+          const last = Number(localStorage.getItem('lh_xtab_refresh_at') || 0)
+          if (Date.now() - last < 3000) return
+          localStorage.setItem('lh_xtab_refresh_at', String(Date.now()))
+        } catch {
+          /* localStorage unavailable — fall through and just refresh */
         }
+        refreshSessionInternalRef.current().catch((e) =>
+          console.error('[auth] cross-tab session refresh failed:', e),
+        )
       }
     }
 
@@ -236,9 +257,12 @@ export function SessionProvider({
     }
   }, [])
 
-  // Check if a session might exist (marker cookie is set alongside httpOnly auth cookies)
+  // Check if a session might exist (marker cookie is set alongside httpOnly auth cookies).
+  // Match the cookie name EXACTLY — `includes('LH_session')` also matched unrelated
+  // names like `LH_session_backup`, falsely reporting a session.
   const hasSessionMarker = useCallback((): boolean => {
-    return typeof document !== 'undefined' && document.cookie.includes('LH_session')
+    if (typeof document === 'undefined') return false
+    return document.cookie.split('; ').some((c) => c.startsWith('LH_session='))
   }, [])
 
   // Refresh access token using refresh token cookie
@@ -485,7 +509,7 @@ export function SessionProvider({
             broadcastChannelRef.current?.postMessage({ type: 'LOGIN' })
 
             if (redirect) {
-              window.location.href = callbackUrl
+              window.location.href = safeRedirectUrl(callbackUrl)
             }
 
             return { ok: true, error: null, url: callbackUrl, status: 200 }
@@ -568,7 +592,7 @@ export function SessionProvider({
           broadcastChannelRef.current?.postMessage({ type: 'LOGIN' })
 
           if (redirect) {
-            window.location.href = callbackUrl
+            window.location.href = safeRedirectUrl(callbackUrl)
           }
 
           return { ok: true, error: null, url: callbackUrl, status: 200 }
@@ -692,7 +716,7 @@ export function SessionProvider({
     broadcastChannelRef.current?.postMessage({ type: 'LOGOUT' })
 
     if (redirect) {
-      window.location.href = callbackUrl
+      window.location.href = safeRedirectUrl(callbackUrl)
     }
 
     // If backend logout failed, log a warning (user is still logged out locally)
@@ -876,7 +900,7 @@ export async function signOut(options?: SignOutOptions): Promise<void> {
   }
 
   if (redirect) {
-    window.location.href = callbackUrl
+    window.location.href = safeRedirectUrl(callbackUrl)
   }
 }
 

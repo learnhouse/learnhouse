@@ -205,7 +205,18 @@
     "no_content_yet": "Chưa có nội dung",
     "other": "Other",
     "disabled": "Disabled",
-    "store": "Store"
+    "store": "Store",
+    "organizations": "Tổ chức",
+    "billing": "Thanh toán",
+    "create_organization": "Tạo tổ chức",
+    "copyright": "© {{year}} LearnHouse, Inc.",
+    "delete_organization_error": "Không thể xóa tổ chức này. Vui lòng thử lại.",
+    "org_actions": "Thao tác tổ chức",
+    "manage_upgrade": "Quản lý / Nâng cấp",
+    "delete_organization": "Xóa tổ chức",
+    "delete_organization_warning": "Thao tác này sẽ xóa vĩnh viễn {{name}} và toàn bộ dữ liệu của tổ chức. Hành động này không thể hoàn tác.",
+    "delete_organization_confirm_label": "Nhập {{slug}} để xác nhận",
+    "deleting": "Đang xóa…"
   },
   "banner": {
     "viewing_as_guest": "Bạn đang xem {{name}} với tư cách khách.",
@@ -341,7 +352,21 @@
     "verify_email_title": "Xác minh email của bạn",
     "verifying_email": "Đang xác minh địa chỉ email của bạn...",
     "error_generic": "Đã xảy ra lỗi. Vui lòng thử lại.",
-    "sign_in": "Đăng nhập"
+    "sign_in": "Đăng nhập",
+    "terms_text": "Khi tiếp tục, bạn đồng ý với",
+    "terms_of_service": "Điều khoản Dịch vụ",
+    "and": "và",
+    "privacy_policy": "Chính sách Bảo mật",
+    "image_title_forgot": "Đặt lại mật khẩu của bạn.",
+    "image_subtitle_forgot": "Chúng tôi sẽ giúp bạn nhanh chóng truy cập lại tài khoản.",
+    "image_title_login": "Chào mừng trở lại với LearnHouse.",
+    "image_subtitle_login": "Tiếp tục từ nơi bạn dừng lại — các khóa học, học viên và công cụ của bạn đang chờ.",
+    "image_title_reset": "Sắp xong rồi.",
+    "image_subtitle_reset": "Tạo một mật khẩu mạnh để giữ tài khoản của bạn an toàn.",
+    "image_title_signup": "Bắt đầu giảng dạy cùng LearnHouse.",
+    "image_subtitle_signup": "Tạo tài khoản và ra mắt khóa học đầu tiên của bạn chỉ trong vài phút.",
+    "image_title_verify": "Xác minh email của bạn.",
+    "image_subtitle_verify": "Một bước nhanh gọn để bảo mật tài khoản và bắt đầu."
   },
   "verify_email": {
     "title": "Xác minh email",
@@ -985,7 +1010,13 @@
     "quiz": {
       "correct_answer": "Đúng",
       "incorrect_answer": "Sai"
-    }
+    },
+    "quick_grade": {
+      "full": "Tối đa",
+      "half": "Một nửa",
+      "zero": "Không điểm"
+    },
+    "task_feedback_placeholder": "Ghi chú cho nhiệm vụ này (lưu kèm điểm)"
   },
   "certificate": {
     "certificate": "Chứng chỉ",
@@ -1082,7 +1113,23 @@
     "my_courses": "Khóa học của tôi",
     "no_purchased_courses": "Chưa có khóa học nào được mua",
     "purchased_courses_description": "Các khóa học bạn đã mua hoặc đăng ký sẽ xuất hiện ở đây",
-    "purchases": "Giao dịch mua"
+    "purchases": "Giao dịch mua",
+    "back_home": "Quay lại tổ chức",
+    "subtitle": "Quản lý hồ sơ, bảo mật và tài khoản của bạn",
+    "section": {
+      "profile": "Hồ sơ",
+      "security": "Bảo mật",
+      "danger": "Vùng nguy hiểm"
+    },
+    "delete": {
+      "success": "Tài khoản của bạn đã được xóa.",
+      "error": "Không thể xóa tài khoản của bạn. Vui lòng thử lại.",
+      "title": "Xóa tài khoản",
+      "description": "Xóa vĩnh viễn tài khoản và thu hồi quyền truy cập của bạn. Hành động này không thể hoàn tác.",
+      "warning": "Thao tác này sẽ xóa vĩnh viễn tài khoản và toàn bộ dữ liệu liên quan. Hành động này không thể hoàn tác.",
+      "confirm_label": "Nhập {{username}} để xác nhận",
+      "deleting": "Đang xóa…"
+    }
   },
   "user": {
     "user_settings": "Cài đặt người dùng",
@@ -3610,7 +3657,8 @@
           "current_grade": "Điểm hiện tại",
           "passing": "Đạt",
           "not_passing": "Không đạt",
-          "not_submitted": "Chưa nộp"
+          "not_submitted": "Chưa nộp",
+          "manually_graded": "Chấm điểm thủ công"
         },
         "feedback": {
           "label": "Phản hồi tổng thể",
@@ -4610,8 +4658,8 @@
     "done": "Xong, tôi đã sẵn sàng!",
     "steps": {
       "create_course": {
-        "title": "Tạo khóa học đầu tiên",
-        "description": "Bắt đầu bằng cách tạo khóa học mới cho học viên của bạn.",
+        "title": "Khóa học đầu tiên của bạn đã hoạt động",
+        "description": "Xuất bản một khóa học để học viên có nội dung thực sự để đăng ký.",
         "action": "Tạo khóa học"
       },
       "add_activities": {
@@ -4655,6 +4703,31 @@
         "classroom_desc": "Tìm hiểu cách phát triển và quản lý khóa học",
         "university": "Đại học LearnHouse",
         "university_desc": "Hướng dẫn, mẹo và thực hành tốt nhất"
+      },
+      "add_content": {
+        "title": "Một bài học đáng để học viên ghé thăm",
+        "description": "Thêm video, trang nội dung hoặc bài kiểm tra — cho học viên một lý do thực sự để đăng ký.",
+        "action": "Thêm nội dung"
+      },
+      "brand_school": {
+        "title": "Một ngôi trường được học viên tin tưởng",
+        "description": "Thêm logo và màu sắc của bạn để trông giống một ngôi trường chuyên nghiệp, đáng tin cậy.",
+        "action": "Tạo thương hiệu"
+      },
+      "share_grow": {
+        "title": "Cánh cửa chính của ngôi trường",
+        "description": "Đưa trường lên mạng và lấy liên kết chia sẻ — nơi bạn sẽ gửi cho mọi học viên.",
+        "action": "Mở trường của tôi"
+      },
+      "invite_learners": {
+        "title": "Chào đón học viên đầu tiên của bạn",
+        "description": "Chia sẻ liên kết tham gia hoặc mời mọi người — đưa học viên đầu tiên bước qua cửa.",
+        "action": "Mời học viên"
+      },
+      "build_community": {
+        "title": "Giữ chân học viên quay lại",
+        "description": "Mở một không gian cộng đồng để học viên luôn năng động — và rủ thêm bạn bè.",
+        "action": "Mở cộng đồng"
       }
     },
     "welcome": {
@@ -4689,7 +4762,15 @@
       "title": "Bạn đã sẵn sàng dạy cả thế giới",
       "description": "Mọi thứ đã được thiết lập. Người học đang chờ đợi điều tuyệt vời từ bạn.",
       "button": "Bắt đầu giảng dạy"
-    }
+    },
+    "box_title": "Bắt đầu sử dụng",
+    "up_next": "Tiếp theo",
+    "continue_setup": "Tiếp tục thiết lập",
+    "done_label": "Hoàn tất",
+    "video_placeholder": "Video hướng dẫn sắp ra mắt",
+    "dismiss": "Để sau",
+    "steps_done": "bước đã hoàn tất",
+    "back_to_dashboard": "Quay lại bảng điều khiển"
   },
   "boards": {
     "access": {
@@ -5257,5 +5338,258 @@
       "unlink_success": "User group unlinked",
       "unlink_error": "Failed to unlink user group"
     }
+  },
+  "plan": {
+    "free_plan_title": "Gói miễn phí",
+    "free_plan_cta": "Mở khóa toàn bộ nền tảng",
+    "free_plan_desc": "Tất cả những gì bạn cần để giảng dạy, bán khóa học và phát triển.",
+    "upgrade": "Nâng cấp"
+  },
+  "billing": {
+    "no_billing_account": "Không tìm thấy tài khoản thanh toán. Vui lòng đăng ký một gói trước.",
+    "portal_error": "Không thể mở cổng thanh toán. Vui lòng thử lại.",
+    "cancel_success": "Gói đăng ký sẽ bị hủy vào cuối kỳ thanh toán.",
+    "cancel_error": "Không thể hủy gói đăng ký. Vui lòng thử lại.",
+    "checkout_error": "Không thể bắt đầu thanh toán.",
+    "plan_and_usage": "Gói & Mức sử dụng",
+    "plan_and_usage_subtitle": "Quản lý gói đăng ký và theo dõi mức sử dụng tài nguyên.",
+    "billing": "Thanh toán",
+    "org_inactive": "Tổ chức của bạn đang ngừng hoạt động. Nâng cấp gói để khôi phục quyền truy cập.",
+    "upgrade": "Nâng cấp",
+    "on_free_plan": "Bạn đang dùng gói miễn phí",
+    "free_upsell": "Nâng cấp để mở khóa tính năng AI, tên miền tùy chỉnh và hơn thế nữa.",
+    "managed_outside": "Gói này được quản lý bên ngoài hệ thống thanh toán Stripe.",
+    "active": "Đang hoạt động",
+    "inactive": "Ngừng hoạt động",
+    "current_plan": "Gói hiện tại",
+    "canceling": "Đang hủy",
+    "billed_annually": "thanh toán hằng năm",
+    "billed_monthly": "thanh toán hằng tháng",
+    "change_plan": "Đổi gói",
+    "canceling_ellipsis": "Đang hủy...",
+    "cancel_plan": "Hủy gói",
+    "cycle": "Chu kỳ",
+    "access_until": "Truy cập đến",
+    "next_payment": "Lần thanh toán tiếp theo",
+    "status": "Trạng thái",
+    "usage": "Mức sử dụng",
+    "courses": "Khóa học",
+    "members": "Thành viên",
+    "admin_seats": "Chỗ quản trị viên",
+    "ai_credits": "Tín dụng AI",
+    "addons": "Tiện ích bổ sung",
+    "addons_subtitle": "Mua thêm tín dụng AI hoặc chỗ thành viên dưới dạng gói đăng ký hằng tháng.",
+    "active_subscriptions": "Gói đăng ký đang hoạt động",
+    "credits": "tín dụng",
+    "seats": "chỗ",
+    "available": "Khả dụng",
+    "per_pack": "mỗi gói",
+    "add": "Thêm",
+    "recurring_subscription": "gói đăng ký định kỳ",
+    "what_youre_getting": "Những gì bạn nhận được",
+    "pack_immediate": "Có hiệu lực ngay sau khi thanh toán",
+    "pack_cancel_anytime": "Hủy bất cứ lúc nào — vẫn hoạt động đến cuối kỳ thanh toán",
+    "pack_credits_reset": "Tín dụng được làm mới mỗi chu kỳ thanh toán",
+    "after_purchase": "Sau khi mua",
+    "unlimited": "Không giới hạn",
+    "pack_redirect_notice": "Bạn sẽ được chuyển đến Stripe để hoàn tất thanh toán. Bạn có thể mua nhiều gói cùng loại.",
+    "cancel": "Hủy",
+    "continue_to_payment": "Tiếp tục thanh toán",
+    "step_choose_plan": "Chọn gói",
+    "step_confirm": "Xác nhận",
+    "step_done": "Hoàn tất",
+    "back": "Quay lại",
+    "switch_plan": "Chuyển gói",
+    "upgrade_plan": "Nâng cấp gói",
+    "switch_subtitle": "Chọn một gói mới. Các thay đổi được tính theo tỷ lệ tự động.",
+    "upgrade_subtitle": "Chọn một gói để bắt đầu.",
+    "your_plan": "Gói của bạn",
+    "downgrade": "Hạ cấp",
+    "upgrade_summary": "Tóm tắt nâng cấp",
+    "downgrade_summary": "Tóm tắt hạ cấp",
+    "current": "Hiện tại",
+    "new": "Mới",
+    "annual_total": "Tổng hằng năm",
+    "monthly_total": "Tổng hằng tháng",
+    "prorated_billing": "Thanh toán theo tỷ lệ",
+    "prorated_desc": "Bạn sẽ được hoàn lại cho thời gian chưa sử dụng của gói hiện tại và tính phần chênh lệch cho gói mới. Thay đổi có hiệu lực ngay lập tức.",
+    "subscription_cancellation": "Hủy gói đăng ký",
+    "end_of_cycle_switch": "Chuyển vào cuối chu kỳ",
+    "cancel_desc": "Gói đăng ký của bạn sẽ bị hủy vào cuối kỳ thanh toán hiện tại. Bạn vẫn giữ toàn quyền truy cập đến lúc đó.",
+    "downgrade_desc": "Bạn sẽ giữ gói hiện tại đến cuối kỳ thanh toán. Gói mới sẽ tự động có hiệu lực khi chu kỳ hiện tại kết thúc.",
+    "whats_included": "Những gì bao gồm",
+    "discount_code": "Mã giảm giá",
+    "enter_code": "Nhập mã",
+    "checking": "Đang kiểm tra...",
+    "apply": "Áp dụng",
+    "code_applied": "Đã áp dụng mã",
+    "invalid_code": "Mã không hợp lệ hoặc đã hết hạn",
+    "canceling_subscription": "Đang hủy gói đăng ký...",
+    "switching_plan": "Đang chuyển gói...",
+    "redirecting": "Đang chuyển đến Stripe...",
+    "confirm_cancellation": "Xác nhận hủy",
+    "confirm_upgrade": "Xác nhận nâng cấp",
+    "confirm_downgrade": "Xác nhận hạ cấp",
+    "secure_checkout": "Thanh toán an toàn được hỗ trợ bởi Stripe",
+    "back_to_plans": "Quay lại các gói",
+    "plan_updated": "Đã cập nhật gói!",
+    "subscription_canceled": "Đã hủy gói đăng ký",
+    "downgrade_scheduled": "Đã lên lịch hạ cấp",
+    "canceled_desc": "Gói đăng ký của bạn sẽ bị hủy vào cuối kỳ thanh toán hiện tại. Bạn vẫn giữ toàn quyền truy cập đến lúc đó.",
+    "back_to_plan_usage": "Quay lại Gói & Mức sử dụng",
+    "back_to_orgs": "Quay lại tổ chức"
+  },
+  "hub_new": {
+    "useType": {
+      "personal": {
+        "label": "Cá nhân",
+        "subtitle": "Học tập và xây dựng không gian riêng của bạn.",
+        "badge": "Mới"
+      },
+      "organization": {
+        "label": "Tổ chức",
+        "subtitle": "Giảng dạy cho một nhóm, trường học hay đối tượng khán giả."
+      }
+    },
+    "useCases": {
+      "personal": {
+        "title": "Tự học",
+        "description": "Sắp xếp các khóa học cho riêng bạn."
+      },
+      "creators": {
+        "title": "Nhà sáng tạo",
+        "description": "Bán khóa học cho khán giả của bạn."
+      },
+      "business": {
+        "title": "Doanh nghiệp",
+        "description": "Đào tạo nhân viên của bạn."
+      }
+    },
+    "personalGoals": {
+      "learnSkills": "Học kỹ năng",
+      "teachOthers": "Dạy người khác",
+      "coding": "Lập trình",
+      "creative": "Sáng tạo",
+      "music": "Âm nhạc",
+      "ai": "AI",
+      "literature": "Văn học",
+      "science": "Khoa học",
+      "business": "Kinh doanh",
+      "health": "Sức khỏe",
+      "photography": "Nhiếp ảnh",
+      "writing": "Viết lách",
+      "languages": "Ngôn ngữ",
+      "gaming": "Trò chơi"
+    },
+    "personalUsage": {
+      "title": "Bạn muốn học gì?",
+      "subtitle": "Chọn tất cả mục phù hợp."
+    },
+    "teamSizes": {
+      "solo": "Một mình",
+      "2-10": "2–10",
+      "11-50": "11–50",
+      "51-200": "51–200",
+      "200plus": "200+"
+    },
+    "orgUseCases": {
+      "employeeTraining": "Đào tạo nhân viên",
+      "onlineCourses": "Khóa học trực tuyến",
+      "customerEducation": "Đào tạo khách hàng",
+      "academicPrograms": "Chương trình học thuật",
+      "developerDocs": "Tài liệu lập trình viên",
+      "communityLearning": "Học tập cộng đồng"
+    },
+    "orgUsage": {
+      "teamSizeTitle": "Nhóm của bạn có quy mô bao lớn?",
+      "useCaseTitle": "Bạn sẽ sử dụng nền tảng này để làm gì?"
+    },
+    "createOrg": {
+      "testHint": {
+        "title": "Muốn dùng thử?",
+        "body": "Hãy đến",
+        "link": "trang Nhà phát triển",
+        "suffix": "để trải nghiệm LearnHouse."
+      },
+      "validation": {
+        "required": "Bắt buộc",
+        "lowercase": "Chỉ chữ thường",
+        "noSpecialChars": "Chỉ chữ cái, số và dấu gạch ngang",
+        "reserved": "Slug này đã được dành riêng",
+        "maxLength": "Tối đa 20 ký tự"
+      },
+      "fields": {
+        "name": "Tên tổ chức",
+        "description": "Mô tả (không bắt buộc)",
+        "slug": "Địa chỉ"
+      },
+      "placeholders": {
+        "name": "Học viện Acme",
+        "description": "Tổ chức của bạn về lĩnh vực gì?"
+      },
+      "submitting": "Đang tạo…",
+      "submitPaid": "Tạo & tiếp tục thanh toán",
+      "submit": "Tạo tổ chức"
+    },
+    "success": {
+      "title": "Tổ chức của bạn đã sẵn sàng",
+      "description": "Bắt tay vào xây dựng các khóa học của bạn.",
+      "goToOrg": "Đến tổ chức",
+      "cta": "Quay lại tổ chức"
+    },
+    "toast": {
+      "creating": "Đang tạo tổ chức…",
+      "created": "Đã tạo tổ chức!",
+      "checkoutFailed": "Đã tạo tổ chức — bạn có thể nâng cấp từ Gói & Mức sử dụng.",
+      "failed": "Không thể tạo tổ chức"
+    },
+    "steps": {
+      "useType": {
+        "title": "Bạn đang tạo gì?",
+        "subtitle": "Điều này giúp chúng tôi tùy chỉnh không gian cho bạn."
+      },
+      "usage": {
+        "title": "Cho chúng tôi biết thêm một chút",
+        "subtitle": "Để chúng tôi có thể gợi ý thiết lập phù hợp."
+      },
+      "choosePlan": {
+        "title": "Chọn một gói",
+        "subtitle": "Bạn có thể thay đổi bất cứ lúc nào."
+      },
+      "createOrg": {
+        "title": "Đặt tên cho tổ chức của bạn",
+        "subtitle": "Chọn một cái tên và một địa chỉ web."
+      },
+      "success": {
+        "title": "Đã hoàn tất"
+      }
+    },
+    "topBar": {
+      "back": "Tổ chức"
+    },
+    "freeLimit": "Đã đạt giới hạn 1 tổ chức miễn phí",
+    "navigation": {
+      "back": "Quay lại",
+      "continue": "Tiếp tục",
+      "skip": "Bỏ qua"
+    }
+  },
+  "subscriptions": {
+    "no_subscription": "Không có gói đăng ký",
+    "cancels_on": "Hủy vào {{date}}",
+    "cancels": "Hủy vào cuối kỳ",
+    "status_active": "Đang hoạt động",
+    "status_trialing": "Đang dùng thử",
+    "status_past_due": "Quá hạn",
+    "status_canceled": "Đã hủy",
+    "status_unpaid": "Chưa thanh toán",
+    "renews_on": "Gia hạn {{date}}",
+    "manage_plan": "Quản lý gói",
+    "portal_error": "Không thể mở cổng thanh toán. Vui lòng thử lại.",
+    "back_home": "Quay lại trang chủ",
+    "title": "Gói đăng ký",
+    "subtitle": "Gói và thanh toán trên các tổ chức của bạn",
+    "opening": "Đang mở…",
+    "manage_billing": "Quản lý thanh toán"
   }
 }

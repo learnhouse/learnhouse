@@ -205,7 +205,18 @@
     "no_content_yet": "Belum ada konten",
     "other": "Other",
     "disabled": "Disabled",
-    "store": "Store"
+    "store": "Store",
+    "organizations": "Organisasi",
+    "billing": "Tagihan",
+    "create_organization": "Buat organisasi",
+    "copyright": "© {{year}} LearnHouse, Inc.",
+    "delete_organization_error": "Tidak dapat menghapus organisasi ini. Silakan coba lagi.",
+    "org_actions": "Tindakan organisasi",
+    "manage_upgrade": "Kelola / Tingkatkan",
+    "delete_organization": "Hapus organisasi",
+    "delete_organization_warning": "Ini menghapus {{name}} dan seluruh datanya secara permanen. Tindakan ini tidak dapat dibatalkan.",
+    "delete_organization_confirm_label": "Ketik {{slug}} untuk mengonfirmasi",
+    "deleting": "Menghapus…"
   },
   "banner": {
     "viewing_as_guest": "Anda melihat {{name}} sebagai tamu.",
@@ -351,7 +362,21 @@
     "verify_email_title": "Verifikasi Email Anda",
     "verifying_email": "Memverifikasi alamat email Anda...",
     "error_generic": "Terjadi kesalahan. Silakan coba lagi.",
-    "sign_in": "Masuk"
+    "sign_in": "Masuk",
+    "terms_text": "Dengan melanjutkan, Anda menyetujui",
+    "terms_of_service": "Ketentuan Layanan",
+    "and": "dan",
+    "privacy_policy": "Kebijakan Privasi",
+    "image_title_forgot": "Atur ulang kata sandi Anda.",
+    "image_subtitle_forgot": "Kami akan membantu Anda kembali ke akun Anda dalam sekejap.",
+    "image_title_login": "Selamat datang kembali di LearnHouse.",
+    "image_subtitle_login": "Lanjutkan dari tempat Anda berhenti — kursus, siswa, dan alat Anda sudah menanti.",
+    "image_title_reset": "Hampir selesai.",
+    "image_subtitle_reset": "Buat kata sandi yang kuat untuk menjaga keamanan akun Anda.",
+    "image_title_signup": "Mulai mengajar dengan LearnHouse.",
+    "image_subtitle_signup": "Buat akun Anda dan luncurkan kursus pertama Anda dalam hitungan menit.",
+    "image_title_verify": "Verifikasi email Anda.",
+    "image_subtitle_verify": "Satu langkah cepat untuk mengamankan akun Anda dan memulai."
   },
   "validation": {
     "required": "Wajib isi",
@@ -985,7 +1010,13 @@
     "quiz": {
       "correct_answer": "Benar",
       "incorrect_answer": "Salah"
-    }
+    },
+    "quick_grade": {
+      "full": "Penuh",
+      "half": "Setengah",
+      "zero": "Nol"
+    },
+    "task_feedback_placeholder": "Catatan untuk tugas ini (disimpan bersama nilai)"
   },
   "certificate": {
     "certificate": "Sertifikat",
@@ -1082,7 +1113,23 @@
     "my_courses": "Kursus Saya",
     "no_purchased_courses": "Belum ada kursus yang dibeli",
     "purchased_courses_description": "Kursus yang Anda beli atau langgani akan muncul di sini",
-    "purchases": "Pembelian"
+    "purchases": "Pembelian",
+    "back_home": "Kembali ke organisasi",
+    "subtitle": "Kelola profil, keamanan, dan akun Anda",
+    "section": {
+      "profile": "Profil",
+      "security": "Keamanan",
+      "danger": "Zona berbahaya"
+    },
+    "delete": {
+      "success": "Akun Anda telah dihapus.",
+      "error": "Tidak dapat menghapus akun Anda. Silakan coba lagi.",
+      "title": "Hapus akun",
+      "description": "Hapus akun Anda secara permanen dan cabut akses Anda. Tindakan ini tidak dapat dibatalkan.",
+      "warning": "Ini menghapus akun Anda dan semua data terkait secara permanen. Tindakan ini tidak dapat dibatalkan.",
+      "confirm_label": "Ketik {{username}} untuk mengonfirmasi",
+      "deleting": "Menghapus…"
+    }
   },
   "user": {
     "user_settings": "Pengaturan Pengguna",
@@ -3608,7 +3655,8 @@
           "current_grade": "Nilai saat ini",
           "passing": "Lulus",
           "not_passing": "Tidak lulus",
-          "not_submitted": "Tidak dikumpulkan"
+          "not_submitted": "Tidak dikumpulkan",
+          "manually_graded": "Dinilai manual"
         },
         "feedback": {
           "label": "Umpan balik keseluruhan",
@@ -4864,9 +4912,9 @@
     "done": "Selesai, saya sudah siap!",
     "steps": {
       "create_course": {
-        "title": "Buat kursus pertama Anda",
-        "description": "Mulailah dengan membuat kursus baru untuk para pembelajar Anda.",
-        "action": "Buat Kursus"
+        "title": "Kursus pertama Anda telah aktif",
+        "description": "Terbitkan kursus agar ada sesuatu yang nyata untuk diikuti pelajar.",
+        "action": "Buat kursus"
       },
       "add_activities": {
         "title": "Tambahkan aktivitas ke kursus Anda",
@@ -4909,6 +4957,31 @@
         "classroom_desc": "Pelajari cara mengembangkan dan mengelola kursus Anda",
         "university": "Universitas LearnHouse",
         "university_desc": "Panduan, tips, dan praktik terbaik"
+      },
+      "add_content": {
+        "title": "Pelajaran yang layak untuk diikuti",
+        "description": "Tambahkan video, halaman, atau kuis — beri pelajar alasan nyata untuk mendaftar.",
+        "action": "Tambah konten"
+      },
+      "brand_school": {
+        "title": "Sekolah yang dipercaya pelajar",
+        "description": "Tambahkan logo dan warna Anda agar terlihat seperti sekolah yang kredibel dan profesional.",
+        "action": "Beri merek"
+      },
+      "share_grow": {
+        "title": "Pintu depan sekolah Anda",
+        "description": "Tayang dan ambil tautan yang dapat dibagikan — tempat Anda akan mengarahkan setiap pelajar.",
+        "action": "Buka sekolah saya"
+      },
+      "invite_learners": {
+        "title": "Sambut pelajar pertama Anda",
+        "description": "Bagikan tautan gabung Anda atau undang orang — bawa pelajar pertama itu masuk.",
+        "action": "Undang pelajar"
+      },
+      "build_community": {
+        "title": "Buat pelajar terus kembali",
+        "description": "Buka ruang komunitas agar pelajar Anda tetap aktif — dan membawa teman-teman mereka.",
+        "action": "Buka komunitas"
       }
     },
     "welcome": {
@@ -4943,7 +5016,15 @@
       "title": "Anda siap mengajarkan dunia",
       "description": "Semuanya sudah siap. Pelajar Anda menunggu sesuatu yang hebat.",
       "button": "Mulai mengajar"
-    }
+    },
+    "box_title": "Orientasi",
+    "up_next": "Berikutnya",
+    "continue_setup": "Lanjutkan penyiapan",
+    "done_label": "Selesai",
+    "video_placeholder": "Video panduan segera hadir",
+    "dismiss": "Saya akan selesaikan nanti",
+    "steps_done": "langkah selesai",
+    "back_to_dashboard": "Kembali ke dasbor"
   },
   "embed": {
     "not_supported_description": "Tipe aktivitas ini memerlukan autentikasi dan tidak dapat disematkan.",
@@ -5255,5 +5336,258 @@
       "unlink_success": "User group unlinked",
       "unlink_error": "Failed to unlink user group"
     }
+  },
+  "plan": {
+    "free_plan_title": "Paket gratis",
+    "free_plan_cta": "Buka seluruh platform",
+    "free_plan_desc": "Semua yang Anda butuhkan untuk mengajar, menjual & berkembang.",
+    "upgrade": "Tingkatkan"
+  },
+  "billing": {
+    "no_billing_account": "Tidak ada akun tagihan yang ditemukan. Berlangganan paket terlebih dahulu.",
+    "portal_error": "Tidak dapat membuka portal tagihan. Silakan coba lagi.",
+    "cancel_success": "Langganan akan dibatalkan pada akhir periode penagihan.",
+    "cancel_error": "Gagal membatalkan langganan. Silakan coba lagi.",
+    "checkout_error": "Gagal memulai pembayaran.",
+    "plan_and_usage": "Paket & Penggunaan",
+    "plan_and_usage_subtitle": "Kelola langganan Anda dan pantau penggunaan sumber daya.",
+    "billing": "Tagihan",
+    "org_inactive": "Organisasi Anda tidak aktif. Tingkatkan paket Anda untuk memulihkan akses.",
+    "upgrade": "Tingkatkan",
+    "on_free_plan": "Anda menggunakan paket gratis",
+    "free_upsell": "Tingkatkan untuk membuka fitur AI, domain khusus, dan lainnya.",
+    "managed_outside": "Paket ini dikelola di luar penagihan Stripe.",
+    "active": "Aktif",
+    "inactive": "Tidak aktif",
+    "current_plan": "Paket saat ini",
+    "canceling": "Membatalkan",
+    "billed_annually": "ditagih per tahun",
+    "billed_monthly": "ditagih per bulan",
+    "change_plan": "Ubah paket",
+    "canceling_ellipsis": "Membatalkan...",
+    "cancel_plan": "Batalkan paket",
+    "cycle": "Siklus",
+    "access_until": "Akses hingga",
+    "next_payment": "Pembayaran berikutnya",
+    "status": "Status",
+    "usage": "Penggunaan",
+    "courses": "Kursus",
+    "members": "Anggota",
+    "admin_seats": "Kursi admin",
+    "ai_credits": "Kredit AI",
+    "addons": "Pengaya",
+    "addons_subtitle": "Beli kredit AI atau kursi anggota tambahan sebagai langganan bulanan.",
+    "active_subscriptions": "Langganan aktif",
+    "credits": "kredit",
+    "seats": "kursi",
+    "available": "Tersedia",
+    "per_pack": "per paket",
+    "add": "Tambah",
+    "recurring_subscription": "langganan berulang",
+    "what_youre_getting": "Yang Anda dapatkan",
+    "pack_immediate": "Berlaku segera setelah pembayaran",
+    "pack_cancel_anytime": "Batalkan kapan saja — tetap aktif hingga akhir periode penagihan",
+    "pack_credits_reset": "Kredit diatur ulang setiap siklus penagihan",
+    "after_purchase": "Setelah pembelian",
+    "unlimited": "Tanpa batas",
+    "pack_redirect_notice": "Anda akan diarahkan ke Stripe untuk menyelesaikan pembayaran. Anda dapat membeli beberapa paket dengan jenis yang sama.",
+    "cancel": "Batal",
+    "continue_to_payment": "Lanjutkan ke pembayaran",
+    "step_choose_plan": "Pilih Paket",
+    "step_confirm": "Konfirmasi",
+    "step_done": "Selesai",
+    "back": "Kembali",
+    "switch_plan": "Ganti Paket",
+    "upgrade_plan": "Tingkatkan Paket",
+    "switch_subtitle": "Pilih paket baru. Perubahan dihitung secara prorata otomatis.",
+    "upgrade_subtitle": "Pilih paket untuk memulai.",
+    "your_plan": "Paket Anda",
+    "downgrade": "Turunkan",
+    "upgrade_summary": "Ringkasan Peningkatan",
+    "downgrade_summary": "Ringkasan Penurunan",
+    "current": "Saat ini",
+    "new": "Baru",
+    "annual_total": "Total tahunan",
+    "monthly_total": "Total bulanan",
+    "prorated_billing": "Penagihan prorata",
+    "prorated_desc": "Anda akan mendapatkan kredit untuk waktu yang belum terpakai pada paket Anda saat ini dan dikenakan selisihnya untuk paket baru. Perubahan berlaku segera.",
+    "subscription_cancellation": "Pembatalan langganan",
+    "end_of_cycle_switch": "Pergantian akhir siklus",
+    "cancel_desc": "Langganan Anda akan dibatalkan pada akhir periode penagihan saat ini. Anda tetap memiliki akses penuh hingga saat itu.",
+    "downgrade_desc": "Anda akan tetap menggunakan paket saat ini hingga akhir periode penagihan. Paket baru akan berlaku otomatis saat siklus Anda berakhir.",
+    "whats_included": "Yang termasuk",
+    "discount_code": "Kode diskon",
+    "enter_code": "Masukkan kode",
+    "checking": "Memeriksa...",
+    "apply": "Terapkan",
+    "code_applied": "Kode diterapkan",
+    "invalid_code": "Kode tidak valid atau kedaluwarsa",
+    "canceling_subscription": "Membatalkan langganan...",
+    "switching_plan": "Mengganti paket...",
+    "redirecting": "Mengarahkan ke Stripe...",
+    "confirm_cancellation": "Konfirmasi pembatalan",
+    "confirm_upgrade": "Konfirmasi peningkatan",
+    "confirm_downgrade": "Konfirmasi penurunan",
+    "secure_checkout": "Pembayaran aman didukung oleh Stripe",
+    "back_to_plans": "Kembali ke paket",
+    "plan_updated": "Paket diperbarui!",
+    "subscription_canceled": "Langganan dibatalkan",
+    "downgrade_scheduled": "Penurunan dijadwalkan",
+    "canceled_desc": "Langganan Anda akan dibatalkan pada akhir periode penagihan Anda saat ini. Anda tetap memiliki akses penuh hingga saat itu.",
+    "back_to_plan_usage": "Kembali ke Paket & Penggunaan",
+    "back_to_orgs": "Kembali ke organisasi"
+  },
+  "hub_new": {
+    "useType": {
+      "personal": {
+        "label": "Pribadi",
+        "subtitle": "Belajar dan bangun ruang Anda sendiri.",
+        "badge": "Baru"
+      },
+      "organization": {
+        "label": "Organisasi",
+        "subtitle": "Ajarkan tim, sekolah, atau audiens."
+      }
+    },
+    "useCases": {
+      "personal": {
+        "title": "Belajar mandiri",
+        "description": "Atur kursus untuk diri Anda sendiri."
+      },
+      "creators": {
+        "title": "Kreator",
+        "description": "Jual kursus ke audiens Anda."
+      },
+      "business": {
+        "title": "Bisnis",
+        "description": "Latih karyawan Anda."
+      }
+    },
+    "personalGoals": {
+      "learnSkills": "Pelajari keterampilan",
+      "teachOthers": "Ajari orang lain",
+      "coding": "Pemrograman",
+      "creative": "Kreatif",
+      "music": "Musik",
+      "ai": "AI",
+      "literature": "Sastra",
+      "science": "Sains",
+      "business": "Bisnis",
+      "health": "Kesehatan",
+      "photography": "Fotografi",
+      "writing": "Menulis",
+      "languages": "Bahasa",
+      "gaming": "Gim"
+    },
+    "personalUsage": {
+      "title": "Apa yang ingin Anda pelajari?",
+      "subtitle": "Pilih semua yang sesuai."
+    },
+    "teamSizes": {
+      "solo": "Sendiri",
+      "2-10": "2–10",
+      "11-50": "11–50",
+      "51-200": "51–200",
+      "200plus": "200+"
+    },
+    "orgUseCases": {
+      "employeeTraining": "Pelatihan karyawan",
+      "onlineCourses": "Kursus online",
+      "customerEducation": "Edukasi pelanggan",
+      "academicPrograms": "Program akademik",
+      "developerDocs": "Dokumentasi pengembang",
+      "communityLearning": "Pembelajaran komunitas"
+    },
+    "orgUsage": {
+      "teamSizeTitle": "Seberapa besar tim Anda?",
+      "useCaseTitle": "Untuk apa Anda akan menggunakannya?"
+    },
+    "createOrg": {
+      "testHint": {
+        "title": "Ingin mencoba?",
+        "body": "Kunjungi",
+        "link": "halaman Pengembang",
+        "suffix": "untuk mencoba LearnHouse."
+      },
+      "validation": {
+        "required": "Wajib diisi",
+        "lowercase": "Hanya huruf kecil",
+        "noSpecialChars": "Hanya huruf, angka, dan tanda hubung",
+        "reserved": "Slug ini sudah dipesan",
+        "maxLength": "Maksimal 20 karakter"
+      },
+      "fields": {
+        "name": "Nama organisasi",
+        "description": "Deskripsi (opsional)",
+        "slug": "Alamat"
+      },
+      "placeholders": {
+        "name": "Acme Academy",
+        "description": "Tentang apa organisasi Anda?"
+      },
+      "submitting": "Membuat…",
+      "submitPaid": "Buat & lanjutkan ke pembayaran",
+      "submit": "Buat organisasi"
+    },
+    "success": {
+      "title": "Organisasi Anda sudah siap",
+      "description": "Langsung masuk dan mulai bangun kursus Anda.",
+      "goToOrg": "Buka organisasi",
+      "cta": "Kembali ke organisasi"
+    },
+    "toast": {
+      "creating": "Membuat organisasi…",
+      "created": "Organisasi dibuat!",
+      "checkoutFailed": "Organisasi dibuat — Anda dapat meningkatkan dari Paket & Penggunaan.",
+      "failed": "Gagal membuat organisasi"
+    },
+    "steps": {
+      "useType": {
+        "title": "Apa yang Anda buat?",
+        "subtitle": "Ini membantu kami menyesuaikan ruang Anda."
+      },
+      "usage": {
+        "title": "Ceritakan sedikit lebih banyak",
+        "subtitle": "Agar kami dapat merekomendasikan penyiapan yang tepat."
+      },
+      "choosePlan": {
+        "title": "Pilih paket",
+        "subtitle": "Anda dapat mengubah ini kapan saja."
+      },
+      "createOrg": {
+        "title": "Beri nama organisasi Anda",
+        "subtitle": "Pilih nama dan alamat web."
+      },
+      "success": {
+        "title": "Semua siap"
+      }
+    },
+    "topBar": {
+      "back": "Organisasi"
+    },
+    "freeLimit": "Batas 1 organisasi gratis telah tercapai",
+    "navigation": {
+      "back": "Kembali",
+      "continue": "Lanjutkan",
+      "skip": "Lewati"
+    }
+  },
+  "subscriptions": {
+    "no_subscription": "Tidak ada langganan",
+    "cancels_on": "Dibatalkan pada {{date}}",
+    "cancels": "Dibatalkan pada akhir periode",
+    "status_active": "Aktif",
+    "status_trialing": "Masa percobaan",
+    "status_past_due": "Jatuh tempo",
+    "status_canceled": "Dibatalkan",
+    "status_unpaid": "Belum dibayar",
+    "renews_on": "Diperpanjang {{date}}",
+    "manage_plan": "Kelola paket",
+    "portal_error": "Tidak dapat membuka portal tagihan. Silakan coba lagi.",
+    "back_home": "Kembali ke beranda",
+    "title": "Langganan",
+    "subtitle": "Paket dan tagihan di seluruh organisasi Anda",
+    "opening": "Membuka…",
+    "manage_billing": "Kelola tagihan"
   }
 }

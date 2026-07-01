@@ -211,7 +211,18 @@
     "no_content_yet": "아직 콘텐츠가 없습니다",
     "other": "Other",
     "disabled": "Disabled",
-    "store": "Store"
+    "store": "Store",
+    "organizations": "조직",
+    "billing": "결제",
+    "create_organization": "조직 만들기",
+    "copyright": "© {{year}} LearnHouse, Inc.",
+    "delete_organization_error": "이 조직을 삭제할 수 없습니다. 다시 시도해 주세요.",
+    "org_actions": "조직 작업",
+    "manage_upgrade": "관리 / 업그레이드",
+    "delete_organization": "조직 삭제",
+    "delete_organization_warning": "{{name}} 및 모든 데이터가 영구적으로 삭제됩니다. 이 작업은 되돌릴 수 없습니다.",
+    "delete_organization_confirm_label": "확인하려면 {{slug}}을(를) 입력하세요",
+    "deleting": "삭제 중…"
   },
   "banner": {
     "viewing_as_guest": "{{name}}을(를) 게스트로 보고 있습니다.",
@@ -334,7 +345,21 @@
     "sso_error": "SSO 인증에 실패했습니다. 다시 시도해 주세요.",
     "try_again_in": "{{minutes}}분 후에 다시 시도해 주세요",
     "error_generic": "문제가 발생했습니다. 다시 시도해 주세요.",
-    "sign_in": "로그인"
+    "sign_in": "로그인",
+    "terms_text": "계속 진행하면 LearnHouse의",
+    "terms_of_service": "서비스 약관",
+    "and": "및",
+    "privacy_policy": "개인정보 처리방침",
+    "image_title_forgot": "비밀번호를 재설정하세요.",
+    "image_subtitle_forgot": "금방 계정에 다시 접근할 수 있도록 도와드릴게요.",
+    "image_title_login": "LearnHouse에 다시 오신 것을 환영합니다.",
+    "image_subtitle_login": "멈췄던 곳에서 이어가세요 — 코스, 학습자, 도구가 기다리고 있습니다.",
+    "image_title_reset": "거의 다 왔어요.",
+    "image_subtitle_reset": "강력한 비밀번호를 만들어 계정을 안전하게 보호하세요.",
+    "image_title_signup": "LearnHouse로 가르치기를 시작하세요.",
+    "image_subtitle_signup": "계정을 만들고 몇 분 만에 첫 코스를 시작하세요.",
+    "image_title_verify": "이메일을 인증하세요.",
+    "image_subtitle_verify": "계정을 보호하고 시작하기 위한 빠른 한 단계입니다."
   },
   "verify_email": {
     "title": "이메일 인증",
@@ -989,7 +1014,13 @@
     "retry_assignment_last": "마지막 시도입니다 — 신중하게 작성하세요.",
     "retry_assignment_success": "작업이 초기화되었습니다 — 다시 도전해 보세요.",
     "retry_assignment_failed": "제출물을 초기화하지 못했습니다. 다시 시도해 주세요.",
-    "retry_no_attempts_left": "남은 재시도가 없습니다"
+    "retry_no_attempts_left": "남은 재시도가 없습니다",
+    "quick_grade": {
+      "full": "만점",
+      "half": "절반",
+      "zero": "영점"
+    },
+    "task_feedback_placeholder": "이 과제에 대한 메모 (점수와 함께 저장됨)"
   },
   "certificate": {
     "certificate": "수료증",
@@ -1086,7 +1117,23 @@
     "my_courses": "내 강좌",
     "no_purchased_courses": "구매한 강좌가 없습니다",
     "purchased_courses_description": "구매하거나 구독한 강좌가 여기에 표시됩니다",
-    "purchases": "구매 내역"
+    "purchases": "구매 내역",
+    "back_home": "조직으로 돌아가기",
+    "subtitle": "프로필, 보안 및 계정을 관리하세요",
+    "section": {
+      "profile": "프로필",
+      "security": "보안",
+      "danger": "위험 구역"
+    },
+    "delete": {
+      "success": "계정이 삭제되었습니다.",
+      "error": "계정을 삭제할 수 없습니다. 다시 시도해 주세요.",
+      "title": "계정 삭제",
+      "description": "계정을 영구적으로 삭제하고 접근 권한을 제거합니다. 되돌릴 수 없습니다.",
+      "warning": "계정과 관련된 모든 데이터가 영구적으로 삭제됩니다. 이 작업은 되돌릴 수 없습니다.",
+      "confirm_label": "확인하려면 {{username}}을(를) 입력하세요",
+      "deleting": "삭제 중…"
+    }
   },
   "user": {
     "user_settings": "사용자 설정",
@@ -3615,7 +3662,8 @@
           "current_grade": "현재 성적",
           "passing": "합격",
           "not_passing": "불합격",
-          "not_submitted": "미제출"
+          "not_submitted": "미제출",
+          "manually_graded": "수동 채점됨"
         },
         "feedback": {
           "label": "전체 피드백",
@@ -4624,8 +4672,8 @@
     "done": "완료, 준비됐습니다!",
     "steps": {
       "create_course": {
-        "title": "첫 번째 코스 만들기",
-        "description": "학습자를 위한 새 코스를 만들어 시작하세요.",
+        "title": "첫 코스가 공개되었습니다",
+        "description": "코스를 게시해서 학습자가 실제로 등록할 수 있는 콘텐츠를 만드세요.",
         "action": "코스 만들기"
       },
       "add_activities": {
@@ -4669,6 +4717,31 @@
         "classroom_desc": "코스를 성장시키고 관리하는 방법을 배우세요",
         "university": "LearnHouse 대학교",
         "university_desc": "가이드, 팁 및 모범 사례"
+      },
+      "add_content": {
+        "title": "찾아올 만한 가치가 있는 레슨",
+        "description": "영상, 페이지 또는 퀴즈를 추가하세요 — 학습자에게 등록할 진짜 이유를 주세요.",
+        "action": "콘텐츠 추가"
+      },
+      "brand_school": {
+        "title": "학습자가 신뢰하는 학교",
+        "description": "로고와 색상을 추가해 믿을 수 있는 전문적인 학교처럼 보이게 하세요.",
+        "action": "브랜딩하기"
+      },
+      "share_grow": {
+        "title": "학교의 현관문",
+        "description": "공개로 전환하고 공유 링크를 받으세요 — 모든 학습자를 안내할 바로 그곳입니다.",
+        "action": "내 학교 열기"
+      },
+      "invite_learners": {
+        "title": "첫 학습자를 맞이하세요",
+        "description": "참여 링크를 공유하거나 사람들을 초대하세요 — 첫 학습자가 들어오게 하세요.",
+        "action": "학습자 초대"
+      },
+      "build_community": {
+        "title": "학습자가 계속 돌아오게 하세요",
+        "description": "커뮤니티 공간을 열어 학습자가 활발히 활동하고 친구들도 데려오게 하세요.",
+        "action": "커뮤니티 열기"
       }
     },
     "welcome": {
@@ -4703,7 +4776,15 @@
       "title": "세상을 가르칠 준비가 되었습니다",
       "description": "모든 준비가 완료되었습니다. 학습자들이 멋진 콘텐츠를 기다리고 있습니다.",
       "button": "가르치기 시작"
-    }
+    },
+    "box_title": "온보딩",
+    "up_next": "다음 단계",
+    "continue_setup": "설정 계속하기",
+    "done_label": "완료",
+    "video_placeholder": "둘러보기 영상이 곧 제공됩니다",
+    "dismiss": "나중에 마저 할게요",
+    "steps_done": "단계 완료",
+    "back_to_dashboard": "대시보드로 돌아가기"
   },
   "boards": {
     "access": {
@@ -5281,5 +5362,258 @@
     "folder_count_one": "{{count}}개 폴더",
     "item_count": "{{count}}개 항목",
     "item_count_one": "{{count}}개 항목"
+  },
+  "plan": {
+    "free_plan_title": "무료 플랜",
+    "free_plan_cta": "전체 플랫폼 잠금 해제",
+    "free_plan_desc": "가르치고, 판매하고, 성장하는 데 필요한 모든 것.",
+    "upgrade": "업그레이드"
+  },
+  "billing": {
+    "no_billing_account": "결제 계정을 찾을 수 없습니다. 먼저 플랜을 구독하세요.",
+    "portal_error": "결제 포털을 열 수 없습니다. 다시 시도해 주세요.",
+    "cancel_success": "구독이 결제 기간이 끝날 때 취소됩니다.",
+    "cancel_error": "구독 취소에 실패했습니다. 다시 시도해 주세요.",
+    "checkout_error": "결제를 시작하지 못했습니다.",
+    "plan_and_usage": "플랜 및 사용량",
+    "plan_and_usage_subtitle": "구독을 관리하고 리소스 사용량을 모니터링하세요.",
+    "billing": "결제",
+    "org_inactive": "조직이 비활성 상태입니다. 플랜을 업그레이드하여 접근 권한을 복구하세요.",
+    "upgrade": "업그레이드",
+    "on_free_plan": "현재 무료 플랜을 사용 중입니다",
+    "free_upsell": "업그레이드하여 AI 기능, 맞춤 도메인 등을 잠금 해제하세요.",
+    "managed_outside": "이 플랜은 Stripe 결제 외부에서 관리됩니다.",
+    "active": "활성",
+    "inactive": "비활성",
+    "current_plan": "현재 플랜",
+    "canceling": "취소 중",
+    "billed_annually": "연간 청구",
+    "billed_monthly": "월간 청구",
+    "change_plan": "플랜 변경",
+    "canceling_ellipsis": "취소 중...",
+    "cancel_plan": "플랜 취소",
+    "cycle": "주기",
+    "access_until": "접근 가능 기한",
+    "next_payment": "다음 결제",
+    "status": "상태",
+    "usage": "사용량",
+    "courses": "코스",
+    "members": "멤버",
+    "admin_seats": "관리자 좌석",
+    "ai_credits": "AI 크레딧",
+    "addons": "추가 기능",
+    "addons_subtitle": "추가 AI 크레딧이나 멤버 좌석을 월간 구독으로 구매하세요.",
+    "active_subscriptions": "활성 구독",
+    "credits": "크레딧",
+    "seats": "좌석",
+    "available": "사용 가능",
+    "per_pack": "팩당",
+    "add": "추가",
+    "recurring_subscription": "정기 구독",
+    "what_youre_getting": "받게 되는 혜택",
+    "pack_immediate": "결제 후 즉시 적용됩니다",
+    "pack_cancel_anytime": "언제든지 취소 가능 — 결제 기간이 끝날 때까지 유지됩니다",
+    "pack_credits_reset": "크레딧은 결제 주기마다 초기화됩니다",
+    "after_purchase": "구매 후",
+    "unlimited": "무제한",
+    "pack_redirect_notice": "결제를 완료하기 위해 Stripe로 이동합니다. 같은 유형의 팩을 여러 개 구매할 수 있습니다.",
+    "cancel": "취소",
+    "continue_to_payment": "결제로 계속하기",
+    "step_choose_plan": "플랜 선택",
+    "step_confirm": "확인",
+    "step_done": "완료",
+    "back": "뒤로",
+    "switch_plan": "플랜 전환",
+    "upgrade_plan": "플랜 업그레이드",
+    "switch_subtitle": "새 플랜을 선택하세요. 변경 사항은 자동으로 일할 계산됩니다.",
+    "upgrade_subtitle": "시작할 플랜을 선택하세요.",
+    "your_plan": "내 플랜",
+    "downgrade": "다운그레이드",
+    "upgrade_summary": "업그레이드 요약",
+    "downgrade_summary": "다운그레이드 요약",
+    "current": "현재",
+    "new": "신규",
+    "annual_total": "연간 합계",
+    "monthly_total": "월간 합계",
+    "prorated_billing": "일할 계산 청구",
+    "prorated_desc": "현재 플랜의 미사용 기간에 대해 크레딧을 받고 새 플랜의 차액이 청구됩니다. 변경 사항은 즉시 적용됩니다.",
+    "subscription_cancellation": "구독 취소",
+    "end_of_cycle_switch": "주기 종료 시 전환",
+    "cancel_desc": "구독은 현재 결제 기간이 끝날 때 취소됩니다. 그때까지 전체 접근 권한이 유지됩니다.",
+    "downgrade_desc": "결제 기간이 끝날 때까지 현재 플랜을 유지합니다. 현재 주기가 종료되면 새 플랜이 자동으로 적용됩니다.",
+    "whats_included": "포함된 내용",
+    "discount_code": "할인 코드",
+    "enter_code": "코드 입력",
+    "checking": "확인 중...",
+    "apply": "적용",
+    "code_applied": "코드 적용됨",
+    "invalid_code": "유효하지 않거나 만료된 코드",
+    "canceling_subscription": "구독 취소 중...",
+    "switching_plan": "플랜 전환 중...",
+    "redirecting": "Stripe로 이동 중...",
+    "confirm_cancellation": "취소 확인",
+    "confirm_upgrade": "업그레이드 확인",
+    "confirm_downgrade": "다운그레이드 확인",
+    "secure_checkout": "Stripe가 제공하는 안전한 결제",
+    "back_to_plans": "플랜으로 돌아가기",
+    "plan_updated": "플랜이 업데이트되었습니다!",
+    "subscription_canceled": "구독이 취소되었습니다",
+    "downgrade_scheduled": "다운그레이드 예약됨",
+    "canceled_desc": "구독은 현재 결제 기간이 끝날 때 취소됩니다. 그때까지 전체 접근 권한이 유지됩니다.",
+    "back_to_plan_usage": "플랜 및 사용량으로 돌아가기",
+    "back_to_orgs": "조직으로 돌아가기"
+  },
+  "hub_new": {
+    "useType": {
+      "personal": {
+        "label": "개인",
+        "subtitle": "스스로 배우고 나만의 공간을 만드세요.",
+        "badge": "신규"
+      },
+      "organization": {
+        "label": "조직",
+        "subtitle": "팀, 학교 또는 청중을 가르치세요."
+      }
+    },
+    "useCases": {
+      "personal": {
+        "title": "자기 주도 학습",
+        "description": "나를 위한 코스를 정리하세요."
+      },
+      "creators": {
+        "title": "크리에이터",
+        "description": "청중에게 코스를 판매하세요."
+      },
+      "business": {
+        "title": "비즈니스",
+        "description": "직원을 교육하세요."
+      }
+    },
+    "personalGoals": {
+      "learnSkills": "기술 배우기",
+      "teachOthers": "다른 사람 가르치기",
+      "coding": "코딩",
+      "creative": "창작",
+      "music": "음악",
+      "ai": "AI",
+      "literature": "문학",
+      "science": "과학",
+      "business": "비즈니스",
+      "health": "건강",
+      "photography": "사진",
+      "writing": "글쓰기",
+      "languages": "언어",
+      "gaming": "게임"
+    },
+    "personalUsage": {
+      "title": "무엇을 배우고 싶으신가요?",
+      "subtitle": "해당하는 항목을 모두 선택하세요."
+    },
+    "teamSizes": {
+      "solo": "혼자",
+      "2-10": "2–10",
+      "11-50": "11–50",
+      "51-200": "51–200",
+      "200plus": "200+"
+    },
+    "orgUseCases": {
+      "employeeTraining": "직원 교육",
+      "onlineCourses": "온라인 코스",
+      "customerEducation": "고객 교육",
+      "academicPrograms": "학술 프로그램",
+      "developerDocs": "개발자 문서",
+      "communityLearning": "커뮤니티 학습"
+    },
+    "orgUsage": {
+      "teamSizeTitle": "팀 규모는 어느 정도인가요?",
+      "useCaseTitle": "어떤 용도로 사용하시나요?"
+    },
+    "createOrg": {
+      "testHint": {
+        "title": "테스트해 보고 싶으신가요?",
+        "body": "다음으로 이동하세요:",
+        "link": "개발자 페이지",
+        "suffix": "에서 LearnHouse를 대신 사용해 보세요."
+      },
+      "validation": {
+        "required": "필수 항목",
+        "lowercase": "소문자만 가능",
+        "noSpecialChars": "문자, 숫자, 하이픈만 가능",
+        "reserved": "이 슬러그는 예약되어 있습니다",
+        "maxLength": "최대 20자"
+      },
+      "fields": {
+        "name": "조직 이름",
+        "description": "설명 (선택 사항)",
+        "slug": "주소"
+      },
+      "placeholders": {
+        "name": "Acme Academy",
+        "description": "조직은 어떤 일을 하나요?"
+      },
+      "submitting": "생성 중…",
+      "submitPaid": "생성하고 결제로 계속하기",
+      "submit": "조직 만들기"
+    },
+    "success": {
+      "title": "조직이 준비되었습니다",
+      "description": "바로 시작해서 코스를 만들어 보세요.",
+      "goToOrg": "조직으로 이동",
+      "cta": "조직으로 돌아가기"
+    },
+    "toast": {
+      "creating": "조직 생성 중…",
+      "created": "조직이 생성되었습니다!",
+      "checkoutFailed": "조직이 생성되었습니다 — 플랜 및 사용량에서 업그레이드할 수 있습니다.",
+      "failed": "조직 생성에 실패했습니다"
+    },
+    "steps": {
+      "useType": {
+        "title": "무엇을 만들고 계신가요?",
+        "subtitle": "공간을 맞춤 설정하는 데 도움이 됩니다."
+      },
+      "usage": {
+        "title": "조금 더 알려주세요",
+        "subtitle": "알맞은 설정을 추천해 드릴 수 있도록요."
+      },
+      "choosePlan": {
+        "title": "플랜 선택",
+        "subtitle": "언제든지 변경할 수 있습니다."
+      },
+      "createOrg": {
+        "title": "조직 이름 정하기",
+        "subtitle": "이름과 웹 주소를 선택하세요."
+      },
+      "success": {
+        "title": "모두 완료"
+      }
+    },
+    "topBar": {
+      "back": "조직"
+    },
+    "freeLimit": "무료 조직 1개 한도에 도달했습니다",
+    "navigation": {
+      "back": "뒤로",
+      "continue": "계속",
+      "skip": "건너뛰기"
+    }
+  },
+  "subscriptions": {
+    "no_subscription": "구독 없음",
+    "cancels_on": "{{date}}에 취소됨",
+    "cancels": "기간 종료 시 취소",
+    "status_active": "활성",
+    "status_trialing": "체험 중",
+    "status_past_due": "연체",
+    "status_canceled": "취소됨",
+    "status_unpaid": "미결제",
+    "renews_on": "{{date}}에 갱신",
+    "manage_plan": "플랜 관리",
+    "portal_error": "결제 포털을 열 수 없습니다. 다시 시도해 주세요.",
+    "back_home": "홈으로 돌아가기",
+    "title": "구독",
+    "subtitle": "조직 전반의 플랜 및 결제",
+    "opening": "여는 중…",
+    "manage_billing": "결제 관리"
   }
 }

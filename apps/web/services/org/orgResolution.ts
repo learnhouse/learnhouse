@@ -1,4 +1,4 @@
-import { cookies, headers } from 'next/headers'
+import { cookies } from 'next/headers'
 import { getOrganizationContextInfoWithoutCredentials, getOrganizationContextInfoWithUUID } from '@services/organizations/orgs'
 
 export interface ResolvedOrg {
@@ -87,6 +87,28 @@ export async function getOrgSlug(): Promise<string | null> {
   return null
 }
 
+/**
+ * Resolve the org slug for AUTH pages (login/signup/reset/forgot/verify).
+ *
+ * Auth org context is driven by WHERE you are, not by a (possibly stale)
+ * `LH_org` cookie:
+ *  - multi tenancy: the SUBDOMAIN only. `corp.learn.io` → "corp"; the bare apex
+ *    `learn.io` → null, i.e. a generic, org-less login. We deliberately do NOT
+ *    fall back to the cookie so the apex is never branded with a previous org.
+ *  - single tenancy: the default org (from the `LH_org` cookie the middleware
+ *    pinned) is the only context, so auth is branded for it.
+ */
+export async function getAuthOrgSlug(): Promise<string | null> {
+  const tenancy = await getServerTenancy()
+
+  if (tenancy === 'multi') {
+    return await getOrgSlugFromSubdomainViaEE()
+  }
+
+  const cookieStore = await cookies()
+  return cookieStore.get('LH_org')?.value ?? null
+}
+
 // =============================================================================
 // EE delegation (multi tenancy)
 // =============================================================================
@@ -111,7 +133,7 @@ async function getOrgSlugFromSubdomainViaEE(): Promise<string | null> {
       || cookieStore.get('LH_frontend_domain')?.value
       || 'localhost'
     return await mod.getOrgSlugFromHost(frontendDomain)
-  } catch (err) {
+  } catch {
     // EE module unavailable — multi tenancy without EE is invalid; the
     // backend would have refused to boot. Stay quiet here.
     return null
