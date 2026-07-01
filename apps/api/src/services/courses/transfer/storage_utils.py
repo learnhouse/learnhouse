@@ -108,10 +108,10 @@ def is_s3_enabled() -> bool:
     return get_content_delivery_type() == "s3api"
 
 
-# Default presigned-URL lifetime (12h). Long enough to cover a full viewing
-# session plus seeking: the browser follows the redirect once and reuses the
-# resolved R2 URL for every subsequent Range request within the same load.
-PRESIGNED_URL_TTL_SECONDS = 12 * 60 * 60
+# Presigned-URL lifetime (24h). Must stay comfortably longer than the redirect
+# Cache-Control window (see stream.py) so a browser-cached 302 never points at
+# an already-expired URL. 24h TTL + 6h cache leaves ≥18h of validity margin.
+PRESIGNED_URL_TTL_SECONDS = 24 * 60 * 60
 
 
 def generate_presigned_get_url(

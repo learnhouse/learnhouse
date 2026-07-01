@@ -38,9 +38,15 @@ router = APIRouter()
 # Base content directory
 CONTENT_DIR = "content"
 
-# Sent on every redirect to a presigned URL so the browser always fetches a
-# fresh, non-expired link instead of caching one that may be about to lapse.
-_PRESIGNED_REDIRECT_HEADERS = {"Cache-Control": "private, max-age=0, no-store"}
+# The 302 to the presigned URL is cacheable for a bounded window. This is
+# critical for smooth playback: without it (no-store) the browser re-resolves
+# the redirect — re-running RBAC + presign (~0.3–1.3s) — on every seek and
+# reconnect, starving the buffer and causing periodic stalls. Caching lets the
+# browser resolve once and reuse the same R2 URL for all Range requests. The
+# 6h window stays well under the 24h presign TTL so a cached 302 never points
+# at an expired URL. "private" keeps shared caches (Cloudflare) from storing a
+# user-scoped signed URL.
+_PRESIGNED_REDIRECT_HEADERS = {"Cache-Control": "private, max-age=21600"}
 
 
 def _redirect_to_storage(file_path: str) -> RedirectResponse | None:
