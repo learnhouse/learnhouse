@@ -2,8 +2,35 @@
 
 import React, { useEffect, useRef } from 'react'
 import 'video.js/dist/video-js.css'
-import '@videojs/themes/dist/city/index.css'
+import './learnhouse-player.css'
 import { shouldSendHlsCredentials } from './videoSource'
+
+const SEEK_SECONDS = 10
+
+/* Register ±10s seek-button components once (video.js Button API — no plugin). */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function registerSeekButtons(videojs: any) {
+  const Button = videojs.getComponent('Button')
+  const make = (name: string, cls: string, label: string, delta: number) => {
+    if (videojs.getComponent(name)) return
+    class SeekButton extends Button {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      constructor(player: any, options: any) {
+        super(player, options)
+        this.controlText(label)
+        this.addClass(cls)
+      }
+      handleClick() {
+        const cur = this.player().currentTime() ?? 0
+        const dur = this.player().duration() || Infinity
+        this.player().currentTime(Math.max(0, Math.min(dur, cur + delta)))
+      }
+    }
+    videojs.registerComponent(name, SeekButton)
+  }
+  make('LhSeekBack', 'vjs-seek-back-10', `Rewind ${SEEK_SECONDS} seconds`, -SEEK_SECONDS)
+  make('LhSeekForward', 'vjs-seek-forward-10', `Forward ${SEEK_SECONDS} seconds`, SEEK_SECONDS)
+}
 
 interface VideoDetails {
   startTime?: number
@@ -66,6 +93,8 @@ const LearnHousePlayer: React.FC<LearnHousePlayerProps> = ({
       await import('videojs-sprite-thumbnails')
       if (disposed || !containerRef.current) return
 
+      registerSeekButtons(videojs)
+
       // Send the auth cookie only to our API playlist endpoint (RBAC); presigned
       // R2 segment requests must stay uncredentialed (R2 CORS).
        
@@ -82,7 +111,7 @@ const LearnHousePlayer: React.FC<LearnHousePlayerProps> = ({
       }
 
       const videoEl = document.createElement('video-js')
-      videoEl.classList.add('vjs-big-play-centered', 'vjs-theme-city')
+      videoEl.classList.add('vjs-big-play-centered', 'vjs-theme-learnhouse')
       videoEl.setAttribute('playsinline', '')
       containerRef.current.appendChild(videoEl)
 
@@ -105,6 +134,17 @@ const LearnHousePlayer: React.FC<LearnHousePlayerProps> = ({
         onReady?.()
       })
       playerRef.current = player
+
+      // Insert the ±10s seek buttons right after the play button.
+      try {
+        const bar = player.getChild('ControlBar')
+        if (bar && !bar.getChild('LhSeekBack')) {
+          bar.addChild('LhSeekBack', {}, 1)
+          bar.addChild('LhSeekForward', {}, 2)
+        }
+      } catch {
+        /* seek buttons are best-effort */
+      }
 
       // Casual-download deterrents (cosmetic — not real protection; the segments
       // are AES-128 encrypted server-side for the actual bar-raising).
