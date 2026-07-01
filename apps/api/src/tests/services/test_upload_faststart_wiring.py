@@ -54,3 +54,12 @@ async def test_filesystem_upload_invokes_faststart(monkeypatch, tmp_path):
     assert seen["path"].endswith(
         "content/orgs/org_x/courses/c/activities/a/video/clip.mp4"
     )
+
+
+def test_safe_content_path_rejects_absolute_escape(tmp_path, monkeypatch):
+    # An absolute part resets the join and escapes the content root → 400 via
+    # the realpath/commonpath containment check (not the ".." fast-path).
+    monkeypatch.chdir(tmp_path)
+    with pytest.raises(HTTPException) as ei:
+        _safe_content_path("orgs", "/etc/passwd")
+    assert ei.value.status_code == 400

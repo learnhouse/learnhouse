@@ -357,3 +357,61 @@ async def test_run_worker_requires_redis(monkeypatch):
     monkeypatch.setattr(hls_jobs, "get_redis_client", lambda: None)
     with pytest.raises(RuntimeError):
         await hls_jobs.run_worker()
+
+
+# --------------------------------------------------------------------------
+# enqueue branch coverage
+# --------------------------------------------------------------------------
+
+def test_enqueue_redis_rpush_error_is_swallowed(monkeypatch):
+    monkeypatch.setattr(hls_jobs, "hls_enabled", lambda: True)
+    monkeypatch.setattr(hls_jobs, "inprocess_worker_enabled", lambda: False)
+
+    class _R:
+        def rpush(self, *a):
+            raise RuntimeError("redis down")
+
+    monkeypatch.setattr(hls_jobs, "get_redis_client", lambda: _R())
+    # Must not raise despite the Redis error.
+    hls_jobs.enqueue("act1")
+
+
+def test_enqueue_no_redis_no_inprocess_warns(monkeypatch):
+    monkeypatch.setattr(hls_jobs, "hls_enabled", lambda: True)
+    monkeypatch.setattr(hls_jobs, "inprocess_worker_enabled", lambda: False)
+    monkeypatch.setattr(hls_jobs, "get_redis_client", lambda: None)
+    hls_jobs.enqueue("act1")  # hits the "no queue, no worker" warning branch
+
+
+async def test_enqueue_spawns_inprocess_worker(monkeypatch):
+    monkeypatch.setattr(hls_jobs, "hls_enabled", lambda: True)
+    monkeypatch.setattr(hls_jobs, "inprocess_worker_enabled", lambda: True)
+    monkeypatch.setattr(hls_jobs, "get_redis_client", lambda: None)
+    processed = []
+
+    async def _tr(uuid):
+        processed.append(uuid)
+        return True
+
+    monkeypatch.setattr(hls_jobs, "transcode_activity", _tr)
+    hls_jobs.enqueue("act_inproc")
+    # Let the spawned task run.
+    for _ in range(5):
+        await asyncio.sleep(0)
+    assert processed == ["act_inproc"]
+
+
+async def test_run_worker_recovers_from_poll_error(monkeypatch):
+    calls = {"n": 0}
+
+    class _R:
+        def blpop(self, key, timeout):
+            calls["n"] += 1
+            if calls["n"] == 1:
+                raise RuntimeError("transient redis error")
+            raise asyncio.CancelledError()
+
+    monkeypatch.setattr(hls_jobs, "get_redis_client", lambda: _R())
+    with pytest.raises(asyncio.CancelledError):
+        await hls_jobs.run_worker(poll_timeout=0)
+    assert calls["n"] == 2  # recovered from the first error, polled again
