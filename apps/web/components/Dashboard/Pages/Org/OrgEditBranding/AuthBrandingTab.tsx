@@ -9,7 +9,6 @@ import { toast } from 'react-hot-toast'
 import { constructAcceptValue } from '@/lib/constants'
 import { updateOrgAuthBrandingConfig, uploadOrgAuthBackground, AuthBrandingConfig } from '@services/settings/org'
 import { cn } from '@/lib/utils'
-import { Input } from "@components/ui/input"
 import { Button } from "@components/ui/button"
 import { Label } from "@components/ui/label"
 import { Textarea } from "@components/ui/textarea"
@@ -18,7 +17,6 @@ import { revalidateTags } from '@services/utils/ts/requests'
 import { useQueryClient } from '@tanstack/react-query'
 import { queryKeys } from '@/lib/query/keys'
 import UnsplashImagePicker, { UnsplashPhotoMeta } from '@components/Dashboard/Pages/Course/EditCourseGeneral/UnsplashImagePicker'
-import { isOSSMode } from '@services/config/config'
 import { usePlan } from '@components/Hooks/usePlan'
 
 const SUPPORTED_FILES = constructAcceptValue(['png', 'jpg', 'webp'])
@@ -84,7 +82,7 @@ export default function AuthBrandingTab() {
       queryClient.invalidateQueries({ queryKey: queryKeys.org.detail(org.slug) })
       toast.success(t('dashboard.organization.auth_branding.save_success'), { id: loadingToast })
       router.refresh()
-    } catch (err) {
+    } catch {
       toast.error(t('dashboard.organization.auth_branding.save_error'), { id: loadingToast })
     } finally {
       setIsSaving(false)
@@ -103,7 +101,7 @@ export default function AuthBrandingTab() {
         setBackgroundType('custom')
         toast.success(t('dashboard.organization.auth_branding.upload_success'), { id: loadingToast })
         queryClient.invalidateQueries({ queryKey: queryKeys.org.detail(org.slug) })
-      } catch (err) {
+      } catch {
         toast.error(t('dashboard.organization.auth_branding.upload_error'), { id: loadingToast })
         setLocalBackgroundPreview(null)
       } finally {
@@ -290,7 +288,18 @@ export default function AuthBrandingTab() {
         </Label>
         <div className="rounded-xl overflow-hidden border border-gray-200 aspect-[4/3]">
           <div className="h-full flex">
-            {/* Branding Side Preview */}
+            {/* Form Side Preview (left) */}
+            <div className="w-1/2 bg-white flex items-center justify-center p-4">
+              <div className="w-full max-w-[100px] space-y-2">
+                <div className="h-2 w-12 bg-gray-200 rounded" />
+                <div className="h-6 bg-gray-100 rounded border border-gray-200" />
+                <div className="h-2 w-10 bg-gray-200 rounded" />
+                <div className="h-6 bg-gray-100 rounded border border-gray-200" />
+                <div className="h-5 bg-gray-800 rounded mt-3" />
+              </div>
+            </div>
+
+            {/* Branding Side Preview (right) */}
             <div
               className="w-1/2 relative flex flex-col p-3"
               style={getBackgroundStyle()}
@@ -341,17 +350,6 @@ export default function AuthBrandingTab() {
                     </p>
                   )}
                 </div>
-              </div>
-            </div>
-
-            {/* Form Side Preview */}
-            <div className="w-1/2 bg-white flex items-center justify-center p-4">
-              <div className="w-full max-w-[100px] space-y-2">
-                <div className="h-2 w-12 bg-gray-200 rounded" />
-                <div className="h-6 bg-gray-100 rounded border border-gray-200" />
-                <div className="h-2 w-10 bg-gray-200 rounded" />
-                <div className="h-6 bg-gray-100 rounded border border-gray-200" />
-                <div className="h-5 bg-gray-800 rounded mt-3" />
               </div>
             </div>
           </div>

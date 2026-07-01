@@ -205,7 +205,18 @@
     "no_content_yet": "まだコンテンツがありません",
     "other": "Other",
     "disabled": "Disabled",
-    "store": "Store"
+    "store": "Store",
+    "organizations": "組織",
+    "billing": "請求",
+    "create_organization": "組織を作成",
+    "copyright": "© {{year}} LearnHouse, Inc.",
+    "delete_organization_error": "この組織を削除できませんでした。もう一度お試しください。",
+    "org_actions": "組織の操作",
+    "manage_upgrade": "管理 / アップグレード",
+    "delete_organization": "組織を削除",
+    "delete_organization_warning": "{{name}} とそのすべてのデータが完全に削除されます。この操作は元に戻せません。",
+    "delete_organization_confirm_label": "確認のため {{slug}} と入力してください",
+    "deleting": "削除中…"
   },
   "banner": {
     "viewing_as_guest": "{{name}}をゲストとして閲覧しています。",
@@ -328,7 +339,21 @@
     "login_failed": "ログインに失敗しました",
     "try_again_in": "{{minutes}}分後に再試行してください",
     "error_generic": "問題が発生しました。もう一度お試しください。",
-    "sign_in": "サインイン"
+    "sign_in": "サインイン",
+    "terms_text": "続行することで、LearnHouse の",
+    "terms_of_service": "利用規約",
+    "and": "および",
+    "privacy_policy": "プライバシーポリシー",
+    "image_title_forgot": "パスワードをリセット。",
+    "image_subtitle_forgot": "すぐにアカウントへ戻れるようサポートします。",
+    "image_title_login": "LearnHouse へおかえりなさい。",
+    "image_subtitle_login": "続きから再開しましょう — コース、受講者、ツールが待っています。",
+    "image_title_reset": "あと少しです。",
+    "image_subtitle_reset": "アカウントを安全に保つため、強力なパスワードを作成してください。",
+    "image_title_signup": "LearnHouse で教え始めましょう。",
+    "image_subtitle_signup": "アカウントを作成し、最初のコースを数分で公開しましょう。",
+    "image_title_verify": "メールアドレスを確認。",
+    "image_subtitle_verify": "アカウントを保護して始めるための、ほんの一手間です。"
   },
   "verify_email": {
     "title": "メール確認",
@@ -972,7 +997,13 @@
     "quiz": {
       "correct_answer": "正解",
       "incorrect_answer": "不正解"
-    }
+    },
+    "quick_grade": {
+      "full": "満点",
+      "half": "半分",
+      "zero": "ゼロ"
+    },
+    "task_feedback_placeholder": "このタスクへのメモ（採点とともに保存されます）"
   },
   "certificate": {
     "certificate": "修了証",
@@ -1069,7 +1100,23 @@
     "my_courses": "マイコース",
     "no_purchased_courses": "購入したコースはまだありません",
     "purchased_courses_description": "購入またはサブスクリプションしたコースがここに表示されます",
-    "purchases": "購入履歴"
+    "purchases": "購入履歴",
+    "back_home": "組織へ戻る",
+    "subtitle": "プロフィール、セキュリティ、アカウントを管理",
+    "section": {
+      "profile": "プロフィール",
+      "security": "セキュリティ",
+      "danger": "危険な操作"
+    },
+    "delete": {
+      "success": "アカウントを削除しました。",
+      "error": "アカウントを削除できませんでした。もう一度お試しください。",
+      "title": "アカウントを削除",
+      "description": "アカウントを完全に削除し、アクセス権を取り消します。この操作は元に戻せません。",
+      "warning": "アカウントと関連するすべてのデータが完全に削除されます。この操作は元に戻せません。",
+      "confirm_label": "確認のため {{username}} と入力してください",
+      "deleting": "削除中…"
+    }
   },
   "user": {
     "user_settings": "ユーザー設定",
@@ -3595,7 +3642,8 @@
           "current_grade": "現在の成績",
           "passing": "合格",
           "not_passing": "不合格",
-          "not_submitted": "未提出"
+          "not_submitted": "未提出",
+          "manually_graded": "手動採点"
         },
         "feedback": {
           "label": "総合フィードバック",
@@ -4851,8 +4899,8 @@
     "done": "完了、準備万端です！",
     "steps": {
       "create_course": {
-        "title": "最初のコースを作成する",
-        "description": "学習者のために新しいコースを作成して始めましょう。",
+        "title": "最初のコースが公開されました",
+        "description": "コースを公開して、学習者が登録できる実際のものを用意しましょう。",
         "action": "コースを作成"
       },
       "add_activities": {
@@ -4896,6 +4944,31 @@
         "classroom_desc": "コースの成長と管理の方法を学ぶ",
         "university": "LearnHouse大学",
         "university_desc": "ガイド、ヒント、ベストプラクティス"
+      },
+      "add_content": {
+        "title": "参加する価値のあるレッスン",
+        "description": "動画、ページ、クイズを追加 — 学習者に登録する確かな理由を提供しましょう。",
+        "action": "コンテンツを追加"
+      },
+      "brand_school": {
+        "title": "学習者が信頼する学校",
+        "description": "ロゴと色を追加して、信頼できるプロフェッショナルな学校に見せましょう。",
+        "action": "ブランディング"
+      },
+      "share_grow": {
+        "title": "あなたの学校の入口",
+        "description": "公開して共有リンクを取得 — すべての学習者を案内する場所です。",
+        "action": "学校を開く"
+      },
+      "invite_learners": {
+        "title": "最初の学習者を迎えましょう",
+        "description": "参加リンクを共有するか、人を招待して — 最初の学習者を迎え入れましょう。",
+        "action": "学習者を招待"
+      },
+      "build_community": {
+        "title": "学習者に再び戻ってもらう",
+        "description": "コミュニティスペースを開設して、学習者が活発に — そして友達を連れてくるように。",
+        "action": "コミュニティを開く"
       }
     },
     "welcome": {
@@ -4930,7 +5003,15 @@
       "title": "世界に教える準備ができました",
       "description": "すべて準備が整いました。学習者が素晴らしいコンテンツを待っています。",
       "button": "教え始める"
-    }
+    },
+    "box_title": "オンボーディング",
+    "up_next": "次のステップ",
+    "continue_setup": "セットアップを続ける",
+    "done_label": "完了",
+    "video_placeholder": "解説動画は近日公開",
+    "dismiss": "あとで完了する",
+    "steps_done": "ステップ完了",
+    "back_to_dashboard": "ダッシュボードへ戻る"
   },
   "embed": {
     "not_supported_description": "このタイプのアクティビティは認証が必要で、埋め込みできません。",
@@ -5242,5 +5323,258 @@
       "unlink_success": "User group unlinked",
       "unlink_error": "Failed to unlink user group"
     }
+  },
+  "plan": {
+    "free_plan_title": "無料プラン",
+    "free_plan_cta": "すべての機能を解放",
+    "free_plan_desc": "教える、販売する、成長させる。必要なものすべてを。",
+    "upgrade": "アップグレード"
+  },
+  "billing": {
+    "no_billing_account": "請求アカウントが見つかりません。まずプランにご加入ください。",
+    "portal_error": "請求ポータルを開けませんでした。もう一度お試しください。",
+    "cancel_success": "請求期間の終了時にサブスクリプションが解約されます。",
+    "cancel_error": "サブスクリプションを解約できませんでした。もう一度お試しください。",
+    "checkout_error": "決済を開始できませんでした。",
+    "plan_and_usage": "プランと使用状況",
+    "plan_and_usage_subtitle": "サブスクリプションの管理とリソース使用状況のモニタリング。",
+    "billing": "請求",
+    "org_inactive": "組織が無効になっています。プランをアップグレードしてアクセスを復元してください。",
+    "upgrade": "アップグレード",
+    "on_free_plan": "無料プランをご利用中です",
+    "free_upsell": "アップグレードして、AI 機能やカスタムドメインなどを解放しましょう。",
+    "managed_outside": "このプランは Stripe 請求の外部で管理されています。",
+    "active": "有効",
+    "inactive": "無効",
+    "current_plan": "現在のプラン",
+    "canceling": "解約中",
+    "billed_annually": "年額請求",
+    "billed_monthly": "月額請求",
+    "change_plan": "プランを変更",
+    "canceling_ellipsis": "解約中...",
+    "cancel_plan": "プランを解約",
+    "cycle": "サイクル",
+    "access_until": "アクセス期限",
+    "next_payment": "次回の支払い",
+    "status": "ステータス",
+    "usage": "使用状況",
+    "courses": "コース",
+    "members": "メンバー",
+    "admin_seats": "管理者シート",
+    "ai_credits": "AI クレジット",
+    "addons": "アドオン",
+    "addons_subtitle": "追加の AI クレジットやメンバーシートを月額サブスクリプションとして購入できます。",
+    "active_subscriptions": "有効なサブスクリプション",
+    "credits": "クレジット",
+    "seats": "シート",
+    "available": "利用可能",
+    "per_pack": "1 パックあたり",
+    "add": "追加",
+    "recurring_subscription": "定期サブスクリプション",
+    "what_youre_getting": "ご利用いただける内容",
+    "pack_immediate": "支払い後すぐに有効になります",
+    "pack_cancel_anytime": "いつでも解約可能 — 請求期間の終了まで有効です",
+    "pack_credits_reset": "クレジットは請求サイクルごとにリセットされます",
+    "after_purchase": "購入後",
+    "unlimited": "無制限",
+    "pack_redirect_notice": "支払いを完了するため Stripe にリダイレクトされます。同じ種類のパックを複数購入できます。",
+    "cancel": "キャンセル",
+    "continue_to_payment": "支払いに進む",
+    "step_choose_plan": "プランを選択",
+    "step_confirm": "確認",
+    "step_done": "完了",
+    "back": "戻る",
+    "switch_plan": "プランを切り替え",
+    "upgrade_plan": "プランをアップグレード",
+    "switch_subtitle": "新しいプランを選択してください。変更分は自動的に日割り計算されます。",
+    "upgrade_subtitle": "始めるためのプランを選択してください。",
+    "your_plan": "あなたのプラン",
+    "downgrade": "ダウングレード",
+    "upgrade_summary": "アップグレードの概要",
+    "downgrade_summary": "ダウングレードの概要",
+    "current": "現在",
+    "new": "新規",
+    "annual_total": "年額合計",
+    "monthly_total": "月額合計",
+    "prorated_billing": "日割り請求",
+    "prorated_desc": "現在のプランの未使用期間分が返金され、新しいプランとの差額が請求されます。変更はすぐに反映されます。",
+    "subscription_cancellation": "サブスクリプションの解約",
+    "end_of_cycle_switch": "サイクル終了時の切り替え",
+    "cancel_desc": "現在の請求期間の終了時にサブスクリプションが解約されます。それまでは引き続きすべての機能をご利用いただけます。",
+    "downgrade_desc": "請求期間の終了まで現在のプランが維持されます。現在のサイクルが終了すると、新しいプランが自動的に適用されます。",
+    "whats_included": "含まれる内容",
+    "discount_code": "割引コード",
+    "enter_code": "コードを入力",
+    "checking": "確認中...",
+    "apply": "適用",
+    "code_applied": "コードを適用しました",
+    "invalid_code": "無効または期限切れのコードです",
+    "canceling_subscription": "サブスクリプションを解約中...",
+    "switching_plan": "プランを切り替え中...",
+    "redirecting": "Stripe にリダイレクト中...",
+    "confirm_cancellation": "解約を確認",
+    "confirm_upgrade": "アップグレードを確認",
+    "confirm_downgrade": "ダウングレードを確認",
+    "secure_checkout": "Stripe による安全な決済",
+    "back_to_plans": "プランへ戻る",
+    "plan_updated": "プランを更新しました！",
+    "subscription_canceled": "サブスクリプションを解約しました",
+    "downgrade_scheduled": "ダウングレードを予約しました",
+    "canceled_desc": "現在の請求期間の終了時にサブスクリプションが解約されます。それまでは引き続きすべての機能をご利用いただけます。",
+    "back_to_plan_usage": "プランと使用状況へ戻る",
+    "back_to_orgs": "組織へ戻る"
+  },
+  "hub_new": {
+    "useType": {
+      "personal": {
+        "label": "個人",
+        "subtitle": "自分専用のスペースで学び、作りましょう。",
+        "badge": "新着"
+      },
+      "organization": {
+        "label": "組織",
+        "subtitle": "チーム、学校、または受講者に教える。"
+      }
+    },
+    "useCases": {
+      "personal": {
+        "title": "独学",
+        "description": "自分のためにコースを整理。"
+      },
+      "creators": {
+        "title": "クリエイター",
+        "description": "受講者にコースを販売。"
+      },
+      "business": {
+        "title": "ビジネス",
+        "description": "従業員を育成。"
+      }
+    },
+    "personalGoals": {
+      "learnSkills": "スキルを学ぶ",
+      "teachOthers": "人に教える",
+      "coding": "コーディング",
+      "creative": "クリエイティブ",
+      "music": "音楽",
+      "ai": "AI",
+      "literature": "文学",
+      "science": "科学",
+      "business": "ビジネス",
+      "health": "健康",
+      "photography": "写真",
+      "writing": "ライティング",
+      "languages": "語学",
+      "gaming": "ゲーム"
+    },
+    "personalUsage": {
+      "title": "何を学びたいですか？",
+      "subtitle": "該当するものをすべて選択してください。"
+    },
+    "teamSizes": {
+      "solo": "1人",
+      "2-10": "2〜10人",
+      "11-50": "11〜50人",
+      "51-200": "51〜200人",
+      "200plus": "200人以上"
+    },
+    "orgUseCases": {
+      "employeeTraining": "従業員研修",
+      "onlineCourses": "オンラインコース",
+      "customerEducation": "顧客教育",
+      "academicPrograms": "教育プログラム",
+      "developerDocs": "開発者向けドキュメント",
+      "communityLearning": "コミュニティ学習"
+    },
+    "orgUsage": {
+      "teamSizeTitle": "チームの規模はどのくらいですか？",
+      "useCaseTitle": "何のために使いますか？"
+    },
+    "createOrg": {
+      "testHint": {
+        "title": "お試しをご希望ですか？",
+        "body": "代わりに",
+        "link": "開発者ページ",
+        "suffix": "で LearnHouse をお試しください。"
+      },
+      "validation": {
+        "required": "必須",
+        "lowercase": "小文字のみ",
+        "noSpecialChars": "英数字とハイフンのみ",
+        "reserved": "このスラッグは予約済みです",
+        "maxLength": "最大 20 文字"
+      },
+      "fields": {
+        "name": "組織名",
+        "description": "説明（任意）",
+        "slug": "アドレス"
+      },
+      "placeholders": {
+        "name": "Acme Academy",
+        "description": "あなたの組織について教えてください"
+      },
+      "submitting": "作成中…",
+      "submitPaid": "作成して支払いに進む",
+      "submit": "組織を作成"
+    },
+    "success": {
+      "title": "組織の準備が整いました",
+      "description": "さっそく始めて、コース作りに取りかかりましょう。",
+      "goToOrg": "組織へ移動",
+      "cta": "組織へ戻る"
+    },
+    "toast": {
+      "creating": "組織を作成中…",
+      "created": "組織を作成しました！",
+      "checkoutFailed": "組織を作成しました — プランと使用状況からアップグレードできます。",
+      "failed": "組織の作成に失敗しました"
+    },
+    "steps": {
+      "useType": {
+        "title": "何を作成しますか？",
+        "subtitle": "あなたに合ったスペースを用意するのに役立ちます。"
+      },
+      "usage": {
+        "title": "もう少し教えてください",
+        "subtitle": "最適なセットアップをおすすめできるように。"
+      },
+      "choosePlan": {
+        "title": "プランを選択",
+        "subtitle": "いつでも変更できます。"
+      },
+      "createOrg": {
+        "title": "組織に名前を付ける",
+        "subtitle": "名前とウェブアドレスを選んでください。"
+      },
+      "success": {
+        "title": "準備完了"
+      }
+    },
+    "topBar": {
+      "back": "組織"
+    },
+    "freeLimit": "無料組織の上限（1つ）に達しました",
+    "navigation": {
+      "back": "戻る",
+      "continue": "続ける",
+      "skip": "スキップ"
+    }
+  },
+  "subscriptions": {
+    "no_subscription": "サブスクリプションなし",
+    "cancels_on": "{{date}} に解約",
+    "cancels": "期間終了時に解約",
+    "status_active": "有効",
+    "status_trialing": "トライアル中",
+    "status_past_due": "支払い延滞",
+    "status_canceled": "解約済み",
+    "status_unpaid": "未払い",
+    "renews_on": "{{date}} に更新",
+    "manage_plan": "プランを管理",
+    "portal_error": "請求ポータルを開けませんでした。もう一度お試しください。",
+    "back_home": "ホームへ戻る",
+    "title": "サブスクリプション",
+    "subtitle": "組織全体のプランと請求",
+    "opening": "開いています…",
+    "manage_billing": "請求を管理"
   }
 }

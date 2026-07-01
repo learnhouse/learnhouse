@@ -12,6 +12,19 @@ export async function POST(request: NextRequest) {
       )
     }
 
+    // Validate redirect_uri before forwarding it to Google: it must be a well-
+    // formed http(s) URL pointing at our own callback path. Google additionally
+    // enforces it against the registered URIs, but validating here rejects
+    // malformed / scheme-injection values early (RFC 6749 §4.1.3).
+    try {
+      const ru = new URL(redirect_uri)
+      if ((ru.protocol !== 'http:' && ru.protocol !== 'https:') || ru.pathname !== '/auth/callback/google') {
+        return NextResponse.json({ error: 'Invalid redirect_uri' }, { status: 400 })
+      }
+    } catch {
+      return NextResponse.json({ error: 'Invalid redirect_uri' }, { status: 400 })
+    }
+
     const clientId = process.env.LEARNHOUSE_GOOGLE_CLIENT_ID
     const clientSecret = process.env.LEARNHOUSE_GOOGLE_CLIENT_SECRET
 

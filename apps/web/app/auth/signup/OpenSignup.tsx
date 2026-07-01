@@ -4,12 +4,9 @@ import { useRouter } from 'next/navigation'
 import React, { useEffect } from 'react'
 import FormLayout, {
   FormField,
-  FormLabelAndMessage,
-  Input,
-  Textarea,
 } from '@components/Objects/StyledElements/Form/Form'
 import * as Form from '@radix-ui/react-form'
-import { AlertTriangle, Mail, User } from 'lucide-react'
+import { AlertTriangle, Info, Mail, User } from 'lucide-react'
 import Link from 'next/link'
 import { signup } from '@services/auth/auth'
 import { useOrg } from '@components/Contexts/OrgContext'
@@ -17,6 +14,7 @@ import { signIn } from '@components/Contexts/AuthContext'
 import { getLEARNHOUSE_TOP_DOMAIN_VAL } from '@services/config/config'
 import { useTranslation } from 'react-i18next'
 import { PasswordStrengthIndicator, validatePasswordStrength } from '@components/Auth/PasswordStrengthIndicator'
+import TurnstileWidget, { useTurnstileRequired, type TurnstileWidgetHandle } from '@components/Auth/TurnstileWidget'
 import { useLHAnalytics, AnalyticsEvent } from '@services/analytics'
 
 const validate = (values: any, t: any) => {
@@ -48,14 +46,24 @@ const validate = (values: any, t: any) => {
   return errors
 }
 
-function OpenSignUpComponent() {
+interface OpenSignUpComponentProps {
+  // On the org-less apex the OrgContext is empty, so the signup page resolves
+  // the instance default org server-side and passes it down here. Prefer it over
+  // the (possibly null) context so the POST always targets a real org_id.
+  org?: any
+}
+
+function OpenSignUpComponent({ org: propOrg }: OpenSignUpComponentProps = {}) {
   const { t } = useTranslation()
   const { track } = useLHAnalytics('public')
   const [isSubmitting, setIsSubmitting] = React.useState(false)
-  const org = useOrg() as any
+  const contextOrg = useOrg() as any
+  const org = (contextOrg && (contextOrg.id || contextOrg.slug)) ? contextOrg : propOrg
   const _router = useRouter()
   const [error, setError] = React.useState('')
   const [message, setMessage] = React.useState<{ email_verified: boolean } | null>(null)
+  const turnstileRef = React.useRef<TurnstileWidgetHandle>(null)
+  const turnstileRequired = useTurnstileRequired()
   const formik = useFormik({
     initialValues: {
       org_slug: org?.slug,
@@ -66,6 +74,7 @@ function OpenSignUpComponent() {
       bio: '',
       first_name: '',
       last_name: '',
+      turnstileToken: null as string | null,
     },
     validate: (values) => validate(values, t),
     enableReinitialize: true,
@@ -75,29 +84,43 @@ function OpenSignUpComponent() {
       setIsSubmitting(true)
       track(AnalyticsEvent.SignupSubmitted, { invite_code_present: false, has_bio: !!values.bio })
       let res = await signup(values)
-      let message = await res.json()
+      let message = await res.json().catch(() => ({}))
       if (res.status == 200) {
         track(AnalyticsEvent.SignupSucceeded, { email_verified: message.email_verified })
         setMessage(message)
         setIsSubmitting(false)
-      } else if (
-        res.status == 401 ||
-        res.status == 400 ||
-        res.status == 404 ||
-        res.status == 409
-      ) {
-        track(AnalyticsEvent.SignupFailed, { status_code: res.status })
-        setError(message.detail)
-        setIsSubmitting(false)
       } else {
+        // Surface the backend's actual error detail for ANY non-2xx (incl. 409
+        // already-exists, 422 validation, 503 email-service-down) instead of
+        // masking everything past the handful of hardcoded statuses behind a
+        // generic message. Fall back to a generic string only when the backend
+        // gave us nothing readable.
         track(AnalyticsEvent.SignupFailed, { status_code: res.status })
-        setError(t('common.something_went_wrong'))
+        const detail = message?.detail
+        const errorMsg =
+          typeof detail === 'string'
+            ? detail
+            : Array.isArray(detail) && detail[0]?.msg
+              ? detail[0].msg
+              : t('common.something_went_wrong')
+        setError(errorMsg)
         setIsSubmitting(false)
+        // Turnstile tokens are single-use — fetch a fresh one for the retry.
+        turnstileRef.current?.reset()
       }
     },
   })
 
   useEffect(() => { }, [org])
+
+  // Honor a sanitized ?next / ?redirect destination through the
+  // cross-domain /redirect_from_auth handoff; default to /home.
+  const buildCallbackUrl = () => {
+    const params = new URLSearchParams(window.location.search)
+    const raw = params.get('next') ?? params.get('redirect')
+    const dest = raw && /^\/(?!\/)/.test(raw) ? raw : '/home'
+    return `${window.location.origin}/redirect_from_auth?next=${encodeURIComponent(dest)}`
+  }
 
   const handleGoogleSignIn = () => {
     track(AnalyticsEvent.SignupGoogleClicked)
@@ -112,192 +135,232 @@ function OpenSignUpComponent() {
       document.cookie = `LH_oauth_org_id=${org.id}${baseAttributes}${domainAttr}`;
     }
     // Use absolute URL with current origin for custom domain support
-    signIn('google', { callbackUrl: `${window.location.origin}/redirect_from_auth` });
+    signIn('google', { callbackUrl: buildCallbackUrl() });
   };
 
   return (
-    <div className="m-auto w-full max-w-sm px-6 py-8 sm:py-0">
+    <div className="w-full max-w-[420px] py-10">
       {/* Header */}
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold text-gray-900">{t('auth.create_account')}</h1>
-        <p className="text-gray-500 mt-1">{t('auth.fill_in_details')}</p>
-      </div>
+      <h1 className="text-[28px] md:text-[32px] font-black text-black tracking-tight leading-tight">{t('auth.create_account')}</h1>
+      <p className="mt-2 text-black/45 text-[15px] font-medium">{t('auth.fill_in_details')}</p>
 
-      {/* Error/Success Messages */}
-      {error && (
-        <div className="flex items-center gap-3 bg-red-100 rounded-xl text-red-900 p-4 mb-6 nice-shadow">
-          <AlertTriangle size={18} className="shrink-0" />
-          <div className="font-bold text-sm">{error}</div>
-        </div>
-      )}
-
-
-      {message && message.email_verified === false && (
-        <div className="flex flex-col gap-4 bg-green-100 rounded-xl text-green-900 p-4 mb-6 nice-shadow">
-          <div className="flex items-center gap-2">
-            <Mail size={18} />
-            <div className="font-bold text-sm">{t('auth.check_email_for_verification')}</div>
+      <div className="mt-8">
+        {/* Error/Success Messages */}
+        {error && (
+          <div className="flex justify-center bg-red-50 rounded-xl text-red-600 space-x-2 items-center p-4 mb-6 border border-red-100">
+            <AlertTriangle size={18} className="shrink-0" />
+            <div className="font-medium text-sm">{error}</div>
           </div>
-          <p className="text-xs text-green-800">
-            {t('auth.verification_email_sent_message')}
-          </p>
-          <hr className="border-green-200" />
-          <Link className="flex items-center gap-2 text-sm font-medium hover:underline" href="/login">
-            <User size={14} />
-            <span>{t('auth.login')}</span>
-          </Link>
-        </div>
-      )}
+        )}
 
-      {message && message.email_verified && (
-        <div className="flex flex-col gap-4 bg-green-100 rounded-xl text-green-900 p-4 mb-6 nice-shadow">
-          <div className="flex items-center gap-2">
-            <Mail size={18} />
-            <div className="font-bold text-sm">{t('auth.account_created_success')}</div>
+        {message && message.email_verified === false && (
+          <div className="flex flex-col gap-4 bg-green-50 rounded-xl text-green-700 p-4 mb-6 border border-green-100">
+            <div className="flex items-center gap-2">
+              <Mail size={18} />
+              <div className="font-semibold text-sm">{t('auth.check_email_for_verification')}</div>
+            </div>
+            <p className="text-xs text-green-600">
+              {t('auth.verification_email_sent_message')}
+            </p>
+            <hr className="border-green-100" />
+            <Link className="flex items-center gap-2 text-sm font-medium hover:underline" href="/login">
+              <User size={14} />
+              <span>{t('auth.login')}</span>
+            </Link>
           </div>
-          <hr className="border-green-200" />
-          <Link className="flex items-center gap-2 text-sm font-medium hover:underline" href="/login">
-            <User size={14} />
-            <span>{t('auth.login')}</span>
-          </Link>
-        </div>
-      )}
+        )}
 
-      {/* Signup Form Card */}
-      <div className="bg-white rounded-xl p-6 nice-shadow">
+        {message && message.email_verified && (
+          <div className="flex flex-col gap-4 bg-green-50 rounded-xl text-green-700 p-4 mb-6 border border-green-100">
+            <div className="flex items-center gap-2">
+              <Mail size={18} />
+              <div className="font-semibold text-sm">{t('auth.account_created_success')}</div>
+            </div>
+            <hr className="border-green-100" />
+            <Link className="flex items-center gap-2 text-sm font-medium hover:underline" href="/login">
+              <User size={14} />
+              <span>{t('auth.login')}</span>
+            </Link>
+          </div>
+        )}
+
         <FormLayout onSubmit={formik.handleSubmit}>
           <FormField name="email">
-            <FormLabelAndMessage
-              label={t('auth.email')}
-              message={formik.touched.email ? formik.errors.email : undefined}
-            />
+            <div className="flex items-center space-x-2 mb-1.5">
+              <Form.Label className="grow text-[13px] font-semibold text-black/70">{t('auth.email')}</Form.Label>
+              {formik.touched.email && formik.errors.email && (
+                <span className="text-red-500 text-xs flex items-center space-x-1">
+                  <Info size={11} />
+                  <span>{formik.errors.email}</span>
+                </span>
+              )}
+            </div>
             <Form.Control asChild>
-              <Input
+              <input
                 onChange={formik.handleChange}
                 onBlur={formik.handleBlur}
                 value={formik.values.email}
                 type="email"
                 required
+                className="box-border w-full bg-neutral-50 text-black rounded-lg px-4 border border-neutral-200 inline-flex h-[44px] appearance-none items-center focus:outline-none focus:ring-2 focus:ring-black/5 focus:border-neutral-400 transition-all placeholder:text-black/25 text-sm"
               />
             </Form.Control>
           </FormField>
 
           <div className="flex flex-row space-x-2">
             <FormField name="first_name">
-              <FormLabelAndMessage
-                label={t('user.first_name')}
-                message={formik.touched.first_name ? formik.errors.first_name : undefined}
-              />
+              <div className="flex items-center space-x-2 mb-1.5">
+                <Form.Label className="grow text-[13px] font-semibold text-black/70">{t('user.first_name')}</Form.Label>
+                {formik.touched.first_name && formik.errors.first_name && (
+                  <span className="text-red-500 text-xs flex items-center space-x-1">
+                    <Info size={11} />
+                    <span>{formik.errors.first_name}</span>
+                  </span>
+                )}
+              </div>
               <Form.Control asChild>
-                <Input
+                <input
                   onChange={formik.handleChange}
                   onBlur={formik.handleBlur}
                   value={formik.values.first_name}
                   type="text"
+                  className="box-border w-full bg-neutral-50 text-black rounded-lg px-4 border border-neutral-200 inline-flex h-[44px] appearance-none items-center focus:outline-none focus:ring-2 focus:ring-black/5 focus:border-neutral-400 transition-all placeholder:text-black/25 text-sm"
                 />
               </Form.Control>
             </FormField>
             <FormField name="last_name">
-              <FormLabelAndMessage
-                label={t('user.last_name')}
-                message={formik.touched.last_name ? formik.errors.last_name : undefined}
-              />
+              <div className="flex items-center space-x-2 mb-1.5">
+                <Form.Label className="grow text-[13px] font-semibold text-black/70">{t('user.last_name')}</Form.Label>
+                {formik.touched.last_name && formik.errors.last_name && (
+                  <span className="text-red-500 text-xs flex items-center space-x-1">
+                    <Info size={11} />
+                    <span>{formik.errors.last_name}</span>
+                  </span>
+                )}
+              </div>
               <Form.Control asChild>
-                <Input
+                <input
                   onChange={formik.handleChange}
                   onBlur={formik.handleBlur}
                   value={formik.values.last_name}
                   type="text"
+                  className="box-border w-full bg-neutral-50 text-black rounded-lg px-4 border border-neutral-200 inline-flex h-[44px] appearance-none items-center focus:outline-none focus:ring-2 focus:ring-black/5 focus:border-neutral-400 transition-all placeholder:text-black/25 text-sm"
                 />
               </Form.Control>
             </FormField>
           </div>
 
           <FormField name="password">
-            <FormLabelAndMessage
-              label={t('auth.password')}
-              message={formik.touched.password ? formik.errors.password : undefined}
-            />
+            <div className="flex items-center space-x-2 mb-1.5">
+              <Form.Label className="grow text-[13px] font-semibold text-black/70">{t('auth.password')}</Form.Label>
+              {formik.touched.password && formik.errors.password && (
+                <span className="text-red-500 text-xs flex items-center space-x-1">
+                  <Info size={11} />
+                  <span>{formik.errors.password}</span>
+                </span>
+              )}
+            </div>
             <Form.Control asChild>
-              <Input
+              <input
                 onChange={formik.handleChange}
                 onBlur={formik.handleBlur}
                 value={formik.values.password}
                 type="password"
                 autoComplete="new-password"
                 required
+                className="box-border w-full bg-neutral-50 text-black rounded-lg px-4 border border-neutral-200 inline-flex h-[44px] appearance-none items-center focus:outline-none focus:ring-2 focus:ring-black/5 focus:border-neutral-400 transition-all placeholder:text-black/25 text-sm"
               />
             </Form.Control>
             <PasswordStrengthIndicator password={formik.values.password} />
           </FormField>
 
           <FormField name="username">
-            <FormLabelAndMessage
-              label={t('user.username')}
-              message={formik.touched.username ? formik.errors.username : undefined}
-            />
+            <div className="flex items-center space-x-2 mb-1.5">
+              <Form.Label className="grow text-[13px] font-semibold text-black/70">{t('user.username')}</Form.Label>
+              {formik.touched.username && formik.errors.username && (
+                <span className="text-red-500 text-xs flex items-center space-x-1">
+                  <Info size={11} />
+                  <span>{formik.errors.username}</span>
+                </span>
+              )}
+            </div>
             <Form.Control asChild>
-              <Input
+              <input
                 onChange={formik.handleChange}
                 onBlur={formik.handleBlur}
                 value={formik.values.username}
                 type="text"
                 required
+                className="box-border w-full bg-neutral-50 text-black rounded-lg px-4 border border-neutral-200 inline-flex h-[44px] appearance-none items-center focus:outline-none focus:ring-2 focus:ring-black/5 focus:border-neutral-400 transition-all placeholder:text-black/25 text-sm"
               />
             </Form.Control>
           </FormField>
 
           <FormField name="bio">
-            <FormLabelAndMessage
-              label={`${t('user.bio')} (${t('common.optional')})`}
-              message={formik.touched.bio ? formik.errors.bio : undefined}
-            />
+            <div className="flex items-center space-x-2 mb-1.5">
+              <Form.Label className="grow text-[13px] font-semibold text-black/70">{`${t('user.bio')} (${t('common.optional')})`}</Form.Label>
+            </div>
             <Form.Control asChild>
-              <Textarea
+              <textarea
                 onChange={formik.handleChange}
                 onBlur={formik.handleBlur}
                 value={formik.values.bio}
                 placeholder={t('user.bio_placeholder')}
+                className="box-border w-full bg-neutral-50 text-black rounded-lg px-4 py-3 border border-neutral-200 appearance-none focus:outline-none focus:ring-2 focus:ring-black/5 focus:border-neutral-400 transition-all placeholder:text-black/25 text-sm resize-none min-h-[80px]"
               />
             </Form.Control>
           </FormField>
 
-          <div className="pt-2">
-            <Form.Submit asChild>
-              <button className="w-full bg-black text-white font-semibold text-center py-2.5 rounded-lg hover:bg-gray-800 transition-colors">
-                {isSubmitting ? t('common.loading') : t('auth.create_account')}
-              </button>
-            </Form.Submit>
-          </div>
+          <TurnstileWidget
+            ref={turnstileRef}
+            onToken={(token) => formik.setFieldValue('turnstileToken', token)}
+            className="mt-2 flex justify-center"
+          />
+
+          <Form.Submit asChild>
+            <button
+              disabled={isSubmitting || (turnstileRequired && !formik.values.turnstileToken)}
+              className="box-border w-full inline-flex h-[44px] rounded-lg items-center justify-center bg-black hover:bg-black/85 text-white px-[15px] font-bold text-[14px] leading-none mt-2 transition-all disabled:opacity-50"
+            >
+              {isSubmitting ? (
+                <span className="flex items-center space-x-2">
+                  <span className="w-4 h-4 border-t-2 border-white rounded-full animate-spin" />
+                  <span>{t('common.loading')}</span>
+                </span>
+              ) : (
+                t('auth.create_account')
+              )}
+            </button>
+          </Form.Submit>
         </FormLayout>
 
         {/* Divider */}
         <div className="relative my-6">
           <div className="absolute inset-0 flex items-center">
-            <div className="w-full border-t border-gray-200"></div>
+            <div className="w-full border-t border-neutral-200" />
           </div>
           <div className="relative flex justify-center text-sm">
-            <span className="px-3 bg-white text-gray-400">{t('common.or')}</span>
+            <span className="px-3 text-black/30 bg-white text-xs font-medium">{t('common.or')}</span>
           </div>
         </div>
 
         {/* Google Sign In */}
         <button
           onClick={handleGoogleSignIn}
-          className="flex items-center justify-center gap-2 w-full py-2.5 bg-white border border-gray-200 text-gray-700 font-medium rounded-lg hover:bg-gray-50 transition-colors"
+          className="flex justify-center items-center w-full bg-white hover:bg-neutral-50 text-black space-x-3 font-medium p-3 rounded-lg border border-neutral-200 transition-all text-sm"
         >
           <img src="https://fonts.gstatic.com/s/i/productlogos/googleg/v6/24px.svg" alt="" className="w-4 h-4" />
           <span>{t('auth.sign_in_with_google')}</span>
         </button>
-      </div>
 
-      {/* Login Link */}
-      <p className="text-center text-gray-600 mt-6">
-        {t('auth.already_have_account')}{' '}
-        <Link href="/login" className="font-semibold text-gray-900 hover:underline">
-          {t('auth.login')}
-        </Link>
-      </p>
+        {/* Login Link */}
+        <p className="text-center text-sm text-black/35 mt-6">
+          {t('auth.already_have_account')}{' '}
+          <Link href="/login" className="text-black font-semibold hover:underline">
+            {t('auth.login')}
+          </Link>
+        </p>
+      </div>
     </div>
   )
 }

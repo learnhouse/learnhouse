@@ -144,6 +144,55 @@ async def get_organization_by_slug(
     return org_read
 
 
+# Free-plan organizations a single user may own (as admin) before an upgrade is
+# required. Users who already pay for at least one org are exempt.
+MAX_FREE_ORGS = 3
+
+
+async def _enforce_free_org_cap(
+    current_user: PublicUser | AnonymousUser,
+    db_session: AsyncSession,
+) -> None:
+    """Block a free-tier user from owning more than MAX_FREE_ORGS organizations.
+
+    Only orgs where the user is admin count toward the cap. A user with at least
+    one paid organization is exempt (a customer, not free-tier).
+    """
+    admin_org_ids = (
+        await db_session.execute(
+            select(UserOrganization.org_id).where(
+                UserOrganization.user_id == int(current_user.id),
+                UserOrganization.role_id == ADMIN_ROLE_ID,
+            )
+        )
+    ).scalars().all()
+    if len(admin_org_ids) < MAX_FREE_ORGS:
+        return
+
+    configs = (
+        await db_session.execute(
+            select(OrganizationConfig.config).where(
+                OrganizationConfig.org_id.in_(admin_org_ids)
+            )
+        )
+    ).scalars().all()
+
+    def _plan_of(cfg: dict | None) -> str:
+        cfg = cfg or {}
+        return cfg.get("plan") or (cfg.get("cloud") or {}).get("plan") or "free"
+
+    if any(_plan_of(c) not in ("free", "oss", None) for c in configs):
+        return
+
+    raise HTTPException(
+        status_code=status.HTTP_403_FORBIDDEN,
+        detail=(
+            f"Free plan is limited to {MAX_FREE_ORGS} organizations. "
+            "Upgrade an organization to create more."
+        ),
+    )
+
+
 async def create_org(
     request: Request,
     org_object: OrganizationCreate,
@@ -175,6 +224,8 @@ async def create_org(
             status_code=status.HTTP_409_CONFLICT,
             detail="You should be logged in to be able to achieve this action",
         )
+
+    await _enforce_free_org_cap(current_user, db_session)
 
     # Complete the org object
     org.org_uuid = f"org_{uuid4()}"
@@ -268,6 +319,8 @@ async def create_org_with_config(
             status_code=status.HTTP_409_CONFLICT,
             detail="You should be logged in to be able to achieve this action",
         )
+
+    await _enforce_free_org_cap(current_user, db_session)
 
     # Complete the org object
     org.org_uuid = f"org_{uuid4()}"

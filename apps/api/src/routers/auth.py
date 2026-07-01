@@ -19,6 +19,8 @@ from src.security.auth import (
     revoke_user_sessions_before,
     _is_token_revoked_for_user,
     _mark_refresh_jti_used,
+    _store_refresh_grace,
+    _get_refresh_grace,
     JWT_ACCESS_TOKEN_EXPIRES,
     JWT_REFRESH_TOKEN_EXPIRES,
     JWT_REFRESH_COOKIE_NAME,
@@ -104,11 +106,22 @@ def get_cookie_domain_for_request(request: Request) -> str | None:
     if is_subdomain:
         return config_cookie_domain
 
-    # Custom (per-org) domain — host-only cookie.
-    # TODO: add custom domain allowlist — query the CustomDomain table for
-    # active/verified entries and raise HTTPException(400, "Invalid request
-    # origin") when check_value does not match any of them. This requires
-    # threading a db_session into this function (or a separate helper).
+    # Custom (per-org) domain, or an unrecognized/forged origin → host-only
+    # cookie. This is the safe boundary: a host-only cookie is scoped to the
+    # exact Host that received it, so a request carrying a forged Origin/Referer
+    # can never cause a session cookie to be written on the shared
+    # `.{top_domain}` scope (which is the only thing that would enable
+    # cross-domain theft). Registered custom domains are deliberately a separate
+    # auth realm and also get host-only cookies here.
+    #
+    # We intentionally do NOT query the CustomDomain table to *reject*
+    # unrecognized origins: that would add an async DB lookup to the login/
+    # refresh hot path and risk locking out legitimate custom domains during DNS
+    # propagation / verification lag — for no real gain, since the host-only
+    # fallback already removes the cross-domain leakage vector. If an explicit
+    # allowlist is ever required (e.g. to harden against cache-poisoning of the
+    # Host header), enforce it in a dedicated dependency on the login/oauth
+    # routes, not in this cookie-scope resolver.
     return None
 
 
@@ -259,26 +272,47 @@ async def refresh(
     if _is_token_revoked_for_user(user.id, issued_at):
         raise credentials_exception
 
-    # One-time-use rotation with replay detection. Atomically mark this
-    # refresh token's jti as consumed. The FIRST presentation succeeds; any
-    # subsequent presentation of the SAME token (a replay) is treated as
-    # theft — we revoke every session for the user and reject the request.
-    # Without this, a stolen refresh token could be replayed indefinitely
-    # for its entire 30-day lifetime with no detection.
+    # One-time-use rotation with replay detection and a benign-replay grace
+    # window. Atomically mark this refresh token's jti as consumed. The FIRST
+    # presentation succeeds and caches the rotated pair for a few seconds.
+    #
+    # A subsequent presentation of the SAME jti is either:
+    #   - a benign concurrent/retried refresh (multiple tabs sharing the cookie
+    #     jar, a network retry) arriving within the grace window — we re-serve
+    #     the exact pair the first call issued, so nobody gets logged out; or
+    #   - a replay AFTER the window (a stolen token being reused) — treated as
+    #     theft: every session for the user is revoked.
     jti = payload.get("jti")
+    reused_pair = None
     if jti:
         first_use = _mark_refresh_jti_used(user.id, jti)
         if not first_use:
-            # Replay of an already-consumed refresh token: revoke all sessions
-            # so neither the legitimate user's nor the attacker's tokens work.
-            revoke_user_sessions_before(user.id)
-            raise credentials_exception
+            # Poll briefly for the grace entry: a truly simultaneous request may
+            # lose the NX race before the winner has written its cached pair.
+            import asyncio as _asyncio
+            for _attempt in range(15):
+                reused_pair = _get_refresh_grace(user.id, jti)
+                if reused_pair is not None:
+                    break
+                await _asyncio.sleep(0.1)
+            if reused_pair is None:
+                # No live grace entry → replay outside the window → theft.
+                revoke_user_sessions_before(user.id)
+                raise credentials_exception
 
-    new_access_token = create_access_token(
-        data={"sub": email},
-        expires_delta=JWT_ACCESS_TOKEN_EXPIRES,
-    )
-    new_refresh_token = create_refresh_token(data={"sub": email})
+    if reused_pair is not None:
+        new_access_token = reused_pair["access_token"]
+        new_refresh_token = reused_pair["refresh_token"]
+    else:
+        new_access_token = create_access_token(
+            data={"sub": email},
+            expires_delta=JWT_ACCESS_TOKEN_EXPIRES,
+        )
+        new_refresh_token = create_refresh_token(data={"sub": email})
+        if jti:
+            _store_refresh_grace(
+                user.id, jti, new_access_token, new_refresh_token
+            )
 
     cookie_domain = get_cookie_domain_for_request(request)
     is_secure = is_request_secure(request)

@@ -211,7 +211,18 @@
     "no_content_yet": "Noch kein Inhalt",
     "other": "Other",
     "disabled": "Disabled",
-    "store": "Store"
+    "store": "Store",
+    "organizations": "Organisationen",
+    "billing": "Abrechnung",
+    "create_organization": "Organisation erstellen",
+    "copyright": "© {{year}} LearnHouse, Inc.",
+    "delete_organization_error": "Diese Organisation konnte nicht gelöscht werden. Bitte versuche es erneut.",
+    "org_actions": "Organisationsaktionen",
+    "manage_upgrade": "Verwalten / Upgrade",
+    "delete_organization": "Organisation löschen",
+    "delete_organization_warning": "Dadurch werden {{name}} und alle zugehörigen Daten dauerhaft gelöscht. Diese Aktion kann nicht rückgängig gemacht werden.",
+    "delete_organization_confirm_label": "Gib zur Bestätigung {{slug}} ein",
+    "deleting": "Wird gelöscht…"
   },
   "banner": {
     "viewing_as_guest": "Sie betrachten {{name}} als Gast.",
@@ -334,7 +345,21 @@
     "email_verification_required": "E-Mail-Verifizierung erforderlich",
     "email_verification_required_join": "Bitte verifizieren Sie Ihre E-Mail-Adresse, bevor Sie einer Organisation beitreten. Überprüfen Sie Ihren Posteingang für die Verifizierungs-E-Mail.",
     "error_generic": "Etwas ist schiefgelaufen. Bitte versuchen Sie es erneut.",
-    "sign_in": "Anmelden"
+    "sign_in": "Anmelden",
+    "terms_text": "Indem du fortfährst, stimmst du den",
+    "terms_of_service": "Nutzungsbedingungen",
+    "and": "und der",
+    "privacy_policy": "Datenschutzrichtlinie",
+    "image_title_forgot": "Setze dein Passwort zurück.",
+    "image_subtitle_forgot": "Wir helfen dir, im Handumdrehen wieder in dein Konto zu kommen.",
+    "image_title_login": "Willkommen zurück bei LearnHouse.",
+    "image_subtitle_login": "Mach da weiter, wo du aufgehört hast — deine Kurse, Lernenden und Tools warten auf dich.",
+    "image_title_reset": "Fast geschafft.",
+    "image_subtitle_reset": "Erstelle ein sicheres Passwort, um dein Konto zu schützen.",
+    "image_title_signup": "Starte das Unterrichten mit LearnHouse.",
+    "image_subtitle_signup": "Erstelle dein Konto und starte deinen ersten Kurs in wenigen Minuten.",
+    "image_title_verify": "Bestätige deine E-Mail-Adresse.",
+    "image_subtitle_verify": "Ein kurzer Schritt, um dein Konto zu sichern und loszulegen."
   },
   "validation": {
     "required": "Erforderlich",
@@ -979,7 +1004,13 @@
     "retry_assignment_last": "Dies ist Ihr letzter Versuch – nutzen Sie ihn gut.",
     "retry_assignment_success": "Ihre Arbeit wurde zurückgesetzt – versuchen Sie es erneut.",
     "retry_assignment_failed": "Ihre Abgabe konnte nicht zurückgesetzt werden. Bitte versuchen Sie es erneut.",
-    "retry_no_attempts_left": "Keine Versuche mehr übrig"
+    "retry_no_attempts_left": "Keine Versuche mehr übrig",
+    "quick_grade": {
+      "full": "Voll",
+      "half": "Halb",
+      "zero": "Null"
+    },
+    "task_feedback_placeholder": "Notiz zu dieser Aufgabe (wird mit der Note gespeichert)"
   },
   "certificate": {
     "certificate": "Zertifikat",
@@ -1076,7 +1107,23 @@
     "my_courses": "Meine Kurse",
     "no_purchased_courses": "Noch keine gekauften Kurse",
     "purchased_courses_description": "Kurse, die Sie gekauft oder abonniert haben, werden hier angezeigt",
-    "purchases": "Einkäufe"
+    "purchases": "Einkäufe",
+    "back_home": "Zurück zu den Organisationen",
+    "subtitle": "Verwalte dein Profil, deine Sicherheit und dein Konto",
+    "section": {
+      "profile": "Profil",
+      "security": "Sicherheit",
+      "danger": "Gefahrenzone"
+    },
+    "delete": {
+      "success": "Dein Konto wurde gelöscht.",
+      "error": "Dein Konto konnte nicht gelöscht werden. Bitte versuche es erneut.",
+      "title": "Konto löschen",
+      "description": "Lösche dein Konto dauerhaft und entferne deinen Zugriff. Dies kann nicht rückgängig gemacht werden.",
+      "warning": "Dadurch werden dein Konto und alle zugehörigen Daten dauerhaft gelöscht. Diese Aktion kann nicht rückgängig gemacht werden.",
+      "confirm_label": "Gib zur Bestätigung {{username}} ein",
+      "deleting": "Wird gelöscht…"
+    }
   },
   "user": {
     "user_settings": "Benutzereinstellungen",
@@ -3603,7 +3650,8 @@
           "current_grade": "Aktuelle Note",
           "passing": "Bestanden",
           "not_passing": "Nicht bestanden",
-          "not_submitted": "Nicht eingereicht"
+          "not_submitted": "Nicht eingereicht",
+          "manually_graded": "Manuell bewertet"
         },
         "feedback": {
           "label": "Gesamtfeedback",
@@ -4874,8 +4922,8 @@
     "done": "Fertig, ich bin startklar!",
     "steps": {
       "create_course": {
-        "title": "Erstelle deinen ersten Kurs",
-        "description": "Beginne mit der Erstellung eines neuen Kurses für deine Lernenden.",
+        "title": "Dein erster Kurs ist live",
+        "description": "Veröffentliche einen Kurs, damit es etwas Echtes gibt, für das sich Lernende anmelden können.",
         "action": "Kurs erstellen"
       },
       "add_activities": {
@@ -4919,6 +4967,31 @@
         "classroom_desc": "Lerne, wie du deine Kurse ausbaust und verwaltest",
         "university": "LearnHouse Universität",
         "university_desc": "Anleitungen, Tipps und Best Practices"
+      },
+      "add_content": {
+        "title": "Eine Lektion, für die es sich lohnt",
+        "description": "Füge ein Video, eine Seite oder ein Quiz hinzu — gib Lernenden einen echten Grund, sich anzumelden.",
+        "action": "Inhalt hinzufügen"
+      },
+      "brand_school": {
+        "title": "Eine Schule, der Lernende vertrauen",
+        "description": "Füge dein Logo und deine Farben hinzu, damit es wie eine glaubwürdige, professionelle Schule wirkt.",
+        "action": "Gestalten"
+      },
+      "share_grow": {
+        "title": "Die Eingangstür deiner Schule",
+        "description": "Geh live und schnapp dir deinen teilbaren Link — der Ort, an den du jeden Lernenden schickst.",
+        "action": "Meine Schule öffnen"
+      },
+      "invite_learners": {
+        "title": "Begrüße deinen ersten Lernenden",
+        "description": "Teile deinen Beitrittslink oder lade Leute ein — hol den ersten Lernenden an Bord.",
+        "action": "Lernende einladen"
+      },
+      "build_community": {
+        "title": "Halte Lernende bei der Stange",
+        "description": "Eröffne einen Community-Bereich, damit deine Lernenden aktiv bleiben — und ihre Freunde mitbringen.",
+        "action": "Community öffnen"
       }
     },
     "welcome": {
@@ -4953,7 +5026,15 @@
       "title": "Du bist bereit, die Welt zu unterrichten",
       "description": "Alles ist eingerichtet. Deine Lernenden warten auf etwas Großartiges.",
       "button": "Loslegen"
-    }
+    },
+    "box_title": "Onboarding",
+    "up_next": "Als Nächstes",
+    "continue_setup": "Einrichtung fortsetzen",
+    "done_label": "Erledigt",
+    "video_placeholder": "Einführungsvideo folgt in Kürze",
+    "dismiss": "Ich mache später weiter",
+    "steps_done": "Schritte erledigt",
+    "back_to_dashboard": "Zurück zum Dashboard"
   },
   "migration": {
     "accepted_formats": "Videos (MP4, WebM, MOV), Dokumente (PDF), Bilder (PNG, JPG, WebP), Audio (MP3, WAV)",
@@ -5269,5 +5350,258 @@
     "folder_count_one": "{{count}} Ordner",
     "item_count": "{{count}} Elemente",
     "item_count_one": "{{count}} Element"
+  },
+  "plan": {
+    "free_plan_title": "Kostenloser Tarif",
+    "free_plan_cta": "Die volle Plattform freischalten",
+    "free_plan_desc": "Alles, was du zum Unterrichten, Verkaufen und Wachsen brauchst.",
+    "upgrade": "Upgrade"
+  },
+  "billing": {
+    "no_billing_account": "Kein Abrechnungskonto gefunden. Abonniere zuerst einen Tarif.",
+    "portal_error": "Das Abrechnungsportal konnte nicht geöffnet werden. Bitte versuche es erneut.",
+    "cancel_success": "Das Abonnement wird am Ende des Abrechnungszeitraums gekündigt.",
+    "cancel_error": "Das Abonnement konnte nicht gekündigt werden. Bitte versuche es erneut.",
+    "checkout_error": "Der Bezahlvorgang konnte nicht gestartet werden.",
+    "plan_and_usage": "Tarif & Nutzung",
+    "plan_and_usage_subtitle": "Verwalte dein Abonnement und behalte deine Ressourcennutzung im Blick.",
+    "billing": "Abrechnung",
+    "org_inactive": "Deine Organisation ist inaktiv. Führe ein Upgrade durch, um den Zugriff wiederherzustellen.",
+    "upgrade": "Upgrade",
+    "on_free_plan": "Du nutzt den kostenlosen Tarif",
+    "free_upsell": "Mach ein Upgrade, um KI-Funktionen, eigene Domains und mehr freizuschalten.",
+    "managed_outside": "Dieser Tarif wird außerhalb der Stripe-Abrechnung verwaltet.",
+    "active": "Aktiv",
+    "inactive": "Inaktiv",
+    "current_plan": "Aktueller Tarif",
+    "canceling": "Wird gekündigt",
+    "billed_annually": "jährlich abgerechnet",
+    "billed_monthly": "monatlich abgerechnet",
+    "change_plan": "Tarif ändern",
+    "canceling_ellipsis": "Wird gekündigt...",
+    "cancel_plan": "Tarif kündigen",
+    "cycle": "Zeitraum",
+    "access_until": "Zugriff bis",
+    "next_payment": "Nächste Zahlung",
+    "status": "Status",
+    "usage": "Nutzung",
+    "courses": "Kurse",
+    "members": "Mitglieder",
+    "admin_seats": "Admin-Plätze",
+    "ai_credits": "KI-Credits",
+    "addons": "Add-ons",
+    "addons_subtitle": "Kaufe zusätzliche KI-Credits oder Mitgliederplätze als monatliche Abonnements.",
+    "active_subscriptions": "Aktive Abonnements",
+    "credits": "Credits",
+    "seats": "Plätze",
+    "available": "Verfügbar",
+    "per_pack": "pro Paket",
+    "add": "Hinzufügen",
+    "recurring_subscription": "wiederkehrendes Abonnement",
+    "what_youre_getting": "Das bekommst du",
+    "pack_immediate": "Wird sofort nach der Zahlung wirksam",
+    "pack_cancel_anytime": "Jederzeit kündbar — bleibt bis zum Ende des Abrechnungszeitraums aktiv",
+    "pack_credits_reset": "Credits werden zu Beginn jedes Abrechnungszeitraums zurückgesetzt",
+    "after_purchase": "Nach dem Kauf",
+    "unlimited": "Unbegrenzt",
+    "pack_redirect_notice": "Du wirst zu Stripe weitergeleitet, um die Zahlung abzuschließen. Du kannst mehrere Pakete desselben Typs kaufen.",
+    "cancel": "Abbrechen",
+    "continue_to_payment": "Weiter zur Zahlung",
+    "step_choose_plan": "Tarif wählen",
+    "step_confirm": "Bestätigen",
+    "step_done": "Fertig",
+    "back": "Zurück",
+    "switch_plan": "Tarif wechseln",
+    "upgrade_plan": "Tarif upgraden",
+    "switch_subtitle": "Wähle einen neuen Tarif. Änderungen werden automatisch anteilig berechnet.",
+    "upgrade_subtitle": "Wähle einen Tarif, um loszulegen.",
+    "your_plan": "Dein Tarif",
+    "downgrade": "Downgrade",
+    "upgrade_summary": "Upgrade-Übersicht",
+    "downgrade_summary": "Downgrade-Übersicht",
+    "current": "Aktuell",
+    "new": "Neu",
+    "annual_total": "Jahresgesamtbetrag",
+    "monthly_total": "Monatsgesamtbetrag",
+    "prorated_billing": "Anteilige Abrechnung",
+    "prorated_desc": "Dir wird die ungenutzte Zeit deines aktuellen Tarifs gutgeschrieben und die Differenz für den neuen Tarif berechnet. Die Änderung wird sofort wirksam.",
+    "subscription_cancellation": "Abo-Kündigung",
+    "end_of_cycle_switch": "Wechsel zum Zyklusende",
+    "cancel_desc": "Dein Abonnement wird am Ende des aktuellen Abrechnungszeitraums gekündigt. Bis dahin behältst du vollen Zugriff.",
+    "downgrade_desc": "Du behältst deinen aktuellen Tarif bis zum Ende des Abrechnungszeitraums. Der neue Tarif wird automatisch wirksam, sobald dein aktueller Zyklus endet.",
+    "whats_included": "Was enthalten ist",
+    "discount_code": "Rabattcode",
+    "enter_code": "Code eingeben",
+    "checking": "Wird geprüft...",
+    "apply": "Anwenden",
+    "code_applied": "Code angewendet",
+    "invalid_code": "Ungültiger oder abgelaufener Code",
+    "canceling_subscription": "Abonnement wird gekündigt...",
+    "switching_plan": "Tarif wird gewechselt...",
+    "redirecting": "Weiterleitung zu Stripe...",
+    "confirm_cancellation": "Kündigung bestätigen",
+    "confirm_upgrade": "Upgrade bestätigen",
+    "confirm_downgrade": "Downgrade bestätigen",
+    "secure_checkout": "Sicherer Bezahlvorgang über Stripe",
+    "back_to_plans": "Zurück zu den Tarifen",
+    "plan_updated": "Tarif aktualisiert!",
+    "subscription_canceled": "Abonnement gekündigt",
+    "downgrade_scheduled": "Downgrade geplant",
+    "canceled_desc": "Dein Abonnement wird am Ende deines aktuellen Abrechnungszeitraums gekündigt. Bis dahin behältst du vollen Zugriff.",
+    "back_to_plan_usage": "Zurück zu Tarif & Nutzung",
+    "back_to_orgs": "Zurück zu den Organisationen"
+  },
+  "hub_new": {
+    "useType": {
+      "personal": {
+        "label": "Privat",
+        "subtitle": "Lerne und gestalte deinen eigenen Bereich.",
+        "badge": "Neu"
+      },
+      "organization": {
+        "label": "Organisation",
+        "subtitle": "Unterrichte ein Team, eine Schule oder ein Publikum."
+      }
+    },
+    "useCases": {
+      "personal": {
+        "title": "Selbstlernen",
+        "description": "Organisiere Kurse für dich selbst."
+      },
+      "creators": {
+        "title": "Creator",
+        "description": "Verkaufe Kurse an dein Publikum."
+      },
+      "business": {
+        "title": "Unternehmen",
+        "description": "Schule deine Mitarbeitenden."
+      }
+    },
+    "personalGoals": {
+      "learnSkills": "Fähigkeiten lernen",
+      "teachOthers": "Andere unterrichten",
+      "coding": "Programmieren",
+      "creative": "Kreatives",
+      "music": "Musik",
+      "ai": "KI",
+      "literature": "Literatur",
+      "science": "Wissenschaft",
+      "business": "Business",
+      "health": "Gesundheit",
+      "photography": "Fotografie",
+      "writing": "Schreiben",
+      "languages": "Sprachen",
+      "gaming": "Gaming"
+    },
+    "personalUsage": {
+      "title": "Was möchtest du lernen?",
+      "subtitle": "Wähle alles aus, was zutrifft."
+    },
+    "teamSizes": {
+      "solo": "Solo",
+      "2-10": "2–10",
+      "11-50": "11–50",
+      "51-200": "51–200",
+      "200plus": "200+"
+    },
+    "orgUseCases": {
+      "employeeTraining": "Mitarbeiterschulung",
+      "onlineCourses": "Onlinekurse",
+      "customerEducation": "Kundenschulung",
+      "academicPrograms": "Akademische Programme",
+      "developerDocs": "Entwicklerdokumentation",
+      "communityLearning": "Community-Learning"
+    },
+    "orgUsage": {
+      "teamSizeTitle": "Wie groß ist dein Team?",
+      "useCaseTitle": "Wofür wirst du es nutzen?"
+    },
+    "createOrg": {
+      "testHint": {
+        "title": "Möchtest du es testen?",
+        "body": "Geh zur",
+        "link": "Entwicklerseite",
+        "suffix": ", um LearnHouse stattdessen auszuprobieren."
+      },
+      "validation": {
+        "required": "Erforderlich",
+        "lowercase": "Nur Kleinbuchstaben",
+        "noSpecialChars": "Nur Buchstaben, Zahlen und Bindestriche",
+        "reserved": "Dieser Slug ist reserviert",
+        "maxLength": "Maximal 20 Zeichen"
+      },
+      "fields": {
+        "name": "Name der Organisation",
+        "description": "Beschreibung (optional)",
+        "slug": "Adresse"
+      },
+      "placeholders": {
+        "name": "Acme Academy",
+        "description": "Worum geht es in deiner Organisation?"
+      },
+      "submitting": "Wird erstellt…",
+      "submitPaid": "Erstellen & weiter zur Zahlung",
+      "submit": "Organisation erstellen"
+    },
+    "success": {
+      "title": "Deine Organisation ist bereit",
+      "description": "Leg los und beginne, deine Kurse aufzubauen.",
+      "goToOrg": "Zur Organisation",
+      "cta": "Zurück zu den Organisationen"
+    },
+    "toast": {
+      "creating": "Organisation wird erstellt…",
+      "created": "Organisation erstellt!",
+      "checkoutFailed": "Organisation erstellt — du kannst unter Tarif & Nutzung upgraden.",
+      "failed": "Organisation konnte nicht erstellt werden"
+    },
+    "steps": {
+      "useType": {
+        "title": "Was erstellst du?",
+        "subtitle": "Das hilft uns, deinen Bereich anzupassen."
+      },
+      "usage": {
+        "title": "Erzähl uns etwas mehr",
+        "subtitle": "Damit wir die passende Einrichtung empfehlen können."
+      },
+      "choosePlan": {
+        "title": "Wähle einen Tarif",
+        "subtitle": "Du kannst dies jederzeit ändern."
+      },
+      "createOrg": {
+        "title": "Benenne deine Organisation",
+        "subtitle": "Wähle einen Namen und eine Webadresse."
+      },
+      "success": {
+        "title": "Alles bereit"
+      }
+    },
+    "topBar": {
+      "back": "Organisationen"
+    },
+    "freeLimit": "Limit von 1 kostenlosen Organisation erreicht",
+    "navigation": {
+      "back": "Zurück",
+      "continue": "Weiter",
+      "skip": "Überspringen"
+    }
+  },
+  "subscriptions": {
+    "no_subscription": "Kein Abonnement",
+    "cancels_on": "Kündigung am {{date}}",
+    "cancels": "Kündigung zum Zeitraumende",
+    "status_active": "Aktiv",
+    "status_trialing": "Testphase",
+    "status_past_due": "Überfällig",
+    "status_canceled": "Gekündigt",
+    "status_unpaid": "Unbezahlt",
+    "renews_on": "Verlängert sich am {{date}}",
+    "manage_plan": "Tarif verwalten",
+    "portal_error": "Das Abrechnungsportal konnte nicht geöffnet werden. Bitte versuche es erneut.",
+    "back_home": "Zurück zur Startseite",
+    "title": "Abonnements",
+    "subtitle": "Tarife und Abrechnung über deine Organisationen hinweg",
+    "opening": "Wird geöffnet…",
+    "manage_billing": "Abrechnung verwalten"
   }
 }

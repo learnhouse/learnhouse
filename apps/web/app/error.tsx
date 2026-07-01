@@ -1,8 +1,6 @@
 'use client'
 
-import ErrorUI from '@components/Objects/StyledElements/Error/Error'
-import * as Sentry from '@sentry/nextjs'
-import { useEffect } from 'react'
+import BoundaryError from '@components/Objects/StyledElements/Error/BoundaryError'
 import { useTrackView, AnalyticsEvent } from '@services/analytics'
 
 export default function Error({
@@ -22,19 +20,8 @@ export default function Error({
     'public',
   )
 
-  useEffect(() => {
-    if (Sentry.isInitialized()) {
-      Sentry.captureException(error)
-    }
-    console.error(error)
-
-    if (
-      error.message.includes('Failed to find Server Action') ||
-      error.message.includes('older or newer deployment')
-    ) {
-      window.location.reload()
-    }
-  }, [error])
-
-  return <ErrorUI onRetry={reset} />
+  // BoundaryError captures to Sentry (keeping the event id for the report
+  // button), auto-reloads on stale-deploy errors, and renders the meaningful
+  // ErrorUI with recovery actions (retry / home / sign out / report).
+  return <BoundaryError error={error} reset={reset} />
 }

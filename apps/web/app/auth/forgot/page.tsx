@@ -1,11 +1,11 @@
 import { getOrganizationContextInfo } from '@services/organizations/orgs'
-import { getOrgSlug } from '@services/org/orgResolution'
+import { getAuthOrgSlug } from '@services/org/orgResolution'
 import ForgotPasswordClient from './forgot'
 import { Metadata } from 'next'
 import OrgNotFound from '@components/Objects/StyledElements/Error/OrgNotFound'
 
 export async function generateMetadata(): Promise<Metadata> {
-  const orgslug = await getOrgSlug()
+  const orgslug = await getAuthOrgSlug()
 
   if (!orgslug) {
     return { title: 'Forgot Password — LearnHouse' }
@@ -28,24 +28,21 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 const ForgotPasswordPage = async () => {
-  const orgslug = await getOrgSlug()
-
-  if (!orgslug) {
-    return <OrgNotFound />
-  }
+  const orgslug = await getAuthOrgSlug()
 
   let org: any = null
-  try {
-    org = await getOrganizationContextInfo(orgslug, {
-      revalidate: 60,
-      tags: ['organizations'],
-    })
-  } catch {
-    return <OrgNotFound />
-  }
-
-  if (!org) {
-    return <OrgNotFound />
+  if (orgslug) {
+    try {
+      org = await getOrganizationContextInfo(orgslug, {
+        revalidate: 60,
+        tags: ['organizations'],
+      })
+    } catch {
+      org = null
+    }
+    if (!org) {
+      return <OrgNotFound />
+    }
   }
 
   return <ForgotPasswordClient org={org} />

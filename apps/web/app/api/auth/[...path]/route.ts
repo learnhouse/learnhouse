@@ -6,9 +6,10 @@ import {
   REFRESH_TOKEN_COOKIE,
   ACCESS_TOKEN_MAX_AGE,
   REFRESH_TOKEN_MAX_AGE,
-  getCookieDomain,
+  getDomainFromRequest,
   getCookieOptions,
 } from '@services/auth/cookies'
+import { isLocalhost } from '@services/utils/ts/hostUtils'
 
 const BACKEND_URL = (getConfig('NEXT_PUBLIC_LEARNHOUSE_BACKEND_URL') || 'http://localhost:1338').replace(/\/+$/, '')
 
@@ -45,20 +46,52 @@ function decodeJwtExpiryMs(token: string): number | null {
 // of life left. Two minutes of headroom keeps us safe against clock skew.
 const REFRESH_FAST_PATH_HEADROOM_MS = 2 * 60 * 1000
 
-function clearAuthCookies(response: NextResponse, request: NextRequest) {
-  const isSecure = request.nextUrl.protocol === 'https:'
-  const domain = getCookieDomain(request)
-  const securePart = isSecure ? '; Secure' : ''
+// Clear every auth + instance cookie in BOTH its domain-scoped (.{top_domain})
+// and host-only variants. The browser can hold two cookies with the same name
+// but different Domain attributes; clearing only one leaves the stale one to
+// keep being sent — the user appears logged in with a dead token ("cookie
+// staling").
+//
+// Crucially, the domain-scoped attribute is derived from env/host (via
+// getDomainFromRequest), NOT from the LH_tenancy cookie: on a browser-restart-
+// then-logout, LH_tenancy can be absent, and gating the domain clear on it
+// (the old getCookieDomain path) left a multi-tenant session's .{top}-scoped
+// 30-day refresh cookie alive forever. We always attempt both variants.
+//
+// We clear exactly the SESSION-sensitive cookies: the httpOnly auth tokens, the
+// "session exists" marker (LH_session), the current-org marker (LH_org), and the
+// per-session custom-domain marker. We deliberately do NOT clear the instance
+// metadata cookies (LH_tenancy/LH_mode/LH_top_domain/LH_frontend_domain/
+// LH_default_org) — those describe the deployment, are non-sensitive, are needed
+// by anonymous visitors, and the proxy re-sets them on the very next request, so
+// clearing them is both pointless and would briefly break tenancy resolution.
+const CLEAR_HTTPONLY = [ACCESS_TOKEN_COOKIE, REFRESH_TOKEN_COOKIE, 'LH_custom_domain']
+const CLEAR_MARKERS = ['LH_session', 'LH_org']
 
-  if (domain) {
-    response.headers.append('Set-Cookie', `${ACCESS_TOKEN_COOKIE}=; Path=/; Domain=${domain}; Max-Age=0; HttpOnly; SameSite=Lax${securePart}`)
-    response.headers.append('Set-Cookie', `${REFRESH_TOKEN_COOKIE}=; Path=/; Domain=${domain}; Max-Age=0; HttpOnly; SameSite=Lax${securePart}`)
-    response.headers.append('Set-Cookie', `LH_session=; Path=/; Domain=${domain}; Max-Age=0; SameSite=Lax${securePart}`)
+function appendClearAuthCookies(response: NextResponse, request: NextRequest) {
+  const securePart = request.nextUrl.protocol === 'https:' ? '; Secure' : ''
+  const host = request.headers.get('host') || ''
+  const { topDomain } = getDomainFromRequest(request)
+  const domainScoped =
+    !isLocalhost(host) && topDomain && topDomain !== 'localhost' ? `.${topDomain}` : undefined
+
+  const clear = (name: string, httpOnly: boolean, domain?: string) => {
+    const httpPart = httpOnly ? '; HttpOnly' : ''
+    const domainPart = domain ? `; Domain=${domain}` : ''
+    response.headers.append(
+      'Set-Cookie',
+      `${name}=; Path=/${domainPart}; Max-Age=0${httpPart}; SameSite=Lax${securePart}`,
+    )
   }
 
-  response.headers.append('Set-Cookie', `${ACCESS_TOKEN_COOKIE}=; Path=/; Max-Age=0; HttpOnly; SameSite=Lax${securePart}`)
-  response.headers.append('Set-Cookie', `${REFRESH_TOKEN_COOKIE}=; Path=/; Max-Age=0; HttpOnly; SameSite=Lax${securePart}`)
-  response.headers.append('Set-Cookie', `LH_session=; Path=/; Max-Age=0; SameSite=Lax${securePart}`)
+  for (const n of CLEAR_HTTPONLY) {
+    clear(n, true)
+    if (domainScoped) clear(n, true, domainScoped)
+  }
+  for (const n of CLEAR_MARKERS) {
+    clear(n, false)
+    if (domainScoped) clear(n, false, domainScoped)
+  }
 }
 
 async function proxyRequest(
@@ -92,9 +125,13 @@ async function proxyRequest(
   const accessToken = cookieStore.get(ACCESS_TOKEN_COOKIE)
   const refreshToken = cookieStore.get(REFRESH_TOKEN_COOKIE)
 
-  // Short-circuit: no refresh token cookie means nothing to refresh
+  // Short-circuit: no refresh token cookie means nothing to refresh. Clear the
+  // stale LH_session marker (and any orphaned cookies) too — otherwise the
+  // client keeps seeing "a session exists" and loops on failed refreshes.
   if (pathSegments === 'refresh' && !refreshToken?.value) {
-    return NextResponse.json({ error: 'No refresh token' }, { status: 401 })
+    const response = NextResponse.json({ error: 'No refresh token' }, { status: 401 })
+    appendClearAuthCookies(response, request)
+    return response
   }
 
   // Fast-path: if the access token cookie is present and isn't about to
@@ -133,7 +170,7 @@ async function proxyRequest(
     }
 
     const response = NextResponse.json({ ok: true })
-    clearAuthCookies(response, request)
+    appendClearAuthCookies(response, request)
     return response
   }
 
@@ -193,10 +230,6 @@ async function proxyRequest(
     statusText: backendResponse.statusText,
   })
 
-  if (pathSegments === 'refresh' && backendResponse.status === 401) {
-    clearAuthCookies(response, request)
-  }
-
   // Copy relevant headers
   if (responseContentType) {
     response.headers.set('content-type', responseContentType)
@@ -232,6 +265,15 @@ async function proxyRequest(
         maxAge: REFRESH_TOKEN_MAX_AGE,
       })
     }
+  }
+
+  // A failed refresh means the refresh cookie is dead (revoked, expired, or a
+  // replay outside the grace window). Clear all auth cookies so the browser
+  // stops sending a stale 30-day refresh token + LH_session marker, which
+  // would otherwise loop the client through repeated failed refreshes instead
+  // of cleanly falling back to the login screen.
+  if (pathSegments === 'refresh' && !backendResponse.ok) {
+    appendClearAuthCookies(response, request)
   }
 
   return response

@@ -5,7 +5,7 @@
     "back_to_home": "Back to Home",
     "your_organization": "Your Organization",
     "your_organizations": "Your Organizations",
-    "no_orgs_message": "It seems you're not part of an organization yet, join one to be able to see it here",
+    "no_orgs_message": "You are not part of any organization yet.",
     "assignments": "Assignments",
     "boards": "Boards",
     "payments": "Payments",
@@ -211,7 +211,18 @@
     "no_content_yet": "No content yet",
     "other": "Other",
     "disabled": "Disabled",
-    "store": "Store"
+    "store": "Store",
+    "organizations": "Organizations",
+    "billing": "Billing",
+    "create_organization": "Create organization",
+    "copyright": "© {{year}} LearnHouse, Inc.",
+    "delete_organization_error": "Could not delete this organization. Please try again.",
+    "org_actions": "Organization actions",
+    "manage_upgrade": "Manage / Upgrade",
+    "delete_organization": "Delete organization",
+    "delete_organization_warning": "This permanently deletes {{name}} and all of its data. This action cannot be undone.",
+    "delete_organization_confirm_label": "Type {{slug}} to confirm",
+    "deleting": "Deleting…"
   },
   "banner": {
     "viewing_as_guest": "You're viewing {{name}} as a guest.",
@@ -230,6 +241,7 @@
     "sign_up": "Sign up",
     "sign_in_with_google": "Sign in with Google",
     "wrong_email_password": "Wrong Email or password",
+    "turnstile_failed": "Verification failed. Please try again.",
     "error_generic": "Something went wrong. Please try again.",
     "invited_to_join": "Start your learning journey",
     "join": "Join",
@@ -334,7 +346,21 @@
     "invite_required": "Invite Required",
     "invite_required_desc": "An invite code is required to join {{org}}",
     "invite_code": "Invite Code",
-    "validate_invite": "Validate Invite"
+    "validate_invite": "Validate Invite",
+    "terms_text": "By continuing, you agree to LearnHouse's",
+    "terms_of_service": "Terms of Service",
+    "and": "and",
+    "privacy_policy": "Privacy Policy",
+    "image_title_forgot": "Reset your password.",
+    "image_subtitle_forgot": "We'll help you get back into your account in no time.",
+    "image_title_login": "Welcome back to LearnHouse.",
+    "image_subtitle_login": "Pick up where you left off — your courses, students, and tools are waiting.",
+    "image_title_reset": "Almost there.",
+    "image_subtitle_reset": "Create a strong password to keep your account secure.",
+    "image_title_signup": "Start teaching with LearnHouse.",
+    "image_subtitle_signup": "Create your account and launch your first course in minutes.",
+    "image_title_verify": "Verify your email.",
+    "image_subtitle_verify": "One quick step to secure your account and get started."
   },
   "validation": {
     "required": "Required",
@@ -1402,7 +1428,13 @@
     },
     "form": {
       "expected_answer": "Expected"
-    }
+    },
+    "quick_grade": {
+      "full": "Full",
+      "half": "Half",
+      "zero": "Zero"
+    },
+    "task_feedback_placeholder": "Note for this task (saved with grade)"
   },
   "certificate": {
     "certificate": "Certificate",
@@ -1492,14 +1524,30 @@
     "choose_price": "Choose your price"
   },
   "account": {
-    "title": "Account",
+    "title": "Account settings",
     "general": "General",
     "profile": "Profile",
     "security": "Security",
     "my_courses": "My Courses",
     "purchases": "Purchases",
     "no_purchased_courses": "No purchased courses yet",
-    "purchased_courses_description": "Courses you have purchased or subscribed to will appear here"
+    "purchased_courses_description": "Courses you have purchased or subscribed to will appear here",
+    "back_home": "Back to organizations",
+    "subtitle": "Manage your profile, security and account",
+    "section": {
+      "profile": "Profile",
+      "security": "Security",
+      "danger": "Danger zone"
+    },
+    "delete": {
+      "success": "Your account has been deleted.",
+      "error": "Could not delete your account. Please try again.",
+      "title": "Delete account",
+      "description": "Permanently delete your account and remove your access. This cannot be undone.",
+      "warning": "This permanently deletes your account and all associated data. This action cannot be undone.",
+      "confirm_label": "Type {{username}} to confirm",
+      "deleting": "Deleting…"
+    }
   },
   "user": {
     "user_settings": "User Settings",
@@ -4005,7 +4053,8 @@
           "current_grade": "Current grade",
           "passing": "Passing",
           "not_passing": "Not passing",
-          "not_submitted": "Not submitted"
+          "not_submitted": "Not submitted",
+          "manually_graded": "Manually graded"
         },
         "feedback": {
           "label": "Overall feedback",
@@ -5066,8 +5115,8 @@
   "onboarding": {
     "getting_started": "Getting Started",
     "all_done": "All done!",
-    "all_set": "You're all set!",
-    "all_set_desc": "You've completed the getting started guide.",
+    "all_set": "You're all set",
+    "all_set_desc": "Setup complete.",
     "more_steps": "{{count}} more step",
     "more_steps_plural": "{{count}} more steps",
     "show_less": "Show less",
@@ -5076,9 +5125,9 @@
     "done": "Done, I'm all set!",
     "steps": {
       "create_course": {
-        "title": "Create your first course",
-        "description": "Start by creating a new course for your learners.",
-        "action": "Create a Course"
+        "title": "Your first course is live",
+        "description": "Publish a course so there’s something real for learners to enroll in.",
+        "action": "Create a course"
       },
       "add_activities": {
         "title": "Add activities to your course",
@@ -5121,6 +5170,31 @@
         "classroom_desc": "Learn how to grow and manage your courses",
         "university": "LearnHouse University",
         "university_desc": "Guides, tips and best practices"
+      },
+      "add_content": {
+        "title": "A lesson worth showing up for",
+        "description": "Add a video, page or quiz — give learners a real reason to enroll.",
+        "action": "Add content"
+      },
+      "brand_school": {
+        "title": "A school learners trust",
+        "description": "Add your logo and colors so it looks like a credible, professional school.",
+        "action": "Brand it"
+      },
+      "share_grow": {
+        "title": "Your school’s front door",
+        "description": "Go live and grab your shareable link — the place you’ll send every learner.",
+        "action": "Open my school"
+      },
+      "invite_learners": {
+        "title": "Welcome your first learner",
+        "description": "Share your join link or invite people — get that first learner through the door.",
+        "action": "Invite learners"
+      },
+      "build_community": {
+        "title": "Keep learners coming back",
+        "description": "Open a community space so your learners stay active — and bring their friends.",
+        "action": "Open community"
       }
     },
     "welcome": {
@@ -5155,7 +5229,15 @@
       "title": "You're ready to teach the world",
       "description": "Everything is set up. Your learners are waiting for something great.",
       "button": "Start teaching"
-    }
+    },
+    "box_title": "Onboarding",
+    "up_next": "Up next",
+    "continue_setup": "Continue setup",
+    "done_label": "Done",
+    "video_placeholder": "Walkthrough video coming soon",
+    "dismiss": "I'll finish later",
+    "steps_done": "steps done",
+    "back_to_dashboard": "Back to dashboard"
   },
   "upgrade_modal": {
     "title": "Unlock your full potential",
@@ -5274,5 +5356,258 @@
       "exit_fullscreen": "Exit",
       "fullscreen": "Fullscreen"
     }
+  },
+  "plan": {
+    "free_plan_title": "Free plan",
+    "free_plan_cta": "Unlock the full platform",
+    "free_plan_desc": "Everything you need to teach, sell & grow.",
+    "upgrade": "Upgrade"
+  },
+  "billing": {
+    "no_billing_account": "No billing account found. Subscribe to a plan first.",
+    "portal_error": "Could not open billing portal. Please try again.",
+    "cancel_success": "Subscription will be canceled at the end of the billing period.",
+    "cancel_error": "Failed to cancel subscription. Please try again.",
+    "checkout_error": "Failed to start checkout.",
+    "plan_and_usage": "Plan & Usage",
+    "plan_and_usage_subtitle": "Manage your subscription and monitor resource usage.",
+    "billing": "Billing",
+    "org_inactive": "Your organization is inactive. Upgrade your plan to restore access.",
+    "upgrade": "Upgrade",
+    "on_free_plan": "You're on the free plan",
+    "free_upsell": "Upgrade to unlock AI features, custom domains, and more.",
+    "managed_outside": "This plan is managed outside of Stripe billing.",
+    "active": "Active",
+    "inactive": "Inactive",
+    "current_plan": "Current plan",
+    "canceling": "Canceling",
+    "billed_annually": "billed annually",
+    "billed_monthly": "billed monthly",
+    "change_plan": "Change plan",
+    "canceling_ellipsis": "Canceling...",
+    "cancel_plan": "Cancel plan",
+    "cycle": "Cycle",
+    "access_until": "Access until",
+    "next_payment": "Next payment",
+    "status": "Status",
+    "usage": "Usage",
+    "courses": "Courses",
+    "members": "Members",
+    "admin_seats": "Admin seats",
+    "ai_credits": "AI Credits",
+    "addons": "Add-ons",
+    "addons_subtitle": "Purchase additional AI credits or member seats as monthly subscriptions.",
+    "active_subscriptions": "Active subscriptions",
+    "credits": "credits",
+    "seats": "seats",
+    "available": "Available",
+    "per_pack": "per pack",
+    "add": "Add",
+    "recurring_subscription": "recurring subscription",
+    "what_youre_getting": "What you're getting",
+    "pack_immediate": "Takes effect immediately after payment",
+    "pack_cancel_anytime": "Cancel anytime — stays active until end of billing period",
+    "pack_credits_reset": "Credits reset each billing cycle",
+    "after_purchase": "After purchase",
+    "unlimited": "Unlimited",
+    "pack_redirect_notice": "You'll be redirected to Stripe to complete payment. You can purchase multiple packs of the same type.",
+    "cancel": "Cancel",
+    "continue_to_payment": "Continue to payment",
+    "step_choose_plan": "Choose Plan",
+    "step_confirm": "Confirm",
+    "step_done": "Done",
+    "back": "Back",
+    "switch_plan": "Switch Plan",
+    "upgrade_plan": "Upgrade Plan",
+    "switch_subtitle": "Choose a new plan. Changes are prorated automatically.",
+    "upgrade_subtitle": "Choose a plan to get started.",
+    "your_plan": "Your plan",
+    "downgrade": "Downgrade",
+    "upgrade_summary": "Upgrade Summary",
+    "downgrade_summary": "Downgrade Summary",
+    "current": "Current",
+    "new": "New",
+    "annual_total": "Annual total",
+    "monthly_total": "Monthly total",
+    "prorated_billing": "Prorated billing",
+    "prorated_desc": "You'll be credited for the unused time on your current plan and charged the difference for the new plan. The change takes effect immediately.",
+    "subscription_cancellation": "Subscription cancellation",
+    "end_of_cycle_switch": "End-of-cycle switch",
+    "cancel_desc": "Your subscription will be canceled at the end of the current billing period. You'll keep full access until then.",
+    "downgrade_desc": "You'll keep your current plan until the end of the billing period. The new plan will take effect automatically when your current cycle ends.",
+    "whats_included": "What's included",
+    "discount_code": "Discount code",
+    "enter_code": "Enter code",
+    "checking": "Checking...",
+    "apply": "Apply",
+    "code_applied": "Code applied",
+    "invalid_code": "Invalid or expired code",
+    "canceling_subscription": "Canceling subscription...",
+    "switching_plan": "Switching plan...",
+    "redirecting": "Redirecting to Stripe...",
+    "confirm_cancellation": "Confirm cancellation",
+    "confirm_upgrade": "Confirm upgrade",
+    "confirm_downgrade": "Confirm downgrade",
+    "secure_checkout": "Secure checkout powered by Stripe",
+    "back_to_plans": "Back to plans",
+    "plan_updated": "Plan updated!",
+    "subscription_canceled": "Subscription canceled",
+    "downgrade_scheduled": "Downgrade scheduled",
+    "canceled_desc": "Your subscription will be canceled at the end of your current billing period. You'll keep full access until then.",
+    "back_to_plan_usage": "Back to Plan & Usage",
+    "back_to_orgs": "Back to organizations"
+  },
+  "hub_new": {
+    "useType": {
+      "personal": {
+        "label": "Personal",
+        "subtitle": "Learn and build your own space.",
+        "badge": "New"
+      },
+      "organization": {
+        "label": "Organization",
+        "subtitle": "Teach a team, school or audience."
+      }
+    },
+    "useCases": {
+      "personal": {
+        "title": "Self learning",
+        "description": "Organize courses for yourself."
+      },
+      "creators": {
+        "title": "Creators",
+        "description": "Sell courses to your audience."
+      },
+      "business": {
+        "title": "Business",
+        "description": "Train your employees."
+      }
+    },
+    "personalGoals": {
+      "learnSkills": "Learn skills",
+      "teachOthers": "Teach others",
+      "coding": "Coding",
+      "creative": "Creative",
+      "music": "Music",
+      "ai": "AI",
+      "literature": "Literature",
+      "science": "Science",
+      "business": "Business",
+      "health": "Health",
+      "photography": "Photography",
+      "writing": "Writing",
+      "languages": "Languages",
+      "gaming": "Gaming"
+    },
+    "personalUsage": {
+      "title": "What would you like to learn?",
+      "subtitle": "Pick all that apply."
+    },
+    "teamSizes": {
+      "solo": "Solo",
+      "2-10": "2–10",
+      "11-50": "11–50",
+      "51-200": "51–200",
+      "200plus": "200+"
+    },
+    "orgUseCases": {
+      "employeeTraining": "Employee training",
+      "onlineCourses": "Online courses",
+      "customerEducation": "Customer education",
+      "academicPrograms": "Academic programs",
+      "developerDocs": "Developer docs",
+      "communityLearning": "Community learning"
+    },
+    "orgUsage": {
+      "teamSizeTitle": "How big is your team?",
+      "useCaseTitle": "What will you use it for?"
+    },
+    "createOrg": {
+      "testHint": {
+        "title": "Looking to test?",
+        "body": "Head to the",
+        "link": "Developers page",
+        "suffix": "to try LearnHouse instead."
+      },
+      "validation": {
+        "required": "Required",
+        "lowercase": "Lowercase only",
+        "noSpecialChars": "Letters, numbers, dashes only",
+        "reserved": "This slug is reserved",
+        "maxLength": "Max 20 characters"
+      },
+      "fields": {
+        "name": "Organization name",
+        "description": "Description (optional)",
+        "slug": "Address"
+      },
+      "placeholders": {
+        "name": "Acme Academy",
+        "description": "What is your organization about?"
+      },
+      "submitting": "Creating…",
+      "submitPaid": "Create & continue to payment",
+      "submit": "Create organization"
+    },
+    "success": {
+      "title": "Your organization is ready",
+      "description": "Jump in and start building your courses.",
+      "goToOrg": "Go to organization",
+      "cta": "Back to organizations"
+    },
+    "toast": {
+      "creating": "Creating organization…",
+      "created": "Organization created!",
+      "checkoutFailed": "Organization created — you can upgrade from Plan & Usage.",
+      "failed": "Failed to create organization"
+    },
+    "steps": {
+      "useType": {
+        "title": "What are you creating?",
+        "subtitle": "This helps us tailor your space."
+      },
+      "usage": {
+        "title": "Tell us a bit more",
+        "subtitle": "So we can recommend the right setup."
+      },
+      "choosePlan": {
+        "title": "Choose a plan",
+        "subtitle": "You can change this anytime."
+      },
+      "createOrg": {
+        "title": "Name your organization",
+        "subtitle": "Pick a name and a web address."
+      },
+      "success": {
+        "title": "All set"
+      }
+    },
+    "topBar": {
+      "back": "Organizations"
+    },
+    "freeLimit": "1 free org limit reached",
+    "navigation": {
+      "back": "Back",
+      "continue": "Continue",
+      "skip": "Skip"
+    }
+  },
+  "subscriptions": {
+    "no_subscription": "No subscription",
+    "cancels_on": "Cancels on {{date}}",
+    "cancels": "Cancels at period end",
+    "status_active": "Active",
+    "status_trialing": "Trialing",
+    "status_past_due": "Past due",
+    "status_canceled": "Canceled",
+    "status_unpaid": "Unpaid",
+    "renews_on": "Renews {{date}}",
+    "manage_plan": "Manage plan",
+    "portal_error": "Could not open the billing portal. Please try again.",
+    "back_home": "Back to home",
+    "title": "Subscriptions",
+    "subtitle": "Plans and billing across your organizations",
+    "opening": "Opening…",
+    "manage_billing": "Manage billing"
   }
 }

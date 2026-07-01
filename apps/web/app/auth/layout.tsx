@@ -1,16 +1,17 @@
+import type { ReactNode } from 'react'
 import { OrgProvider } from '@components/Contexts/OrgContext'
 import OrgLanguageSync from '@components/Contexts/OrgLanguageSync'
-import { getOrgSlug } from '@services/org/orgResolution'
+import { getAuthOrgSlug } from '@services/org/orgResolution'
 
 export default async function AuthLayout({
     children,
 }: {
-    children: React.ReactNode
+    children: ReactNode
 }) {
-    const orgslug = await getOrgSlug()
+    const orgslug = await getAuthOrgSlug()
 
-    // If no org slug found, let the page components handle it
-    // (they show OrgNotFound appropriately)
+    // No org slug → bare apex (learn.io) → generic, org-less auth pages. No
+    // OrgProvider; the page renders generic LearnHouse branding.
     if (!orgslug) {
         return <>{children}</>
     }

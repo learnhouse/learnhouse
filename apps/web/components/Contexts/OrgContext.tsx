@@ -17,12 +17,14 @@ export const OrgContext = createContext<OrgContextValue | null>(null)
 export function OrgProvider({
   children,
   orgslug,
-  errorMessage = 'An error occurred while fetching data',
+  errorMessage,
   errorSubmessage,
   inactiveMessage = 'This organization is no longer active',
 }: {
   children: React.ReactNode
   orgslug: string
+  // When omitted, the fetch error is classified into a meaningful message
+  // (offline / server / not-found …). Pass a value to force a specific one.
   errorMessage?: string
   errorSubmessage?: string
   inactiveMessage?: string
@@ -63,12 +65,17 @@ export function OrgProvider({
     orgslug,
   }), [org, isUserPartOfTheOrg, orgslug])
 
-  if (orgError) {
-    return <ErrorUI message={errorMessage} submessage={errorSubmessage} />
-  }
-  if (!isLoading && org && !isOrgActive) {
-    return <ErrorUI message={inactiveMessage} />
-  }
+  // Pass the real SWR error so it's classified into a meaningful message
+  // (offline / server / not-found …) with the right recovery actions. An
+  // explicit errorMessage prop still overrides the classification.
+  if (orgError) return <ErrorUI error={orgError} message={errorMessage} submessage={errorSubmessage} />
+  if (!isLoading && org && !isOrgActive) return (
+    <ErrorUI
+      message={inactiveMessage}
+      submessage="The workspace has been deactivated. If you believe this is a mistake, contact the organization's owner or our support team."
+      resolutions={['home', 'signout', 'contact_support']}
+    />
+  )
 
   return <OrgContext.Provider value={contextValue}>{children}</OrgContext.Provider>
 }
