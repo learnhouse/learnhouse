@@ -33,6 +33,34 @@ def test_thumbnails_grid_math():
     assert ht.thumbnails_grid(250) == (10, 3)        # 25 frames → 3 rows
 
 
+def test_thumbnails_grid_guards_zero_interval_and_columns():
+    # Must not raise ZeroDivisionError on degenerate inputs.
+    assert ht.thumbnails_grid(100, interval=0, columns=10) == (10, ht.thumbnails_grid(100, 1, 10)[1])
+    assert ht.thumbnails_grid(100, interval=10, columns=0)[0] == 1
+
+
+def test_sprite_interval_shrinks_for_short_and_caps_for_long():
+    # Short clip: interval shrinks so fps yields ≥1 frame.
+    assert ht._sprite_interval(4, 10, 10) == 2
+    assert ht._sprite_interval(1, 10, 10) == 1
+    # Normal: unchanged.
+    assert ht._sprite_interval(1200, 10, 10) == 10
+    # Very long: interval grows so total cells stay under MAX_THUMBNAILS.
+    long_interval = ht._sprite_interval(100000, 10, 10)
+    assert long_interval > 10
+    import math
+    assert math.ceil(100000 / long_interval) <= ht.MAX_THUMBNAILS
+
+
+async def test_probe_missing_ffprobe_safe_fallback(monkeypatch):
+    # No ffprobe → (0, False, 0.0): no forced 1080 upscale, no audio map.
+    monkeypatch.setattr(ht, "_ffprobe", lambda: None)
+    height, has_audio, duration = await ht._probe("whatever.mp4")
+    assert (height, has_audio, duration) == (0, False, 0.0)
+    # And that height selects a single lowest rung (never upscales).
+    assert [r.name for r in ht.select_ladder(height)] == ["360p"]
+
+
 # --------------------------------------------------------------------------
 # ffmpeg argument construction
 # --------------------------------------------------------------------------
@@ -145,3 +173,49 @@ def test_transcode_missing_source_returns_none(tmp_path):
         ht.transcode_source_to_hls(str(tmp_path / "nope.mp4"), str(tmp_path / "out"))
     )
     assert result is None
+
+
+# --- Error-path coverage (no real hang/ffmpeg needed) ----------------------
+
+async def test_communicate_timeout_kills_process():
+    class _P:
+        def __init__(self):
+            self.killed = False
+
+        async def communicate(self):
+            await asyncio.sleep(30)
+
+        def kill(self):
+            self.killed = True
+
+        async def wait(self):
+            return 0
+
+    p = _P()
+    with pytest.raises(asyncio.TimeoutError):
+        await ht._communicate(p, 0.01)
+    assert p.killed is True
+
+
+async def test_transcode_and_sprite_return_none_without_ffmpeg(monkeypatch, tmp_path):
+    monkeypatch.setattr(ht, "_ffmpeg", lambda: None)
+    src = tmp_path / "x.mp4"
+    src.write_bytes(b"data")
+    assert await ht.transcode_source_to_hls(str(src), str(tmp_path / "o")) is None
+    assert await ht.generate_sprite_thumbnails(str(src), str(tmp_path / "o2"), 10) is None
+
+
+@pytest.mark.skipif(not _HAS_FFMPEG, reason="ffmpeg not installed")
+async def test_transcode_bogus_source_returns_none(tmp_path):
+    # ffmpeg present but the input isn't a valid media file → rc!=0 → None.
+    bogus = tmp_path / "bogus.mp4"
+    bogus.write_bytes(b"not a real video")
+    assert await ht.transcode_source_to_hls(str(bogus), str(tmp_path / "out")) is None
+
+
+@pytest.mark.skipif(not _HAS_FFMPEG, reason="ffprobe not installed")
+async def test_probe_non_media_returns_safe_defaults(tmp_path):
+    p = tmp_path / "notvideo.mp4"
+    p.write_bytes(b"just text, not a video")
+    height, has_audio, duration = await ht._probe(str(p))
+    assert height == 0 and has_audio is False and duration == 0.0

@@ -67,3 +67,61 @@ def test_resolve_key_handles_subdirs_and_parent():
     assert _resolve_key("content/o/hls/v480p", "seg_0000.ts") == "content/o/hls/v480p/seg_0000.ts"
     assert _resolve_key("content/o/hls/v480p", "../v720p/seg.ts") == "content/o/hls/v720p/seg.ts"
     assert _resolve_key("content/o/hls", "./master.m3u8") == "content/o/hls/master.m3u8"
+
+
+# --- Edge cases added during hardening audit -------------------------------
+
+_ROOT = "content/orgs/O/courses/C/activities/A/video/hls"
+
+
+def test_resolve_key_clamps_traversal_escape():
+    base = f"{_ROOT}/v480p"
+    # A crafted ../ chain that would escape the activity's hls dir → None.
+    assert _resolve_key(base, "../../../../../../secret/x.ts", _ROOT) is None
+    # A legitimate in-tree reference still resolves.
+    assert _resolve_key(base, "seg_0000.ts", _ROOT) == f"{_ROOT}/v480p/seg_0000.ts"
+    # ../enc.key stays within root (used by encrypted renditions).
+    assert _resolve_key(base, "../enc.key", _ROOT) == f"{_ROOT}/enc.key"
+
+
+def test_rewrite_leaves_escaping_segment_untouched():
+    base = f"{_ROOT}/v480p"
+    pl = "#EXTM3U\n#EXTINF:6,\n../../../../../../secret/x.ts\n"
+    out = rewrite_playlist(pl, base, lambda k: "SIGNED:" + k)
+    assert "SIGNED:" not in out  # escape was refused
+    assert "../../../../../../secret/x.ts" in out
+
+
+def test_segment_with_query_params_is_presigned():
+    out = rewrite_playlist("#EXTM3U\nseg_0000.ts?foo=bar\n", f"{_ROOT}/v480p", _presign)
+    # Extension detection ignores the query; the whole ref is signed.
+    assert "https://r2.example/" in out
+    assert "seg_0000.ts" in out
+
+
+def test_uppercase_and_protocol_relative_absolute_urls_passthrough():
+    out = rewrite_playlist(
+        "#EXTM3U\nHTTPS://cdn/x.ts\n//cdn/y.ts\n", f"{_ROOT}/v480p", _presign
+    )
+    assert "HTTPS://cdn/x.ts" in out
+    assert "//cdn/y.ts" in out
+    assert "r2.example" not in out
+
+
+def test_ext_x_key_tag_is_preserved_verbatim():
+    # The AES key URI lives in a #-tag and must NOT be presigned/rewritten.
+    pl = '#EXTM3U\n#EXT-X-KEY:METHOD=AES-128,URI="../enc.key",IV=0x1\nseg_0.ts\n'
+    out = rewrite_playlist(pl, f"{_ROOT}/v480p", _presign)
+    assert 'URI="../enc.key"' in out
+
+
+def test_ext_x_map_init_segment_is_presigned():
+    # fMP4 init segment (defensive: we emit TS, but handle it if ever enabled).
+    pl = '#EXTM3U\n#EXT-X-MAP:URI="init.mp4"\nseg_0.m4s\n'
+    out = rewrite_playlist(pl, f"{_ROOT}/v480p", _presign)
+    assert 'URI="https://r2.example/' in out and "init.mp4" in out
+
+
+def test_crlf_line_endings_handled():
+    out = rewrite_playlist("#EXTM3U\r\nseg_0000.ts\r\n", f"{_ROOT}/v480p", _presign)
+    assert "https://r2.example/" in out

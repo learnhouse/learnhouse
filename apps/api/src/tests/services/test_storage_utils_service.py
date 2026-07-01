@@ -65,7 +65,14 @@ class TestValidateLocalPath:
         content_dir.mkdir()
         (content_dir / "ok.txt").write_text("data")
 
-        assert storage_utils._validate_local_path("content/ok.txt") == "content/ok.txt"
+        # Returns the canonicalized, containment-checked absolute path (not the
+        # original tainted string) so callers open the validated path.
+        result = storage_utils._validate_local_path("content/ok.txt")
+        import os as _os
+        assert result is not None
+        assert _os.path.isabs(result)
+        assert result == _os.path.realpath("content/ok.txt")
+        assert result.replace("\\", "/").endswith("content/ok.txt")
 
     def test_rejects_path_escaping_content_root(self, tmp_path, monkeypatch):
         # A path that normalizes inside but realpath-escapes the content root

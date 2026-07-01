@@ -65,10 +65,13 @@ async def test_rendition_playlist_segments_presigned(
     client = await client_factory(anonymous_user)
     r = await client.get(_url(org, course, activity, "v360p/index.m3u8"))
     assert r.status_code == 200
-    assert "https://r2.example/" in r.text
+    # The segment line was rewritten to the presigned URL (query param present),
+    # and the bare relative segment name is gone.
     assert "seg_0000.ts?sig=abc" in r.text
-    # Raw relative segment name should be replaced.
     assert "\nseg_0000.ts\n" not in r.text
+    # The rewritten line is an absolute URL to the storage host.
+    seg_line = next(ln for ln in r.text.splitlines() if ln.strip().endswith("sig=abc"))
+    assert seg_line.startswith("https://")
 
 
 async def test_segment_request_redirects_to_presigned_in_s3_mode(
@@ -185,6 +188,8 @@ async def test_activity_video_redirects_to_presigned_with_cache(
         stream_mod, "generate_presigned_get_url",
         lambda key: f"https://r2.example/{key}?sig=abc",
     )
+    # Object exists (head_object hit) so the handler proceeds to the redirect.
+    monkeypatch.setattr(stream_mod, "get_file_info", lambda p: (1000, "video/mp4", True))
     client = await client_factory(anonymous_user)
     r = await client.get(
         f"/video/{org.org_uuid}/{course.course_uuid}/{activity.activity_uuid}/clip.mp4",
@@ -193,6 +198,52 @@ async def test_activity_video_redirects_to_presigned_with_cache(
     assert r.status_code == 302
     assert r.headers["location"].startswith("https://r2.example/")
     assert "max-age=21600" in r.headers["cache-control"]
+
+
+async def test_activity_video_missing_object_returns_404_in_s3_mode(
+    client_factory, monkeypatch, org, course, chapter, activity, anonymous_user
+):
+    # Missing object → 404 (consistent with HEAD), not a 302 to a dead URL.
+    monkeypatch.setattr(stream_mod, "is_s3_enabled", lambda: True)
+    monkeypatch.setattr(stream_mod, "generate_presigned_get_url", lambda key: "https://r2/x")
+    monkeypatch.setattr(stream_mod, "get_file_info", lambda p: (0, "", False))
+    client = await client_factory(anonymous_user)
+    r = await client.get(
+        f"/video/{org.org_uuid}/{course.course_uuid}/{activity.activity_uuid}/missing.mp4",
+        follow_redirects=False,
+    )
+    assert r.status_code == 404
+    assert "location" not in r.headers
+
+
+async def test_get_and_head_agree_for_missing_object(
+    client_factory, monkeypatch, org, course, chapter, activity, anonymous_user
+):
+    monkeypatch.setattr(stream_mod, "is_s3_enabled", lambda: True)
+    monkeypatch.setattr(stream_mod, "generate_presigned_get_url", lambda key: "https://r2/x")
+    monkeypatch.setattr(stream_mod, "get_file_info", lambda p: (0, "", False))
+    client = await client_factory(anonymous_user)
+    url = f"/video/{org.org_uuid}/{course.course_uuid}/{activity.activity_uuid}/missing.mp4"
+    head = await client.head(url, follow_redirects=False)
+    get = await client.get(url, follow_redirects=False)
+    assert head.status_code == 404
+    assert get.status_code == 404
+
+
+async def test_unsatisfiable_range_returns_416(
+    client_factory, monkeypatch, org, course, chapter, activity, anonymous_user
+):
+    # Local mode (no redirect); existing file of 10 bytes; ask for byte 999-.
+    monkeypatch.setattr(stream_mod, "is_s3_enabled", lambda: False)
+    monkeypatch.setattr(stream_mod, "get_file_info", lambda p: (10, "video/mp4", True))
+    client = await client_factory(anonymous_user)
+    r = await client.get(
+        f"/video/{org.org_uuid}/{course.course_uuid}/{activity.activity_uuid}/clip.mp4",
+        headers={"Range": "bytes=999-"},
+        follow_redirects=False,
+    )
+    assert r.status_code == 416
+    assert r.headers["content-range"] == "bytes */10"
 
 
 async def test_private_course_denies_anonymous(
@@ -206,3 +257,69 @@ async def test_private_course_denies_anonymous(
     client = await client_factory(anonymous_user)
     r = await client.get(_url(org, course, activity, "master.m3u8"))
     assert r.status_code in (401, 403)
+
+
+# --------------------------------------------------------------------------
+# Block + podcast GET handlers (cover the duplicated existence-check/redirect)
+# --------------------------------------------------------------------------
+
+async def test_block_video_redirects_in_s3(
+    client_factory, monkeypatch, org, course, chapter, activity, anonymous_user
+):
+    monkeypatch.setattr(stream_mod, "is_s3_enabled", lambda: True)
+    monkeypatch.setattr(stream_mod, "get_file_info", lambda p: (1000, "video/mp4", True))
+    monkeypatch.setattr(stream_mod, "generate_presigned_get_url", lambda k: f"https://r2/{k}")
+    client = await client_factory(anonymous_user)
+    r = await client.get(
+        f"/block/{org.org_uuid}/{course.course_uuid}/{activity.activity_uuid}/blk1/v.mp4",
+        follow_redirects=False,
+    )
+    assert r.status_code == 302
+    assert "max-age=21600" in r.headers["cache-control"]
+
+
+async def test_block_video_missing_returns_404(
+    client_factory, monkeypatch, org, course, chapter, activity, anonymous_user
+):
+    monkeypatch.setattr(stream_mod, "is_s3_enabled", lambda: True)
+    monkeypatch.setattr(stream_mod, "get_file_info", lambda p: (0, "", False))
+    monkeypatch.setattr(stream_mod, "generate_presigned_get_url", lambda k: "https://r2/x")
+    client = await client_factory(anonymous_user)
+    r = await client.get(
+        f"/block/{org.org_uuid}/{course.course_uuid}/{activity.activity_uuid}/blk1/v.mp4",
+        follow_redirects=False,
+    )
+    assert r.status_code == 404
+
+
+async def test_block_audio_redirects_in_s3(
+    client_factory, monkeypatch, org, course, chapter, activity, anonymous_user
+):
+    monkeypatch.setattr(stream_mod, "is_s3_enabled", lambda: True)
+    monkeypatch.setattr(stream_mod, "get_file_info", lambda p: (1000, "audio/mpeg", True))
+    monkeypatch.setattr(stream_mod, "generate_presigned_get_url", lambda k: f"https://r2/{k}")
+    client = await client_factory(anonymous_user)
+    r = await client.get(
+        f"/block/audio/{org.org_uuid}/{course.course_uuid}/{activity.activity_uuid}/blk1/a.mp3",
+        follow_redirects=False,
+    )
+    assert r.status_code == 302
+
+
+async def test_podcast_audio_redirects_in_s3(
+    client_factory, monkeypatch, org, anonymous_user
+):
+    # Focus on the redirect logic (the changed lines); podcast RBAC is exercised
+    # by its own dedicated tests, so stub the access check here.
+    async def _allow(*a, **k):
+        return None
+
+    monkeypatch.setattr(stream_mod, "_verify_podcast_episode_access", _allow)
+    monkeypatch.setattr(stream_mod, "is_s3_enabled", lambda: True)
+    monkeypatch.setattr(stream_mod, "get_file_info", lambda p: (1000, "audio/mpeg", True))
+    monkeypatch.setattr(stream_mod, "generate_presigned_get_url", lambda k: f"https://r2/{k}")
+    client = await client_factory(anonymous_user)
+    r = await client.get(
+        f"/audio/{org.org_uuid}/pod_test/ep_test/a.mp3", follow_redirects=False
+    )
+    assert r.status_code == 302

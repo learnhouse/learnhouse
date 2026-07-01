@@ -2,8 +2,27 @@
 
 from types import SimpleNamespace
 
+import pytest
+from fastapi import HTTPException
+
 import src.services.utils.upload_content as upload_content_mod
-from src.services.utils.upload_content import upload_content
+from src.services.utils.upload_content import upload_content, _safe_content_path
+
+
+def test_safe_content_path_contains_within_root(tmp_path, monkeypatch):
+    monkeypatch.chdir(tmp_path)
+    p = _safe_content_path("orgs", "org_x", "courses/c/video", "clip.mp4")
+    import os
+    assert os.path.isabs(p)
+    assert p == os.path.realpath("content/orgs/org_x/courses/c/video/clip.mp4")
+
+
+def test_safe_content_path_rejects_traversal(tmp_path, monkeypatch):
+    monkeypatch.chdir(tmp_path)
+    for bad in [("..", "escape.mp4"), ("orgs", "../../etc/passwd"), ("orgs", "x\x00.mp4")]:
+        with pytest.raises(HTTPException) as ei:
+            _safe_content_path(*bad)
+        assert ei.value.status_code == 400
 
 
 async def test_filesystem_upload_invokes_faststart(monkeypatch, tmp_path):
