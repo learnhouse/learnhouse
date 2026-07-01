@@ -3,6 +3,7 @@ import { describe, expect, test } from "bun:test";
 import {
   isActivityHlsReady,
   resolveActivityVideoSource,
+  resolveHlsThumbnails,
   shouldSendHlsCredentials,
 } from "../components/Objects/Activities/Video/videoSource.ts";
 
@@ -47,6 +48,39 @@ describe("resolveActivityVideoSource", () => {
     expect(isHls).toBe(true);
     expect(src).toContain("api/v1/stream/hls/org_1/course_1/activity_1/master.m3u8");
     expect(src).not.toContain("clip.mp4");
+  });
+});
+
+describe("resolveHlsThumbnails", () => {
+  const ids = { orgUuid: "org_1", courseUuid: "course_1", activityUuid: "activity_1" };
+  const full = {
+    extra_metadata: {
+      hls: {
+        status: "ready",
+        thumbnails: { url: "thumbnails/sprite.jpg", interval: 10, width: 160, height: 90, columns: 10, rows: 6 },
+      },
+    },
+  };
+
+  test("builds an absolute sprite URL and passes config through", () => {
+    const t = resolveHlsThumbnails(full, ids);
+    expect(t).not.toBeNull();
+    expect(t.url).toContain("api/v1/stream/hls/org_1/course_1/activity_1/thumbnails/sprite.jpg");
+    expect(t).toMatchObject({ interval: 10, width: 160, height: 90, columns: 10, rows: 6 });
+  });
+
+  test("null when thumbnails metadata is missing or incomplete", () => {
+    expect(resolveHlsThumbnails({ extra_metadata: { hls: { status: "ready" } } }, ids)).toBeNull();
+    expect(resolveHlsThumbnails({ extra_metadata: { hls: { thumbnails: { url: "x.jpg" } } } }, ids)).toBeNull();
+    expect(resolveHlsThumbnails({}, ids)).toBeNull();
+  });
+
+  test("defaults rows to 1 when omitted", () => {
+    const t = resolveHlsThumbnails(
+      { extra_metadata: { hls: { thumbnails: { url: "s.jpg", interval: 5, width: 160, height: 90, columns: 10 } } } },
+      ids
+    );
+    expect(t.rows).toBe(1);
   });
 });
 

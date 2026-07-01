@@ -40,6 +40,19 @@ export function getActivityHlsMasterUrl(
 }
 
 /**
+ * Get the URL of an activity's HLS hover-preview sprite sheet. The API redirects
+ * this to a presigned R2 URL; it's loaded as a CSS background image (no CORS).
+ */
+export function getActivityHlsThumbnailsUrl(
+  orgUUID: string,
+  courseUUID: string,
+  activityUUID: string,
+  spritePath: string
+) {
+  return `${getApiUrl()}api/v1/stream/hls/${orgUUID}/${courseUUID}/${activityUUID}/${spritePath}`
+}
+
+/**
  * Get the streaming URL for a video block.
  * Uses the optimized streaming endpoint with proper Range request support.
  */

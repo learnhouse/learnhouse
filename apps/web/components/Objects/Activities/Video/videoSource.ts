@@ -1,14 +1,39 @@
-import { getActivityVideoStreamUrl, getActivityHlsMasterUrl } from '@services/media/media'
+import {
+  getActivityVideoStreamUrl,
+  getActivityHlsMasterUrl,
+  getActivityHlsThumbnailsUrl,
+} from '@services/media/media'
 
 /**
  * Pure helpers for choosing a video activity's playback source.
  *
  * Extracted from the components so the decision logic (HLS-when-ready with an
- * MP4 fallback, and the hls.js credentials rule) can be unit-tested.
+ * MP4 fallback, the credentials rule, and thumbnail config) can be unit-tested.
  */
 
+export interface HlsThumbnails {
+  url: string
+  interval: number
+  width: number
+  height: number
+  columns: number
+  rows: number
+}
+
 export interface HlsActivityMeta {
-  extra_metadata?: { hls?: { status?: string } } | null
+  extra_metadata?: {
+    hls?: {
+      status?: string
+      thumbnails?: {
+        url?: string
+        interval?: number
+        width?: number
+        height?: number
+        columns?: number
+        rows?: number
+      } | null
+    }
+  } | null
 }
 
 /** True once transcoding has produced a ready HLS ladder for the activity. */
@@ -46,10 +71,39 @@ export function resolveActivityVideoSource(args: VideoSourceArgs): VideoSource {
 }
 
 /**
- * hls.js requests both API playlists and R2 segments. Send the auth cookie only
- * to our API playlist endpoint (for RBAC); presigned R2 segment requests must
- * stay uncredentialed (R2 CORS rejects credentialed wildcard requests).
+ * The player requests both API playlists and R2 segments. Send the auth cookie
+ * only to our API playlist endpoint (for RBAC); presigned R2 segment requests
+ * must stay uncredentialed (R2 CORS rejects credentialed wildcard requests).
  */
 export function shouldSendHlsCredentials(url: string): boolean {
   return url.includes('/api/v1/stream/hls/')
+}
+
+export interface ThumbnailArgs {
+  orgUuid: string
+  courseUuid: string
+  activityUuid: string
+}
+
+/**
+ * Resolve the hover-scrub thumbnail config for the player from the activity's
+ * HLS metadata, or null when unavailable/incomplete. Only valid when HLS is
+ * ready (the sprite lives alongside the HLS output).
+ */
+export function resolveHlsThumbnails(
+  activity: HlsActivityMeta,
+  ids: ThumbnailArgs
+): HlsThumbnails | null {
+  const t = activity?.extra_metadata?.hls?.thumbnails
+  if (!t || !t.url || !t.width || !t.height || !t.columns || !t.interval) {
+    return null
+  }
+  return {
+    url: getActivityHlsThumbnailsUrl(ids.orgUuid, ids.courseUuid, ids.activityUuid, t.url),
+    interval: t.interval,
+    width: t.width,
+    height: t.height,
+    columns: t.columns,
+    rows: t.rows ?? 1,
+  }
 }

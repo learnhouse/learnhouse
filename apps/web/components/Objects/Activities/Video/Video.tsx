@@ -2,7 +2,7 @@ import React from 'react'
 import YouTube from 'react-youtube'
 import { useOrg } from '@components/Contexts/OrgContext'
 import LearnHousePlayer from './LearnHousePlayer'
-import { isActivityHlsReady, resolveActivityVideoSource } from './videoSource'
+import { isActivityHlsReady, resolveActivityVideoSource, resolveHlsThumbnails } from './videoSource'
 
 interface VideoDetails {
   startTime?: number
@@ -23,6 +23,14 @@ interface VideoActivityProps {
     extra_metadata?: {
       hls?: {
         status?: string
+        thumbnails?: {
+          url?: string
+          interval?: number
+          width?: number
+          height?: number
+          columns?: number
+          rows?: number
+        } | null
       }
     } | null
   }
@@ -66,12 +74,20 @@ function VideoActivity({ activity, course, orgUuid }: VideoActivityProps) {
               <div className="relative w-full aspect-video sm:rounded-lg overflow-hidden ring-0 sm:ring-1 sm:ring-gray-200/10 sm:dark:ring-gray-700/20 shadow-none">
                 {(() => {
                   const { src, isHls } = getVideoSource()
+                  const thumbnails = isHls
+                    ? resolveHlsThumbnails(activity, {
+                        orgUuid: resolvedOrgUuid,
+                        courseUuid: course?.course_uuid,
+                        activityUuid: activity.activity_uuid,
+                      })
+                    : null
                   return src ? (
                     <LearnHousePlayer
                       key={src}
                       src={src}
                       isHls={isHls}
                       details={activity.details}
+                      thumbnails={thumbnails}
                     />
                   ) : null
                 })()}
