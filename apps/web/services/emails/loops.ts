@@ -20,6 +20,8 @@ function client(): LoopsClient | null {
 }
 
 type ContactProps = Record<string, string | number | boolean | null>
+// Loops events disallow null values (unlike contact properties).
+type EventProps = Record<string, string | number | boolean>
 
 /** The default lifecycle group new signups land in. */
 export const LOOPS_SIGNED_USERS_GROUP = 'signed-users'
@@ -104,7 +106,7 @@ export async function appendLoopsContactProperty(
 export async function sendLoopsEvent(
   email: string,
   eventName: string,
-  eventProperties?: ContactProps,
+  eventProperties?: EventProps,
 ): Promise<unknown | null> {
   const c = client()
   if (!c) return null
