@@ -49,7 +49,7 @@ function BillingClient() {
   }, [isLoading, isAuthenticated, router])
 
   // Load the user's orgs to resolve ?org= / ?orgId=.
-  const { data: orgs, isLoading: orgsLoading } = useQuery({
+  const { data: orgs, isLoading: orgsLoading, isError: orgsError, refetch: refetchOrgs } = useQuery({
     queryKey: ['orgs', 'user'],
     queryFn: () => apiFetch(`${getAPIUrl()}orgs/user/page/1/limit/50`, access_token),
     enabled: isAuthenticated,
@@ -121,7 +121,8 @@ function BillingClient() {
   const isOrgActive = resolveOrgActive(org)
   const hasExistingSub = !!subscription
 
-  const showLoader = isLoading || (isAuthenticated && (orgsLoading || !org))
+  // Don't spin forever if the orgs request failed — surface an error instead.
+  const showLoader = isLoading || (isAuthenticated && !orgsError && (orgsLoading || !org))
 
   return (
     <div className="fixed inset-0 z-[100] bg-white overflow-y-auto">
@@ -180,6 +181,18 @@ function BillingClient() {
                 <div className="h-10 w-64 rounded-xl bg-black/[0.03] animate-pulse" />
                 <div className="h-40 w-full rounded-2xl bg-black/[0.03] animate-pulse" />
                 <div className="h-40 w-full rounded-2xl bg-black/[0.03] animate-pulse" />
+              </div>
+            ) : orgsError ? (
+              <div className="rounded-2xl border border-rose-200 bg-rose-50 p-6 text-center">
+                <p className="text-rose-700 font-semibold">
+                  {t('billing.load_failed', { defaultValue: "We couldn't load your organizations." })}
+                </p>
+                <button
+                  onClick={() => refetchOrgs()}
+                  className="mt-3 inline-flex items-center rounded-full bg-rose-700 px-4 py-1.5 text-sm font-bold text-white hover:bg-rose-800"
+                >
+                  {t('common.retry', { defaultValue: 'Retry' })}
+                </button>
               </div>
             ) : org ? (
               view === 'plan' ? (

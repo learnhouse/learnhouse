@@ -74,12 +74,12 @@ export async function POST(request: NextRequest) {
   let usedDefaultOrg = false
   if (!resolvedOrgId) {
     try {
-      const instanceRes = await fetch(`${base}instance/info`, { cache: 'no-store' })
+      const instanceRes = await fetch(`${base}instance/info`, { cache: 'no-store', signal: AbortSignal.timeout(5000) })
       const instance = await instanceRes.json()
       const defaultOrgSlug = instance?.default_org_slug
       if (!defaultOrgSlug) throw new Error('no default_org_slug')
 
-      const orgRes = await fetch(`${base}orgs/slug/${defaultOrgSlug}`)
+      const orgRes = await fetch(`${base}orgs/slug/${defaultOrgSlug}`, { signal: AbortSignal.timeout(5000) })
       const org = await orgRes.json()
       if (!org?.id) throw new Error('default org not found')
 
@@ -104,6 +104,7 @@ export async function POST(request: NextRequest) {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(backendBody),
+      signal: AbortSignal.timeout(8000),
     })
   } catch (err) {
     console.error('[signup] backend request failed:', err)

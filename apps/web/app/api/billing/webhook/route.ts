@@ -209,6 +209,8 @@ async function handleSubscriptionEvent(eventType: string, subscription: any) {
         const plan = await planFromSubscription(subscription);
         if (plan) {
           await updateOrganizationConfigInternally(orgId, plan as any);
+        } else {
+          console.warn(`[webhook] could not resolve plan for active subscription ${subscription.id} (org ${orgId}); price id not in catalog?`);
         }
       } else if (status === "past_due" || status === "unpaid") {
         // Payment failed — notify user but keep plan active for grace period
