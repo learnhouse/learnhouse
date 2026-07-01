@@ -163,14 +163,25 @@
     "lodash-es": ">=4.17.23",
     "preact": ">=10.27.3",
     "js-yaml": ">=4.1.1",
-    "jspdf": ">=4.0.0",
+    "jspdf": ">=4.2.1",
     "prosemirror-view": "1.41.9",
     "prosemirror-model": "1.25.9",
-    "nth-check": ">=2.0.1"
+    "nth-check": ">=2.0.1",
+    "dompurify": ">=3.2.4",
+    "postcss": ">=8.4.31"
   },
   "pnpm": {
     "overrides": {
-      "nth-check": ">=2.0.1"
+      "@types/react": "19.2.17",
+      "@types/react-dom": "19.2.3",
+      "preact": ">=10.27.3",
+      "js-yaml": ">=4.1.1",
+      "jspdf": ">=4.2.1",
+      "prosemirror-view": "1.41.9",
+      "prosemirror-model": "1.25.9",
+      "nth-check": ">=2.0.1",
+      "dompurify": ">=3.2.4",
+      "postcss": ">=8.4.31"
     }
   }
 }
