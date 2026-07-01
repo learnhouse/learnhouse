@@ -43,12 +43,14 @@ router = APIRouter()
 CONTENT_DIR = "content"
 
 # HLS MIME types (not covered by the generic media maps). Includes the
-# hover-preview sprite (.jpg), which is served like a segment (presigned in S3).
+# hover-preview sprite (.jpg, served like a segment) and the AES-128 key (.key,
+# served ONLY server-side after RBAC — never presigned/redirected).
 _HLS_MIME = {
     ".m3u8": "application/vnd.apple.mpegurl",
     ".ts": "video/mp2t",
     ".m4s": "video/iso.segment",
     ".jpg": "image/jpeg",
+    ".key": "application/octet-stream",
 }
 
 
@@ -340,6 +342,18 @@ async def stream_activity_hls(
                 "Cache-Control": "private, max-age=300",
                 "X-Content-Type-Options": "nosniff",
             },
+        )
+
+    if ext == ".key":
+        # AES-128 decryption key: served ONLY through this authed endpoint,
+        # never presigned/redirected, and never cached, so it stays gated by RBAC.
+        raw = read_file_content(asset_key)
+        if raw is None:
+            raise HTTPException(status_code=404, detail="Key not found")
+        return Response(
+            content=raw,
+            media_type=_HLS_MIME[".key"],
+            headers={"Cache-Control": "private, no-store"},
         )
 
     # Segment request. In S3 mode the player uses presigned URLs directly, so

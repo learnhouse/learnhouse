@@ -15,6 +15,7 @@ import json
 import logging
 import os
 import shutil
+import tempfile
 from dataclasses import dataclass
 from typing import Optional
 
@@ -51,6 +52,17 @@ THUMB_WIDTH = 160
 THUMB_HEIGHT = 90
 THUMB_COLUMNS = 10
 
+# AES-128 segment encryption. The key lives in the private bucket and is only
+# handed out by the authed key endpoint — a deterrent against casual segment
+# stitching (not DRM). The URI is relative so it resolves back to our API from
+# a rendition playlist at v{name}/index.m3u8.
+ENC_KEY_NAME = "enc.key"
+ENC_KEY_URI = f"../{ENC_KEY_NAME}"
+
+
+def encryption_enabled() -> bool:
+    return os.environ.get("LEARNHOUSE_HLS_ENCRYPT", "true").strip().lower() == "true"
+
 
 def _ffmpeg() -> Optional[str]:
     return shutil.which("ffmpeg")
@@ -73,12 +85,16 @@ def select_ladder(source_height: int) -> list[Rung]:
 
 
 def build_ffmpeg_args(
-    src_path: str, out_dir: str, rungs: list[Rung], has_audio: bool
+    src_path: str, out_dir: str, rungs: list[Rung], has_audio: bool,
+    key_info_file: Optional[str] = None,
 ) -> list[str]:
     """Build the single-invocation ffmpeg command for the whole ladder.
 
     Output layout under out_dir: master.m3u8, v{name}/index.m3u8, v{name}/seg_*.ts
     (relative refs — master → rendition playlists, rendition → segments).
+
+    When key_info_file is given, segments are AES-128 encrypted and the playlists
+    carry an #EXT-X-KEY pointing at the (authed) key URI from that file.
     """
     n = len(rungs)
     split_labels = "".join(f"[v{i}]" for i in range(n))
@@ -118,8 +134,10 @@ def build_ffmpeg_args(
         "-master_pl_name", MASTER_PLAYLIST_NAME,
         "-hls_segment_filename", os.path.join(out_dir, "v%v", "seg_%04d.ts"),
         "-var_stream_map", " ".join(var_parts),
-        os.path.join(out_dir, "v%v", "index.m3u8"),
     ]
+    if key_info_file:
+        args += ["-hls_key_info_file", key_info_file]
+    args.append(os.path.join(out_dir, "v%v", "index.m3u8"))
     return args
 
 
@@ -233,9 +251,22 @@ async def transcode_source_to_hls(src_path: str, out_dir: str) -> Optional[dict]
     for r in rungs:
         os.makedirs(os.path.join(out_dir, f"v{r.name}"), exist_ok=True)
 
-    args = build_ffmpeg_args(src_path, out_dir, rungs, has_audio)
-    logger.info("Transcoding %s → HLS %s (%s)", src_path, out_dir,
-                ",".join(r.name for r in rungs))
+    # Optional AES-128 encryption: write a random key into out_dir (uploaded to
+    # the private bucket, served only via the authed key endpoint) and a keyinfo
+    # file (kept out of out_dir so it isn't uploaded).
+    keyinfo_path = None
+    if encryption_enabled():
+        key_path = os.path.join(out_dir, ENC_KEY_NAME)
+        with open(key_path, "wb") as kf:
+            kf.write(os.urandom(16))
+        fd, keyinfo_path = tempfile.mkstemp(suffix=".keyinfo")
+        with os.fdopen(fd, "w") as info:
+            info.write(f"{ENC_KEY_URI}\n{key_path}\n")
+
+    args = build_ffmpeg_args(src_path, out_dir, rungs, has_audio, key_info_file=keyinfo_path)
+    logger.info("Transcoding %s → HLS %s (%s%s)", src_path, out_dir,
+                ",".join(r.name for r in rungs),
+                ", encrypted" if keyinfo_path else "")
     try:
         proc = await asyncio.create_subprocess_exec(
             *args, stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE,
@@ -248,6 +279,12 @@ async def transcode_source_to_hls(src_path: str, out_dir: str) -> Optional[dict]
     except Exception as e:
         logger.error("HLS transcode error for %s: %s", src_path, e)
         return None
+    finally:
+        if keyinfo_path and os.path.exists(keyinfo_path):
+            try:
+                os.remove(keyinfo_path)
+            except OSError:
+                pass
 
     master = os.path.join(out_dir, MASTER_PLAYLIST_NAME)
     if not os.path.isfile(master):

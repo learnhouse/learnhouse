@@ -62,6 +62,18 @@ def test_build_ffmpeg_args_without_audio_omits_audio_maps():
     assert vsm == "v:0,name:360p"
 
 
+def test_build_ffmpeg_args_adds_key_info_when_encrypting():
+    rungs = ht.select_ladder(360)
+    without = ht.build_ffmpeg_args("in.mp4", "/out", rungs, has_audio=True)
+    assert "-hls_key_info_file" not in without
+
+    with_key = ht.build_ffmpeg_args("in.mp4", "/out", rungs, has_audio=True, key_info_file="/tmp/k.keyinfo")
+    assert "-hls_key_info_file" in with_key
+    assert with_key[with_key.index("-hls_key_info_file") + 1] == "/tmp/k.keyinfo"
+    # The key flag must precede the output playlist template.
+    assert with_key.index("-hls_key_info_file") < len(with_key) - 1
+
+
 # --------------------------------------------------------------------------
 # Real ffmpeg end-to-end (skipped when ffmpeg is unavailable)
 # --------------------------------------------------------------------------
@@ -104,6 +116,27 @@ def test_transcode_source_to_hls_end_to_end(tmp_path):
     assert thumbs["url"] == "thumbnails/sprite.jpg"
     assert thumbs["columns"] == 10 and thumbs["width"] == 160 and thumbs["height"] == 90
     assert os.path.isfile(os.path.join(out, "thumbnails", "sprite.jpg"))
+
+    # AES-128 encryption on by default: key present, playlists reference it, and
+    # the keyinfo temp file was cleaned up (not left in the output).
+    assert os.path.isfile(os.path.join(out, "enc.key"))
+    rendition = open(os.path.join(out, "v360p", "index.m3u8")).read()
+    assert "#EXT-X-KEY:METHOD=AES-128" in rendition
+    assert 'URI="../enc.key"' in rendition
+    assert not any(f.endswith(".keyinfo") for f in os.listdir(out))
+
+
+@pytest.mark.skipif(not _HAS_FFMPEG, reason="ffmpeg/ffprobe not installed")
+def test_transcode_without_encryption(tmp_path, monkeypatch):
+    monkeypatch.setenv("LEARNHOUSE_HLS_ENCRYPT", "false")
+    src = str(tmp_path / "src.mp4")
+    out = str(tmp_path / "hls")
+    _make_clip(src)
+    result = asyncio.run(ht.transcode_source_to_hls(src, out))
+    assert result is not None
+    assert not os.path.isfile(os.path.join(out, "enc.key"))
+    rendition = open(os.path.join(out, "v360p", "index.m3u8")).read()
+    assert "#EXT-X-KEY" not in rendition
 
 
 @pytest.mark.skipif(not _HAS_FFMPEG, reason="ffmpeg not installed")

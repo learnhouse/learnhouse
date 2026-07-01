@@ -123,6 +123,26 @@ async def test_thumbnail_sprite_redirects_to_presigned(
     assert r.headers["location"].endswith("thumbnails/sprite.jpg?sig=abc")
 
 
+async def test_aes_key_served_inline_never_redirected(
+    client_factory, monkeypatch, org, course, chapter, activity, anonymous_user
+):
+    # Even with S3 enabled, the key must be returned inline (RBAC-gated), never
+    # redirected to a presigned URL that would expose it publicly.
+    monkeypatch.setattr(stream_mod, "is_s3_enabled", lambda: True)
+    monkeypatch.setattr(
+        stream_mod, "generate_presigned_get_url",
+        lambda key: "https://r2.example/LEAKED",
+    )
+    monkeypatch.setattr(stream_mod, "read_file_content", lambda key: b"0123456789abcdef")
+
+    client = await client_factory(anonymous_user)
+    r = await client.get(_url(org, course, activity, "enc.key"), follow_redirects=False)
+    assert r.status_code == 200
+    assert r.content == b"0123456789abcdef"
+    assert "no-store" in r.headers["cache-control"]
+    assert "location" not in r.headers
+
+
 async def test_bad_extension_returns_404_without_reading(
     client_factory, monkeypatch, org, course, chapter, activity, anonymous_user
 ):

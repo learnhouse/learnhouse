@@ -106,6 +106,19 @@ const LearnHousePlayer: React.FC<LearnHousePlayerProps> = ({
       })
       playerRef.current = player
 
+      // Casual-download deterrents (cosmetic — not real protection; the segments
+      // are AES-128 encrypted server-side for the actual bar-raising).
+      try {
+        const techEl = player.el().querySelector('video') as HTMLVideoElement | null
+        if (techEl) {
+          techEl.setAttribute('controlsList', 'nodownload')
+          techEl.disablePictureInPicture = true
+        }
+        player.el().addEventListener('contextmenu', (e: Event) => e.preventDefault())
+      } catch {
+        /* best-effort */
+      }
+
       // Quality gear (populated from HLS renditions; harmless for MP4).
       try {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
