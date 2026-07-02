@@ -516,6 +516,69 @@ async def test_reconcile_no_redis(monkeypatch):
     assert out["requeued"] == 0 and out.get("error") == "no_redis"
 
 
+async def test_reconcile_resilient_to_redis_errors(monkeypatch, db, org, course, chapter, activity):
+    _bind_session(monkeypatch, db)
+    await _add_video_activity(db, org, course, "e1", filename="a.mp4", hls_status="failed")
+
+    class _BadR(_FakeRedis):
+        def lrange(self, *a):
+            raise RuntimeError("boom")
+
+        def exists(self, key):
+            raise RuntimeError("boom")
+
+        def get(self, key):
+            raise RuntimeError("boom")
+
+        def incr(self, key):
+            raise RuntimeError("boom")
+
+        def rpush(self, key, val):
+            raise RuntimeError("boom")
+
+    monkeypatch.setattr(hls_jobs, "get_redis_client", lambda: _BadR())
+    out = await hls_jobs.reconcile_unfinished()  # must not raise despite every op erroring
+    assert out["requeued"] == 0  # rpush failed, so not counted
+
+
+def test_hls_max_retries_parsing(monkeypatch):
+    monkeypatch.delenv("LEARNHOUSE_HLS_MAX_RETRIES", raising=False)
+    assert hls_jobs.hls_max_retries() == 6
+    monkeypatch.setenv("LEARNHOUSE_HLS_MAX_RETRIES", "3")
+    assert hls_jobs.hls_max_retries() == 3
+    monkeypatch.setenv("LEARNHOUSE_HLS_MAX_RETRIES", "bad")
+    assert hls_jobs.hls_max_retries() == 6
+
+
+async def test_lease_heartbeat_swallows_errors(monkeypatch):
+    monkeypatch.setattr(hls_jobs, "LEASE_HEARTBEAT_SECONDS", 0)
+
+    class _C:
+        def expire(self, key, ttl):
+            raise RuntimeError("redis down")  # -> caught, heartbeat returns
+
+    await hls_jobs._lease_heartbeat(_C(), "k")  # returns, no raise
+
+
+async def test_lease_heartbeat_cancellable(monkeypatch):
+    monkeypatch.setattr(hls_jobs, "LEASE_HEARTBEAT_SECONDS", 0)
+    calls = {"n": 0}
+
+    class _C:
+        def expire(self, key, ttl):
+            calls["n"] += 1
+
+    task = asyncio.create_task(hls_jobs._lease_heartbeat(_C(), "k"))
+    for _ in range(30):
+        await asyncio.sleep(0)
+        if calls["n"] >= 1:
+            break
+    task.cancel()
+    with pytest.raises(asyncio.CancelledError):
+        await task
+    assert calls["n"] >= 1
+
+
 async def test_consumer_loop_no_redis_returns(monkeypatch):
     monkeypatch.setattr(hls_jobs, "get_redis_client", lambda: None)
     await hls_jobs._consumer_loop()  # returns immediately, no raise
