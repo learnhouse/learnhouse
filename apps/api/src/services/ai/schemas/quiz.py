@@ -20,9 +20,10 @@ class GenQuizAnswer(BaseModel):
 
 class GenQuizQuestion(BaseModel):
     question: str
-    # `multiple_choice` = one or more correct options; `custom_answer` = open
-    # self-check with a model answer marked correct. Mirrors QuizBlockComponent.
-    type: Literal["multiple_choice", "custom_answer"] = "multiple_choice"
+    # Only `multiple_choice` is generated: QuizBlockComponent renders every
+    # question as multiple-choice, so a `custom_answer` would degenerate into a
+    # single answer-revealing option.
+    type: Literal["multiple_choice"] = "multiple_choice"
     answers: List[GenQuizAnswer] = Field(default_factory=list)
 
 

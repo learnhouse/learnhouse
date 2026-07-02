@@ -125,6 +125,45 @@ async def test_generate_image_sdk_error_raises_runtime():
             await gen.generate_image("x")
 
 
+async def test_generate_image_requests_image_modality():
+    """Regression: the call MUST pass response_modalities so the model returns an image."""
+    client = MagicMock()
+    client.aio.models.generate_content = AsyncMock(return_value=_image_response(b"IMG"))
+    with patch.object(gen, "get_learnhouse_config", return_value=_cfg()), patch(
+        "google.genai.Client", return_value=client
+    ):
+        await gen.generate_image("a cat")
+    cfg = client.aio.models.generate_content.await_args.kwargs["config"]
+    assert list(cfg.response_modalities) == ["IMAGE"]
+
+
+async def test_default_model_is_ga_flash_image():
+    assert gen.DEFAULT_IMAGE_MODEL == "gemini-2.5-flash-image"
+
+
+def test_sniff_mime():
+    assert gen._sniff_mime(b"\x89PNG\r\n\x1a\n....") == "image/png"
+    assert gen._sniff_mime(b"\xff\xd8\xff\xe0xxxx") == "image/jpeg"
+    assert gen._sniff_mime(b"RIFF\x00\x00\x00\x00WEBPxxxx") == "image/webp"
+    assert gen._sniff_mime(b"unknownbytes") == "image/png"  # safe fallback
+
+
+async def test_generate_image_retries_transient_then_succeeds():
+    class ServerError(Exception):
+        code = 503
+
+    client = MagicMock()
+    client.aio.models.generate_content = AsyncMock(
+        side_effect=[ServerError("busy"), _image_response(b"IMG")]
+    )
+    with patch.object(gen, "get_learnhouse_config", return_value=_cfg()), patch(
+        "google.genai.Client", return_value=client
+    ), patch("asyncio.sleep", new=AsyncMock()):
+        out = await gen.generate_image("a cat")
+    assert out == b"IMG"
+    assert client.aio.models.generate_content.await_count == 2
+
+
 async def test_generate_image_truncates_long_prompt():
     client = MagicMock()
     client.aio.models.generate_content = AsyncMock(return_value=_image_response(b"IMG"))

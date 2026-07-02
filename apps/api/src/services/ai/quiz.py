@@ -9,6 +9,7 @@ expects. Multi-turn refinement is supported via the Redis chat session store
 
 from __future__ import annotations
 
+import json
 import logging
 from uuid import uuid4
 
@@ -25,11 +26,9 @@ MAX_CONTEXT_CHARS = 6000
 _SYSTEM_PROMPT = """You are an expert instructional designer creating quiz questions for a course.
 
 Rules:
-- Produce clear, unambiguous questions at the requested difficulty.
-- For `multiple_choice` questions: provide 3-5 answer options with exactly the
-  correct one(s) marked correct. At least one option MUST be correct.
-- For `custom_answer` questions: provide a single model answer marked correct.
-- Prefer `multiple_choice` unless the concept genuinely needs an open answer.
+- Produce clear, unambiguous multiple-choice questions at the requested difficulty.
+- Each question has 3-5 answer options; mark exactly the correct one(s) correct.
+  At least one option MUST be correct.
 - Write in the same language as the user's request/content.
 - Base questions strictly on the provided course content when it is supplied;
   do not invent facts that contradict it.
@@ -105,10 +104,11 @@ async def generate_quiz(
 
     block_quiz = _to_block_quiz(generated)
 
-    # Record the exchange so a follow-up refine turn has context.
-    summary = f"Generated {len(block_quiz['questions'])} quiz question(s)."
+    # Record the exchange so a follow-up refine turn can amend the actual quiz
+    # (persist the generated questions, not just a count).
+    assistant_turn = json.dumps(block_quiz.get("questions", []))
     try:
-        save_message_to_history(resolved_session_uuid, prompt.strip(), summary, org_id=org_id)
+        save_message_to_history(resolved_session_uuid, prompt.strip(), assistant_turn, org_id=org_id)
     except Exception:
         logger.debug("Failed to persist quiz refine history", exc_info=True)
 

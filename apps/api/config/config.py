@@ -64,7 +64,8 @@ class AIConfig(BaseModel):
     # Google-only path — it always uses the Google GenAI SDK regardless of the
     # configured text `provider`, resolving its key from `api_key` (when provider
     # is Google) or `gemini_api_key`. Override the exact model id with
-    # LEARNHOUSE_AI_IMAGE_MODEL; defaults to the nano-banana-2-lite model.
+    # LEARNHOUSE_AI_IMAGE_MODEL; defaults to the GA `gemini-2.5-flash-image`
+    # (Nano Banana). Set a newer/preview model here once it is allowlisted.
     image_model: str | None = None
 
 

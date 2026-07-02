@@ -15,6 +15,7 @@ Supports two modes with the same call:
 
 from __future__ import annotations
 
+import asyncio
 import logging
 from typing import Optional
 
@@ -24,10 +25,12 @@ from src.services.ai.llm.provider import _GOOGLE_ALIASES
 
 logger = logging.getLogger(__name__)
 
-# Google "nano banana 2 lite" image model. Overridable via LEARNHOUSE_AI_IMAGE_MODEL
-# so the exact model id can be pinned/upgraded without a code change (Google's
-# preview model strings change over time — confirm the current id for your key).
-DEFAULT_IMAGE_MODEL = "gemini-3-pro-image-preview"
+# Google "nano banana" image model. Defaults to the generally-available Gemini 2.5
+# Flash Image model so generation works out of the box on any Gemini API key.
+# Newer/preview models (e.g. Nano Banana 2 / "gemini-3-pro-image-preview") require
+# allowlist access and can 429/500 under capacity — set LEARNHOUSE_AI_IMAGE_MODEL
+# to opt into one once it is enabled for your key.
+DEFAULT_IMAGE_MODEL = "gemini-2.5-flash-image"
 
 # Nano banana returns PNG inline data.
 OUTPUT_MIME = "image/png"
@@ -35,6 +38,34 @@ OUTPUT_EXT = "png"
 
 # Guard against pathologically large prompts before we spend a credit / call out.
 MAX_PROMPT_CHARS = 4000
+
+# Bounded retry for transient upstream errors (rate limit / capacity).
+_MAX_ATTEMPTS = 3
+_RETRY_BACKOFF_SECONDS = 1.5
+_RETRYABLE_STATUS = {429, 500, 502, 503, 504}
+
+
+def _sniff_mime(data: bytes) -> str:
+    """Best-effort image MIME detection so edit/refine inputs aren't mislabeled."""
+    if data[:8] == b"\x89PNG\r\n\x1a\n":
+        return "image/png"
+    if data[:3] == b"\xff\xd8\xff":
+        return "image/jpeg"
+    if data[:4] == b"RIFF" and data[8:12] == b"WEBP":
+        return "image/webp"
+    if data[:6] in (b"GIF87a", b"GIF89a"):
+        return "image/gif"
+    return OUTPUT_MIME
+
+
+def _is_retryable(exc: Exception) -> bool:
+    """True for transient Google API errors worth retrying."""
+    code = getattr(exc, "code", None) or getattr(exc, "status_code", None)
+    if isinstance(code, int) and code in _RETRYABLE_STATUS:
+        return True
+    # google.genai raises ServerError (5xx) / APIError with a numeric status.
+    name = type(exc).__name__
+    return name in ("ServerError", "ServiceUnavailable", "ResourceExhausted")
 
 
 def _resolve_image_config() -> tuple[str, str]:
@@ -97,22 +128,39 @@ async def generate_image(
     api_key, model = _resolve_image_config()
 
     # Build multimodal contents: the prompt plus any reference images to edit.
+    # Sniff each image's real MIME type — a JPEG/WebP mislabeled as PNG can be
+    # rejected by the model.
     contents: list = [prompt]
     for img in input_images or []:
         if img:
-            contents.append(types.Part.from_bytes(data=img, mime_type=OUTPUT_MIME))
+            contents.append(types.Part.from_bytes(data=img, mime_type=_sniff_mime(img)))
+
+    # Explicitly request image output. Without this the model can return a
+    # text-only response and we would (wrongly) treat it as "no image" / 502.
+    config = types.GenerateContentConfig(response_modalities=["IMAGE"])
 
     client = genai.Client(api_key=api_key)
-    try:
-        response = await client.aio.models.generate_content(
-            model=model,
-            contents=contents,
-        )
-    except Exception as e:  # noqa: BLE001 — surface a clean error to the router
-        # Log only the exception type: the underlying SDK error can embed the
-        # API key (request URL/headers), so never log the message or traceback.
-        logger.error("Image generation call failed: %s", type(e).__name__)
-        raise RuntimeError("Image generation failed") from e
+    response = None
+    for attempt in range(1, _MAX_ATTEMPTS + 1):
+        try:
+            response = await client.aio.models.generate_content(
+                model=model,
+                contents=contents,
+                config=config,
+            )
+            break
+        except Exception as e:  # noqa: BLE001 — surface a clean error to the router
+            # Log only the exception type: the underlying SDK error can embed the
+            # API key (request URL/headers), so never log the message or traceback.
+            if _is_retryable(e) and attempt < _MAX_ATTEMPTS:
+                logger.warning(
+                    "Image generation transient error (%s), retry %d/%d",
+                    type(e).__name__, attempt, _MAX_ATTEMPTS,
+                )
+                await asyncio.sleep(_RETRY_BACKOFF_SECONDS * attempt)
+                continue
+            logger.error("Image generation call failed: %s", type(e).__name__)
+            raise RuntimeError("Image generation failed") from e
 
     image_bytes = _extract_image_bytes(response)
     if not image_bytes:

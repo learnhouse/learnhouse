@@ -10,6 +10,7 @@ returned for the teacher to preview, edit, and save via the existing endpoints.
 
 from __future__ import annotations
 
+import json
 import logging
 from uuid import uuid4
 
@@ -215,9 +216,11 @@ async def generate_assignment_plan(
         tasks=generated_tasks,
     )
 
-    summary = f"Generated assignment '{plan.title}' with {len(generated_tasks)} task(s)."
+    # Persist the actual generated plan (not just a count) so a refine turn can
+    # amend it instead of regenerating from scratch.
+    assistant_turn = json.dumps(generated.model_dump())
     try:
-        save_message_to_history(resolved_session_uuid, prompt.strip(), summary, org_id=org_id)
+        save_message_to_history(resolved_session_uuid, prompt.strip(), assistant_turn, org_id=org_id)
     except Exception:
         logger.debug("Failed to persist assignment refine history", exc_info=True)
 

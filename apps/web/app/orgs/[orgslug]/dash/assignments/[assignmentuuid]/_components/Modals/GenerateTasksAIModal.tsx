@@ -266,6 +266,7 @@ function GenerateTasksAIModal({
     if (tasks.length === 0) return
     setIsSaving(true)
     let saved = 0
+    let failed = 0
     try {
       for (const task of tasks) {
         const body = {
@@ -277,15 +278,24 @@ function GenerateTasksAIModal({
           contents: task.contents ?? {},
           max_grade_value: task.max_grade_value ?? 100,
         }
+        // createAssignmentTask returns { success: false } on non-200 (it does not throw).
         const res = await createAssignmentTask(body, assignment_uuid, access_token)
-        if (res?.success !== false) saved += 1
+        if (res?.success === false) failed += 1
+        else saved += 1
       }
       // Refresh the task list the editor page renders (react-query key used by
       // AssignmentProvider / Tasks list).
       queryClient.invalidateQueries({ queryKey: queryKeys.assignments.tasks(assignment_uuid) })
       queryClient.invalidateQueries({ queryKey: queryKeys.assignments.detail(assignment_uuid) })
-      toast.success(`Added ${saved} task${saved === 1 ? '' : 's'} to the assignment.`)
-      closeModal(false)
+      if (saved > 0) {
+        toast.success(`Added ${saved} task${saved === 1 ? '' : 's'} to the assignment.`)
+      }
+      if (failed > 0) {
+        toast.error(`${failed} task${failed === 1 ? '' : 's'} could not be saved.`)
+      }
+      // Only close when everything saved; otherwise keep the preview so the
+      // teacher can retry the ones that failed.
+      if (failed === 0) closeModal(false)
     } catch {
       toast.error('Some tasks could not be saved.')
     } finally {

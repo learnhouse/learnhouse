@@ -25,6 +25,7 @@ interface GeneratedItem {
   file_id: string
   url: string
   prompt: string
+  failed?: boolean
 }
 
 const PROMPT_IDEAS = [
@@ -36,8 +37,10 @@ const PROMPT_IDEAS = [
 
 async function urlToBase64(url: string): Promise<string | undefined> {
   try {
-    const res = await fetch(url)
+    const res = await fetch(url, { credentials: 'include' })
+    if (!res.ok) return undefined
     const blob = await res.blob()
+    if (!blob.type.startsWith('image/')) return undefined
     return await new Promise((resolve) => {
       const reader = new FileReader()
       reader.onloadend = () => resolve(reader.result as string)
@@ -85,6 +88,10 @@ const AIImagePicker: React.FC<AIImagePickerProps> = ({ onSelect, onClose, isOpen
       let source_image_base64: string | undefined
       if (refineFrom) {
         source_image_base64 = await urlToBase64(refineFrom.url)
+        if (!source_image_base64) {
+          setError('Could not load the source image to refine. Please try again.')
+          return
+        }
       }
       const res = await generateAIImage(
         {
@@ -95,8 +102,11 @@ const AIImagePicker: React.FC<AIImagePickerProps> = ({ onSelect, onClose, isOpen
         },
         access_token
       )
-      if (!res.success) {
-        setError(res.data?.detail || 'Image generation failed. Please try again.')
+      // detail can be a string (our HTTPException) or an array (422) — only show strings.
+      const detail = res.data?.detail
+      const message = typeof detail === 'string' ? detail : 'Image generation failed. Please try again.'
+      if (!res.success || !res.data?.file_id || !res.data?.ai_generation_uuid) {
+        setError(message)
         return
       }
       const url = aiImageUrl(org.org_uuid, res.data.file_id)
@@ -215,25 +225,44 @@ const AIImagePicker: React.FC<AIImagePickerProps> = ({ onSelect, onClose, isOpen
             <div className="grid grid-cols-2 gap-4">
               {items.map((item) => (
                 <div key={item.ai_generation_uuid} className="group flex flex-col gap-1.5">
-                  <div className="relative w-full pb-[75%] rounded-xl overflow-hidden nice-shadow">
-                    <img src={item.url} alt={item.prompt} className="absolute inset-0 w-full h-full object-cover" />
-                    <div className="absolute inset-0 bg-neutral-900/0 group-hover:bg-neutral-900/40 transition-colors flex items-center justify-center gap-2 opacity-0 group-hover:opacity-100">
-                      <button
-                        onClick={() => {
-                          onSelect(item.url)
-                          onClose()
-                        }}
-                        className="px-3 py-1.5 rounded-lg bg-white text-neutral-900 text-sm flex items-center gap-1 nice-shadow"
-                      >
-                        <ArrowUpRight size={15} /> Use
-                      </button>
-                      <button
-                        onClick={() => setRefineFrom(item)}
-                        className="px-3 py-1.5 rounded-lg bg-neutral-900 text-white text-sm flex items-center gap-1 nice-shadow"
-                      >
-                        <Wand2 size={15} /> Refine
-                      </button>
-                    </div>
+                  <div className="relative w-full pb-[75%] rounded-xl overflow-hidden nice-shadow bg-neutral-100">
+                    {item.failed ? (
+                      <div className="absolute inset-0 flex items-center justify-center text-[11px] text-neutral-400 px-2 text-center">
+                        Image failed to load
+                      </div>
+                    ) : (
+                      <img
+                        src={item.url}
+                        alt={item.prompt}
+                        className="absolute inset-0 w-full h-full object-cover"
+                        onError={() =>
+                          setItems((prev) =>
+                            prev.map((i) =>
+                              i.ai_generation_uuid === item.ai_generation_uuid ? { ...i, failed: true } : i
+                            )
+                          )
+                        }
+                      />
+                    )}
+                    {!item.failed && (
+                      <div className="absolute inset-0 bg-neutral-900/0 group-hover:bg-neutral-900/40 transition-colors flex items-center justify-center gap-2 opacity-0 group-hover:opacity-100">
+                        <button
+                          onClick={() => {
+                            onSelect(item.url)
+                            onClose()
+                          }}
+                          className="px-3 py-1.5 rounded-lg bg-white text-neutral-900 text-sm flex items-center gap-1 nice-shadow"
+                        >
+                          <ArrowUpRight size={15} /> Use
+                        </button>
+                        <button
+                          onClick={() => setRefineFrom(item)}
+                          className="px-3 py-1.5 rounded-lg bg-neutral-900 text-white text-sm flex items-center gap-1 nice-shadow"
+                        >
+                          <Wand2 size={15} /> Refine
+                        </button>
+                      </div>
+                    )}
                   </div>
                   <p className="text-[11px] text-neutral-500 truncate">{item.prompt}</p>
                 </div>

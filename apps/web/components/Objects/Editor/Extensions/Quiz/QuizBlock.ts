@@ -15,7 +15,7 @@ export default Node.create({
   addAttributes() {
     return {
       quizId: {
-        value: null,
+        default: null,
       },
       questions: {
         default: [],
