@@ -1,17 +1,36 @@
 'use client'
 
-import React, { useRef, useState, useCallback, useEffect } from 'react'
-import { useMediaQuery } from 'usehooks-ts'
-import {
-  Play,
-  Pause,
-  Volume2,
-  VolumeX,
-  Maximize,
-  Minimize,
-  Settings,
-  Loader2,
-} from 'lucide-react'
+import React, { useEffect, useRef, useState } from 'react'
+import 'video.js/dist/video-js.css'
+import './player-controls.css'
+import { shouldSendHlsCredentials, type CaptionTrack } from './videoSource'
+
+const SEEK_SECONDS = 15
+
+/* Register ±15s seek-button components once (Video.js Button API — no plugin). */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function registerSeekButtons(videojs: any) {
+  const Button = videojs.getComponent('Button')
+  const make = (name: string, cls: string, label: string, delta: number) => {
+    if (videojs.getComponent(name)) return
+    class SeekButton extends Button {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      constructor(player: any, options: any) {
+        super(player, options)
+        this.controlText(label)
+        this.addClass(cls)
+      }
+      handleClick() {
+        const cur = this.player().currentTime() ?? 0
+        const dur = this.player().duration() || Infinity
+        this.player().currentTime(Math.max(0, Math.min(dur, cur + delta)))
+      }
+    }
+    videojs.registerComponent(name, SeekButton)
+  }
+  make('LhSeekBack', 'vjs-seek-back-15', `Rewind ${SEEK_SECONDS} seconds`, -SEEK_SECONDS)
+  make('LhSeekForward', 'vjs-seek-forward-15', `Forward ${SEEK_SECONDS} seconds`, SEEK_SECONDS)
+}
 
 interface VideoDetails {
   startTime?: number
@@ -20,409 +39,302 @@ interface VideoDetails {
   muted?: boolean
 }
 
+export interface ThumbnailsConfig {
+  /** Absolute URL of the sprite sheet. */
+  url: string
+  interval: number
+  width: number
+  height: number
+  columns: number
+  rows: number
+}
+
 interface LearnHousePlayerProps {
   src: string
+  /** When true, `src` is an HLS master playlist (.m3u8). */
+  isHls?: boolean
+  /** Progressive MP4 URL to fall back to if the HLS source errors. */
+  fallbackSrc?: string
   details?: VideoDetails
   onReady?: () => void
   poster?: string
-}
-
-function formatTime(seconds: number): string {
-  if (isNaN(seconds) || !isFinite(seconds)) return '0:00'
-  const h = Math.floor(seconds / 3600)
-  const m = Math.floor((seconds % 3600) / 60)
-  const s = Math.floor(seconds % 60)
-  if (h > 0) {
-    return `${h}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`
-  }
-  return `${m}:${s.toString().padStart(2, '0')}`
+  /** Hover-scrub preview sprite config (HLS only). */
+  thumbnails?: ThumbnailsConfig | null
+  /** Ready WebVTT caption tracks to attach (subtitles/CC menu). */
+  captions?: CaptionTrack[]
 }
 
 const PLAYBACK_RATES = [0.5, 0.75, 1, 1.25, 1.5, 2]
 
+/**
+ * Video.js-based player (default skin): adaptive HLS with an automatic quality
+ * selector and hover-scrub thumbnail previews; falls back to a progressive MP4
+ * source when HLS isn't ready.
+ *
+ * Video.js and its plugins are imported dynamically inside an effect so nothing
+ * touches `window`/`document` during SSR.
+ */
 const LearnHousePlayer: React.FC<LearnHousePlayerProps> = ({
   src,
+  isHls = false,
+  fallbackSrc,
   details,
   onReady,
   poster,
+  thumbnails,
+  captions,
 }) => {
-  const videoRef = useRef<HTMLVideoElement>(null)
   const containerRef = useRef<HTMLDivElement>(null)
-  const hideControlsTimeout = useRef<NodeJS.Timeout | null>(null)
 
-  const [isReady, setIsReady] = useState(false)
-  const [isPlaying, setIsPlaying] = useState(false)
-  const [isMuted, setIsMuted] = useState(details?.muted ?? false)
-  const [volume, setVolume] = useState(0.8)
-  const [currentTime, setCurrentTime] = useState(0)
-  const [duration, setDuration] = useState(0)
-  const [buffered, setBuffered] = useState(0)
-  const [showControls, setShowControls] = useState(true)
-  const [isBuffering, setIsBuffering] = useState(false)
-  const [playbackRate, setPlaybackRate] = useState(1)
-  const [showSettings, setShowSettings] = useState(false)
-  const [showVolumeSlider, setShowVolumeSlider] = useState(false)
-  const [isFullscreen, setIsFullscreen] = useState(false)
-  const isMobile = useMediaQuery('(max-width: 768px)')
+  const playerRef = useRef<any>(null)
+  const fellBackRef = useRef(false)
+  const captionBlobUrls = useRef<string[]>([])
+  const retriedRef = useRef(false)
+  const [loadError, setLoadError] = useState(false)
+  const [reloadNonce, setReloadNonce] = useState(0)
 
-  // Hide controls after inactivity
-  const resetHideControlsTimer = useCallback(() => {
-    if (hideControlsTimeout.current) {
-      clearTimeout(hideControlsTimeout.current)
-    }
-    setShowControls(true)
-    if (isPlaying) {
-      hideControlsTimeout.current = setTimeout(() => {
-        setShowControls(false)
-        setShowSettings(false)
-        setShowVolumeSlider(false)
-      }, 3000)
-    }
-  }, [isPlaying])
-
-  // Cleanup timeout on unmount
   useEffect(() => {
-    return () => {
-      if (hideControlsTimeout.current) {
-        clearTimeout(hideControlsTimeout.current)
+    let disposed = false
+    fellBackRef.current = false
+    retriedRef.current = false
+    setLoadError(false)
+
+    ;(async () => {
+      const { default: videojs } = await import('video.js')
+      // Order matters: quality-levels must register before the selector.
+      await import('videojs-contrib-quality-levels')
+      await import('videojs-hls-quality-selector')
+      await import('videojs-sprite-thumbnails')
+      if (disposed || !containerRef.current) return
+
+      registerSeekButtons(videojs)
+
+
+      // Send the auth cookie only to our API playlist endpoint (RBAC); presigned
+      // R2 segment requests must stay uncredentialed (R2 CORS).
+       
+      const Vhs = (videojs as any).Vhs
+      if (Vhs && !Vhs.__lhBeforeRequestSet) {
+         
+        Vhs.xhr.beforeRequest = (options: any) => {
+          if (options?.uri && shouldSendHlsCredentials(options.uri)) {
+            options.withCredentials = true
+          }
+          return options
+        }
+        Vhs.__lhBeforeRequestSet = true
       }
-    }
-  }, [])
 
-  // Reset player state and reload video when src changes
-  useEffect(() => {
-    const video = videoRef.current
-    if (!video) return
+      const videoEl = document.createElement('video-js')
+      videoEl.classList.add('vjs-big-play-centered')
+      videoEl.setAttribute('playsinline', '')
+      containerRef.current.appendChild(videoEl)
 
-    // Reset all player state
-    setIsReady(false)
-    setIsPlaying(false)
-    setCurrentTime(0)
-    setDuration(0)
-    setBuffered(0)
-    setIsBuffering(true)
-    setPlaybackRate(1)
-    setShowSettings(false)
+      const player = videojs(videoEl, {
+        controls: true,
+        // fill (not fluid) so the player always fills its aspect-video parent and
+        // the control bar is visible IMMEDIATELY — even before video metadata
+        // loads or if the source errors. `fluid` sized from metadata, so a slow/
+        // broken source left the player collapsed with no visible controls.
+        fill: true,
+        preload: 'metadata',
+        poster: poster || undefined,
+        autoplay: !!details?.autoplay,
+        muted: !!details?.muted,
+        playbackRates: PLAYBACK_RATES,
+        sources: [{ src, type: isHls ? 'application/x-mpegURL' : 'video/mp4' }],
+        html5: {
+          vhs: { overrideNative: true },
+          nativeAudioTracks: false,
+          nativeVideoTracks: false,
+        },
+      }, () => {
+        onReady?.()
+      })
+      playerRef.current = player
 
-    // Force the video element to reload with the new source
-    video.load()
-  }, [src])
-
-  // Handle fullscreen changes
-  useEffect(() => {
-    const handleFullscreenChange = () => {
-      setIsFullscreen(!!document.fullscreenElement)
-    }
-    document.addEventListener('fullscreenchange', handleFullscreenChange)
-    return () => {
-      document.removeEventListener('fullscreenchange', handleFullscreenChange)
-    }
-  }, [])
-
-  // Sync volume state with video element
-  useEffect(() => {
-    if (videoRef.current && isReady) {
-      videoRef.current.volume = volume
-    }
-  }, [volume, isReady])
-
-  // Sync muted state with video element
-  useEffect(() => {
-    if (videoRef.current) {
-      videoRef.current.muted = isMuted
-    }
-  }, [isMuted])
-
-  const handlePlayPause = useCallback(() => {
-    const video = videoRef.current
-    if (!video) return
-
-    if (video.paused) {
-      video.play().catch((err) => console.error('Play error:', err))
-    } else {
-      video.pause()
-    }
-  }, [])
-
-  const handleLoadedMetadata = () => {
-    const video = videoRef.current
-    if (!video) return
-
-    setDuration(video.duration)
-    setIsReady(true)
-    setIsBuffering(false)
-
-    // Seek to start time if specified
-    if (details?.startTime) {
-      video.currentTime = details.startTime
-    }
-
-    // Start playing if autoplay is enabled
-    if (details?.autoplay) {
-      video.play().catch((err) => console.error('Autoplay error:', err))
-    }
-
-    onReady?.()
-  }
-
-  const handleTimeUpdate = () => {
-    const video = videoRef.current
-    if (!video) return
-
-    setCurrentTime(video.currentTime)
-
-    // Update buffered
-    if (video.buffered.length > 0) {
-      const bufferedEnd = video.buffered.end(video.buffered.length - 1)
-      setBuffered(bufferedEnd / video.duration)
-    }
-
-    // Handle end time
-    if (details?.endTime && video.currentTime >= details.endTime) {
-      video.pause()
-    }
-  }
-
-  const handleProgressBarClick = (e: React.MouseEvent<HTMLDivElement>) => {
-    const video = videoRef.current
-    if (!video || !duration) return
-
-    const rect = e.currentTarget.getBoundingClientRect()
-    const pos = (e.clientX - rect.left) / rect.width
-    video.currentTime = pos * duration
-  }
-
-  const handleVolumeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const newVolume = parseFloat(e.target.value)
-    setVolume(newVolume)
-    if (newVolume > 0) {
-      setIsMuted(false)
-    }
-  }
-
-  const toggleMute = () => {
-    setIsMuted(!isMuted)
-  }
-
-  const toggleFullscreen = async () => {
-    if (!containerRef.current) return
-    try {
-      if (document.fullscreenElement) {
-        await document.exitFullscreen()
-      } else {
-        await containerRef.current.requestFullscreen()
+      // Durable, layered recovery so the user is NEVER left with a dead player:
+      //   1. HLS source errors/stalls -> switch to the progressive MP4
+      //   2. still fails               -> one silent reload of the current source
+      //   3. still fails               -> clean "couldn't load" + Retry overlay
+      // A watchdog also covers sources that HANG without firing 'error' (e.g. an
+      // HLS master that loads but whose segments never arrive).
+      const LOAD_WATCHDOG_MS = 15000
+      let metaLoaded = false
+      let watchdog: ReturnType<typeof setTimeout> | null = null
+      const clearWatchdog = () => {
+        if (watchdog) clearTimeout(watchdog)
+        watchdog = null
       }
-    } catch (err) {
-      console.error('Fullscreen error:', err)
+      const armWatchdog = () => {
+        clearWatchdog()
+        watchdog = setTimeout(() => {
+          if (!metaLoaded && !disposed) recover()
+        }, LOAD_WATCHDOG_MS)
+      }
+      const reloadCurrent = (nextSrc?: { src: string; type: string }) => {
+        const resume = player.currentTime?.() ?? 0
+        metaLoaded = false
+        try {
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          ;(player as any).error(null) // clear the error overlay before retrying
+          if (nextSrc) player.src(nextSrc)
+          player.load()
+          player.one('loadedmetadata', () => {
+            try { if (resume > 0) player.currentTime(resume) } catch { /* noop */ }
+          })
+          player.play?.()
+          armWatchdog()
+        } catch {
+          /* best-effort */
+        }
+      }
+      const recover = () => {
+        if (disposed) return
+        clearWatchdog()
+        if (isHls && fallbackSrc && !fellBackRef.current) {
+          fellBackRef.current = true
+          reloadCurrent({ src: fallbackSrc, type: 'video/mp4' })
+          return
+        }
+        if (!retriedRef.current) {
+          retriedRef.current = true
+          reloadCurrent()
+          return
+        }
+        setLoadError(true)
+      }
+      player.on('error', recover)
+      player.one('loadedmetadata', () => {
+        metaLoaded = true
+        clearWatchdog()
+      })
+      player.on('dispose', clearWatchdog)
+      armWatchdog()
+
+      // Insert the ±15s seek buttons right after the play button.
+      try {
+        const bar = player.getChild('ControlBar')
+        if (bar && !bar.getChild('LhSeekBack')) {
+          bar.addChild('LhSeekBack', {}, 1)
+          bar.addChild('LhSeekForward', {}, 2)
+        }
+      } catch {
+        /* seek buttons are best-effort */
+      }
+
+      // Casual-download deterrents (cosmetic — not real protection; the segments
+      // are AES-128 encrypted server-side for the actual bar-raising). Picture-in-
+      // picture is intentionally LEFT ENABLED (users asked for it).
+      try {
+        const techEl = player.el().querySelector('video') as HTMLVideoElement | null
+        if (techEl) {
+          techEl.setAttribute('controlsList', 'nodownload')
+        }
+        player.el().addEventListener('contextmenu', (e: Event) => e.preventDefault())
+      } catch {
+        /* best-effort */
+      }
+
+      // Quality gear (populated from HLS renditions; harmless for MP4).
+      try {
+         
+        ;(player as any).hlsQualitySelector?.({ displayCurrentQuality: true })
+      } catch {
+        /* selector is best-effort */
+      }
+
+      // Hover-scrub preview thumbnails.
+      if (thumbnails?.url) {
+        try {
+           
+          ;(player as any).spriteThumbnails?.({
+            url: thumbnails.url,
+            width: thumbnails.width,
+            height: thumbnails.height,
+            columns: thumbnails.columns,
+            rows: thumbnails.rows,
+            interval: thumbnails.interval,
+            // downlink:0 disables the plugin's bandwidth gate, which otherwise
+            // SILENTLY hides thumbnails whenever the browser reports
+            // connection.downlink < 1.5 Mbps (its default).
+            downlink: 0,
+          })
+        } catch {
+          /* thumbnails are best-effort */
+        }
+      }
+
+      // Captions: fetch each ready VTT with credentials (RBAC) and attach it as a
+      // subtitles text track. Fetching to a blob (instead of a <track src>) avoids
+      // cross-origin credential limitations on private courses.
+      if (captions && captions.length) {
+        captions.forEach(async (track) => {
+          try {
+            const res = await fetch(track.url, { credentials: 'include' })
+            if (!res.ok || disposed) return
+            const vtt = await res.text()
+            const blobUrl = URL.createObjectURL(new Blob([vtt], { type: 'text/vtt' }))
+            captionBlobUrls.current.push(blobUrl)
+            if (disposed) {
+              URL.revokeObjectURL(blobUrl)
+              return
+            }
+            player.addRemoteTextTrack(
+              { kind: 'subtitles', src: blobUrl, srclang: track.code, label: track.label },
+              false
+            )
+          } catch {
+            /* captions are best-effort */
+          }
+        })
+      }
+
+      // Honor per-video start/stop bounds. video.js's currentTime() getter is
+      // typed number | undefined, so coalesce before comparing.
+      const startTime = details?.startTime
+      if (startTime) {
+        player.one('loadedmetadata', () => player.currentTime(startTime))
+      }
+      const endTime = details?.endTime
+      if (endTime) {
+        player.on('timeupdate', () => {
+          if ((player.currentTime() ?? 0) >= endTime) player.pause()
+        })
+      }
+    })()
+
+    return () => {
+      disposed = true
+      if (playerRef.current) {
+        playerRef.current.dispose()
+        playerRef.current = null
+      }
+      captionBlobUrls.current.forEach((u) => URL.revokeObjectURL(u))
+      captionBlobUrls.current = []
     }
-  }
-
-  const handlePlaybackRateChange = (rate: number) => {
-    const video = videoRef.current
-    if (!video) return
-
-    setPlaybackRate(rate)
-    video.playbackRate = rate
-    setShowSettings(false)
-  }
-
-  const played = duration > 0 ? currentTime / duration : 0
+    // Rebuild when the source changes, or when the user hits Retry (reloadNonce).
+  }, [src, isHls, fallbackSrc, reloadNonce])
 
   return (
-    <div
-      ref={containerRef}
-      className={`learnhouse-player relative w-full aspect-video overflow-hidden bg-black ${
-        isMobile ? 'rounded-none' : 'rounded-xl shadow-md shadow-gray-300/25 outline outline-1 outline-neutral-200/40'
-      }`}
-      onMouseMove={!isMobile ? resetHideControlsTimer : undefined}
-      onMouseLeave={!isMobile ? () => isPlaying && setShowControls(false) : undefined}
-    >
-      {/* Video Element */}
-      <video
-        ref={videoRef}
-        src={src}
-        poster={poster}
-        className="absolute inset-0 w-full h-full object-contain"
-        preload="metadata"
-        playsInline
-        muted={isMuted}
-        controls={isMobile}
-        controlsList="nodownload"
-        onLoadedMetadata={handleLoadedMetadata}
-        onTimeUpdate={handleTimeUpdate}
-        onPlay={() => setIsPlaying(true)}
-        onPause={() => setIsPlaying(false)}
-        onEnded={() => setIsPlaying(false)}
-        onWaiting={() => setIsBuffering(true)}
-        onCanPlay={() => setIsBuffering(false)}
-        onVolumeChange={() => {
-          const video = videoRef.current
-          if (video) {
-            setVolume(video.volume)
-            setIsMuted(video.muted)
-          }
-        }}
-        onError={(e) => console.error('Video error:', e)}
-      />
-
-      {/* Custom controls - desktop only */}
-      {!isMobile && (
-        <>
-      {/* Click overlay for play/pause */}
-      <div
-        className="absolute inset-0 z-10 cursor-pointer"
-        onClick={handlePlayPause}
-      />
-
-      {/* Center play button (when paused and ready) */}
-      {!isPlaying && isReady && !isBuffering && (
-        <button
-          onClick={handlePlayPause}
-          className="absolute inset-0 z-20 flex items-center justify-center transition-opacity"
-        >
-          <Play className="w-16 h-16 text-white/90 drop-shadow-lg" fill="white" fillOpacity={0.9} />
-        </button>
-      )}
-
-      {/* Buffering/Loading indicator */}
-      {isBuffering && (
-        <div className="absolute inset-0 z-20 flex items-center justify-center bg-black/30 pointer-events-none">
-          <Loader2 className="w-12 h-12 text-white animate-spin" />
-        </div>
-      )}
-
-      {/* Controls overlay */}
-      <div
-        className={`absolute inset-0 z-30 flex flex-col justify-end transition-opacity duration-300 pointer-events-none ${
-          showControls || !isPlaying ? 'opacity-100' : 'opacity-0'
-        }`}
-      >
-        {/* Gradient background */}
-        <div className="absolute inset-x-0 bottom-0 h-28 bg-gradient-to-t from-black/70 via-black/30 to-transparent" />
-
-        {/* Controls container */}
-        <div className="relative z-10 px-4 pb-3 space-y-2 pointer-events-auto">
-          {/* Progress bar */}
-          <div
-            className="relative h-1 bg-white/30 rounded-full cursor-pointer group/progress hover:h-1.5 transition-all"
-            onClick={handleProgressBarClick}
+    // h-full chain is required for the player's `fill` mode to size to the
+    // aspect-video parent (otherwise the video collapses to zero height).
+    <div className="learnhouse-player relative w-full h-full" data-vjs-player>
+      <div ref={containerRef} className="w-full h-full" />
+      {loadError && (
+        <div className="absolute inset-0 z-10 flex flex-col items-center justify-center gap-3 bg-black/80 p-4 text-center text-white">
+          <p className="text-sm opacity-90">This video couldn’t be loaded.</p>
+          <button
+            type="button"
+            onClick={() => {
+              setLoadError(false)
+              setReloadNonce((n) => n + 1)
+            }}
+            className="rounded-md bg-white/15 px-4 py-1.5 text-sm font-medium transition-colors hover:bg-white/25"
           >
-            {/* Buffered */}
-            <div
-              className="absolute inset-y-0 left-0 bg-white/50 rounded-full"
-              style={{ width: `${buffered * 100}%` }}
-            />
-            {/* Progress */}
-            <div
-              className="absolute inset-y-0 left-0 bg-white rounded-full"
-              style={{ width: `${played * 100}%` }}
-            />
-            {/* Thumb */}
-            <div
-              className="absolute top-1/2 -translate-y-1/2 w-3 h-3 bg-white rounded-full shadow opacity-0 group-hover/progress:opacity-100 transition-opacity"
-              style={{ left: `calc(${played * 100}% - 6px)` }}
-            />
-          </div>
-
-          {/* Control buttons */}
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-0.5">
-              {/* Play/Pause */}
-              <button
-                onClick={handlePlayPause}
-                className="p-2 rounded-lg hover:bg-white/15 transition-colors"
-              >
-                {isPlaying ? (
-                  <Pause className="w-5 h-5 text-white" />
-                ) : (
-                  <Play className="w-5 h-5 text-white" fill="white" />
-                )}
-              </button>
-
-              {/* Volume */}
-              <div
-                className="relative flex items-center"
-                onMouseEnter={() => setShowVolumeSlider(true)}
-                onMouseLeave={() => setShowVolumeSlider(false)}
-              >
-                <button
-                  onClick={toggleMute}
-                  className="p-2 rounded-lg hover:bg-white/15 transition-colors"
-                >
-                  {isMuted || volume === 0 ? (
-                    <VolumeX className="w-5 h-5 text-white" />
-                  ) : (
-                    <Volume2 className="w-5 h-5 text-white" />
-                  )}
-                </button>
-                <div
-                  className={`flex items-center transition-all duration-200 overflow-hidden ${
-                    showVolumeSlider ? 'w-20 ml-1' : 'w-0'
-                  }`}
-                >
-                  <input
-                    type="range"
-                    min={0}
-                    max={1}
-                    step={0.05}
-                    value={isMuted ? 0 : volume}
-                    onChange={handleVolumeChange}
-                    className="w-full h-1 bg-white/30 rounded-full appearance-none cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-3 [&::-webkit-slider-thumb]:h-3 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-white"
-                  />
-                </div>
-              </div>
-
-              {/* Time */}
-              <div className="text-white/90 text-xs font-medium tabular-nums ml-2">
-                {formatTime(currentTime)} / {formatTime(duration)}
-              </div>
-            </div>
-
-            <div className="flex items-center gap-0.5">
-              {/* Settings */}
-              <div className="relative">
-                <button
-                  onClick={() => setShowSettings(!showSettings)}
-                  className="p-2 rounded-lg hover:bg-white/15 transition-colors"
-                >
-                  <Settings className="w-5 h-5 text-white" />
-                </button>
-                {showSettings && (
-                  <div className="absolute bottom-full right-0 mb-2 bg-neutral-900/95 backdrop-blur-lg border border-white/10 rounded-lg overflow-hidden min-w-[140px] shadow-xl">
-                    <div className="px-3 py-2 text-xs text-white/60 font-medium border-b border-white/10">
-                      Speed
-                    </div>
-                    {PLAYBACK_RATES.map((rate) => (
-                      <button
-                        key={rate}
-                        onClick={() => handlePlaybackRateChange(rate)}
-                        className={`w-full px-3 py-2 text-left text-sm hover:bg-white/10 transition-colors ${
-                          playbackRate === rate ? 'text-white font-medium' : 'text-white/80'
-                        }`}
-                      >
-                        {rate === 1 ? 'Normal' : `${rate}x`}
-                      </button>
-                    ))}
-                  </div>
-                )}
-              </div>
-
-              {/* Fullscreen */}
-              <button
-                onClick={toggleFullscreen}
-                className="p-2 rounded-lg hover:bg-white/15 transition-colors"
-              >
-                {isFullscreen ? (
-                  <Minimize className="w-5 h-5 text-white" />
-                ) : (
-                  <Maximize className="w-5 h-5 text-white" />
-                )}
-              </button>
-            </div>
-          </div>
+            Retry
+          </button>
         </div>
-      </div>
-        </>
       )}
     </div>
   )
