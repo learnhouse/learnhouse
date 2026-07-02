@@ -3,6 +3,10 @@ import * as Form from '@radix-ui/react-form'
 import BarLoader from 'react-spinners/BarLoader'
 import { PlayCircle, Upload, YoutubeLogo } from '@phosphor-icons/react'
 import { constructAcceptValue } from '@/lib/constants'
+import CaptionsSettings, {
+  type CaptionsValue,
+  EMPTY_CAPTIONS,
+} from '@components/Objects/Activities/Video/CaptionsSettings'
 
 const SUPPORTED_FILES = constructAcceptValue(['mp4', 'webm'])
 
@@ -40,6 +44,7 @@ function VideoModal({
     autoplay: false,
     muted: false,
   })
+  const [captions, setCaptions] = React.useState<CaptionsValue>(EMPTY_CAPTIONS)
 
   const handleVideoChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     if (event.target.files?.[0]) {
@@ -66,7 +71,14 @@ function VideoModal({
             course_id: course.id,
             details: videoDetails,
           },
-          chapterId
+          chapterId,
+          captions.enabled && captions.languages.length > 0
+            ? {
+                enabled: true,
+                source_language: captions.sourceLang,
+                languages: captions.languages.map((l) => ({ code: l.code, label: l.label })),
+              }
+            : undefined
         )
       }
 
@@ -331,6 +343,10 @@ function VideoModal({
           </label>
         </div>
       </div>
+
+      {selectedView === 'file' && (
+        <CaptionsSettings value={captions} onChange={setCaptions} />
+      )}
 
       <div className="flex justify-end">
         <button
