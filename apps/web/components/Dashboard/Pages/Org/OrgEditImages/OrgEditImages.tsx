@@ -126,7 +126,7 @@ export default function OrgEditImages() {
         toast.success(t('dashboard.organization.images.toasts.logo_success'), { id: loadingToast })
         queryClient.invalidateQueries({ queryKey: queryKeys.org.detail(org.slug) })
         router.refresh()
-      } catch (err) {
+      } catch (_err) {
         toast.error(t('dashboard.organization.images.toasts.logo_error'), { id: loadingToast })
       } finally {
         setIsLogoUploading(false)
@@ -166,7 +166,7 @@ export default function OrgEditImages() {
         toast.success(t('dashboard.organization.images.toasts.thumbnail_success'), { id: loadingToast })
         queryClient.invalidateQueries({ queryKey: queryKeys.org.detail(org.slug) })
         router.refresh()
-      } catch (err) {
+      } catch (_err) {
         toast.error(t('dashboard.organization.images.toasts.thumbnail_error'), { id: loadingToast })
       } finally {
         setIsThumbnailUploading(false)
@@ -236,7 +236,7 @@ export default function OrgEditImages() {
           : t('dashboard.organization.images.toasts.preview_added_plural', { count: files.length }), { id: loadingToast })
         queryClient.invalidateQueries({ queryKey: queryKeys.org.detail(org.slug) })
         router.refresh()
-      } catch (err) {
+      } catch (_err) {
         toast.error(t('dashboard.organization.images.toasts.preview_error'), { id: loadingToast })
       } finally {
         setIsPreviewUploading(false)
@@ -260,14 +260,14 @@ export default function OrgEditImages() {
       toast.success(t('dashboard.organization.images.toasts.preview_removed'), { id: loadingToast })
       queryClient.invalidateQueries({ queryKey: queryKeys.org.detail(org.slug) })
       router.refresh()
-    } catch (err) {
+    } catch (_err) {
       toast.error(t('dashboard.organization.images.toasts.preview_remove_error'), { id: loadingToast })
     }
   }
 
   const extractVideoId = (url: string, type: 'youtube' | 'loom'): string | null => {
     if (type === 'youtube') {
-      const regex = /(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/
+      const regex = /(?:youtube\.com\/(?:[^/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?/\s]{11})/
       const match = url.match(regex)
       return match ? match[1] : null
     } else if (type === 'loom') {
@@ -334,7 +334,7 @@ export default function OrgEditImages() {
       toast.success(t('dashboard.organization.images.toasts.video_preview_added'), { id: loadingToast });
       queryClient.invalidateQueries({ queryKey: queryKeys.org.detail(org.slug) });
       router.refresh();
-    } catch (err) {
+    } catch (_err) {
       toast.error(t('dashboard.organization.images.toasts.video_preview_error'), { id: loadingToast });
     }
   };
@@ -379,7 +379,7 @@ export default function OrgEditImages() {
       toast.success(t('dashboard.organization.images.toasts.order_updated'), { id: loadingToast });
       queryClient.invalidateQueries({ queryKey: queryKeys.org.detail(org.slug) });
       router.refresh();
-    } catch (err) {
+    } catch (_err) {
       toast.error(t('dashboard.organization.images.toasts.order_update_error'), { id: loadingToast });
       setPreviews(previews);
     }

@@ -39,7 +39,7 @@ function ThumbnailUpdate({ thumbnailType }: ThumbnailUpdateProps) {
   const [isLoading, setIsLoading] = useState(false)
   const [showUnsplashPicker, setShowUnsplashPicker] = useState(false)
   const [activeTab, setActiveTab] = useState<TabType>('image')
-  const withUnpublishedActivities = course ? course.withUnpublishedActivities : false
+  const _withUnpublishedActivities = course ? course.withUnpublishedActivities : false
 
   // Set initial active tab based on thumbnailType
   useEffect(() => {
@@ -129,7 +129,7 @@ function ThumbnailUpdate({ thumbnailType }: ThumbnailUpdateProps) {
       const blobUrl = URL.createObjectURL(file);
       setLocalThumbnail({ file, url: blobUrl, type: 'image' });
       await updateThumbnail(file, 'image');
-    } catch (err) {
+    } catch (_err) {
       showError('Failed to process Unsplash image');
       setIsLoading(false);
     }
@@ -163,7 +163,7 @@ function ThumbnailUpdate({ thumbnailType }: ThumbnailUpdateProps) {
           position: 'top-center',
         });
       }
-    } catch (err) {
+    } catch (_err) {
       showError('Failed to update thumbnail');
     } finally {
       setIsLoading(false);

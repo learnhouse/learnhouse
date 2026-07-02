@@ -39,10 +39,10 @@ type Tab = 'general' | 'access' | 'thumbnail'
 
 interface PlaygroundOptionsModalProps {
   open: boolean
-  onOpenChange: (open: boolean) => void
+  onOpenChange: (_open: boolean) => void
   playground: Playground
   orgslug: string
-  onUpdated: (updated: Playground) => void
+  onUpdated: (_updated: Playground) => void
 }
 
 export default function PlaygroundOptionsModal({
@@ -121,7 +121,7 @@ function GeneralTab({
 }: {
   playground: Playground
   orgslug: string
-  onUpdated: (p: Playground) => void
+  onUpdated: (_p: Playground) => void
 }) {
   const session = useLHSession() as any
   const access_token = session?.data?.tokens?.access_token
@@ -216,7 +216,7 @@ function AccessTab({
   playground: Playground
   orgslug: string
   orgId: number
-  onUpdated: (p: Playground) => void
+  onUpdated: (_p: Playground) => void
 }) {
   const session = useLHSession() as any
   const access_token = session?.data?.tokens?.access_token
@@ -423,7 +423,7 @@ function ThumbnailTab({
 }: {
   playground: Playground
   orgslug: string
-  onUpdated: (p: Playground) => void
+  onUpdated: (_p: Playground) => void
 }) {
   const session = useLHSession() as any
   const access_token = session?.data?.tokens?.access_token

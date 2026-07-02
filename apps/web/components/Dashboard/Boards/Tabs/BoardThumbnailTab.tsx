@@ -23,7 +23,7 @@ interface BoardThumbnailTabProps {
   boardKey: string | null
 }
 
-function BoardThumbnailTab({ board, boardUuid, orgUuid, boardKey }: BoardThumbnailTabProps) {
+function BoardThumbnailTab({ board, boardUuid, orgUuid, boardKey: _boardKey }: BoardThumbnailTabProps) {
   const { t } = useTranslation()
   const org = useOrg() as any
   const session = useLHSession() as any

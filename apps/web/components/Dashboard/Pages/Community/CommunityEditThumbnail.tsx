@@ -27,7 +27,7 @@ const CommunityEditThumbnail: React.FC = () => {
   const session = useLHSession() as any
   const org = useOrg() as any
   const communityState = useCommunity()
-  const dispatch = useCommunityDispatch()
+  const _dispatch = useCommunityDispatch()
   const community = communityState?.community
   const accessToken = session?.data?.tokens?.access_token
   const queryClient = useQueryClient()
@@ -99,7 +99,7 @@ const CommunityEditThumbnail: React.FC = () => {
       setLocalThumbnail({ file, url: blobUrl })
       setShowUnsplashPicker(false)
       await uploadThumbnail(file)
-    } catch (err) {
+    } catch (_err) {
       showError(t('dashboard.courses.communities.thumbnail.toasts.update_error'))
       setIsLoading(false)
     }
@@ -127,7 +127,7 @@ const CommunityEditThumbnail: React.FC = () => {
         })
         router.refresh()
       }
-    } catch (err) {
+    } catch (_err) {
       showError(t('dashboard.courses.communities.thumbnail.toasts.update_error'))
     } finally {
       setIsLoading(false)

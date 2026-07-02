@@ -1,6 +1,6 @@
 'use client'
 import React, { useState, useRef } from 'react'
-import { UploadCloud, Image as ImageIcon, ArrowBigUpDash, X, Loader2 } from 'lucide-react'
+import { UploadCloud, Image as ImageIcon, ArrowBigUpDash } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
 import { useOrg } from '@components/Contexts/OrgContext'
@@ -108,7 +108,7 @@ export function CommunityThumbnailModal({
       setLocalThumbnail({ file, url: blobUrl })
       setShowUnsplashPicker(false)
       await uploadThumbnail(file)
-    } catch (err) {
+    } catch (_err) {
       showError('Failed to process Unsplash image')
       setIsLoading(false)
     }
@@ -141,7 +141,7 @@ export function CommunityThumbnailModal({
         router.refresh()
         onClose()
       }
-    } catch (err) {
+    } catch (_err) {
       showError('Failed to update thumbnail')
     } finally {
       setIsLoading(false)
