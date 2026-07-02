@@ -18,6 +18,7 @@ import { revalidateTags } from '@services/utils/ts/requests'
 import { useQueryClient } from '@tanstack/react-query'
 import { queryKeys } from '@/lib/query/keys'
 import UnsplashImagePicker, { UnsplashPhotoMeta } from '@components/Dashboard/Pages/Course/EditCourseGeneral/UnsplashImagePicker'
+import AIImageButton from '@components/Objects/AI/AIImageButton'
 import { isOSSMode } from '@services/config/config'
 import { usePlan } from '@components/Hooks/usePlan'
 
@@ -223,6 +224,12 @@ export default function AuthBrandingTab() {
             className="hidden"
             onChange={handleBackgroundUpload}
           />
+          <div className="mt-3">
+            <AIImageButton
+              onSelect={handleUnsplashSelect}
+              className="w-full flex items-center justify-center gap-2 p-3 rounded-xl border-2 border-gray-200 hover:border-gray-300 bg-white text-sm font-medium text-gray-600 transition-all"
+            />
+          </div>
         </div>
 
         {/* Text Color */}

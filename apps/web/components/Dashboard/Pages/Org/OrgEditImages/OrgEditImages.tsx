@@ -13,6 +13,7 @@ import { cn } from '@/lib/utils'
 import { Input } from "@components/ui/input"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@components/ui/dialog"
 import { Button } from "@components/ui/button"
+import AIImageButton from '@components/Objects/AI/AIImageButton'
 import { SiLoom, SiYoutube } from '@icons-pack/react-simple-icons'
 import { DragDropContext, Droppable, Draggable, DropResult } from '@hello-pangea/dnd'
 import { useTranslation } from 'react-i18next'
@@ -130,6 +131,26 @@ export default function OrgEditImages() {
       } finally {
         setIsLogoUploading(false)
       }
+    }
+  }
+
+  const handleLogoAISelect = async (imageUrl: string) => {
+    setLocalLogo(imageUrl)
+    setIsLogoUploading(true)
+    const loadingToast = toast.loading(t('dashboard.organization.images.uploading_logo'))
+    try {
+      const response = await fetch(imageUrl)
+      const blob = await response.blob()
+      const file = new File([blob], `ai_logo_${Date.now()}.png`, { type: blob.type || 'image/png' })
+      await uploadOrganizationLogo(org.id, file, access_token)
+      await new Promise((r) => setTimeout(r, 1500))
+      toast.success(t('dashboard.organization.images.toasts.logo_success'), { id: loadingToast })
+      queryClient.invalidateQueries({ queryKey: queryKeys.org.detail(org.slug) })
+      router.refresh()
+    } catch {
+      toast.error(t('dashboard.organization.images.toasts.logo_error'), { id: loadingToast })
+    } finally {
+      setIsLogoUploading(false)
     }
   }
 
@@ -444,6 +465,11 @@ export default function OrgEditImages() {
                     <UploadCloud size={18} className={cn("", isLogoUploading && "animate-bounce")} />
                     <span>{isLogoUploading ? t('dashboard.organization.images.uploading') : t('dashboard.organization.images.upload_logo')}</span>
                   </button>
+
+                  <AIImageButton
+                    onSelect={handleLogoAISelect}
+                    className="font-medium text-sm px-6 py-2.5 rounded-full bg-neutral-900 text-white hover:bg-neutral-800 shadow-xs hover:shadow-sm transition-all duration-300 flex items-center space-x-2"
+                  />
 
                   <div className="flex flex-col text-xs space-y-2 items-center text-gray-500">
                     <div className="flex items-center space-x-2 bg-blue-50 text-blue-700 px-3 py-1.5 rounded-full">

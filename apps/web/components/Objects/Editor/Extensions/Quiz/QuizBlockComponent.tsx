@@ -2,9 +2,10 @@ import { NodeViewWrapper } from '@tiptap/react'
 import { v4 as uuidv4 } from 'uuid'
 import { cn } from '@/lib/utils'
 import React from 'react'
-import { BadgeHelp, Check, Minus, Plus, RefreshCcw } from 'lucide-react'
+import { BadgeHelp, Check, Minus, Plus, RefreshCcw, Sparkles } from 'lucide-react'
 import dynamic from 'next/dynamic'
 const ReactConfetti = dynamic(() => import('react-confetti'), { ssr: false })
+const AIQuizGeneratorModal = dynamic(() => import('@components/Objects/AI/AIQuizGeneratorModal'), { ssr: false })
 import { useEditorProvider } from '@components/Contexts/Editor/EditorContext'
 import { useTranslation } from 'react-i18next'
 
@@ -33,6 +34,18 @@ function QuizBlockComponent(props: any) {
   ]
   const editorState = useEditorProvider() as any
   const isEditable = editorState.isEditable
+  const [showAIGenerator, setShowAIGenerator] = React.useState(false)
+  const activityUuid = props.extension?.options?.activity?.activity_uuid
+
+  const applyGeneratedQuiz = (quiz: { quizId: string; questions: Question[] }) => {
+    // Append the generated questions to whatever is already in the block.
+    const merged = [...questions, ...quiz.questions]
+    props.updateAttributes({
+      quizId: props.node.attrs.quizId || quiz.quizId,
+      questions: merged,
+    })
+    setQuestions(merged)
+  }
 
   const handleAnswerClick = (question_id: string, answer_id: string) => {
     if (submitted) return;
@@ -233,12 +246,21 @@ function QuizBlockComponent(props: any) {
 
           {/* Action buttons */}
           {isEditable ? (
-            <button
-              onClick={addSampleQuestion}
-              className="bg-neutral-200 hover:bg-neutral-300 text-neutral-700 font-medium py-1.5 px-3 rounded-lg text-xs transition-colors outline-none"
-            >
-              {t('editor.blocks.quiz_block.add_question')}
-            </button>
+            <div className="flex items-center gap-1.5">
+              <button
+                onClick={() => setShowAIGenerator(true)}
+                className="bg-neutral-900 hover:bg-neutral-800 text-white font-medium py-1.5 px-3 rounded-lg text-xs transition-colors outline-none flex items-center gap-1.5 nice-shadow"
+              >
+                <Sparkles size={13} />
+                {t('editor.blocks.quiz_block.generate_with_ai', 'Generate with AI')}
+              </button>
+              <button
+                onClick={addSampleQuestion}
+                className="bg-neutral-200 hover:bg-neutral-300 text-neutral-700 font-medium py-1.5 px-3 rounded-lg text-xs transition-colors outline-none"
+              >
+                {t('editor.blocks.quiz_block.add_question')}
+              </button>
+            </div>
           ) : (
             <div className="flex items-center gap-1">
               <button
@@ -412,6 +434,14 @@ function QuizBlockComponent(props: any) {
           ))}
         </div>
       </div>
+      {showAIGenerator && (
+        <AIQuizGeneratorModal
+          isOpen={showAIGenerator}
+          onClose={() => setShowAIGenerator(false)}
+          onInsert={applyGeneratedQuiz}
+          activityUuid={activityUuid}
+        />
+      )}
     </NodeViewWrapper>
   )
 }

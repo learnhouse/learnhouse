@@ -105,6 +105,14 @@ export function getCourseThumbnailMediaDirectory(
   return uri
 }
 
+/**
+ * Absolute URL for an AI-generated image (nano banana). Stored per-org under
+ * content/orgs/{orgUUID}/ai_images/{fileId}, mirroring the other media helpers.
+ */
+export function getAIImageMediaDirectory(orgUUID: string, fileId: string) {
+  return `${getMediaUrl()}content/orgs/${orgUUID}/ai_images/${fileId}`
+}
+
 export function getFolderThumbnailMediaDirectory(
   orgUUID: string,
   folderUUID: string,

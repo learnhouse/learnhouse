@@ -7,6 +7,7 @@ import { useLHSession } from '@components/Contexts/LHSessionContext'
 import { updateBoardThumbnail } from '@services/boards/boards'
 import { getBoardThumbnailMediaDirectory } from '@services/media/media'
 import UnsplashImagePicker from '@components/Dashboard/Pages/Course/EditCourseGeneral/UnsplashImagePicker'
+import AIImageButton from '@components/Objects/AI/AIImageButton'
 import toast from 'react-hot-toast'
 import { useQueryClient } from '@tanstack/react-query'
 import { queryKeys } from '@/lib/query/keys'
@@ -157,6 +158,10 @@ function BoardThumbnailTab({ board, boardUuid, orgUuid, boardKey }: BoardThumbna
                 <ImageIcon size={16} />
                 {t('boards.thumbnail.gallery')}
               </button>
+              <AIImageButton
+                onSelect={handleUnsplashSelect}
+                className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+              />
             </div>
           )}
 

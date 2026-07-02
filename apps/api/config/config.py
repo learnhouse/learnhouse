@@ -60,6 +60,12 @@ class AIConfig(BaseModel):
     # Google/Gemini key. Doubles as the embeddings fallback for providers (Anthropic, DeepSeek,
     # Moonshot, Mistral, OpenRouter, Bedrock) that have no embeddings API of their own.
     gemini_api_key: str | None = None
+    # Image generation model (Google "nano banana" family). Image generation is a
+    # Google-only path — it always uses the Google GenAI SDK regardless of the
+    # configured text `provider`, resolving its key from `api_key` (when provider
+    # is Google) or `gemini_api_key`. Override the exact model id with
+    # LEARNHOUSE_AI_IMAGE_MODEL; defaults to the nano-banana-2-lite model.
+    image_model: str | None = None
 
 
 class S3ApiConfig(BaseModel):
@@ -382,6 +388,7 @@ def get_learnhouse_config() -> LearnHouseConfig:
     env_is_ai_enabled_str = os.environ.get("LEARNHOUSE_IS_AI_ENABLED")
 
     gemini_api_key = env_gemini_api_key or yaml_ai_config.get("gemini_api_key")
+    ai_image_model = os.environ.get("LEARNHOUSE_AI_IMAGE_MODEL") or yaml_ai_config.get("image_model")
 
     # Provider-agnostic generation settings (env takes precedence over yaml).
     ai_provider = os.environ.get("LEARNHOUSE_AI_PROVIDER") or yaml_ai_config.get("provider")
@@ -582,6 +589,7 @@ def get_learnhouse_config() -> LearnHouseConfig:
         embedding_model=ai_embedding_model,
         embedding_dimensions=ai_embedding_dimensions,
         gemini_api_key=gemini_api_key,
+        image_model=ai_image_model,
     )
 
     # Surface missing internal-service keys at boot rather than at first
