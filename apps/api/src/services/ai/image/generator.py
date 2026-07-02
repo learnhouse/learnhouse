@@ -109,7 +109,9 @@ async def generate_image(
             contents=contents,
         )
     except Exception as e:  # noqa: BLE001 — surface a clean error to the router
-        logger.error("Image generation call failed: %s", e, exc_info=True)
+        # Log only the exception type: the underlying SDK error can embed the
+        # API key (request URL/headers), so never log the message or traceback.
+        logger.error("Image generation call failed: %s", type(e).__name__)
         raise RuntimeError("Image generation failed") from e
 
     image_bytes = _extract_image_bytes(response)
