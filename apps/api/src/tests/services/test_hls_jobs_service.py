@@ -441,28 +441,79 @@ async def test_consumer_reenqueues_inflight_on_shutdown(monkeypatch):
     assert "stuck1" in pushed
 
 
-async def test_requeue_stale_processing(monkeypatch, db, org, course, chapter, activity):
+class _FakeRedis:
+    """Minimal Redis for reconcile_unfinished tests."""
+    def __init__(self, leases=None, retries=None, queue=None):
+        self.pushed = []
+        self.leases = set(leases or [])
+        self.retries = dict(retries or {})
+        self.queue = list(queue or [])
+
+    def lrange(self, key, a, b):
+        return list(self.queue)
+
+    def exists(self, key):
+        return 1 if key in self.leases else 0
+
+    def get(self, key):
+        return str(self.retries[key]) if key in self.retries else None
+
+    def incr(self, key):
+        self.retries[key] = self.retries.get(key, 0) + 1
+        return self.retries[key]
+
+    def expire(self, key, ttl):
+        return True
+
+    def rpush(self, key, val):
+        self.pushed.append(val)
+        return len(self.pushed)
+
+
+async def test_reconcile_requeues_unfinished_skips_ready(monkeypatch, db, org, course, chapter, activity):
     _bind_session(monkeypatch, db)
-    from datetime import datetime, timezone, timedelta
-    old = (datetime.now(timezone.utc) - timedelta(hours=1)).isoformat()
-    fresh = datetime.now(timezone.utc).isoformat()
-    a1 = await _add_video_activity(db, org, course, "stale1", filename="a.mp4")
-    a1.extra_metadata = {"hls": {"status": "processing", "updated_at": old}}
-    a2 = await _add_video_activity(db, org, course, "fresh1", filename="b.mp4")
-    a2.extra_metadata = {"hls": {"status": "processing", "updated_at": fresh}}
-    db.add(a1)
-    db.add(a2)
-    await db.commit()
+    await _add_video_activity(db, org, course, "todo1", filename="a.mp4")  # hls None
+    await _add_video_activity(db, org, course, "proc1", filename="b.mp4", hls_status="processing")
+    await _add_video_activity(db, org, course, "fail1", filename="c.mp4", hls_status="failed")
+    await _add_video_activity(db, org, course, "rdy1", filename="d.mp4", hls_status="ready")
+    r = _FakeRedis()
+    monkeypatch.setattr(hls_jobs, "get_redis_client", lambda: r)
+    out = await hls_jobs.reconcile_unfinished()
+    assert set(r.pushed) == {"todo1", "proc1", "fail1"}  # ready skipped
+    assert out["requeued"] == 3
 
-    pushed = []
 
-    class _R:
-        def rpush(self, key, val):
-            pushed.append(val)
+async def test_reconcile_skips_active_lease(monkeypatch, db, org, course, chapter, activity):
+    _bind_session(monkeypatch, db)
+    await _add_video_activity(db, org, course, "busy1", filename="a.mp4", hls_status="processing")
+    r = _FakeRedis(leases={hls_jobs._lease_key("busy1")})
+    monkeypatch.setattr(hls_jobs, "get_redis_client", lambda: r)
+    out = await hls_jobs.reconcile_unfinished()
+    assert r.pushed == [] and out["skipped"] == 1
 
-    monkeypatch.setattr(hls_jobs, "get_redis_client", lambda: _R())
-    n = await hls_jobs._requeue_stale_processing(stale_after=1200)
-    assert n == 1 and pushed == ["stale1"]  # only the >20min-old one is reaped
+
+async def test_reconcile_skips_already_queued(monkeypatch, db, org, course, chapter, activity):
+    _bind_session(monkeypatch, db)
+    await _add_video_activity(db, org, course, "q1", filename="a.mp4", hls_status="failed")
+    r = _FakeRedis(queue=["q1"])
+    monkeypatch.setattr(hls_jobs, "get_redis_client", lambda: r)
+    out = await hls_jobs.reconcile_unfinished()
+    assert r.pushed == [] and out["skipped"] == 1
+
+
+async def test_reconcile_gives_up_after_max_retries(monkeypatch, db, org, course, chapter, activity):
+    _bind_session(monkeypatch, db)
+    await _add_video_activity(db, org, course, "bad1", filename="a.mp4", hls_status="failed")
+    r = _FakeRedis(retries={hls_jobs._retries_key("bad1"): 6})
+    monkeypatch.setattr(hls_jobs, "get_redis_client", lambda: r)
+    out = await hls_jobs.reconcile_unfinished(max_retries=6)
+    assert r.pushed == [] and out["gaveup"] == 1
+
+
+async def test_reconcile_no_redis(monkeypatch):
+    monkeypatch.setattr(hls_jobs, "get_redis_client", lambda: None)
+    out = await hls_jobs.reconcile_unfinished()
+    assert out["requeued"] == 0 and out.get("error") == "no_redis"
 
 
 async def test_consumer_loop_no_redis_returns(monkeypatch):
@@ -547,18 +598,18 @@ async def test_consumer_job_timeout_marks_failed(monkeypatch):
     assert ("slow1", "failed", "timeout") in status
 
 
-async def test_reaper_loop_calls_requeue_and_survives_errors(monkeypatch):
+async def test_reconcile_loop_calls_and_survives_errors(monkeypatch):
     calls = {"n": 0}
 
-    async def _req():
+    async def _rec(*a, **k):
         calls["n"] += 1
         if calls["n"] == 1:
-            raise RuntimeError("transient")  # must not kill the reaper
+            raise RuntimeError("transient")  # must not kill the loop
         raise asyncio.CancelledError()
 
-    monkeypatch.setattr(hls_jobs, "_requeue_stale_processing", _req)
+    monkeypatch.setattr(hls_jobs, "reconcile_unfinished", _rec)
     with pytest.raises(asyncio.CancelledError):
-        await hls_jobs._reaper_loop(interval=0)
+        await hls_jobs._reconcile_loop(interval=0)
     assert calls["n"] == 2
 
 
@@ -603,26 +654,13 @@ async def test_start_consumer_starts_reaper(monkeypatch):
         await hls_jobs.stop_consumer()
 
 
-async def test_requeue_stale_missing_timestamp_is_stale(monkeypatch, db, org, course, chapter, activity):
+async def test_reconcile_ignores_activities_without_a_file(monkeypatch, db, org, course, chapter, activity):
     _bind_session(monkeypatch, db)
-    a = await _add_video_activity(db, org, course, "noTs", filename="a.mp4")
-    a.extra_metadata = {"hls": {"status": "processing"}}  # no updated_at → treated stale
-    db.add(a)
-    await db.commit()
-    pushed = []
-
-    class _R:
-        def rpush(self, k, v):
-            pushed.append(v)
-
-    monkeypatch.setattr(hls_jobs, "get_redis_client", lambda: _R())
-    n = await hls_jobs._requeue_stale_processing(stale_after=1200)
-    assert n == 1 and pushed == ["noTs"]
-
-
-async def test_requeue_stale_no_redis_returns_zero(monkeypatch):
-    monkeypatch.setattr(hls_jobs, "get_redis_client", lambda: None)
-    assert await hls_jobs._requeue_stale_processing() == 0
+    await _add_video_activity(db, org, course, "nofile", filename=None, hls_status="failed")
+    r = _FakeRedis()
+    monkeypatch.setattr(hls_jobs, "get_redis_client", lambda: r)
+    out = await hls_jobs.reconcile_unfinished()
+    assert r.pushed == [] and out["requeued"] == 0
 
 
 async def test_consumer_loop_empty_poll_then_cancel(monkeypatch):
@@ -640,24 +678,13 @@ async def test_consumer_loop_empty_poll_then_cancel(monkeypatch):
         await hls_jobs._consumer_loop(poll_seconds=0)
 
 
-async def test_requeue_stale_skips_ready_and_handles_bad_ts(monkeypatch, db, org, course, chapter, activity):
+async def test_reconcile_bumps_retry_counter(monkeypatch, db, org, course, chapter, activity):
     _bind_session(monkeypatch, db)
-    ready = await _add_video_activity(db, org, course, "rdy", filename="a.mp4")
-    ready.extra_metadata = {"hls": {"status": "ready"}}  # non-processing → skipped
-    badts = await _add_video_activity(db, org, course, "bad", filename="b.mp4")
-    badts.extra_metadata = {"hls": {"status": "processing", "updated_at": "not-a-date"}}
-    db.add(ready)
-    db.add(badts)
-    await db.commit()
-    pushed = []
-
-    class _R:
-        def rpush(self, k, v):
-            pushed.append(v)
-
-    monkeypatch.setattr(hls_jobs, "get_redis_client", lambda: _R())
-    await hls_jobs._requeue_stale_processing(stale_after=1200)
-    assert pushed == ["bad"]  # ready skipped; unparseable ts treated as stale
+    await _add_video_activity(db, org, course, "retryme", filename="a.mp4", hls_status="failed")
+    r = _FakeRedis()
+    monkeypatch.setattr(hls_jobs, "get_redis_client", lambda: r)
+    await hls_jobs.reconcile_unfinished()
+    assert r.retries.get(hls_jobs._retries_key("retryme")) == 1  # counter incremented
 
 
 async def test_backfill_counts_failures(monkeypatch, db, org, course, chapter, activity):

@@ -54,14 +54,48 @@ _consumer_children: set = set()
 # termination (deploy/autoscale) never leaves a job stuck at "processing".
 _inflight: set = set()
 
-# A job left in "processing" longer than this (no heartbeat) is considered
-# orphaned (its pod died) and re-enqueued by the reaper.
-STALE_PROCESSING_SECONDS = 20 * 60
 REAPER_INTERVAL_SECONDS = 5 * 60
 CONSUMER_POLL_SECONDS = 2
 # Hard ceiling for a single transcode job; bounds any hang so the consumer slot
-# always frees (the reaper re-queues anything left stale).
+# always frees (the reconciler re-queues anything left unfinished).
 JOB_TIMEOUT_SECONDS = 40 * 60
+
+# Reconciliation: a running transcode holds a heartbeated Redis "lease" so the
+# reconciler can tell active work from an interrupted job WITHOUT relying on
+# stale timestamps (a slow 1-thread encode can outlive any fixed staleness
+# window). The lease expires shortly after a pod dies, so its job is re-queued
+# fast. Retries are capped so a genuinely broken video can't loop forever.
+LEASE_TTL_SECONDS = 180
+LEASE_HEARTBEAT_SECONDS = 60
+
+
+def hls_max_retries() -> int:
+    """Max auto-retries per video before the reconciler gives up
+    (LEARNHOUSE_HLS_MAX_RETRIES, default 6)."""
+    try:
+        return max(1, int(os.environ.get("LEARNHOUSE_HLS_MAX_RETRIES", "6")))
+    except (TypeError, ValueError):
+        return 6
+
+
+def _lease_key(activity_uuid: str) -> str:
+    return f"learnhouse:hls:lease:{activity_uuid}"
+
+
+def _retries_key(activity_uuid: str) -> str:
+    return f"learnhouse:hls:retries:{activity_uuid}"
+
+
+async def _lease_heartbeat(client, key: str) -> None:
+    """Refresh the processing lease's TTL until cancelled."""
+    try:
+        while True:
+            await asyncio.sleep(LEASE_HEARTBEAT_SECONDS)
+            await asyncio.to_thread(client.expire, key, LEASE_TTL_SECONDS)
+    except asyncio.CancelledError:
+        raise
+    except Exception:
+        pass
 
 
 def _flag(name: str) -> bool:
@@ -162,6 +196,18 @@ async def transcode_activity(activity_uuid: str) -> bool:
     src_key = f"{base}/{filename}"
     hls_prefix = f"{base}/hls"
 
+    # Hold a heartbeated lease so the reconciler knows this job is actively
+    # running; it expires shortly after this pod dies, prompting a fast retry.
+    client = get_redis_client()
+    lease = _lease_key(activity_uuid)
+    heartbeat = None
+    if client:
+        try:
+            client.set(lease, "1", ex=LEASE_TTL_SECONDS)
+            heartbeat = asyncio.create_task(_lease_heartbeat(client, lease))
+        except Exception:
+            heartbeat = None
+
     await _set_status(activity_uuid, "processing")
     try:
         with tempfile.TemporaryDirectory() as td:
@@ -192,12 +238,25 @@ async def transcode_activity(activity_uuid: str) -> bool:
             master=result["master"], renditions=result["renditions"],
             thumbnails=result.get("thumbnails"),
         )
+        if client:
+            try:
+                client.delete(_retries_key(activity_uuid))  # success clears the retry count
+            except Exception:
+                pass
         logger.info("HLS ready for activity %s (%s)", activity_uuid, ",".join(result["renditions"]))
         return True
     except Exception as e:
         logger.error("HLS job crashed for %s: %s", activity_uuid, e)
         await _set_status(activity_uuid, "failed", error="exception")
         return False
+    finally:
+        if heartbeat:
+            heartbeat.cancel()
+        if client:
+            try:
+                client.delete(lease)
+            except Exception:
+                pass
 
 
 def enqueue(activity_uuid: str) -> None:
@@ -285,15 +344,34 @@ async def _consumer_loop(poll_seconds: int = CONSUMER_POLL_SECONDS) -> None:
         task.add_done_callback(_consumer_children.discard)
 
 
-async def _requeue_stale_processing(stale_after: int = STALE_PROCESSING_SECONDS) -> int:
-    """Re-enqueue hosted videos stuck in 'processing' longer than `stale_after`
-    (their pod died mid-transcode). Idempotent: transcode overwrites the output."""
-    from datetime import datetime, timezone
+async def reconcile_unfinished(max_retries: Optional[int] = None) -> dict:
+    """Re-poll for hosted videos whose HLS isn't `ready` and (re)queue them —
+    the clean auto-retry system that replaces manual re-triggering.
+
+    Per video it:
+      * skips ones that are `ready`, already queued, or actively transcoding
+        (a live heartbeated processing lease exists);
+      * otherwise (re)queues it — interrupted `processing`, `failed`, a lost
+        `queued`, or never-started (no hls) — bumping a Redis retry counter;
+      * gives up after `max_retries` so a genuinely broken file can't loop
+        forever (a successful transcode clears that video's counter).
+
+    Returns {requeued, skipped, gaveup}.
+    """
+    if max_retries is None:
+        max_retries = hls_max_retries()
     client = get_redis_client()
     if not client:
-        return 0
+        return {"requeued": 0, "skipped": 0, "gaveup": 0, "error": "no_redis"}
     now = datetime.now(timezone.utc)
-    requeued = 0
+    # Snapshot what's already waiting so we never double-queue an item.
+    try:
+        raw = client.lrange(REDIS_QUEUE_KEY, 0, -1)
+        pending = {(x.decode() if isinstance(x, (bytes, bytearray)) else x) for x in raw}
+    except Exception:
+        pending = set()
+
+    requeued = skipped = gaveup = 0
     async with _async_session_factory() as db:
         rows = (await db.execute(
             select(Activity).where(
@@ -301,41 +379,59 @@ async def _requeue_stale_processing(stale_after: int = STALE_PROCESSING_SECONDS)
             )
         )).scalars().all()
         for a in rows:
-            hls = (a.extra_metadata or {}).get("hls") or {}
-            if hls.get("status") != "processing":
+            if not (a.content or {}).get("filename"):
                 continue
-            ts = hls.get("updated_at")
+            hls = (a.extra_metadata or {}).get("hls") or {}
+            if hls.get("status") == "ready":
+                continue
+            uuid = a.activity_uuid
+            if uuid in pending:
+                skipped += 1
+                continue
             try:
-                age = (now - datetime.fromisoformat(ts)).total_seconds() if ts else 1e9
-            except (TypeError, ValueError):
-                age = 1e9
-            if age >= stale_after:
-                # Mark queued (fresh timestamp) so other pods' reapers don't also
-                # grab it, then push to the queue.
-                meta = dict(a.extra_metadata or {})
-                meta["hls"] = {**hls, "status": "queued", "updated_at": now.isoformat()}
-                a.extra_metadata = meta
-                db.add(a)
-                await db.commit()
-                try:
-                    client.rpush(REDIS_QUEUE_KEY, a.activity_uuid)
-                    requeued += 1
-                except Exception:
-                    pass
-    if requeued:
-        logger.info("HLS reaper: re-enqueued %s stale 'processing' job(s)", requeued)
-    return requeued
+                if client.exists(_lease_key(uuid)):  # actively transcoding somewhere
+                    skipped += 1
+                    continue
+            except Exception:
+                pass
+            # Retry cap, tracked in Redis so status writes can't clobber it.
+            rkey = _retries_key(uuid)
+            try:
+                retries = int(client.get(rkey) or 0)
+            except Exception:
+                retries = 0
+            if retries >= max_retries:
+                gaveup += 1
+                continue
+            try:
+                client.incr(rkey)
+                client.expire(rkey, 7 * 24 * 3600)
+            except Exception:
+                pass
+            meta = dict(a.extra_metadata or {})
+            meta["hls"] = {**hls, "status": "queued", "updated_at": now.isoformat()}
+            a.extra_metadata = meta  # reassign so SQLAlchemy detects the JSONB change
+            db.add(a)
+            await db.commit()
+            try:
+                client.rpush(REDIS_QUEUE_KEY, uuid)
+                requeued += 1
+            except Exception:
+                pass
+    if requeued or gaveup:
+        logger.info("HLS reconcile: requeued=%s gaveup=%s skipped=%s", requeued, gaveup, skipped)
+    return {"requeued": requeued, "skipped": skipped, "gaveup": gaveup}
 
 
-async def _reaper_loop(interval: int = REAPER_INTERVAL_SECONDS) -> None:
+async def _reconcile_loop(interval: int = REAPER_INTERVAL_SECONDS) -> None:
     while True:
         await asyncio.sleep(interval)
         try:
-            await _requeue_stale_processing()
+            await reconcile_unfinished()
         except asyncio.CancelledError:
             raise
         except Exception as e:
-            logger.error("HLS reaper error: %s", e)
+            logger.error("HLS reconcile error: %s", e)
 
 
 def start_consumer() -> None:
@@ -350,7 +446,7 @@ def start_consumer() -> None:
     if not (_consumer_task and not _consumer_task.done()):
         _consumer_task = asyncio.create_task(_consumer_loop())
     if not (_reaper_task and not _reaper_task.done()):
-        _reaper_task = asyncio.create_task(_reaper_loop())
+        _reaper_task = asyncio.create_task(_reconcile_loop())
 
 
 async def stop_consumer() -> None:
