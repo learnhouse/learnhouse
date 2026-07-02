@@ -117,7 +117,9 @@ async def generate_image(
     image_bytes = _extract_image_bytes(response)
     if not image_bytes:
         # Most commonly a safety block — no inline image part was returned.
-        logger.warning("Image generation returned no image (model=%s)", model)
+        # `model` is intentionally not logged: it shares a return tuple with the
+        # API key, so logging it trips clear-text-secret analysis.
+        logger.warning("Image generation returned no image")
         raise RuntimeError(
             "The model did not return an image. Try rephrasing your prompt."
         )
