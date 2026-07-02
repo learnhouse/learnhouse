@@ -28,7 +28,9 @@ from src.services.courses.activities.pdf import (
     update_documentpdf_activity,
 )
 from src.services.courses.activities.video import (
+    CaptionsConfigIn,
     ExternalVideo,
+    configure_captions,
     create_external_video_activity,
     create_video_activity,
     update_video_activity,
@@ -528,6 +530,26 @@ async def api_update_video_activity(
     return await update_video_activity(
         request, activity_uuid, current_user, db_session, name, video_file, details_str
     )
+
+
+@router.post(
+    "/video/{activity_uuid}/captions",
+    summary="Configure AI closed captions for a hosted video activity",
+    description=(
+        "Enable/disable AI-generated captions and choose the target languages "
+        "(any of the platform's languages, or custom BCP-47 codes). When enabled, "
+        "queues generation on the AI captions pipeline (metered against the org's "
+        "AI credits). Returns the stored captions metadata."
+    ),
+)
+async def api_configure_video_captions(
+    request: Request,
+    activity_uuid: str,
+    config: CaptionsConfigIn,
+    current_user: PublicUser = Depends(get_current_user),
+    db_session=Depends(get_db_session),
+) -> dict:
+    return await configure_captions(request, activity_uuid, current_user, db_session, config)
 
 
 @router.put(

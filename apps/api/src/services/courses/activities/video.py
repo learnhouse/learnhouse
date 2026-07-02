@@ -1,5 +1,7 @@
 from typing import Literal, Optional
 import json
+import logging
+import re
 from src.db.courses.courses import Course
 from src.db.organizations import Organization
 
@@ -21,6 +23,8 @@ from fastapi import HTTPException, status, UploadFile, Request
 from uuid import uuid4
 from datetime import datetime
 from src.security.rbac import check_resource_access, AccessAction
+
+logger = logging.getLogger(__name__)
 
 
 async def create_video_activity(
@@ -153,6 +157,14 @@ async def create_video_activity(
     db_session.add(chapter_activity_object)
     await db_session.commit()
     await db_session.refresh(chapter_activity_object)
+
+    # Kick off HLS transcoding (no-op unless LEARNHOUSE_HLS_ENABLED). The MP4 is
+    # served as the fallback until HLS is ready.
+    try:
+        from src.services.utils.hls_jobs import enqueue as enqueue_hls
+        enqueue_hls(activity.activity_uuid)
+    except Exception:
+        logger.exception("Failed to enqueue HLS transcode for %s", activity.activity_uuid)
 
     return ActivityRead.model_validate(activity)
 
@@ -329,6 +341,119 @@ async def update_video_activity(
     await db_session.refresh(activity)
 
     return ActivityRead.model_validate(activity)
+
+
+# --------------------------------------------------------------------------
+# AI closed captions
+# --------------------------------------------------------------------------
+
+_CAPTION_LANG_RE = re.compile(r"^[A-Za-z0-9-]{2,20}$")
+MAX_CAPTION_LANGUAGES = 15
+
+
+class CaptionLanguageIn(BaseModel):
+    code: str
+    label: Optional[str] = None
+
+
+class CaptionsConfigIn(BaseModel):
+    enabled: bool = True
+    # "auto" = let the model detect the spoken language, or a specific code.
+    source_language: str = "auto"
+    languages: list[CaptionLanguageIn] = []
+
+
+async def configure_captions(
+    request: Request,
+    activity_uuid: str,
+    current_user: PublicUser | AnonymousUser,
+    db_session: AsyncSession,
+    config: CaptionsConfigIn,
+) -> dict:
+    """Persist AI-caption settings on a hosted-video activity and (when enabled)
+    enqueue generation. Instructor must have UPDATE rights on the course.
+
+    Languages may be any of the platform's available languages OR custom
+    additions — any well-formed BCP-47-ish code is accepted (the model can
+    translate to it). Returns the stored `captions` metadata block.
+    """
+    activity = (
+        await db_session.execute(select(Activity).where(Activity.activity_uuid == activity_uuid))
+    ).scalars().first()
+    if not activity:
+        raise HTTPException(status_code=404, detail="Activity not found")
+    if activity.activity_sub_type != ActivitySubTypeEnum.SUBTYPE_VIDEO_HOSTED:
+        raise HTTPException(status_code=400, detail="Captions are only available for hosted videos")
+
+    course = (
+        await db_session.execute(select(Course).where(Course.id == activity.course_id))
+    ).scalars().first()
+    if not course:
+        raise HTTPException(status_code=404, detail="Course not found")
+    await check_resource_access(
+        request, db_session, current_user, course.course_uuid, AccessAction.UPDATE
+    )
+
+    # Validate + dedupe target languages.
+    seen: set[str] = set()
+    langs: list[dict] = []
+    for lang in config.languages:
+        code = (lang.code or "").strip()
+        if not _CAPTION_LANG_RE.match(code):
+            raise HTTPException(status_code=400, detail=f"Invalid language code: {lang.code!r}")
+        if code in seen:
+            continue
+        seen.add(code)
+        langs.append({"code": code, "label": (lang.label or code).strip(), "status": "queued"})
+    if len(langs) > MAX_CAPTION_LANGUAGES:
+        raise HTTPException(status_code=400, detail=f"At most {MAX_CAPTION_LANGUAGES} languages")
+    src = (config.source_language or "auto").strip()
+    if src != "auto" and not _CAPTION_LANG_RE.match(src):
+        raise HTTPException(status_code=400, detail="Invalid source language code")
+    if config.enabled and not langs:
+        raise HTTPException(status_code=400, detail="Choose at least one caption language")
+
+    # Feature + credit pre-check for immediate feedback (the job re-checks + meters).
+    if config.enabled:
+        from src.security.features_utils.usage import (
+            check_feature_enabled,
+            get_ai_credits_summary,
+        )
+        await check_feature_enabled("ai", activity.org_id, db_session)
+        summary = await get_ai_credits_summary(activity.org_id, db_session)
+        remaining = summary.get("remaining_credits")
+        if isinstance(remaining, (int, float)) and remaining != -1 and remaining <= 0:
+            raise HTTPException(status_code=402, detail="No AI credits remaining")
+
+    from sqlalchemy.orm.attributes import flag_modified
+
+    meta = dict(activity.extra_metadata or {})
+    captions = dict(meta.get("captions") or {})
+    captions.update({
+        "enabled": config.enabled,
+        "auto_generate": True,
+        "source_language": src,
+        "languages": langs,
+        "status": "queued" if (config.enabled and langs) else "idle",
+        "error": None,
+        "updated_at": str(datetime.now()),
+    })
+    meta["captions"] = captions
+    activity.extra_metadata = meta
+    flag_modified(activity, "extra_metadata")
+    db_session.add(activity)
+    await db_session.commit()
+
+    if config.enabled and langs:
+        try:
+            from src.services.utils.caption_jobs import enqueue as enqueue_captions
+            enqueue_captions(activity_uuid)
+        except Exception:
+            logging.getLogger(__name__).exception(
+                "Failed to enqueue captions for %s", activity_uuid
+            )
+
+    return captions
 
 
 async def update_external_video_activity(
