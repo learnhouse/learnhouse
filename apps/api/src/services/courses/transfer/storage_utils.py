@@ -52,7 +52,9 @@ def _validate_local_path(file_path: str) -> Optional[str]:
     except ValueError:
         return None
 
-    return file_path
+    # Return the canonicalized, containment-checked path (not the original
+    # tainted string) so callers open the validated path.
+    return full_real
 
 
 @functools.cache
@@ -78,10 +80,22 @@ def get_storage_client():
         if _s3_client is not None:
             return _s3_client
         learnhouse_config = get_learnhouse_config()
+        # Cloudflare R2 requires SigV4 and the "auto" region; without this,
+        # botocore falls back to SigV2 for presigned URLs (the legacy
+        # AWSAccessKeyId/Signature/Expires form), which R2 rejects with 401.
+        # Overridable via LEARNHOUSE_S3_API_REGION for real AWS S3 / MinIO, which
+        # validate the region against the endpoint.
+        region = os.environ.get("LEARNHOUSE_S3_API_REGION") or "auto"
         _s3_client = boto3.client(
             "s3",
             endpoint_url=learnhouse_config.hosting_config.content_delivery.s3api.endpoint_url,
-            config=botocore.config.Config(connect_timeout=10, read_timeout=60, retries={"max_attempts": 2}),
+            region_name=region,
+            config=botocore.config.Config(
+                signature_version="s3v4",
+                connect_timeout=10,
+                read_timeout=60,
+                retries={"max_attempts": 2},
+            ),
         )
         return _s3_client
 
@@ -97,6 +111,41 @@ def get_s3_bucket_name() -> str:
 def is_s3_enabled() -> bool:
     """Check if S3 storage is enabled (cached)."""
     return get_content_delivery_type() == "s3api"
+
+
+# Presigned-URL lifetime (24h). Must stay comfortably longer than the redirect
+# Cache-Control window (see stream.py) so a browser-cached 302 never points at
+# an already-expired URL. 24h TTL + 6h cache leaves ≥18h of validity margin.
+PRESIGNED_URL_TTL_SECONDS = 24 * 60 * 60
+
+
+def generate_presigned_get_url(
+    s3_key: str, expires_in: int = PRESIGNED_URL_TTL_SECONDS
+) -> Optional[str]:
+    """
+    Generate a presigned GET URL for an object so the browser can fetch it
+    directly from S3/R2 (with native HTTP Range support) instead of proxying
+    every byte through the API.
+
+    Returns None when S3 is not enabled, the client is unavailable, or signing
+    fails — callers fall back to streaming the file through the API.
+    """
+    if not is_s3_enabled():
+        return None
+
+    s3_client = get_storage_client()
+    if not s3_client:
+        return None
+
+    try:
+        return s3_client.generate_presigned_url(
+            "get_object",
+            Params={"Bucket": get_s3_bucket_name(), "Key": s3_key},
+            ExpiresIn=expires_in,
+        )
+    except Exception as e:
+        logger.error("Failed to presign URL for %s: %s", s3_key, e)
+        return None
 
 
 def read_file_content(file_path: str) -> Optional[bytes]:
@@ -348,6 +397,9 @@ MIME_TYPES_BY_EXT = {
     ".webp": "image/webp",
     ".mp3": "audio/mpeg",
     ".wav": "audio/wav",
+    ".m3u8": "application/vnd.apple.mpegurl",
+    ".ts": "video/mp2t",
+    ".m4s": "video/iso.segment",
 }
 
 
