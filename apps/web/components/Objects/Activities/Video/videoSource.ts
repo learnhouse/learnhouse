@@ -80,10 +80,12 @@ export function resolveActivityVideoSource(args: VideoSourceArgs): VideoSource {
  * must stay uncredentialed (R2 CORS rejects credentialed wildcard requests).
  */
 export function shouldSendHlsCredentials(url: string): boolean {
-  // Our authed playlist/key endpoint — but NEVER a presigned object-storage URL
-  // (those always carry X-Amz-* query params). Sending the cookie cross-origin
-  // to R2 would fail CORS and leak the cookie to storage.
-  return url.includes('/api/v1/stream/hls/') && !url.includes('X-Amz-')
+  // Our authed playlist/key endpoints (activity + video block) — but NEVER a
+  // presigned object-storage URL (those always carry X-Amz-* query params).
+  // Sending the cookie cross-origin to R2 would fail CORS and leak the cookie.
+  const isApiPlaylist =
+    url.includes('/api/v1/stream/hls/') || url.includes('/api/v1/stream/block-hls/')
+  return isApiPlaylist && !url.includes('X-Amz-')
 }
 
 export interface ThumbnailArgs {

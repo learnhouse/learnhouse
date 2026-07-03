@@ -1,8 +1,11 @@
 import { NodeViewWrapper } from '@tiptap/react'
 import React, { useState } from 'react'
 import { RotateCcw, ArrowRight, CheckCircle, GitBranch, RefreshCcw } from 'lucide-react'
+import { Sparkle } from '@phosphor-icons/react'
+import dynamic from 'next/dynamic'
 import { useEditorProvider } from '@components/Contexts/Editor/EditorContext'
 import ScenariosModal from './ScenariosModal'
+const AIScenarioGeneratorModal = dynamic(() => import('@components/Objects/AI/AIScenarioGeneratorModal'), { ssr: false })
 
 interface ScenarioOption {
   id: string
@@ -22,9 +25,15 @@ const ScenariosExtension: React.FC = (props: any) => {
   const [scenarios, setScenarios] = useState<Scenario[]>(props.node.attrs.scenarios)
   const [currentScenarioId, setCurrentScenarioId] = useState(props.node.attrs.currentScenarioId)
   const [isModalOpen, setIsModalOpen] = useState(false)
+  const [showAIGenerator, setShowAIGenerator] = useState(false)
   const [scenarioComplete, setScenarioComplete] = useState(false)
   const editorState = useEditorProvider() as any
   const isEditable = editorState?.isEditable ?? true
+  const activityUuid = props.extension?.options?.activity?.activity_uuid
+
+  const applyGeneratedScenario = (block: { title: string; scenarios: Scenario[]; currentScenarioId: string }) => {
+    handleSave(block.title, block.scenarios, block.currentScenarioId)
+  }
 
   const getCurrentScenario = (scenarioId: string = currentScenarioId): Scenario | null => {
     return scenarios.find(s => s.id === scenarioId) || null
@@ -83,12 +92,21 @@ const ScenariosExtension: React.FC = (props: any) => {
 
           {/* Action buttons */}
           {isEditable ? (
-            <button
-              onClick={() => setIsModalOpen(true)}
-              className="bg-neutral-200 hover:bg-neutral-300 text-neutral-700 font-medium py-1.5 px-3 rounded-lg text-xs transition-colors outline-none"
-            >
-              Edit Scenarios
-            </button>
+            <div className="flex items-center gap-1.5">
+              <button
+                onClick={() => setShowAIGenerator(true)}
+                className="bg-neutral-900 hover:bg-neutral-800 text-white font-medium py-1.5 px-3 rounded-lg text-xs transition-colors outline-none flex items-center gap-1.5 nice-shadow"
+              >
+                <Sparkle weight="duotone" size={13} />
+                Generate with AI
+              </button>
+              <button
+                onClick={() => setIsModalOpen(true)}
+                className="bg-neutral-200 hover:bg-neutral-300 text-neutral-700 font-medium py-1.5 px-3 rounded-lg text-xs transition-colors outline-none"
+              >
+                Edit Scenarios
+              </button>
+            </div>
           ) : (
             <button
               onClick={resetScenario}
@@ -213,6 +231,14 @@ const ScenariosExtension: React.FC = (props: any) => {
           onSave={handleSave}
         />
       </div>
+      {showAIGenerator && (
+        <AIScenarioGeneratorModal
+          isOpen={showAIGenerator}
+          onClose={() => setShowAIGenerator(false)}
+          onInsert={applyGeneratedScenario}
+          activityUuid={activityUuid}
+        />
+      )}
     </NodeViewWrapper>
   )
 }

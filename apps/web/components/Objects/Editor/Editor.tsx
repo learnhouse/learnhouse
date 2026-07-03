@@ -167,7 +167,7 @@ function Editor(props: EditorProps) {
       InfoCallout.configure({ editable: true }),
       WarningCallout.configure({ editable: true }),
       ImageBlock.configure({ editable: true, activity: stableActivity }),
-      VideoBlock.configure({ editable: true, activity: stableActivity }),
+      VideoBlock.configure({ editable: true, activity: stableActivity, orgUuid: props.org?.org_uuid, courseUuid: props.course?.course_uuid }),
       AudioBlock.configure({ editable: true, activity: stableActivity }),
       MathEquationBlock.configure({ editable: true, activity: stableActivity }),
       PDFBlock.configure({ editable: true, activity: stableActivity }),

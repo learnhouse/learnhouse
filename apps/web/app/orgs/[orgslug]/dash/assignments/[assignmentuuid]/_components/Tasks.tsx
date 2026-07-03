@@ -1,8 +1,9 @@
 import { useAssignments } from '@components/Contexts/Assignments/AssignmentContext'
 import Modal from '@components/Objects/StyledElements/Modal/Modal';
-import { Clock, Code2, FileUp, Hash, ListTodo, Pencil, Plus, Type } from 'lucide-react';
+import { Clock, Code2, FileUp, Hash, ListTodo, Pencil, Plus, Sparkles, Type } from 'lucide-react';
 import React from 'react'
 import NewTaskModal from './Modals/NewTaskModal';
+import GenerateTasksAIModal from './Modals/GenerateTasksAIModal';
 import { useAssignmentsTask, useAssignmentsTaskDispatch } from '@components/Contexts/Assignments/AssignmentsTaskContext';
 import { useTranslation } from 'react-i18next';
 import dayjs from 'dayjs'
@@ -33,6 +34,7 @@ function AssignmentTasks({ assignment_uuid }: any) {
     const assignmentTask = useAssignmentsTask() as any;
     const assignmentTaskHook = useAssignmentsTaskDispatch() as any;
     const [isNewTaskModalOpen, setIsNewTaskModalOpen] = React.useState(false)
+    const [isGenerateAIModalOpen, setIsGenerateAIModalOpen] = React.useState(false)
 
     async function setSelectTask(task_uuid: string) {
         assignmentTaskHook({ type: 'setSelectedAssignmentTaskUUID', payload: task_uuid })
@@ -61,6 +63,32 @@ function AssignmentTasks({ assignment_uuid }: any) {
                             >
                                 <Plus size={14} className='transition-transform group-hover:scale-110' />
                                 <span>{t('dashboard.assignments.editor.add_task')}</span>
+                            </button>
+                        }
+                    />
+                )}
+
+                {assignments && tasks.length < 10 && (
+                    <Modal
+                        isDialogOpen={isGenerateAIModalOpen}
+                        onOpenChange={setIsGenerateAIModalOpen}
+                        minHeight='no-min'
+                        minWidth='md'
+                        dialogContent={
+                            <GenerateTasksAIModal
+                                assignment_uuid={assignment_uuid}
+                                closeModal={setIsGenerateAIModalOpen}
+                            />
+                        }
+                        dialogTitle={t('dashboard.assignments.editor.generate_ai_modal.title', 'Generate tasks with AI')}
+                        dialogDescription={t('dashboard.assignments.editor.generate_ai_modal.description', 'Describe what you want and preview tasks grounded on the course content before adding them.')}
+                        dialogTrigger={
+                            <button
+                                type='button'
+                                className='group flex items-center justify-center gap-1.5 w-full px-3 py-2.5 bg-white text-gray-700 text-xs font-semibold rounded-lg border border-gray-200 hover:border-gray-300 hover:bg-gray-50 transition-colors nice-shadow'
+                            >
+                                <Sparkles size={14} className='transition-transform group-hover:scale-110' />
+                                <span>{t('dashboard.assignments.editor.generate_ai', 'Generate tasks with AI')}</span>
                             </button>
                         }
                     />

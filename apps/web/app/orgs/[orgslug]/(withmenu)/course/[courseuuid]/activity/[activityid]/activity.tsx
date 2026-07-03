@@ -312,7 +312,7 @@ function ActivityClient(props: ActivityClientProps) {
         }
         return (
           <Suspense fallback={<LoadingFallback />}>
-            <Canva content={activity.content} activity={activity} />
+            <Canva content={activity.content} activity={activity} courseUuid={course?.course_uuid} orgUuid={org?.org_uuid} />
           </Suspense>
         );
       case 'TYPE_VIDEO':

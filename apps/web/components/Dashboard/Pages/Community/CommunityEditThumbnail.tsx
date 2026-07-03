@@ -12,6 +12,7 @@ import { revalidateTags } from '@services/utils/ts/requests'
 import { useQueryClient } from '@tanstack/react-query'
 import { queryKeys } from '@/lib/query/keys'
 import UnsplashImagePicker from '@components/Dashboard/Pages/Course/EditCourseGeneral/UnsplashImagePicker'
+import AIImageButton from '@components/Objects/AI/AIImageButton'
 import toast from 'react-hot-toast'
 import { Button } from '@components/ui/button'
 import { SafeImage } from '@components/Objects/SafeImage'
@@ -26,7 +27,7 @@ const CommunityEditThumbnail: React.FC = () => {
   const session = useLHSession() as any
   const org = useOrg() as any
   const communityState = useCommunity()
-  const dispatch = useCommunityDispatch()
+  const _dispatch = useCommunityDispatch()
   const community = communityState?.community
   const accessToken = session?.data?.tokens?.access_token
   const queryClient = useQueryClient()
@@ -98,10 +99,17 @@ const CommunityEditThumbnail: React.FC = () => {
       setLocalThumbnail({ file, url: blobUrl })
       setShowUnsplashPicker(false)
       await uploadThumbnail(file)
-    } catch (err) {
+    } catch (_err) {
       showError(t('dashboard.courses.communities.thumbnail.toasts.update_error'))
       setIsLoading(false)
     }
+  }
+
+  const handleAIImageFile = async (file: File) => {
+    if (!validateFile(file)) return
+    const blobUrl = URL.createObjectURL(file)
+    setLocalThumbnail({ file, url: blobUrl })
+    await uploadThumbnail(file)
   }
 
   const uploadThumbnail = async (file: File) => {
@@ -126,7 +134,7 @@ const CommunityEditThumbnail: React.FC = () => {
         })
         router.refresh()
       }
-    } catch (err) {
+    } catch (_err) {
       showError(t('dashboard.courses.communities.thumbnail.toasts.update_error'))
     } finally {
       setIsLoading(false)
@@ -215,6 +223,11 @@ const CommunityEditThumbnail: React.FC = () => {
                   <ImageIcon size={16} />
                   {t('dashboard.courses.communities.thumbnail.browse_unsplash')}
                 </Button>
+                <AIImageButton
+                  onSelect={handleUnsplashSelect}
+                  onSelectFile={handleAIImageFile}
+                  className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium border border-gray-200 rounded-md bg-white hover:bg-gray-50 transition-colors"
+                />
               </div>
             )}
 

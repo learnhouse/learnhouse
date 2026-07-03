@@ -31,6 +31,7 @@ import {
 import { getPlaygroundThumbnailMediaDirectory } from '@services/media/media'
 import Modal from '@components/Objects/StyledElements/Modal/Modal'
 import UnsplashImagePicker from '@components/Dashboard/Pages/Course/EditCourseGeneral/UnsplashImagePicker'
+import AIImageButton from '@components/Objects/AI/AIImageButton'
 import toast from 'react-hot-toast'
 import Link from 'next/link'
 
@@ -38,10 +39,10 @@ type Tab = 'general' | 'access' | 'thumbnail'
 
 interface PlaygroundOptionsModalProps {
   open: boolean
-  onOpenChange: (open: boolean) => void
+  onOpenChange: (_open: boolean) => void
   playground: Playground
   orgslug: string
-  onUpdated: (updated: Playground) => void
+  onUpdated: (_updated: Playground) => void
 }
 
 export default function PlaygroundOptionsModal({
@@ -120,7 +121,7 @@ function GeneralTab({
 }: {
   playground: Playground
   orgslug: string
-  onUpdated: (p: Playground) => void
+  onUpdated: (_p: Playground) => void
 }) {
   const session = useLHSession() as any
   const access_token = session?.data?.tokens?.access_token
@@ -215,7 +216,7 @@ function AccessTab({
   playground: Playground
   orgslug: string
   orgId: number
-  onUpdated: (p: Playground) => void
+  onUpdated: (_p: Playground) => void
 }) {
   const session = useLHSession() as any
   const access_token = session?.data?.tokens?.access_token
@@ -422,7 +423,7 @@ function ThumbnailTab({
 }: {
   playground: Playground
   orgslug: string
-  onUpdated: (p: Playground) => void
+  onUpdated: (_p: Playground) => void
 }) {
   const session = useLHSession() as any
   const access_token = session?.data?.tokens?.access_token
@@ -558,6 +559,10 @@ function ThumbnailTab({
             <Image size={14} weight="bold" />
             Unsplash
           </button>
+          <AIImageButton
+            onSelect={handleUnsplashSelect}
+            className="flex items-center gap-1.5 h-9 px-4 rounded-lg border border-gray-200 bg-white hover:bg-gray-50 text-sm font-medium text-gray-700 transition-all nice-shadow"
+          />
         </div>
       )}
       <p className="text-xs text-gray-400">PNG or JPG · Max 8MB</p>

@@ -385,6 +385,87 @@ async def stream_activity_hls(
     )
 
 
+@router.get(
+    "/block-hls/{org_uuid}/{course_uuid}/{activity_uuid}/{block_uuid}/{hls_path:path}",
+    summary="Serve an HLS playlist or segment for a video block",
+    description=(
+        "Serves the adaptive-bitrate HLS assets for a video block inside a dynamic "
+        "activity — identical behavior to the activity HLS endpoint (RBAC-gated "
+        "playlists with segment URLs presigned to R2), keyed off the block's dir."
+    ),
+    responses={
+        200: {"description": "Playlist or segment returned"},
+        302: {"description": "Redirect to a presigned segment URL (S3/R2 mode)"},
+        403: {"description": "User is not permitted to read this course"},
+        404: {"description": "Activity, course, block, or HLS asset not found"},
+    },
+)
+async def stream_block_hls(
+    request: Request,
+    org_uuid: str = Path(..., description="Organization UUID"),
+    course_uuid: str = Path(..., description="Course UUID"),
+    activity_uuid: str = Path(..., description="Activity UUID"),
+    block_uuid: str = Path(..., description="Block UUID"),
+    hls_path: str = Path(..., description="HLS asset path (e.g. master.m3u8)"),
+    current_user: PublicUser | AnonymousUser | APITokenUser = Depends(get_current_user),
+    db_session: AsyncSession = Depends(get_db_session),
+):
+    """Serve a video block's HLS assets. RBAC runs before any content/URL signing."""
+    await _verify_course_activity_access(request, course_uuid, activity_uuid, current_user, db_session)
+
+    rel = _safe_hls_relpath(hls_path)
+    if rel is None:
+        raise HTTPException(status_code=404, detail="HLS asset not found")
+    # block_uuid is a single path segment, but reject any traversal defensively.
+    if "/" in block_uuid or "\\" in block_uuid or ".." in block_uuid or "\x00" in block_uuid:
+        raise HTTPException(status_code=404, detail="HLS asset not found")
+
+    base_key = (
+        f"{CONTENT_DIR}/orgs/{org_uuid}/courses/{course_uuid}/activities/{activity_uuid}"
+        f"/dynamic/blocks/videoBlock/{block_uuid}/hls"
+    )
+    asset_key = f"{base_key}/{rel}"
+    ext = os.path.splitext(rel)[1].lower()
+
+    if ext == ".m3u8":
+        raw = await asyncio.to_thread(read_file_content, asset_key)
+        if raw is None:
+            raise HTTPException(status_code=404, detail="Playlist not found")
+        playlist_dir_key = asset_key.rsplit("/", 1)[0]
+        body = rewrite_playlist(
+            raw.decode("utf-8", errors="replace"),
+            playlist_dir_key,
+            generate_presigned_get_url,
+        )
+        return Response(
+            content=body,
+            media_type=_HLS_MIME[".m3u8"],
+            headers={"Cache-Control": "private, max-age=300", "X-Content-Type-Options": "nosniff"},
+        )
+
+    if ext == ".key":
+        raw = await asyncio.to_thread(read_file_content, asset_key)
+        if raw is None:
+            raise HTTPException(status_code=404, detail="Key not found")
+        return Response(
+            content=raw,
+            media_type=_HLS_MIME[".key"],
+            headers={"Cache-Control": "private, no-store"},
+        )
+
+    redirect = _redirect_to_storage(asset_key)
+    if redirect:
+        return redirect
+    raw = await asyncio.to_thread(read_file_content, asset_key)
+    if raw is None:
+        raise HTTPException(status_code=404, detail="Segment not found")
+    return Response(
+        content=raw,
+        media_type=_HLS_MIME.get(ext, "application/octet-stream"),
+        headers={"Cache-Control": "public, max-age=86400", "X-Content-Type-Options": "nosniff"},
+    )
+
+
 # Caption language codes are bare BCP-47-ish tokens (letters/digits/hyphen). This
 # rejects path traversal, slashes, and dots so it can't escape the captions dir.
 _CAPTION_LANG_RE = re.compile(r"^[A-Za-z0-9-]{2,20}$")
