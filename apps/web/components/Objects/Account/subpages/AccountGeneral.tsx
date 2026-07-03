@@ -254,6 +254,7 @@ const UserEditForm = ({
     localAvatar: File | null;
     handleFileChange: (_event: any) => Promise<void>;
     handleAISelect: (_imageUrl: string) => Promise<void>;
+    handleAIImageFile: (_file: File) => Promise<void>;
   };
 }) => {
   const { t } = useTranslation();
@@ -505,6 +506,7 @@ const UserEditForm = ({
                     </Button>
                     <AIImageButton
                       onSelect={profilePicture.handleAISelect}
+                      onSelectFile={profilePicture.handleAIImageFile}
                       className="w-full inline-flex items-center justify-center gap-2 px-4 py-2 text-sm font-medium border border-gray-200 rounded-md bg-white hover:bg-gray-50 transition-colors"
                     />
                   </>
@@ -600,6 +602,26 @@ function AccountGeneral() {
     }
   }
 
+  const handleAIImageFile = async (file: File) => {
+    try {
+      setLocalAvatar(file)
+      setIsLoading(true)
+      const res = await updateUserAvatar(session.data.user.id, file, access_token)
+      if (res.success === false) {
+        setError(res.HTTPmessage)
+      } else {
+        // Force refresh session to pick up the new avatar filename
+        await session.update(true)
+        setIsLoading(false)
+        setError('')
+        setSuccess(t('user.settings.general.avatar_updated'))
+      }
+    } catch {
+      setError('Failed to process AI image')
+      setIsLoading(false)
+    }
+  }
+
   const handleEmailChange = async (newEmail: string) => {
     toast.success(t('user.settings.general.profile_updated'), { duration: 4000 })
 
@@ -674,7 +696,8 @@ function AccountGeneral() {
               isLoading,
               localAvatar,
               handleFileChange,
-              handleAISelect
+              handleAISelect,
+              handleAIImageFile
             }}
           />
         )}

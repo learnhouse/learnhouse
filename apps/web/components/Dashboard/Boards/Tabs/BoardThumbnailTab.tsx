@@ -83,6 +83,12 @@ function BoardThumbnailTab({ board, boardUuid, orgUuid, boardKey: _boardKey }: B
     await uploadFile(file)
   }
 
+  const handleAIImageFile = async (file: File) => {
+    const blobUrl = URL.createObjectURL(file)
+    setLocalThumbnail({ url: blobUrl })
+    await uploadFile(file)
+  }
+
   const handleUnsplashSelect = async (imageUrl: string) => {
     try {
       const url = new URL(imageUrl)
@@ -160,6 +166,7 @@ function BoardThumbnailTab({ board, boardUuid, orgUuid, boardKey: _boardKey }: B
               </button>
               <AIImageButton
                 onSelect={handleUnsplashSelect}
+                onSelectFile={handleAIImageFile}
                 className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
               />
             </div>

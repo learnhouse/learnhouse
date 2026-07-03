@@ -114,6 +114,13 @@ export function CommunityThumbnailModal({
     }
   }
 
+  const handleAIImageFile = async (file: File) => {
+    if (!validateFile(file)) return
+    const blobUrl = URL.createObjectURL(file)
+    setLocalThumbnail({ file, url: blobUrl })
+    await uploadThumbnail(file)
+  }
+
   const uploadThumbnail = async (file: File) => {
     setIsLoading(true)
     try {
@@ -230,6 +237,7 @@ export function CommunityThumbnailModal({
                 </button>
                 <AIImageButton
                   onSelect={handleUnsplashSelect}
+                  onSelectFile={handleAIImageFile}
                   className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 text-sm font-medium text-gray-700 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
                 />
               </div>

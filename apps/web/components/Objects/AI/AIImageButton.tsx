@@ -9,6 +9,9 @@ import AIImagePicker from './AIImagePicker'
 // onSelect receives an absolute image URL (same contract as UnsplashImagePicker).
 interface AIImageButtonProps {
   onSelect: (_imageUrl: string) => void
+  // Upload surfaces pass this to receive a ready-to-upload File (fetched
+  // same-origin via the API), instead of re-fetching a cross-origin URL.
+  onSelectFile?: (_file: File) => void | Promise<void>
   className?: string
   label?: string
   variant?: 'button' | 'chip'
@@ -16,6 +19,7 @@ interface AIImageButtonProps {
 
 const AIImageButton: React.FC<AIImageButtonProps> = ({
   onSelect,
+  onSelectFile,
   className,
   label = 'Generate with AI',
   variant = 'button',
@@ -37,6 +41,7 @@ const AIImageButton: React.FC<AIImageButtonProps> = ({
         <AIImagePicker
           isOpen={open}
           onSelect={onSelect}
+          onSelectFile={onSelectFile}
           onClose={() => setOpen(false)}
         />
       )}

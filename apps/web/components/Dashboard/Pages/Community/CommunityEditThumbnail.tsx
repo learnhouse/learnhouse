@@ -105,6 +105,13 @@ const CommunityEditThumbnail: React.FC = () => {
     }
   }
 
+  const handleAIImageFile = async (file: File) => {
+    if (!validateFile(file)) return
+    const blobUrl = URL.createObjectURL(file)
+    setLocalThumbnail({ file, url: blobUrl })
+    await uploadThumbnail(file)
+  }
+
   const uploadThumbnail = async (file: File) => {
     setIsLoading(true)
     try {
@@ -218,6 +225,7 @@ const CommunityEditThumbnail: React.FC = () => {
                 </Button>
                 <AIImageButton
                   onSelect={handleUnsplashSelect}
+                  onSelectFile={handleAIImageFile}
                   className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium border border-gray-200 rounded-md bg-white hover:bg-gray-50 transition-colors"
                 />
               </div>

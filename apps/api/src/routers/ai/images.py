@@ -15,6 +15,7 @@ import logging
 from uuid import uuid4
 
 from fastapi import APIRouter, Depends, HTTPException
+from fastapi.responses import Response
 from sqlmodel import select
 from sqlmodel.ext.asyncio.session import AsyncSession
 
@@ -53,6 +54,16 @@ AI_IMAGE_DIR = "ai_images"
 def _media_path(org_uuid: str, file_id: str) -> str:
     """Relative content path; the frontend prepends the media base to build a URL."""
     return f"content/orgs/{org_uuid}/{AI_IMAGE_DIR}/{file_id}"
+
+
+def _validate_file_id(file_id: str) -> None:
+    """Reject any file_id that could escape the org's ai_images directory.
+
+    A single shared guard so the read-bytes and refine paths cannot drift. This
+    matters most in S3/R2 mode, where the key is built by string interpolation.
+    """
+    if not file_id or "/" in file_id or "\\" in file_id or ".." in file_id or "\x00" in file_id:
+        raise HTTPException(status_code=400, detail="Invalid file id")
 
 
 async def _load_org_and_authorize(
@@ -102,6 +113,7 @@ async def api_generate_image(
     # fall back to a client-supplied base64 data URL.
     input_images: list[bytes] = []
     if body.source_file_id:
+        _validate_file_id(body.source_file_id)
         try:
             input_images.append(
                 await read_content(
@@ -176,6 +188,50 @@ async def api_generate_image(
         file_id=file_id,
         media_url=media_path,
         prompt=body.prompt.strip(),
+    )
+
+
+@router.get(
+    "/images/{org_id}/{file_id}/bytes",
+    summary="Download a generated AI image (same-origin, authenticated)",
+    responses={
+        200: {"description": "Image bytes returned", "content": {"image/png": {}}},
+        400: {"description": "Invalid file id"},
+        401: {"description": "Authentication required"},
+        403: {"description": "Not an org member"},
+        404: {"description": "Image not found"},
+    },
+)
+async def api_get_image_bytes(
+    org_id: int,
+    file_id: str,
+    current_user: PublicUser = Depends(get_authenticated_user),
+    db_session: AsyncSession = Depends(get_db_session),
+) -> Response:
+    """Serve a generated image's raw bytes from the SAME origin as the API.
+
+    Upload surfaces fetch this (instead of the public, possibly cross-origin
+    media URL) so building a File to re-upload never trips CORS.
+    """
+    org = await _load_org_and_authorize(org_id, current_user, db_session)
+    if "/" in file_id or "\\" in file_id or ".." in file_id or "\x00" in file_id:
+        raise HTTPException(status_code=400, detail="Invalid file id")
+    try:
+        data = await read_content(
+            directory=AI_IMAGE_DIR,
+            type_of_dir="orgs",
+            uuid=org.org_uuid,
+            file_and_format=file_id,
+        )
+    except HTTPException:
+        raise HTTPException(status_code=404, detail="Image not found")
+    return Response(
+        content=data,
+        media_type=f"image/{OUTPUT_EXT}",
+        headers={
+            "Cache-Control": "private, max-age=3600",
+            "X-Content-Type-Options": "nosniff",
+        },
     )
 
 

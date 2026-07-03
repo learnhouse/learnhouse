@@ -134,6 +134,18 @@ async def test_refine_source_file_id_missing_404():
     assert exc.value.status_code == 404
 
 
+async def test_refine_source_file_id_traversal_400():
+    body = GenerateImageRequest(org_id=5, prompt="x", source_file_id="../../other/secret.png")
+    with patch.object(img, "is_org_member", new=AsyncMock(return_value=True)), \
+         patch.object(img, "enforce_ai_rate_limit"), \
+         patch.object(img, "reserve_ai_credit", new=AsyncMock()), \
+         patch.object(img, "read_content", new=AsyncMock()) as rc:
+        with pytest.raises(HTTPException) as exc:
+            await img.api_generate_image(body, _user(), _db_returning(_org()))
+    assert exc.value.status_code == 400
+    rc.assert_not_called()  # rejected before any storage read
+
+
 async def test_invalid_source_base64_ignored():
     body = GenerateImageRequest(org_id=5, prompt="x", source_image_base64="!!!notbase64!!!")
     record = SimpleNamespace(ai_generation_uuid="aigen_3")
@@ -186,6 +198,36 @@ async def test_upload_failure_refunds_and_500():
             await img.api_generate_image(body, _user(), _db_returning(_org()))
     assert exc.value.status_code == 500
     refund.assert_called_once()
+
+
+async def test_get_image_bytes_ok():
+    with patch.object(img, "is_org_member", new=AsyncMock(return_value=True)), \
+         patch.object(img, "read_content", new=AsyncMock(return_value=b"PNGDATA")):
+        resp = await img.api_get_image_bytes(5, "f.png", _user(), _db_returning(_org()))
+    assert resp.body == b"PNGDATA"
+    assert resp.media_type == "image/png"
+
+
+async def test_get_image_bytes_traversal_400():
+    with patch.object(img, "is_org_member", new=AsyncMock(return_value=True)):
+        with pytest.raises(HTTPException) as exc:
+            await img.api_get_image_bytes(5, "../secret.png", _user(), _db_returning(_org()))
+    assert exc.value.status_code == 400
+
+
+async def test_get_image_bytes_missing_404():
+    with patch.object(img, "is_org_member", new=AsyncMock(return_value=True)), \
+         patch.object(img, "read_content", new=AsyncMock(side_effect=HTTPException(status_code=404, detail="nf"))):
+        with pytest.raises(HTTPException) as exc:
+            await img.api_get_image_bytes(5, "gone.png", _user(), _db_returning(_org()))
+    assert exc.value.status_code == 404
+
+
+async def test_get_image_bytes_non_member_403():
+    with patch.object(img, "is_org_member", new=AsyncMock(return_value=False)):
+        with pytest.raises(HTTPException) as exc:
+            await img.api_get_image_bytes(5, "f.png", _user(), _db_returning(_org()))
+    assert exc.value.status_code == 403
 
 
 async def test_history_list():

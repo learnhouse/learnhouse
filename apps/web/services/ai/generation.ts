@@ -86,9 +86,33 @@ export async function deleteAIImageHistory(uuid: string, access_token: string) {
   return del(`ai/images/history/${uuid}`, access_token)
 }
 
-/** Build the absolute URL for a generated image from its file_id. */
+/** Build the absolute URL for a generated image from its file_id (for <img> display). */
 export function aiImageUrl(orgUUID: string, fileId: string) {
   return getAIImageMediaDirectory(orgUUID, fileId)
+}
+
+/**
+ * Fetch a generated AI image's bytes SAME-ORIGIN (via the API, not the public
+ * media URL) and return a ready-to-upload File. Upload surfaces use this instead
+ * of cross-origin fetching getAIImageMediaDirectory(...), which is CORS-gated and
+ * fails on custom domains — leaving the surface stuck "processing".
+ */
+export async function fetchAIImageFile(
+  orgId: number,
+  fileId: string,
+  access_token: string
+): Promise<File> {
+  const res = await fetch(
+    `${getAPIUrl()}ai/images/${orgId}/${encodeURIComponent(fileId)}/bytes`,
+    {
+      method: 'GET',
+      headers: { Authorization: `Bearer ${access_token}` },
+      cache: 'no-store',
+    }
+  )
+  if (!res.ok) throw new Error(`Failed to load AI image (${res.status})`)
+  const blob = await res.blob()
+  return new File([blob], `ai_generated_${Date.now()}.png`, { type: blob.type || 'image/png' })
 }
 
 // --- Quiz generation ---

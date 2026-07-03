@@ -154,6 +154,23 @@ export default function OrgEditImages() {
     }
   }
 
+  const handleLogoAIImageFile = async (file: File) => {
+    setLocalLogo(URL.createObjectURL(file))
+    setIsLogoUploading(true)
+    const loadingToast = toast.loading(t('dashboard.organization.images.uploading_logo'))
+    try {
+      await uploadOrganizationLogo(org.id, file, access_token)
+      await new Promise((r) => setTimeout(r, 1500))
+      toast.success(t('dashboard.organization.images.toasts.logo_success'), { id: loadingToast })
+      queryClient.invalidateQueries({ queryKey: queryKeys.org.detail(org.slug) })
+      router.refresh()
+    } catch {
+      toast.error(t('dashboard.organization.images.toasts.logo_error'), { id: loadingToast })
+    } finally {
+      setIsLogoUploading(false)
+    }
+  }
+
   const handleThumbnailChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
     if (event.target.files && event.target.files.length > 0) {
       const file = event.target.files[0]
@@ -468,6 +485,7 @@ export default function OrgEditImages() {
 
                   <AIImageButton
                     onSelect={handleLogoAISelect}
+                    onSelectFile={handleLogoAIImageFile}
                     className="font-medium text-sm px-6 py-2.5 rounded-full bg-neutral-900 text-white hover:bg-neutral-800 shadow-xs hover:shadow-sm transition-all duration-300 flex items-center space-x-2"
                   />
 

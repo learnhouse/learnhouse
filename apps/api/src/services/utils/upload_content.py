@@ -176,6 +176,18 @@ async def read_content(
     a client round-trip (no CORS/credentials concerns). Path parts are
     traversal-guarded; raises HTTP 404 when the file is missing.
     """
+    # Defense in depth: the filesystem branch is guarded by _safe_content_path,
+    # but the S3 branch builds the key by string interpolation — reject any
+    # separators/traversal in the caller-supplied filename for both.
+    if (
+        not file_and_format
+        or "/" in file_and_format
+        or "\\" in file_and_format
+        or ".." in file_and_format
+        or "\x00" in file_and_format
+    ):
+        raise HTTPException(status_code=400, detail="Invalid file name")
+
     learnhouse_config = get_learnhouse_config()
     content_delivery = learnhouse_config.hosting_config.content_delivery.type
 

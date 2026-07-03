@@ -159,6 +159,10 @@ function CreateCourseModal({ closeModal, orgslug }: any) {
     setIsUploading(false)
   }
 
+  const handleAIImageFile = async (file: File) => {
+    formik.setFieldValue('thumbnail', file)
+  }
+
   return (
     <FormLayout onSubmit={formik.handleSubmit} >
       <FormField name="name">
@@ -235,6 +239,7 @@ function CreateCourseModal({ closeModal, orgslug }: any) {
                 </button>
                 <AIImageButton
                   onSelect={handleUnsplashSelect}
+                  onSelectFile={handleAIImageFile}
                   className="font-bold antialiased items-center text-gray text-sm rounded-md px-4 mt-6 flex gap-2"
                 />
               </div>

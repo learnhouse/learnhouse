@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useState } from 'react'
-import { Sparkles, Wand2, History, ArrowUpRight, RefreshCw, X, Trash2 } from 'lucide-react'
+import { Sparkles, Wand2, History, ArrowUpRight, RefreshCw, X, Trash2, ImageIcon, ImageOff } from 'lucide-react'
 import Modal from '@components/Objects/StyledElements/Modal/Modal'
 import { useOrg } from '@components/Contexts/OrgContext'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
@@ -7,15 +7,19 @@ import {
   generateAIImage,
   fetchAIImageHistory,
   deleteAIImageHistory,
+  fetchAIImageFile,
   aiImageUrl,
   AIImageHistoryItem,
 } from '@services/ai/generation'
 
-// Shared, Unsplash-style AI image generator (Google "nano banana"). Drops into
-// every image-upload surface via the SAME contract as UnsplashImagePicker, so
-// callers can wire it in identically: onSelect receives an absolute image URL.
+// Shared AI image generator (Google "nano banana"). Drops into every image-upload
+// surface via the same contract as UnsplashImagePicker (onSelect(url)). Upload
+// surfaces can additionally pass onSelectFile to receive a ready-to-upload File
+// fetched SAME-ORIGIN via the API (avoids the cross-origin CORS fetch that left
+// the surface stuck "processing").
 export interface AIImagePickerProps {
   onSelect: (_imageUrl: string) => void
+  onSelectFile?: (_file: File) => void | Promise<void>
   onClose: () => void
   isOpen?: boolean
 }
@@ -35,7 +39,7 @@ const PROMPT_IDEAS = [
   'A watercolor landscape for a history lesson',
 ]
 
-const AIImagePicker: React.FC<AIImagePickerProps> = ({ onSelect, onClose, isOpen = true }) => {
+const AIImagePicker: React.FC<AIImagePickerProps> = ({ onSelect, onSelectFile, onClose, isOpen = true }) => {
   const org = useOrg() as any
   const session = useLHSession() as any
   const access_token = session?.data?.tokens?.access_token
@@ -47,6 +51,7 @@ const AIImagePicker: React.FC<AIImagePickerProps> = ({ onSelect, onClose, isOpen
   const [items, setItems] = useState<GeneratedItem[]>([])
   const [sessionUuid, setSessionUuid] = useState<string | undefined>(undefined)
   const [refineFrom, setRefineFrom] = useState<GeneratedItem | null>(null)
+  const [usingKey, setUsingKey] = useState<string | null>(null)
 
   const [history, setHistory] = useState<AIImageHistoryItem[]>([])
   const [historyLoading, setHistoryLoading] = useState(false)
@@ -101,6 +106,28 @@ const AIImagePicker: React.FC<AIImagePickerProps> = ({ onSelect, onClose, isOpen
     }
   }
 
+  // Apply a picked image. When the caller needs an uploadable File (thumbnails,
+  // avatars, logos), fetch the bytes SAME-ORIGIN via the API; otherwise hand back
+  // the URL (editor image block stores it directly).
+  const handleUse = async (key: string, fileId: string, url: string) => {
+    if (!onSelectFile) {
+      onSelect(url)
+      onClose()
+      return
+    }
+    try {
+      setUsingKey(key)
+      setError(null)
+      const file = await fetchAIImageFile(org.id, fileId, access_token)
+      await onSelectFile(file)
+      onClose()
+    } catch {
+      setError('Could not use this image. Please try again.')
+    } finally {
+      setUsingKey(null)
+    }
+  }
+
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) {
       e.preventDefault()
@@ -114,164 +141,180 @@ const AIImagePicker: React.FC<AIImagePickerProps> = ({ onSelect, onClose, isOpen
     setHistory((prev) => prev.filter((h) => h.ai_generation_uuid !== uuid))
   }
 
+  const tabBtn = (id: 'generate' | 'history', icon: React.ReactNode, label: string) => (
+    <button
+      onClick={() => setTab(id)}
+      className={`px-3.5 py-1.5 rounded-full text-sm font-medium flex items-center gap-1.5 transition-colors ${
+        tab === id ? 'bg-neutral-900 text-white nice-shadow' : 'text-neutral-500 hover:bg-neutral-100'
+      }`}
+    >
+      {icon} {label}
+    </button>
+  )
+
+  const renderUseButton = (key: string, fileId: string, url: string) => (
+    <button
+      onClick={() => handleUse(key, fileId, url)}
+      disabled={usingKey === key}
+      className="px-3 py-1.5 rounded-lg bg-white text-neutral-900 text-sm font-medium flex items-center gap-1.5 nice-shadow disabled:opacity-60"
+    >
+      {usingKey === key ? <RefreshCw size={15} className="animate-spin" /> : <ArrowUpRight size={15} />}
+      Use
+    </button>
+  )
+
   const modalContent = (
-    <div className="flex flex-col h-full">
+    <div className="flex flex-col h-full bg-white">
       {/* Tabs */}
-      <div className="flex items-center gap-1 px-4 pt-3">
-        <button
-          onClick={() => setTab('generate')}
-          className={`px-3 py-1.5 rounded-lg text-sm flex items-center gap-1.5 transition-colors ${
-            tab === 'generate' ? 'bg-neutral-900 text-white' : 'text-neutral-500 hover:bg-neutral-100'
-          }`}
-        >
-          <Wand2 size={15} /> Generate
-        </button>
-        <button
-          onClick={() => setTab('history')}
-          className={`px-3 py-1.5 rounded-lg text-sm flex items-center gap-1.5 transition-colors ${
-            tab === 'history' ? 'bg-neutral-900 text-white' : 'text-neutral-500 hover:bg-neutral-100'
-          }`}
-        >
-          <History size={15} /> History
-        </button>
+      <div className="flex items-center gap-1.5 px-5 pt-4 pb-3 border-b border-neutral-100">
+        {tabBtn('generate', <Wand2 size={15} />, 'Generate')}
+        {tabBtn('history', <History size={15} />, 'History')}
       </div>
 
       {tab === 'generate' ? (
         <>
           {/* Prompt composer */}
-          <div className="p-4 space-y-3">
+          <div className="px-5 pt-4 pb-3 space-y-3">
             {refineFrom && (
-              <div className="flex items-center gap-2 text-xs text-neutral-600 bg-neutral-100 rounded-lg px-2.5 py-1.5 w-fit">
-                <img src={refineFrom.url} alt="" className="w-6 h-6 rounded object-cover" />
-                <span>Refining from this image</span>
+              <div className="flex items-center gap-2 text-xs text-neutral-600 bg-neutral-100 rounded-full pl-1.5 pr-2.5 py-1 w-fit">
+                <img src={refineFrom.url} alt="" className="w-6 h-6 rounded-full object-cover" />
+                <span className="font-medium">Refining from this image</span>
                 <button onClick={() => setRefineFrom(null)} className="text-neutral-400 hover:text-neutral-700">
                   <X size={13} />
                 </button>
               </div>
             )}
-            <div className="relative">
+            <div className="rounded-2xl border border-neutral-200 focus-within:border-neutral-300 focus-within:ring-4 focus-within:ring-neutral-900/5 transition-all bg-neutral-50/50">
               <textarea
                 value={prompt}
                 onChange={(e) => setPrompt(e.target.value)}
                 onKeyDown={handleKeyDown}
-                rows={2}
+                rows={3}
+                autoFocus
                 placeholder={
                   refineFrom
-                    ? 'Describe how to change the image…'
-                    : 'Describe the image you want to generate…'
+                    ? 'Describe how to change the image…  (e.g. make it darker, add a diagram)'
+                    : 'Describe the image you want to create…'
                 }
-                className="w-full p-3 pr-28 border border-neutral-200 rounded-xl resize-none focus:outline-hidden focus:ring-2 focus:ring-neutral-900/10 text-sm"
+                className="w-full p-3.5 bg-transparent resize-none focus:outline-hidden text-sm placeholder:text-neutral-400"
               />
-              <button
-                onClick={handleGenerate}
-                disabled={generating || !prompt.trim()}
-                className="absolute right-2 bottom-2 px-3 py-1.5 rounded-lg bg-neutral-900 text-white text-sm flex items-center gap-1.5 nice-shadow disabled:opacity-40 transition-opacity"
-              >
-                {generating ? (
-                  <RefreshCw size={15} className="animate-spin" />
-                ) : (
-                  <Sparkles size={15} />
-                )}
-                {generating ? 'Generating' : 'Generate'}
-              </button>
+              <div className="flex items-center justify-between px-3 pb-3">
+                <span className="text-[11px] text-neutral-400 hidden sm:block">⌘↵ to generate · uses AI credits</span>
+                <button
+                  onClick={handleGenerate}
+                  disabled={generating || !prompt.trim()}
+                  className="ml-auto px-4 py-2 rounded-xl bg-neutral-900 text-white text-sm font-medium flex items-center gap-2 nice-shadow disabled:opacity-40 transition-opacity hover:bg-neutral-800"
+                >
+                  {generating ? <RefreshCw size={15} className="animate-spin" /> : <Sparkles size={15} />}
+                  {generating ? 'Generating…' : refineFrom ? 'Refine' : 'Generate'}
+                </button>
+              </div>
             </div>
-            {items.length === 0 && !generating && (
-              <div className="flex flex-wrap gap-2">
-                {PROMPT_IDEAS.map((idea) => (
-                  <button
-                    key={idea}
-                    onClick={() => setPrompt(idea)}
-                    className="px-2.5 py-1 bg-neutral-100 rounded-lg hover:bg-neutral-200 nice-shadow transition-colors text-xs text-neutral-600"
-                  >
-                    {idea}
-                  </button>
+            {error && (
+              <div className="text-xs text-rose-600 bg-rose-50 border border-rose-100 rounded-lg px-3 py-2">
+                {error}
+              </div>
+            )}
+          </div>
+
+          {/* Results / empty / loading */}
+          <div className="flex-1 overflow-y-auto px-5 pb-5">
+            {generating && (
+              <div className="relative w-full aspect-[4/3] rounded-2xl bg-gradient-to-br from-neutral-100 to-neutral-200 overflow-hidden mb-4">
+                <div className="absolute inset-0 animate-pulse" />
+                <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 text-neutral-500">
+                  <Sparkles size={22} className="animate-pulse" />
+                  <span className="text-sm font-medium">Creating your image…</span>
+                </div>
+              </div>
+            )}
+
+            {!generating && items.length === 0 ? (
+              <div className="flex flex-col items-center text-center gap-3 py-10">
+                <div className="w-12 h-12 rounded-2xl bg-neutral-100 flex items-center justify-center text-neutral-400">
+                  <ImageIcon size={22} />
+                </div>
+                <div>
+                  <p className="text-sm font-semibold text-neutral-700">Describe an image to get started</p>
+                  <p className="text-xs text-neutral-400 mt-0.5">or try one of these ideas</p>
+                </div>
+                <div className="flex flex-wrap gap-2 justify-center max-w-md">
+                  {PROMPT_IDEAS.map((idea) => (
+                    <button
+                      key={idea}
+                      onClick={() => setPrompt(idea)}
+                      className="px-3 py-1.5 bg-neutral-100 rounded-full hover:bg-neutral-200 transition-colors text-xs text-neutral-600"
+                    >
+                      {idea}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            ) : (
+              <div className="grid grid-cols-2 gap-4">
+                {items.map((item) => (
+                  <div key={item.ai_generation_uuid} className="group flex flex-col gap-1.5">
+                    <div className="relative w-full pb-[75%] rounded-2xl overflow-hidden nice-shadow bg-neutral-100">
+                      {item.failed ? (
+                        <div className="absolute inset-0 flex flex-col items-center justify-center gap-1 text-[11px] text-neutral-400 px-2 text-center">
+                          <ImageOff size={18} />
+                          Image failed to load
+                        </div>
+                      ) : (
+                        <img
+                          src={item.url}
+                          alt={item.prompt}
+                          className="absolute inset-0 w-full h-full object-cover"
+                          onError={() =>
+                            setItems((prev) =>
+                              prev.map((i) =>
+                                i.ai_generation_uuid === item.ai_generation_uuid ? { ...i, failed: true } : i
+                              )
+                            )
+                          }
+                        />
+                      )}
+                      {!item.failed && (
+                        <div className="absolute inset-0 bg-neutral-900/0 group-hover:bg-neutral-900/45 transition-colors flex items-center justify-center gap-2 opacity-0 group-hover:opacity-100">
+                          {renderUseButton(item.ai_generation_uuid, item.file_id, item.url)}
+                          <button
+                            onClick={() => setRefineFrom(item)}
+                            className="px-3 py-1.5 rounded-lg bg-neutral-900 text-white text-sm font-medium flex items-center gap-1.5 nice-shadow"
+                          >
+                            <Wand2 size={15} /> Refine
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                    <p className="text-[11px] text-neutral-500 truncate px-0.5">{item.prompt}</p>
+                  </div>
                 ))}
               </div>
             )}
-            {error && <p className="text-xs text-rose-500">{error}</p>}
-            <p className="text-[11px] text-neutral-400">
-              Powered by Google nano banana. Generating an image uses AI credits.
-            </p>
-          </div>
-
-          {/* Generated thread */}
-          <div className="flex-1 overflow-y-auto px-4 pb-4">
-            {generating && (
-              <div className="w-full aspect-video rounded-xl bg-neutral-100 animate-pulse mb-4" />
-            )}
-            <div className="grid grid-cols-2 gap-4">
-              {items.map((item) => (
-                <div key={item.ai_generation_uuid} className="group flex flex-col gap-1.5">
-                  <div className="relative w-full pb-[75%] rounded-xl overflow-hidden nice-shadow bg-neutral-100">
-                    {item.failed ? (
-                      <div className="absolute inset-0 flex items-center justify-center text-[11px] text-neutral-400 px-2 text-center">
-                        Image failed to load
-                      </div>
-                    ) : (
-                      <img
-                        src={item.url}
-                        alt={item.prompt}
-                        className="absolute inset-0 w-full h-full object-cover"
-                        onError={() =>
-                          setItems((prev) =>
-                            prev.map((i) =>
-                              i.ai_generation_uuid === item.ai_generation_uuid ? { ...i, failed: true } : i
-                            )
-                          )
-                        }
-                      />
-                    )}
-                    {!item.failed && (
-                      <div className="absolute inset-0 bg-neutral-900/0 group-hover:bg-neutral-900/40 transition-colors flex items-center justify-center gap-2 opacity-0 group-hover:opacity-100">
-                        <button
-                          onClick={() => {
-                            onSelect(item.url)
-                            onClose()
-                          }}
-                          className="px-3 py-1.5 rounded-lg bg-white text-neutral-900 text-sm flex items-center gap-1 nice-shadow"
-                        >
-                          <ArrowUpRight size={15} /> Use
-                        </button>
-                        <button
-                          onClick={() => setRefineFrom(item)}
-                          className="px-3 py-1.5 rounded-lg bg-neutral-900 text-white text-sm flex items-center gap-1 nice-shadow"
-                        >
-                          <Wand2 size={15} /> Refine
-                        </button>
-                      </div>
-                    )}
-                  </div>
-                  <p className="text-[11px] text-neutral-500 truncate">{item.prompt}</p>
-                </div>
-              ))}
-            </div>
           </div>
         </>
       ) : (
         // History tab
-        <div className="flex-1 overflow-y-auto p-4">
+        <div className="flex-1 overflow-y-auto p-5">
           {historyLoading ? (
-            <p className="text-center text-sm text-neutral-400 mt-6">Loading…</p>
+            <div className="flex items-center justify-center gap-2 text-sm text-neutral-400 mt-8">
+              <RefreshCw size={15} className="animate-spin" /> Loading…
+            </div>
           ) : history.length === 0 ? (
-            <p className="text-center text-sm text-neutral-400 mt-6">No generated images yet.</p>
+            <div className="flex flex-col items-center text-center gap-2 py-12 text-neutral-400">
+              <History size={22} />
+              <p className="text-sm">No generated images yet.</p>
+            </div>
           ) : (
             <div className="grid grid-cols-3 gap-4">
               {history.map((h) => {
                 const url = aiImageUrl(org.org_uuid, h.file_id)
                 return (
                   <div key={h.ai_generation_uuid} className="group flex flex-col gap-1.5">
-                    <div className="relative w-full pb-[75%] rounded-xl overflow-hidden nice-shadow">
+                    <div className="relative w-full pb-[75%] rounded-2xl overflow-hidden nice-shadow bg-neutral-100">
                       <img src={url} alt={h.prompt} className="absolute inset-0 w-full h-full object-cover" />
-                      <div className="absolute inset-0 bg-neutral-900/0 group-hover:bg-neutral-900/40 transition-colors flex items-center justify-center gap-2 opacity-0 group-hover:opacity-100">
-                        <button
-                          onClick={() => {
-                            onSelect(url)
-                            onClose()
-                          }}
-                          className="px-3 py-1.5 rounded-lg bg-white text-neutral-900 text-sm flex items-center gap-1 nice-shadow"
-                        >
-                          <ArrowUpRight size={15} /> Use
-                        </button>
+                      <div className="absolute inset-0 bg-neutral-900/0 group-hover:bg-neutral-900/45 transition-colors flex items-center justify-center gap-2 opacity-0 group-hover:opacity-100">
+                        {renderUseButton(h.ai_generation_uuid, h.file_id, url)}
                         <button
                           onClick={() => handleDeleteHistory(h.ai_generation_uuid)}
                           className="p-1.5 rounded-lg bg-neutral-900 text-white nice-shadow"
@@ -281,7 +324,7 @@ const AIImagePicker: React.FC<AIImagePickerProps> = ({ onSelect, onClose, isOpen
                         </button>
                       </div>
                     </div>
-                    <p className="text-[11px] text-neutral-500 truncate">{h.prompt}</p>
+                    <p className="text-[11px] text-neutral-500 truncate px-0.5">{h.prompt}</p>
                   </div>
                 )
               })}
@@ -300,7 +343,7 @@ const AIImagePicker: React.FC<AIImagePickerProps> = ({ onSelect, onClose, isOpen
       isDialogOpen={isOpen}
       minWidth="lg"
       minHeight="lg"
-      customHeight="h-[80vh]"
+      customHeight="h-[82vh]"
       noPadding
     />
   )

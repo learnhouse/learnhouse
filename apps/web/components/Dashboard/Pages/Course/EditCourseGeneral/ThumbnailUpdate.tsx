@@ -135,6 +135,13 @@ function ThumbnailUpdate({ thumbnailType }: ThumbnailUpdateProps) {
     }
   }
 
+  const handleAIImageFile = async (file: File) => {
+    if (!validateFile(file, 'image')) return
+    const blobUrl = URL.createObjectURL(file)
+    setLocalThumbnail({ file, url: blobUrl, type: 'image' })
+    await updateThumbnail(file, 'image')
+  }
+
   const updateThumbnail = async (file: File, type: 'image' | 'video') => {
     setIsLoading(true);
     try {
@@ -281,6 +288,7 @@ function ThumbnailUpdate({ thumbnailType }: ThumbnailUpdateProps) {
           </button>
           <AIImageButton
             onSelect={handleUnsplashSelect}
+            onSelectFile={handleAIImageFile}
             className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
           />
         </div>
