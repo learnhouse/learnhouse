@@ -28,9 +28,10 @@ def _bind_session(monkeypatch, session):
 
 
 class _FakeRedis:
-    def __init__(self):
+    def __init__(self, pending=None):
         self.pushed = []
         self.store = {}
+        self._pending = list(pending or [])
 
     def rpush(self, key, val):
         self.pushed.append(val)
@@ -56,7 +57,7 @@ class _FakeRedis:
         return True
 
     def lrange(self, key, a, b):
-        return []
+        return list(self._pending)
 
 
 async def _add_video_block(db, org, course, activity, block_uuid, *, file_id="f1", fmt="mp4", hls=None):
@@ -199,6 +200,83 @@ async def test_transcode_block_no_source_returns_false(monkeypatch):
     assert await hls_jobs.transcode_block("a", "b") is False
 
 
+def _mock_common_transcode(monkeypatch, statuses):
+    async def fake_status(uuid, status, **extra):
+        statuses.append((uuid, status, extra))
+    monkeypatch.setattr(hls_jobs, "_set_block_status", fake_status)
+    monkeypatch.setattr(hls_jobs, "_resolve_block_source", hls_jobs_aret({
+        "org_uuid": "o", "course_uuid": "c", "activity_uuid": "a", "filename": "v.mp4",
+    }))
+    monkeypatch.setattr(hls_jobs, "_fetch_source", lambda *a, **k: True)
+
+
+async def test_transcode_block_with_redis_and_s3(monkeypatch):
+    """Covers the lease/heartbeat + S3 upload branches + success retry-clear."""
+    statuses = []
+    _mock_common_transcode(monkeypatch, statuses)
+    r = _FakeRedis()
+    monkeypatch.setattr(hls_jobs, "get_redis_client", lambda: r)
+
+    async def fake_transcode(src, out):
+        return {"master": "master.m3u8", "renditions": ["720p"], "thumbnails": None}
+    monkeypatch.setattr(hls_jobs, "transcode_source_to_hls", fake_transcode)
+    monkeypatch.setattr(hls_jobs, "is_s3_enabled", lambda: True)
+    monkeypatch.setattr(hls_jobs, "upload_directory_to_s3", lambda out, prefix: True)
+
+    ok = await hls_jobs.transcode_block("act_1", "block_1")
+    assert ok is True
+    assert statuses[-1][1] == "ready"
+    # lease was set then cleaned up
+    assert hls_jobs._lease_key("block:block_1") not in r.store
+
+
+async def test_transcode_block_transcode_failed(monkeypatch):
+    statuses = []
+    _mock_common_transcode(monkeypatch, statuses)
+    monkeypatch.setattr(hls_jobs, "get_redis_client", lambda: None)
+    monkeypatch.setattr(hls_jobs, "transcode_source_to_hls", hls_jobs_aret(None))
+    ok = await hls_jobs.transcode_block("a", "b")
+    assert ok is False
+    assert statuses[-1][2]["error"] == "transcode_failed"
+
+
+async def test_transcode_block_upload_failed(monkeypatch):
+    statuses = []
+    _mock_common_transcode(monkeypatch, statuses)
+    monkeypatch.setattr(hls_jobs, "get_redis_client", lambda: None)
+    monkeypatch.setattr(hls_jobs, "transcode_source_to_hls", hls_jobs_aret({"master": "m", "renditions": ["720p"]}))
+    monkeypatch.setattr(hls_jobs, "is_s3_enabled", lambda: True)
+    monkeypatch.setattr(hls_jobs, "upload_directory_to_s3", lambda out, prefix: False)
+    ok = await hls_jobs.transcode_block("a", "b")
+    assert ok is False
+    assert statuses[-1][2]["error"] == "upload_failed"
+
+
+async def test_transcode_block_exception(monkeypatch):
+    statuses = []
+    _mock_common_transcode(monkeypatch, statuses)
+    monkeypatch.setattr(hls_jobs, "get_redis_client", lambda: None)
+    async def boom(src, out):
+        raise RuntimeError("ffmpeg blew up")
+    monkeypatch.setattr(hls_jobs, "transcode_source_to_hls", boom)
+    ok = await hls_jobs.transcode_block("a", "b")
+    assert ok is False
+    assert statuses[-1][2]["error"] == "exception"
+
+
+async def test_mark_failed_routes(monkeypatch):
+    calls = []
+    async def fake_block(uuid, status, **extra):
+        calls.append(("block", uuid, extra.get("error")))
+    async def fake_act(uuid, status, **extra):
+        calls.append(("activity", uuid, extra.get("error")))
+    monkeypatch.setattr(hls_jobs, "_set_block_status", fake_block)
+    monkeypatch.setattr(hls_jobs, "_set_status", fake_act)
+    await hls_jobs._mark_failed({"kind": "block", "block_uuid": "b1"}, "timeout")
+    await hls_jobs._mark_failed({"kind": "activity", "activity_uuid": "a1"}, "timeout")
+    assert calls == [("block", "b1", "timeout"), ("activity", "a1", "timeout")]
+
+
 # --- reconciler block pass ---
 
 async def test_reconcile_requeues_unready_block(monkeypatch, db, org, course, chapter, activity):
@@ -214,7 +292,83 @@ async def test_reconcile_requeues_unready_block(monkeypatch, db, org, course, ch
     assert result["requeued"] >= 1
 
 
+async def test_reconcile_skips_leased_block(monkeypatch, db, org, course, chapter, activity):
+    _bind_session(monkeypatch, db)
+    await _add_video_block(db, org, course, activity, "block_leased")
+    r = _FakeRedis()
+    r.store[hls_jobs._lease_key("block:block_leased")] = "1"  # actively transcoding
+    monkeypatch.setattr(hls_jobs, "get_redis_client", lambda: r)
+    result = await hls_jobs.reconcile_unfinished()
+    assert hls_jobs._block_item(activity.activity_uuid, "block_leased") not in r.pushed
+    assert result["skipped"] >= 1
+
+
+async def test_reconcile_gives_up_block_at_max_retries(monkeypatch, db, org, course, chapter, activity):
+    _bind_session(monkeypatch, db)
+    await _add_video_block(db, org, course, activity, "block_broken")
+    r = _FakeRedis()
+    r.store[hls_jobs._retries_key("block:block_broken")] = hls_jobs.hls_max_retries()
+    monkeypatch.setattr(hls_jobs, "get_redis_client", lambda: r)
+    result = await hls_jobs.reconcile_unfinished()
+    assert hls_jobs._block_item(activity.activity_uuid, "block_broken") not in r.pushed
+    assert result["gaveup"] >= 1
+
+
 def hls_jobs_aret(value):
     async def _f(*a, **k):
         return value
     return _f
+
+
+# --- extra edge coverage ---
+
+def test_enqueue_block_no_redis_is_noop(monkeypatch):
+    monkeypatch.setattr(hls_jobs, "hls_enabled", lambda: True)
+    monkeypatch.setattr(hls_jobs, "get_redis_client", lambda: None)
+    hls_jobs.enqueue_block("a", "b")  # must not raise
+
+
+async def test_set_block_status_missing_block_is_noop(monkeypatch, db, org, course, chapter, activity):
+    _bind_session(monkeypatch, db)
+    await hls_jobs._set_block_status("does_not_exist", "processing")  # no raise
+
+
+async def test_resolve_block_source_non_video_and_no_file(monkeypatch, db, org, course, chapter, activity):
+    _bind_session(monkeypatch, db)
+    # non-video block
+    img = Block(
+        block_type=BlockTypeEnum.BLOCK_IMAGE, content={"file_id": "x", "file_format": "png"},
+        org_id=org.id, course_id=course.id, activity_id=activity.id, block_uuid="block_img",
+        creation_date=str(datetime.now()), update_date=str(datetime.now()),
+    )
+    db.add(img)
+    # video block missing file_id
+    nofile = Block(
+        block_type=BlockTypeEnum.BLOCK_VIDEO, content={"activity_uuid": activity.activity_uuid},
+        org_id=org.id, course_id=course.id, activity_id=activity.id, block_uuid="block_nofile",
+        creation_date=str(datetime.now()), update_date=str(datetime.now()),
+    )
+    db.add(nofile)
+    await db.commit()
+    assert await hls_jobs._resolve_block_source("block_img") is None
+    assert await hls_jobs._resolve_block_source("block_nofile") is None
+
+
+async def test_reconcile_skips_pending_and_nofile_blocks(monkeypatch, db, org, course, chapter, activity):
+    _bind_session(monkeypatch, db)
+    await _add_video_block(db, org, course, activity, "block_pending")
+    # video block with no file_id -> continue (skipped silently)
+    nofile = Block(
+        block_type=BlockTypeEnum.BLOCK_VIDEO, content={"activity_uuid": activity.activity_uuid},
+        org_id=org.id, course_id=course.id, activity_id=activity.id, block_uuid="block_nofile2",
+        creation_date=str(datetime.now()), update_date=str(datetime.now()),
+    )
+    db.add(nofile)
+    await db.commit()
+    pending_item = hls_jobs._block_item(activity.activity_uuid, "block_pending")
+    r = _FakeRedis(pending=[pending_item])
+    monkeypatch.setattr(hls_jobs, "get_redis_client", lambda: r)
+    result = await hls_jobs.reconcile_unfinished()
+    # already-pending block is not re-pushed
+    assert pending_item not in r.pushed
+    assert result["skipped"] >= 1
