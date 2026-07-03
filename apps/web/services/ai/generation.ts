@@ -63,6 +63,8 @@ export async function generateAIImage(
     org_id: number
     prompt: string
     session_uuid?: string
+    // Preferred way to refine: the file_id of a prior AI image in this org.
+    source_file_id?: string
     source_image_base64?: string
     course_id?: number
     activity_id?: number

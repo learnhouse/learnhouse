@@ -107,6 +107,33 @@ async def test_refine_with_source_image():
     assert gen.await_args.kwargs["input_images"] == [b"orig"]
 
 
+async def test_refine_by_source_file_id_reads_storage():
+    body = GenerateImageRequest(org_id=5, prompt="darker", source_file_id="prev.png", session_uuid="aiimg_prev")
+    record = SimpleNamespace(ai_generation_uuid="aigen_r")
+    gen = AsyncMock(return_value=b"IMG")
+    with patch.object(img, "is_org_member", new=AsyncMock(return_value=True)), \
+         patch.object(img, "enforce_ai_rate_limit"), \
+         patch.object(img, "reserve_ai_credit", new=AsyncMock()), \
+         patch.object(img, "read_content", new=AsyncMock(return_value=b"orig-bytes")) as rc, \
+         patch.object(img, "generate_image", new=gen), \
+         patch.object(img, "upload_content", new=AsyncMock()), \
+         patch.object(img, "record_generation", new=AsyncMock(return_value=record)):
+        await img.api_generate_image(body, _user(), _db_returning(_org()))
+    rc.assert_awaited_once()
+    assert gen.await_args.kwargs["input_images"] == [b"orig-bytes"]
+
+
+async def test_refine_source_file_id_missing_404():
+    body = GenerateImageRequest(org_id=5, prompt="x", source_file_id="gone.png")
+    with patch.object(img, "is_org_member", new=AsyncMock(return_value=True)), \
+         patch.object(img, "enforce_ai_rate_limit"), \
+         patch.object(img, "reserve_ai_credit", new=AsyncMock()), \
+         patch.object(img, "read_content", new=AsyncMock(side_effect=HTTPException(status_code=404, detail="nf"))):
+        with pytest.raises(HTTPException) as exc:
+            await img.api_generate_image(body, _user(), _db_returning(_org()))
+    assert exc.value.status_code == 404
+
+
 async def test_invalid_source_base64_ignored():
     body = GenerateImageRequest(org_id=5, prompt="x", source_image_base64="!!!notbase64!!!")
     record = SimpleNamespace(ai_generation_uuid="aigen_3")

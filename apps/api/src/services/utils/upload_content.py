@@ -161,3 +161,46 @@ async def upload_content(
                 os.remove(local_path)
             except OSError as cleanup_err:
                 logger.error("Failed to clean up temp file %s: %s", local_path, cleanup_err)
+
+
+async def read_content(
+    directory: str,
+    type_of_dir: Literal["orgs", "users"],
+    uuid: str,  # org_uuid or user_uuid
+    file_and_format: str,
+) -> bytes:
+    """Read raw bytes for a stored content file (filesystem or S3/R2).
+
+    The symmetric counterpart of :func:`upload_content`. Used e.g. to feed a
+    previously-generated image back into the model for iterative editing without
+    a client round-trip (no CORS/credentials concerns). Path parts are
+    traversal-guarded; raises HTTP 404 when the file is missing.
+    """
+    learnhouse_config = get_learnhouse_config()
+    content_delivery = learnhouse_config.hosting_config.content_delivery.type
+
+    if content_delivery == "s3api":
+        s3 = boto3.client(
+            "s3",
+            endpoint_url=learnhouse_config.hosting_config.content_delivery.s3api.endpoint_url,
+            config=botocore.config.Config(connect_timeout=10, read_timeout=60, retries={"max_attempts": 2}),
+        )
+        bucket_name = learnhouse_config.hosting_config.content_delivery.s3api.bucket_name or "learnhouse-media"
+        s3_key = f"content/{type_of_dir}/{uuid}/{directory}/{file_and_format}"
+        try:
+            resp = await asyncio.to_thread(s3.get_object, Bucket=bucket_name, Key=s3_key)
+            return await asyncio.to_thread(resp["Body"].read)
+        except (ClientError, BotoCoreError) as e:
+            logger.error("S3 read failed: %s", e)
+            raise HTTPException(status_code=404, detail="File not found")
+
+    # filesystem
+    safe_path = _safe_content_path(type_of_dir, uuid, directory, file_and_format)
+    if not os.path.exists(safe_path):
+        raise HTTPException(status_code=404, detail="File not found")
+    return await asyncio.to_thread(_read_file_bytes, safe_path)
+
+
+def _read_file_bytes(path: str) -> bytes:
+    with open(path, "rb") as f:
+        return f.read()

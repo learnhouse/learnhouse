@@ -11,9 +11,11 @@ class GenerateImageRequest(BaseModel):
     # Ephemeral refine-session id (Redis). Omitted on the first generation; the
     # response returns a session_uuid to pass back on subsequent refine turns.
     session_uuid: Optional[str] = None
-    # For iterative refinement / editing: the previously generated image the user
-    # is refining, sent back as a base64 PNG (data is client-held, avoiding any
-    # server-side fetch / SSRF surface).
+    # For iterative refinement / editing: the file_id of a previously-generated
+    # AI image in THIS org. The backend reads its bytes straight from storage
+    # (no client fetch → no CORS/credentials issues). Preferred over base64.
+    source_file_id: Optional[str] = None
+    # Fallback: the source image sent back as a base64 data URL (client-held).
     source_image_base64: Optional[str] = None
     # Optional context the image is generated for (recorded in durable history).
     course_id: Optional[int] = None

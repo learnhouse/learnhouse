@@ -38,7 +38,7 @@ from src.services.ai.schemas.image import (
     GenerateImageResponse,
 )
 from src.services.security.rate_limiting import enforce_ai_rate_limit
-from src.services.utils.upload_content import upload_content
+from src.services.utils.upload_content import read_content, upload_content
 
 logger = logging.getLogger(__name__)
 
@@ -97,9 +97,26 @@ async def api_generate_image(
     enforce_ai_rate_limit(current_user.id, org.id)
     await reserve_ai_credit(org.id, db_session, amount=IMAGE_CREDIT_COST)
 
-    # Decode an optional source image for iterative refinement / editing.
+    # Resolve an optional source image for iterative refinement / editing.
+    # Prefer reading it from our own storage by file_id (reliable, no CORS);
+    # fall back to a client-supplied base64 data URL.
     input_images: list[bytes] = []
-    if body.source_image_base64:
+    if body.source_file_id:
+        try:
+            input_images.append(
+                await read_content(
+                    directory=AI_IMAGE_DIR,
+                    type_of_dir="orgs",
+                    uuid=org.org_uuid,
+                    file_and_format=body.source_file_id,
+                )
+            )
+        except HTTPException:
+            raise HTTPException(
+                status_code=404,
+                detail="Source image to refine was not found.",
+            )
+    elif body.source_image_base64:
         raw = body.source_image_base64
         if "," in raw and raw.strip().startswith("data:"):
             raw = raw.split(",", 1)[1]  # strip a data: URL prefix if present

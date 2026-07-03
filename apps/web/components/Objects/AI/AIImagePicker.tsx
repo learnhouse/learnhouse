@@ -35,23 +35,6 @@ const PROMPT_IDEAS = [
   'A watercolor landscape for a history lesson',
 ]
 
-async function urlToBase64(url: string): Promise<string | undefined> {
-  try {
-    const res = await fetch(url, { credentials: 'include' })
-    if (!res.ok) return undefined
-    const blob = await res.blob()
-    if (!blob.type.startsWith('image/')) return undefined
-    return await new Promise((resolve) => {
-      const reader = new FileReader()
-      reader.onloadend = () => resolve(reader.result as string)
-      reader.onerror = () => resolve(undefined)
-      reader.readAsDataURL(blob)
-    })
-  } catch {
-    return undefined
-  }
-}
-
 const AIImagePicker: React.FC<AIImagePickerProps> = ({ onSelect, onClose, isOpen = true }) => {
   const org = useOrg() as any
   const session = useLHSession() as any
@@ -85,20 +68,14 @@ const AIImagePicker: React.FC<AIImagePickerProps> = ({ onSelect, onClose, isOpen
     setGenerating(true)
     setError(null)
     try {
-      let source_image_base64: string | undefined
-      if (refineFrom) {
-        source_image_base64 = await urlToBase64(refineFrom.url)
-        if (!source_image_base64) {
-          setError('Could not load the source image to refine. Please try again.')
-          return
-        }
-      }
       const res = await generateAIImage(
         {
           org_id: org.id,
           prompt: prompt.trim(),
           session_uuid: sessionUuid,
-          source_image_base64,
+          // Refine by file_id — the backend reads the source image from storage
+          // (no cross-origin fetch), so refinement is reliable.
+          source_file_id: refineFrom?.file_id,
         },
         access_token
       )
