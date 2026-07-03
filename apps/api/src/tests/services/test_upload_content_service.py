@@ -7,7 +7,12 @@ from unittest.mock import Mock, patch
 import pytest
 from fastapi import HTTPException, UploadFile
 
-from src.services.utils.upload_content import ensure_directory_exists, upload_content, upload_file
+from src.services.utils.upload_content import (
+    ensure_directory_exists,
+    read_content,
+    upload_content,
+    upload_file,
+)
 
 
 class TestUploadContentService:
@@ -157,6 +162,86 @@ class TestUploadContentService:
             os.chdir(old_cwd)
 
         assert exc.value.status_code == 500
+
+    @pytest.mark.asyncio
+    async def test_read_content_rejects_bad_filename(self):
+        for bad in ("../secret.png", "a/b.png", "x\\y.png", "\x00.png", ""):
+            with pytest.raises(HTTPException) as exc:
+                await read_content("ai_images", "orgs", "org_uuid", bad)
+            assert exc.value.status_code == 400
+
+    @pytest.mark.asyncio
+    async def test_read_content_filesystem_success_and_missing(self, tmp_path):
+        fake_config = SimpleNamespace(
+            hosting_config=SimpleNamespace(
+                content_delivery=SimpleNamespace(type="filesystem")
+            )
+        )
+        file_path = tmp_path / "content" / "orgs" / "org_uuid" / "ai_images" / "img.png"
+        file_path.parent.mkdir(parents=True)
+        file_path.write_bytes(b"PNGDATA")
+
+        import os
+        old_cwd = os.getcwd()
+        os.chdir(tmp_path)
+        try:
+            with patch(
+                "src.services.utils.upload_content.get_learnhouse_config",
+                return_value=fake_config,
+            ):
+                data = await read_content("ai_images", "orgs", "org_uuid", "img.png")
+                assert data == b"PNGDATA"
+
+                # missing file -> 404
+                with pytest.raises(HTTPException) as exc:
+                    await read_content("ai_images", "orgs", "org_uuid", "gone.png")
+                assert exc.value.status_code == 404
+        finally:
+            os.chdir(old_cwd)
+
+    @pytest.mark.asyncio
+    async def test_read_content_s3_success_and_failure(self):
+        fake_config = SimpleNamespace(
+            hosting_config=SimpleNamespace(
+                content_delivery=SimpleNamespace(
+                    type="s3api",
+                    s3api=SimpleNamespace(endpoint_url="https://s3.test", bucket_name="bucket"),
+                )
+            )
+        )
+        body = Mock()
+        body.read.return_value = b"S3BYTES"
+        s3_client = Mock()
+        s3_client.get_object.return_value = {"Body": body}
+
+        with patch(
+            "src.services.utils.upload_content.get_learnhouse_config",
+            return_value=fake_config,
+        ), patch(
+            "src.services.utils.upload_content.boto3.client",
+            return_value=s3_client,
+        ):
+            data = await read_content("ai_images", "orgs", "org_uuid", "img.png")
+        assert data == b"S3BYTES"
+        s3_client.get_object.assert_called_once()
+
+        # missing object -> 404
+        from botocore.exceptions import ClientError
+
+        s3_client = Mock()
+        s3_client.get_object.side_effect = ClientError(
+            {"Error": {"Code": "NoSuchKey", "Message": "nope"}}, "get_object"
+        )
+        with patch(
+            "src.services.utils.upload_content.get_learnhouse_config",
+            return_value=fake_config,
+        ), patch(
+            "src.services.utils.upload_content.boto3.client",
+            return_value=s3_client,
+        ):
+            with pytest.raises(HTTPException) as exc:
+                await read_content("ai_images", "orgs", "org_uuid", "img.png")
+        assert exc.value.status_code == 404
 
     @pytest.mark.asyncio
     async def test_upload_content_s3_cleanup_oserror_is_swallowed(self, tmp_path):
