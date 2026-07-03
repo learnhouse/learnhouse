@@ -7,7 +7,6 @@ routing, transcode_block, and the reconciler's block pass.
 
 from datetime import datetime
 
-import pytest
 
 from src.db.courses.blocks import Block, BlockTypeEnum
 from src.services.utils import hls_jobs
@@ -141,9 +140,11 @@ async def test_resolve_block_source(monkeypatch, db, org, course, chapter, activ
 async def test_dispatch_routes_block_and_activity(monkeypatch):
     calls = []
     async def fake_block(a, b):
-        calls.append(("block", a, b)); return True
+        calls.append(("block", a, b))
+        return True
     async def fake_activity(a):
-        calls.append(("activity", a)); return True
+        calls.append(("activity", a))
+        return True
     monkeypatch.setattr(hls_jobs, "transcode_block", fake_block)
     monkeypatch.setattr(hls_jobs, "transcode_activity", fake_activity)
     await hls_jobs._dispatch({"kind": "block", "activity_uuid": "a1", "block_uuid": "b1"})
