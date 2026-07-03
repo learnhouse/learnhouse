@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useState } from 'react'
-import { Sparkles, Wand2, History, RefreshCw, Check, Trash2, CornerDownLeft } from 'lucide-react'
+import { ArrowElbowDownLeft, Check, CircleNotch, ClockCounterClockwise, MagicWand, Sparkle, Trash } from '@phosphor-icons/react'
 import Modal from '@components/Objects/StyledElements/Modal/Modal'
 import { useOrg } from '@components/Contexts/OrgContext'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
@@ -171,7 +171,7 @@ const AIQuizGeneratorModal: React.FC<AIQuizGeneratorModalProps> = ({
             tab === 'generate' ? 'bg-neutral-900 text-white' : 'text-neutral-500 hover:bg-neutral-100'
           }`}
         >
-          <Wand2 size={15} /> Generate
+          <MagicWand weight="duotone" size={15} /> Generate
         </button>
         <button
           onClick={() => setTab('history')}
@@ -179,7 +179,7 @@ const AIQuizGeneratorModal: React.FC<AIQuizGeneratorModalProps> = ({
             tab === 'history' ? 'bg-neutral-900 text-white' : 'text-neutral-500 hover:bg-neutral-100'
           }`}
         >
-          <History size={15} /> History
+          <ClockCounterClockwise weight="duotone" size={15} /> History
         </button>
       </div>
 
@@ -229,7 +229,7 @@ const AIQuizGeneratorModal: React.FC<AIQuizGeneratorModalProps> = ({
                 disabled={generating || !prompt.trim()}
                 className="px-3 py-2 rounded-lg bg-neutral-900 text-white text-sm flex items-center gap-1.5 nice-shadow disabled:opacity-40 transition-opacity"
               >
-                {generating ? <RefreshCw size={15} className="animate-spin" /> : <Sparkles size={15} />}
+                {generating ? <CircleNotch weight="duotone" size={15} className="animate-spin" /> : <Sparkle weight="duotone" size={15} />}
                 {quiz ? 'Regenerate' : generating ? 'Generating' : 'Generate'}
               </button>
             </div>
@@ -272,7 +272,7 @@ const AIQuizGeneratorModal: React.FC<AIQuizGeneratorModalProps> = ({
                             }`}
                             title={a.correct ? 'Marked correct' : 'Mark correct'}
                           >
-                            <Check size={14} />
+                            <Check weight="duotone" size={14} />
                           </button>
                           <input
                             value={a.answer}
@@ -295,7 +295,7 @@ const AIQuizGeneratorModal: React.FC<AIQuizGeneratorModalProps> = ({
                 onClick={handleInsert}
                 className="px-4 py-2 rounded-lg bg-neutral-900 text-white text-sm flex items-center gap-1.5 nice-shadow"
               >
-                <CornerDownLeft size={15} /> Insert into editor
+                <ArrowElbowDownLeft weight="duotone" size={15} /> Insert into editor
               </button>
             </div>
           )}
@@ -334,7 +334,7 @@ const AIQuizGeneratorModal: React.FC<AIQuizGeneratorModalProps> = ({
                     className="p-1.5 rounded-lg hover:bg-neutral-100 text-neutral-400"
                     title="Delete"
                   >
-                    <Trash2 size={15} />
+                    <Trash weight="duotone" size={15} />
                   </button>
                 </div>
               ))}

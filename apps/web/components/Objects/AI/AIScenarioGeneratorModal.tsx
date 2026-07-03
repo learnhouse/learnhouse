@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useState } from 'react'
-import { Sparkles, Wand2, History, RefreshCw, Trash2, CornerDownLeft, GitBranch, ArrowRight } from 'lucide-react'
+import { ArrowElbowDownLeft, ArrowRight, CircleNotch, ClockCounterClockwise, GitBranch, MagicWand, Sparkle, Trash } from '@phosphor-icons/react'
 import Modal from '@components/Objects/StyledElements/Modal/Modal'
 import { useOrg } from '@components/Contexts/OrgContext'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
@@ -151,7 +151,7 @@ const AIScenarioGeneratorModal: React.FC<AIScenarioGeneratorModalProps> = ({
             tab === 'generate' ? 'bg-neutral-900 text-white' : 'text-neutral-500 hover:bg-neutral-100'
           }`}
         >
-          <Wand2 size={15} /> Generate
+          <MagicWand weight="duotone" size={15} /> Generate
         </button>
         <button
           onClick={() => setTab('history')}
@@ -159,7 +159,7 @@ const AIScenarioGeneratorModal: React.FC<AIScenarioGeneratorModalProps> = ({
             tab === 'history' ? 'bg-neutral-900 text-white' : 'text-neutral-500 hover:bg-neutral-100'
           }`}
         >
-          <History size={15} /> History
+          <ClockCounterClockwise weight="duotone" size={15} /> History
         </button>
       </div>
 
@@ -195,7 +195,7 @@ const AIScenarioGeneratorModal: React.FC<AIScenarioGeneratorModalProps> = ({
                 disabled={generating || !prompt.trim()}
                 className="px-3 py-2 rounded-lg bg-neutral-900 text-white text-sm flex items-center gap-1.5 nice-shadow disabled:opacity-40 transition-opacity"
               >
-                {generating ? <RefreshCw size={15} className="animate-spin" /> : <Sparkles size={15} />}
+                {generating ? <CircleNotch weight="duotone" size={15} className="animate-spin" /> : <Sparkle weight="duotone" size={15} />}
                 {block ? 'Regenerate' : generating ? 'Generating' : 'Generate'}
               </button>
             </div>
@@ -214,7 +214,7 @@ const AIScenarioGeneratorModal: React.FC<AIScenarioGeneratorModalProps> = ({
             {block && (
               <div className="space-y-4">
                 <p className="text-sm font-semibold text-neutral-700 flex items-center gap-1.5">
-                  <GitBranch size={15} className="text-neutral-400" /> {block.title}
+                  <GitBranch weight="duotone" size={15} className="text-neutral-400" /> {block.title}
                 </p>
                 {block.scenarios.map((node, ni) => (
                   <div key={node.id} className="bg-white rounded-lg p-4 nice-shadow">
@@ -239,7 +239,7 @@ const AIScenarioGeneratorModal: React.FC<AIScenarioGeneratorModalProps> = ({
                             className="flex-1 text-neutral-700 bg-transparent border-0 text-sm outline-none"
                           />
                           <span className="text-[11px] text-neutral-400 flex items-center gap-1 whitespace-nowrap">
-                            <ArrowRight size={12} /> {nodeLabel(node.id, opt.nextScenarioId)}
+                            <ArrowRight weight="duotone" size={12} /> {nodeLabel(node.id, opt.nextScenarioId)}
                           </span>
                         </div>
                       ))}
@@ -256,7 +256,7 @@ const AIScenarioGeneratorModal: React.FC<AIScenarioGeneratorModalProps> = ({
                 onClick={handleInsert}
                 className="px-4 py-2 rounded-lg bg-neutral-900 text-white text-sm flex items-center gap-1.5 nice-shadow"
               >
-                <CornerDownLeft size={15} /> Insert into editor
+                <ArrowElbowDownLeft weight="duotone" size={15} /> Insert into editor
               </button>
             </div>
           )}
@@ -290,7 +290,7 @@ const AIScenarioGeneratorModal: React.FC<AIScenarioGeneratorModalProps> = ({
                     className="p-1.5 rounded-lg hover:bg-neutral-100 text-neutral-400"
                     title="Delete"
                   >
-                    <Trash2 size={15} />
+                    <Trash weight="duotone" size={15} />
                   </button>
                 </div>
               ))}

@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useState } from 'react'
-import { Sparkles, Wand2, History, ArrowUpRight, RefreshCw, X, Trash2, ImageIcon, ImageOff } from 'lucide-react'
+import { ArrowUpRight, CircleNotch, ClockCounterClockwise, Image, ImageBroken, MagicWand, Sparkle, Trash, X } from '@phosphor-icons/react'
 import Modal from '@components/Objects/StyledElements/Modal/Modal'
 import { useOrg } from '@components/Contexts/OrgContext'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
@@ -165,7 +165,7 @@ const AIImagePicker: React.FC<AIImagePickerProps> = ({ onSelect, onSelectFile, o
       disabled={usingKey === key}
       className="px-3 py-1.5 rounded-lg bg-white text-neutral-900 text-sm font-medium flex items-center gap-1.5 nice-shadow disabled:opacity-60"
     >
-      {usingKey === key ? <RefreshCw size={15} className="animate-spin" /> : <ArrowUpRight size={15} />}
+      {usingKey === key ? <CircleNotch weight="duotone" size={15} className="animate-spin" /> : <ArrowUpRight weight="duotone" size={15} />}
       Use
     </button>
   )
@@ -174,8 +174,8 @@ const AIImagePicker: React.FC<AIImagePickerProps> = ({ onSelect, onSelectFile, o
     <div className="flex flex-col h-full bg-white">
       {/* Tabs */}
       <div className="flex items-center gap-1.5 px-5 pt-4 pb-3 border-b border-neutral-100">
-        {tabBtn('generate', <Wand2 size={15} />, 'Generate')}
-        {tabBtn('history', <History size={15} />, 'History')}
+        {tabBtn('generate', <MagicWand weight="duotone" size={15} />, 'Generate')}
+        {tabBtn('history', <ClockCounterClockwise weight="duotone" size={15} />, 'History')}
       </div>
 
       {tab === 'generate' ? (
@@ -187,7 +187,7 @@ const AIImagePicker: React.FC<AIImagePickerProps> = ({ onSelect, onSelectFile, o
                 <img src={refineFrom.url} alt="" className="w-6 h-6 rounded-full object-cover" />
                 <span className="font-medium">Refining from this image</span>
                 <button onClick={() => setRefineFrom(null)} className="text-neutral-400 hover:text-neutral-700">
-                  <X size={13} />
+                  <X weight="duotone" size={13} />
                 </button>
               </div>
             )}
@@ -213,7 +213,7 @@ const AIImagePicker: React.FC<AIImagePickerProps> = ({ onSelect, onSelectFile, o
                   disabled={generating || !prompt.trim()}
                   className="ml-auto px-4 py-2 rounded-xl bg-neutral-900 text-white text-sm font-medium flex items-center gap-2 nice-shadow disabled:opacity-40 transition-opacity hover:bg-neutral-800"
                 >
-                  {generating ? <RefreshCw size={15} className="animate-spin" /> : <Sparkles size={15} />}
+                  {generating ? <CircleNotch weight="duotone" size={15} className="animate-spin" /> : <Sparkle weight="duotone" size={15} />}
                   {generating ? 'Generating…' : refineFrom ? 'Refine' : 'Generate'}
                 </button>
               </div>
@@ -231,7 +231,7 @@ const AIImagePicker: React.FC<AIImagePickerProps> = ({ onSelect, onSelectFile, o
               <div className="relative w-full aspect-[4/3] rounded-2xl bg-gradient-to-br from-neutral-100 to-neutral-200 overflow-hidden mb-4">
                 <div className="absolute inset-0 animate-pulse" />
                 <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 text-neutral-500">
-                  <Sparkles size={22} className="animate-pulse" />
+                  <Sparkle weight="duotone" size={22} className="animate-pulse" />
                   <span className="text-sm font-medium">Creating your image…</span>
                 </div>
               </div>
@@ -240,7 +240,7 @@ const AIImagePicker: React.FC<AIImagePickerProps> = ({ onSelect, onSelectFile, o
             {!generating && items.length === 0 ? (
               <div className="flex flex-col items-center text-center gap-3 py-10">
                 <div className="w-12 h-12 rounded-2xl bg-neutral-100 flex items-center justify-center text-neutral-400">
-                  <ImageIcon size={22} />
+                  <Image weight="duotone" size={22} />
                 </div>
                 <div>
                   <p className="text-sm font-semibold text-neutral-700">Describe an image to get started</p>
@@ -265,7 +265,7 @@ const AIImagePicker: React.FC<AIImagePickerProps> = ({ onSelect, onSelectFile, o
                     <div className="relative w-full pb-[75%] rounded-2xl overflow-hidden nice-shadow bg-neutral-100">
                       {item.failed ? (
                         <div className="absolute inset-0 flex flex-col items-center justify-center gap-1 text-[11px] text-neutral-400 px-2 text-center">
-                          <ImageOff size={18} />
+                          <ImageBroken weight="duotone" size={18} />
                           Image failed to load
                         </div>
                       ) : (
@@ -289,7 +289,7 @@ const AIImagePicker: React.FC<AIImagePickerProps> = ({ onSelect, onSelectFile, o
                             onClick={() => stageRefine(item)}
                             className="px-3 py-1.5 rounded-lg bg-neutral-900 text-white text-sm font-medium flex items-center gap-1.5 nice-shadow"
                           >
-                            <Wand2 size={15} /> Refine
+                            <MagicWand weight="duotone" size={15} /> Refine
                           </button>
                         </div>
                       )}
@@ -306,11 +306,11 @@ const AIImagePicker: React.FC<AIImagePickerProps> = ({ onSelect, onSelectFile, o
         <div className="flex-1 overflow-y-auto p-5">
           {historyLoading ? (
             <div className="flex items-center justify-center gap-2 text-sm text-neutral-400 mt-8">
-              <RefreshCw size={15} className="animate-spin" /> Loading…
+              <CircleNotch weight="duotone" size={15} className="animate-spin" /> Loading…
             </div>
           ) : history.length === 0 ? (
             <div className="flex flex-col items-center text-center gap-2 py-12 text-neutral-400">
-              <History size={22} />
+              <ClockCounterClockwise weight="duotone" size={22} />
               <p className="text-sm">No generated images yet.</p>
             </div>
           ) : (
@@ -328,7 +328,7 @@ const AIImagePicker: React.FC<AIImagePickerProps> = ({ onSelect, onSelectFile, o
                           className="p-1.5 rounded-lg bg-neutral-900 text-white nice-shadow"
                           title="Delete"
                         >
-                          <Trash2 size={15} />
+                          <Trash weight="duotone" size={15} />
                         </button>
                       </div>
                     </div>

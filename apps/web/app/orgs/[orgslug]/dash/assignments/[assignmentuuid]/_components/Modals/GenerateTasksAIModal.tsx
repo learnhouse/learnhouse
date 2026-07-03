@@ -3,22 +3,7 @@
 import React from 'react'
 import toast from 'react-hot-toast'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
-import {
-  Check,
-  Clock,
-  FileUp,
-  Hash,
-  History,
-  ListTodo,
-  Loader2,
-  Pencil,
-  Plus,
-  Sparkles,
-  Trash2,
-  Type,
-  X,
-} from 'lucide-react'
-
+import { Check, CircleNotch, Clock, ClockCounterClockwise, FileArrowUp, Hash, ListChecks, PencilSimple, Plus, Sparkle, TextT, Trash, X, type Icon as PhosphorIcon } from '@phosphor-icons/react'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
 import { useOrg } from '@components/Contexts/OrgContext'
 import { queryKeys } from '@/lib/query/keys'
@@ -77,13 +62,13 @@ interface HistoryItem {
 
 const TYPE_META: Record<
   string,
-  { label: string; Icon: React.ComponentType<{ size?: number; className?: string }> }
+  { label: string; Icon: PhosphorIcon }
 > = {
-  QUIZ: { label: 'Quiz', Icon: ListTodo },
-  FORM: { label: 'Form', Icon: Type },
-  SHORT_ANSWER: { label: 'Short answer', Icon: Pencil },
+  QUIZ: { label: 'Quiz', Icon: ListChecks },
+  FORM: { label: 'Form', Icon: TextT },
+  SHORT_ANSWER: { label: 'Short answer', Icon: PencilSimple },
   NUMBER_ANSWER: { label: 'Number', Icon: Hash },
-  FILE_SUBMISSION: { label: 'File upload', Icon: FileUp },
+  FILE_SUBMISSION: { label: 'File upload', Icon: FileArrowUp },
 }
 
 const ALL_TYPES: AssignmentTypeValue[] = [
@@ -317,7 +302,7 @@ function GenerateTasksAIModal({
             tab === 'generate' ? 'bg-white text-gray-900 nice-shadow' : 'text-gray-500 hover:text-gray-700'
           }`}
         >
-          <Sparkles size={13} />
+          <Sparkle weight="duotone" size={13} />
           Generate
         </button>
         <button
@@ -327,7 +312,7 @@ function GenerateTasksAIModal({
             tab === 'history' ? 'bg-white text-gray-900 nice-shadow' : 'text-gray-500 hover:text-gray-700'
           }`}
         >
-          <History size={13} />
+          <ClockCounterClockwise weight="duotone" size={13} />
           History
         </button>
       </div>
@@ -395,7 +380,7 @@ function GenerateTasksAIModal({
                             : 'bg-white text-gray-500 border-gray-200 hover:border-gray-300'
                         }`}
                       >
-                        <Icon size={12} />
+                        <Icon weight="duotone" size={12} />
                         {meta.label}
                       </button>
                     )
@@ -411,7 +396,7 @@ function GenerateTasksAIModal({
                 disabled={isGenerating}
                 className="flex items-center gap-1.5 px-4 py-2 bg-gray-900 text-white text-xs font-semibold rounded-lg hover:bg-black transition-colors disabled:opacity-50"
               >
-                {isGenerating ? <Loader2 size={14} className="animate-spin" /> : <Sparkles size={14} />}
+                {isGenerating ? <CircleNotch weight="duotone" size={14} className="animate-spin" /> : <Sparkle weight="duotone" size={14} />}
                 {plan ? 'Regenerate' : 'Generate'}
               </button>
               {plan && (
@@ -431,7 +416,7 @@ function GenerateTasksAIModal({
           {/* Preview */}
           {isGenerating && !plan && (
             <div className="flex items-center justify-center gap-2 py-10 text-sm text-gray-400">
-              <Loader2 size={16} className="animate-spin" />
+              <CircleNotch weight="duotone" size={16} className="animate-spin" />
               Generating tasks…
             </div>
           )}
@@ -483,7 +468,7 @@ function GenerateTasksAIModal({
                   disabled={isSaving || tasks.length === 0}
                   className="flex items-center gap-1.5 px-4 py-2 bg-gray-900 text-white text-xs font-semibold rounded-lg hover:bg-black transition-colors disabled:opacity-50"
                 >
-                  {isSaving ? <Loader2 size={14} className="animate-spin" /> : <Plus size={14} />}
+                  {isSaving ? <CircleNotch weight="duotone" size={14} className="animate-spin" /> : <Plus weight="duotone" size={14} />}
                   Add to assignment
                 </button>
               </div>
@@ -512,7 +497,7 @@ function HistoryList({
   if (isLoading) {
     return (
       <div className="flex items-center justify-center gap-2 py-10 text-sm text-gray-400">
-        <Loader2 size={16} className="animate-spin" />
+        <CircleNotch weight="duotone" size={16} className="animate-spin" />
         Loading history…
       </div>
     )
@@ -541,13 +526,13 @@ function HistoryList({
               <p className="mt-0.5 text-xs text-gray-500 line-clamp-2">{item.prompt}</p>
               <div className="mt-1.5 flex items-center gap-2 text-[11px] text-gray-400">
                 <span className="inline-flex items-center gap-1">
-                  <ListTodo size={11} />
+                  <ListChecks weight="duotone" size={11} />
                   {item.plan?.tasks?.length ?? 0} task
                   {(item.plan?.tasks?.length ?? 0) === 1 ? '' : 's'}
                 </span>
                 {item.creation_date && (
                   <span className="inline-flex items-center gap-1">
-                    <Clock size={11} />
+                    <Clock weight="duotone" size={11} />
                     {new Date(item.creation_date).toLocaleDateString()}
                   </span>
                 )}
@@ -560,7 +545,7 @@ function HistoryList({
               className="flex-none p-1.5 rounded-md text-gray-300 hover:text-rose-500 hover:bg-rose-50 transition-colors"
               title="Delete"
             >
-              <Trash2 size={14} />
+              <Trash weight="duotone" size={14} />
             </span>
           </div>
         </button>
@@ -585,7 +570,7 @@ function TaskPreviewCard({
   onUpdateContents: (_index: number, _mutate: (_contents: any) => void) => void
   onRemove: (_index: number) => void
 }) {
-  const meta = TYPE_META[task.assignment_type] ?? { label: task.assignment_type, Icon: Type }
+  const meta = TYPE_META[task.assignment_type] ?? { label: task.assignment_type, Icon: TextT }
   const Icon = meta.Icon
 
   return (
@@ -596,7 +581,7 @@ function TaskPreviewCard({
           <span className="inline-flex items-center justify-center w-4 h-4 rounded-full bg-gray-200 text-gray-600 font-bold">
             {index + 1}
           </span>
-          <Icon size={13} className="text-gray-400" />
+          <Icon weight="duotone" size={13} className="text-gray-400" />
           <span>{meta.label}</span>
         </div>
         <button
@@ -605,7 +590,7 @@ function TaskPreviewCard({
           className="p-1 rounded-md text-gray-300 hover:text-rose-500 hover:bg-rose-50 transition-colors"
           title="Remove from preview"
         >
-          <X size={14} />
+          <X weight="duotone" size={14} />
         </button>
       </div>
 
@@ -721,7 +706,7 @@ function TaskContentEditor({
                     }`}
                     title="Toggle correct answer"
                   >
-                    {o.assigned_right_answer ? <Check size={12} /> : <X size={12} />}
+                    {o.assigned_right_answer ? <Check weight="duotone" size={12} /> : <X weight="duotone" size={12} />}
                     {o.assigned_right_answer ? 'Correct' : 'Wrong'}
                   </button>
                 </div>

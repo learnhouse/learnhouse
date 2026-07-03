@@ -1,6 +1,7 @@
 import { NodeViewWrapper } from '@tiptap/react'
 import React, { useState } from 'react'
-import { RotateCcw, ArrowRight, CheckCircle, GitBranch, RefreshCcw, Sparkles } from 'lucide-react'
+import { RotateCcw, ArrowRight, CheckCircle, GitBranch, RefreshCcw } from 'lucide-react'
+import { Sparkle } from '@phosphor-icons/react'
 import dynamic from 'next/dynamic'
 import { useEditorProvider } from '@components/Contexts/Editor/EditorContext'
 import ScenariosModal from './ScenariosModal'
@@ -96,7 +97,7 @@ const ScenariosExtension: React.FC = (props: any) => {
                 onClick={() => setShowAIGenerator(true)}
                 className="bg-neutral-900 hover:bg-neutral-800 text-white font-medium py-1.5 px-3 rounded-lg text-xs transition-colors outline-none flex items-center gap-1.5 nice-shadow"
               >
-                <Sparkles size={13} />
+                <Sparkle weight="duotone" size={13} />
                 Generate with AI
               </button>
               <button

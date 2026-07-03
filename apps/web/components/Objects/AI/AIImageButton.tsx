@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { Sparkles } from 'lucide-react'
+import { Sparkle } from '@phosphor-icons/react'
 import AIImagePicker from './AIImagePicker'
 
 // Drop-in trigger for the shared AI image generator. Place next to an existing
@@ -34,7 +34,7 @@ const AIImageButton: React.FC<AIImageButtonProps> = ({
   return (
     <>
       <button type="button" onClick={() => setOpen(true)} className={className || base}>
-        <Sparkles size={15} />
+        <Sparkle weight="duotone" size={15} />
         {label}
       </button>
       {open && (

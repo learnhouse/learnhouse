@@ -2,7 +2,8 @@ import { NodeViewWrapper } from '@tiptap/react'
 import { v4 as uuidv4 } from 'uuid'
 import { cn } from '@/lib/utils'
 import React from 'react'
-import { BadgeHelp, Check, Minus, Plus, RefreshCcw, Sparkles } from 'lucide-react'
+import { BadgeHelp, Check, Minus, Plus, RefreshCcw } from 'lucide-react'
+import { Sparkle } from '@phosphor-icons/react'
 import dynamic from 'next/dynamic'
 const ReactConfetti = dynamic(() => import('react-confetti'), { ssr: false })
 const AIQuizGeneratorModal = dynamic(() => import('@components/Objects/AI/AIQuizGeneratorModal'), { ssr: false })
@@ -251,7 +252,7 @@ function QuizBlockComponent(props: any) {
                 onClick={() => setShowAIGenerator(true)}
                 className="bg-neutral-900 hover:bg-neutral-800 text-white font-medium py-1.5 px-3 rounded-lg text-xs transition-colors outline-none flex items-center gap-1.5 nice-shadow"
               >
-                <Sparkles size={13} />
+                <Sparkle weight="duotone" size={13} />
                 {t('editor.blocks.quiz_block.generate_with_ai', 'Generate with AI')}
               </button>
               <button
