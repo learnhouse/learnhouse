@@ -81,6 +81,30 @@ export function getVideoBlockStreamUrl(
 }
 
 /**
+ * HLS master-playlist URL for a video BLOCK (adaptive streaming). The API
+ * presigns segment URLs to R2 — same pipeline as activity videos.
+ */
+export function getVideoBlockHlsMasterUrl(
+  orgUUID: string,
+  courseUUID: string,
+  activityUUID: string,
+  blockUUID: string
+) {
+  return `${getApiUrl()}api/v1/stream/block-hls/${orgUUID}/${courseUUID}/${activityUUID}/${blockUUID}/master.m3u8`
+}
+
+/** URL of a video block's HLS hover-preview sprite sheet. */
+export function getVideoBlockHlsThumbnailsUrl(
+  orgUUID: string,
+  courseUUID: string,
+  activityUUID: string,
+  blockUUID: string,
+  spritePath: string
+) {
+  return `${getApiUrl()}api/v1/stream/block-hls/${orgUUID}/${courseUUID}/${activityUUID}/${blockUUID}/${spritePath}`
+}
+
+/**
  * Get the streaming URL for an audio block.
  * Uses the optimized streaming endpoint with proper Range request support.
  */

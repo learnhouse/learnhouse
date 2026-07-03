@@ -6,8 +6,8 @@ import {
 } from 'lucide-react'
 import React from 'react'
 import toast from 'react-hot-toast'
-import { uploadNewVideoFileWithProgress } from '../../../../../services/blocks/Video/video'
-import { getVideoBlockStreamUrl } from '@services/media/media'
+import { uploadNewVideoFileWithProgress, getVideoBlock } from '../../../../../services/blocks/Video/video'
+import { getVideoBlockStreamUrl, getVideoBlockHlsMasterUrl, getVideoBlockHlsThumbnailsUrl } from '@services/media/media'
 import { useOrg } from '@components/Contexts/OrgContext'
 import { useCourse } from '@components/Contexts/CourseContext'
 import { useEditorProvider } from '@components/Contexts/Editor/EditorContext'
@@ -139,6 +139,11 @@ function VideoBlockComponent(props: ExtendedNodeViewProps) {
   const [blockObject, setBlockObject] = React.useState<VideoBlockObject | null>(initialBlockObject)
   const [selectedSize, setSelectedSize] = React.useState<VideoSize>(initialBlockObject?.size || 'medium')
   const [isModalOpen, setIsModalOpen] = React.useState(false)
+  // Fresh HLS transcode status for this block (the Tiptap blockObject is an
+  // upload-time snapshot and never reflects later HLS-ready updates).
+  const [hlsMeta, setHlsMeta] = React.useState<any>(
+    (initialBlockObject as any)?.content?.hls ?? null
+  )
 
   // Update block object when size changes
   React.useEffect(() => {
@@ -253,9 +258,44 @@ function VideoBlockComponent(props: ExtendedNodeViewProps) {
   const courseUuid = extension.options.courseUuid || course?.courseStructure?.course_uuid
   const activityUuid = blockObject?.content?.activity_uuid || extension.options.activity?.activity_uuid
 
-  const videoUrl = blockObject && orgUuid && courseUuid && activityUuid && fileId
+  const mp4Url = blockObject && orgUuid && courseUuid && activityUuid && fileId
     ? getVideoBlockStreamUrl(orgUuid, courseUuid, activityUuid, blockObject.block_uuid, fileId)
     : null
+
+  // Fetch the fresh block once we have its uuid, to learn whether HLS is ready.
+  const blockUuid = blockObject?.block_uuid
+  React.useEffect(() => {
+    if (!blockUuid || !access_token) return
+    let cancelled = false
+    getVideoBlock(blockUuid, access_token).then((fresh) => {
+      if (!cancelled && fresh?.content?.hls) setHlsMeta(fresh.content.hls)
+    })
+    return () => { cancelled = true }
+  }, [blockUuid, access_token])
+
+  const hlsReady = hlsMeta?.status === 'ready'
+  const hlsMasterUrl = hlsReady && blockObject && orgUuid && courseUuid && activityUuid
+    ? getVideoBlockHlsMasterUrl(orgUuid, courseUuid, activityUuid, blockObject.block_uuid)
+    : null
+
+  // Adaptive HLS when ready (with the MP4 as fallback), else the progressive MP4.
+  const videoUrl = hlsMasterUrl || mp4Url
+  const playerProps = {
+    src: videoUrl || '',
+    isHls: !!hlsMasterUrl,
+    fallbackSrc: hlsMasterUrl && mp4Url ? mp4Url : undefined,
+    thumbnails:
+      hlsReady && hlsMeta?.thumbnails?.url && blockObject && orgUuid && courseUuid && activityUuid
+        ? {
+            url: getVideoBlockHlsThumbnailsUrl(orgUuid, courseUuid, activityUuid, blockObject.block_uuid, hlsMeta.thumbnails.url),
+            interval: hlsMeta.thumbnails.interval,
+            width: hlsMeta.thumbnails.width,
+            height: hlsMeta.thumbnails.height,
+            columns: hlsMeta.thumbnails.columns,
+            rows: hlsMeta.thumbnails.rows ?? 1,
+          }
+        : null,
+  }
 
   const handleExpand = () => {
     setIsModalOpen(true);
@@ -275,7 +315,7 @@ function VideoBlockComponent(props: ExtendedNodeViewProps) {
               }}
             >
               <div className="relative group">
-                <LearnHousePlayer src={videoUrl} />
+                <LearnHousePlayer {...playerProps} />
                 <div className="absolute top-2 right-2 z-40 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                   <button
                     onClick={handleExpand}
@@ -300,7 +340,7 @@ function VideoBlockComponent(props: ExtendedNodeViewProps) {
             <div className="w-full">
               <LearnHousePlayer
                 key={isModalOpen ? videoUrl : undefined}
-                src={videoUrl}
+                {...playerProps}
                 details={{ autoplay: true }}
               />
             </div>
@@ -439,7 +479,7 @@ function VideoBlockComponent(props: ExtendedNodeViewProps) {
                       <Loader2 className="w-8 h-8 animate-spin text-white" />
                     </div>
                   )}
-                  <LearnHousePlayer src={videoUrl} />
+                  <LearnHousePlayer {...playerProps} />
                   <div className="absolute top-2 right-2 z-40 flex gap-1">
                     <button
                       onClick={handleExpand}
@@ -467,7 +507,7 @@ function VideoBlockComponent(props: ExtendedNodeViewProps) {
             <div className="w-full">
               <LearnHousePlayer
                 key={isModalOpen ? videoUrl : undefined}
-                src={videoUrl}
+                {...playerProps}
                 details={{ autoplay: true }}
               />
             </div>

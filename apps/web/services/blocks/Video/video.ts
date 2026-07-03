@@ -86,6 +86,20 @@ export function uploadNewVideoFileWithProgress(
   })
 }
 
+/**
+ * Fetch a fresh video block by its UUID (BlockRead). Used to read the current
+ * `content.hls` transcode status — the Tiptap-stored blockObject is an
+ * upload-time snapshot and never sees later HLS-ready updates.
+ */
+export async function getVideoBlock(block_uuid: string, access_token: string) {
+  const res = await fetch(
+    `${getAPIUrl()}blocks/video?block_uuid=${encodeURIComponent(block_uuid)}`,
+    RequestBodyWithAuthHeader('GET', null, null, access_token)
+  )
+  if (!res.ok) return null
+  return res.json().catch(() => null)
+}
+
 export async function getVideoFile(file_id: string, access_token: string) {
   return fetch(
     `${getAPIUrl()}blocks/video?file_id=${file_id}`,
