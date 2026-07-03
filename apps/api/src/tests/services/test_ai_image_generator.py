@@ -100,9 +100,11 @@ async def test_generate_image_with_input_images():
     ), patch("google.genai.types.Part.from_bytes", return_value="PART"):
         out = await gen.generate_image("make it darker", input_images=[b"orig"])
     assert out == b"EDITED"
-    # prompt + one image part were sent
+    # image part FIRST, then an edit-framed instruction referencing the image
     sent = client.aio.models.generate_content.await_args.kwargs["contents"]
     assert len(sent) == 2
+    assert sent[0] == "PART"
+    assert isinstance(sent[1], str) and "provided image" in sent[1] and "make it darker" in sent[1]
 
 
 async def test_generate_image_no_image_raises_runtime():
@@ -134,7 +136,7 @@ async def test_generate_image_requests_image_modality():
     ):
         await gen.generate_image("a cat")
     cfg = client.aio.models.generate_content.await_args.kwargs["config"]
-    assert list(cfg.response_modalities) == ["IMAGE"]
+    assert list(cfg.response_modalities) == ["TEXT", "IMAGE"]
 
 
 async def test_default_model_is_ga_flash_image():

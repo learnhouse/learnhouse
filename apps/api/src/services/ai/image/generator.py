@@ -127,17 +127,30 @@ async def generate_image(
 
     api_key, model = _resolve_image_config()
 
-    # Build multimodal contents: the prompt plus any reference images to edit.
-    # Sniff each image's real MIME type — a JPEG/WebP mislabeled as PNG can be
-    # rejected by the model.
-    contents: list = [prompt]
-    for img in input_images or []:
-        if img:
+    # Build multimodal contents.
+    #   - EDIT/REFINE (input_images present): put the reference image(s) FIRST and
+    #     frame the instruction as an edit of "the provided image". This matches
+    #     Google's image-editing recipe and is what makes the model modify the
+    #     attachment instead of generating a fresh image from the words alone.
+    #   - TEXT-TO-IMAGE: prompt only.
+    # Sniff each image's real MIME type — a JPEG/WebP mislabeled as PNG is rejected.
+    imgs = [img for img in (input_images or []) if img]
+    contents: list = []
+    if imgs:
+        for img in imgs:
             contents.append(types.Part.from_bytes(data=img, mime_type=_sniff_mime(img)))
+        contents.append(
+            f"Using the provided image as the starting point, edit it as follows: {prompt}"
+        )
+    else:
+        contents.append(prompt)
 
-    # Explicitly request image output. Without this the model can return a
-    # text-only response and we would (wrongly) treat it as "no image" / 502.
-    config = types.GenerateContentConfig(response_modalities=["IMAGE"])
+    # Request both output modalities — Google's documented image-editing config.
+    # TEXT parts are skipped by _extract_image_bytes, so output handling is
+    # unchanged; this only avoids a spurious "no image" 502 when an edit turn also
+    # returns a text note. (response_modalities is OUTPUT-only — the edit framing
+    # above, not this, is what makes the input image be used.)
+    config = types.GenerateContentConfig(response_modalities=["TEXT", "IMAGE"])
 
     client = genai.Client(api_key=api_key)
     response = None

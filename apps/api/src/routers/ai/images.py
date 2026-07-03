@@ -4,8 +4,9 @@ Backs the shared AIImagePicker used across every image-upload surface. Follows
 the same guard/credit ordering as the other AI routers: resolve org → org
 membership → rate limit → reserve credit → generate → refund on failure.
 
-Refinement is stateless: the client sends the previous image back as base64 each
-turn, and durable history rows are grouped by ``session_uuid`` to reconstruct the
+Refinement reads the prior image server-side by ``source_file_id`` (a client
+base64 data URL is only a fallback), so the edit is reliable without a client
+re-fetch. Durable history rows are grouped by ``session_uuid`` to reconstruct the
 thread — so no Redis session is needed for images (the hybrid model's Redis half
 is used by the streaming quiz/assignment refine chats instead).
 """

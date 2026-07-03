@@ -52,6 +52,13 @@ const AIImagePicker: React.FC<AIImagePickerProps> = ({ onSelect, onSelectFile, o
   const [sessionUuid, setSessionUuid] = useState<string | undefined>(undefined)
   const [refineFrom, setRefineFrom] = useState<GeneratedItem | null>(null)
   const [usingKey, setUsingKey] = useState<string | null>(null)
+  const promptRef = React.useRef<HTMLTextAreaElement>(null)
+
+  const stageRefine = (item: GeneratedItem) => {
+    setRefineFrom(item)
+    setPrompt('')
+    requestAnimationFrame(() => promptRef.current?.focus())
+  }
 
   const [history, setHistory] = useState<AIImageHistoryItem[]>([])
   const [historyLoading, setHistoryLoading] = useState(false)
@@ -186,6 +193,7 @@ const AIImagePicker: React.FC<AIImagePickerProps> = ({ onSelect, onSelectFile, o
             )}
             <div className="rounded-2xl border border-neutral-200 focus-within:border-neutral-300 focus-within:ring-4 focus-within:ring-neutral-900/5 transition-all bg-neutral-50/50">
               <textarea
+                ref={promptRef}
                 value={prompt}
                 onChange={(e) => setPrompt(e.target.value)}
                 onKeyDown={handleKeyDown}
@@ -278,7 +286,7 @@ const AIImagePicker: React.FC<AIImagePickerProps> = ({ onSelect, onSelectFile, o
                         <div className="absolute inset-0 bg-neutral-900/0 group-hover:bg-neutral-900/45 transition-colors flex items-center justify-center gap-2 opacity-0 group-hover:opacity-100">
                           {renderUseButton(item.ai_generation_uuid, item.file_id, item.url)}
                           <button
-                            onClick={() => setRefineFrom(item)}
+                            onClick={() => stageRefine(item)}
                             className="px-3 py-1.5 rounded-lg bg-neutral-900 text-white text-sm font-medium flex items-center gap-1.5 nice-shadow"
                           >
                             <Wand2 size={15} /> Refine
