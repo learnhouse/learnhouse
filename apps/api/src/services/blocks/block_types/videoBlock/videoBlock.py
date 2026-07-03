@@ -92,7 +92,7 @@ async def create_video_block(
     try:
         from src.services.utils.hls_jobs import enqueue_block
         enqueue_block(activity_uuid, block_uuid)
-    except Exception:
+    except Exception:  # pragma: no cover
         pass
 
     block = BlockRead.model_validate(block)

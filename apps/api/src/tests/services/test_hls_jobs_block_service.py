@@ -353,6 +353,10 @@ async def test_resolve_block_source_non_video_and_no_file(monkeypatch, db, org, 
     assert await hls_jobs._resolve_block_source("block_img") is None
     assert await hls_jobs._resolve_block_source("block_nofile") is None
 
+    # unsafe filename (traversal in file_id) is rejected
+    await _add_video_block(db, org, course, activity, "block_badname", file_id="../evil", fmt="mp4")
+    assert await hls_jobs._resolve_block_source("block_badname") is None
+
 
 async def test_reconcile_skips_pending_and_nofile_blocks(monkeypatch, db, org, course, chapter, activity):
     _bind_session(monkeypatch, db)
@@ -365,10 +369,19 @@ async def test_reconcile_skips_pending_and_nofile_blocks(monkeypatch, db, org, c
     )
     db.add(nofile)
     await db.commit()
+    # video block with hls status but NO activity_uuid -> skipped (can't build a job)
+    noact = Block(
+        block_type=BlockTypeEnum.BLOCK_VIDEO, content={"file_id": "z", "file_format": "mp4", "hls": {"status": "failed"}},
+        org_id=org.id, course_id=course.id, activity_id=activity.id, block_uuid="block_noact",
+        creation_date=str(datetime.now()), update_date=str(datetime.now()),
+    )
+    db.add(noact)
+    await db.commit()
     pending_item = hls_jobs._block_item(activity.activity_uuid, "block_pending")
     r = _FakeRedis(pending=[pending_item])
     monkeypatch.setattr(hls_jobs, "get_redis_client", lambda: r)
     result = await hls_jobs.reconcile_unfinished()
-    # already-pending block is not re-pushed
+    # already-pending block is not re-pushed; the no-activity_uuid block isn't queued
     assert pending_item not in r.pushed
+    assert not any("block_noact" in p for p in r.pushed)
     assert result["skipped"] >= 1
