@@ -62,6 +62,10 @@ interface Editor {
   content: string
   activity: any
   hideTableOfContents?: boolean
+  // Passed by the activity/embed/board renderers so the video block can build
+  // stream URLs even where the Org/Course React contexts aren't populated.
+  courseUuid?: string
+  orgUuid?: string
 }
 
 
@@ -82,7 +86,7 @@ function Canva(props: Editor) {
         ? JSON.parse(props.content)
         : props.content;
       return normalizeMarkTypes(parsed);
-    } catch (e) {
+    } catch {
       return props.content;
     }
   }, [props.content]);
@@ -122,6 +126,8 @@ function Canva(props: Editor) {
       VideoBlock.configure({
         editable: true,
         activity: props.activity,
+        orgUuid: props.orgUuid,
+        courseUuid: props.courseUuid,
       }),
       AudioBlock.configure({
         editable: true,

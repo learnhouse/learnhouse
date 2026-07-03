@@ -253,7 +253,12 @@ export default function ActivityBlockComponent({ node, updateAttributes, selecte
         return (
           <EmbedCourseProvider courseUuid={cUuid}>
             <Suspense fallback={<LoadingFallback />}>
-              <Canva content={activity.content} activity={activity} />
+              <Canva
+                content={activity.content}
+                activity={activity}
+                courseUuid={courseMeta?.course_uuid || cUuid}
+                orgUuid={courseMeta?.org_uuid}
+              />
             </Suspense>
           </EmbedCourseProvider>
         )

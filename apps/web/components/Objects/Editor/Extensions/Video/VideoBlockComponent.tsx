@@ -6,7 +6,7 @@ import {
 } from 'lucide-react'
 import React from 'react'
 import toast from 'react-hot-toast'
-import { uploadNewVideoFile } from '../../../../../services/blocks/Video/video'
+import { uploadNewVideoFileWithProgress } from '../../../../../services/blocks/Video/video'
 import { getVideoBlockStreamUrl } from '@services/media/media'
 import { useOrg } from '@components/Contexts/OrgContext'
 import { useCourse } from '@components/Contexts/CourseContext'
@@ -91,6 +91,10 @@ interface ExtendedNodeViewProps extends Omit<NodeViewProps, 'extension'> {
       activity: {
         activity_uuid: string
       }
+      // Passed at configure() time so playback ids resolve reliably even where
+      // the Org/Course React contexts aren't populated (e.g. the student page).
+      orgUuid?: string
+      courseUuid?: string
     }
   }
 }
@@ -200,17 +204,14 @@ function VideoBlockComponent(props: ExtendedNodeViewProps) {
       setError(null)
       setUploadProgress(0)
 
-      const progressInterval = setInterval(() => {
-        setUploadProgress(prev => Math.min(prev + 10, 90))
-      }, 200)
-
-      const object = await uploadNewVideoFile(
+      // Real byte-accurate progress (XHR), same as the video-activity upload.
+      const object = await uploadNewVideoFileWithProgress(
         file,
         extension.options.activity.activity_uuid,
-        access_token
+        access_token,
+        (percent) => setUploadProgress(Math.round(percent))
       )
 
-      clearInterval(progressInterval)
       setUploadProgress(100)
 
       const newBlockObject = {
@@ -245,13 +246,16 @@ function VideoBlockComponent(props: ExtendedNodeViewProps) {
     setSelectedSize(size)
   }
 
-  const videoUrl = blockObject && org?.org_uuid && course?.courseStructure.course_uuid ? getVideoBlockStreamUrl(
-    org.org_uuid,
-    course.courseStructure.course_uuid,
-    blockObject.content.activity_uuid || extension.options.activity.activity_uuid,
-    blockObject.block_uuid,
-    fileId || ''
-  ) : null
+  // Resolve ids preferring what was passed at configure() time (reliable on the
+  // student page), falling back to the Org/Course contexts. This is what makes
+  // the player actually render there (previously videoUrl went null).
+  const orgUuid = extension.options.orgUuid || org?.org_uuid
+  const courseUuid = extension.options.courseUuid || course?.courseStructure?.course_uuid
+  const activityUuid = blockObject?.content?.activity_uuid || extension.options.activity?.activity_uuid
+
+  const videoUrl = blockObject && orgUuid && courseUuid && activityUuid && fileId
+    ? getVideoBlockStreamUrl(orgUuid, courseUuid, activityUuid, blockObject.block_uuid, fileId)
+    : null
 
   const handleExpand = () => {
     setIsModalOpen(true);
@@ -431,20 +435,12 @@ function VideoBlockComponent(props: ExtendedNodeViewProps) {
               >
                 <div className="relative rounded-lg overflow-hidden bg-black/5 nice-shadow">
                   {isLoading && (
-                    <div className="absolute inset-0 flex items-center justify-center bg-black/10 backdrop-blur-sm">
+                    <div className="absolute inset-0 z-40 flex items-center justify-center bg-black/10 backdrop-blur-sm">
                       <Loader2 className="w-8 h-8 animate-spin text-white" />
                     </div>
                   )}
-                  <video
-                    controls
-                    preload="metadata"
-                    className={cn(
-                      "w-full aspect-video object-contain bg-black/95 transition-all duration-200",
-                      isLoading && "opacity-50 blur-sm"
-                    )}
-                    src={videoUrl}
-                  />
-                  <div className="absolute top-2 right-2 flex gap-1">
+                  <LearnHousePlayer src={videoUrl} />
+                  <div className="absolute top-2 right-2 z-40 flex gap-1">
                     <button
                       onClick={handleExpand}
                       className="p-2 outline-none bg-black/50 hover:bg-black/70 rounded-lg transition-colors"
@@ -469,13 +465,10 @@ function VideoBlockComponent(props: ExtendedNodeViewProps) {
           minHeight="lg"
           dialogContent={
             <div className="w-full">
-              <video
+              <LearnHousePlayer
                 key={isModalOpen ? videoUrl : undefined}
-                controls
-                autoPlay
-                preload="metadata"
-                className="w-full aspect-video object-contain rounded-lg shadow-lg bg-black"
                 src={videoUrl}
+                details={{ autoplay: true }}
               />
             </div>
           }
