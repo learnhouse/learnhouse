@@ -18,6 +18,7 @@ class AIGenerationKind(str, Enum):
     IMAGE = "IMAGE"
     QUIZ = "QUIZ"
     ASSIGNMENT = "ASSIGNMENT"
+    SCENARIO = "SCENARIO"
 
 
 class AIGenerationBase(SQLModel):

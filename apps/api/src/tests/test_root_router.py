@@ -116,6 +116,7 @@ def _install_stub_modules(monkeypatch: pytest.MonkeyPatch) -> None:
     install_router_module(
         "src.routers.ai.assignment_gen", "src.routers.ai.assignment_gen"
     )
+    install_router_module("src.routers.ai.scenario", "src.routers.ai.scenario")
     sys.modules["src.routers.ai"].ai = sys.modules["src.routers.ai.ai"]
     sys.modules["src.routers.ai"].magicblocks = sys.modules[
         "src.routers.ai.magicblocks"
@@ -129,6 +130,7 @@ def _install_stub_modules(monkeypatch: pytest.MonkeyPatch) -> None:
     sys.modules["src.routers.ai"].assignment_gen = sys.modules[
         "src.routers.ai.assignment_gen"
     ]
+    sys.modules["src.routers.ai"].scenario = sys.modules["src.routers.ai.scenario"]
 
     install_router_module("src.routers.boards.boards", "src.routers.boards.boards")
     install_router_module(

@@ -13,7 +13,7 @@ from src.routers import stream
 from src.routers import api_tokens
 from src.routers import webhooks
 from src.routers.integrations import zapier as zapier_integration
-from src.routers.ai import ai, magicblocks, courseplanning, rag, images, quiz, assignment_gen
+from src.routers.ai import ai, magicblocks, courseplanning, rag, images, quiz, assignment_gen, scenario
 from src.routers.boards import boards_playground
 from src.routers.orgs import ai_credits
 from src.routers.orgs import custom_domains
@@ -266,6 +266,12 @@ v1_router.include_router(
     assignment_gen.router,
     prefix="/ai",
     tags=["ai", "assignment-gen"],
+    dependencies=[Depends(require_authenticated_user)]
+)
+v1_router.include_router(
+    scenario.router,
+    prefix="/ai",
+    tags=["ai", "scenario"],
     dependencies=[Depends(require_authenticated_user)]
 )
 v1_router.include_router(

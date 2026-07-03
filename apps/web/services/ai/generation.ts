@@ -139,6 +139,29 @@ export async function deleteAIQuizHistory(uuid: string, access_token: string) {
   return del(`ai/quiz/history/${uuid}`, access_token)
 }
 
+// --- Scenario generation (editor scenarios block) ---
+
+export async function generateAIScenario(
+  params: {
+    org_id: number
+    prompt: string
+    activity_uuid?: string
+    session_uuid?: string
+    num_scenarios?: number
+  },
+  access_token: string
+) {
+  return postJSON('ai/scenario/generate', params, access_token)
+}
+
+export async function fetchAIScenarioHistory(org_id: number, access_token: string, limit = 30) {
+  return getJSON(`ai/scenario/history?org_id=${org_id}&limit=${limit}`, access_token)
+}
+
+export async function deleteAIScenarioHistory(uuid: string, access_token: string) {
+  return del(`ai/scenario/history/${uuid}`, access_token)
+}
+
 // --- Assignment generation ---
 
 export async function generateAIAssignment(
