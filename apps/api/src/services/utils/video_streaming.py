@@ -50,6 +50,28 @@ def get_video_mime_type(file_path: str) -> str:
     return mime_types.get(extension, 'video/mp4')
 
 
+def is_range_unsatisfiable(range_header: Optional[str], file_size: int) -> bool:
+    """
+    Whether a Range request cannot be satisfied per RFC 7233 → caller returns 416.
+
+    Unsatisfiable when: the resource is empty (a Range over 0 bytes), or the
+    requested start is at/after EOF. Suffix ranges (bytes=-N) and malformed
+    headers are treated as satisfiable (fall through to normal handling / 200).
+    """
+    if not range_header:
+        return False
+    if file_size <= 0:
+        return True
+    spec = range_header.replace("bytes=", "").strip()
+    if spec.startswith("-"):  # suffix range — always satisfiable for size>0
+        return False
+    try:
+        start = int(spec.split("-")[0])
+    except (ValueError, IndexError):
+        return False
+    return start > file_size - 1
+
+
 def parse_range_header(range_header: Optional[str], file_size: int) -> Tuple[int, int]:
     """
     Parse the HTTP Range header to determine byte range.
@@ -267,7 +289,13 @@ def validate_video_path(base_content_dir: str, *path_parts: str) -> Optional[str
             resolved_path = os.path.realpath(full_path)
             base_resolved = os.path.realpath(base_content_dir)
 
-            if not resolved_path.startswith(base_resolved):
+            # Use commonpath rather than a bare startswith: a plain prefix check
+            # treats "/data/content-secret" as inside "/data/content", letting a
+            # crafted path escape the content dir into a sibling directory.
+            if (
+                resolved_path != base_resolved
+                and os.path.commonpath([resolved_path, base_resolved]) != base_resolved
+            ):
                 return None
 
             return resolved_path

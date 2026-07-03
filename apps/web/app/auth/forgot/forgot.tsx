@@ -12,6 +12,7 @@ import { useFormik } from 'formik'
 import { sendResetLink } from '@services/auth/auth'
 import { useTranslation } from 'react-i18next'
 import AuthLayout from '@components/Auth/AuthLayout'
+import { useLHAnalytics, AnalyticsEvent } from '@services/analytics'
 
 const validate = (values: any, t: any) => {
     const errors: any = {}
@@ -31,6 +32,7 @@ interface ForgotPasswordClientProps {
 
 function ForgotPasswordClient({ org }: ForgotPasswordClientProps) {
     const { t } = useTranslation();
+    const { track } = useLHAnalytics('public')
     const [isSubmitting, setIsSubmitting] = React.useState(false)
     const [error, setError] = React.useState('')
     const [message, setMessage] = React.useState('')
@@ -49,10 +51,12 @@ function ForgotPasswordClient({ org }: ForgotPasswordClientProps) {
             setShowMessage(false)
             let res = await sendResetLink(values.email, org?.id)
             if (res.status == 200) {
+                track(AnalyticsEvent.PasswordResetLinkRequested, { success: true })
                 setMessage(res.data + ', ' + t('auth.check_email_message'))
                 setShowMessage(true)
                 setIsSubmitting(false)
             } else {
+                track(AnalyticsEvent.PasswordResetLinkRequested, { success: false })
                 setError(res.data.detail)
                 setShowMessage(true)
                 setIsSubmitting(false)

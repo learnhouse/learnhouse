@@ -17,6 +17,7 @@ import { useLHSession } from '@components/Contexts/LHSessionContext'
 import { useTranslation } from 'react-i18next'
 import { resendVerificationEmail } from '@services/auth/auth'
 import AuthLayout from '@components/Auth/AuthLayout'
+import { useLHAnalytics, AnalyticsEvent } from '@services/analytics'
 
 interface LoginClientProps {
   org: any
@@ -25,11 +26,12 @@ interface LoginClientProps {
 const LoginClient = (props: LoginClientProps) => {
   const { t } = useTranslation()
   const { signIn } = useAuth()
+  const { track } = useLHAnalytics('public')
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [ssoEnabled, setSsoEnabled] = useState(false)
   const [ssoLoading, setSsoLoading] = useState(false)
-  const router = useRouter();
-  const session = useLHSession() as any;
+  const _router = useRouter();
+  const _session = useLHSession() as any;
 
   // Error state with type information
   const [error, setError] = useState('')
@@ -41,6 +43,7 @@ const LoginClient = (props: LoginClientProps) => {
   const [retryAfter, setRetryAfter] = useState<number | null>(null)
 
   const handleGoogleSignIn = () => {
+    track(AnalyticsEvent.LoginGoogleClicked)
     // Store org context in cookies before OAuth redirect
     if (props.org?.slug) {
       const topDomain = getLEARNHOUSE_TOP_DOMAIN_VAL();
@@ -81,6 +84,7 @@ const LoginClient = (props: LoginClientProps) => {
   }, [props.org?.slug, props.org?.config?.config?.plan, props.org?.config?.config?.cloud?.plan]) // eslint-disable-line
 
   const handleSSOLogin = async () => {
+    track(AnalyticsEvent.LoginSsoClicked)
     setSsoLoading(true)
     try {
       await redirectToSSOLogin(props.org.slug)
@@ -119,7 +123,7 @@ const LoginClient = (props: LoginClientProps) => {
       } else {
         setError(res.error || t('auth.resend_verification_failed'))
       }
-    } catch (err) {
+    } catch (_err) {
       setError(t('auth.resend_verification_failed'))
     } finally {
       setIsResendingVerification(false)
@@ -151,6 +155,8 @@ const LoginClient = (props: LoginClientProps) => {
         return;
       }
 
+      track(AnalyticsEvent.LoginSubmitted, { has_sso_enabled: ssoEnabled })
+
       // Use absolute URL with current origin for custom domain support
       const callbackUrl = `${window.location.origin}/redirect_from_auth`;
 
@@ -162,11 +168,13 @@ const LoginClient = (props: LoginClientProps) => {
       });
 
       if (res && res.error) {
+        let loginErrorType: string | null = null
         // Try to parse the error message for error codes
         try {
           // The error from next-auth might contain our structured error
           const errorData = JSON.parse(res.error);
           if (errorData.code) {
+            loginErrorType = errorData.code;
             setErrorType(errorData.code);
             setError(errorData.message || t('auth.wrong_email_password'));
             if (errorData.code === 'EMAIL_NOT_VERIFIED') {
@@ -181,22 +189,27 @@ const LoginClient = (props: LoginClientProps) => {
         } catch {
           // If parsing fails, check for specific error strings
           if (res.error.includes('EMAIL_NOT_VERIFIED')) {
+            loginErrorType = 'EMAIL_NOT_VERIFIED';
             setErrorType('EMAIL_NOT_VERIFIED');
             setError(t('auth.email_not_verified_message'));
             setUnverifiedEmail(values.email);
           } else if (res.error.includes('ACCOUNT_LOCKED')) {
+            loginErrorType = 'ACCOUNT_LOCKED';
             setErrorType('ACCOUNT_LOCKED');
             setError(t('auth.account_locked_message'));
           } else if (res.error.includes('RATE_LIMITED')) {
+            loginErrorType = 'RATE_LIMITED';
             setErrorType('RATE_LIMITED');
             setError(t('auth.rate_limited_message'));
           } else {
             setError(t('auth.wrong_email_password'));
           }
         }
+        track(AnalyticsEvent.LoginFailed, { method: 'credentials', error_type: loginErrorType })
         setShowErrorModal(true);
         setIsSubmitting(false);
       } else {
+        track(AnalyticsEvent.LoginSucceeded, { method: 'credentials' })
         // First signIn already authenticated and set cookies — just redirect
         window.location.href = callbackUrl;
       }

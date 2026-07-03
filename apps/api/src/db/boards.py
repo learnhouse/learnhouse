@@ -14,7 +14,13 @@ class BoardBase(SQLModel):
     name: str
     description: Optional[str] = None
     thumbnail_image: Optional[str] = Field(default="")
-    public: bool = Field(default=True)
+    # Secure-by-default: new boards are private. Boards are gated for anonymous
+    # access by this flag alone (has_published_field=False in RBAC config), so
+    # defaulting to True would make every new board anonymously readable. This
+    # default only affects newly-created rows; existing boards keep their stored
+    # value, so flipping it does not retroactively change current boards. Owners
+    # opt into public sharing via BoardCreate.public=True or BoardUpdate.public.
+    public: bool = Field(default=False)
 
 
 class Board(BoardBase, table=True):
@@ -47,6 +53,10 @@ class BoardCreate(SQLModel):
     name: str
     description: Optional[str] = None
     thumbnail_image: Optional[str] = Field(default="")
+    # Explicit opt-in for public boards; defaults to private (secure default).
+    # The frontend create flow should surface a "make public" toggle for users
+    # who want the board listed in the public gallery.
+    public: bool = Field(default=False)
 
 
 class BoardUpdate(SQLModel):

@@ -6,6 +6,7 @@ import * as Yup from 'yup'
 import { useTranslation } from 'react-i18next'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
 import { createPodcast } from '@services/podcasts/podcasts'
+import { useLHAnalytics, AnalyticsEvent } from '@services/analytics'
 import { revalidateTags } from '@services/utils/ts/requests'
 import Modal from '@components/Objects/StyledElements/Modal/Modal'
 import { Loader2 } from 'lucide-react'
@@ -29,6 +30,7 @@ export function CreatePodcastModal({
   const session = useLHSession() as any
   const router = useRouter()
   const queryClient = useQueryClient()
+  const { track } = useLHAnalytics('learner')
   const [isSubmitting, setIsSubmitting] = useState(false)
 
   const accessToken = session?.data?.tokens?.access_token
@@ -58,6 +60,11 @@ export function CreatePodcastModal({
       )
 
       if (result) {
+        track(AnalyticsEvent.PodcastCreated, {
+          is_public: values.public,
+          has_thumbnail: false,
+          source: 'quick_modal',
+        })
         await revalidateTags(['podcasts'], orgSlug)
         queryClient.invalidateQueries({ queryKey: queryKeys.podcasts.list(orgSlug) })
         router.refresh()

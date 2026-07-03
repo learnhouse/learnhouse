@@ -9,6 +9,7 @@ import * as Yup from 'yup';
 import toast from 'react-hot-toast';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { queryKeys } from '@/lib/query/keys';
+import { useLHAnalytics, AnalyticsEvent } from '@services/analytics';
 import { Button } from '@components/ui/button';
 import { Input } from '@components/ui/input';
 import { Textarea } from '@components/ui/textarea';
@@ -45,6 +46,7 @@ const CreateOfferForm: React.FC<{ onSuccess: () => void }> = ({ onSuccess }) => 
   const session = useLHSession() as any;
   const token = session?.data?.tokens?.access_token;
   const queryClient = useQueryClient();
+  const { track } = useLHAnalytics('dashboard');
   const [currencies, setCurrencies] = useState<{ code: string; name: string }[]>([]);
 
   useEffect(() => {
@@ -92,6 +94,11 @@ const CreateOfferForm: React.FC<{ onSuccess: () => void }> = ({ onSuccess }) => 
       };
       const res = await createOffer(org.id, payload, token);
       if (res.success) {
+        track(AnalyticsEvent.OfferCreated, {
+          offer_type: values.offer_type,
+          price_type: values.price_type,
+          amount: values.amount,
+        });
         toast.success('Offer created successfully');
         queryClient.invalidateQueries({ queryKey: queryKeys.payments.offers(org.id) });
         resetForm();
@@ -99,7 +106,7 @@ const CreateOfferForm: React.FC<{ onSuccess: () => void }> = ({ onSuccess }) => 
       } else {
         toast.error(res.data?.detail || 'Failed to create offer');
       }
-    } catch (error) {
+    } catch (_error) {
       toast.error('An error occurred while creating the offer');
     } finally {
       setSubmitting(false);

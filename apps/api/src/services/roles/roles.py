@@ -181,6 +181,11 @@ async def create_role(
         user_role = await get_user_org_role(create_role_user_id, role.org_id, db_session)
         if role.rights and isinstance(role.rights, dict) and user_role and user_role.rights and isinstance(user_role.rights, dict):
             for right_key, right_permissions in role.rights.items():
+                # right_permissions may be a non-dict value for unexpected keys
+                # in a raw rights dict; calling .items() on it would raise an
+                # AttributeError (HTTP 500). Skip anything that isn't a dict.
+                if not isinstance(right_permissions, dict):
+                    continue
                 if right_key in user_role.rights:
                     user_right_permissions = user_role.rights[right_key]
                     for perm_key, perm_value in right_permissions.items():
@@ -477,6 +482,27 @@ async def update_role(
         if not isinstance(role.rights, dict):
             role.rights = rights_dict
 
+    # ============================================================================
+    # VERIFICATION: Ensure user cannot escalate a role to have higher permissions
+    # than they themselves hold (superadmins skip this check).
+    # ============================================================================
+    update_role_user_id = resolve_acting_user_id(current_user)
+    if 'rights' in update_data and not await is_user_superadmin(update_role_user_id, db_session):
+        user_role = await get_user_org_role(update_role_user_id, role.org_id, db_session)
+        if role.rights and isinstance(role.rights, dict) and user_role and user_role.rights and isinstance(user_role.rights, dict):
+            for right_key, right_permissions in role.rights.items():
+                if not isinstance(right_permissions, dict):
+                    continue
+                user_right_permissions = user_role.rights.get(right_key)
+                for perm_key, perm_value in right_permissions.items():
+                    if isinstance(perm_value, bool) and perm_value:
+                        if isinstance(user_right_permissions, dict) and user_right_permissions.get(perm_key):
+                            continue
+                        raise HTTPException(
+                            status_code=403,
+                            detail=f"You cannot grant a role the '{perm_key}' permission for '{right_key}' as you don't have this permission yourself",
+                        )
+
     db_session.add(role)
     await db_session.commit()
     await db_session.refresh(role)
@@ -548,10 +574,15 @@ async def rbac_check(
     role_uuid: str,
     db_session: AsyncSession,
 ):
-    await authorization_verify_if_user_is_anon(current_user.id)
+    # Resolve the real acting user id. For API tokens, current_user.id is the
+    # token id (0), not a user id — using it directly makes the anon check
+    # reject every API token and runs the role/authorship check against id 0.
+    acting_user_id = resolve_acting_user_id(current_user)
+
+    await authorization_verify_if_user_is_anon(acting_user_id)
 
     await authorization_verify_based_on_roles_and_authorship(
-        request, current_user.id, action, role_uuid, db_session
+        request, acting_user_id, action, role_uuid, db_session
     )
 
 

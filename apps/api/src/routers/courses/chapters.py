@@ -151,7 +151,13 @@ async def api_get_chapter_by(
     Get Course Chapters by page and limit
     """
     return await get_course_chapters(
-        request, course_id, db_session, current_user, page, limit
+        request,
+        course_id,
+        db_session,
+        current_user,
+        with_unpublished_activities=False,
+        page=page,
+        limit=limit,
     )
 
 

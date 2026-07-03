@@ -243,6 +243,15 @@ async def get_course_chapters(
         statement = select(Course).where(Course.id == course_id)
         course = (await db_session.execute(statement)).scalars().first()
 
+    # A non-existent course_id (e.g. from the public
+    # /chapters/course/{course_id}/page/... endpoint) must return a clean 404.
+    # Without this guard the RBAC check below dereferences course.course_uuid
+    # on None and the request 500s instead.
+    if course is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Course does not exist"
+        )
+
     statement = (
         select(Chapter)
         .join(CourseChapter, Chapter.id == CourseChapter.chapter_id) # type: ignore

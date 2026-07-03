@@ -6,6 +6,7 @@ import { useSearchParams } from 'next/navigation'
 import { verifyEmail } from '@services/auth/auth'
 import { useTranslation } from 'react-i18next'
 import AuthLayout from '@components/Auth/AuthLayout'
+import { useLHAnalytics, AnalyticsEvent } from '@services/analytics'
 
 interface VerifyEmailClientProps {
     org: any
@@ -13,6 +14,7 @@ interface VerifyEmailClientProps {
 
 function VerifyEmailClient({ org }: VerifyEmailClientProps) {
     const { t } = useTranslation();
+    const { track } = useLHAnalytics('public')
     const searchParams = useSearchParams()
     const token = searchParams.get('token') || ''
     const userUuid = searchParams.get('user') || ''
@@ -26,6 +28,7 @@ function VerifyEmailClient({ org }: VerifyEmailClientProps) {
     useEffect(() => {
         const verify = async () => {
             if (!token || !userUuid || !orgUuid) {
+                track(AnalyticsEvent.EmailVerificationCompleted, { result: 'fail' })
                 setError(t('auth.verification_missing_params'))
                 setIsVerifying(false)
                 setShowMessage(true)
@@ -35,13 +38,22 @@ function VerifyEmailClient({ org }: VerifyEmailClientProps) {
             try {
                 const res = await verifyEmail(token, userUuid, orgUuid)
                 if (res.success) {
+                    track(AnalyticsEvent.EmailVerificationCompleted, { result: 'success' })
                     setSuccess(true)
                     setShowMessage(true)
+                    // Verification also signs the user in (session cookies were
+                    // set via the auth proxy). Send them straight into the app —
+                    // a full navigation lets auth bootstrap from the new cookies.
+                    setTimeout(() => {
+                        window.location.assign('/')
+                    }, 1200)
                 } else {
+                    track(AnalyticsEvent.EmailVerificationCompleted, { result: 'fail' })
                     setError(res.error || t('auth.verification_failed'))
                     setShowMessage(true)
                 }
-            } catch (err) {
+            } catch {
+                track(AnalyticsEvent.EmailVerificationCompleted, { result: 'fail' })
                 setError(t('auth.verification_failed'))
                 setShowMessage(true)
             } finally {
@@ -50,7 +62,7 @@ function VerifyEmailClient({ org }: VerifyEmailClientProps) {
         }
 
         verify()
-    }, [token, userUuid, orgUuid, t])
+    }, [token, userUuid, orgUuid, t, track])
 
     return (
         <AuthLayout org={org} welcomeText={t('auth.verifying_your_email')}>
@@ -68,7 +80,7 @@ function VerifyEmailClient({ org }: VerifyEmailClientProps) {
                                 </span>
                                 {success && (
                                     <span className="text-sm ml-2">
-                                        · <Link href="/login" className="underline hover:no-underline">{t('auth.proceed_to_login')}</Link>
+                                        · <Link href="/" className="underline hover:no-underline">{t('auth.proceed_to_login')}</Link>
                                     </span>
                                 )}
                             </div>
@@ -140,7 +152,7 @@ function VerifyEmailClient({ org }: VerifyEmailClientProps) {
                                     </div>
                                 </div>
                                 <Link
-                                    href="/login"
+                                    href="/"
                                     className="block w-full bg-black text-white font-semibold text-center py-2.5 rounded-lg hover:bg-gray-800 transition-colors"
                                 >
                                     {t('auth.proceed_to_login')}

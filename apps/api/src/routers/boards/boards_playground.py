@@ -221,6 +221,30 @@ async def get_session_state(
     if not session:
         raise HTTPException(status_code=404, detail="Session not found")
 
+    # SECURITY: a playground session exposes generated HTML, prompts and the
+    # full message history. Without an authorization check any authenticated
+    # user could read another tenant's session by guessing/enumerating the
+    # session_uuid. Mirror the org-membership gate used by /start and /iterate:
+    # resolve the session's board -> org and require membership.
+    board = (await db_session.execute(
+        select(Board).where(Board.board_uuid == session.board_uuid)
+    )).scalars().first()
+    if not board:
+        raise HTTPException(status_code=404, detail="Session not found")
+
+    org = (await db_session.execute(
+        select(Organization).where(Organization.id == board.org_id)
+    )).scalars().first()
+    if not org or org.id is None:
+        raise HTTPException(status_code=404, detail="Session not found")
+
+    acting_user_id = resolve_acting_user_id(current_user)
+    if not await is_org_member(acting_user_id, org.id, db_session):
+        raise HTTPException(
+            status_code=403,
+            detail="You are not a member of this organization",
+        )
+
     return BoardsPlaygroundSessionResponse(
         session_uuid=session.session_uuid,
         iteration_count=session.iteration_count,

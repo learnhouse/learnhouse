@@ -18,6 +18,7 @@ import { CheckCircle2, XCircle } from 'lucide-react'
 import React, { useEffect, useState } from 'react'
 import toast from 'react-hot-toast'
 import { useTranslation } from 'react-i18next'
+import { applyManualGrade } from './applyManualGrade'
 
 type NumberAnswerContents = {
   prompt: string
@@ -93,6 +94,7 @@ function TaskNumberAnswerObject({
     if (view === 'teacher' && assignmentTaskState?.assignmentTask?.contents) {
       const c = assignmentTaskState.assignmentTask.contents
       if (c.prompt !== undefined || c.correct_value !== undefined) {
+        // eslint-disable-next-line react-hooks/set-state-in-effect
         setContents(normalizeContents(c))
       }
     }
@@ -143,6 +145,7 @@ function TaskNumberAnswerObject({
   }
 
   useEffect(() => {
+    /* eslint-disable react-hooks/set-state-in-effect */
     if (view === 'student') {
       loadTaskDefinition()
       loadOwnSubmission()
@@ -150,6 +153,7 @@ function TaskNumberAnswerObject({
       loadTaskDefinition()
       loadUserSubmission()
     }
+    /* eslint-enable react-hooks/set-state-in-effect */
   }, [view, assignmentTaskUUID, assignment, access_token])
 
   // --- SAVE (teacher) ---
@@ -210,41 +214,22 @@ function TaskNumberAnswerObject({
       : `${contents.correct_value}${contents.unit ? ' ' + contents.unit : ''}`
 
   async function gradeCustomFC(grade: number, feedback?: string) {
-    if (!assignmentTaskUUID || !userSubmissions) return
-    const maxPoints =
-      assignmentTaskOutsideProvider?.max_grade_value ||
-      assignmentTaskState?.assignmentTask?.max_grade_value ||
-      100
-    if (Number.isNaN(grade) || grade < 0) {
-      toast.error('Grade must be a positive number.')
-      return
-    }
-    if (grade > maxPoints) {
-      toast.error(`Grade cannot be more than ${maxPoints} points`)
-      return
-    }
-    const trimmed = feedback?.trim()
-    const finalFeedback = trimmed && trimmed.length > 0
-      ? trimmed
-      : `Graded by teacher : @${session?.data?.user?.username ?? ''}`
-    const values = {
-      assignment_task_submission_uuid: userSubmissions.assignment_task_submission_uuid,
-      task_submission: userSubmissions.task_submission,
+    if (!userSubmissions) return
+    await applyManualGrade({
       grade,
-      task_submission_grade_feedback: finalFeedback,
-    }
-    const res = await handleAssignmentTaskSubmission(
-      values,
+      feedback,
+      maxPoints:
+        assignmentTaskOutsideProvider?.max_grade_value ||
+        assignmentTaskState?.assignmentTask?.max_grade_value ||
+        100,
       assignmentTaskUUID,
-      assignment.assignment_object.assignment_uuid,
-      access_token
-    )
-    if (res) {
-      loadUserSubmission()
-      toast.success(`Task graded successfully with ${grade} points`)
-    } else {
-      toast.error('Error grading task, please retry later.')
-    }
+      assignmentUUID: assignment.assignment_object.assignment_uuid,
+      accessToken: access_token,
+      username: session?.data?.user?.username,
+      assignmentTaskSubmissionUUID: userSubmissions.assignment_task_submission_uuid,
+      taskSubmissionPayload: userSubmissions.task_submission,
+      onSuccess: loadUserSubmission,
+    })
   }
 
   return (

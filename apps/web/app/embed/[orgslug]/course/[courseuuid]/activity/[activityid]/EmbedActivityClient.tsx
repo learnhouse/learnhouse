@@ -228,7 +228,7 @@ function EmbedActivityClient({ activityId, courseuuid, orgslug, bgcolor }: Embed
         return (
           <EmbedCourseProvider course={course}>
             <Suspense fallback={null}>
-              <Canva content={activity.content} activity={activity} hideTableOfContents />
+              <Canva content={activity.content} activity={activity} hideTableOfContents courseUuid={course?.course_uuid} orgUuid={course?.org_uuid} />
             </Suspense>
           </EmbedCourseProvider>
         )

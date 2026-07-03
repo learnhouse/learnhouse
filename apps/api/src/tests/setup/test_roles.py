@@ -47,6 +47,7 @@ class TestRightsModel:
             "organizations": self.get_valid_permission(),
             "coursechapters": self.get_valid_permission(),
             "activities": self.get_valid_permission(),
+            "assignments": self.get_valid_permission(),
             "roles": self.get_valid_permission(),
             "dashboard": self.get_valid_dashboard_permission(),
             "communities": self.get_valid_permission(),
@@ -191,7 +192,8 @@ class TestRightsModel:
         assert "communities" in dumped
         assert "discussions" in dumped
         assert "podcasts" in dumped
-        assert len(dumped) == 15  # All 15 fields
+        assert "assignments" in dumped
+        assert len(dumped) == 16  # All 16 fields
 
 
 class TestPermissionModels:
@@ -251,6 +253,7 @@ class TestDefaultRolesValidation:
         "organizations",
         "coursechapters",
         "activities",
+        "assignments",
         "roles",
         "dashboard",
         "communities",
@@ -578,6 +581,7 @@ class TestRightsFieldConsistency:
             "organizations",
             "coursechapters",
             "activities",
+            "assignments",
             "roles",
             "dashboard",
             "communities",

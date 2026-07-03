@@ -1,4 +1,5 @@
 'use client'
+import { useLHAnalytics, AnalyticsEvent } from '@services/analytics'
 import ConfirmationModal from '@components/Objects/StyledElements/ConfirmationModal/ConfirmationModal'
 import Modal from '@components/Objects/StyledElements/Modal/Modal'
 import { getAPIUrl, getUriWithOrg } from '@services/config/config'
@@ -8,7 +9,7 @@ import {
   unLinkResourcesToUserGroup,
 } from '@services/usergroups/usergroups'
 import { updateFolder, getFolderById } from '@services/folders/folders'
-import { updateMedia } from '@services/media/media-resource'
+import { updateMedia, getMediaById } from '@services/media/media-resource'
 import { updateCourse, getCourse } from '@services/courses/courses'
 import { apiFetch } from '@services/utils/ts/requests'
 import { Check, Globe, Info, SquareUserRound, Users, X } from 'lucide-react'
@@ -105,6 +106,7 @@ function LinkUserGroup({
   const session = useLHSession() as any
   const access_token = session?.data?.tokens?.access_token
 
+  const { track } = useLHAnalytics('dashboard')
   const { data } = useSWR(
     org?.id ? ['usergroups', org.id] : null,
     () => getUserGroups(org.id, access_token)
@@ -123,6 +125,7 @@ function LinkUserGroup({
     const res = await linkResourcesToUserGroup(selected, resource_uuid, org.id, access_token)
     if (res.status === 200) {
       closeModal()
+      track(AnalyticsEvent.UsergroupLinked, { resource_uuid, usergroup_id: selected })
       toast.success(t('access.usergroups.link_success'))
       onLinked()
     } else {
@@ -196,10 +199,12 @@ function ManageAccessPopover({ resource_uuid, resourceType }: Props) {
     async () => {
       if (resourceType === 'folders') return getFolderById(resource_uuid, access_token)
       if (resourceType === 'courses') return getCourse(resource_uuid, null, access_token)
+      if (resourceType === 'media') return getMediaById(resource_uuid, access_token)
       return null
     }
   )
 
+  const { track } = useLHAnalytics('dashboard')
   const [isClientPublic, setIsClientPublic] = useState<boolean | undefined>(undefined)
   const [isSaving, setIsSaving] = useState(false)
 
@@ -223,6 +228,11 @@ function ManageAccessPopover({ resource_uuid, resourceType }: Props) {
       }
       setIsClientPublic(value)
       mutateResource()
+      track(AnalyticsEvent.ResourceVisibilityChanged, {
+        resource_type: resourceType,
+        resource_uuid,
+        is_public: value,
+      })
       toast.success(t('access.visibility_updated'))
     } catch (error: any) {
       toast.error(error?.message || t('access.visibility_update_error'))

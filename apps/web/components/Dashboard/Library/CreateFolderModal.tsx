@@ -18,6 +18,7 @@ import toast from 'react-hot-toast'
 import { useFormik } from 'formik'
 import * as Yup from 'yup'
 import { useTranslation } from 'react-i18next'
+import { useLHAnalytics, AnalyticsEvent } from '@services/analytics'
 
 type Props = {
   orgslug: string
@@ -31,6 +32,7 @@ function CreateFolderModal({ parentFolderUuid, closeModal, onChanged }: Props) {
   const org = useOrg() as any
   const session = useLHSession() as any
   const access_token = session?.data?.tokens?.access_token
+  const { track } = useLHAnalytics('dashboard')
 
   const [color, setColor] = React.useState('violet')
   const [file, setFile] = React.useState<File | null>(null)
@@ -69,6 +71,10 @@ function CreateFolderModal({ parentFolderUuid, closeModal, onChanged }: Props) {
             toast.error(e?.message || t('library.thumbnail_error'))
           }
         }
+        track(AnalyticsEvent.FolderCreated, {
+          is_public: values.public,
+          is_subfolder: !!parentFolderUuid,
+        })
         toast.success(t('library.folder_created_success'))
         closeModal()
         onChanged?.()

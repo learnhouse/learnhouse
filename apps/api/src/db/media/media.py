@@ -30,6 +30,10 @@ class Media(MediaBase, table=True):
     media_uuid: str = Field(default="", index=True)
     # For UPLOAD — file metadata (mirrors BlockFile shape)
     file_id: Optional[str] = ""
+    # Randomized, server-only relative storage key (under content/). New uploads
+    # set this; it is NEVER returned to clients, so the storage path cannot be
+    # derived from public identifiers. Legacy rows leave it empty (reconstructed).
+    storage_key: Optional[str] = ""
     file_format: Optional[str] = ""
     file_size: Optional[int] = Field(default=None, sa_column=Column(Integer, nullable=True))
     file_mime: Optional[str] = ""
@@ -55,7 +59,10 @@ class MediaRead(MediaBase):
     id: int
     org_id: int
     media_uuid: str
-    file_id: Optional[str] = ""
+    # NOTE: the storage-locating fields (file_id / storage_key) are intentionally
+    # NOT exposed — clients load bytes via GET /media/{media_uuid}/file only, so
+    # the storage path is never derivable. file_format/size/mime are safe metadata
+    # the UI needs to pick the right preview.
     file_format: Optional[str] = ""
     file_size: Optional[int] = None
     file_mime: Optional[str] = ""

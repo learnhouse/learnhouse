@@ -13,6 +13,7 @@ import toast from 'react-hot-toast'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { queryKeys } from '@/lib/query/keys'
 import { useTranslation } from 'react-i18next'
+import { useLHAnalytics, AnalyticsEvent } from '@services/analytics'
 
 type EditCourseAccessProps = {
     orgslug: string
@@ -86,8 +87,9 @@ function SkeletonCard() {
     )
 }
 
-function EditCourseAccess(props: EditCourseAccessProps) {
+function EditCourseAccess(_props: EditCourseAccessProps) {
     const { t } = useTranslation()
+    const { track } = useLHAnalytics('dashboard')
     const session = useLHSession() as any;
     const access_token = session?.data?.tokens?.access_token;
     const org = useOrg() as any;
@@ -99,7 +101,7 @@ function EditCourseAccess(props: EditCourseAccessProps) {
         isSaving,
     } = useCourseFieldSync('editCourseAccess');
 
-    const queryClient = useQueryClient()
+    const _queryClient = useQueryClient()
 
     const { data: usergroups } = useQuery({
         queryKey: queryKeys.courseUsergroups.resources(courseStructure?.course_uuid ?? '', org?.id ?? 0),
@@ -136,7 +138,8 @@ function EditCourseAccess(props: EditCourseAccessProps) {
 
     const handleSetPublic = useCallback((value: boolean) => {
         setIsClientPublic(value);
-    }, []);
+        track(AnalyticsEvent.CourseAccessChanged, { new_access: value ? 'public' : 'users_only' });
+    }, [track]);
 
     if (!courseStructure) return null;
 

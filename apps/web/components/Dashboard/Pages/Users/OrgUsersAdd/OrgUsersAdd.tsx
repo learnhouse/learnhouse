@@ -27,6 +27,7 @@ import toast from 'react-hot-toast'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { queryKeys } from '@/lib/query/keys'
 import { useTranslation } from 'react-i18next'
+import { useLHAnalytics, AnalyticsEvent } from '@services/analytics'
 
 const ITEMS_PER_PAGE = 10
 
@@ -58,6 +59,7 @@ function OrgUsersAdd() {
   const [sendSummary, setSendSummary] = useState<InviteSummary | null>(null)
   const [searchValue, setSearchValue] = useState('')
   const [page, setPage] = useState(1)
+  const { track } = useLHAnalytics('dashboard')
 
   const { data: invites } = useQuery({
     queryKey: queryKeys.org.inviteCodes(org?.id),
@@ -104,6 +106,11 @@ function OrgUsersAdd() {
       const data = res.data
       setSendResults(data.results || [])
       setSendSummary(data.summary || null)
+      track(AnalyticsEvent.MembersBatchInvited, {
+        total: data.summary?.total ?? 0,
+        sent: data.summary?.sent ?? 0,
+        failed: data.summary?.failed ?? 0,
+      })
       queryClient.invalidateQueries({ queryKey: invitedUsersKey(org?.id) })
       setIsLoading(false)
       setInvitedUsers('')

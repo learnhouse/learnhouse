@@ -1,11 +1,6 @@
 import { getAPIUrl } from '@services/config/config'
 import { RequestBody, getResponseMetadata } from '@services/utils/ts/requests'
 
-interface LoginAndGetTokenResponse {
-  access_token: 'string'
-  token_type: 'string'
-}
-
 // ⚠️ mvp phase code
 // TODO : everything in this file need to be refactored including security issues fix
 
@@ -266,9 +261,12 @@ export async function verifyEmail(
         user_uuid: userUuid,
         org_uuid: orgUuid,
       }),
+      // Go through the same-origin auth proxy so the session cookies the
+      // backend returns on success are mirrored onto this origin (auto sign-in).
+      credentials: 'include',
     }
 
-    const response = await fetch(`${getAPIUrl()}auth/verify-email`, requestOptions)
+    const response = await fetch('/api/auth/verify-email', requestOptions)
     const data = await response.json()
 
     if (response.ok) {
@@ -279,7 +277,7 @@ export async function verifyEmail(
         error: data.detail || 'Verification failed',
       }
     }
-  } catch (error) {
+  } catch {
     return {
       success: false,
       error: 'An error occurred during verification',
@@ -314,7 +312,7 @@ export async function resendVerificationEmail(
         error: data.detail || 'Failed to resend verification email',
       }
     }
-  } catch (error) {
+  } catch {
     return {
       success: false,
       error: 'An error occurred',

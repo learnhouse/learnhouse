@@ -10,10 +10,80 @@ from src.services.media.media import (
     get_media_list,
     update_media,
     delete_media,
+    authorize_media_file,
+    authorize_share_token,
+    create_media_share_link,
 )
+from src.services.media.media_serve import serve_media_file
 
 
 router = APIRouter()
+
+
+# --- File serving (the ONLY way the client loads media bytes) ----------------
+
+@router.get(
+    "/{media_uuid}/file",
+    summary="Serve a media file",
+    description="Streams the media file's bytes after enforcing access (folder-aware). The storage path is never exposed to the client. Supports Range requests.",
+)
+async def api_serve_media_file(
+    request: Request,
+    media_uuid: str,
+    current_user=Depends(get_current_user),
+    db_session=Depends(get_db_session),
+):
+    media, is_public = await authorize_media_file(request, media_uuid, current_user, db_session)
+    return await serve_media_file(request, media, db_session, is_public=is_public)
+
+
+@router.head("/{media_uuid}/file", summary="Media file metadata")
+async def api_head_media_file(
+    request: Request,
+    media_uuid: str,
+    current_user=Depends(get_current_user),
+    db_session=Depends(get_db_session),
+):
+    media, is_public = await authorize_media_file(request, media_uuid, current_user, db_session)
+    return await serve_media_file(request, media, db_session, is_public=is_public, head=True)
+
+
+# --- Shareable copy link (random + unique every call) ------------------------
+
+@router.post(
+    "/{media_uuid}/share-link",
+    summary="Create a media share link",
+    description="Mints a fresh random, revocable token each call. The link is NOT an access bypass — recipients still need access.",
+)
+async def api_create_media_share_link(
+    request: Request,
+    media_uuid: str,
+    current_user: PublicUser = Depends(get_current_user),
+    db_session=Depends(get_db_session),
+):
+    return await create_media_share_link(request, media_uuid, current_user, db_session)
+
+
+@router.get("/shared/{token}/file", summary="Serve a shared media file by token")
+async def api_serve_shared_media(
+    request: Request,
+    token: str,
+    current_user=Depends(get_current_user),
+    db_session=Depends(get_db_session),
+):
+    media, is_public = await authorize_share_token(request, token, current_user, db_session)
+    return await serve_media_file(request, media, db_session, is_public=is_public)
+
+
+@router.head("/shared/{token}/file", summary="Shared media file metadata by token")
+async def api_head_shared_media(
+    request: Request,
+    token: str,
+    current_user=Depends(get_current_user),
+    db_session=Depends(get_db_session),
+):
+    media, is_public = await authorize_share_token(request, token, current_user, db_session)
+    return await serve_media_file(request, media, db_session, is_public=is_public, head=True)
 
 
 @router.post(

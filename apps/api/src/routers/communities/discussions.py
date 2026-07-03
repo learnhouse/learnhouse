@@ -358,6 +358,15 @@ async def api_get_user_votes_batch(
 
     Returns a dictionary mapping discussion_uuid to voted status.
     """
+    # SECURITY: Bound the batch size. An unbounded list is built into a single
+    # SQL IN (...) clause downstream; very large lists exhaust DB driver
+    # parameter limits (raising a 500) and allow trivial resource-exhaustion.
+    if len(discussion_uuids) > 200:
+        from fastapi import HTTPException
+        raise HTTPException(
+            status_code=400,
+            detail="Too many discussion_uuids; maximum 200 per request",
+        )
     return await get_user_votes_for_discussions(
         request, discussion_uuids, current_user, db_session
     )
@@ -437,20 +446,27 @@ async def api_get_comments_by_discussion(
 @router.get(
     "/discussions/{discussion_uuid}/comments/count",
     summary="Get comment count for a discussion",
-    description="Return the total number of comments on a discussion. This endpoint is unauthenticated and safe to call for counters.",
+    description="Return the total number of comments on a discussion. The caller must be able to read the parent community (public communities are readable by anyone, including anonymous users).",
     responses={
         200: {"description": "Object with the comment count (e.g. {\"count\": 42})."},
+        403: {"description": "Caller cannot read this discussion's community"},
         404: {"description": "Discussion not found"},
     },
 )
 async def api_get_comment_count(
+    request: Request,
     discussion_uuid: str,
+    current_user: PublicUser = Depends(get_current_user),
     db_session: AsyncSession = Depends(get_db_session),
 ) -> dict:
     """
     Get the count of comments for a discussion.
+
+    Authorized by community read access (not blanket auth): public-community
+    counts remain visible to anonymous callers, while private-community counts
+    require membership — matching the discussion read endpoint.
     """
-    count = await get_comment_count(discussion_uuid, db_session)
+    count = await get_comment_count(request, discussion_uuid, current_user, db_session)
     return {"count": count}
 
 

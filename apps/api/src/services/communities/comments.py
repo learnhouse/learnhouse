@@ -5,7 +5,7 @@ from sqlmodel import select
 from sqlmodel.ext.asyncio.session import AsyncSession
 from fastapi import HTTPException, Request
 
-from src.db.users import PublicUser, AnonymousUser, APITokenUser, User, UserRead
+from src.db.users import PublicUser, AnonymousUser, APITokenUser, User, UserReadAuthor
 from src.db.communities.communities import Community
 from src.db.communities.discussions import Discussion
 from src.db.communities.discussion_comments import (
@@ -100,7 +100,7 @@ async def create_comment(
 
     return DiscussionCommentReadWithVoteStatus(
         **comment.model_dump(),
-        author=UserRead.model_validate(author.model_dump()) if author else None,
+        author=UserReadAuthor.model_validate(author.model_dump()) if author else None,
         has_voted=False,  # User just created it, hasn't voted yet
     )
 
@@ -170,7 +170,7 @@ async def get_comments_by_discussion(
         result.append(
             DiscussionCommentReadWithVoteStatus(
                 **comment.model_dump(),
-                author=UserRead.model_validate(author.model_dump()) if author else None,
+                author=UserReadAuthor.model_validate(author.model_dump()) if author else None,
                 has_voted=user_votes.get(comment.id, False),
             )
         )
@@ -241,7 +241,7 @@ async def update_comment(
 
     return DiscussionCommentReadWithVoteStatus(
         **comment.model_dump(),
-        author=UserRead.model_validate(author.model_dump()) if author else None,
+        author=UserReadAuthor.model_validate(author.model_dump()) if author else None,
         has_voted=user_votes.get(comment.id, False),
     )
 
@@ -313,11 +313,17 @@ async def delete_comment(
 
 
 async def get_comment_count(
+    request: Request,
     discussion_uuid: str,
+    current_user: Union[PublicUser, AnonymousUser, APITokenUser],
     db_session: AsyncSession,
 ) -> int:
     """
     Get the count of comments for a discussion.
+
+    The caller must be able to READ the parent community; otherwise the count
+    would leak activity from private communities to anyone who can guess a
+    discussion uuid. This mirrors the authorization of ``get_discussion``.
     """
     discussion_statement = select(Discussion).where(
         Discussion.discussion_uuid == discussion_uuid
@@ -325,7 +331,17 @@ async def get_comment_count(
     discussion = (await db_session.execute(discussion_statement)).scalars().first()
 
     if not discussion:
-        return 0
+        raise HTTPException(status_code=404, detail="Discussion not found")
+
+    community = (await db_session.execute(
+        select(Community).where(Community.id == discussion.community_id)
+    )).scalars().first()
+    if not community:
+        raise HTTPException(status_code=404, detail="Community not found")
+
+    await check_resource_access(
+        request, db_session, current_user, community.community_uuid, AccessAction.READ
+    )
 
     from sqlalchemy import func
     count_statement = select(func.count(DiscussionComment.id)).where(

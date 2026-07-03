@@ -1,5 +1,5 @@
 import { useAssignments } from '@components/Contexts/Assignments/AssignmentContext';
-import { BookOpenCheck, Check, CircleHelp, Download, Info, MessageSquare, X } from 'lucide-react';
+import { BookOpenCheck, Check, CircleHelp, Download, Info, MessageSquare, UserCheck, X } from 'lucide-react';
 import Link from 'next/link';
 import React, { useEffect, useState } from 'react'
 import { useQueryClient } from '@tanstack/react-query';
@@ -18,6 +18,7 @@ import { deleteUserSubmission, getFinalGrade, markActivityAsDoneForUser, putFina
 import { useLHSession } from '@components/Contexts/LHSessionContext';
 import toast from 'react-hot-toast';
 import { useTranslation } from 'react-i18next';
+import { useLHAnalytics, AnalyticsEvent } from '@services/analytics';
 
 function EvaluateAssignment({ user_id }: any) {
     const { t } = useTranslation()
@@ -26,6 +27,7 @@ function EvaluateAssignment({ user_id }: any) {
     const org = useOrg() as any;
     const access_token = session?.data?.tokens?.access_token;
     const queryClient = useQueryClient();
+    const { track } = useLHAnalytics('dashboard');
 
     // Overall feedback the teacher types. `undefined` means "not touched yet"
     // so we don't clobber existing server-side feedback with an empty string.
@@ -59,6 +61,11 @@ function EvaluateAssignment({ user_id }: any) {
         if (res.success) {
             setGradePreview(res.data);
             toast.success(res.data.message)
+            track(AnalyticsEvent.SubmissionGraded, {
+                has_feedback: !!(feedback && feedback.trim()),
+                passed: res.data.passed,
+                display_grade: res.data.display_grade,
+            })
             const rawUuid = assignmentUuid?.replace('assignment_', '') ?? ''
             queryClient.invalidateQueries({ queryKey: queryKeys.assignments.allSubmissions(rawUuid) })
             queryClient.invalidateQueries({ queryKey: queryKeys.assignments.analytics(rawUuid) })
@@ -78,6 +85,10 @@ function EvaluateAssignment({ user_id }: any) {
         const doneRes = await markActivityAsDoneForUser(user_id, assignmentUuid, access_token)
         if (doneRes.success) {
             toast.success(t('dashboard.assignments.submissions.toasts.finalize_success'))
+            track(AnalyticsEvent.SubmissionFinalized, {
+                passed: gradeRes.data.passed,
+                display_grade: gradeRes.data.display_grade,
+            })
             const rawUuid = assignmentUuid?.replace('assignment_', '') ?? ''
             queryClient.invalidateQueries({ queryKey: queryKeys.assignments.allSubmissions(rawUuid) })
             queryClient.invalidateQueries({ queryKey: queryKeys.assignments.analytics(rawUuid) })
@@ -169,6 +180,12 @@ function EvaluateAssignment({ user_id }: any) {
                                         {taskSubmitted
                                             ? tb.percentage_display
                                             : t('dashboard.assignments.submissions.preview.not_submitted')}
+                                    </div>
+                                )}
+                                {tb?.manually_graded && (
+                                    <div className='flex items-center space-x-1 text-[10px] font-bold px-2 py-0.5 rounded-full bg-orange-50 text-orange-700'>
+                                        <UserCheck size={10} />
+                                        <span>{t('dashboard.assignments.submissions.preview.manually_graded', { defaultValue: 'Manually graded' })}</span>
                                     </div>
                                 )}
                             </div>

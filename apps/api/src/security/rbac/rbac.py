@@ -1,5 +1,5 @@
 import logging
-from typing import Literal, Union
+from typing import Literal, Optional, Union
 from fastapi import HTTPException, status, Request
 from sqlalchemy import null
 from sqlmodel import select
@@ -407,6 +407,15 @@ async def authorization_verify_based_on_roles_and_authorship(
     )
     logger.info("[RBAC] isRole=%s", isRole)
 
+    # Authors and role-holders (e.g. course admins/maintainers) must never be
+    # blocked by the paywall on a resource they own or manage. Grant access
+    # immediately so the UserGroup/paid-offer check below cannot raise a 402
+    # against them (check_usergroup_access raises HTTP 402 for paid offers, which
+    # would otherwise lock the author/admin out of their own paid resource).
+    if isAuthor or isRole:
+        logger.info("[RBAC] Access GRANTED via author/role before usergroup check")
+        return True
+
     # For read actions, also check UserGroup membership
     # UserGroups allow access to resources that are not public but restricted to group members
     hasUserGroupAccess = False
@@ -452,6 +461,7 @@ async def authorization_verify_api_token_permissions(
     action: Literal["read", "update", "delete", "create"],
     element_uuid: str,
     db_session: AsyncSession,
+    resource_type_override: Optional[str] = None,
 ) -> bool:
     """
     Verify API token permissions for an action on an element.
@@ -461,14 +471,20 @@ async def authorization_verify_api_token_permissions(
 
     API tokens are restricted to these resources:
     - courses, activities, coursechapters, folders, media, certifications,
-    - usergroups, payments, search
+    - usergroups, payments, search, assignments
 
     Args:
         request: FastAPI request object
         api_token_user: The authenticated API token user
         action: The action being performed
-        element_uuid: The UUID of the element being accessed
+        element_uuid: The UUID of the element being accessed. Used both to
+            resolve the resource type (by UUID prefix) and to enforce the org
+            boundary.
         db_session: Database session
+        resource_type_override: When the rights bucket to check differs from the
+            element's own type, pass it here. Assignments authorize against their
+            parent course UUID (for the org-boundary lookup) but must be checked
+            against the ``assignments`` rights bucket, not ``courses``.
 
     Returns:
         bool: True if permission granted
@@ -476,12 +492,12 @@ async def authorization_verify_api_token_permissions(
     Raises:
         HTTPException: If permission denied or org boundary violated
     """
-    element_type = await check_element_type(element_uuid)
+    element_type = resource_type_override or await check_element_type(element_uuid)
 
     # API tokens are restricted to specific resource types
     allowed_resource_types = [
         'courses', 'activities', 'coursechapters', 'folders', 'media',
-        'certifications', 'usergroups', 'payments', 'search'
+        'certifications', 'usergroups', 'payments', 'search', 'assignments'
     ]
 
     if element_type not in allowed_resource_types:

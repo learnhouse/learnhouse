@@ -12,6 +12,7 @@ import { useQueryClient } from '@tanstack/react-query'
 import { queryKeys } from '@/lib/query/keys'
 import Modal from '@components/Objects/StyledElements/Modal/Modal'
 import { Loader2 } from 'lucide-react'
+import { useLHAnalytics, AnalyticsEvent } from '@services/analytics'
 
 interface CreateCommunityModalProps {
   isOpen: boolean
@@ -30,6 +31,7 @@ export function CreateCommunityModal({
   const session = useLHSession() as any
   const router = useRouter()
   const queryClient = useQueryClient()
+  const { track } = useLHAnalytics('learner')
   const [isSubmitting, setIsSubmitting] = useState(false)
 
   const accessToken = session?.data?.tokens?.access_token
@@ -58,6 +60,10 @@ export function CreateCommunityModal({
       )
 
       if (result) {
+        track(AnalyticsEvent.CommunityCreated, {
+          is_public: values.public,
+          has_description: !!values.description,
+        })
         await revalidateTags(['communities'], orgSlug)
         queryClient.invalidateQueries({ queryKey: queryKeys.community.list(orgId) })
         router.refresh()

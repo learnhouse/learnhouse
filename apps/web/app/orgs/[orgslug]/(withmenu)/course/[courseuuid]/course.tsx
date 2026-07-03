@@ -25,7 +25,7 @@ import { getActivityWithAuthHeader } from '@services/courses/activities'
 import { useTranslation } from 'react-i18next'
 import CourseCommunitySection from '@components/Objects/Communities/CourseCommunitySection'
 import CourseShare from '@components/Objects/Courses/CourseShare/CourseShare'
-import { useAnalytics } from '@/hooks/useAnalytics'
+import { useLHAnalytics, AnalyticsEvent } from '@services/analytics'
 
 const CourseClient = (props: any) => {
   const { t } = useTranslation()
@@ -37,7 +37,7 @@ const CourseClient = (props: any) => {
   const initialCourse = props.course
   const serverError = props.serverError
   const org = useOrg() as any
-  const router = useRouter()
+  const _router = useRouter()
   const isMobile = useMediaQuery('(max-width: 768px)')
   const session = useLHSession() as any;
   const access_token = session?.data?.tokens?.access_token;
@@ -53,14 +53,14 @@ const CourseClient = (props: any) => {
 
   const course = initialCourse || clientCourseData;
 
-  const { track } = useAnalytics()
+  const { track } = useLHAnalytics('learner')
 
   // Track course view
   const courseId = course?.id
   const courseUuidForTracking = course?.course_uuid
   useEffect(() => {
     if (courseId && courseUuidForTracking) {
-      track('course_view', {
+      track(AnalyticsEvent.CourseViewed, {
         course_uuid: courseUuidForTracking,
       })
     }
@@ -198,7 +198,7 @@ const CourseClient = (props: any) => {
         setLearnings(parsedLearnings)
         return
       }
-    } catch (e) {
+    } catch (_e) {
       // Not valid JSON, continue to legacy format handling
     }
 
@@ -227,7 +227,7 @@ const CourseClient = (props: any) => {
     }
   }
 
-  const getActivityTypeBadgeColor = (activityType: string) => {
+  const _getActivityTypeBadgeColor = (activityType: string) => {
     switch (activityType) {
       case 'TYPE_VIDEO':
         return 'bg-neutral-100 text-neutral-500'
@@ -396,7 +396,7 @@ const CourseClient = (props: any) => {
                         }}
                       >
                         {/* Hidden img with fetchpriority="high" so the browser fetches this LCP image immediately */}
-                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        { }
                         <img
                           src={getCourseThumbnailMediaDirectory(org?.org_uuid, course?.course_uuid, course?.thumbnail_image)}
                           alt=""

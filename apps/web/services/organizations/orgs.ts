@@ -162,6 +162,27 @@ export async function removeUsersFromOrg(
   return res
 }
 
+export async function removeAllUsersFromOrg(
+  org_id: any,
+  access_token: string
+) {
+  const result = await fetch(
+    `${getAPIUrl()}orgs/${org_id}/users/all`,
+    RequestBodyWithAuthHeader('DELETE', null, null, access_token)
+  )
+  const res = await errorHandling(result)
+  return res
+}
+
+export async function wipeOrgContent(org_id: any, access_token: string) {
+  const result = await fetch(
+    `${getAPIUrl()}orgs/${org_id}/content`,
+    RequestBodyWithAuthHeader('DELETE', null, null, access_token)
+  )
+  const res = await errorHandling(result)
+  return res
+}
+
 export async function joinOrg(
   args: {
     org_id: number

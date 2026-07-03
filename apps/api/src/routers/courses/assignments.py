@@ -409,11 +409,16 @@ async def api_handle_assignment_task_submissions(
     request: Request,
     assignment_task_submission_object: AssignmentTaskSubmissionUpdate,
     assignment_task_uuid: str,
+    on_behalf_of_user_id: int | None = None,
     current_user: PublicUser = Depends(get_current_user),
     db_session=Depends(get_db_session),
 ):
     """
-    Create new task submissions for an assignment
+    Create new task submissions for an assignment.
+
+    Sessions write their own submission. An API token with ``assignments.create``
+    may submit on behalf of a learner by passing ``on_behalf_of_user_id`` (the
+    learner's LearnHouse user id; the learner must belong to the token's org).
     """
     return await handle_assignment_task_submission(
         request,
@@ -421,6 +426,7 @@ async def api_handle_assignment_task_submissions(
         assignment_task_submission_object,
         current_user,
         db_session,
+        on_behalf_of_user_id=on_behalf_of_user_id,
     )
 
 
@@ -578,14 +584,19 @@ async def api_delete_assignment_task_submissions(
 async def api_create_assignment_submissions(
     request: Request,
     assignment_uuid: str,
+    on_behalf_of_user_id: int | None = None,
     current_user: PublicUser = Depends(get_current_user),
     db_session=Depends(get_db_session),
 ):
     """
-    Create new submissions for an assignment
+    Create new submissions for an assignment.
+
+    Sessions submit for themselves. An API token with ``assignments.create`` may
+    submit on behalf of a learner by passing ``on_behalf_of_user_id``.
     """
     return await create_assignment_submission(
-        request, assignment_uuid, current_user, db_session
+        request, assignment_uuid, current_user, db_session,
+        on_behalf_of_user_id=on_behalf_of_user_id,
     )
 
 

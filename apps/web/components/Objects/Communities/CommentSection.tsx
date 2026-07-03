@@ -12,6 +12,7 @@ import {
   DiscussionCommentWithAuthor,
 } from '@services/communities/discussions'
 import { CommentCard } from './CommentCard'
+import { useLHAnalytics, AnalyticsEvent } from '@services/analytics'
 
 interface CommentSectionProps {
   discussionUuid: string
@@ -26,6 +27,7 @@ export function CommentSection({ discussionUuid, communityUuid, isLocked = false
   const isAuthenticated = session?.status === 'authenticated'
   const { isUserPartOfTheOrg } = useOrgMembership()
   const { canManageCommunity } = useCommunityRights(communityUuid || '')
+  const { track } = useLHAnalytics('learner')
   const canComment = isAuthenticated && isUserPartOfTheOrg
 
   const [comments, setComments] = useState<DiscussionCommentWithAuthor[]>([])
@@ -74,6 +76,10 @@ export function CommentSection({ discussionUuid, communityUuid, isLocked = false
         { content: newComment.trim() },
         accessToken
       )
+      track(AnalyticsEvent.CommentPosted, {
+        existing_comment_count: comments.length,
+        is_locked: isLocked,
+      })
       setComments((prev) => [...prev, comment])
       setNewComment('')
       setIsFocused(false)

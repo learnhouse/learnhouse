@@ -27,6 +27,12 @@ router = APIRouter()
 
 JUDGE0_TIMEOUT = 30.0
 
+# Hard limits for batch execution. Without these a single authenticated user
+# could submit an arbitrarily large `test_cases` list and fan out unbounded
+# parallel requests to Judge0, exhausting connections / CPU and racking up cost.
+MAX_BATCH_TEST_CASES = 50
+MAX_BATCH_CONCURRENCY = 8
+
 # SQL language ID (Judge0)
 SQL_LANGUAGE_ID = 82
 # We run SQL via Python's sqlite3 module
@@ -318,6 +324,12 @@ async def execute_batch(
 ):
     judge0_cfg = _get_judge0_config()
 
+    if len(body.test_cases) > MAX_BATCH_TEST_CASES:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Too many test cases (max {MAX_BATCH_TEST_CASES})",
+        )
+
     language_id = body.language_id
     source_code = body.source_code
     additional_files_b64 = None
@@ -338,10 +350,14 @@ async def execute_batch(
     elif zip_files:
         additional_files_b64 = _make_additional_files_zip(text_files=zip_files)
 
+    # Bound how many submissions hit Judge0 simultaneously.
+    semaphore = asyncio.Semaphore(MAX_BATCH_CONCURRENCY)
+
     async def run_test(tc: TestCase) -> dict:
-        r = await _submit_single(
-            judge0_cfg, language_id, source_code, tc.stdin, additional_files_b64
-        )
+        async with semaphore:
+            r = await _submit_single(
+                judge0_cfg, language_id, source_code, tc.stdin, additional_files_b64
+            )
         status = r.get("status", {})
         # Normalize both outputs before comparing:
         # - splitlines handles \n, \r\n, and \r equivalently

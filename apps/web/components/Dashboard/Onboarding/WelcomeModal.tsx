@@ -16,6 +16,7 @@ import {
 } from '@phosphor-icons/react'
 import WelcomeGlobe from './WelcomeGlobe'
 import { useTranslation } from 'react-i18next'
+import { useLHAnalytics, AnalyticsEvent } from '@services/analytics'
 
 const ease = [0.16, 1, 0.3, 1] as const
 
@@ -101,6 +102,7 @@ const FEATURES = [
 export default function WelcomeModal() {
   const { welcomeSeen, markWelcomeSeen, dismissed } = useOnboarding()
   const { t } = useTranslation()
+  const { track } = useLHAnalytics('dashboard')
   const [step, setStep] = useState<'welcome' | 'features'>('welcome')
   const [isMobile, setIsMobile] = useState(false)
 
@@ -247,7 +249,10 @@ export default function WelcomeModal() {
                 </motion.button>
               ) : (
                 <button
-                  onClick={() => markWelcomeSeen()}
+                  onClick={() => {
+                    track(AnalyticsEvent.OnboardingWelcomeCompleted)
+                    markWelcomeSeen()
+                  }}
                   className="w-full flex items-center justify-center gap-2 py-3 text-sm font-semibold text-white bg-black rounded-lg hover:bg-gray-800 transition-colors"
                 >
                   {t('onboarding.welcome.lets_go')}

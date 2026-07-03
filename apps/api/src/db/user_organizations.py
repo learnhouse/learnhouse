@@ -13,7 +13,7 @@ class UserOrganization(SQLModel, table=True):
         sa_column=Column(Integer, ForeignKey("user.id", ondelete="CASCADE"), nullable=False, index=True)
     )
     org_id: int = Field(
-        sa_column=Column(Integer, ForeignKey("organization.id", ondelete="CASCADE"), index=True)
+        sa_column=Column(Integer, ForeignKey("organization.id", ondelete="CASCADE"), nullable=False, index=True)
     )
     role_id: int = Field(default=None, foreign_key="role.id", index=True)
     creation_date: str

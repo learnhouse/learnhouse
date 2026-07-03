@@ -1,13 +1,21 @@
 'use client'
 import React, { useEffect, useState } from 'react'
 import BarLoader from 'react-spinners/BarLoader'
-import { PlayCircle, Upload, YoutubeLogo } from '@phosphor-icons/react'
+import { PlayCircle, Upload, YoutubeLogo, Sparkle } from '@phosphor-icons/react'
 import { constructAcceptValue } from '@/lib/constants'
-import { getActivity, updateHostedVideoActivity, updateExternalVideoActivity } from '@services/courses/activities'
+import CaptionsSettings, {
+  type CaptionsValue,
+  EMPTY_CAPTIONS,
+} from '@components/Objects/Activities/Video/CaptionsSettings'
+import {
+  getActivity,
+  updateHostedVideoActivity,
+  updateExternalVideoActivity,
+  updateVideoCaptions,
+} from '@services/courses/activities'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
 import toast from 'react-hot-toast'
 import { mutate } from 'swr'
-import { getAPIUrl } from '@services/config/config'
 
 const SUPPORTED_FILES = constructAcceptValue(['mp4', 'webm'])
 
@@ -20,12 +28,12 @@ interface VideoDetails {
 
 interface EditVideoActivityModalProps {
   activity: any
-  courseUuid: string
-  orgSlug: string
+  courseUuid?: string
+  orgSlug?: string
   onClose: () => void
 }
 
-function EditVideoActivityModal({ activity, courseUuid, orgSlug, onClose }: EditVideoActivityModalProps) {
+function EditVideoActivityModal({ activity, onClose }: EditVideoActivityModalProps) {
   const session = useLHSession() as any
   const access_token = session?.data?.tokens?.access_token
   const isYouTube = activity.activity_sub_type === 'SUBTYPE_VIDEO_YOUTUBE'
@@ -42,6 +50,11 @@ function EditVideoActivityModal({ activity, courseUuid, orgSlug, onClose }: Edit
   const [isLoading, setIsLoading] = useState(true)
   const [isSubmitting, setIsSubmitting] = useState(false)
 
+  // --- AI captions state (hosted video only) ---
+  const [captions, setCaptions] = useState<CaptionsValue>(EMPTY_CAPTIONS)
+  const [capStatus, setCapStatus] = useState<string | null>(null)
+  const [isSavingCaptions, setIsSavingCaptions] = useState(false)
+
   useEffect(() => {
     async function loadActivity() {
       const data = await getActivity(activity.activity_uuid, null, access_token)
@@ -56,10 +69,52 @@ function EditVideoActivityModal({ activity, courseUuid, orgSlug, onClose }: Edit
       if (data?.content?.uri) {
         setYoutubeUrl(data.content.uri)
       }
+      const caps = data?.extra_metadata?.captions
+      if (caps) {
+        setCapStatus(caps.status || null)
+        setCaptions({
+          enabled: !!caps.enabled,
+          sourceLang: caps.source_language || 'auto',
+          languages: (caps.languages || []).map((l: any) => ({
+            code: l.code,
+            label: l.label || l.code,
+            status: l.status,
+          })),
+        })
+      }
       setIsLoading(false)
     }
     loadActivity()
   }, [activity.activity_uuid])
+
+  const saveCaptions = async () => {
+    setIsSavingCaptions(true)
+    const toastId = toast.loading('Saving caption settings...')
+    try {
+      const res = await updateVideoCaptions(
+        activity.activity_uuid,
+        {
+          enabled: captions.enabled,
+          source_language: captions.sourceLang,
+          languages: captions.languages.map((l) => ({ code: l.code, label: l.label })),
+        },
+        access_token
+      )
+      if (res?.success === false) {
+        toast.error(res?.data?.detail || 'Failed to save captions', { id: toastId })
+      } else {
+        toast.success(
+          captions.enabled ? 'Captions queued — generating in the background' : 'Captions disabled',
+          { id: toastId }
+        )
+        setCapStatus(res?.data?.status || (captions.enabled ? 'queued' : 'idle'))
+      }
+    } catch {
+      toast.error('Failed to save captions', { id: toastId })
+    } finally {
+      setIsSavingCaptions(false)
+    }
+  }
 
   const convertToSeconds = (minutes: number, seconds: number) => minutes * 60 + seconds
   const convertFromSeconds = (totalSeconds: number) => ({
@@ -279,6 +334,28 @@ function EditVideoActivityModal({ activity, courseUuid, orgSlug, onClose }: Edit
           </label>
         </div>
       </div>
+
+      {!isYouTube && (
+        <div className="space-y-2">
+          <CaptionsSettings value={captions} onChange={setCaptions} status={capStatus} />
+          <div className="flex justify-end">
+            <button
+              type="button"
+              onClick={saveCaptions}
+              disabled={isSavingCaptions}
+              className="inline-flex items-center gap-1.5 h-8 px-4 text-xs font-medium text-white bg-violet-600 rounded-lg hover:bg-violet-700 transition-colors disabled:opacity-50"
+            >
+              {isSavingCaptions ? (
+                <BarLoader cssOverride={{ borderRadius: 60 }} width={40} color="#ffffff" />
+              ) : (
+                <>
+                  <Sparkle size={14} weight="duotone" /> {captions.enabled ? 'Generate captions' : 'Save'}
+                </>
+              )}
+            </button>
+          </div>
+        </div>
+      )}
 
       <div className="flex justify-end">
         <button

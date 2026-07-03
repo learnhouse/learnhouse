@@ -55,6 +55,14 @@ class Rights(BaseModel):
     organizations: Permission
     coursechapters: Permission
     activities: Permission
+    assignments: Permission = Permission(
+        action_create=False,
+        action_read=False,
+        action_update=False,
+        action_delete=False,
+    )  # Default: no access. Single bucket covering assignment authoring, tasks,
+    # submissions, and grading (grading = action_update). Lets API tokens drive
+    # headless assignments while existing roles/tokens stay unaffected.
     roles: Permission
     dashboard: DashboardPermission
     communities: Permission

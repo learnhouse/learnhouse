@@ -43,6 +43,7 @@ import { PlanLevel, planMeetsRequirement } from '@services/plans/plans'
 import PlanBadge from '@components/Dashboard/Shared/PlanRestricted/PlanBadge'
 import WelcomeGlobe from './WelcomeGlobe'
 import { useTranslation } from 'react-i18next'
+import { useLHAnalytics, AnalyticsEvent } from '@services/analytics'
 
 const ACTIVITY_TYPES = [
   { icon: Browsers, color: 'text-blue-400', label: 'Page' },
@@ -142,6 +143,7 @@ export default function OnboardingBar() {
   } = useOnboarding()
 
   const { t } = useTranslation()
+  const { track } = useLHAnalytics('dashboard')
   const [showFarewell, setShowFarewell] = useState(false)
   const isDev = process.env.NODE_ENV === 'development'
   const currentPlan = usePlan()
@@ -497,7 +499,10 @@ export default function OnboardingBar() {
                                     <div className="flex items-center gap-2">
                                       {!step.completed && isLocked && (
                                         <button
-                                          onClick={() => skipStep(step.id)}
+                                          onClick={() => {
+                                            track(AnalyticsEvent.OnboardingStepSkipped, { step_id: step.id })
+                                            skipStep(step.id)
+                                          }}
                                           className="relative flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-gray-500 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors shrink-0"
                                         >
                                           <SkipForward size={14} weight="bold" />
@@ -507,7 +512,10 @@ export default function OnboardingBar() {
 
                                       {!step.completed && !isLocked && actionHref && (
                                         <button
-                                          onClick={() => navigateTo(actionHref)}
+                                          onClick={() => {
+                                            track(AnalyticsEvent.OnboardingStepActionClicked, { step_id: step.id })
+                                            navigateTo(actionHref)
+                                          }}
                                           className="relative flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-white bg-black rounded-lg hover:bg-gray-800 transition-colors shrink-0"
                                         >
                                           <PlusCircle size={14} weight="bold" />
@@ -642,7 +650,10 @@ export default function OnboardingBar() {
                                           </div>
                                         </div>
                                         <button
-                                          onClick={() => completeStep('experience_editor')}
+                                          onClick={() => {
+                                            track(AnalyticsEvent.OnboardingStepCompleted, { step_id: 'experience_editor' })
+                                            completeStep('experience_editor')
+                                          }}
                                           className="w-full flex items-center justify-center gap-2 py-2 mt-1 text-xs font-medium text-gray-600 bg-white nice-shadow rounded-lg hover:bg-gray-50 transition-colors"
                                         >
                                           <Check size={14} weight="bold" />
@@ -699,6 +710,7 @@ export default function OnboardingBar() {
                                         </a>
                                         <button
                                           onClick={() => {
+                                            track(AnalyticsEvent.OnboardingStepCompleted, { step_id: 'teach_the_world' })
                                             completeStep('teach_the_world')
                                             setShowFarewell(true)
                                           }}

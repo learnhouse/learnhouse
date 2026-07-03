@@ -25,6 +25,7 @@ import { AssignmentProvider } from '@components/Contexts/Assignments/AssignmentC
 import { AssignmentsTaskProvider } from '@components/Contexts/Assignments/AssignmentsTaskContext';
 import AssignmentSubmissionProvider from '@components/Contexts/Assignments/AssignmentSubmissionContext';
 import { useTranslation } from 'react-i18next';
+import { useLHAnalytics, AnalyticsEvent } from '@services/analytics';
 
 type SortField =
     | 'date'             // when the student submitted
@@ -365,6 +366,7 @@ function SubmissionRow({
     const { t } = useTranslation();
     const session = useLHSession() as any;
     const access_token = session?.data?.tokens?.access_token;
+    const { track } = useLHAnalytics('dashboard');
     const [gradeModalOpen, setGradeModalOpen] = useState(false);
 
     const { data: user } = useQuery({
@@ -486,7 +488,15 @@ function SubmissionRow({
             {/* Evaluate button */}
             <Modal
                 isDialogOpen={gradeModalOpen}
-                onOpenChange={(open: boolean) => setGradeModalOpen(open)}
+                onOpenChange={(open: boolean) => {
+                    if (open && !gradeModalOpen) {
+                        track(AnalyticsEvent.SubmissionEvaluateOpened, {
+                            submission_status: submission.submission_status,
+                            attempt_number: submission.attempt_number ?? 1,
+                        })
+                    }
+                    setGradeModalOpen(open)
+                }}
                 minHeight="lg"
                 minWidth="lg"
                 dialogContent={

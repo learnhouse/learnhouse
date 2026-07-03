@@ -30,6 +30,7 @@ import {
 import { getUriWithOrg } from '@services/config/config'
 import { removeCoursePrefix } from '@components/Objects/Thumbnails/CourseThumbnail'
 import UserAvatar from '@components/Objects/UserAvatar'
+import { useLHAnalytics, AnalyticsEvent } from '@services/analytics'
 
 /**
  * Discussions store their body as a tiptap/ProseMirror JSON document
@@ -377,6 +378,7 @@ function SearchPage() {
   const searchParams = useSearchParams()
   const session = useLHSession() as any
   const org = useOrg() as any
+  const { track } = useLHAnalytics('learner')
 
   const urlQuery = searchParams.get('q') ?? ''
   const urlPage = Math.max(1, parseInt(searchParams.get('page') ?? '1', 10) || 1)
@@ -408,6 +410,7 @@ function SearchPage() {
     e.preventDefault()
     const trimmed = inputValue.trim()
     if (!trimmed) return
+    track(AnalyticsEvent.SearchExecuted, { query_length: trimmed.length, source: 'search_page' })
     updateParams({ q: trimmed, page: 1 })
   }
 
@@ -557,10 +560,19 @@ function SearchPage() {
                       </span>
                     </h2>
                     <div className={gridClass(section.key)}>
-                      {items.map((item) => (
-                        <React.Fragment key={section.itemKey(item)}>
+                      {items.map((item, index) => (
+                        <span
+                          key={section.itemKey(item)}
+                          className="contents"
+                          onClick={() =>
+                            track(AnalyticsEvent.SearchResultClicked, {
+                              result_type: section.key,
+                              position: index + 1,
+                            })
+                          }
+                        >
                           {section.renderCard(item, renderContext)}
-                        </React.Fragment>
+                        </span>
                       ))}
                     </div>
                   </section>

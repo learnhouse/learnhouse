@@ -664,6 +664,70 @@ class TestAnalyticsRouter:
             )
         assert response.status_code == 200
 
+    async def test_export_course_scoped_requires_pro_plan(self, client):
+        # Course-scoped export on a sub-Pro plan must be rejected with 403.
+        with _analytics_guard_patches(), patch(
+            "src.routers.analytics.get_org_plan",
+            new_callable=AsyncMock,
+            return_value="starter",
+        ) as mock_plan, patch(
+            "src.routers.analytics.plan_meets_requirement",
+            return_value=False,
+        ):
+            response = await client.get(
+                "/api/v1/analytics/export?org_id=1&format=json"
+                "&queries=course_overview_stats&course_uuid=course_1"
+            )
+        assert response.status_code == 403
+        assert "Pro plan" in response.json()["detail"]
+        mock_plan.assert_awaited_once()
+
+    async def test_export_course_scoped_allows_pro_plan(self, client):
+        # When the plan meets Pro the course export proceeds past the gate.
+        with _analytics_guard_patches(), patch(
+            "src.routers.analytics.get_org_plan",
+            new_callable=AsyncMock,
+            return_value="pro",
+        ), patch(
+            "src.routers.analytics.plan_meets_requirement",
+            return_value=True,
+        ), patch(
+            "src.routers.analytics._enrich_with_metadata",
+            new_callable=AsyncMock,
+            side_effect=lambda rows, db: rows,
+        ), patch(
+            "src.routers.analytics._execute_tinybird_query",
+            new_callable=AsyncMock,
+            return_value={"data": [], "rows": 0, "meta": []},
+        ):
+            response = await client.get(
+                "/api/v1/analytics/export?org_id=1&format=json"
+                "&queries=course_overview_stats&course_uuid=course_1"
+            )
+        assert response.status_code == 200
+
+    async def test_export_advanced_query_requires_enterprise_plan(self, client):
+        # Advanced (org-level) queries require Enterprise in SaaS mode; when no
+        # bypass applies and the plan is below Enterprise the export is rejected.
+        with _analytics_guard_patches(), patch(
+            "src.security.features_utils.plan_check._check_mode_bypass",
+            return_value=None,
+        ), patch(
+            "src.routers.analytics.get_org_plan",
+            new_callable=AsyncMock,
+            return_value="pro",
+        ) as mock_plan, patch(
+            "src.routers.analytics.plan_meets_requirement",
+            return_value=False,
+        ):
+            response = await client.get(
+                "/api/v1/analytics/export?org_id=1&format=json"
+                "&queries=peak_usage_hours"
+            )
+        assert response.status_code == 403
+        assert "Enterprise plan" in response.json()["detail"]
+        mock_plan.assert_awaited_once()
+
     async def test_dashboard_unknown_and_course_plan_and_query_validation(self, client):
         with _analytics_guard_patches():
             response = await client.get("/api/v1/analytics/dashboard/detail/unknown_detail?org_id=1")

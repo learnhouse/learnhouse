@@ -83,6 +83,12 @@ async def install_default_elements(db_session: AsyncSession):
                 action_update=True,
                 action_delete=True,
             ),
+            assignments=Permission(
+                action_create=True,
+                action_read=True,
+                action_update=True,
+                action_delete=True,
+            ),
             roles=Permission(
                 action_create=True,
                 action_read=True,
@@ -192,6 +198,12 @@ async def install_default_elements(db_session: AsyncSession):
                 action_delete=True,
             ),
             activities=Permission(
+                action_create=True,
+                action_read=True,
+                action_update=True,
+                action_delete=True,
+            ),
+            assignments=Permission(
                 action_create=True,
                 action_read=True,
                 action_update=True,
@@ -311,6 +323,12 @@ async def install_default_elements(db_session: AsyncSession):
                 action_update=False,
                 action_delete=False,
             ),
+            assignments=Permission(
+                action_create=True,
+                action_read=True,
+                action_update=True,
+                action_delete=False,
+            ),
             roles=Permission(
                 action_create=False,
                 action_read=False,
@@ -420,6 +438,12 @@ async def install_default_elements(db_session: AsyncSession):
                 action_delete=False,
             ),
             activities=Permission(
+                action_create=False,
+                action_read=True,
+                action_update=False,
+                action_delete=False,
+            ),
+            assignments=Permission(
                 action_create=False,
                 action_read=True,
                 action_update=False,

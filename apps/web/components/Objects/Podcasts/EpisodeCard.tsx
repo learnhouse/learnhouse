@@ -6,6 +6,7 @@ import { formatDuration } from '@services/podcasts/episodes'
 import { usePodcastPlayer } from '@components/Contexts/PodcastPlayerContext'
 import { useOrg } from '@components/Contexts/OrgContext'
 import { getEpisodeThumbnailMediaDirectory, getPodcastThumbnailMediaDirectory } from '@services/media/media'
+import { useLHAnalytics, AnalyticsEvent } from '@services/analytics'
 import { Play, Pause, Clock } from 'lucide-react'
 
 interface EpisodeCardProps {
@@ -17,14 +18,25 @@ interface EpisodeCardProps {
 export default function EpisodeCard({ episode, podcast, showThumbnail = true }: EpisodeCardProps) {
   const { state, playEpisode, togglePlay } = usePodcastPlayer()
   const org = useOrg() as any
+  const { track } = useLHAnalytics('learner')
 
   const isCurrentEpisode = state.currentEpisode?.episode_uuid === episode.episode_uuid
   const isPlaying = isCurrentEpisode && state.isPlaying
 
   const handlePlay = () => {
     if (isCurrentEpisode) {
+      if (!isPlaying) {
+        track(AnalyticsEvent.EpisodePlayed, {
+          episode_number: episode.episode_number,
+          duration_seconds: episode.duration_seconds,
+        })
+      }
       togglePlay()
     } else {
+      track(AnalyticsEvent.EpisodePlayed, {
+        episode_number: episode.episode_number,
+        duration_seconds: episode.duration_seconds,
+      })
       playEpisode(episode, podcast)
     }
   }

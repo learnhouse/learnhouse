@@ -111,6 +111,12 @@ def _install_stub_modules(monkeypatch: pytest.MonkeyPatch) -> None:
         "src.routers.ai.courseplanning", "src.routers.ai.courseplanning"
     )
     install_router_module("src.routers.ai.rag", "src.routers.ai.rag")
+    install_router_module("src.routers.ai.images", "src.routers.ai.images")
+    install_router_module("src.routers.ai.quiz", "src.routers.ai.quiz")
+    install_router_module(
+        "src.routers.ai.assignment_gen", "src.routers.ai.assignment_gen"
+    )
+    install_router_module("src.routers.ai.scenario", "src.routers.ai.scenario")
     sys.modules["src.routers.ai"].ai = sys.modules["src.routers.ai.ai"]
     sys.modules["src.routers.ai"].magicblocks = sys.modules[
         "src.routers.ai.magicblocks"
@@ -119,6 +125,12 @@ def _install_stub_modules(monkeypatch: pytest.MonkeyPatch) -> None:
         "src.routers.ai.courseplanning"
     ]
     sys.modules["src.routers.ai"].rag = sys.modules["src.routers.ai.rag"]
+    sys.modules["src.routers.ai"].images = sys.modules["src.routers.ai.images"]
+    sys.modules["src.routers.ai"].quiz = sys.modules["src.routers.ai.quiz"]
+    sys.modules["src.routers.ai"].assignment_gen = sys.modules[
+        "src.routers.ai.assignment_gen"
+    ]
+    sys.modules["src.routers.ai"].scenario = sys.modules["src.routers.ai.scenario"]
 
     install_router_module("src.routers.boards.boards", "src.routers.boards.boards")
     install_router_module(
@@ -254,10 +266,14 @@ def _install_stub_modules(monkeypatch: pytest.MonkeyPatch) -> None:
     async def get_authenticated_non_api_token_user(request=None, db_session=None):
         return object()
 
+    async def require_authenticated_user_or_api_token(request=None, db_session=None):
+        return object()
+
     install(
         "src.security.api_token_utils",
         require_non_api_token_user=require_non_api_token_user,
         get_authenticated_non_api_token_user=get_authenticated_non_api_token_user,
+        require_authenticated_user_or_api_token=require_authenticated_user_or_api_token,
     )
 
     plan_module = _module(

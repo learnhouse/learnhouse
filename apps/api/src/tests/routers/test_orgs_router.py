@@ -258,6 +258,22 @@ class TestOrgUserEndpoints:
         assert response.status_code == 200
         assert response.json()["detail"] == "joined"
 
+    async def test_join_org_as_another_user_forbidden(self, client):
+        # admin_user has id=1; joining with a different user_id must be rejected
+        # before join_org() is ever called.
+        with patch(
+            "src.routers.orgs.orgs.join_org",
+            new_callable=AsyncMock,
+        ) as join_mock:
+            response = await client.post(
+                "/api/v1/orgs/join",
+                json={"org_id": 1, "user_id": 999, "invite_code": "abc123"},
+            )
+
+        assert response.status_code == 403
+        assert "only join an organization as yourself" in response.json()["detail"]
+        join_mock.assert_not_called()
+
     async def test_update_user_role(self, client):
         with patch(
             "src.routers.orgs.orgs.update_user_role",
@@ -292,6 +308,29 @@ class TestOrgUserEndpoints:
 
         assert response.status_code == 200
         assert response.json()["removed"] == 1
+
+    async def test_remove_all_users_from_org(self, client):
+        with patch(
+            "src.routers.orgs.orgs.remove_all_users_from_org",
+            new_callable=AsyncMock,
+            return_value={"detail": "3 user(s) removed from org"},
+        ):
+            # The /users/all literal route must win over /users/{user_id}.
+            response = await client.delete("/api/v1/orgs/1/users/all")
+
+        assert response.status_code == 200
+        assert response.json()["detail"] == "3 user(s) removed from org"
+
+    async def test_wipe_org_content(self, client):
+        with patch(
+            "src.routers.orgs.orgs.wipe_org_content",
+            new_callable=AsyncMock,
+            return_value={"detail": "Organization content wiped", "deleted_courses": 2},
+        ):
+            response = await client.delete("/api/v1/orgs/1/content")
+
+        assert response.status_code == 200
+        assert response.json()["deleted_courses"] == 2
 
 
 class TestOrgConfigEndpoints:

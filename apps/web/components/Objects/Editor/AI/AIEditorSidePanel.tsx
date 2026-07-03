@@ -37,6 +37,7 @@ import {
 } from '@services/ai/ai'
 import UserAvatar from '@components/Objects/UserAvatar'
 import { useTranslation } from 'react-i18next'
+import { useLHAnalytics, AnalyticsEvent } from '@services/analytics'
 import AIMarkdownRenderer from '@components/Objects/Activities/AI/AIMarkdownRenderer'
 import { setAIHighlight, clearAIHighlight } from '../Extensions/AISelectionHighlight/AISelectionHighlight'
 
@@ -54,6 +55,7 @@ type AIMessage = {
 
 function AIEditorSidePanel(props: AIEditorSidePanelProps) {
   const { t } = useTranslation()
+  const { track } = useLHAnalytics('editor')
   const session = useLHSession() as any
   const access_token = session?.data?.tokens?.access_token
   const aiEditorState = useAIEditor() as AIEditorStateTypes
@@ -606,8 +608,14 @@ function AIEditorSidePanel(props: AIEditorSidePanelProps) {
     }
   }
 
-  const sendMessage = async (message: string) => {
+  const sendMessage = async (message: string, source: string = 'input') => {
     if (!message.trim()) return
+
+    track(AnalyticsEvent.AiEditorMessageSent, {
+      source,
+      has_text_selection: !props.editor.state.selection.empty,
+      is_new_session: !aiEditorState.aichat_uuid,
+    })
 
     await dispatchAIEditor({ type: 'clearFollowUpSuggestions' })
     accumulatedContentRef.current = ''
@@ -688,6 +696,8 @@ function AIEditorSidePanel(props: AIEditorSidePanelProps) {
       },
       onContentEnd: (fullContent) => {
         isStreamingContentRef.current = false
+
+        track(AnalyticsEvent.AiEditorContentInserted)
 
         // Clean up the content - remove extra whitespace and newlines
         let cleanContent = fullContent.trim()
@@ -1216,7 +1226,7 @@ function AIEditorSidePanel(props: AIEditorSidePanelProps) {
                         (suggestion, idx) => (
                           <button
                             key={idx}
-                            onClick={() => sendMessage(suggestion)}
+                            onClick={() => sendMessage(suggestion, 'follow_up')}
                             disabled={isInputDisabled}
                             className="px-3 py-1.5 text-xs bg-white/5 text-white/60 rounded-full hover:bg-white/10 hover:text-white/80 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                           >
@@ -1258,7 +1268,7 @@ function AIEditorSidePanel(props: AIEditorSidePanelProps) {
             {quickActions.map((action, idx) => (
               <button
                 key={idx}
-                onClick={() => sendMessage(action.prompt)}
+                onClick={() => sendMessage(action.prompt, 'quick_action')}
                 disabled={isInputDisabled}
                 className="flex items-center gap-1.5 px-3 py-1 text-xs bg-white/5 text-white/60 rounded-full hover:bg-white/10 hover:text-white/80 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >

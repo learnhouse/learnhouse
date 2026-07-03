@@ -6,6 +6,7 @@ import { getUriWithOrg } from '@services/config/config'
 import { getCourseThumbnailMediaDirectory } from '@services/media/media'
 import { ShoppingBag, RefreshCcw, SquareCheck, ArrowRight, Sparkles, BookOpen, Mic, Puzzle } from 'lucide-react'
 import { useOrg } from '@components/Contexts/OrgContext'
+import { useLHAnalytics, useTrackView, AnalyticsEvent } from '@services/analytics'
 
 interface Resource {
   resource_uuid: string
@@ -89,13 +90,17 @@ function CourseBoxes({ resources, orgUuid }: { resources: Resource[]; orgUuid: s
   )
 }
 
-function OfferCard({ offer, orgslug, orgUuid }: { offer: Offer; orgslug: string; orgUuid: string }) {
+function OfferCard({ offer, orgslug, orgUuid, position }: { offer: Offer; orgslug: string; orgUuid: string; position: number }) {
   const isSubscription = offer.offer_type === 'subscription'
   const benefits = offer.benefits ? offer.benefits.split(',').map(b => b.trim()).filter(Boolean) : []
   const resources = offer.included_resources ?? []
+  const { track } = useLHAnalytics('learner')
 
   return (
-    <Link href={getUriWithOrg(orgslug, `/store/offers/${offer.offer_uuid}`)}>
+    <Link
+      href={getUriWithOrg(orgslug, `/store/offers/${offer.offer_uuid}`)}
+      onClick={() => track(AnalyticsEvent.StoreOfferCardClicked, { offer_type: offer.offer_type, amount: offer.amount, position })}
+    >
       <div className="group bg-white rounded-xl nice-shadow overflow-hidden flex flex-col h-full cursor-pointer transition-all duration-200 hover:scale-[1.01]">
 
         {/* Thumbnail area */}
@@ -205,6 +210,8 @@ function OfferCard({ offer, orgslug, orgUuid }: { offer: Offer; orgslug: string;
 function Store({ orgslug, offers }: StoreProps) {
   const org = useOrg() as any
 
+  useTrackView(AnalyticsEvent.StoreViewed, { offers_count: offers.length, is_empty: offers.length === 0 }, true, 'learner')
+
   return (
     <div className="w-full">
       <GeneralWrapperStyled>
@@ -236,8 +243,8 @@ function Store({ orgslug, offers }: StoreProps) {
               {offers.length} {offers.length === 1 ? 'offer' : 'offers'} available
             </p>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-              {offers.map((offer) => (
-                <OfferCard key={offer.id} offer={offer} orgslug={orgslug} orgUuid={org?.org_uuid ?? ''} />
+              {offers.map((offer, index) => (
+                <OfferCard key={offer.id} offer={offer} orgslug={orgslug} orgUuid={org?.org_uuid ?? ''} position={index} />
               ))}
             </div>
           </>

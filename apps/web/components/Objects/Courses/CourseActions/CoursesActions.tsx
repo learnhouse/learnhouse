@@ -16,6 +16,7 @@ import { useOrg, useOrgMembership } from '@components/Contexts/OrgContext'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { queryKeys } from '@/lib/query/keys'
 import { useTranslation } from 'react-i18next'
+import { useLHAnalytics, AnalyticsEvent } from '@services/analytics'
 
 interface CourseRun {
   status: string
@@ -63,6 +64,7 @@ function CoursesActions({ courseuuid, orgslug, course, trailData }: CourseAction
   const org = useOrg() as any
   const { isUserPartOfTheOrg } = useOrgMembership()
   const queryClient = useQueryClient()
+  const { track } = useLHAnalytics('learner')
 
   // Clean up course UUID by removing 'course_' prefix if it exists
   const cleanCourseUuid = course.course_uuid?.replace('course_', '');
@@ -86,6 +88,10 @@ function CoursesActions({ courseuuid, orgslug, course, trailData }: CourseAction
 
   const handleCourseAction = async () => {
     if (!session.data?.user) {
+      track(AnalyticsEvent.CourseSignupPrompted, {
+        reason: 'unauthenticated',
+        intended_action: isStarted ? 'leave_course' : 'start_course',
+      })
       router.push(getUriWithOrg(orgslug, '/signup'))
       return
     }
@@ -105,10 +111,16 @@ function CoursesActions({ courseuuid, orgslug, course, trailData }: CourseAction
       if (isStarted) {
         await removeCourse('course_' + courseuuid, orgslug, session.data?.tokens?.access_token)
         if (org?.id) queryClient.invalidateQueries({ queryKey: queryKeys.trail.org(org.id) })
+        track(AnalyticsEvent.CourseLeft, { course_uuid: cleanCourseUuid })
         toast.success(t('courses.leave_course_success'), { id: loadingToast })
       } else {
         await startCourse('course_' + courseuuid, orgslug, session.data?.tokens?.access_token)
         if (org?.id) queryClient.invalidateQueries({ queryKey: queryKeys.trail.org(org.id) })
+        track(AnalyticsEvent.CourseStarted, {
+          course_uuid: cleanCourseUuid,
+          total_activities: course.chapters?.reduce((acc: number, chapter: any) => acc + chapter.activities.length, 0) || 0,
+          has_offers: linkedOffers.length > 0,
+        })
         toast.success(t('courses.start_course_success'), { id: loadingToast })
 
         // Get the first activity from the first chapter
@@ -153,6 +165,7 @@ function CoursesActions({ courseuuid, orgslug, course, trailData }: CourseAction
       await applyForContributor('course_' + courseuuid, data, session.data?.tokens?.access_token)
       await revalidateTags(['courses'], orgslug)
       await refetch()
+      track(AnalyticsEvent.ContributorApplicationSubmitted, { course_uuid: cleanCourseUuid })
       toast.success(t('courses.contributor_application_success'), { id: loadingToast })
     } catch (error) {
       console.error('Failed to apply as contributor:', error)
@@ -343,7 +356,15 @@ function CoursesActions({ courseuuid, orgslug, course, trailData }: CourseAction
                   </div>
                 </div>
                 <button
-                  onClick={() => setIsProgressOpen(true)}
+                  onClick={() => {
+                    track(AnalyticsEvent.CourseProgressViewed, {
+                      course_uuid: cleanCourseUuid,
+                      completed_activities: completedActivities,
+                      total_activities: totalActivities,
+                      progress_percentage: progressPercentage,
+                    })
+                    setIsProgressOpen(true)
+                  }}
                   aria-label={t('courses.view_course_progress', { completed: completedActivities, total: totalActivities })}
                   className="flex-1 text-left hover:bg-neutral-50/50 p-2 rounded-lg transition-colors"
                 >

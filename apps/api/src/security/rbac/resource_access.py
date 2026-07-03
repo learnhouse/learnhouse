@@ -723,10 +723,22 @@ class ResourceAccessChecker:
         else:
             is_public = getattr(resource, 'public', False)
             is_published = getattr(resource, 'published', True) if config.has_published_field else True
+            # Media privacy is folder-aware: a file placed in ANY private folder
+            # is private even if its own `public` flag is True (most-restrictive
+            # wins). This makes a direct media read deny for a public media that
+            # lives inside a private folder, for every caller of check_access.
+            if is_public and config.resource_type == "media":
+                if await self._media_in_any_private_folder(resource_uuid):
+                    is_public = False
             result = (is_public, is_published)
 
         self._public_published_cache[resource_uuid] = result
         return result
+
+    async def _media_in_any_private_folder(self, media_uuid: str) -> bool:
+        """True if this media is placed in at least one non-public folder."""
+        from src.services.media.media_access import media_in_any_private_folder
+        return await media_in_any_private_folder(self.db_session, media_uuid)
 
     async def _is_resource_author(self, resource_uuid: str) -> bool:
         """Check if current user is the author of the resource."""

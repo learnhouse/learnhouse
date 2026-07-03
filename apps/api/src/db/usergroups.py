@@ -10,7 +10,7 @@ class UserGroupBase(SQLModel):
 class UserGroup(UserGroupBase, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
     org_id: int = Field(
-        sa_column=Column(Integer, ForeignKey("organization.id", ondelete="CASCADE"))
+        sa_column=Column(Integer, ForeignKey("organization.id", ondelete="CASCADE"), nullable=False)
     )
     usergroup_uuid: str = ""
     creation_date: str = ""

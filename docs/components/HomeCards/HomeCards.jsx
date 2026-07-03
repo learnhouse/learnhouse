@@ -6,6 +6,7 @@ import {
   BookOpen,
   Cloud,
   Code,
+  GraduationCap,
 } from '@phosphor-icons/react/dist/ssr'
 
 const cards = [
@@ -44,6 +45,15 @@ const cards = [
     desc: 'Architecture, REST API, and contributing guide',
     pattern: 'repeating-linear-gradient(0deg, currentColor 0px, currentColor 1px, transparent 1px, transparent 6px)',
     patternSize: '6px 6px',
+  },
+  {
+    href: '/guides',
+    icon: GraduationCap,
+    color: '#0ea5e9',
+    title: 'Guides',
+    desc: 'Build your own learning platform and custom features',
+    pattern: 'radial-gradient(circle, currentColor 1px, transparent 1px)',
+    patternSize: '16px 16px',
   },
 ]
 

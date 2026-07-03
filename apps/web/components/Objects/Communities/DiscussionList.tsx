@@ -18,6 +18,7 @@ import { useCommunityRights } from '@components/Hooks/useCommunityRights'
 import { useDiscussions, useMutateDiscussions } from '@components/Hooks/useDiscussions'
 import ConfirmationModal from '@components/Objects/StyledElements/ConfirmationModal/ConfirmationModal'
 import { searchMatchesAny } from '@/lib/search/normalize'
+import { useLHAnalytics, AnalyticsEvent } from '@services/analytics'
 
 interface DiscussionListProps {
   communityUuid: string
@@ -39,6 +40,7 @@ export function DiscussionList({
   const canCreateDiscussion = hasCreatePermission && isUserPartOfTheOrg
   const accessToken = session?.data?.tokens?.access_token
   const mutateDiscussions = useMutateDiscussions()
+  const { track } = useLHAnalytics('learner')
 
   const [sortBy, setSortBy] = useState<DiscussionSortBy>('recent')
   const [searchQuery, setSearchQuery] = useState('')
@@ -97,6 +99,14 @@ export function DiscussionList({
       }
     }
   }, [discussions])
+
+  const handleCreateClick = (source: 'header' | 'empty_state') => {
+    track(AnalyticsEvent.CreateDiscussionModalOpened, {
+      source,
+      feed_is_empty: filteredDiscussions.length === 0,
+    })
+    onCreateClick?.()
+  }
 
   const handleSortChange = (newSort: DiscussionSortBy) => {
     setSortBy(newSort)
@@ -237,7 +247,7 @@ export function DiscussionList({
             {/* Desktop create button */}
             {canCreateDiscussion && onCreateClick && !isSelectMode && (
               <button
-                onClick={onCreateClick}
+                onClick={() => handleCreateClick('header')}
                 className="hidden md:flex items-center gap-2 px-3 py-2 h-8 bg-neutral-900 hover:bg-neutral-800 text-white rounded-md transition-colors text-xs font-medium"
               >
                 <Plus size={14} />
@@ -315,7 +325,7 @@ export function DiscussionList({
                 </p>
                 {canCreateDiscussion && onCreateClick && (
                   <button
-                    onClick={onCreateClick}
+                    onClick={() => handleCreateClick('empty_state')}
                     className="inline-flex items-center gap-2 px-4 py-2 bg-neutral-900 hover:bg-neutral-800 text-white rounded-lg transition-colors text-sm font-medium"
                   >
                     <Plus size={16} />

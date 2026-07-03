@@ -1,5 +1,4 @@
 'use client'
-import { getAPIUrl } from '@services/config/config'
 import { updateCourseOrderStructure } from '@services/courses/chapters'
 import { revalidateTags } from '@services/utils/ts/requests'
 import {
@@ -9,7 +8,7 @@ import {
 } from '@components/Contexts/CourseContext'
 import { useQueryClient } from '@tanstack/react-query'
 import { queryKeys } from '@/lib/query/keys'
-import { Check, SaveAllIcon, Timer, Loader2, AlertCircle } from 'lucide-react'
+import { Check, SaveAllIcon, Loader2, AlertCircle } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import React, { useCallback, useEffect, useRef } from 'react'
 import { updateCourse } from '@services/courses/courses'
@@ -18,6 +17,7 @@ import { useLHSession } from '@components/Contexts/LHSessionContext'
 import { useOrg } from '@components/Contexts/OrgContext'
 import toast from 'react-hot-toast'
 import { useTranslation } from 'react-i18next'
+import { useLHAnalytics, AnalyticsEvent } from '@services/analytics'
 
 interface SaveResult {
   success: boolean
@@ -27,6 +27,7 @@ interface SaveResult {
 
 function SaveState(props: { orgslug: string }) {
   const { t } = useTranslation()
+  const { track } = useLHAnalytics('dashboard')
   const queryClient = useQueryClient()
   const course = useCourse() as any
   const session = useLHSession() as any
@@ -61,7 +62,7 @@ function SaveState(props: { orgslug: string }) {
     dispatchCourse({ type: 'setSaveError', payload: null })
 
     // Store the state before saving for potential rollback
-    const stateBeforeSave = { ...courseStructure }
+    const _stateBeforeSave = { ...courseStructure }
 
     const results: SaveResult[] = []
 
@@ -145,6 +146,12 @@ function SaveState(props: { orgslug: string }) {
 
       // Show success feedback
       const allSucceeded = results.every(r => r.success)
+
+      track(AnalyticsEvent.CourseChangesSaved, {
+        order_changed: results.some(r => r.operation === 'order'),
+        metadata_changed: results.some(r => r.operation === 'metadata'),
+        save_succeeded: allSucceeded,
+      })
       if (allSucceeded) {
         toast.success(t('dashboard.courses.save.success') || 'Changes saved successfully')
       } else {
@@ -200,6 +207,7 @@ function SaveState(props: { orgslug: string }) {
     dispatchCourse,
     router,
     props.orgslug,
+    track,
     t
   ])
 

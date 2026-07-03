@@ -25,6 +25,7 @@ import {
   DropdownMenuTrigger,
 } from "@components/ui/dropdown-menu"
 import { useTranslation } from 'react-i18next'
+import { useLHAnalytics, AnalyticsEvent } from '@services/analytics'
 
 type Course = {
   course_uuid: string
@@ -66,8 +67,16 @@ function CourseThumbnail({ course, orgslug, customLink, isDashboard = false, isS
   const org = useOrg() as any
   const session = useLHSession() as any
   const queryClient = useQueryClient()
+  const { track } = useLHAnalytics('learner')
 
   const cleanUuid = removeCoursePrefix(course.course_uuid)
+
+  const handleCardOpen = () => {
+    track(AnalyticsEvent.CourseCardOpened, {
+      course_uuid: cleanUuid,
+      source: isDashboard ? 'dashboard' : 'catalog',
+    })
+  }
 
   // Prefetch course meta on hover so the course page feels instant
   const handleMouseEnter = () => {
@@ -173,7 +182,7 @@ function CourseThumbnail({ course, orgslug, customLink, isDashboard = false, isS
         isDashboard={isDashboard}
       />
 
-      <Link prefetch={false} href={courseLink} className="block relative aspect-video overflow-hidden bg-gray-50">
+      <Link prefetch={false} href={courseLink} onClick={handleCardOpen} className="block relative aspect-video overflow-hidden bg-gray-50">
         {/* Hidden img gives the browser a real resource hint so it can fetch the background-image early as an LCP candidate */}
         {isPriority && (
            
@@ -210,6 +219,7 @@ function CourseThumbnail({ course, orgslug, customLink, isDashboard = false, isS
           <Link
             prefetch={false}
             href={courseLink}
+            onClick={handleCardOpen}
             className="text-base font-bold text-gray-900 leading-tight hover:text-black transition-colors line-clamp-1"
           >
             {course.name}
@@ -263,6 +273,7 @@ function CourseThumbnail({ course, orgslug, customLink, isDashboard = false, isS
           <Link
             prefetch={false}
             href={courseLink}
+            onClick={handleCardOpen}
             className="text-[10px] font-bold text-gray-400 hover:text-gray-900 transition-colors uppercase tracking-wider"
           >
             {t('courses.start_learning')}

@@ -6,6 +6,7 @@ import { Check, Loader2, AlertTriangle } from 'lucide-react'
 import { motion } from 'motion/react'
 import toast from 'react-hot-toast'
 import { verifyStripeConnection } from '@services/payments/providers/stripe'
+import { useLHAnalytics, AnalyticsEvent } from '@services/analytics'
 import Image from 'next/image'
 import learnhouseIcon from 'public/learnhouse_bigicon_1.png'
 import { useTranslation } from 'react-i18next'
@@ -17,6 +18,7 @@ function StripeConnectCallbackInner() {
   const session = useLHSession() as any
   const [status, setStatus] = useState<'processing' | 'success' | 'error'>('processing')
   const [message, setMessage] = useState('')
+  const { track } = useLHAnalytics('dashboard')
 
   useEffect(() => {
     const verifyConnection = async () => {
@@ -36,6 +38,8 @@ function StripeConnectCallbackInner() {
         )
 
         await new Promise(resolve => setTimeout(resolve, 1000))
+
+        track(AnalyticsEvent.PaymentProviderConnected, { provider: 'stripe' })
 
         setStatus('success')
         setMessage(t('payments.stripe_success'))

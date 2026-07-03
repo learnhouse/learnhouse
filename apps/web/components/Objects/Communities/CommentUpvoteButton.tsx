@@ -6,12 +6,13 @@ import { useLHSession } from '@components/Contexts/LHSessionContext'
 import { useOrgMembership } from '@components/Contexts/OrgContext'
 import { upvoteComment, removeCommentUpvote } from '@services/communities/discussions'
 import { cn } from '@/lib/utils'
+import { useLHAnalytics, AnalyticsEvent } from '@services/analytics'
 
 interface CommentUpvoteButtonProps {
   commentUuid: string
   initialVoteCount: number
   initialHasVoted: boolean
-  onVoteChange?: (newCount: number, hasVoted: boolean) => void
+  onVoteChange?: (_newCount: number, _hasVoted: boolean) => void
 }
 
 export function CommentUpvoteButton({
@@ -22,6 +23,7 @@ export function CommentUpvoteButton({
 }: CommentUpvoteButtonProps) {
   const session = useLHSession() as any
   const { isUserPartOfTheOrg } = useOrgMembership()
+  const { track } = useLHAnalytics('learner')
   const [voteCount, setVoteCount] = useState(initialVoteCount)
   const [hasVoted, setHasVoted] = useState(initialHasVoted)
   const [isLoading, setIsLoading] = useState(false)
@@ -48,6 +50,10 @@ export function CommentUpvoteButton({
       } else {
         await removeCommentUpvote(commentUuid, accessToken)
       }
+      track(AnalyticsEvent.CommentUpvoted, {
+        action: newHasVoted ? 'upvote' : 'remove',
+        new_vote_count: newVoteCount,
+      })
     } catch (err: any) {
       // Revert on error
       setHasVoted(!newHasVoted)
@@ -62,7 +68,7 @@ export function CommentUpvoteButton({
     } finally {
       setIsLoading(false)
     }
-  }, [hasVoted, voteCount, canVote, isLoading, commentUuid, accessToken, onVoteChange])
+  }, [hasVoted, voteCount, canVote, isLoading, commentUuid, accessToken, onVoteChange, track])
 
   return (
     <button

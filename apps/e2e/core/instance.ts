@@ -13,8 +13,10 @@ const DOMAIN = process.env.E2E_DOMAIN || 'localhost'
 export const BASE_URL =
   process.env.E2E_BASE_URL || `http://${DOMAIN}:${PORT}`
 
-/** REST API root — used by helpers/verify.ts to read back server state. */
-export const API_URL = `${BASE_URL}/api/v1`
+/** REST API root — used by helpers/verify.ts to read back server state.
+ * Defaults to same-origin; point at a separate API origin via E2E_API_URL for
+ * split web/API dev setups. */
+export const API_URL = process.env.E2E_API_URL || `${BASE_URL}/api/v1`
 
 /** Organization the install is bootstrapped with. */
 export const ORG_SLUG = process.env.E2E_ORG_SLUG || 'default'

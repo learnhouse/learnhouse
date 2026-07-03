@@ -65,6 +65,9 @@ import {
   IdentificationBadge,
   Package,
   Scroll,
+  Robot,
+  WebhooksLogo,
+  PlugsConnected,
 } from '@phosphor-icons/react/dist/ssr'
 
 const ICON_SIZE = 15
@@ -77,6 +80,7 @@ const iconMap = {
   '/enterprise': Briefcase,
   '/self-hosting': Cloud,
   '/developers': Code,
+  '/guides': GraduationCap,
 
   // Getting Started
   '/getting-started/quickstart': Lightning,
@@ -209,6 +213,18 @@ const iconMap = {
   '/developers/migration/programmatic': Code,
   '/developers/migration/activity-types': Stack,
   '/developers/migration/assisted': Brain,
+
+  // Guides
+  '/guides/build-learning-platform': Browser,
+  '/guides/custom-features': PlugsConnected,
+
+  // Guides > Build a Learning Platform
+  '/guides/build-learning-platform/do-it-yourself': Wrench,
+  '/guides/build-learning-platform/with-an-agent': Robot,
+  '/guides/build-learning-platform/agent-spec': ClipboardText,
+
+  // Guides > Custom Features
+  '/guides/custom-features/webhooks': WebhooksLogo,
 }
 
 function getIcon(route) {
@@ -217,7 +233,34 @@ function getIcon(route) {
   return <Icon size={ICON_SIZE} weight="fill" />
 }
 
-function SidebarItem({ item, depth = 0, onNavigate }) {
+// Explicit sidebar label overrides (the page map auto-titleizes folder names,
+// which drops articles like "a" and can't express "&"). Keyed by route.
+const labelMap = {
+  '/guides/build-learning-platform': 'Build a Learning Platform',
+  '/guides/custom-features': 'Custom Features & Webhooks',
+}
+
+// Explicit child ordering for folders whose pages shouldn't be alphabetical.
+const childOrder = {
+  '/guides/build-learning-platform': [
+    '/guides/build-learning-platform',
+    '/guides/build-learning-platform/do-it-yourself',
+    '/guides/build-learning-platform/with-an-agent',
+    '/guides/build-learning-platform/agent-spec',
+  ],
+}
+
+function orderedChildren(item) {
+  const order = childOrder[item.route]
+  if (!order) return item.children
+  return [...item.children].sort((a, b) => {
+    const ai = order.indexOf(a.route)
+    const bi = order.indexOf(b.route)
+    return (ai === -1 ? 99 : ai) - (bi === -1 ? 99 : bi)
+  })
+}
+
+function SidebarItem({ item, depth = 0, parentRoute = null, onNavigate }) {
   const pathname = usePathname()
   const isActive = pathname === item.route
   const hasChildren = item.children && item.children.length > 0
@@ -240,11 +283,12 @@ function SidebarItem({ item, depth = 0, onNavigate }) {
 
   if (item.display === 'hidden') return null
 
-  const title = typeof item.title === 'string'
-    ? item.title
-    : typeof item.title === 'object' && item.title
-      ? item.title
-      : item.name
+  // Resolve the display label: explicit override → "Overview" for a folder's
+  // own index child → page map title → name.
+  const isIndexChild = parentRoute && item.route === parentRoute && !hasChildren
+  const title = (isIndexChild && item.route?.startsWith('/guides') ? 'Overview' : null)
+    ?? labelMap[item.route]
+    ?? (typeof item.title === 'string' ? item.title : item.name)
 
   const icon = getIcon(item.route)
 
@@ -276,8 +320,8 @@ function SidebarItem({ item, depth = 0, onNavigate }) {
         </button>
         {open && (
           <div className="lh-sidebar-children">
-            {item.children.map((child, i) => (
-              <SidebarItem key={child.route || i} item={child} depth={depth + 1} onNavigate={onNavigate} />
+            {orderedChildren(item).map((child, i) => (
+              <SidebarItem key={child.route || i} item={child} depth={depth + 1} parentRoute={item.route} onNavigate={onNavigate} />
             ))}
           </div>
         )}

@@ -413,7 +413,8 @@ class TestTrailService:
 
         trail = await _make_trail(db, org, admin_user)
         trail_run = await _make_trail_run(db, trail, course, admin_user)
-        await _make_trail_step(db, trail, trail_run, activity, course, admin_user)
+        # One completion step per (run, activity, user) — enforced by a UNIQUE
+        # constraint. A single step is enough to verify removal deletes it.
         await _make_trail_step(db, trail, trail_run, activity, course, admin_user)
 
         removed = await remove_course_from_trail(
@@ -447,6 +448,44 @@ class TestTrailService:
             )
 
         assert exc_info.value.status_code == 404
+
+    @pytest.mark.asyncio
+    async def test_anonymous_users_are_rejected_by_trail_endpoints(
+        self, db, org, mock_request
+    ):
+        # Lines 108, 145, 220, 372, 430, 515: every trail mutation/read entry
+        # point raises 401 for AnonymousUser before touching the DB.
+        anon = AnonymousUser()
+
+        with pytest.raises(HTTPException) as create_exc:
+            await create_user_trail(
+                mock_request,
+                anon,
+                TrailCreate(org_id=org.id, user_id=0),
+                db,
+            )
+
+        with pytest.raises(HTTPException) as get_exc:
+            await get_user_trails(mock_request, anon, db)
+
+        with pytest.raises(HTTPException) as add_activity_exc:
+            await add_activity_to_trail(mock_request, anon, "any-activity", db)
+
+        with pytest.raises(HTTPException) as remove_activity_exc:
+            await remove_activity_from_trail(mock_request, anon, "any-activity", db)
+
+        with pytest.raises(HTTPException) as add_course_exc:
+            await add_course_to_trail(mock_request, anon, "any-course", db)
+
+        with pytest.raises(HTTPException) as remove_course_exc:
+            await remove_course_from_trail(mock_request, anon, "any-course", db)
+
+        assert create_exc.value.status_code == 401
+        assert get_exc.value.status_code == 401
+        assert add_activity_exc.value.status_code == 401
+        assert remove_activity_exc.value.status_code == 401
+        assert add_course_exc.value.status_code == 401
+        assert remove_course_exc.value.status_code == 401
 
     @pytest.mark.asyncio
     async def test_add_activity_to_trail_swallows_certificate_exception(

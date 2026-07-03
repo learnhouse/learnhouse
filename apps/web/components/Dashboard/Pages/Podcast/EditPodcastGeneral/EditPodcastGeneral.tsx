@@ -4,6 +4,7 @@ import { usePodcast } from '@components/Contexts/PodcastContext'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
 import { useOrg } from '@components/Contexts/OrgContext'
 import { updatePodcast, updatePodcastThumbnail } from '@services/podcasts/podcasts'
+import { useLHAnalytics, AnalyticsEvent } from '@services/analytics'
 import { getPodcastThumbnailMediaDirectory } from '@services/media/media'
 import { revalidateTags } from '@services/utils/ts/requests'
 import { useQueryClient } from '@tanstack/react-query'
@@ -31,6 +32,7 @@ function EditPodcastGeneral({ orgslug }: EditPodcastGeneralProps) {
   const session = useLHSession() as any
   const org = useOrg() as any
   const queryClient = useQueryClient()
+  const { track } = useLHAnalytics('dashboard')
   const [isSaving, setIsSaving] = useState(false)
   const [thumbnailFile, setThumbnailFile] = useState<File | null>(null)
   const [thumbnailPreview, setThumbnailPreview] = useState<string | null>(null)
@@ -64,9 +66,14 @@ function EditPodcastGeneral({ orgslug }: EditPodcastGeneralProps) {
     enableReinitialize: true,
     onSubmit: async (values) => {
       setIsSaving(true)
+      const thumbnailChanged = !!thumbnailFile
       const toastId = toast.loading(t('podcasts.dashboard.saving'))
       try {
         await updatePodcast(podcast!.podcast_uuid, values, accessToken)
+        track(AnalyticsEvent.PodcastUpdated, {
+          is_published: values.published,
+          thumbnail_changed: thumbnailChanged,
+        })
 
         if (thumbnailFile) {
           const formData = new FormData()

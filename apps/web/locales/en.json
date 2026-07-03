@@ -36,6 +36,7 @@
     "thai": "Thai",
     "bengali": "Bengali",
     "slovak": "Slovak",
+    "persian": "Persian",
     "unknown": "Unknown",
     "loading": "Loading...",
     "search": "Search",
@@ -2606,7 +2607,8 @@
           "other": "Other",
           "seo": "SEO",
           "automations": "Automations",
-          "menu": "Menu"
+          "menu": "Menu",
+          "danger": "Danger Zone"
         },
         "pages": {
           "general": {
@@ -2652,6 +2654,10 @@
           "menu": {
             "title": "Public menu",
             "subtitle": "Choose and order the links shown in your public navigation"
+          },
+          "danger": {
+            "title": "Danger Zone",
+            "subtitle": "Irreversible and destructive actions for this organization"
           }
         },
         "name": "Organization Name",

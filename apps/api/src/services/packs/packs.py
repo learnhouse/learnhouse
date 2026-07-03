@@ -110,8 +110,13 @@ async def activate_pack(
         db_session.add(existing)
         await db_session.flush()
 
-        # Add credits/seats to Redis — use stored quantity from DB record
-        _apply_pack_credits(org_id, pack_def)
+        # Add credits/seats to Redis — use stored quantity/type from DB record
+        # (the DB record is the source of truth; pack_def may have drifted or
+        # a different pack_id may have been supplied for the same subscription).
+        if existing.pack_type == PackTypeEnum.ai_credits:
+            add_ai_credits(org_id, existing.quantity)
+        elif existing.pack_type == PackTypeEnum.member_seats:
+            _add_member_seats(org_id, existing.quantity)
 
         await db_session.commit()
         await db_session.refresh(existing)
@@ -179,13 +184,20 @@ async def deactivate_pack(
     org_pack.status = PackStatusEnum.cancelled
     org_pack.cancelled_at = datetime.now()
     db_session.add(org_pack)
-    await db_session.flush()
 
-    # Remove credits/seats from Redis
-    _revoke_pack_credits(org_id, org_pack.pack_type, org_pack.quantity)
+    # Capture values needed for Redis BEFORE commit (refresh may expire them),
+    # but only mutate Redis AFTER the DB commit succeeds. The DB is the source
+    # of truth (see reconcile_pack_credits); revoking credits before the commit
+    # means a failed/rolled-back commit would strip a still-paying customer's
+    # purchased credits/seats.
+    pack_type = org_pack.pack_type
+    quantity = org_pack.quantity
 
     await db_session.commit()
     await db_session.refresh(org_pack)
+
+    # Remove credits/seats from Redis
+    _revoke_pack_credits(org_id, pack_type, quantity)
 
     _task = asyncio.create_task(dispatch_webhooks(
         event_name="pack_deactivated",

@@ -115,7 +115,7 @@ class TestApiTokensBlockedOnSensitiveActions:
             with pytest.raises(HTTPException) as exc:
                 await create_assignment(mock_request, obj, api_token_user, db)
         assert exc.value.status_code == 403
-        assert "API tokens" in exc.value.detail
+        assert "API token" in exc.value.detail
 
     async def test_update_assignment_blocks_api_token(
         self, mock_request, db, assignment, api_token_user
@@ -178,12 +178,17 @@ class TestApiTokensBlockedOnSensitiveActions:
     async def test_create_submission_blocks_api_token(
         self, mock_request, db, assignment, api_token_user
     ):
-        """create_assignment_submission rejects an APITokenUser with 403 (the _block_api_tokens guard)."""
+        """create_assignment_submission rejects a token lacking assignments rights.
+
+        Submit-on-behalf needs the ``assignments.create`` right; this token has no
+        rights, so it is rejected with 403 before any DB work.
+        """
         with patch(_PATCH_RBAC, new_callable=AsyncMock), \
              patch(_PATCH_AUTH_ROLES, new_callable=AsyncMock, return_value=False):
             with pytest.raises(HTTPException) as exc:
                 await create_assignment_submission(
-                    mock_request, assignment.assignment_uuid, api_token_user, db
+                    mock_request, assignment.assignment_uuid, api_token_user, db,
+                    on_behalf_of_user_id=1,
                 )
         assert exc.value.status_code == 403
 
@@ -231,7 +236,7 @@ class TestApiTokensBlockedOnSensitiveActions:
                     db,
                 )
         assert exc.value.status_code == 403
-        assert "API tokens" in exc.value.detail
+        assert "API token" in exc.value.detail
         rbac.assert_not_awaited()
 
 

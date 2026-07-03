@@ -6,6 +6,7 @@ Supports both org-based and org-less (platform) signups.
 """
 from datetime import datetime, timezone
 import json
+import os
 import secrets
 import redis
 from fastapi import HTTPException, Request
@@ -18,7 +19,10 @@ from src.db.users import User, UserRead
 from config.config import get_learnhouse_config
 from src.services.orgs.orgs import get_org_default_language
 from src.services.users.emails import send_email_verification_email
-from src.services.email.utils import get_base_url_from_request
+from src.services.email.utils import (
+    get_base_url_from_request,
+    get_trusted_base_url_from_request,
+)
 from src.services.security.rate_limiting import check_verification_resend_rate_limit
 from src.services.webhooks.dispatch import dispatch_webhooks
 
@@ -119,8 +123,30 @@ async def send_verification_email(
     # Convert to Read model for email function
     user_read = UserRead.model_validate(user)
 
+    # Resolve the base URL for the verification link.
+    #
+    # Org-based signups always use the request-derived URL (the org's own
+    # host is what the user signed up on). Platform / org-less signups
+    # (org_id is None) frequently arrive without a trusted Origin/Referer, in
+    # which case the generic request fallback would land on the org app
+    # (frontend_domain), not the platform. So for org-less signups prefer, in
+    # order: a trusted request origin → the explicitly-configured platform URL
+    # (LEARNHOUSE_PLATFORM_URL) → the existing fallback. The platform-URL step
+    # only fires when the env var is set, so self-hosted deployments that don't
+    # set it keep their current behavior.
+    if org_id is None:
+        base_url = get_trusted_base_url_from_request(request)
+        if not base_url:
+            platform_url = os.environ.get("LEARNHOUSE_PLATFORM_URL")
+            base_url = (
+                platform_url.rstrip("/")
+                if platform_url
+                else get_base_url_from_request(request)
+            )
+    else:
+        base_url = get_base_url_from_request(request)
+
     # Send verification email
-    base_url = get_base_url_from_request(request)
     email_sent = send_email_verification_email(
         token=token,
         user=user_read,
@@ -145,7 +171,7 @@ async def verify_email_token(
     token: str,
     user_uuid: str,
     org_uuid: str,
-) -> str:
+) -> tuple[User, str]:
     """
     Verify an email verification token and mark email as verified.
 
@@ -157,7 +183,8 @@ async def verify_email_token(
         org_uuid: Organization UUID (or "none" for platform signups)
 
     Returns:
-        Success message
+        Tuple of (verified user, success message). The user is returned so the
+        caller can issue an authenticated session (auto sign-in) on success.
     """
     # Get Redis connection
     r = get_redis_connection()
@@ -204,7 +231,7 @@ async def verify_email_token(
     if user.email_verified:
         # Delete token and return success
         r.delete(redis_key)
-        return "Email already verified"
+        return user, "Email already verified"
 
     # Mark email as verified
     user.email_verified = True
@@ -231,7 +258,7 @@ async def verify_email_token(
                 },
             )
 
-    return "Email verified successfully"
+    return user, "Email verified successfully"
 
 
 async def resend_verification_email(

@@ -106,6 +106,11 @@ async def start_playground_session(
     if not org or org.id is None:
         raise HTTPException(status_code=404, detail="Organization not found")
 
+    # Enforce API-token org scope: a token is bound to a single org and must not
+    # be usable to drive (and bill) AI generation against another org's playground.
+    if isinstance(current_user, APITokenUser) and current_user.org_id != playground.org_id:
+        raise HTTPException(status_code=403, detail="Insufficient permissions to generate content")
+
     # Verify user can edit (must be creator or have update rights)
     generate_acting_user_id = resolve_acting_user_id(current_user)
     from src.services.playgrounds.playgrounds import _get_user_rights
@@ -201,6 +206,11 @@ async def iterate_playground_session(
     if not org or org.id is None:
         raise HTTPException(status_code=404, detail="Organization not found")
 
+    # Enforce API-token org scope: a token is bound to a single org and must not
+    # be usable to drive (and bill) AI generation against another org's playground.
+    if isinstance(current_user, APITokenUser) and current_user.org_id != playground.org_id:
+        raise HTTPException(status_code=403, detail="Insufficient permissions")
+
     # Verify user can edit
     iterate_acting_user_id = resolve_acting_user_id(current_user)
     from src.services.playgrounds.playgrounds import _get_user_rights
@@ -269,6 +279,28 @@ async def get_session_state(
     session = get_playground_session(session_uuid)
     if not session:
         raise HTTPException(status_code=404, detail="Session not found")
+
+    # Authorize: a session exposes generated HTML + full message history, so the
+    # caller must have edit rights on the underlying playground. Without this
+    # check any authenticated user could read another org's session content by
+    # its uuid (cross-tenant IDOR), while /generate/start and /generate/iterate
+    # both enforce the same check.
+    playground = (await db_session.execute(
+        select(Playground).where(Playground.playground_uuid == session.playground_uuid)
+    )).scalars().first()
+    if not playground:
+        raise HTTPException(status_code=404, detail="Playground not found")
+
+    state_acting_user_id = resolve_acting_user_id(current_user)
+    from src.services.playgrounds.playgrounds import _get_user_rights
+    rights = await _get_user_rights(state_acting_user_id, playground.org_id, db_session)
+    pg_rights = rights.get("playgrounds", {})
+    is_owner = playground.created_by == state_acting_user_id
+    can_edit = pg_rights.get("action_update", False) or (
+        is_owner and pg_rights.get("action_update_own", False)
+    )
+    if not can_edit:
+        raise HTTPException(status_code=403, detail="Insufficient permissions")
 
     return PlaygroundSessionResponse(
         session_uuid=session.session_uuid,

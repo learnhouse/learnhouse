@@ -1,5 +1,6 @@
 import json
 import logging
+import re
 import secrets
 import string
 import uuid
@@ -199,6 +200,11 @@ async def get_invite_codes(
 
     for invite_code in invite_codes:  # type: ignore
         invite_code = r.get(invite_code)
+        # The key may have expired between scan_iter() and get() (codes carry a
+        # TTL). r.get() then returns None and json.loads(None) raises TypeError,
+        # crashing the whole listing with a 500. Skip vanished keys instead.
+        if invite_code is None:
+            continue
         invite_code = json.loads(invite_code)  # type: ignore
 
         # Enrich with usergroup name if linked
@@ -313,6 +319,17 @@ async def delete_invite_code(
         raise HTTPException(
             status_code=500,
             detail="Could not connect to Redis",
+        )
+
+    # SECURITY: the UUID is interpolated into a Redis SCAN glob pattern. Without
+    # validation an admin could pass wildcard characters (e.g. "*") to match —
+    # and delete — every invite code key for the org in a single call, instead
+    # of the one resource the endpoint is meant to address. Restrict to the
+    # exact "org_invite_code_<uuid4>" shape this codebase generates.
+    if not re.fullmatch(r"org_invite_code_[0-9a-fA-F-]{36}", invite_code_uuid):
+        raise HTTPException(
+            status_code=404,
+            detail="Invite code not found",
         )
 
     # Delete invite code (use scan_iter to avoid blocking Redis)

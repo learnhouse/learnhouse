@@ -37,6 +37,9 @@ class TestAnalyticsCacheHelpers:
         assert get_ttl_for_query("course_recent_enrollments") == CACHE_TTL_DETAIL
         assert get_ttl_for_query("course_custom_widget") == CACHE_TTL_COURSE
         assert get_ttl_for_query("detail_custom") == CACHE_TTL_DETAIL
+        # A detail query not prefixed with "detail_"/"course_" must still resolve
+        # to the short detail TTL via the DETAIL_QUERIES membership check.
+        assert get_ttl_for_query("learner_engagement_score") == CACHE_TTL_DETAIL
         assert get_ttl_for_query("peak_usage_hours") == CACHE_TTL_ADVANCED
         assert get_ttl_for_query("event_counts") == CACHE_TTL_CORE
 

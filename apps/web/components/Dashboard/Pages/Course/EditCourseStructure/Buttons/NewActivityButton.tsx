@@ -5,7 +5,10 @@ import {
   createActivity,
   createExternalVideoActivity,
   createFileActivity,
+  createVideoActivityWithProgress,
+  updateVideoCaptions,
 } from '@services/courses/activities'
+import { useBackgroundTasks } from '@components/Contexts/BackgroundTasksContext'
 import { getOrganizationContextInfoWithoutCredentials } from '@services/organizations/orgs'
 import { revalidateTags } from '@services/utils/ts/requests'
 import { Layers } from 'lucide-react'
@@ -17,6 +20,7 @@ import { useQueryClient } from '@tanstack/react-query'
 import { queryKeys } from '@lib/query/keys'
 import toast from 'react-hot-toast'
 import { useTranslation } from 'react-i18next'
+import { useLHAnalytics, AnalyticsEvent } from '@services/analytics'
 
 type NewActivityButtonProps = {
   chapterId: string
@@ -25,6 +29,7 @@ type NewActivityButtonProps = {
 
 function NewActivityButton(props: NewActivityButtonProps) {
   const { t } = useTranslation()
+  const { track } = useLHAnalytics('dashboard')
   const [newActivityModal, setNewActivityModal] = React.useState(false)
   const [selectedView, setSelectedView] = React.useState('home')
   const router = useRouter()
@@ -32,6 +37,7 @@ function NewActivityButton(props: NewActivityButtonProps) {
   const session = useLHSession() as any;
   const access_token = session?.data?.tokens?.access_token;
   const queryClient = useQueryClient()
+  const { addTask, updateTask } = useBackgroundTasks()
   const cleanCourseUuid = (id: string) => id?.replace(/^course_/, '') ?? id
 
   const openNewActivityModal = async (_chapterId: any) => {
@@ -51,10 +57,19 @@ function NewActivityButton(props: NewActivityButtonProps) {
     )
     const toast_loading = toast.loading(t('dashboard.courses.structure.activity.toasts.creating'))
     await createActivity(activity, props.chapterId, org.id, access_token)
+    track(AnalyticsEvent.ActivityCreated, { activity_type: activity?.type ?? activity?.activity_type })
     queryClient.invalidateQueries({ queryKey: queryKeys.courses.meta(cleanCourseUuid(course.courseStructure.course_uuid)) })
     toast.dismiss(toast_loading)
     toast.success(t('dashboard.courses.structure.activity.toasts.create_success'))
     setNewActivityModal(false)
+    await revalidateTags(['courses'], props.orgslug)
+    router.refresh()
+  }
+
+  const refreshStructure = async () => {
+    queryClient.invalidateQueries({
+      queryKey: queryKeys.courses.meta(cleanCourseUuid(course.courseStructure.course_uuid)),
+    })
     await revalidateTags(['courses'], props.orgslug)
     router.refresh()
   }
@@ -64,25 +79,63 @@ function NewActivityButton(props: NewActivityButtonProps) {
     file: any,
     type: any,
     activity: any,
-    chapterId: string
+    chapterId: string,
+    captions?: { enabled: boolean; source_language: string; languages: { code: string; label?: string }[] }
   ) => {
+    // Video uploads run in the BACKGROUND with a progress notification, so the
+    // modal closes immediately and the teacher can keep working.
+    if (type === 'video') {
+      setNewActivityModal(false)
+      const taskId = addTask({
+        kind: 'video-upload',
+        title: activity?.name || 'Video',
+        subtitle: 'Uploading…',
+      })
+      try {
+        const created = await createVideoActivityWithProgress(
+          file,
+          activity,
+          chapterId,
+          access_token,
+          (pct) => updateTask(taskId, { progress: pct })
+        )
+        updateTask(taskId, { status: 'processing', subtitle: 'Finishing up…', progress: 100 })
+        if (captions && created?.activity_uuid) {
+          try {
+            await updateVideoCaptions(created.activity_uuid, captions, access_token)
+          } catch {
+            /* captions are best-effort; upload already succeeded */
+          }
+        }
+        track(AnalyticsEvent.ActivityFileUploaded, { file_type: type, upload_succeeded: true })
+        await refreshStructure()
+        updateTask(taskId, { status: 'done', subtitle: 'Uploaded' })
+      } catch (error: any) {
+        track(AnalyticsEvent.ActivityFileUploaded, { file_type: type, upload_succeeded: false })
+        updateTask(taskId, {
+          status: 'error',
+          error: error?.message || t('dashboard.courses.structure.activity.toasts.upload_error'),
+        })
+      }
+      return
+    }
+
+    // Non-video files keep the original inline flow.
     const toast_loading = toast.loading(t('dashboard.courses.structure.activity.toasts.uploading'))
     try {
       await createFileActivity(file, type, activity, chapterId, access_token)
     } catch (error: any) {
-      // Without this, an upload failure (e.g. a 413 from the proxy on a large
-      // video) left the loading toast spinning forever with no feedback.
+      track(AnalyticsEvent.ActivityFileUploaded, { file_type: type, upload_succeeded: false })
       toast.dismiss(toast_loading)
       toast.error(error?.message || t('dashboard.courses.structure.activity.toasts.upload_error'))
       return
     }
-    queryClient.invalidateQueries({ queryKey: queryKeys.courses.meta(cleanCourseUuid(course.courseStructure.course_uuid)) })
+    track(AnalyticsEvent.ActivityFileUploaded, { file_type: type, upload_succeeded: true })
     setNewActivityModal(false)
     toast.dismiss(toast_loading)
     toast.success(t('dashboard.courses.structure.activity.toasts.upload_success'))
     toast.success(t('dashboard.courses.structure.activity.toasts.create_success'))
-    await revalidateTags(['courses'], props.orgslug)
-    router.refresh()
+    await refreshStructure()
   }
 
   // Submit YouTube Video Upload
@@ -97,6 +150,7 @@ function NewActivityButton(props: NewActivityButtonProps) {
       activity,
       props.chapterId, access_token
     )
+    track(AnalyticsEvent.ActivityFileUploaded, { file_type: 'video', upload_succeeded: true })
     queryClient.invalidateQueries({ queryKey: queryKeys.courses.meta(cleanCourseUuid(course.courseStructure.course_uuid)) })
     setNewActivityModal(false)
     toast.dismiss(toast_loading)

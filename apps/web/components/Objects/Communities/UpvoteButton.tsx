@@ -6,12 +6,13 @@ import { useLHSession } from '@components/Contexts/LHSessionContext'
 import { useOrgMembership } from '@components/Contexts/OrgContext'
 import { upvoteDiscussion, removeUpvote } from '@services/communities/discussions'
 import { cn } from '@/lib/utils'
+import { useLHAnalytics, AnalyticsEvent } from '@services/analytics'
 
 interface UpvoteButtonProps {
   discussionUuid: string
   initialVoteCount: number
   initialHasVoted: boolean
-  onVoteChange?: (newCount: number, hasVoted: boolean) => void
+  onVoteChange?: (_newCount: number, _hasVoted: boolean) => void
   disabled?: boolean
   compact?: boolean
 }
@@ -26,6 +27,7 @@ export function UpvoteButton({
 }: UpvoteButtonProps) {
   const session = useLHSession() as any
   const { isUserPartOfTheOrg } = useOrgMembership()
+  const { track } = useLHAnalytics('learner')
   const [voteCount, setVoteCount] = useState(initialVoteCount)
   const [hasVoted, setHasVoted] = useState(initialHasVoted)
   const [isLoading, setIsLoading] = useState(false)
@@ -52,6 +54,10 @@ export function UpvoteButton({
       } else {
         await removeUpvote(discussionUuid, accessToken)
       }
+      track(AnalyticsEvent.DiscussionUpvoted, {
+        action: newHasVoted ? 'upvote' : 'remove',
+        new_vote_count: newVoteCount,
+      })
     } catch (err: any) {
       // Revert on error
       setHasVoted(!newHasVoted)
@@ -66,7 +72,7 @@ export function UpvoteButton({
     } finally {
       setIsLoading(false)
     }
-  }, [hasVoted, voteCount, canVote, isLoading, disabled, discussionUuid, accessToken, onVoteChange])
+  }, [hasVoted, voteCount, canVote, isLoading, disabled, discussionUuid, accessToken, onVoteChange, track])
 
   if (compact) {
     return (

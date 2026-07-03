@@ -505,12 +505,14 @@ class TestApiTokenBlocked:
     async def test_create_blocked_for_api_token_user(
         self, db, mock_request, org, assignment
     ):
-        """Same gate on the create path."""
+        """Create-on-behalf requires the assignments.create right; a token with
+        no rights is rejected with 403 before any DB work."""
         token_user = _api_token_user(org.id)
         with patch(_PATCH_RBAC, new_callable=AsyncMock):
             with pytest.raises(HTTPException) as exc:
                 await create_assignment_submission(
-                    mock_request, assignment.assignment_uuid, token_user, db
+                    mock_request, assignment.assignment_uuid, token_user, db,
+                    on_behalf_of_user_id=1,
                 )
         assert exc.value.status_code == 403
-        assert "API tokens cannot access assignments" in exc.value.detail
+        assert "API token" in exc.value.detail

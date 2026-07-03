@@ -1,0 +1,79 @@
+---
+title: Let an Agent Build It
+description: Have a coding agent like Claude Code or Cursor build your headless LearnHouse platform for you, using a ready-made, self-contained specification.
+---
+
+import { Callout, Steps } from 'nextra/components'
+
+# Let an Agent Build It
+
+If you'd rather not type out every file, hand the work to a coding agent. This page explains how to drive an agent (Claude Code, Cursor, Windsurf, Copilot, etc.) to build the same headless learning platform described in [Do It Yourself](/guides/build-learning-platform/do-it-yourself), using the self-contained **[Agent Spec](/guides/build-learning-platform/agent-spec)**.
+
+The spec is written *for the model*: it states the goal, the exact API contract taken from the LearnHouse codebase, the file layout, the auth rules, and clear acceptance criteria. You supply three facts about your instance and let the agent do the rest.
+
+<Callout type="info">
+This still produces **your** code on **your** machine — the agent is just doing the typing. Review the result the same way you'd review a teammate's PR.
+</Callout>
+
+## What you'll need
+
+- A coding agent with file-writing and terminal access (e.g. **Claude Code**).
+- A running LearnHouse instance and its API base URL (e.g. `http://localhost:1338/api/v1`).
+- Your **organization slug** and at least one **public, published course**.
+- Test credentials (an email + password you can sign up with) if you want the agent to verify the authenticated flow.
+
+## How to do it
+
+<Steps>
+
+### Open the Agent Spec
+
+Go to the **[Agent Spec](/guides/build-learning-platform/agent-spec)** page and copy the entire specification block.
+
+### Fill in the three blanks
+
+At the top of the spec there's a short **Configuration** section. Replace the placeholders with your values:
+
+- `API_BASE` — your API base URL (e.g. `http://localhost:1338/api/v1`)
+- `ORG_SLUG` — your organization slug
+- `TEST_EMAIL` / `TEST_PASSWORD` — optional, for verifying login/enrollment
+
+### Paste it into your agent
+
+Start a new agent session in an empty directory and paste the filled-in spec as your first message. A good kickoff prompt:
+
+> Build the project described in the specification below. Work in this directory, create all files, install dependencies, and run the dev server when done. Ask me before doing anything destructive.
+>
+> _(paste the spec here)_
+
+### Review and run
+
+When the agent finishes, it should have scaffolded the app, written the files, and started `npm run dev`. Open the URL it reports and click through: catalogue → course → activity → sign up → log in → enroll → progress.
+
+### Iterate
+
+If something's off (a media URL that won't load, an activity type that isn't rendered), tell the agent what you saw. The spec includes the troubleshooting notes it needs to fix the common cases.
+
+</Steps>
+
+## What "done" looks like
+
+The spec's acceptance criteria ask the agent to confirm:
+
+1. The catalogue lists your public courses.
+2. A course page shows chapters and activities.
+3. An activity renders (video, document, or dynamic page).
+4. A new user can sign up and log in.
+5. A logged-in user can enroll and see progress update.
+
+If your agent can check those boxes against your live instance, you're done.
+
+<Callout type="warning">
+Agents are good at the scaffolding and the happy path, but they can't see your specific `content` field shapes or storage config. Expect to nudge it on the **activity viewer** (the keys inside `content` vary by sub-type) and **media URLs** (filesystem vs S3). The spec calls both out as the likely spots to adjust.
+</Callout>
+
+## Why a spec instead of "build me an LMS"?
+
+A vague prompt makes the agent invent an API. The [spec](/guides/build-learning-platform/agent-spec) pins down the **real** endpoints, response shapes, and the auth/refresh quirk — all lifted from this codebase — so the agent builds against the API that actually exists, not one it hallucinated. That's the difference between an app that runs and an app that 404s on every call.
+
+Ready? **[Open the Agent Spec →](/guides/build-learning-platform/agent-spec)**

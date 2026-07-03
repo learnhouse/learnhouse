@@ -13,7 +13,9 @@ import {
 const BACKEND_URL = (getConfig('NEXT_PUBLIC_LEARNHOUSE_BACKEND_URL') || 'http://localhost:1338').replace(/\/+$/, '')
 
 // Paths that return tokens in response body (relative to /api/v1/auth/)
-const TOKEN_RESPONSE_PATHS = ['login', 'refresh', 'oauth', 'signup']
+// `verify-email` auto-signs-in the user on successful email verification, so
+// it returns tokens just like login/signup and its cookies must be mirrored.
+const TOKEN_RESPONSE_PATHS = ['login', 'refresh', 'oauth', 'signup', 'verify-email']
 
 function shouldExtractTokens(path: string): boolean {
   return TOKEN_RESPONSE_PATHS.some(p => path.startsWith(p))
@@ -42,6 +44,22 @@ function decodeJwtExpiryMs(token: string): number | null {
 // Skip the backend refresh roundtrip when the cookie token still has plenty
 // of life left. Two minutes of headroom keeps us safe against clock skew.
 const REFRESH_FAST_PATH_HEADROOM_MS = 2 * 60 * 1000
+
+function clearAuthCookies(response: NextResponse, request: NextRequest) {
+  const isSecure = request.nextUrl.protocol === 'https:'
+  const domain = getCookieDomain(request)
+  const securePart = isSecure ? '; Secure' : ''
+
+  if (domain) {
+    response.headers.append('Set-Cookie', `${ACCESS_TOKEN_COOKIE}=; Path=/; Domain=${domain}; Max-Age=0; HttpOnly; SameSite=Lax${securePart}`)
+    response.headers.append('Set-Cookie', `${REFRESH_TOKEN_COOKIE}=; Path=/; Domain=${domain}; Max-Age=0; HttpOnly; SameSite=Lax${securePart}`)
+    response.headers.append('Set-Cookie', `LH_session=; Path=/; Domain=${domain}; Max-Age=0; SameSite=Lax${securePart}`)
+  }
+
+  response.headers.append('Set-Cookie', `${ACCESS_TOKEN_COOKIE}=; Path=/; Max-Age=0; HttpOnly; SameSite=Lax${securePart}`)
+  response.headers.append('Set-Cookie', `${REFRESH_TOKEN_COOKIE}=; Path=/; Max-Age=0; HttpOnly; SameSite=Lax${securePart}`)
+  response.headers.append('Set-Cookie', `LH_session=; Path=/; Max-Age=0; SameSite=Lax${securePart}`)
+}
 
 async function proxyRequest(
   request: NextRequest,
@@ -115,21 +133,7 @@ async function proxyRequest(
     }
 
     const response = NextResponse.json({ ok: true })
-    const isSecure = request.nextUrl.protocol === 'https:'
-    const domain = getCookieDomain(request)
-    const securePart = isSecure ? '; Secure' : ''
-
-    // Clear domain-scoped cookies (the ones set during login on subdomains)
-    if (domain) {
-      response.headers.append('Set-Cookie', `${ACCESS_TOKEN_COOKIE}=; Path=/; Domain=${domain}; Max-Age=0; HttpOnly; SameSite=Lax${securePart}`)
-      response.headers.append('Set-Cookie', `${REFRESH_TOKEN_COOKIE}=; Path=/; Domain=${domain}; Max-Age=0; HttpOnly; SameSite=Lax${securePart}`)
-      response.headers.append('Set-Cookie', `LH_session=; Path=/; Domain=${domain}; Max-Age=0; SameSite=Lax${securePart}`)
-    }
-    // Clear host-only cookies (pre-existing or custom domain cookies)
-    response.headers.append('Set-Cookie', `${ACCESS_TOKEN_COOKIE}=; Path=/; Max-Age=0; HttpOnly; SameSite=Lax${securePart}`)
-    response.headers.append('Set-Cookie', `${REFRESH_TOKEN_COOKIE}=; Path=/; Max-Age=0; HttpOnly; SameSite=Lax${securePart}`)
-    response.headers.append('Set-Cookie', `LH_session=; Path=/; Max-Age=0; SameSite=Lax${securePart}`)
-
+    clearAuthCookies(response, request)
     return response
   }
 
@@ -188,6 +192,10 @@ async function proxyRequest(
     status: backendResponse.status,
     statusText: backendResponse.statusText,
   })
+
+  if (pathSegments === 'refresh' && backendResponse.status === 401) {
+    clearAuthCookies(response, request)
+  }
 
   // Copy relevant headers
   if (responseContentType) {

@@ -12,6 +12,7 @@ import { getUserAvatarMediaDirectory } from '@services/media/media'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { queryKeys } from '@/lib/query/keys'
 import Link from 'next/link'
+import { useLHAnalytics, AnalyticsEvent } from '@services/analytics'
 
 interface Author {
   user: {
@@ -132,6 +133,7 @@ const CourseActionsMobile = ({ courseuuid, orgslug, course, trailData }: CourseA
   const { isUserPartOfTheOrg } = useOrgMembership()
   const org = useOrg() as any
   const queryClient = useQueryClient()
+  const { track } = useLHAnalytics('learner')
   const [isActionLoading, setIsActionLoading] = useState(false)
   // Clean up course UUID by removing 'course_' prefix if it exists
   const cleanCourseUuid = course.course_uuid?.replace('course_', '');
@@ -155,6 +157,10 @@ const CourseActionsMobile = ({ courseuuid, orgslug, course, trailData }: CourseA
 
   const handleCourseAction = async () => {
     if (!session.data?.user) {
+      track(AnalyticsEvent.CourseSignupPrompted, {
+        reason: 'unauthenticated',
+        intended_action: isStarted ? 'leave_course' : 'start_course',
+      })
       router.push(getUriWithOrg(orgslug, '/signup'))
       return
     }
@@ -171,12 +177,18 @@ const CourseActionsMobile = ({ courseuuid, orgslug, course, trailData }: CourseA
         await removeCourse('course_' + courseuuid, orgslug, session.data?.tokens?.access_token)
         await revalidateTags(['courses'], orgslug)
         queryClient.invalidateQueries({ queryKey: queryKeys.trail.org(org.id) })
+        track(AnalyticsEvent.CourseLeft, { course_uuid: cleanCourseUuid })
         router.refresh()
       } else {
         await startCourse('course_' + courseuuid, orgslug, session.data?.tokens?.access_token)
         await revalidateTags(['courses'], orgslug)
         queryClient.invalidateQueries({ queryKey: queryKeys.trail.org(org.id) })
-        
+        track(AnalyticsEvent.CourseStarted, {
+          course_uuid: cleanCourseUuid,
+          total_activities: course.chapters?.reduce((acc: number, chapter: any) => acc + chapter.activities.length, 0) || 0,
+          has_offers: linkedOffers.length > 0,
+        })
+
         // Get the first activity from the first chapter
         const firstChapter = course.chapters?.[0]
         const firstActivity = firstChapter?.activities?.[0]
@@ -294,7 +306,15 @@ const CourseActionsMobile = ({ courseuuid, orgslug, course, trailData }: CourseA
                     </div>
                   </div>
                   <Link href={storeHref}>
-                    <button className="w-full py-2 px-4 rounded-lg bg-neutral-900 text-white font-semibold text-sm hover:bg-neutral-800 transition-colors flex items-center justify-center gap-2">
+                    <button
+                      onClick={() => track(AnalyticsEvent.CourseOfferCtaClicked, {
+                        offer_uuid: offer.offer_uuid,
+                        offer_type: offer.offer_type,
+                        amount: offer.amount,
+                        currency: offer.currency,
+                      })}
+                      className="w-full py-2 px-4 rounded-lg bg-neutral-900 text-white font-semibold text-sm hover:bg-neutral-800 transition-colors flex items-center justify-center gap-2"
+                    >
                       <ShoppingCart className="w-4 h-4" />
                       {formattedPrice ? `Get Access — ${formattedPrice}` : 'Purchase Course'}
                     </button>

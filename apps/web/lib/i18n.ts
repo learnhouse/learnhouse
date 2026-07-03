@@ -25,6 +25,7 @@ const LOCALE_LOADERS: Record<string, () => Promise<{ default: any }>> = {
   nl: () => import('../locales/nl.json'),
   th: () => import('../locales/th.json'),
   bn: () => import('../locales/bn.json'),
+  fa: () => import('../locales/fa.json'),
   sk: () => import('../locales/sk.json'),
 };
 

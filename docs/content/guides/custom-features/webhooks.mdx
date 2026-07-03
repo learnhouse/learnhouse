@@ -1,0 +1,187 @@
+---
+title: Webhooks
+description: Subscribe to LearnHouse events, verify HMAC-SHA256 signatures, and react to learning activity in real time with a Next.js webhook receiver.
+---
+
+import { Callout } from 'nextra/components'
+import WebhookFlowDiagram from '../../../components/diagrams/WebhookFlowDiagram'
+
+# Webhooks
+
+Webhooks let LearnHouse **push events to your application** the moment they happen — a learner enrolls, completes a course, submits an assignment, signs up — so you can react without polling. Use them to sync a CRM, send custom emails, update a dashboard, or kick off any workflow.
+
+<WebhookFlowDiagram />
+
+<Callout type="info">
+Webhooks are a **Pro** feature. They're managed by an authenticated user under organization settings or the webhook API below.
+</Callout>
+
+## How it works
+
+1. You register an **endpoint** (a public HTTPS URL) and choose which events to subscribe to.
+2. When a subscribed event fires, LearnHouse sends a `POST` to your URL with a JSON body, **signed** with a per-endpoint secret.
+3. Your receiver **verifies the signature**, then handles the event.
+4. If your endpoint doesn't return a `2xx`, LearnHouse **retries** — up to 3 attempts, waiting 1s then 4s between them — and logs every delivery.
+
+## Managing endpoints
+
+All webhook endpoints live under `/api/v1/orgs/{org_id}/webhooks`.
+
+| Method | Path | Purpose |
+| --- | --- | --- |
+| `GET` | `/orgs/{org_id}/webhooks/events` | List every event type and its payload schema |
+| `POST` | `/orgs/{org_id}/webhooks` | Create an endpoint |
+| `GET` | `/orgs/{org_id}/webhooks` | List your endpoints |
+| `GET` | `/orgs/{org_id}/webhooks/{webhook_uuid}` | Get one endpoint |
+| `PUT` | `/orgs/{org_id}/webhooks/{webhook_uuid}` | Update URL / events / active state |
+| `DELETE` | `/orgs/{org_id}/webhooks/{webhook_uuid}` | Delete an endpoint |
+| `POST` | `/orgs/{org_id}/webhooks/{webhook_uuid}/regenerate-secret` | Rotate the signing secret |
+| `POST` | `/orgs/{org_id}/webhooks/{webhook_uuid}/test` | Send a `ping` test event |
+| `GET` | `/orgs/{org_id}/webhooks/{webhook_uuid}/deliveries` | Recent delivery logs |
+
+### Create an endpoint
+
+```bash
+curl -X POST "http://localhost:1338/api/v1/orgs/1/webhooks" \
+  -H "Authorization: Bearer <user_jwt>" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "url": "https://your-app.com/api/webhooks/learnhouse",
+    "events": ["course_completed", "course_enrolled", "user_signed_up"]
+  }'
+```
+
+The response contains the **signing secret exactly once** (prefixed `whsec_`). Store it — you'll need it to verify signatures, and it can't be retrieved again (only rotated). It also returns the usual metadata (`created_by_user_id`, `creation_date`, …):
+
+```json
+{
+  "webhook_uuid": "webhook_…",
+  "url": "https://your-app.com/api/webhooks/learnhouse",
+  "events": ["course_completed", "course_enrolled", "user_signed_up"],
+  "secret": "whsec_…store me…",
+  "is_active": true
+}
+```
+
+<Callout type="info">
+Use `POST …/test` to send yourself a `ping` event while building your receiver, and `GET …/deliveries` to inspect what was sent and how your endpoint responded.
+</Callout>
+
+## The payload
+
+Every delivery is a JSON envelope. The `data` field is event-specific:
+
+```json
+{
+  "event": "course_completed",
+  "delivery_id": "dlv_1a2b3c4d5e6f7081",
+  "timestamp": "2026-06-22T12:00:00Z",
+  "org_id": 1,
+  "data": {
+    "user": { "user_uuid": "user_…", "email": "learner@example.com", "username": "learner" },
+    "course": { "course_uuid": "course_…", "name": "Introduction to Python" }
+  }
+}
+```
+
+Each request also carries these headers:
+
+| Header | Value |
+| --- | --- |
+| `X-Webhook-Event` | The event name, e.g. `course_completed` |
+| `X-Webhook-Delivery` | Unique delivery id, e.g. `dlv_…` (use it for idempotency) |
+| `X-Webhook-Signature` | `sha256=<hmac-hex>` — HMAC-SHA256 of the **raw request body** |
+| `User-Agent` | `LearnHouse-Webhooks/1.0` |
+
+## Verifying the signature
+
+The signature is `sha256=` followed by the hex HMAC-SHA256 of the **exact raw body bytes**, keyed by your endpoint secret. You must compute the HMAC over the **unparsed** body — re-serializing the JSON will change the bytes and break verification.
+
+Here's a complete receiver as a Next.js Route Handler:
+
+```ts filename="src/app/api/webhooks/learnhouse/route.ts"
+import { NextRequest, NextResponse } from 'next/server'
+import crypto from 'node:crypto'
+
+const SECRET = process.env.LEARNHOUSE_WEBHOOK_SECRET! // the whsec_… value
+
+export async function POST(req: NextRequest) {
+  // 1. Read the RAW body — do not use req.json() first.
+  const raw = await req.text()
+  const signature = req.headers.get('x-webhook-signature') ?? ''
+
+  // 2. Recompute the HMAC and compare in constant time.
+  const expected =
+    'sha256=' + crypto.createHmac('sha256', SECRET).update(raw).digest('hex')
+
+  const valid =
+    signature.length === expected.length &&
+    crypto.timingSafeEqual(Buffer.from(signature), Buffer.from(expected))
+
+  if (!valid) {
+    return NextResponse.json({ error: 'invalid signature' }, { status: 401 })
+  }
+
+  // 3. Now it's safe to parse and handle.
+  const payload = JSON.parse(raw)
+  switch (payload.event) {
+    case 'course_completed':
+      console.log(`${payload.data.user.email} finished ${payload.data.course.name}`)
+      // …send a certificate email, update your CRM, etc.
+      break
+    case 'user_signed_up':
+      // …add to your mailing list
+      break
+  }
+
+  // 4. Return 2xx quickly so LearnHouse marks the delivery successful.
+  return NextResponse.json({ received: true })
+}
+```
+
+The same check in raw Node.js / Express:
+
+```js
+const crypto = require('node:crypto')
+
+function verify(rawBody, signatureHeader, secret) {
+  const expected = 'sha256=' + crypto.createHmac('sha256', secret).update(rawBody).digest('hex')
+  const a = Buffer.from(signatureHeader ?? '')
+  const b = Buffer.from(expected)
+  // timingSafeEqual throws if lengths differ, so guard first.
+  return a.length === b.length && crypto.timingSafeEqual(a, b)
+}
+```
+
+<Callout type="warning">
+**Always verify before trusting a payload**, and treat deliveries as **at-least-once** — the same `delivery_id` can arrive more than once after a retry. Make your handler idempotent (e.g. record processed `delivery_id`s).
+</Callout>
+
+## Event catalogue
+
+A webhook can subscribe to any of these events. The shape of each event's `data` field is returned live by `GET /api/v1/orgs/{org_id}/webhooks/events`, so your tooling never has to hardcode it.
+
+| Category | Events |
+| --- | --- |
+| **System** | `ping` |
+| **Learning Progress** | `course_completed`, `course_enrolled`, `activity_completed`, `assignment_submitted`, `assignment_graded`, `certificate_claimed` |
+| **User & Access** | `user_signed_up`, `user_email_verified`, `user_role_changed`, `user_invited_to_org`, `user_removed_from_org` |
+| **Course Lifecycle** | `course_created`, `course_published`, `course_deleted`, `course_update_published` |
+| **Content Management** | `activity_version_created`, `activity_version_restored`, `course_contributor_added`, `course_contributor_removed`, `collection_created`, `podcast_episode_created` |
+| **Collaboration** | `board_created`, `board_member_added`, `playground_created` |
+| **Community** | `discussion_posted`, `comment_created`, `discussion_pinned`, `discussion_locked`, `discussion_vote_cast` |
+| **Groups** | `usergroup_created`, `usergroup_deleted`, `usergroup_users_added`, `usergroup_resources_added` |
+| **Subscriptions** | `pack_activated`, `pack_deactivated` |
+| **Organization** | `org_signup_method_changed`, `org_ai_config_changed`, `org_payments_config_changed` |
+
+## Security notes
+
+- **Secrets** are stored encrypted at rest and are shown to you only at creation and on rotation.
+- **Signatures** use HMAC-SHA256 over the raw body — the same convention as GitHub and Stripe.
+- **Outbound requests are SSRF-protected**: LearnHouse validates the target URL and the resolved IP before every delivery, so endpoints must be publicly reachable — `localhost` and private/reserved IP ranges are always rejected (in every environment).
+
+## See also
+
+- [Custom features overview](/guides/custom-features) — API tokens and programmatic content.
+- [Build a learning platform](/guides/build-learning-platform) — the frontend side of the API.
+- [API Reference](/developers/api) — every endpoint and schema.

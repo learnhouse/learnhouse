@@ -19,6 +19,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from '@components/ui/tooltip'
+import { useLHAnalytics, AnalyticsEvent } from '@services/analytics'
 
 // Common emojis for reactions
 const REACTION_EMOJIS = ['👍', '❤️', '🎉', '🚀', '👀', '💯', '🔥', '💡', '👏', '🙌']
@@ -32,6 +33,7 @@ export function ReactionButton({ discussionUuid, compact = false }: ReactionButt
   const session = useLHSession() as any
   const accessToken = session?.data?.tokens?.access_token
   const isAuthenticated = session?.status === 'authenticated'
+  const { track } = useLHAnalytics('learner')
 
   const [reactions, setReactions] = useState<ReactionSummary[]>([])
   const [isLoading, setIsLoading] = useState(false)
@@ -53,10 +55,16 @@ export function ReactionButton({ discussionUuid, compact = false }: ReactionButt
   const handleToggleReaction = async (emoji: string) => {
     if (!isAuthenticated || !accessToken || isLoading) return
 
+    const wasReacted = reactions.find((r) => r.emoji === emoji)?.has_reacted ?? false
+
     setIsLoading(true)
     try {
       await toggleReaction(discussionUuid, emoji, accessToken)
       await fetchReactions()
+      track(AnalyticsEvent.DiscussionReactionToggled, {
+        emoji,
+        action: wasReacted ? 'removed' : 'added',
+      })
     } catch (error: any) {
       const message =
         (error?.detail && typeof error.detail === 'object' && error.detail.message) ||

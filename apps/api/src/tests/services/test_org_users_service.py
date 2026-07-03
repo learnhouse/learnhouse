@@ -6,6 +6,7 @@ from types import SimpleNamespace
 from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
+from sqlmodel import select
 
 from src.db.roles import Role, RoleTypeEnum
 from src.db.user_organizations import UserOrganization
@@ -17,6 +18,7 @@ from src.services.orgs.users import (
     get_organization_users,
     get_list_of_invited_users,
     invite_batch_users,
+    remove_all_users_from_org,
     remove_batch_users_from_org,
     remove_invited_user,
     remove_user_from_org,
@@ -366,6 +368,41 @@ class TestOrgUsersService:
         invalidate_cache.assert_any_call(regular_user.id)
         invalidate_cache.assert_any_call(9999)
         assert decrease_usage.call_count == 1
+
+    @pytest.mark.asyncio
+    async def test_remove_all_users_from_org(
+        self, mock_request, db, org, admin_user, regular_user
+    ):
+        # Missing org -> 404
+        with pytest.raises(Exception) as missing_org_exc:
+            await remove_all_users_from_org(mock_request, 999, db, admin_user)
+        assert missing_org_exc.value.status_code == 404
+
+        # org has admin_user (id=1) and regular_user (id=2). Removing all should
+        # drop regular_user but keep the caller (admin_user).
+        with patch(
+            "src.services.orgs.users.rbac_check",
+            new_callable=AsyncMock,
+        ), patch(
+            "src.routers.users._invalidate_session_cache"
+        ) as invalidate_cache, patch(
+            "src.services.orgs.users.decrease_feature_usage"
+        ) as decrease_usage:
+            result = await remove_all_users_from_org(
+                mock_request, org.id, db, admin_user
+            )
+
+        assert result == {"detail": "1 user(s) removed from org"}
+        invalidate_cache.assert_any_call(regular_user.id)
+        assert decrease_usage.call_count == 1
+
+        # Caller remains a member; the other user is gone.
+        remaining = (await db.exec(
+            select(UserOrganization).where(UserOrganization.org_id == org.id)
+        )).all()
+        remaining_ids = {uo.user_id for uo in remaining}
+        assert admin_user.id in remaining_ids
+        assert regular_user.id not in remaining_ids
 
     @pytest.mark.asyncio
     async def test_update_user_role_guard_paths_and_email_failure(

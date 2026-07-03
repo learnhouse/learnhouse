@@ -122,9 +122,12 @@ async def test_refresh_happy_path_rotates_refresh_cookie(client):
     ctxs = [
         patch("src.routers.auth.security_get_user", new_callable=AsyncMock, return_value=user),
         patch("src.routers.auth._is_token_revoked_for_user", return_value=False),
+        # Isolate the one-time-use replay store (real Redis) so a fixed test jti
+        # isn't flagged as a replay across runs; first use returns True.
+        patch("src.routers.auth._mark_refresh_jti_used", return_value=True),
     ]
     with stack[0], stack[1], stack[2], stack[3], stack[4], stack[5], stack[6], \
-         ctxs[0], ctxs[1]:
+         ctxs[0], ctxs[1], ctxs[2]:
         response = await client.get(
             "/api/v1/auth/refresh",
             cookies={JWT_REFRESH_COOKIE_NAME: "legit-token"},

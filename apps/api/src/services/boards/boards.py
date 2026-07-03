@@ -226,6 +226,16 @@ async def add_board_member(
     board = await _get_board_or_404(board_uuid, db_session)
     await check_resource_access(request, db_session, current_user, board.board_uuid, AccessAction.UPDATE)
 
+    # Validate the requested role against the allowed set. The schema types
+    # `role` as a bare str, so without this an arbitrary string (or a second
+    # "owner") could be persisted, corrupting role-based access logic.
+    role = _validate_member_role(member_object.role)
+
+    # Ensure the target user actually belongs to this board's organization.
+    # Otherwise a board manager could add users from *other* organizations,
+    # leaking the board (and the foreign user's profile) across tenants.
+    await require_org_membership(member_object.user_id, board.org_id, db_session)
+
     # Check member limit (max 10 per board)
     member_count = (await db_session.execute(
         select(func.count(BoardMember.id)).where(BoardMember.board_id == board.id)
@@ -246,7 +256,7 @@ async def add_board_member(
     member = BoardMember(
         board_id=board.id,
         user_id=member_object.user_id,
-        role=member_object.role,
+        role=role,
         creation_date=str(datetime.now()),
     )
     db_session.add(member)
@@ -259,7 +269,7 @@ async def add_board_member(
         data={
             "board_uuid": board.board_uuid,
             "user_id": member_object.user_id,
-            "role": member_object.role.value,
+            "role": role.value,
         },
     )
 
@@ -288,6 +298,11 @@ async def add_board_members_batch(
         if member_count + len(added) >= 10:
             break
 
+        # Validate role and ensure the user belongs to this board's org
+        # (prevents cross-tenant member additions and invalid/escalated roles).
+        role = _validate_member_role(member_create.role)
+        await require_org_membership(member_create.user_id, board.org_id, db_session)
+
         # Skip duplicates silently
         existing = (await db_session.execute(
             select(BoardMember).where(
@@ -301,7 +316,7 @@ async def add_board_members_batch(
         member = BoardMember(
             board_id=board.id,
             user_id=member_create.user_id,
-            role=member_create.role,
+            role=role,
             creation_date=str(datetime.now()),
         )
         db_session.add(member)
@@ -484,6 +499,22 @@ async def store_ydoc_state(
     db_session.add(board)
     await db_session.commit()
     return {"detail": "Ydoc state stored"}
+
+
+def _validate_member_role(role) -> BoardMemberRole:
+    """Coerce/validate an incoming board-member role into the allowed enum.
+
+    The API schema types `role` as a plain str, so we must reject anything
+    outside BoardMemberRole (e.g. arbitrary strings, or escalating to
+    "owner") before it is persisted.
+    """
+    try:
+        return BoardMemberRole(role.value if isinstance(role, BoardMemberRole) else role)
+    except ValueError:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Invalid board member role. Allowed: {', '.join(r.value for r in BoardMemberRole)}",
+        )
 
 
 async def _get_board_or_404(board_uuid: str, db_session: AsyncSession) -> Board:

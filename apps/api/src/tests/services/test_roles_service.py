@@ -723,6 +723,124 @@ class TestRolesService:
         assert expected_detail in exc.value.detail
 
     @pytest.mark.asyncio
+    async def test_create_role_skips_non_dict_right_value(
+        self, db, org, admin_user, admin_role, mock_request
+    ):
+        # A raw rights dict may carry an unexpected key whose value isn't a
+        # dict. The manual validator only checks the 9 required keys, so a dict
+        # holding just those keys (plus an extra non-dict entry) stays a plain
+        # dict (it can't coerce to the Rights model, which needs more keys) and
+        # the escalation loop must skip the non-dict entry (continue) instead of
+        # raising AttributeError / HTTP 500.
+        # Copy whatever required rights the admin role carries (resilient to the
+        # required-rights set changing over time), then add an unexpected
+        # non-dict entry that the escalation loop must skip instead of crashing.
+        rights = {k: copy.deepcopy(v) for k, v in dict(admin_role.rights).items()}
+        rights["unexpected_key"] = True
+
+        with patch(
+            "src.services.roles.roles.rbac_check",
+            new_callable=AsyncMock,
+        ), patch(
+            "src.services.roles.roles.require_org_role_permission"
+        ), patch(
+            "src.services.roles.roles.get_user_org_role",
+            return_value=admin_role,
+        ), patch(
+            "src.services.roles.roles.is_user_superadmin",
+            return_value=False,
+        ):
+            created = await create_role(
+                mock_request,
+                db,
+                RoleCreate(
+                    org_id=org.id,
+                    name="Role With Extra Key",
+                    rights=rights,
+                ),
+                admin_user,
+            )
+
+        assert created.name == "Role With Extra Key"
+
+    @pytest.mark.asyncio
+    async def test_update_role_skips_non_dict_right_value(
+        self, db, org, admin_user, admin_role, mock_request
+    ):
+        # Same defensive skip on the update path: an unexpected non-dict right
+        # entry must be skipped (continue) by the escalation check.
+        role = await _make_role(
+            db,
+            org,
+            id=60,
+            name="Update Extra Key",
+            role_uuid="role_update_extra",
+            rights=admin_role.rights,
+        )
+        # Copy whatever required rights the admin role carries (resilient to the
+        # required-rights set changing over time), then add an unexpected
+        # non-dict entry that the escalation loop must skip instead of crashing.
+        rights = {k: copy.deepcopy(v) for k, v in dict(admin_role.rights).items()}
+        rights["unexpected_key"] = True
+
+        with patch(
+            "src.services.roles.roles.require_org_role_permission"
+        ), patch(
+            "src.services.roles.roles.get_user_org_role",
+            return_value=admin_role,
+        ), patch(
+            "src.services.roles.roles.is_user_superadmin",
+            return_value=False,
+        ):
+            updated = await update_role(
+                mock_request,
+                db,
+                RoleUpdate(role_id=role.id, rights=rights),
+                admin_user,
+            )
+
+        assert updated.id == role.id
+
+    @pytest.mark.asyncio
+    async def test_update_role_blocks_permission_escalation(
+        self, db, org, admin_user, admin_role, user_role, mock_request
+    ):
+        # When the acting user lacks a permission that the updated role would
+        # grant, update_role must raise 403 (the escalation guard).
+        role = await _make_role(
+            db,
+            org,
+            id=61,
+            name="Escalate Target",
+            role_uuid="role_escalate_target",
+            rights=user_role.rights,
+        )
+        # admin rights grant permissions the limited user_role does not have
+        escalated_rights = copy.deepcopy(admin_role.rights)
+
+        with patch(
+            "src.services.roles.roles.require_org_role_permission"
+        ), patch(
+            "src.services.roles.roles.get_user_org_role",
+            new_callable=AsyncMock,
+            return_value=user_role,
+        ), patch(
+            "src.services.roles.roles.is_user_superadmin",
+            new_callable=AsyncMock,
+            return_value=False,
+        ):
+            with pytest.raises(HTTPException) as exc:
+                await update_role(
+                    mock_request,
+                    db,
+                    RoleUpdate(role_id=role.id, rights=escalated_rights),
+                    admin_user,
+                )
+
+        assert exc.value.status_code == 403
+        assert "you don't have this permission yourself" in exc.value.detail.lower()
+
+    @pytest.mark.asyncio
     async def test_delete_role_success_and_guards(
         self, db, org, admin_user, regular_user, mock_request
     ):

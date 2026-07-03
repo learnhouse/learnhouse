@@ -10,6 +10,7 @@ import { useLHSession } from '@components/Contexts/LHSessionContext'
 import { createActivity, deleteActivity } from '@services/courses/activities'
 import toast from 'react-hot-toast'
 import { useTranslation } from 'react-i18next'
+import { useLHAnalytics, AnalyticsEvent } from '@services/analytics'
 import {
   ALargeSmall,
   Hash,
@@ -24,13 +25,14 @@ import {
   Infinity as InfinityIcon,
 } from 'lucide-react'
 
-function NewAssignment({ submitActivity, chapterId, course, closeModal }: any) {
+function NewAssignment({ submitActivity: _submitActivity, chapterId, course, closeModal }: any) {
   const { t } = useTranslation()
   const org = useOrg() as any
   const session = useLHSession() as any
   const queryClient = useQueryClient()
+  const { track } = useLHAnalytics('dashboard')
   const cleanCourseUuid = (id: string) => id?.replace(/^course_/, '') ?? id
-  const withUnpublishedActivities = course
+  const _withUnpublishedActivities = course
     ? course.withUnpublishedActivities
     : false
   const [activityName, setActivityName] = React.useState('')
@@ -87,6 +89,12 @@ function NewAssignment({ submitActivity, chapterId, course, closeModal }: any) {
     if (res.success) {
       toast.dismiss(toast_loading)
       toast.success(t('dashboard.assignments.modals.create.toasts.success'))
+      track(AnalyticsEvent.AssignmentCreated, {
+        grading_type: gradingType,
+        auto_grading: autoGrading,
+        allow_retries: allowRetries,
+        has_due_date: !!dueDate,
+      })
     } else {
       toast.error(res.data.detail)
       await deleteActivity(
@@ -351,7 +359,7 @@ const GRADING_TYPE_OPTIONS: {
   { value: 'GPA_SCALE', labelKey: 'grading_types.gpa_scale', descriptionKey: 'grading_type_descriptions.gpa_scale', icon: <GraduationCap size={18} />, color: 'text-rose-600', selectedBorder: 'border-rose-400', selectedBg: 'bg-rose-50', illustration: '0.0 — 4.0' },
 ]
 
-function GradingTypeSelector({ value, onChange, translationPrefix }: { value: string; onChange: (v: string) => void; translationPrefix: string }) {
+function GradingTypeSelector({ value, onChange, translationPrefix }: { value: string; onChange: (_v: string) => void; translationPrefix: string }) {
   const { t } = useTranslation()
   return (
     <div className="grid grid-cols-3 gap-2">
@@ -403,7 +411,7 @@ function SmallToggleRow({
   label: string
   description: string
   checked: boolean
-  onChange: (next: boolean) => void
+  onChange: (_next: boolean) => void
 }) {
   return (
     <div className="flex items-start justify-between gap-3 p-2.5 rounded-lg border border-gray-100 bg-white">

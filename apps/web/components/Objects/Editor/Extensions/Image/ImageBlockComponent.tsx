@@ -13,6 +13,7 @@ import { constructAcceptValue } from '@/lib/constants';
 import Modal from '@components/Objects/StyledElements/Modal/Modal'
 import { useTranslation } from 'react-i18next'
 import UnsplashImagePicker, { UnsplashPhotoMeta } from '@components/Dashboard/Pages/Course/EditCourseGeneral/UnsplashImagePicker'
+import AIImageButton from '@components/Objects/AI/AIImageButton'
 
 const SUPPORTED_FILES = constructAcceptValue(['jpg', 'png', 'webp', 'gif'])
 const UNSPLASH_UTM = '?utm_source=LearnHouse&utm_medium=referral'
@@ -283,7 +284,7 @@ function ImageBlockComponent(props: any) {
 
           {/* Upload Zone - shown when no image */}
           {!blockObject && !unsplashUrl && isEditable && (
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
               <div
                 onClick={() => fileInputRef.current?.click()}
                 onDragEnter={handleDragEnter}
@@ -347,6 +348,10 @@ function ImageBlockComponent(props: any) {
                   </div>
                 </div>
               </button>
+              <AIImageButton
+                onSelect={handleUnsplashSelect}
+                className="border border-neutral-200 rounded-lg text-center cursor-pointer transition-all flex flex-col gap-2 items-center justify-center min-h-[160px] p-6 bg-white hover:border-neutral-400 hover:bg-neutral-50 disabled:opacity-50 disabled:cursor-not-allowed outline-none text-sm font-medium text-neutral-700"
+              />
             </div>
           )}
 

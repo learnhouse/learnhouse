@@ -54,6 +54,7 @@ import {
   CustomDomainSSLStatus,
 } from '@services/custom_domains/custom_domains'
 import FeatureGate from '@components/Dashboard/Shared/FeatureGate/FeatureGate'
+import { useLHAnalytics, AnalyticsEvent } from '@services/analytics'
 
 const OrgEditDomains: React.FC = () => {
   const session = useLHSession() as any
@@ -61,6 +62,7 @@ const OrgEditDomains: React.FC = () => {
   const org = useOrg() as any
   const { t } = useTranslation()
   const queryClient = useQueryClient()
+  const { track } = useLHAnalytics('dashboard')
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false)
   const [isVerifyDialogOpen, setIsVerifyDialogOpen] = useState(false)
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false)
@@ -91,6 +93,7 @@ const OrgEditDomains: React.FC = () => {
       const response = await addCustomDomain(org.id, { domain: newDomain.trim() }, access_token)
 
       if (response.success) {
+        track(AnalyticsEvent.CustomDomainAdded, { domain: newDomain.trim() })
         queryClient.invalidateQueries({ queryKey: ['org', org.id, 'domains'] })
         toast.success(t('dashboard.organization.domains.domain_added_success'), { id: loadingToast })
         setNewDomain('')
@@ -125,6 +128,7 @@ const OrgEditDomains: React.FC = () => {
       const response = await verifyCustomDomain(org.id, selectedDomain.domain_uuid, access_token)
 
       if (response.success) {
+        track(AnalyticsEvent.CustomDomainVerified, { domain: selectedDomain.domain })
         queryClient.invalidateQueries({ queryKey: ['org', org.id, 'domains'] })
         toast.success(t('dashboard.organization.domains.domain_verified'), { id: loadingToast })
         setIsVerifyDialogOpen(false)

@@ -265,34 +265,40 @@ def validate_upload(
     """
     if not file or not file.filename:
         raise HTTPException(status_code=400, detail="No file provided")
-    
-    # Read file content once
-    content = file.file.read()
-    file.file.seek(0)
-    
+
     # Get file extension and block SVG explicitly
     ext = '.' + file.filename.split('.')[-1].lower()
     if ext == '.svg':
         raise HTTPException(status_code=415, detail="SVG files are not allowed for security reasons")
-    
+
     # Find matching file type configuration
     config = None
     for file_type in allowed_types:
         if file_type in FILE_TYPES and ext in FILE_TYPES[file_type]['extensions']:
             config = FILE_TYPES[file_type]
             break
-    
+
     if not config:
         allowed_exts = [ext for t in allowed_types for ext in FILE_TYPES.get(t, {}).get('extensions', [])]
         raise HTTPException(status_code=415, detail=f"File type not allowed. Allowed: {allowed_exts}")
-    
-    # Check file size (skip if no limit set)
+
+    # SECURITY: enforce the size limit WHILE reading so an oversized upload can
+    # never be fully buffered into memory. Reading the whole stream first (the
+    # previous behaviour) let a single multi-GB upload exhaust process RAM
+    # before the limit was ever checked. We read at most size_limit + 1 bytes,
+    # which is enough to detect (and reject) any file that exceeds the cap.
     size_limit = max_size or config.get('max_size')
-    if size_limit and len(content) > size_limit:
-        raise HTTPException(
-            status_code=413,
-            detail=f"File too large ({len(content)/1024/1024:.1f}MB > {size_limit/1024/1024:.1f}MB)"
-        )
+    if size_limit:
+        content = file.file.read(size_limit + 1)
+        if len(content) > size_limit:
+            file.file.seek(0)
+            raise HTTPException(
+                status_code=413,
+                detail=f"File too large (> {size_limit/1024/1024:.1f}MB)"
+            )
+    else:
+        content = file.file.read()
+    file.file.seek(0)
     
     # Validate file content
     if not config['validator'](content):

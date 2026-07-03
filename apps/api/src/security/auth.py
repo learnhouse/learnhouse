@@ -316,8 +316,13 @@ async def _verify_api_token_org_boundary(
     """
     path_params = request.path_params
 
-    # Check org_id in path
+    # Check org_id in path AND query string. Many list/collection endpoints take
+    # org_id as a query parameter (e.g. ?org_id=42), not a path param — checking
+    # only path params let an org-scoped token reach another org's data simply by
+    # passing a different org_id in the query string.
     org_id_param = path_params.get("org_id")
+    if org_id_param is None:
+        org_id_param = request.query_params.get("org_id")
     if org_id_param is not None:
         try:
             if int(org_id_param) != api_token_user.org_id:
@@ -328,8 +333,10 @@ async def _verify_api_token_org_boundary(
         except (ValueError, TypeError):
             pass
 
-    # Check org_slug in path
+    # Check org_slug in path AND query string.
     org_slug_param = path_params.get("org_slug")
+    if org_slug_param is None:
+        org_slug_param = request.query_params.get("org_slug")
     if org_slug_param is not None:
         from src.db.organizations import Organization
         org = (await db_session.execute(

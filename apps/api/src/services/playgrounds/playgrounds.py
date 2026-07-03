@@ -153,8 +153,13 @@ async def create_playground(
     if not org:
         raise HTTPException(status_code=404, detail="Organization not found")
 
-    # Check rights
-    rights = await _get_user_rights(current_user.id, org_id, db_session)
+    # Check rights. Resolve the real acting user id: an API token authenticates
+    # as APITokenUser whose .id is the token id (often 0), not a user id. Using
+    # current_user.id directly would (a) make every rights/ownership check fail
+    # for token callers and (b) store the token id as created_by, which is a FK
+    # to user.id — corrupting the author reference.
+    acting_user_id = resolve_acting_user_id(current_user)
+    rights = await _get_user_rights(acting_user_id, org_id, db_session)
     pg_rights = rights.get("playgrounds", {})
     if not pg_rights.get("action_create", False):
         raise HTTPException(status_code=403, detail="Insufficient permissions to create playgrounds")
@@ -180,7 +185,7 @@ async def create_playground(
         org_id=org_id,
         playground_uuid=str(uuid4()),
         course_id=course_id,
-        created_by=current_user.id,
+        created_by=acting_user_id,
         creation_date=now,
         update_date=now,
     )
@@ -194,7 +199,7 @@ async def create_playground(
         data={
             "playground_uuid": playground.playground_uuid,
             "name": playground.name,
-            "created_by": current_user.id,
+            "created_by": acting_user_id,
         },
     )
 
@@ -214,6 +219,21 @@ async def get_playground(
         raise HTTPException(status_code=404, detail="Playground not found")
 
     await _check_read_access(playground, current_user, db_session)
+
+    # Unpublished (draft) playgrounds must never be exposed by uuid to anyone
+    # other than the owner or an org admin. _check_read_access only validates
+    # access_type, so without this guard a draft PUBLIC/AUTHENTICATED playground
+    # would be readable by anonymous/any authenticated user via its uuid — the
+    # same content list_org_playgrounds deliberately hides.
+    if not playground.published:
+        if isinstance(current_user, AnonymousUser):
+            raise HTTPException(status_code=404, detail="Playground not found")
+        acting_user_id = resolve_acting_user_id(current_user)
+        if playground.created_by != acting_user_id and not await _is_org_admin(
+            acting_user_id, playground.org_id, db_session
+        ):
+            raise HTTPException(status_code=404, detail="Playground not found")
+
     return await _playground_to_read(playground, db_session)
 
 
@@ -230,7 +250,9 @@ async def list_org_playgrounds(
         return []
 
     is_anon = isinstance(current_user, AnonymousUser)
-    user_id = None if is_anon else current_user.id
+    # An API token's .id is the token id, not a user id; resolve to the real
+    # acting user so ownership/admin visibility checks below evaluate correctly.
+    user_id = None if is_anon else resolve_acting_user_id(current_user)
 
     is_admin = False if is_anon else await _is_org_admin(user_id, org_id, db_session)
 
@@ -330,10 +352,11 @@ async def update_playground(
     if not playground:
         raise HTTPException(status_code=404, detail="Playground not found")
 
-    rights = await _get_user_rights(current_user.id, playground.org_id, db_session)
+    acting_user_id = resolve_acting_user_id(current_user)
+    rights = await _get_user_rights(acting_user_id, playground.org_id, db_session)
     pg_rights = rights.get("playgrounds", {})
 
-    is_owner = playground.created_by == current_user.id
+    is_owner = playground.created_by == acting_user_id
     can_update = pg_rights.get("action_update", False) or (
         is_owner and pg_rights.get("action_update_own", False)
     )
@@ -378,10 +401,11 @@ async def delete_playground(
     if not playground:
         raise HTTPException(status_code=404, detail="Playground not found")
 
-    rights = await _get_user_rights(current_user.id, playground.org_id, db_session)
+    acting_user_id = resolve_acting_user_id(current_user)
+    rights = await _get_user_rights(acting_user_id, playground.org_id, db_session)
     pg_rights = rights.get("playgrounds", {})
 
-    is_owner = playground.created_by == current_user.id
+    is_owner = playground.created_by == acting_user_id
     can_delete = pg_rights.get("action_delete", False) or (
         is_owner and pg_rights.get("action_delete_own", False)
     )
@@ -414,7 +438,8 @@ async def duplicate_playground(
     if not playground:
         raise HTTPException(status_code=404, detail="Playground not found")
 
-    rights = await _get_user_rights(current_user.id, playground.org_id, db_session)
+    acting_user_id = resolve_acting_user_id(current_user)
+    rights = await _get_user_rights(acting_user_id, playground.org_id, db_session)
     pg_rights = rights.get("playgrounds", {})
     if not pg_rights.get("action_create", False):
         raise HTTPException(status_code=403, detail="Insufficient permissions to create playgrounds")
@@ -431,7 +456,7 @@ async def duplicate_playground(
         org_id=playground.org_id,
         playground_uuid=str(uuid4()),
         course_id=playground.course_id,
-        created_by=current_user.id,
+        created_by=acting_user_id,
         creation_date=now,
         update_date=now,
     )
@@ -454,9 +479,10 @@ async def add_usergroup_to_playground(
     if not playground:
         raise HTTPException(status_code=404, detail="Playground not found")
 
-    rights = await _get_user_rights(current_user.id, playground.org_id, db_session)
+    acting_user_id = resolve_acting_user_id(current_user)
+    rights = await _get_user_rights(acting_user_id, playground.org_id, db_session)
     pg_rights = rights.get("playgrounds", {})
-    is_owner = playground.created_by == current_user.id
+    is_owner = playground.created_by == acting_user_id
     can_update = pg_rights.get("action_update", False) or (
         is_owner and pg_rights.get("action_update_own", False)
     )
@@ -505,9 +531,10 @@ async def remove_usergroup_from_playground(
     if not playground:
         raise HTTPException(status_code=404, detail="Playground not found")
 
-    rights = await _get_user_rights(current_user.id, playground.org_id, db_session)
+    acting_user_id = resolve_acting_user_id(current_user)
+    rights = await _get_user_rights(acting_user_id, playground.org_id, db_session)
     pg_rights = rights.get("playgrounds", {})
-    is_owner = playground.created_by == current_user.id
+    is_owner = playground.created_by == acting_user_id
     can_update = pg_rights.get("action_update", False) or (
         is_owner and pg_rights.get("action_update_own", False)
     )
@@ -548,9 +575,10 @@ async def update_playground_thumbnail(
     if not playground:
         raise HTTPException(status_code=404, detail="Playground not found")
 
-    rights = await _get_user_rights(current_user.id, playground.org_id, db_session)
+    acting_user_id = resolve_acting_user_id(current_user)
+    rights = await _get_user_rights(acting_user_id, playground.org_id, db_session)
     pg_rights = rights.get("playgrounds", {})
-    is_owner = playground.created_by == current_user.id
+    is_owner = playground.created_by == acting_user_id
     can_update = pg_rights.get("action_update", False) or (
         is_owner and pg_rights.get("action_update_own", False)
     )

@@ -22,6 +22,14 @@ export interface APITokenRights {
     action_update: boolean
     action_delete: boolean
   }
+  // Headless assignments: create/read/update/delete covers authoring, tasks,
+  // reading submissions & grades, and manual grading (grading = action_update).
+  assignments: {
+    action_create: boolean
+    action_read: boolean
+    action_update: boolean
+    action_delete: boolean
+  }
   coursechapters: {
     action_create: boolean
     action_read: boolean
@@ -114,6 +122,12 @@ export const getDefaultRights = (): APITokenRights => ({
     action_update: false,
     action_delete: false,
   },
+  assignments: {
+    action_create: false,
+    action_read: false,
+    action_update: false,
+    action_delete: false,
+  },
   coursechapters: {
     action_create: false,
     action_read: false,
@@ -172,6 +186,12 @@ export const getFullRights = (): APITokenRights => ({
     action_update: true,
     action_delete: true,
   },
+  assignments: {
+    action_create: true,
+    action_read: true,
+    action_update: true,
+    action_delete: true,
+  },
   coursechapters: {
     action_create: true,
     action_read: true,
@@ -225,6 +245,12 @@ export const getReadOnlyRights = (): APITokenRights => ({
     action_delete_own: false,
   },
   activities: {
+    action_create: false,
+    action_read: true,
+    action_update: false,
+    action_delete: false,
+  },
+  assignments: {
     action_create: false,
     action_read: true,
     action_update: false,

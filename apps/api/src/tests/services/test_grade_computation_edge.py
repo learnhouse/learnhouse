@@ -390,8 +390,12 @@ def _bt_task(id, max_grade_value, title="T", description="D",
     )
 
 
-def _bt_submission(grade, feedback="ok"):
-    return SimpleNamespace(grade=grade, task_submission_grade_feedback=feedback)
+def _bt_submission(grade, feedback="ok", manually_graded=False):
+    return SimpleNamespace(
+        grade=grade,
+        task_submission_grade_feedback=feedback,
+        manually_graded=manually_graded,
+    )
 
 
 class TestBuildTasksBreakdown:
@@ -417,6 +421,7 @@ class TestBuildTasksBreakdown:
         assert row["points_summary"] == "80/100"
         assert row["passed"] is True
         assert row["feedback"] == "good"
+        assert row["manually_graded"] is False
 
     def test_no_submission_marks_unsubmitted_zero_grade(self):
         """A task with no submission yields submitted=False, grade 0, no feedback, and failed."""

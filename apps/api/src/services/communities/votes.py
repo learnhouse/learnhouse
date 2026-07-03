@@ -140,9 +140,15 @@ async def remove_upvote(
     # Delete vote
     await db_session.delete(vote)
 
-    # Decrement upvote count (minimum 0)
-    discussion.upvote_count = max(0, discussion.upvote_count - 1)
-    db_session.add(discussion)
+    # Atomic decrement (floored at 0). upvote_discussion uses an atomic SQL
+    # increment, so the removal path must mirror it: a Python read-modify-write
+    # here loses concurrent updates and lets the cached count drift away from
+    # the real number of vote rows.
+    await db_session.execute(
+        sql_update(Discussion)
+        .where(Discussion.id == discussion.id, Discussion.upvote_count > 0)
+        .values(upvote_count=Discussion.upvote_count - 1)
+    )
 
     await db_session.commit()
 

@@ -10,6 +10,7 @@ import {
   ExternalLink, Loader2, CalendarDays, BadgeCheck
 } from 'lucide-react'
 import toast from 'react-hot-toast'
+import { useLHAnalytics, AnalyticsEvent } from '@services/analytics'
 
 interface AccountPurchasesProps {
   orgId: number
@@ -108,6 +109,7 @@ function AccountPurchases({ orgId, orgslug }: AccountPurchasesProps) {
   const session = useLHSession() as any
   const access_token = session?.data?.tokens?.access_token
   const [billingLoading, setBillingLoading] = useState(false)
+  const { track } = useLHAnalytics('learner')
 
   const { data: enrollmentsResult, isLoading, error } = useQuery({
     queryKey: ['payments', orgId, 'enrollments', 'mine'],
@@ -118,7 +120,7 @@ function AccountPurchases({ orgId, orgslug }: AccountPurchasesProps) {
 
   const enrollments: any[] = Array.isArray(enrollmentsResult?.data) ? enrollmentsResult.data : []
 
-  const handleManageBilling = async () => {
+  const handleManageBilling = async (source: string) => {
     if (!access_token) return
     setBillingLoading(true)
     try {
@@ -126,6 +128,7 @@ function AccountPurchases({ orgId, orgslug }: AccountPurchasesProps) {
       const result = await getBillingPortalSession(orgId, return_url, access_token)
       const url = result?.data?.portal_url
       if (url) {
+        track(AnalyticsEvent.AccountBillingPortalOpened, { source })
         window.location.href = url
       } else {
         toast.error('Could not open billing portal. Please try again.')
@@ -194,7 +197,7 @@ function AccountPurchases({ orgId, orgslug }: AccountPurchasesProps) {
               key={enrollment.enrollment_id}
               enrollment={enrollment}
               orgslug={orgslug}
-              onManageBilling={handleManageBilling}
+              onManageBilling={() => handleManageBilling('subscription')}
               billingLoading={billingLoading}
             />
           ))}
@@ -205,7 +208,7 @@ function AccountPurchases({ orgId, orgslug }: AccountPurchasesProps) {
               <p className="text-xs text-gray-400 mt-0.5">View and download all your invoices via the billing portal</p>
             </div>
             <button
-              onClick={handleManageBilling}
+              onClick={() => handleManageBilling('invoices')}
               disabled={billingLoading}
               className="shrink-0 flex items-center gap-1.5 text-xs font-semibold text-indigo-600 hover:text-indigo-800 disabled:opacity-60 transition-colors"
             >

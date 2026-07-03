@@ -5,7 +5,11 @@ from src.core.events.database import get_db_session
 from src.db.users import AnonymousUser, PublicUser, APITokenUser
 from src.security.auth import get_current_user, resolve_acting_user_id
 from src.services.search.search import search_across_org, SearchResult
-from src.services.security.rate_limiting import check_search_rate_limit
+from src.services.security.rate_limiting import (
+    check_search_rate_limit,
+    check_rate_limit,
+    get_client_ip,
+)
 
 router = APIRouter()
 
@@ -45,12 +49,23 @@ async def api_search_across_org(
     caller_id = resolve_acting_user_id(current_user)
     if caller_id and not isinstance(current_user, AnonymousUser):
         is_allowed, retry_after = check_search_rate_limit(caller_id)
-        if not is_allowed:
-            raise HTTPException(
-                status_code=429,
-                detail="Too many search queries. Please slow down.",
-                headers={"Retry-After": str(retry_after)},
-            )
+    else:
+        # Anonymous (and id-less) callers have no stable user id, so they must
+        # be throttled by client IP. Otherwise unauthenticated clients bypass
+        # the search throttle entirely and can hammer the full-text indexes,
+        # driving unbounded DB load (DoS).
+        ip = get_client_ip(request)
+        is_allowed, _count, retry_after = check_rate_limit(
+            key=f"search_anon:{ip}",
+            max_attempts=30,
+            window_seconds=60,
+        )
+    if not is_allowed:
+        raise HTTPException(
+            status_code=429,
+            detail="Too many search queries. Please slow down.",
+            headers={"Retry-After": str(retry_after)},
+        )
 
     return await search_across_org(
         request=request,

@@ -8,6 +8,7 @@ from sqlmodel.ext.asyncio.session import AsyncSession
 from src.security.features_utils.usage import (
     check_limits_with_usage,
     increase_feature_usage,
+    decrease_feature_usage,
 )
 from src.security.rbac.rbac import (
     authorization_verify_based_on_roles_and_authorship,
@@ -415,8 +416,8 @@ async def delete_usergroup_by_id(
         org_id=usergroup.org_id,
     )
 
-    # Feature usage
-    await increase_feature_usage("usergroups", usergroup.org_id, db_session)
+    # Feature usage — deleting a usergroup must DECREASE the counter, not increase it.
+    await decrease_feature_usage("usergroups", usergroup.org_id, db_session)
 
     usergroup_uuid_val = usergroup.usergroup_uuid
     usergroup_name_val = usergroup.name
@@ -464,7 +465,13 @@ async def add_users_to_usergroup(
         org_id=usergroup.org_id,
     )
 
-    user_ids_array = [int(uid) for uid in user_ids.split(",")]
+    try:
+        user_ids_array = [int(uid) for uid in user_ids.split(",") if uid.strip() != ""]
+    except ValueError:
+        raise HTTPException(
+            status_code=400,
+            detail="user_ids must be a comma-separated list of integers",
+        )
 
     for user_id in user_ids_array:
         statement = select(User).where(User.id == user_id)
@@ -552,7 +559,13 @@ async def remove_users_from_usergroup(
         org_id=usergroup.org_id,
     )
 
-    user_ids_array = [int(uid) for uid in user_ids.split(",")]
+    try:
+        user_ids_array = [int(uid) for uid in user_ids.split(",") if uid.strip() != ""]
+    except ValueError:
+        raise HTTPException(
+            status_code=400,
+            detail="user_ids must be a comma-separated list of integers",
+        )
 
     for user_id in user_ids_array:
         statement = select(UserGroupUser).where(

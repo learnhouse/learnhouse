@@ -7,6 +7,7 @@ import { useLHSession } from '@components/Contexts/LHSessionContext'
 import { updateBoardThumbnail } from '@services/boards/boards'
 import { getBoardThumbnailMediaDirectory } from '@services/media/media'
 import UnsplashImagePicker from '@components/Dashboard/Pages/Course/EditCourseGeneral/UnsplashImagePicker'
+import AIImageButton from '@components/Objects/AI/AIImageButton'
 import toast from 'react-hot-toast'
 import { useQueryClient } from '@tanstack/react-query'
 import { queryKeys } from '@/lib/query/keys'
@@ -22,7 +23,7 @@ interface BoardThumbnailTabProps {
   boardKey: string | null
 }
 
-function BoardThumbnailTab({ board, boardUuid, orgUuid, boardKey }: BoardThumbnailTabProps) {
+function BoardThumbnailTab({ board, boardUuid, orgUuid, boardKey: _boardKey }: BoardThumbnailTabProps) {
   const { t } = useTranslation()
   const org = useOrg() as any
   const session = useLHSession() as any
@@ -77,6 +78,12 @@ function BoardThumbnailTab({ board, boardUuid, orgUuid, boardKey }: BoardThumbna
       return
     }
 
+    const blobUrl = URL.createObjectURL(file)
+    setLocalThumbnail({ url: blobUrl })
+    await uploadFile(file)
+  }
+
+  const handleAIImageFile = async (file: File) => {
     const blobUrl = URL.createObjectURL(file)
     setLocalThumbnail({ url: blobUrl })
     await uploadFile(file)
@@ -157,6 +164,11 @@ function BoardThumbnailTab({ board, boardUuid, orgUuid, boardKey }: BoardThumbna
                 <ImageIcon size={16} />
                 {t('boards.thumbnail.gallery')}
               </button>
+              <AIImageButton
+                onSelect={handleUnsplashSelect}
+                onSelectFile={handleAIImageFile}
+                className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+              />
             </div>
           )}
 

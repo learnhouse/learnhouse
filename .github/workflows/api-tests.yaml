@@ -26,6 +26,11 @@ jobs:
         with:
           version: latest
 
+      - name: Install ffmpeg
+        # Required by the video faststart / HLS transcode tests (they skip
+        # without it, which would leave that code uncovered).
+        run: sudo apt-get update && sudo apt-get install -y --no-install-recommends ffmpeg
+
       - name: Install dependencies
         run: uv sync
         working-directory: apps/api

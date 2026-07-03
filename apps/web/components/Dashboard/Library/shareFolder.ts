@@ -1,6 +1,7 @@
 import toast from 'react-hot-toast'
 import { getUriWithOrg } from '@services/config/config'
 import { removeFolderPrefix } from '@services/folders/folders'
+import { createMediaShareLink, getMediaShareFileUrl } from '@services/media/media-resource'
 
 /**
  * Build the public, shareable URL for a folder.
@@ -39,6 +40,32 @@ export async function shareFolderLink(
     throw new Error('clipboard unavailable')
   } catch (e: any) {
     if (e?.name === 'AbortError') return // user dismissed the share sheet
+    toast.error(errorLabel)
+  }
+}
+
+/**
+ * Copy a media file's share link. Mints a FRESH random token on every call
+ * (the URL is unique each time) and copies the resulting access-checked URL.
+ */
+export async function shareMediaLink(
+  media_uuid: string,
+  access_token: string,
+  copiedLabel: string,
+  errorLabel: string,
+) {
+  try {
+    const res = await createMediaShareLink(media_uuid, access_token)
+    if (!res?.token) throw new Error('no token')
+    const url = getMediaShareFileUrl(res.token)
+    const nav: any = typeof navigator !== 'undefined' ? navigator : null
+    if (nav?.clipboard?.writeText) {
+      await nav.clipboard.writeText(url)
+      toast.success(copiedLabel)
+      return
+    }
+    throw new Error('clipboard unavailable')
+  } catch {
     toast.error(errorLabel)
   }
 }

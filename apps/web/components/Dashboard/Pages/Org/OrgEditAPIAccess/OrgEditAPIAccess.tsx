@@ -56,6 +56,7 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@components/ui/tabs'
 import APIDocumentation from './APIDocumentation'
 import FeatureGate from '@components/Dashboard/Shared/FeatureGate/FeatureGate'
+import { useLHAnalytics, AnalyticsEvent } from '@services/analytics'
 
 const OrgEditAPIAccess: React.FC = () => {
   const { t } = useTranslation()
@@ -63,6 +64,7 @@ const OrgEditAPIAccess: React.FC = () => {
   const access_token = session?.data?.tokens?.access_token
   const org = useOrg() as any
   const queryClient = useQueryClient()
+  const { track } = useLHAnalytics('dashboard')
   const [activeTab, setActiveTab] = useState('tokens')
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false)
   const [isViewDialogOpen, setIsViewDialogOpen] = useState(false)
@@ -108,6 +110,10 @@ const OrgEditAPIAccess: React.FC = () => {
       if (response.success) {
         setNewTokenValue(response.data.token)
         setShowTokenValue(true)
+        track(AnalyticsEvent.ApiTokenCreated, {
+          rights_preset: rightsPreset,
+          has_expiry: !!tokenExpiry,
+        })
         queryClient.invalidateQueries({ queryKey: ['org', org.id, 'api-tokens'] })
         toast.success('API token created successfully', { id: loadingToast })
         // Reset form
@@ -704,6 +710,7 @@ const PermissionsEditor: React.FC<{
   const resources = [
     { key: 'courses', label: 'Courses', hasCrud: true },
     { key: 'activities', label: 'Activities', hasCrud: true },
+    { key: 'assignments', label: 'Assignments', hasCrud: true },
     { key: 'coursechapters', label: 'Chapters', hasCrud: true },
     { key: 'folders', label: 'Folders', hasCrud: true },
     { key: 'media', label: 'Media', hasCrud: true },
@@ -795,6 +802,7 @@ const PermissionsViewer: React.FC<{ rights: APITokenRights }> = ({ rights }) => 
     <div className="grid grid-cols-3 gap-2">
       <div>Courses: {getPermissionSummary(rights.courses)}</div>
       <div>Activities: {getPermissionSummary(rights.activities)}</div>
+      <div>Assignments: {getPermissionSummary(rights.assignments)}</div>
       <div>Chapters: {getPermissionSummary(rights.coursechapters)}</div>
       <div>Folders: {getPermissionSummary(rights.folders)}</div>
       <div>Media: {getPermissionSummary(rights.media)}</div>

@@ -47,11 +47,12 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from '@components/ui/tooltip'
+import { useLHAnalytics, AnalyticsEvent } from '@services/analytics'
 
 export const OrgMenu = (props: any) => {
   const orgslug = props.orgslug
   const session = useLHSession() as any;
-  const access_token = session?.data?.tokens?.access_token;
+  const _access_token = session?.data?.tokens?.access_token;
   const org = useOrg() as any;
   const [isMenuOpen, setIsMenuOpen] = React.useState(false)
   const [isFocusMode, setIsFocusMode] = useState(false)
@@ -60,6 +61,7 @@ export const OrgMenu = (props: any) => {
   const { rights } = useAdminStatus()
   const [feedbackModalOpen, setFeedbackModalOpen] = useState(false)
   const { isVisible: isJoinBannerVisible } = useJoinBannerVisible()
+  const { track } = useLHAnalytics()
 
   // Copilot bubble state
   const [bubbleOpen, setBubbleOpen] = useState(false)
@@ -268,7 +270,11 @@ export const OrgMenu = (props: any) => {
                       const IconComponent = item.icon
                       return (
                         <DropdownMenuItem key={item.id} asChild>
-                          <Link href={item.href} className="flex items-center gap-2">
+                          <Link
+                            href={item.href}
+                            className="flex items-center gap-2"
+                            onClick={() => track(AnalyticsEvent.DashboardEntered, { source: 'org_menu' })}
+                          >
                             <IconComponent size={16} weight="fill" />
                             <span>{t(item.labelKey)}</span>
                           </Link>
@@ -428,9 +434,9 @@ const CopilotMenuButton = ({
   orgslug: string
   iconBtnClass: string
   isBubbleMode: boolean
-  onToggleBubbleMode: (v: boolean) => void
+  onToggleBubbleMode: (_v: boolean) => void
   bubbleOpen: boolean
-  onOpenBubble: (sessionUuid?: string) => void
+  onOpenBubble: (_sessionUuid?: string) => void
 }) => {
   const session = useLHSession() as any
   const accessToken = session?.data?.tokens?.access_token

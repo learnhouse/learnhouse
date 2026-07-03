@@ -15,6 +15,7 @@ import React from 'react'
 import { BarLoader } from 'react-spinners'
 import toast from 'react-hot-toast'
 import { useTranslation } from 'react-i18next'
+import { useLHAnalytics, AnalyticsEvent } from '@services/analytics'
 
 type Props = {
   folderUuid?: string
@@ -28,6 +29,7 @@ function UploadMediaModal({ folderUuid, closeModal, onChanged }: Props) {
   const org = useOrg() as any
   const session = useLHSession() as any
   const access_token = session?.data?.tokens?.access_token
+  const { track } = useLHAnalytics('dashboard')
 
   const [mode, setMode] = React.useState<'UPLOAD' | 'EMBED'>('UPLOAD')
   const [name, setName] = React.useState('')
@@ -66,10 +68,18 @@ function UploadMediaModal({ folderUuid, closeModal, onChanged }: Props) {
       if (mode === 'UPLOAD' && file) formData.append('file', file)
 
       await createMedia(formData, access_token)
+      track(AnalyticsEvent.MediaUploaded, {
+        media_type: mode,
+        is_embed: mode === 'EMBED',
+        ...(file ? { file_size_kb: Math.round(file.size / 1024) } : {}),
+      })
       toast.success(t('media.media_uploaded_success'))
       closeModal()
       onChanged?.()
     } catch (error: any) {
+      track(AnalyticsEvent.MediaUploadFailed, {
+        reason: error?.message || 'unknown',
+      })
       toast.error(error?.message || t('media.media_uploaded_error'))
     } finally {
       toast.dismiss(toastId)

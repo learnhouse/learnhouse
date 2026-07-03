@@ -12,6 +12,7 @@ import { queryKeys } from '@/lib/query/keys'
 import { getOrgFolders, getOrgRootItems } from '@services/folders/folders'
 import { FolderSimple } from '@phosphor-icons/react'
 import { FolderCard, LibraryItemCard } from './library-cards'
+import { useTrackView, AnalyticsEvent } from '@services/analytics'
 
 function LibraryClient({ orgslug }: { orgslug: string }) {
   const { t } = useTranslation()
@@ -35,6 +36,13 @@ function LibraryClient({ orgslug }: { orgslug: string }) {
   // an empty state rather than blanking the page or blocking course discovery.
   const folders = Array.isArray(data) ? data : []
   const rootItems = Array.isArray(rootItemsData) ? rootItemsData : []
+
+  useTrackView(
+    AnalyticsEvent.LibraryViewed,
+    { folder_count: folders.length, is_empty: folders.length === 0 && rootItems.length === 0 },
+    !isLoading,
+    'learner',
+  )
 
   if (isLoading && !data) {
     return (

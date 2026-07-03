@@ -110,8 +110,12 @@ async def _deliver_webhooks(
         endpoints: list[_EndpointInfo] = []
         async with _async_session_factory() as db_session:
             if webhook_ids:
+                # Always scope by org_id even when targeting specific ids, so a
+                # mismatched/forged id list can never deliver an org's event
+                # payload to an endpoint belonging to a different organization.
                 statement = select(WebhookEndpoint).where(
                     WebhookEndpoint.id.in_(webhook_ids),  # type: ignore
+                    WebhookEndpoint.org_id == org_id,
                     WebhookEndpoint.is_active == True,
                 )
             else:

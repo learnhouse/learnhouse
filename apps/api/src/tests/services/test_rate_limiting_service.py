@@ -204,6 +204,49 @@ def test_check_rate_limit_increments_existing_counter():
     fake_redis.incr.assert_called_once_with("rate_limit:signup:203.0.113.9")
 
 
+def test_check_rate_limit_reasserts_expiry_when_ttl_negative():
+    # rate_limiting.py:134-135 - if the key lost its TTL (e.g. it expired between
+    # the GET and the INCR, so Redis recreated it without an expiry), the window
+    # must be re-asserted via expire() so the counter resets.
+    fake_redis = Mock()
+    fake_redis.get.return_value = b"4"
+    fake_redis.ttl.return_value = -1
+    fake_redis.incr.return_value = 5
+
+    allowed, count, retry_after = check_rate_limit(
+        key="login:203.0.113.9",
+        max_attempts=10,
+        window_seconds=90,
+        r=fake_redis,
+    )
+
+    assert allowed is True
+    assert count == 5
+    assert retry_after == 90
+    fake_redis.expire.assert_called_once_with("rate_limit:login:203.0.113.9", 90)
+
+
+def test_check_rate_limit_reasserts_expiry_when_incr_recreates_key():
+    # rate_limiting.py:134-135 via the `new_count == 1` branch: the key expired
+    # right before INCR, so INCR recreated it at 1 with no TTL.
+    fake_redis = Mock()
+    fake_redis.get.return_value = b"2"
+    fake_redis.ttl.return_value = 5
+    fake_redis.incr.return_value = 1
+
+    allowed, count, retry_after = check_rate_limit(
+        key="signup:203.0.113.9",
+        max_attempts=10,
+        window_seconds=120,
+        r=fake_redis,
+    )
+
+    assert allowed is True
+    assert count == 1
+    assert retry_after == 120
+    fake_redis.expire.assert_called_once_with("rate_limit:signup:203.0.113.9", 120)
+
+
 def test_increment_rate_limit_existing_and_missing_keys():
     fake_redis = Mock()
     fake_redis.exists.side_effect = [True, False]

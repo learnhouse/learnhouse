@@ -129,6 +129,11 @@ class AssignmentTaskTypeEnum(str, Enum):
     CODE = "CODE"
     SHORT_ANSWER = "SHORT_ANSWER"
     NUMBER_ANSWER = "NUMBER_ANSWER"
+    # Headless/custom task: the `contents` JSON (the task definition) and the
+    # `task_submission` JSON (the learner answer) are an arbitrary, caller-owned
+    # data object. The server never interprets or auto-grades it — it is graded
+    # manually (or left ungraded), so custom frontends fully control the schema.
+    CUSTOM = "CUSTOM"
     OTHER = "OTHER"
 
 
@@ -215,6 +220,10 @@ class AssignmentTaskSubmissionBase(SQLModel):
     task_submission: Dict = Field(default_factory=dict, sa_column=Column(JSON))
     grade: int = 0  # Task-local raw score; aggregated into AssignmentUserSubmission.grade
     task_submission_grade_feedback: str
+    # True when a teacher set this task's grade through the manual grading UI.
+    # The aggregate grading pass skips server-side re-verification for these
+    # rows so the teacher's deliberate override is not overwritten.
+    manually_graded: bool = False
     assignment_type: AssignmentTaskTypeEnum
 
     user_id: int
@@ -246,6 +255,7 @@ class AssignmentTaskSubmissionUpdate(SQLModel):
     task_submission: Optional[Dict] = Field(default=None, sa_column=Column(JSON))
     grade: Optional[int] = None
     task_submission_grade_feedback: Optional[str] = None
+    manually_graded: Optional[bool] = None
     assignment_type: Optional[AssignmentTaskTypeEnum] = None
 
 
@@ -257,6 +267,7 @@ class AssignmentTaskSubmission(AssignmentTaskSubmissionBase, table=True):
     task_submission: Dict = Field(default_factory=dict, sa_column=Column(JSON))
     grade: int = 0  # Task-local raw score; aggregated into AssignmentUserSubmission.grade
     task_submission_grade_feedback: str
+    manually_graded: bool = Field(default=False, nullable=False)
     assignment_type: AssignmentTaskTypeEnum
 
     user_id: int = Field(
@@ -321,10 +332,22 @@ class AssignmentUserSubmissionBase(SQLModel):
 
 
 class AssignmentUserSubmissionCreate(SQLModel):
-    """Model for creating a new assignment user submission."""
+    """Model for creating/updating an assignment user submission.
+
+    Carries the editable submission fields so the instructor update endpoint
+    can actually persist them. These are Optional because the update path only
+    applies non-None values and strips the privileged ones for students.
+    """
 
     assignment_id: int
-    pass  # Inherits all fields from AssignmentUserSubmissionBase
+    # Only the fields the update endpoint guards for students are exposed here.
+    # attempt_number / overall_feedback are intentionally NOT settable through
+    # this model: the update service does not strip them for non-instructors,
+    # so exposing them would let a student reset their own retry counter
+    # (attempt_number) or overwrite the instructor's feedback.
+    submission_status: Optional[AssignmentUserSubmissionStatus] = None
+    grade: Optional[int] = None
+    user_id: Optional[int] = None
 
 
 class AssignmentUserSubmissionRead(AssignmentUserSubmissionBase):
@@ -339,7 +362,7 @@ class AssignmentUserSubmissionUpdate(SQLModel):
     """Model for updating an assignment user submission."""
 
     submission_status: Optional[AssignmentUserSubmissionStatus] = None
-    grade: Optional[str] = None
+    grade: Optional[int] = None
     overall_feedback: Optional[str] = None
     attempt_number: Optional[int] = None
     user_id: Optional[int] = None

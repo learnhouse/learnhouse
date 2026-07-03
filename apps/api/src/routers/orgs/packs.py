@@ -192,6 +192,11 @@ async def api_get_org_packs(
     if not org:
         raise HTTPException(status_code=404, detail="Organization not found")
 
+    # API tokens are scoped to a single org; do not let a token act against a
+    # different org just because its creator is an admin there.
+    if isinstance(current_user, APITokenUser) and current_user.org_id != org_id:
+        raise HTTPException(status_code=403, detail="API token is not scoped to this organization")
+
     if not await is_org_admin(resolve_acting_user_id(current_user), org_id, db_session):
         raise HTTPException(status_code=403, detail="Only organization admins can view packs")
 
@@ -227,6 +232,11 @@ async def api_get_org_pack_summary(
     org = (await db_session.execute(select(Organization).where(Organization.id == org_id))).scalars().first()
     if not org:
         raise HTTPException(status_code=404, detail="Organization not found")
+
+    # API tokens are scoped to a single org; do not let a token act against a
+    # different org just because its creator is an admin there.
+    if isinstance(current_user, APITokenUser) and current_user.org_id != org_id:
+        raise HTTPException(status_code=403, detail="API token is not scoped to this organization")
 
     if not await is_org_admin(resolve_acting_user_id(current_user), org_id, db_session):
         raise HTTPException(status_code=403, detail="Only organization admins can view pack summary")

@@ -7,8 +7,10 @@ import pytest
 from fastapi import HTTPException
 from sqlmodel import select
 
+from src.db.courses.courses import Course
 from src.db.organization_config import OrganizationConfig, SeoOrgConfig
 from src.db.organizations import Organization, OrganizationCreate, OrganizationRead, OrganizationUpdate
+from src.db.user_organizations import UserOrganization
 from src.services.orgs.orgs import (
     _build_org_read_with_resolved,
     _get_org_config_cached,
@@ -23,6 +25,7 @@ from src.services.orgs.orgs import (
     update_org_seo_config,
     update_org_signup_mechanism,
     update_org_with_config_no_auth,
+    wipe_org_content,
 )
 
 
@@ -470,3 +473,42 @@ class TestBuildOrgReadWithResolved:
         assert result.config.config["resolved_features"] == {
             "courses": {"enabled": True}
         }
+
+
+class TestWipeOrgContent:
+    @pytest.mark.asyncio
+    async def test_wipe_org_content_missing_org(self, mock_request, admin_user, db):
+        with pytest.raises(HTTPException) as exc:
+            await wipe_org_content(mock_request, 999, admin_user, db)
+        assert exc.value.status_code == 404
+
+    @pytest.mark.asyncio
+    async def test_wipe_org_content_deletes_courses_keeps_org_and_members(
+        self, mock_request, db, org, admin_user, course
+    ):
+        # admin_user is a member of org via the fixture; `course` belongs to org.
+        with patch(
+            "src.services.orgs.orgs.rbac_check", new_callable=AsyncMock
+        ), patch(
+            "src.services.courses.transfer.storage_utils.delete_storage_directory"
+        ) as delete_storage, patch(
+            "src.security.features_utils.usage.decrease_feature_usage",
+            new_callable=AsyncMock,
+        ) as decrease_usage:
+            result = await wipe_org_content(mock_request, org.id, admin_user, db)
+
+        assert result == {"detail": "Organization content wiped", "deleted_courses": 1}
+        delete_storage.assert_called_once()
+        assert decrease_usage.call_count == 1
+
+        # All courses gone...
+        assert (await db.exec(
+            select(Course).where(Course.org_id == org.id)
+        )).first() is None
+        # ...but the org and its membership survive.
+        assert (await db.exec(
+            select(Organization).where(Organization.id == org.id)
+        )).first() is not None
+        assert (await db.exec(
+            select(UserOrganization).where(UserOrganization.org_id == org.id)
+        )).first() is not None

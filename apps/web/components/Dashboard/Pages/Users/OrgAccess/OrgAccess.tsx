@@ -19,6 +19,7 @@ import Modal from '@components/Objects/StyledElements/Modal/Modal'
 import OrgInviteCodeGenerate from '@components/Objects/Modals/Dash/OrgAccess/OrgInviteCodeGenerate'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
 import { useTranslation } from 'react-i18next'
+import { useLHAnalytics, AnalyticsEvent } from '@services/analytics'
 
 function CopyButton({ text }: { text: string }) {
   const [copied, setCopied] = React.useState(false)
@@ -50,6 +51,7 @@ function OrgAccess() {
   const [joinMethod, setJoinMethod] = React.useState('closed')
   const [invitesModal, setInvitesModal] = React.useState(false)
   const router = useRouter()
+  const { track } = useLHAnalytics('dashboard')
 
   const { data: invites, isLoading: isInvitesLoading } = useQuery({
     queryKey: queryKeys.org.inviteCodes(org?.id),
@@ -90,6 +92,7 @@ function OrgAccess() {
     let res = await changeSignupMechanism(org.id, method, access_token)
     if (res.status == 200) {
       setJoinMethod(method)
+      track(AnalyticsEvent.SignupMechanismChanged, { method })
       queryClient.invalidateQueries({ queryKey: queryKeys.org.detail(org?.slug) })
       router.refresh()
       toast.success(t('dashboard.users.signups.invite_codes.toasts.change_success', { method }), {id:toastId})

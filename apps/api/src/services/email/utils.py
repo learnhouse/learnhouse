@@ -159,18 +159,15 @@ async def _get_primary_verified_custom_domain(db_session, org_id: int) -> Option
         return None
 
 
-def get_base_url_from_request(request: Request) -> str:
+def get_trusted_base_url_from_request(request: Request) -> Optional[str]:
     """
-    Extract the base URL from a FastAPI request.
+    Return the request's Origin/Referer base URL **only if** it is an allowed
+    origin, otherwise None.
 
-    Uses the Origin or Referer header to determine the frontend URL,
-    but validates against allowed origins to prevent open redirect.
-
-    Args:
-        request: FastAPI Request object
-
-    Returns:
-        Base URL string (e.g., "https://myorg.example.com")
+    This is the "we actually know where the request came from" part of
+    ``get_base_url_from_request`` — callers that need to distinguish a trusted,
+    request-derived URL from the configured fallback (e.g. platform signups that
+    prefer the platform URL over ``frontend_domain``) use this directly.
     """
     # Try Origin header first
     origin = request.headers.get("origin")
@@ -188,6 +185,26 @@ def get_base_url_from_request(request: Request) -> str:
         if _is_allowed_base_url(candidate):
             return candidate
         logger.warning("Rejected untrusted Referer header for email URL: %s", candidate)
+
+    return None
+
+
+def get_base_url_from_request(request: Request) -> str:
+    """
+    Extract the base URL from a FastAPI request.
+
+    Uses the Origin or Referer header to determine the frontend URL,
+    but validates against allowed origins to prevent open redirect.
+
+    Args:
+        request: FastAPI Request object
+
+    Returns:
+        Base URL string (e.g., "https://myorg.example.com")
+    """
+    trusted = get_trusted_base_url_from_request(request)
+    if trusted:
+        return trusted
 
     # Fall back to configured frontend_domain (preferred over raw request URL
     # which would point to the API server, not the frontend)

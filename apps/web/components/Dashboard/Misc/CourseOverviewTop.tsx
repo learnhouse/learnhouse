@@ -9,7 +9,7 @@ import { getCourseThumbnailMediaDirectory } from '@services/media/media'
 import Link from 'next/link'
 import Image from 'next/image'
 import EmptyThumbnailImage from '../../../public/empty_thumbnail.png'
-import { BookCopy, BrainCircuit, Eye, Globe, GlobeLock, Loader2, Check, Info } from 'lucide-react'
+import { BookCopy, BrainCircuit, Eye, Globe, GlobeLock, Loader2, Check } from 'lucide-react'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@components/ui/tooltip'
 import { useTranslation } from 'react-i18next'
 import { updateCourse } from '@services/courses/courses'
@@ -20,6 +20,7 @@ import { useQueryClient } from '@tanstack/react-query'
 import { queryKeys } from '@/lib/query/keys'
 import toast from 'react-hot-toast'
 import { useState, useCallback } from 'react'
+import { useLHAnalytics, AnalyticsEvent } from '@services/analytics'
 
 export function CourseOverviewTop({
   params,
@@ -27,6 +28,7 @@ export function CourseOverviewTop({
   params: CourseOverviewParams
 }) {
   const { t } = useTranslation()
+  const { track } = useLHAnalytics('dashboard')
   const course = useCourse() as any
   const dispatchCourse = useCourseDispatch() as any
   const org = useOrg() as any
@@ -104,13 +106,15 @@ export function CourseOverviewTop({
       // Revalidate server-side cache
       await revalidateTags(['courses'], params.orgslug)
 
+      track(AnalyticsEvent.CoursePublishedToggled, { new_published_status: newPublishedStatus })
+
       toast.dismiss(toastId)
       toast.success(
         newPublishedStatus
           ? t('dashboard.courses.published_success')
           : t('dashboard.courses.unpublished_success')
       )
-    } catch (error) {
+    } catch (_error) {
       // Rollback on error
       dispatchCourse({
         type: 'mergePendingChanges',
@@ -131,6 +135,7 @@ export function CourseOverviewTop({
     dispatchCourse,
     params.orgslug,
     params.courseuuid,
+    track,
     t
   ])
 

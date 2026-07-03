@@ -25,6 +25,7 @@ import {
   Lightbulb
 } from 'lucide-react'
 import UserAvatar from '@components/Objects/UserAvatar'
+import AIImageButton from '@components/Objects/AI/AIImageButton'
 import { updateUserAvatar } from '@services/users/users'
 import { constructAcceptValue } from '@/lib/constants'
 import * as Yup from 'yup'
@@ -44,6 +45,7 @@ import { signOut } from '@components/Contexts/AuthContext'
 import { getUriWithoutOrg } from '@services/config/config';
 import { useDebounce } from '@/hooks/useDebounce';
 import { useTranslation } from 'react-i18next';
+import { useLHAnalytics, AnalyticsEvent } from '@services/analytics';
 
 const SUPPORTED_FILES = constructAcceptValue(['jpg', 'png', 'webp', 'gif'])
 
@@ -128,9 +130,9 @@ const DetailCard = React.memo(({
 }: {
   id: string;
   detail: DetailItem;
-  onUpdate: (id: string, field: keyof DetailItem, value: string) => void;
-  onRemove: (id: string) => void;
-  onLabelChange: (id: string, newLabel: string) => void;
+  onUpdate: (_id: string, _field: keyof DetailItem, _value: string) => void;
+  onRemove: (_id: string) => void;
+  onLabelChange: (_id: string, _newLabel: string) => void;
 }) => {
   const { t } = useTranslation();
   const [localLabel, setLocalLabel] = useState(detail.label);
@@ -240,8 +242,8 @@ const UserEditForm = ({
   profilePicture
 }: {
   values: FormValues;
-  setFieldValue: (field: string, value: any) => void;
-  handleChange: (e: React.ChangeEvent<any>) => void;
+  setFieldValue: (_field: string, _value: any) => void;
+  handleChange: (_e: React.ChangeEvent<any>) => void;
   errors: any;
   touched: any;
   isSubmitting: boolean;
@@ -250,7 +252,9 @@ const UserEditForm = ({
     success: string;
     isLoading: boolean;
     localAvatar: File | null;
-    handleFileChange: (event: any) => Promise<void>;
+    handleFileChange: (_event: any) => Promise<void>;
+    handleAISelect: (_imageUrl: string) => Promise<void>;
+    handleAIImageFile: (_file: File) => Promise<void>;
   };
 }) => {
   const { t } = useTranslation();
@@ -500,6 +504,11 @@ const UserEditForm = ({
                       <UploadCloud size={16} className="mr-2" />
                       {t('user.settings.general.change_avatar')}
                     </Button>
+                    <AIImageButton
+                      onSelect={profilePicture.handleAISelect}
+                      onSelectFile={profilePicture.handleAIImageFile}
+                      className="w-full inline-flex items-center justify-center gap-2 px-4 py-2 text-sm font-medium border border-gray-200 rounded-md bg-white hover:bg-gray-50 transition-colors"
+                    />
                   </>
                 )}
                 <div className="flex items-center text-xs text-gray-500">
@@ -536,6 +545,7 @@ function AccountGeneral() {
   const [success, setSuccess] = React.useState('') as any
   const [userData, setUserData] = useState<any>(null);
   const { t } = useTranslation();
+  const { track } = useLHAnalytics('learner');
 
   useEffect(() => {
     const fetchUserData = async () => {
@@ -569,10 +579,53 @@ function AccountGeneral() {
     }
   }
 
+  const handleAISelect = async (imageUrl: string) => {
+    try {
+      const response = await fetch(imageUrl)
+      const blob = await response.blob()
+      const file = new File([blob], `ai_avatar_${Date.now()}.jpg`, { type: blob.type || 'image/jpeg' })
+      setLocalAvatar(file)
+      setIsLoading(true)
+      const res = await updateUserAvatar(session.data.user.id, file, access_token)
+      if (res.success === false) {
+        setError(res.HTTPmessage)
+      } else {
+        // Force refresh session to pick up the new avatar filename
+        await session.update(true)
+        setIsLoading(false)
+        setError('')
+        setSuccess(t('user.settings.general.avatar_updated'))
+      }
+    } catch (_error) {
+      setError('Failed to process AI image')
+      setIsLoading(false)
+    }
+  }
+
+  const handleAIImageFile = async (file: File) => {
+    try {
+      setLocalAvatar(file)
+      setIsLoading(true)
+      const res = await updateUserAvatar(session.data.user.id, file, access_token)
+      if (res.success === false) {
+        setError(res.HTTPmessage)
+      } else {
+        // Force refresh session to pick up the new avatar filename
+        await session.update(true)
+        setIsLoading(false)
+        setError('')
+        setSuccess(t('user.settings.general.avatar_updated'))
+      }
+    } catch {
+      setError('Failed to process AI image')
+      setIsLoading(false)
+    }
+  }
+
   const handleEmailChange = async (newEmail: string) => {
     toast.success(t('user.settings.general.profile_updated'), { duration: 4000 })
 
-    toast((t_toast: any) => (
+    toast((_t_toast: any) => (
       <div className="flex items-center gap-2">
         <span>{t('user.settings.general.relogin_message', { email: newEmail })}</span>
       </div>
@@ -617,6 +670,10 @@ function AccountGeneral() {
             updateProfile(values, userData.id, access_token)
               .then(() => {
                 toast.dismiss(loadingToast)
+                track(AnalyticsEvent.AccountProfileUpdated, {
+                  email_changed: isEmailChanged,
+                  has_bio: !!values.bio?.trim(),
+                })
                 if (isEmailChanged) {
                   handleEmailChange(values.email)
                 } else {
@@ -638,7 +695,9 @@ function AccountGeneral() {
               success,
               isLoading,
               localAvatar,
-              handleFileChange
+              handleFileChange,
+              handleAISelect,
+              handleAIImageFile
             }}
           />
         )}

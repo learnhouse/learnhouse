@@ -1,16 +1,17 @@
 import { getBackendUrl, getConfig } from '@services/config/config'
 
 function getMediaUrl() {
-  const mediaUrl = getConfig('NEXT_PUBLIC_LEARNHOUSE_MEDIA_URL');
-  if (mediaUrl) {
-    return mediaUrl;
-  } else {
-    return getBackendUrl();
-  }
+  const raw = getConfig('NEXT_PUBLIC_LEARNHOUSE_MEDIA_URL') || getBackendUrl();
+  // Guarantee a trailing slash so callers can concatenate "content/..." without
+  // producing "https://api.example.iocontent/..." when the base lacks a slash.
+  return raw.endsWith('/') ? raw : `${raw}/`;
 }
 
 function getApiUrl() {
-  return getBackendUrl();
+  // Normalize so URL building is correct whether or not the configured backend
+  // URL carries a trailing slash (otherwise we'd get "...ioapi/v1/...").
+  const base = getBackendUrl();
+  return base.endsWith('/') ? base : `${base}/`;
 }
 
 /**
@@ -27,6 +28,45 @@ export function getActivityVideoStreamUrl(
 }
 
 /**
+ * Get the HLS master-playlist URL for an activity video.
+ * The API returns the playlist (after an RBAC check) with segment URLs
+ * presigned to R2, so hls.js streams segments directly from object storage.
+ */
+export function getActivityHlsMasterUrl(
+  orgUUID: string,
+  courseUUID: string,
+  activityUUID: string
+) {
+  return `${getApiUrl()}api/v1/stream/hls/${orgUUID}/${courseUUID}/${activityUUID}/master.m3u8`
+}
+
+/**
+ * Get the URL of an activity's HLS hover-preview sprite sheet. The API redirects
+ * this to a presigned R2 URL; it's loaded as a CSS background image (no CORS).
+ */
+export function getActivityHlsThumbnailsUrl(
+  orgUUID: string,
+  courseUUID: string,
+  activityUUID: string,
+  spritePath: string
+) {
+  return `${getApiUrl()}api/v1/stream/hls/${orgUUID}/${courseUUID}/${activityUUID}/${spritePath}`
+}
+
+/**
+ * Get the URL of an activity's WebVTT caption track for a language. Served inline
+ * by the API after an RBAC check (same access as the video).
+ */
+export function getActivityCaptionUrl(
+  orgUUID: string,
+  courseUUID: string,
+  activityUUID: string,
+  lang: string
+) {
+  return `${getApiUrl()}api/v1/stream/captions/${orgUUID}/${courseUUID}/${activityUUID}/${lang}.vtt`
+}
+
+/**
  * Get the streaming URL for a video block.
  * Uses the optimized streaming endpoint with proper Range request support.
  */
@@ -38,6 +78,30 @@ export function getVideoBlockStreamUrl(
   filename: string
 ) {
   return `${getApiUrl()}api/v1/stream/block/${orgUUID}/${courseUUID}/${activityUUID}/${blockUUID}/${filename}`
+}
+
+/**
+ * HLS master-playlist URL for a video BLOCK (adaptive streaming). The API
+ * presigns segment URLs to R2 — same pipeline as activity videos.
+ */
+export function getVideoBlockHlsMasterUrl(
+  orgUUID: string,
+  courseUUID: string,
+  activityUUID: string,
+  blockUUID: string
+) {
+  return `${getApiUrl()}api/v1/stream/block-hls/${orgUUID}/${courseUUID}/${activityUUID}/${blockUUID}/master.m3u8`
+}
+
+/** URL of a video block's HLS hover-preview sprite sheet. */
+export function getVideoBlockHlsThumbnailsUrl(
+  orgUUID: string,
+  courseUUID: string,
+  activityUUID: string,
+  blockUUID: string,
+  spritePath: string
+) {
+  return `${getApiUrl()}api/v1/stream/block-hls/${orgUUID}/${courseUUID}/${activityUUID}/${blockUUID}/${spritePath}`
 }
 
 /**
@@ -61,6 +125,14 @@ export function getCourseThumbnailMediaDirectory(
 ) {
   let uri = `${getMediaUrl()}content/orgs/${orgUUID}/courses/${courseUUID}/thumbnails/${fileId}`
   return uri
+}
+
+/**
+ * Absolute URL for an AI-generated image (nano banana). Stored per-org under
+ * content/orgs/{orgUUID}/ai_images/{fileId}, mirroring the other media helpers.
+ */
+export function getAIImageMediaDirectory(orgUUID: string, fileId: string) {
+  return `${getMediaUrl()}content/orgs/${orgUUID}/ai_images/${fileId}`
 }
 
 export function getFolderThumbnailMediaDirectory(

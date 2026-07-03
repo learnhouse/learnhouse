@@ -690,6 +690,7 @@ class TestBoardsRouter:
             iteration_count=1,
             max_iterations=3,
             current_html="<div>done</div>",
+            board_uuid="board_test",
             message_history=[SimpleNamespace(role="user", content="Prompt")],
         )
         with patch(
@@ -699,6 +700,89 @@ class TestBoardsRouter:
             response = await client.get("/api/v1/boards/playground/session/session1")
         assert response.status_code == 200
         assert response.json()["session_uuid"] == "session1"
+
+    async def test_boards_playground_session_state_authz_branches(
+        self, client, db, org, admin_user
+    ):
+        """get_session_state authorization guards:
+        line 233 (board not found -> 404), line 239 (org not found -> 404),
+        line 243 (caller not an org member -> 403)."""
+        board = Board(
+            id=70,
+            org_id=org.id,
+            name="Board",
+            description="Desc",
+            thumbnail_image="",
+            public=True,
+            board_uuid="board_state_authz",
+            created_by=admin_user.id,
+            creation_date="2024-01-01",
+            update_date="2024-01-01",
+        )
+        orphan_board = Board(
+            id=71,
+            org_id=999,
+            name="Orphan",
+            description="Desc",
+            thumbnail_image="",
+            public=True,
+            board_uuid="board_state_orphan",
+            created_by=admin_user.id,
+            creation_date="2024-01-01",
+            update_date="2024-01-01",
+        )
+        db.add(board)
+        db.add(orphan_board)
+        await db.commit()
+
+        # Line 233: session references a board that does not exist -> 404.
+        with patch(
+            "src.routers.boards.boards_playground.get_boards_playground_session",
+            return_value=SimpleNamespace(
+                session_uuid="session1",
+                iteration_count=1,
+                max_iterations=3,
+                current_html="<div></div>",
+                board_uuid="board_does_not_exist",
+                message_history=[],
+            ),
+        ):
+            response = await client.get("/api/v1/boards/playground/session/session1")
+        assert response.status_code == 404
+
+        # Line 239: board exists but its org does not -> 404.
+        with patch(
+            "src.routers.boards.boards_playground.get_boards_playground_session",
+            return_value=SimpleNamespace(
+                session_uuid="session1",
+                iteration_count=1,
+                max_iterations=3,
+                current_html="<div></div>",
+                board_uuid="board_state_orphan",
+                message_history=[],
+            ),
+        ):
+            response = await client.get("/api/v1/boards/playground/session/session1")
+        assert response.status_code == 404
+
+        # Line 243: board + org exist but the caller is not an org member -> 403.
+        with patch(
+            "src.routers.boards.boards_playground.get_boards_playground_session",
+            return_value=SimpleNamespace(
+                session_uuid="session1",
+                iteration_count=1,
+                max_iterations=3,
+                current_html="<div></div>",
+                board_uuid="board_state_authz",
+                message_history=[],
+            ),
+        ), patch(
+            "src.routers.boards.boards_playground.is_org_member",
+            new_callable=AsyncMock,
+            return_value=False,
+        ):
+            response = await client.get("/api/v1/boards/playground/session/session1")
+        assert response.status_code == 403
 
     async def test_boards_playground_iterate_session_not_found(self, client):
         with patch(

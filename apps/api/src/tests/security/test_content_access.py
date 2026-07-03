@@ -211,14 +211,16 @@ class TestCheckContentAccess:
         assert exc_info.value.status_code == 401
 
     @pytest.mark.asyncio
-    async def test_unknown_path_authenticated_allowed(self):
-        """Unknown path patterns are allowed for authenticated users."""
+    async def test_unknown_path_authenticated_rejected(self):
+        """Unknown path patterns are denied for authenticated users (deny-by-default)."""
         from src.routers.local_content import _check_content_access
         db = self._make_db_session()
-        await _check_content_access(
-            "something/unknown/file.txt",
-            self._make_auth_user(), db
-        )
+        with pytest.raises(HTTPException) as exc_info:
+            await _check_content_access(
+                "something/unknown/file.txt",
+                self._make_auth_user(), db
+            )
+        assert exc_info.value.status_code == 403
 
 
 class TestS3ContentPathValidation:

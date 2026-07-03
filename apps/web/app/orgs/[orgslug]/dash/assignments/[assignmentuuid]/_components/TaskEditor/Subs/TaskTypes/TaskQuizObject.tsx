@@ -11,6 +11,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { useTranslation } from 'react-i18next';
 import { useQueryClient } from '@tanstack/react-query';
 import { queryKeys } from '@/lib/query/keys';
+import { applyManualGrade } from './applyManualGrade';
 
 type QuizSchema = {
     questionText: string;
@@ -303,33 +304,18 @@ function TaskQuizObject({ view, assignmentTaskUUID, user_id }: TaskQuizObjectPro
     }
 
     async function gradeCustomFC(grade: number, feedback?: string) {
-        if (!assignmentTaskUUID) return;
-        const maxPoints = assignmentTaskOutsideProvider?.max_grade_value || 100;
-        if (Number.isNaN(grade) || grade < 0) {
-            toast.error('Grade must be a positive number.');
-            return;
-        }
-        if (grade > maxPoints) {
-            toast.error(`Grade cannot be more than ${maxPoints} points`);
-            return;
-        }
-        const trimmed = feedback?.trim();
-        const finalFeedback = trimmed && trimmed.length > 0
-            ? trimmed
-            : `Graded by teacher : @${session?.data?.user?.username ?? ''}`;
-        const values = {
-            assignment_task_submission_uuid: userSubmissions.assignment_task_submission_uuid,
-            task_submission: userSubmissions,
+        await applyManualGrade({
             grade,
-            task_submission_grade_feedback: finalFeedback,
-        };
-        const res = await handleAssignmentTaskSubmission(values, assignmentTaskUUID, assignment.assignment_object.assignment_uuid, access_token);
-        if (res) {
-            getAssignmentTaskSubmissionFromIdentifiedUserUI();
-            toast.success(`Task graded successfully with ${grade} points`);
-        } else {
-            toast.error('Error grading task, please retry later.');
-        }
+            feedback,
+            maxPoints: assignmentTaskOutsideProvider?.max_grade_value || 100,
+            assignmentTaskUUID,
+            assignmentUUID: assignment.assignment_object.assignment_uuid,
+            accessToken: access_token,
+            username: session?.data?.user?.username,
+            assignmentTaskSubmissionUUID: userSubmissions.assignment_task_submission_uuid,
+            taskSubmissionPayload: userSubmissions,
+            onSuccess: getAssignmentTaskSubmissionFromIdentifiedUserUI,
+        });
     }
 
     async function gradeFC() {
@@ -357,6 +343,7 @@ function TaskQuizObject({ view, assignmentTaskUUID, user_id }: TaskQuizObjectPro
                 task_submission: userSubmissions,
                 grade: finalGrade,
                 task_submission_grade_feedback: 'Auto graded by system',
+                manually_graded: false,
             };
 
             const res = await handleAssignmentTaskSubmission(values, assignmentTaskUUID, assignment.assignment_object.assignment_uuid, access_token);

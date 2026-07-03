@@ -10,6 +10,7 @@ const LinkedinIcon = ({ size = 24 }: { size?: number }) => (
   </svg>
 );
 import { useTranslation } from 'react-i18next'
+import { useLHAnalytics, AnalyticsEvent } from '@services/analytics'
 
 interface CourseShareProps {
   courseName: string
@@ -18,6 +19,7 @@ interface CourseShareProps {
 
 function CourseShare({ courseName, courseUrl }: CourseShareProps) {
   const { t } = useTranslation()
+  const { track } = useLHAnalytics('learner')
   const [isOpen, setIsOpen] = useState(false)
   const [copied, setCopied] = useState(false)
   const dropdownRef = useRef<HTMLDivElement>(null)
@@ -62,6 +64,7 @@ function CourseShare({ courseName, courseUrl }: CourseShareProps) {
   const copyToClipboard = async () => {
     try {
       await navigator.clipboard.writeText(courseUrl)
+      track(AnalyticsEvent.CourseShared, { network: 'copy_link', source: 'course_page' })
       setCopied(true)
       setTimeout(() => setCopied(false), 2000)
     } catch (err) {
@@ -117,7 +120,10 @@ function CourseShare({ courseName, courseUrl }: CourseShareProps) {
                 href={link.url}
                 target="_blank"
                 rel="noopener noreferrer"
-                onClick={() => setIsOpen(false)}
+                onClick={() => {
+                  track(AnalyticsEvent.CourseShared, { network: link.name, source: 'course_page' })
+                  setIsOpen(false)
+                }}
                 className={`flex items-center gap-2.5 px-3 py-2 text-sm text-neutral-600 transition-all duration-200 ${link.color}`}
               >
                 <Icon size={16} />

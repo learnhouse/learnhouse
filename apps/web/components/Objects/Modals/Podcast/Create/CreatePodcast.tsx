@@ -8,6 +8,7 @@ import FormLayout, {
 } from '@components/Objects/StyledElements/Form/Form'
 import * as Form from '@radix-ui/react-form'
 import { createPodcast } from '@services/podcasts/podcasts'
+import { useLHAnalytics, AnalyticsEvent } from '@services/analytics'
 import { getOrganizationContextInfoWithoutCredentials } from '@services/organizations/orgs'
 import React, { useEffect } from 'react'
 import { BarLoader } from 'react-spinners'
@@ -21,6 +22,7 @@ import { useFormik } from 'formik'
 import * as Yup from 'yup'
 import { UploadCloud, Image as ImageIcon } from 'lucide-react'
 import UnsplashImagePicker from "@components/Dashboard/Pages/Course/EditCourseGeneral/UnsplashImagePicker"
+import AIImageButton from '@components/Objects/AI/AIImageButton'
 import FormTagInput from "@components/Objects/StyledElements/Form/TagInput"
 import { useTranslation } from "react-i18next"
 
@@ -29,6 +31,7 @@ function CreatePodcastModal({ closeModal, orgslug }: any) {
   const router = useRouter()
   const session = useLHSession() as any
   const queryClient = useQueryClient()
+  const { track } = useLHAnalytics('learner')
   const [orgId, setOrgId] = React.useState(null) as any
   const [showUnsplashPicker, setShowUnsplashPicker] = React.useState(false)
   const [isUploading, setIsUploading] = React.useState(false)
@@ -70,6 +73,11 @@ function CreatePodcastModal({ closeModal, orgslug }: any) {
         )
 
         if (res.success) {
+          track(AnalyticsEvent.PodcastCreated, {
+            is_public: values.visibility,
+            has_thumbnail: !!values.thumbnail,
+            source: 'create_modal',
+          })
           await revalidateTags(['podcasts'], orgslug)
           queryClient.invalidateQueries({ queryKey: queryKeys.podcasts.list(orgslug) })
           toast.dismiss(toast_loading)
@@ -129,6 +137,10 @@ function CreatePodcastModal({ closeModal, orgslug }: any) {
       toast.error('Failed to load image from Unsplash')
     }
     setIsUploading(false)
+  }
+
+  const handleAIImageFile = async (file: File) => {
+    formik.setFieldValue('thumbnail', file)
   }
 
   return (
@@ -204,6 +216,11 @@ function CreatePodcastModal({ closeModal, orgslug }: any) {
                   <ImageIcon size={16} className="mr-2" />
                   <span>{t('courses.choose_from_gallery')}</span>
                 </button>
+                <AIImageButton
+                  onSelect={handleUnsplashSelect}
+                  onSelectFile={handleAIImageFile}
+                  className="font-bold antialiased items-center text-gray text-sm rounded-md px-4 mt-6 flex gap-2"
+                />
               </div>
             </div>
           </div>

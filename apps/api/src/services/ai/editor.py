@@ -68,8 +68,11 @@ def _serialize_tiptap_content_to_text(content: Any) -> str:
                 for q in questions:
                     text_parts.append(f"\n[QUIZ] {q.get('question', '')}")
                     for a in q.get('answers', []):
-                        marker = '(correct)' if a.get('isCorrect') else ''
-                        text_parts.append(f"\n  - {a.get('text', '')} {marker}")
+                        # TipTap quiz answers use 'answer'/'correct' (see Quiz block schema);
+                        # accept legacy 'text'/'isCorrect' as a fallback.
+                        marker = '(correct)' if (a.get('correct') or a.get('isCorrect')) else ''
+                        answer_text = a.get('answer', '') or a.get('text', '')
+                        text_parts.append(f"\n  - {answer_text} {marker}")
                 return
 
             # Handle flipcards

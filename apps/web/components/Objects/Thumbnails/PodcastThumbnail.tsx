@@ -5,6 +5,7 @@ import ConfirmationModal from '@components/Objects/StyledElements/ConfirmationMo
 import { getUriWithOrg } from '@services/config/config'
 import { deletePodcast, removePodcastPrefix } from '@services/podcasts/podcasts'
 import { getPodcastThumbnailMediaDirectory, getUserAvatarMediaDirectory } from '@services/media/media'
+import { useLHAnalytics, AnalyticsEvent } from '@services/analytics'
 import { useQueryClient } from '@tanstack/react-query'
 import { Trash2, FilePenLine, Settings2, MoreVertical, Play, Headphones } from 'lucide-react'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
@@ -56,6 +57,14 @@ function PodcastThumbnail({ podcast, orgslug, customLink, isDashboard = false }:
   const org = useOrg() as any
   const session = useLHSession() as any
   const queryClient = useQueryClient()
+  const { track } = useLHAnalytics(isDashboard ? 'dashboard' : 'learner')
+
+  const handleCardOpen = () => {
+    track(AnalyticsEvent.PodcastCardOpened, {
+      episode_count: podcast.episode_count,
+      source: isDashboard ? 'dashboard' : 'public',
+    })
+  }
 
   const activeAuthors = podcast.authors?.filter(author => author.authorship_status === 'ACTIVE') || []
   const displayedAuthors = activeAuthors.slice(0, 3)
@@ -68,7 +77,7 @@ function PodcastThumbnail({ podcast, orgslug, customLink, isDashboard = false }:
       await deletePodcast(podcast.podcast_uuid, session.data?.tokens?.access_token)
       queryClient.invalidateQueries({ queryKey: ['podcasts'] })
       toast.success(t('podcasts.podcast_deleted_success'))
-    } catch (error) {
+    } catch (_error) {
       toast.error(t('podcasts.podcast_deleted_error'))
     } finally {
       toast.dismiss(toastId)
@@ -95,7 +104,7 @@ function PodcastThumbnail({ podcast, orgslug, customLink, isDashboard = false }:
         isDashboard={isDashboard}
       />
 
-      <Link prefetch href={podcastLink} className="block relative aspect-video overflow-hidden bg-gray-50">
+      <Link prefetch href={podcastLink} onClick={handleCardOpen} className="block relative aspect-video overflow-hidden bg-gray-50">
         <div
           className="w-full h-full bg-cover bg-center transition-transform duration-500 group-hover:scale-105"
           style={{ backgroundImage: `url(${thumbnailImage})` }}
@@ -130,6 +139,7 @@ function PodcastThumbnail({ podcast, orgslug, customLink, isDashboard = false }:
         <div className="flex items-start justify-between">
           <Link
             href={podcastLink}
+            onClick={handleCardOpen}
             className="text-base font-bold text-gray-900 leading-tight hover:text-black transition-colors line-clamp-1"
           >
             {podcast.name}
@@ -182,6 +192,7 @@ function PodcastThumbnail({ podcast, orgslug, customLink, isDashboard = false }:
 
           <Link
             href={podcastLink}
+            onClick={handleCardOpen}
             className="text-[10px] font-bold text-gray-400 hover:text-gray-900 transition-colors uppercase tracking-wider"
           >
             {t('podcasts.listen_now')}

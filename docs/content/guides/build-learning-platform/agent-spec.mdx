@@ -1,0 +1,161 @@
+---
+title: Agent Spec
+description: A self-contained, copy-paste specification a coding agent can follow to build a headless LearnHouse learning platform with Next.js, including the exact API contract and acceptance criteria.
+---
+
+import { Callout } from 'nextra/components'
+
+# Agent Spec
+
+Copy everything in the block below, fill in the **Configuration** values at the top, and paste it into your coding agent (see [Let an Agent Build It](/guides/build-learning-platform/with-an-agent) for the workflow). It's written *for the model* and contains the real LearnHouse API contract, so the agent builds against the API that actually exists.
+
+<Callout type="info">
+This spec mirrors the [Do It Yourself](/guides/build-learning-platform/do-it-yourself) build exactly. If you want to understand what the agent is doing, read that page alongside the generated code.
+</Callout>
+
+````markdown
+# SPEC: Build a headless learning platform on the LearnHouse API
+
+## Configuration (fill these in before starting)
+- API_BASE = http://localhost:1338/api/v1     # your LearnHouse API base URL
+- ORG_SLUG = your-org-slug                     # your organization slug
+- TEST_EMAIL = you@example.com                 # optional, for verifying auth
+- TEST_PASSWORD = ********                      # optional
+
+## Goal
+Build a web learning platform with Next.js (App Router + TypeScript + Tailwind)
+that reads courses and content from the LearnHouse REST API and supports user
+signup, login, enrollment, and progress tracking. Build it in two stages:
+Stage 1 is fully anonymous (no tokens); Stage 2 adds authentication on top
+without rewriting Stage 1.
+
+## Hard rules
+- LearnHouse access/refresh tokens MUST NEVER reach the browser. Do all
+  authenticated calls from the server (Route Handlers / Server Actions) and
+  store tokens in the Next.js app's own httpOnly cookie (a "BFF" pattern).
+- Read the API base and org slug from environment variables; never hardcode.
+- All API responses must be treated as uncacheable (cache: 'no-store').
+- Surface API errors: error bodies are JSON shaped { "detail": "..." }.
+
+## API contract (use these exactly; all paths are relative to API_BASE)
+Anonymous reads (no Authorization header needed for public, published content):
+- GET  /orgs/slug/{ORG_SLUG}
+    -> organization object incl. numeric `id`.
+- GET  /courses/org_slug/{ORG_SLUG}/page/{page}/limit/{limit}
+    -> JSON ARRAY of courses. Each: { course_uuid, name, description,
+       thumbnail_image, public, published }. `course_uuid` already includes a
+       "course_" prefix — use it verbatim in URLs.
+- GET  /courses/{course_uuid}/meta
+    -> course + { org_id, chapters: [ { chapter_uuid, name, description,
+       activities: [ { id, activity_uuid, name, activity_type,
+       activity_sub_type, content, published } ] } ] }.
+       Each activity has BOTH a numeric `id` and a string `activity_uuid`.
+       Match progress with the numeric `id` (step.activity_id === activity.id);
+       use `activity_uuid` for routing/fetching.
+- GET  /activities/{activity_uuid}
+    -> a single activity { id, activity_uuid, name, activity_type,
+       activity_sub_type, content, published }.
+       activity_type is one of: TYPE_VIDEO, TYPE_DOCUMENT, TYPE_DYNAMIC,
+       TYPE_ASSIGNMENT, TYPE_CUSTOM, TYPE_SCORM.
+
+Media: served from the backend ROOT (NOT under /api/v1) — derive a media base
+by stripping "/api/v1" from API_BASE. Stored media values are BARE filenames,
+not paths, so build org/course-scoped URLs:
+  - course thumbnail: {MEDIA_BASE}/content/orgs/{org_uuid}/courses/{course_uuid}/thumbnails/{thumbnail_image}
+  - hosted video:     {MEDIA_BASE}/content/orgs/{org_uuid}/courses/{course_uuid}/activities/{activity_uuid}/video/{fileId}
+  - document (pdf):    {MEDIA_BASE}/content/orgs/{org_uuid}/courses/{course_uuid}/activities/{activity_uuid}/documentpdf/{fileId}
+  org_uuid comes from GET /orgs/slug/{ORG_SLUG} or the /meta response (the
+  course LIST does not include org_uuid). Values starting with http(s) are full
+  S3 URLs — use as-is.
+
+Auth (Stage 2):
+- POST /auth/login   Content-Type: application/x-www-form-urlencoded
+    body: username={email}&password={password}
+    -> { user: { user_uuid, username, email, ... },
+         tokens: { access_token, refresh_token, expiry } }
+    (It also sets httpOnly cookies, but rely on the body for a headless client.)
+- POST /users/{org_id}   Content-Type: application/json
+    body: { email, password, username, first_name, last_name }  -> creates a user.
+    (Resolve org_id via GET /orgs/slug/{ORG_SLUG}.)
+- GET  /auth/refresh
+    Reads the refresh token ONLY from the `LH_refresh` cookie — NOT a header or
+    body. To refresh from the server, send header: Cookie: LH_refresh={value}.
+    -> { access_token, refresh_token, expiry }. The refresh token ROTATES: you
+    MUST persist the returned refresh_token (and access_token) back into your
+    session, or the next refresh is rejected as a replay (401).
+- DELETE /auth/logout   Authorization: Bearer {access_token}  -> revokes session.
+- Authenticated calls: send header Authorization: Bearer {access_token}.
+
+Enrollment & progress (Stage 2, authenticated):
+- A Trail (one per user per org) must EXIST before a course can be added, or
+  add_course returns 404. Reading the trail creates it lazily, so call
+  GET /trail/org/{org_id}/trail once before POST /trail/add_course.
+- GET    /trail/org/{org_id}/trail            lazily creates the trail; returns
+         { runs: [ { course, steps:[{activity_id, complete, ...}],
+         course_total_steps, ... } ] } (one run per enrolled course).
+- POST   /trail/add_course/{course_uuid}      enroll the current user (trail must exist).
+- POST   /trail/add_activity/{activity_uuid}  mark an activity done (creates trail/run if needed).
+
+## Required pages / files
+- src/lib/learnhouse.ts   : API_BASE/ORG_SLUG consts, `lhFetch` (public reads,
+                            optional token), media-URL helpers that build the
+                            backend-root org/course-scoped paths (see Media
+                            above), shared types.
+- src/lib/session.ts      : httpOnly-cookie session (get/set/clear) + `authedFetch`
+                            that retries once on 401 by refreshing (refresh token
+                            sent as a Cookie: LH_refresh header), persisting the
+                            rotated access+refresh tokens back to the session
+                            before retrying — see contract.
+- src/app/page.tsx        : course catalogue (anonymous).
+- src/app/courses/[uuid]/page.tsx           : course detail from /meta (anonymous).
+- src/app/courses/[uuid]/[activityUuid]/page.tsx : activity viewer, switch on
+                            activity_type (video / document / dynamic).
+- src/app/api/auth/login/route.ts   : POST -> /auth/login, store session.
+- src/app/api/auth/signup/route.ts  : POST -> resolve org id, /users/{org_id}.
+- src/app/api/auth/logout/route.ts  : POST -> /auth/logout, clear session.
+- src/app/login/page.tsx            : client login form posting to /api/auth/login.
+- src/app/courses/[uuid]/actions.ts : Server Actions `enroll` and
+                            `markActivityDone` using authedFetch.
+- Enroll button on the course page (link to /login if no session); progress
+  ticks derived from GET /trail/org/{org_id}/trail.
+
+## Environment
+Create .env.local:
+  NEXT_PUBLIC_LEARNHOUSE_API_URL=<API_BASE>
+  NEXT_PUBLIC_LEARNHOUSE_ORG_SLUG=<ORG_SLUG>
+
+## Build order
+1. Scaffold: npx create-next-app@latest . --typescript --app --tailwind --eslint --src-dir --use-npm
+2. Stage 1: lib/learnhouse.ts -> catalogue -> course page -> activity viewer.
+   STOP and verify the public site renders before continuing.
+3. Stage 2: session.ts -> auth route handlers + login form -> authedFetch ->
+   enroll action -> progress display.
+
+## Acceptance criteria (verify against the live instance)
+1. Catalogue lists the org's public courses with thumbnails.
+2. A course page lists chapters and their published activities.
+3. At least one activity renders (video, document, or dynamic page).
+4. A new user can sign up (TEST_EMAIL) and log in.
+5. A logged-in user can enroll in a course and see at least one progress tick
+   after marking an activity done.
+Report which criteria pass and show the commands/URLs you used to check.
+
+## Known adjustment points (don't guess — inspect, then adapt)
+- Activity `content` keys vary by activity_sub_type and editor version. Inspect a
+  real GET /activities/{uuid} and adapt the viewer's field names. Dynamic pages
+  are a structured block document; rendering raw JSON is an acceptable v1.
+- Media is served from the backend ROOT (not /api/v1) at org/course-scoped
+  paths (see the Media section). If images 404, confirm the base has no /api/v1
+  and that you built the full orgs/{org}/courses/{course}/... path; S3 values
+  are absolute URLs.
+- On SaaS instances, login may require email verification first. On local
+  self-hosted instances this is usually disabled.
+````
+
+<Callout type="warning">
+The agent can build the structure and the happy path, but it can't see your instance's exact `content` shapes or storage config. Plan to review the **activity viewer** and **media URLs** — the spec flags both as the likely places to adjust.
+</Callout>
+
+## After it runs
+
+Click through the acceptance criteria yourself, then continue with the same next steps as the manual build: real block rendering for dynamic activities, [webhooks](/guides/custom-features/webhooks), and the full [API Reference](/developers/api). Compare your result with [`learnhouse/headless-examples`](https://github.com/learnhouse/headless-examples).

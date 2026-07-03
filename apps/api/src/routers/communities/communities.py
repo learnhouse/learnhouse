@@ -1,5 +1,5 @@
 from typing import List
-from fastapi import APIRouter, Depends, Request, UploadFile
+from fastapi import APIRouter, Depends, Request, UploadFile, Path
 from pydantic import BaseModel
 from sqlmodel import select
 from sqlmodel.ext.asyncio.session import AsyncSession
@@ -60,6 +60,25 @@ async def api_create_community(
     """
     from src.db.communities.communities import CommunityCreate
 
+    # SECURITY: If a course is to be linked on creation, verify it exists and
+    # belongs to this organization. Without this check a client could attach a
+    # community to a course in another tenant by guessing its id (the create
+    # service writes course_id directly with no validation), causing
+    # cross-tenant data linkage.
+    if community_data.course_id is not None:
+        from fastapi import HTTPException
+        from src.db.courses.courses import Course
+
+        course_statement = select(Course).where(Course.id == community_data.course_id)
+        course = (await db_session.execute(course_statement)).scalars().first()
+        if not course:
+            raise HTTPException(status_code=404, detail="Course not found")
+        if course.org_id != org_id:
+            raise HTTPException(
+                status_code=400,
+                detail="Course must belong to the same organization as the community",
+            )
+
     community_create = CommunityCreate(
         name=community_data.name,
         description=community_data.description,
@@ -112,8 +131,10 @@ async def api_get_community(
 async def api_get_communities_by_org(
     request: Request,
     org_id: int,
-    page: int = 1,
-    limit: int = 10,
+    page: int = Path(ge=1),
+    # Upper bound guards against negative/absurd values (the original 500 bug)
+    # while staying above real callers — the sitemap requests limit=1000.
+    limit: int = Path(ge=1, le=1000),
     current_user: PublicUser = Depends(get_current_user),
     db_session: AsyncSession = Depends(get_db_session),
 ) -> List[CommunityRead]:

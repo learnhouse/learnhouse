@@ -11,6 +11,8 @@ import { Community } from '@services/communities/communities'
 import { DiscussionWithAuthor } from '@services/communities/discussions'
 import { MessageCircle } from 'lucide-react'
 import { getUriWithOrg } from '@services/config/config'
+import { useLHSession } from '@components/Contexts/LHSessionContext'
+import { useTrackView, AnalyticsEvent } from '@services/analytics'
 
 interface DiscussionPageClientProps {
   discussion: DiscussionWithAuthor
@@ -24,8 +26,15 @@ const DiscussionPageClient = ({
   orgslug,
 }: DiscussionPageClientProps) => {
   const router = useRouter()
+  const session = useLHSession() as any
   const [discussion, setDiscussion] = useState(initialDiscussion)
   const [isEditModalOpen, setIsEditModalOpen] = useState(false)
+
+  useTrackView(AnalyticsEvent.DiscussionViewed, {
+    label: discussion.label,
+    is_locked: discussion.is_locked,
+    is_author: session?.data?.user?.id === discussion.author_id,
+  })
 
   const handleDiscussionUpdated = (updated: DiscussionWithAuthor) => {
     setDiscussion(updated)

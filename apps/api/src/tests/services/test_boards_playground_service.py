@@ -84,6 +84,8 @@ class TestBoardsPlaygroundService:
         )
 
         with patch(
+            "src.services.boards.boards_playground._redis_client", None
+        ), patch(
             "src.services.boards.boards_playground.LH_CONFIG",
             SimpleNamespace(
                 redis_config=SimpleNamespace(redis_connection_string="")
@@ -92,6 +94,8 @@ class TestBoardsPlaygroundService:
             assert get_redis_connection() is None
 
         with patch(
+            "src.services.boards.boards_playground._redis_client", None
+        ), patch(
             "src.services.boards.boards_playground.redis.from_url",
             side_effect=RuntimeError("boom"),
         ), patch(

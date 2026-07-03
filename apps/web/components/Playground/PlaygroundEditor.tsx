@@ -6,7 +6,6 @@ import Link from 'next/link'
 import { motion, type Transition, type TargetAndTransition } from 'motion/react'
 import {
   ArrowLeft,
-  Globe,
   Check,
   FloppyDisk,
   Eye,
@@ -24,6 +23,7 @@ import { useQueryClient } from '@tanstack/react-query'
 import { queryKeys } from '@/lib/query/keys'
 import { startPlaygroundSession, iteratePlayground } from '@services/playgrounds/generator'
 import { updatePlayground, Playground } from '@services/playgrounds/playgrounds'
+import { useLHAnalytics, AnalyticsEvent } from '@services/analytics'
 
 interface Course {
   course_uuid: string
@@ -81,6 +81,7 @@ export default function PlaygroundEditor({
   orgCourses = [],
 }: PlaygroundEditorProps) {
   const queryClient = useQueryClient()
+  const { track } = useLHAnalytics('dashboard')
   const [playground, setPlayground] = useState(initialPlayground)
   const [title, setTitle] = useState(initialPlayground.name)
   const [html, setHtml] = useState<string>(initialPlayground.html_content || '')
@@ -142,9 +143,18 @@ export default function PlaygroundEditor({
     async (prompt: string) => {
       if (isStreaming) return
 
+      const isFirstGeneration = !sessionUuid
+      const sourceMode = isFirstGeneration ? 'start' : 'iterate'
+
       setIsStreaming(true)
       setStreamingHtml('')
       setMessages((prev) => [...prev, { role: 'user' as const, content: prompt }])
+
+      track(AnalyticsEvent.PlaygroundGenerationStarted, {
+        is_first_generation: isFirstGeneration,
+        iteration_count: iterationCount,
+        source_mode: sourceMode,
+      })
 
       let accumulated = ''
 
@@ -160,12 +170,19 @@ export default function PlaygroundEditor({
         setHtml(accumulated)
         setStreamingHtml('')
         setMessages((prev) => [...prev, { role: 'model' as const, content: accumulated }])
+        track(AnalyticsEvent.PlaygroundGenerationCompleted, {
+          output_char_length: accumulated.length,
+          source_mode: sourceMode,
+        })
       }
 
-      const onError = (_error: string) => {
+      const onError = (error: string) => {
         setIsStreaming(false)
         setStreamingHtml('')
         setMessages((prev) => prev.slice(0, -1))
+        track(AnalyticsEvent.PlaygroundGenerationFailed, {
+          error_message: error,
+        })
       }
 
       if (!sessionUuid) {
@@ -196,7 +213,7 @@ export default function PlaygroundEditor({
         )
       }
     },
-    [isStreaming, sessionUuid, playground, title, html, accessToken, selectedCourseUuid, selectedCourse]
+    [isStreaming, sessionUuid, playground, title, html, accessToken, selectedCourseUuid, selectedCourse, iterationCount, track]
   )
 
   const handleSave = async () => {
@@ -213,6 +230,10 @@ export default function PlaygroundEditor({
       handleUpdated(updated)
       setSaveStatus('saved')
       setTimeout(() => setSaveStatus('idle'), 2000)
+      track(AnalyticsEvent.PlaygroundSaved, {
+        has_html_content: !!html,
+        html_char_length: html.length,
+      })
       queryClient.invalidateQueries({ queryKey: queryKeys.playgrounds.detail(playground.playground_uuid) })
       queryClient.invalidateQueries({ queryKey: queryKeys.playgrounds.list(orgslug) })
     } catch (err) {
@@ -223,13 +244,17 @@ export default function PlaygroundEditor({
   }
 
   const handlePublishToggle = async () => {
+    const nowPublished = !playground.published
     try {
       const updated = await updatePlayground(
         playground.playground_uuid,
-        { published: !playground.published },
+        { published: nowPublished },
         accessToken
       )
       handleUpdated(updated)
+      track(AnalyticsEvent.PlaygroundPublishToggled, {
+        now_published: nowPublished,
+      })
       queryClient.invalidateQueries({ queryKey: queryKeys.playgrounds.detail(playground.playground_uuid) })
       queryClient.invalidateQueries({ queryKey: queryKeys.playgrounds.list(orgslug) })
     } catch (err) {

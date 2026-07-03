@@ -152,6 +152,11 @@ async def get_updates_by_course_uuid(
             status_code=status.HTTP_409_CONFLICT, detail="Course does not exist"
         )
 
+    # RBAC check — course updates inherit the course's visibility. Without this
+    # any caller (including anonymous users) could read the update feed of a
+    # private / unpublished course just by knowing its uuid.
+    await check_resource_access(request, db_session, current_user, course.course_uuid, AccessAction.READ)
+
     statement = (
         select(CourseUpdate)
         .where(CourseUpdate.course_id == course.id)

@@ -64,6 +64,16 @@ async def join_org(
             detail="User not found",
         )
 
+    # SECURITY: a user may only join an organization as themselves. Without this
+    # check, any authenticated caller could pass an arbitrary user_id in the
+    # request body and force-join (or, in inviteOnly orgs, force-attach to a
+    # usergroup) any other account — an IDOR / privilege-escalation flaw.
+    if isinstance(current_user, AnonymousUser) or str(user.id) != str(current_user.id):
+        raise HTTPException(
+            status_code=403,
+            detail="You can only join an organization as yourself.",
+        )
+
     # Check if user's email is verified
     if not user.email_verified:
         raise HTTPException(

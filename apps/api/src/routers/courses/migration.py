@@ -4,8 +4,8 @@ from typing import Optional
 from fastapi import APIRouter, Request, UploadFile, File, Depends, Query, HTTPException
 
 
-from src.db.users import PublicUser, AnonymousUser
-from src.security.auth import get_current_user, get_authenticated_user
+from src.db.users import PublicUser
+from src.security.auth import get_authenticated_user
 from sqlmodel.ext.asyncio.session import AsyncSession
 from src.core.events.database import get_db_session
 from src.services.courses.migration.models import (
@@ -109,7 +109,7 @@ async def api_create_from_migration(
     request: Request,
     org_id: int,
     body: CreateFromMigrationRequest,
-    current_user: PublicUser | AnonymousUser = Depends(get_current_user),
+    current_user: PublicUser = Depends(get_authenticated_user),
     db_session: AsyncSession = Depends(get_db_session),
 ):
     """Create a course from the finalized migration tree structure."""

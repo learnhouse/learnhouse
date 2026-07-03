@@ -1,0 +1,138 @@
+---
+title: Custom Features & Webhooks
+description: Extend LearnHouse beyond the official frontend — authenticate with API tokens, create and query content programmatically, and react to events with webhooks.
+---
+
+import { Callout } from 'nextra/components'
+import GuideCards from '../../../components/GuideCards/GuideCards'
+
+# Custom Features & Webhooks
+
+The [build guide](/guides/build-learning-platform) showed how to *read* the API as a frontend. This guide is about going further: driving LearnHouse **programmatically** — creating and managing content from your own scripts and services, and reacting to what happens inside LearnHouse with **webhooks**.
+
+<GuideCards set="custom" />
+
+## Two ways to authenticate
+
+| | User session (JWT) | API token |
+| --- | --- | --- |
+| **For** | Acting *as a logged-in user* (a frontend) | Server-to-server automation, scripts, integrations |
+| **How** | `POST /api/v1/auth/login` → bearer token | A long-lived token created in org settings |
+| **Prefix** | a JWT | `lh_…` |
+| **Plan** | any | **Pro** |
+
+For everything in this guide, use an **API token**. It's a single bearer credential you attach to every request:
+
+```bash
+curl "http://localhost:1338/api/v1/courses/org_slug/{org_slug}/page/1/limit/10" \
+  -H "Authorization: Bearer lh_your_api_token_here"
+```
+
+<Callout type="warning">
+API tokens work on resource routes (courses, chapters, activities, collections…) but **not** on routes that require a real user session — `/users/*`, `/orgs/*`, `/roles/*`, and **webhook management** all reject `lh_` tokens with `403`. Use a courses read to smoke-test a token.
+</Callout>
+
+### Creating an API token
+
+API tokens are a **Pro** feature. Create one in your organization settings, or via the API itself (with a user session that has `roles` permissions):
+
+```bash
+curl -X POST "http://localhost:1338/api/v1/orgs/{org_id}/api-tokens" \
+  -H "Authorization: Bearer <user_jwt>" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "My integration",
+    "description": "Server-side automation",
+    "expires_at": null
+  }'
+```
+
+The response includes the **full token exactly once** — store it securely, it can't be retrieved again:
+
+```json
+{
+  "token": "lh_8f3c…the only time you'll see this…",
+  "token_uuid": "apitoken_…",
+  "name": "My integration",
+  "token_prefix": "lh_8f3c4d2a",
+  "org_id": 1
+}
+```
+
+<Callout type="info">
+Tokens support fine-grained permissions via a `rights` object (per-resource read/write scopes) and an optional `expires_at`. Set `rights` to grant a token only the access it needs. The full schema is on the interactive Swagger UI at `http://localhost:1338/docs` (development mode). List, revoke, and regenerate tokens under `/api/v1/orgs/{org_id}/api-tokens`.
+</Callout>
+
+## Request conventions
+
+A few things that are true across the whole API:
+
+- **Base path** — every endpoint is under `/api/v1/`.
+- **Auth** — `Authorization: Bearer <token>` (JWT or `lh_` token).
+- **Reads are JSON** — `GET` returns JSON; lists are plain arrays unless documented otherwise.
+- **Writes are often multipart** — create/update endpoints that can take a file (courses, activities, avatars) accept `multipart/form-data`, not JSON. Endpoints without files (collections, trails, users) take JSON.
+- **Errors** — non-2xx responses are `{ "detail": "..." }`. Always read `detail`.
+- **UUIDs vs ids** — resources expose a stable `{resource}_uuid` (e.g. `course_…`, `activity_…`); numeric `id`s are used by a few routes (notably `org_id`).
+
+## Recipe: create a course programmatically
+
+Courses are created with multipart form data (so a thumbnail can ride along). `org_id` is a query parameter:
+
+```bash
+curl -X POST "http://localhost:1338/api/v1/courses/?org_id=1" \
+  -H "Authorization: Bearer lh_your_api_token" \
+  -F 'name=Introduction to Python' \
+  -F 'description=A beginner-friendly Python course' \
+  -F 'about=Learn Python from scratch.' \
+  -F 'public=true'
+```
+
+<Callout type="info">
+`name`, `description`, and `about` are all required on course creation — omitting `about` returns `422`. Creating courses, chapters, and activities requires a role with create permission (Admin / Maintainer / Instructor), not a plain member account.
+</Callout>
+
+Then add structure — a chapter (JSON), then activities inside it:
+
+```bash
+# Create a chapter
+curl -X POST "http://localhost:1338/api/v1/chapters/" \
+  -H "Authorization: Bearer lh_your_api_token" \
+  -H "Content-Type: application/json" \
+  -d '{ "name": "Getting started", "org_id": 1, "course_id": 42 }'
+```
+
+<Callout type="info">
+For bulk or AI-assisted course creation from existing media, see the [Migration](/developers/migration) guides — there's a three-call flow that builds an entire course tree in one transaction.
+</Callout>
+
+## Recipe: search and list content
+
+```bash
+# Paginated list of courses
+curl "http://localhost:1338/api/v1/courses/org_slug/{org_slug}/page/1/limit/20" \
+  -H "Authorization: Bearer lh_your_api_token"
+
+# Full-text search (max 50 per page)
+curl "http://localhost:1338/api/v1/courses/org_slug/{org_slug}/search?query=python&page=1&limit=10" \
+  -H "Authorization: Bearer lh_your_api_token"
+```
+
+## Discoverability: the OpenAPI spec
+
+Because the API is built with FastAPI, a complete machine-readable spec is available:
+
+- **OpenAPI JSON** — `http://localhost:1338/openapi.json` (served on all instances)
+- **Swagger UI** — `http://localhost:1338/docs` (development mode only)
+- **ReDoc** — `http://localhost:1338/redoc` (development mode only)
+
+Point a client generator at `openapi.json` to produce a typed SDK in your language of choice.
+
+<Callout type="info">
+The interactive HTML docs (`/docs` and `/redoc`) are served in **development mode only**. The raw `/openapi.json` spec is generated by FastAPI and available on all instances.
+</Callout>
+
+## Next: react to events
+
+Polling the API to find out "did anyone finish a course?" is wasteful. **Webhooks** push those events to you the moment they happen — enrollment, completion, signups, and dozens more.
+
+→ **[Consume webhooks](/guides/custom-features/webhooks)**

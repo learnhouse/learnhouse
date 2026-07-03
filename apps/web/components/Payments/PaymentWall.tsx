@@ -5,6 +5,7 @@ import { Button } from '@components/ui/button';
 import Link from 'next/link';
 import { useOrg } from '@components/Contexts/OrgContext';
 import { getUriWithOrg } from '@services/config/config';
+import { useLHAnalytics, useTrackView, AnalyticsEvent } from '@services/analytics';
 
 interface OfferMeta {
   offer_id: number;
@@ -33,6 +34,14 @@ interface PaymentWallProps {
 function PaymentWall({ offer, resourceName, resourceThumbnail, orgslug }: PaymentWallProps) {
   const org = useOrg() as any;
   const slug = orgslug ?? org?.slug;
+  const { track } = useLHAnalytics('learner');
+
+  useTrackView(
+    AnalyticsEvent.PaywallViewed,
+    { offer_id: offer.offer_id, amount: offer.amount, resource_name: resourceName },
+    true,
+    'learner',
+  );
 
   const formattedPrice = new Intl.NumberFormat('en-US', {
     style: 'currency',
@@ -79,7 +88,10 @@ function PaymentWall({ offer, resourceName, resourceThumbnail, orgslug }: Paymen
           <p className="text-sm text-gray-500">{offer.offer_name}</p>
         </div>
 
-        <Link href={storeHref}>
+        <Link
+          href={storeHref}
+          onClick={() => track(AnalyticsEvent.PaywallGetAccessClicked, { offer_id: offer.offer_id, amount: offer.amount })}
+        >
           <Button className="w-full flex items-center space-x-2">
             <ShoppingCart size={16} />
             <span>Get Access</span>

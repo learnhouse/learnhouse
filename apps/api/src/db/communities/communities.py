@@ -38,7 +38,7 @@ class Community(CommunityBase, table=True):
         sa_column=Column(Integer, ForeignKey("course.id", ondelete="SET NULL"))
     )
     community_uuid: str = Field(default="", index=True)
-    moderation_words: List[str] = Field(default=[], sa_column=Column(JSON, default=[]))
+    moderation_words: List[str] = Field(default_factory=list, sa_column=Column(JSON, default=list))
     moderation_settings: Optional[Dict[str, Any]] = Field(
         default=None, sa_column=Column(JSON, nullable=True)
     )

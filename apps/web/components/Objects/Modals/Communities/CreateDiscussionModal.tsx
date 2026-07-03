@@ -4,12 +4,13 @@ import { useRouter } from 'next/navigation'
 import { useTranslation } from 'react-i18next'
 import toast from 'react-hot-toast'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
-import { createDiscussion, DISCUSSION_LABELS, DiscussionLabelId } from '@services/communities/discussions'
+import { createDiscussion, DISCUSSION_LABELS } from '@services/communities/discussions'
 import { useMutateDiscussions } from '@components/Hooks/useDiscussions'
 import Modal from '@components/Objects/StyledElements/Modal/Modal'
 import { DiscussionEditor } from '@components/Objects/Communities/DiscussionEditor'
 import { EmojiPicker } from '@components/Objects/Communities/EmojiPicker'
 import { Loader2, AlertCircle, MessageSquare, HelpCircle, Lightbulb, Megaphone, Star, Check } from 'lucide-react'
+import { useLHAnalytics, AnalyticsEvent } from '@services/analytics'
 
 interface CreateDiscussionModalProps {
   isOpen: boolean
@@ -38,12 +39,13 @@ export function CreateDiscussionModal({
   isOpen,
   onClose,
   communityUuid,
-  orgSlug,
+  orgSlug: _orgSlug,
 }: CreateDiscussionModalProps) {
   const { t } = useTranslation()
   const session = useLHSession() as any
-  const router = useRouter()
+  const _router = useRouter()
   const mutateDiscussions = useMutateDiscussions()
+  const { track } = useLHAnalytics('learner')
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [title, setTitle] = useState('')
@@ -97,6 +99,11 @@ export function CreateDiscussionModal({
       )
 
       if (result) {
+        track(AnalyticsEvent.DiscussionCreated, {
+          label: selectedLabel,
+          has_content: !!hasContent,
+          title_length: title.trim().length,
+        })
         // Revalidate SWR cache to show new discussion immediately
         mutateDiscussions(communityUuid)
         // Reset form
