@@ -338,7 +338,7 @@ const CourseActionsMobile = ({ courseuuid, orgslug, course, trailData }: CourseA
             ) : !session.data?.user ? (
               <>
                 <LogIn className="w-4 h-4" />
-                Sign In
+                Get Started
               </>
             ) : isStarted ? (
               <>
