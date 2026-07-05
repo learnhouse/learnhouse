@@ -121,13 +121,13 @@ function AssignmentStudentActivity() {
                 <p className='text-slate-500 break-words'>{task.description}</p>
               </div>
               <div className='flex flex-wrap gap-2'>
-                <div
+                {task.hint && <div
                   onClick={() => toast(task.hint, { icon: 'ℹ️' })}
                   className='px-3 py-1 flex items-center nice-shadow bg-amber-50/40 text-amber-900 rounded-full space-x-2 cursor-pointer'>
                   <Info size={13} />
                   <p className='text-xs font-semibold'>{t('assignments.hint')}</p>
-                </div>
-                <Link
+                </div>}
+                {task.reference_file && <Link
                   href={getTaskRefFileDir(
                     org?.org_uuid,
                     assignments?.course_object.course_uuid,
@@ -148,7 +148,7 @@ function AssignmentStudentActivity() {
                     )}
                     <p className='text-xs font-semibold'>{t('assignments.reference_document')}</p>
                   </div>
-                </Link>
+                </Link>}
               </div>
             </div>
             {isGraded && taskSubmission && (
