@@ -178,6 +178,58 @@ export async function removeOrgRootContent(
   return res
 }
 
+/**
+ * Persist a manual folder ordering. Mirrors updateCourseOrderStructure in
+ * services/courses/chapters.ts — position is derived from the array index,
+ * so we only send the ordered folder ids.
+ * Optionally scoped to one subfolder via parentFolderUuid so nested folders
+ * reorder independently; when omitted it reorders the org's root folders.
+ */
+export async function reorderFolders(
+  org_id: any,
+  folderOrderByIds: { folder_id: number }[],
+  access_token: any,
+  parentFolderUuid?: string
+) {
+  const query = parentFolderUuid
+    ? `?parent_folder_uuid=${parentFolderUuid}`
+    : ''
+  const result: any = await fetch(
+    `${getAPIUrl()}folders/org/${org_id}/order${query}`,
+    RequestBodyWithAuthHeader(
+      'PUT',
+      { folder_order_by_ids: folderOrderByIds },
+      null,
+      access_token
+    )
+  )
+  const res = await errorHandling(result)
+  return res
+}
+
+/**
+ * Persist the manual (admin drag) order of a folder's content items
+ * (courses/media). `resourceUuidsOrdered` is the full list in the desired order;
+ * position = array index. Admin only (API enforces).
+ */
+export async function reorderFolderContent(
+  folder_uuid: string,
+  resourceUuidsOrdered: string[],
+  access_token: any
+) {
+  const result: any = await fetch(
+    `${getAPIUrl()}folders/${folder_uuid}/content/order`,
+    RequestBodyWithAuthHeader(
+      'PUT',
+      { resource_uuids: resourceUuidsOrdered },
+      null,
+      access_token
+    )
+  )
+  const res = await errorHandling(result)
+  return res
+}
+
 export async function moveFolderContent(
   folder_uuid: string,
   target_folder_uuid: string,
