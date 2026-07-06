@@ -309,6 +309,17 @@ class TestOrgUserEndpoints:
         assert response.status_code == 200
         assert response.json()["removed"] == 1
 
+    async def test_leave_org(self, client):
+        with patch(
+            "src.routers.orgs.orgs.leave_org",
+            new_callable=AsyncMock,
+            return_value={"detail": "Left organization", "org_id": 1},
+        ):
+            response = await client.delete("/api/v1/orgs/1/leave")
+
+        assert response.status_code == 200
+        assert response.json()["detail"] == "Left organization"
+
     async def test_remove_all_users_from_org(self, client):
         with patch(
             "src.routers.orgs.orgs.remove_all_users_from_org",

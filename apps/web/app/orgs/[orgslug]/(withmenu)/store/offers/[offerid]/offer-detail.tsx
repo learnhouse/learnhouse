@@ -12,6 +12,7 @@ import {
 } from 'lucide-react'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
 import { useLHAnalytics, useTrackView, AnalyticsEvent } from '@services/analytics'
+import { meaningfulMessage } from '@lib/errors/classify'
 import toast from 'react-hot-toast'
 
 interface Resource {
@@ -157,9 +158,9 @@ export default function OfferDetailClient({ orgslug, orgId, offerUuid, offer, ac
         track(AnalyticsEvent.CheckoutSessionFailed, { failure_reason: 'no_checkout_url' })
         toast.error('Could not start checkout. Please try again.')
       }
-    } catch {
+    } catch (err) {
       track(AnalyticsEvent.CheckoutSessionFailed, { failure_reason: 'exception' })
-      toast.error('An error occurred. Please try again.')
+      toast.error(meaningfulMessage(err))
     } finally {
       setLoading(false)
     }

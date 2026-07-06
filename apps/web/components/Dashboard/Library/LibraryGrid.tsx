@@ -5,7 +5,8 @@ import CourseThumbnail, { removeCoursePrefix } from '@components/Objects/Thumbna
 import ConfirmationModal from '@components/Objects/StyledElements/ConfirmationModal/ConfirmationModal'
 import { getUriWithOrg } from '@services/config/config'
 import { FolderSimple } from '@phosphor-icons/react'
-import { FolderMinus } from 'lucide-react'
+import { FolderMinus, GripVertical } from 'lucide-react'
+import { DragDropContext, Droppable, Draggable, type DropResult } from '@hello-pangea/dnd'
 import React from 'react'
 import { useTranslation } from 'react-i18next'
 
@@ -19,6 +20,12 @@ type Props = {
   emptyTitle?: string
   emptyDescription?: string
   emptyAction?: React.ReactNode
+  /** When true (manual sort mode + admin), folders/items can be drag-reordered. */
+  isManual?: boolean
+  /** Persist the reordered folder list (already in the new order). */
+  onReorderFolders?: (_folders: any[]) => void
+  /** Persist the reordered content items (already in the new order). */
+  onReorderItems?: (_items: any[]) => void
 }
 
 function CourseItem({ item, orgslug, onRemove }: { item: any; orgslug: string; onRemove: () => void }) {
@@ -60,9 +67,34 @@ export default function LibraryGrid({
   emptyTitle,
   emptyDescription,
   emptyAction,
+  isManual = false,
+  onReorderFolders,
+  onReorderItems,
 }: Props) {
   const { t } = useTranslation()
   const isEmpty = folders.length === 0 && items.length === 0
+  const dragEnabled = isManual && !!onReorderFolders
+  const itemsDragEnabled = isManual && !!onReorderItems
+
+  const handleDragEnd = (result: DropResult) => {
+    if (!result.destination || !onReorderFolders) return
+    if (result.destination.index === result.source.index) return
+    const reordered = Array.from(folders)
+    const [moved] = reordered.splice(result.source.index, 1)
+    reordered.splice(result.destination.index, 0, moved)
+    onReorderFolders(reordered)
+  }
+
+  const handleItemsDragEnd = (result: DropResult) => {
+    if (!result.destination || !onReorderItems) return
+    if (result.destination.index === result.source.index) return
+    const reordered = Array.from(items)
+    const [moved] = reordered.splice(result.source.index, 1)
+    reordered.splice(result.destination.index, 0, moved)
+    onReorderItems(reordered)
+  }
+
+  const itemKey = (item: any) => item.resource_uuid
 
   if (isEmpty) {
     return (
@@ -82,39 +114,123 @@ export default function LibraryGrid({
       {/* Folders — always on top, in their own compact grid (Drive-like) */}
       {folders.length > 0 && (
         <section>
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
-            {folders.map((folder: any) => (
-              <FolderThumbnail
-                key={folder.folder_uuid}
-                folder={folder}
-                orgslug={orgslug}
-                org_id={org_id}
-                isDashboard={true}
-                onChanged={onChanged}
-              />
-            ))}
-          </div>
+          {dragEnabled ? (
+            <DragDropContext onDragEnd={handleDragEnd}>
+              <Droppable droppableId="folders" direction="horizontal">
+                {(provided) => (
+                  <div
+                    ref={provided.innerRef}
+                    {...provided.droppableProps}
+                    className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3"
+                  >
+                    {folders.map((folder: any, i: number) => (
+                      <Draggable key={folder.folder_uuid} draggableId={folder.folder_uuid} index={i}>
+                        {(dragProvided, snapshot) => (
+                          <div
+                            ref={dragProvided.innerRef}
+                            {...dragProvided.draggableProps}
+                            style={{ ...dragProvided.draggableProps.style }}
+                            className={`relative ${snapshot.isDragging ? 'z-drag-overlay rotate-1 scale-[1.02]' : ''}`}
+                          >
+                            <div
+                              {...dragProvided.dragHandleProps}
+                              className="absolute top-2 left-2 z-30 cursor-grab active:cursor-grabbing text-gray-300 hover:text-gray-500 transition-colors"
+                              title={t('library.sort.drag_to_reorder', { defaultValue: 'Drag to reorder' })}
+                            >
+                              <GripVertical size={16} />
+                            </div>
+                            <FolderThumbnail
+                              folder={folder}
+                              orgslug={orgslug}
+                              org_id={org_id}
+                              isDashboard={true}
+                              onChanged={onChanged}
+                            />
+                          </div>
+                        )}
+                      </Draggable>
+                    ))}
+                    {provided.placeholder}
+                  </div>
+                )}
+              </Droppable>
+            </DragDropContext>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+              {folders.map((folder: any) => (
+                <FolderThumbnail
+                  key={folder.folder_uuid}
+                  folder={folder}
+                  orgslug={orgslug}
+                  org_id={org_id}
+                  isDashboard={true}
+                  onChanged={onChanged}
+                />
+              ))}
+            </div>
+          )}
         </section>
       )}
 
       {/* Resources — a separate grid of full-size cards below */}
       {items.length > 0 && (
         <section>
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 items-start">
-            {items.map((item: any) =>
-              item.resource_type === 'courses' ? (
-                <CourseItem key={item.resource_uuid} item={item} orgslug={orgslug} onRemove={() => onRemoveItem(item.resource_uuid)} />
-              ) : (
-                <LibraryItemCard
-                  key={item.resource_uuid}
-                  item={item}
-                  orgslug={orgslug}
-                  org_id={org_id}
-                  onRemove={() => onRemoveItem(item.resource_uuid)}
-                />
-              )
-            )}
-          </div>
+          {itemsDragEnabled ? (
+            <DragDropContext onDragEnd={handleItemsDragEnd}>
+              <Droppable droppableId="items" direction="horizontal">
+                {(provided) => (
+                  <div
+                    ref={provided.innerRef}
+                    {...provided.droppableProps}
+                    className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 items-start"
+                  >
+                    {items.map((item: any, i: number) => (
+                      <Draggable key={itemKey(item)} draggableId={String(itemKey(item))} index={i}>
+                        {(dragProvided, snapshot) => (
+                          <div
+                            ref={dragProvided.innerRef}
+                            {...dragProvided.draggableProps}
+                            style={{ ...dragProvided.draggableProps.style }}
+                            className={`relative ${snapshot.isDragging ? 'z-drag-overlay rotate-1 scale-[1.02]' : ''}`}
+                          >
+                            <div
+                              {...dragProvided.dragHandleProps}
+                              className="absolute top-2 right-2 z-30 cursor-grab active:cursor-grabbing text-gray-300 hover:text-gray-500 transition-colors bg-white/90 backdrop-blur-sm rounded-full p-1 shadow-md"
+                              title={t('library.sort.drag_to_reorder', { defaultValue: 'Drag to reorder' })}
+                            >
+                              <GripVertical size={16} />
+                            </div>
+                            {item.resource_type === 'courses' ? (
+                              <CourseItem item={item} orgslug={orgslug} onRemove={() => onRemoveItem(item.resource_uuid)} />
+                            ) : (
+                              <LibraryItemCard item={item} orgslug={orgslug} org_id={org_id} onRemove={() => onRemoveItem(item.resource_uuid)} />
+                            )}
+                          </div>
+                        )}
+                      </Draggable>
+                    ))}
+                    {provided.placeholder}
+                  </div>
+                )}
+              </Droppable>
+            </DragDropContext>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 items-start">
+              {items.map((item: any) =>
+                item.resource_type === 'courses' ? (
+                  <CourseItem key={item.resource_uuid} item={item} orgslug={orgslug} onRemove={() => onRemoveItem(item.resource_uuid)} />
+                ) : (
+                  <LibraryItemCard
+                    key={item.resource_uuid}
+                    item={item}
+                    orgslug={orgslug}
+                    org_id={org_id}
+                    onRemove={() => onRemoveItem(item.resource_uuid)}
+                  />
+                )
+              )}
+            </div>
+          )}
         </section>
       )}
     </div>

@@ -86,7 +86,13 @@ class TestFeaturesUtils:
 
     @pytest.mark.asyncio
     async def test_check_limits_with_usage_feature_disabled(self, mock_db_session, mock_org_config):
-        """Test feature limit check when feature is disabled via admin toggle"""
+        """Feature limit check raises 403 when a feature is not enabled.
+
+        Uses the FREE plan so the admin toggle actually disables `ai`. On a paid
+        plan an admin toggle cannot disable an included feature — that guarantee
+        is covered in test_feature_resolve.py.
+        """
+        mock_org_config.config["plan"] = "free"
         mock_org_config.config["admin_toggles"]["ai"] = {"disabled": True}
         mock_db_session.execute.return_value.scalar_one_or_none.return_value = mock_org_config
 

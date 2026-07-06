@@ -14,6 +14,7 @@ import {
   getLEARNHOUSE_DOMAIN_VAL,
 } from '@services/config/config'
 import { isSubdomainOf, isSameHost, isLocalhost as isLocalhostCheck } from '@services/utils/ts/hostUtils'
+import { safeRedirectUrl } from '@services/auth/redirects'
 import { AUTH_EXPIRED_EVENT, AUTH_REFRESHED_EVENT } from '@/lib/auth/events'
 
 // Types matching NextAuth's session structure
@@ -69,7 +70,11 @@ interface SessionCache {
   timestamp: number
 }
 
-const SESSION_CACHE_TTL = 10 * 60 * 1000 // 10 minutes
+// Keep this SHORT — the cached session carries the user's org roles, which the
+// admin feature-gating reads. A long TTL means revoked membership/roles linger
+// in the UI. 2 min balances freshness against redundant /users/session fetches
+// (the authenticated refetch interval is ~1 min).
+const SESSION_CACHE_TTL = 2 * 60 * 1000 // 2 minutes
 const TOKEN_REFRESH_THRESHOLD = 60 * 1000 // 1 minute before expiry
 const AUTH_BROADCAST_CHANNEL = 'learnhouse_auth_sync'
 const OAUTH_STATE_COOKIE = 'LH_oauth_state'
@@ -189,8 +194,13 @@ export function SessionProvider({
   const refreshPromiseRef = useRef<Promise<{ access_token: string; expiry?: number } | null> | null>(null)
   const isRefreshingRef = useRef(false)
   const authFailureHandledRef = useRef(false)
+  // Monotonic auth epoch: bumped on every logout/clear. An in-flight refresh that
+  // resolves AFTER a logout (cross-tab or same-tab) checks this before committing
+  // and aborts, so it can't resurrect a session that was just invalidated.
+  const authEpochRef = useRef(0)
 
   const clearAuthState = useCallback((clearMarker: boolean = true) => {
+    authEpochRef.current++
     setSession(null)
     setAccessToken(null)
     setTokenExpiry(null)
@@ -204,22 +214,39 @@ export function SessionProvider({
 
   // Set up BroadcastChannel for cross-tab communication
   useEffect(() => {
-    if (typeof window !== 'undefined' && 'BroadcastChannel' in window) {
+    if (typeof window === 'undefined' || !('BroadcastChannel' in window)) return
+    try {
       broadcastChannelRef.current = new BroadcastChannel(AUTH_BROADCAST_CHANNEL)
+    } catch (e) {
+      // Some privacy modes throw on BroadcastChannel — degrade gracefully.
+      console.warn('[auth] BroadcastChannel unavailable:', e)
+      return
+    }
 
-      broadcastChannelRef.current.onmessage = (event) => {
-        if (event.data.type === 'LOGOUT') {
-          // Another tab logged out, clear our state too
-          setSession(null)
-          setAccessToken(null)
-          setTokenExpiry(null)
-          setStatus('unauthenticated')
-          sessionCacheRef.current = null
-          clearSessionMarker()
-        } else if (event.data.type === 'LOGIN') {
-          // Another tab logged in, refresh our session
-          refreshSessionInternalRef.current()
+    broadcastChannelRef.current.onmessage = (event) => {
+      if (event.data.type === 'LOGOUT') {
+        // Another tab logged out — clear our state (and the session marker) too.
+        authEpochRef.current++
+        setSession(null)
+        setAccessToken(null)
+        setTokenExpiry(null)
+        setStatus('unauthenticated')
+        sessionCacheRef.current = null
+        clearSessionMarker()
+      } else if (event.data.type === 'LOGIN') {
+        // Another tab logged in. Refresh our session, but dedupe across tabs via
+        // a shared localStorage timestamp so N open tabs don't all fire
+        // /api/auth/refresh at once on a single login.
+        try {
+          const last = Number(localStorage.getItem('lh_xtab_refresh_at') || 0)
+          if (Date.now() - last < 3000) return
+          localStorage.setItem('lh_xtab_refresh_at', String(Date.now()))
+        } catch {
+          /* localStorage unavailable — fall through and just refresh */
         }
+        refreshSessionInternalRef.current().catch((e) =>
+          console.error('[auth] cross-tab session refresh failed:', e),
+        )
       }
     }
 
@@ -260,9 +287,12 @@ export function SessionProvider({
     }
   }, [])
 
-  // Check if a session might exist (marker cookie is set alongside httpOnly auth cookies)
+  // Check if a session might exist (marker cookie is set alongside httpOnly auth cookies).
+  // Match the cookie name EXACTLY — `includes('LH_session')` also matched unrelated
+  // names like `LH_session_backup`, falsely reporting a session.
   const hasSessionMarker = useCallback((): boolean => {
-    return typeof document !== 'undefined' && document.cookie.includes('LH_session')
+    if (typeof document === 'undefined') return false
+    return document.cookie.split('; ').some((c) => c.startsWith('LH_session='))
   }, [])
 
   // Refresh access token using refresh token cookie
@@ -323,10 +353,14 @@ export function SessionProvider({
     token: string,
     expiry?: number
   ): Promise<boolean> => {
+    const epoch = authEpochRef.current
     setAccessToken(token)
     setTokenExpiry(expiry || null)
 
     const sessionData = await fetchUserSession(token, expiry)
+    // A logout/clear that fired during the await bumped the epoch — abort the
+    // write so we don't resurrect a session that was just invalidated.
+    if (authEpochRef.current !== epoch) return false
     if (!sessionData) {
       clearAuthState()
       return false
@@ -378,6 +412,7 @@ export function SessionProvider({
     }
 
     try {
+      const epoch = authEpochRef.current
       // Try to refresh token if we don't have one or it's expiring
       let currentToken = accessToken
       let currentExpiry = tokenExpiry
@@ -398,6 +433,9 @@ export function SessionProvider({
 
       // Fetch session data with the CURRENT expiry (from refresh, not stale state)
       const sessionData = await fetchUserSession(currentToken, currentExpiry || undefined)
+      // A logout/clear during the awaits bumped the epoch — abort the write so we
+      // don't resurrect a session that was just invalidated (cross-tab logout).
+      if (authEpochRef.current !== epoch) return null
       if (sessionData) {
         setSession(sessionData)
         setStatus('authenticated')
@@ -500,7 +538,7 @@ export function SessionProvider({
             broadcastChannelRef.current?.postMessage({ type: 'LOGIN' })
 
             if (redirect) {
-              window.location.href = callbackUrl
+              window.location.href = safeRedirectUrl(callbackUrl)
             }
 
             return { ok: true, error: null, url: callbackUrl, status: 200 }
@@ -583,7 +621,7 @@ export function SessionProvider({
           broadcastChannelRef.current?.postMessage({ type: 'LOGIN' })
 
           if (redirect) {
-            window.location.href = callbackUrl
+            window.location.href = safeRedirectUrl(callbackUrl)
           }
 
           return { ok: true, error: null, url: callbackUrl, status: 200 }
@@ -683,7 +721,10 @@ export function SessionProvider({
       console.error('Logout error:', error)
     }
 
-    // Clear local state regardless of backend response
+    // Clear local state regardless of backend response. Bump the auth epoch first
+    // (like clearAuthState + the cross-tab handler) so an in-flight refresh racing
+    // this same-tab logout can't resurrect the session it's clearing.
+    authEpochRef.current++
     setSession(null)
     setAccessToken(null)
     setTokenExpiry(null)
@@ -708,7 +749,7 @@ export function SessionProvider({
     broadcastChannelRef.current?.postMessage({ type: 'LOGOUT' })
 
     if (redirect) {
-      window.location.href = callbackUrl
+      window.location.href = safeRedirectUrl(callbackUrl)
     }
 
     // If backend logout failed, log a warning (user is still logged out locally)
@@ -722,6 +763,10 @@ export function SessionProvider({
 
     const onAuthExpired = (event: Event) => {
       if (authFailureHandledRef.current) return
+      // Never force a sign-out/redirect for a visitor who was never signed in.
+      // Anonymous users on public content get expected 401s from auth-only
+      // endpoints; only an ACTUAL expired session (marker present) should redirect.
+      if (!hasSessionMarker()) return
       authFailureHandledRef.current = true
 
       const detail = (event as CustomEvent<{ callbackUrl?: string }>).detail
@@ -757,7 +802,7 @@ export function SessionProvider({
       window.removeEventListener(AUTH_EXPIRED_EVENT, onAuthExpired as EventListener)
       window.removeEventListener(AUTH_REFRESHED_EVENT, onAuthRefreshed)
     }
-  }, [applySessionFromToken, handleSignOut])
+  }, [applySessionFromToken, handleSignOut, hasSessionMarker])
 
   const contextValue: AuthContextValue = {
     session,
@@ -808,6 +853,10 @@ export function validateOAuthState(state: string): { valid: boolean; callbackUrl
       return defaultResult
     }
 
+    // Single-use nonce: consume it as soon as it's read, so it can't be replayed
+    // on any subsequent (including failed) validation within its 5-minute TTL.
+    clearOAuthStateCookie()
+
     // Validate CSRF token matches
     if (stateData.csrf !== stored.csrf) {
       console.error('OAuth CSRF token mismatch')
@@ -820,9 +869,6 @@ export function validateOAuthState(state: string): { valid: boolean; callbackUrl
       console.error('OAuth state expired')
       return defaultResult
     }
-
-    // Clear stored state after successful validation
-    clearOAuthStateCookie()
 
     return {
       valid: true,
@@ -935,7 +981,7 @@ export async function signOut(options?: SignOutOptions): Promise<void> {
   }
 
   if (redirect) {
-    window.location.href = callbackUrl
+    window.location.href = safeRedirectUrl(callbackUrl)
   }
 }
 

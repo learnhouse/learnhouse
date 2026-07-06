@@ -6,6 +6,8 @@ import useAdminStatus from '@components/Hooks/useAdminStatus'
 import { toast } from 'react-hot-toast'
 import { AlertTriangle, Trash2, Users, Eraser, Loader2 } from 'lucide-react'
 import ConfirmationModal from '@components/Objects/StyledElements/ConfirmationModal/ConfirmationModal'
+import ToolTip from '@components/Objects/StyledElements/Tooltip/Tooltip'
+import { useTranslation } from 'react-i18next'
 import {
   deleteOrganizationFromBackend,
   removeAllUsersFromOrg,
@@ -13,24 +15,29 @@ import {
 } from '@services/organizations/orgs'
 
 const OrgEditDangerZone: React.FC = () => {
+  const { t } = useTranslation()
   const session = useLHSession() as any
   const access_token = session?.data?.tokens?.access_token
   const org = useOrg() as any
-  const { isAdmin, rights } = useAdminStatus()
+  const { canManageOrg } = useAdminStatus()
 
   const [confirmText, setConfirmText] = React.useState('')
   const [isDeletingOrg, setIsDeletingOrg] = React.useState(false)
   const [isRemovingUsers, setIsRemovingUsers] = React.useState(false)
   const [isWipingContent, setIsWipingContent] = React.useState(false)
 
-  // Only admins (or users with explicit org-delete rights) should ever see this.
-  const canDeleteOrg = rights?.organizations?.action_delete === true || isAdmin === true
+  // Mirror the backend: delete/wipe/remove-all are authorized on admin/maintainer
+  // role membership (rbac "delete"/"update" → authorization_verify_based_on_org_
+  // admin_status), which canManageOrg (organizations.action_update, superadmin
+  // bypass) reflects. The broad `isAdmin` (dashboard access) also lets editors in,
+  // so gating on it showed them a delete button the API would 403 — a dead button.
+  const canDeleteOrg = canManageOrg === true
 
   if (!org?.id) {
     return null
   }
 
-  if (isAdmin === false && !canDeleteOrg) {
+  if (!canManageOrg) {
     return (
       <div className="sm:mx-10 mx-0">
         <div className="bg-white rounded-xl nice-shadow p-6 text-gray-500">
@@ -189,15 +196,17 @@ const OrgEditDangerZone: React.FC = () => {
                     placeholder={org.slug}
                     className="w-full max-w-xs px-3 py-2 border border-red-200 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-red-300"
                   />
-                  <button
-                    type="button"
-                    onClick={handleDeleteOrg}
-                    disabled={confirmText !== org.slug || isDeletingOrg}
-                    className="shrink-0 inline-flex items-center gap-1.5 px-3 py-2 rounded-md text-sm font-bold text-white bg-red-600 hover:bg-red-700 transition disabled:opacity-40 disabled:cursor-not-allowed"
-                  >
-                    {isDeletingOrg ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />}
-                    <span>Delete organization</span>
-                  </button>
+                  <ToolTip content={t('dashboard.organization.danger_zone.delete_org_tooltip', { defaultValue: 'Permanently delete org' })} side="top" slateBlack>
+                    <button
+                      type="button"
+                      onClick={handleDeleteOrg}
+                      disabled={confirmText !== org.slug || isDeletingOrg}
+                      className="shrink-0 inline-flex items-center gap-1.5 px-3 py-2 rounded-md text-sm font-bold text-white bg-red-600 hover:bg-red-700 transition disabled:opacity-40 disabled:cursor-not-allowed"
+                    >
+                      {isDeletingOrg ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />}
+                      <span>Delete organization</span>
+                    </button>
+                  </ToolTip>
                 </div>
               </div>
             </div>

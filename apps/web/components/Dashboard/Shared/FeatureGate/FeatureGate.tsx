@@ -97,7 +97,8 @@ function UpgradeCard({
 }) {
   const meta = getFeatureMeta(feature)
   const Icon = meta.Icon
-  const upgradeUrl = getUpgradeUrl(orgSlug)
+  // Deep-link straight to the Confirm step for the plan this feature needs.
+  const upgradeUrl = getUpgradeUrl(orgSlug, meta.upsellPlan)
   const gradient = PLAN_GRADIENT[meta.upsellPlan] ?? 'from-gray-50/80'
 
   // Impression: fires once per mount everywhere a feature is gated by plan —
@@ -121,7 +122,7 @@ function UpgradeCard({
   )
 
   return (
-    <GateShell>
+    <GateShell variant="upgrade" feature={feature}>
       <GateCard gradient={gradient}>
         <IconBubble>
           <Icon size={32} weight="duotone" className="text-gray-500" />
@@ -180,7 +181,7 @@ function DisabledCard({
   )
 
   return (
-    <GateShell>
+    <GateShell variant="disabled" feature={feature}>
       <GateCard gradient="from-gray-50/80">
         <IconBubble>
           <Icon size={32} weight="duotone" className="text-gray-500" />
@@ -206,9 +207,21 @@ function DisabledCard({
   )
 }
 
-function GateShell({ children }: { children: React.ReactNode }) {
+function GateShell({
+  children,
+  variant,
+  feature,
+}: {
+  children: React.ReactNode
+  variant: 'upgrade' | 'disabled'
+  feature: FeatureKey
+}) {
   return (
-    <div className="flex items-center justify-center min-h-[60vh] w-full p-6 bg-[#f8f8f8]">
+    <div
+      data-feature-gate={variant}
+      data-feature={feature}
+      className="flex items-center justify-center min-h-[60vh] w-full p-6 bg-[#f8f8f8]"
+    >
       <div className="w-full max-w-lg">{children}</div>
     </div>
   )

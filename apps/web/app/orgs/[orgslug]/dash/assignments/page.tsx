@@ -6,7 +6,7 @@ import { getUriWithOrg } from '@services/config/config';
 import { getAssignmentsFromACourse } from '@services/courses/assignments';
 import { getCourseThumbnailMediaDirectory } from '@services/media/media';
 import { getOrgCourses } from '@services/courses/courses';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { queryKeys } from '@/lib/query/keys';
 import {
   ALargeSmall,
@@ -20,6 +20,7 @@ import {
   Inbox,
   Layers2,
   Percent,
+  Plus,
   Search,
   Shield,
   ThumbsUp,
@@ -30,6 +31,7 @@ import {
 import Link from 'next/link';
 import React, { useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next';
+import NewAssignmentModal from './_components/NewAssignmentModal';
 
 type StatusFilter = 'all' | 'published' | 'drafts';
 
@@ -69,6 +71,14 @@ function AssignmentsHome() {
   const session = useLHSession() as any;
   const access_token = session?.data?.tokens?.access_token;
   const org = useOrg() as any;
+  const queryClient = useQueryClient();
+  const [showNewAssignment, setShowNewAssignment] = useState(false);
+
+  const invalidateAssignments = () => {
+    queryClient.invalidateQueries({ queryKey: ['assignments-all'] });
+    queryClient.invalidateQueries({ queryKey: ['assignments'] });
+    queryClient.invalidateQueries({ queryKey: queryKeys.courses.list(org?.slug ?? '') });
+  };
 
   const { data: courses } = useQuery({
     queryKey: queryKeys.courses.list(org?.slug ?? ''),
@@ -155,11 +165,20 @@ function AssignmentsHome() {
   return (
     <div className='flex w-full'>
       <div className='pl-4 sm:pl-10 mr-4 sm:mr-10 tracking-tighter flex flex-col space-y-5 w-full'>
-        <div className='flex flex-col space-y-2 pt-6'>
-          <Breadcrumbs items={[
-            { label: t('common.assignments'), href: '/dash/assignments', icon: <Backpack size={14} /> }
-          ]} />
-          <h1 className="pt-3 flex font-bold text-4xl">{t('dashboard.assignments.home.title')}</h1>
+        <div className='flex items-start justify-between gap-4 pt-6'>
+          <div className='flex flex-col space-y-2'>
+            <Breadcrumbs items={[
+              { label: t('common.assignments'), href: '/dash/assignments', icon: <Backpack size={14} /> }
+            ]} />
+            <h1 className="pt-3 flex font-bold text-4xl">{t('dashboard.assignments.home.title')}</h1>
+          </div>
+          <button
+            onClick={() => setShowNewAssignment(true)}
+            className="flex-none inline-flex items-center gap-1.5 bg-black text-white text-sm font-semibold rounded-lg px-4 py-2.5 nice-shadow hover:bg-gray-800 transition-colors"
+          >
+            <Plus size={16} />
+            {t('dashboard.assignments.home.new_assignment', { defaultValue: 'New Assignment' })}
+          </button>
         </div>
 
         {/* Stats bar */}
@@ -298,7 +317,7 @@ function AssignmentsHome() {
                 ? t('dashboard.assignments.home.empty_filtered')
                 : t('dashboard.assignments.home.empty')}
             </p>
-            {(searchQuery || statusFilter !== 'all' || autoGradedOnly) && (
+            {(searchQuery || statusFilter !== 'all' || autoGradedOnly) ? (
               <button
                 onClick={() => {
                   setSearchQuery('')
@@ -308,6 +327,14 @@ function AssignmentsHome() {
                 className='text-xs text-gray-500 hover:text-gray-700 underline'
               >
                 {t('dashboard.assignments.home.clear_filters')}
+              </button>
+            ) : (
+              <button
+                onClick={() => setShowNewAssignment(true)}
+                className='mt-1 inline-flex items-center gap-1.5 bg-black text-white text-sm font-semibold rounded-lg px-4 py-2 nice-shadow hover:bg-gray-800 transition-colors'
+              >
+                <Plus size={15} />
+                {t('dashboard.assignments.home.new_assignment', { defaultValue: 'New Assignment' })}
               </button>
             )}
           </div>
@@ -337,6 +364,14 @@ function AssignmentsHome() {
           </p>
         )}
       </div>
+
+      <NewAssignmentModal
+        open={showNewAssignment}
+        onClose={() => setShowNewAssignment(false)}
+        courses={courses}
+        org={org}
+        onCreated={invalidateAssignments}
+      />
     </div>
   )
 }
@@ -401,8 +436,8 @@ function CourseCard({
   assignments: any[]
   originalCount: number
   org: any
-  removeAssignmentPrefix: (uuid: string) => string
-  removeCoursePrefix: (uuid: string) => string
+  removeAssignmentPrefix: (_uuid: string) => string
+  removeCoursePrefix: (_uuid: string) => string
 }) {
   const { t } = useTranslation()
 
@@ -463,7 +498,7 @@ function AssignmentCard({
 }: {
   assignment: any
   org: any
-  removeAssignmentPrefix: (uuid: string) => string
+  removeAssignmentPrefix: (_uuid: string) => string
 }) {
   const { t } = useTranslation()
   const gradingBadge = assignment.grading_type ? GRADING_TYPE_BADGE[assignment.grading_type] : null

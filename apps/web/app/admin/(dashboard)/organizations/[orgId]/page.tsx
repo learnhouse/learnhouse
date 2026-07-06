@@ -1373,7 +1373,7 @@ function FeaturesTab({
         <h3 className="text-sm font-medium text-white/60 mb-1">Feature toggles</h3>
         <p className="text-xs text-white/40 mb-4">
           {mode === 'saas'
-            ? 'Override the plan defaults for this organization. Disabled features are hidden from the org dashboard.'
+            ? 'Override the plan defaults for this organization. Disabled features are hidden from the org dashboard. Features marked “In plan” are part of a paid plan and stay available to the org regardless of this toggle.'
             : 'Enable or disable features for this organization.'}
         </p>
         <div className="bg-white/[0.03] border border-white/[0.08] rounded-xl divide-y divide-white/[0.06]">
@@ -1385,7 +1385,16 @@ function FeaturesTab({
               <div key={key} className="px-5 py-4">
                 <div className="flex items-center justify-between gap-4">
                   <div className="min-w-0">
-                    <p className="text-sm text-white/90 font-medium">{label}</p>
+                    <div className="flex items-center gap-2">
+                      <p className="text-sm text-white/90 font-medium">{label}</p>
+                      {/* "Available in the org's plan" — separate from the on/off
+                          toggle. On a paid plan these stay enabled regardless. */}
+                      {mode === 'saas' && resolvedFeatures[key]?.available && (
+                        <span className="text-[10px] font-medium px-1.5 py-0.5 rounded bg-violet-400/10 text-violet-300 border border-violet-400/20">
+                          In plan
+                        </span>
+                      )}
+                    </div>
                     <p className="text-xs text-white/40 mt-0.5">{description}</p>
                   </div>
                   <div className="flex items-center gap-3 shrink-0">

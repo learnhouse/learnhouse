@@ -33,6 +33,22 @@ EMAIL_TRANSLATIONS: dict[str, dict[str, str]] = {
         "account_creation.footer": "Need help? Visit {academy_link} to learn the basics.",
         "academy_link_text": "LearnHouse Academy",
 
+        "org_created.subject": "Your organization {org_name} is ready",
+        "org_created.heading": "{org_name} is live!",
+        "org_created.body": "Your new organization is set up and ready. Invite your team, create your first course, and make it yours.",
+        "org_created.cta": "Open your dashboard",
+        "org_created.footer": "You're receiving this because you created an organization on LearnHouse.",
+
+        "org_deleted.subject": "Your organization {org_name} was deleted",
+        "org_deleted.heading": "{org_name} has been deleted",
+        "org_deleted.body": "Your organization and all of its content have been permanently removed from LearnHouse. If this wasn't you, contact support right away.",
+        "org_deleted.footer": "You're receiving this because you were an admin of this organization.",
+
+        "account_deleted.subject": "Your LearnHouse account was deleted",
+        "account_deleted.heading": "Your account has been deleted",
+        "account_deleted.body": "Your LearnHouse account and personal data have been permanently removed. We're sorry to see you go. If this wasn't you, contact support right away.",
+        "account_deleted.footer": "This is a confirmation that your account was deleted.",
+
         "password_reset.subject": "Reset your password",
         "password_reset.heading": "Reset your password",
         "password_reset.body": "Hi {username}, we received a request to reset your password. Use the code below or click the button.",

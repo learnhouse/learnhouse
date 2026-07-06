@@ -1,6 +1,7 @@
 import { useCourse } from '@components/Contexts/CourseContext'
 import NewActivityModal from '@components/Objects/Modals/Activities/Create/NewActivity'
 import Modal from '@components/Objects/StyledElements/Modal/Modal'
+import ToolTip from '@components/Objects/StyledElements/Tooltip/Tooltip'
 import {
   createActivity,
   createExternalVideoActivity,
@@ -163,12 +164,14 @@ function NewActivityButton(props: NewActivityButtonProps) {
 
   const dialogTitle = selectedView !== 'home' ? (
     <div className="flex items-center gap-3">
-      <button
-        onClick={() => setSelectedView('home')}
-        className="flex items-center justify-center h-7 w-7 rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors"
-      >
-        <ArrowLeft size={18} />
-      </button>
+      <ToolTip content={t('dashboard.courses.structure.actions.back', { defaultValue: 'Go back' })} side="bottom">
+        <button
+          onClick={() => setSelectedView('home')}
+          className="flex items-center justify-center h-7 w-7 rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors"
+        >
+          <ArrowLeft size={18} />
+        </button>
+      </ToolTip>
       <span>{t('dashboard.courses.structure.modals.new_activity.title')}</span>
     </div>
   ) : (

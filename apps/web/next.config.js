@@ -21,6 +21,21 @@ const nextConfig = {
   },
   async headers() {
     return [
+      // Global security headers on every route — clickjacking (X-Frame-Options /
+      // frame-ancestors), MIME sniffing, referrer leakage and HSTS. The embed
+      // override below comes AFTER this block, so it wins for the same header
+      // keys on embed paths only (later source overrides earlier in Next).
+      {
+        source: '/:path*',
+        headers: [
+          { key: 'X-Content-Type-Options', value: 'nosniff' },
+          { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
+          { key: 'X-Frame-Options', value: 'DENY' },
+          { key: 'Content-Security-Policy', value: "frame-ancestors 'none'" },
+          { key: 'Strict-Transport-Security', value: 'max-age=31536000; includeSubDomains' },
+          { key: 'X-Download-Options', value: 'noopen' },
+        ],
+      },
       {
         source: '/embed/:orgslug/course/:courseuuid/activity/:path*',
         headers: [

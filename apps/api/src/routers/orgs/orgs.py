@@ -13,6 +13,7 @@ from src.services.orgs.users import (
     get_list_of_invited_users,
     get_organization_users,
     invite_batch_users,
+    leave_org,
     remove_all_users_from_org,
     remove_batch_users_from_org,
     remove_invited_user,
@@ -46,6 +47,7 @@ from src.services.orgs.orgs import (
     update_org_communities_config,
     update_org_payments_config,
     update_org_folders_config,
+    update_org_folders_sort_config,
     update_org_courses_config,
     update_org_podcasts_config,
     update_org_boards_config,
@@ -402,6 +404,30 @@ async def api_remove_user_from_org(
     )
 
 
+@router.delete(
+    "/{org_id}/leave",
+    summary="Leave an organization",
+    description=(
+        "Remove the CURRENT (authenticated) user's own membership in the org — "
+        "self-service, no admin rights required. The last remaining admin cannot "
+        "leave (they must transfer ownership or delete the org)."
+    ),
+    responses={
+        200: {"description": "Left the organization."},
+        400: {"description": "You are the last admin"},
+        401: {"description": "Not authenticated"},
+        404: {"description": "Organization not found or you are not a member"},
+    },
+)
+async def api_leave_org(
+    request: Request,
+    org_id: int,
+    current_user: PublicUser = Depends(get_current_user),
+    db_session: AsyncSession = Depends(get_db_session),
+):
+    return await leave_org(request, org_id, db_session, current_user)
+
+
 # Config related routes
 @router.put(
     "/{org_id}/signup_mechanism",
@@ -562,6 +588,33 @@ async def api_update_org_folders_config(
     """
     return await update_org_folders_config(
         request, folders_enabled, org_id, current_user, db_session
+    )
+
+
+@feature_config_router.put(
+    "/{org_id}/config/folders-sort",
+    summary="Update organization library folders sort mode",
+    description="Set the library folder ordering mode (name_asc | name_desc | newest | oldest | manual). Admin only.",
+    responses={
+        200: {"description": "Folders sort mode updated."},
+        401: {"description": "Not authenticated"},
+        403: {"description": "Caller is not an organization administrator"},
+        404: {"description": "Organization not found"},
+        422: {"description": "Invalid sort mode"},
+    },
+)
+async def api_update_org_folders_sort_config(
+    request: Request,
+    org_id: int,
+    sort_mode: str,
+    current_user: PublicUser = Depends(get_current_user),
+    db_session: AsyncSession = Depends(get_db_session),
+):
+    """
+    Update organization library folders sort mode (admin-only)
+    """
+    return await update_org_folders_sort_config(
+        request, sort_mode, org_id, current_user, db_session
     )
 
 

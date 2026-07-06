@@ -56,7 +56,10 @@ const PRO_HIGHLIGHTS = [
 export default function UpgradeModal({ open, onClose }: UpgradeModalProps) {
   const { t } = useTranslation()
   const org = useOrg() as any
-  const upgradeUrl = getUpgradeUrl(org?.slug || 'default')
+  const orgSlug = org?.slug || 'default'
+  // Per-plan deep links → the billing switch wizard opens at Confirm for that plan.
+  const standardUrl = getUpgradeUrl(orgSlug, 'standard')
+  const proUrl = getUpgradeUrl(orgSlug, 'pro')
   const currentPlan = usePlan()
   const { track } = useLHAnalytics('dashboard')
 
@@ -145,7 +148,7 @@ export default function UpgradeModal({ open, onClose }: UpgradeModalProps) {
                       </div>
 
                       <a
-                        href={upgradeUrl || '#'}
+                        href={standardUrl || '#'}
                         target="_blank"
                         rel="noopener noreferrer"
                         onClick={() => track(AnalyticsEvent.UpgradePlanSelected, { selected_plan: 'standard' })}
@@ -192,7 +195,7 @@ export default function UpgradeModal({ open, onClose }: UpgradeModalProps) {
                       </div>
 
                       <a
-                        href={upgradeUrl || '#'}
+                        href={proUrl || '#'}
                         target="_blank"
                         rel="noopener noreferrer"
                         onClick={() => track(AnalyticsEvent.UpgradePlanSelected, { selected_plan: 'pro' })}

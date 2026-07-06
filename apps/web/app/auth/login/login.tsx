@@ -1,22 +1,21 @@
 'use client'
 import FormLayout, {
   FormField,
-  FormLabelAndMessage,
-  Input,
 } from '@components/Objects/StyledElements/Form/Form'
 import * as Form from '@radix-ui/react-form'
 import { useFormik } from 'formik'
 import React, { useState, useEffect } from 'react'
-import { AlertTriangle, Lock, Mail, Shield, X, Clock } from 'lucide-react'
+import { AlertTriangle, Info, Lock, Mail, Shield, X, Clock } from 'lucide-react'
 import { checkSSOEnabled, redirectToSSOLogin } from '@services/auth/sso'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { useAuth } from '@components/Contexts/AuthContext'
-import { getLEARNHOUSE_TOP_DOMAIN_VAL, getDeploymentMode } from '@services/config/config'
+import { getLEARNHOUSE_TOP_DOMAIN_VAL, getDeploymentMode, isOnCustomDomain } from '@services/config/config'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
 import { useTranslation } from 'react-i18next'
 import { resendVerificationEmail } from '@services/auth/auth'
 import AuthLayout from '@components/Auth/AuthLayout'
+import TurnstileWidget, { useTurnstileRequired, verifyTurnstileToken, type TurnstileWidgetHandle } from '@components/Auth/TurnstileWidget'
 import { useLHAnalytics, AnalyticsEvent } from '@services/analytics'
 
 interface LoginClientProps {
@@ -30,8 +29,20 @@ const LoginClient = (props: LoginClientProps) => {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [ssoEnabled, setSsoEnabled] = useState(false)
   const [ssoLoading, setSsoLoading] = useState(false)
-  const _router = useRouter();
-  const _session = useLHSession() as any;
+  const [turnstileToken, setTurnstileToken] = useState<string | null>(null)
+  const turnstileRef = React.useRef<TurnstileWidgetHandle>(null)
+  const turnstileRequired = useTurnstileRequired()
+  const router = useRouter();
+  const session = useLHSession() as any;
+  const isAuthenticated = session?.status === 'authenticated'
+
+  // A signed-in user has nothing to do on /login → bounce to the hub. The proxy
+  // does this best-effort, but pages must self-handle it too (mirrors signup.tsx).
+  // Guarded by !isSubmitting so a FRESH login (which flips the session to
+  // authenticated) doesn't race the onSubmit's own post-login navigation.
+  useEffect(() => {
+    if (isAuthenticated && !isSubmitting) router.replace('/home')
+  }, [isAuthenticated, isSubmitting, router])
 
   // Error state with type information
   const [error, setError] = useState('')
@@ -42,6 +53,16 @@ const LoginClient = (props: LoginClientProps) => {
   const [showErrorModal, setShowErrorModal] = useState(false)
   const [retryAfter, setRetryAfter] = useState<number | null>(null)
 
+  // Honor a post-login redirect via ?next / ?redirect, sanitized to an
+  // internal same-origin path (no open-redirect), defaulting to /home.
+  // Forward it through the cross-domain /redirect_from_auth handoff.
+  const buildCallbackUrl = () => {
+    const params = new URLSearchParams(window.location.search)
+    const raw = params.get('next') ?? params.get('redirect')
+    const dest = raw && /^\/(?!\/)/.test(raw) ? raw : '/home'
+    return `${window.location.origin}/redirect_from_auth?next=${encodeURIComponent(dest)}`
+  }
+
   const handleGoogleSignIn = () => {
     track(AnalyticsEvent.LoginGoogleClicked)
     // Store org context in cookies before OAuth redirect
@@ -50,12 +71,15 @@ const LoginClient = (props: LoginClientProps) => {
       const isSecure = window.location.protocol === 'https:';
       const secureAttr = isSecure ? '; secure' : '';
       const baseAttributes = `; path=/; SameSite=Lax${secureAttr}`;
-      const domainAttr = topDomain === 'localhost' ? '' : `; domain=.${topDomain}`;
+      // Host-only on custom domains: a `.{platformTopDomain}` cookie can't be set
+      // from learn.acme.org (Domain not a suffix of host) → the browser drops it
+      // and the callback loses org context. Omit the Domain there.
+      const domainAttr = (topDomain === 'localhost' || isOnCustomDomain()) ? '' : `; domain=.${topDomain}`;
       document.cookie = `LH_oauth_orgslug=${props.org.slug}${baseAttributes}${domainAttr}`;
       document.cookie = `LH_oauth_org_id=${props.org.id}${baseAttributes}${domainAttr}`;
     }
     // Use absolute URL with current origin for custom domain support
-    signIn('google', { callbackUrl: `${window.location.origin}/redirect_from_auth` });
+    signIn('google', { callbackUrl: buildCallbackUrl() });
   };
 
   // Check if SSO is enabled for this organization (requires enterprise plan)
@@ -113,11 +137,13 @@ const LoginClient = (props: LoginClientProps) => {
   }
 
   const handleResendVerification = async () => {
-    if (!unverifiedEmail || !props.org?.id) return
+    // org?.id is undefined on the org-less apex — the backend resends by email
+    // without an org, so we only require the email here.
+    if (!unverifiedEmail) return
 
     setIsResendingVerification(true)
     try {
-      const res = await resendVerificationEmail(unverifiedEmail, props.org.id)
+      const res = await resendVerificationEmail(unverifiedEmail, props.org?.id)
       if (res.success) {
         setVerificationResent(true)
       } else {
@@ -157,15 +183,45 @@ const LoginClient = (props: LoginClientProps) => {
 
       track(AnalyticsEvent.LoginSubmitted, { has_sso_enabled: ssoEnabled })
 
-      // Use absolute URL with current origin for custom domain support
-      const callbackUrl = `${window.location.origin}/redirect_from_auth`;
+      // Bot check before attempting credentials (blocks credential-stuffing).
+      let botOk = false
+      try {
+        botOk = await verifyTurnstileToken(turnstileToken)
+      } catch {
+        botOk = false
+      }
+      if (!botOk) {
+        setError(t('auth.turnstile_failed', { defaultValue: 'Verification failed. Please try again.' }))
+        setSubmitting(false)
+        setIsSubmitting(false)
+        turnstileRef.current?.reset()
+        return
+      }
 
-      const res = await signIn('credentials', {
-        redirect: false,
-        email: values.email,
-        password: values.password,
-        callbackUrl
-      });
+      // Use absolute URL with current origin for custom domain support;
+      // forwards a sanitized ?next so the post-exchange landing honors it.
+      const callbackUrl = buildCallbackUrl();
+
+      let res: any = null
+      try {
+        res = await signIn('credentials', {
+          redirect: false,
+          email: values.email,
+          password: values.password,
+          callbackUrl
+        });
+      } catch {
+        // Transport-level failure (offline, DNS/TLS): next-auth THROWS rather than
+        // returning res.error. Without this, isSubmitting stays true and the submit
+        // button is permanently disabled with a spinning loader until a reload.
+        track(AnalyticsEvent.LoginFailed, { method: 'credentials', error_type: 'exception' })
+        setError(t('auth.wrong_email_password'))
+        setShowErrorModal(true)
+        setSubmitting(false)
+        setIsSubmitting(false)
+        turnstileRef.current?.reset()
+        return
+      }
 
       if (res && res.error) {
         let loginErrorType: string | null = null
@@ -208,6 +264,8 @@ const LoginClient = (props: LoginClientProps) => {
         track(AnalyticsEvent.LoginFailed, { method: 'credentials', error_type: loginErrorType })
         setShowErrorModal(true);
         setIsSubmitting(false);
+        // Single-use token was consumed by this attempt — refresh for the retry.
+        turnstileRef.current?.reset();
       } else {
         track(AnalyticsEvent.LoginSucceeded, { method: 'credentials' })
         // First signIn already authenticated and set cookies — just redirect
@@ -217,16 +275,23 @@ const LoginClient = (props: LoginClientProps) => {
   })
 
   return (
-    <AuthLayout org={props.org} welcomeText={t('auth.login_to')}>
+    <AuthLayout
+      org={props.org}
+      welcomeText={t('auth.login_to')}
+      title={t('auth.image_title_login', { defaultValue: 'Welcome back to LearnHouse.' })}
+      subtitle={t('auth.image_subtitle_login', {
+        defaultValue: 'Pick up where you left off — your courses, students, and tools are waiting.',
+      })}
+    >
         {/* Error Top Bar */}
         {showErrorModal && (
           <div className={`
-            w-full px-4 py-3 flex items-center justify-between gap-3 animate-in slide-in-from-top duration-200
-            ${errorType === 'EMAIL_NOT_VERIFIED' && !verificationResent ? 'bg-amber-500 text-white' : ''}
-            ${verificationResent ? 'bg-green-500 text-white' : ''}
-            ${errorType === 'ACCOUNT_LOCKED' ? 'bg-red-500 text-white' : ''}
-            ${errorType === 'RATE_LIMITED' ? 'bg-orange-500 text-white' : ''}
-            ${error && !verificationResent && errorType !== 'EMAIL_NOT_VERIFIED' && errorType !== 'ACCOUNT_LOCKED' && errorType !== 'RATE_LIMITED' ? 'bg-red-500 text-white' : ''}
+            mx-6 md:mx-12 lg:mx-20 mt-6 rounded-xl border px-4 py-3 flex items-center justify-between gap-3 animate-in slide-in-from-top duration-200
+            ${errorType === 'EMAIL_NOT_VERIFIED' && !verificationResent ? 'bg-amber-50 text-amber-700 border-amber-100' : ''}
+            ${verificationResent ? 'bg-green-50 text-green-700 border-green-100' : ''}
+            ${errorType === 'ACCOUNT_LOCKED' ? 'bg-red-50 text-red-700 border-red-100' : ''}
+            ${errorType === 'RATE_LIMITED' ? 'bg-orange-50 text-orange-700 border-orange-100' : ''}
+            ${error && !verificationResent && errorType !== 'EMAIL_NOT_VERIFIED' && errorType !== 'ACCOUNT_LOCKED' && errorType !== 'RATE_LIMITED' ? 'bg-red-50 text-red-700 border-red-100' : ''}
           `}>
             <div className="flex items-center gap-3 flex-1 min-w-0">
               {errorType === 'EMAIL_NOT_VERIFIED' && !verificationResent && <Mail size={18} className="shrink-0" />}
@@ -275,114 +340,135 @@ const LoginClient = (props: LoginClientProps) => {
                 setShowErrorModal(false)
                 if (verificationResent) setVerificationResent(false)
               }}
-              className="p-1 hover:bg-white/20 rounded transition-colors shrink-0"
+              className="p-1 rounded-lg hover:bg-black/5 transition-colors shrink-0 opacity-60 hover:opacity-100"
             >
               <X size={18} />
             </button>
           </div>
         )}
 
-        <div className="flex-1 flex flex-row">
-        <div className="m-auto w-full max-w-sm px-6 py-8 sm:py-0">
-          {/* Header */}
-          <div className="mb-8">
-            <h1 className="text-2xl font-bold text-gray-900">{t('auth.welcome_back')}</h1>
-            <p className="text-gray-500 mt-1">{t('auth.enter_credentials')}</p>
-          </div>
+        <div className="flex-1 flex items-center justify-center px-6 md:px-12 lg:px-20">
+          <div className="w-full max-w-[420px] py-10">
+            {/* Header */}
+            <h1 className="text-[28px] md:text-[32px] font-black text-black tracking-tight leading-tight">{t('auth.welcome_back')}</h1>
+            <p className="mt-2 text-black/45 text-[15px] font-medium">{t('auth.enter_credentials')}</p>
 
-          {/* Login Form Card */}
-          <div className="bg-white rounded-xl p-6 nice-shadow">
-            <FormLayout onSubmit={formik.handleSubmit}>
-              <FormField name="email">
-                <FormLabelAndMessage
-                  label={t('auth.email')}
-                  message={formik.touched.email ? formik.errors.email : undefined}
+            <div className="mt-8">
+              <FormLayout onSubmit={formik.handleSubmit}>
+                <FormField name="email">
+                  <div className="flex items-center space-x-2 mb-1.5">
+                    <Form.Label className="grow text-[13px] font-semibold text-black/70">{t('auth.email')}</Form.Label>
+                    {formik.touched.email && formik.errors.email && (
+                      <span className="text-red-500 text-xs flex items-center space-x-1">
+                        <Info size={11} />
+                        <span>{formik.errors.email}</span>
+                      </span>
+                    )}
+                  </div>
+                  <Form.Control asChild>
+                    <input
+                      onChange={formik.handleChange}
+                      onBlur={formik.handleBlur}
+                      value={formik.values.email}
+                      type="email"
+                      className="box-border w-full bg-neutral-50 text-black rounded-lg px-4 border border-neutral-200 inline-flex h-[44px] appearance-none items-center focus:outline-none focus:ring-2 focus:ring-black/5 focus:border-neutral-400 transition-all placeholder:text-black/25 text-sm"
+                    />
+                  </Form.Control>
+                </FormField>
+
+                <FormField name="password">
+                  <div className="flex items-center space-x-2 mb-1.5">
+                    <Form.Label className="grow text-[13px] font-semibold text-black/70">{t('auth.password')}</Form.Label>
+                    {formik.touched.password && formik.errors.password && (
+                      <span className="text-red-500 text-xs flex items-center space-x-1">
+                        <Info size={11} />
+                        <span>{formik.errors.password}</span>
+                      </span>
+                    )}
+                    <Link
+                      href="/forgot"
+                      className="text-xs text-black/60 hover:text-black font-semibold transition-colors"
+                    >
+                      {t('auth.forgot_password')}
+                    </Link>
+                  </div>
+                  <Form.Control asChild>
+                    <input
+                      onChange={formik.handleChange}
+                      onBlur={formik.handleBlur}
+                      value={formik.values.password}
+                      type="password"
+                      autoComplete="current-password"
+                      className="box-border w-full bg-neutral-50 text-black rounded-lg px-4 border border-neutral-200 inline-flex h-[44px] appearance-none items-center focus:outline-none focus:ring-2 focus:ring-black/5 focus:border-neutral-400 transition-all placeholder:text-black/25 text-sm"
+                    />
+                  </Form.Control>
+                </FormField>
+
+                <TurnstileWidget
+                  ref={turnstileRef}
+                  onToken={setTurnstileToken}
+                  className="mt-2 flex justify-center"
                 />
-                <Form.Control asChild>
-                  <Input
-                    onChange={formik.handleChange}
-                    onBlur={formik.handleBlur}
-                    value={formik.values.email}
-                    type="email"
-                  />
-                </Form.Control>
-              </FormField>
 
-              <FormField name="password">
-                <FormLabelAndMessage
-                  label={t('auth.password')}
-                  message={formik.touched.password ? formik.errors.password : undefined}
-                />
-                <Form.Control asChild>
-                  <Input
-                    onChange={formik.handleChange}
-                    onBlur={formik.handleBlur}
-                    value={formik.values.password}
-                    type="password"
-                    autoComplete="current-password"
-                  />
-                </Form.Control>
-              </FormField>
-
-              <div className="flex justify-end">
-                <Link
-                  href="/forgot"
-                  className="text-xs text-gray-500 hover:text-gray-700 transition-colors"
-                >
-                  {t('auth.forgot_password')}
-                </Link>
-              </div>
-
-              <div className="pt-2">
                 <Form.Submit asChild>
-                  <button className="w-full bg-black text-white font-semibold text-center py-2.5 rounded-lg hover:bg-gray-800 transition-colors">
-                    {isSubmitting ? t('common.loading') : t('auth.login')}
+                  <button
+                    disabled={isSubmitting || (turnstileRequired && !turnstileToken)}
+                    className="box-border w-full inline-flex h-[44px] rounded-lg items-center justify-center bg-black hover:bg-black/85 text-white px-[15px] font-bold text-[14px] leading-none mt-2 transition-all disabled:opacity-50"
+                  >
+                    {isSubmitting ? (
+                      <span className="flex items-center space-x-2">
+                        <span className="w-4 h-4 border-t-2 border-white rounded-full animate-spin" />
+                        <span>{t('common.loading')}</span>
+                      </span>
+                    ) : (
+                      t('auth.login')
+                    )}
                   </button>
                 </Form.Submit>
-              </div>
-            </FormLayout>
+              </FormLayout>
 
-            {/* Divider */}
-            <div className="relative my-6">
-              <div className="absolute inset-0 flex items-center">
-                <div className="w-full border-t border-gray-200"></div>
+              {/* Divider */}
+              <div className="relative my-6">
+                <div className="absolute inset-0 flex items-center">
+                  <div className="w-full border-t border-neutral-200" />
+                </div>
+                <div className="relative flex justify-center text-sm">
+                  <span className="px-3 text-black/30 bg-white text-xs font-medium">{t('common.or')}</span>
+                </div>
               </div>
-              <div className="relative flex justify-center text-sm">
-                <span className="px-3 bg-white text-gray-400">{t('common.or')}</span>
-              </div>
-            </div>
 
-            {/* Social & SSO Buttons */}
-            <div className="space-y-2.5">
-              <button
-                onClick={handleGoogleSignIn}
-                className="flex items-center justify-center gap-2 w-full py-2.5 bg-white border border-gray-200 text-gray-700 font-medium rounded-lg hover:bg-gray-50 transition-colors"
-              >
-                <img src="https://fonts.gstatic.com/s/i/productlogos/googleg/v6/24px.svg" alt="" className="w-4 h-4" />
-                <span>{t('auth.sign_in_with_google')}</span>
-              </button>
-
-              {ssoEnabled && (
+              {/* Social & SSO Buttons */}
+              <div className="space-y-2.5">
                 <button
-                  onClick={handleSSOLogin}
-                  disabled={ssoLoading}
-                  className="flex items-center justify-center gap-2 w-full py-2.5 bg-indigo-600 text-white font-medium rounded-lg hover:bg-indigo-700 transition-colors disabled:opacity-50"
+                  onClick={handleGoogleSignIn}
+                  disabled={isSubmitting}
+                  className="flex justify-center items-center w-full bg-white hover:bg-neutral-50 text-black space-x-3 font-medium p-3 rounded-lg border border-neutral-200 transition-all text-sm disabled:opacity-50"
                 >
-                  <Shield size={16} />
-                  <span>{ssoLoading ? t('common.loading') : t('auth.sign_in_with_sso')}</span>
+                  <img src="https://fonts.gstatic.com/s/i/productlogos/googleg/v6/24px.svg" alt="" className="w-4 h-4" />
+                  <span>{t('auth.sign_in_with_google')}</span>
                 </button>
-              )}
+
+                {ssoEnabled && (
+                  <button
+                    onClick={handleSSOLogin}
+                    disabled={ssoLoading}
+                    className="flex justify-center items-center w-full bg-white hover:bg-neutral-50 text-black space-x-3 font-medium p-3 rounded-lg border border-neutral-200 transition-all text-sm disabled:opacity-50"
+                  >
+                    <Shield size={16} />
+                    <span>{ssoLoading ? t('common.loading') : t('auth.sign_in_with_sso')}</span>
+                  </button>
+                )}
+              </div>
+
+              {/* Sign Up Link */}
+              <p className="text-center text-sm text-black/35 mt-6">
+                {t('auth.no_account')}{' '}
+                <Link href="/signup" className="text-black font-semibold hover:underline">
+                  {t('auth.sign_up')}
+                </Link>
+              </p>
             </div>
           </div>
-
-          {/* Sign Up Link */}
-          <p className="text-center text-gray-600 mt-6">
-            {t('auth.no_account')}{' '}
-            <Link href="/signup" className="font-semibold text-gray-900 hover:underline">
-              {t('auth.sign_up')}
-            </Link>
-          </p>
-        </div>
         </div>
     </AuthLayout>
   )

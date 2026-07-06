@@ -12,11 +12,15 @@
 
 import { getDeploymentMode } from '@services/config/config'
 
-export type PlanLevel = 'free' | 'personal' | 'family' | 'standard' | 'pro' | 'enterprise' | 'oss'
+// Plan ids MUST match the backend (src/security/features_utils/plans.py): the
+// family tier is 'personal-family', not 'family'. Using 'family' broke
+// PLAN_HIERARCHY.indexOf() (→ -1) so planMeetsRequirement() denied every gated
+// feature for those orgs.
+export type PlanLevel = 'free' | 'personal' | 'personal-family' | 'standard' | 'pro' | 'enterprise' | 'oss'
 
 // Plan hierarchy for SaaS mode (lower index = lower tier).
 // 'oss' is kept as a display-only type value (not in hierarchy) for OSS mode label rendering.
-export const PLAN_HIERARCHY: PlanLevel[] = ['free', 'personal', 'family', 'standard', 'pro', 'enterprise']
+export const PLAN_HIERARCHY: PlanLevel[] = ['free', 'personal', 'personal-family', 'standard', 'pro', 'enterprise']
 
 // Features blocked in OSS mode — require EE or SaaS/enterprise plan
 const OSS_BLOCKED_FEATURES = new Set(['sso', 'audit_logs', 'payments', 'analytics_advanced', 'scorm'])

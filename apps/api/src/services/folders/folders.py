@@ -14,8 +14,10 @@ from src.db.folders.folders import (
     FolderCreate,
     FolderRead,
     FolderUpdate,
+    FolderUpdateOrder,
 )
 from src.db.folders.folder_content import FolderContent
+from src.db.organization_config import OrganizationConfig
 from src.db.resource_authors import (
     ResourceAuthor,
     ResourceAuthorshipEnum,
@@ -24,6 +26,54 @@ from src.db.resource_authors import (
 from src.security.auth import resolve_acting_user_id
 from src.security.rbac import check_resource_access, AccessAction
 from src.services.webhooks.dispatch import dispatch_webhooks
+
+
+# ----------------------------------------------------------------------------
+# Folder ordering — org-scoped, admin-controlled sort mode
+# ----------------------------------------------------------------------------
+
+VALID_SORT_MODES = ("name_asc", "name_desc", "newest", "oldest", "manual")
+
+
+async def _get_folders_sort_mode(db_session: AsyncSession, org_id: int) -> str:
+    """Read the org's library folders.sort_mode from organization_config.
+
+    Stored at config["general"]["folders"]["sort_mode"]. Falls back to the v1
+    features.folders location, then to the deterministic default "name_asc".
+    """
+    org_config = (
+        await db_session.execute(
+            select(OrganizationConfig).where(OrganizationConfig.org_id == org_id)
+        )
+    ).scalars().first()
+    if org_config is None:
+        return "name_asc"
+
+    config = org_config.config or {}
+    mode = (
+        (config.get("general", {}) or {}).get("folders", {}) or {}
+    ).get("sort_mode")
+    if not mode:
+        mode = (
+            (config.get("features", {}) or {}).get("folders", {}) or {}
+        ).get("sort_mode")
+    if mode not in VALID_SORT_MODES:
+        return "name_asc"
+    return mode
+
+
+def _apply_folder_sort(statement, sort_mode: str):
+    """Append the ORDER BY for the given sort mode to a Folder select."""
+    if sort_mode == "name_desc":
+        return statement.order_by(Folder.name.desc())
+    if sort_mode == "newest":
+        return statement.order_by(Folder.creation_date.desc())
+    if sort_mode == "oldest":
+        return statement.order_by(Folder.creation_date.asc())
+    if sort_mode == "manual":
+        return statement.order_by(Folder.order.asc(), Folder.id.asc())
+    # name_asc (default)
+    return statement.order_by(Folder.name.asc())
 
 
 # ----------------------------------------------------------------------------
@@ -139,11 +189,11 @@ async def _folder_to_read(
     total_items = int(sub_count) + int(content_count)
 
     if with_children:
-        sub_rows = (
-            await db_session.execute(
-                select(Folder).where(Folder.parent_folder_id == folder.id)
-            )
-        ).scalars().all()
+        sort_mode = await _get_folders_sort_mode(db_session, folder.org_id)
+        sub_stmt = _apply_folder_sort(
+            select(Folder).where(Folder.parent_folder_id == folder.id), sort_mode
+        )
+        sub_rows = (await db_session.execute(sub_stmt)).scalars().all()
         for sub in sub_rows:
             if not include_private and not sub.public:
                 continue
@@ -426,6 +476,8 @@ async def get_folders(
     if anonymous:
         statement = statement.where(Folder.public == True)  # noqa: E712
 
+    sort_mode = await _get_folders_sort_mode(db_session, int(org_id))
+    statement = _apply_folder_sort(statement, sort_mode)
     statement = statement.offset((page - 1) * limit).limit(limit)
     folders = (await db_session.execute(statement)).scalars().all()
 
@@ -433,6 +485,128 @@ async def get_folders(
         await _folder_to_read(db_session, folder, include_private=not anonymous)
         for folder in folders
     ]
+
+
+async def reorder_folders(
+    request: Request,
+    org_id: int,
+    order: FolderUpdateOrder,
+    current_user: PublicUser,
+    db_session: AsyncSession,
+    parent_folder_uuid: Optional[str] = None,
+) -> dict:
+    """Persist the manual (admin drag) ordering of sibling folders.
+
+    Scoped to a single parent: pass parent_folder_uuid to reorder a folder's
+    direct sub-folders, or omit it to reorder root folders. Only reindexes the
+    rows matching that scope so a drag in one subfolder never reshuffles
+    siblings elsewhere. Position is derived from the array index.
+    """
+    from src.db.organizations import Organization
+    from src.services.orgs.orgs import rbac_check
+
+    org = (
+        await db_session.execute(select(Organization).where(Organization.id == org_id))
+    ).scalars().first()
+    if not org:
+        raise HTTPException(status_code=404, detail="Organization not found")
+
+    # Admin gate (403 for non-admins), same helper the org config writes use.
+    await rbac_check(request, org.org_uuid, current_user, "update", db_session)
+
+    parent_id = None
+    if parent_folder_uuid:
+        parent = (
+            await db_session.execute(
+                select(Folder).where(Folder.folder_uuid == parent_folder_uuid)
+            )
+        ).scalars().first()
+        if not parent:
+            raise HTTPException(status_code=404, detail="Parent folder not found")
+        parent_id = parent.id
+
+    folders = (
+        await db_session.execute(
+            select(Folder).where(
+                Folder.org_id == org_id,
+                Folder.parent_folder_id == parent_id,
+            )
+        )
+    ).scalars().all()
+    folders_by_id = {folder.id: folder for folder in folders}
+
+    for fo in order.folder_order_by_ids:
+        if fo.folder_id not in folders_by_id:
+            raise HTTPException(
+                status_code=400,
+                detail=f"Folder {fo.folder_id} is not in this organization/parent scope",
+            )
+
+    for index, fo in enumerate(order.folder_order_by_ids):
+        folder = folders_by_id[fo.folder_id]
+        folder.order = index
+        db_session.add(folder)
+
+    await db_session.commit()
+
+    return {"detail": "Folder order updated"}
+
+
+async def reorder_folder_content(
+    request: Request,
+    folder_uuid: str,
+    resource_uuids: list[str],
+    current_user: PublicUser,
+    db_session: AsyncSession,
+) -> dict:
+    """Persist the manual (admin drag) ordering of a folder's CONTENT items
+    (courses, media, …). Position is derived from the array index — matching how
+    `_resolve_folder_content` sorts items by FolderContent.position. Admin only.
+    """
+    from src.db.organizations import Organization
+    from src.services.orgs.orgs import rbac_check
+
+    folder = (
+        await db_session.execute(
+            select(Folder).where(Folder.folder_uuid == folder_uuid)
+        )
+    ).scalars().first()
+    if not folder:
+        raise HTTPException(status_code=404, detail="Folder not found")
+
+    org = (
+        await db_session.execute(
+            select(Organization).where(Organization.id == folder.org_id)
+        )
+    ).scalars().first()
+    if not org:
+        raise HTTPException(status_code=404, detail="Organization not found")
+
+    # Admin gate (403 for non-admins), same helper folder reordering uses.
+    await rbac_check(request, org.org_uuid, current_user, "update", db_session)
+
+    rows = (
+        await db_session.execute(
+            select(FolderContent).where(FolderContent.folder_id == folder.id)
+        )
+    ).scalars().all()
+    rows_by_uuid = {row.resource_uuid: row for row in rows}
+
+    for resource_uuid in resource_uuids:
+        if resource_uuid not in rows_by_uuid:
+            raise HTTPException(
+                status_code=400,
+                detail=f"Resource {resource_uuid} is not in this folder",
+            )
+
+    for index, resource_uuid in enumerate(resource_uuids):
+        row = rows_by_uuid[resource_uuid]
+        row.position = index
+        db_session.add(row)
+
+    await db_session.commit()
+
+    return {"detail": "Folder content order updated"}
 
 
 # ----------------------------------------------------------------------------

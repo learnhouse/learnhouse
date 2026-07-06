@@ -1928,6 +1928,12 @@ async def change_user_role(
     except Exception:
         pass
 
+    # NOTE: no Loops "became admin" sync here on purpose. API tokens can NEVER
+    # grant Admin (enforced by _check_token_can_assign_role above, which 403s on
+    # ADMIN/MAINTAINER targets), so this path cannot produce a new org admin.
+    # Admin promotions are synced from the interactive flows (orgs.create_org and
+    # orgs.users.update_user_role).
+
     return {
         "user_id": user_id,
         "role_id": new_role_id,
