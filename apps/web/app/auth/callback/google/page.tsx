@@ -5,7 +5,8 @@ import { useSearchParams, useRouter } from 'next/navigation'
 import { Loader2, AlertTriangle, ShieldAlert } from 'lucide-react'
 import Link from 'next/link'
 import { useAuth, validateOAuthState } from '@components/Contexts/AuthContext'
-import { getLEARNHOUSE_DOMAIN_VAL } from '@services/config/config'
+import { getLEARNHOUSE_DOMAIN_VAL, getLEARNHOUSE_TOP_DOMAIN_VAL, getAPIUrl } from '@services/config/config'
+import { getErrorMessage } from '@services/utils/ts/errorMessage'
 
 export default function GoogleCallbackPage() {
   const searchParams = useSearchParams()
@@ -46,8 +47,48 @@ export default function GoogleCallbackPage() {
       // so CSRF validation and cookie-setting happen on the correct origin.
       try {
         const stateData = JSON.parse(atob(state))
-        if (stateData.returnOrigin && stateData.returnOrigin !== window.location.origin) {
-          const bounceUrl = new URL('/auth/callback/google', stateData.returnOrigin)
+        // Validate returnOrigin strictly before bouncing the OAuth code there.
+        // Parse it as a URL and use ONLY its origin (drops any path/query
+        // injection); require an http(s) scheme — rejects `javascript:`/`data:`,
+        // protocol-relative `//evil`, and malformed values that would otherwise
+        // be an open redirect / OAuth-code leak. (Full forgery protection needs
+        // HMAC-signed state — tracked as a follow-up.)
+        // Only bounce the OAuth code to a TRUSTED host: the platform apex / a
+        // platform subdomain (sync), or a REGISTERED custom domain (verified
+        // against the backend). A scheme check alone still allows any https host
+        // (e.g. attacker.com) → open redirect / OAuth-code leak. Anything not
+        // proven trusted is ignored; we fall through to CSRF validation on the
+        // current origin. (HMAC-signed state is the fuller fix — follow-up.)
+        let bounceOrigin: string | null = null
+        if (typeof stateData.returnOrigin === 'string') {
+          try {
+            const u = new URL(stateData.returnOrigin)
+            if (u.protocol === 'http:' || u.protocol === 'https:') {
+              const host = u.hostname
+              const topDomain = getLEARNHOUSE_TOP_DOMAIN_VAL()
+              const isPlatformHost = !!topDomain && (host === topDomain || host.endsWith(`.${topDomain}`))
+              if (isPlatformHost) {
+                bounceOrigin = u.origin
+              } else {
+                // Non-platform host: bounce ONLY if the backend confirms it is a
+                // registered custom domain (200 = resolved to an org).
+                try {
+                  const r = await fetch(
+                    `${getAPIUrl()}orgs/resolve/domain/${encodeURIComponent(host)}`,
+                    { signal: AbortSignal.timeout(5000) },
+                  )
+                  if (r.ok) bounceOrigin = u.origin
+                } catch {
+                  /* verification failed — do not bounce */
+                }
+              }
+            }
+          } catch {
+            /* malformed returnOrigin — ignore, fall through to CSRF validation */
+          }
+        }
+        if (bounceOrigin && bounceOrigin !== window.location.origin) {
+          const bounceUrl = new URL('/auth/callback/google', bounceOrigin)
           // Forward all search params (code, state, scope, etc.)
           searchParams.forEach((value, key) => {
             bounceUrl.searchParams.set(key, value)
@@ -86,6 +127,19 @@ export default function GoogleCallbackPage() {
         // Ignore cookie parsing errors
       }
 
+      // Consume the OAuth org-context cookies once read, so a stale org id can't
+      // bleed into a later OAuth attempt (both domain-scoped and host-only).
+      try {
+        const topDomain = getLEARNHOUSE_TOP_DOMAIN_VAL()
+        const domainAttr = topDomain && topDomain !== 'localhost' ? `; domain=.${topDomain}` : ''
+        for (const n of ['LH_oauth_org_id', 'LH_oauth_orgslug']) {
+          document.cookie = `${n}=; path=/; max-age=0`
+          if (domainAttr) document.cookie = `${n}=; path=/; max-age=0${domainAttr}`
+        }
+      } catch {
+        // best-effort cleanup
+      }
+
       try {
         // redirect_uri must always match what was sent during authorization (main domain)
         const domain = getLEARNHOUSE_DOMAIN_VAL()
@@ -105,50 +159,11 @@ export default function GoogleCallbackPage() {
         })
 
         if (!tokenResponse.ok) {
-          // If no token endpoint, exchange directly via Next.js API route
-          // This ensures cookies are set by Next.js for reliable SSR access
-          const oauthCallbackUrl = new URL('/api/auth/oauth/google/callback', window.location.origin)
-          oauthCallbackUrl.searchParams.set('code', code)
-          oauthCallbackUrl.searchParams.set('redirect_uri', oauthRedirectUri)
-          if (orgId) {
-            oauthCallbackUrl.searchParams.set('org_id', orgId.toString())
-          }
-
-          const backendResponse = await fetch(oauthCallbackUrl.toString(), {
-            method: 'GET',
-            credentials: 'include',
-          })
-
-          if (!backendResponse.ok) {
-            const errorData = await backendResponse.json().catch(() => ({}))
-            throw new Error(errorData.detail || 'Failed to authenticate with Google')
-          }
-
-          const data = await backendResponse.json()
-
-          // Validate response structure
-          if (!data.tokens?.access_token) {
-            throw new Error('Invalid response from server')
-          }
-
-          // Sign in with the tokens from backend
-          const result = await signIn('credentials', {
-            redirect: false,
-            sso: 'true',
-            sso_access_token: data.tokens.access_token,
-            sso_refresh_token: data.tokens.refresh_token,
-            sso_user: JSON.stringify(data.user),
-            sso_expiry: data.tokens.expiry,
-            callbackUrl,
-          })
-
-          if (result && !result.ok) {
-            throw new Error(result.error || 'Failed to complete sign in')
-          }
-
-          setStatus('success')
-          router.push(callbackUrl)
-          return
+          // Surface the real token-exchange error. (There is no
+          // /api/auth/oauth/google/callback route — the old fallback here just
+          // 404'd and masked the actual error with a misleading one.)
+          const err = await tokenResponse.json().catch(() => ({}))
+          throw new Error(typeof err.error === 'string' && err.error ? err.error : getErrorMessage(err.detail, 'Failed to exchange the Google authorization code.'))
         }
 
         const tokenData = await tokenResponse.json()
@@ -199,7 +214,7 @@ export default function GoogleCallbackPage() {
 
         if (!oauthResponse.ok) {
           const errorData = await oauthResponse.json().catch(() => ({}))
-          throw new Error(errorData.detail || 'Failed to authenticate')
+          throw new Error(getErrorMessage(errorData.detail, 'Failed to authenticate'))
         }
 
         const data = await oauthResponse.json()
@@ -271,7 +286,7 @@ export default function GoogleCallbackPage() {
           </p>
           <div className="space-y-3">
             <Link
-              href="/auth/login"
+              href="/login"
               className="block w-full py-2 px-4 bg-black text-white rounded-md hover:bg-gray-800 transition-colors"
             >
               Go to Login
@@ -303,7 +318,7 @@ export default function GoogleCallbackPage() {
           <p className="text-gray-600 mb-6">{error}</p>
           <div className="space-y-3">
             <Link
-              href="/auth/login"
+              href="/login"
               className="block w-full py-2 px-4 bg-black text-white rounded-md hover:bg-gray-800 transition-colors"
             >
               Try Again

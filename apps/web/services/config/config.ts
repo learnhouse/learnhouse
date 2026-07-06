@@ -134,7 +134,7 @@ export const LEARNHOUSE_DOMAIN = getLEARNHOUSE_DOMAIN()
 export const LEARNHOUSE_TOP_DOMAIN = getLEARNHOUSE_TOP_DOMAIN()
 
 // Helper to check if we're on a custom domain (for API URL selection)
-const isOnCustomDomain = (): boolean => {
+export const isOnCustomDomain = (): boolean => {
   if (typeof window === 'undefined') return false
   const hostname = window.location.hostname
   const domain = getLEARNHOUSE_DOMAIN()
@@ -171,15 +171,22 @@ export const getBackendUrl = () => getLEARNHOUSE_BACKEND_URL()
 
 /**
  * Get the upgrade/plan URL for a given org.
- * Uses LEARNHOUSE_PLATFORM_URL (the main platform, e.g. learnhouse.app).
- * Returns null in OSS/self-hosted mode or when platform URL is not configured.
+ *
+ * In SaaS the billing/upgrade hub lives IN-APP on the apex (learnhouse.io
+ * /billing) — see app/(hub)/billing. We return an absolute apex URL so an
+ * upgrade CTA rendered inside an org subdomain ({slug}.learnhouse.io) crosses
+ * to the root hub; the `.{top_domain}`-scoped session cookie carries the login
+ * across the hop. Returns null in OSS/EE, where there is no SaaS billing
+ * surface — callers MUST treat null as "hide the upgrade CTA".
  */
-export const getUpgradeUrl = (orgSlug: string): string | null => {
+export const getUpgradeUrl = (orgSlug: string, plan?: string | null): string | null => {
   const mode = getDeploymentMode()
   if (mode === 'oss' || mode === 'ee') return null
-  const platformUrl = getLEARNHOUSE_PLATFORM_URL()
-  if (!platformUrl) return null
-  return `${platformUrl}/dashboard/${orgSlug}/plan`
+  // Deep-link: when a target plan is given, the billing page opens the switch
+  // wizard straight at the Confirm step for that plan (?plan=), so a "Upgrade to
+  // Standard" CTA lands the user one click from checkout instead of the plan grid.
+  const planParam = plan ? `&plan=${encodeURIComponent(plan)}` : ''
+  return getMainDomainUri(`/billing?org=${encodeURIComponent(orgSlug)}${planParam}`)
 }
 
 /**

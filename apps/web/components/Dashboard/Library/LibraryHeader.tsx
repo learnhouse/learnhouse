@@ -6,6 +6,7 @@ import CreateFolderModal from '@components/Dashboard/Library/CreateFolderModal'
 import UploadMediaModal from '@components/Dashboard/Library/UploadMediaModal'
 import AddContentModal from '@components/Dashboard/Library/AddContentModal'
 import { FilterPill, PRIMARY_BTN, SECONDARY_BTN } from '@components/Dashboard/Library/LibraryToolbar'
+import FolderSortDropdown, { type FolderSortMode } from '@components/Dashboard/Library/FolderSortDropdown'
 import {
   FolderSimple,
   MagnifyingGlass,
@@ -28,6 +29,8 @@ type Props = {
   setQuery: (_v: string) => void
   filter: FilterKey
   setFilter: (_f: FilterKey) => void
+  sortMode: FolderSortMode
+  setSortMode: (_m: FolderSortMode) => void
   onChanged: () => void
 }
 
@@ -39,6 +42,8 @@ export default function LibraryHeader({
   setQuery,
   filter,
   setFilter,
+  sortMode,
+  setSortMode,
   onChanged,
 }: Props) {
   const { t } = useTranslation()
@@ -107,9 +112,50 @@ export default function LibraryHeader({
           <FilterPill label={t('library.tabs.courses')} active={filter === 'courses'} activeClass="bg-blue-600 text-white" onClick={() => setFilter('courses')} />
           <FilterPill label={t('media.media')} active={filter === 'media'} activeClass="bg-amber-500 text-white" onClick={() => setFilter('media')} />
         </div>
+        <AuthenticatedClientElement checkMethod="roles" action="update" ressourceType={'folders' as any} orgId={org_id}>
+          <div className="sm:ml-auto">
+            <FolderSortDropdown value={sortMode} onChange={setSortMode} />
+          </div>
+        </AuthenticatedClientElement>
       </div>
     </div>
   )
+}
+
+// Name/date accessors that work for both folders and content items (courses,
+// media, …). Items carry their display fields under `.resource`.
+const _nameOf = (x: any) =>
+  (x?.name ?? x?.resource?.name ?? x?.resource?.title ?? x?.title ?? '').toString().toLowerCase()
+const _dateOf = (x: any) => {
+  const raw =
+    x?.creation_date ?? x?.created_at ?? x?.update_date ??
+    x?.resource?.update_date ?? x?.resource?.creation_date ?? x?.resource?.created_at ?? ''
+  const t = raw ? Date.parse(raw) : NaN
+  return Number.isNaN(t) ? 0 : t
+}
+
+/**
+ * Apply the selected sort mode to the visible library content, CLIENT-SIDE, so
+ * it reorders folders AND items (courses/media) instantly and consistently.
+ *
+ * 'manual' is intentionally a no-op here: folders already arrive ordered by their
+ * persisted `order` from the server, and drag-reordering mutates the array in
+ * place — re-sorting by the (optimistically stale) `order` field would fight the
+ * drag. So manual mode trusts the incoming order.
+ */
+export function sortLibrary(folders: any[], items: any[], mode: FolderSortMode) {
+  if (mode === 'manual') return { folders, items }
+  const byName = (a: any, b: any) => _nameOf(a).localeCompare(_nameOf(b))
+  const cmp = (a: any, b: any) => {
+    switch (mode) {
+      case 'name_desc': return byName(b, a)
+      case 'newest': return _dateOf(b) - _dateOf(a) || byName(a, b)
+      case 'oldest': return _dateOf(a) - _dateOf(b) || byName(a, b)
+      case 'name_asc':
+      default: return byName(a, b)
+    }
+  }
+  return { folders: [...folders].sort(cmp), items: [...items].sort(cmp) }
 }
 
 // Shared client-side filtering used by both root and folder views.

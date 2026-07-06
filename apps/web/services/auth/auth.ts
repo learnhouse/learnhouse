@@ -1,8 +1,15 @@
 import { getAPIUrl } from '@services/config/config'
 import { RequestBody, getResponseMetadata } from '@services/utils/ts/requests'
+import { getErrorMessage } from '@services/utils/ts/errorMessage'
 
-// ⚠️ mvp phase code
-// TODO : everything in this file need to be refactored including security issues fix
+// Thin fetch wrappers around the backend auth endpoints. The app-wide auth
+// security hardening (cookie clearing, open-redirect guards, session-marker
+// handling, OAuth redirect validation) now lives in the same-origin proxy
+// (app/api/auth/[...path]) + AuthContext + services/auth/{cookies,redirects}.
+// REMAINING CLEANUP: several wrappers below still hit the backend DIRECTLY
+// (loginAndGetToken, refresh, logout, getUserSession) instead of going through
+// the /api/auth/* same-origin proxy, so they do not set/clear .io-origin
+// cookies. Prefer the proxy path for any new auth call; consolidate these over.
 
 export async function loginAndGetToken(
   username: any,
@@ -69,10 +76,13 @@ export async function loginWithOAuthToken(
   return response
 }
 
-export async function sendResetLink(email: string, org_id: number) {
+// Password reset is PLATFORM-level (org-less): the backend finds the user by
+// email, so no org_id is needed — matching how the platform worked and working
+// for org-less accounts created on the apex.
+export async function sendResetLink(email: string) {
   const result = await fetch(
-    `${getAPIUrl()}users/reset_password/send_reset_code/${email}?org_id=${org_id}`,
-    RequestBody('POST', null, null)
+    `${getAPIUrl()}users/reset_password/platform/send_reset_code`,
+    RequestBody('POST', { email }, null)
   )
   const res = await getResponseMetadata(result)
   return res
@@ -81,12 +91,11 @@ export async function sendResetLink(email: string, org_id: number) {
 export async function resetPassword(
   email: string,
   new_password: string,
-  org_id: number,
   reset_code: string
 ) {
   const result = await fetch(
-    `${getAPIUrl()}users/reset_password/change_password/${email}`,
-    RequestBody('POST', { new_password, org_id, reset_code }, null)
+    `${getAPIUrl()}users/reset_password/platform/change_password`,
+    RequestBody('POST', { email, new_password, reset_code }, null)
   )
   const res = await getResponseMetadata(result)
   return res
@@ -205,42 +214,39 @@ interface NewAccountBody {
   password: string
   org_slug: string
   org_id: string
+  // Cloudflare Turnstile token collected by the signup form. Optional so OSS /
+  // Turnstile-disabled deployments keep working.
+  turnstileToken?: string | null
 }
 
+// Signup goes through the same-origin gateway (app/api/signup/route.ts), which
+// verifies Turnstile + rejects disposable emails server-side, forwards to the
+// backend user-create endpoint, then syncs the Loops marketing contact. The
+// gateway mirrors the backend's status + JSON, so callers keep reading
+// `res.status` / `res.json().detail` exactly as before.
 export async function signup(body: NewAccountBody): Promise<any> {
-  const HeadersConfig = new Headers({ 'Content-Type': 'application/json' })
-
   const requestOptions: any = {
     method: 'POST',
-    headers: HeadersConfig,
+    headers: new Headers({ 'Content-Type': 'application/json' }),
     body: JSON.stringify(body),
     redirect: 'follow',
   }
 
-  const res = await fetch(`${getAPIUrl()}users/${body.org_id}`, requestOptions)
-
-  return res
+  return await fetch('/api/signup', requestOptions)
 }
 
 export async function signUpWithInviteCode(
   body: NewAccountBody,
   invite_code: string
 ): Promise<any> {
-  const HeadersConfig = new Headers({ 'Content-Type': 'application/json' })
-
   const requestOptions: any = {
     method: 'POST',
-    headers: HeadersConfig,
-    body: JSON.stringify(body),
+    headers: new Headers({ 'Content-Type': 'application/json' }),
+    body: JSON.stringify({ ...body, inviteCode: invite_code }),
     redirect: 'follow',
   }
 
-  const res = await fetch(
-    `${getAPIUrl()}users/${body.org_id}/invite/${invite_code}`,
-    requestOptions
-  )
-
-  return res
+  return await fetch('/api/signup', requestOptions)
 }
 
 // Email Verification
@@ -274,7 +280,7 @@ export async function verifyEmail(
     } else {
       return {
         success: false,
-        error: data.detail || 'Verification failed',
+        error: getErrorMessage(data?.detail, 'Verification failed'),
       }
     }
   } catch {
@@ -287,18 +293,17 @@ export async function verifyEmail(
 
 export async function resendVerificationEmail(
   email: string,
-  orgId: number
+  orgId?: number
 ): Promise<{ success: boolean; error?: string }> {
   try {
     const HeadersConfig = new Headers({ 'Content-Type': 'application/json' })
 
+    // org_id is OPTIONAL: org-less apex accounts have no org, and the backend
+    // resend endpoint accepts a null/absent org_id. Only include it when known.
     const requestOptions: RequestInit = {
       method: 'POST',
       headers: HeadersConfig,
-      body: JSON.stringify({
-        email,
-        org_id: orgId,
-      }),
+      body: JSON.stringify(orgId != null ? { email, org_id: orgId } : { email }),
     }
 
     const response = await fetch(`${getAPIUrl()}auth/resend-verification`, requestOptions)
@@ -309,7 +314,7 @@ export async function resendVerificationEmail(
     } else {
       return {
         success: false,
-        error: data.detail || 'Failed to resend verification email',
+        error: getErrorMessage(data?.detail, 'Failed to resend verification email'),
       }
     }
   } catch {

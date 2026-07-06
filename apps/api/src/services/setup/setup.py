@@ -643,6 +643,20 @@ async def install_create_organization_user(
     await db_session.commit()
     await db_session.refresh(user_organization)
 
+    # This install/seed user is an org ADMIN — add them to the Loops marketing
+    # audience. Best-effort, SaaS-gated (no-op on OSS/self-hosted), never fails
+    # the install.
+    try:
+        from src.services.marketing.loops import record_org_admin_in_loops
+        record_org_admin_in_loops(
+            email=getattr(user, "email", None),
+            org_slug=org_slug,
+            first_name=getattr(user, "first_name", None),
+            last_name=getattr(user, "last_name", None),
+        )
+    except Exception:
+        pass
+
     user = UserRead.model_validate(user)
 
     return user

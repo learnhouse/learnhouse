@@ -9,7 +9,7 @@
     "assignments": "الواجبات",
     "boards": "اللوحات",
     "payments": "المدفوعات",
-    "playgrounds": "ساحات التعلم",
+    "playgrounds": "Playgrounds",
     "organization": "المنظمة",
     "dashboard": "لوحة التحكم",
     "settings": "الإعدادات",
@@ -132,6 +132,10 @@
         "webhooks": {
           "title": "Pro Feature",
           "description": "Automations is a premium feature available only to organizations on our Pro plan or higher. Upgrade to wire your courses up to webhooks and external integrations."
+        },
+        "api_access": {
+          "title": "ميزة Pro",
+          "description": "API Access هي ميزة متميزة متاحة فقط للمنظمات على خطتنا Pro أو أعلى. قم بالترقية لفتح الوصول البرمجي إلى بيانات منظمتك."
         }
       },
       "current_plan": "الخطة الحالية",
@@ -148,7 +152,9 @@
           "payments": "المدفوعات",
           "trail": "تتبع التقدم",
           "boards": "اللوحات",
-          "playgrounds": "Playgrounds"
+          "playgrounds": "Playgrounds",
+          "library": "مكتبة",
+          "folders": "مكتبة"
         },
         "public": {
           "title": "{{feature}} غير متاح",
@@ -205,7 +211,19 @@
     "no_content_yet": "لا يوجد محتوى بعد",
     "other": "Other",
     "disabled": "Disabled",
-    "store": "Store"
+    "store": "Store",
+    "organizations": "المؤسسات",
+    "billing": "الفوترة",
+    "create_organization": "إنشاء مؤسسة",
+    "copyright": "© {{year}} LearnHouse, Inc.",
+    "delete_organization_error": "تعذّر حذف هذه المؤسسة. يرجى المحاولة مرة أخرى.",
+    "org_actions": "إجراءات المؤسسة",
+    "manage_upgrade": "إدارة / ترقية",
+    "delete_organization": "حذف المؤسسة",
+    "delete_organization_warning": "هذا يحذف {{name}} وجميع بياناتها نهائيًا. لا يمكن التراجع عن هذا الإجراء.",
+    "delete_organization_confirm_label": "اكتب {{slug}} للتأكيد",
+    "deleting": "جارٍ الحذف…",
+    "retry": "إعادة المحاولة"
   },
   "banner": {
     "viewing_as_guest": "أنت تتصفح {{name}} كضيف.",
@@ -328,7 +346,23 @@
     "email_verification_required": "مطلوب التحقق من البريد الإلكتروني",
     "email_verification_required_join": "يرجى التحقق من عنوان بريدك الإلكتروني قبل الانضمام إلى المنظمة. تحقق من صندوق الوارد للحصول على رسالة التحقق.",
     "error_generic": "حدث خطأ ما. يرجى المحاولة مرة أخرى.",
-    "sign_in": "تسجيل الدخول"
+    "sign_in": "تسجيل الدخول",
+    "terms_text": "بالمتابعة، فإنك توافق على",
+    "terms_of_service": "شروط الخدمة",
+    "and": "و",
+    "privacy_policy": "سياسة الخصوصية",
+    "image_title_forgot": "أعد تعيين كلمة مرورك.",
+    "image_subtitle_forgot": "سنساعدك على العودة إلى حسابك في لمح البصر.",
+    "image_title_login": "مرحبًا بعودتك إلى LearnHouse.",
+    "image_subtitle_login": "تابِع من حيث توقفت — دوراتك وطلابك وأدواتك في انتظارك.",
+    "image_title_reset": "أوشكت على الانتهاء.",
+    "image_subtitle_reset": "أنشئ كلمة مرور قوية للحفاظ على أمان حسابك.",
+    "image_title_signup": "ابدأ التدريس مع LearnHouse.",
+    "image_subtitle_signup": "أنشئ حسابك وأطلق دورتك الأولى في دقائق.",
+    "image_title_verify": "تحقّق من بريدك الإلكتروني.",
+    "image_subtitle_verify": "خطوة سريعة واحدة لتأمين حسابك والبدء.",
+    "turnstile_failed": "فشل التحقق. يرجى المحاولة مرة أخرى.",
+    "resend_verification": "لم تستقبل البريد؟ أعد إرسال البريد الإلكتروني"
   },
   "verify_email": {
     "title": "تأكيد البريد الإلكتروني",
@@ -975,7 +1009,24 @@
     "quiz": {
       "correct_answer": "صحيح",
       "incorrect_answer": "خطأ"
-    }
+    },
+    "quick_grade": {
+      "full": "كاملة",
+      "half": "نصف",
+      "zero": "صفر"
+    },
+    "task_feedback_placeholder": "ملاحظة لهذه المهمة (تُحفظ مع الدرجة)",
+    "attempt_label": "محاولة",
+    "attempt_count": "محاولة {{current}}",
+    "attempt_count_bounded": "محاولة {{current}} من {{max}}",
+    "retry_assignment": "حاول مرة أخرى",
+    "retry_assignment_title": "تريد محاولة هذا الواجب مرة أخرى؟",
+    "retry_assignment_confirm": "سيتم إعادة تعيين تقديمك الحالي والإجابات حتى تتمكن من البدء من جديد. سيتم استبدال درجتك السابقة بمجرد إعادة التقديم.",
+    "retry_assignment_remaining": "لديك {{remaining}} محاولة{{plural}} متبقية بعد هذه.",
+    "retry_assignment_last": "هذه محاولتك الأخيرة — اجعلها تستحق.",
+    "retry_assignment_success": "تم إعادة تعيين عملك — حاول مرة أخرى.",
+    "retry_assignment_failed": "تعذر إعادة تعيين تقديمك. يرجى المحاولة مرة أخرى.",
+    "retry_no_attempts_left": "لا توجد محاولات متبقية"
   },
   "certificate": {
     "certificate": "الشهادة",
@@ -1029,7 +1080,7 @@
       "users": "أعضاء",
       "communities": "مجتمعات",
       "discussions": "مناقشات",
-      "playgrounds": "ساحات تجريب",
+      "playgrounds": "Playgrounds",
       "podcasts": "بودكاست"
     }
   },
@@ -1072,7 +1123,23 @@
     "my_courses": "دوراتي",
     "no_purchased_courses": "لا توجد دورات مشتراة بعد",
     "purchased_courses_description": "ستظهر هنا الدورات التي اشتريتها أو اشتركت فيها",
-    "purchases": "المشتريات"
+    "purchases": "المشتريات",
+    "back_home": "العودة إلى المؤسسات",
+    "subtitle": "إدارة ملفك الشخصي والأمان والحساب",
+    "section": {
+      "profile": "الملف الشخصي",
+      "security": "الأمان",
+      "danger": "منطقة الخطر"
+    },
+    "delete": {
+      "success": "تم حذف حسابك.",
+      "error": "تعذّر حذف حسابك. يرجى المحاولة مرة أخرى.",
+      "title": "حذف الحساب",
+      "description": "احذف حسابك نهائيًا وأزل صلاحية وصولك. لا يمكن التراجع عن هذا.",
+      "warning": "هذا يحذف حسابك وجميع البيانات المرتبطة به نهائيًا. لا يمكن التراجع عن هذا الإجراء.",
+      "confirm_label": "اكتب {{username}} للتأكيد",
+      "deleting": "جارٍ الحذف…"
+    }
   },
   "user": {
     "user_settings": "إعدادات المستخدم",
@@ -2043,7 +2110,8 @@
             "uploading": "جاري رفع الملف وإنشاء النشاط...",
             "upload_success": "تم رفع الملف بنجاح",
             "creating_uploading": "جاري إنشاء النشاط ورفع الملف...",
-            "update_error": "فشل تحديث النشاط"
+            "update_error": "فشل تحديث النشاط",
+            "upload_error": "فشل تحميل الملف"
           },
           "versioning": {
             "version_history": "سجل الإصدارات",
@@ -2180,7 +2248,8 @@
           "seo": "تحسين محركات البحث",
           "automations": "الأتمتة",
           "api": "API Access",
-          "menu": "Menu"
+          "menu": "Menu",
+          "danger": "منطقة الخطر"
         },
         "pages": {
           "general": {
@@ -2226,6 +2295,10 @@
           "menu": {
             "title": "Public menu",
             "subtitle": "Choose and order the links shown in your public navigation"
+          },
+          "danger": {
+            "title": "منطقة الخطر",
+            "subtitle": "إجراءات لا يمكن عكسها وضارة لهذه المنظمة"
           }
         },
         "name": "اسم المنظمة",
@@ -3599,7 +3672,8 @@
           "current_grade": "الدرجة الحالية",
           "passing": "ناجح",
           "not_passing": "غير ناجح",
-          "not_submitted": "لم يُقدَّم"
+          "not_submitted": "لم يُقدَّم",
+          "manually_graded": "مُصحّح يدويًا"
         },
         "feedback": {
           "label": "الملاحظات العامة",
@@ -3699,7 +3773,12 @@
             "grading_type_hint": "كيف تُعرض الدرجات على الطلاب",
             "grading_options_hint": "السلوك عند التسليم",
             "show_correct_answers_description": "بمجرد تقييم الإرسال، أظهر للطلاب الإجابات الصحيحة بجانب إجاباتهم — أيّ خيارات الاختبار كانت صحيحة، والإجابة القصيرة أو الرقمية المتوقعة، وفراغات النموذج الصحيحة.",
-            "show_correct_answers_label": "إظهار الإجابات الصحيحة بعد التقييم"
+            "show_correct_answers_label": "إظهار الإجابات الصحيحة بعد التقييم",
+            "allow_retries_label": "السماح بإعادة المحاولة",
+            "allow_retries_description": "اسمح للطلاب بإعادة تعيين وإعادة محاولة الواجب بعد تقييمه. كل محاولة تمحو إجاباتهم السابقة وتحتسب كمحاولة جديدة.",
+            "max_retries_label": "الحد الأقصى للمحاولات",
+            "max_retries_unlimited": "0 تعني محاولات غير محدودة",
+            "max_retries_bounded": "إجمالي المحاولات المقيّمة (التقديم الأولي + إعادة المحاولات)"
           },
           "toasts": {
             "updating": "جاري تحديث الواجب...",
@@ -3763,7 +3842,7 @@
         "users": "المستخدمون",
         "communities": "المجتمعات",
         "discussions": "المناقشات",
-        "playgrounds": "ساحات اللعب",
+        "playgrounds": "Playgrounds",
         "podcasts": "البودكاست"
       },
       "entries": {
@@ -3792,7 +3871,7 @@
           "keywords": "كانبان, مشروع, مهام, قوائم"
         },
         "playgrounds": {
-          "description": "ساحات لعب البرمجة",
+          "description": "playgrounds البرمجة",
           "keywords": "كود, sandbox, repl, برمجة"
         },
         "analytics": {
@@ -3912,6 +3991,10 @@
         "account_purchases": {
           "description": "مشترياتك واشتراكاتك",
           "keywords": "مشتريات, اشتراكات, فواتير, تاريخ, إيصالات"
+        },
+        "org_api": {
+          "description": "رموز API والوصول البرمجي",
+          "keywords": "api, رموز, وصول, برمجي, مفاتيح"
         }
       }
     }
@@ -4706,7 +4789,7 @@
       "note": "ملاحظة",
       "sticker": "ملصق",
       "youtube": "YouTube",
-      "ai_playground": "ملعب الذكاء الاصطناعي",
+      "ai_playground": "AI Playground",
       "activity": "نشاط",
       "embed": "تضمين",
       "webpage": "صفحة ويب",
@@ -4786,7 +4869,7 @@
       "open_in_new_tab": "فتح في علامة تبويب جديدة"
     },
     "playground_block": {
-      "title": "ملعب الذكاء الاصطناعي",
+      "title": "AI Playground",
       "description": "إنشاء عناصر تفاعلية مدعومة بالذكاء الاصطناعي",
       "generate": "إنشاء",
       "edit": "تعديل",
@@ -4794,7 +4877,7 @@
       "generating": "جارٍ إنشاء محتوى تفاعلي...",
       "streaming": "جارٍ الإنشاء...",
       "empty_state": "صف ما تريد إنشاءه وشاهده يتحقق",
-      "chat_header": "ملعب الذكاء الاصطناعي",
+      "chat_header": "AI Playground",
       "prompt_text": "صف عنصراً تفاعلياً لإنشائه",
       "ai_content": "محتوى مُنشأ بالذكاء الاصطناعي",
       "check_preview": "تحقق من المعاينة على اليسار",
@@ -4861,8 +4944,8 @@
     "done": "تم، أنا جاهز!",
     "steps": {
       "create_course": {
-        "title": "أنشئ دورتك الأولى",
-        "description": "ابدأ بإنشاء دورة جديدة للمتعلمين.",
+        "title": "دورتك الأولى منشورة",
+        "description": "انشر دورة ليكون هناك شيء حقيقي يلتحق به المتعلّمون.",
         "action": "إنشاء دورة"
       },
       "add_activities": {
@@ -4885,9 +4968,9 @@
         "interactive_blocks": "كتل تفاعلية"
       },
       "try_playgrounds": {
-        "title": "التعلم التفاعلي مع الملاعب",
+        "title": "التعلم التفاعلي مع Playgrounds",
         "description": "أنشئ صفحات تفاعلية للتعلم الذاتي.",
-        "action": "جرّب الملاعب"
+        "action": "جرّب Playgrounds"
       },
       "invite_users": {
         "title": "ادعُ فريقك والمتعلمين",
@@ -4906,6 +4989,31 @@
         "classroom_desc": "تعلم كيفية تنمية وإدارة دوراتك",
         "university": "جامعة LearnHouse",
         "university_desc": "أدلة ونصائح وأفضل الممارسات"
+      },
+      "add_content": {
+        "title": "درس يستحق الحضور",
+        "description": "أضف فيديو أو صفحة أو اختبارًا — امنح المتعلّمين سببًا حقيقيًا للالتحاق.",
+        "action": "إضافة محتوى"
+      },
+      "brand_school": {
+        "title": "مدرسة يثق بها المتعلّمون",
+        "description": "أضف شعارك وألوانك لتبدو كمدرسة موثوقة واحترافية.",
+        "action": "أضف هويتك"
+      },
+      "share_grow": {
+        "title": "بوابة مدرستك",
+        "description": "انطلق واحصل على رابطك القابل للمشاركة — المكان الذي سترسل إليه كل متعلّم.",
+        "action": "افتح مدرستي"
+      },
+      "invite_learners": {
+        "title": "رحّب بأول متعلّم لديك",
+        "description": "شارك رابط الانضمام أو ادعُ الناس — اجعل ذلك المتعلّم الأول يدخل من الباب.",
+        "action": "دعوة المتعلّمين"
+      },
+      "build_community": {
+        "title": "اجعل المتعلّمين يعودون",
+        "description": "افتح مساحة مجتمعية ليبقى متعلّموك نشطين — ويأتوا بأصدقائهم.",
+        "action": "افتح المجتمع"
       }
     },
     "welcome": {
@@ -4919,7 +5027,7 @@
         "teach": "علّم أي شيء",
         "teach_desc": "أنشئ دورات منظمة بفصول ومحتوى غني",
         "interactive": "اجعلها تفاعلية",
-        "interactive_desc": "أنشئ بيئات تفاعلية يستكشف فيها المتعلمون بوتيرتهم الخاصة",
+        "interactive_desc": "أنشئ playgrounds يستكشف فيها المتعلمون بوتيرتهم الخاصة",
         "community": "ابنِ مجتمعاً",
         "community_desc": "أنشئ مساحات نقاش يساعد فيها المتعلمون بعضهم البعض",
         "assess": "قيّم المعرفة",
@@ -4940,7 +5048,15 @@
       "title": "أنت مستعد لتعليم العالم",
       "description": "كل شيء جاهز. متعلموك ينتظرون شيئًا رائعًا.",
       "button": "ابدأ التعليم"
-    }
+    },
+    "box_title": "البدء",
+    "up_next": "التالي",
+    "continue_setup": "متابعة الإعداد",
+    "done_label": "تم",
+    "video_placeholder": "فيديو الشرح قريبًا",
+    "dismiss": "سأُكمل لاحقًا",
+    "steps_done": "خطوات مكتملة",
+    "back_to_dashboard": "العودة إلى لوحة التحكم"
   },
   "migration": {
     "accepted_formats": "فيديو (MP4, WebM, MOV)، مستندات (PDF)، صور (PNG, JPG, WebP)، صوت (MP3, WAV)",
@@ -5001,7 +5117,7 @@
           "ai_desc": "سرّع إنشاء المحتوى بأدوات كتابة مدعومة بالذكاء الاصطناعي.",
           "analytics": "تحليلات المتعلمين",
           "analytics_desc": "تتبع التقدم والمشاركة لتحسين دوراتك.",
-          "playgrounds": "بيئات تفاعلية",
+          "playgrounds": "playgrounds تفاعلية",
           "playgrounds_desc": "دع المتعلمين يجربون ويتدربون من خلال تمارين تفاعلية عملية."
         }
       },
@@ -5018,7 +5134,9 @@
           "custom_domain": "نطاق مخصص",
           "custom_domain_desc": "استخدم نطاقك الخاص لأكاديمية بعلامتك التجارية.",
           "roles": "أدوار وصلاحيات مخصصة",
-          "roles_desc": "تحكم بدقة في من يمكنه فعل ماذا في مؤسستك."
+          "roles_desc": "تحكم بدقة في من يمكنه فعل ماذا في مؤسستك.",
+          "api": "وصول API والخطافات الويب",
+          "api_desc": "التكامل مع أدواتك الحالية وأتمتة سير العمل."
         }
       }
     }
@@ -5064,7 +5182,7 @@
     "showing_page": "عرض الصفحة {{current}} من {{total}}"
   },
   "playgrounds": {
-    "no_playgrounds_yet": "لا توجد ملاعب بعد",
+    "no_playgrounds_yet": "لا توجد playgrounds بعد",
     "playgrounds_description": "أنشئ تجارب تفاعلية مولدة بالذكاء الاصطناعي لمتعلميك.",
     "new_playground": "New Playground",
     "search_placeholder": "Search playgrounds...",
@@ -5079,7 +5197,7 @@
       "open_editor_to_generate": "افتح المحرر لإنشاء المحتوى.",
       "check_back_later": "تحقق لاحقاً.",
       "open_editor": "فتح المحرر",
-      "breadcrumb": "الملاعب",
+      "breadcrumb": "Playgrounds",
       "about": "حول",
       "author": "المؤلف",
       "access": "الوصول",
@@ -5246,5 +5364,281 @@
       "unlink_success": "User group unlinked",
       "unlink_error": "Failed to unlink user group"
     }
+  },
+  "plan": {
+    "free_plan_title": "الخطة المجانية",
+    "free_plan_cta": "افتح المنصة بالكامل",
+    "free_plan_desc": "كل ما تحتاجه للتدريس والبيع والنمو.",
+    "upgrade": "ترقية"
+  },
+  "billing": {
+    "no_billing_account": "لم يُعثر على حساب فوترة. اشترك في خطة أولًا.",
+    "portal_error": "تعذّر فتح بوابة الفوترة. يرجى المحاولة مرة أخرى.",
+    "cancel_success": "سيتم إلغاء الاشتراك في نهاية فترة الفوترة.",
+    "cancel_error": "فشل إلغاء الاشتراك. يرجى المحاولة مرة أخرى.",
+    "checkout_error": "فشل بدء عملية الدفع.",
+    "plan_and_usage": "الخطة والاستخدام",
+    "plan_and_usage_subtitle": "أدر اشتراكك وراقب استخدام الموارد.",
+    "billing": "الفوترة",
+    "org_inactive": "مؤسستك غير نشطة. رقِّ خطتك لاستعادة الوصول.",
+    "upgrade": "ترقية",
+    "on_free_plan": "أنت على الخطة المجانية",
+    "free_upsell": "رقِّ لفتح ميزات الذكاء الاصطناعي والنطاقات المخصصة والمزيد.",
+    "managed_outside": "تُدار هذه الخطة خارج نظام فوترة Stripe.",
+    "active": "نشط",
+    "inactive": "غير نشط",
+    "current_plan": "الخطة الحالية",
+    "canceling": "قيد الإلغاء",
+    "billed_annually": "تُفوتر سنويًا",
+    "billed_monthly": "تُفوتر شهريًا",
+    "change_plan": "تغيير الخطة",
+    "canceling_ellipsis": "جارٍ الإلغاء...",
+    "cancel_plan": "إلغاء الخطة",
+    "cycle": "الدورة",
+    "access_until": "الوصول حتى",
+    "next_payment": "الدفعة التالية",
+    "status": "الحالة",
+    "usage": "الاستخدام",
+    "courses": "الدورات",
+    "members": "الأعضاء",
+    "admin_seats": "مقاعد المسؤولين",
+    "ai_credits": "أرصدة الذكاء الاصطناعي",
+    "addons": "الإضافات",
+    "addons_subtitle": "اشترِ أرصدة ذكاء اصطناعي إضافية أو مقاعد أعضاء كاشتراكات شهرية.",
+    "active_subscriptions": "الاشتراكات النشطة",
+    "credits": "أرصدة",
+    "seats": "مقاعد",
+    "available": "متاح",
+    "per_pack": "لكل حزمة",
+    "add": "إضافة",
+    "recurring_subscription": "اشتراك متكرر",
+    "what_youre_getting": "ما الذي ستحصل عليه",
+    "pack_immediate": "يسري المفعول فورًا بعد الدفع",
+    "pack_cancel_anytime": "ألغِ في أي وقت — يبقى نشطًا حتى نهاية فترة الفوترة",
+    "pack_credits_reset": "تُعاد تهيئة الأرصدة كل دورة فوترة",
+    "after_purchase": "بعد الشراء",
+    "unlimited": "غير محدود",
+    "pack_redirect_notice": "ستتم إعادة توجيهك إلى Stripe لإتمام الدفع. يمكنك شراء عدة حزم من النوع نفسه.",
+    "cancel": "إلغاء",
+    "continue_to_payment": "المتابعة إلى الدفع",
+    "step_choose_plan": "اختر الخطة",
+    "step_confirm": "تأكيد",
+    "step_done": "تم",
+    "back": "رجوع",
+    "switch_plan": "تبديل الخطة",
+    "upgrade_plan": "ترقية الخطة",
+    "switch_subtitle": "اختر خطة جديدة. تُحتسب التغييرات تناسبيًا تلقائيًا.",
+    "upgrade_subtitle": "اختر خطة للبدء.",
+    "your_plan": "خطتك",
+    "downgrade": "تخفيض الخطة",
+    "upgrade_summary": "ملخص الترقية",
+    "downgrade_summary": "ملخص التخفيض",
+    "current": "الحالية",
+    "new": "الجديدة",
+    "annual_total": "الإجمالي السنوي",
+    "monthly_total": "الإجمالي الشهري",
+    "prorated_billing": "فوترة تناسبية",
+    "prorated_desc": "سيُحتسب لك رصيد عن الوقت غير المستخدم في خطتك الحالية وسيُحتسب عليك الفرق للخطة الجديدة. يسري التغيير فورًا.",
+    "subscription_cancellation": "إلغاء الاشتراك",
+    "end_of_cycle_switch": "تبديل في نهاية الدورة",
+    "cancel_desc": "سيتم إلغاء اشتراكك في نهاية فترة الفوترة الحالية. ستحتفظ بالوصول الكامل حتى ذلك الحين.",
+    "downgrade_desc": "ستحتفظ بخطتك الحالية حتى نهاية فترة الفوترة. وستسري الخطة الجديدة تلقائيًا عند انتهاء دورتك الحالية.",
+    "whats_included": "ما المتضمَّن",
+    "discount_code": "رمز الخصم",
+    "enter_code": "أدخل الرمز",
+    "checking": "جارٍ التحقق...",
+    "apply": "تطبيق",
+    "code_applied": "تم تطبيق الرمز",
+    "invalid_code": "رمز غير صالح أو منتهي الصلاحية",
+    "canceling_subscription": "جارٍ إلغاء الاشتراك...",
+    "switching_plan": "جارٍ تبديل الخطة...",
+    "redirecting": "جارٍ إعادة التوجيه إلى Stripe...",
+    "confirm_cancellation": "تأكيد الإلغاء",
+    "confirm_upgrade": "تأكيد الترقية",
+    "confirm_downgrade": "تأكيد التخفيض",
+    "secure_checkout": "دفع آمن مدعوم من Stripe",
+    "back_to_plans": "العودة إلى الخطط",
+    "plan_updated": "تم تحديث الخطة!",
+    "subscription_canceled": "تم إلغاء الاشتراك",
+    "downgrade_scheduled": "تمت جدولة التخفيض",
+    "canceled_desc": "سيتم إلغاء اشتراكك في نهاية فترة الفوترة الحالية. ستحتفظ بالوصول الكامل حتى ذلك الحين.",
+    "back_to_plan_usage": "العودة إلى الخطة والاستخدام",
+    "back_to_orgs": "العودة إلى المؤسسات",
+    "pack_purchased": "تم شراء الإضافة — تم تحديث الحدود الخاصة بك.",
+    "checkout_success": "تم تحديث الاشتراك — مرحباً بك في الخطة الجديدة!",
+    "checkout_cancelled": "تم إلغاء الدفع — لم يتم إجراء أي تغييرات.",
+    "load_failed": "تعذر علينا تحميل منظماتك.",
+    "no_permission": "ليس لديك إذن لإدارة الفواتير لهذه المنظمة.",
+    "no_permission_hint": "فقط مسؤول المنظمة يمكنه عرض أو تغيير الخطة.",
+    "usage_load_failed": "لم يتمكن من تحميل الاستخدام الآن.",
+    "on_named_plan": "أنت على خطة {{plan}}",
+    "included_in": "مضمنة في {{plan}}",
+    "updated_desc": "تم تبديلك إلى خطة {{plan}}. ستظهر أي تعديلات على الفاتورة في فاتورتك التالية.",
+    "scheduled_desc": "ستتحول خطتك إلى {{plan}} في نهاية دورة الفوترة الحالية. ستحتفظ بالوصول الكامل إلى خطتك الحالية حتى ذلك الحين.",
+    "plan_plus_purchased": "الخطة: {{plan}} + تم الشراء: {{purchased}}",
+    "base_plus_purchased": "الأساس: {{base}} + تم الشراء: {{purchased}}",
+    "pack_ai_desc": "تمت إضافة {{quantity}} رصيد AI إضافي إلى مؤسستك",
+    "pack_seats_desc": "{{quantity}} مقعد عضو إضافي لمؤسستك"
+  },
+  "hub_new": {
+    "useType": {
+      "personal": {
+        "label": "شخصي",
+        "subtitle": "تعلّم وابنِ مساحتك الخاصة.",
+        "badge": "جديد"
+      },
+      "organization": {
+        "label": "مؤسسة",
+        "subtitle": "علّم فريقًا أو مدرسة أو جمهورًا."
+      }
+    },
+    "useCases": {
+      "personal": {
+        "title": "التعلّم الذاتي",
+        "description": "نظّم الدورات لنفسك."
+      },
+      "creators": {
+        "title": "صنّاع المحتوى",
+        "description": "بِع الدورات لجمهورك."
+      },
+      "business": {
+        "title": "الأعمال",
+        "description": "درّب موظفيك."
+      }
+    },
+    "personalGoals": {
+      "learnSkills": "تعلّم مهارات",
+      "teachOthers": "تعليم الآخرين",
+      "coding": "البرمجة",
+      "creative": "الإبداع",
+      "music": "الموسيقى",
+      "ai": "الذكاء الاصطناعي",
+      "literature": "الأدب",
+      "science": "العلوم",
+      "business": "الأعمال",
+      "health": "الصحة",
+      "photography": "التصوير الفوتوغرافي",
+      "writing": "الكتابة",
+      "languages": "اللغات",
+      "gaming": "الألعاب"
+    },
+    "personalUsage": {
+      "title": "ماذا تودّ أن تتعلّم؟",
+      "subtitle": "اختر كل ما ينطبق."
+    },
+    "teamSizes": {
+      "solo": "فردي",
+      "2-10": "2–10",
+      "11-50": "11–50",
+      "51-200": "51–200",
+      "200plus": "200+"
+    },
+    "orgUseCases": {
+      "employeeTraining": "تدريب الموظفين",
+      "onlineCourses": "الدورات عبر الإنترنت",
+      "customerEducation": "تثقيف العملاء",
+      "academicPrograms": "البرامج الأكاديمية",
+      "developerDocs": "وثائق المطوّرين",
+      "communityLearning": "التعلّم المجتمعي"
+    },
+    "orgUsage": {
+      "teamSizeTitle": "ما حجم فريقك؟",
+      "useCaseTitle": "فيمَ ستستخدمها؟"
+    },
+    "createOrg": {
+      "testHint": {
+        "title": "تريد التجربة؟",
+        "body": "توجّه إلى",
+        "link": "صفحة المطوّرين",
+        "suffix": "لتجربة LearnHouse بدلًا من ذلك."
+      },
+      "validation": {
+        "required": "مطلوب",
+        "lowercase": "أحرف صغيرة فقط",
+        "noSpecialChars": "أحرف وأرقام وشرطات فقط",
+        "reserved": "هذا المعرّف محجوز",
+        "maxLength": "20 حرفًا كحد أقصى"
+      },
+      "fields": {
+        "name": "اسم المؤسسة",
+        "description": "الوصف (اختياري)",
+        "slug": "العنوان"
+      },
+      "placeholders": {
+        "name": "أكاديمية أكمي",
+        "description": "ما موضوع مؤسستك؟"
+      },
+      "submitting": "جارٍ الإنشاء…",
+      "submitPaid": "إنشاء والمتابعة إلى الدفع",
+      "submit": "إنشاء مؤسسة"
+    },
+    "success": {
+      "title": "مؤسستك جاهزة",
+      "description": "ابدأ الآن وأنشئ دوراتك.",
+      "goToOrg": "الذهاب إلى المؤسسة",
+      "cta": "العودة إلى المؤسسات"
+    },
+    "toast": {
+      "creating": "جارٍ إنشاء المؤسسة…",
+      "created": "تم إنشاء المؤسسة!",
+      "checkoutFailed": "تم إنشاء المؤسسة — يمكنك الترقية من الخطة والاستخدام.",
+      "failed": "فشل إنشاء المؤسسة"
+    },
+    "steps": {
+      "useType": {
+        "title": "ماذا تُنشئ؟",
+        "subtitle": "هذا يساعدنا على تخصيص مساحتك."
+      },
+      "usage": {
+        "title": "أخبرنا المزيد",
+        "subtitle": "حتى نتمكن من اقتراح الإعداد المناسب."
+      },
+      "choosePlan": {
+        "title": "اختر خطة",
+        "subtitle": "يمكنك تغيير هذا في أي وقت."
+      },
+      "createOrg": {
+        "title": "سمِّ مؤسستك",
+        "subtitle": "اختر اسمًا وعنوان ويب."
+      },
+      "success": {
+        "title": "كل شيء جاهز"
+      }
+    },
+    "topBar": {
+      "back": "المؤسسات"
+    },
+    "freeLimit": "تم بلوغ حد المؤسسة المجانية الواحدة",
+    "navigation": {
+      "back": "رجوع",
+      "continue": "متابعة",
+      "skip": "تخطٍّ"
+    }
+  },
+  "subscriptions": {
+    "no_subscription": "لا يوجد اشتراك",
+    "cancels_on": "يُلغى في {{date}}",
+    "cancels": "يُلغى في نهاية الفترة",
+    "status_active": "نشط",
+    "status_trialing": "فترة تجريبية",
+    "status_past_due": "متأخر السداد",
+    "status_canceled": "مُلغى",
+    "status_unpaid": "غير مدفوع",
+    "renews_on": "يتجدد في {{date}}",
+    "manage_plan": "إدارة الخطة",
+    "portal_error": "تعذّر فتح بوابة الفوترة. يرجى المحاولة مرة أخرى.",
+    "back_home": "العودة إلى الرئيسية",
+    "title": "الاشتراكات",
+    "subtitle": "الخطط والفوترة عبر مؤسساتك",
+    "opening": "جارٍ الفتح…",
+    "manage_billing": "إدارة الفوترة"
+  },
+  "folders": {
+    "folder": "مجلد",
+    "folders": "المجلدات",
+    "folder_count": "{{count}} مجلدات",
+    "folder_count_one": "{{count}} مجلد",
+    "item_count": "{{count}} عناصر",
+    "item_count_one": "{{count}} عنصر"
   }
 }

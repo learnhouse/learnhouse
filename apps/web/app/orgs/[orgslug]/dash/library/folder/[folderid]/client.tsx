@@ -4,12 +4,16 @@ import AuthenticatedClientElement from '@components/Security/AuthenticatedClient
 import Modal from '@components/Objects/StyledElements/Modal/Modal'
 import ManageAccessPopover from '@components/Dashboard/Library/ManageAccessPopover'
 import LibraryGrid from '@components/Dashboard/Library/LibraryGrid'
-import LibraryHeader, { filterLibrary, type FilterKey } from '@components/Dashboard/Library/LibraryHeader'
+import LibraryHeader, { filterLibrary, sortLibrary, type FilterKey } from '@components/Dashboard/Library/LibraryHeader'
+import { type FolderSortMode } from '@components/Dashboard/Library/FolderSortDropdown'
 import LibrarySearchResults from '@components/Dashboard/Library/LibrarySearchResults'
 import { shareFolderLink } from '@components/Dashboard/Library/shareFolder'
 import { SECONDARY_BTN } from '@components/Dashboard/Library/LibraryToolbar'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
-import { getFolderById, removeFolderContent, removeFolderPrefix, searchLibrary } from '@services/folders/folders'
+import { useOrg } from '@components/Contexts/OrgContext'
+import useAdminStatus from '@components/Hooks/useAdminStatus'
+import { getFolderById, removeFolderContent, removeFolderPrefix, reorderFolders, reorderFolderContent, searchLibrary } from '@services/folders/folders'
+import { updateOrgFoldersSort } from '@services/organizations/orgs'
 import { getUriWithOrg } from '@services/config/config'
 import { FolderSimple, LinkSimple, Lock } from '@phosphor-icons/react'
 import React from 'react'
@@ -28,11 +32,27 @@ function FolderView({ orgslug, org_id, folderid, initialFolder }: Props) {
   const { t } = useTranslation()
   const session = useLHSession() as any
   const access_token = session?.data?.tokens?.access_token
+  const org = useOrg() as any
 
   const [accessOpen, setAccessOpen] = React.useState(false)
   const [query, setQuery] = React.useState('')
   const [filter, setFilter] = React.useState<FilterKey>('all')
   const searching = query.trim().length > 0
+
+  // Sort mode is persisted server-side in the org config (shared with the root
+  // library view); seed local state from it and keep it in sync.
+  const configSortMode: FolderSortMode =
+    org?.config?.config?.general?.folders?.sort_mode ?? 'name_asc'
+  const [sortMode, setSortMode] = React.useState<FolderSortMode>(configSortMode)
+  React.useEffect(() => {
+    setSortMode(configSortMode)
+  }, [configSortMode])
+
+  // Only admins (folders:update) can rearrange subfolders; everyone else sees
+  // the resulting server-side order read-only.
+  const { rights } = useAdminStatus()
+  const canReorder = rights?.folders?.action_update === true
+  const isManual = sortMode === 'manual' && canReorder
 
   const { data: folder, mutate } = useSWR(
     folderid && access_token ? ['folder', folderid] : null,
@@ -60,7 +80,12 @@ function FolderView({ orgslug, org_id, folderid, initialFolder }: Props) {
   const folderUuid = folder.folder_uuid
   const subfolders: any[] = folder.subfolders || []
   const items: any[] = folder.items || []
-  const { visibleFolders, visibleItems } = filterLibrary(subfolders, items, '', filter)
+  const filtered = filterLibrary(subfolders, items, '', filter)
+  // Client-side sort so the chosen mode reorders the folder's subfolders AND its
+  // content (courses/media) instantly.
+  const { folders: visibleFolders, items: visibleItems } = sortLibrary(
+    filtered.visibleFolders, filtered.visibleItems, sortMode
+  )
 
   const filteredSearch = searchData
     ? filterLibrary(searchData.folders || [], searchData.items || [], '', filter)
@@ -85,6 +110,55 @@ function FolderView({ orgslug, org_id, folderid, initialFolder }: Props) {
     }
   }
 
+  // Persist the chosen sort mode server-side (admin-only; API also rejects
+  // non-admins). Optimistically flip the control, revert on failure.
+  const handleSortChange = async (mode: FolderSortMode) => {
+    const previous = sortMode
+    setSortMode(mode)
+    try {
+      await updateOrgFoldersSort(org_id, mode, access_token)
+      mutate()
+    } catch (error: any) {
+      setSortMode(previous)
+      toast.error(error?.message || t('library.sort.sort_error', { defaultValue: 'Could not update sort order' }))
+    }
+  }
+
+  // Persist a manual drag reorder of THIS folder's subfolders on drop, scoped to
+  // the parent folder so nested folders reorder independently.
+  const handleReorderFolders = async (newFolders: any[]) => {
+    mutate({ ...folder, subfolders: newFolders }, false)
+    try {
+      await reorderFolders(
+        org_id,
+        newFolders.map((f: any) => ({ folder_id: f.id })),
+        access_token,
+        folderUuid
+      )
+      mutate()
+    } catch (error: any) {
+      mutate()
+      toast.error(error?.message || t('library.sort.reorder_error', { defaultValue: 'Could not save the new order' }))
+    }
+  }
+
+  // Persist a manual drag reorder of THIS folder's content items (courses/media)
+  // on drop, storing their position on the folder-content link rows.
+  const handleReorderItems = async (newItems: any[]) => {
+    mutate({ ...folder, items: newItems }, false)
+    try {
+      await reorderFolderContent(
+        folderUuid,
+        newItems.map((i: any) => i.resource_uuid),
+        access_token
+      )
+      mutate()
+    } catch (error: any) {
+      mutate()
+      toast.error(error?.message || t('library.sort.reorder_error', { defaultValue: 'Could not save the new order' }))
+    }
+  }
+
   return (
     <div className="flex w-full">
       <div className="pl-4 sm:pl-10 mr-4 sm:mr-10 tracking-tight flex flex-col space-y-5 w-full">
@@ -97,6 +171,8 @@ function FolderView({ orgslug, org_id, folderid, initialFolder }: Props) {
           setQuery={setQuery}
           filter={filter}
           setFilter={setFilter}
+          sortMode={sortMode}
+          setSortMode={handleSortChange}
           onChanged={refresh}
         />
 
@@ -138,6 +214,9 @@ function FolderView({ orgslug, org_id, folderid, initialFolder }: Props) {
             org_id={org_id}
             onChanged={mutate}
             onRemoveItem={handleRemove}
+            isManual={isManual}
+            onReorderFolders={handleReorderFolders}
+            onReorderItems={handleReorderItems}
           />
         )}
       </div>

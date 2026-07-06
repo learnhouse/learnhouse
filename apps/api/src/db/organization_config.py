@@ -56,6 +56,8 @@ class CommunitiesOrgConfig(BaseModel):
 
 class FoldersOrgConfig(BaseModel):
     enabled: bool = True
+    # Library folder ordering. One of: name_asc | name_desc | newest | oldest | manual.
+    sort_mode: str = "name_asc"
 
 
 class AnalyticsOrgConfig(BaseModel):

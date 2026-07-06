@@ -6,8 +6,11 @@ from src.db.organizations import OrganizationRead
 from src.db.users import UserRead
 from src.services.users.emails import (
     send_account_creation_email,
+    send_account_deleted_email,
     send_email_verification_email,
     send_invitation_email,
+    send_org_created_email,
+    send_org_deleted_email,
     send_password_reset_email,
     send_password_reset_email_platform,
     send_role_changed_email,
@@ -45,6 +48,20 @@ def _org(**overrides):
 
 
 class TestEmailsService:
+    def test_lifecycle_confirmation_emails(self):
+        with patch("src.services.users.emails.send_email", return_value=True) as send_email:
+            assert send_org_created_email("a@test.com", "Org & Co", "https://learnhouse.io/home") is True
+            created = send_email.call_args
+            assert "Org &amp; Co" in created.kwargs["body"]  # name html-escaped
+            assert "https://learnhouse.io/home" in created.kwargs["body"]  # CTA link
+            assert "Org &amp; Co" in created.kwargs["subject"]
+
+            assert send_org_deleted_email("a@test.com", "Org & Co") is True
+            assert "deleted" in send_email.call_args.kwargs["subject"].lower()
+
+            assert send_account_deleted_email("a@test.com", "user<script>") is True
+            assert "deleted" in send_email.call_args.kwargs["subject"].lower()
+
     def test_send_account_creation_email_escapes_username(self):
         with patch("src.services.users.emails.send_email", return_value=True) as send_email:
             result = send_account_creation_email(_user(), "user@test.com")
@@ -72,8 +89,10 @@ class TestEmailsService:
 
         first_body = send_email.call_args_list[0].kwargs["body"]
         second_body = send_email.call_args_list[1].kwargs["body"]
-        assert "reset?email=user%2Btag%40test.com&amp;resetCode=code%20123" in first_body
-        assert "reset-password?email=user%2Btag%40test.com&amp;resetCode=code%20123" in second_body
+        # Both variants now point at the real .io route `/reset` (the platform
+        # variant previously used `/reset-password`, which 404s on .io).
+        assert "/reset?email=user%2Btag%40test.com&amp;resetCode=code%20123" in first_body
+        assert "/reset?email=user%2Btag%40test.com&amp;resetCode=code%20123" in second_body
 
     def test_send_invitation_role_change_and_verification_email(self):
         with patch("src.services.users.emails.send_email", return_value=True) as send_email:

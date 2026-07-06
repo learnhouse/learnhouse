@@ -6,6 +6,7 @@
  */
 
 import { getAPIUrl } from '@services/config/config'
+import { getErrorMessage as getDetailMessage } from '@services/utils/ts/errorMessage'
 
 // ============================================================================
 // Types
@@ -141,7 +142,7 @@ export async function getAvailableProviders(
 
   if (!response.ok) {
     const error = await response.json().catch(() => ({}))
-    throw new Error(error.detail || 'Failed to fetch SSO providers')
+    throw new Error(getDetailMessage(error?.detail, 'Failed to fetch SSO providers'))
   }
 
   return response.json()
@@ -169,7 +170,7 @@ export async function getSSOConfig(
 
   if (!response.ok) {
     const error = await response.json().catch(() => ({}))
-    throw new Error(error.detail || 'Failed to fetch SSO configuration')
+    throw new Error(getDetailMessage(error?.detail, 'Failed to fetch SSO configuration'))
   }
 
   return response.json()
@@ -195,7 +196,7 @@ export async function createSSOConfig(
 
   if (!response.ok) {
     const error = await response.json().catch(() => ({}))
-    throw new Error(error.detail || 'Failed to create SSO configuration')
+    throw new Error(getDetailMessage(error?.detail, 'Failed to create SSO configuration'))
   }
 
   return response.json()
@@ -221,7 +222,7 @@ export async function updateSSOConfig(
 
   if (!response.ok) {
     const error = await response.json().catch(() => ({}))
-    throw new Error(error.detail || 'Failed to update SSO configuration')
+    throw new Error(getDetailMessage(error?.detail, 'Failed to update SSO configuration'))
   }
 
   return response.json()
@@ -245,7 +246,7 @@ export async function deleteSSOConfig(
 
   if (!response.ok) {
     const error = await response.json().catch(() => ({}))
-    throw new Error(error.detail || 'Failed to delete SSO configuration')
+    throw new Error(getDetailMessage(error?.detail, 'Failed to delete SSO configuration'))
   }
 }
 
@@ -326,7 +327,7 @@ export async function initiateSSOLogin(
 
   if (!response.ok) {
     const error = await response.json().catch(() => ({}))
-    throw new Error(error.detail || 'Failed to initiate SSO login')
+    throw new Error(getDetailMessage(error?.detail, 'Failed to initiate SSO login'))
   }
 
   return response.json()

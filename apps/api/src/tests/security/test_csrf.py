@@ -280,3 +280,106 @@ class TestCSRFMiddlewareDispatch:
         assert isinstance(result, JSONResponse)
         assert result.status_code == 403
         call_next.assert_not_awaited()
+
+
+def _mock_session_factory(row):
+    """Build a fake _async_session_factory whose session.execute().scalars().first()
+    returns `row` (a CustomDomain-like object, or None)."""
+    session = MagicMock()
+    result = MagicMock()
+    result.scalars.return_value.first.return_value = row
+    session.execute = AsyncMock(return_value=result)
+    ctx = MagicMock()
+    ctx.__aenter__ = AsyncMock(return_value=session)
+    ctx.__aexit__ = AsyncMock(return_value=False)
+    return MagicMock(return_value=ctx)
+
+
+class TestCSRFCustomDomain:
+    """The Origin allowlist is platform-domain only; verified org custom domains
+    are allowed via a cached DB lookup on the slow path."""
+
+    def test_verified_custom_domain_origin_allowed(self):
+        with patch("src.security.csrf.get_learnhouse_config", return_value=_make_mock_config(
+            allowed_origins=["https://example.com"]
+        )):
+            from src.security.csrf import CSRFProtectionMiddleware, _CUSTOM_DOMAIN_CACHE
+            _CUSTOM_DOMAIN_CACHE.clear()
+            mw = CSRFProtectionMiddleware(MagicMock())
+            with patch("src.core.events.database._async_session_factory", _mock_session_factory(object())):
+                assert asyncio.run(mw._is_verified_custom_domain_origin("https://learn.acme.org")) is True
+                # Second call hits the cache (no factory needed).
+            assert asyncio.run(mw._is_verified_custom_domain_origin("https://learn.acme.org")) is True
+
+    def test_unverified_custom_domain_origin_denied(self):
+        with patch("src.security.csrf.get_learnhouse_config", return_value=_make_mock_config(
+            allowed_origins=["https://example.com"]
+        )):
+            from src.security.csrf import CSRFProtectionMiddleware, _CUSTOM_DOMAIN_CACHE
+            _CUSTOM_DOMAIN_CACHE.clear()
+            mw = CSRFProtectionMiddleware(MagicMock())
+            with patch("src.core.events.database._async_session_factory", _mock_session_factory(None)):
+                assert asyncio.run(mw._is_verified_custom_domain_origin("https://attacker.com")) is False
+
+    def test_invalid_origin_has_no_host(self):
+        with patch("src.security.csrf.get_learnhouse_config", return_value=_make_mock_config()):
+            from src.security.csrf import CSRFProtectionMiddleware
+            mw = CSRFProtectionMiddleware(MagicMock())
+            assert asyncio.run(mw._is_verified_custom_domain_origin("not-a-url")) is False
+
+    def test_urlparse_raises_is_denied(self):
+        # If URL parsing itself blows up, the origin is denied (fail-closed).
+        with patch("src.security.csrf.get_learnhouse_config", return_value=_make_mock_config()):
+            from src.security.csrf import CSRFProtectionMiddleware
+            mw = CSRFProtectionMiddleware(MagicMock())
+            with patch("src.security.csrf.urlparse", side_effect=ValueError("boom")):
+                assert asyncio.run(mw._is_verified_custom_domain_origin("https://x.example")) is False
+
+    def test_cache_evicts_when_full(self):
+        # When the cache hits its cap it is cleared before inserting, so it never
+        # grows unbounded. Cap patched low to exercise the eviction branch.
+        with patch("src.security.csrf.get_learnhouse_config", return_value=_make_mock_config()):
+            from src.security.csrf import CSRFProtectionMiddleware, _CUSTOM_DOMAIN_CACHE
+            _CUSTOM_DOMAIN_CACHE.clear()
+            _CUSTOM_DOMAIN_CACHE["stale.example"] = (True, 9999999999.0)
+            mw = CSRFProtectionMiddleware(MagicMock())
+            with patch("src.security.csrf._CUSTOM_DOMAIN_CACHE_MAX", 1):
+                with patch("src.core.events.database._async_session_factory", _mock_session_factory(None)):
+                    assert asyncio.run(mw._is_verified_custom_domain_origin("https://fresh.example")) is False
+            # The pre-existing entry was evicted by the clear(); only the new host remains.
+            assert "stale.example" not in _CUSTOM_DOMAIN_CACHE
+            assert "fresh.example" in _CUSTOM_DOMAIN_CACHE
+
+    def test_dispatch_allows_verified_custom_domain(self):
+        with patch("src.security.csrf.get_learnhouse_config", return_value=_make_mock_config(
+            allowed_origins=["https://example.com"]
+        )):
+            from src.security.csrf import CSRFProtectionMiddleware, _CUSTOM_DOMAIN_CACHE
+            _CUSTOM_DOMAIN_CACHE.clear()
+            mw = CSRFProtectionMiddleware(MagicMock())
+            req = _make_request("POST", {"origin": "https://learn.acme.org"})
+            called = {"v": False}
+
+            async def call_next(_r):
+                called["v"] = True
+                return JSONResponse({"ok": True})
+
+            with patch("src.core.events.database._async_session_factory", _mock_session_factory(object())):
+                asyncio.run(mw.dispatch(req, call_next))
+            assert called["v"] is True
+
+    def test_dispatch_rejects_unverified_origin(self):
+        with patch("src.security.csrf.get_learnhouse_config", return_value=_make_mock_config(
+            allowed_origins=["https://example.com"]
+        )):
+            from src.security.csrf import CSRFProtectionMiddleware, _CUSTOM_DOMAIN_CACHE
+            _CUSTOM_DOMAIN_CACHE.clear()
+            mw = CSRFProtectionMiddleware(MagicMock())
+            req = _make_request("POST", {"origin": "https://attacker.com"})
+
+            async def call_next(_r):
+                return JSONResponse({"ok": True})
+
+            with patch("src.core.events.database._async_session_factory", _mock_session_factory(None)):
+                resp = asyncio.run(mw.dispatch(req, call_next))
+            assert resp.status_code == 403

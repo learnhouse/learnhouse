@@ -1,10 +1,12 @@
 'use client'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
 import { useOrg } from '@components/Contexts/OrgContext'
+import useAdminStatus from '@components/Hooks/useAdminStatus'
 import LearnHouseSpinner from '@components/Objects/Loaders/LearnHouseSpinner'
 import ConfirmationModal from '@components/Objects/StyledElements/ConfirmationModal/ConfirmationModal'
 import Toast from '@components/Objects/StyledElements/Toast/Toast'
 import UserAvatar from '@components/Objects/UserAvatar'
+import ToolTip from '@components/Objects/StyledElements/Tooltip/Tooltip'
 import { getAPIUrl } from '@services/config/config'
 import { getUserAvatarMediaDirectory } from '@services/media/media'
 import { removeUserFromOrg, removeUsersFromOrg, updateUserRole } from '@services/organizations/orgs'
@@ -42,6 +44,10 @@ function OrgUsers() {
   const session = useLHSession() as any
   const access_token = session?.data?.tokens?.access_token;
   const queryClient = useQueryClient()
+  // Member mutations (remove, role change) require admin/maintainer server-side
+  // (rbac "delete"/"update"). Editors can reach this page (dashboard access) but
+  // would 403 on those actions, so only expose the controls to org managers.
+  const { canManageOrg } = useAdminStatus()
 
   const [page, setPage] = useState(1)
   const [searchValue, setSearchValue] = useState('')
@@ -269,15 +275,16 @@ function OrgUsers() {
                     onChange={(e) => handleSearchChange(e.target.value)}
                   />
                 </div>
-                <button
-                  onClick={handleExportCSV}
-                  disabled={isExporting || total === 0}
-                  className="inline-flex items-center gap-1.5 px-3 py-2 border border-gray-200 rounded-lg text-sm font-medium text-gray-600 bg-white hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed transition-all"
-                  title="Export users as CSV"
-                >
-                  <Download className="w-4 h-4" />
-                  <span className="hidden sm:inline">Export</span>
-                </button>
+                <ToolTip content={t('dashboard.users.active_users.actions.export_csv', { defaultValue: 'Export users (CSV)' })} side="top">
+                  <button
+                    onClick={handleExportCSV}
+                    disabled={isExporting || total === 0}
+                    className="inline-flex items-center gap-1.5 px-3 py-2 border border-gray-200 rounded-lg text-sm font-medium text-gray-600 bg-white hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed transition-all"
+                  >
+                    <Download className="w-4 h-4" />
+                    <span className="hidden sm:inline">Export</span>
+                  </button>
+                </ToolTip>
               </div>
             </div>
 
@@ -352,19 +359,21 @@ function OrgUsers() {
                   >
                     Clear selection
                   </button>
-                  <ConfirmationModal
-                    confirmationButtonText={`Remove ${selectedUserIds.size} user${selectedUserIds.size !== 1 ? 's' : ''}`}
-                    confirmationMessage={`Are you sure you want to remove ${selectedUserIds.size} user${selectedUserIds.size !== 1 ? 's' : ''} from the organization? This action cannot be undone.`}
-                    dialogTitle="Remove selected users"
-                    dialogTrigger={
-                      <button className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-rose-600 text-white hover:bg-rose-700 rounded-md text-xs font-medium transition-all">
-                        <LogOut className="w-3.5 h-3.5" />
-                        <span>Remove selected</span>
-                      </button>
-                    }
-                    functionToExecute={handleBatchRemove}
-                    status="warning"
-                  />
+                  {canManageOrg && (
+                    <ConfirmationModal
+                      confirmationButtonText={`Remove ${selectedUserIds.size} user${selectedUserIds.size !== 1 ? 's' : ''}`}
+                      confirmationMessage={`Are you sure you want to remove ${selectedUserIds.size} user${selectedUserIds.size !== 1 ? 's' : ''} from the organization? This action cannot be undone.`}
+                      dialogTitle="Remove selected users"
+                      dialogTrigger={
+                        <button className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-rose-600 text-white hover:bg-rose-700 rounded-md text-xs font-medium transition-all">
+                          <LogOut className="w-3.5 h-3.5" />
+                          <span>Remove selected</span>
+                        </button>
+                      }
+                      functionToExecute={handleBatchRemove}
+                      status="warning"
+                    />
+                  )}
                 </div>
               </div>
             )}
@@ -594,7 +603,7 @@ function OrgUsers() {
                           <Select
                             value={user.role.role_uuid}
                             onValueChange={(newRoleUuid) => handleRoleChange(user.user.id, newRoleUuid)}
-                            disabled={!roles}
+                            disabled={!roles || !canManageOrg}
                           >
                             <SelectTrigger className={`h-8 w-fit px-3 text-xs font-semibold rounded-md nice-shadow transition-all border-0 ${
                               user.role.name.toLowerCase().includes('admin')
@@ -637,24 +646,26 @@ function OrgUsers() {
 
                         {/* Actions */}
                         <td className="px-6 py-4 text-right">
-                          <ConfirmationModal
-                            confirmationButtonText={t('dashboard.users.active_users.modals.remove_user.button')}
-                            confirmationMessage={t('dashboard.users.active_users.modals.remove_user.message')}
-                            dialogTitle={t('dashboard.users.active_users.modals.remove_user.title', { username: user.user.username })}
-                            dialogTrigger={
-                              <button
-                                className="inline-flex items-center gap-1.5 h-8 px-3 bg-white text-gray-600 hover:bg-rose-50 hover:text-rose-600 rounded-md text-xs font-medium nice-shadow transition-all"
-                                title={t('dashboard.users.active_users.actions.remove_from_org')}
-                              >
-                                <LogOut className="w-3.5 h-3.5" />
-                                <span>{t('dashboard.users.active_users.actions.remove_from_org')}</span>
-                              </button>
-                            }
-                            functionToExecute={() => {
-                              handleRemoveUser(user.user.id)
-                            }}
-                            status="warning"
-                          />
+                          {canManageOrg && (
+                            <ConfirmationModal
+                              confirmationButtonText={t('dashboard.users.active_users.modals.remove_user.button')}
+                              confirmationMessage={t('dashboard.users.active_users.modals.remove_user.message')}
+                              dialogTitle={t('dashboard.users.active_users.modals.remove_user.title', { username: user.user.username })}
+                              dialogTrigger={
+                                <button
+                                  className="inline-flex items-center gap-1.5 h-8 px-3 bg-white text-gray-600 hover:bg-rose-50 hover:text-rose-600 rounded-md text-xs font-medium nice-shadow transition-all"
+                                  title={t('dashboard.users.active_users.actions.remove_from_org')}
+                                >
+                                  <LogOut className="w-3.5 h-3.5" />
+                                  <span>{t('dashboard.users.active_users.actions.remove_from_org')}</span>
+                                </button>
+                              }
+                              functionToExecute={() => {
+                                handleRemoveUser(user.user.id)
+                              }}
+                              status="warning"
+                            />
+                          )}
                         </td>
                       </tr>
                     ))}
@@ -675,23 +686,27 @@ function OrgUsers() {
                   }) || `Showing ${(page - 1) * ITEMS_PER_PAGE + 1}-${Math.min(page * ITEMS_PER_PAGE, total)} of ${total}`}
                 </div>
                 <div className="flex items-center gap-2">
-                  <button
-                    onClick={() => handlePageChange(page - 1)}
-                    disabled={page === 1}
-                    className="p-2 rounded-lg border border-gray-200 bg-white hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed transition-all"
-                  >
-                    <ChevronLeft className="w-4 h-4 text-gray-600" />
-                  </button>
+                  <ToolTip content={t('dashboard.users.active_users.pagination.previous', { defaultValue: 'Previous page' })} side="top">
+                    <button
+                      onClick={() => handlePageChange(page - 1)}
+                      disabled={page === 1}
+                      className="p-2 rounded-lg border border-gray-200 bg-white hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed transition-all"
+                    >
+                      <ChevronLeft className="w-4 h-4 text-gray-600" />
+                    </button>
+                  </ToolTip>
                   <span className="text-sm text-gray-600 font-medium min-w-[80px] text-center bg-white px-3 py-2 rounded-lg border border-gray-200">
                     {t('dashboard.users.active_users.pagination.page', { current: page, total: Math.ceil(total / ITEMS_PER_PAGE) }) || `Page ${page} of ${Math.ceil(total / ITEMS_PER_PAGE)}`}
                   </span>
-                  <button
-                    onClick={() => handlePageChange(page + 1)}
-                    disabled={page * ITEMS_PER_PAGE >= total}
-                    className="p-2 rounded-lg border border-gray-200 bg-white hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed transition-all"
-                  >
-                    <ChevronRight className="w-4 h-4 text-gray-600" />
-                  </button>
+                  <ToolTip content={t('dashboard.users.active_users.pagination.next', { defaultValue: 'Next page' })} side="top">
+                    <button
+                      onClick={() => handlePageChange(page + 1)}
+                      disabled={page * ITEMS_PER_PAGE >= total}
+                      className="p-2 rounded-lg border border-gray-200 bg-white hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed transition-all"
+                    >
+                      <ChevronRight className="w-4 h-4 text-gray-600" />
+                    </button>
+                  </ToolTip>
                 </div>
               </div>
             )}

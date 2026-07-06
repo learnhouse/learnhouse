@@ -51,7 +51,7 @@ export default function AuthMobileHeader({ org }: AuthMobileHeaderProps) {
 
   return (
     <div
-      className="relative flex items-center gap-4 px-5 py-4"
+      className="relative flex items-center gap-4 px-5 py-4 rounded-b-2xl overflow-hidden"
       style={getBackgroundStyle()}
     >
       {hasCustomBackground && (
@@ -80,7 +80,7 @@ export default function AuthMobileHeader({ org }: AuthMobileHeaderProps) {
       </Link>
 
       <span className="relative z-10 font-semibold text-white text-lg truncate">
-        {org?.name}
+        {org?.name || 'LearnHouse'}
       </span>
 
       {/* Unsplash attribution (required by Unsplash API guidelines) */}

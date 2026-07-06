@@ -5,6 +5,8 @@ export default async function CommunityPage({
 }: {
   params: Promise<{ orgslug: string; communityuuid: string }>
 }) {
-  const { orgslug, communityuuid } = await params
-  redirect(`/${orgslug}/dash/communities/${communityuuid}/general`)
+  const { communityuuid } = await params
+  // Browser-relative path only — the proxy adds the /orgs/{slug} prefix; a
+  // slug-prefixed path would be double-prefixed → 404.
+  redirect(`/dash/communities/${communityuuid}/general`)
 }

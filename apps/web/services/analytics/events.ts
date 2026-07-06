@@ -145,6 +145,21 @@ export enum AnalyticsEvent {
   AccountProfileUpdated = 'account_profile_updated',
   AccountBillingPortalOpened = 'account_billing_portal_opened',
   AccountSubpageViewed = 'account_subpage_viewed',
+  AccountDeleteInitiated = 'account_delete_initiated',
+  AccountDeleted = 'account_deleted',
+
+  // ── Hub: org onboarding funnel + lifecycle + plan (SaaS) ─────────────────
+  OnboardingStarted = 'onboarding_started',
+  OnboardingUseTypeSelected = 'onboarding_use_type_selected',
+  OnboardingPlanSelected = 'onboarding_plan_selected',
+  OrgFormStarted = 'onboarding_org_form_started',
+  OrgCreateSubmitted = 'onboarding_org_create_submitted',
+  OrgCreated = 'onboarding_org_created',
+  OrgCreateFailed = 'onboarding_org_create_failed',
+  OrgDeleteInitiated = 'org_delete_initiated',
+  OrgDeleted = 'org_deleted',
+  PlanPageViewed = 'plan_page_viewed',
+  PlanCheckoutInitiated = 'plan_checkout_initiated',
 
   // ── Store & checkout (buyer) ─────────────────────────────────────────────
   StoreViewed = 'store_viewed',

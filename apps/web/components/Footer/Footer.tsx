@@ -6,7 +6,9 @@ import { usePathname } from 'next/navigation'
 
 const Footer: React.FC = () => {
   const pathname = usePathname()
-  const isDashboard = pathname?.startsWith('/dashboard')
+  // App/dashboard pages live under `/dash` on .io (org subdomains) — the old
+  // `/dashboard` prefix never matches here. Match both to be safe.
+  const isDashboard = /(?:^|\/)dash(?:board)?(?:\/|$)/.test(pathname || '')
 
   // Don't run scripts in dashboard pages
   if (isDashboard) {

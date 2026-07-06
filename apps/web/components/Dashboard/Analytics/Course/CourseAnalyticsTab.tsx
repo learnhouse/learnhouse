@@ -4,10 +4,9 @@ import dynamic from 'next/dynamic'
 import { useTranslation } from 'react-i18next'
 import { useOrg } from '@components/Contexts/OrgContext'
 import { useCourse } from '@components/Contexts/CourseContext'
-import { isFeatureAvailable } from '@services/plans/plans'
 import { useAnalyticsStatus } from '../useAnalyticsDashboard'
 import FeatureGate from '@components/Dashboard/Shared/FeatureGate/FeatureGate'
-import { usePlan } from '@components/Hooks/usePlan'
+import { useResolvedFeature } from '@components/Hooks/useResolvedFeature'
 import ExportAnalyticsButton from '../AnalyticsExport'
 
 const CourseOverviewStats = dynamic(() => import('./CourseOverviewStats'))
@@ -62,8 +61,7 @@ export default function CourseAnalyticsTab({ courseUUID }: { courseUUID: string 
   const [days, setDays] = useState('30')
   const org = useOrg() as any
   const courseContext = useCourse() as any
-  const currentPlan = usePlan()
-  const isCourseAnalyticsAvailable = isFeatureAvailable('course_analytics', currentPlan)
+  const courseAnalyticsGate = useResolvedFeature('course_analytics')
   const { data: analyticsStatus } = useAnalyticsStatus()
   const isConfigured = analyticsStatus?.configured === true
   const orgslug = org?.slug || ''
@@ -94,7 +92,7 @@ export default function CourseAnalyticsTab({ courseUUID }: { courseUUID: string 
     return map
   }, [courseContext?.courseStructure])
 
-  if (!isCourseAnalyticsAvailable) {
+  if (courseAnalyticsGate.reason) {
     return (
       <div className="p-6">
         <FeatureGate feature="course_analytics">

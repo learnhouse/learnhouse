@@ -8,6 +8,10 @@ import {
   ChatsCircle,
   ChalkboardSimple,
   Cube,
+  FolderSimple,
+  Headphones,
+  ChartBar,
+  Code,
 } from '@phosphor-icons/react'
 
 export interface DashboardMenuItem {
@@ -41,11 +45,25 @@ export const DASHBOARD_MENU_ITEMS: DashboardMenuItem[] = [
     labelKey: 'common.assignments',
   },
   {
+    id: 'library',
+    href: '/dash/library',
+    icon: FolderSimple,
+    labelKey: 'library.library',
+    featureKey: 'folders',
+  },
+  {
     id: 'communities',
     href: '/dash/communities',
     icon: ChatsCircle,
     labelKey: 'communities.title',
     featureKey: 'communities',
+  },
+  {
+    id: 'podcasts',
+    href: '/dash/podcasts',
+    icon: Headphones,
+    labelKey: 'podcasts.podcasts',
+    featureKey: 'podcasts',
   },
   {
     id: 'boards',
@@ -81,5 +99,17 @@ export const DASHBOARD_MENU_ITEMS: DashboardMenuItem[] = [
     href: '/dash/org/settings/general',
     icon: Buildings,
     labelKey: 'common.organization',
+  },
+  {
+    id: 'analytics',
+    href: '/dash/analytics',
+    icon: ChartBar,
+    labelKey: 'common.analytics',
+  },
+  {
+    id: 'developers',
+    href: '/dash/developers/api',
+    icon: Code,
+    labelKey: 'dashboard.developers.breadcrumb',
   },
 ]

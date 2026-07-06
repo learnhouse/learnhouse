@@ -18,7 +18,7 @@ import { useTranslation } from 'react-i18next';
 function AssignmentStudentActivity() {
   const { t } = useTranslation()
   const assignments = useAssignments() as any;
-  const course = useCourse() as any;
+  const _course = useCourse() as any;
   const org = useOrg() as any;
   const submission = useAssignmentSubmission() as any;
   const taskSubmissionsMap = useAssignmentTaskSubmissions() as Record<string, any> | null;

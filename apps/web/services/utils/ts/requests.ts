@@ -1,5 +1,6 @@
 import { getUriWithOrg, getAPIUrl } from '@services/config/config'
 import { dispatchAuthExpired } from '@/lib/auth/events'
+import { hasSessionMarker } from '@services/auth/sessionMarker'
 
 /**
  * Validates that a URL is a safe API URL by checking it starts with the configured API base URL.
@@ -138,7 +139,11 @@ export const errorHandling = async (res: any) => {
     const error: any = new Error(message)
     error.status = res.status
     error.detail = detail
-    if (typeof window !== 'undefined' && res.status === 401) {
+    // Only treat a 401 as an EXPIRED session (→ force login) when the user
+    // actually had one. An anonymous visitor on public content legitimately gets
+    // 401s from auth-required endpoints (progress, enrollment, …) and must NOT be
+    // redirected to login.
+    if (typeof window !== 'undefined' && res.status === 401 && hasSessionMarker()) {
       dispatchAuthExpired({
         callbackUrl: window.location.pathname.startsWith('/admin') ? '/admin/login' : '/login',
         reason: 'api_401',

@@ -118,6 +118,19 @@ export async function updateOrgLanding(
   return res
 }
 
+export async function updateOrgFoldersSort(
+  org_id: any,
+  sort_mode: string,
+  access_token: string
+) {
+  const result = await fetch(
+    `${getAPIUrl()}orgs/${org_id}/config/folders-sort?sort_mode=${sort_mode}`,
+    RequestBodyWithAuthHeader('PUT', null, null, access_token)
+  )
+  const res = await getResponseMetadata(result)
+  return res
+}
+
 export async function uploadLandingContent(
   org_uuid: any,
   content_file: File,
@@ -141,6 +154,16 @@ export async function removeUserFromOrg(
 ) {
   const result = await fetch(
     `${getAPIUrl()}orgs/${org_id}/users/${user_id}`,
+    RequestBodyWithAuthHeader('DELETE', null, null, access_token)
+  )
+  const res = await getResponseMetadata(result)
+  return res
+}
+
+// Self-service: the current user leaves an org they belong to (no admin rights).
+export async function leaveOrg(org_id: any, access_token: any) {
+  const result = await fetch(
+    `${getAPIUrl()}orgs/${org_id}/leave`,
     RequestBodyWithAuthHeader('DELETE', null, null, access_token)
   )
   const res = await getResponseMetadata(result)

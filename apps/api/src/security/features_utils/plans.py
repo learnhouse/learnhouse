@@ -254,6 +254,18 @@ def get_plan_feature_config(plan: str, feature: str) -> dict:
     return cfg["features"].get(feature, {"enabled": False, "limit": 0})
 
 
+def is_paying_plan(plan: str) -> bool:
+    """
+    Whether `plan` is a paid plan (anything above free).
+
+    Features INCLUDED in a paid plan are guaranteed to the organization: an
+    admin/superadmin per-org toggle can never disable them (paying users always
+    keep the features their plan makes available). The toggle still governs free
+    orgs and comp-granted extras. See resolve_feature().
+    """
+    return plan not in ("free",)
+
+
 def is_feature_enabled_for_plan(plan: str, feature: str) -> bool:
     """Check if a feature is enabled for a given plan."""
     from src.core.deployment_mode import get_deployment_mode
