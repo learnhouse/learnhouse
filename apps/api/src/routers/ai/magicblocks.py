@@ -173,7 +173,8 @@ async def start_magicblock_session(
     stream = generate_magicblock_stream(
         prompt=session_request.prompt,
         session=session,
-        model_name=ai_model
+        model_name=ai_model,
+        style_reference=session_request.style_reference,
     )
 
     return StreamingResponse(
@@ -190,13 +191,13 @@ async def start_magicblock_session(
 @router.post(
     "/magicblocks/iterate",
     summary="Iterate MagicBlock session (streaming)",
-    description="Continue an existing MagicBlock session with a new user message. Streams the updated HTML as Server-Sent Events (SSE). Consumes AI credits and is bounded by the session's max iterations.",
+    description="Continue an existing MagicBlock session with a new user message. Streams the updated HTML as Server-Sent Events (SSE). Consumes AI credits.",
     responses={
         200: {
             "description": "SSE stream of generation events (chunk, done, error).",
             "content": {"text/event-stream": {}},
         },
-        400: {"description": "Maximum iterations reached or activity/block UUID mismatch"},
+        400: {"description": "Activity/block UUID mismatch"},
         401: {"description": "Authentication required"},
         403: {"description": "AI feature disabled or insufficient credits"},
         404: {"description": "Session, course, or organization not found"},
@@ -281,7 +282,8 @@ async def iterate_magicblock_session(
         prompt=message_request.message,
         session=session,
         model_name=ai_model,
-        current_html=html_to_iterate
+        current_html=html_to_iterate,
+        style_reference=message_request.style_reference,
     )
 
     return StreamingResponse(
@@ -330,5 +332,6 @@ async def get_session_state(
         message_history=[
             MagicBlockMessage(role=msg.role, content=msg.content)
             for msg in session.message_history
-        ]
+        ],
+        revisions=session.revisions,
     )
