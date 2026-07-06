@@ -130,6 +130,10 @@
         "webhooks": {
           "title": "Pro Feature",
           "description": "Automations is a premium feature available only to organizations on our Pro plan or higher. Upgrade to wire your courses up to webhooks and external integrations."
+        },
+        "api_access": {
+          "title": "Pro Feature",
+          "description": "Dostęp API to funkcja premium dostępna tylko dla organizacji na naszym planie Pro lub wyższym. Uaktualnij, aby odblokować dostęp programistyczny do danych Twojej organizacji."
         }
       },
       "current_plan": "Aktualny plan",
@@ -146,7 +150,9 @@
           "payments": "Płatności",
           "trail": "Śledzenie postępów",
           "boards": "Tablice",
-          "playgrounds": "Playgrounds"
+          "playgrounds": "Playgrounds",
+          "library": "Biblioteka",
+          "folders": "Biblioteka"
         },
         "public": {
           "title": "{{feature}} niedostępna",
@@ -195,7 +201,7 @@
     "boards": "Tablice",
     "close": "Zamknij",
     "optional": "opcjonalne",
-    "playgrounds": "Place zabaw",
+    "playgrounds": "Playgrounds",
     "analytics": "Analityka",
     "add": "Dodaj",
     "choose_an_organization_to_continue": "Wybierz organizację, aby kontynuować",
@@ -205,7 +211,19 @@
     "no_content_yet": "Brak treści",
     "other": "Other",
     "disabled": "Disabled",
-    "store": "Store"
+    "store": "Store",
+    "organizations": "Organizacje",
+    "billing": "Płatności",
+    "create_organization": "Utwórz organizację",
+    "copyright": "© {{year}} LearnHouse, Inc.",
+    "delete_organization_error": "Nie udało się usunąć tej organizacji. Spróbuj ponownie.",
+    "org_actions": "Działania organizacji",
+    "manage_upgrade": "Zarządzaj / Ulepsz",
+    "delete_organization": "Usuń organizację",
+    "delete_organization_warning": "Spowoduje to trwałe usunięcie {{name}} i wszystkich jej danych. Tej operacji nie można cofnąć.",
+    "delete_organization_confirm_label": "Wpisz {{slug}}, aby potwierdzić",
+    "deleting": "Usuwanie…",
+    "retry": "Ponów"
   },
   "banner": {
     "viewing_as_guest": "Przeglądasz {{name}} jako gość.",
@@ -341,7 +359,22 @@
     "verify_email_title": "Zweryfikuj e-mail",
     "verifying_email": "Weryfikacja adresu e-mail...",
     "error_generic": "Coś poszło nie tak. Spróbuj ponownie.",
-    "sign_in": "Zaloguj się"
+    "sign_in": "Zaloguj się",
+    "terms_text": "Kontynuując, akceptujesz",
+    "terms_of_service": "Warunki korzystania z usługi",
+    "and": "oraz",
+    "privacy_policy": "Politykę prywatności",
+    "image_title_forgot": "Zresetuj hasło.",
+    "image_subtitle_forgot": "Pomożemy Ci błyskawicznie wrócić do Twojego konta.",
+    "image_title_login": "Witaj ponownie w LearnHouse.",
+    "image_subtitle_login": "Kontynuuj od miejsca, w którym skończyłeś — Twoje kursy, kursanci i narzędzia czekają.",
+    "image_title_reset": "Już prawie gotowe.",
+    "image_subtitle_reset": "Utwórz silne hasło, aby zabezpieczyć swoje konto.",
+    "image_title_signup": "Zacznij uczyć z LearnHouse.",
+    "image_subtitle_signup": "Utwórz konto i uruchom swój pierwszy kurs w kilka minut.",
+    "image_title_verify": "Zweryfikuj swój adres e-mail.",
+    "image_subtitle_verify": "Jeden szybki krok, aby zabezpieczyć konto i zacząć.",
+    "turnstile_failed": "Weryfikacja nie powiodła się. Spróbuj ponownie."
   },
   "verify_email": {
     "title": "Weryfikacja email",
@@ -985,7 +1018,24 @@
     "quiz": {
       "correct_answer": "Poprawna",
       "incorrect_answer": "Błędna"
-    }
+    },
+    "quick_grade": {
+      "full": "Pełna",
+      "half": "Połowa",
+      "zero": "Zero"
+    },
+    "task_feedback_placeholder": "Notatka do tego zadania (zapisana z oceną)",
+    "attempt_label": "Próba",
+    "attempt_count": "Próba {{current}}",
+    "attempt_count_bounded": "Próba {{current}} z {{max}}",
+    "retry_assignment": "Spróbuj ponownie",
+    "retry_assignment_title": "Spróbować to zadanie ponownie?",
+    "retry_assignment_confirm": "Twoje obecne zgłoszenie i odpowiedzi zostaną zresetowane, aby móc zacząć od nowa. Twoja poprzednia ocena zostanie zastąpiona po ponownym wysłaniu.",
+    "retry_assignment_remaining": "Masz {{remaining}} próbę{{plural}} pozostałą po tej.",
+    "retry_assignment_last": "To Twoja ostatnia próba — wykorzystaj ją dobrze.",
+    "retry_assignment_success": "Twoja praca została zresetowana — spróbuj jeszcze raz.",
+    "retry_assignment_failed": "Nie można zresetować Twojego zgłoszenia. Spróbuj ponownie.",
+    "retry_no_attempts_left": "Brak pozostałych prób"
   },
   "certificate": {
     "certificate": "Certyfikat",
@@ -1039,7 +1089,7 @@
       "users": "Członkowie",
       "communities": "Społeczności",
       "discussions": "Dyskusje",
-      "playgrounds": "Playgroundy",
+      "playgrounds": "Playgrounds",
       "podcasts": "Podcasty"
     }
   },
@@ -1082,7 +1132,23 @@
     "my_courses": "Moje kursy",
     "no_purchased_courses": "Brak zakupionych kursów",
     "purchased_courses_description": "Kursy, które kupiłeś lub subskrybujesz, pojawią się tutaj",
-    "purchases": "Zakupy"
+    "purchases": "Zakupy",
+    "back_home": "Powrót do organizacji",
+    "subtitle": "Zarządzaj swoim profilem, zabezpieczeniami i kontem",
+    "section": {
+      "profile": "Profil",
+      "security": "Zabezpieczenia",
+      "danger": "Strefa zagrożenia"
+    },
+    "delete": {
+      "success": "Twoje konto zostało usunięte.",
+      "error": "Nie udało się usunąć konta. Spróbuj ponownie.",
+      "title": "Usuń konto",
+      "description": "Trwale usuń swoje konto i odbierz sobie dostęp. Tej operacji nie można cofnąć.",
+      "warning": "Spowoduje to trwałe usunięcie konta i wszystkich powiązanych danych. Tej operacji nie można cofnąć.",
+      "confirm_label": "Wpisz {{username}}, aby potwierdzić",
+      "deleting": "Usuwanie…"
+    }
   },
   "user": {
     "user_settings": "Ustawienia użytkownika",
@@ -2052,7 +2118,8 @@
             "uploading": "Przesyłanie pliku i tworzenie aktywności...",
             "upload_success": "Plik został pomyślnie przesłany",
             "creating_uploading": "Tworzenie aktywności i przesyłanie pliku...",
-            "update_error": "Nie udało się zaktualizować aktywności"
+            "update_error": "Nie udało się zaktualizować aktywności",
+            "upload_error": "Nie udało się przesłać pliku"
           },
           "versioning": {
             "version_history": "Historia wersji",
@@ -2189,7 +2256,8 @@
           "seo": "SEO",
           "automations": "Automatyzacje",
           "api": "API Access",
-          "menu": "Menu"
+          "menu": "Menu",
+          "danger": "Strefa Zagrożenia"
         },
         "pages": {
           "general": {
@@ -2235,6 +2303,10 @@
           "menu": {
             "title": "Public menu",
             "subtitle": "Choose and order the links shown in your public navigation"
+          },
+          "danger": {
+            "title": "Strefa Zagrożenia",
+            "subtitle": "Nieodwracalne i destrukcyjne działania dla tej organizacji"
           }
         },
         "name": "Nazwa organizacji",
@@ -3610,7 +3682,8 @@
           "current_grade": "Aktualna ocena",
           "passing": "Zaliczone",
           "not_passing": "Niezaliczone",
-          "not_submitted": "Nie przesłano"
+          "not_submitted": "Nie przesłano",
+          "manually_graded": "Oceniono ręcznie"
         },
         "feedback": {
           "label": "Ogólna opinia",
@@ -3710,7 +3783,12 @@
             "grading_type_hint": "Jak oceny są wyświetlane uczniom",
             "grading_options_hint": "Zachowanie przy wysłaniu",
             "show_correct_answers_description": "Po ocenieniu zgłoszenia pokaż uczniom poprawne odpowiedzi obok ich własnych — które opcje quizu były poprawne, oczekiwaną krótką lub liczbową odpowiedź oraz poprawne uzupełnienia w formularzu.",
-            "show_correct_answers_label": "Pokaż poprawne odpowiedzi po ocenieniu"
+            "show_correct_answers_label": "Pokaż poprawne odpowiedzi po ocenieniu",
+            "allow_retries_label": "Zezwól na próby",
+            "allow_retries_description": "Pozwól uczniom zresetować i ponowić próbę zadania po ocenieniu. Każda próba usuwa poprzednie odpowiedzi i liczy się jako nowa próba.",
+            "max_retries_label": "Maksymalna liczba prób",
+            "max_retries_unlimited": "0 oznacza nieograniczone próby",
+            "max_retries_bounded": "Razem oceniane próby (początkowe zgłoszenie + próby)"
           },
           "toasts": {
             "updating": "Aktualizowanie zadania...",
@@ -3774,7 +3852,7 @@
         "users": "Użytkownicy",
         "communities": "Społeczności",
         "discussions": "Dyskusje",
-        "playgrounds": "Piaskownice",
+        "playgrounds": "Playgrounds",
         "podcasts": "Podcasty"
       },
       "entries": {
@@ -3803,7 +3881,7 @@
           "keywords": "kanban, projekt, zadania, listy"
         },
         "playgrounds": {
-          "description": "Piaskownice kodu",
+          "description": "Playgrounds kodu",
           "keywords": "kod, sandbox, repl, programowanie"
         },
         "analytics": {
@@ -3923,6 +4001,10 @@
         "account_purchases": {
           "description": "Twoje zakupy i subskrypcje",
           "keywords": "zakupy, subskrypcje, rozliczenia, historia, paragony"
+        },
+        "org_api": {
+          "description": "Tokeny API i dostęp programistyczny",
+          "keywords": "api, tokeny, dostęp, programistyczny, klucze"
         }
       }
     }
@@ -4610,8 +4692,8 @@
     "done": "Gotowe, jestem przygotowany!",
     "steps": {
       "create_course": {
-        "title": "Utwórz swój pierwszy kurs",
-        "description": "Zacznij od utworzenia nowego kursu dla swoich uczniów.",
+        "title": "Twój pierwszy kurs jest aktywny",
+        "description": "Opublikuj kurs, aby kursanci mieli się na co zapisać.",
         "action": "Utwórz kurs"
       },
       "add_activities": {
@@ -4655,6 +4737,31 @@
         "classroom_desc": "Naucz się rozwijać i zarządzać swoimi kursami",
         "university": "Uniwersytet LearnHouse",
         "university_desc": "Przewodniki, wskazówki i najlepsze praktyki"
+      },
+      "add_content": {
+        "title": "Lekcja warta uwagi",
+        "description": "Dodaj film, stronę lub quiz — daj kursantom prawdziwy powód, by się zapisać.",
+        "action": "Dodaj treść"
+      },
+      "brand_school": {
+        "title": "Szkoła, której kursanci ufają",
+        "description": "Dodaj swoje logo i kolory, aby wyglądała jak wiarygodna, profesjonalna szkoła.",
+        "action": "Nadaj markę"
+      },
+      "share_grow": {
+        "title": "Drzwi wejściowe Twojej szkoły",
+        "description": "Uruchom szkołę i pobierz link do udostępniania — miejsce, do którego skierujesz każdego kursanta.",
+        "action": "Otwórz moją szkołę"
+      },
+      "invite_learners": {
+        "title": "Powitaj swojego pierwszego kursanta",
+        "description": "Udostępnij link dołączenia lub zaproś osoby — niech pierwszy kursant przekroczy próg.",
+        "action": "Zaproś kursantów"
+      },
+      "build_community": {
+        "title": "Spraw, by kursanci wracali",
+        "description": "Otwórz przestrzeń społeczności, aby Twoi kursanci pozostali aktywni — i przyprowadzali znajomych.",
+        "action": "Otwórz społeczność"
       }
     },
     "welcome": {
@@ -4668,7 +4775,7 @@
         "teach": "Ucz czegokolwiek",
         "teach_desc": "Twórz ustrukturyzowane kursy z rozdziałami i bogatą treścią",
         "interactive": "Działaj interaktywnie",
-        "interactive_desc": "Buduj playgroundy, w których uczniowie eksplorują we własnym tempie",
+        "interactive_desc": "Buduj playgrounds, w których uczniowie eksplorują we własnym tempie",
         "community": "Zbuduj społeczność",
         "community_desc": "Twórz przestrzenie dyskusyjne, w których uczniowie pomagają sobie nawzajem",
         "assess": "Oceniaj wiedzę",
@@ -4689,7 +4796,15 @@
       "title": "Jesteś gotowy, by uczyć świat",
       "description": "Wszystko jest gotowe. Twoi uczniowie czekają na coś wspaniałego.",
       "button": "Zacznij uczyć"
-    }
+    },
+    "box_title": "Wdrożenie",
+    "up_next": "Następny krok",
+    "continue_setup": "Kontynuuj konfigurację",
+    "done_label": "Gotowe",
+    "video_placeholder": "Film instruktażowy już wkrótce",
+    "dismiss": "Dokończę później",
+    "steps_done": "ukończonych kroków",
+    "back_to_dashboard": "Powrót do panelu"
   },
   "boards": {
     "access": {
@@ -4854,7 +4969,7 @@
       "ai_content": "Treść wygenerowana przez AI",
       "calculator": "Kalkulator",
       "chart": "Wykres",
-      "chat_header": "Plac zabaw AI",
+      "chat_header": "AI Playground",
       "check_preview": "Sprawdź podgląd po lewej",
       "creating": "Tworzenie...",
       "description": "Generuj interaktywne elementy za pomocą AI",
@@ -4872,7 +4987,7 @@
       "save_close": "Zapisz i zamknij",
       "streaming": "Generowanie...",
       "timeline": "Oś czasu",
-      "title": "Plac zabaw AI"
+      "title": "AI Playground"
     },
     "private": "Prywatna",
     "public": "Publiczna",
@@ -4907,7 +5022,7 @@
     "toolbar": {
       "activity": "Aktywność",
       "add_card": "Dodaj kartę",
-      "ai_playground": "Plac zabaw AI",
+      "ai_playground": "AI Playground",
       "draw": "Rysuj",
       "embed": "Osadź",
       "frame": "Ramka",
@@ -5012,7 +5127,7 @@
           "ai_desc": "Przyspiesz tworzenie treści za pomocą narzędzi do pisania AI.",
           "analytics": "Analityka uczniów",
           "analytics_desc": "Śledź postępy i zaangażowanie, aby ulepszać kursy.",
-          "playgrounds": "Interaktywne playgroundy",
+          "playgrounds": "Interaktywne playgrounds",
           "playgrounds_desc": "Pozwól uczniom eksperymentować i ćwiczyć z interaktywnymi ćwiczeniami praktycznymi."
         }
       },
@@ -5029,7 +5144,9 @@
           "custom_domain": "Własna domena",
           "custom_domain_desc": "Użyj własnej domeny dla akademii z Twoją marką.",
           "roles": "Niestandardowe role i uprawnienia",
-          "roles_desc": "Kontroluj dokładnie, kto co może robić w Twojej organizacji."
+          "roles_desc": "Kontroluj dokładnie, kto co może robić w Twojej organizacji.",
+          "api": "Dostęp API i webhooki",
+          "api_desc": "Integruj się z istniejącymi narzędziami i automatyzuj przepływy pracy."
         }
       }
     }
@@ -5075,7 +5192,7 @@
     "showing_page": "Strona {{current}} z {{total}}"
   },
   "playgrounds": {
-    "no_playgrounds_yet": "Brak playgroundów",
+    "no_playgrounds_yet": "Brak playgrounds",
     "playgrounds_description": "Twórz interaktywne doświadczenia generowane przez AI dla swoich uczniów.",
     "new_playground": "New Playground",
     "search_placeholder": "Search playgrounds...",
@@ -5257,5 +5374,281 @@
       "unlink_success": "User group unlinked",
       "unlink_error": "Failed to unlink user group"
     }
+  },
+  "plan": {
+    "free_plan_title": "Plan darmowy",
+    "free_plan_cta": "Odblokuj pełną platformę",
+    "free_plan_desc": "Wszystko, czego potrzebujesz, by uczyć, sprzedawać i się rozwijać.",
+    "upgrade": "Ulepsz plan"
+  },
+  "billing": {
+    "no_billing_account": "Nie znaleziono konta rozliczeniowego. Najpierw wykup plan.",
+    "portal_error": "Nie udało się otworzyć panelu płatności. Spróbuj ponownie.",
+    "cancel_success": "Subskrypcja zostanie anulowana na koniec okresu rozliczeniowego.",
+    "cancel_error": "Nie udało się anulować subskrypcji. Spróbuj ponownie.",
+    "checkout_error": "Nie udało się rozpocząć płatności.",
+    "plan_and_usage": "Plan i zużycie",
+    "plan_and_usage_subtitle": "Zarządzaj subskrypcją i monitoruj zużycie zasobów.",
+    "billing": "Płatności",
+    "org_inactive": "Twoja organizacja jest nieaktywna. Ulepsz plan, aby przywrócić dostęp.",
+    "upgrade": "Ulepsz plan",
+    "on_free_plan": "Korzystasz z planu darmowego",
+    "free_upsell": "Ulepsz plan, aby odblokować funkcje AI, własne domeny i więcej.",
+    "managed_outside": "Ten plan jest zarządzany poza systemem płatności Stripe.",
+    "active": "Aktywny",
+    "inactive": "Nieaktywny",
+    "current_plan": "Bieżący plan",
+    "canceling": "Anulowanie",
+    "billed_annually": "rozliczane rocznie",
+    "billed_monthly": "rozliczane miesięcznie",
+    "change_plan": "Zmień plan",
+    "canceling_ellipsis": "Anulowanie...",
+    "cancel_plan": "Anuluj plan",
+    "cycle": "Cykl",
+    "access_until": "Dostęp do",
+    "next_payment": "Następna płatność",
+    "status": "Status",
+    "usage": "Zużycie",
+    "courses": "Kursy",
+    "members": "Członkowie",
+    "admin_seats": "Miejsca administratorów",
+    "ai_credits": "Kredyty AI",
+    "addons": "Dodatki",
+    "addons_subtitle": "Kupuj dodatkowe kredyty AI lub miejsca dla członków jako subskrypcje miesięczne.",
+    "active_subscriptions": "Aktywne subskrypcje",
+    "credits": "kredyty",
+    "seats": "miejsca",
+    "available": "Dostępne",
+    "per_pack": "za pakiet",
+    "add": "Dodaj",
+    "recurring_subscription": "subskrypcja cykliczna",
+    "what_youre_getting": "Co otrzymujesz",
+    "pack_immediate": "Działa od razu po dokonaniu płatności",
+    "pack_cancel_anytime": "Anuluj w dowolnej chwili — pozostaje aktywny do końca okresu rozliczeniowego",
+    "pack_credits_reset": "Kredyty są odnawiane w każdym cyklu rozliczeniowym",
+    "after_purchase": "Po zakupie",
+    "unlimited": "Bez limitu",
+    "pack_redirect_notice": "Zostaniesz przekierowany do Stripe, aby dokończyć płatność. Możesz kupić wiele pakietów tego samego typu.",
+    "cancel": "Anuluj",
+    "continue_to_payment": "Przejdź do płatności",
+    "step_choose_plan": "Wybierz plan",
+    "step_confirm": "Potwierdź",
+    "step_done": "Gotowe",
+    "back": "Wstecz",
+    "switch_plan": "Zmień plan",
+    "upgrade_plan": "Ulepsz plan",
+    "switch_subtitle": "Wybierz nowy plan. Zmiany są rozliczane proporcjonalnie automatycznie.",
+    "upgrade_subtitle": "Wybierz plan, aby rozpocząć.",
+    "your_plan": "Twój plan",
+    "downgrade": "Obniż plan",
+    "upgrade_summary": "Podsumowanie ulepszenia",
+    "downgrade_summary": "Podsumowanie obniżenia",
+    "current": "Bieżący",
+    "new": "Nowy",
+    "annual_total": "Suma roczna",
+    "monthly_total": "Suma miesięczna",
+    "prorated_billing": "Rozliczenie proporcjonalne",
+    "prorated_desc": "Otrzymasz zwrot za niewykorzystany czas w bieżącym planie, a różnica za nowy plan zostanie naliczona. Zmiana wchodzi w życie natychmiast.",
+    "subscription_cancellation": "Anulowanie subskrypcji",
+    "end_of_cycle_switch": "Zmiana na koniec cyklu",
+    "cancel_desc": "Twoja subskrypcja zostanie anulowana na koniec bieżącego okresu rozliczeniowego. Do tego czasu zachowasz pełny dostęp.",
+    "downgrade_desc": "Zachowasz bieżący plan do końca okresu rozliczeniowego. Nowy plan zacznie obowiązywać automatycznie po zakończeniu bieżącego cyklu.",
+    "whats_included": "Co jest w zestawie",
+    "discount_code": "Kod rabatowy",
+    "enter_code": "Wpisz kod",
+    "checking": "Sprawdzanie...",
+    "apply": "Zastosuj",
+    "code_applied": "Kod zastosowany",
+    "invalid_code": "Nieprawidłowy lub wygasły kod",
+    "canceling_subscription": "Anulowanie subskrypcji...",
+    "switching_plan": "Zmiana planu...",
+    "redirecting": "Przekierowywanie do Stripe...",
+    "confirm_cancellation": "Potwierdź anulowanie",
+    "confirm_upgrade": "Potwierdź ulepszenie",
+    "confirm_downgrade": "Potwierdź obniżenie",
+    "secure_checkout": "Bezpieczna płatność obsługiwana przez Stripe",
+    "back_to_plans": "Powrót do planów",
+    "plan_updated": "Plan zaktualizowany!",
+    "subscription_canceled": "Subskrypcja anulowana",
+    "downgrade_scheduled": "Obniżenie zaplanowane",
+    "canceled_desc": "Twoja subskrypcja zostanie anulowana na koniec bieżącego okresu rozliczeniowego. Do tego czasu zachowasz pełny dostęp.",
+    "back_to_plan_usage": "Powrót do Planu i zużycia",
+    "back_to_orgs": "Powrót do organizacji",
+    "pack_purchased": "Pakiet zakupiony — Twoje limity zostały zaktualizowane.",
+    "checkout_success": "Subskrypcja zaktualizowana — witamy w Twoim nowym planie!",
+    "checkout_cancelled": "Kasa anulowana — nie wprowadzono żadnych zmian.",
+    "load_failed": "Nie mogliśmy załadować Twoich organizacji.",
+    "no_permission": "Nie masz uprawnień do zarządzania rozliczeniami dla tej organizacji.",
+    "no_permission_hint": "Tylko administrator organizacji może wyświetlać lub zmieniać plan.",
+    "usage_load_failed": "Nie można załadować użycia w tej chwili.",
+    "on_named_plan": "Jesteś na planie {{plan}}",
+    "included_in": "Zawarte w {{plan}}",
+    "updated_desc": "Przełączono Cię na plan {{plan}}. Wszelkie korekty rozliczeń pojawią się na następnej fakturze.",
+    "scheduled_desc": "Twój plan zmieni się na {{plan}} na koniec cyklu rozliczeniowego. Zachowasz pełny dostęp do obecnego planu do tego czasu.",
+    "plan_plus_purchased": "Plan: {{plan}} + Zakupione: {{purchased}}",
+    "base_plus_purchased": "Bazowe: {{base}} + Zakupione: {{purchased}}",
+    "pack_ai_desc": "{{quantity}} dodatkowych punktów AI dodanych do Twojej organizacji",
+    "pack_seats_desc": "{{quantity}} dodatkowych miejsc dla członków w Twojej organizacji"
+  },
+  "hub_new": {
+    "useType": {
+      "personal": {
+        "label": "Osobiste",
+        "subtitle": "Ucz się i buduj własną przestrzeń.",
+        "badge": "Nowość"
+      },
+      "organization": {
+        "label": "Organizacja",
+        "subtitle": "Ucz zespół, szkołę lub odbiorców."
+      }
+    },
+    "useCases": {
+      "personal": {
+        "title": "Samodzielna nauka",
+        "description": "Organizuj kursy dla siebie."
+      },
+      "creators": {
+        "title": "Twórcy",
+        "description": "Sprzedawaj kursy swoim odbiorcom."
+      },
+      "business": {
+        "title": "Firma",
+        "description": "Szkol swoich pracowników."
+      }
+    },
+    "personalGoals": {
+      "learnSkills": "Nauka umiejętności",
+      "teachOthers": "Uczenie innych",
+      "coding": "Programowanie",
+      "creative": "Kreatywność",
+      "music": "Muzyka",
+      "ai": "AI",
+      "literature": "Literatura",
+      "science": "Nauka",
+      "business": "Biznes",
+      "health": "Zdrowie",
+      "photography": "Fotografia",
+      "writing": "Pisanie",
+      "languages": "Języki",
+      "gaming": "Gry"
+    },
+    "personalUsage": {
+      "title": "Czego chciałbyś się nauczyć?",
+      "subtitle": "Zaznacz wszystkie pasujące."
+    },
+    "teamSizes": {
+      "solo": "Solo",
+      "2-10": "2–10",
+      "11-50": "11–50",
+      "51-200": "51–200",
+      "200plus": "200+"
+    },
+    "orgUseCases": {
+      "employeeTraining": "Szkolenia pracowników",
+      "onlineCourses": "Kursy online",
+      "customerEducation": "Edukacja klientów",
+      "academicPrograms": "Programy akademickie",
+      "developerDocs": "Dokumentacja dla deweloperów",
+      "communityLearning": "Nauka w społeczności"
+    },
+    "orgUsage": {
+      "teamSizeTitle": "Jak duży jest Twój zespół?",
+      "useCaseTitle": "Do czego będziesz tego używać?"
+    },
+    "createOrg": {
+      "testHint": {
+        "title": "Chcesz przetestować?",
+        "body": "Przejdź na",
+        "link": "stronę dla deweloperów",
+        "suffix": "aby wypróbować LearnHouse."
+      },
+      "validation": {
+        "required": "Wymagane",
+        "lowercase": "Tylko małe litery",
+        "noSpecialChars": "Tylko litery, cyfry i myślniki",
+        "reserved": "Ten adres jest zarezerwowany",
+        "maxLength": "Maksymalnie 20 znaków"
+      },
+      "fields": {
+        "name": "Nazwa organizacji",
+        "description": "Opis (opcjonalnie)",
+        "slug": "Adres"
+      },
+      "placeholders": {
+        "name": "Akademia Acme",
+        "description": "Czym zajmuje się Twoja organizacja?"
+      },
+      "submitting": "Tworzenie…",
+      "submitPaid": "Utwórz i przejdź do płatności",
+      "submit": "Utwórz organizację"
+    },
+    "success": {
+      "title": "Twoja organizacja jest gotowa",
+      "description": "Zacznij i twórz swoje kursy.",
+      "goToOrg": "Przejdź do organizacji",
+      "cta": "Powrót do organizacji"
+    },
+    "toast": {
+      "creating": "Tworzenie organizacji…",
+      "created": "Organizacja utworzona!",
+      "checkoutFailed": "Organizacja utworzona — możesz ulepszyć plan w sekcji Plan i zużycie.",
+      "failed": "Nie udało się utworzyć organizacji"
+    },
+    "steps": {
+      "useType": {
+        "title": "Co tworzysz?",
+        "subtitle": "To pomoże nam dopasować Twoją przestrzeń."
+      },
+      "usage": {
+        "title": "Powiedz nam nieco więcej",
+        "subtitle": "Abyśmy mogli polecić odpowiednią konfigurację."
+      },
+      "choosePlan": {
+        "title": "Wybierz plan",
+        "subtitle": "Możesz to zmienić w dowolnej chwili."
+      },
+      "createOrg": {
+        "title": "Nazwij swoją organizację",
+        "subtitle": "Wybierz nazwę i adres internetowy."
+      },
+      "success": {
+        "title": "Wszystko gotowe"
+      }
+    },
+    "topBar": {
+      "back": "Organizacje"
+    },
+    "freeLimit": "Osiągnięto limit 1 darmowej organizacji",
+    "navigation": {
+      "back": "Wstecz",
+      "continue": "Kontynuuj",
+      "skip": "Pomiń"
+    }
+  },
+  "subscriptions": {
+    "no_subscription": "Brak subskrypcji",
+    "cancels_on": "Anulowanie {{date}}",
+    "cancels": "Anulowanie na koniec okresu",
+    "status_active": "Aktywna",
+    "status_trialing": "Okres próbny",
+    "status_past_due": "Zaległa płatność",
+    "status_canceled": "Anulowana",
+    "status_unpaid": "Nieopłacona",
+    "renews_on": "Odnowienie {{date}}",
+    "manage_plan": "Zarządzaj planem",
+    "portal_error": "Nie udało się otworzyć panelu płatności. Spróbuj ponownie.",
+    "back_home": "Powrót do strony głównej",
+    "title": "Subskrypcje",
+    "subtitle": "Plany i płatności we wszystkich Twoich organizacjach",
+    "opening": "Otwieranie…",
+    "manage_billing": "Zarządzaj płatnościami"
+  },
+  "folders": {
+    "folder": "Folder",
+    "folders": "Foldery",
+    "folder_count": "{{count}} folderów",
+    "folder_count_one": "{{count}} folder",
+    "item_count": "{{count}} elementów",
+    "item_count_one": "{{count}} element"
   }
 }
