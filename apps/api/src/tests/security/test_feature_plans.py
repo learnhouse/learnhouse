@@ -85,7 +85,9 @@ class TestFeaturePlans:
     @pytest.mark.parametrize(
         ("mode", "plan", "expected"),
         [
-            ("saas", "free", 0),
+            # Free orgs get a starter AI credit allowance so they can try the AI
+            # features (incl. AI audio generation) before upgrading.
+            ("saas", "free", 20),
             ("saas", "personal", 500),
             ("saas", "enterprise", -1),
             ("saas", "missing", 0),
