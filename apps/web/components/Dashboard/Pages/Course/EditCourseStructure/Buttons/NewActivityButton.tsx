@@ -26,6 +26,9 @@ import { useLHAnalytics, AnalyticsEvent } from '@services/analytics'
 type NewActivityButtonProps = {
   chapterId: string
   orgslug: string
+  // When true, the add-activity modal opens automatically on mount. Used right
+  // after a course is created to drop the teacher straight into adding content.
+  autoOpen?: boolean
 }
 
 function NewActivityButton(props: NewActivityButtonProps) {
@@ -161,6 +164,16 @@ function NewActivityButton(props: NewActivityButtonProps) {
   }
 
   useEffect(() => { }, [course])
+
+  // Auto-open the modal once when requested (e.g. straight after course creation).
+  const autoOpenedRef = React.useRef(false)
+  useEffect(() => {
+    if (props.autoOpen && !autoOpenedRef.current) {
+      autoOpenedRef.current = true
+      setSelectedView('home')
+      setNewActivityModal(true)
+    }
+  }, [props.autoOpen])
 
   const dialogTitle = selectedView !== 'home' ? (
     <div className="flex items-center gap-3">

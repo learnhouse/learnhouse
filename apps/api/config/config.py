@@ -67,6 +67,12 @@ class AIConfig(BaseModel):
     # LEARNHOUSE_AI_IMAGE_MODEL; defaults to the GA `gemini-2.5-flash-image`
     # (Nano Banana). Set a newer/preview model here once it is allowlisted.
     image_model: str | None = None
+    # Text-to-speech / podcast model (Google Gemini TTS). Like image generation
+    # this is a Google-only path resolving its key from `api_key` (when provider
+    # is Google) or `gemini_api_key`. Override the exact model id with
+    # LEARNHOUSE_AI_TTS_MODEL; defaults to `gemini-2.5-flash-preview-tts`. All
+    # Gemini TTS models are currently preview, so keep this configurable.
+    tts_model: str | None = None
 
 
 class S3ApiConfig(BaseModel):
@@ -390,6 +396,7 @@ def get_learnhouse_config() -> LearnHouseConfig:
 
     gemini_api_key = env_gemini_api_key or yaml_ai_config.get("gemini_api_key")
     ai_image_model = os.environ.get("LEARNHOUSE_AI_IMAGE_MODEL") or yaml_ai_config.get("image_model")
+    ai_tts_model = os.environ.get("LEARNHOUSE_AI_TTS_MODEL") or yaml_ai_config.get("tts_model")
 
     # Provider-agnostic generation settings (env takes precedence over yaml).
     ai_provider = os.environ.get("LEARNHOUSE_AI_PROVIDER") or yaml_ai_config.get("provider")
@@ -591,6 +598,7 @@ def get_learnhouse_config() -> LearnHouseConfig:
         embedding_dimensions=ai_embedding_dimensions,
         gemini_api_key=gemini_api_key,
         image_model=ai_image_model,
+        tts_model=ai_tts_model,
     )
 
     # Surface missing internal-service keys at boot rather than at first

@@ -51,6 +51,12 @@ function VerifyEmailClient({ org }: VerifyEmailClientProps) {
                 const res = await verifyEmail(token, userUuid, orgUuid)
                 if (res.success) {
                     track(AnalyticsEvent.EmailVerificationCompleted, { result: 'success' })
+                    // Verification auto-signs the user in (session cookies were set
+                    // via the auth proxy), so they never touch the login form. Emit
+                    // login_succeeded here too, otherwise the signup→login funnel
+                    // shows a phantom drop for every verified user. `method`
+                    // distinguishes this from a credentials login.
+                    track(AnalyticsEvent.LoginSucceeded, { method: 'email_verification' })
                     setSuccess(true)
                     setShowMessage(true)
                     // Verification also signs the user in (session cookies were
@@ -105,7 +111,7 @@ function VerifyEmailClient({ org }: VerifyEmailClientProps) {
                                 </span>
                                 {success && (
                                     <span className="text-sm ml-2">
-                                        · <Link href="/" className="underline hover:no-underline">{t('auth.proceed_to_login')}</Link>
+                                        · <Link href="/home" className="underline hover:no-underline">{t('auth.continue_to_dashboard', { defaultValue: 'Continue to your dashboard' })}</Link>
                                     </span>
                                 )}
                             </div>
@@ -167,10 +173,10 @@ function VerifyEmailClient({ org }: VerifyEmailClientProps) {
                                     </div>
                                 </div>
                                 <Link
-                                    href="/"
+                                    href="/home"
                                     className="box-border w-full inline-flex h-[44px] rounded-lg items-center justify-center bg-black hover:bg-black/85 text-white px-[15px] font-bold text-[14px] leading-none transition-all"
                                 >
-                                    {t('auth.proceed_to_login')}
+                                    {t('auth.continue_to_dashboard', { defaultValue: 'Continue to your dashboard' })}
                                 </Link>
                             </div>
                         )}

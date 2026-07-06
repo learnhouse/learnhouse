@@ -31,6 +31,9 @@ const ease = [0.16, 1, 0.3, 1] as const
 interface UpgradeModalProps {
   open: boolean
   onClose: () => void
+  // Where the modal was opened from, for analytics attribution
+  // (e.g. 'free_plan_banner', 'course_limit', 'member_limit').
+  source?: string
 }
 
 const STANDARD_HIGHLIGHTS = [
@@ -53,7 +56,7 @@ const PRO_HIGHLIGHTS = [
   { icon: Code, labelKey: 'upgrade_modal.plans.pro.highlights.api', descKey: 'upgrade_modal.plans.pro.highlights.api_desc', iconColor: 'text-gray-500' },
 ]
 
-export default function UpgradeModal({ open, onClose }: UpgradeModalProps) {
+export default function UpgradeModal({ open, onClose, source = 'free_plan_banner' }: UpgradeModalProps) {
   const { t } = useTranslation()
   const org = useOrg() as any
   const orgSlug = org?.slug || 'default'
@@ -65,7 +68,7 @@ export default function UpgradeModal({ open, onClose }: UpgradeModalProps) {
 
   useEffect(() => {
     if (open) {
-      track(AnalyticsEvent.UpgradeModalViewed, { source: 'free_plan_banner' })
+      track(AnalyticsEvent.UpgradeModalViewed, { source })
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open])

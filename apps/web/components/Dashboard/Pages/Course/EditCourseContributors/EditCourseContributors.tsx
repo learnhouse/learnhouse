@@ -96,7 +96,18 @@ function EditCourseContributors(_props: EditCourseContributorsProps) {
 
     const { data: contributors } = useQuery({
         queryKey: queryKeys.courses.contributors(courseStructure?.course_uuid ?? ''),
-        queryFn: () => getCourseContributors(courseStructure!.course_uuid, access_token).then(res => res.data as Contributor[]),
+        // getCourseContributors resolves (does not throw) on non-200s, returning the
+        // error body as `data`. Reject on failure so React Query surfaces an error
+        // state, and always resolve to an array so render never calls .filter/.find
+        // on a `{ detail: ... }` object (was crashing the whole page on 401/403/404).
+        queryFn: async () => {
+            const res = await getCourseContributors(courseStructure!.course_uuid, access_token)
+            if (!res.success) {
+                const detail = typeof res.data?.detail === 'string' ? res.data.detail : undefined
+                throw new Error(detail ?? 'Failed to load contributors')
+            }
+            return (Array.isArray(res.data) ? res.data : []) as Contributor[]
+        },
         enabled: !!courseStructure?.course_uuid && !!access_token,
         staleTime: 60_000,
     });
@@ -110,7 +121,7 @@ function EditCourseContributors(_props: EditCourseContributorsProps) {
 
     // Derived during render: the master checkbox is checked when every
     // non-creator contributor is currently selected (and there is at least one).
-    const nonCreatorContributors = contributors?.filter(c => c.authorship !== 'CREATOR') ?? [];
+    const nonCreatorContributors = (Array.isArray(contributors) ? contributors : []).filter(c => c.authorship !== 'CREATOR');
     const masterCheckboxChecked =
         nonCreatorContributors.length > 0 &&
         selectedContributors.length === nonCreatorContributors.length;
@@ -306,7 +317,7 @@ function EditCourseContributors(_props: EditCourseContributorsProps) {
     };
 
     const sortContributors = (contributors: Contributor[] | undefined) => {
-        if (!contributors) return [];
+        if (!Array.isArray(contributors)) return [];
         
         // Find the creator and other contributors
         const creator = contributors.find(c => c.authorship === 'CREATOR');

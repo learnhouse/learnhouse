@@ -3,11 +3,11 @@ import { Node } from '@tiptap/core'
 import {
   Loader2, Headphones, Upload, X, ArrowLeftRight,
   CheckCircle2, AlertCircle, Play, Pause, Music, Radio, List,
-  SkipBack, SkipForward, Volume2, VolumeX, Clock
+  SkipBack, SkipForward, Volume2, VolumeX, Clock, Sparkles, Users
 } from 'lucide-react'
 import React from 'react'
 import toast from 'react-hot-toast'
-import { uploadNewAudioFile } from '../../../../../services/blocks/Audio/audio'
+import { uploadNewAudioFile, generateAudioBlock, type GenerateAudioSpeaker } from '../../../../../services/blocks/Audio/audio'
 import { getAudioBlockStreamUrl, getPodcastAudioStreamUrl } from '@services/media/media'
 import { useOrg } from '@components/Contexts/OrgContext'
 import { useOrgMembership } from '@components/Contexts/OrgContext'
@@ -29,7 +29,29 @@ const AUDIO_SIZES = {
 
 type AudioSize = keyof typeof AUDIO_SIZES
 type SourceType = 'upload' | 'episode' | 'podcast'
-type TabType = 'upload' | 'episode' | 'podcast'
+type TabType = 'upload' | 'generate' | 'episode' | 'podcast'
+
+// AI audio generation (Gemini TTS). Curated subset of the prebuilt voices, and a
+// list of well-supported languages. Language is otherwise auto-detected from the
+// text; picking one just nudges the model.
+const AI_CREDIT_COST = 3
+const TTS_VOICES = [
+  { name: 'Kore', desc: 'Firm' },
+  { name: 'Puck', desc: 'Upbeat' },
+  { name: 'Zephyr', desc: 'Bright' },
+  { name: 'Charon', desc: 'Informative' },
+  { name: 'Aoede', desc: 'Breezy' },
+  { name: 'Achird', desc: 'Friendly' },
+  { name: 'Sulafat', desc: 'Warm' },
+  { name: 'Enceladus', desc: 'Breathy' },
+  { name: 'Leda', desc: 'Youthful' },
+  { name: 'Sadaltager', desc: 'Knowledgeable' },
+]
+const TTS_LANGUAGES = [
+  'Auto-detect', 'English', 'Spanish', 'French', 'German', 'Portuguese',
+  'Italian', 'Dutch', 'Arabic', 'Hindi', 'Japanese', 'Korean',
+  'Chinese (Mandarin)', 'Russian', 'Turkish', 'Polish', 'Indonesian', 'Vietnamese',
+]
 
 interface AudioBlockObject {
   block_uuid?: string
@@ -480,6 +502,18 @@ function AudioBlockComponent(props: ExtendedNodeViewProps) {
   const [isDragging, setIsDragging] = React.useState(false)
   const [uploadProgress, setUploadProgress] = React.useState(0)
 
+  // AI generation state
+  const [genMode, setGenMode] = React.useState<'tts' | 'podcast'>('tts')
+  const [genText, setGenText] = React.useState('')
+  const [genVoice, setGenVoice] = React.useState(TTS_VOICES[0].name)
+  const [genLanguage, setGenLanguage] = React.useState(TTS_LANGUAGES[0])
+  const [genStyle, setGenStyle] = React.useState('')
+  const [genSpeakers, setGenSpeakers] = React.useState<GenerateAudioSpeaker[]>([
+    { name: 'Host', voice: 'Kore' },
+    { name: 'Guest', voice: 'Puck' },
+  ])
+  const [isGenerating, setIsGenerating] = React.useState(false)
+
   // Podcast selection state
   const [podcasts, setPodcasts] = React.useState<Podcast[]>([])
   const [podcastsLoading, setPodcastsLoading] = React.useState(false)
@@ -643,6 +677,41 @@ function AudioBlockComponent(props: ExtendedNodeViewProps) {
     }
   }
 
+  const handleGenerate = async () => {
+    if (!access_token) return
+    if (!genText.trim()) {
+      setError('Write some text to generate audio from.')
+      return
+    }
+    try {
+      setIsGenerating(true)
+      setError(null)
+      const object = await generateAudioBlock(
+        {
+          activity_uuid: extension.options.activity.activity_uuid,
+          mode: genMode,
+          text: genText,
+          voice: genMode === 'tts' ? genVoice : undefined,
+          speakers: genMode === 'podcast' ? genSpeakers : undefined,
+          style: genStyle.trim() || undefined,
+          language: genLanguage === 'Auto-detect' ? undefined : genLanguage,
+        },
+        access_token
+      )
+      // Generated audio is stored like an upload, so treat it identically.
+      const newBlockObject: AudioBlockObject = { ...object, source_type: 'upload', size: selectedSize }
+      setBlockObject(newBlockObject)
+      updateAttributes({ blockObject: newBlockObject })
+      toast.success('Audio generated')
+    } catch (err: any) {
+      const errorMessage = err?.message || 'Failed to generate audio. Please try again.'
+      setError(errorMessage)
+      toast.error(errorMessage)
+    } finally {
+      setIsGenerating(false)
+    }
+  }
+
   const handleRemove = () => {
     setBlockObject(null)
     updateAttributes({ blockObject: null })
@@ -742,6 +811,7 @@ function AudioBlockComponent(props: ExtendedNodeViewProps) {
             <div className="flex gap-1 bg-neutral-100 rounded-lg p-1">
               {([
                 { key: 'upload' as TabType, icon: Upload, label: 'Upload' },
+                { key: 'generate' as TabType, icon: Sparkles, label: 'Generate' },
                 { key: 'episode' as TabType, icon: Music, label: 'Episode' },
                 { key: 'podcast' as TabType, icon: List, label: 'Playlist' },
               ]).map((tab) => (
@@ -795,6 +865,137 @@ function AudioBlockComponent(props: ExtendedNodeViewProps) {
                     </div>
                   )}
                 </div>
+              </div>
+            )}
+
+            {/* Generate Tab (AI / Gemini TTS) */}
+            {activeTab === 'generate' && (
+              <div className="space-y-3">
+                {/* Mode toggle */}
+                <div className="flex gap-1 bg-neutral-100 rounded-lg p-1">
+                  {([
+                    { key: 'tts' as const, icon: Sparkles, label: 'Text to speech' },
+                    { key: 'podcast' as const, icon: Users, label: 'Podcast (2 voices)' },
+                  ]).map((m) => (
+                    <button
+                      key={m.key}
+                      onClick={() => setGenMode(m.key)}
+                      className={cn(
+                        'flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs transition-colors flex-1 justify-center outline-none',
+                        genMode === m.key ? 'bg-white text-neutral-800 shadow-sm' : 'text-neutral-500 hover:text-neutral-700'
+                      )}
+                    >
+                      <m.icon size={13} />
+                      {m.label}
+                    </button>
+                  ))}
+                </div>
+
+                {/* Script / text */}
+                <textarea
+                  value={genText}
+                  onChange={(e) => setGenText(e.target.value)}
+                  rows={genMode === 'podcast' ? 5 : 4}
+                  placeholder={genMode === 'podcast'
+                    ? 'Host: Welcome to the show!\nGuest: Thanks for having me…'
+                    : 'Type the text you want spoken aloud…'}
+                  className="w-full rounded-lg border border-neutral-200 p-3 text-sm outline-none focus:border-blue-400 resize-y"
+                />
+
+                {/* Voice(s) */}
+                {genMode === 'tts' ? (
+                  <label className="block">
+                    <span className="text-xs font-medium text-neutral-600">Voice</span>
+                    <select
+                      value={genVoice}
+                      onChange={(e) => setGenVoice(e.target.value)}
+                      className="mt-1 w-full rounded-lg border border-neutral-200 p-2 text-sm outline-none focus:border-blue-400 bg-white"
+                    >
+                      {TTS_VOICES.map((v) => (
+                        <option key={v.name} value={v.name}>{v.name} — {v.desc}</option>
+                      ))}
+                    </select>
+                  </label>
+                ) : (
+                  <div className="space-y-2">
+                    {genSpeakers.map((sp, i) => (
+                      <div key={i} className="flex gap-2">
+                        <input
+                          value={sp.name}
+                          onChange={(e) => {
+                            const next = [...genSpeakers]
+                            next[i] = { ...next[i], name: e.target.value }
+                            setGenSpeakers(next)
+                          }}
+                          placeholder="Speaker name"
+                          className="flex-1 rounded-lg border border-neutral-200 p-2 text-sm outline-none focus:border-blue-400"
+                        />
+                        <select
+                          value={sp.voice}
+                          onChange={(e) => {
+                            const next = [...genSpeakers]
+                            next[i] = { ...next[i], voice: e.target.value }
+                            setGenSpeakers(next)
+                          }}
+                          className="rounded-lg border border-neutral-200 p-2 text-sm outline-none focus:border-blue-400 bg-white"
+                        >
+                          {TTS_VOICES.map((v) => (
+                            <option key={v.name} value={v.name}>{v.name}</option>
+                          ))}
+                        </select>
+                      </div>
+                    ))}
+                    <p className="text-[11px] text-neutral-400">
+                      Start each line of your script with a speaker name (e.g. “Host:”).
+                    </p>
+                  </div>
+                )}
+
+                {/* Language + tone */}
+                <div className="flex gap-2">
+                  <label className="flex-1">
+                    <span className="text-xs font-medium text-neutral-600">Language</span>
+                    <select
+                      value={genLanguage}
+                      onChange={(e) => setGenLanguage(e.target.value)}
+                      className="mt-1 w-full rounded-lg border border-neutral-200 p-2 text-sm outline-none focus:border-blue-400 bg-white"
+                    >
+                      {TTS_LANGUAGES.map((l) => (
+                        <option key={l} value={l}>{l}</option>
+                      ))}
+                    </select>
+                  </label>
+                  <label className="flex-1">
+                    <span className="text-xs font-medium text-neutral-600">Tone / style</span>
+                    <input
+                      value={genStyle}
+                      onChange={(e) => setGenStyle(e.target.value)}
+                      placeholder="warm and upbeat"
+                      className="mt-1 w-full rounded-lg border border-neutral-200 p-2 text-sm outline-none focus:border-blue-400"
+                    />
+                  </label>
+                </div>
+
+                {/* Generate button */}
+                <button
+                  onClick={handleGenerate}
+                  disabled={isGenerating || !genText.trim()}
+                  className={cn(
+                    'w-full flex items-center justify-center gap-2 py-2.5 rounded-lg text-sm font-semibold transition-colors',
+                    isGenerating || !genText.trim()
+                      ? 'bg-neutral-200 text-neutral-400 cursor-not-allowed'
+                      : 'bg-black text-white hover:bg-neutral-800'
+                  )}
+                >
+                  {isGenerating ? (
+                    <><Loader2 size={15} className="animate-spin" /> Generating…</>
+                  ) : (
+                    <><Sparkles size={15} /> Generate audio</>
+                  )}
+                </button>
+                <p className="text-[11px] text-center text-neutral-400">
+                  Uses {AI_CREDIT_COST} AI credits · Powered by Gemini
+                </p>
               </div>
             )}
 
