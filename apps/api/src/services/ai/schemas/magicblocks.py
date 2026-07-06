@@ -20,6 +20,7 @@ class StartMagicBlockSession(BaseModel):
     block_uuid: str
     prompt: str = Field(max_length=AI_MESSAGE_MAX_CHARS)
     context: MagicBlockContext
+    style_reference: Optional[str] = None  # HTML of another block to match the design language of
 
 
 class SendMagicBlockMessage(BaseModel):
@@ -29,11 +30,20 @@ class SendMagicBlockMessage(BaseModel):
     message: str = Field(max_length=AI_MESSAGE_MAX_CHARS)
     # The current HTML content to iterate on (model-generated, so larger)
     current_html: Optional[str] = Field(default=None, max_length=100_000)
+    # HTML of another block to match the design language of
+    style_reference: Optional[str] = Field(default=None, max_length=100_000)
 
 
 class MagicBlockMessage(BaseModel):
     role: str  # "user" or "model"
     content: str
+
+
+class MagicBlockRevision(BaseModel):
+    revision_uuid: str
+    prompt: str
+    html: str
+    created_at: float  # unix timestamp
 
 
 class MagicBlockSessionResponse(BaseModel):
@@ -42,6 +52,7 @@ class MagicBlockSessionResponse(BaseModel):
     max_iterations: int
     html_content: Optional[str]
     message_history: List[MagicBlockMessage]
+    revisions: List[MagicBlockRevision] = Field(default_factory=list)
 
 
 class MagicBlockSessionData(BaseModel):
@@ -54,3 +65,4 @@ class MagicBlockSessionData(BaseModel):
     current_html: Optional[str]
     context: MagicBlockContext
     user_id: Optional[int] = None
+    revisions: List[MagicBlockRevision] = Field(default_factory=list)

@@ -32,9 +32,6 @@ export default Node.create({
       htmlContent: {
         default: null,
       },
-      iterationCount: {
-        default: 0,
-      },
       title: {
         default: 'Interactive Element',
       },

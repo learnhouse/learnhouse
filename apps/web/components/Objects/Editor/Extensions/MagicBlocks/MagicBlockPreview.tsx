@@ -1,5 +1,5 @@
 import React from 'react'
-import { Loader2 } from 'lucide-react'
+import { CircleNotch } from '@phosphor-icons/react'
 import { extractHtmlDocument } from './extractHtml'
 
 interface MagicBlockPreviewProps {
@@ -69,7 +69,7 @@ ${html}
     return (
       <div className="flex items-center justify-center w-full h-full bg-black/30" style={{ minHeight: '100%' }}>
         <div className="text-center space-y-3">
-          <Loader2 className="w-8 h-8 animate-spin mx-auto text-purple-400" />
+          <CircleNotch weight="duotone" className="w-8 h-8 animate-spin mx-auto text-purple-400" />
           <p className="text-sm text-white/50">Generating interactive content...</p>
         </div>
       </div>
