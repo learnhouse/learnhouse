@@ -13,6 +13,7 @@ import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { queryKeys } from '@/lib/query/keys'
 import Link from 'next/link'
 import { useLHAnalytics, AnalyticsEvent } from '@services/analytics'
+import { useTranslation } from 'react-i18next'
 
 interface Author {
   user: {
@@ -138,6 +139,7 @@ const CourseActionsMobile = ({ courseuuid, orgslug, course, trailData }: CourseA
   // Clean up course UUID by removing 'course_' prefix if it exists
   const cleanCourseUuid = course.course_uuid?.replace('course_', '');
   const resourceUuid = cleanCourseUuid ? `course_${cleanCourseUuid}` : null;
+    const { t } = useTranslation()
 
   const isStarted = trailData?.runs?.find(
     (run: any) => {
@@ -224,10 +226,10 @@ const CourseActionsMobile = ({ courseuuid, orgslug, course, trailData }: CourseA
           <div className="p-3 bg-amber-50 border border-amber-200 rounded-lg">
             <div className="flex items-center gap-2">
               <UserPlus className="w-4 h-4 text-amber-800" />
-              <span className="text-amber-800 text-sm font-semibold">Organization Membership Required</span>
+              <span className="text-amber-800 text-sm font-semibold">{t('courses.join_org_required')}</span>
             </div>
             <p className="text-amber-700 text-xs mt-1">
-              You need to join this organization to enroll in courses.
+              {t('courses.join_org_required_description')}
             </p>
           </div>
           <a
@@ -235,7 +237,7 @@ const CourseActionsMobile = ({ courseuuid, orgslug, course, trailData }: CourseA
             className="w-full py-2 px-4 rounded-lg bg-neutral-900 text-white font-semibold text-sm hover:bg-neutral-800 transition-colors flex items-center justify-center gap-2"
           >
             <UserPlus className="w-4 h-4" />
-            Join Organization
+            {t('courses.join_organization')}
           </a>
         </div>
       </div>
@@ -274,7 +276,7 @@ const CourseActionsMobile = ({ courseuuid, orgslug, course, trailData }: CourseA
                   <div className="p-3 bg-green-50 border border-green-200 rounded-lg">
                     <div className="flex items-center gap-2">
                       <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
-                      <span className="text-green-800 text-sm font-semibold">You Own This Course</span>
+                      <span className="text-green-800 text-sm font-semibold">{t('courses.you_own_this_course')}</span>
                     </div>
                   </div>
                   <button
@@ -287,7 +289,7 @@ const CourseActionsMobile = ({ courseuuid, orgslug, course, trailData }: CourseA
                     ) : (
                       <>
                         <LogOut className="w-4 h-4" />
-                        Leave Course
+                        {t('courses.leave_course')}
                       </>
                     )}
                   </button>
@@ -338,17 +340,17 @@ const CourseActionsMobile = ({ courseuuid, orgslug, course, trailData }: CourseA
             ) : !session.data?.user ? (
               <>
                 <LogIn className="w-4 h-4" />
-                Get Started
+                {t('onboarding.welcome.get_started')}
               </>
             ) : isStarted ? (
               <>
                 <LogOut className="w-4 h-4" />
-                Leave Course
+                {t('courses.leave_course')}
               </>
             ) : (
               <>
                 <LogIn className="w-4 h-4" />
-                Start Course
+                {t('courses.start_course')}
               </>
             )}
           </button>
