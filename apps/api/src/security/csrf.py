@@ -7,7 +7,9 @@ to protect against Cross-Site Request Forgery attacks.
 
 import logging
 import re
+import time
 from typing import Callable
+from urllib.parse import urlparse
 from fastapi import Request, Response
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.responses import JSONResponse
@@ -18,6 +20,14 @@ logger = logging.getLogger(__name__)
 
 # Methods that require CSRF protection
 STATE_CHANGING_METHODS = {"POST", "PUT", "DELETE", "PATCH"}
+
+# Short-TTL cache for the verified-custom-domain origin check, so we don't hit the
+# DB on every mutation. Only consulted when the static allowlist/regex fails, so
+# platform/subdomain traffic never touches it; bounds attacker random-origin
+# lookups (negative results are cached too). Capped to avoid unbounded growth.
+_CUSTOM_DOMAIN_CACHE: dict[str, tuple[bool, float]] = {}
+_CUSTOM_DOMAIN_TTL_SECONDS = 60.0
+_CUSTOM_DOMAIN_CACHE_MAX = 2048
 
 
 class CSRFProtectionMiddleware(BaseHTTPMiddleware):
@@ -89,6 +99,52 @@ class CSRFProtectionMiddleware(BaseHTTPMiddleware):
 
         return False
 
+    async def _is_verified_custom_domain_origin(self, candidate_origin: str) -> bool:
+        """Allow an origin whose host is a VERIFIED org custom domain.
+
+        The static allowlist/regex only covers the platform domain, so browsers on
+        a custom domain (learn.acme.org) would otherwise fail CSRF on same-origin
+        mutations. We resolve the host against the custom_domains table (verified
+        only), short-cached. This does NOT weaken CSRF: browsers set the Origin
+        header themselves, so a cross-site request from attacker.com carries
+        Origin: attacker.com (rejected) — only genuine custom-domain requests carry
+        the custom-domain Origin.
+        """
+        try:
+            host = (urlparse(candidate_origin).hostname or "").lower()
+        except Exception:
+            return False
+        if not host:
+            return False
+
+        now = time.monotonic()
+        cached = _CUSTOM_DOMAIN_CACHE.get(host)
+        if cached and cached[1] > now:
+            return cached[0]
+
+        allowed = False
+        try:
+            from sqlmodel import select
+            from src.db.custom_domains import CustomDomain
+            from src.core.events.database import _async_session_factory
+
+            async with _async_session_factory() as session:
+                row = (await session.execute(
+                    select(CustomDomain).where(
+                        CustomDomain.domain == host,
+                        CustomDomain.status == "verified",
+                    )
+                )).scalars().first()
+                allowed = row is not None
+        except Exception:
+            logger.exception("CSRF: custom-domain verification failed for host %s", host)
+            allowed = False
+
+        if len(_CUSTOM_DOMAIN_CACHE) >= _CUSTOM_DOMAIN_CACHE_MAX:
+            _CUSTOM_DOMAIN_CACHE.clear()
+        _CUSTOM_DOMAIN_CACHE[host] = (allowed, now + _CUSTOM_DOMAIN_TTL_SECONDS)
+        return allowed
+
     def _is_csrf_exempt(self, request: Request) -> bool:
         """Check if the request is exempt from CSRF validation.
 
@@ -136,13 +192,18 @@ class CSRFProtectionMiddleware(BaseHTTPMiddleware):
         origin = request.headers.get("origin")
         referer = request.headers.get("referer")
 
-        # Validate origin
+        # Validate origin. If it fails the static allowlist/regex, fall back to a
+        # DB check for VERIFIED org custom domains (which the platform-domain-only
+        # config can't express), so custom-domain browsers can make same-origin
+        # mutations. The DB check runs only on this slow path (cached).
         if not self.is_allowed_origin(origin, referer):
-            return JSONResponse(
-                status_code=403,
-                content={
-                    "detail": "CSRF validation failed: Origin not allowed"
-                }
-            )
+            candidate = origin or (self._extract_origin_from_url(referer) if referer else None)
+            if not (candidate and await self._is_verified_custom_domain_origin(candidate)):
+                return JSONResponse(
+                    status_code=403,
+                    content={
+                        "detail": "CSRF validation failed: Origin not allowed"
+                    }
+                )
 
         return await call_next(request)

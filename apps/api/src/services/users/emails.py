@@ -103,6 +103,83 @@ def send_account_creation_email(
     )
 
 
+def send_org_created_email(
+    email: EmailStr,
+    org_name: str,
+    dashboard_url: str,
+    lang: str = "en",
+):
+    """Confirmation email when a user creates a new organization."""
+    safe_name = html.escape(org_name)
+    heading = t(lang, "org_created.heading", org_name=safe_name)
+    body_text = t(lang, "org_created.body")
+    cta = t(lang, "org_created.cta")
+
+    body_content = f"""
+        <h1 style="{STYLES['h1']}">{heading}</h1>
+        <p style="{STYLES['p']}">{body_text}</p>
+        <a href="{html.escape(dashboard_url)}" style="{STYLES['button']}">{cta}</a>
+    """
+    return send_email(
+        to=email,
+        subject=t(lang, "org_created.subject", org_name=safe_name),
+        body=_email_layout(
+            title=heading,
+            body_content=body_content,
+            footer_note=t(lang, "org_created.footer"),
+        ),
+    )
+
+
+def send_org_deleted_email(
+    email: EmailStr,
+    org_name: str,
+    lang: str = "en",
+):
+    """Confirmation email sent to org admins after an organization is deleted."""
+    safe_name = html.escape(org_name)
+    heading = t(lang, "org_deleted.heading", org_name=safe_name)
+    body_text = t(lang, "org_deleted.body")
+
+    body_content = f"""
+        <h1 style="{STYLES['h1']}">{heading}</h1>
+        <p style="{STYLES['p']}">{body_text}</p>
+    """
+    return send_email(
+        to=email,
+        subject=t(lang, "org_deleted.subject", org_name=safe_name),
+        body=_email_layout(
+            title=heading,
+            body_content=body_content,
+            footer_note=t(lang, "org_deleted.footer"),
+        ),
+    )
+
+
+def send_account_deleted_email(
+    email: EmailStr,
+    username: str = "",
+    lang: str = "en",
+):
+    """Confirmation ('goodbye') email sent after an account is deleted."""
+    heading = t(lang, "account_deleted.heading")
+    body_text = t(lang, "account_deleted.body")
+
+    body_content = f"""
+        <h1 style="{STYLES['h1']}">{heading}</h1>
+        <p style="{STYLES['p']}">{body_text}</p>
+    """
+    return send_email(
+        to=email,
+        subject=t(lang, "account_deleted.subject"),
+        body=_email_layout(
+            title=heading,
+            body_content=body_content,
+            footer_note=t(lang, "account_deleted.footer"),
+        ),
+    )
+
+
 def send_password_reset_email(
     generated_reset_code: str,
     user: UserRead,
@@ -156,7 +233,7 @@ def send_password_reset_email_platform(
     safe_code = html.escape(generated_reset_code)
     safe_email = quote(str(email), safe='')
     safe_code_param = quote(generated_reset_code, safe='')
-    reset_url = f"{base_url}/reset-password?email={safe_email}&amp;resetCode={safe_code_param}"
+    reset_url = f"{base_url}/reset?email={safe_email}&amp;resetCode={safe_code_param}"
 
     heading = t(lang, "password_reset.heading")
     body_text = t(lang, "password_reset.body", username=safe_username)

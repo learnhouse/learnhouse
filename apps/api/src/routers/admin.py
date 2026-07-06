@@ -5,7 +5,6 @@ All endpoints are scoped by org_slug and require API token authentication
 (Bearer lh_...). The token's organization must match the org_slug in the URL.
 """
 
-import os
 from typing import Any, Dict, List, Optional
 from fastapi import APIRouter, Depends, HTTPException, Path, Query, Request, Response
 from fastapi.responses import HTMLResponse, RedirectResponse
@@ -925,9 +924,12 @@ async def api_admin_issue_magic_link(
 
 
 def _support_url() -> str:
-    """Return the LearnHouse support page URL (platform URL, not org-specific)."""
-    platform = os.environ.get("LEARNHOUSE_PLATFORM_URL", "https://www.learnhouse.app").rstrip("/")
-    return f"{platform}/dashboard/support"
+    """Return a support contact URL for the magic-link error page.
+
+    The old `{platform}/dashboard/support` path 404s (the platform dashboard is
+    gone on .io), so use a support mailto that can never break.
+    """
+    return "mailto:hello@learnhouse.app"
 
 
 def _render_magic_link_error(title: str, message: str) -> HTMLResponse:

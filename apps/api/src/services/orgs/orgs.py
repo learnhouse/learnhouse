@@ -144,6 +144,84 @@ async def get_organization_by_slug(
     return org_read
 
 
+# Free-plan organizations a single user may own (as admin) before an upgrade is
+# required. Users who already pay for at least one org are exempt.
+MAX_FREE_ORGS = 3
+
+
+async def _enforce_free_org_cap(
+    current_user: PublicUser | AnonymousUser,
+    db_session: AsyncSession,
+) -> None:
+    """Block a free-tier user from owning more than MAX_FREE_ORGS organizations.
+
+    Only orgs where the user is admin count toward the cap. A user with at least
+    one paid organization is exempt (a customer, not free-tier).
+    """
+    admin_org_ids = (
+        await db_session.execute(
+            select(UserOrganization.org_id).where(
+                UserOrganization.user_id == int(current_user.id),
+                UserOrganization.role_id == ADMIN_ROLE_ID,
+            )
+        )
+    ).scalars().all()
+    if len(admin_org_ids) < MAX_FREE_ORGS:
+        return
+
+    configs = (
+        await db_session.execute(
+            select(OrganizationConfig.config).where(
+                OrganizationConfig.org_id.in_(admin_org_ids)
+            )
+        )
+    ).scalars().all()
+
+    def _plan_of(cfg: dict | None) -> str:
+        cfg = cfg or {}
+        return cfg.get("plan") or (cfg.get("cloud") or {}).get("plan") or "free"
+
+    if any(_plan_of(c) not in ("free", "oss", None) for c in configs):
+        return
+
+    raise HTTPException(
+        status_code=status.HTTP_403_FORBIDDEN,
+        detail=(
+            f"Free plan is limited to {MAX_FREE_ORGS} organizations. "
+            "Upgrade an organization to create more."
+        ),
+    )
+
+
+def _try_send_org_created(request: Request, current_user, org) -> None:
+    """Best-effort welcome email to the org creator (never fails the create)."""
+    try:
+        email = getattr(current_user, "email", None)
+        if not email:
+            return
+        from src.services.email.utils import get_base_url_from_request
+        from src.services.users.emails import send_org_created_email
+        base = get_base_url_from_request(request)
+        send_org_created_email(email, org.name, f"{base}/home")
+    except Exception:
+        logging.exception("send_org_created_email failed")
+
+
+def _try_record_org_admin_in_loops(current_user, org) -> None:
+    """Best-effort: the org creator is now an ADMIN — add them to the Loops
+    marketing audience. Fire-and-forget, SaaS-gated, never fails the create."""
+    try:
+        from src.services.marketing.loops import record_org_admin_in_loops
+        record_org_admin_in_loops(
+            email=getattr(current_user, "email", None),
+            org_slug=getattr(org, "slug", None),
+            first_name=getattr(current_user, "first_name", None),
+            last_name=getattr(current_user, "last_name", None),
+        )
+    except Exception:
+        logging.exception("record_org_admin_in_loops failed")
+
+
 async def create_org(
     request: Request,
     org_object: OrganizationCreate,
@@ -175,6 +253,8 @@ async def create_org(
             status_code=status.HTTP_409_CONFLICT,
             detail="You should be logged in to be able to achieve this action",
         )
+
+    await _enforce_free_org_cap(current_user, db_session)
 
     # Complete the org object
     org.org_uuid = f"org_{uuid4()}"
@@ -229,11 +309,12 @@ async def create_org(
     if org_config is None:
         logging.error(f"Organization {org.id} has no config")
 
-    config = OrganizationConfig.model_validate(org_config)
-
-    org = OrganizationRead(**org.model_dump(), config=config)
-
-    return org
+    # Reuse the shared builder so the create response carries resolved_features,
+    # matching the GET org endpoints (and the None-config case is handled).
+    org_read = _build_org_read_with_resolved(org, org_config)
+    _try_send_org_created(request, current_user, org)
+    _try_record_org_admin_in_loops(current_user, org)
+    return org_read
 
 
 async def create_org_with_config(
@@ -268,6 +349,8 @@ async def create_org_with_config(
             status_code=status.HTTP_409_CONFLICT,
             detail="You should be logged in to be able to achieve this action",
         )
+
+    await _enforce_free_org_cap(current_user, db_session)
 
     # Complete the org object
     org.org_uuid = f"org_{uuid4()}"
@@ -320,11 +403,12 @@ async def create_org_with_config(
     if org_config is None:
         logging.error(f"Organization {org.id} has no config")
 
-    config = OrganizationConfig.model_validate(org_config)
-
-    org = OrganizationRead(**org.model_dump(), config=config)
-
-    return org
+    # Reuse the shared builder so the create response carries resolved_features,
+    # matching the GET org endpoints (and the None-config case is handled).
+    org_read = _build_org_read_with_resolved(org, org_config)
+    _try_send_org_created(request, current_user, org)
+    _try_record_org_admin_in_loops(current_user, org)
+    return org_read
 
 
 async def update_org(
@@ -609,11 +693,22 @@ async def delete_org(
     for uid in affected_users:
         _invalidate_session_cache(uid)
 
+    # Capture the acting admin's email before the cascade removes memberships.
+    acting_email = getattr(current_user, "email", None)
+
     # Delete the organization
     # Related data (UserOrganization, Courses, Folders, etc.) will be
     # automatically deleted via CASCADE constraints in the database
     await db_session.delete(org)
     await db_session.commit()
+
+    # Best-effort deletion confirmation to the acting admin.
+    if acting_email:
+        try:
+            from src.services.users.emails import send_org_deleted_email
+            send_org_deleted_email(acting_email, org_name)
+        except Exception:
+            logging.exception("send_org_deleted_email failed")
 
     return {"detail": "Organization deleted", "org_id": org_id, "org_name": org_name}
 
@@ -978,6 +1073,57 @@ async def update_org_folders_config(
         request, "folders", folders_enabled, org_id, current_user, db_session,
         v1_default={"enabled": True},
     )
+
+
+FOLDERS_SORT_MODES = ("name_asc", "name_desc", "newest", "oldest", "manual")
+
+
+async def update_org_folders_sort_config(
+    request: Request,
+    sort_mode: str,
+    org_id: int,
+    current_user: PublicUser | AnonymousUser,
+    db_session: AsyncSession,
+):
+    """Set the library folder ordering mode (admin-only).
+
+    Persisted at config["general"]["folders"]["sort_mode"] in the free-form
+    organization_config JSON blob (no migration).
+    """
+    if sort_mode not in FOLDERS_SORT_MODES:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail=f"Invalid sort_mode. Must be one of: {', '.join(FOLDERS_SORT_MODES)}",
+        )
+
+    statement = select(Organization).where(Organization.id == org_id)
+    org = (await db_session.execute(statement)).scalars().first()
+
+    if not org:
+        raise HTTPException(status_code=404, detail="Organization not found")
+
+    await rbac_check(request, org.org_uuid, current_user, "update", db_session)
+
+    statement = select(OrganizationConfig).where(OrganizationConfig.org_id == org.id)
+    org_config = (await db_session.execute(statement)).scalars().first()
+
+    if org_config is None:
+        raise HTTPException(status_code=404, detail="Organization config not found")
+
+    updated_config = _deep_copy_config(org_config)
+    updated_config.setdefault("general", {}).setdefault("folders", {})["sort_mode"] = sort_mode
+
+    org_config.config = updated_config
+    org_config.update_date = str(datetime.now())
+
+    db_session.add(org_config)
+    await db_session.commit()
+    await db_session.refresh(org_config)
+
+    from src.services.orgs.cache import invalidate_org_config_cache
+    invalidate_org_config_cache(org.id)
+
+    return {"detail": "Folders sort mode updated"}
 
 
 async def update_org_courses_config(

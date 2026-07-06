@@ -701,6 +701,10 @@ async def delete_user_by_id(
     # RBAC check
     await rbac_check(request, current_user, "delete", user.user_uuid, db_session)
 
+    # Capture identity before deletion for the confirmation ('goodbye') email.
+    deleted_email = user.email
+    deleted_username = user.username
+
     from src.routers.users import _invalidate_session_cache
 
     # Delete organizations the user is the SOLE admin of, so we don't leave
@@ -765,6 +769,14 @@ async def delete_user_by_id(
     # Delete user (all other FKs have ondelete="CASCADE")
     await db_session.delete(user)
     await db_session.commit()
+
+    # Best-effort deletion confirmation email.
+    if deleted_email:
+        try:
+            from src.services.users.emails import send_account_deleted_email
+            send_account_deleted_email(deleted_email, deleted_username or "")
+        except Exception:
+            logging.exception("send_account_deleted_email failed")
 
     return {"detail": "User deleted successfully"}
 

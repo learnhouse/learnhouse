@@ -1,4 +1,5 @@
 from typing import Optional, List
+from pydantic import BaseModel
 from sqlalchemy import Column, ForeignKey, Integer, BigInteger
 from sqlmodel import Field, SQLModel
 
@@ -26,6 +27,9 @@ class Folder(FolderBase, table=True):
             Integer, ForeignKey("folder.id", ondelete="CASCADE"), nullable=True, index=True
         ),
     )
+    # Manual (admin drag) ordering position among siblings. Only consulted when
+    # the org's folders.sort_mode == "manual"; the other modes sort by name/date.
+    order: int = Field(default=0)
     creation_date: str = ""
     update_date: str = ""
 
@@ -63,6 +67,7 @@ class FolderRead(FolderBase):
     org_id: int
     folder_uuid: str
     parent_folder_id: Optional[int] = None
+    order: int = 0
     creation_date: str
     update_date: str
     # Total number of children (sub-folders + leaf items), always populated.
@@ -71,3 +76,16 @@ class FolderRead(FolderBase):
     subfolders: List["FolderRead"] = []
     items: List[FolderContentItem] = []
     breadcrumbs: List[FolderBreadcrumb] = []
+
+
+class FolderOrder(BaseModel):
+    folder_id: int
+
+
+class FolderUpdateOrder(BaseModel):
+    folder_order_by_ids: List[FolderOrder]
+
+
+class FolderContentUpdateOrder(BaseModel):
+    # Content resource_uuids in the desired display order; position = array index.
+    resource_uuids: List[str]

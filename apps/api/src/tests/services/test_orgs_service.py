@@ -27,6 +27,8 @@ from src.services.orgs.orgs import (
     update_org_with_config_no_auth,
     wipe_org_content,
 )
+from src.services.orgs.users import leave_org
+from src.db.users import PublicUser
 
 
 async def _make_org_config(db, org, config):
@@ -512,3 +514,58 @@ class TestWipeOrgContent:
         assert (await db.exec(
             select(UserOrganization).where(UserOrganization.org_id == org.id)
         )).first() is not None
+
+
+# leave_org (self-service member departure)
+class TestLeaveOrg:
+    @pytest.mark.asyncio
+    @patch("src.services.orgs.users.dispatch_webhooks", new_callable=AsyncMock)
+    @patch("src.services.orgs.users.decrease_feature_usage", new_callable=AsyncMock)
+    @patch("src.routers.users._invalidate_session_cache")
+    async def test_leave_org_success(
+        self, mock_inv, mock_dec, mock_wh, mock_request, db, org, admin_user, regular_user
+    ):
+        # regular_user (non-admin member) leaves; admin_user remains as the admin.
+        result = await leave_org(mock_request, org.id, db, regular_user)
+
+        assert result["detail"] == "Left organization"
+        assert result["org_id"] == org.id
+        remaining = (
+            await db.execute(
+                select(UserOrganization).where(
+                    UserOrganization.user_id == regular_user.id,
+                    UserOrganization.org_id == org.id,
+                )
+            )
+        ).scalars().first()
+        assert remaining is None
+        mock_inv.assert_called_once_with(regular_user.id)
+        mock_dec.assert_awaited_once()
+        mock_wh.assert_awaited_once()
+
+    @pytest.mark.asyncio
+    async def test_leave_org_last_admin_blocked(self, mock_request, db, org, admin_user):
+        # The sole admin cannot leave — would orphan the org.
+        with pytest.raises(HTTPException) as exc:
+            await leave_org(mock_request, org.id, db, admin_user)
+        assert exc.value.status_code == 400
+
+    @pytest.mark.asyncio
+    async def test_leave_org_not_a_member(self, mock_request, db, org, admin_user):
+        stranger = PublicUser(
+            id=999,
+            username="stranger",
+            first_name="No",
+            last_name="Member",
+            email="stranger@test.com",
+            user_uuid="user_stranger",
+        )
+        with pytest.raises(HTTPException) as exc:
+            await leave_org(mock_request, org.id, db, stranger)
+        assert exc.value.status_code == 404
+
+    @pytest.mark.asyncio
+    async def test_leave_org_org_not_found(self, mock_request, db, admin_user):
+        with pytest.raises(HTTPException) as exc:
+            await leave_org(mock_request, 99999, db, admin_user)
+        assert exc.value.status_code == 404

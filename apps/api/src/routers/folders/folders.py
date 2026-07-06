@@ -1,7 +1,14 @@
 from typing import List, Optional
 from fastapi import APIRouter, Depends, File, Request, UploadFile
 from src.core.events.database import get_db_session
-from src.db.folders.folders import FolderContentItem, FolderCreate, FolderRead, FolderUpdate
+from src.db.folders.folders import (
+    FolderContentItem,
+    FolderContentUpdateOrder,
+    FolderCreate,
+    FolderRead,
+    FolderUpdate,
+    FolderUpdateOrder,
+)
 from src.security.auth import get_current_user
 from src.services.users.users import PublicUser
 from src.services.folders.folders import (
@@ -10,6 +17,8 @@ from src.services.folders.folders import (
     get_folders,
     update_folder,
     delete_folder,
+    reorder_folders,
+    reorder_folder_content,
     add_folder_content,
     remove_folder_content,
     move_folder_content,
@@ -87,6 +96,55 @@ async def api_search_library(
     db_session=Depends(get_db_session),
 ):
     return await search_library(request, org_id, q, current_user, db_session)
+
+
+@router.put(
+    "/org/{org_id}/order",
+    summary="Reorder library folders",
+    description="Persist the manual (admin drag) ordering of sibling folders. Reorders root folders by default; pass `parent_folder_uuid` to reorder a folder's direct sub-folders. Admin only.",
+    responses={
+        200: {"description": "Folder order updated"},
+        400: {"description": "A folder id is not in the org/parent scope"},
+        401: {"description": "Not authenticated"},
+        403: {"description": "Caller is not an organization administrator"},
+        404: {"description": "Organization or parent folder not found"},
+    },
+)
+async def api_reorder_folders(
+    request: Request,
+    org_id: int,
+    order: FolderUpdateOrder,
+    parent_folder_uuid: Optional[str] = None,
+    current_user: PublicUser = Depends(get_current_user),
+    db_session=Depends(get_db_session),
+):
+    return await reorder_folders(
+        request, org_id, order, current_user, db_session, parent_folder_uuid
+    )
+
+
+@router.put(
+    "/{folder_uuid}/content/order",
+    summary="Reorder a folder's content items",
+    description="Persist the manual (admin drag) ordering of a folder's content (courses, media, …). Position is derived from the array index. Admin only.",
+    responses={
+        200: {"description": "Folder content order updated"},
+        400: {"description": "A resource is not in this folder"},
+        401: {"description": "Not authenticated"},
+        403: {"description": "Caller is not an organization administrator"},
+        404: {"description": "Folder or organization not found"},
+    },
+)
+async def api_reorder_folder_content(
+    request: Request,
+    folder_uuid: str,
+    order: FolderContentUpdateOrder,
+    current_user: PublicUser = Depends(get_current_user),
+    db_session=Depends(get_db_session),
+):
+    return await reorder_folder_content(
+        request, folder_uuid, order.resource_uuids, current_user, db_session
+    )
 
 
 @router.get(

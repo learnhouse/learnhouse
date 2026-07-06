@@ -137,3 +137,62 @@ async def test_refresh_happy_path_rotates_refresh_cookie(client):
     # Both cookies should have been set: LH_access + LH_refresh.
     set_cookies = [c for c in response.headers.get_list("set-cookie")]
     assert any("LH_refresh=rotated-refresh" in c for c in set_cookies), set_cookies
+
+
+@pytest.mark.asyncio
+async def test_refresh_replay_within_grace_window_reuses_pair(client):
+    """
+    A benign concurrent/retried refresh re-presents the SAME jti within the
+    grace window. Instead of revoking every session (the "I keep getting logged
+    out" bug), the endpoint re-serves the exact rotated pair the first call
+    issued, and does NOT revoke.
+    """
+    user = _fake_user()
+    stack = _patch_happy_path(
+        {"sub": user.email, "iat": 1, "exp": 9_999_999_999, "jti": "concurrent-jti"}
+    )
+    with stack[0], stack[1], stack[2], stack[3], stack[4], stack[5], stack[6], \
+         patch("src.routers.auth.security_get_user", new_callable=AsyncMock, return_value=user), \
+         patch("src.routers.auth._is_token_revoked_for_user", return_value=False), \
+         patch("src.routers.auth._mark_refresh_jti_used", return_value=False), \
+         patch(
+             "src.routers.auth._get_refresh_grace",
+             return_value={"access_token": "grace-access", "refresh_token": "grace-refresh"},
+         ), \
+         patch("src.routers.auth.revoke_user_sessions_before") as revoke_mock:
+        response = await client.get(
+            "/api/v1/auth/refresh",
+            cookies={JWT_REFRESH_COOKIE_NAME: "concurrent-token"},
+        )
+    assert response.status_code == 200
+    # Served the cached pair, not a freshly-minted one.
+    assert response.json()["access_token"] == "grace-access"
+    set_cookies = response.headers.get_list("set-cookie")
+    assert any("LH_refresh=grace-refresh" in c for c in set_cookies), set_cookies
+    # Crucially: no mass session revocation for a benign concurrent refresh.
+    revoke_mock.assert_not_called()
+
+
+@pytest.mark.asyncio
+async def test_refresh_replay_outside_grace_window_revokes(client):
+    """
+    A replay with no live grace entry (window elapsed / genuine theft) is
+    rejected with 401 and revokes every session for the user.
+    """
+    user = _fake_user()
+    stack = _patch_happy_path(
+        {"sub": user.email, "iat": 1, "exp": 9_999_999_999, "jti": "stolen-jti"}
+    )
+    with stack[0], stack[1], stack[2], stack[3], stack[4], stack[5], stack[6], \
+         patch("src.routers.auth.security_get_user", new_callable=AsyncMock, return_value=user), \
+         patch("src.routers.auth._is_token_revoked_for_user", return_value=False), \
+         patch("src.routers.auth._mark_refresh_jti_used", return_value=False), \
+         patch("src.routers.auth._get_refresh_grace", return_value=None), \
+         patch("asyncio.sleep", new_callable=AsyncMock), \
+         patch("src.routers.auth.revoke_user_sessions_before") as revoke_mock:
+        response = await client.get(
+            "/api/v1/auth/refresh",
+            cookies={JWT_REFRESH_COOKIE_NAME: "replayed-token"},
+        )
+    assert response.status_code == 401
+    revoke_mock.assert_called_once_with(user.id)

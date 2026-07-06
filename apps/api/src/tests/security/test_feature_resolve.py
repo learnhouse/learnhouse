@@ -67,6 +67,7 @@ class TestFeatureResolve:
         with patch("src.security.features_utils.resolve.get_deployment_mode", return_value="oss"):
             assert resolve_feature("usergroups", {}, 0) == {
                 "enabled": True,
+                "available": True,
                 "limit": 0,
                 "required_plan": "standard",
             }
@@ -78,6 +79,7 @@ class TestFeatureResolve:
             ):
                 assert resolve_feature("courses", {}, 0) == {
                     "enabled": True,
+                    "available": True,
                     "limit": 0,
                     "required_plan": None,
                 }
@@ -107,21 +109,27 @@ class TestFeatureResolve:
 
         assert members == {
             "enabled": True,
+            "available": True,
             "limit": 17,
             "required_plan": None,
         }
+        # force_enabled override → available even though the free plan omits it.
         assert analytics == {
             "enabled": True,
+            "available": True,
             "limit": 0,
             "required_plan": "standard",
         }
+        # admin-disabled AND not in the (free) plan → unavailable and off.
         assert boards == {
             "enabled": False,
+            "available": False,
             "limit": 0,
             "required_plan": "personal",
         }
         assert ai == {
             "enabled": False,
+            "available": False,
             "limit": 0,
             "required_plan": "standard",
         }
@@ -144,11 +152,13 @@ class TestFeatureResolve:
 
         assert unlimited == {
             "enabled": True,
+            "available": True,
             "limit": 0,
             "required_plan": None,
         }
         assert limited == {
             "enabled": True,
+            "available": True,
             "limit": 11,
             "required_plan": None,
         }
@@ -175,21 +185,56 @@ class TestFeatureResolve:
             oss_blocked = resolve_feature("sso", config, org_id=0)
             oss_allowed = resolve_feature("analytics", config_allowed, org_id=0)
 
+        # EE: available (everything is), but the admin toggle still turned it off.
         assert ee_disabled == {
             "enabled": False,
+            "available": True,
             "limit": 0,
             "required_plan": "standard",
         }
+        # OSS: an EE-only feature is unavailable.
         assert oss_blocked == {
             "enabled": False,
+            "available": False,
             "limit": 0,
             "required_plan": "enterprise",
         }
         assert oss_allowed == {
             "enabled": True,
+            "available": True,
             "limit": 0,
             "required_plan": "standard",
         }
+
+    def test_paid_plan_feature_cannot_be_admin_disabled(self):
+        # A feature INCLUDED in a paid plan must stay enabled even when an admin
+        # toggles it off — paying users always keep their plan features.
+        base = {"config_version": "2.0", "plan": "pro"}
+        toggled_off = {**base, "admin_toggles": {"roles": {"disabled": True}}}
+
+        with patch("src.security.features_utils.resolve.get_deployment_mode", return_value="saas"):
+            without_toggle = resolve_feature("roles", base, org_id=0)
+            with_toggle = resolve_feature("roles", toggled_off, org_id=0)
+
+        # pro includes roles → available, and the admin toggle can't take it away
+        assert without_toggle["available"] is True
+        assert without_toggle["enabled"] is True
+        assert with_toggle["available"] is True
+        assert with_toggle["enabled"] is True
+
+    def test_free_plan_feature_can_be_admin_disabled(self):
+        # The SAME toggle DOES disable a plan feature on the free plan (the
+        # guarantee only protects paying orgs).
+        config = {
+            "config_version": "2.0",
+            "plan": "free",
+            "admin_toggles": {"members": {"disabled": True}},
+        }
+        with patch("src.security.features_utils.resolve.get_deployment_mode", return_value="saas"):
+            members = resolve_feature("members", config, org_id=0)
+
+        assert members["available"] is True   # free plan includes members
+        assert members["enabled"] is False    # ...but the admin turned it off
 
     def test_fetch_purchased_extras_returns_defaults_when_org_id_zero(self):
         result = _fetch_purchased_extras(0)

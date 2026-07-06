@@ -162,8 +162,14 @@ async def send_reset_password_code(
     org_config_stmt = select(OrganizationConfig).where(OrganizationConfig.org_id == org.id)
     org_config = (await db_session.execute(org_config_stmt)).scalars().first()
 
-    # Send reset code via email
-    base_url = get_base_url_from_request(request)
+    # Send reset code via email. Use the org-aware base URL so the link points at
+    # the org's own host — including a verified CUSTOM DOMAIN (learn.acme.org) —
+    # not the org-less platform apex (where /reset can't resolve the org). Mirrors
+    # the invitation flow (services/orgs/invites.py).
+    from src.services.email.utils import get_org_signup_base_url
+    base_url = await get_org_signup_base_url(
+        org.slug, request, db_session=db_session, org_id=org.id
+    )
     isEmailSent = send_password_reset_email(
         generated_reset_code=generated_reset_code,
         user=user_read,
