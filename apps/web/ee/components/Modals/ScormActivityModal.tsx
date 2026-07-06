@@ -277,7 +277,7 @@ function ScormActivityModal({ course, closeModal, onImportComplete }: ScormActiv
                     <Upload size={36} className="text-gray-400" />
                     <div>
                       <p className="text-gray-600 font-medium">Click to upload or drag and drop</p>
-                      <p className="text-sm text-gray-400 mt-1">SCORM 1.2 or SCORM 2004 package (max 200MB)</p>
+                      <p className="text-sm text-gray-400 mt-1">SCORM 1.2 or SCORM 2004 package (max 5GB)</p>
                     </div>
                   </>
                 )}
