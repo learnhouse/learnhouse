@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getBackendUrl } from '@services/config/config'
 
-// Allow large file uploads (videos, SCORM packages) to pass through
-export const maxDuration = 300 // 5 minutes
+// Allow large file uploads (videos, SCORM packages up to 5GB) to pass through
+export const maxDuration = 3600 // 60 minutes
 export const dynamic = 'force-dynamic'
 export const fetchCache = 'force-no-store'
 
@@ -31,7 +31,9 @@ async function proxyToBackend(request: NextRequest): Promise<Response> {
     : undefined
 
   const controller = new AbortController()
-  const timeoutId = setTimeout(() => controller.abort(), 290_000)
+  // Just under maxDuration so large uploads (e.g. 5GB SCORM packages on slow
+  // connections) can complete before the request is aborted with a 504.
+  const timeoutId = setTimeout(() => controller.abort(), 3_590_000)
 
   try {
     const backendResponse = await fetch(backendUrl, {
