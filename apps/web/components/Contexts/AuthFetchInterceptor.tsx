@@ -3,6 +3,7 @@
 import { useEffect } from 'react'
 import { getAPIUrl } from '@services/config/config'
 import { dispatchAuthExpired, dispatchAuthRefreshed } from '@/lib/auth/events'
+import { hasSessionMarker } from '@services/auth/sessionMarker'
 
 const AUTH_RETRY_HEADER = 'X-LH-Auth-Retry'
 
@@ -99,10 +100,15 @@ export default function AuthFetchInterceptor() {
 
       const refreshed = await refreshAccessToken()
       if (!refreshed?.access_token) {
-        dispatchAuthExpired({
-          callbackUrl: getLoginCallbackUrl(),
-          reason: 'refresh_failed',
-        })
+        // Only force login if the user actually had a session (an anonymous
+        // visitor whose request happened to carry a stale bearer token must not
+        // be bounced off public content).
+        if (hasSessionMarker()) {
+          dispatchAuthExpired({
+            callbackUrl: getLoginCallbackUrl(),
+            reason: 'refresh_failed',
+          })
+        }
         return response
       }
 
@@ -115,7 +121,7 @@ export default function AuthFetchInterceptor() {
         headers: retryHeaders,
       })
 
-      if (retryResponse.status === 401) {
+      if (retryResponse.status === 401 && hasSessionMarker()) {
         dispatchAuthExpired({
           callbackUrl: getLoginCallbackUrl(),
           reason: 'retry_failed',
