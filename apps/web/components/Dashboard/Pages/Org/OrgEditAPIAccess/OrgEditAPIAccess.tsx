@@ -4,7 +4,6 @@ import { useOrg } from '@components/Contexts/OrgContext'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
 import { toast } from 'react-hot-toast'
 import { Button } from '@components/ui/button'
-import { getPlatformUrl } from '@services/config/config'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { useTranslation } from 'react-i18next'
 import {
@@ -231,7 +230,7 @@ const OrgEditAPIAccess: React.FC = () => {
             </TabsTrigger>
           </TabsList>
           <a
-            href={getPlatformUrl('/dashboard/support') ?? 'https://www.learnhouse.app/dashboard/support'}
+            href="mailto:hello@learnhouse.app"
             target="_blank"
             rel="noopener noreferrer"
             className="inline-flex items-center gap-2 px-3 py-1.5 rounded-md text-sm text-gray-600 hover:text-gray-900 hover:bg-gray-100 transition-colors border border-gray-200"

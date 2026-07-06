@@ -10,6 +10,7 @@ import toast from 'react-hot-toast';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { queryKeys } from '@/lib/query/keys';
 import { useLHAnalytics, AnalyticsEvent } from '@services/analytics';
+import { meaningfulMessage } from '@lib/errors/classify';
 import { Button } from '@components/ui/button';
 import { Input } from '@components/ui/input';
 import { Textarea } from '@components/ui/textarea';
@@ -106,8 +107,8 @@ const CreateOfferForm: React.FC<{ onSuccess: () => void }> = ({ onSuccess }) => 
       } else {
         toast.error(res.data?.detail || 'Failed to create offer');
       }
-    } catch (_error) {
-      toast.error('An error occurred while creating the offer');
+    } catch (error) {
+      toast.error(meaningfulMessage(error));
     } finally {
       setSubmitting(false);
     }

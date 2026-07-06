@@ -6,6 +6,7 @@ import ToolTip from '@components/Objects/StyledElements/Tooltip/Tooltip'
 import { getAPIUrl } from '@services/config/config'
 import { inviteBatchUsers, removeInvitedUser } from '@services/organizations/invites'
 import { apiFetch } from '@services/utils/ts/requests'
+import { getErrorMessage } from '@services/utils/ts/errorMessage'
 import { searchMatches } from '@/lib/search/normalize'
 import {
   Info,
@@ -101,33 +102,42 @@ function OrgUsersAdd() {
     setIsLoading(true)
     setSendResults(null)
     setSendSummary(null)
-    let res = await inviteBatchUsers(org.id, invitedUsers, selectedInviteCode, access_token)
-    if (res.status == 200) {
-      const data = res.data
-      setSendResults(data.results || [])
-      setSendSummary(data.summary || null)
-      track(AnalyticsEvent.MembersBatchInvited, {
-        total: data.summary?.total ?? 0,
-        sent: data.summary?.sent ?? 0,
-        failed: data.summary?.failed ?? 0,
-      })
-      queryClient.invalidateQueries({ queryKey: invitedUsersKey(org?.id) })
-      setIsLoading(false)
-      setInvitedUsers('')
+    try {
+      const res = await inviteBatchUsers(org.id, invitedUsers, selectedInviteCode, access_token)
+      if (res.status == 200) {
+        const data = res.data
+        setSendResults(data.results || [])
+        setSendSummary(data.summary || null)
+        track(AnalyticsEvent.MembersBatchInvited, {
+          total: data.summary?.total ?? 0,
+          sent: data.summary?.sent ?? 0,
+          failed: data.summary?.failed ?? 0,
+        })
+        queryClient.invalidateQueries({ queryKey: invitedUsersKey(org?.id) })
+        setInvitedUsers('')
 
-      if (data.summary?.failed > 0) {
+        if (data.summary?.failed > 0) {
+          toast.error(
+            t('dashboard.users.invite_members.toasts.partial', {
+              sent: data.summary.sent,
+              failed: data.summary.failed,
+            }),
+            { id: toastId }
+          )
+        } else {
+          toast.success(t('dashboard.users.invite_members.toasts.success'), { id: toastId })
+        }
+      } else {
         toast.error(
-          t('dashboard.users.invite_members.toasts.partial', {
-            sent: data.summary.sent,
-            failed: data.summary.failed,
-          }),
+          getErrorMessage(res.data?.detail, t('dashboard.users.invite_members.toasts.error')),
           { id: toastId }
         )
-      } else {
-        toast.success(t('dashboard.users.invite_members.toasts.success'), { id: toastId })
       }
-    } else {
-      toast.error(t('dashboard.users.invite_members.toasts.error'), { id: toastId })
+    } catch (err) {
+      toast.error(getErrorMessage((err as any)?.data?.detail, 'Failed to send invites'), {
+        id: toastId,
+      })
+    } finally {
       setIsLoading(false)
     }
   }

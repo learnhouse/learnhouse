@@ -6,6 +6,7 @@ import EditRole from '@components/Objects/Modals/Dash/OrgRoles/EditRole'
 import ConfirmationModal from '@components/Objects/StyledElements/ConfirmationModal/ConfirmationModal'
 import Modal from '@components/Objects/StyledElements/Modal/Modal'
 import PlanBadge from '@components/Dashboard/Shared/PlanRestricted/PlanBadge'
+import FeatureGate from '@components/Dashboard/Shared/FeatureGate/FeatureGate'
 import { getAPIUrl } from '@services/config/config'
 import { deleteRole } from '@services/roles/roles'
 import { apiFetch } from '@services/utils/ts/requests'
@@ -167,7 +168,7 @@ function OrgRoles() {
     }
 
     return (
-        <>
+        <FeatureGate feature="roles">
             <div className="mx-4 sm:mx-10 bg-white rounded-xl nice-shadow">
                 {/* Header */}
                 <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between px-4 sm:px-6 py-5 border-b border-gray-100">
@@ -466,7 +467,7 @@ function OrgRoles() {
                     )}
                 </div>
             </div>
-        </>
+        </FeatureGate>
     )
 }
 

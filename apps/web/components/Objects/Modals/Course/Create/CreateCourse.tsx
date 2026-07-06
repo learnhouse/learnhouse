@@ -8,6 +8,7 @@ import FormLayout, {
 } from '@components/Objects/StyledElements/Form/Form'
 import * as Form from '@radix-ui/react-form'
 import { createNewCourse } from '@services/courses/courses'
+import { createChapter } from '@services/courses/chapters'
 import { getOrganizationContextInfoWithoutCredentials } from '@services/organizations/orgs'
 import React, { useEffect } from 'react'
 import { BarLoader } from 'react-spinners'
@@ -99,6 +100,23 @@ function CreateCourseModal({ closeModal, orgslug }: any) {
             visibility: values.visibility ? 'public' : 'private',
             has_learnings: !!values.learnings?.trim(),
           })
+          // Create a default first chapter so the new course isn't empty.
+          // Never let a failure here block course creation.
+          try {
+            await createChapter(
+              {
+                name: t('courses.first_chapter_default_name', { defaultValue: 'First Chapter' }),
+                description: '',
+                thumbnail_image: '',
+                course_id: res.data.id,
+                org_id: res.data.org_id ?? orgId,
+              },
+              session.data?.tokens?.access_token
+            )
+          } catch (_chapterError) {
+            // Ignore: the default chapter is a convenience, not a requirement.
+          }
+
           await revalidateTags(['courses'], orgslug)
           // Refresh sidebar courses cache
           queryClient.invalidateQueries({ queryKey: queryKeys.courses.list(orgslug) })

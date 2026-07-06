@@ -1,5 +1,6 @@
 import ConfirmationModal from '@components/Objects/StyledElements/ConfirmationModal/ConfirmationModal'
 import Modal from '@components/Objects/StyledElements/Modal/Modal'
+import ToolTip from '@components/Objects/StyledElements/Tooltip/Tooltip'
 import EditVideoActivityModal from '@components/Objects/Modals/Activities/Edit/EditVideoActivityModal'
 import EditDocumentActivityModal from '@components/Objects/Modals/Activities/Edit/EditDocumentActivityModal'
 import EditScormActivityModal from '@components/Objects/Modals/Activities/Edit/EditScormActivityModal'
@@ -90,7 +91,7 @@ function ActivityElement(props: ActivitiyElementProps) {
   const org = useOrg() as any;
   const course = useCourse() as any;
   const dispatchCourse = useCourseDispatch() as any;
-  const withUnpublishedActivities = course ? course.withUnpublishedActivities : false
+  const _withUnpublishedActivities = course ? course.withUnpublishedActivities : false
   const queryClient = useQueryClient()
   const cleanCourseUuid = (id: string) => id?.replace(/^course_/, '') ?? id
 
@@ -298,17 +299,19 @@ function ActivityElement(props: ActivitiyElementProps) {
                   }
                   disabled={isUpdatingName}
                 />
-                <button
-                  onClick={() => updateActivityName(props.activity.id)}
-                  className="text-gray-500 hover:text-gray-700 disabled:opacity-50 disabled:cursor-not-allowed"
-                  disabled={isUpdatingName}
-                >
-                  {isUpdatingName ? (
-                    <Loader2 size={14} className="animate-spin" />
-                  ) : (
-                    <Save size={14} />
-                  )}
-                </button>
+                <ToolTip content={t('dashboard.courses.structure.actions.save_name', { defaultValue: 'Save name' })} side="top">
+                  <button
+                    onClick={() => updateActivityName(props.activity.id)}
+                    className="text-gray-500 hover:text-gray-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                    disabled={isUpdatingName}
+                  >
+                    {isUpdatingName ? (
+                      <Loader2 size={14} className="animate-spin" />
+                    ) : (
+                      <Save size={14} />
+                    )}
+                  </button>
+                </ToolTip>
               </div>
             ) : (
               <p className="first-letter:uppercase text-sm text-gray-600 truncate">{props.activity.name}</p>
@@ -423,26 +426,31 @@ function ActivityElement(props: ActivitiyElementProps) {
                   }
                 />
               ) : editHref ? (
-                <Link
-                  href={editHref}
-                  target="_blank"
-                  className="h-7 w-7 flex items-center justify-center rounded-md text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors"
-                  title={props.activity.activity_type === 'TYPE_ASSIGNMENT'
+                <ToolTip
+                  content={props.activity.activity_type === 'TYPE_ASSIGNMENT'
                     ? t('dashboard.courses.structure.actions.edit_assignment')
                     : t('dashboard.courses.structure.actions.edit_page')}
+                  side="top"
                 >
-                  <FilePenLine size={15} />
-                </Link>
+                  <Link
+                    href={editHref}
+                    target="_blank"
+                    className="h-7 w-7 flex items-center justify-center rounded-md text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors"
+                  >
+                    <FilePenLine size={15} />
+                  </Link>
+                </ToolTip>
               ) : (
                 <div className="h-7 w-7" />
               )}
-              <Link
-                href={previewHref}
-                className="h-7 w-7 flex items-center justify-center rounded-md text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors"
-                title={t('dashboard.courses.structure.actions.preview_activity')}
-              >
-                <Eye size={15} />
-              </Link>
+              <ToolTip content={t('dashboard.courses.structure.actions.preview_activity')} side="top">
+                <Link
+                  href={previewHref}
+                  className="h-7 w-7 flex items-center justify-center rounded-md text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors"
+                >
+                  <Eye size={15} />
+                </Link>
+              </ToolTip>
               <LockPopover
                 lockType={(props.activity.lock_type as LockType) || 'public'}
                 onChangeLockType={changeLockType}

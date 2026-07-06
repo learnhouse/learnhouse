@@ -295,7 +295,18 @@ export default function AuthBrandingTab() {
         </Label>
         <div className="rounded-xl overflow-hidden border border-gray-200 aspect-[4/3]">
           <div className="h-full flex">
-            {/* Branding Side Preview */}
+            {/* Form Side Preview (left) */}
+            <div className="w-1/2 bg-white flex items-center justify-center p-4">
+              <div className="w-full max-w-[100px] space-y-2">
+                <div className="h-2 w-12 bg-gray-200 rounded" />
+                <div className="h-6 bg-gray-100 rounded border border-gray-200" />
+                <div className="h-2 w-10 bg-gray-200 rounded" />
+                <div className="h-6 bg-gray-100 rounded border border-gray-200" />
+                <div className="h-5 bg-gray-800 rounded mt-3" />
+              </div>
+            </div>
+
+            {/* Branding Side Preview (right) */}
             <div
               className="w-1/2 relative flex flex-col p-3"
               style={getBackgroundStyle()}
@@ -346,17 +357,6 @@ export default function AuthBrandingTab() {
                     </p>
                   )}
                 </div>
-              </div>
-            </div>
-
-            {/* Form Side Preview */}
-            <div className="w-1/2 bg-white flex items-center justify-center p-4">
-              <div className="w-full max-w-[100px] space-y-2">
-                <div className="h-2 w-12 bg-gray-200 rounded" />
-                <div className="h-6 bg-gray-100 rounded border border-gray-200" />
-                <div className="h-2 w-10 bg-gray-200 rounded" />
-                <div className="h-6 bg-gray-100 rounded border border-gray-200" />
-                <div className="h-5 bg-gray-800 rounded mt-3" />
               </div>
             </div>
           </div>

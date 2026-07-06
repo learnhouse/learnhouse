@@ -80,9 +80,27 @@ interface Rights {
 
 interface UseAdminStatusReturn {
     isAdmin: boolean | null;
+    // Can the user MANAGE the org (settings + billing)? Stricter than isAdmin
+    // (dashboard access): an editor/maintainer may reach the dashboard, but only
+    // an org admin (or superadmin) manages the organization and its billing.
+    canManageOrg: boolean;
     loading: boolean;
     userRoles: Role[];
     rights: Rights | null;
+}
+
+/**
+ * Per-org "can manage the org (incl. billing)" check from the session, usable
+ * where there is no OrgContext (e.g. the apex hub's multi-org picker). Mirrors
+ * useAdminStatus().canManageOrg for an arbitrary org id.
+ */
+export function canManageOrgFromSession(session: any, orgId?: number): boolean {
+    if (!orgId) return false;
+    if (session?.data?.user?.is_superadmin === true) return true;
+    const roles: Role[] = session?.data?.roles || [];
+    return roles.some(
+        (r) => r?.org?.id === orgId && r?.role?.rights?.organizations?.action_update === true,
+    );
 }
 
 function extractRightsFromRoles(userRoles: Role[], orgId: number): Rights | null {
@@ -210,9 +228,14 @@ function useAdminStatus(): UseAdminStatusReturn {
         [isAuthenticated, orgId, isSuperadmin, rights]
     );
 
+    const canManageOrg = useMemo(
+        () => (isAuthenticated && orgId ? isSuperadmin || rights?.organizations?.action_update === true : false),
+        [isAuthenticated, orgId, isSuperadmin, rights]
+    );
+
     const loading = !isAuthenticated && session.status !== 'unauthenticated';
 
-    return { isAdmin, loading, userRoles, rights };
+    return { isAdmin, canManageOrg, loading, userRoles, rights };
 }
 
 export default useAdminStatus;

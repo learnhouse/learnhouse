@@ -564,10 +564,15 @@ function AccountGeneral() {
   }, [session?.data?.user?.id, access_token]);
 
   const handleFileChange = async (event: any) => {
+    const userId = session?.data?.user?.id
+    if (!userId) {
+      setError(t('user.settings.general.signin_again', { defaultValue: 'Please sign in again' }))
+      return
+    }
     const file = event.target.files[0]
     setLocalAvatar(file)
     setIsLoading(true)
-    const res = await updateUserAvatar(session.data.user.id, file, access_token)
+    const res = await updateUserAvatar(userId, file, access_token)
     if (res.success === false) {
       setError(res.HTTPmessage)
     } else {
@@ -580,13 +585,18 @@ function AccountGeneral() {
   }
 
   const handleAISelect = async (imageUrl: string) => {
+    const userId = session?.data?.user?.id
+    if (!userId) {
+      setError(t('user.settings.general.signin_again', { defaultValue: 'Please sign in again' }))
+      return
+    }
     try {
       const response = await fetch(imageUrl)
       const blob = await response.blob()
       const file = new File([blob], `ai_avatar_${Date.now()}.jpg`, { type: blob.type || 'image/jpeg' })
       setLocalAvatar(file)
       setIsLoading(true)
-      const res = await updateUserAvatar(session.data.user.id, file, access_token)
+      const res = await updateUserAvatar(userId, file, access_token)
       if (res.success === false) {
         setError(res.HTTPmessage)
       } else {
@@ -603,10 +613,15 @@ function AccountGeneral() {
   }
 
   const handleAIImageFile = async (file: File) => {
+    const userId = session?.data?.user?.id
+    if (!userId) {
+      setError(t('user.settings.general.signin_again', { defaultValue: 'Please sign in again' }))
+      return
+    }
     try {
       setLocalAvatar(file)
       setIsLoading(true)
-      const res = await updateUserAvatar(session.data.user.id, file, access_token)
+      const res = await updateUserAvatar(userId, file, access_token)
       if (res.success === false) {
         setError(res.HTTPmessage)
       } else {
@@ -661,30 +676,29 @@ function AccountGeneral() {
           details: userData.details || {},
         }}
         validationSchema={validationSchema}
-        onSubmit={(values, { setSubmitting }) => {
+        onSubmit={async (values, { setSubmitting }) => {
           const isEmailChanged = values.email !== userData.email
           const loadingToast = toast.loading(t('user.settings.general.saving'))
 
-          setTimeout(() => {
+          try {
+            await updateProfile(values, userData.id, access_token)
+            toast.dismiss(loadingToast)
+            track(AnalyticsEvent.AccountProfileUpdated, {
+              email_changed: isEmailChanged,
+              has_bio: !!values.bio?.trim(),
+            })
+            if (isEmailChanged) {
+              handleEmailChange(values.email)
+            } else {
+              toast.success(t('user.settings.general.profile_updated'))
+            }
+            const refreshedUser = await getUser(userData.id, access_token)
+            setUserData(refreshedUser)
+          } catch {
+            toast.error('Failed to update profile', { id: loadingToast })
+          } finally {
             setSubmitting(false)
-            updateProfile(values, userData.id, access_token)
-              .then(() => {
-                toast.dismiss(loadingToast)
-                track(AnalyticsEvent.AccountProfileUpdated, {
-                  email_changed: isEmailChanged,
-                  has_bio: !!values.bio?.trim(),
-                })
-                if (isEmailChanged) {
-                  handleEmailChange(values.email)
-                } else {
-                  toast.success(t('user.settings.general.profile_updated'))
-                }
-                getUser(userData.id, access_token).then(setUserData);
-              })
-              .catch(() => {
-                toast.error('Failed to update profile', { id: loadingToast })
-              })
-          }, 400)
+          }
         }}
       >
         {(formikProps) => (

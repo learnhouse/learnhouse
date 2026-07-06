@@ -10,14 +10,18 @@ import {
   Lightning,
   Package,
   ArrowSquareOut,
+  Check,
+  Sparkle,
+  ArrowRight,
 } from '@phosphor-icons/react'
 import { useOrg } from '@components/Contexts/OrgContext'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
-import { getAPIUrl, getDeploymentMode } from '@services/config/config'
+import { getAPIUrl, getDeploymentMode, getMainDomainUri, getUpgradeUrl } from '@services/config/config'
 import { OrgUsageResponse, getOrgUsage } from '@services/orgs/usage'
 import { apiFetch } from '@services/utils/ts/requests'
 import { usePlan } from '@components/Hooks/usePlan'
 import { OrgPacksResponse } from '@services/packs/packs'
+import { GENERAL_PLANS, type Plan } from '@/app/(hub)/_billing/plans'
 
 
 interface AICreditsSummary {
@@ -102,6 +106,9 @@ export default function OrgEditUsage() {
 
   return (
     <div className="sm:mx-10 mx-0 space-y-6 pb-10">
+      {/* Upgrade upsell — easy way to move up + see what each plan offers */}
+      <PlanUpsell orgSlug={org?.slug ?? ''} currentPlan={plan} />
+
       {/* Plan & Resource Usage */}
       <div className="bg-white rounded-xl nice-shadow">
         <div className="border-b px-6 py-4 flex items-center justify-between">
@@ -271,7 +278,7 @@ export default function OrgEditUsage() {
               </p>
             </div>
             <a
-              href="https://learnhouse.app"
+              href={getMainDomainUri(`/billing?org=${org?.slug ?? ''}`)}
               target="_blank"
               rel="noopener noreferrer"
               className="flex items-center gap-1.5 text-sm font-medium text-blue-600 hover:text-blue-700"
@@ -376,6 +383,95 @@ function AICreditsDetail({ credits }: { credits: AICreditsSummary }) {
           </p>
         </div>
       </div>
+    </div>
+  )
+}
+
+// Plan ranking for the usage-page upsell — only surface plans ABOVE the current
+// one. personal/family sit at the entry rank; oss/enterprise never upsell.
+const PLAN_RANK: Record<string, number> = {
+  free: 0, personal: 0, 'personal-family': 0, standard: 1, pro: 2, enterprise: 3, oss: 99,
+}
+
+function PlanUpsell({ orgSlug, currentPlan }: { orgSlug: string; currentPlan: string }) {
+  const { t } = useTranslation()
+  if (getDeploymentMode() !== 'saas') return null
+
+  const rank = PLAN_RANK[currentPlan] ?? 0
+  const targets: Plan[] = GENERAL_PLANS.filter(
+    (p) => p.id !== 'free' && (PLAN_RANK[p.id] ?? 0) > rank,
+  )
+  if (targets.length === 0) return null
+
+  const compareUrl = getUpgradeUrl(orgSlug)
+
+  return (
+    <div className="bg-white rounded-xl nice-shadow overflow-hidden">
+      <div className="border-b px-6 py-4 flex items-center gap-2.5">
+        <Sparkle size={18} weight="fill" className="text-amber-500 flex-none" />
+        <div className="min-w-0">
+          <h3 className="text-lg font-semibold text-gray-800">
+            {t('dashboard.organization.usage.upsell.title', { defaultValue: 'Do more with a higher plan' })}
+          </h3>
+          <p className="text-sm text-gray-400">
+            {t('dashboard.organization.usage.upsell.subtitle', { defaultValue: 'Upgrade to raise your limits and unlock more features.' })}
+          </p>
+        </div>
+      </div>
+
+      <div className={`p-6 grid grid-cols-1 gap-4 ${targets.length > 1 ? 'md:grid-cols-2' : ''}`}>
+        {targets.map((plan) => {
+          const url = getUpgradeUrl(orgSlug, plan.id)
+          return (
+            <div
+              key={plan.id}
+              className="relative rounded-xl border border-gray-100 p-5 flex flex-col nice-shadow"
+              style={{ background: `linear-gradient(to bottom, ${plan.topGlow}, transparent)` }}
+            >
+              {plan.popular && (
+                <span className="absolute top-4 right-4 text-[10px] font-bold uppercase tracking-wider text-purple-700 bg-purple-100 px-2 py-0.5 rounded-full">
+                  {t('dashboard.organization.usage.upsell.popular', { defaultValue: 'Popular' })}
+                </span>
+              )}
+              <h4 className={`text-lg font-bold ${plan.accentColor}`}>{plan.name}</h4>
+              <p className="text-xs text-gray-500 mb-3">{plan.tagline}</p>
+              <p className="mb-4">
+                <span className="text-2xl font-black text-gray-900">${plan.monthlyPrice}</span>
+                <span className="text-sm text-gray-400 font-medium">/mo</span>
+              </p>
+              <ul className="space-y-1.5 mb-5 flex-1">
+                {plan.features.slice(0, 6).map((f) => (
+                  <li key={f.label} className="flex items-start gap-2 text-sm text-gray-600">
+                    <Check size={14} weight="bold" className="text-emerald-500 mt-0.5 flex-none" />
+                    <span>
+                      {f.label}
+                      {f.badge && <span className="ml-1 text-[10px] font-semibold text-gray-400">{f.badge}</span>}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+              {url && (
+                <a
+                  href={url}
+                  className={`inline-flex items-center justify-center gap-1.5 w-full py-2.5 rounded-lg text-sm font-semibold transition-colors ${plan.ctaStyle}`}
+                >
+                  {t('dashboard.organization.usage.upsell.upgrade_to', { plan: plan.name, defaultValue: `Upgrade to ${plan.name}` })}
+                  <ArrowRight size={14} weight="bold" />
+                </a>
+              )}
+            </div>
+          )
+        })}
+      </div>
+
+      {compareUrl && (
+        <div className="px-6 pb-5 -mt-1">
+          <a href={compareUrl} className="text-xs font-semibold text-gray-500 hover:text-gray-800 inline-flex items-center gap-1">
+            {t('dashboard.organization.usage.upsell.compare', { defaultValue: 'Compare all plans' })}
+            <ArrowRight size={12} weight="bold" />
+          </a>
+        </div>
+      )}
     </div>
   )
 }

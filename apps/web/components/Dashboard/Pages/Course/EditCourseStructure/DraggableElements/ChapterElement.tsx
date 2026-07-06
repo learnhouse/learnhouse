@@ -1,4 +1,5 @@
 import ConfirmationModal from '@components/Objects/StyledElements/ConfirmationModal/ConfirmationModal'
+import ToolTip from '@components/Objects/StyledElements/Tooltip/Tooltip'
 import {
   Check,
   Globe,
@@ -27,7 +28,6 @@ import LockPopover, { LockType } from './LockPopover'
 import { deleteAssignmentUsingActivityUUID } from '@services/courses/assignments'
 import { revalidateTags } from '@services/utils/ts/requests'
 import { useRouter } from 'next/navigation'
-import { getAPIUrl } from '@services/config/config'
 import { useQueryClient } from '@tanstack/react-query'
 import { queryKeys } from '@lib/query/keys'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
@@ -60,7 +60,7 @@ function ChapterElement(props: ChapterElementProps) {
   >(undefined)
   const course = useCourse() as any;
   const dispatchCourse = useCourseDispatch() as any;
-  const withUnpublishedActivities = course ? course.withUnpublishedActivities : false
+  const _withUnpublishedActivities = course ? course.withUnpublishedActivities : false
   const queryClient = useQueryClient()
   const cleanCourseUuid = (id: string) => id?.replace(/^course_/, '') ?? id
 
@@ -91,7 +91,7 @@ function ChapterElement(props: ChapterElementProps) {
 
   const clearSelection = () => setSelectedActivities(new Set())
 
-  const updateLocalActivities = (updater: (activity: any) => any | null) => {
+  const updateLocalActivities = (updater: (_activity: any) => any | null) => {
     const updatedStructure = {
       ...course.courseStructure,
       chapters: course.courseStructure.chapters.map((ch: any) => ({
@@ -261,23 +261,29 @@ function ChapterElement(props: ChapterElementProps) {
                         })
                       }
                     />
-                    <button
-                      onClick={() => updateChapterName(props.chapter.id)}
-                      className="bg-transparent text-neutral-700 hover:cursor-pointer hover:text-neutral-900"
-                    >
-                      <Save size={15} />
-                    </button>
+                    <ToolTip content={t('dashboard.courses.structure.actions.save_name', { defaultValue: 'Save name' })} side="top">
+                      <button
+                        onClick={() => updateChapterName(props.chapter.id)}
+                        className="bg-transparent text-neutral-700 hover:cursor-pointer hover:text-neutral-900"
+                      >
+                        <Save size={15} />
+                      </button>
+                    </ToolTip>
                   </div>
                 ) : (
                   <p className="text-neutral-700 first-letter:uppercase text-sm sm:text-base">
                     {props.chapter.name}
                   </p>
                 )}
-                <Pencil
-                  size={15}
-                  onClick={() => setSelectedChapter(props.chapter.id)}
-                  className="text-neutral-600 hover:cursor-pointer"
-                />
+                <ToolTip content={t('dashboard.courses.structure.actions.rename_chapter', { defaultValue: 'Rename chapter' })} side="top">
+                  <button
+                    type="button"
+                    onClick={() => setSelectedChapter(props.chapter.id)}
+                    className="text-neutral-600 hover:cursor-pointer"
+                  >
+                    <Pencil size={15} />
+                  </button>
+                </ToolTip>
               </div>
             </div>
             <div className="flex items-center space-x-2">
@@ -329,20 +335,24 @@ function ChapterElement(props: ChapterElementProps) {
                 <Loader2 size={16} className="animate-spin text-blue-500" />
               ) : (
                 <div className="flex items-center gap-1.5">
-                  <button
-                    onClick={() => bulkUpdatePublished(true)}
-                    className="h-7 px-2.5 rounded-md text-xs font-bold flex items-center gap-1 bg-green-50 text-green-700 hover:bg-green-100 border border-green-200 transition-colors"
-                  >
-                    <Globe size={12} />
-                    <span className="hidden sm:inline">{t('dashboard.courses.structure.actions.publish')}</span>
-                  </button>
-                  <button
-                    onClick={() => bulkUpdatePublished(false)}
-                    className="h-7 px-2.5 rounded-md text-xs font-bold flex items-center gap-1 bg-gray-50 text-gray-600 hover:bg-gray-100 border border-gray-200 transition-colors"
-                  >
-                    <Lock size={12} />
-                    <span className="hidden sm:inline">{t('dashboard.courses.structure.actions.unpublish')}</span>
-                  </button>
+                  <ToolTip content={t('dashboard.courses.structure.bulk_actions.publish_tooltip', { defaultValue: 'Publish selected' })} side="top">
+                    <button
+                      onClick={() => bulkUpdatePublished(true)}
+                      className="h-7 px-2.5 rounded-md text-xs font-bold flex items-center gap-1 bg-green-50 text-green-700 hover:bg-green-100 border border-green-200 transition-colors"
+                    >
+                      <Globe size={12} />
+                      <span className="hidden sm:inline">{t('dashboard.courses.structure.actions.publish')}</span>
+                    </button>
+                  </ToolTip>
+                  <ToolTip content={t('dashboard.courses.structure.bulk_actions.unpublish_tooltip', { defaultValue: 'Unpublish selected' })} side="top">
+                    <button
+                      onClick={() => bulkUpdatePublished(false)}
+                      className="h-7 px-2.5 rounded-md text-xs font-bold flex items-center gap-1 bg-gray-50 text-gray-600 hover:bg-gray-100 border border-gray-200 transition-colors"
+                    >
+                      <Lock size={12} />
+                      <span className="hidden sm:inline">{t('dashboard.courses.structure.actions.unpublish')}</span>
+                    </button>
+                  </ToolTip>
                   <ConfirmationModal
                     confirmationMessage={t('dashboard.courses.structure.bulk_actions.delete_confirm', { count: selectedActivities.size })}
                     confirmationButtonText={t('dashboard.courses.structure.bulk_actions.delete_button')}
