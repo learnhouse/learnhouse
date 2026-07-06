@@ -6,6 +6,8 @@ import { cookies, headers } from 'next/headers'
 import {
   resolveMultiTenant,
   extractOrgSubdomain,
+  isCustomDomain,
+  resolveCustomDomain,
   type InstanceInfo,
   type ResolvedTenant,
 } from './core'
@@ -36,5 +38,19 @@ export async function resolveMultiFromServer(
 export async function getOrgSlugFromHost(domain: string): Promise<string | null> {
   const headersList = await headers()
   const host = headersList.get('host')
-  return extractOrgSubdomain(host, domain)
+
+  // Subdomain org ({slug}.platform.tld) — cheap, synchronous.
+  const sub = extractOrgSubdomain(host, domain)
+  if (sub) return sub
+
+  // Custom domain (e.g. learn.acme.org) — NOT a subdomain of the platform domain,
+  // so it must be resolved to its org via the backend. Without this, auth pages on
+  // a custom domain fail to resolve the org and fall back to the generic org-less
+  // page instead of the org-branded one.
+  if (isCustomDomain(host, domain)) {
+    const resolved = await resolveCustomDomain(host as string)
+    return resolved?.slug ?? null
+  }
+
+  return null
 }

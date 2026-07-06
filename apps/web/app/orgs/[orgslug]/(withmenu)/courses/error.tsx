@@ -1,23 +1,15 @@
 'use client' // Error components must be Client Components
 
-import ErrorUI from '@components/Objects/StyledElements/Error/Error'
-import { useEffect } from 'react'
+import BoundaryError from '@components/Objects/StyledElements/Error/BoundaryError'
 
 export default function Error({
   error,
   reset,
 }: {
-  error: Error
+  error: Error & { digest?: string }
   reset: () => void
 }) {
-  useEffect(() => {
-    // Log the error to an error reporting service
-    console.error(error)
-  }, [error])
-
-  return (
-    <div>
-      <ErrorUI></ErrorUI>
-    </div>
-  )
+  // Capture to Sentry, auto-reload on stale-deploy, and render the meaningful
+  // ErrorUI with recovery actions (retry / home / sign out / report feedback).
+  return <BoundaryError error={error} reset={reset} />
 }

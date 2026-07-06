@@ -16,7 +16,6 @@ import { useOrg } from '@components/Contexts/OrgContext'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
 import { searchMatchesAny } from '@/lib/search/normalize'
 import { getUserGroups, getUserGroupResources } from '@services/usergroups/usergroups'
-import { usePlan } from '@components/Hooks/usePlan'
 import { useCourses } from '@/hooks/queries/useCourses'
 import { useLHAnalytics, AnalyticsEvent } from '@services/analytics'
 
@@ -34,14 +33,14 @@ function Courses(props: CourseProps) {
   const org = useOrg() as any
   const session = useLHSession() as any
   const access_token = session?.data?.tokens?.access_token
-  const currentPlan = usePlan()
   const { track } = useLHAnalytics('learner')
   const { data: coursesData, isLoading: coursesLoading } = useCourses(orgslug)
 
   const allCourses = coursesData || []
 
-  // Usergroup filter — only shown on personal/family plans
-  const usergroupsAvailable = currentPlan === 'personal' || currentPlan === 'family'
+  // Usergroup filter — shown only when the org's plan actually includes
+  // usergroups (a standard+ feature per the backend), via resolved features.
+  const usergroupsAvailable = org?.config?.config?.resolved_features?.usergroups?.enabled ?? false
   const [usergroups, setUsergroups] = useState<any[]>([])
   const [selectedUsergroupId, setSelectedUsergroupId] = useState<string>(() => {
     if (typeof window !== 'undefined') {

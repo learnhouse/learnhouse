@@ -59,14 +59,16 @@ const AccountSubPage = async (props: { params: Promise<{ orgslug: string; subpag
   const params = await props.params
   const session = await getServerSession()
 
-  // Redirect to login if not authenticated
+  // Browser-relative redirects only: the org slug is NEVER a URL path segment
+  // (the proxy adds the /orgs/{slug} prefix). A slug-prefixed path would be
+  // double-prefixed by the proxy → 404.
   if (!session) {
-    redirect(`/${params.orgslug}`)
+    redirect(`/login?redirect=/account/${params.subpage}`)
   }
 
   // Redirect to general if invalid subpage
   if (!VALID_SUBPAGES.includes(params.subpage)) {
-    redirect(`/${params.orgslug}/account/general`)
+    redirect('/account/general')
   }
 
   const org = await getOrganizationContextInfo(params.orgslug, {

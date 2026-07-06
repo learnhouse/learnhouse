@@ -5,8 +5,8 @@ import { Breadcrumbs } from '@components/Objects/Breadcrumbs/Breadcrumbs'
 import { ChartBar, ChartLine, SquaresFour } from '@phosphor-icons/react'
 import { motion } from 'motion/react'
 import { useTranslation } from 'react-i18next'
-import { usePlanInfo, useAnalyticsStatus } from '@components/Dashboard/Analytics/useAnalyticsDashboard'
-import { isFeatureAvailable } from '@services/plans/plans'
+import { useAnalyticsStatus } from '@components/Dashboard/Analytics/useAnalyticsDashboard'
+import { planMeetsRequirement } from '@services/plans/plans'
 import { DashTabBar } from '@components/Dashboard/Shared/DashTabBar/DashTabBar'
 import FeatureGate from '@components/Dashboard/Shared/FeatureGate/FeatureGate'
 import { usePlan } from '@components/Hooks/usePlan'
@@ -60,22 +60,16 @@ export default function AnalyticsDashboard() {
   const { t } = useTranslation()
   const [days, setDays] = useState('30')
   const [tab, setTab] = useState<Tab>('overview')
-  const { data: planInfo } = usePlanInfo()
   const { data: analyticsStatus } = useAnalyticsStatus()
   const plan = usePlan()
-  const isAnalyticsAvailable = isFeatureAvailable('analytics', plan)
-  const isAdvanced = isFeatureAvailable('analytics_advanced', plan)
+  // Advanced analytics is the enterprise tier; usePlan() returns the right
+  // pseudo-plan for EE ('enterprise') and OSS ('oss'), so planMeetsRequirement
+  // resolves all modes correctly.
+  const isAdvanced = planMeetsRequirement(plan, 'enterprise')
   const isConfigured = analyticsStatus?.configured === true
 
-  if (!isAnalyticsAvailable) {
-    return (
-      <FeatureGate feature="analytics">
-        <></>
-      </FeatureGate>
-    )
-  }
-
   return (
+    <FeatureGate feature="analytics">
     <div className="h-full w-full bg-[#f8f8f8] flex flex-col">
       {/* Sticky header box */}
       <div className="pl-4 pr-4 sm:pl-10 sm:pr-10 tracking-tight bg-[#fcfbfc] z-10 nice-shadow flex-shrink-0 relative">
@@ -235,5 +229,6 @@ export default function AnalyticsDashboard() {
         )}
       </motion.div>
     </div>
+    </FeatureGate>
   )
 }

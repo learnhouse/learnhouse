@@ -88,8 +88,9 @@ function CoursesHome(params: CourseProps) {
   const courseLimitReached = usageData?.features?.courses?.limit_reached ?? false
   const courseLimit = usageData?.features?.courses?.limit ?? 0
 
-  // Usergroup filter — only shown on personal/family plans
-  const usergroupsAvailable = currentPlan === 'personal' || currentPlan === 'family'
+  // Usergroup filter — shown only when the org's plan actually includes
+  // usergroups (a standard+ feature per the backend), via resolved features.
+  const usergroupsAvailable = org?.config?.config?.resolved_features?.usergroups?.enabled ?? false
   const [usergroups, setUsergroups] = useState<any[]>([])
   const [selectedUsergroupId, setSelectedUsergroupId] = useState<string>(() => {
     if (typeof window !== 'undefined') {
@@ -253,11 +254,13 @@ function CoursesHome(params: CourseProps) {
     switch (importType) {
       case 'scorm':
         return (
-          <ScormCourseImport
-            orgId={orgId!}
-            orgslug={orgslug}
-            closeModal={closeImportCourseModal}
-          />
+          <FeatureGate feature="scorm" orgslug={orgslug} context="dashboard">
+            <ScormCourseImport
+              orgId={orgId!}
+              orgslug={orgslug}
+              closeModal={closeImportCourseModal}
+            />
+          </FeatureGate>
         )
       case 'learnhouse':
         return (
