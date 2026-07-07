@@ -24,7 +24,11 @@ from src.services.blocks.block_types.imageBlock.imageBlock import create_image_b
 from src.services.blocks.block_types.pdfBlock.pdfBlock import create_pdf_block
 from src.services.blocks.block_types.videoBlock.videoBlock import create_video_block
 from src.services.courses.activities.activities import get_activity, update_activity
-from src.services.utils.ssrf_guard import SSRFBlockedError, resolve_and_validate_url
+from src.services.utils.ssrf_guard import (
+    SSRFBlockedError,
+    assert_connected_peer_allowed,
+    resolve_and_validate_url,
+)
 from src.db.courses.activities import ActivityUpdate
 
 # (allowed extensions, content-type prefix, byte cap) per asset kind.
@@ -33,51 +37,82 @@ _VIDEO = (("mp4", "webm"), "video/", 200 * 1024 * 1024)
 _PDF = (("pdf",), "application/pdf", 50 * 1024 * 1024)
 _AUDIO = (("mp3", "wav", "ogg", "m4a"), "audio/", 30 * 1024 * 1024)
 
+_MAX_REDIRECTS = 5
+# Browser-like UA so hosts that block bare clients (Wikimedia, some CDNs)
+# still serve the asset.
+_UA = {
+    "User-Agent": (
+        "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 "
+        "(KHTML, like Gecko) Chrome/124.0 Safari/537.36"
+    ),
+    "Accept": "*/*",
+}
 
-async def _fetch(url: str, allowed_exts, ctype_prefix, cap) -> tuple[bytes, str]:
-    """SSRF-guarded download; returns (bytes, extension). Enforces size cap
-    and that the extension/content-type matches the asset kind."""
-    try:
-        resolve_and_validate_url(url)
-    except SSRFBlockedError as e:
-        raise HTTPException(status_code=400, detail=f"Blocked URL: {e}")
 
+def _ext_from(url: str, ctype: str) -> str:
     path = urlparse(url).path
     ext = path.rsplit(".", 1)[-1].lower() if "." in path.rsplit("/", 1)[-1] else ""
+    if ext:
+        return ext
+    return {
+        "image/jpeg": "jpg", "image/png": "png", "image/gif": "gif",
+        "image/webp": "webp", "application/pdf": "pdf", "video/mp4": "mp4",
+        "video/webm": "webm", "audio/mpeg": "mp3", "audio/wav": "wav",
+        "audio/ogg": "ogg",
+    }.get(ctype, "")
 
-    # Browser-like UA so hosts that block bare clients (Wikimedia, some CDNs)
-    # still serve the asset.
-    ua = {
-        "User-Agent": (
-            "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 "
-            "(KHTML, like Gecko) Chrome/124.0 Safari/537.36"
-        ),
-        "Accept": "*/*",
-    }
+
+async def _fetch(url: str, allowed_exts, ctype_prefix, cap) -> tuple[bytes, str]:
+    """SSRF-guarded download; returns (bytes, extension).
+
+    Redirects are followed MANUALLY (httpx auto-redirects are disabled) so
+    every hop is re-validated: `resolve_and_validate_url` rejects non-http(s)
+    schemes and private/loopback/link-local targets, and
+    `assert_connected_peer_allowed` re-checks the actually-connected peer IP
+    against the validated set (DNS-rebinding defense). Without this, a public
+    URL could 302 to 169.254.169.254 or localhost and exfiltrate internal data.
+    """
+    current = url
     try:
-        async with httpx.AsyncClient(follow_redirects=True, timeout=60, headers=ua) as client:
-            async with client.stream("GET", url) as resp:
-                if resp.status_code >= 400:
-                    raise HTTPException(status_code=400, detail=f"Could not fetch URL ({resp.status_code})")
-                ctype = resp.headers.get("content-type", "").split(";")[0].strip().lower()
-                if not ext:
-                    # derive extension from content-type when the URL has none
-                    ext = {"image/jpeg": "jpg", "image/png": "png", "image/gif": "gif",
-                           "image/webp": "webp", "application/pdf": "pdf", "video/mp4": "mp4",
-                           "video/webm": "webm", "audio/mpeg": "mp3", "audio/wav": "wav",
-                           "audio/ogg": "ogg"}.get(ctype, "")
-                if ext not in allowed_exts:
-                    raise HTTPException(status_code=400, detail=f"Unsupported file type '.{ext or ctype}'. Allowed: {', '.join(allowed_exts)}")
-                if ctype and not ctype.startswith(ctype_prefix):
-                    raise HTTPException(status_code=400, detail=f"URL content-type '{ctype}' does not match the expected asset kind")
-                buf = bytearray()
-                async for chunk in resp.aiter_bytes():
-                    buf.extend(chunk)
-                    if len(buf) > cap:
-                        raise HTTPException(status_code=400, detail=f"File exceeds the {cap // (1024*1024)}MB limit")
+        async with httpx.AsyncClient(
+            follow_redirects=False, timeout=60, headers=_UA
+        ) as client:
+            for _hop in range(_MAX_REDIRECTS + 1):
+                validated_ips = resolve_and_validate_url(current)
+                request = client.build_request("GET", current)
+                resp = await client.send(request, stream=True)
+                try:
+                    assert_connected_peer_allowed(resp, validated_ips)
+                    if resp.is_redirect:
+                        location = resp.headers.get("location")
+                        if not location:
+                            raise HTTPException(status_code=400, detail="Redirect without a location")
+                        # Resolve relative redirects against the current URL;
+                        # the next loop re-validates scheme + host + peer.
+                        current = str(resp.url.join(location))
+                        continue
+
+                    if resp.status_code >= 400:
+                        raise HTTPException(status_code=400, detail=f"Could not fetch URL ({resp.status_code})")
+                    ctype = resp.headers.get("content-type", "").split(";")[0].strip().lower()
+                    ext = _ext_from(current, ctype)
+                    if ext not in allowed_exts:
+                        raise HTTPException(status_code=400, detail=f"Unsupported file type '.{ext or ctype}'. Allowed: {', '.join(allowed_exts)}")
+                    if ctype and not ctype.startswith(ctype_prefix):
+                        raise HTTPException(status_code=400, detail=f"URL content-type '{ctype}' does not match the expected asset kind")
+                    buf = bytearray()
+                    async for chunk in resp.aiter_bytes():
+                        buf.extend(chunk)
+                        if len(buf) > cap:
+                            raise HTTPException(status_code=400, detail=f"File exceeds the {cap // (1024*1024)}MB limit")
+                    return bytes(buf), ext
+                finally:
+                    await resp.aclose()
+            raise HTTPException(status_code=400, detail="Too many redirects")
+    except SSRFBlockedError as e:
+        raise HTTPException(status_code=400, detail=f"Blocked URL: {e}")
     except httpx.HTTPError as e:
         raise HTTPException(status_code=400, detail=f"Could not fetch URL: {e}")
-    return bytes(buf), ext
 
 
 def _upload_file(data: bytes, ext: str, ctype: str) -> UploadFile:
