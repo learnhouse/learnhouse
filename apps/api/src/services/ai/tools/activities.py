@@ -84,7 +84,12 @@ class CreateActivityParams(BaseModel):
     )
     content: dict = Field(
         default_factory=dict,
-        description="Editor JSON document for dynamic activities; {} to start empty.",
+        description=(
+            "Editor JSON document (TipTap): {\"type\":\"doc\",\"content\":[...blocks...]}. "
+            "Call describe_activity_blocks first to get the block palette and "
+            "examples — you can compose quiz, callout, flipcard, math, headings, "
+            "and lists, not just paragraphs. {} starts empty."
+        ),
     )
     published: bool = False
 
@@ -94,7 +99,10 @@ class UpdateActivityParams(BaseModel):
     name: str | None = Field(None, min_length=1, max_length=200)
     content: dict | None = Field(
         None,
-        description="Full replacement editor JSON; snapshots the previous version.",
+        description=(
+            "Full replacement editor JSON (TipTap doc); snapshots the previous "
+            "version. See describe_activity_blocks for the block palette."
+        ),
     )
     published: bool | None = None
 
@@ -103,7 +111,11 @@ class SetActivityContentParams(BaseModel):
     activity_uuid: str
     content: dict = Field(
         ...,
-        description="Full replacement editor JSON document for the activity.",
+        description=(
+            "Full replacement editor JSON document (TipTap doc). Call "
+            "describe_activity_blocks for the supported blocks (quiz, callout, "
+            "flipcard, math, …) and their JSON shapes before composing."
+        ),
     )
 
 
