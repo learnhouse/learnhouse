@@ -187,11 +187,14 @@ async def _describe_activity_blocks(ctx: ToolContext, p: DescribeBlocksParams):
         "blocks": BLOCK_CATALOG,
         "asset_blocks": ASSET_BLOCKS_NOTE,
         "how_to_use": (
-            "Build the activity content by composing these node objects into "
-            "the doc.content array, then pass the whole doc to create_activity "
-            "or set_activity_content. Prefer a rich mix: headings, paragraphs, "
-            "a callout for key warnings/tips, a flipcard or quiz to check "
-            "understanding."
+            "Build NEW activity content by composing these node objects into "
+            "the doc.content array, then pass the whole doc to create_activity. "
+            "Prefer a rich mix: headings, paragraphs, a callout for key "
+            "warnings/tips, a flipcard or quiz to check understanding. "
+            "To EDIT an EXISTING activity, do not rebuild the whole doc — call "
+            "read_activity_content to get each block's path, then patch just "
+            "that block with edit_block_text / update_block_attrs / "
+            "replace_block / insert_block / delete_block / move_block."
         ),
     }
 
