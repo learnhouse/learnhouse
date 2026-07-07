@@ -115,9 +115,11 @@ BLOCK_CATALOG: list[dict] = [
 ]
 
 ASSET_BLOCKS_NOTE = (
-    "Image, video, audio and PDF blocks (blockImage/blockVideo/blockAudio/"
-    "blockPDF) reference an uploaded file via a `blockObject` id and cannot "
-    "be authored as plain JSON — use the dedicated add_*_block upload tools."
+    "Image, video, audio and PDF blocks reference an uploaded file and cannot "
+    "be authored as plain JSON. Add them from a public URL with the dedicated "
+    "tools: add_image_block, add_video_block, add_pdf_block, add_audio_block "
+    "(each takes the activity_uuid and the asset URL, uploads it, and appends "
+    "the block to the activity)."
 )
 
 
