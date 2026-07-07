@@ -61,7 +61,17 @@ const EmbedServicesIcon = () => (
   </div>
 )
 
-export const activityTypes = [
+type ActivityTypeCard = {
+  key: string
+  icon: any
+  customIcon?: React.ComponentType
+  labelKey: string
+  color: { icon: string }
+  pattern: string
+  patternSize?: string
+}
+
+export const activityTypes: ActivityTypeCard[] = [
   {
     key: 'dynamic',
     icon: Browsers,
@@ -132,7 +142,7 @@ export const activityTypes = [
 ]
 
 // SCORM authoring card — only shown when the org has the SCORM feature enabled.
-const scormActivityType = {
+const scormActivityType: ActivityTypeCard = {
   key: 'scorm',
   icon: Package,
   labelKey: 'dashboard.courses.structure.activity.types.scorm',

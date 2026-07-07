@@ -1,5 +1,5 @@
 'use client';
-import { use, useEffect } from "react";
+import { use, useEffect, type ReactNode } from "react";
 import '@styles/globals.css'
 import Watermark from '@components/Objects/Watermark'
 import { SessionGate } from '@components/Contexts/LHSessionContext'
@@ -54,7 +54,7 @@ function OrgFooter() {
   )
 }
 
-function LayoutContent({ children, orgslug }: { children: React.ReactNode; orgslug: string }) {
+function LayoutContent({ children, orgslug }: { children: ReactNode; orgslug: string }) {
   const org = useOrg() as any
   const primaryColor = org?.config?.config?.customization?.general?.color || org?.config?.config?.general?.color || ''
   const customFont = org?.config?.config?.customization?.general?.font || org?.config?.config?.general?.font || ''
@@ -126,7 +126,7 @@ function LayoutContent({ children, orgslug }: { children: React.ReactNode; orgsl
 
 export default function RootLayout(
   props: {
-    children: React.ReactNode
+    children: ReactNode
     params: Promise<any>
   }
 ) {

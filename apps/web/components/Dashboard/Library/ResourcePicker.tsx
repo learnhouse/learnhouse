@@ -67,7 +67,7 @@ type ResourceListProps = {
   folderUuid?: string
   onChanged?: () => void
   // select mode
-  onSelect?: (resource: SelectedResource) => void
+  onSelect?: (_resource: SelectedResource) => void
   selectedUuid?: string
 }
 
@@ -212,7 +212,7 @@ type ResourcePickerProps = {
   folderUuid?: string
   onChanged?: () => void
   // select mode
-  onSelect?: (resource: SelectedResource) => void
+  onSelect?: (_resource: SelectedResource) => void
   selectedUuid?: string
 }
 
