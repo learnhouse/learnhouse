@@ -127,11 +127,13 @@ class TestFeatureResolve:
             "limit": 0,
             "required_plan": "personal",
         }
+        # AI is enabled on the free plan (metered by a starter credit allowance),
+        # so it resolves as available with a free requirement.
         assert ai == {
-            "enabled": False,
-            "available": False,
+            "enabled": True,
+            "available": True,
             "limit": 0,
-            "required_plan": "standard",
+            "required_plan": "free",
         }
 
     def test_courses_saas_limit_resolution_uses_plan_overrides_and_purchased_extra(self):

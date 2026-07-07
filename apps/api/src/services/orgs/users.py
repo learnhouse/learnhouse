@@ -21,7 +21,7 @@ from src.db.usergroup_user import UserGroupUser
 from src.db.usergroups import UserGroup, UserGroupRead
 from src.db.users import AnonymousUser, APITokenUser, PublicUser, User, UserRead
 from src.security.auth import resolve_acting_user_id
-from src.security.features_utils.usage import decrease_feature_usage
+from src.security.features_utils.usage import check_limits_with_usage, decrease_feature_usage
 from src.security.org_auth import is_org_member
 from src.security.rbac.constants import ADMIN_ROLE_ID
 from src.services.orgs.invites import send_invite_email
@@ -800,6 +800,12 @@ async def invite_batch_users(
 
     # RBAC check
     await rbac_check(request, org.org_uuid, current_user, "create", db_session)
+
+    # Enforce the member limit on the invite surface too (not just at join time),
+    # so a free org at its limit is stopped here with a 403 "Usage Limit has been
+    # reached for Members" — which the dashboard turns into a contextual upgrade
+    # prompt — instead of being able to queue unlimited invites.
+    await check_limits_with_usage("members", org.id, db_session)
 
     # Connect to Redis
     r = redis.Redis.from_url(redis_conn_string)

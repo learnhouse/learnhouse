@@ -26,6 +26,7 @@ import AIImageButton from '@components/Objects/AI/AIImageButton'
 import FormTagInput from "@components/Objects/StyledElements/Form/TagInput"
 import { useTranslation } from "react-i18next"
 import { useLHAnalytics, AnalyticsEvent } from '@services/analytics'
+import UpgradeModal from '@components/Dashboard/Shared/PlanRestricted/UpgradeModal'
 
 const _validationSchema = Yup.object().shape({
   name: Yup.string()
@@ -48,6 +49,8 @@ function CreateCourseModal({ closeModal, orgslug }: any) {
   const [orgId, setOrgId] = React.useState(null) as any
   const [showUnsplashPicker, setShowUnsplashPicker] = React.useState(false)
   const [isUploading, setIsUploading] = React.useState(false)
+  // Shown when a free org hits its course limit — a contextual upgrade paywall.
+  const [showUpgradeModal, setShowUpgradeModal] = React.useState(false)
 
   const validationSchema = Yup.object().shape({
     name: Yup.string()
@@ -124,16 +127,31 @@ function CreateCourseModal({ closeModal, orgslug }: any) {
           toast.success(t('courses.course_created_success'))
 
           closeModal()
-          // Redirect to the course dashboard - remove 'course_' prefix if present
+          // Redirect straight to the Content tab and auto-open the "add activity"
+          // popup so a brand-new course lands the teacher on the core creation
+          // action (their first activity) instead of an empty settings page.
           const courseId = res.data.course_uuid?.replace('course_', '') || res.data.course_uuid
-          router.push(`/dash/courses/course/${courseId}/general`)
+          router.push(`/dash/courses/course/${courseId}/content?new_activity=1`)
         } else {
-          const errorMessage = typeof res.data?.detail === 'string'
-            ? res.data.detail
-            : Array.isArray(res.data?.detail)
-              ? res.data.detail.map((e: any) => e.msg).join(', ')
-              : t('courses.failed_to_create_course')
-          toast.error(errorMessage)
+          toast.dismiss(toast_loading)
+          const detail = typeof res.data?.detail === 'string' ? res.data.detail : ''
+          // A free org that has hit its course limit gets a contextual upgrade
+          // paywall at the moment of value, instead of a dead-end error toast.
+          if (/Usage Limit has been reached/i.test(detail)) {
+            track(AnalyticsEvent.FeatureGateUpgradeShown, {
+              feature: 'courses',
+              surface: 'course_create',
+              required_plan: 'standard',
+            })
+            setShowUpgradeModal(true)
+          } else {
+            const errorMessage = detail
+              ? detail
+              : Array.isArray(res.data?.detail)
+                ? res.data.detail.map((e: any) => e.msg).join(', ')
+                : t('courses.failed_to_create_course')
+            toast.error(errorMessage)
+          }
         }
       } catch (_error) {
         toast.error(t('courses.failed_to_create_course'))
@@ -335,6 +353,15 @@ function CreateCourseModal({ closeModal, orgslug }: any) {
           onClose={() => setShowUnsplashPicker(false)}
         />
       )}
+
+      <UpgradeModal
+        open={showUpgradeModal}
+        source="course_limit"
+        onClose={() => {
+          setShowUpgradeModal(false)
+          closeModal()
+        }}
+      />
     </FormLayout>
   )
 }

@@ -17,7 +17,9 @@ PLAN_HIERARCHY: list[str] = ["free", "personal", "personal-family", "standard", 
 
 # Feature to required plan mapping
 FEATURE_PLAN_REQUIREMENTS: dict[str, PlanLevel] = {
-    "ai": "standard",
+    # AI is available from the free plan (metered by a starter credit allowance);
+    # access is gated by remaining AI credits rather than by plan tier.
+    "ai": "free",
     "analytics": "standard",
     "collaboration": "standard",
     "communities": "standard",
@@ -48,7 +50,9 @@ FEATURE_PLAN_REQUIREMENTS: dict[str, PlanLevel] = {
 PLAN_FEATURE_CONFIGS: dict[str, dict] = {
     "free": {
         "features": {
-            "ai": {"enabled": False, "limit": 0},
+            # AI is enabled on free with a starter credit allowance (see
+            # AI_CREDIT_LIMITS). Usage is metered by credits, not blocked by plan.
+            "ai": {"enabled": True, "limit": 0},
             "analytics": {"enabled": False, "limit": 0},
             "api": {"enabled": False, "limit": 0},
             "assignments": {"enabled": True, "limit": 5},
@@ -229,8 +233,11 @@ PLAN_LIMITS: dict[str, dict[str, int]] = {
 
 # AI credit allocation per plan
 # 0 = no access, -1 = unlimited
+# Free orgs get a starter allowance of AI credits so new teachers can try the AI
+# features (incl. AI podcast/audio generation) before upgrading. When these run
+# out, the AI endpoints return 402/403 which the UI surfaces as an upgrade prompt.
 AI_CREDIT_LIMITS: dict[str, int] = {
-    "free": 0,
+    "free": 20,
     "personal": 500,
     "personal-family": 3000,
     "standard": 1000,

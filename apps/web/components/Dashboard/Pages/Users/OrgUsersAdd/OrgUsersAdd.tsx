@@ -29,6 +29,7 @@ import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { queryKeys } from '@/lib/query/keys'
 import { useTranslation } from 'react-i18next'
 import { useLHAnalytics, AnalyticsEvent } from '@services/analytics'
+import UpgradeModal from '@components/Dashboard/Shared/PlanRestricted/UpgradeModal'
 
 const ITEMS_PER_PAGE = 10
 
@@ -60,6 +61,8 @@ function OrgUsersAdd() {
   const [sendSummary, setSendSummary] = useState<InviteSummary | null>(null)
   const [searchValue, setSearchValue] = useState('')
   const [page, setPage] = useState(1)
+  // Shown when a free org hits its member limit — a contextual upgrade paywall.
+  const [showUpgradeModal, setShowUpgradeModal] = useState(false)
   const { track } = useLHAnalytics('dashboard')
 
   const { data: invites } = useQuery({
@@ -128,10 +131,22 @@ function OrgUsersAdd() {
           toast.success(t('dashboard.users.invite_members.toasts.success'), { id: toastId })
         }
       } else {
-        toast.error(
-          getErrorMessage(res.data?.detail, t('dashboard.users.invite_members.toasts.error')),
-          { id: toastId }
-        )
+        const detail = typeof res.data?.detail === 'string' ? res.data.detail : ''
+        // Free org hit its member limit → contextual upgrade paywall.
+        if (/Usage Limit has been reached/i.test(detail)) {
+          toast.dismiss(toastId)
+          track(AnalyticsEvent.FeatureGateUpgradeShown, {
+            feature: 'members',
+            surface: 'member_invite',
+            required_plan: 'standard',
+          })
+          setShowUpgradeModal(true)
+        } else {
+          toast.error(
+            getErrorMessage(res.data?.detail, t('dashboard.users.invite_members.toasts.error')),
+            { id: toastId }
+          )
+        }
       }
     } catch (err) {
       toast.error(getErrorMessage((err as any)?.data?.detail, 'Failed to send invites'), {
@@ -484,6 +499,12 @@ function OrgUsersAdd() {
           </div>
         )}
       </div>
+
+      <UpgradeModal
+        open={showUpgradeModal}
+        source="member_limit"
+        onClose={() => setShowUpgradeModal(false)}
+      />
     </>
   )
 }

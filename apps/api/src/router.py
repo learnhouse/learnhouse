@@ -13,7 +13,7 @@ from src.routers import stream
 from src.routers import api_tokens
 from src.routers import webhooks
 from src.routers.integrations import zapier as zapier_integration
-from src.routers.ai import ai, magicblocks, courseplanning, rag, images, quiz, assignment_gen, scenario
+from src.routers.ai import ai, magicblocks, courseplanning, rag, images, quiz, assignment_gen, scenario, audio
 from src.routers.boards import boards_playground
 from src.routers.orgs import ai_credits
 from src.routers.orgs import custom_domains
@@ -277,6 +277,12 @@ v1_router.include_router(
     images.router,
     prefix="/ai",
     tags=["ai", "images"],
+    dependencies=[Depends(require_authenticated_user)]
+)
+v1_router.include_router(
+    audio.router,
+    prefix="/ai",
+    tags=["ai", "audio"],
     dependencies=[Depends(require_authenticated_user)]
 )
 v1_router.include_router(

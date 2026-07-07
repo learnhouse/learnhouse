@@ -52,6 +52,21 @@ const EditCourseStructure = (props: EditCourseStructureProps) => {
 
   const dispatchCourse = useCourseDispatch() as any
 
+  // After a course is created we redirect to `.../content?new_activity=1` so the
+  // teacher lands directly on the first activity creation. Read that flag on mount,
+  // then strip it from the URL so a refresh doesn't reopen the modal.
+  const [autoOpenFirstActivity, setAutoOpenFirstActivity] = useState(false)
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    const params = new URLSearchParams(window.location.search)
+    if (params.get('new_activity') === '1') {
+      setAutoOpenFirstActivity(true)
+      params.delete('new_activity')
+      const qs = params.toString()
+      window.history.replaceState(null, '', window.location.pathname + (qs ? `?${qs}` : ''))
+    }
+  }, [])
+
   const [_order, _setOrder] = useState<OrderPayload>()
   const course = useCourse() as any
   const course_structure = course ? course.courseStructure : {}
@@ -144,6 +159,7 @@ const EditCourseStructure = (props: EditCourseStructureProps) => {
                         orgslug={props.orgslug}
                         course_uuid={course_uuid}
                         chapter={chapter}
+                        autoOpenNewActivity={index === 0 && autoOpenFirstActivity}
                       />
                     )
                   })}

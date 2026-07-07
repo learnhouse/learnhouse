@@ -542,6 +542,9 @@ class TestOrgUsersService:
             "src.services.orgs.users.rbac_check",
             new_callable=AsyncMock,
         ), patch(
+            "src.services.orgs.users.check_limits_with_usage",
+            new_callable=AsyncMock,
+        ), patch(
             "src.services.orgs.users.redis.Redis.from_url",
             return_value=None,
         ):
@@ -564,6 +567,9 @@ class TestOrgUsersService:
             return_value=fake_redis,
         ), patch(
             "src.services.orgs.users.rbac_check",
+            new_callable=AsyncMock,
+        ), patch(
+            "src.services.orgs.users.check_limits_with_usage",
             new_callable=AsyncMock,
         ), patch(
             "src.services.orgs.users.send_invite_email",
@@ -671,6 +677,9 @@ class TestOrgUsersService:
             return_value=empty_config,
         ), patch(
             "src.services.orgs.users.rbac_check",
+            new_callable=AsyncMock,
+        ), patch(
+            "src.services.orgs.users.check_limits_with_usage",
             new_callable=AsyncMock,
         ), patch(
             "src.services.orgs.users.redis.Redis.from_url",
@@ -1155,6 +1164,9 @@ class TestOrgUsersService:
             return_value=fake_redis,
         ), patch(
             "src.services.orgs.users.rbac_check",
+            new_callable=AsyncMock,
+        ), patch(
+            "src.services.orgs.users.check_limits_with_usage",
             new_callable=AsyncMock,
         ), patch(
             "src.services.orgs.users.send_invite_email",
