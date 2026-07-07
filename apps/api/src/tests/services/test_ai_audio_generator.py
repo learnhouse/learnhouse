@@ -214,6 +214,23 @@ async def test_generate_spoken_script_minutes_below_min_clamps():
     assert f"{gen.MIN_SPOKEN_MINUTES} minute" in gm.await_args.kwargs["system_prompt"]
 
 
+async def test_generate_spoken_script_budget_has_thinking_headroom():
+    # The standard tier is a Gemini-3 thinking model whose max_output_tokens is
+    # shared between reasoning and the answer. The budget must leave ample room
+    # beyond the visible output, or scripts get cut off mid-sentence. Guards the fix.
+    gm = AsyncMock(return_value="Host: hi")
+    with patch("src.services.ai.llm.generate", new=gm), \
+         patch("src.services.ai.llm.model_for_tier", return_value="m"):
+        await gen.generate_spoken_script("topic", minutes=gen.MIN_SPOKEN_MINUTES)
+    two_min = gm.await_args.kwargs["max_tokens"]
+    assert two_min >= 3000
+    with patch("src.services.ai.llm.generate", new=gm), \
+         patch("src.services.ai.llm.model_for_tier", return_value="m"):
+        await gen.generate_spoken_script("topic", minutes=gen.MAX_SPOKEN_MINUTES)
+    # Longer scripts get a larger budget.
+    assert gm.await_args.kwargs["max_tokens"] > two_min
+
+
 async def test_generate_spoken_script_empty_brief_raises():
     with pytest.raises(ValueError):
         await gen.generate_spoken_script("   ")

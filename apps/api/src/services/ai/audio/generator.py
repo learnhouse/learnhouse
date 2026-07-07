@@ -225,8 +225,17 @@ async def generate_spoken_script(
             names=names, length_line=length_line, lang_line=lang_line, tone_line=tone_line
         )
 
-    # Scale the output budget to the requested length (~1.6 tokens/word + headroom).
-    max_tokens = min(4000, target_words * 2 + 300)
+    # Token budget. The standard tier is a Gemini 3 "thinking" model, where
+    # max_output_tokens is SHARED between reasoning tokens and the visible answer —
+    # a tight budget makes the script stop mid-sentence (the reasoning eats it up).
+    # So give generous headroom for thinking PLUS ~2x the target output length so
+    # the script can never be truncated by the ceiling. (max_tokens is a ceiling,
+    # not a target — length is steered by the prompt.)
+    # Cap stays safely under the flash model's own output limit (~8k tokens); the
+    # computed budget for the longest (10 min) script is ~5.8k, so this never binds.
+    _THINKING_HEADROOM_TOKENS = 3000
+    _OUTPUT_TOKENS_PER_WORD = 2  # ~2x the ~1.4 tokens/word a script actually needs
+    max_tokens = min(8000, target_words * _OUTPUT_TOKENS_PER_WORD + _THINKING_HEADROOM_TOKENS)
 
     try:
         text = await generate(
