@@ -21,6 +21,7 @@ from enum import Enum
 from typing import Any, Awaitable, Callable, Literal, Union
 
 from pydantic import BaseModel
+from pydantic_core import to_jsonable_python
 from sqlmodel.ext.asyncio.session import AsyncSession
 from starlette.requests import Request
 
@@ -39,6 +40,12 @@ class ActionTier(str, Enum):
     EDIT = "edit"                # pending in confirm mode
     DESTRUCTIVE = "destructive"  # pending + typed challenge in confirm mode;
                                  # explicit confirm arg on the token surface
+
+
+def jsonable(value: Any) -> Any:
+    """Convert service-layer output (SQLModel/pydantic models, lists,
+    datetimes, ...) into plain JSON-safe data for the model / MCP client."""
+    return to_jsonable_python(value, fallback=str)
 
 
 def make_synthetic_request() -> Request:
