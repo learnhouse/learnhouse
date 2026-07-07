@@ -50,6 +50,7 @@ dependencies = [
     "pypdf==6.14.2",
     "regex==2026.7.19",
     "mcp>=1.28.1",
+    "fakeredis>=2.36.2",
 ]
 
 [tool.ruff]
