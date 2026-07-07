@@ -168,3 +168,34 @@ async def test_generate_speech_nonretryable_raises_runtime():
          patch("google.genai.Client", return_value=client):
         with pytest.raises(RuntimeError):
             await gen.generate_speech("Hello")
+
+
+# --- generate_podcast_script ---------------------------------------------
+
+async def test_generate_podcast_script_happy():
+    with patch("src.services.ai.llm.generate", new=AsyncMock(return_value="Host: Hi\nGuest: Hey")), \
+         patch("src.services.ai.llm.model_for_tier", return_value="m"):
+        out = await gen.generate_podcast_script(
+            "about cats", speaker_names=["Host", "Guest"], language="English", style="fun"
+        )
+    assert out.startswith("Host:")
+
+
+async def test_generate_podcast_script_empty_brief_raises():
+    with pytest.raises(ValueError):
+        await gen.generate_podcast_script("   ")
+
+
+async def test_generate_podcast_script_empty_output_raises_runtime():
+    with patch("src.services.ai.llm.generate", new=AsyncMock(return_value="   ")), \
+         patch("src.services.ai.llm.model_for_tier", return_value="m"):
+        with pytest.raises(RuntimeError):
+            await gen.generate_podcast_script("topic")
+
+
+async def test_generate_podcast_script_truncates_to_tts_budget():
+    long_script = "Host: " + ("x" * (gen.MAX_TEXT_CHARS + 500))
+    with patch("src.services.ai.llm.generate", new=AsyncMock(return_value=long_script)), \
+         patch("src.services.ai.llm.model_for_tier", return_value="m"):
+        out = await gen.generate_podcast_script("topic")
+    assert len(out) <= gen.MAX_TEXT_CHARS

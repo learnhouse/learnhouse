@@ -16,6 +16,14 @@ export type GenerateAudioParams = {
   language?: string
 }
 
+function extractDetail(data: any, fallback: string): string {
+  return typeof data?.detail === 'string'
+    ? data.detail
+    : Array.isArray(data?.detail)
+      ? data.detail.map((e: any) => e.msg).join(', ')
+      : fallback
+}
+
 // Generate an audio block with AI (Gemini TTS). Returns the same shape as the
 // audio upload endpoint (a BlockRead), so callers can treat it like an upload.
 export async function generateAudioBlock(
@@ -30,12 +38,35 @@ export async function generateAudioBlock(
   const data = await result.json()
 
   if (!result.ok) {
-    const errorMessage = typeof data?.detail === 'string'
-      ? data.detail
-      : Array.isArray(data?.detail)
-        ? data.detail.map((e: any) => e.msg).join(', ')
-        : 'Audio generation failed'
-    throw new Error(errorMessage)
+    throw new Error(extractDetail(data, 'Audio generation failed'))
+  }
+
+  return data
+}
+
+export type GeneratePodcastScriptParams = {
+  activity_uuid: string
+  text: string
+  speakers?: GenerateAudioSpeaker[]
+  style?: string
+  language?: string
+}
+
+// Turn a topic/brief into a two-speaker discussion script (for podcast mode).
+// Returns { transcript }.
+export async function generatePodcastScript(
+  params: GeneratePodcastScriptParams,
+  access_token: string
+): Promise<{ transcript: string }> {
+  const result = await fetch(
+    `${getAPIUrl()}ai/audio/script`,
+    RequestBodyWithAuthHeader('POST', params, null, access_token)
+  )
+
+  const data = await result.json()
+
+  if (!result.ok) {
+    throw new Error(extractDetail(data, 'Script generation failed'))
   }
 
   return data

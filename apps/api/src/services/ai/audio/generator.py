@@ -49,6 +49,9 @@ OUTPUT_EXT = "wav"
 # fail fast with a clear error instead of spending a credit on a doomed call.
 MAX_TEXT_CHARS = 6000
 
+# Upper bound on the topic/brief used to generate a podcast script.
+MAX_SCRIPT_BRIEF_CHARS = 8000
+
 # Gemini caps multi-speaker synthesis at 2 voices.
 MAX_SPEAKERS = 2
 
@@ -141,6 +144,69 @@ def _build_prompt(text: str, *, style: Optional[str], language: Optional[str], p
     if podcast:
         return f"{lead}\nTTS the following conversation:\n{text}"
     return f"{lead}\n{text}"
+
+
+_PODCAST_SCRIPT_SYSTEM = (
+    "You are a professional podcast script writer. Turn the user's topic or source "
+    "material into a natural, engaging spoken conversation between the given speakers.\n"
+    "Rules:\n"
+    "- Output ONLY the dialogue. Every line MUST start with a speaker name followed by a "
+    "colon, e.g. 'Host:'. Use ONLY these exact speaker names: {names}.\n"
+    "- Alternate turns naturally; aim for 6 to 10 short-to-medium exchanges.\n"
+    "- Make it sound spoken — contractions, natural reactions, a clear intro and wrap-up.\n"
+    "- Do NOT include stage directions, sound effects, markdown, headings, or narration.\n"
+    "{lang_line}{tone_line}"
+)
+
+
+async def generate_podcast_script(
+    brief: str,
+    *,
+    speaker_names: Optional[list[str]] = None,
+    language: Optional[str] = None,
+    style: Optional[str] = None,
+) -> str:
+    """Write a two-speaker podcast dialogue from a topic/brief using the text LLM.
+
+    Returns a script where each line starts with a speaker name (ready to feed into
+    ``generate_speech`` in podcast mode). Raises ``AINotConfiguredError`` when the AI
+    provider is unconfigured, ``ValueError`` on empty input, or ``RuntimeError`` on
+    an empty/failed generation.
+    """
+    from src.services.ai.llm import generate, model_for_tier
+
+    brief = (brief or "").strip()
+    if not brief:
+        raise ValueError("Add a topic or some text to generate a script from.")
+    if len(brief) > MAX_SCRIPT_BRIEF_CHARS:
+        brief = brief[:MAX_SCRIPT_BRIEF_CHARS]
+
+    names = ", ".join([n for n in (speaker_names or []) if n and n.strip()]) or "Host, Guest"
+    lang_line = f"- Write the dialogue in {language.strip()}.\n" if language and language.strip() else ""
+    tone_line = f"- Tone / style: {style.strip()}.\n" if style and style.strip() else ""
+    system = _PODCAST_SCRIPT_SYSTEM.format(names=names, lang_line=lang_line, tone_line=tone_line)
+
+    try:
+        text = await generate(
+            model_name=model_for_tier("standard"),
+            user_prompt=brief,
+            system_prompt=system,
+            max_tokens=1400,
+            temperature=0.8,
+        )
+    except AINotConfiguredError:
+        raise
+    except Exception as e:  # noqa: BLE001 — surface a clean error to the router
+        logger.error("Podcast script generation failed: %s", type(e).__name__)
+        raise RuntimeError("Podcast script generation failed") from e
+
+    text = (text or "").strip()
+    if not text:
+        raise RuntimeError("The model returned an empty script. Try a different topic.")
+    # Keep the script within the TTS input budget.
+    if len(text) > MAX_TEXT_CHARS:
+        text = text[:MAX_TEXT_CHARS]
+    return text
 
 
 def _pcm_to_wav(pcm: bytes) -> bytes:

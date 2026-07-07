@@ -27,3 +27,20 @@ class GenerateAudioRequest(BaseModel):
     style: Optional[str] = None
     # Optional target language label/BCP-47 (Gemini otherwise auto-detects it).
     language: Optional[str] = None
+
+
+class GeneratePodcastScriptRequest(BaseModel):
+    # The activity the podcast will be attached to (used to resolve the org for
+    # credit metering; no audio is stored by this endpoint).
+    activity_uuid: str
+    # The topic, question, or source material to turn into a discussion.
+    text: str
+    # Named speakers for the dialogue (their names anchor each script line).
+    speakers: Optional[list[GenerateAudioSpeaker]] = Field(default=None)
+    # Optional tone/style and target language for the generated script.
+    style: Optional[str] = None
+    language: Optional[str] = None
+
+
+class GeneratePodcastScriptResponse(BaseModel):
+    transcript: str

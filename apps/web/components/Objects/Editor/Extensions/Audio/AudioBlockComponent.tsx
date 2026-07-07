@@ -7,7 +7,7 @@ import {
 } from 'lucide-react'
 import React from 'react'
 import toast from 'react-hot-toast'
-import { uploadNewAudioFile, generateAudioBlock, type GenerateAudioSpeaker } from '../../../../../services/blocks/Audio/audio'
+import { uploadNewAudioFile, generateAudioBlock, generatePodcastScript, type GenerateAudioSpeaker } from '../../../../../services/blocks/Audio/audio'
 import { getAudioBlockStreamUrl, getPodcastAudioStreamUrl } from '@services/media/media'
 import { useOrg } from '@components/Contexts/OrgContext'
 import { useOrgMembership } from '@components/Contexts/OrgContext'
@@ -35,6 +35,7 @@ type TabType = 'upload' | 'generate' | 'episode' | 'podcast'
 // list of well-supported languages. Language is otherwise auto-detected from the
 // text; picking one just nudges the model.
 const AI_CREDIT_COST = 3
+const SCRIPT_CREDIT_COST = 1
 const TTS_VOICES = [
   { name: 'Kore', desc: 'Firm' },
   { name: 'Puck', desc: 'Upbeat' },
@@ -513,6 +514,7 @@ function AudioBlockComponent(props: ExtendedNodeViewProps) {
     { name: 'Guest', voice: 'Puck' },
   ])
   const [isGenerating, setIsGenerating] = React.useState(false)
+  const [isGeneratingScript, setIsGeneratingScript] = React.useState(false)
 
   // Podcast selection state
   const [podcasts, setPodcasts] = React.useState<Podcast[]>([])
@@ -712,6 +714,38 @@ function AudioBlockComponent(props: ExtendedNodeViewProps) {
     }
   }
 
+  const handleGenerateScript = async () => {
+    if (!access_token) return
+    if (!genText.trim()) {
+      setError('Add a topic or some text to generate a script from.')
+      return
+    }
+    try {
+      setIsGeneratingScript(true)
+      setError(null)
+      const res = await generatePodcastScript(
+        {
+          activity_uuid: extension.options.activity.activity_uuid,
+          text: genText,
+          speakers: genSpeakers,
+          style: genStyle.trim() || undefined,
+          language: genLanguage === 'Auto-detect' ? undefined : genLanguage,
+        },
+        access_token
+      )
+      if (res?.transcript) {
+        setGenText(res.transcript)
+        toast.success('Script ready — review it, then generate audio')
+      }
+    } catch (err: any) {
+      const errorMessage = err?.message || 'Failed to generate script. Please try again.'
+      setError(errorMessage)
+      toast.error(errorMessage)
+    } finally {
+      setIsGeneratingScript(false)
+    }
+  }
+
   const handleRemove = () => {
     setBlockObject(null)
     updateAttributes({ blockObject: null })
@@ -897,7 +931,7 @@ function AudioBlockComponent(props: ExtendedNodeViewProps) {
                   onChange={(e) => setGenText(e.target.value)}
                   rows={genMode === 'podcast' ? 5 : 4}
                   placeholder={genMode === 'podcast'
-                    ? 'Host: Welcome to the show!\nGuest: Thanks for having me…'
+                    ? "What should the podcast be about? Add a topic or a question — or paste notes to turn into a discussion. Then generate a script."
                     : 'Type the text you want spoken aloud…'}
                   className="w-full rounded-lg border border-neutral-200 p-3 text-sm outline-none focus:border-blue-400 resize-y"
                 />
@@ -946,7 +980,7 @@ function AudioBlockComponent(props: ExtendedNodeViewProps) {
                       </div>
                     ))}
                     <p className="text-[11px] text-neutral-400">
-                      Start each line of your script with a speaker name (e.g. “Host:”).
+                      Add a topic above and generate a discussion, or write the script yourself — each line starts with a speaker name (e.g. “Host:”).
                     </p>
                   </div>
                 )}
@@ -976,13 +1010,33 @@ function AudioBlockComponent(props: ExtendedNodeViewProps) {
                   </label>
                 </div>
 
-                {/* Generate button */}
+                {/* Podcast: turn the topic into a discussion script first */}
+                {genMode === 'podcast' && (
+                  <button
+                    onClick={handleGenerateScript}
+                    disabled={isGeneratingScript || isGenerating || !genText.trim()}
+                    className={cn(
+                      'w-full flex items-center justify-center gap-2 py-2.5 rounded-lg text-sm font-semibold border transition-colors',
+                      isGeneratingScript || isGenerating || !genText.trim()
+                        ? 'border-neutral-200 text-neutral-400 cursor-not-allowed'
+                        : 'border-neutral-300 text-neutral-700 hover:bg-neutral-50'
+                    )}
+                  >
+                    {isGeneratingScript ? (
+                      <><Loader2 size={15} className="animate-spin" /> Writing the discussion…</>
+                    ) : (
+                      <><Sparkles size={15} /> Generate discussion script</>
+                    )}
+                  </button>
+                )}
+
+                {/* Generate audio button */}
                 <button
                   onClick={handleGenerate}
-                  disabled={isGenerating || !genText.trim()}
+                  disabled={isGenerating || isGeneratingScript || !genText.trim()}
                   className={cn(
                     'w-full flex items-center justify-center gap-2 py-2.5 rounded-lg text-sm font-semibold transition-colors',
-                    isGenerating || !genText.trim()
+                    isGenerating || isGeneratingScript || !genText.trim()
                       ? 'bg-neutral-200 text-neutral-400 cursor-not-allowed'
                       : 'bg-black text-white hover:bg-neutral-800'
                   )}
@@ -994,7 +1048,9 @@ function AudioBlockComponent(props: ExtendedNodeViewProps) {
                   )}
                 </button>
                 <p className="text-[11px] text-center text-neutral-400">
-                  Uses {AI_CREDIT_COST} AI credits · Powered by Gemini
+                  {genMode === 'podcast'
+                    ? `Script ${SCRIPT_CREDIT_COST} credit · Audio ${AI_CREDIT_COST} credits · Powered by Gemini`
+                    : `Uses ${AI_CREDIT_COST} AI credits · Powered by Gemini`}
                 </p>
               </div>
             )}

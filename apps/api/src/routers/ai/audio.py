@@ -23,9 +23,18 @@ from src.db.users import PublicUser
 from src.security.auth import get_authenticated_user
 from src.security.features_utils.usage import refund_ai_credit, reserve_ai_credit
 from src.security.org_auth import is_org_member
-from src.services.ai.audio.generator import OUTPUT_EXT, Speaker, generate_speech
+from src.services.ai.audio.generator import (
+    OUTPUT_EXT,
+    Speaker,
+    generate_podcast_script,
+    generate_speech,
+)
 from src.services.ai.llm import AINotConfiguredError
-from src.services.ai.schemas.audio import GenerateAudioRequest
+from src.services.ai.schemas.audio import (
+    GenerateAudioRequest,
+    GeneratePodcastScriptRequest,
+    GeneratePodcastScriptResponse,
+)
 from src.services.blocks.block_types.audioBlock.audioBlock import create_audio_block
 from src.services.security.rate_limiting import enforce_ai_rate_limit
 
@@ -35,6 +44,21 @@ router = APIRouter()
 
 # Audio generation is more expensive than a text turn but cheaper than an image.
 AUDIO_CREDIT_COST = 3
+
+# Writing a podcast script is a single cheap text turn.
+SCRIPT_CREDIT_COST = 1
+
+
+async def _resolve_org_id_for_activity(activity_uuid: str, current_user: PublicUser, db_session: AsyncSession) -> int:
+    """Resolve the owning org for an activity and authorize the caller as a member."""
+    activity = (
+        await db_session.execute(select(Activity).where(Activity.activity_uuid == activity_uuid))
+    ).scalars().first()
+    if not activity or activity.org_id is None:
+        raise HTTPException(status_code=404, detail="Activity not found")
+    if not await is_org_member(current_user.id, activity.org_id, db_session):
+        raise HTTPException(status_code=403, detail="User is not a member of this organization")
+    return activity.org_id
 
 
 @router.post(
@@ -65,19 +89,7 @@ async def api_generate_audio(
     # Resolve the owning org from the activity so we can meter credits before
     # spending anything. Full RBAC (UPDATE on the course) is enforced by
     # create_audio_block below.
-    activity = (
-        await db_session.execute(
-            select(Activity).where(Activity.activity_uuid == body.activity_uuid)
-        )
-    ).scalars().first()
-    if not activity or activity.org_id is None:
-        raise HTTPException(status_code=404, detail="Activity not found")
-    org_id = activity.org_id
-
-    if not await is_org_member(current_user.id, org_id, db_session):
-        raise HTTPException(
-            status_code=403, detail="User is not a member of this organization"
-        )
+    org_id = await _resolve_org_id_for_activity(body.activity_uuid, current_user, db_session)
 
     # Rate limit then reserve credit (feature-enabled + quota checked inside reserve).
     enforce_ai_rate_limit(current_user.id, org_id)
@@ -129,3 +141,54 @@ async def api_generate_audio(
         refund_ai_credit(org_id, AUDIO_CREDIT_COST)
         logger.exception("Failed to store generated audio")
         raise HTTPException(status_code=500, detail="Failed to store generated audio")
+
+
+@router.post(
+    "/audio/script",
+    response_model=GeneratePodcastScriptResponse,
+    summary="Generate a podcast discussion script with AI",
+    description=(
+        "Turn a topic, question, or source material into a two-speaker discussion "
+        "script (ready to synthesize as a podcast). Consumes AI credits."
+    ),
+    responses={
+        200: {"description": "Script generated.", "model": GeneratePodcastScriptResponse},
+        400: {"description": "Invalid request"},
+        401: {"description": "Authentication required"},
+        403: {"description": "Not an org member, AI disabled, or insufficient credits"},
+        404: {"description": "Activity not found"},
+    },
+)
+async def api_generate_podcast_script(
+    body: GeneratePodcastScriptRequest,
+    current_user: PublicUser = Depends(get_authenticated_user),
+    db_session: AsyncSession = Depends(get_db_session),
+) -> GeneratePodcastScriptResponse:
+    if not (body.text or "").strip():
+        raise HTTPException(status_code=400, detail="Add a topic or some text to generate a script from.")
+
+    org_id = await _resolve_org_id_for_activity(body.activity_uuid, current_user, db_session)
+
+    enforce_ai_rate_limit(current_user.id, org_id)
+    await reserve_ai_credit(org_id, db_session, amount=SCRIPT_CREDIT_COST)
+
+    names = [s.name for s in (body.speakers or []) if s.name.strip()] or None
+    try:
+        transcript = await generate_podcast_script(
+            body.text, speaker_names=names, language=body.language, style=body.style
+        )
+    except AINotConfiguredError as e:
+        refund_ai_credit(org_id, SCRIPT_CREDIT_COST)
+        raise HTTPException(status_code=403, detail=str(e))
+    except ValueError as e:
+        refund_ai_credit(org_id, SCRIPT_CREDIT_COST)
+        raise HTTPException(status_code=400, detail=str(e))
+    except Exception:
+        refund_ai_credit(org_id, SCRIPT_CREDIT_COST)
+        logger.error("Podcast script generation failed")
+        raise HTTPException(
+            status_code=502,
+            detail="Podcast script generation failed. Please try again.",
+        )
+
+    return GeneratePodcastScriptResponse(transcript=transcript)
