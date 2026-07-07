@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useRef, useEffect } from 'react'
+import React, { useState, useRef, useEffect, useMemo } from 'react'
 import { SiX, SiFacebook, SiWhatsapp, SiReddit } from '@icons-pack/react-simple-icons'
 import { Link2, Check, Share2 } from 'lucide-react'
 
@@ -24,8 +24,21 @@ function CourseShare({ courseName, courseUrl }: CourseShareProps) {
   const [copied, setCopied] = useState(false)
   const dropdownRef = useRef<HTMLDivElement>(null)
 
+  // courseUrl may be a relative path — getUriWithOrg returns a relative URL when
+  // the user is already on the org's host (the common case on the course page).
+  // Resolve it to an absolute URL so shared/copied links include the protocol
+  // and base domain. No-op if an absolute URL was already passed. See issue #923.
+  const absoluteCourseUrl = useMemo(() => {
+    if (typeof window === 'undefined') return courseUrl
+    try {
+      return new URL(courseUrl, window.location.origin).toString()
+    } catch {
+      return courseUrl
+    }
+  }, [courseUrl])
+
   const shareText = `Check out this course: ${courseName}`
-  const encodedUrl = encodeURIComponent(courseUrl)
+  const encodedUrl = encodeURIComponent(absoluteCourseUrl)
   const encodedText = encodeURIComponent(shareText)
 
   const shareLinks = [
@@ -63,7 +76,7 @@ function CourseShare({ courseName, courseUrl }: CourseShareProps) {
 
   const copyToClipboard = async () => {
     try {
-      await navigator.clipboard.writeText(courseUrl)
+      await navigator.clipboard.writeText(absoluteCourseUrl)
       track(AnalyticsEvent.CourseShared, { network: 'copy_link', source: 'course_page' })
       setCopied(true)
       setTimeout(() => setCopied(false), 2000)

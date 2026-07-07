@@ -208,6 +208,7 @@ function NewActivityButton(props: NewActivityButtonProps) {
             submitActivity={submitActivity}
             chapterId={props.chapterId}
             course={course}
+            orgslug={props.orgslug}
             selectedView={selectedView}
             setSelectedView={setSelectedView}
           ></NewActivityModal>

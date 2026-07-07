@@ -55,6 +55,7 @@ const AIChatBotProvider = lazy(() => import('@components/Contexts/AI/AIChatBotCo
 const ScormActivity = lazy(() => import('../../../../../../../../ee/components/Activities/ScormActivity'))
 const MarkdownActivity = lazy(() => import('@components/Objects/Activities/Markdown/MarkdownActivity'))
 const EmbedActivity = lazy(() => import('@components/Objects/Activities/Embed/EmbedActivity'))
+const ResourceActivity = lazy(() => import('@components/Objects/Activities/Resource/ResourceActivity'))
 
 // Loading fallback component
 const LoadingFallback = () => (
@@ -310,6 +311,13 @@ function ActivityClient(props: ActivityClientProps) {
             </Suspense>
           );
         }
+        if (activity.activity_sub_type === 'SUBTYPE_DYNAMIC_RESOURCE') {
+          return (
+            <Suspense fallback={<LoadingFallback />}>
+              <ResourceActivity activity={activity} orgslug={orgslug} />
+            </Suspense>
+          );
+        }
         return (
           <Suspense fallback={<LoadingFallback />}>
             <Canva content={activity.content} activity={activity} courseUuid={course?.course_uuid} orgUuid={org?.org_uuid} />
@@ -354,7 +362,7 @@ function ActivityClient(props: ActivityClientProps) {
       default:
         return null;
     }
-  }, [activity, course, assignment]);
+  }, [activity, course, assignment, orgslug]);
 
   // Navigate to an activity
   const navigateToActivity = (activity: any) => {

@@ -1,5 +1,5 @@
 'use client';
-import { use, useEffect } from "react";
+import { use, useEffect, type ReactNode } from "react";
 import '@styles/globals.css'
 import Watermark from '@components/Objects/Watermark'
 import { SessionGate } from '@components/Contexts/LHSessionContext'
@@ -12,7 +12,7 @@ const PodcastPlayer = dynamic(() => import('@components/Objects/Podcasts/Podcast
 import Image from 'next/image'
 import Link from 'next/link'
 import { PageViewTracker } from '@components/Analytics/PageViewTracker'
-import { usePathname } from 'next/navigation'
+import { usePathname, useSearchParams } from 'next/navigation'
 import { usePlan } from '@components/Hooks/usePlan'
 import { getGoogleFontUrl, DEFAULT_FONT } from '@/lib/fonts'
 
@@ -54,11 +54,15 @@ function OrgFooter() {
   )
 }
 
-function LayoutContent({ children, orgslug }: { children: React.ReactNode; orgslug: string }) {
+function LayoutContent({ children, orgslug }: { children: ReactNode; orgslug: string }) {
   const org = useOrg() as any
   const primaryColor = org?.config?.config?.customization?.general?.color || org?.config?.config?.general?.color || ''
   const customFont = org?.config?.config?.customization?.general?.font || org?.config?.config?.general?.font || ''
   const pathname = usePathname()
+  const searchParams = useSearchParams()
+  // chrome=none strips the org navigation/footer so this route can be embedded
+  // inside another view (e.g. a Resource activity iframe) without duplicate chrome.
+  const chromeless = searchParams?.get('chrome') === 'none'
 
   // Inject Google Font stylesheet into document head
   useEffect(() => {
@@ -109,20 +113,20 @@ function LayoutContent({ children, orgslug }: { children: React.ReactNode; orgsl
       }}
     >
       <PageViewTracker />
-      <OrgJoinBanner />
-      <OrgMenu orgslug={orgslug} />
+      {!chromeless && <OrgJoinBanner />}
+      {!chromeless && <OrgMenu orgslug={orgslug} />}
       <div className="flex-1 relative" style={{ zIndex: 'var(--z-content)' }}>
         {children}
       </div>
-      {!isFullBleedPage && <OrgFooter />}
-      {!isFullBleedPage && <Watermark />}
+      {!isFullBleedPage && !chromeless && <OrgFooter />}
+      {!isFullBleedPage && !chromeless && <Watermark />}
     </div>
   )
 }
 
 export default function RootLayout(
   props: {
-    children: React.ReactNode
+    children: ReactNode
     params: Promise<any>
   }
 ) {
