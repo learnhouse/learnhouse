@@ -1389,6 +1389,14 @@ async def _resolve_token_submission_user(
     return PublicUser(**learner.model_dump())
 
 
+_ASSIGNMENT_TASK_SUBMISSION_MUTABLE_FIELDS = {
+    "task_submission",
+    "grade",
+    "task_submission_grade_feedback",
+    "manually_graded",
+}
+
+
 async def handle_assignment_task_submission(
     request: Request,
     assignment_task_uuid: str,
@@ -1492,17 +1500,23 @@ async def handle_assignment_task_submission(
         # SECURITY: Instructors/admins need update permission to grade
         await check_resource_access(request, db_session, current_user, course.course_uuid, AccessAction.UPDATE)
 
-    # Try to find existing submission by user_id and assignment_task_id first (for save progress functionality)
-    statement = select(AssignmentTaskSubmission).where(
-        AssignmentTaskSubmission.assignment_task_id == assignment_task.id,
-        AssignmentTaskSubmission.user_id == submitter.id,
-    )
-    assignment_task_submission = (await db_session.execute(statement)).scalars().first()
-    
-    # If no submission found by user+task, try to find by UUID if provided (for specific submission updates)
-    if not assignment_task_submission and assignment_task_submission_uuid:
+    if assignment_task_submission_uuid:
         statement = select(AssignmentTaskSubmission).where(
-            AssignmentTaskSubmission.assignment_task_submission_uuid == assignment_task_submission_uuid
+            AssignmentTaskSubmission.assignment_task_submission_uuid == assignment_task_submission_uuid,
+            AssignmentTaskSubmission.assignment_task_id == assignment_task.id,
+        )
+        assignment_task_submission = (await db_session.execute(statement)).scalars().first()
+        if not assignment_task_submission:
+            raise HTTPException(
+                status_code=404,
+                detail="Assignment Task Submission not found",
+            )
+    else:
+        # Save-progress path: without an explicit UUID, update/create the
+        # submitter's own submission for this task.
+        statement = select(AssignmentTaskSubmission).where(
+            AssignmentTaskSubmission.assignment_task_id == assignment_task.id,
+            AssignmentTaskSubmission.user_id == submitter.id,
         )
         assignment_task_submission = (await db_session.execute(statement)).scalars().first()
 
@@ -1518,7 +1532,7 @@ async def handle_assignment_task_submission(
 
         # Update only the fields that were passed in
         for var, value in vars(assignment_task_submission_object).items():
-            if value is not None:
+            if value is not None and var in _ASSIGNMENT_TASK_SUBMISSION_MUTABLE_FIELDS:
                 setattr(assignment_task_submission, var, value)
         assignment_task_submission.update_date = str(datetime.now())
 
