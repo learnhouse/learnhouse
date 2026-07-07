@@ -39,13 +39,19 @@ from src.services.ai.tools.base import (
 
 logger = logging.getLogger(__name__)
 
-# UUID prefixes registered with the resource-access checker; targets outside
-# this set (playgrounds, usergroups, roles, ...) rely on token bucket rights
-# + the services' own checks.
+# UUID prefixes we can safely pre-flight through check_resource_access.
+# Targets outside this set (activities, playgrounds, usergroups, roles, ...)
+# rely on token bucket rights + the services' own authoritative checks.
+#
+# `activity_` is deliberately excluded: activities have no chapter_id column
+# (they link to chapters via the ChapterActivity association table), so the
+# shared checker's parent resolution can never find their parent and always
+# denies. The activity services resolve the parent course themselves and call
+# check_resource_access on it, so access is still enforced — just at the
+# service layer, not this pre-flight.
 _RBAC_PREFIXES = (
     "course_",
     "chapter_",
-    "activity_",
     "podcast_",
     "episode_",
     "community_",
