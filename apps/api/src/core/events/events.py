@@ -79,7 +79,7 @@ def startup_app(app: FastAPI) -> Callable:
         # mounts don't run sub-app lifespans, so the manager's run()
         # context is entered here and closed in shutdown_app — without it
         # every /mcp request fails with an uninitialized task group.
-        mcp_manager = getattr(app.state, "mcp_session_manager", None)
+        mcp_manager = getattr(getattr(app, "state", None), "mcp_session_manager", None)
         if mcp_manager is not None:
             from contextlib import AsyncExitStack
 
