@@ -32,7 +32,7 @@ class TestVerifyOrgMembership:
     async def test_non_member_rejected(self):
         from src.routers.analytics import _verify_org_membership
         db = self._make_db_session(has_membership=False)
-        with patch("src.routers.analytics.is_user_superadmin", AsyncMock(return_value=False)):
+        with patch("src.services.analytics.runner.is_user_superadmin", AsyncMock(return_value=False)):
             with pytest.raises(HTTPException) as exc_info:
                 await _verify_org_membership(user_id=1, org_id=99, db_session=db)
         assert exc_info.value.status_code == 403
@@ -41,7 +41,7 @@ class TestVerifyOrgMembership:
     async def test_member_allowed(self):
         from src.routers.analytics import _verify_org_membership
         db = self._make_db_session(has_membership=True)
-        with patch("src.routers.analytics.is_user_superadmin", AsyncMock(return_value=False)):
+        with patch("src.services.analytics.runner.is_user_superadmin", AsyncMock(return_value=False)):
             # Should not raise
             await _verify_org_membership(user_id=1, org_id=1, db_session=db)
 
@@ -49,7 +49,7 @@ class TestVerifyOrgMembership:
     async def test_superadmin_bypasses(self):
         from src.routers.analytics import _verify_org_membership
         db = self._make_db_session(has_membership=False)
-        with patch("src.routers.analytics.is_user_superadmin", AsyncMock(return_value=True)):
+        with patch("src.services.analytics.runner.is_user_superadmin", AsyncMock(return_value=True)):
             # Should not raise even though not a member
             await _verify_org_membership(user_id=1, org_id=99, db_session=db)
 

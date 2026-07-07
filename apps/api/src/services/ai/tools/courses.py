@@ -78,6 +78,7 @@ class CreateCourseParams(BaseModel):
     tags: str = ""
     public: bool = False
     published: bool = False
+    open_to_contributors: bool = False
 
 
 class UpdateCourseParams(BaseModel):
@@ -165,6 +166,7 @@ async def _create_course(ctx: ToolContext, p: CreateCourseParams):
             tags=p.tags,
             public=p.public,
             published=p.published,
+            open_to_contributors=p.open_to_contributors,
             org_id=ctx.org.id,
         ),
         ctx.user,
