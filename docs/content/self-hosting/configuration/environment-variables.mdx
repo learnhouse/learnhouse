@@ -92,6 +92,8 @@ optional: the feature stays disabled or uses a runtime fallback when the variabl
 | `LEARNHOUSE_AI_MODEL_FAST` | Low-latency model tier for titles, follow-ups, and migration tasks. | model id | `gemini-3.1-flash-lite` | API |
 | `LEARNHOUSE_AI_MODEL_STANDARD` | Standard model tier for chat, RAG, and standard-plan generation. | model id | `gemini-3.5-flash` | API |
 | `LEARNHOUSE_AI_MODEL_PRO` | Pro model tier for upgraded course planning and generation flows. | model id | `gemini-3.1-pro-preview` | API |
+| `LEARNHOUSE_AI_IMAGE_MODEL` | Google image-generation model ("nano banana"). Google-only path (uses the Gemini key regardless of provider). | model id | `gemini-2.5-flash-image` | API |
+| `LEARNHOUSE_AI_TTS_MODEL` | Google text-to-speech model for AI audio / podcast generation. Google-only path. All Gemini TTS models are currently preview. | model id | `gemini-2.5-flash-preview-tts` | API |
 | `LEARNHOUSE_AI_EMBEDDING_PROVIDER` | Optional provider override for RAG embeddings. | string | same as `LEARNHOUSE_AI_PROVIDER` | API |
 | `LEARNHOUSE_AI_EMBEDDING_MODEL` | Optional embedding model override. | model id | provider default, such as `gemini-embedding-001`, `text-embedding-3-small`, or `nomic-embed-text` | API |
 | `LEARNHOUSE_AI_EMBEDDING_DIMENSIONS` | Embedding vector size. Changing this requires a matching database migration and re-index. | integer | `768` | API |

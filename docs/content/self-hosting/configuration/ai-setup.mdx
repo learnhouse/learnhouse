@@ -252,6 +252,30 @@ Once AI is enabled on the instance, each organization can toggle AI on or off an
 limits from its admin settings. The provider and API key are set once at deployment and shared
 across organizations.
 
+## Media generation (images & audio)
+
+Image generation and audio / podcast generation (text-to-speech) are **Google-only** paths: they
+always use the Google GenAI SDK regardless of `LEARNHOUSE_AI_PROVIDER`, resolving their key from
+`LEARNHOUSE_AI_API_KEY` (when `provider=google`) or `LEARNHOUSE_GEMINI_API_KEY`. So if you already
+run on Gemini, they work with no extra configuration.
+
+Both model ids default to sensible values and only need overriding to opt into a newer/allowlisted
+model:
+
+```bash
+# AI image generation ("nano banana"). Default: gemini-2.5-flash-image
+LEARNHOUSE_AI_IMAGE_MODEL=gemini-2.5-flash-image
+
+# AI audio / podcast generation (Gemini TTS). Default: gemini-2.5-flash-preview-tts
+# All Gemini TTS models are currently preview, so this is kept configurable.
+LEARNHOUSE_AI_TTS_MODEL=gemini-2.5-flash-preview-tts
+```
+
+The audio feature powers the editor's **Generate** audio tab (text-to-speech, a two-voice podcast,
+or a single-voice "Speak" talk). The spoken script for the podcast/Speak modes is written by the
+standard text model (`LEARNHOUSE_AI_MODEL_STANDARD`); the narration uses the TTS model above. All of
+it is metered by [AI credits](/platform/ai).
+
 ## Usage limits
 
 You can configure a per-organization request limit to control API costs. When a user exceeds the
@@ -267,5 +291,7 @@ limit, further AI requests are rejected until the window resets.
 | `LEARNHOUSE_AI_BASE_URL` | Optional. Custom endpoint for OpenAI-compatible / local providers (e.g. Ollama). Auto-set for OpenRouter. |
 | `LEARNHOUSE_AI_MODEL_FAST` / `_STANDARD` / `_PRO` | Per-tier model overrides (see table above). |
 | `LEARNHOUSE_AI_EMBEDDING_PROVIDER` / `_MODEL` / `_DIMENSIONS` | Optional RAG embedding overrides. Default: same provider, per-provider model, 768 dims. |
-| `LEARNHOUSE_GEMINI_API_KEY` | Google/Gemini key. Also the **embeddings fallback** for providers without an embeddings API. |
+| `LEARNHOUSE_AI_IMAGE_MODEL` | Google image-generation model. Default `gemini-2.5-flash-image`. Google-only path. |
+| `LEARNHOUSE_AI_TTS_MODEL` | Google text-to-speech model for audio/podcast generation. Default `gemini-2.5-flash-preview-tts` (all Gemini TTS models are preview). Google-only path. |
+| `LEARNHOUSE_GEMINI_API_KEY` | Google/Gemini key. Also the **embeddings fallback** for providers without an embeddings API, and the key used for image/TTS generation on non-Google providers. |
 | `AWS_REGION` / `AWS_ACCESS_KEY_ID` / `AWS_SECRET_ACCESS_KEY` | Standard AWS credentials, used only when `provider=bedrock`. |
