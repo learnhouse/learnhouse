@@ -32,7 +32,7 @@ import {
   Trash2,
   Video,
 } from 'lucide-react'
-import { MarkdownLogo, Globe as GlobePhosphor } from '@phosphor-icons/react'
+import { MarkdownLogo, Globe as GlobePhosphor, Cube } from '@phosphor-icons/react'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
@@ -538,10 +538,13 @@ const ActivityTypeIndicator = ({activityType, activitySubType, isMobile} : { act
   const { t } = useTranslation()
   const isMarkdown = activitySubType === 'SUBTYPE_DYNAMIC_MARKDOWN'
   const isEmbed = activitySubType === 'SUBTYPE_DYNAMIC_EMBED'
+  const isResource = activitySubType === 'SUBTYPE_DYNAMIC_RESOURCE'
   const {displayNameKey, Icon} = isMarkdown
     ? { displayNameKey: 'markdown', Icon: MarkdownLogo }
     : isEmbed
     ? { displayNameKey: 'embed', Icon: GlobePhosphor }
+    : isResource
+    ? { displayNameKey: 'resource', Icon: Cube }
     : ACTIVITIES[activityType]
 
   return (

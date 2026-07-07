@@ -46,9 +46,13 @@ interface ScormActivityModalProps {
   course: any
   closeModal: () => void
   onImportComplete: () => void
+  // When set (e.g. launched from a chapter's "Add activity" picker), all SCOs
+  // are imported directly into this chapter and the per-SCO chapter selector is
+  // hidden — a streamlined single-chapter upload.
+  chapterId?: string | number
 }
 
-function ScormActivityModal({ course, closeModal, onImportComplete }: ScormActivityModalProps) {
+function ScormActivityModal({ course, closeModal, onImportComplete, chapterId }: ScormActivityModalProps) {
   const { t } = useTranslation()
   const session = useLHSession() as any
   const access_token = session?.data?.tokens?.access_token
@@ -127,8 +131,11 @@ function ScormActivityModal({ course, closeModal, onImportComplete }: ScormActiv
       const result: ScormAnalysisResponse = await response.json()
       setAnalysisResult(result)
 
-      // Initialize assignments with default values
-      const defaultChapterId = chapters.length > 0 ? chapters[0].id.toString() : ''
+      // Initialize assignments with default values. When launched from a
+      // specific chapter, target that chapter directly.
+      const defaultChapterId = chapterId != null
+        ? chapterId.toString()
+        : chapters.length > 0 ? chapters[0].id.toString() : ''
       setAssignments(
         result.scos.map((sco) => ({
           scoIdentifier: sco.identifier,
@@ -296,8 +303,9 @@ function ScormActivityModal({ course, closeModal, onImportComplete }: ScormActiv
           {/* Info */}
           <div className="bg-sky-50 p-4 rounded-xl text-sm text-sky-700 border border-sky-100">
             <p>
-              Upload your SCORM package to analyze its contents. You&apos;ll be able to assign each
-              learning object to different chapters in the next step.
+              {chapterId != null
+                ? "Upload your SCORM package to analyze its contents. Its learning objects will be added to this chapter."
+                : "Upload your SCORM package to analyze its contents. You'll be able to assign each learning object to different chapters in the next step."}
             </p>
           </div>
 
@@ -348,7 +356,9 @@ function ScormActivityModal({ course, closeModal, onImportComplete }: ScormActiv
 
           {/* SCO Assignments */}
           <div className="space-y-3 max-h-[300px] overflow-y-auto">
-            <Label className="text-sm font-medium text-gray-700">Assign SCOs to Chapters</Label>
+            <Label className="text-sm font-medium text-gray-700">
+              {chapterId != null ? 'Learning objects to import' : 'Assign SCOs to Chapters'}
+            </Label>
             {assignments.map((assignment, index) => (
               <div
                 key={assignment.scoIdentifier}
@@ -381,23 +391,25 @@ function ScormActivityModal({ course, closeModal, onImportComplete }: ScormActiv
                       />
                     </div>
 
-                    {/* Chapter Dropdown */}
-                    <div className="flex items-center gap-2">
-                      <label className="text-xs text-gray-500 w-16">Chapter:</label>
-                      <select
-                        value={assignment.chapterId}
-                        onChange={(e) => handleAssignmentChange(index, 'chapterId', e.target.value)}
-                        disabled={!assignment.include}
-                        className="flex-1 h-9 text-sm border border-gray-200 rounded-lg px-3 bg-white focus:outline-none focus:ring-2 focus:ring-black"
-                      >
-                        <option value="">Select chapter...</option>
-                        {chapters.map((chapter) => (
-                          <option key={chapter.id} value={chapter.id.toString()}>
-                            {chapter.name}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
+                    {/* Chapter Dropdown — hidden when a target chapter is fixed */}
+                    {chapterId == null && (
+                      <div className="flex items-center gap-2">
+                        <label className="text-xs text-gray-500 w-16">Chapter:</label>
+                        <select
+                          value={assignment.chapterId}
+                          onChange={(e) => handleAssignmentChange(index, 'chapterId', e.target.value)}
+                          disabled={!assignment.include}
+                          className="flex-1 h-9 text-sm border border-gray-200 rounded-lg px-3 bg-white focus:outline-none focus:ring-2 focus:ring-black"
+                        >
+                          <option value="">Select chapter...</option>
+                          {chapters.map((chapter) => (
+                            <option key={chapter.id} value={chapter.id.toString()}>
+                              {chapter.name}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>

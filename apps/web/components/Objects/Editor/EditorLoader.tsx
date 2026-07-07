@@ -9,6 +9,7 @@ import EditorSkeleton from './EditorSkeleton'
 import EditorWrapper from './EditorWrapper'
 import MarkdownActivity from '@components/Objects/Activities/Markdown/MarkdownActivity'
 import EmbedActivity from '@components/Objects/Activities/Embed/EmbedActivity'
+import ResourceActivity from '@components/Objects/Activities/Resource/ResourceActivity'
 import OnboardingTracker from '@components/Dashboard/Onboarding/OnboardingTracker'
 
 interface EditorLoaderProps {
@@ -56,6 +57,7 @@ export default function EditorLoader({ courseid: _courseid, activityuuid }: Edit
   }
   const isMarkdownActivity = activity?.activity_sub_type === 'SUBTYPE_DYNAMIC_MARKDOWN'
   const isEmbedActivity = activity?.activity_sub_type === 'SUBTYPE_DYNAMIC_EMBED'
+  const isResourceActivity = activity?.activity_sub_type === 'SUBTYPE_DYNAMIC_RESOURCE'
 
   if (isMarkdownActivity && dataReady) {
     return <MarkdownActivity activity={activity} editable />
@@ -63,6 +65,12 @@ export default function EditorLoader({ courseid: _courseid, activityuuid }: Edit
 
   if (isEmbedActivity && dataReady) {
     return <EmbedActivity activity={activity} editable />
+  }
+
+  if (isResourceActivity && dataReady) {
+    // Resource activities are configured on creation; the editor shows a preview
+    // of the embedded resource (change it by re-adding the activity).
+    return <ResourceActivity activity={activity} orgslug={org?.slug || ''} />
   }
 
   return (
