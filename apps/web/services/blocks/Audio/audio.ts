@@ -44,18 +44,22 @@ export async function generateAudioBlock(
   return data
 }
 
-export type GeneratePodcastScriptParams = {
+export type GenerateScriptParams = {
   activity_uuid: string
+  // 'podcast' → two-speaker dialogue; 'speak' → single-speaker detailed monologue.
+  mode: 'podcast' | 'speak'
   text: string
   speakers?: GenerateAudioSpeaker[]
   style?: string
   language?: string
+  // Approximate spoken length in minutes.
+  minutes?: number
 }
 
-// Turn a topic/brief into a two-speaker discussion script (for podcast mode).
-// Returns { transcript }.
-export async function generatePodcastScript(
-  params: GeneratePodcastScriptParams,
+// Turn a topic/brief into a spoken script (podcast dialogue or a detailed
+// monologue for "speak" mode). Returns { transcript }.
+export async function generateScript(
+  params: GenerateScriptParams,
   access_token: string
 ): Promise<{ transcript: string }> {
   const result = await fetch(

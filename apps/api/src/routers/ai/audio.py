@@ -26,14 +26,14 @@ from src.security.org_auth import is_org_member
 from src.services.ai.audio.generator import (
     OUTPUT_EXT,
     Speaker,
-    generate_podcast_script,
     generate_speech,
+    generate_spoken_script,
 )
 from src.services.ai.llm import AINotConfiguredError
 from src.services.ai.schemas.audio import (
     GenerateAudioRequest,
-    GeneratePodcastScriptRequest,
-    GeneratePodcastScriptResponse,
+    GenerateScriptRequest,
+    GenerateScriptResponse,
 )
 from src.services.blocks.block_types.audioBlock.audioBlock import create_audio_block
 from src.services.security.rate_limiting import enforce_ai_rate_limit
@@ -145,25 +145,26 @@ async def api_generate_audio(
 
 @router.post(
     "/audio/script",
-    response_model=GeneratePodcastScriptResponse,
-    summary="Generate a podcast discussion script with AI",
+    response_model=GenerateScriptResponse,
+    summary="Generate a spoken script with AI (podcast dialogue or monologue)",
     description=(
-        "Turn a topic, question, or source material into a two-speaker discussion "
-        "script (ready to synthesize as a podcast). Consumes AI credits."
+        "Turn a topic, question, or source material into a spoken script — a "
+        "two-speaker discussion ('podcast') or a detailed single-speaker explanation "
+        "('speak') — of an approximate length. Consumes AI credits."
     ),
     responses={
-        200: {"description": "Script generated.", "model": GeneratePodcastScriptResponse},
+        200: {"description": "Script generated.", "model": GenerateScriptResponse},
         400: {"description": "Invalid request"},
         401: {"description": "Authentication required"},
         403: {"description": "Not an org member, AI disabled, or insufficient credits"},
         404: {"description": "Activity not found"},
     },
 )
-async def api_generate_podcast_script(
-    body: GeneratePodcastScriptRequest,
+async def api_generate_script(
+    body: GenerateScriptRequest,
     current_user: PublicUser = Depends(get_authenticated_user),
     db_session: AsyncSession = Depends(get_db_session),
-) -> GeneratePodcastScriptResponse:
+) -> GenerateScriptResponse:
     if not (body.text or "").strip():
         raise HTTPException(status_code=400, detail="Add a topic or some text to generate a script from.")
 
@@ -172,10 +173,16 @@ async def api_generate_podcast_script(
     enforce_ai_rate_limit(current_user.id, org_id)
     await reserve_ai_credit(org_id, db_session, amount=SCRIPT_CREDIT_COST)
 
+    kind = "monologue" if body.mode == "speak" else "podcast"
     names = [s.name for s in (body.speakers or []) if s.name.strip()] or None
     try:
-        transcript = await generate_podcast_script(
-            body.text, speaker_names=names, language=body.language, style=body.style
+        transcript = await generate_spoken_script(
+            body.text,
+            kind=kind,
+            speaker_names=names,
+            language=body.language,
+            style=body.style,
+            minutes=body.minutes,
         )
     except AINotConfiguredError as e:
         refund_ai_credit(org_id, SCRIPT_CREDIT_COST)
@@ -185,10 +192,10 @@ async def api_generate_podcast_script(
         raise HTTPException(status_code=400, detail=str(e))
     except Exception:
         refund_ai_credit(org_id, SCRIPT_CREDIT_COST)
-        logger.error("Podcast script generation failed")
+        logger.error("Script generation failed")
         raise HTTPException(
             status_code=502,
-            detail="Podcast script generation failed. Please try again.",
+            detail="Script generation failed. Please try again.",
         )
 
-    return GeneratePodcastScriptResponse(transcript=transcript)
+    return GenerateScriptResponse(transcript=transcript)

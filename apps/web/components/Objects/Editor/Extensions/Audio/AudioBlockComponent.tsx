@@ -7,7 +7,7 @@ import {
 } from 'lucide-react'
 import React from 'react'
 import toast from 'react-hot-toast'
-import { uploadNewAudioFile, generateAudioBlock, generatePodcastScript, type GenerateAudioSpeaker } from '../../../../../services/blocks/Audio/audio'
+import { uploadNewAudioFile, generateAudioBlock, generateScript, type GenerateAudioSpeaker } from '../../../../../services/blocks/Audio/audio'
 import { getAudioBlockStreamUrl, getPodcastAudioStreamUrl } from '@services/media/media'
 import { useOrg } from '@components/Contexts/OrgContext'
 import { useOrgMembership } from '@components/Contexts/OrgContext'
@@ -53,6 +53,10 @@ const TTS_LANGUAGES = [
   'Italian', 'Dutch', 'Arabic', 'Hindi', 'Japanese', 'Korean',
   'Chinese (Mandarin)', 'Russian', 'Turkish', 'Polish', 'Indonesian', 'Vietnamese',
 ]
+// Approximate podcast/talk length options, in minutes (from 2).
+const LENGTH_OPTIONS = [2, 3, 5, 10]
+
+type GenMode = 'tts' | 'speak' | 'podcast'
 
 interface AudioBlockObject {
   block_uuid?: string
@@ -504,11 +508,12 @@ function AudioBlockComponent(props: ExtendedNodeViewProps) {
   const [uploadProgress, setUploadProgress] = React.useState(0)
 
   // AI generation state
-  const [genMode, setGenMode] = React.useState<'tts' | 'podcast'>('tts')
+  const [genMode, setGenMode] = React.useState<GenMode>('tts')
   const [genText, setGenText] = React.useState('')
   const [genVoice, setGenVoice] = React.useState(TTS_VOICES[0].name)
   const [genLanguage, setGenLanguage] = React.useState(TTS_LANGUAGES[0])
   const [genStyle, setGenStyle] = React.useState('')
+  const [genMinutes, setGenMinutes] = React.useState<number>(LENGTH_OPTIONS[0])
   const [genSpeakers, setGenSpeakers] = React.useState<GenerateAudioSpeaker[]>([
     { name: 'Host', voice: 'Kore' },
     { name: 'Guest', voice: 'Puck' },
@@ -688,12 +693,13 @@ function AudioBlockComponent(props: ExtendedNodeViewProps) {
     try {
       setIsGenerating(true)
       setError(null)
+      // 'speak' narrates a single voice, same as plain text-to-speech.
       const object = await generateAudioBlock(
         {
           activity_uuid: extension.options.activity.activity_uuid,
-          mode: genMode,
+          mode: genMode === 'podcast' ? 'podcast' : 'tts',
           text: genText,
-          voice: genMode === 'tts' ? genVoice : undefined,
+          voice: genMode !== 'podcast' ? genVoice : undefined,
           speakers: genMode === 'podcast' ? genSpeakers : undefined,
           style: genStyle.trim() || undefined,
           language: genLanguage === 'Auto-detect' ? undefined : genLanguage,
@@ -723,13 +729,15 @@ function AudioBlockComponent(props: ExtendedNodeViewProps) {
     try {
       setIsGeneratingScript(true)
       setError(null)
-      const res = await generatePodcastScript(
+      const res = await generateScript(
         {
           activity_uuid: extension.options.activity.activity_uuid,
+          mode: genMode === 'podcast' ? 'podcast' : 'speak',
           text: genText,
-          speakers: genSpeakers,
+          speakers: genMode === 'podcast' ? genSpeakers : undefined,
           style: genStyle.trim() || undefined,
           language: genLanguage === 'Auto-detect' ? undefined : genLanguage,
+          minutes: genMinutes,
         },
         access_token
       )
@@ -910,6 +918,7 @@ function AudioBlockComponent(props: ExtendedNodeViewProps) {
                   {([
                     { key: 'tts' as const, icon: Sparkles, label: 'Text to speech' },
                     { key: 'podcast' as const, icon: Users, label: 'Podcast (2 voices)' },
+                    { key: 'speak' as const, icon: Radio, label: 'Speak' },
                   ]).map((m) => (
                     <button
                       key={m.key}
@@ -929,15 +938,19 @@ function AudioBlockComponent(props: ExtendedNodeViewProps) {
                 <textarea
                   value={genText}
                   onChange={(e) => setGenText(e.target.value)}
-                  rows={genMode === 'podcast' ? 5 : 4}
-                  placeholder={genMode === 'podcast'
-                    ? "What should the podcast be about? Add a topic or a question — or paste notes to turn into a discussion. Then generate a script."
-                    : 'Type the text you want spoken aloud…'}
+                  rows={genMode === 'tts' ? 4 : 5}
+                  placeholder={
+                    genMode === 'podcast'
+                      ? "What should the podcast be about? Add a topic or a question — or paste notes to turn into a discussion. Then generate a script."
+                      : genMode === 'speak'
+                        ? "What should the talk be about? e.g. “Explain how photosynthesis works, in detail.” Then generate a script."
+                        : 'Type the text you want spoken aloud…'
+                  }
                   className="w-full rounded-lg border border-neutral-200 p-3 text-sm outline-none focus:border-blue-400 resize-y"
                 />
 
-                {/* Voice(s) */}
-                {genMode === 'tts' ? (
+                {/* Voice(s) — single voice for text-to-speech and speak; two for podcast */}
+                {genMode !== 'podcast' ? (
                   <label className="block">
                     <span className="text-xs font-medium text-neutral-600">Voice</span>
                     <select
@@ -985,8 +998,22 @@ function AudioBlockComponent(props: ExtendedNodeViewProps) {
                   </div>
                 )}
 
-                {/* Language + tone */}
+                {/* Length (podcast / speak) + language + tone */}
                 <div className="flex gap-2">
+                  {genMode !== 'tts' && (
+                    <label className="w-28 shrink-0">
+                      <span className="text-xs font-medium text-neutral-600">Length</span>
+                      <select
+                        value={genMinutes}
+                        onChange={(e) => setGenMinutes(Number(e.target.value))}
+                        className="mt-1 w-full rounded-lg border border-neutral-200 p-2 text-sm outline-none focus:border-blue-400 bg-white"
+                      >
+                        {LENGTH_OPTIONS.map((m) => (
+                          <option key={m} value={m}>{m} min</option>
+                        ))}
+                      </select>
+                    </label>
+                  )}
                   <label className="flex-1">
                     <span className="text-xs font-medium text-neutral-600">Language</span>
                     <select
@@ -1010,8 +1037,8 @@ function AudioBlockComponent(props: ExtendedNodeViewProps) {
                   </label>
                 </div>
 
-                {/* Podcast: turn the topic into a discussion script first */}
-                {genMode === 'podcast' && (
+                {/* Podcast / Speak: turn the topic into a script first */}
+                {genMode !== 'tts' && (
                   <button
                     onClick={handleGenerateScript}
                     disabled={isGeneratingScript || isGenerating || !genText.trim()}
@@ -1023,9 +1050,9 @@ function AudioBlockComponent(props: ExtendedNodeViewProps) {
                     )}
                   >
                     {isGeneratingScript ? (
-                      <><Loader2 size={15} className="animate-spin" /> Writing the discussion…</>
+                      <><Loader2 size={15} className="animate-spin" /> {genMode === 'podcast' ? 'Writing the discussion…' : 'Writing the talk…'}</>
                     ) : (
-                      <><Sparkles size={15} /> Generate discussion script</>
+                      <><Sparkles size={15} /> {genMode === 'podcast' ? 'Generate discussion script' : 'Generate talk script'}</>
                     )}
                   </button>
                 )}
@@ -1048,7 +1075,7 @@ function AudioBlockComponent(props: ExtendedNodeViewProps) {
                   )}
                 </button>
                 <p className="text-[11px] text-center text-neutral-400">
-                  {genMode === 'podcast'
+                  {genMode !== 'tts'
                     ? `Script ${SCRIPT_CREDIT_COST} credit · Audio ${AI_CREDIT_COST} credits · Powered by Gemini`
                     : `Uses ${AI_CREDIT_COST} AI credits · Powered by Gemini`}
                 </p>

@@ -47,10 +47,17 @@ OUTPUT_EXT = "wav"
 
 # A single TTS request has a ~32k-token context. Cap input well under that so we
 # fail fast with a clear error instead of spending a credit on a doomed call.
-MAX_TEXT_CHARS = 6000
+# Sized to hold up to the longest generated script (see MAX_SPOKEN_MINUTES).
+MAX_TEXT_CHARS = 11000
 
-# Upper bound on the topic/brief used to generate a podcast script.
+# Upper bound on the topic/brief used to generate a script.
 MAX_SCRIPT_BRIEF_CHARS = 8000
+
+# Script length targeting. Natural spoken pace is ~140 words/min; the requested
+# duration drives the target word count for generated podcast/monologue scripts.
+WORDS_PER_MINUTE = 140
+MIN_SPOKEN_MINUTES = 2
+MAX_SPOKEN_MINUTES = 10
 
 # Gemini caps multi-speaker synthesis at 2 voices.
 MAX_SPEAKERS = 2
@@ -152,26 +159,43 @@ _PODCAST_SCRIPT_SYSTEM = (
     "Rules:\n"
     "- Output ONLY the dialogue. Every line MUST start with a speaker name followed by a "
     "colon, e.g. 'Host:'. Use ONLY these exact speaker names: {names}.\n"
-    "- Alternate turns naturally; aim for 6 to 10 short-to-medium exchanges.\n"
-    "- Make it sound spoken — contractions, natural reactions, a clear intro and wrap-up.\n"
+    "- Alternate turns naturally with a clear intro and wrap-up.\n"
+    "{length_line}"
+    "- Make it sound spoken — contractions, natural reactions.\n"
     "- Do NOT include stage directions, sound effects, markdown, headings, or narration.\n"
     "{lang_line}{tone_line}"
 )
 
+_MONOLOGUE_SCRIPT_SYSTEM = (
+    "You are an expert educator and speaker. Turn the user's subject into a detailed, "
+    "engaging spoken explanation delivered by a single speaker talking directly to the "
+    "listener.\n"
+    "Rules:\n"
+    "- Output ONLY the spoken words as flowing prose. NO speaker labels, NO markdown, NO "
+    "headings, NO bullet points, NO stage directions.\n"
+    "- Explain in depth and clearly, well-structured, with a natural intro and a conclusion.\n"
+    "{length_line}"
+    "- Make it sound spoken — contractions, natural transitions, a clear voice.\n"
+    "{lang_line}{tone_line}"
+)
 
-async def generate_podcast_script(
+
+async def generate_spoken_script(
     brief: str,
     *,
+    kind: str = "podcast",
     speaker_names: Optional[list[str]] = None,
     language: Optional[str] = None,
     style: Optional[str] = None,
+    minutes: int = MIN_SPOKEN_MINUTES,
 ) -> str:
-    """Write a two-speaker podcast dialogue from a topic/brief using the text LLM.
+    """Write a spoken script from a topic/brief using the text LLM.
 
-    Returns a script where each line starts with a speaker name (ready to feed into
-    ``generate_speech`` in podcast mode). Raises ``AINotConfiguredError`` when the AI
-    provider is unconfigured, ``ValueError`` on empty input, or ``RuntimeError`` on
-    an empty/failed generation.
+    ``kind='podcast'`` produces a two-speaker dialogue (each line prefixed with a
+    speaker name); ``kind='monologue'`` produces a single-speaker explanation as
+    flowing prose. ``minutes`` targets the spoken length. Raises
+    ``AINotConfiguredError`` when the AI provider is unconfigured, ``ValueError`` on
+    empty input, or ``RuntimeError`` on an empty/failed generation.
     """
     from src.services.ai.llm import generate, model_for_tier
 
@@ -181,24 +205,42 @@ async def generate_podcast_script(
     if len(brief) > MAX_SCRIPT_BRIEF_CHARS:
         brief = brief[:MAX_SCRIPT_BRIEF_CHARS]
 
-    names = ", ".join([n for n in (speaker_names or []) if n and n.strip()]) or "Host, Guest"
-    lang_line = f"- Write the dialogue in {language.strip()}.\n" if language and language.strip() else ""
+    minutes = max(MIN_SPOKEN_MINUTES, min(int(minutes or MIN_SPOKEN_MINUTES), MAX_SPOKEN_MINUTES))
+    target_words = minutes * WORDS_PER_MINUTE
+    length_line = (
+        f"- Aim for about {minutes} minute(s) of spoken audio (roughly {target_words} "
+        "words). Use enough content to fill the time naturally, without padding or "
+        "abruptly cutting off.\n"
+    )
+    lang_line = f"- Speak in {language.strip()}.\n" if language and language.strip() else ""
     tone_line = f"- Tone / style: {style.strip()}.\n" if style and style.strip() else ""
-    system = _PODCAST_SCRIPT_SYSTEM.format(names=names, lang_line=lang_line, tone_line=tone_line)
+
+    if kind == "monologue":
+        system = _MONOLOGUE_SCRIPT_SYSTEM.format(
+            length_line=length_line, lang_line=lang_line, tone_line=tone_line
+        )
+    else:
+        names = ", ".join([n for n in (speaker_names or []) if n and n.strip()]) or "Host, Guest"
+        system = _PODCAST_SCRIPT_SYSTEM.format(
+            names=names, length_line=length_line, lang_line=lang_line, tone_line=tone_line
+        )
+
+    # Scale the output budget to the requested length (~1.6 tokens/word + headroom).
+    max_tokens = min(4000, target_words * 2 + 300)
 
     try:
         text = await generate(
             model_name=model_for_tier("standard"),
             user_prompt=brief,
             system_prompt=system,
-            max_tokens=1400,
+            max_tokens=max_tokens,
             temperature=0.8,
         )
     except AINotConfiguredError:
         raise
     except Exception as e:  # noqa: BLE001 — surface a clean error to the router
-        logger.error("Podcast script generation failed: %s", type(e).__name__)
-        raise RuntimeError("Podcast script generation failed") from e
+        logger.error("Script generation failed: %s", type(e).__name__)
+        raise RuntimeError("Script generation failed") from e
 
     text = (text or "").strip()
     if not text:

@@ -29,18 +29,22 @@ class GenerateAudioRequest(BaseModel):
     language: Optional[str] = None
 
 
-class GeneratePodcastScriptRequest(BaseModel):
-    # The activity the podcast will be attached to (used to resolve the org for
+class GenerateScriptRequest(BaseModel):
+    # The activity the script will be attached to (used to resolve the org for
     # credit metering; no audio is stored by this endpoint).
     activity_uuid: str
-    # The topic, question, or source material to turn into a discussion.
+    # 'podcast' → two-speaker dialogue; 'speak' → single-speaker detailed monologue.
+    mode: Literal["podcast", "speak"] = "podcast"
+    # The topic, question, or source material to turn into a script.
     text: str
-    # Named speakers for the dialogue (their names anchor each script line).
+    # Named speakers for the dialogue (podcast mode; their names anchor script lines).
     speakers: Optional[list[GenerateAudioSpeaker]] = Field(default=None)
     # Optional tone/style and target language for the generated script.
     style: Optional[str] = None
     language: Optional[str] = None
+    # Approximate spoken length in minutes (clamped server-side).
+    minutes: int = Field(default=2, ge=1, le=60)
 
 
-class GeneratePodcastScriptResponse(BaseModel):
+class GenerateScriptResponse(BaseModel):
     transcript: str

@@ -170,32 +170,65 @@ async def test_generate_speech_nonretryable_raises_runtime():
             await gen.generate_speech("Hello")
 
 
-# --- generate_podcast_script ---------------------------------------------
+# --- generate_spoken_script ----------------------------------------------
 
-async def test_generate_podcast_script_happy():
-    with patch("src.services.ai.llm.generate", new=AsyncMock(return_value="Host: Hi\nGuest: Hey")), \
+async def test_generate_spoken_script_podcast_happy():
+    gm = AsyncMock(return_value="Host: Hi\nGuest: Hey")
+    with patch("src.services.ai.llm.generate", new=gm), \
          patch("src.services.ai.llm.model_for_tier", return_value="m"):
-        out = await gen.generate_podcast_script(
-            "about cats", speaker_names=["Host", "Guest"], language="English", style="fun"
+        out = await gen.generate_spoken_script(
+            "about cats", kind="podcast", speaker_names=["Host", "Guest"], language="English", style="fun"
         )
     assert out.startswith("Host:")
+    # Podcast system prompt enforces speaker-labelled dialogue.
+    assert "speaker name" in gm.await_args.kwargs["system_prompt"].lower()
 
 
-async def test_generate_podcast_script_empty_brief_raises():
+async def test_generate_spoken_script_monologue_uses_prose_prompt():
+    gm = AsyncMock(return_value="Photosynthesis is how plants make food...")
+    with patch("src.services.ai.llm.generate", new=gm), \
+         patch("src.services.ai.llm.model_for_tier", return_value="m"):
+        out = await gen.generate_spoken_script("photosynthesis", kind="monologue")
+    assert out.startswith("Photosynthesis")
+    system = gm.await_args.kwargs["system_prompt"].lower()
+    assert "single speaker" in system
+    assert "no speaker labels" in system
+
+
+async def test_generate_spoken_script_minutes_drives_target_and_clamps():
+    gm = AsyncMock(return_value="Host: hi")
+    with patch("src.services.ai.llm.generate", new=gm), \
+         patch("src.services.ai.llm.model_for_tier", return_value="m"):
+        # Over the max clamps to MAX_SPOKEN_MINUTES.
+        await gen.generate_spoken_script("t", minutes=99)
+    system = gm.await_args.kwargs["system_prompt"]
+    assert f"{gen.MAX_SPOKEN_MINUTES} minute" in system
+    assert str(gen.MAX_SPOKEN_MINUTES * gen.WORDS_PER_MINUTE) in system
+
+
+async def test_generate_spoken_script_minutes_below_min_clamps():
+    gm = AsyncMock(return_value="Host: hi")
+    with patch("src.services.ai.llm.generate", new=gm), \
+         patch("src.services.ai.llm.model_for_tier", return_value="m"):
+        await gen.generate_spoken_script("t", minutes=1)
+    assert f"{gen.MIN_SPOKEN_MINUTES} minute" in gm.await_args.kwargs["system_prompt"]
+
+
+async def test_generate_spoken_script_empty_brief_raises():
     with pytest.raises(ValueError):
-        await gen.generate_podcast_script("   ")
+        await gen.generate_spoken_script("   ")
 
 
-async def test_generate_podcast_script_empty_output_raises_runtime():
+async def test_generate_spoken_script_empty_output_raises_runtime():
     with patch("src.services.ai.llm.generate", new=AsyncMock(return_value="   ")), \
          patch("src.services.ai.llm.model_for_tier", return_value="m"):
         with pytest.raises(RuntimeError):
-            await gen.generate_podcast_script("topic")
+            await gen.generate_spoken_script("topic")
 
 
-async def test_generate_podcast_script_truncates_to_tts_budget():
+async def test_generate_spoken_script_truncates_to_tts_budget():
     long_script = "Host: " + ("x" * (gen.MAX_TEXT_CHARS + 500))
     with patch("src.services.ai.llm.generate", new=AsyncMock(return_value=long_script)), \
          patch("src.services.ai.llm.model_for_tier", return_value="m"):
-        out = await gen.generate_podcast_script("topic")
+        out = await gen.generate_spoken_script("topic")
     assert len(out) <= gen.MAX_TEXT_CHARS
