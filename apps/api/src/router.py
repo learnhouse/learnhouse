@@ -71,8 +71,16 @@ v1_router.include_router(
     usergroups.router,
     prefix="/usergroups",
     tags=["usergroups"],
+    # Admit API tokens (headless enrollment/usergroup management) while still
+    # rejecting anonymous callers — same pattern as /assignments. `usergroups`
+    # is already an allowed API-token resource type in the RBAC layer
+    # (rbac.py authorization_verify_api_token_permissions), and every handler
+    # authorizes through usergroups.rbac_check, which has an APITokenUser branch
+    # enforcing the token's usergroups rights + org boundary. The two handlers
+    # that authorize against a placeholder uuid (create, get-by-resource) get an
+    # explicit token org-boundary check in the service layer.
     dependencies=[
-        Depends(require_authenticated_user),
+        Depends(require_authenticated_user_or_api_token),
         Depends(require_plan_for_usergroups("standard", "User Groups")),
     ],
 )

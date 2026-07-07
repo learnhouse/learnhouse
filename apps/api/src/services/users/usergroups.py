@@ -111,13 +111,27 @@ async def _validate_resource_exists_and_belongs_to_org(
 async def create_usergroup(
     request: Request,
     db_session: AsyncSession,
-    current_user: PublicUser | AnonymousUser,
+    current_user: PublicUser | AnonymousUser | APITokenUser,
     usergroup_create: UserGroupCreate,
 ) -> UserGroupRead:
 
     from src.security.auth import resolve_acting_user_id
 
     usergroup = UserGroup.model_validate(usergroup_create)
+
+    # SECURITY: enforce the API-token org boundary. The target org here comes
+    # from the request body (usergroup_create.org_id), which neither the global
+    # path/query org-boundary net (auth._verify_api_token_org_boundary) nor the
+    # RBAC element-org lookup can see — the RBAC check below authorizes against
+    # the placeholder "usergroup_X", whose org resolves to None so the boundary
+    # check is skipped. Without this, a token whose creator also belongs to
+    # another org could create a usergroup in that other org. A token is bound
+    # to exactly one org, so refuse any mismatch.
+    if isinstance(current_user, APITokenUser) and usergroup_create.org_id != current_user.org_id:
+        raise HTTPException(
+            status_code=403,
+            detail="API token cannot create resources outside its organization",
+        )
 
     await require_org_membership(
         resolve_acting_user_id(current_user), usergroup_create.org_id, db_session
@@ -273,7 +287,7 @@ async def read_usergroups_by_org_id(
 async def get_usergroups_by_resource(
     request: Request,
     db_session: AsyncSession,
-    current_user: PublicUser | AnonymousUser,
+    current_user: PublicUser | AnonymousUser | APITokenUser,
     resource_uuid: str,
 ) -> list[UserGroupRead]:
 
@@ -299,6 +313,19 @@ async def get_usergroups_by_resource(
     from src.security.auth import resolve_acting_user_id
 
     target_org_id = usergroup_resources[0].org_id
+
+    # SECURITY: enforce the API-token org boundary. The org is derived from the
+    # resource here, not from an org_id path/query param, so the global boundary
+    # net cannot see it, and the RBAC check above ran against the placeholder
+    # "usergroup_X" (org None → boundary skipped). Refuse cross-org reads so a
+    # token cannot enumerate another org's usergroups via a resource its creator
+    # happens to be able to reach.
+    if isinstance(current_user, APITokenUser) and target_org_id != current_user.org_id:
+        raise HTTPException(
+            status_code=403,
+            detail="API token cannot access resources outside its organization",
+        )
+
     await require_org_membership(
         resolve_acting_user_id(current_user), target_org_id, db_session
     )

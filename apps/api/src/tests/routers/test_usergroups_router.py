@@ -3,14 +3,19 @@
 from unittest.mock import AsyncMock, patch
 
 import pytest
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
 from httpx import ASGITransport, AsyncClient
 
 from src.core.events.database import get_db_session
-from src.db.usergroups import UserGroupRead
-from src.db.users import UserRead
+from src.db.usergroup_resources import UserGroupResource
+from src.db.usergroups import UserGroup, UserGroupCreate, UserGroupRead
+from src.db.users import APITokenUser, UserRead
 from src.routers.usergroups import router as usergroups_router
 from src.security.auth import get_current_user
+from src.services.users.usergroups import (
+    create_usergroup,
+    get_usergroups_by_resource,
+)
 
 
 @pytest.fixture
@@ -126,3 +131,74 @@ class TestUsergroupsRouter:
         assert response.status_code == 422
         assert "integer user IDs" in response.json()["detail"]
         service_mock.assert_not_awaited()
+
+
+class TestUsergroupsApiTokenOrgBoundary:
+    """API tokens may manage usergroups, but never across their org boundary.
+
+    The router admits API tokens (require_authenticated_user_or_api_token) and
+    most handlers authorize against a real usergroup uuid, so the RBAC layer
+    resolves the element's org and enforces the boundary. These tests lock down
+    the two handlers that authorize against the ``usergroup_X`` placeholder —
+    create (org from the request body) and get-by-resource (org from the
+    resource) — where the placeholder's org resolves to None and the RBAC
+    boundary check is skipped, so the service layer must guard the boundary.
+    """
+
+    def _token(self, org_id: int, **rights) -> APITokenUser:
+        return APITokenUser(
+            id=1,
+            user_uuid="apitoken_test",
+            username="api_token",
+            org_id=org_id,
+            rights=rights or None,
+            token_name="Test Token",
+            created_by_user_id=1,
+        )
+
+    async def test_create_usergroup_cross_org_rejected(self, db, org, other_org, mock_request):
+        # Token scoped to `org` tries to create a group in `other_org` via the
+        # request body — invisible to the global path/query org-boundary net.
+        # Must 403 before any DB write.
+        token = self._token(org.id, usergroups={"action_create": True})
+        with pytest.raises(HTTPException) as exc:
+            await create_usergroup(
+                mock_request,
+                db,
+                token,
+                UserGroupCreate(name="Cohort", description="", org_id=other_org.id),
+            )
+        assert exc.value.status_code == 403
+        assert "outside its organization" in exc.value.detail
+
+    async def test_get_usergroups_by_resource_cross_org_rejected(self, db, org, other_org, mock_request):
+        # A usergroup + resource link living entirely in other_org.
+        ug = UserGroup(
+            org_id=other_org.id,
+            name="Other",
+            description="",
+            usergroup_uuid="usergroup_other",
+            creation_date="2024-01-01",
+            update_date="2024-01-01",
+        )
+        db.add(ug)
+        await db.commit()
+        await db.refresh(ug)
+        db.add(
+            UserGroupResource(
+                usergroup_id=ug.id,
+                resource_uuid="course_other",
+                org_id=other_org.id,
+                creation_date="2024-01-01",
+                update_date="2024-01-01",
+            )
+        )
+        await db.commit()
+
+        # Token scoped to `org` with read rights clears the placeholder RBAC
+        # check, then the service must refuse because the resource is in other_org.
+        token = self._token(org.id, usergroups={"action_read": True})
+        with pytest.raises(HTTPException) as exc:
+            await get_usergroups_by_resource(mock_request, db, token, "course_other")
+        assert exc.value.status_code == 403
+        assert "outside its organization" in exc.value.detail
