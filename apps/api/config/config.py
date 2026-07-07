@@ -77,6 +77,11 @@ class AIConfig(BaseModel):
     # LLM layer). Defaults to a fast tier because tool-use latency adds up fast;
     # override via LEARNHOUSE_ATLAS_MODEL for harder reasoning tasks.
     atlas_model: str | None = None
+    # Expose the embedded MCP server (mounted at /mcp on the API) so external
+    # agents can drive org actions with an API token. Off by default — enable
+    # via LEARNHOUSE_MCP_ENABLED=true. Tool access is always bounded by the
+    # token's rights and org scope.
+    mcp_enabled: bool = False
 
 
 class S3ApiConfig(BaseModel):
@@ -594,6 +599,14 @@ def get_learnhouse_config() -> LearnHouseConfig:
         "atlas_model"
     )
 
+    env_mcp_enabled = os.environ.get("LEARNHOUSE_MCP_ENABLED")
+    if env_mcp_enabled is not None:
+        mcp_enabled = env_mcp_enabled.lower() in ("true", "1", "yes")
+    else:
+        mcp_enabled = bool(
+            yaml_config.get("ai_config", {}).get("mcp_enabled", False)
+        )
+
     ai_config = AIConfig(
         is_ai_enabled=bool(is_ai_enabled),
         provider=ai_provider,
@@ -609,6 +622,7 @@ def get_learnhouse_config() -> LearnHouseConfig:
         image_model=ai_image_model,
         tts_model=ai_tts_model,
         atlas_model=atlas_model,
+        mcp_enabled=mcp_enabled,
     )
 
     # Surface missing internal-service keys at boot rather than at first
