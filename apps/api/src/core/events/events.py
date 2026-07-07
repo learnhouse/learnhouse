@@ -12,6 +12,7 @@ from src.core.ee_hooks import run_ee_startup
 logger = logging.getLogger(__name__)
 
 _cleanup_task = None
+_mcp_lifespan_stack = None
 
 
 async def _periodic_migration_cleanup():
@@ -74,6 +75,19 @@ def startup_app(app: FastAPI) -> Callable:
         from src.services.utils.caption_jobs import start_consumer as start_captions_consumer
         start_captions_consumer()
 
+        # Start the embedded MCP session manager when enabled. Starlette
+        # mounts don't run sub-app lifespans, so the manager's run()
+        # context is entered here and closed in shutdown_app — without it
+        # every /mcp request fails with an uninitialized task group.
+        mcp_manager = getattr(app.state, "mcp_session_manager", None)
+        if mcp_manager is not None:
+            from contextlib import AsyncExitStack
+
+            global _mcp_lifespan_stack
+            _mcp_lifespan_stack = AsyncExitStack()
+            await _mcp_lifespan_stack.enter_async_context(mcp_manager.run())
+            logger.info("Embedded MCP server started on /mcp")
+
         # Start Enterprise Edition Startup tasks if available
         run_ee_startup(app)
 
@@ -99,6 +113,14 @@ def shutdown_app(app: FastAPI) -> Callable:
         if _webhook_tasks:  # pragma: no cover
             await asyncio.gather(*list(_webhook_tasks), return_exceptions=True)
         await close_webhook_client()
+        # Close the embedded MCP session manager (started in startup_app).
+        global _mcp_lifespan_stack
+        if _mcp_lifespan_stack is not None:
+            try:
+                await _mcp_lifespan_stack.aclose()
+            except Exception:  # pragma: no cover - defensive shutdown
+                logger.exception("MCP session manager shutdown failed")
+            _mcp_lifespan_stack = None
         await close_database(app)
 
     return close_app
