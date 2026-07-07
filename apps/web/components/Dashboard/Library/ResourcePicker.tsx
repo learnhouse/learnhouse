@@ -41,7 +41,8 @@ export const TAB_META: Record<
 export function endpointFor(tab: TabKey, orgslug: string, org_id: any): string {
   switch (tab) {
     case 'courses':
-      return `${getAPIUrl()}courses/org_slug/${orgslug}/page/1/limit/100`
+      // include_unpublished so drafts show too (this is an admin/editor context).
+      return `${getAPIUrl()}courses/org_slug/${orgslug}/page/1/limit/100?include_unpublished=true`
     case 'podcasts':
       return `${getAPIUrl()}podcasts/org_slug/${orgslug}/page/1/limit/100`
     case 'communities':
@@ -205,6 +206,56 @@ function ResourceList({
   )
 }
 
+function TabButton({
+  tab,
+  orgslug,
+  active,
+  onClick,
+}: {
+  tab: TabKey
+  orgslug: string
+  active: boolean
+  onClick: () => void
+}) {
+  const { t } = useTranslation()
+  const org = useOrg() as any
+  const session = useLHSession() as any
+  const access_token = session?.data?.tokens?.access_token
+  const Icon = TAB_META[tab].icon
+
+  // Prefetch each tab's data so we can show a count and warm the cache. SWR
+  // dedupes this against the active tab's ResourceList fetch (same key).
+  const { data } = useSWR(
+    org?.id ? endpointFor(tab, orgslug, org.id) : null,
+    (url: string) => apiFetch(url, access_token)
+  )
+  const count = Array.isArray(data) ? data.length : data?.data?.length
+
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={`flex items-center gap-1.5 px-3 py-2 text-sm font-medium border-b-2 transition-colors -mb-px ${
+        active
+          ? 'border-black text-gray-900'
+          : 'border-transparent text-gray-400 hover:text-gray-600'
+      }`}
+    >
+      <Icon className="w-4 h-4" />
+      {t(`library.tabs.${tab}`)}
+      {count !== undefined && (
+        <span
+          className={`ml-1 inline-flex items-center justify-center min-w-[18px] h-[18px] px-1 rounded-full text-[11px] font-semibold ${
+            active ? 'bg-black text-white' : 'bg-gray-100 text-gray-500'
+          }`}
+        >
+          {count}
+        </span>
+      )}
+    </button>
+  )
+}
+
 type ResourcePickerProps = {
   orgslug: string
   mode: 'add' | 'select'
@@ -224,7 +275,6 @@ function ResourcePicker({
   onSelect,
   selectedUuid,
 }: ResourcePickerProps) {
-  const { t } = useTranslation()
   const org = useOrg() as any
 
   const enabledTabs = (Object.keys(TAB_META) as TabKey[]).filter((tab) => {
@@ -237,25 +287,15 @@ function ResourcePicker({
   return (
     <div>
       <div className="flex gap-1 mb-4 border-b border-gray-100 overflow-x-auto">
-        {enabledTabs.map((tab) => {
-          const Icon = TAB_META[tab].icon
-          const active = activeTab === tab
-          return (
-            <button
-              key={tab}
-              type="button"
-              onClick={() => setActiveTab(tab)}
-              className={`flex items-center gap-1.5 px-3 py-2 text-sm font-medium border-b-2 transition-colors -mb-px ${
-                active
-                  ? 'border-black text-gray-900'
-                  : 'border-transparent text-gray-400 hover:text-gray-600'
-              }`}
-            >
-              <Icon className="w-4 h-4" />
-              {t(`library.tabs.${tab}`)}
-            </button>
-          )
-        })}
+        {enabledTabs.map((tab) => (
+          <TabButton
+            key={tab}
+            tab={tab}
+            orgslug={orgslug}
+            active={activeTab === tab}
+            onClick={() => setActiveTab(tab)}
+          />
+        ))}
       </div>
 
       <ResourceList
