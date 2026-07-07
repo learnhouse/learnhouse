@@ -112,6 +112,60 @@ BLOCK_CATALOG: list[dict] = [
         },
         "notes": "Multiple answers may have correct=true (multi-select). Keep 2-5 answers per question.",
     },
+    {
+        "node": "badge",
+        "purpose": "A small inline pill/label with an emoji. Holds short text.",
+        "example": {"type": "badge", "attrs": {"color": "sky", "emoji": "⭐"}, "content": [{"type": "text", "text": "Key concept"}]},
+        "notes": "color is a tailwind-ish name (sky, green, red, amber, blue, purple, …).",
+    },
+    {
+        "node": "button",
+        "purpose": "A call-to-action link button with an emoji. Holds the label text.",
+        "example": {"type": "button", "attrs": {"emoji": "🔗", "link": "https://aws.amazon.com/s3/", "color": "blue", "alignment": "left"}, "content": [{"type": "text", "text": "Open the S3 docs"}]},
+    },
+    {
+        "node": "blockEmbed",
+        "purpose": "Embed external content (YouTube, Figma, Loom, CodePen, GitHub gist, Giphy, Google Maps, Canva). Provide embedUrl (an embeddable URL) or raw embedCode (an iframe).",
+        "example": {"type": "blockEmbed", "attrs": {"embedUrl": "https://www.youtube.com/embed/tp4gGvGl-mc", "embedType": "youtube", "embedCode": None, "embedHeight": 400, "embedWidth": "100%", "alignment": "center"}},
+        "notes": "embedType is a hint like youtube|figma|loom|codepen|github|giphy|maps|canva. Use an /embed URL for YouTube.",
+    },
+    {
+        "node": "blockWebPreview",
+        "purpose": "A rich link-preview card for a web page.",
+        "example": {"type": "blockWebPreview", "attrs": {"url": "https://aws.amazon.com/s3/", "title": "Amazon S3", "description": "Object storage built to store and retrieve any amount of data.", "og_image": None, "favicon": None, "og_type": None, "og_url": None, "alignment": "left", "showButton": True, "buttonLabel": "Visit Site", "openInPopup": False}},
+        "notes": "Only url is required; title/description/og_image are optional and can be refreshed later.",
+    },
+    {
+        "node": "blockUser",
+        "purpose": "Embed an organization member's profile card.",
+        "example": {"type": "blockUser", "attrs": {"user_id": "2"}},
+        "notes": "user_id is the member's numeric id — resolve it first with list_org_users / resolve_entity(kind='user').",
+    },
+    {
+        "node": "scenarios",
+        "purpose": "A branching interactive scenario: nodes with options that link to other nodes. Great for decision-tree practice.",
+        "example": {"type": "scenarios", "attrs": {"title": "Choose an S3 storage class", "scenarios": [
+            {"id": "1", "text": "Your data is read constantly with low latency. Which class?", "imageUrl": "", "options": [
+                {"id": "opt1", "text": "S3 Standard", "nextScenarioId": "2"},
+                {"id": "opt2", "text": "Glacier Deep Archive", "nextScenarioId": "3"}]},
+            {"id": "2", "text": "Correct — Standard fits hot, frequent access.", "imageUrl": "", "options": [
+                {"id": "opt3", "text": "Finish", "nextScenarioId": None}]},
+            {"id": "3", "text": "Not quite — Glacier is for cold archives with slow retrieval. Try again.", "imageUrl": "", "options": [
+                {"id": "opt4", "text": "Back to start", "nextScenarioId": "1"}]}]}},
+        "notes": "Every option.nextScenarioId must reference an existing scenario id, or be null to end. Node ids and option ids must be unique.",
+    },
+    {
+        "node": "blockCode",
+        "purpose": "An executable code-playground exercise (runs via Judge0). Learners write and run code against optional test cases.",
+        "example": {"type": "blockCode", "attrs": {"mode": "simple", "languageId": 71, "languageName": "Python 3", "starterCode": "# Print the S3 bucket name\nprint('my-bucket')\n", "description": "Print your bucket name.", "difficulty": "easy", "testCases": [], "hints": [], "solutionCode": "", "maxAttemptsBeforeReveal": 3}},
+        "notes": "languageId is a Judge0 id and MUST match languageName. Common ids: 71=Python 3, 63=JavaScript (Node), 62=Java, 54=C++, 50=C, 72=Ruby, 73=Rust, 60=Go. Leave testCases empty for a free-form playground.",
+    },
+    {
+        "node": "blockMagic",
+        "purpose": "A self-contained interactive HTML widget (rendered in a sandboxed iframe). Use for custom simulations/visualizations.",
+        "example": {"type": "blockMagic", "attrs": {"blockUuid": "mb_example_1", "sessionUuid": None, "title": "S3 request calculator", "height": 400, "htmlContent": "<!DOCTYPE html><html><body><p>Interactive widget HTML goes here.</p></body></html>"}},
+        "notes": "Normally produced by the Magic Blocks generator, but you may author a self-contained HTML document directly. blockUuid must be a unique string; keep htmlContent fully self-contained (inline CSS/JS, CDN libraries only).",
+    },
 ]
 
 ASSET_BLOCKS_NOTE = (
