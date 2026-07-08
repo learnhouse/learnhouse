@@ -8,8 +8,6 @@ import {
   Globe,
   Lock,
   Users,
-  ChevronLeft,
-  ChevronRight,
   Pencil,
   Trash2,
   Copy,
@@ -35,6 +33,7 @@ import AuthenticatedClientElement from '@components/Security/AuthenticatedClient
 import FeatureGate from '@components/Dashboard/Shared/FeatureGate/FeatureGate'
 import { searchMatchesAny } from '@/lib/search/normalize'
 import { useLHAnalytics, AnalyticsEvent } from '@services/analytics'
+import CatalogPagination, { useCatalogPagination } from '@components/Objects/Catalog/CatalogPagination'
 
 interface PlaygroundsListClientProps {
   org_id: number
@@ -51,13 +50,11 @@ export default function PlaygroundsListClient({ org_id, orgslug }: PlaygroundsLi
   const { track } = useLHAnalytics('dashboard')
 
   const [searchQuery, setSearchQuery] = useState('')
-  const [currentPage, setCurrentPage] = useState(1)
   const [isCreating, setIsCreating] = useState(false)
   const [showNameModal, setShowNameModal] = useState(false)
   const [newName, setNewName] = useState('')
   const [selectedUuids, setSelectedUuids] = useState<Set<string>>(new Set())
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
-  const itemsPerPage = 12
 
   const { data: playgrounds, isLoading } = useQuery({
     queryKey: queryKeys.playgrounds.list(orgslug),
@@ -75,39 +72,16 @@ export default function PlaygroundsListClient({ org_id, orgslug }: PlaygroundsLi
     )
   }, [allPlaygrounds, searchQuery])
 
-  React.useEffect(() => { setCurrentPage(1) }, [searchQuery])
+  const {
+    currentPage,
+    totalPages,
+    paginatedItems: paginated,
+    pageNumbers,
+    goToPage,
+    resetPage,
+  } = useCatalogPagination(filtered)
 
-  const totalPages = Math.ceil(filtered.length / itemsPerPage)
-  const paginated = useMemo(() => {
-    const start = (currentPage - 1) * itemsPerPage
-    return filtered.slice(start, start + itemsPerPage)
-  }, [filtered, currentPage, itemsPerPage])
-
-  const goToPage = (page: number) => {
-    if (page >= 1 && page <= totalPages) setCurrentPage(page)
-  }
-
-  const getVisiblePages = () => {
-    const pages: (number | string)[] = []
-    if (totalPages <= 5) {
-      for (let i = 1; i <= totalPages; i++) pages.push(i)
-    } else if (currentPage <= 3) {
-      for (let i = 1; i <= 4; i++) pages.push(i)
-      pages.push('...')
-      pages.push(totalPages)
-    } else if (currentPage >= totalPages - 2) {
-      pages.push(1)
-      pages.push('...')
-      for (let i = totalPages - 3; i <= totalPages; i++) pages.push(i)
-    } else {
-      pages.push(1)
-      pages.push('...')
-      for (let i = currentPage - 1; i <= currentPage + 1; i++) pages.push(i)
-      pages.push('...')
-      pages.push(totalPages)
-    }
-    return pages
-  }
+  React.useEffect(() => { resetPage() }, [searchQuery, resetPage])
 
   const toggleSelect = (uuid: string) => {
     setSelectedUuids((prev) => {
@@ -332,51 +306,20 @@ export default function PlaygroundsListClient({ org_id, orgslug }: PlaygroundsLi
             </div>
           )}
 
-          {/* Pagination */}
+          <CatalogPagination
+            currentPage={currentPage}
+            totalPages={totalPages}
+            pageNumbers={pageNumbers}
+            onPageChange={goToPage}
+            previousLabel="Previous"
+            nextLabel="Next"
+            className="mt-8 mb-6"
+          />
+
           {totalPages > 1 && (
-            <>
-              <div className="mt-8 mb-6 flex items-center justify-center gap-2">
-                <button
-                  onClick={() => goToPage(currentPage - 1)}
-                  disabled={currentPage === 1}
-                  className="flex items-center gap-1 px-3 py-2 text-sm font-medium text-gray-600 bg-white nice-shadow rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                >
-                  <ChevronLeft className="w-4 h-4" />
-                  <span className="hidden sm:inline">Previous</span>
-                </button>
-                <div className="flex items-center gap-1">
-                  {getVisiblePages().map((page, index) => (
-                    <React.Fragment key={index}>
-                      {page === '...' ? (
-                        <span className="px-2 py-1 text-gray-400">...</span>
-                      ) : (
-                        <button
-                          onClick={() => goToPage(page as number)}
-                          className={`px-3 py-2 text-sm font-medium rounded-lg transition-colors ${
-                            currentPage === page
-                              ? 'bg-black text-white'
-                              : 'bg-white text-gray-600 nice-shadow hover:bg-gray-50'
-                          }`}
-                        >
-                          {page}
-                        </button>
-                      )}
-                    </React.Fragment>
-                  ))}
-                </div>
-                <button
-                  onClick={() => goToPage(currentPage + 1)}
-                  disabled={currentPage === totalPages}
-                  className="flex items-center gap-1 px-3 py-2 text-sm font-medium text-gray-600 bg-white nice-shadow rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                >
-                  <span className="hidden sm:inline">Next</span>
-                  <ChevronRight className="w-4 h-4" />
-                </button>
-              </div>
-              <div className="mb-6 text-center text-sm text-gray-500">
-                Page {currentPage} of {totalPages}
-              </div>
-            </>
+            <div className="mb-6 text-center text-sm text-gray-500">
+              Page {currentPage} of {totalPages}
+            </div>
           )}
         </div>
 
