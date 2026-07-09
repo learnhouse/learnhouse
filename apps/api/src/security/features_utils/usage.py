@@ -300,6 +300,51 @@ async def check_limits_with_usage(
     return True
 
 
+async def check_members_limit_with_pending(
+    org_id: int,
+    pending_and_new: int,
+    db_session: AsyncSession,
+):
+    """Enforce the members limit counting BOTH joined members and pending/new
+    invites.
+
+    ``check_limits_with_usage("members", ...)`` only counts users who have
+    already joined, so a free org at (or near) its cap could still queue an
+    unbounded number of pending invitations. This folds ``pending_and_new``
+    (existing pending invites + the new ones about to be sent) into the count.
+
+    No-op when the members feature is unlimited (limit 0) or the org is on a
+    paid plan (paid plans allow tracked overage).
+    """
+    from src.security.features_utils.resolve import resolve_feature
+
+    org_config = await _get_org_config(org_id, db_session)
+    if org_config is None:
+        raise HTTPException(status_code=404, detail="Organization has no config")
+
+    resolved = resolve_feature("members", org_config.config or {}, org_id)
+    if not resolved["enabled"]:
+        raise HTTPException(
+            status_code=403,
+            detail="Members is not enabled for this organization",
+        )
+
+    feature_limit = resolved["limit"]
+    if feature_limit == 0:  # unlimited
+        return True
+
+    if _get_org_plan(org_config) not in ("free",):
+        return True  # paid: allow overage, billing tracks it
+
+    current = await _get_actual_member_count(org_id, db_session)
+    if current + max(pending_and_new, 0) > feature_limit:
+        raise HTTPException(
+            status_code=403,
+            detail="Usage Limit has been reached for Members",
+        )
+    return True
+
+
 async def increase_feature_usage(
     feature: FeatureSet,
     org_id: int,

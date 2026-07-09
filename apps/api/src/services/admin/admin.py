@@ -1855,6 +1855,26 @@ async def update_user_profile(
         if existing:
             raise HTTPException(status_code=400, detail="Username already in use")
 
+    # Reject phishing links in display-name fields here too — the admin API
+    # token path must not be a way around the signup/profile-update guard.
+    from src.services.security.profile_validation import validate_profile_fields
+
+    name_check = validate_profile_fields({
+        "username": updates.get("username"),
+        "first_name": updates.get("first_name"),
+        "last_name": updates.get("last_name"),
+    })
+    if not name_check.is_valid:
+        raise HTTPException(
+            status_code=400,
+            detail={
+                "code": "PROFILE_FIELD_INVALID",
+                "message": "Display name fields may not contain URLs or links",
+                "errors": name_check.errors,
+                "invalid_fields": name_check.invalid_fields,
+            },
+        )
+
     for field, value in updates.items():
         if field in _USER_UPDATABLE_FIELDS and value is not None:
             setattr(user, field, value)

@@ -261,6 +261,16 @@ async def add_custom_domain(
     # VERIFICATION 3+4: Membership + admin permission (superadmins bypass)
     await require_org_admin(acting_user_id, org_id, db_session)
 
+    # VERIFICATION 4b: Free-tier abuse gate. Custom domains are an unenforced,
+    # unlimited surface and a phishing/brand-impersonation amplifier, so a
+    # free org (and the acting user) must be at least FREE_TIER_MIN_AGE_DAYS
+    # old before attaching one. Paid orgs are exempt.
+    from src.services.security.account_age import enforce_free_tier_age_gate
+
+    await enforce_free_tier_age_gate(
+        org_id, acting_user_id, db_session, action="add a custom domain"
+    )
+
     # VERIFICATION 5: Validate domain format
     domain = domain_data.domain.lower().strip()
 

@@ -2,6 +2,7 @@ import csv
 import io
 import json
 import logging
+import re
 from datetime import datetime, timedelta
 from typing import Optional
 
@@ -21,7 +22,16 @@ from src.db.usergroup_user import UserGroupUser
 from src.db.usergroups import UserGroup, UserGroupRead
 from src.db.users import AnonymousUser, APITokenUser, PublicUser, User, UserRead
 from src.security.auth import resolve_acting_user_id
-from src.security.features_utils.usage import check_limits_with_usage, decrease_feature_usage
+from src.security.features_utils.usage import (
+    check_members_limit_with_pending,
+    decrease_feature_usage,
+)
+from src.services.security.account_age import enforce_free_tier_age_gate
+from src.services.security.rate_limiting import (
+    INVITE_MAX_BATCH_SIZE,
+    enforce_batch_size_limit,
+    enforce_invite_rate_limit,
+)
 from src.security.org_auth import is_org_member
 from src.security.rbac.constants import ADMIN_ROLE_ID
 from src.services.orgs.invites import send_invite_email
@@ -44,6 +54,21 @@ def _csv_safe(value):
     if isinstance(value, str) and value and value[0] in ("=", "+", "-", "@", "\t", "\r"):
         return "'" + value
     return value
+
+
+# Deliberately permissive email shape check: exactly one "@", a dotted domain,
+# no whitespace/control chars, bounded length. The goal is to reject malformed
+# input (and ":"/whitespace that would shape the Redis invite key), not to
+# fully validate deliverability — the mail provider is the source of truth.
+_EMAIL_RE = re.compile(r"^[^@\s:]{1,64}@[^@\s:]{1,255}\.[a-zA-Z]{2,}$")
+
+
+def _looks_like_email(value: str) -> bool:
+    if not value or len(value) > 254:
+        return False
+    if any(ord(c) < 32 or ord(c) == 127 for c in value):
+        return False
+    return bool(_EMAIL_RE.match(value))
 
 
 async def get_organization_users(
@@ -554,6 +579,8 @@ async def remove_batch_users_from_org(
     # RBAC check
     await rbac_check(request, org.org_uuid, current_user, "delete", db_session)
 
+    enforce_batch_size_limit(len(user_ids), "users")
+
     # Get all admins for last-admin protection
     admin_statement = select(UserOrganization).where(
         UserOrganization.org_id == org.id, UserOrganization.role_id == ADMIN_ROLE_ID
@@ -801,11 +828,14 @@ async def invite_batch_users(
     # RBAC check
     await rbac_check(request, org.org_uuid, current_user, "create", db_session)
 
-    # Enforce the member limit on the invite surface too (not just at join time),
-    # so a free org at its limit is stopped here with a 403 "Usage Limit has been
-    # reached for Members" — which the dashboard turns into a contextual upgrade
-    # prompt — instead of being able to queue unlimited invites.
-    await check_limits_with_usage("members", org.id, db_session)
+    acting_user_id = resolve_acting_user_id(current_user)
+
+    # Free-tier abuse gate: the org AND the acting user must be at least
+    # FREE_TIER_MIN_AGE_DAYS old before invites can be sent. This stops a
+    # freshly-registered free org from being spun up purely to relay spam.
+    await enforce_free_tier_age_gate(
+        org.id, acting_user_id, db_session, action="invite members"
+    )
 
     # Connect to Redis
     r = redis.Redis.from_url(redis_conn_string)
@@ -816,7 +846,56 @@ async def invite_batch_users(
             detail="Could not connect to Redis",
         )
 
-    invite_list = emails.split(",")
+    # Normalize + dedupe requested emails up front, then cap the batch size so
+    # a single request cannot fan out unbounded email. Malformed addresses are
+    # rejected here (never sent), which also prevents ':'/whitespace-bearing
+    # input from shaping the ``invited_user:{email}:org:{uuid}`` Redis key.
+    seen_emails = set()
+    invite_list = []
+    invalid_results = []
+    for raw_email in emails.split(","):
+        candidate = raw_email.strip()
+        if not candidate or candidate.lower() in seen_emails:
+            continue
+        seen_emails.add(candidate.lower())
+        if not _looks_like_email(candidate):
+            invalid_results.append({"email": candidate, "status": "invalid_email"})
+            continue
+        invite_list.append(candidate)
+
+    if len(invite_list) > INVITE_MAX_BATCH_SIZE:
+        raise HTTPException(
+            status_code=400,
+            detail={
+                "code": "INVITE_BATCH_TOO_LARGE",
+                "message": (
+                    f"You can invite at most {INVITE_MAX_BATCH_SIZE} people at "
+                    f"a time."
+                ),
+                "max_batch_size": INVITE_MAX_BATCH_SIZE,
+            },
+        )
+
+    # Which requested emails are genuinely new (not already pending)?
+    new_emails = [
+        e for e in invite_list
+        if not r.get(f"invited_user:{e}:org:{org.org_uuid}")
+    ]
+
+    # Count pending invites toward the member limit (not just joined members),
+    # so a free org can't queue invitations that would exceed its cap once
+    # accepted. Existing pending + new invites are both counted.
+    existing_pending = len(list(
+        r.scan_iter(match=f"invited_user:*:org:{org.org_uuid}", count=1000)
+    ))
+    await check_members_limit_with_pending(
+        org.id, existing_pending + len(new_emails), db_session
+    )
+
+    # Per-org AND per-user daily invite rate limit, reserving capacity for the
+    # new emails about to be sent.
+    if new_emails:
+        enforce_invite_rate_limit(org.id, acting_user_id, len(new_emails))
 
     # invitations expire after 60 days
     ttl = int(timedelta(days=60).total_seconds())
@@ -869,9 +948,13 @@ async def invite_batch_users(
             "status": "sent" if isEmailSent else "email_failed",
         })
 
+    # Surface malformed addresses that were rejected before sending.
+    results.extend(invalid_results)
+
     sent = sum(1 for r in results if r["status"] == "sent")
     failed = sum(1 for r in results if r["status"] == "email_failed")
     skipped = sum(1 for r in results if r["status"] == "already_invited")
+    invalid = sum(1 for r in results if r["status"] == "invalid_email")
 
     await dispatch_webhooks(
         event_name="user_invited_to_org",
@@ -892,6 +975,7 @@ async def invite_batch_users(
             "sent": sent,
             "failed": failed,
             "already_invited": skipped,
+            "invalid_email": invalid,
         },
     }
 
