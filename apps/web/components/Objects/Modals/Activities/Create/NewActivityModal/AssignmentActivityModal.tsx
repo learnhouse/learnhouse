@@ -11,6 +11,8 @@ import { createActivity, deleteActivity } from '@services/courses/activities'
 import toast from 'react-hot-toast'
 import { useTranslation } from 'react-i18next'
 import { useLHAnalytics, AnalyticsEvent } from '@services/analytics'
+import { useUpgradeModal } from '@components/Dashboard/Shared/PlanRestricted/UpgradeModalContext'
+import { getErrorMessage } from '@services/utils/ts/errorMessage'
 import {
   ALargeSmall,
   Hash,
@@ -31,6 +33,7 @@ function NewAssignment({ submitActivity: _submitActivity, chapterId, course, clo
   const session = useLHSession() as any
   const queryClient = useQueryClient()
   const { track } = useLHAnalytics('dashboard')
+  const { handlePlanLimit } = useUpgradeModal()
   const cleanCourseUuid = (id: string) => id?.replace(/^course_/, '') ?? id
   const _withUnpublishedActivities = course
     ? course.withUnpublishedActivities
@@ -96,7 +99,12 @@ function NewAssignment({ submitActivity: _submitActivity, chapterId, course, clo
         has_due_date: !!dueDate,
       })
     } else {
-      toast.error(res.data.detail)
+      toast.dismiss(toast_loading)
+      // Assignments are quota-limited on the free plan → offer an upgrade
+      // rather than a dead-end error toast.
+      if (!handlePlanLimit(res, { source: 'assignment_create', feature: 'assignments', requiredPlan: 'standard' })) {
+        toast.error(getErrorMessage(res.data?.detail, t('dashboard.assignments.modals.create.toasts.error')))
+      }
       await deleteActivity(
         activity_res.activity_uuid,
         session.data?.tokens?.access_token

@@ -12,6 +12,9 @@ import Modal from '@components/Objects/StyledElements/Modal/Modal'
 import { Loader2 } from 'lucide-react'
 import { useQueryClient } from '@tanstack/react-query'
 import { queryKeys } from '@/lib/query/keys'
+import toast from 'react-hot-toast'
+import { getErrorMessage } from '@services/utils/ts/errorMessage'
+import { useUpgradeModal } from '@components/Dashboard/Shared/PlanRestricted/UpgradeModalContext'
 
 interface CreatePodcastModalProps {
   isOpen: boolean
@@ -31,6 +34,7 @@ export function CreatePodcastModal({
   const router = useRouter()
   const queryClient = useQueryClient()
   const { track } = useLHAnalytics('learner')
+  const { handlePlanLimit } = useUpgradeModal()
   const [isSubmitting, setIsSubmitting] = useState(false)
 
   const accessToken = session?.data?.tokens?.access_token
@@ -59,7 +63,10 @@ export function CreatePodcastModal({
         accessToken
       )
 
-      if (result) {
+      // getResponseMetadata() always resolves (never throws on HTTP error), so
+      // gate on result.success — previously `if (result)` treated a 403 limit
+      // failure as success and silently closed the modal.
+      if (result?.success) {
         track(AnalyticsEvent.PodcastCreated, {
           is_public: values.public,
           has_thumbnail: false,
@@ -69,9 +76,14 @@ export function CreatePodcastModal({
         queryClient.invalidateQueries({ queryKey: queryKeys.podcasts.list(orgSlug) })
         router.refresh()
         onClose()
+      } else if (handlePlanLimit(result, { source: 'podcast_create', feature: 'podcasts', requiredPlan: 'standard' })) {
+        onClose()
+      } else {
+        toast.error(getErrorMessage(result?.data?.detail, t('podcasts.failed_to_create_podcast')))
       }
     } catch (error) {
       console.error('Failed to create podcast:', error)
+      toast.error(t('podcasts.failed_to_create_podcast'))
     } finally {
       setIsSubmitting(false)
     }

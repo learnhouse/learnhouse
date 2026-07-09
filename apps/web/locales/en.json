@@ -4259,7 +4259,8 @@
           },
           "toasts": {
             "creating": "Creating assignment...",
-            "success": "Assignment created successfully"
+            "success": "Assignment created successfully",
+            "error": "Failed to create assignment"
           }
         }
       }
