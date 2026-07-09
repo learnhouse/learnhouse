@@ -67,3 +67,11 @@ async def test_disabled_feature_raises_403():
     with pytest.raises(HTTPException) as exc:
         await _run(limit=10, plan="free", member_count=0, pending_and_new=1, enabled=False)
     assert exc.value.status_code == 403
+
+
+@pytest.mark.asyncio
+async def test_missing_org_config_raises_404():
+    with patch.object(usage, "_get_org_config", AsyncMock(return_value=None)):
+        with pytest.raises(HTTPException) as exc:
+            await check_members_limit_with_pending(1, 1, AsyncMock())
+    assert exc.value.status_code == 404

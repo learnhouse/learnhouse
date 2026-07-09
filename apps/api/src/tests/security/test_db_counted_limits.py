@@ -22,6 +22,18 @@ def test_db_counted_features_include_the_drift_prone_ones():
         assert f in DB_COUNTED_FEATURES
 
 
+@pytest.mark.asyncio
+async def test_get_actual_usage_routes_row_counted_features():
+    # The usergroups/podcasts/assignments helpers count live rows via scalar_one.
+    from src.security.features_utils.usage import _get_actual_usage
+
+    db = AsyncMock()
+    db.execute = AsyncMock(return_value=SimpleNamespace(scalar_one=lambda: 7))
+    for feat in ("usergroups", "podcasts", "assignments", "members", "courses"):
+        assert await _get_actual_usage(feat, 1, db) == 7
+    assert await _get_actual_usage("unknown_feature", 1, db) == 0
+
+
 async def _run_check(*, feature, limit, plan, actual, enabled=True):
     patches = [
         patch.object(usage, "_get_org_config", AsyncMock(return_value=SimpleNamespace(config={}))),

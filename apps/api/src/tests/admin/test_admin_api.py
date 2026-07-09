@@ -1122,6 +1122,25 @@ class TestProvisionUser:
         mock_admin_side_effects["check_limits_with_usage"].assert_called_once()
         mock_admin_side_effects["increase_feature_usage"].assert_called_once()
 
+    async def test_dashboard_role_provision_enforces_admin_seat(
+        self, token_user, student_role, mock_request, db, mock_admin_side_effects
+    ):
+        # When the provisioned role grants dashboard access, the admin-seat cap
+        # is checked (a new membership always consumes a seat).
+        with patch(
+            "src.services.admin.admin._role_grants_dashboard_access", return_value=True
+        ), patch(
+            "src.services.admin.admin.check_admin_seat_limit", new_callable=AsyncMock
+        ) as seat_check:
+            await provision_user(
+                token_user=token_user,
+                email="seat@example.com",
+                username="seatuser",
+                first_name="", last_name="", password=None, role_id=4,
+                request=mock_request, db_session=db,
+            )
+        seat_check.assert_awaited_once()
+
     async def test_duplicate_email_in_org_rejected(self, token_user, user, student_role, mock_request, db, mock_admin_side_effects):
         # `user` is already a member of token_user's org via the fixture
         with pytest.raises(HTTPException) as exc:
@@ -2056,6 +2075,15 @@ class TestUpdateUserProfile:
         with pytest.raises(HTTPException) as exc:
             await update_user_profile(token_user, 9999, {"first_name": "X"}, db)
         assert exc.value.status_code == 404
+
+    async def test_rejects_url_in_display_name(self, token_user, user, db):
+        # The admin API path must not be a way around the display-name URL guard.
+        with pytest.raises(HTTPException) as exc:
+            await update_user_profile(
+                token_user, user.id, {"username": "win money http://evil.io"}, db
+            )
+        assert exc.value.status_code == 400
+        assert exc.value.detail["code"] == "PROFILE_FIELD_INVALID"
 
 
 # ── Change user role tests ──────────────────────────────────────────────────

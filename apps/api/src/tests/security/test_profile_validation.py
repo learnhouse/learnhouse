@@ -70,6 +70,11 @@ def test_validate_profile_fields_all_clean():
     assert result.invalid_fields == []
 
 
+def test_strip_urls_empty_returns_empty_string():
+    assert strip_urls("") == ""
+    assert strip_urls(None) == ""
+
+
 def test_strip_urls_removes_links_and_control_chars():
     assert "http" not in strip_urls("see https://evil.example/x now")
     # CR/LF (SMTP header injection primitive) are stripped.
@@ -81,3 +86,27 @@ def test_sanitize_display_name_falls_back_when_empty_after_scrub():
     assert sanitize_display_name("platf-yndx.online") == "A LearnHouse user"
     assert sanitize_display_name("platf-yndx.online", fallback="Someone") == "Someone"
     assert sanitize_display_name("John Smith") == "John Smith"
+
+
+def test_reject_urls_in_profile_fields_helper():
+    from fastapi import HTTPException
+
+    from src.services.users.users import _reject_urls_in_profile_fields
+
+    # Clean fields: no raise.
+    _reject_urls_in_profile_fields(username="dan", first_name="Dan", last_name="Smith")
+    # A URL in any field: 400 PROFILE_FIELD_INVALID.
+    with pytest.raises(HTTPException) as exc:
+        _reject_urls_in_profile_fields(username="buy http://evil.io", first_name=None, last_name=None)
+    assert exc.value.status_code == 400
+    assert exc.value.detail["code"] == "PROFILE_FIELD_INVALID"
+
+
+def test_looks_like_email_rejects_malformed_and_control_chars():
+    from src.services.orgs.users import _looks_like_email
+
+    assert _looks_like_email("a@test.com") is True
+    assert _looks_like_email("no-at-sign") is False
+    assert _looks_like_email("a@b.com" + "x" * 260) is False  # too long
+    assert _looks_like_email("a\n@test.com") is False  # control char
+    assert _looks_like_email("a:b@test.com") is False  # colon (Redis key shaping)
