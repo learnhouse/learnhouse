@@ -6,6 +6,11 @@ import BarLoader from 'react-spinners/BarLoader'
 import { Upload, Package, CheckCircle2, ChevronRight, AlertCircle } from 'lucide-react'
 import { getAPIUrl } from '@services/config/config'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
+import {
+  uploadScormPackage,
+  formatMB,
+  type ScormUploadProgress,
+} from '../../services/scorm/upload'
 import { constructAcceptValue } from '@/lib/constants'
 import { useQueryClient } from '@tanstack/react-query'
 import { queryKeys } from '@/lib/query/keys'
@@ -22,11 +27,19 @@ interface ScormScoInfo {
   prerequisites: string | null
 }
 
+interface ScormPackageFileInfo {
+  path: string
+  size_bytes: number
+}
+
 interface ScormAnalysisResponse {
   temp_package_id: string
   scorm_version: string
   package_title: string
   scos: ScormScoInfo[]
+  file_count?: number
+  total_size_bytes?: number
+  largest_files?: ScormPackageFileInfo[]
 }
 
 interface ScoAssignment {
@@ -66,6 +79,7 @@ function ScormActivityModal({ course, closeModal, onImportComplete, chapterId }:
   // Upload step state
   const [scormFile, setScormFile] = useState<File | null>(null)
   const [isAnalyzing, setIsAnalyzing] = useState(false)
+  const [uploadProgress, setUploadProgress] = useState<ScormUploadProgress | null>(null)
   const [uploadError, setUploadError] = useState<string | null>(null)
 
   // Analysis result state
@@ -106,29 +120,16 @@ function ScormActivityModal({ course, closeModal, onImportComplete, chapterId }:
     }
 
     setIsAnalyzing(true)
+    setUploadProgress(null)
     setUploadError(null)
 
     try {
-      const formData = new FormData()
-      formData.append('scorm_file', scormFile)
-
-      const response = await fetch(
+      const result = await uploadScormPackage<ScormAnalysisResponse>(
         `${getAPIUrl()}scorm/analyze/${courseUuid}`,
-        {
-          method: 'POST',
-          headers: {
-            Authorization: `Bearer ${access_token}`,
-          },
-          body: formData,
-        }
+        scormFile,
+        access_token,
+        setUploadProgress
       )
-
-      if (!response.ok) {
-        const error = await response.json()
-        throw new Error(error.detail || 'Failed to analyze SCORM package')
-      }
-
-      const result: ScormAnalysisResponse = await response.json()
       setAnalysisResult(result)
 
       // Initialize assignments with default values. When launched from a
@@ -151,6 +152,7 @@ function ScormActivityModal({ course, closeModal, onImportComplete, chapterId }:
       setUploadError(error.message || 'Failed to analyze SCORM package')
     } finally {
       setIsAnalyzing(false)
+      setUploadProgress(null)
     }
   }
 
@@ -300,6 +302,35 @@ function ScormActivityModal({ course, closeModal, onImportComplete, chapterId }:
             </div>
           )}
 
+          {/* Upload Progress */}
+          {isAnalyzing && (
+            <div className="space-y-2 bg-gray-50 p-4 rounded-xl border border-gray-100">
+              <div className="flex justify-between text-sm text-gray-600">
+                <span className="font-medium">
+                  {uploadProgress && uploadProgress.percent < 100
+                    ? 'Uploading package…'
+                    : 'Analyzing package…'}
+                </span>
+                {uploadProgress && uploadProgress.percent < 100 && (
+                  <span>
+                    {formatMB(uploadProgress.loadedBytes)} / {formatMB(uploadProgress.totalBytes)} MB
+                    {' '}({uploadProgress.percent}%)
+                  </span>
+                )}
+              </div>
+              {uploadProgress && uploadProgress.percent < 100 ? (
+                <div className="h-2 w-full bg-gray-200 rounded-full overflow-hidden">
+                  <div
+                    className="h-full bg-black rounded-full transition-all duration-200"
+                    style={{ width: `${uploadProgress.percent}%` }}
+                  />
+                </div>
+              ) : (
+                <BarLoader width="100%" color="#000000" cssOverride={{ borderRadius: 60 }} />
+              )}
+            </div>
+          )}
+
           {/* Info */}
           <div className="bg-sky-50 p-4 rounded-xl text-sm text-sky-700 border border-sky-100">
             <p>
@@ -317,7 +348,11 @@ function ScormActivityModal({ course, closeModal, onImportComplete, chapterId }:
               className="inline-flex items-center justify-center gap-2 px-6 py-2.5 bg-black text-white text-sm font-semibold rounded-xl hover:bg-gray-800 transition-colors shadow-sm disabled:opacity-50 disabled:cursor-not-allowed min-w-[160px]"
             >
               {isAnalyzing ? (
-                <BarLoader width={60} color="#ffffff" cssOverride={{ borderRadius: 60 }} />
+                <span>
+                  {uploadProgress && uploadProgress.percent < 100
+                    ? `Uploading ${uploadProgress.percent}%`
+                    : 'Analyzing…'}
+                </span>
               ) : (
                 <>
                   <span>Analyze Package</span>
@@ -352,6 +387,20 @@ function ScormActivityModal({ course, closeModal, onImportComplete, chapterId }:
             <p className="text-sm text-gray-600 mt-1">
               <span className="font-medium">SCOs found:</span> {analysisResult.scos.length}
             </p>
+            {analysisResult.file_count != null && analysisResult.total_size_bytes != null && (
+              <p className="text-sm text-gray-600 mt-1">
+                <span className="font-medium">Content:</span> {analysisResult.file_count} files,{' '}
+                {formatMB(analysisResult.total_size_bytes)} MB uncompressed
+              </p>
+            )}
+            {analysisResult.largest_files && analysisResult.largest_files.length > 0 && (
+              <p className="text-xs text-gray-400 mt-1 truncate">
+                Largest: {analysisResult.largest_files
+                  .slice(0, 3)
+                  .map((f) => `${f.path.split('/').pop()} (${formatMB(f.size_bytes)} MB)`)
+                  .join(', ')}
+              </p>
+            )}
           </div>
 
           {/* SCO Assignments */}
@@ -424,17 +473,26 @@ function ScormActivityModal({ course, closeModal, onImportComplete, chapterId }:
             </div>
           )}
 
+          {/* Import progress note */}
+          {isImporting && (
+            <div className="flex items-center gap-2 text-sm text-gray-600 bg-gray-50 p-3 rounded-xl border border-gray-100">
+              <BarLoader width={40} color="#000000" cssOverride={{ borderRadius: 60 }} />
+              <span>Importing — copying content to storage, this can take a few minutes for large packages…</span>
+            </div>
+          )}
+
           {/* Actions */}
           <div className="flex justify-between items-center pt-4 border-t border-gray-100">
             <button
               type="button"
+              disabled={isImporting}
               onClick={() => {
                 setStep('upload')
                 setAnalysisResult(null)
                 setAssignments([])
                 setScormFile(null)
               }}
-              className="text-sm text-gray-500 hover:text-gray-700 transition-colors"
+              className="text-sm text-gray-500 hover:text-gray-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
               &larr; Upload different package
             </button>

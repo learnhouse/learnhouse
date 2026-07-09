@@ -739,3 +739,171 @@ class TestUploadAndDeleteHelpers:
             result = storage_utils.delete_storage_file(str(local_file))
 
         assert result is True
+
+
+class TestDownloadFileFromS3:
+    def test_returns_false_without_client(self, tmp_path):
+        with patch.object(storage_utils, "get_storage_client", return_value=None):
+            assert storage_utils.download_file_from_s3("key", str(tmp_path / "out.zip")) is False
+
+    def test_downloads_and_creates_parent_dirs(self, tmp_path):
+        s3_client = Mock()
+        dest = tmp_path / "nested" / "dir" / "package.zip"
+
+        with patch.object(
+            storage_utils,
+            "get_storage_client",
+            return_value=s3_client,
+        ), patch.object(
+            storage_utils,
+            "get_s3_bucket_name",
+            return_value="bucket",
+        ):
+            assert storage_utils.download_file_from_s3("content/temp/package.zip", str(dest)) is True
+
+        assert dest.parent.is_dir()
+        s3_client.download_file.assert_called_once_with(
+            Bucket="bucket",
+            Key="content/temp/package.zip",
+            Filename=str(dest),
+        )
+
+    def test_returns_false_on_client_error_and_generic_error(self, tmp_path):
+        s3_client = Mock()
+        dest = str(tmp_path / "out.zip")
+
+        with patch.object(
+            storage_utils,
+            "get_storage_client",
+            return_value=s3_client,
+        ), patch.object(
+            storage_utils,
+            "get_s3_bucket_name",
+            return_value="bucket",
+        ), patch.object(storage_utils.logger, "error"):
+            s3_client.download_file.side_effect = _client_error("NoSuchKey", "download_file")
+            assert storage_utils.download_file_from_s3("missing.zip", dest) is False
+
+            s3_client.download_file.side_effect = RuntimeError("boom")
+            assert storage_utils.download_file_from_s3("broken.zip", dest) is False
+
+
+class TestGeneratePresignedGetUrl:
+    def test_returns_none_when_disabled_or_without_client(self):
+        with patch.object(storage_utils, "is_s3_enabled", return_value=False):
+            assert storage_utils.generate_presigned_get_url("content/video.mp4") is None
+
+        with patch.object(
+            storage_utils,
+            "is_s3_enabled",
+            return_value=True,
+        ), patch.object(storage_utils, "get_storage_client", return_value=None):
+            assert storage_utils.generate_presigned_get_url("content/video.mp4") is None
+
+    def test_returns_url_with_bucket_key_and_expiry(self):
+        s3_client = Mock()
+        s3_client.generate_presigned_url.return_value = "https://s3.test/signed"
+
+        with patch.object(
+            storage_utils,
+            "is_s3_enabled",
+            return_value=True,
+        ), patch.object(
+            storage_utils,
+            "get_storage_client",
+            return_value=s3_client,
+        ), patch.object(
+            storage_utils,
+            "get_s3_bucket_name",
+            return_value="bucket",
+        ):
+            url = storage_utils.generate_presigned_get_url("content/video.mp4", expires_in=600)
+
+        assert url == "https://s3.test/signed"
+        s3_client.generate_presigned_url.assert_called_once_with(
+            "get_object",
+            Params={"Bucket": "bucket", "Key": "content/video.mp4"},
+            ExpiresIn=600,
+        )
+
+    def test_returns_none_on_error(self):
+        s3_client = Mock()
+        s3_client.generate_presigned_url.side_effect = RuntimeError("boom")
+
+        with patch.object(
+            storage_utils,
+            "is_s3_enabled",
+            return_value=True,
+        ), patch.object(
+            storage_utils,
+            "get_storage_client",
+            return_value=s3_client,
+        ), patch.object(
+            storage_utils,
+            "get_s3_bucket_name",
+            return_value="bucket",
+        ), patch.object(storage_utils.logger, "error"):
+            assert storage_utils.generate_presigned_get_url("content/video.mp4") is None
+
+
+class TestUploadDirectoryToS3Parallel:
+    def test_returns_true_when_disabled_missing_or_empty(self, tmp_path):
+        with patch.object(storage_utils, "is_s3_enabled", return_value=False):
+            assert storage_utils.upload_directory_to_s3_parallel("dir", "prefix") is True
+
+        with patch.object(
+            storage_utils,
+            "is_s3_enabled",
+            return_value=True,
+        ), patch.object(storage_utils, "upload_file_to_s3") as upload_mock:
+            assert storage_utils.upload_directory_to_s3_parallel(
+                str(tmp_path / "missing"), "prefix"
+            ) is True
+
+            empty_dir = tmp_path / "empty"
+            empty_dir.mkdir()
+            assert storage_utils.upload_directory_to_s3_parallel(str(empty_dir), "prefix") is True
+            upload_mock.assert_not_called()
+
+    def test_uploads_all_files_with_forward_slash_keys(self, tmp_path):
+        local_dir = tmp_path / "package"
+        nested_dir = local_dir / "nested"
+        nested_dir.mkdir(parents=True)
+        (local_dir / "root.txt").write_text("root")
+        (nested_dir / "child.md").write_text("child")
+
+        upload_mock = Mock(return_value=True)
+        with patch.object(
+            storage_utils,
+            "is_s3_enabled",
+            return_value=True,
+        ), patch.object(storage_utils, "upload_file_to_s3", upload_mock):
+            assert storage_utils.upload_directory_to_s3_parallel(
+                str(local_dir), "content/package"
+            ) is True
+
+        assert upload_mock.call_count == 2
+        uploaded_keys = {call.args[0] for call in upload_mock.call_args_list}
+        assert uploaded_keys == {
+            "content/package/root.txt",
+            "content/package/nested/child.md",
+        }
+        assert all("\\" not in key for key in uploaded_keys)
+
+    def test_returns_false_when_any_upload_fails(self, tmp_path):
+        local_dir = tmp_path / "package"
+        local_dir.mkdir()
+        (local_dir / "a.txt").write_text("a")
+        (local_dir / "b.txt").write_text("b")
+
+        upload_mock = Mock(side_effect=[True, False])
+        with patch.object(
+            storage_utils,
+            "is_s3_enabled",
+            return_value=True,
+        ), patch.object(storage_utils, "upload_file_to_s3", upload_mock):
+            assert storage_utils.upload_directory_to_s3_parallel(
+                str(local_dir), "content/package"
+            ) is False
+
+        assert upload_mock.call_count == 2
