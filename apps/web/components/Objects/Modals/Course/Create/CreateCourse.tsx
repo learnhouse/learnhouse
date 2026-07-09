@@ -20,7 +20,7 @@ import { useLHSession } from '@components/Contexts/LHSessionContext'
 import toast from 'react-hot-toast'
 import { useFormik } from 'formik'
 import * as Yup from 'yup'
-import {  UploadCloud, Image as ImageIcon } from 'lucide-react'
+import {  UploadCloud, Image as ImageIcon, Clipboard } from 'lucide-react'
 import UnsplashImagePicker from "@components/Dashboard/Pages/Course/EditCourseGeneral/UnsplashImagePicker"
 import AIImageButton from '@components/Objects/AI/AIImageButton'
 import FormTagInput from "@components/Objects/StyledElements/Form/TagInput"
@@ -199,6 +199,24 @@ function CreateCourseModal({ closeModal, orgslug }: any) {
     formik.setFieldValue('thumbnail', file)
   }
 
+  const handlePasteFromClipboard = async () => {
+    try {
+      const clipboardItems = await navigator.clipboard.read()
+      for (const clipboardItem of clipboardItems) {
+        const imageTypes = clipboardItem.types.filter(type => type.startsWith('image/'))
+        if (imageTypes.length > 0) {
+          const blob = await clipboardItem.getType(imageTypes[0])
+          const file = new File([blob], 'clipboard_image.png', { type: imageTypes[0] })
+          formik.setFieldValue('thumbnail', file)
+          return
+        }
+      }
+      toast.error(t('courses.no_image_in_clipboard', { defaultValue: 'No image found in clipboard' }))
+    } catch (_) {
+      toast.error(t('courses.clipboard_read_error', { defaultValue: 'Failed to read from clipboard' }))
+    }
+  }
+
   return (
     <FormLayout onSubmit={formik.handleSubmit} >
       <FormField name="name">
@@ -272,6 +290,14 @@ function CreateCourseModal({ closeModal, orgslug }: any) {
                 >
                   <ImageIcon size={16} className="mr-2" />
                   <span>{t('courses.choose_from_gallery')}</span>
+                </button>
+                <button
+                  type="button"
+                  className="font-bold antialiased items-center text-gray text-sm rounded-md px-4 mt-6 flex"
+                  onClick={handlePasteFromClipboard}
+                >
+                  <Clipboard size={16} className="mr-2" />
+                  <span>{t('courses.paste_from_clipboard')}</span>
                 </button>
                 <AIImageButton
                   onSelect={handleUnsplashSelect}
