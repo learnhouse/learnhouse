@@ -46,8 +46,11 @@ from src.security.auth import create_access_token, create_refresh_token
 from src.security.features_utils.plan_check import get_org_plan
 from src.security.features_utils.plans import plan_meets_requirement
 from src.security.features_utils.usage import (
+    _role_grants_dashboard_access,
+    check_admin_seat_limit,
     check_limits_with_usage,
     decrease_feature_usage,
+    enforce_admin_seat_limit_for_role_change,
     increase_feature_usage,
 )
 from src.security.security import security_hash_password
@@ -1003,6 +1006,11 @@ async def provision_user(
 
     await check_limits_with_usage("members", token_user.org_id, db_session)
 
+    # Provisioning always creates a NET-NEW membership, so a dashboard-access
+    # role consumes a fresh admin seat — enforce the plan's seat cap.
+    if _role_grants_dashboard_access(role):
+        await check_admin_seat_limit(token_user.org_id, db_session)
+
     now = datetime.now()
 
     existing_user = (await db_session.execute(select(User).where(User.email == email))).scalars().first()
@@ -1937,6 +1945,12 @@ async def change_user_role(
                 detail="Cannot demote the last admin of the organization",
             )
 
+    # Enforce the admin-seat cap when promoting into a dashboard-access role
+    # (no-op for demotions and admin->admin swaps).
+    await enforce_admin_seat_limit_for_role_change(
+        token_user.org_id, user_id, role, db_session
+    )
+
     membership.role_id = new_role_id
     membership.update_date = str(datetime.now())
     db_session.add(membership)
@@ -1970,6 +1984,10 @@ async def create_usergroup(
     db_session: AsyncSession,
 ) -> UserGroupRead:
     """Create a user group / cohort in the token's org."""
+
+    # Enforce the usergroups plan limit on the API path too (it is disabled on
+    # free and count-limited on higher tiers); previously this bypassed it.
+    await check_limits_with_usage("usergroups", token_user.org_id, db_session)
 
     now = datetime.now()
     group = UserGroup(

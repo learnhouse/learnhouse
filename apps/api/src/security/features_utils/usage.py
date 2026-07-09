@@ -4,6 +4,9 @@ from src.db.billing_usage import UsageEvent
 from src.db.user_organizations import UserOrganization
 from src.db.courses.courses import Course
 from src.db.roles import Role, RoleTypeEnum
+from src.db.usergroups import UserGroup
+from src.db.podcasts.podcasts import Podcast
+from src.db.courses.assignments import Assignment
 from sqlalchemy import or_
 from src.core.deployment_mode import get_deployment_mode
 from src.core.redis import get_redis_client as _get_redis_pool_client
@@ -39,6 +42,16 @@ PLAN_BASED_FEATURES = {"courses", "members", "admin_seats"}
 # Features that use Redis for usage tracking (non-billing, rate limiting)
 REDIS_TRACKED_FEATURES = {"ai", "analytics", "api", "assignments", "collaboration",
                           "payments", "podcasts", "usergroups"}
+
+# Count-limited features whose usage is enforced by counting ACTUAL DB rows
+# rather than a mutable Redis counter. Counting rows makes enforcement
+# self-healing: the Redis usage counter could drift or be lost (it is an
+# ephemeral cache), which silently disabled these limits — e.g. a free org
+# could exceed its 5-assignment cap once the counter was gone. usergroups,
+# podcasts and assignments are all org-scoped DB entities, so their live count
+# is authoritative. (usergroups/podcasts are also disabled on the free plan, so
+# they are additionally gated by the enabled check.)
+DB_COUNTED_FEATURES = PLAN_BASED_FEATURES | {"usergroups", "podcasts", "assignments"}
 
 
 def _is_non_saas() -> bool:
@@ -116,14 +129,38 @@ async def _get_actual_admin_seat_count(org_id: int, db_session: AsyncSession) ->
     return (await db_session.execute(statement)).scalar_one()
 
 
+async def _get_actual_usergroup_count(org_id: int, db_session: AsyncSession) -> int:
+    """Get actual usergroup count from the database."""
+    statement = select(func.count()).where(UserGroup.org_id == org_id)
+    return (await db_session.execute(statement)).scalar_one()
+
+
+async def _get_actual_podcast_count(org_id: int, db_session: AsyncSession) -> int:
+    """Get actual podcast count from the database."""
+    statement = select(func.count()).where(Podcast.org_id == org_id)
+    return (await db_session.execute(statement)).scalar_one()
+
+
+async def _get_actual_assignment_count(org_id: int, db_session: AsyncSession) -> int:
+    """Get actual assignment count from the database."""
+    statement = select(func.count()).where(Assignment.org_id == org_id)
+    return (await db_session.execute(statement)).scalar_one()
+
+
 async def _get_actual_usage(feature: str, org_id: int, db_session: AsyncSession) -> int:
-    """Get actual usage count from database for plan-based features."""
+    """Get actual usage count from the database for DB-counted features."""
     if feature == "members":
         return await _get_actual_member_count(org_id, db_session)
     elif feature == "courses":
         return await _get_actual_course_count(org_id, db_session)
     elif feature == "admin_seats":
         return await _get_actual_admin_seat_count(org_id, db_session)
+    elif feature == "usergroups":
+        return await _get_actual_usergroup_count(org_id, db_session)
+    elif feature == "podcasts":
+        return await _get_actual_podcast_count(org_id, db_session)
+    elif feature == "assignments":
+        return await _get_actual_assignment_count(org_id, db_session)
     return 0
 
 
@@ -267,8 +304,9 @@ async def check_limits_with_usage(
     org_plan = _get_org_plan(org_config)
     feature_limit = resolved["limit"]
 
-    # Plan-based features - check actual DB count
-    if feature in PLAN_BASED_FEATURES:
+    # DB-counted features — enforce against the live row count so the limit
+    # cannot be bypassed by a drifted/lost Redis usage counter.
+    if feature in DB_COUNTED_FEATURES:
         current_usage = await _get_actual_usage(feature, org_id, db_session)
 
         if current_usage >= feature_limit:
@@ -715,6 +753,122 @@ async def check_admin_seat_limit(
         HTTPException if limit reached (for free plan)
     """
     return await check_limits_with_usage("admin_seats", org_id, db_session)
+
+
+def _role_grants_dashboard_access(role: Optional[Role]) -> bool:
+    """True if a role occupies an admin seat (dashboard.action_access == true).
+
+    Mirrors the seat-counting logic in ``_get_actual_admin_seat_count`` so the
+    gate and the count agree on what an "admin seat" is. Tolerates ``rights``
+    being either a plain dict or a Pydantic model.
+    """
+    if role is None:
+        return False
+    rights = role.rights
+    if rights is None:
+        return False
+    if not isinstance(rights, dict):
+        try:
+            rights = rights.model_dump()
+        except Exception:
+            return False
+    return bool(rights.get("dashboard", {}).get("action_access", False))
+
+
+async def enforce_admin_seat_limit_for_role_rights_change(
+    org_id: int,
+    role_id: int,
+    will_grant_dashboard: bool,
+    currently_grants_dashboard: bool,
+    db_session: AsyncSession,
+) -> None:
+    """Enforce the admin-seat cap when a role's ``dashboard.action_access`` is
+    turned ON (false -> true).
+
+    Because seats are derived from role rights, flipping a role that N members
+    already hold instantly converts all N into admin seats — a bulk grant that
+    the per-assignment gate cannot see. This validates the projected seat total
+    (current seats + the holders about to be converted) against the plan limit.
+    No-op for non-SaaS, paid plans, unlimited seats, or a role held by nobody.
+    """
+    if _is_non_saas():
+        return
+    if not will_grant_dashboard or currently_grants_dashboard:
+        return  # not a false->true transition: no new seats created
+
+    holders = (await db_session.execute(
+        select(func.count()).where(
+            UserOrganization.org_id == org_id,
+            UserOrganization.role_id == role_id,
+        )
+    )).scalar_one()
+    if holders == 0:
+        return  # nobody holds this role yet; assignment is gated separately
+
+    org_config = await _get_org_config(org_id, db_session)
+    if org_config is None:
+        return
+    org_plan = _get_org_plan(org_config)
+    if org_plan not in ("free",):
+        return  # paid plans allow overage
+
+    limit = get_plan_limit(org_plan, "admin_seats")
+    if limit <= 0:
+        return  # unlimited
+
+    # Holders of a non-dashboard role are not currently counted as seats, so the
+    # projected total is the current seat count plus everyone about to convert.
+    current = await _get_actual_admin_seat_count(org_id, db_session)
+    if current + holders > limit:
+        raise HTTPException(
+            status_code=403,
+            detail="Usage Limit has been reached for Admin_seats",
+        )
+
+
+async def enforce_admin_seat_limit_for_role_change(
+    org_id: int,
+    user_id: int,
+    new_role: Optional[Role],
+    db_session: AsyncSession,
+) -> None:
+    """Enforce the admin-seat limit when ``user_id`` is being assigned
+    ``new_role`` in ``org_id``.
+
+    Only a NET-NEW seat is checked:
+    - Granting a non-dashboard role (a demotion, or a normal-member role) never
+      raises — you can always remove admins or add regular members.
+    - Moving a user who already occupies an admin seat between two
+      dashboard-access roles consumes no new seat, so it is not blocked.
+    - Granting a dashboard-access role to a user who does not already hold one
+      (a promotion, or a brand-new admin membership) is gated by
+      ``check_admin_seat_limit`` and raises 403 for a free org at its limit.
+    """
+    if not _role_grants_dashboard_access(new_role):
+        return
+
+    # If the org has no config we cannot resolve its plan/limit; don't block a
+    # role change on that misconfiguration (enforcement degrades open, matching
+    # the non-SaaS skip inside check_limits_with_usage).
+    if await _get_org_config(org_id, db_session) is None:
+        return
+
+    # Does the user already occupy an admin seat in this org? If so, swapping
+    # admin roles adds no seat.
+    current = (await db_session.execute(
+        select(UserOrganization).where(
+            UserOrganization.org_id == org_id,
+            UserOrganization.user_id == user_id,
+        )
+    )).scalars().first()
+    if current is not None and current.role_id is not None:
+        current_role = (await db_session.execute(
+            select(Role).where(Role.id == current.role_id)
+        )).scalars().first()
+        if _role_grants_dashboard_access(current_role):
+            return
+
+    await check_admin_seat_limit(org_id, db_session)
 
 
 async def get_admin_seat_usage(

@@ -25,6 +25,7 @@ from src.security.auth import resolve_acting_user_id
 from src.security.features_utils.usage import (
     check_members_limit_with_pending,
     decrease_feature_usage,
+    enforce_admin_seat_limit_for_role_change,
 )
 from src.services.security.account_age import enforce_free_tier_age_gate
 from src.services.security.rate_limiting import (
@@ -735,6 +736,11 @@ async def update_user_role(
             status_code=404,
             detail="User not found",
         )
+
+    # Enforce the admin-seat limit: promoting a user into a dashboard-access
+    # role must respect the org's plan seat cap. Demotions and admin->admin
+    # swaps are never blocked (see the helper).
+    await enforce_admin_seat_limit_for_role_change(org.id, user_id, role, db_session)
 
     if role_id is not None:
         user_org.role_id = role_id

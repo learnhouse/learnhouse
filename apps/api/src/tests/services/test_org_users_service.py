@@ -542,7 +542,7 @@ class TestOrgUsersService:
             "src.services.orgs.users.rbac_check",
             new_callable=AsyncMock,
         ), patch(
-            "src.services.orgs.users.check_limits_with_usage",
+            "src.services.orgs.users.enforce_free_tier_age_gate",
             new_callable=AsyncMock,
         ), patch(
             "src.services.orgs.users.redis.Redis.from_url",
@@ -555,7 +555,8 @@ class TestOrgUsersService:
         assert redis_conn_exc.value.status_code == 500
 
         fake_redis = Mock()
-        fake_redis.get.side_effect = [None, b"existing", None]
+        fake_redis.get = Mock(side_effect=lambda key: b"x" if "existing@test.com" in key else None)
+        fake_redis.scan_iter = Mock(return_value=[])
         fake_redis.set = Mock()
         fake_redis.__bool__ = Mock(return_value=True)
 
@@ -569,8 +570,13 @@ class TestOrgUsersService:
             "src.services.orgs.users.rbac_check",
             new_callable=AsyncMock,
         ), patch(
-            "src.services.orgs.users.check_limits_with_usage",
+            "src.services.orgs.users.check_members_limit_with_pending",
             new_callable=AsyncMock,
+        ), patch(
+            "src.services.orgs.users.enforce_free_tier_age_gate",
+            new_callable=AsyncMock,
+        ), patch(
+            "src.services.orgs.users.enforce_invite_rate_limit",
         ), patch(
             "src.services.orgs.users.send_invite_email",
             side_effect=[True, False],
@@ -592,6 +598,7 @@ class TestOrgUsersService:
             "sent": 1,
             "failed": 1,
             "already_invited": 1,
+            "invalid_email": 0,
         }
         assert [item["status"] for item in result["results"]] == [
             "sent",
@@ -677,9 +684,6 @@ class TestOrgUsersService:
             return_value=empty_config,
         ), patch(
             "src.services.orgs.users.rbac_check",
-            new_callable=AsyncMock,
-        ), patch(
-            "src.services.orgs.users.check_limits_with_usage",
             new_callable=AsyncMock,
         ), patch(
             "src.services.orgs.users.redis.Redis.from_url",
@@ -1149,7 +1153,8 @@ class TestOrgUsersService:
         self, mock_request, db, org, admin_user
     ):
         fake_redis = Mock()
-        fake_redis.get.side_effect = [None, b"existing"]
+        fake_redis.get = Mock(side_effect=lambda key: b"x" if "existing@test.com" in key else None)
+        fake_redis.scan_iter = Mock(return_value=[])
         fake_redis.set = Mock()
         fake_redis.__bool__ = Mock(return_value=True)
         fake_config = SimpleNamespace(
@@ -1166,8 +1171,13 @@ class TestOrgUsersService:
             "src.services.orgs.users.rbac_check",
             new_callable=AsyncMock,
         ), patch(
-            "src.services.orgs.users.check_limits_with_usage",
+            "src.services.orgs.users.check_members_limit_with_pending",
             new_callable=AsyncMock,
+        ), patch(
+            "src.services.orgs.users.enforce_free_tier_age_gate",
+            new_callable=AsyncMock,
+        ), patch(
+            "src.services.orgs.users.enforce_invite_rate_limit",
         ), patch(
             "src.services.orgs.users.send_invite_email",
             return_value=True,

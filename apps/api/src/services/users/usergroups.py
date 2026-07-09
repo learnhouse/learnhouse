@@ -157,8 +157,9 @@ async def create_usergroup(
             detail="Organization does not exist",
         )
 
-    # Usage check
-    await check_limits_with_usage("courses", org.id, db_session)
+    # Usage check — this is the usergroups limit, not courses. (Previously
+    # keyed "courses", so the usergroups cap was never actually enforced.)
+    await check_limits_with_usage("usergroups", org.id, db_session)
 
     # Complete the object
     usergroup.usergroup_uuid = f"usergroup_{uuid4()}"

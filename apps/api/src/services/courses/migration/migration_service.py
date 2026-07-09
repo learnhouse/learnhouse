@@ -403,6 +403,18 @@ async def create_course_from_migration(
 
     org_uuid = organization.org_uuid
 
+    # Enforce the course plan limit on the migration path too — this creates a
+    # real course and previously bypassed the cap other create paths enforce.
+    # Skip only if the org has no config (a prod impossibility) so a config
+    # anomaly can't hard-fail a migration.
+    from src.security.features_utils.usage import (
+        _get_org_config,
+        check_limits_with_usage,
+        increase_feature_usage,
+    )
+    if await _get_org_config(org_id, db_session) is not None:
+        await check_limits_with_usage("courses", org_id, db_session)
+
     try:
         now = str(datetime.now())
         course_uuid = f"course_{uuid4()}"
@@ -636,6 +648,9 @@ async def create_course_from_migration(
                 activities_created += 1
 
         await db_session.commit()
+
+        # Track course usage for billing, consistent with the other create paths.
+        await increase_feature_usage("courses", org_id, db_session)
 
         # Clean up temp directory — temp_real already validated above
         shutil.rmtree(temp_real, ignore_errors=True)
