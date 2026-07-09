@@ -13,6 +13,7 @@ type AuthorizationProps = {
 };
 
 const ADMIN_PATHS = [
+  '/dash/apps/manage',
   '/dash/org/*',
   '/dash/org',
   '/dash/users/*',
@@ -39,7 +40,7 @@ const AdminAuthorization: React.FC<AuthorizationProps> = ({ children, authorizat
     }
 
     // Convert pattern to a regex pattern
-    const regexPattern = new RegExp(`^${pattern.replace(/[\/.*+?^${}()|[\]\\]/g, '\\$&').replace(/\\\*/g, '.*')}$`);
+    const regexPattern = new RegExp(`^${pattern.replace(/[/.*+?^${}()|[\]\\]/g, '\\$&').replace(/\\\*/g, '.*')}$`);
 
     // Test the pathname against the regex pattern
     return regexPattern.test(pathname);

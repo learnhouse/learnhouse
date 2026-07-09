@@ -188,6 +188,15 @@ FILE_TYPES = {
         'mime_types': ['application/zip', 'application/x-zip-compressed'],
         'max_size': 2 * _GB,  # bounded further by the zip-bomb guard
         'validator': validate_zip_content
+    },
+    'app_package': {
+        # Third-party app bundles (static UI only). Deliberately much smaller
+        # than scorm/archive: an app is HTML/JS/CSS, not media. The install
+        # pipeline applies stricter per-entry checks on top of this.
+        'extensions': ['.zip'],
+        'mime_types': ['application/zip', 'application/x-zip-compressed'],
+        'max_size': 50 * _MB,
+        'validator': validate_zip_content
     }
 }
 

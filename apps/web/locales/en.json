@@ -137,6 +137,10 @@
           "title": "Enterprise Feature",
           "description": "SCORM support is a premium feature available only to organizations on our Enterprise plan. Upgrade to import and deliver SCORM packages alongside your courses."
         },
+        "apps": {
+          "title": "Pro Feature",
+          "description": "Apps is a premium feature available only to organizations on our Pro plan or higher. Upgrade to install third-party apps that extend your organization."
+        },
         "webhooks": {
           "title": "Pro Feature",
           "description": "Automations is a premium feature available only to organizations on our Pro plan or higher. Upgrade to wire your courses up to webhooks and external integrations."

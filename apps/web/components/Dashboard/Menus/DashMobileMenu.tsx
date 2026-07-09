@@ -26,6 +26,7 @@ import {
   CaretDown,
   MagnifyingGlass,
   Code,
+  PuzzlePiece,
 } from '@phosphor-icons/react'
 import { DiscordIcon } from '@components/Objects/Icons/DiscordIcon'
 import Link from 'next/link'
@@ -230,6 +231,7 @@ function DashMobileMenu() {
                 <PanelItem href="/dash/analytics" icon={<ChartBar size={15} weight="fill" />} label="Analytics" active={isActive('/dash/analytics')} onClick={close} />
                 <PanelItem href="/dash/org/settings/general" icon={<Buildings size={15} weight="fill" />} label={t('common.organization')} active={isActive('/dash/org')} onClick={close} />
                 <PanelItem href="/dash/developers/api" icon={<Code size={15} weight="fill" />} label={t('dashboard.developers.breadcrumb', { defaultValue: 'Developers' })} active={isActive('/dash/developers')} onClick={close} />
+                {isEnabled('apps') && <PanelItem href="/dash/apps" icon={<PuzzlePiece size={15} weight="fill" />} label={t('dashboard.apps.title', { defaultValue: 'Apps' })} active={isActive('/dash/apps')} onClick={close} />}
 
                 <div className="h-px bg-white/[0.05] mx-2 my-1.5" />
 

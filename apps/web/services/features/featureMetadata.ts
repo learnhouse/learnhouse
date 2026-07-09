@@ -26,6 +26,7 @@ import {
   LockKey,
   Microphone,
   Path,
+  PuzzlePiece,
   Robot,
   ShieldCheck,
   UsersThree,
@@ -48,6 +49,7 @@ export type FeatureKey =
   | 'custom_domains'
   | 'roles'
   | 'api_access'
+  | 'apps'
   | 'webhooks'
   | 'certifications'
   | 'audit_logs'
@@ -147,6 +149,12 @@ export const FEATURE_METADATA: Record<FeatureKey, FeatureMeta> = {
     titleKey: 'common.plans.feature_restricted.api_access.title',
     descriptionKey: 'common.plans.feature_restricted.api_access.description',
     Icon: Key,
+    upsellPlan: 'pro',
+  },
+  apps: {
+    titleKey: 'common.plans.feature_restricted.apps.title',
+    descriptionKey: 'common.plans.feature_restricted.apps.description',
+    Icon: PuzzlePiece,
     upsellPlan: 'pro',
   },
   webhooks: {

@@ -1,0 +1,9 @@
+{
+  "manifest_version": 1,
+  "id": "hello-world",
+  "name": "Hello World",
+  "version": "1.0.0",
+  "description": "Minimal example app: lists the organization's courses through the LearnHouse Apps bridge.",
+  "entry": "index.html",
+  "scopes": ["courses:read"]
+}

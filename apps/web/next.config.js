@@ -63,6 +63,21 @@ const nextConfig = {
         ],
       },
       {
+        // Third-party app bundles are served same-origin through /api/apps and
+        // rendered inside a SANDBOXED iframe (opaque origin) by the AppRunner.
+        // The global frame-ancestors 'none' / X-Frame-Options: DENY above
+        // blocks even same-origin framing, so allow these routes to be framed
+        // by their own origin. Unlike SCORM, app content is untrusted: the
+        // backend attaches a strict CSP (no egress) to every asset response,
+        // which passes through the proxy untouched apart from connect-src
+        // narrowing (see app/api/apps/[...path]/route.ts).
+        source: '/api/apps/:path*',
+        headers: [
+          { key: 'X-Frame-Options', value: 'SAMEORIGIN' },
+          { key: 'Content-Security-Policy', value: "frame-ancestors 'self'" },
+        ],
+      },
+      {
         // Resource activities embed an existing Library resource (board, course,
         // podcast, community, playground) inside a same-origin iframe in the
         // activity player. The global frame-ancestors 'none' / X-Frame-Options:
