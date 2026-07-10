@@ -15,6 +15,7 @@ import { useFormik } from 'formik'
 import toast from 'react-hot-toast'
 import { useTranslation } from 'react-i18next'
 import { useLHAnalytics, AnalyticsEvent } from '@services/analytics'
+import { useUpgradeModal } from '@components/Dashboard/Shared/PlanRestricted/UpgradeModalContext'
 
 type AddUserGroupProps = {
     setCreateUserGroupModal: any
@@ -36,6 +37,7 @@ function AddUserGroup(props: AddUserGroupProps) {
     const access_token = session?.data?.tokens?.access_token;
     const queryClient = useQueryClient()
     const { track } = useLHAnalytics('dashboard')
+    const { handlePlanLimit } = useUpgradeModal()
     const [isSubmitting, setIsSubmitting] = React.useState(false)
 
     const formik = useFormik({
@@ -59,7 +61,14 @@ function AddUserGroup(props: AddUserGroupProps) {
                 toast.success(t('dashboard.users.usergroups.modals.create.toasts.success'), {id:toastID})
             } else {
                 setIsSubmitting(false)
-                toast.error(t('dashboard.users.usergroups.modals.create.toasts.error'), {id:toastID})
+                // A free org that has hit (or can't reach) its usergroups quota
+                // gets a contextual upgrade prompt instead of a dead-end error.
+                if (handlePlanLimit(res, { source: 'usergroup_create', feature: 'usergroups', requiredPlan: 'standard' })) {
+                    toast.dismiss(toastID)
+                    props.setCreateUserGroupModal(false)
+                } else {
+                    toast.error(t('dashboard.users.usergroups.modals.create.toasts.error'), {id:toastID})
+                }
             }
         },
     })

@@ -9,6 +9,7 @@ import FormLayout, {
 import * as Form from '@radix-ui/react-form'
 import { createPodcast } from '@services/podcasts/podcasts'
 import { useLHAnalytics, AnalyticsEvent } from '@services/analytics'
+import { useUpgradeModal } from '@components/Dashboard/Shared/PlanRestricted/UpgradeModalContext'
 import { getOrganizationContextInfoWithoutCredentials } from '@services/organizations/orgs'
 import React, { useEffect } from 'react'
 import { BarLoader } from 'react-spinners'
@@ -32,6 +33,7 @@ function CreatePodcastModal({ closeModal, orgslug }: any) {
   const session = useLHSession() as any
   const queryClient = useQueryClient()
   const { track } = useLHAnalytics('learner')
+  const { handlePlanLimit } = useUpgradeModal()
   const [orgId, setOrgId] = React.useState(null) as any
   const [showUnsplashPicker, setShowUnsplashPicker] = React.useState(false)
   const [isUploading, setIsUploading] = React.useState(false)
@@ -89,12 +91,18 @@ function CreatePodcastModal({ closeModal, orgslug }: any) {
           router.push(`/dash/podcasts/podcast/${podcastId}/general`)
         } else {
           toast.dismiss(toast_loading)
-          const errorMessage = typeof res.data?.detail === 'string'
-            ? res.data.detail
-            : Array.isArray(res.data?.detail)
-              ? res.data.detail.map((e: any) => e.msg).join(', ')
-              : t('podcasts.failed_to_create_podcast')
-          toast.error(errorMessage)
+          // Podcasts are gated on the free plan → offer an upgrade at the
+          // moment of value rather than a dead-end error toast.
+          if (handlePlanLimit(res, { source: 'podcast_create', feature: 'podcasts', requiredPlan: 'standard' })) {
+            closeModal()
+          } else {
+            const errorMessage = typeof res.data?.detail === 'string'
+              ? res.data.detail
+              : Array.isArray(res.data?.detail)
+                ? res.data.detail.map((e: any) => e.msg).join(', ')
+                : t('podcasts.failed_to_create_podcast')
+            toast.error(errorMessage)
+          }
         }
       } catch (_error) {
         toast.dismiss(toast_loading)

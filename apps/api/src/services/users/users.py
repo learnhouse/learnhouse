@@ -44,9 +44,30 @@ from src.db.user_organizations import UserOrganization
 from src.security.rbac.constants import ADMIN_ROLE_ID
 from src.security.security import security_hash_password, security_verify_password
 from src.services.security.password_validation import validate_password_complexity
+from src.services.security.profile_validation import validate_profile_fields
 from src.services.analytics.analytics import track
 from src.services.analytics import events as analytics_events
 from src.services.webhooks.dispatch import dispatch_webhooks
+
+
+def _reject_urls_in_profile_fields(**fields) -> None:
+    """Reject display-name fields containing URLs/links (S: phishing relay).
+
+    Raises HTTP 400 ``PROFILE_FIELD_INVALID`` if any of ``username``,
+    ``first_name`` or ``last_name`` contains a link. ``None`` values are
+    skipped so this is safe for partial updates.
+    """
+    result = validate_profile_fields(fields)
+    if not result.is_valid:
+        raise HTTPException(
+            status_code=400,
+            detail={
+                "code": "PROFILE_FIELD_INVALID",
+                "message": "Display name fields may not contain URLs or links",
+                "errors": result.errors,
+                "invalid_fields": result.invalid_fields,
+            },
+        )
 
 
 async def create_user(
@@ -71,6 +92,13 @@ async def create_user(
                     "requirements": validation_result.requirements,
                 },
             )
+
+    # Reject phishing links in display-name fields at signup.
+    _reject_urls_in_profile_fields(
+        username=user_object.username,
+        first_name=user_object.first_name,
+        last_name=user_object.last_name,
+    )
 
     user = User.model_validate(user_object)
 
@@ -284,6 +312,13 @@ async def create_user_without_org(
                 },
             )
 
+    # Reject phishing links in display-name fields at signup.
+    _reject_urls_in_profile_fields(
+        username=user_object.username,
+        first_name=user_object.first_name,
+        last_name=user_object.last_name,
+    )
+
     user = User.model_validate(user_object)
 
     # RBAC check
@@ -369,6 +404,13 @@ async def update_user(
 
     # RBAC check
     await rbac_check(request, current_user, "update", user.user_uuid, db_session)
+
+    # Reject phishing links in display-name fields on profile update.
+    _reject_urls_in_profile_fields(
+        username=user_object.username,
+        first_name=user_object.first_name,
+        last_name=user_object.last_name,
+    )
 
     # Verifications
 

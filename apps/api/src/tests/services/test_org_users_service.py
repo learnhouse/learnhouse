@@ -6,6 +6,7 @@ from types import SimpleNamespace
 from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
+from fastapi import HTTPException
 from sqlmodel import select
 
 from src.db.roles import Role, RoleTypeEnum
@@ -542,7 +543,7 @@ class TestOrgUsersService:
             "src.services.orgs.users.rbac_check",
             new_callable=AsyncMock,
         ), patch(
-            "src.services.orgs.users.check_limits_with_usage",
+            "src.services.orgs.users.enforce_free_tier_age_gate",
             new_callable=AsyncMock,
         ), patch(
             "src.services.orgs.users.redis.Redis.from_url",
@@ -555,7 +556,8 @@ class TestOrgUsersService:
         assert redis_conn_exc.value.status_code == 500
 
         fake_redis = Mock()
-        fake_redis.get.side_effect = [None, b"existing", None]
+        fake_redis.get = Mock(side_effect=lambda key: b"x" if "existing@test.com" in key else None)
+        fake_redis.scan_iter = Mock(return_value=[])
         fake_redis.set = Mock()
         fake_redis.__bool__ = Mock(return_value=True)
 
@@ -569,8 +571,13 @@ class TestOrgUsersService:
             "src.services.orgs.users.rbac_check",
             new_callable=AsyncMock,
         ), patch(
-            "src.services.orgs.users.check_limits_with_usage",
+            "src.services.orgs.users.check_members_limit_with_pending",
             new_callable=AsyncMock,
+        ), patch(
+            "src.services.orgs.users.enforce_free_tier_age_gate",
+            new_callable=AsyncMock,
+        ), patch(
+            "src.services.orgs.users.enforce_invite_rate_limit",
         ), patch(
             "src.services.orgs.users.send_invite_email",
             side_effect=[True, False],
@@ -592,6 +599,7 @@ class TestOrgUsersService:
             "sent": 1,
             "failed": 1,
             "already_invited": 1,
+            "invalid_email": 0,
         }
         assert [item["status"] for item in result["results"]] == [
             "sent",
@@ -677,9 +685,6 @@ class TestOrgUsersService:
             return_value=empty_config,
         ), patch(
             "src.services.orgs.users.rbac_check",
-            new_callable=AsyncMock,
-        ), patch(
-            "src.services.orgs.users.check_limits_with_usage",
             new_callable=AsyncMock,
         ), patch(
             "src.services.orgs.users.redis.Redis.from_url",
@@ -1149,7 +1154,8 @@ class TestOrgUsersService:
         self, mock_request, db, org, admin_user
     ):
         fake_redis = Mock()
-        fake_redis.get.side_effect = [None, b"existing"]
+        fake_redis.get = Mock(side_effect=lambda key: b"x" if "existing@test.com" in key else None)
+        fake_redis.scan_iter = Mock(return_value=[])
         fake_redis.set = Mock()
         fake_redis.__bool__ = Mock(return_value=True)
         fake_config = SimpleNamespace(
@@ -1166,8 +1172,13 @@ class TestOrgUsersService:
             "src.services.orgs.users.rbac_check",
             new_callable=AsyncMock,
         ), patch(
-            "src.services.orgs.users.check_limits_with_usage",
+            "src.services.orgs.users.check_members_limit_with_pending",
             new_callable=AsyncMock,
+        ), patch(
+            "src.services.orgs.users.enforce_free_tier_age_gate",
+            new_callable=AsyncMock,
+        ), patch(
+            "src.services.orgs.users.enforce_invite_rate_limit",
         ), patch(
             "src.services.orgs.users.send_invite_email",
             return_value=True,
@@ -1186,6 +1197,53 @@ class TestOrgUsersService:
 
         assert result["summary"]["sent"] == 1
         assert result["summary"]["already_invited"] == 1
+
+    @pytest.mark.asyncio
+    async def test_invite_batch_users_rejects_malformed_and_oversized(
+        self, mock_request, db, org, admin_user
+    ):
+        from src.services.security.rate_limiting import INVITE_MAX_BATCH_SIZE
+
+        fake_redis = Mock()
+        fake_redis.get = Mock(return_value=None)
+        fake_redis.scan_iter = Mock(return_value=[])
+        fake_redis.set = Mock()
+        fake_redis.__bool__ = Mock(return_value=True)
+        fake_config = SimpleNamespace(
+            redis_config=SimpleNamespace(redis_connection_string="redis://test")
+        )
+
+        patches = [
+            patch("src.services.orgs.users.get_learnhouse_config", return_value=fake_config),
+            patch("src.services.orgs.users.redis.Redis.from_url", return_value=fake_redis),
+            patch("src.services.orgs.users.rbac_check", new_callable=AsyncMock),
+            patch("src.services.orgs.users.check_members_limit_with_pending", new_callable=AsyncMock),
+            patch("src.services.orgs.users.enforce_free_tier_age_gate", new_callable=AsyncMock),
+            patch("src.services.orgs.users.enforce_invite_rate_limit"),
+            patch("src.services.orgs.users.send_invite_email", new_callable=AsyncMock, return_value=True),
+            patch("src.services.orgs.users.dispatch_webhooks", new_callable=AsyncMock),
+        ]
+        for p in patches:
+            p.start()
+        try:
+            # A malformed address is rejected (never sent) and reported.
+            result = await invite_batch_users(
+                mock_request, org.id, "ok@test.com,not-an-email", "invite_uuid", db, admin_user
+            )
+            assert result["summary"]["invalid_email"] == 1
+            assert any(r["status"] == "invalid_email" for r in result["results"])
+
+            # More than the batch cap → 400 BATCH/INVITE_BATCH_TOO_LARGE.
+            too_many = ",".join(f"user{i}@test.com" for i in range(INVITE_MAX_BATCH_SIZE + 1))
+            with pytest.raises(HTTPException) as exc:
+                await invite_batch_users(
+                    mock_request, org.id, too_many, "invite_uuid", db, admin_user
+                )
+            assert exc.value.status_code == 400
+            assert exc.value.detail["code"] == "INVITE_BATCH_TOO_LARGE"
+        finally:
+            for p in patches:
+                p.stop()
 
     @pytest.mark.asyncio
     async def test_remove_batch_users_from_org_empty_list(

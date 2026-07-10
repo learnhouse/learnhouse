@@ -87,6 +87,17 @@ async def create_invite_code(
     # RBAC check
     await rbac_check(request, org.org_uuid, current_user, "update", db_session)
 
+    # Free-tier abuse gate: shareable invite links are a self-service member
+    # onboarding primitive, so a free org (and the acting user) must be at
+    # least FREE_TIER_MIN_AGE_DAYS old before minting one. Paid orgs exempt.
+    from src.security.auth import resolve_acting_user_id
+    from src.services.security.account_age import enforce_free_tier_age_gate
+
+    await enforce_free_tier_age_gate(
+        org_id, resolve_acting_user_id(current_user), db_session,
+        action="create invite links",
+    )
+
     # Connect to Redis
     r = _get_redis(redis_conn_string)
 
@@ -391,10 +402,15 @@ async def send_invite_email(
             pass
 
     try:
+        # Defense in depth: scrub any link out of the inviter's display name
+        # before it is relayed to recipients, even if it slipped past
+        # write-time validation (e.g. imported via OAuth).
+        from src.services.security.profile_validation import sanitize_display_name
+
         result = send_invitation_email(
             email=email,
-            org_name=org.name,
-            inviter_username=user.username,
+            org_name=sanitize_display_name(org.name, fallback="A LearnHouse organization"),
+            inviter_username=sanitize_display_name(user.username),
             invite_code=invite_code,
             signup_url=signup_url,
             lang=lang,

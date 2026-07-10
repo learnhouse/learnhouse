@@ -26,7 +26,7 @@ import AIImageButton from '@components/Objects/AI/AIImageButton'
 import FormTagInput from "@components/Objects/StyledElements/Form/TagInput"
 import { useTranslation } from "react-i18next"
 import { useLHAnalytics, AnalyticsEvent } from '@services/analytics'
-import UpgradeModal from '@components/Dashboard/Shared/PlanRestricted/UpgradeModal'
+import { useUpgradeModal } from '@components/Dashboard/Shared/PlanRestricted/UpgradeModalContext'
 
 const _validationSchema = Yup.object().shape({
   name: Yup.string()
@@ -49,8 +49,8 @@ function CreateCourseModal({ closeModal, orgslug }: any) {
   const [orgId, setOrgId] = React.useState(null) as any
   const [showUnsplashPicker, setShowUnsplashPicker] = React.useState(false)
   const [isUploading, setIsUploading] = React.useState(false)
-  // Shown when a free org hits its course limit — a contextual upgrade paywall.
-  const [showUpgradeModal, setShowUpgradeModal] = React.useState(false)
+  // A free org that hits its course limit gets the shared upgrade paywall.
+  const { handlePlanLimit } = useUpgradeModal()
 
   const validationSchema = Yup.object().shape({
     name: Yup.string()
@@ -137,13 +137,8 @@ function CreateCourseModal({ closeModal, orgslug }: any) {
           const detail = typeof res.data?.detail === 'string' ? res.data.detail : ''
           // A free org that has hit its course limit gets a contextual upgrade
           // paywall at the moment of value, instead of a dead-end error toast.
-          if (/Usage Limit has been reached/i.test(detail)) {
-            track(AnalyticsEvent.FeatureGateUpgradeShown, {
-              feature: 'courses',
-              surface: 'course_create',
-              required_plan: 'standard',
-            })
-            setShowUpgradeModal(true)
+          if (handlePlanLimit(res, { source: 'course_create', feature: 'courses', requiredPlan: 'standard' })) {
+            closeModal()
           } else {
             const errorMessage = detail
               ? detail
@@ -353,15 +348,6 @@ function CreateCourseModal({ closeModal, orgslug }: any) {
           onClose={() => setShowUnsplashPicker(false)}
         />
       )}
-
-      <UpgradeModal
-        open={showUpgradeModal}
-        source="course_limit"
-        onClose={() => {
-          setShowUpgradeModal(false)
-          closeModal()
-        }}
-      />
     </FormLayout>
   )
 }

@@ -17,6 +17,7 @@ import toast from 'react-hot-toast'
 import { BarLoader } from 'react-spinners'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { queryKeys } from '@/lib/query/keys'
+import { useUpgradeModal } from '@components/Dashboard/Shared/PlanRestricted/UpgradeModalContext'
 
 interface Props {
   user: any
@@ -29,6 +30,7 @@ function RolesUpdate(props: Props) {
   const session = useLHSession() as any
   const access_token = session?.data?.tokens?.access_token;
   const queryClient = useQueryClient()
+  const { handlePlanLimit } = useUpgradeModal()
   const [isSubmitting, setIsSubmitting] = React.useState(false)
   const [assignedRole, setAssignedRole] = React.useState(
     props.alreadyAssignedRole
@@ -59,8 +61,15 @@ function RolesUpdate(props: Props) {
       toast.success("Updated role", {id:toastId})
     } else {
       setIsSubmitting(false)
-      setError('Error ' + res.status + ': ' + res.data.detail)
-      toast.error("Error while updating role", {id:toastId})
+      // Promoting a user into an admin role can exceed the plan's admin-seat
+      // cap → offer an upgrade instead of a dead-end error.
+      if (handlePlanLimit(res, { source: 'user_role_change', feature: 'admin_seats', requiredPlan: 'standard' })) {
+        toast.dismiss(toastId)
+        props.setRolesModal(false)
+      } else {
+        setError('Error ' + res.status + ': ' + res.data.detail)
+        toast.error("Error while updating role", {id:toastId})
+      }
     }
   }
 

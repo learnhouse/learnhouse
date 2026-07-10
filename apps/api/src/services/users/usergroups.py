@@ -24,6 +24,7 @@ from src.db.organizations import Organization
 from src.db.usergroups import UserGroup, UserGroupCreate, UserGroupRead, UserGroupUpdate
 from src.db.users import AnonymousUser, APITokenUser, InternalUser, PublicUser, User, UserRead
 from src.services.webhooks.dispatch import dispatch_webhooks
+from src.services.security.rate_limiting import enforce_batch_size_limit
 
 
 async def _validate_resource_exists_and_belongs_to_org(
@@ -156,8 +157,9 @@ async def create_usergroup(
             detail="Organization does not exist",
         )
 
-    # Usage check
-    await check_limits_with_usage("courses", org.id, db_session)
+    # Usage check — this is the usergroups limit, not courses. (Previously
+    # keyed "courses", so the usergroups cap was never actually enforced.)
+    await check_limits_with_usage("usergroups", org.id, db_session)
 
     # Complete the object
     usergroup.usergroup_uuid = f"usergroup_{uuid4()}"
@@ -500,6 +502,8 @@ async def add_users_to_usergroup(
             detail="user_ids must be a comma-separated list of integers",
         )
 
+    enforce_batch_size_limit(len(user_ids_array), "users")
+
     for user_id in user_ids_array:
         statement = select(User).where(User.id == user_id)
         user = (await db_session.execute(statement)).scalars().first()
@@ -594,6 +598,8 @@ async def remove_users_from_usergroup(
             detail="user_ids must be a comma-separated list of integers",
         )
 
+    enforce_batch_size_limit(len(user_ids_array), "users")
+
     for user_id in user_ids_array:
         statement = select(UserGroupUser).where(
             UserGroupUser.user_id == user_id, UserGroupUser.usergroup_id == usergroup_id
@@ -637,7 +643,9 @@ async def add_resources_to_usergroup(
         org_id=usergroup.org_id,
     )
 
-    resources_uuids_array = resources_uuids.split(",")
+    resources_uuids_array = [r for r in resources_uuids.split(",") if r.strip() != ""]
+
+    enforce_batch_size_limit(len(resources_uuids_array), "resources")
 
     for resource_uuid in resources_uuids_array:
         # Check if a link between UserGroup and Resource already exists
@@ -708,7 +716,9 @@ async def remove_resources_from_usergroup(
         org_id=usergroup.org_id,
     )
 
-    resources_uuids_array = resources_uuids.split(",")
+    resources_uuids_array = [r for r in resources_uuids.split(",") if r.strip() != ""]
+
+    enforce_batch_size_limit(len(resources_uuids_array), "resources")
 
     for resource_uuid in resources_uuids_array:
         statement = select(UserGroupResource).where(

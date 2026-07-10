@@ -283,6 +283,92 @@ def check_invite_acceptance_rate_limit(request: Request, org_id: int) -> Tuple[b
     return is_allowed, retry_after
 
 
+# Default ceiling for comma-split / list batch endpoints that loop with
+# per-item DB or network work. Bounds a single request so one call cannot fan
+# out unbounded work; sized generously so legitimate bulk actions still pass.
+DEFAULT_MAX_BATCH_SIZE = 100
+
+
+def enforce_batch_size_limit(
+    count: int,
+    label: str,
+    max_size: int = DEFAULT_MAX_BATCH_SIZE,
+) -> None:
+    """Raise HTTP 400 (``BATCH_TOO_LARGE``) if ``count`` exceeds ``max_size``.
+
+    Use on any endpoint that splits/loops caller-supplied batch input with
+    per-item work, so a single request cannot be used as an amplification or
+    DoS primitive. ``label`` names the unit (e.g. ``"users"``) for the error.
+    """
+    if count > max_size:
+        raise HTTPException(
+            status_code=400,
+            detail={
+                "code": "BATCH_TOO_LARGE",
+                "message": f"You can process at most {max_size} {label} at a time.",
+                "max_batch_size": max_size,
+            },
+        )
+
+
+# Invite tunables. Module-level so tests can monkeypatch without touching
+# bucket semantics. The batch cap bounds a single request; the per-org and
+# per-user windows bound sustained fan-out across requests.
+INVITE_MAX_BATCH_SIZE = 25
+INVITE_ORG_MAX_PER_DAY = 100
+INVITE_USER_MAX_PER_DAY = 100
+INVITE_RATE_LIMIT_WINDOW_SECONDS = 24 * 60 * 60
+
+
+def check_invite_rate_limit(org_id: int, user_id: int, count: int = 1) -> Tuple[bool, int]:
+    """Per-org AND per-user daily rate limit for outbound invite emails.
+
+    Invites relay attacker-controlled content to arbitrary addresses through
+    the shared email sender, so an unbounded batch endpoint is a spam/phishing
+    amplifier (and can exhaust the provider's daily quota, taking down all
+    platform email). ``count`` reserves the given number of invites atomically
+    so a single large batch cannot overshoot the window ceiling.
+
+    Returns ``(is_allowed, retry_after_seconds)``; ``retry_after`` reflects
+    whichever bucket denied the request.
+    """
+    r = get_redis_connection()
+    for key, ceiling in (
+        (f"invite_send:org:{org_id}", INVITE_ORG_MAX_PER_DAY),
+        (f"invite_send:user:{user_id}", INVITE_USER_MAX_PER_DAY),
+    ):
+        rate_key = f"rate_limit:{key}"
+        current = r.get(rate_key)
+        current = int(current) if current is not None else 0
+        if current + count > ceiling:
+            ttl = r.ttl(rate_key)
+            return False, ttl if ttl and ttl > 0 else INVITE_RATE_LIMIT_WINDOW_SECONDS
+    # Reserve capacity in both buckets, asserting the window TTL on creation.
+    for key in (f"invite_send:org:{org_id}", f"invite_send:user:{user_id}"):
+        rate_key = f"rate_limit:{key}"
+        new_val = r.incrby(rate_key, count)
+        ttl = r.ttl(rate_key)
+        if new_val == count or ttl is None or ttl < 0:
+            r.expire(rate_key, INVITE_RATE_LIMIT_WINDOW_SECONDS)
+    return True, INVITE_RATE_LIMIT_WINDOW_SECONDS
+
+
+def enforce_invite_rate_limit(org_id: int, user_id: int, count: int = 1) -> None:
+    """Raise HTTP 429 (``RATE_LIMITED``) if sending ``count`` invites would
+    exceed the per-org or per-user daily ceiling."""
+    is_allowed, retry_after = check_invite_rate_limit(org_id, user_id, count)
+    if not is_allowed:
+        raise HTTPException(
+            status_code=429,
+            detail={
+                "code": "RATE_LIMITED",
+                "message": "Invite limit reached. Please try again later.",
+                "retry_after": retry_after,
+            },
+            headers={"Retry-After": str(retry_after)},
+        )
+
+
 def check_search_rate_limit(user_id: int) -> Tuple[bool, int]:
     """
     Rate limit search queries at 60/min per authenticated user. Search hits
