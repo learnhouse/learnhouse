@@ -1,5 +1,9 @@
 {
   "index": "Overview",
+  "reference": {
+    "title": "Full API Reference ↗",
+    "href": "/reference"
+  },
   "authentication": "Authentication",
   "endpoints": "Endpoints",
   "headless-assignments": "Headless Assignments"

@@ -4,7 +4,7 @@ import { useTheme } from 'next-themes'
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { Search } from 'nextra/components'
-import { GithubLogo, DiscordLogo, Code, ArrowUpRight, List, X, Plug, Globe, GraduationCap } from '@phosphor-icons/react/dist/ssr'
+import { GithubLogo, DiscordLogo, Code, ArrowUpRight, List, X, Plug, Globe, GraduationCap, BracketsCurly } from '@phosphor-icons/react/dist/ssr'
 
 function Navbar() {
   const { resolvedTheme } = useTheme()
@@ -54,6 +54,13 @@ function Navbar() {
               >
                 <Code size={15} weight="fill" />
                 Developers
+              </Link>
+              <Link
+                href="/reference"
+                className="lh-navbar-nav-item"
+              >
+                <BracketsCurly size={15} weight="fill" />
+                API Reference
               </Link>
               <a
                 href="https://university.learnhouse.io"
@@ -133,6 +140,10 @@ function Navbar() {
           <Link href="/developers" className="lh-mobile-drawer-link" onClick={() => setMobileMenuOpen(false)}>
             <Code size={16} weight="fill" />
             Developers
+          </Link>
+          <Link href="/reference" className="lh-mobile-drawer-link" onClick={() => setMobileMenuOpen(false)}>
+            <BracketsCurly size={16} weight="fill" />
+            API Reference
           </Link>
           <a href="https://university.learnhouse.io" target="_blank" rel="noopener noreferrer" className="lh-mobile-drawer-link">
             <GraduationCap size={16} weight="fill" />
