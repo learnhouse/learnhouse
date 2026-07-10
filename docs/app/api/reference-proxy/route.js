@@ -27,46 +27,68 @@ function reject(status, detail) {
   return Response.json({ detail }, { status, headers: { 'Cache-Control': 'no-store' } })
 }
 
-export async function POST(req) {
-  let payload
-  try {
-    payload = await req.json()
-  } catch {
-    return reject(400, 'Invalid JSON payload')
-  }
-
-  const method = String(payload?.method || '').toUpperCase()
-  const path = String(payload?.path || '')
-  const contentType = payload?.contentType ? String(payload.contentType) : null
-
-  if (!ALLOWED_METHODS.has(method)) return reject(400, 'Method not allowed')
-  if (!PATH_RE.test(path)) return reject(400, 'Invalid path')
-
+function validatePath(path) {
+  if (!PATH_RE.test(path)) return false
   let decoded = path
   try {
     decoded = decodeURIComponent(path)
   } catch {}
-  if (decoded.includes('..') || /^[a-z]+:/i.test(decoded) || path.startsWith('//')) {
-    return reject(400, 'Invalid path')
+  return !(decoded.includes('..') || /^[a-z]+:/i.test(decoded) || path.startsWith('//'))
+}
+
+export async function POST(req) {
+  const incomingType = req.headers.get('content-type') || ''
+  const isMultipart = incomingType.startsWith('multipart/form-data')
+
+  let method
+  let path
+  let headers = {}
+  let body
+  let duplex
+
+  if (isMultipart) {
+    // File-upload passthrough: method/path arrive as query params, the
+    // multipart body (with its boundary) is streamed verbatim upstream.
+    const params = req.nextUrl?.searchParams || new URL(req.url).searchParams
+    method = String(params.get('method') || '').toUpperCase()
+    path = String(params.get('path') || '')
+    if (!ALLOWED_METHODS.has(method)) return reject(400, 'Method not allowed')
+    if (method === 'GET' || method === 'DELETE') return reject(400, 'Method cannot carry a body')
+    if (!validatePath(path)) return reject(400, 'Invalid path')
+    headers['Content-Type'] = incomingType
+    body = req.body
+    duplex = 'half'
+  } else {
+    let payload
+    try {
+      payload = await req.json()
+    } catch {
+      return reject(400, 'Invalid JSON payload')
+    }
+
+    method = String(payload?.method || '').toUpperCase()
+    path = String(payload?.path || '')
+    const contentType = payload?.contentType ? String(payload.contentType) : null
+
+    if (!ALLOWED_METHODS.has(method)) return reject(400, 'Method not allowed')
+    if (!validatePath(path)) return reject(400, 'Invalid path')
+
+    if (payload?.body !== undefined && method !== 'GET' && method !== 'DELETE') {
+      if (contentType === 'application/x-www-form-urlencoded') {
+        headers['Content-Type'] = contentType
+        body = new URLSearchParams(payload.body).toString()
+      } else if (!contentType || ALLOWED_CONTENT_TYPES.has(contentType)) {
+        headers['Content-Type'] = 'application/json'
+        body = JSON.stringify(payload.body)
+      } else {
+        return reject(400, 'Unsupported content type')
+      }
+    }
   }
 
-  const headers = {}
   const authorization = req.headers.get('authorization')
   if (authorization && /^Bearer\s+\S+$/i.test(authorization)) {
     headers.Authorization = authorization
-  }
-
-  let body
-  if (payload?.body !== undefined && method !== 'GET' && method !== 'DELETE') {
-    if (contentType === 'application/x-www-form-urlencoded') {
-      headers['Content-Type'] = contentType
-      body = new URLSearchParams(payload.body).toString()
-    } else if (!contentType || ALLOWED_CONTENT_TYPES.has(contentType)) {
-      headers['Content-Type'] = 'application/json'
-      body = JSON.stringify(payload.body)
-    } else {
-      return reject(400, 'Unsupported content type')
-    }
   }
 
   let upstream
@@ -75,6 +97,7 @@ export async function POST(req) {
       method,
       headers,
       body,
+      duplex,
       cache: 'no-store',
       redirect: 'error',
       signal: AbortSignal.timeout(UPSTREAM_TIMEOUT_MS),

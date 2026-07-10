@@ -4,8 +4,8 @@
    ═══════════════════════════════════════════════════════════════ */
 
 :root {
-  --lh-ref-nav-w: 280px;
-  --lh-ref-code-w: 460px;
+  --lh-ref-nav-w: var(--lh-sidebar-w); /* match the docs sidebar (250px) */
+  --lh-ref-code-w: 440px;
   --lh-ref-get: #1a7f4e;
   --lh-ref-get-bg: #e8f5ee;
   --lh-ref-post: #175cd3;
@@ -20,29 +20,35 @@
 
 /* ── Shell ───────────────────────────────────────────────────── */
 
+/* Mirrors .lh-page / .lh-sidebar / .lh-article from styles.css so the
+   reference reads as the same product as the rest of the docs. */
 .lh-ref-shell {
-  display: grid;
-  grid-template-columns: var(--lh-ref-nav-w) minmax(0, 1fr);
-  max-width: 1600px;
+  display: flex;
+  max-width: 1400px;
   margin: 0 auto;
   min-height: calc(100vh - var(--lh-navbar-h));
 }
 
 .lh-ref-main {
+  flex: 1;
   min-width: 0;
-  padding: 32px 40px 120px;
-  border-left: 1px solid var(--lh-border-subtle);
+  padding: 20px 40px 64px;
 }
 
-/* ── Left nav ────────────────────────────────────────────────── */
+/* ── Left nav (matches .lh-sidebar) ──────────────────────────── */
 
 .lh-ref-nav {
   position: sticky;
   top: var(--lh-navbar-h);
   height: calc(100vh - var(--lh-navbar-h));
+  width: var(--lh-ref-nav-w);
+  min-width: var(--lh-ref-nav-w);
   overflow-y: auto;
+  overflow-x: hidden;
   overscroll-behavior: contain;
-  padding: 20px 12px 40px 20px;
+  border-right: 1px solid var(--lh-border-subtle);
+  background: var(--lh-bg);
+  padding: 20px 14px 40px;
   scrollbar-width: thin;
   scrollbar-color: transparent transparent;
 }
@@ -90,13 +96,14 @@
 
 .lh-ref-nav-overview {
   display: block;
-  padding: 5px 8px;
+  padding: 7px 10px;
   margin-bottom: 6px;
   font-size: 13px;
-  font-weight: 600;
+  font-weight: 500;
   color: var(--lh-fg-muted);
-  border-radius: 6px;
+  border-radius: 8px;
   text-decoration: none;
+  transition: color 0.2s, background 0.2s;
 }
 
 .lh-ref-nav-overview:hover {
@@ -111,18 +118,19 @@
 .lh-ref-nav-group-btn {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 7px;
   width: 100%;
-  padding: 5px 8px;
+  padding: 7px 10px;
   font-size: 13px;
-  font-weight: 600;
+  font-weight: 500;
   font-family: var(--lh-font);
   color: var(--lh-fg-muted);
   background: none;
   border: none;
-  border-radius: 6px;
+  border-radius: 8px;
   cursor: pointer;
   text-align: left;
+  transition: color 0.2s, background 0.2s;
 }
 
 .lh-ref-nav-group-btn:hover {
@@ -196,6 +204,28 @@
   display: none;
 }
 
+.lh-ref-nav-history {
+  margin-top: 16px;
+  padding-top: 12px;
+  border-top: 1px solid var(--lh-border-subtle);
+}
+
+.lh-ref-history-status {
+  margin-left: auto;
+  font-family: var(--lh-font-mono);
+  font-size: 10px;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.lh-ref-history-status-ok { color: var(--lh-ref-get); }
+.lh-ref-history-status-err { color: var(--lh-ref-put); }
+
+.lh-ref-play-file {
+  font-size: 12px;
+  color: var(--lh-fg-muted);
+}
+
 /* ── Method badges ───────────────────────────────────────────── */
 
 .lh-ref-method {
@@ -230,17 +260,19 @@
   padding-bottom: 28px;
 }
 
+/* Matches .lh-prose h1 */
 .lh-ref-group-title {
-  font-family: 'Wix Madefor Display', var(--lh-font);
-  font-size: 30px;
-  font-weight: 800;
-  letter-spacing: -0.03em;
-  margin: 0 0 10px;
+  font-size: 2rem;
+  font-weight: 900;
+  letter-spacing: -0.035em;
+  line-height: 1.15;
+  margin: 0 0 0.75rem;
+  color: var(--lh-fg);
 }
 
 .lh-ref-group-desc {
   font-size: 15px;
-  line-height: 1.6;
+  line-height: 1.7;
   color: var(--lh-fg-muted);
   margin: 0;
 }
@@ -250,7 +282,6 @@
 .lh-ref-op {
   border-top: 1px solid var(--lh-border-subtle);
   padding: 40px 0;
-  scroll-margin-top: calc(var(--lh-navbar-h) + 16px);
 }
 
 .lh-ref-op-grid {
@@ -260,16 +291,19 @@
   align-items: start;
 }
 
+/* Matches .lh-prose h2 weight/tracking (anchors live on these headings) */
 .lh-ref-op-title {
-  font-family: 'Wix Madefor Display', var(--lh-font);
-  font-size: 20px;
-  font-weight: 700;
-  letter-spacing: -0.02em;
+  font-size: 1.4rem;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  line-height: 1.3;
+  color: var(--lh-fg);
   margin: 0 0 12px;
   display: flex;
   align-items: center;
   gap: 10px;
   flex-wrap: wrap;
+  scroll-margin-top: calc(var(--lh-navbar-h) + 16px);
 }
 
 .lh-ref-op-endpoint {
@@ -311,10 +345,49 @@
   padding: 1px 5px;
 }
 
-.lh-ref-op-noauth {
-  font-size: 13px;
-  color: var(--lh-fg-faint);
-  margin: 0 0 12px;
+/* ── Auth chips ──────────────────────────────────────────────── */
+
+.lh-ref-authrow {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin: 0 0 14px;
+}
+
+.lh-ref-authchip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--lh-fg-muted);
+  border: 1px solid var(--lh-border-subtle);
+  background: var(--lh-bg-subtle);
+  border-radius: 999px;
+  padding: 3px 10px;
+}
+
+.lh-ref-authchip code {
+  font-family: var(--lh-font-mono);
+  font-size: 10.5px;
+  font-weight: 600;
+  background: var(--lh-bg);
+  border: 1px solid var(--lh-border-subtle);
+  border-radius: 4px;
+  padding: 0 5px;
+}
+
+.lh-ref-authchip-token {
+  color: var(--lh-ref-get);
+  border-color: color-mix(in srgb, var(--lh-ref-get) 25%, transparent);
+  background: color-mix(in srgb, var(--lh-ref-get-bg) 60%, var(--lh-bg));
+}
+
+.lh-ref-authchip-session {
+  color: var(--lh-ref-put);
+  border-color: color-mix(in srgb, var(--lh-ref-put) 25%, transparent);
+  background: color-mix(in srgb, var(--lh-ref-put-bg) 60%, var(--lh-bg));
 }
 
 /* ── Sections & fields ───────────────────────────────────────── */
@@ -882,11 +955,12 @@
 }
 
 .lh-ref-overview-title {
-  font-family: 'Wix Madefor Display', var(--lh-font);
-  font-size: 38px;
-  font-weight: 800;
+  font-size: 2.25rem;
+  font-weight: 900;
   letter-spacing: -0.035em;
+  line-height: 1.15;
   margin: 0 0 14px;
+  color: var(--lh-fg);
 }
 
 .lh-ref-overview-lede {
@@ -896,12 +970,16 @@
   margin: 0;
 }
 
+/* Matches .lh-prose h2 */
 .lh-ref-overview-h2 {
-  font-family: 'Wix Madefor Display', var(--lh-font);
-  font-size: 19px;
-  font-weight: 700;
-  letter-spacing: -0.02em;
+  font-size: 1.4rem;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  line-height: 1.3;
   margin: 0 0 10px;
+  padding-bottom: 0.4rem;
+  border-bottom: 1px solid var(--lh-border-subtle);
+  color: var(--lh-fg);
 }
 
 .lh-ref-baseurl {
@@ -1051,12 +1129,7 @@
 }
 
 @media (max-width: 768px) {
-  .lh-ref-shell {
-    grid-template-columns: minmax(0, 1fr);
-  }
-
   .lh-ref-main {
-    border-left: none;
     padding: 20px 18px 80px;
   }
 
@@ -1066,6 +1139,7 @@
     top: var(--lh-navbar-h);
     z-index: 150;
     width: min(320px, 85vw);
+    min-width: 0;
     background: var(--lh-bg);
     border-right: 1px solid var(--lh-border);
     transform: translateX(-100%);

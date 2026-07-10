@@ -10,7 +10,7 @@ export default async function ReferenceLayout({ children }) {
 
   return (
     <TokenProvider>
-      <div className="lh-ref-shell" data-pagefind-ignore>
+      <div className="lh-ref-shell">
         <ReferenceNav nav={nav} />
         <main className="lh-ref-main">{children}</main>
       </div>

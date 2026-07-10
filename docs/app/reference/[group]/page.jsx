@@ -28,8 +28,27 @@ export default async function GroupPage({ params }) {
   const model = await buildGroupModel(spec, group)
   if (!model || model.operations.length === 0) notFound()
 
+  const jsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'APIReference',
+    name: `LearnHouse API — ${model.title}`,
+    description: model.description,
+    url: `https://docs.learnhouse.app/reference/${model.slug}`,
+    programmingModel: 'REST',
+    targetPlatform: 'LearnHouse',
+    isPartOf: {
+      '@type': 'WebSite',
+      name: 'LearnHouse Docs',
+      url: 'https://docs.learnhouse.app',
+    },
+  }
+
   return (
     <div className="lh-ref-group">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
       <header className="lh-ref-group-head">
         <h1 className="lh-ref-group-title">{model.title}</h1>
         <p className="lh-ref-group-desc">{model.description}</p>

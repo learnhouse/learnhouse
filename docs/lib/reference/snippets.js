@@ -1,4 +1,5 @@
 import { TOKEN_PLACEHOLDER } from './config'
+import { isBinaryField } from './resolve'
 
 /**
  * Generate curl / JavaScript (fetch) / Python (requests) snippets for an
@@ -18,24 +19,27 @@ function pyString(value) {
   return JSON.stringify(String(value))
 }
 
-function isBinaryField(field) {
-  return (
-    field?.format === 'binary' ||
-    field?.contentEncoding === 'base64' ||
-    field?.contentMediaType === 'application/octet-stream'
-  )
-}
 
 /**
  * @param {object} input
  * @param {string} input.method    - 'GET' | 'POST' | ...
  * @param {string} input.url       - full URL with {placeholders} and example query string
  * @param {boolean} input.auth     - include the Authorization header
+ * @param {string} input.authValue - bearer value shown in examples (defaults to the lh_ token
+ *                                   placeholder; session-only endpoints pass a JWT placeholder)
  * @param {string|null} input.contentType
  * @param {object|null} input.bodyExample   - example body (JSON object; for form types a flat object)
  * @param {Array} input.bodyFields          - [{name, schema}] used to split binary vs scalar for multipart
  */
-export function buildSnippets({ method, url, auth = true, contentType = null, bodyExample = null, bodyFields = [] }) {
+export function buildSnippets({
+  method,
+  url,
+  auth = true,
+  authValue = TOKEN_PLACEHOLDER,
+  contentType = null,
+  bodyExample = null,
+  bodyFields = [],
+}) {
   const hasBody =
     bodyExample !== null &&
     bodyExample !== undefined &&
@@ -46,19 +50,19 @@ export function buildSnippets({ method, url, auth = true, contentType = null, bo
   )
 
   return {
-    curl: buildCurl({ method, url, auth, contentType, bodyExample, binaryNames, hasBody }),
-    js: buildJs({ method, url, auth, contentType, bodyExample, binaryNames, hasBody }),
-    python: buildPython({ method, url, auth, contentType, bodyExample, binaryNames, hasBody }),
+    curl: buildCurl({ method, url, auth, authValue, contentType, bodyExample, binaryNames, hasBody }),
+    js: buildJs({ method, url, auth, authValue, contentType, bodyExample, binaryNames, hasBody }),
+    python: buildPython({ method, url, auth, authValue, contentType, bodyExample, binaryNames, hasBody }),
   }
 }
 
 // ── curl ────────────────────────────────────────────────────────────────────
 
-function buildCurl({ method, url, auth, contentType, bodyExample, binaryNames, hasBody }) {
+function buildCurl({ method, url, auth, authValue, contentType, bodyExample, binaryNames, hasBody }) {
   const parts = []
   if (method !== 'GET') parts.push(`-X ${method}`)
   parts.push(`"${url}"`)
-  if (auth) parts.push(`-H "Authorization: Bearer ${TOKEN_PLACEHOLDER}"`)
+  if (auth) parts.push(`-H "Authorization: Bearer ${authValue}"`)
 
   if (hasBody) {
     if (contentType === 'multipart/form-data') {
@@ -85,10 +89,10 @@ function buildCurl({ method, url, auth, contentType, bodyExample, binaryNames, h
 
 // ── JavaScript (fetch) ──────────────────────────────────────────────────────
 
-function buildJs({ method, url, auth, contentType, bodyExample, binaryNames, hasBody }) {
+function buildJs({ method, url, auth, authValue, contentType, bodyExample, binaryNames, hasBody }) {
   const lines = []
   const headers = []
-  if (auth) headers.push(`    Authorization: "Bearer ${TOKEN_PLACEHOLDER}",`)
+  if (auth) headers.push(`    Authorization: "Bearer ${authValue}",`)
 
   let bodyDecl = null
   let bodyRef = null
@@ -169,12 +173,12 @@ function pyLiteral(value, indentLevel = 1) {
   return pyDict(value, indentLevel)
 }
 
-function buildPython({ method, url, auth, contentType, bodyExample, binaryNames, hasBody }) {
+function buildPython({ method, url, auth, authValue, contentType, bodyExample, binaryNames, hasBody }) {
   const lines = ['import requests', '']
   const callArgs = [`    "${url}",`]
 
   if (auth) {
-    callArgs.push(`    headers={"Authorization": "Bearer ${TOKEN_PLACEHOLDER}"},`)
+    callArgs.push(`    headers={"Authorization": "Bearer ${authValue}"},`)
   }
 
   if (hasBody) {

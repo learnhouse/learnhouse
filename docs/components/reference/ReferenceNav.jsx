@@ -3,9 +3,61 @@
 import { useEffect, useMemo, useState } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { MagnifyingGlass, CaretRight, List, X } from '@phosphor-icons/react/dist/ssr'
+import { MagnifyingGlass, CaretRight, List, X, ClockCounterClockwise } from '@phosphor-icons/react/dist/ssr'
 import MethodBadge from './MethodBadge'
 import TokenWidget from './TokenWidget'
+import { HISTORY_EVENT } from './Playground'
+
+function RecentRequests() {
+  const [history, setHistory] = useState([])
+  const [open, setOpen] = useState(false)
+
+  useEffect(() => {
+    const load = () => {
+      try {
+        setHistory(JSON.parse(localStorage.getItem('lh:ref-history') || '[]'))
+      } catch {}
+    }
+    load()
+    window.addEventListener(HISTORY_EVENT, load)
+    window.addEventListener('storage', load)
+    return () => {
+      window.removeEventListener(HISTORY_EVENT, load)
+      window.removeEventListener('storage', load)
+    }
+  }, [])
+
+  if (!history.length) return null
+
+  return (
+    <div className="lh-ref-nav-history">
+      <button className="lh-ref-nav-group-btn" onClick={() => setOpen((v) => !v)}>
+        <ClockCounterClockwise size={13} weight="bold" className="lh-ref-nav-caret" />
+        Recent requests
+        <span className="lh-ref-nav-count">{history.length}</span>
+      </button>
+      {open && (
+        <div className="lh-ref-nav-ops">
+          {history.map((entry, i) => (
+            <Link key={`${entry.ts}-${i}`} href={entry.href || '#'} className="lh-ref-nav-item">
+              <MethodBadge method={entry.method} small />
+              <span className="lh-ref-nav-item-label" title={entry.path}>
+                {entry.path.replace(/^\/api\/v1/, '')}
+              </span>
+              <span
+                className={`lh-ref-history-status ${
+                  entry.status < 300 ? 'lh-ref-history-status-ok' : 'lh-ref-history-status-err'
+                }`}
+              >
+                {entry.status}
+              </span>
+            </Link>
+          ))}
+        </div>
+      )}
+    </div>
+  )
+}
 
 function filterGroups(groups, query) {
   const q = query.trim().toLowerCase()
@@ -45,14 +97,18 @@ export default function ReferenceNav({ nav }) {
     setMobileOpen(false)
   }, [pathname, currentSlug])
 
-  // Scroll-spy over the operation articles of the current page.
+  // Scroll-spy over the operation articles of the current page (anchors live
+  // on the operation headings so search/deep links land precisely).
   useEffect(() => {
-    const articles = document.querySelectorAll('article.lh-ref-op[id]')
+    const articles = document.querySelectorAll('article.lh-ref-op')
     if (!articles.length) return
     const observer = new IntersectionObserver(
       (entries) => {
         for (const entry of entries) {
-          if (entry.isIntersecting) setActiveId(entry.target.id)
+          if (entry.isIntersecting) {
+            const heading = entry.target.querySelector('.lh-ref-op-title[id]')
+            if (heading) setActiveId(heading.id)
+          }
         }
       },
       { rootMargin: '-15% 0px -70% 0px' }
@@ -84,7 +140,7 @@ export default function ReferenceNav({ nav }) {
         Endpoints
       </button>
 
-      <aside className={`lh-ref-nav ${mobileOpen ? 'lh-ref-nav-open' : ''}`}>
+      <aside className={`lh-ref-nav ${mobileOpen ? 'lh-ref-nav-open' : ''}`} data-pagefind-ignore>
         <div className="lh-ref-nav-token">
           <TokenWidget compact />
         </div>
@@ -149,6 +205,8 @@ export default function ReferenceNav({ nav }) {
           {searching && filtered.length === 0 && (
             <p className="lh-ref-nav-empty">No endpoints match “{query}”.</p>
           )}
+
+          <RecentRequests />
         </nav>
       </aside>
       {mobileOpen && <div className="lh-ref-nav-overlay" onClick={() => setMobileOpen(false)} />}

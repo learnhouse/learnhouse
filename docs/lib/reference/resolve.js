@@ -109,6 +109,15 @@ export function typeLabel(spec, schema) {
   return label
 }
 
+/** OpenAPI 3.1 binary (file upload) fields. */
+export function isBinaryField(schema) {
+  return (
+    schema?.format === 'binary' ||
+    schema?.contentEncoding === 'base64' ||
+    schema?.contentMediaType === 'application/octet-stream'
+  )
+}
+
 const NAME_HINTS = [
   [/email/i, 'ada@example.com'],
   [/password/i, 'a-strong-password'],

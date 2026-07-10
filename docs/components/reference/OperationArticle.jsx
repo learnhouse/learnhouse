@@ -41,15 +41,62 @@ const CONTENT_TYPE_LABEL = {
   'application/x-www-form-urlencoded': 'application/x-www-form-urlencoded',
 }
 
+/**
+ * Access requirements, derived from the API's router wiring and RBAC layer
+ * (see API_GROUPS in lib/reference/config.js).
+ */
+function AuthChips({ op }) {
+  if (!op.auth) {
+    return (
+      <div className="lh-ref-authrow">
+        <span className="lh-ref-authchip">No authentication</span>
+      </div>
+    )
+  }
+  if (op.access === 'token' || op.access === 'token-required') {
+    return (
+      <div className="lh-ref-authrow">
+        <span className="lh-ref-authchip lh-ref-authchip-token">
+          API token
+          {op.tokenRight && (
+            <code>
+              {op.tokenRight.bucket}:{op.tokenRight.action}
+            </code>
+          )}
+        </span>
+        {op.access === 'token' ? (
+          <span className="lh-ref-authchip">or user session</span>
+        ) : (
+          <span className="lh-ref-authchip">required — no session fallback</span>
+        )}
+      </div>
+    )
+  }
+  if (op.access === 'session') {
+    return (
+      <div className="lh-ref-authrow">
+        <span className="lh-ref-authchip lh-ref-authchip-session">
+          User session only — API tokens not accepted
+        </span>
+      </div>
+    )
+  }
+  return (
+    <div className="lh-ref-authrow">
+      <span className="lh-ref-authchip">User session</span>
+    </div>
+  )
+}
+
 export default function OperationArticle({ op }) {
   const successResponses = op.responses.filter((r) => r.status.startsWith('2'))
   const errorResponses = op.responses.filter((r) => !r.status.startsWith('2'))
 
   return (
-    <article className="lh-ref-op" id={op.id}>
+    <article className="lh-ref-op">
       <div className="lh-ref-op-grid">
         <div className="lh-ref-op-prose">
-          <h2 className="lh-ref-op-title">
+          <h2 className="lh-ref-op-title" id={op.id}>
             {op.summary}
             {op.deprecated && <span className="lh-ref-pill lh-ref-pill-deprecated">deprecated</span>}
           </h2>
@@ -57,12 +104,8 @@ export default function OperationArticle({ op }) {
             <MethodBadge method={op.method} />
             <PathDisplay path={op.path} />
           </div>
+          <AuthChips op={op} />
           <Description text={op.description} />
-          {!op.auth && (
-            <p className="lh-ref-op-noauth">
-              This endpoint does not require an <code>Authorization</code> header.
-            </p>
-          )}
 
           <ParamsTable title="Path parameters" rows={op.pathParams} />
           <ParamsTable title="Query parameters" rows={op.queryParams} />
@@ -123,10 +166,16 @@ export default function OperationArticle({ op }) {
           )}
         </div>
 
-        <div className="lh-ref-op-code">
+        <div className="lh-ref-op-code" data-pagefind-ignore>
           <CodePanel snippets={op.snippets} />
           <ResponseExamples responses={op.responses} />
-          <Playground method={op.method} path={op.path} playground={op.playground} auth={op.auth} />
+          <Playground
+            method={op.method}
+            path={op.path}
+            playground={op.playground}
+            auth={op.auth}
+            opId={op.id}
+          />
         </div>
       </div>
     </article>

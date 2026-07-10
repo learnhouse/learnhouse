@@ -1,10 +1,11 @@
-import { API_BASE_URL, API_GROUPS, groupForTag, groupBySlug } from './config'
+import { API_BASE_URL, API_GROUPS, groupForTag, groupBySlug, METHOD_TO_ACTION } from './config'
 import {
   resolveRef,
   simplifyAnyOf,
   schemaToExample,
   schemaFields,
   typeLabel,
+  isBinaryField,
 } from './resolve'
 import { buildSnippets } from './snippets'
 import { highlight } from './highlight'
@@ -185,6 +186,9 @@ export async function buildGroupModel(spec, slug) {
       method,
       url: exampleUrl(path, queryParams),
       auth,
+      // Session-only endpoints reject lh_ tokens — show a JWT placeholder
+      // instead so the examples can't mislead (token substitution leaves it alone).
+      authValue: group.access === 'session' ? 'YOUR_JWT' : undefined,
       contentType: requestBody?.contentType || null,
       bodyExample: requestBody ? requestBody.example : null,
       bodyFields: requestBody?.fieldSchemas || [],
@@ -205,6 +209,10 @@ export async function buildGroupModel(spec, slug) {
       description: op.description || '',
       deprecated: !!op.deprecated,
       auth,
+      access: group.access,
+      tokenRight: group.rightsBucket
+        ? { bucket: group.rightsBucket, action: METHOD_TO_ACTION[method] || 'read' }
+        : null,
       pathParams,
       queryParams,
       requestBody: requestBody
@@ -219,7 +227,7 @@ export async function buildGroupModel(spec, slug) {
       responses,
       snippets,
       playground: {
-        supported: !isMultipart,
+        supported: true,
         contentType: requestBody?.contentType || null,
         pathParams: pathParams.map(({ name, required, example, type }) => ({
           name,
@@ -235,6 +243,15 @@ export async function buildGroupModel(spec, slug) {
         })),
         bodyTemplate:
           requestBody && !isMultipart ? JSON.stringify(requestBody.example, null, 2) : null,
+        // Multipart bodies render as individual form fields (file inputs for binary).
+        formFields: isMultipart
+          ? requestBody.fieldSchemas.map(({ name, schema }) => ({
+              name,
+              binary: isBinaryField(schema),
+              required: requestBody.fields.find((f) => f.name === name)?.required || false,
+              example: requestBody.example?.[name],
+            }))
+          : null,
       },
     })
   }

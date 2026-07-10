@@ -1,10 +1,43 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Play, CaretRight } from '@phosphor-icons/react/dist/ssr'
 import { useApiToken } from './TokenContext'
 
-function buildPath(pathTemplate, pathValues, queryParams, queryValues) {
+const PARAM_STORAGE_KEY = 'lh:ref-param-values'
+const HISTORY_STORAGE_KEY = 'lh:ref-history'
+const HISTORY_LIMIT = 12
+export const HISTORY_EVENT = 'lh-ref-history'
+
+function loadStoredParams() {
+  try {
+    return JSON.parse(localStorage.getItem(PARAM_STORAGE_KEY) || '{}')
+  } catch {
+    return {}
+  }
+}
+
+/** Remember param values by name so org_slug/course_uuid etc. follow you across endpoints. */
+function saveParams(values) {
+  try {
+    const stored = loadStoredParams()
+    for (const v of values) {
+      if (v.value?.trim()) stored[v.name] = v.value.trim()
+    }
+    localStorage.setItem(PARAM_STORAGE_KEY, JSON.stringify(stored))
+  } catch {}
+}
+
+function pushHistory(entry) {
+  try {
+    const history = JSON.parse(localStorage.getItem(HISTORY_STORAGE_KEY) || '[]')
+    history.unshift(entry)
+    localStorage.setItem(HISTORY_STORAGE_KEY, JSON.stringify(history.slice(0, HISTORY_LIMIT)))
+    window.dispatchEvent(new CustomEvent(HISTORY_EVENT))
+  } catch {}
+}
+
+function buildPath(pathTemplate, pathValues, queryValues) {
   let path = pathTemplate
   for (const p of pathValues) {
     const value = p.value?.trim()
@@ -20,77 +53,128 @@ function buildPath(pathTemplate, pathValues, queryParams, queryValues) {
   return { path: qs.length ? `${path}?${qs.join('&')}` : path }
 }
 
+function ParamInputs({ values, onChange }) {
+  if (!values.length) return null
+  return (
+    <div className="lh-ref-play-params">
+      {values.map((p, i) => (
+        <label key={p.name} className="lh-ref-play-param">
+          <span>
+            <code>{p.name}</code>{' '}
+            <em>
+              {p.kind}
+              {p.required ? ' · required' : ''}
+            </em>
+          </span>
+          <input
+            value={p.value}
+            placeholder={String(p.example ?? '')}
+            spellCheck={false}
+            onChange={(e) => onChange(i, e.target.value)}
+          />
+        </label>
+      ))}
+    </div>
+  )
+}
+
 /**
  * Live "Try it" panel. Requests are sent through the docs-site proxy
  * (/api/reference-proxy) because the API's CORS policy is pinned to tenant
  * domains — the proxy forwards only the Authorization header, never cookies.
+ * Multipart endpoints send FormData with method/path carried as query params.
  */
-export default function Playground({ method, path, playground, auth }) {
+export default function Playground({ method, path, playground, auth, opId }) {
   const { token } = useApiToken()
   const [open, setOpen] = useState(false)
-  const [pathValues, setPathValues] = useState(
-    playground.pathParams.map((p) => ({ ...p, value: '' }))
+  const [pathValues, setPathValues] = useState(() =>
+    playground.pathParams.map((p) => ({ ...p, kind: 'path', value: '' }))
   )
-  const [queryValues, setQueryValues] = useState(
-    playground.queryParams.map((q) => ({ ...q, value: '' }))
+  const [queryValues, setQueryValues] = useState(() =>
+    playground.queryParams.map((q) => ({ ...q, kind: 'query', value: '' }))
   )
+  const [formValues, setFormValues] = useState(() =>
+    (playground.formFields || [])
+      .filter((f) => !f.binary)
+      .map((f) => ({ ...f, kind: 'field', value: '' }))
+  )
+  const [files, setFiles] = useState({})
   const [body, setBody] = useState(playground.bodyTemplate || '')
   const [sending, setSending] = useState(false)
   const [result, setResult] = useState(null)
 
-  if (!playground.supported) {
-    return (
-      <div className="lh-ref-play lh-ref-play-unsupported">
-        <span className="lh-ref-play-note">
-          File-upload endpoints can’t run in the browser playground — use the cURL example.
-        </span>
-      </div>
-    )
-  }
-
+  const binaryFields = (playground.formFields || []).filter((f) => f.binary)
+  const isMultipart = playground.contentType === 'multipart/form-data'
   const needsToken = auth && !token
+
+  // Prefill from previously used values (org_slug etc. follow the visitor).
+  useEffect(() => {
+    if (!open) return
+    const stored = loadStoredParams()
+    const prefill = (list) =>
+      list.map((p) => (p.value || !stored[p.name] ? p : { ...p, value: stored[p.name] }))
+    setPathValues((prev) => prefill(prev))
+    setQueryValues((prev) => prefill(prev))
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open])
 
   const send = async () => {
     setResult(null)
-    const built = buildPath(path, pathValues, playground.queryParams, queryValues)
+    const built = buildPath(path, pathValues, queryValues)
     if (built.error) {
       setResult({ error: built.error })
       return
     }
 
-    let parsedBody
-    const isForm = playground.contentType === 'application/x-www-form-urlencoded'
-    if (playground.bodyTemplate && body.trim() && !isForm) {
-      try {
-        parsedBody = JSON.parse(body)
-      } catch (err) {
-        setResult({ error: `Body is not valid JSON: ${err.message}` })
-        return
-      }
-    } else if (playground.bodyTemplate && body.trim() && isForm) {
-      try {
-        parsedBody = JSON.parse(body)
-      } catch (err) {
-        setResult({ error: `Body must be a JSON object of form fields: ${err.message}` })
-        return
-      }
-    }
-
     setSending(true)
     const startedAt = performance.now()
     try {
-      const headers = { 'Content-Type': 'application/json' }
-      if (auth && token) headers.Authorization = `Bearer ${token}`
-      const res = await fetch('/api/reference-proxy', {
-        method: 'POST',
-        headers,
-        body: JSON.stringify({
-          method,
-          path: built.path,
-          body: parsedBody,
-          contentType: playground.contentType,
-        }),
-      })
+      let res
+      if (isMultipart) {
+        const form = new FormData()
+        for (const f of formValues) {
+          if (f.value?.trim()) form.append(f.name, f.value)
+        }
+        for (const f of binaryFields) {
+          const file = files[f.name]
+          if (file) form.append(f.name, file)
+          else if (f.required) {
+            setResult({ error: `Missing required file “${f.name}”` })
+            setSending(false)
+            return
+          }
+        }
+        const qs = new URLSearchParams({ method, path: built.path })
+        res = await fetch(`/api/reference-proxy?${qs}`, {
+          method: 'POST',
+          headers: auth && token ? { Authorization: `Bearer ${token}` } : {},
+          body: form,
+        })
+      } else {
+        let parsedBody
+        if (playground.bodyTemplate && body.trim()) {
+          try {
+            parsedBody = JSON.parse(body)
+          } catch (err) {
+            setResult({ error: `Body is not valid JSON: ${err.message}` })
+            setSending(false)
+            return
+          }
+        }
+        const headers = { 'Content-Type': 'application/json' }
+        if (auth && token) headers.Authorization = `Bearer ${token}`
+        res = await fetch('/api/reference-proxy', {
+          method: 'POST',
+          headers,
+          body: JSON.stringify({
+            method,
+            path: built.path,
+            body: parsedBody,
+            contentType: playground.contentType,
+          }),
+        })
+      }
+
       const latency = Math.round(performance.now() - startedAt)
       const text = await res.text()
       let pretty = text
@@ -98,6 +182,15 @@ export default function Playground({ method, path, playground, auth }) {
         pretty = JSON.stringify(JSON.parse(text), null, 2)
       } catch {}
       setResult({ status: res.status, latency, body: pretty })
+      saveParams([...pathValues, ...queryValues])
+      pushHistory({
+        method,
+        path: built.path,
+        status: res.status,
+        opId,
+        href: `${location.pathname}#${opId}`,
+        ts: new Date().toISOString(),
+      })
     } catch (err) {
       setResult({ error: `Request failed: ${err.message}` })
     } finally {
@@ -113,6 +206,13 @@ export default function Playground({ method, path, playground, auth }) {
         : 'lh-ref-play-status-err'
     : ''
 
+  const updateAt = (setter) => (i, value) =>
+    setter((prev) => {
+      const next = [...prev]
+      next[i] = { ...next[i], value }
+      return next
+    })
+
   return (
     <div className="lh-ref-play">
       <button className="lh-ref-play-toggle" onClick={() => setOpen((v) => !v)}>
@@ -126,51 +226,30 @@ export default function Playground({ method, path, playground, auth }) {
 
       {open && (
         <div className="lh-ref-play-body">
-          {pathValues.length > 0 && (
-            <div className="lh-ref-play-params">
-              {pathValues.map((p, i) => (
-                <label key={p.name} className="lh-ref-play-param">
+          <ParamInputs values={pathValues} onChange={updateAt(setPathValues)} />
+          <ParamInputs values={queryValues} onChange={updateAt(setQueryValues)} />
+
+          {isMultipart && (
+            <>
+              <ParamInputs values={formValues} onChange={updateAt(setFormValues)} />
+              {binaryFields.map((f) => (
+                <label key={f.name} className="lh-ref-play-param">
                   <span>
-                    <code>{p.name}</code> <em>path · required</em>
+                    <code>{f.name}</code> <em>file{f.required ? ' · required' : ''}</em>
                   </span>
                   <input
-                    value={p.value}
-                    placeholder={String(p.example ?? '')}
-                    spellCheck={false}
-                    onChange={(e) => {
-                      const next = [...pathValues]
-                      next[i] = { ...p, value: e.target.value }
-                      setPathValues(next)
-                    }}
+                    type="file"
+                    className="lh-ref-play-file"
+                    onChange={(e) =>
+                      setFiles((prev) => ({ ...prev, [f.name]: e.target.files?.[0] || null }))
+                    }
                   />
                 </label>
               ))}
-            </div>
+            </>
           )}
 
-          {queryValues.length > 0 && (
-            <div className="lh-ref-play-params">
-              {queryValues.map((q, i) => (
-                <label key={q.name} className="lh-ref-play-param">
-                  <span>
-                    <code>{q.name}</code> <em>query{q.required ? ' · required' : ''}</em>
-                  </span>
-                  <input
-                    value={q.value}
-                    placeholder={String(q.example ?? '')}
-                    spellCheck={false}
-                    onChange={(e) => {
-                      const next = [...queryValues]
-                      next[i] = { ...q, value: e.target.value }
-                      setQueryValues(next)
-                    }}
-                  />
-                </label>
-              ))}
-            </div>
-          )}
-
-          {playground.bodyTemplate && (
+          {!isMultipart && playground.bodyTemplate && (
             <label className="lh-ref-play-bodyfield">
               <span>
                 Body{' '}
