@@ -205,8 +205,18 @@ function CreateCourseModal({ closeModal, orgslug }: any) {
       for (const clipboardItem of clipboardItems) {
         const imageTypes = clipboardItem.types.filter(type => type.startsWith('image/'))
         if (imageTypes.length > 0) {
-          const blob = await clipboardItem.getType(imageTypes[0])
-          const file = new File([blob], 'clipboard_image.png', { type: imageTypes[0] })
+          const imageType = imageTypes[0]
+          const blob = await clipboardItem.getType(imageType)
+          // The API derives the stored extension from the filename, so it must
+          // match the blob's actual type (browsers may hand back jpeg/webp/gif).
+          const extensionByType: Record<string, string> = {
+            'image/jpeg': 'jpg',
+            'image/png': 'png',
+            'image/gif': 'gif',
+            'image/webp': 'webp',
+          }
+          const extension = extensionByType[imageType] ?? 'png'
+          const file = new File([blob], `clipboard_image.${extension}`, { type: imageType })
           formik.setFieldValue('thumbnail', file)
           return
         }
