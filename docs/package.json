@@ -19,7 +19,8 @@
     "nextra-theme-docs": "^4.6.1",
     "posthog-js": "^1.386.6",
     "react": "^19.2.7",
-    "react-dom": "^19.2.7"
+    "react-dom": "^19.2.7",
+    "shiki": "^3.13.0"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4.3.0",
