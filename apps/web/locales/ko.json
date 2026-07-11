@@ -464,6 +464,7 @@
     "image": "이미지",
     "upload_image": "이미지 업로드",
     "choose_from_gallery": "갤러리에서 선택",
+    "paste_from_clipboard": "클립보드에서 붙여넣기",
     "enter_to_add": "Enter 키로 추가...",
     "select_visibility": "공개 설정 선택",
     "and_x_more": "외 {{count}}건",

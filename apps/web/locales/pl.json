@@ -476,6 +476,7 @@
     "image": "Obraz",
     "upload_image": "Prześlij obraz",
     "choose_from_gallery": "Wybierz z galerii",
+    "paste_from_clipboard": "Wklej schowka",
     "enter_to_add": "Naciśnij Enter, aby dodać...",
     "select_visibility": "Wybierz widoczność",
     "and_x_more": "i {{count}} więcej",

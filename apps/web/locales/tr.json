@@ -476,6 +476,7 @@
     "image": "Resim",
     "upload_image": "Resim Yükle",
     "choose_from_gallery": "Galeriden Seç",
+    "paste_from_clipboard": "Panodan Yapıştır",
     "enter_to_add": "Eklemek için Enter tuşuna basın...",
     "select_visibility": "Görünürlüğü seçin",
     "and_x_more": "ve {{count}} tane daha",

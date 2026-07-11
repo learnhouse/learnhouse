@@ -476,6 +476,7 @@
     "image": "Изображение",
     "upload_image": "Загрузить изображение",
     "choose_from_gallery": "Выбрать из галереи",
+    "paste_from_clipboard": "Вставить из буфера обмена",
     "enter_to_add": "Нажмите Enter, чтобы добавить...",
     "select_visibility": "Выберите видимость",
     "and_x_more": "и еще {{count}}",
