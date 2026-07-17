@@ -82,21 +82,34 @@ export async function POST(request: Request) {
   if (processedEvents.has(event.id)) {
     return NextResponse.json({ result: "duplicate", ok: true });
   }
-  processedEvents.set(event.id, Date.now());
 
   try {
     if (event.type === "checkout.session.completed") {
       await handleCheckoutCompleted(event.data.object);
     }
 
-    if (event.type === "customer.subscription.updated" || event.type === "customer.subscription.deleted") {
+    // Treat `created` like an `updated`: it's the natural recovery event that
+    // also carries subscription_data.metadata.org_id, so if checkout.session
+    // .completed was dropped, this still upgrades the org.
+    if (
+      event.type === "customer.subscription.updated" ||
+      event.type === "customer.subscription.deleted" ||
+      event.type === "customer.subscription.created"
+    ) {
       await handleSubscriptionEvent(event.type, event.data.object);
     }
 
+    // Mark processed only AFTER successful handling. Recording it before (as we
+    // used to) meant a handler that threw returned 500 for Stripe to retry, but
+    // the retry — arriving within the 5-minute TTL on the same instance — was
+    // answered "duplicate" and never reprocessed, permanently dropping the
+    // upgrade. Downstream service calls are idempotent, so worst case is a
+    // harmless re-apply.
+    processedEvents.set(event.id, Date.now());
     return NextResponse.json({ result: event.type, ok: true });
   } catch (error) {
     console.error(`Webhook processing error for ${event.type} (${event.id}):`, error);
-    // Return 500 so Stripe retries the webhook
+    // Return 500 (and leave the event unmarked) so Stripe retries the webhook.
     return NextResponse.json(
       { message: "webhook processing failed", ok: false },
       { status: 500 }
@@ -107,21 +120,37 @@ export async function POST(request: Request) {
 async function handleCheckoutCompleted(session: any) {
   if (session.payment_status !== "paid") return;
 
-  // Retrieve session with expanded subscription to get metadata
-  const fullSession = await stripe.checkout.sessions.retrieve(session.id, {
-    expand: ["subscription"],
-  });
-  const subscription = fullSession.subscription;
+  // Retrieve the session with the subscription expanded to read its metadata.
+  // Stripe's basil API (2025-03-31) defers subscription creation until payment
+  // completes, so the expanded `subscription` can briefly be null right after
+  // checkout — the same race fulfillCheckoutSession() guards against. Retry so a
+  // deferred subscription doesn't silently drop the upgrade.
+  let fullSession: any;
+  let subscription: any;
+  for (let attempt = 0; attempt < 3; attempt++) {
+    fullSession = await stripe.checkout.sessions.retrieve(session.id, {
+      expand: ["subscription"],
+    });
+    subscription = fullSession.subscription;
+    if (subscription?.metadata?.org_id) break;
+    if (attempt < 2) await new Promise((r) => setTimeout(r, 1000));
+  }
   const customerEmail = fullSession.customer_details?.email || session.customer_email;
 
-  if (!subscription?.metadata) {
-    console.warn("checkout.session.completed: no subscription metadata", session.id);
-    return;
+  if (!subscription) {
+    // Subscription still not materialized after retries — transient. Throw so
+    // Stripe redelivers (and customer.subscription.created will also cover it),
+    // rather than acking with a 200 that permanently drops the upgrade.
+    throw new Error(
+      `checkout.session.completed: subscription not yet available for session ${session.id}`,
+    );
   }
 
-  const orgId = subscription.metadata.org_id;
+  const orgId = subscription.metadata?.org_id;
   if (!orgId) {
-    console.warn("checkout.session.completed: no org_id in metadata", session.id);
+    // A checkout not created by our flow carries no org linkage — nothing we can
+    // do; ack so Stripe doesn't retry it forever and disable the endpoint.
+    console.warn("checkout.session.completed: no org_id in subscription metadata", session.id);
     return;
   }
 
@@ -175,7 +204,10 @@ async function handleSubscriptionEvent(eventType: string, subscription: any) {
 
     if (eventType === "customer.subscription.deleted") {
       await deactivatePackInternally(orgId, subscription.id);
-    } else if (eventType === "customer.subscription.updated") {
+    } else if (
+      eventType === "customer.subscription.updated" ||
+      eventType === "customer.subscription.created"
+    ) {
       if (subscription.cancel_at_period_end) {
         // User requested cancellation — mark as canceling but keep active until period end
         await markPackCancelingInternally(orgId, subscription.id);
@@ -200,7 +232,10 @@ async function handleSubscriptionEvent(eventType: string, subscription: any) {
       await deactivateAllPacksInternally(orgId).catch((err) => {
         console.error(`Failed to deactivate packs for org ${orgId}:`, err);
       });
-    } else if (eventType === "customer.subscription.updated") {
+    } else if (
+      eventType === "customer.subscription.updated" ||
+      eventType === "customer.subscription.created"
+    ) {
       if (subscription.cancel_at_period_end) {
         // Plan is canceling — keep current plan until period ends
         console.log(`Plan subscription canceling for org ${orgId}, access continues until period end`);
