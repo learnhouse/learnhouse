@@ -30,7 +30,10 @@ ALL_FEATURES = [
 
 def _get_plan_from_config(config: dict) -> str:
     """Extract plan from config, supporting both v1 and v2 formats."""
-    version = config.get("config_version", "1.0")
+    # Coerce to str: config_version may be stored as a number in JSON, which
+    # would make .startswith() raise AttributeError and crash feature
+    # resolution. The writer (org_plan.py) already normalizes with str().
+    version = str(config.get("config_version", "1.0"))
     if version.startswith("2"):
         return config.get("plan", "free")
     # v1: plan is under cloud.plan
@@ -39,7 +42,7 @@ def _get_plan_from_config(config: dict) -> str:
 
 def _get_admin_toggle(config: dict, feature: str) -> dict:
     """Get admin toggle for a feature, supporting both v1 and v2 formats."""
-    version = config.get("config_version", "1.0")
+    version = str(config.get("config_version", "1.0"))
     if version.startswith("2"):
         return config.get("admin_toggles", {}).get(feature, {})
     # v1: read from features section; map enabled=False → disabled=True
@@ -56,7 +59,7 @@ def _get_admin_toggle(config: dict, feature: str) -> dict:
 
 def _get_overrides(config: dict, feature: str) -> dict:
     """Get overrides for a feature from v2 config."""
-    version = config.get("config_version", "1.0")
+    version = str(config.get("config_version", "1.0"))
     if not version.startswith("2"):
         return {}
     return config.get("overrides", {}).get(feature, {})
