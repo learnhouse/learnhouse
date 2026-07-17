@@ -464,6 +464,7 @@
     "image": "画像",
     "upload_image": "画像をアップロード",
     "choose_from_gallery": "ギャラリーから選択",
+    "paste_from_clipboard": "クリップボードからペースト",
     "enter_to_add": "Enterキーで追加...",
     "select_visibility": "公開設定を選択",
     "and_x_more": "他 {{count}} 件",

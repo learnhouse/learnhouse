@@ -476,6 +476,7 @@
     "image": "छवि",
     "upload_image": "छवि अपलोड करें",
     "choose_from_gallery": "गैलरी से चुनें",
+    "paste_from_clipboard": "क्लिपबोर्ड से पेस्ट करें",
     "enter_to_add": "जोड़ने के लिए Enter दबाएं...",
     "select_visibility": "दृश्यता चुनें",
     "and_x_more": "और {{count}} और",

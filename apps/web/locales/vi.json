@@ -476,6 +476,7 @@
     "image": "Hình ảnh",
     "upload_image": "Tải ảnh lên",
     "choose_from_gallery": "Chọn từ thư viện",
+    "paste_from_clipboard": "Dán từ khay nhớ tạm",
     "enter_to_add": "Nhấn Enter để thêm...",
     "select_visibility": "Chọn chế độ hiển thị",
     "and_x_more": "và {{count}} khác",
