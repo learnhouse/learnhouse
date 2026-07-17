@@ -16,7 +16,9 @@ export function usePlan(): PlanLevel {
   if (mode === 'oss') return 'oss'
   if (mode === 'ee') return 'enterprise'
   const config = org?.config?.config
-  const isV2 = config?.config_version?.startsWith('2')
+  // config_version may be a number in stored JSON; guard startsWith so a numeric
+  // version doesn't throw and blank out the plan (→ falls back to free).
+  const isV2 = typeof config?.config_version === 'string' && config.config_version.startsWith('2')
   const plan = isV2 ? config?.plan : config?.cloud?.plan
   return (plan || 'free') as PlanLevel
 }
