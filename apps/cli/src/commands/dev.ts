@@ -282,6 +282,7 @@ export async function devCommand(opts: { ee?: boolean; adminEmail?: string; admi
   serviceEnv = {
     FORCE_COLOR: '1',
     LEARNHOUSE_DEVELOPMENT_MODE: 'true',
+    UV_PYTHON_PREFERENCE: 'only-managed',
     ...(adminEmail && { LEARNHOUSE_INITIAL_ADMIN_EMAIL: adminEmail }),
     ...(adminPassword && { LEARNHOUSE_INITIAL_ADMIN_PASSWORD: adminPassword }),
     ...(!opts.ee && { LEARNHOUSE_DISABLE_EE: '1' }),
@@ -329,7 +330,15 @@ export async function devCommand(opts: { ee?: boolean; adminEmail?: string; admi
 
   if (!fs.existsSync(path.join(apiDir, '.venv'))) {
     p.log.info('Installing API dependencies...')
-    const result = spawnSync('uv', ['sync'], { cwd: apiDir, stdio: 'inherit', shell: true })
+    const result = spawnSync('uv', ['sync'], {
+      cwd: apiDir,
+      stdio: 'inherit',
+      shell: true,
+      env: {
+        ...process.env,
+        UV_PYTHON_PREFERENCE: 'only-managed',
+      },
+    })
     if (result.status !== 0) {
       p.log.error('Failed to install API dependencies')
       process.exit(1)
