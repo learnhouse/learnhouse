@@ -1,6 +1,8 @@
 'use client'
 import React, { useState } from 'react'
 import '../lib/i18n'
+import { ThemeProvider } from 'next-themes'
+import ThemeToggle from '@components/Theme/ThemeToggle'
 import { SessionProvider } from '@components/Contexts/AuthContext'
 import LHSessionProvider from '@components/Contexts/LHSessionContext'
 import AuthFetchInterceptor from '@components/Contexts/AuthFetchInterceptor'
@@ -17,19 +19,27 @@ export default function Providers({ children }: { children: React.ReactNode }) {
 
   return (
     <QueryClientProvider client={queryClient}>
-      <SessionProvider refetchInterval={600000}>
-        <AuthFetchInterceptor />
-        <LHSessionProvider>
-          <PostHogProvider>
-            <I18nProvider>
-              <BackgroundTasksProvider>
-                {children}
-                <BackgroundTasksPanel />
-              </BackgroundTasksProvider>
-            </I18nProvider>
-          </PostHogProvider>
-        </LHSessionProvider>
-      </SessionProvider>
+      <ThemeProvider
+        attribute="class"
+        defaultTheme="system"
+        enableSystem
+        disableTransitionOnChange
+      >
+        <SessionProvider refetchInterval={600000}>
+          <AuthFetchInterceptor />
+          <LHSessionProvider>
+            <PostHogProvider>
+              <I18nProvider>
+                <BackgroundTasksProvider>
+                  {children}
+                  <BackgroundTasksPanel />
+                  <ThemeToggle />
+                </BackgroundTasksProvider>
+              </I18nProvider>
+            </PostHogProvider>
+          </LHSessionProvider>
+        </SessionProvider>
+      </ThemeProvider>
       {process.env.NODE_ENV === 'development' && <ReactQueryDevtools initialIsOpen={false} />}
     </QueryClientProvider>
   )
