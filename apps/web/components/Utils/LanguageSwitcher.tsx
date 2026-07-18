@@ -34,7 +34,7 @@ const LanguageSwitcher = ({ primaryColor = '' }: { primaryColor?: string }) => {
       </DropdownMenuTrigger>
 
       <DropdownMenuContent
-        className="min-w-[180px] z-dropdown"
+        className="min-w-[180px] z-dropdown max-h-[70vh] overflow-y-auto"
         align="end"
       >
         {AVAILABLE_LANGUAGES.map((language) => (
