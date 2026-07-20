@@ -1,5 +1,5 @@
 from typing import Optional, Dict
-from sqlalchemy import JSON, Column, ForeignKey, Index
+from sqlalchemy import JSON, Column, ForeignKey, Index, UniqueConstraint
 from sqlmodel import Field, SQLModel
 from enum import Enum
 
@@ -45,6 +45,10 @@ class AssignmentBase(SQLModel):
     # submission is attempt 1, so a teacher who sets max_retries=3 gives the
     # student up to 3 graded attempts total (initial + 2 retries).
     max_retries: Optional[int] = 0
+    # Passing line as a percentage (0-100). When None, the grading-type default
+    # applies (50 for NUMERIC/PERCENTAGE/PASS_FAIL, 60 for ALPHABET/GPA_SCALE).
+    # Nullable so every existing assignment keeps its legacy behavior.
+    pass_threshold_percentage: Optional[float] = None
 
     org_id: int
     course_id: int
@@ -72,7 +76,16 @@ class AssignmentRead(AssignmentBase):
 
 
 class AssignmentUpdate(SQLModel):
-    """Model for updating an assignment."""
+    """Model for updating an assignment.
+
+    The structural foreign keys (org_id / course_id / chapter_id / activity_id)
+    are intentionally NOT exposed here. They locate the assignment inside a
+    single tenant/course, and the update endpoint only authorizes against the
+    assignment's *current* course — so accepting client-supplied parents would
+    let an instructor reparent an assignment into another org/course they don't
+    own. Assignments are created inside a course and never legitimately moved
+    across one through this endpoint.
+    """
 
     title: Optional[str] = None
     description: Optional[str] = None
@@ -84,10 +97,7 @@ class AssignmentUpdate(SQLModel):
     show_correct_answers: Optional[bool] = None
     allow_retries: Optional[bool] = None
     max_retries: Optional[int] = None
-    org_id: Optional[int] = None
-    course_id: Optional[int] = None
-    chapter_id: Optional[int] = None
-    activity_id: Optional[int] = None
+    pass_threshold_percentage: Optional[float] = None
     update_date: Optional[str] = None
 
 
@@ -261,6 +271,15 @@ class AssignmentTaskSubmissionUpdate(SQLModel):
 
 class AssignmentTaskSubmission(AssignmentTaskSubmissionBase, table=True):
     """Represents a submission for a specific assignment task with grade and feedback."""
+    # One submission row per (user, task). Enforced in the DB so two concurrent
+    # save-progress/submit requests can't each pass the "does a row exist?" check
+    # and both INSERT (duplicate rows make grading pick a nondeterministic row).
+    __table_args__ = (
+        UniqueConstraint(
+            "user_id", "assignment_task_id",
+            name="uq_assignmenttasksubmission_user_task",
+        ),
+    )
 
     id: Optional[int] = Field(default=None, primary_key=True)
     assignment_task_submission_uuid: str
@@ -371,6 +390,16 @@ class AssignmentUserSubmissionUpdate(SQLModel):
 
 class AssignmentUserSubmission(AssignmentUserSubmissionBase, table=True):
     """Represents the submission status of an assignment for a user."""
+    # One submission row per (user, assignment) — retries reset the row in place
+    # rather than inserting a new one. Enforced in the DB so two concurrent
+    # submit requests (double-click) can't both INSERT a duplicate row that then
+    # splits grading/webhooks across two rows.
+    __table_args__ = (
+        UniqueConstraint(
+            "user_id", "assignment_id",
+            name="uq_assignmentusersubmission_user_assignment",
+        ),
+    )
 
     id: Optional[int] = Field(default=None, primary_key=True)
     creation_date: str
