@@ -39,10 +39,10 @@ export async function addContactWithLoops(
   if (!c) return null
   try {
     const props: ContactProps = { userGroup, source: 'learnhouse.io', ...(extra || {}) }
-    const res = await c.createContact(email, props)
+    const res = await c.createContact({ email, properties: props })
     // Already exists → update instead so the call is idempotent.
     if ((res as any)?.success === false) {
-      return await c.updateContact(email, props)
+      return await c.updateContact({ email, properties: props })
     }
     return res
   } catch (err) {
@@ -55,7 +55,7 @@ export async function updateLoopsContact(email: string, properties: ContactProps
   const c = client()
   if (!c) return null
   try {
-    return await c.updateContact(email, properties)
+    return await c.updateContact({ email, properties })
   } catch (err) {
     console.error('[loops] updateContact failed:', err)
     return null
@@ -96,7 +96,7 @@ export async function appendLoopsContactProperty(
       // findContact failed — proceed with just the incoming values.
     }
     const merged = Array.from(new Set([...existing, ...incoming].filter(Boolean)))
-    return await c.updateContact(email, { [property]: merged.join(',') })
+    return await c.updateContact({ email, properties: { [property]: merged.join(',') } })
   } catch (err) {
     console.error('[loops] appendContactProperty failed:', err)
     return null

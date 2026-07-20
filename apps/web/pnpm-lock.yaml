@@ -288,8 +288,8 @@ importers:
         specifier: ^0.18.0
         version: 0.18.1
       loops:
-        specifier: ^4
-        version: 4.1.0
+        specifier: ^7.0.0
+        version: 7.0.0
       lowlight:
         specifier: ^3.3.0
         version: 3.3.0
@@ -4644,8 +4644,8 @@ packages:
   longest-streak@3.1.0:
     resolution: {integrity: sha512-9Ri+o0JYgehTaVBBDoMqIl8GXtbWg711O3srftcHhZ0dqnETqLaoIK0x17fUw9rFSlK/0NlsKe0Ahhyl5pXE2g==}
 
-  loops@4.1.0:
-    resolution: {integrity: sha512-KUiRuRZjqRgq17dQNKODkGQ26NWr8aP6MPMoBzzd0xXUJci8HWbT31Y2GETiVE6cl+I7oXOHStA+dE8+p6oyLA==}
+  loops@7.0.0:
+    resolution: {integrity: sha512-TNbnJndtZwE7Esmc6+xKy3xWZOqzq8xQ5IqvZ+CBS9MOjqcx8qgyfsWoW4F7oNZGkX7uS1+RDxvUAswwD2hR5Q==}
     engines: {node: '>=18'}
 
   loose-envify@1.4.0:
@@ -10601,7 +10601,7 @@ snapshots:
 
   longest-streak@3.1.0: {}
 
-  loops@4.1.0: {}
+  loops@7.0.0: {}
 
   loose-envify@1.4.0:
     dependencies:
