@@ -32,6 +32,7 @@ type TaskNumberAnswerObjectProps = {
   view: 'teacher' | 'student' | 'grading'
   assignmentTaskUUID?: string
   user_id?: string
+  onGraded?: () => void
 }
 
 const DEFAULT_CONTENTS: NumberAnswerContents = {
@@ -60,6 +61,7 @@ function TaskNumberAnswerObject({
   view,
   assignmentTaskUUID,
   user_id,
+  onGraded,
 }: TaskNumberAnswerObjectProps) {
   const { t } = useTranslation()
   const session = useLHSession() as any
@@ -80,9 +82,9 @@ function TaskNumberAnswerObject({
   const [contents, setContents] = useState<NumberAnswerContents>(DEFAULT_CONTENTS)
   const [studentAnswer, setStudentAnswer] = useState<string>('')
   const [initialAnswer, setInitialAnswer] = useState<string>('')
-  // Derived: the disclaimer shows exactly while the draft differs from the
-  // last saved answer (submitFC syncs initialAnswer on success).
-  const showSavingDisclaimer = view === 'student' && studentAnswer !== initialAnswer
+  // Tracks whether the student has typed in the input; once true, we stop
+  // re-hydrating from the server so their draft isn't clobbered mid-edit.
+  const interactedRef = React.useRef(false)
 
   const [userSubmissions, setUserSubmissions] = useState<any>(null)
   const [userSubmissionObject, setUserSubmissionObject] = useState<any>(null)
@@ -113,6 +115,7 @@ function TaskNumberAnswerObject({
   }
 
   async function loadOwnSubmission() {
+    if (interactedRef.current) return
     if (!assignmentTaskUUID) return
     const res = await getAssignmentTaskSubmissionsMe(
       assignmentTaskUUID,
@@ -179,8 +182,8 @@ function TaskNumberAnswerObject({
   // is finalized — either by the auto-grade path on submission or by the
   // teacher clicking "Set final grade". Keeping the client out of the
   // grading loop also means DevTools tampering can't inflate the score.
-  async function submitFC() {
-    if (!assignmentTaskUUID) return
+  async function submitFC(opts?: { silent?: boolean }) {
+    if (!assignmentTaskUUID) return true
     const values = {
       assignment_task_submission_uuid:
         userSubmissions?.assignment_task_submission_uuid || null,
@@ -199,9 +202,11 @@ function TaskNumberAnswerObject({
     if (res.success) {
       setUserSubmissions(res.data)
       setInitialAnswer(studentAnswer)
-      toast.success(t('dashboard.assignments.editor.toasts.task_saved'))
+      if (!opts?.silent) toast.success(t('dashboard.assignments.editor.toasts.task_saved'))
+      return true
     } else {
-      toast.error(t('dashboard.assignments.editor.toasts.task_save_error'))
+      if (!opts?.silent) toast.error(t('dashboard.assignments.editor.toasts.task_save_error'))
+      return false
     }
   }
 
@@ -228,7 +233,7 @@ function TaskNumberAnswerObject({
       username: session?.data?.user?.username,
       assignmentTaskSubmissionUUID: userSubmissions.assignment_task_submission_uuid,
       taskSubmissionPayload: userSubmissions.task_submission,
-      onSuccess: loadUserSubmission,
+      onSuccess: () => { loadUserSubmission(); onGraded?.(); },
     })
   }
 
@@ -238,6 +243,7 @@ function TaskNumberAnswerObject({
       view={view}
       saveFC={saveFC}
       submitFC={submitFC}
+      taskUUID={assignmentTaskUUID}
       gradeCustomFC={gradeCustomFC}
       currentPoints={userSubmissionObject?.grade}
       currentFeedback={userSubmissionObject?.task_submission_grade_feedback}
@@ -245,7 +251,8 @@ function TaskNumberAnswerObject({
         assignmentTaskOutsideProvider?.max_grade_value ||
         assignmentTaskState?.assignmentTask?.max_grade_value
       }
-      showSavingDisclaimer={showSavingDisclaimer}
+      dirtyValue={studentAnswer}
+      savedValue={initialAnswer}
     >
       <div className="flex flex-col space-y-4">
         {/* === TEACHER VIEW === */}
@@ -365,7 +372,7 @@ function TaskNumberAnswerObject({
                 type="text"
                 inputMode="decimal"
                 value={studentAnswer}
-                onChange={(e) => !submissionIsGraded && setStudentAnswer(e.target.value)}
+                onChange={(e) => { if (!submissionIsGraded) { interactedRef.current = true; setStudentAnswer(e.target.value) } }}
                 readOnly={submissionIsGraded}
                 placeholder={t(
                   'dashboard.assignments.editor.task_editor.number_answer.your_answer_placeholder'

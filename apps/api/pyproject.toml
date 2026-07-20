@@ -47,6 +47,7 @@ dependencies = [
     "llama-index-core==0.14.22",
     "pgvector==0.4.2",
     "pypdf==6.13.3",
+    "regex>=2026.1.15",
 ]
 
 [tool.ruff]

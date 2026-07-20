@@ -15,6 +15,7 @@ import { getAssignmentFromActivityUUID, getFinalGrade, retryAssignmentSubmission
 import { AssignmentProvider } from '@components/Contexts/Assignments/AssignmentContext'
 import { AssignmentsTaskProvider } from '@components/Contexts/Assignments/AssignmentsTaskContext'
 import AssignmentSubmissionProvider, { useAssignmentSubmission } from '@components/Contexts/Assignments/AssignmentSubmissionContext'
+import { AssignmentDirtyTasksProvider, useAssignmentDirtyTasks } from '@components/Contexts/Assignments/AssignmentDirtyTasksContext'
 import toast from 'react-hot-toast'
 import { useQueryClient } from '@tanstack/react-query'
 import { queryKeys } from '@/lib/query/keys'
@@ -518,6 +519,10 @@ function ActivityClient(props: ActivityClientProps) {
   return (
     <>
       <CourseProvider courseuuid={course?.course_uuid} initialCourseStructure={course}>
+        {/* Common ancestor of BOTH the task editors and the Submit button, which
+            live in disjoint AssignmentSubmissionProvider subtrees. Lets Submit
+            flush unsaved task answers before grading (avoids silent 0%). */}
+        <AssignmentDirtyTasksProvider>
         <Suspense fallback={<LoadingFallback />}>
           <AIChatBotProvider>
             <Suspense fallback={null}>
@@ -1021,6 +1026,7 @@ function ActivityClient(props: ActivityClientProps) {
             </Suspense>
           </AIChatBotProvider>
         </Suspense>
+        </AssignmentDirtyTasksProvider>
       </CourseProvider>
     </>
   )
@@ -1442,6 +1448,7 @@ function AssignmentTools(props: {
   const submission = useAssignmentSubmission() as any
   const session = useLHSession() as any;
   const queryClient = useQueryClient();
+  const dirtyTasks = useAssignmentDirtyTasks();
   const [gradeData, setGradeData] = React.useState<any>(null);
   const [isGradeModalOpen, setIsGradeModalOpen] = React.useState(false);
   const { width: windowWidth, height: windowHeight } = useWindowSize();
@@ -1451,6 +1458,14 @@ function AssignmentTools(props: {
 
   const submitForGradingUI = async () => {
     if (props.assignment) {
+      // Persist any answers the learner selected but didn't manually save, so
+      // grading never runs against an empty/stale answer sheet. Abort if a save
+      // fails rather than silently finalizing a 0%.
+      const flushed = await dirtyTasks.flushAll()
+      if (!flushed) {
+        toast.error(t('assignments.failed_submit_assignment'))
+        return
+      }
       const res = await submitAssignmentForGrading(
         props.assignment?.assignment_uuid,
         session.data?.tokens?.access_token
@@ -1459,6 +1474,11 @@ function AssignmentTools(props: {
         toast.success(t('assignments.assignment_submitted_success'))
         queryClient.invalidateQueries({ queryKey: queryKeys.assignments.submission(props.assignment?.assignment_uuid) })
         queryClient.invalidateQueries({ queryKey: queryKeys.assignments.taskSubmission(props.assignment?.assignment_uuid) })
+        // Submitting may auto-grade the assignment (GRADED), which makes the
+        // answer key eligible to be revealed (show_correct_answers). The task
+        // definitions were fetched pre-grade with the key stripped, so refetch
+        // them — otherwise the reveal renders every option as "incorrect".
+        queryClient.invalidateQueries({ queryKey: queryKeys.assignments.tasks(props.assignment?.assignment_uuid) })
       }
       else {
         toast.error(t('assignments.failed_submit_assignment'))
@@ -1477,10 +1497,20 @@ function AssignmentTools(props: {
       );
       if (res.success) {
         toast.success(t('assignments.retry_assignment_success'));
+        // The retry wiped every per-task submission server-side. Clear the
+        // cached batch IMMEDIATELY (before the refetch lands) so the task
+        // editors — which remount on the incremented attempt number — hydrate
+        // from an empty state and don't briefly re-adopt the previous attempt's
+        // answers as their saved baseline (which would submit empty -> 0%).
+        queryClient.setQueryData(queryKeys.assignments.taskSubmission(props.assignment?.assignment_uuid), {});
         // Pull the fresh per-task batch + the user submission so the task
         // editors snap back to an empty state without a hard reload.
         queryClient.invalidateQueries({ queryKey: queryKeys.assignments.submission(props.assignment?.assignment_uuid) });
         queryClient.invalidateQueries({ queryKey: queryKeys.assignments.taskSubmission(props.assignment?.assignment_uuid) });
+        // The submission is back to PENDING, so the answer key must be stripped
+        // again — refetch the task definitions so a revealed key from the graded
+        // attempt isn't left visible during the retry.
+        queryClient.invalidateQueries({ queryKey: queryKeys.assignments.tasks(props.assignment?.assignment_uuid) });
         setGradeData(null);
         setIsGradeModalOpen(false);
         // Re-arm the auto-open on this fresh attempt so the next graded

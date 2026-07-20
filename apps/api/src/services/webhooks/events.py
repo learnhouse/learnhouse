@@ -67,16 +67,26 @@ WEBHOOK_EVENTS: dict[str, dict] = {
             "user": {"user_uuid": "string", "email": "string", "username": "string"},
             "assignment": {"assignment_uuid": "string"},
             "course": {"course_uuid": "string", "name": "string"},
+            "attempt_number": "integer",
         },
     },
     "assignment_graded": {
         "category": "Learning Progress",
-        "description": "Triggered when an instructor grades an assignment submission",
+        "description": "Triggered when an assignment submission is graded (by an instructor or auto-grading)",
         "data_schema": {
             "user_id": "integer",
             "assignment_uuid": "string",
             "course_uuid": "string",
             "grade": "integer",
+            "max_grade": "integer",
+            "percentage": "number",
+            "display_grade": "string",
+            "letter_grade": "string",
+            "points_summary": "string",
+            "passed": "boolean",
+            "grading_type": "string",
+            "overall_feedback": "string",
+            "auto_graded": "boolean",
         },
     },
     "certificate_claimed": {
@@ -86,6 +96,20 @@ WEBHOOK_EVENTS: dict[str, dict] = {
             "user": {"user_uuid": "string", "email": "string", "username": "string"},
             "course": {"course_uuid": "string", "name": "string"},
             "certificate": {"user_certification_uuid": "string"},
+        },
+    },
+    "certificate_revoked": {
+        "category": "Learning Progress",
+        "description": (
+            "Triggered when a previously issued certificate is revoked (e.g. a "
+            "gating assignment was regraded below the pass threshold, or the "
+            "learner reset/retried a completed assignment)"
+        ),
+        "data_schema": {
+            "user": {"user_uuid": "string", "email": "string", "username": "string"},
+            "course": {"course_uuid": "string", "name": "string"},
+            "certificate": {"user_certification_uuid": "string"},
+            "reason": "string",
         },
     },
     # ── User & access ────────────────────────────────────────────────

@@ -137,3 +137,68 @@ async def test_generate_assignment_plan_clamps_num_tasks():
             org_id=1, course_id=2, prompt="p", model_name="m", db_session=AsyncMock(), num_tasks=999,
         )
     assert f"exactly {ag.MAX_TASKS} task" in captured["prompt"]
+
+
+# --- answer-key validation (M13) ---
+
+def _quiz_task(*correct_flags):
+    return ag._to_generated_task(
+        AITask(title="t", description="d", assignment_type="QUIZ",
+               quiz=AIQuizContents(questions=[AIQuizQuestion(
+                   question_text="Q",
+                   options=[AIQuizOption(text=f"o{i}", is_correct=c) for i, c in enumerate(correct_flags)])])))
+
+
+def test_valid_answer_key_quiz_needs_a_correct_option():
+    assert ag._has_valid_answer_key(_quiz_task(True, False)) is True
+    # No correct option -> not auto-scorable.
+    assert ag._has_valid_answer_key(_quiz_task(False, False)) is False
+
+
+def test_valid_answer_key_short_answer_needs_nonempty():
+    good = ag._to_generated_task(AITask(title="t", description="d", assignment_type="SHORT_ANSWER",
+        short_answer=AIShortAnswerContents(prompt="P", correct_answers=["a"])))
+    empty = ag._to_generated_task(AITask(title="t", description="d", assignment_type="SHORT_ANSWER",
+        short_answer=AIShortAnswerContents(prompt="P", correct_answers=["   "])))
+    assert ag._has_valid_answer_key(good) is True
+    assert ag._has_valid_answer_key(empty) is False
+
+
+def test_valid_answer_key_form_needs_a_filled_blank():
+    good = ag._to_generated_task(AITask(title="t", description="d", assignment_type="FORM",
+        form=AIFormContents(questions=[AIFormQuestion(question_text="F",
+            blanks=[AIFormBlank(placeholder="_", correct_answer="x")])])))
+    empty = ag._to_generated_task(AITask(title="t", description="d", assignment_type="FORM",
+        form=AIFormContents(questions=[AIFormQuestion(question_text="F",
+            blanks=[AIFormBlank(placeholder="_", correct_answer=" ")])])))
+    assert ag._has_valid_answer_key(good) is True
+    assert ag._has_valid_answer_key(empty) is False
+
+
+def test_valid_answer_key_file_submission_always_kept():
+    assert ag._has_valid_answer_key(
+        ag._to_generated_task(AITask(title="t", description="d", assignment_type="FILE_SUBMISSION"))
+    ) is True
+
+
+async def test_generate_assignment_plan_drops_quiz_without_correct_option():
+    bad_plan = AIAssignmentPlan(
+        title="A", description="d", grading_type="PERCENTAGE",
+        tasks=[
+            AITask(title="ok", description="d", assignment_type="SHORT_ANSWER",
+                   short_answer=AIShortAnswerContents(prompt="P", correct_answers=["a"])),
+            AITask(title="bad", description="d", assignment_type="QUIZ",
+                   quiz=AIQuizContents(questions=[AIQuizQuestion(question_text="Q", options=[
+                       AIQuizOption(text="A", is_correct=False),
+                       AIQuizOption(text="B", is_correct=False)])])),
+        ],
+    )
+    with patch.object(ag, "_course_context", new=AsyncMock(return_value="ctx")), \
+         patch.object(ag, "get_chat_session_history", return_value={"aichat_uuid": "s1", "message_history": []}), \
+         patch.object(ag, "generate", new=AsyncMock(return_value=bad_plan)), \
+         patch.object(ag, "save_message_to_history"):
+        plan, _ = await ag.generate_assignment_plan(
+            org_id=1, course_id=2, prompt="p", model_name="m", db_session=AsyncMock(),
+        )
+    # The keyless QUIZ is dropped; the valid SHORT_ANSWER survives.
+    assert [t.assignment_type for t in plan.tasks] == ["SHORT_ANSWER"]

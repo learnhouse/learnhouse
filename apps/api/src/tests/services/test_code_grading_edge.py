@@ -344,10 +344,13 @@ async def test_language_id_falls_back_to_contents():
     assert called_lang == 71
 
 
-async def test_judge0_exception_per_case_counts_as_fail():
+async def test_judge0_exception_per_case_makes_grade_unverifiable():
     """
-    If a per-case Judge0 call itself raises, that test is treated as failed
-    (caught inside run_one) rather than blowing up the whole grade.
+    If a per-case Judge0 call raises (transport failure / outage), that test
+    couldn't actually execute — so the WHOLE grade is untrustworthy and the
+    grader returns None (caller leaves the submission pending) rather than
+    zeroing a student out on a partial "1/2 passed" score built on a test that
+    never ran. This is the H4 fix: an outage must not finalize a bogus grade.
     """
     task = _task(
         {
@@ -359,6 +362,53 @@ async def test_judge0_exception_per_case_counts_as_fail():
         }
     )
     sub = _submission({"source_code": "...", "language_id": 71})
-    # First call succeeds, second raises → equal_weight 1/2 → 50.
+    # First call succeeds, second raises → not gradable → None.
     with _patch_judge0([_ok("1\n"), RuntimeError("judge0 boom")]):
-        assert await _grade_code_task_async(task, sub) == 50
+        assert await _grade_code_task_async(task, sub) is None
+
+
+async def test_judge0_all_cases_raise_returns_none():
+    """Every per-case Judge0 call raising → unverifiable → None."""
+    task = _task(
+        {
+            "language_id": 71,
+            "test_cases": [{"expectedStdout": "1"}, {"expectedStdout": "2"}],
+        }
+    )
+    sub = _submission({"source_code": "...", "language_id": 71})
+    with _patch_judge0([RuntimeError("boom"), RuntimeError("boom")]):
+        assert await _grade_code_task_async(task, sub) is None
+
+
+async def test_judge0_internal_error_status_returns_none():
+    """
+    Judge0 status id 13 (Internal Error) means the test never produced a real
+    verdict → the grade is unverifiable (None), not a fail.
+    """
+    task = _task(
+        {
+            "grading_mode": "binary",
+            "language_id": 71,
+            "test_cases": [{"expectedStdout": "1"}, {"expectedStdout": "2"}],
+        }
+    )
+    sub = _submission({"source_code": "print(1)", "language_id": 71})
+    # First accepted, second returns Judge0 internal-error status → None overall.
+    with _patch_judge0([_ok("1\n"), {"status": {"id": 13}, "stdout": None}]):
+        assert await _grade_code_task_async(task, sub) is None
+
+
+async def test_judge0_still_queued_status_returns_none():
+    """
+    A submission still In Queue/Processing (status id 1/2) hasn't finished, so
+    its verdict can't be trusted → None.
+    """
+    task = _task(
+        {
+            "language_id": 71,
+            "test_cases": [{"expectedStdout": "1"}],
+        }
+    )
+    sub = _submission({"source_code": "print(1)", "language_id": 71})
+    with _patch_judge0([{"status": {"id": 1}, "stdout": None}]):
+        assert await _grade_code_task_async(task, sub) is None

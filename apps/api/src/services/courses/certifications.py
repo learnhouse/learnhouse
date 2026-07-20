@@ -5,6 +5,7 @@ from uuid import uuid4
 from datetime import datetime
 from sqlmodel import select, func
 from sqlmodel.ext.asyncio.session import AsyncSession
+from sqlalchemy.exc import IntegrityError
 from fastapi import HTTPException, Request
 from src.db.courses.certifications import (
     Certifications,
@@ -15,6 +16,7 @@ from src.db.courses.certifications import (
     CertificateUserRead,
 )
 from src.db.courses.courses import Course
+from src.db.courses.activities import Activity
 from src.db.courses.chapter_activities import ChapterActivity
 from src.db.trail_steps import TrailStep
 from src.db.users import PublicUser, AnonymousUser
@@ -309,7 +311,24 @@ async def create_certificate_user(
     )
 
     db_session.add(certificate_user)
-    await db_session.commit()
+    try:
+        await db_session.commit()
+    except IntegrityError:
+        # A concurrent completion check inserted the certificate first. The
+        # unique (user_id, certification_id) constraint tripped — treat it as
+        # "already issued" and return the existing row instead of 500-ing.
+        await db_session.rollback()
+        existing = (
+            await db_session.execute(
+                select(CertificateUser).where(
+                    CertificateUser.user_id == user_id,
+                    CertificateUser.certification_id == certification_id,
+                )
+            )
+        ).scalars().first()
+        if existing:
+            return CertificateUserRead(**existing.model_dump())
+        raise
     await db_session.refresh(certificate_user)
 
     # Track certificate_claimed event for analytics and webhooks
@@ -348,6 +367,80 @@ async def create_certificate_user(
         logger.warning("Certificate tracking failed (non-critical): %s", e)
 
     return CertificateUserRead(**certificate_user.model_dump())
+
+
+async def revoke_user_certificate(
+    user_id: int,
+    course_id: int,
+    db_session: AsyncSession,
+    reason: str = "revoked",
+) -> bool:
+    """Revoke any certificate this user holds for the given course.
+
+    Deletes the CertificateUser row and emits a ``certificate_revoked``
+    analytics + webhook event so downstream systems learn the certificate is no
+    longer valid (previously the row was silently deleted on retry/reject with
+    no signal, and a re-pass fired a second ``certificate_claimed``). No-ops and
+    returns False when the course has no certification or the user holds none.
+    The event dispatch is best-effort and never fails the caller.
+    """
+    from src.db.users import User
+
+    certification = (await db_session.execute(
+        select(Certifications).where(Certifications.course_id == course_id)
+    )).scalars().first()
+    if not certification or not certification.id:
+        return False
+
+    cert_user = (await db_session.execute(
+        select(CertificateUser).where(
+            CertificateUser.user_id == user_id,
+            CertificateUser.certification_id == certification.id,
+        )
+    )).scalars().first()
+    if not cert_user:
+        return False
+
+    revoked_uuid = cert_user.user_certification_uuid
+    await db_session.delete(cert_user)
+    await db_session.commit()
+
+    # Best-effort revocation event (mirrors the claimed-event payload shape).
+    try:
+        course = (await db_session.execute(
+            select(Course).where(Course.id == course_id)
+        )).scalars().first()
+        user = (await db_session.execute(
+            select(User).where(User.id == user_id)
+        )).scalars().first()
+        if course:
+            await track(
+                event_name=analytics_events.CERTIFICATE_REVOKED,
+                org_id=course.org_id,
+                user_id=user_id,
+                properties={"course_uuid": course.course_uuid, "reason": reason},
+            )
+            await dispatch_webhooks(
+                event_name=analytics_events.CERTIFICATE_REVOKED,
+                org_id=course.org_id,
+                data={
+                    "user": {
+                        "user_uuid": getattr(user, "user_uuid", None),
+                        "email": getattr(user, "email", None),
+                        "username": getattr(user, "username", None),
+                    },
+                    "course": {
+                        "course_uuid": course.course_uuid,
+                        "name": course.name,
+                    },
+                    "certificate": {"user_certification_uuid": revoked_uuid},
+                    "reason": reason,
+                },
+            )
+    except Exception as e:
+        logger.warning("Certificate revocation tracking failed (non-critical): %s", e)
+
+    return True
 
 
 async def get_user_certificates_for_course(
@@ -396,12 +489,23 @@ async def get_user_certificates_for_course(
     # Build a map of certification_id -> Certifications (already fetched above)
     cert_map = {cert.id: cert for cert in certifications if cert.id}
 
+    # The recipient is always the requesting user (query filters on
+    # current_user.id), so the name can be attached without an extra lookup.
+    # Needed so the certificate page/PDF can show who it was awarded to.
+    recipient = {
+        "user_uuid": getattr(current_user, "user_uuid", None),
+        "username": getattr(current_user, "username", None),
+        "first_name": getattr(current_user, "first_name", None),
+        "last_name": getattr(current_user, "last_name", None),
+    }
+
     result = []
     for cert_user in cert_users:
         certification = cert_map.get(cert_user.certification_id)
         result.append({
             "certificate_user": CertificateUserRead(**cert_user.model_dump()),
-            "certification": CertificationRead(**certification.model_dump()) if certification else None
+            "certification": CertificationRead(**certification.model_dump()) if certification else None,
+            "user": recipient,
         })
 
     return result
@@ -420,8 +524,14 @@ async def is_course_fully_completed(
     Uses COUNT aggregates instead of fetching all rows so this stays fast
     even on large courses.
     """
+    # Only PUBLISHED activities count toward completion — a draft/unpublished
+    # activity is never shown to the learner, so counting it in the total would
+    # make the course impossible to complete (and permanently withhold the
+    # certificate).
     total_activities = (await db_session.execute(
-        select(func.count(ChapterActivity.id)).where(ChapterActivity.course_id == course_id)
+        select(func.count(ChapterActivity.id))
+        .join(Activity, Activity.id == ChapterActivity.activity_id)
+        .where(ChapterActivity.course_id == course_id, Activity.published == True)
     )).scalar_one()
     if not total_activities:
         return False
@@ -433,14 +543,156 @@ async def is_course_fully_completed(
             (ChapterActivity.activity_id == TrailStep.activity_id)
             & (ChapterActivity.course_id == TrailStep.course_id),
         )
+        .join(Activity, Activity.id == ChapterActivity.activity_id)
         .where(
             TrailStep.user_id == user_id,
             TrailStep.course_id == course_id,
             TrailStep.complete == True,
+            Activity.published == True,
         )
     )).scalar_one()
 
     return completed_activities >= total_activities
+
+
+async def sync_trailrun_status(
+    user_id: int,
+    course_id: int,
+    db_session: AsyncSession,
+) -> None:
+    """
+    Keep the enrollment row (TrailRun.status) in sync with actual course
+    completion. This is the single field every enrollment/analytics "completed"
+    vs "in progress" number is derived from, yet nothing used to flip it — so
+    fully completed, certified learners still counted as in-progress.
+
+    Derives the status from :func:`is_course_fully_completed` and promotes the
+    run to STATUS_COMPLETED when done, or demotes it back to STATUS_IN_PROGRESS
+    if completion was lost (e.g. an activity was un-completed). PAUSED and
+    CANCELLED runs are left untouched — those are explicit learner/teacher
+    states, not derived from progress. No-ops when nothing needs to change.
+    """
+    from src.db.trail_runs import TrailRun, StatusEnum
+
+    trailrun = (await db_session.execute(
+        select(TrailRun).where(
+            TrailRun.course_id == course_id,
+            TrailRun.user_id == user_id,
+        )
+    )).scalars().first()
+
+    if not trailrun:
+        return
+
+    # Only completion-derived states are managed here.
+    if trailrun.status not in (
+        StatusEnum.STATUS_IN_PROGRESS,
+        StatusEnum.STATUS_COMPLETED,
+    ):
+        return
+
+    is_complete = await is_course_fully_completed(user_id, course_id, db_session)
+    target = (
+        StatusEnum.STATUS_COMPLETED if is_complete else StatusEnum.STATUS_IN_PROGRESS
+    )
+
+    if trailrun.status != target:
+        trailrun.status = target
+        trailrun.update_date = str(datetime.now())
+        db_session.add(trailrun)
+        await db_session.commit()
+
+
+async def are_course_assignments_passed(
+    user_id: int,
+    course_id: int,
+    db_session: AsyncSession,
+) -> bool:
+    """
+    Certificate eligibility gate: returns True iff EVERY assignment activity in
+    the course has been graded AND passed by the user.
+
+    - A course with no assignments returns True (completion alone certifies).
+    - A missing submission, a not-yet-GRADED submission (SUBMITTED/PENDING), or a
+      graded-but-failed submission all return False, so the certificate is
+      withheld until the learner actually passes.
+    - Pass/fail reuses the canonical grader with the assignment's configured
+      threshold, so "certified" always agrees with the score shown to the learner.
+
+    This is intentionally separate from course *completion* (progress/analytics):
+    completion means "all activities done", certification means "all assessments
+    passed".
+    """
+    # Lazy imports: the assignments service imports this module at load time, so
+    # importing it at module top would create a cycle.
+    from src.db.courses.assignments import (
+        Assignment,
+        AssignmentTask,
+        AssignmentUserSubmission,
+        AssignmentUserSubmissionStatus,
+    )
+    from src.services.courses.activities.assignments import compute_assignment_grade
+
+    # Assignments that belong to activities actually in this course. Use an
+    # IN-subquery (not a join) so an activity reused across chapters isn't
+    # double-counted.
+    assignments = (await db_session.execute(
+        select(Assignment).where(
+            Assignment.course_id == course_id,
+            Assignment.activity_id.in_(
+                select(ChapterActivity.activity_id).where(
+                    ChapterActivity.course_id == course_id
+                )
+            ),
+        )
+    )).scalars().all()
+
+    if not assignments:
+        return True
+
+    assignment_ids = [a.id for a in assignments if a.id is not None]
+
+    # Max grade per assignment (sum of task max values), one grouped query.
+    max_rows = (await db_session.execute(
+        select(
+            AssignmentTask.assignment_id,
+            func.coalesce(func.sum(AssignmentTask.max_grade_value), 0),
+        )
+        .where(AssignmentTask.assignment_id.in_(assignment_ids))
+        .group_by(AssignmentTask.assignment_id)
+    )).all()
+    max_by_assignment = {aid: int(m or 0) for aid, m in max_rows}
+
+    # This user's submission per assignment (at most one row each).
+    subs = (await db_session.execute(
+        select(AssignmentUserSubmission).where(
+            AssignmentUserSubmission.user_id == user_id,
+            AssignmentUserSubmission.assignment_id.in_(assignment_ids),
+        )
+    )).scalars().all()
+    sub_by_assignment = {s.assignment_id: s for s in subs}
+
+    for assignment in assignments:
+        # An assignment with no gradable points (no tasks / all-zero max) can't
+        # be passed or failed — treat it as vacuously passed so it doesn't
+        # permanently block the certificate.
+        if max_by_assignment.get(assignment.id, 0) <= 0:
+            continue
+        sub = sub_by_assignment.get(assignment.id)
+        if sub is None:
+            return False
+        if sub.submission_status != AssignmentUserSubmissionStatus.GRADED:
+            return False
+        computed = compute_assignment_grade(
+            int(sub.grade or 0),
+            max_by_assignment.get(assignment.id, 0),
+            assignment.grading_type,
+            pass_threshold_percentage=assignment.pass_threshold_percentage,
+        )
+        if not computed["passed"]:
+            return False
+
+    return True
 
 
 async def check_course_completion_and_create_certificate(
@@ -463,9 +715,21 @@ async def check_course_completion_and_create_certificate(
     - It should only create certificates for users who have actually completed the course
     - The function is called from mark_activity_as_done_for_user which already has RBAC checks
     """
-    
+    # Keep the enrollment status (TrailRun.status) in sync on every completion
+    # check. Assignment activities render their own submit flow instead of going
+    # through add_activity_to_trail, so when the last activity in a course is an
+    # assignment nothing else would flip the run to COMPLETED — leaving a
+    # certified learner reported as "in progress" in analytics/enrollment. This
+    # is idempotent (no-op when already correct) and also demotes if completion
+    # was lost.
+    await sync_trailrun_status(user_id, course_id, db_session)
+
+    # Count only PUBLISHED activities (see is_course_fully_completed) so a draft
+    # activity can't permanently block completion + certificate issuance.
     total_activities = (await db_session.execute(
-        select(func.count(ChapterActivity.id)).where(ChapterActivity.course_id == course_id)
+        select(func.count(ChapterActivity.id))
+        .join(Activity, Activity.id == ChapterActivity.activity_id)
+        .where(ChapterActivity.course_id == course_id, Activity.published == True)
     )).scalar_one()
 
     if not total_activities:
@@ -478,10 +742,12 @@ async def check_course_completion_and_create_certificate(
             (ChapterActivity.activity_id == TrailStep.activity_id)
             & (ChapterActivity.course_id == TrailStep.course_id),
         )
+        .join(Activity, Activity.id == ChapterActivity.activity_id)
         .where(
             TrailStep.user_id == user_id,
             TrailStep.course_id == course_id,
             TrailStep.complete == True,
+            Activity.published == True,
         )
     )).scalar_one()
 
@@ -491,6 +757,12 @@ async def check_course_completion_and_create_certificate(
         certification = (await db_session.execute(statement)).scalars().first()
         
         if certification and certification.id:
+            # Certificate integrity: completion is necessary but not sufficient —
+            # every graded assignment in the course must be passed. This withholds
+            # the certificate from learners who finished all activities but failed
+            # (or haven't yet been graded on) a required assessment.
+            if not await are_course_assignments_passed(user_id, course_id, db_session):
+                return False
             # SECURITY: Create certificate user link (system operation, no RBAC needed here)
             # This is called from mark_activity_as_done_for_user which already has proper RBAC checks
             try:

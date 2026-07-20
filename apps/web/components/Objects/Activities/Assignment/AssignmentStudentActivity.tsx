@@ -45,8 +45,15 @@ function AssignmentStudentActivity() {
   // "Not Passed" inline while the same score is "Pass" at the assignment
   // level — exactly the mismatch the teacher tried to avoid.
   const gradingType = assignments?.assignment_object?.grading_type;
+  // Honor the teacher-configured passing threshold; fall back to the
+  // grading-type default when unset so existing assignments are unchanged.
+  const configuredThreshold = assignments?.assignment_object?.pass_threshold_percentage;
   const passingThreshold =
-    gradingType === 'ALPHABET' || gradingType === 'GPA_SCALE' ? 60 : 50;
+    typeof configuredThreshold === 'number'
+      ? configuredThreshold
+      : gradingType === 'ALPHABET' || gradingType === 'GPA_SCALE'
+        ? 60
+        : 50;
 
   useEffect(() => {
   }, [assignments, org])
@@ -105,7 +112,7 @@ function AssignmentStudentActivity() {
       )}
       
       
-      {assignments && assignments?.assignment_tasks?.sort((a: any, b: any) => a.id - b.id).map((task: any, index: number) => {
+      {assignments && assignments?.assignment_tasks?.slice().sort((a: any, b: any) => a.id - b.id).map((task: any, index: number) => {
         const taskSubmission = taskSubmissionsMap ? taskSubmissionsMap[task.assignment_task_uuid] : null;
         const taskGrade = taskSubmission?.grade ?? 0;
         const taskMax = task.max_grade_value || 0;
@@ -200,13 +207,18 @@ function AssignmentStudentActivity() {
                 </div>
               </div>
             )}
+            {/* Key by attempt number so a retry (which wipes the server-side
+                answers) remounts the editors fresh — they re-hydrate from the
+                now-empty submission instead of keeping the previous attempt's
+                answers as a stale saved baseline (which would submit empty ->
+                0% on the next attempt). */}
             <div className='w-full'>
-              {task.assignment_type === 'QUIZ' && <TaskQuizObject key={task.assignment_task_uuid} view='student' assignmentTaskUUID={task.assignment_task_uuid} />}
-              {task.assignment_type === 'FILE_SUBMISSION' && <TaskFileObject key={task.assignment_task_uuid} view='student' assignmentTaskUUID={task.assignment_task_uuid} />}
-              {task.assignment_type === 'FORM' && <TaskFormObject key={task.assignment_task_uuid} view='student' assignmentTaskUUID={task.assignment_task_uuid} />}
-              {task.assignment_type === 'CODE' && <TaskCodeObject key={task.assignment_task_uuid} view='student' assignmentTaskUUID={task.assignment_task_uuid} />}
-              {task.assignment_type === 'SHORT_ANSWER' && <TaskShortAnswerObject key={task.assignment_task_uuid} view='student' assignmentTaskUUID={task.assignment_task_uuid} />}
-              {task.assignment_type === 'NUMBER_ANSWER' && <TaskNumberAnswerObject key={task.assignment_task_uuid} view='student' assignmentTaskUUID={task.assignment_task_uuid} />}
+              {task.assignment_type === 'QUIZ' && <TaskQuizObject key={`${task.assignment_task_uuid}-${currentAttempt}`} view='student' assignmentTaskUUID={task.assignment_task_uuid} />}
+              {task.assignment_type === 'FILE_SUBMISSION' && <TaskFileObject key={`${task.assignment_task_uuid}-${currentAttempt}`} view='student' assignmentTaskUUID={task.assignment_task_uuid} />}
+              {task.assignment_type === 'FORM' && <TaskFormObject key={`${task.assignment_task_uuid}-${currentAttempt}`} view='student' assignmentTaskUUID={task.assignment_task_uuid} />}
+              {task.assignment_type === 'CODE' && <TaskCodeObject key={`${task.assignment_task_uuid}-${currentAttempt}`} view='student' assignmentTaskUUID={task.assignment_task_uuid} />}
+              {task.assignment_type === 'SHORT_ANSWER' && <TaskShortAnswerObject key={`${task.assignment_task_uuid}-${currentAttempt}`} view='student' assignmentTaskUUID={task.assignment_task_uuid} />}
+              {task.assignment_type === 'NUMBER_ANSWER' && <TaskNumberAnswerObject key={`${task.assignment_task_uuid}-${currentAttempt}`} view='student' assignmentTaskUUID={task.assignment_task_uuid} />}
             </div>
           </div>
         )

@@ -17,6 +17,14 @@ from src.services.ai.schemas.assignment import (
 pytestmark = pytest.mark.asyncio
 
 
+@pytest.fixture(autouse=True)
+def _allow_rbac():
+    """Course-scoped authoring RBAC is exercised separately; allow it by default
+    so the behavioral tests below focus on their own concern."""
+    with patch.object(ag, "check_resource_access", new=AsyncMock()):
+        yield
+
+
 def _result(value):
     scalars = MagicMock()
     scalars.first.return_value = value
@@ -43,6 +51,10 @@ def _user(id=1):
     return SimpleNamespace(id=id)
 
 
+def _http_req():
+    return MagicMock()
+
+
 def _plan():
     return GeneratedAssignmentPlan(
         title="A", description="d", grading_type="PERCENTAGE",
@@ -58,35 +70,50 @@ def _req():
 async def test_empty_prompt_400():
     body = GenerateAssignmentRequest(org_id=5, course_uuid="course_1", prompt="  ")
     with pytest.raises(HTTPException) as exc:
-        await ag.api_generate_assignment(body, _user(), _db_returning(_org()))
+        await ag.api_generate_assignment(body, _http_req(), _user(), _db_returning(_org()))
     assert exc.value.status_code == 400
 
 
 async def test_org_not_found_404():
     with pytest.raises(HTTPException) as exc:
-        await ag.api_generate_assignment(_req(), _user(), _db_returning(None))
+        await ag.api_generate_assignment(_req(), _http_req(), _user(), _db_returning(None))
     assert exc.value.status_code == 404
 
 
 async def test_non_member_403():
     with patch.object(ag, "is_org_member", new=AsyncMock(return_value=False)):
         with pytest.raises(HTTPException) as exc:
-            await ag.api_generate_assignment(_req(), _user(), _db_returning(_org()))
+            await ag.api_generate_assignment(_req(), _http_req(), _user(), _db_returning(_org()))
     assert exc.value.status_code == 403
 
 
 async def test_course_not_found_404():
     with patch.object(ag, "is_org_member", new=AsyncMock(return_value=True)):
         with pytest.raises(HTTPException) as exc:
-            await ag.api_generate_assignment(_req(), _user(), _db_returning(_org(), None))
+            await ag.api_generate_assignment(_req(), _http_req(), _user(), _db_returning(_org(), None))
     assert exc.value.status_code == 404
 
 
 async def test_course_wrong_org_404():
     with patch.object(ag, "is_org_member", new=AsyncMock(return_value=True)):
         with pytest.raises(HTTPException) as exc:
-            await ag.api_generate_assignment(_req(), _user(), _db_returning(_org(), _course(org_id=999)))
+            await ag.api_generate_assignment(_req(), _http_req(), _user(), _db_returning(_org(), _course(org_id=999)))
     assert exc.value.status_code == 404
+
+
+async def test_non_author_denied_by_rbac(monkeypatch):
+    # A plain org member without content-author rights on the course must be
+    # blocked: check_resource_access raises 403 and it propagates (no credits
+    # spent, no generation). Guards against the bare-membership authorization gap.
+    reserve = AsyncMock()
+    with patch.object(ag, "is_org_member", new=AsyncMock(return_value=True)), \
+         patch.object(ag, "check_resource_access",
+                      new=AsyncMock(side_effect=HTTPException(status_code=403, detail="denied"))), \
+         patch.object(ag, "reserve_ai_credit", new=reserve):
+        with pytest.raises(HTTPException) as exc:
+            await ag.api_generate_assignment(_req(), _http_req(), _user(), _db_returning(_org(), _course()))
+    assert exc.value.status_code == 403
+    reserve.assert_not_called()
 
 
 async def test_happy_path():
@@ -98,7 +125,7 @@ async def test_happy_path():
          patch.object(ag, "resolve_model_for_org", new=AsyncMock(return_value="m")), \
          patch.object(ag, "generate_assignment_plan", new=AsyncMock(return_value=(_plan(), "s1"))), \
          patch.object(ag, "record_generation", new=rec):
-        resp = await ag.api_generate_assignment(_req(), _user(), _db_returning(_org(), _course()))
+        resp = await ag.api_generate_assignment(_req(), _http_req(), _user(), _db_returning(_org(), _course()))
     assert resp.session_uuid == "s1"
     assert resp.plan.tasks[0].assignment_type == "SHORT_ANSWER"
     assert rec.await_args.kwargs["course_id"] == 7
@@ -113,7 +140,7 @@ async def test_no_tasks_refunds_and_502():
          patch.object(ag, "generate_assignment_plan", new=AsyncMock(return_value=(empty, "s1"))), \
          patch.object(ag, "refund_ai_credit") as refund:
         with pytest.raises(HTTPException) as exc:
-            await ag.api_generate_assignment(_req(), _user(), _db_returning(_org(), _course()))
+            await ag.api_generate_assignment(_req(), _http_req(), _user(), _db_returning(_org(), _course()))
     assert exc.value.status_code == 502
     refund.assert_called_once()
 
@@ -126,7 +153,7 @@ async def test_not_configured_refunds_and_403():
          patch.object(ag, "generate_assignment_plan", new=AsyncMock(side_effect=AINotConfiguredError("no key"))), \
          patch.object(ag, "refund_ai_credit") as refund:
         with pytest.raises(HTTPException) as exc:
-            await ag.api_generate_assignment(_req(), _user(), _db_returning(_org(), _course()))
+            await ag.api_generate_assignment(_req(), _http_req(), _user(), _db_returning(_org(), _course()))
     assert exc.value.status_code == 403
     refund.assert_called_once()
 
@@ -139,7 +166,7 @@ async def test_generation_error_refunds_and_502():
          patch.object(ag, "generate_assignment_plan", new=AsyncMock(side_effect=RuntimeError("boom"))), \
          patch.object(ag, "refund_ai_credit") as refund:
         with pytest.raises(HTTPException) as exc:
-            await ag.api_generate_assignment(_req(), _user(), _db_returning(_org(), _course()))
+            await ag.api_generate_assignment(_req(), _http_req(), _user(), _db_returning(_org(), _course()))
     assert exc.value.status_code == 502
     refund.assert_called_once()
 

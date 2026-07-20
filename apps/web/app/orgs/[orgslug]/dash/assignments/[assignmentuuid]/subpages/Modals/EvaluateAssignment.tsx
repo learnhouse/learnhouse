@@ -38,6 +38,21 @@ function EvaluateAssignment({ user_id }: any) {
 
     const assignmentUuid = assignments?.assignment_object?.assignment_uuid;
 
+    // Re-pull the aggregate grade + per-task breakdown. Called on open and after
+    // a child task is inline-graded, so the header banner and per-task badges
+    // reflect the new score immediately instead of staying stale until the
+    // teacher clicks "Set final grade".
+    const refreshGradePreview = React.useCallback(async (seedFeedback = false) => {
+        if (!assignmentUuid || !user_id || !access_token) return;
+        const res = await getFinalGrade(user_id, assignmentUuid, access_token);
+        if (res.success) {
+            setGradePreview(res.data);
+            if (seedFeedback && res.data.overall_feedback) {
+                setFeedback(res.data.overall_feedback);
+            }
+        }
+    }, [assignmentUuid, user_id, access_token]);
+
     // Load any existing grade + feedback when the modal opens so the teacher
     // can edit them instead of starting from scratch.
     useEffect(() => {
@@ -222,12 +237,12 @@ function EvaluateAssignment({ user_id }: any) {
 
                         {/* Task content */}
                         <div className='rounded-xl overflow-hidden'>
-                            {task.assignment_type === 'QUIZ' && <TaskQuizObject key={task.assignment_task_uuid} view='grading' user_id={user_id} assignmentTaskUUID={task.assignment_task_uuid} />}
-                            {task.assignment_type === 'FILE_SUBMISSION' && <TaskFileObject key={task.assignment_task_uuid} view='custom-grading' user_id={user_id} assignmentTaskUUID={task.assignment_task_uuid} />}
-                            {task.assignment_type === 'FORM' && <TaskFormObject key={task.assignment_task_uuid} view='grading' user_id={user_id} assignmentTaskUUID={task.assignment_task_uuid} />}
-                            {task.assignment_type === 'CODE' && <TaskCodeObject key={task.assignment_task_uuid} view='grading' user_id={user_id} assignmentTaskUUID={task.assignment_task_uuid} />}
-                            {task.assignment_type === 'SHORT_ANSWER' && <TaskShortAnswerObject key={task.assignment_task_uuid} view='grading' user_id={user_id} assignmentTaskUUID={task.assignment_task_uuid} />}
-                            {task.assignment_type === 'NUMBER_ANSWER' && <TaskNumberAnswerObject key={task.assignment_task_uuid} view='grading' user_id={user_id} assignmentTaskUUID={task.assignment_task_uuid} />}
+                            {task.assignment_type === 'QUIZ' && <TaskQuizObject key={task.assignment_task_uuid} view='grading' user_id={user_id} assignmentTaskUUID={task.assignment_task_uuid} onGraded={refreshGradePreview} />}
+                            {task.assignment_type === 'FILE_SUBMISSION' && <TaskFileObject key={task.assignment_task_uuid} view='custom-grading' user_id={user_id} assignmentTaskUUID={task.assignment_task_uuid} onGraded={refreshGradePreview} />}
+                            {task.assignment_type === 'FORM' && <TaskFormObject key={task.assignment_task_uuid} view='grading' user_id={user_id} assignmentTaskUUID={task.assignment_task_uuid} onGraded={refreshGradePreview} />}
+                            {task.assignment_type === 'CODE' && <TaskCodeObject key={task.assignment_task_uuid} view='grading' user_id={user_id} assignmentTaskUUID={task.assignment_task_uuid} onGraded={refreshGradePreview} />}
+                            {task.assignment_type === 'SHORT_ANSWER' && <TaskShortAnswerObject key={task.assignment_task_uuid} view='grading' user_id={user_id} assignmentTaskUUID={task.assignment_task_uuid} onGraded={refreshGradePreview} />}
+                            {task.assignment_type === 'NUMBER_ANSWER' && <TaskNumberAnswerObject key={task.assignment_task_uuid} view='grading' user_id={user_id} assignmentTaskUUID={task.assignment_task_uuid} onGraded={refreshGradePreview} />}
                         </div>
                     </div>
                     );

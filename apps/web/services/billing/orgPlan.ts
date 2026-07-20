@@ -11,21 +11,7 @@ import type { LearnHousePlanType } from "./plans";
 export async function updateOrganizationConfigInternally(org_id: any, plan: LearnHousePlanType) {
   console.log(`[updateOrgConfig] Updating org ${org_id} to plan "${plan}"`);
 
-  // The API guard (apps/api/.../orgs/org_plan.py) compares X-Internal-Key to env
-  // CLOUD_INTERNAL_KEY. Accept EITHER name here: deployments commonly set the
-  // unprefixed CLOUD_INTERNAL_KEY on both services (the sibling packs endpoint
-  // already uses one shared name), so reading only LEARNHOUSE_CLOUD_INTERNAL_KEY
-  // silently sent an empty key and 403'd every plan write. Fail loud when NEITHER
-  // is set rather than sending "" and mislabelling the 403 as a key mismatch.
-  const internalKey =
-    process.env.LEARNHOUSE_CLOUD_INTERNAL_KEY || process.env.CLOUD_INTERNAL_KEY || "";
-  if (!internalKey) {
-    throw new Error(
-      "[updateOrgConfig] internal key unset — set CLOUD_INTERNAL_KEY (or " +
-        "LEARNHOUSE_CLOUD_INTERNAL_KEY) on the web deployment to match the API's " +
-        "CLOUD_INTERNAL_KEY; the plan write would 403 without it.",
-    );
-  }
+  const internalKey = process.env.LEARNHOUSE_CLOUD_INTERNAL_KEY || "";
   const result = await fetch(`${getServerAPIUrl()}cloud_internal/update_org_plan`, {
     method: "PUT",
     headers: {

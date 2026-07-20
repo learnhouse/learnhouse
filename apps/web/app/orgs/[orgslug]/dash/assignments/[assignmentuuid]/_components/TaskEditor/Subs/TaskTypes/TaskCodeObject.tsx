@@ -116,6 +116,7 @@ type TaskCodeObjectProps = {
   view: 'teacher' | 'student' | 'grading'
   assignmentTaskUUID?: string
   user_id?: string
+  onGraded?: () => void
 }
 
 const cmStyles: React.CSSProperties = {
@@ -166,7 +167,7 @@ function normalizeCodeContents(raw: any): CodeTaskContents {
   }
 }
 
-function TaskCodeObject({ view, assignmentTaskUUID, user_id }: TaskCodeObjectProps) {
+function TaskCodeObject({ view, assignmentTaskUUID, user_id, onGraded }: TaskCodeObjectProps) {
   const { t } = useTranslation()
   const session = useLHSession() as any
   const access_token = session?.data?.tokens?.access_token
@@ -179,7 +180,6 @@ function TaskCodeObject({ view, assignmentTaskUUID, user_id }: TaskCodeObjectPro
   // Editor state
   const [contents, setContents] = useState<CodeTaskContents>(DEFAULT_CONTENTS)
   const [code, setCode] = useState('')
-  const [showSavingDisclaimer, setShowSavingDisclaimer] = useState(false)
 
   // CodeMirror extensions
   const [cmExtensions, setCmExtensions] = useState<any[]>([])
@@ -194,6 +194,14 @@ function TaskCodeObject({ view, assignmentTaskUUID, user_id }: TaskCodeObjectPro
   const [userSubmissions, setUserSubmissions] = useState<any>(null)
   const [initialCode, setInitialCode] = useState('')
   const [userSubmissionObject, setUserSubmissionObject] = useState<any>(null)
+  // Hydrate the task definition (starter code) and the saved submission each at
+  // most once, so later query refetches never reset the editor to starter/saved
+  // code over the learner's in-progress edits (which would stop auto-save).
+  const defHydratedForRef = React.useRef<string | null>(null)
+  const subHydratedForRef = React.useRef<string | null>(null)
+  // Tracks whether the learner has edited the code yet, so an early edit made
+  // before the saved submission hydrates isn't clobbered by hydration.
+  const interactedRef = React.useRef(false)
 
   // Teacher UI state
   const [showSolution, setShowSolution] = useState(false)
@@ -303,28 +311,47 @@ function TaskCodeObject({ view, assignmentTaskUUID, user_id }: TaskCodeObjectPro
   // submissions map. Re-runs when either context payload arrives.
   useEffect(() => {
     if (view !== 'student' || !assignmentTaskUUID) return
-    const task = assignment?.assignment_tasks?.find(
-      (t: any) => t.assignment_task_uuid === assignmentTaskUUID
-    )
-    if (task) {
-      setAssignmentTaskOutsideProvider(task)
-      const c = task.contents
-      if (c) {
-        setContents(normalizeCodeContents(c))
-        setCode(c.starter_code ?? '')
-        setInitialCode(c.starter_code ?? '')
+    // Definition (starter code) — hydrate once. Re-running would reset the
+    // editor to starter code over the learner's edits.
+    if (defHydratedForRef.current !== assignmentTaskUUID) {
+      const task = assignment?.assignment_tasks?.find(
+        (t: any) => t.assignment_task_uuid === assignmentTaskUUID
+      )
+      if (task) {
+        setAssignmentTaskOutsideProvider(task)
+        const c = task.contents
+        if (c) {
+          setContents(normalizeCodeContents(c))
+          // Only seed the editor with starter code when no saved submission has
+          // been applied yet. If the submission already hydrated (in a prior
+          // run), resetting to starter would wipe the learner's saved code.
+          if (subHydratedForRef.current !== assignmentTaskUUID) {
+            setCode(c.starter_code ?? '')
+            setInitialCode(c.starter_code ?? '')
+          }
+        }
+        defHydratedForRef.current = assignmentTaskUUID
       }
     }
-    const sub = taskSubmissionsMap?.[assignmentTaskUUID] ?? null
-    if (sub) {
-      setUserSubmissions(sub)
-      if (sub.task_submission?.source_code) {
-        setCode(sub.task_submission.source_code)
-        setInitialCode(sub.task_submission.source_code)
+    // Saved submission — hydrate once, when the batch first resolves. Runs even
+    // if the learner already started typing: the submission uuid + baseline
+    // (initialCode) are always adopted so a save targets the right row and dirty
+    // detection works, while their in-progress code is preserved.
+    if (taskSubmissionsMap !== null && subHydratedForRef.current !== assignmentTaskUUID) {
+      const sub = taskSubmissionsMap?.[assignmentTaskUUID] ?? null
+      if (sub) {
+        setUserSubmissions(sub)
+        if (sub.task_submission?.source_code) {
+          setInitialCode(sub.task_submission.source_code)
+          if (!interactedRef.current) {
+            setCode(sub.task_submission.source_code)
+          }
+        }
+        if (sub.task_submission?.results && !interactedRef.current) {
+          setResults(sub.task_submission.results)
+        }
       }
-      if (sub.task_submission?.results) {
-        setResults(sub.task_submission.results)
-      }
+      subHydratedForRef.current = assignmentTaskUUID
     }
   }, [view, assignmentTaskUUID, assignment?.assignment_tasks, taskSubmissionsMap])
 
@@ -336,13 +363,6 @@ function TaskCodeObject({ view, assignmentTaskUUID, user_id }: TaskCodeObjectPro
       getAssignmentTaskSubmissionFromIdentifiedUserUI()
     }
   }, [view, assignmentTaskUUID, assignment, access_token])
-
-  // Track changes for save disclaimer
-  useEffect(() => {
-    if (view === 'student') {
-      setShowSavingDisclaimer(code !== initialCode)
-    }
-  }, [code, initialCode, view])
 
   // --- SAVE (teacher) ---
   async function saveFC() {
@@ -380,12 +400,12 @@ function TaskCodeObject({ view, assignmentTaskUUID, user_id }: TaskCodeObjectPro
   const submissionBlocked = submissionGatedByPassing && !allVisiblePassing
 
   // --- SUBMIT (student) ---
-  async function submitFC() {
-    if (!assignmentTaskUUID) return
+  async function submitFC(opts?: { silent?: boolean }) {
+    if (!assignmentTaskUUID) return true
     // Enforce "must pass all visible tests" gate if the teacher enabled it.
     if (submissionBlocked) {
-      toast.error(t('dashboard.assignments.editor.task_editor.code.must_pass_toast'))
-      return
+      if (!opts?.silent) toast.error(t('dashboard.assignments.editor.task_editor.code.must_pass_toast'))
+      return false
     }
     const values = {
       assignment_task_submission_uuid: userSubmissions?.assignment_task_submission_uuid || null,
@@ -406,13 +426,16 @@ function TaskCodeObject({ view, assignmentTaskUUID, user_id }: TaskCodeObjectPro
     if (res.success) {
       setUserSubmissions(res.data)
       setInitialCode(code)
-      setShowSavingDisclaimer(false)
-      // Refresh the batch task-submissions cache so peer Task*Objects (and
-      // a future re-mount of this one) see the new submission state.
-      queryClient.invalidateQueries({ queryKey: queryKeys.assignments.taskSubmission(assignment.assignment_object.assignment_uuid) })
-      toast.success(t('dashboard.assignments.editor.toasts.task_saved'))
+      // Refresh the batch task-submissions cache so a future re-mount sees the
+      // new submission. Skipped on silent auto-saves (draft; would refetch ~1s).
+      if (!opts?.silent) {
+        queryClient.invalidateQueries({ queryKey: queryKeys.assignments.taskSubmission(assignment.assignment_object.assignment_uuid) })
+        toast.success(t('dashboard.assignments.editor.toasts.task_saved'))
+      }
+      return true
     } else {
-      toast.error(t('dashboard.assignments.editor.toasts.task_save_error'))
+      if (!opts?.silent) toast.error(t('dashboard.assignments.editor.toasts.task_save_error'))
+      return false
     }
   }
 
@@ -487,7 +510,7 @@ function TaskCodeObject({ view, assignmentTaskUUID, user_id }: TaskCodeObjectPro
       username: session?.data?.user?.username,
       assignmentTaskSubmissionUUID: userSubmissions.assignment_task_submission_uuid,
       taskSubmissionPayload: userSubmissions,
-      onSuccess: getAssignmentTaskSubmissionFromIdentifiedUserUI,
+      onSuccess: () => { getAssignmentTaskSubmissionFromIdentifiedUserUI(); onGraded?.(); },
     })
   }
 
@@ -610,12 +633,14 @@ function TaskCodeObject({ view, assignmentTaskUUID, user_id }: TaskCodeObjectPro
       view={view}
       saveFC={saveFC}
       submitFC={submitFC}
+      taskUUID={assignmentTaskUUID}
       gradeFC={gradeFC}
       gradeCustomFC={gradeCustomFC}
       currentPoints={userSubmissionObject?.grade}
       currentFeedback={userSubmissionObject?.task_submission_grade_feedback}
       maxPoints={assignmentTaskOutsideProvider?.max_grade_value || assignmentTaskState?.assignmentTask?.max_grade_value}
-      showSavingDisclaimer={showSavingDisclaimer}
+      dirtyValue={code}
+      savedValue={initialCode}
       autoGradable={true}
     >
       <div className="flex flex-col space-y-4">
@@ -871,7 +896,10 @@ function TaskCodeObject({ view, assignmentTaskUUID, user_id }: TaskCodeObjectPro
               {cmTheme && (
                 <CodeMirror
                   value={code}
-                  onChange={(val) => setCode(val)}
+                  onChange={(val) => {
+                    interactedRef.current = true
+                    setCode(val)
+                  }}
                   extensions={studentCmExtensions}
                   theme={cmTheme}
                   style={cmStyles}

@@ -33,6 +33,7 @@ type TaskShortAnswerObjectProps = {
   view: 'teacher' | 'student' | 'grading'
   assignmentTaskUUID?: string
   user_id?: string
+  onGraded?: () => void
 }
 
 const DEFAULT_CONTENTS: ShortAnswerContents = {
@@ -63,6 +64,7 @@ function TaskShortAnswerObject({
   view,
   assignmentTaskUUID,
   user_id,
+  onGraded,
 }: TaskShortAnswerObjectProps) {
   const { t } = useTranslation()
   const session = useLHSession() as any
@@ -84,9 +86,9 @@ function TaskShortAnswerObject({
   const [contents, setContents] = useState<ShortAnswerContents>(DEFAULT_CONTENTS)
   const [studentAnswer, setStudentAnswer] = useState<string>('')
   const [initialAnswer, setInitialAnswer] = useState<string>('')
-  // Derived: the disclaimer shows exactly while the draft differs from the
-  // last saved answer (submitFC syncs initialAnswer on success).
-  const showSavingDisclaimer = view === 'student' && studentAnswer !== initialAnswer
+  // Hydration race guard: once the learner starts typing, don't let a late
+  // loadOwnSubmission response clobber their in-progress edit.
+  const interactedRef = React.useRef(false)
 
   const [userSubmissions, setUserSubmissions] = useState<any>(null)
   const [userSubmissionObject, setUserSubmissionObject] = useState<any>(null)
@@ -117,6 +119,7 @@ function TaskShortAnswerObject({
   }
 
   async function loadOwnSubmission() {
+    if (interactedRef.current) return
     if (!assignmentTaskUUID) return
     const res = await getAssignmentTaskSubmissionsMe(
       assignmentTaskUUID,
@@ -199,8 +202,8 @@ function TaskShortAnswerObject({
   // This lets the student save drafts without being told whether they got
   // it right, and prevents client-side tampering (the backend re-grades
   // from the stored answer no matter what the client sends).
-  async function submitFC() {
-    if (!assignmentTaskUUID) return
+  async function submitFC(opts?: { silent?: boolean }) {
+    if (!assignmentTaskUUID) return true
     const values = {
       assignment_task_submission_uuid:
         userSubmissions?.assignment_task_submission_uuid || null,
@@ -219,9 +222,11 @@ function TaskShortAnswerObject({
     if (res.success) {
       setUserSubmissions(res.data)
       setInitialAnswer(studentAnswer)
-      toast.success(t('dashboard.assignments.editor.toasts.task_saved'))
+      if (!opts?.silent) toast.success(t('dashboard.assignments.editor.toasts.task_saved'))
+      return true
     } else {
-      toast.error(t('dashboard.assignments.editor.toasts.task_save_error'))
+      if (!opts?.silent) toast.error(t('dashboard.assignments.editor.toasts.task_save_error'))
+      return false
     }
   }
 
@@ -265,7 +270,7 @@ function TaskShortAnswerObject({
       username: session?.data?.user?.username,
       assignmentTaskSubmissionUUID: userSubmissions.assignment_task_submission_uuid,
       taskSubmissionPayload: userSubmissions.task_submission,
-      onSuccess: loadUserSubmission,
+      onSuccess: () => { loadUserSubmission(); onGraded?.(); },
     })
   }
 
@@ -275,6 +280,7 @@ function TaskShortAnswerObject({
       view={view}
       saveFC={saveFC}
       submitFC={submitFC}
+      taskUUID={assignmentTaskUUID}
       gradeCustomFC={gradeCustomFC}
       currentPoints={userSubmissionObject?.grade}
       currentFeedback={userSubmissionObject?.task_submission_grade_feedback}
@@ -282,7 +288,8 @@ function TaskShortAnswerObject({
         assignmentTaskOutsideProvider?.max_grade_value ||
         assignmentTaskState?.assignmentTask?.max_grade_value
       }
-      showSavingDisclaimer={showSavingDisclaimer}
+      dirtyValue={studentAnswer}
+      savedValue={initialAnswer}
     >
       <div className="flex flex-col space-y-4">
         {/* === TEACHER VIEW === */}
@@ -401,7 +408,7 @@ function TaskShortAnswerObject({
             )}
             <input
               value={studentAnswer}
-              onChange={(e) => !submissionIsGraded && setStudentAnswer(e.target.value)}
+              onChange={(e) => { if (!submissionIsGraded) { interactedRef.current = true; setStudentAnswer(e.target.value) } }}
               readOnly={submissionIsGraded}
               placeholder={t(
                 'dashboard.assignments.editor.task_editor.short_answer.your_answer_placeholder'

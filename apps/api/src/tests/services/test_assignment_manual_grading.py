@@ -191,21 +191,19 @@ class TestAutoGradeStillReverifies:
 
 # One question, three options: two of the student's choices match the answer
 # key and one does not → 2/3 → round(66.67) → 67 on auto-grade.
+# Three single-correct questions. Student answers q1 and q2 correctly and leaves
+# q3 blank → 2 of 3 QUESTIONS correct → per-question auto-grade 67/100.
 _QUIZ_CONTENTS = {
     "questions": [
-        {
-            "questionUUID": "q1",
-            "options": [
-                {"optionUUID": "o1", "assigned_right_answer": True},
-                {"optionUUID": "o2", "assigned_right_answer": False},
-                {"optionUUID": "o3", "assigned_right_answer": True},
-            ],
-        }
+        {"questionUUID": "q1", "options": [{"optionUUID": "o1", "assigned_right_answer": True}]},
+        {"questionUUID": "q2", "options": [{"optionUUID": "o2", "assigned_right_answer": True}]},
+        {"questionUUID": "q3", "options": [{"optionUUID": "o3", "assigned_right_answer": True}]},
     ]
 }
-# Student checks o1 (right) and leaves o2 (right: stays unchecked) and o3
-# (wrong: should have been checked) → 2 of 3 options match.
-_QUIZ_SUBMISSION = {"submissions": [{"questionUUID": "q1", "optionUUID": "o1", "answer": True}]}
+_QUIZ_SUBMISSION = {"submissions": [
+    {"questionUUID": "q1", "optionUUID": "o1", "answer": True},
+    {"questionUUID": "q2", "optionUUID": "o2", "answer": True},
+]}
 
 
 async def _setup_quiz(db, org, course, chapter, activity, regular_user, *, stored_grade, manually_graded):
@@ -326,3 +324,147 @@ class TestQuizManualOverride:
             )
         assert computed["grade"] == 67
         assert computed["percentage"] == 67.0
+
+
+# ---------------------------------------------------------------------------
+# H4: a CODE task that can't be server-verified (Judge0 outage) must NOT
+# finalize an auto-graded submission at a bogus 0. The submission stays
+# SUBMITTED (pending) so it can be re-graded once Judge0 recovers.
+# ---------------------------------------------------------------------------
+async def _setup_code(db, org, course, chapter, activity, regular_user):
+    """Assignment with one CODE task + a student submission with real source."""
+    assignment = Assignment(
+        title="Code Outage",
+        description="x",
+        due_date="2030-01-01",
+        published=True,
+        grading_type=GradingTypeEnum.NUMERIC,
+        auto_grading=True,
+        org_id=org.id,
+        course_id=course.id,
+        chapter_id=chapter.id,
+        activity_id=activity.id,
+        assignment_uuid="assignment_code_outage",
+        creation_date=str(datetime.now()),
+        update_date=str(datetime.now()),
+    )
+    db.add(assignment)
+    await db.commit()
+    await db.refresh(assignment)
+
+    task = AssignmentTask(
+        title="Solve it",
+        description="Print 1",
+        hint="",
+        reference_file=None,
+        assignment_type=AssignmentTaskTypeEnum.CODE,
+        contents={
+            "language_id": 71,
+            "grading_mode": "equal_weight",
+            "test_cases": [{"expectedStdout": "1"}, {"expectedStdout": "2"}],
+        },
+        max_grade_value=100,
+        assignment_id=assignment.id,
+        org_id=org.id,
+        course_id=course.id,
+        chapter_id=chapter.id,
+        activity_id=activity.id,
+        assignment_task_uuid="assignmenttask_code_outage",
+        creation_date=str(datetime.now()),
+        update_date=str(datetime.now()),
+    )
+    db.add(task)
+    await db.commit()
+    await db.refresh(task)
+
+    user_submission = AssignmentUserSubmission(
+        user_id=regular_user.id,
+        assignment_id=assignment.id,
+        grade=0,
+        submission_status=AssignmentUserSubmissionStatus.SUBMITTED,
+        attempt_number=1,
+        assignmentusersubmission_uuid="aus_code_outage",
+        creation_date=str(datetime.now()),
+        update_date=str(datetime.now()),
+    )
+    db.add(user_submission)
+
+    task_submission = AssignmentTaskSubmission(
+        assignment_task_submission_uuid="ats_code_outage",
+        task_submission={"source_code": "print(1)", "language_id": 71},
+        grade=0,
+        manually_graded=False,
+        task_submission_grade_feedback="",
+        assignment_type=AssignmentTaskTypeEnum.CODE,
+        user_id=regular_user.id,
+        activity_id=task.activity_id,
+        course_id=task.course_id,
+        chapter_id=task.chapter_id,
+        assignment_task_id=task.id,
+        creation_date=str(datetime.now()),
+        update_date=str(datetime.now()),
+    )
+    db.add(task_submission)
+    await db.commit()
+    await db.refresh(user_submission)
+    return assignment, user_submission
+
+
+class TestCodeUnverifiableDefersAutoGrade:
+    async def test_auto_grade_defers_when_judge0_unreachable(
+        self, db, org, course, chapter, activity, regular_user
+    ):
+        # Judge0 raises on every call → grade unverifiable. The auto-grade must
+        # NOT finalize: it returns finalized=False and leaves the submission
+        # SUBMITTED so a bogus 0 is never stamped on the learner.
+        assignment, submission = await _setup_code(
+            db, org, course, chapter, activity, regular_user
+        )
+        with patch(_PATCH_DISPATCH, new_callable=AsyncMock) as dispatch, patch(
+            "src.routers.code_execution._get_judge0_config",
+            lambda: {"cfg": "fake"},
+        ), patch(
+            "src.routers.code_execution._submit_single",
+            new_callable=AsyncMock,
+            side_effect=RuntimeError("judge0 down"),
+        ):
+            computed = await _apply_grade_and_finalize(
+                assignment=assignment,
+                course=course,
+                user_id=regular_user.id,
+                assignment_user_submission=submission,
+                db_session=db,
+                auto_graded=True,
+            )
+        assert computed == {"finalized": False, "reason": "code_unverifiable"}
+        # Left pending — NOT flipped to GRADED, and no graded webhook fired.
+        assert submission.submission_status == AssignmentUserSubmissionStatus.SUBMITTED
+        dispatch.assert_not_called()
+
+    async def test_manual_grade_still_finalizes_despite_outage(
+        self, db, org, course, chapter, activity, regular_user
+    ):
+        # On the MANUAL path (auto_graded=False) a teacher is deliberately
+        # grading; an unverifiable CODE task keeps its stored grade and the
+        # submission still finalizes to GRADED (teacher owns the outcome).
+        assignment, submission = await _setup_code(
+            db, org, course, chapter, activity, regular_user
+        )
+        with patch(_PATCH_DISPATCH, new_callable=AsyncMock), patch(
+            "src.routers.code_execution._get_judge0_config",
+            lambda: {"cfg": "fake"},
+        ), patch(
+            "src.routers.code_execution._submit_single",
+            new_callable=AsyncMock,
+            side_effect=RuntimeError("judge0 down"),
+        ):
+            computed = await _apply_grade_and_finalize(
+                assignment=assignment,
+                course=course,
+                user_id=regular_user.id,
+                assignment_user_submission=submission,
+                db_session=db,
+                auto_graded=False,
+            )
+        assert computed.get("finalized") is not False
+        assert submission.submission_status == AssignmentUserSubmissionStatus.GRADED

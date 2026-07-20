@@ -476,7 +476,6 @@
     "image": "รูปภาพ",
     "upload_image": "อัปโหลดรูปภาพ",
     "choose_from_gallery": "เลือกจากคลังภาพ",
-    "paste_from_clipboard": "วางจากคลิปบอร์ด",
     "enter_to_add": "กด Enter เพื่อเพิ่ม...",
     "select_visibility": "เลือกการมองเห็น",
     "and_x_more": "และอีก {{count}} อย่าง",

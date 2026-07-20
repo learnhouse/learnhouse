@@ -464,7 +464,6 @@
     "image": "图像",
     "upload_image": "上传图像",
     "choose_from_gallery": "从图库中选择",
-    "paste_from_clipboard": "从剪贴板粘贴",
     "enter_to_add": "按 Enter 键添加...",
     "select_visibility": "选择可见性",
     "and_x_more": "以及另外 {{count}} 个",

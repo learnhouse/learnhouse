@@ -185,13 +185,10 @@ class TestMatchingSemantics:
 # None and empty-string handling
 # --------------------------------------------------------------------------- #
 class TestNoneAndEmpty:
-    def test_none_correct_answer_is_skipped_but_still_counted(self):
-        """SURPRISING: a blank with correctAnswer=None is impossible to earn
-        (the None guard skips scoring) yet it still inflates total_blanks.
-
-        Here 1 of 2 blanks is scorable+correct, the other is None → the student
-        is capped at round(1/2*100) == 50, never 100.
-        """
+    def test_none_correct_answer_blank_is_skipped_entirely(self):
+        """A blank with correctAnswer=None can't be auto-scored, so it is skipped
+        (neither counted nor credited). Only the scorable b1 remains → 1/1 → 100,
+        instead of the old behavior that inflated the denominator to 2 (→ 50)."""
         contents = {
             "questions": [_q("q1", [_blank("b1", "x"), _blank("b2", None)])]
         }
@@ -201,7 +198,7 @@ class TestNoneAndEmpty:
                 _sub("q1", "b2", "anything"),
             ]
         }
-        assert _grade_form_task(contents, sub, 100) == 50
+        assert _grade_form_task(contents, sub, 100) == 100
 
     def test_none_student_answer_is_skipped_but_still_counted(self):
         """An explicit None answer is skipped (never scores) but still counts."""
@@ -216,23 +213,33 @@ class TestNoneAndEmpty:
         }
         assert _grade_form_task(contents, sub, 100) == 50
 
-    def test_empty_string_correct_answer_matches_missing_submission(self):
-        """SURPRISING: correctAnswer='' with no student submission both default
-        to '' → they MATCH, so an empty blank is auto-awarded a point."""
+    def test_empty_string_correct_answer_blank_is_skipped_no_free_credit(self):
+        """A blank with an empty answer key can't be auto-scored: it is skipped,
+        so a blank submission earns 0 (not free credit). It's the only blank, so
+        total_blanks==0 → grade 0."""
         contents = {"questions": [_q("q1", [_blank("b1", "")])]}
         sub = {"submissions": []}
-        assert _grade_form_task(contents, sub, 100) == 100
+        assert _grade_form_task(contents, sub, 100) == 0
 
-    def test_empty_string_correct_answer_matches_empty_student_answer(self):
-        """A blank whose correctAnswer is '' is satisfied by a whitespace-only answer (both trim to '')."""
+    def test_empty_key_blank_not_credited_for_whitespace_answer(self):
+        """An empty-key blank is skipped even when the student submits whitespace
+        (previously both trimmed to '' and matched for free credit)."""
         contents = {"questions": [_q("q1", [_blank("b1", "")])]}
-        sub = {"submissions": [_sub("q1", "b1", "   ")]}  # whitespace trims to ''
-        assert _grade_form_task(contents, sub, 100) == 100
+        sub = {"submissions": [_sub("q1", "b1", "   ")]}
+        assert _grade_form_task(contents, sub, 100) == 0
 
-    def test_missing_correct_answer_key_defaults_to_empty_string(self):
-        """A blank dict without a correctAnswer key behaves like ''."""
+    def test_missing_correct_answer_key_blank_is_skipped(self):
+        """A blank dict without a correctAnswer key has no key to grade against,
+        so it is skipped (no free credit for a blank answer)."""
         contents = {"questions": [_q("q1", [{"blankUUID": "b1"}])]}
         sub = {"submissions": [_sub("q1", "b1", "")]}
+        assert _grade_form_task(contents, sub, 100) == 0
+
+    def test_empty_key_blank_skipped_but_real_blank_still_scored(self):
+        """A mix: the empty-key blank is skipped, the real blank is graded — the
+        student's correct answer to the real blank earns full marks (1/1)."""
+        contents = {"questions": [_q("q1", [_blank("b1", ""), _blank("b2", "Paris")])]}
+        sub = {"submissions": [_sub("q1", "b2", "paris")]}
         assert _grade_form_task(contents, sub, 100) == 100
 
     def test_missing_student_submission_defaults_to_empty_string(self):
@@ -409,12 +416,12 @@ class TestMalformedQuestionsAndBlanks:
         # correctAnswer 'Paris' vs default '' → wrong, but counted → 0
         assert _grade_form_task(contents, sub, 100) == 0
 
-    def test_blank_missing_blank_uuid_with_empty_correct_answer_scores(self):
-        """The flip side: a blankUUID-less blank with correctAnswer='' matches
-        the '' default and scores a point."""
+    def test_blank_with_empty_correct_answer_is_skipped_not_scored(self):
+        """A blank with correctAnswer='' can't be auto-scored, so it is skipped
+        (no free credit) — with it as the only blank, grade is 0."""
         contents = {"questions": [_q("q1", [{"correctAnswer": ""}])]}
         sub = {"submissions": []}
-        assert _grade_form_task(contents, sub, 100) == 100
+        assert _grade_form_task(contents, sub, 100) == 0
 
     def test_question_with_empty_blanks_list_contributes_nothing(self):
         """A question with no blanks contributes 0 to total_blanks; if it's the
@@ -434,11 +441,12 @@ class TestMalformedQuestionsAndBlanks:
 # Whitespace-only / long answers
 # --------------------------------------------------------------------------- #
 class TestWhitespaceAndLongAnswers:
-    def test_whitespace_only_answers_both_trim_to_empty_and_match(self):
-        """Whitespace-only correct AND student both strip to '' → match."""
+    def test_whitespace_only_correct_answer_is_skipped(self):
+        """A whitespace-only correctAnswer trims to '' — it's effectively an
+        empty key, so it is skipped (no free credit for a whitespace answer)."""
         contents = {"questions": [_q("q1", [_blank("b1", "   ")])]}
         sub = {"submissions": [_sub("q1", "b1", "\t  \n")]}
-        assert _grade_form_task(contents, sub, 100) == 100
+        assert _grade_form_task(contents, sub, 100) == 0
 
     def test_whitespace_only_correct_vs_real_answer_fails(self):
         """A whitespace-only correctAnswer (trims to '') doesn't match a real non-empty answer → 0."""

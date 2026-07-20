@@ -24,9 +24,10 @@ type TaskFileObjectProps = {
     view: 'teacher' | 'student' | 'grading' | 'custom-grading';
     assignmentTaskUUID?: string;
     user_id?: string;
+    onGraded?: () => void;
 };
 
-export default function TaskFileObject({ view, user_id, assignmentTaskUUID }: TaskFileObjectProps) {
+export default function TaskFileObject({ view, user_id, assignmentTaskUUID, onGraded }: TaskFileObjectProps) {
     const { t } = useTranslation()
     const session = useLHSession() as any;
     const org = useOrg() as any;
@@ -44,15 +45,19 @@ export default function TaskFileObject({ view, user_id, assignmentTaskUUID }: Ta
     /* TEACHER VIEW CODE */
 
     /* STUDENT VIEW CODE */
-    const [showSavingDisclaimer, setShowSavingDisclaimer] = useState<boolean>(false);
     const [userSubmissions, setUserSubmissions] = useState<FileSchema>({
         fileUUID: '',
     });
     const [initialUserSubmissions, setInitialUserSubmissions] = useState<FileSchema>({
         fileUUID: '',
     });
+    // Hydrate the student's saved submission exactly once (see call site), so
+    // later query refetches can't overwrite in-progress edits and stop auto-save.
+    const submissionHydratedForRef = React.useRef<string | null>(null);
+    const interactedRef = React.useRef(false);
 
     const handleFileChange = async (event: any) => {
+        interactedRef.current = true;
         // Check if user is authenticated
         if (!access_token) {
             setError(t('dashboard.assignments.editor.task_editor.general.auth_required'));
@@ -89,26 +94,37 @@ export default function TaskFileObject({ view, user_id, assignmentTaskUUID }: Ta
 
     // Hydrate from the batch task-submissions cache instead of calling
     // /submissions/me per task. Re-runs when the batch payload arrives.
-    function hydrateSubmissionFromBatch() {
+    function hydrateSubmissionFromBatch(preserveLiveAnswers = false) {
         if (!assignmentTaskUUID) return;
         const sub = taskSubmissionsMap?.[assignmentTaskUUID] ?? null;
         if (sub) {
-            setUserSubmissions({
-                ...sub.task_submission,
-                assignment_task_submission_uuid: sub.assignment_task_submission_uuid,
-            });
+            // Always seed the saved baseline so dirty detection is correct.
             setInitialUserSubmissions({
                 ...sub.task_submission,
                 assignment_task_submission_uuid: sub.assignment_task_submission_uuid,
             });
+            if (preserveLiveAnswers) {
+                // Learner interacted before the batch resolved — keep their live
+                // answer but adopt the server submission uuid so a save updates
+                // the existing row instead of creating a duplicate.
+                setUserSubmissions((prev: any) => ({
+                    ...prev,
+                    assignment_task_submission_uuid: sub.assignment_task_submission_uuid,
+                }));
+            } else {
+                setUserSubmissions({
+                    ...sub.task_submission,
+                    assignment_task_submission_uuid: sub.assignment_task_submission_uuid,
+                });
+            }
         }
     }
 
-    const submitFC = async () => {
+    const submitFC = async (opts?: { silent?: boolean }) => {
         // Check if user is authenticated
         if (!access_token) {
-            toast.error(t('dashboard.assignments.editor.task_editor.general.auth_required_submit'));
-            return;
+            if (!opts?.silent) toast.error(t('dashboard.assignments.editor.task_editor.general.auth_required_submit'));
+            return false;
         }
 
         // Save the file submission to the server
@@ -120,24 +136,26 @@ export default function TaskFileObject({ view, user_id, assignmentTaskUUID }: Ta
         };
         if (assignmentTaskUUID) {
             const res = await handleAssignmentTaskSubmission(values, assignmentTaskUUID, assignment.assignment_object.assignment_uuid, access_token);
-            if (res) {
-                assignmentTaskStateHook({
-                    type: 'reload',
-                });
-                toast.success(t('dashboard.assignments.editor.toasts.task_saved'));
-                setShowSavingDisclaimer(false);
-                // Update userSubmissions with the returned UUID for future updates
-                const updatedUserSubmissions = {
-                    ...userSubmissions,
-                    assignment_task_submission_uuid: res.data?.assignment_task_submission_uuid || userSubmissions.assignment_task_submission_uuid
-                };
-                setUserSubmissions(updatedUserSubmissions);
-                setInitialUserSubmissions(updatedUserSubmissions);
-                queryClient.invalidateQueries({ queryKey: queryKeys.assignments.taskSubmission(assignment.assignment_object.assignment_uuid) });
+            if (res.success) {
+                if (!opts?.silent) {
+                    assignmentTaskStateHook({ type: 'reload' });
+                    toast.success(t('dashboard.assignments.editor.toasts.task_saved'));
+                }
+                const savedUUID = res.data?.assignment_task_submission_uuid || userSubmissions.assignment_task_submission_uuid;
+                // Baseline = what we sent; live = latest (from prev), never reverted
+                // to the call-time snapshot, so a change during the save survives.
+                setInitialUserSubmissions({ ...userSubmissions, assignment_task_submission_uuid: savedUUID });
+                setUserSubmissions(prev => ({ ...prev, assignment_task_submission_uuid: savedUUID }));
+                if (!opts?.silent) {
+                    queryClient.invalidateQueries({ queryKey: queryKeys.assignments.taskSubmission(assignment.assignment_object.assignment_uuid) });
+                }
+                return true;
             } else {
-                toast.error(t('dashboard.assignments.editor.toasts.task_save_error'));
+                if (!opts?.silent) toast.error(t('dashboard.assignments.editor.toasts.task_save_error'));
+                return false;
             }
         }
+        return true;
     };
 
     // Used only by grading view — student view hydrates from useAssignments() context
@@ -165,17 +183,6 @@ export default function TaskFileObject({ view, user_id, assignmentTaskUUID }: Ta
             setAssignmentTaskOutsideProvider(task);
         }
     }
-
-    // Detect changes between initial and current submissions
-    useEffect(() => {
-        /* eslint-disable react-hooks/set-state-in-effect */
-        if (userSubmissions.fileUUID !== initialUserSubmissions.fileUUID) {
-            setShowSavingDisclaimer(true);
-        } else {
-            setShowSavingDisclaimer(false);
-        }
-        /* eslint-enable react-hooks/set-state-in-effect */
-    }, [userSubmissions]);
 
     /* STUDENT VIEW CODE */
 
@@ -214,7 +221,7 @@ export default function TaskFileObject({ view, user_id, assignmentTaskUUID }: Ta
             username: session?.data?.user?.username,
             assignmentTaskSubmissionUUID: userSubmissions?.assignment_task_submission_uuid,
             taskSubmissionPayload: userSubmissions,
-            onSuccess: getAssignmentTaskSubmissionFromIdentifiedUserUI,
+            onSuccess: () => { getAssignmentTaskSubmissionFromIdentifiedUserUI(); onGraded?.(); },
         });
     }
 
@@ -225,7 +232,13 @@ export default function TaskFileObject({ view, user_id, assignmentTaskUUID }: Ta
         // Student area: hydrate from already-fetched context payloads.
         if (view === 'student') {
             hydrateTaskFromContext()
-            hydrateSubmissionFromBatch()
+            // Hydrate the saved submission only once (when the batch first
+            // resolves). Re-hydrating on later refetches would clobber the
+            // learner's in-progress submission and stop auto-save.
+            if (taskSubmissionsMap !== null && submissionHydratedForRef.current !== assignmentTaskUUID) {
+                hydrateSubmissionFromBatch(interactedRef.current)
+                submissionHydratedForRef.current = assignmentTaskUUID ?? null
+            }
         }
 
         // Grading area: per-task fetches are fine here (one task at a time).
@@ -237,7 +250,7 @@ export default function TaskFileObject({ view, user_id, assignmentTaskUUID }: Ta
     }, [view, assignmentTaskUUID, assignment?.assignment_tasks, taskSubmissionsMap])
 
     return (
-        <AssignmentBoxUI submitFC={submitFC} showSavingDisclaimer={showSavingDisclaimer} view={view} gradeCustomFC={gradeCustomFC} currentPoints={userSubmissionObject?.grade} currentFeedback={userSubmissionObject?.task_submission_grade_feedback} maxPoints={assignmentTaskOutsideProvider?.max_grade_value} type="file">
+        <AssignmentBoxUI submitFC={submitFC} dirtyValue={userSubmissions.fileUUID ?? ''} savedValue={initialUserSubmissions.fileUUID ?? ''} taskUUID={assignmentTaskUUID} view={view} gradeCustomFC={gradeCustomFC} currentPoints={userSubmissionObject?.grade} currentFeedback={userSubmissionObject?.task_submission_grade_feedback} maxPoints={assignmentTaskOutsideProvider?.max_grade_value} type="file">
             {view === 'teacher' && (
                 <div className='flex flex-col sm:flex-row py-5 sm:py-6 text-xs sm:text-sm justify-center mx-auto space-y-2 sm:space-y-0 sm:space-x-3 text-slate-600 px-4 sm:px-2 text-center sm:text-left bg-slate-50 rounded-lg border border-slate-100'>
                     <Info size={18} className="mx-auto sm:mx-0 text-slate-500" />

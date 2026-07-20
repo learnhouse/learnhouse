@@ -217,6 +217,37 @@ class TestCreateAssignment:
         assert isinstance(result, AssignmentRead)
         assert result.title == "New Assignment"
 
+    async def test_rejects_activity_from_another_course(
+        self, mock_request, db, org, course, chapter, activity, admin_user
+    ):
+        # SECURITY: RBAC only authorizes `course`, so a client-supplied activity
+        # that belongs to a DIFFERENT course must be rejected (400) rather than
+        # creating a dangling / cross-course assignment.
+        from src.db.courses.activities import (
+            Activity, ActivityTypeEnum, ActivitySubTypeEnum,
+        )
+        foreign = Activity(
+            id=7777, name="Foreign", activity_uuid="activity_foreign_7777",
+            activity_type=ActivityTypeEnum.TYPE_DYNAMIC,
+            activity_sub_type=ActivitySubTypeEnum.SUBTYPE_DYNAMIC_PAGE,
+            published=True, org_id=org.id, course_id=course.id + 999, content={},
+            creation_date="2024-01-01", update_date="2024-01-01",
+        )
+        db.add(foreign)
+        await db.commit()
+
+        obj = AssignmentCreate(
+            title="T", description="D", due_date="2030-01-01",
+            grading_type=GradingTypeEnum.NUMERIC, org_id=org.id,
+            course_id=course.id, chapter_id=chapter.id, activity_id=foreign.id,
+        )
+        with patch(_PATCH_RBAC, new_callable=AsyncMock), \
+             patch(_PATCH_LIMITS, new_callable=AsyncMock), \
+             patch(_PATCH_INCREASE, new_callable=AsyncMock):
+            with pytest.raises(HTTPException) as exc:
+                await create_assignment(mock_request, obj, admin_user, db)
+        assert exc.value.status_code == 400
+
 
 # ---------------------------------------------------------------------------
 # read_assignment
@@ -1900,10 +1931,14 @@ class TestUpdateAssignmentSubmissionProtectedFields:
         await db.refresh(user_submission)
         assert user_submission.assignment_id == original_assignment_id
 
-    async def test_instructor_can_reassign_assignment_id(
+    async def test_instructor_cannot_reassign_assignment_id(
         self, mock_request, db, org, course, chapter, activity, assignment,
         user_submission, admin_user, regular_user,
     ):
+        # SECURITY: the row's assignment_id is fixed by the URL/lookup keys.
+        # Even an instructor must NOT be able to reparent a submission onto a
+        # different assignment via the request body (assignment ids are global
+        # integers — this would be a cross-tenant write).
         other = Assignment(
             id=12,
             title="Other Assignment 2",
@@ -1924,7 +1959,7 @@ class TestUpdateAssignmentSubmissionProtectedFields:
         await db.commit()
 
         obj = AssignmentUserSubmissionCreate(assignment_id=other.id)
-        # is_instructor -> True; assignment_id IS applied (not stripped)
+        # is_instructor -> True, but assignment_id is still stripped for everyone.
         with patch(_PATCH_RBAC, new_callable=AsyncMock), \
              patch(_PATCH_AUTH_ROLES, new_callable=AsyncMock, return_value=True):
             result = await update_assignment_submission(
@@ -1935,4 +1970,5 @@ class TestUpdateAssignmentSubmissionProtectedFields:
                 admin_user,
                 db,
             )
-        assert result.assignment_id == other.id
+        # Unchanged: the submission still belongs to the original assignment.
+        assert result.assignment_id == assignment.id

@@ -28,6 +28,20 @@ const CertificatePage: React.FC<CertificatePageProps> = ({ orgslug, courseid, qr
 
   useTrackView(AnalyticsEvent.CertificateViewed, {}, !!userCertificate);
 
+  // Recipient's display name for the certificate. Falls back through
+  // full name -> username -> the session user, and is empty when unknown so
+  // the "Presented to" line simply doesn't render.
+  const getLearnerName = (): string => {
+    const u = userCertificate?.user;
+    const full = [u?.first_name, u?.last_name].filter(Boolean).join(' ').trim();
+    if (full) return full;
+    if (u?.username) return u.username;
+    const s = session?.data?.user;
+    const sessionFull = [s?.first_name, s?.last_name].filter(Boolean).join(' ').trim();
+    return sessionFull || s?.username || '';
+  };
+  const learnerName = getLearnerName();
+
   // Fetch user certificate
   useEffect(() => {
     const fetchCertificate = async () => {
@@ -73,7 +87,9 @@ const CertificatePage: React.FC<CertificatePageProps> = ({ orgslug, courseid, qr
 
     try {
       const [{ default: html2canvas }, { default: jsPDF }, QRCode] = await Promise.all([
-        import('html2canvas'),
+        // html2canvas-pro understands modern CSS color functions (oklch/lab/
+        // color-mix) emitted by Tailwind v4; classic html2canvas throws on them.
+        import('html2canvas-pro'),
         import('jspdf'),
         import('qrcode'),
       ]);
@@ -126,6 +142,12 @@ const CertificatePage: React.FC<CertificatePageProps> = ({ orgslug, courseid, qr
       const theme = getPatternTheme(userCertificate.certification.config.certificate_pattern);
       const certificateId = userCertificate.certificate_user.user_certification_uuid;
       const qrCodeData = qrCodeLink ;
+
+      // Escape the learner-controlled name before injecting into innerHTML.
+      const escapeHtml = (s: string) =>
+        s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+         .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+      const safeLearnerName = learnerName ? escapeHtml(learnerName) : '';
 
       // Generate QR code
       const qrCodeDataUrl = await QRCode.toDataURL(qrCodeData, {
@@ -204,7 +226,25 @@ const CertificatePage: React.FC<CertificatePageProps> = ({ orgslug, courseid, qr
           line-height: 1.2;
           max-width: 600px;
         ">${userCertificate.certification.config.certification_name}</div>
-        
+
+        ${safeLearnerName ? `
+        <div style="
+          margin-bottom: 14px;
+        ">
+          <div style="
+            font-size: 12px;
+            color: ${theme.secondary};
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 3px;
+          ">Presented to</div>
+          <div style="
+            font-size: 22px;
+            font-weight: bold;
+            color: ${theme.primary};
+          ">${safeLearnerName}</div>
+        </div>` : ''}
+
         <div style="
           font-size: 18px;
           color: #6b7280;
@@ -478,6 +518,7 @@ const CertificatePage: React.FC<CertificatePageProps> = ({ orgslug, courseid, qr
               certificatePattern={userCertificate.certification.config.certificate_pattern}
               certificateInstructor={userCertificate.certification.config.certificate_instructor}
               certificateId={userCertificate.certificate_user.user_certification_uuid}
+              learnerName={learnerName}
               awardedDate={new Date(userCertificate.certificate_user.created_at).toLocaleDateString('en-US', {
                 year: 'numeric',
                 month: 'long',
