@@ -15,6 +15,7 @@ import {
 } from '@services/config/config'
 import { isSubdomainOf, isSameHost, isLocalhost as isLocalhostCheck } from '@services/utils/ts/hostUtils'
 import { safeRedirectUrl } from '@services/auth/redirects'
+import { safeExternalUrl } from '@services/security/url'
 import { AUTH_EXPIRED_EVENT, AUTH_REFRESHED_EVENT } from '@/lib/auth/events'
 
 // Types matching NextAuth's session structure
@@ -681,7 +682,8 @@ export function SessionProvider({
           }
 
           const { url: googleAuthUrl } = await authResponse.json()
-          window.location.href = googleAuthUrl
+          const safeGoogleUrl = safeExternalUrl(googleAuthUrl)
+          if (safeGoogleUrl) window.location.href = safeGoogleUrl
           return
         }
 
@@ -933,7 +935,8 @@ export async function signIn(
     }
 
     const { url: googleAuthUrl } = await authResponse.json()
-    window.location.href = googleAuthUrl
+    const safeGoogleUrl = safeExternalUrl(googleAuthUrl)
+    if (safeGoogleUrl) window.location.href = safeGoogleUrl
     return
   }
 
