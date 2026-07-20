@@ -509,3 +509,58 @@ class TestGetPrimaryVerifiedCustomDomain:
 
         result = await _get_primary_verified_custom_domain(bad_session, org_id=1)
         assert result is None
+
+
+class TestOrgLogoUrl:
+    """Absolute org-logo URL resolution for white-labeled emails."""
+
+    def test_media_base_prefers_env_override(self):
+        from src.services.email.utils import get_media_base_url
+
+        with patch.dict(
+            "src.services.email.utils.os.environ",
+            {"LEARNHOUSE_MEDIA_URL": "https://cdn.acme.test/"},
+            clear=False,
+        ):
+            assert get_media_base_url(_request()) == "https://cdn.acme.test"
+
+    def test_media_base_derives_api_subdomain_from_domain(self):
+        from src.services.email.utils import get_media_base_url
+
+        with patch(
+            "src.services.email.utils.get_learnhouse_config",
+            return_value=_config(domain="learnhouse.io", ssl=True),
+        ), patch.dict(
+            "src.services.email.utils.os.environ", {}, clear=True
+        ):
+            assert get_media_base_url(_request()) == "https://api.learnhouse.io"
+
+    def test_media_base_falls_back_to_request_host_for_localhost(self):
+        from src.services.email.utils import get_media_base_url
+
+        with patch(
+            "src.services.email.utils.get_learnhouse_config",
+            return_value=_config(domain="localhost"),
+        ), patch.dict(
+            "src.services.email.utils.os.environ", {}, clear=True
+        ):
+            base = get_media_base_url(_request(server=("api.test", 443)))
+            assert base == "https://api.test"
+
+    def test_org_logo_url_builds_content_path(self):
+        from src.services.email.utils import get_org_logo_url
+
+        org = SimpleNamespace(org_uuid="org_abc", logo_image="uuid_logo.png")
+        with patch(
+            "src.services.email.utils.get_media_base_url",
+            return_value="https://api.learnhouse.io",
+        ):
+            url = get_org_logo_url(org, _request())
+        assert url == "https://api.learnhouse.io/content/orgs/org_abc/logos/uuid_logo.png"
+
+    def test_org_logo_url_none_when_no_logo(self):
+        from src.services.email.utils import get_org_logo_url
+
+        org = SimpleNamespace(org_uuid="org_abc", logo_image=None)
+        assert get_org_logo_url(org, _request()) is None
+        assert get_org_logo_url(None, _request()) is None

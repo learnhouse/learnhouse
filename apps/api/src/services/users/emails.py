@@ -11,6 +11,9 @@ from src.services.email.utils import send_email
 
 logger = logging.getLogger(__name__)
 
+# Public academy — footer "learn more" target, and last-resort CTA fallback.
+ACADEMY_URL = "https://university.learnhouse.io"
+
 
 # Inline SVG logo (LearnHouse icon mark + wordmark, scaled down)
 LOGO_SVG = """<svg width="140" height="20" viewBox="0 0 1488 218" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -37,8 +40,31 @@ STYLES = {
 }
 
 
-def _email_layout(title: str, body_content: str, footer_note: str = "") -> str:
-    """Wrap content in the standard email layout."""
+def _org_logo_img(logo_url: str, alt: str) -> str:
+    """<img> for a white-labeled org logo.
+
+    Bounded to the same footprint as the LearnHouse wordmark. Raster logos
+    (PNG/JPG) render in every mail client; an SVG logo may be stripped by some
+    (e.g. Gmail), in which case the ``alt`` (the org name) shows instead — still
+    org-branded, never a broken LearnHouse mark.
+    """
+    return (
+        f'<img src="{html.escape(logo_url)}" alt="{html.escape(alt)}" '
+        'style="max-height: 40px; max-width: 180px; height: auto; width: auto;" />'
+    )
+
+
+def _email_layout(
+    title: str,
+    body_content: str,
+    footer_note: str = "",
+    logo_html: str = LOGO_SVG,
+) -> str:
+    """Wrap content in the standard email layout.
+
+    ``logo_html`` defaults to the LearnHouse mark; white-labeled emails pass the
+    org's logo <img> instead.
+    """
     footer_html = ""
     if footer_note:
         footer_html = f"""
@@ -54,7 +80,7 @@ def _email_layout(title: str, body_content: str, footer_note: str = "") -> str:
     <div style="{STYLES['wrapper']}">
         <div style="{STYLES['container']}">
             <div style="{STYLES['header']}">
-                {LOGO_SVG}
+                {logo_html}
             </div>
             <div style="{STYLES['content']}">
                 {body_content}
@@ -70,35 +96,63 @@ def send_account_creation_email(
     user: UserRead,
     email: EmailStr,
     lang: str = "en",
+    cta_url: str | None = None,
+    org_name: str | None = None,
+    logo_url: str | None = None,
 ):
+    """Welcome email sent once an account exists.
+
+    ``cta_url`` is where "Get Started" lands: the org-scoped URL when the
+    account was created inside an org, or the platform org-picker for org-less
+    signups. Falls back to the public academy when no URL is supplied.
+
+    When ``org_name`` is set the email is WHITE-LABELED to that organization:
+    the subject and body name the org (not LearnHouse), the org's ``logo_url``
+    replaces the LearnHouse mark when present, and the footer is reduced to a
+    subtle "Powered by LearnHouse". Org-less signups keep the LearnHouse-branded
+    variant with the Academy footer link.
+    """
     safe_username = html.escape(user.username)
+    white_label = bool(org_name)
+    safe_org = html.escape(org_name) if org_name else ""
 
     heading = t(lang, "account_creation.heading", username=safe_username)
-    body_text = t(lang, "account_creation.body")
     cta = t(lang, "account_creation.cta")
-    academy_link = (
-        '<a href="https://university.learnhouse.io" '
-        'style="color: rgba(0,0,0,0.35); text-decoration: underline;">'
-        f'{t(lang, "academy_link_text")}</a>'
-    )
+
+    if white_label:
+        subject = t(lang, "account_creation.subject_org", org_name=safe_org, username=safe_username)
+        body_text = t(lang, "account_creation.body_in_org", org_name=safe_org)
+        footer_note = t(lang, "account_creation.footer_powered")
+        logo_html = _org_logo_img(logo_url, org_name) if logo_url else LOGO_SVG
+    else:
+        subject = t(lang, "account_creation.subject", username=safe_username)
+        body_text = t(lang, "account_creation.body")
+        academy_link = (
+            f'<a href="{ACADEMY_URL}" '
+            'style="color: rgba(0,0,0,0.35); text-decoration: underline;">'
+            f'{t(lang, "academy_link_text")}</a>'
+        )
+        footer_note = t(lang, "account_creation.footer", academy_link=academy_link)
+        logo_html = LOGO_SVG
 
     body_content = f"""
         <h1 style="{STYLES['h1']}">{heading}</h1>
         <p style="{STYLES['p']}">
             {body_text}
         </p>
-        <a href="https://university.learnhouse.io" style="{STYLES['button']}">
+        <a href="{html.escape(cta_url or ACADEMY_URL)}" style="{STYLES['button']}">
             {cta}
         </a>
     """
 
     return send_email(
         to=email,
-        subject=t(lang, "account_creation.subject", username=safe_username),
+        subject=subject,
         body=_email_layout(
             title=heading,
             body_content=body_content,
-            footer_note=t(lang, "account_creation.footer", academy_link=academy_link),
+            footer_note=footer_note,
+            logo_html=logo_html,
         ),
     )
 

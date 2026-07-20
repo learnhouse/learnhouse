@@ -75,8 +75,11 @@ async def test_gate_exempts_paid_org():
 
 @pytest.mark.asyncio
 async def test_gate_flags_new_free_org_and_account():
-    org = SimpleNamespace(creation_date=str(NOW.replace(tzinfo=None)))
-    user = SimpleNamespace(creation_date=str(NOW.replace(tzinfo=None)))
+    # "Just created" relative to the real clock — the gate compares against
+    # datetime.now(), so a fixed date would age past the threshold over time.
+    fresh = str(datetime.now())
+    org = SimpleNamespace(creation_date=fresh)
+    user = SimpleNamespace(creation_date=fresh)
     db = _db_returning(org, user)
     with patch.object(account_age, "_is_non_saas", return_value=False), \
          patch.object(account_age, "_get_org_config", AsyncMock(return_value=object())), \
@@ -109,8 +112,10 @@ async def test_gate_fails_open_on_legacy_empty_dates():
 
 @pytest.mark.asyncio
 async def test_enforce_raises_403_account_too_new():
-    org = SimpleNamespace(creation_date=str(NOW.replace(tzinfo=None)))
-    user = SimpleNamespace(creation_date=str(NOW.replace(tzinfo=None)))
+    # "Just created" relative to the real clock (see note above).
+    fresh = str(datetime.now())
+    org = SimpleNamespace(creation_date=fresh)
+    user = SimpleNamespace(creation_date=fresh)
     db = _db_returning(org, user)
     with patch.object(account_age, "_is_non_saas", return_value=False), \
          patch.object(account_age, "_get_org_config", AsyncMock(return_value=object())), \

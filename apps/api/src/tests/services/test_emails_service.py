@@ -71,6 +71,50 @@ class TestEmailsService:
         assert "user&lt;script&gt;" in body
         assert "Get Started" in body
 
+    def test_orgless_welcome_uses_cta_url_and_learnhouse_branding(self):
+        with patch("src.services.users.emails.send_email", return_value=True) as send_email:
+            send_account_creation_email(
+                _user(), "user@test.com", cta_url="https://platform.test/organizations"
+            )
+        call = send_email.call_args.kwargs
+        assert "https://platform.test/organizations" in call["body"]
+        # Org-less keeps the LearnHouse-branded subject + Academy footer, no org logo.
+        assert "Welcome to LearnHouse" in call["subject"]
+        assert "LearnHouse Academy" in call["body"]
+        assert "<img" not in call["body"]
+
+    def test_welcome_is_whitelabeled_when_org_supplied(self):
+        with patch("src.services.users.emails.send_email", return_value=True) as send_email:
+            send_account_creation_email(
+                _user(),
+                "user@test.com",
+                cta_url="https://acme.test/home",
+                org_name="Acme & Co",
+                logo_url="https://api.test/content/orgs/org_uuid/logos/logo.png",
+            )
+        call = send_email.call_args.kwargs
+        # Subject/body name the org (html-escaped), not LearnHouse.
+        assert "Acme &amp; Co" in call["subject"]
+        assert "Welcome to LearnHouse" not in call["subject"]
+        assert "Acme &amp; Co" in call["body"]
+        # Org logo replaces the mark; Academy link is gone; powered-by remains.
+        assert '<img src="https://api.test/content/orgs/org_uuid/logos/logo.png"' in call["body"]
+        assert "LearnHouse Academy" not in call["body"]
+        assert "Powered by LearnHouse" in call["body"]
+        assert "https://acme.test/home" in call["body"]
+
+    def test_whitelabel_without_logo_falls_back_to_learnhouse_mark(self):
+        with patch("src.services.users.emails.send_email", return_value=True) as send_email:
+            send_account_creation_email(
+                _user(), "user@test.com", org_name="Acme", logo_url=None
+            )
+        call = send_email.call_args.kwargs
+        # No org logo → LearnHouse wordmark (SVG), but text still white-labeled.
+        assert "<img" not in call["body"]
+        assert "<svg" in call["body"]
+        assert "Acme" in call["subject"]
+        assert "Powered by LearnHouse" in call["body"]
+
     def test_send_password_reset_email_variants_encode_params(self):
         with patch("src.services.users.emails.send_email", return_value=True) as send_email:
             send_password_reset_email(
