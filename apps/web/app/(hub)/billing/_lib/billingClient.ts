@@ -43,16 +43,6 @@ export interface PromoResult {
   currency?: string;
 }
 
-// POST /api/billing/fulfill → { fulfilled, plan? }
-// Redundant automatic upgrade path: called on return from Stripe checkout so the
-// org upgrades even if the webhook is delayed or misconfigured. Idempotent.
-export function billingFulfill(body: {
-  sessionId: string;
-  orgId: number | string;
-}): Promise<{ fulfilled: boolean; plan?: string; reason?: string }> {
-  return postJson("/api/billing/fulfill", body);
-}
-
 // POST /api/billing/checkout → { id, url }
 export function billingCheckout(body: {
   plan: PlanId;

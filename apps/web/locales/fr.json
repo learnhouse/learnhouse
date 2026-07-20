@@ -454,7 +454,6 @@
     "image": "Image",
     "upload_image": "Téléverser",
     "choose_from_gallery": "Galerie",
-    "paste_from_clipboard": "Coller depuis le presse-papiers",
     "enter_to_add": "Appuyez sur Entrée...",
     "select_visibility": "Choisir la visibilité",
     "and_x_more": "& {{count}} de plus",

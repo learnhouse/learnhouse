@@ -12,7 +12,7 @@ import UserAvatar from '@components/Objects/UserAvatar'
 import { getAPIUrl } from '@services/config/config'
 import { getOrgLogoMediaDirectory } from '@services/media/media'
 import { apiFetch } from '@services/utils/ts/requests'
-import { fetchPrices, fetchSubscription, billingFulfill } from './_lib/billingClient'
+import { fetchPrices, fetchSubscription } from './_lib/billingClient'
 import { resolvePlanIdFromOrg } from './_lib/plans'
 import PlanUsage from './_components/PlanUsage'
 import SwitchWizard from './_components/SwitchWizard'
@@ -132,24 +132,11 @@ function BillingClient() {
   // params so a reload doesn't re-fire.
   const checkoutParam = searchParams?.get('checkout')
   const packPurchased = searchParams?.get('pack_purchased')
-  const checkoutSessionId = searchParams?.get('session_id')
   useEffect(() => {
     if (!orgId || (!checkoutParam && !packPurchased)) return
     if (checkoutParam === 'success' || packPurchased) {
-      // Redundant automatic fulfillment: apply the plan directly from the paid
-      // Stripe session so the org upgrades even when the webhook is delayed or
-      // misconfigured. Idempotent and server-authorized; we refresh regardless
-      // of its outcome (the webhook may already have applied the plan). A plan
-      // checkout (not a pack) carries session_id in the success_url.
-      const settle = checkoutSessionId && !packPurchased
-        ? billingFulfill({ sessionId: checkoutSessionId, orgId }).catch((err) => {
-            console.error('[billing] fulfill on return failed:', err)
-          })
-        : Promise.resolve()
-      settle.finally(() => {
-        queryClient.invalidateQueries({ queryKey: ['billing'] })
-        queryClient.invalidateQueries({ queryKey: ['orgs', 'user'] })
-      })
+      queryClient.invalidateQueries({ queryKey: ['billing'] })
+      queryClient.invalidateQueries({ queryKey: ['orgs', 'user'] })
       toast.success(
         packPurchased
           ? t('billing.pack_purchased', { defaultValue: 'Add-on purchased — your limits are updated.' })
@@ -162,7 +149,7 @@ function BillingClient() {
     ;['checkout', 'session_id', 'pack_purchased', 'pack'].forEach((k) => sp.delete(k))
     const qs = sp.toString()
     router.replace(qs ? `/billing?${qs}` : '/billing')
-  }, [orgId, checkoutParam, packPurchased, checkoutSessionId, queryClient, router, searchParams, t])
+  }, [orgId, checkoutParam, packPurchased, queryClient, router, searchParams, t])
 
   const currentPlanId = resolvePlanIdFromOrg(org)
   const isOrgActive = resolveOrgActive(org)
