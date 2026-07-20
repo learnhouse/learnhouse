@@ -94,7 +94,7 @@
         "jspdf": "^4.0.0",
         "jspdf-html2canvas": "^1.5.2",
         "katex": "^0.18.0",
-        "loops": "^4",
+        "loops": "^7.0.0",
         "lowlight": "^3.3.0",
         "lucide-react": "^1.0.0",
         "mailchecker": "^6.0.20",
@@ -1730,7 +1730,7 @@
 
     "longest-streak": ["longest-streak@3.1.0", "", {}, "sha512-9Ri+o0JYgehTaVBBDoMqIl8GXtbWg711O3srftcHhZ0dqnETqLaoIK0x17fUw9rFSlK/0NlsKe0Ahhyl5pXE2g=="],
 
-    "loops": ["loops@4.1.0", "", {}, "sha512-KUiRuRZjqRgq17dQNKODkGQ26NWr8aP6MPMoBzzd0xXUJci8HWbT31Y2GETiVE6cl+I7oXOHStA+dE8+p6oyLA=="],
+    "loops": ["loops@7.0.0", "", {}, "sha512-TNbnJndtZwE7Esmc6+xKy3xWZOqzq8xQ5IqvZ+CBS9MOjqcx8qgyfsWoW4F7oNZGkX7uS1+RDxvUAswwD2hR5Q=="],
 
     "loose-envify": ["loose-envify@1.4.0", "", { "dependencies": { "js-tokens": "^3.0.0 || ^4.0.0" }, "bin": { "loose-envify": "cli.js" } }, "sha512-lyuxPGr/Wfhrlem2CL/UcnUc1zcqKAImBDzukY7Y5F/yQiNdko6+fRLevlw1HgMySw7f611UIY408EtxRSoK3Q=="],
 
