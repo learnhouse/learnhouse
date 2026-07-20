@@ -131,6 +131,53 @@ async def get_org_signup_base_url(
     return f"{scheme}://{org_slug}.{base_domain}"
 
 
+def get_media_base_url(request: Request) -> str:
+    """Public base URL that serves ``/content/...`` files (org logos, etc.).
+
+    Email HTML can't reference local assets, so an embedded org logo needs an
+    absolute, publicly reachable URL. The host that serves ``/content`` is the
+    backend/media host — which is normally configured only on the FRONTEND
+    (``NEXT_PUBLIC_LEARNHOUSE_BACKEND_URL`` / ``..._MEDIA_URL``). The backend
+    doesn't have that value, so resolve it in order:
+
+    1. An explicit backend override (``LEARNHOUSE_MEDIA_URL`` /
+       ``LEARNHOUSE_BACKEND_URL``) — set this if the media host isn't ``api.``.
+    2. The SaaS convention ``{scheme}://api.{domain}`` (e.g. api.learnhouse.io)
+       when a real domain is configured.
+    3. The request's own host as a last resort (correct for single-tenant /
+       self-hosted where API and content share the request origin).
+    """
+    override = os.environ.get("LEARNHOUSE_MEDIA_URL") or os.environ.get(
+        "LEARNHOUSE_BACKEND_URL"
+    )
+    if override:
+        return override.rstrip("/")
+
+    config = get_learnhouse_config()
+    base_domain = (config.hosting_config.domain or "").strip().rstrip("/")
+    if base_domain and "localhost" not in base_domain:
+        scheme = "https" if config.hosting_config.ssl else "http"
+        return f"{scheme}://api.{base_domain}"
+
+    # Single-tenant / dev: the API answering this request also serves /content.
+    return str(request.base_url).rstrip("/")
+
+
+def get_org_logo_url(org, request: Request) -> Optional[str]:
+    """Absolute URL of an org's uploaded logo, or None when it has none.
+
+    Mirrors the frontend's ``getOrgLogoMediaDirectory`` path shape
+    (``content/orgs/{uuid}/logos/{file}``). Returns None so callers fall back
+    to the default LearnHouse mark.
+    """
+    logo_image = getattr(org, "logo_image", None)
+    org_uuid = getattr(org, "org_uuid", None)
+    if not org or not logo_image or not org_uuid:
+        return None
+    base = get_media_base_url(request)
+    return f"{base}/content/orgs/{org_uuid}/logos/{logo_image}"
+
+
 async def _get_primary_verified_custom_domain(db_session, org_id: int) -> Optional[str]:
     """Return the org's primary verified custom domain, or any verified one."""
     try:
