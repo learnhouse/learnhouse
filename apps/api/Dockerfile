@@ -1,4 +1,4 @@
-FROM python:3.14.3-slim-bookworm
+FROM python:3.14.6-slim-bookworm
 
 # Install curl and netcat for health checks and service waiting, plus ffmpeg
 # for video faststart remuxing (moves the MP4 moov atom to the front so long
