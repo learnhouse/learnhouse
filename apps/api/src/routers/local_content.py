@@ -27,6 +27,10 @@ from src.db.podcasts.podcasts import Podcast
 from src.db.users import AnonymousUser, PublicUser, APITokenUser
 from src.db.user_organizations import UserOrganization
 from src.security.auth import get_current_user
+from src.security.submission_file_access import (
+    is_submission_file,
+    enforce_submission_file_access,
+)
 
 router = APIRouter()
 
@@ -70,6 +74,13 @@ async def _check_content_access(
     - orgs/{uuid}/...                                  → org-level (public)
     """
     parts = file_path.split('/')
+
+    # Assignment submission files must be gated to the owner or an instructor —
+    # not the generic activity-content grant below (which would let any org
+    # member, or anyone on a public course, download another learner's work).
+    if is_submission_file(parts):
+        await enforce_submission_file_access(parts, current_user, db_session, request)
+        return
 
     # Activity content: requires course to be public or user to be org member
     if (
