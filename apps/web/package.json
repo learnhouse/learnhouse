@@ -128,7 +128,7 @@
     "rehype-raw": "^7.0.0",
     "remark-gfm": "^4.0.1",
     "require-in-the-middle": "^8.0.1",
-    "resend": "^4.8.0",
+    "resend": "^6.0.0",
     "screenfull": "^6.0.2",
     "sharp": "^0.35.0",
     "stripe": "^22.2.1",
