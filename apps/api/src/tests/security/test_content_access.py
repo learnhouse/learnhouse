@@ -107,6 +107,33 @@ class TestCheckContentAccess:
         )
 
     @pytest.mark.asyncio
+    async def test_submission_file_delegates_to_access_control(self):
+        """A submission-file sub-path is routed to enforce_submission_file_access
+        (owner/instructor gate), NOT the generic activity grant below."""
+        from unittest.mock import patch
+        import src.routers.local_content as lc
+
+        path = ("orgs/org1/courses/course_abc/activities/act1/assignments/"
+                "asgn1/tasks/task1/subs/submission_x.pdf")
+        db = self._make_db_session()
+        with patch.object(lc, "enforce_submission_file_access", new_callable=AsyncMock) as gate:
+            await lc._check_content_access(path, MagicMock(), db)
+        gate.assert_awaited_once()
+
+    @pytest.mark.asyncio
+    async def test_submission_file_delegates_to_access_control_s3_router(self):
+        """Same submission-file gating in the S3 content-files router."""
+        from unittest.mock import patch
+        import src.routers.content_files as cf
+
+        path = ("orgs/org1/courses/course_abc/activities/act1/assignments/"
+                "asgn1/tasks/task1/subs/submission_x.pdf")
+        db = self._make_db_session()
+        with patch.object(cf, "enforce_submission_file_access", new_callable=AsyncMock) as gate:
+            await cf._check_content_access(path, MagicMock(), db)
+        gate.assert_awaited_once()
+
+    @pytest.mark.asyncio
     async def test_private_course_activity_anonymous_rejected(self):
         """Anonymous users cannot access activity content of private courses."""
         from src.routers.local_content import _check_content_access

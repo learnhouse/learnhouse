@@ -108,15 +108,17 @@ class TestCommaAndSeparators:
         """'3,14' (European decimal) parses to 3.14."""
         assert _check_number_answer("3,14", 3.14, 0) is True
 
-    def test_comma_thousands_is_misread_as_decimal(self):
-        """SURPRISING-BUT-REAL: '1,000' is NOT a thousands separator.
+    def test_comma_thousands_is_parsed_as_grouping(self):
+        """'1,000' is read as the integer 1000 (thousands grouping), not 1.0.
 
-        The function does a naive ``replace(",", ".")`` so '1,000'
-        becomes '1.000' == 1.0, NOT 1000. A student meaning one thousand
-        would be graded as 1.0.
+        The parser recognizes the ``\\d{1,3}(,\\d{3})+`` thousands-separator
+        shape and strips the commas, so a student meaning one thousand is
+        graded as 1000 — not misread as 1.0 by a naive ``replace(',', '.')``.
         """
-        assert _check_number_answer("1,000", 1, 0) is True
-        assert _check_number_answer("1,000", 1000, 0) is False
+        assert _check_number_answer("1,000", 1000, 0) is True
+        assert _check_number_answer("1,000", 1, 0) is False
+        # Multi-group grouping too.
+        assert _check_number_answer("1,234,567", 1234567, 0) is True
 
     def test_multiple_commas_fail(self):
         """'1,5,5' -> '1.5.5' which is not a valid float."""

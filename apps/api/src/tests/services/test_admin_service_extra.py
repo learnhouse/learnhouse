@@ -37,11 +37,13 @@ from src.services.admin.admin import (
     award_certificate,
     bulk_unenroll_users,
     change_user_role,
+    complete_course,
     consume_magic_link_token,
     get_course_analytics,
     list_course_enrollments,
     remove_user_from_org_admin,
     revoke_certificate,
+    uncomplete_activity,
     update_user_profile,
 )
 
@@ -617,3 +619,100 @@ async def test_bulk_unenroll_users_enrolled_user_with_steps_deleted(db, org, cou
     assert user.id not in result["not_enrolled"]
     remaining = (await db.execute(sql_select(TrailStep).where(TrailStep.id == step_id))).scalars().first()
     assert remaining is None
+
+
+@pytest.mark.asyncio
+async def test_complete_course_marks_trailrun_completed(db, org, course, user_role, activity, mock_request):
+    """complete_course must flip the enrollment (TrailRun.status) to
+    STATUS_COMPLETED so analytics/enrollment counts reflect the completion."""
+    from sqlmodel import select as sql_select
+
+    token_user = _make_token_user(org.id)
+    user = await _create_user(db, user_id=222, username="complete222", email="complete222@test.com")
+    await _add_user_to_org(db, user, org, role_id=user_role.id)
+
+    await complete_course(mock_request, token_user, user.id, course.course_uuid, db)
+
+    # Status must flip regardless of whether a certificate is configured — the
+    # enrollment/analytics count reads from TrailRun.status, not the cert.
+    trailrun = (await db.execute(
+        sql_select(TrailRun).where(TrailRun.course_id == course.id, TrailRun.user_id == user.id)
+    )).scalars().first()
+    assert trailrun is not None
+    assert trailrun.status == StatusEnum.STATUS_COMPLETED
+
+
+@pytest.mark.asyncio
+async def test_complete_course_reports_completed_without_certification(
+    db, org, course, user_role, activity, mock_request
+):
+    """M9: course_completed must reflect actual completion, not the
+    certificate-create return value. A course with no certification is still
+    'completed' (and certificate_awarded is False)."""
+    token_user = _make_token_user(org.id)
+    user = await _create_user(db, user_id=224, username="complete224", email="complete224@test.com")
+    await _add_user_to_org(db, user, org, role_id=user_role.id)
+
+    result = await complete_course(mock_request, token_user, user.id, course.course_uuid, db)
+
+    assert result["course_completed"] is True
+    assert result["certificate_awarded"] is False
+
+
+@pytest.mark.asyncio
+async def test_uncomplete_activity_demotes_completed_trailrun(db, org, course, user_role, activity):
+    """uncomplete_activity must demote a previously-completed enrollment back to
+    STATUS_IN_PROGRESS once the course is no longer fully completed."""
+    from sqlmodel import select as sql_select
+
+    token_user = _make_token_user(org.id)
+    user = await _create_user(db, user_id=223, username="uncomplete223", email="uncomplete223@test.com")
+    await _add_user_to_org(db, user, org, role_id=user_role.id)
+
+    trail = Trail(
+        org_id=org.id,
+        user_id=user.id,
+        trail_uuid="trail_uncomplete223",
+        creation_date=str(datetime.now()),
+        update_date=str(datetime.now()),
+    )
+    db.add(trail)
+    await db.commit()
+    await db.refresh(trail)
+
+    trail_run = TrailRun(
+        trail_id=trail.id,
+        course_id=course.id,
+        org_id=org.id,
+        user_id=user.id,
+        status=StatusEnum.STATUS_COMPLETED,
+        creation_date=str(datetime.now()),
+        update_date=str(datetime.now()),
+    )
+    db.add(trail_run)
+    await db.commit()
+    await db.refresh(trail_run)
+
+    step = TrailStep(
+        complete=True,
+        teacher_verified=False,
+        grade="",
+        data={},
+        trailrun_id=trail_run.id,
+        trail_id=trail.id,
+        activity_id=activity.id,
+        course_id=course.id,
+        org_id=org.id,
+        user_id=user.id,
+        creation_date=str(datetime.now()),
+        update_date=str(datetime.now()),
+    )
+    db.add(step)
+    await db.commit()
+
+    await uncomplete_activity(token_user, user.id, activity.activity_uuid, db)
+
+    refreshed = (await db.execute(
+        sql_select(TrailRun).where(TrailRun.id == trail_run.id)
+    )).scalars().first()
+    assert refreshed.status == StatusEnum.STATUS_IN_PROGRESS

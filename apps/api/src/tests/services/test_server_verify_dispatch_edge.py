@@ -175,10 +175,40 @@ class TestQuizFormProportionalDispatch:
     max, confirming the dispatcher passes ``task_max`` through to the graders."""
 
     async def test_quiz_half_correct_scaled_to_task_max(self):
-        """QUIZ scoring half the options correct returns a proportional grade scaled to the task max (40 of 80)."""
-        # 'b' wrongly checked → 1 of 2 options correct → half of max(80) = 40.
-        task = _task(AssignmentTaskTypeEnum.QUIZ, _quiz_contents(), max_grade_value=80)
-        ts = _ts(_quiz_submission({"a": True, "b": True}))
+        """QUIZ scoring half the QUESTIONS correct returns a proportional grade
+        scaled to the task max (40 of 80). Quiz grading is per-question (exact
+        option-set match), so this uses two single-answer questions: one answered
+        correctly, one answered wrong → 1 of 2 → half of max(80) = 40."""
+        contents = {
+            "questions": [
+                {
+                    "questionUUID": "q1",
+                    "options": [
+                        {"optionUUID": "o1", "assigned_right_answer": True},
+                        {"optionUUID": "o1b", "assigned_right_answer": False},
+                    ],
+                },
+                {
+                    "questionUUID": "q2",
+                    "options": [
+                        {"optionUUID": "o2", "assigned_right_answer": True},
+                        {"optionUUID": "o2b", "assigned_right_answer": False},
+                    ],
+                },
+            ]
+        }
+        # q1 answered correctly ({o1}); q2 answered wrong ({o2b}) → 1 of 2 → 40.
+        ts = _ts(
+            {
+                "submissions": [
+                    {"questionUUID": "q1", "optionUUID": "o1", "answer": True},
+                    {"questionUUID": "q1", "optionUUID": "o1b", "answer": False},
+                    {"questionUUID": "q2", "optionUUID": "o2", "answer": False},
+                    {"questionUUID": "q2", "optionUUID": "o2b", "answer": True},
+                ]
+            }
+        )
+        task = _task(AssignmentTaskTypeEnum.QUIZ, contents, max_grade_value=80)
         assert await _server_verified_task_grade(task, ts) == 40
 
     async def test_form_half_correct_scaled_to_task_max(self):
@@ -189,22 +219,25 @@ class TestQuizFormProportionalDispatch:
         assert await _server_verified_task_grade(task, ts) == 30
 
     async def test_quiz_proportional_rounds(self):
-        """QUIZ proportional grade rounds to the nearest integer (2 of 3 → round(2/3 * 100) = 67)."""
-        # 3-option question, 2 correct → round(2/3 * 100) = 67.
+        """QUIZ proportional grade rounds to the nearest integer. Per-question:
+        three single-answer questions, two answered correctly and one left blank
+        → round(2/3 * 100) = 67."""
         contents = {
             "questions": [
-                {
-                    "questionUUID": "q1",
-                    "options": [
-                        {"optionUUID": "a", "assigned_right_answer": True},
-                        {"optionUUID": "b", "assigned_right_answer": True},
-                        {"optionUUID": "c", "assigned_right_answer": False},
-                    ],
-                }
+                {"questionUUID": "q1", "options": [{"optionUUID": "o1", "assigned_right_answer": True}]},
+                {"questionUUID": "q2", "options": [{"optionUUID": "o2", "assigned_right_answer": True}]},
+                {"questionUUID": "q3", "options": [{"optionUUID": "o3", "assigned_right_answer": True}]},
             ]
         }
-        # a correct, b wrong (unchecked), c correct (unchecked) → 2 of 3 match.
-        ts = _ts(_quiz_submission({"a": True, "b": False, "c": False}))
+        # q1, q2 answered correctly; q3 left blank → 2 of 3 → round(2/3*100) = 67.
+        ts = _ts(
+            {
+                "submissions": [
+                    {"questionUUID": "q1", "optionUUID": "o1", "answer": True},
+                    {"questionUUID": "q2", "optionUUID": "o2", "answer": True},
+                ]
+            }
+        )
         task = _task(AssignmentTaskTypeEnum.QUIZ, contents, max_grade_value=100)
         assert await _server_verified_task_grade(task, ts) == 67
 

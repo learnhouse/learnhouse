@@ -757,7 +757,11 @@ class TestCompleteActivity:
 
     @patch("src.services.admin.admin.check_course_completion_and_create_certificate", new_callable=AsyncMock, return_value=True)
     @patch("src.services.admin.admin.track", new_callable=AsyncMock)
-    async def test_course_completion_triggered(self, mock_track, mock_cert, token_user, user, activity, course, db, mock_request):
+    async def test_course_completion_triggered(self, mock_track, mock_cert, token_user, user, chapter_activity, activity, course, db, mock_request):
+        # course_completed now reflects ACTUAL completion (is_course_fully_completed),
+        # not the certificate helper's return, so the activity must be wired into
+        # the course (chapter_activity) and be the only one for completing it to
+        # finish the course.
         result = await complete_activity(mock_request, token_user, user.id, "activity_test123", db)
         assert result["course_completed"] is True
 
