@@ -1,8 +1,14 @@
 import { useAssignmentSubmission } from '@components/Contexts/Assignments/AssignmentSubmissionContext'
-import { BookPlus, BookUser, Code2, EllipsisVertical, FileUp, Forward, InfoIcon, ListTodo, MessageSquare, Save, Type } from 'lucide-react'
+import { useAssignmentDirtyTasks } from '@components/Contexts/Assignments/AssignmentDirtyTasksContext'
+import { useAutoSave } from './useAutoSave'
+import { BookPlus, BookUser, Check, Code2, EllipsisVertical, FileUp, ListTodo, Loader2, MessageSquare, Save, TriangleAlert, Type } from 'lucide-react'
 import React from 'react'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
 import { useTranslation } from 'react-i18next'
+
+// Options passed to a task's submitFC. `silent` suppresses user-facing toasts
+// so background auto-saves and the submit-time flush don't spam the learner.
+export type TaskSubmitOptions = { silent?: boolean }
 
 type AssignmentBoxProps = {
     type: 'quiz' | 'file' | 'form' | 'code'
@@ -11,11 +17,17 @@ type AssignmentBoxProps = {
     currentPoints?: number
     currentFeedback?: string
     saveFC?: () => void
-    submitFC?: () => void
+    submitFC?: (_opts?: TaskSubmitOptions) => void | Promise<boolean | void>
     gradeFC?: () => void
-    gradeCustomFC?: (grade: number, feedback?: string) => void
-    showSavingDisclaimer?: boolean
+    gradeCustomFC?: (_grade: number, _feedback?: string) => void
     autoGradable?: boolean
+    // Canonical serialization of the learner's CURRENT answer and the LAST-SAVED
+    // baseline. Auto-save fires whenever they differ (student tasks only).
+    dirtyValue?: string
+    savedValue?: string
+    // Identifies this task in the dirty-task registry so "Submit for grading"
+    // can flush its unsaved answers. Omit outside the learner activity flow.
+    taskUUID?: string
     children: React.ReactNode
 }
 
@@ -25,7 +37,7 @@ type AssignmentBoxProps = {
 const isAutoFeedback = (s?: string) =>
     !!s && (/^Auto graded by system$/.test(s) || /^Graded by teacher : @/.test(s))
 
-function AssignmentBoxUI({ type, view, currentPoints, currentFeedback, maxPoints, saveFC, submitFC, gradeFC, gradeCustomFC, showSavingDisclaimer, autoGradable, children }: AssignmentBoxProps) {
+function AssignmentBoxUI({ type, view, currentPoints, currentFeedback, maxPoints, saveFC, submitFC, gradeFC, gradeCustomFC, autoGradable, dirtyValue, savedValue, taskUUID, children }: AssignmentBoxProps) {
     const { t } = useTranslation()
     // Grading view manual input. Pre-filled from the server-side currentPoints
     // so teachers can tweak an existing grade instead of retyping it.
@@ -33,6 +45,43 @@ function AssignmentBoxUI({ type, view, currentPoints, currentFeedback, maxPoints
     const [manualFeedback, setManualFeedback] = React.useState<string>('')
     const submission = useAssignmentSubmission() as any
     const session = useLHSession() as any
+
+    // The student can save/draft answers until they SUBMIT for grading or are
+    // GRADED. A retry flips the row back to PENDING, which re-enables saving.
+    const latestSubmissionStatus =
+        Array.isArray(submission) && submission.length > 0
+            ? submission[0]?.submission_status
+            : null
+    const canStudentSave =
+        latestSubmissionStatus !== 'SUBMITTED' && latestSubmissionStatus !== 'GRADED'
+
+    // Value-driven auto-save. "Dirty" is a pure content predicate
+    // (dirtyValue !== savedValue) so it is immune to query refetches, window
+    // focus, submission-status churn, and unrelated re-renders — the failure
+    // modes of the previous flag+poller design.
+    const autoSaveEnabled = view === 'student' && !!taskUUID && !!submitFC && canStudentSave
+    const auto = useAutoSave({
+        currentValue: dirtyValue ?? '',
+        savedValue: savedValue ?? '',
+        save: (opts) => (submitFC ? submitFC(opts) : Promise.resolve(true)),
+        enabled: autoSaveEnabled,
+    })
+
+    // Register this student task so a single "Submit for grading" click flushes
+    // its unsaved answers before the server auto-grades. Backed by the hook's
+    // own dirty/flush, read via refs to avoid stale closures.
+    const dirtyTasks = useAssignmentDirtyTasks()
+    const flushRef = React.useRef(auto.flush)
+    const getDirtyRef = React.useRef(auto.getIsDirty)
+    React.useEffect(() => { flushRef.current = auto.flush; getDirtyRef.current = auto.getIsDirty })
+    React.useEffect(() => {
+        if (view !== 'student' || !taskUUID) return
+        dirtyTasks.register(taskUUID, {
+            getIsDirty: () => getDirtyRef.current(),
+            flush: () => flushRef.current(),
+        })
+        return () => dirtyTasks.unregister(taskUUID)
+    }, [view, taskUUID, dirtyTasks])
 
     React.useEffect(() => {
         if (currentPoints !== undefined && currentPoints !== null) {
@@ -58,19 +107,6 @@ function AssignmentBoxUI({ type, view, currentPoints, currentFeedback, maxPoints
 
     // Check if user is authenticated
     const isAuthenticated = session?.status === 'authenticated'
-
-    // The student can still save/draft their answers as long as they haven't
-    // SUBMITTED or been GRADED yet. We must NOT gate this on the mere existence
-    // of an AssignmentUserSubmission row: a retry keeps that row in place and
-    // flips it back to PENDING, so gating on `submission.length` would wrongly
-    // hide the save control on every retry attempt and leave students unable to
-    // save their new answers (they'd then submit an empty/old answer and score 0).
-    const latestSubmissionStatus =
-        Array.isArray(submission) && submission.length > 0
-            ? submission[0]?.submission_status
-            : null
-    const canStudentSave =
-        latestSubmissionStatus !== 'SUBMITTED' && latestSubmissionStatus !== 'GRADED'
 
     return (
         <div className='flex flex-col px-3 sm:px-6 py-4 nice-shadow rounded-md bg-slate-100/30'>
@@ -119,12 +155,29 @@ function AssignmentBoxUI({ type, view, currentPoints, currentFeedback, maxPoints
 
                 {/* Right side with buttons and actions */}
                 <div className='flex flex-wrap gap-2 items-center'>
-                    {showSavingDisclaimer &&
-                        <div className='flex space-x-2 items-center font-semibold px-3 py-1 outline-dashed outline-red-200 text-red-400 sm:mr-5 rounded-full w-full sm:w-auto mb-2 sm:mb-0'>
-                            <InfoIcon size={14} />
-                            <p className='text-xs'>{t('activities.dont_forget_to_save')}</p>
+                    {/* Auto-save status — answers persist automatically. */}
+                    {autoSaveEnabled && (auto.isDirty || auto.status !== 'idle') && (
+                        <div className='flex space-x-1.5 items-center font-medium px-2 py-1 text-xs text-slate-400 sm:mr-2'>
+                            {auto.isError ? (
+                                // Failed save: show a distinct indicator (a retry
+                                // is already scheduled) instead of a stuck spinner.
+                                <>
+                                    <TriangleAlert size={13} className='text-amber-500' />
+                                    <p className='text-amber-600'>{t('activities.autosave_retry', { defaultValue: "Couldn't save — retrying…" })}</p>
+                                </>
+                            ) : (auto.isSaving || auto.isDirty) ? (
+                                <>
+                                    <Loader2 size={13} className='animate-spin' />
+                                    <p>{t('activities.autosaving', { defaultValue: 'Saving…' })}</p>
+                                </>
+                            ) : (
+                                <>
+                                    <Check size={13} className='text-emerald-500' />
+                                    <p>{t('activities.autosaved', { defaultValue: 'Saved' })}</p>
+                                </>
+                            )}
                         </div>
-                    }
+                    )}
 
                     {/* Teacher button */}
                     {view === 'teacher' &&
@@ -136,13 +189,15 @@ function AssignmentBoxUI({ type, view, currentPoints, currentFeedback, maxPoints
                         </div>
                     }
 
-                    {/* Student button - only show if authenticated and not yet submitted/graded */}
+                    {/* Student button - only show if authenticated and not yet submitted/graded.
+                        Routed through the auto-save hook so a manual click can't race a
+                        background save into a duplicate submission; disabled while saving. */}
                     {view === 'student' && isAuthenticated && canStudentSave &&
                         <div
-                            onClick={() => submitFC && submitFC()}
-                            className='flex px-2 py-1 cursor-pointer rounded-md space-x-2 items-center justify-center mx-auto w-full sm:w-auto bg-linear-to-bl text-emerald-700 bg-emerald-300/20 hover:bg-emerald-300/10 hover:outline-offset-4 active:outline-offset-1 linear transition-all outline-offset-2 outline-dashed outline-emerald-500/60'>
-                            <Forward size={14} />
-                            <p className='text-xs font-semibold'>{t('activities.save_your_progress')}</p>
+                            onClick={() => { if (!auto.isSaving) auto.saveNow() }}
+                            className={`flex px-2 py-1 rounded-md space-x-2 items-center justify-center mx-auto w-full sm:w-auto bg-linear-to-bl text-emerald-700 bg-emerald-300/20 hover:bg-emerald-300/10 hover:outline-offset-4 active:outline-offset-1 linear transition-all outline-offset-2 outline-dashed outline-emerald-500/60 ${auto.isSaving ? 'opacity-60 cursor-wait' : 'cursor-pointer'}`}>
+                            <Save size={14} />
+                            <p className='text-xs font-semibold'>{t('activities.save_answers', { defaultValue: 'Save answers' })}</p>
                         </div>
                     }
 

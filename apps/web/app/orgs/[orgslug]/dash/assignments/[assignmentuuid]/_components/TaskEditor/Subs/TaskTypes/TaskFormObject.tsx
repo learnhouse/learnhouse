@@ -12,6 +12,7 @@ import { useTranslation } from 'react-i18next';
 import { useQueryClient } from '@tanstack/react-query';
 import { queryKeys } from '@/lib/query/keys';
 import { applyManualGrade } from './applyManualGrade';
+import { serializeBlankAnswers } from './autosaveSerialize'
 
 type FormSchema = {
     questionText: string;
@@ -38,9 +39,10 @@ type TaskFormObjectProps = {
     view: 'teacher' | 'student' | 'grading';
     assignmentTaskUUID: string;
     user_id?: string;
+    onGraded?: () => void;
 };
 
-function TaskFormObject({ view, assignmentTaskUUID, user_id }: TaskFormObjectProps) {
+function TaskFormObject({ view, assignmentTaskUUID, user_id, onGraded }: TaskFormObjectProps) {
     const { t } = useTranslation()
     const session = useLHSession() as any;
     const access_token = session?.data?.tokens?.access_token;
@@ -146,7 +148,7 @@ function TaskFormObject({ view, assignmentTaskUUID, user_id }: TaskFormObjectPro
             },
         };
         const res = await updateAssignmentTask(values, assignmentTaskState.assignmentTask.assignment_task_uuid, assignment.assignment_object.assignment_uuid, access_token);
-        if (res) {
+        if (res.success) {
             assignmentTaskStateHook({
                 type: 'reload',
             });
@@ -166,18 +168,22 @@ function TaskFormObject({ view, assignmentTaskUUID, user_id }: TaskFormObjectPro
         questions: [],
         submissions: [],
     });
-    const [showSavingDisclaimer, setShowSavingDisclaimer] = useState<boolean>(false);
     const [assignmentTaskOutsideProvider, setAssignmentTaskOutsideProvider] = useState<any>(null);
     const [userSubmissionObject, setUserSubmissionObject] = useState<any>(null);
+    // Hydrate the student's saved submission exactly once (see call site), so
+    // later query refetches can't overwrite in-progress edits and stop auto-save.
+    const submissionHydratedForRef = React.useRef<string | null>(null);
+    const interactedRef = React.useRef(false);
 
     const handleUserAnswerChange = (questionUUID: string, blankUUID: string, answer: string) => {
+        interactedRef.current = true;
         const updatedSubmissions = [...userSubmissions.submissions];
         const existingIndex = updatedSubmissions.findIndex(
             (submission) => submission.questionUUID === questionUUID && submission.blankUUID === blankUUID
         );
 
         if (existingIndex !== -1) {
-            updatedSubmissions[existingIndex].answer = answer;
+            updatedSubmissions[existingIndex] = { ...updatedSubmissions[existingIndex], answer };
         } else {
             updatedSubmissions.push({
                 questionUUID,
@@ -210,10 +216,10 @@ function TaskFormObject({ view, assignmentTaskUUID, user_id }: TaskFormObjectPro
         }
     };
 
-    const submitFC = async () => {
+    const submitFC = async (opts?: { silent?: boolean }) => {
         if (userSubmissions.submissions.length === 0) {
-            toast.error('Please fill in at least one blank before submitting.');
-            return;
+            if (!opts?.silent) toast.error('Please fill in at least one blank before submitting.');
+            return false;
         }
 
         const values = {
@@ -230,20 +236,23 @@ function TaskFormObject({ view, assignmentTaskUUID, user_id }: TaskFormObjectPro
             access_token
         );
 
-        if (res) {
-            toast.success('Form submitted successfully!');
-            // Update userSubmissions with the returned UUID for future updates
-            const updatedUserSubmissions = {
-                ...userSubmissions,
-                assignment_task_submission_uuid: res.data?.assignment_task_submission_uuid || userSubmissions.assignment_task_submission_uuid
-            };
-            setUserSubmissions(updatedUserSubmissions);
-            setInitialUserSubmissions(updatedUserSubmissions);
-            setShowSavingDisclaimer(false);
-            queryClient.invalidateQueries({ queryKey: queryKeys.assignments.taskSubmission(assignment.assignment_object.assignment_uuid) });
+        if (res.success) {
+            if (!opts?.silent) toast.success('Form submitted successfully!');
+            const savedUUID = res.data?.assignment_task_submission_uuid || userSubmissions.assignment_task_submission_uuid;
+            // Baseline = exactly what we sent. Live = the LATEST answers (from
+            // prev), never reverted to the call-time snapshot — so any edit made
+            // during the save round-trip survives and re-triggers auto-save.
+            setInitialUserSubmissions({ ...userSubmissions, assignment_task_submission_uuid: savedUUID });
+            setUserSubmissions(prev => ({ ...prev, assignment_task_submission_uuid: savedUUID }));
+            // Silent auto-saves skip the refetch (draft save; would re-hydrate).
+            if (!opts?.silent) {
+                queryClient.invalidateQueries({ queryKey: queryKeys.assignments.taskSubmission(assignment.assignment_object.assignment_uuid) });
+            }
+            return true;
         } else {
             console.error('Submission error:', res);
-            toast.error('Error submitting form, please retry later.');
+            if (!opts?.silent) toast.error('Error submitting form, please retry later.');
+            return false;
         }
     };
 
@@ -262,7 +271,7 @@ function TaskFormObject({ view, assignmentTaskUUID, user_id }: TaskFormObjectPro
             username: session?.data?.user?.username,
             assignmentTaskSubmissionUUID: userSubmissions.assignment_task_submission_uuid,
             taskSubmissionPayload: userSubmissions,
-            onSuccess: getAssignmentTaskSubmissionFromIdentifiedUserUI,
+            onSuccess: () => { getAssignmentTaskSubmissionFromIdentifiedUserUI(); onGraded?.(); },
         });
     };
 
@@ -301,7 +310,7 @@ function TaskFormObject({ view, assignmentTaskUUID, user_id }: TaskFormObjectPro
         };
 
         const res = await handleAssignmentTaskSubmission(values, assignmentTaskUUID, assignment.assignment_object.assignment_uuid, access_token);
-        if (res) {
+        if (res.success) {
             getAssignmentTaskSubmissionFromIdentifiedUserUI();
             toast.success(`Task graded successfully with ${finalGrade} points (${correctAnswers}/${totalBlanks} correct)`);
         } else {
@@ -362,16 +371,31 @@ function TaskFormObject({ view, assignmentTaskUUID, user_id }: TaskFormObjectPro
                     setQuestions([]);
                 }
             }
-            const sub = taskSubmissionsMap?.[assignmentTaskUUID] ?? null;
-            if (sub) {
-                setUserSubmissions({
-                    ...sub.task_submission,
-                    assignment_task_submission_uuid: sub.assignment_task_submission_uuid,
-                });
-                setInitialUserSubmissions({
-                    ...sub.task_submission,
-                    assignment_task_submission_uuid: sub.assignment_task_submission_uuid,
-                });
+            // Hydrate the saved submission once, when the batch first resolves.
+            // Runs even if the learner already started answering: the baseline +
+            // submission uuid are always adopted (so saves target the right row
+            // and dirty detection works) while their live answers are preserved.
+            if (taskSubmissionsMap !== null && submissionHydratedForRef.current !== assignmentTaskUUID) {
+                const sub = taskSubmissionsMap?.[assignmentTaskUUID] ?? null;
+                if (sub) {
+                    // Deep-copy into two independent states so a later edit can't
+                    // mutate the baseline through a shared submissions reference.
+                    const clone = () => ({
+                        ...sub.task_submission,
+                        submissions: (sub.task_submission?.submissions ?? []).map((s: any) => ({ ...s })),
+                        assignment_task_submission_uuid: sub.assignment_task_submission_uuid,
+                    });
+                    setInitialUserSubmissions(clone());
+                    if (interactedRef.current) {
+                        setUserSubmissions((prev: any) => ({
+                            ...prev,
+                            assignment_task_submission_uuid: sub.assignment_task_submission_uuid,
+                        }));
+                    } else {
+                        setUserSubmissions(clone());
+                    }
+                }
+                submissionHydratedForRef.current = assignmentTaskUUID;
             }
         };
 
@@ -398,14 +422,6 @@ function TaskFormObject({ view, assignmentTaskUUID, user_id }: TaskFormObjectPro
             getAssignmentTaskSubmissionFromIdentifiedUserUI();
         }
     }, [assignmentTaskState, assignment, assignmentTaskStateHook, access_token, assignmentTaskUUID, view, taskSubmissionsMap]);
-
-    useEffect(() => {
-        if (JSON.stringify(userSubmissions) !== JSON.stringify(initialUserSubmissions)) {
-            setShowSavingDisclaimer(true);
-        } else {
-            setShowSavingDisclaimer(false);
-        }
-    }, [userSubmissions, initialUserSubmissions]);
 
     // Ensure questions is always an array for teacher view
     if (view === 'teacher' && (!questions || questions.length === 0)) {
@@ -435,7 +451,9 @@ function TaskFormObject({ view, assignmentTaskUUID, user_id }: TaskFormObjectPro
                 currentPoints={userSubmissionObject?.grade}
                 currentFeedback={userSubmissionObject?.task_submission_grade_feedback}
                 maxPoints={assignmentTaskOutsideProvider?.max_grade_value}
-                showSavingDisclaimer={showSavingDisclaimer}
+                dirtyValue={serializeBlankAnswers(userSubmissions.submissions)}
+                savedValue={serializeBlankAnswers(initialUserSubmissions.submissions)}
+                taskUUID={assignmentTaskUUID}
                 type="form"
                 autoGradable={true}
             >

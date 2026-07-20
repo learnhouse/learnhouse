@@ -56,7 +56,7 @@ export async function applyManualGrade({
         assignmentUUID,
         accessToken,
     )
-    if (res) {
+    if (res.success) {
         onSuccess()
         toast.success(`Task graded successfully with ${grade} points`)
     } else {
