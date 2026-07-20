@@ -80,7 +80,7 @@ class TestEmailsService:
         assert "https://platform.test/organizations" in call["body"]
         # Org-less keeps the LearnHouse-branded subject + Academy footer, no org logo.
         assert "Welcome to LearnHouse" in call["subject"]
-        assert "university.learnhouse.io" in call["body"]
+        assert "LearnHouse Academy" in call["body"]
         assert "<img" not in call["body"]
 
     def test_welcome_is_whitelabeled_when_org_supplied(self):
@@ -99,7 +99,7 @@ class TestEmailsService:
         assert "Acme &amp; Co" in call["body"]
         # Org logo replaces the mark; Academy link is gone; powered-by remains.
         assert '<img src="https://api.test/content/orgs/org_uuid/logos/logo.png"' in call["body"]
-        assert "university.learnhouse.io" not in call["body"]
+        assert "LearnHouse Academy" not in call["body"]
         assert "Powered by LearnHouse" in call["body"]
         assert "https://acme.test/home" in call["body"]
 
