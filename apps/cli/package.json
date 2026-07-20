@@ -41,7 +41,7 @@
   ],
   "author": "LearnHouse",
   "devDependencies": {
-    "@types/node": "^25.0.0",
+    "@types/node": "^26.0.0",
     "@vitest/coverage-v8": "^4",
     "tsup": "^8.0.1",
     "typescript": "^6.0.0",
