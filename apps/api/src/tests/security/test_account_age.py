@@ -22,6 +22,20 @@ from src.services.security.account_age import (
 NOW = datetime(2026, 7, 9, 12, 0, 0, tzinfo=timezone.utc)
 
 
+class _FrozenDatetime(datetime):
+    """datetime subclass whose ``now()`` is pinned to :data:`NOW`.
+
+    The gate reads the wall clock via ``datetime.now(timezone.utc)``; patching
+    ``account_age.datetime`` with this keeps the "brand new account" tests
+    deterministic (otherwise they age past the threshold and start failing).
+    Subclassing (rather than a Mock) preserves ``fromisoformat`` for parsing.
+    """
+
+    @classmethod
+    def now(cls, tz=None):
+        return NOW.astimezone(tz) if tz else NOW.replace(tzinfo=None)
+
+
 def test_parse_creation_date_roundtrips_str_datetime_now():
     # This is exactly the format the app persists: str(datetime.now()).
     raw = "2026-07-09 11:47:21.155477"
@@ -75,13 +89,11 @@ async def test_gate_exempts_paid_org():
 
 @pytest.mark.asyncio
 async def test_gate_flags_new_free_org_and_account():
-    # "Just created" relative to the real clock — the gate compares against
-    # datetime.now(), so a fixed date would age past the threshold over time.
-    fresh = str(datetime.now())
-    org = SimpleNamespace(creation_date=fresh)
-    user = SimpleNamespace(creation_date=fresh)
+    org = SimpleNamespace(creation_date=str(NOW.replace(tzinfo=None)))
+    user = SimpleNamespace(creation_date=str(NOW.replace(tzinfo=None)))
     db = _db_returning(org, user)
-    with patch.object(account_age, "_is_non_saas", return_value=False), \
+    with patch.object(account_age, "datetime", _FrozenDatetime), \
+         patch.object(account_age, "_is_non_saas", return_value=False), \
          patch.object(account_age, "_get_org_config", AsyncMock(return_value=object())), \
          patch.object(account_age, "_get_org_plan", return_value="free"):
         too_new = await is_free_tier_age_gated(1, 2, db)
@@ -112,12 +124,11 @@ async def test_gate_fails_open_on_legacy_empty_dates():
 
 @pytest.mark.asyncio
 async def test_enforce_raises_403_account_too_new():
-    # "Just created" relative to the real clock (see note above).
-    fresh = str(datetime.now())
-    org = SimpleNamespace(creation_date=fresh)
-    user = SimpleNamespace(creation_date=fresh)
+    org = SimpleNamespace(creation_date=str(NOW.replace(tzinfo=None)))
+    user = SimpleNamespace(creation_date=str(NOW.replace(tzinfo=None)))
     db = _db_returning(org, user)
-    with patch.object(account_age, "_is_non_saas", return_value=False), \
+    with patch.object(account_age, "datetime", _FrozenDatetime), \
+         patch.object(account_age, "_is_non_saas", return_value=False), \
          patch.object(account_age, "_get_org_config", AsyncMock(return_value=object())), \
          patch.object(account_age, "_get_org_plan", return_value="free"):
         with pytest.raises(HTTPException) as exc:
