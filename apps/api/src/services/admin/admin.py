@@ -36,6 +36,8 @@ from src.db.users import APITokenUser, User, UserRead
 from src.services.trail.trail import _build_trail_read
 from src.services.courses.certifications import (
     check_course_completion_and_create_certificate,
+    is_course_fully_completed,
+    sync_trailrun_status,
     create_certificate_user,
 )
 from src.services.email.utils import get_base_url_from_request
@@ -523,12 +525,21 @@ async def complete_activity(
             },
         )
 
-    # Check course completion
+    # Check course completion. The completion signal must come from actual
+    # completion (is_course_fully_completed), NOT from the certificate helper's
+    # return value — that is True only when it creates a *new* certificate row,
+    # so a course with no certification, an already-issued certificate, or an
+    # unpassed assignment would wrongly report course_completed=False and drop
+    # the COURSE_COMPLETED event. The cert helper is still called for its side
+    # effect (issue the certificate when eligible).
     course_completed = False
     if course.id:
-        course_completed = await check_course_completion_and_create_certificate(
+        await check_course_completion_and_create_certificate(
             request, user_id, course.id, db_session
         )
+        course_completed = await is_course_fully_completed(user_id, course.id, db_session)
+        # Keep the enrollment row's status aligned with real completion.
+        await sync_trailrun_status(user_id, course.id, db_session)
 
     if course_completed:
         await track(
@@ -578,6 +589,10 @@ async def uncomplete_activity(
     if step:
         await db_session.delete(step)
         await db_session.commit()
+        # Completion may have been lost — demote the enrollment so analytics
+        # stop counting it as completed.
+        if course.id:
+            await sync_trailrun_status(user_id, course.id, db_session)
 
     return {
         "activity_uuid": activity_uuid,
@@ -683,10 +698,17 @@ async def complete_course(
 
     await db_session.commit()
 
-    # Check course completion and create certificate
-    course_completed = await check_course_completion_and_create_certificate(
+    # Create the certificate if eligible. Its return value means "a NEW
+    # certificate row was created", so it maps to certificate_awarded — NOT to
+    # course_completed. The completion signal must come from actual completion,
+    # otherwise a course with no certification (or an already-issued one) would
+    # report course_completed=False and drop the COURSE_COMPLETED event.
+    certificate_awarded = await check_course_completion_and_create_certificate(
         request, user_id, course.id, db_session
     )
+    course_completed = await is_course_fully_completed(user_id, course.id, db_session)
+    # Keep the enrollment row's status aligned with real completion.
+    await sync_trailrun_status(user_id, course.id, db_session)
 
     if course_completed:
         await track(
@@ -703,7 +725,7 @@ async def complete_course(
         "already_completed_count": len(already_completed),
         "total_activities": len(activity_ids),
         "course_completed": course_completed,
-        "certificate_awarded": course_completed,
+        "certificate_awarded": certificate_awarded,
     }
 
 
