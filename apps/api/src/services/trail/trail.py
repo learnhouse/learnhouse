@@ -14,6 +14,7 @@ from src.db.users import AnonymousUser, PublicUser
 from src.services.courses.certifications import (
     check_course_completion_and_create_certificate,
     is_course_fully_completed,
+    sync_trailrun_status,
 )
 from src.services.analytics.analytics import track
 from src.services.analytics import events as analytics_events
@@ -341,6 +342,11 @@ async def add_activity_to_trail(
             # Certificate creation must not block the webhook dispatch.
             pass
 
+        # Flip the enrollment row to COMPLETED so analytics/enrollment counts
+        # match reality. Kept OUTSIDE the certificate try/except above so a
+        # cert failure never leaves a completed course stuck "in progress".
+        await sync_trailrun_status(user.id, course.id, db_session)
+
     if course_was_completed:
         await track(
             event_name=analytics_events.COURSE_COMPLETED,
@@ -412,6 +418,10 @@ async def remove_activity_from_trail(
     if trail_step:
         await db_session.delete(trail_step)
         await db_session.commit()
+        # Completion may have been lost — demote the enrollment back to
+        # in-progress so counts stay accurate.
+        if course.id:
+            await sync_trailrun_status(user.id, course.id, db_session)
 
     # Get updated trail data
     statement = select(TrailRun).where(TrailRun.trail_id == trail.id, TrailRun.user_id == user.id)

@@ -1,5 +1,5 @@
 from typing import Optional
-from sqlalchemy import JSON, Column, ForeignKey
+from sqlalchemy import JSON, Column, ForeignKey, UniqueConstraint
 from sqlmodel import Field, SQLModel
 
 class CertificationBase(SQLModel):
@@ -36,6 +36,15 @@ class CertificateUserBase(SQLModel):
     user_certification_uuid: str
 
 class CertificateUser(CertificateUserBase, table=True):
+    # A user can hold at most one certificate per certification. Enforced in the
+    # DB so a race between two concurrent completion checks (e.g. the submit path
+    # and a parallel grade) can't create duplicate certificate rows.
+    __table_args__ = (
+        UniqueConstraint(
+            "user_id", "certification_id", name="uq_certificateuser_user_certification"
+        ),
+    )
+
     id: Optional[int] = Field(default=None, primary_key=True)
     user_id: int = Field(sa_column= Column("user_id", ForeignKey("user.id", ondelete="CASCADE")))
     certification_id: int = Field(sa_column= Column("certification_id", ForeignKey("certifications.id", ondelete="CASCADE")))
