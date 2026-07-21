@@ -194,8 +194,20 @@ def check_verification_resend_rate_limit(email: str) -> Tuple[bool, int]:
 
 def check_refresh_rate_limit(request: Request) -> Tuple[bool, int]:
     """
-    Check token refresh rate limit: 60 attempts per minute per IP.
-    This prevents brute-force attacks on the refresh endpoint.
+    Check token refresh rate limit: 600 attempts per minute per IP.
+
+    This limit exists for DoS protection only, NOT for credential guessing:
+    /auth/refresh requires an already-valid, server-signed refresh JWT, so
+    there is nothing here an attacker can brute-force.
+
+    The limit is keyed per IP, and schools/companies — LearnHouse's core
+    audience — put hundreds of users behind a single NAT address. The previous
+    60/minute ceiling was reached by a few dozen people signing in at the same
+    time (start of a class, Monday morning), and every request over the line
+    got a 429 that the frontend then treated as "your session is dead" —
+    logging out an entire site at once. Keep this generous; the real
+    protections are the JWT signature, the revocation blocklist, and the
+    one-time-use rotation.
 
     Returns:
         Tuple of (is_allowed, retry_after_seconds)
@@ -205,7 +217,7 @@ def check_refresh_rate_limit(request: Request) -> Tuple[bool, int]:
 
     is_allowed, count, retry_after = check_rate_limit(
         key=key,
-        max_attempts=60,
+        max_attempts=600,
         window_seconds=60  # 1 minute
     )
 

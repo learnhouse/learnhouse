@@ -31,6 +31,17 @@ export interface Session {
 
 export type SessionStatus = 'loading' | 'authenticated' | 'unauthenticated'
 
+// Result of trying to trade the refresh cookie for an access token.
+//
+// `unauthenticated` and `transient` are kept apart on purpose: only the former
+// may end a session. Treating a rate limit, a 5xx, or an offline browser as
+// "signed out" destroys an httpOnly refresh cookie that still had weeks left,
+// and the user has no way back except signing in again.
+export type RefreshOutcome =
+  | { status: 'ok'; access_token: string; expiry?: number }
+  | { status: 'unauthenticated' }
+  | { status: 'transient' }
+
 export interface UseSessionReturn {
   data: Session | null
   status: SessionStatus
@@ -192,7 +203,7 @@ export function SessionProvider({
 
   // Use ref for refresh promise to avoid issues with stale closures
   // but still deduplicate within the same tab
-  const refreshPromiseRef = useRef<Promise<{ access_token: string; expiry?: number } | null> | null>(null)
+  const refreshPromiseRef = useRef<Promise<RefreshOutcome> | null>(null)
   const isRefreshingRef = useRef(false)
   const authFailureHandledRef = useRef(false)
   // Monotonic auth epoch: bumped on every logout/clear. An in-flight refresh that
@@ -256,35 +267,37 @@ export function SessionProvider({
     }
   }, [])
 
-  // Fetch user session from backend
+  // Fetch user session from backend.
+  //
+  // Returns `null` ONLY when the backend says this token is not a valid
+  // identity (401/403). Any other failure throws, so callers can tell "you are
+  // signed out" apart from "the request did not get through" and avoid tearing
+  // down a healthy session over a server blip.
   const fetchUserSession = useCallback(async (token: string, expiry?: number): Promise<Session | null> => {
-    try {
-      const response = await fetch(`${getAPIUrl()}users/session`, {
-        method: 'GET',
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-        credentials: 'include',
-      })
+    const response = await fetch(`${getAPIUrl()}users/session`, {
+      method: 'GET',
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+      credentials: 'include',
+    })
 
-      if (!response.ok) {
-        console.error(`Session fetch failed with status: ${response.status}`)
+    if (!response.ok) {
+      if (response.status === 401 || response.status === 403) {
         return null
       }
+      throw new Error(`Session fetch failed with status: ${response.status}`)
+    }
 
-      const data = await response.json()
-      return {
-        user: data.user,
-        roles: data.roles,
-        tokens: {
-          access_token: token,
-          refresh_token: undefined, // Stored in httpOnly cookie
-          expiry: expiry,
-        },
-      }
-    } catch (error) {
-      console.error('Error fetching user session:', error)
-      return null
+    const data = await response.json()
+    return {
+      user: data.user,
+      roles: data.roles,
+      tokens: {
+        access_token: token,
+        refresh_token: undefined, // Stored in httpOnly cookie
+        expiry: expiry,
+      },
     }
   }, [])
 
@@ -296,8 +309,15 @@ export function SessionProvider({
     return document.cookie.split('; ').some((c) => c.startsWith('LH_session='))
   }, [])
 
-  // Refresh access token using refresh token cookie
-  const refreshAccessToken = useCallback(async (): Promise<{ access_token: string; expiry?: number } | null> => {
+  // Refresh access token using refresh token cookie.
+  //
+  // The outcome is deliberately three-way. Collapsing "the server is having a
+  // bad minute" into "you are logged out" is what made sessions evaporate: a
+  // single 429 from the shared-IP refresh rate limit, or one 502 during an API
+  // rollout, used to tear down a session that still had weeks of validity.
+  // Only `unauthenticated` — the backend explicitly rejecting the refresh
+  // credential — may end a session.
+  const refreshAccessToken = useCallback(async (): Promise<RefreshOutcome> => {
     // Deduplicate refresh requests within this tab
     if (isRefreshingRef.current && refreshPromiseRef.current) {
       return refreshPromiseRef.current
@@ -313,11 +333,16 @@ export function SessionProvider({
         })
 
         if (!response.ok) {
-          if (response.status === 401) {
-            // Refresh token expired or invalid
-            return null
+          // 401/403 are the only statuses that mean the refresh cookie itself
+          // is dead. The proxy clears cookies on exactly these, so the two
+          // layers agree on what ends a session.
+          if (response.status === 401 || response.status === 403) {
+            return { status: 'unauthenticated' } as const
           }
-          throw new Error(`Refresh failed with status: ${response.status}`)
+          console.warn(
+            `[auth] refresh failed with ${response.status} — keeping session, will retry`,
+          )
+          return { status: 'transient' } as const
         }
 
         const data = await response.json()
@@ -325,16 +350,19 @@ export function SessionProvider({
         // Validate response structure
         if (!data.access_token) {
           console.error('Invalid refresh response: missing access_token')
-          return null
+          return { status: 'transient' } as const
         }
 
         return {
+          status: 'ok',
           access_token: data.access_token,
           expiry: typeof data.expiry === 'number' ? data.expiry : undefined,
-        }
+        } as const
       } catch (error) {
-        console.error('Token refresh failed:', error)
-        return null
+        // Network error, offline, DNS blip, aborted request. Says nothing
+        // about whether the user is still signed in.
+        console.warn('[auth] refresh request could not be sent:', error)
+        return { status: 'transient' } as const
       } finally {
         isRefreshingRef.current = false
         refreshPromiseRef.current = null
@@ -358,7 +386,20 @@ export function SessionProvider({
     setAccessToken(token)
     setTokenExpiry(expiry || null)
 
-    const sessionData = await fetchUserSession(token, expiry)
+    let sessionData: Session | null
+    try {
+      sessionData = await fetchUserSession(token, expiry)
+    } catch (error) {
+      // Transient — the profile lookup did not complete. We hold a freshly
+      // issued access token, so the user IS signed in, but without user data
+      // there is nothing to render as authenticated. Leave the cookies alone
+      // and settle on 'unauthenticated', which is the state the refetch
+      // interval polls from (it keys off the surviving session marker), so the
+      // tab recovers on its own instead of hanging on 'loading' forever.
+      console.warn('[auth] session lookup failed, keeping session:', error)
+      setStatus('unauthenticated')
+      return false
+    }
     // A logout/clear that fired during the await bumped the epoch — abort the
     // write so we don't resurrect a session that was just invalidated.
     if (authEpochRef.current !== epoch) return false
@@ -380,14 +421,16 @@ export function SessionProvider({
   const refreshSessionInternal = useCallback(async () => {
     try {
       const refreshResult = await refreshAccessToken()
-      if (refreshResult) {
+      if (refreshResult.status === 'ok') {
         await applySessionFromToken(refreshResult.access_token, refreshResult.expiry)
-      } else {
+      } else if (refreshResult.status === 'unauthenticated') {
         clearAuthState()
       }
+      // 'transient': leave the current session in place. The refetch interval
+      // will try again shortly.
     } catch (error) {
+      // Never end a session because of an unexpected client-side error.
       console.error('Session refresh error:', error)
-      clearAuthState()
     }
   }, [applySessionFromToken, clearAuthState, refreshAccessToken])
 
@@ -420,15 +463,19 @@ export function SessionProvider({
 
       if (!currentToken || isTokenExpiringSoon(currentExpiry)) {
         const refreshResult = await refreshAccessToken()
-        if (refreshResult) {
+        if (refreshResult.status === 'ok') {
           currentToken = refreshResult.access_token
           currentExpiry = refreshResult.expiry || null
           setAccessToken(currentToken)
           setTokenExpiry(currentExpiry)
-        } else {
-          // No valid token, user is unauthenticated
+        } else if (refreshResult.status === 'unauthenticated') {
+          // The backend rejected the refresh credential — genuinely signed out.
           clearAuthState()
           return null
+        } else {
+          // Transient failure. Keep whatever session we already have rather
+          // than signing the user out over a hiccup; the next tick retries.
+          return currentToken
         }
       }
 
@@ -450,9 +497,11 @@ export function SessionProvider({
         return null
       }
     } catch (error) {
-      console.error('Session refresh error:', error)
-      clearAuthState()
-      return null
+      // Reaching here means a request could not be completed (offline, 5xx,
+      // aborted). That is not a signal about the user's identity, so the
+      // session stays as-is and the refetch interval retries.
+      console.warn('[auth] session refresh could not complete, keeping session:', error)
+      return accessTokenRef.current
     }
   }, [accessToken, tokenExpiry, fetchUserSession, isTokenExpiringSoon, refreshAccessToken, clearAuthState])
 
@@ -474,11 +523,16 @@ export function SessionProvider({
 
       if (!isMounted) return
 
-      if (refreshResult) {
-        if (!isMounted) return
+      if (refreshResult.status === 'ok') {
         await applySessionFromToken(refreshResult.access_token, refreshResult.expiry)
-      } else {
+      } else if (refreshResult.status === 'unauthenticated') {
         clearAuthState()
+      } else {
+        // Transient failure on a cold start. The refresh cookie is very likely
+        // still good, so don't wipe it — drop back to 'unauthenticated' status
+        // WITHOUT clearing cookies, and let the refetch interval recover the
+        // session once the backend is reachable again.
+        setStatus('unauthenticated')
       }
     }
 
@@ -489,9 +543,18 @@ export function SessionProvider({
     }
   }, [applySessionFromToken, clearAuthState, hasSessionMarker, refreshAccessToken])
 
-  // Set up refetch interval
+  // Set up refetch interval.
+  //
+  // Also runs while unauthenticated IF the session marker cookie is still
+  // present. That combination means "we hold a refresh cookie but couldn't
+  // turn it into a session yet" — i.e. a transient failure — and polling is
+  // what lets the tab heal itself once the backend is reachable again, instead
+  // of stranding the user on a logged-out UI until they reload.
   useEffect(() => {
-    if (refetchInterval && status === 'authenticated') {
+    const shouldPoll =
+      status === 'authenticated' || (status === 'unauthenticated' && hasSessionMarker())
+
+    if (refetchInterval && shouldPoll) {
       intervalRef.current = setInterval(() => {
         refreshSession()
       }, refetchInterval)
@@ -502,7 +565,7 @@ export function SessionProvider({
         clearInterval(intervalRef.current)
       }
     }
-  }, [refetchInterval, status, refreshSession])
+  }, [refetchInterval, status, refreshSession, hasSessionMarker])
 
   // Sign in function
   const handleSignIn = useCallback(

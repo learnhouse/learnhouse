@@ -68,6 +68,16 @@ const REFRESH_FAST_PATH_HEADROOM_MS = 2 * 60 * 1000
 const CLEAR_HTTPONLY = [ACCESS_TOKEN_COOKIE, REFRESH_TOKEN_COOKIE, 'LH_custom_domain']
 const CLEAR_MARKERS = ['LH_session', 'LH_org']
 
+// A refresh failure only justifies destroying the session when the backend
+// rejected the CREDENTIAL itself. 401/403 are terminal — the refresh cookie is
+// expired, revoked, or was flagged as replayed, and re-sending it will never
+// work. Everything else (429 rate limit, 5xx during a deploy, gateway
+// timeouts) is a server-side hiccup that says nothing about the token's
+// validity, and the user's session must survive it.
+function isTerminalAuthFailure(status: number): boolean {
+  return status === 401 || status === 403
+}
+
 function appendClearAuthCookies(response: NextResponse, request: NextRequest) {
   const securePart = request.nextUrl.protocol === 'https:' ? '; Secure' : ''
   const host = request.headers.get('host') || ''
@@ -273,12 +283,19 @@ async function proxyRequest(
     }
   }
 
-  // A failed refresh means the refresh cookie is dead (revoked, expired, or a
-  // replay outside the grace window). Clear all auth cookies so the browser
-  // stops sending a stale 30-day refresh token + LH_session marker, which
-  // would otherwise loop the client through repeated failed refreshes instead
-  // of cleanly falling back to the login screen.
-  if (pathSegments === 'refresh' && !backendResponse.ok) {
+  // Only destroy the session when the backend says the refresh CREDENTIAL is
+  // dead — 401 (expired/revoked/replayed) or 403. Those are terminal: the
+  // cookie will never work again, so we clear it and let the client fall back
+  // to the login screen instead of looping on failed refreshes.
+  //
+  // Every other failure is transient and MUST NOT log the user out. A 429 from
+  // the per-IP refresh rate limit, a 502 while the API rolls out, a 500, a
+  // gateway timeout — none of those mean the user's 30-day refresh token is
+  // invalid. Clearing cookies on those was silently ending sessions that had
+  // weeks of life left, and because the httpOnly refresh cookie was deleted
+  // the user could not recover except by signing in again. Whole classrooms
+  // behind one NAT IP were being signed out together this way.
+  if (pathSegments === 'refresh' && isTerminalAuthFailure(backendResponse.status)) {
     appendClearAuthCookies(response, request)
   }
 

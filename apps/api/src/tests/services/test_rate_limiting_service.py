@@ -267,7 +267,11 @@ def test_increment_rate_limit_existing_and_missing_keys():
     [
         (check_login_rate_limit, "login:203.0.113.9", 30, 5 * 60),
         (check_signup_rate_limit, "signup:203.0.113.9", 10, 60 * 60),
-        (check_refresh_rate_limit, "refresh:203.0.113.9", 60, 60),
+        # Deliberately generous: /auth/refresh is cookie-authenticated, so there
+        # is nothing to brute-force, and this limit is keyed per IP. Schools and
+        # companies put hundreds of users behind one NAT address, and a limit
+        # low enough to catch them signs out an entire site at once.
+        (check_refresh_rate_limit, "refresh:203.0.113.9", 600, 60),
         (check_api_token_rate_limit, "api_token:203.0.113.9", 10, 60 * 60),
     ],
 )
