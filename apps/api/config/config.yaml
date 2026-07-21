@@ -90,6 +90,10 @@ ai_config:
   embedding_dimensions: ""  # default: 768
   # Google/Gemini key. Also the embeddings fallback for providers that lack an embeddings API.
   gemini_api_key: ""
+  # Media generation (Google-only, uses the Google GenAI SDK regardless of `provider`,
+  # resolving its key from `api_key` when provider=google, else `gemini_api_key`).
+  image_model: ""       # AI image generation           (default: gemini-2.5-flash-image)
+  tts_model: ""         # AI audio / podcast generation  (default: gemini-2.5-flash-preview-tts)
 
 tinybird_config:
   # Set api_url to enable analytics automatically

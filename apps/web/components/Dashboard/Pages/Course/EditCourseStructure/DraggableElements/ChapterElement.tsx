@@ -40,6 +40,9 @@ type ChapterElementProps = {
   chapterIndex: number
   orgslug: string
   course_uuid: string
+  // Auto-open the add-activity modal for this chapter (used on the first chapter
+  // right after a course is created).
+  autoOpenNewActivity?: boolean
 }
 
 interface ModifiedChapterInterface {
@@ -410,6 +413,7 @@ function ChapterElement(props: ChapterElementProps) {
           <NewActivityButton
             orgslug={props.orgslug}
             chapterId={props.chapter.id}
+            autoOpen={props.autoOpenNewActivity}
           />
           <div className="h-6">
             <div className="flex items-center">

@@ -29,6 +29,8 @@ from src.services.courses.certifications import (
     get_certification,
     get_certifications_by_course,
     get_user_certificates_for_course,
+    revoke_user_certificate,
+    sync_trailrun_status,
     update_certification,
 )
 from src.security.rbac import AccessAction
@@ -842,6 +844,90 @@ class TestCreateCertificateUser:
 
         assert exc_info.value.status_code == 404
 
+    @pytest.mark.asyncio
+    async def test_duplicate_row_blocked_by_db_constraint(
+        self, db, course, regular_user
+    ):
+        # The unique (user_id, certification_id) constraint must reject a second
+        # certificate row for the same user+certification at the DB level — the
+        # safety net behind the race-recovery path.
+        from sqlalchemy.exc import IntegrityError
+
+        certification = await _create_certification(db, course, cert_uuid="cert_uq")
+        await _create_certificate_user(db, certification, regular_user)
+        dup = CertificateUser(
+            user_id=regular_user.id,
+            certification_id=certification.id,
+            user_certification_uuid="AB-20240101-TEST-002",
+            created_at="2024-01-01T00:00:00",
+            updated_at="2024-01-01T00:00:00",
+        )
+        db.add(dup)
+        with pytest.raises(IntegrityError):
+            await db.commit()
+        await db.rollback()
+
+    @pytest.mark.asyncio
+    async def test_create_certificate_user_race_returns_existing(
+        self, db, course, admin_user, regular_user, mock_request
+    ):
+        # Simulate the race: a concurrent request already inserted the winning
+        # certificate, but this request's pre-existence SELECT missed it (the
+        # race window). Its own INSERT then trips the unique constraint. The
+        # service must recover — roll back and return the existing row — instead
+        # of 500-ing an already-committed submission.
+        certification = await _create_certification(db, course, cert_uuid="cert_race")
+        winner = await _create_certificate_user(
+            db,
+            certification,
+            regular_user,
+            user_certification_uuid="WIN-20240101-TEST-999",
+        )
+
+        # Force the FIRST CertificateUser SELECT (the pre-existence check) to
+        # return an empty result so the code proceeds to its own INSERT; later
+        # CertificateUser SELECTs (the except-branch fetch) run for real and
+        # find the winner.
+        real_execute = db.execute
+        state = {"cu_selects": 0}
+
+        async def fake_execute(statement, *args, **kwargs):
+            text = str(statement).lower()
+            is_cu_select = "certificateuser" in text and text.strip().startswith("select")
+            if is_cu_select:
+                state["cu_selects"] += 1
+                if state["cu_selects"] == 1:
+                    # Empty result: same query shape but matches nothing.
+                    return await real_execute(
+                        select(CertificateUser).where(CertificateUser.id == -1)
+                    )
+            return await real_execute(statement, *args, **kwargs)
+
+        with patch(
+            "src.services.courses.certifications.check_resource_access",
+            new_callable=AsyncMock,
+        ), patch(
+            "src.services.courses.certifications.track",
+            new_callable=AsyncMock,
+        ) as mock_track, patch(
+            "src.services.courses.certifications.dispatch_webhooks",
+            new_callable=AsyncMock,
+        ) as mock_webhooks, patch.object(db, "execute", side_effect=fake_execute):
+            result = await create_certificate_user(
+                mock_request,
+                regular_user.id,
+                certification.id,
+                db,
+                current_user=admin_user,
+            )
+
+        # Recovered the winner's row rather than raising.
+        assert isinstance(result, CertificateUserRead)
+        assert result.user_certification_uuid == winner.user_certification_uuid
+        # No duplicate CERTIFICATE_CLAIMED emitted on the losing racer.
+        mock_track.assert_not_called()
+        mock_webhooks.assert_not_called()
+
 
 class TestUserCertificatesForCourse:
     @pytest.mark.asyncio
@@ -1028,6 +1114,61 @@ class TestCompletionHelpers:
             db,
         )
         assert second_result is False
+
+    @pytest.mark.asyncio
+    async def test_check_course_completion_promotes_trailrun_status(
+        self, db, course, org, regular_user, activity, mock_request
+    ):
+        # H2: when the last activity is an assignment, nothing but this check
+        # would flip the enrollment status. Start the run IN_PROGRESS with the
+        # only activity complete, and assert the completion check promotes the
+        # TrailRun to COMPLETED (no certification needed for the sync itself).
+        trail = Trail(
+            id=1,
+            org_id=org.id,
+            user_id=regular_user.id,
+            trail_uuid="trail_promote",
+            creation_date="2024-01-01T00:00:00",
+            update_date="2024-01-01T00:00:00",
+        )
+        db.add(trail)
+        await db.commit()
+        trail_run = TrailRun(
+            id=1,
+            data={},
+            status=StatusEnum.STATUS_IN_PROGRESS,
+            trail_id=trail.id,
+            course_id=course.id,
+            org_id=org.id,
+            user_id=regular_user.id,
+            creation_date="2024-01-01T00:00:00",
+            update_date="2024-01-01T00:00:00",
+        )
+        db.add(trail_run)
+        db.add(
+            TrailStep(
+                complete=True,
+                teacher_verified=False,
+                grade="",
+                data={},
+                trailrun_id=1,
+                trail_id=1,
+                activity_id=activity.id,
+                course_id=course.id,
+                org_id=org.id,
+                user_id=regular_user.id,
+                creation_date="2024-01-01T00:00:00",
+                update_date="2024-01-01T00:00:00",
+            )
+        )
+        await db.commit()
+
+        await check_course_completion_and_create_certificate(
+            mock_request, regular_user.id, course.id, db
+        )
+
+        await db.refresh(trail_run)
+        assert trail_run.status == StatusEnum.STATUS_COMPLETED
 
     @pytest.mark.asyncio
     async def test_check_course_completion_and_create_certificate_no_activities(
@@ -1373,3 +1514,306 @@ class TestIsCourseFullyCompleted:
         result = await is_course_fully_completed(regular_user.id, course_no_acts.id, db)
 
         assert result is False
+
+    @pytest.mark.asyncio
+    async def test_unpublished_activity_does_not_block_completion(
+        self, db, org, course, regular_user
+    ):
+        """A draft (unpublished) activity is never shown to the learner, so it
+        must not count toward completion — otherwise the course could never be
+        finished and the certificate would be permanently withheld."""
+        from src.db.courses.activities import (
+            Activity, ActivityTypeEnum, ActivitySubTypeEnum,
+        )
+        from src.db.courses.chapter_activities import ChapterActivity
+        from src.services.courses.certifications import is_course_fully_completed
+
+        published = Activity(
+            id=4101, name="Published", activity_uuid="activity_pub_4101",
+            activity_type=ActivityTypeEnum.TYPE_DYNAMIC,
+            activity_sub_type=ActivitySubTypeEnum.SUBTYPE_DYNAMIC_PAGE,
+            published=True, org_id=org.id, course_id=course.id, content={},
+            creation_date="2024-01-01", update_date="2024-01-01",
+        )
+        draft = Activity(
+            id=4102, name="Draft", activity_uuid="activity_draft_4102",
+            activity_type=ActivityTypeEnum.TYPE_DYNAMIC,
+            activity_sub_type=ActivitySubTypeEnum.SUBTYPE_DYNAMIC_PAGE,
+            published=False, org_id=org.id, course_id=course.id, content={},
+            creation_date="2024-01-01", update_date="2024-01-01",
+        )
+        db.add(published)
+        db.add(draft)
+        await db.commit()
+        for a in (published, draft):
+            db.add(ChapterActivity(
+                activity_id=a.id, course_id=course.id, chapter_id=1,
+                org_id=org.id, order=1,
+                creation_date="2024-01-01", update_date="2024-01-01",
+            ))
+        # Only the PUBLISHED activity is completed.
+        db.add(TrailStep(
+            complete=True, teacher_verified=False, grade="", data={},
+            trailrun_id=1, trail_id=1, activity_id=published.id,
+            course_id=course.id, org_id=org.id, user_id=regular_user.id,
+            creation_date="2024-01-01", update_date="2024-01-01",
+        ))
+        await db.commit()
+
+        # The draft activity is excluded, so the course is fully completed.
+        assert await is_course_fully_completed(regular_user.id, course.id, db) is True
+
+
+class TestSyncTrailrunStatus:
+    """Tests for sync_trailrun_status — keeps TrailRun.status aligned with
+    actual course completion so enrollment/analytics counts are correct."""
+
+    async def _make_in_progress_run(self, db, org, course, user, *, status=StatusEnum.STATUS_IN_PROGRESS):
+        trail = Trail(
+            org_id=org.id,
+            user_id=user.id,
+            trail_uuid="trail_sync_test",
+            creation_date="2024-01-01T00:00:00",
+            update_date="2024-01-01T00:00:00",
+        )
+        db.add(trail)
+        await db.commit()
+        await db.refresh(trail)
+
+        trail_run = TrailRun(
+            data={},
+            status=status,
+            trail_id=trail.id,
+            course_id=course.id,
+            org_id=org.id,
+            user_id=user.id,
+            creation_date="2024-01-01T00:00:00",
+            update_date="2024-01-01T00:00:00",
+        )
+        db.add(trail_run)
+        await db.commit()
+        await db.refresh(trail_run)
+        return trail_run
+
+    @pytest.mark.asyncio
+    async def test_promotes_to_completed_when_course_fully_completed(
+        self, db, org, course, regular_user
+    ):
+        trail_run = await self._make_in_progress_run(db, org, course, regular_user)
+
+        with patch(
+            "src.services.courses.certifications.is_course_fully_completed",
+            new_callable=AsyncMock,
+            return_value=True,
+        ):
+            await sync_trailrun_status(regular_user.id, course.id, db)
+
+        await db.refresh(trail_run)
+        assert trail_run.status == StatusEnum.STATUS_COMPLETED
+
+    @pytest.mark.asyncio
+    async def test_demotes_to_in_progress_when_completion_lost(
+        self, db, org, course, regular_user
+    ):
+        trail_run = await self._make_in_progress_run(
+            db, org, course, regular_user, status=StatusEnum.STATUS_COMPLETED
+        )
+
+        with patch(
+            "src.services.courses.certifications.is_course_fully_completed",
+            new_callable=AsyncMock,
+            return_value=False,
+        ):
+            await sync_trailrun_status(regular_user.id, course.id, db)
+
+        await db.refresh(trail_run)
+        assert trail_run.status == StatusEnum.STATUS_IN_PROGRESS
+
+    @pytest.mark.asyncio
+    async def test_leaves_paused_runs_untouched(
+        self, db, org, course, regular_user
+    ):
+        trail_run = await self._make_in_progress_run(
+            db, org, course, regular_user, status=StatusEnum.STATUS_PAUSED
+        )
+
+        with patch(
+            "src.services.courses.certifications.is_course_fully_completed",
+            new_callable=AsyncMock,
+            return_value=True,
+        ):
+            await sync_trailrun_status(regular_user.id, course.id, db)
+
+        await db.refresh(trail_run)
+        assert trail_run.status == StatusEnum.STATUS_PAUSED
+
+
+class TestAreCourseAssignmentsPassed:
+    """Certificate eligibility gate: all graded assignments must be passed."""
+
+    async def _make_assignment(self, db, org, course, activity, *, threshold=None, max_grade=100):
+        from src.db.courses.assignments import (
+            Assignment,
+            AssignmentTask,
+            AssignmentTaskTypeEnum,
+            GradingTypeEnum,
+        )
+        assignment = Assignment(
+            title="Final Exam",
+            description="Score at least 80% to pass",
+            due_date="2024-01-01",
+            published=True,
+            grading_type=GradingTypeEnum.PERCENTAGE,
+            pass_threshold_percentage=threshold,
+            org_id=org.id,
+            course_id=course.id,
+            chapter_id=1,
+            activity_id=activity.id,
+            assignment_uuid="assignment_gate_test",
+            creation_date="2024-01-01T00:00:00",
+            update_date="2024-01-01T00:00:00",
+        )
+        db.add(assignment)
+        await db.commit()
+        await db.refresh(assignment)
+        task = AssignmentTask(
+            title="Q1",
+            description="",
+            hint="",
+            assignment_type=AssignmentTaskTypeEnum.QUIZ,
+            contents={},
+            max_grade_value=max_grade,
+            assignment_id=assignment.id,
+            org_id=org.id,
+            course_id=course.id,
+            chapter_id=1,
+            activity_id=activity.id,
+            assignment_task_uuid="task_gate_test",
+            creation_date="2024-01-01T00:00:00",
+            update_date="2024-01-01T00:00:00",
+        )
+        db.add(task)
+        await db.commit()
+        return assignment
+
+    async def _make_submission(self, db, assignment, user, *, grade, status):
+        from src.db.courses.assignments import AssignmentUserSubmission
+        sub = AssignmentUserSubmission(
+            submission_status=status,
+            grade=grade,
+            user_id=user.id,
+            assignment_id=assignment.id,
+            assignmentusersubmission_uuid="aus_gate_test",
+            creation_date="2024-01-01T00:00:00",
+            update_date="2024-01-01T00:00:00",
+        )
+        db.add(sub)
+        await db.commit()
+        return sub
+
+    @pytest.mark.asyncio
+    async def test_no_assignments_passes(self, db, org, course, regular_user):
+        from src.services.courses.certifications import are_course_assignments_passed
+        assert await are_course_assignments_passed(regular_user.id, course.id, db) is True
+
+    @pytest.mark.asyncio
+    async def test_graded_and_passed_returns_true(self, db, org, course, activity, regular_user):
+        from src.db.courses.assignments import AssignmentUserSubmissionStatus
+        from src.services.courses.certifications import are_course_assignments_passed
+        a = await self._make_assignment(db, org, course, activity, threshold=80)
+        await self._make_submission(db, a, regular_user, grade=80, status=AssignmentUserSubmissionStatus.GRADED)
+        assert await are_course_assignments_passed(regular_user.id, course.id, db) is True
+
+    @pytest.mark.asyncio
+    async def test_graded_but_failed_returns_false(self, db, org, course, activity, regular_user):
+        from src.db.courses.assignments import AssignmentUserSubmissionStatus
+        from src.services.courses.certifications import are_course_assignments_passed
+        # 77% against a configured 80% threshold -> failed -> cert withheld.
+        a = await self._make_assignment(db, org, course, activity, threshold=80)
+        await self._make_submission(db, a, regular_user, grade=77, status=AssignmentUserSubmissionStatus.GRADED)
+        assert await are_course_assignments_passed(regular_user.id, course.id, db) is False
+
+    @pytest.mark.asyncio
+    async def test_ungraded_submission_returns_false(self, db, org, course, activity, regular_user):
+        from src.db.courses.assignments import AssignmentUserSubmissionStatus
+        from src.services.courses.certifications import are_course_assignments_passed
+        a = await self._make_assignment(db, org, course, activity, threshold=80)
+        await self._make_submission(db, a, regular_user, grade=0, status=AssignmentUserSubmissionStatus.SUBMITTED)
+        assert await are_course_assignments_passed(regular_user.id, course.id, db) is False
+
+    @pytest.mark.asyncio
+    async def test_missing_submission_returns_false(self, db, org, course, activity, regular_user):
+        from src.services.courses.certifications import are_course_assignments_passed
+        await self._make_assignment(db, org, course, activity, threshold=80)
+        assert await are_course_assignments_passed(regular_user.id, course.id, db) is False
+
+    @pytest.mark.asyncio
+    async def test_zero_max_assignment_does_not_block(self, db, org, course, activity, regular_user):
+        # A 0-point assignment (no gradable tasks) must not permanently block the
+        # certificate even with no submission -> vacuously passed.
+        from src.services.courses.certifications import are_course_assignments_passed
+        await self._make_assignment(db, org, course, activity, threshold=80, max_grade=0)
+        assert await are_course_assignments_passed(regular_user.id, course.id, db) is True
+
+
+class TestRevokeUserCertificate:
+    """revoke_user_certificate deletes the certificate row and emits a
+    certificate_revoked analytics + webhook event (M8)."""
+
+    @pytest.mark.asyncio
+    async def test_revokes_and_emits_event(self, db, course, org, regular_user):
+        certification = await _create_certification(db, course, cert_uuid="cert_revoke")
+        await _create_certificate_user(
+            db, certification, regular_user, user_certification_uuid="REV-1"
+        )
+
+        with patch(
+            "src.services.courses.certifications.track", new_callable=AsyncMock
+        ) as mock_track, patch(
+            "src.services.courses.certifications.dispatch_webhooks",
+            new_callable=AsyncMock,
+        ) as mock_webhooks:
+            revoked = await revoke_user_certificate(
+                regular_user.id, course.id, db, reason="regraded_below_threshold"
+            )
+
+        assert revoked is True
+        # Row is gone.
+        remaining = (
+            await db.execute(
+                select(CertificateUser).where(
+                    CertificateUser.certification_id == certification.id,
+                    CertificateUser.user_id == regular_user.id,
+                )
+            )
+        ).scalars().first()
+        assert remaining is None
+        # certificate_revoked emitted with the reason + revoked uuid.
+        mock_track.assert_awaited_once()
+        assert mock_track.await_args.kwargs["event_name"] == analytics_events.CERTIFICATE_REVOKED
+        wh = mock_webhooks.await_args.kwargs
+        assert wh["event_name"] == analytics_events.CERTIFICATE_REVOKED
+        assert wh["data"]["reason"] == "regraded_below_threshold"
+        assert wh["data"]["certificate"]["user_certification_uuid"] == "REV-1"
+
+    @pytest.mark.asyncio
+    async def test_noop_when_no_certificate(self, db, course, org, regular_user):
+        await _create_certification(db, course, cert_uuid="cert_norevoke")
+        with patch(
+            "src.services.courses.certifications.track", new_callable=AsyncMock
+        ) as mock_track, patch(
+            "src.services.courses.certifications.dispatch_webhooks",
+            new_callable=AsyncMock,
+        ) as mock_webhooks:
+            revoked = await revoke_user_certificate(regular_user.id, course.id, db)
+        assert revoked is False
+        mock_track.assert_not_called()
+        mock_webhooks.assert_not_called()
+
+    @pytest.mark.asyncio
+    async def test_noop_when_no_certification(self, db, org, regular_user):
+        course = await _create_course_without_certifications(
+            db, org, course_id=909, course_uuid="course_no_cert_revoke"
+        )
+        revoked = await revoke_user_certificate(regular_user.id, course.id, db)
+        assert revoked is False

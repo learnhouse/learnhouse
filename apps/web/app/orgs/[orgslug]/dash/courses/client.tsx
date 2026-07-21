@@ -3,7 +3,7 @@ import { Breadcrumbs } from '@components/Objects/Breadcrumbs/Breadcrumbs'
 import CreateCourseModal from '@components/Objects/Modals/Course/Create/CreateCourse'
 import CourseCreationTypeSelector from '@components/Objects/Modals/Course/Create/CourseCreationTypeSelector'
 import AICourseCreationModal from '@components/Objects/Modals/Course/Create/AICourse/AICourseCreationModal'
-import { BookCopy, Search, X, Trash2, ChevronLeft, ChevronRight, Users, Info } from 'lucide-react'
+import { BookCopy, Search, X, Trash2, Users, Info } from 'lucide-react'
 import ScormCourseImport from '../../../../../ee/components/Modals/ScormCourseImport'
 import { ImportTypeSelector, LearnHouseCourseImport } from '@components/Objects/Modals/Course/Import'
 import CourseThumbnail, { removeCoursePrefix } from '@components/Objects/Thumbnails/CourseThumbnail'
@@ -32,6 +32,7 @@ import FeatureGate from '@components/Dashboard/Shared/FeatureGate/FeatureGate'
 import { usePlan } from '@components/Hooks/usePlan'
 import { searchMatchesAny } from '@/lib/search/normalize'
 import { useLHAnalytics, AnalyticsEvent } from '@services/analytics'
+import CatalogPagination, { useCatalogPagination } from '@components/Objects/Catalog/CatalogPagination'
 
 type CourseProps = {
   orgslug: string
@@ -162,21 +163,19 @@ function CoursesHome(params: CourseProps) {
     return courses
   }, [allCourses, searchQuery, usergroupResourceUuids])
 
-  // Pagination state
-  const [currentPage, setCurrentPage] = useState(1)
-  const itemsPerPage = 12
+  const {
+    currentPage,
+    totalPages,
+    paginatedItems: paginatedCourses,
+    pageNumbers,
+    goToPage: goToCatalogPage,
+    resetPage,
+  } = useCatalogPagination(filteredCourses)
 
   // Reset to page 1 when search or filter changes
   React.useEffect(() => {
-    setCurrentPage(1)
-  }, [searchQuery, selectedUsergroupId])
-
-  // Calculate pagination (client-side)
-  const totalPages = Math.ceil(filteredCourses.length / itemsPerPage)
-  const paginatedCourses = useMemo(() => {
-    const startIndex = (currentPage - 1) * itemsPerPage
-    return filteredCourses.slice(startIndex, startIndex + itemsPerPage)
-  }, [filteredCourses, currentPage, itemsPerPage])
+    resetPage()
+  }, [searchQuery, selectedUsergroupId, resetPage])
 
   // Selection state
   const [selectedCourses, setSelectedCourses] = useState<Set<string>>(new Set())
@@ -400,35 +399,9 @@ function CoursesHome(params: CourseProps) {
   // Pagination handlers
   const goToPage = (page: number) => {
     if (page >= 1 && page <= totalPages) {
-      setCurrentPage(page)
+      goToCatalogPage(page)
       setSelectedCourses(new Set())
     }
-  }
-
-  const getVisiblePageNumbers = () => {
-    const pages: (number | string)[] = []
-    const maxVisible = 5
-
-    if (totalPages <= maxVisible) {
-      for (let i = 1; i <= totalPages; i++) pages.push(i)
-    } else {
-      if (currentPage <= 3) {
-        for (let i = 1; i <= 4; i++) pages.push(i)
-        pages.push('...')
-        pages.push(totalPages)
-      } else if (currentPage >= totalPages - 2) {
-        pages.push(1)
-        pages.push('...')
-        for (let i = totalPages - 3; i <= totalPages; i++) pages.push(i)
-      } else {
-        pages.push(1)
-        pages.push('...')
-        for (let i = currentPage - 1; i <= currentPage + 1; i++) pages.push(i)
-        pages.push('...')
-        pages.push(totalPages)
-      }
-    }
-    return pages
   }
 
   if (isCoursesLoading) {
@@ -727,49 +700,15 @@ function CoursesHome(params: CourseProps) {
         )}
       </div>
 
-      {/* Pagination Controls */}
-      {totalPages > 1 && (
-        <div className="mt-8 mb-6 flex items-center justify-center gap-2">
-          <button
-            onClick={() => goToPage(currentPage - 1)}
-            disabled={currentPage === 1}
-            className="flex items-center gap-1 px-3 py-2 text-sm font-medium text-gray-600 bg-white nice-shadow rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-          >
-            <ChevronLeft className="w-4 h-4" />
-            <span className="hidden sm:inline">{t('pagination.previous')}</span>
-          </button>
-
-          <div className="flex items-center gap-1">
-            {getVisiblePageNumbers().map((page, index) => (
-              <React.Fragment key={index}>
-                {page === '...' ? (
-                  <span className="px-2 py-1 text-gray-400">...</span>
-                ) : (
-                  <button
-                    onClick={() => goToPage(page as number)}
-                    className={`px-3 py-2 text-sm font-medium rounded-lg transition-colors ${
-                      currentPage === page
-                        ? 'bg-black text-white'
-                        : 'bg-white text-gray-600 nice-shadow hover:bg-gray-50'
-                    }`}
-                  >
-                    {page}
-                  </button>
-                )}
-              </React.Fragment>
-            ))}
-          </div>
-
-          <button
-            onClick={() => goToPage(currentPage + 1)}
-            disabled={currentPage === totalPages}
-            className="flex items-center gap-1 px-3 py-2 text-sm font-medium text-gray-600 bg-white nice-shadow rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-          >
-            <span className="hidden sm:inline">{t('pagination.next')}</span>
-            <ChevronRight className="w-4 h-4" />
-          </button>
-        </div>
-      )}
+      <CatalogPagination
+        currentPage={currentPage}
+        totalPages={totalPages}
+        pageNumbers={pageNumbers}
+        onPageChange={goToPage}
+        previousLabel={t('pagination.previous')}
+        nextLabel={t('pagination.next')}
+        className="mt-8 mb-6"
+      />
 
       {/* Pagination info */}
       {totalPages > 1 && (

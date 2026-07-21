@@ -1,33 +1,25 @@
 """
 Edge-case unit tests for ``_grade_quiz_task(contents, submission_data, task_max)``.
 
-``_grade_quiz_task`` is the server-side mirror of the client ``gradeFC`` in
-``TaskQuizObject.tsx``. Its contract (read straight from the implementation):
+``_grade_quiz_task`` grades a quiz PER QUESTION (mirrored by the client
+``gradeFC`` in ``TaskQuizObject.tsx``). Contract (from the implementation):
 
-* Every option in every question is worth exactly one point.
-* A point is earned when the student's checkbox state, coerced with ``bool()``,
-  equals ``bool(option.assigned_right_answer)``.
-* Student answers are indexed by ``(questionUUID, optionUUID)``; a submission
-  entry is only indexed when BOTH uuids are truthy. Options with no matching
-  submission default to ``False`` ("not checked").
-* ``grade = round(correct_options / total_options * task_max)``.
-* ``0`` is returned when ``total_options == 0`` OR ``task_max <= 0``.
+* A question is correct only when the student's selected option set EXACTLY
+  matches the key: for every option, ``bool(student answer) ==
+  bool(option.assigned_right_answer)`` (all correct options selected, no
+  incorrect option selected). A missing submission entry counts as "not
+  selected".
+* ``grade = round(correct_questions / total_questions * task_max)``.
+* Questions with no options are skipped (can't be answered).
+* ``0`` is returned when ``total_questions == 0`` OR ``task_max <= 0``.
 
-The happy-path cases (all-correct / partial / all-wrong / empty / zero max /
-custom max) already live in ``test_assignment_grading.py::TestGradeQuizTask``.
-This file deliberately does NOT repeat them; it targets the awkward inputs:
-rounding, odd ``task_max``, multi-question mixes, junk/duplicate/partial
-submission entries, non-dict members, and ``bool()`` coercion of the ``answer``
-field. All assertions describe REAL observed behavior of the shipped function.
+Per-question is the corrected model: the previous per-option scoring gave
+phantom credit for non-answers (a blank 4-option question still "matched" its 3
+unselected wrong options -> 75%), so a learner could leave most of an exam blank
+and still clear a high pass bar. These tests pin the corrected behavior,
+including the concrete miscounts reported from production data.
 
-The JSON shapes used here mirror the real client structures in
-``TaskQuizObject.tsx``:
-    contents = {"questions": [{"questionUUID": str,
-                               "options": [{"optionUUID": str,
-                                            "assigned_right_answer": bool}]}]}
-    submission_data = {"submissions": [{"questionUUID": str,
-                                        "optionUUID": str,
-                                        "answer": bool}]}
+JSON shapes mirror the real client structures in ``TaskQuizObject.tsx``.
 """
 
 from src.services.courses.activities.assignments import _grade_quiz_task
@@ -59,455 +51,343 @@ def _submission(*entries):
     return {"submissions": list(entries)}
 
 
+def _exam(num_q=12, opts_per_q=4, correct_idx=0):
+    """An exam of `num_q` single-correct questions, each with `opts_per_q` options."""
+    return _contents(*[
+        _question(f"q{i}", [(f"q{i}o{j}", j == correct_idx) for j in range(opts_per_q)])
+        for i in range(num_q)
+    ])
+
+
+def _pick(i, j):
+    """A submission entry selecting option j of question i."""
+    return _sub(f"q{i}", f"q{i}o{j}", True)
+
+
 # --------------------------------------------------------------------------- #
-# Multiple questions, each with multiple options
+# Production-reported miscounts (Brian) — per-question is the fix
 # --------------------------------------------------------------------------- #
-class TestMultiQuestionMultiOption:
-    def test_all_options_across_all_questions_correct_is_full_marks(self):
-        """Two questions x three options; every checkbox matches the key -> 6/6 -> 100."""
+class TestReportedMiscounts:
+    def test_one_option_off_on_12q_exam_is_11_of_12_not_98pct(self):
+        """One question wrong on a 12-question, 4-option exam -> 11/12 = 92%.
+
+        Old per-option scoring gave 47/48 = 98%.
+        """
+        contents = _exam(12, 4, 0)
+        subs = [_pick(i, 0) for i in range(11)]  # 11 answered correctly
+        subs += [_pick(11, 0), _pick(11, 1)]     # q11: correct + an extra wrong -> wrong
+        assert _grade_quiz_task(contents, _submission(*subs), 100) == 92
+
+    def test_eight_of_twelve_correct_fails_the_80_bar(self):
+        """8/12 correct -> 67%, which must NOT clear an 80% pass bar.
+
+        Old per-option scoring inflated this to ~83%.
+        """
+        contents = _exam(12, 4, 0)
+        subs = [_pick(i, 0) for i in range(8)]        # 8 correct
+        subs += [_pick(i, 1) for i in range(8, 12)]   # 4 wrong (picked a wrong option)
+        assert _grade_quiz_task(contents, _submission(*subs), 100) == 67
+
+    def test_nine_blank_of_twelve_scores_25_not_81pct(self):
+        """3 answered, 9 left blank -> 3/12 = 25%. Old scoring gave ~81%."""
+        contents = _exam(12, 4, 0)
+        subs = [_pick(i, 0) for i in range(3)]  # only 3 answered; 9 blank
+        assert _grade_quiz_task(contents, _submission(*subs), 100) == 25
+
+    def test_fully_blank_exam_scores_zero(self):
+        """No answers at all -> 0% (previously every blank question scored 3/4)."""
+        contents = _exam(12, 4, 0)
+        assert _grade_quiz_task(contents, _submission(), 100) == 0
+
+
+# --------------------------------------------------------------------------- #
+# Per-question correctness (exact option-set match)
+# --------------------------------------------------------------------------- #
+class TestPerQuestionMatch:
+    def test_all_questions_exactly_right_is_full_marks(self):
         contents = _contents(
             _question("q1", [("a", True), ("b", False), ("c", True)]),
             _question("q2", [("d", False), ("e", True), ("f", False)]),
         )
         sub = _submission(
-            _sub("q1", "a", True),
-            _sub("q1", "b", False),
-            _sub("q1", "c", True),
-            _sub("q2", "d", False),
-            _sub("q2", "e", True),
-            _sub("q2", "f", False),
+            _sub("q1", "a", True), _sub("q1", "b", False), _sub("q1", "c", True),
+            _sub("q2", "d", False), _sub("q2", "e", True), _sub("q2", "f", False),
         )
         assert _grade_quiz_task(contents, sub, 100) == 100
 
-    def test_mixed_correctness_across_questions_is_proportional(self):
-        """q1 fully right (3/3), q2 fully wrong (0/3) -> 3/6 of 100 -> 50."""
+    def test_one_of_two_questions_right_is_half(self):
+        """q1 exactly right; q2 has all correct options left unchecked -> q2 wrong."""
         contents = _contents(
             _question("q1", [("a", True), ("b", False), ("c", True)]),
             _question("q2", [("d", True), ("e", True), ("f", True)]),
         )
         sub = _submission(
-            _sub("q1", "a", True),
-            _sub("q1", "b", False),
-            _sub("q1", "c", True),
-            # q2 all left unchecked while all are right answers -> all wrong
-            _sub("q2", "d", False),
-            _sub("q2", "e", False),
-            _sub("q2", "f", False),
+            _sub("q1", "a", True), _sub("q1", "b", False), _sub("q1", "c", True),
+            _sub("q2", "d", False), _sub("q2", "e", False), _sub("q2", "f", False),
         )
         assert _grade_quiz_task(contents, sub, 100) == 50
 
-    def test_options_counted_across_questions_for_total(self):
-        """Two questions with differing option counts: total = 2 + 3 = 5 options.
+    def test_missing_one_correct_option_makes_question_wrong(self):
+        """Multi-correct question: selecting only one of two correct options -> wrong."""
+        contents = _contents(_question("q1", [("a", True), ("b", True), ("c", False)]))
+        sub = _submission(_sub("q1", "a", True))  # b (correct) left unchecked
+        assert _grade_quiz_task(contents, sub, 100) == 0
 
-        Right answers checked: q1/a and q2/e only -> but unchecked-wrong options
-        also count, so we compute explicitly: q1 a=T(right,checked ok),
-        b=F(right unchecked? key F -> ok). q2 d=F key F ok, e=T key T checked ok,
-        f=F key F ok. So 5/5 here -> 100.
-        """
-        contents = _contents(
-            _question("q1", [("a", True), ("b", False)]),
-            _question("q2", [("d", False), ("e", True), ("f", False)]),
-        )
-        sub = _submission(
-            _sub("q1", "a", True),
-            _sub("q2", "e", True),
-        )
-        # Every other option defaults to unchecked (False) which matches its
-        # False key -> all 5 options correct.
-        assert _grade_quiz_task(contents, sub, 100) == 100
+    def test_selecting_an_extra_wrong_option_makes_question_wrong(self):
+        contents = _contents(_question("q1", [("a", True), ("b", False)]))
+        sub = _submission(_sub("q1", "a", True), _sub("q1", "b", True))  # b wrong
+        assert _grade_quiz_task(contents, sub, 100) == 0
+
+    def test_blank_single_question_is_wrong(self):
+        contents = _contents(_question("q1", [("a", True), ("b", False), ("c", False)]))
+        assert _grade_quiz_task(contents, _submission(), 100) == 0
 
 
 # --------------------------------------------------------------------------- #
-# Rounding behavior
+# Rounding — driven by number of correct QUESTIONS
 # --------------------------------------------------------------------------- #
 class TestRounding:
-    def _three_option_key_all_true(self):
-        """3 options, all with right answer True; student checks N of them."""
-        return _contents(_question("q1", [("a", True), ("b", True), ("c", True)]))
+    def test_one_of_three_questions_rounds_to_33(self):
+        assert _grade_quiz_task(_exam(3, 1, 0), _submission(_pick(0, 0)), 100) == 33
 
-    def test_one_third_of_100_rounds_to_33(self):
-        """1 of 3 options correct -> 1/3 * 100 = 33.33 -> round -> 33."""
-        contents = self._three_option_key_all_true()
-        sub = _submission(
-            _sub("q1", "a", True),   # correct
-            _sub("q1", "b", False),  # wrong (key True)
-            _sub("q1", "c", False),  # wrong (key True)
-        )
-        assert _grade_quiz_task(contents, sub, 100) == 33
+    def test_two_of_three_questions_rounds_to_67(self):
+        subs = [_pick(0, 0), _pick(1, 0)]
+        assert _grade_quiz_task(_exam(3, 1, 0), _submission(*subs), 100) == 67
 
-    def test_two_thirds_of_100_rounds_to_67(self):
-        """2 of 3 options correct -> 2/3 * 100 = 66.67 -> round -> 67."""
-        contents = self._three_option_key_all_true()
-        sub = _submission(
-            _sub("q1", "a", True),
-            _sub("q1", "b", True),
-            _sub("q1", "c", False),
-        )
-        assert _grade_quiz_task(contents, sub, 100) == 67
-
-    def test_bankers_rounding_half_to_even_one_sixth(self):
-        """1 of 6 correct of 3 -> 0.5 exactly; Python round() is banker's rounding.
-
-        1/6 * 3 = 0.5 -> round(0.5) == 0 (rounds to even). This documents that
-        the function relies on Python's round-half-to-even, not classic 0.5-up.
-        """
-        contents = _contents(
-            _question(
-                "q1",
-                [("a", True), ("b", True), ("c", True),
-                 ("d", True), ("e", True), ("f", True)],
-            )
-        )
-        sub = _submission(
-            _sub("q1", "a", True),
-            _sub("q1", "b", False),
-            _sub("q1", "c", False),
-            _sub("q1", "d", False),
-            _sub("q1", "e", False),
-            _sub("q1", "f", False),
-        )
-        # 1/6 * 3 = 0.5 -> banker's rounding -> 0
-        assert _grade_quiz_task(contents, sub, 3) == 0
-
-    def test_bankers_rounding_half_to_even_one_point_five(self):
-        """3 of 6 correct, task_max 3 -> 3/6 * 3 = 1.5 -> round -> 2 (even)."""
-        contents = _contents(
-            _question(
-                "q1",
-                [("a", True), ("b", True), ("c", True),
-                 ("d", True), ("e", True), ("f", True)],
-            )
-        )
-        sub = _submission(
-            _sub("q1", "a", True),
-            _sub("q1", "b", True),
-            _sub("q1", "c", True),
-            _sub("q1", "d", False),
-            _sub("q1", "e", False),
-            _sub("q1", "f", False),
-        )
-        assert _grade_quiz_task(contents, sub, 3) == 2
+    def test_half_uses_bankers_rounding_to_even(self):
+        # 3 of 6 questions, task_max 3 -> 1.5 -> round-half-to-even -> 2
+        subs = [_pick(i, 0) for i in range(3)]
+        assert _grade_quiz_task(_exam(6, 1, 0), _submission(*subs), 3) == 2
+        # 1 of 6 questions, task_max 3 -> 0.5 -> round-half-to-even -> 0
+        assert _grade_quiz_task(_exam(6, 1, 0), _submission(_pick(0, 0)), 3) == 0
 
 
 # --------------------------------------------------------------------------- #
 # Odd / unusual task_max values
 # --------------------------------------------------------------------------- #
 class TestOddTaskMax:
-    def _two_opt_one_correct(self):
-        """2 options, student gets exactly 1 of 2 right (50%)."""
-        contents = _contents(_question("q1", [("a", True), ("b", False)]))
-        sub = _submission(
-            _sub("q1", "a", True),   # correct
-            _sub("q1", "b", True),   # wrong (key False)
-        )
-        return contents, sub
+    def _one_of_two(self):
+        return _exam(2, 1, 0), _submission(_pick(0, 0))  # 1 of 2 questions -> 50%
 
     def test_task_max_50_at_fifty_percent(self):
-        """50% of task_max 50 -> 25."""
-        contents, sub = self._two_opt_one_correct()
+        contents, sub = self._one_of_two()
         assert _grade_quiz_task(contents, sub, 50) == 25
 
     def test_task_max_7_at_fifty_percent_rounds(self):
-        """50% of 7 = 3.5 -> banker's rounding -> 4 (even)."""
-        contents, sub = self._two_opt_one_correct()
-        assert _grade_quiz_task(contents, sub, 7) == 4
+        contents, sub = self._one_of_two()
+        assert _grade_quiz_task(contents, sub, 7) == 4  # 3.5 -> even -> 4
 
     def test_task_max_one_at_one_third(self):
-        """1/3 of task_max 1 = 0.333 -> round -> 0."""
-        contents = _contents(_question("q1", [("a", True), ("b", True), ("c", True)]))
-        sub = _submission(
-            _sub("q1", "a", True),
-            _sub("q1", "b", False),
-            _sub("q1", "c", False),
-        )
-        assert _grade_quiz_task(contents, sub, 1) == 0
+        assert _grade_quiz_task(_exam(3, 1, 0), _submission(_pick(0, 0)), 1) == 0
 
     def test_negative_task_max_returns_zero(self):
-        """task_max <= 0 short-circuits to 0 even when answers are perfect."""
-        contents, sub = self._two_opt_one_correct()
+        contents, sub = self._one_of_two()
         assert _grade_quiz_task(contents, sub, -5) == 0
 
 
 # --------------------------------------------------------------------------- #
-# All-correct / all-wrong / mixed extremes
+# All-wrong / extra-selection extremes
 # --------------------------------------------------------------------------- #
 class TestCorrectnessExtremes:
-    def test_all_wrong_every_option_inverted(self):
-        """Student inverts every checkbox -> 0/4 -> 0."""
+    def test_all_wrong_every_checkbox_inverted(self):
         contents = _contents(
             _question("q1", [("a", True), ("b", False)]),
             _question("q2", [("c", True), ("d", False)]),
         )
         sub = _submission(
-            _sub("q1", "a", False),  # key True
-            _sub("q1", "b", True),   # key False
-            _sub("q2", "c", False),  # key True
-            _sub("q2", "d", True),   # key False
+            _sub("q1", "a", False), _sub("q1", "b", True),
+            _sub("q2", "c", False), _sub("q2", "d", True),
         )
         assert _grade_quiz_task(contents, sub, 100) == 0
 
-    def test_student_checks_extra_correct_options_not_in_key(self):
-        """Checking an option whose key is False is simply wrong, not bonus.
-
-        2 options both keyed False; student checks both -> 0/2 -> 0.
-        """
+    def test_checking_options_keyed_false_is_wrong_not_bonus(self):
         contents = _contents(_question("q1", [("a", False), ("b", False)]))
-        sub = _submission(
-            _sub("q1", "a", True),
-            _sub("q1", "b", True),
-        )
+        sub = _submission(_sub("q1", "a", True), _sub("q1", "b", True))
         assert _grade_quiz_task(contents, sub, 100) == 0
+
+    def test_question_with_no_correct_option_is_skipped(self):
+        """A question whose key marks every option False can't be auto-scored, so
+        it is skipped: only the well-formed q2 counts (answered right -> 100),
+        NOT counted as a free 'blank is correct' point."""
+        contents = _contents(
+            _question("q1", [("a", False), ("b", False)]),  # malformed -> skipped
+            _question("q2", [("c", True)]),                 # answered right
+        )
+        sub = _submission(_sub("q2", "c", True))
+        assert _grade_quiz_task(contents, sub, 100) == 100
+
+    def test_only_no_correct_question_scores_zero_not_free_credit(self):
+        """M13: a quiz whose ONLY question has no correct option must NOT award a
+        blank submission full marks. The malformed question is skipped, leaving
+        no gradable questions -> grade 0 (fails closed, no free credit)."""
+        contents = _contents(_question("q1", [("a", False), ("b", False)]))
+        assert _grade_quiz_task(contents, _submission(), 100) == 0
 
 
 # --------------------------------------------------------------------------- #
-# Junk / unknown / duplicate submission entries
+# Junk / duplicate / partial submission entries (q2 is always correct so the
+# score reflects only whether the junked q1 was scored correctly)
 # --------------------------------------------------------------------------- #
 class TestSubmissionJunk:
-    def test_unknown_question_and_option_uuids_are_ignored(self):
-        """Submissions for UUIDs not in the key never affect the score.
+    def _q1_junk_plus_correct_q2(self, *q1_entries):
+        contents = _contents(
+            _question("q1", [("a", True), ("b", False)]),
+            _question("q2", [("c", True)]),
+        )
+        sub = _submission(*q1_entries, _sub("q2", "c", True))
+        return contents, sub
 
-        Key: q1/a True (checked correct), q1/b False (defaults unchecked correct).
-        The bogus entries reference questions/options that don't exist -> ignored.
-        2/2 -> 100.
-        """
-        contents = _contents(_question("q1", [("a", True), ("b", False)]))
-        sub = _submission(
+    def test_unknown_uuids_are_ignored(self):
+        """q1 answered correctly; bogus entries reference nothing -> both right -> 100."""
+        contents, sub = self._q1_junk_plus_correct_q2(
             _sub("q1", "a", True),
             _sub("ghost_q", "ghost_o", True),
             _sub("q1", "ghost_o", True),
-            _sub("ghost_q", "a", True),
         )
         assert _grade_quiz_task(contents, sub, 100) == 100
 
-    def test_duplicate_entries_for_same_option_last_wins(self):
-        """Repeated (questionUUID, optionUUID) entries overwrite; the LAST wins.
-
-        q1/a key True. Two entries: first answer=True (would be correct), then
-        answer=False (wrong). Last-write-wins -> a counts as wrong.
-        q1/b key False defaults unchecked correct. So 1/2 -> 50.
-        """
-        contents = _contents(_question("q1", [("a", True), ("b", False)]))
-        sub = _submission(
+    def test_duplicate_entries_last_wins(self):
+        """q1/a keyed True; last entry sets it False -> q1 wrong, q2 right -> 50."""
+        contents, sub = self._q1_junk_plus_correct_q2(
             _sub("q1", "a", True),
-            _sub("q1", "a", False),  # later entry overwrites the earlier one
+            _sub("q1", "a", False),
         )
         assert _grade_quiz_task(contents, sub, 100) == 50
 
-    def test_submission_missing_question_uuid_is_skipped(self):
-        """Entry with falsy questionUUID is not indexed -> option defaults False.
-
-        q1/a key True; the only submission for it omits questionUUID, so 'a' is
-        treated as unchecked (wrong). q1/b key False defaults correct. 1/2 -> 50.
-        """
-        contents = _contents(_question("q1", [("a", True), ("b", False)]))
-        sub = _submission(
-            {"optionUUID": "a", "answer": True},  # no questionUUID
+    def test_entry_missing_question_uuid_is_skipped(self):
+        """'a' never marked -> q1 wrong, q2 right -> 50."""
+        contents, sub = self._q1_junk_plus_correct_q2(
+            {"optionUUID": "a", "answer": True},
         )
         assert _grade_quiz_task(contents, sub, 100) == 50
 
-    def test_submission_missing_option_uuid_is_skipped(self):
-        """Entry with falsy optionUUID is not indexed -> 'a' stays unchecked.
-
-        Same accounting as above -> 1/2 -> 50.
-        """
-        contents = _contents(_question("q1", [("a", True), ("b", False)]))
-        sub = _submission(
-            {"questionUUID": "q1", "answer": True},  # no optionUUID
+    def test_entry_missing_option_uuid_is_skipped(self):
+        contents, sub = self._q1_junk_plus_correct_q2(
+            {"questionUUID": "q1", "answer": True},
         )
         assert _grade_quiz_task(contents, sub, 100) == 50
 
-    def test_submission_with_empty_string_uuids_is_skipped(self):
-        """Empty-string UUIDs are falsy, so the guard skips them.
-
-        'a' stays unchecked/wrong -> 1/2 -> 50.
-        """
-        contents = _contents(_question("q1", [("a", True), ("b", False)]))
-        sub = _submission(
+    def test_empty_string_uuids_are_skipped(self):
+        contents, sub = self._q1_junk_plus_correct_q2(
             {"questionUUID": "", "optionUUID": "", "answer": True},
             {"questionUUID": "q1", "optionUUID": "", "answer": True},
-            {"questionUUID": "", "optionUUID": "a", "answer": True},
         )
         assert _grade_quiz_task(contents, sub, 100) == 50
 
     def test_non_dict_submission_entries_are_skipped(self):
-        """Strings / ints / None / lists in submissions are skipped gracefully.
-
-        Only the real dict for q1/a is honored -> 2/2 -> 100.
-        """
-        contents = _contents(_question("q1", [("a", True), ("b", False)]))
-        sub = {
-            "submissions": [
-                "not a dict",
-                42,
-                None,
-                ["q1", "a", True],
-                _sub("q1", "a", True),
-            ]
-        }
+        """Only the real dict for q1/a is honored -> both questions right -> 100."""
+        contents = _contents(
+            _question("q1", [("a", True), ("b", False)]),
+            _question("q2", [("c", True)]),
+        )
+        sub = {"submissions": ["nope", 42, None, ["q1", "a", True],
+                               _sub("q1", "a", True), _sub("q2", "c", True)]}
         assert _grade_quiz_task(contents, sub, 100) == 100
 
 
 # --------------------------------------------------------------------------- #
-# Junk / degenerate questions & options
+# Degenerate questions & options
 # --------------------------------------------------------------------------- #
 class TestQuestionJunk:
     def test_non_dict_questions_are_skipped(self):
-        """Non-dict members of 'questions' are skipped; only real questions count.
+        contents = {"questions": ["garbage", None, 123,
+                                  _question("q1", [("a", True), ("b", False)])]}
+        assert _grade_quiz_task(contents, _submission(_sub("q1", "a", True)), 100) == 100
 
-        One valid question with 2 options, fully correct -> 2/2 -> 100.
-        """
-        contents = {
-            "questions": [
-                "garbage",
-                None,
-                123,
-                _question("q1", [("a", True), ("b", False)]),
-            ]
-        }
-        sub = _submission(_sub("q1", "a", True))
-        assert _grade_quiz_task(contents, sub, 100) == 100
+    def test_non_dict_options_are_skipped(self):
+        contents = {"questions": [{
+            "questionUUID": "q1",
+            "options": ["junk", {"optionUUID": "a", "assigned_right_answer": True},
+                        None, {"optionUUID": "b", "assigned_right_answer": False}],
+        }]}
+        assert _grade_quiz_task(contents, _submission(_sub("q1", "a", True)), 100) == 100
 
-    def test_non_dict_options_are_skipped_but_dict_options_count(self):
-        """Non-dict entries inside an options list are skipped before counting.
-
-        Options list: ["junk", {a:True}, None, {b:False}] -> only 2 real options.
-        Student checks 'a' correctly, 'b' defaults correct -> 2/2 -> 100.
-        """
-        contents = {
-            "questions": [
-                {
-                    "questionUUID": "q1",
-                    "options": [
-                        "junk",
-                        {"optionUUID": "a", "assigned_right_answer": True},
-                        None,
-                        {"optionUUID": "b", "assigned_right_answer": False},
-                    ],
-                }
-            ]
-        }
-        sub = _submission(_sub("q1", "a", True))
-        assert _grade_quiz_task(contents, sub, 100) == 100
-
-    def test_question_with_empty_options_list_contributes_nothing(self):
-        """A question with options=[] adds 0 options; total comes from others.
-
-        q1 empty, q2 has 2 options both correct -> 2/2 -> 100.
-        """
+    def test_question_with_empty_options_is_not_counted(self):
+        """A question with options=[] is skipped; total comes only from real ones."""
         contents = _contents(
             _question("q1", []),
             _question("q2", [("a", True), ("b", False)]),
         )
-        sub = _submission(_sub("q2", "a", True))
-        assert _grade_quiz_task(contents, sub, 100) == 100
+        assert _grade_quiz_task(contents, _submission(_sub("q2", "a", True)), 100) == 100
 
-    def test_question_with_no_options_key_contributes_nothing(self):
-        """A question dict lacking an 'options' key -> `or []` -> 0 options.
-
-        Only q2's 2 options count -> 2/2 -> 100.
-        """
-        contents = {
-            "questions": [
-                {"questionUUID": "q1"},  # no 'options' key at all
-                _question("q2", [("a", True), ("b", False)]),
-            ]
-        }
-        sub = _submission(_sub("q2", "a", True))
-        assert _grade_quiz_task(contents, sub, 100) == 100
-
-    def test_all_questions_have_no_options_returns_zero(self):
-        """total_options == 0 -> short-circuit to 0 regardless of task_max."""
+    def test_all_questions_empty_returns_zero(self):
         contents = _contents(_question("q1", []), _question("q2", []))
         assert _grade_quiz_task(contents, _submission(), 100) == 0
 
 
 # --------------------------------------------------------------------------- #
-# bool() coercion of the `answer` field
+# Answer-key stripping (students must not receive the key in the task payload)
 # --------------------------------------------------------------------------- #
-class TestAnswerCoercion:
-    def _single_true_option(self):
-        """One option whose right answer is True; isolates a single answer value."""
-        return _contents(_question("q1", [("a", True)]))
+from src.services.courses.activities.assignments import _strip_answer_key  # noqa: E402
 
-    def test_string_true_is_truthy_matches_true_key(self):
-        """answer='true' -> bool('true') is True -> matches True key -> 100."""
-        contents = self._single_true_option()
-        sub = _submission(_sub("q1", "a", "true"))
-        assert _grade_quiz_task(contents, sub, 100) == 100
 
-    def test_string_false_is_still_truthy(self):
-        """SURPRISE: answer='false' is a non-empty string -> bool() True.
+class TestStripAnswerKey:
+    def test_quiz_option_flags_removed(self):
+        c = {"questions": [{"questionUUID": "q1", "options": [
+            {"optionUUID": "a", "text": "A", "assigned_right_answer": True},
+            {"optionUUID": "b", "text": "B", "assigned_right_answer": False},
+        ]}]}
+        s = _strip_answer_key(c)
+        for o in s["questions"][0]["options"]:
+            assert "assigned_right_answer" not in o
+            assert "text" in o
+        assert c["questions"][0]["options"][0]["assigned_right_answer"] is True
 
-        Against a True key this counts as CORRECT (100), even though the literal
-        text says 'false'. The server only ever stores real booleans, but this
-        documents that a stringified 'false' would be mis-graded.
-        """
-        contents = self._single_true_option()
-        sub = _submission(_sub("q1", "a", "false"))
-        assert _grade_quiz_task(contents, sub, 100) == 100
+    def test_form_blank_answers_removed(self):
+        c = {"questions": [{"questionUUID": "q1", "blanks": [
+            {"blankUUID": "b1", "correctAnswer": "42"},
+        ]}]}
+        s = _strip_answer_key(c)
+        assert "correctAnswer" not in s["questions"][0]["blanks"][0]
 
-    def test_empty_string_is_falsy(self):
-        """answer='' -> bool('') False -> mismatches True key -> 0."""
-        contents = self._single_true_option()
-        sub = _submission(_sub("q1", "a", ""))
-        assert _grade_quiz_task(contents, sub, 100) == 0
+    def test_short_and_number_keys_removed(self):
+        assert "correct_answers" not in _strip_answer_key({"correct_answers": ["x"], "match_mode": "exact"})
+        assert _strip_answer_key({"correct_answers": ["x"], "match_mode": "exact"}).get("match_mode") == "exact"
+        assert "correct_value" not in _strip_answer_key({"correct_value": 9.8, "tolerance": 0.1})
 
-    def test_integer_one_is_truthy(self):
-        """answer=1 -> bool(1) True -> matches True key -> 100."""
-        contents = self._single_true_option()
-        sub = _submission(_sub("q1", "a", 1))
-        assert _grade_quiz_task(contents, sub, 100) == 100
+    def test_code_solution_and_hidden_tests_removed_visible_kept(self):
+        c = {"solution_code": "print(42)", "starter_code": "# go", "test_cases": [
+            {"id": "t1", "hidden": False, "stdin": "1", "expectedStdout": "2"},
+            {"id": "t2", "hidden": True, "stdin": "3", "expectedStdout": "9"},
+        ]}
+        s = _strip_answer_key(c)
+        assert "solution_code" not in s
+        assert s["starter_code"] == "# go"
+        assert s["test_cases"][0]["expectedStdout"] == "2"
+        assert "expectedStdout" not in s["test_cases"][1]
+        assert "stdin" not in s["test_cases"][1]
 
-    def test_integer_zero_is_falsy(self):
-        """answer=0 -> bool(0) False -> mismatches True key -> 0."""
-        contents = self._single_true_option()
-        sub = _submission(_sub("q1", "a", 0))
-        assert _grade_quiz_task(contents, sub, 100) == 0
+    def test_non_dict_is_returned_as_is(self):
+        assert _strip_answer_key(None) is None
+        assert _strip_answer_key("x") == "x"
 
-    def test_none_answer_is_falsy(self):
-        """answer=None -> bool(None) False -> mismatches True key -> 0."""
-        contents = self._single_true_option()
-        sub = _submission(_sub("q1", "a", None))
-        assert _grade_quiz_task(contents, sub, 100) == 0
+    # ----- reveal mode (keep_answer_keys=True): graded student may see which
+    # answers were right, but NEVER the CODE solution or hidden test I/O -----
 
-    def test_assigned_right_answer_truthy_non_bool_also_coerced(self):
-        """The KEY side is bool()'d too: assigned_right_answer=1 behaves like True.
-
-        Student checks the option (True) -> matches coerced-True key -> 100.
-        """
-        contents = {
-            "questions": [
-                {
-                    "questionUUID": "q1",
-                    "options": [{"optionUUID": "a", "assigned_right_answer": 1}],
-                }
-            ]
+    def test_reveal_keeps_quiz_and_answer_keys(self):
+        c = {
+            "correct_answers": ["x"],
+            "correct_value": 9.8,
+            "questions": [{"questionUUID": "q1", "options": [
+                {"optionUUID": "a", "assigned_right_answer": True},
+            ], "blanks": [{"blankUUID": "b1", "correctAnswer": "42"}]}],
         }
-        sub = _submission(_sub("q1", "a", True))
-        assert _grade_quiz_task(contents, sub, 100) == 100
+        s = _strip_answer_key(c, keep_answer_keys=True)
+        assert s["correct_answers"] == ["x"]
+        assert s["correct_value"] == 9.8
+        assert s["questions"][0]["options"][0]["assigned_right_answer"] is True
+        assert s["questions"][0]["blanks"][0]["correctAnswer"] == "42"
 
-
-# --------------------------------------------------------------------------- #
-# Missing top-level keys
-# --------------------------------------------------------------------------- #
-class TestMissingTopLevelKeys:
-    def test_contents_missing_questions_key_returns_zero(self):
-        """No 'questions' key -> `or []` -> total_options 0 -> 0."""
-        assert _grade_quiz_task({}, _submission(_sub("q1", "a", True)), 100) == 0
-
-    def test_submission_missing_submissions_key_treats_all_unchecked(self):
-        """No 'submissions' key -> every option defaults to unchecked (False).
-
-        Key: a=True (unchecked -> wrong), b=False (unchecked -> correct).
-        1/2 -> 50.
-        """
-        contents = _contents(_question("q1", [("a", True), ("b", False)]))
-        assert _grade_quiz_task(contents, {}, 100) == 50
-
-    def test_questions_value_explicitly_none_returns_zero(self):
-        """questions=None -> `or []` -> 0 options -> 0."""
-        assert _grade_quiz_task({"questions": None}, {"submissions": None}, 100) == 0
-
-    def test_both_top_level_inputs_empty_dicts(self):
-        """Empty contents and submission_data -> 0 (no options)."""
-        assert _grade_quiz_task({}, {}, 100) == 0
+    def test_reveal_still_removes_solution_and_hidden_tests(self):
+        c = {"solution_code": "print(42)", "starter_code": "# go", "test_cases": [
+            {"id": "t1", "hidden": False, "stdin": "1", "expectedStdout": "2"},
+            {"id": "t2", "hidden": True, "stdin": "3", "expectedStdout": "9"},
+        ]}
+        s = _strip_answer_key(c, keep_answer_keys=True)
+        # Reference solution + hidden test I/O are removed even in reveal mode.
+        assert "solution_code" not in s
+        assert "expectedStdout" not in s["test_cases"][1]
+        assert "stdin" not in s["test_cases"][1]
+        # Visible test + starter code still available.
+        assert s["starter_code"] == "# go"
+        assert s["test_cases"][0]["expectedStdout"] == "2"

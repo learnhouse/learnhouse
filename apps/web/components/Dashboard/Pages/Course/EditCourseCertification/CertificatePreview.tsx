@@ -12,6 +12,9 @@ interface CertificatePreviewProps {
   certificateId?: string;
   awardedDate?: string;
   qrCodeLink?: string;
+  // The recipient's name. Optional so the admin editor preview (which has no
+  // learner) renders unchanged; only shown when a name is provided.
+  learnerName?: string;
 }
 
 const CertificatePreview: React.FC<CertificatePreviewProps> = ({
@@ -22,7 +25,8 @@ const CertificatePreview: React.FC<CertificatePreviewProps> = ({
   certificateInstructor,
   certificateId,
   awardedDate,
-  qrCodeLink
+  qrCodeLink,
+  learnerName
 }) => {
   const [qrCodeUrl, setQrCodeUrl] = useState<string>('');
   const org = useOrg() as any;
@@ -488,6 +492,14 @@ const CertificatePreview: React.FC<CertificatePreviewProps> = ({
             <h4 className={`font-bold text-sm sm:text-base ${theme.primary} mb-2 text-center`}>
               {certificationName || 'Certification Name'}
             </h4>
+            {learnerName && (
+              <div className="flex flex-col items-center mb-2">
+                <span className={`text-[10px] sm:text-xs ${theme.secondary} uppercase tracking-wider`}>Presented to</span>
+                <span className={`font-semibold text-sm sm:text-base ${theme.primary} text-center`}>
+                  {learnerName}
+                </span>
+              </div>
+            )}
             <p className={`text-xs sm:text-sm ${theme.secondary} text-center leading-relaxed max-w-xs sm:max-w-sm`}>
               {certificationDescription || 'Certification description will appear here...'}
             </p>

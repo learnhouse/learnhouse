@@ -1,4 +1,5 @@
 import { NodeViewContent, NodeViewWrapper } from '@tiptap/react'
+import { safeHref } from '@services/security/url'
 import React, { useState, useRef, useEffect, lazy, Suspense } from 'react'
 const Picker = lazy(() => import('@emoji-mart/react'))
 import { ArrowRight, ChevronDown, Link, AlignLeft, AlignCenter, AlignRight, Palette } from 'lucide-react'
@@ -100,7 +101,7 @@ const ButtonsExtension: React.FC = (props: any) => {
     <NodeViewWrapper className={`block-button ${getAlignmentClass()}`}>
       <div className='inline-block'>
         <button
-          onClick={isEditable ? undefined : () => window.open(link, '_blank')}
+          onClick={isEditable ? undefined : () => { const safe = safeHref(link); if (safe !== '#') window.open(safe, '_blank') }}
           className={twMerge(
             'flex items-center space-x-2 py-2 px-4 rounded-xl text-white transition-colors',
             getButtonColor(color),

@@ -13,7 +13,7 @@ from src.routers import stream
 from src.routers import api_tokens
 from src.routers import webhooks
 from src.routers.integrations import zapier as zapier_integration
-from src.routers.ai import ai, magicblocks, courseplanning, rag, images, quiz, assignment_gen, scenario
+from src.routers.ai import ai, magicblocks, courseplanning, rag, images, quiz, assignment_gen, scenario, audio
 from src.routers.boards import boards_playground
 from src.routers.orgs import ai_credits
 from src.routers.orgs import custom_domains
@@ -71,8 +71,16 @@ v1_router.include_router(
     usergroups.router,
     prefix="/usergroups",
     tags=["usergroups"],
+    # Admit API tokens (headless enrollment/usergroup management) while still
+    # rejecting anonymous callers — same pattern as /assignments. `usergroups`
+    # is already an allowed API-token resource type in the RBAC layer
+    # (rbac.py authorization_verify_api_token_permissions), and every handler
+    # authorizes through usergroups.rbac_check, which has an APITokenUser branch
+    # enforcing the token's usergroups rights + org boundary. The two handlers
+    # that authorize against a placeholder uuid (create, get-by-resource) get an
+    # explicit token org-boundary check in the service layer.
     dependencies=[
-        Depends(require_authenticated_user),
+        Depends(require_authenticated_user_or_api_token),
         Depends(require_plan_for_usergroups("standard", "User Groups")),
     ],
 )
@@ -269,6 +277,12 @@ v1_router.include_router(
     images.router,
     prefix="/ai",
     tags=["ai", "images"],
+    dependencies=[Depends(require_authenticated_user)]
+)
+v1_router.include_router(
+    audio.router,
+    prefix="/ai",
+    tags=["ai", "audio"],
     dependencies=[Depends(require_authenticated_user)]
 )
 v1_router.include_router(

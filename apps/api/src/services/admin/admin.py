@@ -36,6 +36,8 @@ from src.db.users import APITokenUser, User, UserRead
 from src.services.trail.trail import _build_trail_read
 from src.services.courses.certifications import (
     check_course_completion_and_create_certificate,
+    is_course_fully_completed,
+    sync_trailrun_status,
     create_certificate_user,
 )
 from src.services.email.utils import get_base_url_from_request
@@ -46,8 +48,11 @@ from src.security.auth import create_access_token, create_refresh_token
 from src.security.features_utils.plan_check import get_org_plan
 from src.security.features_utils.plans import plan_meets_requirement
 from src.security.features_utils.usage import (
+    _role_grants_dashboard_access,
+    check_admin_seat_limit,
     check_limits_with_usage,
     decrease_feature_usage,
+    enforce_admin_seat_limit_for_role_change,
     increase_feature_usage,
 )
 from src.security.security import security_hash_password
@@ -520,12 +525,21 @@ async def complete_activity(
             },
         )
 
-    # Check course completion
+    # Check course completion. The completion signal must come from actual
+    # completion (is_course_fully_completed), NOT from the certificate helper's
+    # return value — that is True only when it creates a *new* certificate row,
+    # so a course with no certification, an already-issued certificate, or an
+    # unpassed assignment would wrongly report course_completed=False and drop
+    # the COURSE_COMPLETED event. The cert helper is still called for its side
+    # effect (issue the certificate when eligible).
     course_completed = False
     if course.id:
-        course_completed = await check_course_completion_and_create_certificate(
+        await check_course_completion_and_create_certificate(
             request, user_id, course.id, db_session
         )
+        course_completed = await is_course_fully_completed(user_id, course.id, db_session)
+        # Keep the enrollment row's status aligned with real completion.
+        await sync_trailrun_status(user_id, course.id, db_session)
 
     if course_completed:
         await track(
@@ -575,6 +589,10 @@ async def uncomplete_activity(
     if step:
         await db_session.delete(step)
         await db_session.commit()
+        # Completion may have been lost — demote the enrollment so analytics
+        # stop counting it as completed.
+        if course.id:
+            await sync_trailrun_status(user_id, course.id, db_session)
 
     return {
         "activity_uuid": activity_uuid,
@@ -680,10 +698,17 @@ async def complete_course(
 
     await db_session.commit()
 
-    # Check course completion and create certificate
-    course_completed = await check_course_completion_and_create_certificate(
+    # Create the certificate if eligible. Its return value means "a NEW
+    # certificate row was created", so it maps to certificate_awarded — NOT to
+    # course_completed. The completion signal must come from actual completion,
+    # otherwise a course with no certification (or an already-issued one) would
+    # report course_completed=False and drop the COURSE_COMPLETED event.
+    certificate_awarded = await check_course_completion_and_create_certificate(
         request, user_id, course.id, db_session
     )
+    course_completed = await is_course_fully_completed(user_id, course.id, db_session)
+    # Keep the enrollment row's status aligned with real completion.
+    await sync_trailrun_status(user_id, course.id, db_session)
 
     if course_completed:
         await track(
@@ -700,7 +725,7 @@ async def complete_course(
         "already_completed_count": len(already_completed),
         "total_activities": len(activity_ids),
         "course_completed": course_completed,
-        "certificate_awarded": course_completed,
+        "certificate_awarded": certificate_awarded,
     }
 
 
@@ -1002,6 +1027,11 @@ async def provision_user(
     await _check_token_can_assign_role(token_user, role, db_session)
 
     await check_limits_with_usage("members", token_user.org_id, db_session)
+
+    # Provisioning always creates a NET-NEW membership, so a dashboard-access
+    # role consumes a fresh admin seat — enforce the plan's seat cap.
+    if _role_grants_dashboard_access(role):
+        await check_admin_seat_limit(token_user.org_id, db_session)
 
     now = datetime.now()
 
@@ -1855,6 +1885,26 @@ async def update_user_profile(
         if existing:
             raise HTTPException(status_code=400, detail="Username already in use")
 
+    # Reject phishing links in display-name fields here too — the admin API
+    # token path must not be a way around the signup/profile-update guard.
+    from src.services.security.profile_validation import validate_profile_fields
+
+    name_check = validate_profile_fields({
+        "username": updates.get("username"),
+        "first_name": updates.get("first_name"),
+        "last_name": updates.get("last_name"),
+    })
+    if not name_check.is_valid:
+        raise HTTPException(
+            status_code=400,
+            detail={
+                "code": "PROFILE_FIELD_INVALID",
+                "message": "Display name fields may not contain URLs or links",
+                "errors": name_check.errors,
+                "invalid_fields": name_check.invalid_fields,
+            },
+        )
+
     for field, value in updates.items():
         if field in _USER_UPDATABLE_FIELDS and value is not None:
             setattr(user, field, value)
@@ -1917,6 +1967,12 @@ async def change_user_role(
                 detail="Cannot demote the last admin of the organization",
             )
 
+    # Enforce the admin-seat cap when promoting into a dashboard-access role
+    # (no-op for demotions and admin->admin swaps).
+    await enforce_admin_seat_limit_for_role_change(
+        token_user.org_id, user_id, role, db_session
+    )
+
     membership.role_id = new_role_id
     membership.update_date = str(datetime.now())
     db_session.add(membership)
@@ -1950,6 +2006,10 @@ async def create_usergroup(
     db_session: AsyncSession,
 ) -> UserGroupRead:
     """Create a user group / cohort in the token's org."""
+
+    # Enforce the usergroups plan limit on the API path too (it is disabled on
+    # free and count-limited on higher tiers); previously this bypassed it.
+    await check_limits_with_usage("usergroups", token_user.org_id, db_session)
 
     now = datetime.now()
     group = UserGroup(

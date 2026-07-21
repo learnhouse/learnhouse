@@ -49,6 +49,41 @@ const nextConfig = {
           },
         ],
       },
+      {
+        // SCORM packages are served same-origin through /api/scorm and rendered
+        // inside an iframe by the player. The global frame-ancestors 'none' /
+        // X-Frame-Options: DENY above blocks even same-origin framing, so the
+        // player shows "refused to connect". Allow the content to be framed by
+        // its own origin (the player also needs same-origin contentDocument
+        // access to inject the SCORM API and styles).
+        source: '/api/scorm/:path*',
+        headers: [
+          { key: 'X-Frame-Options', value: 'SAMEORIGIN' },
+          { key: 'Content-Security-Policy', value: "frame-ancestors 'self'" },
+        ],
+      },
+      {
+        // Resource activities embed an existing Library resource (board, course,
+        // podcast, community, playground) inside a same-origin iframe in the
+        // activity player. The global frame-ancestors 'none' / X-Frame-Options:
+        // DENY above blocks even same-origin framing, so allow these resource
+        // routes to be framed by their own origin. Both the public path form
+        // (subdomain tenancy: /course/...) and the internal /orgs/:slug/... form
+        // are covered so the override applies regardless of how the tenancy
+        // proxy rewrites the path before it reaches Next.
+        source: '/:kind(board|course|podcast|community|playground)/:path*',
+        headers: [
+          { key: 'X-Frame-Options', value: 'SAMEORIGIN' },
+          { key: 'Content-Security-Policy', value: "frame-ancestors 'self'" },
+        ],
+      },
+      {
+        source: '/orgs/:orgslug/:kind(board|course|podcast|community|playground)/:path*',
+        headers: [
+          { key: 'X-Frame-Options', value: 'SAMEORIGIN' },
+          { key: 'Content-Security-Policy', value: "frame-ancestors 'self'" },
+        ],
+      },
     ]
   },
   reactStrictMode: false,

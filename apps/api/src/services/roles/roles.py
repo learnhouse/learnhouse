@@ -384,6 +384,16 @@ async def update_role(
     # org_id is guaranteed non-None here because TYPE_GLOBAL roles are blocked above.
     await require_org_role_permission(resolve_acting_user_id(current_user), role.org_id, db_session, "roles", "action_update")
 
+    # Capture the role's admin-seat status BEFORE applying the update, so we can
+    # detect a false->true flip of dashboard.action_access (which would convert
+    # every current holder of this role into an admin seat at once).
+    from src.security.features_utils.usage import (
+        _role_grants_dashboard_access,
+        enforce_admin_seat_limit_for_role_rights_change,
+    )
+    _seat_role_id = role.id
+    _was_dashboard_role = _role_grants_dashboard_access(role)
+
     # Complete the role object
     role.update_date = str(datetime.now())
 
@@ -502,6 +512,16 @@ async def update_role(
                             status_code=403,
                             detail=f"You cannot grant a role the '{perm_key}' permission for '{right_key}' as you don't have this permission yourself",
                         )
+
+    # Enforce the admin-seat cap if this update turns on dashboard access for a
+    # role members already hold (bulk promotion the per-assignment gate misses).
+    await enforce_admin_seat_limit_for_role_rights_change(
+        role.org_id,
+        _seat_role_id,
+        will_grant_dashboard=_role_grants_dashboard_access(role),
+        currently_grants_dashboard=_was_dashboard_role,
+        db_session=db_session,
+    )
 
     db_session.add(role)
     await db_session.commit()

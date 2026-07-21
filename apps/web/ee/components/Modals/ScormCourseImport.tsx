@@ -9,6 +9,11 @@ import { Upload, CheckCircle2, ChevronRight, AlertCircle, FileArchive, ArrowLeft
 import { getAPIUrl } from '@services/config/config'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
 import { constructAcceptValue } from '@/lib/constants'
+import {
+  uploadScormPackage,
+  formatMB,
+  type ScormUploadProgress,
+} from '../../services/scorm/upload'
 import { revalidateTags } from '@services/utils/ts/requests'
 import toast from 'react-hot-toast'
 import { useRouter } from 'next/navigation'
@@ -56,6 +61,7 @@ function ScormCourseImport({ orgId, orgslug, closeModal }: ScormCourseImportProp
   // Upload step state
   const [scormFile, setScormFile] = useState<File | null>(null)
   const [isAnalyzing, setIsAnalyzing] = useState(false)
+  const [uploadProgress, setUploadProgress] = useState<ScormUploadProgress | null>(null)
   const [uploadError, setUploadError] = useState<string | null>(null)
   const [isDragging, setIsDragging] = useState(false)
 
@@ -106,29 +112,16 @@ function ScormCourseImport({ orgId, orgslug, closeModal }: ScormCourseImportProp
     if (!scormFile || !orgId) return
 
     setIsAnalyzing(true)
+    setUploadProgress(null)
     setUploadError(null)
 
     try {
-      const formData = new FormData()
-      formData.append('scorm_file', scormFile)
-
-      const response = await fetch(
+      const result = await uploadScormPackage<ScormAnalysisResponse>(
         `${getAPIUrl()}scorm/analyze-for-import/${orgId}`,
-        {
-          method: 'POST',
-          headers: {
-            Authorization: `Bearer ${access_token}`,
-          },
-          body: formData,
-        }
+        scormFile,
+        access_token,
+        setUploadProgress
       )
-
-      if (!response.ok) {
-        const error = await response.json()
-        throw new Error(error.detail || 'Failed to analyze SCORM package')
-      }
-
-      const result: ScormAnalysisResponse = await response.json()
       setAnalysisResult(result)
 
       // Set default course name from package title
@@ -150,6 +143,7 @@ function ScormCourseImport({ orgId, orgslug, closeModal }: ScormCourseImportProp
       setUploadError(error.message || 'Failed to analyze SCORM package')
     } finally {
       setIsAnalyzing(false)
+      setUploadProgress(null)
     }
   }
 
@@ -327,6 +321,35 @@ function ScormCourseImport({ orgId, orgslug, closeModal }: ScormCourseImportProp
               </div>
             )}
 
+            {/* Upload Progress */}
+            {isAnalyzing && (
+              <div className="space-y-2 bg-gray-50 p-4 rounded-lg border border-gray-100">
+                <div className="flex justify-between text-sm text-gray-600">
+                  <span className="font-medium">
+                    {uploadProgress && uploadProgress.percent < 100
+                      ? 'Uploading package…'
+                      : 'Analyzing package…'}
+                  </span>
+                  {uploadProgress && uploadProgress.percent < 100 && (
+                    <span>
+                      {formatMB(uploadProgress.loadedBytes)} / {formatMB(uploadProgress.totalBytes)} MB
+                      {' '}({uploadProgress.percent}%)
+                    </span>
+                  )}
+                </div>
+                {uploadProgress && uploadProgress.percent < 100 ? (
+                  <div className="h-2 w-full bg-gray-200 rounded-full overflow-hidden">
+                    <div
+                      className="h-full bg-black rounded-full transition-all duration-200"
+                      style={{ width: `${uploadProgress.percent}%` }}
+                    />
+                  </div>
+                ) : (
+                  <BarLoader width="100%" color="#000000" cssOverride={{ borderRadius: 60 }} />
+                )}
+              </div>
+            )}
+
             {/* Info Box */}
             <div className="bg-blue-50 border border-blue-100 p-4 rounded-lg">
               <p className="text-sm text-blue-700">{t('courses.scorm.import_info')}</p>
@@ -340,9 +363,11 @@ function ScormCourseImport({ orgId, orgslug, closeModal }: ScormCourseImportProp
                 className="bg-black text-white hover:bg-gray-800 px-6 h-11"
               >
                 {isAnalyzing ? (
-                  <div className="flex items-center space-x-2">
-                    <BarLoader width={60} color="#ffffff" cssOverride={{ borderRadius: 60 }} />
-                  </div>
+                  <span>
+                    {uploadProgress && uploadProgress.percent < 100
+                      ? `Uploading ${uploadProgress.percent}%`
+                      : 'Analyzing…'}
+                  </span>
                 ) : (
                   <div className="flex items-center space-x-2">
                     <span>{t('courses.scorm.analyze_package')}</span>
@@ -463,12 +488,21 @@ function ScormCourseImport({ orgId, orgslug, closeModal }: ScormCourseImportProp
             </div>
           )}
 
+          {/* Import progress note */}
+          {isImporting && (
+            <div className="flex items-center space-x-2 text-sm text-gray-600 bg-gray-50 p-3 rounded-lg border border-gray-100">
+              <BarLoader width={40} color="#000000" cssOverride={{ borderRadius: 60 }} />
+              <span>Importing — copying content to storage, this can take a few minutes for large packages…</span>
+            </div>
+          )}
+
           {/* Actions */}
           <div className="flex justify-between items-center pt-2 border-t border-gray-100">
             <button
               type="button"
+              disabled={isImporting}
               onClick={resetToUpload}
-              className="flex items-center space-x-1 text-sm text-gray-500 hover:text-gray-700 transition-colors"
+              className="flex items-center space-x-1 text-sm text-gray-500 hover:text-gray-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <ArrowLeft size={16} />
               <span>{t('courses.scorm.upload_different')}</span>

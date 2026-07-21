@@ -77,6 +77,19 @@ class TestCheckShortAnswer:
         # Unbalanced bracket — must not raise, just fail to match
         assert _check_short_answer("anything", ["[unclosed"], "regex") is False
 
+    def test_catastrophic_backtracking_pattern_is_bounded_not_hang(self):
+        # ReDoS guard: a catastrophic pattern against a crafted answer must
+        # return quickly (timeout -> no match), not pin the CPU / hang.
+        import time
+        start = time.monotonic()
+        result = _check_short_answer("a" * 40 + "!", ["(a+)+$"], "regex")
+        elapsed = time.monotonic() - start
+        assert result is False
+        assert elapsed < 2.0  # bounded by the wall-clock timeout, not exponential
+
+    def test_over_long_regex_input_is_skipped(self):
+        assert _check_short_answer("x" * 5000, [".*"], "regex") is False
+
     def test_any_accepted_answer_can_match(self):
         accepted = ["Paris", "Lyon", "Marseille"]
         assert _check_short_answer("Lyon", accepted, "case_insensitive") is True
@@ -110,6 +123,17 @@ class TestCheckNumberAnswer:
 
     def test_comma_decimal_is_accepted(self):
         assert _check_number_answer("41,5", 42, 0.5) is True
+
+    def test_thousands_separator_is_parsed_correctly(self):
+        # "1,000" is 1000 (thousands), not 1.0
+        assert _check_number_answer("1,000", 1000, 0) is True
+        assert _check_number_answer("1,000", 1.0, 0.01) is False
+        # multi-group
+        assert _check_number_answer("1,000,000", 1000000, 0) is True
+        # mixed thousands + decimal
+        assert _check_number_answer("1,000.50", 1000.5, 0) is True
+        # single-comma European decimal still works
+        assert _check_number_answer("3,14", 3.14, 0.001) is True
 
     def test_blank_and_non_numeric_fail(self):
         assert _check_number_answer("", 42, 0.5) is False
@@ -156,20 +180,21 @@ class TestGradeQuizTask:
         sub = _quiz_submission({"a": True, "b": False})
         assert _grade_quiz_task(_quiz_contents(), sub, 100) == 100
 
-    def test_partial_earns_proportional(self):
-        # 'a' correct, 'b' wrongly checked → 1 of 2 options correct → 50
+    def test_wrong_option_makes_the_whole_question_wrong(self):
+        # Per-question: 'a' correct but 'b' wrongly checked → the question's
+        # option set no longer matches the key → question wrong → 0 (not 50).
         sub = _quiz_submission({"a": True, "b": True})
-        assert _grade_quiz_task(_quiz_contents(), sub, 100) == 50
+        assert _grade_quiz_task(_quiz_contents(), sub, 100) == 0
 
     def test_all_wrong_earns_zero(self):
-        # 'a' unchecked (wrong), 'b' checked (wrong) → 0 of 2 correct
+        # 'a' unchecked (wrong), 'b' checked (wrong) → question wrong
         sub = _quiz_submission({"a": False, "b": True})
         assert _grade_quiz_task(_quiz_contents(), sub, 100) == 0
 
-    def test_missing_submission_treated_as_unchecked(self):
-        # No submissions at all: 'a' should be checked but isn't (wrong),
-        # 'b' should be unchecked and is (correct) → 1 of 2 → 50
-        assert _grade_quiz_task(_quiz_contents(), {"submissions": []}, 100) == 50
+    def test_missing_submission_scores_zero(self):
+        # No submissions: the correct option 'a' is not selected → the single
+        # question is unanswered → wrong → 0 (per-question; no phantom credit).
+        assert _grade_quiz_task(_quiz_contents(), {"submissions": []}, 100) == 0
 
     def test_zero_options_returns_zero(self):
         assert _grade_quiz_task({"questions": []}, {"submissions": []}, 100) == 0

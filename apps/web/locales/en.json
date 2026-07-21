@@ -464,6 +464,9 @@
     "image": "Image",
     "upload_image": "Upload Image",
     "choose_from_gallery": "Choose from Gallery",
+    "paste_from_clipboard": "Paste from Clipboard",
+    "no_image_in_clipboard": "No image found in clipboard",
+    "clipboard_read_error": "Failed to read from clipboard",
     "enter_to_add": "Enter to add...",
     "select_visibility": "Select visibility",
     "and_x_more": "& {{count}} more",
@@ -2599,7 +2602,8 @@
             "dynamic_page": "Dynamic Page",
             "scorm": "Scorm",
             "markdown": "Markdown",
-            "embed": "Embed"
+            "embed": "Embed",
+            "resource": "Resource"
           },
           "toasts": {
             "deleting": "Deleting activity...",
@@ -4258,7 +4262,8 @@
           },
           "toasts": {
             "creating": "Creating assignment...",
-            "success": "Assignment created successfully"
+            "success": "Assignment created successfully",
+            "error": "Failed to create assignment"
           }
         }
       }

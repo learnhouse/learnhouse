@@ -1,6 +1,7 @@
 'use client'
 
 import React, { useState, useEffect } from 'react'
+import { safeExternalUrl } from '@services/security/url'
 import { useOrg } from '@components/Contexts/OrgContext'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
 import { toast } from 'react-hot-toast'
@@ -205,8 +206,9 @@ const OrgEditSSO: React.FC = () => {
       const returnUrl = window.location.href
       const setupUrl = await getSetupUrl(org.id, returnUrl, access_token)
 
-      if (setupUrl) {
-        window.open(setupUrl, '_blank')
+      const safeSetupUrl = safeExternalUrl(setupUrl)
+      if (safeSetupUrl) {
+        window.open(safeSetupUrl, '_blank')
       } else {
         toast.error(t('dashboard.organization.sso.setup_not_available'))
       }

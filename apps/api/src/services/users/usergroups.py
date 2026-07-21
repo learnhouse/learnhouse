@@ -24,6 +24,7 @@ from src.db.organizations import Organization
 from src.db.usergroups import UserGroup, UserGroupCreate, UserGroupRead, UserGroupUpdate
 from src.db.users import AnonymousUser, APITokenUser, InternalUser, PublicUser, User, UserRead
 from src.services.webhooks.dispatch import dispatch_webhooks
+from src.services.security.rate_limiting import enforce_batch_size_limit
 
 
 async def _validate_resource_exists_and_belongs_to_org(
@@ -111,13 +112,27 @@ async def _validate_resource_exists_and_belongs_to_org(
 async def create_usergroup(
     request: Request,
     db_session: AsyncSession,
-    current_user: PublicUser | AnonymousUser,
+    current_user: PublicUser | AnonymousUser | APITokenUser,
     usergroup_create: UserGroupCreate,
 ) -> UserGroupRead:
 
     from src.security.auth import resolve_acting_user_id
 
     usergroup = UserGroup.model_validate(usergroup_create)
+
+    # SECURITY: enforce the API-token org boundary. The target org here comes
+    # from the request body (usergroup_create.org_id), which neither the global
+    # path/query org-boundary net (auth._verify_api_token_org_boundary) nor the
+    # RBAC element-org lookup can see — the RBAC check below authorizes against
+    # the placeholder "usergroup_X", whose org resolves to None so the boundary
+    # check is skipped. Without this, a token whose creator also belongs to
+    # another org could create a usergroup in that other org. A token is bound
+    # to exactly one org, so refuse any mismatch.
+    if isinstance(current_user, APITokenUser) and usergroup_create.org_id != current_user.org_id:
+        raise HTTPException(
+            status_code=403,
+            detail="API token cannot create resources outside its organization",
+        )
 
     await require_org_membership(
         resolve_acting_user_id(current_user), usergroup_create.org_id, db_session
@@ -142,8 +157,9 @@ async def create_usergroup(
             detail="Organization does not exist",
         )
 
-    # Usage check
-    await check_limits_with_usage("courses", org.id, db_session)
+    # Usage check — this is the usergroups limit, not courses. (Previously
+    # keyed "courses", so the usergroups cap was never actually enforced.)
+    await check_limits_with_usage("usergroups", org.id, db_session)
 
     # Complete the object
     usergroup.usergroup_uuid = f"usergroup_{uuid4()}"
@@ -273,7 +289,7 @@ async def read_usergroups_by_org_id(
 async def get_usergroups_by_resource(
     request: Request,
     db_session: AsyncSession,
-    current_user: PublicUser | AnonymousUser,
+    current_user: PublicUser | AnonymousUser | APITokenUser,
     resource_uuid: str,
 ) -> list[UserGroupRead]:
 
@@ -299,6 +315,19 @@ async def get_usergroups_by_resource(
     from src.security.auth import resolve_acting_user_id
 
     target_org_id = usergroup_resources[0].org_id
+
+    # SECURITY: enforce the API-token org boundary. The org is derived from the
+    # resource here, not from an org_id path/query param, so the global boundary
+    # net cannot see it, and the RBAC check above ran against the placeholder
+    # "usergroup_X" (org None → boundary skipped). Refuse cross-org reads so a
+    # token cannot enumerate another org's usergroups via a resource its creator
+    # happens to be able to reach.
+    if isinstance(current_user, APITokenUser) and target_org_id != current_user.org_id:
+        raise HTTPException(
+            status_code=403,
+            detail="API token cannot access resources outside its organization",
+        )
+
     await require_org_membership(
         resolve_acting_user_id(current_user), target_org_id, db_session
     )
@@ -473,6 +502,8 @@ async def add_users_to_usergroup(
             detail="user_ids must be a comma-separated list of integers",
         )
 
+    enforce_batch_size_limit(len(user_ids_array), "users")
+
     for user_id in user_ids_array:
         statement = select(User).where(User.id == user_id)
         user = (await db_session.execute(statement)).scalars().first()
@@ -567,6 +598,8 @@ async def remove_users_from_usergroup(
             detail="user_ids must be a comma-separated list of integers",
         )
 
+    enforce_batch_size_limit(len(user_ids_array), "users")
+
     for user_id in user_ids_array:
         statement = select(UserGroupUser).where(
             UserGroupUser.user_id == user_id, UserGroupUser.usergroup_id == usergroup_id
@@ -610,7 +643,9 @@ async def add_resources_to_usergroup(
         org_id=usergroup.org_id,
     )
 
-    resources_uuids_array = resources_uuids.split(",")
+    resources_uuids_array = [r for r in resources_uuids.split(",") if r.strip() != ""]
+
+    enforce_batch_size_limit(len(resources_uuids_array), "resources")
 
     for resource_uuid in resources_uuids_array:
         # Check if a link between UserGroup and Resource already exists
@@ -681,7 +716,9 @@ async def remove_resources_from_usergroup(
         org_id=usergroup.org_id,
     )
 
-    resources_uuids_array = resources_uuids.split(",")
+    resources_uuids_array = [r for r in resources_uuids.split(",") if r.strip() != ""]
+
+    enforce_batch_size_limit(len(resources_uuids_array), "resources")
 
     for resource_uuid in resources_uuids_array:
         statement = select(UserGroupResource).where(

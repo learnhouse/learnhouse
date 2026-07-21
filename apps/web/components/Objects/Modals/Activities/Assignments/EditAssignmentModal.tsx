@@ -28,6 +28,7 @@ import {
     AlertTriangle,
     Eye,
     RotateCcw,
+    Target,
     Infinity as InfinityIcon,
 } from 'lucide-react';
 
@@ -44,6 +45,7 @@ interface Assignment {
     show_correct_answers?: boolean;
     allow_retries?: boolean;
     max_retries?: number;
+    pass_threshold_percentage?: number | null;
     assignment_tasks?: any[];
 }
 
@@ -151,6 +153,12 @@ const EditAssignmentForm: React.FC<EditAssignmentFormProps> = ({
             // numeric and the backend doesn't have to coerce strings.
             max_retries:
                 typeof assignment.max_retries === 'number' ? assignment.max_retries : 0,
+            // Empty string = "use the grading-type default"; a number overrides
+            // the passing line for this assignment.
+            pass_threshold_percentage:
+                typeof assignment.pass_threshold_percentage === 'number'
+                    ? assignment.pass_threshold_percentage
+                    : '',
         },
         enableReinitialize: true,
         onSubmit: async (values, { setSubmitting }) => {
@@ -164,6 +172,12 @@ const EditAssignmentForm: React.FC<EditAssignmentFormProps> = ({
             if (!payload.allow_retries) {
                 payload.max_retries = 0;
             }
+            // Blank -> null (fall back to the default); otherwise clamp to 0-100.
+            payload.pass_threshold_percentage =
+                values.pass_threshold_percentage === '' ||
+                values.pass_threshold_percentage === null
+                    ? null
+                    : Math.max(0, Math.min(100, Number(values.pass_threshold_percentage)));
             const toast_loading = toast.loading(t('dashboard.assignments.modals.edit.toasts.updating'));
             try {
                 const res = await updateAssignment(payload, assignment.assignment_uuid, accessToken);
@@ -174,7 +188,7 @@ const EditAssignmentForm: React.FC<EditAssignmentFormProps> = ({
                 } else {
                     toast.error(t('dashboard.assignments.modals.edit.toasts.error'));
                 }
-            } catch (error) {
+            } catch (_error) {
                 toast.error(t('dashboard.assignments.modals.edit.toasts.error_detail'));
             } finally {
                 toast.dismiss(toast_loading);
@@ -336,6 +350,13 @@ const EditAssignmentForm: React.FC<EditAssignmentFormProps> = ({
                         helperUnlimited={t('dashboard.assignments.modals.edit.form.max_retries_unlimited')}
                         helperBounded={t('dashboard.assignments.modals.edit.form.max_retries_bounded')}
                     />
+                    <PassThresholdRow
+                        value={formik.values.pass_threshold_percentage}
+                        onChange={(v) => formik.setFieldValue('pass_threshold_percentage', v, true)}
+                        label={t('dashboard.assignments.modals.edit.form.pass_threshold_label', { defaultValue: 'Passing threshold' })}
+                        description={t('dashboard.assignments.modals.edit.form.pass_threshold_description', { defaultValue: 'Minimum score to pass. Leave blank to use the default (50%, or 60% for letter grades).' })}
+                        placeholder={t('dashboard.assignments.modals.edit.form.pass_threshold_placeholder', { defaultValue: 'Auto' })}
+                    />
                 </div>
             </div>
 
@@ -402,7 +423,7 @@ function ToggleRow({
     description: string;
     checked: boolean;
     disabled?: boolean;
-    onChange: (next: boolean) => void;
+    onChange: (_next: boolean) => void;
     warning?: boolean;
 }) {
     return (
@@ -459,8 +480,8 @@ function RetryRow({
 }: {
     allowRetries: boolean;
     maxRetries: number;
-    onAllowChange: (next: boolean) => void;
-    onMaxChange: (next: number) => void;
+    onAllowChange: (_next: boolean) => void;
+    onMaxChange: (_next: number) => void;
     labelAllow: string;
     descriptionAllow: string;
     labelMax: string;
@@ -551,6 +572,54 @@ function RetryRow({
                     </div>
                 </div>
             )}
+        </div>
+    );
+}
+
+function PassThresholdRow({
+    value,
+    onChange,
+    label,
+    description,
+    placeholder,
+}: {
+    value: number | string | null;
+    onChange: (_v: number | '') => void;
+    label: string;
+    description: string;
+    placeholder: string;
+}) {
+    return (
+        <div className="rounded-lg border border-gray-200 nice-shadow overflow-hidden">
+            <div className="flex items-center justify-between gap-3 px-3 py-2.5">
+                <div className="flex items-start gap-2 min-w-0">
+                    <Target size={16} className="text-emerald-500 mt-0.5 flex-none" />
+                    <div className="flex flex-col min-w-0">
+                        <p className="text-[11px] font-semibold text-gray-700">{label}</p>
+                        <p className="text-[10px] text-gray-500 leading-snug mt-0.5">{description}</p>
+                    </div>
+                </div>
+                <div className="flex-none flex items-center gap-1.5">
+                    <input
+                        type="number"
+                        min={0}
+                        max={100}
+                        placeholder={placeholder}
+                        value={value === null ? '' : value}
+                        onChange={(e) => {
+                            const raw = e.target.value;
+                            if (raw === '') {
+                                onChange('');
+                                return;
+                            }
+                            const parsed = parseInt(raw, 10);
+                            onChange(isNaN(parsed) ? '' : Math.max(0, Math.min(100, parsed)));
+                        }}
+                        className="w-16 h-7 text-center text-sm font-bold text-gray-900 bg-white border border-gray-200 rounded-md outline-none focus:ring-1 focus:ring-gray-300"
+                    />
+                    <span className="text-xs font-semibold text-gray-400">%</span>
+                </div>
+            </div>
         </div>
     );
 }

@@ -1,5 +1,6 @@
 'use client'
 import React, { useState } from 'react'
+import { safeHref } from '@services/security/url'
 import { useAnalyticsPipe } from './useAnalyticsDashboard'
 import { useOrg } from '@components/Contexts/OrgContext'
 import { getCourseThumbnailMediaDirectory } from '@services/media/media'
@@ -328,14 +329,14 @@ export default function CoreWidgetsRow({ days = '30' }: { days?: string }) {
               return (
                 <Link
                   key={i}
-                  href={href}
+                  href={safeHref(href)}
                   className="grid grid-cols-[1fr_80px_80px_80px_100px] gap-2 items-center px-3 py-2.5 rounded-lg hover:bg-gray-50 transition-colors group"
                 >
                   <div className="flex items-center gap-3 min-w-0">
                     <div className="w-9 h-9 rounded-lg bg-gray-100 flex-shrink-0 overflow-hidden flex items-center justify-center">
                       {thumbnail ? (
                         <img
-                          src={thumbnail}
+                          src={safeHref(thumbnail)}
                           alt=""
                           className="w-full h-full object-cover"
                         />
@@ -473,12 +474,12 @@ function CourseRow({ row, org }: { row: any; org: any }) {
 
   return (
     <Link
-      href={href}
+      href={safeHref(href)}
       className="flex items-center gap-3 p-2 -mx-1 rounded-lg hover:bg-gray-50 transition-colors group cursor-pointer"
     >
       <div className="w-10 h-10 rounded-lg bg-gray-100 flex-shrink-0 overflow-hidden flex items-center justify-center">
         {thumbnail ? (
-          <img src={thumbnail} alt="" className="w-full h-full object-cover" />
+          <img src={safeHref(thumbnail)} alt="" className="w-full h-full object-cover" />
         ) : (
           <BookOpen size={18} weight="duotone" className="text-gray-300" />
         )}

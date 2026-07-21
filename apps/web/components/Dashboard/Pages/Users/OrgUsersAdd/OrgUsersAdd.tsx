@@ -29,6 +29,7 @@ import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { queryKeys } from '@/lib/query/keys'
 import { useTranslation } from 'react-i18next'
 import { useLHAnalytics, AnalyticsEvent } from '@services/analytics'
+import { useUpgradeModal } from '@components/Dashboard/Shared/PlanRestricted/UpgradeModalContext'
 
 const ITEMS_PER_PAGE = 10
 
@@ -60,6 +61,8 @@ function OrgUsersAdd() {
   const [sendSummary, setSendSummary] = useState<InviteSummary | null>(null)
   const [searchValue, setSearchValue] = useState('')
   const [page, setPage] = useState(1)
+  // A free org that hits its member limit gets the shared upgrade paywall.
+  const { handlePlanLimit } = useUpgradeModal()
   const { track } = useLHAnalytics('dashboard')
 
   const { data: invites } = useQuery({
@@ -128,10 +131,14 @@ function OrgUsersAdd() {
           toast.success(t('dashboard.users.invite_members.toasts.success'), { id: toastId })
         }
       } else {
-        toast.error(
-          getErrorMessage(res.data?.detail, t('dashboard.users.invite_members.toasts.error')),
-          { id: toastId }
-        )
+        // Free org hit its member limit → contextual upgrade paywall.
+        toast.dismiss(toastId)
+        if (!handlePlanLimit(res, { source: 'member_invite', feature: 'members', requiredPlan: 'standard' })) {
+          toast.error(
+            getErrorMessage(res.data?.detail, t('dashboard.users.invite_members.toasts.error')),
+            { id: toastId }
+          )
+        }
       }
     } catch (err) {
       toast.error(getErrorMessage((err as any)?.data?.detail, 'Failed to send invites'), {
@@ -484,6 +491,7 @@ function OrgUsersAdd() {
           </div>
         )}
       </div>
+
     </>
   )
 }

@@ -515,3 +515,83 @@ class TestBuildTasksBreakdown:
         assert rows[0]["grade"] == 0
         assert rows[0]["submitted"] is True  # present in map even with None grade
         assert rows[0]["percentage"] == 0.0
+
+
+class TestConfigurablePassThreshold:
+    """compute_assignment_grade pass_threshold_percentage override."""
+
+    def test_none_threshold_preserves_numeric_default_50(self):
+        # 60% passes under the default 50 line for NUMERIC/PERCENTAGE/PASS_FAIL.
+        r = compute_assignment_grade(60, 100, GradingTypeEnum.PERCENTAGE)
+        assert r["passing_threshold"] == 50.0
+        assert r["passed"] is True
+
+    def test_none_threshold_preserves_letter_default_60(self):
+        # 55% fails under the default 60 line for ALPHABET/GPA_SCALE.
+        r = compute_assignment_grade(55, 100, GradingTypeEnum.ALPHABET)
+        assert r["passing_threshold"] == 60.0
+        assert r["passed"] is False
+
+    def test_configured_threshold_fails_77_percent(self):
+        # The reported bug: 77% must NOT pass when the teacher set 80%.
+        r = compute_assignment_grade(
+            77, 100, GradingTypeEnum.PERCENTAGE, pass_threshold_percentage=80
+        )
+        assert r["passing_threshold"] == 80.0
+        assert r["passed"] is False
+
+    def test_configured_threshold_passes_at_or_above(self):
+        r = compute_assignment_grade(
+            80, 100, GradingTypeEnum.PERCENTAGE, pass_threshold_percentage=80
+        )
+        assert r["passed"] is True
+
+    def test_configured_threshold_pass_fail_display_honors_override(self):
+        r = compute_assignment_grade(
+            77, 100, GradingTypeEnum.PASS_FAIL, pass_threshold_percentage=80
+        )
+        assert r["display_grade"] == "Fail"
+
+    def test_out_of_range_threshold_clamps(self):
+        high = compute_assignment_grade(
+            50, 100, GradingTypeEnum.NUMERIC, pass_threshold_percentage=150
+        )
+        assert high["passing_threshold"] == 100.0
+        low = compute_assignment_grade(
+            0, 100, GradingTypeEnum.NUMERIC, pass_threshold_percentage=-10
+        )
+        assert low["passing_threshold"] == 0.0
+        assert low["passed"] is True
+
+
+class TestDisplayMatchesPassedWithThreshold:
+    """display_grade must show the failing symbol IFF not passed (letter/GPA),
+    so a custom threshold can't show a passing-looking letter to a failing
+    student or an F to a passing one."""
+
+    def test_alphabet_failing_below_custom_threshold_shows_F(self):
+        r = compute_assignment_grade(75, 100, GradingTypeEnum.ALPHABET, pass_threshold_percentage=80)
+        assert r["passed"] is False
+        assert r["display_grade"] == "F"
+
+    def test_alphabet_passing_low_threshold_not_shown_as_F(self):
+        # 58% passes a 55 threshold but the raw letter for 58% is F -> lift to D.
+        r = compute_assignment_grade(58, 100, GradingTypeEnum.ALPHABET, pass_threshold_percentage=55)
+        assert r["passed"] is True
+        assert r["display_grade"] != "F"
+        assert r["display_grade"] == "D"
+
+    def test_gpa_passing_low_threshold_not_shown_as_zero(self):
+        r = compute_assignment_grade(58, 100, GradingTypeEnum.GPA_SCALE, pass_threshold_percentage=55)
+        assert r["passed"] is True
+        assert r["display_grade"] != "0.0"
+
+    def test_gpa_failing_custom_threshold_shows_zero(self):
+        r = compute_assignment_grade(75, 100, GradingTypeEnum.GPA_SCALE, pass_threshold_percentage=80)
+        assert r["passed"] is False
+        assert r["display_grade"] == "0.0"
+
+    def test_default_threshold_alphabet_unchanged(self):
+        # No override: B for 85% still shows B (backward compat).
+        r = compute_assignment_grade(85, 100, GradingTypeEnum.ALPHABET)
+        assert r["display_grade"] == "B"

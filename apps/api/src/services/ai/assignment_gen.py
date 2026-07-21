@@ -167,6 +167,40 @@ def _to_generated_task(task: AITask) -> GeneratedTask:
     )
 
 
+def _has_valid_answer_key(task: GeneratedTask) -> bool:
+    """True when an auto-gradable task carries a usable answer key.
+
+    The model occasionally emits a QUIZ question with no correct option, or an
+    empty SHORT_ANSWER / FORM key. Persisting those produces a task that
+    auto-grades every learner incorrectly (a no-correct quiz question scores a
+    blank answer as full credit). Such tasks are dropped before the plan is
+    returned. Non-auto-graded types (FILE_SUBMISSION, etc.) are always kept.
+    """
+    c = task.contents or {}
+    t = task.assignment_type
+
+    if t == "QUIZ":
+        questions = c.get("questions") or []
+        # At least one question must have at least one correct option, otherwise
+        # nothing in the task can be meaningfully auto-scored.
+        return any(
+            any(bool(o.get("assigned_right_answer")) for o in (q.get("options") or []))
+            for q in questions
+            if isinstance(q, dict)
+        )
+    if t == "SHORT_ANSWER":
+        return any((a or "").strip() for a in (c.get("correct_answers") or []))
+    if t == "FORM":
+        questions = c.get("questions") or []
+        return any(
+            any((b.get("correctAnswer") or "").strip() for b in (q.get("blanks") or []))
+            for q in questions
+            if isinstance(q, dict)
+        )
+    # NUMBER_ANSWER always has a numeric key; other types aren't auto-graded.
+    return True
+
+
 async def generate_assignment_plan(
     *,
     org_id: int,
@@ -203,11 +237,22 @@ async def generate_assignment_plan(
         output_type=AIAssignmentPlan,
     )
 
-    # Keep only allowed types and convert to grader-valid contents.
+    # Keep only allowed types and convert to grader-valid contents, then drop
+    # any auto-gradable task the model left without a usable answer key so we
+    # never persist a task that would mis-grade every learner.
     allowed_set = set(allowed)
-    generated_tasks = [
-        _to_generated_task(t) for t in plan.tasks if t.assignment_type in allowed_set
-    ]
+    generated_tasks = []
+    for t in plan.tasks:
+        if t.assignment_type not in allowed_set:
+            continue
+        gen_task = _to_generated_task(t)
+        if not _has_valid_answer_key(gen_task):
+            logger.warning(
+                "Dropping AI-generated %s task with no usable answer key",
+                t.assignment_type,
+            )
+            continue
+        generated_tasks.append(gen_task)
 
     generated = GeneratedAssignmentPlan(
         title=plan.title,

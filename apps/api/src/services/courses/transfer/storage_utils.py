@@ -435,6 +435,33 @@ def upload_file_to_s3(s3_key: str, local_path: str) -> bool:
         return False
 
 
+def download_file_from_s3(s3_key: str, local_path: str) -> bool:
+    """
+    Download a file from S3 to a local path (streams to disk, no full-file
+    memory load). Creates parent directories as needed.
+    """
+    s3_client = get_storage_client()
+    if not s3_client:
+        return False
+
+    try:
+        parent_dir = os.path.dirname(local_path)
+        if parent_dir:
+            os.makedirs(parent_dir, exist_ok=True)
+        s3_client.download_file(
+            Bucket=get_s3_bucket_name(),
+            Key=s3_key,
+            Filename=local_path,
+        )
+        return True
+    except ClientError as e:
+        logger.error("S3 download error for %s: %s", s3_key, e)
+        return False
+    except Exception as e:
+        logger.error("Error downloading from S3: %s", e)
+        return False
+
+
 def delete_storage_directory(dir_path: str) -> bool:
     """
     Delete an entire directory from storage (S3 or local filesystem).
@@ -542,3 +569,38 @@ def upload_directory_to_s3(local_dir: str, s3_prefix: str) -> bool:
                 success = False
 
     return success
+
+
+def upload_directory_to_s3_parallel(local_dir: str, s3_prefix: str, max_workers: int = 8) -> bool:
+    """
+    Upload an entire directory to S3 with concurrent per-file uploads.
+
+    Same contract as upload_directory_to_s3, but uploads files in parallel —
+    for directories with many files (e.g. extracted SCORM packages) sequential
+    per-file round-trips dominate the wall clock. The cached boto3 client is
+    thread-safe.
+
+    Returns:
+        True if all uploads successful (or S3 not configured), False if any failed
+    """
+    if not is_s3_enabled():
+        return True  # Not an error, just not configured
+
+    if not os.path.exists(local_dir):
+        return True
+
+    uploads = []
+    for root, dirs, files in os.walk(local_dir):
+        for filename in files:
+            local_path = os.path.join(root, filename)
+            rel_path = os.path.relpath(local_path, local_dir)
+            uploads.append((f"{s3_prefix}/{rel_path}".replace('\\', '/'), local_path))
+
+    if not uploads:
+        return True
+
+    from concurrent.futures import ThreadPoolExecutor
+
+    with ThreadPoolExecutor(max_workers=max_workers) as pool:
+        results = pool.map(lambda args: upload_file_to_s3(*args), uploads)
+        return all(results)

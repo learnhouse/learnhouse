@@ -7,7 +7,7 @@ the other AI routers.
 
 import logging
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Request
 from sqlmodel import select
 from sqlmodel.ext.asyncio.session import AsyncSession
 
@@ -20,6 +20,7 @@ from src.db.users import PublicUser
 from src.security.auth import get_authenticated_user
 from src.security.features_utils.usage import refund_ai_credit, reserve_ai_credit
 from src.security.org_auth import is_org_member
+from src.security.rbac import check_resource_access, AccessAction
 from src.services.ai.generations import (
     delete_generation,
     list_generations,
@@ -54,15 +55,17 @@ async def _authorize_org(org_id: int, user: PublicUser, db_session: AsyncSession
 
 async def _load_activity_content(
     activity_uuid: str, org_id: int, db_session: AsyncSession
-) -> tuple[dict | None, int | None]:
-    """Return (content, activity_id) for an activity, verifying it is in the org."""
+) -> tuple[dict | None, int | None, str | None]:
+    """Return (content, activity_id, course_uuid) for an activity, verifying it
+    is in the org. course_uuid is used by the caller to enforce content-author
+    rights before the (possibly restricted) content grounds the prompt."""
     activity = (
         await db_session.execute(
             select(Activity).where(Activity.activity_uuid == activity_uuid)
         )
     ).scalars().first()
     if not activity:
-        return None, None
+        return None, None, None
     course = (
         await db_session.execute(
             select(Course).where(Course.id == activity.course_id)
@@ -70,8 +73,8 @@ async def _load_activity_content(
     ).scalars().first()
     if not course or course.org_id != org_id:
         # Don't leak cross-org content into the prompt.
-        return None, None
-    return (activity.content or None), activity.id
+        return None, None, None
+    return (activity.content or None), activity.id, course.course_uuid
 
 
 @router.post(
@@ -86,6 +89,7 @@ async def _load_activity_content(
 )
 async def api_generate_quiz(
     body: GenerateQuizRequest,
+    request: Request,
     current_user: PublicUser = Depends(get_authenticated_user),
     db_session: AsyncSession = Depends(get_db_session),
 ) -> GenerateQuizResponse:
@@ -98,9 +102,16 @@ async def api_generate_quiz(
     activity_content: dict | None = None
     activity_id: int | None = None
     if body.activity_uuid:
-        activity_content, activity_id = await _load_activity_content(
+        activity_content, activity_id, course_uuid = await _load_activity_content(
             body.activity_uuid, org.id, db_session
         )
+        # Grounding a quiz on an activity's (possibly restricted/draft) content
+        # is an authoring action — require content-author rights on that course,
+        # not bare org membership.
+        if course_uuid:
+            await check_resource_access(
+                request, db_session, current_user, course_uuid, AccessAction.UPDATE
+            )
 
     enforce_ai_rate_limit(current_user.id, org.id)
     await reserve_ai_credit(org.id, db_session, amount=QUIZ_CREDIT_COST)
@@ -129,16 +140,22 @@ async def api_generate_quiz(
         refund_ai_credit(org.id, QUIZ_CREDIT_COST)
         raise HTTPException(status_code=502, detail="The model returned no questions. Try rephrasing.")
 
-    record = await record_generation(
-        db_session,
-        kind=AIGenerationKind.QUIZ,
-        org_id=org.id,
-        user_id=current_user.id,
-        prompt=body.prompt.strip(),
-        result=block_quiz,
-        session_uuid=session_uuid,
-        activity_id=activity_id,
-    )
+    try:
+        record = await record_generation(
+            db_session,
+            kind=AIGenerationKind.QUIZ,
+            org_id=org.id,
+            user_id=current_user.id,
+            prompt=body.prompt.strip(),
+            result=block_quiz,
+            session_uuid=session_uuid,
+            activity_id=activity_id,
+        )
+    except Exception:
+        # Refund the reserved credits if persisting the history record fails.
+        refund_ai_credit(org.id, QUIZ_CREDIT_COST)
+        logger.exception("Failed to record quiz generation")
+        raise HTTPException(status_code=502, detail="Quiz generation failed. Please try again.")
 
     return GenerateQuizResponse(
         ai_generation_uuid=record.ai_generation_uuid,

@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useState, useMemo } from 'react'
-import { Search, X, Users, Globe, Lock, ChevronLeft, ChevronRight, MoreVertical, Settings2, Eye, Trash2, CheckSquare, Square, Copy } from 'lucide-react'
+import { Search, X, Users, Globe, Lock, MoreVertical, Settings2, Eye, Trash2, CheckSquare, Square, Copy } from 'lucide-react'
 import { ChalkboardSimple } from '@phosphor-icons/react'
 import { useOrg } from '@components/Contexts/OrgContext'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
@@ -26,6 +26,7 @@ import {
 import Modal from '@components/Objects/StyledElements/Modal/Modal'
 import { searchMatchesAny } from '@/lib/search/normalize'
 import { useLHAnalytics, AnalyticsEvent } from '@services/analytics'
+import CatalogPagination, { useCatalogPagination } from '@components/Objects/Catalog/CatalogPagination'
 
 interface BoardListClientProps {
   org_id: number
@@ -104,9 +105,7 @@ export default function BoardListClient({ org_id, orgslug }: BoardListClientProp
 
   const [createModalOpen, setCreateModalOpen] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
-  const [currentPage, setCurrentPage] = useState(1)
   const [selectedBoards, setSelectedBoards] = useState<Set<string>>(new Set())
-  const itemsPerPage = 12
 
   const { data: boards, isLoading } = useQuery({
     queryKey: queryKeys.boards.list(orgslug),
@@ -124,15 +123,18 @@ export default function BoardListClient({ org_id, orgslug }: BoardListClientProp
     )
   }, [allBoards, searchQuery])
 
-  React.useEffect(() => {
-    setCurrentPage(1)
-  }, [searchQuery])
+  const {
+    currentPage,
+    totalPages,
+    paginatedItems: paginatedBoards,
+    pageNumbers,
+    goToPage: goToCatalogPage,
+    resetPage,
+  } = useCatalogPagination(filteredBoards)
 
-  const totalPages = Math.ceil(filteredBoards.length / itemsPerPage)
-  const paginatedBoards = useMemo(() => {
-    const startIndex = (currentPage - 1) * itemsPerPage
-    return filteredBoards.slice(startIndex, startIndex + itemsPerPage)
-  }, [filteredBoards, currentPage, itemsPerPage])
+  React.useEffect(() => {
+    resetPage()
+  }, [searchQuery, resetPage])
 
   const handleCreated = () => {
     setCreateModalOpen(false)
@@ -211,34 +213,9 @@ export default function BoardListClient({ org_id, orgslug }: BoardListClientProp
 
   const goToPage = (page: number) => {
     if (page >= 1 && page <= totalPages) {
-      setCurrentPage(page)
+      goToCatalogPage(page)
       setSelectedBoards(new Set())
     }
-  }
-
-  const getVisiblePageNumbers = () => {
-    const pages: (number | string)[] = []
-    const maxVisible = 5
-    if (totalPages <= maxVisible) {
-      for (let i = 1; i <= totalPages; i++) pages.push(i)
-    } else {
-      if (currentPage <= 3) {
-        for (let i = 1; i <= 4; i++) pages.push(i)
-        pages.push('...')
-        pages.push(totalPages)
-      } else if (currentPage >= totalPages - 2) {
-        pages.push(1)
-        pages.push('...')
-        for (let i = totalPages - 3; i <= totalPages; i++) pages.push(i)
-      } else {
-        pages.push(1)
-        pages.push('...')
-        for (let i = currentPage - 1; i <= currentPage + 1; i++) pages.push(i)
-        pages.push('...')
-        pages.push(totalPages)
-      }
-    }
-    return pages
   }
 
   return (
@@ -413,49 +390,15 @@ export default function BoardListClient({ org_id, orgslug }: BoardListClientProp
           </div>
         )}
 
-        {/* Pagination Controls */}
-        {totalPages > 1 && (
-          <div className="mt-8 mb-6 flex items-center justify-center gap-2">
-            <button
-              onClick={() => goToPage(currentPage - 1)}
-              disabled={currentPage === 1}
-              className="flex items-center gap-1 px-3 py-2 text-sm font-medium text-gray-600 bg-white nice-shadow rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-            >
-              <ChevronLeft className="w-4 h-4" />
-              <span className="hidden sm:inline">{t('boards.pagination.previous')}</span>
-            </button>
-
-            <div className="flex items-center gap-1">
-              {getVisiblePageNumbers().map((page, index) => (
-                <React.Fragment key={index}>
-                  {page === '...' ? (
-                    <span className="px-2 py-1 text-gray-400">...</span>
-                  ) : (
-                    <button
-                      onClick={() => goToPage(page as number)}
-                      className={`px-3 py-2 text-sm font-medium rounded-lg transition-colors ${
-                        currentPage === page
-                          ? 'bg-black text-white'
-                          : 'bg-white text-gray-600 nice-shadow hover:bg-gray-50'
-                      }`}
-                    >
-                      {page}
-                    </button>
-                  )}
-                </React.Fragment>
-              ))}
-            </div>
-
-            <button
-              onClick={() => goToPage(currentPage + 1)}
-              disabled={currentPage === totalPages}
-              className="flex items-center gap-1 px-3 py-2 text-sm font-medium text-gray-600 bg-white nice-shadow rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-            >
-              <span className="hidden sm:inline">{t('boards.pagination.next')}</span>
-              <ChevronRight className="w-4 h-4" />
-            </button>
-          </div>
-        )}
+        <CatalogPagination
+          currentPage={currentPage}
+          totalPages={totalPages}
+          pageNumbers={pageNumbers}
+          onPageChange={goToPage}
+          previousLabel={t('boards.pagination.previous')}
+          nextLabel={t('boards.pagination.next')}
+          className="mt-8 mb-6"
+        />
 
         {totalPages > 1 && (
           <div className="mb-6 text-center text-sm text-gray-500">

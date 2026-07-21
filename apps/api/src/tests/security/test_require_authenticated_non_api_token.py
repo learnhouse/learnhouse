@@ -4,7 +4,7 @@ Regression tests for F-2: get_non_api_token_user silently admitted AnonymousUser
 The historical helper only rejected APITokenUser. Every router that used it
 as the router-level dependency (e.g. /ai/*, /blocks/*, /trail/*, /analytics,
 /code, /webhooks, /api-tokens, /roles, /ai_credits, /custom_domains,
-/migration, /assignments, /usergroups, /utils, /boards/playground,
+/migration, /utils, /boards/playground,
 /playgrounds, /playgrounds_generator, /packs, /audit_logs) treated
 unauthenticated callers as "authenticated-but-anonymous" and relied on each
 handler to remember to reject them.

@@ -321,8 +321,19 @@ class TestAllowedEndpoints:
         assert isinstance(mock_api_token_user, APITokenUser)
 
     def test_usergroups_router_allows_api_tokens(self, mock_api_token_user):
-        """Test that /usergroups router allows API tokens"""
+        """The /usergroups router admits API tokens (headless enrollment).
+
+        It mounts ``require_authenticated_user_or_api_token`` instead of
+        ``require_authenticated_user``: tokens reach the handlers, where every
+        operation authorizes through ``usergroups.rbac_check`` (the
+        ``usergroups`` rights bucket + org boundary). The two handlers that
+        authorize against the ``usergroup_X`` placeholder — create and
+        get-by-resource — additionally enforce an explicit token org-boundary
+        check in the service layer, since the placeholder's org resolves to
+        None and would otherwise skip the boundary comparison.
+        """
         assert isinstance(mock_api_token_user, APITokenUser)
+        assert mock_api_token_user.org_id is not None
 
     def test_payments_router_allows_api_tokens(self, mock_api_token_user):
         """Test that /payments router allows API tokens (EE)"""

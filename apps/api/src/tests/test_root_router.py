@@ -157,6 +157,11 @@ def _install_stub_modules(monkeypatch: pytest.MonkeyPatch) -> None:
         "src.routers.orgs.packs",
         internal_router=_named_router("src.routers.orgs.packs.internal_router"),
     )
+    install_router_module(
+        "src.routers.orgs.org_plan",
+        "src.routers.orgs.org_plan",
+        internal_router=_named_router("src.routers.orgs.org_plan.internal_router"),
+    )
     sys.modules["src.routers.orgs"].ai_credits = sys.modules[
         "src.routers.orgs.ai_credits"
     ]
@@ -164,6 +169,7 @@ def _install_stub_modules(monkeypatch: pytest.MonkeyPatch) -> None:
         "src.routers.orgs.custom_domains"
     ]
     sys.modules["src.routers.orgs"].packs = sys.modules["src.routers.orgs.packs"]
+    sys.modules["src.routers.orgs"].org_plan = sys.modules["src.routers.orgs.org_plan"]
 
     install_router_module("src.routers.courses.chapters", "src.routers.courses.chapters")
     install_router_module(
@@ -338,11 +344,12 @@ class TestRootRouter:
         )
         assert usergroups["prefix"] == "/usergroups"
         assert usergroups["tags"] == ["usergroups"]
-        # F-2: usergroups now requires an authenticated, non-API-token user
-        # in addition to the plan gate. Before the fix, anonymous callers
-        # could bypass auth if the plan check happened to allow them.
+        # usergroups admits API tokens (headless enrollment/usergroup mgmt) via
+        # require_authenticated_user_or_api_token — anonymous is still rejected
+        # (401) and the plan gate still applies. Per-handler rbac_check enforces
+        # the token's usergroups rights + org boundary.
         assert _dependency_names(usergroups) == [
-            "get_authenticated_non_api_token_user",
+            "require_authenticated_user_or_api_token",
             "require_plan_for_usergroups_standard_user_groups",
         ]
 

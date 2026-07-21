@@ -13,6 +13,8 @@ import { queryKeys } from '@/lib/query/keys'
 import Modal from '@components/Objects/StyledElements/Modal/Modal'
 import { Loader2 } from 'lucide-react'
 import { useLHAnalytics, AnalyticsEvent } from '@services/analytics'
+import { getErrorMessage } from '@services/utils/ts/errorMessage'
+import { useUpgradeModal } from '@components/Dashboard/Shared/PlanRestricted/UpgradeModalContext'
 
 interface CreateCommunityModalProps {
   isOpen: boolean
@@ -32,6 +34,7 @@ export function CreateCommunityModal({
   const router = useRouter()
   const queryClient = useQueryClient()
   const { track } = useLHAnalytics('learner')
+  const { handlePlanLimit } = useUpgradeModal()
   const [isSubmitting, setIsSubmitting] = useState(false)
 
   const accessToken = session?.data?.tokens?.access_token
@@ -59,7 +62,10 @@ export function CreateCommunityModal({
         accessToken
       )
 
-      if (result) {
+      // getResponseMetadata() always resolves (never throws on HTTP error), so
+      // gate on result.success — previously `if (result)` treated a 403 limit
+      // failure as success and closed the modal without creating anything.
+      if (result?.success) {
         track(AnalyticsEvent.CommunityCreated, {
           is_public: values.public,
           has_description: !!values.description,
@@ -68,6 +74,10 @@ export function CreateCommunityModal({
         queryClient.invalidateQueries({ queryKey: queryKeys.community.list(orgId) })
         router.refresh()
         onClose()
+      } else if (handlePlanLimit(result, { source: 'community_create', feature: 'communities', requiredPlan: 'standard' })) {
+        onClose()
+      } else {
+        toast.error(getErrorMessage(result?.data?.detail, 'Failed to create community.'))
       }
     } catch (err: any) {
       const message =

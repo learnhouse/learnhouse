@@ -1,5 +1,6 @@
 import json
 import logging
+import os
 from datetime import datetime, timezone
 from typing import Literal
 from uuid import uuid4
@@ -44,9 +45,82 @@ from src.db.user_organizations import UserOrganization
 from src.security.rbac.constants import ADMIN_ROLE_ID
 from src.security.security import security_hash_password, security_verify_password
 from src.services.security.password_validation import validate_password_complexity
+from src.services.security.profile_validation import validate_profile_fields
 from src.services.analytics.analytics import track
 from src.services.analytics import events as analytics_events
 from src.services.webhooks.dispatch import dispatch_webhooks
+
+
+def _reject_urls_in_profile_fields(**fields) -> None:
+    """Reject display-name fields containing URLs/links (S: phishing relay).
+
+    Raises HTTP 400 ``PROFILE_FIELD_INVALID`` if any of ``username``,
+    ``first_name`` or ``last_name`` contains a link. ``None`` values are
+    skipped so this is safe for partial updates.
+    """
+    result = validate_profile_fields(fields)
+    if not result.is_valid:
+        raise HTTPException(
+            status_code=400,
+            detail={
+                "code": "PROFILE_FIELD_INVALID",
+                "message": "Display name fields may not contain URLs or links",
+                "errors": result.errors,
+                "invalid_fields": result.invalid_fields,
+            },
+        )
+
+
+async def _get_welcome_cta_url(
+    request: Request,
+    db_session: AsyncSession,
+    org_id: int | None,
+) -> str | None:
+    """Where the welcome email's "Get Started" button should land.
+
+    - Account created inside an org → that org's own home, on the org's host
+      (verified custom domain when it has one). Mirrors the verification and
+      invite emails so the user stays on the host their session lives on.
+    - Org-less signup → the platform's organizations list, so the user picks
+      or creates an org rather than landing somewhere with no org context.
+
+    Returns None if no URL can be resolved, letting the caller fall back.
+    """
+    from src.services.email.utils import (
+        get_base_url_from_request,
+        get_org_signup_base_url,
+        get_trusted_base_url_from_request,
+    )
+
+    try:
+        if org_id is not None:
+            org_stmt = select(Organization).where(Organization.id == org_id)
+            org = (await db_session.execute(org_stmt)).scalars().first()
+            if org is not None:
+                base_url = await get_org_signup_base_url(
+                    org.slug, request, db_session=db_session, org_id=org_id
+                )
+                return f"{base_url.rstrip('/')}/home"
+            return None
+
+        # Org-less signups often arrive without a trusted Origin/Referer, and the
+        # generic request fallback would land on the org app rather than the
+        # platform — so only use it after the explicit platform URL.
+        base_url = get_trusted_base_url_from_request(request)
+        if not base_url:
+            platform_url = os.environ.get("LEARNHOUSE_PLATFORM_URL")
+            base_url = (
+                platform_url.rstrip("/")
+                if platform_url
+                else get_base_url_from_request(request)
+            )
+        return f"{base_url.rstrip('/')}/organizations"
+    except Exception:
+        # A welcome email with a fallback link beats no welcome email.
+        logging.getLogger(__name__).warning(
+            "Could not resolve welcome email CTA URL", exc_info=True
+        )
+        return None
 
 
 async def create_user(
@@ -71,6 +145,13 @@ async def create_user(
                     "requirements": validation_result.requirements,
                 },
             )
+
+    # Reject phishing links in display-name fields at signup.
+    _reject_urls_in_profile_fields(
+        username=user_object.username,
+        first_name=user_object.first_name,
+        last_name=user_object.last_name,
+    )
 
     user = User.model_validate(user_object)
 
@@ -179,10 +260,18 @@ async def create_user(
     if is_oauth:
         org_config_stmt = select(OrganizationConfig).where(OrganizationConfig.org_id == org_id)
         org_config = (await db_session.execute(org_config_stmt)).scalars().first()
+        # White-label the welcome email to the org: name it in the subject/body
+        # and use the org's own logo when it has one.
+        from src.services.email.utils import get_org_logo_url
+        org_stmt = select(Organization).where(Organization.id == org_id)
+        org = (await db_session.execute(org_stmt)).scalars().first()
         send_account_creation_email(
             user=user_read,
             email=user_read.email,
             lang=get_org_default_language(org_config),
+            cta_url=await _get_welcome_cta_url(request, db_session, org_id),
+            org_name=org.name if org else None,
+            logo_url=get_org_logo_url(org, request) if org else None,
         )
     elif get_deployment_mode() == 'saas':
         # Import here to avoid circular imports
@@ -284,6 +373,13 @@ async def create_user_without_org(
                 },
             )
 
+    # Reject phishing links in display-name fields at signup.
+    _reject_urls_in_profile_fields(
+        username=user_object.username,
+        first_name=user_object.first_name,
+        last_name=user_object.last_name,
+    )
+
     user = User.model_validate(user_object)
 
     # RBAC check
@@ -342,6 +438,7 @@ async def create_user_without_org(
         send_account_creation_email(
             user=user_read,
             email=user_read.email,
+            cta_url=await _get_welcome_cta_url(request, db_session, org_id=None),
         )
     else:
         from src.services.users.email_verification import send_verification_email
@@ -369,6 +466,13 @@ async def update_user(
 
     # RBAC check
     await rbac_check(request, current_user, "update", user.user_uuid, db_session)
+
+    # Reject phishing links in display-name fields on profile update.
+    _reject_urls_in_profile_fields(
+        username=user_object.username,
+        first_name=user_object.first_name,
+        last_name=user_object.last_name,
+    )
 
     # Verifications
 

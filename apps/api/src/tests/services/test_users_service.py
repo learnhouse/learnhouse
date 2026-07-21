@@ -25,6 +25,7 @@ from src.db.users import (
 )
 from src.security.security import security_hash_password
 from src.services.users.users import (
+    _get_welcome_cta_url,
     authorize_user_action,
     create_user,
     create_user_without_org,
@@ -1119,3 +1120,36 @@ class TestSecurityHelpers:
                     ),
                 )
         assert update_exc.value.status_code == 400
+
+
+class TestWelcomeCtaUrl:
+    """The welcome email's "Get Started" link must land the user on an org."""
+
+    @pytest.mark.asyncio
+    async def test_org_signup_uses_org_scoped_home(self, mock_request, db, org):
+        with patch(
+            "src.services.email.utils.get_org_signup_base_url",
+            new_callable=AsyncMock,
+            return_value="https://learn.acme.test/",
+        ):
+            url = await _get_welcome_cta_url(mock_request, db, org.id)
+        assert url == "https://learn.acme.test/home"
+
+    @pytest.mark.asyncio
+    async def test_orgless_signup_uses_platform_organizations_list(
+        self, mock_request, db
+    ):
+        with patch(
+            "src.services.email.utils.get_trusted_base_url_from_request",
+            return_value=None,
+        ), patch.dict(
+            "os.environ", {"LEARNHOUSE_PLATFORM_URL": "https://platform.test/"}
+        ):
+            url = await _get_welcome_cta_url(mock_request, db, org_id=None)
+        assert url == "https://platform.test/organizations"
+
+    @pytest.mark.asyncio
+    async def test_unknown_org_returns_none_for_caller_fallback(
+        self, mock_request, db
+    ):
+        assert await _get_welcome_cta_url(mock_request, db, org_id=999999) is None

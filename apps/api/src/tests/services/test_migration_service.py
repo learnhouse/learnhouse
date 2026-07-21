@@ -4,7 +4,8 @@ import json
 import os
 from pathlib import Path
 from uuid import uuid4
-from unittest.mock import patch
+from types import SimpleNamespace
+from unittest.mock import AsyncMock, patch
 
 import pytest
 from sqlmodel import select
@@ -459,6 +460,14 @@ async def test_create_course_from_migration_success_and_failure(monkeypatch, tmp
     base = tmp_path / "migrations"
     monkeypatch.setattr(migrations, "_TEMP_BASE_REAL", str(base))
     monkeypatch.setattr(migrations, "is_s3_enabled", lambda: False)
+    # Exercise the course-limit check path (org has a config → check runs).
+    monkeypatch.setattr(
+        "src.security.features_utils.usage._get_org_config",
+        AsyncMock(return_value=SimpleNamespace(config={})),
+    )
+    monkeypatch.setattr(
+        "src.security.features_utils.usage.check_limits_with_usage", AsyncMock()
+    )
 
     temp_id = str(uuid4())
     video_id = str(uuid4())

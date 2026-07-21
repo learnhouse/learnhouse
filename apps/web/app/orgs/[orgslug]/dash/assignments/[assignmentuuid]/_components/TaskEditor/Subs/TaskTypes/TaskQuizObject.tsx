@@ -12,6 +12,7 @@ import { useTranslation } from 'react-i18next';
 import { useQueryClient } from '@tanstack/react-query';
 import { queryKeys } from '@/lib/query/keys';
 import { applyManualGrade } from './applyManualGrade';
+import { serializeSelectedOptions } from './autosaveSerialize';
 
 type QuizSchema = {
     questionText: string;
@@ -38,6 +39,7 @@ type QuizSubmitSchema = {
 type TaskQuizObjectProps = {
     view: 'teacher' | 'student' | 'grading';
     user_id?: string; // Only for read-only view
+    onGraded?: () => void; // Notify parent (grading view) after an inline grade
     assignmentTaskUUID?: string;
 };
 
@@ -47,7 +49,7 @@ type Submission = {
     answer: boolean;
 };
 
-function TaskQuizObject({ view, assignmentTaskUUID, user_id }: TaskQuizObjectProps) {
+function TaskQuizObject({ view, assignmentTaskUUID, user_id, onGraded }: TaskQuizObjectProps) {
     const { t } = useTranslation()
     const session = useLHSession() as any;
     const access_token = session?.data?.tokens?.access_token;
@@ -130,7 +132,7 @@ function TaskQuizObject({ view, assignmentTaskUUID, user_id }: TaskQuizObjectPro
             },
         };
         const res = await updateAssignmentTask(values, assignmentTaskState.assignmentTask.assignment_task_uuid, assignment.assignment_object.assignment_uuid, access_token);
-        if (res) {
+        if (res.success) {
             assignmentTaskStateHook({
                 type: 'reload',
             });
@@ -150,10 +152,17 @@ function TaskQuizObject({ view, assignmentTaskUUID, user_id }: TaskQuizObjectPro
         questions: [],
         submissions: [],
     });
-    const [showSavingDisclaimer, setShowSavingDisclaimer] = useState<boolean>(false);
     const [assignmentTaskOutsideProvider, setAssignmentTaskOutsideProvider] = useState<any>(null);
+    // Tracks the task UUID whose server submission we've already hydrated, so we
+    // hydrate live answer state exactly once (on first load) and never re-pull
+    // it over the learner's in-progress edits on later query refetches.
+    const submissionHydratedForRef = React.useRef<string | null>(null);
+    // True once the learner has interacted, so an async hydration that resolves
+    // after the first edit can't clobber it.
+    const interactedRef = React.useRef(false);
 
     async function chooseOption(qIndex: number, oIndex: number) {
+        interactedRef.current = true;
         const updatedSubmissions = [...userSubmissions.submissions];
         const question = questions[qIndex];
         const option = question?.options[oIndex];
@@ -172,7 +181,11 @@ function TaskQuizObject({ view, assignmentTaskUUID, user_id }: TaskQuizObjectPro
         if (submissionIndex === -1) {
             updatedSubmissions.push({ questionUUID, optionUUID, answer: true });
         } else {
-            updatedSubmissions[submissionIndex].answer = !updatedSubmissions[submissionIndex].answer;
+            // Immutable replace — mutating the element in place would also mutate
+            // the shared baseline (initialUserSubmissions) and defeat dirty
+            // detection after hydration.
+            const prev = updatedSubmissions[submissionIndex];
+            updatedSubmissions[submissionIndex] = { ...prev, answer: !prev.answer };
         }
 
         setUserSubmissions({
@@ -206,30 +219,43 @@ function TaskQuizObject({ view, assignmentTaskUUID, user_id }: TaskQuizObjectPro
         }
     }
 
-    function hydrateSubmissionFromBatch() {
+    // Hydrate the student's live answer state from the server exactly ONCE per
+    // task (see the ref guard at the call site). Re-running it on every query
+    // refetch would overwrite in-progress edits and reset the dirty flag,
+    // silently stopping auto-save after the first save.
+    function hydrateSubmissionFromBatch(preserveLiveAnswers = false) {
         if (!assignmentTaskUUID) return;
         const sub = taskSubmissionsMap?.[assignmentTaskUUID] ?? null;
         if (sub) {
-            setUserSubmissions({
+            // Deep-copy the submissions into two INDEPENDENT states so a later
+            // edit to the live answer can never mutate the saved baseline
+            // through a shared reference (which previously defeated dirty
+            // detection after a refresh).
+            const clone = () => ({
                 ...sub.task_submission,
+                submissions: (sub.task_submission?.submissions ?? []).map((s: any) => ({ ...s })),
                 assignment_task_submission_uuid: sub.assignment_task_submission_uuid,
             });
-            setInitialUserSubmissions({
-                ...sub.task_submission,
-                assignment_task_submission_uuid: sub.assignment_task_submission_uuid,
-            });
+            // Always seed the saved baseline so dirty detection is correct.
+            setInitialUserSubmissions(clone());
+            if (preserveLiveAnswers) {
+                // The learner started answering before the batch resolved — keep
+                // their in-progress answers, but adopt the server submission uuid
+                // so their save UPDATES the existing row instead of creating a
+                // duplicate.
+                setUserSubmissions((prev: any) => ({
+                    ...prev,
+                    assignment_task_submission_uuid: sub.assignment_task_submission_uuid,
+                }));
+            } else {
+                setUserSubmissions(clone());
+            }
         }
     }
 
-    // Detect changes between initial and current submissions
-    useEffect(() => {
-        const hasChanges = JSON.stringify(initialUserSubmissions.submissions) !== JSON.stringify(userSubmissions.submissions);
-        setShowSavingDisclaimer(hasChanges);
-    }, [userSubmissions, initialUserSubmissions.submissions]);
 
 
-
-    const submitFC = async () => {
+    const submitFC = async (opts?: { silent?: boolean }) => {
         // Ensure all questions and options have submissions
         const updatedSubmissions: Submission[] = questions.flatMap(question => {
             return question.options.map(option => {
@@ -261,24 +287,47 @@ function TaskQuizObject({ view, assignmentTaskUUID, user_id }: TaskQuizObjectPro
 
         if (assignmentTaskUUID) {
             const res = await handleAssignmentTaskSubmission(values, assignmentTaskUUID, assignment.assignment_object.assignment_uuid, access_token);
-            if (res) {
-                assignmentTaskStateHook({
-                    type: 'reload',
-                });
-                toast.success(t('dashboard.assignments.editor.toasts.task_saved'));
-                setShowSavingDisclaimer(false);
-                // Update userSubmissions with the returned UUID for future updates
-                const updatedUserSubmissionsWithUUID = {
-                    ...updatedUserSubmissions,
-                    assignment_task_submission_uuid: res.data?.assignment_task_submission_uuid || userSubmissions.assignment_task_submission_uuid
-                };
-                setUserSubmissions(updatedUserSubmissionsWithUUID);
-                setInitialUserSubmissions(updatedUserSubmissionsWithUUID);
-                queryClient.invalidateQueries({ queryKey: queryKeys.assignments.taskSubmission(assignment.assignment_object.assignment_uuid) });
+            if (res.success) {
+                if (!opts?.silent) {
+                    assignmentTaskStateHook({ type: 'reload' });
+                    toast.success(t('dashboard.assignments.editor.toasts.task_saved'));
+                }
+                const savedUUID = res.data?.assignment_task_submission_uuid || userSubmissions.assignment_task_submission_uuid;
+                // Baseline = exactly the payload we persisted.
+                setInitialUserSubmissions({ ...updatedUserSubmissions, assignment_task_submission_uuid: savedUUID });
+                // Live = the LATEST answers (from prev), re-completed to the same
+                // shape. Never revert to the call-time snapshot — that would erase
+                // any selection the learner made during the save round-trip. If a
+                // mid-flight change exists, live stays ahead of baseline so the
+                // dirty flag re-asserts and the next auto-save persists it.
+                setUserSubmissions(prev => ({
+                    ...prev,
+                    assignment_task_submission_uuid: savedUUID,
+                    submissions: questions.flatMap(question =>
+                        question.options.map(option => {
+                            const existing = prev.submissions.find(
+                                s => s.questionUUID === question.questionUUID && s.optionUUID === option.optionUUID
+                            );
+                            return existing || {
+                                questionUUID: question.questionUUID || '',
+                                optionUUID: option.optionUUID || '',
+                                answer: false,
+                            };
+                        })
+                    ),
+                }));
+                // Silent auto-saves skip the refetch: it isn't needed for a
+                // draft save and would re-hydrate the batch every ~1s.
+                if (!opts?.silent) {
+                    queryClient.invalidateQueries({ queryKey: queryKeys.assignments.taskSubmission(assignment.assignment_object.assignment_uuid) });
+                }
+                return true;
             } else {
-                toast.error(t('dashboard.assignments.editor.toasts.task_save_error'));
+                if (!opts?.silent) toast.error(t('dashboard.assignments.editor.toasts.task_save_error'));
+                return false;
             }
         }
+        return true;
     };
 
     /* STUDENT VIEW CODE */
@@ -314,28 +363,34 @@ function TaskQuizObject({ view, assignmentTaskUUID, user_id }: TaskQuizObjectPro
             username: session?.data?.user?.username,
             assignmentTaskSubmissionUUID: userSubmissions.assignment_task_submission_uuid,
             taskSubmissionPayload: userSubmissions,
-            onSuccess: getAssignmentTaskSubmissionFromIdentifiedUserUI,
+            onSuccess: () => { getAssignmentTaskSubmissionFromIdentifiedUserUI(); onGraded?.(); },
         });
     }
 
     async function gradeFC() {
         if (assignmentTaskUUID) {
             const maxPoints = assignmentTaskOutsideProvider?.max_grade_value || 100;
-            const totalOptions = questions.reduce((total, question) => total + question.options.length, 0);
-            let correctAnswers = 0;
+            // Grade PER QUESTION (mirrors the server's _grade_quiz_task): a
+            // question counts only when the student's selected option set exactly
+            // matches the answer key. Per-option scoring gave phantom credit for
+            // unanswered questions (unselected wrong options "matched").
+            const gradableQuestions = questions.filter((q) => (q.options?.length ?? 0) > 0);
+            let correctQuestions = 0;
 
-            questions.forEach((question) => {
-                question.options.forEach((option) => {
+            gradableQuestions.forEach((question) => {
+                const questionCorrect = question.options.every((option) => {
                     const submission = userSubmissions.submissions.find(
                         (sub) => sub.questionUUID === question.questionUUID && sub.optionUUID === option.optionUUID
                     );
-                    if (submission?.answer === option.assigned_right_answer) {
-                        correctAnswers++;
-                    }
+                    const studentAnswer = !!submission?.answer;
+                    return studentAnswer === !!option.assigned_right_answer;
                 });
+                if (questionCorrect) correctQuestions++;
             });
 
-            const finalGrade = Math.round((correctAnswers / totalOptions) * maxPoints);
+            const finalGrade = gradableQuestions.length > 0
+                ? Math.round((correctQuestions / gradableQuestions.length) * maxPoints)
+                : 0;
 
             // Save the grade to the server
             const values = {
@@ -347,7 +402,7 @@ function TaskQuizObject({ view, assignmentTaskUUID, user_id }: TaskQuizObjectPro
             };
 
             const res = await handleAssignmentTaskSubmission(values, assignmentTaskUUID, assignment.assignment_object.assignment_uuid, access_token);
-            if (res) {
+            if (res.success) {
                 getAssignmentTaskSubmissionFromIdentifiedUserUI();
                 toast.success(`Task graded successfully with ${finalGrade} points`);
             } else {
@@ -371,7 +426,16 @@ function TaskQuizObject({ view, assignmentTaskUUID, user_id }: TaskQuizObjectPro
         // Student area: hydrate from already-fetched context payloads.
         else if (view == 'student') {
             hydrateTaskFromContext();
-            hydrateSubmissionFromBatch();
+            // Hydrate the saved submission once, when the batch first resolves.
+            // This runs even if the learner already started answering: the
+            // baseline + submission uuid are always adopted (so saves target the
+            // right row and dirty detection works), while their live answers are
+            // preserved. Re-hydrating on later refetches is still skipped so it
+            // never clobbers in-progress work.
+            if (submissionHydratedForRef.current !== assignmentTaskUUID && taskSubmissionsMap !== null) {
+                hydrateSubmissionFromBatch(interactedRef.current);
+                submissionHydratedForRef.current = assignmentTaskUUID ?? null;
+            }
         }
 
         // Grading area: per-task fetches are fine here (one task at a time).
@@ -384,7 +448,7 @@ function TaskQuizObject({ view, assignmentTaskUUID, user_id }: TaskQuizObjectPro
 
     if (questions && questions.length >= 0) {
         return (
-            <AssignmentBoxUI submitFC={submitFC} saveFC={saveFC} gradeFC={gradeFC} gradeCustomFC={gradeCustomFC} view={view} currentPoints={userSubmissionObject?.grade} currentFeedback={userSubmissionObject?.task_submission_grade_feedback} maxPoints={assignmentTaskOutsideProvider?.max_grade_value} showSavingDisclaimer={showSavingDisclaimer} type="quiz" autoGradable={true}>
+            <AssignmentBoxUI submitFC={submitFC} saveFC={saveFC} gradeFC={gradeFC} gradeCustomFC={gradeCustomFC} view={view} currentPoints={userSubmissionObject?.grade} currentFeedback={userSubmissionObject?.task_submission_grade_feedback} maxPoints={assignmentTaskOutsideProvider?.max_grade_value} dirtyValue={serializeSelectedOptions(userSubmissions.submissions)} savedValue={serializeSelectedOptions(initialUserSubmissions.submissions)} taskUUID={assignmentTaskUUID} type="quiz" autoGradable={true}>
                 <div className="flex flex-col space-y-6">
                     {questions && questions.map((question, qIndex) => (
                         <div key={qIndex} className="flex flex-col space-y-1.5">

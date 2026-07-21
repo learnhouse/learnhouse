@@ -55,6 +55,8 @@ import {
 } from '@services/custom_domains/custom_domains'
 import FeatureGate from '@components/Dashboard/Shared/FeatureGate/FeatureGate'
 import { useLHAnalytics, AnalyticsEvent } from '@services/analytics'
+import { useUpgradeModal } from '@components/Dashboard/Shared/PlanRestricted/UpgradeModalContext'
+import { getErrorMessage } from '@services/utils/ts/errorMessage'
 
 const OrgEditDomains: React.FC = () => {
   const session = useLHSession() as any
@@ -63,6 +65,7 @@ const OrgEditDomains: React.FC = () => {
   const { t } = useTranslation()
   const queryClient = useQueryClient()
   const { track } = useLHAnalytics('dashboard')
+  const { handlePlanLimit } = useUpgradeModal()
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false)
   const [isVerifyDialogOpen, setIsVerifyDialogOpen] = useState(false)
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false)
@@ -103,7 +106,14 @@ const OrgEditDomains: React.FC = () => {
         await loadVerificationInfo(response.data.domain_uuid)
         setIsVerifyDialogOpen(true)
       } else {
-        toast.error(response.data?.detail || t('dashboard.organization.domains.failed_add'), { id: loadingToast })
+        // Custom domains are a paid/age-gated feature → offer an upgrade
+        // instead of a dead-end error when the org can't add one yet.
+        if (handlePlanLimit(response, { source: 'custom_domain_add', feature: 'custom_domains', requiredPlan: 'pro' })) {
+          toast.dismiss(loadingToast)
+          setIsAddDialogOpen(false)
+        } else {
+          toast.error(getErrorMessage(response.data?.detail, t('dashboard.organization.domains.failed_add')), { id: loadingToast })
+        }
       }
     } catch (error: any) {
       toast.error(error.message || t('dashboard.organization.domains.failed_add'), { id: loadingToast })

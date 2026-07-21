@@ -1,13 +1,24 @@
 import React from 'react'
-import { Browsers, PlayCircle, FileText, Backpack, MarkdownLogo, Globe } from '@phosphor-icons/react'
+import { Browsers, PlayCircle, FileText, Backpack, MarkdownLogo, Globe, Package, Cube } from '@phosphor-icons/react'
 import { SiGoogledocs, SiGooglesheets, SiGoogleslides, SiGoogleforms, SiFigma, SiNotion, SiCanvas, SiLoom, SiMiro, SiYoutube, SiSpotify, SiAirtable, SiTypeform, SiDropbox, SiTrello } from '@icons-pack/react-simple-icons'
+import dynamic from 'next/dynamic'
 import DynamicCanvaModal from './NewActivityModal/DynamicActivityModal'
 import MarkdownModal from './NewActivityModal/MarkdownActivityModal'
 import EmbedModal from './NewActivityModal/EmbedActivityModal'
 import VideoModal from './NewActivityModal/VideoActivityModal'
 import DocumentPdfModal from './NewActivityModal/DocumentActivityModal'
 import Assignment from './NewActivityModal/AssignmentActivityModal'
+import ResourceModal from './NewActivityModal/ResourceActivityModal'
+import { useOrg } from '@components/Contexts/OrgContext'
 import { useTranslation } from 'react-i18next'
+
+// SCORM authoring lives in the Enterprise (ee) package; load it lazily so
+// open-source builds without `ee/` degrade gracefully (the card is also
+// feature-gated, so it only appears when SCORM is enabled).
+const ScormActivityModal = dynamic(
+  () => import('../../../../../ee/components/Modals/ScormActivityModal'),
+  { ssr: false }
+)
 
 const EMBED_SERVICES = [
   { Icon: SiGoogledocs, color: '#4285F4' },
@@ -50,7 +61,17 @@ const EmbedServicesIcon = () => (
   </div>
 )
 
-export const activityTypes = [
+type ActivityTypeCard = {
+  key: string
+  icon: any
+  customIcon?: React.ComponentType
+  labelKey: string
+  color: { icon: string }
+  pattern: string
+  patternSize?: string
+}
+
+export const activityTypes: ActivityTypeCard[] = [
   {
     key: 'dynamic',
     icon: Browsers,
@@ -108,7 +129,28 @@ export const activityTypes = [
     pattern: `radial-gradient(circle, rgba(165,243,252,0.4) 1px, transparent 1px)`,
     patternSize: '12px 12px',
   },
+  {
+    key: 'resource',
+    icon: Cube,
+    labelKey: 'dashboard.courses.structure.activity.types.resource',
+    color: {
+      icon: 'text-indigo-400',
+    },
+    pattern: `radial-gradient(circle, rgba(199,210,254,0.4) 1px, transparent 1px)`,
+    patternSize: '12px 12px',
+  },
 ]
+
+// SCORM authoring card — only shown when the org has the SCORM feature enabled.
+const scormActivityType: ActivityTypeCard = {
+  key: 'scorm',
+  icon: Package,
+  labelKey: 'dashboard.courses.structure.activity.types.scorm',
+  color: {
+    icon: 'text-sky-400',
+  },
+  pattern: `repeating-linear-gradient(-45deg, transparent, transparent 6px, rgba(186,230,253,0.3) 6px, rgba(186,230,253,0.3) 7px)`,
+}
 
 function NewActivityModal({
   closeModal,
@@ -117,16 +159,23 @@ function NewActivityModal({
   submitExternalVideo,
   chapterId,
   course,
+  orgslug,
   selectedView,
   setSelectedView,
 }: any) {
   const { t } = useTranslation()
+  const org = useOrg() as any
+  const scormEnabled = org?.config?.config?.resolved_features?.scorm?.enabled === true
+
+  const visibleActivityTypes = scormEnabled
+    ? [...activityTypes, scormActivityType]
+    : activityTypes
 
   return (
     <>
       {selectedView === 'home' && (
         <div className="grid grid-cols-3 gap-3 p-5 w-full">
-          {activityTypes.map((activity) => {
+          {visibleActivityTypes.map((activity) => {
             const Icon = activity.icon
             const CustomIcon = (activity as any).customIcon
             return (
@@ -211,6 +260,24 @@ function NewActivityModal({
               submitActivity={submitActivity}
               chapterId={chapterId}
               course={course}
+            />
+          )}
+
+          {selectedView === 'resource' && (
+            <ResourceModal
+              submitActivity={submitActivity}
+              chapterId={chapterId}
+              course={course}
+              orgslug={orgslug}
+            />
+          )}
+
+          {selectedView === 'scorm' && (
+            <ScormActivityModal
+              course={course}
+              chapterId={chapterId}
+              closeModal={closeModal}
+              onImportComplete={closeModal}
             />
           )}
         </div>

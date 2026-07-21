@@ -7,6 +7,7 @@ import FormLayout, {
 } from '@components/Objects/StyledElements/Form/Form'
 import * as Form from '@radix-ui/react-form'
 import { useOrg } from '@components/Contexts/OrgContext'
+import { useUpgradeModal } from '@components/Dashboard/Shared/PlanRestricted/UpgradeModalContext'
 import React from 'react'
 import { updateRole } from '@services/roles/roles'
 import { useQueryClient } from '@tanstack/react-query'
@@ -313,6 +314,7 @@ function EditRole(props: EditRoleProps) {
     const session = useLHSession() as any
     const access_token = session?.data?.tokens?.access_token;
     const queryClient = useQueryClient()
+    const { handlePlanLimit } = useUpgradeModal()
     const [isSubmitting, setIsSubmitting] = React.useState(false)
     const [rights, setRights] = React.useState<Rights>(props.role.rights || {})
 
@@ -405,7 +407,14 @@ function EditRole(props: EditRoleProps) {
                 toast.success(t('dashboard.users.roles.modals.edit.toasts.success'), {id:toastID})
             } else {
                 setIsSubmitting(false)
-                toast.error(t('dashboard.users.roles.modals.edit.toasts.error'), {id:toastID})
+                // Enabling dashboard access for a role can exceed the plan's
+                // admin-seat cap → offer an upgrade instead of a dead-end error.
+                if (handlePlanLimit(res, { source: 'role_edit', feature: 'admin_seats', requiredPlan: 'standard' })) {
+                    toast.dismiss(toastID)
+                    props.setEditRoleModal(false)
+                } else {
+                    toast.error(t('dashboard.users.roles.modals.edit.toasts.error'), {id:toastID})
+                }
             }
         },
     })
