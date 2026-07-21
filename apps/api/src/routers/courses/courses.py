@@ -108,6 +108,20 @@ class ImportRequest(BaseModel):
 router = APIRouter(dependencies=[Depends(require_courses_feature)])
 
 
+def _validated_export_path(zip_path: str) -> str:
+    """Confirm an export archive path stays within the system temp directory
+    before it is streamed back. The export service builds the file with
+    ``tempfile.mkstemp`` (server-controlled), so this is defense-in-depth that
+    also keeps the value reaching FileResponse a checked one."""
+    import tempfile
+
+    base_real = os.path.realpath(tempfile.gettempdir())
+    full_real = os.path.realpath(zip_path)
+    if full_real != base_real and os.path.commonpath([base_real, full_real]) != base_real:
+        raise HTTPException(status_code=400, detail="Invalid export path")
+    return full_real
+
+
 # Static routes must come before dynamic /{course_uuid} routes
 @router.post(
     "/export/batch",
@@ -158,7 +172,7 @@ async def api_export_courses_batch(
     background_tasks.add_task(os.unlink, zip_path)
 
     return FileResponse(
-        path=zip_path,
+        path=_validated_export_path(zip_path),
         media_type="application/zip",
         filename=filename,
     )
@@ -688,7 +702,7 @@ async def api_export_course(
     background_tasks.add_task(os.unlink, zip_path)
 
     return FileResponse(
-        path=zip_path,
+        path=_validated_export_path(zip_path),
         media_type="application/zip",
         filename=filename,
     )

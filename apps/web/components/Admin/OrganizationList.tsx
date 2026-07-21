@@ -1,5 +1,6 @@
 'use client'
 import React, { useState, useMemo, useRef, useEffect, useCallback } from 'react'
+import { safeHref } from '@services/security/url'
 import { useQuery } from '@tanstack/react-query'
 import { queryKeys } from '@/lib/query/keys'
 import { getAPIUrl, getDeploymentMode } from '@services/config/config'
@@ -11,16 +12,6 @@ import { useSearchParams, useRouter, usePathname } from 'next/navigation'
 import { Buildings, Globe, User, CaretLeft, CaretRight, BookOpen, MagnifyingGlass, ArrowSquareOut, Plus } from '@phosphor-icons/react'
 import CreateOrganizationModal from '@components/Admin/CreateOrganizationModal'
 import EELicenseError from '@components/Admin/EELicenseError'
-
-/** Ensure a URL only uses http/https — returns '#' for anything else. */
-function safeHref(url: string): string {
-  try {
-    const { protocol } = new URL(url)
-    return protocol === 'http:' || protocol === 'https:' ? url : '#'
-  } catch {
-    return '#'
-  }
-}
 
 interface PaginatedOrgResponse {
   items: OrgWithCount[]
