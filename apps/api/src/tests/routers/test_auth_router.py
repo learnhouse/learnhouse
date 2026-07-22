@@ -1,6 +1,7 @@
 """Router tests for src/routers/auth.py."""
 
-from datetime import datetime, timedelta
+import logging
+from datetime import datetime, timedelta, timezone
 from types import SimpleNamespace
 from unittest.mock import AsyncMock, Mock, patch
 
@@ -685,3 +686,121 @@ class TestAuthRouter:
         ):
             response = await client.delete("/api/v1/auth/logout")
         assert response.status_code == 401
+
+
+class TestRefreshOutcomeTelemetry:
+    """Every exit path from /auth/refresh must emit one tagged outcome.
+
+    Added after an unexplained wave of sign-outs could not be diagnosed from
+    telemetry — there was none on this endpoint — and required a code audit.
+    A rising replay_detected/revoked_before rate is the signal that sessions are
+    being destroyed rather than expiring naturally.
+    """
+
+    async def test_missing_cookie_logs_cookie_missing(self, client, caplog):
+        with patch(
+            "src.routers.auth.check_refresh_rate_limit", return_value=(True, None)
+        ):
+            with caplog.at_level(logging.INFO, logger="learnhouse.auth.refresh"):
+                response = await client.get("/api/v1/auth/refresh")
+        assert response.status_code == 401
+        assert any(getattr(r, "outcome", None) == "cookie_missing" for r in caplog.records)
+
+    async def test_rate_limited_logs_rate_limited(self, client, caplog):
+        with patch(
+            "src.routers.auth.check_refresh_rate_limit", return_value=(False, 60)
+        ):
+            with caplog.at_level(logging.INFO, logger="learnhouse.auth.refresh"):
+                response = await client.get("/api/v1/auth/refresh")
+        assert response.status_code == 429
+        assert any(getattr(r, "outcome", None) == "rate_limited" for r in caplog.records)
+
+    async def test_undecodable_token_logs_undecodable(self, client, caplog):
+        with patch(
+            "src.routers.auth.check_refresh_rate_limit", return_value=(True, None)
+        ), patch("src.routers.auth.decode_refresh_token", return_value=None):
+            with caplog.at_level(logging.INFO, logger="learnhouse.auth.refresh"):
+                response = await client.get(
+                    "/api/v1/auth/refresh",
+                    cookies={JWT_REFRESH_COOKIE_NAME: "refresh-token"},
+                )
+        assert response.status_code == 401
+        assert any(getattr(r, "outcome", None) == "undecodable" for r in caplog.records)
+
+    async def test_replay_logs_replay_detected_at_warning_with_token_age(
+        self, client, auth_user, caplog
+    ):
+        """Replay is the most destructive outcome — it revokes every session on
+        every device — so it is logged at WARNING with the token's age, which is
+        what separates a benign desync from real theft."""
+        issued_at = int((datetime.now(timezone.utc) - timedelta(hours=3)).timestamp())
+        with patch(
+            "src.routers.auth.check_refresh_rate_limit", return_value=(True, None)
+        ), patch(
+            "src.routers.auth.decode_refresh_token",
+            return_value={
+                "sub": auth_user.email,
+                "iat": issued_at,
+                "exp": 9_999_999_999,
+                "jti": "replayed-jti",
+            },
+        ), patch(
+            "src.routers.auth.security_get_user",
+            new_callable=AsyncMock,
+            return_value=auth_user,
+        ), patch(
+            "src.routers.auth._is_token_revoked_for_user", return_value=False
+        ), patch(
+            "src.routers.auth._mark_refresh_jti_used", return_value=False
+        ), patch(
+            "src.routers.auth._get_refresh_grace", return_value=None
+        ), patch(
+            "src.routers.auth.revoke_user_sessions_before"
+        ):
+            with caplog.at_level(logging.INFO, logger="learnhouse.auth.refresh"):
+                response = await client.get(
+                    "/api/v1/auth/refresh",
+                    cookies={JWT_REFRESH_COOKIE_NAME: "refresh-token"},
+                )
+        assert response.status_code == 401
+        record = next(
+            (r for r in caplog.records if getattr(r, "outcome", None) == "replay_detected"),
+            None,
+        )
+        assert record is not None
+        assert record.levelno == logging.WARNING
+        # ~3 hours old — old enough to look like theft rather than a tab race.
+        assert record.token_age_seconds is not None
+        assert record.token_age_seconds > 3000
+
+    async def test_success_logs_ok(self, client, auth_user, caplog):
+        with patch(
+            "src.routers.auth.check_refresh_rate_limit", return_value=(True, None)
+        ), patch(
+            "src.routers.auth.decode_refresh_token",
+            return_value={
+                "sub": auth_user.email,
+                "iat": int(datetime.now(timezone.utc).timestamp()),
+                "exp": 9_999_999_999,
+                "jti": "legit-jti",
+            },
+        ), patch(
+            "src.routers.auth.security_get_user",
+            new_callable=AsyncMock,
+            return_value=auth_user,
+        ), patch(
+            "src.routers.auth._is_token_revoked_for_user", return_value=False
+        ), patch(
+            "src.routers.auth._mark_refresh_jti_used", return_value=True
+        ), patch(
+            "src.routers.auth.get_cookie_domain_for_request", return_value=None
+        ), patch(
+            "src.routers.auth.is_request_secure", return_value=False
+        ):
+            with caplog.at_level(logging.INFO, logger="learnhouse.auth.refresh"):
+                response = await client.get(
+                    "/api/v1/auth/refresh",
+                    cookies={JWT_REFRESH_COOKIE_NAME: "refresh-token"},
+                )
+        assert response.status_code == 200
+        assert any(getattr(r, "outcome", None) == "ok" for r in caplog.records)

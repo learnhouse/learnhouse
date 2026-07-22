@@ -104,6 +104,29 @@ function appendClearAuthCookies(response: NextResponse, request: NextRequest) {
   }
 }
 
+// Headers that identify the ORIGINAL caller, relayed to the backend untouched.
+//
+// This proxy is server-to-server: with nothing forwarded, the backend sees the
+// Next.js pod as the client for EVERY request. Its per-IP limits — login
+// (30/5min), signup (10/hour), refresh (600/min) — then share ONE bucket across
+// the whole deployment instead of being per caller. A single person retrying a
+// password could lock every user out of signing in, and the limits stop being
+// brute-force protection at all because they cannot tell callers apart. The
+// account-lockout bookkeeping records the attempting IP too, so it was logging
+// this pod for every failed login.
+//
+// Relayed verbatim rather than parsed: the backend's get_client_ip already owns
+// the chain-parsing rules (and only trusts these at all when the connection
+// comes from a private address). Re-deriving a single IP here would mean the
+// same header is interpreted two different ways in two places.
+//
+// NOTE: this inherits the deployment requirement the backend already documents
+// — the ingress MUST overwrite, not append to, a client-supplied
+// X-Forwarded-For. Otherwise a caller can prepend a fake IP and evade the
+// limits. That requirement is unchanged by this proxy; it applies equally to
+// requests that reach the API directly.
+const CLIENT_IDENTITY_HEADERS = ['x-forwarded-for', 'x-real-ip', 'user-agent']
+
 async function proxyRequest(
   request: NextRequest,
   method: string
@@ -129,6 +152,11 @@ async function proxyRequest(
   const authHeader = request.headers.get('authorization')
   if (authHeader) {
     headers['Authorization'] = authHeader
+  }
+
+  for (const name of CLIENT_IDENTITY_HEADERS) {
+    const value = request.headers.get(name)
+    if (value) headers[name] = value
   }
 
   // Forward cookies to backend

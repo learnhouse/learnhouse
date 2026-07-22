@@ -1,3 +1,4 @@
+import logging
 from datetime import timedelta, datetime, timezone
 from typing import Literal, Optional
 from fastapi import Depends, APIRouter, HTTPException, Response, status, Request, Form
@@ -192,6 +193,67 @@ def unset_auth_cookies(response: Response, request: Request = None):
     response.delete_cookie(key=JWT_REFRESH_COOKIE_NAME, domain=cookie_domain)
 
 
+_refresh_logger = logging.getLogger("learnhouse.auth.refresh")
+
+
+def _token_age_seconds(payload: dict | None) -> int | None:
+    """Seconds since the presented refresh token was issued, or None.
+
+    The key disambiguator for replay detection: a benign desync (two tabs, a
+    server-rendered page racing the client) re-presents a token seconds old,
+    while a genuinely stolen token is reused hours or days later.
+    """
+    if not payload:
+        return None
+    iat = payload.get("iat")
+    if not iat:
+        return None
+    try:
+        issued = datetime.fromtimestamp(iat, tz=timezone.utc)
+    except (TypeError, ValueError, OSError, OverflowError):
+        return None
+    return int((datetime.now(timezone.utc) - issued).total_seconds())
+
+
+def _log_refresh_outcome(
+    outcome: str,
+    *,
+    user_id: int | None = None,
+    token_age_seconds: int | None = None,
+    level: int = logging.INFO,
+) -> None:
+    """Emit one structured line per refresh attempt, tagged with its outcome.
+
+    Exists because this endpoint had NO telemetry: when users reported being
+    randomly signed out, there was no way to tell an expired token from a
+    revocation from replay detection, and diagnosing it required reading the
+    code instead of querying. Outcomes are a closed set —
+    ``ok``, ``grace_reused``, ``rate_limited``, ``cookie_missing``,
+    ``undecodable``, ``no_subject``, ``user_not_found``, ``password_changed``,
+    ``revoked_before``, ``replay_detected`` — so they can be counted and alerted
+    on. A rising ``replay_detected`` or ``revoked_before`` rate is the signal
+    that sessions are being destroyed rather than expiring.
+
+    Never raises: telemetry must not be able to break authentication.
+    """
+    try:
+        _refresh_logger.log(
+            level,
+            "auth.refresh outcome=%s user_id=%s token_age_seconds=%s",
+            outcome,
+            user_id if user_id is not None else "-",
+            token_age_seconds if token_age_seconds is not None else "-",
+            extra={
+                "event": "auth.refresh",
+                "outcome": outcome,
+                "user_id": user_id,
+                "token_age_seconds": token_age_seconds,
+            },
+        )
+    except Exception:  # pragma: no cover - telemetry must never break auth
+        pass
+
+
 @router.get(
     "/refresh",
     summary="Refresh access token",
@@ -218,10 +280,14 @@ async def refresh(
     ``get_current_user`` — a refresh must not outlive either. Rotates the
     refresh cookie on every call; the old token's ``jti`` is marked consumed
     in Redis, and replay is treated as theft (all sessions revoked).
+
+    Every exit path emits an ``auth.refresh`` log line tagged with its outcome —
+    see :func:`_log_refresh_outcome`.
     """
     # Rate limit refresh endpoint to prevent brute force attacks
     is_allowed, retry_after = check_refresh_rate_limit(request)
     if not is_allowed:
+        _log_refresh_outcome("rate_limited")
         raise HTTPException(
             status_code=status.HTTP_429_TOO_MANY_REQUESTS,
             detail={
@@ -239,18 +305,24 @@ async def refresh(
 
     refresh_token = request.cookies.get(JWT_REFRESH_COOKIE_NAME)
     if not refresh_token:
+        _log_refresh_outcome("cookie_missing")
         raise credentials_exception
 
     payload = decode_refresh_token(refresh_token)
     if not payload:
+        # Bad signature, wrong token type, or — overwhelmingly the common case —
+        # naturally expired.
+        _log_refresh_outcome("undecodable")
         raise credentials_exception
 
     email = payload.get("sub")
     if not email:
+        _log_refresh_outcome("no_subject")
         raise credentials_exception
 
     user = await security_get_user(request, db_session, email=email)
     if user is None or user.id is None:
+        _log_refresh_outcome("user_not_found", token_age_seconds=_token_age_seconds(payload))
         raise credentials_exception
 
     # Enforce password-change cutover: tokens minted before the user's last
@@ -267,9 +339,17 @@ async def refresh(
     if isinstance(pca_raw, datetime) and issued_at is not None:
         pca = pca_raw if pca_raw.tzinfo else pca_raw.replace(tzinfo=timezone.utc)
         if issued_at < pca:
+            _log_refresh_outcome(
+                "password_changed", user_id=user.id, token_age_seconds=_token_age_seconds(payload)
+            )
             raise credentials_exception
 
     if _is_token_revoked_for_user(user.id, issued_at):
+        # The user's sessions were revoked after this token was issued — by an
+        # explicit logout, or by replay detection firing on another request.
+        _log_refresh_outcome(
+            "revoked_before", user_id=user.id, token_age_seconds=_token_age_seconds(payload)
+        )
         raise credentials_exception
 
     # One-time-use rotation with replay detection and a benign-replay grace
@@ -297,6 +377,16 @@ async def refresh(
                 await _asyncio.sleep(0.1)
             if reused_pair is None:
                 # No live grace entry → replay outside the window → theft.
+                # This is the single most destructive outcome (it revokes every
+                # session on every device), so it is logged at WARNING with the
+                # token's age — a benign desync shows up as a young token, real
+                # theft as an old one.
+                _log_refresh_outcome(
+                    "replay_detected",
+                    user_id=user.id,
+                    token_age_seconds=_token_age_seconds(payload),
+                    level=logging.WARNING,
+                )
                 revoke_user_sessions_before(user.id)
                 raise credentials_exception
 
@@ -334,6 +424,12 @@ async def refresh(
         domain=cookie_domain,
         max_age=int(JWT_REFRESH_TOKEN_EXPIRES.total_seconds()),
     )
+    _log_refresh_outcome(
+        "grace_reused" if reused_pair is not None else "ok",
+        user_id=user.id,
+        token_age_seconds=_token_age_seconds(payload),
+    )
+
     # Return the rotated refresh token in the body so a Next.js route handler
     # acting as a proxy can mirror the rotation onto its own cookies. Without
     # this, browsers behind a proxy keep the OLD refresh token (now consumed
