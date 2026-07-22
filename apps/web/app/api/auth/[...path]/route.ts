@@ -119,6 +119,18 @@ async function proxyRequest(
   const headers: HeadersInit = {}
   const cookieStore = await cookies()
 
+  // Forward the caller's IP. This proxy builds its headers from scratch, so
+  // without this the backend only ever sees the Next.js server's own address:
+  // every visitor collapses into a single per-IP rate-limit bucket and one busy
+  // deployment locks everyone out of login and token refresh. The backend only
+  // trusts these when the direct connection is from a private address (see
+  // get_client_ip), so forwarding what the ingress already set is the same
+  // contract the /api/v1 proxy honours by forwarding all headers.
+  for (const ipHeader of ['x-forwarded-for', 'x-real-ip']) {
+    const value = request.headers.get(ipHeader)
+    if (value) headers[ipHeader] = value
+  }
+
   // Forward content-type
   const contentType = request.headers.get('content-type')
   if (contentType) {

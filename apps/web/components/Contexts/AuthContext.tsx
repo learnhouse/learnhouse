@@ -598,6 +598,29 @@ export function SessionProvider({
               timestamp: Date.now(),
             }
 
+            // Resolve the real org/role list, exactly as the password login below
+            // does. The SSO handoff only carries tokens and the user, so without
+            // this the session stayed `roles: []` — and because that empty list
+            // was written into the session cache, the user spent the cache window
+            // looking like a non-member of the org they had just signed in to:
+            // the "join this organization" banner instead of their courses.
+            // A failure here must not undo a successful sign-in, so we keep the
+            // role-less session and let the next session fetch fill it in.
+            try {
+              const fullSession = await fetchUserSession(options.sso_access_token, expiry)
+              if (fullSession) {
+                fullSession.tokens = newSession.tokens
+                setSession(fullSession)
+                sessionCacheRef.current = {
+                  data: fullSession,
+                  timestamp: Date.now(),
+                }
+              }
+            } catch {
+              // Transient failure — the cached role-less session is refreshed by
+              // the next /users/session read rather than blocking the redirect.
+            }
+
             // Notify other tabs
             broadcastChannelRef.current?.postMessage({ type: 'LOGIN' })
 
