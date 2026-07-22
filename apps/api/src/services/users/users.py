@@ -331,7 +331,14 @@ async def create_user_with_invite(
             statement = select(Organization).where(Organization.id == org_id)
             org = (await db_session.execute(statement)).scalars().first()
             if org:
-                redis_key = f"invited_user:{user_object.email}:org:{org.org_uuid}"
+                # Invites are keyed on the lower-cased address; without
+                # normalising here a signup that typed the address with
+                # different capitals left the invitation showing as "Pending"
+                # forever even though the person had joined.
+                redis_key = (
+                    f"invited_user:{user_object.email.strip().lower()}"
+                    f":org:{org.org_uuid}"
+                )
                 invited_data = r.get(redis_key)
                 if invited_data:
                     invited_record = json.loads(invited_data)
