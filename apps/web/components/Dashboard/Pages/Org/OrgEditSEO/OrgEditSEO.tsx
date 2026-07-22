@@ -20,7 +20,7 @@ import { useQueryClient } from '@tanstack/react-query'
 import { queryKeys } from '@/lib/query/keys'
 import { getOrgOgImageMediaDirectory } from '@services/media/media'
 import { Copy, ExternalLink, Upload, X } from 'lucide-react'
-import { getCanonicalUrl } from '@/lib/seo/utils'
+import { useAbsoluteUrl } from '@/lib/seo/useAbsoluteUrl'
 import FeatureGate from '@components/Dashboard/Shared/FeatureGate/FeatureGate'
 
 const OrgEditSEO: React.FC = () => {
@@ -44,8 +44,9 @@ const OrgEditSEO: React.FC = () => {
     noindex_communities: seoConfig.noindex_communities || false,
   }
 
-  const sitemapUrl = getCanonicalUrl(org?.slug, '/sitemap.xml')
-  const robotsUrl = getCanonicalUrl(org?.slug, '/robots.txt')
+  // Absolute: these are handed to Google Search Console, not clicked in-app
+  const sitemapUrl = useAbsoluteUrl(org?.slug, '/sitemap.xml')
+  const robotsUrl = useAbsoluteUrl(org?.slug, '/robots.txt')
 
   const copyToClipboard = (text: string) => {
     navigator.clipboard.writeText(text)
