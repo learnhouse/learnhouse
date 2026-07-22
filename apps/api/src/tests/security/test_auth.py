@@ -402,3 +402,61 @@ class TestAuth:
                 await get_current_user(request=mock_request, db_session=mock_db_session)
 
         assert exc_info.value.status_code == 401
+
+class TestSessionLifetime:
+    """Guards on how long a user may stay away before being signed out.
+
+    These exist because the inactivity window regressed in production and
+    users were being signed out while their session still had weeks of life.
+    """
+
+    def test_refresh_lifetime_defaults_to_thirty_days(self):
+        from src.security.auth import _refresh_token_lifetime, DEFAULT_REFRESH_TOKEN_DAYS
+
+        with patch.dict("os.environ", {}, clear=False):
+            import os
+            os.environ.pop("LEARNHOUSE_AUTH_REFRESH_TOKEN_DAYS", None)
+            assert _refresh_token_lifetime() == timedelta(days=DEFAULT_REFRESH_TOKEN_DAYS)
+
+    def test_refresh_lifetime_honours_env_override(self):
+        from src.security.auth import _refresh_token_lifetime
+
+        with patch.dict("os.environ", {"LEARNHOUSE_AUTH_REFRESH_TOKEN_DAYS": "45"}):
+            assert _refresh_token_lifetime() == timedelta(days=45)
+
+    def test_refresh_lifetime_never_drops_below_two_weeks(self):
+        """A user must survive a two-week absence. Anything shorter is clamped:
+        a too-small value is nearly always a misconfiguration, and it shows up
+        as users complaining they keep getting logged out."""
+        from src.security.auth import _refresh_token_lifetime, MIN_REFRESH_TOKEN_DAYS
+
+        assert MIN_REFRESH_TOKEN_DAYS == 14
+        for bad in ("1", "7", "13", "0", "-5"):
+            with patch.dict("os.environ", {"LEARNHOUSE_AUTH_REFRESH_TOKEN_DAYS": bad}):
+                assert _refresh_token_lifetime() == timedelta(days=MIN_REFRESH_TOKEN_DAYS)
+
+    def test_refresh_lifetime_ignores_garbage_env(self):
+        from src.security.auth import _refresh_token_lifetime, DEFAULT_REFRESH_TOKEN_DAYS
+
+        with patch.dict("os.environ", {"LEARNHOUSE_AUTH_REFRESH_TOKEN_DAYS": "not-a-number"}):
+            assert _refresh_token_lifetime() == timedelta(days=DEFAULT_REFRESH_TOKEN_DAYS)
+
+    def test_issued_refresh_token_outlives_two_weeks(self):
+        """End-to-end: a freshly minted refresh token is still valid well past
+        the two-week mark."""
+        token = create_refresh_token({"sub": "test@example.com"})
+        decoded = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        exp = datetime.fromtimestamp(decoded["exp"], tz=timezone.utc)
+
+        assert exp - datetime.now(timezone.utc) > timedelta(days=14)
+
+    def test_replay_grace_window_tolerates_slow_clients(self):
+        """The grace window absorbs benign duplicate refreshes (a suspended
+        laptop, a background tab, a retried request on a bad connection).
+
+        At 30 seconds those were being misread as token theft, which revokes
+        every session the user has on every device. Keep it comfortably above
+        a page-load timescale."""
+        from src.security.auth import REFRESH_GRACE_WINDOW_SECONDS
+
+        assert REFRESH_GRACE_WINDOW_SECONDS >= 120
