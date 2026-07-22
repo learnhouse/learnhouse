@@ -193,16 +193,25 @@ async def _enforce_free_org_cap(
     )
 
 
-def _try_send_org_created(request: Request, current_user, org) -> None:
-    """Best-effort welcome email to the org creator (never fails the create)."""
+async def _try_send_org_created(request: Request, org, current_user, db_session) -> None:
+    """Best-effort welcome email to the org creator (never fails the create).
+
+    The CTA lands on the new org's own dashboard, on the org's host. It used to
+    point at `{request-host}/home`, which is wrong twice over: orgs are created
+    from the platform apex, so the host was the apex rather than the new org,
+    and `/home` is the org picker on every host — the creator was sent to a list
+    of organizations instead of into the one they had just made.
+    """
     try:
         email = getattr(current_user, "email", None)
         if not email:
             return
-        from src.services.email.utils import get_base_url_from_request
+        from src.services.email.utils import get_org_signup_base_url
         from src.services.users.emails import send_org_created_email
-        base = get_base_url_from_request(request)
-        send_org_created_email(email, org.name, f"{base}/home")
+        base = await get_org_signup_base_url(
+            org.slug, request, db_session=db_session, org_id=org.id
+        )
+        send_org_created_email(email, org.name, f"{base.rstrip('/')}/dash")
     except Exception:
         logging.exception("send_org_created_email failed")
 
@@ -312,7 +321,7 @@ async def create_org(
     # Reuse the shared builder so the create response carries resolved_features,
     # matching the GET org endpoints (and the None-config case is handled).
     org_read = _build_org_read_with_resolved(org, org_config)
-    _try_send_org_created(request, current_user, org)
+    await _try_send_org_created(request, org, current_user, db_session)
     _try_record_org_admin_in_loops(current_user, org)
     return org_read
 
@@ -406,7 +415,7 @@ async def create_org_with_config(
     # Reuse the shared builder so the create response carries resolved_features,
     # matching the GET org endpoints (and the None-config case is handled).
     org_read = _build_org_read_with_resolved(org, org_config)
-    _try_send_org_created(request, current_user, org)
+    await _try_send_org_created(request, org, current_user, db_session)
     _try_record_org_admin_in_loops(current_user, org)
     return org_read
 

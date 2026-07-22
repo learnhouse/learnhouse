@@ -1,5 +1,6 @@
 """Tests for src/services/orgs/join_notifications.py."""
 
+import re
 from datetime import datetime
 from unittest.mock import AsyncMock, patch
 
@@ -7,6 +8,11 @@ import pytest
 
 from src.db.users import User
 from src.services.orgs.join_notifications import notify_user_joined_org
+
+
+def _cta_hrefs(body: str) -> list[str]:
+    """The href of every link (button) in an email body."""
+    return re.findall(r'href="([^"]+)"', body)
 
 
 async def _make_user(db, **overrides):
@@ -33,9 +39,10 @@ class TestNotifyUserJoinedOrg:
     async def test_sends_org_scoped_greeting(self, mock_request, db, org):
         user = await _make_user(db)
 
+        org_host = "https://acme.test"
         with patch(
             "src.services.email.utils.get_org_signup_base_url",
-            new=AsyncMock(return_value="https://acme.test/"),
+            new=AsyncMock(return_value=org_host + "/"),
         ), patch(
             "src.services.users.emails.send_email", return_value=True
         ) as send_email:
@@ -45,7 +52,11 @@ class TestNotifyUserJoinedOrg:
         assert call["to"] == "joiner@test.com"
         assert org.name in call["subject"]
         # Lands the user in the org they just joined, on the org's own host.
-        assert "https://acme.test/home" in call["body"]
+        # Not `/home`: that is the org picker on every host, so it would send
+        # them straight back out of the org this email is about.
+        hrefs = _cta_hrefs(call["body"])
+        assert any(h == org_host for h in hrefs)
+        assert not any(h.endswith("/home") for h in hrefs)
 
     @pytest.mark.asyncio
     async def test_skips_user_without_email(self, mock_request, db, org):
