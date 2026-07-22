@@ -223,7 +223,12 @@
     "delete_organization_warning": "Hiermee worden {{name}} en alle bijbehorende gegevens permanent verwijderd. Deze actie kan niet ongedaan worden gemaakt.",
     "delete_organization_confirm_label": "Typ {{slug}} om te bevestigen",
     "deleting": "Bezig met verwijderen…",
-    "retry": "Opnieuw proberen"
+    "retry": "Opnieuw proberen",
+    "leave_organization": "Organisatie verlaten",
+    "leave_organization_title": "Organisatie verlaten?",
+    "leave_organization_desc": "Je verliest toegang tot {{org}} en wordt verwijderd als lid. Je kunt later opnieuw deelnemen als je wordt uitgenodigd.",
+    "leave_organization_error": "Deze organisatie kon niet worden verlaten. Probeer het opnieuw.",
+    "leaving": "Bezig met verlaten…"
   },
   "banner": {
     "viewing_as_guest": "Je bekijkt {{name}} als gast.",
@@ -654,7 +659,13 @@
     "quit_course_confirm": "Weet u zeker dat u deze cursus wilt verlaten? U verliest al uw voortgang.",
     "quit_course_title": "Cursus verlaten?",
     "courses_load_error": "Cursussen laden mislukt. Probeer het opnieuw.",
-    "view_all_courses": "Alle cursussen bekijken"
+    "view_all_courses": "Alle cursussen bekijken",
+    "first_chapter_default_name": "Eerste hoofdstuk",
+    "paste_from_clipboard": "Plakken vanaf klembord",
+    "no_image_in_clipboard": "Geen afbeelding gevonden op het klembord",
+    "clipboard_read_error": "Klembord kon niet worden gelezen",
+    "sign_in_to_see_courses": "Log in om je cursussen te bekijken",
+    "sign_in_to_see_courses_description": "Cursussen in deze academie zijn mogelijk pas zichtbaar nadat je bent ingelogd."
   },
   "communities": {
     "title": "Community's",
@@ -965,13 +976,20 @@
     "embed": "Insluiten",
     "embed_code_copied": "Insluitcode gekopieerd!",
     "link_copied": "Link gekopieerd!",
-    "share": "Delen"
+    "share": "Delen",
+    "autosave_blocked": "Kan nog niet worden opgeslagen",
+    "autosave_retry": "Opslaan mislukt — opnieuw proberen…",
+    "autosave_unsaved": "Niet-opgeslagen wijzigingen",
+    "autosaved": "Opgeslagen",
+    "autosaving": "Opslaan…",
+    "save_answers": "Antwoorden opslaan"
   },
   "assignments": {
     "submit_assignment": "Opdracht indienen",
     "submit_assignment_confirm": "Weet je zeker dat je je opdracht wilt indienen voor beoordeling? Eenmaal ingediend, kun je geen wijzigingen meer aanbrengen.",
     "submit_assignment_title": "Dien je opdracht in voor beoordeling",
     "submit_for_grading": "Indienen voor beoordeling",
+    "submitting": "Bezig met indienen…",
     "grading_in_progress": "Beoordeling in uitvoering",
     "graded": "Beoordeeld",
     "assignment_submitted_success": "Opdracht ingediend voor beoordeling",
@@ -1013,7 +1031,11 @@
     "retry_assignment_last": "Dit is uw laatste poging — zorg dat het telt.",
     "retry_assignment_success": "Uw werk is opnieuw ingesteld — probeer het nogmaals.",
     "retry_assignment_failed": "Kon uw inzending niet opnieuw instellen. Probeer het opnieuw.",
-    "retry_no_attempts_left": "Geen pogingen meer"
+    "retry_no_attempts_left": "Geen pogingen meer",
+    "no_task_submission_to_grade": "Deze student heeft nog geen bestand ingediend voor deze opdracht.",
+    "past_due": "Deadline verstreken",
+    "past_due_description": "De deadline voor deze opdracht was {{date}}. Antwoorden kunnen niet meer worden opgeslagen of ingediend voor beoordeling.",
+    "past_due_title": "Deadline verstreken"
   },
   "certificate": {
     "certificate": "Certificaat",
@@ -1040,7 +1062,8 @@
     "continuing_education": "Permanente educatie",
     "workshop_attendance": "Aanwezigheid bij workshop",
     "specialization": "Specialisatie",
-    "dedication_message": "Je inzet en harde werk hebben hun vruchten afgeworpen. Je hebt alle inhoud van deze cursus onder de knie."
+    "dedication_message": "Je inzet en harde werk hebben hun vruchten afgeworpen. Je hebt alle inhoud van deze cursus onder de knie.",
+    "download_failed": "PDF genereren mislukt. Probeer het opnieuw."
   },
   "search": {
     "search_placeholder": "Zoek cursussen, gebruikers, collecties...",
@@ -1125,7 +1148,9 @@
       "description": "Verwijder je account permanent en trek je toegang in. Dit kan niet ongedaan worden gemaakt.",
       "warning": "Hiermee worden je account en alle bijbehorende gegevens permanent verwijderd. Deze actie kan niet ongedaan worden gemaakt.",
       "confirm_label": "Typ {{username}} om te bevestigen",
-      "deleting": "Bezig met verwijderen…"
+      "deleting": "Bezig met verwijderen…",
+      "zone_subtitle": "Verwijder je account definitief. Dit kan niet ongedaan worden gemaakt.",
+      "zone_body": "Hiermee verwijder je je account en toegang. Elke organisatie waarvan je de enige beheerder bent — inclusief alle cursussen en inhoud — wordt ook verwijderd. Organisaties met andere beheerders blijven bestaan; je wordt daar alleen uit verwijderd."
     }
   },
   "user": {
@@ -1347,6 +1372,12 @@
           "save_error": "Fout bij het bijwerken van profiel"
         },
         "unknown_section": "Onbekende sectie"
+      },
+      "security": {
+        "current_session_title": "Huidige sessie",
+        "current_session_subtitle": "Het apparaat waarop je nu bent ingelogd.",
+        "this_device": "Dit apparaat",
+        "sign_out": "Uitloggen"
       }
     },
     "sign_out": "Uitloggen",
@@ -2082,7 +2113,8 @@
             "dynamic_page": "Dynamische Pagina",
             "scorm": "Scorm",
             "markdown": "Markdown",
-            "embed": "Embed"
+            "embed": "Embed",
+            "resource": "Bron"
           },
           "toasts": {
             "deleting": "Activiteit verwijderen...",
@@ -3451,7 +3483,8 @@
           "drafts": "Concepten",
           "auto_graded": "Alleen auto-beoordeeld",
           "hide_empty": "Lege cursussen verbergen"
-        }
+        },
+        "new_assignment": "Nieuwe opdracht"
       },
       "detail": {
         "title": "Opdracht Tooling",
@@ -3527,7 +3560,8 @@
           "task_save_error": "Er is een fout opgetreden bij het opslaan van de taak. Probeer het later opnieuw.",
           "task_updated": "Taak succesvol bijgewerkt",
           "task_update_error": "Er is een fout opgetreden bij het bijwerken van de taak. Probeer het later opnieuw.",
-          "reminder": "Vergeet niet de publicatie van de opdracht ongedaan te maken bij het bewerken of toevoegen van taken om problemen met studenten te voorkomen. Je kunt het opnieuw publiceren als je klaar bent."
+          "reminder": "Vergeet niet de publicatie van de opdracht ongedaan te maken bij het bewerken of toevoegen van taken om problemen met studenten te voorkomen. Je kunt het opnieuw publiceren als je klaar bent.",
+          "no_submission_to_grade": "Deze student heeft nog niets ingediend voor deze opdracht, dus er valt niets te beoordelen."
         },
         "task_editor": {
           "general": {
@@ -3547,7 +3581,9 @@
             "auth_required_submit": "Authenticatie vereist. Log in om de taak in te dienen.",
             "hint_optional": "Tip (optioneel)",
             "paste_blocked": "Plakken is uitgeschakeld voor deze opdracht",
-            "paste_blocked_hint": "Plakken is uitgeschakeld — typ je antwoord direct."
+            "paste_blocked_hint": "Plakken is uitgeschakeld — typ je antwoord direct.",
+            "upload_locked_graded": "Deze inzending is beoordeeld — je bestand kan niet meer worden gewijzigd.",
+            "upload_locked_submitted": "Je hebt deze opdracht ingediend — je bestand kan niet meer worden gewijzigd."
           },
           "code": {
             "student_behavior_label": "Studentgedrag",
@@ -3563,7 +3599,10 @@
             "must_pass_hint": "Alle zichtbare tests moeten slagen voordat je kunt opslaan.",
             "show_solution_label": "Onthul oplossing na inzending",
             "show_solution_description": "Zodra de student zijn werk heeft opgeslagen, toon de referentieoplossing van de docent.",
-            "reference_solution_label": "Referentieoplossing"
+            "reference_solution_label": "Referentieoplossing",
+            "locked_graded_hint": "Deze inzending is beoordeeld — je code is alleen-lezen.",
+            "locked_submitted_hint": "Je hebt deze opdracht ingediend — je code is alleen-lezen.",
+            "no_runnable_tests": "Deze opdracht heeft geen tests die je kunt uitvoeren — je code wordt gecontroleerd tijdens de beoordeling."
           },
           "short_answer": {
             "prompt_label": "Vraagstelling",
@@ -3606,13 +3645,19 @@
             "correct": "Juist",
             "incorrect": "Niet helemaal — probeer opnieuw"
           }
+        },
+        "generate_ai": "Opdrachten genereren met AI",
+        "generate_ai_modal": {
+          "description": "Beschrijf wat je wilt en bekijk opdrachten op basis van de cursusinhoud voordat je ze toevoegt.",
+          "title": "Opdrachten genereren met AI"
         }
       },
       "submissions": {
         "status": {
           "late": "Te laat",
           "submitted": "Ingediend",
-          "graded": "Beoordeeld"
+          "graded": "Beoordeeld",
+          "pending": "In behandeling"
         },
         "submission_label": "Inzending",
         "evaluate": "Evalueren",
@@ -3668,7 +3713,8 @@
           "optional": "optioneel",
           "placeholder": "Schrijf een commentaar over de hele inzending. De student ziet dit naast zijn cijfer.",
           "hint": "Laat leeg om eerdere feedback ongewijzigd te houden."
-        }
+        },
+        "truncated_warning": "Alleen de eerste {{max}} inzendingen worden getoond. Sommige inzendingen staan hier niet vermeld."
       },
       "analytics": {
         "loading": "Analyses worden geladen...",
@@ -3812,9 +3858,22 @@
           },
           "toasts": {
             "creating": "Opdracht aanmaken...",
-            "success": "Opdracht succesvol aangemaakt"
+            "success": "Opdracht succesvol aangemaakt",
+            "error": "Opdracht maken mislukt"
           }
         }
+      },
+      "create_flow": {
+        "create_course": "Een cursus maken",
+        "no_chapters_desc": "Voeg een hoofdstuk toe in de cursuseditor en maak daar vervolgens een opdracht in.",
+        "no_chapters_title": "Deze cursus heeft nog geen hoofdstukken",
+        "no_courses_desc": "Opdrachten staan in een cursushoofdstuk. Maak je eerste cursus en kom daarna terug om een opdracht toe te voegen.",
+        "no_courses_title": "Maak eerst een cursus",
+        "open_editor": "Cursuseditor openen",
+        "pick_chapter": "Kies het hoofdstuk waarin je deze opdracht wilt plaatsen.",
+        "pick_course": "Kies de cursus waartoe deze opdracht behoort.",
+        "title": "Nieuwe opdracht",
+        "untitled_chapter": "Naamloos hoofdstuk"
       }
     },
     "search": {
@@ -3985,6 +4044,9 @@
           "keywords": "api, tokens, toegang, programmatisch, sleutels"
         }
       }
+    },
+    "developers": {
+      "breadcrumb": "Ontwikkelaars"
     }
   },
   "editor": {
@@ -5162,7 +5224,8 @@
     "accessDenied": "Geen toegang tot deze cursus",
     "backToCourses": "Terug naar cursussen",
     "loadError": "Deze cursus kon niet worden gevonden of er is een fout opgetreden bij het laden.",
-    "noPermission": "Je hebt geen toestemming om deze cursus te bekijken."
+    "noPermission": "Je hebt geen toestemming om deze cursus te bekijken.",
+    "finish_course": "Cursus afronden"
   },
   "pagination": {
     "next": "Volgende",
@@ -5280,7 +5343,18 @@
     "thumbnail_error": "Couldn't upload the cover image",
     "open_resource": "Open",
     "replace_cover": "Replace",
-    "cover_hint": "PNG, JPG, WEBP"
+    "cover_hint": "PNG, JPG, WEBP",
+    "sort": {
+      "sort_by": "Sorteren op",
+      "name_asc": "Naam (A–Z)",
+      "name_desc": "Naam (Z–A)",
+      "newest": "Nieuwste eerst",
+      "oldest": "Oudste eerst",
+      "manual": "Handmatig",
+      "drag_to_reorder": "Sleep om de volgorde te wijzigen",
+      "sort_error": "Sorteervolgorde kon niet worden bijgewerkt",
+      "reorder_error": "Nieuwe volgorde kon niet worden opgeslagen"
+    }
   },
   "media": {
     "media": "Media",
