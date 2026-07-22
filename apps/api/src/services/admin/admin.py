@@ -41,6 +41,7 @@ from src.services.courses.certifications import (
     create_certificate_user,
 )
 from src.services.email.utils import get_base_url_from_request
+from src.services.orgs.join_notifications import notify_user_joined_org
 from src.services.analytics.analytics import track
 from src.services.analytics import events as analytics_events
 from src.services.webhooks.dispatch import dispatch_webhooks
@@ -1086,6 +1087,10 @@ async def provision_user(
             },
         )
 
+        await notify_user_joined_org(
+            request, db_session, existing_user, token_user.org_id
+        )
+
         return UserRead.model_validate(existing_user)
 
     if (await db_session.execute(select(User).where(User.username == username))).scalars().first():
@@ -1141,6 +1146,10 @@ async def provision_user(
             "signup_method": "admin_api",
         },
     )
+
+    # Admin-provisioned accounts skip the signup flow entirely, so this is the
+    # only mail they get: it tells them the org exists and where to log in.
+    await notify_user_joined_org(request, db_session, user, token_user.org_id)
 
     return UserRead.model_validate(user)
 
