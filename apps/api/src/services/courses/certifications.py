@@ -208,6 +208,34 @@ async def delete_certification(
     # RBAC check
     await check_resource_access(request, db_session, current_user, course.course_uuid, AccessAction.DELETE)
 
+    # CertificateUser.certification_id is declared ON DELETE CASCADE, so deleting
+    # the template also destroys every certificate ever awarded from it — the
+    # learners' "my certificates" list empties and every verification link they
+    # shared, including the QR code printed on already-downloaded PDFs, starts
+    # reporting the certificate as revoked. That is irreversible: re-creating the
+    # template mints a new id, and nothing re-issues to past graduates.
+    #
+    # Refuse instead. Awarded certificates must be revoked deliberately, one at a
+    # time, through revoke_user_certificate — which also emits the revocation
+    # analytics and webhooks that a silent cascade skips entirely.
+    awarded_count = (await db_session.execute(
+        select(func.count(CertificateUser.id)).where(
+            CertificateUser.certification_id == certification.id
+        )
+    )).scalar_one()
+
+    if awarded_count:
+        raise HTTPException(
+            status_code=409,
+            detail=(
+                f"This certification has {awarded_count} awarded "
+                f"certificate{'s' if awarded_count != 1 else ''}. Deleting it would "
+                "permanently destroy them and break the verification links their "
+                "holders have shared. Disable the certification instead, or revoke "
+                "the certificates individually first."
+            ),
+        )
+
     await db_session.delete(certification)
     await db_session.commit()
 
