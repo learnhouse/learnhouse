@@ -517,6 +517,45 @@ class TestDeleteCertification:
         )
 
     @pytest.mark.asyncio
+    async def test_delete_certification_refuses_when_certificates_awarded(
+        self, db, course, admin_user, regular_user, mock_request
+    ):
+        """CertificateUser cascades on certification delete, so removing the
+        template would destroy awarded certificates and break the verification
+        links their holders have shared."""
+        certification = await _create_certification(db, course, cert_uuid="cert_awarded")
+        await _create_certificate_user(db, certification, regular_user)
+
+        with patch(
+            "src.services.courses.certifications.check_resource_access",
+            new_callable=AsyncMock,
+        ):
+            with pytest.raises(HTTPException) as exc_info:
+                await delete_certification(
+                    mock_request,
+                    certification.certification_uuid,
+                    admin_user,
+                    db,
+                )
+
+        assert exc_info.value.status_code == 409
+        # The template and the awarded certificate both survive.
+        assert (
+            await db.execute(
+                select(Certifications).where(
+                    Certifications.certification_uuid == certification.certification_uuid
+                )
+            )
+        ).scalars().first() is not None
+        assert (
+            await db.execute(
+                select(CertificateUser).where(
+                    CertificateUser.certification_id == certification.id
+                )
+            )
+        ).scalars().first() is not None
+
+    @pytest.mark.asyncio
     async def test_delete_certification_missing_certification(
         self, db, admin_user, mock_request
     ):
