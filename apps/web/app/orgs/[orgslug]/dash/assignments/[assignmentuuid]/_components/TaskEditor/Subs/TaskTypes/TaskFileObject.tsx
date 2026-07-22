@@ -1,12 +1,12 @@
 import { useAssignments } from '@components/Contexts/Assignments/AssignmentContext';
-import { useAssignmentTaskSubmissions } from '@components/Contexts/Assignments/AssignmentSubmissionContext';
+import { useAssignmentSubmission, useAssignmentTaskSubmissions } from '@components/Contexts/Assignments/AssignmentSubmissionContext';
 import { useAssignmentsTaskDispatch } from '@components/Contexts/Assignments/AssignmentsTaskContext';
 import { useLHSession } from '@components/Contexts/LHSessionContext';
 import { useOrg } from '@components/Contexts/OrgContext';
 import AssignmentBoxUI from '@components/Objects/Activities/Assignment/AssignmentBoxUI'
 import { getAssignmentTask, getAssignmentTaskSubmissionsUser, handleAssignmentTaskSubmission, updateSubFile } from '@services/courses/assignments';
 import { getTaskFileSubmissionDir } from '@services/media/media';
-import { Cloud, Download, File, Info, Loader, UploadCloud } from 'lucide-react'
+import { Cloud, Download, File, Info, Loader, Lock, UploadCloud } from 'lucide-react'
 import Link from 'next/link';
 import React, { useEffect, useState } from 'react'
 import toast from 'react-hot-toast';
@@ -41,6 +41,22 @@ export default function TaskFileObject({ view, user_id, assignmentTaskUUID, onGr
     const taskSubmissionsMap = useAssignmentTaskSubmissions();
     const queryClient = useQueryClient();
 
+    // Student lock — same derivation as AssignmentBoxUI's `canStudentSave` and
+    // the sibling task types (see TaskShortAnswerObject). The upload endpoint
+    // only enforces the deadline: it returns a file_uuid and writes NO
+    // submission row, so the new file is persisted purely by auto-save. Once
+    // the submission is SUBMITTED/GRADED auto-save is off, meaning a fresh
+    // upload would show a green success chip but be lost on reload while the
+    // teacher grades the OLD file. So the upload has to be gated too.
+    const assignmentSubmission = useAssignmentSubmission() as any;
+    const latestSubmissionStatus =
+        Array.isArray(assignmentSubmission) && assignmentSubmission.length > 0
+            ? assignmentSubmission[0]?.submission_status
+            : null;
+    const submissionIsGraded = latestSubmissionStatus === 'GRADED';
+    const canStudentSave =
+        !submissionIsGraded && latestSubmissionStatus !== 'SUBMITTED';
+
     /* TEACHER VIEW CODE */
     /* TEACHER VIEW CODE */
 
@@ -57,6 +73,12 @@ export default function TaskFileObject({ view, user_id, assignmentTaskUUID, onGr
     const interactedRef = React.useRef(false);
 
     const handleFileChange = async (event: any) => {
+        // Defense in depth: the input is not rendered once the submission is
+        // SUBMITTED/GRADED, but a stale/duplicated node must not slip an upload
+        // through that could never be persisted (see canStudentSave above).
+        if (view === 'student' && !canStudentSave) {
+            return;
+        }
         interactedRef.current = true;
         // Check if user is authenticated
         if (!access_token) {
@@ -82,10 +104,16 @@ export default function TaskFileObject({ view, user_id, assignmentTaskUUID, onGr
             setIsLoading(false)
         } else {
             assignmentTaskStateHook({ type: 'reload' })
-            setUserSubmissions({
+            // Only the file uuid comes back from this endpoint — it uploads the
+            // file and does NOT create/return a submission row. Reading
+            // `assignment_task_submission_uuid` off this response yielded
+            // undefined and wiped the existing submission uuid, so the follow-up
+            // auto-save created a duplicate row instead of updating the current
+            // one. Keep whatever uuid we already hold.
+            setUserSubmissions((prev) => ({
+                ...prev,
                 fileUUID: res.data.file_uuid,
-                assignment_task_submission_uuid: res.data.assignment_task_submission_uuid
-            })
+            }))
             queryClient.invalidateQueries({ queryKey: queryKeys.assignments.taskSubmission(assignment.assignment_object.assignment_uuid) });
             setIsLoading(false)
             setError('')
@@ -211,6 +239,16 @@ export default function TaskFileObject({ view, user_id, assignmentTaskUUID, onGr
     }
 
     async function gradeCustomFC(grade: number, feedback?: string) {
+        // Same guard as the sibling task types (TaskShortAnswerObject:259).
+        // Without an existing submission uuid the grade is written against the
+        // INSTRUCTOR's own row, where it is silently forced to 0 while the UI
+        // reports success — so refuse instead of grading a phantom submission.
+        if (!userSubmissions?.assignment_task_submission_uuid) {
+            toast.error(t('assignments.no_task_submission_to_grade', {
+                defaultValue: 'This student has not submitted a file for this task yet.',
+            }));
+            return;
+        }
         await applyManualGrade({
             grade,
             feedback,
@@ -346,6 +384,25 @@ export default function TaskFileObject({ view, user_id, assignmentTaskUUID, onGr
                                         <div className="font-medium animate-pulse antialiased items-center bg-slate-100 text-slate-600 text-xs sm:text-sm rounded-md px-4 sm:px-5 py-2.5 flex">
                                             <Loader size={15} className="mr-2" />
                                             <span>Loading</span>
+                                        </div>
+                                    </div>
+                                ) : !canStudentSave ? (
+                                    // Locked: uploading now would look successful
+                                    // but could never be persisted (auto-save is
+                                    // off once SUBMITTED/GRADED), so the teacher
+                                    // would keep grading the previous file.
+                                    <div className="flex justify-center items-center w-full mt-5">
+                                        <div className="flex justify-center bg-slate-50 border border-slate-200 rounded-md text-slate-500 space-x-2 items-center p-3 transition-all shadow-xs w-full sm:w-auto">
+                                            <Lock size={15} className="text-slate-400" />
+                                            <div className="text-xs sm:text-sm font-medium">
+                                                {submissionIsGraded
+                                                    ? t('dashboard.assignments.editor.task_editor.general.upload_locked_graded', {
+                                                        defaultValue: 'This submission has been graded — your file can no longer be changed.',
+                                                    })
+                                                    : t('dashboard.assignments.editor.task_editor.general.upload_locked_submitted', {
+                                                        defaultValue: 'You have submitted this assignment — your file can no longer be changed.',
+                                                    })}
+                                            </div>
                                         </div>
                                     </div>
                                 ) : (

@@ -1,4 +1,4 @@
-import React, { useMemo, useEffect, useState } from 'react';
+import React, { useMemo, useEffect, useState, useRef } from 'react';
 import toast from 'react-hot-toast';
 import dynamic from 'next/dynamic';
 const ReactConfetti = dynamic(() => import('react-confetti'), { ssr: false });
@@ -11,6 +11,11 @@ import { useOrg } from '@components/Contexts/OrgContext';
 import { useLHSession } from '@components/Contexts/LHSessionContext';
 import { getUserCertificates } from '@services/courses/certifications';
 import CertificatePreview from '@components/Dashboard/Pages/Course/EditCourseCertification/CertificatePreview';
+import {
+  downloadCertificateNodeAsPdf,
+  certificateFileName,
+  CERTIFICATE_CAPTURE_WIDTH,
+} from '@services/courses/certificateDownload';
 import { useTranslation } from 'react-i18next';
 
 interface CourseEndViewProps {
@@ -37,6 +42,10 @@ const CourseEndView: React.FC<CourseEndViewProps> = ({
   const [userCertificate, setUserCertificate] = useState<any>(null);
   const [isLoadingCertificate, setIsLoadingCertificate] = useState(false);
   const [certificateError, setCertificateError] = useState<string | null>(null);
+  // Offscreen, fixed-width render of the certificate used as the PDF source.
+  // The visible copy is fluid (max-w-2xl and narrower on mobile), so capturing
+  // it directly would make the exported file depend on the viewer's screen.
+  const certificateCaptureRef = useRef<HTMLDivElement>(null);
 
   // Recipient's display name for the certificate (full name -> username ->
   // session user). Empty when unknown so the "Presented to" line is skipped.
@@ -129,289 +138,51 @@ const CourseEndView: React.FC<CourseEndViewProps> = ({
     fetchUserCertificate();
   }, [isCourseCompleted, courseUuid, session?.data?.tokens?.access_token, org?.id]);
 
-  // Generate PDF using canvas
+  // Generate the PDF from the SAME <CertificatePreview> the learner sees.
+  //
+  // This used to build a separate certificate out of a hand-written HTML
+  // string, which had drifted into a completely different design: no pattern
+  // artwork, no org logo or name, an emoji instead of the award mark, and its
+  // own colour palette. We now rasterise a hidden, fixed-width render of the
+  // real component (see `certificateCaptureRef` below), so the download always
+  // matches the on-screen and admin-preview certificate.
   const downloadCertificate = async () => {
     if (!userCertificate) return;
+    const node = certificateCaptureRef.current;
+    if (!node) return;
 
     try {
-      const [{ default: html2canvas }, { default: jsPDF }, QRCode] = await Promise.all([
-        // html2canvas-pro understands modern CSS color functions (oklch/lab/
-        // color-mix) emitted by Tailwind v4; classic html2canvas throws on them.
-        import('html2canvas-pro'),
-        import('jspdf'),
-        import('qrcode'),
-      ]);
-      // Create a temporary div for the certificate
-      const certificateDiv = document.createElement('div');
-      certificateDiv.style.position = 'absolute';
-      certificateDiv.style.left = '-9999px';
-      certificateDiv.style.top = '0';
-      certificateDiv.style.width = '800px';
-      certificateDiv.style.height = '600px';
-      certificateDiv.style.background = 'white';
-      certificateDiv.style.padding = '40px';
-      certificateDiv.style.fontFamily = 'Arial, sans-serif';
-      certificateDiv.style.textAlign = 'center';
-      certificateDiv.style.display = 'flex';
-      certificateDiv.style.flexDirection = 'column';
-      certificateDiv.style.justifyContent = 'center';
-      certificateDiv.style.alignItems = 'center';
-      certificateDiv.style.position = 'relative';
-      certificateDiv.style.overflow = 'hidden';
-
-      // Get theme colors based on pattern
-      const getPatternTheme = (pattern: string) => {
-        switch (pattern) {
-          case 'royal':
-            return { primary: '#b45309', secondary: '#d97706', icon: '#d97706' };
-          case 'tech':
-            return { primary: '#0e7490', secondary: '#0891b2', icon: '#0891b2' };
-          case 'nature':
-            return { primary: '#15803d', secondary: '#16a34a', icon: '#16a34a' };
-          case 'geometric':
-            return { primary: '#7c3aed', secondary: '#9333ea', icon: '#9333ea' };
-          case 'vintage':
-            return { primary: '#c2410c', secondary: '#ea580c', icon: '#ea580c' };
-          case 'waves':
-            return { primary: '#1d4ed8', secondary: '#2563eb', icon: '#2563eb' };
-          case 'minimal':
-            return { primary: '#374151', secondary: '#4b5563', icon: '#4b5563' };
-          case 'professional':
-            return { primary: '#334155', secondary: '#475569', icon: '#475569' };
-          case 'academic':
-            return { primary: '#3730a3', secondary: '#4338ca', icon: '#4338ca' };
-          case 'modern':
-            return { primary: '#1d4ed8', secondary: '#2563eb', icon: '#2563eb' };
-          default:
-            return { primary: '#374151', secondary: '#4b5563', icon: '#4b5563' };
-        }
-      };
-
-      const theme = getPatternTheme(userCertificate.certification.config.certificate_pattern);
-      const certificateId = userCertificate.certificate_user.user_certification_uuid;
-      const qrCodeData = qrCodeLink;
-
-      // Escape the learner-controlled name before injecting into innerHTML.
-      const escapeHtml = (s: string) =>
-        s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
-         .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
-      const safeLearnerName = learnerName ? escapeHtml(learnerName) : '';
-
-      // Generate QR code
-      const qrCodeDataUrl = await QRCode.toDataURL(qrCodeData, {
-        width: 120,
-        margin: 2,
-        color: {
-          dark: '#000000',
-          light: '#FFFFFF'
-        },
-        errorCorrectionLevel: 'M',
-        type: 'image/png'
-      });
-
-      // Create certificate content
-      certificateDiv.innerHTML = `
-        <div style="
-          position: absolute;
-          top: 20px;
-          left: 20px;
-          font-size: 12px;
-          color: ${theme.secondary};
-          font-weight: 500;
-        ">ID: ${certificateId}</div>
-        
-        <div style="
-          position: absolute;
-          top: 20px;
-          right: 20px;
-          width: 80px;
-          height: 80px;
-          border: 2px solid ${theme.secondary};
-          border-radius: 8px;
-          background: white;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-        ">
-          <img src="${qrCodeDataUrl}" alt="QR Code" style="width: 100%; height: 100%; object-fit: contain;" />
-        </div>
-        
-        <div style="
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          gap: 8px;
-          margin-bottom: 30px;
-          font-size: 14px;
-          color: ${theme.secondary};
-          font-weight: 500;
-          text-transform: uppercase;
-          letter-spacing: 1px;
-        ">
-          <div style="width: 24px; height: 1px; background: linear-gradient(90deg, transparent, ${theme.secondary}, transparent);"></div>
-          ${t('certificate.certificate')}
-          <div style="width: 24px; height: 1px; background: linear-gradient(90deg, transparent, ${theme.secondary}, transparent);"></div>
-        </div>
-        
-        <div style="
-          width: 80px;
-          height: 80px;
-          background: linear-gradient(135deg, ${theme.icon}20 0%, ${theme.icon}40 100%);
-          border-radius: 50%;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          margin: 0 auto 30px;
-          font-size: 40px;
-          line-height: 1;
-        ">🏆</div>
-        
-        <div style="
-          font-size: 32px;
-          font-weight: bold;
-          color: ${theme.primary};
-          margin-bottom: 20px;
-          line-height: 1.2;
-          max-width: 600px;
-        ">${userCertificate.certification.config.certification_name}</div>
-
-        ${safeLearnerName ? `
-        <div style="margin-bottom: 14px;">
-          <div style="
-            font-size: 12px;
-            color: ${theme.secondary};
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            margin-bottom: 3px;
-          ">${t('certificate.presented_to', { defaultValue: 'Presented to' })}</div>
-          <div style="
-            font-size: 22px;
-            font-weight: bold;
-            color: ${theme.primary};
-          ">${safeLearnerName}</div>
-        </div>` : ''}
-
-        <div style="
-          font-size: 18px;
-          color: #6b7280;
-          margin-bottom: 30px;
-          line-height: 1.5;
-          max-width: 500px;
-        ">${userCertificate.certification.config.certification_description || t('courses.successfully_completed')}</div>
-        
-        <div style="
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          gap: 4px;
-          margin: 20px 0;
-        ">
-          <div style="width: 8px; height: 1px; background: ${theme.secondary}; opacity: 0.5;"></div>
-          <div style="width: 4px; height: 4px; background: ${theme.primary}; border-radius: 50%; opacity: 0.6;"></div>
-          <div style="width: 8px; height: 1px; background: ${theme.secondary}; opacity: 0.5;"></div>
-        </div>
-        
-        <div style="
-          display: inline-flex;
-          align-items: center;
-          gap: 8px;
-          font-size: 16px;
-          color: ${theme.primary};
-          background: ${theme.icon}10;
-          padding: 12px 24px;
-          border-radius: 20px;
-          border: 1px solid ${theme.icon}20;
-          font-weight: 500;
-          margin-bottom: 30px;
-          white-space: nowrap;
-        ">
-          <span style="font-weight: bold; font-size: 18px;">✓</span>
-          <span>${userCertificate.certification.config.certification_type === 'completion' ? t('courses.course_completion') :
-            userCertificate.certification.config.certification_type === 'achievement' ? t('certificate.achievement_based') :
-            userCertificate.certification.config.certification_type === 'assessment' ? t('certificate.assessment_based') :
-            userCertificate.certification.config.certification_type === 'participation' ? t('certificate.participation') :
-            userCertificate.certification.config.certification_type === 'mastery' ? t('certificate.skill_mastery') :
-            userCertificate.certification.config.certification_type === 'professional' ? t('certificate.professional_development') :
-            userCertificate.certification.config.certification_type === 'continuing' ? t('certificate.continuing_education') :
-            userCertificate.certification.config.certification_type === 'workshop' ? t('certificate.workshop_attendance') :
-            userCertificate.certification.config.certification_type === 'specialization' ? t('certificate.specialization') : t('courses.course_completion')}</span>
-        </div>
-        
-        <div style="
-          margin-top: 30px;
-          padding: 24px;
-          background: #f8fafc;
-          border-radius: 8px;
-          border: 1px solid #e2e8f0;
-          max-width: 400px;
-        ">
-          <div style="margin: 8px 0; font-size: 14px; color: #374151;">
-            <strong style="color: ${theme.primary};">${t('certificate.certificate_id')}:</strong> ${certificateId}
-          </div>
-          <div style="margin: 8px 0; font-size: 14px; color: #374151;">
-            <strong style="color: ${theme.primary};">${t('certificate.awarded')}:</strong> ${new Date(userCertificate.certificate_user.created_at).toLocaleDateString(i18n.language === 'fr' ? 'fr-FR' : 'en-US', {
-              year: 'numeric',
-              month: 'long',
-              day: 'numeric'
-            })}
-          </div>
-          ${userCertificate.certification.config.certificate_instructor ? 
-            `<div style="margin: 8px 0; font-size: 14px; color: #374151;">
-              <strong style="color: ${theme.primary};">${t('roles.instructor')}:</strong> ${userCertificate.certification.config.certificate_instructor}
-            </div>` : ''
-          }
-        </div>
-        
-        <div style="
-          margin-top: 20px;
-          font-size: 12px;
-          color: #6b7280;
-        ">
-          ${t('certificate.certificate_verify_message')} ${qrCodeLink}
-        </div>
-      `;
-
-      // Add to document temporarily
-      document.body.appendChild(certificateDiv);
-
-      // Convert to canvas
-      const canvas = await html2canvas(certificateDiv, {
-        width: 800,
-        height: 600,
-        scale: 2, // Higher resolution
-        useCORS: true,
-        allowTaint: true,
-        backgroundColor: '#ffffff'
-      });
-
-      // Remove temporary div
-      document.body.removeChild(certificateDiv);
-
-      // Create PDF
-      const imgData = canvas.toDataURL('image/png');
-      const pdf = new jsPDF('landscape', 'mm', 'a4');
-      
-      // Calculate dimensions to center the certificate
-      const pdfWidth = pdf.internal.pageSize.getWidth();
-      const pdfHeight = pdf.internal.pageSize.getHeight();
-      const imgWidth = 280; // mm
-      const imgHeight = 210; // mm
-      
-      // Center the image
-      const x = (pdfWidth - imgWidth) / 2;
-      const y = (pdfHeight - imgHeight) / 2;
-      
-      pdf.addImage(imgData, 'PNG', x, y, imgWidth, imgHeight);
-      
-      // Save the PDF
-      const fileName = `${userCertificate.certification.config.certification_name.replace(/[^a-zA-Z0-9]/g, '_')}_Certificate.pdf`;
-      pdf.save(fileName);
-
+      await downloadCertificateNodeAsPdf(
+        node,
+        certificateFileName(userCertificate.certification?.config?.certification_name),
+      );
     } catch (error) {
       console.error('Error generating PDF:', error);
-      toast.error('Failed to generate PDF. Please try again.');
+      toast.error(t('certificate.download_failed', 'Failed to generate PDF. Please try again.'));
     }
   };
+
+  // Single source of truth for the certificate's contents. Both the visible
+  // certificate and the offscreen one we rasterise into the PDF are rendered
+  // from this, so they cannot drift apart.
+  const certificatePreviewProps = useMemo(() => {
+    if (!userCertificate) return null;
+    const config = userCertificate.certification?.config || {};
+    return {
+      certificationName: config.certification_name,
+      certificationDescription: config.certification_description,
+      certificationType: config.certification_type,
+      certificatePattern: config.certificate_pattern,
+      certificateInstructor: config.certificate_instructor,
+      certificateId: userCertificate.certificate_user.user_certification_uuid,
+      learnerName,
+      awardedDate: new Date(userCertificate.certificate_user.created_at).toLocaleDateString(
+        i18n.language === 'fr' ? 'fr-FR' : 'en-US',
+        { year: 'numeric', month: 'long', day: 'numeric' },
+      ),
+      qrCodeLink,
+    };
+  }, [userCertificate, learnerName, qrCodeLink, i18n.language]);
 
   // Calculate progress for incomplete courses
   const progressInfo = useMemo(() => {
@@ -509,26 +280,25 @@ const CourseEndView: React.FC<CourseEndViewProps> = ({
                 {certificateError}
               </p>
             </div>
-          ) : userCertificate ? (
+          ) : userCertificate && certificatePreviewProps ? (
             <div className="space-y-4">
               <h2 className="text-2xl font-semibold text-gray-900">{t('certificate.your_certificate')}</h2>
               <div className="max-w-2xl mx-auto" id="certificate-preview">
                 <div id="certificate-content">
-                  <CertificatePreview
-                    certificationName={userCertificate.certification.config.certification_name}
-                    certificationDescription={userCertificate.certification.config.certification_description}
-                    certificationType={userCertificate.certification.config.certification_type}
-                    certificatePattern={userCertificate.certification.config.certificate_pattern}
-                    certificateInstructor={userCertificate.certification.config.certificate_instructor}
-                    certificateId={userCertificate.certificate_user.user_certification_uuid}
-                    learnerName={learnerName}
-                    awardedDate={new Date(userCertificate.certificate_user.created_at).toLocaleDateString(i18n.language === 'fr' ? 'fr-FR' : 'en-US', {
-                      year: 'numeric',
-                      month: 'long',
-                      day: 'numeric'
-                    })}
-                    qrCodeLink={qrCodeLink}
-                  />
+                  <CertificatePreview {...certificatePreviewProps} />
+                </div>
+              </div>
+              {/* PDF source. Identical props to the visible certificate above,
+                  just pinned to a fixed width so the export is the same on
+                  every screen. Kept in the layout (offscreen, not display:none)
+                  because html2canvas cannot measure a hidden subtree. */}
+              <div
+                aria-hidden="true"
+                className="pointer-events-none fixed top-0 left-0 -z-50 opacity-0"
+                style={{ transform: 'translateX(-200vw)' }}
+              >
+                <div ref={certificateCaptureRef} style={{ width: CERTIFICATE_CAPTURE_WIDTH }}>
+                  <CertificatePreview {...certificatePreviewProps} />
                 </div>
               </div>
               <div className="flex justify-center space-x-4">

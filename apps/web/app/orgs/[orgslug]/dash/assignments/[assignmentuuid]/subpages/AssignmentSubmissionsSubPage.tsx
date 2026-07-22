@@ -4,14 +4,17 @@ import Modal from '@components/Objects/StyledElements/Modal/Modal';
 import { getAPIUrl } from '@services/config/config';
 import { getUserAvatarMediaDirectory } from '@services/media/media';
 import { apiFetch } from '@services/utils/ts/requests';
-import { useQuery } from '@tanstack/react-query';
+import { useQueries, useQuery } from '@tanstack/react-query';
 import { queryKeys } from '@/lib/query/keys';
 import {
+    AlertTriangle,
     ArrowUpDown,
     Calendar,
     CheckCircle2,
     ChevronDown,
+    CircleDashed,
     Clock,
+    Hourglass,
     Inbox,
     RotateCcw,
     Search,
@@ -36,7 +39,44 @@ type SortField =
     | 'late_first'       // LATE submissions at the top
     | 'recently_graded'; // GRADED first, then sorted by submission date
 type SortDirection = 'asc' | 'desc';
-type StatusFilter = 'ALL' | 'LATE' | 'SUBMITTED' | 'GRADED';
+type StatusFilter = 'ALL' | 'LATE' | 'SUBMITTED' | 'GRADED' | 'PENDING' | 'NOT_SUBMITTED';
+
+// The submissions endpoint is paginated server-side (`limit` defaults to 50,
+// caps at 500) and answers with a bare array — no total, no cursor. Requesting
+// it without params silently returned only the newest 50 submitters, which made
+// the stats, the filters and the search lie and left everyone else ungradable.
+// So we page through explicitly until a short page comes back.
+const SUBMISSIONS_PAGE_SIZE = 500;
+// Hard stop so a misbehaving server (e.g. one that ignores `offset`) can never
+// spin this loop forever.
+const SUBMISSIONS_MAX_PAGES = 20;
+const SUBMISSIONS_FETCH_CAP = SUBMISSIONS_PAGE_SIZE * SUBMISSIONS_MAX_PAGES;
+
+// Fetch every page of an assignment's submissions. When the returned array is
+// exactly SUBMISSIONS_FETCH_CAP long we bailed on the page guard rather than on
+// a short page, which is what the UI uses to warn about truncation.
+async function fetchAllAssignmentSubmissions(assignment_uuid: string, access_token: string) {
+    const all: any[] = [];
+    for (let page = 0; page < SUBMISSIONS_MAX_PAGES; page++) {
+        const url = `${getAPIUrl()}assignments/assignment_${assignment_uuid}/submissions`
+            + `?limit=${SUBMISSIONS_PAGE_SIZE}&offset=${page * SUBMISSIONS_PAGE_SIZE}`;
+        const batch = await apiFetch(url, access_token);
+        if (!Array.isArray(batch)) break;
+        all.push(...batch);
+        if (batch.length < SUBMISSIONS_PAGE_SIZE) break;
+    }
+    return all;
+}
+
+// Display name used by the list-level search + name sort. Kept identical to
+// what SubmissionRow renders so a student can never match one and not the other.
+function displayNameOf(user: any): string {
+    if (!user) return '';
+    if (user.first_name || user.last_name) {
+        return `${user.first_name || ''} ${user.last_name || ''}`.trim();
+    }
+    return user.username || '';
+}
 
 function AssignmentSubmissionsSubPage({ assignment_uuid }: { assignment_uuid: string }) {
     const { t } = useTranslation();
@@ -51,7 +91,9 @@ function AssignmentSubmissionsSubPage({ assignment_uuid }: { assignment_uuid: st
 
     const { data: assignmentSubmissions } = useQuery({
         queryKey: queryKeys.assignments.allSubmissions(assignment_uuid),
-        queryFn: () => apiFetch(`${getAPIUrl()}assignments/assignment_${assignment_uuid}/submissions`, access_token),
+        // Paged fetch — see fetchAllAssignmentSubmissions: a single unpaginated
+        // request only ever returned the newest 50 rows.
+        queryFn: () => fetchAllAssignmentSubmissions(assignment_uuid, access_token),
         enabled: !!(assignment_uuid && access_token),
         // Keep the submissions view in near real-time: poll every 10s so
         // auto-graded submissions show up without a manual page refresh.
@@ -61,13 +103,23 @@ function AssignmentSubmissionsSubPage({ assignment_uuid }: { assignment_uuid: st
         refetchOnReconnect: true,
     });
 
+    // We only ever stop early on a short page, so landing exactly on the cap
+    // means there are probably more rows we did not load. Say so out loud
+    // instead of hiding students behind a silently truncated list.
+    const isTruncated = !!assignmentSubmissions && assignmentSubmissions.length >= SUBMISSIONS_FETCH_CAP;
+
     const stats = useMemo(() => {
-        if (!assignmentSubmissions) return { total: 0, late: 0, submitted: 0, graded: 0 };
+        if (!assignmentSubmissions) return { total: 0, late: 0, submitted: 0, graded: 0, pending: 0, not_submitted: 0 };
+        // Every status the API can return gets its own bucket so the pills add
+        // up to `total`. PENDING/NOT_SUBMITTED used to fall through and be
+        // rendered (and counted) as "Submitted".
         return {
             total: assignmentSubmissions.length,
             late: assignmentSubmissions.filter((s: any) => s.submission_status === 'LATE').length,
             submitted: assignmentSubmissions.filter((s: any) => s.submission_status === 'SUBMITTED').length,
             graded: assignmentSubmissions.filter((s: any) => s.submission_status === 'GRADED').length,
+            pending: assignmentSubmissions.filter((s: any) => s.submission_status === 'PENDING').length,
+            not_submitted: assignmentSubmissions.filter((s: any) => s.submission_status === 'NOT_SUBMITTED').length,
         };
     }, [assignmentSubmissions]);
 
@@ -76,6 +128,11 @@ function AssignmentSubmissionsSubPage({ assignment_uuid }: { assignment_uuid: st
         { key: 'LATE', label: t('dashboard.assignments.submissions.status.late'), count: stats.late, icon: <Clock size={13} />, activeClass: 'bg-rose-600/80 text-white' },
         { key: 'SUBMITTED', label: t('dashboard.assignments.submissions.status.submitted'), count: stats.submitted, icon: <SendHorizonal size={13} />, activeClass: 'bg-amber-600/80 text-white' },
         { key: 'GRADED', label: t('dashboard.assignments.submissions.status.graded'), count: stats.graded, icon: <CheckCircle2 size={13} />, activeClass: 'bg-emerald-600/80 text-white' },
+        // Only surfaced when they actually occur — most assignments have none of
+        // these and the toolbar is already crowded. Kept visible while selected
+        // so the pill can never vanish and strand the user on an empty list.
+        ...(stats.pending > 0 || statusFilter === 'PENDING' ? [{ key: 'PENDING' as StatusFilter, label: t('dashboard.assignments.submissions.status.pending', { defaultValue: 'In progress' }), count: stats.pending, icon: <Hourglass size={13} />, activeClass: 'bg-slate-500/80 text-white' }] : []),
+        ...(stats.not_submitted > 0 || statusFilter === 'NOT_SUBMITTED' ? [{ key: 'NOT_SUBMITTED' as StatusFilter, label: t('dashboard.assignments.submissions.preview.not_submitted'), count: stats.not_submitted, icon: <CircleDashed size={13} />, activeClass: 'bg-slate-500/80 text-white' }] : []),
     ];
 
     const sortOptions: { field: SortField; label: string }[] = [
@@ -221,6 +278,17 @@ function AssignmentSubmissionsSubPage({ assignment_uuid }: { assignment_uuid: st
 
             {/* Submissions list */}
             <div className="flex-1 overflow-y-auto px-10 pb-6">
+                {isTruncated && (
+                    <div className="flex items-center gap-2 mb-3 px-3.5 py-2.5 rounded-lg bg-amber-50 text-amber-800 text-xs font-semibold ring-1 ring-inset ring-amber-200/60">
+                        <AlertTriangle size={14} className="shrink-0" />
+                        <span>
+                            {t('dashboard.assignments.submissions.truncated_warning', {
+                                max: SUBMISSIONS_FETCH_CAP,
+                                defaultValue: 'Only the first {{max}} submissions are shown. Some submissions are not listed here.',
+                            })}
+                        </span>
+                    </div>
+                )}
                 <SubmissionsList
                     submissions={assignmentSubmissions}
                     assignment_uuid={assignment_uuid}
@@ -250,6 +318,27 @@ function SubmissionsList({
     sortDirection: SortDirection;
 }) {
     const { t } = useTranslation();
+    const session = useLHSession() as any;
+    const access_token = session?.data?.tokens?.access_token;
+
+    // Prefetch every submitter at list level. These use the exact same query
+    // key as the rows did, so react-query dedupes them — no extra requests —
+    // but having the names here is what makes a real "sort by name" and a
+    // list-level search predicate possible at all.
+    const userQueries = useQueries({
+        queries: (submissions || []).map((s: any) => ({
+            queryKey: ['users', 'id', s.user_id],
+            queryFn: () => apiFetch(`${getAPIUrl()}users/id/${s.user_id}`, access_token),
+            enabled: !!(s.user_id && access_token),
+            staleTime: 60_000,
+        })),
+    });
+
+    const usersById = new Map<number, any>();
+    (submissions || []).forEach((s: any, i: number) => {
+        const u = userQueries[i]?.data;
+        if (u) usersById.set(s.user_id, u);
+    });
 
     if (!submissions) {
         return (
@@ -269,21 +358,39 @@ function SubmissionsList({
     }
 
     // Priority tables used by the status-based sorts. Lower numbers come first
-    // when `sortDirection === 'asc'`.
-    const statusOrder: Record<string, number> = { LATE: 0, SUBMITTED: 1, GRADED: 2 };
+    // when `sortDirection === 'asc'`. PENDING/NOT_SUBMITTED sit last everywhere:
+    // there is nothing submitted to review on those rows.
+    const statusOrder: Record<string, number> = { LATE: 0, SUBMITTED: 1, GRADED: 2, PENDING: 3, NOT_SUBMITTED: 4 };
     // needsGradingOrder: ungraded (LATE + SUBMITTED) before GRADED
-    const needsGradingOrder: Record<string, number> = { LATE: 0, SUBMITTED: 0, GRADED: 1 };
+    const needsGradingOrder: Record<string, number> = { LATE: 0, SUBMITTED: 0, GRADED: 1, PENDING: 2, NOT_SUBMITTED: 2 };
     // lateFirstOrder: LATE first, everything else after
-    const lateFirstOrder: Record<string, number> = { LATE: 0, SUBMITTED: 1, GRADED: 1 };
+    const lateFirstOrder: Record<string, number> = { LATE: 0, SUBMITTED: 1, GRADED: 1, PENDING: 2, NOT_SUBMITTED: 2 };
     // recentlyGradedOrder: GRADED first, then everything else
-    const recentlyGradedOrder: Record<string, number> = { GRADED: 0, LATE: 1, SUBMITTED: 1 };
+    const recentlyGradedOrder: Record<string, number> = { GRADED: 0, LATE: 1, SUBMITTED: 1, PENDING: 2, NOT_SUBMITTED: 2 };
 
     const dateMs = (s: any) => new Date(s.creation_date).getTime();
+
+    // Search lives here rather than inside the row: when the rows filtered
+    // themselves out, `filtered.length` stayed >0 so the empty state never
+    // rendered (blank list area) and `isLast` pointed at a hidden row (stray
+    // bottom border).
+    const q = searchQuery.trim().toLowerCase();
+    const matchesSearch = (s: any) => {
+        if (!q) return true;
+        const user = usersById.get(s.user_id);
+        // Keep the row until its user record lands, otherwise everything
+        // disappears for a frame on every refetch.
+        if (!user) return true;
+        const fullName = `${user.first_name || ''} ${user.last_name || ''}`.toLowerCase();
+        const username = (user.username || '').toLowerCase();
+        const email = (user.email || '').toLowerCase();
+        return fullName.includes(q) || username.includes(q) || email.includes(q);
+    };
 
     const filtered = submissions
         .filter((s: any) => {
             if (statusFilter !== 'ALL' && s.submission_status !== statusFilter) return false;
-            return true;
+            return matchesSearch(s);
         })
         .sort((a: any, b: any) => {
             let cmp = 0;
@@ -317,10 +424,20 @@ function SubmissionsList({
                 cmp = (recentlyGradedOrder[a.submission_status] ?? 1) - (recentlyGradedOrder[b.submission_status] ?? 1);
                 // Inside the graded bucket, newest updates first
                 if (cmp === 0) cmp = dateMs(b) - dateMs(a);
+            } else if (sortField === 'name') {
+                // Real name sort, now that the users are prefetched above.
+                // Rows whose user hasn't loaded yet sort to the end instead of
+                // jumping around as each request resolves.
+                const aName = displayNameOf(usersById.get(a.user_id));
+                const bName = displayNameOf(usersById.get(b.user_id));
+                if (!aName || !bName) {
+                    if (aName !== bName) return aName ? -1 : 1;
+                } else {
+                    cmp = aName.localeCompare(bName, undefined, { sensitivity: 'base' });
+                }
+                if (cmp === 0) cmp = dateMs(a) - dateMs(b);
             } else {
-                // name and any unknown: delegate to date as a safe fallback
-                // (name sort happens inside the row component since user data
-                // is fetched there)
+                // Any unknown field: delegate to date as a safe fallback.
                 cmp = dateMs(a) - dateMs(b);
             }
             return sortDirection === 'asc' ? cmp : -cmp;
@@ -344,7 +461,7 @@ function SubmissionsList({
                     key={submission.assignmentusersubmission_uuid || submission.id}
                     submission={submission}
                     assignment_uuid={assignment_uuid}
-                    searchQuery={searchQuery}
+                    user={usersById.get(submission.user_id)}
                     isLast={index === filtered.length - 1}
                 />
             ))}
@@ -355,39 +472,24 @@ function SubmissionsList({
 function SubmissionRow({
     assignment_uuid,
     submission,
-    searchQuery,
+    user,
     isLast,
 }: {
     assignment_uuid: string;
     submission: any;
-    searchQuery: string;
+    user: any;
     isLast: boolean;
 }) {
     const { t } = useTranslation();
-    const session = useLHSession() as any;
-    const access_token = session?.data?.tokens?.access_token;
     const { track } = useLHAnalytics('dashboard');
     const [gradeModalOpen, setGradeModalOpen] = useState(false);
 
-    const { data: user } = useQuery({
-        queryKey: ['users', 'id', submission.user_id],
-        queryFn: () => apiFetch(`${getAPIUrl()}users/id/${submission.user_id}`, access_token),
-        enabled: !!(submission.user_id && access_token),
-        staleTime: 60_000,
-    });
-
-    const matchesSearch = useMemo(() => {
-        if (!searchQuery) return true;
-        if (!user) return true;
-        const q = searchQuery.toLowerCase();
-        const fullName = `${user.first_name || ''} ${user.last_name || ''}`.toLowerCase();
-        const username = (user.username || '').toLowerCase();
-        const email = (user.email || '').toLowerCase();
-        return fullName.includes(q) || username.includes(q) || email.includes(q);
-    }, [searchQuery, user]);
-
-    if (!matchesSearch) return null;
-
+    // Every status the API can return is listed explicitly. The old fallback
+    // to SUBMITTED painted a mid-retry PENDING row with the amber "Submitted"
+    // badge, so a teacher would open Evaluate on a student who had submitted
+    // nothing and grading it would zero their in-flight retry. It also broke
+    // the filter, which compares the real status and therefore hid the very
+    // row that claimed to be "Submitted".
     const statusConfig: Record<string, { label: string; className: string; icon: React.ReactNode }> = {
         LATE: {
             label: t('dashboard.assignments.submissions.status.late'),
@@ -404,9 +506,25 @@ function SubmissionRow({
             className: 'bg-emerald-50 text-emerald-700',
             icon: <CheckCircle2 size={11} />,
         },
+        PENDING: {
+            label: t('dashboard.assignments.submissions.status.pending', { defaultValue: 'In progress' }),
+            className: 'bg-slate-100 text-slate-600',
+            icon: <Hourglass size={11} />,
+        },
+        NOT_SUBMITTED: {
+            label: t('dashboard.assignments.submissions.preview.not_submitted'),
+            className: 'bg-slate-100 text-slate-600',
+            icon: <CircleDashed size={11} />,
+        },
     };
 
-    const status = statusConfig[submission.submission_status] || statusConfig['SUBMITTED'];
+    // Unrecognised statuses degrade to a neutral chip that shows the raw value
+    // rather than claiming the student submitted.
+    const status = statusConfig[submission.submission_status] || {
+        label: submission.submission_status || t('common.unknown'),
+        className: 'bg-slate-100 text-slate-600',
+        icon: <CircleDashed size={11} />,
+    };
     const submittedDate = new Date(submission.creation_date);
     const dateStr = submittedDate.toLocaleDateString('en-UK', {
         year: 'numeric',

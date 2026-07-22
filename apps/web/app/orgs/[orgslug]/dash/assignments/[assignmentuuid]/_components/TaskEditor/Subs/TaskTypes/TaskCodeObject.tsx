@@ -1,6 +1,9 @@
 'use client'
 import { useAssignments } from '@components/Contexts/Assignments/AssignmentContext'
-import { useAssignmentTaskSubmissions } from '@components/Contexts/Assignments/AssignmentSubmissionContext'
+import {
+  useAssignmentSubmission,
+  useAssignmentTaskSubmissions,
+} from '@components/Contexts/Assignments/AssignmentSubmissionContext'
 import {
   useAssignmentsTask,
   useAssignmentsTaskDispatch,
@@ -30,7 +33,7 @@ import {
   ChevronDown,
   ChevronRight,
   ShieldCheck,
-  BookOpen,
+  Lock,
   Settings2,
 } from 'lucide-react'
 import React, { useEffect, useState } from 'react'
@@ -96,7 +99,12 @@ type CodeTaskContents = {
   show_test_details_on_fail?: boolean     // reveal Expected/Got on a failed test (default true)
   show_hidden_test_count?: boolean        // show "N hidden tests" badge (default true)
   require_passing_to_submit?: boolean     // student must pass visible tests to save (default false)
-  show_solution_after_submit?: boolean    // show reference solution once a submission exists (default false)
+  // DEPRECATED / INERT: the API strips `solution_code` from the task contents
+  // for EVERY student, unconditionally and by design, so a learner can never
+  // receive the reference solution and this flag can never have an effect.
+  // The teacher-facing toggle was removed (it silently did nothing), but the
+  // field is kept on the type so existing stored contents round-trip unchanged.
+  show_solution_after_submit?: boolean
 }
 
 type CodeTestResult = {
@@ -176,6 +184,20 @@ function TaskCodeObject({ view, assignmentTaskUUID, user_id, onGraded }: TaskCod
   const assignment = useAssignments() as any
   const taskSubmissionsMap = useAssignmentTaskSubmissions()
   const queryClient = useQueryClient()
+
+  // Student lock, derived exactly like the sibling task types (see
+  // TaskShortAnswerObject) and like AssignmentBoxUI's own `canStudentSave`:
+  // once the learner has SUBMITTED for grading (or been GRADED) auto-save is
+  // switched off, so anything they keep typing is silently discarded on
+  // reload. The editor must therefore become read-only at that point.
+  const assignmentSubmission = useAssignmentSubmission() as any
+  const latestSubmissionStatus =
+    Array.isArray(assignmentSubmission) && assignmentSubmission.length > 0
+      ? assignmentSubmission[0]?.submission_status
+      : null
+  const submissionIsGraded = latestSubmissionStatus === 'GRADED'
+  const canStudentSave =
+    !submissionIsGraded && latestSubmissionStatus !== 'SUBMITTED'
 
   // Editor state
   const [contents, setContents] = useState<CodeTaskContents>(DEFAULT_CONTENTS)
@@ -387,6 +409,10 @@ function TaskCodeObject({ view, assignmentTaskUUID, user_id, onGraded }: TaskCod
   }
 
   // Student-gating helpers: derived from the student-behavior flags.
+  // `visibleTestCases` are the only ones a learner can see, run and reason
+  // about — the API strips the hidden ones' stdin/expectedStdout before the
+  // task ever reaches them.
+  const visibleTestCases = contents.test_cases.filter((tc) => !tc.hidden)
   // `visibleResults` is the subset of run results that are NOT hidden test
   // cases — those are the only ones the student can see and reason about.
   const visibleResults = results.filter((r) => {
@@ -395,17 +421,27 @@ function TaskCodeObject({ view, assignmentTaskUUID, user_id, onGraded }: TaskCod
   })
   const allVisiblePassing =
     visibleResults.length > 0 && visibleResults.every((r) => r.passed)
-  // Only enforce the "must pass" gate when the teacher turned it on.
-  const submissionGatedByPassing = contents.require_passing_to_submit === true
+  // Only enforce the "must pass" gate when the teacher turned it on AND there
+  // is at least one visible test to pass. A task made of hidden tests only
+  // could otherwise never satisfy the gate, locking the learner out forever.
+  const submissionGatedByPassing =
+    contents.require_passing_to_submit === true && visibleTestCases.length > 0
   const submissionBlocked = submissionGatedByPassing && !allVisiblePassing
 
   // --- SUBMIT (student) ---
   async function submitFC(opts?: { silent?: boolean }) {
     if (!assignmentTaskUUID) return true
     // Enforce "must pass all visible tests" gate if the teacher enabled it.
+    // This is a POLICY refusal, not a failure: returning `false` would make
+    // useAutoSave treat it as a transient error and retry every few seconds
+    // forever (permanent amber "Couldn't save — retrying…" chip) and would
+    // also fail the assignment-wide flushAll(), blocking submission of the
+    // WHOLE assignment. `'blocked'` is handled by useAutoSave as terminal —
+    // no retry, no error state. Genuine network/server failures below still
+    // return `false` so they keep being retried.
     if (submissionBlocked) {
       if (!opts?.silent) toast.error(t('dashboard.assignments.editor.task_editor.code.must_pass_toast'))
-      return false
+      return 'blocked' as const
     }
     const values = {
       assignment_task_submission_uuid: userSubmissions?.assignment_task_submission_uuid || null,
@@ -442,14 +478,29 @@ function TaskCodeObject({ view, assignmentTaskUUID, user_id, onGraded }: TaskCod
   // --- RUN CODE ---
   async function runCode() {
     if (isRunning) return
-    if (contents.test_cases.length === 0) {
-      toast.error('No test cases defined')
+    // The API strips `stdin` / `expectedStdout` from every HIDDEN test case
+    // before sending the task contents to a student (deliberate: hidden tests
+    // must stay secret). Sending them back would post
+    // {stdin: undefined, expected_stdout: undefined}, which JSON.stringify
+    // drops entirely — and the server's TestCase model requires both — so the
+    // WHOLE batch 422'd and the learner got zero results, including for the
+    // visible tests. Students therefore only ever run the visible tests; the
+    // hidden ones are executed server-side at grading time.
+    const testCasesToRun =
+      view === 'student' ? visibleTestCases : contents.test_cases
+    if (testCasesToRun.length === 0) {
+      toast.error(
+        view === 'student'
+          ? t('dashboard.assignments.editor.task_editor.code.no_runnable_tests', {
+              defaultValue: 'This task has no tests you can run — your code is checked at grading time.',
+            })
+          : 'No test cases defined'
+      )
       return
     }
     setIsRunning(true)
     setShowResults(true)
     try {
-      // Always run ALL test cases — hidden ones just have details masked in the UI
       const resp = await fetch(`${getAPIUrl()}code/execute-batch`, {
         method: 'POST',
         headers: {
@@ -459,7 +510,7 @@ function TaskCodeObject({ view, assignmentTaskUUID, user_id, onGraded }: TaskCod
         body: JSON.stringify({
           language_id: contents.language_id,
           source_code: code,
-          test_cases: contents.test_cases.map((tc) => ({
+          test_cases: testCasesToRun.map((tc) => ({
             id: tc.id,
             label: tc.label,
             stdin: tc.stdin,
@@ -476,18 +527,23 @@ function TaskCodeObject({ view, assignmentTaskUUID, user_id, onGraded }: TaskCod
       }
 
       const data = await resp.json()
-      const newResults: CodeTestResult[] = data.results.map((r: any) => ({
-        id: r.id,
-        label: r.label,
-        passed: r.passed,
-        actual_stdout: r.actual_stdout,
-        expected_stdout: r.expected_stdout,
-        stderr: r.stderr,
-        compile_output: r.compile_output,
-        status: r.status,
-        time: r.time,
-        memory: r.memory,
-      }))
+      // Match every result back to its test case BY ID — after filtering, array
+      // indices no longer line up with contents.test_cases.
+      const newResults: CodeTestResult[] = (data.results ?? []).map((r: any) => {
+        const tc = testCasesToRun.find((t) => t.id === r.id)
+        return {
+          id: r.id ?? tc?.id,
+          label: r.label ?? tc?.label ?? '',
+          passed: r.passed,
+          actual_stdout: r.actual_stdout,
+          expected_stdout: r.expected_stdout,
+          stderr: r.stderr,
+          compile_output: r.compile_output,
+          status: r.status,
+          time: r.time,
+          memory: r.memory,
+        }
+      })
       setResults(newResults)
     } catch (err) {
       console.error('Code execution error:', err)
@@ -526,6 +582,9 @@ function TaskCodeObject({ view, assignmentTaskUUID, user_id, onGraded }: TaskCod
           Authorization: `Bearer ${access_token}`,
         },
         body: JSON.stringify({
+          // Grading intentionally runs ALL test cases, hidden ones included:
+          // this view is instructor-only and its contents are NOT stripped, so
+          // stdin/expectedStdout are present. Do not filter here.
           language_id: contents.language_id,
           source_code: code,
           test_cases: contents.test_cases.map((tc) => ({
@@ -848,13 +907,14 @@ function TaskCodeObject({ view, assignmentTaskUUID, user_id, onGraded }: TaskCod
                   checked={contents.require_passing_to_submit === true}
                   onChange={(v) => setContents((prev) => ({ ...prev, require_passing_to_submit: v }))}
                 />
-                <CodeOptionToggle
-                  icon={<BookOpen size={13} />}
-                  label={t('dashboard.assignments.editor.task_editor.code.show_solution_label')}
-                  description={t('dashboard.assignments.editor.task_editor.code.show_solution_description')}
-                  checked={contents.show_solution_after_submit === true}
-                  onChange={(v) => setContents((prev) => ({ ...prev, show_solution_after_submit: v }))}
-                />
+                {/* The "Reveal solution after submit" toggle used to live here.
+                    It was removed because it could never do anything: the API
+                    strips `solution_code` from the task contents for EVERY
+                    student, unconditionally and by design. It only appeared to
+                    work when a teacher previewed the task (teachers get the
+                    unstripped contents), so it misled teachers into believing
+                    learners would see the reference solution. Do not re-add it
+                    without also changing the server-side stripping. */}
               </div>
             </div>
 
@@ -891,12 +951,17 @@ function TaskCodeObject({ view, assignmentTaskUUID, user_id, onGraded }: TaskCod
               )}
             </div>
 
-            {/* Code Editor */}
+            {/* Code Editor — locked once the submission is SUBMITTED/GRADED.
+                Auto-save is switched off at that point (AssignmentBoxUI's
+                `canStudentSave`), so any further typing would be silently lost
+                on reload and would not reach the grader. Mirrors the read-only
+                treatment of the other task types. */}
             <div className={`rounded-md overflow-hidden ${cmClassName}`}>
               {cmTheme && (
                 <CodeMirror
                   value={code}
                   onChange={(val) => {
+                    if (!canStudentSave) return
                     interactedRef.current = true
                     setCode(val)
                   }}
@@ -904,10 +969,26 @@ function TaskCodeObject({ view, assignmentTaskUUID, user_id, onGraded }: TaskCod
                   theme={cmTheme}
                   style={cmStyles}
                   height="300px"
+                  readOnly={!canStudentSave}
+                  editable={canStudentSave}
                   basicSetup={{ lineNumbers: true, foldGutter: false }}
                 />
               )}
             </div>
+            {!canStudentSave && (
+              <div className="flex items-center space-x-1.5 text-[10px] text-slate-500 bg-slate-100 rounded-md px-2 py-1 w-fit">
+                <Lock size={11} />
+                <span>
+                  {submissionIsGraded
+                    ? t('dashboard.assignments.editor.task_editor.code.locked_graded_hint', {
+                        defaultValue: 'This submission has been graded — your code is read-only.',
+                      })
+                    : t('dashboard.assignments.editor.task_editor.code.locked_submitted_hint', {
+                        defaultValue: 'You have submitted this assignment — your code is read-only.',
+                      })}
+                </span>
+              </div>
+            )}
             {antiPasteEnabled && (
               <div className="flex items-center space-x-1.5 text-[10px] text-amber-600 bg-amber-50 rounded-md px-2 py-1 w-fit">
                 <span>🔒</span>
@@ -938,48 +1019,25 @@ function TaskCodeObject({ view, assignmentTaskUUID, user_id, onGraded }: TaskCod
               </div>
             )}
 
-            {/* Results */}
+            {/* Results — hidden tests are never run client-side, so they are
+                listed as "not shown" rather than counted as failures. */}
             {showResults && (
               <TestResultsPanel
                 results={results}
                 testCases={contents.test_cases}
                 view="student"
                 showDetailsOnFail={contents.show_test_details_on_fail !== false}
+                maskedTestCases={contents.test_cases.filter(
+                  (tc) => tc.hidden && !results.some((r) => r.id === tc.id)
+                )}
+                showMaskedCount={contents.show_hidden_test_count !== false}
               />
             )}
 
-            {/* Reference solution — revealed after a saved submission when
-                the teacher chose to show it. */}
-            {contents.show_solution_after_submit === true &&
-              contents.solution_code &&
-              userSubmissions && (
-                <div className="flex flex-col space-y-1">
-                  <button
-                    onClick={() => setShowSolution(!showSolution)}
-                    className="flex items-center space-x-1 text-xs font-semibold text-slate-600 hover:text-slate-800 w-fit"
-                  >
-                    {showSolution ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
-                    <BookOpen size={13} />
-                    <span>{t('dashboard.assignments.editor.task_editor.code.reference_solution_label')}</span>
-                  </button>
-                  {showSolution && (
-                    <div className={`rounded-md overflow-hidden ${cmClassName}`}>
-                      {cmTheme && (
-                        <CodeMirror
-                          value={contents.solution_code}
-                          extensions={cmExtensions}
-                          theme={cmTheme}
-                          style={cmStyles}
-                          height="220px"
-                          readOnly
-                          editable={false}
-                          basicSetup={{ lineNumbers: true, foldGutter: false }}
-                        />
-                      )}
-                    </div>
-                  )}
-                </div>
-              )}
+            {/* The student-side "reference solution" panel used to live here.
+                It was removed together with its teacher toggle: `solution_code`
+                is stripped server-side for every student, so the panel could
+                never render for a learner. */}
           </>
         )}
 
@@ -1066,14 +1124,22 @@ function TestResultsPanel({
   testCases,
   view,
   showDetailsOnFail = true,
+  maskedTestCases = [],
+  showMaskedCount = true,
 }: {
   results: CodeTestResult[]
   testCases: CodeTestCase[]
   view: 'student' | 'grading'
   showDetailsOnFail?: boolean
+  // Test cases that were NOT run client-side (hidden ones, whose stdin /
+  // expected output the API withholds from students). They are rendered as
+  // masked/unknown rows so a learner doesn't read them as failures.
+  maskedTestCases?: CodeTestCase[]
+  showMaskedCount?: boolean
 }) {
   const passedCount = results.filter((r) => r.passed).length
   const totalCount = results.length
+  const maskedShown = showMaskedCount ? maskedTestCases : []
 
   return (
     <div className="flex flex-col space-y-2 p-3 bg-slate-50 rounded-md border border-slate-200">
@@ -1088,7 +1154,11 @@ function TestResultsPanel({
               : 'bg-red-100 text-red-700'
           }`}
         >
-          {passedCount === totalCount ? 'All Passed' : 'Some Failed'}
+          {passedCount === totalCount
+            ? maskedShown.length > 0
+              ? 'Visible Tests Passed'
+              : 'All Passed'
+            : 'Some Failed'}
         </span>
       </div>
       <div className="flex flex-col space-y-1.5">
@@ -1152,6 +1222,23 @@ function TestResultsPanel({
             </div>
           )
         })}
+        {/* Hidden tests the student can't run: shown as unknown, never as
+            failures. They are executed server-side when the assignment is
+            graded. */}
+        {maskedShown.map((tc) => (
+          <div
+            key={tc.id}
+            className="flex flex-col p-2 rounded-md text-sm bg-slate-100 border border-slate-200"
+          >
+            <div className="flex items-center space-x-2">
+              <EyeOff size={14} className="text-slate-400 flex-none" />
+              <span className="font-medium text-slate-500">{tc.label}</span>
+            </div>
+            <div className="mt-1 pl-6 text-xs text-slate-400 italic">
+              Hidden test — run when your work is graded
+            </div>
+          </div>
+        ))}
       </div>
     </div>
   )

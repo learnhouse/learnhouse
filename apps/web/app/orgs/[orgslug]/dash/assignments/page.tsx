@@ -92,10 +92,25 @@ function AssignmentsHome() {
   const { data: courseAssignments } = useQuery({
     queryKey: ['assignments-all', ...courseUuids],
     queryFn: async () => {
-      const results = await Promise.all(
+      // allSettled, not all: a single rejected request (network blip, one bad
+      // course) used to take the whole dashboard down with it.
+      const settled = await Promise.allSettled(
         courseUuids.map((uuid: string) => getAssignmentsFromACourse(uuid, access_token))
       )
-      return results.map((res: any) => res.data)
+      // The response helper does not throw — a 404 resolves to
+      // `{ success: false, data: { detail: 'Course not found' } }`. That object
+      // is truthy, so the downstream `|| []` guards never fired and the error
+      // body reached `.filter(...)` during render, blanking the page (no error
+      // boundary under this segment) and counting as a phantom draft in the
+      // stats. Anything that isn't a real array collapses to an empty list —
+      // note we map rather than filter so the result stays index-aligned with
+      // `courseUuids` / `courses`, otherwise a single failing course would
+      // shift every later course's assignments onto the wrong course.
+      return settled.map((r: any) =>
+        r.status === 'fulfilled' && r.value?.success && Array.isArray(r.value.data)
+          ? r.value.data
+          : []
+      )
     },
     enabled: courseUuids.length > 0 && !!access_token,
     staleTime: 60_000,
