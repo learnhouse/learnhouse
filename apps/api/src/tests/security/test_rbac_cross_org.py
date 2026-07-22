@@ -191,3 +191,50 @@ class TestCrossOrgRoleFallback:
             mock_request, alice.id, "create", "course_x", db
         )
         assert allowed is True
+
+
+class TestUsersOnlyIsOrgScoped:
+    """"Users Only" (public=false, no linked usergroup) means signed-in members
+    of the owning org — not every account on the deployment."""
+
+    @pytest.mark.asyncio
+    async def test_users_only_course_is_denied_to_another_orgs_member(
+        self, db, org, other_org, user_role, mock_request
+    ):
+        from src.security.rbac.resource_access import ResourceAccessChecker
+
+        outsider = _mk_user(db, uid=77, username="outsider", email="outsider@test.com")
+        _attach_role(db, user_id=outsider.id, org_id=other_org.id, role_id=user_role.id)
+
+        users_only = _mk_course(
+            db, cid=201, org_id=org.id, uuid="course_users_only", public=False
+        )
+
+        checker = ResourceAccessChecker(mock_request, db, outsider)
+        allowed = await checker._check_usergroup_membership(
+            users_only.course_uuid, is_public=False
+        )
+
+        assert allowed is False, (
+            "a signed-in member of another org must not reach a Users Only course"
+        )
+
+    @pytest.mark.asyncio
+    async def test_users_only_course_is_allowed_for_its_own_org_member(
+        self, db, org, user_role, mock_request
+    ):
+        from src.security.rbac.resource_access import ResourceAccessChecker
+
+        member = _mk_user(db, uid=78, username="insider", email="insider@test.com")
+        _attach_role(db, user_id=member.id, org_id=org.id, role_id=user_role.id)
+
+        users_only = _mk_course(
+            db, cid=202, org_id=org.id, uuid="course_users_only_own", public=False
+        )
+
+        checker = ResourceAccessChecker(mock_request, db, member)
+        allowed = await checker._check_usergroup_membership(
+            users_only.course_uuid, is_public=False
+        )
+
+        assert allowed is True, "the org's own member must still reach a Users Only course"
