@@ -259,6 +259,13 @@ async def signWithGoogle(
 
             _invalidate_session_cache(user.id)
 
+            # Existing account joining a new org: the account-creation welcome
+            # only fires for brand new users, so without this the OAuth-invite
+            # path lands them in an org they were never told about.
+            from src.services.orgs.join_notifications import notify_user_joined_org
+
+            await notify_user_joined_org(request, db_session, user, org_id)
+
     # Update last login info
     client_ip = get_client_ip(request)
     await update_login_info(user, client_ip, db_session)

@@ -371,6 +371,54 @@ def send_invitation_email(
     )
 
 
+def send_org_join_email(
+    email: EmailStr,
+    username: str,
+    org_name: str,
+    cta_url: str,
+    lang: str = "en",
+    logo_url: str | None = None,
+):
+    """Greeting sent when an EXISTING account becomes a member of an organization.
+
+    Complements ``send_account_creation_email``, which only fires for brand new
+    accounts: a user who already had an account and then joined a second org
+    (invite code, open join, OAuth invite, admin provisioning) previously got no
+    mail at all and had to find their way to the org on their own.
+
+    Always white-labeled to the org — the user is being welcomed into that
+    academy, not onto LearnHouse — with the org's logo when it has one.
+    """
+    safe_username = html.escape(username)
+    safe_org_name = html.escape(org_name)
+
+    heading = t(lang, "org_join.heading", username=safe_username)
+    body_text = t(lang, "org_join.body", org_name=safe_org_name)
+    cta = t(lang, "org_join.cta")
+
+    body_content = f"""
+        <h1 style="{STYLES['h1']}">{heading}</h1>
+        <p style="{STYLES['p']}">
+            {body_text}
+        </p>
+        <a href="{html.escape(cta_url)}" style="{STYLES['button']}">
+            {cta}
+        </a>
+        <p style="{STYLES['link_text']}">{html.escape(cta_url)}</p>
+    """
+
+    return send_email(
+        to=email,
+        subject=t(lang, "org_join.subject", org_name=safe_org_name),
+        body=_email_layout(
+            title=heading,
+            body_content=body_content,
+            footer_note=t(lang, "org_join.footer", org_name=safe_org_name),
+            logo_html=_org_logo_img(logo_url, org_name) if logo_url else LOGO_SVG,
+        ),
+    )
+
+
 def send_role_changed_email(
     email: EmailStr,
     username: str,

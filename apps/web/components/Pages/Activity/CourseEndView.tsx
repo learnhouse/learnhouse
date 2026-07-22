@@ -4,7 +4,7 @@ import dynamic from 'next/dynamic';
 const ReactConfetti = dynamic(() => import('react-confetti'), { ssr: false });
 import { Trophy, ArrowLeft, BookOpen, Target, Download, Shield } from 'lucide-react';
 import Link from 'next/link';
-import { getUriWithOrg } from '@services/config/config';
+import { getUriWithOrg, getAbsoluteUriWithOrg } from '@services/config/config';
 import { getCourseThumbnailMediaDirectory } from '@services/media/media';
 import { useWindowSize } from 'usehooks-ts';
 import { useOrg } from '@components/Contexts/OrgContext';
@@ -59,7 +59,8 @@ const CourseEndView: React.FC<CourseEndViewProps> = ({
     return sessionFull || s?.username || '';
   };
   const learnerName = getLearnerName();
-  const qrCodeLink = getUriWithOrg(orgslug, `/certificates/${userCertificate?.certificate_user.user_certification_uuid}/verify`);
+  // Absolute: encoded in the QR code on the certificate PDF, scanned outside the app
+  const qrCodeLink = getAbsoluteUriWithOrg(orgslug, `/certificates/${userCertificate?.certificate_user.user_certification_uuid}/verify`);
 
 
 

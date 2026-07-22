@@ -1,7 +1,7 @@
 import { useOrg } from '@components/Contexts/OrgContext'
 import PageLoading from '@components/Objects/Loaders/PageLoading'
 import ConfirmationModal from '@components/Objects/StyledElements/ConfirmationModal/ConfirmationModal'
-import { getAPIUrl, getUriWithOrg } from '@services/config/config'
+import { getAPIUrl, getAbsoluteUriWithOrg } from '@services/config/config'
 import { apiFetch } from '@services/utils/ts/requests'
 import { Check, Copy, Globe, Ticket, UserSquare, Users, X } from 'lucide-react'
 import Link from 'next/link'
@@ -211,11 +211,11 @@ function OrgAccess() {
                             <Link
                               className="outline bg-gray-50 text-gray-600 px-2 py-1 rounded-md outline-gray-300 outline-dashed outline-1 text-xs truncate max-w-[200px] sm:max-w-[300px]"
                               target="_blank"
-                              href={getUriWithOrg(org.slug, `/signup?inviteCode=${invite.invite_code}`)}
+                              href={getAbsoluteUriWithOrg(org.slug, `/signup?inviteCode=${invite.invite_code}`)}
                             >
-                              {getUriWithOrg(org.slug, `/signup?inviteCode=${invite.invite_code}`)}
+                              {getAbsoluteUriWithOrg(org.slug, `/signup?inviteCode=${invite.invite_code}`)}
                             </Link>
-                            <CopyButton text={getUriWithOrg(org.slug, `/signup?inviteCode=${invite.invite_code}`)} />
+                            <CopyButton text={getAbsoluteUriWithOrg(org.slug, `/signup?inviteCode=${invite.invite_code}`)} />
                           </div>
                         </td>
                         <td className="py-3 px-4 sm:px-6">

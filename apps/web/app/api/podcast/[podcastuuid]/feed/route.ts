@@ -24,7 +24,15 @@ export async function GET(
     }
 
     const { podcast, episodes } = podcastMeta
-    const baseUrl = getUriWithOrg(orgSlug, '/')
+    // RSS requires absolute URLs, and the host the feed was fetched on is the
+    // right one (org subdomain or custom domain). `getUriWithOrg` would hand
+    // back a relative path in single tenancy, producing an invalid feed.
+    const forwardedHost = request.headers.get('x-forwarded-host') || request.headers.get('host')
+    const forwardedProto = request.headers.get('x-forwarded-proto')
+      || (forwardedHost?.startsWith('localhost') || forwardedHost?.startsWith('127.') ? 'http' : 'https')
+    const origin = forwardedHost ? `${forwardedProto}://${forwardedHost}` : request.nextUrl.origin
+    const relativeBase = getUriWithOrg(orgSlug, '/')
+    const baseUrl = /^https?:\/\//i.test(relativeBase) ? relativeBase : `${origin}/`
     const podcastUrl = `${baseUrl}podcast/${podcastuuid}`
 
     const imageUrl = podcast.thumbnail_image
@@ -97,7 +105,7 @@ ${episodeItems}
         'Cache-Control': 'public, max-age=3600, s-maxage=3600',
       },
     })
-  } catch (error) {
+  } catch {
     return NextResponse.json({ error: 'Failed to generate feed' }, { status: 500 })
   }
 }

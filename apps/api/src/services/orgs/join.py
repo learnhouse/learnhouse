@@ -12,6 +12,7 @@ from src.security.features_utils.usage import (
     increase_feature_usage,
 )
 from src.services.orgs.invites import get_invite_code
+from src.services.orgs.join_notifications import notify_user_joined_org
 from src.services.orgs.orgs import get_org_join_mechanism
 from src.services.users.usergroups import add_users_to_usergroup
 
@@ -123,6 +124,8 @@ async def join_org(
             from src.routers.users import _invalidate_session_cache
             _invalidate_session_cache(user.id)
 
+            await notify_user_joined_org(request, db_session, user, org.id, org=org)
+
             # Add user to UserGroup if invite code is linked to one
             if inviteCode.get("usergroup_id"):
                 await add_users_to_usergroup(
@@ -159,6 +162,8 @@ async def join_org(
             _invalidate_session_cache(user.id)
 
             await increase_feature_usage("members", org.id, db_session)
+
+            await notify_user_joined_org(request, db_session, user, org.id, org=org)
 
             return "Great, You're part of the Organization"
 
