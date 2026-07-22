@@ -109,8 +109,9 @@ export default function GoogleCallbackPage() {
 
       const callbackUrl = stateValidation.callbackUrl
 
-      // Get org_id from cookie if set
+      // Get org_id (and, for invite-only orgs, the invite code) from cookies if set
       let orgId: number | undefined
+      let inviteCode: string | undefined
       try {
         const cookies = document.cookie.split(';')
         for (const cookie of cookies) {
@@ -120,7 +121,8 @@ export default function GoogleCallbackPage() {
             if (isNaN(orgId)) {
               orgId = undefined
             }
-            break
+          } else if (name === 'LH_oauth_invite_code' && value) {
+            inviteCode = decodeURIComponent(value)
           }
         }
       } catch {
@@ -132,7 +134,7 @@ export default function GoogleCallbackPage() {
       try {
         const topDomain = getLEARNHOUSE_TOP_DOMAIN_VAL()
         const domainAttr = topDomain && topDomain !== 'localhost' ? `; domain=.${topDomain}` : ''
-        for (const n of ['LH_oauth_org_id', 'LH_oauth_orgslug']) {
+        for (const n of ['LH_oauth_org_id', 'LH_oauth_orgslug', 'LH_oauth_invite_code']) {
           document.cookie = `${n}=; path=/; max-age=0`
           if (domainAttr) document.cookie = `${n}=; path=/; max-age=0${domainAttr}`
         }
@@ -195,8 +197,11 @@ export default function GoogleCallbackPage() {
         }
 
         // Call Next.js API route to ensure cookies are set properly
-        const oauthUrl = orgId
-          ? `/api/auth/oauth?org_id=${orgId}`
+        const oauthParams = new URLSearchParams()
+        if (orgId) oauthParams.set('org_id', String(orgId))
+        if (orgId && inviteCode) oauthParams.set('invite_code', inviteCode)
+        const oauthUrl = oauthParams.toString()
+          ? `/api/auth/oauth?${oauthParams.toString()}`
           : '/api/auth/oauth'
 
         const oauthResponse = await fetch(oauthUrl, {
