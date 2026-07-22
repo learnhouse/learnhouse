@@ -18,11 +18,11 @@ from fastapi import HTTPException
 
 
 class TestValidateContentPath:
-    """Test _validate_content_path in local_content.py."""
+    """Test _normalize_content_relpath in local_content.py."""
 
     def _validate(self, path):
-        from src.routers.local_content import _validate_content_path
-        return _validate_content_path(path)
+        from src.routers.local_content import _normalize_content_relpath
+        return _normalize_content_relpath(path)
 
     def test_valid_path(self):
         assert self._validate("orgs/abc/courses/def/thumbnail.png") is not None
