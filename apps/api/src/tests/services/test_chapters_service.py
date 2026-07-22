@@ -858,3 +858,76 @@ class TestApplyLocksToChapters:
                     with_unpublished_activities=True, slim=False, course=course,
                 )
         assert len(full_result[0].activities) == 1
+
+
+class TestGetChapterDraftFiltering:
+    """get_chapter was the one chapter/activity read path that ignored
+    `published`, returning drafts with full content to any course reader."""
+
+    @staticmethod
+    def _access(allowed: bool):
+        from unittest.mock import MagicMock
+        return AsyncMock(return_value=MagicMock(allowed=allowed))
+
+    async def _add_draft(self, db, org, course, chapter):
+        from datetime import datetime
+        draft = Activity(
+            name="Draft Activity",
+            activity_type=ActivityTypeEnum.TYPE_DYNAMIC,
+            activity_sub_type=ActivitySubTypeEnum.SUBTYPE_DYNAMIC_PAGE,
+            activity_uuid="activity_draft_gate_test",
+            org_id=org.id,
+            course_id=course.id,
+            published=False,
+            content={"secret": "unreleased exam"},
+            creation_date=str(datetime.now()),
+            update_date=str(datetime.now()),
+        )
+        db.add(draft)
+        await db.commit()
+        await db.refresh(draft)
+        db.add(ChapterActivity(
+            chapter_id=chapter.id,
+            activity_id=draft.id,
+            course_id=course.id,
+            org_id=org.id,
+            order=99,
+            creation_date=str(datetime.now()),
+            update_date=str(datetime.now()),
+        ))
+        await db.commit()
+        return draft
+
+    @pytest.mark.asyncio
+    async def test_draft_hidden_from_non_author(
+        self, mock_request, db, org, course, chapter, activity, admin_user
+    ):
+        draft = await self._add_draft(db, org, course, chapter)
+        with patch(
+            "src.services.courses.chapters.check_resource_access", self._access(False)
+        ), patch(
+            "src.services.courses.activities.activities.check_resource_access",
+            self._access(False),
+        ), patch(
+            "src.services.courses.chapters._apply_locks_to_chapters",
+            new_callable=AsyncMock,
+        ):
+            result = await get_chapter(mock_request, chapter.id, admin_user, db)
+        assert draft.id not in [a.id for a in result.activities]
+
+    @pytest.mark.asyncio
+    async def test_draft_visible_to_author(
+        self, mock_request, db, org, course, chapter, activity, admin_user
+    ):
+        draft = await self._add_draft(db, org, course, chapter)
+        with patch(
+            "src.services.courses.chapters.check_resource_access", self._access(True)
+        ), patch(
+            "src.services.courses.activities.activities.check_resource_access",
+            self._access(True),
+        ), patch(
+            "src.services.courses.chapters._apply_locks_to_chapters",
+            new_callable=AsyncMock,
+        ):
+            result = await get_chapter(mock_request, chapter.id, admin_user, db)
+        assert draft.id in [a.id for a in result.activities]

@@ -121,13 +121,27 @@ async def get_chapter(
     # RBAC check
     await check_resource_access(request, db_session, current_user, course.course_uuid, AccessAction.READ)
 
-    # Get activities for this chapter
+    # Get activities for this chapter.
+    #
+    # Drafts are author-only, and this was the one chapter/activity read path
+    # that ignored that: get_course_chapters gates on with_unpublished_activities
+    # and get_activities filters `published` outright, but this endpoint returned
+    # unpublished activities — with full content — to anyone who could READ the
+    # course. The author bypass keeps the editor working.
+    from src.services.courses.activities.activities import can_see_unpublished_activities
+
+    include_unpublished = await can_see_unpublished_activities(
+        request, course.course_uuid, current_user, db_session
+    )
+
     statement = (
         select(Activity)
         .join(ChapterActivity, Activity.id == ChapterActivity.activity_id) # type: ignore
         .where(ChapterActivity.chapter_id == chapter_id)
         .distinct(Activity.id) # type: ignore
     )
+    if not include_unpublished:
+        statement = statement.where(Activity.published == True)  # noqa: E712
 
     activities = (await db_session.execute(statement)).scalars().all()
 

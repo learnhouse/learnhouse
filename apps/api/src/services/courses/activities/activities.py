@@ -139,6 +139,18 @@ async def get_activity(
     # RBAC check
     await check_resource_access(request, db_session, current_user, course.course_uuid, AccessAction.READ)
 
+    # Drafts are author-only. This path applied the paid and lock gates but never
+    # consulted `published`, so a draft's full body was served to anyone who
+    # could READ the parent course. The author bypass matters: this same function
+    # backs the editor, which must keep loading unpublished activities.
+    if not activity.published and not await can_see_unpublished_activities(
+        request, course.course_uuid, current_user, db_session
+    ):
+        raise HTTPException(
+            status_code=404,
+            detail="Activity not found",
+        )
+
     # Paid access check (via EE hook with fallback to True if EE not available)
     has_paid_access = await check_ee_activity_paid_access(
         request=request,
@@ -251,6 +263,32 @@ async def get_editor_bootstrap(
     )
 
 
+async def can_see_unpublished_activities(
+    request: Request,
+    course_uuid: str,
+    current_user,
+    db_session: AsyncSession,
+) -> bool:
+    """Whether this principal may see draft (unpublished) activities.
+
+    Only users who can EDIT the course — authors/admins — see drafts; everyone
+    else gets the published subset. Mirrors the downgrade the course-meta router
+    applies to its client-controlled ``with_unpublished_activities`` flag, so
+    every read path agrees on the rule instead of each re-deriving it.
+
+    Non-raising: callers use it to filter, not to reject.
+    """
+    decision = await check_resource_access(
+        request,
+        db_session,
+        current_user,
+        course_uuid,
+        AccessAction.UPDATE,
+        raise_on_deny=False,
+    )
+    return bool(decision.allowed)
+
+
 async def _apply_activity_lock(
     activity_read: ActivityRead,
     activity: Activity,
@@ -353,7 +391,33 @@ async def get_activityby_id(
     # RBAC check
     await check_resource_access(request, db_session, current_user, course.course_uuid, AccessAction.READ)
 
-    return ActivityRead.model_validate(activity)
+    # SECURITY: this endpoint returns the same ActivityRead for the same resource
+    # as get_activity(), so it must apply the same three gates. It previously
+    # applied only RBAC — which is course-scoped and delegates activities to the
+    # parent course, so it can never enforce a per-activity lock or a purchase.
+    # Fetching by numeric id instead of uuid therefore handed over paid content,
+    # usergroup-locked content, and unpublished drafts in full.
+    if not activity.published and not await can_see_unpublished_activities(
+        request, course.course_uuid, current_user, db_session
+    ):
+        raise HTTPException(
+            status_code=404,
+            detail="Activity not found",
+        )
+
+    has_paid_access = await check_ee_activity_paid_access(
+        request=request,
+        activity_id=activity.id,
+        user=current_user,
+        db_session=db_session,
+    )
+
+    activity_read = ActivityRead.model_validate(activity)
+    activity_read.content = activity_read.content if has_paid_access else {"paid_access": False}
+
+    await _apply_activity_lock(activity_read, activity, course, current_user, db_session)
+
+    return activity_read
 
 
 async def update_activity(
@@ -534,4 +598,19 @@ async def get_activities(
     _, chapter, course = results[0]
     await check_resource_access(request, db_session, current_user, course.course_uuid, AccessAction.READ)
 
-    return [ActivityRead.model_validate(activity) for activity, _, _ in results]
+    # Locks are enforced in the service layer, never by RBAC (which resolves an
+    # activity up to its parent course and so cannot see per-activity
+    # lock_type). Both sibling read paths strip locked bodies —
+    # _apply_locks_to_chapters for the chapter tree, _apply_activity_lock for a
+    # single activity — but this list endpoint returned the same ActivityRead
+    # shape with neither, making the lock a UI-only gate here: the API handed
+    # over the very content it was supposed to withhold.
+    activity_reads: list[ActivityRead] = []
+    for activity, _, _ in results:
+        activity_read = ActivityRead.model_validate(activity)
+        await _apply_activity_lock(
+            activity_read, activity, course, current_user, db_session, parent_chapter=chapter
+        )
+        activity_reads.append(activity_read)
+
+    return activity_reads

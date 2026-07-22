@@ -413,3 +413,95 @@ class TestGetActivities:
             result = await get_activities(mock_request, chapter.id, admin_user, db)
         assert isinstance(result, list)
         assert len(result) >= 1
+
+
+class TestDraftAndLockGatesOnReadPaths:
+    """The three activity read paths must agree on who sees what.
+
+    They return the same ActivityRead for the same rows, but each applied a
+    different subset of the published / paid / lock gates — so picking a
+    different endpoint handed over content the others withheld.
+    """
+
+    @staticmethod
+    def _access(allowed: bool):
+        """check_resource_access stub whose non-raising decision is controllable."""
+        return AsyncMock(return_value=MagicMock(allowed=allowed))
+
+    @pytest.mark.asyncio
+    async def test_get_activityby_id_hides_draft_from_non_author(
+        self, mock_request, db, org, course, chapter, activity, admin_user
+    ):
+        activity.published = False
+        db.add(activity)
+        await db.commit()
+        with patch(
+            "src.services.courses.activities.activities.check_resource_access",
+            self._access(False),
+        ):
+            with pytest.raises(HTTPException) as exc:
+                await get_activityby_id(mock_request, activity.id, admin_user, db)
+        assert exc.value.status_code == 404
+
+    @pytest.mark.asyncio
+    async def test_get_activityby_id_shows_draft_to_author(
+        self, mock_request, db, org, course, chapter, activity, admin_user
+    ):
+        activity.published = False
+        db.add(activity)
+        await db.commit()
+        with patch(
+            "src.services.courses.activities.activities.check_resource_access",
+            self._access(True),
+        ):
+            result = await get_activityby_id(mock_request, activity.id, admin_user, db)
+        assert isinstance(result, ActivityRead)
+        assert result.id == activity.id
+
+    @pytest.mark.asyncio
+    async def test_get_activity_hides_draft_from_non_author(
+        self, mock_request, db, org, course, chapter, activity, admin_user
+    ):
+        activity.published = False
+        db.add(activity)
+        await db.commit()
+        with patch(
+            "src.services.courses.activities.activities.check_resource_access",
+            self._access(False),
+        ):
+            with pytest.raises(HTTPException) as exc:
+                await get_activity(mock_request, activity.activity_uuid, admin_user, db)
+        assert exc.value.status_code == 404
+
+    @pytest.mark.asyncio
+    async def test_get_activity_shows_draft_to_author(
+        self, mock_request, db, org, course, chapter, activity, admin_user
+    ):
+        """The editor loads unpublished activities through this path — the draft
+        filter must never lock authors out of their own work."""
+        activity.published = False
+        db.add(activity)
+        await db.commit()
+        with patch(
+            "src.services.courses.activities.activities.check_resource_access",
+            self._access(True),
+        ):
+            result = await get_activity(mock_request, activity.activity_uuid, admin_user, db)
+        assert isinstance(result, ActivityRead)
+
+    @pytest.mark.asyncio
+    async def test_get_activities_applies_lock_stripping(
+        self, mock_request, db, org, course, chapter, activity, admin_user
+    ):
+        """Locks are enforced in the service layer, not by RBAC, so a list
+        endpoint that skips _apply_activity_lock leaks the withheld body."""
+        with patch(
+            "src.services.courses.activities.activities.check_resource_access",
+            self._access(True),
+        ), patch(
+            "src.services.courses.activities.activities._apply_activity_lock",
+            new_callable=AsyncMock,
+        ) as lock_mock:
+            results = await get_activities(mock_request, chapter.id, admin_user, db)
+        assert len(results) >= 1
+        assert lock_mock.await_count == len(results)
