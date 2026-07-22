@@ -68,7 +68,10 @@ async def notify_user_joined_org(
             email=user.email,
             username=user.username,
             org_name=org.name,
-            cta_url=f"{base_url.rstrip('/')}/home",
+            # Org landing page, not `/home` — `/home` is the platform org
+            # picker on every host and would deroute the user straight back
+            # out of the org they just joined.
+            cta_url=base_url.rstrip("/") or "/",
             lang=get_org_default_language(org_config),
             logo_url=get_org_logo_url(org, request),
         )

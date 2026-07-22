@@ -100,7 +100,11 @@ async def _get_welcome_cta_url(
                 base_url = await get_org_signup_base_url(
                     org.slug, request, db_session=db_session, org_id=org_id
                 )
-                return f"{base_url.rstrip('/')}/home"
+                # The org's own landing page, NOT `/home`: `/home` is the
+                # platform org picker on every host, so an org-scoped
+                # `{org-host}/home` bounces the user to "Your Organizations"
+                # instead of the academy the email is about.
+                return base_url.rstrip("/") or "/"
             return None
 
         # Org-less signups often arrive without a trusted Origin/Referer, and the

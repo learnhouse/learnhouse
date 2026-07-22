@@ -587,6 +587,7 @@ async def sync_trailrun_status(
     user_id: int,
     course_id: int,
     db_session: AsyncSession,
+    is_complete: bool | None = None,
 ) -> None:
     """
     Keep the enrollment row (TrailRun.status) in sync with actual course
@@ -619,7 +620,10 @@ async def sync_trailrun_status(
     ):
         return
 
-    is_complete = await is_course_fully_completed(user_id, course_id, db_session)
+    # Callers that already know whether the course is complete pass it in —
+    # this same pair of aggregates otherwise runs several times per submit.
+    if is_complete is None:
+        is_complete = await is_course_fully_completed(user_id, course_id, db_session)
     target = (
         StatusEnum.STATUS_COMPLETED if is_complete else StatusEnum.STATUS_IN_PROGRESS
     )
@@ -728,6 +732,7 @@ async def check_course_completion_and_create_certificate(
     user_id: int,
     course_id: int,
     db_session: AsyncSession,
+    is_complete: bool | None = None,
 ) -> bool:
     """
     Check if all activities in a course are completed and create certificate if so.
@@ -737,6 +742,12 @@ async def check_course_completion_and_create_certificate(
     actually complete — do NOT use this return value as the trigger for
     ``course_completed`` webhooks. Use :func:`is_course_fully_completed` for
     that, and call this function purely for the certificate side effect.
+
+    ``is_complete`` lets a caller that has already run
+    :func:`is_course_fully_completed` hand the answer over. The completion
+    aggregates are identical, and the submit path used to run them three times
+    for one submission: once here, once inside ``sync_trailrun_status``, and
+    once more in the caller to gate the ``course_completed`` event.
 
     SECURITY NOTES:
     - This function is called by the system when activities are completed
@@ -750,36 +761,15 @@ async def check_course_completion_and_create_certificate(
     # certified learner reported as "in progress" in analytics/enrollment. This
     # is idempotent (no-op when already correct) and also demotes if completion
     # was lost.
-    await sync_trailrun_status(user_id, course_id, db_session)
+    # Same rule as is_course_fully_completed: only PUBLISHED activities count,
+    # so a draft activity can't permanently block completion + certificate
+    # issuance.
+    if is_complete is None:
+        is_complete = await is_course_fully_completed(user_id, course_id, db_session)
 
-    # Count only PUBLISHED activities (see is_course_fully_completed) so a draft
-    # activity can't permanently block completion + certificate issuance.
-    total_activities = (await db_session.execute(
-        select(func.count(ChapterActivity.id))
-        .join(Activity, Activity.id == ChapterActivity.activity_id)
-        .where(ChapterActivity.course_id == course_id, Activity.published == True)
-    )).scalar_one()
+    await sync_trailrun_status(user_id, course_id, db_session, is_complete=is_complete)
 
-    if not total_activities:
-        return False  # No activities in course
-
-    completed_count = (await db_session.execute(
-        select(func.count(func.distinct(TrailStep.activity_id)))
-        .join(
-            ChapterActivity,
-            (ChapterActivity.activity_id == TrailStep.activity_id)
-            & (ChapterActivity.course_id == TrailStep.course_id),
-        )
-        .join(Activity, Activity.id == ChapterActivity.activity_id)
-        .where(
-            TrailStep.user_id == user_id,
-            TrailStep.course_id == course_id,
-            TrailStep.complete == True,
-            Activity.published == True,
-        )
-    )).scalar_one()
-
-    if completed_count >= total_activities:
+    if is_complete:
         # All activities completed, check if certification exists for this course
         statement = select(Certifications).where(Certifications.course_id == course_id)
         certification = (await db_session.execute(statement)).scalars().first()

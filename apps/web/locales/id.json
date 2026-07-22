@@ -223,7 +223,12 @@
     "delete_organization_warning": "Ini menghapus {{name}} dan seluruh datanya secara permanen. Tindakan ini tidak dapat dibatalkan.",
     "delete_organization_confirm_label": "Ketik {{slug}} untuk mengonfirmasi",
     "deleting": "Menghapus…",
-    "retry": "Coba Lagi"
+    "retry": "Coba Lagi",
+    "leave_organization": "Keluar dari organisasi",
+    "leave_organization_title": "Keluar dari organisasi?",
+    "leave_organization_desc": "Anda akan kehilangan akses ke {{org}} dan dihapus dari anggotanya. Anda dapat bergabung kembali nanti jika diundang.",
+    "leave_organization_error": "Tidak dapat keluar dari organisasi ini. Silakan coba lagi.",
+    "leaving": "Keluar…"
   },
   "banner": {
     "viewing_as_guest": "Anda melihat {{name}} sebagai tamu.",
@@ -676,7 +681,13 @@
     "quit_course_confirm": "Apakah Anda yakin ingin meninggalkan kursus ini? Anda akan kehilangan semua kemajuan Anda.",
     "quit_course_title": "Tinggalkan Kursus?",
     "courses_load_error": "Gagal memuat kursus. Silakan coba lagi.",
-    "view_all_courses": "Lihat semua kursus"
+    "view_all_courses": "Lihat semua kursus",
+    "first_chapter_default_name": "Bab Pertama",
+    "paste_from_clipboard": "Tempel dari Papan Klip",
+    "no_image_in_clipboard": "Tidak ada gambar di papan klip",
+    "clipboard_read_error": "Gagal membaca dari papan klip",
+    "sign_in_to_see_courses": "Masuk untuk melihat kursus Anda",
+    "sign_in_to_see_courses_description": "Kursus di akademi ini mungkin hanya terlihat setelah Anda masuk."
   },
   "communities": {
     "title": "Komunitas",
@@ -987,13 +998,20 @@
     "embed": "Sematkan",
     "embed_code_copied": "Kode embed tersalin!",
     "link_copied": "Tautan tersalin!",
-    "share": "Bagikan"
+    "share": "Bagikan",
+    "autosave_blocked": "Belum dapat disimpan",
+    "autosave_retry": "Tidak dapat menyimpan — mencoba lagi…",
+    "autosave_unsaved": "Perubahan belum disimpan",
+    "autosaved": "Tersimpan",
+    "autosaving": "Menyimpan…",
+    "save_answers": "Simpan jawaban"
   },
   "assignments": {
     "submit_assignment": "Kirim Tugas",
     "submit_assignment_confirm": "Apakah Anda yakin ingin mengirimkan tugas Anda untuk dinilai? Setelah dikirim, Anda tidak akan dapat membuat perubahan apa pun.",
     "submit_assignment_title": "Kirim tugas Anda untuk dinilai",
     "submit_for_grading": "Kirim untuk penilaian",
+    "submitting": "Mengirim…",
     "grading_in_progress": "Penilaian sedang berlangsung",
     "graded": "Sudah dinilai",
     "assignment_submitted_success": "Tugas dikirim untuk penilaian",
@@ -1035,7 +1053,11 @@
     "retry_assignment_last": "Ini adalah percobaan terakhir Anda — buatnya berarti.",
     "retry_assignment_success": "Pekerjaan Anda telah direset — coba lagi.",
     "retry_assignment_failed": "Tidak dapat mereset pengiriman Anda. Silakan coba lagi.",
-    "retry_no_attempts_left": "Tidak ada percobaan tersisa"
+    "retry_no_attempts_left": "Tidak ada percobaan tersisa",
+    "no_task_submission_to_grade": "Siswa ini belum mengirimkan file untuk tugas ini.",
+    "past_due": "Batas waktu telah lewat",
+    "past_due_description": "Batas pengumpulan tugas ini adalah {{date}}. Jawaban tidak lagi dapat disimpan atau dikirim untuk dinilai.",
+    "past_due_title": "Batas waktu telah lewat"
   },
   "certificate": {
     "certificate": "Sertifikat",
@@ -1062,7 +1084,8 @@
     "continuing_education": "Pendidikan Berkelanjutan",
     "workshop_attendance": "Kehadiran Workshop",
     "specialization": "Spesialisasi",
-    "dedication_message": "Dedikasi dan kerja keras Anda telah membuahkan hasil. Anda telah menguasai semua konten kursus ini."
+    "dedication_message": "Dedikasi dan kerja keras Anda telah membuahkan hasil. Anda telah menguasai semua konten kursus ini.",
+    "download_failed": "Gagal membuat PDF. Silakan coba lagi."
   },
   "search": {
     "search_placeholder": "Cari kursus, pengguna, koleksi...",
@@ -1147,7 +1170,9 @@
       "description": "Hapus akun Anda secara permanen dan cabut akses Anda. Tindakan ini tidak dapat dibatalkan.",
       "warning": "Ini menghapus akun Anda dan semua data terkait secara permanen. Tindakan ini tidak dapat dibatalkan.",
       "confirm_label": "Ketik {{username}} untuk mengonfirmasi",
-      "deleting": "Menghapus…"
+      "deleting": "Menghapus…",
+      "zone_subtitle": "Hapus akun Anda secara permanen. Tindakan ini tidak dapat dibatalkan.",
+      "zone_body": "Tindakan ini menghapus akun dan akses Anda. Organisasi yang hanya Anda kelola sebagai admin — beserta semua kursus dan kontennya — juga akan dihapus. Organisasi dengan admin lain tetap tersimpan; Anda hanya akan dihapus dari organisasi tersebut."
     }
   },
   "user": {
@@ -1369,6 +1394,12 @@
           "save_error": "Kesalahan memperbarui profil"
         },
         "unknown_section": "Bagian tidak dikenal"
+      },
+      "security": {
+        "current_session_title": "Sesi saat ini",
+        "current_session_subtitle": "Perangkat yang Anda gunakan untuk masuk saat ini.",
+        "this_device": "Perangkat ini",
+        "sign_out": "Keluar"
       }
     },
     "sign_out": "Keluar",
@@ -2104,7 +2135,8 @@
             "dynamic_page": "Halaman Dinamis",
             "scorm": "SCORM",
             "markdown": "Markdown",
-            "embed": "Embed"
+            "embed": "Embed",
+            "resource": "Sumber daya"
           },
           "toasts": {
             "deleting": "Menghapus aktivitas...",
@@ -3471,7 +3503,8 @@
           "drafts": "Draft",
           "auto_graded": "Hanya auto-dinilai",
           "hide_empty": "Sembunyikan kursus kosong"
-        }
+        },
+        "new_assignment": "Tugas Baru"
       },
       "detail": {
         "title": "Alat Tugas",
@@ -3547,7 +3580,8 @@
           "task_save_error": "Kesalahan menyimpan tugas, silakan coba lagi nanti.",
           "task_updated": "Tugas berhasil diperbarui",
           "task_update_error": "Kesalahan memperbarui tugas, silakan coba lagi nanti.",
-          "reminder": "Saat mengedit/menambah tugas Anda, pastikan untuk Membatalkan Terbit Tugas Anda untuk menghindari masalah dengan siswa, Anda dapat Menerbitkannya kembali setelah siap."
+          "reminder": "Saat mengedit/menambah tugas Anda, pastikan untuk Membatalkan Terbit Tugas Anda untuk menghindari masalah dengan siswa, Anda dapat Menerbitkannya kembali setelah siap.",
+          "no_submission_to_grade": "Siswa ini belum mengirimkan tugas ini, jadi tidak ada yang dapat dinilai."
         },
         "task_editor": {
           "general": {
@@ -3567,7 +3601,9 @@
             "auth_required_submit": "Autentikasi diperlukan. Silakan masuk untuk mengirimkan tugas Anda.",
             "hint_optional": "Petunjuk (opsional)",
             "paste_blocked": "Menempel dinonaktifkan untuk tugas ini",
-            "paste_blocked_hint": "Menempel dinonaktifkan — ketik jawaban Anda langsung."
+            "paste_blocked_hint": "Menempel dinonaktifkan — ketik jawaban Anda langsung.",
+            "upload_locked_graded": "Kiriman ini telah dinilai — file Anda tidak dapat diubah lagi.",
+            "upload_locked_submitted": "Anda telah mengirimkan tugas ini — file Anda tidak dapat diubah lagi."
           },
           "code": {
             "student_behavior_label": "Perilaku siswa",
@@ -3583,7 +3619,10 @@
             "must_pass_hint": "Semua tes visible harus lulus sebelum menyimpan.",
             "show_solution_label": "Ungkapkan solusi setelah kirim",
             "show_solution_description": "Setelah siswa menyimpan pekerjaannya, tampilkan solusi referensi guru.",
-            "reference_solution_label": "Solusi referensi"
+            "reference_solution_label": "Solusi referensi",
+            "locked_graded_hint": "Kiriman ini telah dinilai — kode Anda hanya dapat dibaca.",
+            "locked_submitted_hint": "Anda telah mengirimkan tugas ini — kode Anda hanya dapat dibaca.",
+            "no_runnable_tests": "Tugas ini tidak memiliki tes yang dapat dijalankan — kode Anda diperiksa saat penilaian."
           },
           "short_answer": {
             "prompt_label": "Teks pertanyaan",
@@ -3626,13 +3665,19 @@
             "correct": "Benar",
             "incorrect": "Belum tepat — coba lagi"
           }
+        },
+        "generate_ai": "Buat tugas dengan AI",
+        "generate_ai_modal": {
+          "description": "Jelaskan yang Anda inginkan dan pratinjau tugas berdasarkan konten kursus sebelum menambahkannya.",
+          "title": "Buat tugas dengan AI"
         }
       },
       "submissions": {
         "status": {
           "late": "Terlambat",
           "submitted": "Dikirim",
-          "graded": "Dinilai"
+          "graded": "Dinilai",
+          "pending": "Sedang dikerjakan"
         },
         "submission_label": "Pengiriman",
         "evaluate": "Evaluasi",
@@ -3688,7 +3733,8 @@
           "optional": "opsional",
           "placeholder": "Tulis komentar tentang keseluruhan pengumpulan. Siswa akan melihatnya di samping nilai mereka.",
           "hint": "Biarkan kosong untuk mempertahankan umpan balik sebelumnya tanpa perubahan."
-        }
+        },
+        "truncated_warning": "Hanya {{max}} kiriman pertama yang ditampilkan. Beberapa kiriman tidak tercantum di sini."
       },
       "analytics": {
         "loading": "Memuat analitik...",
@@ -3832,9 +3878,22 @@
           },
           "toasts": {
             "creating": "Membuat tugas...",
-            "success": "Tugas berhasil dibuat"
+            "success": "Tugas berhasil dibuat",
+            "error": "Gagal membuat tugas"
           }
         }
+      },
+      "create_flow": {
+        "create_course": "Buat kursus",
+        "no_chapters_desc": "Tambahkan bab di editor kursus, lalu buat tugas di dalamnya.",
+        "no_chapters_title": "Kursus ini belum memiliki bab",
+        "no_courses_desc": "Tugas berada di dalam bab kursus. Buat kursus pertama Anda, lalu kembali untuk menambahkan tugas.",
+        "no_courses_title": "Buat kursus terlebih dahulu",
+        "open_editor": "Buka editor kursus",
+        "pick_chapter": "Pilih bab untuk menempatkan tugas ini.",
+        "pick_course": "Pilih kursus tempat tugas ini berada.",
+        "title": "Tugas Baru",
+        "untitled_chapter": "Bab tanpa judul"
       }
     },
     "search": {
@@ -4005,6 +4064,9 @@
           "keywords": "api, token, akses, programmatic, kunci"
         }
       }
+    },
+    "developers": {
+      "breadcrumb": "Pengembang"
     }
   },
   "editor": {
@@ -5182,7 +5244,8 @@
     "accessDenied": "Tidak dapat mengakses kursus ini",
     "backToCourses": "Kembali ke Kursus",
     "loadError": "Kursus ini tidak dapat ditemukan atau terjadi kesalahan saat memuatnya.",
-    "noPermission": "Anda tidak memiliki izin untuk melihat kursus ini."
+    "noPermission": "Anda tidak memiliki izin untuk melihat kursus ini.",
+    "finish_course": "Selesaikan kursus"
   },
   "pagination": {
     "next": "Berikutnya",
@@ -5300,7 +5363,18 @@
     "thumbnail_error": "Couldn't upload the cover image",
     "open_resource": "Open",
     "replace_cover": "Replace",
-    "cover_hint": "PNG, JPG, WEBP"
+    "cover_hint": "PNG, JPG, WEBP",
+    "sort": {
+      "sort_by": "Urutkan berdasarkan",
+      "name_asc": "Nama (A–Z)",
+      "name_desc": "Nama (Z–A)",
+      "newest": "Terbaru terlebih dahulu",
+      "oldest": "Terlama terlebih dahulu",
+      "manual": "Manual",
+      "drag_to_reorder": "Seret untuk mengurutkan ulang",
+      "sort_error": "Tidak dapat memperbarui urutan",
+      "reorder_error": "Tidak dapat menyimpan urutan baru"
+    }
   },
   "media": {
     "media": "Media",

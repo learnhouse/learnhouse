@@ -223,7 +223,12 @@
     "delete_organization_warning": "这将永久删除 {{name}} 及其所有数据。此操作无法撤销。",
     "delete_organization_confirm_label": "输入 {{slug}} 以确认",
     "deleting": "正在删除…",
-    "retry": "重试"
+    "retry": "重试",
+    "leave_organization": "退出组织",
+    "leave_organization_title": "退出组织？",
+    "leave_organization_desc": "你将失去对 {{org}} 的访问权限，并从成员列表中移除。若收到邀请，你之后可以重新加入。",
+    "leave_organization_error": "无法退出此组织。请重试。",
+    "leaving": "正在退出…"
   },
   "banner": {
     "viewing_as_guest": "您正在以访客身份浏览 {{name}}。",
@@ -664,7 +669,13 @@
     "quit_course_confirm": "确定要退出此课程吗？您将失去所有进度。",
     "quit_course_title": "退出课程？",
     "courses_load_error": "加载课程失败，请重试。",
-    "view_all_courses": "查看所有课程"
+    "view_all_courses": "查看所有课程",
+    "first_chapter_default_name": "第一章",
+    "paste_from_clipboard": "从剪贴板粘贴",
+    "no_image_in_clipboard": "剪贴板中未找到图片",
+    "clipboard_read_error": "无法读取剪贴板",
+    "sign_in_to_see_courses": "登录以查看你的课程",
+    "sign_in_to_see_courses_description": "登录后才能查看此学院中的课程。"
   },
   "communities": {
     "title": "社区",
@@ -975,13 +986,20 @@
     "embed": "嵌入",
     "embed_code_copied": "嵌入代码已复制！",
     "link_copied": "链接已复制！",
-    "share": "分享"
+    "share": "分享",
+    "autosave_blocked": "暂时无法保存",
+    "autosave_retry": "无法保存，正在重试…",
+    "autosave_unsaved": "未保存的更改",
+    "autosaved": "已保存",
+    "autosaving": "正在保存…",
+    "save_answers": "保存答案"
   },
   "assignments": {
     "submit_assignment": "提交作业",
     "submit_assignment_confirm": "您确定要提交作业以供评分吗？提交后您将无法进行更改。",
     "submit_assignment_title": "提交作业以供评分",
     "submit_for_grading": "提交评分",
+    "submitting": "提交中…",
     "grading_in_progress": "评分中",
     "graded": "已评分",
     "assignment_submitted_success": "作业已提交评分",
@@ -1023,7 +1041,11 @@
       "half": "半分",
       "zero": "零分"
     },
-    "task_feedback_placeholder": "此任务的备注（随评分一并保存）"
+    "task_feedback_placeholder": "此任务的备注（随评分一并保存）",
+    "no_task_submission_to_grade": "该学员尚未提交此任务的文件。",
+    "past_due": "已过截止日期",
+    "past_due_description": "此作业截止日期为 {{date}}。答案无法再保存或提交评分。",
+    "past_due_title": "已过截止日期"
   },
   "certificate": {
     "certificate": "证书",
@@ -1050,7 +1072,8 @@
     "continuing_education": "继续教育",
     "workshop_attendance": "工作坊参与",
     "specialization": "专业化",
-    "dedication_message": "您的奉献和努力得到了回报。您已掌握本课程的所有材料。"
+    "dedication_message": "您的奉献和努力得到了回报。您已掌握本课程的所有材料。",
+    "download_failed": "生成 PDF 失败。请重试。"
   },
   "search": {
     "search_placeholder": "搜索课程、用户、合集...",
@@ -1135,7 +1158,9 @@
       "description": "永久删除你的账户并撤销访问权限。此操作无法撤销。",
       "warning": "这将永久删除你的账户及所有相关数据。此操作无法撤销。",
       "confirm_label": "输入 {{username}} 以确认",
-      "deleting": "正在删除…"
+      "deleting": "正在删除…",
+      "zone_subtitle": "永久删除你的账户。此操作无法撤销。",
+      "zone_body": "这将删除你的账户和访问权限。你作为唯一管理员的任何组织，以及其中的所有课程和内容，也会一并删除。拥有其他管理员的组织将会保留；你只会被从中移除。"
     }
   },
   "user": {
@@ -1357,6 +1382,12 @@
           "save_error": "更新个人资料时出错"
         },
         "unknown_section": "未知部分"
+      },
+      "security": {
+        "current_session_title": "当前会话",
+        "current_session_subtitle": "你当前登录所使用的设备。",
+        "this_device": "此设备",
+        "sign_out": "退出登录"
       }
     },
     "sign_out": "退出登录",
@@ -2092,7 +2123,8 @@
             "dynamic_page": "动态页面",
             "scorm": "Scorm",
             "markdown": "Markdown",
-            "embed": "Embed"
+            "embed": "Embed",
+            "resource": "资源"
           },
           "toasts": {
             "deleting": "正在删除活动...",
@@ -3461,7 +3493,8 @@
           "drafts": "草稿",
           "auto_graded": "仅自动评分",
           "hide_empty": "隐藏空课程"
-        }
+        },
+        "new_assignment": "新建作业"
       },
       "detail": {
         "title": "作业工具",
@@ -3537,7 +3570,8 @@
           "task_save_error": "保存任务出错，请稍后重试。",
           "task_updated": "任务更新成功",
           "task_update_error": "更新任务出错，请稍后重试。",
-          "reminder": "在编辑/添加任务时，请记得取消发布作业，以避免学生遇到问题。准备就绪后，您可以再次发布它。"
+          "reminder": "在编辑/添加任务时，请记得取消发布作业，以避免学生遇到问题。准备就绪后，您可以再次发布它。",
+          "no_submission_to_grade": "该学员尚未提交此任务，无需评分。"
         },
         "task_editor": {
           "general": {
@@ -3557,7 +3591,9 @@
             "auth_required_submit": "需要身份验证。请登录以提交任务。",
             "hint_optional": "提示（可选）",
             "paste_blocked": "此作业已禁用粘贴",
-            "paste_blocked_hint": "粘贴已禁用 — 直接输入您的答案。"
+            "paste_blocked_hint": "粘贴已禁用 — 直接输入您的答案。",
+            "upload_locked_graded": "此提交已评分，无法再更改文件。",
+            "upload_locked_submitted": "你已提交此作业，无法再更改文件。"
           },
           "code": {
             "student_behavior_label": "学生行为",
@@ -3573,7 +3609,10 @@
             "must_pass_hint": "保存前所有可见测试都必须通过。",
             "show_solution_label": "提交后显示解决方案",
             "show_solution_description": "学生保存作业后，显示老师的参考解决方案。",
-            "reference_solution_label": "参考解决方案"
+            "reference_solution_label": "参考解决方案",
+            "locked_graded_hint": "此提交已评分，代码为只读。",
+            "locked_submitted_hint": "你已提交此作业，代码为只读。",
+            "no_runnable_tests": "此任务没有可运行的测试，评分时会检查你的代码。"
           },
           "short_answer": {
             "prompt_label": "问题提示",
@@ -3616,13 +3655,19 @@
             "correct": "正确",
             "incorrect": "不太对 — 再试一次"
           }
+        },
+        "generate_ai": "使用 AI 生成任务",
+        "generate_ai_modal": {
+          "description": "描述你的需求，在添加前预览基于课程内容生成的任务。",
+          "title": "使用 AI 生成任务"
         }
       },
       "submissions": {
         "status": {
           "late": "迟交",
           "submitted": "已提交",
-          "graded": "已评分"
+          "graded": "已评分",
+          "pending": "进行中"
         },
         "submission_label": "提交内容",
         "evaluate": "评估",
@@ -3678,7 +3723,8 @@
           "optional": "可选",
           "placeholder": "写一条关于整个提交的评论。学生将在其成绩旁看到此内容。",
           "hint": "留空以保持之前的反馈不变。"
-        }
+        },
+        "truncated_warning": "仅显示前 {{max}} 份提交。部分提交未在此列出。"
       },
       "analytics": {
         "loading": "正在加载分析...",
@@ -3822,9 +3868,22 @@
           },
           "toasts": {
             "creating": "正在创建作业...",
-            "success": "作业创建成功"
+            "success": "作业创建成功",
+            "error": "创建作业失败"
           }
         }
+      },
+      "create_flow": {
+        "create_course": "创建课程",
+        "no_chapters_desc": "请先在课程编辑器中添加章节，然后在其中创建作业。",
+        "no_chapters_title": "此课程尚无章节",
+        "no_courses_desc": "作业位于课程章节中。请先创建你的第一门课程，再回来添加作业。",
+        "no_courses_title": "请先创建课程",
+        "open_editor": "打开课程编辑器",
+        "pick_chapter": "选择要放置此作业的章节。",
+        "pick_course": "选择此作业所属的课程。",
+        "title": "新建作业",
+        "untitled_chapter": "未命名章节"
       }
     },
     "search": {
@@ -3995,6 +4054,9 @@
           "keywords": "api, 令牌, 访问, 程序化, 密钥"
         }
       }
+    },
+    "developers": {
+      "breadcrumb": "开发者"
     }
   },
   "editor": {
@@ -5172,7 +5234,8 @@
     "accessDenied": "无法访问此课程",
     "backToCourses": "返回课程列表",
     "loadError": "找不到此课程或加载时出错。",
-    "noPermission": "您没有权限查看此课程。"
+    "noPermission": "您没有权限查看此课程。",
+    "finish_course": "完成课程"
   },
   "pagination": {
     "next": "下一页",
@@ -5290,7 +5353,18 @@
     "thumbnail_error": "Couldn't upload the cover image",
     "open_resource": "Open",
     "replace_cover": "Replace",
-    "cover_hint": "PNG, JPG, WEBP"
+    "cover_hint": "PNG, JPG, WEBP",
+    "sort": {
+      "sort_by": "排序方式",
+      "name_asc": "名称（A–Z）",
+      "name_desc": "名称（Z–A）",
+      "newest": "最新优先",
+      "oldest": "最早优先",
+      "manual": "手动排序",
+      "drag_to_reorder": "拖动以重新排序",
+      "sort_error": "无法更新排序",
+      "reorder_error": "无法保存新排序"
+    }
   },
   "media": {
     "media": "Media",

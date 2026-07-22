@@ -425,9 +425,14 @@ def send_role_changed_email(
     org_name: str,
     new_role_name: str,
     lang: str = "en",
+    cta_url: str | None = None,
 ):
     """
     Send an email notifying a user that their role has changed in an organization.
+
+    ``cta_url`` is the org's own landing page, on the org's host (verified
+    custom domain when it has one). Without it the mail told someone their
+    permissions had changed and then gave them nowhere to go.
     """
     safe_username = html.escape(username)
     safe_org_name = html.escape(org_name)
@@ -440,6 +445,13 @@ def send_role_changed_email(
     )
     body_2 = t(lang, "role_changed.body_2")
 
+    cta_html = ""
+    if cta_url:
+        cta_html = (
+            f'<a href="{html.escape(cta_url)}" style="{STYLES["button"]}">'
+            f'{t(lang, "role_changed.cta", org_name=safe_org_name)}</a>'
+        )
+
     body_content = f"""
         <h1 style="{STYLES['h1']}">{heading}</h1>
         <p style="{STYLES['p']}">
@@ -448,6 +460,7 @@ def send_role_changed_email(
         <p style="{STYLES['p']}">
             {body_2}
         </p>
+        {cta_html}
     """
 
     return send_email(

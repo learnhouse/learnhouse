@@ -1,6 +1,6 @@
 """Router tests for src/routers/local_content.py."""
 
-from unittest.mock import patch
+from pathlib import Path
 
 import pytest
 from fastapi import HTTPException, FastAPI
@@ -198,22 +198,16 @@ class TestLocalContentRouter:
         original_dir = local_content.CONTENT_DIR
         local_content.CONTENT_DIR = tmp_path / "content"
         try:
-            assert local_content._validate_content_path("../escape") is None
-            assert local_content._validate_content_path("/absolute/path") is None
-            assert local_content._validate_content_path("foo\\..\\bar") is None
-            assert local_content._validate_content_path("foo\x00bar") is None
-
-            with patch("src.routers.local_content.os.path.realpath", side_effect=OSError("boom")):
-                assert local_content._validate_content_path("orgs/x/file.txt") is None
-
-            with patch(
-                "src.routers.local_content.os.path.realpath",
-                side_effect=[
-                    str(tmp_path / "content"),
-                    str(tmp_path / "outside" / "file.txt"),
-                ],
-            ):
-                assert local_content._validate_content_path("orgs/x/file.txt") is None
+            # The relpath normalizer rejects traversal, absolute paths, and null
+            # bytes as strings; the realpath containment guard that catches
+            # symlink escapes lives in the handlers and is covered end-to-end
+            # below and in test_api_token_scope_and_invalid_paths.
+            assert local_content._normalize_content_relpath("../escape") is None
+            assert local_content._normalize_content_relpath("/absolute/path") is None
+            assert local_content._normalize_content_relpath("foo\\..\\bar") is None
+            assert local_content._normalize_content_relpath("foo\x00bar") is None
+            assert local_content._normalize_content_relpath("%2E%2E/escape") is None
+            assert local_content._normalize_content_relpath("orgs/x/file.txt") == "orgs/x/file.txt"
 
             private_course = Course(
                 id=50,
@@ -349,6 +343,25 @@ class TestLocalContentRouter:
                 "/content/orgs/org_test/podcasts/podcast_private_router/episodes/episode_1/missing.txt"
             )
             head_invalid_response = await client.head("/content/%2E%2E/escape.txt")
+
+            # A symlink that lives inside CONTENT_DIR but resolves outside it
+            # passes the string checks in _validate_content_path (no ".." in the
+            # request) yet must be refused by the inline realpath containment
+            # guard right before the filesystem read.
+            secret = tmp_path / "secret.txt"
+            secret.write_text("top secret")
+            content_root = Path(local_content.CONTENT_DIR)
+            content_root.mkdir(parents=True, exist_ok=True)
+            (content_root / "orgs").mkdir(parents=True, exist_ok=True)
+            link = content_root / "orgs" / "leak.txt"
+            try:
+                link.symlink_to(secret)
+                symlink_ok = True
+            except (OSError, NotImplementedError):
+                symlink_ok = False
+            symlink_response = (
+                await client.get("/content/orgs/leak.txt") if symlink_ok else None
+            )
         finally:
             local_content.CONTENT_DIR = original_dir
 
@@ -356,3 +369,5 @@ class TestLocalContentRouter:
         assert invalid_response.status_code == 400
         assert head_missing_response.status_code == 404
         assert head_invalid_response.status_code == 400
+        if symlink_response is not None:
+            assert symlink_response.status_code == 400

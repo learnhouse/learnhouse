@@ -391,7 +391,8 @@ async def test_change_user_role_admin_branch_unreachable_via_token(
 # ---------------------------------------------------------------------------
 
 
-def test_try_send_org_created_no_email_is_noop():
+@pytest.mark.asyncio
+async def test_try_send_org_created_no_email_is_noop():
     """A creator without an email address short-circuits before any send."""
     from src.services.orgs.orgs import _try_send_org_created
 
@@ -401,5 +402,32 @@ def test_try_send_org_created_no_email_is_noop():
     org.name = "Acme Co"
     with patch("src.services.users.emails.send_org_created_email") as send_mock:
         # Must not raise, and must not attempt to send.
-        _try_send_org_created(MagicMock(), user, org)
+        await _try_send_org_created(MagicMock(), org, user, MagicMock())
     send_mock.assert_not_called()
+
+
+@pytest.mark.asyncio
+async def test_try_send_org_created_links_to_the_new_org_dashboard():
+    """The CTA must be the new org's own dashboard on the org's host.
+
+    Orgs are created from the platform apex, so a request-derived host points
+    at the apex, and `/home` is the org picker everywhere — together they sent
+    the creator to a list of orgs instead of into the one they just made.
+    """
+    from src.services.orgs.orgs import _try_send_org_created
+
+    user = MagicMock()
+    user.email = "creator@test.com"
+    org = MagicMock()
+    org.name = "Acme Co"
+    org.slug = "acme"
+    org.id = 7
+
+    with patch(
+        "src.services.email.utils.get_org_signup_base_url",
+        new_callable=AsyncMock,
+        return_value="https://acme.learn.test/",
+    ), patch("src.services.users.emails.send_org_created_email") as send_mock:
+        await _try_send_org_created(MagicMock(), org, user, MagicMock())
+
+    assert send_mock.call_args.args[2] == "https://acme.learn.test/dash"
