@@ -1,7 +1,7 @@
 """Tests for `src.services.courses.certifications`."""
 
 from datetime import datetime
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 from fastapi import HTTPException
@@ -1856,3 +1856,48 @@ class TestRevokeUserCertificate:
         )
         revoked = await revoke_user_certificate(regular_user.id, course.id, db)
         assert revoked is False
+
+
+class TestCompletionResultIsComputedOnce:
+    """One submit used to run the same completion aggregates three times.
+
+    `check_course_completion_and_create_certificate`, the `sync_trailrun_status`
+    it calls, and the caller gating the course_completed event each ran their
+    own copy. Callers can now hand the answer down instead.
+    """
+
+    @pytest.mark.asyncio
+    async def test_passed_in_result_skips_the_recount(self, db, course, org, regular_user):
+        with patch(
+            "src.services.courses.certifications.is_course_fully_completed",
+            new_callable=AsyncMock,
+        ) as recount:
+            await check_course_completion_and_create_certificate(
+                MagicMock(), regular_user.id, course.id, db, is_complete=False
+            )
+        recount.assert_not_called()
+
+    @pytest.mark.asyncio
+    async def test_without_it_the_helper_still_works_out_completion(
+        self, db, course, org, regular_user
+    ):
+        with patch(
+            "src.services.courses.certifications.is_course_fully_completed",
+            new_callable=AsyncMock,
+            return_value=False,
+        ) as recount:
+            await check_course_completion_and_create_certificate(
+                MagicMock(), regular_user.id, course.id, db
+            )
+        recount.assert_awaited_once()
+
+    @pytest.mark.asyncio
+    async def test_sync_trailrun_status_accepts_the_same_result(
+        self, db, course, org, regular_user
+    ):
+        with patch(
+            "src.services.courses.certifications.is_course_fully_completed",
+            new_callable=AsyncMock,
+        ) as recount:
+            await sync_trailrun_status(regular_user.id, course.id, db, is_complete=True)
+        recount.assert_not_called()

@@ -4,6 +4,7 @@ import logging
 import math
 import re
 from datetime import datetime, timedelta
+from typing import Sequence
 from uuid import uuid4
 
 try:
@@ -2663,6 +2664,8 @@ async def create_assignment_submission(
                 db_session=db_session,
                 overall_feedback=None,
                 auto_graded=True,
+                # Reuse the list fetched just above for the auto-gradable check.
+                assignment_tasks=assignment_tasks,
             )
             # Ensure trailstep reflects completion (create_assignment_submission
             # above already created it with complete=True, but if one already
@@ -2678,9 +2681,15 @@ async def create_assignment_submission(
     # 500 the request and make the student think their submission failed — they
     # can always re-trigger the cert check on the next read/grade.
     if course and course.id and user and user.id:
+        # One completion check for the whole request. It answers both questions
+        # asked below — should a certificate be issued, and did THIS submission
+        # finish the course — and is threaded into the certificate helper so it
+        # doesn't re-run the same aggregates (nor let sync_trailrun_status run
+        # them a third time).
+        course_complete = await is_course_fully_completed(user.id, course.id, db_session)
         try:
             await check_course_completion_and_create_certificate(
-                request, user.id, course.id, db_session
+                request, user.id, course.id, db_session, is_complete=course_complete
             )
         except Exception:  # pragma: no cover - defensive: cert errors never fail submit
             logger.exception(
@@ -2697,7 +2706,7 @@ async def create_assignment_submission(
         # resubmit of an already-complete activity doesn't re-fire it.
         if is_new_activity_completion:
             try:
-                if await is_course_fully_completed(user.id, course.id, db_session):
+                if course_complete:
                     await track(
                         event_name=analytics_events.COURSE_COMPLETED,
                         org_id=course.org_id,
@@ -3249,6 +3258,7 @@ async def _apply_grade_and_finalize(
     overall_feedback: str | None = None,
     auto_graded: bool = False,
     dispatch_webhook: bool = True,
+    assignment_tasks: Sequence[AssignmentTask] | None = None,
 ) -> dict:
     """
     Core grading logic shared by manual and auto-grade flows. Computes the
@@ -3268,11 +3278,15 @@ async def _apply_grade_and_finalize(
     path (READ permission, self-grading under teacher-configured auto_grading)
     can share one implementation.
     """
-    # Compute max_grade from the current task configuration
-    tasks_statement = select(AssignmentTask).where(
-        AssignmentTask.assignment_id == assignment.id
-    )
-    assignment_tasks = (await db_session.execute(tasks_statement)).scalars().all()
+    # Compute max_grade from the current task configuration. The auto-grade
+    # path has already loaded this exact list to decide whether every task is
+    # auto-gradable, so it hands it over rather than paying for the same query
+    # twice inside one submit request.
+    if assignment_tasks is None:
+        tasks_statement = select(AssignmentTask).where(
+            AssignmentTask.assignment_id == assignment.id
+        )
+        assignment_tasks = (await db_session.execute(tasks_statement)).scalars().all()
     max_grade = 0
     for task in assignment_tasks:
         max_grade += int(task.max_grade_value or 0)
