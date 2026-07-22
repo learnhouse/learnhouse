@@ -290,6 +290,26 @@ function ActivityClient(props: ActivityClientProps) {
 
   // Memoize activity position calculation
   const { allActivities, currentIndex } = useActivityPosition(course, activityid);
+
+  // Focus-mode progress. Computed once and shared by the ring, the % label and
+  // the "N of M" text, which previously each inlined the same lookup — and each
+  // matched `run.course_uuid`, a field TrailRunRead does not have (the course
+  // uuid lives at `run.course.course_uuid`). Every match failed, so the ring sat
+  // at 0% and the text read "0 of M" no matter how much the learner completed,
+  // while the normal progress bar on the same page showed the truth.
+  const focusProgress = useMemo(() => {
+    const cleanCourseUuid = course?.course_uuid?.replace('course_', '');
+    const run = trailData?.runs?.find(
+      (r: any) => r.course?.course_uuid?.replace('course_', '') === cleanCourseUuid
+    );
+    const completed = run?.steps?.filter((step: any) => step.complete)?.length || 0;
+    const total =
+      course?.chapters?.reduce(
+        (acc: number, chapter: any) => acc + (chapter.activities?.length || 0),
+        0
+      ) || 0;
+    return { completed, total, percent: total > 0 ? Math.round((completed / total) * 100) : 0 };
+  }, [trailData, course]);
   
   // Get previous and next activities
   const prevActivity = currentIndex > 0 ? allActivities[currentIndex - 1] : null;
@@ -589,17 +609,17 @@ function ActivityClient(props: ActivityClientProps) {
                                 fill="none"
                                 strokeLinecap="round"
                                 strokeDasharray={2 * Math.PI * 14}
-                                strokeDashoffset={2 * Math.PI * 14 * (1 - (trailData?.runs?.find((run: any) => run.course_uuid === course.course_uuid)?.steps?.filter((step: any) => step.complete)?.length || 0) / (course.chapters?.reduce((acc: number, chapter: any) => acc + chapter.activities.length, 0) || 1))}
+                                strokeDashoffset={2 * Math.PI * 14 * (1 - focusProgress.percent / 100)}
                               />
                             </svg>
                             <div className="absolute inset-0 flex items-center justify-center">
                               <span className="text-xs font-bold text-gray-800">
-                                {Math.round(((trailData?.runs?.find((run: any) => run.course_uuid === course.course_uuid)?.steps?.filter((step: any) => step.complete)?.length || 0) / (course.chapters?.reduce((acc: number, chapter: any) => acc + chapter.activities.length, 0) || 1)) * 100)}%
+                                {focusProgress.percent}%
                               </span>
                             </div>
                           </div>
                           <div className="text-xs text-gray-600">
-                            {trailData?.runs?.find((run: any) => run.course_uuid === course.course_uuid)?.steps?.filter((step: any) => step.complete)?.length || 0} {t('common.of')} {course.chapters?.reduce((acc: number, chapter: any) => acc + chapter.activities.length, 0) || 0}
+                            {focusProgress.completed} {t('common.of')} {focusProgress.total}
                           </div>
                         </motion.div>
                         
@@ -1120,9 +1140,21 @@ export function MarkStatus(props: {
     </svg>
   );
 
+  // Whether marking the CURRENT activity complete will finish the course.
+  //
+  // Both lookups here were wrong against the actual trail payload: runs were
+  // matched on `run.course_uuid` (TrailRunRead has no such field — the uuid is
+  // nested at `run.course.course_uuid`) and steps on `step.activity_uuid`
+  // (TrailStep carries `activity_id`). The run lookup therefore always failed
+  // and this returned false for everyone, so a learner who finished their last
+  // remaining activity out of order was routed to an activity they had already
+  // done instead of the course-end screen, and the CourseCompleted analytics
+  // event could never fire. isActivityCompleted just below gets both right —
+  // this now matches it.
   const areAllActivitiesCompleted = () => {
+    const cleanCourseUuid = props.course.course_uuid?.replace('course_', '');
     const run = props.trailData?.runs?.find(
-      (run: any) => run.course_uuid === props.course.course_uuid
+      (run: any) => run.course?.course_uuid?.replace('course_', '') === cleanCourseUuid
     );
     if (!run) return false;
 
@@ -1132,8 +1164,8 @@ export function MarkStatus(props: {
     props.course.chapters.forEach((chapter: any) => {
       chapter.activities.forEach((activity: any) => {
         totalActivities++;
-        const isCompleted = run.steps.find(
-          (step: any) => step.activity_uuid === activity.activity_uuid && step.complete === true
+        const isCompleted = run.steps?.find(
+          (step: any) => step.activity_id === activity.id && step.complete === true
         );
         if (isCompleted) {
           completedActivities++;
@@ -1141,6 +1173,8 @@ export function MarkStatus(props: {
       });
     });
 
+    // -1 is deliberate: this runs BEFORE the current activity's step is written,
+    // so "everything except this one" means this one finishes the course.
     return completedActivities >= totalActivities - 1;
   };
 

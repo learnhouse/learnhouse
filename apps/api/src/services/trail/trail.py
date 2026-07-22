@@ -47,9 +47,24 @@ async def _build_trail_read(
     # Batch fetch chapter activity counts per course (for total_steps)
     course_total_steps_map: dict[int, int] = {}
     if with_course_info and course_ids:
+        # Only PUBLISHED activities count toward the total, matching
+        # is_course_fully_completed (services/courses/certifications.py). That
+        # check deliberately joins Activity and filters `published`, noting that
+        # counting drafts "would make the course impossible to complete". This
+        # denominator did not, so the two disagreed: a course containing any
+        # draft activity showed e.g. 4/5 (80%) on the trail page forever, even
+        # though the backend considered it complete and had issued the
+        # certificate. Because the trail card gates its certificate row on
+        # progress === 100, the learner's earned certificate never appeared
+        # there — and no amount of work could fix it, since drafts are never
+        # served to learners in the first place.
         step_counts = (await db_session.execute(
             select(ChapterActivity.course_id, func.count(ChapterActivity.id))  # type: ignore
-            .where(ChapterActivity.course_id.in_(course_ids))  # type: ignore
+            .join(Activity, Activity.id == ChapterActivity.activity_id)  # type: ignore
+            .where(
+                ChapterActivity.course_id.in_(course_ids),  # type: ignore
+                Activity.published == True,  # noqa: E712
+            )
             .group_by(ChapterActivity.course_id)
         )).all()
         course_total_steps_map = {row[0]: row[1] for row in step_counts}

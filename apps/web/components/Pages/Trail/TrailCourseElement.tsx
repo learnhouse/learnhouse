@@ -30,7 +30,13 @@ function TrailCourseElement(props: TrailCourseElementProps) {
   const course = props.course
   const router = useRouter()
   const course_total_steps = props.run.course_total_steps
-  const course_completed_steps = props.run.steps.length
+  // Only steps actually marked complete count. `steps` is the raw TrailStep
+  // list and genuinely contains incomplete rows — rejecting an assignment or
+  // starting a retry flips a step back to complete=False rather than deleting
+  // it. Counting the raw length showed a rejected learner "100% · Completed"
+  // while the course page correctly showed the work as outstanding, so they had
+  // no reason to resubmit. Every other progress consumer filters this way.
+  const course_completed_steps = props.run.steps.filter((step: any) => step.complete).length
   const orgID = org?.id
   const course_progress = course_total_steps > 0
     ? Math.round((course_completed_steps / course_total_steps) * 100)
@@ -50,7 +56,7 @@ function TrailCourseElement(props: TrailCourseElementProps) {
 
   async function quitCourse(course_uuid: string) {
     // Close activity
-    let activity = await removeCourse(course_uuid, props.orgslug, access_token)
+    await removeCourse(course_uuid, props.orgslug, access_token)
     // Mutate course
     await revalidateTags(['courses'], props.orgslug)
     router.refresh()

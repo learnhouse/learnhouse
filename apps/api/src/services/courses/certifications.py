@@ -636,12 +636,23 @@ async def are_course_assignments_passed(
     # Assignments that belong to activities actually in this course. Use an
     # IN-subquery (not a join) so an activity reused across chapters isn't
     # double-counted.
+    #
+    # Only assignments a learner can actually reach count toward the gate. This
+    # previously included assignments whose activity is unpublished (and drafts
+    # of the assignment itself), which the learner is never served — so an
+    # unfinishable requirement sat in front of the certificate forever. This
+    # mirrors is_course_fully_completed, which filters `Activity.published` for
+    # exactly the same reason.
     assignments = (await db_session.execute(
         select(Assignment).where(
             Assignment.course_id == course_id,
+            Assignment.published == True,  # noqa: E712
             Assignment.activity_id.in_(
-                select(ChapterActivity.activity_id).where(
-                    ChapterActivity.course_id == course_id
+                select(ChapterActivity.activity_id)
+                .join(Activity, Activity.id == ChapterActivity.activity_id)
+                .where(
+                    ChapterActivity.course_id == course_id,
+                    Activity.published == True,  # noqa: E712
                 )
             ),
         )

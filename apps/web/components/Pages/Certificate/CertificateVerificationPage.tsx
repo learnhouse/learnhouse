@@ -306,8 +306,15 @@ const CertificateVerificationPage: React.FC<CertificateVerificationPageProps> = 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Certification Type</label>
                   <div className="bg-gray-50 p-3 rounded-lg">
+                    {/* certification_type is free-form JSON config and is absent on
+                        certificates issued before it existed (and on any course whose
+                        certification was set up without it). Calling .replace on
+                        undefined threw and blanked the whole public verification page —
+                        the one page that must never fail to load. */}
                     <span className="text-gray-900 capitalize">
-                      {certificateData.certification.config.certification_type.replace('_', ' ')}
+                      {certificateData.certification.config?.certification_type
+                        ? certificateData.certification.config.certification_type.replace('_', ' ')
+                        : '—'}
                     </span>
                   </div>
                 </div>
