@@ -9,6 +9,7 @@ from fastapi import FastAPI, Response
 from httpx import ASGITransport, AsyncClient
 
 from src.core.events.database import get_db_session
+from src.db.organization_config import OrganizationConfig
 from src.db.users import AnonymousUser, User
 from src.routers.auth import (
     JWT_COOKIE_NAME,
@@ -21,6 +22,20 @@ from src.routers.auth import (
     unset_auth_cookies,
 )
 from src.security.auth import get_current_user
+
+
+async def _set_org_signup_mode(db, org_id: int, signup_mode: str):
+    """Give the org a config row so get_org_join_mechanism can resolve it."""
+    db.add(
+        OrganizationConfig(
+            org_id=org_id,
+            config={
+                "config_version": "1.0",
+                "features": {"members": {"signup_mode": signup_mode}},
+            },
+        )
+    )
+    await db.commit()
 
 
 def _mock_config(tenancy: str = "multi"):
@@ -554,18 +569,45 @@ class TestAuthRouter:
         assert response.status_code == 400
         assert response.json()["detail"] == "Invalid org_id"
 
-    async def test_oauth_org_id_valid_but_no_invite_clears_org_id(self, client, db, org):
-        mock_redis = Mock(get=Mock(return_value=None))
+    async def test_oauth_open_org_needs_no_invite(self, client, db, org):
+        """An open org is joinable by anyone, exactly as POST /users/{org_id} is.
+        No invite lookup happens at all, so Redis being untouched is part of the
+        contract here."""
+        await _set_org_signup_mode(db, org.id, "open")
+        sign_with_google = AsyncMock(return_value=None)
+        with patch("src.routers.auth.signWithGoogle", sign_with_google):
+            response = await client.post(
+                "/api/v1/auth/oauth",
+                params={"org_id": 1},
+                json={
+                    "email": "user@test.com",
+                    "provider": "google",
+                    "access_token": "google-token",
+                },
+            )
+        # signWithGoogle returning None is the "auth failed" path (401); what
+        # matters is that org_id survived the validation block instead of being
+        # silently dropped.
+        assert response.status_code == 401
+        assert sign_with_google.await_args.args[3] == org.id
+
+    async def test_oauth_invite_only_org_without_invite_returns_403(self, client, db, org):
+        await _set_org_signup_mode(db, org.id, "inviteOnly")
+        mock_redis = Mock(get=Mock(return_value=None), close=Mock())
         mock_config = SimpleNamespace(
             redis_config=SimpleNamespace(redis_connection_string="redis://localhost:6379")
         )
         with patch("src.routers.auth.get_learnhouse_config", return_value=mock_config), patch(
             "redis.Redis.from_url", return_value=mock_redis
         ), patch(
+            "src.routers.auth.get_google_user_info",
+            new_callable=AsyncMock,
+            return_value={"email": "user@test.com", "email_verified": True},
+        ), patch(
             "src.routers.auth.signWithGoogle",
             new_callable=AsyncMock,
             return_value=None,
-        ):
+        ) as sign_with_google:
             response = await client.post(
                 "/api/v1/auth/oauth",
                 params={"org_id": 1},
@@ -575,14 +617,21 @@ class TestAuthRouter:
                     "access_token": "google-token",
                 },
             )
-        assert response.status_code == 401
+        assert response.status_code == 403
+        # Rejected outright rather than signed in with no organization.
+        sign_with_google.assert_not_awaited()
 
-    async def test_oauth_org_id_redis_unavailable_clears_org_id(self, client, db, org):
+    async def test_oauth_invite_only_org_redis_unavailable_returns_503(self, client, db, org):
+        await _set_org_signup_mode(db, org.id, "inviteOnly")
         mock_config = SimpleNamespace(
             redis_config=SimpleNamespace(redis_connection_string="redis://localhost:6379")
         )
         with patch("src.routers.auth.get_learnhouse_config", return_value=mock_config), patch(
             "redis.Redis.from_url", side_effect=RuntimeError("Redis down")
+        ), patch(
+            "src.routers.auth.get_google_user_info",
+            new_callable=AsyncMock,
+            return_value={"email": "user@test.com", "email_verified": True},
         ), patch(
             "src.routers.auth.signWithGoogle",
             new_callable=AsyncMock,
@@ -597,11 +646,12 @@ class TestAuthRouter:
                     "access_token": "google-token",
                 },
             )
-        assert response.status_code == 401
+        assert response.status_code == 503
 
     async def test_oauth_org_id_google_unverified_email_returns_401(self, client, db, org):
-        """OAuth org_id invite gate for provider=google: when Google does not
-        return a verified email the request is rejected with 401 (lines 493-499)."""
+        """OAuth invite gate for provider=google: when Google does not return a
+        verified email the request is rejected with 401."""
+        await _set_org_signup_mode(db, org.id, "inviteOnly")
         with patch(
             "src.routers.auth.get_google_user_info",
             new_callable=AsyncMock,
@@ -622,13 +672,12 @@ class TestAuthRouter:
     async def test_oauth_org_id_google_verified_checks_invite_and_closes_redis(
         self, client, db, org
     ):
-        """Google returns a verified email -> the invite email is normalised
-        (line 500), the Redis invite key is read (lines 506-513) and the Redis
-        connection is closed in the finally block (lines 520-524). The invite is
-        not found here, so org_id is cleared and signWithGoogle returns None ->
-        401."""
+        """Google returns a verified email -> the invite email is normalised, the
+        Redis invite key is read and the Redis connection is closed in the finally
+        block. The invite is not found here, so the join is refused with 403."""
+        await _set_org_signup_mode(db, org.id, "inviteOnly")
         # close() raising must be swallowed by the finally block's
-        # ``except Exception: pass`` (lines 523-524).
+        # ``except Exception: pass``.
         close_mock = Mock(side_effect=RuntimeError("close failed"))
         mock_redis = Mock(get=Mock(return_value=None), close=close_mock)
         mock_config = SimpleNamespace(
@@ -657,7 +706,7 @@ class TestAuthRouter:
                 },
             )
 
-        assert response.status_code == 401
+        assert response.status_code == 403
         # Invite key was looked up using the lower-cased Google email.
         mock_redis.get.assert_called_once_with("invited_user:user@test.com:org:org_test")
         # The Redis connection from from_url was always closed (finally block).

@@ -177,6 +177,57 @@ class TestAuthUtilsService:
         mock_update_login.assert_called_once_with(user, "10.0.0.7", db_session)
 
     @pytest.mark.asyncio
+    async def test_sign_with_google_existing_user_join_busts_session_cache(self):
+        """/users/session is Redis-cached for 10 minutes and holds the org list, so
+        joining an org without invalidating it leaves the user looking like a
+        non-member of the org they just joined."""
+        request = Mock(spec=Request)
+        request.client = SimpleNamespace(host="10.0.0.7")
+        user = User(
+            id=1,
+            username="existing",
+            first_name="Existing",
+            last_name="User",
+            email="existing@test.com",
+            password="hashed",
+            user_uuid="user_existing",
+            email_verified=True,
+            signup_method="google",
+            creation_date=str(datetime.now(timezone.utc)),
+            update_date=str(datetime.now(timezone.utc)),
+        )
+        db_session = AsyncMock()
+        # First lookup returns the user, the membership lookup returns nothing.
+        user_result = MagicMock()
+        user_result.scalars.return_value.first.return_value = user
+        membership_result = MagicMock()
+        membership_result.scalars.return_value.first.return_value = None
+        db_session.execute.side_effect = [user_result, membership_result]
+
+        with patch(
+            "src.services.auth.utils.get_google_user_info",
+            return_value={"email": "existing@test.com", "email_verified": True},
+        ), patch("src.services.auth.utils.get_client_ip", return_value="10.0.0.7"), patch(
+            "src.services.auth.utils.update_login_info"
+        ), patch(
+            "src.security.features_utils.usage.check_limits_with_usage", AsyncMock()
+        ), patch(
+            "src.security.features_utils.usage.increase_feature_usage", AsyncMock()
+        ), patch(
+            "src.routers.users._invalidate_session_cache"
+        ) as mock_invalidate:
+            await signWithGoogle(
+                request=request,
+                access_token="access-token",
+                email="existing@test.com",
+                org_id=10,
+                current_user=Mock(),
+                db_session=db_session,
+            )
+
+        mock_invalidate.assert_called_once_with(user.id)
+
+    @pytest.mark.asyncio
     async def test_sign_with_google_username_fallback_to_user(self):
         """Covers line 76 — username_parts.append('user') when name parts are absent
         and the email has no '@', so the prefix-based branch is also skipped."""
