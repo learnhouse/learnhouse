@@ -20,6 +20,83 @@ import toast from 'react-hot-toast';
 import { useTranslation } from 'react-i18next';
 import { useLHAnalytics, AnalyticsEvent } from '@services/analytics';
 
+function pctToLetterGrade(pct: number): string {
+    if (pct >= 90) return 'A';
+    if (pct >= 80) return 'B';
+    if (pct >= 70) return 'C';
+    if (pct >= 60) return 'D';
+    return 'F';
+}
+
+function pctToGpa(pct: number): string {
+    if (pct >= 93) return '4.0';
+    if (pct >= 90) return '3.7';
+    if (pct >= 87) return '3.3';
+    if (pct >= 83) return '3.0';
+    if (pct >= 80) return '2.7';
+    if (pct >= 77) return '2.3';
+    if (pct >= 73) return '2.0';
+    if (pct >= 70) return '1.7';
+    if (pct >= 67) return '1.3';
+    if (pct >= 63) return '1.0';
+    if (pct >= 60) return '0.7';
+    return '0.0';
+}
+
+// The GET /grade response mixes two sources of truth: `display_grade`,
+// `points_summary`, `percentage_display` and `passed` are derived from the
+// PERSISTED aggregate, while `tasks` is rebuilt live from the current task
+// submissions. Inline grading a task writes only the task row, so the header
+// banner kept reading e.g. "40/100 pts · 40.00% · Not passing" while the chip
+// directly below it flipped to 100% — one response contradicting itself.
+// Recompute the banner from the live task rows, mirroring the backend's
+// compute_assignment_grade() so both halves always agree.
+function buildLiveGrade(gradePreview: any) {
+    const tasks = Array.isArray(gradePreview?.tasks) ? gradePreview.tasks : null;
+    if (!tasks || tasks.length === 0) return gradePreview;
+
+    const max = tasks.reduce((acc: number, tb: any) => acc + (Number(tb.max_grade) || 0), 0);
+    const rawSum = tasks.reduce((acc: number, tb: any) => acc + (Number(tb.grade) || 0), 0);
+    // Same clamp the backend applies, so a buggy task sum can't report 120/100.
+    const raw = Math.max(Math.min(rawSum, max), 0);
+    const percentage = max > 0 ? Math.round((raw / max) * 10000) / 100 : 0;
+
+    const gradingType = gradePreview.grading_type || 'NUMERIC';
+    // Prefer the server's threshold (it honours a per-assignment override);
+    // only fall back to the grading-type defaults when it isn't present.
+    const threshold = typeof gradePreview.passing_threshold === 'number'
+        ? gradePreview.passing_threshold
+        : (gradingType === 'ALPHABET' || gradingType === 'GPA_SCALE' ? 60 : 50);
+    const passed = percentage >= threshold;
+    const percentage_display = `${percentage.toFixed(2)}%`;
+
+    let display_grade: string;
+    if (gradingType === 'ALPHABET') {
+        const letter = pctToLetterGrade(percentage);
+        display_grade = !passed ? 'F' : letter === 'F' ? 'D' : letter;
+    } else if (gradingType === 'PERCENTAGE') {
+        display_grade = percentage_display;
+    } else if (gradingType === 'PASS_FAIL') {
+        display_grade = passed ? 'Pass' : 'Fail';
+    } else if (gradingType === 'GPA_SCALE') {
+        const gpa = pctToGpa(percentage);
+        display_grade = !passed ? '0.0' : gpa === '0.0' ? '1.0' : gpa;
+    } else {
+        display_grade = `${Math.round(percentage)}/100`;
+    }
+
+    return {
+        ...gradePreview,
+        grade: raw,
+        max_grade: max,
+        percentage,
+        passed,
+        display_grade,
+        points_summary: `${raw}/${max} pts`,
+        percentage_display,
+    };
+}
+
 function EvaluateAssignment({ user_id }: any) {
     const { t } = useTranslation()
     const assignments = useAssignments() as any;
@@ -86,14 +163,16 @@ function EvaluateAssignment({ user_id }: any) {
             queryClient.invalidateQueries({ queryKey: queryKeys.assignments.analytics(rawUuid) })
         }
         else {
-            toast.error(res.data.message)
+            // FastAPI error bodies carry `detail`, never `message` — reading
+            // `.message` rendered a wordless red toast for 404/403/500 alike.
+            toast.error(res.data?.detail || t('common.something_went_wrong'))
         }
     }
 
     async function finalizeAndComplete() {
         const gradeRes = await putFinalGrade(user_id, assignmentUuid, access_token, feedback ?? null);
         if (!gradeRes.success) {
-            toast.error(gradeRes.data.message)
+            toast.error(gradeRes.data?.detail || t('common.something_went_wrong'))
             return
         }
         setGradePreview(gradeRes.data);
@@ -109,14 +188,17 @@ function EvaluateAssignment({ user_id }: any) {
             queryClient.invalidateQueries({ queryKey: queryKeys.assignments.analytics(rawUuid) })
             queryClient.invalidateQueries({ queryKey: queryKeys.assignments.submission(rawUuid) })
         } else {
-            toast.error(doneRes.data.message)
+            toast.error(doneRes.data?.detail || t('common.something_went_wrong'))
         }
     }
 
     async function rejectAssignment() {
         const res = await deleteUserSubmission(user_id, assignmentUuid, access_token)
         if (!res.success) {
-            toast.error(res.data?.detail || t('dashboard.assignments.submissions.toasts.reject_success'))
+            // Fall back to a generic error, not the *success* string this used
+            // to reuse — an error toast that reads "rejected successfully" is
+            // worse than no message at all.
+            toast.error(res.data?.detail || t('common.something_went_wrong'))
             return
         }
         toast.success(t('dashboard.assignments.submissions.toasts.reject_success'))
@@ -129,6 +211,10 @@ function EvaluateAssignment({ user_id }: any) {
     }
 
     const sortedTasks = assignments?.assignment_tasks?.slice().sort((a: any, b: any) => a.id - b.id) || [];
+
+    // Banner numbers derived from the live per-task rows in the same response
+    // (see buildLiveGrade) so the header can't contradict the chips below it.
+    const liveGrade = gradePreview ? buildLiveGrade(gradePreview) : null;
 
     // Build a uuid → per-task breakdown map from the backend's `tasks` array
     // so we can render "85%" badges next to each task header. Memoizing with
@@ -143,23 +229,23 @@ function EvaluateAssignment({ user_id }: any) {
     return (
         <div className='flex flex-col min-h-fit'>
             {/* Grade preview */}
-            {gradePreview && (
+            {liveGrade && (
                 <div className='flex items-center justify-between bg-white nice-shadow rounded-xl px-5 py-3 mb-4'>
                     <div className='flex items-center space-x-3'>
-                        <div className={`rounded-lg px-3 py-1.5 text-lg font-bold ${gradePreview.passed ? 'bg-emerald-50 text-emerald-700' : 'bg-rose-50 text-rose-700'}`}>
-                            {gradePreview.display_grade}
+                        <div className={`rounded-lg px-3 py-1.5 text-lg font-bold ${liveGrade.passed ? 'bg-emerald-50 text-emerald-700' : 'bg-rose-50 text-rose-700'}`}>
+                            {liveGrade.display_grade}
                         </div>
                         <div className='flex flex-col'>
                             <p className='text-[10px] uppercase tracking-wider font-semibold text-gray-400'>
                                 {t('dashboard.assignments.submissions.preview.current_grade')}
                             </p>
                             <p className='text-xs text-gray-600 font-medium'>
-                                {gradePreview.points_summary} · {gradePreview.percentage_display}
+                                {liveGrade.points_summary} · {liveGrade.percentage_display}
                             </p>
                         </div>
                     </div>
-                    <div className={`text-[10px] uppercase tracking-wider font-bold px-2 py-0.5 rounded-full ${gradePreview.passed ? 'bg-emerald-100 text-emerald-700' : 'bg-rose-100 text-rose-700'}`}>
-                        {gradePreview.passed
+                    <div className={`text-[10px] uppercase tracking-wider font-bold px-2 py-0.5 rounded-full ${liveGrade.passed ? 'bg-emerald-100 text-emerald-700' : 'bg-rose-100 text-rose-700'}`}>
+                        {liveGrade.passed
                             ? t('dashboard.assignments.submissions.preview.passing')
                             : t('dashboard.assignments.submissions.preview.not_passing')}
                     </div>

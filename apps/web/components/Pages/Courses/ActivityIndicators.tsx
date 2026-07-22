@@ -199,8 +199,8 @@ const MobileChapterSelector = memo(({
   currentChapterIndex: number
   orgslug: string
   courseid: string
-  isActivityDone: (activity: any) => boolean
-  isActivityCurrent: (activity: any) => boolean
+  isActivityDone: (_activity: any) => boolean
+  isActivityCurrent: (_activity: any) => boolean
   t: any
 }) => {
   const [isOpen, setIsOpen] = useState(false)
@@ -358,11 +358,17 @@ function ActivityIndicators(props: Props) {
     }
   }
 
+  const isOnLastActivity =
+    allActivities.length > 0 && currentActivityIndex === allActivities.length - 1
+
   const navigateToNext = () => {
     if (currentActivityIndex < allActivities.length - 1) {
       const nextActivity = allActivities[currentActivityIndex + 1]
       const activityId = nextActivity.activity_uuid.replace('activity_', '')
       router.push(getUriWithOrg(orgslug, '') + `/course/${courseid}/activity/${activityId}`)
+    } else if (isOnLastActivity) {
+      // Same destination as the trophy badge — the course-end/certificate view.
+      router.push(getUriWithOrg(orgslug, '') + `/course/${courseid}/activity/end`)
     }
   }
 
@@ -446,7 +452,7 @@ function ActivityIndicators(props: Props) {
         {enableNavigation && (
           <button
             onClick={navigateToNext}
-            disabled={currentActivityIndex >= allActivities.length - 1}
+            disabled={currentActivityIndex > allActivities.length - 1}
             className="p-1.5 rounded-full bg-gray-50 hover:bg-gray-100 disabled:opacity-40 disabled:cursor-not-allowed transition-colors shrink-0"
             aria-label={t('activities.next_activity')}
           >
@@ -570,7 +576,7 @@ function ActivityIndicators(props: Props) {
         {enableNavigation && (
           <button
             onClick={navigateToNext}
-            disabled={currentActivityIndex >= allActivities.length - 1}
+            disabled={currentActivityIndex > allActivities.length - 1}
             className="p-1 rounded-full hover:bg-gray-100 disabled:opacity-40 disabled:cursor-not-allowed transition-colors shrink-0"
             aria-label={t('activities.next_activity')}
           >

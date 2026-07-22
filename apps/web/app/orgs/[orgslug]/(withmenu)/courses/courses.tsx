@@ -10,7 +10,9 @@ import CourseThumbnail from '@components/Objects/Thumbnails/CourseThumbnail'
 import NewCourseButton from '@components/Objects/StyledElements/Buttons/NewCourseButton'
 import useAdminStatus from '@components/Hooks/useAdminStatus'
 import { useTranslation } from 'react-i18next'
-import { BookCopy, Search, X, Users, Info } from 'lucide-react'
+import { BookCopy, Search, X, Users, Info, LogIn } from 'lucide-react'
+import Link from 'next/link'
+import { getUriWithOrg } from '@services/config/config'
 import FeatureGate from '@components/Dashboard/Shared/FeatureGate/FeatureGate'
 import { useOrg } from '@components/Contexts/OrgContext'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
@@ -34,6 +36,7 @@ function Courses(props: CourseProps) {
   const org = useOrg() as any
   const session = useLHSession() as any
   const access_token = session?.data?.tokens?.access_token
+  const isAuthenticated = session?.status === 'authenticated'
   const { track } = useLHAnalytics('learner')
   const { data: coursesData, isLoading: coursesLoading } = useCourses(orgslug)
 
@@ -295,19 +298,44 @@ function Courses(props: CourseProps) {
             {allCourses.length === 0 && !searchQuery && (
               <div className="col-span-full flex flex-col justify-center items-center py-12 px-4 border-2 border-dashed border-gray-100 rounded-2xl bg-gray-50/30">
                 <div className="p-4 bg-white rounded-full nice-shadow mb-4">
-                  <BookCopy className="w-8 h-8 text-gray-300" strokeWidth={1.5} />
+                  {isAuthenticated ? (
+                    <BookCopy className="w-8 h-8 text-gray-300" strokeWidth={1.5} />
+                  ) : (
+                    <LogIn className="w-8 h-8 text-gray-300" strokeWidth={1.5} />
+                  )}
                 </div>
                 <h1 className="text-xl font-bold text-gray-600 mb-2">
-                  {t('courses.no_courses')}
+                  {isAuthenticated
+                    ? t('courses.no_courses')
+                    : t('courses.sign_in_to_see_courses', 'Log in to see your courses')}
                 </h1>
                 <p className="text-md text-gray-400 mb-6 text-center max-w-xs">
-                  {isUserAdmin ? (
+                  {!isAuthenticated ? (
+                    t(
+                      'courses.sign_in_to_see_courses_description',
+                      'Courses in this academy may only be visible once you are signed in.',
+                    )
+                  ) : isUserAdmin ? (
                     t('courses.create_courses_placeholder')
                   ) : (
                     t('courses.no_courses_available')
                   )}
                 </p>
-                {isUserAdmin && (
+                {/* An anonymous visitor sees an empty list whenever the org has no
+                    PUBLIC courses — the API filters non-public ones out rather than
+                    erroring, so "no courses" and "not signed in" are indistinguishable
+                    from here. Prompt for sign-in instead of implying the academy is
+                    empty. */}
+                {!isAuthenticated && (
+                  <Link
+                    href={getUriWithOrg(orgslug, '/login')}
+                    className="inline-flex items-center gap-2 justify-center px-4 py-2 bg-gray-900 text-white rounded-lg text-sm font-semibold hover:bg-gray-800 transition-colors"
+                  >
+                    <LogIn size={16} />
+                    {t('auth.sign_in', 'Sign in')}
+                  </Link>
+                )}
+                {isAuthenticated && isUserAdmin && (
                   <div className="mt-4">
                     <AuthenticatedClientElement
                       action="create"

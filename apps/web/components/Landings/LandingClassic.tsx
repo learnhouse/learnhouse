@@ -10,7 +10,8 @@ import ContentPlaceHolderIfUserIsNotAdmin from '@components/Objects/ContentPlace
 import Link from 'next/link'
 import { getUriWithOrg } from '@services/config/config'
 import { useTranslation } from 'react-i18next'
-import { BookCopy } from 'lucide-react'
+import { BookCopy, LogIn } from 'lucide-react'
+import { useLHSession } from '@components/Contexts/LHSessionContext'
 
 interface LandingClassicProps {
   courses: any[]
@@ -20,6 +21,8 @@ interface LandingClassicProps {
 
 function LandingClassic({ courses, orgslug, org_id }: LandingClassicProps) {
   const { t } = useTranslation()
+  const session = useLHSession() as any
+  const isAuthenticated = session?.status === 'authenticated'
 
   // Limit to 12 courses (4x3 grid) for the home page
   const displayedCourses = courses.slice(0, 12)
@@ -52,14 +55,38 @@ function LandingClassic({ courses, orgslug, org_id }: LandingClassicProps) {
             {courses.length === 0 && (
               <div className="col-span-full flex flex-col justify-center items-center py-12 px-4 border-2 border-dashed border-gray-100 rounded-2xl bg-gray-50/30">
                 <div className="p-4 bg-white rounded-full nice-shadow mb-4">
-                  <BookCopy className="w-8 h-8 text-gray-300" strokeWidth={1.5} />
+                  {isAuthenticated ? (
+                    <BookCopy className="w-8 h-8 text-gray-300" strokeWidth={1.5} />
+                  ) : (
+                    <LogIn className="w-8 h-8 text-gray-300" strokeWidth={1.5} />
+                  )}
                 </div>
                 <h1 className="text-xl font-bold text-gray-600 mb-2">
-                  {t('courses.no_courses')}
+                  {isAuthenticated
+                    ? t('courses.no_courses')
+                    : t('courses.sign_in_to_see_courses', 'Log in to see your courses')}
                 </h1>
+                {/* Anonymous visitors only ever receive PUBLIC courses from the API,
+                    so an empty list here usually means "sign in", not "empty academy". */}
                 <p className="text-md text-gray-400 mb-6 text-center max-w-xs">
-                  <ContentPlaceHolderIfUserIsNotAdmin text={t('courses.create_courses_placeholder')} />
+                  {isAuthenticated ? (
+                    <ContentPlaceHolderIfUserIsNotAdmin text={t('courses.create_courses_placeholder')} />
+                  ) : (
+                    t(
+                      'courses.sign_in_to_see_courses_description',
+                      'Courses in this academy may only be visible once you are signed in.',
+                    )
+                  )}
                 </p>
+                {!isAuthenticated && (
+                  <Link
+                    href={getUriWithOrg(orgslug, '/login')}
+                    className="inline-flex items-center gap-2 justify-center px-4 py-2 bg-gray-900 text-white rounded-lg text-sm font-semibold hover:bg-gray-800 transition-colors"
+                  >
+                    <LogIn size={16} />
+                    {t('auth.sign_in', 'Sign in')}
+                  </Link>
+                )}
               </div>
             )}
           </div>

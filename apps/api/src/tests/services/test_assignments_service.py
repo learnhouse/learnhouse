@@ -16,6 +16,7 @@ Session to AsyncSession in this PR:
 
 from datetime import datetime, timedelta
 from types import SimpleNamespace
+from uuid import uuid4
 from unittest.mock import AsyncMock, patch
 
 import pytest
@@ -35,6 +36,7 @@ from src.db.courses.assignments import (
     AssignmentTaskSubmissionUpdate,
     AssignmentTaskTypeEnum,
     AssignmentUpdate,
+    AssignmentUserSubmission,
     AssignmentUserSubmissionCreate,
     AssignmentUserSubmissionRead,
     AssignmentUserSubmissionStatus,
@@ -47,6 +49,7 @@ from src.db.trails import Trail
 from src.db.users import APITokenUser
 from src.services.courses.activities.assignments import (
     _block_api_tokens,
+    _check_number_answer,
     _is_assignment_past_due,
     create_assignment,
     create_assignment_submission,
@@ -74,6 +77,7 @@ from src.services.courses.activities.assignments import (
     read_user_assignment_task_submissions,
     read_user_assignment_task_submissions_me,
     read_user_assignment_task_submissions_me_batch,
+    retry_assignment_submission,
     update_assignment,
     update_assignment_submission,
     update_assignment_task,
@@ -1972,3 +1976,153 @@ class TestUpdateAssignmentSubmissionProtectedFields:
             )
         # Unchanged: the submission still belongs to the original assignment.
         assert result.assignment_id == assignment.id
+
+
+class TestAssignmentIntegrityGuards:
+    """Guards added after an audit found several ways to corrupt graded work."""
+
+    async def _set_due(self, db, assignment, due_date):
+        assignment.due_date = due_date
+        db.add(assignment)
+        await db.commit()
+        await db.refresh(assignment)
+
+    async def _user_submission(self, db, assignment, user, status):
+        sub = AssignmentUserSubmission(
+            assignment_id=assignment.id,
+            user_id=user.id,
+            assignmentusersubmission_uuid=f"assignmentusersubmission_{uuid4()}",
+            submission_status=status,
+            grade=0,
+            creation_date=str(datetime.now()),
+            update_date=str(datetime.now()),
+        )
+        db.add(sub)
+        await db.commit()
+        await db.refresh(sub)
+        return sub
+
+    async def test_learner_cannot_edit_answers_after_submitting(
+        self, mock_request, db, assignment, assignment_task, regular_user
+    ):
+        """Answers freeze at hand-in.
+
+        Otherwise a learner who has been shown the answer key (show_correct_answers
+        reveals it post-grade) could replay the correct answers, and the next
+        re-grade — which re-derives from the CURRENT stored answers — would score
+        the tampered version.
+        """
+        await self._user_submission(
+            db, assignment, regular_user, AssignmentUserSubmissionStatus.GRADED
+        )
+        obj = AssignmentTaskSubmissionUpdate(task_submission={"answer": "tampered"})
+        with patch(_PATCH_RBAC, new_callable=AsyncMock), \
+             patch(_PATCH_AUTH_ROLES, new_callable=AsyncMock, side_effect=[False, True]):
+            with pytest.raises(HTTPException) as exc:
+                await handle_assignment_task_submission(
+                    mock_request, assignment_task.assignment_task_uuid, obj, regular_user, db
+                )
+        assert exc.value.status_code == 403
+        assert "already been handed in" in exc.value.detail
+
+    async def test_learner_can_still_edit_answers_while_pending(
+        self, mock_request, db, assignment, assignment_task, regular_user
+    ):
+        """A PENDING row is an attempt in progress — saving must keep working."""
+        await self._user_submission(
+            db, assignment, regular_user, AssignmentUserSubmissionStatus.PENDING
+        )
+        obj = AssignmentTaskSubmissionUpdate(task_submission={"answer": "draft"})
+        with patch(_PATCH_RBAC, new_callable=AsyncMock), \
+             patch(_PATCH_AUTH_ROLES, new_callable=AsyncMock, side_effect=[False, True]):
+            result = await handle_assignment_task_submission(
+                mock_request, assignment_task.assignment_task_uuid, obj, regular_user, db
+            )
+        assert isinstance(result, AssignmentTaskSubmissionRead)
+
+    async def test_instructor_grade_without_target_submission_is_rejected(
+        self, mock_request, db, assignment_task, admin_user
+    ):
+        """Grading a task the learner never submitted used to write the grade to
+        the INSTRUCTOR's own row, force it to 0, and report success."""
+        obj = AssignmentTaskSubmissionUpdate(grade=8)
+        with patch(_PATCH_RBAC, new_callable=AsyncMock), \
+             patch(_PATCH_AUTH_ROLES, new_callable=AsyncMock, return_value=True):
+            with pytest.raises(HTTPException) as exc:
+                await handle_assignment_task_submission(
+                    mock_request, assignment_task.assignment_task_uuid, obj, admin_user, db
+                )
+        assert exc.value.status_code == 400
+        assert "no submission" in exc.value.detail
+
+    async def test_instructor_answer_without_target_submission_still_allowed(
+        self, mock_request, db, assignment_task, admin_user
+    ):
+        """An instructor taking their own course saves ANSWERS through the same
+        path with no target uuid — the grade guard must not catch that."""
+        obj = AssignmentTaskSubmissionUpdate(task_submission={"answer": "x"})
+        with patch(_PATCH_RBAC, new_callable=AsyncMock), \
+             patch(_PATCH_AUTH_ROLES, new_callable=AsyncMock, return_value=True):
+            result = await handle_assignment_task_submission(
+                mock_request, assignment_task.assignment_task_uuid, obj, admin_user, db
+            )
+        assert isinstance(result, AssignmentTaskSubmissionRead)
+
+    async def test_retry_past_due_is_rejected(
+        self, mock_request, db, assignment, course, regular_user
+    ):
+        """Retry wipes answers, grade, trail step and certificate. Past the
+        deadline the learner can never resubmit, so this destroyed graded work."""
+        assignment.allow_retries = True
+        await self._set_due(db, assignment, "2000-01-01")
+        await self._user_submission(
+            db, assignment, regular_user, AssignmentUserSubmissionStatus.GRADED
+        )
+        with patch(_PATCH_RBAC, new_callable=AsyncMock), \
+             patch(_PATCH_AUTH_ROLES, new_callable=AsyncMock, return_value=False):
+            with pytest.raises(HTTPException) as exc:
+                await retry_assignment_submission(
+                    mock_request, assignment.assignment_uuid, regular_user, db
+                )
+        assert exc.value.status_code == 403
+        assert "deadline has passed" in exc.value.detail
+
+    async def test_grading_a_pending_submission_is_rejected(
+        self, mock_request, db, assignment, course, regular_user, admin_user
+    ):
+        """A PENDING row is a retry in flight with its task rows deleted.
+        Grading it summed an empty set, wrote 0, and locked the learner out."""
+        await self._user_submission(
+            db, assignment, regular_user, AssignmentUserSubmissionStatus.PENDING
+        )
+        with patch(_PATCH_RBAC, new_callable=AsyncMock), \
+             patch(_PATCH_AUTH_ROLES, new_callable=AsyncMock, return_value=True), \
+             patch(_PATCH_DISPATCH, new_callable=AsyncMock), \
+             patch(_PATCH_TRACK, new_callable=AsyncMock):
+            with pytest.raises(HTTPException) as exc:
+                await grade_assignment_submission(
+                    mock_request, regular_user.id, assignment.assignment_uuid, admin_user, db
+                )
+        assert exc.value.status_code == 400
+        assert "not handed in" in exc.value.detail
+
+
+class TestNumberAnswerSignedThousands:
+    """Signed thousands-grouped numbers were parsed as decimals."""
+
+    def test_negative_grouped_integer_matches(self):
+        assert _check_number_answer("-1,000", -1000, 0) is True
+
+    def test_plus_signed_grouped_integer_matches(self):
+        assert _check_number_answer("+1,000", 1000, 0) is True
+
+    def test_negative_multi_group_matches(self):
+        assert _check_number_answer("-1,234,567", -1234567, 0) is True
+
+    def test_negative_grouped_decimal_matches(self):
+        assert _check_number_answer("-1,000.50", -1000.5, 0) is True
+
+    def test_european_decimal_still_parsed_as_decimal(self):
+        """The disambiguation this regex feeds must not regress: a bare
+        "3,14" is still a European decimal, not three-thousand-fourteen."""
+        assert _check_number_answer("3,14", 3.14, 0) is True

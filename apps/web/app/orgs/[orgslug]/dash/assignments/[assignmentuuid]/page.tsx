@@ -167,20 +167,31 @@ function PublishingState() {
 
     async function updateAssignmentPublishState(assignmentUUID: string) {
         const nextPublished = !assignment?.assignment_object?.published
-        const res = await updateAssignment({ published: nextPublished }, assignmentUUID, access_token)
-        const res2 = await updateActivity({ published: nextPublished }, assignment?.activity_object?.activity_uuid, access_token)
         const toast_loading = toast.loading(t('dashboard.assignments.detail.publishing.toasts.updating'))
-        if (res.success && res2) {
-            queryClient.invalidateQueries({ queryKey: queryKeys.assignments.detail(assignmentUUID) })
-            toast.success(t('dashboard.assignments.detail.publishing.toasts.update_success'))
-            toast.dismiss(toast_loading)
-            track(AnalyticsEvent.AssignmentPublishToggled, {
-                published: nextPublished,
-                task_count: assignment?.assignment_tasks?.length ?? 0,
-            })
-        }
-        else {
+        try {
+            const res = await updateAssignment({ published: nextPublished }, assignmentUUID, access_token)
+            const res2 = await updateActivity({ published: nextPublished }, assignment?.activity_object?.activity_uuid, access_token)
+            // `res2` is a response-metadata envelope — always an object, so the
+            // old `res.success && res2` guard degenerated to `res.success` and
+            // reported success even when the activity leg 404'd/5xx'd, leaving
+            // the badge on "Published" while learners still couldn't see it.
+            if (res.success && res2.success) {
+                queryClient.invalidateQueries({ queryKey: queryKeys.assignments.detail(assignmentUUID) })
+                toast.success(t('dashboard.assignments.detail.publishing.toasts.update_success'))
+                track(AnalyticsEvent.AssignmentPublishToggled, {
+                    published: nextPublished,
+                    task_count: assignment?.assignment_tasks?.length ?? 0,
+                })
+            }
+            else {
+                toast.error(t('dashboard.assignments.detail.publishing.toasts.update_error'))
+            }
+        } catch (_e) {
             toast.error(t('dashboard.assignments.detail.publishing.toasts.update_error'))
+        } finally {
+            // Dismiss in `finally`: it used to live in the success branch only,
+            // so any failure left a spinner toast on screen forever.
+            toast.dismiss(toast_loading)
         }
     }
 
