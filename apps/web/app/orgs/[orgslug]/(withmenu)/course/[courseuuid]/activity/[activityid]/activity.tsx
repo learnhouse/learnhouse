@@ -1,7 +1,7 @@
 'use client'
 import Link from 'next/link'
 import { getUriWithOrg } from '@services/config/config'
-import { BookOpenCheck, CheckCircle, ChevronLeft, ChevronRight, MessageSquare, UserRoundPen, Edit2, Maximize2, Minimize2, Trophy, Sparkles, XCircle, Lock, RotateCcw, Infinity as InfinityIcon } from 'lucide-react'
+import { BookOpenCheck, CheckCircle, ChevronLeft, ChevronRight, MessageSquare, UserRoundPen, Edit2, Loader2, Maximize2, Minimize2, Trophy, Sparkles, XCircle, Lock, RotateCcw, Infinity as InfinityIcon } from 'lucide-react'
 import dynamic from 'next/dynamic'
 import { markActivityAsComplete, unmarkActivityAsComplete } from '@services/courses/activity'
 import { usePathname, useRouter } from 'next/navigation'
@@ -1492,32 +1492,40 @@ function AssignmentTools(props: {
   // so the modal doesn't pop back open every time gradeData refreshes.
   const hasAutoOpenedRef = React.useRef(false);
 
+  const [isSubmitting, setIsSubmitting] = React.useState(false);
+
   const submitForGradingUI = async () => {
     if (props.assignment) {
-      // Persist any answers the learner selected but didn't manually save, so
-      // grading never runs against an empty/stale answer sheet. Abort if a save
-      // fails rather than silently finalizing a 0%.
-      const flushed = await dirtyTasks.flushAll()
-      if (!flushed) {
-        toast.error(t('assignments.failed_submit_assignment'))
-        return
-      }
-      const res = await submitAssignmentForGrading(
-        props.assignment?.assignment_uuid,
-        session.data?.tokens?.access_token
-      )
-      if (res.success) {
-        toast.success(t('assignments.assignment_submitted_success'))
-        queryClient.invalidateQueries({ queryKey: queryKeys.assignments.submission(props.assignment?.assignment_uuid) })
-        queryClient.invalidateQueries({ queryKey: queryKeys.assignments.taskSubmission(props.assignment?.assignment_uuid) })
-        // Submitting may auto-grade the assignment (GRADED), which makes the
-        // answer key eligible to be revealed (show_correct_answers). The task
-        // definitions were fetched pre-grade with the key stripped, so refetch
-        // them — otherwise the reveal renders every option as "incorrect".
-        queryClient.invalidateQueries({ queryKey: queryKeys.assignments.tasks(props.assignment?.assignment_uuid) })
-      }
-      else {
-        toast.error(t('assignments.failed_submit_assignment'))
+      if (isSubmitting) return
+      setIsSubmitting(true)
+      try {
+        // Persist any answers the learner selected but didn't manually save, so
+        // grading never runs against an empty/stale answer sheet. Abort if a save
+        // fails rather than silently finalizing a 0%.
+        const flushed = await dirtyTasks.flushAll()
+        if (!flushed) {
+          toast.error(t('assignments.failed_submit_assignment'))
+          return
+        }
+        const res = await submitAssignmentForGrading(
+          props.assignment?.assignment_uuid,
+          session.data?.tokens?.access_token
+        )
+        if (res.success) {
+          toast.success(t('assignments.assignment_submitted_success'))
+          queryClient.invalidateQueries({ queryKey: queryKeys.assignments.submission(props.assignment?.assignment_uuid) })
+          queryClient.invalidateQueries({ queryKey: queryKeys.assignments.taskSubmission(props.assignment?.assignment_uuid) })
+          // Submitting may auto-grade the assignment (GRADED), which makes the
+          // answer key eligible to be revealed (show_correct_answers). The task
+          // definitions were fetched pre-grade with the key stripped, so refetch
+          // them — otherwise the reveal renders every option as "incorrect".
+          queryClient.invalidateQueries({ queryKey: queryKeys.assignments.tasks(props.assignment?.assignment_uuid) })
+        }
+        else {
+          toast.error(t('assignments.failed_submit_assignment'))
+        }
+      } finally {
+        setIsSubmitting(false)
       }
     }
   }
@@ -1626,9 +1634,27 @@ function AssignmentTools(props: {
       )
     }
 
+    // While the submit runs the trigger itself reports it: saving every pending
+    // answer and grading server-side takes seconds on a long assignment, and
+    // the bar is what the learner is looking at.
+    if (isSubmitting) {
+      return (
+        <div className="bg-cyan-800 rounded-md px-4 nice-shadow flex flex-col p-2.5 text-white transition delay-150 duration-300 ease-in-out">
+          <span className="text-[10px] font-bold mb-1 uppercase">{t('common.status')}</span>
+          <div className="flex items-center space-x-2">
+            <Loader2 size={17} className="animate-spin" />
+            <span className="text-xs font-bold">
+              {t('assignments.submitting', { defaultValue: 'Submitting…' })}
+            </span>
+          </div>
+        </div>
+      )
+    }
+
     return (
       <ConfirmationModal
         confirmationButtonText={t('assignments.submit_assignment')}
+        pendingButtonText={t('assignments.submitting', { defaultValue: 'Submitting…' })}
         confirmationMessage={t('assignments.submit_assignment_confirm')}
         dialogTitle={t('assignments.submit_assignment_title')}
         dialogTrigger={

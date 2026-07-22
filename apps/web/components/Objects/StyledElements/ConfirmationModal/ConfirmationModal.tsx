@@ -1,11 +1,13 @@
 'use client'
 import React from 'react'
 import Modal from '@components/Objects/StyledElements/Modal/Modal'
-import { AlertTriangle, Info } from 'lucide-react'
+import { AlertTriangle, Info, Loader2 } from 'lucide-react'
 
 type ModalParams = {
   confirmationMessage: string
   confirmationButtonText: string
+  /** Label while the confirmed action runs. Defaults to the normal label. */
+  pendingButtonText?: string
   dialogTitle: string
   functionToExecute: any
   dialogTrigger?: React.ReactNode
@@ -15,21 +17,44 @@ type ModalParams = {
 
 const ConfirmationModal = (params: ModalParams) => {
   const [isDialogOpen, setIsDialogOpen] = React.useState(false)
+  const [isPending, setIsPending] = React.useState(false)
   const isWarning = params.status === 'warning'
   const iconColors = isWarning ? 'bg-red-100 text-red-600' : 'bg-blue-100 text-blue-600'
   const buttonColors = isWarning
     ? 'text-white bg-red-500 hover:bg-red-600'
     : 'text-white bg-blue-500 hover:bg-blue-600'
 
-  const handleConfirm = React.useCallback(() => {
-    params.functionToExecute()
-    setIsDialogOpen(false)
-  }, [params])
+  // Confirmed actions can be slow — submitting an assignment saves every
+  // pending answer and then grades it server-side. The modal used to close the
+  // instant you clicked, leaving the user staring at an unchanged page with no
+  // sign anything was happening, free to click through and fire it again. So
+  // wait for the action: the button shows it is working, and the modal stays up
+  // until it finishes. `await` on a non-promise is a no-op, so callers that
+  // pass a synchronous function behave exactly as before.
+  const handleConfirm = React.useCallback(async () => {
+    if (isPending) return
+    setIsPending(true)
+    try {
+      await params.functionToExecute()
+      setIsDialogOpen(false)
+    } catch {
+      // Leave the modal open so the failure toast lands on the screen the user
+      // is still looking at, and they can retry without reopening.
+    } finally {
+      setIsPending(false)
+    }
+  }, [params, isPending])
 
   return (
     <Modal
       isDialogOpen={isDialogOpen}
-      onOpenChange={setIsDialogOpen}
+      // Don't let an outside click or Esc dismiss the modal mid-action: the
+      // work is already in flight, and hiding it just recreates the "did that
+      // do anything?" moment this pending state exists to remove.
+      onOpenChange={(open: boolean) => {
+        if (!open && isPending) return
+        setIsDialogOpen(open)
+      }}
       dialogTrigger={params.dialogTrigger}
       noPadding
       customWidth="sm:max-w-[600px] sm:min-w-[500px]"
@@ -48,9 +73,16 @@ const ConfirmationModal = (params: ModalParams) => {
                 type="button"
                 id={params.buttonid}
                 onClick={handleConfirm}
-                className={`rounded-md text-sm px-3 py-2 font-bold flex justify-center items-center cursor-pointer ${buttonColors} hover:shadow-lg transition duration-300 ease-in-out`}
+                disabled={isPending}
+                aria-busy={isPending}
+                className={`rounded-md text-sm px-3 py-2 font-bold flex justify-center items-center gap-2 ${buttonColors} hover:shadow-lg transition duration-300 ease-in-out ${
+                  isPending ? 'opacity-70 cursor-wait' : 'cursor-pointer'
+                }`}
               >
-                {params.confirmationButtonText}
+                {isPending && <Loader2 size={14} className="animate-spin" />}
+                {isPending
+                  ? params.pendingButtonText || params.confirmationButtonText
+                  : params.confirmationButtonText}
               </button>
             </div>
           </div>
