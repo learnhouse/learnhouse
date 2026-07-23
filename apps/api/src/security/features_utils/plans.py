@@ -143,7 +143,7 @@ PLAN_FEATURE_CONFIGS: dict[str, dict] = {
             "collaboration": {"enabled": True, "limit": 0},
             "courses": {"enabled": True, "limit": 0},
 
-            "members": {"admin_limit": 2, "enabled": True, "limit": 500},
+            "members": {"admin_limit": 2, "enabled": True, "limit": 200},
             "payments": {"enabled": True},
 
             "usergroups": {"enabled": True, "limit": 0},
@@ -164,14 +164,14 @@ PLAN_FEATURE_CONFIGS: dict[str, dict] = {
     },
     "pro": {
         "features": {
-            "ai": {"enabled": True, "limit": 3000},
+            "ai": {"enabled": True, "limit": 2000},
             "analytics": {"enabled": True, "limit": 0},
             "api": {"enabled": True, "limit": 0},
             "assignments": {"enabled": True, "limit": 0},
             "collaboration": {"enabled": True, "limit": 0},
             "courses": {"enabled": True, "limit": 0},
 
-            "members": {"admin_limit": 10, "enabled": True, "limit": 1000},
+            "members": {"admin_limit": 10, "enabled": True, "limit": 500},
             "payments": {"enabled": True},
 
             "usergroups": {"enabled": True, "limit": 0},
@@ -241,7 +241,7 @@ AI_CREDIT_LIMITS: dict[str, int] = {
     "personal": 500,
     "personal-family": 3000,
     "standard": 1000,
-    "pro": 3000,
+    "pro": 2000,
     "enterprise": -1,
 }
 
