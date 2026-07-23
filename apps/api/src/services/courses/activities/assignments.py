@@ -1895,8 +1895,10 @@ async def handle_assignment_task_submission(
                 detail="Assignment Task Submission not found",
             )
     elif is_instructor and (
-        assignment_task_submission_object.grade is not None
-        or assignment_task_submission_object.task_submission_grade_feedback is not None
+        (assignment_task_submission_object.grade is not None
+         and assignment_task_submission_object.grade != 0)
+        or (assignment_task_submission_object.task_submission_grade_feedback is not None
+            and assignment_task_submission_object.task_submission_grade_feedback != "")
     ):
         # An instructor writing a GRADE without naming a target submission has
         # nothing to grade. Falling through to the save-progress lookup below
@@ -1905,9 +1907,14 @@ async def handle_assignment_task_submission(
         # 0 by the create branch) while the UI reported success and the learner's
         # grade never moved. There is no safe target to guess: fail loudly.
         #
-        # Narrowed to grade-bearing payloads on purpose: an instructor who is
-        # also taking their own course legitimately saves ANSWERS through this
-        # same path with no uuid, and that must keep working.
+        # An instructor who is also taking their own course saves ANSWERS through
+        # this same path with no uuid, and that must keep working. The quiz
+        # autosave sends grade=0 and feedback="" on every keystroke, so match the
+        # "actual value" test the student branch above uses (grade != 0, feedback
+        # != "") — a zeroed placeholder is a save, only a real grade or real
+        # feedback is a grading attempt. Every UI grading path always carries a
+        # target uuid and is handled by the branch above, so this stays a
+        # defense-in-depth guard, never the normal grade route.
         raise HTTPException(
             status_code=400,
             detail=(

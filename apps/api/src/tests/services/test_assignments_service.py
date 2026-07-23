@@ -620,6 +620,44 @@ class TestHandleAssignmentTaskSubmission:
         assert exc.value.status_code == 403
         assert "grade" in exc.value.detail.lower()
 
+    async def test_instructor_autosave_with_zero_grade_saves_progress(
+        self, mock_request, db, assignment_task, regular_user
+    ):
+        # An instructor taking their own course autosaves quiz answers through
+        # this path with no target uuid. The quiz autosave sends grade=0 and
+        # feedback="" — a placeholder, not a grade — and it must save, not raise
+        # "the learner has no submission for it".
+        obj = AssignmentTaskSubmissionUpdate(
+            task_submission={"answer": "hello"},
+            grade=0,
+            task_submission_grade_feedback="",
+        )
+        with patch(_PATCH_RBAC, new_callable=AsyncMock), \
+             patch(_PATCH_AUTH_ROLES, new_callable=AsyncMock, return_value=True):
+            result = await handle_assignment_task_submission(
+                mock_request, assignment_task.assignment_task_uuid, obj, regular_user, db
+            )
+        assert isinstance(result, AssignmentTaskSubmissionRead)
+
+    async def test_instructor_real_grade_without_target_still_rejected(
+        self, mock_request, db, assignment_task, regular_user
+    ):
+        # The integrity guard stays: a real grade with no target submission uuid
+        # would otherwise write a phantom instructor-owned row while the learner's
+        # grade never moves, so it must fail loudly.
+        obj = AssignmentTaskSubmissionUpdate(
+            task_submission={"answer": "x"},
+            grade=80,
+        )
+        with patch(_PATCH_RBAC, new_callable=AsyncMock), \
+             patch(_PATCH_AUTH_ROLES, new_callable=AsyncMock, return_value=True):
+            with pytest.raises(HTTPException) as exc:
+                await handle_assignment_task_submission(
+                    mock_request, assignment_task.assignment_task_uuid, obj, regular_user, db
+                )
+        assert exc.value.status_code == 400
+        assert "no submission" in exc.value.detail.lower()
+
 
 # ---------------------------------------------------------------------------
 # read_assignment_submissions
