@@ -28,20 +28,25 @@ const ConfirmationModal = (params: ModalParams) => {
   // pending answer and then grades it server-side. The modal used to close the
   // instant you clicked, leaving the user staring at an unchanged page with no
   // sign anything was happening, free to click through and fire it again. So
-  // wait for the action: the button shows it is working, and the modal stays up
-  // until it finishes. `await` on a non-promise is a no-op, so callers that
-  // pass a synchronous function behave exactly as before.
+  // wait for the action: the button shows it is working and can't be clicked
+  // twice, and the modal stays up until it finishes. `await` on a non-promise
+  // is a no-op, so callers that pass a synchronous function behave as before.
+  //
+  // The modal always closes once the action settles, success or failure — many
+  // confirm handlers report their own errors with a toast and never throw, and
+  // the few that let a network error propagate previously still closed the
+  // modal. Keeping it open on an unexpected throw would strand those on a modal
+  // with no message, so close either way and let the handler's toast speak.
   const handleConfirm = React.useCallback(async () => {
     if (isPending) return
     setIsPending(true)
     try {
       await params.functionToExecute()
-      setIsDialogOpen(false)
     } catch {
-      // Leave the modal open so the failure toast lands on the screen the user
-      // is still looking at, and they can retry without reopening.
+      // The confirmed action owns its own error reporting.
     } finally {
       setIsPending(false)
+      setIsDialogOpen(false)
     }
   }, [params, isPending])
 

@@ -243,11 +243,16 @@ async def serve_local_content(
     if not (safe_real == base_real or safe_real.startswith(base_real + os.sep)):
         raise HTTPException(status_code=400, detail="Invalid path")
 
-    # Run the access check against the content-relative path, not the raw
-    # ``file_path``: an attacker could URL-encode segments so the access-control
-    # pattern matching fails to recognise private activity/podcast content while
-    # the resolved path still points at the real file (auth bypass / IDOR).
-    await _check_content_access(rel_path, current_user, db_session, request=request)
+    # Run the access check against the CANONICAL content-relative path derived
+    # from the resolved file, never the request string. `_normalize_content_relpath`
+    # rejects `..` but leaves `.`/`//` segments intact, so a path like
+    # `orgs/./{uuid}/courses/...` would shift `_check_content_access`'s segment
+    # indices, miss every private pattern, and fall through to the public branch
+    # while realpath still serves the real private file (auth bypass / IDOR).
+    # Deriving the path from `safe_real` keeps the access check and the
+    # filesystem touch looking at exactly the same, collapsed, path.
+    canonical_rel = os.path.relpath(safe_real, base_real).replace(os.sep, '/')
+    await _check_content_access(canonical_rel, current_user, db_session, request=request)
 
     if not os.path.isfile(safe_real):
         raise HTTPException(status_code=404, detail="File not found")
@@ -295,8 +300,11 @@ async def head_local_content(
     if not (safe_real == base_real or safe_real.startswith(base_real + os.sep)):
         raise HTTPException(status_code=400, detail="Invalid path")
 
-    # Access check against the content-relative path, not the raw request path.
-    await _check_content_access(rel_path, current_user, db_session, request=request)
+    # Access check against the CANONICAL path from safe_real, not the request
+    # string — see serve_local_content: a `.`/`//` segment would otherwise slip
+    # private content past the pattern matching (auth bypass / IDOR).
+    canonical_rel = os.path.relpath(safe_real, base_real).replace(os.sep, '/')
+    await _check_content_access(canonical_rel, current_user, db_session, request=request)
 
     if not os.path.isfile(safe_real):
         raise HTTPException(status_code=404, detail="File not found")
