@@ -1,6 +1,6 @@
 import { NodeViewWrapper } from '@tiptap/react'
 import React, { useEffect } from 'react'
-import { FileText, Download, Expand, Upload, Loader2, AlertCircle } from 'lucide-react'
+import { FileText, Download, Expand, Upload, AlertCircle } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { uploadNewPDFFile } from '../../../../../services/blocks/Pdf/pdf'
 import { getActivityBlockMediaDirectory } from '@services/media/media'
@@ -27,6 +27,7 @@ function PDFBlockComponent(props: any) {
   )
   const [isModalOpen, setIsModalOpen] = React.useState(false)
   const [error, setError] = React.useState<string | null>(null)
+  const [progress, setProgress] = React.useState<number | null>(null)
   const fileInputRef = React.useRef<HTMLInputElement>(null)
   const fileId = blockObject
     ? `${blockObject.content.file_id}.${blockObject.content.file_format}`
@@ -46,11 +47,13 @@ function PDFBlockComponent(props: any) {
     e.preventDefault()
     if (!pdf) return
     setIsLoading(true)
+    setProgress(0)
     setError(null)
     try {
       let object = await uploadNewPDFFile(
         pdf,
-        props.extension.options.activity.activity_uuid, access_token
+        props.extension.options.activity.activity_uuid, access_token,
+        (p) => setProgress(p)
       )
       setblockObject(object)
       props.updateAttributes({
@@ -63,6 +66,7 @@ function PDFBlockComponent(props: any) {
       toast.error(errorMessage.includes('Upload failed') ? errorMessage : `Upload failed — please try again: ${errorMessage}`)
     } finally {
       setIsLoading(false)
+      setProgress(null)
     }
   }
 
@@ -201,8 +205,15 @@ function PDFBlockComponent(props: any) {
                 />
                 {isLoading ? (
                   <div className="space-y-3">
-                    <Loader2 className="w-8 h-8 animate-spin mx-auto text-blue-500" />
-                    <p className="text-sm text-neutral-600">{t('editor.blocks.pdf_block.uploading')}</p>
+                    <div className="w-full bg-neutral-200 rounded-full h-2">
+                      <div
+                        className="bg-blue-500 h-2 rounded-full transition-all"
+                        style={{ width: `${progress ?? 0}%` }}
+                      />
+                    </div>
+                    <p className="text-sm text-neutral-600">
+                      {t('editor.blocks.pdf_block.uploading')} {progress ?? 0}%
+                    </p>
                   </div>
                 ) : (
                   <div className="space-y-3">

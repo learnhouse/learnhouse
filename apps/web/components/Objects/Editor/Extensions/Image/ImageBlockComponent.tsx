@@ -1,7 +1,7 @@
 import { NodeViewWrapper } from '@tiptap/react'
 import React, { useEffect } from 'react'
 import { Resizable } from 're-resizable'
-import { Image, Download, AlignLeft, AlignCenter, AlignRight, Expand, Upload, Loader2, AlertCircle } from 'lucide-react'
+import { Image, Download, AlignLeft, AlignCenter, AlignRight, Expand, Upload, AlertCircle } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { uploadNewImageFile } from '../../../../../services/blocks/Image/images'
 import { getActivityBlockMediaDirectory } from '@services/media/media'
@@ -33,6 +33,7 @@ function ImageBlockComponent(props: any) {
   const [isLoading, setIsLoading] = React.useState(false)
   const [isDragging, setIsDragging] = React.useState(false)
   const [error, setError] = React.useState<string | null>(null)
+  const [progress, setProgress] = React.useState<number | null>(null)
   const [blockObject, setblockObject] = React.useState(
     props.node.attrs.blockObject
   )
@@ -64,12 +65,14 @@ function ImageBlockComponent(props: any) {
   const handleUpload = async (file: File) => {
     if (!access_token) return
     setIsLoading(true)
+    setProgress(0)
     setError(null)
     try {
       let object = await uploadNewImageFile(
         file,
         props.extension.options.activity.activity_uuid,
-        access_token
+        access_token,
+        (p) => setProgress(p)
       )
       setblockObject(object)
       props.updateAttributes({
@@ -84,6 +87,7 @@ function ImageBlockComponent(props: any) {
       toast.error(errorMessage.includes('Upload failed') ? errorMessage : `Upload failed — please try again: ${errorMessage}`)
     } finally {
       setIsLoading(false)
+      setProgress(null)
     }
   }
 
@@ -311,8 +315,15 @@ function ImageBlockComponent(props: any) {
                 />
                 {isLoading ? (
                   <div className="space-y-3">
-                    <Loader2 className="w-8 h-8 animate-spin mx-auto text-neutral-500" />
-                    <p className="text-sm text-neutral-600">{t('editor.blocks.image_block.uploading')}</p>
+                    <div className="w-full bg-neutral-200 rounded-full h-2">
+                      <div
+                        className="bg-blue-500 h-2 rounded-full transition-all"
+                        style={{ width: `${progress ?? 0}%` }}
+                      />
+                    </div>
+                    <p className="text-sm text-neutral-600">
+                      {t('editor.blocks.image_block.uploading')} {progress ?? 0}%
+                    </p>
                   </div>
                 ) : (
                   <div className="space-y-2">
