@@ -13,6 +13,8 @@ from src.security.auth import get_current_user
 from src.services.users.users import create_user, create_user_without_org
 from src.services.security.rate_limiting import get_client_ip
 from src.services.security.account_lockout import update_login_info
+from src.services.audit.audit import record_audit_event
+from src.db.user_audit_events import UserAuditEventType
 
 
 logger = logging.getLogger(__name__)
@@ -269,5 +271,14 @@ async def signWithGoogle(
     # Update last login info
     client_ip = get_client_ip(request)
     await update_login_info(user, client_ip, db_session)
+
+    # Durable connection record for the per-student audit log (SSO path).
+    await record_audit_event(
+        event_type=UserAuditEventType.LOGIN,
+        user_id=user.id,
+        ip=client_ip,
+        user_agent=request.headers.get("user-agent"),
+        metadata={"method": "google"},
+    )
 
     return UserRead.model_validate(user)

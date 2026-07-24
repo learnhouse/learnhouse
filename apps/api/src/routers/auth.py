@@ -30,6 +30,8 @@ from src.security.auth import (
 )
 from src.services.users.users import security_get_user
 from src.services.auth.utils import signWithGoogle, get_google_user_info
+from src.services.audit.audit import record_audit_event
+from src.db.user_audit_events import UserAuditEventType
 from src.services.dev.dev import isDevModeEnabled
 from src.services.security.rate_limiting import (
     check_login_rate_limit,
@@ -541,6 +543,16 @@ async def login(
     await reset_failed_attempts(user, db_session)
     client_ip = get_client_ip(request)
     await update_login_info(user, client_ip, db_session)
+
+    # Durable connection record for the per-student audit log. Org-agnostic —
+    # a login authenticates the user, not a single org membership.
+    await record_audit_event(
+        event_type=UserAuditEventType.LOGIN,
+        user_id=user.id,
+        ip=client_ip,
+        user_agent=request.headers.get("user-agent"),
+        metadata={"method": "password"},
+    )
 
     # Step 6: Issue tokens
     access_token = create_access_token(

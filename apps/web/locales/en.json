@@ -3388,12 +3388,17 @@
           "roles": "Roles",
           "signups": "Signups & Invite Codes",
           "add": "Invite Members",
-          "audit_logs": "Audit Logs"
+          "audit_logs": "Audit Logs",
+          "analytics": "Analytics"
         },
         "pages": {
           "users": {
             "title": "Users",
             "subtitle": "Manage your organization users, assign roles and permissions"
+          },
+          "analytics": {
+            "title": "Student Analytics",
+            "subtitle": "A complete, exportable record of each student's learning activity"
           },
           "signups": {
             "title": "Signups & Invite Codes",
@@ -4402,6 +4407,10 @@
         "users_audit_logs": {
           "description": "Organization activity log",
           "keywords": "audit, logs, history, security, activity"
+        },
+        "users_analytics": {
+          "description": "Per-student learning activity & audit",
+          "keywords": "analytics, audit, student, progress, activity, export, legal, compliance"
         },
         "org_branding": {
           "description": "Logo, colors, and visual identity",
