@@ -105,7 +105,7 @@ function UsersSettingsPage(props: { params: Promise<SettingsParams> }) {
       icon: <LineChart size={16} />,
       href: getUriWithOrg(params.orgslug, '') + `/dash/users/settings/analytics`,
       active: params.subpage === 'analytics',
-      requiresPlan: 'enterprise',
+      requiresPlan: 'pro',
     },
     {
       key: 'audit-logs',

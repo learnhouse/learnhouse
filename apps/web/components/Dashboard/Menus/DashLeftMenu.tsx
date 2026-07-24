@@ -562,7 +562,7 @@ function DashLeftMenu() {
                   <HoverMenuItem asChild>
                     <Link href="/dash/users/settings/analytics" className="flex items-center gap-2 px-3 py-2 text-sm text-white/70 hover:text-white hover:bg-white/[0.08] cursor-pointer transition-colors">
                       <ChartLine size={16} weight="fill" />
-                      <span className="flex items-center">{t('dashboard.users.settings.tabs.analytics')}<PlanBadge currentPlan={plan} requiredPlan="enterprise" variant="dark" /></span>
+                      <span className="flex items-center">{t('dashboard.users.settings.tabs.analytics')}<PlanBadge currentPlan={plan} requiredPlan="pro" variant="dark" /></span>
                     </Link>
                   </HoverMenuItem>
                 </HoverMenuContent>

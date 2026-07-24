@@ -54,17 +54,16 @@ async def _require_admin(current_user, org_id: int, db_session: AsyncSession) ->
 
 
 async def _enforce_plan(org_id: int, db_session: AsyncSession) -> None:
-    """Gate the audit feature behind the advanced-analytics plan (parity with the
-    advanced analytics queries)."""
+    """Gate the audit feature behind the Pro plan."""
     from src.security.features_utils.plan_check import _check_mode_bypass
 
     bypass = _check_mode_bypass("analytics_advanced")
     if bypass is None:  # SaaS mode — enforce plan
         current_plan = await get_org_plan(org_id, db_session)
-        if not plan_meets_requirement(current_plan, "enterprise"):
+        if not plan_meets_requirement(current_plan, "pro"):
             raise HTTPException(
                 status_code=403,
-                detail="Student audit & analytics requires an Enterprise plan or higher.",
+                detail="Student audit & analytics requires a Pro plan or higher.",
             )
 
 
@@ -153,7 +152,7 @@ async def _make_behavior_fetcher(org_id: int, user_id: int, days: int):
 @router.get(
     "/user/{user_id}",
     summary="Full per-student audit dossier",
-    description="Returns the complete learning-activity record for one student in one org: connections, course progress, assignments and grades, code exercises, community participation, certificates, and behavioral analytics. Org admin + Enterprise plan.",
+    description="Returns the complete learning-activity record for one student in one org: connections, course progress, assignments and grades, code exercises, community participation, certificates, and behavioral analytics. Org admin + Pro plan.",
     responses={
         200: {"description": "The student's full audit dossier"},
         401: {"description": "Authentication required"},
@@ -186,7 +185,7 @@ async def get_user_dossier(
 @router.get(
     "/users/summary",
     summary="Per-student audit summary rows",
-    description="Lightweight summary (last connection, courses enrolled/completed, certificates) for one or more students — powers the user list and multi-select comparison. Org admin + Enterprise plan.",
+    description="Lightweight summary (last connection, courses enrolled/completed, certificates) for one or more students — powers the user list and multi-select comparison. Org admin + Pro plan.",
     responses={
         200: {"description": "Summary rows for the requested users"},
         401: {"description": "Authentication required"},
@@ -268,7 +267,7 @@ def _dossier_to_csv_rows(dossier: dict):
 @router.get(
     "/export",
     summary="Export per-student audit data",
-    description="Exports the full audit dossier for one or more students as CSV or JSON. Org admin + Enterprise plan. (PDF is rendered client-side from the JSON.)",
+    description="Exports the full audit dossier for one or more students as CSV or JSON. Org admin + Pro plan. (PDF is rendered client-side from the JSON.)",
     responses={
         200: {"description": "Audit data as JSON or streaming CSV"},
         400: {"description": "Invalid parameters"},
