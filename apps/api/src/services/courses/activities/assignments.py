@@ -69,6 +69,8 @@ from src.services.courses.certifications import (
 )
 from src.services.analytics.analytics import track
 from src.services.analytics import events as analytics_events
+from src.services.audit.audit import record_audit_event
+from src.db.user_audit_events import UserAuditEventType
 from src.services.webhooks.dispatch import dispatch_webhooks
 
 # Hard caps for regex answer-matching (defense-in-depth alongside the timeout).
@@ -2412,6 +2414,19 @@ async def create_assignment_submission(
             "attempt_number": submitted_attempt_number,
         },
     )
+    # Durable audit row — retries reset the live submission in place, so each
+    # attempt only survives permanently here.
+    await record_audit_event(
+        event_type=UserAuditEventType.ASSIGNMENT_SUBMITTED,
+        user_id=submitter.id,
+        org_id=course.org_id,
+        target_uuid=assignment_uuid,
+        metadata={
+            "course_uuid": course.course_uuid,
+            "course_name": course.name,
+            "attempt_number": submitted_attempt_number,
+        },
+    )
     await dispatch_webhooks(
         event_name=analytics_events.ASSIGNMENT_SUBMITTED,
         org_id=course.org_id,
@@ -3205,6 +3220,29 @@ async def _apply_grade_and_finalize(
     db_session.add(assignment_user_submission)
     await db_session.commit()
     await db_session.refresh(assignment_user_submission)
+
+    # Durable audit row for the grade the STUDENT received. This is the single
+    # grading choke point (both manual and auto paths), and retries reset the
+    # live submission grade in place — so this permanent row is the only record
+    # that survives a resubmit.
+    await record_audit_event(
+        event_type=UserAuditEventType.ASSIGNMENT_GRADED,
+        user_id=user_id,
+        org_id=course.org_id,
+        target_uuid=assignment.assignment_uuid,
+        metadata={
+            "course_uuid": course.course_uuid,
+            "course_name": course.name,
+            "grade": computed["grade"],
+            "max_grade": computed["max_grade"],
+            "percentage": computed["percentage"],
+            "display_grade": computed["display_grade"],
+            "letter_grade": computed["letter_grade"],
+            "passed": computed["passed"],
+            "attempt_number": int(assignment_user_submission.attempt_number or 1),
+            "auto_graded": auto_graded,
+        },
+    )
 
     await dispatch_webhooks(
         event_name="assignment_graded",

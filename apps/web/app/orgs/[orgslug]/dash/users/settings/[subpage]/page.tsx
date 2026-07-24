@@ -10,7 +10,8 @@ import OrgUsersAdd from '@components/Dashboard/Pages/Users/OrgUsersAdd/OrgUsersA
 import OrgUserGroups from '@components/Dashboard/Pages/Users/OrgUserGroups/OrgUserGroups'
 import OrgRoles from '@components/Dashboard/Pages/Users/OrgRoles/OrgRoles'
 import OrgAuditLogs from '@components/Dashboard/Pages/Org/OrgAuditLogs/OrgAuditLogs'
-import { ShieldAlert } from 'lucide-react'
+import UserAnalytics from '@components/Dashboard/Pages/Users/UserAnalytics/UserAnalytics'
+import { ShieldAlert, LineChart } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { DashTabBar, DashTabItem } from '@components/Dashboard/Shared/DashTabBar/DashTabBar'
 
@@ -49,6 +50,10 @@ function UsersSettingsPage(props: { params: Promise<SettingsParams> }) {
     if (params.subpage == 'audit-logs') {
       setH1Label(t('dashboard.users.settings.pages.audit_logs.title'))
       setH2Label(t('dashboard.users.settings.pages.audit_logs.subtitle'))
+    }
+    if (params.subpage == 'analytics') {
+      setH1Label(t('dashboard.users.settings.pages.analytics.title'))
+      setH2Label(t('dashboard.users.settings.pages.analytics.subtitle'))
     }
   }
 
@@ -95,6 +100,14 @@ function UsersSettingsPage(props: { params: Promise<SettingsParams> }) {
       active: params.subpage === 'add',
     },
     {
+      key: 'analytics',
+      label: t('dashboard.users.settings.tabs.analytics'),
+      icon: <LineChart size={16} />,
+      href: getUriWithOrg(params.orgslug, '') + `/dash/users/settings/analytics`,
+      active: params.subpage === 'analytics',
+      requiresPlan: 'enterprise',
+    },
+    {
       key: 'audit-logs',
       label: t('dashboard.users.settings.tabs.audit_logs'),
       icon: <ShieldAlert size={16} />,
@@ -137,6 +150,7 @@ function UsersSettingsPage(props: { params: Promise<SettingsParams> }) {
         {params.subpage == 'usergroups' ? <><div className="h-6"></div><OrgUserGroups /></> : ''}
         {params.subpage == 'roles' ? <><div className="h-6"></div><OrgRoles /></> : ''}
         {params.subpage == 'audit-logs' ? <><div className="h-6"></div><OrgAuditLogs /></> : ''}
+        {params.subpage == 'analytics' ? <UserAnalytics /> : ''}
       </motion.div>
     </div>
   )

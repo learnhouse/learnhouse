@@ -1170,3 +1170,83 @@ COURSE_DETAIL_QUERIES: dict[str, tuple[str, int]] = {
 }
 
 ALL_QUERIES = {**CORE_QUERIES, **ADVANCED_QUERIES, **DETAIL_QUERIES}
+
+# ---------------------------------------------------------------------------
+# Per-user queries (behavioral enrichment for the student audit dossier).
+# Parameterized by {org_id}, {user_id} and {days}. Used ONLY by the audit
+# router — never exposed on the public analytics dashboard.
+# ---------------------------------------------------------------------------
+
+USER_TIME_TOTAL = """
+SELECT
+    sum(JSONExtractInt(properties, 'seconds_spent')) AS total_seconds,
+    uniqExact(JSONExtractString(properties, 'activity_uuid')) AS activities_touched
+FROM events
+WHERE org_id = {org_id}
+    AND user_id = {user_id}
+    AND event_name = 'time_on_activity'
+    AND timestamp >= now() - INTERVAL {days} DAY
+"""
+
+USER_TIME_BY_COURSE = """
+SELECT
+    JSONExtractString(properties, 'course_uuid') AS course_uuid,
+    sum(JSONExtractInt(properties, 'seconds_spent')) AS total_seconds
+FROM events
+WHERE org_id = {org_id}
+    AND user_id = {user_id}
+    AND event_name = 'time_on_activity'
+    AND JSONExtractString(properties, 'course_uuid') != ''
+    AND timestamp >= now() - INTERVAL {days} DAY
+GROUP BY course_uuid
+ORDER BY total_seconds DESC
+"""
+
+USER_VIEWS = """
+SELECT
+    event_name,
+    count() AS count
+FROM events
+WHERE org_id = {org_id}
+    AND user_id = {user_id}
+    AND event_name IN ('page_view', 'course_view', 'activity_view')
+    AND timestamp >= now() - INTERVAL {days} DAY
+GROUP BY event_name
+"""
+
+USER_SEARCHES = """
+SELECT
+    JSONExtractString(properties, 'query') AS query,
+    count() AS count,
+    max(timestamp) AS last_searched
+FROM events
+WHERE org_id = {org_id}
+    AND user_id = {user_id}
+    AND event_name = 'search_query'
+    AND timestamp >= now() - INTERVAL {days} DAY
+GROUP BY query
+ORDER BY count DESC
+LIMIT 50
+"""
+
+USER_DAILY_ACTIVITY = """
+SELECT
+    toDate(timestamp) AS day,
+    count() AS events,
+    sumIf(JSONExtractInt(properties, 'seconds_spent'), event_name = 'time_on_activity') AS seconds
+FROM events
+WHERE org_id = {org_id}
+    AND user_id = {user_id}
+    AND timestamp >= now() - INTERVAL {days} DAY
+GROUP BY day
+ORDER BY day
+"""
+
+# name -> (sql_template, default_days)
+USER_QUERIES: dict[str, tuple[str, int]] = {
+    "user_time_total": (USER_TIME_TOTAL, 365),
+    "user_time_by_course": (USER_TIME_BY_COURSE, 365),
+    "user_views": (USER_VIEWS, 365),
+    "user_searches": (USER_SEARCHES, 365),
+    "user_daily_activity": (USER_DAILY_ACTIVITY, 365),
+}

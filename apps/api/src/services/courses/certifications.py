@@ -23,6 +23,8 @@ from src.db.users import PublicUser, AnonymousUser
 from src.security.rbac import check_resource_access, AccessAction
 from src.services.analytics.analytics import track
 from src.services.analytics import events as analytics_events
+from src.services.audit.audit import record_audit_event
+from src.db.user_audit_events import UserAuditEventType
 from src.services.webhooks.dispatch import dispatch_webhooks
 
 logger = logging.getLogger(__name__)
@@ -343,6 +345,16 @@ async def create_certificate_user(
                 user_id=user_id,
                 properties={
                     "course_uuid": course.course_uuid,
+                },
+            )
+            await record_audit_event(
+                event_type=UserAuditEventType.CERTIFICATE_CLAIMED,
+                user_id=user_id,
+                org_id=course.org_id,
+                target_uuid=user_certification_uuid,
+                metadata={
+                    "course_uuid": course.course_uuid,
+                    "course_name": course.name,
                 },
             )
             await dispatch_webhooks(

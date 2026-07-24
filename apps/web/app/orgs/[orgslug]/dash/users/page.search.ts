@@ -4,6 +4,7 @@ import {
   ShieldCheck,
   UserPlus,
   ClipboardText,
+  ChartLine,
 } from '@phosphor-icons/react'
 import type { SearchMeta } from '@/lib/dashboard-search/types'
 
@@ -60,6 +61,15 @@ export const searchMetas: SearchMeta[] = [
     keywordsKey: 'dashboard.search.entries.users_audit_logs.keywords',
     icon: ClipboardText,
     href: '/dash/users/settings/audit-logs',
+    group: 'users',
+  },
+  {
+    id: 'dash.users.analytics',
+    titleKey: 'dashboard.users.settings.tabs.analytics',
+    descriptionKey: 'dashboard.search.entries.users_analytics.description',
+    keywordsKey: 'dashboard.search.entries.users_analytics.keywords',
+    icon: ChartLine,
+    href: '/dash/users/settings/analytics',
     group: 'users',
   },
 ]
