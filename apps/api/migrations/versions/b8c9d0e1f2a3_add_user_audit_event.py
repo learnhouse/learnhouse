@@ -11,11 +11,17 @@ place). See ``src/db/user_audit_events.py`` and ``src/services/audit/``.
 
 Guarded (idempotent) so a partially-applied DB is safe.
 
-This revision also merges the two open migration heads that existed on ``dev``
-(``a2b3c4d5e6f7`` and ``r5s6t7u8v9w0``) so the tree resolves to a single head.
+Descends from ``r5s6t7u8v9w0`` — the revision production is actually on. The other
+open head on ``dev`` (``a2b3c4d5e6f7``) is a disconnected legacy lineage that was
+never applied to prod and includes destructive ops (e.g. dropping collections
+tables); this revision deliberately does NOT merge it in, so applying this table is a
+single additive step that can never re-run that branch. Deploy this revision with an
+explicit target — ``alembic upgrade b8c9d0e1f2a3`` — not ``upgrade head`` (which fails
+on the pre-existing multi-head tree) and never ``upgrade heads`` (which would run the
+orphan branch).
 
 Revision ID: b8c9d0e1f2a3
-Revises: a2b3c4d5e6f7, r5s6t7u8v9w0
+Revises: r5s6t7u8v9w0
 Create Date: 2026-07-24
 
 """
@@ -28,8 +34,7 @@ import sqlmodel  # noqa: F401
 
 # revision identifiers, used by Alembic.
 revision: str = 'b8c9d0e1f2a3'
-# Descend from both open dev heads so this becomes the single head.
-down_revision: Union[str, Sequence[str], None] = ('a2b3c4d5e6f7', 'r5s6t7u8v9w0')
+down_revision: Union[str, None] = 'r5s6t7u8v9w0'
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 
