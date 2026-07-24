@@ -54,12 +54,39 @@ type Submission = {
         percentage_display?: string;
         tasks?: Array<{
             assignment_task_uuid: string;
+            title?: string;
             grade: number;
+            max_grade?: number;
+            // 0–100. The only field the difficulty chart may use: its axis is
+            // domain={[0, 100]} and the tooltip reads "x / 100", so raw points
+            // (which are out of the task's own max) would be plotted wrong.
+            percentage?: number;
             passed: boolean;
             display_grade: string;
         }>;
     };
 };
+
+// The submissions endpoint pages server-side (`limit` defaults to 50, caps at
+// 500) and returns a bare array. Analytics computed over an unpaginated call
+// silently described only the newest 50 submissions — the average, median,
+// pass rate and distribution were all wrong for any real cohort.
+const SUBMISSIONS_PAGE_SIZE = 500;
+// Hard stop so a server that ignores `offset` can't spin this loop forever.
+const SUBMISSIONS_MAX_PAGES = 20;
+
+async function fetchAllAssignmentSubmissions(assignment_uuid: string, access_token: string): Promise<Submission[]> {
+    const all: Submission[] = [];
+    for (let page = 0; page < SUBMISSIONS_MAX_PAGES; page++) {
+        const url = `${getAPIUrl()}assignments/assignment_${assignment_uuid}/submissions`
+            + `?limit=${SUBMISSIONS_PAGE_SIZE}&offset=${page * SUBMISSIONS_PAGE_SIZE}`;
+        const batch = await apiFetch(url, access_token);
+        if (!Array.isArray(batch)) break;
+        all.push(...batch);
+        if (batch.length < SUBMISSIONS_PAGE_SIZE) break;
+    }
+    return all;
+}
 
 const GRADE_BUCKETS = [
     { key: 'F', label: 'F', min: 0, max: 59, color: '#e11d48' },      // rose-600
@@ -79,7 +106,8 @@ function AssignmentAnalyticsSubPage({ assignment_uuid }: { assignment_uuid: stri
 
     const { data: submissions } = useQuery<Submission[]>({
         queryKey: queryKeys.assignments.analytics(assignment_uuid),
-        queryFn: () => apiFetch(`${getAPIUrl()}assignments/assignment_${assignment_uuid}/submissions`, access_token),
+        // Paged fetch — stats over a newest-50 slice are not stats.
+        queryFn: () => fetchAllAssignmentSubmissions(assignment_uuid, access_token),
         enabled: !!(assignment_uuid && access_token),
         staleTime: 10_000,
         refetchInterval: 30_000,
@@ -181,10 +209,19 @@ function AssignmentAnalyticsSubPage({ assignment_uuid }: { assignment_uuid: stri
         for (const s of graded) {
             const tArr = s.grade_display?.tasks || [];
             for (const ts of tArr) {
+                // Aggregate the 0–100 `percentage`, never the raw `grade`: the
+                // chart's X axis is domain={[0, 100]} and its tooltip renders
+                // "value / 100", so points out of a per-task max would be
+                // plotted against the wrong scale. Fall back to deriving the
+                // percentage from grade/max_grade, and skip the entry entirely
+                // when neither is usable so the card degrades to its empty
+                // state instead of charting zeroes.
+                const pct = taskEntryPct(ts);
+                if (pct === null) continue;
                 const key = ts.assignment_task_uuid;
                 const entry = taskAgg.get(key) || { total: 0, sum: 0, passed: 0 };
                 entry.total += 1;
-                entry.sum += Number(ts.grade) || 0;
+                entry.sum += pct;
                 if (ts.passed) entry.passed += 1;
                 taskAgg.set(key, entry);
             }
@@ -482,7 +519,7 @@ function AssignmentAnalyticsSubPage({ assignment_uuid }: { assignment_uuid: stri
                                     <Tooltip
                                         cursor={{ fill: '#f9fafb' }}
                                         contentStyle={{ fontSize: 12, borderRadius: 8, border: 'none', boxShadow: '0 2px 10px rgba(0,0,0,0.08)' }}
-                                        formatter={(value: any, name: any, props: any) => {
+                                        formatter={(value: any, name: any, _props: any) => {
                                             if (name === 'avg') return [`${value} / 100`, t('dashboard.assignments.analytics.tasks.avg_grade')];
                                             return [value, name];
                                         }}
@@ -669,7 +706,7 @@ function EmptyChart({ message }: { message: string }) {
 function PerformerRow({
     submission,
     rank,
-    tone,
+    tone: _tone,
     access_token,
 }: {
     submission: Submission;
@@ -766,6 +803,23 @@ function submissionPct(s: Submission): number | null {
     // Last resort: treat `grade` as already a percentage when it plausibly is.
     const g = Number(s.grade);
     if (!isNaN(g) && g >= 0 && g <= 100) return g;
+    return null;
+}
+
+// Extract a 0–100 percentage from one per-task breakdown entry. Returns null
+// when the payload carries no usable number — the submissions list endpoint
+// hasn't always exposed a per-task breakdown, and the difficulty card must
+// fall back to its empty state rather than plot a flat row of zeroes.
+function taskEntryPct(ts: any): number | null {
+    const pct = Number(ts?.percentage);
+    if (!isNaN(pct) && ts?.percentage !== null && ts?.percentage !== undefined) {
+        return Math.max(0, Math.min(100, pct));
+    }
+    const grade = Number(ts?.grade);
+    const max = Number(ts?.max_grade);
+    if (!isNaN(grade) && !isNaN(max) && max > 0) {
+        return Math.max(0, Math.min(100, (grade / max) * 100));
+    }
     return null;
 }
 

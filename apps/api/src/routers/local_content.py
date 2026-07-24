@@ -37,25 +37,26 @@ router = APIRouter()
 CONTENT_DIR = Path("content")
 
 
-def _validate_content_path(file_path: str) -> Path | None:
-    """Validate path is safe and return the resolved path, or None if unsafe."""
+def _normalize_content_relpath(file_path: str) -> str | None:
+    """Decode and vet the request path, returning a safe CONTENT_DIR-relative
+    string, or None if it is unsafe.
+
+    Pure string handling only — no filesystem access. Each handler does the
+    realpath + containment check inline against this value (see
+    ``serve_local_content``); keeping the resolve-and-guard together with the
+    filesystem sink, from the tainted input, is what makes the guard hold at
+    runtime and what static analysis can follow.
+    """
     # Decode URL-encoded characters (double-decode for double-encoding attacks)
     decoded = unquote(unquote(file_path))
     if '..' in decoded or decoded.startswith('/') or '\x00' in decoded:
         return None
     normalized = decoded.replace('\\', '/')
-    if '..' in normalized:  # pragma: no cover
+    if '..' in normalized or normalized.startswith('/'):
         return None
+    return normalized
 
-    try:
-        base_real = os.path.realpath(str(CONTENT_DIR))
-        full_real = os.path.realpath(os.path.join(base_real, normalized))
-        if os.path.commonpath([base_real, full_real]) != base_real:
-            return None
-    except (OSError, ValueError):
-        return None
 
-    return Path(full_real)
 
 
 async def _check_content_access(
@@ -229,27 +230,38 @@ async def serve_local_content(
     Public courses/podcasts are accessible to anonymous users.
     Private content requires authentication.
     """
-    resolved = _validate_content_path(file_path)
-    if resolved is None:
+    rel_path = _normalize_content_relpath(file_path)
+    if rel_path is None:
         raise HTTPException(status_code=400, detail="Invalid path")
 
-    # Run the access check against the same fully-decoded, content-relative path
-    # that the filesystem lookup resolves to. Using the raw ``file_path`` here
-    # would let an attacker URL-encode path segments so the access-control
-    # pattern matching fails to recognise private activity/podcast content while
-    # the resolved path still points at the real file (auth bypass / IDOR).
+    # Resolve and guard inline, from the vetted relative path, so the whole
+    # join -> realpath -> containment-check -> filesystem-touch chain lives in
+    # one place. Anything that escapes CONTENT_DIR (including via a symlink,
+    # which the string checks above cannot see) is refused before any sink.
     base_real = os.path.realpath(str(CONTENT_DIR))
-    rel_path = os.path.relpath(str(resolved), base_real).replace(os.sep, '/')
-    await _check_content_access(rel_path, current_user, db_session, request=request)
+    safe_real = os.path.realpath(os.path.join(base_real, rel_path))
+    if not (safe_real == base_real or safe_real.startswith(base_real + os.sep)):
+        raise HTTPException(status_code=400, detail="Invalid path")
 
-    if not resolved.is_file():
+    # Run the access check against the CANONICAL content-relative path derived
+    # from the resolved file, never the request string. `_normalize_content_relpath`
+    # rejects `..` but leaves `.`/`//` segments intact, so a path like
+    # `orgs/./{uuid}/courses/...` would shift `_check_content_access`'s segment
+    # indices, miss every private pattern, and fall through to the public branch
+    # while realpath still serves the real private file (auth bypass / IDOR).
+    # Deriving the path from `safe_real` keeps the access check and the
+    # filesystem touch looking at exactly the same, collapsed, path.
+    canonical_rel = os.path.relpath(safe_real, base_real).replace(os.sep, '/')
+    await _check_content_access(canonical_rel, current_user, db_session, request=request)
+
+    if not os.path.isfile(safe_real):
         raise HTTPException(status_code=404, detail="File not found")
 
-    ext = resolved.suffix.lower()
+    ext = os.path.splitext(safe_real)[1].lower()
     media_type = _MIME_TYPES.get(ext, 'application/octet-stream')
 
     return FileResponse(
-        path=str(resolved),
+        path=safe_real,
         media_type=media_type,
         headers={
             "Cache-Control": "public, max-age=86400",
@@ -277,22 +289,29 @@ async def head_local_content(
     db_session: AsyncSession = Depends(get_db_session),
 ):
     """HEAD request for content files — returns metadata without body."""
-    resolved = _validate_content_path(file_path)
-    if resolved is None:
+    rel_path = _normalize_content_relpath(file_path)
+    if rel_path is None:
         raise HTTPException(status_code=400, detail="Invalid path")
 
-    # See serve_local_content: check access against the resolved content-relative
-    # path, not the raw (possibly URL-encoded) request path.
+    # Resolve and guard inline from the vetted relative path (see
+    # serve_local_content for the rationale). Sinks operate on ``safe_real``.
     base_real = os.path.realpath(str(CONTENT_DIR))
-    rel_path = os.path.relpath(str(resolved), base_real).replace(os.sep, '/')
-    await _check_content_access(rel_path, current_user, db_session, request=request)
+    safe_real = os.path.realpath(os.path.join(base_real, rel_path))
+    if not (safe_real == base_real or safe_real.startswith(base_real + os.sep)):
+        raise HTTPException(status_code=400, detail="Invalid path")
 
-    if not resolved.is_file():
+    # Access check against the CANONICAL path from safe_real, not the request
+    # string — see serve_local_content: a `.`/`//` segment would otherwise slip
+    # private content past the pattern matching (auth bypass / IDOR).
+    canonical_rel = os.path.relpath(safe_real, base_real).replace(os.sep, '/')
+    await _check_content_access(canonical_rel, current_user, db_session, request=request)
+
+    if not os.path.isfile(safe_real):
         raise HTTPException(status_code=404, detail="File not found")
 
-    ext = resolved.suffix.lower()
+    ext = os.path.splitext(safe_real)[1].lower()
     media_type = _MIME_TYPES.get(ext, 'application/octet-stream')
-    file_size = resolved.stat().st_size
+    file_size = os.path.getsize(safe_real)
 
     from fastapi.responses import Response
     return Response(

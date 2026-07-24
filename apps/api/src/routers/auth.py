@@ -1,7 +1,9 @@
+import logging
 from datetime import timedelta, datetime, timezone
 from typing import Literal, Optional
 from fastapi import Depends, APIRouter, HTTPException, Response, status, Request, Form
 from pydantic import BaseModel, EmailStr
+from sqlalchemy import func
 from sqlmodel import select
 from src.db.users import AnonymousUser, User, UserRead
 from sqlmodel.ext.asyncio.session import AsyncSession
@@ -194,6 +196,67 @@ def unset_auth_cookies(response: Response, request: Request = None):
     response.delete_cookie(key=JWT_REFRESH_COOKIE_NAME, domain=cookie_domain)
 
 
+_refresh_logger = logging.getLogger("learnhouse.auth.refresh")
+
+
+def _token_age_seconds(payload: dict | None) -> int | None:
+    """Seconds since the presented refresh token was issued, or None.
+
+    The key disambiguator for replay detection: a benign desync (two tabs, a
+    server-rendered page racing the client) re-presents a token seconds old,
+    while a genuinely stolen token is reused hours or days later.
+    """
+    if not payload:
+        return None
+    iat = payload.get("iat")
+    if not iat:
+        return None
+    try:
+        issued = datetime.fromtimestamp(iat, tz=timezone.utc)
+    except (TypeError, ValueError, OSError, OverflowError):
+        return None
+    return int((datetime.now(timezone.utc) - issued).total_seconds())
+
+
+def _log_refresh_outcome(
+    outcome: str,
+    *,
+    user_id: int | None = None,
+    token_age_seconds: int | None = None,
+    level: int = logging.INFO,
+) -> None:
+    """Emit one structured line per refresh attempt, tagged with its outcome.
+
+    Exists because this endpoint had NO telemetry: when users reported being
+    randomly signed out, there was no way to tell an expired token from a
+    revocation from replay detection, and diagnosing it required reading the
+    code instead of querying. Outcomes are a closed set —
+    ``ok``, ``grace_reused``, ``rate_limited``, ``cookie_missing``,
+    ``undecodable``, ``no_subject``, ``user_not_found``, ``password_changed``,
+    ``revoked_before``, ``replay_detected`` — so they can be counted and alerted
+    on. A rising ``replay_detected`` or ``revoked_before`` rate is the signal
+    that sessions are being destroyed rather than expiring.
+
+    Never raises: telemetry must not be able to break authentication.
+    """
+    try:
+        _refresh_logger.log(
+            level,
+            "auth.refresh outcome=%s user_id=%s token_age_seconds=%s",
+            outcome,
+            user_id if user_id is not None else "-",
+            token_age_seconds if token_age_seconds is not None else "-",
+            extra={
+                "event": "auth.refresh",
+                "outcome": outcome,
+                "user_id": user_id,
+                "token_age_seconds": token_age_seconds,
+            },
+        )
+    except Exception:  # pragma: no cover - telemetry must never break auth
+        pass
+
+
 @router.get(
     "/refresh",
     summary="Refresh access token",
@@ -220,10 +283,14 @@ async def refresh(
     ``get_current_user`` — a refresh must not outlive either. Rotates the
     refresh cookie on every call; the old token's ``jti`` is marked consumed
     in Redis, and replay is treated as theft (all sessions revoked).
+
+    Every exit path emits an ``auth.refresh`` log line tagged with its outcome —
+    see :func:`_log_refresh_outcome`.
     """
     # Rate limit refresh endpoint to prevent brute force attacks
     is_allowed, retry_after = check_refresh_rate_limit(request)
     if not is_allowed:
+        _log_refresh_outcome("rate_limited")
         raise HTTPException(
             status_code=status.HTTP_429_TOO_MANY_REQUESTS,
             detail={
@@ -241,18 +308,24 @@ async def refresh(
 
     refresh_token = request.cookies.get(JWT_REFRESH_COOKIE_NAME)
     if not refresh_token:
+        _log_refresh_outcome("cookie_missing")
         raise credentials_exception
 
     payload = decode_refresh_token(refresh_token)
     if not payload:
+        # Bad signature, wrong token type, or — overwhelmingly the common case —
+        # naturally expired.
+        _log_refresh_outcome("undecodable")
         raise credentials_exception
 
     email = payload.get("sub")
     if not email:
+        _log_refresh_outcome("no_subject")
         raise credentials_exception
 
     user = await security_get_user(request, db_session, email=email)
     if user is None or user.id is None:
+        _log_refresh_outcome("user_not_found", token_age_seconds=_token_age_seconds(payload))
         raise credentials_exception
 
     # Enforce password-change cutover: tokens minted before the user's last
@@ -269,9 +342,17 @@ async def refresh(
     if isinstance(pca_raw, datetime) and issued_at is not None:
         pca = pca_raw if pca_raw.tzinfo else pca_raw.replace(tzinfo=timezone.utc)
         if issued_at < pca:
+            _log_refresh_outcome(
+                "password_changed", user_id=user.id, token_age_seconds=_token_age_seconds(payload)
+            )
             raise credentials_exception
 
     if _is_token_revoked_for_user(user.id, issued_at):
+        # The user's sessions were revoked after this token was issued — by an
+        # explicit logout, or by replay detection firing on another request.
+        _log_refresh_outcome(
+            "revoked_before", user_id=user.id, token_age_seconds=_token_age_seconds(payload)
+        )
         raise credentials_exception
 
     # One-time-use rotation with replay detection and a benign-replay grace
@@ -299,6 +380,16 @@ async def refresh(
                 await _asyncio.sleep(0.1)
             if reused_pair is None:
                 # No live grace entry → replay outside the window → theft.
+                # This is the single most destructive outcome (it revokes every
+                # session on every device), so it is logged at WARNING with the
+                # token's age — a benign desync shows up as a young token, real
+                # theft as an old one.
+                _log_refresh_outcome(
+                    "replay_detected",
+                    user_id=user.id,
+                    token_age_seconds=_token_age_seconds(payload),
+                    level=logging.WARNING,
+                )
                 revoke_user_sessions_before(user.id)
                 raise credentials_exception
 
@@ -336,6 +427,12 @@ async def refresh(
         domain=cookie_domain,
         max_age=int(JWT_REFRESH_TOKEN_EXPIRES.total_seconds()),
     )
+    _log_refresh_outcome(
+        "grace_reused" if reused_pair is not None else "ok",
+        user_id=user.id,
+        token_age_seconds=_token_age_seconds(payload),
+    )
+
     # Return the rotated refresh token in the body so a Next.js route handler
     # acting as a proxy can mirror the rotation onto its own cookies. Without
     # this, browsers behind a proxy keep the OLD refresh token (now consumed
@@ -495,7 +592,10 @@ class ThirdPartyLogin(BaseModel):
     ),
     responses={
         200: {"description": "OAuth login successful; cookies set and body contains user + tokens."},
+        400: {"description": "Unknown org_id or unsupported provider"},
         401: {"description": "Third-party authentication failed"},
+        403: {"description": "Organization is invite-only and no valid invite was provided"},
+        503: {"description": "Invitation could not be verified; retry"},
     },
 )
 async def third_party_login(
@@ -503,6 +603,7 @@ async def third_party_login(
     response: Response,
     body: ThirdPartyLogin,
     org_id: Optional[int] = None,
+    invite_code: Optional[str] = None,
     current_user: AnonymousUser = Depends(get_current_user),
     db_session: AsyncSession = Depends(get_db_session),
 ):
@@ -510,13 +611,29 @@ async def third_party_login(
     import redis as _redis
     _logger = logging.getLogger(__name__)
 
-    # Validate org_id before passing it downstream: verify the org exists and
-    # that a pending invite exists for this email in that org.  If the org does
-    # not exist we reject the request. If the org exists but no invite is found
-    # we log a warning and clear org_id so the user is created without an org
-    # association (prevents unauthorized org membership via OAuth).
+    # Usergroup to attach the user to after sign-in, when they joined through an
+    # invite code that is linked to one (mirrors create_user_with_invite).
+    _invite_usergroup_id = None
+    # Pending email invite to mark as consumed once the user actually joins.
+    _consume_invite_key = None
+
+    # Validate org_id before passing it downstream. The rule must mirror the
+    # email/password signup endpoints, otherwise the same person gets a
+    # different outcome depending on which button they pressed:
+    #
+    #   open org       -> POST /users/{org_id}                (no invite needed)
+    #   inviteOnly org -> POST /users/{org_id}/invite/{code}  (invite required)
+    #
+    # Previously this endpoint required a pending *email* invite in Redis for
+    # every org regardless of its join mechanism, and silently dropped org_id
+    # when none was found. Signing up with Google into an open org — or through
+    # an invite *code* link — therefore created an account with no organization
+    # at all, while the equivalent form signup joined the org normally.
     if org_id is not None:
         from src.db.organizations import Organization
+        from src.services.orgs.orgs import get_org_join_mechanism
+        from src.services.orgs.invites import get_invite_code
+
         org_record = (await db_session.execute(
             select(Organization).where(Organization.id == org_id)
         )).scalars().first()
@@ -527,55 +644,104 @@ async def third_party_login(
                 detail="Invalid org_id",
             )
 
-        # SECURITY: resolve the identity from the Google-verified email, NOT
-        # from the attacker-controlled body.email. signWithGoogle keys the
-        # account on the Google-returned email but honors org_id to grant
-        # membership. If the invite gate trusted body.email, an attacker could
-        # supply a victim's invited address (passing the gate) while
-        # authenticating with their own Google token, and get their own account
-        # joined to an org they were never invited to. The invite must be
-        # checked against the same email that will own the account.
-        if body.provider == "google":
-            _google_user = await get_google_user_info(body.access_token)
-            _verified_email = _google_user.get("email")
-            if not _verified_email or not _google_user.get("email_verified"):
-                raise HTTPException(
-                    status_code=status.HTTP_401_UNAUTHORIZED,
-                    detail="Google did not return a verified email for this account",
+        join_mechanism = await get_org_join_mechanism(
+            request, org_id, current_user, db_session
+        )
+
+        # Open orgs: anyone may join, exactly as POST /users/{org_id} allows.
+        # inviteOnly orgs: the caller must prove an invite.
+        if join_mechanism == "inviteOnly":
+            # SECURITY: resolve the identity from the Google-verified email, NOT
+            # from the attacker-controlled body.email. signWithGoogle keys the
+            # account on the Google-returned email but honors org_id to grant
+            # membership. If the invite gate trusted body.email, an attacker could
+            # supply a victim's invited address (passing the gate) while
+            # authenticating with their own Google token, and get their own account
+            # joined to an org they were never invited to. The invite must be
+            # checked against the same email that will own the account.
+            if body.provider == "google":
+                _google_user = await get_google_user_info(body.access_token)
+                _verified_email = _google_user.get("email")
+                if not _verified_email or not _google_user.get("email_verified"):
+                    raise HTTPException(
+                        status_code=status.HTTP_401_UNAUTHORIZED,
+                        detail="Google did not return a verified email for this account",
+                    )
+                _invite_email = _verified_email.strip().lower()
+            else:
+                _invite_email = body.email.strip().lower()
+
+            _authorized = False
+
+            # 0. Already a member: this is a plain sign-in, not a join. The org
+            #    context cookie is set on the login page too, so requiring an
+            #    invite here would lock existing members out of their own org.
+            from src.db.user_organizations import UserOrganization
+
+            _existing_member = (await db_session.execute(
+                select(UserOrganization)
+                .join(User, User.id == UserOrganization.user_id)  # type: ignore[arg-type]
+                .where(
+                    (func.lower(User.email) == _invite_email)
+                    & (UserOrganization.org_id == org_id)
                 )
-            _invite_email = _verified_email.strip().lower()
-        else:
-            _invite_email = body.email
+            )).scalars().first()
+            if _existing_member:
+                _authorized = True
 
-        # Check that a pending email invite exists for this address in the org
-        _invite_found = False
-        _r = None
-        try:
-            _lh_config = get_learnhouse_config()
-            _redis_url = _lh_config.redis_config.redis_connection_string
-            if _redis_url:
-                _r = _redis.Redis.from_url(_redis_url)
-                _invite_key = f"invited_user:{_invite_email}:org:{org_record.org_uuid}"
-                _invite_found = bool(_r.get(_invite_key))
-        except Exception as e:
-            _logger.error("Redis unavailable for invite validation, org_id will be ignored: %s", e)
-        finally:
-            # Always release the Redis connection pool created by from_url;
-            # otherwise every OAuth login leaks a connection pool/socket and
-            # the API eventually exhausts file descriptors / Redis connections.
-            if _r is not None:
+            # 1. An invite code carried through the OAuth redirect, same code the
+            #    form signup would have posted to /users/{org_id}/invite/{code}.
+            if invite_code:
                 try:
-                    _r.close()
-                except Exception:
-                    pass
+                    _code_data = await get_invite_code(
+                        request, org_id, invite_code, current_user, db_session
+                    )
+                except HTTPException:
+                    _code_data = None
+                if _code_data:
+                    _authorized = True
+                    _invite_usergroup_id = _code_data.get("usergroup_id")
 
-        if not _invite_found:
-            _logger.warning(
-                "OAuth org_id=%s supplied for email=%s but no pending invite found; ignoring org_id",
-                org_id,
-                body.email,
-            )
-            org_id = None
+            # 2. Or a pending invite sent to this address from the org dashboard.
+            if not _authorized:
+                _r = None
+                try:
+                    _lh_config = get_learnhouse_config()
+                    _redis_url = _lh_config.redis_config.redis_connection_string
+                    if _redis_url:
+                        _r = _redis.Redis.from_url(_redis_url)
+                        _invite_key = f"invited_user:{_invite_email}:org:{org_record.org_uuid}"
+                        if _r.get(_invite_key):
+                            _authorized = True
+                            _consume_invite_key = _invite_key
+                except Exception as e:
+                    # Fail loudly. Continuing here used to create the account with
+                    # no org, which looks like a successful signup to the user but
+                    # leaves them outside the organization with nothing to retry.
+                    _logger.error("Redis unavailable for invite validation: %s", e)
+                    raise HTTPException(
+                        status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+                        detail="Could not verify your invitation right now, please try again.",
+                    )
+                finally:
+                    # Always release the Redis connection pool created by from_url;
+                    # otherwise every OAuth login leaks a connection pool/socket and
+                    # the API eventually exhausts file descriptors / Redis connections.
+                    if _r is not None:
+                        try:
+                            _r.close()
+                        except Exception:
+                            pass
+
+            if not _authorized:
+                _logger.warning(
+                    "OAuth org_id=%s supplied but no valid invite was found for the account",
+                    org_id,
+                )
+                raise HTTPException(
+                    status_code=status.HTTP_403_FORBIDDEN,
+                    detail="You need an invite to join this organization",
+                )
 
     user = None
 
@@ -597,6 +763,55 @@ async def third_party_login(
             detail="Incorrect Email or password",
             headers={"WWW-Authenticate": "Bearer"},
         )
+
+    # Finish the invite the same way the form signup does: attach the usergroup
+    # the invite code is linked to, and stop showing the invite as pending.
+    # Neither of these ran on the OAuth path before, so a user invited by email
+    # stayed "pending" in the org's member list after joining, and an invite code
+    # carrying a usergroup silently didn't apply it.
+    if _invite_usergroup_id and user.id is not None:
+        from src.db.users import InternalUser
+        from src.services.users.usergroups import add_users_to_usergroup
+
+        try:
+            await add_users_to_usergroup(
+                request,
+                db_session,
+                InternalUser(id=0),
+                int(_invite_usergroup_id),
+                str(user.id),
+            )
+        except Exception:
+            # The account exists and is in the org; a usergroup failure must not
+            # turn a completed sign-in into an error.
+            _logger.warning("Could not attach OAuth user to invite usergroup")
+
+    if _consume_invite_key:
+        _r = None
+        try:
+            _redis_url = get_learnhouse_config().redis_config.redis_connection_string
+            if _redis_url:
+                _r = _redis.Redis.from_url(_redis_url)
+                _invited_data = _r.get(_consume_invite_key)
+                if _invited_data:
+                    import json as _json
+
+                    _invited_record = _json.loads(_invited_data)
+                    _invited_record["pending"] = False
+                    _remaining_ttl = _r.ttl(_consume_invite_key)
+                    _r.set(
+                        _consume_invite_key,
+                        _json.dumps(_invited_record),
+                        ex=_remaining_ttl if _remaining_ttl > 0 else None,
+                    )
+        except Exception:
+            _logger.warning("Could not mark invitation as accepted")
+        finally:
+            if _r is not None:
+                try:
+                    _r.close()
+                except Exception:
+                    pass
 
     access_token = create_access_token(
         data={"sub": user.email},

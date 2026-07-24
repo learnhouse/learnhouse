@@ -52,11 +52,11 @@ const validate = (values: any, t: any) => {
   return errors;
 };
 
-function EditCourseCertification(props: EditCourseCertificationProps) {
+function EditCourseCertification(_props: EditCourseCertificationProps) {
   const { t } = useTranslation()
   const [error, setError] = useState('');
   const [isCreating, setIsCreating] = useState(false);
-  const course = useCourse() as any;
+  const _course = useCourse() as any;
   const session = useLHSession() as any;
   const org = useOrg() as any;
   const access_token = session?.data?.tokens?.access_token;
@@ -126,7 +126,7 @@ function EditCourseCertification(props: EditCourseCertificationProps) {
   const formik = useFormik({
     initialValues: getInitialValues(),
     validate: (values) => validate(values, t),
-    onSubmit: async values => {
+    onSubmit: async _values => {
       // This is no longer used - saving is handled by the main Save button
     },
     enableReinitialize: true,
@@ -163,7 +163,7 @@ function EditCourseCertification(props: EditCourseCertificationProps) {
         } else {
           throw new Error('Failed to create certification');
         }
-      } catch (e) {
+      } catch (_e) {
         setError(t('dashboard.courses.certification.errors.create_failed'));
         toast.error(t('dashboard.courses.certification.toasts.create_error'));
         formik.setFieldValue('enable_certification', false);
@@ -188,7 +188,16 @@ function EditCourseCertification(props: EditCourseCertificationProps) {
           throw new Error('Failed to delete certification');
         }
       } catch (e) {
-        setError(t('dashboard.courses.certification.errors.remove_failed'));
+        // The backend refuses to delete a certification that has already awarded
+        // certificates, because deleting it destroys them and breaks the
+        // verification links their holders have shared. Show that reason instead
+        // of a generic failure — it tells the teacher what to do next.
+        const detail = (e as any)?.detail ?? (e as any)?.message;
+        setError(
+          typeof detail === 'string' && detail
+            ? detail
+            : t('dashboard.courses.certification.errors.remove_failed')
+        );
         toast.error(t('dashboard.courses.certification.toasts.remove_error'));
         formik.setFieldValue('enable_certification', true);
       }

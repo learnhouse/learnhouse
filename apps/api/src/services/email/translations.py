@@ -67,11 +67,18 @@ EMAIL_TRANSLATIONS: dict[str, dict[str, str]] = {
         "invitation.cta": "Join {org_name}",
         "invitation.footer": "This invitation was sent by @{inviter}. If you weren't expecting this, you can safely ignore it.",
 
+        "org_join.subject": "Welcome to {org_name}",
+        "org_join.heading": "You're in, {username}!",
+        "org_join.body": "You're now a member of {org_name}. Open your home page to browse courses and pick up where you left off.",
+        "org_join.cta": "Go to my courses",
+        "org_join.footer": "You're receiving this because you joined {org_name} on LearnHouse.",
+
         "role_changed.subject": "Your role in {org_name} has been updated",
         "role_changed.heading": "Your role has been updated",
         "role_changed.body_1": "Hi {username}, your role in <strong>{org_name}</strong> has been changed to <strong>{role}</strong>.",
         "role_changed.body_2": "This may affect what you can access and manage within the organization. If you have any questions, please reach out to your organization administrator.",
         "role_changed.footer": "You received this email because your role was changed in {org_name} on LearnHouse.",
+        "role_changed.cta": "Go to {org_name}",
 
         "email_verification.subject": "Verify your email address",
         "email_verification.heading": "Verify your email",
@@ -106,11 +113,18 @@ EMAIL_TRANSLATIONS: dict[str, dict[str, str]] = {
         "invitation.cta": "Rejoindre {org_name}",
         "invitation.footer": "Cette invitation a été envoyée par @{inviter}. Si vous ne l'attendiez pas, vous pouvez l'ignorer.",
 
+        "org_join.subject": "Bienvenue chez {org_name}",
+        "org_join.heading": "Vous y êtes, {username} !",
+        "org_join.body": "Vous êtes désormais membre de {org_name}. Ouvrez votre page d'accueil pour parcourir les cours et reprendre là où vous en étiez.",
+        "org_join.cta": "Voir mes cours",
+        "org_join.footer": "Vous recevez cet e-mail parce que vous avez rejoint {org_name} sur LearnHouse.",
+
         "role_changed.subject": "Votre rôle dans {org_name} a été mis à jour",
         "role_changed.heading": "Votre rôle a été mis à jour",
         "role_changed.body_1": "Bonjour {username}, votre rôle dans <strong>{org_name}</strong> est désormais <strong>{role}</strong>.",
         "role_changed.body_2": "Cela peut affecter ce que vous pouvez consulter et gérer dans l'organisation. Pour toute question, contactez votre administrateur d'organisation.",
         "role_changed.footer": "Vous recevez cet e-mail parce que votre rôle a été modifié dans {org_name} sur LearnHouse.",
+        "role_changed.cta": "Accéder à {org_name}",
 
         "email_verification.subject": "Vérifiez votre adresse e-mail",
         "email_verification.heading": "Vérifiez votre e-mail",
@@ -145,11 +159,18 @@ EMAIL_TRANSLATIONS: dict[str, dict[str, str]] = {
         "invitation.cta": "{org_name} beitreten",
         "invitation.footer": "Diese Einladung wurde von @{inviter} gesendet. Falls du sie nicht erwartet hast, kannst du sie ignorieren.",
 
+        "org_join.subject": "Willkommen bei {org_name}",
+        "org_join.heading": "Du bist dabei, {username}!",
+        "org_join.body": "Du bist jetzt Mitglied von {org_name}. Öffne deine Startseite, um Kurse zu entdecken und dort weiterzumachen, wo du aufgehört hast.",
+        "org_join.cta": "Zu meinen Kursen",
+        "org_join.footer": "Du erhältst diese E-Mail, weil du {org_name} auf LearnHouse beigetreten bist.",
+
         "role_changed.subject": "Deine Rolle in {org_name} wurde aktualisiert",
         "role_changed.heading": "Deine Rolle wurde aktualisiert",
         "role_changed.body_1": "Hallo {username}, deine Rolle in <strong>{org_name}</strong> wurde auf <strong>{role}</strong> geändert.",
         "role_changed.body_2": "Das kann beeinflussen, worauf du in der Organisation zugreifen und was du verwalten kannst. Bei Fragen wende dich an deinen Organisationsadministrator.",
         "role_changed.footer": "Du erhältst diese E-Mail, weil deine Rolle in {org_name} auf LearnHouse geändert wurde.",
+        "role_changed.cta": "Zu {org_name}",
 
         "email_verification.subject": "Bestätige deine E-Mail-Adresse",
         "email_verification.heading": "E-Mail bestätigen",
@@ -184,11 +205,18 @@ EMAIL_TRANSLATIONS: dict[str, dict[str, str]] = {
         "invitation.cta": "Unirse a {org_name}",
         "invitation.footer": "Esta invitación fue enviada por @{inviter}. Si no la esperabas, puedes ignorarla.",
 
+        "org_join.subject": "Bienvenido a {org_name}",
+        "org_join.heading": "¡Ya estás dentro, {username}!",
+        "org_join.body": "Ya eres miembro de {org_name}. Abre tu página de inicio para explorar los cursos y continuar donde lo dejaste.",
+        "org_join.cta": "Ver mis cursos",
+        "org_join.footer": "Recibes este correo porque te has unido a {org_name} en LearnHouse.",
+
         "role_changed.subject": "Tu rol en {org_name} ha sido actualizado",
         "role_changed.heading": "Tu rol ha sido actualizado",
         "role_changed.body_1": "Hola {username}, tu rol en <strong>{org_name}</strong> ha cambiado a <strong>{role}</strong>.",
         "role_changed.body_2": "Esto puede afectar lo que puedes ver y gestionar dentro de la organización. Si tienes preguntas, contacta al administrador de tu organización.",
         "role_changed.footer": "Recibiste este correo porque tu rol fue cambiado en {org_name} en LearnHouse.",
+        "role_changed.cta": "Ir a {org_name}",
 
         "email_verification.subject": "Verifica tu dirección de correo",
         "email_verification.heading": "Verifica tu correo",
@@ -223,11 +251,18 @@ EMAIL_TRANSLATIONS: dict[str, dict[str, str]] = {
         "invitation.cta": "الانضمام إلى {org_name}",
         "invitation.footer": "أُرسلت هذه الدعوة من قِبل @{inviter}. إذا لم تكن تتوقعها، يمكنك تجاهلها.",
 
+        "org_join.subject": "مرحبًا بك في {org_name}",
+        "org_join.heading": "أهلاً بك، {username}!",
+        "org_join.body": "أنت الآن عضو في {org_name}. افتح صفحتك الرئيسية لتصفح الدورات ومتابعة ما بدأته.",
+        "org_join.cta": "الذهاب إلى دوراتي",
+        "org_join.footer": "تصلك هذه الرسالة لأنك انضممت إلى {org_name} على LearnHouse.",
+
         "role_changed.subject": "تم تحديث دورك في {org_name}",
         "role_changed.heading": "تم تحديث دورك",
         "role_changed.body_1": "مرحبًا {username}، تم تغيير دورك في <strong>{org_name}</strong> إلى <strong>{role}</strong>.",
         "role_changed.body_2": "قد يؤثّر ذلك على ما يمكنك الوصول إليه وإدارته داخل المؤسسة. إذا كانت لديك أي أسئلة، تواصل مع مسؤول مؤسستك.",
         "role_changed.footer": "تلقّيت هذه الرسالة لأن دورك تغيّر في {org_name} على LearnHouse.",
+        "role_changed.cta": "الذهاب إلى {org_name}",
 
         "email_verification.subject": "تأكيد عنوان بريدك الإلكتروني",
         "email_verification.heading": "تأكيد بريدك الإلكتروني",
@@ -262,11 +297,18 @@ EMAIL_TRANSLATIONS: dict[str, dict[str, str]] = {
         "invitation.cta": "{org_name}に参加",
         "invitation.footer": "この招待は@{inviter}さんから送信されました。心当たりがない場合は無視してかまいません。",
 
+        "org_join.subject": "{org_name} へようこそ",
+        "org_join.heading": "{username} さん、参加が完了しました！",
+        "org_join.body": "{org_name} のメンバーになりました。ホームからコースを探して、続きから学習を始めましょう。",
+        "org_join.cta": "コースを見る",
+        "org_join.footer": "このメールは、LearnHouse で {org_name} に参加したため送信されています。",
+
         "role_changed.subject": "{org_name}でのロールが更新されました",
         "role_changed.heading": "ロールが更新されました",
         "role_changed.body_1": "{username}さん、<strong>{org_name}</strong>でのロールが<strong>{role}</strong>に変更されました。",
         "role_changed.body_2": "組織内でアクセス・管理できる範囲が変わることがあります。ご不明な点があれば、組織の管理者にお問い合わせください。",
         "role_changed.footer": "LearnHouseの{org_name}でロールが変更されたため、このメールが送信されました。",
+        "role_changed.cta": "{org_name} を開く",
 
         "email_verification.subject": "メールアドレスを確認してください",
         "email_verification.heading": "メールアドレスを確認",
@@ -301,11 +343,18 @@ EMAIL_TRANSLATIONS: dict[str, dict[str, str]] = {
         "invitation.cta": "Entrar em {org_name}",
         "invitation.footer": "Este convite foi enviado por @{inviter}. Se não estava à espera dele, pode ignorá-lo.",
 
+        "org_join.subject": "Bem-vindo à {org_name}",
+        "org_join.heading": "Você entrou, {username}!",
+        "org_join.body": "Agora você é membro da {org_name}. Abra sua página inicial para explorar os cursos e continuar de onde parou.",
+        "org_join.cta": "Ver meus cursos",
+        "org_join.footer": "Você está recebendo este e-mail porque entrou na {org_name} no LearnHouse.",
+
         "role_changed.subject": "A sua função em {org_name} foi atualizada",
         "role_changed.heading": "A sua função foi atualizada",
         "role_changed.body_1": "Olá {username}, a sua função em <strong>{org_name}</strong> foi alterada para <strong>{role}</strong>.",
         "role_changed.body_2": "Isso pode afetar o que pode aceder e gerir dentro da organização. Em caso de dúvidas, contacte o administrador da sua organização.",
         "role_changed.footer": "Recebeu este e-mail porque a sua função foi alterada em {org_name} no LearnHouse.",
+        "role_changed.cta": "Ir para {org_name}",
 
         "email_verification.subject": "Verifique o seu endereço de e-mail",
         "email_verification.heading": "Verifique o seu e-mail",
@@ -340,11 +389,18 @@ EMAIL_TRANSLATIONS: dict[str, dict[str, str]] = {
         "invitation.cta": "Вступить в {org_name}",
         "invitation.footer": "Это приглашение отправлено @{inviter}. Если вы его не ожидали, его можно проигнорировать.",
 
+        "org_join.subject": "Добро пожаловать в {org_name}",
+        "org_join.heading": "Вы с нами, {username}!",
+        "org_join.body": "Теперь вы участник {org_name}. Откройте главную страницу, чтобы посмотреть курсы и продолжить обучение.",
+        "org_join.cta": "Мои курсы",
+        "org_join.footer": "Вы получили это письмо, потому что присоединились к {org_name} в LearnHouse.",
+
         "role_changed.subject": "Ваша роль в {org_name} обновлена",
         "role_changed.heading": "Ваша роль обновлена",
         "role_changed.body_1": "Здравствуйте, {username}. Ваша роль в <strong>{org_name}</strong> изменена на <strong>{role}</strong>.",
         "role_changed.body_2": "Это может повлиять на то, к чему у вас есть доступ и чем вы можете управлять в организации. Если возникнут вопросы, свяжитесь с администратором организации.",
         "role_changed.footer": "Вы получили это письмо, потому что ваша роль в {org_name} на LearnHouse была изменена.",
+        "role_changed.cta": "Перейти в {org_name}",
 
         "email_verification.subject": "Подтвердите адрес электронной почты",
         "email_verification.heading": "Подтвердите адрес почты",
@@ -379,11 +435,18 @@ EMAIL_TRANSLATIONS: dict[str, dict[str, str]] = {
         "invitation.cta": "加入 {org_name}",
         "invitation.footer": "此邀请由 @{inviter} 发出。如果您并未预期，可忽略此邮件。",
 
+        "org_join.subject": "欢迎加入 {org_name}",
+        "org_join.heading": "{username}，你已加入！",
+        "org_join.body": "你现在是 {org_name} 的成员。打开主页浏览课程，继续之前的学习。",
+        "org_join.cta": "查看我的课程",
+        "org_join.footer": "你收到这封邮件是因为你在 LearnHouse 加入了 {org_name}。",
+
         "role_changed.subject": "您在 {org_name} 中的角色已更新",
         "role_changed.heading": "您的角色已更新",
         "role_changed.body_1": "您好 {username}，您在 <strong>{org_name}</strong> 中的角色已变更为 <strong>{role}</strong>。",
         "role_changed.body_2": "这可能会影响您在组织中能访问和管理的内容。如有疑问，请联系组织管理员。",
         "role_changed.footer": "您收到此邮件，是因为您在 LearnHouse 上 {org_name} 的角色发生了变更。",
+        "role_changed.cta": "前往 {org_name}",
 
         "email_verification.subject": "验证您的电子邮箱",
         "email_verification.heading": "验证您的邮箱",
@@ -418,11 +481,18 @@ EMAIL_TRANSLATIONS: dict[str, dict[str, str]] = {
         "invitation.cta": "{org_name} में शामिल हों",
         "invitation.footer": "यह निमंत्रण @{inviter} द्वारा भेजा गया था। यदि आप इसकी अपेक्षा नहीं कर रहे थे, तो आप इसे अनदेखा कर सकते हैं।",
 
+        "org_join.subject": "{org_name} में आपका स्वागत है",
+        "org_join.heading": "आप जुड़ गए हैं, {username}!",
+        "org_join.body": "अब आप {org_name} के सदस्य हैं। कोर्स देखने और जहाँ छोड़ा था वहीं से शुरू करने के लिए अपना होम पेज खोलें।",
+        "org_join.cta": "मेरे कोर्स देखें",
+        "org_join.footer": "आपको यह ईमेल इसलिए मिला है क्योंकि आप LearnHouse पर {org_name} से जुड़े हैं।",
+
         "role_changed.subject": "{org_name} में आपकी भूमिका अपडेट कर दी गई है",
         "role_changed.heading": "आपकी भूमिका अपडेट की गई",
         "role_changed.body_1": "नमस्ते {username}, <strong>{org_name}</strong> में आपकी भूमिका बदलकर <strong>{role}</strong> कर दी गई है।",
         "role_changed.body_2": "इससे यह प्रभावित हो सकता है कि आप संस्था में क्या एक्सेस और प्रबंधित कर सकते हैं। यदि आपके कोई प्रश्न हैं, तो अपने संस्था प्रशासक से संपर्क करें।",
         "role_changed.footer": "आपको यह ईमेल मिला है क्योंकि LearnHouse पर {org_name} में आपकी भूमिका बदली गई थी।",
+        "role_changed.cta": "{org_name} पर जाएँ",
 
         "email_verification.subject": "अपना ईमेल पता सत्यापित करें",
         "email_verification.heading": "अपना ईमेल सत्यापित करें",
@@ -457,11 +527,18 @@ EMAIL_TRANSLATIONS: dict[str, dict[str, str]] = {
         "invitation.cta": "{org_name} 참여",
         "invitation.footer": "이 초대는 @{inviter}님이 보냈습니다. 예상하지 못한 초대라면 무시하셔도 됩니다.",
 
+        "org_join.subject": "{org_name}에 오신 것을 환영합니다",
+        "org_join.heading": "{username}님, 가입이 완료되었어요!",
+        "org_join.body": "이제 {org_name}의 멤버입니다. 홈에서 코스를 둘러보고 이어서 학습해 보세요.",
+        "org_join.cta": "내 코스 보기",
+        "org_join.footer": "LearnHouse에서 {org_name}에 참여하여 이 메일을 받았습니다.",
+
         "role_changed.subject": "{org_name}에서의 역할이 변경되었습니다",
         "role_changed.heading": "역할이 변경되었습니다",
         "role_changed.body_1": "안녕하세요 {username}님, <strong>{org_name}</strong>에서의 역할이 <strong>{role}</strong>(으)로 변경되었습니다.",
         "role_changed.body_2": "조직 내에서 접근 및 관리할 수 있는 범위가 달라질 수 있습니다. 문의가 있으시면 조직 관리자에게 연락해 주세요.",
         "role_changed.footer": "LearnHouse {org_name}에서 역할이 변경되어 이 이메일을 받으셨습니다.",
+        "role_changed.cta": "{org_name} 열기",
 
         "email_verification.subject": "이메일 주소 인증",
         "email_verification.heading": "이메일을 인증해 주세요",
@@ -496,11 +573,18 @@ EMAIL_TRANSLATIONS: dict[str, dict[str, str]] = {
         "invitation.cta": "Unisciti a {org_name}",
         "invitation.footer": "Questo invito è stato inviato da @{inviter}. Se non te lo aspettavi, puoi ignorarlo.",
 
+        "org_join.subject": "Benvenuto in {org_name}",
+        "org_join.heading": "Ci sei, {username}!",
+        "org_join.body": "Ora fai parte di {org_name}. Apri la tua home per esplorare i corsi e riprendere da dove avevi lasciato.",
+        "org_join.cta": "Vai ai miei corsi",
+        "org_join.footer": "Ricevi questa email perché ti sei unito a {org_name} su LearnHouse.",
+
         "role_changed.subject": "Il tuo ruolo in {org_name} è stato aggiornato",
         "role_changed.heading": "Il tuo ruolo è stato aggiornato",
         "role_changed.body_1": "Ciao {username}, il tuo ruolo in <strong>{org_name}</strong> è stato cambiato in <strong>{role}</strong>.",
         "role_changed.body_2": "Questo può influire su ciò che puoi vedere e gestire all'interno dell'organizzazione. In caso di domande, contatta l'amministratore della tua organizzazione.",
         "role_changed.footer": "Hai ricevuto questa e-mail perché il tuo ruolo è stato modificato in {org_name} su LearnHouse.",
+        "role_changed.cta": "Vai a {org_name}",
 
         "email_verification.subject": "Verifica il tuo indirizzo e-mail",
         "email_verification.heading": "Verifica la tua e-mail",
@@ -535,11 +619,18 @@ EMAIL_TRANSLATIONS: dict[str, dict[str, str]] = {
         "invitation.cta": "{org_name} organizasyonuna katıl",
         "invitation.footer": "Bu davet @{inviter} tarafından gönderildi. Beklemediysen yok sayabilirsin.",
 
+        "org_join.subject": "{org_name} organizasyonuna hoş geldiniz",
+        "org_join.heading": "Aramızdasınız, {username}!",
+        "org_join.body": "Artık {org_name} üyesisiniz. Kursları keşfetmek ve kaldığınız yerden devam etmek için ana sayfanızı açın.",
+        "org_join.cta": "Kurslarıma git",
+        "org_join.footer": "Bu e-postayı LearnHouse'ta {org_name} organizasyonuna katıldığınız için alıyorsunuz.",
+
         "role_changed.subject": "{org_name} organizasyonundaki rolün güncellendi",
         "role_changed.heading": "Rolün güncellendi",
         "role_changed.body_1": "Merhaba {username}, <strong>{org_name}</strong> organizasyonundaki rolün <strong>{role}</strong> olarak değiştirildi.",
         "role_changed.body_2": "Bu, organizasyon içinde erişebileceğin ve yönetebileceğin alanları etkileyebilir. Sorun olursa organizasyon yöneticinle iletişime geç.",
         "role_changed.footer": "Bu e-postayı LearnHouse'taki {org_name} organizasyonundaki rolün değiştirildiği için aldın.",
+        "role_changed.cta": "{org_name} sayfasına git",
 
         "email_verification.subject": "E-posta adresini doğrula",
         "email_verification.heading": "E-postanı doğrula",
@@ -574,11 +665,18 @@ EMAIL_TRANSLATIONS: dict[str, dict[str, str]] = {
         "invitation.cta": "Tham gia {org_name}",
         "invitation.footer": "Lời mời này được gửi bởi @{inviter}. Nếu bạn không mong đợi nhận được lời mời này, bạn có thể bỏ qua.",
 
+        "org_join.subject": "Chào mừng bạn đến với {org_name}",
+        "org_join.heading": "Bạn đã tham gia, {username}!",
+        "org_join.body": "Bạn đã là thành viên của {org_name}. Mở trang chủ để khám phá các khóa học và tiếp tục từ chỗ bạn đang dở.",
+        "org_join.cta": "Xem khóa học của tôi",
+        "org_join.footer": "Bạn nhận được email này vì bạn đã tham gia {org_name} trên LearnHouse.",
+
         "role_changed.subject": "Vai trò của bạn trong {org_name} đã được cập nhật",
         "role_changed.heading": "Vai trò của bạn đã được cập nhật",
         "role_changed.body_1": "Chào {username}, vai trò của bạn trong <strong>{org_name}</strong> đã thay đổi thành <strong>{role}</strong>.",
         "role_changed.body_2": "Điều này có thể ảnh hưởng đến những gì bạn có thể truy cập và quản lý trong tổ chức. Nếu có thắc mắc, hãy liên hệ với quản trị viên tổ chức của bạn.",
         "role_changed.footer": "Bạn nhận được email này vì vai trò của bạn đã thay đổi trong {org_name} trên LearnHouse.",
+        "role_changed.cta": "Đến {org_name}",
 
         "email_verification.subject": "Xác minh địa chỉ email của bạn",
         "email_verification.heading": "Xác minh email của bạn",
@@ -613,11 +711,18 @@ EMAIL_TRANSLATIONS: dict[str, dict[str, str]] = {
         "invitation.cta": "Gabung {org_name}",
         "invitation.footer": "Undangan ini dikirim oleh @{inviter}. Jika Anda tidak mengharapkannya, Anda dapat mengabaikannya.",
 
+        "org_join.subject": "Selamat datang di {org_name}",
+        "org_join.heading": "Kamu sudah bergabung, {username}!",
+        "org_join.body": "Kamu kini anggota {org_name}. Buka halaman utama untuk menjelajahi kursus dan melanjutkan dari tempat terakhir.",
+        "org_join.cta": "Lihat kursus saya",
+        "org_join.footer": "Kamu menerima email ini karena bergabung dengan {org_name} di LearnHouse.",
+
         "role_changed.subject": "Peran Anda di {org_name} telah diperbarui",
         "role_changed.heading": "Peran Anda telah diperbarui",
         "role_changed.body_1": "Halo {username}, peran Anda di <strong>{org_name}</strong> telah diubah menjadi <strong>{role}</strong>.",
         "role_changed.body_2": "Hal ini dapat memengaruhi apa yang dapat Anda akses dan kelola di dalam organisasi. Jika ada pertanyaan, hubungi administrator organisasi Anda.",
         "role_changed.footer": "Anda menerima email ini karena peran Anda diubah di {org_name} pada LearnHouse.",
+        "role_changed.cta": "Buka {org_name}",
 
         "email_verification.subject": "Verifikasi alamat email Anda",
         "email_verification.heading": "Verifikasi email Anda",
@@ -652,11 +757,18 @@ EMAIL_TRANSLATIONS: dict[str, dict[str, str]] = {
         "invitation.cta": "Dołącz do {org_name}",
         "invitation.footer": "To zaproszenie zostało wysłane przez @{inviter}. Jeśli się go nie spodziewałeś, możesz je zignorować.",
 
+        "org_join.subject": "Witamy w {org_name}",
+        "org_join.heading": "Jesteś już z nami, {username}!",
+        "org_join.body": "Jesteś teraz członkiem {org_name}. Otwórz stronę główną, aby przeglądać kursy i kontynuować naukę.",
+        "org_join.cta": "Przejdź do moich kursów",
+        "org_join.footer": "Otrzymujesz tę wiadomość, ponieważ dołączyłeś do {org_name} w LearnHouse.",
+
         "role_changed.subject": "Twoja rola w {org_name} została zaktualizowana",
         "role_changed.heading": "Twoja rola została zaktualizowana",
         "role_changed.body_1": "Cześć {username}, Twoja rola w <strong>{org_name}</strong> została zmieniona na <strong>{role}</strong>.",
         "role_changed.body_2": "Może to wpłynąć na to, do czego masz dostęp i co możesz zarządzać w organizacji. W razie pytań skontaktuj się z administratorem organizacji.",
         "role_changed.footer": "Otrzymałeś tę wiadomość, ponieważ Twoja rola została zmieniona w {org_name} na LearnHouse.",
+        "role_changed.cta": "Przejdź do {org_name}",
 
         "email_verification.subject": "Zweryfikuj swój adres e-mail",
         "email_verification.heading": "Zweryfikuj swój e-mail",
@@ -691,11 +803,18 @@ EMAIL_TRANSLATIONS: dict[str, dict[str, str]] = {
         "invitation.cta": "Приєднатися до {org_name}",
         "invitation.footer": "Це запрошення надіслав @{inviter}. Якщо ви цього не очікували, можете проігнорувати його.",
 
+        "org_join.subject": "Ласкаво просимо до {org_name}",
+        "org_join.heading": "Ви приєдналися, {username}!",
+        "org_join.body": "Тепер ви учасник {org_name}. Відкрийте головну сторінку, щоб переглянути курси та продовжити навчання.",
+        "org_join.cta": "Мої курси",
+        "org_join.footer": "Ви отримали цей лист, тому що приєдналися до {org_name} у LearnHouse.",
+
         "role_changed.subject": "Вашу роль у {org_name} оновлено",
         "role_changed.heading": "Вашу роль оновлено",
         "role_changed.body_1": "Вітаємо, {username}! Вашу роль у <strong>{org_name}</strong> змінено на <strong>{role}</strong>.",
         "role_changed.body_2": "Це може вплинути на те, до чого ви маєте доступ і чим можете керувати в межах організації. Якщо у вас виникли запитання, зверніться до адміністратора вашої організації.",
         "role_changed.footer": "Ви отримали цей лист, оскільки вашу роль було змінено в {org_name} на LearnHouse.",
+        "role_changed.cta": "Перейти до {org_name}",
 
         "email_verification.subject": "Підтвердьте вашу електронну адресу",
         "email_verification.heading": "Підтвердьте вашу електронну адресу",
@@ -730,11 +849,18 @@ EMAIL_TRANSLATIONS: dict[str, dict[str, str]] = {
         "invitation.cta": "Word lid van {org_name}",
         "invitation.footer": "Deze uitnodiging is verzonden door @{inviter}. Verwachtte je hem niet, dan kun je hem negeren.",
 
+        "org_join.subject": "Welkom bij {org_name}",
+        "org_join.heading": "Je doet mee, {username}!",
+        "org_join.body": "Je bent nu lid van {org_name}. Open je startpagina om cursussen te bekijken en verder te gaan waar je gebleven was.",
+        "org_join.cta": "Naar mijn cursussen",
+        "org_join.footer": "Je ontvangt deze e-mail omdat je bent toegetreden tot {org_name} op LearnHouse.",
+
         "role_changed.subject": "Je rol in {org_name} is bijgewerkt",
         "role_changed.heading": "Je rol is bijgewerkt",
         "role_changed.body_1": "Hoi {username}, je rol in <strong>{org_name}</strong> is gewijzigd naar <strong>{role}</strong>.",
         "role_changed.body_2": "Dit kan invloed hebben op wat je in de organisatie kunt zien en beheren. Heb je vragen, neem dan contact op met de beheerder van je organisatie.",
         "role_changed.footer": "Je krijgt deze e-mail omdat je rol in {org_name} op LearnHouse is gewijzigd.",
+        "role_changed.cta": "Naar {org_name}",
 
         "email_verification.subject": "Verifieer je e-mailadres",
         "email_verification.heading": "Verifieer je e-mail",
@@ -769,11 +895,18 @@ EMAIL_TRANSLATIONS: dict[str, dict[str, str]] = {
         "invitation.cta": "เข้าร่วม {org_name}",
         "invitation.footer": "คำเชิญนี้ถูกส่งโดย @{inviter} หากคุณไม่ได้คาดหวัง สามารถละเว้นได้",
 
+        "org_join.subject": "ยินดีต้อนรับสู่ {org_name}",
+        "org_join.heading": "คุณเข้าร่วมแล้ว {username}!",
+        "org_join.body": "ตอนนี้คุณเป็นสมาชิกของ {org_name} แล้ว เปิดหน้าแรกเพื่อดูคอร์สและเรียนต่อจากที่ค้างไว้",
+        "org_join.cta": "ไปที่คอร์สของฉัน",
+        "org_join.footer": "คุณได้รับอีเมลนี้เพราะคุณเข้าร่วม {org_name} บน LearnHouse",
+
         "role_changed.subject": "บทบาทของคุณใน {org_name} ได้รับการอัปเดต",
         "role_changed.heading": "บทบาทของคุณได้รับการอัปเดต",
         "role_changed.body_1": "สวัสดี {username} บทบาทของคุณใน <strong>{org_name}</strong> ถูกเปลี่ยนเป็น <strong>{role}</strong>",
         "role_changed.body_2": "การเปลี่ยนแปลงนี้อาจส่งผลต่อสิ่งที่คุณเข้าถึงและจัดการได้ภายในองค์กร หากมีคำถามใดๆ โปรดติดต่อผู้ดูแลระบบขององค์กรของคุณ",
         "role_changed.footer": "คุณได้รับอีเมลนี้เนื่องจากบทบาทของคุณถูกเปลี่ยนใน {org_name} บน LearnHouse",
+        "role_changed.cta": "ไปที่ {org_name}",
 
         "email_verification.subject": "ยืนยันที่อยู่อีเมลของคุณ",
         "email_verification.heading": "ยืนยันอีเมลของคุณ",
@@ -808,11 +941,18 @@ EMAIL_TRANSLATIONS: dict[str, dict[str, str]] = {
         "invitation.cta": "{org_name}-এ যোগ দিন",
         "invitation.footer": "এই আমন্ত্রণটি পাঠিয়েছেন @{inviter}। আপনি যদি এটি প্রত্যাশা না করে থাকেন, তাহলে নিরাপদে উপেক্ষা করতে পারেন।",
 
+        "org_join.subject": "{org_name}-এ স্বাগতম",
+        "org_join.heading": "আপনি যুক্ত হয়েছেন, {username}!",
+        "org_join.body": "আপনি এখন {org_name}-এর সদস্য। কোর্স দেখতে এবং যেখানে থেমেছিলেন সেখান থেকে শুরু করতে আপনার হোম পেজ খুলুন।",
+        "org_join.cta": "আমার কোর্স দেখুন",
+        "org_join.footer": "আপনি এই ইমেলটি পাচ্ছেন কারণ আপনি LearnHouse-এ {org_name}-এ যোগ দিয়েছেন।",
+
         "role_changed.subject": "{org_name}-এ আপনার ভূমিকা আপডেট হয়েছে",
         "role_changed.heading": "আপনার ভূমিকা আপডেট হয়েছে",
         "role_changed.body_1": "হ্যালো {username}, <strong>{org_name}</strong>-এ আপনার ভূমিকা পরিবর্তন করে <strong>{role}</strong> করা হয়েছে।",
         "role_changed.body_2": "এতে সংস্থার ভেতরে আপনি কী অ্যাক্সেস ও পরিচালনা করতে পারবেন তা প্রভাবিত হতে পারে। কোনো প্রশ্ন থাকলে আপনার সংস্থার অ্যাডমিনিস্ট্রেটরের সাথে যোগাযোগ করুন।",
         "role_changed.footer": "আপনার ভূমিকা LearnHouse-এ {org_name}-তে পরিবর্তন হওয়ায় আপনি এই ইমেইলটি পেয়েছেন।",
+        "role_changed.cta": "{org_name}-এ যান",
 
         "email_verification.subject": "আপনার ইমেইল ঠিকানা যাচাই করুন",
         "email_verification.heading": "আপনার ইমেইল যাচাই করুন",

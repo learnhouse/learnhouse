@@ -1,7 +1,7 @@
 'use client'
 import Link from 'next/link'
 import { getUriWithOrg } from '@services/config/config'
-import { BookOpenCheck, CheckCircle, ChevronLeft, ChevronRight, MessageSquare, UserRoundPen, Edit2, Maximize2, Minimize2, Trophy, Sparkles, XCircle, Lock, RotateCcw, Infinity as InfinityIcon } from 'lucide-react'
+import { BookOpenCheck, CheckCircle, ChevronLeft, ChevronRight, MessageSquare, UserRoundPen, Edit2, Loader2, Maximize2, Minimize2, Trophy, Sparkles, XCircle, Lock, RotateCcw, Infinity as InfinityIcon } from 'lucide-react'
 import dynamic from 'next/dynamic'
 import { markActivityAsComplete, unmarkActivityAsComplete } from '@services/courses/activity'
 import { usePathname, useRouter } from 'next/navigation'
@@ -49,6 +49,11 @@ const Canva = lazy(() => import('@components/Objects/Activities/DynamicCanva/Dyn
 const VideoActivity = lazy(() => import('@components/Objects/Activities/Video/Video'))
 const DocumentPdfActivity = lazy(() => import('@components/Objects/Activities/DocumentPdf/DocumentPdf'))
 const AssignmentStudentActivity = lazy(() => import('@components/Objects/Activities/Assignment/AssignmentStudentActivity'))
+// Deadline rule shared with the learner activity view (and mirroring the
+// server's _is_assignment_past_due) so the submit/retry affordances agree with
+// what the API will actually accept. Static import: it's a pure function, and
+// gating render on the lazy chunk would flash the wrong control.
+import { isAssignmentPastDue } from '@components/Objects/Activities/Assignment/AssignmentStudentActivity'
 const AIActivityAsk = lazy(() => import('@components/Objects/Activities/AI/AIActivityAsk'))
 const AISidePanelContentWrapper = lazy(() => import('@components/Objects/Activities/AI/AIActivityAsk').then(mod => ({ default: mod.AISidePanelContentWrapper })))
 const AISidePanelInline = lazy(() => import('@components/Objects/Activities/AI/AIActivityAsk').then(mod => ({ default: mod.AISidePanelInline })))
@@ -365,11 +370,21 @@ function ActivityClient(props: ActivityClientProps) {
     }
   }, [activity, course, assignment, orgslug]);
 
-  // Navigate to an activity
+  // Past the last activity lies the course-end screen holding the certificate.
+  const isLastActivity = currentIndex >= 0 && !nextActivity;
+
+  // Navigate to an activity. A null target means "there is nothing after this
+  // one" — on the final activity that means the course-end/certificate screen
+  // rather than a dead end.
   const navigateToActivity = (activity: any) => {
-    if (!activity) return;
-    
     const cleanCourseUuid = course.course_uuid?.replace('course_', '');
+    if (!activity) {
+      if (isLastActivity) {
+        router.push(getUriWithOrg(orgslug, '') + `/course/${cleanCourseUuid}/activity/end`);
+      }
+      return;
+    }
+
     router.push(getUriWithOrg(orgslug, '') + `/course/${cleanCourseUuid}/activity/${activity.cleanUuid}`);
   };
 
@@ -730,17 +745,27 @@ function ActivityClient(props: ActivityClientProps) {
                             <button
                               onClick={() => navigateToActivity(nextActivity)}
                               className={`flex items-center space-x-1.5 p-2 rounded-md transition-all duration-200 cursor-pointer ${
-                                nextActivity
+                                nextActivity || isLastActivity
                                   ? 'text-gray-700'
                                   : 'opacity-50 text-gray-400 cursor-not-allowed'
                               }`}
-                              disabled={!nextActivity}
-                              title={nextActivity ? `${t('common.next')}: ${nextActivity.name}` : t('activities.no_next_activity')}
+                              disabled={!nextActivity && !isLastActivity}
+                              title={
+                                nextActivity
+                                  ? `${t('common.next')}: ${nextActivity.name}`
+                                  : isLastActivity
+                                    ? t('course.finish_course', 'Finish course')
+                                    : t('activities.no_next_activity')
+                              }
                             >
                               <div className="flex flex-col items-end">
                                 <span className="text-xs text-gray-500">{t('common.next')}</span>
                                 <span className="text-sm capitalize font-semibold text-right">
-                                  {nextActivity ? nextActivity.name : t('activities.no_next_activity')}
+                                  {nextActivity
+                                    ? nextActivity.name
+                                    : isLastActivity
+                                      ? t('course.finish_course', 'Finish course')
+                                      : t('activities.no_next_activity')}
                                 </span>
                               </div>
                               <ChevronRight size={20} className="text-gray-800 shrink-0" />
@@ -1363,11 +1388,20 @@ function NextActivityButton({ course, currentActivityId, orgslug }: { course: an
 
   const nextActivity = findNextActivity();
 
-  if (!nextActivity) return null;
+  // On the LAST activity, Next advances to the course-end screen (which holds
+  // the certificate) instead of disappearing. Previously the only route there
+  // was the trophy icon on the progress bar, which learners did not find — and
+  // it was unreachable altogether for anyone who had already marked the final
+  // activity complete on an earlier visit.
+  const isLastActivity = !nextActivity;
+  const cleanCourseUuid = course.course_uuid?.replace('course_', '');
 
   const navigateToActivity = () => {
-    const cleanCourseUuid = course.course_uuid?.replace('course_', '');
-    router.push(getUriWithOrg(orgslug, '') + `/course/${cleanCourseUuid}/activity/${nextActivity.cleanUuid}`);
+    router.push(
+      isLastActivity
+        ? getUriWithOrg(orgslug, '') + `/course/${cleanCourseUuid}/activity/end`
+        : getUriWithOrg(orgslug, '') + `/course/${cleanCourseUuid}/activity/${nextActivity.cleanUuid}`
+    );
   };
 
   return (
@@ -1377,7 +1411,9 @@ function NextActivityButton({ course, currentActivityId, orgslug }: { course: an
     >
       <span className="text-[10px] font-bold text-gray-500 mb-1 uppercase">{t('common.next')}</span>
       <div className="flex items-center space-x-1">
-        <span className="text-xs sm:text-sm font-semibold truncate max-w-[120px] sm:max-w-[200px]">{nextActivity.name}</span>
+        <span className="text-xs sm:text-sm font-semibold truncate max-w-[120px] sm:max-w-[200px]">
+          {isLastActivity ? t('course.finish_course', 'Finish course') : nextActivity.name}
+        </span>
         <ChevronRight size={17} className="shrink-0" />
       </div>
     </div>
@@ -1456,32 +1492,40 @@ function AssignmentTools(props: {
   // so the modal doesn't pop back open every time gradeData refreshes.
   const hasAutoOpenedRef = React.useRef(false);
 
+  const [isSubmitting, setIsSubmitting] = React.useState(false);
+
   const submitForGradingUI = async () => {
     if (props.assignment) {
-      // Persist any answers the learner selected but didn't manually save, so
-      // grading never runs against an empty/stale answer sheet. Abort if a save
-      // fails rather than silently finalizing a 0%.
-      const flushed = await dirtyTasks.flushAll()
-      if (!flushed) {
-        toast.error(t('assignments.failed_submit_assignment'))
-        return
-      }
-      const res = await submitAssignmentForGrading(
-        props.assignment?.assignment_uuid,
-        session.data?.tokens?.access_token
-      )
-      if (res.success) {
-        toast.success(t('assignments.assignment_submitted_success'))
-        queryClient.invalidateQueries({ queryKey: queryKeys.assignments.submission(props.assignment?.assignment_uuid) })
-        queryClient.invalidateQueries({ queryKey: queryKeys.assignments.taskSubmission(props.assignment?.assignment_uuid) })
-        // Submitting may auto-grade the assignment (GRADED), which makes the
-        // answer key eligible to be revealed (show_correct_answers). The task
-        // definitions were fetched pre-grade with the key stripped, so refetch
-        // them — otherwise the reveal renders every option as "incorrect".
-        queryClient.invalidateQueries({ queryKey: queryKeys.assignments.tasks(props.assignment?.assignment_uuid) })
-      }
-      else {
-        toast.error(t('assignments.failed_submit_assignment'))
+      if (isSubmitting) return
+      setIsSubmitting(true)
+      try {
+        // Persist any answers the learner selected but didn't manually save, so
+        // grading never runs against an empty/stale answer sheet. Abort if a save
+        // fails rather than silently finalizing a 0%.
+        const flushed = await dirtyTasks.flushAll()
+        if (!flushed) {
+          toast.error(t('assignments.failed_submit_assignment'))
+          return
+        }
+        const res = await submitAssignmentForGrading(
+          props.assignment?.assignment_uuid,
+          session.data?.tokens?.access_token
+        )
+        if (res.success) {
+          toast.success(t('assignments.assignment_submitted_success'))
+          queryClient.invalidateQueries({ queryKey: queryKeys.assignments.submission(props.assignment?.assignment_uuid) })
+          queryClient.invalidateQueries({ queryKey: queryKeys.assignments.taskSubmission(props.assignment?.assignment_uuid) })
+          // Submitting may auto-grade the assignment (GRADED), which makes the
+          // answer key eligible to be revealed (show_correct_answers). The task
+          // definitions were fetched pre-grade with the key stripped, so refetch
+          // them — otherwise the reveal renders every option as "incorrect".
+          queryClient.invalidateQueries({ queryKey: queryKeys.assignments.tasks(props.assignment?.assignment_uuid) })
+        }
+        else {
+          toast.error(t('assignments.failed_submit_assignment'))
+        }
+      } finally {
+        setIsSubmitting(false)
       }
     }
   }
@@ -1573,9 +1617,44 @@ function AssignmentTools(props: {
   const isRetryAttempt = isAwaitingSubmission && submission?.length > 0 && attemptNumber > 1;
 
   if (isAwaitingSubmission) {
+    // Past the deadline the server 403s every write, including the flush that
+    // "Submit for grading" performs. Offering the button anyway produced a
+    // generic failure toast with no explanation of why.
+    if (isAssignmentPastDue(props.assignment?.due_date)) {
+      return (
+        <div className="bg-rose-800 rounded-md px-4 nice-shadow flex flex-col p-2.5 text-white transition delay-150 duration-300 ease-in-out">
+          <span className="text-[10px] font-bold mb-1 uppercase">{t('common.status')}</span>
+          <div className="flex items-center space-x-2">
+            <BookOpenCheck size={17} />
+            <span className="text-xs font-bold">
+              {t('assignments.past_due', { defaultValue: 'Deadline passed' })}
+            </span>
+          </div>
+        </div>
+      )
+    }
+
+    // While the submit runs the trigger itself reports it: saving every pending
+    // answer and grading server-side takes seconds on a long assignment, and
+    // the bar is what the learner is looking at.
+    if (isSubmitting) {
+      return (
+        <div className="bg-cyan-800 rounded-md px-4 nice-shadow flex flex-col p-2.5 text-white transition delay-150 duration-300 ease-in-out">
+          <span className="text-[10px] font-bold mb-1 uppercase">{t('common.status')}</span>
+          <div className="flex items-center space-x-2">
+            <Loader2 size={17} className="animate-spin" />
+            <span className="text-xs font-bold">
+              {t('assignments.submitting', { defaultValue: 'Submitting…' })}
+            </span>
+          </div>
+        </div>
+      )
+    }
+
     return (
       <ConfirmationModal
         confirmationButtonText={t('assignments.submit_assignment')}
+        pendingButtonText={t('assignments.submitting', { defaultValue: 'Submitting…' })}
         confirmationMessage={t('assignments.submit_assignment_confirm')}
         dialogTitle={t('assignments.submit_assignment_title')}
         dialogTrigger={
@@ -1632,7 +1711,13 @@ function AssignmentTools(props: {
     const attemptsRemaining = maxRetries
       ? Math.max(0, maxRetries - currentAttempt)
       : null;
-    const canRetry = allowRetries && (maxRetries === 0 || currentAttempt < maxRetries);
+    // Past the deadline the server refuses a retry — and rightly so: retry wipes
+    // the answers, grade and certificate, and every resubmit path is deadline
+    // gated, so a retry here would destroy graded work with no way back. Mirror
+    // that client-side rather than offering a button that 403s.
+    const retryPastDue = isAssignmentPastDue(props.assignment?.due_date);
+    const canRetry =
+      allowRetries && !retryPastDue && (maxRetries === 0 || currentAttempt < maxRetries);
 
     return (
       <>
@@ -1751,7 +1836,15 @@ function AssignmentTools(props: {
                     <div className="space-y-1.5">
                       {tasks.map((tb: any) => {
                         const pct = Math.max(0, Math.min(100, tb.percentage || 0));
-                        const passedTask = tb.submitted && pct >= 60;
+                        // Use the server's per-task verdict. Hardcoding 60 here
+                        // contradicted the real threshold (50 for most grading
+                        // types, or the teacher's own pass_threshold_percentage),
+                        // so a task at 50% rendered as failing in this modal while
+                        // the hero above it said "Passing" and the page behind it
+                        // showed a green "Task passed" card.
+                        const passedTask = tb.submitted && (
+                          typeof tb.passed === 'boolean' ? tb.passed : pct >= 60
+                        );
                         return (
                           <div
                             key={tb.assignment_task_uuid}

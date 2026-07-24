@@ -100,7 +100,11 @@ async def _get_welcome_cta_url(
                 base_url = await get_org_signup_base_url(
                     org.slug, request, db_session=db_session, org_id=org_id
                 )
-                return f"{base_url.rstrip('/')}/home"
+                # The org's own landing page, NOT `/home`: `/home` is the
+                # platform org picker on every host, so an org-scoped
+                # `{org-host}/home` bounces the user to "Your Organizations"
+                # instead of the academy the email is about.
+                return base_url.rstrip("/") or "/"
             return None
 
         # Org-less signups often arrive without a trusted Origin/Referer, and the
@@ -331,7 +335,14 @@ async def create_user_with_invite(
             statement = select(Organization).where(Organization.id == org_id)
             org = (await db_session.execute(statement)).scalars().first()
             if org:
-                redis_key = f"invited_user:{user_object.email}:org:{org.org_uuid}"
+                # Invites are keyed on the lower-cased address; without
+                # normalising here a signup that typed the address with
+                # different capitals left the invitation showing as "Pending"
+                # forever even though the person had joined.
+                redis_key = (
+                    f"invited_user:{user_object.email.strip().lower()}"
+                    f":org:{org.org_uuid}"
+                )
                 invited_data = r.get(redis_key)
                 if invited_data:
                     invited_record = json.loads(invited_data)

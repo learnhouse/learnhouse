@@ -1126,14 +1126,17 @@ class TestWelcomeCtaUrl:
     """The welcome email's "Get Started" link must land the user on an org."""
 
     @pytest.mark.asyncio
-    async def test_org_signup_uses_org_scoped_home(self, mock_request, db, org):
+    async def test_org_signup_lands_on_the_org_itself(self, mock_request, db, org):
+        """Not `/home` — that is the org PICKER on every host, so it would send
+        a new member straight back out of the org the email is about."""
         with patch(
             "src.services.email.utils.get_org_signup_base_url",
             new_callable=AsyncMock,
             return_value="https://learn.acme.test/",
         ):
             url = await _get_welcome_cta_url(mock_request, db, org.id)
-        assert url == "https://learn.acme.test/home"
+        assert url == "https://learn.acme.test"
+        assert not url.endswith("/home")
 
     @pytest.mark.asyncio
     async def test_orgless_signup_uses_platform_organizations_list(

@@ -251,6 +251,23 @@ async def signWithGoogle(
             await db_session.refresh(user_organization)
             await increase_feature_usage("members", org_id, db_session)
 
+            # /users/session is served from a 10 minute Redis cache keyed on the
+            # user id, and it is what the frontend reads the org list from. Every
+            # other membership change busts it (join_org, role changes, removals);
+            # this one did not, so the user landed in the org they had just joined
+            # with the pre-join role list — no membership, member-only UI hidden —
+            # until the cache expired on its own.
+            from src.routers.users import _invalidate_session_cache
+
+            _invalidate_session_cache(user.id)
+
+            # Existing account joining a new org: the account-creation welcome
+            # only fires for brand new users, so without this the OAuth-invite
+            # path lands them in an org they were never told about.
+            from src.services.orgs.join_notifications import notify_user_joined_org
+
+            await notify_user_joined_org(request, db_session, user, org_id)
+
     # Update last login info
     client_ip = get_client_ip(request)
     await update_login_info(user, client_ip, db_session)

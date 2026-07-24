@@ -133,6 +133,13 @@ function InviteOnlySignUpComponent(props: InviteOnlySignUpProps) {
       const domainAttr = (topDomain === 'localhost' || isOnCustomDomain()) ? '' : `; domain=.${topDomain}`;
       document.cookie = `LH_oauth_orgslug=${org.slug}${baseAttributes}${domainAttr}`;
       document.cookie = `LH_oauth_org_id=${org.id}${baseAttributes}${domainAttr}`;
+      // Invite-only orgs need the invite code itself, not just the org: the
+      // backend requires the same proof the form signup posts to
+      // /users/{org_id}/invite/{code}. Without it a Google sign-up through an
+      // invite link is refused instead of joining the org.
+      if (props.inviteCode) {
+        document.cookie = `LH_oauth_invite_code=${encodeURIComponent(props.inviteCode)}${baseAttributes}${domainAttr}`;
+      }
     }
     // Use absolute URL with current origin for custom domain support
     signIn('google', { callbackUrl: buildCallbackUrl() });

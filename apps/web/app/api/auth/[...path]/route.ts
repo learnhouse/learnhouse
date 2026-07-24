@@ -68,6 +68,16 @@ const REFRESH_FAST_PATH_HEADROOM_MS = 2 * 60 * 1000
 const CLEAR_HTTPONLY = [ACCESS_TOKEN_COOKIE, REFRESH_TOKEN_COOKIE, 'LH_custom_domain']
 const CLEAR_MARKERS = ['LH_session', 'LH_org']
 
+// A refresh failure only justifies destroying the session when the backend
+// rejected the CREDENTIAL itself. 401/403 are terminal — the refresh cookie is
+// expired, revoked, or was flagged as replayed, and re-sending it will never
+// work. Everything else (429 rate limit, 5xx during a deploy, gateway
+// timeouts) is a server-side hiccup that says nothing about the token's
+// validity, and the user's session must survive it.
+function isTerminalAuthFailure(status: number): boolean {
+  return status === 401 || status === 403
+}
+
 function appendClearAuthCookies(response: NextResponse, request: NextRequest) {
   const securePart = request.nextUrl.protocol === 'https:' ? '; Secure' : ''
   const host = request.headers.get('host') || ''
@@ -94,6 +104,29 @@ function appendClearAuthCookies(response: NextResponse, request: NextRequest) {
   }
 }
 
+// Headers that identify the ORIGINAL caller, relayed to the backend untouched.
+//
+// This proxy is server-to-server: with nothing forwarded, the backend sees the
+// Next.js pod as the client for EVERY request. Its per-IP limits — login
+// (30/5min), signup (10/hour), refresh (600/min) — then share ONE bucket across
+// the whole deployment instead of being per caller. A single person retrying a
+// password could lock every user out of signing in, and the limits stop being
+// brute-force protection at all because they cannot tell callers apart. The
+// account-lockout bookkeeping records the attempting IP too, so it was logging
+// this pod for every failed login.
+//
+// Relayed verbatim rather than parsed: the backend's get_client_ip already owns
+// the chain-parsing rules (and only trusts these at all when the connection
+// comes from a private address). Re-deriving a single IP here would mean the
+// same header is interpreted two different ways in two places.
+//
+// NOTE: this inherits the deployment requirement the backend already documents
+// — the ingress MUST overwrite, not append to, a client-supplied
+// X-Forwarded-For. Otherwise a caller can prepend a fake IP and evade the
+// limits. That requirement is unchanged by this proxy; it applies equally to
+// requests that reach the API directly.
+const CLIENT_IDENTITY_HEADERS = ['x-forwarded-for', 'x-real-ip', 'user-agent']
+
 async function proxyRequest(
   request: NextRequest,
   method: string
@@ -109,6 +142,18 @@ async function proxyRequest(
   const headers: HeadersInit = {}
   const cookieStore = await cookies()
 
+  // Forward the caller's IP. This proxy builds its headers from scratch, so
+  // without this the backend only ever sees the Next.js server's own address:
+  // every visitor collapses into a single per-IP rate-limit bucket and one busy
+  // deployment locks everyone out of login and token refresh. The backend only
+  // trusts these when the direct connection is from a private address (see
+  // get_client_ip), so forwarding what the ingress already set is the same
+  // contract the /api/v1 proxy honours by forwarding all headers.
+  for (const ipHeader of ['x-forwarded-for', 'x-real-ip']) {
+    const value = request.headers.get(ipHeader)
+    if (value) headers[ipHeader] = value
+  }
+
   // Forward content-type
   const contentType = request.headers.get('content-type')
   if (contentType) {
@@ -119,6 +164,11 @@ async function proxyRequest(
   const authHeader = request.headers.get('authorization')
   if (authHeader) {
     headers['Authorization'] = authHeader
+  }
+
+  for (const name of CLIENT_IDENTITY_HEADERS) {
+    const value = request.headers.get(name)
+    if (value) headers[name] = value
   }
 
   // Forward cookies to backend
@@ -273,12 +323,19 @@ async function proxyRequest(
     }
   }
 
-  // A failed refresh means the refresh cookie is dead (revoked, expired, or a
-  // replay outside the grace window). Clear all auth cookies so the browser
-  // stops sending a stale 30-day refresh token + LH_session marker, which
-  // would otherwise loop the client through repeated failed refreshes instead
-  // of cleanly falling back to the login screen.
-  if (pathSegments === 'refresh' && !backendResponse.ok) {
+  // Only destroy the session when the backend says the refresh CREDENTIAL is
+  // dead — 401 (expired/revoked/replayed) or 403. Those are terminal: the
+  // cookie will never work again, so we clear it and let the client fall back
+  // to the login screen instead of looping on failed refreshes.
+  //
+  // Every other failure is transient and MUST NOT log the user out. A 429 from
+  // the per-IP refresh rate limit, a 502 while the API rolls out, a 500, a
+  // gateway timeout — none of those mean the user's 30-day refresh token is
+  // invalid. Clearing cookies on those was silently ending sessions that had
+  // weeks of life left, and because the httpOnly refresh cookie was deleted
+  // the user could not recover except by signing in again. Whole classrooms
+  // behind one NAT IP were being signed out together this way.
+  if (pathSegments === 'refresh' && isTerminalAuthFailure(backendResponse.status)) {
     appendClearAuthCookies(response, request)
   }
 

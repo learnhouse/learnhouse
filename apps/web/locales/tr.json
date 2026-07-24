@@ -223,7 +223,12 @@
     "delete_organization_warning": "Bu işlem {{name}} organizasyonunu ve tüm verilerini kalıcı olarak siler. Bu işlem geri alınamaz.",
     "delete_organization_confirm_label": "Onaylamak için {{slug}} yazın",
     "deleting": "Siliniyor…",
-    "retry": "Yeniden Dene"
+    "retry": "Yeniden Dene",
+    "leave_organization": "Kuruluştan ayrıl",
+    "leave_organization_title": "Kuruluştan ayrılmak istiyor musunuz?",
+    "leave_organization_desc": "{{org}} erişiminizi kaybedecek ve üyelerinden çıkarılacaksınız. Davet edilmeniz hâlinde daha sonra tekrar katılabilirsiniz.",
+    "leave_organization_error": "Bu kuruluştan ayrılamadık. Lütfen tekrar deneyin.",
+    "leaving": "Ayrılıyor…"
   },
   "banner": {
     "viewing_as_guest": "{{name}} sitesini misafir olarak görüntülüyorsunuz.",
@@ -676,7 +681,13 @@
     "quit_course_confirm": "Bu kurstan çıkmak istediğinizden emin misiniz? Tüm ilerlemenizi kaybedersiniz.",
     "quit_course_title": "Kurstan Çık?",
     "courses_load_error": "Kurslar yüklenemedi. Lütfen tekrar deneyin.",
-    "view_all_courses": "Tüm kursları görüntüle"
+    "view_all_courses": "Tüm kursları görüntüle",
+    "first_chapter_default_name": "İlk Bölüm",
+    "paste_from_clipboard": "Panodan Yapıştır",
+    "no_image_in_clipboard": "Panoda resim bulunamadı",
+    "clipboard_read_error": "Pano okunamadı",
+    "sign_in_to_see_courses": "Kurslarınızı görmek için giriş yapın",
+    "sign_in_to_see_courses_description": "Bu akademideki kurslar yalnızca giriş yaptıktan sonra görüntülenebilir."
   },
   "communities": {
     "title": "Topluluklar",
@@ -987,13 +998,20 @@
     "embed": "Yerleştir",
     "embed_code_copied": "Yerleştirme kodu kopyalandı!",
     "link_copied": "Bağlantı kopyalandı!",
-    "share": "Paylaş"
+    "share": "Paylaş",
+    "autosave_blocked": "Henüz kaydedilemiyor",
+    "autosave_retry": "Kaydedilemedi — yeniden deneniyor…",
+    "autosave_unsaved": "Kaydedilmemiş değişiklikler",
+    "autosaved": "Kaydedildi",
+    "autosaving": "Kaydediliyor…",
+    "save_answers": "Yanıtları kaydet"
   },
   "assignments": {
     "submit_assignment": "Ödevi Gönder",
     "submit_assignment_confirm": "Ödevinizi notlandırılmak üzere göndermek istediğinizden emin misiniz? Gönderildikten sonra herhangi bir değişiklik yapamazsınız.",
     "submit_assignment_title": "Ödevinizi notlandırılmak üzere gönderin",
     "submit_for_grading": "Notlandırma için gönder",
+    "submitting": "Gönderiliyor…",
     "grading_in_progress": "Notlandırma devam ediyor",
     "graded": "Notlandırıldı",
     "assignment_submitted_success": "Ödev notlandırma için gönderildi",
@@ -1035,7 +1053,11 @@
       "half": "Yarım",
       "zero": "Sıfır"
     },
-    "task_feedback_placeholder": "Bu görev için not (notla birlikte kaydedilir)"
+    "task_feedback_placeholder": "Bu görev için not (notla birlikte kaydedilir)",
+    "no_task_submission_to_grade": "Bu öğrenci henüz bu görev için dosya göndermedi.",
+    "past_due": "Son tarih geçti",
+    "past_due_description": "Bu ödevin son teslim tarihi {{date}} idi. Yanıtlar artık kaydedilemez veya değerlendirme için gönderilemez.",
+    "past_due_title": "Son tarih geçti"
   },
   "certificate": {
     "certificate": "Sertifika",
@@ -1062,7 +1084,8 @@
     "continuing_education": "Sürekli Eğitim",
     "workshop_attendance": "Atölye Katılımı",
     "specialization": "Uzmanlık",
-    "dedication_message": "Özveriniz ve sıkı çalışmanız karşılığını verdi. Bu kursun tüm içeriğine hakim oldunuz."
+    "dedication_message": "Özveriniz ve sıkı çalışmanız karşılığını verdi. Bu kursun tüm içeriğine hakim oldunuz.",
+    "download_failed": "PDF oluşturulamadı. Lütfen tekrar deneyin."
   },
   "search": {
     "search_placeholder": "Kursları, kullanıcıları, koleksiyonları ara...",
@@ -1147,7 +1170,9 @@
       "description": "Hesabınızı kalıcı olarak silin ve erişiminizi kaldırın. Bu işlem geri alınamaz.",
       "warning": "Bu işlem hesabınızı ve ilişkili tüm verileri kalıcı olarak siler. Bu işlem geri alınamaz.",
       "confirm_label": "Onaylamak için {{username}} yazın",
-      "deleting": "Siliniyor…"
+      "deleting": "Siliniyor…",
+      "zone_subtitle": "Hesabınızı kalıcı olarak silin. Bu işlem geri alınamaz.",
+      "zone_body": "Bu işlem hesabınızı ve erişiminizi kaldırır. Tek yöneticisi olduğunuz tüm kuruluşlar — bunların tüm kursları ve içerikleriyle birlikte — silinir. Başka yöneticileri olan kuruluşlar korunur; yalnızca bu kuruluşlardan çıkarılırsınız."
     }
   },
   "user": {
@@ -1369,6 +1394,12 @@
           "save_error": "Profil güncellenirken hata oluştu"
         },
         "unknown_section": "Bilinmeyen bölüm"
+      },
+      "security": {
+        "current_session_title": "Mevcut oturum",
+        "current_session_subtitle": "Şu anda giriş yaptığınız cihaz.",
+        "this_device": "Bu cihaz",
+        "sign_out": "Çıkış yap"
       }
     },
     "sign_out": "Çıkış Yap",
@@ -2104,7 +2135,8 @@
             "dynamic_page": "Dinamik Sayfa",
             "scorm": "SCORM",
             "markdown": "Markdown",
-            "embed": "Gömme"
+            "embed": "Gömme",
+            "resource": "Kaynak"
           },
           "toasts": {
             "deleting": "Aktivite siliniyor...",
@@ -3473,7 +3505,8 @@
           "drafts": "Taslaklar",
           "auto_graded": "Sadece oto-notlu",
           "hide_empty": "Boş kursları gizle"
-        }
+        },
+        "new_assignment": "Yeni Ödev"
       },
       "detail": {
         "title": "Ödev Aracı",
@@ -3549,7 +3582,8 @@
           "task_save_error": "Görev kaydedilirken hata oluştu. Lütfen daha sonra tekrar deneyin.",
           "task_updated": "Görev başarıyla güncellendi",
           "task_update_error": "Görev güncellenirken hata oluştu. Lütfen daha sonra tekrar deneyin.",
-          "reminder": "Potansiyel öğrenci sorunlarını önlemek için görevleri düzenlerken veya eklerken ödevi yayından kaldırmayı unutmayın. Hazır olduğunda tekrar yayınlayabilirsiniz."
+          "reminder": "Potansiyel öğrenci sorunlarını önlemek için görevleri düzenlerken veya eklerken ödevi yayından kaldırmayı unutmayın. Hazır olduğunda tekrar yayınlayabilirsiniz.",
+          "no_submission_to_grade": "Bu öğrencinin henüz bu görev için teslimi yok; değerlendirilecek bir şey bulunmuyor."
         },
         "task_editor": {
           "general": {
@@ -3569,7 +3603,9 @@
             "auth_required_submit": "Kimlik doğrulaması gerekiyor. Görevi göndermek için giriş yapın.",
             "hint_optional": "İpucu (isteğe bağlı)",
             "paste_blocked": "Bu ödev için yapıştırma devre dışı",
-            "paste_blocked_hint": "Yapıştırma devre dışı — cevabınızı doğrudan yazın."
+            "paste_blocked_hint": "Yapıştırma devre dışı — cevabınızı doğrudan yazın.",
+            "upload_locked_graded": "Bu teslim değerlendirildi — dosyanız artık değiştirilemez.",
+            "upload_locked_submitted": "Bu ödevi teslim ettiniz — dosyanız artık değiştirilemez."
           },
           "code": {
             "student_behavior_label": "Öğrenci davranışı",
@@ -3585,7 +3621,10 @@
             "must_pass_hint": "Kaydetmeden önce tüm görünür testlerin geçmesi gerekir.",
             "show_solution_label": "Gönderimden sonra çözümü göster",
             "show_solution_description": "Öğrenci çalışmasını kaydettikten sonra öğretmenin referans çözümünü göster.",
-            "reference_solution_label": "Referans çözüm"
+            "reference_solution_label": "Referans çözüm",
+            "locked_graded_hint": "Bu teslim değerlendirildi — kodunuz salt okunur.",
+            "locked_submitted_hint": "Bu ödevi teslim ettiniz — kodunuz salt okunur.",
+            "no_runnable_tests": "Bu görevde çalıştırabileceğiniz test yok — kodunuz değerlendirme sırasında kontrol edilir."
           },
           "short_answer": {
             "prompt_label": "Soru metni",
@@ -3628,13 +3667,19 @@
             "correct": "Doğru",
             "incorrect": "Pek değil — tekrar deneyin"
           }
+        },
+        "generate_ai": "AI ile görev oluştur",
+        "generate_ai_modal": {
+          "description": "Ne istediğinizi açıklayın ve eklemeden önce kurs içeriğine dayalı görevleri önizleyin.",
+          "title": "AI ile görev oluştur"
         }
       },
       "submissions": {
         "status": {
           "late": "Gecikmiş",
           "submitted": "Gönderildi",
-          "graded": "Notlandırıldı"
+          "graded": "Notlandırıldı",
+          "pending": "Devam ediyor"
         },
         "submission_label": "Gönderim",
         "evaluate": "Değerlendir",
@@ -3690,7 +3735,8 @@
           "optional": "isteğe bağlı",
           "placeholder": "Teslimat hakkında genel bir yorum yazın. Öğrenci bunu notunun yanında görecek.",
           "hint": "Önceki geri bildirimi değiştirmek istemiyorsanız boş bırakın."
-        }
+        },
+        "truncated_warning": "Yalnızca ilk {{max}} teslim gösteriliyor. Bazı teslimler burada listelenmiyor."
       },
       "analytics": {
         "loading": "Analizler yükleniyor...",
@@ -3834,9 +3880,22 @@
           },
           "toasts": {
             "creating": "Ödev oluşturuluyor...",
-            "success": "Ödev başarıyla oluşturuldu"
+            "success": "Ödev başarıyla oluşturuldu",
+            "error": "Ödev oluşturulamadı"
           }
         }
+      },
+      "create_flow": {
+        "create_course": "Kurs oluştur",
+        "no_chapters_desc": "Kurs düzenleyicisinde bir bölüm ekleyin, ardından içinde bir ödev oluşturun.",
+        "no_chapters_title": "Bu kursta henüz bölüm yok",
+        "no_courses_desc": "Ödevler bir kurs bölümünde yer alır. İlk kursunuzu oluşturun, ardından ödev eklemek için buraya geri dönün.",
+        "no_courses_title": "Önce bir kurs oluşturun",
+        "open_editor": "Kurs düzenleyicisini aç",
+        "pick_chapter": "Bu ödevin yerleştirileceği bölümü seçin.",
+        "pick_course": "Bu ödevin ait olduğu kursu seçin.",
+        "title": "Yeni Ödev",
+        "untitled_chapter": "Adsız bölüm"
       }
     },
     "search": {
@@ -4007,6 +4066,9 @@
           "keywords": "api, belirteç, erişim, programatik, anahtar"
         }
       }
+    },
+    "developers": {
+      "breadcrumb": "Geliştiriciler"
     }
   },
   "editor": {
@@ -5184,7 +5246,8 @@
     "accessDenied": "Bu kursa erişilemiyor",
     "backToCourses": "Kurslara Dön",
     "loadError": "Bu kurs bulunamadı veya yüklenirken bir hata oluştu.",
-    "noPermission": "Bu kursu görüntüleme yetkiniz yok."
+    "noPermission": "Bu kursu görüntüleme yetkiniz yok.",
+    "finish_course": "Kursu tamamla"
   },
   "pagination": {
     "next": "Sonraki",
@@ -5302,7 +5365,18 @@
     "thumbnail_error": "Couldn't upload the cover image",
     "open_resource": "Open",
     "replace_cover": "Replace",
-    "cover_hint": "PNG, JPG, WEBP"
+    "cover_hint": "PNG, JPG, WEBP",
+    "sort": {
+      "sort_by": "Sırala",
+      "name_asc": "Ad (A–Z)",
+      "name_desc": "Ad (Z–A)",
+      "newest": "Önce en yeniler",
+      "oldest": "Önce en eskiler",
+      "manual": "Manuel",
+      "drag_to_reorder": "Yeniden sıralamak için sürükleyin",
+      "sort_error": "Sıralama güncellenemedi",
+      "reorder_error": "Yeni sıra kaydedilemedi"
+    }
   },
   "media": {
     "media": "Media",

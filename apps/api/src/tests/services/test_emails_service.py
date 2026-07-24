@@ -11,6 +11,7 @@ from src.services.users.emails import (
     send_invitation_email,
     send_org_created_email,
     send_org_deleted_email,
+    send_org_join_email,
     send_password_reset_email,
     send_password_reset_email_platform,
     send_role_changed_email,
@@ -114,6 +115,73 @@ class TestEmailsService:
         assert "<svg" in call["body"]
         assert "Acme" in call["subject"]
         assert "Powered by LearnHouse" in call["body"]
+
+    def test_role_changed_email_links_back_to_the_org(self):
+        """Telling someone their permissions changed is useless without a way
+        to go use them."""
+        with patch("src.services.users.emails.send_email", return_value=True) as send_email:
+            send_role_changed_email(
+                email="user@test.com",
+                username="learner",
+                org_name="Acme & Co",
+                new_role_name="Admin",
+                cta_url="https://learn.acme.test",
+            )
+        body = send_email.call_args.kwargs["body"]
+        assert 'href="https://learn.acme.test"' in body
+        assert "Acme &amp; Co" in body
+
+    def test_role_changed_email_without_a_link_renders_no_button(self):
+        with patch("src.services.users.emails.send_email", return_value=True) as send_email:
+            send_role_changed_email(
+                email="user@test.com",
+                username="learner",
+                org_name="Acme",
+                new_role_name="Admin",
+            )
+        assert "<a href" not in send_email.call_args.kwargs["body"]
+
+    def test_org_join_email_is_whitelabeled_and_links_to_the_org(self):
+        with patch("src.services.users.emails.send_email", return_value=True) as send_email:
+            assert send_org_join_email(
+                email="user@test.com",
+                username="user<script>",
+                org_name="Acme & Co",
+                cta_url="https://acme.test/home",
+                logo_url="https://api.test/content/orgs/org_uuid/logos/logo.png",
+            ) is True
+        call = send_email.call_args.kwargs
+        # Named after the org, with the org's own logo, not the LearnHouse mark.
+        assert "Acme &amp; Co" in call["subject"]
+        assert '<img src="https://api.test/content/orgs/org_uuid/logos/logo.png"' in call["body"]
+        # The whole point of the email: a working way back into the org.
+        assert "https://acme.test/home" in call["body"]
+        # Hostile username/org names are escaped, never rendered as markup.
+        assert "<script>" not in call["body"]
+
+    def test_org_join_email_falls_back_to_learnhouse_mark_without_logo(self):
+        with patch("src.services.users.emails.send_email", return_value=True) as send_email:
+            send_org_join_email(
+                email="user@test.com",
+                username="learner",
+                org_name="Acme",
+                cta_url="https://acme.test/home",
+            )
+        call = send_email.call_args.kwargs
+        assert "<img" not in call["body"]
+        assert "<svg" in call["body"]
+
+    def test_org_join_email_translates(self):
+        with patch("src.services.users.emails.send_email", return_value=True) as send_email:
+            send_org_join_email(
+                email="user@test.com",
+                username="learner",
+                org_name="Acme",
+                cta_url="https://acme.test/home",
+                lang="fr",
+            )
+        call = send_email.call_args.kwargs
+        assert "Bienvenue" in call["subject"]
 
     def test_send_password_reset_email_variants_encode_params(self):
         with patch("src.services.users.emails.send_email", return_value=True) as send_email:

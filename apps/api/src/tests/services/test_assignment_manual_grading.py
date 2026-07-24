@@ -468,3 +468,50 @@ class TestCodeUnverifiableDefersAutoGrade:
             )
         assert computed.get("finalized") is not False
         assert submission.submission_status == AssignmentUserSubmissionStatus.GRADED
+
+
+class TestTaskListIsReusedNotRefetched:
+    """The submit path loads the task list to decide whether every task is
+    auto-gradable, then hands that same list to the grading helper instead of
+    querying for it a second time inside one request."""
+
+    async def test_passed_in_tasks_are_used_instead_of_a_fresh_query(
+        self, db, org, course, chapter, activity, regular_user
+    ):
+        assignment, submission = await _setup(
+            db, org, course, chapter, activity, regular_user,
+            student_answer="4", stored_grade=100, manually_graded=True,
+        )
+
+        # An empty list is something the DB would never return here, so if the
+        # helper still queried we would see the real task's max_grade instead.
+        with patch(_PATCH_DISPATCH, new_callable=AsyncMock):
+            computed = await _apply_grade_and_finalize(
+                assignment=assignment,
+                course=course,
+                user_id=regular_user.id,
+                assignment_user_submission=submission,
+                db_session=db,
+                auto_graded=True,
+                assignment_tasks=[],
+            )
+
+        assert computed["max_grade"] == 0
+
+    async def test_omitting_them_still_loads_the_tasks(
+        self, db, org, course, chapter, activity, regular_user
+    ):
+        assignment, submission = await _setup(
+            db, org, course, chapter, activity, regular_user,
+            student_answer="4", stored_grade=100, manually_graded=True,
+        )
+        with patch(_PATCH_DISPATCH, new_callable=AsyncMock):
+            computed = await _apply_grade_and_finalize(
+                assignment=assignment,
+                course=course,
+                user_id=regular_user.id,
+                assignment_user_submission=submission,
+                db_session=db,
+                auto_graded=True,
+            )
+        assert computed["max_grade"] > 0

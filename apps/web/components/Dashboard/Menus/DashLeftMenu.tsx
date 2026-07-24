@@ -79,6 +79,7 @@ import { getAssignmentsFromACourse } from '@services/courses/assignments'
 import { getDeploymentMode } from '@services/config/config'
 import PlanBadge from '@components/Dashboard/Shared/PlanRestricted/PlanBadge'
 import { usePlan } from '@components/Hooks/usePlan'
+import { planMeetsRequirement } from '@services/plans/plans'
 import useAdminStatus from '@components/Hooks/useAdminStatus'
 import { useLHAnalytics, AnalyticsEvent } from '@services/analytics'
 import OnboardingSidebarBox from '@components/Dashboard/Onboarding/OnboardingSidebarBox'
@@ -251,7 +252,7 @@ function DashLeftMenu() {
           className={cn("flex items-center transition-opacity hover:opacity-70", isCollapsed ? "" : "space-x-3")}
           href={'/'}
         >
-          {plan === 'enterprise' && org?.logo_image ? (
+          {planMeetsRequirement(plan, 'standard') && org?.logo_image ? (
             <img
               src={getOrgLogoMediaDirectory(org.org_uuid, org.logo_image)}
               alt={org?.name}

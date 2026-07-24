@@ -223,7 +223,12 @@
     "delete_organization_warning": "هذا يحذف {{name}} وجميع بياناتها نهائيًا. لا يمكن التراجع عن هذا الإجراء.",
     "delete_organization_confirm_label": "اكتب {{slug}} للتأكيد",
     "deleting": "جارٍ الحذف…",
-    "retry": "إعادة المحاولة"
+    "retry": "إعادة المحاولة",
+    "leave_organization": "مغادرة المؤسسة",
+    "leave_organization_title": "مغادرة المؤسسة؟",
+    "leave_organization_desc": "ستفقد إمكانية الوصول إلى {{org}} وستُزال من أعضائها. يمكنك الانضمام مجددًا لاحقًا إذا تلقيت دعوة.",
+    "leave_organization_error": "تعذرت مغادرة هذه المؤسسة. يُرجى المحاولة مرة أخرى.",
+    "leaving": "جارٍ المغادرة…"
   },
   "banner": {
     "viewing_as_guest": "أنت تتصفح {{name}} كضيف.",
@@ -664,7 +669,13 @@
       "info_description": "قم بتصفية الدورات حسب مجموعة المستخدمين لعرض الدورات المخصصة لمجموعة معينة فقط. مفيد للعائلات أو الفرق التي تشترك في نفس المنظمة."
     },
     "courses_load_error": "فشل تحميل الدورات. يرجى المحاولة مرة أخرى.",
-    "view_all_courses": "عرض جميع الدورات"
+    "view_all_courses": "عرض جميع الدورات",
+    "first_chapter_default_name": "الفصل الأول",
+    "paste_from_clipboard": "لصق من الحافظة",
+    "no_image_in_clipboard": "لم يتم العثور على صورة في الحافظة",
+    "clipboard_read_error": "تعذرت القراءة من الحافظة",
+    "sign_in_to_see_courses": "سجّل الدخول لرؤية دوراتك",
+    "sign_in_to_see_courses_description": "قد لا تظهر الدورات في هذه الأكاديمية إلا بعد تسجيل الدخول."
   },
   "communities": {
     "title": "المجتمعات",
@@ -978,13 +989,20 @@
     "share": "مشاركة",
     "markdown": "ماركداون",
     "custom": "مخصص",
-    "scorm": "سكورم"
+    "scorm": "سكورم",
+    "autosave_blocked": "لا يمكن الحفظ بعد",
+    "autosave_retry": "تعذر الحفظ — جارٍ إعادة المحاولة…",
+    "autosave_unsaved": "تغييرات غير محفوظة",
+    "autosaved": "تم الحفظ",
+    "autosaving": "جارٍ الحفظ…",
+    "save_answers": "حفظ الإجابات"
   },
   "assignments": {
     "submit_assignment": "تسليم الواجب",
     "submit_assignment_confirm": "هل أنت متأكد أنك تريد تسليم الواجب للتقييم؟ لن تتمكن من إجراء تغييرات بعد التسليم.",
     "submit_assignment_title": "سلم واجبك للتقييم",
     "submit_for_grading": "تسليم للتقييم",
+    "submitting": "جارٍ الإرسال…",
     "grading_in_progress": "التقييم قيد التنفيذ",
     "graded": "تم التقييم",
     "assignment_submitted_success": "تم تسليم الواجب للتقييم",
@@ -1026,7 +1044,11 @@
     "retry_assignment_last": "هذه محاولتك الأخيرة — اجعلها تستحق.",
     "retry_assignment_success": "تم إعادة تعيين عملك — حاول مرة أخرى.",
     "retry_assignment_failed": "تعذر إعادة تعيين تقديمك. يرجى المحاولة مرة أخرى.",
-    "retry_no_attempts_left": "لا توجد محاولات متبقية"
+    "retry_no_attempts_left": "لا توجد محاولات متبقية",
+    "no_task_submission_to_grade": "لم يرسل هذا الطالب ملفًا لهذه المهمة بعد.",
+    "past_due": "انتهى الموعد النهائي",
+    "past_due_description": "كان الموعد النهائي لهذا الواجب في {{date}}. لم يعد بالإمكان حفظ الإجابات أو إرسالها للتقييم.",
+    "past_due_title": "انتهى الموعد النهائي"
   },
   "certificate": {
     "certificate": "الشهادة",
@@ -1053,7 +1075,8 @@
     "continuing_education": "التعليم المستمر",
     "workshop_attendance": "حضور ورشة عمل",
     "specialization": "التخصص",
-    "dedication_message": "لقد آتى تفانيك وعملك الجاد ثماره. لقد أتقنت كل المواد في هذه الدورة."
+    "dedication_message": "لقد آتى تفانيك وعملك الجاد ثماره. لقد أتقنت كل المواد في هذه الدورة.",
+    "download_failed": "تعذر إنشاء ملف PDF. يُرجى المحاولة مرة أخرى."
   },
   "search": {
     "search_placeholder": "ابحث عن دورات، مستخدمين، مجموعات...",
@@ -1138,7 +1161,9 @@
       "description": "احذف حسابك نهائيًا وأزل صلاحية وصولك. لا يمكن التراجع عن هذا.",
       "warning": "هذا يحذف حسابك وجميع البيانات المرتبطة به نهائيًا. لا يمكن التراجع عن هذا الإجراء.",
       "confirm_label": "اكتب {{username}} للتأكيد",
-      "deleting": "جارٍ الحذف…"
+      "deleting": "جارٍ الحذف…",
+      "zone_subtitle": "احذف حسابك نهائيًا. لا يمكن التراجع عن هذا الإجراء.",
+      "zone_body": "سيؤدي ذلك إلى إزالة حسابك وإمكانية وصولك. سيتم أيضًا حذف أي مؤسسة تكون مسؤولها الوحيد، وجميع دوراتها ومحتواها. أما المؤسسات التي لديها مسؤولون آخرون فستبقى؛ وستُزال منها فقط."
     }
   },
   "user": {
@@ -1360,6 +1385,12 @@
           "save_error": "خطأ في تحديث الملف الشخصي"
         },
         "unknown_section": "قسم غير معروف"
+      },
+      "security": {
+        "current_session_title": "الجلسة الحالية",
+        "current_session_subtitle": "الجهاز الذي سجلت الدخول منه الآن.",
+        "this_device": "هذا الجهاز",
+        "sign_out": "تسجيل الخروج"
       }
     },
     "sign_out": "تسجيل الخروج",
@@ -2096,7 +2127,8 @@
             "scorm": "Scorm",
             "markdown": "Markdown",
             "embed": "Embed",
-            "custom": "مخصص"
+            "custom": "مخصص",
+            "resource": "مورد"
           },
           "toasts": {
             "deleting": "جاري حذف النشاط...",
@@ -3463,7 +3495,8 @@
           "drafts": "مسودات",
           "auto_graded": "التقييم التلقائي فقط",
           "hide_empty": "إخفاء الدورات الفارغة"
-        }
+        },
+        "new_assignment": "واجب جديد"
       },
       "detail": {
         "title": "أدوات الواجب",
@@ -3539,7 +3572,8 @@
           "task_save_error": "خطأ أثناء حفظ المهمة، يرجى المحاولة لاحقاً.",
           "task_updated": "تم تحديث المهمة بنجاح",
           "task_update_error": "خطأ أثناء تحديث المهمة، يرجى المحاولة لاحقاً.",
-          "reminder": "عند تعديل/إضافة المهام، تذكر إلغاء نشر الواجب لتجنب المشاكل للطلاب. يمكنك نشره مرة أخرى عندما تكون جاهزاً."
+          "reminder": "عند تعديل/إضافة المهام، تذكر إلغاء نشر الواجب لتجنب المشاكل للطلاب. يمكنك نشره مرة أخرى عندما تكون جاهزاً.",
+          "no_submission_to_grade": "ليس لدى هذا الطالب تسليم لهذه المهمة بعد، ولا يوجد ما يمكن تقييمه."
         },
         "task_editor": {
           "general": {
@@ -3559,7 +3593,9 @@
             "auth_required_submit": "المصادقة مطلوبة. يرجى تسجيل الدخول لتسليم المهمة.",
             "hint_optional": "تلميح (اختياري)",
             "paste_blocked": "اللصق معطّل لهذا الواجب",
-            "paste_blocked_hint": "اللصق معطّل — اكتب إجابتك مباشرة."
+            "paste_blocked_hint": "اللصق معطّل — اكتب إجابتك مباشرة.",
+            "upload_locked_graded": "تم تقييم هذا التسليم — لم يعد بإمكانك تغيير ملفك.",
+            "upload_locked_submitted": "لقد سلّمت هذا الواجب — لم يعد بإمكانك تغيير ملفك."
           },
           "code": {
             "student_behavior_label": "سلوك الطالب",
@@ -3575,7 +3611,10 @@
             "must_pass_hint": "يجب اجتياز جميع الاختبارات المرئية قبل الحفظ.",
             "show_solution_label": "كشف الحل بعد التسليم",
             "show_solution_description": "بعد حفظ الطالب لعمله، أظهر حل المعلم المرجعي كلوحة قابلة للطي.",
-            "reference_solution_label": "الحل المرجعي"
+            "reference_solution_label": "الحل المرجعي",
+            "locked_graded_hint": "تم تقييم هذا التسليم — الكود للقراءة فقط.",
+            "locked_submitted_hint": "لقد سلّمت هذا الواجب — الكود للقراءة فقط.",
+            "no_runnable_tests": "لا تحتوي هذه المهمة على اختبارات يمكنك تشغيلها — سيتم فحص كودك عند التقييم."
           },
           "short_answer": {
             "prompt_label": "نص السؤال",
@@ -3618,13 +3657,19 @@
             "correct": "صحيح",
             "incorrect": "ليس صحيحًا تمامًا — حاول مرة أخرى"
           }
+        },
+        "generate_ai": "إنشاء مهام باستخدام AI",
+        "generate_ai_modal": {
+          "description": "صف ما تريده وعاين المهام المستندة إلى محتوى الدورة قبل إضافتها.",
+          "title": "إنشاء مهام باستخدام AI"
         }
       },
       "submissions": {
         "status": {
           "late": "متأخر",
           "submitted": "تم التسليم",
-          "graded": "تم التقييم"
+          "graded": "تم التقييم",
+          "pending": "قيد التنفيذ"
         },
         "submission_label": "التسليم",
         "evaluate": "تقييم",
@@ -3680,7 +3725,8 @@
           "optional": "اختياري",
           "placeholder": "اكتب تعليقاً حول التسليم بشكل عام. سيراه الطالب بجانب درجته.",
           "hint": "اتركه فارغاً للإبقاء على أي ملاحظات سابقة دون تغيير."
-        }
+        },
+        "truncated_warning": "يتم عرض أول {{max}} تسليمات فقط. بعض التسليمات غير مدرجة هنا."
       },
       "analytics": {
         "loading": "جارٍ تحميل التحليلات...",
@@ -3824,9 +3870,22 @@
           },
           "toasts": {
             "creating": "جاري إنشاء الواجب...",
-            "success": "تم إنشاء الواجب بنجاح"
+            "success": "تم إنشاء الواجب بنجاح",
+            "error": "تعذر إنشاء الواجب"
           }
         }
+      },
+      "create_flow": {
+        "create_course": "إنشاء دورة",
+        "no_chapters_desc": "أضف فصلًا في محرر الدورة، ثم أنشئ واجبًا داخله.",
+        "no_chapters_title": "لا تحتوي هذه الدورة على فصول بعد",
+        "no_courses_desc": "توجد الواجبات داخل فصل من الدورة. أنشئ دورتك الأولى، ثم عد لإضافة واجب.",
+        "no_courses_title": "أنشئ دورة أولاً",
+        "open_editor": "فتح محرر الدورة",
+        "pick_chapter": "اختر الفصل الذي تريد وضع هذا الواجب فيه.",
+        "pick_course": "اختر الدورة التي ينتمي إليها هذا الواجب.",
+        "title": "واجب جديد",
+        "untitled_chapter": "فصل بلا عنوان"
       }
     },
     "search": {
@@ -3997,6 +4056,9 @@
           "keywords": "api, رموز, وصول, برمجي, مفاتيح"
         }
       }
+    },
+    "developers": {
+      "breadcrumb": "المطورون"
     }
   },
   "editor": {
@@ -5174,7 +5236,8 @@
     "accessDenied": "تعذّر الوصول إلى هذه الدورة",
     "backToCourses": "العودة إلى الدورات",
     "loadError": "تعذّر العثور على هذه الدورة أو حدث خطأ أثناء تحميلها.",
-    "noPermission": "ليس لديك إذن لعرض هذه الدورة."
+    "noPermission": "ليس لديك إذن لعرض هذه الدورة.",
+    "finish_course": "إنهاء الدورة"
   },
   "pagination": {
     "next": "التالي",
@@ -5292,7 +5355,18 @@
     "thumbnail_error": "Couldn't upload the cover image",
     "open_resource": "Open",
     "replace_cover": "Replace",
-    "cover_hint": "PNG, JPG, WEBP"
+    "cover_hint": "PNG, JPG, WEBP",
+    "sort": {
+      "sort_by": "فرز حسب",
+      "name_asc": "الاسم (أ–ي)",
+      "name_desc": "الاسم (ي–أ)",
+      "newest": "الأحدث أولاً",
+      "oldest": "الأقدم أولاً",
+      "manual": "يدوي",
+      "drag_to_reorder": "اسحب لإعادة الترتيب",
+      "sort_error": "تعذر تحديث ترتيب الفرز",
+      "reorder_error": "تعذر حفظ الترتيب الجديد"
+    }
   },
   "media": {
     "media": "Media",

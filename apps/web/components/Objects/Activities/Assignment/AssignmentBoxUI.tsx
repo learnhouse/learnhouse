@@ -1,6 +1,6 @@
 import { useAssignmentSubmission } from '@components/Contexts/Assignments/AssignmentSubmissionContext'
 import { useAssignmentDirtyTasks } from '@components/Contexts/Assignments/AssignmentDirtyTasksContext'
-import { useAutoSave } from './useAutoSave'
+import { useAutoSave, type SaveResult } from './useAutoSave'
 import { BookPlus, BookUser, Check, Code2, EllipsisVertical, FileUp, ListTodo, Loader2, MessageSquare, Save, TriangleAlert, Type } from 'lucide-react'
 import React from 'react'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
@@ -17,7 +17,10 @@ type AssignmentBoxProps = {
     currentPoints?: number
     currentFeedback?: string
     saveFC?: () => void
-    submitFC?: (_opts?: TaskSubmitOptions) => void | Promise<boolean | void>
+    // A task may return 'blocked' to mean "refused by policy, do not retry"
+    // (e.g. a code task gated on passing its tests). useAutoSave treats that as
+    // terminal instead of looping a doomed save forever.
+    submitFC?: (_opts?: TaskSubmitOptions) => void | Promise<SaveResult | void>
     gradeFC?: () => void
     gradeCustomFC?: (_grade: number, _feedback?: string) => void
     autoGradable?: boolean
@@ -158,17 +161,34 @@ function AssignmentBoxUI({ type, view, currentPoints, currentFeedback, maxPoints
                     {/* Auto-save status — answers persist automatically. */}
                     {autoSaveEnabled && (auto.isDirty || auto.status !== 'idle') && (
                         <div className='flex space-x-1.5 items-center font-medium px-2 py-1 text-xs text-slate-400 sm:mr-2'>
-                            {auto.isError ? (
+                            {auto.isBlocked ? (
+                                // Refused by policy, not a transient failure — no retry
+                                // is coming, so promising one would be a lie. The task
+                                // itself explains what needs to change (e.g. tests must
+                                // pass before the answer can be saved).
+                                <>
+                                    <TriangleAlert size={13} className='text-rose-500' />
+                                    <p className='text-rose-600'>{t('activities.autosave_blocked', { defaultValue: "Can't be saved yet" })}</p>
+                                </>
+                            ) : auto.isError ? (
                                 // Failed save: show a distinct indicator (a retry
                                 // is already scheduled) instead of a stuck spinner.
                                 <>
                                     <TriangleAlert size={13} className='text-amber-500' />
                                     <p className='text-amber-600'>{t('activities.autosave_retry', { defaultValue: "Couldn't save — retrying…" })}</p>
                                 </>
-                            ) : (auto.isSaving || auto.isDirty) ? (
+                            ) : auto.isSaving ? (
                                 <>
                                     <Loader2 size={13} className='animate-spin' />
                                     <p>{t('activities.autosaving', { defaultValue: 'Saving…' })}</p>
+                                </>
+                            ) : (auto.isPending || auto.isDirty) ? (
+                                // Debounce timer armed but no request in flight. Showing
+                                // a spinner + "Saving…" here claimed work that had not
+                                // started, which is exactly when an unmount lost it.
+                                <>
+                                    <TriangleAlert size={13} className='text-slate-400' />
+                                    <p>{t('activities.autosave_unsaved', { defaultValue: 'Unsaved changes' })}</p>
                                 </>
                             ) : (
                                 <>

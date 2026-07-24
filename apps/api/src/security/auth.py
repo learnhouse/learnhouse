@@ -157,7 +157,37 @@ def create_access_token(data: dict, expires_delta: timedelta | None = None):
     return encoded_jwt
 
 
-JWT_REFRESH_TOKEN_EXPIRES = timedelta(days=30)
+# Users must be able to come back after a two-week break (a holiday, a school
+# vacation, a sprint spent elsewhere) and still be signed in.
+MIN_REFRESH_TOKEN_DAYS = 14
+DEFAULT_REFRESH_TOKEN_DAYS = 30
+
+
+def _refresh_token_lifetime() -> timedelta:
+    """Resolve how long a user may stay away before they must sign in again.
+
+    This is the *inactivity* window: every successful refresh mints a brand-new
+    refresh token with a full lifetime, so an active user is never signed out.
+    Only a user who does not open the app at all for this long loses their
+    session.
+
+    Overridable with ``LEARNHOUSE_AUTH_REFRESH_TOKEN_DAYS`` for operators who
+    want a longer or shorter window, but never below
+    ``MIN_REFRESH_TOKEN_DAYS`` — a shorter window is nearly always a
+    misconfiguration that shows up as users complaining they get logged out.
+    """
+    import os
+    raw = os.environ.get("LEARNHOUSE_AUTH_REFRESH_TOKEN_DAYS")
+    if raw:
+        try:
+            days = int(raw)
+            return timedelta(days=max(days, MIN_REFRESH_TOKEN_DAYS))
+        except (TypeError, ValueError):
+            pass
+    return timedelta(days=DEFAULT_REFRESH_TOKEN_DAYS)
+
+
+JWT_REFRESH_TOKEN_EXPIRES = _refresh_token_lifetime()
 JWT_REFRESH_COOKIE_NAME = "LH_refresh"
 
 
@@ -310,7 +340,20 @@ def _mark_refresh_jti_used(user_id: int, jti: str) -> bool:
 # revokes EVERY session for the user — the classic "I keep getting logged
 # out" bug. Within this window we instead re-serve the exact rotated pair the
 # first call issued. Only a replay AFTER the window is treated as theft.
-REFRESH_GRACE_WINDOW_SECONDS = 30
+#
+# 30 seconds turned out to be far too tight in production. Legitimate replays
+# routinely arrive minutes apart, not milliseconds:
+#   - A server-rendered page consumes the refresh token, and the browser only
+#     re-presents it on the next client-side refresh.
+#   - A laptop is suspended mid-refresh and resumes later on the old cookie.
+#   - A background tab wakes up and refreshes with a cookie another tab has
+#     already rotated.
+#   - A slow/flaky mobile connection retries after a long timeout.
+# Every one of those was being classified as token theft, which revokes ALL of
+# the user's sessions on ALL devices. Five minutes keeps genuine replay
+# detection meaningful (a stolen token reused hours or days later is still
+# caught) while making the common benign cases non-fatal.
+REFRESH_GRACE_WINDOW_SECONDS = 5 * 60
 
 
 def _store_refresh_grace(

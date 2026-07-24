@@ -31,7 +31,13 @@ async function BoardEditorPage(props: any) {
   // Require authentication to access board canvas. Bare /login only — the proxy
   // rewrites it to /auth/login with tenant context; an /orgs/{slug}/login path
   // isn't a real route (the /orgs prefix is an internal rewrite target) → 404.
-  if (!access_token) {
+  //
+  // Redirect ONLY when there is no session at all. A session the server could
+  // not resolve (`unresolved`: refresh cookie present, access token expired)
+  // belongs to a signed-in user — bouncing them to /login here was signing
+  // people out just for coming back after their 8-hour access token lapsed.
+  // The client picks up the real token from the session context instead.
+  if (!session) {
     redirect(`/login?redirect=/board/${params.boarduuid}`)
   }
 
@@ -45,7 +51,7 @@ async function BoardEditorPage(props: any) {
       boardUuid={boardUuid}
       accessToken={access_token}
       orgslug={orgslug}
-      username={session?.user?.username || session?.user?.email || 'Anonymous'}
+      username={session?.user?.username || session?.user?.email || ''}
     />
   )
 }

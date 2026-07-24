@@ -223,7 +223,12 @@
     "delete_organization_warning": "Týmto sa natrvalo odstráni {{name}} a všetky jej údaje. Túto akciu nie je možné vrátiť späť.",
     "delete_organization_confirm_label": "Na potvrdenie napíšte {{slug}}",
     "deleting": "Odstraňuje sa…",
-    "retry": "Skúsiť znova"
+    "retry": "Skúsiť znova",
+    "leave_organization": "Opustiť organizáciu",
+    "leave_organization_title": "Opustiť organizáciu?",
+    "leave_organization_desc": "Stratíte prístup k {{org}} a budete odstránení z jej členov. Ak dostanete pozvánku, môžete sa pripojiť znova.",
+    "leave_organization_error": "Organizáciu sa nepodarilo opustiť. Skúste to znova.",
+    "leaving": "Opúšťanie…"
   },
   "banner": {
     "viewing_as_guest": "Prezeráte si {{name}} ako hosť.",
@@ -654,7 +659,13 @@
       "filter_by_group": "Filtrovať podľa skupiny",
       "info_title": "Filter skupín používateľov",
       "info_description": "Filtrujte kurzy podľa skupiny používateľov pre zobrazenie len kurzov priradených konkrétnej skupine. Užitočné pre rodiny alebo tímy zdieľajúce rovnakú organizáciu."
-    }
+    },
+    "first_chapter_default_name": "Prvá kapitola",
+    "paste_from_clipboard": "Vložiť zo schránky",
+    "no_image_in_clipboard": "V schránke sa nenašiel žiadny obrázok",
+    "clipboard_read_error": "Schránku sa nepodarilo načítať",
+    "sign_in_to_see_courses": "Prihláste sa, aby ste videli svoje kurzy",
+    "sign_in_to_see_courses_description": "Kurzy v tejto akadémii môžu byť viditeľné až po prihlásení."
   },
   "communities": {
     "title": "Komunity",
@@ -1221,7 +1232,13 @@
     "copy_link": "Kopírovať odkaz",
     "link_copied": "Odkaz skopírovaný!",
     "embed": "Vložiť",
-    "embed_code_copied": "Kód na vloženie skopírovaný!"
+    "embed_code_copied": "Kód na vloženie skopírovaný!",
+    "autosave_blocked": "Zatiaľ sa nedá uložiť",
+    "autosave_retry": "Nepodarilo sa uložiť — skúšame znova…",
+    "autosave_unsaved": "Neuložené zmeny",
+    "autosaved": "Uložené",
+    "autosaving": "Ukladanie…",
+    "save_answers": "Uložiť odpovede"
   },
   "embed": {
     "not_supported_title": "Táto aktivita nie je podporovaná",
@@ -1234,6 +1251,7 @@
     "submit_assignment_confirm": "Ste si istí, že chcete odovzdať úlohu na hodnotenie? Po odovzdaní nebudete môcť robiť zmeny.",
     "submit_assignment_title": "Odovzdať úlohu na hodnotenie",
     "submit_for_grading": "Odovzdať na hodnotenie",
+    "submitting": "Odosiela sa…",
     "grading_in_progress": "Hodnotenie prebieha",
     "graded": "Ohodnotené",
     "task_breakdown": "Rozdelenie úloh",
@@ -1275,7 +1293,11 @@
       "half": "Polovičný",
       "zero": "Nula"
     },
-    "task_feedback_placeholder": "Poznámka k tejto úlohe (uloží sa spolu so známkou)"
+    "task_feedback_placeholder": "Poznámka k tejto úlohe (uloží sa spolu so známkou)",
+    "no_task_submission_to_grade": "Tento študent ešte neodovzdal súbor k tejto úlohe.",
+    "past_due": "Termín uplynul",
+    "past_due_description": "Termín odovzdania tejto úlohy bol {{date}}. Odpovede už nie je možné uložiť ani odovzdať na hodnotenie.",
+    "past_due_title": "Termín uplynul"
   },
   "certificate": {
     "certificate": "Certifikát",
@@ -1302,7 +1324,8 @@
     "continuing_education": "Ďalšie vzdelávanie",
     "workshop_attendance": "Účasť na workshope",
     "specialization": "Špecializácia",
-    "dedication_message": "Vaša oddanosť a tvrdá práca sa vyplatili. Zvládli ste všetok obsah tohto kurzu."
+    "dedication_message": "Vaša oddanosť a tvrdá práca sa vyplatili. Zvládli ste všetok obsah tohto kurzu.",
+    "download_failed": "Nepodarilo sa vytvoriť PDF. Skúste to znova."
   },
   "search": {
     "search_placeholder": "Hľadať kurzy, používateľov, kolekcie...",
@@ -1387,7 +1410,9 @@
       "description": "Trvalo odstráňte svoj účet a zrušte svoj prístup. Túto akciu nie je možné vrátiť späť.",
       "warning": "Týmto sa natrvalo odstráni váš účet a všetky súvisiace údaje. Túto akciu nie je možné vrátiť späť.",
       "confirm_label": "Na potvrdenie napíšte {{username}}",
-      "deleting": "Odstraňuje sa…"
+      "deleting": "Odstraňuje sa…",
+      "zone_subtitle": "Natrvalo odstráňte svoj účet. Túto akciu nemožno vrátiť späť.",
+      "zone_body": "Odstráni sa váš účet a prístup. Organizácia, ktorej ste jediným administrátorom — spolu so všetkými jej kurzami a obsahom — bude tiež odstránená. Organizácie s ďalšími administrátormi zostanú zachované; budete z nich iba odstránení."
     }
   },
   "user": {
@@ -1609,6 +1634,12 @@
           "save_error": "Chyba pri aktualizácii profilu"
         },
         "unknown_section": "Neznáma sekcia"
+      },
+      "security": {
+        "current_session_title": "Aktuálna relácia",
+        "current_session_subtitle": "Zariadenie, z ktorého ste práve prihlásení.",
+        "this_device": "Toto zariadenie",
+        "sign_out": "Odhlásiť sa"
       }
     },
     "sign_out": "Odhlásiť sa",
@@ -2413,7 +2444,8 @@
             "dynamic_page": "Dynamická stránka",
             "scorm": "Scorm",
             "markdown": "Markdown",
-            "embed": "Vložený obsah"
+            "embed": "Vložený obsah",
+            "resource": "Zdroj"
           },
           "toasts": {
             "deleting": "Odstraňuje sa aktivita...",
@@ -3711,7 +3743,8 @@
           "drafts": "Koncepty",
           "auto_graded": "Len automaticky hodnotené",
           "hide_empty": "Skryť prázdne kurzy"
-        }
+        },
+        "new_assignment": "Nová úloha"
       },
       "detail": {
         "title": "Nástroje úlohy",
@@ -3787,7 +3820,8 @@
           "task_save_error": "Chyba pri ukladaní úlohy, skúste to neskôr.",
           "task_updated": "Úloha úspešne aktualizovaná",
           "task_update_error": "Chyba pri aktualizácii úlohy, skúste to neskôr.",
-          "reminder": "Pri úprave/pridávaní úloh nezabudnite zrušiť publikovanie úlohy, aby ste predišli problémom so študentmi. Po dokončení ju môžete znova publikovať."
+          "reminder": "Pri úprave/pridávaní úloh nezabudnite zrušiť publikovanie úlohy, aby ste predišli problémom so študentmi. Po dokončení ju môžete znova publikovať.",
+          "no_submission_to_grade": "Tento študent ešte neodovzdal riešenie k tejto úlohe, takže nie je čo hodnotiť."
         },
         "task_editor": {
           "general": {
@@ -3807,7 +3841,9 @@
             "auth_required_submit": "Vyžaduje sa autentifikácia. Pre odovzdanie úlohy sa prihláste.",
             "hint_optional": "Nápoveda (voliteľné)",
             "paste_blocked": "Vkladanie je pre túto úlohu zakázané",
-            "paste_blocked_hint": "Vkladanie je zakázané — napíšte odpoveď priamo."
+            "paste_blocked_hint": "Vkladanie je zakázané — napíšte odpoveď priamo.",
+            "upload_locked_graded": "Táto práca už bola ohodnotená — súbor už nemožno zmeniť.",
+            "upload_locked_submitted": "Túto úlohu ste odovzdali — súbor už nemožno zmeniť."
           },
           "short_answer": {
             "prompt_label": "Otázka",
@@ -3864,15 +3900,24 @@
             "must_pass_hint": "Všetky viditeľné testy musia prejsť pred uložením.",
             "show_solution_label": "Zobraziť riešenie po odovzdaní",
             "show_solution_description": "Po uložení práce študentom zobraziť referenčné riešenie učiteľa ako zbaliteľný panel.",
-            "reference_solution_label": "Referenčné riešenie"
+            "reference_solution_label": "Referenčné riešenie",
+            "locked_graded_hint": "Táto práca už bola ohodnotená — kód je len na čítanie.",
+            "locked_submitted_hint": "Túto úlohu ste odovzdali — kód je len na čítanie.",
+            "no_runnable_tests": "Táto úloha nemá testy, ktoré môžete spustiť — váš kód sa skontroluje pri hodnotení."
           }
+        },
+        "generate_ai": "Generovať úlohy pomocou AI",
+        "generate_ai_modal": {
+          "description": "Opíšte, čo chcete, a pred pridaním si pozrite náhľad úloh založených na obsahu kurzu.",
+          "title": "Generovať úlohy pomocou AI"
         }
       },
       "submissions": {
         "status": {
           "late": "Neskoré",
           "submitted": "Odovzdané",
-          "graded": "Ohodnotené"
+          "graded": "Ohodnotené",
+          "pending": "Prebieha"
         },
         "filters": {
           "all": "Všetko"
@@ -3928,7 +3973,8 @@
         "toasts": {
           "reject_success": "Úloha úspešne zamietnutá",
           "finalize_success": "Úloha ohodnotená a aktivita označená ako dokončená"
-        }
+        },
+        "truncated_warning": "Zobrazených je len prvých {{max}} odovzdaní. Niektoré odovzdania tu nie sú uvedené."
       },
       "analytics": {
         "loading": "Načítava sa analytika...",
@@ -4072,9 +4118,22 @@
           },
           "toasts": {
             "creating": "Vytvára sa úloha...",
-            "success": "Úloha úspešne vytvorená"
+            "success": "Úloha úspešne vytvorená",
+            "error": "Úlohu sa nepodarilo vytvoriť"
           }
         }
+      },
+      "create_flow": {
+        "create_course": "Vytvoriť kurz",
+        "no_chapters_desc": "Pridajte kapitolu v editore kurzu a potom v nej vytvorte úlohu.",
+        "no_chapters_title": "Tento kurz ešte nemá kapitoly",
+        "no_courses_desc": "Úlohy patria do kapitol kurzu. Vytvorte svoj prvý kurz a potom sa sem vráťte a pridajte úlohu.",
+        "no_courses_title": "Najprv vytvorte kurz",
+        "open_editor": "Otvoriť editor kurzu",
+        "pick_chapter": "Vyberte kapitolu, do ktorej chcete túto úlohu umiestniť.",
+        "pick_course": "Vyberte kurz, do ktorého patrí táto úloha.",
+        "title": "Nová úloha",
+        "untitled_chapter": "Kapitola bez názvu"
       }
     },
     "search": {
@@ -4245,6 +4304,9 @@
           "keywords": "api, tokeny, prístup, programmatický, kľúče"
         }
       }
+    },
+    "developers": {
+      "breadcrumb": "Vývojári"
     }
   },
   "editor": {
@@ -5160,7 +5222,8 @@
     "accessDenied": "Nepodarilo sa pristúpiť k tomuto kurzu",
     "backToCourses": "Späť na kurzy",
     "loadError": "Tento kurz sa nenašiel alebo nastala chyba pri jeho načítaní.",
-    "noPermission": "Nemáte oprávnenie zobraziť tento kurz."
+    "noPermission": "Nemáte oprávnenie zobraziť tento kurz.",
+    "finish_course": "Dokončiť kurz"
   },
   "pagination": {
     "next": "Ďalšie",
@@ -5278,7 +5341,18 @@
     "thumbnail_error": "Couldn't upload the cover image",
     "open_resource": "Open",
     "replace_cover": "Replace",
-    "cover_hint": "PNG, JPG, WEBP"
+    "cover_hint": "PNG, JPG, WEBP",
+    "sort": {
+      "sort_by": "Zoradiť podľa",
+      "name_asc": "Názov (A–Z)",
+      "name_desc": "Názov (Z–A)",
+      "newest": "Najnovšie",
+      "oldest": "Najstaršie",
+      "manual": "Ručne",
+      "drag_to_reorder": "Potiahnutím zmeňte poradie",
+      "sort_error": "Poradie sa nepodarilo aktualizovať",
+      "reorder_error": "Nové poradie sa nepodarilo uložiť"
+    }
   },
   "media": {
     "media": "Media",

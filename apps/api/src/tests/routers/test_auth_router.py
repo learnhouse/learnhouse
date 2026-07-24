@@ -1,6 +1,7 @@
 """Router tests for src/routers/auth.py."""
 
-from datetime import datetime, timedelta
+import logging
+from datetime import datetime, timedelta, timezone
 from types import SimpleNamespace
 from unittest.mock import AsyncMock, Mock, patch
 
@@ -9,6 +10,7 @@ from fastapi import FastAPI, Response
 from httpx import ASGITransport, AsyncClient
 
 from src.core.events.database import get_db_session
+from src.db.organization_config import OrganizationConfig
 from src.db.users import AnonymousUser, User
 from src.routers.auth import (
     JWT_COOKIE_NAME,
@@ -21,6 +23,20 @@ from src.routers.auth import (
     unset_auth_cookies,
 )
 from src.security.auth import get_current_user
+
+
+async def _set_org_signup_mode(db, org_id: int, signup_mode: str):
+    """Give the org a config row so get_org_join_mechanism can resolve it."""
+    db.add(
+        OrganizationConfig(
+            org_id=org_id,
+            config={
+                "config_version": "1.0",
+                "features": {"members": {"signup_mode": signup_mode}},
+            },
+        )
+    )
+    await db.commit()
 
 
 def _mock_config(tenancy: str = "multi"):
@@ -554,18 +570,45 @@ class TestAuthRouter:
         assert response.status_code == 400
         assert response.json()["detail"] == "Invalid org_id"
 
-    async def test_oauth_org_id_valid_but_no_invite_clears_org_id(self, client, db, org):
-        mock_redis = Mock(get=Mock(return_value=None))
+    async def test_oauth_open_org_needs_no_invite(self, client, db, org):
+        """An open org is joinable by anyone, exactly as POST /users/{org_id} is.
+        No invite lookup happens at all, so Redis being untouched is part of the
+        contract here."""
+        await _set_org_signup_mode(db, org.id, "open")
+        sign_with_google = AsyncMock(return_value=None)
+        with patch("src.routers.auth.signWithGoogle", sign_with_google):
+            response = await client.post(
+                "/api/v1/auth/oauth",
+                params={"org_id": 1},
+                json={
+                    "email": "user@test.com",
+                    "provider": "google",
+                    "access_token": "google-token",
+                },
+            )
+        # signWithGoogle returning None is the "auth failed" path (401); what
+        # matters is that org_id survived the validation block instead of being
+        # silently dropped.
+        assert response.status_code == 401
+        assert sign_with_google.await_args.args[3] == org.id
+
+    async def test_oauth_invite_only_org_without_invite_returns_403(self, client, db, org):
+        await _set_org_signup_mode(db, org.id, "inviteOnly")
+        mock_redis = Mock(get=Mock(return_value=None), close=Mock())
         mock_config = SimpleNamespace(
             redis_config=SimpleNamespace(redis_connection_string="redis://localhost:6379")
         )
         with patch("src.routers.auth.get_learnhouse_config", return_value=mock_config), patch(
             "redis.Redis.from_url", return_value=mock_redis
         ), patch(
+            "src.routers.auth.get_google_user_info",
+            new_callable=AsyncMock,
+            return_value={"email": "user@test.com", "email_verified": True},
+        ), patch(
             "src.routers.auth.signWithGoogle",
             new_callable=AsyncMock,
             return_value=None,
-        ):
+        ) as sign_with_google:
             response = await client.post(
                 "/api/v1/auth/oauth",
                 params={"org_id": 1},
@@ -575,14 +618,21 @@ class TestAuthRouter:
                     "access_token": "google-token",
                 },
             )
-        assert response.status_code == 401
+        assert response.status_code == 403
+        # Rejected outright rather than signed in with no organization.
+        sign_with_google.assert_not_awaited()
 
-    async def test_oauth_org_id_redis_unavailable_clears_org_id(self, client, db, org):
+    async def test_oauth_invite_only_org_redis_unavailable_returns_503(self, client, db, org):
+        await _set_org_signup_mode(db, org.id, "inviteOnly")
         mock_config = SimpleNamespace(
             redis_config=SimpleNamespace(redis_connection_string="redis://localhost:6379")
         )
         with patch("src.routers.auth.get_learnhouse_config", return_value=mock_config), patch(
             "redis.Redis.from_url", side_effect=RuntimeError("Redis down")
+        ), patch(
+            "src.routers.auth.get_google_user_info",
+            new_callable=AsyncMock,
+            return_value={"email": "user@test.com", "email_verified": True},
         ), patch(
             "src.routers.auth.signWithGoogle",
             new_callable=AsyncMock,
@@ -597,11 +647,12 @@ class TestAuthRouter:
                     "access_token": "google-token",
                 },
             )
-        assert response.status_code == 401
+        assert response.status_code == 503
 
     async def test_oauth_org_id_google_unverified_email_returns_401(self, client, db, org):
-        """OAuth org_id invite gate for provider=google: when Google does not
-        return a verified email the request is rejected with 401 (lines 493-499)."""
+        """OAuth invite gate for provider=google: when Google does not return a
+        verified email the request is rejected with 401."""
+        await _set_org_signup_mode(db, org.id, "inviteOnly")
         with patch(
             "src.routers.auth.get_google_user_info",
             new_callable=AsyncMock,
@@ -622,13 +673,12 @@ class TestAuthRouter:
     async def test_oauth_org_id_google_verified_checks_invite_and_closes_redis(
         self, client, db, org
     ):
-        """Google returns a verified email -> the invite email is normalised
-        (line 500), the Redis invite key is read (lines 506-513) and the Redis
-        connection is closed in the finally block (lines 520-524). The invite is
-        not found here, so org_id is cleared and signWithGoogle returns None ->
-        401."""
+        """Google returns a verified email -> the invite email is normalised, the
+        Redis invite key is read and the Redis connection is closed in the finally
+        block. The invite is not found here, so the join is refused with 403."""
+        await _set_org_signup_mode(db, org.id, "inviteOnly")
         # close() raising must be swallowed by the finally block's
-        # ``except Exception: pass`` (lines 523-524).
+        # ``except Exception: pass``.
         close_mock = Mock(side_effect=RuntimeError("close failed"))
         mock_redis = Mock(get=Mock(return_value=None), close=close_mock)
         mock_config = SimpleNamespace(
@@ -657,7 +707,7 @@ class TestAuthRouter:
                 },
             )
 
-        assert response.status_code == 401
+        assert response.status_code == 403
         # Invite key was looked up using the lower-cased Google email.
         mock_redis.get.assert_called_once_with("invited_user:user@test.com:org:org_test")
         # The Redis connection from from_url was always closed (finally block).
@@ -685,3 +735,121 @@ class TestAuthRouter:
         ):
             response = await client.delete("/api/v1/auth/logout")
         assert response.status_code == 401
+
+
+class TestRefreshOutcomeTelemetry:
+    """Every exit path from /auth/refresh must emit one tagged outcome.
+
+    Added after an unexplained wave of sign-outs could not be diagnosed from
+    telemetry — there was none on this endpoint — and required a code audit.
+    A rising replay_detected/revoked_before rate is the signal that sessions are
+    being destroyed rather than expiring naturally.
+    """
+
+    async def test_missing_cookie_logs_cookie_missing(self, client, caplog):
+        with patch(
+            "src.routers.auth.check_refresh_rate_limit", return_value=(True, None)
+        ):
+            with caplog.at_level(logging.INFO, logger="learnhouse.auth.refresh"):
+                response = await client.get("/api/v1/auth/refresh")
+        assert response.status_code == 401
+        assert any(getattr(r, "outcome", None) == "cookie_missing" for r in caplog.records)
+
+    async def test_rate_limited_logs_rate_limited(self, client, caplog):
+        with patch(
+            "src.routers.auth.check_refresh_rate_limit", return_value=(False, 60)
+        ):
+            with caplog.at_level(logging.INFO, logger="learnhouse.auth.refresh"):
+                response = await client.get("/api/v1/auth/refresh")
+        assert response.status_code == 429
+        assert any(getattr(r, "outcome", None) == "rate_limited" for r in caplog.records)
+
+    async def test_undecodable_token_logs_undecodable(self, client, caplog):
+        with patch(
+            "src.routers.auth.check_refresh_rate_limit", return_value=(True, None)
+        ), patch("src.routers.auth.decode_refresh_token", return_value=None):
+            with caplog.at_level(logging.INFO, logger="learnhouse.auth.refresh"):
+                response = await client.get(
+                    "/api/v1/auth/refresh",
+                    cookies={JWT_REFRESH_COOKIE_NAME: "refresh-token"},
+                )
+        assert response.status_code == 401
+        assert any(getattr(r, "outcome", None) == "undecodable" for r in caplog.records)
+
+    async def test_replay_logs_replay_detected_at_warning_with_token_age(
+        self, client, auth_user, caplog
+    ):
+        """Replay is the most destructive outcome — it revokes every session on
+        every device — so it is logged at WARNING with the token's age, which is
+        what separates a benign desync from real theft."""
+        issued_at = int((datetime.now(timezone.utc) - timedelta(hours=3)).timestamp())
+        with patch(
+            "src.routers.auth.check_refresh_rate_limit", return_value=(True, None)
+        ), patch(
+            "src.routers.auth.decode_refresh_token",
+            return_value={
+                "sub": auth_user.email,
+                "iat": issued_at,
+                "exp": 9_999_999_999,
+                "jti": "replayed-jti",
+            },
+        ), patch(
+            "src.routers.auth.security_get_user",
+            new_callable=AsyncMock,
+            return_value=auth_user,
+        ), patch(
+            "src.routers.auth._is_token_revoked_for_user", return_value=False
+        ), patch(
+            "src.routers.auth._mark_refresh_jti_used", return_value=False
+        ), patch(
+            "src.routers.auth._get_refresh_grace", return_value=None
+        ), patch(
+            "src.routers.auth.revoke_user_sessions_before"
+        ):
+            with caplog.at_level(logging.INFO, logger="learnhouse.auth.refresh"):
+                response = await client.get(
+                    "/api/v1/auth/refresh",
+                    cookies={JWT_REFRESH_COOKIE_NAME: "refresh-token"},
+                )
+        assert response.status_code == 401
+        record = next(
+            (r for r in caplog.records if getattr(r, "outcome", None) == "replay_detected"),
+            None,
+        )
+        assert record is not None
+        assert record.levelno == logging.WARNING
+        # ~3 hours old — old enough to look like theft rather than a tab race.
+        assert record.token_age_seconds is not None
+        assert record.token_age_seconds > 3000
+
+    async def test_success_logs_ok(self, client, auth_user, caplog):
+        with patch(
+            "src.routers.auth.check_refresh_rate_limit", return_value=(True, None)
+        ), patch(
+            "src.routers.auth.decode_refresh_token",
+            return_value={
+                "sub": auth_user.email,
+                "iat": int(datetime.now(timezone.utc).timestamp()),
+                "exp": 9_999_999_999,
+                "jti": "legit-jti",
+            },
+        ), patch(
+            "src.routers.auth.security_get_user",
+            new_callable=AsyncMock,
+            return_value=auth_user,
+        ), patch(
+            "src.routers.auth._is_token_revoked_for_user", return_value=False
+        ), patch(
+            "src.routers.auth._mark_refresh_jti_used", return_value=True
+        ), patch(
+            "src.routers.auth.get_cookie_domain_for_request", return_value=None
+        ), patch(
+            "src.routers.auth.is_request_secure", return_value=False
+        ):
+            with caplog.at_level(logging.INFO, logger="learnhouse.auth.refresh"):
+                response = await client.get(
+                    "/api/v1/auth/refresh",
+                    cookies={JWT_REFRESH_COOKIE_NAME: "refresh-token"},
+                )
+        assert response.status_code == 200
+        assert any(getattr(r, "outcome", None) == "ok" for r in caplog.records)

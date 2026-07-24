@@ -770,12 +770,20 @@ async def update_user_role(
         if role_change_user and role_change_user.email:
             org_config_stmt = select(OrganizationConfig).where(OrganizationConfig.org_id == org.id)
             org_config = (await db_session.execute(org_config_stmt)).scalars().first()
+            # The org's own host (verified custom domain when it has one), so
+            # the recipient can act on the permissions they were just given.
+            from src.services.email.utils import get_org_signup_base_url
+
+            org_base_url = await get_org_signup_base_url(
+                org.slug, request, db_session=db_session, org_id=org.id
+            )
             send_role_changed_email(
                 email=role_change_user.email,
                 username=role_change_user.username,
                 org_name=org.name,
                 new_role_name=role.name,
                 lang=get_org_default_language(org_config),
+                cta_url=org_base_url.rstrip("/") or "/",
             )
     except Exception:
         logger.warning("Failed to send role change email to user %s", user_id)
@@ -867,7 +875,12 @@ async def invite_batch_users(
         if not _looks_like_email(candidate):
             invalid_results.append({"email": candidate, "status": "invalid_email"})
             continue
-        invite_list.append(candidate)
+        # Key invites on the lower-cased address. Every reader lower-cases before
+        # looking the key up (the OAuth invite gate, signup's invite consumption),
+        # so storing the admin's typed casing made an invite to "Jane.Doe@x.com"
+        # permanently unmatchable: the invitee could never consume it, it stayed
+        # "Pending" in the dashboard forever, and it kept occupying a member seat.
+        invite_list.append(candidate.lower())
 
     if len(invite_list) > INVITE_MAX_BATCH_SIZE:
         raise HTTPException(
@@ -891,9 +904,22 @@ async def invite_batch_users(
     # Count pending invites toward the member limit (not just joined members),
     # so a free org can't queue invitations that would exceed its cap once
     # accepted. Existing pending + new invites are both counted.
-    existing_pending = len(list(
-        r.scan_iter(match=f"invited_user:*:org:{org.org_uuid}", count=1000)
-    ))
+    #
+    # Only the ones still PENDING, though. Accepted invites keep their Redis key
+    # (flipped to pending=False) for the full 60 day TTL, so counting every key
+    # charged an accepted invitee twice — once as a real member and once as a
+    # phantom pending invite — and an org that had filled its seats through
+    # invitations was told it had hit the member limit while well under it.
+    existing_pending = 0
+    for key in r.scan_iter(match=f"invited_user:*:org:{org.org_uuid}", count=1000):
+        try:
+            record = json.loads(r.get(key))
+            if record.get("pending", True):
+                existing_pending += 1
+        except Exception:
+            # Unreadable record: count it, so a corrupt entry can't be used to
+            # slip past the cap.
+            existing_pending += 1
     await check_members_limit_with_pending(
         org.id, existing_pending + len(new_emails), db_session
     )
@@ -1074,6 +1100,11 @@ async def remove_invited_user(
             status_code=500,
             detail="Could not connect to Redis",
         )
+
+    # Invites are keyed on the lower-cased address (see invite_batch_users), so
+    # normalise here too — otherwise an admin who typed the address with any
+    # capitals could never withdraw the invitation they had just sent.
+    email = email.strip().lower()
 
     invited_user = r.get(f"invited_user:{email}:org:{org.org_uuid}")
 
