@@ -426,6 +426,20 @@ class TestCreateAssignmentTask:
                 await create_assignment_task(mock_request, "nonexistent", obj, admin_user, db)
         assert exc.value.status_code == 404
 
+    def test_negative_max_grade_value_is_rejected(self):
+        # A negative max would subtract from the assignment total and could hand
+        # out a certificate on a vacuous pass; the request models must reject it.
+        from pydantic import ValidationError
+        from src.db.courses.assignments import AssignmentTaskUpdate
+        with pytest.raises(ValidationError):
+            AssignmentTaskCreate(
+                title="T", description="D", hint="",
+                assignment_type=AssignmentTaskTypeEnum.SHORT_ANSWER,
+                contents={}, max_grade_value=-5,
+            )
+        with pytest.raises(ValidationError):
+            AssignmentTaskUpdate(max_grade_value=-1)
+
     async def test_creates_task_successfully(
         self, mock_request, db, assignment, admin_user
     ):

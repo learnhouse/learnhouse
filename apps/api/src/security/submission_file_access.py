@@ -16,7 +16,7 @@ from sqlmodel.ext.asyncio.session import AsyncSession
 
 from src.db.courses.assignments import AssignmentTask, AssignmentTaskSubmission
 from src.db.courses.courses import Course
-from src.db.users import AnonymousUser
+from src.db.users import AnonymousUser, APITokenUser
 
 # Keys under which a FILE_SUBMISSION task_submission stores the uploaded
 # filename. The web client saves it as ``fileUUID`` (the on-disk name returned
@@ -75,6 +75,15 @@ async def enforce_submission_file_access(
     # Submission files are never public — authentication is always required.
     if isinstance(current_user, AnonymousUser) or getattr(current_user, "id", None) is None:
         raise HTTPException(status_code=401, detail="Authentication required")
+
+    # An API token must never reach the identity checks below: its ``.id`` is the
+    # token's own primary key, not a user id, so the owner query
+    # (``user_id == current_user.id``) and the RBAC subject would both treat it
+    # as a same-numbered learner — letting a token read another user's submission
+    # file, across orgs. There is no token-integration use case for downloading
+    # raw submission files, so deny outright.
+    if isinstance(current_user, APITokenUser):
+        raise HTTPException(status_code=403, detail="Access denied")
 
     # Instructors / authors (course UPDATE right) may view any submission.
     if request is not None:

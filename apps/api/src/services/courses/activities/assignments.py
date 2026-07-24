@@ -2499,6 +2499,7 @@ async def create_assignment_submission(
     # race and already created the row (unique (user_id, assignment_id)), recover
     # by adopting the existing row instead of erroring/duplicating.
     db_session.add(assignment_user_submission)
+    won_insert = True
     try:
         await db_session.commit()
     except IntegrityError:  # pragma: no cover - concurrent-submit race recovery
@@ -2507,6 +2508,10 @@ async def create_assignment_submission(
         # branch only fires under a genuine DB-level race, which the aiosqlite test
         # harness can't faithfully simulate (raises MissingGreenlet where prod
         # asyncpg recovers), so it is excluded from coverage.
+        # This request LOST the race: another concurrent submit already created
+        # the row and emitted the ASSIGNMENT_SUBMITTED analytics/webhook events,
+        # so this one must adopt the winner's row WITHOUT re-firing them.
+        won_insert = False
         await db_session.rollback()
         assignment_user_submission = (await db_session.execute(
             select(AssignmentUserSubmission).where(
@@ -2531,41 +2536,43 @@ async def create_assignment_submission(
 
     # Track assignment submission. attempt_number lets downstream consumers
     # (analytics, webhooks) tell a retry resubmit from the original — without
-    # it, retries would silently double-count.
+    # it, retries would silently double-count. Skipped when this request lost
+    # the concurrent-submit race, so a duplicate submit fires the event once.
     submitted_attempt_number = int(assignment_user_submission.attempt_number or 1)
-    await track(
-        event_name=analytics_events.ASSIGNMENT_SUBMITTED,
-        org_id=course.org_id,
-        user_id=submitter.id,
-        properties={
-            "assignment_uuid": assignment_uuid,
-            "course_uuid": course.course_uuid,
-            "attempt_number": submitted_attempt_number,
-        },
-    )
-    # Durable audit row — retries reset the live submission in place, so each
-    # attempt only survives permanently here.
-    await record_audit_event(
-        event_type=UserAuditEventType.ASSIGNMENT_SUBMITTED,
-        user_id=submitter.id,
-        org_id=course.org_id,
-        target_uuid=assignment_uuid,
-        metadata={
-            "course_uuid": course.course_uuid,
-            "course_name": course.name,
-            "attempt_number": submitted_attempt_number,
-        },
-    )
-    await dispatch_webhooks(
-        event_name=analytics_events.ASSIGNMENT_SUBMITTED,
-        org_id=course.org_id,
-        data={
-            "user": {"user_uuid": submitter.user_uuid, "email": submitter.email, "username": submitter.username},
-            "assignment": {"assignment_uuid": assignment_uuid},
-            "course": {"course_uuid": course.course_uuid, "name": course.name},
-            "attempt_number": submitted_attempt_number,
-        },
-    )
+    if won_insert:
+        await track(
+            event_name=analytics_events.ASSIGNMENT_SUBMITTED,
+            org_id=course.org_id,
+            user_id=submitter.id,
+            properties={
+                "assignment_uuid": assignment_uuid,
+                "course_uuid": course.course_uuid,
+                "attempt_number": submitted_attempt_number,
+            },
+        )
+        # Durable audit row — retries reset the live submission in place, so each
+        # attempt only survives permanently here.
+        await record_audit_event(
+            event_type=UserAuditEventType.ASSIGNMENT_SUBMITTED,
+            user_id=submitter.id,
+            org_id=course.org_id,
+            target_uuid=assignment_uuid,
+            metadata={
+                "course_uuid": course.course_uuid,
+                "course_name": course.name,
+                "attempt_number": submitted_attempt_number,
+            },
+        )
+        await dispatch_webhooks(
+            event_name=analytics_events.ASSIGNMENT_SUBMITTED,
+            org_id=course.org_id,
+            data={
+                "user": {"user_uuid": submitter.user_uuid, "email": submitter.email, "username": submitter.username},
+                "assignment": {"assignment_uuid": assignment_uuid},
+                "course": {"course_uuid": course.course_uuid, "name": course.name},
+                "attempt_number": submitted_attempt_number,
+            },
+        )
 
     # User (the learner the submission belongs to)
     statement = select(User).where(User.id == submitter.id)
