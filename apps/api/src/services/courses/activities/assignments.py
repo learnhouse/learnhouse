@@ -1579,6 +1579,17 @@ async def update_assignment_task(
     # RBAC check
     await authorize_assignment_access(request, db_session, current_user, course.course_uuid, AccessAction.UPDATE)
 
+    # A change to how a task is scored (its type, its answer key/definition, or
+    # its max points) invalidates the grades already stored for it. The delete
+    # path re-grades for exactly this reason; an in-place edit is the same
+    # hazard, so detect a scoring-relevant change and re-grade the same way.
+    _SCORING_FIELDS = ("assignment_type", "contents", "max_grade_value")
+    scoring_changed = any(
+        getattr(assignment_task_object, f, None) is not None
+        and getattr(assignment_task_object, f) != getattr(assignment_task, f)
+        for f in _SCORING_FIELDS
+    )
+
     # Update only the fields that were passed in
     for var, value in vars(assignment_task_object).items():
         if value is not None:
@@ -1589,6 +1600,14 @@ async def update_assignment_task(
     db_session.add(assignment_task)
     await db_session.commit()
     await db_session.refresh(assignment_task)
+
+    if scoring_changed:
+        await _regrade_graded_submissions(
+            assignment=assignment,
+            course=course,
+            db_session=db_session,
+            request=request,
+        )
 
     # return assignment task read
     return AssignmentTaskRead.model_validate(assignment_task)
@@ -1651,21 +1670,63 @@ async def delete_assignment_task(
         assignment=assignment,
         course=course,
         db_session=db_session,
+        request=request,
     )
 
     return {"message": "Assignment Task deleted"}
+
+
+async def _reconcile_certificate_after_grade_change(
+    request: Request | None,
+    user_id: int,
+    course: Course,
+    db_session: AsyncSession,
+) -> None:
+    """Bring a learner's certificate back in line with their current grades.
+
+    Recomputing a grade can flip a learner across the passing threshold. If they
+    no longer pass every gating assignment, a held certificate is revoked and the
+    enrollment status demoted; if they now pass and the course is otherwise
+    complete, a certificate is (re)issued. Best-effort: never abort the caller.
+    """
+    if not course.id:
+        return
+    try:
+        passed = await are_course_assignments_passed(user_id, course.id, db_session)
+        if not passed:
+            await revoke_user_certificate(
+                user_id, course.id, db_session, reason="regraded_below_threshold"
+            )
+            await sync_trailrun_status(user_id, course.id, db_session)
+        elif request is not None:
+            # Now passing — re-issue if the course is otherwise complete. Safe to
+            # call when a cert already exists (it no-ops on a duplicate).
+            await check_course_completion_and_create_certificate(
+                request, user_id, course.id, db_session
+            )
+    except Exception:
+        logger.exception(
+            "Failed to reconcile certificate for user %s on course %s after a grade change",
+            user_id,
+            course.id,
+        )
 
 
 async def _regrade_graded_submissions(
     assignment: Assignment,
     course: Course,
     db_session: AsyncSession,
+    request: Request | None = None,
 ) -> None:
     """Recompute stored grades for every GRADED submission of ``assignment``.
 
     Call after the task set changes, so the persisted numerator stops
     disagreeing with the live denominator. Best-effort per learner: one
     learner's failure must not abort the teacher's edit.
+
+    Recomputing can move a learner across the passing threshold, so each
+    regraded learner's certificate is reconciled — revoked if they now fail,
+    reissued if they now pass. Pass ``request`` to enable reissue.
     """
     graded = (await db_session.execute(
         select(AssignmentUserSubmission).where(
@@ -1695,6 +1756,10 @@ async def _regrade_graded_submissions(
                 submission.user_id,
                 assignment.assignment_uuid,
             )
+            continue
+        await _reconcile_certificate_after_grade_change(
+            request, submission.user_id, course, db_session
+        )
 
 
 ## > Assignments Tasks Submissions CRUD
@@ -2382,8 +2447,43 @@ async def delete_assignment_task_submission(
     await check_resource_access(request, db_session, current_user, course.course_uuid, AccessAction.DELETE)
 
     # Delete Assignment Task Submission
+    deleted_user_id = assignment_task_submission.user_id
     await db_session.delete(assignment_task_submission)
     await db_session.commit()
+
+    # Removing one per-task answer changes the learner's aggregate for this
+    # assignment. If their overall submission was already GRADED, its stored
+    # grade (and any certificate that depended on it) is now stale — recompute
+    # and reconcile, the same as when a whole task is deleted.
+    if deleted_user_id is not None:
+        graded_submission = (await db_session.execute(
+            select(AssignmentUserSubmission).where(
+                AssignmentUserSubmission.assignment_id == assignment.id,
+                AssignmentUserSubmission.user_id == deleted_user_id,
+                AssignmentUserSubmission.submission_status
+                == AssignmentUserSubmissionStatus.GRADED,
+            )
+        )).scalars().first()
+        if graded_submission is not None:
+            try:
+                await _apply_grade_and_finalize(
+                    assignment=assignment,
+                    course=course,
+                    user_id=deleted_user_id,
+                    assignment_user_submission=graded_submission,
+                    db_session=db_session,
+                    overall_feedback=None,
+                    auto_graded=True,
+                    dispatch_webhook=False,
+                )
+                await _reconcile_certificate_after_grade_change(
+                    request, deleted_user_id, course, db_session
+                )
+            except Exception:
+                logger.exception(
+                    "Failed to recompute aggregate for user %s after deleting a task submission",
+                    deleted_user_id,
+                )
 
     return {"message": "Assignment Task Submission deleted"}
 
