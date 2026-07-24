@@ -20,3 +20,8 @@ jobs:
         uses: chartboost/ruff-action@v1
         with:
           src: "./apps/api"
+          # Pin the ruff version. Without it the action's auto-detection can
+          # resolve to an empty version and fall back to a default rule set that
+          # floods the whole tree with thousands of unrelated findings. Pinning
+          # keeps lint deterministic and matched to the project config.
+          version: "0.15.9"
