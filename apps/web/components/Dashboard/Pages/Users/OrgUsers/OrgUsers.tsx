@@ -11,7 +11,14 @@ import { getAPIUrl } from '@services/config/config'
 import { getUserAvatarMediaDirectory } from '@services/media/media'
 import { removeUserFromOrg, removeUsersFromOrg, updateUserRole } from '@services/organizations/orgs'
 import { apiFetch } from '@services/utils/ts/requests'
-import { LogOut, Search, ChevronLeft, ChevronRight, Shield, User, Crown, Users, CheckCircle2, XCircle, Mail, Globe, ArrowUp, ArrowDown, X, Filter, Download } from 'lucide-react'
+import { LogOut, Search, ChevronLeft, ChevronRight, Shield, User, Crown, Users, CheckCircle2, XCircle, Mail, Globe, ArrowUp, ArrowDown, X, Filter, Download, BarChart3, GitCompare, ExternalLink } from 'lucide-react'
+import Link from 'next/link'
+import { useParams } from 'next/navigation'
+import { getUriWithOrg } from '@services/config/config'
+import { Dialog, DialogContent } from '@components/ui/dialog'
+import UserDossierModal from '@components/Dashboard/Pages/Users/UserAnalytics/UserDossierModal'
+import UsersComparisonTable from '@components/Dashboard/Pages/Users/UserAnalytics/UsersComparisonTable'
+import UserAuditExport from '@components/Dashboard/Pages/Users/UserAnalytics/UserAuditExport'
 import React, { useState, useCallback, useMemo } from 'react'
 import toast from 'react-hot-toast'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
@@ -49,6 +56,8 @@ function OrgUsers() {
   // would 403 on those actions, so only expose the controls to org managers.
   const { canManageOrg } = useAdminStatus()
 
+  const params = useParams() as any
+
   const [page, setPage] = useState(1)
   const [searchValue, setSearchValue] = useState('')
   const [selectedUserIds, setSelectedUserIds] = useState<Set<number>>(new Set())
@@ -56,6 +65,9 @@ function OrgUsers() {
   const [filterRole, setFilterRole] = useState<string>('')
   const [filterStatus, setFilterStatus] = useState<string>('')
   const [filterGroupId, setFilterGroupId] = useState<string>('')
+  // Per-student analytics (integrated into this Users list)
+  const [analyticsUserId, setAnalyticsUserId] = useState<number | null>(null)
+  const [comparing, setComparing] = useState(false)
 
   const buildQuery = () => {
     const params = new URLSearchParams()
@@ -359,6 +371,14 @@ function OrgUsers() {
                   >
                     Clear selection
                   </button>
+                  <button
+                    onClick={() => setComparing(true)}
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white text-indigo-700 border border-indigo-200 hover:bg-indigo-100 rounded-md text-xs font-medium transition-all"
+                  >
+                    <GitCompare className="w-3.5 h-3.5" />
+                    <span>Compare analytics</span>
+                  </button>
+                  <UserAuditExport userIds={Array.from(selectedUserIds)} label={`Export analytics (${selectedUserIds.size})`} />
                   {canManageOrg && (
                     <ConfirmationModal
                       confirmationButtonText={`Remove ${selectedUserIds.size} user${selectedUserIds.size !== 1 ? 's' : ''}`}
@@ -646,6 +666,23 @@ function OrgUsers() {
 
                         {/* Actions */}
                         <td className="px-6 py-4 text-right">
+                          <div className="inline-flex items-center gap-1.5">
+                            <button
+                              onClick={() => setAnalyticsUserId(user.user.id)}
+                              className="inline-flex items-center gap-1.5 h-8 px-3 bg-white text-gray-600 hover:bg-indigo-50 hover:text-indigo-600 rounded-md text-xs font-medium nice-shadow transition-all"
+                              title="View student analytics"
+                            >
+                              <BarChart3 className="w-3.5 h-3.5" />
+                              <span>Analytics</span>
+                            </button>
+                            <ToolTip content="Open full analytics page" side="top">
+                              <Link
+                                href={getUriWithOrg(params.orgslug, '') + `/dash/users/analytics/${user.user.id}`}
+                                className="inline-flex items-center justify-center h-8 w-8 bg-white text-gray-500 hover:bg-gray-100 hover:text-gray-700 rounded-md nice-shadow transition-all"
+                              >
+                                <ExternalLink className="w-3.5 h-3.5" />
+                              </Link>
+                            </ToolTip>
                           {canManageOrg && (
                             <ConfirmationModal
                               confirmationButtonText={t('dashboard.users.active_users.modals.remove_user.button')}
@@ -666,6 +703,7 @@ function OrgUsers() {
                               status="warning"
                             />
                           )}
+                          </div>
                         </td>
                       </tr>
                     ))}
@@ -711,6 +749,18 @@ function OrgUsers() {
               </div>
             )}
           </div>
+
+      {/* Per-student analytics (integrated into the Users tab) */}
+      <UserDossierModal userId={analyticsUserId} onOpenChange={(o) => !o && setAnalyticsUserId(null)} />
+      <Dialog open={comparing} onOpenChange={setComparing}>
+        <DialogContent className="max-w-5xl max-h-[90vh] overflow-y-auto bg-[#f8f8f8] p-6 sm:p-8">
+          <h2 className="font-bold text-xl tracking-tight mb-4">Compare students</h2>
+          <UsersComparisonTable
+            userIds={Array.from(selectedUserIds)}
+            onOpenUser={(id) => { setComparing(false); setAnalyticsUserId(id) }}
+          />
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }

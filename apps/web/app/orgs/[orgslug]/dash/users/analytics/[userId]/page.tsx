@@ -23,7 +23,7 @@ export default function UserAnalyticsDetailPage(props: { params: Promise<PagePar
   const [days, setDays] = useState(365)
   const { data, isLoading, isError } = useUserDossier(userId, days)
 
-  const backHref = getUriWithOrg(params.orgslug, '') + '/dash/users/settings/analytics'
+  const backHref = getUriWithOrg(params.orgslug, '') + '/dash/users/settings/users'
 
   return (
     <div className="h-screen w-full bg-[#f8f8f8] grid grid-rows-[auto_1fr] grid-cols-1 overflow-hidden">
@@ -31,7 +31,7 @@ export default function UserAnalyticsDetailPage(props: { params: Promise<PagePar
         <div className="pt-6 pb-4">
           <Breadcrumbs items={[
             { label: 'Users', href: '/dash/users/settings/users', icon: <Users size={14} /> },
-            { label: 'Analytics', href: '/dash/users/settings/analytics' },
+            { label: 'Analytics' },
           ]} />
         </div>
         <div className="my-2 py-3 flex items-center justify-between gap-3">
