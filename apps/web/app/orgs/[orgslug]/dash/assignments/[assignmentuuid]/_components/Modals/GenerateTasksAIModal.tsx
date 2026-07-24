@@ -252,6 +252,11 @@ function GenerateTasksAIModal({
     setIsSaving(true)
     let saved = 0
     let failed = 0
+    // Tasks that didn't persist this round. On a partial failure we keep only
+    // these in the preview, so pressing Save again retries just the failures
+    // instead of re-posting the ones that already succeeded (which duplicated
+    // them).
+    const remaining: typeof tasks = []
     try {
       for (const task of tasks) {
         const body = {
@@ -265,8 +270,12 @@ function GenerateTasksAIModal({
         }
         // createAssignmentTask returns { success: false } on non-200 (it does not throw).
         const res = await createAssignmentTask(body, assignment_uuid, access_token)
-        if (res?.success === false) failed += 1
-        else saved += 1
+        if (res?.success === false) {
+          failed += 1
+          remaining.push(task)
+        } else {
+          saved += 1
+        }
       }
       // Refresh the task list the editor page renders (react-query key used by
       // AssignmentProvider / Tasks list).
@@ -278,9 +287,13 @@ function GenerateTasksAIModal({
       if (failed > 0) {
         toast.error(`${failed} task${failed === 1 ? '' : 's'} could not be saved.`)
       }
-      // Only close when everything saved; otherwise keep the preview so the
-      // teacher can retry the ones that failed.
-      if (failed === 0) closeModal(false)
+      // Only close when everything saved; otherwise keep ONLY the failed tasks
+      // in the preview so a retry re-posts just those, never the saved ones.
+      if (failed === 0) {
+        closeModal(false)
+      } else {
+        setTasks(remaining)
+      }
     } catch {
       toast.error('Some tasks could not be saved.')
     } finally {
