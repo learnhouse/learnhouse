@@ -1,6 +1,6 @@
 """Tests for the per-student audit router + dossier service + durable write path."""
 from datetime import datetime, timezone
-from unittest.mock import patch
+from unittest.mock import patch, AsyncMock
 
 import pytest
 from fastapi import FastAPI
@@ -305,6 +305,108 @@ class TestRequestContext:
         assert ua == "UA/1.0"
         assert ip  # resolved to some value
         assert extract_request_context(None) == (None, None)
+
+
+class TestPlanAndTargetGuards:
+    async def test_plan_gate_blocks_low_plan(self, client, regular_user):
+        """SaaS mode + insufficient plan → 403."""
+        with patch("src.security.features_utils.plan_check._check_mode_bypass", return_value=None), \
+             patch("src.routers.audit.get_org_plan", new_callable=AsyncMock, return_value="free"), \
+             patch("src.routers.audit.plan_meets_requirement", return_value=False):
+            resp = await client.get(f"/api/v1/audit/user/{regular_user.id}?org_id=1")
+        assert resp.status_code == 403
+
+    async def test_plan_gate_allows_enterprise(self, client, regular_user, seed_activity):
+        with patch("src.security.features_utils.plan_check._check_mode_bypass", return_value=None), \
+             patch("src.routers.audit.get_org_plan", new_callable=AsyncMock, return_value="enterprise"), \
+             patch("src.routers.audit.plan_meets_requirement", return_value=True):
+            resp = await client.get(f"/api/v1/audit/user/{regular_user.id}?org_id=1")
+        assert resp.status_code == 200
+
+    async def test_superadmin_target_bypasses_membership(self, client, regular_user):
+        """A superadmin target passes the in-org check without a membership row."""
+        with _bypass_plan(), patch("src.routers.audit.is_user_superadmin", new_callable=AsyncMock, return_value=True):
+            resp = await client.get(f"/api/v1/audit/user/{regular_user.id}?org_id=1")
+        assert resp.status_code == 200
+
+    async def test_valid_days_param(self, client, regular_user, seed_activity):
+        with _bypass_plan():
+            resp = await client.get(f"/api/v1/audit/user/{regular_user.id}?org_id=1&days=30")
+        assert resp.status_code == 200
+
+    async def test_invalid_user_ids_non_int(self, client):
+        with _bypass_plan():
+            resp = await client.get("/api/v1/audit/users/summary?org_id=1&user_ids=abc")
+        assert resp.status_code == 400
+
+    async def test_dossier_404_when_empty(self, client, regular_user):
+        with _bypass_plan(), patch("src.routers.audit.build_user_dossier", new_callable=AsyncMock, return_value={}):
+            resp = await client.get(f"/api/v1/audit/user/{regular_user.id}?org_id=1")
+        assert resp.status_code == 404
+
+
+class TestBehaviorFetcherEdgeCases:
+    async def test_query_failure_yields_empty_section(self, client, regular_user, seed_activity):
+        """A failing Tinybird query degrades that section to [] instead of erroring."""
+        class _BoomClient:
+            async def post(self, *a, **k):
+                raise RuntimeError("tinybird down")
+
+        with _bypass_plan(), patch("src.routers.audit._get_read_client", return_value=_BoomClient()):
+            resp = await client.get(f"/api/v1/audit/user/{regular_user.id}?org_id=1")
+        assert resp.status_code == 200
+        assert resp.json()["behavior"]["user_time_total"] == []
+
+    def test_build_user_sql_rejects_non_int(self):
+        from src.routers.audit import _build_user_sql
+        import pytest as _pytest
+        from fastapi import HTTPException
+        with _pytest.raises(HTTPException):
+            _build_user_sql("SELECT {user_id}", 1, "not-int", 30)  # type: ignore[arg-type]
+
+
+class TestExportCsvRows:
+    async def test_csv_includes_all_sections(self, client, regular_user, seed_rich):
+        with _bypass_plan():
+            resp = await client.get(
+                f"/api/v1/audit/export?org_id=1&user_ids={regular_user.id}&format=csv"
+            )
+        assert resp.status_code == 200
+        text = resp.text
+        for section in ("assignment", "code", "discussion", "comment"):
+            assert section in text
+
+
+class TestDossierServiceUnits:
+    async def test_dossier_unknown_user_returns_empty(self, db, org):
+        from src.services.audit.dossier import build_user_dossier
+        assert await build_user_dossier(db, 999999, org.id) == {}
+
+    async def test_behavior_fetcher_exception_swallowed(self, db, org, regular_user):
+        from src.services.audit.dossier import build_user_dossier
+
+        async def _boom(*a, **k):
+            raise RuntimeError("boom")
+
+        dossier = await build_user_dossier(db, regular_user.id, org.id, behavior_fetcher=_boom)
+        assert dossier["behavior"] == {}
+
+    async def test_summary_empty_ids(self, db, org):
+        from src.services.audit.dossier import build_users_summary
+        assert await build_users_summary(db, [], org.id) == []
+
+    async def test_summary_counts_completed_and_skips_unknown(self, db, org, course, regular_user):
+        from src.services.audit.dossier import build_users_summary
+        db.add(TrailRun(
+            data={}, status=StatusEnum.STATUS_COMPLETED, trail_id=1, course_id=course.id,
+            org_id=org.id, user_id=regular_user.id,
+            creation_date=str(datetime.now()), update_date=str(datetime.now()),
+        ))
+        await db.commit()
+        # 999999 has no User row → skipped (continue branch).
+        rows = await build_users_summary(db, [regular_user.id, 999999], org.id)
+        assert len(rows) == 1
+        assert rows[0]["courses_completed"] == 1
 
 
 class TestRecordAuditEvent:

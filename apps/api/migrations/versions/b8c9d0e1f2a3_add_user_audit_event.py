@@ -11,8 +11,11 @@ place). See ``src/db/user_audit_events.py`` and ``src/services/audit/``.
 
 Guarded (idempotent) so a partially-applied DB is safe.
 
+This revision also merges the two open migration heads that existed on ``dev``
+(``a2b3c4d5e6f7`` and ``r5s6t7u8v9w0``) so the tree resolves to a single head.
+
 Revision ID: b8c9d0e1f2a3
-Revises: a2b3c4d5e6f7
+Revises: a2b3c4d5e6f7, r5s6t7u8v9w0
 Create Date: 2026-07-24
 
 """
@@ -25,7 +28,8 @@ import sqlmodel  # noqa: F401
 
 # revision identifiers, used by Alembic.
 revision: str = 'b8c9d0e1f2a3'
-down_revision: Union[str, None] = 'a2b3c4d5e6f7'
+# Descend from both open dev heads so this becomes the single head.
+down_revision: Union[str, Sequence[str], None] = ('a2b3c4d5e6f7', 'r5s6t7u8v9w0')
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 
