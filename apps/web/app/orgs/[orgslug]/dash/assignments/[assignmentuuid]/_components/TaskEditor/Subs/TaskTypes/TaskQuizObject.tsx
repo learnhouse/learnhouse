@@ -445,8 +445,13 @@ function TaskQuizObject({ view, assignmentTaskUUID, user_id, onGraded }: TaskQui
             // Grade PER QUESTION (mirrors the server's _grade_quiz_task): a
             // question counts only when the student's selected option set exactly
             // matches the answer key. Per-option scoring gave phantom credit for
-            // unanswered questions (unselected wrong options "matched").
-            const gradableQuestions = questions.filter((q) => (q.options?.length ?? 0) > 0);
+            // unanswered questions (unselected wrong options "matched"). A
+            // question with no correct option is skipped by the server too (a
+            // blank submission would "match" an all-false key), so exclude it
+            // here or this preview grade drops below the server's.
+            const gradableQuestions = questions.filter(
+                (q) => (q.options?.length ?? 0) > 0 && q.options.some((o) => !!o.assigned_right_answer)
+            );
             let correctQuestions = 0;
 
             gradableQuestions.forEach((question) => {

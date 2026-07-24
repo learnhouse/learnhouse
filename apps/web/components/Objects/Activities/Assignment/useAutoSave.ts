@@ -109,6 +109,11 @@ export function useAutoSave({
   const enabledRef = React.useRef(enabled)
   const inFlight = React.useRef(false)
   const mounted = React.useRef(true)
+  // Points at the persist-based flush (defined below). Used by the unmount and
+  // page-exit handlers so they await any in-flight save and THEN write the
+  // latest dirty value, instead of skipping while a save is mid-flight and
+  // losing the newer edit.
+  const flushRef = React.useRef<(() => Promise<boolean>) | null>(null)
   React.useEffect(() => { curRef.current = currentValue })
   React.useEffect(() => { savedRef.current = savedValue })
   React.useEffect(() => { saveRef.current = save })
@@ -250,8 +255,12 @@ export function useAutoSave({
   React.useEffect(() => () => {
     if (retryTimer.current) clearTimeout(retryTimer.current)
     const isBlockedValue = blockedValue.current !== null && blockedValue.current === curRef.current
-    if (!inFlight.current && !isBlockedValue && enabledRef.current && curRef.current !== savedRef.current) {
-      void saveRef.current({ silent: true })
+    if (!isBlockedValue && enabledRef.current && curRef.current !== savedRef.current) {
+      // Route through the persist-based flush: it awaits an in-flight save and
+      // then writes the latest dirty value. Firing the raw save here (as it
+      // used to) skipped whenever a save was already running, dropping the
+      // newer edit. Fire-and-forget — the request is what matters.
+      void flushRef.current?.()
     }
     mounted.current = false
   }, [])
@@ -262,7 +271,10 @@ export function useAutoSave({
   // beforeunload guard (shared with the Editor) warns if the write can't finish.
   React.useEffect(() => {
     if (typeof window === 'undefined') return
-    const flushPending = () => { void runAutoSave() }
+    // Persist-based flush (awaits any in-flight save, then writes the latest
+    // dirty value) rather than runAutoSave, which no-ops while a save is
+    // in flight and would drop an edit made during that request.
+    const flushPending = () => { void flushRef.current?.() }
     const onVisibilityChange = () => {
       if (document.visibilityState === 'hidden') flushPending()
     }
@@ -283,6 +295,9 @@ export function useAutoSave({
 
   const flush = React.useCallback(() => persist(true, false), [persist])
   const saveNow = React.useCallback(() => persist(false, true), [persist])
+
+  // Keep the unmount / page-exit handlers pointed at the current flush.
+  React.useEffect(() => { flushRef.current = flush }, [flush])
 
   return {
     status,
