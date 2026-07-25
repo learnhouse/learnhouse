@@ -1469,5 +1469,37 @@ async def api_get_org_usage(
     return await get_org_usage_and_limits(request, org_id, current_user, db_session)
 
 
+@router.get(
+    "/{org_id}/active-users",
+    summary="Get organization active-user count and overage",
+    description=(
+        "Return the number of active users (members seen on >=2 distinct days "
+        "in the month), the included member limit, and the billable overage "
+        "for a calendar month (defaults to the current UTC month)."
+    ),
+    responses={
+        200: {"description": "Active-user count, limit, and overage for the month."},
+        401: {"description": "Not authenticated"},
+        403: {"description": "Caller is not a member of the organization"},
+    },
+)
+async def api_get_org_active_users(
+    request: Request,
+    org_id: int,
+    year: Optional[int] = None,
+    month: Optional[int] = None,
+    current_user: PublicUser = Depends(get_current_user),
+    db_session: AsyncSession = Depends(get_db_session),
+):
+    # Same tenant guard as /{org_id}/usage — active-user data is org-scoped.
+    from src.security.auth import resolve_acting_user_id
+    from src.security.org_auth import require_org_membership
+    await require_org_membership(
+        resolve_acting_user_id(current_user), org_id, db_session
+    )
+    from src.security.features_utils.active_users import get_active_user_summary
+    return await get_active_user_summary(org_id, db_session, year=year, month=month)
+
+
 # Include the feature config sub-router (admin-only endpoints)
 router.include_router(feature_config_router)

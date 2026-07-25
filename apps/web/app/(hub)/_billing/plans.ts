@@ -25,7 +25,7 @@ export type PlanId =
   | "standard"
   | "pro"
   | "enterprise";
-export type PackId = "ai_500" | "seats_200";
+export type PackId = "ai_500";
 
 // Annual discounts used only as a fallback when live Stripe prices aren't loaded.
 export const ANNUAL_DISCOUNT = 0.2;
@@ -129,7 +129,7 @@ export const GENERAL_PLANS: Plan[] = [
     inheritsFrom: "Free",
     inheritsBadge: BADGE.free,
     features: [
-      { label: "500 Members", badge: "+200 for $50/mo", limitKey: "members" },
+      { label: "500 Members", limitKey: "members" },
       { label: "2 Admin seats", limitKey: "admin_seats" },
       { label: "Standard AI", badge: "1,000 Credits", badgeLimitKey: "ai_credits" },
       { label: "Unlimited Courses" },
@@ -156,7 +156,7 @@ export const GENERAL_PLANS: Plan[] = [
     inheritsFrom: "Standard",
     inheritsBadge: BADGE.standard,
     features: [
-      { label: "1,000 Members", badge: "+200 for $50/mo", limitKey: "members" },
+      { label: "1,000 Members", limitKey: "members" },
       { label: "10 Admin seats", limitKey: "admin_seats" },
       { label: "Advanced AI", badge: "3,000 Credits", badgeLimitKey: "ai_credits" },
       { label: "Certifications" },
@@ -356,7 +356,7 @@ export function formatPrice(
 
 export interface PackCatalogEntry {
   id: PackId;
-  type: "ai_credits" | "member_seats";
+  type: "ai_credits";
   quantity: number;
   label: string;
   fallbackPrice: number;
@@ -364,7 +364,6 @@ export interface PackCatalogEntry {
 
 export const PACK_CATALOG: PackCatalogEntry[] = [
   { id: "ai_500", type: "ai_credits", quantity: 500, label: "500 AI Credits", fallbackPrice: 5 },
-  { id: "seats_200", type: "member_seats", quantity: 200, label: "200 Member Seats", fallbackPrice: 50 },
 ];
 
 export function getPackPrice(packId: string, packPrices?: PackPrices): number {

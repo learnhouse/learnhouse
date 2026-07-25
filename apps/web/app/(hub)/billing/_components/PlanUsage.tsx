@@ -481,7 +481,7 @@ export default function PlanUsage({
               {t('billing.addons', { defaultValue: 'Add-ons' })}
             </h2>
             <p className="text-[11px] text-black/35 font-medium mt-0.5">
-              {t('billing.addons_subtitle', { defaultValue: 'Purchase additional AI credits or member seats as monthly subscriptions.' })}
+              {t('billing.addons_subtitle', { defaultValue: 'Purchase additional AI credits as monthly subscriptions.' })}
             </p>
           </div>
           <div className="px-6 py-6 space-y-6">
@@ -627,15 +627,10 @@ export default function PlanUsage({
                   <ul className="space-y-1.5">
                     <li className="text-[12px] text-black/60 flex items-start gap-2">
                       <span className="text-emerald-500 mt-0.5">&#10003;</span>
-                      {disclaimerPack.type === 'ai_credits'
-                        ? t('billing.pack_ai_desc', {
-                            defaultValue: `${disclaimerPack.quantity.toLocaleString()} additional AI credits added to your organization`,
-                            quantity: disclaimerPack.quantity.toLocaleString(),
-                          })
-                        : t('billing.pack_seats_desc', {
-                            defaultValue: `${disclaimerPack.quantity.toLocaleString()} additional member seats for your organization`,
-                            quantity: disclaimerPack.quantity.toLocaleString(),
-                          })}
+                      {t('billing.pack_ai_desc', {
+                        defaultValue: `${disclaimerPack.quantity.toLocaleString()} additional AI credits added to your organization`,
+                        quantity: disclaimerPack.quantity.toLocaleString(),
+                      })}
                     </li>
                     <li className="text-[12px] text-black/60 flex items-start gap-2">
                       <span className="text-emerald-500 mt-0.5">&#10003;</span>
@@ -665,21 +660,6 @@ export default function PlanUsage({
                       <span className="text-emerald-600">
                         {' '}
                         → {aiCredits.total_credits === 'unlimited' ? t('billing.unlimited', { defaultValue: 'Unlimited' }) : (aiCredits.total_credits + disclaimerPack.quantity).toLocaleString()}
-                      </span>
-                    </p>
-                  </div>
-                )}
-                {features && disclaimerPack.type === 'member_seats' && (
-                  <div className="bg-black/[0.02] rounded-xl px-4 py-3">
-                    <p className="text-[11px] font-semibold text-black/40 uppercase tracking-wider mb-1.5">
-                      {t('billing.after_purchase', { defaultValue: 'After purchase' })}
-                    </p>
-                    <p className="text-[13px] font-semibold text-black">
-                      {t('billing.members', { defaultValue: 'Member seats' })}:{' '}
-                      {features.members.limit === 'unlimited' ? t('billing.unlimited', { defaultValue: 'Unlimited' }) : features.members.limit.toLocaleString()}
-                      <span className="text-emerald-600">
-                        {' '}
-                        → {features.members.limit === 'unlimited' ? t('billing.unlimited', { defaultValue: 'Unlimited' }) : (Number(features.members.limit) + disclaimerPack.quantity).toLocaleString()}
                       </span>
                     </p>
                   </div>

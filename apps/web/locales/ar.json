@@ -5504,7 +5504,6 @@
     "admin_seats": "مقاعد المسؤولين",
     "ai_credits": "أرصدة الذكاء الاصطناعي",
     "addons": "الإضافات",
-    "addons_subtitle": "اشترِ أرصدة ذكاء اصطناعي إضافية أو مقاعد أعضاء كاشتراكات شهرية.",
     "active_subscriptions": "الاشتراكات النشطة",
     "credits": "أرصدة",
     "seats": "مقاعد",
@@ -5577,8 +5576,7 @@
     "scheduled_desc": "ستتحول خطتك إلى {{plan}} في نهاية دورة الفوترة الحالية. ستحتفظ بالوصول الكامل إلى خطتك الحالية حتى ذلك الحين.",
     "plan_plus_purchased": "الخطة: {{plan}} + تم الشراء: {{purchased}}",
     "base_plus_purchased": "الأساس: {{base}} + تم الشراء: {{purchased}}",
-    "pack_ai_desc": "تمت إضافة {{quantity}} رصيد AI إضافي إلى مؤسستك",
-    "pack_seats_desc": "{{quantity}} مقعد عضو إضافي لمؤسستك"
+    "pack_ai_desc": "تمت إضافة {{quantity}} رصيد AI إضافي إلى مؤسستك"
   },
   "hub_new": {
     "useType": {

@@ -5514,7 +5514,6 @@
     "admin_seats": "Chỗ quản trị viên",
     "ai_credits": "Tín dụng AI",
     "addons": "Tiện ích bổ sung",
-    "addons_subtitle": "Mua thêm tín dụng AI hoặc chỗ thành viên dưới dạng gói đăng ký hằng tháng.",
     "active_subscriptions": "Gói đăng ký đang hoạt động",
     "credits": "tín dụng",
     "seats": "chỗ",
@@ -5587,8 +5586,7 @@
     "scheduled_desc": "Gói của bạn sẽ chuyển đến {{plan}} vào cuối chu kỳ thanh toán hiện tại. Bạn sẽ giữ quyền truy cập đầy đủ vào gói hiện tại của mình cho đến lúc đó.",
     "plan_plus_purchased": "Gói: {{plan}} + Mua: {{purchased}}",
     "base_plus_purchased": "Cơ bản: {{base}} + Mua: {{purchased}}",
-    "pack_ai_desc": "{{quantity}} khoản tín dụng AI bổ sung được thêm vào tổ chức của bạn",
-    "pack_seats_desc": "{{quantity}} ghế thành viên bổ sung cho tổ chức của bạn"
+    "pack_ai_desc": "{{quantity}} khoản tín dụng AI bổ sung được thêm vào tổ chức của bạn"
   },
   "hub_new": {
     "useType": {

@@ -5490,7 +5490,6 @@
     "admin_seats": "Miesta správcov",
     "ai_credits": "AI kredity",
     "addons": "Doplnky",
-    "addons_subtitle": "Dokúpte si ďalšie AI kredity alebo členské miesta ako mesačné predplatné.",
     "active_subscriptions": "Aktívne predplatné",
     "credits": "kredity",
     "seats": "miesta",
@@ -5563,8 +5562,7 @@
     "scheduled_desc": "Váš plán sa zmení na {{plan}} na konci vášho aktuálneho fakturačného cyklu. Kým do tej doby budete mať plný prístup k svojmu aktuálnemu plánu.",
     "plan_plus_purchased": "Plán: {{plan}} + Kúpené: {{purchased}}",
     "base_plus_purchased": "Základ: {{base}} + Kúpené: {{purchased}}",
-    "pack_ai_desc": "{{quantity}} dodatočných kreditov AI pridaných do vašej organizácie",
-    "pack_seats_desc": "{{quantity}} dodatočných miest članov pre vašu organizáciu"
+    "pack_ai_desc": "{{quantity}} dodatočných kreditov AI pridaných do vašej organizácie"
   },
   "hub_new": {
     "useType": {

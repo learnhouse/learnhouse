@@ -5510,7 +5510,6 @@
     "admin_seats": "管理员席位",
     "ai_credits": "AI 额度",
     "addons": "附加项",
-    "addons_subtitle": "以月度订阅形式购买额外的 AI 额度或成员席位。",
     "active_subscriptions": "有效订阅",
     "credits": "额度",
     "seats": "席位",
@@ -5583,8 +5582,7 @@
     "scheduled_desc": "您的计划将在当前计费周期末切换到 {{plan}}。在此之前，您将保持对当前计划的完全访问权限。",
     "plan_plus_purchased": "计划：{{plan}} + 已购买：{{purchased}}",
     "base_plus_purchased": "基础：{{base}} + 已购买：{{purchased}}",
-    "pack_ai_desc": "已向您的组织添加 {{quantity}} 个额外 AI 积分",
-    "pack_seats_desc": "为您的组织添加了 {{quantity}} 个额外的成员席位"
+    "pack_ai_desc": "已向您的组织添加 {{quantity}} 个额外 AI 积分"
   },
   "hub_new": {
     "useType": {

@@ -5514,7 +5514,6 @@
     "admin_seats": "Miejsca administratorów",
     "ai_credits": "Kredyty AI",
     "addons": "Dodatki",
-    "addons_subtitle": "Kupuj dodatkowe kredyty AI lub miejsca dla członków jako subskrypcje miesięczne.",
     "active_subscriptions": "Aktywne subskrypcje",
     "credits": "kredyty",
     "seats": "miejsca",
@@ -5587,8 +5586,7 @@
     "scheduled_desc": "Twój plan zmieni się na {{plan}} na koniec cyklu rozliczeniowego. Zachowasz pełny dostęp do obecnego planu do tego czasu.",
     "plan_plus_purchased": "Plan: {{plan}} + Zakupione: {{purchased}}",
     "base_plus_purchased": "Bazowe: {{base}} + Zakupione: {{purchased}}",
-    "pack_ai_desc": "{{quantity}} dodatkowych punktów AI dodanych do Twojej organizacji",
-    "pack_seats_desc": "{{quantity}} dodatkowych miejsc dla członków w Twojej organizacji"
+    "pack_ai_desc": "{{quantity}} dodatkowych punktów AI dodanych do Twojej organizacji"
   },
   "hub_new": {
     "useType": {

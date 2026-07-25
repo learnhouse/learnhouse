@@ -5522,7 +5522,6 @@
     "admin_seats": "Yönetici koltukları",
     "ai_credits": "Yapay Zeka Kredileri",
     "addons": "Eklentiler",
-    "addons_subtitle": "Aylık abonelik olarak ek yapay zeka kredisi veya üye koltuğu satın alın.",
     "active_subscriptions": "Aktif abonelikler",
     "credits": "kredi",
     "seats": "koltuk",
@@ -5595,8 +5594,7 @@
     "scheduled_desc": "Planınız mevcut faturalandırma döneminin sonunda {{plan}}'e geçecektir. O zamana kadar mevcut planınıza tam erişim sahibi kalacaksınız.",
     "plan_plus_purchased": "Plan: {{plan}} + Satın Alınan: {{purchased}}",
     "base_plus_purchased": "Temel: {{base}} + Satın Alınan: {{purchased}}",
-    "pack_ai_desc": "Kuruluşunuza {{quantity}} ek AI kredisi eklendi",
-    "pack_seats_desc": "Kuruluşunuza {{quantity}} ek üyelik eklendi"
+    "pack_ai_desc": "Kuruluşunuza {{quantity}} ek AI kredisi eklendi"
   },
   "hub_new": {
     "useType": {

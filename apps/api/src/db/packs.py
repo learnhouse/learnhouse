@@ -7,7 +7,6 @@ from sqlmodel import Field, SQLModel
 
 class PackTypeEnum(str, Enum):
     ai_credits = "ai_credits"
-    member_seats = "member_seats"
 
 
 class PackStatusEnum(str, Enum):
@@ -26,7 +25,7 @@ class OrgPack(SQLModel, table=True):
         sa_column=Column(BigInteger, ForeignKey("organization.id", ondelete="CASCADE"))
     )
     pack_type: PackTypeEnum
-    pack_id: str  # e.g. "ai_500", "seats_200"
+    pack_id: str  # e.g. "ai_500"
     quantity: int
     status: PackStatusEnum = PackStatusEnum.active
     activated_at: datetime = Field(default_factory=datetime.now)

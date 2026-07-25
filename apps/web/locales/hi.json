@@ -5512,7 +5512,6 @@
     "admin_seats": "एडमिन सीटें",
     "ai_credits": "AI क्रेडिट",
     "addons": "ऐड-ऑन",
-    "addons_subtitle": "मासिक सदस्यता के रूप में अतिरिक्त AI क्रेडिट या सदस्य सीटें खरीदें।",
     "active_subscriptions": "सक्रिय सदस्यताएँ",
     "credits": "क्रेडिट",
     "seats": "सीटें",
@@ -5585,8 +5584,7 @@
     "scheduled_desc": "आपकी योजना आपके मौजूदा बिलिंग चक्र के अंत में {{plan}} पर स्विच हो जाएगी। आप तब तक अपनी मौजूदा योजना तक पूर्ण पहुंच बनाए रखेंगे।",
     "plan_plus_purchased": "योजना: {{plan}} + खरीदा गया: {{purchased}}",
     "base_plus_purchased": "आधार: {{base}} + खरीदा गया: {{purchased}}",
-    "pack_ai_desc": "{{quantity}} अतिरिक्त AI क्रेडिट आपके संगठन में जोड़े गए",
-    "pack_seats_desc": "आपके संगठन के लिए {{quantity}} अतिरिक्त सदस्य सीटें"
+    "pack_ai_desc": "{{quantity}} अतिरिक्त AI क्रेडिट आपके संगठन में जोड़े गए"
   },
   "hub_new": {
     "useType": {

@@ -1,3 +1,5 @@
+import asyncio
+import logging
 from typing import Optional, Union
 from sqlmodel import select
 from sqlmodel.ext.asyncio.session import AsyncSession
@@ -450,6 +452,52 @@ async def _verify_api_token_org_boundary(
             )
 
 
+_activity_logger = logging.getLogger(__name__)
+
+
+def _org_ref_from_request(request: Request) -> tuple[Optional[int], Optional[str], Optional[str]]:
+    """Best-effort org reference from the request: (org_id, org_slug, org_uuid).
+
+    Routes are org-scoped by one of these params. org_id is read from path or
+    query (?org_id=); slug/uuid come from the path. The slug/uuid -> id lookup
+    is deferred to the background task so it stays off the request path.
+    """
+    org_id: Optional[int] = None
+    raw = request.path_params.get("org_id")
+    if raw is None:
+        raw = request.query_params.get("org_id")
+    if raw is not None:
+        try:
+            org_id = int(raw)
+        except (TypeError, ValueError):
+            org_id = None
+    org_slug = request.path_params.get("org_slug") or request.path_params.get("orgslug")
+    org_uuid = request.path_params.get("org_uuid")
+    return org_id, org_slug, org_uuid
+
+
+def _record_activity_from_request(request: Request, user_id: Optional[int]) -> None:
+    """Fire-and-forget: mark the authenticated user active for today. Never raises.
+
+    Fully server-side, so it cannot be blocked by ad/tracker blockers.
+    """
+    try:
+        if not user_id:
+            return
+        org_id, org_slug, org_uuid = _org_ref_from_request(request)
+        if not (org_id or org_slug or org_uuid):
+            return
+        from src.services.security.activity import record_user_activity
+
+        asyncio.create_task(
+            record_user_activity(
+                user_id, org_id=org_id, org_slug=org_slug, org_uuid=org_uuid
+            )
+        )
+    except Exception:
+        _activity_logger.debug("activity scheduling failed (non-fatal)", exc_info=True)
+
+
 async def get_current_user(
     request: Request,
     db_session: AsyncSession = Depends(get_db_session),
@@ -555,6 +603,7 @@ async def get_current_user(
         public_user = PublicUser(**user.model_dump())
         request.state.user = public_user
         request.state.is_api_token = False
+        _record_activity_from_request(request, public_user.id)
         return public_user
     else:
         return AnonymousUser()

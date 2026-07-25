@@ -144,6 +144,31 @@ async def api_deactivate_all_packs(
     return {"deactivated": count}
 
 
+@internal_router.get(
+    "/{org_id}/active-user-overage",
+    summary="Get active-user overage for an organization (internal)",
+    description=(
+        "Internal endpoint used by the billing platform to pull an "
+        "organization's active-user count and billable overage for a calendar "
+        "month (defaults to the current UTC month). Requires a valid platform "
+        "API key. This endpoint computes the number only; the platform performs "
+        "the Stripe charge."
+    ),
+    responses={
+        200: {"description": "Active-user count, included limit, and overage for the month."},
+        403: {"description": "Invalid platform API key"},
+    },
+)
+async def api_get_active_user_overage(
+    org_id: int,
+    year: int | None = None,
+    month: int | None = None,
+    db_session: AsyncSession = Depends(get_db_session),
+):
+    from src.security.features_utils.active_users import get_active_user_summary
+    return await get_active_user_summary(org_id, db_session, year=year, month=month)
+
+
 # ============================================================================
 # Org-facing router (user auth, admin only)
 # ============================================================================
@@ -165,7 +190,6 @@ class OrgPacksResponse(BaseModel):
 
 class PackSummaryResponse(BaseModel):
     ai_credits: int
-    member_seats: int
     active_pack_count: int
 
 
@@ -215,7 +239,7 @@ async def api_get_org_packs(
     summary="Get pack totals summary",
     description=(
         "Return aggregated totals from the organization's active packs "
-        "(AI credits, member seats, and active pack count). Only organization "
+        "(AI credits and active pack count). Only organization "
         "admins can view the summary."
     ),
     responses={

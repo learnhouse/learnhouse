@@ -231,9 +231,6 @@ class TestOrgUsageHelpers:
             "src.services.orgs.usage.get_plan_limit",
             side_effect=[4, 2],
         ) as get_plan_limit, patch(
-            "src.services.orgs.usage.get_purchased_member_seats",
-            return_value=5,
-        ) as purchased, patch(
             "src.security.features_utils.resolve.resolve_feature",
             side_effect=[
                 {"enabled": True, "limit": 0},
@@ -257,7 +254,7 @@ class TestOrgUsageHelpers:
         assert result["features"]["courses"]["limit_reached"] is False
         assert result["features"]["members"]["limit"] == 6
         assert result["features"]["members"]["plan_limit"] == 4
-        assert result["features"]["members"]["purchased"] == 5
+        assert result["features"]["members"]["purchased"] == 0
         assert result["features"]["members"]["remaining"] == 5
         assert result["features"]["members"]["limit_reached"] is False
         assert result["features"]["admin_seats"]["limit"] == 2
@@ -267,7 +264,6 @@ class TestOrgUsageHelpers:
         resolve_feature.assert_any_call("members", {"config_version": "2.0", "plan": "pro", "admin_toggles": {}}, org.id)
         get_plan_limit.assert_any_call("pro", "members")
         get_plan_limit.assert_any_call("pro", "admin_seats")
-        purchased.assert_called_once_with(org.id)
         set_cached.assert_called_once_with(org.id, result)
 
     @pytest.mark.asyncio
@@ -307,8 +303,6 @@ class TestOrgUsageHelpers:
         ), patch(
             "src.services.orgs.usage.get_plan_limit",
         ) as get_plan_limit, patch(
-            "src.services.orgs.usage.get_purchased_member_seats",
-        ) as purchased, patch(
             "src.security.features_utils.resolve.resolve_feature",
             side_effect=[
                 {"enabled": True, "limit": 3},
@@ -332,7 +326,6 @@ class TestOrgUsageHelpers:
         assert result["features"]["members"]["purchased"] == 0
         assert result["features"]["admin_seats"]["limit"] == "unlimited"
         get_plan_limit.assert_not_called()
-        purchased.assert_not_called()
 
 
 class TestOrgUploadWrappers:

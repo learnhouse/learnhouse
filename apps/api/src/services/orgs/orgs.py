@@ -498,6 +498,20 @@ async def update_org_with_config_no_auth(
     else:
         config_dict = json.loads(orgconfig.model_dump_json())
 
+    # Record the plan transition BEFORE overwriting the config, while the old
+    # plan is still readable. Active-user overage is billed in arrears, so a
+    # past month has to be priced against the plan that applied then, not the
+    # plan the org ends up on. Best-effort: never blocks the config write.
+    from src.security.features_utils.usage import _plan_from_config_dict
+    from src.services.orgs.plan_history import record_plan_change
+
+    await record_plan_change(
+        org.id,
+        _plan_from_config_dict(org_config.config or {}),
+        _plan_from_config_dict(config_dict),
+        db_session,
+    )
+
     # Update the database
     org_config.config = config_dict
     org_config.update_date = str(datetime.now())

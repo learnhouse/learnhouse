@@ -5500,7 +5500,6 @@
     "admin_seats": "管理者シート",
     "ai_credits": "AI クレジット",
     "addons": "アドオン",
-    "addons_subtitle": "追加の AI クレジットやメンバーシートを月額サブスクリプションとして購入できます。",
     "active_subscriptions": "有効なサブスクリプション",
     "credits": "クレジット",
     "seats": "シート",
@@ -5573,8 +5572,7 @@
     "scheduled_desc": "現在の請求サイクル終了時に{{plan}}プランに切り替わります。それまでは現在のプランへのフルアクセスが保たれます。",
     "plan_plus_purchased": "プラン: {{plan}} + 購入済み: {{purchased}}",
     "base_plus_purchased": "基本: {{base}} + 購入済み: {{purchased}}",
-    "pack_ai_desc": "{{quantity}}個の追加AIクレジットがあなたの組織に追加されました",
-    "pack_seats_desc": "{{quantity}}個の追加メンバーシートがあなたの組織に追加されました"
+    "pack_ai_desc": "{{quantity}}個の追加AIクレジットがあなたの組織に追加されました"
   },
   "hub_new": {
     "useType": {

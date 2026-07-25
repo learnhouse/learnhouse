@@ -5492,7 +5492,6 @@
     "admin_seats": "Beheerderslicenties",
     "ai_credits": "AI-credits",
     "addons": "Add-ons",
-    "addons_subtitle": "Koop extra AI-credits of ledenlicenties als maandelijkse abonnementen.",
     "active_subscriptions": "Actieve abonnementen",
     "credits": "credits",
     "seats": "licenties",
@@ -5565,8 +5564,7 @@
     "scheduled_desc": "Uw abonnement gaat over naar {{plan}} aan het einde van uw huidige factureringsperiode. U behoudt volledige toegang tot uw huidige abonnement tot dan toe.",
     "plan_plus_purchased": "Abonnement: {{plan}} + Aangeschaft: {{purchased}}",
     "base_plus_purchased": "Basis: {{base}} + Aangeschaft: {{purchased}}",
-    "pack_ai_desc": "{{quantity}} aanvullende AI-tegoeden toegevoegd aan uw organisatie",
-    "pack_seats_desc": "{{quantity}} aanvullende lidzetels voor uw organisatie"
+    "pack_ai_desc": "{{quantity}} aanvullende AI-tegoeden toegevoegd aan uw organisatie"
   },
   "hub_new": {
     "useType": {

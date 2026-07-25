@@ -5490,7 +5490,6 @@
     "admin_seats": "Puestos de administrador",
     "ai_credits": "Créditos de IA",
     "addons": "Complementos",
-    "addons_subtitle": "Compra créditos de IA o puestos de miembro adicionales como suscripciones mensuales.",
     "active_subscriptions": "Suscripciones activas",
     "credits": "créditos",
     "seats": "puestos",
@@ -5563,8 +5562,7 @@
     "scheduled_desc": "Tu plan cambiará a {{plan}} al final de tu ciclo de facturación actual. Tendrás acceso completo a tu plan actual hasta entonces.",
     "plan_plus_purchased": "Plan: {{plan}} + Comprado: {{purchased}}",
     "base_plus_purchased": "Base: {{base}} + Comprado: {{purchased}}",
-    "pack_ai_desc": "{{quantity}} créditos de AI adicionales agregados a tu organización",
-    "pack_seats_desc": "{{quantity}} asientos adicionales para miembros de tu organización"
+    "pack_ai_desc": "{{quantity}} créditos de AI adicionales agregados a tu organización"
   },
   "hub_new": {
     "useType": {

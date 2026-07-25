@@ -72,6 +72,9 @@ class OrganizationUser(BaseModel):
     role: RoleRead
     usergroups: List[UserGroupRead] = []
     joined_at: Optional[str] = None
+    # Active-user billing (current UTC month): distinct days seen + active flag.
+    visit_days: int = 0
+    is_active: bool = False
 
 
 # Rebuild models to resolve forward references after all classes are defined

@@ -16,26 +16,6 @@ from src.services.webhooks.dispatch import dispatch_webhooks, _background_tasks
 logger = logging.getLogger(__name__)
 
 
-def _add_member_seats(org_id: int, amount: int) -> int:
-    r = _get_redis_client()
-    key = f"member_seats_purchased:{org_id}"
-    return r.incrby(key, amount)
-
-
-def _remove_member_seats(org_id: int, amount: int) -> int:
-    r = _get_redis_client()
-    key = f"member_seats_purchased:{org_id}"
-    new_val = r.decrby(key, amount)
-    if new_val < 0:
-        logger.warning(
-            "member_seats_purchased went negative for org %d (was %d, removed %d). Resetting to 0.",
-            org_id, new_val + amount, amount,
-        )
-        r.set(key, 0)
-        return 0
-    return new_val
-
-
 def _remove_ai_credits(org_id: int, amount: int) -> int:
     r = _get_redis_client()
     key = f"ai_credits_purchased:{org_id}"
@@ -54,16 +34,12 @@ def _apply_pack_credits(org_id: int, pack_def: dict):
     """Add credits/seats to Redis for an activated pack."""
     if pack_def["type"] == "ai_credits":
         add_ai_credits(org_id, pack_def["quantity"])
-    elif pack_def["type"] == "member_seats":
-        _add_member_seats(org_id, pack_def["quantity"])
 
 
 def _revoke_pack_credits(org_id: int, pack_type: PackTypeEnum, quantity: int):
     """Remove credits/seats from Redis for a deactivated pack."""
     if pack_type == PackTypeEnum.ai_credits:
         _remove_ai_credits(org_id, quantity)
-    elif pack_type == PackTypeEnum.member_seats:
-        _remove_member_seats(org_id, quantity)
 
 
 async def activate_pack(
@@ -115,8 +91,6 @@ async def activate_pack(
         # a different pack_id may have been supplied for the same subscription).
         if existing.pack_type == PackTypeEnum.ai_credits:
             add_ai_credits(org_id, existing.quantity)
-        elif existing.pack_type == PackTypeEnum.member_seats:
-            _add_member_seats(org_id, existing.quantity)
 
         await db_session.commit()
         await db_session.refresh(existing)
@@ -291,14 +265,12 @@ async def reconcile_pack_credits(db_session: AsyncSession) -> dict:
     org_totals: dict[int, dict[str, int]] = {}
     for pack in active_packs:
         if pack.org_id not in org_totals:
-            org_totals[pack.org_id] = {"ai_credits": 0, "member_seats": 0}
+            org_totals[pack.org_id] = {"ai_credits": 0}
         if pack.pack_type == PackTypeEnum.ai_credits:
             org_totals[pack.org_id]["ai_credits"] += pack.quantity
-        elif pack.pack_type == PackTypeEnum.member_seats:
-            org_totals[pack.org_id]["member_seats"] += pack.quantity
 
     r = _get_redis_client()
-    reconciled = {"orgs": 0, "ai_credits_fixed": 0, "member_seats_fixed": 0}
+    reconciled = {"orgs": 0, "ai_credits_fixed": 0}
 
     for org_id, totals in org_totals.items():
         # Reconcile AI credits
@@ -311,23 +283,12 @@ async def reconcile_pack_credits(db_session: AsyncSession) -> dict:
             )
             reconciled["ai_credits_fixed"] += 1
 
-        # Reconcile member seats
-        current_seats = int(r.get(f"member_seats_purchased:{org_id}") or 0)
-        if current_seats != totals["member_seats"]:
-            r.set(f"member_seats_purchased:{org_id}", totals["member_seats"])
-            logger.info(
-                "Reconciled member_seats_purchased for org %d: %d -> %d",
-                org_id, current_seats, totals["member_seats"],
-            )
-            reconciled["member_seats_fixed"] += 1
-
         reconciled["orgs"] += 1
 
     # Also zero out Redis keys for orgs that have NO active packs
     # but might still have stale Redis values
     for key_pattern, credit_type in [
         ("ai_credits_purchased:*", "ai_credits_fixed"),
-        ("member_seats_purchased:*", "member_seats_fixed"),
     ]:
         for key in r.scan_iter(match=key_pattern):
             org_id_str = key.decode().split(":")[-1]
@@ -355,12 +316,8 @@ async def get_org_pack_summary(org_id: int, db_session: AsyncSession) -> dict:
     total_ai_credits = sum(
         p.quantity for p in active_packs if p.pack_type == PackTypeEnum.ai_credits
     )
-    total_member_seats = sum(
-        p.quantity for p in active_packs if p.pack_type == PackTypeEnum.member_seats
-    )
 
     return {
         "ai_credits": total_ai_credits,
-        "member_seats": total_member_seats,
         "active_pack_count": len(active_packs),
     }

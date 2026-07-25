@@ -5510,7 +5510,6 @@
     "admin_seats": "관리자 좌석",
     "ai_credits": "AI 크레딧",
     "addons": "추가 기능",
-    "addons_subtitle": "추가 AI 크레딧이나 멤버 좌석을 월간 구독으로 구매하세요.",
     "active_subscriptions": "활성 구독",
     "credits": "크레딧",
     "seats": "좌석",
@@ -5583,8 +5582,7 @@
     "scheduled_desc": "현재 청구 주기 말에 {{plan}} 플랜으로 변경됩니다. 그때까지 현재 플랜에 완전히 접근할 수 있습니다.",
     "plan_plus_purchased": "플랜: {{plan}} + 구매함: {{purchased}}",
     "base_plus_purchased": "기본: {{base}} + 구매함: {{purchased}}",
-    "pack_ai_desc": "{{quantity}}개의 추가 AI 크레딧이 조직에 추가되었습니다",
-    "pack_seats_desc": "조직을 위한 {{quantity}}개의 추가 회원 자리"
+    "pack_ai_desc": "{{quantity}}개의 추가 AI 크레딧이 조직에 추가되었습니다"
   },
   "hub_new": {
     "useType": {

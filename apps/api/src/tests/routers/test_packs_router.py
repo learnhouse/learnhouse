@@ -2,7 +2,7 @@
 
 import os
 from datetime import datetime
-from unittest.mock import patch
+from unittest.mock import AsyncMock, patch
 
 import pytest
 from fastapi import FastAPI
@@ -173,6 +173,33 @@ class TestInternalPacksRouter:
         assert response.status_code == 200
         assert response.json()["deactivated"] == 2
 
+    async def test_get_active_user_overage(self, client):
+        old = os.environ.get("LEARNHOUSE_PLATFORM_API_KEY")
+        os.environ["LEARNHOUSE_PLATFORM_API_KEY"] = "platform-secret"
+        summary = {
+            "org_id": 1, "plan": "pro", "year": 2026, "month": 7,
+            "active_users": 214, "plan_limit": 200,
+            "overage_units": 14, "overage_usd": 14,
+        }
+        try:
+            with patch(
+                "src.security.features_utils.active_users.get_active_user_summary",
+                new_callable=AsyncMock,
+                return_value=summary,
+            ):
+                response = await client.get(
+                    "/api/v1/internal/packs/1/active-user-overage?year=2026&month=7",
+                    headers={"x-platform-key": "platform-secret"},
+                )
+        finally:
+            if old is None:
+                os.environ.pop("LEARNHOUSE_PLATFORM_API_KEY", None)
+            else:
+                os.environ["LEARNHOUSE_PLATFORM_API_KEY"] = old
+
+        assert response.status_code == 200
+        assert response.json()["overage_units"] == 14
+
 
 class TestOrgPacksRouter:
     async def test_get_org_packs(self, client, org):
@@ -207,7 +234,7 @@ class TestOrgPacksRouter:
             return_value=True,
         ), patch(
             "src.routers.orgs.packs.get_org_pack_summary",
-            return_value={"ai_credits": 500, "member_seats": 0, "active_pack_count": 1},
+            return_value={"ai_credits": 500, "active_pack_count": 1},
         ):
             response = await client.get(f"/api/v1/orgs/{org.id}/packs/summary")
 
