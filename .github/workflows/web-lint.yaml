@@ -10,6 +10,12 @@ on:
       - "apps/web/**"
 permissions:
   contents: read
+
+# See api-lint.yaml — one live run per PR, dev runs always finish.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
 jobs:
   next-lint:
     runs-on: ubuntu-latest
@@ -20,6 +26,14 @@ jobs:
       - uses: oven-sh/setup-bun@v2
         with:
           bun-version: latest
+      # setup-bun restores the toolchain, not the packages. Without this the
+      # web install re-downloads its whole tree on every lint run.
+      - name: Cache bun install cache
+        uses: actions/cache@v4
+        with:
+          path: ~/.bun/install/cache
+          key: bun-web-${{ runner.os }}-${{ hashFiles('apps/web/bun.lock') }}
+          restore-keys: bun-web-${{ runner.os }}-
       - name: Install dependencies
         run: bun install --frozen-lockfile
         working-directory: ./apps/web
