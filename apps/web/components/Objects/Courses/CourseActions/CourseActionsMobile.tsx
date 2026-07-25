@@ -6,7 +6,7 @@ import { getUriWithOrg } from '@services/config/config'
 import { getOffersByResource } from '@services/payments/offers'
 import { LogIn, LogOut, ShoppingCart, Lock, UserPlus } from 'lucide-react'
 import { removeCourse, startCourse } from '@services/courses/activity'
-import { revalidateTags } from '@services/utils/ts/requests'
+import { revalidateTags, asArray } from '@services/utils/ts/requests'
 import UserAvatar from '../../UserAvatar'
 import { getUserAvatarMediaDirectory } from '@services/media/media'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
@@ -155,7 +155,7 @@ const CourseActionsMobile = ({ courseuuid, orgslug, course, trailData }: CourseA
     enabled: !!org && !!resourceUuid,
     staleTime: 60_000,
   });
-  const linkedOffers: any[] = offersResult?.data ?? [];
+  const linkedOffers: any[] = asArray(offersResult);
 
   const handleCourseAction = async () => {
     if (!session.data?.user) {

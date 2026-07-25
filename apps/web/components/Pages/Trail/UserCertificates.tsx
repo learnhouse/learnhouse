@@ -9,6 +9,7 @@ import Link from 'next/link'
 import { useQuery } from '@tanstack/react-query'
 import { queryKeys } from '@/lib/query/keys'
 import { getAllUserCertificates } from '@services/courses/certifications'
+import { asArray } from '@services/utils/ts/requests'
 import { useTranslation } from 'react-i18next'
 import { getCourseThumbnailMediaDirectory } from '@services/media/media'
 
@@ -25,7 +26,7 @@ const UserCertificates: React.FC<UserCertificatesProps> = ({ orgslug }) => {
   const { data: certificates, error, isLoading } = useQuery({
     queryKey: queryKeys.certifications.detail(`user_all_${org?.id}`),
     queryFn: () => getAllUserCertificates(org.id, access_token),
-    select: (res: any) => (Array.isArray(res) ? res : res?.data ?? []),
+    select: (res: any) => asArray(res),
     enabled: !!access_token && !!org?.id,
     staleTime: 60_000,
   })

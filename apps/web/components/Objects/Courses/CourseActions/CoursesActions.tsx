@@ -1,6 +1,6 @@
 import React, { useState } from 'react'
 import { removeCourse, startCourse } from '@services/courses/activity'
-import { revalidateTags } from '@services/utils/ts/requests'
+import { revalidateTags, asArray } from '@services/utils/ts/requests'
 import { useRouter } from 'next/navigation'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
 import { getUriWithOrg } from '@services/config/config'
@@ -84,7 +84,7 @@ function CoursesActions({ courseuuid, orgslug, course, trailData }: CourseAction
     enabled: !!org && !!resourceUuid,
     staleTime: 60_000,
   });
-  const linkedOffers: any[] = offersResult?.data ?? [];
+  const linkedOffers: any[] = asArray(offersResult);
 
   const handleCourseAction = async () => {
     if (!session.data?.user) {

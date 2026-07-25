@@ -16,6 +16,7 @@ Everything is gated by `LEARNHOUSE_HLS_ENABLED` (default off). Until a video is
 """
 
 import asyncio
+import contextlib
 import json
 import logging
 import os
@@ -44,6 +45,27 @@ logger = logging.getLogger(__name__)
 
 REDIS_QUEUE_KEY = "learnhouse:hls:queue"
 
+
+@contextlib.contextmanager
+def scratch_dir():
+    """A temp directory whose cleanup can never fail the job.
+
+    ``tempfile.TemporaryDirectory`` raises on exit if anything is still writing
+    into the tree — ffmpeg segment writers race the rmtree and it comes back as
+    ``[Errno 39] Directory not empty``, which surfaced as "HLS job crashed"
+    *after* the transcode had already succeeded and uploaded. The output is
+    already safe at that point; a leftover temp dir is not worth failing over
+    (the periodic cleanup sweeps it later anyway).
+    """
+    path = tempfile.mkdtemp(prefix="lh-hls-")
+    try:
+        yield path
+    finally:
+        try:
+            shutil.rmtree(path, ignore_errors=True)
+        except Exception:  # pragma: no cover — ignore_errors already swallows
+            logger.debug("Could not remove scratch dir %s", path, exc_info=True)
+
 # In-app background consumer state. Transcoding runs INSIDE the API process as
 # an asyncio background task that drains the Redis queue — no separate worker
 # deployment. ffmpeg runs as an async subprocess and S3 I/O is offloaded to a
@@ -58,6 +80,9 @@ _inflight: set = set()
 
 REAPER_INTERVAL_SECONDS = 5 * 60
 CONSUMER_POLL_SECONDS = 2
+# How many consecutive background failures (queue polls, reconcile passes) it
+# takes before we treat the condition as a real outage rather than a blip.
+CONSECUTIVE_POLL_FAILURES_BEFORE_ERROR = 3
 # Hard ceiling for a single transcode job; bounds any hang so the consumer slot
 # always frees (the reconciler re-queues anything left unfinished).
 JOB_TIMEOUT_SECONDS = 40 * 60
@@ -212,7 +237,7 @@ async def transcode_activity(activity_uuid: str) -> bool:
 
     await _set_status(activity_uuid, "processing")
     try:
-        with tempfile.TemporaryDirectory() as td:
+        with scratch_dir() as td:
             # basename() is defensive belt-and-suspenders on top of _safe_filename.
             local_src = os.path.join(td, os.path.basename(filename))
             # Blocking I/O off the event loop (matters for the in-process worker).
@@ -397,7 +422,7 @@ async def transcode_block(activity_uuid: str, block_uuid: str) -> bool:
 
     await _set_block_status(block_uuid, "processing")
     try:
-        with tempfile.TemporaryDirectory() as td:
+        with scratch_dir() as td:
             local_src = os.path.join(td, os.path.basename(filename))
             if not await asyncio.to_thread(_fetch_source, src_key, local_src):
                 await _set_block_status(block_uuid, "failed", error="source_unavailable")
@@ -506,15 +531,23 @@ async def _consumer_loop(poll_seconds: int = CONSUMER_POLL_SECONDS) -> None:
             _inflight.discard(item)
             sem.release()
 
+    # A single failed poll means nothing — Redis read timeouts happen on an idle
+    # connection and the next poll reconnects. Only a *run* of failures is worth
+    # an error (i.e. Redis is actually down), otherwise every blip pages us.
+    poll_failures = 0
+
     while True:
         await sem.acquire()
         try:
             item = await asyncio.to_thread(client.lpop, REDIS_QUEUE_KEY)
+            poll_failures = 0
         except asyncio.CancelledError:
             sem.release()
             raise
         except Exception as e:
-            logger.error("HLS consumer: poll error: %s", e)
+            poll_failures += 1
+            log = logger.error if poll_failures >= CONSECUTIVE_POLL_FAILURES_BEFORE_ERROR else logger.warning
+            log("HLS consumer: poll error (%s in a row): %s", poll_failures, e)
             sem.release()
             await asyncio.sleep(poll_seconds)
             continue
@@ -657,14 +690,18 @@ async def reconcile_unfinished(max_retries: Optional[int] = None) -> dict:
 
 
 async def _reconcile_loop(interval: int = REAPER_INTERVAL_SECONDS) -> None:
+    failures = 0
     while True:
         await asyncio.sleep(interval)
         try:
             await reconcile_unfinished()
+            failures = 0
         except asyncio.CancelledError:
             raise
         except Exception as e:
-            logger.error("HLS reconcile error: %s", e)
+            failures += 1
+            log = logger.error if failures >= CONSECUTIVE_POLL_FAILURES_BEFORE_ERROR else logger.warning
+            log("HLS reconcile error (%s in a row): %s", failures, e)
 
 
 def start_consumer() -> None:

@@ -100,7 +100,7 @@ async def get_organization_by_uuid(
     org_config = (await db_session.execute(statement)).scalars().first()
 
     if org_config is None:
-        logging.error(f"Organization {org_uuid} has no config")
+        logging.warning(f"Organization {org_uuid} has no config")
 
     return _build_org_read_with_resolved(org, org_config)
 
@@ -132,7 +132,7 @@ async def get_organization_by_slug(
     org_config = await _get_org_config_cached(org.id, db_session)
 
     if org_config is None:
-        logging.error(f"Organization {org_slug} has no config")
+        logging.warning(f"Organization {org_slug} has no config")
 
     org_read = _build_org_read_with_resolved(org, org_config)
 
@@ -316,7 +316,7 @@ async def create_org(
     org_config = (await db_session.execute(statement)).scalars().first()
 
     if org_config is None:
-        logging.error(f"Organization {org.id} has no config")
+        logging.warning(f"Organization {org.id} has no config")
 
     # Reuse the shared builder so the create response carries resolved_features,
     # matching the GET org endpoints (and the None-config case is handled).
@@ -410,7 +410,7 @@ async def create_org_with_config(
     org_config = (await db_session.execute(statement)).scalars().first()
 
     if org_config is None:
-        logging.error(f"Organization {org.id} has no config")
+        logging.warning(f"Organization {org.id} has no config")
 
     # Reuse the shared builder so the create response carries resolved_features,
     # matching the GET org endpoints (and the None-config case is handled).
@@ -486,7 +486,7 @@ async def update_org_with_config_no_auth(
     org_config = (await db_session.execute(statement)).scalars().first()
 
     if org_config is None:
-        logging.error(f"Organization {org_id} has no config")
+        logging.warning(f"Organization {org_id} has no config")
         raise HTTPException(
             status_code=404,
             detail="Organization config not found",
@@ -571,7 +571,7 @@ async def update_org_favicon(
     org_config = (await db_session.execute(statement)).scalars().first()
 
     if org_config is None:
-        logging.error(f"Organization {org_id} has no config")
+        logging.warning(f"Organization {org_id} has no config")
         raise HTTPException(
             status_code=404,
             detail="Organization config not found",
@@ -889,7 +889,7 @@ async def update_org_signup_mechanism(
     org_config = (await db_session.execute(statement)).scalars().first()
 
     if org_config is None:
-        logging.error(f"Organization {org_id} has no config")
+        logging.warning(f"Organization {org_id} has no config")
         raise HTTPException(
             status_code=404,
             detail="Organization config not found",
@@ -953,7 +953,7 @@ async def update_org_ai_config(
     org_config = (await db_session.execute(statement)).scalars().first()
 
     if org_config is None:
-        logging.error(f"Organization {org_id} has no config")
+        logging.warning(f"Organization {org_id} has no config")
         raise HTTPException(
             status_code=404,
             detail="Organization config not found",
@@ -1550,7 +1550,7 @@ async def get_org_join_mechanism(
     org_config = (await db_session.execute(statement)).scalars().first()
 
     if org_config is None:
-        logging.error(f"Organization {org_id} has no config")
+        logging.warning(f"Organization {org_id} has no config")
         raise HTTPException(
             status_code=404,
             detail="Organization config not found",
@@ -1604,7 +1604,7 @@ async def update_org_landing(
     org_config = (await db_session.execute(statement)).scalars().first()
 
     if org_config is None:
-        logging.error(f"Organization {org_id} has no config")
+        logging.warning(f"Organization {org_id} has no config")
         raise HTTPException(
             status_code=404,
             detail="Organization config not found",
@@ -1678,7 +1678,7 @@ async def update_org_seo_config(
     org_config = (await db_session.execute(statement)).scalars().first()
 
     if org_config is None:
-        logging.error(f"Organization {org_id} has no config")
+        logging.warning(f"Organization {org_id} has no config")
         raise HTTPException(
             status_code=404,
             detail="Organization config not found",

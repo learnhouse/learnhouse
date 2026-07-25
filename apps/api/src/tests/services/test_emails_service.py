@@ -1,6 +1,9 @@
 """Tests for src/services/users/emails.py."""
 
+from types import SimpleNamespace
 from unittest.mock import patch
+
+import pytest
 
 from src.db.organizations import OrganizationRead
 from src.db.users import UserRead
@@ -295,3 +298,83 @@ class TestEmailsService:
             )
         body = send_email.call_args.kwargs["body"]
         assert "You've been invited" in body
+
+
+class TestNotificationEmailResilience:
+    """Lifecycle mail must never take the request down with it."""
+
+    def test_notification_email_failure_does_not_propagate(self):
+        from fastapi import HTTPException
+
+        with patch(
+            "src.services.users.emails.send_email",
+            side_effect=HTTPException(status_code=503, detail="Email service temporarily unavailable"),
+        ):
+            # A signup whose welcome email fails still returns — the account is
+            # already created, so a dead mail provider must not 5xx the caller.
+            assert send_account_creation_email(_user(), "user@test.com") is False
+
+    def test_password_reset_email_still_raises(self):
+        from fastapi import HTTPException
+
+        from src.services.users.emails import send_password_reset_email
+
+        with patch(
+            "src.services.users.emails.send_email",
+            side_effect=HTTPException(status_code=503, detail="down"),
+        ):
+            with pytest.raises(HTTPException):
+                send_password_reset_email(
+                    "code 123",
+                    _user(),
+                    _org(),
+                    "user@test.com",
+                    "https://app.test",
+                )
+
+
+class TestResendTransientRetry:
+    def test_timeout_is_retried_once_then_succeeds(self, monkeypatch):
+        from src.services.email import utils as email_utils
+
+        monkeypatch.setattr(email_utils.time, "sleep", lambda _s: None)
+        calls = []
+
+        def flaky(payload):
+            calls.append(payload)
+            if len(calls) == 1:
+                raise RuntimeError("Read timed out. (read timeout=30)")
+            return {"id": "sent"}
+
+        monkeypatch.setattr(email_utils.resend.Emails, "send", staticmethod(flaky))
+
+        result = email_utils._send_email_resend(
+            "LearnHouse <no-reply@test>", "user@test.com", "hi", "<p>hi</p>",
+            SimpleNamespace(resend_api_key="key"),
+        )
+
+        assert result == {"id": "sent"}
+        assert len(calls) == 2
+
+    def test_quota_error_is_not_retried(self, monkeypatch):
+        from fastapi import HTTPException
+
+        from src.services.email import utils as email_utils
+
+        monkeypatch.setattr(email_utils.time, "sleep", lambda _s: None)
+        calls = []
+
+        def over_quota(payload):
+            calls.append(payload)
+            raise RuntimeError("You have reached your daily email sending quota.")
+
+        monkeypatch.setattr(email_utils.resend.Emails, "send", staticmethod(over_quota))
+
+        with pytest.raises(HTTPException) as exc_info:
+            email_utils._send_email_resend(
+                "LearnHouse <no-reply@test>", "user@test.com", "hi", "<p>hi</p>",
+                SimpleNamespace(resend_api_key="key"),
+            )
+
+        assert exc_info.value.status_code == 503
+        assert len(calls) == 1  # a quota error will not clear on retry

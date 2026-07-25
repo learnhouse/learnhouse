@@ -23,7 +23,7 @@ import { useLHSession } from '@components/Contexts/LHSessionContext'
 import { deleteCourseFromBackend, cloneCourse } from '@services/courses/courses'
 import { exportCoursesBatch, downloadBlob, ExportStatus } from '@services/courses/transfer'
 import { exportToast } from '@components/Objects/StyledElements/Toast/ExportToast'
-import { RequestBodyWithAuthHeader } from '@services/utils/ts/requests'
+import { RequestBodyWithAuthHeader, asArray } from '@services/utils/ts/requests'
 import { getUserGroups, getUserGroupResources } from '@services/usergroups/usergroups'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { queryKeys } from '@/lib/query/keys'
@@ -107,7 +107,7 @@ function CoursesHome(params: CourseProps) {
     if (!usergroupsAvailable || !access_token || !orgId) return
     getUserGroups(orgId, access_token)
       .then((res: any) => {
-        const list = Array.isArray(res) ? res : res?.data || []
+        const list = asArray(res)
         setUsergroups(list)
         // Clear saved selection if the usergroup no longer exists
         if (selectedUsergroupId && !list.some((ug: any) => String(ug.id) === selectedUsergroupId)) {
@@ -126,7 +126,7 @@ function CoursesHome(params: CourseProps) {
     }
     getUserGroupResources(selectedUsergroupId, orgId, access_token)
       .then((res: any) => {
-        const uuids = Array.isArray(res) ? res : res?.data || []
+        const uuids = asArray(res)
         setUsergroupResourceUuids(new Set(uuids))
       })
       .catch(() => setUsergroupResourceUuids(null))

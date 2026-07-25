@@ -183,7 +183,9 @@ const LearnHousePlayer: React.FC<LearnHousePlayerProps> = ({
           player.one('loadedmetadata', () => {
             try { if (resume > 0) player.currentTime(resume) } catch { /* noop */ }
           })
-          player.play?.()
+          // Recovery can fire without a user gesture, so the autoplay policy
+          // rejects this promise — expected, and not something to report.
+          void Promise.resolve(player.play?.()).catch(() => { /* autoplay blocked */ })
           armWatchdog()
         } catch {
           /* best-effort */

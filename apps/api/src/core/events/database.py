@@ -1,3 +1,4 @@
+import asyncio
 import logging
 import os
 import importlib
@@ -339,7 +340,30 @@ if not is_testing:
         logging.warning("Failed to register cache invalidation hooks", exc_info=True)
 
 
-async def connect_to_db(app: FastAPI):
+# A saturated connection pooler ("max clients reached in session mode"), a
+# rolling database restart or a brief network blip are all transient: the pod
+# just needs to try again in a moment. Failing the boot instead turns a
+# seconds-long blip into a crash loop, and every restart opens a fresh batch of
+# connections against the pooler that is already out of clients — the outage
+# feeds itself. Retry those, but keep failing fast on permanent errors
+# (bad password, unknown database) where retrying only delays the real signal.
+_STARTUP_CONNECT_ATTEMPTS = int(os.getenv("LEARNHOUSE_DB_STARTUP_ATTEMPTS", "5"))
+_STARTUP_CONNECT_BACKOFF_SECONDS = 2.0
+_PERMANENT_CONNECT_ERROR_MARKERS = (
+    "password authentication failed",
+    "role \"",
+    "does not exist",
+    "no pg_hba.conf entry",
+    "permission denied",
+)
+
+
+def _is_transient_connect_error(exc: BaseException) -> bool:
+    message = str(exc).lower()
+    return not any(marker in message for marker in _PERMANENT_CONNECT_ERROR_MARKERS)
+
+
+async def _bootstrap_schema():
     async with engine.begin() as conn:
         # Enable pgvector extension for vector similarity search (optional — RAG feature)
         try:
@@ -354,6 +378,30 @@ async def connect_to_db(app: FastAPI):
         # Create all tables
         if not is_testing:
             await conn.run_sync(SQLModel.metadata.create_all)
+
+
+async def connect_to_db(app: FastAPI):
+    attempts = max(1, _STARTUP_CONNECT_ATTEMPTS)
+    for attempt in range(1, attempts + 1):
+        try:
+            await _bootstrap_schema()
+            break
+        except Exception as e:
+            if attempt >= attempts or not _is_transient_connect_error(e):
+                raise
+            delay = _STARTUP_CONNECT_BACKOFF_SECONDS * attempt
+            logging.warning(
+                "Database not reachable on startup (attempt %s/%s), retrying in %ss: %s",
+                attempt, attempts, delay, e,
+            )
+            # Drop whatever half-open connections the failed attempt left in the
+            # pool so the retry doesn't hand them straight back to us.
+            try:
+                await engine.dispose()
+            except Exception:
+                logging.debug("Engine dispose before retry failed", exc_info=True)
+            await asyncio.sleep(delay)
+
     app.db_engine = engine  # type: ignore
     logging.info("LearnHouse database has been started.")
 

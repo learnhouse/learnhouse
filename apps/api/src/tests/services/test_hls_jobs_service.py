@@ -775,3 +775,40 @@ async def test_stop_consumer_waits_for_children(monkeypatch):
     hls_jobs._inflight.clear()
     await hls_jobs.stop_consumer()  # gathers children
     hls_jobs._consumer_children.clear()
+
+
+# --------------------------------------------------------------------------
+# Scratch directory cleanup
+# --------------------------------------------------------------------------
+
+
+def test_scratch_dir_cleans_up_and_never_raises_on_busy_tree(monkeypatch):
+    """A file appearing mid-cleanup used to surface as "HLS job crashed".
+
+    tempfile.TemporaryDirectory raises OSError(39, "Directory not empty") when
+    something writes into the tree while it is being removed — after the
+    transcode had already succeeded and uploaded.
+    """
+    seen = {}
+    with hls_jobs.scratch_dir() as td:
+        seen["path"] = td
+        os.makedirs(os.path.join(td, "hls", "v720p"))
+        with open(os.path.join(td, "hls", "v720p", "seg0.ts"), "w") as f:
+            f.write("x")
+
+    assert not os.path.exists(seen["path"])
+
+    real_rmtree = hls_jobs.shutil.rmtree
+    calls = []
+
+    def exploding_rmtree(path, ignore_errors=False):
+        calls.append(path)
+        raise OSError(39, "Directory not empty")
+
+    monkeypatch.setattr(hls_jobs.shutil, "rmtree", exploding_rmtree)
+    with hls_jobs.scratch_dir() as td:
+        leftover = td
+    assert calls == [leftover]  # cleanup attempted, exception swallowed
+
+    monkeypatch.setattr(hls_jobs.shutil, "rmtree", real_rmtree)
+    real_rmtree(leftover, ignore_errors=True)
