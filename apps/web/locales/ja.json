@@ -2998,6 +2998,32 @@
           "message2": "ユーザー設定を表示および管理するには、デスクトップに切り替えてください。"
         }
       },
+      "analytics": {
+        "button": "分析",
+        "view_analytics": "受講者の分析を表示",
+        "open_full_page": "分析ページ全体を開く",
+        "compare": "分析を比較",
+        "compare_students": "受講者を比較",
+        "export": "エクスポート",
+        "export_selected": "分析をエクスポート（{{count}}）",
+        "exporting": "エクスポート中…",
+        "failed_load": "受講者ドシエの読み込みに失敗しました。",
+        "back_to_students": "受講者一覧に戻る",
+        "no_behavioral": "行動データがありません（この期間の分析が未設定の可能性があります）。",
+        "ranges": { "d30": "30日", "d90": "90日", "y1": "1年" },
+        "kpi": { "courses": "コース", "completed": "{{count}} 件完了", "avg_progress": "平均進捗", "time_spent": "利用時間", "assignments": "課題", "avg_grade": "平均 {{grade}}", "certificates": "証明書", "connections": "接続", "last": "最終 {{date}}" },
+        "tabs": { "connections": "接続", "courses": "コース", "assignments": "課題", "code": "コード", "community": "コミュニティ", "certificates": "証明書", "behavior": "行動" },
+        "identity": { "verified": "認証済み", "unverified": "未認証", "via": "{{method}} 経由" },
+        "connections": { "title": "接続", "empty": "記録された接続はまだありません。" },
+        "courses": { "title": "コースの進捗", "empty": "登録しているコースがありません。", "activities": "{{done}}/{{total}} アクティビティ", "enrolled": "登録日 {{date}}" },
+        "assignments": { "title": "課題", "empty": "課題の提出がありません。", "attempt": "{{number}} 回目の試行", "feedback": "フィードバック：" },
+        "code": { "title": "コード演習", "empty": "コードの提出がありません。", "activity": "アクティビティ", "result": "結果", "tests": "テスト", "time": "時間", "when": "日時", "passed": "合格", "failed": "不合格" },
+        "community": { "title": "コミュニティへの参加", "empty": "コミュニティの活動がありません。", "discussions": "ディスカッション", "comments": "コメント" },
+        "certificates": { "title": "取得した証明書", "empty": "取得した証明書はありません。" },
+        "behavior": { "title": "行動分析", "time_by_course": "コース別の利用時間", "searches": "検索" },
+        "status": { "completed": "完了", "in_progress": "進行中", "paused": "一時停止", "cancelled": "キャンセル済み", "graded": "採点済み", "submitted": "提出済み", "pending": "保留中", "late": "遅延", "not_submitted": "未提出" },
+        "comparison": { "student": "受講者", "enrolled": "登録済み", "completed": "完了", "certificates": "証明書", "last_connection": "最終接続", "view": "表示" }
+      },
       "active_users": {
         "title": "アクティブユーザー",
         "subtitle": "組織 of users を管理し、ロールと権限を割り当てます",

@@ -3010,6 +3010,32 @@
           "message2": "Silakan beralih ke desktop untuk melihat dan mengelola pengaturan pengguna."
         }
       },
+      "analytics": {
+        "button": "Analitik",
+        "view_analytics": "Lihat analitik siswa",
+        "open_full_page": "Buka halaman analitik lengkap",
+        "compare": "Bandingkan analitik",
+        "compare_students": "Bandingkan siswa",
+        "export": "Ekspor",
+        "export_selected": "Ekspor analitik ({{count}})",
+        "exporting": "Mengekspor…",
+        "failed_load": "Gagal memuat dosier siswa.",
+        "back_to_students": "Kembali ke daftar siswa",
+        "no_behavioral": "Tidak ada data perilaku (analitik mungkin belum dikonfigurasi untuk rentang waktu ini).",
+        "ranges": { "d30": "30 hari", "d90": "90 hari", "y1": "1 tahun" },
+        "kpi": { "courses": "Kursus", "completed": "{{count}} selesai", "avg_progress": "Rata-rata kemajuan", "time_spent": "Waktu yang dihabiskan", "assignments": "Tugas", "avg_grade": "rata-rata {{grade}}", "certificates": "Sertifikat", "connections": "Koneksi", "last": "terakhir {{date}}" },
+        "tabs": { "connections": "Koneksi", "courses": "Kursus", "assignments": "Tugas", "code": "Kode", "community": "Komunitas", "certificates": "Sertifikat", "behavior": "Perilaku" },
+        "identity": { "verified": "Terverifikasi", "unverified": "Belum terverifikasi", "via": "melalui {{method}}" },
+        "connections": { "title": "Koneksi", "empty": "Belum ada koneksi yang tercatat." },
+        "courses": { "title": "Kemajuan kursus", "empty": "Belum terdaftar di kursus mana pun.", "activities": "{{done}}/{{total}} aktivitas", "enrolled": "Terdaftar {{date}}" },
+        "assignments": { "title": "Tugas", "empty": "Tidak ada pengumpulan tugas.", "attempt": "percobaan {{number}}", "feedback": "Umpan balik:" },
+        "code": { "title": "Latihan kode", "empty": "Tidak ada pengumpulan kode.", "activity": "Aktivitas", "result": "Hasil", "tests": "Pengujian", "time": "Waktu", "when": "Kapan", "passed": "Lulus", "failed": "Gagal" },
+        "community": { "title": "Partisipasi komunitas", "empty": "Tidak ada aktivitas komunitas.", "discussions": "Diskusi", "comments": "Komentar" },
+        "certificates": { "title": "Sertifikat yang diperoleh", "empty": "Tidak ada sertifikat yang diperoleh." },
+        "behavior": { "title": "Analitik perilaku", "time_by_course": "Waktu yang dihabiskan per kursus", "searches": "Pencarian" },
+        "status": { "completed": "selesai", "in_progress": "sedang berlangsung", "paused": "dijeda", "cancelled": "dibatalkan", "graded": "dinilai", "submitted": "dikumpulkan", "pending": "menunggu", "late": "terlambat", "not_submitted": "belum dikumpulkan" },
+        "comparison": { "student": "Siswa", "enrolled": "Terdaftar", "completed": "Selesai", "certificates": "Sertifikat", "last_connection": "Koneksi terakhir", "view": "Lihat" }
+      },
       "active_users": {
         "title": "Pengguna aktif",
         "subtitle": "Kelola pengguna organisasi Anda, tetapkan peran dan izin",

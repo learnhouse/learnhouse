@@ -2988,6 +2988,32 @@
           "message2": "Bitte wechseln Sie zu einem Desktop, um die Benutzereinstellungen anzuzeigen und zu verwalten."
         }
       },
+      "analytics": {
+        "button": "Analysen",
+        "view_analytics": "Studentenanalysen anzeigen",
+        "open_full_page": "Vollständige Analyseseite öffnen",
+        "compare": "Analysen vergleichen",
+        "compare_students": "Studenten vergleichen",
+        "export": "Exportieren",
+        "export_selected": "Analysen exportieren ({{count}})",
+        "exporting": "Exportieren…",
+        "failed_load": "Das Studentendossier konnte nicht geladen werden.",
+        "back_to_students": "Zurück zu den Studenten",
+        "no_behavioral": "Keine Verhaltensdaten (Analysen sind für diesen Zeitraum möglicherweise nicht konfiguriert).",
+        "ranges": { "d30": "30 Tage", "d90": "90 Tage", "y1": "1 Jahr" },
+        "kpi": { "courses": "Kurse", "completed": "{{count}} abgeschlossen", "avg_progress": "Durchschn. Fortschritt", "time_spent": "Aufgewendete Zeit", "assignments": "Aufgaben", "avg_grade": "Durchschn. {{grade}}", "certificates": "Zertifikate", "connections": "Verbindungen", "last": "letzte {{date}}" },
+        "tabs": { "connections": "Verbindungen", "courses": "Kurse", "assignments": "Aufgaben", "code": "Code", "community": "Community", "certificates": "Zertifikate", "behavior": "Verhalten" },
+        "identity": { "verified": "Verifiziert", "unverified": "Nicht verifiziert", "via": "über {{method}}" },
+        "connections": { "title": "Verbindungen", "empty": "Noch keine Verbindungen aufgezeichnet." },
+        "courses": { "title": "Kursfortschritt", "empty": "In keinem Kurs eingeschrieben.", "activities": "{{done}}/{{total}} Aktivitäten", "enrolled": "Eingeschrieben am {{date}}" },
+        "assignments": { "title": "Aufgaben", "empty": "Keine Aufgabeneinreichungen.", "attempt": "Versuch {{number}}", "feedback": "Feedback:" },
+        "code": { "title": "Programmieraufgaben", "empty": "Keine Code-Einreichungen.", "activity": "Aktivität", "result": "Ergebnis", "tests": "Tests", "time": "Zeit", "when": "Wann", "passed": "Bestanden", "failed": "Fehlgeschlagen" },
+        "community": { "title": "Community-Beteiligung", "empty": "Keine Community-Aktivität.", "discussions": "Diskussionen", "comments": "Kommentare" },
+        "certificates": { "title": "Erworbene Zertifikate", "empty": "Keine Zertifikate erworben." },
+        "behavior": { "title": "Verhaltensanalysen", "time_by_course": "Aufgewendete Zeit pro Kurs", "searches": "Suchen" },
+        "status": { "completed": "abgeschlossen", "in_progress": "in Bearbeitung", "paused": "pausiert", "cancelled": "abgebrochen", "graded": "benotet", "submitted": "eingereicht", "pending": "ausstehend", "late": "verspätet", "not_submitted": "nicht eingereicht" },
+        "comparison": { "student": "Student", "enrolled": "Eingeschrieben", "completed": "Abgeschlossen", "certificates": "Zertifikate", "last_connection": "Letzte Verbindung", "view": "Anzeigen" }
+      },
       "active_users": {
         "title": "Aktive Benutzer",
         "subtitle": "Verwalten Sie Ihre Organisationsbenutzer, weisen Sie Rollen und Berechtigungen zu",

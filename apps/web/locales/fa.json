@@ -3285,6 +3285,32 @@
           "message2": "لطفاً برای مشاهده و مدیریت تنظیمات کاربر به دسکتاپ بروید."
         }
       },
+      "analytics": {
+        "button": "تحلیل‌ها",
+        "view_analytics": "مشاهده تحلیل‌های دانشجو",
+        "open_full_page": "باز کردن صفحه کامل تحلیل‌ها",
+        "compare": "مقایسه تحلیل‌ها",
+        "compare_students": "مقایسه دانشجویان",
+        "export": "خروجی گرفتن",
+        "export_selected": "خروجی تحلیل‌ها ({{count}})",
+        "exporting": "در حال خروجی گرفتن…",
+        "failed_load": "بارگذاری پرونده دانشجو ناموفق بود.",
+        "back_to_students": "بازگشت به دانشجویان",
+        "no_behavioral": "داده رفتاری وجود ندارد (ممکن است تحلیل‌ها برای این بازه پیکربندی نشده باشد).",
+        "ranges": { "d30": "۳۰ روز", "d90": "۹۰ روز", "y1": "۱ سال" },
+        "kpi": { "courses": "دوره‌ها", "completed": "{{count}} تکمیل‌شده", "avg_progress": "میانگین پیشرفت", "time_spent": "زمان صرف‌شده", "assignments": "تکالیف", "avg_grade": "میانگین {{grade}}", "certificates": "گواهی‌ها", "connections": "اتصال‌ها", "last": "آخرین {{date}}" },
+        "tabs": { "connections": "اتصال‌ها", "courses": "دوره‌ها", "assignments": "تکالیف", "code": "کد", "community": "انجمن", "certificates": "گواهی‌ها", "behavior": "رفتار" },
+        "identity": { "verified": "تأییدشده", "unverified": "تأییدنشده", "via": "از طریق {{method}}" },
+        "connections": { "title": "اتصال‌ها", "empty": "هنوز هیچ اتصالی ثبت نشده است." },
+        "courses": { "title": "پیشرفت دوره", "empty": "در هیچ دوره‌ای ثبت‌نام نشده است.", "activities": "{{done}}/{{total}} فعالیت", "enrolled": "ثبت‌نام در {{date}}" },
+        "assignments": { "title": "تکالیف", "empty": "هیچ تکلیفی ارسال نشده است.", "attempt": "تلاش {{number}}", "feedback": "بازخورد:" },
+        "code": { "title": "تمرین‌های کد", "empty": "هیچ کدی ارسال نشده است.", "activity": "فعالیت", "result": "نتیجه", "tests": "آزمون‌ها", "time": "زمان", "when": "چه زمانی", "passed": "قبول", "failed": "مردود" },
+        "community": { "title": "مشارکت در انجمن", "empty": "هیچ فعالیت انجمنی وجود ندارد.", "discussions": "بحث‌ها", "comments": "نظرات" },
+        "certificates": { "title": "گواهی‌های کسب‌شده", "empty": "هیچ گواهی‌ای کسب نشده است." },
+        "behavior": { "title": "تحلیل‌های رفتاری", "time_by_course": "زمان صرف‌شده بر اساس دوره", "searches": "جستجوها" },
+        "status": { "completed": "تکمیل‌شده", "in_progress": "در حال انجام", "paused": "متوقف‌شده", "cancelled": "لغوشده", "graded": "نمره‌داده‌شده", "submitted": "ارسال‌شده", "pending": "در انتظار", "late": "با تأخیر", "not_submitted": "ارسال‌نشده" },
+        "comparison": { "student": "دانشجو", "enrolled": "ثبت‌نام‌شده", "completed": "تکمیل‌شده", "certificates": "گواهی‌ها", "last_connection": "آخرین اتصال", "view": "مشاهده" }
+      },
       "active_users": {
         "title": "کاربران فعال",
         "subtitle": "مدیریت کاربران سازمان، اختصاص نقش‌ها و مجوزها",

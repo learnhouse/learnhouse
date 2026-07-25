@@ -3012,6 +3012,32 @@
           "message2": "Kullanıcı ayarlarını görüntülemek ve yönetmek için lütfen masaüstüne geçin."
         }
       },
+      "analytics": {
+        "button": "Analitik",
+        "view_analytics": "Öğrenci analitiğini görüntüle",
+        "open_full_page": "Tam analitik sayfasını aç",
+        "compare": "Analitiği karşılaştır",
+        "compare_students": "Öğrencileri karşılaştır",
+        "export": "Dışa aktar",
+        "export_selected": "Analitiği dışa aktar ({{count}})",
+        "exporting": "Dışa aktarılıyor…",
+        "failed_load": "Öğrenci dosyası yüklenemedi.",
+        "back_to_students": "Öğrencilere geri dön",
+        "no_behavioral": "Davranışsal veri yok (analitik bu dönem için yapılandırılmamış olabilir).",
+        "ranges": { "d30": "30 gün", "d90": "90 gün", "y1": "1 yıl" },
+        "kpi": { "courses": "Dersler", "completed": "{{count}} tamamlandı", "avg_progress": "Ort. ilerleme", "time_spent": "Harcanan süre", "assignments": "Ödevler", "avg_grade": "ort. {{grade}}", "certificates": "Sertifikalar", "connections": "Bağlantılar", "last": "son {{date}}" },
+        "tabs": { "connections": "Bağlantılar", "courses": "Dersler", "assignments": "Ödevler", "code": "Kod", "community": "Topluluk", "certificates": "Sertifikalar", "behavior": "Davranış" },
+        "identity": { "verified": "Doğrulandı", "unverified": "Doğrulanmadı", "via": "{{method}} ile" },
+        "connections": { "title": "Bağlantılar", "empty": "Henüz kayıtlı bağlantı yok." },
+        "courses": { "title": "Ders ilerlemesi", "empty": "Herhangi bir derse kayıtlı değil.", "activities": "{{done}}/{{total}} etkinlik", "enrolled": "{{date}} tarihinde kaydoldu" },
+        "assignments": { "title": "Ödevler", "empty": "Ödev gönderimi yok.", "attempt": "deneme {{number}}", "feedback": "Geri bildirim:" },
+        "code": { "title": "Kod alıştırmaları", "empty": "Kod gönderimi yok.", "activity": "Etkinlik", "result": "Sonuç", "tests": "Testler", "time": "Süre", "when": "Ne zaman", "passed": "Geçti", "failed": "Başarısız" },
+        "community": { "title": "Topluluk katılımı", "empty": "Topluluk etkinliği yok.", "discussions": "Tartışmalar", "comments": "Yorumlar" },
+        "certificates": { "title": "Kazanılan sertifikalar", "empty": "Kazanılmış sertifika yok." },
+        "behavior": { "title": "Davranışsal analitik", "time_by_course": "Derse göre harcanan süre", "searches": "Aramalar" },
+        "status": { "completed": "tamamlandı", "in_progress": "devam ediyor", "paused": "duraklatıldı", "cancelled": "iptal edildi", "graded": "notlandırıldı", "submitted": "gönderildi", "pending": "beklemede", "late": "geç", "not_submitted": "gönderilmedi" },
+        "comparison": { "student": "Öğrenci", "enrolled": "Kayıtlı", "completed": "Tamamlandı", "certificates": "Sertifikalar", "last_connection": "Son bağlantı", "view": "Görüntüle" }
+      },
       "active_users": {
         "title": "Aktif Kullanıcılar",
         "subtitle": "Organizasyonunuzdaki kullanıcıları yönetin ve rolleri ile izinlerini atayın",

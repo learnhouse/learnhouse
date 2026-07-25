@@ -3012,6 +3012,32 @@
           "message2": "Vui lòng chuyển sang máy tính để xem và quản lý cài đặt người dùng."
         }
       },
+      "analytics": {
+        "button": "Phân tích",
+        "view_analytics": "Xem phân tích học viên",
+        "open_full_page": "Mở trang phân tích đầy đủ",
+        "compare": "So sánh phân tích",
+        "compare_students": "So sánh học viên",
+        "export": "Xuất",
+        "export_selected": "Xuất phân tích ({{count}})",
+        "exporting": "Đang xuất…",
+        "failed_load": "Không thể tải hồ sơ học viên.",
+        "back_to_students": "Quay lại danh sách học viên",
+        "no_behavioral": "Không có dữ liệu hành vi (phân tích có thể chưa được cấu hình cho khoảng thời gian này).",
+        "ranges": { "d30": "30 ngày", "d90": "90 ngày", "y1": "1 năm" },
+        "kpi": { "courses": "Khóa học", "completed": "{{count}} đã hoàn thành", "avg_progress": "Tiến độ trung bình", "time_spent": "Thời gian đã dùng", "assignments": "Bài tập", "avg_grade": "trung bình {{grade}}", "certificates": "Chứng chỉ", "connections": "Lượt kết nối", "last": "lần cuối {{date}}" },
+        "tabs": { "connections": "Lượt kết nối", "courses": "Khóa học", "assignments": "Bài tập", "code": "Mã", "community": "Cộng đồng", "certificates": "Chứng chỉ", "behavior": "Hành vi" },
+        "identity": { "verified": "Đã xác minh", "unverified": "Chưa xác minh", "via": "qua {{method}}" },
+        "connections": { "title": "Lượt kết nối", "empty": "Chưa có lượt kết nối nào được ghi lại." },
+        "courses": { "title": "Tiến độ khóa học", "empty": "Chưa đăng ký khóa học nào.", "activities": "{{done}}/{{total}} hoạt động", "enrolled": "Đã đăng ký {{date}}" },
+        "assignments": { "title": "Bài tập", "empty": "Không có bài nộp.", "attempt": "lần thử {{number}}", "feedback": "Phản hồi:" },
+        "code": { "title": "Bài tập mã", "empty": "Không có bài nộp mã.", "activity": "Hoạt động", "result": "Kết quả", "tests": "Kiểm thử", "time": "Thời gian", "when": "Khi nào", "passed": "Đạt", "failed": "Không đạt" },
+        "community": { "title": "Tham gia cộng đồng", "empty": "Không có hoạt động cộng đồng.", "discussions": "Thảo luận", "comments": "Bình luận" },
+        "certificates": { "title": "Chứng chỉ đã đạt", "empty": "Chưa đạt chứng chỉ nào." },
+        "behavior": { "title": "Phân tích hành vi", "time_by_course": "Thời gian dùng theo khóa học", "searches": "Lượt tìm kiếm" },
+        "status": { "completed": "đã hoàn thành", "in_progress": "đang thực hiện", "paused": "đã tạm dừng", "cancelled": "đã hủy", "graded": "đã chấm điểm", "submitted": "đã nộp", "pending": "đang chờ", "late": "trễ hạn", "not_submitted": "chưa nộp" },
+        "comparison": { "student": "Học viên", "enrolled": "Đã đăng ký", "completed": "Đã hoàn thành", "certificates": "Chứng chỉ", "last_connection": "Lần kết nối cuối", "view": "Xem" }
+      },
       "active_users": {
         "title": "Người dùng đang hoạt động",
         "subtitle": "Quản lý người dùng trong tổ chức của bạn và gán vai trò cùng quyền hạn cho họ",

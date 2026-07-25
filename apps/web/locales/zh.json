@@ -3000,6 +3000,32 @@
           "message2": "请切换到桌面设备以查看和管理用户设置。"
         }
       },
+      "analytics": {
+        "button": "分析",
+        "view_analytics": "查看学生分析",
+        "open_full_page": "打开完整分析页面",
+        "compare": "对比分析",
+        "compare_students": "对比学生",
+        "export": "导出",
+        "export_selected": "导出分析（{{count}}）",
+        "exporting": "正在导出…",
+        "failed_load": "加载学生档案失败。",
+        "back_to_students": "返回学生列表",
+        "no_behavioral": "暂无行为数据（此时间段的分析可能尚未配置）。",
+        "ranges": { "d30": "30 天", "d90": "90 天", "y1": "1 年" },
+        "kpi": { "courses": "课程", "completed": "已完成 {{count}} 个", "avg_progress": "平均进度", "time_spent": "花费时间", "assignments": "作业", "avg_grade": "平均 {{grade}}", "certificates": "证书", "connections": "登录次数", "last": "最近 {{date}}" },
+        "tabs": { "connections": "登录记录", "courses": "课程", "assignments": "作业", "code": "代码", "community": "社区", "certificates": "证书", "behavior": "行为" },
+        "identity": { "verified": "已验证", "unverified": "未验证", "via": "通过 {{method}}" },
+        "connections": { "title": "登录记录", "empty": "暂无登录记录。" },
+        "courses": { "title": "课程进度", "empty": "未报名任何课程。", "activities": "{{done}}/{{total}} 个活动", "enrolled": "报名于 {{date}}" },
+        "assignments": { "title": "作业", "empty": "暂无作业提交。", "attempt": "第 {{number}} 次尝试", "feedback": "反馈：" },
+        "code": { "title": "代码练习", "empty": "暂无代码提交。", "activity": "活动", "result": "结果", "tests": "测试", "time": "时间", "when": "时间", "passed": "通过", "failed": "失败" },
+        "community": { "title": "社区参与", "empty": "暂无社区活动。", "discussions": "讨论", "comments": "评论" },
+        "certificates": { "title": "已获得证书", "empty": "暂无已获得证书。" },
+        "behavior": { "title": "行为分析", "time_by_course": "按课程花费时间", "searches": "搜索" },
+        "status": { "completed": "已完成", "in_progress": "进行中", "paused": "已暂停", "cancelled": "已取消", "graded": "已评分", "submitted": "已提交", "pending": "待处理", "late": "逾期", "not_submitted": "未提交" },
+        "comparison": { "student": "学生", "enrolled": "已报名", "completed": "已完成", "certificates": "证书", "last_connection": "最近登录", "view": "查看" }
+      },
       "active_users": {
         "title": "活跃用户",
         "subtitle": "管理组织的用户，分配角色和权限",

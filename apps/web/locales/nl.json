@@ -2990,6 +2990,32 @@
           "message2": "Schakel over naar een desktop om gebruikersinstellingen te bekijken en te beheren."
         }
       },
+      "analytics": {
+        "button": "Analyses",
+        "view_analytics": "Analyses van student bekijken",
+        "open_full_page": "Volledige analysepagina openen",
+        "compare": "Analyses vergelijken",
+        "compare_students": "Studenten vergelijken",
+        "export": "Exporteren",
+        "export_selected": "Analyses exporteren ({{count}})",
+        "exporting": "Exporteren…",
+        "failed_load": "Kan het studentendossier niet laden.",
+        "back_to_students": "Terug naar studenten",
+        "no_behavioral": "Geen gedragsgegevens (analyses zijn mogelijk niet geconfigureerd voor deze periode).",
+        "ranges": { "d30": "30 dagen", "d90": "90 dagen", "y1": "1 jaar" },
+        "kpi": { "courses": "Cursussen", "completed": "{{count}} voltooid", "avg_progress": "Gem. voortgang", "time_spent": "Bestede tijd", "assignments": "Opdrachten", "avg_grade": "gem. {{grade}}", "certificates": "Certificaten", "connections": "Verbindingen", "last": "laatst {{date}}" },
+        "tabs": { "connections": "Verbindingen", "courses": "Cursussen", "assignments": "Opdrachten", "code": "Code", "community": "Community", "certificates": "Certificaten", "behavior": "Gedrag" },
+        "identity": { "verified": "Geverifieerd", "unverified": "Niet-geverifieerd", "via": "via {{method}}" },
+        "connections": { "title": "Verbindingen", "empty": "Nog geen verbindingen geregistreerd." },
+        "courses": { "title": "Cursusvoortgang", "empty": "Niet ingeschreven voor een cursus.", "activities": "{{done}}/{{total}} activiteiten", "enrolled": "Ingeschreven op {{date}}" },
+        "assignments": { "title": "Opdrachten", "empty": "Geen ingeleverde opdrachten.", "attempt": "poging {{number}}", "feedback": "Feedback:" },
+        "code": { "title": "Code-oefeningen", "empty": "Geen ingeleverde code.", "activity": "Activiteit", "result": "Resultaat", "tests": "Tests", "time": "Tijd", "when": "Wanneer", "passed": "Geslaagd", "failed": "Mislukt" },
+        "community": { "title": "Deelname aan community", "empty": "Geen community-activiteit.", "discussions": "Discussies", "comments": "Reacties" },
+        "certificates": { "title": "Behaalde certificaten", "empty": "Geen certificaten behaald." },
+        "behavior": { "title": "Gedragsanalyses", "time_by_course": "Bestede tijd per cursus", "searches": "Zoekopdrachten" },
+        "status": { "completed": "voltooid", "in_progress": "bezig", "paused": "gepauzeerd", "cancelled": "geannuleerd", "graded": "beoordeeld", "submitted": "ingeleverd", "pending": "in afwachting", "late": "te laat", "not_submitted": "niet ingeleverd" },
+        "comparison": { "student": "Student", "enrolled": "Ingeschreven", "completed": "Voltooid", "certificates": "Certificaten", "last_connection": "Laatste verbinding", "view": "Bekijken" }
+      },
       "active_users": {
         "title": "Actieve Gebruikers",
         "subtitle": "Beheer gebruikers van de organisatie en wijs rollen en machtigingen toe",

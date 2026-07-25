@@ -3250,6 +3250,32 @@
           "message2": "Prepnite na počítač pre zobrazenie a správu nastavení používateľov."
         }
       },
+      "analytics": {
+        "button": "Analytika",
+        "view_analytics": "Zobraziť analytiku študenta",
+        "open_full_page": "Otvoriť celú stránku analytiky",
+        "compare": "Porovnať analytiku",
+        "compare_students": "Porovnať študentov",
+        "export": "Exportovať",
+        "export_selected": "Exportovať analytiku ({{count}})",
+        "exporting": "Exportuje sa…",
+        "failed_load": "Nepodarilo sa načítať zložku študenta.",
+        "back_to_students": "Späť na študentov",
+        "no_behavioral": "Žiadne údaje o správaní (analytika nemusí byť pre toto obdobie nakonfigurovaná).",
+        "ranges": { "d30": "30 dní", "d90": "90 dní", "y1": "1 rok" },
+        "kpi": { "courses": "Kurzy", "completed": "{{count}} dokončených", "avg_progress": "Priemerný pokrok", "time_spent": "Strávený čas", "assignments": "Zadania", "avg_grade": "priemer {{grade}}", "certificates": "Certifikáty", "connections": "Pripojenia", "last": "naposledy {{date}}" },
+        "tabs": { "connections": "Pripojenia", "courses": "Kurzy", "assignments": "Zadania", "code": "Kód", "community": "Komunita", "certificates": "Certifikáty", "behavior": "Správanie" },
+        "identity": { "verified": "Overené", "unverified": "Neoverené", "via": "cez {{method}}" },
+        "connections": { "title": "Pripojenia", "empty": "Zatiaľ žiadne zaznamenané pripojenia." },
+        "courses": { "title": "Pokrok v kurze", "empty": "Nezapísaný do žiadneho kurzu.", "activities": "{{done}}/{{total}} aktivít", "enrolled": "Zapísaný {{date}}" },
+        "assignments": { "title": "Zadania", "empty": "Žiadne odovzdané zadania.", "attempt": "pokus {{number}}", "feedback": "Spätná väzba:" },
+        "code": { "title": "Kódové cvičenia", "empty": "Žiadne odovzdané kódy.", "activity": "Aktivita", "result": "Výsledok", "tests": "Testy", "time": "Čas", "when": "Kedy", "passed": "Prešlo", "failed": "Zlyhalo" },
+        "community": { "title": "Účasť v komunite", "empty": "Žiadna komunitná aktivita.", "discussions": "Diskusie", "comments": "Komentáre" },
+        "certificates": { "title": "Získané certifikáty", "empty": "Žiadne získané certifikáty." },
+        "behavior": { "title": "Analytika správania", "time_by_course": "Strávený čas podľa kurzu", "searches": "Vyhľadávania" },
+        "status": { "completed": "dokončené", "in_progress": "prebieha", "paused": "pozastavené", "cancelled": "zrušené", "graded": "ohodnotené", "submitted": "odovzdané", "pending": "čaká sa", "late": "oneskorené", "not_submitted": "neodovzdané" },
+        "comparison": { "student": "Študent", "enrolled": "Zapísaný", "completed": "Dokončené", "certificates": "Certifikáty", "last_connection": "Posledné pripojenie", "view": "Zobraziť" }
+      },
       "active_users": {
         "title": "Aktívni používatelia",
         "subtitle": "Spravujte používateľov organizácie, prideľujte role a oprávnenia",

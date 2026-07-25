@@ -3012,6 +3012,32 @@
           "message2": "Przełącz się na komputer, aby przeglądać i zarządzać ustawieniami użytkowników."
         }
       },
+      "analytics": {
+        "button": "Analityka",
+        "view_analytics": "Zobacz analitykę studenta",
+        "open_full_page": "Otwórz pełną stronę analityki",
+        "compare": "Porównaj analitykę",
+        "compare_students": "Porównaj studentów",
+        "export": "Eksportuj",
+        "export_selected": "Eksportuj analitykę ({{count}})",
+        "exporting": "Eksportowanie…",
+        "failed_load": "Nie udało się załadować teczki studenta.",
+        "back_to_students": "Powrót do studentów",
+        "no_behavioral": "Brak danych behawioralnych (analityka może być nieskonfigurowana dla tego okresu).",
+        "ranges": { "d30": "30 dni", "d90": "90 dni", "y1": "1 rok" },
+        "kpi": { "courses": "Kursy", "completed": "{{count}} ukończonych", "avg_progress": "Śr. postęp", "time_spent": "Spędzony czas", "assignments": "Zadania", "avg_grade": "śr. {{grade}}", "certificates": "Certyfikaty", "connections": "Połączenia", "last": "ostatnie {{date}}" },
+        "tabs": { "connections": "Połączenia", "courses": "Kursy", "assignments": "Zadania", "code": "Kod", "community": "Społeczność", "certificates": "Certyfikaty", "behavior": "Zachowanie" },
+        "identity": { "verified": "Zweryfikowany", "unverified": "Niezweryfikowany", "via": "przez {{method}}" },
+        "connections": { "title": "Połączenia", "empty": "Brak zarejestrowanych połączeń." },
+        "courses": { "title": "Postęp kursu", "empty": "Nie zapisano na żaden kurs.", "activities": "{{done}}/{{total}} aktywności", "enrolled": "Zapisano {{date}}" },
+        "assignments": { "title": "Zadania", "empty": "Brak przesłanych zadań.", "attempt": "próba {{number}}", "feedback": "Opinia:" },
+        "code": { "title": "Ćwiczenia z kodu", "empty": "Brak przesłanego kodu.", "activity": "Aktywność", "result": "Wynik", "tests": "Testy", "time": "Czas", "when": "Kiedy", "passed": "Zaliczone", "failed": "Niezaliczone" },
+        "community": { "title": "Udział w społeczności", "empty": "Brak aktywności w społeczności.", "discussions": "Dyskusje", "comments": "Komentarze" },
+        "certificates": { "title": "Zdobyte certyfikaty", "empty": "Brak zdobytych certyfikatów." },
+        "behavior": { "title": "Analityka behawioralna", "time_by_course": "Czas spędzony według kursu", "searches": "Wyszukiwania" },
+        "status": { "completed": "ukończone", "in_progress": "w toku", "paused": "wstrzymane", "cancelled": "anulowane", "graded": "ocenione", "submitted": "przesłane", "pending": "oczekujące", "late": "spóźnione", "not_submitted": "nieprzesłane" },
+        "comparison": { "student": "Student", "enrolled": "Zapisano", "completed": "Ukończono", "certificates": "Certyfikaty", "last_connection": "Ostatnie połączenie", "view": "Zobacz" }
+      },
       "active_users": {
         "title": "Aktywni użytkownicy",
         "subtitle": "Zarządzaj użytkownikami organizacji oraz przypisuj im role i uprawnienia",
