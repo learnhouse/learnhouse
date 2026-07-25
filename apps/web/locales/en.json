@@ -3567,7 +3567,9 @@
             "message": "Are you sure you want remove this user from the organization?",
             "button": "Remove User"
           }
-        }
+        },
+        "beyond_included": "{{count}} beyond your plan",
+        "beyond_included_tooltip": "These members are past the number your plan includes. Only the ones active this month are counted. See billing for details."
       },
       "signups": {
         "title": "Join method",

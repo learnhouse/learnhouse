@@ -56,6 +56,8 @@ type OverageSummary = {
   month: number;
   active_users: number;
   plan_limit: number;
+  /** Members held beyond the plan's included seats; only these can be billed. */
+  members_beyond_included: number;
   overage_units: number;
   overage_usd: number;
 };
@@ -138,13 +140,14 @@ async function billOverage(params: {
       currency,
       unit_amount: OVERAGE_UNIT_AMOUNT,
       quantity: summary.overage_units,
-      description: `Active users over plan — ${monthName} ${year} (${summary.active_users} active, ${summary.plan_limit} included)`,
+      description: `Active members beyond plan — ${monthName} ${year} (${summary.members_beyond_included} beyond the ${summary.plan_limit} included, ${summary.overage_units} active)`,
       metadata: {
         org_id: orgId,
         type: "au_overage",
         au_period: period,
         active_users: String(summary.active_users),
         plan_limit: String(summary.plan_limit),
+        members_beyond_included: String(summary.members_beyond_included),
         overage_units: String(summary.overage_units),
       },
     },

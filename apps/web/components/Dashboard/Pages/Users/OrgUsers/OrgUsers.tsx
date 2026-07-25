@@ -14,7 +14,7 @@ import { apiFetch } from '@services/utils/ts/requests'
 import { LogOut, Search, ChevronLeft, ChevronRight, Shield, User, Crown, Users, CheckCircle2, XCircle, Mail, Globe, ArrowUp, ArrowDown, X, Filter, Download, BarChart3, GitCompare, ExternalLink } from 'lucide-react'
 import Link from 'next/link'
 import { useParams } from 'next/navigation'
-import { getUriWithOrg } from '@services/config/config'
+import { getUriWithOrg, getUpgradeUrl } from '@services/config/config'
 import { Dialog, DialogContent } from '@components/ui/dialog'
 import UserDossierModal from '@components/Dashboard/Pages/Users/UserAnalytics/UserDossierModal'
 import UsersComparisonTable from '@components/Dashboard/Pages/Users/UserAnalytics/UsersComparisonTable'
@@ -57,6 +57,9 @@ function OrgUsers() {
   const { canManageOrg } = useAdminStatus()
 
   const params = useParams() as any
+
+  // Null in OSS/EE, where there is no billing surface to send anyone to.
+  const billingUrl = getUpgradeUrl(params.orgslug)
 
   const [page, setPage] = useState(1)
   const [searchValue, setSearchValue] = useState('')
@@ -278,27 +281,33 @@ function OrgUsers() {
                     {total} {total === 1 ? 'user' : 'users'}
                   </div>
                 )}
-                {data?.active_users_summary && data.active_users_summary.plan_limit > 0 && (
-                  <ToolTip
-                    content="Active users this month (members seen on 2+ days). Beyond your included limit, each active user is $1/mo."
-                    side="top"
-                  >
-                    <div
-                      className={`text-sm px-3 py-1.5 rounded-lg font-medium ${
-                        data.active_users_summary.overage_units > 0
-                          ? 'bg-amber-50 text-amber-700'
-                          : 'bg-emerald-50 text-emerald-700'
-                      }`}
+                {/* Only surfaces once the org holds more members than its plan
+                    includes — within the included seats there is nothing to
+                    report. No amounts here: billing owns the numbers. */}
+                {data?.active_users_summary &&
+                  data.active_users_summary.members_beyond_included > 0 && (
+                    <ToolTip
+                      content={t('dashboard.users.active_users.beyond_included_tooltip')}
+                      side="top"
                     >
-                      {data.active_users_summary.active_users} / {data.active_users_summary.plan_limit} active
-                      {data.active_users_summary.overage_units > 0 && (
-                        <span>
-                          {' '}· +{data.active_users_summary.overage_units} (${data.active_users_summary.overage_usd}/mo)
-                        </span>
+                      {billingUrl ? (
+                        <Link
+                          href={billingUrl}
+                          className="text-sm px-3 py-1.5 rounded-lg font-medium bg-amber-50 text-amber-700 hover:bg-amber-100 transition-colors"
+                        >
+                          {t('dashboard.users.active_users.beyond_included', {
+                            count: data.active_users_summary.members_beyond_included,
+                          })}
+                        </Link>
+                      ) : (
+                        <div className="text-sm px-3 py-1.5 rounded-lg font-medium bg-amber-50 text-amber-700">
+                          {t('dashboard.users.active_users.beyond_included', {
+                            count: data.active_users_summary.members_beyond_included,
+                          })}
+                        </div>
                       )}
-                    </div>
-                  </ToolTip>
-                )}
+                    </ToolTip>
+                  )}
                 <div className="relative">
                   <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
                   <input

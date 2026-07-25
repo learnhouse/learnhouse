@@ -1,11 +1,19 @@
 """
 Active-user computation and billing.
 
-Active user = a member with >= 2 distinct UTC activity days in a calendar
-month (see src/db/user_activity.py). Beyond the plan's included member limit,
-each active user is billed at ACTIVE_USER_OVERAGE_PRICE_USD / month. This
-module only COMPUTES and EXPOSES the overage; the platform service performs
-the actual Stripe charge.
+A plan includes a fixed number of members outright. Those seats are paid for by
+the subscription regardless of what the members do, so nothing extra is charged
+while an org stays within them. Only once an org holds MORE members than its plan
+includes does activity start to matter, and then only for the members beyond the
+included count: each of those who is active in the month costs
+ACTIVE_USER_OVERAGE_PRICE_USD.
+
+"Included" means the earliest joiners — members are ranked by join date, and the
+first plan_limit of them are the ones the subscription already covers.
+
+Active user = a member with >= 2 distinct UTC activity days in a calendar month
+(see src/db/user_activity.py). This module only COMPUTES and EXPOSES the overage;
+the platform service performs the actual Stripe charge.
 """
 
 from datetime import date, datetime, timezone
@@ -123,6 +131,41 @@ async def get_visit_days_for_users(
     return {int(uid): int(days) for uid, days in rows}
 
 
+async def get_members_beyond_included(
+    org_id: int,
+    year: int,
+    month: int,
+    plan_limit: int,
+    db_session: AsyncSession,
+) -> list[int]:
+    """
+    User ids of the members NOT covered by the plan's included seats.
+
+    Members are ranked by join date (earliest first) and the first `plan_limit`
+    are the included ones. Only members who had joined by the end of the billed
+    month count, so billing a past month doesn't rank people who joined later.
+
+    Empty when the plan is unlimited or the org is within its included count.
+    """
+    if plan_limit <= 0:
+        return []
+
+    _, end = _month_bounds(year, month)
+    stmt = (
+        select(UserOrganization.user_id)
+        .where(
+            UserOrganization.org_id == org_id,
+            # creation_date is stored as str(datetime) — "YYYY-MM-DD HH:MM:SS…"
+            # sorts and compares correctly as a string.
+            UserOrganization.creation_date < str(end),
+        )
+        # id is the tie-break so equal timestamps still rank deterministically.
+        .order_by(UserOrganization.creation_date, UserOrganization.id)
+    )
+    member_ids = [int(uid) for uid in (await db_session.execute(stmt)).scalars().all()]
+    return member_ids[plan_limit:]
+
+
 async def calculate_active_user_overage(
     org_id: int,
     year: int,
@@ -133,17 +176,33 @@ async def calculate_active_user_overage(
     """
     Active-user overage for an org in a calendar month.
 
-    overage_units = max(0, active_users - plan_limit) when plan_limit > 0,
-    else 0 (0 = unlimited). overage_usd = overage_units * $1.
+    The plan's included seats are free whatever their holders do. Overage is the
+    number of members BEYOND those seats who were active in the month — an org
+    inside its included count never has any, however active it is.
     """
     active = await count_active_users(org_id, year, month, db_session)
-    overage_units = max(0, active - plan_limit) if plan_limit > 0 else 0
+
+    excess_member_ids = await get_members_beyond_included(
+        org_id, year, month, plan_limit, db_session
+    )
+    if excess_member_ids:
+        visit_days = await get_visit_days_for_users(
+            org_id, excess_member_ids, year, month, db_session
+        )
+        overage_units = sum(
+            1 for uid in excess_member_ids
+            if visit_days.get(uid, 0) >= ACTIVE_DAYS_THRESHOLD
+        )
+    else:
+        overage_units = 0
+
     return {
         "feature": "active_members",
         "year": year,
         "month": month,
         "active_users": active,
         "limit": plan_limit if plan_limit > 0 else "unlimited",
+        "members_beyond_included": len(excess_member_ids),
         "overage_units": overage_units,
         "overage_usd": overage_units * ACTIVE_USER_OVERAGE_PRICE_USD,
     }
@@ -219,6 +278,10 @@ async def get_active_user_summary(
         "month": month,
         "active_users": overage["active_users"],
         "plan_limit": plan_limit,
+        # How many members sit beyond the included seats. Zero means the org is
+        # inside its plan and activity is not billable at all — the surface that
+        # renders this should stay quiet in that case.
+        "members_beyond_included": overage["members_beyond_included"],
         "overage_units": overage["overage_units"],
         "overage_usd": overage["overage_usd"],
     }
