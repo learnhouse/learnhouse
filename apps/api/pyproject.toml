@@ -7,13 +7,13 @@ authors = [
     {name = "Badr B. (swve)"}
 ]
 dependencies = [
-    "boto3==1.43.51",
-    "botocore==1.43.51",
-    "faker==40.31.0",
+    "boto3==1.43.53",
+    "botocore==1.43.53",
+    "faker==40.32.0",
     "fastapi==0.139.2",
     "httpx==0.28.1",
-    "google-genai==2.12.1",
-    "pydantic-ai-slim[openai,anthropic,google,mistral]==2.12.0",
+    "google-genai==2.13.0",
+    "pydantic-ai-slim[openai,anthropic,google,mistral]==2.15.0",
     "pwdlib[argon2]==0.3.0",
     "psycopg2-binary==2.9.12",
     "asyncpg==0.31.0",
@@ -47,7 +47,7 @@ dependencies = [
     "llama-index-core==0.14.23",
     "pgvector==0.5.0",
     "pypdf==6.14.2",
-    "regex==2026.1.15",
+    "regex==2026.7.19",
 ]
 
 [tool.ruff]
