@@ -22,7 +22,7 @@ from src.security.features_utils.usage import (
     reset_ai_credits_usage,
     set_ai_credits,
 )
-from src.security.org_auth import is_org_member, is_org_admin
+from src.security.org_auth import is_org_member, is_org_admin, enforce_org_mfa
 from src.security.superadmin import is_user_superadmin
 
 
@@ -85,7 +85,10 @@ async def verify_user_is_org_member(
     db_session: AsyncSession,
 ) -> bool:
     """Verify that the user is a member of the organization (superadmins bypass)."""
-    return await is_org_member(user_id, org_id, db_session)
+    member = await is_org_member(user_id, org_id, db_session)
+    if member:
+        await enforce_org_mfa(user_id, org_id, db_session)
+    return member
 
 
 @router.get(

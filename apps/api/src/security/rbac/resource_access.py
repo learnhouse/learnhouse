@@ -148,6 +148,14 @@ class ResourceAccessChecker:
         if isinstance(self.current_user, APITokenUser):
             return await self._check_api_token_access(resource_uuid, action, config)
 
+        # Org-wide "require two-factor" policy. Applies only to real signed-in
+        # users: anonymous public browsing is unaffected, superadmins bypassed
+        # above, and API tokens are a separate credential class handled above.
+        # Raises rather than returning a denial so the structured error code
+        # survives to the client — the UI needs to tell "enable 2FA" apart from
+        # "you don't have permission", which a plain reason string cannot do.
+        await self._enforce_org_mfa_policy(resource_uuid, config)
+
         # Route to appropriate check based on action
         if action == AccessAction.READ:
             return await self._check_read_access(resource_uuid, context, config)
@@ -772,6 +780,38 @@ class ResourceAccessChecker:
         )
         self._author_cache[resource_uuid] = is_valid
         return is_valid
+
+    async def _enforce_org_mfa_policy(self, resource_uuid: str, config: ResourceConfig) -> None:
+        """Block a signed-in user who is past their org's two-factor deadline.
+
+        The resource lookup is memoized and every downstream check fetches it
+        anyway, so on the common path (no policy configured) this costs one
+        cached read plus one org-config read per request.
+        """
+        user_id = self._get_user_id()
+        if user_id == 0:
+            return
+
+        try:
+            resource = await self._get_resource(resource_uuid, config)
+            org_id = getattr(resource, "org_id", None) if resource is not None else None
+        except Exception:
+            # Failing to resolve the resource here must not deny access: the
+            # normal RBAC checks below do their own lookup and will reject
+            # properly if the resource is genuinely unreachable. This policy is
+            # an extra restriction on top, never the only thing standing
+            # between a stranger and the data.
+            logger.debug("MFA policy: could not resolve resource org", exc_info=True)
+            return
+
+        if not org_id:
+            return
+
+        from src.services.orgs.mfa_policy import enforce_org_mfa_policy
+        from src.services.orgs.auth_policy import enforce_org_auth_policy
+
+        await enforce_org_mfa_policy(self.db_session, user_id, org_id)
+        await enforce_org_auth_policy(self.db_session, user_id, org_id)
 
     async def _is_admin_or_maintainer(self, resource_uuid: str) -> bool:
         """Check if current user is admin/maintainer in the resource's organization."""

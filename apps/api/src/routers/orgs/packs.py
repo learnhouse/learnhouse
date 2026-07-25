@@ -11,7 +11,7 @@ from src.db.packs import OrgPackRead
 from src.db.users import PublicUser, AnonymousUser, APITokenUser
 from src.security.auth import get_current_user, resolve_acting_user_id
 from src.security.features_utils.packs import AVAILABLE_PACKS
-from src.security.org_auth import is_org_admin
+from src.security.org_auth import is_org_admin, enforce_org_mfa
 from src.services.packs.packs import (
     activate_pack,
     deactivate_pack,
@@ -223,6 +223,8 @@ async def api_get_org_packs(
 
     if not await is_org_admin(resolve_acting_user_id(current_user), org_id, db_session):
         raise HTTPException(status_code=403, detail="Only organization admins can view packs")
+    # Org-wide two-factor policy, applied after the membership gate.
+    await enforce_org_mfa(resolve_acting_user_id(current_user), org_id, db_session)
 
     active_packs = await get_org_active_packs(org_id, db_session)
     catalog = [
@@ -264,5 +266,7 @@ async def api_get_org_pack_summary(
 
     if not await is_org_admin(resolve_acting_user_id(current_user), org_id, db_session):
         raise HTTPException(status_code=403, detail="Only organization admins can view pack summary")
+    # Org-wide two-factor policy, applied after the membership gate.
+    await enforce_org_mfa(resolve_acting_user_id(current_user), org_id, db_session)
 
     return await get_org_pack_summary(org_id, db_session)

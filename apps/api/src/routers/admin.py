@@ -6,6 +6,7 @@ All endpoints are scoped by org_slug and require API token authentication
 """
 
 from typing import Any, Dict, List, Optional
+from urllib.parse import quote
 from fastapi import APIRouter, Depends, HTTPException, Path, Query, Request, Response
 from fastapi.responses import HTMLResponse, RedirectResponse
 from pydantic import BaseModel, EmailStr, Field
@@ -994,7 +995,7 @@ async def api_admin_magic_consume(
     db_session: AsyncSession = Depends(get_db_session),
 ):
     try:
-        _user, access_token, refresh_token, redirect_to = await consume_magic_link_token(
+        _user, access_token, refresh_token, redirect_to, mfa_token = await consume_magic_link_token(
             token=token,
             db_session=db_session,
         )
@@ -1005,6 +1006,16 @@ async def api_admin_magic_consume(
         )
 
     target = redirect_to or "/"
+
+    if mfa_token:
+        # No cookies set — the link only gets the user as far as the code
+        # challenge. The login page picks the pending token up from the query
+        # string and opens directly on the second-factor step.
+        challenge_url = f"/auth/login?mfa_token={quote(mfa_token, safe='')}"
+        if redirect_to:
+            challenge_url += f"&redirect_to={quote(redirect_to, safe='')}"
+        return RedirectResponse(url=challenge_url, status_code=302)
+
     redirect = RedirectResponse(url=target, status_code=302)
     set_auth_cookies(redirect, access_token, refresh_token, request)
     return redirect

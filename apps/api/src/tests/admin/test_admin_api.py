@@ -1679,8 +1679,10 @@ class TestIssueMagicLink:
 
 class TestMagicLinkConsume:
 
-    @patch("src.services.admin.admin.create_refresh_token", return_value="refresh_consumed")
-    @patch("src.services.admin.admin.create_access_token", return_value="access_consumed")
+    # Session minting now happens inside issue_session_or_challenge, so the
+    # patch targets follow it there.
+    @patch("src.services.auth.session.create_refresh_token", return_value="refresh_consumed")
+    @patch("src.services.auth.session.create_access_token", return_value="access_consumed")
     async def test_valid_token(self, mock_access, mock_refresh, token_user, user, db):
         with patch("src.security.auth.decode_jwt") as mock_decode:
             mock_decode.return_value = {
@@ -1689,12 +1691,45 @@ class TestMagicLinkConsume:
                 "org_id": token_user.org_id,
                 "redirect_to": "/course/bar",
             }
-            consumed_user, access, refresh, redirect = await consume_magic_link_token(
+            consumed_user, access, refresh, redirect, mfa_token = await consume_magic_link_token(
                 token="fake_token", db_session=db,
             )
         assert consumed_user.id == user.id
         assert access == "access_consumed"
         assert refresh == "refresh_consumed"
+        assert redirect == "/course/bar"
+        assert mfa_token is None
+
+    @patch("src.services.auth.session.create_access_token", return_value="unused")
+    async def test_enrolled_user_gets_challenge_not_session(self, mock_access, token_user, user, db):
+        """A magic link for a 2FA-enabled user must not mint a session."""
+        from datetime import datetime as _dt
+        from src.db.user_mfa import UserMFA
+
+        db.add(
+            UserMFA(
+                user_id=user.id,
+                secret_encrypted="ciphertext",
+                confirmed_at=str(_dt.now()),
+                creation_date=str(_dt.now()),
+                update_date=str(_dt.now()),
+            )
+        )
+        await db.commit()
+
+        with patch("src.security.auth.decode_jwt") as mock_decode:
+            mock_decode.return_value = {
+                "sub": user.email,
+                "purpose": "magic_link",
+                "org_id": token_user.org_id,
+                "redirect_to": "/course/bar",
+            }
+            _u, access, refresh, redirect, mfa_token = await consume_magic_link_token(
+                token="fake_token", db_session=db,
+            )
+        assert access is None
+        assert refresh is None
+        assert mfa_token is not None
         assert redirect == "/course/bar"
 
     async def test_invalid_token(self, db):
@@ -1722,8 +1757,10 @@ class TestMagicLinkConsume:
                 await consume_magic_link_token(token="t", db_session=db)
             assert exc.value.status_code == 410
 
-    @patch("src.services.admin.admin.create_refresh_token", return_value="refresh_x")
-    @patch("src.services.admin.admin.create_access_token", return_value="access_x")
+    # Session minting moved into issue_session_or_challenge, so the token
+    # factories are patched there, not on the admin module.
+    @patch("src.services.auth.session.create_refresh_token", return_value="refresh_x")
+    @patch("src.services.auth.session.create_access_token", return_value="access_x")
     async def test_sanitizes_bad_redirect_to_default(self, mock_access, mock_refresh, token_user, user, db):
         """An older token might have an unvalidated redirect_to. Consume must not honor an absolute URL."""
         with patch("src.security.auth.decode_jwt") as mock_decode:
@@ -1733,7 +1770,7 @@ class TestMagicLinkConsume:
                 "org_id": token_user.org_id,
                 "redirect_to": "https://evil.com/phish",
             }
-            _user, _a, _r, redirect = await consume_magic_link_token(
+            _user, _a, _r, redirect, _mfa = await consume_magic_link_token(
                 token="t", db_session=db,
             )
         assert redirect is None  # falls through to "/" in the router

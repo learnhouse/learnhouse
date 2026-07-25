@@ -22,7 +22,7 @@ from src.db.courses.blocks import BlockRead
 from src.db.users import PublicUser
 from src.security.auth import get_authenticated_user
 from src.security.features_utils.usage import refund_ai_credit, reserve_ai_credit
-from src.security.org_auth import is_org_member
+from src.security.org_auth import is_org_member, enforce_org_mfa
 from src.services.ai.audio.generator import (
     OUTPUT_EXT,
     Speaker,
@@ -58,6 +58,8 @@ async def _resolve_org_id_for_activity(activity_uuid: str, current_user: PublicU
         raise HTTPException(status_code=404, detail="Activity not found")
     if not await is_org_member(current_user.id, activity.org_id, db_session):
         raise HTTPException(status_code=403, detail="User is not a member of this organization")
+    # Org-wide two-factor policy, applied after the membership gate.
+    await enforce_org_mfa(current_user.id, activity.org_id, db_session)
     return activity.org_id
 
 

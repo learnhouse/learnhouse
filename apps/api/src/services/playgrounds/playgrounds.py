@@ -73,6 +73,14 @@ async def _get_user_rights(
     if not user_org:
         return {}
 
+    # The caller is a confirmed member — subject to the org's 2FA policy. Every
+    # mutating playground gate (create/update/delete/duplicate and the usergroup
+    # ops) resolves rights through here, so enforcing once closes the whole set
+    # of write paths against a member who is past their two-factor deadline.
+    from src.security.org_auth import enforce_org_mfa
+
+    await enforce_org_mfa(user_id, org_id, db_session)
+
     from src.db.roles import Role
     role = (await db_session.execute(select(Role).where(Role.id == user_org.role_id))).scalars().first()
     if not role or not role.rights:
@@ -82,6 +90,32 @@ async def _get_user_rights(
     if isinstance(rights, dict):
         return rights
     return rights.model_dump() if hasattr(rights, "model_dump") else {}
+
+
+async def _enforce_member_mfa(user_id: int, org_id: int, db_session: AsyncSession) -> None:
+    """Apply the org's "require two-factor" policy — but only to actual members.
+
+    Playgrounds are also served to non-members and anonymous users (PUBLIC /
+    AUTHENTICATED access types), and the org 2FA policy governs *members* of the
+    org, not passers-by. Without the membership gate, an authenticated non-member
+    with no second factor would be wrongly blocked from an org's public
+    playgrounds, because :func:`evaluate_mfa_compliance` falls back to the policy
+    anchor when there is no membership row. Superadmins carry no membership row
+    and are exempt inside the policy layer anyway, so skipping them here is safe.
+    """
+    membership = (
+        await db_session.execute(
+            select(UserOrganization).where(
+                UserOrganization.user_id == user_id,
+                UserOrganization.org_id == org_id,
+            )
+        )
+    ).scalars().first()
+    if membership is None:
+        return
+    from src.security.org_auth import enforce_org_mfa
+
+    await enforce_org_mfa(user_id, org_id, db_session)
 
 
 async def _is_org_admin(user_id: int, org_id: int, db_session: AsyncSession) -> bool:
@@ -220,6 +254,11 @@ async def get_playground(
 
     await _check_read_access(playground, current_user, db_session)
 
+    if not isinstance(current_user, AnonymousUser):
+        await _enforce_member_mfa(
+            resolve_acting_user_id(current_user), playground.org_id, db_session
+        )
+
     # Unpublished (draft) playgrounds must never be exposed by uuid to anyone
     # other than the owner or an org admin. _check_read_access only validates
     # access_type, so without this guard a draft PUBLIC/AUTHENTICATED playground
@@ -253,6 +292,9 @@ async def list_org_playgrounds(
     # An API token's .id is the token id, not a user id; resolve to the real
     # acting user so ownership/admin visibility checks below evaluate correctly.
     user_id = None if is_anon else resolve_acting_user_id(current_user)
+
+    if not is_anon:
+        await _enforce_member_mfa(user_id, org_id, db_session)
 
     is_admin = False if is_anon else await _is_org_admin(user_id, org_id, db_session)
 

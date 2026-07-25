@@ -1263,3 +1263,16 @@ class TestOrgUsersService:
             )
 
         assert result == {"detail": "0 user(s) removed from org"}
+
+
+@pytest.fixture(autouse=True)
+def _skip_org_mfa_policy():
+    """No-op the org two-factor policy for this module.
+
+    These tests use a fake session that returns a fixed, ordered list of
+    results. The policy check issues its own queries, which would consume
+    entries from that list and desynchronise every subsequent lookup. The
+    policy itself is covered in src/tests/security/test_mfa_org_policy.py.
+    """
+    with patch("src.services.orgs.users.enforce_org_mfa", new=AsyncMock(return_value=None)):
+        yield
