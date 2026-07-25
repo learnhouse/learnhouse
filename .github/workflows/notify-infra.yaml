@@ -8,20 +8,41 @@ on:
     tags:
       - '[0-9]*'
   pull_request:
-    types: [opened, synchronize, reopened, closed]
+    # A draft only dispatches once it is marked ready (see the job condition).
+    types: [opened, synchronize, reopened, ready_for_review, closed]
 
 permissions: {}
+
+# Only the newest dispatch per ref is useful; supersede the rest.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
   notify:
     name: Dispatch to Infrastructure Repo
     runs-on: ubuntu-latest
-    # Skip for pull requests opened from forks: GitHub does not expose
-    # secrets (INFRA_REPO_PAT) to fork PRs, so the dispatch can only ever
-    # fail there. Still runs for pushes and same-repo (internal) PRs.
+    # Dispatch only where the receiving side can act on it:
+    #
+    #   forks   — GitHub does not expose secrets (INFRA_REPO_PAT) to fork PRs,
+    #             so the dispatch can only ever fail there.
+    #   drafts  — dispatched on `ready_for_review` instead.
+    #   bots    — automated dependency PRs are covered by the checks in this
+    #             repo; build-community.yaml still builds the image for them.
+    #
+    # `closed` always dispatches, so teardown is never skipped.
     if: >-
       github.event_name != 'pull_request' ||
-      github.event.pull_request.head.repo.full_name == github.repository
+      (
+        github.event.pull_request.head.repo.full_name == github.repository &&
+        (
+          github.event.action == 'closed' ||
+          (
+            !github.event.pull_request.draft &&
+            !endsWith(github.event.pull_request.user.login, '[bot]')
+          )
+        )
+      )
     steps:
       - name: Send repository dispatch
         uses: peter-evans/repository-dispatch@v4
