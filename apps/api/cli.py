@@ -311,6 +311,53 @@ def transcode_backfill(
 
 
 @cli.command()
+def compute_active_user_overage(
+    year: Annotated[int, typer.Option(help="Calendar year (UTC), e.g. 2026")] = 0,
+    month: Annotated[int, typer.Option(help="Calendar month 1-12 (UTC)")] = 0,
+):
+    """
+    Month-end: compute per-org active-user overage for a calendar month.
+
+    Cron-invoked. COMPUTES and reports only — the platform service performs
+    the Stripe charge. Defaults to the current UTC month when year/month
+    are omitted.
+    """
+    asyncio.run(_compute_active_user_overage(year, month))
+
+
+async def _compute_active_user_overage(year: int, month: int) -> None:
+    from datetime import datetime, timezone
+    from src.security.features_utils.active_users import (
+        get_all_orgs_with_active_user_overage,
+    )
+
+    if not year or not month:
+        now = datetime.now(timezone.utc)
+        year, month = now.year, now.month
+
+    learnhouse_config = get_learnhouse_config()
+    sql_url = learnhouse_config.database_config.sql_connection_string  # type: ignore
+    async_engine = create_async_engine(_to_async_url(sql_url), echo=False, pool_pre_ping=True)
+
+    try:
+        async with AsyncSession(async_engine, expire_on_commit=False) as db_session:
+            rows = await get_all_orgs_with_active_user_overage(year, month, db_session)
+    finally:
+        await async_engine.dispose()
+
+    print(f"Active-user overage for {year}-{month:02d} (UTC): {len(rows)} org(s) over limit")
+    total = 0
+    for r in rows:
+        total += r["overage_usd"]
+        print(
+            f"  org {r['org_id']} [{r['plan']}]: "
+            f"active={r['active_users']} limit={r['plan_limit']} "
+            f"overage={r['overage_units']} (${r['overage_usd']})"
+        )
+    print(f"Total billable overage: ${total}")
+
+
+@cli.command()
 def main():
     cli()
 

@@ -148,6 +148,14 @@ class ResourceAccessChecker:
         if isinstance(self.current_user, APITokenUser):
             return await self._check_api_token_access(resource_uuid, action, config)
 
+        # Org-wide "require two-factor" policy. Applies only to real signed-in
+        # users: anonymous public browsing is unaffected, superadmins bypassed
+        # above, and API tokens are a separate credential class handled above.
+        # Raises rather than returning a denial so the structured error code
+        # survives to the client — the UI needs to tell "enable 2FA" apart from
+        # "you don't have permission", which a plain reason string cannot do.
+        await self._enforce_org_mfa_policy(resource_uuid, config)
+
         # Route to appropriate check based on action
         if action == AccessAction.READ:
             return await self._check_read_access(resource_uuid, context, config)
@@ -773,6 +781,38 @@ class ResourceAccessChecker:
         self._author_cache[resource_uuid] = is_valid
         return is_valid
 
+    async def _enforce_org_mfa_policy(self, resource_uuid: str, config: ResourceConfig) -> None:
+        """Block a signed-in user who is past their org's two-factor deadline.
+
+        The resource lookup is memoized and every downstream check fetches it
+        anyway, so on the common path (no policy configured) this costs one
+        cached read plus one org-config read per request.
+        """
+        user_id = self._get_user_id()
+        if user_id == 0:
+            return
+
+        try:
+            resource = await self._get_resource(resource_uuid, config)
+            org_id = getattr(resource, "org_id", None) if resource is not None else None
+        except Exception:
+            # Failing to resolve the resource here must not deny access: the
+            # normal RBAC checks below do their own lookup and will reject
+            # properly if the resource is genuinely unreachable. This policy is
+            # an extra restriction on top, never the only thing standing
+            # between a stranger and the data.
+            logger.debug("MFA policy: could not resolve resource org", exc_info=True)
+            return
+
+        if not org_id:
+            return
+
+        from src.services.orgs.mfa_policy import enforce_org_mfa_policy
+        from src.services.orgs.auth_policy import enforce_org_auth_policy
+
+        await enforce_org_mfa_policy(self.db_session, user_id, org_id)
+        await enforce_org_auth_policy(self.db_session, user_id, org_id)
+
     async def _is_admin_or_maintainer(self, resource_uuid: str) -> bool:
         """Check if current user is admin/maintainer in the resource's organization."""
         user_id = self._get_user_id()
@@ -806,12 +846,20 @@ class ResourceAccessChecker:
         )
         usergroup_resources = (await self.db_session.execute(usergroup_stmt)).scalars().all()
 
-        # If no UserGroups linked, resource is accessible to any authenticated user.
-        # UsersOnly semantics: public=false + no linked group = signed-in users only;
-        # the anonymous branch short-circuits above via user_id == 0.
+        # If no UserGroups linked, resource is accessible to any authenticated
+        # MEMBER OF ITS ORGANIZATION.
+        #
+        # UsersOnly semantics: public=false + no linked group = signed-in users
+        # only; the anonymous branch short-circuits above via user_id == 0.
+        # "Signed-in" alone is not enough: this returned True for any account on
+        # the deployment, so an admin who set a course, folder, media item, board
+        # or community to "Users Only" was in fact publishing it to every user of
+        # every other tenant. Membership in the owning org is what the setting is
+        # understood to mean.
         if not usergroup_resources:
-            self._usergroup_cache[cache_key] = True
-            return True
+            allowed = await self._is_member_of_resource_org(resource_uuid, user_id)
+            self._usergroup_cache[cache_key] = allowed
+            return allowed
 
         # Check if user is a member of any linked UserGroup
         usergroup_ids = [ugr.usergroup_id for ugr in usergroup_resources]
@@ -824,6 +872,39 @@ class ResourceAccessChecker:
         result = membership is not None
         self._usergroup_cache[cache_key] = result
         return result
+
+    async def _is_member_of_resource_org(self, resource_uuid: str, user_id: int) -> bool:
+        """Is the caller a member of the organization that owns this resource?
+
+        Used by the "signed-in users only" fallback, which must not treat an
+        account on another tenant as an authorized reader. Resources that carry
+        no org (or whose org cannot be resolved) fall back to the previous
+        signed-in-only behaviour rather than denying access, so this cannot
+        lock anyone out of a resource type it does not understand.
+        """
+        config = get_resource_config(resource_uuid)
+        if not config:
+            return True
+
+        resource = await self._get_resource(resource_uuid, config)
+        org_id = getattr(resource, "org_id", None) if resource else None
+
+        # Nested resources (chapters, activities…) carry no org_id of their own;
+        # resolve it from the parent the same way the rest of the checker does.
+        if org_id is None and resource is not None:
+            parent_uuid = await self._resolve_parent_resource_uuid(resource_uuid, config)
+            if parent_uuid:
+                parent_config = get_resource_config(parent_uuid)
+                if parent_config:
+                    parent = await self._get_resource(parent_uuid, parent_config)
+                    org_id = getattr(parent, "org_id", None) if parent else None
+
+        if org_id is None:
+            return True
+
+        from src.security.org_auth import is_org_member
+
+        return await is_org_member(user_id, org_id, self.db_session)
 
     async def _get_resource(self, resource_uuid: str, config: ResourceConfig):
         """Get the resource from the database with caching."""

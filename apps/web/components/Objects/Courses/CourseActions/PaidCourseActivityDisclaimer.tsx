@@ -6,6 +6,7 @@ import { useOrg } from '@components/Contexts/OrgContext'
 import { getOffersByResource } from '@services/payments/offers'
 import { OfferCard } from './OfferCard'
 import { useTranslation } from 'react-i18next'
+import { asArray } from '@services/utils/ts/requests'
 
 interface PaidCourseActivityProps {
   course: any
@@ -22,7 +23,7 @@ function PaidCourseActivityDisclaimer({ course }: PaidCourseActivityProps) {
     staleTime: 60_000,
   })
 
-  const offers: any[] = offersResult?.data ?? []
+  const offers: any[] = asArray(offersResult)
 
   return (
     <div className="space-y-4 max-w-lg mx-auto">

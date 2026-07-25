@@ -11,7 +11,7 @@ from src.db.packs import OrgPackRead
 from src.db.users import PublicUser, AnonymousUser, APITokenUser
 from src.security.auth import get_current_user, resolve_acting_user_id
 from src.security.features_utils.packs import AVAILABLE_PACKS
-from src.security.org_auth import is_org_admin
+from src.security.org_auth import is_org_admin, enforce_org_mfa
 from src.services.packs.packs import (
     activate_pack,
     deactivate_pack,
@@ -144,6 +144,31 @@ async def api_deactivate_all_packs(
     return {"deactivated": count}
 
 
+@internal_router.get(
+    "/{org_id}/active-user-overage",
+    summary="Get active-user overage for an organization (internal)",
+    description=(
+        "Internal endpoint used by the billing platform to pull an "
+        "organization's active-user count and billable overage for a calendar "
+        "month (defaults to the current UTC month). Requires a valid platform "
+        "API key. This endpoint computes the number only; the platform performs "
+        "the Stripe charge."
+    ),
+    responses={
+        200: {"description": "Active-user count, included limit, and overage for the month."},
+        403: {"description": "Invalid platform API key"},
+    },
+)
+async def api_get_active_user_overage(
+    org_id: int,
+    year: int | None = None,
+    month: int | None = None,
+    db_session: AsyncSession = Depends(get_db_session),
+):
+    from src.security.features_utils.active_users import get_active_user_summary
+    return await get_active_user_summary(org_id, db_session, year=year, month=month)
+
+
 # ============================================================================
 # Org-facing router (user auth, admin only)
 # ============================================================================
@@ -165,7 +190,6 @@ class OrgPacksResponse(BaseModel):
 
 class PackSummaryResponse(BaseModel):
     ai_credits: int
-    member_seats: int
     active_pack_count: int
 
 
@@ -199,6 +223,8 @@ async def api_get_org_packs(
 
     if not await is_org_admin(resolve_acting_user_id(current_user), org_id, db_session):
         raise HTTPException(status_code=403, detail="Only organization admins can view packs")
+    # Org-wide two-factor policy, applied after the membership gate.
+    await enforce_org_mfa(resolve_acting_user_id(current_user), org_id, db_session)
 
     active_packs = await get_org_active_packs(org_id, db_session)
     catalog = [
@@ -215,7 +241,7 @@ async def api_get_org_packs(
     summary="Get pack totals summary",
     description=(
         "Return aggregated totals from the organization's active packs "
-        "(AI credits, member seats, and active pack count). Only organization "
+        "(AI credits and active pack count). Only organization "
         "admins can view the summary."
     ),
     responses={
@@ -240,5 +266,7 @@ async def api_get_org_pack_summary(
 
     if not await is_org_admin(resolve_acting_user_id(current_user), org_id, db_session):
         raise HTTPException(status_code=403, detail="Only organization admins can view pack summary")
+    # Org-wide two-factor policy, applied after the membership gate.
+    await enforce_org_mfa(resolve_acting_user_id(current_user), org_id, db_session)
 
     return await get_org_pack_summary(org_id, db_session)

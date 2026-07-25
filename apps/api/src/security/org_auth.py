@@ -69,6 +69,31 @@ async def get_user_org_role(user_id: int, org_id: int, db_session: AsyncSession)
     return (await db_session.execute(statement)).scalars().first()
 
 
+async def enforce_org_mfa(user_id: int, org_id: int, db_session: AsyncSession) -> None:
+    """Apply the org's per-access session policies, if it has any.
+
+    Despite the historical name, this is the single seam through which **all**
+    org-level session policies are enforced at a request gate:
+
+    * the "require two-factor" policy (:mod:`src.services.orgs.mfa_policy`), and
+    * the auth-method / session-sharing policy
+      (:mod:`src.services.orgs.auth_policy`) — which methods may access the org
+      and whether a central/foreign session is accepted.
+
+    Every ``require_*`` gate and every additive call site funnels through here,
+    so folding both policies in keeps them enforced in lockstep with one edit.
+    Kept out of :func:`is_org_member` / :func:`is_org_admin` on purpose: those are
+    plain predicates used to *shape* results (search scoping, admin-only fields),
+    and raising from inside them would turn a presentation decision into a 403.
+    Both policies are no-ops under default config.
+    """
+    from src.services.orgs.mfa_policy import enforce_org_mfa_policy
+    from src.services.orgs.auth_policy import enforce_org_auth_policy
+
+    await enforce_org_mfa_policy(db_session, user_id, org_id)
+    await enforce_org_auth_policy(db_session, user_id, org_id)
+
+
 async def require_org_membership(user_id: int, org_id: int, db_session: AsyncSession) -> None:
     """Raise 403 if user is not an org member and not a superadmin."""
     if not await is_org_member(user_id, org_id, db_session):
@@ -76,6 +101,7 @@ async def require_org_membership(user_id: int, org_id: int, db_session: AsyncSes
             status_code=status.HTTP_403_FORBIDDEN,
             detail="You are not a member of this organization",
         )
+    await enforce_org_mfa(user_id, org_id, db_session)
 
 
 async def require_org_admin(user_id: int, org_id: int, db_session: AsyncSession) -> None:
@@ -85,6 +111,7 @@ async def require_org_admin(user_id: int, org_id: int, db_session: AsyncSession)
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Only organization administrators and maintainers can perform this action",
         )
+    await enforce_org_mfa(user_id, org_id, db_session)
 
 
 async def require_org_role_permission(
@@ -135,3 +162,8 @@ async def require_org_role_permission(
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail="Admin or Maintainer role required for this action",
             )
+
+    # Applied last, once the role permission itself has passed. Running it
+    # earlier would also mean issuing DB queries in the middle of the role
+    # lookup, which is both wasteful and surprising.
+    await enforce_org_mfa(user_id, org_id, db_session)

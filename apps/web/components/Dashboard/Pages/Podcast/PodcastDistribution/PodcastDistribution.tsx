@@ -1,13 +1,11 @@
 'use client'
 import React from 'react'
 import { usePodcast } from '@components/Contexts/PodcastContext'
-import { useOrg } from '@components/Contexts/OrgContext'
-import { getCanonicalUrl } from '@/lib/seo/utils'
+import { useAbsoluteUrl } from '@/lib/seo/useAbsoluteUrl'
 import { Copy, ExternalLink, Rss } from 'lucide-react'
 import { SiApplepodcasts, SiSpotify, SiYoutubemusic, SiAudible } from '@icons-pack/react-simple-icons'
 import { Button } from '@components/ui/button'
 import { Input } from '@components/ui/input'
-import { Label } from '@components/ui/label'
 import toast from 'react-hot-toast'
 
 interface PodcastDistributionProps {
@@ -17,10 +15,10 @@ interface PodcastDistributionProps {
 
 function PodcastDistribution({ orgslug, podcastuuid }: PodcastDistributionProps) {
   const { podcast } = usePodcast()
-  const org = useOrg() as any
 
   const shortUuid = podcastuuid.replace('podcast_', '')
-  const feedUrl = getCanonicalUrl(orgslug, `/podcast/${shortUuid}/feed`)
+  // Absolute: this URL is pasted into Apple Podcasts / Spotify, not clicked in-app
+  const feedUrl = useAbsoluteUrl(orgslug, `/podcast/${shortUuid}/feed`)
 
   const copyToClipboard = (text: string) => {
     navigator.clipboard.writeText(text)

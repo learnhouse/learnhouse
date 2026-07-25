@@ -248,9 +248,7 @@ export default function OrgEditUsage() {
                         {catalogItem?.label ?? pack.pack_id}
                       </p>
                       <p className="text-xs text-gray-400">
-                        {pack.pack_type === 'ai_credits'
-                          ? 'AI Credits'
-                          : 'Member Seats'}{' '}
+                        AI Credits{' '}
                         &middot; {pack.quantity}
                       </p>
                     </div>
@@ -274,7 +272,7 @@ export default function OrgEditUsage() {
                 Need more capacity?
               </h3>
               <p className="text-xs text-gray-400 mt-0.5">
-                Purchase additional AI credits or member seats.
+                Purchase additional AI credits.
               </p>
             </div>
             <a

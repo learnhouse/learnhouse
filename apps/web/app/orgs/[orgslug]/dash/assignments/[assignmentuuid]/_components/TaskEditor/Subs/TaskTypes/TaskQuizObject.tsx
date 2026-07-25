@@ -5,7 +5,7 @@ import { useLHSession } from '@components/Contexts/LHSessionContext';
 import AssignmentBoxUI from '@components/Objects/Activities/Assignment/AssignmentBoxUI';
 import { getAssignmentTask, getAssignmentTaskSubmissionsUser, handleAssignmentTaskSubmission, updateAssignmentTask } from '@services/courses/assignments';
 import { Check, Info, Minus, Plus, PlusCircle, X } from 'lucide-react';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import toast from 'react-hot-toast';
 import { v4 as uuidv4 } from 'uuid';
 import { useTranslation } from 'react-i18next';
@@ -148,6 +148,34 @@ function TaskQuizObject({ view, assignmentTaskUUID, user_id, onGraded }: TaskQui
         questions: [],
         submissions: [],
     });
+
+    // Whether the answer key actually reached the client.
+    //
+    // The API strips `assigned_right_answer` from every option whenever the
+    // student is not yet allowed to see it — notably while retries remain
+    // (see _student_may_see_answer_key). The client cannot re-derive that rule
+    // (it has no attempt_number here), so `showCorrectAnswers` can be true
+    // while the key is absent. Rendering the key markers in that state made
+    // `undefined` read as "not the right answer", so EVERY option — including
+    // the one the learner correctly picked — was labelled "Wrong", even on a
+    // 100% submission. Only trust the key when it is genuinely present.
+    const answerKeyPresent = useMemo(
+        () => questions.some((question) =>
+            question.options.some((option) => typeof option.assigned_right_answer === 'boolean')
+        ),
+        [questions]
+    );
+    const revealAnswerKey = showCorrectAnswers && answerKeyPresent;
+
+    // Did the learner pick this option?
+    const isOptionSelected = (questionUUID?: string, optionUUID?: string) =>
+        userSubmissions.submissions.some(
+            (submission) =>
+                submission.questionUUID === questionUUID &&
+                submission.optionUUID === optionUUID &&
+                submission.answer
+        );
+
     const [initialUserSubmissions, setInitialUserSubmissions] = useState<QuizSubmitSchema>({
         questions: [],
         submissions: [],
@@ -317,9 +345,32 @@ function TaskQuizObject({ view, assignmentTaskUUID, user_id, onGraded }: TaskQui
                     ),
                 }));
                 // Silent auto-saves skip the refetch: it isn't needed for a
-                // draft save and would re-hydrate the batch every ~1s.
+                // draft save and would re-hydrate the batch every ~1s. They
+                // must still PATCH the cache though — with staleTime 60_000 the
+                // batch query otherwise keeps serving the page-load snapshot,
+                // so a remount (task retry, tab switch, route change) re-seeded
+                // the baseline from pre-autosave data and overwrote answers
+                // that were already on the server.
                 if (!opts?.silent) {
                     queryClient.invalidateQueries({ queryKey: queryKeys.assignments.taskSubmission(assignment.assignment_object.assignment_uuid) });
+                } else {
+                    queryClient.setQueryData(
+                        queryKeys.assignments.taskSubmission(assignment.assignment_object.assignment_uuid),
+                        (old: any) => {
+                            // Only patch an existing map — never fabricate one, or a
+                            // task with no fetched batch would hydrate from thin air.
+                            if (!old || typeof old !== 'object') return old;
+                            const previous = old[assignmentTaskUUID] ?? {};
+                            return {
+                                ...old,
+                                [assignmentTaskUUID]: {
+                                    ...previous,
+                                    assignment_task_submission_uuid: savedUUID,
+                                    task_submission: updatedUserSubmissions,
+                                },
+                            };
+                        }
+                    );
                 }
                 return true;
             } else {
@@ -353,6 +404,18 @@ function TaskQuizObject({ view, assignmentTaskUUID, user_id, onGraded }: TaskQui
     }
 
     async function gradeCustomFC(grade: number, feedback?: string) {
+        // Without an existing submission row there is nothing to grade: the API
+        // would fall through to a branch keyed on the SUBMITTER (here the
+        // instructor), writing the grade onto the instructor's own row where it
+        // is forced to 0 — while the UI toasted success and the learner's grade
+        // never moved. `userSubmissions` is seeded with a truthy default object
+        // in this component, so the uuid field itself must be checked.
+        if (!userSubmissions?.assignment_task_submission_uuid) {
+            toast.error(t('dashboard.assignments.editor.toasts.no_submission_to_grade', {
+                defaultValue: 'This student has no submission for this task yet, there is nothing to grade.',
+            }));
+            return;
+        }
         await applyManualGrade({
             grade,
             feedback,
@@ -369,12 +432,26 @@ function TaskQuizObject({ view, assignmentTaskUUID, user_id, onGraded }: TaskQui
 
     async function gradeFC() {
         if (assignmentTaskUUID) {
+            // Same trap as the manual path: auto-grading a task the student
+            // never submitted has no row to target, so the write lands on the
+            // instructor's own (0-scored) row while the toast claims success.
+            if (!userSubmissions?.assignment_task_submission_uuid) {
+                toast.error(t('dashboard.assignments.editor.toasts.no_submission_to_grade', {
+                    defaultValue: 'This student has no submission for this task yet, there is nothing to grade.',
+                }));
+                return;
+            }
             const maxPoints = assignmentTaskOutsideProvider?.max_grade_value || 100;
             // Grade PER QUESTION (mirrors the server's _grade_quiz_task): a
             // question counts only when the student's selected option set exactly
             // matches the answer key. Per-option scoring gave phantom credit for
-            // unanswered questions (unselected wrong options "matched").
-            const gradableQuestions = questions.filter((q) => (q.options?.length ?? 0) > 0);
+            // unanswered questions (unselected wrong options "matched"). A
+            // question with no correct option is skipped by the server too (a
+            // blank submission would "match" an all-false key), so exclude it
+            // here or this preview grade drops below the server's.
+            const gradableQuestions = questions.filter(
+                (q) => (q.options?.length ?? 0) > 0 && q.options.some((o) => !!o.assigned_right_answer)
+            );
             let correctQuestions = 0;
 
             gradableQuestions.forEach((question) => {
@@ -535,71 +612,73 @@ function TaskQuizObject({ view, assignmentTaskUUID, user_id, onGraded }: TaskQui
 
                                                 </>
                                             )}
-                                            {view === 'student' && showCorrectAnswers && (
-                                                <div className={`w-fit flex-none flex text-[10px] px-2 py-0.5 space-x-1 items-center h-fit rounded-lg ${
-                                                    option.assigned_right_answer
-                                                        ? 'bg-emerald-50 text-emerald-700'
-                                                        : 'bg-rose-50 text-rose-600'
-                                                }`}>
-                                                    {option.assigned_right_answer ? <Check size={10} /> : <X size={10} />}
-                                                    <p className='font-bold'>
-                                                        {option.assigned_right_answer
-                                                            ? t('assignments.quiz.correct_answer')
-                                                            : t('assignments.quiz.incorrect_answer')}
-                                                    </p>
-                                                </div>
-                                            )}
+                                            {/* Verdict badge. Only options the learner actually
+                                                chose get a right/wrong verdict; the option that
+                                                WAS correct is highlighted separately so they can
+                                                still learn from the review. Untouched wrong
+                                                options get no badge at all — previously every
+                                                option was labelled, which read as "you got all
+                                                of these wrong". */}
+                                            {view === 'student' && revealAnswerKey && (() => {
+                                                const selected = isOptionSelected(question.questionUUID, option.optionUUID);
+                                                const correct = !!option.assigned_right_answer;
+                                                if (!selected && !correct) return null;
+                                                if (selected && correct) {
+                                                    return (
+                                                        <div className="w-fit flex-none flex text-[10px] px-2 py-0.5 space-x-1 items-center h-fit rounded-lg bg-emerald-50 text-emerald-700">
+                                                            <Check size={10} />
+                                                            <p className='font-bold'>{t('assignments.quiz.correct_answer')}</p>
+                                                        </div>
+                                                    );
+                                                }
+                                                if (selected && !correct) {
+                                                    return (
+                                                        <div className="w-fit flex-none flex text-[10px] px-2 py-0.5 space-x-1 items-center h-fit rounded-lg bg-rose-50 text-rose-600">
+                                                            <X size={10} />
+                                                            <p className='font-bold'>{t('assignments.quiz.incorrect_answer')}</p>
+                                                        </div>
+                                                    );
+                                                }
+                                                // Correct but not chosen — show what the answer was.
+                                                return (
+                                                    <div className="w-fit flex-none flex text-[10px] px-2 py-0.5 space-x-1 items-center h-fit rounded-lg bg-emerald-50/70 text-emerald-700 border border-emerald-200">
+                                                        <Check size={10} />
+                                                        <p className='font-bold'>{t('assignments.quiz.correct_answer')}</p>
+                                                    </div>
+                                                );
+                                            })()}
                                             {view === 'student' && (
                                                 <div
                                                     className={`w-[20px] flex-none flex items-center h-[20px] rounded-lg ${
-                                                        userSubmissions.submissions.find(
-                                                            (submission) =>
-                                                                submission.questionUUID === question.questionUUID &&
-                                                                submission.optionUUID === option.optionUUID &&
-                                                                submission.answer
-                                                        )
+                                                        isOptionSelected(question.questionUUID, option.optionUUID)
                                                             ? "bg-green-200/60 text-green-500 hover:bg-green-300"
                                                             : "bg-slate-200/60 text-slate-500 hover:bg-slate-300"
                                                     } text-sm transition-all ease-linear ${submissionIsGraded ? '' : 'cursor-pointer'}`}
                                                     onClick={() => !submissionIsGraded && chooseOption(qIndex, oIndex)}
                                                 >
-                                                    {userSubmissions.submissions.find(
-                                                        (submission) =>
-                                                            submission.questionUUID === question.questionUUID &&
-                                                            submission.optionUUID === option.optionUUID &&
-                                                            submission.answer
-                                                    ) ? (
+                                                    {isOptionSelected(question.questionUUID, option.optionUUID) ? (
                                                         <Check size={12} className="mx-auto" />
                                                     ) : (
-                                                        <X size={12} className="mx-auto" />
+                                                        // While answering this is an empty checkbox. After grading a
+                                                        // cross here would look like a verdict on an option the
+                                                        // learner never picked, so leave it blank.
+                                                        !submissionIsGraded && <X size={12} className="mx-auto" />
                                                     )}
                                                 </div>
                                             )}
                                             {view === 'grading' && (
-                                                <>
-                                                   
-                                                    <div className={`w-[20px] flex-none flex items-center h-[20px] rounded-lg ${
-                                                        userSubmissions.submissions.find(
-                                                            (submission) =>
-                                                                submission.questionUUID === question.questionUUID &&
-                                                                submission.optionUUID === option.optionUUID &&
-                                                                submission.answer
-                                                        )
-                                                            ? "bg-green-200/60 text-green-500"
-                                                            : "bg-slate-200/60 text-slate-500"
-                                                    } text-sm`}>
-                                                        {userSubmissions.submissions.find(
-                                                            (submission) =>
-                                                                submission.questionUUID === question.questionUUID &&
-                                                                submission.optionUUID === option.optionUUID &&
-                                                                submission.answer
-                                                        ) ? (
-                                                            <Check size={12} className="mx-auto" />
-                                                        ) : (
-                                                            <X size={12} className="mx-auto" />
-                                                        )}
-                                                    </div>
-                                                </>
+                                                // Marks what the LEARNER chose. The answer key is already
+                                                // shown by the "Marked as True/False" badge above, so a
+                                                // cross on every unchosen option only added noise.
+                                                <div className={`w-[20px] flex-none flex items-center h-[20px] rounded-lg ${
+                                                    isOptionSelected(question.questionUUID, option.optionUUID)
+                                                        ? "bg-green-200/60 text-green-500"
+                                                        : "bg-slate-200/60 text-slate-500"
+                                                } text-sm`}>
+                                                    {isOptionSelected(question.questionUUID, option.optionUUID) && (
+                                                        <Check size={12} className="mx-auto" />
+                                                    )}
+                                                </div>
                                             )}
 
                                         </div>

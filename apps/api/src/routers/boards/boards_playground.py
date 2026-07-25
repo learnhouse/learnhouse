@@ -13,7 +13,7 @@ from src.security.auth import get_current_user, get_authenticated_user, resolve_
 from src.security.features_utils.usage import (
     reserve_ai_credit,
 )
-from src.security.org_auth import is_org_member
+from src.security.org_auth import is_org_member, enforce_org_mfa
 from src.services.ai.llm import model_for_tier
 from src.services.boards.boards_playground import (
     get_boards_playground_session,
@@ -88,6 +88,8 @@ async def start_boards_playground_session(
             detail="You are not a member of this organization",
         )
 
+    # Org-wide two-factor policy, applied after the membership gate.
+    await enforce_org_mfa(start_acting_user_id, org.id, db_session)
     # F-9: per-user + per-org rate limit before any compute / credit spend.
     from src.services.security.rate_limiting import enforce_ai_rate_limit
     enforce_ai_rate_limit(start_acting_user_id, org.id)
@@ -173,6 +175,8 @@ async def iterate_boards_playground_session(
             detail="You are not a member of this organization",
         )
 
+    # Org-wide two-factor policy, applied after the membership gate.
+    await enforce_org_mfa(iterate_acting_user_id, org.id, db_session)
     # F-9: per-user + per-org rate limit before any compute / credit spend.
     from src.services.security.rate_limiting import enforce_ai_rate_limit
     enforce_ai_rate_limit(iterate_acting_user_id, org.id)
@@ -245,6 +249,8 @@ async def get_session_state(
             detail="You are not a member of this organization",
         )
 
+    # Org-wide two-factor policy, applied after the membership gate.
+    await enforce_org_mfa(acting_user_id, org.id, db_session)
     return BoardsPlaygroundSessionResponse(
         session_uuid=session.session_uuid,
         iteration_count=session.iteration_count,

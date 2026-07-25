@@ -223,7 +223,12 @@
     "delete_organization_warning": "Thao tác này sẽ xóa vĩnh viễn {{name}} và toàn bộ dữ liệu của tổ chức. Hành động này không thể hoàn tác.",
     "delete_organization_confirm_label": "Nhập {{slug}} để xác nhận",
     "deleting": "Đang xóa…",
-    "retry": "Thử lại"
+    "retry": "Thử lại",
+    "leave_organization": "Rời khỏi tổ chức",
+    "leave_organization_title": "Rời khỏi tổ chức?",
+    "leave_organization_desc": "Bạn sẽ mất quyền truy cập vào {{org}} và bị xóa khỏi danh sách thành viên. Bạn có thể tham gia lại sau nếu được mời.",
+    "leave_organization_error": "Không thể rời khỏi tổ chức này. Vui lòng thử lại.",
+    "leaving": "Đang rời đi…"
   },
   "banner": {
     "viewing_as_guest": "Bạn đang xem {{name}} với tư cách khách.",
@@ -676,7 +681,13 @@
     "quit_course_confirm": "Bạn có chắc chắn muốn rời khỏi khóa học này không? Bạn sẽ mất tất cả tiến trình của mình.",
     "quit_course_title": "Rời khóa học?",
     "courses_load_error": "Tải khóa học thất bại. Vui lòng thử lại.",
-    "view_all_courses": "Xem tất cả khóa học"
+    "view_all_courses": "Xem tất cả khóa học",
+    "first_chapter_default_name": "Chương đầu tiên",
+    "paste_from_clipboard": "Dán từ bộ nhớ tạm",
+    "no_image_in_clipboard": "Không tìm thấy hình ảnh trong bộ nhớ tạm",
+    "clipboard_read_error": "Không thể đọc từ bộ nhớ tạm",
+    "sign_in_to_see_courses": "Đăng nhập để xem các khóa học của bạn",
+    "sign_in_to_see_courses_description": "Các khóa học trong học viện này có thể chỉ hiển thị sau khi bạn đăng nhập."
   },
   "communities": {
     "title": "Cộng đồng",
@@ -987,13 +998,20 @@
     "embed": "Nhúng",
     "embed_code_copied": "Đã sao chép mã nhúng!",
     "link_copied": "Đã sao chép liên kết!",
-    "share": "Chia sẻ"
+    "share": "Chia sẻ",
+    "autosave_blocked": "Chưa thể lưu",
+    "autosave_retry": "Không thể lưu — đang thử lại…",
+    "autosave_unsaved": "Thay đổi chưa lưu",
+    "autosaved": "Đã lưu",
+    "autosaving": "Đang lưu…",
+    "save_answers": "Lưu câu trả lời"
   },
   "assignments": {
     "submit_assignment": "Nộp bài tập",
     "submit_assignment_confirm": "Bạn có chắc chắn muốn nộp bài tập để chấm điểm không? Sau khi nộp, bạn sẽ không thể thay đổi.",
     "submit_assignment_title": "Nộp bài tập để chấm điểm",
     "submit_for_grading": "Nộp để chấm điểm",
+    "submitting": "Đang nộp…",
     "grading_in_progress": "Đang chấm điểm",
     "graded": "Đã chấm điểm",
     "assignment_submitted_success": "Đã nộp bài tập để chấm điểm",
@@ -1035,7 +1053,11 @@
     "retry_assignment_last": "Đây là lần thử cuối cùng của bạn — hãy làm cho nó có ý nghĩa.",
     "retry_assignment_success": "Công việc của bạn đã được đặt lại — hãy thử lại.",
     "retry_assignment_failed": "Không thể đặt lại bài nộp của bạn. Vui lòng thử lại.",
-    "retry_no_attempts_left": "Không còn lần thử nào"
+    "retry_no_attempts_left": "Không còn lần thử nào",
+    "no_task_submission_to_grade": "Học viên này chưa nộp tệp cho bài tập này.",
+    "past_due": "Đã quá hạn",
+    "past_due_description": "Hạn nộp bài tập này là {{date}}. Bạn không thể lưu câu trả lời hoặc nộp bài để chấm điểm nữa.",
+    "past_due_title": "Đã quá hạn"
   },
   "certificate": {
     "certificate": "Chứng chỉ",
@@ -1062,7 +1084,8 @@
     "continuing_education": "Giáo dục thường xuyên",
     "workshop_attendance": "Tham dự hội thảo",
     "specialization": "Chuyên môn hóa",
-    "dedication_message": "Sự tận tâm và làm việc chăm chỉ của bạn đã được đền đáp. Bạn đã nắm vững tất cả nội dung của khóa học này."
+    "dedication_message": "Sự tận tâm và làm việc chăm chỉ của bạn đã được đền đáp. Bạn đã nắm vững tất cả nội dung của khóa học này.",
+    "download_failed": "Không thể tạo PDF. Vui lòng thử lại."
   },
   "search": {
     "search_placeholder": "Tìm khóa học, người dùng, bộ sưu tập...",
@@ -1147,7 +1170,9 @@
       "description": "Xóa vĩnh viễn tài khoản và thu hồi quyền truy cập của bạn. Hành động này không thể hoàn tác.",
       "warning": "Thao tác này sẽ xóa vĩnh viễn tài khoản và toàn bộ dữ liệu liên quan. Hành động này không thể hoàn tác.",
       "confirm_label": "Nhập {{username}} để xác nhận",
-      "deleting": "Đang xóa…"
+      "deleting": "Đang xóa…",
+      "zone_subtitle": "Xóa vĩnh viễn tài khoản của bạn. Thao tác này không thể hoàn tác.",
+      "zone_body": "Thao tác này sẽ xóa tài khoản và quyền truy cập của bạn. Mọi tổ chức mà bạn là quản trị viên duy nhất — cùng toàn bộ khóa học và nội dung của tổ chức đó — cũng sẽ bị xóa. Các tổ chức có quản trị viên khác sẽ được giữ lại; bạn chỉ bị xóa khỏi các tổ chức đó."
     }
   },
   "user": {
@@ -1369,6 +1394,12 @@
           "save_error": "Lỗi khi cập nhật hồ sơ"
         },
         "unknown_section": "Mục không xác định"
+      },
+      "security": {
+        "current_session_title": "Phiên hiện tại",
+        "current_session_subtitle": "Thiết bị bạn đang đăng nhập ngay lúc này.",
+        "this_device": "Thiết bị này",
+        "sign_out": "Đăng xuất"
       }
     },
     "sign_out": "Đăng xuất",
@@ -2104,7 +2135,8 @@
             "dynamic_page": "Trang động",
             "scorm": "Scorm",
             "markdown": "Markdown",
-            "embed": "Nhúng"
+            "embed": "Nhúng",
+            "resource": "Tài nguyên"
           },
           "toasts": {
             "deleting": "Đang xóa hoạt động...",
@@ -2980,6 +3012,32 @@
           "message2": "Vui lòng chuyển sang máy tính để xem và quản lý cài đặt người dùng."
         }
       },
+      "analytics": {
+        "button": "Phân tích",
+        "view_analytics": "Xem phân tích học viên",
+        "open_full_page": "Mở trang phân tích đầy đủ",
+        "compare": "So sánh phân tích",
+        "compare_students": "So sánh học viên",
+        "export": "Xuất",
+        "export_selected": "Xuất phân tích ({{count}})",
+        "exporting": "Đang xuất…",
+        "failed_load": "Không thể tải hồ sơ học viên.",
+        "back_to_students": "Quay lại danh sách học viên",
+        "no_behavioral": "Không có dữ liệu hành vi (phân tích có thể chưa được cấu hình cho khoảng thời gian này).",
+        "ranges": { "d30": "30 ngày", "d90": "90 ngày", "y1": "1 năm" },
+        "kpi": { "courses": "Khóa học", "completed": "{{count}} đã hoàn thành", "avg_progress": "Tiến độ trung bình", "time_spent": "Thời gian đã dùng", "assignments": "Bài tập", "avg_grade": "trung bình {{grade}}", "certificates": "Chứng chỉ", "connections": "Lượt kết nối", "last": "lần cuối {{date}}" },
+        "tabs": { "connections": "Lượt kết nối", "courses": "Khóa học", "assignments": "Bài tập", "code": "Mã", "community": "Cộng đồng", "certificates": "Chứng chỉ", "behavior": "Hành vi" },
+        "identity": { "verified": "Đã xác minh", "unverified": "Chưa xác minh", "via": "qua {{method}}" },
+        "connections": { "title": "Lượt kết nối", "empty": "Chưa có lượt kết nối nào được ghi lại." },
+        "courses": { "title": "Tiến độ khóa học", "empty": "Chưa đăng ký khóa học nào.", "activities": "{{done}}/{{total}} hoạt động", "enrolled": "Đã đăng ký {{date}}" },
+        "assignments": { "title": "Bài tập", "empty": "Không có bài nộp.", "attempt": "lần thử {{number}}", "feedback": "Phản hồi:" },
+        "code": { "title": "Bài tập mã", "empty": "Không có bài nộp mã.", "activity": "Hoạt động", "result": "Kết quả", "tests": "Kiểm thử", "time": "Thời gian", "when": "Khi nào", "passed": "Đạt", "failed": "Không đạt" },
+        "community": { "title": "Tham gia cộng đồng", "empty": "Không có hoạt động cộng đồng.", "discussions": "Thảo luận", "comments": "Bình luận" },
+        "certificates": { "title": "Chứng chỉ đã đạt", "empty": "Chưa đạt chứng chỉ nào." },
+        "behavior": { "title": "Phân tích hành vi", "time_by_course": "Thời gian dùng theo khóa học", "searches": "Lượt tìm kiếm" },
+        "status": { "completed": "đã hoàn thành", "in_progress": "đang thực hiện", "paused": "đã tạm dừng", "cancelled": "đã hủy", "graded": "đã chấm điểm", "submitted": "đã nộp", "pending": "đang chờ", "late": "trễ hạn", "not_submitted": "chưa nộp" },
+        "comparison": { "student": "Học viên", "enrolled": "Đã đăng ký", "completed": "Đã hoàn thành", "certificates": "Chứng chỉ", "last_connection": "Lần kết nối cuối", "view": "Xem" }
+      },
       "active_users": {
         "title": "Người dùng đang hoạt động",
         "subtitle": "Quản lý người dùng trong tổ chức của bạn và gán vai trò cùng quyền hạn cho họ",
@@ -3473,7 +3531,8 @@
           "drafts": "Bản nháp",
           "auto_graded": "Chỉ tự động chấm",
           "hide_empty": "Ẩn khóa học trống"
-        }
+        },
+        "new_assignment": "Bài tập mới"
       },
       "detail": {
         "title": "Công cụ bài tập",
@@ -3549,7 +3608,8 @@
           "task_save_error": "Đã xảy ra lỗi khi lưu nhiệm vụ. Vui lòng thử lại sau.",
           "task_updated": "Đã cập nhật nhiệm vụ thành công",
           "task_update_error": "Đã xảy ra lỗi khi cập nhật nhiệm vụ. Vui lòng thử lại sau.",
-          "reminder": "Đừng quên hủy công bố bài tập khi chỉnh sửa hoặc thêm các nhiệm vụ để tránh các vấn đề tiềm ẩn cho người học. Bạn có thể công bố lại khi sẵn sàng."
+          "reminder": "Đừng quên hủy công bố bài tập khi chỉnh sửa hoặc thêm các nhiệm vụ để tránh các vấn đề tiềm ẩn cho người học. Bạn có thể công bố lại khi sẵn sàng.",
+          "no_submission_to_grade": "Học viên này chưa có bài nộp cho bài tập này, không có gì để chấm."
         },
         "task_editor": {
           "general": {
@@ -3569,7 +3629,9 @@
             "auth_required_submit": "Yêu cầu xác thực. Đăng nhập để nộp nhiệm vụ.",
             "hint_optional": "Gợi ý (tùy chọn)",
             "paste_blocked": "Dán bị vô hiệu hóa cho bài tập này",
-            "paste_blocked_hint": "Dán bị vô hiệu hóa — nhập câu trả lời trực tiếp."
+            "paste_blocked_hint": "Dán bị vô hiệu hóa — nhập câu trả lời trực tiếp.",
+            "upload_locked_graded": "Bài nộp này đã được chấm — bạn không thể thay đổi tệp nữa.",
+            "upload_locked_submitted": "Bạn đã nộp bài tập này — bạn không thể thay đổi tệp nữa."
           },
           "code": {
             "student_behavior_label": "Hành vi học sinh",
@@ -3585,7 +3647,10 @@
             "must_pass_hint": "Tất cả bài test hiển thị phải vượt qua trước khi lưu.",
             "show_solution_label": "Tiết lộ giải pháp sau khi nộp",
             "show_solution_description": "Sau khi học sinh đã lưu công việc, hiển thị giải pháp tham khảo của giáo viên.",
-            "reference_solution_label": "Giải pháp tham khảo"
+            "reference_solution_label": "Giải pháp tham khảo",
+            "locked_graded_hint": "Bài nộp này đã được chấm — mã của bạn ở chế độ chỉ đọc.",
+            "locked_submitted_hint": "Bạn đã nộp bài tập này — mã của bạn ở chế độ chỉ đọc.",
+            "no_runnable_tests": "Bài tập này không có bài kiểm tra để chạy — mã của bạn sẽ được kiểm tra khi chấm điểm."
           },
           "short_answer": {
             "prompt_label": "Nội dung câu hỏi",
@@ -3628,13 +3693,19 @@
             "correct": "Đúng",
             "incorrect": "Chưa đúng — thử lại"
           }
+        },
+        "generate_ai": "Tạo bài tập bằng AI",
+        "generate_ai_modal": {
+          "description": "Mô tả điều bạn muốn và xem trước các bài tập dựa trên nội dung khóa học trước khi thêm.",
+          "title": "Tạo bài tập bằng AI"
         }
       },
       "submissions": {
         "status": {
           "late": "Nộp muộn",
           "submitted": "Đã nộp",
-          "graded": "Đã chấm điểm"
+          "graded": "Đã chấm điểm",
+          "pending": "Đang thực hiện"
         },
         "submission_label": "Bài nộp",
         "evaluate": "Đánh giá",
@@ -3690,7 +3761,8 @@
           "optional": "tùy chọn",
           "placeholder": "Viết nhận xét về bài nộp tổng thể. Học sinh sẽ thấy nó bên cạnh điểm của mình.",
           "hint": "Để trống để giữ nhận xét trước đó không thay đổi."
-        }
+        },
+        "truncated_warning": "Chỉ hiển thị {{max}} bài nộp đầu tiên. Một số bài nộp không được liệt kê ở đây."
       },
       "analytics": {
         "loading": "Đang tải phân tích...",
@@ -3834,9 +3906,22 @@
           },
           "toasts": {
             "creating": "Đang tạo bài tập...",
-            "success": "Đã tạo bài tập thành công"
+            "success": "Đã tạo bài tập thành công",
+            "error": "Không thể tạo bài tập"
           }
         }
+      },
+      "create_flow": {
+        "create_course": "Tạo khóa học",
+        "no_chapters_desc": "Thêm một chương trong trình chỉnh sửa khóa học, rồi tạo bài tập trong chương đó.",
+        "no_chapters_title": "Khóa học này chưa có chương nào",
+        "no_courses_desc": "Bài tập nằm trong một chương của khóa học. Hãy tạo khóa học đầu tiên, rồi quay lại để thêm bài tập.",
+        "no_courses_title": "Hãy tạo khóa học trước",
+        "open_editor": "Mở trình chỉnh sửa khóa học",
+        "pick_chapter": "Chọn chương để đặt bài tập này.",
+        "pick_course": "Chọn khóa học chứa bài tập này.",
+        "title": "Bài tập mới",
+        "untitled_chapter": "Chương chưa có tiêu đề"
       }
     },
     "search": {
@@ -4007,6 +4092,9 @@
           "keywords": "api, tokens, access, programmatic, keys"
         }
       }
+    },
+    "developers": {
+      "breadcrumb": "Nhà phát triển"
     }
   },
   "editor": {
@@ -5184,7 +5272,8 @@
     "accessDenied": "Không thể truy cập khóa học này",
     "backToCourses": "Quay lại danh sách khóa học",
     "loadError": "Không tìm thấy khóa học này hoặc đã xảy ra lỗi khi tải.",
-    "noPermission": "Bạn không có quyền xem khóa học này."
+    "noPermission": "Bạn không có quyền xem khóa học này.",
+    "finish_course": "Hoàn thành khóa học"
   },
   "pagination": {
     "next": "Tiếp",
@@ -5302,7 +5391,18 @@
     "thumbnail_error": "Couldn't upload the cover image",
     "open_resource": "Open",
     "replace_cover": "Replace",
-    "cover_hint": "PNG, JPG, WEBP"
+    "cover_hint": "PNG, JPG, WEBP",
+    "sort": {
+      "sort_by": "Sắp xếp theo",
+      "name_asc": "Tên (A–Z)",
+      "name_desc": "Tên (Z–A)",
+      "newest": "Mới nhất trước",
+      "oldest": "Cũ nhất trước",
+      "manual": "Thủ công",
+      "drag_to_reorder": "Kéo để sắp xếp lại",
+      "sort_error": "Không thể cập nhật thứ tự sắp xếp",
+      "reorder_error": "Không thể lưu thứ tự mới"
+    }
   },
   "media": {
     "media": "Media",
@@ -5414,7 +5514,6 @@
     "admin_seats": "Chỗ quản trị viên",
     "ai_credits": "Tín dụng AI",
     "addons": "Tiện ích bổ sung",
-    "addons_subtitle": "Mua thêm tín dụng AI hoặc chỗ thành viên dưới dạng gói đăng ký hằng tháng.",
     "active_subscriptions": "Gói đăng ký đang hoạt động",
     "credits": "tín dụng",
     "seats": "chỗ",
@@ -5487,8 +5586,7 @@
     "scheduled_desc": "Gói của bạn sẽ chuyển đến {{plan}} vào cuối chu kỳ thanh toán hiện tại. Bạn sẽ giữ quyền truy cập đầy đủ vào gói hiện tại của mình cho đến lúc đó.",
     "plan_plus_purchased": "Gói: {{plan}} + Mua: {{purchased}}",
     "base_plus_purchased": "Cơ bản: {{base}} + Mua: {{purchased}}",
-    "pack_ai_desc": "{{quantity}} khoản tín dụng AI bổ sung được thêm vào tổ chức của bạn",
-    "pack_seats_desc": "{{quantity}} ghế thành viên bổ sung cho tổ chức của bạn"
+    "pack_ai_desc": "{{quantity}} khoản tín dụng AI bổ sung được thêm vào tổ chức của bạn"
   },
   "hub_new": {
     "useType": {

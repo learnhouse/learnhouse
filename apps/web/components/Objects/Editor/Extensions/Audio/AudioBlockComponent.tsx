@@ -17,6 +17,7 @@ import { useLHSession } from '@components/Contexts/LHSessionContext'
 import { constructAcceptValue } from '@/lib/constants'
 import { cn } from '@/lib/utils'
 import { getOrgPodcasts, getPodcastMeta, type Podcast, type PodcastEpisode, type PodcastMeta } from '@services/podcasts/podcasts'
+import { safePlay } from '@/lib/media/safePlay'
 
 const SUPPORTED_FILES = constructAcceptValue(['mp3', 'wav', 'ogg', 'm4a'])
 
@@ -153,7 +154,7 @@ function InlineAudioPlayer({ src, title }: { src: string; title?: string }) {
   const togglePlay = () => {
     const audio = audioRef.current
     if (!audio) return
-    if (isPlaying) { audio.pause() } else { audio.play() }
+    if (isPlaying) { audio.pause() } else { safePlay(audio) }
     setIsPlaying(!isPlaying)
   }
 
@@ -315,7 +316,7 @@ function PlaylistPlayer({
     setDuration(0)
     if (audioRef.current) {
       audioRef.current.src = url
-      audioRef.current.play()
+      safePlay(audioRef.current)
       setIsPlaying(true)
     }
   }
@@ -349,7 +350,7 @@ function PlaylistPlayer({
   const togglePlay = () => {
     const audio = audioRef.current
     if (!audio || !activeEpisode) return
-    if (isPlaying) { audio.pause() } else { audio.play() }
+    if (isPlaying) { audio.pause() } else { safePlay(audio) }
     setIsPlaying(!isPlaying)
   }
 

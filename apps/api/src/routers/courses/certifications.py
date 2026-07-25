@@ -126,11 +126,17 @@ async def api_update_certification(
 @router.delete(
     "/{certification_uuid}",
     summary="Delete certification",
-    description="Delete a certification template by its UUID. Existing awarded certificates are not removed.",
+    description=(
+        "Delete a certification template by its UUID. Only allowed while no "
+        "certificates have been awarded from it — deleting the template also "
+        "destroys every awarded certificate and invalidates their verification "
+        "links. Revoke awarded certificates individually first."
+    ),
     responses={
         200: {"description": "Certification deleted."},
         403: {"description": "Caller lacks permission to delete this certification"},
         404: {"description": "Certification not found"},
+        409: {"description": "Certificates have been awarded from this certification"},
     },
 )
 async def api_delete_certification(

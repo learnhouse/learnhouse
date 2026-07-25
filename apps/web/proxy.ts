@@ -334,12 +334,33 @@ export default async function proxy(req: NextRequest) {
   // -------------------------------------------------------------------------
   const authPaths = ['/login', '/signup', '/reset', '/forgot', '/verify-email']
   if (authPaths.includes(pathname)) {
-    // A logged-in user has no business on /login or /signup — bounce them to the
-    // hub (the page itself re-verifies, so this is a best-effort UX shortcut).
-    if ((pathname === '/login' || pathname === '/signup') && req.cookies.get('LH_session')?.value) {
+    const hasSession = !!req.cookies.get('LH_session')?.value
+
+    // A logged-in user has no business on /login — bounce them to the hub (the
+    // page itself re-verifies, so this is a best-effort UX shortcut).
+    if (pathname === '/login' && hasSession) {
       return NextResponse.redirect(new URL('/home', req.url))
     }
+
     const resolved = await resolveTenant(req, instance)
+
+    // `/signup` is NOT only a signup page: for a signed-in user on an org host
+    // it is the JOIN screen (the "Join this organization" banner and every
+    // invite link point at it). Bouncing them to /home dropped them on the org
+    // picker instead — and silently threw away any ?inviteCode. So only send a
+    // signed-in visitor to the hub when there is genuinely no org to join here:
+    // the org-less apex, with no invite code in hand.
+    if (pathname === '/signup' && hasSession) {
+      const onOrgHost =
+        instance.tenancy === 'single'
+        || resolved.source === 'subdomain'
+        || resolved.source === 'custom-domain'
+      const hasInviteCode = !!req.nextUrl.searchParams.get('inviteCode')
+      if (!onOrgHost && !hasInviteCode) {
+        return NextResponse.redirect(new URL('/home', req.url))
+      }
+    }
+
     const requestHeaders = tenantRequestHeaders(req, resolved, instance)
     const response = NextResponse.rewrite(
       new URL(`/auth${pathname}${search}`, req.url),

@@ -15,6 +15,7 @@ import {
   markPackCancelingInternally,
 } from "@services/billing/packs";
 import { planForPriceId, getStripeSecretKey } from "@services/billing/stripe";
+import { billOverageForInvoice } from "@services/billing/activeUserBilling";
 import {
   sendPurchaseCompleteMail,
   sendPackActivatedMail,
@@ -53,6 +54,8 @@ async function planFromSubscription(subscription: any): Promise<string | undefin
 // TTL: 5 minutes — Stripe won't retry faster than that.
 // NOTE: in-memory, so it does NOT dedupe across serverless instances; the
 // downstream service calls are all idempotent, which covers the gap.
+// The entry is dropped again if processing fails (see the catch below), so a
+// retry of a FAILED event is never mistaken for a duplicate of a successful one.
 const processedEvents = new Map<string, number>();
 const IDEMPOTENCY_TTL_MS = 5 * 60 * 1000;
 
@@ -93,9 +96,19 @@ export async function POST(request: Request) {
       await handleSubscriptionEvent(event.type, event.data.object);
     }
 
+    // Add last month's active-user overage as a line on the draft renewal
+    // invoice before Stripe finalizes it (fires ~1h before finalization).
+    if (event.type === "invoice.created") {
+      await billOverageForInvoice(event.data.object);
+    }
+
     return NextResponse.json({ result: event.type, ok: true });
   } catch (error) {
     console.error(`Webhook processing error for ${event.type} (${event.id}):`, error);
+    // Un-mark the event: it was recorded before processing to block concurrent
+    // duplicate deliveries, but this delivery failed. Leaving it would make
+    // Stripe's retry return "duplicate" 200 and silently drop the work.
+    processedEvents.delete(event.id);
     // Return 500 so Stripe retries the webhook
     return NextResponse.json(
       { message: "webhook processing failed", ok: false },

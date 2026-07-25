@@ -223,7 +223,12 @@
     "delete_organization_warning": "Dadurch werden {{name}} und alle zugehörigen Daten dauerhaft gelöscht. Diese Aktion kann nicht rückgängig gemacht werden.",
     "delete_organization_confirm_label": "Gib zur Bestätigung {{slug}} ein",
     "deleting": "Wird gelöscht…",
-    "retry": "Erneut versuchen"
+    "retry": "Erneut versuchen",
+    "leave_organization": "Organisation verlassen",
+    "leave_organization_title": "Organisation verlassen?",
+    "leave_organization_desc": "Du verlierst den Zugriff auf {{org}} und wirst aus den Mitgliedern entfernt. Du kannst später erneut beitreten, wenn du eingeladen wirst.",
+    "leave_organization_error": "Organisation konnte nicht verlassen werden. Bitte versuche es erneut.",
+    "leaving": "Wird verlassen…"
   },
   "banner": {
     "viewing_as_guest": "Sie betrachten {{name}} als Gast.",
@@ -654,7 +659,13 @@
       "info_description": "Filtern Sie Kurse nach Benutzergruppe, um nur die Kurse anzuzeigen, die einer bestimmten Gruppe zugewiesen sind. Nützlich für Familien oder Teams, die sich dieselbe Organisation teilen."
     },
     "courses_load_error": "Kurse konnten nicht geladen werden. Bitte versuchen Sie es erneut.",
-    "view_all_courses": "Alle Kurse anzeigen"
+    "view_all_courses": "Alle Kurse anzeigen",
+    "first_chapter_default_name": "Erstes Kapitel",
+    "paste_from_clipboard": "Aus Zwischenablage einfügen",
+    "no_image_in_clipboard": "Kein Bild in der Zwischenablage gefunden",
+    "clipboard_read_error": "Zwischenablage konnte nicht gelesen werden",
+    "sign_in_to_see_courses": "Melde dich an, um deine Kurse zu sehen",
+    "sign_in_to_see_courses_description": "Kurse in dieser Akademie sind möglicherweise erst sichtbar, wenn du angemeldet bist."
   },
   "communities": {
     "title": "Communities",
@@ -965,13 +976,20 @@
     "embed": "Einbetten",
     "embed_code_copied": "Einbettungscode kopiert!",
     "link_copied": "Link kopiert!",
-    "share": "Teilen"
+    "share": "Teilen",
+    "autosave_blocked": "Kann noch nicht gespeichert werden",
+    "autosave_retry": "Konnte nicht gespeichert werden — erneuter Versuch…",
+    "autosave_unsaved": "Ungespeicherte Änderungen",
+    "autosaved": "Gespeichert",
+    "autosaving": "Wird gespeichert…",
+    "save_answers": "Antworten speichern"
   },
   "assignments": {
     "submit_assignment": "Aufgabe einreichen",
     "submit_assignment_confirm": "Sind Sie sicher, dass Sie Ihre Aufgabe zur Bewertung einreichen möchten? Nach der Einreichung können Sie keine Änderungen mehr vornehmen.",
     "submit_assignment_title": "Reichen Sie Ihre Aufgabe zur Bewertung ein",
     "submit_for_grading": "Zur Bewertung einreichen",
+    "submitting": "Wird eingereicht…",
     "grading_in_progress": "Bewertung läuft",
     "graded": "Bewertet",
     "assignment_submitted_success": "Aufgabe zur Bewertung eingereicht",
@@ -1013,7 +1031,11 @@
       "half": "Halb",
       "zero": "Null"
     },
-    "task_feedback_placeholder": "Notiz zu dieser Aufgabe (wird mit der Note gespeichert)"
+    "task_feedback_placeholder": "Notiz zu dieser Aufgabe (wird mit der Note gespeichert)",
+    "no_task_submission_to_grade": "Dieser Lernende hat für diese Aufgabe noch keine Datei eingereicht.",
+    "past_due": "Frist abgelaufen",
+    "past_due_description": "Die Abgabefrist für diese Aufgabe war am {{date}}. Antworten können nicht mehr gespeichert oder zur Bewertung eingereicht werden.",
+    "past_due_title": "Frist abgelaufen"
   },
   "certificate": {
     "certificate": "Zertifikat",
@@ -1040,7 +1062,8 @@
     "continuing_education": "Fortbildung",
     "workshop_attendance": "Workshop-Teilnahme",
     "specialization": "Spezialisierung",
-    "dedication_message": "Ihr Einsatz und Ihre harte Arbeit haben sich ausgezahlt. Sie haben alle Inhalte dieses Kurses gemeistert."
+    "dedication_message": "Ihr Einsatz und Ihre harte Arbeit haben sich ausgezahlt. Sie haben alle Inhalte dieses Kurses gemeistert.",
+    "download_failed": "PDF konnte nicht erstellt werden. Bitte versuche es erneut."
   },
   "search": {
     "search_placeholder": "Suche nach Kursen, Benutzern, Kollektionen...",
@@ -1125,7 +1148,9 @@
       "description": "Lösche dein Konto dauerhaft und entferne deinen Zugriff. Dies kann nicht rückgängig gemacht werden.",
       "warning": "Dadurch werden dein Konto und alle zugehörigen Daten dauerhaft gelöscht. Diese Aktion kann nicht rückgängig gemacht werden.",
       "confirm_label": "Gib zur Bestätigung {{username}} ein",
-      "deleting": "Wird gelöscht…"
+      "deleting": "Wird gelöscht…",
+      "zone_subtitle": "Dein Konto dauerhaft löschen. Dies kann nicht rückgängig gemacht werden.",
+      "zone_body": "Dadurch werden dein Konto und dein Zugriff entfernt. Jede Organisation, deren einzige:r Admin du bist — einschließlich aller Kurse und Inhalte — wird ebenfalls gelöscht. Organisationen mit weiteren Admins bleiben erhalten; du wirst lediglich daraus entfernt."
     }
   },
   "user": {
@@ -1347,6 +1372,12 @@
           "save_error": "Fehler beim Aktualisieren des Profils"
         },
         "unknown_section": "Unbekannter Abschnitt"
+      },
+      "security": {
+        "current_session_title": "Aktuelle Sitzung",
+        "current_session_subtitle": "Das Gerät, auf dem du gerade angemeldet bist.",
+        "this_device": "Dieses Gerät",
+        "sign_out": "Abmelden"
       }
     },
     "sign_out": "Abmelden",
@@ -2082,7 +2113,8 @@
             "dynamic_page": "Dynamische Seite",
             "scorm": "SCORM",
             "markdown": "Markdown",
-            "embed": "Einbettung"
+            "embed": "Einbettung",
+            "resource": "Ressource"
           },
           "toasts": {
             "deleting": "Aktivität wird gelöscht...",
@@ -2956,6 +2988,32 @@
           "message2": "Bitte wechseln Sie zu einem Desktop, um die Benutzereinstellungen anzuzeigen und zu verwalten."
         }
       },
+      "analytics": {
+        "button": "Analysen",
+        "view_analytics": "Studentenanalysen anzeigen",
+        "open_full_page": "Vollständige Analyseseite öffnen",
+        "compare": "Analysen vergleichen",
+        "compare_students": "Studenten vergleichen",
+        "export": "Exportieren",
+        "export_selected": "Analysen exportieren ({{count}})",
+        "exporting": "Exportieren…",
+        "failed_load": "Das Studentendossier konnte nicht geladen werden.",
+        "back_to_students": "Zurück zu den Studenten",
+        "no_behavioral": "Keine Verhaltensdaten (Analysen sind für diesen Zeitraum möglicherweise nicht konfiguriert).",
+        "ranges": { "d30": "30 Tage", "d90": "90 Tage", "y1": "1 Jahr" },
+        "kpi": { "courses": "Kurse", "completed": "{{count}} abgeschlossen", "avg_progress": "Durchschn. Fortschritt", "time_spent": "Aufgewendete Zeit", "assignments": "Aufgaben", "avg_grade": "Durchschn. {{grade}}", "certificates": "Zertifikate", "connections": "Verbindungen", "last": "letzte {{date}}" },
+        "tabs": { "connections": "Verbindungen", "courses": "Kurse", "assignments": "Aufgaben", "code": "Code", "community": "Community", "certificates": "Zertifikate", "behavior": "Verhalten" },
+        "identity": { "verified": "Verifiziert", "unverified": "Nicht verifiziert", "via": "über {{method}}" },
+        "connections": { "title": "Verbindungen", "empty": "Noch keine Verbindungen aufgezeichnet." },
+        "courses": { "title": "Kursfortschritt", "empty": "In keinem Kurs eingeschrieben.", "activities": "{{done}}/{{total}} Aktivitäten", "enrolled": "Eingeschrieben am {{date}}" },
+        "assignments": { "title": "Aufgaben", "empty": "Keine Aufgabeneinreichungen.", "attempt": "Versuch {{number}}", "feedback": "Feedback:" },
+        "code": { "title": "Programmieraufgaben", "empty": "Keine Code-Einreichungen.", "activity": "Aktivität", "result": "Ergebnis", "tests": "Tests", "time": "Zeit", "when": "Wann", "passed": "Bestanden", "failed": "Fehlgeschlagen" },
+        "community": { "title": "Community-Beteiligung", "empty": "Keine Community-Aktivität.", "discussions": "Diskussionen", "comments": "Kommentare" },
+        "certificates": { "title": "Erworbene Zertifikate", "empty": "Keine Zertifikate erworben." },
+        "behavior": { "title": "Verhaltensanalysen", "time_by_course": "Aufgewendete Zeit pro Kurs", "searches": "Suchen" },
+        "status": { "completed": "abgeschlossen", "in_progress": "in Bearbeitung", "paused": "pausiert", "cancelled": "abgebrochen", "graded": "benotet", "submitted": "eingereicht", "pending": "ausstehend", "late": "verspätet", "not_submitted": "nicht eingereicht" },
+        "comparison": { "student": "Student", "enrolled": "Eingeschrieben", "completed": "Abgeschlossen", "certificates": "Zertifikate", "last_connection": "Letzte Verbindung", "view": "Anzeigen" }
+      },
       "active_users": {
         "title": "Aktive Benutzer",
         "subtitle": "Verwalten Sie Ihre Organisationsbenutzer, weisen Sie Rollen und Berechtigungen zu",
@@ -3449,7 +3507,8 @@
           "drafts": "Entwürfe",
           "auto_graded": "Nur auto-bewertete",
           "hide_empty": "Leere Kurse ausblenden"
-        }
+        },
+        "new_assignment": "Neue Aufgabe"
       },
       "detail": {
         "title": "Aufgaben-Tools",
@@ -3525,7 +3584,8 @@
           "task_save_error": "Fehler beim Speichern der Aufgabenstellung, bitte versuchen Sie es später erneut.",
           "task_updated": "Aufgabenstellung erfolgreich aktualisiert",
           "task_update_error": "Fehler beim Aktualisieren der Aufgabenstellung, bitte versuchen Sie es später erneut.",
-          "reminder": "Wenn Sie Ihre Aufgabenstellungen bearbeiten/hinzufügen, stellen Sie sicher, dass Sie Ihre Aufgabe nicht veröffentlichen, um Probleme mit Schülern zu vermeiden. Sie können sie wieder veröffentlichen, wenn Sie bereit sind."
+          "reminder": "Wenn Sie Ihre Aufgabenstellungen bearbeiten/hinzufügen, stellen Sie sicher, dass Sie Ihre Aufgabe nicht veröffentlichen, um Probleme mit Schülern zu vermeiden. Sie können sie wieder veröffentlichen, wenn Sie bereit sind.",
+          "no_submission_to_grade": "Dieser Lernende hat für diese Aufgabe keine Einreichung. Es gibt nichts zu bewerten."
         },
         "task_editor": {
           "general": {
@@ -3545,7 +3605,9 @@
             "auth_required_submit": "Authentifizierung erforderlich. Bitte melden Sie sich an, um Ihre Aufgabenstellung einzureichen.",
             "hint_optional": "Hinweis (optional)",
             "paste_blocked": "Einfügen ist für diese Aufgabe deaktiviert",
-            "paste_blocked_hint": "Einfügen ist deaktiviert — gib deine Antwort direkt ein."
+            "paste_blocked_hint": "Einfügen ist deaktiviert — gib deine Antwort direkt ein.",
+            "upload_locked_graded": "Diese Einreichung wurde bewertet — deine Datei kann nicht mehr geändert werden.",
+            "upload_locked_submitted": "Du hast diese Aufgabe eingereicht — deine Datei kann nicht mehr geändert werden."
           },
           "code": {
             "student_behavior_label": "Schülerverhalten",
@@ -3561,7 +3623,10 @@
             "must_pass_hint": "Alle sichtbaren Tests müssen bestehen bevor du speichern kannst.",
             "show_solution_label": "Lösung nach Einreichen zeigen",
             "show_solution_description": "Sobald der Schüler seine Arbeit gespeichert hat, zeige die Referenzlösung des Lehrers als einklappbares Panel.",
-            "reference_solution_label": "Referenzlösung"
+            "reference_solution_label": "Referenzlösung",
+            "locked_graded_hint": "Diese Einreichung wurde bewertet — dein Code ist schreibgeschützt.",
+            "locked_submitted_hint": "Du hast diese Aufgabe eingereicht — dein Code ist schreibgeschützt.",
+            "no_runnable_tests": "Für diese Aufgabe gibt es keine Tests, die du ausführen kannst — dein Code wird bei der Bewertung geprüft."
           },
           "short_answer": {
             "prompt_label": "Frage",
@@ -3604,13 +3669,19 @@
             "correct": "Richtig",
             "incorrect": "Leider nicht — versuch es nochmal"
           }
+        },
+        "generate_ai": "Aufgaben mit AI erstellen",
+        "generate_ai_modal": {
+          "description": "Beschreibe, was du möchtest, und sieh dir Aufgaben auf Basis der Kursinhalte an, bevor du sie hinzufügst.",
+          "title": "Aufgaben mit AI erstellen"
         }
       },
       "submissions": {
         "status": {
           "late": "Verspätet",
           "submitted": "Eingereicht",
-          "graded": "Bewertet"
+          "graded": "Bewertet",
+          "pending": "In Bearbeitung"
         },
         "submission_label": "Einreichung",
         "evaluate": "Bewerten",
@@ -3666,7 +3737,8 @@
           "optional": "optional",
           "placeholder": "Schreibe einen Kommentar zur gesamten Abgabe. Der Schüler sieht ihn neben seiner Note.",
           "hint": "Leer lassen, um vorheriges Feedback unverändert zu lassen."
-        }
+        },
+        "truncated_warning": "Es werden nur die ersten {{max}} Einreichungen angezeigt. Einige Einreichungen sind hier nicht aufgeführt."
       },
       "analytics": {
         "loading": "Analysen werden geladen...",
@@ -3810,9 +3882,22 @@
           },
           "toasts": {
             "creating": "Aufgabe wird erstellt...",
-            "success": "Aufgabe erfolgreich erstellt"
+            "success": "Aufgabe erfolgreich erstellt",
+            "error": "Aufgabe konnte nicht erstellt werden"
           }
         }
+      },
+      "create_flow": {
+        "create_course": "Kurs erstellen",
+        "no_chapters_desc": "Füge im Kurseditor ein Kapitel hinzu und erstelle dann darin eine Aufgabe.",
+        "no_chapters_title": "Dieser Kurs hat noch keine Kapitel",
+        "no_courses_desc": "Aufgaben befinden sich in einem Kurskapitel. Erstelle deinen ersten Kurs und füge anschließend eine Aufgabe hinzu.",
+        "no_courses_title": "Erstelle zuerst einen Kurs",
+        "open_editor": "Kurseditor öffnen",
+        "pick_chapter": "Wähle das Kapitel aus, in dem diese Aufgabe platziert werden soll.",
+        "pick_course": "Wähle den Kurs aus, zu dem diese Aufgabe gehört.",
+        "title": "Neue Aufgabe",
+        "untitled_chapter": "Unbenanntes Kapitel"
       }
     },
     "search": {
@@ -3983,6 +4068,9 @@
           "keywords": "api, tokens, zugriff, programmatisch, schlüssel"
         }
       }
+    },
+    "developers": {
+      "breadcrumb": "Entwickler"
     }
   },
   "editor": {
@@ -5160,7 +5248,8 @@
     "accessDenied": "Zugriff auf diesen Kurs nicht möglich",
     "backToCourses": "Zurück zu Kursen",
     "loadError": "Dieser Kurs konnte nicht gefunden werden oder beim Laden ist ein Fehler aufgetreten.",
-    "noPermission": "Sie haben keine Berechtigung, diesen Kurs anzuzeigen."
+    "noPermission": "Sie haben keine Berechtigung, diesen Kurs anzuzeigen.",
+    "finish_course": "Kurs abschließen"
   },
   "pagination": {
     "next": "Weiter",
@@ -5278,7 +5367,18 @@
     "thumbnail_error": "Couldn't upload the cover image",
     "open_resource": "Open",
     "replace_cover": "Replace",
-    "cover_hint": "PNG, JPG, WEBP"
+    "cover_hint": "PNG, JPG, WEBP",
+    "sort": {
+      "sort_by": "Sortieren nach",
+      "name_asc": "Name (A–Z)",
+      "name_desc": "Name (Z–A)",
+      "newest": "Neueste zuerst",
+      "oldest": "Älteste zuerst",
+      "manual": "Manuell",
+      "drag_to_reorder": "Zum Neuordnen ziehen",
+      "sort_error": "Sortierreihenfolge konnte nicht aktualisiert werden",
+      "reorder_error": "Neue Reihenfolge konnte nicht gespeichert werden"
+    }
   },
   "media": {
     "media": "Media",
@@ -5398,7 +5498,6 @@
     "admin_seats": "Admin-Plätze",
     "ai_credits": "KI-Credits",
     "addons": "Add-ons",
-    "addons_subtitle": "Kaufe zusätzliche KI-Credits oder Mitgliederplätze als monatliche Abonnements.",
     "active_subscriptions": "Aktive Abonnements",
     "credits": "Credits",
     "seats": "Plätze",
@@ -5471,8 +5570,7 @@
     "scheduled_desc": "Ihr Plan wird am Ende des aktuellen Abrechnungszeitraums zu {{plan}} gewechselt. Sie behalten bis dahin den vollständigen Zugriff auf Ihren aktuellen Plan.",
     "plan_plus_purchased": "Plan: {{plan}} + Gekauft: {{purchased}}",
     "base_plus_purchased": "Basis: {{base}} + Gekauft: {{purchased}}",
-    "pack_ai_desc": "{{quantity}} zusätzliche AI-Guthaben zur Ihrer Organisation hinzugefügt",
-    "pack_seats_desc": "{{quantity}} zusätzliche Mitgliedersitze für Ihre Organisation"
+    "pack_ai_desc": "{{quantity}} zusätzliche AI-Guthaben zur Ihrer Organisation hinzugefügt"
   },
   "hub_new": {
     "useType": {

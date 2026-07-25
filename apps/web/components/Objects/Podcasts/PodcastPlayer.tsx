@@ -140,14 +140,14 @@ export default function PodcastPlayer() {
   useEffect(() => {
     if (wavesurferRef.current) {
       if (isPlaying) {
-        wavesurferRef.current.play()
+        void Promise.resolve(wavesurferRef.current.play()).catch(() => {})
       } else {
         wavesurferRef.current.pause()
       }
     }
     if (miniWavesurferRef.current) {
       if (isPlaying) {
-        miniWavesurferRef.current.play()
+        void Promise.resolve(miniWavesurferRef.current.play()).catch(() => {})
       } else {
         miniWavesurferRef.current.pause()
       }
@@ -174,9 +174,6 @@ export default function PodcastPlayer() {
   const skipBackward = () => {
     seekTo(Math.max(currentTime - 15, 0))
   }
-
-  // Progress percentage
-  const progress = duration > 0 ? (currentTime / duration) * 100 : 0
 
   if (!isVisible || !currentEpisode || !podcast) {
     return null

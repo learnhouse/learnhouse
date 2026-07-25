@@ -343,6 +343,37 @@ export const getUriWithOrg = (orgslug: string, path: string) => {
   return path
 }
 
+/**
+ * Same as `getUriWithOrg`, but always returns an absolute URL.
+ *
+ * `getUriWithOrg` intentionally returns a relative path when navigation stays
+ * on the current origin. That is right for in-app links, but wrong for links
+ * meant to be shared outside the app (invite/signup links copied to the
+ * clipboard, emails, ...) where the host must be part of the URL.
+ */
+export const getAbsoluteUriWithOrg = (orgslug: string, path: string) => {
+  const uri = getUriWithOrg(orgslug, path)
+
+  // Already absolute (crossing subdomains, or server-side with a known domain)
+  if (/^https?:\/\//i.test(uri)) {
+    return uri
+  }
+
+  // Client-side: the dashboard is served from the org's own host, so the
+  // current origin is the correct one for the shared link.
+  if (typeof window !== 'undefined') {
+    return `${window.location.origin}${uri}`
+  }
+
+  // Server-side fallback
+  const explicitDomain = getConfig('NEXT_PUBLIC_LEARNHOUSE_DOMAIN')
+  if (explicitDomain) {
+    const protocol = getLEARNHOUSE_HTTP_PROTOCOL()
+    return `${protocol}${explicitDomain}${uri}`
+  }
+  return uri
+}
+
 export const getUriWithoutOrg = (path: string) => {
   // Client-side: always use current origin
   if (typeof window !== 'undefined') {

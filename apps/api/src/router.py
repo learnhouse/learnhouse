@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Depends
 from src.routers import admin as admin_router_module
 from src.routers import analytics as analytics_router_module
+from src.routers import audit as audit_router_module
 from src.routers import code_execution
 from src.routers import code_submissions
 from src.routers import health
@@ -8,6 +9,7 @@ from src.routers import instance
 from src.routers import plans
 from src.routers import usergroups
 from src.routers import dev, trail, users, auth, orgs, roles, search
+from src.routers import mfa as mfa_router_module
 from src.routers import monitoring
 from src.routers import stream
 from src.routers import api_tokens
@@ -85,6 +87,8 @@ v1_router.include_router(
     ],
 )
 v1_router.include_router(auth.router, prefix="/auth", tags=["auth"])
+# Two-factor: enrollment/management plus the /auth/login/mfa challenge.
+v1_router.include_router(mfa_router_module.router, prefix="/auth", tags=["auth"])
 v1_router.include_router(
     orgs.router,
     prefix="/orgs",
@@ -326,6 +330,14 @@ v1_router.include_router(
     analytics_router_module.router,
     prefix="/analytics",
     tags=["analytics"],
+    dependencies=[Depends(require_authenticated_user)],
+)
+
+# Per-student audit & analytics (org-admin only; enforced inside the router)
+v1_router.include_router(
+    audit_router_module.router,
+    prefix="/audit",
+    tags=["audit"],
     dependencies=[Depends(require_authenticated_user)],
 )
 

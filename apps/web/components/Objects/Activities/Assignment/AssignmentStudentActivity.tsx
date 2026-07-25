@@ -10,13 +10,56 @@ import TaskCodeObject from 'app/orgs/[orgslug]/dash/assignments/[assignmentuuid]
 import TaskShortAnswerObject from 'app/orgs/[orgslug]/dash/assignments/[assignmentuuid]/_components/TaskEditor/Subs/TaskTypes/TaskShortAnswerObject'
 import TaskNumberAnswerObject from 'app/orgs/[orgslug]/dash/assignments/[assignmentuuid]/_components/TaskEditor/Subs/TaskTypes/TaskNumberAnswerObject'
 import toast from 'react-hot-toast';
-import { Backpack, Calendar, CheckCircle2, Download, EllipsisVertical, Info, MessageSquare, RotateCcw, XCircle } from 'lucide-react';
+import { AlarmClockOff, Backpack, Calendar, CheckCircle2, Download, EllipsisVertical, Info, MessageSquare, RotateCcw, XCircle } from 'lucide-react';
 import Link from 'next/link';
-import React, { useEffect } from 'react'
+import React, { useEffect, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next';
 
+type ParsedDueDate = { at: Date; hasTime: boolean }
+
+// Parse the assignment due date the SAME way the server does in
+// `_is_assignment_past_due` (apps/api/.../assignments.py):
+//   - the value is a free-form ISO-ish string; unparseable/empty means "no
+//     deadline" so a malformed value never locks a student out,
+//   - the server compares against a NAIVE `datetime.now()` and drops any
+//     timezone offset, so the wall-clock parts are what matter. We therefore
+//     build a LOCAL Date from those parts instead of letting `new Date(...)`
+//     treat a bare "2026-06-12" as UTC midnight — that shift alone could mark
+//     an assignment overdue a day early (or late) depending on the viewer's
+//     offset, disagreeing with the 403 the server actually enforces.
+export function parseDueDate(raw?: string | null): ParsedDueDate | null {
+  if (!raw || !String(raw).trim()) return null
+  const value = String(raw).trim()
+  const match = value.match(/^(\d{4})-(\d{2})-(\d{2})(?:[T ](\d{2}):(\d{2})(?::(\d{2}))?)?/)
+  if (!match) return null
+  const [, year, month, day, hours, minutes, seconds] = match
+  const hasTime = hours !== undefined
+  const at = new Date(
+    Number(year),
+    Number(month) - 1,
+    Number(day),
+    Number(hours ?? 0),
+    Number(minutes ?? 0),
+    Number(seconds ?? 0)
+  )
+  if (Number.isNaN(at.getTime())) return null
+  return { at, hasTime }
+}
+
+// Exported so the "Submit for grading" affordance (rendered outside this
+// component) can gate on the exact same rule instead of re-deriving it.
+export function isAssignmentPastDue(raw?: string | null, now: number = Date.now()): boolean {
+  const parsed = parseDueDate(raw)
+  if (!parsed) return false
+  const cutoff = new Date(parsed.at)
+  // A date-only deadline means "end of that day" server-side (the cutoff is
+  // shifted to the following midnight), so the due date itself is still on time.
+  if (!parsed.hasTime) cutoff.setDate(cutoff.getDate() + 1)
+  return cutoff.getTime() < now
+}
+
 function AssignmentStudentActivity() {
-  const { t } = useTranslation()
+  const { t, i18n } = useTranslation()
   const assignments = useAssignments() as any;
   const _course = useCourse() as any;
   const org = useOrg() as any;
@@ -55,6 +98,37 @@ function AssignmentStudentActivity() {
         ? 60
         : 50;
 
+  // Deadline state. Past the due date the server rejects EVERY write with a 403
+  // (see `_is_assignment_past_due`), so the learner needs to be told before
+  // auto-save starts failing behind their back.
+  const dueDateRaw = assignments?.assignment_object?.due_date as string | undefined;
+  const [now, setNow] = useState<number>(() => Date.now());
+  useEffect(() => {
+    if (!parseDueDate(dueDateRaw)) return;
+    if (isAssignmentPastDue(dueDateRaw, Date.now())) return;
+    // Re-evaluate while the page stays open so a deadline that passes mid-session
+    // flips the UI instead of leaving a stale "still open" state.
+    const interval = setInterval(() => {
+      setNow(Date.now());
+      if (isAssignmentPastDue(dueDateRaw, Date.now())) clearInterval(interval);
+    }, 60_000);
+    return () => clearInterval(interval);
+  }, [dueDateRaw]);
+  const isPastDue = useMemo(() => isAssignmentPastDue(dueDateRaw, now), [dueDateRaw, now]);
+
+  // Render the raw ISO-ish string as a readable, localized date. Falls back to
+  // the raw value when it can't be parsed (same tolerance as the server).
+  const dueDateLabel = useMemo(() => {
+    const parsed = parseDueDate(dueDateRaw);
+    if (!parsed) return dueDateRaw ?? '';
+    const locale = i18n.language === 'fr' ? 'fr-FR' : 'en-US';
+    return parsed.hasTime
+      ? parsed.at.toLocaleString(locale, {
+          year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit',
+        })
+      : parsed.at.toLocaleDateString(locale, { year: 'numeric', month: 'short', day: 'numeric' });
+  }, [dueDateRaw, i18n.language]);
+
   useEffect(() => {
   }, [assignments, org])
 
@@ -71,13 +145,15 @@ function AssignmentStudentActivity() {
         <div>
           <div className='flex gap-2 items-center flex-wrap justify-center'>
             <EllipsisVertical className='text-slate-400 hidden md:block' size={18} />
-            <div className='flex gap-2 items-center'>
-              <div className='flex gap-1 md:space-x-2 text-xs items-center text-slate-400'>
-                <Calendar size={14} />
-                <p className='font-semibold'>{t('assignments.due_date')}</p>
-                <p className='font-semibold'>{assignments?.assignment_object?.due_date}</p>
+            {dueDateRaw && (
+              <div className='flex gap-2 items-center'>
+                <div className={`flex gap-1 md:space-x-2 text-xs items-center ${isPastDue ? 'text-rose-500' : 'text-slate-400'}`}>
+                  <Calendar size={14} />
+                  <p className='font-semibold'>{t('assignments.due_date')}</p>
+                  <p className='font-semibold'>{dueDateLabel}</p>
+                </div>
               </div>
-            </div>
+            )}
             {showAttemptBadge && (
               <div className='flex gap-1.5 items-center text-xs px-2.5 py-1 rounded-full bg-fuchsia-50 text-fuchsia-700 font-semibold nice-shadow'>
                 <RotateCcw size={12} />
@@ -97,6 +173,25 @@ function AssignmentStudentActivity() {
       
       
       
+      {/* Overdue notice. The server 403s every save/submit once the deadline has
+          passed, so say it plainly instead of letting auto-save fail silently. */}
+      {isPastDue && !isGraded && (
+        <div className='flex items-start gap-3 p-4 rounded-md bg-rose-50/70 border border-rose-200/70 nice-shadow'>
+          <AlarmClockOff size={16} className='shrink-0 mt-0.5 text-rose-500' />
+          <div className='flex flex-col space-y-1'>
+            <p className='text-sm font-semibold text-rose-700'>
+              {t('assignments.past_due_title', { defaultValue: 'Deadline passed' })}
+            </p>
+            <p className='text-xs leading-relaxed text-rose-600/90'>
+              {t('assignments.past_due_description', {
+                date: dueDateLabel,
+                defaultValue: 'This assignment was due on {{date}}. Answers can no longer be saved or submitted for grading.',
+              })}
+            </p>
+          </div>
+        </div>
+      )}
+
       {assignments?.assignment_object?.description && (
         <div className='flex flex-col space-y-2 p-4 md:p-6 bg-slate-100/30 rounded-md nice-shadow'>
           <div className='flex flex-col space-y-3'>

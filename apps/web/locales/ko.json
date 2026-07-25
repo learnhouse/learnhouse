@@ -223,7 +223,12 @@
     "delete_organization_warning": "{{name}} 및 모든 데이터가 영구적으로 삭제됩니다. 이 작업은 되돌릴 수 없습니다.",
     "delete_organization_confirm_label": "확인하려면 {{slug}}을(를) 입력하세요",
     "deleting": "삭제 중…",
-    "retry": "재시도"
+    "retry": "재시도",
+    "leave_organization": "조직 나가기",
+    "leave_organization_title": "조직에서 나갈까요?",
+    "leave_organization_desc": "{{org}}에 대한 접근 권한이 사라지고 구성원 목록에서 삭제됩니다. 초대를 받으면 나중에 다시 가입할 수 있습니다.",
+    "leave_organization_error": "이 조직에서 나갈 수 없습니다. 다시 시도해 주세요.",
+    "leaving": "나가는 중…"
   },
   "banner": {
     "viewing_as_guest": "{{name}}을(를) 게스트로 보고 있습니다.",
@@ -664,7 +669,13 @@
     "quit_course_confirm": "이 코스를 그만두시겠습니까? 모든 진행 상황이 사라집니다.",
     "quit_course_title": "코스를 그만두시겠습니까?",
     "courses_load_error": "코스를 불러오지 못했습니다. 다시 시도해 주세요.",
-    "view_all_courses": "모든 코스 보기"
+    "view_all_courses": "모든 코스 보기",
+    "first_chapter_default_name": "첫 번째 챕터",
+    "paste_from_clipboard": "클립보드에서 붙여넣기",
+    "no_image_in_clipboard": "클립보드에서 이미지를 찾을 수 없습니다",
+    "clipboard_read_error": "클립보드를 읽지 못했습니다",
+    "sign_in_to_see_courses": "강좌를 보려면 로그인하세요",
+    "sign_in_to_see_courses_description": "이 아카데미의 강좌는 로그인한 후에만 볼 수 있습니다."
   },
   "communities": {
     "title": "커뮤니티",
@@ -975,13 +986,20 @@
     "embed": "임베드",
     "embed_code_copied": "임베드 코드가 복사되었습니다!",
     "link_copied": "링크가 복사되었습니다!",
-    "share": "공유"
+    "share": "공유",
+    "autosave_blocked": "아직 저장할 수 없습니다",
+    "autosave_retry": "저장하지 못했습니다 — 다시 시도하는 중…",
+    "autosave_unsaved": "저장되지 않은 변경사항",
+    "autosaved": "저장됨",
+    "autosaving": "저장 중…",
+    "save_answers": "답변 저장"
   },
   "assignments": {
     "submit_assignment": "과제 제출",
     "submit_assignment_confirm": "정말로 채점을 위해 과제를 제출하시겠습니까? 제출 후에는 수정할 수 없습니다.",
     "submit_assignment_title": "채점을 위해 과제 제출",
     "submit_for_grading": "채점 요청",
+    "submitting": "제출 중…",
     "grading_in_progress": "채점 중",
     "graded": "채점 완료",
     "assignment_submitted_success": "채점을 위해 과제가 제출되었습니다",
@@ -1023,7 +1041,11 @@
       "half": "절반",
       "zero": "영점"
     },
-    "task_feedback_placeholder": "이 과제에 대한 메모 (점수와 함께 저장됨)"
+    "task_feedback_placeholder": "이 과제에 대한 메모 (점수와 함께 저장됨)",
+    "no_task_submission_to_grade": "이 학습자는 아직 이 과제에 파일을 제출하지 않았습니다.",
+    "past_due": "마감일 지남",
+    "past_due_description": "이 과제의 마감일은 {{date}}이었습니다. 더 이상 답변을 저장하거나 채점을 위해 제출할 수 없습니다.",
+    "past_due_title": "마감일 지남"
   },
   "certificate": {
     "certificate": "수료증",
@@ -1050,7 +1072,8 @@
     "continuing_education": "계속 교육",
     "workshop_attendance": "워크숍 참석 증명",
     "specialization": "전문 분야 인증",
-    "dedication_message": "당신의 노력과 헌신이 결실을 맺었습니다. 이 코스의 모든 과정을 마스터했습니다."
+    "dedication_message": "당신의 노력과 헌신이 결실을 맺었습니다. 이 코스의 모든 과정을 마스터했습니다.",
+    "download_failed": "PDF를 생성하지 못했습니다. 다시 시도해 주세요."
   },
   "search": {
     "search_placeholder": "코스, 사용자, 컬렉션 검색...",
@@ -1135,7 +1158,9 @@
       "description": "계정을 영구적으로 삭제하고 접근 권한을 제거합니다. 되돌릴 수 없습니다.",
       "warning": "계정과 관련된 모든 데이터가 영구적으로 삭제됩니다. 이 작업은 되돌릴 수 없습니다.",
       "confirm_label": "확인하려면 {{username}}을(를) 입력하세요",
-      "deleting": "삭제 중…"
+      "deleting": "삭제 중…",
+      "zone_subtitle": "계정을 영구적으로 삭제합니다. 이 작업은 되돌릴 수 없습니다.",
+      "zone_body": "계정과 접근 권한이 삭제됩니다. 내가 유일한 관리자인 모든 조직과 해당 조직의 모든 강좌 및 콘텐츠도 함께 삭제됩니다. 다른 관리자가 있는 조직은 유지되며, 내 계정만 해당 조직에서 삭제됩니다."
     }
   },
   "user": {
@@ -1357,6 +1382,12 @@
           "save_error": "프로필 업데이트 중 오류 발생"
         },
         "unknown_section": "알 수 없는 섹션"
+      },
+      "security": {
+        "current_session_title": "현재 세션",
+        "current_session_subtitle": "현재 로그인한 기기입니다.",
+        "this_device": "이 기기",
+        "sign_out": "로그아웃"
       }
     },
     "sign_out": "로그아웃",
@@ -2092,7 +2123,8 @@
             "dynamic_page": "동적 페이지",
             "scorm": "Scorm",
             "markdown": "Markdown",
-            "embed": "Embed"
+            "embed": "Embed",
+            "resource": "자료"
           },
           "toasts": {
             "deleting": "활동 삭제 중...",
@@ -2968,6 +3000,32 @@
           "message2": "사용자 설정을 보고 관리하려면 데스크톱으로 전환해 주세요."
         }
       },
+      "analytics": {
+        "button": "분석",
+        "view_analytics": "학생 분석 보기",
+        "open_full_page": "전체 분석 페이지 열기",
+        "compare": "분석 비교",
+        "compare_students": "학생 비교",
+        "export": "내보내기",
+        "export_selected": "분석 내보내기 ({{count}})",
+        "exporting": "내보내는 중…",
+        "failed_load": "학생 자료를 불러오지 못했습니다.",
+        "back_to_students": "학생 목록으로 돌아가기",
+        "no_behavioral": "행동 데이터가 없습니다 (이 기간에 대한 분석이 설정되지 않았을 수 있습니다).",
+        "ranges": { "d30": "30일", "d90": "90일", "y1": "1년" },
+        "kpi": { "courses": "코스", "completed": "{{count}}개 완료", "avg_progress": "평균 진행률", "time_spent": "소요 시간", "assignments": "과제", "avg_grade": "평균 {{grade}}", "certificates": "수료증", "connections": "접속", "last": "최근 {{date}}" },
+        "tabs": { "connections": "접속", "courses": "코스", "assignments": "과제", "code": "코드", "community": "커뮤니티", "certificates": "수료증", "behavior": "행동" },
+        "identity": { "verified": "인증됨", "unverified": "미인증", "via": "{{method}}을(를) 통해" },
+        "connections": { "title": "접속", "empty": "아직 기록된 접속이 없습니다." },
+        "courses": { "title": "코스 진행 상황", "empty": "등록된 코스가 없습니다.", "activities": "{{done}}/{{total}} 활동", "enrolled": "{{date}} 등록" },
+        "assignments": { "title": "과제", "empty": "과제 제출이 없습니다.", "attempt": "{{number}}번째 시도", "feedback": "피드백:" },
+        "code": { "title": "코드 연습", "empty": "코드 제출이 없습니다.", "activity": "활동", "result": "결과", "tests": "테스트", "time": "시간", "when": "시점", "passed": "통과", "failed": "실패" },
+        "community": { "title": "커뮤니티 참여", "empty": "커뮤니티 활동이 없습니다.", "discussions": "토론", "comments": "댓글" },
+        "certificates": { "title": "획득한 수료증", "empty": "획득한 수료증이 없습니다." },
+        "behavior": { "title": "행동 분석", "time_by_course": "코스별 소요 시간", "searches": "검색" },
+        "status": { "completed": "완료됨", "in_progress": "진행 중", "paused": "일시 중지됨", "cancelled": "취소됨", "graded": "채점됨", "submitted": "제출됨", "pending": "대기 중", "late": "지연", "not_submitted": "미제출" },
+        "comparison": { "student": "학생", "enrolled": "등록됨", "completed": "완료됨", "certificates": "수료증", "last_connection": "최근 접속", "view": "보기" }
+      },
       "active_users": {
         "title": "활성 사용자",
         "subtitle": "조직 사용자를 관리하고 역할 및 권한을 할당합니다",
@@ -3461,7 +3519,8 @@
           "drafts": "초안",
           "auto_graded": "자동 채점만",
           "hide_empty": "빈 코스 숨기기"
-        }
+        },
+        "new_assignment": "새 과제"
       },
       "detail": {
         "title": "과제 도구",
@@ -3537,7 +3596,8 @@
           "task_save_error": "태스크 저장 중 오류가 발생했습니다. 나중에 다시 시도해 주세요.",
           "task_updated": "태스크가 성공적으로 업데이트되었습니다",
           "task_update_error": "태스크 업데이트 중 오류가 발생했습니다. 나중에 다시 시도해 주세요.",
-          "reminder": "태스크를 편집하거나 추가할 때 학생들과의 문제를 피하기 위해 과제 게시를 취소하는 것을 잊지 마세요. 준비가 되면 다시 게시할 수 있습니다."
+          "reminder": "태스크를 편집하거나 추가할 때 학생들과의 문제를 피하기 위해 과제 게시를 취소하는 것을 잊지 마세요. 준비가 되면 다시 게시할 수 있습니다.",
+          "no_submission_to_grade": "이 학습자는 아직 이 과제에 제출한 내용이 없어 채점할 수 없습니다."
         },
         "task_editor": {
           "general": {
@@ -3557,7 +3617,9 @@
             "auth_required_submit": "인증이 필요합니다. 태스크를 제출하려면 로그인하세요.",
             "hint_optional": "힌트 (선택 사항)",
             "paste_blocked": "이 과제에서는 붙여넣기가 비활성화됩니다",
-            "paste_blocked_hint": "붙여넣기가 비활성화됨 — 답을 직접 입력하세요."
+            "paste_blocked_hint": "붙여넣기가 비활성화됨 — 답을 직접 입력하세요.",
+            "upload_locked_graded": "이 제출물은 채점되었습니다 — 더 이상 파일을 변경할 수 없습니다.",
+            "upload_locked_submitted": "이 과제를 제출했습니다 — 더 이상 파일을 변경할 수 없습니다."
           },
           "code": {
             "student_behavior_label": "학생 동작",
@@ -3573,7 +3635,10 @@
             "must_pass_hint": "저장하기 전에 모든 표시된 테스트가 통과해야 합니다.",
             "show_solution_label": "제출 후 솔루션 공개",
             "show_solution_description": "학생이 작업을 저장한 후 교사의 참조 솔루션을 표시합니다.",
-            "reference_solution_label": "참조 솔루션"
+            "reference_solution_label": "참조 솔루션",
+            "locked_graded_hint": "이 제출물은 채점되었습니다 — 코드는 읽기 전용입니다.",
+            "locked_submitted_hint": "이 과제를 제출했습니다 — 코드는 읽기 전용입니다.",
+            "no_runnable_tests": "이 과제에는 실행할 수 있는 테스트가 없습니다 — 코드는 채점 시 확인됩니다."
           },
           "short_answer": {
             "prompt_label": "문제 내용",
@@ -3616,13 +3681,19 @@
             "correct": "정답",
             "incorrect": "틀렸어요 — 다시 시도하세요"
           }
+        },
+        "generate_ai": "AI로 과제 생성",
+        "generate_ai_modal": {
+          "description": "원하는 내용을 설명하고, 추가하기 전에 강좌 콘텐츠를 바탕으로 생성된 과제를 미리 확인하세요.",
+          "title": "AI로 과제 생성"
         }
       },
       "submissions": {
         "status": {
           "late": "지연됨",
           "submitted": "제출됨",
-          "graded": "채점됨"
+          "graded": "채점됨",
+          "pending": "진행 중"
         },
         "submission_label": "제출물",
         "evaluate": "평가",
@@ -3678,7 +3749,8 @@
           "optional": "선택",
           "placeholder": "제출물 전반에 대한 의견을 작성하세요. 학생이 성적 옆에서 확인할 수 있습니다.",
           "hint": "이전 피드백을 변경하지 않으려면 비워두세요."
-        }
+        },
+        "truncated_warning": "처음 {{max}}개의 제출물만 표시됩니다. 일부 제출물은 여기에 표시되지 않습니다."
       },
       "analytics": {
         "loading": "분석을 불러오는 중...",
@@ -3822,9 +3894,22 @@
           },
           "toasts": {
             "creating": "과제 생성 중...",
-            "success": "과제가 성공적으로 생성되었습니다"
+            "success": "과제가 성공적으로 생성되었습니다",
+            "error": "과제를 생성하지 못했습니다"
           }
         }
+      },
+      "create_flow": {
+        "create_course": "강좌 만들기",
+        "no_chapters_desc": "강좌 편집기에서 챕터를 추가한 다음, 그 안에 과제를 만드세요.",
+        "no_chapters_title": "이 강좌에는 아직 챕터가 없습니다",
+        "no_courses_desc": "과제는 강좌의 챕터 안에 있습니다. 첫 강좌를 만든 후 다시 돌아와 과제를 추가하세요.",
+        "no_courses_title": "먼저 강좌를 만드세요",
+        "open_editor": "강좌 편집기 열기",
+        "pick_chapter": "이 과제를 배치할 챕터를 선택하세요.",
+        "pick_course": "이 과제가 속할 강좌를 선택하세요.",
+        "title": "새 과제",
+        "untitled_chapter": "제목 없는 챕터"
       }
     },
     "search": {
@@ -3995,6 +4080,9 @@
           "keywords": "api, 토큰, 접근, 프로그래밍, 키"
         }
       }
+    },
+    "developers": {
+      "breadcrumb": "개발자"
     }
   },
   "editor": {
@@ -5172,7 +5260,8 @@
     "accessDenied": "이 코스에 액세스할 수 없습니다",
     "backToCourses": "코스 목록으로 돌아가기",
     "loadError": "이 코스를 찾을 수 없거나 로드하는 중 오류가 발생했습니다.",
-    "noPermission": "이 코스를 볼 수 있는 권한이 없습니다."
+    "noPermission": "이 코스를 볼 수 있는 권한이 없습니다.",
+    "finish_course": "강좌 완료"
   },
   "pagination": {
     "next": "다음",
@@ -5290,7 +5379,18 @@
     "thumbnail_error": "Couldn't upload the cover image",
     "open_resource": "Open",
     "replace_cover": "Replace",
-    "cover_hint": "PNG, JPG, WEBP"
+    "cover_hint": "PNG, JPG, WEBP",
+    "sort": {
+      "sort_by": "정렬 기준",
+      "name_asc": "이름 (A–Z)",
+      "name_desc": "이름 (Z–A)",
+      "newest": "최신순",
+      "oldest": "오래된 순",
+      "manual": "수동",
+      "drag_to_reorder": "드래그하여 순서 변경",
+      "sort_error": "정렬 순서를 업데이트할 수 없습니다",
+      "reorder_error": "새 순서를 저장할 수 없습니다"
+    }
   },
   "media": {
     "media": "Media",
@@ -5410,7 +5510,6 @@
     "admin_seats": "관리자 좌석",
     "ai_credits": "AI 크레딧",
     "addons": "추가 기능",
-    "addons_subtitle": "추가 AI 크레딧이나 멤버 좌석을 월간 구독으로 구매하세요.",
     "active_subscriptions": "활성 구독",
     "credits": "크레딧",
     "seats": "좌석",
@@ -5483,8 +5582,7 @@
     "scheduled_desc": "현재 청구 주기 말에 {{plan}} 플랜으로 변경됩니다. 그때까지 현재 플랜에 완전히 접근할 수 있습니다.",
     "plan_plus_purchased": "플랜: {{plan}} + 구매함: {{purchased}}",
     "base_plus_purchased": "기본: {{base}} + 구매함: {{purchased}}",
-    "pack_ai_desc": "{{quantity}}개의 추가 AI 크레딧이 조직에 추가되었습니다",
-    "pack_seats_desc": "조직을 위한 {{quantity}}개의 추가 회원 자리"
+    "pack_ai_desc": "{{quantity}}개의 추가 AI 크레딧이 조직에 추가되었습니다"
   },
   "hub_new": {
     "useType": {

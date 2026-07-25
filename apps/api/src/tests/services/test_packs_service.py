@@ -9,10 +9,8 @@ from fastapi import HTTPException
 
 from src.db.packs import OrgPack, PackStatusEnum, PackTypeEnum
 from src.services.packs.packs import (
-    _add_member_seats,
     _apply_pack_credits,
     _remove_ai_credits,
-    _remove_member_seats,
     _revoke_pack_credits,
     activate_pack,
     deactivate_all_packs_for_org,
@@ -91,7 +89,7 @@ async def _make_pack(db, org, **overrides):
 
 class TestPackHelpers:
     def test_credit_helpers_and_dispatchers(self):
-        redis = FakeRedis({"member_seats_purchased:1": 3, "ai_credits_purchased:1": 2})
+        redis = FakeRedis({"ai_credits_purchased:1": 2})
 
         with patch(
             "src.services.packs.packs._get_redis_client",
@@ -102,16 +100,11 @@ class TestPackHelpers:
                 f"ai_credits_purchased:{org_id}", amount
             ),
         ):
-            assert _add_member_seats(1, 4) == 7
-            assert _remove_member_seats(1, 9) == 0
             assert _remove_ai_credits(1, 5) == 0
 
             _apply_pack_credits(1, {"type": "ai_credits", "quantity": 6})
-            _apply_pack_credits(1, {"type": "member_seats", "quantity": 2})
             _revoke_pack_credits(1, PackTypeEnum.ai_credits, 1)
-            _revoke_pack_credits(1, PackTypeEnum.member_seats, 1)
 
-        assert redis.values["member_seats_purchased:1"] == 1
         assert redis.values["ai_credits_purchased:1"] == 5
 
 
@@ -144,25 +137,6 @@ class TestPackLifecycle:
                 org.id,
                 "ai_500",
                 "sub_new",
-                db,
-            )
-
-            await _make_pack(
-                db,
-                org,
-                id=2,
-                pack_id="seats_200",
-                pack_type=PackTypeEnum.member_seats,
-                quantity=200,
-                status=PackStatusEnum.cancelled,
-                platform_subscription_id="sub_cancelled",
-                cancelled_at=datetime(2024, 1, 2),
-                cancel_at_period_end=True,
-            )
-            reactivated = await activate_pack(
-                org.id,
-                "seats_200",
-                "sub_cancelled",
                 db,
             )
 
@@ -201,10 +175,6 @@ class TestPackLifecycle:
 
         assert created.pack_id == "ai_500"
         assert redis.values["ai_credits_purchased:1"] == 500
-        assert redis.values["member_seats_purchased:1"] == 200
-        assert reactivated.status == PackStatusEnum.active
-        assert reactivated.cancel_at_period_end is False
-        assert reactivated.cancelled_at is None
         assert same_org.id == active.id
         assert foreign.org_id == other_org.id
         assert unknown_exc.value.status_code == 400
@@ -271,7 +241,6 @@ class TestPackLifecycle:
         redis = FakeRedis(
             {
                 "ai_credits_purchased:1": 500,
-                "member_seats_purchased:1": 200,
             }
         )
         background_tasks = Mock()
@@ -290,10 +259,10 @@ class TestPackLifecycle:
             db,
             org,
             id=11,
-            pack_id="seats_200",
-            pack_type=PackTypeEnum.member_seats,
-            quantity=200,
-            platform_subscription_id="sub_seats",
+            pack_id="ai_500",
+            pack_type=PackTypeEnum.ai_credits,
+            quantity=100,
+            platform_subscription_id="sub_ai2",
         )
         await _make_pack(
             db,
@@ -333,7 +302,6 @@ class TestPackLifecycle:
         assert cancelled_result.status == PackStatusEnum.cancelled
         assert deactivated_ai.status == PackStatusEnum.cancelled
         assert redis.values["ai_credits_purchased:1"] == 0
-        assert redis.values["member_seats_purchased:1"] == 0
         assert deactivated_count == 1
         assert missing_exc.value.status_code == 404
         assert canceling_exc.value.status_code == 404
@@ -357,10 +325,10 @@ class TestPackLifecycle:
             db,
             org,
             id=21,
-            pack_id="seats_200",
-            pack_type=PackTypeEnum.member_seats,
+            pack_id="ai_500_b",
+            pack_type=PackTypeEnum.ai_credits,
             quantity=200,
-            platform_subscription_id="sub_seats_summary",
+            platform_subscription_id="sub_ai_summary_b",
         )
         await _make_pack(
             db,
@@ -378,11 +346,10 @@ class TestPackLifecycle:
         marked = await mark_pack_canceling(org.id, "sub_ai_summary", db)
 
         assert summary == {
-            "ai_credits": 500,
-            "member_seats": 200,
+            "ai_credits": 700,
             "active_pack_count": 2,
         }
-        assert {pack.pack_id for pack in active} == {"ai_500", "seats_200"}
+        assert {pack.pack_id for pack in active} == {"ai_500", "ai_500_b"}
         assert marked.cancel_at_period_end is True
 
     @pytest.mark.asyncio
@@ -398,15 +365,6 @@ class TestPackLifecycle:
         )
         await _make_pack(
             db,
-            org,
-            id=31,
-            pack_id="seats_200",
-            pack_type=PackTypeEnum.member_seats,
-            quantity=200,
-            platform_subscription_id="sub_seats_reconcile",
-        )
-        await _make_pack(
-            db,
             other_org,
             id=32,
             pack_id="ai_500_other",
@@ -418,12 +376,9 @@ class TestPackLifecycle:
         redis = FakeRedis(
             {
                 "ai_credits_purchased:1": 125,
-                "member_seats_purchased:1": 999,
                 "ai_credits_purchased:2": 500,
-                "member_seats_purchased:2": 77,
                 "ai_credits_purchased:3": 66,
                 "ai_credits_purchased:bad": 50,
-                "member_seats_purchased:bad": 10,
             }
         )
 
@@ -436,11 +391,8 @@ class TestPackLifecycle:
         assert result == {
             "orgs": 2,
             "ai_credits_fixed": 2,
-            "member_seats_fixed": 2,
         }
         assert redis.values["ai_credits_purchased:1"] == 500
-        assert redis.values["member_seats_purchased:1"] == 200
         assert redis.values["ai_credits_purchased:2"] == 500
-        assert redis.values["member_seats_purchased:2"] == 0
+        assert redis.values["ai_credits_purchased:3"] == 0
         assert redis.values["ai_credits_purchased:bad"] == 50
-        assert redis.values["member_seats_purchased:bad"] == 10

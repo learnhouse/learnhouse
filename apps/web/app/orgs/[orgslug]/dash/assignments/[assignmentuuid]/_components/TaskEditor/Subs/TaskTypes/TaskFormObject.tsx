@@ -5,7 +5,7 @@ import { useLHSession } from '@components/Contexts/LHSessionContext';
 import AssignmentBoxUI from '@components/Objects/Activities/Assignment/AssignmentBoxUI';
 import { getAssignmentTask, getAssignmentTaskSubmissionsUser, handleAssignmentTaskSubmission, updateAssignmentTask } from '@services/courses/assignments';
 import { Check, Info, Minus, Plus, PlusCircle, X, Type } from 'lucide-react';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import toast from 'react-hot-toast';
 import { v4 as uuidv4 } from 'uuid';
 import { useTranslation } from 'react-i18next';
@@ -87,6 +87,23 @@ function TaskFormObject({ view, assignmentTaskUUID, user_id, onGraded }: TaskFor
             },
         ] : []
     );
+
+    // Did the answer key actually reach the client?
+    //
+    // The API strips `blanks[].correctAnswer` from the task payload whenever the
+    // student isn't allowed to see it yet — notably while retry attempts remain
+    // (see _student_may_see_answer_key; max_retries=0 means unlimited, so it
+    // never reveals). The client can't re-derive that rule (it has no
+    // attempt_number here), so `showCorrectAnswers` can be true while the key is
+    // absent — and the reveal chip would then render an empty
+    // "Expected answer:". Trust the key only when it is genuinely present.
+    const answerKeyPresent = useMemo(
+        () => questions.some((question) =>
+            (question.blanks ?? []).some((blank) => typeof blank.correctAnswer === 'string')
+        ),
+        [questions]
+    );
+    const revealAnswerKey = showCorrectAnswers && answerKeyPresent;
 
     const handleQuestionChange = (index: number, value: string) => {
         const updatedQuestions = [...questions];
@@ -244,6 +261,17 @@ function TaskFormObject({ view, assignmentTaskUUID, user_id, onGraded }: TaskFor
             // during the save round-trip survives and re-triggers auto-save.
             setInitialUserSubmissions({ ...userSubmissions, assignment_task_submission_uuid: savedUUID });
             setUserSubmissions(prev => ({ ...prev, assignment_task_submission_uuid: savedUUID }));
+            // Keep the shared batch task-submissions cache in step with what we
+            // just persisted. It has a 60s staleTime, so without this a remount
+            // re-hydrates the page-load snapshot and overwrites answers the
+            // learner already saved. Patching (rather than invalidating) is what
+            // makes this safe on the ~1s silent auto-save path.
+            if (res.data) {
+                queryClient.setQueryData(
+                    queryKeys.assignments.taskSubmission(assignment.assignment_object.assignment_uuid),
+                    (prev: any) => (prev ? { ...prev, [assignmentTaskUUID]: res.data } : prev)
+                );
+            }
             // Silent auto-saves skip the refetch (draft save; would re-hydrate).
             if (!opts?.silent) {
                 queryClient.invalidateQueries({ queryKey: queryKeys.assignments.taskSubmission(assignment.assignment_object.assignment_uuid) });
@@ -259,6 +287,15 @@ function TaskFormObject({ view, assignmentTaskUUID, user_id, onGraded }: TaskFor
     const gradeCustomFC = async (grade: number, feedback?: string) => {
         if (!user_id) {
             toast.error('User ID is required for grading.');
+            return;
+        }
+        // There must be an existing submission row to grade. Without this guard
+        // (the siblings already have it) the PUT falls through to an upsert on
+        // the CALLER's own row — the instructor's — where the grade is silently
+        // forced to 0 while the UI reports success, and the student's task stays
+        // ungraded.
+        if (!userSubmissions?.assignment_task_submission_uuid) {
+            toast.error(t('dashboard.assignments.submissions.preview.not_submitted'));
             return;
         }
         await applyManualGrade({
@@ -287,11 +324,17 @@ function TaskFormObject({ view, assignmentTaskUUID, user_id, onGraded }: TaskFor
 
         questions.forEach((question) => {
             question.blanks.forEach((blank) => {
+                // Mirror the server grader: a blank with no configured answer
+                // can't be auto-scored, so it counts toward neither the
+                // numerator nor the denominator. Counting it here inflated the
+                // denominator and made this preview grade lower than the server's.
+                const correct = (blank.correctAnswer ?? '').trim();
+                if (!correct) return;
                 totalBlanks++;
                 const userAnswer = userSubmissions.submissions.find(
                     (submission) => submission.questionUUID === question.questionUUID && submission.blankUUID === blank.blankUUID
                 );
-                if (userAnswer && userAnswer.answer.toLowerCase().trim() === blank.correctAnswer.toLowerCase().trim()) {
+                if (userAnswer && userAnswer.answer.toLowerCase().trim() === correct.toLowerCase()) {
                     correctAnswers++;
                 }
             });
@@ -575,7 +618,13 @@ function TaskFormObject({ view, assignmentTaskUUID, user_id, onGraded }: TaskFor
                                                         data-blank-id={blank.blankUUID}
                                                         className="w-full mx-2 px-3 pr-6 text-neutral-600 bg-[#00008b00] border-2 border-gray-200 rounded-md focus:border-blue-400 focus:ring-2 focus:ring-blue-200 text-sm font-bold transition-all"
                                                     />
-                                                    {showCorrectAnswers && (
+                                                    {/* Render nothing at all when this blank's key
+                                                        was withheld — the learner still sees their
+                                                        own answer and their score. An empty
+                                                        "Expected answer:" is worse than nothing.
+                                                        Checked per blank too, so a partially
+                                                        stripped payload can't leak a blank chip. */}
+                                                    {revealAnswerKey && typeof blank.correctAnswer === 'string' && (
                                                         <div className="mx-2 text-xs text-emerald-700 bg-emerald-50 px-2 py-1 rounded-md inline-flex items-center space-x-1 w-fit">
                                                             <Check size={11} />
                                                             <span className="font-semibold">{t('assignments.form.expected_answer')}:</span>

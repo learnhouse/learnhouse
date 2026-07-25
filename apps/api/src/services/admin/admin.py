@@ -41,10 +41,11 @@ from src.services.courses.certifications import (
     create_certificate_user,
 )
 from src.services.email.utils import get_base_url_from_request
+from src.services.orgs.join_notifications import notify_user_joined_org
 from src.services.analytics.analytics import track
 from src.services.analytics import events as analytics_events
 from src.services.webhooks.dispatch import dispatch_webhooks
-from src.security.auth import create_access_token, create_refresh_token
+from src.security.auth import create_access_token
 from src.security.features_utils.plan_check import get_org_plan
 from src.security.features_utils.plans import plan_meets_requirement
 from src.security.features_utils.usage import (
@@ -1086,6 +1087,10 @@ async def provision_user(
             },
         )
 
+        await notify_user_joined_org(
+            request, db_session, existing_user, token_user.org_id
+        )
+
         return UserRead.model_validate(existing_user)
 
     if (await db_session.execute(select(User).where(User.username == username))).scalars().first():
@@ -1141,6 +1146,10 @@ async def provision_user(
             "signup_method": "admin_api",
         },
     )
+
+    # Admin-provisioned accounts skip the signup flow entirely, so this is the
+    # only mail they get: it tells them the org exists and where to log in.
+    await notify_user_joined_org(request, db_session, user, token_user.org_id)
 
     return UserRead.model_validate(user)
 
@@ -1302,8 +1311,12 @@ async def issue_magic_link(
 async def consume_magic_link_token(
     token: str,
     db_session: AsyncSession,
-) -> tuple[User, str, str, Optional[str]]:
-    """Validate a magic-link JWT. Returns (user, access_token, refresh_token, redirect_to).
+) -> tuple[User, Optional[str], Optional[str], Optional[str], Optional[str]]:
+    """Validate a magic-link JWT.
+
+    Returns ``(user, access_token, refresh_token, redirect_to, mfa_token)``.
+    Exactly one of ``access_token``/``mfa_token`` is populated: when the user has
+    two-factor enabled the link buys a second-factor challenge, not a session.
 
     Raises HTTPException on expired/invalid token or if the user is no longer
     a member of the org encoded in the token. Re-validates ``redirect_to``
@@ -1312,6 +1325,7 @@ async def consume_magic_link_token(
     """
 
     from src.security.auth import decode_jwt
+    from src.services.auth.session import issue_session_or_challenge
 
     try:
         payload = decode_jwt(token)
@@ -1374,12 +1388,15 @@ async def consume_magic_link_token(
     if not membership:
         raise HTTPException(status_code=410, detail="User is no longer a member of this organization")
 
-    # Explicitly mark session tokens so get_current_user can reject purpose-bearing
-    # tokens that should only be valid at the consume endpoint.
-    access_token = create_access_token(data={"sub": email, "purpose": "session"})
-    refresh_token = create_refresh_token(data={"sub": email, "purpose": "session"})
+    # An admin-issued magic link is a password-equivalent credential, so it must
+    # not walk past a second factor the user has deliberately enabled. When MFA
+    # is active this yields a pending token instead of a session, and the caller
+    # redirects the browser to the code challenge.
+    issue = await issue_session_or_challenge(db_session, user)
+    if issue.mfa_required:
+        return user, None, None, redirect_to, issue.mfa_token
 
-    return user, access_token, refresh_token, redirect_to
+    return user, issue.access_token, issue.refresh_token, redirect_to, None
 
 
 # -- Bulk enrollment ----------------------------------------------------------

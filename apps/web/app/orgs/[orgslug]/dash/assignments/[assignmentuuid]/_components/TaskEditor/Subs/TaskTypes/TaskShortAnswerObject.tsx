@@ -18,6 +18,8 @@ import { CheckCircle2, Plus, X, XCircle } from 'lucide-react'
 import React, { useEffect, useState } from 'react'
 import toast from 'react-hot-toast'
 import { useTranslation } from 'react-i18next'
+import { useQueryClient } from '@tanstack/react-query'
+import { queryKeys } from '@/lib/query/keys'
 import { applyManualGrade } from './applyManualGrade'
 
 type MatchMode = 'exact' | 'case_insensitive' | 'contains' | 'regex'
@@ -60,6 +62,20 @@ function normalizeContents(raw: any): ShortAnswerContents {
   }
 }
 
+// Did the answer key actually reach the client?
+//
+// The API strips `correct_answers` from the task payload whenever the student
+// isn't allowed to see it yet — notably while retry attempts remain (see
+// _student_may_see_answer_key; max_retries=0 means unlimited, so it never
+// reveals). The client can't re-derive that rule (it has no attempt_number
+// here), so `showCorrectAnswers` can be true while the key is absent. In that
+// state normalizeContents defaults to [''], which defeats the `length > 0`
+// guard and renders an "Accepted answers" panel holding one blank chip.
+// Capture presence from the RAW payload, before defaults apply.
+function hasAnswerKey(raw: any): boolean {
+  return Array.isArray(raw?.correct_answers) && raw.correct_answers.length > 0
+}
+
 function TaskShortAnswerObject({
   view,
   assignmentTaskUUID,
@@ -72,6 +88,7 @@ function TaskShortAnswerObject({
   const assignmentTaskState = useAssignmentsTask() as any
   const assignmentTaskStateHook = useAssignmentsTaskDispatch() as any
   const assignment = useAssignments() as any
+  const queryClient = useQueryClient()
   // Student-only reveal: after the submission is GRADED and the teacher
   // opted into showing correct answers, inline the accepted answer list
   // next to the student's input.
@@ -84,6 +101,11 @@ function TaskShortAnswerObject({
     && !!assignment?.assignment_object?.show_correct_answers
 
   const [contents, setContents] = useState<ShortAnswerContents>(DEFAULT_CONTENTS)
+  // Tracks whether the server actually sent the answer key (see hasAnswerKey).
+  const [answerKeyPresent, setAnswerKeyPresent] = useState(false)
+  // The server applies a third reveal condition the client can't reproduce, so
+  // the opt-in gate alone isn't enough — only reveal when the key is really here.
+  const revealAnswerKey = showCorrectAnswers && answerKeyPresent
   const [studentAnswer, setStudentAnswer] = useState<string>('')
   const [initialAnswer, setInitialAnswer] = useState<string>('')
   // Hydration race guard: once the learner starts typing, don't let a late
@@ -100,8 +122,10 @@ function TaskShortAnswerObject({
     if (view === 'teacher' && assignmentTaskState?.assignmentTask?.contents) {
       const c = assignmentTaskState.assignmentTask.contents
       if (c.prompt !== undefined || Array.isArray(c.correct_answers)) {
-        // eslint-disable-next-line react-hooks/set-state-in-effect
+        /* eslint-disable react-hooks/set-state-in-effect */
         setContents(normalizeContents(c))
+        setAnswerKeyPresent(hasAnswerKey(c))
+        /* eslint-enable react-hooks/set-state-in-effect */
       }
     }
   }, [view, assignmentTaskState])
@@ -114,12 +138,12 @@ function TaskShortAnswerObject({
       setAssignmentTaskOutsideProvider(res.data)
       if (res.data.contents) {
         setContents(normalizeContents(res.data.contents))
+        setAnswerKeyPresent(hasAnswerKey(res.data.contents))
       }
     }
   }
 
   async function loadOwnSubmission() {
-    if (interactedRef.current) return
     if (!assignmentTaskUUID) return
     const res = await getAssignmentTaskSubmissionsMe(
       assignmentTaskUUID,
@@ -129,8 +153,17 @@ function TaskShortAnswerObject({
     if (res.success && res.data) {
       setUserSubmissions(res.data)
       const saved = res.data.task_submission?.answer ?? ''
-      setStudentAnswer(saved)
+      // The interaction guard has to be checked HERE, after the await — not
+      // before it. If the learner starts typing during the round trip, a
+      // pre-await check still lets the late response overwrite their text AND
+      // reset the dirty baseline, so auto-save never fires and the answer is
+      // silently lost at submit time. Always adopt the submission row + the
+      // saved baseline (a save must target the right row, and the baseline is
+      // what makes the draft look dirty), but keep their in-progress text.
       setInitialAnswer(saved)
+      if (!interactedRef.current) {
+        setStudentAnswer(saved)
+      }
     }
   }
 
@@ -222,6 +255,16 @@ function TaskShortAnswerObject({
     if (res.success) {
       setUserSubmissions(res.data)
       setInitialAnswer(studentAnswer)
+      // Keep the shared batch task-submissions cache in step with what we just
+      // persisted. It has a 60s staleTime, so without this a remount re-hydrates
+      // the page-load snapshot and overwrites answers the learner already saved.
+      // Patching (rather than invalidating) avoids a refetch on every ~1s
+      // silent auto-save.
+      const taskUUID = assignmentTaskUUID
+      queryClient.setQueryData(
+        queryKeys.assignments.taskSubmission(assignment.assignment_object.assignment_uuid),
+        (prev: any) => (prev ? { ...prev, [taskUUID]: res.data } : prev)
+      )
       if (!opts?.silent) toast.success(t('dashboard.assignments.editor.toasts.task_saved'))
       return true
     } else {
@@ -415,7 +458,10 @@ function TaskShortAnswerObject({
               )}
               className="w-full px-3 py-2 text-sm border-2 border-gray-200 rounded-md bg-white focus:border-blue-400 focus:ring-2 focus:ring-blue-200 outline-none"
             />
-            {showCorrectAnswers && contents.correct_answers.length > 0 && (
+            {/* No answer-key panel at all when the key was withheld — the
+                learner still sees their own answer and their score. A panel
+                holding one blank chip would be worse than nothing. */}
+            {revealAnswerKey && (
               <div className="flex flex-col space-y-1.5 p-3 rounded-md bg-emerald-50 border border-emerald-200">
                 <div className="flex items-center space-x-1.5 text-xs font-semibold text-emerald-700">
                   <CheckCircle2 size={13} />

@@ -135,3 +135,17 @@ class TestRagChatOwnership:
 
         assert resp.media_type == "text/event-stream"
         belongs.assert_not_called()
+
+
+@pytest.fixture(autouse=True)
+def _skip_org_mfa_policy():
+    """No-op the org two-factor policy for this module.
+
+    These tests drive the router with a hand-rolled session whose `execute`
+    returns a fixed, ordered list of results. The policy check issues its own
+    queries, which would consume entries from that list and desynchronise every
+    subsequent lookup. The policy itself is covered directly in
+    src/tests/security/test_mfa_org_policy.py.
+    """
+    with patch.object(rag_router, "enforce_org_mfa", new=AsyncMock(return_value=None)):
+        yield

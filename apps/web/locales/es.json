@@ -223,7 +223,12 @@
     "delete_organization_warning": "Esto elimina permanentemente {{name}} y todos sus datos. Esta acción no se puede deshacer.",
     "delete_organization_confirm_label": "Escribe {{slug}} para confirmar",
     "deleting": "Eliminando…",
-    "retry": "Reintentar"
+    "retry": "Reintentar",
+    "leave_organization": "Salir de la organización",
+    "leave_organization_title": "¿Salir de la organización?",
+    "leave_organization_desc": "Perderás el acceso a {{org}} y se te eliminará de sus miembros. Podrás volver a unirte más adelante si recibes una invitación.",
+    "leave_organization_error": "No se pudo salir de esta organización. Inténtalo de nuevo.",
+    "leaving": "Saliendo…"
   },
   "banner": {
     "viewing_as_guest": "Estás viendo {{name}} como invitado.",
@@ -654,7 +659,13 @@
       "info_description": "Filtra los cursos por grupo de usuarios para ver solo los asignados a un grupo específico. Útil para familias o equipos que comparten la misma organización."
     },
     "courses_load_error": "Error al cargar los cursos. Por favor, inténtalo de nuevo.",
-    "view_all_courses": "Ver todos los cursos"
+    "view_all_courses": "Ver todos los cursos",
+    "first_chapter_default_name": "Primer capítulo",
+    "paste_from_clipboard": "Pegar desde el portapapeles",
+    "no_image_in_clipboard": "No se encontró ninguna imagen en el portapapeles",
+    "clipboard_read_error": "No se pudo leer el portapapeles",
+    "sign_in_to_see_courses": "Inicia sesión para ver tus cursos",
+    "sign_in_to_see_courses_description": "Los cursos de esta academia podrían estar visibles solo después de iniciar sesión."
   },
   "communities": {
     "title": "Comunidades",
@@ -965,13 +976,20 @@
     "embed": "Incrustar",
     "embed_code_copied": "¡Código de incrustación copiado!",
     "link_copied": "¡Enlace copiado!",
-    "share": "Compartir"
+    "share": "Compartir",
+    "autosave_blocked": "Aún no se puede guardar",
+    "autosave_retry": "No se pudo guardar — reintentando…",
+    "autosave_unsaved": "Cambios sin guardar",
+    "autosaved": "Guardado",
+    "autosaving": "Guardando…",
+    "save_answers": "Guardar respuestas"
   },
   "assignments": {
     "submit_assignment": "Enviar tarea",
     "submit_assignment_confirm": "¿Estás seguro de que quieres enviar tu tarea para calificar? Una vez enviada, no podrás realizar cambios.",
     "submit_assignment_title": "Enviar tarea para corregir",
     "submit_for_grading": "Enviar para corregir",
+    "submitting": "Enviando…",
     "grading_in_progress": "Corrección en curso",
     "graded": "Calificado",
     "assignment_submitted_success": "Tarea enviada para corregir",
@@ -1013,7 +1031,11 @@
     "retry_assignment_last": "Este es tu último intento — hazlo contar.",
     "retry_assignment_success": "Tu trabajo ha sido restablecido — intenta de nuevo.",
     "retry_assignment_failed": "No se pudo restablecer tu envío. Por favor, intenta de nuevo.",
-    "retry_no_attempts_left": "Sin reintentos disponibles"
+    "retry_no_attempts_left": "Sin reintentos disponibles",
+    "no_task_submission_to_grade": "Este estudiante aún no ha enviado un archivo para esta tarea.",
+    "past_due": "Fecha límite vencida",
+    "past_due_description": "La fecha límite de esta tarea fue el {{date}}. Ya no se pueden guardar respuestas ni enviarlas para calificación.",
+    "past_due_title": "Fecha límite vencida"
   },
   "certificate": {
     "certificate": "Certificado",
@@ -1040,7 +1062,8 @@
     "continuing_education": "Formación continua",
     "workshop_attendance": "Asistencia a taller",
     "specialization": "Especialización",
-    "dedication_message": "Tu dedicación ha dado sus frutos. Has dominado todo el contenido de este curso."
+    "dedication_message": "Tu dedicación ha dado sus frutos. Has dominado todo el contenido de este curso.",
+    "download_failed": "No se pudo generar el PDF. Inténtalo de nuevo."
   },
   "search": {
     "search_placeholder": "Buscar cursos, usuarios, colecciones...",
@@ -1125,7 +1148,9 @@
       "description": "Elimina permanentemente tu cuenta y revoca tu acceso. Esto no se puede deshacer.",
       "warning": "Esto elimina permanentemente tu cuenta y todos los datos asociados. Esta acción no se puede deshacer.",
       "confirm_label": "Escribe {{username}} para confirmar",
-      "deleting": "Eliminando…"
+      "deleting": "Eliminando…",
+      "zone_subtitle": "Elimina tu cuenta permanentemente. Esta acción no se puede deshacer.",
+      "zone_body": "Esto elimina tu cuenta y tu acceso. También se eliminará cualquier organización de la que seas el único administrador, junto con todos sus cursos y contenidos. Las organizaciones con otros administradores se conservarán; simplemente se te eliminará de ellas."
     }
   },
   "user": {
@@ -1347,6 +1372,12 @@
           "save_error": "Error al actualizar el perfil"
         },
         "unknown_section": "Sección desconocida"
+      },
+      "security": {
+        "current_session_title": "Sesión actual",
+        "current_session_subtitle": "El dispositivo desde el que has iniciado sesión ahora mismo.",
+        "this_device": "Este dispositivo",
+        "sign_out": "Cerrar sesión"
       }
     },
     "sign_out": "Cerrar sesión",
@@ -2082,7 +2113,8 @@
             "dynamic_page": "Página dinámica",
             "scorm": "Scorm",
             "markdown": "Markdown",
-            "embed": "Embed"
+            "embed": "Embed",
+            "resource": "Recurso"
           },
           "toasts": {
             "deleting": "Eliminando actividad...",
@@ -2956,6 +2988,32 @@
           "message2": "Por favor, cambia a un ordenador de escritorio para ver y gestionar los ajustes de usuario."
         }
       },
+      "analytics": {
+        "button": "Analíticas",
+        "view_analytics": "Ver analíticas del estudiante",
+        "open_full_page": "Abrir página completa de analíticas",
+        "compare": "Comparar analíticas",
+        "compare_students": "Comparar estudiantes",
+        "export": "Exportar",
+        "export_selected": "Exportar analíticas ({{count}})",
+        "exporting": "Exportando…",
+        "failed_load": "No se pudo cargar el expediente del estudiante.",
+        "back_to_students": "Volver a estudiantes",
+        "no_behavioral": "Sin datos de comportamiento (las analíticas pueden no estar configuradas para este periodo).",
+        "ranges": { "d30": "30 días", "d90": "90 días", "y1": "1 año" },
+        "kpi": { "courses": "Cursos", "completed": "{{count}} completados", "avg_progress": "Progreso medio", "time_spent": "Tiempo dedicado", "assignments": "Tareas", "avg_grade": "media {{grade}}", "certificates": "Certificados", "connections": "Conexiones", "last": "última {{date}}" },
+        "tabs": { "connections": "Conexiones", "courses": "Cursos", "assignments": "Tareas", "code": "Código", "community": "Comunidad", "certificates": "Certificados", "behavior": "Comportamiento" },
+        "identity": { "verified": "Verificado", "unverified": "Sin verificar", "via": "vía {{method}}" },
+        "connections": { "title": "Conexiones", "empty": "Aún no hay conexiones registradas." },
+        "courses": { "title": "Progreso del curso", "empty": "No inscrito en ningún curso.", "activities": "{{done}}/{{total}} actividades", "enrolled": "Inscrito {{date}}" },
+        "assignments": { "title": "Tareas", "empty": "Sin entregas de tareas.", "attempt": "intento {{number}}", "feedback": "Comentarios:" },
+        "code": { "title": "Ejercicios de código", "empty": "Sin envíos de código.", "activity": "Actividad", "result": "Resultado", "tests": "Pruebas", "time": "Tiempo", "when": "Cuándo", "passed": "Superado", "failed": "Fallido" },
+        "community": { "title": "Participación en la comunidad", "empty": "Sin actividad en la comunidad.", "discussions": "Debates", "comments": "Comentarios" },
+        "certificates": { "title": "Certificados obtenidos", "empty": "Sin certificados obtenidos." },
+        "behavior": { "title": "Analíticas de comportamiento", "time_by_course": "Tiempo dedicado por curso", "searches": "Búsquedas" },
+        "status": { "completed": "completado", "in_progress": "en curso", "paused": "en pausa", "cancelled": "cancelado", "graded": "calificado", "submitted": "entregado", "pending": "pendiente", "late": "atrasado", "not_submitted": "sin entregar" },
+        "comparison": { "student": "Estudiante", "enrolled": "Inscrito", "completed": "Completado", "certificates": "Certificados", "last_connection": "Última conexión", "view": "Ver" }
+      },
       "active_users": {
         "title": "Usuarios activos",
         "subtitle": "Gestiona los usuarios de tu organización, asigna roles y permisos",
@@ -3449,7 +3507,8 @@
           "drafts": "Borradores",
           "auto_graded": "Solo auto-calificadas",
           "hide_empty": "Ocultar cursos vacíos"
-        }
+        },
+        "new_assignment": "Nueva tarea"
       },
       "detail": {
         "title": "Herramientas de tarea",
@@ -3525,7 +3584,8 @@
           "task_save_error": "Error al guardar la tarea, inténtalo de nuevo más tarde.",
           "task_updated": "Tarea actualizada con éxito",
           "task_update_error": "Error al actualizar la tarea, inténtalo de nuevo más tarde.",
-          "reminder": "Al editar o añadir tareas, asegúrate de despublicar la actividad para evitar problemas, puedes publicarla de nuevo cuando esté lista."
+          "reminder": "Al editar o añadir tareas, asegúrate de despublicar la actividad para evitar problemas, puedes publicarla de nuevo cuando esté lista.",
+          "no_submission_to_grade": "Este estudiante aún no ha enviado nada para esta tarea, no hay nada que calificar."
         },
         "task_editor": {
           "general": {
@@ -3545,7 +3605,9 @@
             "auth_required_submit": "Autenticación requerida. Inicia sesión para enviar tu tarea.",
             "hint_optional": "Pista (opcional)",
             "paste_blocked": "Pegar está desactivado para esta tarea",
-            "paste_blocked_hint": "Pegar está desactivado — escribe tu respuesta directamente."
+            "paste_blocked_hint": "Pegar está desactivado — escribe tu respuesta directamente.",
+            "upload_locked_graded": "Esta entrega ha sido calificada — ya no puedes cambiar tu archivo.",
+            "upload_locked_submitted": "Has enviado esta tarea — ya no puedes cambiar tu archivo."
           },
           "code": {
             "student_behavior_label": "Comportamiento del estudiante",
@@ -3561,7 +3623,10 @@
             "must_pass_hint": "Todas las pruebas visibles deben pasar antes de guardar.",
             "show_solution_label": "Revelar solución después de enviar",
             "show_solution_description": "Una vez que el estudiante haya guardado su trabajo, muestra la solución de referencia del profesor.",
-            "reference_solution_label": "Solución de referencia"
+            "reference_solution_label": "Solución de referencia",
+            "locked_graded_hint": "Esta entrega ha sido calificada — tu código es de solo lectura.",
+            "locked_submitted_hint": "Has enviado esta tarea — tu código es de solo lectura.",
+            "no_runnable_tests": "Esta tarea no tiene pruebas que puedas ejecutar — tu código se comprobará al calificarla."
           },
           "short_answer": {
             "prompt_label": "Enunciado de la pregunta",
@@ -3604,13 +3669,19 @@
             "correct": "Correcto",
             "incorrect": "No exactamente — intenta de nuevo"
           }
+        },
+        "generate_ai": "Generar tareas con AI",
+        "generate_ai_modal": {
+          "description": "Describe lo que quieres y previsualiza tareas basadas en el contenido del curso antes de añadirlas.",
+          "title": "Generar tareas con AI"
         }
       },
       "submissions": {
         "status": {
           "late": "Tardío",
           "submitted": "Enviado",
-          "graded": "Calificado"
+          "graded": "Calificado",
+          "pending": "En curso"
         },
         "submission_label": "Envío",
         "evaluate": "Evaluar",
@@ -3666,7 +3737,8 @@
           "optional": "opcional",
           "placeholder": "Escribe un comentario sobre la entrega. El estudiante lo verá junto a su nota.",
           "hint": "Déjalo vacío para mantener cualquier comentario anterior sin cambios."
-        }
+        },
+        "truncated_warning": "Solo se muestran las primeras {{max}} entregas. Algunas entregas no aparecen aquí."
       },
       "analytics": {
         "loading": "Cargando analíticas...",
@@ -3810,9 +3882,22 @@
           },
           "toasts": {
             "creating": "Creando tarea...",
-            "success": "Tarea creada con éxito"
+            "success": "Tarea creada con éxito",
+            "error": "No se pudo crear la tarea"
           }
         }
+      },
+      "create_flow": {
+        "create_course": "Crear un curso",
+        "no_chapters_desc": "Añade un capítulo en el editor del curso y luego crea una tarea dentro de él.",
+        "no_chapters_title": "Este curso aún no tiene capítulos",
+        "no_courses_desc": "Las tareas se encuentran dentro de un capítulo del curso. Crea tu primer curso y vuelve para añadir una tarea.",
+        "no_courses_title": "Primero crea un curso",
+        "open_editor": "Abrir editor del curso",
+        "pick_chapter": "Elige el capítulo donde colocar esta tarea.",
+        "pick_course": "Elige el curso al que pertenece esta tarea.",
+        "title": "Nueva tarea",
+        "untitled_chapter": "Capítulo sin título"
       }
     },
     "search": {
@@ -3983,6 +4068,9 @@
           "keywords": "api, tokens, acceso, programático, claves"
         }
       }
+    },
+    "developers": {
+      "breadcrumb": "Desarrolladores"
     }
   },
   "editor": {
@@ -5160,7 +5248,8 @@
     "accessDenied": "No se puede acceder a este curso",
     "backToCourses": "Volver a Cursos",
     "loadError": "No se pudo encontrar este curso o hubo un error al cargarlo.",
-    "noPermission": "No tienes permiso para ver este curso."
+    "noPermission": "No tienes permiso para ver este curso.",
+    "finish_course": "Finalizar curso"
   },
   "pagination": {
     "next": "Siguiente",
@@ -5278,7 +5367,18 @@
     "thumbnail_error": "Couldn't upload the cover image",
     "open_resource": "Open",
     "replace_cover": "Replace",
-    "cover_hint": "PNG, JPG, WEBP"
+    "cover_hint": "PNG, JPG, WEBP",
+    "sort": {
+      "sort_by": "Ordenar por",
+      "name_asc": "Nombre (A–Z)",
+      "name_desc": "Nombre (Z–A)",
+      "newest": "Más recientes primero",
+      "oldest": "Más antiguos primero",
+      "manual": "Manual",
+      "drag_to_reorder": "Arrastra para reordenar",
+      "sort_error": "No se pudo actualizar el orden",
+      "reorder_error": "No se pudo guardar el nuevo orden"
+    }
   },
   "media": {
     "media": "Media",
@@ -5390,7 +5490,6 @@
     "admin_seats": "Puestos de administrador",
     "ai_credits": "Créditos de IA",
     "addons": "Complementos",
-    "addons_subtitle": "Compra créditos de IA o puestos de miembro adicionales como suscripciones mensuales.",
     "active_subscriptions": "Suscripciones activas",
     "credits": "créditos",
     "seats": "puestos",
@@ -5463,8 +5562,7 @@
     "scheduled_desc": "Tu plan cambiará a {{plan}} al final de tu ciclo de facturación actual. Tendrás acceso completo a tu plan actual hasta entonces.",
     "plan_plus_purchased": "Plan: {{plan}} + Comprado: {{purchased}}",
     "base_plus_purchased": "Base: {{base}} + Comprado: {{purchased}}",
-    "pack_ai_desc": "{{quantity}} créditos de AI adicionales agregados a tu organización",
-    "pack_seats_desc": "{{quantity}} asientos adicionales para miembros de tu organización"
+    "pack_ai_desc": "{{quantity}} créditos de AI adicionales agregados a tu organización"
   },
   "hub_new": {
     "useType": {

@@ -254,6 +254,11 @@ async def generate_assignment_plan(
             continue
         generated_tasks.append(gen_task)
 
+    # The prompt asks for exactly num_tasks, but a model can over-produce; cap
+    # the persisted plan so a chatty response can't create more tasks than the
+    # (already clamped) request allowed.
+    generated_tasks = generated_tasks[:num_tasks]
+
     generated = GeneratedAssignmentPlan(
         title=plan.title,
         description=plan.description,

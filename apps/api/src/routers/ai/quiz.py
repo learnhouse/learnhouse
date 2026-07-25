@@ -19,7 +19,7 @@ from src.db.organizations import Organization
 from src.db.users import PublicUser
 from src.security.auth import get_authenticated_user
 from src.security.features_utils.usage import refund_ai_credit, reserve_ai_credit
-from src.security.org_auth import is_org_member
+from src.security.org_auth import is_org_member, enforce_org_mfa
 from src.security.rbac import check_resource_access, AccessAction
 from src.services.ai.generations import (
     delete_generation,
@@ -50,6 +50,8 @@ async def _authorize_org(org_id: int, user: PublicUser, db_session: AsyncSession
         raise HTTPException(status_code=404, detail="Organization not found")
     if not await is_org_member(user.id, org.id, db_session):
         raise HTTPException(status_code=403, detail="User is not a member of this organization")
+    # Org-wide two-factor policy, applied after the membership gate.
+    await enforce_org_mfa(user.id, org.id, db_session)
     return org
 
 

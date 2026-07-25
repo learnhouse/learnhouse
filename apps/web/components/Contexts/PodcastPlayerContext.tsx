@@ -3,6 +3,7 @@
 import React, { createContext, useContext, useReducer, useCallback, useRef, useEffect, useMemo } from 'react'
 import { Podcast, PodcastEpisode } from '@services/podcasts/podcasts'
 import { useLHAnalytics, AnalyticsEvent } from '@services/analytics'
+import { safePlay } from '@/lib/media/safePlay'
 
 interface PodcastPlayerState {
   currentEpisode: PodcastEpisode | null
@@ -123,7 +124,7 @@ export function PodcastPlayerProvider({ children }: { children: React.ReactNode 
 
   const play = useCallback(() => {
     dispatch({ type: 'PLAY' })
-    audioRef.current?.play()
+    safePlay(audioRef.current)
   }, [])
 
   const pause = useCallback(() => {
@@ -135,7 +136,7 @@ export function PodcastPlayerProvider({ children }: { children: React.ReactNode 
     if (state.isPlaying) {
       audioRef.current?.pause()
     } else {
-      audioRef.current?.play()
+      safePlay(audioRef.current)
     }
     dispatch({ type: 'TOGGLE_PLAY' })
   }, [state.isPlaying])

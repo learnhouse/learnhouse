@@ -223,7 +223,12 @@
     "delete_organization_warning": "{{name}} とそのすべてのデータが完全に削除されます。この操作は元に戻せません。",
     "delete_organization_confirm_label": "確認のため {{slug}} と入力してください",
     "deleting": "削除中…",
-    "retry": "再試行"
+    "retry": "再試行",
+    "leave_organization": "組織を退出",
+    "leave_organization_title": "組織を退出しますか？",
+    "leave_organization_desc": "{{org}} へのアクセス権が失われ、メンバーから削除されます。招待されれば後から再参加できます。",
+    "leave_organization_error": "この組織を退出できませんでした。もう一度お試しください。",
+    "leaving": "退出中…"
   },
   "banner": {
     "viewing_as_guest": "{{name}}をゲストとして閲覧しています。",
@@ -664,7 +669,13 @@
     "quit_course_confirm": "このコースを終了してもよろしいですか？すべての進捗が失われます。",
     "quit_course_title": "コースを終了しますか？",
     "courses_load_error": "コースの読み込みに失敗しました。もう一度お試しください。",
-    "view_all_courses": "すべてのコースを表示"
+    "view_all_courses": "すべてのコースを表示",
+    "first_chapter_default_name": "最初のチャプター",
+    "paste_from_clipboard": "クリップボードから貼り付け",
+    "no_image_in_clipboard": "クリップボードに画像が見つかりません",
+    "clipboard_read_error": "クリップボードを読み取れませんでした",
+    "sign_in_to_see_courses": "コースを見るにはログインしてください",
+    "sign_in_to_see_courses_description": "このアカデミーのコースは、ログイン後にのみ表示される場合があります。"
   },
   "communities": {
     "title": "コミュニティ",
@@ -975,13 +986,20 @@
     "embed": "埋め込み",
     "embed_code_copied": "埋め込みコードをコピーしました！",
     "link_copied": "リンクをコピーしました！",
-    "share": "共有"
+    "share": "共有",
+    "autosave_blocked": "まだ保存できません",
+    "autosave_retry": "保存できませんでした。再試行中…",
+    "autosave_unsaved": "未保存の変更",
+    "autosaved": "保存済み",
+    "autosaving": "保存中…",
+    "save_answers": "回答を保存"
   },
   "assignments": {
     "submit_assignment": "課題を提出",
     "submit_assignment_confirm": "本当に課題を提出しますか？提出後は変更できなくなります。",
     "submit_assignment_title": "採点のために課題を提出する",
     "submit_for_grading": "採点を依頼",
+    "submitting": "送信中…",
     "grading_in_progress": "採点中",
     "graded": "採点済み",
     "assignment_submitted_success": "採点のために課題が提出されました",
@@ -1023,7 +1041,11 @@
     "retry_assignment_last": "最後の試行です。頑張ってください。",
     "retry_assignment_success": "作業がリセットされました。もう一度試してください。",
     "retry_assignment_failed": "提出のリセットに失敗しました。もう一度お試しください。",
-    "retry_no_attempts_left": "再試行できません"
+    "retry_no_attempts_left": "再試行できません",
+    "no_task_submission_to_grade": "この受講者はまだこの課題のファイルを提出していません。",
+    "past_due": "締め切りを過ぎています",
+    "past_due_description": "この課題の締め切りは {{date}} でした。回答の保存や採点のための提出はできません。",
+    "past_due_title": "締め切りを過ぎています"
   },
   "certificate": {
     "certificate": "修了証",
@@ -1050,7 +1072,8 @@
     "continuing_education": "継続教育",
     "workshop_attendance": "ワークショップ参加証",
     "specialization": "専門分野認定",
-    "dedication_message": "あなたの努力が実を結びました。このコースの全内容を習得しました。"
+    "dedication_message": "あなたの努力が実を結びました。このコースの全内容を習得しました。",
+    "download_failed": "PDFを生成できませんでした。もう一度お試しください。"
   },
   "search": {
     "search_placeholder": "コース、ユーザー、コレクションを検索...",
@@ -1135,7 +1158,9 @@
       "description": "アカウントを完全に削除し、アクセス権を取り消します。この操作は元に戻せません。",
       "warning": "アカウントと関連するすべてのデータが完全に削除されます。この操作は元に戻せません。",
       "confirm_label": "確認のため {{username}} と入力してください",
-      "deleting": "削除中…"
+      "deleting": "削除中…",
+      "zone_subtitle": "アカウントを完全に削除します。この操作は元に戻せません。",
+      "zone_body": "アカウントとアクセス権が削除されます。あなたが唯一の管理者である組織と、そのすべてのコースおよびコンテンツも削除されます。他に管理者がいる組織は保持され、あなたのみがその組織から削除されます。"
     }
   },
   "user": {
@@ -1357,6 +1382,12 @@
           "save_error": "プロフィールの更新中にエラーが発生しました"
         },
         "unknown_section": "不明なセクション"
+      },
+      "security": {
+        "current_session_title": "現在のセッション",
+        "current_session_subtitle": "現在ログインしているデバイスです。",
+        "this_device": "このデバイス",
+        "sign_out": "ログアウト"
       }
     },
     "sign_out": "ログアウト",
@@ -2092,7 +2123,8 @@
             "dynamic_page": "ダイナミックページ",
             "scorm": "SCORM",
             "markdown": "Markdown",
-            "embed": "埋め込み"
+            "embed": "埋め込み",
+            "resource": "リソース"
           },
           "toasts": {
             "deleting": "アクティビティを削除中...",
@@ -2966,6 +2998,32 @@
           "message2": "ユーザー設定を表示および管理するには、デスクトップに切り替えてください。"
         }
       },
+      "analytics": {
+        "button": "分析",
+        "view_analytics": "受講者の分析を表示",
+        "open_full_page": "分析ページ全体を開く",
+        "compare": "分析を比較",
+        "compare_students": "受講者を比較",
+        "export": "エクスポート",
+        "export_selected": "分析をエクスポート（{{count}}）",
+        "exporting": "エクスポート中…",
+        "failed_load": "受講者ドシエの読み込みに失敗しました。",
+        "back_to_students": "受講者一覧に戻る",
+        "no_behavioral": "行動データがありません（この期間の分析が未設定の可能性があります）。",
+        "ranges": { "d30": "30日", "d90": "90日", "y1": "1年" },
+        "kpi": { "courses": "コース", "completed": "{{count}} 件完了", "avg_progress": "平均進捗", "time_spent": "利用時間", "assignments": "課題", "avg_grade": "平均 {{grade}}", "certificates": "証明書", "connections": "接続", "last": "最終 {{date}}" },
+        "tabs": { "connections": "接続", "courses": "コース", "assignments": "課題", "code": "コード", "community": "コミュニティ", "certificates": "証明書", "behavior": "行動" },
+        "identity": { "verified": "認証済み", "unverified": "未認証", "via": "{{method}} 経由" },
+        "connections": { "title": "接続", "empty": "記録された接続はまだありません。" },
+        "courses": { "title": "コースの進捗", "empty": "登録しているコースがありません。", "activities": "{{done}}/{{total}} アクティビティ", "enrolled": "登録日 {{date}}" },
+        "assignments": { "title": "課題", "empty": "課題の提出がありません。", "attempt": "{{number}} 回目の試行", "feedback": "フィードバック：" },
+        "code": { "title": "コード演習", "empty": "コードの提出がありません。", "activity": "アクティビティ", "result": "結果", "tests": "テスト", "time": "時間", "when": "日時", "passed": "合格", "failed": "不合格" },
+        "community": { "title": "コミュニティへの参加", "empty": "コミュニティの活動がありません。", "discussions": "ディスカッション", "comments": "コメント" },
+        "certificates": { "title": "取得した証明書", "empty": "取得した証明書はありません。" },
+        "behavior": { "title": "行動分析", "time_by_course": "コース別の利用時間", "searches": "検索" },
+        "status": { "completed": "完了", "in_progress": "進行中", "paused": "一時停止", "cancelled": "キャンセル済み", "graded": "採点済み", "submitted": "提出済み", "pending": "保留中", "late": "遅延", "not_submitted": "未提出" },
+        "comparison": { "student": "受講者", "enrolled": "登録済み", "completed": "完了", "certificates": "証明書", "last_connection": "最終接続", "view": "表示" }
+      },
       "active_users": {
         "title": "アクティブユーザー",
         "subtitle": "組織 of users を管理し、ロールと権限を割り当てます",
@@ -3459,7 +3517,8 @@
           "drafts": "下書き",
           "auto_graded": "自動採点のみ",
           "hide_empty": "空のコースを非表示"
-        }
+        },
+        "new_assignment": "新しい課題"
       },
       "detail": {
         "title": "課題ツール",
@@ -3535,7 +3594,8 @@
           "task_save_error": "タスクの保存中にエラーが発生しました。後でもう一度お試しください。",
           "task_updated": "タスクが正常に更新されました",
           "task_update_error": "タスクの更新中にエラーが発生しました。後でもう一度お試しください。",
-          "reminder": "タスクを編集または追加する際は、受講生とのトラブルを避けるために課題を一度「非公開」にすることをお勧めします。準備ができたら再度「公開」してください。"
+          "reminder": "タスクを編集または追加する際は、受講生とのトラブルを避けるために課題を一度「非公開」にすることをお勧めします。準備ができたら再度「公開」してください。",
+          "no_submission_to_grade": "この受講者はまだこの課題を提出していないため、採点するものがありません。"
         },
         "task_editor": {
           "general": {
@@ -3555,7 +3615,9 @@
             "auth_required_submit": "認証が必要です。タスクを提出するにはサインインしてください。",
             "hint_optional": "ヒント（任意）",
             "paste_blocked": "この課題ではペーストが無効です",
-            "paste_blocked_hint": "ペーストは無効です — 直接答えを入力してください。"
+            "paste_blocked_hint": "ペーストは無効です — 直接答えを入力してください。",
+            "upload_locked_graded": "この提出物は採点済みのため、ファイルを変更できません。",
+            "upload_locked_submitted": "この課題は提出済みのため、ファイルを変更できません。"
           },
           "code": {
             "student_behavior_label": "学生の動作",
@@ -3571,7 +3633,10 @@
             "must_pass_hint": "保存する前にすべての表示テストが合格する必要があります。",
             "show_solution_label": "提出後に解答を表示",
             "show_solution_description": "学生が作業を保存した後、教師の参照解答を表示します。",
-            "reference_solution_label": "参照解答"
+            "reference_solution_label": "参照解答",
+            "locked_graded_hint": "この提出物は採点済みのため、コードは読み取り専用です。",
+            "locked_submitted_hint": "この課題は提出済みのため、コードは読み取り専用です。",
+            "no_runnable_tests": "この課題には実行できるテストがありません。コードは採点時に確認されます。"
           },
           "short_answer": {
             "prompt_label": "問題の文",
@@ -3614,13 +3679,19 @@
             "correct": "正解",
             "incorrect": "惜しい — もう一度試してください"
           }
+        },
+        "generate_ai": "AIで課題を生成",
+        "generate_ai_modal": {
+          "description": "希望する内容を説明すると、追加前にコース内容に基づいた課題をプレビューできます。",
+          "title": "AIで課題を生成"
         }
       },
       "submissions": {
         "status": {
           "late": "期限後",
           "submitted": "提出済み",
-          "graded": "採点済み"
+          "graded": "採点済み",
+          "pending": "進行中"
         },
         "submission_label": "提出物",
         "evaluate": "評価する",
@@ -3676,7 +3747,8 @@
           "optional": "任意",
           "placeholder": "提出物全体についてコメントを書いてください。学生は成績の横で確認できます。",
           "hint": "空欄にすると、以前のフィードバックは変更されずに保持されます。"
-        }
+        },
+        "truncated_warning": "最初の {{max}} 件の提出のみ表示されています。一部の提出はここに表示されません。"
       },
       "analytics": {
         "loading": "分析を読み込んでいます...",
@@ -3820,9 +3892,22 @@
           },
           "toasts": {
             "creating": "課題を作成中...",
-            "success": "課題を正常に作成しました"
+            "success": "課題を正常に作成しました",
+            "error": "課題を作成できませんでした"
           }
         }
+      },
+      "create_flow": {
+        "create_course": "コースを作成",
+        "no_chapters_desc": "コースエディターでチャプターを追加してから、その中に課題を作成してください。",
+        "no_chapters_title": "このコースにはまだチャプターがありません",
+        "no_courses_desc": "課題はコース内のチャプターに作成されます。最初のコースを作成してから、戻って課題を追加してください。",
+        "no_courses_title": "まずコースを作成してください",
+        "open_editor": "コースエディターを開く",
+        "pick_chapter": "この課題を配置するチャプターを選択してください。",
+        "pick_course": "この課題が属するコースを選択してください。",
+        "title": "新しい課題",
+        "untitled_chapter": "無題のチャプター"
       }
     },
     "search": {
@@ -3993,6 +4078,9 @@
           "keywords": "api, トークン, アクセス, プログラマティック, キー"
         }
       }
+    },
+    "developers": {
+      "breadcrumb": "開発者"
     }
   },
   "editor": {
@@ -5170,7 +5258,8 @@
     "accessDenied": "このコースにアクセスできません",
     "backToCourses": "コース一覧に戻る",
     "loadError": "このコースが見つからないか、読み込み中にエラーが発生しました。",
-    "noPermission": "このコースを表示する権限がありません。"
+    "noPermission": "このコースを表示する権限がありません。",
+    "finish_course": "コースを完了"
   },
   "pagination": {
     "next": "次へ",
@@ -5288,7 +5377,18 @@
     "thumbnail_error": "Couldn't upload the cover image",
     "open_resource": "Open",
     "replace_cover": "Replace",
-    "cover_hint": "PNG, JPG, WEBP"
+    "cover_hint": "PNG, JPG, WEBP",
+    "sort": {
+      "sort_by": "並べ替え",
+      "name_asc": "名前（A～Z）",
+      "name_desc": "名前（Z～A）",
+      "newest": "新しい順",
+      "oldest": "古い順",
+      "manual": "手動",
+      "drag_to_reorder": "ドラッグして並べ替え",
+      "sort_error": "並べ替え順を更新できませんでした",
+      "reorder_error": "新しい順序を保存できませんでした"
+    }
   },
   "media": {
     "media": "Media",
@@ -5400,7 +5500,6 @@
     "admin_seats": "管理者シート",
     "ai_credits": "AI クレジット",
     "addons": "アドオン",
-    "addons_subtitle": "追加の AI クレジットやメンバーシートを月額サブスクリプションとして購入できます。",
     "active_subscriptions": "有効なサブスクリプション",
     "credits": "クレジット",
     "seats": "シート",
@@ -5473,8 +5572,7 @@
     "scheduled_desc": "現在の請求サイクル終了時に{{plan}}プランに切り替わります。それまでは現在のプランへのフルアクセスが保たれます。",
     "plan_plus_purchased": "プラン: {{plan}} + 購入済み: {{purchased}}",
     "base_plus_purchased": "基本: {{base}} + 購入済み: {{purchased}}",
-    "pack_ai_desc": "{{quantity}}個の追加AIクレジットがあなたの組織に追加されました",
-    "pack_seats_desc": "{{quantity}}個の追加メンバーシートがあなたの組織に追加されました"
+    "pack_ai_desc": "{{quantity}}個の追加AIクレジットがあなたの組織に追加されました"
   },
   "hub_new": {
     "useType": {

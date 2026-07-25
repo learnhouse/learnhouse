@@ -13,7 +13,7 @@ import logging
 
 import uvicorn
 import sentry_sdk
-from sentry_sdk.integrations.logging import LoggingIntegration
+from sentry_sdk.integrations.logging import LoggingIntegration, ignore_logger
 from fastapi import FastAPI
 from fastapi.middleware.gzip import GZipMiddleware
 
@@ -28,7 +28,27 @@ from src.routers.local_content import router as local_content_router
 
 learnhouse_config: LearnHouseConfig = get_learnhouse_config()
 
+# Health probes fail loudly on purpose — a 503 from /health is how Kubernetes
+# learns to take the pod out of rotation. It is not a second, separate incident
+# to report, and during an outage every probe on every pod files one.
+_HEALTH_TRANSACTIONS = ("/api/v1/health", "/health")
+
+
+def _before_send(event, hint):
+    transaction = event.get("transaction") or ""
+    if transaction in _HEALTH_TRANSACTIONS:
+        return None
+    return event
+
+
 if learnhouse_config.general_config.sentry_config.dsn:
+    # OpenTelemetry logs "Failed to detach context" at ERROR when a span's
+    # context token is reset from a different asyncio context than the one that
+    # created it — which is exactly what streaming AI endpoints do. It is
+    # instrumentation bookkeeping, not an application fault, and the request it
+    # is attached to succeeds.
+    ignore_logger("opentelemetry.context")
+
     sentry_sdk.init(
         dsn=learnhouse_config.general_config.sentry_config.dsn,
         environment=learnhouse_config.general_config.env,
@@ -37,6 +57,7 @@ if learnhouse_config.general_config.sentry_config.dsn:
         traces_sample_rate=1.0 if learnhouse_config.general_config.development_mode else 0.3,
         profile_session_sample_rate=1.0 if learnhouse_config.general_config.development_mode else 0.1,
         profile_lifecycle="trace",
+        before_send=_before_send,
         integrations=[
             LoggingIntegration(
                 level=logging.INFO,
@@ -50,7 +71,7 @@ app = FastAPI(
     description=learnhouse_config.site_description,
     docs_url="/docs" if learnhouse_config.general_config.development_mode else None,
     redoc_url="/redoc" if learnhouse_config.general_config.development_mode else None,
-    version="1.3.2",
+    version="1.3.3",
 )
 
 # Middleware

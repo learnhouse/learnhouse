@@ -332,15 +332,20 @@ def walk_directory(base_path: str):
                 dir_files[dir_rel_path] = set()
             dir_files[dir_rel_path].add(filename)
 
+        # Every root we yield is a storage key prefix, so it stays '/'-joined
+        # regardless of the host os.sep, and a caller-supplied trailing '/'
+        # must not turn into a doubled separator further down.
+        posix_base = base_path.replace(os.sep, '/').rstrip('/')
+
         # Yield root first
         root_files = dir_files.get('', set())
         root_subdirs = sorted([d for d in all_dirs if '/' not in d and d])
         if root_files or root_subdirs:
-            yield base_path, root_subdirs, sorted(root_files)
+            yield posix_base, root_subdirs, sorted(root_files)
 
         # Yield subdirectories
         for dir_rel in sorted(all_dirs):
-            dir_path = os.path.join(base_path, dir_rel)
+            dir_path = f"{posix_base}/{dir_rel}"
             files = sorted(dir_files.get(dir_rel, set()))
             # Find immediate subdirs
             subdirs = sorted([
@@ -353,7 +358,7 @@ def walk_directory(base_path: str):
         # Walk local filesystem
         if os.path.exists(base_path):
             for root, dirs, files in os.walk(base_path):
-                yield root, dirs, files
+                yield root.replace(os.sep, "/"), dirs, files
 
 
 def upload_to_s3(file_path: str, content: bytes) -> bool:

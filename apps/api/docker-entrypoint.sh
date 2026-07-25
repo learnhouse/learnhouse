@@ -72,6 +72,19 @@ HOST=${HOSTNAME:-0.0.0.0}
 
 echo "Starting LearnHouse backend on ${HOST}:${PORT}..."
 
-# Start the FastAPI application
-exec uv run uvicorn app:app --host "$HOST" --port "$PORT" --timeout-keep-alive 600
+# Start the FastAPI application.
+# Calling the venv's uvicorn directly rather than `uv run` keeps a lockfile
+# resolution out of the container start path (measured 574ms vs 54ms).
+# The path is resolved relative to this script rather than hardcoded: the API
+# image has the venv at /app/.venv, the all-in-one OSS image at /app/api/.venv.
+# Falls back to `uv run` if no venv is found next to the script.
+SCRIPT_DIR=$(cd "$(dirname "$0")" && pwd)
+UVICORN="$SCRIPT_DIR/.venv/bin/uvicorn"
+
+if [ -x "$UVICORN" ]; then
+    exec "$UVICORN" app:app --host "$HOST" --port "$PORT" --timeout-keep-alive 600
+else
+    echo "No venv at $UVICORN, falling back to uv run"
+    exec uv run uvicorn app:app --host "$HOST" --port "$PORT" --timeout-keep-alive 600
+fi
 

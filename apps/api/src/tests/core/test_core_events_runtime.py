@@ -2,6 +2,7 @@
 
 import asyncio
 import contextlib
+import inspect
 import logging
 from types import SimpleNamespace
 from unittest.mock import AsyncMock, Mock
@@ -15,7 +16,7 @@ import src.core.events.events as core_events
 import src.core.events.logs as logs_events
 
 
-class _FakeResult:
+class _FakeScalars:
     def __init__(self, row):
         self._row = row
 
@@ -23,164 +24,119 @@ class _FakeResult:
         return self._row
 
 
-class _FakeSession:
+class _FakeResult:
     def __init__(self, row):
-        self.row = row
-        self.closed = False
+        self._row = row
 
-    def exec(self, statement):
+    def scalars(self):
+        return _FakeScalars(self._row)
+
+    def first(self):
+        return self._row
+
+
+class _FakeAsyncSession:
+    """Stands in for a session handed out by ``_async_session_factory``."""
+
+    def __init__(self, row, opened):
+        self.row = row
+        self._opened = opened
+
+    async def execute(self, statement):
         return _FakeResult(self.row)
 
-    def close(self):
-        self.closed = True
-
-    def __enter__(self):
+    async def __aenter__(self):
+        self._opened.append(self)
         return self
 
-    def __exit__(self, exc_type, exc, tb):
-        self.close()
+    async def __aexit__(self, exc_type, exc, tb):
         return False
 
 
+def _patch_session_factory(monkeypatch, row):
+    """Point autoinstall at a fake application session factory.
+
+    The real one is the app-wide engine — the whole point of the module is that
+    it must not build a second one.
+    """
+    opened = []
+    monkeypatch.setattr(
+        autoinstall, "_async_session_factory", lambda: _FakeAsyncSession(row, opened)
+    )
+    return opened
+
+
 @pytest.mark.asyncio
-async def test_auto_install_branches(monkeypatch):
-    create_all_calls = []
+async def test_auto_install_bootstraps_when_no_org_exists(monkeypatch):
     installs = []
     refreshes = []
 
-    fake_config = SimpleNamespace(
-        database_config=SimpleNamespace(sql_connection_string="sqlite:///fake.db")
-    )
+    opened = _patch_session_factory(monkeypatch, None)
 
-    fake_session = SimpleNamespace()
-
-    @contextlib.asynccontextmanager
-    async def fake_async_session_factory():
-        yield fake_session
-
-    class _FakeAsyncSessionmaker:
-        def __call__(self):
-            return fake_async_session_factory()
-
-    class _FakeAsyncEngine:
-        async def dispose(self):
-            pass
-
-    async def fake_install_default_elements(db):
-        refreshes.append(db)
-
-    monkeypatch.setattr(autoinstall, "get_learnhouse_config", lambda: fake_config)
-    monkeypatch.setattr(autoinstall, "create_engine", lambda *args, **kwargs: SimpleNamespace(dispose=lambda: None))
-    monkeypatch.setattr(autoinstall, "create_async_engine", lambda *args, **kwargs: _FakeAsyncEngine())
-    monkeypatch.setattr(autoinstall, "async_sessionmaker", lambda *args, **kwargs: _FakeAsyncSessionmaker())
-    monkeypatch.setattr(
-        autoinstall.SQLModel.metadata,
-        "create_all",
-        lambda engine: create_all_calls.append(engine),
-    )
-    monkeypatch.setattr(autoinstall, "install_default_elements", fake_install_default_elements)
-
-    monkeypatch.setattr(
-        autoinstall,
-        "Session",
-        lambda engine: _FakeSession(None),
-    )
     async def fake_install_async(short=True):
         installs.append(short)
 
+    async def fake_install_default_elements(db):
+        refreshes.append(db)
+
     monkeypatch.setattr(autoinstall, "_install_async", fake_install_async)
+    monkeypatch.setattr(autoinstall, "install_default_elements", fake_install_default_elements)
 
     await autoinstall.auto_install()
 
-    assert create_all_calls and len(create_all_calls) == 1
     assert installs == [True]
-    assert refreshes == []  # bootstrap path returns before refresh
-
-    monkeypatch.setattr(
-        autoinstall,
-        "Session",
-        lambda engine: _FakeSession(SimpleNamespace(slug="anything")),
-    )
-    await autoinstall.auto_install()
-
-    assert installs == [True]
-    assert len(refreshes) == 1  # existing-install path always refreshes
+    assert refreshes == []  # bootstrap path returns before the role refresh
+    assert len(opened) == 1  # only the org lookup
 
 
-@pytest.mark.parametrize(
-    "sync_conn,expected_async_conn",
-    [
-        # autoinstall.py:48-51 (psycopg2 prefix) — must be checked before the
-        # generic postgresql:// branch.
-        (
-            "postgresql+psycopg2://u:p@host:5432/db",
-            "postgresql+asyncpg://u:p@host:5432/db",
-        ),
-        # autoinstall.py:52-55 (generic postgresql:// prefix).
-        (
-            "postgresql://u:p@host:5432/db",
-            "postgresql+asyncpg://u:p@host:5432/db",
-        ),
-        # autoinstall.py:56-59 (postgres:// Heroku/Supabase alias).
-        (
-            "postgres://u:p@host:5432/db",
-            "postgresql+asyncpg://u:p@host:5432/db",
-        ),
-    ],
-)
 @pytest.mark.asyncio
-async def test_auto_install_normalises_async_connection_string(
-    monkeypatch, sync_conn, expected_async_conn
-):
-    captured_async_conn = []
+async def test_auto_install_refreshes_roles_when_org_exists(monkeypatch):
+    installs = []
     refreshes = []
 
-    fake_config = SimpleNamespace(
-        database_config=SimpleNamespace(sql_connection_string=sync_conn)
-    )
+    opened = _patch_session_factory(monkeypatch, SimpleNamespace(slug="anything"))
 
-    fake_session = SimpleNamespace()
-
-    @contextlib.asynccontextmanager
-    async def fake_async_session_factory():
-        yield fake_session
-
-    class _FakeAsyncSessionmaker:
-        def __call__(self):
-            return fake_async_session_factory()
-
-    class _FakeAsyncEngine:
-        async def dispose(self):
-            pass
+    async def fake_install_async(short=True):
+        installs.append(short)
 
     async def fake_install_default_elements(db):
         refreshes.append(db)
 
-    def fake_create_async_engine(conn, *args, **kwargs):
-        captured_async_conn.append(conn)
-        return _FakeAsyncEngine()
-
-    monkeypatch.setattr(autoinstall, "get_learnhouse_config", lambda: fake_config)
-    monkeypatch.setattr(
-        autoinstall, "create_engine", lambda *a, **k: SimpleNamespace(dispose=lambda: None)
-    )
-    monkeypatch.setattr(autoinstall, "create_async_engine", fake_create_async_engine)
-    monkeypatch.setattr(
-        autoinstall, "async_sessionmaker", lambda *a, **k: _FakeAsyncSessionmaker()
-    )
-    monkeypatch.setattr(autoinstall.SQLModel.metadata, "create_all", lambda engine: None)
-    monkeypatch.setattr(
-        autoinstall, "install_default_elements", fake_install_default_elements
-    )
-    # An existing org forces the refresh path (which builds the async engine).
-    monkeypatch.setattr(
-        autoinstall, "Session", lambda engine: _FakeSession(SimpleNamespace(slug="x"))
-    )
+    monkeypatch.setattr(autoinstall, "_install_async", fake_install_async)
+    monkeypatch.setattr(autoinstall, "install_default_elements", fake_install_default_elements)
 
     await autoinstall.auto_install()
 
-    assert captured_async_conn == [expected_async_conn]
+    assert installs == []
     assert len(refreshes) == 1
+    assert len(opened) == 2  # org lookup + role refresh, both on the app engine
+
+
+@pytest.mark.asyncio
+async def test_auto_install_role_refresh_failure_is_non_fatal(monkeypatch):
+    _patch_session_factory(monkeypatch, SimpleNamespace(slug="anything"))
+
+    async def boom(db):
+        raise RuntimeError("db went away mid-refresh")
+
+    monkeypatch.setattr(autoinstall, "install_default_elements", boom)
+
+    # Must not propagate: a failed role refresh cannot be allowed to abort boot.
+    await autoinstall.auto_install()
+
+
+@pytest.mark.asyncio
+async def test_auto_install_does_not_create_its_own_engine():
+    """Regression guard for the duplicate-pool startup crash loop.
+
+    A second engine here doubled each pod's connection count against the
+    Postgres pooler; when the pooler ran out of clients the extra pool raised
+    during startup, the boot aborted, and the restart opened even more
+    connections.
+    """
+    source = inspect.getsource(autoinstall)
+    assert "create_engine" not in source
+    assert "create_async_engine" not in source
 
 
 @pytest.mark.asyncio
@@ -473,3 +429,52 @@ def test_ee_hook_registration_and_paid_access(monkeypatch):
             object(),
         )
     ) is True
+
+
+# --------------------------------------------------------------------------
+# Startup database connect: retry transient, fail fast on permanent
+# --------------------------------------------------------------------------
+
+
+@pytest.mark.asyncio
+async def test_connect_to_db_retries_transient_failure(monkeypatch):
+    import src.core.events.database as db_events
+
+    app = SimpleNamespace()
+    attempts = []
+
+    async def flaky():
+        attempts.append(1)
+        if len(attempts) < 3:
+            raise RuntimeError(
+                "(EMAXCONNSESSION) max clients reached in session mode - "
+                "max clients are limited to pool_size: 15"
+            )
+
+    monkeypatch.setattr(db_events, "_bootstrap_schema", flaky)
+    monkeypatch.setattr(db_events, "_STARTUP_CONNECT_BACKOFF_SECONDS", 0)
+
+    await db_events.connect_to_db(app)
+
+    assert len(attempts) == 3
+    assert app.db_engine is db_events.engine
+
+
+@pytest.mark.asyncio
+async def test_connect_to_db_fails_fast_on_bad_credentials(monkeypatch):
+    import src.core.events.database as db_events
+
+    app = SimpleNamespace()
+    attempts = []
+
+    async def bad_password():
+        attempts.append(1)
+        raise RuntimeError('password authentication failed for user "postgres"')
+
+    monkeypatch.setattr(db_events, "_bootstrap_schema", bad_password)
+
+    with pytest.raises(RuntimeError):
+        await db_events.connect_to_db(app)
+
+    # Retrying a wrong password only delays the real signal.
+    assert len(attempts) == 1

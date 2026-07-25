@@ -33,7 +33,7 @@ from src.services.security.rate_limiting import (
     enforce_batch_size_limit,
     enforce_invite_rate_limit,
 )
-from src.security.org_auth import is_org_member
+from src.security.org_auth import is_org_member, enforce_org_mfa
 from src.security.rbac.constants import ADMIN_ROLE_ID
 from src.services.orgs.invites import send_invite_email
 from src.services.orgs.orgs import get_org_default_language, rbac_check
@@ -124,6 +124,8 @@ async def get_organization_users(
             detail="You must be a member of this organization to view its members",
         )
 
+    # Org-wide two-factor policy, applied after the membership gate.
+    await enforce_org_mfa(acting_user_id, org.id, db_session)
     # Only admins/maintainers can list organization members
     from src.security.superadmin import is_user_superadmin
     if not await is_user_superadmin(acting_user_id, db_session):
@@ -134,6 +136,8 @@ async def get_organization_users(
                 detail="Only administrators and maintainers can view organization members",
             )
 
+        # Org-wide two-factor policy, applied after the membership gate.
+        await enforce_org_mfa(acting_user_id, org.id, db_session)
     # Base query for users in the organization
     base_statement = (
         select(User)
@@ -257,6 +261,22 @@ async def get_organization_users(
                 UserGroupRead.model_validate(ug)
             )
 
+        # Active-user status (current UTC month) for the users on this page.
+        # Display-only enrichment: never let it break the members listing.
+        from src.security.features_utils.active_users import (
+            get_visit_days_for_users,
+            current_utc_year_month,
+            ACTIVE_DAYS_THRESHOLD,
+        )
+        visit_days_map: dict[int, int] = {}
+        try:
+            _year, _month = current_utc_year_month()
+            visit_days_map = await get_visit_days_for_users(
+                org_id, [uid for uid in user_ids if uid is not None], _year, _month, db_session
+            )
+        except Exception:
+            logging.debug("visit_days enrichment unavailable", exc_info=True)
+
         for user in users:
             user_org = user_org_map.get(user.id)
             if not user_org:
@@ -272,11 +292,15 @@ async def get_organization_users(
             role_read = RoleRead.model_validate(role)
             usergroups = user_usergroups_map.get(user.id, [])
 
+            _days = visit_days_map.get(user.id, 0)
+
             org_user = OrganizationUser(
                 user=user_read,
                 role=role_read,
                 usergroups=usergroups,
                 joined_at=user_org.creation_date,
+                visit_days=_days,
+                is_active=_days >= ACTIVE_DAYS_THRESHOLD,
             )
 
             org_users_list.append(org_user)
@@ -287,6 +311,14 @@ async def get_organization_users(
         "page": page,
         "limit": limit,
     }
+
+    # Org-level active-user summary (all members, current UTC month) so the
+    # Users page can show "active this month / included limit (+overage)".
+    try:
+        from src.security.features_utils.active_users import get_active_user_summary
+        result["active_users_summary"] = await get_active_user_summary(org_id, db_session)
+    except Exception:
+        logging.debug("active_users_summary unavailable", exc_info=True)
 
     if in_group_total is not None:
         result["in_group_total"] = in_group_total
@@ -325,6 +357,8 @@ async def export_organization_users_csv(
     if not await is_org_member(export_acting_user_id, org.id, db_session):
         raise HTTPException(status_code=403, detail="You must be a member of this organization")
 
+    # Org-wide two-factor policy, applied after the membership gate.
+    await enforce_org_mfa(export_acting_user_id, org.id, db_session)
     # Only admins/maintainers can export organization members
     from src.security.superadmin import is_user_superadmin
     if not await is_user_superadmin(export_acting_user_id, db_session):
@@ -335,6 +369,8 @@ async def export_organization_users_csv(
                 detail="Only administrators and maintainers can export organization members",
             )
 
+        # Org-wide two-factor policy, applied after the membership gate.
+        await enforce_org_mfa(export_acting_user_id, org.id, db_session)
     base_statement = (
         select(User)
         .join(UserOrganization)
@@ -770,12 +806,20 @@ async def update_user_role(
         if role_change_user and role_change_user.email:
             org_config_stmt = select(OrganizationConfig).where(OrganizationConfig.org_id == org.id)
             org_config = (await db_session.execute(org_config_stmt)).scalars().first()
+            # The org's own host (verified custom domain when it has one), so
+            # the recipient can act on the permissions they were just given.
+            from src.services.email.utils import get_org_signup_base_url
+
+            org_base_url = await get_org_signup_base_url(
+                org.slug, request, db_session=db_session, org_id=org.id
+            )
             send_role_changed_email(
                 email=role_change_user.email,
                 username=role_change_user.username,
                 org_name=org.name,
                 new_role_name=role.name,
                 lang=get_org_default_language(org_config),
+                cta_url=org_base_url.rstrip("/") or "/",
             )
     except Exception:
         logger.warning("Failed to send role change email to user %s", user_id)
@@ -867,7 +911,12 @@ async def invite_batch_users(
         if not _looks_like_email(candidate):
             invalid_results.append({"email": candidate, "status": "invalid_email"})
             continue
-        invite_list.append(candidate)
+        # Key invites on the lower-cased address. Every reader lower-cases before
+        # looking the key up (the OAuth invite gate, signup's invite consumption),
+        # so storing the admin's typed casing made an invite to "Jane.Doe@x.com"
+        # permanently unmatchable: the invitee could never consume it, it stayed
+        # "Pending" in the dashboard forever, and it kept occupying a member seat.
+        invite_list.append(candidate.lower())
 
     if len(invite_list) > INVITE_MAX_BATCH_SIZE:
         raise HTTPException(
@@ -891,9 +940,22 @@ async def invite_batch_users(
     # Count pending invites toward the member limit (not just joined members),
     # so a free org can't queue invitations that would exceed its cap once
     # accepted. Existing pending + new invites are both counted.
-    existing_pending = len(list(
-        r.scan_iter(match=f"invited_user:*:org:{org.org_uuid}", count=1000)
-    ))
+    #
+    # Only the ones still PENDING, though. Accepted invites keep their Redis key
+    # (flipped to pending=False) for the full 60 day TTL, so counting every key
+    # charged an accepted invitee twice — once as a real member and once as a
+    # phantom pending invite — and an org that had filled its seats through
+    # invitations was told it had hit the member limit while well under it.
+    existing_pending = 0
+    for key in r.scan_iter(match=f"invited_user:*:org:{org.org_uuid}", count=1000):
+        try:
+            record = json.loads(r.get(key))
+            if record.get("pending", True):
+                existing_pending += 1
+        except Exception:
+            # Unreadable record: count it, so a corrupt entry can't be used to
+            # slip past the cap.
+            existing_pending += 1
     await check_members_limit_with_pending(
         org.id, existing_pending + len(new_emails), db_session
     )
@@ -1074,6 +1136,11 @@ async def remove_invited_user(
             status_code=500,
             detail="Could not connect to Redis",
         )
+
+    # Invites are keyed on the lower-cased address (see invite_batch_users), so
+    # normalise here too — otherwise an admin who typed the address with any
+    # capitals could never withdraw the invitation they had just sent.
+    email = email.strip().lower()
 
     invited_user = r.get(f"invited_user:{email}:org:{org.org_uuid}")
 

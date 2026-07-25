@@ -663,7 +663,9 @@
       "filter_by_group": "Filter by group",
       "info_title": "User Group Filter",
       "info_description": "Filter courses by user group to see only courses assigned to a specific group. Useful for families or teams sharing the same organization."
-    }
+    },
+    "sign_in_to_see_courses": "Log in to see your courses",
+    "sign_in_to_see_courses_description": "Courses in this academy may only be visible once you are signed in."
   },
   "communities": {
     "title": "Communities",
@@ -1402,7 +1404,13 @@
     "copy_link": "Copy Link",
     "link_copied": "Link copied!",
     "embed": "Embed",
-    "embed_code_copied": "Embed code copied!"
+    "embed_code_copied": "Embed code copied!",
+    "autosave_blocked": "Can't be saved yet",
+    "autosave_retry": "Couldn't save — retrying…",
+    "autosave_unsaved": "Unsaved changes",
+    "autosaved": "Saved",
+    "autosaving": "Saving…",
+    "save_answers": "Save answers"
   },
   "embed": {
     "not_supported_title": "This activity is not supported",
@@ -1415,6 +1423,7 @@
     "submit_assignment_confirm": "Are you sure you want to submit your assignment for grading? Once submitted, you will not be able to make any changes.",
     "submit_assignment_title": "Submit your assignment for grading",
     "submit_for_grading": "Submit for grading",
+    "submitting": "Submitting…",
     "grading_in_progress": "Grading in progress",
     "graded": "Graded",
     "task_breakdown": "Task breakdown",
@@ -1456,7 +1465,11 @@
       "half": "Half",
       "zero": "Zero"
     },
-    "task_feedback_placeholder": "Note for this task (saved with grade)"
+    "task_feedback_placeholder": "Note for this task (saved with grade)",
+    "no_task_submission_to_grade": "This student has not submitted a file for this task yet.",
+    "past_due": "Deadline passed",
+    "past_due_description": "This assignment was due on {{date}}. Answers can no longer be saved or submitted for grading.",
+    "past_due_title": "Deadline passed"
   },
   "certificate": {
     "certificate": "Certificate",
@@ -1483,7 +1496,8 @@
     "continuing_education": "Continuing Education",
     "workshop_attendance": "Workshop Attendance",
     "specialization": "Specialization",
-    "dedication_message": "Your dedication and hard work have paid off. You've mastered all the content in this course."
+    "dedication_message": "Your dedication and hard work have paid off. You've mastered all the content in this course.",
+    "download_failed": "Failed to generate PDF. Please try again."
   },
   "search": {
     "search_placeholder": "Search courses, users, folders...",
@@ -3374,12 +3388,17 @@
           "roles": "Roles",
           "signups": "Signups & Invite Codes",
           "add": "Invite Members",
-          "audit_logs": "Audit Logs"
+          "audit_logs": "Audit Logs",
+          "analytics": "Analytics"
         },
         "pages": {
           "users": {
             "title": "Users",
             "subtitle": "Manage your organization users, assign roles and permissions"
+          },
+          "analytics": {
+            "title": "Student Analytics",
+            "subtitle": "A complete, exportable record of each student's learning activity"
           },
           "signups": {
             "title": "Signups & Invite Codes",
@@ -3406,6 +3425,110 @@
           "title": "Desktop Only",
           "message1": "This page is only accessible from a desktop device.",
           "message2": "Please switch to a desktop to view and manage user settings."
+        }
+      },
+      "analytics": {
+        "button": "Analytics",
+        "view_analytics": "View student analytics",
+        "open_full_page": "Open full analytics page",
+        "compare": "Compare analytics",
+        "compare_students": "Compare students",
+        "export": "Export",
+        "export_selected": "Export analytics ({{count}})",
+        "exporting": "Exporting…",
+        "failed_load": "Failed to load the student dossier.",
+        "back_to_students": "Back to students",
+        "no_behavioral": "No behavioral data (analytics may be unconfigured for this window).",
+        "ranges": {
+          "d30": "30 days",
+          "d90": "90 days",
+          "y1": "1 year"
+        },
+        "kpi": {
+          "courses": "Courses",
+          "completed": "{{count}} completed",
+          "avg_progress": "Avg progress",
+          "time_spent": "Time spent",
+          "assignments": "Assignments",
+          "avg_grade": "avg {{grade}}",
+          "certificates": "Certificates",
+          "connections": "Connections",
+          "last": "last {{date}}"
+        },
+        "tabs": {
+          "connections": "Connections",
+          "courses": "Courses",
+          "assignments": "Assignments",
+          "code": "Code",
+          "community": "Community",
+          "certificates": "Certificates",
+          "behavior": "Behavior"
+        },
+        "identity": {
+          "verified": "Verified",
+          "unverified": "Unverified",
+          "via": "via {{method}}"
+        },
+        "connections": {
+          "title": "Connections",
+          "empty": "No recorded connections yet."
+        },
+        "courses": {
+          "title": "Course progress",
+          "empty": "Not enrolled in any course.",
+          "activities": "{{done}}/{{total}} activities",
+          "enrolled": "Enrolled {{date}}"
+        },
+        "assignments": {
+          "title": "Assignments",
+          "empty": "No assignment submissions.",
+          "attempt": "attempt {{number}}",
+          "feedback": "Feedback:"
+        },
+        "code": {
+          "title": "Code exercises",
+          "empty": "No code submissions.",
+          "activity": "Activity",
+          "result": "Result",
+          "tests": "Tests",
+          "time": "Time",
+          "when": "When",
+          "passed": "Passed",
+          "failed": "Failed"
+        },
+        "community": {
+          "title": "Community participation",
+          "empty": "No community activity.",
+          "discussions": "Discussions",
+          "comments": "Comments"
+        },
+        "certificates": {
+          "title": "Certificates earned",
+          "empty": "No certificates earned."
+        },
+        "behavior": {
+          "title": "Behavioral analytics",
+          "time_by_course": "Time spent by course",
+          "searches": "Searches"
+        },
+        "status": {
+          "completed": "completed",
+          "in_progress": "in progress",
+          "paused": "paused",
+          "cancelled": "cancelled",
+          "graded": "graded",
+          "submitted": "submitted",
+          "pending": "pending",
+          "late": "late",
+          "not_submitted": "not submitted"
+        },
+        "comparison": {
+          "student": "Student",
+          "enrolled": "Enrolled",
+          "completed": "Completed",
+          "certificates": "Certificates",
+          "last_connection": "Last connection",
+          "view": "View"
         }
       },
       "active_users": {
@@ -3444,7 +3567,9 @@
             "message": "Are you sure you want remove this user from the organization?",
             "button": "Remove User"
           }
-        }
+        },
+        "beyond_included": "{{count}} beyond your plan",
+        "beyond_included_tooltip": "These members are past the number your plan includes. Only the ones active this month are counted. See billing for details."
       },
       "signups": {
         "title": "Join method",
@@ -3901,7 +4026,8 @@
           "drafts": "Drafts",
           "auto_graded": "Auto-graded only",
           "hide_empty": "Hide empty courses"
-        }
+        },
+        "new_assignment": "New Assignment"
       },
       "detail": {
         "title": "Assignment Tools",
@@ -3977,7 +4103,8 @@
           "task_save_error": "Error saving task, please retry later.",
           "task_updated": "Task updated successfully",
           "task_update_error": "Error updating task, please retry later.",
-          "reminder": "When editing/adding your tasks, make sure to Unpublish your Assignment to avoid any issues with students, you can Publish it again when you are ready."
+          "reminder": "When editing/adding your tasks, make sure to Unpublish your Assignment to avoid any issues with students, you can Publish it again when you are ready.",
+          "no_submission_to_grade": "This student has no submission for this task yet, there is nothing to grade."
         },
         "task_editor": {
           "general": {
@@ -3997,7 +4124,9 @@
             "auth_required_submit": "Authentication required. Please sign in to submit your task.",
             "hint_optional": "Hint (optional)",
             "paste_blocked": "Pasting is disabled for this assignment",
-            "paste_blocked_hint": "Pasting is disabled — type your answer directly."
+            "paste_blocked_hint": "Pasting is disabled — type your answer directly.",
+            "upload_locked_graded": "This submission has been graded — your file can no longer be changed.",
+            "upload_locked_submitted": "You have submitted this assignment — your file can no longer be changed."
           },
           "short_answer": {
             "prompt_label": "Question prompt",
@@ -4054,15 +4183,24 @@
             "must_pass_hint": "All visible tests must pass before you can save.",
             "show_solution_label": "Reveal solution after submit",
             "show_solution_description": "Once the student has saved their work, show the teacher's reference solution as a collapsible panel.",
-            "reference_solution_label": "Reference solution"
+            "reference_solution_label": "Reference solution",
+            "locked_graded_hint": "This submission has been graded — your code is read-only.",
+            "locked_submitted_hint": "You have submitted this assignment — your code is read-only.",
+            "no_runnable_tests": "This task has no tests you can run — your code is checked at grading time."
           }
+        },
+        "generate_ai": "Generate tasks with AI",
+        "generate_ai_modal": {
+          "description": "Describe what you want and preview tasks grounded on the course content before adding them.",
+          "title": "Generate tasks with AI"
         }
       },
       "submissions": {
         "status": {
           "late": "Late",
           "submitted": "Submitted",
-          "graded": "Graded"
+          "graded": "Graded",
+          "pending": "In progress"
         },
         "filters": {
           "all": "All"
@@ -4118,7 +4256,8 @@
         "toasts": {
           "reject_success": "Assignment rejected successfully",
           "finalize_success": "Assignment graded and activity marked as complete"
-        }
+        },
+        "truncated_warning": "Only the first {{max}} submissions are shown. Some submissions are not listed here."
       },
       "analytics": {
         "loading": "Loading analytics...",
@@ -4266,6 +4405,18 @@
             "error": "Failed to create assignment"
           }
         }
+      },
+      "create_flow": {
+        "create_course": "Create a course",
+        "no_chapters_desc": "Add a chapter in the course editor, then create an assignment inside it.",
+        "no_chapters_title": "This course has no chapters yet",
+        "no_courses_desc": "Assignments live inside a course chapter. Create your first course, then come back to add an assignment.",
+        "no_courses_title": "Create a course first",
+        "open_editor": "Open course editor",
+        "pick_chapter": "Choose the chapter to place this assignment in.",
+        "pick_course": "Choose the course this assignment belongs to.",
+        "title": "New Assignment",
+        "untitled_chapter": "Untitled chapter"
       }
     },
     "search": {
@@ -4362,6 +4513,10 @@
         "users_audit_logs": {
           "description": "Organization activity log",
           "keywords": "audit, logs, history, security, activity"
+        },
+        "users_analytics": {
+          "description": "Per-student learning activity & audit",
+          "keywords": "analytics, audit, student, progress, activity, export, legal, compliance"
         },
         "org_branding": {
           "description": "Logo, colors, and visual identity",
@@ -4652,7 +4807,8 @@
         "paste_directly": "Paste any embed URL directly",
         "how_to_embed": "How to embed {{name}}",
         "paste_code": "Paste embed code (iframe, embed script, etc.)",
-        "paste_iframe": "Paste iframe or embed code from any platform"
+        "paste_iframe": "Paste iframe or embed code from any platform",
+        "remove_embed": "Remove embed"
       },
       "web_preview_block": {
         "website_preview": "Website Preview",
@@ -5354,7 +5510,8 @@
     "accessDenied": "Unable to access this course",
     "backToCourses": "Back to Courses",
     "loadError": "This course could not be found or there was an error loading it.",
-    "noPermission": "You do not have permission to view this course."
+    "noPermission": "You do not have permission to view this course.",
+    "finish_course": "Finish course"
   },
   "pagination": {
     "next": "Next",
@@ -5431,7 +5588,7 @@
     "admin_seats": "Admin seats",
     "ai_credits": "AI Credits",
     "addons": "Add-ons",
-    "addons_subtitle": "Purchase additional AI credits or member seats as monthly subscriptions.",
+    "addons_subtitle": "Purchase additional AI credits as monthly subscriptions.",
     "active_subscriptions": "Active subscriptions",
     "credits": "credits",
     "seats": "seats",
@@ -5504,8 +5661,7 @@
     "scheduled_desc": "Your plan will switch to {{plan}} at the end of your current billing cycle. You'll keep full access to your current plan until then.",
     "plan_plus_purchased": "Plan: {{plan}} + Purchased: {{purchased}}",
     "base_plus_purchased": "Base: {{base}} + Purchased: {{purchased}}",
-    "pack_ai_desc": "{{quantity}} additional AI credits added to your organization",
-    "pack_seats_desc": "{{quantity}} additional member seats for your organization"
+    "pack_ai_desc": "{{quantity}} additional AI credits added to your organization"
   },
   "hub_new": {
     "useType": {

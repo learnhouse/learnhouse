@@ -9,7 +9,6 @@ from src.security.features_utils.usage import (
     _get_actual_usage,
     _get_actual_admin_seat_count,
     _get_redis_client,
-    get_purchased_member_seats,
 )
 from src.core.deployment_mode import get_deployment_mode
 from src.security.features_utils.plans import (
@@ -111,7 +110,9 @@ async def get_org_usage_and_limits(
     courses_limit = courses_resolved["limit"]
     members_limit = members_resolved["limit"]
     members_plan_limit = 0 if mode != 'saas' else get_plan_limit(org_plan, "members")
-    members_purchased = 0 if mode != 'saas' else get_purchased_member_seats(org_id)
+    # Purchasable member-seat packs were retired in favour of active-user
+    # overage, so there is no purchased-seat capacity any more.
+    members_purchased = 0
     # admin_seats is not a resolvable feature in resolve_feature() (it has no
     # plan feature config), so resolve_feature would return limit=0 -> wrongly
     # reported as "unlimited". Read the real per-plan limit directly.
@@ -127,6 +128,17 @@ async def get_org_usage_and_limits(
             return False
         return usage >= limit
 
+    # Active-member overage (current UTC month). Billed dimension beyond the
+    # included member limit: active users (seen >=2 distinct days) at $1 each.
+    from src.security.features_utils.active_users import (
+        calculate_active_user_overage,
+        current_utc_year_month,
+    )
+    _ay, _am = current_utc_year_month()
+    active_overage = await calculate_active_user_overage(
+        org_id, _ay, _am, members_plan_limit if mode == 'saas' else 0, db_session
+    )
+
     response = {
         "org_id": org_id,
         "plan": org_plan,
@@ -137,6 +149,12 @@ async def get_org_usage_and_limits(
                 "limit": courses_limit if courses_limit > 0 else "unlimited",
                 "remaining": calc_remaining(courses_usage, courses_limit),
                 "limit_reached": is_limit_reached(courses_usage, courses_limit),
+            },
+            "active_members": {
+                "usage": active_overage["active_users"],
+                "limit": members_plan_limit if members_plan_limit > 0 else "unlimited",
+                "overage_units": active_overage["overage_units"],
+                "overage_usd": active_overage["overage_usd"],
             },
             "members": {
                 "usage": members_usage,

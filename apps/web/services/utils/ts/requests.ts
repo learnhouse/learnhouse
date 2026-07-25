@@ -164,22 +164,37 @@ type CustomResponseTyping = {
 export const getResponseMetadata = async (
   fetch_result: any
 ): Promise<CustomResponseTyping> => {
-  const json = await fetch_result.json()
-  if (fetch_result.status === 200) {
-    return {
-      success: true,
-      data: json,
-      status: fetch_result.status,
-      HTTPmessage: fetch_result.statusText,
-    }
-  } else {
-    return {
-      success: false,
-      data: json,
-      status: fetch_result.status,
-      HTTPmessage: fetch_result.statusText,
-    }
+  // Not every response carries JSON: a 204, an empty body, or an HTML error
+  // page from a proxy all make .json() throw. That rejection used to surface as
+  // an unrelated crash in whatever component was awaiting the call.
+  let json: any = null
+  try {
+    json = await fetch_result.json()
+  } catch (_e) {
+    json = null
   }
+  const ok = fetch_result.ok ?? fetch_result.status === 200
+  return {
+    success: ok,
+    data: json,
+    status: fetch_result.status,
+    HTTPmessage: fetch_result.statusText,
+  }
+}
+
+/**
+ * Coerce an API result into an array before rendering it as a list.
+ *
+ * `getResponseMetadata` returns the parsed body under `data` whether the call
+ * succeeded or not, so an error response puts an object (`{detail: ...}`) where
+ * a list was expected. `res?.data ?? []` happily passes that object through and
+ * the component dies on `.map is not a function` / `.filter is not a function`
+ * — a blank page for what is really just a failed request.
+ */
+export const asArray = <T = any>(value: any): T[] => {
+  if (Array.isArray(value)) return value as T[]
+  if (Array.isArray(value?.data)) return value.data as T[]
+  return []
 }
 
 export const revalidateTags = async (tags: string[], orgslug: string) => {

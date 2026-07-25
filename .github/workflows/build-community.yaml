@@ -1,20 +1,45 @@
 name: Build Community Images
 
+# The image only ever contains apps/web, apps/collab and apps/api (see
+# Dockerfile). A README edit or a CLI-only change cannot alter the image, so it
+# does not need one. Deliberately a deny-list rather than an allow-list:
+# anything new at the repo root still triggers a build. The list is spelled out
+# twice because GitHub Actions does not support YAML anchors — keep both copies
+# in sync.
 on:
   push:
     branches:
       - prod
       - dev
       - main
+    paths-ignore:
+      - '**.md'
+      - 'docs/**'
+      - 'apps/cli/**'
+      - 'apps/e2e/**'
+      - '.github/ISSUE_TEMPLATE/**'
+      - 'LICENSE'
   pull_request:
     branches:
       - prod
       - dev
       - main
+    paths-ignore:
+      - '**.md'
+      - 'docs/**'
+      - 'apps/cli/**'
+      - 'apps/e2e/**'
+      - '.github/ISSUE_TEMPLATE/**'
+      - 'LICENSE'
 
 permissions:
   contents: read
   packages: write
+
+# See api-lint.yaml — one live run per PR, dev runs always finish.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 env:
   REGISTRY: ghcr.io

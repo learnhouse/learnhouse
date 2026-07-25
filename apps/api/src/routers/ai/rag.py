@@ -21,7 +21,7 @@ from src.db.organizations import Organization
 from src.db.users import PublicUser, AnonymousUser, APITokenUser
 from src.security.auth import get_current_user, get_authenticated_user, resolve_acting_user_id
 from src.security.features_utils.usage import reserve_ai_credit
-from src.security.org_auth import is_org_member, require_org_admin
+from src.security.org_auth import is_org_member, require_org_admin, enforce_org_mfa
 from src.services.ai.base import (
     get_chat_session_history,
     save_message_to_history,
@@ -207,6 +207,8 @@ async def api_rag_chat(
             status_code=403,
             detail="You are not a member of this organization",
         )
+    # Org-wide two-factor policy, applied after the membership gate.
+    await enforce_org_mfa(resolve_acting_user_id(current_user), org_id, db_session)
 
     # Check if copilot is enabled for this org
     org_config = (await db_session.execute(

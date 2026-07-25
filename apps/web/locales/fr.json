@@ -223,7 +223,12 @@
     "delete_organization_warning": "Cette action supprime définitivement {{name}} et toutes ses données. Elle est irréversible.",
     "delete_organization_confirm_label": "Saisissez {{slug}} pour confirmer",
     "deleting": "Suppression…",
-    "retry": "Réessayer"
+    "retry": "Réessayer",
+    "leave_organization": "Quitter l’organisation",
+    "leave_organization_title": "Quitter l’organisation ?",
+    "leave_organization_desc": "Vous perdrez l’accès à {{org}} et serez retiré de ses membres. Vous pourrez la rejoindre plus tard sur invitation.",
+    "leave_organization_error": "Impossible de quitter cette organisation. Veuillez réessayer.",
+    "leaving": "Départ…"
   },
   "banner": {
     "viewing_as_guest": "Vous consultez {{name}} en tant qu'invité.",
@@ -654,7 +659,13 @@
     "quit_course_confirm": "Êtes-vous sûr de vouloir quitter ce cours ? Vous perdrez toute votre progression.",
     "quit_course_title": "Quitter le cours ?",
     "courses_load_error": "Échec du chargement des cours. Veuillez réessayer.",
-    "view_all_courses": "Voir tous les cours"
+    "view_all_courses": "Voir tous les cours",
+    "first_chapter_default_name": "Premier chapitre",
+    "paste_from_clipboard": "Coller depuis le presse-papiers",
+    "no_image_in_clipboard": "Aucune image trouvée dans le presse-papiers",
+    "clipboard_read_error": "Impossible de lire le presse-papiers",
+    "sign_in_to_see_courses": "Connectez-vous pour voir vos cours",
+    "sign_in_to_see_courses_description": "Les cours de cette académie peuvent n’être visibles qu’après connexion."
   },
   "communities": {
     "title": "Communautés",
@@ -965,13 +976,20 @@
     "embed": "Intégrer",
     "embed_code_copied": "Code d'intégration copié !",
     "link_copied": "Lien copié !",
-    "share": "Partager"
+    "share": "Partager",
+    "autosave_blocked": "Impossible d’enregistrer pour le moment",
+    "autosave_retry": "Impossible d’enregistrer — nouvel essai…",
+    "autosave_unsaved": "Modifications non enregistrées",
+    "autosaved": "Enregistré",
+    "autosaving": "Enregistrement…",
+    "save_answers": "Enregistrer les réponses"
   },
   "assignments": {
     "submit_assignment": "Rendre le devoir",
     "submit_assignment_confirm": "Une fois envoyé, vous ne pourrez plus modifier votre devoir. Confirmer ?",
     "submit_assignment_title": "Envoyer pour correction",
     "submit_for_grading": "Soumettre",
+    "submitting": "Envoi en cours…",
     "grading_in_progress": "Correction en cours",
     "graded": "Noté",
     "assignment_submitted_success": "Devoir envoyé",
@@ -1013,7 +1031,11 @@
     "retry_assignment_last": "C'est votre dernière tentative — faites en sorte que ça compte.",
     "retry_assignment_success": "Votre travail a été réinitialisé — réessayez.",
     "retry_assignment_failed": "Impossible de réinitialiser votre soumission. Veuillez réessayer.",
-    "retry_no_attempts_left": "Plus de tentatives"
+    "retry_no_attempts_left": "Plus de tentatives",
+    "no_task_submission_to_grade": "Cet apprenant n’a pas encore envoyé de fichier pour cette tâche.",
+    "past_due": "Date limite dépassée",
+    "past_due_description": "La date limite de ce devoir était le {{date}}. Les réponses ne peuvent plus être enregistrées ni envoyées pour évaluation.",
+    "past_due_title": "Date limite dépassée"
   },
   "certificate": {
     "certificate": "Certificat",
@@ -1040,7 +1062,8 @@
     "continuing_education": "Formation continue",
     "workshop_attendance": "Présence atelier",
     "specialization": "Spécialisation",
-    "dedication_message": "Félicitations pour votre travail acharné. Vous maîtrisez désormais ce sujet."
+    "dedication_message": "Félicitations pour votre travail acharné. Vous maîtrisez désormais ce sujet.",
+    "download_failed": "Impossible de générer le PDF. Veuillez réessayer."
   },
   "search": {
     "search_placeholder": "Rechercher cours, membres...",
@@ -1125,7 +1148,9 @@
       "description": "Supprimez définitivement votre compte et révoquez votre accès. Cette action est irréversible.",
       "warning": "Cette action supprime définitivement votre compte et toutes les données associées. Elle est irréversible.",
       "confirm_label": "Saisissez {{username}} pour confirmer",
-      "deleting": "Suppression…"
+      "deleting": "Suppression…",
+      "zone_subtitle": "Supprimez définitivement votre compte. Cette action est irréversible.",
+      "zone_body": "Cette action supprime votre compte et vos accès. Toute organisation dont vous êtes le seul administrateur — ainsi que tous ses cours et contenus — sera également supprimée. Les organisations avec d’autres administrateurs seront conservées ; vous en serez simplement retiré."
     }
   },
   "user": {
@@ -1347,6 +1372,12 @@
           "save_error": "Erreur lors de la mise à jour du profil"
         },
         "unknown_section": "Section inconnue"
+      },
+      "security": {
+        "current_session_title": "Session actuelle",
+        "current_session_subtitle": "L’appareil depuis lequel vous êtes connecté actuellement.",
+        "this_device": "Cet appareil",
+        "sign_out": "Se déconnecter"
       }
     },
     "sign_out": "Déconnexion",
@@ -2082,7 +2113,8 @@
             "dynamic_page": "Page dynamique",
             "scorm": "SCORM",
             "markdown": "Markdown",
-            "embed": "Intégration"
+            "embed": "Intégration",
+            "resource": "Ressource"
           },
           "toasts": {
             "deleting": "Suppression de l'activité...",
@@ -2956,6 +2988,32 @@
           "message2": "Veuillez passer à un ordinateur de bureau pour afficher et gérer les paramètres utilisateur."
         }
       },
+      "analytics": {
+        "button": "Analytiques",
+        "view_analytics": "Voir les analytiques de l'étudiant",
+        "open_full_page": "Ouvrir la page complète des analytiques",
+        "compare": "Comparer les analytiques",
+        "compare_students": "Comparer les étudiants",
+        "export": "Exporter",
+        "export_selected": "Exporter les analytiques ({{count}})",
+        "exporting": "Exportation…",
+        "failed_load": "Échec du chargement du dossier de l'étudiant.",
+        "back_to_students": "Retour aux étudiants",
+        "no_behavioral": "Aucune donnée comportementale (les analytiques ne sont peut-être pas configurées pour cette période).",
+        "ranges": { "d30": "30 jours", "d90": "90 jours", "y1": "1 an" },
+        "kpi": { "courses": "Cours", "completed": "{{count}} terminés", "avg_progress": "Progression moyenne", "time_spent": "Temps passé", "assignments": "Devoirs", "avg_grade": "moy. {{grade}}", "certificates": "Certificats", "connections": "Connexions", "last": "dernière {{date}}" },
+        "tabs": { "connections": "Connexions", "courses": "Cours", "assignments": "Devoirs", "code": "Code", "community": "Communauté", "certificates": "Certificats", "behavior": "Comportement" },
+        "identity": { "verified": "Vérifié", "unverified": "Non vérifié", "via": "via {{method}}" },
+        "connections": { "title": "Connexions", "empty": "Aucune connexion enregistrée pour le moment." },
+        "courses": { "title": "Progression du cours", "empty": "Inscrit à aucun cours.", "activities": "{{done}}/{{total}} activités", "enrolled": "Inscrit le {{date}}" },
+        "assignments": { "title": "Devoirs", "empty": "Aucune soumission de devoir.", "attempt": "tentative {{number}}", "feedback": "Retour :" },
+        "code": { "title": "Exercices de code", "empty": "Aucune soumission de code.", "activity": "Activité", "result": "Résultat", "tests": "Tests", "time": "Temps", "when": "Quand", "passed": "Réussi", "failed": "Échoué" },
+        "community": { "title": "Participation à la communauté", "empty": "Aucune activité communautaire.", "discussions": "Discussions", "comments": "Commentaires" },
+        "certificates": { "title": "Certificats obtenus", "empty": "Aucun certificat obtenu." },
+        "behavior": { "title": "Analytiques comportementales", "time_by_course": "Temps passé par cours", "searches": "Recherches" },
+        "status": { "completed": "terminé", "in_progress": "en cours", "paused": "en pause", "cancelled": "annulé", "graded": "noté", "submitted": "soumis", "pending": "en attente", "late": "en retard", "not_submitted": "non soumis" },
+        "comparison": { "student": "Étudiant", "enrolled": "Inscrit", "completed": "Terminé", "certificates": "Certificats", "last_connection": "Dernière connexion", "view": "Voir" }
+      },
       "active_users": {
         "title": "Utilisateurs actifs",
         "subtitle": "Gérez les utilisateurs de votre organisation, assignez des rôles et des permissions",
@@ -3449,7 +3507,8 @@
           "drafts": "Brouillons",
           "auto_graded": "Auto-notés uniquement",
           "hide_empty": "Masquer les cours vides"
-        }
+        },
+        "new_assignment": "Nouveau devoir"
       },
       "detail": {
         "title": "Outils de devoir",
@@ -3525,7 +3584,8 @@
           "task_save_error": "Erreur lors de l'enregistrement de la tâche, veuillez réessayer plus tard.",
           "task_updated": "Tâche mise à jour avec succès",
           "task_update_error": "Erreur lors de la mise à jour de la tâche, veuillez réessayer plus tard.",
-          "reminder": "Lors de l'édition/ajout de vos tâches, assurez-vous de Dépublier votre devoir pour éviter tout problème avec les étudiants, vous pouvez le Publier à nouveau lorsque vous êtes prêt."
+          "reminder": "Lors de l'édition/ajout de vos tâches, assurez-vous de Dépublier votre devoir pour éviter tout problème avec les étudiants, vous pouvez le Publier à nouveau lorsque vous êtes prêt.",
+          "no_submission_to_grade": "Cet apprenant n’a pas encore envoyé de travail pour cette tâche, il n’y a rien à évaluer."
         },
         "task_editor": {
           "general": {
@@ -3545,7 +3605,9 @@
             "auth_required_submit": "Authentification requise. Veuillez vous connecter pour soumettre votre tâche.",
             "hint_optional": "Indice (optionnel)",
             "paste_blocked": "Le collage est désactivé pour ce devoir",
-            "paste_blocked_hint": "Le collage est désactivé — tapez votre réponse directement."
+            "paste_blocked_hint": "Le collage est désactivé — tapez votre réponse directement.",
+            "upload_locked_graded": "Ce travail a été évalué — votre fichier ne peut plus être modifié.",
+            "upload_locked_submitted": "Vous avez envoyé ce devoir — votre fichier ne peut plus être modifié."
           },
           "code": {
             "student_behavior_label": "Comportement de l’étudiant",
@@ -3561,7 +3623,10 @@
             "must_pass_hint": "Tous les tests visibles doivent passer avant d’enregistrer.",
             "show_solution_label": "Révéler la solution après soumission",
             "show_solution_description": "Une fois que l’étudiant a enregistré son travail, afficher la solution de référence de l’enseignant.",
-            "reference_solution_label": "Solution de référence"
+            "reference_solution_label": "Solution de référence",
+            "locked_graded_hint": "Ce travail a été évalué — votre code est en lecture seule.",
+            "locked_submitted_hint": "Vous avez envoyé ce devoir — votre code est en lecture seule.",
+            "no_runnable_tests": "Cette tâche ne contient aucun test exécutable — votre code sera vérifié lors de l’évaluation."
           },
           "short_answer": {
             "prompt_label": "Énoncé de la question",
@@ -3604,13 +3669,19 @@
             "correct": "Correct",
             "incorrect": "Pas tout à fait — réessayez"
           }
+        },
+        "generate_ai": "Générer des tâches avec l’AI",
+        "generate_ai_modal": {
+          "description": "Décrivez ce que vous souhaitez et prévisualisez des tâches basées sur le contenu du cours avant de les ajouter.",
+          "title": "Générer des tâches avec l’AI"
         }
       },
       "submissions": {
         "status": {
           "late": "En retard",
           "submitted": "Soumis",
-          "graded": "Noté"
+          "graded": "Noté",
+          "pending": "En cours"
         },
         "submission_label": "Soumission",
         "evaluate": "Évaluer",
@@ -3666,7 +3737,8 @@
           "optional": "facultatif",
           "placeholder": "Écrivez un commentaire sur l’ensemble de la soumission. L’étudiant le verra à côté de sa note.",
           "hint": "Laissez vide pour conserver tout commentaire précédent."
-        }
+        },
+        "truncated_warning": "Seuls les {{max}} premiers travaux sont affichés. Certains travaux ne figurent pas ici."
       },
       "analytics": {
         "loading": "Chargement des analyses...",
@@ -3810,9 +3882,22 @@
           },
           "toasts": {
             "creating": "Création du devoir...",
-            "success": "Devoir créé avec succès"
+            "success": "Devoir créé avec succès",
+            "error": "Impossible de créer le devoir"
           }
         }
+      },
+      "create_flow": {
+        "create_course": "Créer un cours",
+        "no_chapters_desc": "Ajoutez un chapitre dans l’éditeur de cours, puis créez un devoir à l’intérieur.",
+        "no_chapters_title": "Ce cours n’a pas encore de chapitres",
+        "no_courses_desc": "Les devoirs se trouvent dans un chapitre de cours. Créez votre premier cours, puis revenez ajouter un devoir.",
+        "no_courses_title": "Créez d’abord un cours",
+        "open_editor": "Ouvrir l’éditeur de cours",
+        "pick_chapter": "Choisissez le chapitre dans lequel placer ce devoir.",
+        "pick_course": "Choisissez le cours auquel appartient ce devoir.",
+        "title": "Nouveau devoir",
+        "untitled_chapter": "Chapitre sans titre"
       }
     },
     "search": {
@@ -3983,6 +4068,9 @@
           "keywords": "api, jetons, accès, programmation, clés"
         }
       }
+    },
+    "developers": {
+      "breadcrumb": "Développeurs"
     }
   },
   "editor": {
@@ -5160,7 +5248,8 @@
     "accessDenied": "Impossible d'accéder à ce cours",
     "backToCourses": "Retour aux cours",
     "loadError": "Ce cours est introuvable ou une erreur est survenue lors de son chargement.",
-    "noPermission": "Vous n'avez pas la permission de voir ce cours."
+    "noPermission": "Vous n'avez pas la permission de voir ce cours.",
+    "finish_course": "Terminer le cours"
   },
   "pagination": {
     "next": "Suivant",
@@ -5278,7 +5367,18 @@
     "thumbnail_error": "Couldn't upload the cover image",
     "open_resource": "Open",
     "replace_cover": "Replace",
-    "cover_hint": "PNG, JPG, WEBP"
+    "cover_hint": "PNG, JPG, WEBP",
+    "sort": {
+      "sort_by": "Trier par",
+      "name_asc": "Nom (A–Z)",
+      "name_desc": "Nom (Z–A)",
+      "newest": "Plus récent d’abord",
+      "oldest": "Plus ancien d’abord",
+      "manual": "Manuel",
+      "drag_to_reorder": "Faites glisser pour réorganiser",
+      "sort_error": "Impossible de mettre à jour l’ordre de tri",
+      "reorder_error": "Impossible d’enregistrer le nouvel ordre"
+    }
   },
   "media": {
     "media": "Media",
@@ -5390,7 +5490,6 @@
     "admin_seats": "Sièges admin",
     "ai_credits": "Crédits IA",
     "addons": "Modules complémentaires",
-    "addons_subtitle": "Achetez des crédits IA ou des sièges membres supplémentaires sous forme d’abonnements mensuels.",
     "active_subscriptions": "Abonnements actifs",
     "credits": "crédits",
     "seats": "sièges",
@@ -5463,8 +5562,7 @@
     "scheduled_desc": "Votre plan passera à {{plan}} à la fin de votre cycle de facturation actuel. Vous conserverez l'accès complet à votre plan actuel jusqu'à ce moment.",
     "plan_plus_purchased": "Plan : {{plan}} + Acheté : {{purchased}}",
     "base_plus_purchased": "Base : {{base}} + Acheté : {{purchased}}",
-    "pack_ai_desc": "{{quantity}} crédits AI supplémentaires ajoutés à votre organisation",
-    "pack_seats_desc": "{{quantity}} sièges membres supplémentaires pour votre organisation"
+    "pack_ai_desc": "{{quantity}} crédits AI supplémentaires ajoutés à votre organisation"
   },
   "hub_new": {
     "useType": {

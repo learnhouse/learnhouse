@@ -378,10 +378,10 @@ function GradingTypeSelector({ value, onChange, translationPrefix }: { value: st
             key={gt.value}
             type="button"
             onClick={() => onChange(gt.value)}
-            className={`relative flex flex-col items-center text-center p-3 rounded-xl border-2 transition-all cursor-pointer ${
+            className={`relative flex flex-col items-center text-center p-3 rounded-xl nice-shadow bg-white transition-all cursor-pointer ${
               isSelected
-                ? `${gt.selectedBorder} ${gt.selectedBg}`
-                : 'border-gray-100 bg-white hover:border-gray-200 hover:bg-gray-50/50'
+                ? `${gt.selectedBg} ring-2 ${gt.selectedBorder.replace('border-', 'ring-')}`
+                : 'hover:bg-gray-50/60'
             }`}
           >
             {isSelected && (

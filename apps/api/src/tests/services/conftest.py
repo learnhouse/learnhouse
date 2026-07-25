@@ -132,3 +132,17 @@ async def task_submission(db, assignment_task, regular_user):
     await db.commit()
     await db.refresh(ts)
     return ts
+
+
+@pytest.fixture(autouse=True)
+def _no_outbound_email():
+    """Never let a service test reach a real mail provider.
+
+    Membership and account flows send mail as a side effect; without this an
+    unpatched test would issue a live Resend/SMTP call. Tests that assert on
+    the mail itself patch the same target locally, which still wins.
+    """
+    from unittest.mock import patch
+
+    with patch("src.services.users.emails.send_email", return_value=True):
+        yield

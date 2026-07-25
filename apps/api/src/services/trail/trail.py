@@ -18,6 +18,8 @@ from src.services.courses.certifications import (
 )
 from src.services.analytics.analytics import track
 from src.services.analytics import events as analytics_events
+from src.services.audit.audit import record_audit_event
+from src.db.user_audit_events import UserAuditEventType
 from src.services.webhooks.dispatch import dispatch_webhooks
 from src.security.rbac import check_resource_access, AccessAction
 
@@ -306,6 +308,17 @@ async def add_activity_to_trail(
                 "activity_type": activity.activity_type if activity.activity_type else "",
             },
         )
+        await record_audit_event(
+            event_type=UserAuditEventType.ACTIVITY_COMPLETED,
+            user_id=user.id,
+            org_id=course.org_id,
+            target_uuid=activity_uuid,
+            metadata={
+                "course_uuid": course.course_uuid,
+                "course_name": course.name,
+                "activity_type": activity.activity_type or "",
+            },
+        )
         await dispatch_webhooks(
             event_name=analytics_events.ACTIVITY_COMPLETED,
             org_id=course.org_id,
@@ -353,6 +366,13 @@ async def add_activity_to_trail(
             org_id=course.org_id,
             user_id=user.id,
             properties={"course_uuid": course.course_uuid},
+        )
+        await record_audit_event(
+            event_type=UserAuditEventType.COURSE_COMPLETED,
+            user_id=user.id,
+            org_id=course.org_id,
+            target_uuid=course.course_uuid,
+            metadata={"course_name": course.name},
         )
         await dispatch_webhooks(
             event_name=analytics_events.COURSE_COMPLETED,
@@ -499,6 +519,13 @@ async def add_course_to_trail(
         org_id=course.org_id,
         user_id=user.id,
         properties={"course_uuid": course.course_uuid},
+    )
+    await record_audit_event(
+        event_type=UserAuditEventType.COURSE_ENROLLED,
+        user_id=user.id,
+        org_id=course.org_id,
+        target_uuid=course.course_uuid,
+        metadata={"course_name": course.name},
     )
     await dispatch_webhooks(
         event_name=analytics_events.COURSE_ENROLLED,

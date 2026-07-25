@@ -26,9 +26,13 @@ const NavigationButtons = memo(({
   nextActivity: any, 
   currentIndex: number, 
   allActivities: any[], 
-  navigateToActivity: (activity: any) => void 
+  navigateToActivity: (_activity: any) => void
 }) => {
   const { t } = useTranslation();
+  // On the final activity, Next leads to the course-end/certificate screen
+  // rather than being a dead button.
+  const isLastActivity =
+    allActivities.length > 0 && currentIndex === allActivities.length - 1;
   return (
     <div className="flex items-center space-x-2 sm:space-x-3">
       <button
@@ -57,13 +61,23 @@ const NavigationButtons = memo(({
       <button
         onClick={() => navigateToActivity(nextActivity)}
         className={`flex items-center space-x-1 sm:space-x-2 py-1.5 px-1.5 sm:px-2 rounded-md transition-all duration-200`}
-        disabled={!nextActivity}
-        title={nextActivity ? `${t('common.next')}: ${nextActivity.name}` : t('activities.no_next_activity')}
+        disabled={!nextActivity && !isLastActivity}
+        title={
+          nextActivity
+            ? `${t('common.next')}: ${nextActivity.name}`
+            : isLastActivity
+              ? t('course.finish_course', 'Finish course')
+              : t('activities.no_next_activity')
+        }
       >
         <div className="flex flex-col items-end hidden sm:flex">
           <span className={`text-xs ${nextActivity ? 'text-gray-500' : 'text-gray-500'}`}>{t('common.next')}</span>
           <span className="text-sm font-medium text-right truncate max-w-[100px] sm:max-w-[150px]">
-            {nextActivity ? nextActivity.name : t('activities.no_next_activity')}
+            {nextActivity
+              ? nextActivity.name
+              : isLastActivity
+                ? t('course.finish_course', 'Finish course')
+                : t('activities.no_next_activity')}
           </span>
         </div>
         <ChevronRight size={16} className="shrink-0 sm:w-5 sm:h-5" />
@@ -133,10 +147,19 @@ export default function FixedActivitySecondaryBar(props: FixedActivitySecondaryB
   const prevActivity = currentIndex > 0 ? allActivities[currentIndex - 1] : null;
   const nextActivity = currentIndex < allActivities.length - 1 ? allActivities[currentIndex + 1] : null;
   
+  // Past the last activity lies the course-end screen with the certificate.
+  // Next used to be disabled there, leaving the trophy icon as the only way in.
+  const isLastActivity = currentIndex >= 0 && !nextActivity;
+
   const navigateToActivity = (activity: any) => {
-    if (!activity) return;
-    
     const cleanCourseUuid = props.course.course_uuid?.replace('course_', '');
+    if (!activity) {
+      if (isLastActivity) {
+        router.push(getUriWithOrg(props.orgslug, '') + `/course/${cleanCourseUuid}/activity/end`);
+      }
+      return;
+    }
+
     router.push(getUriWithOrg(props.orgslug, '') + `/course/${cleanCourseUuid}/activity/${activity.cleanUuid}`);
   };
 

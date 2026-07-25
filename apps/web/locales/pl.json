@@ -223,7 +223,12 @@
     "delete_organization_warning": "Spowoduje to trwałe usunięcie {{name}} i wszystkich jej danych. Tej operacji nie można cofnąć.",
     "delete_organization_confirm_label": "Wpisz {{slug}}, aby potwierdzić",
     "deleting": "Usuwanie…",
-    "retry": "Ponów"
+    "retry": "Ponów",
+    "leave_organization": "Opuść organizację",
+    "leave_organization_title": "Opuścić organizację?",
+    "leave_organization_desc": "Utracisz dostęp do {{org}} i zostaniesz usunięty(-a) z jej członków. Możesz dołączyć ponownie później, jeśli otrzymasz zaproszenie.",
+    "leave_organization_error": "Nie udało się opuścić tej organizacji. Spróbuj ponownie.",
+    "leaving": "Opuszczanie…"
   },
   "banner": {
     "viewing_as_guest": "Przeglądasz {{name}} jako gość.",
@@ -676,7 +681,13 @@
     "quit_course_confirm": "Czy na pewno chcesz opuścić ten kurs? Utracisz cały postęp.",
     "quit_course_title": "Opuścić kurs?",
     "courses_load_error": "Nie udało się załadować kursów. Spróbuj ponownie.",
-    "view_all_courses": "Zobacz wszystkie kursy"
+    "view_all_courses": "Zobacz wszystkie kursy",
+    "first_chapter_default_name": "Pierwszy rozdział",
+    "paste_from_clipboard": "Wklej ze schowka",
+    "no_image_in_clipboard": "Nie znaleziono obrazu w schowku",
+    "clipboard_read_error": "Nie udało się odczytać schowka",
+    "sign_in_to_see_courses": "Zaloguj się, aby zobaczyć swoje kursy",
+    "sign_in_to_see_courses_description": "Kursy w tej akademii mogą być widoczne dopiero po zalogowaniu."
   },
   "communities": {
     "title": "Społeczności",
@@ -987,13 +998,20 @@
     "embed": "Osadź",
     "embed_code_copied": "Kod osadzania skopiowany!",
     "link_copied": "Link skopiowany!",
-    "share": "Udostępnij"
+    "share": "Udostępnij",
+    "autosave_blocked": "Nie można jeszcze zapisać",
+    "autosave_retry": "Nie udało się zapisać — ponawianie…",
+    "autosave_unsaved": "Niezapisane zmiany",
+    "autosaved": "Zapisano",
+    "autosaving": "Zapisywanie…",
+    "save_answers": "Zapisz odpowiedzi"
   },
   "assignments": {
     "submit_assignment": "Wyślij zadanie",
     "submit_assignment_confirm": "Czy na pewno chcesz wysłać zadanie do oceny? Po wysłaniu nie będziesz mógł wprowadzać zmian.",
     "submit_assignment_title": "Wyślij swoje zadanie do oceny",
     "submit_for_grading": "Wyślij do oceny",
+    "submitting": "Wysyłanie…",
     "grading_in_progress": "Trwa ocenianie",
     "graded": "Oceniono",
     "assignment_submitted_success": "Zadanie wysłane do oceny",
@@ -1035,7 +1053,11 @@
     "retry_assignment_last": "To Twoja ostatnia próba — wykorzystaj ją dobrze.",
     "retry_assignment_success": "Twoja praca została zresetowana — spróbuj jeszcze raz.",
     "retry_assignment_failed": "Nie można zresetować Twojego zgłoszenia. Spróbuj ponownie.",
-    "retry_no_attempts_left": "Brak pozostałych prób"
+    "retry_no_attempts_left": "Brak pozostałych prób",
+    "no_task_submission_to_grade": "Ten uczeń nie przesłał jeszcze pliku do tego zadania.",
+    "past_due": "Termin minął",
+    "past_due_description": "Termin wykonania tego zadania minął {{date}}. Nie można już zapisywać odpowiedzi ani przesyłać ich do oceny.",
+    "past_due_title": "Termin minął"
   },
   "certificate": {
     "certificate": "Certyfikat",
@@ -1062,7 +1084,8 @@
     "continuing_education": "Edukacja ustawiczna",
     "workshop_attendance": "Uczestnictwo w warsztatach",
     "specialization": "Specjalizacja",
-    "dedication_message": "Twoje zaangażowanie i ciężka praca przyniosły efekty. Opanowałeś całą zawartość tego kursu."
+    "dedication_message": "Twoje zaangażowanie i ciężka praca przyniosły efekty. Opanowałeś całą zawartość tego kursu.",
+    "download_failed": "Nie udało się wygenerować pliku PDF. Spróbuj ponownie."
   },
   "search": {
     "search_placeholder": "Szukaj kursów, użytkowników, kolekcji...",
@@ -1147,7 +1170,9 @@
       "description": "Trwale usuń swoje konto i odbierz sobie dostęp. Tej operacji nie można cofnąć.",
       "warning": "Spowoduje to trwałe usunięcie konta i wszystkich powiązanych danych. Tej operacji nie można cofnąć.",
       "confirm_label": "Wpisz {{username}}, aby potwierdzić",
-      "deleting": "Usuwanie…"
+      "deleting": "Usuwanie…",
+      "zone_subtitle": "Trwale usuń swoje konto. Tej operacji nie można cofnąć.",
+      "zone_body": "Spowoduje to usunięcie Twojego konta i dostępu. Zostaną też usunięte wszystkie organizacje, w których jesteś jedynym administratorem, wraz ze wszystkimi kursami i treściami. Organizacje z innymi administratorami zostaną zachowane — po prostu zostaniesz z nich usunięty(-a)."
     }
   },
   "user": {
@@ -1369,6 +1394,12 @@
           "save_error": "Błąd podczas aktualizacji profilu"
         },
         "unknown_section": "Nieznana sekcja"
+      },
+      "security": {
+        "current_session_title": "Bieżąca sesja",
+        "current_session_subtitle": "Urządzenie, z którego jesteś obecnie zalogowany(-a).",
+        "this_device": "To urządzenie",
+        "sign_out": "Wyloguj się"
       }
     },
     "sign_out": "Wyloguj się",
@@ -2104,7 +2135,8 @@
             "dynamic_page": "Strona dynamiczna",
             "scorm": "SCORM",
             "markdown": "Markdown",
-            "embed": "Osadzenie"
+            "embed": "Osadzenie",
+            "resource": "Materiał"
           },
           "toasts": {
             "deleting": "Usuwanie aktywności...",
@@ -2980,6 +3012,32 @@
           "message2": "Przełącz się na komputer, aby przeglądać i zarządzać ustawieniami użytkowników."
         }
       },
+      "analytics": {
+        "button": "Analityka",
+        "view_analytics": "Zobacz analitykę studenta",
+        "open_full_page": "Otwórz pełną stronę analityki",
+        "compare": "Porównaj analitykę",
+        "compare_students": "Porównaj studentów",
+        "export": "Eksportuj",
+        "export_selected": "Eksportuj analitykę ({{count}})",
+        "exporting": "Eksportowanie…",
+        "failed_load": "Nie udało się załadować teczki studenta.",
+        "back_to_students": "Powrót do studentów",
+        "no_behavioral": "Brak danych behawioralnych (analityka może być nieskonfigurowana dla tego okresu).",
+        "ranges": { "d30": "30 dni", "d90": "90 dni", "y1": "1 rok" },
+        "kpi": { "courses": "Kursy", "completed": "{{count}} ukończonych", "avg_progress": "Śr. postęp", "time_spent": "Spędzony czas", "assignments": "Zadania", "avg_grade": "śr. {{grade}}", "certificates": "Certyfikaty", "connections": "Połączenia", "last": "ostatnie {{date}}" },
+        "tabs": { "connections": "Połączenia", "courses": "Kursy", "assignments": "Zadania", "code": "Kod", "community": "Społeczność", "certificates": "Certyfikaty", "behavior": "Zachowanie" },
+        "identity": { "verified": "Zweryfikowany", "unverified": "Niezweryfikowany", "via": "przez {{method}}" },
+        "connections": { "title": "Połączenia", "empty": "Brak zarejestrowanych połączeń." },
+        "courses": { "title": "Postęp kursu", "empty": "Nie zapisano na żaden kurs.", "activities": "{{done}}/{{total}} aktywności", "enrolled": "Zapisano {{date}}" },
+        "assignments": { "title": "Zadania", "empty": "Brak przesłanych zadań.", "attempt": "próba {{number}}", "feedback": "Opinia:" },
+        "code": { "title": "Ćwiczenia z kodu", "empty": "Brak przesłanego kodu.", "activity": "Aktywność", "result": "Wynik", "tests": "Testy", "time": "Czas", "when": "Kiedy", "passed": "Zaliczone", "failed": "Niezaliczone" },
+        "community": { "title": "Udział w społeczności", "empty": "Brak aktywności w społeczności.", "discussions": "Dyskusje", "comments": "Komentarze" },
+        "certificates": { "title": "Zdobyte certyfikaty", "empty": "Brak zdobytych certyfikatów." },
+        "behavior": { "title": "Analityka behawioralna", "time_by_course": "Czas spędzony według kursu", "searches": "Wyszukiwania" },
+        "status": { "completed": "ukończone", "in_progress": "w toku", "paused": "wstrzymane", "cancelled": "anulowane", "graded": "ocenione", "submitted": "przesłane", "pending": "oczekujące", "late": "spóźnione", "not_submitted": "nieprzesłane" },
+        "comparison": { "student": "Student", "enrolled": "Zapisano", "completed": "Ukończono", "certificates": "Certyfikaty", "last_connection": "Ostatnie połączenie", "view": "Zobacz" }
+      },
       "active_users": {
         "title": "Aktywni użytkownicy",
         "subtitle": "Zarządzaj użytkownikami organizacji oraz przypisuj im role i uprawnienia",
@@ -3473,7 +3531,8 @@
           "drafts": "Wersje robocze",
           "auto_graded": "Tylko auto-oceniane",
           "hide_empty": "Ukryj puste kursy"
-        }
+        },
+        "new_assignment": "Nowe zadanie"
       },
       "detail": {
         "title": "Narzędzia zadań",
@@ -3549,7 +3608,8 @@
           "task_save_error": "Wystąpił błąd podczas zapisywania zadania składowego. Spróbuj ponownie później.",
           "task_updated": "Zadanie składowe zostało pomyślnie zaktualizowane",
           "task_update_error": "Wystąpił błąd podczas aktualizacji zadania składowego. Spróbuj ponownie później.",
-          "reminder": "Pamiętaj o wycofaniu publikacji zadania podczas edycji lub dodawania zadań składowych, aby uniknąć problemów z uczniami. Możesz opublikować je ponownie, gdy będziesz gotowy."
+          "reminder": "Pamiętaj o wycofaniu publikacji zadania podczas edycji lub dodawania zadań składowych, aby uniknąć problemów z uczniami. Możesz opublikować je ponownie, gdy będziesz gotowy.",
+          "no_submission_to_grade": "Ten uczeń nie przesłał jeszcze rozwiązania tego zadania, więc nie ma czego oceniać."
         },
         "task_editor": {
           "general": {
@@ -3569,7 +3629,9 @@
             "auth_required_submit": "Wymagana autoryzacja. Zaloguj się, aby przesłać zadanie składowe.",
             "hint_optional": "Wskazówka (opcjonalnie)",
             "paste_blocked": "Wklejanie jest wyłączone dla tego zadania",
-            "paste_blocked_hint": "Wklejanie jest wyłączone — wpisz swoją odpowiedź bezpośrednio."
+            "paste_blocked_hint": "Wklejanie jest wyłączone — wpisz swoją odpowiedź bezpośrednio.",
+            "upload_locked_graded": "To rozwiązanie zostało ocenione — nie możesz już zmienić pliku.",
+            "upload_locked_submitted": "Przesłano to zadanie — nie możesz już zmienić pliku."
           },
           "code": {
             "student_behavior_label": "Zachowanie ucznia",
@@ -3585,7 +3647,10 @@
             "must_pass_hint": "Wszystkie widoczne testy muszą przejść przed zapisaniem.",
             "show_solution_label": "Ujawnij rozwiązanie po wysłaniu",
             "show_solution_description": "Gdy uczeń zapisze swoją pracę, pokaż rozwiązanie referencyjne nauczyciela.",
-            "reference_solution_label": "Rozwiązanie referencyjne"
+            "reference_solution_label": "Rozwiązanie referencyjne",
+            "locked_graded_hint": "To rozwiązanie zostało ocenione — kod jest tylko do odczytu.",
+            "locked_submitted_hint": "Przesłano to zadanie — kod jest tylko do odczytu.",
+            "no_runnable_tests": "To zadanie nie ma testów, które możesz uruchomić — kod zostanie sprawdzony podczas oceny."
           },
           "short_answer": {
             "prompt_label": "Treść pytania",
@@ -3628,13 +3693,19 @@
             "correct": "Poprawnie",
             "incorrect": "Nie do końca — spróbuj ponownie"
           }
+        },
+        "generate_ai": "Generuj zadania z AI",
+        "generate_ai_modal": {
+          "description": "Opisz, czego potrzebujesz, i wyświetl podgląd zadań opartych na treści kursu przed ich dodaniem.",
+          "title": "Generuj zadania z AI"
         }
       },
       "submissions": {
         "status": {
           "late": "Spóźnione",
           "submitted": "Przesłane",
-          "graded": "Ocenione"
+          "graded": "Ocenione",
+          "pending": "W trakcie"
         },
         "submission_label": "Przesłana praca",
         "evaluate": "Oceń",
@@ -3690,7 +3761,8 @@
           "optional": "opcjonalne",
           "placeholder": "Napisz komentarz o całym zgłoszeniu. Uczeń zobaczy go obok swojej oceny.",
           "hint": "Zostaw puste, aby zachować poprzednią opinię bez zmian."
-        }
+        },
+        "truncated_warning": "Wyświetlane jest tylko pierwsze {{max}} przesłanych rozwiązań. Niektóre rozwiązania nie są tutaj widoczne."
       },
       "analytics": {
         "loading": "Ładowanie analityki...",
@@ -3834,9 +3906,22 @@
           },
           "toasts": {
             "creating": "Tworzenie zadania...",
-            "success": "Zadanie zostało pomyślnie utworzone"
+            "success": "Zadanie zostało pomyślnie utworzone",
+            "error": "Nie udało się utworzyć zadania"
           }
         }
+      },
+      "create_flow": {
+        "create_course": "Utwórz kurs",
+        "no_chapters_desc": "Dodaj rozdział w edytorze kursu, a następnie utwórz w nim zadanie.",
+        "no_chapters_title": "Ten kurs nie ma jeszcze rozdziałów",
+        "no_courses_desc": "Zadania znajdują się w rozdziałach kursu. Utwórz pierwszy kurs, a potem wróć, aby dodać zadanie.",
+        "no_courses_title": "Najpierw utwórz kurs",
+        "open_editor": "Otwórz edytor kursu",
+        "pick_chapter": "Wybierz rozdział, w którym umieścić to zadanie.",
+        "pick_course": "Wybierz kurs, do którego należy to zadanie.",
+        "title": "Nowe zadanie",
+        "untitled_chapter": "Rozdział bez tytułu"
       }
     },
     "search": {
@@ -4007,6 +4092,9 @@
           "keywords": "api, tokeny, dostęp, programistyczny, klucze"
         }
       }
+    },
+    "developers": {
+      "breadcrumb": "Programiści"
     }
   },
   "editor": {
@@ -5184,7 +5272,8 @@
     "accessDenied": "Nie można uzyskać dostępu do tego kursu",
     "backToCourses": "Powrót do kursów",
     "loadError": "Nie można znaleźć tego kursu lub wystąpił błąd podczas jego ładowania.",
-    "noPermission": "Nie masz uprawnień do wyświetlenia tego kursu."
+    "noPermission": "Nie masz uprawnień do wyświetlenia tego kursu.",
+    "finish_course": "Ukończ kurs"
   },
   "pagination": {
     "next": "Następna",
@@ -5302,7 +5391,18 @@
     "thumbnail_error": "Couldn't upload the cover image",
     "open_resource": "Open",
     "replace_cover": "Replace",
-    "cover_hint": "PNG, JPG, WEBP"
+    "cover_hint": "PNG, JPG, WEBP",
+    "sort": {
+      "sort_by": "Sortuj według",
+      "name_asc": "Nazwa (A–Z)",
+      "name_desc": "Nazwa (Z–A)",
+      "newest": "Od najnowszych",
+      "oldest": "Od najstarszych",
+      "manual": "Ręcznie",
+      "drag_to_reorder": "Przeciągnij, aby zmienić kolejność",
+      "sort_error": "Nie udało się zaktualizować kolejności sortowania",
+      "reorder_error": "Nie udało się zapisać nowej kolejności"
+    }
   },
   "media": {
     "media": "Media",
@@ -5414,7 +5514,6 @@
     "admin_seats": "Miejsca administratorów",
     "ai_credits": "Kredyty AI",
     "addons": "Dodatki",
-    "addons_subtitle": "Kupuj dodatkowe kredyty AI lub miejsca dla członków jako subskrypcje miesięczne.",
     "active_subscriptions": "Aktywne subskrypcje",
     "credits": "kredyty",
     "seats": "miejsca",
@@ -5487,8 +5586,7 @@
     "scheduled_desc": "Twój plan zmieni się na {{plan}} na koniec cyklu rozliczeniowego. Zachowasz pełny dostęp do obecnego planu do tego czasu.",
     "plan_plus_purchased": "Plan: {{plan}} + Zakupione: {{purchased}}",
     "base_plus_purchased": "Bazowe: {{base}} + Zakupione: {{purchased}}",
-    "pack_ai_desc": "{{quantity}} dodatkowych punktów AI dodanych do Twojej organizacji",
-    "pack_seats_desc": "{{quantity}} dodatkowych miejsc dla członków w Twojej organizacji"
+    "pack_ai_desc": "{{quantity}} dodatkowych punktów AI dodanych do Twojej organizacji"
   },
   "hub_new": {
     "useType": {

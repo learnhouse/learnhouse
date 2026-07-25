@@ -42,6 +42,9 @@ JOB_TIMEOUT_SECONDS = 40 * 60
 CONSUMER_POLL_SECONDS = 2
 STALE_PROCESSING_SECONDS = 20 * 60
 REAPER_INTERVAL_SECONDS = 5 * 60
+# How many consecutive background failures (queue polls, reaper passes) it takes
+# before we treat the condition as a real outage rather than a blip.
+CONSECUTIVE_POLL_FAILURES_BEFORE_ERROR = 3
 
 _consumer_task: Optional["asyncio.Task"] = None
 _reaper_task: Optional["asyncio.Task"] = None
@@ -312,15 +315,23 @@ async def _consumer_loop(poll_seconds: int = CONSUMER_POLL_SECONDS) -> None:
             _inflight.discard(uuid)
             sem.release()
 
+    # A single failed poll means nothing — Redis read timeouts happen on an idle
+    # connection and the next poll reconnects. Only a *run* of failures means
+    # Redis is actually down.
+    poll_failures = 0
+
     while True:
         await sem.acquire()
         try:
             item = await asyncio.to_thread(client.lpop, REDIS_QUEUE_KEY)
+            poll_failures = 0
         except asyncio.CancelledError:
             sem.release()
             raise
         except Exception as e:
-            logger.error("Captions consumer: poll error: %s", e)
+            poll_failures += 1
+            log = logger.error if poll_failures >= CONSECUTIVE_POLL_FAILURES_BEFORE_ERROR else logger.warning
+            log("Captions consumer: poll error (%s in a row): %s", poll_failures, e)
             sem.release()
             await asyncio.sleep(poll_seconds)
             continue
@@ -373,14 +384,18 @@ async def _requeue_stale_processing(stale_after: int = STALE_PROCESSING_SECONDS)
 
 
 async def _reaper_loop(interval: int = REAPER_INTERVAL_SECONDS) -> None:
+    failures = 0
     while True:
         await asyncio.sleep(interval)
         try:
             await _requeue_stale_processing()
+            failures = 0
         except asyncio.CancelledError:
             raise
         except Exception as e:
-            logger.error("Captions reaper error: %s", e)
+            failures += 1
+            log = logger.error if failures >= CONSECUTIVE_POLL_FAILURES_BEFORE_ERROR else logger.warning
+            log("Captions reaper error (%s in a row): %s", failures, e)
 
 
 def start_consumer() -> None:

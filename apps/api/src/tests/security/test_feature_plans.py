@@ -36,7 +36,7 @@ class TestFeaturePlans:
             "enterprise",
         ]
         assert FEATURE_PLAN_REQUIREMENTS["boards"] == "personal"
-        assert PLAN_LIMITS["standard"]["members"] == 500
+        assert PLAN_LIMITS["standard"]["members"] == 200
         assert AI_CREDIT_LIMITS["enterprise"] == -1
         assert PLAN_FEATURE_CONFIGS["free"]["cloud"]["plan"] == "free"
 
@@ -70,8 +70,8 @@ class TestFeaturePlans:
     @pytest.mark.parametrize(
         ("mode", "plan", "feature", "expected"),
         [
-            ("saas", "standard", "members", 500),
-            ("saas", "pro", "ai", 3000),
+            ("saas", "standard", "members", 200),
+            ("saas", "pro", "ai", 2000),
             ("saas", "missing", "ai", 0),
             ("saas", "free", "missing", 0),
             ("ee", "standard", "members", 0),
@@ -102,7 +102,7 @@ class TestFeaturePlans:
     @pytest.mark.parametrize(
         ("mode", "plan", "feature", "expected"),
         [
-            ("saas", "standard", "members", 500),
+            ("saas", "standard", "members", 200),
             ("saas", "pro", "admin_seats", 10),
             ("saas", "missing", "members", 10),
             ("saas", "free", "missing", 0),

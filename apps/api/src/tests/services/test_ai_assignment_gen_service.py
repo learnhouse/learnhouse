@@ -122,6 +122,29 @@ async def test_generate_assignment_plan_filters_disallowed_types():
     save.assert_called_once()
 
 
+async def test_generate_assignment_plan_caps_tasks_to_requested_count():
+    # An over-producing model must not create more tasks than requested.
+    def _two():
+        return AIAssignmentPlan(
+            title="A", description="d", grading_type="PERCENTAGE",
+            tasks=[
+                AITask(title="t1", description="d1", assignment_type="SHORT_ANSWER",
+                       short_answer=AIShortAnswerContents(prompt="P", correct_answers=["a"])),
+                AITask(title="t2", description="d2", assignment_type="SHORT_ANSWER",
+                       short_answer=AIShortAnswerContents(prompt="P2", correct_answers=["b"])),
+            ],
+        )
+    with patch.object(ag, "_course_context", new=AsyncMock(return_value="ctx")), \
+         patch.object(ag, "get_chat_session_history", return_value={"aichat_uuid": "s1", "message_history": []}), \
+         patch.object(ag, "generate", new=AsyncMock(return_value=_two())), \
+         patch.object(ag, "save_message_to_history"):
+        plan, _ = await ag.generate_assignment_plan(
+            org_id=1, course_id=2, prompt="p", model_name="m", db_session=AsyncMock(),
+            num_tasks=1, allowed_task_types=["SHORT_ANSWER"],
+        )
+    assert len(plan.tasks) == 1
+
+
 async def test_generate_assignment_plan_clamps_num_tasks():
     captured = {}
 

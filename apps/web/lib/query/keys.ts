@@ -92,6 +92,10 @@ export const queryKeys = {
     coursePipe: (orgId: number, courseUuid: string, pipeName: string, params: string) => ['analytics', orgId, 'course', courseUuid, 'pipe', pipeName, params] as const,
     courseDetail: (orgId: number, courseUuid: string, queryName: string, params: string) => ['analytics', orgId, 'course', courseUuid, 'detail', queryName, params] as const,
   },
+  audit: {
+    user: (orgId: number, userId: number, days: number) => ['audit', orgId, 'user', userId, days] as const,
+    summary: (orgId: number, userIds: string, days: number) => ['audit', orgId, 'summary', userIds, days] as const,
+  },
   courseUsergroups: {
     resources: (courseUuid: string, orgId: number) => ['courseUsergroups', courseUuid, orgId] as const,
   },

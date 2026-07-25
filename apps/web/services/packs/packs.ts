@@ -26,7 +26,6 @@ export interface OrgPacksResponse {
 
 export interface PackSummaryResponse {
   ai_credits: number
-  member_seats: number
   active_pack_count: number
 }
 

@@ -10,6 +10,12 @@ on:
   pull_request:
     paths:
       - "apps/api/**"
+
+# See api-lint.yaml — one live run per PR, dev runs always finish.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
 jobs:
   test:
     runs-on: ubuntu-latest
@@ -17,14 +23,19 @@ jobs:
       - uses: actions/checkout@v7
 
       - name: Set up Python
-        uses: actions/setup-python@v6
+        uses: actions/setup-python@v7
         with:
           python-version: "3.14"
 
       - name: Install uv
-        uses: astral-sh/setup-uv@v8.3.2
+        uses: astral-sh/setup-uv@v9.0.0
         with:
           version: latest
+          # Resolving and downloading the API's wheels from scratch on every
+          # run is pure repetition — the lockfile is what decides the answer,
+          # so key the cache on it.
+          enable-cache: true
+          cache-dependency-glob: "apps/api/uv.lock"
 
       - name: Install ffmpeg
         # Required by the video faststart / HLS transcode tests (they skip

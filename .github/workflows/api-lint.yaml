@@ -10,6 +10,13 @@ on:
       - "apps/api/**"
 permissions:
   contents: read
+
+# Only the newest commit on a PR needs a result. Runs on dev are never
+# cancelled — those are the ones whose result we keep.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
 jobs:
   ruff:
     runs-on: ubuntu-latest
@@ -20,3 +27,8 @@ jobs:
         uses: chartboost/ruff-action@v1
         with:
           src: "./apps/api"
+          # Pin the ruff version. Without it the action's auto-detection can
+          # resolve to an empty version and fall back to a default rule set that
+          # floods the whole tree with thousands of unrelated findings. Pinning
+          # keeps lint deterministic and matched to the project config.
+          version: "0.15.9"

@@ -1,7 +1,7 @@
 'use client'
 import { Breadcrumbs } from '@components/Objects/Breadcrumbs/Breadcrumbs'
 import { getUriWithOrg } from '@services/config/config'
-import { TextIcon, LucideIcon, LayoutDashboardIcon, CodeIcon, Palette, School, BarChart3, Menu as MenuIcon, AlertTriangle } from 'lucide-react'
+import { TextIcon, LucideIcon, LayoutDashboardIcon, CodeIcon, Palette, School, BarChart3, Menu as MenuIcon, AlertTriangle, ShieldCheck } from 'lucide-react'
 import React, { useEffect, use } from 'react';
 import { useRouter } from 'next/navigation'
 import { motion } from 'motion/react'
@@ -13,6 +13,7 @@ import OrgEditOther from '@components/Dashboard/Pages/Org/OrgEditOther/OrgEditOt
 import OrgEditAI from '@components/Dashboard/Pages/Org/OrgEditAI/OrgEditAI'
 import OrgEditUsage from '@components/Dashboard/Pages/Org/OrgEditUsage/OrgEditUsage'
 import OrgEditMenu from '@components/Dashboard/Pages/Org/OrgEditMenu/OrgEditMenu'
+import OrgEditSecurity from '@components/Dashboard/Pages/Org/OrgEditSecurity/OrgEditSecurity'
 import OrgEditDangerZone from '@components/Dashboard/Pages/Org/OrgEditDangerZone/OrgEditDangerZone'
 import { useTranslation } from 'react-i18next'
 import { PlanLevel } from '@services/plans/plans'
@@ -49,6 +50,7 @@ const getSettingTabs = (t: any): TabConfig[] => [
   { id: 'landing', label: t('dashboard.organization.settings.tabs.landing'), icon: LayoutDashboardIcon },
   { id: 'ai', label: t('dashboard.organization.settings.tabs.ai') || 'AI', customIcon: '/learnhouse_ai_simple_colored.png', requiredPlan: 'standard' },
   { id: 'usage', label: t('dashboard.organization.settings.tabs.usage') || 'Usage', icon: BarChart3 },
+  { id: 'security', label: t('dashboard.organization.settings.tabs.security', { defaultValue: 'Security' }), icon: ShieldCheck },
   { id: 'other', label: t('dashboard.organization.settings.tabs.other'), icon: CodeIcon },
   { id: 'danger', label: t('dashboard.organization.settings.tabs.danger') || 'Danger Zone', icon: AlertTriangle },
 ]
@@ -86,6 +88,9 @@ function OrgPage(props: { params: Promise<OrgParams> }) {
     } else if (params.subpage == 'usage') {
       setH1Label(t('dashboard.organization.settings.pages.usage.title') || 'Usage')
       setH2Label(t('dashboard.organization.settings.pages.usage.subtitle') || 'Monitor your organization\'s resource usage and plan limits')
+    } else if (params.subpage == 'security') {
+      setH1Label(t('dashboard.organization.settings.pages.security.title', { defaultValue: 'Security' }))
+      setH2Label(t('dashboard.organization.settings.pages.security.subtitle', { defaultValue: 'Require two-factor authentication for members of this organization' }))
     } else if (params.subpage == 'other') {
       setH1Label(t('dashboard.organization.settings.pages.other.title'))
       setH2Label(t('dashboard.organization.settings.pages.other.subtitle'))
@@ -150,6 +155,7 @@ function OrgPage(props: { params: Promise<OrgParams> }) {
         {params.subpage == 'landing' ? <OrgEditLanding /> : ''}
         {params.subpage == 'ai' ? <OrgEditAI /> : ''}
         {params.subpage == 'usage' ? <OrgEditUsage /> : ''}
+        {params.subpage == 'security' ? <OrgEditSecurity /> : ''}
         {params.subpage == 'other' ? <OrgEditOther /> : ''}
         {params.subpage == 'danger' ? <OrgEditDangerZone /> : ''}
       </motion.div>

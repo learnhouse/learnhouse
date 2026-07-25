@@ -1,3 +1,5 @@
+import asyncio
+import logging
 from typing import Optional, Union
 from sqlmodel import select
 from sqlmodel.ext.asyncio.session import AsyncSession
@@ -13,6 +15,27 @@ from jwt.exceptions import PyJWTError
 from datetime import datetime, timedelta, timezone
 from src.services.users.users import security_verify_password
 from src.security.security import ALGORITHM, SECRET_KEY, security_hash_password
+from src.security.session_context import (
+    AMR_CLAIM,
+    AUTH_METHOD_API_TOKEN,
+    SORG_CLAIM,
+    SessionProvenance,
+    set_session_provenance,
+)
+
+
+def _publish_session_provenance(amr, org_id) -> None:
+    """Store the current request's session provenance for the org-policy gates.
+
+    Coerces ``sorg`` to int defensively (JWT numbers survive as int, but a
+    hand-crafted token could carry a string). Never raises — provenance is an
+    enrichment, and a bad claim must not break authentication itself.
+    """
+    try:
+        parsed_org = int(org_id) if org_id is not None else None
+    except (TypeError, ValueError):  # pragma: no cover - defensive coercion of a hand-crafted claim
+        parsed_org = None
+    set_session_provenance(SessionProvenance(amr=amr, org_id=parsed_org))
 
 
 # SECURITY: Pre-computed Argon2 hash of an unknown password. Verifying a
@@ -157,7 +180,37 @@ def create_access_token(data: dict, expires_delta: timedelta | None = None):
     return encoded_jwt
 
 
-JWT_REFRESH_TOKEN_EXPIRES = timedelta(days=30)
+# Users must be able to come back after a two-week break (a holiday, a school
+# vacation, a sprint spent elsewhere) and still be signed in.
+MIN_REFRESH_TOKEN_DAYS = 14
+DEFAULT_REFRESH_TOKEN_DAYS = 30
+
+
+def _refresh_token_lifetime() -> timedelta:
+    """Resolve how long a user may stay away before they must sign in again.
+
+    This is the *inactivity* window: every successful refresh mints a brand-new
+    refresh token with a full lifetime, so an active user is never signed out.
+    Only a user who does not open the app at all for this long loses their
+    session.
+
+    Overridable with ``LEARNHOUSE_AUTH_REFRESH_TOKEN_DAYS`` for operators who
+    want a longer or shorter window, but never below
+    ``MIN_REFRESH_TOKEN_DAYS`` — a shorter window is nearly always a
+    misconfiguration that shows up as users complaining they get logged out.
+    """
+    import os
+    raw = os.environ.get("LEARNHOUSE_AUTH_REFRESH_TOKEN_DAYS")
+    if raw:
+        try:
+            days = int(raw)
+            return timedelta(days=max(days, MIN_REFRESH_TOKEN_DAYS))
+        except (TypeError, ValueError):
+            pass
+    return timedelta(days=DEFAULT_REFRESH_TOKEN_DAYS)
+
+
+JWT_REFRESH_TOKEN_EXPIRES = _refresh_token_lifetime()
 JWT_REFRESH_COOKIE_NAME = "LH_refresh"
 
 
@@ -310,7 +363,20 @@ def _mark_refresh_jti_used(user_id: int, jti: str) -> bool:
 # revokes EVERY session for the user — the classic "I keep getting logged
 # out" bug. Within this window we instead re-serve the exact rotated pair the
 # first call issued. Only a replay AFTER the window is treated as theft.
-REFRESH_GRACE_WINDOW_SECONDS = 30
+#
+# 30 seconds turned out to be far too tight in production. Legitimate replays
+# routinely arrive minutes apart, not milliseconds:
+#   - A server-rendered page consumes the refresh token, and the browser only
+#     re-presents it on the next client-side refresh.
+#   - A laptop is suspended mid-refresh and resumes later on the old cookie.
+#   - A background tab wakes up and refreshes with a cookie another tab has
+#     already rotated.
+#   - A slow/flaky mobile connection retries after a long timeout.
+# Every one of those was being classified as token theft, which revokes ALL of
+# the user's sessions on ALL devices. Five minutes keeps genuine replay
+# detection meaningful (a stolen token reused hours or days later is still
+# caught) while making the common benign cases non-fatal.
+REFRESH_GRACE_WINDOW_SECONDS = 5 * 60
 
 
 def _store_refresh_grace(
@@ -407,6 +473,52 @@ async def _verify_api_token_org_boundary(
             )
 
 
+_activity_logger = logging.getLogger(__name__)
+
+
+def _org_ref_from_request(request: Request) -> tuple[Optional[int], Optional[str], Optional[str]]:
+    """Best-effort org reference from the request: (org_id, org_slug, org_uuid).
+
+    Routes are org-scoped by one of these params. org_id is read from path or
+    query (?org_id=); slug/uuid come from the path. The slug/uuid -> id lookup
+    is deferred to the background task so it stays off the request path.
+    """
+    org_id: Optional[int] = None
+    raw = request.path_params.get("org_id")
+    if raw is None:
+        raw = request.query_params.get("org_id")
+    if raw is not None:
+        try:
+            org_id = int(raw)
+        except (TypeError, ValueError):
+            org_id = None
+    org_slug = request.path_params.get("org_slug") or request.path_params.get("orgslug")
+    org_uuid = request.path_params.get("org_uuid")
+    return org_id, org_slug, org_uuid
+
+
+def _record_activity_from_request(request: Request, user_id: Optional[int]) -> None:
+    """Fire-and-forget: mark the authenticated user active for today. Never raises.
+
+    Fully server-side, so it cannot be blocked by ad/tracker blockers.
+    """
+    try:
+        if not user_id:
+            return
+        org_id, org_slug, org_uuid = _org_ref_from_request(request)
+        if not (org_id or org_slug or org_uuid):
+            return
+        from src.services.security.activity import record_user_activity
+
+        asyncio.create_task(
+            record_user_activity(
+                user_id, org_id=org_id, org_slug=org_slug, org_uuid=org_uuid
+            )
+        )
+    except Exception:
+        _activity_logger.debug("activity scheduling failed (non-fatal)", exc_info=True)
+
+
 async def get_current_user(
     request: Request,
     db_session: AsyncSession = Depends(get_db_session),
@@ -435,6 +547,7 @@ async def get_current_user(
             request.state.user = sa_user
             request.state.is_api_token = True
             request.state.is_superadmin_api_token = True
+            _publish_session_provenance(AUTH_METHOD_API_TOKEN, None)
             return sa_user
         raise credentials_exception
 
@@ -448,6 +561,9 @@ async def get_current_user(
             await _verify_api_token_org_boundary(request, api_token_user, db_session)
             request.state.user = api_token_user
             request.state.is_api_token = True
+            _publish_session_provenance(
+                AUTH_METHOD_API_TOKEN, getattr(api_token_user, "org_id", None)
+            )
             return api_token_user
         raise credentials_exception
 
@@ -469,6 +585,7 @@ async def get_current_user(
                 "verify",
                 "email_verification",
                 "magic_link",
+                "magic_login",
                 "password_reset",
             }
             if token_purpose in SINGLE_USE_PURPOSES or (
@@ -512,6 +629,10 @@ async def get_current_user(
         public_user = PublicUser(**user.model_dump())
         request.state.user = public_user
         request.state.is_api_token = False
+        # Publish this session's provenance (how the user authenticated, which
+        # org the session was minted for) for the per-org auth-method policy.
+        _publish_session_provenance(payload.get(AMR_CLAIM), payload.get(SORG_CLAIM))
+        _record_activity_from_request(request, public_user.id)
         return public_user
     else:
         return AnonymousUser()

@@ -11,6 +11,12 @@ on:
     paths:
       - 'apps/cli/**'
 
+# The integration job boots real Docker and is allowed 45 minutes, so a
+# superseded run is worth cancelling the moment a newer commit lands.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
 defaults:
   run:
     working-directory: apps/cli
@@ -25,6 +31,14 @@ jobs:
       - uses: oven-sh/setup-bun@v2
         with:
           bun-version: latest
+
+      # setup-bun restores the toolchain, not the packages.
+      - name: Cache bun install cache
+        uses: actions/cache@v6
+        with:
+          path: ~/.bun/install/cache
+          key: bun-cli-${{ runner.os }}-${{ hashFiles('apps/cli/bun.lock') }}
+          restore-keys: bun-cli-${{ runner.os }}-
 
       - name: Install dependencies
         run: bun install --frozen-lockfile
@@ -42,6 +56,14 @@ jobs:
       - uses: oven-sh/setup-bun@v2
         with:
           bun-version: latest
+
+      # setup-bun restores the toolchain, not the packages.
+      - name: Cache bun install cache
+        uses: actions/cache@v6
+        with:
+          path: ~/.bun/install/cache
+          key: bun-cli-${{ runner.os }}-${{ hashFiles('apps/cli/bun.lock') }}
+          restore-keys: bun-cli-${{ runner.os }}-
 
       - name: Install dependencies
         run: bun install --frozen-lockfile

@@ -20,7 +20,7 @@ from src.db.courses.assignments import (
     AssignmentTaskTypeEnum,
     GradingTypeEnum,
 )
-from src.db.users import AnonymousUser, PublicUser
+from src.db.users import AnonymousUser, PublicUser, APITokenUser
 from src.security.submission_file_access import (
     is_submission_file,
     enforce_submission_file_access,
@@ -167,5 +167,18 @@ class TestEnforceSubmissionFileAccess:
         with pytest.raises(HTTPException) as exc:
             await enforce_submission_file_access(
                 _parts("course_does_not_exist"), regular_user, db, request=None
+            )
+        assert exc.value.status_code == 403
+
+    @pytest.mark.asyncio
+    async def test_api_token_is_denied(self, db, org, course, chapter, activity, regular_user):
+        # An API token's id is a token PK, not a user id. If it were used as a
+        # learner identity, a token whose id equals a learner's id could read
+        # that learner's submission file (cross-org). Tokens are denied outright.
+        await _seed(db, org, course, chapter, activity, regular_user, filename=FILE)
+        token = APITokenUser(id=regular_user.id, org_id=org.id, created_by_user_id=1)
+        with pytest.raises(HTTPException) as exc:
+            await enforce_submission_file_access(
+                _parts(course.course_uuid), token, db, request=MagicMock()
             )
         assert exc.value.status_code == 403

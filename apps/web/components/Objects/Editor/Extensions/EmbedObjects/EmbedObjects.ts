@@ -27,6 +27,9 @@ export default Node.create({
       embedHeight: {
         default: 300,
       },
+      embedAspectRatio: {
+        default: null,
+      },
       embedWidth: {
         default: '100%',
       },

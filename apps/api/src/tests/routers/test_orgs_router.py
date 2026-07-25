@@ -519,3 +519,23 @@ class TestUploadAndListingEndpoints:
 
         assert response.status_code == 200
         assert response.json()["usage"] == {}
+
+    async def test_get_org_active_users(self, client):
+        summary = {
+            "org_id": 1, "plan": "pro", "year": 2026, "month": 7,
+            "active_users": 214, "plan_limit": 200,
+            "overage_units": 14, "overage_usd": 14,
+        }
+        with patch(
+            "src.security.org_auth.require_org_membership",
+            new_callable=AsyncMock,
+            return_value=None,
+        ), patch(
+            "src.security.features_utils.active_users.get_active_user_summary",
+            new_callable=AsyncMock,
+            return_value=summary,
+        ):
+            response = await client.get("/api/v1/orgs/1/active-users?year=2026&month=7")
+
+        assert response.status_code == 200
+        assert response.json()["active_users"] == 214
