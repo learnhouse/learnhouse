@@ -53,11 +53,14 @@ async def _add_days(db, org_id, user_id, days: list[date]):
     await db.commit()
 
 
-async def _add_member(db, org_id, user_id):
+async def _add_member(db, org_id, user_id, creation_date="2026-01-01"):
+    """Add a member. Join order decides which members the plan's seats cover,
+    so callers that care about the cohort pass an explicit creation_date;
+    otherwise insertion order (the id tie-break) settles it."""
     db.add(
         UserOrganization(
             user_id=user_id, org_id=org_id, role_id=1,
-            creation_date="2026-01-01", update_date="2026-01-01",
+            creation_date=creation_date, update_date=creation_date,
         )
     )
     await db.commit()
@@ -111,26 +114,71 @@ class TestMemberActiveStatus:
 
 
 class TestOverage:
-    async def test_overage_units_and_price(self, db):
-        for uid in range(300, 305):  # 5 active users
+    """The plan's included seats are paid for by the subscription whatever their
+    holders do. Only members held BEYOND those seats can ever cost anything, and
+    only if they were active."""
+
+    async def test_only_the_members_past_the_included_seats_are_billed(self, db):
+        # 5 members, all active. With 3 included, the last 2 to join are billable.
+        for uid in range(300, 305):
+            await _add_member(db, ORG, uid)
             await _add_days(db, ORG, uid, [date(2026, 7, 1), date(2026, 7, 2)])
         out = await calculate_active_user_overage(ORG, 2026, 7, plan_limit=3, db_session=db)
         assert out["active_users"] == 5
+        assert out["members_beyond_included"] == 2
         assert out["overage_units"] == 2
         assert out["overage_usd"] == 2 * ACTIVE_USER_OVERAGE_PRICE_USD
 
-    async def test_no_overage_when_under_limit(self, db):
-        await _add_days(db, ORG, 310, [date(2026, 7, 1), date(2026, 7, 2)])
+    async def test_dormant_members_past_the_seats_cost_nothing(self, db):
+        # 5 members, 3 included. The 2 beyond the seats never showed up.
+        for uid in range(330, 335):
+            await _add_member(db, ORG, uid)
+        for uid in range(330, 333):  # only the included ones are active
+            await _add_days(db, ORG, uid, [date(2026, 7, 1), date(2026, 7, 2)])
+        out = await calculate_active_user_overage(ORG, 2026, 7, plan_limit=3, db_session=db)
+        assert out["members_beyond_included"] == 2
+        assert out["overage_units"] == 0
+
+    async def test_activity_inside_the_seats_does_not_offset_the_excess(self, db):
+        """The included seats are not a pool that busy members eat into: an org
+        over its member count pays for its active extras regardless."""
+        for uid in range(340, 346):  # 6 members
+            await _add_member(db, ORG, uid)
+        for uid in (340, 341, 345):  # 2 included active, 1 beyond active
+            await _add_days(db, ORG, uid, [date(2026, 7, 1), date(2026, 7, 2)])
+        out = await calculate_active_user_overage(ORG, 2026, 7, plan_limit=5, db_session=db)
+        assert out["active_users"] == 3
+        assert out["overage_units"] == 1
+
+    async def test_within_the_included_count_nothing_is_billable(self, db):
+        """However active a small org is, it owes nothing while it fits its plan."""
+        for uid in range(310, 315):
+            await _add_member(db, ORG, uid)
+            await _add_days(db, ORG, uid, [date(2026, 7, i) for i in range(1, 20)])
         out = await calculate_active_user_overage(ORG, 2026, 7, plan_limit=200, db_session=db)
+        assert out["members_beyond_included"] == 0
         assert out["overage_units"] == 0
         assert out["overage_usd"] == 0
 
     async def test_unlimited_plan_never_overages(self, db):
         for uid in range(320, 325):
+            await _add_member(db, ORG, uid)
             await _add_days(db, ORG, uid, [date(2026, 7, 1), date(2026, 7, 2)])
         out = await calculate_active_user_overage(ORG, 2026, 7, plan_limit=0, db_session=db)
         assert out["overage_units"] == 0
         assert out["limit"] == "unlimited"
+
+    async def test_members_who_joined_after_the_month_are_not_ranked(self, db):
+        """Billing a past month must not rank people who weren't there yet."""
+        from src.security.features_utils.active_users import get_members_beyond_included
+
+        for uid in range(350, 353):
+            await _add_member(db, ORG, uid, creation_date="2026-07-02 10:00:00")
+        for uid in range(360, 366):
+            await _add_member(db, ORG, uid, creation_date="2026-09-01 10:00:00")
+        excess = await get_members_beyond_included(ORG, 2026, 7, plan_limit=2, db_session=db)
+        # Only the three July members are ranked; one sits beyond the 2 included.
+        assert excess == [352]
 
 
 class TestSummaryAndBatch:
@@ -143,21 +191,25 @@ class TestSummaryAndBatch:
         assert summary["overage_units"] == 0
 
     async def test_summary_saas_free_plan_limit(self, db):
-        # No org config row -> plan falls back to "free" (member limit 10).
-        for uid in range(500, 512):  # 12 active users
+        # No org config row -> plan falls back to "free" (10 included members).
+        for uid in range(500, 512):  # 12 members, all active
+            await _add_member(db, ORG, uid)
             await _add_days(db, ORG, uid, [date(2026, 7, 1), date(2026, 7, 2)])
         with _saas():
             summary = await get_active_user_summary(ORG, db, year=2026, month=7)
         assert summary["plan"] == "free"
         assert summary["plan_limit"] == 10
         assert summary["active_users"] == 12
+        assert summary["members_beyond_included"] == 2
         assert summary["overage_units"] == 2
 
     async def test_batch_only_returns_orgs_over_limit(self, db):
-        # ORG over the free limit (12 > 10), OTHER_ORG under it (3).
+        # ORG holds more members than free includes (12 > 10); OTHER_ORG fits (3).
         for uid in range(600, 612):
+            await _add_member(db, ORG, uid)
             await _add_days(db, ORG, uid, [date(2026, 7, 1), date(2026, 7, 2)])
         for uid in range(700, 703):
+            await _add_member(db, OTHER_ORG, uid)
             await _add_days(db, OTHER_ORG, uid, [date(2026, 7, 1), date(2026, 7, 2)])
         with _saas():
             rows = await get_all_orgs_with_active_user_overage(2026, 7, db)
