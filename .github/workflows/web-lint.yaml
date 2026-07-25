@@ -29,7 +29,7 @@ jobs:
       # setup-bun restores the toolchain, not the packages. Without this the
       # web install re-downloads its whole tree on every lint run.
       - name: Cache bun install cache
-        uses: actions/cache@v4
+        uses: actions/cache@v6
         with:
           path: ~/.bun/install/cache
           key: bun-web-${{ runner.os }}-${{ hashFiles('apps/web/bun.lock') }}

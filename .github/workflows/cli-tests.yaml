@@ -34,7 +34,7 @@ jobs:
 
       # setup-bun restores the toolchain, not the packages.
       - name: Cache bun install cache
-        uses: actions/cache@v4
+        uses: actions/cache@v6
         with:
           path: ~/.bun/install/cache
           key: bun-cli-${{ runner.os }}-${{ hashFiles('apps/cli/bun.lock') }}
@@ -59,7 +59,7 @@ jobs:
 
       # setup-bun restores the toolchain, not the packages.
       - name: Cache bun install cache
-        uses: actions/cache@v4
+        uses: actions/cache@v6
         with:
           path: ~/.bun/install/cache
           key: bun-cli-${{ runner.os }}-${{ hashFiles('apps/cli/bun.lock') }}
