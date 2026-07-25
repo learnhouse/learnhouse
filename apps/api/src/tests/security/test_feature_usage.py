@@ -256,9 +256,25 @@ class TestFeatureUsage:
     async def test_admin_seat_helpers_and_purchased_seats(self, db, org, admin_user):
         await _make_org_config(db, org.id, {"config_version": "2.0", "plan": "standard"})
 
-        with patch("src.security.features_utils.usage.check_limits_with_usage", return_value=True) as check_limits:
-            assert await usage.check_admin_seat_limit(org.id, db) is True
-        check_limits.assert_called_once_with("admin_seats", org.id, db)
+        # admin_seats resolves its limit straight from the plan (get_plan_limit),
+        # NOT through resolve_feature — otherwise every SaaS org is wrongly told
+        # "Admin_seats is not enabled". Under the limit → allowed; at the limit →
+        # 403 "limit reached" (never a spurious "not enabled").
+        with patch("src.security.features_utils.usage._is_non_saas", return_value=False):
+            with patch("src.security.features_utils.usage.get_plan_limit", return_value=5), \
+                 patch("src.security.features_utils.usage._get_actual_admin_seat_count", return_value=2):
+                assert await usage.check_admin_seat_limit(org.id, db) is True
+
+            with patch("src.security.features_utils.usage.get_plan_limit", return_value=2), \
+                 patch("src.security.features_utils.usage._get_actual_admin_seat_count", return_value=2):
+                with pytest.raises(HTTPException) as seat_exc:
+                    await usage.check_admin_seat_limit(org.id, db)
+            assert seat_exc.value.status_code == 403
+            assert "not enabled" not in str(seat_exc.value.detail).lower()
+
+            # limit 0 == unlimited → always allowed
+            with patch("src.security.features_utils.usage.get_plan_limit", return_value=0):
+                assert await usage.check_admin_seat_limit(org.id, db) is True
 
         with patch("src.security.features_utils.usage.get_plan_limit", return_value=5):
             summary = await usage.get_admin_seat_usage(org.id, db)
