@@ -338,9 +338,9 @@ class TestDirectoryHelpers:
             walked = list(storage_utils.walk_directory(str(base_dir)))
 
         assert walked == [
-            (str(base_dir), ["nested"], ["root.txt"]),
-            (str(nested_dir), ["deeper"], ["child.md"]),
-            (str(deeper_dir), [], ["deep.pdf"]),
+            (str(base_dir).replace("\\", "/"), ["nested"], ["root.txt"]),
+            (str(nested_dir).replace("\\", "/"), ["deeper"], ["child.md"]),
+            (str(deeper_dir).replace("\\", "/"), [], ["deep.pdf"]),
         ]
         assert all("\\" not in root for root, _, _ in walked)
 

@@ -340,7 +340,7 @@ def walk_directory(base_path: str):
 
         # Yield subdirectories
         for dir_rel in sorted(all_dirs):
-            dir_path = os.path.join(base_path, dir_rel)
+            dir_path = f"{base_path}/{dir_rel}"
             files = sorted(dir_files.get(dir_rel, set()))
             # Find immediate subdirs
             subdirs = sorted([
@@ -353,7 +353,7 @@ def walk_directory(base_path: str):
         # Walk local filesystem
         if os.path.exists(base_path):
             for root, dirs, files in os.walk(base_path):
-                yield root, dirs, files
+                yield root.replace(os.sep, "/"), dirs, files
 
 
 def upload_to_s3(file_path: str, content: bytes) -> bool:
