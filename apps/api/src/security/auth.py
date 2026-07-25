@@ -15,6 +15,27 @@ from jwt.exceptions import PyJWTError
 from datetime import datetime, timedelta, timezone
 from src.services.users.users import security_verify_password
 from src.security.security import ALGORITHM, SECRET_KEY, security_hash_password
+from src.security.session_context import (
+    AMR_CLAIM,
+    AUTH_METHOD_API_TOKEN,
+    SORG_CLAIM,
+    SessionProvenance,
+    set_session_provenance,
+)
+
+
+def _publish_session_provenance(amr, org_id) -> None:
+    """Store the current request's session provenance for the org-policy gates.
+
+    Coerces ``sorg`` to int defensively (JWT numbers survive as int, but a
+    hand-crafted token could carry a string). Never raises — provenance is an
+    enrichment, and a bad claim must not break authentication itself.
+    """
+    try:
+        parsed_org = int(org_id) if org_id is not None else None
+    except (TypeError, ValueError):  # pragma: no cover - defensive coercion of a hand-crafted claim
+        parsed_org = None
+    set_session_provenance(SessionProvenance(amr=amr, org_id=parsed_org))
 
 
 # SECURITY: Pre-computed Argon2 hash of an unknown password. Verifying a
@@ -526,6 +547,7 @@ async def get_current_user(
             request.state.user = sa_user
             request.state.is_api_token = True
             request.state.is_superadmin_api_token = True
+            _publish_session_provenance(AUTH_METHOD_API_TOKEN, None)
             return sa_user
         raise credentials_exception
 
@@ -539,6 +561,9 @@ async def get_current_user(
             await _verify_api_token_org_boundary(request, api_token_user, db_session)
             request.state.user = api_token_user
             request.state.is_api_token = True
+            _publish_session_provenance(
+                AUTH_METHOD_API_TOKEN, getattr(api_token_user, "org_id", None)
+            )
             return api_token_user
         raise credentials_exception
 
@@ -560,6 +585,7 @@ async def get_current_user(
                 "verify",
                 "email_verification",
                 "magic_link",
+                "magic_login",
                 "password_reset",
             }
             if token_purpose in SINGLE_USE_PURPOSES or (
@@ -603,6 +629,9 @@ async def get_current_user(
         public_user = PublicUser(**user.model_dump())
         request.state.user = public_user
         request.state.is_api_token = False
+        # Publish this session's provenance (how the user authenticated, which
+        # org the session was minted for) for the per-org auth-method policy.
+        _publish_session_provenance(payload.get(AMR_CLAIM), payload.get(SORG_CLAIM))
         _record_activity_from_request(request, public_user.id)
         return public_user
     else:

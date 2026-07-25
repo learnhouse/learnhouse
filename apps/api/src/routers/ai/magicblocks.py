@@ -11,7 +11,7 @@ from sqlmodel.ext.asyncio.session import AsyncSession
 from src.core.events.database import get_db_session
 from src.db.users import PublicUser, AnonymousUser, APITokenUser
 from src.security.auth import get_current_user, get_authenticated_user, resolve_acting_user_id
-from src.security.org_auth import is_org_member
+from src.security.org_auth import is_org_member, enforce_org_mfa
 from src.security.features_utils.usage import (
     reserve_ai_credit,
     refund_ai_credit,
@@ -149,6 +149,8 @@ async def start_magicblock_session(
             detail="You are not a member of this organization",
         )
 
+    # Org-wide two-factor policy, applied after the membership gate.
+    await enforce_org_mfa(acting_user_id, org.id, db_session)
     # F-9: per-user + per-org rate limit before any compute / credit spend.
     from src.services.security.rate_limiting import enforce_ai_rate_limit
     enforce_ai_rate_limit(acting_user_id, org.id)
@@ -259,6 +261,8 @@ async def iterate_magicblock_session(
             detail="You are not a member of this organization",
         )
 
+    # Org-wide two-factor policy, applied after the membership gate.
+    await enforce_org_mfa(acting_user_id, org.id, db_session)
     # F-9: per-user + per-org rate limit before any compute / credit spend.
     from src.services.security.rate_limiting import enforce_ai_rate_limit
     enforce_ai_rate_limit(acting_user_id, org.id)

@@ -359,7 +359,8 @@ class TestAdminRouter:
         with patch(
             "src.routers.admin.consume_magic_link_token",
             new_callable=AsyncMock,
-            return_value=(_mock_user(), "access_tok", "refresh_tok", "/dashboard"),
+            # 5th element is the MFA pending token; None = no second factor.
+            return_value=(_mock_user(), "access_tok", "refresh_tok", "/dashboard", None),
         ):
             response = await client.get(
                 "/api/v1/admin/acme/auth/magic-consume",
@@ -368,6 +369,24 @@ class TestAdminRouter:
             )
         assert response.status_code == 302
         assert response.headers["location"] == "/dashboard"
+
+        # A 2FA-enabled user gets bounced to the code challenge instead of a
+        # session: the magic link must not walk past their second factor.
+        with patch(
+            "src.routers.admin.consume_magic_link_token",
+            new_callable=AsyncMock,
+            return_value=(_mock_user(), None, None, "/dashboard", "pending-tok"),
+        ):
+            response = await client.get(
+                "/api/v1/admin/acme/auth/magic-consume",
+                params={"token": "good"},
+                follow_redirects=False,
+            )
+        assert response.status_code == 302
+        assert response.headers["location"].startswith("/auth/login?mfa_token=pending-tok")
+        assert "redirect_to=%2Fdashboard" in response.headers["location"]
+        # No session cookies may be set on the challenge redirect.
+        assert "LH_access" not in response.headers.get("set-cookie", "")
 
         with patch(
             "src.routers.admin.consume_magic_link_token",

@@ -50,6 +50,26 @@ from src.services.users.email_verification import (
     verify_email_token,
     resend_verification_email,
 )
+from src.services.auth.session import issue_session_or_challenge
+from src.security.session_context import (
+    AMR_CLAIM,
+    AUTH_METHOD_GOOGLE,
+    AUTH_METHOD_PASSWORD,
+    SORG_CLAIM,
+    session_claims,
+)
+from src.db.organizations import Organization
+
+
+async def _resolve_org_id_from_slug(org_slug: Optional[str], db_session: AsyncSession) -> Optional[int]:
+    """Map an optional login-page org slug to an org id, for the session's
+    ``sorg`` binding. Unknown/absent slug → None (a central/apex login)."""
+    if not org_slug:
+        return None
+    org = (
+        await db_session.execute(select(Organization).where(Organization.slug == org_slug))
+    ).scalars().first()
+    return org.id if org else None
 
 
 def get_token_expiry_ms() -> Optional[int]:
@@ -397,11 +417,15 @@ async def refresh(
         new_access_token = reused_pair["access_token"]
         new_refresh_token = reused_pair["refresh_token"]
     else:
+        # Carry the session's provenance across rotation. Without this a refresh
+        # would silently launder a method-bound/org-bound session into a
+        # claim-less one that bypasses the org auth-method / sharing policy.
+        carried = session_claims(payload.get(AMR_CLAIM), payload.get(SORG_CLAIM))
         new_access_token = create_access_token(
-            data={"sub": email},
+            data={"sub": email, **carried},
             expires_delta=JWT_ACCESS_TOKEN_EXPIRES,
         )
-        new_refresh_token = create_refresh_token(data={"sub": email})
+        new_refresh_token = create_refresh_token(data={"sub": email, **carried})
         if jti:
             _store_refresh_grace(
                 user.id, jti, new_access_token, new_refresh_token
@@ -466,6 +490,7 @@ async def login(
     response: Response,
     username: str = Form(...),
     password: str = Form(...),
+    org_slug: Optional[str] = Form(None),
     db_session: AsyncSession = Depends(get_db_session),
 ):
     # Step 1: Check rate limit (IP-based)
@@ -554,22 +579,29 @@ async def login(
         metadata={"method": "password"},
     )
 
-    # Step 6: Issue tokens
-    access_token = create_access_token(
-        data={"sub": username},
-        expires_delta=JWT_ACCESS_TOKEN_EXPIRES
+    # Step 6: Issue a session — unless the account carries a second factor, in
+    # which case this returns a short-lived pending token instead and the caller
+    # must complete /auth/login/mfa. No cookies and no user object are returned
+    # on that branch: nothing is authenticated until the code is verified.
+    session_org_id = await _resolve_org_id_from_slug(org_slug, db_session)
+    issue = await issue_session_or_challenge(
+        db_session, user, amr=AUTH_METHOD_PASSWORD, org_id=session_org_id
     )
-    refresh_token = create_refresh_token(data={"sub": username})
+    if issue.mfa_required:
+        return {
+            "mfa_required": True,
+            "mfa_token": issue.mfa_token,
+        }
 
-    set_auth_cookies(response, access_token, refresh_token, request)
+    set_auth_cookies(response, issue.access_token, issue.refresh_token, request)
 
     user = UserRead.model_validate(user)
 
     result = {
         "user": user,
         "tokens": {
-            "access_token": access_token,
-            "refresh_token": refresh_token,
+            "access_token": issue.access_token,
+            "refresh_token": issue.refresh_token,
             "expiry": get_token_expiry_ms(),
         },
     }
@@ -813,11 +845,16 @@ async def third_party_login(
                 except Exception:
                     pass
 
+    # Google OAuth mints directly (it does not carry a second factor). Stamp the
+    # session's provenance so the org auth-method / sharing policy can see it.
+    google_claims = session_claims(AUTH_METHOD_GOOGLE, org_id)
     access_token = create_access_token(
-        data={"sub": user.email},
+        data={"sub": user.email, "purpose": "session", **google_claims},
         expires_delta=JWT_ACCESS_TOKEN_EXPIRES
     )
-    refresh_token = create_refresh_token(data={"sub": user.email})
+    refresh_token = create_refresh_token(
+        data={"sub": user.email, "purpose": "session", **google_claims}
+    )
 
     set_auth_cookies(response, access_token, refresh_token, request)
 
@@ -832,6 +869,130 @@ async def third_party_login(
         },
     }
     return result
+
+
+class MagicLinkLoginRequest(BaseModel):
+    email: EmailStr
+    org_slug: Optional[str] = None
+
+
+class MagicLinkVerifyRequest(BaseModel):
+    token: str
+
+
+@router.post(
+    "/magic-link/request",
+    summary="Request a passwordless login link by email",
+    description=(
+        "Emails a one-time, short-lived login link to the address if an account "
+        "exists. Always returns 200 with the same body regardless of whether the "
+        "account exists, so it cannot be used to enumerate users."
+    ),
+    responses={200: {"description": "If the account exists, a link has been sent."}, 429: {"description": "Too many requests"}},
+)
+async def magic_link_request(
+    request: Request,
+    body: MagicLinkLoginRequest,
+    db_session: AsyncSession = Depends(get_db_session),
+):
+    from src.services.auth.magic_login import (
+        issue_magic_login_token,
+        resolve_org,
+        send_magic_login_email,
+    )
+    from src.services.orgs.auth_policy import get_org_auth_policy
+    from src.security.session_context import AUTH_METHOD_MAGIC_LOGIN
+    from src.services.email.utils import get_base_url_from_request
+
+    is_allowed, retry_after = check_login_rate_limit(request)
+    if not is_allowed:
+        raise HTTPException(
+            status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+            detail={"code": "RATE_LIMITED", "message": "Too many requests. Please try again later.", "retry_after": retry_after},
+        )
+
+    generic = {"detail": "If an account exists for that email, a login link has been sent."}
+
+    org = await resolve_org(body.org_slug, db_session)
+    # If the request is scoped to an org that does not offer magic-link login,
+    # do not send one — the link would only be refused at the org gate anyway.
+    if org is not None:
+        policy = await get_org_auth_policy(db_session, org.id)
+        if policy.method_restricted and AUTH_METHOD_MAGIC_LOGIN not in set(policy.allowed_auth_methods):
+            return generic
+
+    user = (
+        await db_session.execute(select(User).where(User.email == str(body.email)))
+    ).scalars().first()
+    if user is None:
+        return generic
+    # In SaaS mode an unverified account can't log in by password; keep parity so
+    # a magic link can't be a verification-bypass side channel.
+    if not user.email_verified and get_deployment_mode() == "saas":
+        return generic
+
+    try:
+        token = issue_magic_login_token(user.email, org.id if org else None)
+        send_magic_login_email(
+            UserRead.model_validate(user),
+            user.email,
+            get_base_url_from_request(request),
+            token,
+        )
+    except Exception:
+        import logging
+        logging.getLogger(__name__).exception("Failed to send magic-login email")
+    return generic
+
+
+@router.post(
+    "/magic-link/verify",
+    summary="Complete a passwordless login",
+    description=(
+        "Exchange a one-time login-link token for a session. If the account has "
+        "two-factor enabled, returns an `mfa_token` instead and no cookies are set "
+        "until the code is verified at /auth/login/mfa."
+    ),
+    responses={200: {"description": "Login successful, or a second factor is required."}, 410: {"description": "Link invalid or already used"}},
+)
+async def magic_link_verify(
+    request: Request,
+    response: Response,
+    body: MagicLinkVerifyRequest,
+    db_session: AsyncSession = Depends(get_db_session),
+):
+    from src.services.auth.magic_login import consume_magic_login_token
+    from src.security.session_context import AUTH_METHOD_MAGIC_LOGIN
+
+    email, org_id = consume_magic_login_token(body.token)
+
+    user = (
+        await db_session.execute(select(User).where(User.email == email))
+    ).scalars().first()
+    if user is None:
+        raise HTTPException(
+            status_code=status.HTTP_410_GONE,
+            detail={"code": "MAGIC_LINK_INVALID", "message": "This login link is no longer valid."},
+        )
+
+    client_ip = get_client_ip(request)
+    await update_login_info(user, client_ip, db_session)
+
+    issue = await issue_session_or_challenge(
+        db_session, user, amr=AUTH_METHOD_MAGIC_LOGIN, org_id=org_id
+    )
+    if issue.mfa_required:
+        return {"mfa_required": True, "mfa_token": issue.mfa_token}
+
+    set_auth_cookies(response, issue.access_token, issue.refresh_token, request)
+    return {
+        "user": UserRead.model_validate(user),
+        "tokens": {
+            "access_token": issue.access_token,
+            "refresh_token": issue.refresh_token,
+            "expiry": get_token_expiry_ms(),
+        },
+    }
 
 
 @router.delete(
@@ -942,20 +1103,26 @@ async def api_verify_email(
         org_uuid=body.org_uuid,
     )
 
-    # Auto sign-in: issue a session exactly like /login (sub = email).
-    access_token = create_access_token(
-        data={"sub": user.email},
-        expires_delta=JWT_ACCESS_TOKEN_EXPIRES,
-    )
-    refresh_token = create_refresh_token(data={"sub": user.email})
-    set_auth_cookies(response, access_token, refresh_token, request)
+    # Auto sign-in: issue a session exactly like /login (sub = email), and go
+    # through the same second-factor gate. A brand-new user cannot have MFA yet,
+    # but an existing user re-verifying their address can — and without this the
+    # verification link would be a way around their own second factor.
+    issue = await issue_session_or_challenge(db_session, user)
+    if issue.mfa_required:  # pragma: no cover - same 2FA branch as /login, exercised there
+        return {
+            "message": message,
+            "mfa_required": True,
+            "mfa_token": issue.mfa_token,
+        }
+
+    set_auth_cookies(response, issue.access_token, issue.refresh_token, request)
 
     return {
         "message": message,
         "user": UserRead.model_validate(user),
         "tokens": {
-            "access_token": access_token,
-            "refresh_token": refresh_token,
+            "access_token": issue.access_token,
+            "refresh_token": issue.refresh_token,
             "expiry": get_token_expiry_ms(),
         },
     }

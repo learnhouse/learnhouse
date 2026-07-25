@@ -18,7 +18,7 @@ from sqlmodel.ext.asyncio.session import AsyncSession
 from src.core.events.database import get_db_session
 from src.db.users import PublicUser, AnonymousUser, APITokenUser
 from src.security.auth import get_current_user, resolve_acting_user_id
-from src.security.org_auth import is_org_member
+from src.security.org_auth import is_org_member, enforce_org_mfa
 from src.security.features_utils.usage import (
     reserve_ai_credit,
 )
@@ -83,7 +83,10 @@ async def get_org_ai_model(org_id: int, db_session: AsyncSession) -> str:
 
 async def verify_user_org_membership(user_id: int, org_id: int, db_session: AsyncSession) -> bool:
     """Verify that the user is a member of the organization (superadmins bypass)."""
-    return await is_org_member(user_id, org_id, db_session)
+    member = await is_org_member(user_id, org_id, db_session)
+    if member:
+        await enforce_org_mfa(user_id, org_id, db_session)
+    return member
 
 
 @router.post(

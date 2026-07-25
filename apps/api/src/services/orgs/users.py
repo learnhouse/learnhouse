@@ -33,7 +33,7 @@ from src.services.security.rate_limiting import (
     enforce_batch_size_limit,
     enforce_invite_rate_limit,
 )
-from src.security.org_auth import is_org_member
+from src.security.org_auth import is_org_member, enforce_org_mfa
 from src.security.rbac.constants import ADMIN_ROLE_ID
 from src.services.orgs.invites import send_invite_email
 from src.services.orgs.orgs import get_org_default_language, rbac_check
@@ -124,6 +124,8 @@ async def get_organization_users(
             detail="You must be a member of this organization to view its members",
         )
 
+    # Org-wide two-factor policy, applied after the membership gate.
+    await enforce_org_mfa(acting_user_id, org.id, db_session)
     # Only admins/maintainers can list organization members
     from src.security.superadmin import is_user_superadmin
     if not await is_user_superadmin(acting_user_id, db_session):
@@ -134,6 +136,8 @@ async def get_organization_users(
                 detail="Only administrators and maintainers can view organization members",
             )
 
+        # Org-wide two-factor policy, applied after the membership gate.
+        await enforce_org_mfa(acting_user_id, org.id, db_session)
     # Base query for users in the organization
     base_statement = (
         select(User)
@@ -353,6 +357,8 @@ async def export_organization_users_csv(
     if not await is_org_member(export_acting_user_id, org.id, db_session):
         raise HTTPException(status_code=403, detail="You must be a member of this organization")
 
+    # Org-wide two-factor policy, applied after the membership gate.
+    await enforce_org_mfa(export_acting_user_id, org.id, db_session)
     # Only admins/maintainers can export organization members
     from src.security.superadmin import is_user_superadmin
     if not await is_user_superadmin(export_acting_user_id, db_session):
@@ -363,6 +369,8 @@ async def export_organization_users_csv(
                 detail="Only administrators and maintainers can export organization members",
             )
 
+        # Org-wide two-factor policy, applied after the membership gate.
+        await enforce_org_mfa(export_acting_user_id, org.id, db_session)
     base_statement = (
         select(User)
         .join(UserOrganization)

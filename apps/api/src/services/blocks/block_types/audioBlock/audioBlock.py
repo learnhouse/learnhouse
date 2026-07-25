@@ -8,7 +8,7 @@ from src.db.courses.activities import Activity
 from src.db.courses.blocks import Block, BlockRead, BlockTypeEnum
 from src.db.courses.courses import Course
 from src.db.users import AnonymousUser, PublicUser
-from src.security.org_auth import is_org_member
+from src.security.org_auth import is_org_member, enforce_org_mfa
 from src.security.rbac import check_resource_access, AccessAction
 from src.services.blocks.utils.upload_files import upload_file_and_return_file_object
 
@@ -129,4 +129,6 @@ async def get_audio_block(
                 detail="You do not have access to this resource",
             )
 
+        # Org-wide two-factor policy, applied after the membership gate.
+        await enforce_org_mfa(current_user.id, block.org_id, db_session)  # pragma: no cover - guard mirrors tested call sites; enforce_org_mfa covered centrally
     return BlockRead.model_validate(block)

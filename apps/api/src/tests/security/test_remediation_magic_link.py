@@ -59,11 +59,18 @@ async def test_magic_link_single_use_blocks_replay(legit_payload):
         "src.services.admin.admin._validate_magic_link_redirect",
         return_value="/dashboard",
     ), patch(
-        "src.services.admin.admin.create_access_token",
+        # Session minting moved behind issue_session_or_challenge, which is the
+        # single gate every sign-in path now goes through.
+        "src.services.auth.session.create_access_token",
         return_value="new-access",
     ), patch(
-        "src.services.admin.admin.create_refresh_token",
+        "src.services.auth.session.create_refresh_token",
         return_value="new-refresh",
+    ), patch(
+        # This test drives the service with a Mock session, so the MFA lookup
+        # would otherwise return a truthy Mock and read as "user has 2FA".
+        "src.services.auth.session.is_mfa_active",
+        return_value=False,
     ), patch(
         "redis.Redis.from_url",
         return_value=redis_client,
@@ -71,13 +78,14 @@ async def test_magic_link_single_use_blocks_replay(legit_payload):
         "config.config.get_learnhouse_config",
         return_value=fake_cfg,
     ):
-        _, access, refresh, redirect_to = await consume_magic_link_token(
+        _, access, refresh, redirect_to, mfa_token = await consume_magic_link_token(
             token="legit-jwt",
             db_session=db_mock,
         )
         assert access == "new-access"
         assert refresh == "new-refresh"
         assert redirect_to == "/dashboard"
+        assert mfa_token is None
 
         with pytest.raises(HTTPException) as exc:
             await consume_magic_link_token(
@@ -111,11 +119,14 @@ async def test_magic_link_falls_through_when_redis_unavailable(legit_payload):
         "src.services.admin.admin._validate_magic_link_redirect",
         return_value=None,
     ), patch(
-        "src.services.admin.admin.create_access_token",
+        "src.services.auth.session.create_access_token",
         return_value="new-access",
     ), patch(
-        "src.services.admin.admin.create_refresh_token",
+        "src.services.auth.session.create_refresh_token",
         return_value="new-refresh",
+    ), patch(
+        "src.services.auth.session.is_mfa_active",
+        return_value=False,
     ), patch(
         "redis.Redis.from_url",
         side_effect=RuntimeError("redis down"),

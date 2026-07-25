@@ -127,7 +127,47 @@ class FeatureAdminToggle(BaseModel):
     disabled: bool = False
 
 
+class SecurityAdminToggle(BaseModel):
+    """Org-wide security policy.
+
+    Lives in the config JSON blob, so enabling it needs no migration.
+
+    ``require_2fa_enabled_at`` is the anchor the grace period counts from. Each
+    member's personal deadline is
+    ``max(require_2fa_enabled_at, their join date) + require_2fa_grace_days``;
+    without the ``max`` a member who joins after the policy was set would land
+    with an already-expired deadline and be locked out on their first day.
+    """
+
+    require_2fa: bool = False
+    require_2fa_grace_days: int = 0
+    # ISO timestamp of when an admin last switched require_2fa on.
+    require_2fa_enabled_at: Optional[str] = None
+    # Users authenticated by an external IdP already presented whatever factors
+    # that IdP demands; requiring a second app-level TOTP on top is redundant
+    # and, for a SAML-only org, would be unsatisfiable.
+    exempt_external_auth: bool = True
+
+    # Which sign-in methods this org accepts. Members of the org must have
+    # authenticated with one of these to access it. The default lists all
+    # methods, i.e. no restriction — the policy is a no-op until an admin removes
+    # one. Values are drawn from
+    # src.security.session_context.POLICY_AUTH_METHODS:
+    # "password" | "magic_login" | "google" | "sso". Empty list is treated as
+    # "unrestricted" too, so a mis-save can never lock every method out.
+    allowed_auth_methods: list[str] = Field(
+        default_factory=lambda: ["password", "magic_login", "google", "sso"]
+    )
+    # Whether a session established on the central apex (learnhouse.io) or for a
+    # different org may be used to access this org directly. Default True keeps
+    # today's behavior (one session works everywhere the user is a member). When
+    # False, a member arriving with a foreign/central session is refused and must
+    # sign in again from this org using an allowed method.
+    allow_central_session_sharing: bool = True
+
+
 class AdminToggles(BaseModel):
+    security: SecurityAdminToggle = SecurityAdminToggle()
     ai: AIAdminToggle = AIAdminToggle()
     analytics: FeatureAdminToggle = FeatureAdminToggle()
     api: FeatureAdminToggle = FeatureAdminToggle()
