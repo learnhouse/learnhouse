@@ -1,0 +1,35 @@
+# The CI build context is ./apps/api, so Docker reads this file and not the one at
+# the repo root. Without it a local build copies .venv over the image's own venv,
+# and ships .env into the image.
+
+# Virtualenv - would clobber the venv built by `uv sync`
+.venv
+venv
+
+# Python caches
+__pycache__
+*.pyc
+*.pyo
+*.pyd
+.pytest_cache
+.ruff_cache
+.mypy_cache
+
+# Test and coverage artifacts
+.coverage
+htmlcov
+
+# Secrets and local config
+.env
+.env.*
+
+# Node - not used by the Python image
+node_modules
+
+# VCS and editor
+.git
+.gitignore
+.DS_Store
+
+# Runtime output
+logs
