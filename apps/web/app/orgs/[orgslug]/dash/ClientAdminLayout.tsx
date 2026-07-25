@@ -26,7 +26,14 @@ function ClientAdminLayout({
                 <CommandPaletteProvider>
                     <UpgradeModalProvider>
                         {isMobile && <DashMobileMenu />}
-                        <div className="flex flex-col lg:flex-row">
+                        {/* Built-in page translation (Chrome/Edge/Firefox) swaps text
+                            nodes out from under React. On the editor — where nodes are
+                            constantly inserted and moved — that desyncs the two trees
+                            and the next render dies on "insertBefore ... not a child of
+                            this node", taking the whole page with it. The dashboard is
+                            already translated by i18n, so opting it out costs nothing.
+                            Public course pages stay translatable. */}
+                        <div translate="no" className="notranslate flex flex-col lg:flex-row">
                             {!isMobile && <DashLeftMenu />}
                             <div className="flex flex-col w-full min-w-0 relative isolate pb-24 lg:pb-0">
                                 {children}

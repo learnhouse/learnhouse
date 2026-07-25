@@ -1,6 +1,7 @@
 import logging
 import os
 import smtplib
+import time
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from typing import Optional
@@ -288,19 +289,42 @@ def send_email(to: EmailStr, subject: str, body: str):
         return _send_email_resend(sender, to_addr, subject, body, mailing)
 
 
+# Transient provider hiccups (read timeouts, connection resets, 5xx) usually
+# clear within a second; a single quick retry turns most of them into a
+# delivered email instead of a 503 on a password-reset request.
+_RESEND_RETRIES = 1
+_RESEND_RETRY_DELAY_SECONDS = 1.0
+
+
+def _is_transient_email_error(exc: BaseException) -> bool:
+    message = str(exc).lower()
+    if "quota" in message or "rate limit" in message:
+        return False
+    return any(
+        marker in message
+        for marker in ("timed out", "timeout", "connection", "temporarily", "502", "503", "504")
+    )
+
+
 def _send_email_resend(sender: str, to: str, subject: str, body: str, mailing):
     from fastapi import HTTPException
     resend.api_key = mailing.resend_api_key
-    try:
-        return resend.Emails.send({
-            "from": sender,
-            "to": [to],
-            "subject": subject,
-            "html": body,
-        })
-    except Exception as e:
-        logger.error("Resend email failed to %s: %s", to, e, exc_info=True)
-        raise HTTPException(status_code=503, detail="Email service temporarily unavailable")
+    payload = {
+        "from": sender,
+        "to": [to],
+        "subject": subject,
+        "html": body,
+    }
+    for attempt in range(_RESEND_RETRIES + 1):
+        try:
+            return resend.Emails.send(payload)
+        except Exception as e:
+            if attempt < _RESEND_RETRIES and _is_transient_email_error(e):
+                logger.warning("Resend email to %s failed (%s), retrying once", to, e)
+                time.sleep(_RESEND_RETRY_DELAY_SECONDS)
+                continue
+            logger.error("Resend email failed to %s: %s", to, e, exc_info=True)
+            raise HTTPException(status_code=503, detail="Email service temporarily unavailable")
 
 
 _SMTP_TIMEOUT = 15

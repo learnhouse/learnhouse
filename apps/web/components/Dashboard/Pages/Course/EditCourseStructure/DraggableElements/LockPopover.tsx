@@ -6,6 +6,7 @@ import { Globe, Lock, LockOpen, Shield, Users, Plus, X, Loader2, Check } from 'l
 import { useLHSession } from '@components/Contexts/LHSessionContext'
 import { useOrg } from '@components/Contexts/OrgContext'
 import { getUserGroups } from '@services/usergroups/usergroups'
+import { asArray } from '@services/utils/ts/requests'
 import { useTranslation } from 'react-i18next'
 import toast from 'react-hot-toast'
 
@@ -13,11 +14,11 @@ export type LockType = 'public' | 'authenticated' | 'restricted'
 
 type LockPopoverProps = {
   lockType: LockType
-  onChangeLockType: (next: LockType) => Promise<void> | void
+  onChangeLockType: (_next: LockType) => Promise<void> | void
   // List + mutate usergroups (only shown when lockType === 'restricted').
   fetchAssignedUserGroups: () => Promise<UserGroup[]>
-  addUserGroup: (usergroupUuid: string) => Promise<void>
-  removeUserGroup: (usergroupUuid: string) => Promise<void>
+  addUserGroup: (_usergroupUuid: string) => Promise<void>
+  removeUserGroup: (_usergroupUuid: string) => Promise<void>
   // Which locale key to use for the popover heading — selects
   // `course.lock.title_chapter` vs `title_activity` so translations can
   // keep correct grammatical gender/agreement per language.
@@ -90,7 +91,7 @@ export default function LockPopover({
   const refreshAssigned = async () => {
     try {
       const groups = await fetchAssignedUserGroups()
-      setAssignedGroups(groups || [])
+      setAssignedGroups(asArray<UserGroup>(groups))
     } catch {
       // swallow — TOC still usable, show empty list
       setAssignedGroups([])
@@ -105,9 +106,9 @@ export default function LockPopover({
       setLoadingGroups(true)
       getUserGroups(org_id, access_token)
         .then((res: any) => {
-          // getUserGroups returns metadata wrapper — unwrap if needed
-          const list = Array.isArray(res) ? res : res?.data || []
-          setAllGroups(list)
+          // getUserGroups returns a metadata wrapper — and on a failed request
+          // its `data` is the error body, not a list.
+          setAllGroups(asArray<UserGroup>(res))
         })
         .catch(() => setAllGroups([]))
         .finally(() => setLoadingGroups(false))
@@ -116,7 +117,7 @@ export default function LockPopover({
   }, [open, lockType])
 
   const assignedUuids = new Set(assignedGroups.map((g) => g.usergroup_uuid))
-  const available = (allGroups || []).filter((g) => !assignedUuids.has(g.usergroup_uuid))
+  const available = asArray<UserGroup>(allGroups).filter((g) => !assignedUuids.has(g.usergroup_uuid))
 
   const handleSelect = async (next: LockType) => {
     if (saving || next === lockType) return

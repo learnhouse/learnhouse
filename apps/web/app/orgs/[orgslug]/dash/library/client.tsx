@@ -12,6 +12,7 @@ import React from 'react'
 import toast from 'react-hot-toast'
 import useSWR from 'swr'
 import { useTranslation } from 'react-i18next'
+import { asArray } from '@services/utils/ts/requests'
 
 type Props = {
   orgslug: string
@@ -64,8 +65,8 @@ function LibraryHome({ orgslug, org_id, initialFolders }: Props) {
     if (searching) mutateSearch()
   }
 
-  const folderList: any[] = Array.isArray(folders) ? folders : folders?.data ?? []
-  const itemList: any[] = Array.isArray(rootItems) ? rootItems : rootItems?.data ?? []
+  const folderList: any[] = asArray(folders)
+  const itemList: any[] = asArray(rootItems)
   const filtered = filterLibrary(folderList, itemList, '', filter)
   // Sort the visible content (folders + courses + media) client-side so the
   // chosen mode reorders everything instantly, not just server-side folders.

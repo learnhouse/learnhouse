@@ -23,6 +23,7 @@ import { useLHSession } from '@components/Contexts/LHSessionContext'
 import CourseThumbnailLanding from '@components/Objects/Thumbnails/CourseThumbnailLanding'
 import { useTranslation } from 'react-i18next'
 import { useQuery } from '@tanstack/react-query'
+import { asArray } from '@services/utils/ts/requests'
 
 interface UserProfileClientProps {
   userData: any;
@@ -88,7 +89,7 @@ function UserProfileClient({ userData, profile }: UserProfileClientProps) {
     staleTime: 60_000,
   });
 
-  const userCourses: any[] = coursesResponse?.data ?? [];
+  const userCourses: any[] = asArray(coursesResponse);
 
   const IconComponent = ({ iconName }: { iconName: string }) => {
     const IconElement = ICON_MAP[iconName as keyof typeof ICON_MAP]

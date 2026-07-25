@@ -11,6 +11,26 @@ from src.services.email.utils import send_email
 
 logger = logging.getLogger(__name__)
 
+
+def _send_notification_email(**kwargs):
+    """Send mail whose failure must not fail the caller's request.
+
+    Welcome/lifecycle notifications are a side effect of an action that has
+    already happened and been committed — the account exists, the org was
+    created, the role changed. When the provider is rate-limited or times out,
+    raising here turned "no welcome email" into "signup returned 503", which the
+    user then retried. Delivery failures are logged and swallowed instead.
+
+    Mail the user is actively waiting on (password reset, invitation, address
+    verification) still calls ``send_email`` directly and still raises.
+    """
+    try:
+        return send_email(**kwargs)
+    except Exception as e:
+        logger.warning("Non-critical email to %s not sent: %s", kwargs.get("to"), e)
+        return False
+
+
 # Public academy — footer "learn more" target, and last-resort CTA fallback.
 ACADEMY_URL = "https://university.learnhouse.io"
 
@@ -145,7 +165,7 @@ def send_account_creation_email(
         </a>
     """
 
-    return send_email(
+    return _send_notification_email(
         to=email,
         subject=subject,
         body=_email_layout(
@@ -174,7 +194,7 @@ def send_org_created_email(
         <p style="{STYLES['p']}">{body_text}</p>
         <a href="{html.escape(dashboard_url)}" style="{STYLES['button']}">{cta}</a>
     """
-    return send_email(
+    return _send_notification_email(
         to=email,
         subject=t(lang, "org_created.subject", org_name=safe_name),
         body=_email_layout(
@@ -199,7 +219,7 @@ def send_org_deleted_email(
         <h1 style="{STYLES['h1']}">{heading}</h1>
         <p style="{STYLES['p']}">{body_text}</p>
     """
-    return send_email(
+    return _send_notification_email(
         to=email,
         subject=t(lang, "org_deleted.subject", org_name=safe_name),
         body=_email_layout(
@@ -223,7 +243,7 @@ def send_account_deleted_email(
         <h1 style="{STYLES['h1']}">{heading}</h1>
         <p style="{STYLES['p']}">{body_text}</p>
     """
-    return send_email(
+    return _send_notification_email(
         to=email,
         subject=t(lang, "account_deleted.subject"),
         body=_email_layout(
@@ -407,7 +427,7 @@ def send_org_join_email(
         <p style="{STYLES['link_text']}">{html.escape(cta_url)}</p>
     """
 
-    return send_email(
+    return _send_notification_email(
         to=email,
         subject=t(lang, "org_join.subject", org_name=safe_org_name),
         body=_email_layout(
@@ -463,7 +483,7 @@ def send_role_changed_email(
         {cta_html}
     """
 
-    return send_email(
+    return _send_notification_email(
         to=email,
         subject=t(lang, "role_changed.subject", org_name=safe_org_name),
         body=_email_layout(

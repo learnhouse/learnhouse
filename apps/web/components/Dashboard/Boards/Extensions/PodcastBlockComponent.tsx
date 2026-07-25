@@ -11,6 +11,7 @@ import { getOrgPodcasts, getPodcastMeta } from '@services/podcasts/podcasts'
 import type { Podcast, PodcastEpisode, PodcastMeta } from '@services/podcasts/podcasts'
 import { formatDuration } from '@services/podcasts/episodes'
 import { getPodcastThumbnailMediaDirectory, getPodcastAudioStreamUrl } from '@services/media/media'
+import { safePlay } from '@/lib/media/safePlay'
 
 export default function PodcastBlockComponent({ node, updateAttributes, selected, deleteNode, editor, getPos }: any) {
   const { podcastUuid, episodeUuid, x, y, width, height } = node.attrs
@@ -105,7 +106,7 @@ export default function PodcastBlockComponent({ node, updateAttributes, selected
       audio.pause()
       setIsPlaying(false)
     } else {
-      audio.play()
+      safePlay(audio)
       setIsPlaying(true)
     }
   }, [isPlaying])

@@ -38,6 +38,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@components/ui/dropdown-menu'
+import { safePlay } from '@/lib/media/safePlay'
 
 interface EditPodcastEpisodesProps {
   orgslug: string
@@ -75,7 +76,7 @@ function EditPodcastEpisodes({ orgslug, podcastuuid }: EditPodcastEpisodesProps)
     } else {
       audioElement?.pause()
       const audio = new Audio(audioUrl)
-      audio.play()
+      safePlay(audio)
       audio.onended = () => {
         setPlayingEpisodeId(null)
         setAudioElement(null)

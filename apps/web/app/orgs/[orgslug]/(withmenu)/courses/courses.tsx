@@ -21,6 +21,7 @@ import { getUserGroups, getUserGroupResources } from '@services/usergroups/userg
 import { useCourses } from '@/hooks/queries/useCourses'
 import { useLHAnalytics, AnalyticsEvent } from '@services/analytics'
 import CatalogPagination, { useCatalogPagination } from '@components/Objects/Catalog/CatalogPagination'
+import { asArray } from '@services/utils/ts/requests'
 
 interface CourseProps {
   orgslug: string
@@ -60,7 +61,7 @@ function Courses(props: CourseProps) {
     if (!usergroupsAvailable || !access_token || !org?.id) return
     getUserGroups(org?.id, access_token)
       .then((res: any) => {
-        const list = Array.isArray(res) ? res : res?.data || []
+        const list = asArray(res)
         setUsergroups(list)
         if (selectedUsergroupId && !list.some((ug: any) => String(ug.id) === selectedUsergroupId)) {
           setSelectedUsergroupId('')
@@ -78,7 +79,7 @@ function Courses(props: CourseProps) {
     }
     getUserGroupResources(selectedUsergroupId, org?.id, access_token)
       .then((res: any) => {
-        const uuids = Array.isArray(res) ? res : res?.data || []
+        const uuids = asArray(res)
         setUsergroupResourceUuids(new Set(uuids))
       })
       .catch(() => setUsergroupResourceUuids(null))
