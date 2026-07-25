@@ -268,14 +268,6 @@ class TestFeatureUsage:
         await db.commit()
         assert await usage.get_admin_seat_usage(org.id, db) == {"error": "Organization has no config"}
 
-        with patch("src.security.features_utils.usage._get_redis_client") as redis_client:
-            redis_client.return_value.get.return_value = b"7"
-            assert usage.get_purchased_member_seats(org.id) == 7
-
-        with patch("src.security.features_utils.usage._get_redis_client") as redis_client:
-            redis_client.return_value.get.return_value = None
-            assert usage.get_purchased_member_seats(org.id) == 0
-
     @pytest.mark.asyncio
     async def test_usage_limit_checks_and_mutators(self, db, org):
         await _make_org_config(db, org.id, {"config_version": "2.0", "plan": "free"})

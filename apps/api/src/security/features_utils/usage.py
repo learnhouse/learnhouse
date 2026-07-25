@@ -70,13 +70,18 @@ def _get_redis_client():
     return r
 
 
-def _get_org_plan(org_config: OrganizationConfig) -> PlanLevel:
-    """Get the organization's current plan (supports v1 and v2 config)."""
-    config = org_config.config or {}
-    version = config.get("config_version", "1.0")
+def _plan_from_config_dict(config: dict) -> PlanLevel:
+    """Read the plan out of a raw org config dict (supports v1 and v2 layout)."""
+    config = config or {}
+    version = str(config.get("config_version", "1.0"))
     if version.startswith("2"):
         return config.get("plan", "free")
     return config.get("cloud", {}).get("plan", "free")
+
+
+def _get_org_plan(org_config: OrganizationConfig) -> PlanLevel:
+    """Get the organization's current plan (supports v1 and v2 config)."""
+    return _plan_from_config_dict(org_config.config or {})
 
 
 # ============================================================================
@@ -901,17 +906,6 @@ def is_role_dashboard_enabled(role: Role) -> bool:
         dashboard = rights.get("dashboard", {})
         return dashboard.get("action_access", False)
     return False
-
-
-# ============================================================================
-# Purchased Member Seats (Redis)
-# ============================================================================
-
-def get_purchased_member_seats(org_id: int) -> int:
-    """Get purchased member seats from Redis."""
-    r = _get_redis_client()
-    val = r.get(f"member_seats_purchased:{org_id}")
-    return int(val) if val else 0
 
 
 # ============================================================================

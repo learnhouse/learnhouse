@@ -5472,7 +5472,6 @@
     "admin_seats": "Admin-Plätze",
     "ai_credits": "KI-Credits",
     "addons": "Add-ons",
-    "addons_subtitle": "Kaufe zusätzliche KI-Credits oder Mitgliederplätze als monatliche Abonnements.",
     "active_subscriptions": "Aktive Abonnements",
     "credits": "Credits",
     "seats": "Plätze",
@@ -5545,8 +5544,7 @@
     "scheduled_desc": "Ihr Plan wird am Ende des aktuellen Abrechnungszeitraums zu {{plan}} gewechselt. Sie behalten bis dahin den vollständigen Zugriff auf Ihren aktuellen Plan.",
     "plan_plus_purchased": "Plan: {{plan}} + Gekauft: {{purchased}}",
     "base_plus_purchased": "Basis: {{base}} + Gekauft: {{purchased}}",
-    "pack_ai_desc": "{{quantity}} zusätzliche AI-Guthaben zur Ihrer Organisation hinzugefügt",
-    "pack_seats_desc": "{{quantity}} zusätzliche Mitgliedersitze für Ihre Organisation"
+    "pack_ai_desc": "{{quantity}} zusätzliche AI-Guthaben zur Ihrer Organisation hinzugefügt"
   },
   "hub_new": {
     "useType": {

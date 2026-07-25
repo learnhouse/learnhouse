@@ -47,14 +47,15 @@ class TestFeatureResolve:
 
     def test_purchased_extra_branches(self):
         redis_client = Mock()
-        redis_client.get.side_effect = [b"9", b"4", None]
+        redis_client.get.return_value = b"9"
 
         with patch(
             "src.core.redis.get_redis_client",
             return_value=redis_client,
         ):
             assert _get_purchased_extra(1, "ai") == 9
-            assert _get_purchased_extra(2, "members") == 4
+            # members/admin_seats no longer have a purchasable pack -> always 0
+            assert _get_purchased_extra(2, "members") == 0
             assert _get_purchased_extra(3, "unknown") == 0
 
         with patch(
@@ -248,18 +249,18 @@ class TestFeatureResolve:
         assert result == {"ai": 0, "members": 0, "admin_seats": 0}
 
     def test_fetch_purchased_extras_returns_values_from_redis(self):
+        # Only AI credits remain purchasable; members/admin_seats are always 0
+        # (the member-seats pack was retired for active-user overage).
         redis_client = Mock()
-        redis_client.mget.return_value = [b"100", b"50"]
+        redis_client.get.return_value = b"100"
         with patch("src.core.redis.get_redis_client", return_value=redis_client):
             result = _fetch_purchased_extras(7)
-        assert result == {"ai": 100, "members": 50, "admin_seats": 50}
-        redis_client.mget.assert_called_once_with(
-            ["ai_credits_purchased:7", "member_seats_purchased:7"]
-        )
+        assert result == {"ai": 100, "members": 0, "admin_seats": 0}
+        redis_client.get.assert_called_once_with("ai_credits_purchased:7")
 
     def test_fetch_purchased_extras_handles_none_redis_values(self):
         redis_client = Mock()
-        redis_client.mget.return_value = [None, None]
+        redis_client.get.return_value = None
         with patch("src.core.redis.get_redis_client", return_value=redis_client):
             result = _fetch_purchased_extras(8)
         assert result == {"ai": 0, "members": 0, "admin_seats": 0}

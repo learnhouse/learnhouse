@@ -72,14 +72,11 @@ def _fetch_purchased_extras(org_id: int) -> dict:
         r = get_redis_client()
         if r is None:
             return defaults
-        keys = [f"ai_credits_purchased:{org_id}", f"member_seats_purchased:{org_id}"]
-        values = r.mget(keys)
-        ai_val, member_val = values
-        member_int = int(member_val) if member_val else 0
+        ai_val = r.get(f"ai_credits_purchased:{org_id}")
         return {
             "ai": int(ai_val) if ai_val else 0,
-            "members": member_int,
-            "admin_seats": member_int,
+            "members": 0,
+            "admin_seats": 0,
         }
     except Exception:
         return defaults
@@ -98,9 +95,6 @@ def _get_purchased_extra(org_id: int, feature: str, _extras: dict | None = None)
             return 0
         if feature == "ai":
             val = r.get(f"ai_credits_purchased:{org_id}")
-            return int(val) if val else 0
-        if feature in ("members", "admin_seats"):
-            val = r.get(f"member_seats_purchased:{org_id}")
             return int(val) if val else 0
     except Exception:
         pass

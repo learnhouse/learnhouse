@@ -5481,7 +5481,7 @@
     "admin_seats": "Admin seats",
     "ai_credits": "AI Credits",
     "addons": "Add-ons",
-    "addons_subtitle": "Purchase additional AI credits or member seats as monthly subscriptions.",
+    "addons_subtitle": "Purchase additional AI credits as monthly subscriptions.",
     "active_subscriptions": "Active subscriptions",
     "credits": "credits",
     "seats": "seats",
@@ -5554,8 +5554,7 @@
     "scheduled_desc": "Your plan will switch to {{plan}} at the end of your current billing cycle. You'll keep full access to your current plan until then.",
     "plan_plus_purchased": "Plan: {{plan}} + Purchased: {{purchased}}",
     "base_plus_purchased": "Base: {{base}} + Purchased: {{purchased}}",
-    "pack_ai_desc": "{{quantity}} additional AI credits added to your organization",
-    "pack_seats_desc": "{{quantity}} additional member seats for your organization"
+    "pack_ai_desc": "{{quantity}} additional AI credits added to your organization"
   },
   "hub_new": {
     "useType": {

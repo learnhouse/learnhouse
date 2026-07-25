@@ -4,6 +4,8 @@ from sqlmodel import select
 from cli import _install_async
 from src.core.events.database import _async_session_factory
 from src.db.organizations import Organization
+from src.db.user_activity import UserActivityDay  # noqa: F401 — register table on SQLModel.metadata
+from src.db.organization_plan_history import OrganizationPlanHistory  # noqa: F401 — register table on SQLModel.metadata
 from src.services.setup.setup import install_default_elements
 
 logger = logging.getLogger(__name__)

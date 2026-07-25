@@ -175,6 +175,63 @@ class TestOrgCreationAndListingWave3:
     @pytest.mark.asyncio
     @patch("src.services.orgs.orgs.is_multi_org_allowed", return_value=True)
     @patch("src.routers.users._invalidate_session_cache")
+    async def test_config_update_records_plan_history(
+        self,
+        mock_invalidate,
+        mock_multi_org,
+        mock_request,
+        db,
+        admin_user,
+    ):
+        """Active-user overage bills in arrears, so every plan transition has to
+        leave a dated record. A config write that doesn't touch the plan must
+        not add noise to that log."""
+        from src.db.organization_plan_history import OrganizationPlanHistory
+
+        created = await create_org_with_config(
+            mock_request,
+            OrganizationCreate(
+                name="History Org", slug="history-org", email="history@org.com"
+            ),
+            admin_user,
+            db,
+            OrganizationConfigV2Base(plan="standard"),
+        )
+
+        async def _plans():
+            rows = (await db.execute(
+                select(OrganizationPlanHistory)
+                .where(OrganizationPlanHistory.org_id == created.id)
+                .order_by(OrganizationPlanHistory.id)
+            )).scalars().all()
+            return [r.plan for r in rows]
+
+        # Same plan, different customization: no new history row.
+        await update_org_with_config_no_auth(
+            mock_request,
+            OrganizationConfigV2Base(
+                plan="standard", customization={"landing": {"hero": "x"}}
+            ),
+            created.id,
+            db,
+        )
+        assert await _plans() == []
+
+        # Plan actually changes: recorded.
+        await update_org_with_config_no_auth(
+            mock_request, OrganizationConfigV2Base(plan="pro"), created.id, db
+        )
+        assert await _plans() == ["pro"]
+
+        # And again on the way back down.
+        await update_org_with_config_no_auth(
+            mock_request, OrganizationConfigV2Base(plan="standard"), created.id, db
+        )
+        assert await _plans() == ["pro", "standard"]
+
+    @pytest.mark.asyncio
+    @patch("src.services.orgs.orgs.is_multi_org_allowed", return_value=True)
+    @patch("src.routers.users._invalidate_session_cache")
     async def test_create_org_skips_missing_config_logging(
         self,
         mock_invalidate,

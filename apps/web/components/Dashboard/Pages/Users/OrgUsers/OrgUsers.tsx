@@ -278,6 +278,27 @@ function OrgUsers() {
                     {total} {total === 1 ? 'user' : 'users'}
                   </div>
                 )}
+                {data?.active_users_summary && data.active_users_summary.plan_limit > 0 && (
+                  <ToolTip
+                    content="Active users this month (members seen on 2+ days). Beyond your included limit, each active user is $1/mo."
+                    side="top"
+                  >
+                    <div
+                      className={`text-sm px-3 py-1.5 rounded-lg font-medium ${
+                        data.active_users_summary.overage_units > 0
+                          ? 'bg-amber-50 text-amber-700'
+                          : 'bg-emerald-50 text-emerald-700'
+                      }`}
+                    >
+                      {data.active_users_summary.active_users} / {data.active_users_summary.plan_limit} active
+                      {data.active_users_summary.overage_units > 0 && (
+                        <span>
+                          {' '}· +{data.active_users_summary.overage_units} (${data.active_users_summary.overage_usd}/mo)
+                        </span>
+                      )}
+                    </div>
+                  </ToolTip>
+                )}
                 <div className="relative">
                   <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
                   <input
@@ -613,6 +634,18 @@ function OrgUsers() {
                             {user.user.last_login_at && (
                               <span className="text-xs text-gray-400">
                                 Last login: {formatShortDate(user.user.last_login_at)}
+                              </span>
+                            )}
+                            {typeof user.visit_days === 'number' && (
+                              <span
+                                className={`inline-flex items-center gap-1 w-fit text-xs px-1.5 py-0.5 rounded font-medium ${
+                                  user.is_active
+                                    ? 'bg-emerald-50 text-emerald-600'
+                                    : 'bg-gray-100 text-gray-500'
+                                }`}
+                                title={`Seen on ${user.visit_days} day${user.visit_days === 1 ? '' : 's'} this month${user.is_active ? ' — counts as an active user' : ''}`}
+                              >
+                                {user.is_active ? 'Active' : 'Inactive'} · {user.visit_days}d
                               </span>
                             )}
                           </div>

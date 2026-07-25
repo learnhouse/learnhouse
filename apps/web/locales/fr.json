@@ -5464,7 +5464,6 @@
     "admin_seats": "Sièges admin",
     "ai_credits": "Crédits IA",
     "addons": "Modules complémentaires",
-    "addons_subtitle": "Achetez des crédits IA ou des sièges membres supplémentaires sous forme d’abonnements mensuels.",
     "active_subscriptions": "Abonnements actifs",
     "credits": "crédits",
     "seats": "sièges",
@@ -5537,8 +5536,7 @@
     "scheduled_desc": "Votre plan passera à {{plan}} à la fin de votre cycle de facturation actuel. Vous conserverez l'accès complet à votre plan actuel jusqu'à ce moment.",
     "plan_plus_purchased": "Plan : {{plan}} + Acheté : {{purchased}}",
     "base_plus_purchased": "Base : {{base}} + Acheté : {{purchased}}",
-    "pack_ai_desc": "{{quantity}} crédits AI supplémentaires ajoutés à votre organisation",
-    "pack_seats_desc": "{{quantity}} sièges membres supplémentaires pour votre organisation"
+    "pack_ai_desc": "{{quantity}} crédits AI supplémentaires ajoutés à votre organisation"
   },
   "hub_new": {
     "useType": {

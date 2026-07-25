@@ -11,7 +11,7 @@ import "server-only";
 export type Billing = "monthly" | "annual";
 export type PlanId = "free" | "standard" | "pro" | "enterprise" | "personal" | "personal-family";
 export type PaidPlanId = Exclude<PlanId, "free" | "enterprise">;
-export type PackId = "ai_500" | "seats_200";
+export type PackId = "ai_500";
 export type LearnHousePlanType = "free" | "personal" | "personal-family" | "standard" | "pro" | "enterprise";
 
 import { buildPriceToPlan, type PriceMapEntry } from "./subscriptionUtils";
@@ -42,7 +42,6 @@ export const PRICE_IDS: Record<PaidPlanId, Record<Billing, string>> = {
 // Pack add-on Stripe price IDs (monthly subscriptions)
 export const PACK_PRICE_IDS: Record<PackId, string> = {
   ai_500:    process.env.STRIPE_PRICE_PACK_AI_500    ?? "",
-  seats_200: process.env.STRIPE_PRICE_PACK_SEATS_200 ?? "",
 };
 
 // Reverse lookup: Stripe price id → plan/billing (or pack). Used to derive an

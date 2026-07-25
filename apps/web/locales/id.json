@@ -5486,7 +5486,6 @@
     "admin_seats": "Kursi admin",
     "ai_credits": "Kredit AI",
     "addons": "Pengaya",
-    "addons_subtitle": "Beli kredit AI atau kursi anggota tambahan sebagai langganan bulanan.",
     "active_subscriptions": "Langganan aktif",
     "credits": "kredit",
     "seats": "kursi",
@@ -5559,8 +5558,7 @@
     "scheduled_desc": "Paket Anda akan beralih ke {{plan}} pada akhir siklus penagihan Anda saat ini. Anda akan mempertahankan akses penuh ke paket Anda saat ini sampai saat itu.",
     "plan_plus_purchased": "Paket: {{plan}} + Dibeli: {{purchased}}",
     "base_plus_purchased": "Dasar: {{base}} + Dibeli: {{purchased}}",
-    "pack_ai_desc": "{{quantity}} kredit AI tambahan ditambahkan ke organisasi Anda",
-    "pack_seats_desc": "{{quantity}} kursi anggota tambahan untuk organisasi Anda"
+    "pack_ai_desc": "{{quantity}} kredit AI tambahan ditambahkan ke organisasi Anda"
   },
   "hub_new": {
     "useType": {
