@@ -136,3 +136,58 @@ class TestDeleteTaskSubmissionReconciles:
         await db.refresh(us)
         # The graded aggregate no longer counts the deleted answer.
         assert us.grade == 0
+
+
+class TestReconcileCertificateAfterGradeChange:
+    """The reconcile helper revokes when a regrade drops a learner below the
+    threshold and reissues when it lifts them above."""
+
+    @pytest.mark.asyncio
+    async def test_revokes_when_no_longer_passing(self, mock_request, db, org, course):
+        from src.services.courses.activities import assignments as ag
+        with patch.object(ag, "are_course_assignments_passed", new=AsyncMock(return_value=False)), \
+             patch.object(ag, "revoke_user_certificate", new_callable=AsyncMock) as revoke, \
+             patch.object(ag, "sync_trailrun_status", new_callable=AsyncMock) as sync, \
+             patch.object(ag, "check_course_completion_and_create_certificate", new_callable=AsyncMock) as issue:
+            await ag._reconcile_certificate_after_grade_change(mock_request, 7, course, db)
+        revoke.assert_awaited_once()
+        sync.assert_awaited_once()
+        issue.assert_not_called()
+
+    @pytest.mark.asyncio
+    async def test_reissues_when_now_passing(self, mock_request, db, org, course):
+        from src.services.courses.activities import assignments as ag
+        with patch.object(ag, "are_course_assignments_passed", new=AsyncMock(return_value=True)), \
+             patch.object(ag, "revoke_user_certificate", new_callable=AsyncMock) as revoke, \
+             patch.object(ag, "check_course_completion_and_create_certificate", new_callable=AsyncMock) as issue:
+            await ag._reconcile_certificate_after_grade_change(mock_request, 7, course, db)
+        issue.assert_awaited_once()
+        revoke.assert_not_called()
+
+    @pytest.mark.asyncio
+    async def test_swallows_errors(self, mock_request, db, org, course):
+        # Best-effort: a failure in the eligibility check must not propagate.
+        from src.services.courses.activities import assignments as ag
+        with patch.object(ag, "are_course_assignments_passed",
+                          new=AsyncMock(side_effect=RuntimeError("boom"))):
+            await ag._reconcile_certificate_after_grade_change(mock_request, 7, course, db)
+
+
+class TestRegradeIsBestEffort:
+    @pytest.mark.asyncio
+    async def test_one_learner_failure_does_not_abort_the_rest(
+        self, mock_request, db, org, course, chapter, activity, regular_user
+    ):
+        # A regrade that throws for one submission is logged and skipped, never
+        # aborting the teacher's edit or the remaining learners.
+        from src.services.courses.activities import assignments as ag
+        a, task, us, ts = await _seed_graded(db, org, course, chapter, activity, regular_user)
+        with patch.object(ag, "_apply_grade_and_finalize",
+                          new=AsyncMock(side_effect=RuntimeError("boom"))), \
+             patch.object(ag, "_reconcile_certificate_after_grade_change",
+                          new_callable=AsyncMock) as reconcile:
+            await ag._regrade_graded_submissions(
+                assignment=a, course=course, db_session=db, request=mock_request
+            )
+        # Reconcile is skipped for the failed learner (the `continue` path).
+        reconcile.assert_not_called()
