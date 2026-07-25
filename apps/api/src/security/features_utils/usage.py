@@ -768,12 +768,19 @@ async def check_admin_seat_limit(
         return True
 
     org_plan = _get_org_plan(org_config)
+    # Paid plans allow tracked overage — only the free tier is hard-capped. This
+    # matches the sibling enforcers (enforce_admin_seat_limit_for_role_rights_change
+    # and the bulk role-change check), so a Pro/Enterprise admin promotion is
+    # never blocked here.
+    if org_plan not in ("free",):
+        return True
+
     limit = get_plan_limit(org_plan, "admin_seats")
     if limit <= 0:
         return True  # 0 == unlimited
 
     current = await _get_actual_admin_seat_count(org_id, db_session)
-    if current + 1 > limit:
+    if current >= limit:
         raise HTTPException(
             status_code=403,
             detail="Usage Limit has been reached for Admin_seats",

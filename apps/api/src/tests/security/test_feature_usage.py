@@ -258,22 +258,26 @@ class TestFeatureUsage:
 
         # admin_seats resolves its limit straight from the plan (get_plan_limit),
         # NOT through resolve_feature — otherwise every SaaS org is wrongly told
-        # "Admin_seats is not enabled". Under the limit → allowed; at the limit →
-        # 403 "limit reached" (never a spurious "not enabled").
+        # "Admin_seats is not enabled". Paid plans allow overage (never blocked);
+        # only the free tier is capped, and it 403s with "limit reached" (never a
+        # spurious "not enabled").
         with patch("src.security.features_utils.usage._is_non_saas", return_value=False):
-            with patch("src.security.features_utils.usage.get_plan_limit", return_value=5), \
-                 patch("src.security.features_utils.usage._get_actual_admin_seat_count", return_value=2):
-                assert await usage.check_admin_seat_limit(org.id, db) is True
+            # Paid plan (standard config seeded above) → never blocked.
+            assert await usage.check_admin_seat_limit(org.id, db) is True
 
-            with patch("src.security.features_utils.usage.get_plan_limit", return_value=2), \
-                 patch("src.security.features_utils.usage._get_actual_admin_seat_count", return_value=2):
+            # Free plan at its cap → 403 "limit reached", NOT "not enabled".
+            with patch("src.security.features_utils.usage._get_org_plan", return_value="free"), \
+                 patch("src.security.features_utils.usage.get_plan_limit", return_value=1), \
+                 patch("src.security.features_utils.usage._get_actual_admin_seat_count", return_value=1):
                 with pytest.raises(HTTPException) as seat_exc:
                     await usage.check_admin_seat_limit(org.id, db)
             assert seat_exc.value.status_code == 403
             assert "not enabled" not in str(seat_exc.value.detail).lower()
 
-            # limit 0 == unlimited → always allowed
-            with patch("src.security.features_utils.usage.get_plan_limit", return_value=0):
+            # Free plan under cap → allowed.
+            with patch("src.security.features_utils.usage._get_org_plan", return_value="free"), \
+                 patch("src.security.features_utils.usage.get_plan_limit", return_value=2), \
+                 patch("src.security.features_utils.usage._get_actual_admin_seat_count", return_value=1):
                 assert await usage.check_admin_seat_limit(org.id, db) is True
 
         with patch("src.security.features_utils.usage.get_plan_limit", return_value=5):
