@@ -3427,6 +3427,110 @@
           "message2": "Please switch to a desktop to view and manage user settings."
         }
       },
+      "analytics": {
+        "button": "Analytics",
+        "view_analytics": "View student analytics",
+        "open_full_page": "Open full analytics page",
+        "compare": "Compare analytics",
+        "compare_students": "Compare students",
+        "export": "Export",
+        "export_selected": "Export analytics ({{count}})",
+        "exporting": "Exporting…",
+        "failed_load": "Failed to load the student dossier.",
+        "back_to_students": "Back to students",
+        "no_behavioral": "No behavioral data (analytics may be unconfigured for this window).",
+        "ranges": {
+          "d30": "30 days",
+          "d90": "90 days",
+          "y1": "1 year"
+        },
+        "kpi": {
+          "courses": "Courses",
+          "completed": "{{count}} completed",
+          "avg_progress": "Avg progress",
+          "time_spent": "Time spent",
+          "assignments": "Assignments",
+          "avg_grade": "avg {{grade}}",
+          "certificates": "Certificates",
+          "connections": "Connections",
+          "last": "last {{date}}"
+        },
+        "tabs": {
+          "connections": "Connections",
+          "courses": "Courses",
+          "assignments": "Assignments",
+          "code": "Code",
+          "community": "Community",
+          "certificates": "Certificates",
+          "behavior": "Behavior"
+        },
+        "identity": {
+          "verified": "Verified",
+          "unverified": "Unverified",
+          "via": "via {{method}}"
+        },
+        "connections": {
+          "title": "Connections",
+          "empty": "No recorded connections yet."
+        },
+        "courses": {
+          "title": "Course progress",
+          "empty": "Not enrolled in any course.",
+          "activities": "{{done}}/{{total}} activities",
+          "enrolled": "Enrolled {{date}}"
+        },
+        "assignments": {
+          "title": "Assignments",
+          "empty": "No assignment submissions.",
+          "attempt": "attempt {{number}}",
+          "feedback": "Feedback:"
+        },
+        "code": {
+          "title": "Code exercises",
+          "empty": "No code submissions.",
+          "activity": "Activity",
+          "result": "Result",
+          "tests": "Tests",
+          "time": "Time",
+          "when": "When",
+          "passed": "Passed",
+          "failed": "Failed"
+        },
+        "community": {
+          "title": "Community participation",
+          "empty": "No community activity.",
+          "discussions": "Discussions",
+          "comments": "Comments"
+        },
+        "certificates": {
+          "title": "Certificates earned",
+          "empty": "No certificates earned."
+        },
+        "behavior": {
+          "title": "Behavioral analytics",
+          "time_by_course": "Time spent by course",
+          "searches": "Searches"
+        },
+        "status": {
+          "completed": "completed",
+          "in_progress": "in progress",
+          "paused": "paused",
+          "cancelled": "cancelled",
+          "graded": "graded",
+          "submitted": "submitted",
+          "pending": "pending",
+          "late": "late",
+          "not_submitted": "not submitted"
+        },
+        "comparison": {
+          "student": "Student",
+          "enrolled": "Enrolled",
+          "completed": "Completed",
+          "certificates": "Certificates",
+          "last_connection": "Last connection",
+          "view": "View"
+        }
+      },
       "active_users": {
         "title": "Active users",
         "subtitle": "Manage your organization users, assign roles and permissions",

@@ -1,5 +1,6 @@
 'use client'
 import React from 'react'
+import { useTranslation } from 'react-i18next'
 import { Dialog, DialogContent } from '@components/ui/dialog'
 import { useUserDossier } from './useUserAudit'
 import UserDossier from './UserDossier'
@@ -12,6 +13,7 @@ interface Props {
 }
 
 export default function UserDossierModal({ userId, days = 365, onOpenChange }: Props) {
+  const { t } = useTranslation()
   const { data, isLoading, isError } = useUserDossier(userId, days)
 
   return (
@@ -21,7 +23,7 @@ export default function UserDossierModal({ userId, days = 365, onOpenChange }: P
           <div className="py-20 flex justify-center"><LearnHouseSpinner /></div>
         )}
         {isError && (
-          <div className="py-20 text-center text-sm text-gray-500">Failed to load the student dossier.</div>
+          <div className="py-20 text-center text-sm text-gray-500">{t('dashboard.users.analytics.failed_load')}</div>
         )}
         {data && !isLoading && <UserDossier dossier={data} />}
       </DialogContent>

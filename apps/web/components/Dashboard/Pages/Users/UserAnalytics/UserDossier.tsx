@@ -1,5 +1,6 @@
 'use client'
 import React, { useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import UserAvatar from '@components/Objects/UserAvatar'
 import { Badge } from '@components/ui/badge'
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@components/ui/tabs'
@@ -15,6 +16,8 @@ import {
 } from 'lucide-react'
 import { fmtDate, fmtDateTime, fmtDuration, fullName, avatarUrl } from './format'
 import UserAuditExport from './UserAuditExport'
+
+const P = 'dashboard.users.analytics'
 
 // ---------------------------------------------------------------------------
 // Small presentational primitives (no external card/progress component exists)
@@ -63,7 +66,8 @@ function ProgressBar({ pct }: { pct: number }) {
 }
 
 function StatusBadge({ status }: { status: string }) {
-  const map: Record<string, string> = {
+  const { t } = useTranslation()
+  const color: Record<string, string> = {
     STATUS_COMPLETED: 'bg-green-100 text-green-700',
     STATUS_IN_PROGRESS: 'bg-blue-100 text-blue-700',
     STATUS_PAUSED: 'bg-amber-100 text-amber-700',
@@ -74,10 +78,11 @@ function StatusBadge({ status }: { status: string }) {
     LATE: 'bg-red-100 text-red-700',
     NOT_SUBMITTED: 'bg-gray-100 text-gray-600',
   }
-  const label = status?.replace('STATUS_', '').replace('_', ' ').toLowerCase()
+  const key = status?.replace('STATUS_', '').toLowerCase()
+  const label = key ? t(`${P}.status.${key}`, { defaultValue: key.replace('_', ' ') }) : '—'
   return (
-    <span className={`text-xs font-semibold rounded-full px-2 py-0.5 capitalize ${map[status] || 'bg-gray-100 text-gray-600'}`}>
-      {label || '—'}
+    <span className={`text-xs font-semibold rounded-full px-2 py-0.5 capitalize ${color[status] || 'bg-gray-100 text-gray-600'}`}>
+      {label}
     </span>
   )
 }
@@ -90,11 +95,12 @@ function Empty({ label }: { label: string }) {
 // Section: Connections timeline
 // ---------------------------------------------------------------------------
 function ConnectionsSection({ connections }: { connections: any[] }) {
+  const { t } = useTranslation()
   return (
     <Card>
-      <SectionTitle icon={<LogIn size={18} />} title="Connections" count={connections.length} />
+      <SectionTitle icon={<LogIn size={18} />} title={t(`${P}.connections.title`)} count={connections.length} />
       {connections.length === 0 ? (
-        <Empty label="No recorded connections yet." />
+        <Empty label={t(`${P}.connections.empty`)} />
       ) : (
         <ol className="relative border-l border-gray-200 ml-2">
           {connections.map((c, i) => (
@@ -125,11 +131,12 @@ function ConnectionsSection({ connections }: { connections: any[] }) {
 // Section: Course progress
 // ---------------------------------------------------------------------------
 function CoursesSection({ courses }: { courses: any[] }) {
+  const { t } = useTranslation()
   return (
     <Card>
-      <SectionTitle icon={<BookOpen size={18} />} title="Course progress" count={courses.length} />
+      <SectionTitle icon={<BookOpen size={18} />} title={t(`${P}.courses.title`)} count={courses.length} />
       {courses.length === 0 ? (
-        <Empty label="Not enrolled in any course." />
+        <Empty label={t(`${P}.courses.empty`)} />
       ) : (
         <div className="space-y-4">
           {courses.map((c, i) => (
@@ -140,8 +147,8 @@ function CoursesSection({ courses }: { courses: any[] }) {
               </div>
               <ProgressBar pct={c.progress_pct} />
               <div className="flex flex-wrap justify-between gap-3 mt-2 text-xs text-gray-500">
-                <span>{c.progress_pct}% · {c.activities_completed}/{c.activities_total} activities</span>
-                <span>Enrolled {fmtDate(c.enrolled_at)}</span>
+                <span>{c.progress_pct}% · {t(`${P}.courses.activities`, { done: c.activities_completed, total: c.activities_total })}</span>
+                <span>{t(`${P}.courses.enrolled`, { date: fmtDate(c.enrolled_at) })}</span>
               </div>
             </div>
           ))}
@@ -155,6 +162,7 @@ function CoursesSection({ courses }: { courses: any[] }) {
 // Section: Assignments (with per-task expand)
 // ---------------------------------------------------------------------------
 function AssignmentRow({ a }: { a: any }) {
+  const { t } = useTranslation()
   const [open, setOpen] = useState(false)
   const hasTasks = (a.tasks || []).length > 0
   return (
@@ -172,7 +180,7 @@ function AssignmentRow({ a }: { a: any }) {
           <span className="text-sm font-semibold">
             {a.grade != null ? `${a.grade}/${a.max_grade_value ?? 100}` : '—'}
           </span>
-          <span className="text-xs text-gray-400">attempt {a.attempt_number}</span>
+          <span className="text-xs text-gray-400">{t(`${P}.assignments.attempt`, { number: a.attempt_number })}</span>
           <StatusBadge status={a.status} />
         </div>
       </button>
@@ -180,7 +188,7 @@ function AssignmentRow({ a }: { a: any }) {
         <div className="px-4 pb-4 space-y-2">
           {a.overall_feedback && (
             <div className="text-xs text-gray-600 bg-gray-50 rounded p-2">
-              <span className="font-semibold">Feedback: </span>{a.overall_feedback}
+              <span className="font-semibold">{t(`${P}.assignments.feedback`)} </span>{a.overall_feedback}
             </div>
           )}
           {a.tasks.map((tk: any, i: number) => (
@@ -202,11 +210,12 @@ function AssignmentRow({ a }: { a: any }) {
 }
 
 function AssignmentsSection({ assignments }: { assignments: any[] }) {
+  const { t } = useTranslation()
   return (
     <Card>
-      <SectionTitle icon={<Activity size={18} />} title="Assignments" count={assignments.length} />
+      <SectionTitle icon={<Activity size={18} />} title={t(`${P}.assignments.title`)} count={assignments.length} />
       {assignments.length === 0 ? (
-        <Empty label="No assignment submissions." />
+        <Empty label={t(`${P}.assignments.empty`)} />
       ) : (
         <div className="space-y-3">
           {assignments.map((a, i) => <AssignmentRow key={i} a={a} />)}
@@ -220,20 +229,21 @@ function AssignmentsSection({ assignments }: { assignments: any[] }) {
 // Section: Code submissions
 // ---------------------------------------------------------------------------
 function CodeSection({ submissions }: { submissions: any[] }) {
+  const { t } = useTranslation()
   return (
     <Card>
-      <SectionTitle icon={<Code2 size={18} />} title="Code exercises" count={submissions.length} />
+      <SectionTitle icon={<Code2 size={18} />} title={t(`${P}.code.title`)} count={submissions.length} />
       {submissions.length === 0 ? (
-        <Empty label="No code submissions." />
+        <Empty label={t(`${P}.code.empty`)} />
       ) : (
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Activity</TableHead>
-              <TableHead>Result</TableHead>
-              <TableHead>Tests</TableHead>
-              <TableHead>Time</TableHead>
-              <TableHead>When</TableHead>
+              <TableHead>{t(`${P}.code.activity`)}</TableHead>
+              <TableHead>{t(`${P}.code.result`)}</TableHead>
+              <TableHead>{t(`${P}.code.tests`)}</TableHead>
+              <TableHead>{t(`${P}.code.time`)}</TableHead>
+              <TableHead>{t(`${P}.code.when`)}</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -242,7 +252,7 @@ function CodeSection({ submissions }: { submissions: any[] }) {
                 <TableCell className="font-mono text-xs truncate max-w-[140px]">{s.activity_uuid}</TableCell>
                 <TableCell>
                   <span className={s.passed ? 'text-green-600' : 'text-red-600'}>
-                    {s.passed ? 'Passed' : 'Failed'}
+                    {s.passed ? t(`${P}.code.passed`) : t(`${P}.code.failed`)}
                   </span>
                 </TableCell>
                 <TableCell>{s.passed_tests}/{s.total_tests}</TableCell>
@@ -261,18 +271,19 @@ function CodeSection({ submissions }: { submissions: any[] }) {
 // Section: Community
 // ---------------------------------------------------------------------------
 function CommunitySection({ community }: { community: any }) {
+  const { t } = useTranslation()
   const discussions = community?.discussions || []
   const comments = community?.comments || []
   return (
     <Card>
-      <SectionTitle icon={<MessagesSquare size={18} />} title="Community participation" count={discussions.length + comments.length} />
+      <SectionTitle icon={<MessagesSquare size={18} />} title={t(`${P}.community.title`)} count={discussions.length + comments.length} />
       {discussions.length === 0 && comments.length === 0 ? (
-        <Empty label="No community activity." />
+        <Empty label={t(`${P}.community.empty`)} />
       ) : (
         <div className="space-y-4">
           {discussions.length > 0 && (
             <div>
-              <div className="text-xs font-semibold text-gray-400 uppercase mb-2">Discussions</div>
+              <div className="text-xs font-semibold text-gray-400 uppercase mb-2">{t(`${P}.community.discussions`)}</div>
               <div className="space-y-2">
                 {discussions.map((d: any, i: number) => (
                   <div key={i} className="flex items-center justify-between text-sm border border-gray-100 rounded p-2">
@@ -285,7 +296,7 @@ function CommunitySection({ community }: { community: any }) {
           )}
           {comments.length > 0 && (
             <div>
-              <div className="text-xs font-semibold text-gray-400 uppercase mb-2">Comments</div>
+              <div className="text-xs font-semibold text-gray-400 uppercase mb-2">{t(`${P}.community.comments`)}</div>
               <div className="space-y-2">
                 {comments.map((c: any, i: number) => (
                   <div key={i} className="flex items-center justify-between gap-3 text-sm border border-gray-100 rounded p-2">
@@ -306,11 +317,12 @@ function CommunitySection({ community }: { community: any }) {
 // Section: Certificates
 // ---------------------------------------------------------------------------
 function CertificatesSection({ certificates }: { certificates: any[] }) {
+  const { t } = useTranslation()
   return (
     <Card>
-      <SectionTitle icon={<Award size={18} />} title="Certificates earned" count={certificates.length} />
+      <SectionTitle icon={<Award size={18} />} title={t(`${P}.certificates.title`)} count={certificates.length} />
       {certificates.length === 0 ? (
-        <Empty label="No certificates earned." />
+        <Empty label={t(`${P}.certificates.empty`)} />
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           {certificates.map((c, i) => (
@@ -332,6 +344,7 @@ function CertificatesSection({ certificates }: { certificates: any[] }) {
 // Section: Behavior (Tinybird enrichment)
 // ---------------------------------------------------------------------------
 function BehaviorSection({ behavior }: { behavior: any }) {
+  const { t } = useTranslation()
   const daily = (behavior?.user_daily_activity || []).map((d: any) => ({
     day: d.day, events: Number(d.events || 0), minutes: Math.round(Number(d.seconds || 0) / 60),
   }))
@@ -341,9 +354,9 @@ function BehaviorSection({ behavior }: { behavior: any }) {
 
   return (
     <Card>
-      <SectionTitle icon={<TrendingUp size={18} />} title="Behavioral analytics" />
+      <SectionTitle icon={<TrendingUp size={18} />} title={t(`${P}.behavior.title`)} />
       {!hasAny ? (
-        <Empty label="No behavioral data (analytics may be unconfigured for this window)." />
+        <Empty label={t(`${P}.no_behavioral`)} />
       ) : (
         <div className="space-y-6">
           {daily.length > 0 && (
@@ -367,7 +380,7 @@ function BehaviorSection({ behavior }: { behavior: any }) {
           )}
           {byCourse.length > 0 && (
             <div>
-              <div className="text-xs font-semibold text-gray-400 uppercase mb-2">Time spent by course</div>
+              <div className="text-xs font-semibold text-gray-400 uppercase mb-2">{t(`${P}.behavior.time_by_course`)}</div>
               <div className="space-y-1">
                 {byCourse.map((c: any, i: number) => (
                   <div key={i} className="flex items-center justify-between text-sm">
@@ -380,7 +393,7 @@ function BehaviorSection({ behavior }: { behavior: any }) {
           )}
           {searches.length > 0 && (
             <div>
-              <div className="text-xs font-semibold text-gray-400 uppercase mb-2">Searches</div>
+              <div className="text-xs font-semibold text-gray-400 uppercase mb-2">{t(`${P}.behavior.searches`)}</div>
               <div className="flex flex-wrap gap-2">
                 {searches.map((s: any, i: number) => (
                   <Badge key={i} variant="secondary">{s.query} · {s.count}</Badge>
@@ -398,6 +411,7 @@ function BehaviorSection({ behavior }: { behavior: any }) {
 // Main dossier
 // ---------------------------------------------------------------------------
 export default function UserDossier({ dossier }: { dossier: any }) {
+  const { t } = useTranslation()
   const user = dossier?.user || {}
   const summary = dossier?.summary || {}
   const security = dossier?.security || {}
@@ -426,9 +440,9 @@ export default function UserDossier({ dossier }: { dossier: any }) {
             <div className="text-sm text-gray-500 truncate">@{user.username} · {user.email}</div>
             <div className="flex flex-wrap gap-2 mt-2 text-xs">
               <span className={`flex items-center gap-1 ${security.email_verified ? 'text-green-600' : 'text-amber-600'}`}>
-                <ShieldCheck size={12} /> {security.email_verified ? 'Verified' : 'Unverified'}
+                <ShieldCheck size={12} /> {security.email_verified ? t(`${P}.identity.verified`) : t(`${P}.identity.unverified`)}
               </span>
-              {security.signup_method && <span className="text-gray-400">via {security.signup_method}</span>}
+              {security.signup_method && <span className="text-gray-400">{t(`${P}.identity.via`, { method: security.signup_method })}</span>}
               {(membership.groups || []).map((g: string, i: number) => (
                 <Badge key={i} variant="outline">{g}</Badge>
               ))}
@@ -440,24 +454,24 @@ export default function UserDossier({ dossier }: { dossier: any }) {
 
       {/* KPI row */}
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
-        <KpiTile icon={<BookOpen size={14} />} label="Courses" value={summary.courses_enrolled ?? 0} sub={`${summary.courses_completed ?? 0} completed`} />
-        <KpiTile icon={<TrendingUp size={14} />} label="Avg progress" value={`${summary.avg_progress_pct ?? 0}%`} />
-        <KpiTile icon={<Clock size={14} />} label="Time spent" value={fmtDuration(totalSeconds)} />
-        <KpiTile icon={<Activity size={14} />} label="Assignments" value={summary.assignments_submitted ?? 0} sub={summary.avg_grade != null ? `avg ${summary.avg_grade}` : undefined} />
-        <KpiTile icon={<Award size={14} />} label="Certificates" value={summary.certificates_earned ?? 0} />
-        <KpiTile icon={<LogIn size={14} />} label="Connections" value={summary.connections ?? 0} sub={summary.last_connection ? `last ${fmtDate(summary.last_connection)}` : undefined} />
+        <KpiTile icon={<BookOpen size={14} />} label={t(`${P}.kpi.courses`)} value={summary.courses_enrolled ?? 0} sub={t(`${P}.kpi.completed`, { count: summary.courses_completed ?? 0 })} />
+        <KpiTile icon={<TrendingUp size={14} />} label={t(`${P}.kpi.avg_progress`)} value={`${summary.avg_progress_pct ?? 0}%`} />
+        <KpiTile icon={<Clock size={14} />} label={t(`${P}.kpi.time_spent`)} value={fmtDuration(totalSeconds)} />
+        <KpiTile icon={<Activity size={14} />} label={t(`${P}.kpi.assignments`)} value={summary.assignments_submitted ?? 0} sub={summary.avg_grade != null ? t(`${P}.kpi.avg_grade`, { grade: summary.avg_grade }) : undefined} />
+        <KpiTile icon={<Award size={14} />} label={t(`${P}.kpi.certificates`)} value={summary.certificates_earned ?? 0} />
+        <KpiTile icon={<LogIn size={14} />} label={t(`${P}.kpi.connections`)} value={summary.connections ?? 0} sub={summary.last_connection ? t(`${P}.kpi.last`, { date: fmtDate(summary.last_connection) }) : undefined} />
       </div>
 
       {/* Detailed sections */}
       <Tabs defaultValue="connections">
         <TabsList className="flex-wrap h-auto">
-          <TabsTrigger value="connections">Connections</TabsTrigger>
-          <TabsTrigger value="courses">Courses</TabsTrigger>
-          <TabsTrigger value="assignments">Assignments</TabsTrigger>
-          <TabsTrigger value="code">Code</TabsTrigger>
-          <TabsTrigger value="community">Community</TabsTrigger>
-          <TabsTrigger value="certificates">Certificates</TabsTrigger>
-          <TabsTrigger value="behavior">Behavior</TabsTrigger>
+          <TabsTrigger value="connections">{t(`${P}.tabs.connections`)}</TabsTrigger>
+          <TabsTrigger value="courses">{t(`${P}.tabs.courses`)}</TabsTrigger>
+          <TabsTrigger value="assignments">{t(`${P}.tabs.assignments`)}</TabsTrigger>
+          <TabsTrigger value="code">{t(`${P}.tabs.code`)}</TabsTrigger>
+          <TabsTrigger value="community">{t(`${P}.tabs.community`)}</TabsTrigger>
+          <TabsTrigger value="certificates">{t(`${P}.tabs.certificates`)}</TabsTrigger>
+          <TabsTrigger value="behavior">{t(`${P}.tabs.behavior`)}</TabsTrigger>
         </TabsList>
         <TabsContent value="connections"><ConnectionsSection connections={dossier?.connections || []} /></TabsContent>
         <TabsContent value="courses"><CoursesSection courses={dossier?.courses || []} /></TabsContent>
@@ -468,7 +482,7 @@ export default function UserDossier({ dossier }: { dossier: any }) {
         <TabsContent value="behavior"><BehaviorSection behavior={behavior} /></TabsContent>
       </Tabs>
 
-      {/* Coverage notes */}
+      {/* Coverage notes (server-provided, rendered as-is) */}
       {(dossier?.coverage_notes || []).length > 0 && (
         <div className="flex gap-2 text-xs text-gray-400 bg-gray-50 rounded-lg p-4">
           <Info size={14} className="flex-shrink-0 mt-0.5" />
