@@ -1,11 +1,14 @@
 import { NodeViewWrapper } from '@tiptap/react'
 import React, { useState, useRef, useEffect, useMemo } from 'react'
-import { Link as LinkIcon, GripVertical, GripHorizontal, AlignCenter, Code, X, ExternalLink, Palette } from 'lucide-react'
+import { Link as LinkIcon, GripVertical, GripHorizontal, AlignCenter, Code, X, Palette } from 'lucide-react'
 import { useEditorProvider } from '@components/Contexts/Editor/EditorContext'
 import { SiGithub, SiReplit, SiSpotify, SiLoom, SiGooglemaps, SiNotion, SiGoogledocs, SiX, SiFigma, SiGiphy, SiYoutube } from '@icons-pack/react-simple-icons'
 import DOMPurify from 'dompurify'
 import { cn } from '@/lib/utils'
 import { useTranslation } from 'react-i18next'
+
+// Matches the embedHeight default in the EmbedObjects node
+const DEFAULT_EMBED_HEIGHT = 300;
 
 // Add new type for script-based embeds
 const SCRIPT_BASED_EMBEDS = {
@@ -110,11 +113,11 @@ function EmbedObjectsComponent(props: any) {
   const [embedType, setEmbedType] = useState<'url' | 'code'>(props.node.attrs.embedType || 'url')
   const [embedUrl, setEmbedUrl] = useState(props.node.attrs.embedUrl || '')
   const [embedCode, setEmbedCode] = useState(props.node.attrs.embedCode || '')
-  const [embedHeight, setEmbedHeight] = useState(props.node.attrs.embedHeight || 300)
+  const [embedHeight, setEmbedHeight] = useState(props.node.attrs.embedHeight || DEFAULT_EMBED_HEIGHT)
   const [embedWidth, setEmbedWidth] = useState(props.node.attrs.embedWidth || '100%')
+  const [aspectRatio, setAspectRatio] = useState<number | null>(props.node.attrs.embedAspectRatio || null)
   const [alignment, setAlignment] = useState(props.node.attrs.alignment || 'left')
   const [isResizing, setIsResizing] = useState(false)
-  const [parentWidth, setParentWidth] = useState<number | null>(null)
   const [isMobile, setIsMobile] = useState(false)
 
   const resizeRef = useRef<HTMLDivElement>(null)
@@ -122,40 +125,56 @@ function EmbedObjectsComponent(props: any) {
   const editorState = useEditorProvider() as any
   const isEditable = editorState.isEditable
 
+  // Only track the breakpoint here. Sizing itself is handled in CSS
+  // (percentage width + aspect-ratio), so the observer never writes node
+  // attributes — that used to fire on every window resize.
   useEffect(() => {
-    const updateDimensions = () => {
-      if (containerRef.current && containerRef.current.parentElement) {
-        const parentElement = containerRef.current.parentElement;
-        const newParentWidth = parentElement.offsetWidth;
-        setParentWidth(newParentWidth);
-        setIsMobile(newParentWidth < 640);
+    const parentElement = containerRef.current?.parentElement;
+    if (!parentElement) return;
 
-        if (typeof embedWidth === 'string' && embedWidth.endsWith('%')) {
-          const percentage = parseInt(embedWidth, 10);
-          const newWidth = `${Math.min(100, percentage)}%`;
-          setEmbedWidth(newWidth);
-          props.updateAttributes({ embedWidth: newWidth });
-        } else if (newParentWidth < parseInt(String(embedWidth), 10)) {
-          setEmbedWidth('100%');
-          props.updateAttributes({ embedWidth: '100%' });
-        }
-      }
+    const updateDimensions = () => {
+      setIsMobile(parentElement.offsetWidth < 640);
     };
 
     updateDimensions();
 
-    const resizeObserver = new ResizeObserver(() => {
-      updateDimensions();
-    });
-
-    if (containerRef.current && containerRef.current.parentElement) {
-      resizeObserver.observe(containerRef.current.parentElement);
-    }
+    const resizeObserver = new ResizeObserver(updateDimensions);
+    resizeObserver.observe(parentElement);
 
     return () => {
       resizeObserver.disconnect();
     };
   }, []);
+
+  // Blocks saved before the aspect-ratio attribute existed only have a pixel
+  // height, which kept the frame at a fixed size while the window (and the
+  // video inside it) shrank. Give them a ratio so they scale too. URL embeds
+  // only: script embeds (tweets, TikTok) need their height, shrinking it clips
+  // the content.
+  const derivedRatioRef = useRef(false)
+
+  useEffect(() => {
+    if (derivedRatioRef.current || aspectRatio) return;
+    if (embedType !== 'url' || !embedUrl) return;
+
+    const height = parseInt(String(embedHeight), 10);
+    const renderedWidth = resizeRef.current?.offsetWidth || 0;
+
+    if (!height) return;
+
+    // Never resized by hand, so the 300px is just the attribute default —
+    // 16:9 fits video, which is what most URL embeds are.
+    if (height === DEFAULT_EMBED_HEIGHT) {
+      setAspectRatio(16 / 9);
+      derivedRatioRef.current = true;
+      return;
+    }
+
+    if (!renderedWidth) return;
+
+    setAspectRatio(renderedWidth / height);
+    derivedRatioRef.current = true;
+  }, [aspectRatio, embedType, embedUrl, embedHeight]);
 
   const supportedProducts = [
     { name: 'YouTube', icon: SiYoutube, color: '#FF0000', guide: 'https://support.google.com/youtube/answer/171780?hl=en' },
@@ -236,7 +255,8 @@ function EmbedObjectsComponent(props: any) {
 
   const dimensionsRef = useRef({
     width: props.node.attrs.embedWidth || '100%',
-    height: props.node.attrs.embedHeight || 300
+    height: props.node.attrs.embedHeight || DEFAULT_EMBED_HEIGHT,
+    ratio: props.node.attrs.embedAspectRatio || null as number | null
   })
 
   const handleResizeStart = (event: React.MouseEvent<HTMLDivElement>, direction: 'horizontal' | 'vertical') => {
@@ -246,6 +266,7 @@ function EmbedObjectsComponent(props: any) {
     const startY = event.clientY
     const startWidth = resizeRef.current?.offsetWidth || 0
     const startHeight = resizeRef.current?.offsetHeight || 0
+    dimensionsRef.current.ratio = aspectRatio
 
     const handleMouseMove = (e: MouseEvent) => {
       if (resizeRef.current) {
@@ -259,7 +280,14 @@ function EmbedObjectsComponent(props: any) {
         } else {
           const newHeight = Math.max(100, startHeight + e.clientY - startY)
           dimensionsRef.current.height = newHeight
+          // Drop the ratio while dragging so the height follows the cursor,
+          // then re-derive it from the box the user settled on.
+          resizeRef.current.style.aspectRatio = 'auto'
           resizeRef.current.style.height = `${newHeight}px`
+          const currentWidth = resizeRef.current.offsetWidth
+          dimensionsRef.current.ratio = embedType === 'url' && currentWidth
+            ? currentWidth / newHeight
+            : null
         }
       }
     }
@@ -268,9 +296,11 @@ function EmbedObjectsComponent(props: any) {
       setIsResizing(false)
       setEmbedWidth(dimensionsRef.current.width)
       setEmbedHeight(dimensionsRef.current.height)
+      setAspectRatio(dimensionsRef.current.ratio)
       props.updateAttributes({
         embedWidth: dimensionsRef.current.width,
-        embedHeight: dimensionsRef.current.height
+        embedHeight: dimensionsRef.current.height,
+        embedAspectRatio: dimensionsRef.current.ratio
       })
       document.removeEventListener('mousemove', handleMouseMove)
       document.removeEventListener('mouseup', handleMouseUp)
@@ -288,18 +318,16 @@ function EmbedObjectsComponent(props: any) {
 
   const getResponsiveStyles = () => {
     const styles: React.CSSProperties = {
-      height: `${embedHeight}px`,
-      width: embedWidth,
+      width: isMobile ? '100%' : embedWidth,
+      maxWidth: '100%',
     };
 
-    if (parentWidth) {
-      if (isMobile) {
-        styles.width = '100%';
-        styles.minWidth = 'unset';
-      } else {
-        styles.minWidth = Math.min(parentWidth, 400) + 'px';
-        styles.maxWidth = '100%';
-      }
+    // An aspect ratio lets the frame shrink with its container instead of
+    // keeping a pixel height the content no longer fills.
+    if (aspectRatio) {
+      styles.aspectRatio = String(aspectRatio);
+    } else {
+      styles.height = `${embedHeight}px`;
     }
 
     return styles;
@@ -360,34 +388,15 @@ function EmbedObjectsComponent(props: any) {
 
   return (
     <NodeViewWrapper className="embed-block w-full" ref={containerRef}>
-      <div className="bg-neutral-50 rounded-xl px-5 py-4 nice-shadow transition-all ease-linear">
-        {/* Header */}
-        <div className="flex items-center justify-between mb-3">
-          <div className="flex items-center gap-2">
-            <ExternalLink className="text-neutral-400" size={16} />
-            <span className="uppercase tracking-widest text-xs font-bold text-neutral-400">
-              {t('editor.blocks.embed')}
-            </span>
-          </div>
-          {(embedUrl || sanitizedEmbedCode) && isEditable && (
-            <button
-              onClick={handleRemove}
-              className="text-neutral-400 hover:text-red-500 transition-colors"
-            >
-              <X size={16} />
-            </button>
-          )}
-        </div>
-
-        {/* Embed Container */}
-        <div
-          ref={resizeRef}
-          className={cn(
-            "relative bg-white rounded-lg overflow-hidden nice-shadow",
-            alignment === 'center' && "mx-auto"
-          )}
-          style={getResponsiveStyles()}
-        >
+      {/* Embed Container */}
+      <div
+        ref={resizeRef}
+        className={cn(
+          "relative bg-white rounded-xl overflow-hidden nice-shadow",
+          alignment === 'center' && "mx-auto"
+        )}
+        style={(embedUrl || sanitizedEmbedCode) ? getResponsiveStyles() : { width: '100%' }}
+      >
           {(embedUrl || sanitizedEmbedCode) ? (
             <>
               {embedContent}
@@ -411,11 +420,18 @@ function EmbedObjectsComponent(props: any) {
                   >
                     <AlignCenter size={16} />
                   </button>
+                  <button
+                    onClick={handleRemove}
+                    className="p-1.5 rounded-md hover:bg-neutral-100 text-neutral-600 hover:text-red-500 transition-colors"
+                    title={t('editor.blocks.embed_block.remove_embed')}
+                  >
+                    <X size={16} />
+                  </button>
                 </div>
               )}
             </>
           ) : (
-            <div className="w-full h-full flex flex-col items-center justify-center p-4 sm:p-6">
+            <div className="w-full flex flex-col items-center justify-center p-4 sm:p-6">
               <p className="text-neutral-500 mb-4 font-medium text-base text-center">{t('editor.blocks.embed_block.add_embed_from')}</p>
               <div className="flex flex-wrap gap-3 sm:gap-4 justify-center mb-4">
                 {supportedProducts.map((product) => (
@@ -586,7 +602,6 @@ function EmbedObjectsComponent(props: any) {
               </div>
             </>
           )}
-        </div>
       </div>
     </NodeViewWrapper>
   )

@@ -4805,7 +4805,8 @@
         "paste_directly": "Paste any embed URL directly",
         "how_to_embed": "How to embed {{name}}",
         "paste_code": "Paste embed code (iframe, embed script, etc.)",
-        "paste_iframe": "Paste iframe or embed code from any platform"
+        "paste_iframe": "Paste iframe or embed code from any platform",
+        "remove_embed": "Remove embed"
       },
       "web_preview_block": {
         "website_preview": "Website Preview",
