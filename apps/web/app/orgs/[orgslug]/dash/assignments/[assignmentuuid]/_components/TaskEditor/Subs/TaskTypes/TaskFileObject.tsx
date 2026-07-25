@@ -174,9 +174,14 @@ export default function TaskFileObject({ view, user_id, assignmentTaskUUID, onGr
                 // to the call-time snapshot, so a change during the save survives.
                 setInitialUserSubmissions({ ...userSubmissions, assignment_task_submission_uuid: savedUUID });
                 setUserSubmissions(prev => ({ ...prev, assignment_task_submission_uuid: savedUUID }));
-                if (!opts?.silent) {
-                    queryClient.invalidateQueries({ queryKey: queryKeys.assignments.taskSubmission(assignment.assignment_object.assignment_uuid) });
-                }
+                // Keep the shared batch cache current with the saved file UUID,
+                // even on a silent save. Without this the 60s-cached batch still
+                // holds the pre-upload submission, so a remount re-hydrates the
+                // old file UUID and the next save persists the stale one.
+                queryClient.setQueryData(
+                    queryKeys.assignments.taskSubmission(assignment.assignment_object.assignment_uuid),
+                    (old: any) => (old ? { ...old, [assignmentTaskUUID]: res.data ?? old[assignmentTaskUUID] } : old)
+                );
                 return true;
             } else {
                 if (!opts?.silent) toast.error(t('dashboard.assignments.editor.toasts.task_save_error'));

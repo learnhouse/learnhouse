@@ -462,10 +462,15 @@ function TaskCodeObject({ view, assignmentTaskUUID, user_id, onGraded }: TaskCod
     if (res.success) {
       setUserSubmissions(res.data)
       setInitialCode(code)
-      // Refresh the batch task-submissions cache so a future re-mount sees the
-      // new submission. Skipped on silent auto-saves (draft; would refetch ~1s).
+      // Keep the shared 60s batch cache in sync with what we just saved, even on
+      // a silent auto-save. Patching the cached entry in place (no refetch)
+      // avoids the stale-hydration bug: a remount that reads the batch would
+      // otherwise get the pre-save submission and overwrite the newer code.
+      queryClient.setQueryData(
+        queryKeys.assignments.taskSubmission(assignment.assignment_object.assignment_uuid),
+        (old: any) => (old ? { ...old, [assignmentTaskUUID]: res.data } : old)
+      )
       if (!opts?.silent) {
-        queryClient.invalidateQueries({ queryKey: queryKeys.assignments.taskSubmission(assignment.assignment_object.assignment_uuid) })
         toast.success(t('dashboard.assignments.editor.toasts.task_saved'))
       }
       return true

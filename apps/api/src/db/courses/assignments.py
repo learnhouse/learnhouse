@@ -161,7 +161,12 @@ class AssignmentTaskBase(SQLModel):
     # legacy assignments set different values which, when summed, yielded a
     # weighted average. New tasks and the UI always use 100, so the
     # compute_assignment_grade math produces a simple average across tasks.
-    max_grade_value: int = 100
+    # Must be non-negative: a negative max would subtract from the assignment
+    # total, and compute_assignment_grade clamps a non-positive total to a
+    # vacuous pass, so a single negative task could cancel real points and hand
+    # out the certificate. (DB CHECK constraint is a follow-up; the API rejects
+    # it here.)
+    max_grade_value: int = Field(default=100, ge=0)
 
 
 class AssignmentTaskCreate(AssignmentTaskBase):
@@ -187,7 +192,7 @@ class AssignmentTaskUpdate(SQLModel):
     hint: Optional[str] = None
     assignment_type: Optional[AssignmentTaskTypeEnum] = None
     contents: Optional[Dict] = Field(default=None, sa_column=Column(JSON))
-    max_grade_value: Optional[int] = None
+    max_grade_value: Optional[int] = Field(default=None, ge=0)
 
 
 class AssignmentTask(AssignmentTaskBase, table=True):

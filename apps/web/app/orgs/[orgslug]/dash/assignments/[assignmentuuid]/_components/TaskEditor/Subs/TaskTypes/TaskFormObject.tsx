@@ -324,11 +324,17 @@ function TaskFormObject({ view, assignmentTaskUUID, user_id, onGraded }: TaskFor
 
         questions.forEach((question) => {
             question.blanks.forEach((blank) => {
+                // Mirror the server grader: a blank with no configured answer
+                // can't be auto-scored, so it counts toward neither the
+                // numerator nor the denominator. Counting it here inflated the
+                // denominator and made this preview grade lower than the server's.
+                const correct = (blank.correctAnswer ?? '').trim();
+                if (!correct) return;
                 totalBlanks++;
                 const userAnswer = userSubmissions.submissions.find(
                     (submission) => submission.questionUUID === question.questionUUID && submission.blankUUID === blank.blankUUID
                 );
-                if (userAnswer && userAnswer.answer.toLowerCase().trim() === blank.correctAnswer.toLowerCase().trim()) {
+                if (userAnswer && userAnswer.answer.toLowerCase().trim() === correct.toLowerCase()) {
                     correctAnswers++;
                 }
             });
