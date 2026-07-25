@@ -338,9 +338,9 @@ class TestDirectoryHelpers:
             walked = list(storage_utils.walk_directory(str(base_dir)))
 
         assert walked == [
-            (str(base_dir), ["nested"], ["root.txt"]),
-            (str(nested_dir), ["deeper"], ["child.md"]),
-            (str(deeper_dir), [], ["deep.pdf"]),
+            (str(base_dir).replace("\\", "/"), ["nested"], ["root.txt"]),
+            (str(nested_dir).replace("\\", "/"), ["deeper"], ["child.md"]),
+            (str(deeper_dir).replace("\\", "/"), [], ["deep.pdf"]),
         ]
         assert all("\\" not in root for root, _, _ in walked)
 
@@ -379,6 +379,29 @@ class TestDirectoryHelpers:
             ("content/transfer/nested/deeper", [], ["deep.pdf"]),
         ]
         assert all("\\" not in root for root, _, _ in walked)
+
+        # A trailing slash on the base path must not double up in the roots we
+        # yield — the S3 keys built from them would stop resolving.
+        with patch.object(
+            storage_utils,
+            "get_content_delivery_type",
+            return_value="s3api",
+        ), patch.object(
+            storage_utils,
+            "get_storage_client",
+            return_value=s3_client,
+        ), patch.object(
+            storage_utils,
+            "get_s3_bucket_name",
+            return_value="bucket",
+        ):
+            walked = list(storage_utils.walk_directory("content/transfer/"))
+
+        assert walked == [
+            ("content/transfer", ["nested"], ["root.txt", "side.txt"]),
+            ("content/transfer/nested", ["deeper"], ["child.md"]),
+            ("content/transfer/nested/deeper", [], ["deep.pdf"]),
+        ]
 
         s3_client.get_paginator.side_effect = _client_error("500", "list_objects_v2")
         with patch.object(
