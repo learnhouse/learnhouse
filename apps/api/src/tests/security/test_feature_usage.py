@@ -1,6 +1,6 @@
 from datetime import datetime, timedelta
 from types import SimpleNamespace
-from unittest.mock import Mock, patch
+from unittest.mock import Mock, patch, AsyncMock
 
 import pytest
 from fastapi import HTTPException
@@ -279,6 +279,19 @@ class TestFeatureUsage:
                  patch("src.security.features_utils.usage.get_plan_limit", return_value=2), \
                  patch("src.security.features_utils.usage._get_actual_admin_seat_count", return_value=1):
                 assert await usage.check_admin_seat_limit(org.id, db) is True
+
+            # Free plan with unlimited seats (limit 0) → allowed.
+            with patch("src.security.features_utils.usage._get_org_plan", return_value="free"), \
+                 patch("src.security.features_utils.usage.get_plan_limit", return_value=0):
+                assert await usage.check_admin_seat_limit(org.id, db) is True
+
+            # No org config → degrade open (never block a role change on misconfig).
+            with patch("src.security.features_utils.usage._get_org_config", new_callable=AsyncMock, return_value=None):
+                assert await usage.check_admin_seat_limit(org.id, db) is True
+
+        # Non-SaaS deployment → seat limits do not apply.
+        with patch("src.security.features_utils.usage._is_non_saas", return_value=True):
+            assert await usage.check_admin_seat_limit(org.id, db) is True
 
         with patch("src.security.features_utils.usage.get_plan_limit", return_value=5):
             summary = await usage.get_admin_seat_usage(org.id, db)
