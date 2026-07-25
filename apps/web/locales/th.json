@@ -3012,6 +3012,32 @@
           "message2": "โปรดเปลี่ยนไปใช้เดสก์ท็อปเพื่อดูและจัดการการตั้งค่าผู้ใช้งาน"
         }
       },
+      "analytics": {
+        "button": "การวิเคราะห์",
+        "view_analytics": "ดูการวิเคราะห์ของนักเรียน",
+        "open_full_page": "เปิดหน้าการวิเคราะห์แบบเต็ม",
+        "compare": "เปรียบเทียบการวิเคราะห์",
+        "compare_students": "เปรียบเทียบนักเรียน",
+        "export": "ส่งออก",
+        "export_selected": "ส่งออกการวิเคราะห์ ({{count}})",
+        "exporting": "กำลังส่งออก…",
+        "failed_load": "ไม่สามารถโหลดแฟ้มข้อมูลนักเรียนได้",
+        "back_to_students": "กลับไปที่นักเรียน",
+        "no_behavioral": "ไม่มีข้อมูลพฤติกรรม (การวิเคราะห์อาจยังไม่ได้ตั้งค่าสำหรับช่วงเวลานี้)",
+        "ranges": { "d30": "30 วัน", "d90": "90 วัน", "y1": "1 ปี" },
+        "kpi": { "courses": "คอร์ส", "completed": "เสร็จสิ้น {{count}}", "avg_progress": "ความคืบหน้าเฉลี่ย", "time_spent": "เวลาที่ใช้", "assignments": "งานที่มอบหมาย", "avg_grade": "เฉลี่ย {{grade}}", "certificates": "ใบรับรอง", "connections": "การเชื่อมต่อ", "last": "ล่าสุด {{date}}" },
+        "tabs": { "connections": "การเชื่อมต่อ", "courses": "คอร์ส", "assignments": "งานที่มอบหมาย", "code": "โค้ด", "community": "ชุมชน", "certificates": "ใบรับรอง", "behavior": "พฤติกรรม" },
+        "identity": { "verified": "ยืนยันแล้ว", "unverified": "ยังไม่ยืนยัน", "via": "ผ่าน {{method}}" },
+        "connections": { "title": "การเชื่อมต่อ", "empty": "ยังไม่มีการเชื่อมต่อที่บันทึกไว้" },
+        "courses": { "title": "ความคืบหน้าของคอร์ส", "empty": "ยังไม่ได้ลงทะเบียนในคอร์สใด", "activities": "{{done}}/{{total}} กิจกรรม", "enrolled": "ลงทะเบียน {{date}}" },
+        "assignments": { "title": "งานที่มอบหมาย", "empty": "ไม่มีการส่งงานที่มอบหมาย", "attempt": "ครั้งที่ {{number}}", "feedback": "ข้อเสนอแนะ:" },
+        "code": { "title": "แบบฝึกหัดโค้ด", "empty": "ไม่มีการส่งโค้ด", "activity": "กิจกรรม", "result": "ผลลัพธ์", "tests": "การทดสอบ", "time": "เวลา", "when": "เมื่อ", "passed": "ผ่าน", "failed": "ไม่ผ่าน" },
+        "community": { "title": "การมีส่วนร่วมในชุมชน", "empty": "ไม่มีกิจกรรมในชุมชน", "discussions": "การอภิปราย", "comments": "ความคิดเห็น" },
+        "certificates": { "title": "ใบรับรองที่ได้รับ", "empty": "ยังไม่ได้รับใบรับรอง" },
+        "behavior": { "title": "การวิเคราะห์พฤติกรรม", "time_by_course": "เวลาที่ใช้แยกตามคอร์ส", "searches": "การค้นหา" },
+        "status": { "completed": "เสร็จสิ้น", "in_progress": "กำลังดำเนินการ", "paused": "หยุดชั่วคราว", "cancelled": "ยกเลิก", "graded": "ให้คะแนนแล้ว", "submitted": "ส่งแล้ว", "pending": "รอดำเนินการ", "late": "ล่าช้า", "not_submitted": "ยังไม่ได้ส่ง" },
+        "comparison": { "student": "นักเรียน", "enrolled": "ลงทะเบียน", "completed": "เสร็จสิ้น", "certificates": "ใบรับรอง", "last_connection": "การเชื่อมต่อล่าสุด", "view": "ดู" }
+      },
       "active_users": {
         "title": "ผู้ใช้งานที่ใช้งานอยู่",
         "subtitle": "จัดการผู้ใช้งานในองค์กรและกำหนดบทบาทและสิทธิ์การใช้งาน",

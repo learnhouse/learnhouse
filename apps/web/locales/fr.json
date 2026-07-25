@@ -2988,6 +2988,32 @@
           "message2": "Veuillez passer à un ordinateur de bureau pour afficher et gérer les paramètres utilisateur."
         }
       },
+      "analytics": {
+        "button": "Analytiques",
+        "view_analytics": "Voir les analytiques de l'étudiant",
+        "open_full_page": "Ouvrir la page complète des analytiques",
+        "compare": "Comparer les analytiques",
+        "compare_students": "Comparer les étudiants",
+        "export": "Exporter",
+        "export_selected": "Exporter les analytiques ({{count}})",
+        "exporting": "Exportation…",
+        "failed_load": "Échec du chargement du dossier de l'étudiant.",
+        "back_to_students": "Retour aux étudiants",
+        "no_behavioral": "Aucune donnée comportementale (les analytiques ne sont peut-être pas configurées pour cette période).",
+        "ranges": { "d30": "30 jours", "d90": "90 jours", "y1": "1 an" },
+        "kpi": { "courses": "Cours", "completed": "{{count}} terminés", "avg_progress": "Progression moyenne", "time_spent": "Temps passé", "assignments": "Devoirs", "avg_grade": "moy. {{grade}}", "certificates": "Certificats", "connections": "Connexions", "last": "dernière {{date}}" },
+        "tabs": { "connections": "Connexions", "courses": "Cours", "assignments": "Devoirs", "code": "Code", "community": "Communauté", "certificates": "Certificats", "behavior": "Comportement" },
+        "identity": { "verified": "Vérifié", "unverified": "Non vérifié", "via": "via {{method}}" },
+        "connections": { "title": "Connexions", "empty": "Aucune connexion enregistrée pour le moment." },
+        "courses": { "title": "Progression du cours", "empty": "Inscrit à aucun cours.", "activities": "{{done}}/{{total}} activités", "enrolled": "Inscrit le {{date}}" },
+        "assignments": { "title": "Devoirs", "empty": "Aucune soumission de devoir.", "attempt": "tentative {{number}}", "feedback": "Retour :" },
+        "code": { "title": "Exercices de code", "empty": "Aucune soumission de code.", "activity": "Activité", "result": "Résultat", "tests": "Tests", "time": "Temps", "when": "Quand", "passed": "Réussi", "failed": "Échoué" },
+        "community": { "title": "Participation à la communauté", "empty": "Aucune activité communautaire.", "discussions": "Discussions", "comments": "Commentaires" },
+        "certificates": { "title": "Certificats obtenus", "empty": "Aucun certificat obtenu." },
+        "behavior": { "title": "Analytiques comportementales", "time_by_course": "Temps passé par cours", "searches": "Recherches" },
+        "status": { "completed": "terminé", "in_progress": "en cours", "paused": "en pause", "cancelled": "annulé", "graded": "noté", "submitted": "soumis", "pending": "en attente", "late": "en retard", "not_submitted": "non soumis" },
+        "comparison": { "student": "Étudiant", "enrolled": "Inscrit", "completed": "Terminé", "certificates": "Certificats", "last_connection": "Dernière connexion", "view": "Voir" }
+      },
       "active_users": {
         "title": "Utilisateurs actifs",
         "subtitle": "Gérez les utilisateurs de votre organisation, assignez des rôles et des permissions",

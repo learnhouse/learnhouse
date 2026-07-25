@@ -750,9 +750,42 @@ async def check_admin_seat_limit(
         True if allowed
 
     Raises:
-        HTTPException if limit reached (for free plan)
+        HTTPException 403 if the plan's admin-seat limit is already reached.
+
+    NOTE: ``admin_seats`` is NOT a resolvable feature — it has no plan
+    ``enabled`` flag of its own (it is derived from ``members.admin_limit``).
+    Routing it through ``check_limits_with_usage``/``resolve_feature`` therefore
+    resolved it as "disabled" for EVERY SaaS org and 403'd every admin promotion
+    with "Admin_seats is not enabled". Resolve the limit directly from the plan
+    (``get_plan_limit``) and enforce against the live seat count instead.
     """
-    return await check_limits_with_usage("admin_seats", org_id, db_session)
+    if _is_non_saas():
+        return True
+
+    org_config = await _get_org_config(org_id, db_session)
+    if org_config is None:
+        # Degrade open on a misconfigured org rather than blocking role changes.
+        return True
+
+    org_plan = _get_org_plan(org_config)
+    # Paid plans allow tracked overage — only the free tier is hard-capped. This
+    # matches the sibling enforcers (enforce_admin_seat_limit_for_role_rights_change
+    # and the bulk role-change check), so a Pro/Enterprise admin promotion is
+    # never blocked here.
+    if org_plan not in ("free",):
+        return True
+
+    limit = get_plan_limit(org_plan, "admin_seats")
+    if limit <= 0:
+        return True  # 0 == unlimited
+
+    current = await _get_actual_admin_seat_count(org_id, db_session)
+    if current >= limit:
+        raise HTTPException(
+            status_code=403,
+            detail="Usage Limit has been reached for Admin_seats",
+        )
+    return True
 
 
 def _role_grants_dashboard_access(role: Optional[Role]) -> bool:

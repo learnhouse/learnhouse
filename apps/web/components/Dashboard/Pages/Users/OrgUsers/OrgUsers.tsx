@@ -376,9 +376,9 @@ function OrgUsers() {
                     className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white text-indigo-700 border border-indigo-200 hover:bg-indigo-100 rounded-md text-xs font-medium transition-all"
                   >
                     <GitCompare className="w-3.5 h-3.5" />
-                    <span>Compare analytics</span>
+                    <span>{t('dashboard.users.analytics.compare')}</span>
                   </button>
-                  <UserAuditExport userIds={Array.from(selectedUserIds)} label={`Export analytics (${selectedUserIds.size})`} />
+                  <UserAuditExport userIds={Array.from(selectedUserIds)} label={t('dashboard.users.analytics.export_selected', { count: selectedUserIds.size })} />
                   {canManageOrg && (
                     <ConfirmationModal
                       confirmationButtonText={`Remove ${selectedUserIds.size} user${selectedUserIds.size !== 1 ? 's' : ''}`}
@@ -670,12 +670,12 @@ function OrgUsers() {
                             <button
                               onClick={() => setAnalyticsUserId(user.user.id)}
                               className="inline-flex items-center gap-1.5 h-8 px-3 bg-white text-gray-600 hover:bg-indigo-50 hover:text-indigo-600 rounded-md text-xs font-medium nice-shadow transition-all"
-                              title="View student analytics"
+                              title={t('dashboard.users.analytics.view_analytics')}
                             >
                               <BarChart3 className="w-3.5 h-3.5" />
-                              <span>Analytics</span>
+                              <span>{t('dashboard.users.analytics.button')}</span>
                             </button>
-                            <ToolTip content="Open full analytics page" side="top">
+                            <ToolTip content={t('dashboard.users.analytics.open_full_page')} side="top">
                               <Link
                                 href={getUriWithOrg(params.orgslug, '') + `/dash/users/analytics/${user.user.id}`}
                                 className="inline-flex items-center justify-center h-8 w-8 bg-white text-gray-500 hover:bg-gray-100 hover:text-gray-700 rounded-md nice-shadow transition-all"
@@ -754,7 +754,7 @@ function OrgUsers() {
       <UserDossierModal userId={analyticsUserId} onOpenChange={(o) => !o && setAnalyticsUserId(null)} />
       <Dialog open={comparing} onOpenChange={setComparing}>
         <DialogContent className="max-w-5xl max-h-[90vh] overflow-y-auto bg-[#f8f8f8] p-6 sm:p-8">
-          <h2 className="font-bold text-xl tracking-tight mb-4">Compare students</h2>
+          <h2 className="font-bold text-xl tracking-tight mb-4">{t('dashboard.users.analytics.compare_students')}</h2>
           <UsersComparisonTable
             userIds={Array.from(selectedUserIds)}
             onOpenUser={(id) => { setComparing(false); setAnalyticsUserId(id) }}

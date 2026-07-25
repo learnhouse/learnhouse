@@ -1,5 +1,6 @@
 'use client'
 import React from 'react'
+import { useTranslation } from 'react-i18next'
 import {
   Table, TableHeader, TableBody, TableHead, TableRow, TableCell,
 } from '@components/ui/table'
@@ -16,8 +17,10 @@ interface Props {
 }
 
 export default function UsersComparisonTable({ userIds, days = 365, onOpenUser }: Props) {
+  const { t } = useTranslation()
   const { data, isLoading } = useUsersAuditSummary(userIds, days)
   const rows = data?.data || []
+  const P = 'dashboard.users.analytics.comparison'
 
   if (isLoading) {
     return <div className="py-16 flex justify-center"><LearnHouseSpinner /></div>
@@ -28,11 +31,11 @@ export default function UsersComparisonTable({ userIds, days = 365, onOpenUser }
       <Table>
         <TableHeader>
           <TableRow>
-            <TableHead>Student</TableHead>
-            <TableHead className="text-center">Enrolled</TableHead>
-            <TableHead className="text-center">Completed</TableHead>
-            <TableHead className="text-center">Certificates</TableHead>
-            <TableHead>Last connection</TableHead>
+            <TableHead>{t(`${P}.student`)}</TableHead>
+            <TableHead className="text-center">{t(`${P}.enrolled`)}</TableHead>
+            <TableHead className="text-center">{t(`${P}.completed`)}</TableHead>
+            <TableHead className="text-center">{t(`${P}.certificates`)}</TableHead>
+            <TableHead>{t(`${P}.last_connection`)}</TableHead>
             <TableHead />
           </TableRow>
         </TableHeader>
@@ -64,7 +67,7 @@ export default function UsersComparisonTable({ userIds, days = 365, onOpenUser }
                   onClick={() => onOpenUser(r.user.id)}
                   className="flex items-center gap-1 text-xs font-medium text-blue-600 hover:text-blue-700"
                 >
-                  <Eye size={13} /> View
+                  <Eye size={13} /> {t(`${P}.view`)}
                 </button>
               </TableCell>
             </TableRow>

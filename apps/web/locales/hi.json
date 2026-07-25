@@ -3010,6 +3010,32 @@
           "message2": "उपयोगकर्ता सेटिंग्स देखने और प्रबंधित करने के लिए कृपया डेस्कटॉप पर स्विच करें।"
         }
       },
+      "analytics": {
+        "button": "विश्लेषण",
+        "view_analytics": "छात्र विश्लेषण देखें",
+        "open_full_page": "पूरा विश्लेषण पृष्ठ खोलें",
+        "compare": "विश्लेषण की तुलना करें",
+        "compare_students": "छात्रों की तुलना करें",
+        "export": "निर्यात करें",
+        "export_selected": "विश्लेषण निर्यात करें ({{count}})",
+        "exporting": "निर्यात हो रहा है…",
+        "failed_load": "छात्र डोज़ियर लोड करने में विफल।",
+        "back_to_students": "छात्रों पर वापस जाएँ",
+        "no_behavioral": "कोई व्यवहारिक डेटा नहीं (इस अवधि के लिए विश्लेषण अकॉन्फ़िगर हो सकता है)।",
+        "ranges": { "d30": "30 दिन", "d90": "90 दिन", "y1": "1 वर्ष" },
+        "kpi": { "courses": "पाठ्यक्रम", "completed": "{{count}} पूर्ण", "avg_progress": "औसत प्रगति", "time_spent": "बिताया गया समय", "assignments": "असाइनमेंट", "avg_grade": "औसत {{grade}}", "certificates": "प्रमाणपत्र", "connections": "कनेक्शन", "last": "अंतिम {{date}}" },
+        "tabs": { "connections": "कनेक्शन", "courses": "पाठ्यक्रम", "assignments": "असाइनमेंट", "code": "कोड", "community": "समुदाय", "certificates": "प्रमाणपत्र", "behavior": "व्यवहार" },
+        "identity": { "verified": "सत्यापित", "unverified": "असत्यापित", "via": "{{method}} के माध्यम से" },
+        "connections": { "title": "कनेक्शन", "empty": "अभी तक कोई दर्ज कनेक्शन नहीं।" },
+        "courses": { "title": "पाठ्यक्रम प्रगति", "empty": "किसी भी पाठ्यक्रम में नामांकित नहीं।", "activities": "{{done}}/{{total}} गतिविधियाँ", "enrolled": "नामांकित {{date}}" },
+        "assignments": { "title": "असाइनमेंट", "empty": "कोई असाइनमेंट सबमिशन नहीं।", "attempt": "प्रयास {{number}}", "feedback": "प्रतिक्रिया:" },
+        "code": { "title": "कोड अभ्यास", "empty": "कोई कोड सबमिशन नहीं।", "activity": "गतिविधि", "result": "परिणाम", "tests": "परीक्षण", "time": "समय", "when": "कब", "passed": "उत्तीर्ण", "failed": "असफल" },
+        "community": { "title": "समुदाय भागीदारी", "empty": "कोई समुदाय गतिविधि नहीं।", "discussions": "चर्चाएँ", "comments": "टिप्पणियाँ" },
+        "certificates": { "title": "अर्जित प्रमाणपत्र", "empty": "कोई प्रमाणपत्र अर्जित नहीं।" },
+        "behavior": { "title": "व्यवहारिक विश्लेषण", "time_by_course": "पाठ्यक्रम अनुसार बिताया गया समय", "searches": "खोजें" },
+        "status": { "completed": "पूर्ण", "in_progress": "प्रगति पर", "paused": "रोका गया", "cancelled": "रद्द किया गया", "graded": "अंकित", "submitted": "सबमिट किया गया", "pending": "लंबित", "late": "विलंबित", "not_submitted": "सबमिट नहीं किया गया" },
+        "comparison": { "student": "छात्र", "enrolled": "नामांकित", "completed": "पूर्ण", "certificates": "प्रमाणपत्र", "last_connection": "अंतिम कनेक्शन", "view": "देखें" }
+      },
       "active_users": {
         "title": "सक्रिय उपयोगकर्ता",
         "subtitle": "अपने संगठन के उपयोगकर्ताओं को प्रबंधित करें, भूमिकाएं और अनुमतियां असाइन करें",

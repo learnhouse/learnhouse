@@ -3002,6 +3002,32 @@
           "message2": "يرجى التبديل لجهاز كمبيوتر لعرض وإدارة إعدادات المستخدمين."
         }
       },
+      "analytics": {
+        "button": "التحليلات",
+        "view_analytics": "عرض تحليلات الطالب",
+        "open_full_page": "فتح صفحة التحليلات الكاملة",
+        "compare": "مقارنة التحليلات",
+        "compare_students": "مقارنة الطلاب",
+        "export": "تصدير",
+        "export_selected": "تصدير التحليلات ({{count}})",
+        "exporting": "جارٍ التصدير…",
+        "failed_load": "فشل تحميل ملف الطالب.",
+        "back_to_students": "العودة إلى الطلاب",
+        "no_behavioral": "لا توجد بيانات سلوكية (قد لا تكون التحليلات مُهيأة لهذه الفترة).",
+        "ranges": { "d30": "30 يومًا", "d90": "90 يومًا", "y1": "سنة واحدة" },
+        "kpi": { "courses": "الدورات", "completed": "{{count}} مكتملة", "avg_progress": "متوسط التقدم", "time_spent": "الوقت المستغرق", "assignments": "الواجبات", "avg_grade": "متوسط {{grade}}", "certificates": "الشهادات", "connections": "الاتصالات", "last": "آخر {{date}}" },
+        "tabs": { "connections": "الاتصالات", "courses": "الدورات", "assignments": "الواجبات", "code": "البرمجة", "community": "المجتمع", "certificates": "الشهادات", "behavior": "السلوك" },
+        "identity": { "verified": "مُوثَّق", "unverified": "غير مُوثَّق", "via": "عبر {{method}}" },
+        "connections": { "title": "الاتصالات", "empty": "لا توجد اتصالات مسجلة بعد." },
+        "courses": { "title": "تقدم الدورة", "empty": "غير مسجل في أي دورة.", "activities": "{{done}}/{{total}} نشاط", "enrolled": "مُسجَّل في {{date}}" },
+        "assignments": { "title": "الواجبات", "empty": "لا توجد واجبات مُقدَّمة.", "attempt": "المحاولة {{number}}", "feedback": "الملاحظات:" },
+        "code": { "title": "تمارين البرمجة", "empty": "لا توجد أكواد مُقدَّمة.", "activity": "النشاط", "result": "النتيجة", "tests": "الاختبارات", "time": "الوقت", "when": "متى", "passed": "ناجح", "failed": "فاشل" },
+        "community": { "title": "المشاركة المجتمعية", "empty": "لا يوجد نشاط مجتمعي.", "discussions": "المناقشات", "comments": "التعليقات" },
+        "certificates": { "title": "الشهادات المكتسبة", "empty": "لم يتم اكتساب أي شهادات." },
+        "behavior": { "title": "التحليلات السلوكية", "time_by_course": "الوقت المستغرق حسب الدورة", "searches": "عمليات البحث" },
+        "status": { "completed": "مكتمل", "in_progress": "قيد التقدم", "paused": "متوقف مؤقتًا", "cancelled": "مُلغى", "graded": "مُقيَّم", "submitted": "مُقدَّم", "pending": "قيد الانتظار", "late": "متأخر", "not_submitted": "لم يُقدَّم" },
+        "comparison": { "student": "الطالب", "enrolled": "مُسجَّل", "completed": "مكتمل", "certificates": "الشهادات", "last_connection": "آخر اتصال", "view": "عرض" }
+      },
       "active_users": {
         "title": "المستخدمون النشطون",
         "subtitle": "أدر مستخدمي منظمتك، عين الأدوار والصلاحيات",

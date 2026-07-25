@@ -1,6 +1,6 @@
 from datetime import datetime, timedelta
 from types import SimpleNamespace
-from unittest.mock import Mock, patch
+from unittest.mock import Mock, patch, AsyncMock
 
 import pytest
 from fastapi import HTTPException
@@ -256,9 +256,42 @@ class TestFeatureUsage:
     async def test_admin_seat_helpers_and_purchased_seats(self, db, org, admin_user):
         await _make_org_config(db, org.id, {"config_version": "2.0", "plan": "standard"})
 
-        with patch("src.security.features_utils.usage.check_limits_with_usage", return_value=True) as check_limits:
+        # admin_seats resolves its limit straight from the plan (get_plan_limit),
+        # NOT through resolve_feature — otherwise every SaaS org is wrongly told
+        # "Admin_seats is not enabled". Paid plans allow overage (never blocked);
+        # only the free tier is capped, and it 403s with "limit reached" (never a
+        # spurious "not enabled").
+        with patch("src.security.features_utils.usage._is_non_saas", return_value=False):
+            # Paid plan (standard config seeded above) → never blocked.
             assert await usage.check_admin_seat_limit(org.id, db) is True
-        check_limits.assert_called_once_with("admin_seats", org.id, db)
+
+            # Free plan at its cap → 403 "limit reached", NOT "not enabled".
+            with patch("src.security.features_utils.usage._get_org_plan", return_value="free"), \
+                 patch("src.security.features_utils.usage.get_plan_limit", return_value=1), \
+                 patch("src.security.features_utils.usage._get_actual_admin_seat_count", return_value=1):
+                with pytest.raises(HTTPException) as seat_exc:
+                    await usage.check_admin_seat_limit(org.id, db)
+            assert seat_exc.value.status_code == 403
+            assert "not enabled" not in str(seat_exc.value.detail).lower()
+
+            # Free plan under cap → allowed.
+            with patch("src.security.features_utils.usage._get_org_plan", return_value="free"), \
+                 patch("src.security.features_utils.usage.get_plan_limit", return_value=2), \
+                 patch("src.security.features_utils.usage._get_actual_admin_seat_count", return_value=1):
+                assert await usage.check_admin_seat_limit(org.id, db) is True
+
+            # Free plan with unlimited seats (limit 0) → allowed.
+            with patch("src.security.features_utils.usage._get_org_plan", return_value="free"), \
+                 patch("src.security.features_utils.usage.get_plan_limit", return_value=0):
+                assert await usage.check_admin_seat_limit(org.id, db) is True
+
+            # No org config → degrade open (never block a role change on misconfig).
+            with patch("src.security.features_utils.usage._get_org_config", new_callable=AsyncMock, return_value=None):
+                assert await usage.check_admin_seat_limit(org.id, db) is True
+
+        # Non-SaaS deployment → seat limits do not apply.
+        with patch("src.security.features_utils.usage._is_non_saas", return_value=True):
+            assert await usage.check_admin_seat_limit(org.id, db) is True
 
         with patch("src.security.features_utils.usage.get_plan_limit", return_value=5):
             summary = await usage.get_admin_seat_usage(org.id, db)

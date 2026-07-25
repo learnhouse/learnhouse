@@ -3010,6 +3010,32 @@
           "message2": "ব্যবহারকারী সেটিংস দেখতে এবং পরিচালনা করতে দয়া করে ডেস্কটপে সুইচ করুন।"
         }
       },
+      "analytics": {
+        "button": "বিশ্লেষণ",
+        "view_analytics": "শিক্ষার্থীর বিশ্লেষণ দেখুন",
+        "open_full_page": "সম্পূর্ণ বিশ্লেষণ পৃষ্ঠা খুলুন",
+        "compare": "বিশ্লেষণ তুলনা করুন",
+        "compare_students": "শিক্ষার্থীদের তুলনা করুন",
+        "export": "রপ্তানি করুন",
+        "export_selected": "বিশ্লেষণ রপ্তানি করুন ({{count}})",
+        "exporting": "রপ্তানি হচ্ছে…",
+        "failed_load": "শিক্ষার্থীর ডসিয়ার লোড করতে ব্যর্থ হয়েছে।",
+        "back_to_students": "শিক্ষার্থীদের কাছে ফিরে যান",
+        "no_behavioral": "কোনো আচরণগত তথ্য নেই (এই সময়সীমার জন্য বিশ্লেষণ অকনফিগার করা থাকতে পারে)।",
+        "ranges": { "d30": "৩০ দিন", "d90": "৯০ দিন", "y1": "১ বছর" },
+        "kpi": { "courses": "কোর্স", "completed": "{{count}} সম্পন্ন", "avg_progress": "গড় অগ্রগতি", "time_spent": "ব্যয়িত সময়", "assignments": "অ্যাসাইনমেন্ট", "avg_grade": "গড় {{grade}}", "certificates": "সার্টিফিকেট", "connections": "সংযোগ", "last": "সর্বশেষ {{date}}" },
+        "tabs": { "connections": "সংযোগ", "courses": "কোর্স", "assignments": "অ্যাসাইনমেন্ট", "code": "কোড", "community": "কমিউনিটি", "certificates": "সার্টিফিকেট", "behavior": "আচরণ" },
+        "identity": { "verified": "যাচাইকৃত", "unverified": "অযাচাইকৃত", "via": "{{method}} এর মাধ্যমে" },
+        "connections": { "title": "সংযোগ", "empty": "এখনও কোনো রেকর্ডকৃত সংযোগ নেই।" },
+        "courses": { "title": "কোর্সের অগ্রগতি", "empty": "কোনো কোর্সে নথিভুক্ত নয়।", "activities": "{{done}}/{{total}} কার্যকলাপ", "enrolled": "নথিভুক্ত {{date}}" },
+        "assignments": { "title": "অ্যাসাইনমেন্ট", "empty": "কোনো অ্যাসাইনমেন্ট জমা নেই।", "attempt": "প্রচেষ্টা {{number}}", "feedback": "প্রতিক্রিয়া:" },
+        "code": { "title": "কোড অনুশীলন", "empty": "কোনো কোড জমা নেই।", "activity": "কার্যকলাপ", "result": "ফলাফল", "tests": "পরীক্ষা", "time": "সময়", "when": "কখন", "passed": "উত্তীর্ণ", "failed": "ব্যর্থ" },
+        "community": { "title": "কমিউনিটি অংশগ্রহণ", "empty": "কোনো কমিউনিটি কার্যকলাপ নেই।", "discussions": "আলোচনা", "comments": "মন্তব্য" },
+        "certificates": { "title": "অর্জিত সার্টিফিকেট", "empty": "কোনো সার্টিফিকেট অর্জিত হয়নি।" },
+        "behavior": { "title": "আচরণগত বিশ্লেষণ", "time_by_course": "কোর্স অনুযায়ী ব্যয়িত সময়", "searches": "অনুসন্ধান" },
+        "status": { "completed": "সম্পন্ন", "in_progress": "চলমান", "paused": "স্থগিত", "cancelled": "বাতিল", "graded": "গ্রেডকৃত", "submitted": "জমা দেওয়া হয়েছে", "pending": "অপেক্ষমাণ", "late": "বিলম্বিত", "not_submitted": "জমা দেওয়া হয়নি" },
+        "comparison": { "student": "শিক্ষার্থী", "enrolled": "নথিভুক্ত", "completed": "সম্পন্ন", "certificates": "সার্টিফিকেট", "last_connection": "সর্বশেষ সংযোগ", "view": "দেখুন" }
+      },
       "active_users": {
         "title": "সক্রিয় ব্যবহারকারী",
         "subtitle": "আপনার সংস্থার ব্যবহারকারীদের পরিচালনা করুন, রোল এবং অনুমতি প্রদান করুন",
