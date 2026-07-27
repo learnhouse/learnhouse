@@ -12,7 +12,12 @@ import UserAvatar from '@components/Objects/UserAvatar'
 import { getAPIUrl } from '@services/config/config'
 import { getOrgLogoMediaDirectory } from '@services/media/media'
 import { apiFetch } from '@services/utils/ts/requests'
-import { fetchPrices, fetchSubscription } from './_lib/billingClient'
+import {
+  fetchPrices,
+  fetchSubscription,
+  fetchUpcomingInvoice,
+  fetchInvoices,
+} from './_lib/billingClient'
 import { resolvePlanIdFromOrg } from './_lib/plans'
 import PlanUsage from './_components/PlanUsage'
 import SwitchWizard from './_components/SwitchWizard'
@@ -117,12 +122,41 @@ function BillingClient() {
     refetchInterval: 60_000,
   })
 
+  // Active-user summary: same month as /usage, but it also reports how many
+  // members sit beyond the plan's included seats — the number that explains the
+  // active-member charge.
+  const { data: activeUsers } = useQuery({
+    queryKey: ['billing', 'active-users', orgId],
+    queryFn: () => apiFetch(`${getAPIUrl()}orgs/${orgId}/active-users`, access_token),
+    enabled: isAuthenticated && !!orgId,
+    refetchInterval: 60_000,
+  })
+
+  // Invoice data is only meaningful once the org has a subscription, so both
+  // queries wait for it rather than calling Stripe for free orgs.
+  const { data: upcomingInvoice } = useQuery({
+    queryKey: ['billing', 'upcoming', orgId],
+    queryFn: () => fetchUpcomingInvoice(orgId),
+    enabled: isAuthenticated && !!orgId && !!subscription,
+    staleTime: 60_000,
+  })
+
+  const { data: invoices } = useQuery({
+    queryKey: ['billing', 'invoices', orgId],
+    queryFn: () => fetchInvoices(orgId),
+    enabled: isAuthenticated && !!orgId && !!subscription,
+    staleTime: 5 * 60_000,
+  })
+
   function handleChanged() {
     if (!orgId) return
     queryClient.invalidateQueries({ queryKey: ['billing', 'subscription', orgId] })
     queryClient.invalidateQueries({ queryKey: ['billing', 'usage', orgId] })
     queryClient.invalidateQueries({ queryKey: ['billing', 'ai-credits', orgId] })
     queryClient.invalidateQueries({ queryKey: ['billing', 'packs', orgId] })
+    queryClient.invalidateQueries({ queryKey: ['billing', 'active-users', orgId] })
+    queryClient.invalidateQueries({ queryKey: ['billing', 'upcoming', orgId] })
+    queryClient.invalidateQueries({ queryKey: ['billing', 'invoices', orgId] })
     queryClient.invalidateQueries({ queryKey: ['orgs', 'user'] })
   }
 
@@ -260,6 +294,9 @@ function BillingClient() {
                   subLoading={subLoading}
                   usage={usage}
                   usageError={usageError}
+                  activeUsers={activeUsers}
+                  upcomingInvoice={upcomingInvoice}
+                  invoices={invoices}
                   aiCredits={aiCredits}
                   packsData={packsData}
                   priceOverrides={prices?.plans}

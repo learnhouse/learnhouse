@@ -97,6 +97,55 @@ export async function fetchSubscription(
   return res.json();
 }
 
+export interface InvoiceLine {
+  description: string;
+  amount: number;
+  currency: string;
+  kind: "overage" | "plan" | "other";
+}
+
+export interface UpcomingInvoice {
+  amountDue: number;
+  currency: string;
+  nextPaymentAttempt?: number;
+  periodEnd?: number;
+  lines: InvoiceLine[];
+}
+
+export interface PastInvoice {
+  id: string;
+  number?: string;
+  created: number;
+  amountPaid: number;
+  amountDue: number;
+  currency: string;
+  status: string;
+  hostedInvoiceUrl?: string;
+  invoicePdf?: string;
+}
+
+// GET /api/billing/upcoming?orgId=… → next-invoice preview | null
+export async function fetchUpcomingInvoice(
+  orgId: number | string,
+): Promise<UpcomingInvoice | null> {
+  const res = await fetch(
+    `/api/billing/upcoming?orgId=${encodeURIComponent(String(orgId))}`,
+  );
+  if (!res.ok) return null;
+  return res.json();
+}
+
+// GET /api/billing/invoices?orgId=… → recent invoices, newest first
+export async function fetchInvoices(
+  orgId: number | string,
+): Promise<PastInvoice[]> {
+  const res = await fetch(
+    `/api/billing/invoices?orgId=${encodeURIComponent(String(orgId))}`,
+  );
+  if (!res.ok) return [];
+  return res.json();
+}
+
 // GET /api/billing/prices → { plans, packs, limits }
 export async function fetchPrices(): Promise<PricesResponse | null> {
   const res = await fetch("/api/billing/prices");
