@@ -415,9 +415,26 @@ async def export_organization_users_csv(
 
     users = (await db_session.execute(base_statement)).scalars().all()
 
+    # The org's custom signup fields become extra columns, so admins can export
+    # what they collected. Read from the org config rather than from whatever
+    # keys happen to exist on user rows, so retired fields drop out and the
+    # column set is stable across the export.
+    from src.services.orgs.signup_fields import get_signup_fields
+
+    org_config_row = (await db_session.execute(
+        select(OrganizationConfig).where(OrganizationConfig.org_id == org_id)
+    )).scalars().first()
+    custom_fields = get_signup_fields(org_config_row.config if org_config_row else None)
+
     output = io.StringIO()
     writer = csv.writer(output)
-    writer.writerow(["Name", "Username", "Email", "Groups", "Role", "Joined", "Email Verified", "Signup Method", "Last Login"])
+    writer.writerow(
+        [
+            "Name", "Username", "Email", "Groups", "Role", "Joined",
+            "Email Verified", "Signup Method", "Last Login",
+        ]
+        + [f.label or f.key for f in custom_fields]
+    )
 
     if users:
         user_ids = [user.id for user in users]
@@ -464,6 +481,19 @@ async def export_organization_users_csv(
             role = role_map.get(user_org.role_id)
             groups = "; ".join(user_usergroups_map.get(user.id, []))
 
+            # Custom field answers are member-supplied text, exactly the
+            # untrusted input _csv_safe's formula-injection guard exists for.
+            metadata = user.extra_metadata or {}
+            custom_values = []
+            for field in custom_fields:
+                value = metadata.get(field.key)
+                if value is None:
+                    custom_values.append("")
+                elif isinstance(value, bool):
+                    custom_values.append("Yes" if value else "No")
+                else:
+                    custom_values.append(_csv_safe(str(value)))
+
             writer.writerow([
                 _csv_safe(f"{user.first_name or ''} {user.last_name or ''}".strip()),
                 _csv_safe(user.username or ""),
@@ -474,7 +504,7 @@ async def export_organization_users_csv(
                 "Yes" if user.email_verified else "No",
                 _csv_safe(user.signup_method or ""),
                 fmt_date(user.last_login_at) if hasattr(user, "last_login_at") else "",
-            ])
+            ] + custom_values)
 
     output.seek(0)
     return StreamingResponse(

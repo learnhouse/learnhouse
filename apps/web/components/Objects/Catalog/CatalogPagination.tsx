@@ -2,11 +2,15 @@
 
 import React, { useCallback, useMemo, useState } from 'react'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
+// Named `...Utils` rather than `catalogPagination` so it cannot collide with
+// this file on case-insensitive filesystems — the two names differed only in
+// their leading capital, which made macOS resolve this import to the wrong
+// module and fail the build.
 import {
   CATALOG_PAGE_SIZE,
   CatalogPageNumber,
   getCatalogPageNumbers,
-} from './catalogPagination'
+} from './catalogPaginationUtils'
 
 const paginationWrapperClassName = 'flex items-center justify-center gap-2'
 const paginationNavButtonClassName =

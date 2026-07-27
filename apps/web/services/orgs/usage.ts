@@ -9,15 +9,45 @@ export interface FeatureUsage {
   limit_reached: boolean
 }
 
+/**
+ * Active-member usage. Deliberately NOT a `FeatureUsage`: this is a billed
+ * dimension, not a quota, so the backend sends no `remaining`/`limit_reached`.
+ * On paid plans the seats a plan includes are free whatever their holders do,
+ * and each member beyond them who is active in the month is charged.
+ */
+export interface ActiveMembersUsage {
+  usage: number
+  limit: number | 'unlimited'
+  overage_units: number
+  overage_usd: number
+}
+
+export type DeploymentMode = 'saas' | 'ee' | 'oss'
+
 export interface OrgUsageResponse {
   org_id: number
   plan: string
-  oss_mode: boolean
+  mode: DeploymentMode
   features: {
     courses: FeatureUsage
+    active_members: ActiveMembersUsage
     members: FeatureUsage
     admin_seats: FeatureUsage
   }
+}
+
+/** Full active-user summary from `GET /orgs/{id}/active-users`. Carries
+ *  `members_beyond_included`, which the `/usage` payload omits. */
+export interface ActiveUsersSummary {
+  org_id: number
+  plan: string
+  year: number
+  month: number
+  active_users: number
+  plan_limit: number
+  members_beyond_included: number
+  overage_units: number
+  overage_usd: number
 }
 
 /**

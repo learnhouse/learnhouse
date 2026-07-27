@@ -7,6 +7,7 @@ import {
   Plus,
   BookOpen,
   Users,
+  UserCheck,
   ShieldCheck,
   Sparkles,
   Zap,
@@ -36,8 +37,13 @@ import {
   billingCancel,
   billingPackCheckout,
   type SubscriptionDetail,
+  type UpcomingInvoice,
+  type PastInvoice,
 } from '../_lib/billingClient'
+import type { OrgUsageResponse, ActiveUsersSummary } from '@services/orgs/usage'
 import UsageBar from './UsageBar'
+import BillingSummary from './BillingSummary'
+import InvoiceHistory from './InvoiceHistory'
 
 interface PlanUsageProps {
   org: any
@@ -45,8 +51,13 @@ interface PlanUsageProps {
   isOrgActive: boolean
   subscription: SubscriptionDetail | null
   subLoading: boolean
-  usage: any
+  usage?: OrgUsageResponse
   usageError?: boolean
+  /** `GET /orgs/{id}/active-users` — carries members_beyond_included, which the
+   *  usage payload omits. */
+  activeUsers?: ActiveUsersSummary
+  upcomingInvoice?: UpcomingInvoice | null
+  invoices?: PastInvoice[]
   aiCredits: any
   packsData: any
   priceOverrides?: PriceOverrides
@@ -66,6 +77,9 @@ export default function PlanUsage({
   subLoading,
   usage,
   usageError,
+  activeUsers,
+  upcomingInvoice,
+  invoices,
   aiCredits,
   packsData,
   priceOverrides,
@@ -84,6 +98,36 @@ export default function PlanUsage({
 
   const features = usage?.features
   const activePacks: any[] = packsData?.active_packs ?? []
+
+  // Free is the only plan where a limit actually blocks anything. Paid plans
+  // allow overage and bill it (see check_limits_with_usage in the API), so
+  // showing them a red "limit reached" bar would be a lie.
+  const isFreePlan = currentPlanId === 'free'
+  const activeMembers = features?.active_members
+  const overageUnits = activeMembers?.overage_units ?? 0
+  const overageUsd = activeMembers?.overage_usd ?? 0
+
+  // Active-member billing only exists on SaaS paid plans: a free org cannot
+  // exceed its member cap, so it can never accrue an active-member charge.
+  const showActiveMembers =
+    !isFreePlan && usage?.mode === 'saas' && !!activeMembers
+
+  // The seats the plan itself includes — distinct from `members.limit`, which
+  // resolve_feature() may have raised via an override.
+  const includedMembers = features?.members?.plan_limit ?? activeUsers?.plan_limit
+  const includedMembersLabel =
+    includedMembers === undefined || includedMembers === 'unlimited' || includedMembers === 0
+      ? t('billing.unlimited_lower', { defaultValue: 'unlimited' })
+      : includedMembers.toLocaleString()
+
+  // Prefer the active-users endpoint: it ranks members by join date to work out
+  // who is actually beyond the included seats. Fall back to a plain subtraction
+  // when that request hasn't landed.
+  const membersBeyondPlan =
+    activeUsers?.members_beyond_included ??
+    (typeof includedMembers === 'number' && includedMembers > 0
+      ? Math.max(0, (features?.members?.usage ?? 0) - includedMembers)
+      : 0)
 
   const price = (() => {
     if (!plan || plan.monthlyPrice === 0) return 0
@@ -381,46 +425,114 @@ export default function PlanUsage({
         </div>
       )}
 
+      {/* Next invoice */}
+      <BillingSummary
+        invoice={upcomingInvoice ?? null}
+        accruingUsd={overageUsd}
+        hasActivePacks={activePacks.length > 0}
+      />
+
       {/* Usage breakdown */}
       <div className="bg-white rounded-2xl nice-shadow overflow-hidden">
         <div className="px-6 py-5 border-b border-black/[0.05]">
           <h2 className="font-bold text-base tracking-tight text-black">
             {t('billing.usage', { defaultValue: 'Usage' })}
           </h2>
+          <p className="text-[11px] text-black/35 font-medium mt-0.5">
+            {isFreePlan
+              ? t('billing.usage_subtitle_free', {
+                  defaultValue: 'Free plans are capped. Upgrade to go past a limit.',
+                })
+              : t('billing.usage_subtitle_paid', {
+                  defaultValue:
+                    'Your plan includes these amounts. Going past the member limit is allowed and billed — nothing is blocked.',
+                })}
+          </p>
         </div>
         <div>
           {features ? (
-            <div className="flex items-stretch flex-wrap md:flex-nowrap">
-              <div className="flex-1 min-w-[200px] px-6 py-6">
+            // gap-px over a tinted background paints the hairlines between
+            // cells, so dividers stay correct however the grid wraps.
+            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-px bg-black/[0.06]">
+              <div className="px-6 py-6 bg-white">
                 <UsageBar
                   label={t('billing.courses', { defaultValue: 'Courses' })}
                   icon={<BookOpen size={14} className="text-blue-600" />}
                   usage={features.courses.usage}
                   limit={features.courses.limit}
                   color="bg-blue-50"
+                  soft={!isFreePlan}
                 />
               </div>
-              <div className="w-px bg-black/[0.06]" />
-              <div className="flex-1 min-w-[200px] px-6 py-6">
+
+              <div className="px-6 py-6 bg-white">
                 <UsageBar
                   label={t('billing.members', { defaultValue: 'Members' })}
                   icon={<Users size={14} className="text-violet-600" />}
                   usage={features.members.usage}
                   limit={features.members.limit}
                   color="bg-violet-50"
+                  soft={!isFreePlan}
+                  footer={
+                    isFreePlan ? undefined : (
+                      <p className="text-[11px] font-medium text-black/30">
+                        {membersBeyondPlan > 0
+                          ? t('billing.members_beyond_plan', {
+                              defaultValue: `${includedMembersLabel} included · ${membersBeyondPlan} beyond your plan`,
+                              included: includedMembersLabel,
+                              beyond: membersBeyondPlan,
+                            })
+                          : t('billing.members_within_plan', {
+                              defaultValue: `${includedMembersLabel} included in your plan`,
+                              included: includedMembersLabel,
+                            })}
+                      </p>
+                    )
+                  }
                 />
-                {features.members.purchased > 0 && (
-                  <p className="text-[10px] text-black/25 font-medium mt-1">
-                    {t('billing.plan_plus_purchased', {
-                      defaultValue: `Plan: ${features.members.plan_limit} + Purchased: ${features.members.purchased}`,
-                      plan: features.members.plan_limit,
-                      purchased: features.members.purchased,
+                <p className="text-[10px] text-black/25 font-medium mt-1.5">
+                  {t('billing.members_hint', {
+                    defaultValue: 'Everyone who has joined your organization.',
+                  })}
+                </p>
+              </div>
+
+              {showActiveMembers && (
+                <div className="px-6 py-6 bg-white">
+                  <UsageBar
+                    label={t('billing.active_members', { defaultValue: 'Active members' })}
+                    icon={<UserCheck size={14} className="text-emerald-600" />}
+                    usage={activeMembers.usage}
+                    limit={activeMembers.limit}
+                    color="bg-emerald-50"
+                    soft
+                    footer={
+                      overageUnits > 0 ? (
+                        <p className="text-[11px] font-semibold text-amber-700">
+                          {t('billing.overage_this_month', {
+                            defaultValue: `$${overageUsd} this month so far`,
+                            amount: overageUsd,
+                          })}
+                        </p>
+                      ) : (
+                        <p className="text-[11px] font-medium text-black/30">
+                          {t('billing.no_extra_charges', {
+                            defaultValue: 'No extra charges this month',
+                          })}
+                        </p>
+                      )
+                    }
+                  />
+                  <p className="text-[10px] text-black/25 font-medium mt-1.5 leading-relaxed">
+                    {t('billing.active_members_hint', {
+                      defaultValue: `Counted when a member is active on 2+ days this month. The ${includedMembersLabel} seats your plan includes are free — you're billed $1/month for each active member beyond them.`,
+                      included: includedMembersLabel,
                     })}
                   </p>
-                )}
-              </div>
-              <div className="w-px bg-black/[0.06]" />
-              <div className="flex-1 min-w-[200px] px-6 py-6">
+                </div>
+              )}
+
+              <div className="px-6 py-6 bg-white">
                 <UsageBar
                   label={t('billing.admin_seats', { defaultValue: 'Admin seats' })}
                   icon={<ShieldCheck size={14} className="text-amber-600" />}
@@ -428,29 +540,40 @@ export default function PlanUsage({
                   limit={features.admin_seats.limit}
                   color="bg-amber-50"
                 />
+                <p className="text-[10px] text-black/25 font-medium mt-1.5">
+                  {t('billing.admin_seats_hint', {
+                    defaultValue: 'Members who can access the dashboard. A subset of your members.',
+                  })}
+                </p>
               </div>
+
               {aiCredits && (aiCredits.total_credits === 'unlimited' || aiCredits.total_credits > 0) && (
-                <>
-                  <div className="w-px bg-black/[0.06]" />
-                  <div className="flex-1 min-w-[200px] px-6 py-6">
-                    <UsageBar
-                      label={t('billing.ai_credits', { defaultValue: 'AI Credits' })}
-                      icon={<Sparkles size={14} className="text-violet-600" />}
-                      usage={aiCredits.used_credits}
-                      limit={aiCredits.total_credits === 'unlimited' ? 'unlimited' : aiCredits.total_credits}
-                      color="bg-violet-50"
-                    />
-                    {aiCredits.purchased_credits > 0 && (
-                      <p className="text-[10px] text-black/25 font-medium mt-1">
-                        {t('billing.base_plus_purchased', {
-                          defaultValue: `Base: ${aiCredits.base_credits.toLocaleString()} + Purchased: ${aiCredits.purchased_credits.toLocaleString()}`,
-                          base: aiCredits.base_credits.toLocaleString(),
-                          purchased: aiCredits.purchased_credits.toLocaleString(),
-                        })}
-                      </p>
-                    )}
-                  </div>
-                </>
+                <div className="px-6 py-6 bg-white">
+                  <UsageBar
+                    label={t('billing.ai_credits', { defaultValue: 'AI Credits' })}
+                    icon={<Sparkles size={14} className="text-violet-600" />}
+                    usage={aiCredits.used_credits}
+                    limit={aiCredits.total_credits === 'unlimited' ? 'unlimited' : aiCredits.total_credits}
+                    color="bg-violet-50"
+                  />
+                  {aiCredits.purchased_credits > 0 && (
+                    <p className="text-[10px] text-black/25 font-medium mt-1">
+                      {t('billing.base_plus_purchased', {
+                        defaultValue: `Base: ${aiCredits.base_credits.toLocaleString()} + Purchased: ${aiCredits.purchased_credits.toLocaleString()}`,
+                        base: aiCredits.base_credits.toLocaleString(),
+                        purchased: aiCredits.purchased_credits.toLocaleString(),
+                      })}
+                    </p>
+                  )}
+                  {periodEnd && (
+                    <p className="text-[10px] text-black/25 font-medium mt-1.5">
+                      {t('billing.credits_reset_on', {
+                        defaultValue: `Resets on ${periodEnd}`,
+                        date: periodEnd,
+                      })}
+                    </p>
+                  )}
+                </div>
               )}
             </div>
           ) : usageError ? (
@@ -592,6 +715,9 @@ export default function PlanUsage({
           </div>
         </div>
       )}
+
+      {/* Invoice history */}
+      <InvoiceHistory invoices={invoices ?? []} />
 
       {/* Disclaimer modal */}
       <Dialog open={!!disclaimerPack} onOpenChange={(o) => !o && setDisclaimerPack(null)}>

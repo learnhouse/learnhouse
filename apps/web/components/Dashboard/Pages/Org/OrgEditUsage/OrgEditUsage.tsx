@@ -89,7 +89,9 @@ export default function OrgEditUsage() {
     staleTime: 60_000,
   })
 
-  const ossMode = usageData?.oss_mode ?? false
+  // The backend sends `mode`, never `oss_mode` — reading the latter made this
+  // permanently false, so non-SaaS deployments were shown plan limits.
+  const ossMode = usageData?.mode !== undefined && usageData.mode !== 'saas'
   const mode = getDeploymentMode()
   const isSaaS = mode === 'saas'
   const plan = usePlan()

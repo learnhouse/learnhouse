@@ -177,6 +177,60 @@ export async function updateOrgMenuConfig(
   return res
 }
 
+export type SignupFieldType =
+  | 'text'
+  | 'textarea'
+  | 'select'
+  | 'checkbox'
+  | 'number'
+  | 'date'
+
+export interface SignupFieldItem {
+  /** JSON key on the user's extra_metadata. Immutable once created — renaming
+   *  it orphans every answer already collected. */
+  key: string
+  label: string
+  type: SignupFieldType
+  required: boolean
+  enabled: boolean
+  order: number
+  help_text?: string
+  placeholder?: string
+  /** select only — also the server-side allowlist. */
+  options?: string[]
+  max_length?: number | null
+  min_value?: number | null
+  max_value?: number | null
+}
+
+export async function updateOrgSignupFieldsConfig(
+  org_id: string,
+  signup_fields_config: { fields: SignupFieldItem[] },
+  access_token: string
+) {
+  const result: any = await fetch(
+    `${getAPIUrl()}orgs/${org_id}/config/signup-fields`,
+    RequestBodyWithAuthHeader('PUT', signup_fields_config, null, access_token)
+  )
+  const res = await errorHandling(result)
+  return res
+}
+
+/** Read an org's signup fields from its config, handling both config shapes
+ *  (v2 keeps customization under `customization`, v1 under `general`). */
+export function readSignupFields(orgConfig: any): SignupFieldItem[] {
+  const config = orgConfig?.config?.config ?? orgConfig?.config ?? orgConfig
+  const isV2 = String(config?.config_version ?? '1.0').startsWith('2')
+  const section = isV2
+    ? config?.customization?.signup_fields
+    : config?.general?.signup_fields
+  const fields = section?.fields
+  if (!Array.isArray(fields)) return []
+  return [...fields]
+    .filter((f: any) => f && typeof f.key === 'string' && f.key.length > 0)
+    .sort((a: any, b: any) => (a.order ?? 0) - (b.order ?? 0))
+}
+
 export interface SeoOrgConfig {
   default_meta_title_suffix: string
   default_meta_description: string

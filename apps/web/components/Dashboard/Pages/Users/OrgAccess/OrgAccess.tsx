@@ -20,6 +20,7 @@ import OrgInviteCodeGenerate from '@components/Objects/Modals/Dash/OrgAccess/Org
 import { useLHSession } from '@components/Contexts/LHSessionContext'
 import { useTranslation } from 'react-i18next'
 import { useLHAnalytics, AnalyticsEvent } from '@services/analytics'
+import OrgSignupFields from './OrgSignupFields'
 
 function CopyButton({ text }: { text: string }) {
   const [copied, setCopied] = React.useState(false)
@@ -277,6 +278,8 @@ function OrgAccess() {
               </div>
             </div>
           </div>
+          <OrgSignupFields />
+          <div className="h-10"></div>
         </>
       ) : (
         <PageLoading />
