@@ -20,20 +20,12 @@ export default function PlaygroundPreview({
   const lastRenderedRef = useRef<string | null>(null)
   const writeTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
-  // Write HTML directly into the iframe document (no reload, no flicker)
+  // srcdoc, not document.write() — the frame is sandboxed onto an opaque
+  // origin, so its document isn't reachable from here.
   const writeToIframe = useCallback((content: string) => {
     const iframe = iframeRef.current
     if (!iframe) return
-    try {
-      const doc = iframe.contentDocument || iframe.contentWindow?.document
-      if (!doc) return
-      doc.open()
-      doc.write(content)
-      doc.close()
-    } catch {
-      // cross-origin fallback — shouldn't happen with srcdoc
-      iframe.srcdoc = content
-    }
+    iframe.srcdoc = content
   }, [])
 
   useEffect(() => {
@@ -110,7 +102,7 @@ export default function PlaygroundPreview({
       <iframe
         ref={iframeRef}
         className="w-full h-full border-0"
-        sandbox="allow-scripts allow-same-origin allow-forms allow-popups"
+        sandbox="allow-scripts allow-forms allow-popups"
         title="Playground Preview"
       />
     </div>

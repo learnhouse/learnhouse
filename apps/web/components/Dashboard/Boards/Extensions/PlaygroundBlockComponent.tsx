@@ -340,7 +340,8 @@ export default function PlaygroundBlockComponent({
             srcDoc={srcdoc}
             className="w-full h-full bg-white block"
             style={{ border: 'none' }}
-            sandbox="allow-scripts allow-same-origin allow-forms allow-modals allow-popups"
+            // srcDoc content runs on an opaque origin (no allow-same-origin)
+            sandbox="allow-scripts allow-forms allow-modals allow-popups"
             title="Playground"
           />
         )}
@@ -495,7 +496,7 @@ function PlaygroundModal({
                     srcDoc={previewSrcdoc}
                     className="w-full h-full bg-white block"
                     style={{ border: 'none' }}
-                    sandbox="allow-scripts allow-same-origin allow-forms allow-modals allow-popups"
+                    sandbox="allow-scripts allow-forms allow-modals allow-popups"
                     title="Playground Preview"
                   />
                 </div>
