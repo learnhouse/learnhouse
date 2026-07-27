@@ -497,6 +497,13 @@ class TestSetOrgPolicy:
         assert response.status_code == 403
         assert response.json()["detail"]["code"] == "AUTH_METHOD_SELF_LOCKOUT"
 
+    async def test_get_settings_is_admin_only(self, app, client, db, org, regular_user):
+        _act_as(app, regular_user)
+        await _add_org_config(db, org.id)
+        response = await client.get(f"/api/v1/auth/mfa/org-policy/{org.id}/settings")
+        assert response.status_code == 403
+        assert response.json()["detail"]["code"] == "NOT_ORG_ADMIN"
+
     async def test_get_settings_returns_the_saved_policy(
         self, app, client, db, org, admin_user
     ):
