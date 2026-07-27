@@ -78,6 +78,7 @@ export const queryKeys = {
   },
   ai: {
     ragSessions: (orgSlug: string) => ['ai', 'rag', 'sessions', orgSlug] as const,
+    atlasSessions: (orgId: number) => ['ai', 'atlas', 'sessions', orgId] as const,
   },
   certifications: {
     detail: (uuid: string) => ['certification', uuid] as const,

@@ -73,6 +73,10 @@ class AIConfig(BaseModel):
     # LEARNHOUSE_AI_TTS_MODEL; defaults to `gemini-2.5-flash-preview-tts`. All
     # Gemini TTS models are currently preview, so keep this configurable.
     tts_model: str | None = None
+    # Model used by the Atlas dashboard agent (resolved by the provider-agnostic
+    # LLM layer). Defaults to a fast tier because tool-use latency adds up fast;
+    # override via LEARNHOUSE_ATLAS_MODEL for harder reasoning tasks.
+    atlas_model: str | None = None
 
 
 class S3ApiConfig(BaseModel):
@@ -585,6 +589,11 @@ def get_learnhouse_config() -> LearnHouseConfig:
     )
 
     # AI Config
+    env_atlas_model = os.environ.get("LEARNHOUSE_ATLAS_MODEL")
+    atlas_model = env_atlas_model or yaml_config.get("ai_config", {}).get(
+        "atlas_model"
+    )
+
     ai_config = AIConfig(
         is_ai_enabled=bool(is_ai_enabled),
         provider=ai_provider,
@@ -599,6 +608,7 @@ def get_learnhouse_config() -> LearnHouseConfig:
         gemini_api_key=gemini_api_key,
         image_model=ai_image_model,
         tts_model=ai_tts_model,
+        atlas_model=atlas_model,
     )
 
     # Surface missing internal-service keys at boot rather than at first
