@@ -56,11 +56,14 @@ def fs_file():
     shutil.rmtree(Path("content") / "orgs" / "org_test", ignore_errors=True)
 
 
-async def _mk_media(db, org, storage_key="", public=True, media_type=MediaTypeEnum.UPLOAD, name="m"):
+async def _mk_media(
+    db, org, storage_key="", public=True, media_type=MediaTypeEnum.UPLOAD, name="m",
+    file_format="pdf",
+):
     m = Media(
         name=name, media_type=media_type, public=public, org_id=org.id,
         media_uuid=f"media_{name}", file_id="testfile.pdf", storage_key=storage_key,
-        file_format="pdf", file_mime="application/pdf",
+        file_format=file_format, file_mime="application/pdf",
         creation_date=str(datetime.now()), update_date=str(datetime.now()),
     )
     db.add(m)
@@ -120,6 +123,16 @@ class TestServeFilesystem:
         disposition = res.headers["content-disposition"]
         assert disposition.startswith("attachment; filename*=UTF-8''")
         assert "rapport%20financier.pdf" in disposition
+
+    async def test_filename_falls_back_to_storage_suffix_and_keeps_one_extension(
+        self, client, db, org, fs_file
+    ):
+        # Legacy rows can have no file_format, so the extension comes from the
+        # storage key; and a name that already carries it must not get it twice.
+        m = await _mk_media(db, org, storage_key=fs_file, name="already.pdf", file_format="")
+        res = await client.get(f"/api/v1/media/{m.media_uuid}/file?download=true")
+        assert res.status_code == 200, res.text
+        assert res.headers["content-disposition"] == "attachment; filename*=UTF-8''already.pdf"
 
     async def test_missing_file_on_disk_404(self, client, db, org):
         m = await _mk_media(db, org, storage_key="orgs/org_test/media/none/missing.pdf", name="fsmiss")
