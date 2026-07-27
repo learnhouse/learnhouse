@@ -1004,7 +1004,10 @@
     "autosave_unsaved": "অসংরক্ষিত পরিবর্তন",
     "autosaved": "সংরক্ষিত",
     "autosaving": "সংরক্ষণ করা হচ্ছে…",
-    "save_answers": "উত্তর সংরক্ষণ করুন"
+    "save_answers": "উত্তর সংরক্ষণ করুন",
+    "markdown": "মার্কডাউন",
+    "custom": "কাস্টম",
+    "scorm": "স্কর্ম"
   },
   "assignments": {
     "submit_assignment": "অ্যাসাইনমেন্ট জমা দিন",
@@ -2136,7 +2139,8 @@
             "scorm": "SCORM",
             "markdown": "Markdown",
             "embed": "এমবেড",
-            "resource": "রিসোর্স"
+            "resource": "রিসোর্স",
+            "custom": "কাস্টম"
           },
           "toasts": {
             "deleting": "কার্যক্রম মোছা হচ্ছে...",

@@ -992,7 +992,10 @@
     "autosave_unsaved": "未保存的更改",
     "autosaved": "已保存",
     "autosaving": "正在保存…",
-    "save_answers": "保存答案"
+    "save_answers": "保存答案",
+    "markdown": "Markdown",
+    "custom": "自定义",
+    "scorm": "SCORM"
   },
   "assignments": {
     "submit_assignment": "提交作业",
@@ -2124,7 +2127,8 @@
             "scorm": "Scorm",
             "markdown": "Markdown",
             "embed": "Embed",
-            "resource": "资源"
+            "resource": "资源",
+            "custom": "自定义"
           },
           "toasts": {
             "deleting": "正在删除活动...",

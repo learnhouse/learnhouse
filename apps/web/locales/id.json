@@ -1004,7 +1004,10 @@
     "autosave_unsaved": "Perubahan belum disimpan",
     "autosaved": "Tersimpan",
     "autosaving": "Menyimpan…",
-    "save_answers": "Simpan jawaban"
+    "save_answers": "Simpan jawaban",
+    "markdown": "Markdown",
+    "custom": "Kustom",
+    "scorm": "SCORM"
   },
   "assignments": {
     "submit_assignment": "Kirim Tugas",
@@ -2136,7 +2139,8 @@
             "scorm": "SCORM",
             "markdown": "Markdown",
             "embed": "Embed",
-            "resource": "Sumber daya"
+            "resource": "Sumber daya",
+            "custom": "Kustom"
           },
           "toasts": {
             "deleting": "Menghapus aktivitas...",

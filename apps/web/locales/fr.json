@@ -982,7 +982,10 @@
     "autosave_unsaved": "Modifications non enregistrées",
     "autosaved": "Enregistré",
     "autosaving": "Enregistrement…",
-    "save_answers": "Enregistrer les réponses"
+    "save_answers": "Enregistrer les réponses",
+    "markdown": "Markdown",
+    "custom": "Personnalisé",
+    "scorm": "SCORM"
   },
   "assignments": {
     "submit_assignment": "Rendre le devoir",
@@ -2114,7 +2117,8 @@
             "scorm": "SCORM",
             "markdown": "Markdown",
             "embed": "Intégration",
-            "resource": "Ressource"
+            "resource": "Ressource",
+            "custom": "Personnalisé"
           },
           "toasts": {
             "deleting": "Suppression de l'activité...",

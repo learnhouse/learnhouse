@@ -982,7 +982,10 @@
     "autosave_unsaved": "Niet-opgeslagen wijzigingen",
     "autosaved": "Opgeslagen",
     "autosaving": "Opslaan…",
-    "save_answers": "Antwoorden opslaan"
+    "save_answers": "Antwoorden opslaan",
+    "markdown": "Markdown",
+    "custom": "Aangepast",
+    "scorm": "SCORM"
   },
   "assignments": {
     "submit_assignment": "Opdracht indienen",
@@ -2114,7 +2117,8 @@
             "scorm": "Scorm",
             "markdown": "Markdown",
             "embed": "Embed",
-            "resource": "Bron"
+            "resource": "Bron",
+            "custom": "Aangepast"
           },
           "toasts": {
             "deleting": "Activiteit verwijderen...",

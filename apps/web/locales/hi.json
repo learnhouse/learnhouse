@@ -1004,7 +1004,10 @@
     "autosave_unsaved": "न सहेजे गए बदलाव",
     "autosaved": "सहेजा गया",
     "autosaving": "सहेजा जा रहा है…",
-    "save_answers": "जवाब सहेजें"
+    "save_answers": "जवाब सहेजें",
+    "markdown": "मार्कडाउन",
+    "custom": "कस्टम",
+    "scorm": "स्कॉर्म"
   },
   "assignments": {
     "submit_assignment": "असाइनमेंट सबमिट करें",
@@ -2136,7 +2139,8 @@
             "scorm": "SCORM",
             "markdown": "Markdown",
             "embed": "एम्बेड",
-            "resource": "संसाधन"
+            "resource": "संसाधन",
+            "custom": "कस्टम"
           },
           "toasts": {
             "deleting": "गतिविधि हटाई जा रही है...",
