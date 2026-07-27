@@ -11,14 +11,6 @@ const COLUMN_OPTIONS: { value: number; Icon: any; labelKey: string }[] = [
   { value: 4, Icon: Columns4, labelKey: 'activities.grid_columns_4' },
 ]
 
-// Explicit class names so Tailwind keeps them; the count is dynamic.
-const COLUMN_CLASS: Record<number, string> = {
-  1: 'sm:grid-cols-1',
-  2: 'sm:grid-cols-2',
-  3: 'sm:grid-cols-3',
-  4: 'sm:grid-cols-4',
-}
-
 const FlipcardGridExtension: React.FC = (props: any) => {
   const { t } = useTranslation()
   const editorState = useEditorProvider() as any
@@ -68,10 +60,14 @@ const FlipcardGridExtension: React.FC = (props: any) => {
   }
 
   return (
-    <NodeViewWrapper className="flipcard-grid my-4">
-      <NodeViewContent
-        className={cn('grid grid-cols-1 gap-4 justify-items-center', COLUMN_CLASS[columns] || COLUMN_CLASS[2])}
-      />
+    <NodeViewWrapper
+      className="flipcard-grid my-4"
+      style={{ ['--flipcard-grid-columns' as any]: columns }}
+    >
+      {/* The column count rides a CSS variable rather than a Tailwind class:
+          Tiptap injects its own content holder inside this element, so the grid
+          has to be declared in CSS where that holder can be dissolved. */}
+      <NodeViewContent className="flipcard-grid-content" />
 
       {isEditable && (
         <div
