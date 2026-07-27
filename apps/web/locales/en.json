@@ -3488,7 +3488,10 @@
         },
         "connections": {
           "title": "Connections",
-          "empty": "No recorded connections yet."
+          "empty": "No recorded connections yet.",
+          "device": "Device",
+          "raw_agent": "Raw user agent",
+          "unknown_device": "Unknown device"
         },
         "courses": {
           "title": "Course progress",
@@ -3500,7 +3503,9 @@
           "title": "Assignments",
           "empty": "No assignment submissions.",
           "attempt": "attempt {{number}}",
-          "feedback": "Feedback:"
+          "feedback": "Feedback:",
+          "tasks": "{{done}}/{{total}} tasks submitted",
+          "no_tasks": "This assignment has no tasks."
         },
         "code": {
           "title": "Code exercises",
@@ -3511,22 +3516,30 @@
           "time": "Time",
           "when": "When",
           "passed": "Passed",
-          "failed": "Failed"
+          "failed": "Failed",
+          "language": "Language",
+          "course": "Course",
+          "untitled_activity": "Untitled activity"
         },
         "community": {
           "title": "Community participation",
           "empty": "No community activity.",
           "discussions": "Discussions",
-          "comments": "Comments"
+          "comments": "Comments",
+          "in_discussion": "In \"{{title}}\"",
+          "community": "Community"
         },
         "certificates": {
           "title": "Certificates earned",
-          "empty": "No certificates earned."
+          "empty": "No certificates earned.",
+          "credential_id": "Credential ID"
         },
         "behavior": {
           "title": "Behavioral analytics",
           "time_by_course": "Time spent by course",
-          "searches": "Searches"
+          "searches": "Searches",
+          "views": "Page & content views",
+          "untitled_course": "Untitled course"
         },
         "status": {
           "completed": "completed",
@@ -3546,6 +3559,39 @@
           "certificates": "Certificates",
           "last_connection": "Last connection",
           "view": "View"
+        },
+        "export_include_raw": "Include raw submission data",
+        "answer": {
+          "question": "Question",
+          "answered": "Answered",
+          "expected": "Expected answer",
+          "no_answer": "No answer given",
+          "correct": "Correct",
+          "incorrect": "Wrong",
+          "correct_answer": "Correct answer",
+          "not_graded": "Not auto-graded",
+          "score": "{{correct}}/{{total}} correct",
+          "explanation": "Explanation",
+          "raw_note": "Custom task — shown as raw fields",
+          "not_submitted": "Not submitted",
+          "manual": "manually graded",
+          "source_code": "Submitted code",
+          "test_cases": "Test cases",
+          "hidden_test": "Hidden test {{number}}",
+          "test_passed": "Passed",
+          "test_failed": "Failed",
+          "actual": "Output",
+          "download_file": "Download file"
+        },
+        "task_types": {
+          "QUIZ": "Quiz",
+          "FORM": "Fill in the blanks",
+          "SHORT_ANSWER": "Short answer",
+          "NUMBER_ANSWER": "Numeric answer",
+          "FILE_SUBMISSION": "File upload",
+          "CODE": "Code exercise",
+          "CUSTOM": "Custom task",
+          "OTHER": "Other"
         }
       },
       "active_users": {

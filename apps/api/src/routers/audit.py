@@ -93,6 +93,10 @@ def _safe_days(request: Request, default: int = 365) -> int:
     return max(1, min(d, 3650))
 
 
+def _safe_bool(request: Request, key: str) -> bool:
+    return request.query_params.get(key, "").strip().lower() in ("1", "true", "yes")
+
+
 def _parse_user_ids(request: Request) -> list[int]:
     raw = request.query_params.get("user_ids", "")
     ids: list[int] = []
@@ -152,7 +156,16 @@ async def _make_behavior_fetcher(org_id: int, user_id: int, days: int):
 @router.get(
     "/user/{user_id}",
     summary="Full per-student audit dossier",
-    description="Returns the complete learning-activity record for one student in one org: connections, course progress, assignments and grades, code exercises, community participation, certificates, and behavioral analytics. Org admin + Pro plan.",
+    description=(
+        "Returns the complete learning-activity record for one student in one org: "
+        "connections, course progress, assignments and grades, code exercises, community "
+        "participation, certificates, and behavioral analytics. Assignment answers are "
+        "rendered as readable question/answer pairs including the teacher's answer key "
+        "(admin-only surface); reference solutions and hidden test-case data are excluded. "
+        "Pass include_raw=true to also receive each task's original stored submission "
+        "payload — otherwise every task carries only a sha256 answer_digest of it. "
+        "Org admin + Pro plan."
+    ),
     responses={
         200: {"description": "The student's full audit dossier"},
         401: {"description": "Authentication required"},
@@ -173,7 +186,11 @@ async def get_user_dossier(
 
     days = _safe_days(request)
     fetcher = await _make_behavior_fetcher(org_id, user_id, days)
-    dossier = await build_user_dossier(db_session, user_id, org_id, days, behavior_fetcher=fetcher)
+    dossier = await build_user_dossier(
+        db_session, user_id, org_id, days,
+        behavior_fetcher=fetcher,
+        include_raw=_safe_bool(request, "include_raw"),
+    )
     if not dossier:
         raise HTTPException(status_code=404, detail="User not found")
     return dossier
@@ -220,14 +237,28 @@ async def get_users_summary(
 # GET /audit/export — CSV / JSON export for one or many students
 # -------------------------------------------------------------------
 _CSV_COLUMNS = [
-    "user_id", "username", "email", "section", "type",
-    "name", "detail", "status", "grade", "timestamp", "ip",
+    "user_id", "username", "email",
+    "section", "course", "activity", "item", "type",
+    "question", "answer", "expected", "correct",
+    "status", "grade", "max_grade", "detail",
+    "timestamp", "ip", "device",
 ]
+
+# Guard against one pathological task blowing up an export; matches the humanizer's
+# own per-task cap.
+_MAX_ANSWER_ROWS_PER_TASK = 200
+
+_CORRECT_LABELS = {True: "yes", False: "no", None: "n/a"}
 
 
 def _dossier_to_csv_rows(dossier: dict):
     """Flatten a dossier into normalized CSV rows so one file can hold every
-    section for one or many students."""
+    section for one or many students.
+
+    Assignment answers get two extra sections: one ``assignment_task`` row per task
+    and one ``assignment_answer`` row per question or blank, so the spreadsheet
+    carries the actual questions and what the student answered — not just a grade.
+    """
     user = dossier.get("user", {})
     uid = user.get("id")
     uname = user.get("username")
@@ -237,37 +268,81 @@ def _dossier_to_csv_rows(dossier: dict):
         base = {c: "" for c in _CSV_COLUMNS}
         base.update({"user_id": uid, "username": uname, "email": email, "section": section})
         base.update(kw)
+        # Formula-injection guard. Applies to every field, which now includes
+        # free-form learner and teacher text (question/answer/expected) — the most
+        # likely injection vector in this file.
         return {k: _csv_safe(v) for k, v in base.items()}
 
     for c in dossier.get("connections", []):
-        yield row("connection", type=c.get("event_type"), timestamp=c.get("at"),
-                  ip=c.get("ip"), detail=(c.get("metadata") or {}).get("method", ""))
+        yield row("connection", type=c.get("event_label") or c.get("event_type"),
+                  timestamp=c.get("at"), ip=c.get("ip"),
+                  detail=c.get("method") or "", device=c.get("device") or "")
     for c in dossier.get("courses", []):
-        yield row("course", name=c.get("course_name"), status=c.get("status"),
-                  detail=f"{c.get('progress_pct')}% ({c.get('activities_completed')}/{c.get('activities_total')})",
+        yield row("course", course=c.get("course_name"), status=c.get("status"),
+                  grade=c.get("progress_pct"),
+                  detail=f"{c.get('activities_completed')}/{c.get('activities_total')} activities",
                   timestamp=c.get("enrolled_at"))
     for a in dossier.get("assignments", []):
-        yield row("assignment", name=a.get("title"), status=a.get("status"),
-                  grade=a.get("grade"), detail=f"attempt {a.get('attempt_number')}",
+        detail = f"attempt {a.get('attempt_number')}"
+        if a.get("grade_percentage") is not None:
+            detail += f" · {a.get('grade_percentage')}%"
+        yield row("assignment", course=a.get("course_name"),
+                  activity=a.get("activity_name"), item=a.get("title"),
+                  status=a.get("status"), grade=a.get("grade"),
+                  max_grade=a.get("max_grade_value"), detail=detail,
                   timestamp=a.get("submitted_at"))
+        for task in a.get("tasks", []):
+            answer = task.get("answer") or {}
+            yield row("assignment_task", course=a.get("course_name"),
+                      item=a.get("title"), type=task.get("type_label"),
+                      question=task.get("title"), answer=answer.get("summary"),
+                      status=("submitted" if task.get("submitted") else "not submitted"),
+                      grade=task.get("grade"), max_grade=task.get("max_grade"),
+                      detail=task.get("feedback"), timestamp=task.get("submitted_at"))
+            for item in (answer.get("items") or [])[:_MAX_ANSWER_ROWS_PER_TASK]:
+                yield row("assignment_answer", course=a.get("course_name"),
+                          item=a.get("title"), type=task.get("type_label"),
+                          question=item.get("prompt"), answer=item.get("answer_text"),
+                          expected=item.get("expected_text"),
+                          correct=_CORRECT_LABELS.get(item.get("correct"), "n/a"))
     for cs in dossier.get("code_submissions", []):
-        yield row("code", name=cs.get("activity_uuid"),
+        yield row("code", course=cs.get("course_name"),
+                  activity=cs.get("activity_name") or cs.get("activity_uuid"),
+                  type=cs.get("language"),
                   status=("passed" if cs.get("passed") else "failed"),
                   detail=f"{cs.get('passed_tests')}/{cs.get('total_tests')} tests",
                   timestamp=cs.get("created_at"))
     for d in dossier.get("community", {}).get("discussions", []):
-        yield row("discussion", name=d.get("title"), timestamp=d.get("created_at"))
+        yield row("discussion", course=d.get("community_name"), item=d.get("title"),
+                  detail=d.get("excerpt"), timestamp=d.get("created_at"))
     for cm in dossier.get("community", {}).get("comments", []):
-        yield row("comment", detail=cm.get("content"), timestamp=cm.get("created_at"))
+        yield row("comment", course=cm.get("community_name"),
+                  item=cm.get("discussion_title"), answer=cm.get("content"),
+                  timestamp=cm.get("created_at"))
     for cert in dossier.get("certificates", []):
-        yield row("certificate", name=cert.get("course_name"),
-                  detail=cert.get("user_certification_uuid"), timestamp=cert.get("created_at"))
+        yield row("certificate", course=cert.get("course_name"),
+                  item=cert.get("course_name"),
+                  detail=f"Credential ID {cert.get('credential_id')}",
+                  timestamp=cert.get("created_at"))
+    behavior = dossier.get("behavior") or {}
+    for b in (behavior.get("user_time_by_course") or []):
+        yield row("behavior_course", course=b.get("course_name") or b.get("course_uuid"),
+                  detail=f"{b.get('total_seconds')}s")
+    for s in (behavior.get("user_searches") or []):
+        yield row("behavior_search", question=s.get("query"), detail=s.get("count"))
 
 
 @router.get(
     "/export",
     summary="Export per-student audit data",
-    description="Exports the full audit dossier for one or more students as CSV or JSON. Org admin + Pro plan. (PDF is rendered client-side from the JSON.)",
+    description=(
+        "Exports the full audit dossier for one or more students as CSV or JSON. "
+        "The CSV carries one row per item plus, for assignments, an assignment_task row "
+        "per task and an assignment_answer row per question or blank with the question "
+        "text, the student's answer, the expected answer and a correct flag. "
+        "Pass include_raw=true to also embed the original stored submission payloads. "
+        "Org admin + Pro plan. (PDF is rendered client-side from the JSON.)"
+    ),
     responses={
         200: {"description": "Audit data as JSON or streaming CSV"},
         400: {"description": "Invalid parameters"},
@@ -300,12 +375,16 @@ async def export_audit(
         raise HTTPException(status_code=404, detail="No requested users belong to this organization")
 
     days = _safe_days(request)
+    include_raw = _safe_bool(request, "include_raw")
 
     # Build each dossier (behavioral enrichment included).
     dossiers = []
     for uid in scoped_ids:
         fetcher = await _make_behavior_fetcher(org_id, uid, days)
-        d = await build_user_dossier(db_session, uid, org_id, days, behavior_fetcher=fetcher)
+        d = await build_user_dossier(
+            db_session, uid, org_id, days,
+            behavior_fetcher=fetcher, include_raw=include_raw,
+        )
         if d:
             dossiers.append(d)
 
