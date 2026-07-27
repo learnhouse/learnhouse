@@ -644,6 +644,30 @@ class TestExportCsvRows:
         assert ",=cmd|" not in resp.text     # ...but never as a live formula
         assert "'=cmd|" in resp.text
 
+    def test_behavior_sections_reach_the_csv(self):
+        """The Tinybird sections are part of the record too, resolved to names."""
+        from src.routers.audit import _dossier_to_csv_rows
+
+        rows = list(_dossier_to_csv_rows({
+            "user": {"id": 1, "username": "u", "email": "u@e.com"},
+            "behavior": {
+                "user_time_by_course": [
+                    {"course_name": "Algebra", "total_seconds": 90},
+                    {"course_uuid": "course_unresolved", "total_seconds": 5},
+                ],
+                "user_searches": [{"query": "pythagoras", "count": 3}],
+            },
+        }))
+        assert [r["section"] for r in rows] == [
+            "behavior_course", "behavior_course", "behavior_search",
+        ]
+        assert rows[0]["course"] == "Algebra"
+        assert rows[0]["detail"] == "90s"
+        # Falls back to the uuid only when the name could not be resolved.
+        assert rows[1]["course"] == "course_unresolved"
+        assert rows[2]["question"] == "pythagoras"
+        assert rows[2]["detail"] == 3
+
     async def test_every_row_uses_declared_columns(self, seed_rich, db, org, regular_user):
         """csv.DictWriter raises on an unknown key — catch a typo'd kwarg here."""
         from src.routers.audit import _CSV_COLUMNS, _dossier_to_csv_rows
@@ -660,6 +684,151 @@ class TestDossierServiceUnits:
     async def test_dossier_unknown_user_returns_empty(self, db, org):
         from src.services.audit.dossier import build_user_dossier
         assert await build_user_dossier(db, 999999, org.id) == {}
+
+    def test_user_agent_parsing(self):
+        from src.services.audit.dossier import _parse_user_agent
+
+        assert _parse_user_agent(None) == {"browser": None, "os": None, "device": None}
+        # Edge and Opera both claim to be Chrome, and everything claims to be Safari,
+        # so the ladder order is the whole test.
+        assert _parse_user_agent("Mozilla/5.0 (Windows NT 10.0) Chrome/1 Edg/1")["device"] == "Edge on Windows"
+        assert _parse_user_agent("Mozilla/5.0 (Linux; Android 14) Chrome/1")["device"] == "Chrome on Android"
+        assert _parse_user_agent("Mozilla/5.0 (iPhone) Safari/1")["device"] == "Safari on iOS"
+        assert _parse_user_agent("curl/8.0")["device"] is None
+        assert _parse_user_agent("Firefox/1")["device"] == "Firefox"
+
+    async def test_orphan_submission_survives_a_deleted_task(
+        self, db, org, course, chapter, activity, regular_user
+    ):
+        """Deleting a task must not erase the answers already recorded against it."""
+        from src.db.courses.assignments import (
+            Assignment, AssignmentTask, AssignmentTaskSubmission, AssignmentUserSubmission,
+            AssignmentUserSubmissionStatus, AssignmentTaskTypeEnum, GradingTypeEnum,
+        )
+        from src.services.audit.dossier import _assignments
+
+        assignment = Assignment(
+            title="Final", description="d", due_date="2026-01-01",
+            grading_type=GradingTypeEnum.NUMERIC, max_grade_value=100,
+            assignment_uuid="assignment_orphan", org_id=org.id, course_id=course.id,
+            chapter_id=chapter.id, activity_id=activity.id,
+            creation_date=str(datetime.now()), update_date=str(datetime.now()),
+        )
+        db.add(assignment)
+        await db.commit()
+        # A live task keeps the assignment non-empty; the orphan points at an id that
+        # no AssignmentTask row has.
+        db.add(AssignmentTask(
+            title="Live task", description="", hint="",
+            assignment_type=AssignmentTaskTypeEnum.QUIZ, max_grade_value=10,
+            contents={}, assignment_task_uuid="assignmenttask_live",
+            assignment_id=assignment.id, org_id=org.id, course_id=course.id,
+            chapter_id=chapter.id, activity_id=activity.id,
+            creation_date=str(datetime.now()), update_date=str(datetime.now()),
+        ))
+        db.add(AssignmentUserSubmission(
+            assignmentusersubmission_uuid="aus_orphan",
+            submission_status=AssignmentUserSubmissionStatus.GRADED, grade=5,
+            overall_feedback="", attempt_number=1, user_id=regular_user.id,
+            assignment_id=assignment.id,
+            creation_date=str(datetime.now()), update_date=str(datetime.now()),
+        ))
+        db.add(AssignmentTaskSubmission(
+            assignment_task_submission_uuid="ats_orphan",
+            task_submission={"answer": "written before the task was deleted"},
+            grade=5, task_submission_grade_feedback="", manually_graded=False,
+            assignment_type=AssignmentTaskTypeEnum.SHORT_ANSWER, user_id=regular_user.id,
+            activity_id=activity.id, course_id=course.id, chapter_id=chapter.id,
+            assignment_task_id=987654,
+            creation_date=str(datetime.now()), update_date=str(datetime.now()),
+        ))
+        await db.commit()
+
+        rows = await _assignments(db, regular_user.id, org.id)
+        tasks = rows[0]["tasks"]
+        assert len(tasks) == 2
+        orphan = tasks[1]
+        assert orphan["title"] is None and orphan["submitted"] is True
+        assert orphan["type_label"] == "Short answer"
+        assert "written before the task was deleted" in str(orphan["answer"])
+
+    async def test_comment_on_another_orgs_discussion_is_dropped(
+        self, db, org, other_org, regular_user
+    ):
+        from src.db.communities.communities import Community
+        from src.db.communities.discussions import Discussion
+        from src.db.communities.discussion_comments import DiscussionComment
+        from src.services.audit.dossier import _community
+
+        community = Community(
+            name="C", description="d", org_id=other_org.id, community_uuid="comm_other",
+            creation_date=str(datetime.now()), update_date=str(datetime.now()),
+        )
+        db.add(community)
+        await db.commit()
+        foreign = Discussion(
+            title="Elsewhere", content=None, community_id=community.id,
+            org_id=other_org.id, author_id=regular_user.id, discussion_uuid="disc_other",
+            creation_date=str(datetime.now()), update_date=str(datetime.now()),
+        )
+        db.add(foreign)
+        await db.commit()
+        db.add(DiscussionComment(
+            content="hidden", discussion_id=foreign.id, author_id=regular_user.id,
+            comment_uuid="cmt_other",
+            creation_date=str(datetime.now()), update_date=str(datetime.now()),
+        ))
+        await db.commit()
+
+        out = await _community(db, regular_user.id, org.id)
+        assert out["comments"] == [] and out["discussions"] == []
+
+    async def test_discussion_without_content_has_no_excerpt(
+        self, db, org, regular_user
+    ):
+        from src.db.communities.communities import Community
+        from src.db.communities.discussions import Discussion
+        from src.services.audit.dossier import _community
+
+        community = Community(
+            name="C", description="d", org_id=org.id, community_uuid="comm_empty",
+            creation_date=str(datetime.now()), update_date=str(datetime.now()),
+        )
+        db.add(community)
+        await db.commit()
+        db.add(Discussion(
+            title="No body", content=None, community_id=community.id, org_id=org.id,
+            author_id=regular_user.id, discussion_uuid="disc_empty",
+            creation_date=str(datetime.now()), update_date=str(datetime.now()),
+        ))
+        await db.commit()
+
+        out = await _community(db, regular_user.id, org.id)
+        assert out["discussions"][0]["excerpt"] is None
+
+    async def test_behavior_enrichment_failure_degrades_to_raw_rows(self, db):
+        """Analytics is best-effort; it must not take the Postgres dossier with it."""
+        from src.services.audit import dossier as dossier_module
+
+        behavior = {"user_time_by_course": [{"course_uuid": "course_test"}]}
+        with patch.object(
+            dossier_module, "enrich_with_metadata", side_effect=RuntimeError("boom")
+        ):
+            out = await dossier_module._enrich_behavior(behavior, db)
+        assert out["user_time_by_course"] == [{"course_uuid": "course_test"}]
+
+    async def test_behavior_view_events_are_labelled(self, db):
+        from src.services.audit.dossier import _enrich_behavior
+
+        out = await _enrich_behavior({"user_views": [
+            {"event_name": "course_view"}, {"event_name": "something_else"}, "junk",
+        ]}, db)
+        assert out["user_views"][0]["label"] == "Course views"
+        assert out["user_views"][1]["label"] == "Something else"
+
+    async def test_empty_behavior_is_returned_untouched(self, db):
+        from src.services.audit.dossier import _enrich_behavior
+        assert await _enrich_behavior({}, db) == {}
 
     async def test_behavior_fetcher_exception_swallowed(self, db, org, regular_user):
         from src.services.audit.dossier import build_user_dossier

@@ -133,6 +133,21 @@ class TestForm:
         assert out["items"][1]["expected_text"] is None
         assert out["total_count"] == 1
 
+    def test_blank_count_is_capped_across_questions(self):
+        """The cap is on rendered rows, not per question — two full questions hit it."""
+        contents = {"questions": [
+            {
+                "questionUUID": f"q{q}", "questionText": f"Question {q}",
+                "blanks": [
+                    {"blankUUID": f"b{q}_{i}", "placeholder": f"p{i}", "correctAnswer": "x"}
+                    for i in range(MAX_ITEMS)
+                ],
+            }
+            for q in range(2)
+        ]}
+        out = humanize_task_answer("FORM", contents, {"submissions": []})
+        assert len(out["items"]) == MAX_ITEMS
+
 
 class TestShortAnswer:
     def test_agrees_with_the_grader(self):
@@ -253,6 +268,19 @@ class TestRawFallback:
         out = humanize_task_answer("QUIZ", {"questions": "not-a-list"}, {"submissions": 5})
         assert out["kind"] in ("quiz", "raw")
 
+    def test_an_exception_inside_a_builder_falls_back_to_raw(self):
+        class Exploding(dict):
+            def get(self, *args, **kwargs):
+                raise RuntimeError("unreadable contents")
+
+        out = humanize_task_answer("QUIZ", Exploding(), {"submissions": [{"a": 1}]})
+        assert out["kind"] == "raw" and out["unreadable"] is True
+
+    def test_lists_are_walked_with_indexed_paths(self):
+        out = humanize_task_answer("CUSTOM", {}, {"answers": ["first", "second"]})
+        assert [i["prompt"] for i in out["items"]] == ["answers.0", "answers.1"]
+        assert out["items"][1]["answer_text"] == "second"
+
     def test_none_inputs_are_tolerated(self):
         out = humanize_task_answer("QUIZ", None, None)
         assert out["items"] == []
@@ -270,6 +298,12 @@ class TestHelpers:
         assert answer_digest({"a": 1}) != answer_digest({"a": 2})
         assert answer_digest({"a": 1}).startswith("sha256:")
         assert answer_digest(None) is None
+
+    def test_digest_survives_unserializable_payloads(self):
+        """A digest is an attestation — it must never be the thing that 500s."""
+        circular: dict = {}
+        circular["self"] = circular
+        assert answer_digest(circular).startswith("sha256:")
 
     def test_type_labels(self):
         assert task_type_label("QUIZ") == "Quiz"
