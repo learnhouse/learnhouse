@@ -8,11 +8,12 @@ import { getUriWithOrg } from '@services/config/config'
 import { removeFolderPrefix } from '@services/folders/folders'
 import CourseThumbnail from '@components/Objects/Thumbnails/CourseThumbnail'
 import { getFolderThumbnailMediaDirectory } from '@services/media/media'
-import { getMediaFileDirectory } from '@services/media/media-resource'
 import { folderTone } from '@components/Dashboard/Library/LibraryToolbar'
 import { shareFolderLink } from '@components/Dashboard/Library/shareFolder'
-import { resourceHref, safeExternalUrl } from '@components/Dashboard/Library/resourceLink'
+import { resourceHref } from '@components/Dashboard/Library/resourceLink'
 import MediaPreview from '@components/Dashboard/Library/MediaPreview'
+import MediaLightbox from '@components/Objects/Media/MediaLightbox'
+import { mediaKind } from '@/lib/media/mediaKind'
 import {
   FolderSimple,
   GraduationCap,
@@ -27,6 +28,7 @@ import {
   MusicNote,
   File as FileIcon,
   ArrowSquareOut,
+  Eye,
   type IconProps,
 } from '@phosphor-icons/react'
 
@@ -42,13 +44,14 @@ const TYPE_TONE: Record<string, string> = {
 }
 
 function mediaIcon(resource: any): React.ComponentType<IconProps> {
-  if (resource?.media_type === 'EMBED') return LinkSimple
-  const f = (resource?.file_format || '').toLowerCase()
-  if (f === 'pdf') return FilePdf
-  if (['mp4', 'webm', 'mov'].includes(f)) return VideoCamera
-  if (['png', 'jpg', 'jpeg', 'gif', 'webp'].includes(f)) return ImageIcon
-  if (['mp3', 'wav', 'ogg', 'm4a'].includes(f)) return MusicNote
-  return FileIcon
+  switch (mediaKind(resource)) {
+    case 'embed': return LinkSimple
+    case 'pdf': return FilePdf
+    case 'video': return VideoCamera
+    case 'image': return ImageIcon
+    case 'audio': return MusicNote
+    default: return FileIcon
+  }
 }
 
 function typeIcon(type: string, resource: any): React.ComponentType<IconProps> {
@@ -106,6 +109,7 @@ export function FolderCard({ folder, orgslug }: { folder: any; orgslug: string }
 export function LibraryItemCard({ item, orgslug }: { item: any; orgslug: string }) {
   const { t } = useTranslation()
   const org = useOrg() as any
+  const [previewOpen, setPreviewOpen] = React.useState(false)
   const type = item.resource_type as ResourceType
   const resource = item.resource || {}
 
@@ -118,20 +122,9 @@ export function LibraryItemCard({ item, orgslug }: { item: any; orgslug: string 
   const tone = TYPE_TONE[type] || 'bg-gray-50 text-gray-400'
   const Icon = typeIcon(type, resource)
 
-  let href: string | null = null
-  let external = false
-  let fileUrl: string | null = null
-  if (type === 'media') {
-    // file_id is no longer exposed; uploaded media is served via the authed
-    // /media/{uuid}/file endpoint keyed only by media_uuid.
-    if (resource.media_type !== 'EMBED') fileUrl = getMediaFileDirectory(org?.org_uuid, resource.media_uuid || item.resource_uuid)
-    if (resource.media_type === 'EMBED' && resource.url) { href = safeExternalUrl(resource.url); external = !!href }
-    else if (fileUrl) { href = fileUrl; external = true }
-  } else {
-    // Podcasts, communities, boards, playgrounds → their own resource page.
-    href = resourceHref(type, resource, orgslug, 'public')
-  }
-  const isUpload = type === 'media' && resource.media_type !== 'EMBED'
+  const mediaUuid = resource.media_uuid || item.resource_uuid
+  // Media previews in-app (see below); everything else links to its own page.
+  const href = type === 'media' ? null : resourceHref(type, resource, orgslug, 'public')
 
   const body = (
     <>
@@ -147,10 +140,10 @@ export function LibraryItemCard({ item, orgslug }: { item: any; orgslug: string 
         <h3 className="text-base font-bold text-gray-900 leading-tight line-clamp-1">{name}</h3>
         <div className="pt-1.5 flex items-center justify-between border-t border-gray-100">
           <span className="text-[10px] font-bold uppercase tracking-wider text-gray-400">{t(`library.tabs.${type}`)}</span>
-          {href && (
+          {(href || type === 'media') && (
             <span className="text-[10px] font-bold uppercase tracking-wider text-gray-400 inline-flex items-center gap-1">
-              {isUpload ? t('media.download') : t('library.open_resource')}
-              {external && <ArrowSquareOut size={11} />}
+              {type === 'media' ? t('library.preview') : t('library.open_resource')}
+              {type === 'media' ? <Eye size={11} /> : <ArrowSquareOut size={11} />}
             </span>
           )}
         </div>
@@ -159,7 +152,22 @@ export function LibraryItemCard({ item, orgslug }: { item: any; orgslug: string 
   )
 
   const BIG = 'group relative flex flex-col bg-white rounded-xl nice-shadow overflow-hidden w-full transition-all hover:bg-gray-50/40'
-  if (href && external) return <a href={href} target="_blank" rel="noopener noreferrer" className={BIG}>{body}</a>
+  // Media opens in-app rather than sending the learner off to the raw file.
+  if (type === 'media') {
+    return (
+      <>
+        <button type="button" onClick={() => setPreviewOpen(true)} className={`${BIG} text-left`}>
+          {body}
+        </button>
+        <MediaLightbox
+          resource={resource}
+          mediaUuid={mediaUuid}
+          isOpen={previewOpen}
+          onOpenChange={setPreviewOpen}
+        />
+      </>
+    )
+  }
   if (href) return <Link href={href} className={BIG}>{body}</Link>
   return <div className={BIG}>{body}</div>
 }

@@ -1272,7 +1272,18 @@
       "drag_to_reorder": "Drag to reorder",
       "sort_error": "Could not update sort order",
       "reorder_error": "Could not save the new order"
-    }
+    },
+    "preview": "Preview",
+    "no_access": "You don't have access to this file.",
+    "choose_from_library": "Choose from Library",
+    "upload_to_library": "Upload",
+    "upload_to_library_hint": "Uploaded files are added to your Library, so you can reuse them elsewhere.",
+    "no_resource_selected": "No library item selected.",
+    "private_media_warning": "Private — learners without access will not see this.",
+    "replace_resource": "Replace",
+    "remove_resource": "Remove",
+    "show_as_card": "Show as card",
+    "show_inline": "Show inline"
   },
   "media": {
     "media": "Media",
@@ -1410,7 +1421,13 @@
     "autosave_unsaved": "Unsaved changes",
     "autosaved": "Saved",
     "autosaving": "Saving…",
-    "save_answers": "Save answers"
+    "save_answers": "Save answers",
+    "grid_columns_2": "2 Columns",
+    "grid_columns_3": "3 Columns",
+    "grid_columns_4": "4 Columns",
+    "add_card": "Add Card",
+    "ungroup_cards": "Ungroup Cards",
+    "group_into_grid": "Group into Grid"
   },
   "embed": {
     "not_supported_title": "This activity is not supported",
@@ -4827,11 +4844,6 @@
         "visit_site": "Visit Site",
         "align": "Align"
       },
-      "flipcard_block": {
-        "front": "Front",
-        "back": "Back",
-        "click_to_flip": "Click to flip"
-      },
       "button_block": {
         "enter_link_url": "Enter link URL"
       },
@@ -4872,7 +4884,9 @@
         "suggestion_calculator_prompt": "Create a calculator that shows step-by-step solutions for basic equations",
         "suggestion_timeline": "Timeline",
         "suggestion_timeline_prompt": "Create an interactive timeline showing major historical events with expandable details"
-      }
+      },
+      "library": "Library",
+      "flipcard_grid": "Flashcard Grid"
     }
   },
   "analytics": {

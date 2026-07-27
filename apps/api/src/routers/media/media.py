@@ -25,16 +25,19 @@ router = APIRouter()
 @router.get(
     "/{media_uuid}/file",
     summary="Serve a media file",
-    description="Streams the media file's bytes after enforcing access (folder-aware). The storage path is never exposed to the client. Supports Range requests.",
+    description="Streams the media file's bytes after enforcing access (folder-aware). The storage path is never exposed to the client. Supports Range requests. Pass `download=true` to force a save-as instead of inline rendering.",
 )
 async def api_serve_media_file(
     request: Request,
     media_uuid: str,
+    download: bool = False,
     current_user=Depends(get_current_user),
     db_session=Depends(get_db_session),
 ):
     media, is_public = await authorize_media_file(request, media_uuid, current_user, db_session)
-    return await serve_media_file(request, media, db_session, is_public=is_public)
+    return await serve_media_file(
+        request, media, db_session, is_public=is_public, download=download
+    )
 
 
 @router.head("/{media_uuid}/file", summary="Media file metadata")
@@ -68,11 +71,14 @@ async def api_create_media_share_link(
 async def api_serve_shared_media(
     request: Request,
     token: str,
+    download: bool = False,
     current_user=Depends(get_current_user),
     db_session=Depends(get_db_session),
 ):
     media, is_public = await authorize_share_token(request, token, current_user, db_session)
-    return await serve_media_file(request, media, db_session, is_public=is_public)
+    return await serve_media_file(
+        request, media, db_session, is_public=is_public, download=download
+    )
 
 
 @router.head("/shared/{token}/file", summary="Shared media file metadata by token")

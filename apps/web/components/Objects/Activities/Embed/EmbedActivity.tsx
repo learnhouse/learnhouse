@@ -4,48 +4,7 @@ import { WarningCircle, Globe, FloppyDisk, SpinnerGap } from '@phosphor-icons/re
 import { updateActivity } from '@services/courses/activities'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
 import toast from 'react-hot-toast'
-
-function toEmbedUrl(url: string): string {
-  // Google Docs/Sheets/Slides → preview
-  const googleDocMatch = url.match(
-    /^(https?:\/\/docs\.google\.com\/(?:document|spreadsheets|presentation)\/d\/[^/]+)/
-  )
-  if (googleDocMatch) {
-    return `${googleDocMatch[1]}/preview`
-  }
-
-  // Google Forms → embedded
-  const googleFormMatch = url.match(
-    /^(https?:\/\/docs\.google\.com\/forms\/d\/[^/]+)/
-  )
-  if (googleFormMatch) {
-    return `${googleFormMatch[1]}/viewform?embedded=true`
-  }
-
-  // Figma → embed host
-  if (/^https?:\/\/(www\.)?figma\.com\//.test(url)) {
-    return `https://www.figma.com/embed?embed_host=learnhouse&url=${encodeURIComponent(url)}`
-  }
-
-  // Loom → /share/ to /embed/
-  const loomMatch = url.match(/^(https?:\/\/www\.loom\.com)\/share\/(.+)$/)
-  if (loomMatch) {
-    return `${loomMatch[1]}/embed/${loomMatch[2]}`
-  }
-
-  // Canva design → embed
-  if (url.includes('canva.com/design/')) {
-    return url.includes('?') ? `${url}&embed` : `${url}?embed`
-  }
-
-  // Miro → embed
-  const miroMatch = url.match(/^(https?:\/\/miro\.com\/app\/board\/)(.+)$/)
-  if (miroMatch) {
-    return `https://miro.com/app/live-embed/${miroMatch[2]}`
-  }
-
-  return url
-}
+import { toEmbedUrl } from '@/lib/media/embedUrl'
 
 interface EmbedActivityProps {
   activity: any
@@ -60,7 +19,7 @@ function EmbedActivity({ activity, editable = false, style }: EmbedActivityProps
 
   const [editUrl, setEditUrl] = useState(embedUrl)
   const [saving, setSaving] = useState(false)
-  const [error, setError] = useState(!embedUrl)
+  const [, setError] = useState(!embedUrl)
 
   const handleSaveUrl = async () => {
     if (!editUrl.trim()) return

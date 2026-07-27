@@ -81,6 +81,16 @@ def _serialize_tiptap_content_to_text(content: Any) -> str:
                 text_parts.append(f"\n[FLIPCARD]\nQ: {attrs.get('question', '')}\nA: {attrs.get('answer', '')}")
                 return
 
+            # A library block only references an asset; name it so the model has
+            # something to reason about instead of an empty node.
+            if node_type == 'blockLibrary':
+                attrs = node.get('attrs', {})
+                snapshot = attrs.get('snapshot') or {}
+                name = snapshot.get('name') or attrs.get('resourceUuid', '')
+                kind = attrs.get('resourceType', 'resource')
+                text_parts.append(f"\n[LIBRARY {str(kind).upper()}] {name}")
+                return
+
             # Recursively process content
             content = node.get('content', [])
             if isinstance(content, list):

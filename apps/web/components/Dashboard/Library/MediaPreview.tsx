@@ -14,6 +14,8 @@ import {
   Play,
 } from '@phosphor-icons/react'
 import PdfThumbnail from '@components/Dashboard/Library/PdfThumbnail'
+import { mediaKind } from '@/lib/media/mediaKind'
+import { youTubeId, vimeoId } from '@/lib/media/embedUrl'
 
 /*
  Shared media preview used by BOTH the dashboard and public library cards.
@@ -28,21 +30,18 @@ import PdfThumbnail from '@components/Dashboard/Library/PdfThumbnail'
  The component is read-only / presentational.
 */
 
-const IMAGE_FORMATS = ['png', 'jpg', 'jpeg', 'gif', 'webp', 'svg', 'avif']
-const VIDEO_FORMATS = ['mp4', 'webm', 'mov']
-const AUDIO_FORMATS = ['mp3', 'wav', 'ogg', 'm4a']
-
 // Amber tone matches the existing "media" tone used by the cards.
 const MEDIA_TONE = 'bg-amber-50 text-amber-500'
 
 function tileIcon(resource: any): React.ComponentType<any> {
-  if (resource?.media_type === 'EMBED') return LinkSimple
-  const f = (resource?.file_format || '').toLowerCase()
-  if (f === 'pdf') return FilePdf
-  if (VIDEO_FORMATS.includes(f)) return VideoCamera
-  if (IMAGE_FORMATS.includes(f)) return ImageIcon
-  if (AUDIO_FORMATS.includes(f)) return MusicNote
-  return FileIcon
+  switch (mediaKind(resource)) {
+    case 'embed': return LinkSimple
+    case 'pdf': return FilePdf
+    case 'video': return VideoCamera
+    case 'image': return ImageIcon
+    case 'audio': return MusicNote
+    default: return FileIcon
+  }
 }
 
 function IconTile({ Icon }: { Icon: React.ComponentType<any> }) {
@@ -51,37 +50,6 @@ function IconTile({ Icon }: { Icon: React.ComponentType<any> }) {
       <Icon size={46} weight="fill" />
     </div>
   )
-}
-
-/** Extract a YouTube video id from common URL shapes, or null. */
-function youTubeId(url: string): string | null {
-  try {
-    const u = new URL(url)
-    const host = u.hostname.replace(/^www\./, '')
-    if (host === 'youtu.be') {
-      const id = u.pathname.split('/').filter(Boolean)[0]
-      return id || null
-    }
-    if (host.endsWith('youtube.com') || host.endsWith('youtube-nocookie.com')) {
-      const v = u.searchParams.get('v')
-      if (v) return v
-      const parts = u.pathname.split('/').filter(Boolean)
-      const i = parts.findIndex((p) => p === 'embed' || p === 'shorts' || p === 'v')
-      if (i !== -1 && parts[i + 1]) return parts[i + 1]
-    }
-  } catch {
-    /* not a parseable URL */
-  }
-  return null
-}
-
-/** True if the url is a Vimeo link. */
-function isVimeo(url: string): boolean {
-  try {
-    return new URL(url).hostname.replace(/^www\./, '').endsWith('vimeo.com')
-  } catch {
-    return false
-  }
 }
 
 function YouTubePreview({ id }: { id: string }) {
@@ -207,24 +175,24 @@ export default function MediaPreview({
   resourceUuid?: string
 }) {
   const Icon = tileIcon(resource)
+  const kind = mediaKind(resource)
 
   // EMBED: parse the url.
-  if (resource?.media_type === 'EMBED') {
+  if (kind === 'embed') {
     const url: string = resource.url || ''
     if (!url) return <IconTile Icon={Icon} />
     const yt = youTubeId(url)
     if (yt) return <YouTubePreview id={yt} />
     // Vimeo and every other website link get a real preview (og:image / screenshot).
-    return <EmbedPreview url={url} video={isVimeo(url)} />
+    return <EmbedPreview url={url} video={!!vimeoId(url)} />
   }
 
   // UPLOAD: build the file url. file_id is no longer exposed by the API; the
   // authed /media/{uuid}/file endpoint is keyed only by media_uuid.
   const mediaUuid = resource?.media_uuid || resourceUuid
   const fileUrl = mediaUuid ? getMediaFileDirectory(orgUuid, mediaUuid) : null
-  const fmt = (resource?.file_format || '').toLowerCase()
 
-  if (fileUrl && IMAGE_FORMATS.includes(fmt)) {
+  if (fileUrl && kind === 'image') {
     return (
       <div
         className="relative aspect-video bg-gray-50 bg-cover bg-center"
@@ -233,11 +201,11 @@ export default function MediaPreview({
     )
   }
 
-  if (fileUrl && fmt === 'pdf') {
+  if (fileUrl && kind === 'pdf') {
     return <PdfThumbnail url={fileUrl} />
   }
 
-  if (fileUrl && VIDEO_FORMATS.includes(fmt)) {
+  if (fileUrl && kind === 'video') {
     return <UploadVideoPreview src={fileUrl} />
   }
 

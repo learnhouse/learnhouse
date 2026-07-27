@@ -538,7 +538,8 @@ def validate_prosemirror_content(content: dict) -> tuple[bool, str]:
         "codeBlock", "blockQuiz", "flipcard", "calloutInfo", "calloutWarning",
         "blockEmbed", "blockImage", "blockVideo", "blockPDF", "blockMathEquation",
         "table", "tableRow", "tableCell", "tableHeader", "horizontalRule",
-        "hardBreak", "text", "scenarios", "blockUser", "blockWebPreview", "button", "badge"
+        "hardBreak", "text", "scenarios", "blockUser", "blockWebPreview", "button", "badge",
+        "blockLibrary", "flipcardGrid"
     }
 
     def check_node(node: dict, path: str = "root") -> tuple[bool, str]:

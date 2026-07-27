@@ -502,6 +502,39 @@
   transform: rotateY(180deg);
 }
 
+/* Flipcard grid: cards sit side by side instead of each claiming a full row. */
+.flipcard-grid-content {
+  display: grid;
+  grid-template-columns: repeat(var(--flipcard-grid-columns, 2), minmax(0, 1fr));
+  gap: 1rem;
+  align-items: start;
+}
+
+/* Tiptap mounts the child nodes inside a holder div of its own, which would
+   otherwise be the grid's only item and stack the cards. Dissolving it makes
+   the flipcards themselves the grid items. */
+.flipcard-grid-content > [data-node-view-content-react] {
+  display: contents;
+}
+
+/* One column on narrow screens — three cards side by side is unreadable. */
+@media (max-width: 640px) {
+  .flipcard-grid-content {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+/* Spacing comes from the grid gap, so the card's own vertical margin has to go. */
+.flipcard-grid .flipcard-wrapper {
+  margin-top: 0;
+  margin-bottom: 0;
+  width: 100%;
+}
+
+.flipcard-grid .flipcard-container {
+  width: 100%;
+}
+
 /* AI Canva Bubble Menu Styles */
 .ai-canva-bubble-menu {
   position: fixed !important;

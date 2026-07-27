@@ -7,6 +7,7 @@ import {
   FileText,
   Globe,
   GitBranch,
+  Grid2x2,
   Headphones,
   Heading1,
   Heading2,
@@ -15,6 +16,7 @@ import {
   Heading5,
   Heading6,
   ImagePlus,
+  Library,
   List,
   ListOrdered,
   MousePointerClick,
@@ -220,6 +222,17 @@ export const slashCommands: SlashCommandItem[] = [
       editor.chain().focus().insertContent({ type: 'blockAudio' }).run()
     },
   },
+  {
+    id: 'library',
+    title: 'Library',
+    description: 'Insert a file or resource from your Library',
+    icon: <Library size={18} />,
+    category: 'media',
+    keywords: ['library', 'file', 'media', 'resource', 'reuse', 'existing', 'folder'],
+    command: (editor) => {
+      editor.chain().focus().insertContent({ type: 'blockLibrary' }).run()
+    },
+  },
 
   // Interactive category
   {
@@ -284,6 +297,28 @@ export const slashCommands: SlashCommandItem[] = [
           alignment: 'center',
           size: 'medium',
         },
+      }).run()
+    },
+  },
+  {
+    id: 'flipcardGrid',
+    title: 'Flashcard Grid',
+    description: 'Lay several flashcards out side by side',
+    icon: <Grid2x2 size={18} />,
+    category: 'interactive',
+    keywords: ['flipcard', 'flashcard', 'grid', 'columns', 'row', 'horizontal', 'deck'],
+    command: (editor) => {
+      const card = (question: string, answer: string) => ({
+        type: 'flipcard',
+        attrs: { question, answer, color: 'blue', alignment: 'center', size: 'medium' },
+      })
+      editor.chain().focus().insertContent({
+        type: 'flipcardGrid',
+        attrs: { columns: 2 },
+        content: [
+          card('Click to reveal the answer', 'This is the answer'),
+          card('Click to reveal the answer', 'This is the answer'),
+        ],
       }).run()
     },
   },
