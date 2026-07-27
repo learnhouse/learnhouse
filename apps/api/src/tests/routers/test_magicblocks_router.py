@@ -59,6 +59,7 @@ def _session(user_id=1, iteration_count=0, max_iterations=5):
         max_iterations=max_iterations,
         current_html="<div></div>",
         message_history=[],
+        revisions=[],
         user_id=user_id,
     )
 
