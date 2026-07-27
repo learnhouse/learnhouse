@@ -14,7 +14,6 @@ from src.db.users import PublicUser, AnonymousUser, APITokenUser, User
 from src.db.user_organizations import UserOrganization
 from src.db.roles import Role
 from src.db.courses.courses import Course
-from src.db.courses.activities import Activity
 from src.db.trail_runs import TrailRun
 from src.security.auth import get_current_user, resolve_acting_user_id
 from src.security.superadmin import is_user_superadmin
@@ -23,6 +22,7 @@ from src.security.features_utils.plans import plan_meets_requirement
 import httpx
 from src.services.analytics.analytics import track
 from src.services.analytics.cache import get_cached_result, set_cached_result
+from src.services.analytics.enrichment import enrich_with_metadata
 from src.services.analytics.events import ALLOWED_FRONTEND_EVENTS
 from src.services.orgs.users import _csv_safe
 from src.services.analytics.queries import (
@@ -224,75 +224,10 @@ def _parse_safe_params(
     return safe_org_id, safe_days
 
 
-async def _enrich_with_metadata(rows: list[dict], db_session: AsyncSession) -> list[dict]:
-    """Enrich analytics result rows with course/activity metadata from PostgreSQL."""
-    if not rows:
-        return rows
-
-    # Collect unique course_uuids
-    course_uuids = set()
-    for row in rows:
-        if row.get("course_uuid"):
-            course_uuids.add(row["course_uuid"])
-
-    # Batch fetch courses
-    course_map: dict[str, Course] = {}
-    if course_uuids:
-        courses = (await db_session.execute(
-            select(Course).where(Course.course_uuid.in_(list(course_uuids)))  # type: ignore
-        )).scalars().all()
-        course_map = {c.course_uuid: c for c in courses}
-
-    # Collect unique activity_uuids
-    activity_uuids = set()
-    for row in rows:
-        for key in ("activity_uuid", "last_activity_uuid"):
-            if row.get(key):
-                activity_uuids.add(row[key])
-
-    # Batch fetch activities
-    activity_map: dict[str, Activity] = {}
-    if activity_uuids:
-        activities = (await db_session.execute(
-            select(Activity).where(Activity.activity_uuid.in_(list(activity_uuids)))  # type: ignore
-        )).scalars().all()
-        activity_map = {a.activity_uuid: a for a in activities}
-
-        # Also resolve course_uuid for activities (needed when rows don't have course_uuid)
-        activity_course_ids = {a.course_id for a in activities if a.course_id}
-        missing_course_ids = activity_course_ids - {c.id for c in course_map.values()}
-        if missing_course_ids:
-            extra_courses = (await db_session.execute(
-                select(Course).where(Course.id.in_(list(missing_course_ids)))  # type: ignore
-            )).scalars().all()
-            for c in extra_courses:
-                course_map[c.course_uuid] = c
-
-    # Build course_id -> course_uuid lookup for activity enrichment
-    course_id_to_obj = {c.id: c for c in course_map.values()}
-
-    # Inject metadata into rows
-    for row in rows:
-        if row.get("course_uuid"):
-            course = course_map.get(row["course_uuid"])
-            if course:
-                row["course_name"] = course.name
-                row["thumbnail_image"] = course.thumbnail_image or ""
-
-        for key in ("activity_uuid", "last_activity_uuid"):
-            if row.get(key):
-                activity = activity_map.get(row[key])
-                if activity:
-                    name_key = "activity_name" if key == "activity_uuid" else "last_activity_name"
-                    row[name_key] = activity.name
-                    # If row doesn't have course_uuid, resolve it from the activity
-                    if not row.get("course_uuid") and activity.course_id:
-                        parent_course = course_id_to_obj.get(activity.course_id)
-                        if parent_course:
-                            row["course_uuid"] = parent_course.course_uuid
-                            row["course_name"] = parent_course.name
-
-    return rows
+# The implementation lives in services/ so the audit dossier can reuse it without
+# importing from src.routers. Re-exported under the original private name so the
+# existing call sites (and the tests that patch it) keep working.
+_enrich_with_metadata = enrich_with_metadata
 
 
 # -------------------------------------------------------------------
