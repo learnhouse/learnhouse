@@ -22,15 +22,21 @@ import {
  * sends the session cookie (same-origin), so private-folder files are only
  * served to authorized users, and the storage path is never exposed. The
  * orgUuid/fileId params are kept for signature stability but unused.
+ *
+ * Pass `{ download: true }` for a save-as URL: the `download` attribute on an
+ * anchor is ignored cross-origin, and media is served from the API host, so the
+ * attachment disposition has to come from the server.
  */
 export function getMediaFileDirectory(
   _orgUuid?: string,
   mediaUuid?: string,
-  _fileId?: string
+  _fileId?: string,
+  options?: { download?: boolean }
 ) {
   // _orgUuid/_fileId are accepted for backward-compatible call sites but no
   // longer used: media is served via the authed endpoint keyed by media_uuid.
-  return `${getAPIUrl()}media/${mediaUuid}/file`
+  const base = `${getAPIUrl()}media/${mediaUuid}/file`
+  return options?.download ? `${base}?download=true` : base
 }
 
 /**
@@ -47,8 +53,9 @@ export async function createMediaShareLink(media_uuid: string, access_token: str
 }
 
 /** Build the shareable, token-based file URL (random + unique every time). */
-export function getMediaShareFileUrl(token: string) {
-  return `${getAPIUrl()}media/shared/${token}/file`
+export function getMediaShareFileUrl(token: string, options?: { download?: boolean }) {
+  const base = `${getAPIUrl()}media/shared/${token}/file`
+  return options?.download ? `${base}?download=true` : base
 }
 
 export async function getOrgMedia(

@@ -97,6 +97,30 @@ class TestServeFilesystem:
         assert res.status_code == 200, res.text
         assert res.headers["cache-control"] == "private, no-store"
 
+    async def test_inline_disposition_by_default(self, client, db, org, fs_file):
+        m = await _mk_media(db, org, storage_key=fs_file, name="fsinline")
+        res = await client.get(f"/api/v1/media/{m.media_uuid}/file")
+        assert res.status_code == 200, res.text
+        assert res.headers["content-disposition"].startswith("inline;")
+        assert "fsinline.pdf" in res.headers["content-disposition"]
+
+    async def test_download_forces_attachment(self, client, db, org, fs_file):
+        # The `download` attribute on an anchor is ignored cross-origin, so the
+        # attachment disposition has to come from the API.
+        m = await _mk_media(db, org, storage_key=fs_file, name="fsdl")
+        res = await client.get(f"/api/v1/media/{m.media_uuid}/file?download=true")
+        assert res.status_code == 200, res.text
+        assert res.headers["content-disposition"].startswith("attachment;")
+        assert "fsdl.pdf" in res.headers["content-disposition"]
+
+    async def test_download_filename_is_rfc5987_encoded(self, client, db, org, fs_file):
+        m = await _mk_media(db, org, storage_key=fs_file, name="rapport financier")
+        res = await client.get(f"/api/v1/media/{m.media_uuid}/file?download=true")
+        assert res.status_code == 200, res.text
+        disposition = res.headers["content-disposition"]
+        assert disposition.startswith("attachment; filename*=UTF-8''")
+        assert "rapport%20financier.pdf" in disposition
+
     async def test_missing_file_on_disk_404(self, client, db, org):
         m = await _mk_media(db, org, storage_key="orgs/org_test/media/none/missing.pdf", name="fsmiss")
         res = await client.get(f"/api/v1/media/{m.media_uuid}/file")
