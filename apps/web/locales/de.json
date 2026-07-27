@@ -982,7 +982,10 @@
     "autosave_unsaved": "Ungespeicherte Änderungen",
     "autosaved": "Gespeichert",
     "autosaving": "Wird gespeichert…",
-    "save_answers": "Antworten speichern"
+    "save_answers": "Antworten speichern",
+    "markdown": "Markdown",
+    "custom": "Benutzerdefiniert",
+    "scorm": "SCORM"
   },
   "assignments": {
     "submit_assignment": "Aufgabe einreichen",
@@ -2114,7 +2117,8 @@
             "scorm": "SCORM",
             "markdown": "Markdown",
             "embed": "Einbettung",
-            "resource": "Ressource"
+            "resource": "Ressource",
+            "custom": "Benutzerdefiniert"
           },
           "toasts": {
             "deleting": "Aktivität wird gelöscht...",

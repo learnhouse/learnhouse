@@ -982,7 +982,10 @@
     "autosave_unsaved": "Alterações não salvas",
     "autosaved": "Salvo",
     "autosaving": "Salvando…",
-    "save_answers": "Salvar respostas"
+    "save_answers": "Salvar respostas",
+    "markdown": "Markdown",
+    "custom": "Personalizado",
+    "scorm": "SCORM"
   },
   "assignments": {
     "submit_assignment": "Enviar Tarefa",
@@ -2114,7 +2117,8 @@
             "scorm": "SCORM",
             "markdown": "Markdown",
             "embed": "Embed",
-            "resource": "Recurso"
+            "resource": "Recurso",
+            "custom": "Personalizado"
           },
           "toasts": {
             "deleting": "Excluindo atividade...",

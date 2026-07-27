@@ -1004,7 +1004,10 @@
     "autosave_unsaved": "Niezapisane zmiany",
     "autosaved": "Zapisano",
     "autosaving": "Zapisywanie…",
-    "save_answers": "Zapisz odpowiedzi"
+    "save_answers": "Zapisz odpowiedzi",
+    "markdown": "Markdown",
+    "custom": "Niestandardowy",
+    "scorm": "SCORM"
   },
   "assignments": {
     "submit_assignment": "Wyślij zadanie",
@@ -2136,7 +2139,8 @@
             "scorm": "SCORM",
             "markdown": "Markdown",
             "embed": "Osadzenie",
-            "resource": "Materiał"
+            "resource": "Materiał",
+            "custom": "Niestandardowy"
           },
           "toasts": {
             "deleting": "Usuwanie aktywności...",

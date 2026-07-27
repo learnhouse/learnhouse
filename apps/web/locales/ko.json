@@ -992,7 +992,10 @@
     "autosave_unsaved": "저장되지 않은 변경사항",
     "autosaved": "저장됨",
     "autosaving": "저장 중…",
-    "save_answers": "답변 저장"
+    "save_answers": "답변 저장",
+    "markdown": "마크다운",
+    "custom": "사용자 정의",
+    "scorm": "SCORM"
   },
   "assignments": {
     "submit_assignment": "과제 제출",
@@ -2124,7 +2127,8 @@
             "scorm": "Scorm",
             "markdown": "Markdown",
             "embed": "Embed",
-            "resource": "자료"
+            "resource": "자료",
+            "custom": "사용자 정의"
           },
           "toasts": {
             "deleting": "활동 삭제 중...",

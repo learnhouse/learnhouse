@@ -5,22 +5,22 @@ import { getUserByUsername, getUser } from '@services/users/users'
 import { Input } from "@components/ui/input"
 import { Button } from "@components/ui/button"
 import {
-  Loader2,
+  CircleNotch,
   User,
-  ExternalLink,
+  ArrowSquareOut,
   Briefcase,
   GraduationCap,
   MapPin,
-  Building2,
+  BuildingApartment,
   Globe,
-  Laptop2,
-  Award,
+  Laptop,
+  Medal,
   BookOpen,
   Link,
   Users,
   Calendar,
   Lightbulb
-} from 'lucide-react'
+} from '@phosphor-icons/react'
 import { Badge } from "@components/ui/badge"
 import { useRouter } from 'next/navigation'
 import UserAvatar from '@components/Objects/UserAvatar'
@@ -50,11 +50,11 @@ const AVAILABLE_ICONS = {
   'briefcase': Briefcase,
   'graduation-cap': GraduationCap,
   'map-pin': MapPin,
-  'building-2': Building2,
+  'building-2': BuildingApartment,
   'speciality': Lightbulb,
   'globe': Globe,
-  'laptop-2': Laptop2,
-  'award': Award,
+  'laptop-2': Laptop,
+  'award': Medal,
   'book-open': BookOpen,
   'link': Link,
   'users': Users,
@@ -63,8 +63,8 @@ const AVAILABLE_ICONS = {
 
 const IconComponent = ({ iconName }: { iconName: string }) => {
   const IconElement = AVAILABLE_ICONS[iconName as keyof typeof AVAILABLE_ICONS]
-  if (!IconElement) return <User className="w-4 h-4 text-neutral-500" />
-  return <IconElement className="w-4 h-4 text-neutral-500" />
+  if (!IconElement) return <User weight="duotone" className="w-4 h-4 text-neutral-500" />
+  return <IconElement weight="duotone" className="w-4 h-4 text-neutral-500" />
 }
 
 function UserBlockComponent(props: any) {
@@ -148,7 +148,7 @@ function UserBlockComponent(props: any) {
         <div className="bg-neutral-50 rounded-xl px-5 py-4 nice-shadow transition-all ease-linear">
           {/* Header */}
           <div className="flex items-center gap-2 mb-3">
-            <User className="text-neutral-400" size={16} />
+            <User weight="duotone" className="text-neutral-400" size={16} />
             <span className="uppercase tracking-widest text-xs font-bold text-neutral-400">
               {t('editor.blocks.user')}
             </span>
@@ -166,7 +166,7 @@ function UserBlockComponent(props: any) {
                 />
                 <Button type="submit" disabled={isLoading} className="bg-neutral-700 hover:bg-neutral-800">
                   {isLoading ? (
-                    <Loader2 className="w-4 h-4 animate-spin" />
+                    <CircleNotch weight="duotone" className="w-4 h-4 animate-spin" />
                   ) : (
                     t('editor.blocks.user_block.load_user')
                   )}
@@ -188,7 +188,7 @@ function UserBlockComponent(props: any) {
       <NodeViewWrapper className="block-user">
         <div className="bg-neutral-50 rounded-xl px-5 py-4 nice-shadow">
           <div className="flex items-center justify-center py-8">
-            <Loader2 className="w-6 h-6 animate-spin text-neutral-400" />
+            <CircleNotch weight="duotone" className="w-6 h-6 animate-spin text-neutral-400" />
           </div>
         </div>
       </NodeViewWrapper>
@@ -215,7 +215,7 @@ function UserBlockComponent(props: any) {
       <NodeViewWrapper className="block-user">
         <div className="bg-neutral-50 rounded-xl px-5 py-4 nice-shadow">
           <div className="flex items-center justify-center gap-3 py-8 bg-white rounded-lg nice-shadow">
-            <User className="text-neutral-300" size={32} />
+            <User weight="duotone" className="text-neutral-300" size={32} />
             <span className="text-neutral-500">{t('editor.blocks.user_block.no_user')}</span>
           </div>
         </div>
@@ -262,7 +262,7 @@ function UserBlockComponent(props: any) {
                     className="h-7 w-7 text-neutral-500 hover:text-neutral-700 flex-shrink-0"
                     onClick={() => userData.username && router.push(`/user/${userData.username}`)}
                   >
-                    <ExternalLink className="w-4 h-4" />
+                    <ArrowSquareOut weight="duotone" className="w-4 h-4" />
                   </Button>
                 </div>
                 {userData.bio && (
@@ -299,7 +299,7 @@ function UserBlockComponent(props: any) {
       <div className="bg-neutral-50 rounded-xl px-5 py-4 nice-shadow transition-all ease-linear">
         {/* Header */}
         <div className="flex items-center gap-2 mb-3">
-          <User className="text-neutral-400" size={16} />
+          <User weight="duotone" className="text-neutral-400" size={16} />
           <span className="uppercase tracking-widest text-xs font-bold text-neutral-400">
             User Profile
           </span>
@@ -341,7 +341,7 @@ function UserBlockComponent(props: any) {
                     className="h-7 w-7 text-neutral-500 hover:text-neutral-700 flex-shrink-0"
                     onClick={() => userData.username && router.push(`/user/${userData.username}`)}
                   >
-                    <ExternalLink className="w-4 h-4" />
+                    <ArrowSquareOut weight="duotone" className="w-4 h-4" />
                   </Button>
                 </div>
                 {userData.bio && (

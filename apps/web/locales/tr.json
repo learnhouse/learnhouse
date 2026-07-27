@@ -1004,7 +1004,10 @@
     "autosave_unsaved": "Kaydedilmemiş değişiklikler",
     "autosaved": "Kaydedildi",
     "autosaving": "Kaydediliyor…",
-    "save_answers": "Yanıtları kaydet"
+    "save_answers": "Yanıtları kaydet",
+    "markdown": "Markdown",
+    "custom": "Özel",
+    "scorm": "SCORM"
   },
   "assignments": {
     "submit_assignment": "Ödevi Gönder",
@@ -2136,7 +2139,8 @@
             "scorm": "SCORM",
             "markdown": "Markdown",
             "embed": "Gömme",
-            "resource": "Kaynak"
+            "resource": "Kaynak",
+            "custom": "Özel"
           },
           "toasts": {
             "deleting": "Aktivite siliniyor...",

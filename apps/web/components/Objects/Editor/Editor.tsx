@@ -73,6 +73,7 @@ import { PlanLevel } from '@services/plans/plans'
 import { useOrg } from '@components/Contexts/OrgContext'
 const VersionHistoryPanel = dynamic(() => import('./VersionHistory/VersionHistoryPanel'), { ssr: false, loading: () => null })
 const MergeConflictModal = dynamic(() => import('./VersionHistory/MergeConflictModal'), { ssr: false, loading: () => null })
+const ActivitySwitcher = dynamic(() => import('./ActivitySwitcher'), { ssr: false, loading: () => null })
 import { usePlan } from '@components/Hooks/usePlan'
 import {
   createBeforeUnloadHandler,
@@ -347,6 +348,18 @@ function Editor(props: EditorProps) {
     }
   }, [editor, conflictInfo, props.setContent, markEditorContentSaved])
 
+  // Cmd+S / Ctrl+S → save. The save handler shows its own toast.
+  React.useEffect(() => {
+    const onKeyDown = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && !e.shiftKey && !e.altKey && e.key.toLowerCase() === 's') {
+        e.preventDefault()
+        handleSave(false)
+      }
+    }
+    window.addEventListener('keydown', onKeyDown)
+    return () => window.removeEventListener('keydown', onKeyDown)
+  }, [handleSave])
+
   // Handler to reload with remote changes
   const handleReloadRemote = React.useCallback(() => {
     // Reload the page to get the latest version
@@ -442,6 +455,12 @@ function Editor(props: EditorProps) {
 
       <CourseProvider courseuuid={props.course.course_uuid} initialCourseStructure={props.course}>
           <div className="activity-editor-top">
+            <ActivitySwitcher
+              course={props.course}
+              activity={props.activity}
+              isDirty={hasUnsavedChanges}
+              onSave={() => handleSave(false)}
+            />
             <div className="activity-editor-doc-section">
               <div className="activity-editor-info-wrapper">
                 <Link href="/">

@@ -1427,7 +1427,10 @@
     "grid_columns_4": "4 Columns",
     "add_card": "Add Card",
     "ungroup_cards": "Ungroup Cards",
-    "group_into_grid": "Group into Grid"
+    "group_into_grid": "Group into Grid",
+    "markdown": "Markdown",
+    "custom": "Custom",
+    "scorm": "SCORM"
   },
   "embed": {
     "not_supported_title": "This activity is not supported",
@@ -2634,7 +2637,8 @@
             "scorm": "Scorm",
             "markdown": "Markdown",
             "embed": "Embed",
-            "resource": "Resource"
+            "resource": "Resource",
+            "custom": "Custom"
           },
           "toasts": {
             "deleting": "Deleting activity...",
@@ -4843,7 +4847,11 @@
         "reset_answers": "Reset answers",
         "mark_correct": "Mark as correct",
         "mark_incorrect": "Mark as incorrect",
-        "delete_answer": "Delete answer"
+        "delete_answer": "Delete answer",
+        "question_label": "Question",
+        "delete_question": "Delete question",
+        "empty_editable": "No questions yet. Add your first one to get started.",
+        "empty_readonly": "This quiz has no questions yet."
       },
       "math_block": {
         "templates": "Templates",

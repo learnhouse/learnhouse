@@ -1,5 +1,6 @@
 'use client'
-import { BookOpenCheck, Check, FileText, Layers, Video, ChevronLeft, ChevronRight, ChevronDown, Trophy } from 'lucide-react'
+import { BookOpenCheck, Check, FileText, Layers, Video, ChevronLeft, ChevronRight, ChevronDown, Trophy, Package, Puzzle, Globe } from 'lucide-react'
+import { MarkdownLogo } from '@phosphor-icons/react'
 import React, { useMemo, memo, useState, useRef, useEffect, useCallback } from 'react'
 import ToolTip from '@components/Objects/StyledElements/Tooltip/Tooltip'
 import { getUriWithOrg } from '@services/config/config'
@@ -17,7 +18,9 @@ interface Props {
 }
 
 // Helper functions
-function getActivityTypeLabel(activityType: string, t: any): string {
+function getActivityTypeLabel(activityType: string, t: any, activitySubType?: string): string {
+  if (activitySubType === 'SUBTYPE_DYNAMIC_MARKDOWN') return t('activities.markdown')
+  if (activitySubType === 'SUBTYPE_DYNAMIC_EMBED') return t('activities.embed')
   switch (activityType) {
     case 'TYPE_VIDEO':
       return t('activities.video')
@@ -27,6 +30,10 @@ function getActivityTypeLabel(activityType: string, t: any): string {
       return t('activities.interactive')
     case 'TYPE_ASSIGNMENT':
       return t('activities.assignment')
+    case 'TYPE_SCORM':
+      return t('activities.scorm')
+    case 'TYPE_CUSTOM':
+      return t('activities.custom')
     default:
       return t('common.unknown')
   }
@@ -42,13 +49,19 @@ function getActivityTypeBadgeColor(activityType: string): string {
       return 'bg-green-100 text-green-700'
     case 'TYPE_ASSIGNMENT':
       return 'bg-orange-100 text-orange-700'
+    case 'TYPE_SCORM':
+      return 'bg-indigo-100 text-indigo-700'
+    case 'TYPE_CUSTOM':
+      return 'bg-pink-100 text-pink-700'
     default:
       return 'bg-gray-100 text-gray-700'
   }
 }
 
 // Memoized activity type icon component
-const ActivityTypeIcon = memo(({ activityType }: { activityType: string }) => {
+const ActivityTypeIcon = memo(({ activityType, activitySubType }: { activityType: string; activitySubType?: string }) => {
+  if (activitySubType === 'SUBTYPE_DYNAMIC_MARKDOWN') return <MarkdownLogo size={16} className="text-gray-400" />
+  if (activitySubType === 'SUBTYPE_DYNAMIC_EMBED') return <Globe size={16} className="text-gray-400" />
   switch (activityType) {
     case 'TYPE_VIDEO':
       return <Video size={16} className="text-gray-400" />
@@ -58,6 +71,10 @@ const ActivityTypeIcon = memo(({ activityType }: { activityType: string }) => {
       return <Layers size={16} className="text-gray-400" />
     case 'TYPE_ASSIGNMENT':
       return <BookOpenCheck size={16} className="text-gray-400" />
+    case 'TYPE_SCORM':
+      return <Package size={16} className="text-gray-400" />
+    case 'TYPE_CUSTOM':
+      return <Puzzle size={16} className="text-gray-400" />
     default:
       return <FileText size={16} className="text-gray-400" />
   }
@@ -79,7 +96,7 @@ const ActivityTooltipContent = memo(({
   return (
   <div className="bg-white rounded-lg nice-shadow py-3 px-4 min-w-[200px] animate-in fade-in duration-200">
     <div className="flex items-center gap-2">
-      <ActivityTypeIcon activityType={activity.activity_type} />
+      <ActivityTypeIcon activityType={activity.activity_type} activitySubType={activity.activity_sub_type} />
       <span className="text-sm text-gray-700">{activity.name}</span>
       {isDone && (
         <span className="ml-auto text-gray-400">
@@ -89,7 +106,7 @@ const ActivityTooltipContent = memo(({
     </div>
     <div className="flex items-center gap-2 mt-2">
       <span className={`text-xs px-2 py-0.5 rounded-full ${getActivityTypeBadgeColor(activity.activity_type)}`}>
-        {getActivityTypeLabel(activity.activity_type, t)}
+        {getActivityTypeLabel(activity.activity_type, t, activity.activity_sub_type)}
       </span>
       <span className="text-xs text-gray-400">
         {isCurrent ? t('activities.current_activity') : isDone ? t('common.completed') : t('activities.not_started')}
@@ -263,7 +280,7 @@ const MobileChapterSelector = memo(({
                       <div className={`w-[6px] h-[6px] rounded-full shrink-0 ${
                         isDone ? 'bg-teal-500' : isCurrent ? 'bg-gray-500 animate-pulse' : 'bg-zinc-200'
                       }`} />
-                      <ActivityTypeIcon activityType={activity.activity_type} />
+                      <ActivityTypeIcon activityType={activity.activity_type} activitySubType={activity.activity_sub_type} />
                       <span className="truncate">{activity.name}</span>
                       {isDone && <Check size={12} className="text-teal-500 ml-auto shrink-0" />}
                     </Link>
