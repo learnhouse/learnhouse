@@ -45,8 +45,13 @@ function uniqueKey(base: string, taken: Set<string>): string {
   return `${seed}_${n}`
 }
 
-const INPUT =
-  'w-full bg-gray-50 text-gray-900 rounded-lg px-3 py-2 border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-black/5 focus:border-gray-400 transition-all'
+// No width here on purpose: each usage sets its own. `w-full` in the shared
+// class beat the `w-36` on the type select in the cascade, so the select ate the
+// row and the label input next to it collapsed to a few pixels.
+const INPUT_BASE =
+  'bg-gray-50 text-gray-900 rounded-lg px-3 py-2 border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-black/5 focus:border-gray-400 transition-all'
+
+const INPUT = `${INPUT_BASE} w-full`
 
 export default function OrgSignupFields() {
   const { t } = useTranslation()
@@ -248,7 +253,10 @@ export default function OrgSignupFields() {
                   placeholder={t('dashboard.users.signup_fields.label_placeholder', {
                     defaultValue: 'Question label',
                   })}
-                  className={`${INPUT} flex-1`}
+                  aria-label={t('dashboard.users.signup_fields.label_placeholder', {
+                    defaultValue: 'Question label',
+                  })}
+                  className={`${INPUT_BASE} flex-1 min-w-0`}
                 />
 
                 <select
@@ -256,7 +264,7 @@ export default function OrgSignupFields() {
                   onChange={(e) =>
                     update(index, { type: e.target.value as SignupFieldType })
                   }
-                  className={`${INPUT} w-36`}
+                  className={`${INPUT_BASE} w-36 shrink-0`}
                 >
                   {FIELD_TYPES.map((ft) => (
                     <option key={ft.value} value={ft.value}>
