@@ -23,6 +23,7 @@ from src.db.resource_authors import (
 )
 from src.db.media.media_share_token import MediaShareToken
 from src.security.auth import resolve_acting_user_id
+from src.security.file_validation import EXT_TO_CANONICAL_MIME
 from src.security.rbac import check_resource_access, AccessAction
 from src.services.media.media_access import media_in_any_private_folder
 from src.services.utils.upload_content import upload_file
@@ -96,7 +97,11 @@ async def create_media(
         # Server-only key (under content/), never returned to clients.
         media.storage_key = f"orgs/{org_uuid}/{directory}/{filename}"
         media.file_format = parts[1] if len(parts) > 1 else ""
-        media.file_mime = file.content_type or ""
+        # Derive the MIME from the STORED extension, which `upload_file` built
+        # from the validated (magic-byte checked) content type. The client's
+        # own `file.content_type` header is not persisted: this value becomes a
+        # response header when the file is served, so it stays server-decided.
+        media.file_mime = EXT_TO_CANONICAL_MIME.get(f".{media.file_format}".lower(), "")
         try:
             file.file.seek(0)
             media.file_size = len(await file.read())

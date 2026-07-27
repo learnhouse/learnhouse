@@ -42,6 +42,26 @@ def _mime_for(key: str) -> str:
     return _MIME_TYPES.get(Path(key).suffix.lower(), 'application/octet-stream')
 
 
+# Every MIME type this endpoint is ever allowed to emit. The stored
+# `media.file_mime` is only usable as a fallback if it is one of these.
+_SERVABLE_MIMES = frozenset(_MIME_TYPES.values())
+
+
+def _serve_mime(media: Media, rel_key: str) -> str:
+    """Decide the Content-Type from server-controlled state only.
+
+    The stored extension is server-derived (`get_safe_filename` builds it from
+    the validated content type), so it is the authoritative signal.
+    `media.file_mime` is consulted only when the extension is unknown — legacy
+    rows, mostly — and even then only if it names a type on the servable list.
+    """
+    by_extension = _mime_for(rel_key)
+    if by_extension != 'application/octet-stream':
+        return by_extension
+    stored = (media.file_mime or '').split(';')[0].strip().lower()
+    return stored if stored in _SERVABLE_MIMES else 'application/octet-stream'
+
+
 async def _resolve_storage_key(db_session: AsyncSession, media: Media) -> str:
     """Return the relative storage key (under `content/`), randomized for new
     uploads (`media.storage_key`), or reconstructed for legacy rows."""
@@ -123,7 +143,7 @@ async def serve_media_file(
         raise HTTPException(status_code=404, detail="This media has no file")
 
     rel_key = await _resolve_storage_key(db_session, media)
-    mime = media.file_mime or _mime_for(rel_key)
+    mime = _serve_mime(media, rel_key)
     headers = _headers(mime, is_public, _download_filename(media, rel_key), download)
     range_header = request.headers.get("range")
 

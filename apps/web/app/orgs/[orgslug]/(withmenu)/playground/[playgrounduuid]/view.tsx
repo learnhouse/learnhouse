@@ -244,7 +244,8 @@ export default function PlaygroundViewClient({
             {playground.html_content ? (
               <iframe
                 srcDoc={playground.html_content}
-                sandbox="allow-scripts allow-same-origin allow-forms allow-popups"
+                // srcDoc content runs on an opaque origin (no allow-same-origin)
+                sandbox="allow-scripts allow-forms allow-popups"
                 className="w-full h-full border-0"
                 title={playground.name}
               />
