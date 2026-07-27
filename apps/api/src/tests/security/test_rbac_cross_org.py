@@ -238,3 +238,41 @@ class TestUsersOnlyIsOrgScoped:
         )
 
         assert allowed is True, "the org's own member must still reach a Users Only course"
+
+
+class TestUserAccountsAreOrgScoped:
+    """A user row carries no org column, so the resource-org resolver answers
+    None for it. That used to fall into the placeholder branch, which loads every
+    role the caller holds anywhere — enough for an admin of one org to update or
+    delete an account belonging only to another."""
+
+    @pytest.mark.asyncio
+    async def test_admin_cannot_touch_a_user_from_another_org(
+        self, db, org, other_org, admin_role, mock_request
+    ):
+        alice = _mk_user(db, uid=51, username="alice_users", email="alice3@test.com")
+        _attach_role(db, user_id=alice.id, org_id=org.id, role_id=admin_role.id)
+
+        victim = _mk_user(db, uid=52, username="victim", email="victim@test.com")
+        _attach_role(db, user_id=victim.id, org_id=other_org.id, role_id=admin_role.id)
+
+        for action in ("update", "delete"):
+            allowed = await authorization_verify_based_on_roles(
+                mock_request, alice.id, action, victim.user_uuid, db
+            )
+            assert allowed is False, f"cross-org user {action} must be denied"
+
+    @pytest.mark.asyncio
+    async def test_admin_can_still_manage_a_user_in_a_shared_org(
+        self, db, org, admin_role, mock_request
+    ):
+        alice = _mk_user(db, uid=53, username="alice_shared", email="alice4@test.com")
+        _attach_role(db, user_id=alice.id, org_id=org.id, role_id=admin_role.id)
+
+        member = _mk_user(db, uid=54, username="member", email="member@test.com")
+        _attach_role(db, user_id=member.id, org_id=org.id, role_id=admin_role.id)
+
+        allowed = await authorization_verify_based_on_roles(
+            mock_request, alice.id, "update", member.user_uuid, db
+        )
+        assert allowed is True

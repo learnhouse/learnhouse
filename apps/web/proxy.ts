@@ -446,18 +446,43 @@ export default async function proxy(req: NextRequest) {
   // 8. Auth redirect bridge (cross-domain return path)
   // -------------------------------------------------------------------------
   if (pathname === '/redirect_from_auth') {
-    const queryString = req.nextUrl.searchParams.toString()
-    const customDomain = req.cookies.get('LH_custom_domain')?.value
+    const params = new URLSearchParams(req.nextUrl.searchParams)
 
-    let redirectUrl: URL
-    if (customDomain) {
-      const protocol = req.nextUrl.protocol + '//'
-      redirectUrl = new URL(`${protocol}${customDomain}/`)
-    } else {
-      redirectUrl = new URL('/', req.url)
+    const rawNext = params.get('next')
+    params.delete('next')
+
+    const customDomain = req.cookies.get('LH_custom_domain')?.value
+    const base = customDomain
+      ? `${req.nextUrl.protocol}//${customDomain}`
+      : req.url
+    const baseOrigin = new URL(base).origin
+
+    // Every auth flow forwards where the user was headed as ?next. Landing them
+    // on "/" instead threw that away, so a deep link that prompted a sign-in
+    // always returned to the org picker.
+    //
+    // Resolve the candidate and compare origins rather than pattern-matching the
+    // raw string: this is an open-redirect sink, and a prefix test lets through
+    // anything the URL parser later normalises into another origin ("//evil",
+    // "/\evil", encoded control characters). Only the path survives.
+    let dest = '/'
+    if (rawNext) {
+      try {
+        const candidate = new URL(rawNext, baseOrigin)
+        if (candidate.origin === baseOrigin) {
+          dest = `${candidate.pathname}${candidate.search}${candidate.hash}`
+        }
+      } catch {
+        // Unparseable — fall back to the root.
+      }
     }
-    if (queryString) {
-      redirectUrl.search = queryString
+
+    const redirectUrl = new URL(dest, base)
+    const remaining = params.toString()
+    if (remaining) {
+      redirectUrl.search = redirectUrl.search
+        ? `${redirectUrl.search}&${remaining}`
+        : remaining
     }
     return NextResponse.redirect(redirectUrl)
   }

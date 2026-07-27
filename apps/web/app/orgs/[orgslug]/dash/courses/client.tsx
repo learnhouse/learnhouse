@@ -73,7 +73,14 @@ function CoursesHome(params: CourseProps) {
     staleTime: 60_000,
   })
 
-  const mutateCourses = () => queryClient.invalidateQueries({ queryKey: queryKeys.courses.list(orgslug) })
+  // Course count feeds the plan's usage numbers, and those drive the "limit
+  // reached" banner and the disabled New Course button. Refreshing only the list
+  // left an org that had just deleted a course still locked out of creating one
+  // until the usage query happened to go stale.
+  const mutateCourses = () => {
+    queryClient.invalidateQueries({ queryKey: queryKeys.courses.list(orgslug) })
+    if (orgId) queryClient.invalidateQueries({ queryKey: queryKeys.org.usage(orgId) })
+  }
 
   const allCourses = coursesData ?? []
 
