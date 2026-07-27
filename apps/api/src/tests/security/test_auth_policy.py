@@ -7,6 +7,7 @@ policy logic can be exercised without a full HTTP round-trip.
 """
 
 from datetime import datetime
+import time
 
 import pytest
 from sqlmodel import select
@@ -44,8 +45,12 @@ async def _set_auth_policy(db, org_id, **security):
     await db.commit()
 
 
-def _prov(amr=None, org_id=None):
-    set_session_provenance(SessionProvenance(amr=amr, org_id=org_id))
+def _prov(amr=None, org_id=None, legacy_grace_expires=None):
+    set_session_provenance(
+        SessionProvenance(
+            amr=amr, org_id=org_id, legacy_grace_expires=legacy_grace_expires
+        )
+    )
 
 
 @pytest.fixture(autouse=True)
@@ -98,13 +103,47 @@ class TestMethodGate:
         _prov(amr="password", org_id=org.id)
         await enforce_org_auth_policy(db, regular_user.id, org.id)
 
-    async def test_legacy_session_blocked_under_restriction(self, db, org, regular_user):
-        from fastapi import HTTPException
-
-        # A pre-feature session carries no amr; a restrictive org must force it to
-        # re-authenticate with a known method rather than let it through blind.
+    async def test_unstamped_legacy_session_allowed(self, db, org, regular_user):
+        # A session predating the feature carries no amr. That is "unknown", not
+        # "used a forbidden method". Blocking it would lock out the org's entire
+        # existing membership the moment an admin narrows the method list, while
+        # still showing them the org. It has no deadline yet either — it picks
+        # one up on its next rotation.
         await _set_auth_policy(db, org.id, allowed_auth_methods=["password"])
         _prov(amr=None, org_id=None)
+        await enforce_org_auth_policy(db, regular_user.id, org.id)
+
+    async def test_legacy_session_allowed_before_its_deadline(self, db, org, regular_user):
+        await _set_auth_policy(db, org.id, allowed_auth_methods=["password"])
+        _prov(amr=None, org_id=None, legacy_grace_expires=int(time.time()) + 86_400)
+        await enforce_org_auth_policy(db, regular_user.id, org.id)
+
+    async def test_legacy_session_blocked_after_its_deadline(self, db, org, regular_user):
+        from fastapi import HTTPException
+
+        # The window must close. Rotation copies the missing claim forward, so
+        # these sessions never expire on their own — left open-ended they would
+        # skip the policy for good.
+        await _set_auth_policy(db, org.id, allowed_auth_methods=["password"])
+        _prov(amr=None, org_id=None, legacy_grace_expires=int(time.time()) - 60)
+        with pytest.raises(HTTPException) as exc:
+            await enforce_org_auth_policy(db, regular_user.id, org.id)
+        assert exc.value.detail["code"] == METHOD_NOT_ALLOWED_CODE
+
+    async def test_allowed_method_unaffected_by_expired_deadline(self, db, org, regular_user):
+        # The deadline governs method-less sessions only; a session naming an
+        # allowed method keeps working regardless.
+        await _set_auth_policy(db, org.id, allowed_auth_methods=["password"])
+        _prov(amr="password", org_id=org.id, legacy_grace_expires=int(time.time()) - 60)
+        await enforce_org_auth_policy(db, regular_user.id, org.id)
+
+    async def test_disallowed_method_still_blocked(self, db, org, regular_user):
+        from fastapi import HTTPException
+
+        # The flip side of the above: a session that positively names a method
+        # outside the allow-list is still rejected.
+        await _set_auth_policy(db, org.id, allowed_auth_methods=["password"])
+        _prov(amr="google", org_id=org.id)
         with pytest.raises(HTTPException) as exc:
             await enforce_org_auth_policy(db, regular_user.id, org.id)
         assert exc.value.detail["code"] == METHOD_NOT_ALLOWED_CODE
@@ -218,3 +257,53 @@ class TestMalformedConfig:
         policy = await get_org_auth_policy(db, org.id)
         assert policy.method_restricted is False
         assert policy.allow_central_session_sharing is True
+
+
+class TestCarrySessionClaimsOnRotation:
+    """A rotation must not launder provenance, and must bound a method-less session."""
+
+    def test_method_bearing_session_carries_its_claims(self):
+        from src.security.session_context import (
+            AMR_CLAIM,
+            LEGACY_GRACE_CLAIM,
+            SORG_CLAIM,
+            carry_session_claims,
+        )
+
+        carried = carry_session_claims({AMR_CLAIM: "password", SORG_CLAIM: 7})
+        assert carried[AMR_CLAIM] == "password"
+        assert carried[SORG_CLAIM] == 7
+        # A session that names its method needs no deadline.
+        assert LEGACY_GRACE_CLAIM not in carried
+
+    def test_method_less_session_gets_a_deadline(self):
+        from src.security.session_context import (
+            AMR_CLAIM,
+            LEGACY_GRACE_CLAIM,
+            carry_session_claims,
+        )
+
+        carried = carry_session_claims({})
+        assert AMR_CLAIM not in carried
+        # Without this the session would sit outside the policy forever, since
+        # rotation copies the missing method claim forward indefinitely.
+        assert carried[LEGACY_GRACE_CLAIM] > int(time.time())
+
+    def test_existing_deadline_is_not_extended_by_rotation(self):
+        from src.security.session_context import LEGACY_GRACE_CLAIM, carry_session_claims
+
+        deadline = int(time.time()) + 500
+        carried = carry_session_claims({LEGACY_GRACE_CLAIM: deadline})
+        # Re-stamping on every rotation would let a session refresh its way past
+        # the deadline forever.
+        assert carried[LEGACY_GRACE_CLAIM] == deadline
+
+    def test_a_deadline_never_survives_onto_a_method_bearing_session(self):
+        from src.security.session_context import (
+            AMR_CLAIM,
+            LEGACY_GRACE_CLAIM,
+            carry_session_claims,
+        )
+
+        carried = carry_session_claims({AMR_CLAIM: "google", LEGACY_GRACE_CLAIM: 1})
+        assert LEGACY_GRACE_CLAIM not in carried

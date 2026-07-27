@@ -14,6 +14,7 @@ import "server-only";
  */
 import { getServerAPIUrl } from "@services/config/config";
 import { getStripeSecretKey } from "@services/billing/stripe";
+import { platformApiKey } from "@services/billing/packs";
 import {
   completeMonthsBefore,
   intervalMonths,
@@ -71,7 +72,7 @@ export async function fetchActiveUserOverage(
   const url = `${getServerAPIUrl()}internal/packs/${orgId}/active-user-overage?year=${year}&month=${month}`;
   const res = await fetch(url, {
     method: "GET",
-    headers: { "x-platform-key": process.env.LEARNHOUSE_PLATFORM_API_KEY || "" },
+    headers: { "x-platform-key": platformApiKey() },
     cache: "no-store",
   });
   if (!res.ok) {

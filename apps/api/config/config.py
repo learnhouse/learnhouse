@@ -4,6 +4,10 @@ from typing import Literal, Optional
 from pydantic import BaseModel
 from dotenv import load_dotenv
 
+# One-shot guard for the missing-credential report below: config is loaded on
+# every request, and repeating the report drowns out every other startup log.
+_LOGGED_MISSING_INTERNAL_KEYS = False
+
 
 class CookieConfig(BaseModel):
     domain: str
@@ -609,18 +613,40 @@ def get_learnhouse_config() -> LearnHouseConfig:
     # control plane (custom domains, plans, internal cron) to the per-tenant
     # backend. Self-hosted EE / OSS deployments don't run that control plane
     # and don't need them, so suppress the warning in those modes.
-    if not development_mode and saas_mode:
+    # Reported ONCE per process, as a single aggregated line. This block used to
+    # warn on every config load, which emitted the same two lines thousands of
+    # times a day and buried the one-shot warnings around them — a disabled
+    # Google audience check sat unnoticed in that noise. One loud line per
+    # process is what actually gets read.
+    global _LOGGED_MISSING_INTERNAL_KEYS
+    if not development_mode and saas_mode and not _LOGGED_MISSING_INTERNAL_KEYS:
+        _LOGGED_MISSING_INTERNAL_KEYS = True
         import logging as _cfg_log
         _log = _cfg_log.getLogger(__name__)
+
+        missing = []
         if not os.environ.get("CLOUD_INTERNAL_KEY"):
-            _log.warning(
-                "CLOUD_INTERNAL_KEY is not set. Internal endpoints "
-                "(custom domain sync, cloud_internal) will reject every request."
+            missing.append(
+                "CLOUD_INTERNAL_KEY (custom domain sync, cloud_internal plan writes)"
             )
         if not os.environ.get("LEARNHOUSE_PLATFORM_API_KEY"):
-            _log.warning(
-                "LEARNHOUSE_PLATFORM_API_KEY is not set. Platform endpoints "
-                "(packs internal_router) will reject every request."
+            missing.append(
+                "LEARNHOUSE_PLATFORM_API_KEY (pack activation, active-user overage billing)"
+            )
+        if not (
+            os.environ.get("LEARNHOUSE_GOOGLE_OAUTH_CLIENT_ID")
+            or os.environ.get("LEARNHOUSE_GOOGLE_CLIENT_ID")
+        ):
+            missing.append(
+                "LEARNHOUSE_GOOGLE_OAUTH_CLIENT_ID (Google OAuth audience "
+                "verification — absent means it is DISABLED, not merely unset)"
+            )
+        if missing:
+            _log.critical(
+                "SaaS deployment is missing %d required credential(s); the "
+                "features behind them fail silently until these are set: %s",
+                len(missing),
+                "; ".join(missing),
             )
 
     # Create LearnHouseConfig object

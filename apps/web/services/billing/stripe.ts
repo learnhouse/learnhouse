@@ -41,8 +41,10 @@ export function getStripeSecretKey(): string | undefined {
 // collection evaluates this module) and any non-SaaS deployment that imports it
 // without a Stripe key. The Proxy instantiates the real client on first
 // property access (request time, after the SaaS/key guard has run).
+// Exported so the webhook route shares this one client instead of building a
+// second identical proxy of its own.
 let _stripeClient: any = null;
-const stripe: any = new Proxy(
+export const stripeClient: any = new Proxy(
   {},
   {
     get(_t, prop) {
@@ -55,6 +57,9 @@ const stripe: any = new Proxy(
     },
   },
 );
+
+// Local alias so the 28 call sites below stay unchanged.
+const stripe: any = stripeClient;
 
 // APP_URL is computed per-call: apps/web reads runtime config lazily, so a
 // module-load constant could capture an empty domain before config is hydrated.
@@ -189,9 +194,13 @@ export async function createCheckoutSession(
   const cancelUrl = orgSlug
     ? `${APP_URL}/billing?org=${orgSlug}&checkout=cancelled`
     : `${APP_URL}/new?checkout=cancelled`;
+  // Always return to /billing on success, even without an org slug: it is the
+  // only page that runs the post-checkout fulfillment fallback. /home ignores
+  // both `checkout` and `session_id`, so landing there left the upgrade
+  // depending on webhook delivery alone, with no confirmation to the customer.
   const successUrl = orgSlug
     ? `${APP_URL}/billing?org=${orgSlug}&checkout=success&session_id={CHECKOUT_SESSION_ID}`
-    : `${APP_URL}/home?checkout=success&session_id={CHECKOUT_SESSION_ID}`;
+    : `${APP_URL}/billing?orgId=${orgId}&checkout=success&session_id={CHECKOUT_SESSION_ID}`;
 
   const session = await stripe.checkout.sessions.create({
     customer: customerId,

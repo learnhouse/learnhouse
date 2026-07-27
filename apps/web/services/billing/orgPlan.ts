@@ -11,9 +11,28 @@ import type { LearnHousePlanType } from "./plans";
 export async function updateOrganizationConfigInternally(org_id: any, plan: LearnHousePlanType) {
   console.log(`[updateOrgConfig] Updating org ${org_id} to plan "${plan}"`);
 
-  const internalKey = process.env.LEARNHOUSE_CLOUD_INTERNAL_KEY || "";
+  // The API guard (apps/api/.../orgs/org_plan.py) compares X-Internal-Key to env
+  // CLOUD_INTERNAL_KEY. Accept EITHER name here, preferring the unprefixed one
+  // the API itself reads, so the two services agree even when only one name is
+  // provisioned. Reading a single name and falling back to "" sent an empty key
+  // whenever that name was the one missing, and the API — which fails closed on
+  // an empty expected key — answered 403, indistinguishable from a real key
+  // mismatch. Fail loud instead: a missing credential is a deploy fault, and it
+  // must not read as an authorization failure.
+  const internalKey =
+    process.env.CLOUD_INTERNAL_KEY || process.env.LEARNHOUSE_CLOUD_INTERNAL_KEY || "";
+  if (!internalKey) {
+    throw new Error(
+      "[updateOrgConfig] internal key unset — set CLOUD_INTERNAL_KEY (or " +
+        "LEARNHOUSE_CLOUD_INTERNAL_KEY) on the web deployment to match the API's " +
+        "CLOUD_INTERNAL_KEY; the plan write would 403 without it.",
+    );
+  }
   const result = await fetch(`${getServerAPIUrl()}cloud_internal/update_org_plan`, {
     method: "PUT",
+    // Bound the call: this runs inside the Stripe webhook handler, and an
+    // unbounded fetch would hold the delivery open until Stripe times out.
+    signal: AbortSignal.timeout(10_000),
     headers: {
       "Content-Type": "application/json",
       // The backend cloud_internal guard (apps/api/.../orgs/org_plan.py) reads

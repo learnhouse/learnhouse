@@ -52,10 +52,9 @@ from src.services.users.email_verification import (
 )
 from src.services.auth.session import issue_session_or_challenge
 from src.security.session_context import (
-    AMR_CLAIM,
     AUTH_METHOD_GOOGLE,
     AUTH_METHOD_PASSWORD,
-    SORG_CLAIM,
+    carry_session_claims,
     session_claims,
 )
 from src.db.organizations import Organization
@@ -420,7 +419,8 @@ async def refresh(
         # Carry the session's provenance across rotation. Without this a refresh
         # would silently launder a method-bound/org-bound session into a
         # claim-less one that bypasses the org auth-method / sharing policy.
-        carried = session_claims(payload.get(AMR_CLAIM), payload.get(SORG_CLAIM))
+        # A session that records no method also picks up its grace deadline here.
+        carried = carry_session_claims(payload)
         new_access_token = create_access_token(
             data={"sub": email, **carried},
             expires_delta=JWT_ACCESS_TOKEN_EXPIRES,
@@ -1125,7 +1125,23 @@ async def api_verify_email(
     # through the same second-factor gate. A brand-new user cannot have MFA yet,
     # but an existing user re-verifying their address can — and without this the
     # verification link would be a way around their own second factor.
-    issue = await issue_session_or_challenge(db_session, user)
+    #
+    # Stamp the provenance like every other sign-in path. Minting a claim-less
+    # session here meant a freshly-verified member could not be matched against
+    # the org's allowed-method policy at all.
+    from src.security.session_context import AUTH_METHOD_MAGIC_LOGIN
+
+    verified_org = (
+        await db_session.execute(
+            select(Organization).where(Organization.org_uuid == body.org_uuid)
+        )
+    ).scalars().first()
+    issue = await issue_session_or_challenge(
+        db_session,
+        user,
+        amr=AUTH_METHOD_MAGIC_LOGIN,
+        org_id=verified_org.id if verified_org else None,
+    )
     if issue.mfa_required:  # pragma: no cover - same 2FA branch as /login, exercised there
         return {
             "message": message,
