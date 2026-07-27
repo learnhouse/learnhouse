@@ -23,12 +23,35 @@ Claim keys are defined here so the mint side and the read side cannot drift.
 """
 
 import contextvars
+import os
+import time
 from dataclasses import dataclass
+from datetime import timedelta
 from typing import Optional
+
+
+def _legacy_session_grace() -> timedelta:
+    """How long a method-less session keeps working once it is first rotated.
+
+    Defaults to the refresh-token lifetime — the longest a member can go without
+    re-authenticating — so everyone gets a full cycle to sign in again before the
+    policy applies to them.
+    """
+    raw = os.environ.get("LEARNHOUSE_AUTH_LEGACY_SESSION_GRACE_DAYS")
+    if raw:
+        try:
+            return timedelta(days=max(int(raw), 0))
+        except (TypeError, ValueError):
+            pass
+    return timedelta(days=30)
+
+
+LEGACY_SESSION_GRACE = _legacy_session_grace()
 
 # JWT claim names carried on session tokens.
 AMR_CLAIM = "amr"       # authentication method: password | magic_login | google | sso | api_token
 SORG_CLAIM = "sorg"     # id of the org the session was established for (int), or absent
+LEGACY_GRACE_CLAIM = "lgc"  # unix seconds after which a method-less session stops being admitted
 
 # Recognised authentication methods. "api_token" is internal — a machine
 # credential that already carries its own org boundary and is exempt from the
@@ -52,6 +75,7 @@ POLICY_AUTH_METHODS = (
 class SessionProvenance:
     amr: Optional[str] = None
     org_id: Optional[int] = None
+    legacy_grace_expires: Optional[int] = None
 
 
 _current: contextvars.ContextVar[Optional[SessionProvenance]] = contextvars.ContextVar(
@@ -67,7 +91,11 @@ def get_session_provenance() -> Optional[SessionProvenance]:
     return _current.get()
 
 
-def session_claims(amr: Optional[str], org_id: Optional[int]) -> dict:
+def session_claims(
+    amr: Optional[str],
+    org_id: Optional[int],
+    legacy_grace_expires: Optional[int] = None,
+) -> dict:
     """Build the provenance claims to merge into a token's ``data`` dict.
 
     Omits keys that are ``None`` so a central (org-less) or method-less token
@@ -78,4 +106,26 @@ def session_claims(amr: Optional[str], org_id: Optional[int]) -> dict:
         claims[AMR_CLAIM] = amr
     if org_id is not None:
         claims[SORG_CLAIM] = org_id
+    if legacy_grace_expires is not None:
+        claims[LEGACY_GRACE_CLAIM] = legacy_grace_expires
     return claims
+
+
+def carry_session_claims(payload: dict) -> dict:
+    """Carry a session's provenance across a token rotation.
+
+    A session that records no auth method gets a grace deadline stamped on the
+    first rotation after this shipped, and keeps it from then on. Without a
+    deadline such a session would sit outside the org auth-method policy
+    forever: rotation copies the missing method claim forward, so it never ages
+    out on its own. Stamping here needs no stored state and no backfill — the
+    deadline travels in the token, and a real sign-in replaces the whole thing
+    with a method-bearing session.
+    """
+    amr = payload.get(AMR_CLAIM)
+    grace = payload.get(LEGACY_GRACE_CLAIM)
+    if amr is None and grace is None:
+        grace = int(time.time()) + int(LEGACY_SESSION_GRACE.total_seconds())
+    if amr is not None:
+        grace = None
+    return session_claims(amr, payload.get(SORG_CLAIM), grace)

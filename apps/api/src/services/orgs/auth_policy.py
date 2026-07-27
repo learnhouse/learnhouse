@@ -24,6 +24,7 @@ data.
 """
 
 import logging
+import time
 from dataclasses import dataclass, field
 from typing import Any, Dict, List, Optional
 
@@ -45,6 +46,23 @@ METHOD_NOT_ALLOWED_CODE = "AUTH_METHOD_NOT_ALLOWED"
 SESSION_NOT_BOUND_CODE = "SESSION_NOT_BOUND_TO_ORG"
 
 _ALL_METHODS = frozenset(POLICY_AUTH_METHODS)
+
+
+def _legacy_session_within_grace(provenance: SessionProvenance) -> bool:
+    """True while a session that records no auth method is still admitted.
+
+    The deadline rides on the session itself, stamped the first time the session
+    is rotated. A session old enough to predate that stamping has no deadline
+    yet and is admitted — it acquires one within an access token's lifetime, so
+    the exemption cannot outlive a single rotation.
+    """
+    expires = provenance.legacy_grace_expires
+    if expires is None:
+        return True
+    try:
+        return time.time() < int(expires)
+    except (TypeError, ValueError):  # pragma: no cover - defensive against a hand-crafted claim
+        return False
 
 
 @dataclass
@@ -139,17 +157,20 @@ async def evaluate_org_auth(
                     # moment an admin unchecked a single method — they kept
                     # seeing the org, but every authorized request 403'd.
                     #
-                    # Failing open here costs little: the real gate is
-                    # sign-in time, where /auth/login, /auth/oauth and the
-                    # magic-link endpoints already refuse a disallowed method.
-                    # This check is defence-in-depth against an already-issued
-                    # session, and it still rejects any session that positively
-                    # identifies a method outside the allow-list. Claim-less
-                    # sessions age out on their own as tokens expire.
-                    if (
-                        policy.method_restricted
-                        and provenance.amr is not None
-                        and provenance.amr not in allowed
+                    # So a method-less session is admitted, but only until the
+                    # grace deadline carried on the session itself. It cannot be
+                    # indefinite: rotation copies the missing claim forward, so
+                    # these sessions never age out on their own and would
+                    # otherwise skip the policy for good. Past the deadline they
+                    # are refused like any other unapproved session, and signing
+                    # in again replaces them with a method-bearing session.
+                    #
+                    # A session that positively names a method outside the
+                    # allow-list is refused immediately, grace or not.
+                    if policy.method_restricted and (
+                        provenance.amr not in allowed
+                        if provenance.amr is not None
+                        else not _legacy_session_within_grace(provenance)
                     ):
                         result = {
                             "code": METHOD_NOT_ALLOWED_CODE,

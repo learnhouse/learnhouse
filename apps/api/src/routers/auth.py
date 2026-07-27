@@ -52,10 +52,9 @@ from src.services.users.email_verification import (
 )
 from src.services.auth.session import issue_session_or_challenge
 from src.security.session_context import (
-    AMR_CLAIM,
     AUTH_METHOD_GOOGLE,
     AUTH_METHOD_PASSWORD,
-    SORG_CLAIM,
+    carry_session_claims,
     session_claims,
 )
 from src.db.organizations import Organization
@@ -420,7 +419,8 @@ async def refresh(
         # Carry the session's provenance across rotation. Without this a refresh
         # would silently launder a method-bound/org-bound session into a
         # claim-less one that bypasses the org auth-method / sharing policy.
-        carried = session_claims(payload.get(AMR_CLAIM), payload.get(SORG_CLAIM))
+        # A session that records no method also picks up its grace deadline here.
+        carried = carry_session_claims(payload)
         new_access_token = create_access_token(
             data={"sub": email, **carried},
             expires_delta=JWT_ACCESS_TOKEN_EXPIRES,
