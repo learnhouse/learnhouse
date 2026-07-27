@@ -186,6 +186,58 @@ def auth_policy_exception(block: Dict[str, Any]) -> HTTPException:
     )
 
 
+async def is_login_method_allowed(
+    db_session: AsyncSession, org_id: Optional[int], method: str
+) -> bool:
+    """Whether ``method`` may be used to sign in *to* ``org_id``.
+
+    ``org_id`` is None for the org-less apex login, which no single org's policy
+    governs — that session is caught later by the per-request gate instead.
+    """
+    if org_id is None:
+        return True
+    try:
+        policy = await get_org_auth_policy(db_session, org_id)
+    except Exception:
+        # Same fail-open contract as evaluate_org_auth: a policy read that blows
+        # up must not become an outage on the login path.
+        logger.exception("Auth-method policy read failed for org %s; allowing login", org_id)
+        return True
+    if not policy.method_restricted:
+        return True
+    return method in set(policy.allowed_auth_methods)
+
+
+async def enforce_login_auth_method(
+    db_session: AsyncSession, org_id: Optional[int], method: str
+) -> None:
+    """Refuse an org-scoped sign-in whose method the org does not accept.
+
+    :func:`enforce_org_auth_policy` is what actually protects the org's data, but
+    it only runs *after* a session exists. Letting a disallowed sign-in succeed
+    and then refusing every page afterwards is indistinguishable from a broken
+    product, so when the sign-in names an org we refuse it at the door — which is
+    also what the login page renders.
+    """
+    if await is_login_method_allowed(db_session, org_id, method):
+        return
+
+    policy = await get_org_auth_policy(db_session, org_id)  # type: ignore[arg-type]
+    allowed = sorted(set(policy.allowed_auth_methods))
+    labels = ", ".join(_method_label(m) for m in allowed)
+    raise HTTPException(
+        status_code=status.HTTP_403_FORBIDDEN,
+        detail={
+            "code": METHOD_NOT_ALLOWED_CODE,
+            "message": (
+                f"This organization doesn't allow signing in with {_method_label(method)}. "
+                f"Use {labels or 'an approved method'} instead."
+            ),
+            "allowed_methods": allowed,
+        },
+    )
+
+
 async def enforce_org_auth_policy(
     db_session: AsyncSession, user_id: int, org_id: int
 ) -> None:

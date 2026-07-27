@@ -1004,7 +1004,10 @@
     "autosave_unsaved": "การเปลี่ยนแปลงที่ยังไม่ได้บันทึก",
     "autosaved": "บันทึกแล้ว",
     "autosaving": "กำลังบันทึก…",
-    "save_answers": "บันทึกคำตอบ"
+    "save_answers": "บันทึกคำตอบ",
+    "markdown": "มาร์กดาวน์",
+    "custom": "กำหนดเอง",
+    "scorm": "สกอร์ม"
   },
   "assignments": {
     "submit_assignment": "ส่งงาน",
@@ -2136,7 +2139,8 @@
             "scorm": "SCORM",
             "markdown": "Markdown",
             "embed": "ฝังเนื้อหา",
-            "resource": "แหล่งข้อมูล"
+            "resource": "แหล่งข้อมูล",
+            "custom": "กำหนดเอง"
           },
           "toasts": {
             "deleting": "กำลังลบกิจกรรม...",

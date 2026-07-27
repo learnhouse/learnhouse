@@ -1272,7 +1272,18 @@
       "drag_to_reorder": "Drag to reorder",
       "sort_error": "Could not update sort order",
       "reorder_error": "Could not save the new order"
-    }
+    },
+    "preview": "Preview",
+    "no_access": "You don't have access to this file.",
+    "choose_from_library": "Choose from Library",
+    "upload_to_library": "Upload",
+    "upload_to_library_hint": "Uploaded files are added to your Library, so you can reuse them elsewhere.",
+    "no_resource_selected": "No library item selected.",
+    "private_media_warning": "Private — learners without access will not see this.",
+    "replace_resource": "Replace",
+    "remove_resource": "Remove",
+    "show_as_card": "Show as card",
+    "show_inline": "Show inline"
   },
   "media": {
     "media": "Media",
@@ -1410,7 +1421,16 @@
     "autosave_unsaved": "Unsaved changes",
     "autosaved": "Saved",
     "autosaving": "Saving…",
-    "save_answers": "Save answers"
+    "save_answers": "Save answers",
+    "grid_columns_2": "2 Columns",
+    "grid_columns_3": "3 Columns",
+    "grid_columns_4": "4 Columns",
+    "add_card": "Add Card",
+    "ungroup_cards": "Ungroup Cards",
+    "group_into_grid": "Group into Grid",
+    "markdown": "Markdown",
+    "custom": "Custom",
+    "scorm": "SCORM"
   },
   "embed": {
     "not_supported_title": "This activity is not supported",
@@ -2617,7 +2637,8 @@
             "scorm": "Scorm",
             "markdown": "Markdown",
             "embed": "Embed",
-            "resource": "Resource"
+            "resource": "Resource",
+            "custom": "Custom"
           },
           "toasts": {
             "deleting": "Deleting activity...",
@@ -3471,7 +3492,10 @@
         },
         "connections": {
           "title": "Connections",
-          "empty": "No recorded connections yet."
+          "empty": "No recorded connections yet.",
+          "device": "Device",
+          "raw_agent": "Raw user agent",
+          "unknown_device": "Unknown device"
         },
         "courses": {
           "title": "Course progress",
@@ -3483,7 +3507,9 @@
           "title": "Assignments",
           "empty": "No assignment submissions.",
           "attempt": "attempt {{number}}",
-          "feedback": "Feedback:"
+          "feedback": "Feedback:",
+          "tasks": "{{done}}/{{total}} tasks submitted",
+          "no_tasks": "This assignment has no tasks."
         },
         "code": {
           "title": "Code exercises",
@@ -3494,22 +3520,30 @@
           "time": "Time",
           "when": "When",
           "passed": "Passed",
-          "failed": "Failed"
+          "failed": "Failed",
+          "language": "Language",
+          "course": "Course",
+          "untitled_activity": "Untitled activity"
         },
         "community": {
           "title": "Community participation",
           "empty": "No community activity.",
           "discussions": "Discussions",
-          "comments": "Comments"
+          "comments": "Comments",
+          "in_discussion": "In \"{{title}}\"",
+          "community": "Community"
         },
         "certificates": {
           "title": "Certificates earned",
-          "empty": "No certificates earned."
+          "empty": "No certificates earned.",
+          "credential_id": "Credential ID"
         },
         "behavior": {
           "title": "Behavioral analytics",
           "time_by_course": "Time spent by course",
-          "searches": "Searches"
+          "searches": "Searches",
+          "views": "Page & content views",
+          "untitled_course": "Untitled course"
         },
         "status": {
           "completed": "completed",
@@ -3529,6 +3563,39 @@
           "certificates": "Certificates",
           "last_connection": "Last connection",
           "view": "View"
+        },
+        "export_include_raw": "Include raw submission data",
+        "answer": {
+          "question": "Question",
+          "answered": "Answered",
+          "expected": "Expected answer",
+          "no_answer": "No answer given",
+          "correct": "Correct",
+          "incorrect": "Wrong",
+          "correct_answer": "Correct answer",
+          "not_graded": "Not auto-graded",
+          "score": "{{correct}}/{{total}} correct",
+          "explanation": "Explanation",
+          "raw_note": "Custom task — shown as raw fields",
+          "not_submitted": "Not submitted",
+          "manual": "manually graded",
+          "source_code": "Submitted code",
+          "test_cases": "Test cases",
+          "hidden_test": "Hidden test {{number}}",
+          "test_passed": "Passed",
+          "test_failed": "Failed",
+          "actual": "Output",
+          "download_file": "Download file"
+        },
+        "task_types": {
+          "QUIZ": "Quiz",
+          "FORM": "Fill in the blanks",
+          "SHORT_ANSWER": "Short answer",
+          "NUMBER_ANSWER": "Numeric answer",
+          "FILE_SUBMISSION": "File upload",
+          "CODE": "Code exercise",
+          "CUSTOM": "Custom task",
+          "OTHER": "Other"
         }
       },
       "active_users": {
@@ -4780,7 +4847,11 @@
         "reset_answers": "Reset answers",
         "mark_correct": "Mark as correct",
         "mark_incorrect": "Mark as incorrect",
-        "delete_answer": "Delete answer"
+        "delete_answer": "Delete answer",
+        "question_label": "Question",
+        "delete_question": "Delete question",
+        "empty_editable": "No questions yet. Add your first one to get started.",
+        "empty_readonly": "This quiz has no questions yet."
       },
       "math_block": {
         "templates": "Templates",
@@ -4827,11 +4898,6 @@
         "visit_site": "Visit Site",
         "align": "Align"
       },
-      "flipcard_block": {
-        "front": "Front",
-        "back": "Back",
-        "click_to_flip": "Click to flip"
-      },
       "button_block": {
         "enter_link_url": "Enter link URL"
       },
@@ -4872,7 +4938,9 @@
         "suggestion_calculator_prompt": "Create a calculator that shows step-by-step solutions for basic equations",
         "suggestion_timeline": "Timeline",
         "suggestion_timeline_prompt": "Create an interactive timeline showing major historical events with expandable details"
-      }
+      },
+      "library": "Library",
+      "flipcard_grid": "Flashcard Grid"
     }
   },
   "analytics": {
@@ -5661,7 +5729,30 @@
     "scheduled_desc": "Your plan will switch to {{plan}} at the end of your current billing cycle. You'll keep full access to your current plan until then.",
     "plan_plus_purchased": "Plan: {{plan}} + Purchased: {{purchased}}",
     "base_plus_purchased": "Base: {{base}} + Purchased: {{purchased}}",
-    "pack_ai_desc": "{{quantity}} additional AI credits added to your organization"
+    "pack_ai_desc": "{{quantity}} additional AI credits added to your organization",
+    "unlimited_lower": "unlimited",
+    "limit_reached_upgrade": "Limit reached — upgrade to continue",
+    "remaining": "{{n}} remaining",
+    "remaining_nearing": "{{n}} remaining — nearing limit",
+    "usage_subtitle_free": "Free plans are capped. Upgrade to go past a limit.",
+    "usage_subtitle_paid": "Your plan includes these amounts. Going past the member limit is allowed and billed — nothing is blocked.",
+    "members_hint": "Everyone who has joined your organization.",
+    "members_beyond_plan": "{{included}} included · {{beyond}} beyond your plan",
+    "members_within_plan": "{{included}} included in your plan",
+    "active_members": "Active members",
+    "active_members_short": "Active members",
+    "active_members_hint": "Counted when a member is active on 2+ days this month. The {{included}} seats your plan includes are free — you're billed $1/month for each active member beyond them.",
+    "overage_this_month": "${{amount}} this month so far",
+    "no_extra_charges": "No extra charges this month",
+    "admin_seats_hint": "Members who can access the dashboard. A subset of your members.",
+    "credits_reset_on": "Resets on {{date}}",
+    "next_invoice": "Next invoice",
+    "due_on": "due {{date}}",
+    "line_subscription": "Subscription",
+    "accruing_this_month": "Active members this month (billed on your next renewal)",
+    "packs_billed_separately": "Add-ons are separate subscriptions and are invoiced on their own schedule.",
+    "invoice_history": "Invoice history",
+    "view": "View"
   },
   "hub_new": {
     "useType": {

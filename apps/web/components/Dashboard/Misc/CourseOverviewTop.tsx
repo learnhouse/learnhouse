@@ -189,6 +189,8 @@ export function CourseOverviewTop({
           <button
             onClick={togglePublishStatus}
             disabled={isPublishing}
+            aria-label={isPublished ? 'Unpublish course' : 'Publish course'}
+            title={isPublished ? 'Click to unpublish' : 'Click to publish'}
             className={`group px-2.5 sm:px-3.5 py-2 text-sm font-semibold flex items-center space-x-1.5 transition-colors ${
               isPublished
                 ? 'bg-green-50/70 text-green-700 hover:bg-green-100/70'
@@ -196,11 +198,11 @@ export function CourseOverviewTop({
             } ${isPublishing ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
           >
             {isPublishing ? (
-              <Loader2 className="w-4 h-4 animate-spin" />
+              <Loader2 className="w-4 h-4 animate-spin flex-none" />
             ) : isPublished ? (
-              <Globe className="w-4 h-4" />
+              <Globe className="w-4 h-4 flex-none" />
             ) : (
-              <GlobeLock className="w-4 h-4" />
+              <GlobeLock className="w-4 h-4 flex-none" />
             )}
             <span className="hidden sm:inline">
               {isPublishing
@@ -231,6 +233,7 @@ export function CourseOverviewTop({
                     <button
                       onClick={indexCourseForAI}
                       disabled={isIndexing}
+                      aria-label={isIndexing ? 'Indexing course' : isIndexed ? 'Course indexed' : 'Index course for AI'}
                       className={`group px-2.5 sm:px-3.5 py-2 text-sm font-semibold flex items-center space-x-1.5 transition-colors ${
                         isIndexed
                           ? 'bg-blue-50/70 text-blue-700'
@@ -238,11 +241,11 @@ export function CourseOverviewTop({
                       } ${isIndexing ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
                     >
                       {isIndexing ? (
-                        <Loader2 className="w-4 h-4 animate-spin" />
+                        <Loader2 className="w-4 h-4 animate-spin flex-none" />
                       ) : isIndexed ? (
-                        <Check className="w-4 h-4" />
+                        <Check className="w-4 h-4 flex-none" />
                       ) : (
-                        <BrainCircuit className="w-4 h-4" />
+                        <BrainCircuit className="w-4 h-4 flex-none" />
                       )}
                       <span className="hidden sm:inline">
                         {isIndexing ? 'Indexing...' : isIndexed ? 'Indexed' : 'Index for AI'}
@@ -260,6 +263,8 @@ export function CourseOverviewTop({
           <Link
             href={getUriWithOrg(org?.slug, '') + `/course/${params.courseuuid}`}
             target="_blank"
+            aria-label={t('dashboard.courses.preview')}
+            title={t('dashboard.courses.preview')}
             className="px-2.5 sm:px-3.5 py-2 text-sm font-semibold text-neutral-600 bg-neutral-50/70 hover:bg-neutral-100/70 transition-colors flex items-center space-x-1.5"
           >
             <Eye className="w-4 h-4" />

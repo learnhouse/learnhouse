@@ -384,6 +384,24 @@ export default async function proxy(req: NextRequest) {
     return response
   }
 
+  // Magic login links are emailed as /auth/magic?token=… — already the internal
+  // path, so it needs a pass-through of its own. Without one it fell to the
+  // tenant catch-all, was rewritten to /orgs/{slug}/auth/magic, and every
+  // emailed link 404'd. Tenant is resolved (unlike the callbacks above) because
+  // the page finishes through /redirect_from_auth, which reads the org cookies
+  // to know which host to land on.
+  if (pathname === '/auth/magic') {
+    const resolved = await resolveTenant(req, instance)
+    const requestHeaders = tenantRequestHeaders(req, resolved, instance)
+    const response = NextResponse.rewrite(
+      new URL(`${pathname}${search}`, req.url),
+      { request: { headers: requestHeaders } },
+    )
+    setOrgCookies(response, resolved, instance)
+    setInstanceCookies(response, instance)
+    return response
+  }
+
   // -------------------------------------------------------------------------
   // 5. Standalone editors / boards — bypass org rewrite
   // -------------------------------------------------------------------------
@@ -428,18 +446,43 @@ export default async function proxy(req: NextRequest) {
   // 8. Auth redirect bridge (cross-domain return path)
   // -------------------------------------------------------------------------
   if (pathname === '/redirect_from_auth') {
-    const queryString = req.nextUrl.searchParams.toString()
-    const customDomain = req.cookies.get('LH_custom_domain')?.value
+    const params = new URLSearchParams(req.nextUrl.searchParams)
 
-    let redirectUrl: URL
-    if (customDomain) {
-      const protocol = req.nextUrl.protocol + '//'
-      redirectUrl = new URL(`${protocol}${customDomain}/`)
-    } else {
-      redirectUrl = new URL('/', req.url)
+    const rawNext = params.get('next')
+    params.delete('next')
+
+    const customDomain = req.cookies.get('LH_custom_domain')?.value
+    const base = customDomain
+      ? `${req.nextUrl.protocol}//${customDomain}`
+      : req.url
+    const baseOrigin = new URL(base).origin
+
+    // Every auth flow forwards where the user was headed as ?next. Landing them
+    // on "/" instead threw that away, so a deep link that prompted a sign-in
+    // always returned to the org picker.
+    //
+    // Resolve the candidate and compare origins rather than pattern-matching the
+    // raw string: this is an open-redirect sink, and a prefix test lets through
+    // anything the URL parser later normalises into another origin ("//evil",
+    // "/\evil", encoded control characters). Only the path survives.
+    let dest = '/'
+    if (rawNext) {
+      try {
+        const candidate = new URL(rawNext, baseOrigin)
+        if (candidate.origin === baseOrigin) {
+          dest = `${candidate.pathname}${candidate.search}${candidate.hash}`
+        }
+      } catch {
+        // Unparseable — fall back to the root.
+      }
     }
-    if (queryString) {
-      redirectUrl.search = queryString
+
+    const redirectUrl = new URL(dest, base)
+    const remaining = params.toString()
+    if (remaining) {
+      redirectUrl.search = redirectUrl.search
+        ? `${redirectUrl.search}&${remaining}`
+        : remaining
     }
     return NextResponse.redirect(redirectUrl)
   }
@@ -506,8 +549,12 @@ export default async function proxy(req: NextRequest) {
   // -------------------------------------------------------------------------
   const resolved = await resolveTenant(req, instance)
   const requestHeaders = tenantRequestHeaders(req, resolved, instance)
+  // `${search}` is load-bearing: a rewrite destination built from an absolute
+  // path drops the base URL's query, and Next treats the destination's search
+  // as the request's. Every other branch above appends it; this one did not, so
+  // org-scoped pages lost their query string (?page, ?q, ?tab, …).
   const response = NextResponse.rewrite(
-    new URL(`/orgs/${resolved.slug}${pathname}`, req.url),
+    new URL(`/orgs/${resolved.slug}${pathname}${search}`, req.url),
     { request: { headers: requestHeaders } },
   )
   setOrgCookies(response, resolved, instance)

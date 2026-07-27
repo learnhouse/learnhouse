@@ -107,6 +107,54 @@ class TestFoldersServiceCoverage:
         assert "course_deadbeef" not in uuids  # orphan filtered
         assert "course_private" not in uuids    # private skipped (line 78)
 
+    # --- media rows must be projected through MediaRead, never dumped raw ---
+    @pytest.mark.asyncio
+    async def test_media_storage_fields_never_reach_the_client(
+        self, db, org, mock_request
+    ):
+        """The randomized storage key is only useful if it stays server-side.
+
+        Dumping the Media table model would ship file_id/storage_key in every
+        folder and search payload, letting a client derive a storage path.
+        """
+        from src.db.media.media import Media, MediaTypeEnum
+
+        media = Media(
+            name="Leaky",
+            media_type=MediaTypeEnum.UPLOAD,
+            public=True,
+            org_id=org.id,
+            media_uuid="media_leaky",
+            file_id="secret-file-id",
+            storage_key="orgs/x/media/secret-random-dir/secret.pdf",
+            file_format="pdf",
+            file_mime="application/pdf",
+            creation_date=str(datetime.now()),
+            update_date=str(datetime.now()),
+        )
+        db.add(media)
+        await db.commit()
+
+        folder = await _mk_folder(db, org, "MediaHolder")
+        await _add_content(db, org, folder.id, "media_leaky")
+
+        rbac, webhooks = _bypass()
+        with rbac, webhooks:
+            fetched = await get_folder(
+                mock_request, folder.folder_uuid, AnonymousLike(), db
+            )
+            found = await search_library(mock_request, str(org.id), "Leaky", AnonymousLike(), db)
+
+        payloads = [i.resource for i in fetched.items if i.resource_type == "media"]
+        payloads += [i["resource"] for i in found["items"] if i["resource_type"] == "media"]
+        assert payloads, "the media item should have been resolved"
+        for payload in payloads:
+            assert "file_id" not in payload
+            assert "storage_key" not in payload
+            # The metadata the UI actually needs is still there.
+            assert payload["file_format"] == "pdf"
+            assert payload["media_uuid"] == "media_leaky"
+
     # --- line 100: breadcrumb cycle-guard break ---
     @pytest.mark.asyncio
     async def test_build_breadcrumbs_cycle_guard_break(self, db, org):

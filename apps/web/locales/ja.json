@@ -992,7 +992,10 @@
     "autosave_unsaved": "未保存の変更",
     "autosaved": "保存済み",
     "autosaving": "保存中…",
-    "save_answers": "回答を保存"
+    "save_answers": "回答を保存",
+    "markdown": "マークダウン",
+    "custom": "カスタム",
+    "scorm": "SCORM"
   },
   "assignments": {
     "submit_assignment": "課題を提出",
@@ -2124,7 +2127,8 @@
             "scorm": "SCORM",
             "markdown": "Markdown",
             "embed": "埋め込み",
-            "resource": "リソース"
+            "resource": "リソース",
+            "custom": "カスタム"
           },
           "toasts": {
             "deleting": "アクティビティを削除中...",

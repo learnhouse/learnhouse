@@ -7,6 +7,7 @@ Handles both filesystem and s3/R2 delivery, with HTTP Range support.
 """
 
 from pathlib import Path
+from urllib.parse import quote
 
 from botocore.exceptions import ClientError
 from fastapi import HTTPException, Request
@@ -57,13 +58,33 @@ async def _resolve_storage_key(db_session: AsyncSession, media: Media) -> str:
     return f"orgs/{org.org_uuid}/media/{media.media_uuid}/{media.file_id}"
 
 
-def _headers(mime: str, is_public: bool) -> dict:
+def _download_filename(media: Media, rel_key: str) -> str:
+    """A human filename for the Content-Disposition header.
+
+    `media.name` is the label the user gave the asset and usually has no
+    extension, so the stored format (or the storage key's suffix) is appended.
+    """
+    stem = (media.name or "").strip() or Path(rel_key).stem or "file"
+    stem = stem.replace("/", "-").replace("\\", "-")
+    suffix = (media.file_format or "").strip().lstrip(".").lower()
+    if not suffix:
+        suffix = Path(rel_key).suffix.lstrip(".").lower()
+    if suffix and not stem.lower().endswith(f".{suffix}"):
+        return f"{stem}.{suffix}"
+    return stem
+
+
+def _headers(mime: str, is_public: bool, filename: str, download: bool) -> dict:
     cache = "public, max-age=86400" if is_public else "private, no-store"
+    # Always send a filename so "save as" proposes something sensible; only the
+    # disposition type changes. RFC 5987 encoding keeps non-ASCII names intact.
+    disposition = "attachment" if download else "inline"
     return {
         "Content-Type": mime,
         "Accept-Ranges": "bytes",
         "Cache-Control": cache,
         "X-Content-Type-Options": "nosniff",
+        "Content-Disposition": f"{disposition}; filename*=UTF-8''{quote(filename, safe='')}",
     }
 
 
@@ -91,15 +112,19 @@ async def serve_media_file(
     *,
     is_public: bool,
     head: bool = False,
+    download: bool = False,
 ) -> Response:
     """Stream (or HEAD) a media file's bytes after the caller has already
-    authorized access. `is_public` only controls caching headers."""
+    authorized access. `is_public` only controls caching headers; `download`
+    switches Content-Disposition to attachment so the browser saves the file
+    instead of rendering it (the `download` attribute on an anchor is ignored
+    cross-origin, and media is served from the API host)."""
     if media.media_type != MediaTypeEnum.UPLOAD:
         raise HTTPException(status_code=404, detail="This media has no file")
 
     rel_key = await _resolve_storage_key(db_session, media)
     mime = media.file_mime or _mime_for(rel_key)
-    headers = _headers(mime, is_public)
+    headers = _headers(mime, is_public, _download_filename(media, rel_key), download)
     range_header = request.headers.get("range")
 
     if get_content_delivery_type() == "s3api":

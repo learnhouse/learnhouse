@@ -94,6 +94,12 @@ Flipcard format:
 - size options: "small", "medium", "large"
 - alignment options: "left", "center", "right"
 
+Flipcard grid format (lays several flipcards out side by side):
+{"type":"flipcardGrid","attrs":{"columns":2},"content":[{"type":"flipcard","attrs":{...}},{"type":"flipcard","attrs":{...}}]}
+- columns options: 1, 2, 3, 4
+- content must contain at least one flipcard, and only flipcards
+- use this instead of consecutive standalone flipcards when the user wants a grid or a row
+
 Math equation format:
 {"type":"blockMathEquation","attrs":{"math_equation":"E = mc^2"}}
 - Uses LaTeX syntax for equations

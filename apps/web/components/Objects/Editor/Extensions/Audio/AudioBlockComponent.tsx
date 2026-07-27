@@ -1,10 +1,10 @@
 import { NodeViewProps, NodeViewWrapper } from '@tiptap/react'
 import { Node } from '@tiptap/core'
 import {
-  Loader2, Headphones, Upload, X, ArrowLeftRight,
-  CheckCircle2, AlertCircle, Play, Pause, Music, Radio, List,
-  SkipBack, SkipForward, Volume2, VolumeX, Clock, Sparkles, Users
-} from 'lucide-react'
+  CircleNotch, Headphones, UploadSimple, X, ArrowsLeftRight,
+  CheckCircle, WarningCircle, Play, Pause, MusicNote, Radio, List,
+  SkipBack, SkipForward, Clock, Sparkle, Users
+} from '@phosphor-icons/react'
 import React from 'react'
 import toast from 'react-hot-toast'
 import { uploadNewAudioFile, generateAudioBlock, generateScript, type GenerateAudioSpeaker } from '../../../../../services/blocks/Audio/audio'
@@ -18,6 +18,7 @@ import { constructAcceptValue } from '@/lib/constants'
 import { cn } from '@/lib/utils'
 import { getOrgPodcasts, getPodcastMeta, type Podcast, type PodcastEpisode, type PodcastMeta } from '@services/podcasts/podcasts'
 import { safePlay } from '@/lib/media/safePlay'
+import InlineAudioPlayer, { formatTime } from '@components/Objects/Media/InlineAudioPlayer'
 
 const SUPPORTED_FILES = constructAcceptValue(['mp3', 'wav', 'ogg', 'm4a'])
 
@@ -112,182 +113,6 @@ interface ExtendedNodeViewProps extends Omit<NodeViewProps, 'extension'> {
   }
 }
 
-// ─── Inline Audio Player (podcast-player inspired) ───
-
-function formatTime(seconds: number): string {
-  const s = Math.floor(seconds)
-  const h = Math.floor(s / 3600)
-  const m = Math.floor((s % 3600) / 60)
-  const r = s % 60
-  if (h > 0) return `${h}:${m.toString().padStart(2, '0')}:${r.toString().padStart(2, '0')}`
-  return `${m}:${r.toString().padStart(2, '0')}`
-}
-
-function InlineAudioPlayer({ src, title }: { src: string; title?: string }) {
-  const audioRef = React.useRef<HTMLAudioElement>(null)
-  const progressRef = React.useRef<HTMLDivElement>(null)
-  const [isPlaying, setIsPlaying] = React.useState(false)
-  const [currentTime, setCurrentTime] = React.useState(0)
-  const [duration, setDuration] = React.useState(0)
-  const [volume, setVolume] = React.useState(1)
-  const [isMuted, setIsMuted] = React.useState(false)
-  const [prevVolume, setPrevVolume] = React.useState(1)
-
-  React.useEffect(() => {
-    const audio = audioRef.current
-    if (!audio) return
-
-    const onTimeUpdate = () => setCurrentTime(audio.currentTime)
-    const onLoadedMetadata = () => setDuration(audio.duration)
-    const onEnded = () => setIsPlaying(false)
-
-    audio.addEventListener('timeupdate', onTimeUpdate)
-    audio.addEventListener('loadedmetadata', onLoadedMetadata)
-    audio.addEventListener('ended', onEnded)
-    return () => {
-      audio.removeEventListener('timeupdate', onTimeUpdate)
-      audio.removeEventListener('loadedmetadata', onLoadedMetadata)
-      audio.removeEventListener('ended', onEnded)
-    }
-  }, [src])
-
-  const togglePlay = () => {
-    const audio = audioRef.current
-    if (!audio) return
-    if (isPlaying) { audio.pause() } else { safePlay(audio) }
-    setIsPlaying(!isPlaying)
-  }
-
-  const skip = (delta: number) => {
-    const audio = audioRef.current
-    if (!audio) return
-    audio.currentTime = Math.max(0, Math.min(audio.currentTime + delta, duration))
-  }
-
-  const seekTo = (e: React.MouseEvent<HTMLDivElement>) => {
-    const audio = audioRef.current
-    const bar = progressRef.current
-    if (!audio || !bar) return
-    const rect = bar.getBoundingClientRect()
-    const ratio = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width))
-    audio.currentTime = ratio * duration
-  }
-
-  const toggleMute = () => {
-    const audio = audioRef.current
-    if (!audio) return
-    if (isMuted) {
-      audio.volume = prevVolume
-      setVolume(prevVolume)
-    } else {
-      setPrevVolume(volume)
-      audio.volume = 0
-      setVolume(0)
-    }
-    setIsMuted(!isMuted)
-  }
-
-  const handleVolumeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const v = parseFloat(e.target.value)
-    if (audioRef.current) audioRef.current.volume = v
-    setVolume(v)
-    setIsMuted(v === 0)
-  }
-
-  const progress = duration > 0 ? (currentTime / duration) * 100 : 0
-
-  return (
-    <div className="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
-      <audio ref={audioRef} src={src} preload="metadata" />
-
-      {/* Title bar */}
-      {title && (
-        <div className="px-4 pt-3 pb-1 flex items-center gap-2">
-          <Headphones size={14} className="text-gray-400 flex-shrink-0" />
-          <span className="text-sm font-semibold text-gray-900 truncate">{title}</span>
-        </div>
-      )}
-
-      {/* Player controls */}
-      <div className="px-4 py-3 flex items-center gap-3">
-        {/* Skip back */}
-        <button
-          onClick={() => skip(-15)}
-          className="p-1.5 rounded-full hover:bg-gray-100 transition-colors outline-none"
-          title="Skip back 15s"
-        >
-          <SkipBack size={16} className="text-gray-600" />
-        </button>
-
-        {/* Play/Pause */}
-        <button
-          onClick={togglePlay}
-          className="rounded-full bg-gray-900 hover:bg-gray-800 p-2.5 transition-colors outline-none"
-        >
-          {isPlaying ? (
-            <Pause size={16} className="text-white" fill="white" />
-          ) : (
-            <Play size={16} className="text-white" fill="white" />
-          )}
-        </button>
-
-        {/* Skip forward */}
-        <button
-          onClick={() => skip(15)}
-          className="p-1.5 rounded-full hover:bg-gray-100 transition-colors outline-none"
-          title="Skip forward 15s"
-        >
-          <SkipForward size={16} className="text-gray-600" />
-        </button>
-
-        {/* Time + Progress */}
-        <span className="text-xs text-gray-500 w-10 text-right tabular-nums flex-shrink-0">
-          {formatTime(currentTime)}
-        </span>
-
-        <div
-          ref={progressRef}
-          onClick={seekTo}
-          className="flex-1 h-1.5 bg-gray-200 rounded-full cursor-pointer relative group"
-        >
-          <div
-            className="h-full bg-gray-900 rounded-full transition-all duration-100"
-            style={{ width: `${progress}%` }}
-          />
-          <div
-            className="absolute top-1/2 -translate-y-1/2 w-3 h-3 bg-gray-900 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
-            style={{ left: `calc(${progress}% - 6px)` }}
-          />
-        </div>
-
-        <span className="text-xs text-gray-500 w-10 tabular-nums flex-shrink-0">
-          {formatTime(duration)}
-        </span>
-
-        {/* Volume */}
-        <button
-          onClick={toggleMute}
-          className="p-1.5 rounded-full hover:bg-gray-100 transition-colors outline-none"
-        >
-          {isMuted || volume === 0 ? (
-            <VolumeX size={16} className="text-gray-600" />
-          ) : (
-            <Volume2 size={16} className="text-gray-600" />
-          )}
-        </button>
-        <input
-          type="range"
-          min="0"
-          max="1"
-          step="0.01"
-          value={volume}
-          onChange={handleVolumeChange}
-          className="w-16 h-1 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-gray-900"
-        />
-      </div>
-    </div>
-  )
-}
 
 // ─── Playlist Player (podcast-player inspired episode list) ───
 
@@ -377,7 +202,7 @@ function PlaylistPlayer({
 
       {/* Header */}
       <div className="px-4 pt-3 pb-2 border-b border-gray-100 flex items-center gap-2">
-        <Radio size={14} className="text-gray-400 flex-shrink-0" />
+        <Radio weight="duotone" size={14} className="text-gray-400 flex-shrink-0" />
         <span className="text-sm font-semibold text-gray-900">{podcastName}</span>
         <span className="text-xs text-gray-400 ml-auto">{episodes.length} episodes</span>
       </div>
@@ -404,9 +229,9 @@ function PlaylistPlayer({
                 )}
               >
                 {isEpPlaying ? (
-                  <Pause size={14} className={isCurrent ? 'text-white' : 'text-gray-600'} fill={isCurrent ? 'white' : 'currentColor'} />
+                  <Pause weight="duotone" size={14} className={isCurrent ? 'text-white' : 'text-gray-600'} fill={isCurrent ? 'white' : 'currentColor'} />
                 ) : (
-                  <Play size={14} className={isCurrent ? 'text-white' : 'text-gray-600'} fill={isCurrent ? 'white' : 'currentColor'} />
+                  <Play weight="duotone" size={14} className={isCurrent ? 'text-white' : 'text-gray-600'} fill={isCurrent ? 'white' : 'currentColor'} />
                 )}
               </div>
 
@@ -417,7 +242,7 @@ function PlaylistPlayer({
                 </h4>
                 {ep.duration_seconds > 0 && (
                   <span className="text-xs text-gray-400 flex items-center gap-1 mt-0.5">
-                    <Clock size={10} />
+                    <Clock weight="duotone" size={10} />
                     {formatTime(ep.duration_seconds)}
                   </span>
                 )}
@@ -432,14 +257,14 @@ function PlaylistPlayer({
         <div className="border-t border-gray-200 px-4 py-3 bg-gray-50">
           {/* Now playing title */}
           <div className="flex items-center gap-2 mb-2">
-            <Music size={12} className="text-gray-400 flex-shrink-0" />
+            <MusicNote weight="duotone" size={12} className="text-gray-400 flex-shrink-0" />
             <span className="text-xs font-medium text-gray-700 truncate">{activeEpisode.title}</span>
           </div>
 
           {/* Controls row */}
           <div className="flex items-center gap-2">
             <button onClick={() => skip(-15)} className="p-1 rounded-full hover:bg-gray-200 transition-colors outline-none">
-              <SkipBack size={14} className="text-gray-600" />
+              <SkipBack weight="duotone" size={14} className="text-gray-600" />
             </button>
 
             <button
@@ -447,14 +272,14 @@ function PlaylistPlayer({
               className="rounded-full bg-gray-900 hover:bg-gray-800 p-2 transition-colors outline-none"
             >
               {isPlaying ? (
-                <Pause size={14} className="text-white" fill="white" />
+                <Pause weight="duotone" size={14} className="text-white" fill="white" />
               ) : (
-                <Play size={14} className="text-white" fill="white" />
+                <Play weight="duotone" size={14} className="text-white" fill="white" />
               )}
             </button>
 
             <button onClick={() => skip(15)} className="p-1 rounded-full hover:bg-gray-200 transition-colors outline-none">
-              <SkipForward size={14} className="text-gray-600" />
+              <SkipForward weight="duotone" size={14} className="text-gray-600" />
             </button>
 
             <span className="text-xs text-gray-500 tabular-nums flex-shrink-0 w-8 text-right">
@@ -819,7 +644,7 @@ function AudioBlockComponent(props: ExtendedNodeViewProps) {
                 />
               ) : (
                 <div className="bg-white border border-gray-200 rounded-xl shadow-sm px-4 py-6 text-center">
-                  <Loader2 className="w-5 h-5 animate-spin mx-auto text-gray-400" />
+                  <CircleNotch weight="duotone" className="w-5 h-5 animate-spin mx-auto text-gray-400" />
                   <p className="text-sm text-gray-400 mt-2">Loading playlist...</p>
                 </div>
               )
@@ -837,12 +662,12 @@ function AudioBlockComponent(props: ExtendedNodeViewProps) {
         {/* Header */}
         <div className="flex items-center justify-between mb-3">
           <div className="flex items-center gap-2">
-            <Headphones className="text-neutral-400" size={16} />
+            <Headphones weight="duotone" className="text-neutral-400" size={16} />
             <span className="uppercase tracking-widest text-xs font-bold text-neutral-400">Audio</span>
           </div>
           {blockObject && (
             <button onClick={handleRemove} className="text-neutral-400 hover:text-red-500 transition-colors">
-              <X size={16} />
+              <X weight="duotone" size={16} />
             </button>
           )}
         </div>
@@ -853,9 +678,9 @@ function AudioBlockComponent(props: ExtendedNodeViewProps) {
             {/* Tabs */}
             <div className="flex gap-1 bg-neutral-100 rounded-lg p-1">
               {([
-                { key: 'upload' as TabType, icon: Upload, label: 'Upload' },
-                { key: 'generate' as TabType, icon: Sparkles, label: 'Generate' },
-                { key: 'episode' as TabType, icon: Music, label: 'Episode' },
+                { key: 'upload' as TabType, icon: UploadSimple, label: 'Upload' },
+                { key: 'generate' as TabType, icon: Sparkle, label: 'Generate' },
+                { key: 'episode' as TabType, icon: MusicNote, label: 'Episode' },
                 { key: 'podcast' as TabType, icon: List, label: 'Playlist' },
               ]).map((tab) => (
                 <button
@@ -892,7 +717,7 @@ function AudioBlockComponent(props: ExtendedNodeViewProps) {
                 >
                   {isLoading ? (
                     <div className="space-y-3">
-                      <Loader2 className="w-8 h-8 animate-spin mx-auto text-blue-500" />
+                      <CircleNotch weight="duotone" className="w-8 h-8 animate-spin mx-auto text-blue-500" />
                       <p className="text-sm text-neutral-600">Uploading... {uploadProgress}%</p>
                       <div className="w-48 h-1 bg-neutral-200 rounded-full mx-auto overflow-hidden">
                         <div className="h-full bg-blue-500 rounded-full transition-all duration-200" style={{ width: `${uploadProgress}%` }} />
@@ -900,7 +725,7 @@ function AudioBlockComponent(props: ExtendedNodeViewProps) {
                     </div>
                   ) : (
                     <div className="space-y-3">
-                      <Upload className="w-8 h-8 mx-auto text-neutral-400" />
+                      <UploadSimple weight="duotone" className="w-8 h-8 mx-auto text-neutral-400" />
                       <div>
                         <p className="text-sm font-medium text-neutral-700">Drop an audio file or click to browse</p>
                         <p className="text-xs text-neutral-500 mt-1">Supports MP3, WAV, OGG, M4A</p>
@@ -917,7 +742,7 @@ function AudioBlockComponent(props: ExtendedNodeViewProps) {
                 {/* Mode toggle */}
                 <div className="flex gap-1 bg-neutral-100 rounded-lg p-1">
                   {([
-                    { key: 'tts' as const, icon: Sparkles, label: 'Text to speech' },
+                    { key: 'tts' as const, icon: Sparkle, label: 'Text to speech' },
                     { key: 'podcast' as const, icon: Users, label: 'Podcast (2 voices)' },
                     { key: 'speak' as const, icon: Radio, label: 'Speak' },
                   ]).map((m) => (
@@ -1051,9 +876,9 @@ function AudioBlockComponent(props: ExtendedNodeViewProps) {
                     )}
                   >
                     {isGeneratingScript ? (
-                      <><Loader2 size={15} className="animate-spin" /> {genMode === 'podcast' ? 'Writing the discussion…' : 'Writing the talk…'}</>
+                      <><CircleNotch size={15} className="animate-spin" /> {genMode === 'podcast' ? 'Writing the discussion…' : 'Writing the talk…'}</>
                     ) : (
-                      <><Sparkles size={15} /> {genMode === 'podcast' ? 'Generate discussion script' : 'Generate talk script'}</>
+                      <><Sparkle size={15} /> {genMode === 'podcast' ? 'Generate discussion script' : 'Generate talk script'}</>
                     )}
                   </button>
                 )}
@@ -1070,9 +895,9 @@ function AudioBlockComponent(props: ExtendedNodeViewProps) {
                   )}
                 >
                   {isGenerating ? (
-                    <><Loader2 size={15} className="animate-spin" /> Generating…</>
+                    <><CircleNotch size={15} className="animate-spin" /> Generating…</>
                   ) : (
-                    <><Sparkles size={15} /> Generate audio</>
+                    <><Sparkle size={15} /> Generate audio</>
                   )}
                 </button>
                 <p className="text-[11px] text-center text-neutral-400">
@@ -1088,7 +913,7 @@ function AudioBlockComponent(props: ExtendedNodeViewProps) {
               <div className="space-y-3">
                 {podcastsLoading ? (
                   <div className="flex items-center justify-center py-6">
-                    <Loader2 className="w-5 h-5 animate-spin text-neutral-400" />
+                    <CircleNotch weight="duotone" className="w-5 h-5 animate-spin text-neutral-400" />
                   </div>
                 ) : !selectedPodcast ? (
                   <div className="space-y-1 max-h-60 overflow-y-auto">
@@ -1101,7 +926,7 @@ function AudioBlockComponent(props: ExtendedNodeViewProps) {
                           onClick={() => handleSelectPodcast(p)}
                           className="flex items-center gap-2 px-3 py-2 rounded-lg cursor-pointer hover:bg-neutral-100 transition-colors"
                         >
-                          <Radio size={14} className="text-neutral-400 flex-shrink-0" />
+                          <Radio weight="duotone" size={14} className="text-neutral-400 flex-shrink-0" />
                           <span className="text-sm text-neutral-700 truncate">{p.name}</span>
                         </div>
                       ))
@@ -1118,7 +943,7 @@ function AudioBlockComponent(props: ExtendedNodeViewProps) {
                     <p className="text-sm font-medium text-neutral-700">{selectedPodcast.name}</p>
                     {episodesLoading ? (
                       <div className="flex items-center justify-center py-4">
-                        <Loader2 className="w-5 h-5 animate-spin text-neutral-400" />
+                        <CircleNotch weight="duotone" className="w-5 h-5 animate-spin text-neutral-400" />
                       </div>
                     ) : (
                       <div className="space-y-1 max-h-48 overflow-y-auto">
@@ -1131,7 +956,7 @@ function AudioBlockComponent(props: ExtendedNodeViewProps) {
                               onClick={() => handleSelectEpisode(ep)}
                               className="flex items-center gap-2 px-3 py-2 rounded-lg cursor-pointer hover:bg-blue-50 transition-colors"
                             >
-                              <Music size={14} className="text-neutral-400 flex-shrink-0" />
+                              <MusicNote weight="duotone" size={14} className="text-neutral-400 flex-shrink-0" />
                               <span className="text-sm text-neutral-700 truncate">{ep.title}</span>
                             </div>
                           ))
@@ -1148,7 +973,7 @@ function AudioBlockComponent(props: ExtendedNodeViewProps) {
               <div className="space-y-3">
                 {podcastsLoading ? (
                   <div className="flex items-center justify-center py-6">
-                    <Loader2 className="w-5 h-5 animate-spin text-neutral-400" />
+                    <CircleNotch weight="duotone" className="w-5 h-5 animate-spin text-neutral-400" />
                   </div>
                 ) : (
                   <div className="space-y-1 max-h-60 overflow-y-auto">
@@ -1161,7 +986,7 @@ function AudioBlockComponent(props: ExtendedNodeViewProps) {
                           onClick={() => handleSelectPodcastPlaylist(p)}
                           className="flex items-center gap-2 px-3 py-2 rounded-lg cursor-pointer hover:bg-blue-50 transition-colors"
                         >
-                          <Radio size={14} className="text-neutral-400 flex-shrink-0" />
+                          <Radio weight="duotone" size={14} className="text-neutral-400 flex-shrink-0" />
                           <div className="min-w-0">
                             <span className="text-sm text-neutral-700 truncate block">{p.name}</span>
                             <span className="text-xs text-neutral-400">{p.description}</span>
@@ -1176,7 +1001,7 @@ function AudioBlockComponent(props: ExtendedNodeViewProps) {
 
             {error && (
               <div className="flex items-center gap-2 text-sm text-red-500 font-medium bg-red-50 rounded-lg p-3">
-                <AlertCircle size={16} />
+                <WarningCircle weight="duotone" size={16} />
                 {error}
               </div>
             )}
@@ -1189,7 +1014,7 @@ function AudioBlockComponent(props: ExtendedNodeViewProps) {
             {/* Size Controls */}
             <div className="flex items-center gap-2 flex-wrap">
               <div className="text-sm text-neutral-500 font-medium flex items-center gap-1">
-                <ArrowLeftRight size={14} />
+                <ArrowsLeftRight weight="duotone" size={14} />
                 Size:
               </div>
               {(Object.keys(AUDIO_SIZES) as AudioSize[]).map((size) => (
@@ -1203,7 +1028,7 @@ function AudioBlockComponent(props: ExtendedNodeViewProps) {
                       : 'bg-neutral-200 text-neutral-700 hover:bg-neutral-300'
                   )}
                 >
-                  {size === selectedSize && <CheckCircle2 size={14} />}
+                  {size === selectedSize && <CheckCircle weight="duotone" size={14} />}
                   {AUDIO_SIZES[size].label}
                 </button>
               ))}

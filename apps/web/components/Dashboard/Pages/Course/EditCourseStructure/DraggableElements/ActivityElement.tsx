@@ -27,6 +27,7 @@ import {
   MoreVertical,
   Package,
   Pencil,
+  Puzzle,
   Save,
   Sparkles,
   Trash2,
@@ -53,6 +54,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@components/ui/dropdown-menu'
+import { ActivityPreviewHoverCard } from '@components/Objects/Activities/ActivityPreview/ActivityPreview'
 
 type ActivitiyElementProps = {
   orgslug: string
@@ -314,7 +316,11 @@ function ActivityElement(props: ActivitiyElementProps) {
                 </ToolTip>
               </div>
             ) : (
-              <p className="first-letter:uppercase text-sm text-gray-600 truncate">{props.activity.name}</p>
+              <ActivityPreviewHoverCard activity={props.activity}>
+                <p className="first-letter:uppercase text-sm text-gray-600 truncate cursor-default">
+                  {props.activity.name}
+                </p>
+              </ActivityPreviewHoverCard>
             )}
           </div>
 
@@ -531,8 +537,14 @@ const ACTIVITIES = {
   'TYPE_SCORM': {
     displayNameKey: 'scorm',
     Icon: Package
+  },
+  'TYPE_CUSTOM': {
+    displayNameKey: 'custom',
+    Icon: Puzzle
   }
 }
+
+const UNKNOWN_ACTIVITY = { displayNameKey: 'dynamic', Icon: Sparkles }
 
 const ActivityTypeIndicator = ({activityType, activitySubType, isMobile} : { activityType: keyof typeof ACTIVITIES, activitySubType?: string, isMobile: boolean}) => {
   const { t } = useTranslation()
@@ -545,7 +557,7 @@ const ActivityTypeIndicator = ({activityType, activitySubType, isMobile} : { act
     ? { displayNameKey: 'embed', Icon: GlobePhosphor }
     : isResource
     ? { displayNameKey: 'resource', Icon: Cube }
-    : ACTIVITIES[activityType]
+    : ACTIVITIES[activityType] ?? UNKNOWN_ACTIVITY
 
   return (
     <div className="flex items-center gap-1.5 flex-shrink-0">

@@ -27,6 +27,8 @@ interface SignupBody {
   first_name?: string
   last_name?: string
   bio?: string
+  /** Answers to the org's admin-defined signup fields, keyed by field key. */
+  custom_fields?: Record<string, unknown>
   turnstileToken?: string | null
   inviteCode?: string
 }
@@ -39,9 +41,21 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ detail: 'Invalid request body' }, { status: 400 })
   }
 
-  const { email, org_id, org_slug: _org_slug, turnstileToken, inviteCode, ...rest } = body
+  const {
+    email,
+    org_id,
+    org_slug: _org_slug,
+    turnstileToken,
+    inviteCode,
+    password,
+    username,
+    first_name,
+    last_name,
+    bio,
+    custom_fields,
+  } = body
 
-  if (!email || !rest.password || !rest.username) {
+  if (!email || !password || !username) {
     return NextResponse.json({ detail: 'Missing required fields' }, { status: 400 })
   }
 
@@ -79,7 +93,21 @@ export async function POST(request: NextRequest) {
 
   // The backend UserCreate body — account fields only; the org (if any) is in
   // the URL path, never the body.
-  const backendBody = { email, ...rest }
+  //
+  // Every field is listed explicitly rather than spread from the request. The
+  // previous `...rest` spread forwarded any key the client invented, which is
+  // how an arbitrary `extra_metadata` blob could reach UserCreate. Custom field
+  // answers travel in their own slot and the backend validates them against the
+  // org's declared fields.
+  const backendBody = {
+    email,
+    password,
+    username,
+    first_name,
+    last_name,
+    bio,
+    ...(custom_fields ? { custom_fields } : {}),
+  }
 
   let url: string
   if (inviteCode) {
@@ -118,11 +146,11 @@ export async function POST(request: NextRequest) {
   // separately when they create/administer an org (see /api/loops/admin).
   if (backendRes.ok && saas && !org_id) {
     void addContactWithLoops(email, LOOPS_SIGNED_USERS_GROUP, {
-      firstName: rest.first_name || '',
-      lastName: rest.last_name || '',
+      firstName: first_name || '',
+      lastName: last_name || '',
     }).catch(() => {})
     void sendLoopsEvent(email, 'user_signed_up', {
-      username: rest.username,
+      username,
       has_org: false,
     }).catch(() => {})
   }

@@ -1,4 +1,4 @@
-import { useOrg } from '@components/Contexts/OrgContext';
+import { useOrgMembership } from '@components/Contexts/OrgContext';
 import { useLHSession } from '@components/Contexts/LHSessionContext';
 import { useMemo } from 'react';
 
@@ -205,7 +205,7 @@ const SUPERADMIN_RIGHTS: Rights = {
 
 function useAdminStatus(): UseAdminStatusReturn {
     const session = useLHSession() as any;
-    const org = useOrg() as any;
+    const { org, orgslug } = useOrgMembership() as any;
 
     const roles = session.data?.roles;
     const userRoles: Role[] = useMemo(() => roles || [], [roles]);
@@ -233,7 +233,18 @@ function useAdminStatus(): UseAdminStatusReturn {
         [isAuthenticated, orgId, isSuperadmin, rights]
     );
 
-    const loading = !isAuthenticated && session.status !== 'unauthenticated';
+    // Every right is derived per-org, so an unresolved org reads as "no rights"
+    // rather than "not known yet". Callers that redirect on !isAdmin would then
+    // bounce an admin off a deep-linked page during the first render, before
+    // OrgContext's fetch lands — and never again once react-query has the org
+    // cached, which is why it only ever happened on the first visit.
+    //
+    // A non-empty orgslug means we are inside an OrgProvider, so an absent
+    // org.id is "still loading" and not "this surface has no org at all"
+    // (the apex hub renders these hooks with no provider).
+    const orgPending = !!orgslug && !orgId;
+
+    const loading = (!isAuthenticated && session.status !== 'unauthenticated') || orgPending;
 
     return { isAdmin, canManageOrg, loading, userRoles, rights };
 }

@@ -1,6 +1,6 @@
 import { NodeViewWrapper } from '@tiptap/react'
 import React, { useState, useRef, useEffect } from 'react'
-import { RotateCw, Edit, AlignLeft, AlignCenter, AlignRight, Palette, Maximize2, Minimize2, Square } from 'lucide-react'
+import { ArrowClockwise, PencilSimple, TextAlignLeft, TextAlignCenter, TextAlignRight, Palette, ArrowsOutSimple, ArrowsInSimple, Square, SquaresFour } from '@phosphor-icons/react'
 import { cn } from '@/lib/utils'
 import { useEditorProvider } from '@components/Contexts/Editor/EditorContext'
 import { useTranslation } from 'react-i18next'
@@ -77,6 +77,37 @@ const FlipcardExtension: React.FC = (props: any) => {
     })
   }
 
+  // Inside a flipcardGrid the container owns the layout: the card fills its cell
+  // and per-card alignment stops meaning anything.
+  const inGrid = (() => {
+    const pos = typeof props.getPos === 'function' ? props.getPos() : null
+    if (pos === null || pos === undefined) return false
+    try {
+      return props.editor.state.doc.resolve(pos).parent.type.name === 'flipcardGrid'
+    } catch {
+      return false
+    }
+  })()
+
+  /** Wrap this standalone card in a grid so more cards can sit beside it. */
+  const groupIntoGrid = () => {
+    const pos = typeof props.getPos === 'function' ? props.getPos() : null
+    if (pos === null || pos === undefined) return
+    props.editor
+      .chain()
+      .focus()
+      .command(({ tr, state, dispatch }: any) => {
+        const node = tr.doc.nodeAt(pos)
+        const gridType = state.schema.nodes.flipcardGrid
+        if (!node || !gridType) return false
+        if (dispatch) {
+          tr.replaceWith(pos, pos + node.nodeSize, gridType.create({ columns: 2 }, node))
+        }
+        return true
+      })
+      .run()
+  }
+
   const getAlignmentClass = () => {
     switch (alignment) {
       case 'left': return 'justify-start';
@@ -150,8 +181,17 @@ const FlipcardExtension: React.FC = (props: any) => {
   }
 
   return (
-    <NodeViewWrapper className={cn("flipcard-wrapper flex my-4", getAlignmentClass())}>
-      <div className={cn("flipcard-container relative", getSizeClass())}>
+    <NodeViewWrapper
+      className={cn("flipcard-wrapper flex", inGrid ? "w-full" : cn("my-4", getAlignmentClass()))}
+    >
+      <div
+        className={cn(
+          "flipcard-container relative",
+          // In a grid the cell dictates the width; the height must stay explicit
+          // because the front/back faces are absolutely positioned.
+          inGrid ? cn("w-full", getSizeClass().split(' ')[1]) : getSizeClass()
+        )}
+      >
         <div
           className={cn("flipcard-inner cursor-pointer", isFlipped && "flipped")}
           onClick={handleFlip}
@@ -164,7 +204,7 @@ const FlipcardExtension: React.FC = (props: any) => {
             )}
           >
             <div className="flex items-center justify-center mb-3 select-none pointer-events-none">
-              <RotateCw size={getIconSizeClass()} className="opacity-70" />
+              <ArrowClockwise weight="duotone" size={getIconSizeClass()} className="opacity-70" />
             </div>
             <div className="flex-1 flex items-center justify-center">
               {isEditable && isEditingQuestion ? (
@@ -187,7 +227,7 @@ const FlipcardExtension: React.FC = (props: any) => {
                       }}
                       className="ml-2 opacity-60 hover:opacity-100 flex-shrink-0 pointer-events-auto"
                     >
-                      <Edit size={14} />
+                      <PencilSimple weight="duotone" size={14} />
                     </button>
                   )}
                 </div>
@@ -206,7 +246,7 @@ const FlipcardExtension: React.FC = (props: any) => {
             )}
           >
             <div className="flex items-center justify-center mb-3 select-none pointer-events-none">
-              <RotateCw size={getIconSizeClass()} className="opacity-70 rotate-180" />
+              <ArrowClockwise weight="duotone" size={getIconSizeClass()} className="opacity-70 rotate-180" />
             </div>
             <div className="flex-1 flex items-center justify-center">
               {isEditable && isEditingAnswer ? (
@@ -229,7 +269,7 @@ const FlipcardExtension: React.FC = (props: any) => {
                       }}
                       className="ml-2 opacity-60 hover:opacity-100 flex-shrink-0 pointer-events-auto"
                     >
-                      <Edit size={14} />
+                      <PencilSimple weight="duotone" size={14} />
                     </button>
                   )}
                 </div>
@@ -244,7 +284,8 @@ const FlipcardExtension: React.FC = (props: any) => {
         {/* Editor Controls */}
         {isEditable && (
           <div className="flex mt-3 gap-1 justify-center opacity-60 hover:opacity-100 transition-opacity">
-            {/* Alignment Controls */}
+            {/* Alignment Controls — the grid container owns alignment when nested */}
+            {!inGrid && (<>
             <button
               onClick={(e) => {
                 e.stopPropagation()
@@ -256,7 +297,7 @@ const FlipcardExtension: React.FC = (props: any) => {
               )}
               title={t('activities.align_left')}
             >
-              <AlignLeft size={12} />
+              <TextAlignLeft weight="duotone" size={12} />
             </button>
             <button
               onClick={(e) => {
@@ -269,7 +310,7 @@ const FlipcardExtension: React.FC = (props: any) => {
               )}
               title={t('activities.align_center')}
             >
-              <AlignCenter size={12} />
+              <TextAlignCenter weight="duotone" size={12} />
             </button>
             <button
               onClick={(e) => {
@@ -282,10 +323,11 @@ const FlipcardExtension: React.FC = (props: any) => {
               )}
               title={t('activities.align_right')}
             >
-              <AlignRight size={12} />
+              <TextAlignRight weight="duotone" size={12} />
             </button>
 
             <div className="w-px h-4 bg-neutral-300 self-center mx-1"></div>
+            </>)}
 
             {/* Size Controls */}
             <button
@@ -299,7 +341,7 @@ const FlipcardExtension: React.FC = (props: any) => {
               )}
               title={t('activities.size_small')}
             >
-              <Minimize2 size={12} />
+              <ArrowsInSimple weight="duotone" size={12} />
             </button>
             <button
               onClick={(e) => {
@@ -312,7 +354,7 @@ const FlipcardExtension: React.FC = (props: any) => {
               )}
               title={t('activities.size_medium')}
             >
-              <Square size={12} />
+              <Square weight="duotone" size={12} />
             </button>
             <button
               onClick={(e) => {
@@ -325,7 +367,7 @@ const FlipcardExtension: React.FC = (props: any) => {
               )}
               title={t('activities.size_large')}
             >
-              <Maximize2 size={12} />
+              <ArrowsOutSimple weight="duotone" size={12} />
             </button>
 
             <div className="w-px h-4 bg-neutral-300 self-center mx-1"></div>
@@ -339,7 +381,7 @@ const FlipcardExtension: React.FC = (props: any) => {
               className="p-1.5 bg-neutral-200 hover:bg-neutral-300 text-neutral-600 rounded-md transition-colors text-xs"
               title={t('activities.change_color')}
             >
-              <Palette size={12} />
+              <Palette weight="duotone" size={12} />
             </button>
             <button
               onClick={(e) => {
@@ -349,8 +391,20 @@ const FlipcardExtension: React.FC = (props: any) => {
               className="p-1.5 bg-neutral-200 hover:bg-neutral-300 text-neutral-600 rounded-md transition-colors text-xs"
               title={t('activities.preview_flip')}
             >
-              <RotateCw size={12} />
+              <ArrowClockwise weight="duotone" size={12} />
             </button>
+            {!inGrid && (
+              <button
+                onClick={(e) => {
+                  e.stopPropagation()
+                  groupIntoGrid()
+                }}
+                className="p-1.5 bg-neutral-200 hover:bg-neutral-300 text-neutral-600 rounded-md transition-colors text-xs"
+                title={t('activities.group_into_grid')}
+              >
+                <SquaresFour weight="duotone" size={12} />
+              </button>
+            )}
           </div>
         )}
 

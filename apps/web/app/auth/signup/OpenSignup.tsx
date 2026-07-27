@@ -17,8 +17,14 @@ import { useTranslation } from 'react-i18next'
 import { PasswordStrengthIndicator, validatePasswordStrength } from '@components/Auth/PasswordStrengthIndicator'
 import TurnstileWidget, { useTurnstileRequired, type TurnstileWidgetHandle } from '@components/Auth/TurnstileWidget'
 import { useLHAnalytics, AnalyticsEvent } from '@services/analytics'
+import { getAllowedAuthMethods } from '@services/auth/authMethods'
+import CustomSignupFields, {
+  initialCustomFieldValues,
+  validateCustomFields,
+} from '@components/Auth/CustomSignupFields'
+import { readSignupFields, type SignupFieldItem } from '@services/settings/org'
 
-const validate = (values: any, t: any) => {
+const validate = (values: any, t: any, customFields: SignupFieldItem[]) => {
   const errors: any = {}
 
   if (!values.email) {
@@ -44,6 +50,12 @@ const validate = (values: any, t: any) => {
 
   // Bio is optional - no validation required
 
+  // The org's admin-defined fields. Client-side only; the server revalidates.
+  const customFieldErrors = validateCustomFields(customFields, values.custom_fields, t)
+  if (Object.keys(customFieldErrors).length > 0) {
+    errors.custom_fields = customFieldErrors
+  }
+
   return errors
 }
 
@@ -66,6 +78,22 @@ function OpenSignUpComponent({ org: propOrg }: OpenSignUpComponentProps = {}) {
   const [resendState, setResendState] = React.useState<'idle' | 'sending' | 'sent' | 'error'>('idle')
   const turnstileRef = React.useRef<TurnstileWidgetHandle>(null)
   const turnstileRequired = useTurnstileRequired()
+
+  // The org's allowed sign-in methods also govern how an account may be
+  // created: minting a password account for an org that refuses password
+  // sign-in produces an account that can never be used. The backend refuses
+  // both, so offering them here would only surface a 403.
+  const allowedMethods = React.useMemo(() => getAllowedAuthMethods(org), [org])
+  const passwordAllowed = allowedMethods.has('password')
+  const googleAllowed = allowedMethods.has('google')
+
+  // Field definitions ship with the org config the page already loaded, so no
+  // extra request is needed to render them.
+  const customFields = React.useMemo<SignupFieldItem[]>(
+    () => readSignupFields(org),
+    [org],
+  )
+
   const formik = useFormik({
     initialValues: {
       org_slug: org?.slug,
@@ -76,9 +104,10 @@ function OpenSignUpComponent({ org: propOrg }: OpenSignUpComponentProps = {}) {
       bio: '',
       first_name: '',
       last_name: '',
+      custom_fields: initialCustomFieldValues(customFields),
       turnstileToken: null as string | null,
     },
-    validate: (values) => validate(values, t),
+    validate: (values) => validate(values, t, customFields),
     enableReinitialize: true,
     onSubmit: async (values) => {
       setError('')
@@ -213,6 +242,7 @@ function OpenSignUpComponent({ org: propOrg }: OpenSignUpComponentProps = {}) {
           </div>
         )}
 
+        {passwordAllowed && (
         <FormLayout onSubmit={formik.handleSubmit}>
           <FormField name="email">
             <div className="flex items-center space-x-2 mb-1.5">
@@ -340,6 +370,8 @@ function OpenSignUpComponent({ org: propOrg }: OpenSignUpComponentProps = {}) {
             </Form.Control>
           </FormField>
 
+          <CustomSignupFields fields={customFields} formik={formik} />
+
           <TurnstileWidget
             ref={turnstileRef}
             onToken={(token) => formik.setFieldValue('turnstileToken', token)}
@@ -362,18 +394,22 @@ function OpenSignUpComponent({ org: propOrg }: OpenSignUpComponentProps = {}) {
             </button>
           </Form.Submit>
         </FormLayout>
+        )}
 
-        {/* Divider */}
-        <div className="relative my-6">
-          <div className="absolute inset-0 flex items-center">
-            <div className="w-full border-t border-neutral-200" />
+        {/* Divider — only earns its place between two sets of options. */}
+        {passwordAllowed && googleAllowed && (
+          <div className="relative my-6">
+            <div className="absolute inset-0 flex items-center">
+              <div className="w-full border-t border-neutral-200" />
+            </div>
+            <div className="relative flex justify-center text-sm">
+              <span className="px-3 text-black/30 bg-white text-xs font-medium">{t('common.or')}</span>
+            </div>
           </div>
-          <div className="relative flex justify-center text-sm">
-            <span className="px-3 text-black/30 bg-white text-xs font-medium">{t('common.or')}</span>
-          </div>
-        </div>
+        )}
 
         {/* Google Sign In */}
+        {googleAllowed && (
         <button
           onClick={handleGoogleSignIn}
           disabled={isSubmitting}
@@ -382,6 +418,19 @@ function OpenSignUpComponent({ org: propOrg }: OpenSignUpComponentProps = {}) {
           <img src="https://fonts.gstatic.com/s/i/productlogos/googleg/v6/24px.svg" alt="" className="w-4 h-4" />
           <span>{t('auth.sign_in_with_google')}</span>
         </button>
+        )}
+
+        {!passwordAllowed && !googleAllowed && (
+          <div className="rounded-lg border border-neutral-200 bg-neutral-50 px-4 py-3 flex items-start gap-3">
+            <Info size={16} className="shrink-0 mt-0.5 text-black/40" />
+            <p className="text-sm text-black/60">
+              {t('auth.no_sign_up_method_available', {
+                defaultValue:
+                  'This organization has restricted how members sign in, so accounts can’t be created here. Contact an administrator.',
+              })}
+            </p>
+          </div>
+        )}
 
         {/* Login Link */}
         <p className="text-center text-sm text-black/35 mt-6">

@@ -13,6 +13,7 @@ from fastapi import FastAPI
 from httpx import ASGITransport, AsyncClient
 
 from src.core.events.database import get_db_session
+from src.db.organization_config import OrganizationConfig
 from src.db.user_mfa import UserMFA
 from src.db.users import AnonymousUser, User
 from src.routers.auth import router as auth_router
@@ -55,6 +56,21 @@ def login_user(db):
     db.commit()
     db.refresh(user)
     return user
+
+
+async def _set_allowed_methods(db, org_id, methods):
+    db.add(
+        OrganizationConfig(
+            org_id=org_id,
+            config={
+                "config_version": "2.0",
+                "admin_toggles": {"security": {"allowed_auth_methods": methods}},
+            },
+            creation_date=str(datetime.now()),
+            update_date=str(datetime.now()),
+        )
+    )
+    await db.commit()
 
 
 def _login_patches():
@@ -111,6 +127,65 @@ class TestLoginProvenance:
         claims = decode_jwt(resp.json()["tokens"]["access_token"])
         assert claims[AMR_CLAIM] == "password"
         assert SORG_CLAIM not in claims
+
+    async def test_login_refused_when_org_disallows_password(self, client, db, login_user, org):
+        await _set_allowed_methods(db, org.id, ["google", "sso"])
+
+        stubs = _login_patches() + [
+            patch("src.routers.auth.authenticate_user", new_callable=AsyncMock, return_value=login_user),
+        ]
+        import contextlib
+
+        with contextlib.ExitStack() as stack:
+            for s in stubs:
+                stack.enter_context(s)
+            resp = await client.post(
+                "/api/v1/auth/login",
+                data={"username": login_user.email, "password": "secret", "org_slug": org.slug},
+            )
+
+        assert resp.status_code == 403
+        detail = resp.json()["detail"]
+        assert detail["code"] == "AUTH_METHOD_NOT_ALLOWED"
+        assert detail["allowed_methods"] == ["google", "sso"]
+
+    async def test_org_policy_does_not_block_the_apex_login(self, client, db, login_user, org):
+        # Same restricted org, but a login that names no org is not that org's to
+        # refuse — the per-request gate handles it once they reach the org.
+        await _set_allowed_methods(db, org.id, ["google"])
+
+        stubs = _login_patches() + [
+            patch("src.routers.auth.authenticate_user", new_callable=AsyncMock, return_value=login_user),
+        ]
+        import contextlib
+
+        with contextlib.ExitStack() as stack:
+            for s in stubs:
+                stack.enter_context(s)
+            resp = await client.post(
+                "/api/v1/auth/login",
+                data={"username": login_user.email, "password": "secret"},
+            )
+
+        assert resp.status_code == 200
+
+    async def test_login_allowed_when_password_is_on_the_list(self, client, db, login_user, org):
+        await _set_allowed_methods(db, org.id, ["password", "google"])
+
+        stubs = _login_patches() + [
+            patch("src.routers.auth.authenticate_user", new_callable=AsyncMock, return_value=login_user),
+        ]
+        import contextlib
+
+        with contextlib.ExitStack() as stack:
+            for s in stubs:
+                stack.enter_context(s)
+            resp = await client.post(
+                "/api/v1/auth/login",
+                data={"username": login_user.email, "password": "secret", "org_slug": org.slug},
+            )
+
+        assert resp.status_code == 200
 
     async def test_login_with_2fa_returns_challenge_not_session(self, client, db, login_user):
         # Enrolled second factor → login must hand back an mfa_token, no session.

@@ -184,7 +184,7 @@ class TestExport:
 async def seed_rich(db: AsyncSession, org, course, chapter, activity, regular_user):
     """Seed assignment (+ task submission), code submission and community activity."""
     from src.db.courses.assignments import (
-        Assignment, AssignmentUserSubmission, AssignmentTaskSubmission,
+        Assignment, AssignmentTask, AssignmentUserSubmission, AssignmentTaskSubmission,
         AssignmentUserSubmissionStatus, AssignmentTaskTypeEnum, GradingTypeEnum,
     )
     from src.db.code_submissions import CodeSubmission
@@ -201,6 +201,27 @@ async def seed_rich(db: AsyncSession, org, course, chapter, activity, regular_us
     )
     db.add(assignment)
     await db.commit()
+    # A real task row: the question bank is what makes the stored answer readable.
+    task = AssignmentTask(
+        id=1, title="Chapter 1 quiz", description="d", hint="",
+        assignment_type=AssignmentTaskTypeEnum.QUIZ, max_grade_value=100,
+        contents={"questions": [{
+            "questionUUID": "question_1",
+            "questionText": "What is 2 + 2?",
+            "options": [
+                {"optionUUID": "option_a", "text": "Three",
+                 "assigned_right_answer": False},
+                {"optionUUID": "option_b", "text": "Four",
+                 "assigned_right_answer": True},
+            ],
+        }]},
+        assignment_task_uuid="assignmenttask_1", assignment_id=assignment.id,
+        org_id=org.id, course_id=course.id, chapter_id=chapter.id,
+        activity_id=activity.id,
+        creation_date=str(datetime.now()), update_date=str(datetime.now()),
+    )
+    db.add(task)
+    await db.commit()
     db.add(AssignmentUserSubmission(
         assignmentusersubmission_uuid="aus_1",
         submission_status=AssignmentUserSubmissionStatus.GRADED, grade=88,
@@ -209,11 +230,16 @@ async def seed_rich(db: AsyncSession, org, course, chapter, activity, regular_us
         creation_date=str(datetime.now()), update_date=str(datetime.now()),
     ))
     db.add(AssignmentTaskSubmission(
-        assignment_task_submission_uuid="ats_1", task_submission={"a": 1}, grade=88,
+        assignment_task_submission_uuid="ats_1",
+        task_submission={"questions": [], "submissions": [
+            {"questionUUID": "question_1", "optionUUID": "option_a", "answer": False},
+            {"questionUUID": "question_1", "optionUUID": "option_b", "answer": True},
+        ]},
+        grade=88,
         task_submission_grade_feedback="ok", manually_graded=False,
         assignment_type=AssignmentTaskTypeEnum.QUIZ, user_id=regular_user.id,
         activity_id=activity.id, course_id=course.id, chapter_id=chapter.id,
-        assignment_task_id=1,
+        assignment_task_id=task.id,
         creation_date=str(datetime.now()), update_date=str(datetime.now()),
     ))
     db.add(CodeSubmission(
@@ -257,6 +283,202 @@ class TestDossierRichSections:
         assert body["community"]["discussions_count"] == 1
         assert body["community"]["comments_count"] == 1
         assert body["summary"]["avg_grade"] == 88
+
+    async def test_assignment_carries_readable_answers(self, client, regular_user, seed_rich):
+        """The stored blob of UUIDs comes back as question text and chosen options."""
+        with _bypass_plan():
+            resp = await client.get(f"/api/v1/audit/user/{regular_user.id}?org_id=1")
+        a = resp.json()["assignments"][0]
+        # The max is summed from the tasks — it is not stored on the assignment, which
+        # is why the UI used to hardcode "/100".
+        assert a["max_grade_value"] == 100
+        assert a["grade_display"] == "88/100"
+        assert a["course_name"] and a["activity_name"]
+        assert a["tasks_total"] == 1 and a["tasks_submitted"] == 1
+
+        tk = a["tasks"][0]
+        assert tk["title"] == "Chapter 1 quiz"
+        assert tk["type_label"] == "Quiz"
+        assert tk["max_grade"] == 100
+        answer = tk["answer"]
+        assert answer["kind"] == "quiz"
+        assert answer["correct_count"] == 1 and answer["total_count"] == 1
+        item = answer["items"][0]
+        assert item["prompt"] == "What is 2 + 2?"
+        assert item["answer_text"] == "B. Four"
+        assert item["correct"] is True
+        assert item["options"][0]["letter"] == "A"
+        assert item["options"][1]["selected"] is True
+        # Raw payload withheld by default, but attested.
+        assert "raw_answer" not in tk
+        assert tk["answer_digest"].startswith("sha256:")
+
+    async def test_include_raw_returns_original_submission(self, client, regular_user, seed_rich):
+        with _bypass_plan():
+            resp = await client.get(
+                f"/api/v1/audit/user/{regular_user.id}?org_id=1&include_raw=true"
+            )
+        tk = resp.json()["assignments"][0]["tasks"][0]
+        assert tk["raw_answer"]["submissions"][1] == {
+            "questionUUID": "question_1", "optionUUID": "option_b", "answer": True,
+        }
+
+    async def test_task_submissions_scoped_by_assignment_task_id(
+        self, db, client, regular_user, seed_rich, org
+    ):
+        """A second org's tasks must not leak in through the parent-assignment lookup.
+
+        Regression guard: submissions used to be matched on (course_id, activity_id)
+        with no org filter at all, so any assignment sharing an activity id swapped in
+        another org's answers.
+        """
+        from src.db.organizations import Organization
+        from src.db.courses.courses import Course
+        from src.db.courses.assignments import (
+            Assignment, AssignmentTask, AssignmentTaskSubmission,
+            AssignmentTaskTypeEnum, GradingTypeEnum,
+        )
+
+        other_org = Organization(
+            name="Other", description="", email="o@o.com", slug="other",
+            logo_image="", thumbnail_image="", org_uuid="org_other",
+            creation_date=str(datetime.now()), update_date=str(datetime.now()),
+        )
+        db.add(other_org)
+        await db.commit()
+        other_course = Course(
+            name="Other course", description="", public=False, published=False,
+            open_to_contributors=False, course_uuid="course_other",
+            org_id=other_org.id,
+            creation_date=str(datetime.now()), update_date=str(datetime.now()),
+        )
+        db.add(other_course)
+        await db.commit()
+        other_assignment = Assignment(
+            title="Other org final", description="", due_date="2026-01-01",
+            grading_type=GradingTypeEnum.NUMERIC, max_grade_value=100,
+            assignment_uuid="assignment_other", org_id=other_org.id,
+            course_id=other_course.id, chapter_id=1, activity_id=1,
+            creation_date=str(datetime.now()), update_date=str(datetime.now()),
+        )
+        db.add(other_assignment)
+        await db.commit()
+        other_task = AssignmentTask(
+            title="Other org task", description="", hint="",
+            assignment_type=AssignmentTaskTypeEnum.QUIZ, max_grade_value=100,
+            contents={"questions": [{
+                "questionUUID": "q_other", "questionText": "Other org secret question?",
+                "options": [{"optionUUID": "o_other", "text": "Leaked",
+                             "assigned_right_answer": True}],
+            }]},
+            assignment_task_uuid="assignmenttask_other",
+            assignment_id=other_assignment.id, org_id=other_org.id,
+            course_id=other_course.id, chapter_id=1, activity_id=1,
+            creation_date=str(datetime.now()), update_date=str(datetime.now()),
+        )
+        db.add(other_task)
+        await db.commit()
+        db.add(AssignmentTaskSubmission(
+            assignment_task_submission_uuid="ats_other",
+            task_submission={"submissions": [
+                {"questionUUID": "q_other", "optionUUID": "o_other", "answer": True},
+            ]},
+            grade=100, task_submission_grade_feedback="", manually_graded=False,
+            assignment_type=AssignmentTaskTypeEnum.QUIZ, user_id=regular_user.id,
+            activity_id=1, course_id=other_course.id, chapter_id=1,
+            assignment_task_id=other_task.id,
+            creation_date=str(datetime.now()), update_date=str(datetime.now()),
+        ))
+        await db.commit()
+
+        with _bypass_plan():
+            resp = await client.get(f"/api/v1/audit/user/{regular_user.id}?org_id={org.id}")
+        assert resp.status_code == 200
+        body = resp.text
+        for leaked in ("Other org final", "Other org task", "Other org secret question?", "Leaked"):
+            assert leaked not in body
+        assert len(resp.json()["assignments"][0]["tasks"]) == 1
+
+    async def test_unsubmitted_task_appears_as_gap(self, db, client, regular_user, seed_rich, course, chapter, activity, org):
+        """A task the student never attempted is an audit fact, not an omission."""
+        from src.db.courses.assignments import AssignmentTask, AssignmentTaskTypeEnum
+
+        db.add(AssignmentTask(
+            title="Essay", description="", hint="",
+            assignment_type=AssignmentTaskTypeEnum.FILE_SUBMISSION, max_grade_value=50,
+            contents={}, assignment_task_uuid="assignmenttask_2", assignment_id=1,
+            org_id=org.id, course_id=course.id, chapter_id=chapter.id,
+            activity_id=activity.id,
+            creation_date=str(datetime.now()), update_date=str(datetime.now()),
+        ))
+        await db.commit()
+
+        with _bypass_plan():
+            resp = await client.get(f"/api/v1/audit/user/{regular_user.id}?org_id=1")
+        a = resp.json()["assignments"][0]
+        assert a["tasks_total"] == 2 and a["tasks_submitted"] == 1
+        assert a["max_grade_value"] == 150
+        gap = a["tasks"][1]
+        assert gap["submitted"] is False
+        assert gap["answer"] is None
+        assert gap["type_label"] == "File upload"
+
+    async def test_code_submission_resolves_activity_name(self, client, regular_user, seed_rich, activity):
+        with _bypass_plan():
+            resp = await client.get(f"/api/v1/audit/user/{regular_user.id}?org_id=1")
+        cs = resp.json()["code_submissions"][0]
+        assert cs["activity_name"] == activity.name
+        assert cs["language"] == "Python 3"
+        assert cs["tests_summary"] == "3/3"
+
+    async def test_comment_carries_parent_discussion_title(self, client, regular_user, seed_rich):
+        with _bypass_plan():
+            resp = await client.get(f"/api/v1/audit/user/{regular_user.id}?org_id=1")
+        comment = resp.json()["community"]["comments"][0]
+        assert comment["discussion_title"] == "Q?"
+        assert comment["community_name"] == "C"
+
+    async def test_certificate_exposes_credential_id(self, client, regular_user, seed_activity):
+        with _bypass_plan():
+            resp = await client.get(f"/api/v1/audit/user/{regular_user.id}?org_id=1")
+        assert resp.json()["certificates"][0]["credential_id"] == "usercert_test"
+
+    async def test_connection_event_is_humanized(self, db, client, regular_user):
+        db.add(UserAuditEvent(
+            event_type=UserAuditEventType.LOGIN,
+            user_id=regular_user.id, org_id=None, ip="10.0.0.1",
+            user_agent=(
+                "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 "
+                "(KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+            ),
+            audit_metadata={"method": "password"},
+            created_at=datetime.now(timezone.utc),
+        ))
+        await db.commit()
+
+        with _bypass_plan():
+            resp = await client.get(f"/api/v1/audit/user/{regular_user.id}?org_id=1")
+        c = resp.json()["connections"][0]
+        assert c["event_label"] == "Signed in"
+        assert c["device"] == "Chrome on macOS"
+        assert c["method"] == "password"
+
+    async def test_malformed_task_contents_does_not_break_dossier(self, db, client, regular_user, seed_rich):
+        """Years-old schemaless JSON must degrade to raw fields, never 500."""
+        from src.db.courses.assignments import AssignmentTask
+
+        task = (await db.execute(select(AssignmentTask).where(AssignmentTask.id == 1))).scalars().first()
+        task.contents = {"questions": "not-a-list"}
+        db.add(task)
+        await db.commit()
+
+        with _bypass_plan():
+            resp = await client.get(f"/api/v1/audit/user/{regular_user.id}?org_id=1")
+        assert resp.status_code == 200
+        answer = resp.json()["assignments"][0]["tasks"][0]["answer"]
+        # The snapshot in the submission is empty here, so there is nothing to render
+        # from — but the payload still describes itself instead of erroring.
+        assert answer["kind"] in ("quiz", "raw")
 
 
 class TestBehaviorEnrichment:
@@ -376,11 +598,237 @@ class TestExportCsvRows:
         for section in ("assignment", "code", "discussion", "comment"):
             assert section in text
 
+    async def test_csv_header_matches_columns(self, client, regular_user, seed_rich):
+        from src.routers.audit import _CSV_COLUMNS
+
+        with _bypass_plan():
+            resp = await client.get(
+                f"/api/v1/audit/export?org_id=1&user_ids={regular_user.id}&format=csv"
+            )
+        assert resp.text.splitlines()[0] == ",".join(_CSV_COLUMNS)
+
+    async def test_csv_carries_questions_and_answers(self, client, regular_user, seed_rich, activity):
+        with _bypass_plan():
+            resp = await client.get(
+                f"/api/v1/audit/export?org_id=1&user_ids={regular_user.id}&format=csv"
+            )
+        text = resp.text
+        assert "assignment_task" in text and "assignment_answer" in text
+        assert "What is 2 + 2?" in text
+        assert "B. Four" in text
+        # The code row names the activity instead of printing its uuid.
+        assert activity.name in text
+        assert activity.activity_uuid not in text
+
+    async def test_csv_escapes_formula_injection_in_answers(self, db, client, regular_user, seed_rich):
+        """Question and answer columns carry free-form text — the likeliest vector."""
+        from src.db.courses.assignments import AssignmentTask
+
+        task = (await db.execute(
+            select(AssignmentTask).where(AssignmentTask.id == 1)
+        )).scalars().first()
+        task.contents = {"questions": [{
+            "questionUUID": "question_1",
+            "questionText": "=cmd|'/c calc'!A1",
+            "options": [{"optionUUID": "option_b", "text": "Four",
+                         "assigned_right_answer": True}],
+        }]}
+        db.add(task)
+        await db.commit()
+
+        with _bypass_plan():
+            resp = await client.get(
+                f"/api/v1/audit/export?org_id=1&user_ids={regular_user.id}&format=csv"
+            )
+        assert "=cmd|" in resp.text          # the question text made it through
+        assert ",=cmd|" not in resp.text     # ...but never as a live formula
+        assert "'=cmd|" in resp.text
+
+    def test_behavior_sections_reach_the_csv(self):
+        """The Tinybird sections are part of the record too, resolved to names."""
+        from src.routers.audit import _dossier_to_csv_rows
+
+        rows = list(_dossier_to_csv_rows({
+            "user": {"id": 1, "username": "u", "email": "u@e.com"},
+            "behavior": {
+                "user_time_by_course": [
+                    {"course_name": "Algebra", "total_seconds": 90},
+                    {"course_uuid": "course_unresolved", "total_seconds": 5},
+                ],
+                "user_searches": [{"query": "pythagoras", "count": 3}],
+            },
+        }))
+        assert [r["section"] for r in rows] == [
+            "behavior_course", "behavior_course", "behavior_search",
+        ]
+        assert rows[0]["course"] == "Algebra"
+        assert rows[0]["detail"] == "90s"
+        # Falls back to the uuid only when the name could not be resolved.
+        assert rows[1]["course"] == "course_unresolved"
+        assert rows[2]["question"] == "pythagoras"
+        assert rows[2]["detail"] == 3
+
+    async def test_every_row_uses_declared_columns(self, seed_rich, db, org, regular_user):
+        """csv.DictWriter raises on an unknown key — catch a typo'd kwarg here."""
+        from src.routers.audit import _CSV_COLUMNS, _dossier_to_csv_rows
+        from src.services.audit.dossier import build_user_dossier
+
+        dossier = await build_user_dossier(db, regular_user.id, org.id)
+        rows = list(_dossier_to_csv_rows(dossier))
+        assert rows
+        for row in rows:
+            assert set(row.keys()) <= set(_CSV_COLUMNS)
+
 
 class TestDossierServiceUnits:
     async def test_dossier_unknown_user_returns_empty(self, db, org):
         from src.services.audit.dossier import build_user_dossier
         assert await build_user_dossier(db, 999999, org.id) == {}
+
+    def test_user_agent_parsing(self):
+        from src.services.audit.dossier import _parse_user_agent
+
+        assert _parse_user_agent(None) == {"browser": None, "os": None, "device": None}
+        # Edge and Opera both claim to be Chrome, and everything claims to be Safari,
+        # so the ladder order is the whole test.
+        assert _parse_user_agent("Mozilla/5.0 (Windows NT 10.0) Chrome/1 Edg/1")["device"] == "Edge on Windows"
+        assert _parse_user_agent("Mozilla/5.0 (Linux; Android 14) Chrome/1")["device"] == "Chrome on Android"
+        assert _parse_user_agent("Mozilla/5.0 (iPhone) Safari/1")["device"] == "Safari on iOS"
+        assert _parse_user_agent("curl/8.0")["device"] is None
+        assert _parse_user_agent("Firefox/1")["device"] == "Firefox"
+
+    async def test_orphan_submission_survives_a_deleted_task(
+        self, db, org, course, chapter, activity, regular_user
+    ):
+        """Deleting a task must not erase the answers already recorded against it."""
+        from src.db.courses.assignments import (
+            Assignment, AssignmentTask, AssignmentTaskSubmission, AssignmentUserSubmission,
+            AssignmentUserSubmissionStatus, AssignmentTaskTypeEnum, GradingTypeEnum,
+        )
+        from src.services.audit.dossier import _assignments
+
+        assignment = Assignment(
+            title="Final", description="d", due_date="2026-01-01",
+            grading_type=GradingTypeEnum.NUMERIC, max_grade_value=100,
+            assignment_uuid="assignment_orphan", org_id=org.id, course_id=course.id,
+            chapter_id=chapter.id, activity_id=activity.id,
+            creation_date=str(datetime.now()), update_date=str(datetime.now()),
+        )
+        db.add(assignment)
+        await db.commit()
+        # A live task keeps the assignment non-empty; the orphan points at an id that
+        # no AssignmentTask row has.
+        db.add(AssignmentTask(
+            title="Live task", description="", hint="",
+            assignment_type=AssignmentTaskTypeEnum.QUIZ, max_grade_value=10,
+            contents={}, assignment_task_uuid="assignmenttask_live",
+            assignment_id=assignment.id, org_id=org.id, course_id=course.id,
+            chapter_id=chapter.id, activity_id=activity.id,
+            creation_date=str(datetime.now()), update_date=str(datetime.now()),
+        ))
+        db.add(AssignmentUserSubmission(
+            assignmentusersubmission_uuid="aus_orphan",
+            submission_status=AssignmentUserSubmissionStatus.GRADED, grade=5,
+            overall_feedback="", attempt_number=1, user_id=regular_user.id,
+            assignment_id=assignment.id,
+            creation_date=str(datetime.now()), update_date=str(datetime.now()),
+        ))
+        db.add(AssignmentTaskSubmission(
+            assignment_task_submission_uuid="ats_orphan",
+            task_submission={"answer": "written before the task was deleted"},
+            grade=5, task_submission_grade_feedback="", manually_graded=False,
+            assignment_type=AssignmentTaskTypeEnum.SHORT_ANSWER, user_id=regular_user.id,
+            activity_id=activity.id, course_id=course.id, chapter_id=chapter.id,
+            assignment_task_id=987654,
+            creation_date=str(datetime.now()), update_date=str(datetime.now()),
+        ))
+        await db.commit()
+
+        rows = await _assignments(db, regular_user.id, org.id)
+        tasks = rows[0]["tasks"]
+        assert len(tasks) == 2
+        orphan = tasks[1]
+        assert orphan["title"] is None and orphan["submitted"] is True
+        assert orphan["type_label"] == "Short answer"
+        assert "written before the task was deleted" in str(orphan["answer"])
+
+    async def test_comment_on_another_orgs_discussion_is_dropped(
+        self, db, org, other_org, regular_user
+    ):
+        from src.db.communities.communities import Community
+        from src.db.communities.discussions import Discussion
+        from src.db.communities.discussion_comments import DiscussionComment
+        from src.services.audit.dossier import _community
+
+        community = Community(
+            name="C", description="d", org_id=other_org.id, community_uuid="comm_other",
+            creation_date=str(datetime.now()), update_date=str(datetime.now()),
+        )
+        db.add(community)
+        await db.commit()
+        foreign = Discussion(
+            title="Elsewhere", content=None, community_id=community.id,
+            org_id=other_org.id, author_id=regular_user.id, discussion_uuid="disc_other",
+            creation_date=str(datetime.now()), update_date=str(datetime.now()),
+        )
+        db.add(foreign)
+        await db.commit()
+        db.add(DiscussionComment(
+            content="hidden", discussion_id=foreign.id, author_id=regular_user.id,
+            comment_uuid="cmt_other",
+            creation_date=str(datetime.now()), update_date=str(datetime.now()),
+        ))
+        await db.commit()
+
+        out = await _community(db, regular_user.id, org.id)
+        assert out["comments"] == [] and out["discussions"] == []
+
+    async def test_discussion_without_content_has_no_excerpt(
+        self, db, org, regular_user
+    ):
+        from src.db.communities.communities import Community
+        from src.db.communities.discussions import Discussion
+        from src.services.audit.dossier import _community
+
+        community = Community(
+            name="C", description="d", org_id=org.id, community_uuid="comm_empty",
+            creation_date=str(datetime.now()), update_date=str(datetime.now()),
+        )
+        db.add(community)
+        await db.commit()
+        db.add(Discussion(
+            title="No body", content=None, community_id=community.id, org_id=org.id,
+            author_id=regular_user.id, discussion_uuid="disc_empty",
+            creation_date=str(datetime.now()), update_date=str(datetime.now()),
+        ))
+        await db.commit()
+
+        out = await _community(db, regular_user.id, org.id)
+        assert out["discussions"][0]["excerpt"] is None
+
+    async def test_behavior_enrichment_failure_degrades_to_raw_rows(self, db):
+        """Analytics is best-effort; it must not take the Postgres dossier with it."""
+        from src.services.audit import dossier as dossier_module
+
+        behavior = {"user_time_by_course": [{"course_uuid": "course_test"}]}
+        with patch.object(
+            dossier_module, "enrich_with_metadata", side_effect=RuntimeError("boom")
+        ):
+            out = await dossier_module._enrich_behavior(behavior, db)
+        assert out["user_time_by_course"] == [{"course_uuid": "course_test"}]
+
+    async def test_behavior_view_events_are_labelled(self, db):
+        from src.services.audit.dossier import _enrich_behavior
+
+        out = await _enrich_behavior({"user_views": [
+            {"event_name": "course_view"}, {"event_name": "something_else"}, "junk",
+        ]}, db)
+        assert out["user_views"][0]["label"] == "Course views"
+        assert out["user_views"][1]["label"] == "Something else"
+
+    async def test_empty_behavior_is_returned_untouched(self, db):
+        from src.services.audit.dossier import _enrich_behavior
+        assert await _enrich_behavior({}, db) == {}
 
     async def test_behavior_fetcher_exception_swallowed(self, db, org, regular_user):
         from src.services.audit.dossier import build_user_dossier

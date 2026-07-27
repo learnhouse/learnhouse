@@ -38,6 +38,7 @@ from src.services.auth.session import (
     decode_mfa_pending_provenance,
     mint_session_tokens,
 )
+from src.services.orgs.auth_policy import auth_policy_exception, evaluate_org_auth
 from src.services.orgs.mfa_policy import evaluate_mfa_compliance, get_org_mfa_policy
 from src.services.security.rate_limiting import check_rate_limit, get_client_ip
 from src.security.org_auth import is_org_admin
@@ -459,11 +460,16 @@ async def api_login_mfa(
 
 
 class OrgMFAPolicyUpdate(BaseModel):
-    require_2fa: bool
-    require_2fa_grace_days: int = 0
-    exempt_external_auth: bool = True
-    # Auth-method / session-sharing policy. Optional so an older client that only
-    # sends the 2FA fields leaves these untouched.
+    """Partial update — every field is optional and an omitted one is left as-is.
+
+    The dashboard splits this policy across two tabs (two-factor / sign-in
+    methods); each must be able to save its own fields without resetting the
+    other tab's to their defaults.
+    """
+
+    require_2fa: Optional[bool] = None
+    require_2fa_grace_days: Optional[int] = None
+    exempt_external_auth: Optional[bool] = None
     allowed_auth_methods: Optional[list[str]] = None
     allow_central_session_sharing: Optional[bool] = None
 
@@ -483,8 +489,63 @@ async def api_org_mfa_compliance(
     current_user=Depends(get_authenticated_user),
 ):
     user = await _require_human_user(current_user, db_session)
+
+    # The org's auth-method / session-sharing policy is enforced per request all
+    # over the API, but this endpoint is the one the dashboard polls to decide
+    # what to tell the user. Evaluating it here is what turns a scattering of
+    # 403s into the single "sign in to this org again" screen — without it the
+    # restriction is enforced but never explained, which reads as "the setting
+    # does nothing unless two-factor is also on".
+    block = await evaluate_org_auth(db_session, user.id, org_id)
+    if block is not None:
+        raise auth_policy_exception(block)
+
     state = await evaluate_mfa_compliance(db_session, user, org_id)
     return state.to_dict()
+
+
+@router.get(
+    "/mfa/org-policy/{org_id}/settings",
+    summary="Get the org's saved security policy",
+    description=(
+        "Admin/maintainer only. Returns the policy exactly as stored, read "
+        "straight from the database. The settings UI reads it from here rather "
+        "than from the cached organization payload, so a save is never followed "
+        "by the previous values reappearing."
+    ),
+    tags=["auth"],
+    responses={403: {"description": "Not an org admin"}},
+)
+async def api_get_org_security_policy(
+    org_id: int,
+    db_session: AsyncSession = Depends(get_db_session),
+    current_user=Depends(get_authenticated_user),
+):
+    user = await _require_human_user(current_user, db_session)
+
+    if not await is_org_admin(user.id, org_id, db_session):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail={"code": "NOT_ORG_ADMIN", "message": "Only org admins can view this setting."},
+        )
+
+    return await _org_security_policy_payload(db_session, org_id)
+
+
+async def _org_security_policy_payload(db_session: AsyncSession, org_id: int) -> dict:
+    """The saved policy, in the one shape both the GET and the PUT answer with."""
+    from src.services.orgs.auth_policy import get_org_auth_policy
+
+    policy = await get_org_mfa_policy(db_session, org_id)
+    auth_policy = await get_org_auth_policy(db_session, org_id)
+    return {
+        "require_2fa": policy.require_2fa,
+        "require_2fa_grace_days": policy.grace_days,
+        "require_2fa_enabled_at": policy.enabled_at,
+        "exempt_external_auth": policy.exempt_external_auth,
+        "allowed_auth_methods": auth_policy.allowed_auth_methods,
+        "allow_central_session_sharing": auth_policy.allow_central_session_sharing,
+    }
 
 
 @router.put(
@@ -541,16 +602,19 @@ async def api_set_org_mfa_policy(
 
     was_enabled = bool(security.get("require_2fa", False))
 
-    security["require_2fa"] = form.require_2fa
-    security["require_2fa_grace_days"] = max(0, form.require_2fa_grace_days)
-    security["exempt_external_auth"] = form.exempt_external_auth
-    # Only re-anchor when switching off→on. Re-saving an already-active policy
-    # (e.g. to tweak the grace length) must not silently restart everyone's
-    # countdown.
-    if form.require_2fa and not was_enabled:
-        security["require_2fa_enabled_at"] = datetime.now().isoformat()
-    elif not form.require_2fa:
-        security["require_2fa_enabled_at"] = None
+    if form.require_2fa_grace_days is not None:
+        security["require_2fa_grace_days"] = max(0, form.require_2fa_grace_days)
+    if form.exempt_external_auth is not None:
+        security["exempt_external_auth"] = form.exempt_external_auth
+    if form.require_2fa is not None:
+        security["require_2fa"] = form.require_2fa
+        # Only re-anchor when switching off→on. Re-saving an already-active policy
+        # (e.g. to tweak the grace length) must not silently restart everyone's
+        # countdown.
+        if form.require_2fa and not was_enabled:
+            security["require_2fa_enabled_at"] = datetime.now().isoformat()
+        elif not form.require_2fa:
+            security["require_2fa_enabled_at"] = None
 
     # Auth-method / session-sharing policy, with self-lockout guards so an admin
     # cannot save a policy that would refuse their own current session.
@@ -563,18 +627,27 @@ async def api_set_org_mfa_policy(
     if form.allowed_auth_methods is not None:
         methods = [m for m in form.allowed_auth_methods if m in POLICY_AUTH_METHODS]
         restrictive = bool(methods) and not set(POLICY_AUTH_METHODS).issubset(methods)
+        # A session with no recorded method is refused by the gate exactly like a
+        # disallowed one, so it has to trip this guard too. Sessions minted before
+        # the policy shipped carry no `amr`, and a refresh copies the missing
+        # claim forward — so without this the admin saves, is locked out on the
+        # next request, and no re-login prompt can be reached from inside.
+        unknown_method = provenance is None or provenance.amr is None
         if (
             restrictive
             and not is_super
-            and provenance is not None
-            and provenance.amr in POLICY_AUTH_METHODS
-            and provenance.amr not in methods
+            and (unknown_method or provenance.amr not in methods)
+            and (unknown_method or provenance.amr in POLICY_AUTH_METHODS)
         ):
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail={
                     "code": "AUTH_METHOD_SELF_LOCKOUT",
-                    "message": "That would lock you out — the method you're signed in with isn't in the allowed list. Keep it, or sign in with an allowed method first.",
+                    "message": (
+                        "That would lock you out — this session isn't signed in with one of "
+                        "the methods you're allowing. Sign in to this organization again with "
+                        "an allowed method, then save."
+                    ),
                 },
             )
         security["allowed_auth_methods"] = methods
@@ -604,17 +677,7 @@ async def api_set_org_mfa_policy(
     db_session.add(row)
     await db_session.commit()
 
-    policy = await get_org_mfa_policy(db_session, org_id)
-    from src.services.orgs.auth_policy import get_org_auth_policy
-    auth_policy = await get_org_auth_policy(db_session, org_id)
-    return {
-        "require_2fa": policy.require_2fa,
-        "require_2fa_grace_days": policy.grace_days,
-        "require_2fa_enabled_at": policy.enabled_at,
-        "exempt_external_auth": policy.exempt_external_auth,
-        "allowed_auth_methods": auth_policy.allowed_auth_methods,
-        "allow_central_session_sharing": auth_policy.allow_central_session_sharing,
-    }
+    return await _org_security_policy_payload(db_session, org_id)
 
 
 @router.get(

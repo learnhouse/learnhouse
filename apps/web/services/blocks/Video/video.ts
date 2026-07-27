@@ -2,6 +2,7 @@ import { getAPIUrl } from '@services/config/config'
 import {
   RequestBodyFormWithAuthHeader,
   RequestBodyWithAuthHeader,
+  uploadFormWithProgress,
 } from '@services/utils/ts/requests'
 
 export async function uploadNewVideoFile(
@@ -48,42 +49,12 @@ export function uploadNewVideoFileWithProgress(
   const formData = new FormData()
   formData.append('file_object', file)
   formData.append('activity_uuid', activity_uuid)
-  return new Promise((resolve, reject) => {
-    const xhr = new XMLHttpRequest()
-    xhr.open('POST', `${getAPIUrl()}blocks/video`)
-    xhr.withCredentials = true
-    xhr.setRequestHeader('Authorization', `Bearer ${access_token}`)
-    xhr.upload.onprogress = (e) => {
-      if (e.lengthComputable) onProgress((e.loaded / e.total) * 100)
-    }
-    xhr.onload = () => {
-      if (xhr.status >= 200 && xhr.status < 300) {
-        try {
-          resolve(JSON.parse(xhr.responseText))
-        } catch {
-          resolve({})
-        }
-      } else if (xhr.status === 413) {
-        reject(new Error('The file is too large to upload.'))
-      } else {
-        let detail: string | undefined
-        try {
-          const body = JSON.parse(xhr.responseText)
-          detail = typeof body?.detail === 'string'
-            ? body.detail
-            : Array.isArray(body?.detail)
-              ? body.detail.map((e: any) => e.msg).join(', ')
-              : undefined
-        } catch {
-          /* non-JSON error body */
-        }
-        reject(new Error(detail || `Upload failed (HTTP ${xhr.status})`))
-      }
-    }
-    xhr.onerror = () => reject(new Error('Network error during upload'))
-    xhr.onabort = () => reject(new Error('Upload cancelled'))
-    xhr.send(formData)
-  })
+  return uploadFormWithProgress(
+    `${getAPIUrl()}blocks/video`,
+    formData,
+    access_token,
+    onProgress
+  )
 }
 
 /**

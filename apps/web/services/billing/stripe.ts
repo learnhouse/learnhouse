@@ -25,6 +25,7 @@ import {
 } from "./subscriptionUtils";
 import { updateOrganizationConfigInternally } from "./orgPlan";
 import { sendPlanSwitchMail, sendSubscriptionCanceledMail } from "./emails";
+import { invoiceSubscriptionId } from "./activeUserBillingUtils";
 
 // Resolve the Stripe secret key. Prefer the billing-specific STRIPE_SECRET_KEY,
 // but fall back to LEARNHOUSE_STRIPE_SECRET_KEY (the platform Stripe account's
@@ -447,6 +448,148 @@ export async function getSubscriptionDetails(email: string, orgId: string) {
     currency: subscription.items.data[0]?.price?.currency,
     interval: subscription.items.data[0]?.price?.recurring?.interval,
   };
+}
+
+// ── Invoices ─────────────────────────────────────────────────────────────────
+
+/** A single line on an upcoming or past invoice, flattened for the billing UI. */
+export interface InvoiceLine {
+  description: string;
+  amount: number;
+  currency: string;
+  /** `overage` marks the active-user line written by billOverageForInvoice. */
+  kind: "overage" | "plan" | "other";
+}
+
+export interface UpcomingInvoice {
+  amountDue: number;
+  currency: string;
+  /** When Stripe expects to charge this invoice. */
+  nextPaymentAttempt?: number;
+  periodEnd?: number;
+  lines: InvoiceLine[];
+}
+
+export interface PastInvoice {
+  id: string;
+  number?: string;
+  created: number;
+  amountPaid: number;
+  amountDue: number;
+  currency: string;
+  status: string;
+  hostedInvoiceUrl?: string;
+  invoicePdf?: string;
+}
+
+/** Classify a line so the UI can label the active-user overage explicitly
+ *  rather than showing users an unexplained charge. billOverage() stamps
+ *  `metadata.type = "au_overage"` on the invoice item it creates. */
+function classifyInvoiceLine(line: any): InvoiceLine["kind"] {
+  if (line?.metadata?.type === "au_overage") return "overage";
+  if (line?.price?.recurring || line?.pricing?.price_details?.price) return "plan";
+  return "other";
+}
+
+function toInvoiceLines(invoice: any): InvoiceLine[] {
+  const data: any[] = invoice?.lines?.data ?? [];
+  return data.map((line) => ({
+    description: line?.description ?? "",
+    amount: line?.amount ?? 0,
+    currency: line?.currency ?? invoice?.currency ?? "usd",
+    kind: classifyInvoiceLine(line),
+  }));
+}
+
+/**
+ * Preview the org's next PLAN invoice.
+ *
+ * Only the plan subscription is previewed. Pack add-ons are separate Stripe
+ * subscriptions and are invoiced on their own schedule, so folding them into
+ * one "next invoice" total would show a figure the user is never charged.
+ *
+ * Returns null when the org has no plan subscription, and also when Stripe has
+ * nothing to preview (a subscription that is cancelled or fully paid off has no
+ * upcoming invoice — Stripe 404s rather than returning an empty one).
+ */
+export async function getUpcomingInvoice(
+  email: string,
+  orgId: string,
+): Promise<UpcomingInvoice | null> {
+  const subscription = await findOrgPlanSubscription(email, orgId);
+  if (!subscription) return null;
+
+  let invoice: any;
+  try {
+    // Stripe Node v18 removed invoices.retrieveUpcoming in favour of
+    // invoices.createPreview. Despite the name this creates nothing — it is a
+    // read-only preview call.
+    invoice = await stripe.invoices.createPreview({ subscription: subscription.id });
+  } catch (err: any) {
+    // No upcoming invoice for this subscription is an expected state, not a
+    // failure — surface it as "nothing to show" rather than a 500.
+    if (err?.statusCode === 404) return null;
+    throw err;
+  }
+  if (!invoice) return null;
+
+  return {
+    amountDue: invoice.amount_due ?? 0,
+    currency: invoice.currency ?? "usd",
+    nextPaymentAttempt: invoice.next_payment_attempt ?? undefined,
+    periodEnd: invoice.period_end ?? undefined,
+    lines: toInvoiceLines(invoice),
+  };
+}
+
+/**
+ * Past invoices for this org, newest first.
+ *
+ * Invoices carry no org metadata, so they are matched by the subscriptions they
+ * belong to — the org's plan subscription plus its packs. Invoices belonging to
+ * another org (or another LearnHouse product) on the same shared customer are
+ * therefore excluded.
+ */
+export async function listInvoices(
+  email: string,
+  orgId: string,
+  limit = 6,
+): Promise<PastInvoice[]> {
+  const customerIds = await listCustomerIdsByEmail(email);
+  if (customerIds.length === 0) return [];
+
+  const planSub = await findOrgPlanSubscription(email, orgId);
+  const packSubs = await getActivePackSubscriptions(email, orgId);
+  const orgSubIds = new Set<string>(
+    [planSub?.id, ...packSubs.map((p: any) => p.id)].filter(Boolean) as string[],
+  );
+  if (orgSubIds.size === 0) return [];
+
+  const invoices: any[] = [];
+  for (const customerId of customerIds) {
+    const page = await stripe.invoices.list({ customer: customerId, limit: 100 });
+    invoices.push(
+      ...page.data.filter((inv: any) => {
+        const subId = invoiceSubscriptionId(inv);
+        return subId ? orgSubIds.has(subId) : false;
+      }),
+    );
+  }
+
+  return invoices
+    .sort((a, b) => (b.created ?? 0) - (a.created ?? 0))
+    .slice(0, limit)
+    .map((inv) => ({
+      id: inv.id,
+      number: inv.number ?? undefined,
+      created: inv.created,
+      amountPaid: inv.amount_paid ?? 0,
+      amountDue: inv.amount_due ?? 0,
+      currency: inv.currency ?? "usd",
+      status: inv.status ?? "unknown",
+      hostedInvoiceUrl: inv.hosted_invoice_url ?? undefined,
+      invoicePdf: inv.invoice_pdf ?? undefined,
+    }));
 }
 
 // ── Pack Add-on Functions ──────────────────────────────────────────────────────

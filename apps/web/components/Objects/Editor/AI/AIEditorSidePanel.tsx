@@ -113,6 +113,7 @@ function AIEditorSidePanel(props: AIEditorSidePanelProps) {
     blockImage: 'Image',
     blockVideo: 'Video',
     blockPDF: 'PDF',
+    blockLibrary: 'Library Item',
     blockEmbed: 'Embed',
     blockMathEquation: 'Math Equation',
     blockWebPreview: 'Web Preview',
@@ -124,6 +125,7 @@ function AIEditorSidePanel(props: AIEditorSidePanelProps) {
     badge: 'Badge',
     button: 'Button',
     flipcard: 'Flashcard',
+    flipcardGrid: 'Flashcard Grid',
     codeBlock: 'Code Block',
     blockquote: 'Quote',
     table: 'Table',
@@ -134,10 +136,10 @@ function AIEditorSidePanel(props: AIEditorSidePanelProps) {
 
   // Block types that are "interesting" to highlight (not just paragraphs)
   const INTERESTING_BLOCK_TYPES = [
-    'blockQuiz', 'blockImage', 'blockVideo', 'blockPDF', 'blockEmbed',
+    'blockQuiz', 'blockImage', 'blockVideo', 'blockPDF', 'blockLibrary', 'blockEmbed',
     'blockMathEquation', 'blockWebPreview', 'blockUser', 'blockMagic',
     'scenarios', 'calloutInfo', 'calloutWarning', 'badge', 'button',
-    'flipcard', 'codeBlock', 'blockquote', 'table', 'bulletList',
+    'flipcard', 'flipcardGrid', 'codeBlock', 'blockquote', 'table', 'bulletList',
     'orderedList', 'heading',
   ]
 
@@ -335,6 +337,7 @@ function AIEditorSidePanel(props: AIEditorSidePanelProps) {
     'blockImage',
     'blockVideo',
     'blockPDF',
+    'blockLibrary',
     'blockEmbed',
     'blockMathEquation',
     'blockWebPreview',

@@ -1472,6 +1472,77 @@ async def update_org_menu_config(
     return {"detail": "Menu configuration updated"}
 
 
+async def update_org_signup_fields_config(
+    request: Request,
+    signup_fields_config: dict,
+    org_id: int,
+    current_user: PublicUser | AnonymousUser,
+    db_session: AsyncSession,
+):
+    """Replace the org's custom signup field definitions.
+
+    Note these definitions are served publicly (the signup form is anonymous),
+    so labels/options are public strings — the admin UI says as much.
+    """
+    statement = select(Organization).where(Organization.id == org_id)
+    org = (await db_session.execute(statement)).scalars().first()
+
+    if not org:
+        raise HTTPException(status_code=404, detail="Organization not found")
+
+    await rbac_check(request, org.org_uuid, current_user, "update", db_session)
+
+    statement = select(OrganizationConfig).where(OrganizationConfig.org_id == org.id)
+    org_config = (await db_session.execute(statement)).scalars().first()
+
+    if org_config is None:
+        raise HTTPException(status_code=404, detail="Organization config not found")
+
+    # Validate/normalise via the pydantic model (drops unknown keys, fills defaults)
+    from src.db.organization_config import SignupFieldsConfig
+
+    fields_data = json.loads(
+        SignupFieldsConfig(**(signup_fields_config or {})).model_dump_json()
+    )
+
+    # A field's key is the extra_metadata JSON key already used by everyone who
+    # signed up. Duplicates would make one silently shadow the other, so reject
+    # them here rather than letting the last one win.
+    keys = [f["key"] for f in fields_data["fields"]]
+    if len(keys) != len(set(keys)):
+        raise HTTPException(
+            status_code=400, detail="Signup field keys must be unique"
+        )
+    if any(not k.strip() for k in keys):
+        raise HTTPException(
+            status_code=400, detail="Signup field keys may not be empty"
+        )
+
+    updated_config = _deep_copy_config(org_config)
+    if _is_v2_config(updated_config):
+        updated_config.setdefault("customization", {})
+        updated_config["customization"]["signup_fields"] = fields_data
+    else:
+        updated_config.setdefault("general", {"enabled": True})
+        updated_config["general"]["signup_fields"] = fields_data
+
+    org_config.config = updated_config
+    org_config.update_date = str(datetime.now())
+
+    db_session.add(org_config)
+    await db_session.commit()
+    await db_session.refresh(org_config)
+
+    # Explicit Redis invalidation, same reasoning as the signup-mechanism
+    # update: the public /signup page renders these fields, so a stale cached
+    # config would keep showing the old form (and the server would then reject
+    # answers to a field the visitor was still being asked for).
+    from src.services.orgs.cache import invalidate_org_cache
+    invalidate_org_cache(org.slug)
+
+    return {"detail": "Signup fields configuration updated"}
+
+
 async def update_org_auth_branding_config(
     request: Request,
     auth_branding: AuthBrandingConfig,

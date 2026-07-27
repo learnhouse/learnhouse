@@ -23,6 +23,7 @@ import React, { useState, useCallback, useMemo } from 'react'
 import toast from 'react-hot-toast'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { queryKeys } from '@/lib/query/keys'
+import { readSignupFields } from '@services/settings/org'
 import { useTranslation } from 'react-i18next'
 import {
   Select,
@@ -33,6 +34,13 @@ import {
 } from '@components/ui/select'
 
 const ITEMS_PER_PAGE = 10
+
+/** Render a custom signup field answer for the members table. */
+function formatCustomFieldValue(value: any): string {
+  if (value === undefined || value === null) return ''
+  if (typeof value === 'boolean') return value ? 'Yes' : 'No'
+  return String(value)
+}
 
 function formatShortDate(dateStr: string | null | undefined): string {
   if (!dateStr) return '—'
@@ -48,6 +56,8 @@ function formatShortDate(dateStr: string | null | undefined): string {
 function OrgUsers() {
   const { t } = useTranslation()
   const org = useOrg() as any
+  // The org's custom signup fields become extra members-table columns.
+  const customFields = useMemo(() => readSignupFields(org), [org])
   const session = useLHSession() as any
   const access_token = session?.data?.tokens?.access_token;
   const queryClient = useQueryClient()
@@ -533,6 +543,15 @@ function OrgUsers() {
                       <th className="text-left text-xs font-semibold text-gray-500 uppercase tracking-wider px-6 py-3">
                         {t('dashboard.users.active_users.table.role') || 'Role'}
                       </th>
+                      {/* One column per custom signup field the org collects. */}
+                      {customFields.map((field) => (
+                        <th
+                          key={field.key}
+                          className="text-left text-xs font-semibold text-gray-500 uppercase tracking-wider px-6 py-3 whitespace-nowrap"
+                        >
+                          {field.label || field.key}
+                        </th>
+                      ))}
                       <th className="text-right text-xs font-semibold text-gray-500 uppercase tracking-wider px-6 py-3">
                         {t('dashboard.users.active_users.table.actions') || 'Actions'}
                       </th>
@@ -705,6 +724,19 @@ function OrgUsers() {
                             </SelectContent>
                           </Select>
                         </td>
+
+                        {/* Custom signup field answers */}
+                        {customFields.map((field) => (
+                          <td
+                            key={field.key}
+                            className="px-6 py-4 text-sm text-gray-600 max-w-[220px] truncate"
+                            title={formatCustomFieldValue(user.user.extra_metadata?.[field.key])}
+                          >
+                            {formatCustomFieldValue(user.user.extra_metadata?.[field.key]) || (
+                              <span className="text-gray-300">—</span>
+                            )}
+                          </td>
+                        ))}
 
                         {/* Actions */}
                         <td className="px-6 py-4 text-right">

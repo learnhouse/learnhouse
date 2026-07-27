@@ -2,7 +2,7 @@
 import React, { useEffect, use } from 'react';
 import { motion } from 'motion/react'
 import { getUriWithOrg } from '@services/config/config'
-import { ScanEye, SquareUserRound, UserPlus, Users, Shield } from 'lucide-react'
+import { KeyRound, ScanEye, ShieldCheck, SquareUserRound, UserPlus, Users, Shield } from 'lucide-react'
 import { Breadcrumbs } from '@components/Objects/Breadcrumbs/Breadcrumbs'
 import OrgUsers from '@components/Dashboard/Pages/Users/OrgUsers/OrgUsers'
 import OrgAccess from '@components/Dashboard/Pages/Users/OrgAccess/OrgAccess'
@@ -10,6 +10,8 @@ import OrgUsersAdd from '@components/Dashboard/Pages/Users/OrgUsersAdd/OrgUsersA
 import OrgUserGroups from '@components/Dashboard/Pages/Users/OrgUserGroups/OrgUserGroups'
 import OrgRoles from '@components/Dashboard/Pages/Users/OrgRoles/OrgRoles'
 import OrgAuditLogs from '@components/Dashboard/Pages/Org/OrgAuditLogs/OrgAuditLogs'
+import OrgTwoFactorPolicy from '@components/Dashboard/Pages/Users/Security/OrgTwoFactorPolicy'
+import OrgSignInMethods from '@components/Dashboard/Pages/Users/Security/OrgSignInMethods'
 import { ShieldAlert } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { DashTabBar, DashTabItem } from '@components/Dashboard/Shared/DashTabBar/DashTabBar'
@@ -49,6 +51,18 @@ function UsersSettingsPage(props: { params: Promise<SettingsParams> }) {
     if (params.subpage == 'audit-logs') {
       setH1Label(t('dashboard.users.settings.pages.audit_logs.title'))
       setH2Label(t('dashboard.users.settings.pages.audit_logs.subtitle'))
+    }
+    if (params.subpage == 'two-factor') {
+      setH1Label(t('dashboard.users.settings.pages.two_factor.title', { defaultValue: 'Two-factor' }))
+      setH2Label(t('dashboard.users.settings.pages.two_factor.subtitle', {
+        defaultValue: 'Require two-factor authentication for members of this organization',
+      }))
+    }
+    if (params.subpage == 'sign-in') {
+      setH1Label(t('dashboard.users.settings.pages.sign_in.title', { defaultValue: 'Sign-in' }))
+      setH2Label(t('dashboard.users.settings.pages.sign_in.subtitle', {
+        defaultValue: 'Choose how members are allowed to sign in to this organization',
+      }))
     }
   }
 
@@ -95,6 +109,20 @@ function UsersSettingsPage(props: { params: Promise<SettingsParams> }) {
       active: params.subpage === 'add',
     },
     {
+      key: 'sign-in',
+      label: t('dashboard.users.settings.tabs.sign_in', { defaultValue: 'Sign-in' }),
+      icon: <KeyRound size={16} />,
+      href: getUriWithOrg(params.orgslug, '') + `/dash/users/settings/sign-in`,
+      active: params.subpage === 'sign-in',
+    },
+    {
+      key: 'two-factor',
+      label: t('dashboard.users.settings.tabs.two_factor', { defaultValue: 'Two-factor' }),
+      icon: <ShieldCheck size={16} />,
+      href: getUriWithOrg(params.orgslug, '') + `/dash/users/settings/two-factor`,
+      active: params.subpage === 'two-factor',
+    },
+    {
       key: 'audit-logs',
       label: t('dashboard.users.settings.tabs.audit_logs'),
       icon: <ShieldAlert size={16} />,
@@ -137,6 +165,8 @@ function UsersSettingsPage(props: { params: Promise<SettingsParams> }) {
         {params.subpage == 'usergroups' ? <><div className="h-6"></div><OrgUserGroups /></> : ''}
         {params.subpage == 'roles' ? <><div className="h-6"></div><OrgRoles /></> : ''}
         {params.subpage == 'audit-logs' ? <><div className="h-6"></div><OrgAuditLogs /></> : ''}
+        {params.subpage == 'sign-in' ? <><div className="h-6"></div><OrgSignInMethods /></> : ''}
+        {params.subpage == 'two-factor' ? <><div className="h-6"></div><OrgTwoFactorPolicy /></> : ''}
       </motion.div>
     </div>
   )

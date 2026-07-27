@@ -99,6 +99,21 @@ def _resource_registry():
     }
 
 
+def _public_resource_dump(resource) -> dict:
+    """Serialize a resolved resource for the client.
+
+    Media rows must go through MediaRead: dumping the table model would ship
+    `file_id` and `storage_key`, and the whole point of the randomized storage
+    key is that the client can never derive a storage path (bytes are only
+    reachable via GET /media/{uuid}/file).
+    """
+    from src.db.media.media import Media, MediaRead
+
+    if isinstance(resource, Media):
+        return MediaRead.model_validate(resource, from_attributes=True).model_dump()
+    return resource.model_dump()
+
+
 async def _resolve_items(
     db_session: AsyncSession,
     content_rows: list[FolderContent],
@@ -132,7 +147,7 @@ async def _resolve_items(
                     resource_uuid=r_uuid,
                     resource_type=resource_type,
                     position=position_map.get(r_uuid, 0),
-                    resource=resource.model_dump(),
+                    resource=_public_resource_dump(resource),
                 )
             )
 
@@ -844,7 +859,7 @@ async def search_library(
                 "resource_uuid": r.resource_uuid,
                 "resource_type": rtype,
                 "position": r.position,
-                "resource": res.model_dump(),
+                "resource": _public_resource_dump(res),
                 "path": await folder_path(r.folder_id),
             })
 

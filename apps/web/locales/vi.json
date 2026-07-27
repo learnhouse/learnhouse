@@ -1004,7 +1004,10 @@
     "autosave_unsaved": "Thay đổi chưa lưu",
     "autosaved": "Đã lưu",
     "autosaving": "Đang lưu…",
-    "save_answers": "Lưu câu trả lời"
+    "save_answers": "Lưu câu trả lời",
+    "markdown": "Markdown",
+    "custom": "Tùy chỉnh",
+    "scorm": "SCORM"
   },
   "assignments": {
     "submit_assignment": "Nộp bài tập",
@@ -2136,7 +2139,8 @@
             "scorm": "Scorm",
             "markdown": "Markdown",
             "embed": "Nhúng",
-            "resource": "Tài nguyên"
+            "resource": "Tài nguyên",
+            "custom": "Tùy chỉnh"
           },
           "toasts": {
             "deleting": "Đang xóa hoạt động...",

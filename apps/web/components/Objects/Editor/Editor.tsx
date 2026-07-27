@@ -32,6 +32,7 @@ import AudioBlock from './Extensions/Audio/AudioBlock'
 import { Eye, Monitor, History, AlertTriangle, RefreshCw, Loader2 } from 'lucide-react'
 import MathEquationBlock from './Extensions/MathEquation/MathEquationBlock'
 import PDFBlock from './Extensions/PDF/PDFBlock'
+import LibraryBlock from './Extensions/Library/LibraryBlock'
 import QuizBlock from './Extensions/Quiz/QuizBlock'
 import { Table } from '@tiptap/extension-table'
 import TableCell from '@tiptap/extension-table-cell'
@@ -57,6 +58,7 @@ import EmbedObjects from './Extensions/EmbedObjects/EmbedObjects'
 import Badges from './Extensions/Badges/Badges'
 import Buttons from './Extensions/Buttons/Buttons'
 import Flipcard from './Extensions/Flipcard/Flipcard'
+import FlipcardGrid from './Extensions/Flipcard/FlipcardGrid'
 import Scenarios from './Extensions/Scenarios/Scenarios'
 import CodePlayground from './Extensions/CodePlayground/CodePlayground'
 import { useMediaQuery } from 'usehooks-ts'
@@ -71,6 +73,7 @@ import { PlanLevel } from '@services/plans/plans'
 import { useOrg } from '@components/Contexts/OrgContext'
 const VersionHistoryPanel = dynamic(() => import('./VersionHistory/VersionHistoryPanel'), { ssr: false, loading: () => null })
 const MergeConflictModal = dynamic(() => import('./VersionHistory/MergeConflictModal'), { ssr: false, loading: () => null })
+const ActivitySwitcher = dynamic(() => import('./ActivitySwitcher'), { ssr: false, loading: () => null })
 import { usePlan } from '@components/Hooks/usePlan'
 import {
   createBeforeUnloadHandler,
@@ -171,6 +174,7 @@ function Editor(props: EditorProps) {
       AudioBlock.configure({ editable: true, activity: stableActivity }),
       MathEquationBlock.configure({ editable: true, activity: stableActivity }),
       PDFBlock.configure({ editable: true, activity: stableActivity }),
+      LibraryBlock.configure({ editable: true, activity: stableActivity }),
       QuizBlock.configure({ editable: true, activity: stableActivity }),
       Youtube.configure({ controls: true, modestBranding: true }),
       CodeBlockLowlight.configure({ lowlight }),
@@ -185,6 +189,7 @@ function Editor(props: EditorProps) {
       getLinkExtension(),
       WebPreview.configure({ editable: true, activity: stableActivity }),
       Flipcard.configure({ editable: true, activity: stableActivity }),
+      FlipcardGrid.configure({ editable: true, activity: stableActivity }),
       Scenarios.configure({ editable: true, activity: stableActivity }),
       CodePlayground.configure({ editable: true, activity: stableActivity }),
       DragHandle,
@@ -343,6 +348,18 @@ function Editor(props: EditorProps) {
     }
   }, [editor, conflictInfo, props.setContent, markEditorContentSaved])
 
+  // Cmd+S / Ctrl+S → save. The save handler shows its own toast.
+  React.useEffect(() => {
+    const onKeyDown = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && !e.shiftKey && !e.altKey && e.key.toLowerCase() === 's') {
+        e.preventDefault()
+        handleSave(false)
+      }
+    }
+    window.addEventListener('keydown', onKeyDown)
+    return () => window.removeEventListener('keydown', onKeyDown)
+  }, [handleSave])
+
   // Handler to reload with remote changes
   const handleReloadRemote = React.useCallback(() => {
     // Reload the page to get the latest version
@@ -438,6 +455,12 @@ function Editor(props: EditorProps) {
 
       <CourseProvider courseuuid={props.course.course_uuid} initialCourseStructure={props.course}>
           <div className="activity-editor-top">
+            <ActivitySwitcher
+              course={props.course}
+              activity={props.activity}
+              isDirty={hasUnsavedChanges}
+              onSave={() => handleSave(false)}
+            />
             <div className="activity-editor-doc-section">
               <div className="activity-editor-info-wrapper">
                 <Link href="/">

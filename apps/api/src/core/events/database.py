@@ -200,14 +200,29 @@ def _register_cache_invalidation_hooks():
         if not session or not target.org_id:
             return
         _ensure_org_config_ids(session).add(target.org_id)
+
+        # The org-by-slug cache carries the whole config blob, so a config write
+        # has to bust it too. The identity map is only a shortcut: a request that
+        # updates OrganizationConfig without ever loading its Organization (the
+        # org-policy endpoints do exactly that) gets a miss here, and a miss is a
+        # None — not an exception. Falling back only on exception therefore left
+        # the slug cache holding the pre-write config until its TTL expired, and
+        # the dashboard, refetching immediately after a save, cached that stale
+        # copy for another five minutes and showed the old values back.
+        slug = None
         try:
             key = sa_inspect(Organization).identity_key_from_primary_key(
                 (target.org_id,)
             )
             org = session.identity_map.get(key)
             if org and org.slug:
-                _ensure_set(session).add(org.slug)
+                slug = org.slug
         except Exception:
+            logging.debug(
+                "Identity-map lookup failed for org_id=%s", target.org_id, exc_info=True
+            )
+
+        if slug is None:
             try:
                 from sqlalchemy import text as sa_text
                 row = connection.execute(
@@ -215,9 +230,12 @@ def _register_cache_invalidation_hooks():
                     {"oid": target.org_id},
                 ).first()
                 if row and row[0]:
-                    _ensure_set(session).add(row[0])
+                    slug = row[0]
             except Exception:
                 logging.debug("Could not look up org slug for config org_id=%s", target.org_id, exc_info=True)
+
+        if slug:
+            _ensure_set(session).add(slug)
 
     sa_event.listen(OrganizationConfig, "after_insert", _orgconfig_changed)
     sa_event.listen(OrganizationConfig, "after_update", _orgconfig_changed)
