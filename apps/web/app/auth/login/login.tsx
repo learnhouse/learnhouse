@@ -17,6 +17,7 @@ import { resendVerificationEmail } from '@services/auth/auth'
 import AuthLayout from '@components/Auth/AuthLayout'
 import TurnstileWidget, { useTurnstileRequired, verifyTurnstileToken, type TurnstileWidgetHandle } from '@components/Auth/TurnstileWidget'
 import { useLHAnalytics, AnalyticsEvent } from '@services/analytics'
+import { getAllowedAuthMethods } from '@services/auth/authMethods'
 
 interface LoginClientProps {
   org: any
@@ -35,6 +36,19 @@ const LoginClient = (props: LoginClientProps) => {
   const router = useRouter();
   const session = useLHSession() as any;
   const isAuthenticated = session?.status === 'authenticated'
+
+  // The org's allowed sign-in methods. Offering a method the org has turned off
+  // only leads to a 403 from the backend, so it isn't offered at all.
+  const allowedMethods = React.useMemo(
+    () => getAllowedAuthMethods(props.org),
+    [props.org]
+  )
+  const passwordAllowed = allowedMethods.has('password')
+  const magicLoginAllowed = allowedMethods.has('magic_login')
+  const googleAllowed = allowedMethods.has('google')
+  const ssoAllowed = allowedMethods.has('sso')
+  // SSO counts only once it is actually configured for the org (ssoEnabled).
+  const hasAlternativeMethods = googleAllowed || magicLoginAllowed || (ssoAllowed && ssoEnabled)
 
   // A signed-in user has nothing to do on /login → bounce to the hub. The proxy
   // does this best-effort, but pages must self-handle it too (mirrors signup.tsx).
@@ -210,6 +224,11 @@ const LoginClient = (props: LoginClientProps) => {
   // Check if SSO is enabled for this organization (requires enterprise plan)
   useEffect(() => {
     const checkSSO = async () => {
+      // The org can switch SSO off as a sign-in method regardless of its plan.
+      if (!ssoAllowed) {
+        setSsoEnabled(false)
+        return
+      }
       // SSO is only available for enterprise plan (requires EE or SaaS/enterprise)
       const orgConfig = props.org?.config?.config
       const plan = orgConfig?.plan ?? orgConfig?.cloud?.plan
@@ -230,7 +249,7 @@ const LoginClient = (props: LoginClientProps) => {
       }
     }
     checkSSO()
-  }, [props.org?.slug, props.org?.config?.config?.plan, props.org?.config?.config?.cloud?.plan]) // eslint-disable-line
+  }, [props.org?.slug, props.org?.config?.config?.plan, props.org?.config?.config?.cloud?.plan, ssoAllowed]) // eslint-disable-line
 
   const handleSSOLogin = async () => {
     track(AnalyticsEvent.LoginSsoClicked)
@@ -703,9 +722,16 @@ const LoginClient = (props: LoginClientProps) => {
               <>
             {/* Header */}
             <h1 className="text-[28px] md:text-[32px] font-black text-black tracking-tight leading-tight">{t('auth.welcome_back')}</h1>
-            <p className="mt-2 text-black/45 text-[15px] font-medium">{t('auth.enter_credentials')}</p>
+            <p className="mt-2 text-black/45 text-[15px] font-medium">
+              {passwordAllowed
+                ? t('auth.enter_credentials')
+                : t('auth.choose_sign_in_method', {
+                    defaultValue: 'Choose how you’d like to sign in.',
+                  })}
+            </p>
 
             <div className="mt-8">
+              {passwordAllowed && (
               <FormLayout onSubmit={formik.handleSubmit}>
                 <FormField name="email">
                   <div className="flex items-center space-x-2 mb-1.5">
@@ -778,19 +804,23 @@ const LoginClient = (props: LoginClientProps) => {
                   </button>
                 </Form.Submit>
               </FormLayout>
+              )}
 
-              {/* Divider */}
-              <div className="relative my-6">
-                <div className="absolute inset-0 flex items-center">
-                  <div className="w-full border-t border-neutral-200" />
+              {/* Divider — only earns its place between two sets of options. */}
+              {passwordAllowed && hasAlternativeMethods && (
+                <div className="relative my-6">
+                  <div className="absolute inset-0 flex items-center">
+                    <div className="w-full border-t border-neutral-200" />
+                  </div>
+                  <div className="relative flex justify-center text-sm">
+                    <span className="px-3 text-black/30 bg-white text-xs font-medium">{t('common.or')}</span>
+                  </div>
                 </div>
-                <div className="relative flex justify-center text-sm">
-                  <span className="px-3 text-black/30 bg-white text-xs font-medium">{t('common.or')}</span>
-                </div>
-              </div>
+              )}
 
               {/* Social & SSO Buttons */}
               <div className="space-y-2.5">
+                {googleAllowed && (
                 <button
                   onClick={handleGoogleSignIn}
                   disabled={isSubmitting}
@@ -799,6 +829,7 @@ const LoginClient = (props: LoginClientProps) => {
                   <img src="https://fonts.gstatic.com/s/i/productlogos/googleg/v6/24px.svg" alt="" className="w-4 h-4" />
                   <span>{t('auth.sign_in_with_google')}</span>
                 </button>
+                )}
 
                 {ssoEnabled && (
                   <button
@@ -811,6 +842,7 @@ const LoginClient = (props: LoginClientProps) => {
                   </button>
                 )}
 
+                {magicLoginAllowed && (
                 <button
                   type="button"
                   onClick={openMagicMode}
@@ -820,7 +852,22 @@ const LoginClient = (props: LoginClientProps) => {
                   <Mail size={16} />
                   <span>{t('auth.magic_send', { defaultValue: 'Email me a login link' })}</span>
                 </button>
+                )}
               </div>
+
+              {/* Every method is off, or the only allowed one (SSO) is not set
+                  up yet. Say so instead of rendering an empty page. */}
+              {!passwordAllowed && !hasAlternativeMethods && (
+                <div className="rounded-lg border border-neutral-200 bg-neutral-50 px-4 py-3 flex items-start gap-3">
+                  <Info size={16} className="shrink-0 mt-0.5 text-black/40" />
+                  <p className="text-sm text-black/60">
+                    {t('auth.no_sign_in_method_available', {
+                      defaultValue:
+                        'This organization has restricted how members sign in, and none of the allowed methods are available here. Contact an administrator.',
+                    })}
+                  </p>
+                </div>
+              )}
 
               {/* Sign Up Link */}
               <p className="text-center text-sm text-black/35 mt-6">

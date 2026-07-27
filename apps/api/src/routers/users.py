@@ -162,6 +162,18 @@ async def api_get_authorization_status(
     )
 
 
+async def _enforce_password_signup_allowed(db_session: AsyncSession, org_id: int) -> None:
+    """Refuse a password signup into an org that doesn't accept password sign-in.
+
+    Same gate the login endpoint applies, one step earlier: without it the org's
+    own signup page would happily mint accounts that its policy then refuses.
+    """
+    from src.security.session_context import AUTH_METHOD_PASSWORD
+    from src.services.orgs.auth_policy import enforce_login_auth_method
+
+    await enforce_login_auth_method(db_session, org_id, AUTH_METHOD_PASSWORD)
+
+
 @router.post(
     "/{org_id}",
     response_model=UserRead,
@@ -184,6 +196,9 @@ async def api_create_user_with_orgid(
     """
     Create User with Org ID
     """
+    # An org that has turned email+password off must not hand out password
+    # accounts for itself — they could never be used to sign in to it.
+    await _enforce_password_signup_allowed(db_session, org_id)
 
     # TODO(fix) : This is temporary, logic should be moved to service
     if (
@@ -221,6 +236,8 @@ async def api_create_user_with_orgid_and_invite(
     """
     Create User with Org ID and invite code
     """
+    await _enforce_password_signup_allowed(db_session, org_id)
+
     # Throttle invite-code guessing per IP+org. ``detail`` is a plain string
     # so the frontend's generic error path renders it as-is.
     is_allowed, retry_after = check_invite_acceptance_rate_limit(request, org_id)

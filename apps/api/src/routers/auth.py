@@ -564,7 +564,16 @@ async def login(
             },
         )
 
-    # Step 5: Reset failed attempts and update login info
+    # Step 5: Enforce the org's allowed sign-in methods. Only meaningful when the
+    # login page named an org (the apex login belongs to no single org, and is
+    # caught by the per-request gate instead). Runs after the password check so
+    # the refusal can never be used to probe which orgs exist.
+    from src.services.orgs.auth_policy import enforce_login_auth_method
+
+    session_org_id = await _resolve_org_id_from_slug(org_slug, db_session)
+    await enforce_login_auth_method(db_session, session_org_id, AUTH_METHOD_PASSWORD)
+
+    # Step 6: Reset failed attempts and update login info
     await reset_failed_attempts(user, db_session)
     client_ip = get_client_ip(request)
     await update_login_info(user, client_ip, db_session)
@@ -579,11 +588,10 @@ async def login(
         metadata={"method": "password"},
     )
 
-    # Step 6: Issue a session — unless the account carries a second factor, in
+    # Step 7: Issue a session — unless the account carries a second factor, in
     # which case this returns a short-lived pending token instead and the caller
     # must complete /auth/login/mfa. No cookies and no user object are returned
     # on that branch: nothing is authenticated until the code is verified.
-    session_org_id = await _resolve_org_id_from_slug(org_slug, db_session)
     issue = await issue_session_or_challenge(
         db_session, user, amr=AUTH_METHOD_PASSWORD, org_id=session_org_id
     )
@@ -675,6 +683,12 @@ async def third_party_login(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="Invalid org_id",
             )
+
+        # An org that has turned Google off must not be joinable — or reachable —
+        # through the Google button. Same door-level refusal as password login.
+        from src.services.orgs.auth_policy import enforce_login_auth_method
+
+        await enforce_login_auth_method(db_session, org_id, AUTH_METHOD_GOOGLE)
 
         join_mechanism = await get_org_join_mechanism(
             request, org_id, current_user, db_session
@@ -900,7 +914,7 @@ async def magic_link_request(
         resolve_org,
         send_magic_login_email,
     )
-    from src.services.orgs.auth_policy import get_org_auth_policy
+    from src.services.orgs.auth_policy import is_login_method_allowed
     from src.security.session_context import AUTH_METHOD_MAGIC_LOGIN
     from src.services.email.utils import get_base_url_from_request
 
@@ -916,10 +930,10 @@ async def magic_link_request(
     org = await resolve_org(body.org_slug, db_session)
     # If the request is scoped to an org that does not offer magic-link login,
     # do not send one — the link would only be refused at the org gate anyway.
-    if org is not None:
-        policy = await get_org_auth_policy(db_session, org.id)
-        if policy.method_restricted and AUTH_METHOD_MAGIC_LOGIN not in set(policy.allowed_auth_methods):
-            return generic
+    if org is not None and not await is_login_method_allowed(
+        db_session, org.id, AUTH_METHOD_MAGIC_LOGIN
+    ):
+        return generic
 
     user = (
         await db_session.execute(select(User).where(User.email == str(body.email)))
@@ -963,8 +977,12 @@ async def magic_link_verify(
 ):
     from src.services.auth.magic_login import consume_magic_login_token
     from src.security.session_context import AUTH_METHOD_MAGIC_LOGIN
+    from src.services.orgs.auth_policy import enforce_login_auth_method
 
     email, org_id = consume_magic_login_token(body.token)
+
+    # A link issued before the org turned magic login off must not still work.
+    await enforce_login_auth_method(db_session, org_id, AUTH_METHOD_MAGIC_LOGIN)
 
     user = (
         await db_session.execute(select(User).where(User.email == email))
