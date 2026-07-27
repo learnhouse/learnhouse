@@ -132,8 +132,24 @@ async def evaluate_org_auth(
                 # auth-method policy.
                 if provenance.amr != AUTH_METHOD_API_TOKEN:
                     allowed = set(policy.allowed_auth_methods)
-                    if policy.method_restricted and (
-                        provenance.amr is None or provenance.amr not in allowed
+                    # A session with no ``amr`` means "we don't know how this
+                    # user signed in", not "they used a forbidden method".
+                    # Treating unknown as a violation locked out every member
+                    # holding a session minted before this feature existed the
+                    # moment an admin unchecked a single method — they kept
+                    # seeing the org, but every authorized request 403'd.
+                    #
+                    # Failing open here costs little: the real gate is
+                    # sign-in time, where /auth/login, /auth/oauth and the
+                    # magic-link endpoints already refuse a disallowed method.
+                    # This check is defence-in-depth against an already-issued
+                    # session, and it still rejects any session that positively
+                    # identifies a method outside the allow-list. Claim-less
+                    # sessions age out on their own as tokens expire.
+                    if (
+                        policy.method_restricted
+                        and provenance.amr is not None
+                        and provenance.amr not in allowed
                     ):
                         result = {
                             "code": METHOD_NOT_ALLOWED_CODE,

@@ -98,13 +98,23 @@ class TestMethodGate:
         _prov(amr="password", org_id=org.id)
         await enforce_org_auth_policy(db, regular_user.id, org.id)
 
-    async def test_legacy_session_blocked_under_restriction(self, db, org, regular_user):
-        from fastapi import HTTPException
-
-        # A pre-feature session carries no amr; a restrictive org must force it to
-        # re-authenticate with a known method rather than let it through blind.
+    async def test_legacy_session_allowed_under_restriction(self, db, org, regular_user):
+        # A pre-feature session carries no amr. That is "unknown", not "used a
+        # forbidden method", and it must not be blocked: an org narrowing its
+        # method list would otherwise lock out its entire existing membership at
+        # once, while still showing them the org. Sign-in time is the enforcing
+        # gate; these claim-less sessions age out as their tokens expire.
         await _set_auth_policy(db, org.id, allowed_auth_methods=["password"])
         _prov(amr=None, org_id=None)
+        await enforce_org_auth_policy(db, regular_user.id, org.id)
+
+    async def test_disallowed_method_still_blocked(self, db, org, regular_user):
+        from fastapi import HTTPException
+
+        # The flip side of the above: a session that positively names a method
+        # outside the allow-list is still rejected.
+        await _set_auth_policy(db, org.id, allowed_auth_methods=["password"])
+        _prov(amr="google", org_id=org.id)
         with pytest.raises(HTTPException) as exc:
             await enforce_org_auth_policy(db, regular_user.id, org.id)
         assert exc.value.detail["code"] == METHOD_NOT_ALLOWED_CODE

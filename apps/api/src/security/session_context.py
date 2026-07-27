@@ -14,8 +14,10 @@ never leaks across requests). The gates read it back with
 
 Legacy sessions minted before this feature carry no ``amr``/``sorg`` claims; they
 resolve to ``SessionProvenance(amr=None, org_id=None)``. Policy evaluation treats
-an unknown method as "does not match a restrictive allow-list" — fail-closed for
-the policy, but only for orgs that opted into a restriction.
+an unknown method as *unknown*, not as a violation, and lets it through: the
+enforcing gate is sign-in time, and failing closed here would lock out every
+member holding a pre-feature session as soon as an org narrowed its method list.
+A session that positively names a disallowed method is still rejected.
 
 Claim keys are defined here so the mint side and the read side cannot drift.
 """
