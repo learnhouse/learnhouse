@@ -1,7 +1,7 @@
 import { NodeViewWrapper } from '@tiptap/react'
 import React, { useEffect } from 'react'
 import { Resizable } from 're-resizable'
-import { Image, Download, AlignLeft, AlignCenter, AlignRight, Expand, Upload, AlertCircle } from 'lucide-react'
+import { Image, Download, AlignLeft, AlignCenter, AlignRight, Expand, Upload, Loader2, AlertCircle } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { uploadNewImageFile } from '../../../../../services/blocks/Image/images'
 import { getActivityBlockMediaDirectory } from '@services/media/media'
@@ -33,7 +33,7 @@ function ImageBlockComponent(props: any) {
   const [isLoading, setIsLoading] = React.useState(false)
   const [isDragging, setIsDragging] = React.useState(false)
   const [error, setError] = React.useState<string | null>(null)
-  const [progress, setProgress] = React.useState<number | null>(null)
+  const [progress, setProgress] = React.useState(0)
   const [blockObject, setblockObject] = React.useState(
     props.node.attrs.blockObject
   )
@@ -74,6 +74,7 @@ function ImageBlockComponent(props: any) {
         access_token,
         (p) => setProgress(p)
       )
+      setProgress(100)
       setblockObject(object)
       props.updateAttributes({
         blockObject: object,
@@ -87,7 +88,7 @@ function ImageBlockComponent(props: any) {
       toast.error(errorMessage.includes('Upload failed') ? errorMessage : `Upload failed — please try again: ${errorMessage}`)
     } finally {
       setIsLoading(false)
-      setProgress(null)
+      setProgress(0)
     }
   }
 
@@ -315,15 +316,20 @@ function ImageBlockComponent(props: any) {
                 />
                 {isLoading ? (
                   <div className="space-y-3">
-                    <div className="w-full bg-neutral-200 rounded-full h-2">
+                    <Loader2 className="w-8 h-8 animate-spin mx-auto text-neutral-500" />
+                    <p className="text-sm text-neutral-600">{t('editor.blocks.image_block.uploading')} {progress}%</p>
+                    <div
+                      className="w-48 h-1 bg-neutral-200 rounded-full mx-auto overflow-hidden"
+                      role="progressbar"
+                      aria-valuenow={progress}
+                      aria-valuemin={0}
+                      aria-valuemax={100}
+                    >
                       <div
-                        className="bg-blue-500 h-2 rounded-full transition-all"
-                        style={{ width: `${progress ?? 0}%` }}
+                        className="h-full bg-blue-500 rounded-full transition-all duration-200"
+                        style={{ width: `${progress}%` }}
                       />
                     </div>
-                    <p className="text-sm text-neutral-600">
-                      {t('editor.blocks.image_block.uploading')} {progress ?? 0}%
-                    </p>
                   </div>
                 ) : (
                   <div className="space-y-2">

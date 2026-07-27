@@ -101,6 +101,78 @@ export const RequestBodyFormWithAuthHeader = (
   return options
 }
 
+const UPLOAD_TIMEOUT_MS = 30 * 60 * 1000
+
+/**
+ * POST a FormData payload with REAL upload progress.
+ *
+ * Uses XMLHttpRequest because fetch() cannot report request-body upload
+ * progress: large files otherwise sit on an indeterminate spinner for minutes.
+ * Resolves with the parsed JSON body and rejects with the backend `detail`
+ * message (or an HTTP-status message when the body isn't JSON, which is what
+ * an nginx 413 or a gateway 502 returns).
+ */
+export function uploadFormWithProgress<T = any>(
+  url: string,
+  formData: FormData,
+  access_token: string,
+  onProgress?: (_percent: number) => void
+): Promise<T> {
+  validateApiUrl(url)
+  return new Promise<T>((resolve, reject) => {
+    const xhr = new XMLHttpRequest()
+    xhr.open('POST', url)
+    xhr.setRequestHeader('Authorization', `Bearer ${access_token}`)
+    xhr.withCredentials = true
+    xhr.timeout = UPLOAD_TIMEOUT_MS
+
+    xhr.upload.onprogress = (e) => {
+      if (onProgress && e.lengthComputable) {
+        onProgress(Math.round((e.loaded / e.total) * 100))
+      }
+    }
+
+    xhr.onload = () => {
+      // Status first, body second: a successful upload with an empty body must
+      // not be reported as a failure, and a non-JSON error body must not hide
+      // the status code.
+      if (xhr.status >= 200 && xhr.status < 300) {
+        try {
+          resolve(JSON.parse(xhr.responseText))
+        } catch {
+          resolve({} as T)
+        }
+        return
+      }
+      if (xhr.status === 413) {
+        reject(new Error('The file is too large to upload.'))
+        return
+      }
+      let detail: string | undefined
+      try {
+        const body = JSON.parse(xhr.responseText)
+        detail =
+          typeof body?.detail === 'string'
+            ? body.detail
+            : Array.isArray(body?.detail)
+              ? body.detail.map((e: any) => e.msg).join(', ')
+              : undefined
+      } catch {
+        /* non-JSON error body (nginx / gateway HTML) */
+      }
+      reject(new Error(detail || `Upload failed (HTTP ${xhr.status})`))
+    }
+
+    xhr.onerror = () =>
+      reject(new Error('Upload failed. Please check your connection and try again.'))
+    xhr.ontimeout = () =>
+      reject(new Error('Upload timed out. Please try again on a faster connection.'))
+    xhr.onabort = () => reject(new Error('Upload cancelled.'))
+
+    xhr.send(formData)
+  })
+}
+
 export const apiFetch = async (url: string, token?: string) => {
   // Create the request options
   let HeadersConfig = new Headers(

@@ -1,6 +1,6 @@
 import { NodeViewWrapper } from '@tiptap/react'
 import React, { useEffect } from 'react'
-import { FileText, Download, Expand, Upload, AlertCircle } from 'lucide-react'
+import { FileText, Download, Expand, Upload, Loader2, AlertCircle } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { uploadNewPDFFile } from '../../../../../services/blocks/Pdf/pdf'
 import { getActivityBlockMediaDirectory } from '@services/media/media'
@@ -27,7 +27,7 @@ function PDFBlockComponent(props: any) {
   )
   const [isModalOpen, setIsModalOpen] = React.useState(false)
   const [error, setError] = React.useState<string | null>(null)
-  const [progress, setProgress] = React.useState<number | null>(null)
+  const [progress, setProgress] = React.useState(0)
   const fileInputRef = React.useRef<HTMLInputElement>(null)
   const fileId = blockObject
     ? `${blockObject.content.file_id}.${blockObject.content.file_format}`
@@ -55,6 +55,7 @@ function PDFBlockComponent(props: any) {
         props.extension.options.activity.activity_uuid, access_token,
         (p) => setProgress(p)
       )
+      setProgress(100)
       setblockObject(object)
       props.updateAttributes({
         blockObject: object,
@@ -66,7 +67,7 @@ function PDFBlockComponent(props: any) {
       toast.error(errorMessage.includes('Upload failed') ? errorMessage : `Upload failed — please try again: ${errorMessage}`)
     } finally {
       setIsLoading(false)
-      setProgress(null)
+      setProgress(0)
     }
   }
 
@@ -205,15 +206,20 @@ function PDFBlockComponent(props: any) {
                 />
                 {isLoading ? (
                   <div className="space-y-3">
-                    <div className="w-full bg-neutral-200 rounded-full h-2">
+                    <Loader2 className="w-8 h-8 animate-spin mx-auto text-blue-500" />
+                    <p className="text-sm text-neutral-600">{t('editor.blocks.pdf_block.uploading')} {progress}%</p>
+                    <div
+                      className="w-48 h-1 bg-neutral-200 rounded-full mx-auto overflow-hidden"
+                      role="progressbar"
+                      aria-valuenow={progress}
+                      aria-valuemin={0}
+                      aria-valuemax={100}
+                    >
                       <div
-                        className="bg-blue-500 h-2 rounded-full transition-all"
-                        style={{ width: `${progress ?? 0}%` }}
+                        className="h-full bg-blue-500 rounded-full transition-all duration-200"
+                        style={{ width: `${progress}%` }}
                       />
                     </div>
-                    <p className="text-sm text-neutral-600">
-                      {t('editor.blocks.pdf_block.uploading')} {progress ?? 0}%
-                    </p>
                   </div>
                 ) : (
                   <div className="space-y-3">
