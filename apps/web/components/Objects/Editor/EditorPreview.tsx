@@ -14,6 +14,7 @@ import VideoBlock from './Extensions/Video/VideoBlock'
 import AudioBlock from './Extensions/Audio/AudioBlock'
 import MathEquationBlock from './Extensions/MathEquation/MathEquationBlock'
 import PDFBlock from './Extensions/PDF/PDFBlock'
+import LibraryBlock from './Extensions/Library/LibraryBlock'
 import QuizBlock from './Extensions/Quiz/QuizBlock'
 import { Table } from '@tiptap/extension-table'
 import TableCell from '@tiptap/extension-table-cell'
@@ -25,6 +26,7 @@ import EmbedObjects from './Extensions/EmbedObjects/EmbedObjects'
 import Badges from './Extensions/Badges/Badges'
 import Buttons from './Extensions/Buttons/Buttons'
 import Flipcard from './Extensions/Flipcard/Flipcard'
+import FlipcardGrid from './Extensions/Flipcard/FlipcardGrid'
 import Scenarios from './Extensions/Scenarios/Scenarios'
 import CodePlayground from './Extensions/CodePlayground/CodePlayground'
 import UserBlock from './Extensions/Users/UserBlock'
@@ -85,6 +87,10 @@ function EditorPreview({ content, activity }: EditorPreviewProps) {
         editable: false,
         activity: activity,
       }),
+      LibraryBlock.configure({
+        editable: false,
+        activity: activity,
+      }),
       QuizBlock.configure({
         editable: false,
         activity: activity,
@@ -124,6 +130,10 @@ function EditorPreview({ content, activity }: EditorPreviewProps) {
         activity: activity,
       }),
       Flipcard.configure({
+        editable: false,
+        activity: activity,
+      }),
+      FlipcardGrid.configure({
         editable: false,
         activity: activity,
       }),

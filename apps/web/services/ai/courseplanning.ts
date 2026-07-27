@@ -132,9 +132,9 @@ export async function startCoursePlanningSession(
   orgId: number,
   prompt: string,
   accessToken: string,
-  onChunk: (chunk: string) => void,
-  onComplete: (sessionUuid: string) => void,
-  onError: (error: string) => void,
+  onChunk: (_chunk: string) => void,
+  onComplete: (_sessionUuid: string) => void,
+  onError: (_error: string) => void,
   language: string = 'en',
   attachments?: Attachment[]
 ): Promise<void> {
@@ -182,9 +182,9 @@ export async function iterateCoursePlanning(
   sessionUuid: string,
   message: string,
   accessToken: string,
-  onChunk: (chunk: string) => void,
-  onComplete: (sessionUuid: string) => void,
-  onError: (error: string) => void,
+  onChunk: (_chunk: string) => void,
+  onComplete: (_sessionUuid: string) => void,
+  onError: (_error: string) => void,
   currentPlan?: CoursePlan | null,
   attachments?: Attachment[]
 ): Promise<void> {
@@ -276,9 +276,9 @@ export async function generateActivityContent(
   courseName: string,
   courseDescription: string,
   accessToken: string,
-  onChunk: (chunk: string) => void,
-  onComplete: (sessionUuid: string) => void,
-  onError: (error: string) => void,
+  onChunk: (_chunk: string) => void,
+  onComplete: (_sessionUuid: string) => void,
+  onError: (_error: string) => void,
   prompt?: string
 ): Promise<void> {
   const data = {
@@ -343,7 +343,8 @@ export async function saveActivityContent(
       }
     }
 
-    const data = await response.json()
+    // Drain the body so the connection can be reused; the payload isn't needed.
+    await response.json().catch(() => ({}))
     return { success: true }
   } catch (error) {
     console.error('[saveActivityContent] Exception:', error)
@@ -395,9 +396,9 @@ export async function getCoursePlanningSession(
  */
 async function processStream(
   response: Response,
-  onChunk: (chunk: string) => void,
-  onComplete: (sessionUuid: string) => void | Promise<void>,
-  onError: (error: string) => void
+  onChunk: (_chunk: string) => void,
+  onComplete: (_sessionUuid: string) => void | Promise<void>,
+  onError: (_error: string) => void
 ): Promise<void> {
   const reader = response.body?.getReader()
   if (!reader) {
@@ -527,7 +528,8 @@ function validateProseMirrorDoc(content: any): { valid: boolean; error?: string 
     'codeBlock', 'blockQuiz', 'flipcard', 'calloutInfo', 'calloutWarning',
     'blockEmbed', 'blockImage', 'blockVideo', 'blockPDF', 'blockMathEquation',
     'table', 'tableRow', 'tableCell', 'tableHeader', 'horizontalRule',
-    'hardBreak', 'text', 'scenarios', 'blockUser', 'blockWebPreview', 'button', 'badge'
+    'hardBreak', 'text', 'scenarios', 'blockUser', 'blockWebPreview', 'button', 'badge',
+    'blockLibrary', 'flipcardGrid'
   ])
 
   function checkNode(node: any, path: string): { valid: boolean; error?: string } {

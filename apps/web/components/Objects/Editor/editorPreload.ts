@@ -9,6 +9,7 @@ const COMPONENT_LOADERS: Record<string, () => Promise<unknown>> = {
   blockMathEquation: () =>
     import('./Extensions/MathEquation/MathEquationBlockComponent'),
   blockPDF: () => import('./Extensions/PDF/PDFBlockComponent'),
+  blockLibrary: () => import('./Extensions/Library/LibraryBlockComponent'),
   blockQuiz: () => import('./Extensions/Quiz/QuizBlockComponent'),
   blockEmbed: () => import('./Extensions/EmbedObjects/EmbedObjectsComponent'),
   blockUser: () => import('./Extensions/Users/UserBlockComponent'),
@@ -17,6 +18,7 @@ const COMPONENT_LOADERS: Record<string, () => Promise<unknown>> = {
   blockCode: () => import('./Extensions/CodePlayground/CodePlaygroundComponent'),
   scenarios: () => import('./Extensions/Scenarios/ScenariosExtension'),
   flipcard: () => import('./Extensions/Flipcard/FlipcardExtension'),
+  flipcardGrid: () => import('./Extensions/Flipcard/FlipcardGridExtension'),
 }
 
 function collectNodeTypes(node: any, types: Set<string>): void {

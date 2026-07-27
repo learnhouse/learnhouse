@@ -14,24 +14,27 @@ import {
   Check,
   Plus,
   Loader2,
+  File as FileIcon,
 } from 'lucide-react'
+import MediaPreview from '@components/Dashboard/Library/MediaPreview'
 import React from 'react'
 import toast from 'react-hot-toast'
 import useSWR from 'swr'
 import { useTranslation } from 'react-i18next'
 import { useLHAnalytics, AnalyticsEvent } from '@services/analytics'
 
-export type TabKey = 'courses' | 'podcasts' | 'communities' | 'boards' | 'playgrounds'
+export type TabKey = 'courses' | 'podcasts' | 'communities' | 'boards' | 'playgrounds' | 'media'
 
 // Singular resource kind stored on a resource activity's content.resource_type,
 // used by the student renderer to build the correct resource route.
-export type ResourceKind = 'course' | 'podcast' | 'community' | 'board' | 'playground'
+export type ResourceKind = 'course' | 'podcast' | 'community' | 'board' | 'playground' | 'media'
 
 export const TAB_META: Record<
   TabKey,
   { feature: string; icon: any; uuidKey: string; kind: ResourceKind }
 > = {
   courses: { feature: 'courses', icon: BookCopy, uuidKey: 'course_uuid', kind: 'course' },
+  media: { feature: 'library', icon: FileIcon, uuidKey: 'media_uuid', kind: 'media' },
   podcasts: { feature: 'podcasts', icon: Podcast, uuidKey: 'podcast_uuid', kind: 'podcast' },
   communities: { feature: 'communities', icon: Users, uuidKey: 'community_uuid', kind: 'community' },
   boards: { feature: 'boards', icon: LayoutGrid, uuidKey: 'board_uuid', kind: 'board' },
@@ -43,6 +46,8 @@ export function endpointFor(tab: TabKey, orgslug: string, org_id: any): string {
     case 'courses':
       // include_unpublished so drafts show too (this is an admin/editor context).
       return `${getAPIUrl()}courses/org_slug/${orgslug}/page/1/limit/100?include_unpublished=true`
+    case 'media':
+      return `${getAPIUrl()}media/org/${org_id}/page/1/limit/100`
     case 'podcasts':
       return `${getAPIUrl()}podcasts/org_slug/${orgslug}/page/1/limit/100`
     case 'communities':
@@ -58,6 +63,8 @@ export type SelectedResource = {
   resource_uuid: string
   resource_type: ResourceKind
   name?: string
+  /** The full row, so callers can cache display metadata without a refetch. */
+  resource?: any
 }
 
 type ResourceListProps = {
@@ -129,6 +136,7 @@ function ResourceList({
       resource_uuid: item[uuidKey],
       resource_type: TAB_META[tab].kind,
       name: item.name,
+      resource: item,
     })
   }
 
@@ -151,6 +159,41 @@ function ResourceList({
         </div>
       ) : filtered.length === 0 ? (
         <div className="py-10 text-center text-sm text-gray-400">{t('library.no_resources')}</div>
+      ) : tab === 'media' ? (
+        // Files need to be recognisable, so media gets thumbnails instead of rows.
+        <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 max-h-[400px] overflow-y-auto pr-1">
+          {filtered.map((item) => {
+            const uuid = item[uuidKey]
+            const isAdded = added.has(uuid)
+            const isSelected = mode === 'select' && selectedUuid === uuid
+            return (
+              <button
+                key={uuid}
+                type="button"
+                onClick={() => (mode === 'add' ? handleAdd(uuid) : handleSelect(item))}
+                disabled={pending === uuid}
+                className={`group text-left rounded-xl overflow-hidden border transition-colors disabled:opacity-50 ${
+                  isSelected || isAdded ? 'border-black' : 'border-gray-100 hover:border-gray-300'
+                }`}
+              >
+                <MediaPreview resource={item} resourceUuid={uuid} />
+                <div className="p-2 flex items-center justify-between gap-2">
+                  <span className="text-xs font-medium text-gray-800 truncate">{item.name}</span>
+                  {isAdded || isSelected ? (
+                    <Check className="w-3.5 h-3.5 text-green-600 flex-shrink-0" />
+                  ) : (
+                    <Plus className="w-3.5 h-3.5 text-gray-400 flex-shrink-0" />
+                  )}
+                </div>
+                {item.public === false && (
+                  <p className="px-2 pb-2 text-[10px] text-amber-600 leading-tight">
+                    {t('library.private_media_warning')}
+                  </p>
+                )}
+              </button>
+            )
+          })}
+        </div>
       ) : (
         <div className="flex flex-col gap-1.5 max-h-[400px] overflow-y-auto">
           {filtered.map((item) => {
@@ -256,9 +299,16 @@ function TabButton({
   )
 }
 
+// The library "add content" flow places existing resources into a folder, and
+// media already lives in the library — offering it there would just file the
+// same asset twice. Callers that want media (the Library block) opt in.
+const DEFAULT_TABS: TabKey[] = ['courses', 'podcasts', 'communities', 'boards', 'playgrounds']
+
 type ResourcePickerProps = {
   orgslug: string
   mode: 'add' | 'select'
+  /** Which tabs to offer; defaults to every resource type except media. */
+  tabs?: TabKey[]
   // add mode
   folderUuid?: string
   onChanged?: () => void
@@ -270,6 +320,7 @@ type ResourcePickerProps = {
 function ResourcePicker({
   orgslug,
   mode,
+  tabs = DEFAULT_TABS,
   folderUuid,
   onChanged,
   onSelect,
@@ -277,7 +328,7 @@ function ResourcePicker({
 }: ResourcePickerProps) {
   const org = useOrg() as any
 
-  const enabledTabs = (Object.keys(TAB_META) as TabKey[]).filter((tab) => {
+  const enabledTabs = tabs.filter((tab) => {
     const feature = TAB_META[tab].feature
     return org?.config?.config?.resolved_features?.[feature]?.enabled ?? true
   })

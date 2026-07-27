@@ -32,6 +32,7 @@ import AudioBlock from './Extensions/Audio/AudioBlock'
 import { Eye, Monitor, History, AlertTriangle, RefreshCw, Loader2 } from 'lucide-react'
 import MathEquationBlock from './Extensions/MathEquation/MathEquationBlock'
 import PDFBlock from './Extensions/PDF/PDFBlock'
+import LibraryBlock from './Extensions/Library/LibraryBlock'
 import QuizBlock from './Extensions/Quiz/QuizBlock'
 import { Table } from '@tiptap/extension-table'
 import TableCell from '@tiptap/extension-table-cell'
@@ -57,6 +58,7 @@ import EmbedObjects from './Extensions/EmbedObjects/EmbedObjects'
 import Badges from './Extensions/Badges/Badges'
 import Buttons from './Extensions/Buttons/Buttons'
 import Flipcard from './Extensions/Flipcard/Flipcard'
+import FlipcardGrid from './Extensions/Flipcard/FlipcardGrid'
 import Scenarios from './Extensions/Scenarios/Scenarios'
 import CodePlayground from './Extensions/CodePlayground/CodePlayground'
 import { useMediaQuery } from 'usehooks-ts'
@@ -171,6 +173,7 @@ function Editor(props: EditorProps) {
       AudioBlock.configure({ editable: true, activity: stableActivity }),
       MathEquationBlock.configure({ editable: true, activity: stableActivity }),
       PDFBlock.configure({ editable: true, activity: stableActivity }),
+      LibraryBlock.configure({ editable: true, activity: stableActivity }),
       QuizBlock.configure({ editable: true, activity: stableActivity }),
       Youtube.configure({ controls: true, modestBranding: true }),
       CodeBlockLowlight.configure({ lowlight }),
@@ -185,6 +188,7 @@ function Editor(props: EditorProps) {
       getLinkExtension(),
       WebPreview.configure({ editable: true, activity: stableActivity }),
       Flipcard.configure({ editable: true, activity: stableActivity }),
+      FlipcardGrid.configure({ editable: true, activity: stableActivity }),
       Scenarios.configure({ editable: true, activity: stableActivity }),
       CodePlayground.configure({ editable: true, activity: stableActivity }),
       DragHandle,

@@ -33,6 +33,7 @@ import VideoBlock from '@components/Objects/Editor/Extensions/Video/VideoBlock'
 import AudioBlock from '@components/Objects/Editor/Extensions/Audio/AudioBlock'
 import MathEquationBlock from '@components/Objects/Editor/Extensions/MathEquation/MathEquationBlock'
 import PDFBlock from '@components/Objects/Editor/Extensions/PDF/PDFBlock'
+import LibraryBlock from '@components/Objects/Editor/Extensions/Library/LibraryBlock'
 import QuizBlock from '@components/Objects/Editor/Extensions/Quiz/QuizBlock'
 import MagicBlock from '@components/Objects/Editor/Extensions/MagicBlocks/MagicBlock'
 
@@ -45,6 +46,7 @@ import EmbedObjects from '@components/Objects/Editor/Extensions/EmbedObjects/Emb
 import Badges from '@components/Objects/Editor/Extensions/Badges/Badges'
 import Buttons from '@components/Objects/Editor/Extensions/Buttons/Buttons'
 import Flipcard from '@components/Objects/Editor/Extensions/Flipcard/Flipcard'
+import FlipcardGrid from '@components/Objects/Editor/Extensions/Flipcard/FlipcardGrid'
 import Scenarios from '@components/Objects/Editor/Extensions/Scenarios/Scenarios'
 import CodePlayground from '@components/Objects/Editor/Extensions/CodePlayground/CodePlayground'
 import { Table } from '@tiptap/extension-table'
@@ -141,6 +143,10 @@ function Canva(props: Editor) {
         editable: true,
         activity: props.activity,
       }),
+      LibraryBlock.configure({
+        editable: isEditable,
+        activity: props.activity,
+      }),
       QuizBlock.configure({
         editable: isEditable,
         activity: props.activity,
@@ -177,6 +183,10 @@ function Canva(props: Editor) {
         activity: props.activity,
       }),
       Flipcard.configure({
+        editable: false,
+        activity: props.activity,
+      }),
+      FlipcardGrid.configure({
         editable: false,
         activity: props.activity,
       }),

@@ -1,47 +1,14 @@
 'use client'
 import React from 'react'
 import { WarningCircle, SquaresFour, Microphone, UsersThree, Code, GraduationCap, ArrowSquareOut } from '@phosphor-icons/react'
-import { getUriWithOrg } from '@services/config/config'
+import { buildEmbedUrl, buildResourceUrl, type ResourceKind } from '@/lib/library/resourceEmbed'
 
-type ResourceKind = 'course' | 'podcast' | 'community' | 'board' | 'playground'
-
-const KIND_META: Record<ResourceKind, { label: string; icon: any; color: string }> = {
+const KIND_META: Partial<Record<ResourceKind, { label: string; icon: any; color: string }>> = {
   course: { label: 'Course', icon: GraduationCap, color: 'text-blue-500' },
   podcast: { label: 'Podcast', icon: Microphone, color: 'text-violet-500' },
   community: { label: 'Community', icon: UsersThree, color: 'text-emerald-500' },
   board: { label: 'Board', icon: SquaresFour, color: 'text-indigo-500' },
   playground: { label: 'Playground', icon: Code, color: 'text-amber-500' },
-}
-
-/**
- * Base internal route for a Library resource, mirroring resourceHref's
- * uuid-prefix handling. Boards live at a top-level chrome-free route; the other
- * kinds live under the (withmenu) group (see buildEmbedUrl for the chrome=none
- * suppression used when embedded in the activity player).
- */
-function buildResourceUrl(kind: ResourceKind, resourceUuid: string, orgslug: string): string | null {
-  if (!resourceUuid) return null
-  switch (kind) {
-    case 'board':
-      return getUriWithOrg(orgslug, `/board/${resourceUuid.replace('board_', '')}`)
-    case 'community':
-      return getUriWithOrg(orgslug, `/community/${resourceUuid.replace('community_', '')}`)
-    case 'podcast':
-      return getUriWithOrg(orgslug, `/podcast/${resourceUuid.replace('podcast_', '')}`)
-    case 'playground':
-      // Playgrounds use the full prefixed uuid.
-      return getUriWithOrg(orgslug, `/playground/${resourceUuid}`)
-    case 'course':
-      return getUriWithOrg(orgslug, `/course/${resourceUuid.replace('course_', '')}`)
-    default:
-      return null
-  }
-}
-
-// Boards already render chrome-free; the (withmenu) kinds need ?chrome=none.
-function buildEmbedUrl(kind: ResourceKind, baseUrl: string): string {
-  if (kind === 'board') return baseUrl
-  return baseUrl.includes('?') ? `${baseUrl}&chrome=none` : `${baseUrl}?chrome=none`
 }
 
 interface ResourceActivityProps {
@@ -53,9 +20,10 @@ interface ResourceActivityProps {
 function ResourceActivity({ activity, orgslug, style }: ResourceActivityProps) {
   const kind = (activity.content?.resource_type || '') as ResourceKind
   const resourceUuid = activity.content?.resource_uuid || ''
-  const baseUrl = KIND_META[kind] ? buildResourceUrl(kind, resourceUuid, orgslug) : null
+  const meta = KIND_META[kind]
+  const baseUrl = meta ? buildResourceUrl(kind, resourceUuid, orgslug) : null
 
-  if (!baseUrl) {
+  if (!meta || !baseUrl) {
     return (
       <div className="flex flex-col items-center justify-center py-20 gap-4">
         <WarningCircle size={40} className="text-red-400" />
@@ -64,7 +32,6 @@ function ResourceActivity({ activity, orgslug, style }: ResourceActivityProps) {
     )
   }
 
-  const meta = KIND_META[kind]
   const Icon = meta.icon
   const embedUrl = buildEmbedUrl(kind, baseUrl)
 

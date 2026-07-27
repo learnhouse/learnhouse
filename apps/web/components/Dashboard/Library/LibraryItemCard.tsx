@@ -5,9 +5,11 @@ import ConfirmationModal from '@components/Objects/StyledElements/ConfirmationMo
 import Modal from '@components/Objects/StyledElements/Modal/Modal'
 import ManageAccessPopover from '@components/Dashboard/Library/ManageAccessPopover'
 import MediaPreview from '@components/Dashboard/Library/MediaPreview'
+import MediaLightbox from '@components/Objects/Media/MediaLightbox'
 import { resourceHref, safeExternalUrl } from '@components/Dashboard/Library/resourceLink'
 import { shareMediaLink } from '@components/Dashboard/Library/shareFolder'
 import { getMediaFileDirectory } from '@services/media/media-resource'
+import { mediaKind } from '@/lib/media/mediaKind'
 import Link from 'next/link'
 import {
   MicrophoneStage,
@@ -23,6 +25,7 @@ import {
   DotsThreeVertical,
   ArrowSquareOut,
   DownloadSimple,
+  Eye,
   Lock,
   FolderMinus,
 } from '@phosphor-icons/react'
@@ -45,13 +48,14 @@ const TYPE_TONE: Record<string, string> = {
 }
 
 function mediaIcon(resource: any) {
-  if (resource?.media_type === 'EMBED') return LinkSimple
-  const f = (resource?.file_format || '').toLowerCase()
-  if (f === 'pdf') return FilePdf
-  if (['mp4', 'webm', 'mov'].includes(f)) return VideoCamera
-  if (['png', 'jpg', 'jpeg', 'gif', 'webp'].includes(f)) return ImageIcon
-  if (['mp3', 'wav', 'ogg', 'm4a'].includes(f)) return MusicNote
-  return FileIcon
+  switch (mediaKind(resource)) {
+    case 'embed': return LinkSimple
+    case 'pdf': return FilePdf
+    case 'video': return VideoCamera
+    case 'image': return ImageIcon
+    case 'audio': return MusicNote
+    default: return FileIcon
+  }
 }
 
 function typeIcon(type: string, resource: any) {
@@ -79,6 +83,7 @@ export default function LibraryItemCard({ item, orgslug, onRemove }: Props) {
   const access_token = session?.data?.tokens?.access_token
   const [isMenuOpen, setIsMenuOpen] = React.useState(false)
   const [accessOpen, setAccessOpen] = React.useState(false)
+  const [previewOpen, setPreviewOpen] = React.useState(false)
 
   const type: string = item.resource_type
   const resource = item.resource || {}
@@ -87,15 +92,21 @@ export default function LibraryItemCard({ item, orgslug, onRemove }: Props) {
   const Icon = typeIcon(type, resource)
   const isUploadMedia = type === 'media' && resource.media_type !== 'EMBED'
 
+  const mediaUuid = resource.media_uuid || item.resource_uuid
   let href: string | null = null          // external (media file / embed url)
   let internalHref: string | null = null  // resource detail page (same-tab)
-  let fileUrl: string | null = null
+  let downloadUrl: string | null = null
   if (type === 'media') {
     // file_id is no longer exposed; uploaded media is served via the authed
     // /media/{uuid}/file endpoint keyed only by media_uuid.
-    if (isUploadMedia) fileUrl = getMediaFileDirectory(org?.org_uuid, resource.media_uuid || item.resource_uuid)
-    if (resource.media_type === 'EMBED' && resource.url) href = safeExternalUrl(resource.url)
-    else if (fileUrl) href = fileUrl
+    if (isUploadMedia) {
+      href = getMediaFileDirectory(org?.org_uuid, mediaUuid)
+      // The `download` attribute is ignored cross-origin, so the attachment
+      // disposition has to come from the API.
+      downloadUrl = getMediaFileDirectory(org?.org_uuid, mediaUuid, undefined, { download: true })
+    } else if (resource.url) {
+      href = safeExternalUrl(resource.url)
+    }
   } else {
     // Podcasts, communities, boards, playgrounds → their dashboard page.
     internalHref = resourceHref(type, resource, orgslug, 'dashboard')
@@ -118,8 +129,8 @@ export default function LibraryItemCard({ item, orgslug, onRemove }: Props) {
           <span className="text-[10px] font-bold uppercase tracking-wider text-gray-400">{typeLabel}</span>
           {(href || internalHref) && (
             <span className="text-[10px] font-bold uppercase tracking-wider text-gray-400 inline-flex items-center gap-1">
-              {isUploadMedia ? t('media.download') : t('library.open_resource')}
-              {isUploadMedia ? <DownloadSimple size={11} /> : <ArrowSquareOut size={11} />}
+              {type === 'media' ? t('library.preview') : t('library.open_resource')}
+              {type === 'media' ? <Eye size={11} /> : <ArrowSquareOut size={11} />}
             </span>
           )}
         </div>
@@ -137,10 +148,27 @@ export default function LibraryItemCard({ item, orgslug, onRemove }: Props) {
             </button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-52">
+            {type === 'media' && (
+              <DropdownMenuItem asChild>
+                <button
+                  onClick={() => setPreviewOpen(true)}
+                  className="w-full text-left flex items-center px-2 py-1.5 text-sm text-gray-700 hover:bg-gray-50 rounded-md transition-colors"
+                >
+                  <Eye className="mr-2 h-4 w-4" /> {t('library.preview')}
+                </button>
+              </DropdownMenuItem>
+            )}
+            {downloadUrl && (
+              <DropdownMenuItem asChild>
+                <a href={downloadUrl} className="flex items-center cursor-pointer">
+                  <DownloadSimple className="mr-2 h-4 w-4" /> {t('media.download')}
+                </a>
+              </DropdownMenuItem>
+            )}
             {href && (
               <DropdownMenuItem asChild>
                 <a href={href} target="_blank" rel="noopener noreferrer" className="flex items-center cursor-pointer">
-                  {isUploadMedia ? (<><DownloadSimple className="mr-2 h-4 w-4" /> {t('media.download')}</>) : (<><ArrowSquareOut className="mr-2 h-4 w-4" /> {t('library.open')}</>)}
+                  <ArrowSquareOut className="mr-2 h-4 w-4" /> {t('library.open')}
                 </a>
               </DropdownMenuItem>
             )}
@@ -186,16 +214,26 @@ export default function LibraryItemCard({ item, orgslug, onRemove }: Props) {
         </DropdownMenu>
       </div>
 
-      {href ? (
-        <a href={href} target="_blank" rel="noopener noreferrer" className="block">
+      {type === 'media' ? (
+        // Media opens in-app rather than dumping the raw file in a new tab.
+        <button type="button" onClick={() => setPreviewOpen(true)} className="block w-full text-left">
           {body}
-        </a>
+        </button>
       ) : internalHref ? (
         <Link href={internalHref} className="block">
           {body}
         </Link>
       ) : (
         <div>{body}</div>
+      )}
+
+      {type === 'media' && (
+        <MediaLightbox
+          resource={resource}
+          mediaUuid={mediaUuid}
+          isOpen={previewOpen}
+          onOpenChange={setPreviewOpen}
+        />
       )}
 
       {type === 'media' && (

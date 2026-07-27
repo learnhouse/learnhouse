@@ -502,6 +502,18 @@
   transform: rotateY(180deg);
 }
 
+/* Flipcard grid: cards fill their cell instead of claiming a full row. Spacing
+   comes from the grid gap, so the card's own vertical margin has to go. */
+.flipcard-grid .flipcard-wrapper {
+  margin-top: 0;
+  margin-bottom: 0;
+  width: 100%;
+}
+
+.flipcard-grid .flipcard-container {
+  width: 100%;
+}
+
 /* AI Canva Bubble Menu Styles */
 .ai-canva-bubble-menu {
   position: fixed !important;

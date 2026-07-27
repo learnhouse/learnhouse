@@ -222,6 +222,7 @@ Activities in LearnHouse use a rich content editor with various block types. For
 - codeBlock: Code snippets with syntax highlighting
 - blockQuiz: Interactive quiz questions with multiple choice answers
 - flipcard: Flashcards for memorization (front/back cards)
+- flipcardGrid: Several flashcards laid out side by side (wraps flipcard children)
 - calloutInfo: Important information callouts
 - calloutWarning: Warning/caution notices
 - blockEmbed: YouTube videos and external embeds (IMPORTANT: Use this for any YouTube URLs provided by the user)
@@ -332,6 +333,14 @@ AVAILABLE BLOCK TYPES (use EXACTLY these type names):
      "alignment": "center",
      "size": "medium"
    }}}}
+
+9b. flipcardGrid - several flashcards side by side (use instead of consecutive
+    standalone flipcards when a grid or row is wanted). `columns` is 1-4 and the
+    content array holds only flipcard nodes.
+   {{"type": "flipcardGrid", "attrs": {{"columns": 2}}, "content": [
+     {{"type": "flipcard", "attrs": {{"question": "Term", "answer": "Definition", "color": "blue", "alignment": "center", "size": "medium"}}}},
+     {{"type": "flipcard", "attrs": {{"question": "Term", "answer": "Definition", "color": "blue", "alignment": "center", "size": "medium"}}}}
+   ]}}
 
 10. blockEmbed - YouTube videos and external embeds
     {{"type": "blockEmbed", "attrs": {{

@@ -3,6 +3,7 @@ import {
   ArrowCounterClockwise,
   ArrowClockwise,
   ArrowsClockwise,
+  Books,
   BracketsCurly,
   CaretDown,
   CheckCircle,
@@ -44,7 +45,7 @@ import lrnaiIcon from 'public/lrnai_icon.png'
 import { useOrg } from '@components/Contexts/OrgContext'
 import { useTranslation } from 'react-i18next'
 
-export const ToolbarButtons = React.memo(({ editor, props }: any) => {
+export const ToolbarButtons = React.memo(({ editor }: any) => {
   const { t } = useTranslation()
   const [showTableMenu, setShowTableMenu] = React.useState(false)
   const [showListMenu, setShowListMenu] = React.useState(false)
@@ -122,12 +123,7 @@ export const ToolbarButtons = React.memo(({ editor, props }: any) => {
     // Store the current selection
     const { from, to } = editor.state.selection
 
-    if (editor.isActive('link')) {
-      const currentLink = editor.getAttributes('link')
-      setShowLinkInput(true)
-    } else {
-      setShowLinkInput(true)
-    }
+    setShowLinkInput(true)
 
     // Restore the selection after a small delay to ensure the tooltip is rendered
     setTimeout(() => {
@@ -425,6 +421,23 @@ export const ToolbarButtons = React.memo(({ editor, props }: any) => {
           <FileText size={15} weight="fill" />
         </div>
       </ToolTip>
+      <ToolTip content={t('editor.blocks.library')}>
+        <div
+          className="editor-tool-btn editor-tool-btn-document"
+          onClick={() =>
+            editor
+              .chain()
+              .focus()
+              .insertContent({
+                type: 'blockLibrary',
+              })
+              .run()
+          }
+          aria-label={t('editor.blocks.library')}
+        >
+          <Books size={15} weight="fill" />
+        </div>
+      </ToolTip>
       <ToolTip content={t('editor.blocks.quiz')}>
         <div
           className="editor-tool-btn editor-tool-btn-interactive"
@@ -638,3 +651,5 @@ export const ToolbarButtons = React.memo(({ editor, props }: any) => {
     </div>
   )
 })
+
+ToolbarButtons.displayName = 'ToolbarButtons'
