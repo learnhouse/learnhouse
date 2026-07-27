@@ -384,6 +384,24 @@ export default async function proxy(req: NextRequest) {
     return response
   }
 
+  // Magic login links are emailed as /auth/magic?token=… — already the internal
+  // path, so it needs a pass-through of its own. Without one it fell to the
+  // tenant catch-all, was rewritten to /orgs/{slug}/auth/magic, and every
+  // emailed link 404'd. Tenant is resolved (unlike the callbacks above) because
+  // the page finishes through /redirect_from_auth, which reads the org cookies
+  // to know which host to land on.
+  if (pathname === '/auth/magic') {
+    const resolved = await resolveTenant(req, instance)
+    const requestHeaders = tenantRequestHeaders(req, resolved, instance)
+    const response = NextResponse.rewrite(
+      new URL(`${pathname}${search}`, req.url),
+      { request: { headers: requestHeaders } },
+    )
+    setOrgCookies(response, resolved, instance)
+    setInstanceCookies(response, instance)
+    return response
+  }
+
   // -------------------------------------------------------------------------
   // 5. Standalone editors / boards — bypass org rewrite
   // -------------------------------------------------------------------------
@@ -506,8 +524,12 @@ export default async function proxy(req: NextRequest) {
   // -------------------------------------------------------------------------
   const resolved = await resolveTenant(req, instance)
   const requestHeaders = tenantRequestHeaders(req, resolved, instance)
+  // `${search}` is load-bearing: a rewrite destination built from an absolute
+  // path drops the base URL's query, and Next treats the destination's search
+  // as the request's. Every other branch above appends it; this one did not, so
+  // org-scoped pages lost their query string (?page, ?q, ?tab, …).
   const response = NextResponse.rewrite(
-    new URL(`/orgs/${resolved.slug}${pathname}`, req.url),
+    new URL(`/orgs/${resolved.slug}${pathname}${search}`, req.url),
     { request: { headers: requestHeaders } },
   )
   setOrgCookies(response, resolved, instance)

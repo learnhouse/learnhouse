@@ -275,6 +275,37 @@ async def test_register_cache_hooks_cover_early_returns_and_history_failure(db, 
 
 
 @pytest.mark.asyncio
+async def test_org_config_change_busts_slug_cache_without_the_org_loaded(db, monkeypatch):
+    """A config write that never loads its Organization must still bust the
+    org-by-slug cache.
+
+    This is the shape of every org-policy save: the endpoint selects only
+    OrganizationConfig, so the identity map has no Organization to read the slug
+    from. The lookup misses without raising, so the SQL fallback has to run on a
+    miss and not only on an exception — otherwise the slug cache keeps serving
+    the pre-write config and the dashboard shows the old values back.
+    """
+    sync_session = db.sync_session
+    registrations = _capture_hooks(monkeypatch)
+    org_config_changed = registrations[(OrganizationConfig, "after_update")]
+
+    monkeypatch.setattr(database.Session, "object_session", lambda target: sync_session)
+    sync_session._org_slugs_to_invalidate = set()
+
+    org_config = OrganizationConfig(org_id=777, config={})
+    db.add(org_config)
+    await db.flush()
+
+    # No Organization in the identity map — exactly what the org-policy PUT does.
+    connection = _FakeConnection(row=("policy-only-org",))
+    org_config_changed(None, connection, org_config)
+
+    assert connection.executed
+    assert "policy-only-org" in sync_session._org_slugs_to_invalidate
+    assert 777 in sync_session._org_config_ids_to_invalidate
+
+
+@pytest.mark.asyncio
 async def test_register_cache_hooks_cover_fallback_queries_and_commit_warning(db, monkeypatch, caplog):
     sync_session = db.sync_session
 

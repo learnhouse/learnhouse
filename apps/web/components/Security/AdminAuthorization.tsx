@@ -39,7 +39,7 @@ const AdminAuthorization: React.FC<AuthorizationProps> = ({ children, authorizat
     }
 
     // Convert pattern to a regex pattern
-    const regexPattern = new RegExp(`^${pattern.replace(/[\/.*+?^${}()|[\]\\]/g, '\\$&').replace(/\\\*/g, '.*')}$`);
+    const regexPattern = new RegExp(`^${pattern.replace(/[/.*+?^${}()|[\]\\]/g, '\\$&').replace(/\\\*/g, '.*')}$`);
 
     // Test the pathname against the regex pattern
     return regexPattern.test(pathname);
@@ -54,7 +54,9 @@ const AdminAuthorization: React.FC<AuthorizationProps> = ({ children, authorizat
     }
 
     if (!isUserAuthenticated) {
-      router.push(getUriWithOrg(org.slug, '/login'));
+      // org can still be null here (its fetch is client-side and may not have
+      // landed); getUriWithOrg tolerates an empty slug, dereferencing does not.
+      router.push(getUriWithOrg(org?.slug ?? '', '/login'));
       return;
     }
 

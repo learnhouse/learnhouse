@@ -11,6 +11,7 @@ import {
   ALL_AUTH_METHODS,
   AUTH_METHOD_OPTIONS,
   ReadOnlyNotice,
+  SecuritySkeleton,
   sameMethodSet,
   useOrgSecurityPolicy,
 } from './shared'
@@ -30,6 +31,7 @@ const OrgSignInMethods: React.FC = () => {
   const {
     orgId,
     policy,
+    policyLoading,
     seedVersion,
     savePolicy,
     saving,
@@ -62,6 +64,9 @@ const OrgSignInMethods: React.FC = () => {
     draftMethods.length > 0 && !ALL_AUTH_METHODS.every((m) => draftMethods.includes(m))
 
   if (!orgId) return null
+  // Rendering the default (everything allowed) before the saved policy lands
+  // would show boxes the admin never ticked.
+  if (policyLoading) return <SecuritySkeleton />
 
   const readOnly = canManageOrg !== true
   const controlsDisabled = saving || readOnly
