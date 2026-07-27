@@ -12,11 +12,13 @@ import UserAvatar from '@components/Objects/UserAvatar'
 import { getAPIUrl } from '@services/config/config'
 import { getOrgLogoMediaDirectory } from '@services/media/media'
 import { apiFetch } from '@services/utils/ts/requests'
+import { queryKeys } from '@/lib/query/keys'
 import {
   fetchPrices,
   fetchSubscription,
   fetchUpcomingInvoice,
   fetchInvoices,
+  billingFulfill,
 } from './_lib/billingClient'
 import { resolvePlanIdFromOrg } from './_lib/plans'
 import PlanUsage from './_components/PlanUsage'
@@ -166,16 +168,66 @@ function BillingClient() {
   // params so a reload doesn't re-fire.
   const checkoutParam = searchParams?.get('checkout')
   const packPurchased = searchParams?.get('pack_purchased')
+  const checkoutSessionId = searchParams?.get('session_id')
+  const orgSlug = org?.slug
   useEffect(() => {
     if (!orgId || (!checkoutParam && !packPurchased)) return
     if (checkoutParam === 'success' || packPurchased) {
-      queryClient.invalidateQueries({ queryKey: ['billing'] })
-      queryClient.invalidateQueries({ queryKey: ['orgs', 'user'] })
-      toast.success(
-        packPurchased
-          ? t('billing.pack_purchased', { defaultValue: 'Add-on purchased — your limits are updated.' })
-          : t('billing.checkout_success', { defaultValue: 'Subscription updated — welcome to your new plan!' }),
-      )
+      // Refreshing the plan/usage queries is not enough on its own: the org
+      // detail query feeds usePlan() and carries a 5-minute staleTime, so
+      // without invalidating it too a genuinely-upgraded org keeps rendering its
+      // old plan and limits.
+      const refresh = () => {
+        queryClient.invalidateQueries({ queryKey: ['billing'] })
+        queryClient.invalidateQueries({ queryKey: ['orgs', 'user'] })
+        if (orgSlug) queryClient.invalidateQueries({ queryKey: queryKeys.org.detail(orgSlug) })
+      }
+
+      // Packs land here without a session_id and are applied by the webhook
+      // alone, so there is nothing to confirm — keep the existing behaviour.
+      if (packPurchased || !checkoutSessionId) {
+        refresh()
+        toast.success(
+          packPurchased
+            ? t('billing.pack_purchased', { defaultValue: 'Add-on purchased — your limits are updated.' })
+            : t('billing.checkout_success', { defaultValue: 'Subscription updated — welcome to your new plan!' }),
+        )
+      } else {
+        // Redundant automatic fulfillment: apply the plan directly from the paid
+        // Stripe session so the org upgrades even when the webhook is delayed or
+        // misconfigured. Idempotent and server-authorized.
+        //
+        // Announce success only once something confirms the plan actually
+        // changed. Claiming "welcome to your new plan" unconditionally is how a
+        // failed upgrade reached the customer looking like a completed one.
+        billingFulfill({ sessionId: checkoutSessionId, orgId })
+          .then((result) => {
+            if (result?.fulfilled) {
+              toast.success(
+                t('billing.checkout_success', {
+                  defaultValue: 'Subscription updated — welcome to your new plan!',
+                }),
+              )
+            } else {
+              toast.success(
+                t('billing.checkout_settling', {
+                  defaultValue:
+                    'Payment received — your new plan is being applied and will appear shortly.',
+                }),
+              )
+            }
+          })
+          .catch((err) => {
+            console.error('[billing] fulfill on return failed:', err)
+            toast(
+              t('billing.checkout_settling_delayed', {
+                defaultValue:
+                  'Payment received, but your plan has not updated yet. Refresh in a moment — contact support if it persists.',
+              }),
+            )
+          })
+          .finally(refresh)
+      }
     } else if (checkoutParam === 'cancelled') {
       toast(t('billing.checkout_cancelled', { defaultValue: 'Checkout cancelled — no changes were made.' }))
     }
@@ -183,7 +235,7 @@ function BillingClient() {
     ;['checkout', 'session_id', 'pack_purchased', 'pack'].forEach((k) => sp.delete(k))
     const qs = sp.toString()
     router.replace(qs ? `/billing?${qs}` : '/billing')
-  }, [orgId, checkoutParam, packPurchased, queryClient, router, searchParams, t])
+  }, [orgId, checkoutParam, packPurchased, checkoutSessionId, orgSlug, queryClient, router, searchParams, t])
 
   const currentPlanId = resolvePlanIdFromOrg(org)
   const isOrgActive = resolveOrgActive(org)
