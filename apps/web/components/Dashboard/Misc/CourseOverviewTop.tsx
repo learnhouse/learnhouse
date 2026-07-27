@@ -10,6 +10,8 @@ import Link from 'next/link'
 import Image from 'next/image'
 import EmptyThumbnailImage from '../../../public/empty_thumbnail.png'
 import { BookCopy, BrainCircuit, Eye, Globe, GlobeLock, Loader2, Check } from 'lucide-react'
+import { GlobeStand } from '@phosphor-icons/react'
+import { useAtlasMini, useRegisterAtlasPageContext } from '@components/Dashboard/Atlas/AtlasMiniContext'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@components/ui/tooltip'
 import { useTranslation } from 'react-i18next'
 import { updateCourse } from '@services/courses/courses'
@@ -37,9 +39,23 @@ export function CourseOverviewTop({
   const [isPublishing, setIsPublishing] = useState(false)
   const [isIndexing, setIsIndexing] = useState(false)
   const [isIndexed, setIsIndexed] = useState(false)
+  const { open: atlasOpen, toggle: toggleAtlas } = useAtlasMini()
 
   const courseStructure = course?.courseStructure
   const isPublished = courseStructure?.published
+
+  // Tell Atlas which course the user is viewing so the agent can pre-focus
+  // it and skip the "which course?" round-trip on terse messages like
+  // "fill this please". Cleared automatically on unmount.
+  useRegisterAtlasPageContext(
+    courseStructure?.course_uuid
+      ? {
+          course_uuid: courseStructure.course_uuid,
+          course_name: courseStructure.name,
+        }
+      : null,
+  )
+
   const isAIEnabled = org?.config?.config?.resolved_features?.ai?.enabled ?? org?.config?.config?.features?.ai?.enabled !== false
 
   const indexCourseForAI = useCallback(async () => {
@@ -265,6 +281,26 @@ export function CourseOverviewTop({
             <Eye className="w-4 h-4" />
             <span className="hidden sm:inline">{t('dashboard.courses.preview')}</span>
           </Link>
+          {isAIEnabled && (
+            <>
+              <div className="w-px self-stretch bg-neutral-200/80" />
+              <button
+                type="button"
+                onClick={toggleAtlas}
+                aria-pressed={atlasOpen}
+                aria-label="Toggle Atlas quick assist"
+                title="Atlas"
+                className={`px-3.5 py-2 text-sm font-semibold flex items-center space-x-2 whitespace-nowrap transition-colors ${
+                  atlasOpen
+                    ? 'bg-violet-100 text-violet-700'
+                    : 'bg-violet-50/70 text-violet-700 hover:bg-violet-100/70'
+                }`}
+              >
+                <GlobeStand size={16} weight="duotone" className="flex-none" />
+                <span className="hidden md:inline">Atlas</span>
+              </button>
+            </>
+          )}
         </div>
       </div>
     </>

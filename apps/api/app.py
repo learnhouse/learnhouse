@@ -79,6 +79,19 @@ configure_cors(app)
 app.add_middleware(GZipMiddleware, minimum_size=1000)
 register_ee_middlewares(app)
 
+# Embedded MCP server (off by default; LEARNHOUSE_MCP_ENABLED=true).
+# Mounted on the root app so v1 router dependencies don't interfere;
+# authenticated by MCPAuthMiddleware with lh_ API tokens. Its session
+# manager lifecycle is driven from startup_app/shutdown_app via
+# app.state.mcp_session_manager (mounted sub-apps get no lifespan).
+if learnhouse_config.ai_config.mcp_enabled:
+    from src.security.mcp_auth import MCPAuthMiddleware
+    from src.services.ai.mcp.server import MCPASGIApp, build_mcp_session_manager
+
+    _mcp_session_manager = build_mcp_session_manager()
+    app.state.mcp_session_manager = _mcp_session_manager
+    app.mount("/mcp", MCPAuthMiddleware(MCPASGIApp(_mcp_session_manager)))
+
 # Lifecycle
 app.add_event_handler("startup", startup_app(app))
 app.add_event_handler("shutdown", shutdown_app(app))

@@ -119,3 +119,133 @@ async def test_generate_stream_reraises_on_provider_error(monkeypatch):
             prompt="hi", session=session, model_name="gemini-x"
         ):
             pass
+
+
+async def test_style_reference_primes_history_with_exemplar(monkeypatch):
+    """A style_reference must be injected as a user/model exemplar pair at the
+    FRONT of the history so the new block inherits its design language."""
+    captured = {}
+
+    async def _fake_stream(**kwargs):
+        captured.update(kwargs)
+        yield "<!DOCTYPE html><html></html>"
+
+    monkeypatch.setattr(mb, "get_redis_connection", lambda: _FakeRedis())
+    monkeypatch.setattr(mb, "generate_stream", _fake_stream)
+
+    session = mb.create_magicblock_session(
+        block_uuid="b1", activity_uuid="a1", context=_context()
+    )
+
+    async for _ in mb.generate_magicblock_stream(
+        prompt="make a quiz",
+        session=session,
+        style_reference="<html>REFERENCE_MARKER</html>",
+    ):
+        pass
+
+    history = captured["history"]
+    assert history[0]["role"] == "user"
+    assert "STYLE REFERENCE" in history[0]["content"]
+    assert "REFERENCE_MARKER" in history[0]["content"]
+    assert history[1]["role"] == "model"
+
+
+async def test_no_style_reference_leaves_history_empty_on_first_turn(monkeypatch):
+    captured = {}
+
+    async def _fake_stream(**kwargs):
+        captured.update(kwargs)
+        yield "<!DOCTYPE html><html></html>"
+
+    monkeypatch.setattr(mb, "get_redis_connection", lambda: _FakeRedis())
+    monkeypatch.setattr(mb, "generate_stream", _fake_stream)
+
+    session = mb.create_magicblock_session(
+        block_uuid="b1", activity_uuid="a1", context=_context()
+    )
+
+    async for _ in mb.generate_magicblock_stream(prompt="build", session=session):
+        pass
+
+    assert captured["history"] == []
+    assert captured["user_prompt"] == "build"
+
+
+async def test_iteration_uses_surgical_edit_prompt(monkeypatch):
+    """When iterating on existing HTML, the user prompt must carry the strict
+    surgical-edit rules and embed the current HTML."""
+    captured = {}
+
+    async def _fake_stream(**kwargs):
+        captured.update(kwargs)
+        yield "<!DOCTYPE html><html></html>"
+
+    monkeypatch.setattr(mb, "get_redis_connection", lambda: _FakeRedis())
+    monkeypatch.setattr(mb, "generate_stream", _fake_stream)
+
+    session = mb.create_magicblock_session(
+        block_uuid="b1", activity_uuid="a1", context=_context()
+    )
+    session.iteration_count = 1
+
+    async for _ in mb.generate_magicblock_stream(
+        prompt="change the color",
+        session=session,
+        current_html="<html>ORIGINAL_BODY</html>",
+    ):
+        pass
+
+    user_prompt = captured["user_prompt"]
+    assert "SURGICAL CHANGE" in user_prompt
+    assert "STRICT EDIT RULES" in user_prompt
+    assert "ORIGINAL_BODY" in user_prompt
+
+
+async def test_generation_appends_revision_snapshot(monkeypatch):
+    async def _fake_stream(**kwargs):
+        yield "<!DOCTYPE html><html><body>hi</body></html>"
+
+    monkeypatch.setattr(mb, "get_redis_connection", lambda: _FakeRedis())
+    monkeypatch.setattr(mb, "generate_stream", _fake_stream)
+
+    session = mb.create_magicblock_session(
+        block_uuid="b1", activity_uuid="a1", context=_context()
+    )
+    assert session.revisions == []
+
+    async for _ in mb.generate_magicblock_stream(prompt="build a widget", session=session):
+        pass
+
+    assert len(session.revisions) == 1
+    rev = session.revisions[0]
+    assert rev.prompt == "build a widget"
+    assert rev.revision_uuid.startswith("rev_")
+    assert "hi" in rev.html
+    assert session.iteration_count == 1
+
+
+async def test_revisions_are_capped_at_max(monkeypatch):
+    from src.services.ai.schemas.magicblocks import MagicBlockRevision
+
+    async def _fake_stream(**kwargs):
+        yield "<!DOCTYPE html><html></html>"
+
+    monkeypatch.setattr(mb, "get_redis_connection", lambda: _FakeRedis())
+    monkeypatch.setattr(mb, "generate_stream", _fake_stream)
+
+    session = mb.create_magicblock_session(
+        block_uuid="b1", activity_uuid="a1", context=_context()
+    )
+    session.revisions = [
+        MagicBlockRevision(
+            revision_uuid=f"rev_{i}", prompt="p", html="<html></html>", created_at=0.0
+        )
+        for i in range(mb.MAX_REVISIONS)
+    ]
+
+    async for _ in mb.generate_magicblock_stream(prompt="one more", session=session):
+        pass
+
+    assert len(session.revisions) == mb.MAX_REVISIONS
+    assert session.revisions[-1].prompt == "one more"

@@ -10,6 +10,7 @@ from fastapi import FastAPI, HTTPException
 from httpx import ASGITransport, AsyncClient
 
 import src.routers.analytics as analytics_router_module
+import src.services.analytics.runner as analytics_runner_module
 from src.core.events.database import get_db_session
 from src.db.users import AnonymousUser
 from src.routers.analytics import (
@@ -93,17 +94,17 @@ class TestAnalyticsHelpers:
             _validate_course_uuid("c" * 101)
 
     def test_get_read_client_handles_missing_and_configured_tinybird(self, monkeypatch):
-        monkeypatch.setattr(analytics_router_module, "_read_client", None)
+        monkeypatch.setattr(analytics_runner_module, "_read_client", None)
         monkeypatch.setattr(
-            "src.routers.analytics.get_learnhouse_config",
+            "src.services.analytics.runner.get_learnhouse_config",
             lambda: SimpleNamespace(tinybird_config=None),
         )
         assert _get_read_client() is None
 
         fake_client = SimpleNamespace()
-        monkeypatch.setattr(analytics_router_module, "_read_client", None)
+        monkeypatch.setattr(analytics_runner_module, "_read_client", None)
         monkeypatch.setattr(
-            "src.routers.analytics.get_learnhouse_config",
+            "src.services.analytics.runner.get_learnhouse_config",
             lambda: SimpleNamespace(
                 tinybird_config=SimpleNamespace(
                     api_url="https://tinybird.test",
@@ -111,10 +112,10 @@ class TestAnalyticsHelpers:
                 )
             ),
         )
-        with patch("src.routers.analytics.httpx.AsyncClient", return_value=fake_client):
+        with patch("src.services.analytics.runner.httpx.AsyncClient", return_value=fake_client):
             assert _get_read_client() is fake_client
 
-        monkeypatch.setattr(analytics_router_module, "_read_client", fake_client)
+        monkeypatch.setattr(analytics_runner_module, "_read_client", fake_client)
         assert _get_read_client() is fake_client
 
     async def test_verify_org_membership_and_admin(self):
@@ -128,12 +129,12 @@ class TestAnalyticsHelpers:
             result.scalars.return_value = scalars
             return result
 
-        with patch("src.routers.analytics.is_user_superadmin", new_callable=AsyncMock, return_value=True):
+        with patch("src.services.analytics.runner.is_user_superadmin", new_callable=AsyncMock, return_value=True):
             await _verify_org_membership(1, 10, db)
             await _verify_org_admin(1, 10, db)
 
         db.execute.return_value = _make_execute_result(first_result=None)
-        with patch("src.routers.analytics.is_user_superadmin", new_callable=AsyncMock, return_value=False):
+        with patch("src.services.analytics.runner.is_user_superadmin", new_callable=AsyncMock, return_value=False):
             with pytest.raises(HTTPException, match="Not a member"):
                 await _verify_org_membership(1, 10, db)
 
@@ -142,19 +143,19 @@ class TestAnalyticsHelpers:
             _make_execute_result(first_result=membership),
             _make_execute_result(first_result=SimpleNamespace(rights={"organizations": {"action_update": True}})),
         ]
-        with patch("src.routers.analytics.is_user_superadmin", new_callable=AsyncMock, return_value=False):
+        with patch("src.services.analytics.runner.is_user_superadmin", new_callable=AsyncMock, return_value=False):
             await _verify_org_admin(1, 10, db)
 
         db.execute.side_effect = [
             _make_execute_result(first_result=membership),
             _make_execute_result(first_result=SimpleNamespace(rights={"organizations": {"action_update": False}})),
         ]
-        with patch("src.routers.analytics.is_user_superadmin", new_callable=AsyncMock, return_value=False):
+        with patch("src.services.analytics.runner.is_user_superadmin", new_callable=AsyncMock, return_value=False):
             with pytest.raises(HTTPException, match="Admin access required"):
                 await _verify_org_admin(1, 10, db)
 
         db.execute.side_effect = [_make_execute_result(first_result=None)]
-        with patch("src.routers.analytics.is_user_superadmin", new_callable=AsyncMock, return_value=False):
+        with patch("src.services.analytics.runner.is_user_superadmin", new_callable=AsyncMock, return_value=False):
             with pytest.raises(HTTPException, match="Admin access required"):
                 await _verify_org_admin(1, 10, db)
 
@@ -162,7 +163,7 @@ class TestAnalyticsHelpers:
             _make_execute_result(first_result=membership),
             _make_execute_result(first_result=None),
         ]
-        with patch("src.routers.analytics.is_user_superadmin", new_callable=AsyncMock, return_value=False):
+        with patch("src.services.analytics.runner.is_user_superadmin", new_callable=AsyncMock, return_value=False):
             with pytest.raises(HTTPException, match="Admin access required"):
                 await _verify_org_admin(1, 10, db)
 
@@ -240,11 +241,11 @@ class TestAnalyticsHelpers:
     @pytest.mark.asyncio
     async def test_execute_tinybird_query_cache_and_error_paths(self):
         cached = {"data": [{"ok": True}], "rows": 1, "meta": []}
-        with patch("src.routers.analytics.get_cached_result", return_value=cached):
+        with patch("src.services.analytics.runner.get_cached_result", return_value=cached):
             assert await _execute_tinybird_query("daily_active_users", "sql", 1, 30) == cached
 
-        with patch("src.routers.analytics.get_cached_result", return_value=None), patch(
-            "src.routers.analytics._get_read_client",
+        with patch("src.services.analytics.runner.get_cached_result", return_value=None), patch(
+            "src.services.analytics.runner._get_read_client",
             return_value=None,
         ):
             with pytest.raises(HTTPException, match="Analytics not configured"):
@@ -254,26 +255,26 @@ class TestAnalyticsHelpers:
         not_found_response = httpx.Response(404, request=request, content=b"table not found")
         not_found_exc = httpx.HTTPStatusError("not found", request=request, response=not_found_response)
         fake_client = SimpleNamespace(post=AsyncMock(side_effect=not_found_exc))
-        with patch("src.routers.analytics.get_cached_result", return_value=None), patch(
-            "src.routers.analytics._get_read_client",
+        with patch("src.services.analytics.runner.get_cached_result", return_value=None), patch(
+            "src.services.analytics.runner._get_read_client",
             return_value=fake_client,
-        ), patch("src.routers.analytics.set_cached_result") as set_cached:
+        ), patch("src.services.analytics.runner.set_cached_result") as set_cached:
             result = await _execute_tinybird_query("daily_active_users", "sql", 1, 30)
         assert result == {"data": [], "rows": 0, "meta": []}
 
         bad_response = httpx.Response(500, request=request, content=b"boom")
         bad_exc = httpx.HTTPStatusError("boom", request=request, response=bad_response)
         fake_client = SimpleNamespace(post=AsyncMock(side_effect=bad_exc))
-        with patch("src.routers.analytics.get_cached_result", return_value=None), patch(
-            "src.routers.analytics._get_read_client",
+        with patch("src.services.analytics.runner.get_cached_result", return_value=None), patch(
+            "src.services.analytics.runner._get_read_client",
             return_value=fake_client,
         ):
             with pytest.raises(HTTPException, match="Analytics query failed"):
                 await _execute_tinybird_query("daily_active_users", "sql", 1, 30)
 
         fake_client = SimpleNamespace(post=AsyncMock(side_effect=RuntimeError("boom")))
-        with patch("src.routers.analytics.get_cached_result", return_value=None), patch(
-            "src.routers.analytics._get_read_client",
+        with patch("src.services.analytics.runner.get_cached_result", return_value=None), patch(
+            "src.services.analytics.runner._get_read_client",
             return_value=fake_client,
         ):
             with pytest.raises(HTTPException, match="Analytics query failed"):
@@ -289,10 +290,10 @@ class TestAnalyticsHelpers:
             json=lambda: payload,
         )
         fake_client = SimpleNamespace(post=AsyncMock(return_value=fake_response))
-        with patch("src.routers.analytics.get_cached_result", return_value=None), patch(
-            "src.routers.analytics._get_read_client",
+        with patch("src.services.analytics.runner.get_cached_result", return_value=None), patch(
+            "src.services.analytics.runner._get_read_client",
             return_value=fake_client,
-        ), patch("src.routers.analytics.set_cached_result") as set_cached:
+        ), patch("src.services.analytics.runner.set_cached_result") as set_cached:
             result = await _execute_tinybird_query("daily_active_users", "sql", 1, 30)
         assert result["data"][0]["value"] is None
         assert result["data"][0]["other"] is None
