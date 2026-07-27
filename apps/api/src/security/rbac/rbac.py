@@ -277,6 +277,64 @@ async def _load_applicable_roles(
     return (await db_session.execute(statement)).scalars().all()
 
 
+async def _shared_org_ids_with_target_user(
+    db_session: AsyncSession,
+    user_id: int,
+    target_user_uuid: str,
+) -> list[int] | None:
+    """Org ids where both the caller and the targeted user are members.
+
+    Returns ``None`` when ``target_user_uuid`` names no real user — the create
+    paths pass a placeholder (``user_x``), which has no target to be scoped
+    against and is gated by the endpoint instead.
+    """
+    from src.db.users import User
+
+    target_id = (
+        await db_session.execute(
+            select(User.id).where(User.user_uuid == target_user_uuid)
+        )
+    ).scalars().first()
+    if target_id is None:
+        return None
+
+    caller_orgs = set(
+        (
+            await db_session.execute(
+                select(UserOrganization.org_id).where(UserOrganization.user_id == user_id)
+            )
+        ).scalars().all()
+    )
+    target_orgs = set(
+        (
+            await db_session.execute(
+                select(UserOrganization.org_id).where(UserOrganization.user_id == target_id)
+            )
+        ).scalars().all()
+    )
+    return sorted(caller_orgs & target_orgs)
+
+
+async def _load_roles_for_user_target(
+    db_session: AsyncSession,
+    user_id: int,
+    shared_org_ids: list[int],
+):
+    """Roles that may act on a user account, scoped to shared organizations.
+
+    A user row carries no org of its own, so the generic resolver answers None
+    for it. Loading *every* role the caller holds there would let an admin of one
+    organization update or delete an account that only belongs to another.
+    """
+    statement = (
+        select(Role)
+        .join(UserOrganization)
+        .where(UserOrganization.user_id == user_id)
+        .where(Role.org_id.in_(shared_org_ids) | (Role.org_id == null()))  # type: ignore[union-attr]
+    )
+    return (await db_session.execute(statement)).scalars().all()
+
+
 # Tested and working
 async def authorization_verify_based_on_roles(
     request: Request,
@@ -297,9 +355,28 @@ async def authorization_verify_based_on_roles(
     # one of their org roles carries the permission.
     target_org_id = await get_element_organization_id(element_uuid, db_session)
 
-    user_roles_in_organization_and_standard_roles = await _load_applicable_roles(
-        db_session, user_id, target_org_id
-    )
+    if element_type == "users" and target_org_id is None:
+        # A user row has no org column, so the generic resolver returns None and
+        # the placeholder branch below would hand back every role the caller
+        # holds anywhere — letting an admin of one org act on an account that
+        # only belongs to another. Scope to the orgs the two actually share.
+        shared_org_ids = await _shared_org_ids_with_target_user(
+            db_session, user_id, element_uuid
+        )
+        if shared_org_ids is not None:
+            if not shared_org_ids:
+                return False
+            user_roles_in_organization_and_standard_roles = await _load_roles_for_user_target(
+                db_session, user_id, shared_org_ids
+            )
+        else:
+            user_roles_in_organization_and_standard_roles = await _load_applicable_roles(
+                db_session, user_id, target_org_id
+            )
+    else:
+        user_roles_in_organization_and_standard_roles = await _load_applicable_roles(
+            db_session, user_id, target_org_id
+        )
 
 
     # Check if user is the author of the resource for "own" permissions
