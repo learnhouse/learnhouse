@@ -352,3 +352,29 @@ class TestSignupCustomFields:
 
         row = await _fetch(db, created.id)
         assert row.extra_metadata is None
+
+
+class TestCompletionEdgeCases:
+    @pytest.mark.asyncio
+    async def test_org_without_fields_stores_nothing_on_completion(self, db, org):
+        """Nothing declared means nothing to collect, so the call is a no-op
+        rather than an error."""
+        await _set_signup_fields(db, org, [])
+
+        from src.services.orgs.signup_fields import complete_signup_fields_for_user
+
+        assert await complete_signup_fields_for_user(org.id, 12345, {"a": "b"}, db) == {}
+
+    @pytest.mark.asyncio
+    async def test_completion_for_unknown_user_is_404(self, db, org):
+        await _set_signup_fields(
+            db, org, [{"key": "company", "label": "Company", "type": "text"}]
+        )
+
+        from src.services.orgs.signup_fields import complete_signup_fields_for_user
+
+        with pytest.raises(HTTPException) as exc:
+            await complete_signup_fields_for_user(
+                org.id, 999_999, {"company": "Acme"}, db
+            )
+        assert exc.value.status_code == 404

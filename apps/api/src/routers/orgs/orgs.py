@@ -933,6 +933,8 @@ async def api_get_pending_signup_fields(
     current_user: PublicUser = Depends(get_authenticated_user),
     db_session: AsyncSession = Depends(get_db_session),
 ):
+    from sqlmodel import select
+
     from src.db.users import User
     from src.security.org_auth import is_org_member
     from src.services.orgs.signup_fields import (

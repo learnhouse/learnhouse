@@ -1050,6 +1050,68 @@ class TestOrgUsersService:
         assert "text/csv" in csv_response.media_type
 
     @pytest.mark.asyncio
+    async def test_export_csv_includes_custom_signup_field_columns(
+        self, mock_request, db, org, admin_user
+    ):
+        """The org's declared signup fields become extra export columns, with
+        booleans rendered Yes/No and unanswered fields left blank."""
+        from src.db.organization_config import OrganizationConfig
+
+        member_role = await _make_role(
+            db, org, id=11, name="Member", role_uuid="role_member_cf"
+        )
+        member = await _make_user(
+            db,
+            id=21,
+            username="member21",
+            first_name="Member",
+            last_name="TwentyOne",
+            email="member21@test.com",
+            user_uuid="user_21",
+        )
+        member.extra_metadata = {"company": "Acme", "news": True}
+        db.add(member)
+        await _link_user(db, member.id, org.id, member_role.id)
+
+        db.add(
+            OrganizationConfig(
+                org_id=org.id,
+                config={
+                    "config_version": "2.0",
+                    "customization": {
+                        "signup_fields": {
+                            "fields": [
+                                {"key": "company", "label": "Company", "type": "text"},
+                                {"key": "news", "label": "Newsletter", "type": "checkbox"},
+                                {"key": "cohort", "label": "Cohort", "type": "text"},
+                            ]
+                        }
+                    },
+                },
+                creation_date=str(datetime.now()),
+                update_date=str(datetime.now()),
+            )
+        )
+        await db.commit()
+
+        with patch(
+            "src.services.orgs.users.is_org_member", return_value=True
+        ), patch(
+            "src.security.superadmin.is_user_superadmin", return_value=False
+        ), patch(
+            "src.security.org_auth.is_org_admin", return_value=True
+        ):
+            response = await export_organization_users_csv(
+                mock_request, org.id, db, admin_user, search="member21"
+            )
+
+        csv_text = await _streaming_response_text(response)
+        header, row = csv_text.strip().splitlines()[0], csv_text.strip().splitlines()[1]
+        assert header.endswith("Company,Newsletter,Cohort")
+        # Acme, the boolean rendered Yes, and an empty cell for the unanswered one.
+        assert row.endswith("Acme,Yes,")
+
+    @pytest.mark.asyncio
     async def test_get_organization_users_auth_guards(
         self, mock_request, db, org, admin_user, anonymous_user
     ):

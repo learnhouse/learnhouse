@@ -13,6 +13,7 @@ from src.services.orgs.signup_fields import (
     MAX_TEXT_LENGTH,
     MAX_TOTAL_SERIALIZED_BYTES,
     get_signup_fields,
+    missing_required_fields,
     validate_signup_field_values,
 )
 
@@ -194,8 +195,19 @@ class TestValidateSignupFieldValues:
     def test_urls_in_free_text_are_rejected(self):
         """Public signup free-text is a standard phishing/spam relay — the same
         reason display-name fields reject links."""
-        with pytest.raises(HTTPException):
-            validate_signup_field_values(_fields(), {"company": "http://spam.example"})
+        # Deliberately a field with no tight max_length, so the URL check is
+        # what rejects this rather than the length check.
+        fields = [SignupFieldItem(key="notes", label="Notes", type="textarea")]
+        with pytest.raises(HTTPException) as exc:
+            validate_signup_field_values(fields, {"notes": "visit http://spam.example now"})
+        assert exc.value.detail["field"] == "notes"
+
+    @pytest.mark.parametrize("value", ["nan", "inf", "-inf", float("nan"), float("inf")])
+    def test_non_finite_numbers_are_rejected(self, value):
+        """float() happily parses 'nan'/'inf'; neither belongs in stored JSON."""
+        with pytest.raises(HTTPException) as exc:
+            validate_signup_field_values(_fields(), {"company": "Acme", "age": value})
+        assert exc.value.detail["field"] == "age"
 
     def test_total_payload_size_is_capped(self):
         # Many generous fields, each individually legal, must still not add up
@@ -209,3 +221,34 @@ class TestValidateSignupFieldValues:
             validate_signup_field_values(fields, payload)
         assert exc.value.detail["code"] == "SIGNUP_FIELDS_TOO_LARGE"
         assert len(str(payload)) > MAX_TOTAL_SERIALIZED_BYTES
+
+
+class TestMissingRequiredFields:
+    """Drives the post-OAuth "complete your profile" prompt."""
+
+    def test_optional_fields_are_never_outstanding(self):
+        fields = [SignupFieldItem(key="notes", type="textarea", required=False)]
+        assert missing_required_fields(fields, {}) == []
+
+    def test_unanswered_required_text_is_outstanding(self):
+        fields = [SignupFieldItem(key="company", type="text", required=True)]
+        assert [f.key for f in missing_required_fields(fields, None)] == ["company"]
+        assert [f.key for f in missing_required_fields(fields, {"company": "  "})] == ["company"]
+
+    def test_answered_required_text_is_not_outstanding(self):
+        fields = [SignupFieldItem(key="company", type="text", required=True)]
+        assert missing_required_fields(fields, {"company": "Acme"}) == []
+
+    def test_unticked_required_checkbox_is_outstanding(self):
+        fields = [SignupFieldItem(key="terms", type="checkbox", required=True)]
+        assert [f.key for f in missing_required_fields(fields, {"terms": False})] == ["terms"]
+        assert missing_required_fields(fields, {"terms": True}) == []
+
+    def test_mixed_set_reports_only_the_outstanding_ones(self):
+        fields = [
+            SignupFieldItem(key="company", type="text", required=True),
+            SignupFieldItem(key="notes", type="textarea", required=False),
+            SignupFieldItem(key="terms", type="checkbox", required=True),
+        ]
+        outstanding = missing_required_fields(fields, {"company": "Acme", "terms": False})
+        assert [f.key for f in outstanding] == ["terms"]
