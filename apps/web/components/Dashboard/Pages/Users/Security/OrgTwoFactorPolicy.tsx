@@ -66,6 +66,7 @@ const OrgTwoFactorPolicy: React.FC = () => {
     access_token,
     currentUserId,
     policy,
+    policyLoading,
     seedVersion,
     mfaFetch,
     savePolicy,
@@ -241,7 +242,7 @@ const OrgTwoFactorPolicy: React.FC = () => {
   // --- states --------------------------------------------------------------
 
   if (!orgId) return null
-  if (loading) return <SecuritySkeleton />
+  if (loading || policyLoading) return <SecuritySkeleton />
   if (forbidden) return <NotAdminNotice />
 
   if (loadError && !compliance) {

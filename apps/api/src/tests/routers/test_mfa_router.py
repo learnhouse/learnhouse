@@ -481,6 +481,37 @@ class TestSetOrgPolicy:
         assert response.status_code == 403
         assert response.json()["detail"]["code"] == "AUTH_METHOD_SELF_LOCKOUT"
 
+    async def test_auth_method_self_lockout_for_a_session_with_no_recorded_method(
+        self, app, client, db, org, admin_user
+    ):
+        _act_as(app, admin_user)
+        await _add_org_config(db, org.id)
+        # A session minted before the policy shipped carries no amr. The gate
+        # refuses it exactly like a disallowed method, so the save must not go
+        # through — the admin would have no way back in.
+        set_session_provenance(SessionProvenance(amr=None, org_id=org.id))
+        response = await client.put(
+            f"/api/v1/auth/mfa/org-policy/{org.id}",
+            json={"require_2fa": False, "allowed_auth_methods": ["password"]},
+        )
+        assert response.status_code == 403
+        assert response.json()["detail"]["code"] == "AUTH_METHOD_SELF_LOCKOUT"
+
+    async def test_get_settings_returns_the_saved_policy(
+        self, app, client, db, org, admin_user
+    ):
+        _act_as(app, admin_user)
+        await _add_org_config(db, org.id)
+        set_session_provenance(SessionProvenance(amr=AUTH_METHOD_PASSWORD, org_id=org.id))
+        await client.put(
+            f"/api/v1/auth/mfa/org-policy/{org.id}",
+            json={"require_2fa": False, "allowed_auth_methods": ["password"]},
+        )
+
+        response = await client.get(f"/api/v1/auth/mfa/org-policy/{org.id}/settings")
+        assert response.status_code == 200
+        assert response.json()["allowed_auth_methods"] == ["password"]
+
     async def test_session_sharing_self_lockout(self, app, client, db, org, admin_user):
         _act_as(app, admin_user)
         await _add_org_config(db, org.id)

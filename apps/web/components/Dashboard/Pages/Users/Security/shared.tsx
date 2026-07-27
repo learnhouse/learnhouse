@@ -201,30 +201,23 @@ export function useOrgSecurityPolicy() {
   const orgslug = org?.slug
   const queryClient = useQueryClient()
 
-  // Saved policy — seeded from the org config the page already loads, then kept
-  // authoritative from the PUT response.
-  const savedPolicy: OrgSecurityPolicy = React.useMemo(() => {
+  // First paint only. The org payload is served from a slug-keyed cache and is
+  // held by react-query for minutes after a save, so it is a hint, never the
+  // answer — the authoritative policy is fetched below.
+  const hintPolicy: OrgSecurityPolicy = React.useMemo(() => {
     const security = org?.config?.config?.admin_toggles?.security
     return security ? normalizePolicy(security) : DEFAULT_POLICY
   }, [org])
 
-  const [policy, setPolicy] = React.useState<OrgSecurityPolicy>(savedPolicy)
+  const [policy, setPolicy] = React.useState<OrgSecurityPolicy>(hintPolicy)
   const [saving, setSaving] = React.useState(false)
   const [saveError, setSaveError] = React.useState<string | null>(null)
   // Set when the backend refuses because the admin has no second factor of
   // their own — drives the "enable it on your account first" call to action.
   const [needsOwnMfa, setNeedsOwnMfa] = React.useState(false)
-
-  // Re-seed once the org config lands (it arrives asynchronously via OrgContext).
-  const seededRef = React.useRef(false)
+  // Bumped whenever an authoritative policy lands, so each tab knows to reset
+  // its drafts to it.
   const [seedVersion, setSeedVersion] = React.useState(0)
-  React.useEffect(() => {
-    if (seededRef.current) return
-    if (!org?.config?.config) return
-    seededRef.current = true
-    setPolicy(savedPolicy)
-    setSeedVersion((v) => v + 1)
-  }, [org, savedPolicy])
 
   // Same call shape as the account-level two-factor section: getAPIUrl() +
   // RequestBodyWithAuthHeader + getResponseMetadata. Deliberately NOT apiFetch —
@@ -240,6 +233,33 @@ export function useOrgSecurityPolicy() {
     },
     [access_token]
   )
+
+  // The saved policy, straight from the database. Reading it here rather than
+  // from the org payload is what stops a save from being followed by the old
+  // values reappearing.
+  const [policyLoading, setPolicyLoading] = React.useState(true)
+  React.useEffect(() => {
+    let cancelled = false
+    if (!orgId || !access_token) return
+    ;(async () => {
+      try {
+        const res = await mfaFetch(`/org-policy/${orgId}/settings`, 'GET')
+        if (cancelled) return
+        if (res.success) {
+          setPolicy(normalizePolicy(res.data))
+          setSeedVersion((v) => v + 1)
+        }
+      } catch {
+        // Keep the hint from the org payload; the tabs stay usable and a save
+        // still round-trips through the authoritative PUT response.
+      } finally {
+        if (!cancelled) setPolicyLoading(false)
+      }
+    })()
+    return () => {
+      cancelled = true
+    }
+  }, [orgId, access_token, mfaFetch])
 
   /**
    * Save only the fields this tab owns. The backend treats every field as
@@ -273,6 +293,7 @@ export function useOrgSecurityPolicy() {
         }
 
         setPolicy(normalizePolicy(res.data))
+        setSeedVersion((v) => v + 1)
 
         if (orgslug) await revalidateTags(['organizations'], orgslug)
         if (orgslug) queryClient.invalidateQueries({ queryKey: queryKeys.org.detail(orgslug) })
@@ -303,8 +324,7 @@ export function useOrgSecurityPolicy() {
     access_token,
     currentUserId,
     policy,
-    // Bumped when the async org config first lands, so a tab knows to reset its
-    // drafts to the freshly seeded policy.
+    policyLoading,
     seedVersion,
     mfaFetch,
     savePolicy,
