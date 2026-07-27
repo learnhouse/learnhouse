@@ -1,9 +1,6 @@
 'use client'
 import React from 'react'
-import Link from 'next/link'
 import { useTranslation } from 'react-i18next'
-import { toast } from 'react-hot-toast'
-import { useQueryClient } from '@tanstack/react-query'
 import {
   AlertTriangle,
   CheckCircle2,
@@ -14,22 +11,13 @@ import {
   Info,
   Loader2,
   RefreshCw,
-  ShieldAlert,
   ShieldCheck,
   ShieldOff,
   Users,
 } from 'lucide-react'
-import { useOrg } from '@components/Contexts/OrgContext'
-import { useLHSession } from '@components/Contexts/LHSessionContext'
 import useAdminStatus from '@components/Hooks/useAdminStatus'
-import { getAPIUrl, getUriWithOrg } from '@services/config/config'
-import {
-  RequestBodyWithAuthHeader,
-  getResponseMetadata,
-  revalidateTags,
-} from '@services/utils/ts/requests'
+import { getUriWithOrg } from '@services/config/config'
 import { getErrorMessage } from '@services/utils/ts/errorMessage'
-import { queryKeys } from '@/lib/query/keys'
 import { Switch } from '@components/ui/switch'
 import { Checkbox } from '@components/ui/checkbox'
 import { Button } from '@components/ui/button'
@@ -42,230 +30,69 @@ import {
   SelectValue,
 } from '@components/ui/select'
 import Modal from '@components/Objects/StyledElements/Modal/Modal'
+import {
+  AdminMfaCallout,
+  Badge,
+  ComplianceResponse,
+  GRACE_OPTIONS,
+  NotAdminNotice,
+  ReadOnlyNotice,
+  SecuritySkeleton,
+  SelfComplianceState,
+  StatTile,
+  addDays,
+  formatDate,
+  isExternalAuth,
+  memberName,
+  useOrgSecurityPolicy,
+} from './shared'
 
-// ---------------------------------------------------------------------------
-// Types — mirror of the backend payloads (src/routers/mfa.py)
-// ---------------------------------------------------------------------------
-
-type ComplianceMember = {
-  user_id: number
-  email: string | null
-  username: string | null
-  first_name: string | null
-  last_name: string | null
-  signup_method: string | null
-  mfa_enabled: boolean
-  confirmed_at: string | null
-}
-
-type ComplianceResponse = {
-  total: number
-  enabled: number
-  members: ComplianceMember[]
-}
-
-type OrgSecurityPolicy = {
-  require_2fa: boolean
-  require_2fa_grace_days: number
-  require_2fa_enabled_at: string | null
-  exempt_external_auth: boolean
-  // Which sign-in methods this org accepts. The full set = unrestricted.
-  allowed_auth_methods: string[]
-  // When off, a central learnhouse.io session can't carry members into this org.
-  allow_central_session_sharing: boolean
-}
-
-// The CALLING user's own compliance state — context only, not the policy.
-type SelfComplianceState = {
-  required: boolean
-  satisfied: boolean
-  deadline: string | null
-  days_remaining: number | null
-  blocking: boolean
-  exempt_reason: string | null
-}
-
-// Kept in sync with EXTERNAL_AUTH_METHODS in
-// apps/api/src/services/orgs/mfa_policy.py. An unrecognised signup_method is
-// deliberately treated as a local password account, i.e. subject to the policy.
-const EXTERNAL_AUTH_METHODS = [
-  'google',
-  'sso',
-  'saml',
-  'oidc',
-  'workos',
-  'keycloak',
-  'okta',
-  'auth0',
-]
-
-const GRACE_OPTIONS = [0, 7, 14, 30]
-
-// The complete set of sign-in methods. Selecting all of them = unrestricted,
-// which is also what an absent policy falls back to. Kept in sync with the
-// backend's allowed_auth_methods contract.
-const ALL_AUTH_METHODS = ['password', 'magic_login', 'google', 'sso'] as const
-
-const AUTH_METHOD_OPTIONS: {
-  key: string
-  labelKey: string
-  labelDefault: string
-  hintKey: string
-  hintDefault: string
-}[] = [
-  {
-    key: 'password',
-    labelKey: 'dashboard.organization.security.method_password',
-    labelDefault: 'Email + password',
-    hintKey: 'dashboard.organization.security.method_password_hint',
-    hintDefault: 'Sign in with an email address and password.',
-  },
-  {
-    key: 'magic_login',
-    labelKey: 'dashboard.organization.security.method_magic_login',
-    labelDefault: 'Magic login link',
-    hintKey: 'dashboard.organization.security.method_magic_login_hint',
-    hintDefault: 'Sign in through a one-time link sent by email.',
-  },
-  {
-    key: 'google',
-    labelKey: 'dashboard.organization.security.method_google',
-    labelDefault: 'Google',
-    hintKey: 'dashboard.organization.security.method_google_hint',
-    hintDefault: 'Sign in with a Google account.',
-  },
-  {
-    key: 'sso',
-    labelKey: 'dashboard.organization.security.method_sso',
-    labelDefault: 'SSO',
-    hintKey: 'dashboard.organization.security.method_sso_hint',
-    hintDefault: 'Sign in through your configured single sign-on provider.',
-  },
-]
-
-const DEFAULT_POLICY: OrgSecurityPolicy = {
-  require_2fa: false,
-  require_2fa_grace_days: 0,
-  require_2fa_enabled_at: null,
-  exempt_external_auth: true,
-  allowed_auth_methods: [...ALL_AUTH_METHODS],
-  allow_central_session_sharing: true,
-}
-
-// Two string sets are equal regardless of order/dupes.
-const sameMethodSet = (a: string[], b: string[]): boolean => {
-  const sa = new Set(a)
-  const sb = new Set(b)
-  if (sa.size !== sb.size) return false
-  for (const v of sa) if (!sb.has(v)) return false
-  return true
-}
-
-const isExternalAuth = (signup_method: string | null): boolean =>
-  EXTERNAL_AUTH_METHODS.includes((signup_method || '').toLowerCase())
-
-const memberName = (m: ComplianceMember): string => {
-  const full = [m.first_name, m.last_name].filter(Boolean).join(' ').trim()
-  return full || m.username || m.email || `#${m.user_id}`
-}
-
-const formatDate = (value: string | null | undefined): string => {
-  if (!value) return ''
-  const d = new Date(value)
-  if (Number.isNaN(d.getTime())) return String(value)
-  return d.toLocaleDateString(undefined, {
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric',
-  })
-}
-
-const addDays = (days: number): Date => {
-  const d = new Date()
-  d.setDate(d.getDate() + days)
-  return d
-}
-
-// ---------------------------------------------------------------------------
-
-const OrgEditSecurity: React.FC = () => {
+/**
+ * Users → Two-factor. Owns the "require two-factor" half of the org security
+ * policy: the requirement itself, its grace period, the external-auth exemption,
+ * and the member coverage it implies.
+ *
+ * The coverage panel and member list only appear once the requirement is
+ * actually on — with the policy off they are a wall of red badges about a rule
+ * that isn't in force. Before switching it on, the confirmation dialog still
+ * spells out exactly who loses access.
+ */
+const OrgTwoFactorPolicy: React.FC = () => {
   const { t } = useTranslation()
-  const session = useLHSession() as any
-  const access_token = session?.data?.tokens?.access_token
-  const currentUserId = session?.data?.user?.id
-  const org = useOrg() as any
-  const orgId = org?.id
-  const orgslug = org?.slug
-  const queryClient = useQueryClient()
   const { canManageOrg } = useAdminStatus()
+  const {
+    orgId,
+    orgslug,
+    access_token,
+    currentUserId,
+    policy,
+    seedVersion,
+    mfaFetch,
+    savePolicy,
+    saving,
+    saveError,
+    setSaveError,
+    needsOwnMfa,
+    setNeedsOwnMfa,
+  } = useOrgSecurityPolicy()
 
-  // Saved policy — seeded from the org config the page already loads, then kept
-  // authoritative from the PUT response.
-  const savedPolicy: OrgSecurityPolicy = React.useMemo(() => {
-    const security = org?.config?.config?.admin_toggles?.security
-    if (!security) return DEFAULT_POLICY
-    return {
-      require_2fa: !!security.require_2fa,
-      require_2fa_grace_days: Math.max(0, Number(security.require_2fa_grace_days) || 0),
-      require_2fa_enabled_at: security.require_2fa_enabled_at ?? null,
-      exempt_external_auth: security.exempt_external_auth !== false,
-      // Absent → unrestricted (all methods) + central sharing on.
-      allowed_auth_methods: Array.isArray(security.allowed_auth_methods)
-        ? security.allowed_auth_methods
-        : [...ALL_AUTH_METHODS],
-      allow_central_session_sharing: security.allow_central_session_sharing !== false,
-    }
-  }, [org])
+  const [draftRequire, setDraftRequire] = React.useState(policy.require_2fa)
+  const [draftGrace, setDraftGrace] = React.useState(policy.require_2fa_grace_days)
+  const [draftExempt, setDraftExempt] = React.useState(policy.exempt_external_auth)
 
-  const [policy, setPolicy] = React.useState<OrgSecurityPolicy>(savedPolicy)
-  const [draftRequire, setDraftRequire] = React.useState(savedPolicy.require_2fa)
-  const [draftGrace, setDraftGrace] = React.useState(savedPolicy.require_2fa_grace_days)
-  const [draftExempt, setDraftExempt] = React.useState(savedPolicy.exempt_external_auth)
-  const [draftMethods, setDraftMethods] = React.useState<string[]>(savedPolicy.allowed_auth_methods)
-  const [draftSharing, setDraftSharing] = React.useState(savedPolicy.allow_central_session_sharing)
-
-  // Re-seed once the org config lands (it arrives asynchronously via OrgContext).
-  const seededRef = React.useRef(false)
   React.useEffect(() => {
-    if (seededRef.current) return
-    if (!org?.config?.config) return
-    seededRef.current = true
-    setPolicy(savedPolicy)
-    setDraftRequire(savedPolicy.require_2fa)
-    setDraftGrace(savedPolicy.require_2fa_grace_days)
-    setDraftExempt(savedPolicy.exempt_external_auth)
-    setDraftMethods(savedPolicy.allowed_auth_methods)
-    setDraftSharing(savedPolicy.allow_central_session_sharing)
-  }, [org, savedPolicy])
+    setDraftRequire(policy.require_2fa)
+    setDraftGrace(policy.require_2fa_grace_days)
+    setDraftExempt(policy.exempt_external_auth)
+  }, [seedVersion, policy])
 
   const [compliance, setCompliance] = React.useState<ComplianceResponse | null>(null)
   const [selfState, setSelfState] = React.useState<SelfComplianceState | null>(null)
   const [loading, setLoading] = React.useState(true)
   const [loadError, setLoadError] = React.useState<string | null>(null)
   const [forbidden, setForbidden] = React.useState(false)
-
-  const [saving, setSaving] = React.useState(false)
-  const [saveError, setSaveError] = React.useState<string | null>(null)
-  // Set when the backend refuses because the admin has no second factor of
-  // their own — drives the "enable it on your account first" call to action.
-  const [needsOwnMfa, setNeedsOwnMfa] = React.useState(false)
   const [confirmOpen, setConfirmOpen] = React.useState(false)
   const [showAllMembers, setShowAllMembers] = React.useState(false)
-
-  // Same call shape as the account-level two-factor section: getAPIUrl() +
-  // RequestBodyWithAuthHeader + getResponseMetadata. Deliberately NOT apiFetch —
-  // its errorHandling() turns a 401 into a global "session expired" event, and
-  // we want to read the structured `detail.code` on 403 ourselves.
-  const mfaFetch = React.useCallback(
-    async (path: string, method: 'GET' | 'PUT' | 'POST', body?: any) => {
-      const result = await fetch(
-        `${getAPIUrl()}auth/mfa${path}`,
-        RequestBodyWithAuthHeader(method, body ?? null, null, access_token)
-      )
-      return getResponseMetadata(result)
-    },
-    [access_token]
-  )
 
   // Admin recovery state: clear a member's factor so they can re-enroll (lost
   // device, no backup codes). Handler defined after loadData (below).
@@ -384,95 +211,23 @@ const OrgEditSecurity: React.FC = () => {
   const isDirty =
     draftRequire !== policy.require_2fa ||
     draftGrace !== policy.require_2fa_grace_days ||
-    draftExempt !== policy.exempt_external_auth ||
-    !sameMethodSet(draftMethods, policy.allowed_auth_methods) ||
-    draftSharing !== policy.allow_central_session_sharing
-
-  const toggleMethod = (key: string, checked: boolean) => {
-    setSaveError(null)
-    setNeedsOwnMfa(false)
-    setDraftMethods((prev) =>
-      checked ? Array.from(new Set([...prev, key])) : prev.filter((m) => m !== key)
-    )
-  }
+    draftExempt !== policy.exempt_external_auth
 
   const isTurningOn = draftRequire && !policy.require_2fa
 
   const accountSecurityHref = getUriWithOrg(orgslug || '', '/account/security')
 
-  // --- save ----------------------------------------------------------------
-
   const persist = React.useCallback(async () => {
-    if (!orgId) return
-    setSaving(true)
-    setSaveError(null)
-    setNeedsOwnMfa(false)
-    const loadingToast = toast.loading(
-      t('dashboard.organization.security.saving', { defaultValue: 'Saving security policy…' })
-    )
-    try {
-      const res = await mfaFetch(`/org-policy/${orgId}`, 'PUT', {
-        require_2fa: draftRequire,
-        require_2fa_grace_days: draftGrace,
-        exempt_external_auth: draftExempt,
-        allowed_auth_methods: draftMethods,
-        allow_central_session_sharing: draftSharing,
-      })
-
-      if (!res.success) {
-        const code = res.data?.detail?.code
-        const message = getErrorMessage(
-          res.data?.detail,
-          t('dashboard.organization.security.save_error', {
-            defaultValue: 'Could not save the security policy.',
-          })
-        )
-        if (code === 'ADMIN_MFA_REQUIRED_FIRST') setNeedsOwnMfa(true)
-        setSaveError(message)
-        toast.error(message, { id: loadingToast })
-        return
-      }
-
-      const raw = res.data as Partial<OrgSecurityPolicy>
-      // Normalize against the contract: an omitted methods list / sharing flag
-      // means unrestricted + sharing on.
-      const next: OrgSecurityPolicy = {
-        require_2fa: !!raw.require_2fa,
-        require_2fa_grace_days: Math.max(0, Number(raw.require_2fa_grace_days) || 0),
-        require_2fa_enabled_at: raw.require_2fa_enabled_at ?? null,
-        exempt_external_auth: raw.exempt_external_auth !== false,
-        allowed_auth_methods: Array.isArray(raw.allowed_auth_methods)
-          ? raw.allowed_auth_methods
-          : [...ALL_AUTH_METHODS],
-        allow_central_session_sharing: raw.allow_central_session_sharing !== false,
-      }
-      setPolicy(next)
-      setDraftRequire(next.require_2fa)
-      setDraftGrace(next.require_2fa_grace_days)
-      setDraftExempt(next.exempt_external_auth)
-      setDraftMethods(next.allowed_auth_methods)
-      setDraftSharing(next.allow_central_session_sharing)
+    const ok = await savePolicy({
+      require_2fa: draftRequire,
+      require_2fa_grace_days: draftGrace,
+      exempt_external_auth: draftExempt,
+    })
+    if (ok) {
       setConfirmOpen(false)
-
-      if (orgslug) await revalidateTags(['organizations'], orgslug)
-      if (orgslug) queryClient.invalidateQueries({ queryKey: queryKeys.org.detail(orgslug) })
-      toast.success(
-        t('dashboard.organization.security.save_success', {
-          defaultValue: 'Security policy updated',
-        }),
-        { id: loadingToast }
-      )
       loadData()
-    } catch {
-      const message = t('dashboard.organization.security.save_error', {
-        defaultValue: 'Could not save the security policy.',
-      })
-      setSaveError(message)
-      toast.error(message, { id: loadingToast })
-    } finally {
-      setSaving(false)
     }
-  }, [orgId, orgslug, draftRequire, draftGrace, draftExempt, draftMethods, draftSharing, mfaFetch, t, queryClient, loadData])
+  }, [savePolicy, draftRequire, draftGrace, draftExempt, loadData])
 
   const handleSaveClick = () => {
     // Turning the requirement ON is never one click — it can lock staff out.
@@ -486,46 +241,8 @@ const OrgEditSecurity: React.FC = () => {
   // --- states --------------------------------------------------------------
 
   if (!orgId) return null
-
-  if (loading) {
-    return (
-      <div className="sm:mx-10 mx-0 space-y-4">
-        <div className="bg-white rounded-xl nice-shadow p-6 animate-pulse space-y-4">
-          <div className="h-4 w-48 bg-gray-200 rounded" />
-          <div className="h-2 w-full bg-gray-100 rounded-full" />
-          <div className="h-3 w-64 bg-gray-100 rounded" />
-        </div>
-        <div className="bg-white rounded-xl nice-shadow p-6 animate-pulse space-y-3">
-          {[0, 1, 2, 3].map((i) => (
-            <div key={i} className="h-10 bg-gray-50 rounded-lg" />
-          ))}
-        </div>
-      </div>
-    )
-  }
-
-  if (forbidden) {
-    return (
-      <div className="sm:mx-10 mx-0">
-        <div className="bg-white rounded-xl nice-shadow p-6 flex items-start gap-3">
-          <ShieldOff className="w-5 h-5 text-gray-400 shrink-0 mt-0.5" />
-          <div>
-            <h2 className="font-semibold text-gray-800">
-              {t('dashboard.organization.security.not_admin_title', {
-                defaultValue: 'You don’t have access to this setting',
-              })}
-            </h2>
-            <p className="text-sm text-gray-500 mt-1">
-              {t('dashboard.organization.security.not_admin_body', {
-                defaultValue:
-                  'Only organization admins can view or change the two-factor requirement.',
-              })}
-            </p>
-          </div>
-        </div>
-      </div>
-    )
-  }
+  if (loading) return <SecuritySkeleton />
+  if (forbidden) return <NotAdminNotice />
 
   if (loadError && !compliance) {
     return (
@@ -555,6 +272,8 @@ const OrgEditSecurity: React.FC = () => {
 
   const readOnly = canManageOrg !== true
   const controlsDisabled = saving || readOnly
+  // Coverage is only meaningful once the requirement is actually in force.
+  const showCoverage = policy.require_2fa
 
   return (
     <div className="sm:mx-10 mx-0 space-y-4 pb-10">
@@ -565,7 +284,7 @@ const OrgEditSecurity: React.FC = () => {
         </div>
         <div>
           <h1 className="font-bold text-lg text-gray-800">
-            {t('dashboard.organization.security.title', { defaultValue: 'Security' })}
+            {t('dashboard.users.security.two_factor_title', { defaultValue: 'Two-factor' })}
           </h1>
           <p className="text-sm text-gray-500">
             {t('dashboard.organization.security.subtitle', {
@@ -576,22 +295,12 @@ const OrgEditSecurity: React.FC = () => {
         </div>
       </div>
 
-      {readOnly && (
-        <div className="flex items-center gap-3 px-4 py-3 rounded-xl bg-amber-50 border border-amber-200/80">
-          <ShieldAlert className="w-4 h-4 text-amber-600 shrink-0" />
-          <p className="text-sm text-amber-800">
-            {t('dashboard.organization.security.read_only', {
-              defaultValue:
-                'You can review this page, but only an organization admin can change the policy.',
-            })}
-          </p>
-        </div>
-      )}
+      {readOnly && <ReadOnlyNotice />}
 
       {/* ------------------------------------------------------------------ */}
-      {/* 1. Compliance summary — deliberately ABOVE the toggle. Switching the */}
-      {/*    policy on without reading this is how an org locks out its staff. */}
+      {/* 1. Compliance summary — only while the requirement is on.          */}
       {/* ------------------------------------------------------------------ */}
+      {showCoverage && (
       <div className="bg-white rounded-xl nice-shadow p-5 space-y-4">
         <div className="flex items-start justify-between gap-4 flex-wrap">
           <div>
@@ -668,9 +377,9 @@ const OrgEditSecurity: React.FC = () => {
 
         {blockedMembers.length > 0 && (
           <p className="text-xs text-gray-500 leading-relaxed">
-            {t('dashboard.organization.security.blocked_hint', {
+            {t('dashboard.organization.security.blocked_hint_active', {
               defaultValue:
-                'Review this list before switching the requirement on — these are the people who lose access to this organization if they don’t enroll in time.',
+                'These members lose access to this organization when their grace period ends, unless they enroll.',
             })}
           </p>
         )}
@@ -681,10 +390,12 @@ const OrgEditSecurity: React.FC = () => {
           </p>
         )}
       </div>
+      )}
 
       {/* ------------------------------------------------------------------ */}
-      {/* 2. Member list                                                      */}
+      {/* 2. Member list — same condition as the coverage panel above.       */}
       {/* ------------------------------------------------------------------ */}
+      {showCoverage && (
       <div className="bg-white rounded-xl nice-shadow overflow-hidden">
         <div className="flex items-center gap-2 px-5 py-3 border-b border-gray-100">
           <Users className="w-4 h-4 text-gray-400" />
@@ -809,6 +520,7 @@ const OrgEditSecurity: React.FC = () => {
           </>
         )}
       </div>
+      )}
 
       {/* ------------------------------------------------------------------ */}
       {/* 3. The policy itself                                                */}
@@ -936,91 +648,6 @@ const OrgEditSecurity: React.FC = () => {
           </div>
         </div>
 
-        {/* ---------------------------------------------------------------- */}
-        {/* Allowed sign-in methods + central session sharing.               */}
-        {/* Part of the SAME policy save below.                              */}
-        {/* ---------------------------------------------------------------- */}
-        <div className="pt-1 border-t border-gray-100 space-y-4">
-          <div>
-            <h3 className="font-bold text-gray-800">
-              {t('dashboard.organization.security.methods_title', {
-                defaultValue: 'Allowed sign-in methods',
-              })}
-            </h3>
-            <p className="text-sm text-gray-500 mt-0.5 max-w-2xl leading-relaxed">
-              {t('dashboard.organization.security.methods_description', {
-                defaultValue:
-                  'Choose how members are allowed to sign in to this organization. Leave every method checked to keep sign-in unrestricted.',
-              })}
-            </p>
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            {AUTH_METHOD_OPTIONS.map((m) => {
-              const checked = draftMethods.includes(m.key)
-              return (
-                <div key={m.key} className="flex items-start gap-3">
-                  <Checkbox
-                    id={`auth-method-${m.key}`}
-                    checked={checked}
-                    onCheckedChange={(value) => toggleMethod(m.key, value === true)}
-                    disabled={controlsDisabled}
-                    className="mt-0.5"
-                  />
-                  <div className="space-y-0.5">
-                    <Label htmlFor={`auth-method-${m.key}`} className="cursor-pointer">
-                      {t(m.labelKey, { defaultValue: m.labelDefault })}
-                    </Label>
-                    <p className="text-xs text-gray-500 leading-relaxed">
-                      {t(m.hintKey, { defaultValue: m.hintDefault })}
-                    </p>
-                  </div>
-                </div>
-              )
-            })}
-          </div>
-
-          {draftMethods.length === 0 && (
-            <p className="text-xs text-amber-700 bg-amber-50 border border-amber-200/80 rounded-lg px-3 py-2">
-              {t('dashboard.organization.security.methods_empty_warning', {
-                defaultValue:
-                  'With no method selected, no one could sign in to this organization. Pick at least one.',
-              })}
-            </p>
-          )}
-
-          {/* Central session sharing */}
-          <div className="flex items-start justify-between gap-4 pt-1">
-            <div className="min-w-0">
-              <Label htmlFor="central-session-sharing" className="cursor-pointer">
-                {t('dashboard.organization.security.session_sharing_label', {
-                  defaultValue: 'Allow sharing sessions with learnhouse.io',
-                })}
-              </Label>
-              <p className="text-xs text-gray-500 mt-0.5 leading-relaxed max-w-xl">
-                {t('dashboard.organization.security.session_sharing_hint', {
-                  defaultValue:
-                    'When off, signing in at learnhouse.io won’t let members into this org — they must sign in again from this org’s login page using an allowed method.',
-                })}
-              </p>
-            </div>
-            <Switch
-              id="central-session-sharing"
-              checked={draftSharing}
-              onCheckedChange={(checked) => {
-                setDraftSharing(checked)
-                setSaveError(null)
-                setNeedsOwnMfa(false)
-              }}
-              disabled={controlsDisabled}
-              className="shrink-0 mt-1"
-              aria-label={t('dashboard.organization.security.session_sharing_label', {
-                defaultValue: 'Allow sharing sessions with learnhouse.io',
-              })}
-            />
-          </div>
-        </div>
-
         {/* Self-lockout warning: the backend refuses the change anyway. */}
         {draftRequire && adminHasOwnMfa === false && !needsOwnMfa && (
           <AdminMfaCallout href={accountSecurityHref} />
@@ -1074,8 +701,6 @@ const OrgEditSecurity: React.FC = () => {
                 setDraftRequire(policy.require_2fa)
                 setDraftGrace(policy.require_2fa_grace_days)
                 setDraftExempt(policy.exempt_external_auth)
-                setDraftMethods(policy.allowed_auth_methods)
-                setDraftSharing(policy.allow_central_session_sharing)
                 setSaveError(null)
                 setNeedsOwnMfa(false)
               }}
@@ -1196,97 +821,4 @@ const OrgEditSecurity: React.FC = () => {
   )
 }
 
-// ---------------------------------------------------------------------------
-// Small presentational helpers
-// ---------------------------------------------------------------------------
-
-const TILE_TONES: Record<string, string> = {
-  green: 'bg-green-50 text-green-700 border-green-100',
-  blue: 'bg-blue-50 text-blue-700 border-blue-100',
-  red: 'bg-red-50 text-red-700 border-red-100',
-  gray: 'bg-gray-50 text-gray-600 border-gray-100',
-}
-
-function StatTile({
-  tone,
-  icon,
-  value,
-  label,
-}: {
-  tone: 'green' | 'blue' | 'red' | 'gray'
-  icon: React.ReactNode
-  value: number
-  label: string
-}) {
-  return (
-    <div className={`rounded-xl border px-4 py-3 ${TILE_TONES[tone]}`}>
-      <div className="flex items-center gap-2">
-        {icon}
-        <span className="text-xl font-bold tracking-tight">{value}</span>
-      </div>
-      <div className="text-xs mt-0.5 opacity-80">{label}</div>
-    </div>
-  )
-}
-
-const BADGE_TONES: Record<string, string> = {
-  green: 'bg-green-50 text-green-700',
-  blue: 'bg-blue-50 text-blue-700',
-  red: 'bg-red-50 text-red-700',
-}
-
-function Badge({
-  tone,
-  icon,
-  children,
-}: {
-  tone: 'green' | 'blue' | 'red'
-  icon: React.ReactNode
-  children: React.ReactNode
-}) {
-  return (
-    <span
-      className={`inline-flex items-center gap-1 px-2 py-1 rounded-md text-[11px] font-medium ${BADGE_TONES[tone]}`}
-    >
-      {icon}
-      {children}
-    </span>
-  )
-}
-
-// The one error that needs a way out, not just a message: the admin must enable
-// two-factor on their OWN account before they can require it org-wide.
-function AdminMfaCallout({ href, message }: { href: string; message?: string | null }) {
-  const { t } = useTranslation()
-  return (
-    <div className="flex items-start gap-3 rounded-lg bg-amber-50 border border-amber-200/80 px-4 py-3">
-      <ShieldAlert className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
-      <div className="space-y-2">
-        <p className="text-sm text-amber-900">
-          {message ||
-            t('dashboard.organization.security.admin_mfa_first', {
-              defaultValue:
-                'Enable two-factor on your own account before requiring it for the organization.',
-            })}
-        </p>
-        <p className="text-xs text-amber-800/80 leading-relaxed">
-          {t('dashboard.organization.security.admin_mfa_first_why', {
-            defaultValue:
-              'Otherwise the policy would lock you out of your own organization the moment it saves — and no admin would be left to turn it back off.',
-          })}
-        </p>
-        <Link
-          href={href}
-          className="inline-flex items-center gap-1.5 text-sm font-medium text-amber-900 underline underline-offset-2 hover:text-amber-950"
-        >
-          {t('dashboard.organization.security.admin_mfa_first_cta', {
-            defaultValue: 'Set up two-factor on your account',
-          })}
-          <ExternalLink className="w-3.5 h-3.5" />
-        </Link>
-      </div>
-    </div>
-  )
-}
-
-export default OrgEditSecurity
+export default OrgTwoFactorPolicy

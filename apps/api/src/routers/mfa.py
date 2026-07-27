@@ -38,6 +38,7 @@ from src.services.auth.session import (
     decode_mfa_pending_provenance,
     mint_session_tokens,
 )
+from src.services.orgs.auth_policy import auth_policy_exception, evaluate_org_auth
 from src.services.orgs.mfa_policy import evaluate_mfa_compliance, get_org_mfa_policy
 from src.services.security.rate_limiting import check_rate_limit, get_client_ip
 from src.security.org_auth import is_org_admin
@@ -459,11 +460,16 @@ async def api_login_mfa(
 
 
 class OrgMFAPolicyUpdate(BaseModel):
-    require_2fa: bool
-    require_2fa_grace_days: int = 0
-    exempt_external_auth: bool = True
-    # Auth-method / session-sharing policy. Optional so an older client that only
-    # sends the 2FA fields leaves these untouched.
+    """Partial update — every field is optional and an omitted one is left as-is.
+
+    The dashboard splits this policy across two tabs (two-factor / sign-in
+    methods); each must be able to save its own fields without resetting the
+    other tab's to their defaults.
+    """
+
+    require_2fa: Optional[bool] = None
+    require_2fa_grace_days: Optional[int] = None
+    exempt_external_auth: Optional[bool] = None
     allowed_auth_methods: Optional[list[str]] = None
     allow_central_session_sharing: Optional[bool] = None
 
@@ -483,6 +489,17 @@ async def api_org_mfa_compliance(
     current_user=Depends(get_authenticated_user),
 ):
     user = await _require_human_user(current_user, db_session)
+
+    # The org's auth-method / session-sharing policy is enforced per request all
+    # over the API, but this endpoint is the one the dashboard polls to decide
+    # what to tell the user. Evaluating it here is what turns a scattering of
+    # 403s into the single "sign in to this org again" screen — without it the
+    # restriction is enforced but never explained, which reads as "the setting
+    # does nothing unless two-factor is also on".
+    block = await evaluate_org_auth(db_session, user.id, org_id)
+    if block is not None:
+        raise auth_policy_exception(block)
+
     state = await evaluate_mfa_compliance(db_session, user, org_id)
     return state.to_dict()
 
@@ -541,16 +558,19 @@ async def api_set_org_mfa_policy(
 
     was_enabled = bool(security.get("require_2fa", False))
 
-    security["require_2fa"] = form.require_2fa
-    security["require_2fa_grace_days"] = max(0, form.require_2fa_grace_days)
-    security["exempt_external_auth"] = form.exempt_external_auth
-    # Only re-anchor when switching off→on. Re-saving an already-active policy
-    # (e.g. to tweak the grace length) must not silently restart everyone's
-    # countdown.
-    if form.require_2fa and not was_enabled:
-        security["require_2fa_enabled_at"] = datetime.now().isoformat()
-    elif not form.require_2fa:
-        security["require_2fa_enabled_at"] = None
+    if form.require_2fa_grace_days is not None:
+        security["require_2fa_grace_days"] = max(0, form.require_2fa_grace_days)
+    if form.exempt_external_auth is not None:
+        security["exempt_external_auth"] = form.exempt_external_auth
+    if form.require_2fa is not None:
+        security["require_2fa"] = form.require_2fa
+        # Only re-anchor when switching off→on. Re-saving an already-active policy
+        # (e.g. to tweak the grace length) must not silently restart everyone's
+        # countdown.
+        if form.require_2fa and not was_enabled:
+            security["require_2fa_enabled_at"] = datetime.now().isoformat()
+        elif not form.require_2fa:
+            security["require_2fa_enabled_at"] = None
 
     # Auth-method / session-sharing policy, with self-lockout guards so an admin
     # cannot save a policy that would refuse their own current session.
