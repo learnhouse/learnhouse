@@ -980,7 +980,9 @@ class TestOrgUsersService:
             missing_user_org = await export_organization_users_csv(
                 mock_request,
                 org.id,
-                _Session([fake_org, [fake_user], [], []]),
+                # The `None` is the org-config lookup for custom signup field
+                # columns — no config row, so no extra columns.
+                _Session([fake_org, [fake_user], None, [], []]),
                 admin_user,
             )
 

@@ -246,12 +246,56 @@ class MenuConfig(BaseModel):
     items: list[MenuLinkItem] = Field(default_factory=list)
 
 
+# ============================================================================
+# Custom signup fields (shared between v1 and v2)
+# ============================================================================
+
+SignupFieldType = Literal["text", "textarea", "select", "checkbox", "number", "date"]
+
+
+class SignupFieldItem(BaseModel):
+    """One admin-defined field shown on the org's signup form.
+
+    Answers are stored on the user's ``extra_metadata`` JSON under ``key``.
+
+    ``key`` is the JSON key and must stay stable: renaming it orphans every
+    answer already collected, so the admin UI locks it after creation.
+
+    NOTE: this config is served by the unauthenticated ``GET /orgs/slug/{slug}``
+    endpoint (the public signup form needs it), so labels, help text and options
+    are PUBLIC strings. Nothing sensitive belongs in them.
+    """
+
+    key: str
+    label: str = ""
+    type: SignupFieldType = "text"
+    required: bool = False
+    enabled: bool = True
+    order: int = 0
+    help_text: str = ""
+    placeholder: str = ""
+    # select only — the permitted values. A submitted value outside this list is
+    # rejected server-side, so it doubles as the validation allowlist.
+    options: list[str] = Field(default_factory=list)
+    # text/textarea only.
+    max_length: Optional[int] = None
+    # number only.
+    min_value: Optional[float] = None
+    max_value: Optional[float] = None
+
+
+class SignupFieldsConfig(BaseModel):
+    # Empty means the signup form renders exactly as it did before this feature.
+    fields: list[SignupFieldItem] = Field(default_factory=list)
+
+
 class CustomizationConfig(BaseModel):
     general: GeneralCustomization = GeneralCustomization()
     auth_branding: AuthBrandingConfig = AuthBrandingConfig()
     seo: SeoOrgConfig = SeoOrgConfig()
     landing: dict = Field(default_factory=dict)
     menu: MenuConfig = MenuConfig()
+    signup_fields: SignupFieldsConfig = SignupFieldsConfig()
 
 
 # ============================================================================

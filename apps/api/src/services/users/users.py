@@ -71,6 +71,46 @@ def _reject_urls_in_profile_fields(**fields) -> None:
         )
 
 
+async def _resolve_signup_custom_fields(
+    user_object: UserCreate,
+    org_id: int,
+    db_session: AsyncSession,
+    enforce_required: bool = True,
+) -> dict | None:
+    """Build the ``extra_metadata`` value for a public signup.
+
+    Only keys the org declared as signup fields survive; the submitted
+    ``extra_metadata`` blob is ignored entirely. Returns ``None`` when the org
+    declares no fields, so users keep a null column instead of an empty dict.
+
+    ``enforce_required`` is False for OAuth, which has no form to fill in.
+    """
+    from src.services.orgs.signup_fields import (
+        get_signup_fields,
+        validate_signup_field_values,
+    )
+
+    org_config = await _get_org_config_for_signup(org_id, db_session)
+    fields = get_signup_fields(org_config)
+    if not fields:
+        return None
+
+    values = validate_signup_field_values(
+        fields, user_object.custom_fields, enforce_required=enforce_required
+    )
+    return values or None
+
+
+async def _get_org_config_for_signup(
+    org_id: int, db_session: AsyncSession
+) -> dict | None:
+    from src.db.organization_config import OrganizationConfig
+
+    statement = select(OrganizationConfig).where(OrganizationConfig.org_id == org_id)
+    org_config = (await db_session.execute(statement)).scalars().first()
+    return org_config.config if org_config else None
+
+
 async def _get_welcome_cta_url(
     request: Request,
     db_session: AsyncSession,
@@ -191,6 +231,18 @@ async def create_user(
             detail="Organization does not exist",
         )
 
+    # SECURITY: signup is public, so the submitted extra_metadata blob is never
+    # trusted. Discard it and rebuild the dict from the org's declared signup
+    # fields alone. Raises 400 when a required field is missing or invalid.
+    #
+    # OAuth never sees the signup form, so required fields cannot be enforced
+    # here — that would make an org with a required field unable to use Google
+    # sign-in at all. Those users are asked to complete their profile after
+    # landing instead (see the signup-fields completion endpoint).
+    user.extra_metadata = await _resolve_signup_custom_fields(
+        user_object, org_id, db_session, enforce_required=not is_oauth
+    )
+
     # Usage check
     await check_limits_with_usage("members", org_id, db_session)
 
@@ -209,8 +261,11 @@ async def create_user(
             detail="Email or username is already in use",
         )
 
-    # Exclude unset values; strip protected fields to prevent privilege escalation
-    _PROTECTED_FIELDS = {"is_superadmin", "id", "user_uuid"}
+    # Exclude unset values; strip protected fields to prevent privilege escalation.
+    # `extra_metadata` is protected here because it was just rebuilt from the
+    # org's declared signup fields — re-applying the submitted value would undo
+    # that and let a public caller store arbitrary JSON.
+    _PROTECTED_FIELDS = {"is_superadmin", "id", "user_uuid", "extra_metadata"}
     user_data = user.model_dump(exclude_unset=True)
     for key, value in user_data.items():
         if key not in _PROTECTED_FIELDS:
@@ -413,6 +468,11 @@ async def create_user_without_org(
     user.creation_date = str(datetime.now())
     user.update_date = str(datetime.now())
 
+    # SECURITY: this endpoint is public and has no org, so there are no declared
+    # signup fields to validate against — nothing may be stored. Dropping the
+    # submitted blob stops an anonymous caller writing arbitrary JSON.
+    user.extra_metadata = None
+
     # Verifications
 
     # SECURITY: single generic error for both email and username conflicts to
@@ -429,8 +489,10 @@ async def create_user_without_org(
             detail="Email or username is already in use",
         )
 
-    # Exclude unset values; strip protected fields to prevent privilege escalation
-    _PROTECTED_FIELDS = {"is_superadmin", "id", "user_uuid"}
+    # Exclude unset values; strip protected fields to prevent privilege escalation.
+    # `extra_metadata` is protected because this org-less path has no declared
+    # signup fields, so a submitted blob must never reach the database.
+    _PROTECTED_FIELDS = {"is_superadmin", "id", "user_uuid", "extra_metadata"}
     user_data = user.model_dump(exclude_unset=True)
     for key, value in user_data.items():
         if key not in _PROTECTED_FIELDS:
@@ -506,7 +568,17 @@ async def update_user(
     # Update user; strip protected fields to prevent privilege escalation.
     # email_verified is also protected so changing the email cannot leave
     # the account appearing "already verified" on the new address.
-    _PROTECTED_FIELDS = {"is_superadmin", "id", "user_uuid", "email_verified", "email_verified_at"}
+    # extra_metadata is protected because it holds the answers to the org's
+    # signup fields: letting a member rewrite it through their own profile
+    # would let them forge data the organization collected about them.
+    _PROTECTED_FIELDS = {
+        "is_superadmin",
+        "id",
+        "user_uuid",
+        "email_verified",
+        "email_verified_at",
+        "extra_metadata",
+    }
     user_data = user_object.model_dump(exclude_unset=True)
 
     # SECURITY: if the email actually changed, force re-verification on the

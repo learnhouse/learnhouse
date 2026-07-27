@@ -26,6 +26,14 @@ class UserCreate(UserBase):
     first_name: str = ""
     last_name: str = ""
     password: str
+    # Answers to the org's admin-defined signup fields, keyed by field key.
+    #
+    # SECURITY: this is the ONLY channel by which a public signup may influence
+    # ``extra_metadata``. The inherited ``extra_metadata`` field is stripped on
+    # the signup paths (see services/users/users.py) — otherwise an anonymous
+    # request could write an arbitrary blob. Values here are validated against
+    # the org's declared fields before anything is stored.
+    custom_fields: Optional[dict] = None
 
 
 class UserUpdate(UserBase):

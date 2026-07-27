@@ -18,8 +18,13 @@ import { PasswordStrengthIndicator, validatePasswordStrength } from '@components
 import TurnstileWidget, { useTurnstileRequired, type TurnstileWidgetHandle } from '@components/Auth/TurnstileWidget'
 import { useLHAnalytics, AnalyticsEvent } from '@services/analytics'
 import { getAllowedAuthMethods } from '@services/auth/authMethods'
+import CustomSignupFields, {
+  initialCustomFieldValues,
+  validateCustomFields,
+} from '@components/Auth/CustomSignupFields'
+import { readSignupFields, type SignupFieldItem } from '@services/settings/org'
 
-const validate = (values: any, t: any) => {
+const validate = (values: any, t: any, customFields: SignupFieldItem[]) => {
   const errors: any = {}
 
   if (!values.email) {
@@ -44,6 +49,12 @@ const validate = (values: any, t: any) => {
   }
 
   // Bio is optional - no validation required
+
+  // The org's admin-defined fields. Client-side only; the server revalidates.
+  const customFieldErrors = validateCustomFields(customFields, values.custom_fields, t)
+  if (Object.keys(customFieldErrors).length > 0) {
+    errors.custom_fields = customFieldErrors
+  }
 
   return errors
 }
@@ -76,6 +87,13 @@ function OpenSignUpComponent({ org: propOrg }: OpenSignUpComponentProps = {}) {
   const passwordAllowed = allowedMethods.has('password')
   const googleAllowed = allowedMethods.has('google')
 
+  // Field definitions ship with the org config the page already loaded, so no
+  // extra request is needed to render them.
+  const customFields = React.useMemo<SignupFieldItem[]>(
+    () => readSignupFields(org),
+    [org],
+  )
+
   const formik = useFormik({
     initialValues: {
       org_slug: org?.slug,
@@ -86,9 +104,10 @@ function OpenSignUpComponent({ org: propOrg }: OpenSignUpComponentProps = {}) {
       bio: '',
       first_name: '',
       last_name: '',
+      custom_fields: initialCustomFieldValues(customFields),
       turnstileToken: null as string | null,
     },
-    validate: (values) => validate(values, t),
+    validate: (values) => validate(values, t, customFields),
     enableReinitialize: true,
     onSubmit: async (values) => {
       setError('')
@@ -350,6 +369,8 @@ function OpenSignUpComponent({ org: propOrg }: OpenSignUpComponentProps = {}) {
               />
             </Form.Control>
           </FormField>
+
+          <CustomSignupFields fields={customFields} formik={formik} />
 
           <TurnstileWidget
             ref={turnstileRef}

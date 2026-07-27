@@ -62,6 +62,7 @@ from src.services.orgs.orgs import (
     upload_org_landing_content_service,
     update_org_auth_branding_config,
     update_org_menu_config,
+    update_org_signup_fields_config,
     upload_org_auth_background_service,
     update_org_seo_config,
     upload_org_og_image_service,
@@ -878,6 +879,116 @@ async def api_update_org_menu_config(
     return await update_org_menu_config(
         request, menu_config, org_id, current_user, db_session
     )
+
+
+@router.put(
+    "/{org_id}/config/signup-fields",
+    summary="Update custom signup fields",
+    description=(
+        "Define the extra fields collected on the organization's signup form. "
+        "Answers are stored on each user's `extra_metadata`, keyed by field key. "
+        "These definitions are rendered on the public signup page, so labels and "
+        "options are publicly visible."
+    ),
+    responses={
+        200: {"description": "Signup fields configuration updated."},
+        400: {"description": "Field keys are missing or not unique"},
+        401: {"description": "Not authenticated"},
+        403: {"description": "Caller is not an organization administrator"},
+        404: {"description": "Organization not found"},
+    },
+)
+async def api_update_org_signup_fields_config(
+    request: Request,
+    org_id: int,
+    signup_fields_config: dict,
+    current_user: PublicUser = Depends(get_current_user),
+    db_session: AsyncSession = Depends(get_db_session),
+):
+    """
+    Update organization custom signup fields (admin-only)
+    """
+    return await update_org_signup_fields_config(
+        request, signup_fields_config, org_id, current_user, db_session
+    )
+
+
+@router.get(
+    "/{org_id}/signup-fields/pending",
+    summary="List unanswered required signup fields",
+    description=(
+        "Required custom signup fields the authenticated user has not answered "
+        "yet. Google sign-in skips the signup form, so those users are asked to "
+        "complete their profile afterwards. Returns an empty list when there is "
+        "nothing outstanding."
+    ),
+    responses={
+        200: {"description": "Required fields still awaiting an answer."},
+        401: {"description": "Not authenticated"},
+        403: {"description": "Caller is not a member of this organization"},
+    },
+)
+async def api_get_pending_signup_fields(
+    org_id: int,
+    current_user: PublicUser = Depends(get_authenticated_user),
+    db_session: AsyncSession = Depends(get_db_session),
+):
+    from src.db.users import User
+    from src.security.org_auth import is_org_member
+    from src.services.orgs.signup_fields import (
+        get_org_signup_fields,
+        missing_required_fields,
+    )
+
+    if not await is_org_member(current_user.id, org_id, db_session):
+        raise HTTPException(
+            status_code=403, detail="You must be a member of this organization"
+        )
+
+    fields = await get_org_signup_fields(org_id, db_session)
+    if not fields:
+        return {"fields": []}
+
+    user = (
+        await db_session.execute(select(User).where(User.id == current_user.id))
+    ).scalars().first()
+    missing = missing_required_fields(fields, user.extra_metadata if user else None)
+    return {"fields": [f.model_dump() for f in missing]}
+
+
+@router.post(
+    "/{org_id}/signup-fields/complete",
+    summary="Submit answers to the org's signup fields",
+    description=(
+        "Store the authenticated user's answers to the organization's custom "
+        "signup fields. Answers are validated against the declared fields and "
+        "merged with anything already stored."
+    ),
+    responses={
+        200: {"description": "Answers stored."},
+        400: {"description": "A required field is missing or a value is invalid"},
+        401: {"description": "Not authenticated"},
+        403: {"description": "Caller is not a member of this organization"},
+    },
+)
+async def api_complete_signup_fields(
+    org_id: int,
+    custom_fields: dict,
+    current_user: PublicUser = Depends(get_authenticated_user),
+    db_session: AsyncSession = Depends(get_db_session),
+):
+    from src.security.org_auth import is_org_member
+    from src.services.orgs.signup_fields import complete_signup_fields_for_user
+
+    if not await is_org_member(current_user.id, org_id, db_session):
+        raise HTTPException(
+            status_code=403, detail="You must be a member of this organization"
+        )
+
+    stored = await complete_signup_fields_for_user(
+        org_id, current_user.id, custom_fields, db_session
+    )
+    return {"detail": "Signup fields saved", "extra_metadata": stored}
 
 
 @router.put(

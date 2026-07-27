@@ -2,11 +2,13 @@
 Tests for the `extra_metadata` JSONB field on the User model.
 
 Covers:
-- provision_user (admin service) persists extra_metadata on new users.
+- provision_user (admin service) persists extra_metadata on new users. This
+  path is authenticated and headless, so it may write the blob directly.
 - provision_user does NOT overwrite extra_metadata when attaching an
   existing user (documents current behavior).
-- update_user (user service) persists extra_metadata - verifies the field
-  is not part of `_PROTECTED_FIELDS`.
+- update_user (user service) does NOT persist extra_metadata - it holds the
+  answers to the org's custom signup fields, so it is in `_PROTECTED_FIELDS`
+  and a member cannot rewrite it through their own profile.
 """
 
 from datetime import datetime
@@ -158,12 +160,19 @@ class TestProvisionUserExtraMetadata:
         assert result.extra_metadata == {"keep": True}
 
     @pytest.mark.asyncio
-    async def test_update_user_persists_extra_metadata(
+    async def test_update_user_ignores_extra_metadata(
         self,
         regular_user,
         mock_request,
         db,
     ):
+        """A profile update may not rewrite extra_metadata.
+
+        It holds the answers to the org's signup fields, so letting a member
+        set it through their own profile would let them forge data the
+        organization collected about them. extra_metadata is therefore in
+        update_user's _PROTECTED_FIELDS.
+        """
         # regular_user is a PublicUser; update_user looks up the DB row by id.
         update_payload = UserUpdate(
             username="regular",
@@ -177,7 +186,7 @@ class TestProvisionUserExtraMetadata:
             "src.services.users.users.rbac_check",
             new_callable=AsyncMock,
         ):
-            result = await update_user(
+            await update_user(
                 request=mock_request,
                 db_session=db,
                 user_id=regular_user.id,
@@ -185,10 +194,9 @@ class TestProvisionUserExtraMetadata:
                 user_object=update_payload,
             )
 
-        # Response carries the new metadata.
-        assert result.extra_metadata == {"locale": "en-GB", "tier": "gold"}
-
-        # Persisted in the DB - proves extra_metadata is NOT in _PROTECTED_FIELDS.
         row = (await db.execute(select(User).where(User.id == regular_user.id))).scalars().first()
         assert row is not None
-        assert row.extra_metadata == {"locale": "en-GB", "tier": "gold"}
+        assert row.extra_metadata != {"locale": "en-GB", "tier": "gold"}
+
+        # The rest of the update still applies — only this one field is pinned.
+        assert row.first_name == "Regular"
