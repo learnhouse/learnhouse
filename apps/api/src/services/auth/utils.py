@@ -42,13 +42,20 @@ async def _verify_google_token_audience(access_token: str) -> None:
     """
     global _LOGGED_MISSING_GOOGLE_CLIENT_ID
 
-    expected_client_id = os.environ.get("LEARNHOUSE_GOOGLE_OAUTH_CLIENT_ID")
+    # Accept either name. The web deployment provisions this same value as
+    # LEARNHOUSE_GOOGLE_CLIENT_ID, and reading only the _OAUTH_ spelling meant a
+    # deployment that had the client id all along still ran with audience
+    # verification silently disabled.
+    expected_client_id = os.environ.get("LEARNHOUSE_GOOGLE_OAUTH_CLIENT_ID") or os.environ.get(
+        "LEARNHOUSE_GOOGLE_CLIENT_ID"
+    )
     if not expected_client_id:
         if not _LOGGED_MISSING_GOOGLE_CLIENT_ID:
             logger.warning(
-                "LEARNHOUSE_GOOGLE_OAUTH_CLIENT_ID is not set — Google OAuth "
-                "audience verification is DISABLED. Set this env var to your "
-                "Google OAuth client_id to block confused-deputy token reuse."
+                "Google OAuth audience verification is DISABLED — neither "
+                "LEARNHOUSE_GOOGLE_OAUTH_CLIENT_ID nor LEARNHOUSE_GOOGLE_CLIENT_ID "
+                "is set. Set one to your Google OAuth client_id to block "
+                "confused-deputy token reuse."
             )
             _LOGGED_MISSING_GOOGLE_CLIENT_ID = True
         return
