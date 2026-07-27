@@ -1,36 +1,26 @@
 import { getAPIUrl } from '@services/config/config'
 import {
-  RequestBodyFormWithAuthHeader,
   RequestBodyWithAuthHeader,
+  uploadFormWithProgress,
 } from '@services/utils/ts/requests'
 
 export async function uploadNewImageFile(
   file: any,
   activity_uuid: string,
-  access_token: string
+  access_token: string,
+  onProgress?: (_percent: number) => void
 ) {
   // Send file thumbnail as form data
   const formData = new FormData()
   formData.append('file_object', file)
   formData.append('activity_uuid', activity_uuid)
 
-  const result = await fetch(
+  return uploadFormWithProgress(
     `${getAPIUrl()}blocks/image`,
-    RequestBodyFormWithAuthHeader('POST', formData, null, access_token)
+    formData,
+    access_token,
+    onProgress
   )
-
-  const data = await result.json()
-
-  if (!result.ok) {
-    const errorMessage = typeof data?.detail === 'string'
-      ? data.detail
-      : Array.isArray(data?.detail)
-        ? data.detail.map((e: any) => e.msg).join(', ')
-        : 'Upload failed'
-    throw new Error(errorMessage)
-  }
-
-  return data
 }
 
 export async function getImageFile(file_id: string, access_token: string) {

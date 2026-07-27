@@ -27,6 +27,7 @@ function PDFBlockComponent(props: any) {
   )
   const [isModalOpen, setIsModalOpen] = React.useState(false)
   const [error, setError] = React.useState<string | null>(null)
+  const [progress, setProgress] = React.useState(0)
   const fileInputRef = React.useRef<HTMLInputElement>(null)
   const fileId = blockObject
     ? `${blockObject.content.file_id}.${blockObject.content.file_format}`
@@ -46,12 +47,15 @@ function PDFBlockComponent(props: any) {
     e.preventDefault()
     if (!pdf) return
     setIsLoading(true)
+    setProgress(0)
     setError(null)
     try {
       let object = await uploadNewPDFFile(
         pdf,
-        props.extension.options.activity.activity_uuid, access_token
+        props.extension.options.activity.activity_uuid, access_token,
+        (p) => setProgress(p)
       )
+      setProgress(100)
       setblockObject(object)
       props.updateAttributes({
         blockObject: object,
@@ -63,6 +67,7 @@ function PDFBlockComponent(props: any) {
       toast.error(errorMessage.includes('Upload failed') ? errorMessage : `Upload failed — please try again: ${errorMessage}`)
     } finally {
       setIsLoading(false)
+      setProgress(0)
     }
   }
 
@@ -202,7 +207,19 @@ function PDFBlockComponent(props: any) {
                 {isLoading ? (
                   <div className="space-y-3">
                     <Loader2 className="w-8 h-8 animate-spin mx-auto text-blue-500" />
-                    <p className="text-sm text-neutral-600">{t('editor.blocks.pdf_block.uploading')}</p>
+                    <p className="text-sm text-neutral-600">{t('editor.blocks.pdf_block.uploading')} {progress}%</p>
+                    <div
+                      className="w-48 h-1 bg-neutral-200 rounded-full mx-auto overflow-hidden"
+                      role="progressbar"
+                      aria-valuenow={progress}
+                      aria-valuemin={0}
+                      aria-valuemax={100}
+                    >
+                      <div
+                        className="h-full bg-blue-500 rounded-full transition-all duration-200"
+                        style={{ width: `${progress}%` }}
+                      />
+                    </div>
                   </div>
                 ) : (
                   <div className="space-y-3">

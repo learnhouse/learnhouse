@@ -33,6 +33,7 @@ function ImageBlockComponent(props: any) {
   const [isLoading, setIsLoading] = React.useState(false)
   const [isDragging, setIsDragging] = React.useState(false)
   const [error, setError] = React.useState<string | null>(null)
+  const [progress, setProgress] = React.useState(0)
   const [blockObject, setblockObject] = React.useState(
     props.node.attrs.blockObject
   )
@@ -64,13 +65,16 @@ function ImageBlockComponent(props: any) {
   const handleUpload = async (file: File) => {
     if (!access_token) return
     setIsLoading(true)
+    setProgress(0)
     setError(null)
     try {
       let object = await uploadNewImageFile(
         file,
         props.extension.options.activity.activity_uuid,
-        access_token
+        access_token,
+        (p) => setProgress(p)
       )
+      setProgress(100)
       setblockObject(object)
       props.updateAttributes({
         blockObject: object,
@@ -84,6 +88,7 @@ function ImageBlockComponent(props: any) {
       toast.error(errorMessage.includes('Upload failed') ? errorMessage : `Upload failed — please try again: ${errorMessage}`)
     } finally {
       setIsLoading(false)
+      setProgress(0)
     }
   }
 
@@ -312,7 +317,19 @@ function ImageBlockComponent(props: any) {
                 {isLoading ? (
                   <div className="space-y-3">
                     <Loader2 className="w-8 h-8 animate-spin mx-auto text-neutral-500" />
-                    <p className="text-sm text-neutral-600">{t('editor.blocks.image_block.uploading')}</p>
+                    <p className="text-sm text-neutral-600">{t('editor.blocks.image_block.uploading')} {progress}%</p>
+                    <div
+                      className="w-48 h-1 bg-neutral-200 rounded-full mx-auto overflow-hidden"
+                      role="progressbar"
+                      aria-valuenow={progress}
+                      aria-valuemin={0}
+                      aria-valuemax={100}
+                    >
+                      <div
+                        className="h-full bg-blue-500 rounded-full transition-all duration-200"
+                        style={{ width: `${progress}%` }}
+                      />
+                    </div>
                   </div>
                 ) : (
                   <div className="space-y-2">
