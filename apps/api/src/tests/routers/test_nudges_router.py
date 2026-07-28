@@ -140,3 +140,27 @@ class TestRouterMounting:
         token is the only authorisation these routes get."""
         for route in public_router.routes:
             assert route.dependencies == [], route.path
+
+
+class TestDeletedUser:
+    async def test_token_for_a_deleted_user_shows_the_expired_page(
+        self, client, db, admin_user
+    ):
+        """The token stays valid forever by design, so it outlives the account
+        it names. That must not 500."""
+        from sqlmodel import delete
+
+        from src.db.nudges import EmailPreference
+        from src.db.users import User
+
+        token = make_unsubscribe_token(admin_user.user_uuid)
+        await db.execute(delete(EmailPreference).where(EmailPreference.user_id == admin_user.id))
+        await db.execute(delete(User).where(User.id == admin_user.id))
+        await db.commit()
+
+        response = await client.post(
+            "/api/v1/emails/unsubscribe", data={"token": token}
+        )
+
+        assert response.status_code == 200
+        assert "expired" in response.text.lower()

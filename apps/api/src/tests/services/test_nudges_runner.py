@@ -530,3 +530,93 @@ class TestEnvHelpers:
         stats.record("a.b")
         stats.record("a.b")
         assert stats.as_dict()["by_nudge"] == {"a.b": 2}
+
+
+class TestRepeatKeys:
+    def test_monthly_repeat_keys_by_month(self):
+        spec = get_spec("dormancy.no_login_30d")
+        monthly = type(spec)(**{**spec.__dict__, "repeat": "monthly"})
+
+        july = dedupe_key(monthly, 1, 1, datetime(2026, 7, 5, tzinfo=timezone.utc), False)
+        august = dedupe_key(monthly, 1, 1, datetime(2026, 8, 5, tzinfo=timezone.utc), False)
+
+        assert july.endswith(":2026-07")
+        assert august.endswith(":2026-08")
+
+    def test_full_backfill_mode_admits_every_track(self, monkeypatch):
+        """Documented as unsupported, but it exists as an escape hatch and
+        must do what it says."""
+        monkeypatch.setenv("LEARNHOUSE_NUDGES_BACKFILL_MODE", "full")
+        spec = get_spec("activation.first_course_d1")
+        snapshot = type(
+            "S", (), {"created_at": NOW - timedelta(days=400)}
+        )()
+        assert runner_module._backfill_allows(
+            spec, snapshot, NOW - timedelta(days=30)
+        ) is True
+
+
+class TestWhiteLabelling:
+    async def test_org_logo_is_used_when_the_org_has_one(
+        self, db, activation_org, sender
+    ):
+        activation_org.logo_image = "logo.png"
+        db.add(activation_org)
+        await db.commit()
+
+        await run_nudges(db, now=NOW)
+
+        assert sender.call_args.kwargs["logo_url"] == (
+            "https://api.test/content/orgs/org_test/logos/logo.png"
+        )
+
+    async def test_no_logo_leaves_the_default_mark(self, db, activation_org, sender):
+        await run_nudges(db, now=NOW)
+        assert sender.call_args.kwargs["logo_url"] is None
+
+
+class TestBudgetMidOrganization:
+    async def test_budget_stops_between_admins_of_one_org(
+        self, db, org, admin_role, verified_admin, sender
+    ):
+        """The inner loop needs its own budget check — an org with several
+        admins could otherwise overrun the cap on a single iteration."""
+        from datetime import datetime as dt
+
+        from src.db.user_organizations import UserOrganization
+        from src.db.users import User
+
+        org.creation_date = _stored(1.5)
+        org.update_date = _stored(1.5)
+        db.add(org)
+
+        for index in range(2, 5):
+            db.add(
+                User(
+                    id=index + 10,
+                    username=f"admin{index}",
+                    first_name="Admin",
+                    last_name="Two",
+                    email=f"admin{index}@test.com",
+                    password="x",
+                    user_uuid=f"user_admin{index}",
+                    email_verified=True,
+                    creation_date=str(dt.now()),
+                    update_date=str(dt.now()),
+                )
+            )
+            db.add(
+                UserOrganization(
+                    user_id=index + 10,
+                    org_id=org.id,
+                    role_id=admin_role.id,
+                    creation_date=str(dt.now()),
+                    update_date=str(dt.now()),
+                )
+            )
+        await db.commit()
+
+        stats = await run_nudges(db, now=NOW, max_sends=2)
+
+        assert stats.sent == 2
+        assert stats.budget_exhausted is True
