@@ -11,6 +11,7 @@ from src.routers import usergroups
 from src.routers import dev, trail, users, auth, orgs, roles, search
 from src.routers import mfa as mfa_router_module
 from src.routers import monitoring
+from src.routers import nudges as nudges_router_module
 from src.routers import stream
 from src.routers import api_tokens
 from src.routers import webhooks
@@ -135,6 +136,13 @@ v1_router.include_router(
     custom_domains.public_router,
     prefix="/orgs",
     tags=["custom-domains"],
+)
+# Public unsubscribe endpoints (no auth — the HMAC token in the link is the
+# authorisation; a nudge recipient may have no session at all)
+v1_router.include_router(
+    nudges_router_module.public_router,
+    prefix="/emails",
+    tags=["emails"],
 )
 # Internal domain listing endpoint (protected by internal key)
 v1_router.include_router(

@@ -79,18 +79,39 @@ def _email_layout(
     body_content: str,
     footer_note: str = "",
     logo_html: str = LOGO_SVG,
+    unsubscribe_url: str = "",
+    unsubscribe_label: str = "Unsubscribe from these emails",
 ) -> str:
     """Wrap content in the standard email layout.
 
     ``logo_html`` defaults to the LearnHouse mark; white-labeled emails pass the
     org's logo <img> instead.
+
+    ``unsubscribe_url`` is set only by bulk lifecycle mail. Transactional email
+    (password reset, invitation, verification) leaves it empty and renders
+    byte-identically to before — you cannot unsubscribe from a password reset.
+    The link is deliberately legible rather than hidden: someone who wants out
+    and can't find the exit reports spam instead, which costs the sending domain
+    far more than the opt-out does.
     """
-    footer_html = ""
+    note_html = ""
     if footer_note:
+        note_html = f'\n            <p style="{STYLES["footer_text"]}">{footer_note}</p>'
+
+    unsub_html = ""
+    if unsubscribe_url:
+        unsub_html = (
+            f'\n            <p style="{STYLES["footer_text"]} margin-top: 12px;">'
+            f'<a href="{html.escape(unsubscribe_url)}" '
+            'style="color: rgba(0,0,0,0.35); text-decoration: underline;">'
+            f'{html.escape(unsubscribe_label)}</a></p>'
+        )
+
+    footer_html = ""
+    if note_html or unsub_html:
         footer_html = f"""
         <div style="{STYLES['footer']}">
-            <hr style="{STYLES['divider']}" />
-            <p style="{STYLES['footer_text']}">{footer_note}</p>
+            <hr style="{STYLES['divider']}" />{note_html}{unsub_html}
         </div>"""
 
     return f"""<!DOCTYPE html>
@@ -549,4 +570,78 @@ def send_email_verification_email(
             body_content=body_content,
             footer_note=t(lang, "email_verification.footer"),
         ),
+    )
+
+
+def send_nudge_email(
+    nudge_id: str,
+    email: EmailStr,
+    org_name: str,
+    cta_url: str,
+    unsubscribe_url: str,
+    lang: str = "en",
+    logo_url: str | None = None,
+    has_cta: bool = True,
+    **copy_vars,
+):
+    """Send one lifecycle nudge.
+
+    Generic over the catalog: the nudge id selects its copy from the
+    ``nudge.<id>.*`` namespace, so adding a nudge never means adding a function
+    here. ``copy_vars`` fills the placeholders that nudge's strings declare
+    (course name, plan name, and so on) — every value is escaped before it
+    reaches the template.
+
+    Unlike transactional mail this always carries an unsubscribe link and the
+    matching ``List-Unsubscribe`` headers. Gmail and Outlook expect them on
+    bulk mail, and without them a run at any real volume puts the sending
+    domain at risk.
+
+    Failures are swallowed via ``_send_notification_email``: a nudge nobody
+    asked for must never be the reason a batch job dies.
+    """
+    safe_org_name = html.escape(org_name)
+    raw_vars = {key: str(value) for key, value in copy_vars.items() if value is not None}
+    raw_vars.setdefault("org_name", org_name)
+    safe_vars = {key: html.escape(value) for key, value in raw_vars.items()}
+
+    heading = t(lang, f"nudge.{nudge_id}.heading", **safe_vars)
+    body_text = t(lang, f"nudge.{nudge_id}.body", **safe_vars)
+    # The subject is plain text, not HTML: escaping it would deliver
+    # "Maths &amp; Physics" to the inbox, and ampersands in course names are
+    # common enough that this is not an edge case.
+    subject = t(lang, f"nudge.{nudge_id}.subject", **raw_vars)
+
+    body_content = f"""
+        <h1 style="{STYLES['h1']}">{heading}</h1>
+        <p style="{STYLES['p']}">
+            {body_text}
+        </p>
+    """
+    if has_cta and cta_url:
+        cta = t(lang, f"nudge.{nudge_id}.cta", **safe_vars)
+        body_content += f"""
+        <a href="{html.escape(cta_url)}" style="{STYLES['button']}">
+            {cta}
+        </a>
+        <p style="{STYLES['link_text']}">{html.escape(cta_url)}</p>
+    """
+
+    return _send_notification_email(
+        to=email,
+        subject=subject,
+        body=_email_layout(
+            title=heading,
+            body_content=body_content,
+            footer_note=t(lang, "nudge.common.footer", org_name=safe_org_name),
+            logo_html=_org_logo_img(logo_url, org_name) if logo_url else LOGO_SVG,
+            unsubscribe_url=unsubscribe_url,
+            unsubscribe_label=t(lang, "nudge.common.unsubscribe"),
+        ),
+        headers={
+            "List-Unsubscribe": f"<{unsubscribe_url}>",
+            "List-Unsubscribe-Post": "List-Unsubscribe=One-Click",
+        }
+        if unsubscribe_url
+        else None,
     )
