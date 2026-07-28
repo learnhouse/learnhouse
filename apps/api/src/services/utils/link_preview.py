@@ -73,7 +73,7 @@ async def _read_capped_text(response: httpx.Response) -> str:
         return body.decode("utf-8", errors="replace")
 
 
-async def _fetch_html(url: str, validated_ips) -> Optional[str]:
+async def _fetch_html(url: str) -> Optional[str]:
     """Fetch ``url`` and return its HTML, or ``None`` when there is nothing to parse.
 
     Redirects are followed manually so every hop is SSRF-validated, and the body
@@ -88,6 +88,15 @@ async def _fetch_html(url: str, validated_ips) -> Optional[str]:
     ) as client:
         current_url = url
         for _ in range(_MAX_REDIRECTS + 1):
+            # Resolve and check the exact value about to be requested, on every
+            # hop including the first. Validating the initial URL further up and
+            # only re-checking redirects here left the guard a loop iteration
+            # away from the request it protects.
+            try:
+                validated_ips = resolve_and_validate_url(current_url)
+            except SSRFBlockedError as exc:
+                raise HTTPException(status_code=400, detail=str(exc))
+
             try:
                 async with client.stream("GET", current_url) as response:
                     try:
@@ -103,10 +112,6 @@ async def _fetch_html(url: str, validated_ips) -> Optional[str]:
                         )
                         if not redirect_url:
                             return None
-                        try:
-                            validated_ips = resolve_and_validate_url(redirect_url)
-                        except SSRFBlockedError as exc:
-                            raise HTTPException(status_code=400, detail=str(exc))
                         current_url = redirect_url
                         continue
 
@@ -144,14 +149,7 @@ async def _fetch_html(url: str, validated_ips) -> Optional[str]:
 
 async def fetch_link_preview(url: str) -> Dict[str, Optional[str]]:
     try:
-        validated_ips = resolve_and_validate_url(url)
-    except SSRFBlockedError as exc:
-        raise HTTPException(status_code=400, detail=str(exc))
-
-    try:
-        html = await asyncio.wait_for(
-            _fetch_html(url, validated_ips), timeout=_TOTAL_TIMEOUT
-        )
+        html = await asyncio.wait_for(_fetch_html(url), timeout=_TOTAL_TIMEOUT)
     except asyncio.TimeoutError:
         return _minimal_preview(url)
 

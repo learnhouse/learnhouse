@@ -196,18 +196,19 @@ async def test_fetch_link_preview_uses_fallbacks_when_metadata_missing():
 
 @pytest.mark.asyncio
 async def test_fetch_link_preview_blocks_invalid_url_before_request():
+    handler = _Handler([_html_response("<html><head><title>Nope</title></head></html>")])
+
     with patch(
         "src.services.utils.link_preview.resolve_and_validate_url",
         side_effect=SSRFBlockedError("Blocked hostname: localhost"),
-    ), patch(
-        "src.services.utils.link_preview.httpx.AsyncClient"
-    ) as mock_client:
+    ), _patch_client(handler):
         with pytest.raises(HTTPException) as exc_info:
             await fetch_link_preview("http://localhost/page")
 
     assert exc_info.value.status_code == 400
     assert "Blocked hostname" in exc_info.value.detail
-    mock_client.assert_not_called()
+    # The client is opened, but the guard runs before the first hop is sent.
+    assert handler.requested_urls == []
 
 
 @pytest.mark.asyncio
