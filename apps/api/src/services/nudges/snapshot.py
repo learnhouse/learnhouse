@@ -15,6 +15,10 @@ from src.services.security.account_age import parse_creation_date
 # calendar says about its anchors — chasing it would be noise.
 ACTIVE_WINDOW_DAYS = 3
 
+# Past this, every ordinary track's `day_max` has long since excluded the org.
+# These are the ones a reactivation sequence exists for.
+COLD_AFTER_DAYS = 90
+
 
 @dataclass(frozen=True)
 class AdminRow:
@@ -96,6 +100,12 @@ class OrgSnapshot:
     last_admin_login_at: Optional[datetime] = None
     last_activity_day: Optional[datetime] = None
 
+    # When this org first received any nudge. The reactivation ladder measures
+    # from here rather than from last activity: an org quiet for two years has
+    # a last-touch number that never moves, so nothing anchored on it can form
+    # a sequence.
+    first_nudged_at: Optional[datetime] = None
+
     admins: tuple[AdminRow, ...] = field(default_factory=tuple)
 
     # Injected so a run can be replayed "as of" a past date, and so tests are
@@ -160,6 +170,16 @@ class OrgSnapshot:
     @property
     def days_since_touch(self) -> Optional[float]:
         return self.age_days(self.last_touch)
+
+    @property
+    def days_since_first_nudge(self) -> Optional[float]:
+        return self.age_days(self.first_nudged_at)
+
+    @property
+    def is_cold(self) -> bool:
+        """Quiet long enough that no ordinary track can reach them."""
+        days = self.days_since_touch
+        return days is not None and days >= COLD_AFTER_DAYS
 
     @property
     def org_active(self) -> bool:

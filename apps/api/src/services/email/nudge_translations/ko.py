@@ -4,6 +4,15 @@ STRINGS: dict[str, str] = {
     "nudge.common.unsubscribe": "이 이메일 수신 거부",
     "nudge.common.footer": "{org_name}의 관리자이기 때문에 이 이메일을 받았습니다.",
 
+    # Stat-strip labels. A label beside a bare number needs no plural
+    # agreement, which is why the figures are not written into prose.
+    "nudge.stat.courses": "코스",
+    "nudge.stat.chapters": "챕터",
+    "nudge.stat.lessons": "레슨",
+    "nudge.stat.members": "멤버",
+    "nudge.stat.learners": "학습자",
+    "nudge.stat.completed": "수료",
+
     "nudge.activation.first_course_d1.subject": "{org_name}의 첫 코스",
     "nudge.activation.first_course_d1.heading": "준비되셨을 때",
     "nudge.activation.first_course_d1.body": "{org_name} 설정이 끝나고 첫 코스를 기다리고 있습니다. 대부분 작게 시작합니다. 주제 하나, 레슨 몇 개. 나중에 얼마든지 늘릴 수 있습니다.",
@@ -152,4 +161,21 @@ STRINGS: dict[str, str] = {
     "nudge.milestone.first_completion.heading": "첫 수료",
     "nudge.milestone.first_completion.body": "한 학습자가 {org_name}의 코스를 처음부터 끝까지 마쳤습니다. 제대로 남기고 싶으시면 수료증을 추가하실 수 있고, 다음 코스를 시작하셔도 좋습니다.",
     "nudge.milestone.first_completion.cta": "대시보드 열기",
+
+    # -- reactivation ------------------------------------------------------
+    "nudge.reactivation.opener.subject": "{org_name}의 아카데미는 그대로 있습니다",
+    "nudge.reactivation.opener.heading": "두고 가신 그대로입니다",
+    "nudge.reactivation.opener.body": "마지막으로 다녀가신 뒤 {org_name}은 아무도 건드리지 않았습니다. 코스도 챕터도 레슨도 모두 그 자리에 있습니다. 다시 시작하는 데는 클릭 한 번이면 됩니다.",
+    "nudge.reactivation.opener.cta": "대시보드 열기",
+    "nudge.reactivation.whats_changed.subject": "LearnHouse에 몇 가지가 바뀌었습니다",
+    "nudge.reactivation.whats_changed.heading": "마지막으로 오신 뒤로",
+    "nudge.reactivation.whats_changed.body": "{org_name}이 조용한 사이 제품이 꽤 나아졌습니다. 에디터와 코스 도구, 학습자의 진행 방식에 실질적인 변화가 있었습니다. 만들어 두신 것은 예전 그대로 동작합니다.",
+    "nudge.reactivation.whats_changed.cta": "달라진 점 보기",
+    "nudge.reactivation.need_a_hand.subject": "{org_name}으로 돌아오시는 데 도움이 필요하신가요?",
+    "nudge.reactivation.need_a_hand.heading": "무엇이 걸리셨나요?",
+    "nudge.reactivation.need_a_hand.body": "{org_name}이 멈춘 이유가 있었다면 — 헷갈리는 부분, 빠진 기능, 아니면 그저 시간 — 정말 듣고 싶습니다. 이 메일에 그대로 답장해 주시면 저희에게 바로 전달됩니다.",
+    "nudge.reactivation.closing.subject": "{org_name}에 대한 마지막 안내",
+    "nudge.reactivation.closing.heading": "여기서 멈추겠습니다",
+    "nudge.reactivation.closing.body": "이런 메일은 이번이 마지막입니다. {org_name}은 그대로 남고 만료되는 것도 없습니다. 언제든 돌아오고 싶으시면 모두 그대로 기다리고 있습니다.",
+    "nudge.reactivation.closing.cta": "대시보드 열기",
 }

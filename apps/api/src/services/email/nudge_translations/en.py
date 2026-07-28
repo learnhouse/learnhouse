@@ -4,6 +4,15 @@ STRINGS: dict[str, str] = {
     "nudge.common.unsubscribe": "Unsubscribe from these emails",
     "nudge.common.footer": "You're receiving this because you're an admin of {org_name}.",
 
+    # Stat-strip labels. A label beside a bare number needs no plural
+    # agreement, which is why the figures are not written into prose.
+    "nudge.stat.courses": "Courses",
+    "nudge.stat.chapters": "Chapters",
+    "nudge.stat.lessons": "Lessons",
+    "nudge.stat.members": "Members",
+    "nudge.stat.learners": "Learners",
+    "nudge.stat.completed": "Completed",
+
     # -- activation --------------------------------------------------------
     "nudge.activation.first_course_d1.subject": "Your first course on {org_name}",
     "nudge.activation.first_course_d1.heading": "Ready when you are",
@@ -158,4 +167,21 @@ STRINGS: dict[str, str] = {
     "nudge.milestone.first_completion.heading": "First completion",
     "nudge.milestone.first_completion.body": "A learner has finished a course in {org_name} end to end. If you want to mark that properly you can add a certificate — or start building what comes next.",
     "nudge.milestone.first_completion.cta": "Open your dashboard",
+
+    # -- reactivation ------------------------------------------------------
+    "nudge.reactivation.opener.subject": "Your academy on {org_name} is still here",
+    "nudge.reactivation.opener.heading": "Still here, exactly as you left it",
+    "nudge.reactivation.opener.body": "Nobody has touched {org_name} since you were last in — every course, chapter and lesson is where you left it. If you want to pick it up again, it takes one click.",
+    "nudge.reactivation.opener.cta": "Open your dashboard",
+    "nudge.reactivation.whats_changed.subject": "A few things have changed on LearnHouse",
+    "nudge.reactivation.whats_changed.heading": "Since you were last here",
+    "nudge.reactivation.whats_changed.body": "The product has moved on a fair bit while {org_name} has been quiet — the editor, the course tools and how learners work through material have all had real work. Everything you built still works exactly as before.",
+    "nudge.reactivation.whats_changed.cta": "See what's new",
+    "nudge.reactivation.need_a_hand.subject": "Need a hand getting back into {org_name}?",
+    "nudge.reactivation.need_a_hand.heading": "Is there something in the way?",
+    "nudge.reactivation.need_a_hand.body": "If there was a reason {org_name} stalled — something confusing, something missing, or just no time — we'd genuinely like to hear it. Reply to this email and it comes straight to us.",
+    "nudge.reactivation.closing.subject": "Last note about {org_name}",
+    "nudge.reactivation.closing.heading": "We'll stop here",
+    "nudge.reactivation.closing.body": "This is the last of these. {org_name} stays exactly as it is, and nothing expires — if you ever want to come back, everything will be waiting.",
+    "nudge.reactivation.closing.cta": "Open your dashboard",
 }

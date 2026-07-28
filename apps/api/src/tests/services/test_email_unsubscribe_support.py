@@ -236,9 +236,19 @@ class TestNudgeRendering:
             "List-Unsubscribe=One-Click"
         )
 
-    def test_no_unsubscribe_url_means_no_headers(self):
+    def test_no_unsubscribe_url_means_no_unsubscribe_headers(self):
+        """Reply-To survives — a reader should be able to answer a lifecycle
+        email whether or not it carried an opt-out link."""
         captured = self._send(unsubscribe_url="")
-        assert captured["headers"] is None
+        headers = captured["headers"] or {}
+        assert "List-Unsubscribe" not in headers
+        assert "List-Unsubscribe-Post" not in headers
+
+    def test_reply_to_is_set(self):
+        """Several nudges invite a reply; from a no-reply sender that would be
+        a lie."""
+        captured = self._send()
+        assert "@" in captured["headers"]["Reply-To"]
 
     def test_cta_button_is_rendered(self):
         captured = self._send()

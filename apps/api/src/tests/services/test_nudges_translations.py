@@ -42,7 +42,9 @@ class TestCoverage:
         misleading signal that the nudge still ships."""
         known = {spec.id for spec in NUDGE_CATALOG}
         for key in ENGLISH:
-            if key.startswith("nudge.common."):
+            # `common` and `stat` are shared across the catalog rather than
+            # belonging to any one nudge.
+            if key.startswith(("nudge.common.", "nudge.stat.")):
                 continue
             nudge_id = ".".join(key.split(".")[1:3])
             assert nudge_id in known, f"orphaned copy: {key}"

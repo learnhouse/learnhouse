@@ -307,6 +307,29 @@ async def _activity_day_facts(db_session: AsyncSession, org_ids: Sequence[int]) 
     return _rows_by_org(rows)
 
 
+async def _first_nudge_facts(db_session: AsyncSession, org_ids: Sequence[int]) -> dict:
+    """When each org first received a nudge.
+
+    The reactivation ladder measures from this instead of from last activity —
+    a long-dormant org's last-touch figure never moves, so nothing anchored on
+    it can advance through a sequence.
+    """
+    from src.db.nudges import NudgeSend, NudgeSendStatus
+
+    rows = (
+        await db_session.execute(
+            select(NudgeSend.org_id, func.min(NudgeSend.sent_at).label("first_sent"))
+            .where(
+                NudgeSend.org_id.in_(org_ids),
+                NudgeSend.status == NudgeSendStatus.SENT,
+                NudgeSend.sent_at.is_not(None),
+            )
+            .group_by(NudgeSend.org_id)
+        )
+    ).all()
+    return _rows_by_org(rows)
+
+
 async def _config_facts(db_session: AsyncSession, org_ids: Sequence[int]) -> dict:
     rows = (
         await db_session.execute(
@@ -364,6 +387,7 @@ async def build_snapshots(
     activity_days = await _activity_day_facts(db_session, org_ids)
     configs = await _config_facts(db_session, org_ids)
     admin_logins = await _admin_login_facts(db_session, org_ids)
+    first_nudges = await _first_nudge_facts(db_session, org_ids)
     ai_usage = await _ai_credit_usage(org_ids)
 
     snapshots: list[OrgSnapshot] = []
@@ -379,6 +403,7 @@ async def build_snapshots(
         draft = courses["drafts"].get(oid)
         login_agg = admin_logins.get(oid)
         day_agg = activity_days.get(oid)
+        first_nudge_agg = first_nudges.get(oid)
         assignment_agg = assignments["assignments"].get(oid)
         submission_agg = assignments["submissions"].get(oid)
 
@@ -432,6 +457,9 @@ async def build_snapshots(
                 ai_credits_used=ai_usage.get(oid, 0),
                 last_admin_login_at=parse_ts(login_agg[1]) if login_agg else None,
                 last_activity_day=parse_ts(day_agg[1]) if day_agg else None,
+                first_nudged_at=(
+                    parse_ts(first_nudge_agg[1]) if first_nudge_agg else None
+                ),
                 admins=tuple(admins.get(oid, ())),
                 now=now,
             )

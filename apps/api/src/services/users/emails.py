@@ -74,6 +74,92 @@ def _org_logo_img(logo_url: str, alt: str) -> str:
     )
 
 
+def _first_sentence(text: str, limit: int = 110) -> str:
+    """Opening sentence of a body string, for use as preheader text.
+
+    Handles the full stops of every locale we ship — the CJK ideographic
+    period, the Arabic and Devanagari terminators — then falls back to a word
+    boundary. Inbox previews are cut around 100 characters anyway.
+    """
+    if not text:
+        return ""
+
+    for terminator in ("。", "۔", "।", ". ", "! ", "? ", "؟ "):
+        head, sep, _tail = text.partition(terminator)
+        if sep and len(head) <= limit:
+            return (head + sep).strip()
+
+    if len(text) <= limit:
+        return text.strip()
+    return text[:limit].rsplit(" ", 1)[0].strip() + "…"
+
+
+def _reply_to_address() -> str:
+    """Where a reply to a lifecycle email should land, or "" if unconfigured."""
+    try:
+        from config.config import get_learnhouse_config
+
+        return (get_learnhouse_config().contact_email or "").strip()
+    except Exception:  # pragma: no cover - config is always present in practice
+        return ""
+
+
+def _stat_strip(stats: list[tuple[str, int]]) -> str:
+    """A row of label/value pairs, e.g. "LESSONS 8   LEARNERS 0".
+
+    Deliberately not prose. Writing "8 lessons" into copy means solving plural
+    agreement in twenty languages — Russian has three forms, Arabic six — and
+    without an ICU library the result is "1 lessons" in production. A label
+    beside a bare figure needs no agreement in any of them, and it reads faster
+    than a sentence anyway.
+    """
+    if not stats:
+        return ""
+
+    cells = []
+    for label, value in stats:
+        cells.append(
+            '<td style="padding: 0 14px; text-align: center;">'
+            '<div style="font-size: 22px; font-weight: 900; color: #000000; '
+            f'line-height: 1.2;">{value}</div>'
+            '<div style="font-size: 10px; font-weight: 700; letter-spacing: 0.08em; '
+            'text-transform: uppercase; color: rgba(0,0,0,0.35); margin-top: 2px;">'
+            f"{html.escape(label)}</div>"
+            "</td>"
+        )
+
+    return (
+        '<table role="presentation" cellpadding="0" cellspacing="0" border="0" '
+        'align="center" style="margin: 0 auto 24px auto; border-collapse: collapse;">'
+        f"<tr>{''.join(cells)}</tr>"
+        "</table>"
+    )
+
+
+def _preheader_block(text: str) -> str:
+    """The grey line an inbox list shows after the subject.
+
+    Without one, clients scrape the first visible text — which here is the
+    heading, so the list entry reads as the subject said twice. Setting it
+    explicitly buys a second line of information in the only place a reader
+    looks before deciding to open.
+
+    The zero-width padding after the text stops the client continuing into the
+    body copy once the preheader runs out.
+    """
+    if not text:
+        return ""
+    padding = "&#847;&zwnj;&nbsp;" * 60
+    hide = (
+        "display:none;max-height:0;overflow:hidden;mso-hide:all;"
+        "font-size:1px;line-height:1px;color:#ffffff;opacity:0;"
+    )
+    return (
+        f'<div style="{hide}">{html.escape(text)}</div>'
+        f'<div style="{hide}">{padding}</div>'
+    )
+
+
 def _email_layout(
     title: str,
     body_content: str,
@@ -81,6 +167,7 @@ def _email_layout(
     logo_html: str = LOGO_SVG,
     unsubscribe_url: str = "",
     unsubscribe_label: str = "Unsubscribe from these emails",
+    preheader: str = "",
 ) -> str:
     """Wrap content in the standard email layout.
 
@@ -114,10 +201,16 @@ def _email_layout(
             <hr style="{STYLES['divider']}" />{note_html}{unsub_html}
         </div>"""
 
+    # Prefixed with its own newline so that an absent preheader leaves the
+    # document byte-identical to before — the twelve transactional emails
+    # share this layout and none of their output may shift.
+    block = _preheader_block(preheader)
+    preheader_html = f"\n    {block}" if block else ""
+
     return f"""<!DOCTYPE html>
 <html>
 <head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"></head>
-<body style="{STYLES['body']}">
+<body style="{STYLES['body']}">{preheader_html}
     <div style="{STYLES['wrapper']}">
         <div style="{STYLES['container']}">
             <div style="{STYLES['header']}">
@@ -582,6 +675,8 @@ def send_nudge_email(
     lang: str = "en",
     logo_url: str | None = None,
     has_cta: bool = True,
+    track: str = "",
+    stats: list[tuple[str, int]] | None = None,
     **copy_vars,
 ):
     """Send one lifecycle nudge.
@@ -591,6 +686,11 @@ def send_nudge_email(
     here. ``copy_vars`` fills the placeholders that nudge's strings declare
     (course name, plan name, and so on) — every value is escaped before it
     reaches the template.
+
+    ``track`` selects the illustration. It is drawn as a table mosaic rather
+    than an image because Gmail strips inline SVG and both Gmail and Outlook
+    block ``data:`` URIs, so an embedded picture would render as a blank gap
+    for a large share of readers.
 
     Unlike transactional mail this always carries an unsubscribe link and the
     matching ``List-Unsubscribe`` headers. Gmail and Outlook expect them on
@@ -612,12 +712,19 @@ def send_nudge_email(
     # common enough that this is not an edge case.
     subject = t(lang, f"nudge.{nudge_id}.subject", **raw_vars)
 
+    from src.services.nudges.illustrations import render_illustration
+
+    stat_html = _stat_strip(
+        [(t(lang, f"nudge.stat.{key}"), value) for key, value in (stats or [])]
+    )
+
     body_content = f"""
+        {render_illustration(track)}
         <h1 style="{STYLES['h1']}">{heading}</h1>
         <p style="{STYLES['p']}">
             {body_text}
         </p>
-    """
+        {stat_html}"""
     if has_cta and cta_url:
         cta = t(lang, f"nudge.{nudge_id}.cta", **safe_vars)
         body_content += f"""
@@ -626,6 +733,22 @@ def send_nudge_email(
         </a>
         <p style="{STYLES['link_text']}">{html.escape(cta_url)}</p>
     """
+
+    # The preheader is the body's opening sentence rather than a thirty-first
+    # set of translated strings. It is already localised, and it gives the
+    # inbox list a second line of information instead of echoing the subject.
+    preheader = _first_sentence(t(lang, f"nudge.{nudge_id}.body", **raw_vars))
+
+    headers: dict[str, str] = {}
+    if unsubscribe_url:
+        headers["List-Unsubscribe"] = f"<{unsubscribe_url}>"
+        headers["List-Unsubscribe-Post"] = "List-Unsubscribe=One-Click"
+
+    # Several nudges invite a reply. Without this they would arrive from the
+    # no-reply sender and the invitation would be a lie.
+    reply_to = _reply_to_address()
+    if reply_to:
+        headers["Reply-To"] = reply_to
 
     return _send_notification_email(
         to=email,
@@ -637,11 +760,7 @@ def send_nudge_email(
             logo_html=_org_logo_img(logo_url, org_name) if logo_url else LOGO_SVG,
             unsubscribe_url=unsubscribe_url,
             unsubscribe_label=t(lang, "nudge.common.unsubscribe"),
+            preheader=preheader,
         ),
-        headers={
-            "List-Unsubscribe": f"<{unsubscribe_url}>",
-            "List-Unsubscribe-Post": "List-Unsubscribe=One-Click",
-        }
-        if unsubscribe_url
-        else None,
+        headers=headers or None,
     )

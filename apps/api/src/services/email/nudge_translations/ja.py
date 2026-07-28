@@ -4,6 +4,15 @@ STRINGS: dict[str, str] = {
     "nudge.common.unsubscribe": "このメールの配信を停止する",
     "nudge.common.footer": "{org_name} の管理者であるため、このメールが届いています。",
 
+    # Stat-strip labels. A label beside a bare number needs no plural
+    # agreement, which is why the figures are not written into prose.
+    "nudge.stat.courses": "コース",
+    "nudge.stat.chapters": "章",
+    "nudge.stat.lessons": "レッスン",
+    "nudge.stat.members": "メンバー",
+    "nudge.stat.learners": "受講者",
+    "nudge.stat.completed": "修了",
+
     "nudge.activation.first_course_d1.subject": "{org_name} での最初のコース",
     "nudge.activation.first_course_d1.heading": "準備ができたときに",
     "nudge.activation.first_course_d1.body": "{org_name} の設定は完了し、最初のコースを待っています。多くの方は小さく始めます。テーマを一つ、レッスンを数本。あとから足していけます。",
@@ -152,4 +161,21 @@ STRINGS: dict[str, str] = {
     "nudge.milestone.first_completion.heading": "はじめての修了",
     "nudge.milestone.first_completion.body": "受講者が {org_name} のコースを最後まで終えました。きちんと形にするなら修了証を追加できますし、次のコースに取りかかることもできます。",
     "nudge.milestone.first_completion.cta": "ダッシュボードを開く",
+
+    # -- reactivation ------------------------------------------------------
+    "nudge.reactivation.opener.subject": "{org_name} のアカデミーはそのまま残っています",
+    "nudge.reactivation.opener.heading": "そのまま、置いていかれた状態で",
+    "nudge.reactivation.opener.body": "前回いらしてから {org_name} には誰も手を触れていません。コースも章もレッスンも、すべて残っています。再開はワンクリックです。",
+    "nudge.reactivation.opener.cta": "ダッシュボードを開く",
+    "nudge.reactivation.whats_changed.subject": "LearnHouse でいくつか変わりました",
+    "nudge.reactivation.whats_changed.heading": "前回のご訪問から",
+    "nudge.reactivation.whats_changed.body": "{org_name} が静かなあいだに製品はかなり進みました。エディター、コース作成まわり、受講者の進み方に手が入っています。作られたものはこれまでどおり動きます。",
+    "nudge.reactivation.whats_changed.cta": "変更点を見る",
+    "nudge.reactivation.need_a_hand.subject": "{org_name} に戻るお手伝いをしましょうか",
+    "nudge.reactivation.need_a_hand.heading": "何か引っかかりましたか",
+    "nudge.reactivation.need_a_hand.body": "{org_name} が止まった理由があれば — 分かりにくかった、足りなかった、単に時間がなかった — ぜひ伺いたいです。このメールにそのまま返信してください。私たちに直接届きます。",
+    "nudge.reactivation.closing.subject": "{org_name} についての最後のご連絡",
+    "nudge.reactivation.closing.heading": "ここで失礼します",
+    "nudge.reactivation.closing.body": "この種のご連絡はこれで最後です。{org_name} はそのまま残り、期限もありません。戻りたくなったときには、すべてお待ちしています。",
+    "nudge.reactivation.closing.cta": "ダッシュボードを開く",
 }

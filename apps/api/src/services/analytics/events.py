@@ -18,6 +18,10 @@ CERTIFICATE_CLAIMED = "certificate_claimed"
 CERTIFICATE_REVOKED = "certificate_revoked"
 DISCUSSION_POSTED = "discussion_posted"
 
+# Lifecycle email. Recorded per delivered nudge so returns can be attributed
+# to the specific message that prompted them, rather than to "we sent emails".
+NUDGE_SENT = "nudge_sent"
+
 # Allowed frontend event names (whitelist for the proxy endpoint)
 ALLOWED_FRONTEND_EVENTS = {
     PAGE_VIEW,

@@ -4,6 +4,15 @@ STRINGS: dict[str, str] = {
     "nudge.common.unsubscribe": "Diese E-Mails abbestellen",
     "nudge.common.footer": "Sie erhalten diese E-Mail, weil Sie Administrator von {org_name} sind.",
 
+    # Stat-strip labels. A label beside a bare number needs no plural
+    # agreement, which is why the figures are not written into prose.
+    "nudge.stat.courses": "Kurse",
+    "nudge.stat.chapters": "Kapitel",
+    "nudge.stat.lessons": "Lektionen",
+    "nudge.stat.members": "Mitglieder",
+    "nudge.stat.learners": "Lernende",
+    "nudge.stat.completed": "Abgeschlossen",
+
     "nudge.activation.first_course_d1.subject": "Ihr erster Kurs auf {org_name}",
     "nudge.activation.first_course_d1.heading": "Wann immer Sie möchten",
     "nudge.activation.first_course_d1.body": "{org_name} ist eingerichtet und wartet auf den ersten Kurs. Die meisten fangen klein an: ein Thema, ein paar Lektionen. Ergänzen können Sie jederzeit.",
@@ -152,4 +161,21 @@ STRINGS: dict[str, str] = {
     "nudge.milestone.first_completion.heading": "Erster Abschluss",
     "nudge.milestone.first_completion.body": "Ein Lernender hat einen Kurs in {org_name} von Anfang bis Ende abgeschlossen. Wenn Sie das gebührend festhalten wollen, können Sie ein Zertifikat hinzufügen — oder mit dem Nächsten beginnen.",
     "nudge.milestone.first_completion.cta": "Dashboard öffnen",
+
+    # -- reactivation ------------------------------------------------------
+    "nudge.reactivation.opener.subject": "Ihre Akademie auf {org_name} ist noch da",
+    "nudge.reactivation.opener.heading": "Noch da, genau wie Sie sie verlassen haben",
+    "nudge.reactivation.opener.body": "Seit Ihrem letzten Besuch hat niemand {org_name} angerührt — jeder Kurs, jedes Kapitel und jede Lektion liegt unverändert da. Ein Klick, und Sie machen weiter.",
+    "nudge.reactivation.opener.cta": "Dashboard öffnen",
+    "nudge.reactivation.whats_changed.subject": "Auf LearnHouse hat sich einiges getan",
+    "nudge.reactivation.whats_changed.heading": "Seit Ihrem letzten Besuch",
+    "nudge.reactivation.whats_changed.body": "Während {org_name} still war, hat sich das Produkt deutlich weiterentwickelt: Editor, Kurswerkzeuge und der Lernweg wurden gründlich überarbeitet. Alles, was Sie aufgebaut haben, funktioniert unverändert.",
+    "nudge.reactivation.whats_changed.cta": "Neuerungen ansehen",
+    "nudge.reactivation.need_a_hand.subject": "Brauchen Sie Hilfe beim Wiedereinstieg in {org_name}?",
+    "nudge.reactivation.need_a_hand.heading": "Stand etwas im Weg?",
+    "nudge.reactivation.need_a_hand.body": "Falls es einen Grund gab, warum {org_name} liegen blieb — etwas Unklares, etwas Fehlendes oder schlicht keine Zeit — würden wir das gern erfahren. Antworten Sie einfach auf diese E-Mail, sie kommt direkt bei uns an.",
+    "nudge.reactivation.closing.subject": "Letzte Nachricht zu {org_name}",
+    "nudge.reactivation.closing.heading": "Hier hören wir auf",
+    "nudge.reactivation.closing.body": "Das ist die letzte dieser E-Mails. {org_name} bleibt genau so bestehen und nichts verfällt — wenn Sie zurückkommen möchten, wartet alles auf Sie.",
+    "nudge.reactivation.closing.cta": "Dashboard öffnen",
 }

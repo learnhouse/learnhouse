@@ -4,6 +4,15 @@ STRINGS: dict[str, str] = {
     "nudge.common.unsubscribe": "Hủy đăng ký nhận những email này",
     "nudge.common.footer": "Bạn nhận được email này vì bạn là quản trị viên của {org_name}.",
 
+    # Stat-strip labels. A label beside a bare number needs no plural
+    # agreement, which is why the figures are not written into prose.
+    "nudge.stat.courses": "Khóa học",
+    "nudge.stat.chapters": "Chương",
+    "nudge.stat.lessons": "Bài học",
+    "nudge.stat.members": "Thành viên",
+    "nudge.stat.learners": "Người học",
+    "nudge.stat.completed": "Hoàn thành",
+
     "nudge.activation.first_course_d1.subject": "Khóa học đầu tiên của bạn trên {org_name}",
     "nudge.activation.first_course_d1.heading": "Khi nào bạn sẵn sàng",
     "nudge.activation.first_course_d1.body": "{org_name} đã sẵn sàng và đang chờ khóa học đầu tiên. Phần lớn mọi người bắt đầu từ nhỏ: một chủ đề, vài bài học. Bạn luôn có thể bổ sung sau.",
@@ -152,4 +161,21 @@ STRINGS: dict[str, str] = {
     "nudge.milestone.first_completion.heading": "Lần hoàn thành đầu tiên",
     "nudge.milestone.first_completion.body": "Một người học đã hoàn thành khóa học trong {org_name} từ đầu đến cuối. Nếu muốn ghi nhận đàng hoàng, bạn có thể thêm chứng chỉ — hoặc bắt tay vào khóa tiếp theo.",
     "nudge.milestone.first_completion.cta": "Mở bảng điều khiển",
+
+    # -- reactivation ------------------------------------------------------
+    "nudge.reactivation.opener.subject": "Học viện của bạn trên {org_name} vẫn còn đây",
+    "nudge.reactivation.opener.heading": "Vẫn ở đây, đúng như bạn để lại",
+    "nudge.reactivation.opener.body": "Không ai động vào {org_name} kể từ lần cuối bạn ghé — mọi khóa học, chương và bài học đều ở nguyên chỗ. Quay lại chỉ mất một cú nhấp.",
+    "nudge.reactivation.opener.cta": "Mở bảng điều khiển",
+    "nudge.reactivation.whats_changed.subject": "Có vài thay đổi trên LearnHouse",
+    "nudge.reactivation.whats_changed.heading": "Kể từ lần cuối bạn ghé",
+    "nudge.reactivation.whats_changed.body": "Sản phẩm đã tiến khá xa trong lúc {org_name} im ắng: trình soạn thảo, công cụ khóa học và lộ trình của người học đều đã được làm lại đáng kể. Mọi thứ bạn dựng vẫn chạy như cũ.",
+    "nudge.reactivation.whats_changed.cta": "Xem điều gì mới",
+    "nudge.reactivation.need_a_hand.subject": "Cần hỗ trợ để quay lại {org_name} không?",
+    "nudge.reactivation.need_a_hand.heading": "Có gì cản trở không?",
+    "nudge.reactivation.need_a_hand.body": "Nếu có lý do khiến {org_name} dừng lại — điều gì đó khó hiểu, thiếu sót, hay đơn giản là không có thời gian — chúng tôi thật sự muốn nghe. Trả lời email này, nó đến thẳng chỗ chúng tôi.",
+    "nudge.reactivation.closing.subject": "Lời nhắn cuối về {org_name}",
+    "nudge.reactivation.closing.heading": "Chúng tôi dừng ở đây",
+    "nudge.reactivation.closing.body": "Đây là email cuối thuộc loại này. {org_name} vẫn giữ nguyên và không có gì hết hạn — nếu có ngày bạn muốn quay lại, mọi thứ vẫn đang chờ.",
+    "nudge.reactivation.closing.cta": "Mở bảng điều khiển",
 }

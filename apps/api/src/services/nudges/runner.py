@@ -35,15 +35,25 @@ logger = logging.getLogger(__name__)
 # An admin hears from us at most this often, across every org they administer.
 # Someone who runs three organizations should not receive triple the mail.
 DEFAULT_WEEKLY_CAP = 2
-DEFAULT_DAILY_CAP = 1
+# The gap is the binding constraint, not a separate daily cap: two days between
+# sends already implies at most one a day, so a daily cap would be dead weight.
 MIN_GAP_HOURS = 48
 
 # Blast radius fuse. Reached, the run stops and logs what it deferred; nothing
 # was claimed, so those candidates are simply reconsidered tomorrow.
 DEFAULT_MAX_SENDS = 500
 
-# Only the dormancy track may reach organizations that predate this system.
-BACKFILL_TRACKS = frozenset({"dormancy"})
+# The only tracks allowed to reach organizations that predate this system.
+# Both exist for exactly that audience; everything else is bounded by day_max
+# and could not reach them anyway.
+BACKFILL_TRACKS = frozenset({"dormancy", "reactivation"})
+
+# Long-dormant organizations are a different audience from someone who signed
+# up on Tuesday: there is no ongoing relationship to pace, and the sequence
+# only works if its steps land close enough together to read as a sequence.
+# These override the ordinary caps for orgs that predate the start date.
+DEFAULT_LEGACY_WEEKLY_CAP = 7
+DEFAULT_LEGACY_MIN_GAP_HOURS = 20
 
 
 def _flag(name: str, default: bool = False) -> bool:
@@ -62,6 +72,25 @@ def _int_env(name: str, default: int) -> int:
 
 def nudges_enabled() -> bool:
     return _flag("LEARNHOUSE_NUDGES_ENABLED", False)
+
+
+def send_slots() -> int:
+    """How many slots the day's sending is spread across.
+
+    ``1`` (the default) keeps the original behaviour: one daily run, everything
+    at once. Set it higher and run the job hourly — each org is pinned to a
+    slot by its id, so the day's mail trickles out instead of arriving as one
+    burst. A burst looks like a blast to spam filters and like a robot to
+    readers, and it also means a bad send hits everyone before anyone notices.
+    """
+    return max(1, _int_env("LEARNHOUSE_NUDGES_SLOTS", 1))
+
+
+def _slot_matches(org_id: int, now: datetime, slots: int) -> bool:
+    """Whether this org's slot is the one currently open."""
+    if slots <= 1:
+        return True
+    return org_id % slots == now.hour % slots
 
 
 def backfill_mode() -> str:
@@ -96,6 +125,7 @@ class RunStats:
     skipped_optout: int = 0
     skipped_backfill: int = 0
     skipped_inactive_org: int = 0
+    skipped_slot: int = 0
     failed: int = 0
     budget_exhausted: bool = False
     by_nudge: dict = field(default_factory=dict)
@@ -113,6 +143,7 @@ class RunStats:
             "skipped_optout": self.skipped_optout,
             "skipped_backfill": self.skipped_backfill,
             "skipped_inactive_org": self.skipped_inactive_org,
+            "skipped_slot": self.skipped_slot,
             "budget_exhausted": self.budget_exhausted,
             "by_nudge": dict(sorted(self.by_nudge.items())),
         }
@@ -182,18 +213,60 @@ async def _recent_send_counts(
     return counts
 
 
+def legacy_caps() -> tuple[int, int]:
+    """Weekly cap and minimum gap for organizations older than the start date."""
+    return (
+        _int_env("LEARNHOUSE_NUDGES_LEGACY_WEEKLY_CAP", DEFAULT_LEGACY_WEEKLY_CAP),
+        _int_env("LEARNHOUSE_NUDGES_LEGACY_MIN_GAP_HOURS", DEFAULT_LEGACY_MIN_GAP_HOURS),
+    )
+
+
 def _cap_blocks(
     counts: dict[int, tuple[int, Optional[datetime]]],
     user_id: int,
     now: datetime,
     weekly_cap: int,
+    min_gap_hours: int = MIN_GAP_HOURS,
 ) -> bool:
     count, latest = counts.get(user_id, (0, None))
     if count >= weekly_cap:
         return True
-    if latest is not None and (now - latest) < timedelta(hours=MIN_GAP_HOURS):
+    if latest is not None and (now - latest) < timedelta(hours=min_gap_hours):
         return True
     return False
+
+
+# Which figures are worth showing per track. Keys resolve to `nudge.stat.<key>`
+# labels; the value beside them is a bare number, so no locale has to solve
+# plural agreement.
+TRACK_STATS: dict[str, tuple[str, ...]] = {
+    "content": ("chapters", "lessons"),
+    "audience": ("members", "learners"),
+    "dormancy": ("courses", "lessons"),
+    "milestone": ("learners", "completed"),
+    # The whole message is "your work is still here" — the figures say it
+    # faster than the sentence does.
+    "reactivation": ("courses", "lessons"),
+    # activation: an empty org has nothing but zeros, and a row of them reads
+    # as an accusation rather than a prompt.
+    # monetization: the plan and its ceiling are already the subject of the copy.
+}
+
+
+def _stats_for(spec: NudgeSpec, snapshot: OrgSnapshot) -> list[tuple[str, int]]:
+    """Figures to show beneath the copy, or [] when none would help."""
+    available = {
+        "courses": snapshot.course_count,
+        "chapters": snapshot.chapter_count,
+        "lessons": snapshot.activity_count,
+        "members": snapshot.member_count,
+        "learners": snapshot.learner_count,
+        "completed": snapshot.completed_trailrun_count,
+    }
+    keys = TRACK_STATS.get(spec.track, ())
+    stats = [(key, available[key]) for key in keys]
+    # All-zero tells the reader nothing they did not already know.
+    return stats if any(value for _key, value in stats) else []
 
 
 def _copy_vars(snapshot: OrgSnapshot, spec: NudgeSpec) -> dict:
@@ -257,6 +330,32 @@ async def _claim(
     return row
 
 
+async def _record_sent(spec: NudgeSpec, snapshot: OrgSnapshot, admin: AdminRow) -> None:
+    """Emit an analytics event for one delivered nudge.
+
+    Without this there is no way to tell which of the catalog earns its place —
+    the ledger records that mail went out, not whether it brought anyone back.
+    Failures are swallowed: analytics must never be the reason a send loop dies.
+    """
+    try:
+        from src.services.analytics.analytics import track
+        from src.services.analytics.events import NUDGE_SENT
+
+        await track(
+            event_name=NUDGE_SENT,
+            org_id=snapshot.org_id,
+            user_id=admin.user_id,
+            properties={
+                "nudge_id": spec.id,
+                "track": spec.track,
+                "plan": snapshot.plan,
+                "lang": snapshot.lang,
+            },
+        )
+    except Exception as exc:  # pragma: no cover - defensive
+        logger.warning("Nudge analytics event not recorded: %s", exc)
+
+
 async def run_nudges(
     db_session: AsyncSession,
     *,
@@ -282,6 +381,8 @@ async def run_nudges(
     )
     weekly_cap = _int_env("LEARNHOUSE_NUDGES_WEEKLY_CAP", DEFAULT_WEEKLY_CAP)
     cutoff = start_date()
+    slots = send_slots()
+    legacy_weekly_cap, legacy_gap = legacy_caps()
 
     if not force and get_deployment_mode() != "saas":
         logger.info("Nudges skipped: deployment mode is not saas")
@@ -298,6 +399,10 @@ async def run_nudges(
             stats.budget_exhausted = True
             logger.info("Nudge budget of %s reached; deferring the rest", max_sends)
             break
+
+        if not _slot_matches(snapshot.org_id, now, slots):
+            stats.skipped_slot += 1
+            continue
 
         if not snapshot.org_active_flag:
             stats.skipped_inactive_org += 1
@@ -331,7 +436,15 @@ async def run_nudges(
                 stats.skipped_optout += 1
                 continue
 
-            if not seed and _cap_blocks(counts, admin.user_id, now, weekly_cap):
+            # An org that predates the system gets the looser pacing: there is
+            # no ongoing relationship to protect, and the reactivation ladder
+            # only reads as a sequence if its steps arrive close together.
+            cap, gap = (
+                (legacy_weekly_cap, legacy_gap)
+                if _is_preexisting(snapshot, cutoff)
+                else (weekly_cap, MIN_GAP_HOURS)
+            )
+            if not seed and _cap_blocks(counts, admin.user_id, now, cap, gap):
                 stats.skipped_cap += 1
                 continue
 
@@ -381,6 +494,8 @@ async def run_nudges(
                     lang=snapshot.lang,
                     logo_url=logo_url,
                     has_cta=spec.has_cta,
+                    track=spec.track,
+                    stats=_stats_for(spec, snapshot),
                     **_copy_vars(snapshot, spec),
                 )
 
@@ -397,6 +512,7 @@ async def run_nudges(
                         counts.get(admin.user_id, (0, None))[0] + 1,
                         now,
                     )
+                    await _record_sent(spec, snapshot, admin)
 
                 db_session.add(row)
                 await db_session.commit()

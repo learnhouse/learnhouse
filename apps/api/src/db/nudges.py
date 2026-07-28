@@ -128,5 +128,15 @@ class EmailPreference(SQLModel, table=True):
     unsubscribed_at: Optional[datetime] = Field(
         default=None, sa_column=Column(DateTime(timezone=True), nullable=True)
     )
-    # "email_link" | "dashboard" | "admin"
+    # "email_link" | "dashboard" | "admin" | "bounce" | "complaint"
     source: Optional[str] = Field(default=None, sa_column=Column(String(32), nullable=True))
+    # Set by a hard bounce or a spam complaint. Unlike lifecycle_opt_out this is
+    # not the reader's preference — it is a delivery fact, and it must survive
+    # any later re-subscribe, because continuing to mail a dead address or a
+    # complainant is what actually costs a sending domain its reputation.
+    suppressed: bool = Field(
+        default=False, sa_column=Column(Boolean, nullable=False, default=False)
+    )
+    suppressed_reason: Optional[str] = Field(
+        default=None, sa_column=Column(String(32), nullable=True)
+    )

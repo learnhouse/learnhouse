@@ -144,6 +144,13 @@ v1_router.include_router(
     prefix="/emails",
     tags=["emails"],
 )
+# Email delivery feedback from the provider (protected by a shared secret).
+# Bounces and complaints have to reach us or a dead address is mailed forever.
+v1_router.include_router(
+    nudges_router_module.internal_router,
+    prefix="/internal/emails",
+    tags=["emails-internal"],
+)
 # Internal domain listing endpoint (protected by internal key)
 v1_router.include_router(
     custom_domains.internal_router,

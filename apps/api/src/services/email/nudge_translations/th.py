@@ -4,6 +4,15 @@ STRINGS: dict[str, str] = {
     "nudge.common.unsubscribe": "ยกเลิกการรับอีเมลเหล่านี้",
     "nudge.common.footer": "คุณได้รับอีเมลนี้เพราะคุณเป็นผู้ดูแลของ {org_name}",
 
+    # Stat-strip labels. A label beside a bare number needs no plural
+    # agreement, which is why the figures are not written into prose.
+    "nudge.stat.courses": "คอร์ส",
+    "nudge.stat.chapters": "บท",
+    "nudge.stat.lessons": "บทเรียน",
+    "nudge.stat.members": "สมาชิก",
+    "nudge.stat.learners": "ผู้เรียน",
+    "nudge.stat.completed": "เรียนจบ",
+
     "nudge.activation.first_course_d1.subject": "คอร์สแรกของคุณบน {org_name}",
     "nudge.activation.first_course_d1.heading": "เมื่อไหร่ที่คุณพร้อม",
     "nudge.activation.first_course_d1.body": "{org_name} ตั้งค่าเรียบร้อยและรอคอร์สแรกอยู่ ส่วนใหญ่เริ่มจากเล็ก ๆ คือหัวข้อเดียวกับบทเรียนไม่กี่บท เพิ่มทีหลังได้เสมอ",
@@ -152,4 +161,21 @@ STRINGS: dict[str, str] = {
     "nudge.milestone.first_completion.heading": "การเรียนจบครั้งแรก",
     "nudge.milestone.first_completion.body": "ผู้เรียนคนหนึ่งเรียนคอร์สใน {org_name} จบตั้งแต่ต้นจนจบ ถ้าอยากบันทึกไว้ให้เป็นเรื่องเป็นราว คุณเพิ่มใบรับรองได้ หรือจะเริ่มสร้างคอร์สถัดไปก็ได้",
     "nudge.milestone.first_completion.cta": "เปิดแดชบอร์ดของคุณ",
+
+    # -- reactivation ------------------------------------------------------
+    "nudge.reactivation.opener.subject": "สถาบันของคุณบน {org_name} ยังอยู่",
+    "nudge.reactivation.opener.heading": "ยังอยู่ ตรงที่คุณวางไว้",
+    "nudge.reactivation.opener.body": "ไม่มีใครแตะ {org_name} เลยนับจากครั้งล่าสุดที่คุณเข้ามา ทุกคอร์ส ทุกบท ทุกบทเรียนยังอยู่ที่เดิม กลับมาทำต่อแค่คลิกเดียว",
+    "nudge.reactivation.opener.cta": "เปิดแดชบอร์ดของคุณ",
+    "nudge.reactivation.whats_changed.subject": "มีบางอย่างเปลี่ยนไปบน LearnHouse",
+    "nudge.reactivation.whats_changed.heading": "นับจากครั้งล่าสุดที่คุณเข้ามา",
+    "nudge.reactivation.whats_changed.body": "ระหว่างที่ {org_name} เงียบ ผลิตภัณฑ์พัฒนาไปพอสมควร ทั้งตัวแก้ไข เครื่องมือสร้างคอร์ส และเส้นทางของผู้เรียนได้รับการปรับจริงจัง ทุกอย่างที่คุณสร้างไว้ยังทำงานเหมือนเดิม",
+    "nudge.reactivation.whats_changed.cta": "ดูสิ่งที่เปลี่ยนไป",
+    "nudge.reactivation.need_a_hand.subject": "ให้เราช่วยพาคุณกลับเข้า {org_name} ไหม",
+    "nudge.reactivation.need_a_hand.heading": "มีอะไรมาขวางหรือเปล่า",
+    "nudge.reactivation.need_a_hand.body": "ถ้ามีเหตุผลที่ทำให้ {org_name} หยุดไป ไม่ว่าจะสับสนตรงไหน ขาดอะไร หรือแค่ไม่มีเวลา เราอยากรู้จริง ๆ ตอบกลับอีเมลฉบับนี้ได้เลย มันจะถึงเราโดยตรง",
+    "nudge.reactivation.closing.subject": "ข้อความสุดท้ายเรื่อง {org_name}",
+    "nudge.reactivation.closing.heading": "เราขอหยุดไว้เท่านี้",
+    "nudge.reactivation.closing.body": "นี่คืออีเมลแบบนี้ฉบับสุดท้าย {org_name} ยังคงอยู่เหมือนเดิมและไม่มีอะไรหมดอายุ หากวันหนึ่งคุณอยากกลับมา ทุกอย่างจะรออยู่",
+    "nudge.reactivation.closing.cta": "เปิดแดชบอร์ดของคุณ",
 }

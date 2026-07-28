@@ -4,6 +4,15 @@ STRINGS: dict[str, str] = {
     "nudge.common.unsubscribe": "إلغاء الاشتراك في هذه الرسائل",
     "nudge.common.footer": "تصلك هذه الرسالة لأنك مسؤول في {org_name}.",
 
+    # Stat-strip labels. A label beside a bare number needs no plural
+    # agreement, which is why the figures are not written into prose.
+    "nudge.stat.courses": "الدورات",
+    "nudge.stat.chapters": "الفصول",
+    "nudge.stat.lessons": "الدروس",
+    "nudge.stat.members": "الأعضاء",
+    "nudge.stat.learners": "المتعلمون",
+    "nudge.stat.completed": "مكتملة",
+
     "nudge.activation.first_course_d1.subject": "دورتك الأولى في {org_name}",
     "nudge.activation.first_course_d1.heading": "متى ما كنت مستعدًا",
     "nudge.activation.first_course_d1.body": "{org_name} جاهزة وتنتظر دورتها الأولى. معظم الناس يبدؤون بشيء صغير: موضوع واحد وبضعة دروس. يمكنك التوسّع لاحقًا.",
@@ -152,4 +161,21 @@ STRINGS: dict[str, str] = {
     "nudge.milestone.first_completion.heading": "أول إتمام",
     "nudge.milestone.first_completion.body": "أنهى متعلم دورة في {org_name} من أولها إلى آخرها. إن أردت توثيق ذلك، يمكنك إضافة شهادة — أو البدء ببناء ما يليها.",
     "nudge.milestone.first_completion.cta": "افتح لوحة التحكم",
+
+    # -- reactivation ------------------------------------------------------
+    "nudge.reactivation.opener.subject": "أكاديميتك على {org_name} ما زالت هنا",
+    "nudge.reactivation.opener.heading": "ما زالت هنا، تمامًا كما تركتها",
+    "nudge.reactivation.opener.body": "لم يمسّ أحد {org_name} منذ زيارتك الأخيرة — كل دورة وفصل ودرس في مكانه. للعودة يكفي نقرة واحدة.",
+    "nudge.reactivation.opener.cta": "افتح لوحة التحكم",
+    "nudge.reactivation.whats_changed.subject": "تغيّرت بعض الأمور في LearnHouse",
+    "nudge.reactivation.whats_changed.heading": "منذ آخر زيارة لك",
+    "nudge.reactivation.whats_changed.body": "تطوّر المنتج كثيرًا بينما كانت {org_name} هادئة: المحرّر وأدوات الدورات ومسار المتعلمين نالت جميعها عملًا حقيقيًا. كل ما بنيته يعمل كما كان.",
+    "nudge.reactivation.whats_changed.cta": "اطّلع على الجديد",
+    "nudge.reactivation.need_a_hand.subject": "هل تحتاج مساعدة للعودة إلى {org_name}؟",
+    "nudge.reactivation.need_a_hand.heading": "هل اعترض شيء طريقك؟",
+    "nudge.reactivation.need_a_hand.body": "إن كان هناك سبب لتوقّف {org_name} — شيء مربك أو ناقص أو ببساطة ضيق الوقت — فنحن نودّ سماعه. ردّ على هذه الرسالة وستصلنا مباشرة.",
+    "nudge.reactivation.closing.subject": "آخر رسالة بخصوص {org_name}",
+    "nudge.reactivation.closing.heading": "سنتوقف هنا",
+    "nudge.reactivation.closing.body": "هذه آخر رسالة من هذا النوع. تبقى {org_name} كما هي ولا ينتهي شيء — إن أردت العودة يومًا، سيكون كل شيء في انتظارك.",
+    "nudge.reactivation.closing.cta": "افتح لوحة التحكم",
 }

@@ -4,6 +4,15 @@ STRINGS: dict[str, str] = {
     "nudge.common.unsubscribe": "Berhenti berlangganan email ini",
     "nudge.common.footer": "Anda menerima email ini karena Anda admin di {org_name}.",
 
+    # Stat-strip labels. A label beside a bare number needs no plural
+    # agreement, which is why the figures are not written into prose.
+    "nudge.stat.courses": "Kursus",
+    "nudge.stat.chapters": "Bab",
+    "nudge.stat.lessons": "Pelajaran",
+    "nudge.stat.members": "Anggota",
+    "nudge.stat.learners": "Peserta",
+    "nudge.stat.completed": "Selesai",
+
     "nudge.activation.first_course_d1.subject": "Kursus pertama Anda di {org_name}",
     "nudge.activation.first_course_d1.heading": "Kapan pun Anda siap",
     "nudge.activation.first_course_d1.body": "{org_name} sudah siap dan menunggu kursus pertamanya. Kebanyakan orang mulai dari yang kecil: satu topik, beberapa pelajaran. Menambah bisa kapan saja.",
@@ -152,4 +161,21 @@ STRINGS: dict[str, str] = {
     "nudge.milestone.first_completion.heading": "Penyelesaian pertama",
     "nudge.milestone.first_completion.body": "Seorang peserta menyelesaikan kursus di {org_name} dari awal sampai akhir. Kalau ingin mencatatnya dengan pantas, Anda bisa menambahkan sertifikat — atau mulai menyiapkan kursus berikutnya.",
     "nudge.milestone.first_completion.cta": "Buka dasbor Anda",
+
+    # -- reactivation ------------------------------------------------------
+    "nudge.reactivation.opener.subject": "Akademi Anda di {org_name} masih ada",
+    "nudge.reactivation.opener.heading": "Masih di sini, persis seperti Anda tinggalkan",
+    "nudge.reactivation.opener.body": "Tak ada yang menyentuh {org_name} sejak kunjungan terakhir Anda — setiap kursus, bab, dan pelajaran ada di tempatnya. Melanjutkan hanya butuh satu klik.",
+    "nudge.reactivation.opener.cta": "Buka dasbor Anda",
+    "nudge.reactivation.whats_changed.subject": "Ada beberapa perubahan di LearnHouse",
+    "nudge.reactivation.whats_changed.heading": "Sejak terakhir Anda ke sini",
+    "nudge.reactivation.whats_changed.body": "Produknya berkembang cukup jauh selagi {org_name} sepi: editor, perkakas kursus, dan alur peserta semuanya digarap serius. Semua yang Anda bangun tetap berjalan seperti dulu.",
+    "nudge.reactivation.whats_changed.cta": "Lihat apa yang baru",
+    "nudge.reactivation.need_a_hand.subject": "Perlu bantuan untuk kembali ke {org_name}?",
+    "nudge.reactivation.need_a_hand.heading": "Ada yang menghalangi?",
+    "nudge.reactivation.need_a_hand.body": "Kalau ada alasan {org_name} berhenti — sesuatu yang membingungkan, ada yang kurang, atau memang tidak sempat — kami sungguh ingin mendengarnya. Balas email ini, langsung sampai ke kami.",
+    "nudge.reactivation.closing.subject": "Catatan terakhir soal {org_name}",
+    "nudge.reactivation.closing.heading": "Kami berhenti di sini",
+    "nudge.reactivation.closing.body": "Ini yang terakhir dari email semacam ini. {org_name} tetap apa adanya dan tidak ada yang kedaluwarsa — kalau suatu saat ingin kembali, semuanya menunggu.",
+    "nudge.reactivation.closing.cta": "Buka dasbor Anda",
 }

@@ -10,6 +10,7 @@ import logging
 from datetime import datetime, timezone
 from typing import Iterable, Optional, Set
 
+from sqlalchemy import or_
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlmodel import select
 
@@ -28,7 +29,13 @@ async def get_user_by_uuid(db_session: AsyncSession, user_uuid: str) -> Optional
 async def get_opted_out_user_ids(
     db_session: AsyncSession, user_ids: Iterable[int]
 ) -> Set[int]:
-    """User ids from the given set that have opted out of lifecycle email."""
+    """Ids from the given set that must not be mailed.
+
+    Covers two different things deliberately: someone who asked to stop, and
+    an address a provider told us is undeliverable or whose owner reported us
+    as spam. The first is a preference; the second is a fact, and mailing
+    through it is what actually burns a sending domain.
+    """
     ids = list(user_ids)
     if not ids:
         return set()
@@ -37,11 +44,63 @@ async def get_opted_out_user_ids(
         await db_session.execute(
             select(EmailPreference.user_id).where(
                 EmailPreference.user_id.in_(ids),
-                EmailPreference.lifecycle_opt_out.is_(True),
+                or_(
+                    EmailPreference.lifecycle_opt_out.is_(True),
+                    EmailPreference.suppressed.is_(True),
+                ),
             )
         )
     ).scalars().all()
     return set(rows)
+
+
+async def suppress_address(
+    db_session: AsyncSession, email: str, reason: str
+) -> Optional[EmailPreference]:
+    """Stop mailing an address after a hard bounce or a spam complaint.
+
+    Keyed on the address rather than a user id because that is all a provider
+    webhook gives us. Returns None when the address matches no account, which
+    is normal — the bounce may be for a user since deleted.
+
+    This is set independently of ``lifecycle_opt_out`` so that a later
+    re-subscribe cannot silently undo it.
+    """
+    user = (
+        await db_session.execute(select(User).where(User.email == email))
+    ).scalars().first()
+    if user is None or user.id is None:
+        logger.info("Suppression for unknown address ignored (%s)", reason)
+        return None
+
+    pref = (
+        await db_session.execute(
+            select(EmailPreference).where(EmailPreference.user_id == user.id)
+        )
+    ).scalars().first()
+
+    if pref is None:
+        pref = EmailPreference(user_id=user.id, source=reason)
+        db_session.add(pref)
+
+    pref.suppressed = True
+    pref.suppressed_reason = reason
+    if pref.unsubscribed_at is None:
+        pref.unsubscribed_at = datetime.now(timezone.utc)
+    db_session.add(pref)
+    await db_session.commit()
+    await db_session.refresh(pref)
+    logger.info("Suppressed address for user %s (%s)", user.id, reason)
+    return pref
+
+
+async def is_suppressed(db_session: AsyncSession, user_id: int) -> bool:
+    pref = (
+        await db_session.execute(
+            select(EmailPreference).where(EmailPreference.user_id == user_id)
+        )
+    ).scalars().first()
+    return bool(pref and pref.suppressed)
 
 
 async def is_opted_out(db_session: AsyncSession, user_id: int) -> bool:
@@ -87,6 +146,9 @@ async def set_lifecycle_opt_out(
             pref.unsubscribed_at = now
         if not opted_out:
             pref.unsubscribed_at = None
+        # `suppressed` is untouched on purpose: a hard bounce or spam complaint
+        # is a delivery fact, and re-subscribing cannot make a dead address
+        # deliverable again.
         pref.source = source
         db_session.add(pref)
 

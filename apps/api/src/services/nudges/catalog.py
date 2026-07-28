@@ -45,6 +45,7 @@ TRACK_AUDIENCE = "audience"
 TRACK_MONETIZATION = "monetization"
 TRACK_DORMANCY = "dormancy"
 TRACK_MILESTONE = "milestone"
+TRACK_REACTIVATION = "reactivation"
 
 
 @dataclass(frozen=True)
@@ -199,6 +200,16 @@ def _anchor_first_completion(s: OrgSnapshot):
     return s.age_days(s.first_completed_trailrun_at)
 
 
+def _anchor_first_nudge(s: OrgSnapshot):
+    """Days since this org first heard from us.
+
+    The reactivation ladder runs on this clock. An org quiet for two years has
+    a last-touch figure that never advances, so a sequence anchored on activity
+    would fire its first step forever and its second step never.
+    """
+    return s.days_since_first_nudge
+
+
 def _no_second_visit(s: OrgSnapshot) -> bool:
     """True when nobody appears to have come back after signing up.
 
@@ -303,8 +314,10 @@ NUDGE_CATALOG: tuple[NudgeSpec, ...] = (
         has_cta=False,
         priority=15,
     ),
-    # Says plainly that it is the last one. That earns more goodwill than any
-    # subject-line trick, and it ends the track.
+    # Says plainly that it is the last one, and it is: every activation nudge
+    # is once-per-org-forever, and this is the last window in the track, so
+    # once it has fired the ledger keeps the whole track closed. That promise
+    # is kept by the dedupe key, not by a separate terminal marker.
     NudgeSpec(
         id="activation.last_call_d30",
         track=TRACK_ACTIVATION,
@@ -548,6 +561,58 @@ NUDGE_CATALOG: tuple[NudgeSpec, ...] = (
         cta=lambda s, base: links.dashboard_url(base),
         repeat="quarterly",
         priority=63,
+    ),
+    # ---------------------------------------------------------------- track 7
+    # Reactivation: a real sequence for organizations that went cold long ago.
+    #
+    # These exist because every other track is bounded by `day_max`, so an org
+    # quiet for a year qualifies for essentially nothing — the frequency cap was
+    # never what limited them, the absence of anything to send was. The ladder
+    # is anchored on first contact so it can actually advance, and it opens the
+    # door once: after the last step, `dormancy.winback_q` takes over at its
+    # quarterly cadence.
+    NudgeSpec(
+        id="reactivation.opener",
+        track=TRACK_REACTIVATION,
+        day_min=90,
+        day_max=3650,
+        anchor=_anchor_touch,
+        # No prior contact — this is the step that starts the sequence and
+        # stamps the clock the rest of it measures from.
+        predicate=lambda s: s.content_exists and s.first_nudged_at is None,
+        cta=lambda s, base: links.dashboard_url(base),
+        priority=64,
+    ),
+    NudgeSpec(
+        id="reactivation.whats_changed",
+        track=TRACK_REACTIVATION,
+        day_min=3,
+        day_max=6,
+        anchor=_anchor_first_nudge,
+        predicate=lambda s: s.is_cold and s.content_exists,
+        cta=lambda s, base: links.dashboard_url(base),
+        priority=65,
+    ),
+    NudgeSpec(
+        id="reactivation.need_a_hand",
+        track=TRACK_REACTIVATION,
+        day_min=8,
+        day_max=12,
+        anchor=_anchor_first_nudge,
+        predicate=lambda s: s.is_cold and s.content_exists,
+        cta=lambda s, base: links.dashboard_url(base),
+        has_cta=False,
+        priority=66,
+    ),
+    NudgeSpec(
+        id="reactivation.closing",
+        track=TRACK_REACTIVATION,
+        day_min=16,
+        day_max=21,
+        anchor=_anchor_first_nudge,
+        predicate=lambda s: s.is_cold and s.content_exists,
+        cta=lambda s, base: links.dashboard_url(base),
+        priority=67,
     ),
     # ---------------------------------------------------------------- track 6
     # Congratulations go out immediately or not at all, so these never

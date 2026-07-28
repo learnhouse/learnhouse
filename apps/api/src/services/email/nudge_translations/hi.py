@@ -4,6 +4,15 @@ STRINGS: dict[str, str] = {
     "nudge.common.unsubscribe": "इन ईमेल की सदस्यता समाप्त करें",
     "nudge.common.footer": "आपको यह ईमेल इसलिए मिला है क्योंकि आप {org_name} के व्यवस्थापक हैं।",
 
+    # Stat-strip labels. A label beside a bare number needs no plural
+    # agreement, which is why the figures are not written into prose.
+    "nudge.stat.courses": "कोर्स",
+    "nudge.stat.chapters": "अध्याय",
+    "nudge.stat.lessons": "पाठ",
+    "nudge.stat.members": "सदस्य",
+    "nudge.stat.learners": "शिक्षार्थी",
+    "nudge.stat.completed": "पूर्ण",
+
     "nudge.activation.first_course_d1.subject": "{org_name} पर आपका पहला कोर्स",
     "nudge.activation.first_course_d1.heading": "जब आप तैयार हों",
     "nudge.activation.first_course_d1.body": "{org_name} तैयार है और अपने पहले कोर्स का इंतज़ार कर रही है। ज़्यादातर लोग छोटे से शुरू करते हैं: एक विषय, कुछ पाठ। आगे जोड़ते रहना हमेशा संभव है।",
@@ -152,4 +161,21 @@ STRINGS: dict[str, str] = {
     "nudge.milestone.first_completion.heading": "पहली बार कोर्स पूरा हुआ",
     "nudge.milestone.first_completion.body": "एक सीखने वाले ने {org_name} का कोर्स शुरू से अंत तक पूरा किया। इसे ठीक से दर्ज करना हो तो प्रमाणपत्र जोड़ सकते हैं — या अगला कोर्स बनाना शुरू कर सकते हैं।",
     "nudge.milestone.first_completion.cta": "अपना डैशबोर्ड खोलें",
+
+    # -- reactivation ------------------------------------------------------
+    "nudge.reactivation.opener.subject": "{org_name} पर आपकी अकादमी अब भी यहीं है",
+    "nudge.reactivation.opener.heading": "वैसी ही, जैसी आपने छोड़ी थी",
+    "nudge.reactivation.opener.body": "आपकी पिछली बार के बाद {org_name} को किसी ने नहीं छुआ — हर कोर्स, अध्याय और पाठ वहीं है जहाँ आपने छोड़ा था। दोबारा शुरू करना एक क्लिक का काम है।",
+    "nudge.reactivation.opener.cta": "अपना डैशबोर्ड खोलें",
+    "nudge.reactivation.whats_changed.subject": "LearnHouse में कुछ चीज़ें बदली हैं",
+    "nudge.reactivation.whats_changed.heading": "आपकी पिछली बार के बाद",
+    "nudge.reactivation.whats_changed.body": "{org_name} के शांत रहते हुए उत्पाद काफ़ी आगे बढ़ा है: एडिटर, कोर्स के उपकरण और सीखने वालों का रास्ता — सब पर असली काम हुआ है। आपने जो बनाया वह पहले जैसा ही चलता है।",
+    "nudge.reactivation.whats_changed.cta": "नया क्या है देखें",
+    "nudge.reactivation.need_a_hand.subject": "{org_name} पर लौटने में मदद चाहिए?",
+    "nudge.reactivation.need_a_hand.heading": "कुछ रास्ते में आ गया था?",
+    "nudge.reactivation.need_a_hand.body": "अगर {org_name} के रुकने की कोई वजह थी — कुछ उलझन भरा, कुछ कमी, या बस समय की कमी — तो हम सचमुच जानना चाहेंगे। इस ईमेल का जवाब दीजिए, वह सीधे हम तक पहुँचता है।",
+    "nudge.reactivation.closing.subject": "{org_name} के बारे में आखिरी बात",
+    "nudge.reactivation.closing.heading": "हम यहीं रुकते हैं",
+    "nudge.reactivation.closing.body": "यह इस तरह का आखिरी ईमेल है। {org_name} जस की तस बनी रहेगी और कुछ भी समाप्त नहीं होता — कभी लौटना चाहें, तो सब इंतज़ार में मिलेगा।",
+    "nudge.reactivation.closing.cta": "अपना डैशबोर्ड खोलें",
 }

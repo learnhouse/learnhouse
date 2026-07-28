@@ -4,6 +4,15 @@ STRINGS: dict[str, str] = {
     "nudge.common.unsubscribe": "Cancelar inscrição nestes e-mails",
     "nudge.common.footer": "Você recebeu este e-mail porque é administrador de {org_name}.",
 
+    # Stat-strip labels. A label beside a bare number needs no plural
+    # agreement, which is why the figures are not written into prose.
+    "nudge.stat.courses": "Cursos",
+    "nudge.stat.chapters": "Capítulos",
+    "nudge.stat.lessons": "Aulas",
+    "nudge.stat.members": "Membros",
+    "nudge.stat.learners": "Alunos",
+    "nudge.stat.completed": "Concluídos",
+
     "nudge.activation.first_course_d1.subject": "Seu primeiro curso na {org_name}",
     "nudge.activation.first_course_d1.heading": "Quando você quiser",
     "nudge.activation.first_course_d1.body": "A {org_name} está pronta e esperando o primeiro curso. A maioria começa pequeno: um tema, algumas aulas. Você pode ampliar depois.",
@@ -152,4 +161,21 @@ STRINGS: dict[str, str] = {
     "nudge.milestone.first_completion.heading": "Primeira conclusão",
     "nudge.milestone.first_completion.body": "Um aluno concluiu um curso da {org_name} do início ao fim. Se quiser registrar isso, dá para adicionar um certificado — ou começar a montar o próximo.",
     "nudge.milestone.first_completion.cta": "Abrir seu painel",
+
+    # -- reactivation ------------------------------------------------------
+    "nudge.reactivation.opener.subject": "Sua academia na {org_name} continua aqui",
+    "nudge.reactivation.opener.heading": "Continua aqui, do jeito que você deixou",
+    "nudge.reactivation.opener.body": "Ninguém mexeu na {org_name} desde a sua última visita — cada curso, capítulo e aula está onde você deixou. Retomar é um clique.",
+    "nudge.reactivation.opener.cta": "Abrir seu painel",
+    "nudge.reactivation.whats_changed.subject": "Algumas coisas mudaram no LearnHouse",
+    "nudge.reactivation.whats_changed.heading": "Desde a sua última visita",
+    "nudge.reactivation.whats_changed.body": "O produto avançou bastante enquanto a {org_name} esteve parada: o editor, as ferramentas de curso e o percurso dos alunos foram bem trabalhados. Tudo o que você construiu continua funcionando como antes.",
+    "nudge.reactivation.whats_changed.cta": "Ver as novidades",
+    "nudge.reactivation.need_a_hand.subject": "Precisa de ajuda para voltar à {org_name}?",
+    "nudge.reactivation.need_a_hand.heading": "Teve algo atrapalhando?",
+    "nudge.reactivation.need_a_hand.body": "Se houve um motivo para a {org_name} parar — algo confuso, algo faltando ou simplesmente falta de tempo — a gente gostaria muito de saber. Responda a este e-mail, que chega direto para nós.",
+    "nudge.reactivation.closing.subject": "Última mensagem sobre a {org_name}",
+    "nudge.reactivation.closing.heading": "Paramos por aqui",
+    "nudge.reactivation.closing.body": "Este é o último destes e-mails. A {org_name} fica exatamente como está e nada expira — se um dia quiser voltar, tudo estará esperando.",
+    "nudge.reactivation.closing.cta": "Abrir seu painel",
 }

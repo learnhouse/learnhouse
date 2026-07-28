@@ -313,8 +313,8 @@ class TestEngagementVsCreation:
 
 
 class TestCatalogComposition:
-    def test_all_thirty_nudges_ship(self):
-        assert len(NUDGE_CATALOG) == 30
+    def test_the_whole_catalog_ships(self):
+        assert len(NUDGE_CATALOG) == 34
 
     def test_track_sizes(self):
         from collections import Counter
@@ -327,6 +327,7 @@ class TestCatalogComposition:
             "monetization": 4,
             "dormancy": 4,
             "milestone": 3,
+            "reactivation": 4,
         }
 
     def test_priorities_are_unique_so_ordering_is_deterministic(self):
@@ -340,11 +341,12 @@ class TestCatalogComposition:
         others = [s.priority for s in NUDGE_CATALOG if s.track != "milestone"]
         assert max(milestones) < min(others)
 
-    def test_only_dormancy_reaches_arbitrarily_old_orgs(self):
+    def test_only_winback_tracks_reach_arbitrarily_old_orgs(self):
         """The structural half of the backfill guard: every other track is
-        anchored to a recent event with a bounded window."""
+        anchored to a recent event with a bounded window, so switching the
+        system on cannot reach years of history."""
         for spec in NUDGE_CATALOG:
-            if spec.track != "dormancy":
+            if spec.track not in ("dormancy", "reactivation"):
                 assert spec.day_max <= 90, spec.id
 
     def test_only_dormancy_repeats(self):

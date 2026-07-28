@@ -4,6 +4,15 @@ STRINGS: dict[str, str] = {
     "nudge.common.unsubscribe": "退订这些邮件",
     "nudge.common.footer": "您收到此邮件是因为您是 {org_name} 的管理员。",
 
+    # Stat-strip labels. A label beside a bare number needs no plural
+    # agreement, which is why the figures are not written into prose.
+    "nudge.stat.courses": "课程",
+    "nudge.stat.chapters": "章节",
+    "nudge.stat.lessons": "课时",
+    "nudge.stat.members": "成员",
+    "nudge.stat.learners": "学员",
+    "nudge.stat.completed": "已完成",
+
     "nudge.activation.first_course_d1.subject": "您在 {org_name} 的第一门课程",
     "nudge.activation.first_course_d1.heading": "随时都可以开始",
     "nudge.activation.first_course_d1.body": "{org_name} 已经就绪，正等着第一门课程。多数人从小处入手：一个主题，几节课。之后随时可以补充。",
@@ -152,4 +161,21 @@ STRINGS: dict[str, str] = {
     "nudge.milestone.first_completion.heading": "第一次结课",
     "nudge.milestone.first_completion.body": "有学员把 {org_name} 的一门课程从头学到尾。想正式记录一下，可以添加证书——或者开始筹备下一门。",
     "nudge.milestone.first_completion.cta": "打开控制台",
+
+    # -- reactivation ------------------------------------------------------
+    "nudge.reactivation.opener.subject": "您在 {org_name} 的学院还在",
+    "nudge.reactivation.opener.heading": "一切照旧，和您离开时一样",
+    "nudge.reactivation.opener.body": "自您上次来过之后，没人动过 {org_name}——每一门课程、章节和课时都在原处。想接着做，只需一次点击。",
+    "nudge.reactivation.opener.cta": "打开控制台",
+    "nudge.reactivation.whats_changed.subject": "LearnHouse 有了一些变化",
+    "nudge.reactivation.whats_changed.heading": "自您上次来过之后",
+    "nudge.reactivation.whats_changed.body": "在 {org_name} 安静的这段时间，产品推进了不少：编辑器、课程工具和学员的学习路径都做了实在的改动。您做过的一切仍照常运行。",
+    "nudge.reactivation.whats_changed.cta": "看看有什么新变化",
+    "nudge.reactivation.need_a_hand.subject": "需要帮您重新上手 {org_name} 吗？",
+    "nudge.reactivation.need_a_hand.heading": "是有什么挡住了吗？",
+    "nudge.reactivation.need_a_hand.body": "如果 {org_name} 停下来是有原因的——某处让人困惑、缺了什么，或者只是没时间——我们很想知道。直接回复这封邮件就好，会直接到我们手上。",
+    "nudge.reactivation.closing.subject": "关于 {org_name} 的最后一封",
+    "nudge.reactivation.closing.heading": "我们就说到这里",
+    "nudge.reactivation.closing.body": "这是这类邮件的最后一封。{org_name} 会原样保留，也不会过期——哪天想回来，一切都还在。",
+    "nudge.reactivation.closing.cta": "打开控制台",
 }

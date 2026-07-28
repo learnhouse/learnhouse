@@ -620,3 +620,85 @@ class TestBudgetMidOrganization:
 
         assert stats.sent == 2
         assert stats.budget_exhausted is True
+
+
+class TestSlotsInTheRun:
+    async def test_an_org_outside_the_current_slot_is_deferred(
+        self, db, activation_org, sender, monkeypatch
+    ):
+        """Spreading the day's mail across slots keeps a single burst from
+        looking like a blast to spam filters — and means a bad send reaches a
+        fraction of the list before anyone notices."""
+        monkeypatch.setenv("LEARNHOUSE_NUDGES_SLOTS", "6")
+        # org id 1 belongs to slot 1; run during slot 0.
+        stats = await run_nudges(db, now=NOW.replace(hour=0))
+
+        assert stats.sent == 0
+        assert stats.skipped_slot == 1
+        sender.assert_not_called()
+
+    async def test_the_org_sends_when_its_slot_comes_round(
+        self, db, activation_org, sender, monkeypatch
+    ):
+        monkeypatch.setenv("LEARNHOUSE_NUDGES_SLOTS", "6")
+        stats = await run_nudges(db, now=NOW.replace(hour=1))
+
+        assert stats.sent == 1
+        assert stats.skipped_slot == 0
+
+    async def test_stats_expose_the_deferred_count(self, db, activation_org, sender, monkeypatch):
+        monkeypatch.setenv("LEARNHOUSE_NUDGES_SLOTS", "6")
+        stats = await run_nudges(db, now=NOW.replace(hour=0))
+        assert stats.as_dict()["skipped_slot"] == 1
+
+
+class TestStatStripReachesTheEmail:
+    async def test_content_nudge_carries_its_figures(self, db, org, verified_admin, sender):
+        from src.db.courses.courses import Course
+
+        org.creation_date = _stored(40)
+        org.update_date = _stored(40)
+        db.add(org)
+        db.add(
+            Course(
+                id=60,
+                name="Draft",
+                description="",
+                public=False,
+                published=False,
+                open_to_contributors=False,
+                org_id=org.id,
+                course_uuid="course_d",
+                creation_date=_stored(30),
+                update_date=_stored(4),
+            )
+        )
+        await db.commit()
+
+        from src.db.courses.activities import (
+            Activity,
+            ActivitySubTypeEnum,
+            ActivityTypeEnum,
+        )
+
+        for index in (1, 2):
+            db.add(
+                Activity(
+                    id=index,
+                    name=f"Lesson {index}",
+                    activity_type=ActivityTypeEnum.TYPE_DYNAMIC,
+                    activity_sub_type=ActivitySubTypeEnum.SUBTYPE_DYNAMIC_PAGE,
+                    content={},
+                    published=False,
+                    org_id=org.id,
+                    course_id=60,
+                    activity_uuid=f"activity_{index}",
+                    creation_date=_stored(30),
+                    update_date=_stored(30),
+                )
+            )
+        await db.commit()
+
+        await run_nudges(db, now=NOW, only="content.course_draft_d3")
+
+        assert sender.call_args.kwargs["stats"] == [("chapters", 0), ("lessons", 2)]

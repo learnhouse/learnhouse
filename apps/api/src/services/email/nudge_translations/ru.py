@@ -4,6 +4,15 @@ STRINGS: dict[str, str] = {
     "nudge.common.unsubscribe": "Отписаться от этих писем",
     "nudge.common.footer": "Вы получили это письмо, так как являетесь администратором {org_name}.",
 
+    # Stat-strip labels. A label beside a bare number needs no plural
+    # agreement, which is why the figures are not written into prose.
+    "nudge.stat.courses": "Курсы",
+    "nudge.stat.chapters": "Главы",
+    "nudge.stat.lessons": "Уроки",
+    "nudge.stat.members": "Участники",
+    "nudge.stat.learners": "Учащиеся",
+    "nudge.stat.completed": "Завершено",
+
     "nudge.activation.first_course_d1.subject": "Ваш первый курс в {org_name}",
     "nudge.activation.first_course_d1.heading": "Когда будет удобно",
     "nudge.activation.first_course_d1.body": "{org_name} готова и ждёт первый курс. Большинство начинает с малого: одна тема, несколько уроков. Дополнить можно в любой момент.",
@@ -152,4 +161,21 @@ STRINGS: dict[str, str] = {
     "nudge.milestone.first_completion.heading": "Первое завершение",
     "nudge.milestone.first_completion.body": "Участник прошёл курс в {org_name} от начала до конца. Чтобы отметить это как следует, можно добавить сертификат — или начать готовить следующий курс.",
     "nudge.milestone.first_completion.cta": "Открыть панель",
+
+    # -- reactivation ------------------------------------------------------
+    "nudge.reactivation.opener.subject": "Ваша академия в {org_name} никуда не делась",
+    "nudge.reactivation.opener.heading": "Всё на месте, ровно как вы оставили",
+    "nudge.reactivation.opener.body": "С вашего последнего визита {org_name} никто не трогал — каждый курс, раздел и урок там, где вы их оставили. Вернуться — один клик.",
+    "nudge.reactivation.opener.cta": "Открыть панель",
+    "nudge.reactivation.whats_changed.subject": "В LearnHouse кое-что изменилось",
+    "nudge.reactivation.whats_changed.heading": "С вашего последнего визита",
+    "nudge.reactivation.whats_changed.body": "Пока {org_name} молчала, продукт заметно продвинулся: редактор, инструменты курсов и путь учащегося серьёзно переработаны. Всё, что вы построили, работает как прежде.",
+    "nudge.reactivation.whats_changed.cta": "Посмотреть новое",
+    "nudge.reactivation.need_a_hand.subject": "Нужна помощь, чтобы вернуться в {org_name}?",
+    "nudge.reactivation.need_a_hand.heading": "Что-то помешало?",
+    "nudge.reactivation.need_a_hand.body": "Если была причина, по которой {org_name} остановилась — что-то непонятное, чего-то не хватило или просто не было времени — нам важно об этом знать. Ответьте на это письмо, оно придёт напрямую к нам.",
+    "nudge.reactivation.closing.subject": "Последнее письмо про {org_name}",
+    "nudge.reactivation.closing.heading": "На этом остановимся",
+    "nudge.reactivation.closing.body": "Это последнее такое письмо. {org_name} остаётся ровно как есть, и ничего не сгорает — захотите вернуться, всё будет ждать вас.",
+    "nudge.reactivation.closing.cta": "Открыть панель",
 }

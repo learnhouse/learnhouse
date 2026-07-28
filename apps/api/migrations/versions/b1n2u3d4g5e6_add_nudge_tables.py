@@ -65,6 +65,10 @@ def upgrade() -> None:
         ),
         sa.Column('unsubscribed_at', sa.DateTime(timezone=True), nullable=True),
         sa.Column('source', sa.String(length=32), nullable=True),
+        sa.Column(
+            'suppressed', sa.Boolean(), nullable=False, server_default=sa.false()
+        ),
+        sa.Column('suppressed_reason', sa.String(length=32), nullable=True),
         sa.UniqueConstraint('user_id', name='uq_email_preference_user'),
     )
     op.create_index('ix_email_preference_user_id', 'email_preference', ['user_id'])

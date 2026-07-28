@@ -4,6 +4,15 @@ STRINGS: dict[str, str] = {
     "nudge.common.unsubscribe": "এই ইমেলগুলি থেকে আনসাবস্ক্রাইব করুন",
     "nudge.common.footer": "আপনি এই ইমেলটি পাচ্ছেন কারণ আপনি {org_name}-এর একজন অ্যাডমিন।",
 
+    # Stat-strip labels. A label beside a bare number needs no plural
+    # agreement, which is why the figures are not written into prose.
+    "nudge.stat.courses": "কোর্স",
+    "nudge.stat.chapters": "অধ্যায়",
+    "nudge.stat.lessons": "পাঠ",
+    "nudge.stat.members": "সদস্য",
+    "nudge.stat.learners": "শিক্ষার্থী",
+    "nudge.stat.completed": "সম্পন্ন",
+
     "nudge.activation.first_course_d1.subject": "{org_name}-এ আপনার প্রথম কোর্স",
     "nudge.activation.first_course_d1.heading": "যখন আপনি প্রস্তুত",
     "nudge.activation.first_course_d1.body": "{org_name} তৈরি হয়ে গেছে এবং প্রথম কোর্সের অপেক্ষায় আছে। বেশিরভাগ মানুষ ছোট থেকে শুরু করেন: একটি বিষয়, কয়েকটি পাঠ। পরে যোগ করা সবসময়ই সম্ভব।",
@@ -152,4 +161,21 @@ STRINGS: dict[str, str] = {
     "nudge.milestone.first_completion.heading": "প্রথম সমাপ্তি",
     "nudge.milestone.first_completion.body": "একজন শিক্ষার্থী {org_name}-এর একটি কোর্স শুরু থেকে শেষ পর্যন্ত সম্পূর্ণ করেছেন। ঠিকভাবে চিহ্নিত করতে চাইলে একটি সার্টিফিকেট যোগ করতে পারেন — বা পরেরটি বানানো শুরু করতে পারেন।",
     "nudge.milestone.first_completion.cta": "আপনার ড্যাশবোর্ড খুলুন",
+
+    # -- reactivation ------------------------------------------------------
+    "nudge.reactivation.opener.subject": "{org_name}-এ আপনার অ্যাকাডেমি এখনও আছে",
+    "nudge.reactivation.opener.heading": "এখনও এখানে, যেমন রেখে গিয়েছিলেন",
+    "nudge.reactivation.opener.body": "আপনার শেষবার আসার পর {org_name}-এ কেউ হাত দেয়নি — প্রতিটি কোর্স, অধ্যায় আর পাঠ ঠিক জায়গাতেই আছে। আবার শুরু করতে একটি ক্লিকই যথেষ্ট।",
+    "nudge.reactivation.opener.cta": "আপনার ড্যাশবোর্ড খুলুন",
+    "nudge.reactivation.whats_changed.subject": "LearnHouse-এ কিছু বদলেছে",
+    "nudge.reactivation.whats_changed.heading": "আপনার শেষবার আসার পর",
+    "nudge.reactivation.whats_changed.body": "{org_name} চুপচাপ থাকার সময় পণ্যটি বেশ এগিয়েছে: এডিটর, কোর্স তৈরির সরঞ্জাম আর শিক্ষার্থীদের এগিয়ে চলার পথ — সবেতেই সত্যিকারের কাজ হয়েছে। আপনার গড়া সবকিছু আগের মতোই চলে।",
+    "nudge.reactivation.whats_changed.cta": "কী নতুন হয়েছে দেখুন",
+    "nudge.reactivation.need_a_hand.subject": "{org_name}-এ ফিরতে সাহায্য লাগবে?",
+    "nudge.reactivation.need_a_hand.heading": "কিছু কি বাধা হয়ে দাঁড়িয়েছিল?",
+    "nudge.reactivation.need_a_hand.body": "{org_name} থেমে যাওয়ার কোনো কারণ থাকলে — বিভ্রান্তিকর কিছু, কিছুর অভাব, কিংবা কেবল সময় না পাওয়া — আমরা সত্যিই জানতে চাই। এই ইমেলের উত্তর দিন, সেটি সরাসরি আমাদের কাছে পৌঁছবে।",
+    "nudge.reactivation.closing.subject": "{org_name} নিয়ে শেষ কথা",
+    "nudge.reactivation.closing.heading": "আমরা এখানেই থামছি",
+    "nudge.reactivation.closing.body": "এ ধরনের ইমেলের মধ্যে এটিই শেষ। {org_name} যেমন আছে তেমনই থাকবে, কিছুই মেয়াদোত্তীর্ণ হয় না — কখনও ফিরতে চাইলে সবকিছু অপেক্ষায় থাকবে।",
+    "nudge.reactivation.closing.cta": "আপনার ড্যাশবোর্ড খুলুন",
 }

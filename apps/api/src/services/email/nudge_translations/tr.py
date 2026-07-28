@@ -4,6 +4,15 @@ STRINGS: dict[str, str] = {
     "nudge.common.unsubscribe": "Bu e-postalardan çık",
     "nudge.common.footer": "Bu e-postayı {org_name} yöneticisi olduğunuz için alıyorsunuz.",
 
+    # Stat-strip labels. A label beside a bare number needs no plural
+    # agreement, which is why the figures are not written into prose.
+    "nudge.stat.courses": "Kurslar",
+    "nudge.stat.chapters": "Bölümler",
+    "nudge.stat.lessons": "Dersler",
+    "nudge.stat.members": "Üyeler",
+    "nudge.stat.learners": "Katılımcılar",
+    "nudge.stat.completed": "Tamamlanan",
+
     "nudge.activation.first_course_d1.subject": "{org_name} üzerindeki ilk kursunuz",
     "nudge.activation.first_course_d1.heading": "Hazır olduğunuzda",
     "nudge.activation.first_course_d1.body": "{org_name} kuruldu ve ilk kursunu bekliyor. Çoğu kişi küçük başlıyor: bir konu, birkaç ders. Sonradan her zaman ekleyebilirsiniz.",
@@ -152,4 +161,21 @@ STRINGS: dict[str, str] = {
     "nudge.milestone.first_completion.heading": "İlk tamamlama",
     "nudge.milestone.first_completion.body": "Bir katılımcı {org_name} içindeki bir kursu baştan sona tamamladı. Bunu düzgün biçimde işaretlemek isterseniz sertifika ekleyebilir ya da sıradakini kurmaya başlayabilirsiniz.",
     "nudge.milestone.first_completion.cta": "Panelinizi açın",
+
+    # -- reactivation ------------------------------------------------------
+    "nudge.reactivation.opener.subject": "{org_name} üzerindeki akademiniz hâlâ burada",
+    "nudge.reactivation.opener.heading": "Hâlâ burada, bıraktığınız gibi",
+    "nudge.reactivation.opener.body": "Son ziyaretinizden bu yana {org_name} kuruluşuna kimse dokunmadı — her kurs, bölüm ve ders bıraktığınız yerde. Kaldığınız yerden devam etmek tek tık.",
+    "nudge.reactivation.opener.cta": "Panelinizi açın",
+    "nudge.reactivation.whats_changed.subject": "LearnHouse'ta birkaç şey değişti",
+    "nudge.reactivation.whats_changed.heading": "Son ziyaretinizden bu yana",
+    "nudge.reactivation.whats_changed.body": "{org_name} sessizken ürün epey yol aldı: editör, kurs araçları ve katılımcıların ilerleyişi baştan ele alındı. Kurduğunuz her şey eskisi gibi çalışıyor.",
+    "nudge.reactivation.whats_changed.cta": "Yenilikleri görün",
+    "nudge.reactivation.need_a_hand.subject": "{org_name} kuruluşuna dönmek için yardım ister misiniz?",
+    "nudge.reactivation.need_a_hand.heading": "Araya bir şey mi girdi?",
+    "nudge.reactivation.need_a_hand.body": "{org_name} durduysa bunun bir nedeni varsa — kafa karıştıran bir şey, eksik bir şey ya da sadece zaman — bunu gerçekten bilmek isteriz. Bu e-postayı yanıtlayın, doğrudan bize ulaşır.",
+    "nudge.reactivation.closing.subject": "{org_name} hakkında son not",
+    "nudge.reactivation.closing.heading": "Burada duruyoruz",
+    "nudge.reactivation.closing.body": "Bu, bu e-postaların sonuncusu. {org_name} olduğu gibi kalıyor ve hiçbir şeyin süresi dolmuyor — bir gün dönmek isterseniz her şey sizi bekliyor olacak.",
+    "nudge.reactivation.closing.cta": "Panelinizi açın",
 }

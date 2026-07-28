@@ -8,6 +8,8 @@ HMAC token in the link is the authorisation.
 
 import html
 import logging
+import os
+import secrets
 from typing import Optional
 
 from fastapi import APIRouter, Depends, Form, Query, Request
@@ -18,6 +20,7 @@ from src.core.events.database import get_db_session
 from src.services.nudges.preferences import (
     get_user_by_uuid,
     set_lifecycle_opt_out,
+    suppress_address,
 )
 from src.services.nudges.tokens import verify_unsubscribe_token
 
@@ -132,3 +135,75 @@ async def unsubscribe_confirm(
         "You won't receive any more tips or reminders from us. Account emails "
         "like password resets and invitations will still reach you.",
     )
+
+
+# --------------------------------------------------------------------------
+# Delivery feedback
+# --------------------------------------------------------------------------
+
+# Resend's event names for the two things that cost a sending domain its
+# reputation: mail to an address that does not exist, and mail the recipient
+# reported as spam.
+_HARD_BOUNCE_EVENTS = {"email.bounced"}
+_COMPLAINT_EVENTS = {"email.complained"}
+
+internal_router = APIRouter()
+
+
+def _verify_webhook_secret(request: Request) -> None:
+    """Shared-secret check for the provider callback.
+
+    Fails closed when unset: an unauthenticated endpoint that suppresses
+    addresses is a denial-of-service on your own mail.
+    """
+    from fastapi import HTTPException
+
+    expected = (os.environ.get("LEARNHOUSE_EMAIL_WEBHOOK_SECRET") or "").strip()
+    supplied = (request.headers.get("x-webhook-secret") or "").strip()
+    if not expected or not secrets.compare_digest(expected, supplied):
+        raise HTTPException(status_code=403, detail="Invalid webhook secret")
+
+
+@internal_router.post("/delivery-events")
+async def delivery_events(
+    request: Request,
+    db_session: AsyncSession = Depends(get_db_session),
+) -> dict:
+    """Consume bounce and complaint callbacks from the email provider.
+
+    Without this a dead address is mailed forever and a spam complaint changes
+    nothing — which is precisely how a domain's reputation degrades once
+    volume goes up. Only hard bounces suppress; a soft bounce is a full mailbox
+    or a temporary failure and the address is still good.
+    """
+    _verify_webhook_secret(request)
+
+    try:
+        payload = await request.json()
+    except Exception:
+        return {"status": "ignored", "reason": "unparseable payload"}
+
+    event_type = str(payload.get("type") or "")
+    data = payload.get("data") or {}
+    recipients = data.get("to") or []
+    if isinstance(recipients, str):
+        recipients = [recipients]
+
+    if event_type in _COMPLAINT_EVENTS:
+        reason = "complaint"
+    elif event_type in _HARD_BOUNCE_EVENTS:
+        bounce_kind = str((data.get("bounce") or {}).get("type") or "").lower()
+        # "soft" is a full mailbox or a transient failure; the address is fine.
+        if bounce_kind and bounce_kind != "hard":
+            return {"status": "ignored", "reason": "soft bounce"}
+        reason = "bounce"
+    else:
+        return {"status": "ignored", "reason": "unhandled event"}
+
+    suppressed = 0
+    for address in recipients:
+        if await suppress_address(db_session, str(address).strip(), reason):
+            suppressed += 1
+
+    logger.info("Delivery feedback %s suppressed %s address(es)", reason, suppressed)
+    return {"status": "ok", "reason": reason, "suppressed": suppressed}

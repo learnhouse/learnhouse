@@ -4,6 +4,15 @@ STRINGS: dict[str, str] = {
     "nudge.common.unsubscribe": "Afmelden voor deze e-mails",
     "nudge.common.footer": "Je ontvangt deze e-mail omdat je beheerder bent van {org_name}.",
 
+    # Stat-strip labels. A label beside a bare number needs no plural
+    # agreement, which is why the figures are not written into prose.
+    "nudge.stat.courses": "Cursussen",
+    "nudge.stat.chapters": "Hoofdstukken",
+    "nudge.stat.lessons": "Lessen",
+    "nudge.stat.members": "Leden",
+    "nudge.stat.learners": "Deelnemers",
+    "nudge.stat.completed": "Afgerond",
+
     "nudge.activation.first_course_d1.subject": "Je eerste cursus op {org_name}",
     "nudge.activation.first_course_d1.heading": "Wanneer het jou uitkomt",
     "nudge.activation.first_course_d1.body": "{org_name} staat klaar en wacht op de eerste cursus. De meeste mensen beginnen klein: één onderwerp, een paar lessen. Uitbreiden kan altijd nog.",
@@ -152,4 +161,21 @@ STRINGS: dict[str, str] = {
     "nudge.milestone.first_completion.heading": "Eerste afronding",
     "nudge.milestone.first_completion.body": "Een deelnemer heeft een cursus in {org_name} van begin tot eind afgerond. Wil je dat vastleggen, dan kun je een certificaat toevoegen — of beginnen aan wat hierna komt.",
     "nudge.milestone.first_completion.cta": "Dashboard openen",
+
+    # -- reactivation ------------------------------------------------------
+    "nudge.reactivation.opener.subject": "Je academie op {org_name} staat er nog",
+    "nudge.reactivation.opener.heading": "Nog steeds hier, precies zoals je het achterliet",
+    "nudge.reactivation.opener.body": "Niemand heeft {org_name} aangeraakt sinds je laatste bezoek — elke cursus, elk hoofdstuk en elke les staat waar je het liet. Weer oppakken is één klik.",
+    "nudge.reactivation.opener.cta": "Dashboard openen",
+    "nudge.reactivation.whats_changed.subject": "Er is het een en ander veranderd op LearnHouse",
+    "nudge.reactivation.whats_changed.heading": "Sinds je laatste bezoek",
+    "nudge.reactivation.whats_changed.body": "Het product is flink doorontwikkeld terwijl {org_name} stil lag: de editor, de cursustools en de route die deelnemers volgen zijn allemaal grondig aangepakt. Alles wat je bouwde werkt nog precies zo.",
+    "nudge.reactivation.whats_changed.cta": "Bekijk wat nieuw is",
+    "nudge.reactivation.need_a_hand.subject": "Hulp nodig om weer in {org_name} te komen?",
+    "nudge.reactivation.need_a_hand.heading": "Zat er iets in de weg?",
+    "nudge.reactivation.need_a_hand.body": "Als er een reden was dat {org_name} stil kwam te liggen — iets onduidelijks, iets dat ontbrak, of gewoon geen tijd — horen we dat graag. Beantwoord deze e-mail, hij komt rechtstreeks bij ons binnen.",
+    "nudge.reactivation.closing.subject": "Laatste bericht over {org_name}",
+    "nudge.reactivation.closing.heading": "Hier stoppen we",
+    "nudge.reactivation.closing.body": "Dit is de laatste van deze e-mails. {org_name} blijft precies zoals het is en niets verloopt — wil je ooit terugkomen, dan staat alles klaar.",
+    "nudge.reactivation.closing.cta": "Dashboard openen",
 }

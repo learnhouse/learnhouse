@@ -4,6 +4,15 @@ STRINGS: dict[str, str] = {
     "nudge.common.unsubscribe": "Відписатися від цих листів",
     "nudge.common.footer": "Ви отримали цей лист, оскільки ви адміністратор {org_name}.",
 
+    # Stat-strip labels. A label beside a bare number needs no plural
+    # agreement, which is why the figures are not written into prose.
+    "nudge.stat.courses": "Курси",
+    "nudge.stat.chapters": "Розділи",
+    "nudge.stat.lessons": "Уроки",
+    "nudge.stat.members": "Учасники",
+    "nudge.stat.learners": "Слухачі",
+    "nudge.stat.completed": "Завершено",
+
     "nudge.activation.first_course_d1.subject": "Ваш перший курс у {org_name}",
     "nudge.activation.first_course_d1.heading": "Коли вам зручно",
     "nudge.activation.first_course_d1.body": "{org_name} готова й чекає на перший курс. Більшість починає з малого: одна тема, кілька уроків. Доповнити можна будь-коли.",
@@ -152,4 +161,21 @@ STRINGS: dict[str, str] = {
     "nudge.milestone.first_completion.heading": "Перше завершення",
     "nudge.milestone.first_completion.body": "Учасник пройшов курс у {org_name} від початку до кінця. Щоб відзначити це як належить, можна додати сертифікат — або почати готувати наступний курс.",
     "nudge.milestone.first_completion.cta": "Відкрити панель",
+
+    # -- reactivation ------------------------------------------------------
+    "nudge.reactivation.opener.subject": "Ваша академія в {org_name} нікуди не поділася",
+    "nudge.reactivation.opener.heading": "Усе на місці, саме так, як ви залишили",
+    "nudge.reactivation.opener.body": "Від вашого останнього візиту {org_name} ніхто не чіпав — кожен курс, розділ і урок там, де ви їх залишили. Повернутися — один клік.",
+    "nudge.reactivation.opener.cta": "Відкрити панель",
+    "nudge.reactivation.whats_changed.subject": "У LearnHouse дещо змінилося",
+    "nudge.reactivation.whats_changed.heading": "Від вашого останнього візиту",
+    "nudge.reactivation.whats_changed.body": "Поки {org_name} мовчала, продукт помітно просунувся: редактор, інструменти курсів і шлях слухача серйозно перероблено. Усе, що ви побудували, працює як і раніше.",
+    "nudge.reactivation.whats_changed.cta": "Подивитися нове",
+    "nudge.reactivation.need_a_hand.subject": "Потрібна допомога, щоб повернутися в {org_name}?",
+    "nudge.reactivation.need_a_hand.heading": "Щось завадило?",
+    "nudge.reactivation.need_a_hand.body": "Якщо була причина, чому {org_name} спинилася — щось незрозуміле, чогось бракувало або просто не було часу — нам важливо про це знати. Відповідайте на цей лист, він надійде прямо до нас.",
+    "nudge.reactivation.closing.subject": "Останній лист про {org_name}",
+    "nudge.reactivation.closing.heading": "На цьому спинимося",
+    "nudge.reactivation.closing.body": "Це останній такий лист. {org_name} лишається саме такою, як є, і нічого не згорає — захочете повернутися, усе чекатиме на вас.",
+    "nudge.reactivation.closing.cta": "Відкрити панель",
 }
