@@ -7,7 +7,6 @@ to, could borrow the org administrator's session.
 """
 
 from datetime import datetime
-from types import SimpleNamespace
 
 import pytest
 from fastapi import HTTPException
@@ -19,7 +18,6 @@ from src.security.auth import decode_jwt
 from src.security.rbac.constants import ADMIN_ROLE_ID, MAINTAINER_ROLE_ID
 from src.security.session_context import AMR_CLAIM, AUTH_METHOD_API_TOKEN, SORG_CLAIM
 from src.services.admin.admin import (
-    _require_token_right,
     _resolve_org_slug,
     issue_user_token,
 )
@@ -102,55 +100,32 @@ def reader_token(org):
     return _token(org.id, USERS_READ_RIGHTS)
 
 
-class TestIssueUserTokenRights:
-    async def test_token_without_users_read_is_refused(self, db, org):
-        """The core fix: a token scoped to courses cannot mint a user session."""
+class TestIssueUserTokenIsNotRightsScoped:
+    async def test_a_content_scoped_token_can_still_mint_for_a_member(self, db, org):
+        """Tokens only ever carry content buckets, so impersonation is not
+        gated on a ``users`` right — it is gated on the target instead."""
         target = await _member(db, org.id, user_id=20, role_id=MEMBER_ROLE_ID)
         token = _token(org.id, COURSES_ONLY_RIGHTS)
 
-        with pytest.raises(HTTPException) as exc:
-            await issue_user_token(token, target.id, db)
+        result = await issue_user_token(token, target.id, db)
 
-        assert exc.value.status_code == 403
-        assert "users" in str(exc.value.detail)
+        assert result["user_id"] == target.id
 
-    async def test_token_without_any_rights_is_refused(self, db, org):
+    async def test_a_token_with_no_rights_at_all_still_works(self, db, org):
         target = await _member(db, org.id, user_id=21, role_id=MEMBER_ROLE_ID)
         token = _token(org.id, None)
 
-        with pytest.raises(HTTPException) as exc:
-            await issue_user_token(token, target.id, db)
+        result = await issue_user_token(token, target.id, db)
 
-        assert exc.value.status_code == 403
-        assert "no permissions configured" in str(exc.value.detail)
+        assert result["user_id"] == target.id
 
-    async def test_rights_are_checked_before_the_target_is_looked_up(self, db, org):
-        """A rights-less token must not learn whether a user id exists."""
+    async def test_unknown_target_is_a_404(self, db, org):
         token = _token(org.id, COURSES_ONLY_RIGHTS)
 
         with pytest.raises(HTTPException) as exc:
             await issue_user_token(token, 999999, db)
 
-        assert exc.value.status_code == 403
-
-    def test_model_shaped_rights_are_understood(self):
-        """Rights may arrive as a model rather than a plain dict — both count."""
-        granted = SimpleNamespace(
-            rights=SimpleNamespace(users=_model_permission(action_read=True))
-        )
-        _require_token_right(granted, "users", "read")  # does not raise
-
-        denied = SimpleNamespace(
-            rights=SimpleNamespace(users=_model_permission(action_read=False))
-        )
-        with pytest.raises(HTTPException) as exc:
-            _require_token_right(denied, "users", "read")
-        assert exc.value.status_code == 403
-
-        no_bucket = SimpleNamespace(rights=SimpleNamespace())
-        with pytest.raises(HTTPException) as exc:
-            _require_token_right(no_bucket, "users", "read")
-        assert exc.value.status_code == 403
+        assert exc.value.status_code == 404
 
 
 class TestIssueUserTokenLegitimateUse:

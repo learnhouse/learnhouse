@@ -96,13 +96,29 @@ class TestContentFileMimeHardening:
     """F21/F24 — nothing served from /content may render as a document."""
 
     @pytest.mark.parametrize(
-        "filename", ["evil.html", "evil.svg", "evil.js", "evil.css", "evil.xml"]
+        "filename", ["evil.html", "evil.js", "evil.css", "evil.xml"]
     )
     def test_renderable_extensions_fall_back_to_octet_stream(self, filename):
         assert content_files._get_mime_type(filename) == "application/octet-stream"
 
+    async def test_svg_renders_but_is_neutralized_by_csp(
+        self, anon_client, s3_stub, org
+    ):
+        # Org logos and thumbnails are legitimately SVG, so this one keeps its
+        # real type and stays inline; the CSP is what makes that safe.
+        response = await anon_client.get(
+            f"/content/orgs/{org.org_uuid}/branding/logo.svg"
+        )
+
+        assert response.status_code == 200
+        assert response.headers["content-type"] == "image/svg+xml"
+        assert response.headers["content-disposition"].startswith("inline")
+        csp = response.headers["content-security-policy"]
+        assert "default-src 'none'" in csp
+        assert "sandbox" in csp
+
     @pytest.mark.parametrize(
-        "filename", ["evil.html", "evil.svg", "evil.js", "evil.css", "evil.xml"]
+        "filename", ["evil.html", "evil.js", "evil.css", "evil.xml"]
     )
     async def test_anonymous_get_serves_attacker_named_file_as_download(
         self, anon_client, s3_stub, org, filename

@@ -130,38 +130,6 @@ def _role_priority(role_id: int) -> int:
     return _ROLE_PRIORITY.get(role_id, _DEFAULT_ROLE_PRIORITY)
 
 
-def _require_token_right(token_user: APITokenUser, resource: str, action: str) -> None:
-    """Enforce the token's declared rights for a resource bucket.
-
-    ``authorization_verify_api_token_permissions`` resolves the bucket from an
-    element UUID and only covers content resources, so admin-API calls that act
-    on a *person* rather than a course/activity have no element to check
-    against. Same rights shape and same 403 wording as that helper.
-    """
-    rights = token_user.rights
-    if not rights:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="API token has no permissions configured",
-        )
-
-    if isinstance(rights, dict):
-        bucket = rights.get(resource)
-    else:
-        bucket = getattr(rights, resource, None)
-
-    if isinstance(bucket, dict):
-        granted = bucket.get(f"action_{action}", False)
-    else:
-        granted = getattr(bucket, f"action_{action}", False) if bucket else False
-
-    if not granted:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail=f"API token does not have '{action}' permission for {resource}",
-        )
-
-
 async def _check_token_can_impersonate(
     user: User,
     org_id: int,
@@ -242,12 +210,15 @@ async def issue_user_token(
 ) -> dict:
     """Issue a JWT access token on behalf of a user in the token's org.
 
-    Requires the token's ``users.action_read`` right (as the endpoint has always
-    documented) and refuses privileged targets — otherwise any token, whatever
-    its rights, could mint a full session for the org's administrator.
-    """
+    Refuses privileged targets: without that, any token — whatever its rights —
+    could mint a full session for the org's administrator and inherit every
+    permission the token itself was never granted.
 
-    _require_token_right(token_user, "users", "read")
+    Deliberately not gated on a ``users`` rights bucket: tokens are issued with
+    content buckets only (courses, activities, usergroups, …), so requiring one
+    would reject every token in existence rather than scope anything. Scoping
+    impersonation properly needs ``users`` to become a grantable bucket first.
+    """
 
     user = await _get_user_in_org(user_id, token_user.org_id, db_session)
 
