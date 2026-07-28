@@ -46,6 +46,7 @@ from src.services.analytics.analytics import track
 from src.services.analytics import events as analytics_events
 from src.services.webhooks.dispatch import dispatch_webhooks
 from src.security.auth import create_access_token
+from src.security.session_context import AUTH_METHOD_API_TOKEN, session_claims
 from src.security.features_utils.plan_check import get_org_plan
 from src.security.features_utils.plans import plan_meets_requirement
 from src.security.features_utils.usage import (
@@ -129,6 +130,69 @@ def _role_priority(role_id: int) -> int:
     return _ROLE_PRIORITY.get(role_id, _DEFAULT_ROLE_PRIORITY)
 
 
+def _require_token_right(token_user: APITokenUser, resource: str, action: str) -> None:
+    """Enforce the token's declared rights for a resource bucket.
+
+    ``authorization_verify_api_token_permissions`` resolves the bucket from an
+    element UUID and only covers content resources, so admin-API calls that act
+    on a *person* rather than a course/activity have no element to check
+    against. Same rights shape and same 403 wording as that helper.
+    """
+    rights = token_user.rights
+    if not rights:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="API token has no permissions configured",
+        )
+
+    if isinstance(rights, dict):
+        bucket = rights.get(resource)
+    else:
+        bucket = getattr(rights, resource, None)
+
+    if isinstance(bucket, dict):
+        granted = bucket.get(f"action_{action}", False)
+    else:
+        granted = getattr(bucket, f"action_{action}", False) if bucket else False
+
+    if not granted:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail=f"API token does not have '{action}' permission for {resource}",
+        )
+
+
+async def _check_token_can_impersonate(
+    user: User,
+    org_id: int,
+    db_session: AsyncSession,
+) -> None:
+    """Refuse to mint a session for a privileged account.
+
+    Same reasoning as :func:`_check_token_can_assign_role`: elevated authority
+    only comes from an interactive admin flow, so a leaked token cannot borrow
+    an org Admin/Maintainer's — or a platform superadmin's — session and inherit
+    every check that trusts it.
+    """
+    if user.is_superadmin:
+        raise HTTPException(
+            status_code=403,
+            detail="API tokens cannot issue tokens for superadmin accounts",
+        )
+
+    membership = (await db_session.execute(
+        select(UserOrganization).where(
+            UserOrganization.user_id == user.id,
+            UserOrganization.org_id == org_id,
+        )
+    )).scalars().first()
+    if membership is not None and membership.role_id in {ADMIN_ROLE_ID, MAINTAINER_ROLE_ID}:
+        raise HTTPException(
+            status_code=403,
+            detail="API tokens cannot issue tokens for Admin or Maintainer accounts",
+        )
+
+
 async def _check_token_can_assign_role(
     token_user: APITokenUser,
     role: Role,
@@ -176,15 +240,32 @@ async def issue_user_token(
     user_id: int,
     db_session: AsyncSession,
 ) -> dict:
-    """Issue a JWT access token on behalf of a user in the token's org."""
+    """Issue a JWT access token on behalf of a user in the token's org.
+
+    Requires the token's ``users.action_read`` right (as the endpoint has always
+    documented) and refuses privileged targets — otherwise any token, whatever
+    its rights, could mint a full session for the org's administrator.
+    """
+
+    _require_token_right(token_user, "users", "read")
 
     user = await _get_user_in_org(user_id, token_user.org_id, db_session)
+
+    await _check_token_can_impersonate(user, token_user.org_id, db_session)
 
     # Issue a short-lived token (1 hour) for headless use — shorter than the
     # default 8-hour session token to limit blast radius if leaked.
     from datetime import timedelta
+    # ``purpose`` has to stay "session" — get_current_user rejects every other
+    # value — so the machine origin is recorded in ``amr`` instead: the session
+    # is auditable as API-token-minted rather than indistinguishable from a
+    # human login, and stays bound to the token's org via ``sorg``.
     access_token = create_access_token(
-        data={"sub": user.email},
+        data={
+            "sub": user.email,
+            "purpose": "session",
+            **session_claims(AUTH_METHOD_API_TOKEN, token_user.org_id),
+        },
         expires_delta=timedelta(hours=1),
     )
     return {

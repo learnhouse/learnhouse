@@ -692,8 +692,12 @@ async def update_user_password(
             detail="User does not exist",
         )
 
-    # Verify old password before allowing change
-    if not security_verify_password(form.old_password, user.password):
+    # Verify old password before allowing change. Accounts with no local
+    # password (Google/SSO signups, admin-provisioned users) store an empty
+    # sentinel that pwdlib rejects with UnknownHashError, which surfaced as a 500
+    # instead of an answer — there is no old password to prove here, so refuse it
+    # the same way a wrong one is refused.
+    if not user.password or not security_verify_password(form.old_password, user.password):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED, detail="Wrong password"
         )

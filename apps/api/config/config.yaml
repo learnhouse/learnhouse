@@ -27,7 +27,15 @@ hosting_config:
     - http://localhost:3001
   cookies_config:
     domain: ".localhost"
-  allowed_regexp: '\b((?:https?://)[^\s/$.?#].[^\s]*)\b'
+  # SECURITY: this is an origin ALLOWLIST (CORS, CSRF, and the base URL of
+  # emailed login / verification links). It must be anchored and scoped to your
+  # own domain — a catch-all pattern matches any attacker Origin and lets it
+  # become the host of a magic-login link. The default below covers localhost
+  # and its dev subdomains only; multi-tenant deployments must set
+  # LEARNHOUSE_ALLOWED_REGEXP to their platform domain, e.g.
+  # '^https://(?:[a-z0-9-]+\.)*learnhouse\.io$'. Local multi-tenant work on a
+  # wildcard loopback host (lvh.me and friends) needs the same override.
+  allowed_regexp: '^https?://(?:[a-z0-9-]+\.)*(?:localhost|127\.0\.0\.1)(?::\d+)?$'
   content_delivery:
     type: "filesystem" # "filesystem" or "s3api"
     s3api:

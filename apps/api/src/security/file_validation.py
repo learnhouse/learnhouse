@@ -4,9 +4,18 @@ Blocks SVG files entirely to prevent XSS attacks (CWE-79).
 Validates file types and content to prevent unrestricted uploads (CWE-434).
 """
 
+import os
 import re
-from typing import List, Optional, Tuple
+from typing import Any, List, Optional, Tuple
 from fastapi import HTTPException, UploadFile
+
+# Uncompressed-size ceiling applied to every zip-based upload (zip, OOXML,
+# SCORM). Shared by the buffer- and stream-based zip validators.
+_MAX_UNCOMPRESSED_ZIP = 500 * 1024 * 1024
+
+# Magic-byte validators only ever look at a file header, so validation reads a
+# bounded prefix instead of the whole upload.
+_MAGIC_PREFIX_BYTES = 64 * 1024
 
 
 def validate_image_content(content: bytes) -> bool:
@@ -93,16 +102,66 @@ def validate_zip_content(content: bytes) -> bool:
     import zipfile
 
     # 500 MB uncompressed limit — protects against zip bomb attacks.
-    max_uncompressed = 500 * 1024 * 1024
     try:
         with zipfile.ZipFile(io.BytesIO(content)) as zf:
             total = sum(info.file_size for info in zf.infolist())
-            if total > max_uncompressed:
+            if total > _MAX_UNCOMPRESSED_ZIP:
                 return False
     except Exception:
         return False
 
     return True
+
+
+def validate_zip_stream(stream: Any) -> bool:
+    """Same checks as :func:`validate_zip_content`, but against a seekable stream.
+
+    ``validate_zip_content`` has to copy its ``bytes`` into an ``io.BytesIO``,
+    doubling the memory cost of every zip/OOXML upload. ``zipfile`` only needs a
+    seekable file object and ``UploadFile.file`` (a SpooledTemporaryFile) already
+    is one, so a multi-hundred-MB archive is never held in RAM twice.
+    """
+    import zipfile
+
+    try:
+        stream.seek(0)
+        if stream.read(4) not in (b'PK\x03\x04', b'PK\x05\x06'):
+            return False
+        stream.seek(0)
+        # ZipFile does not close a file object that was passed in to it.
+        with zipfile.ZipFile(stream) as zf:
+            total = sum(info.file_size for info in zf.infolist())
+            if total > _MAX_UNCOMPRESSED_ZIP:
+                return False
+    except Exception:
+        return False
+    finally:
+        _rewind(stream)
+
+    return True
+
+
+def _rewind(stream: Any) -> None:
+    """Best-effort seek back to the start; upload streams are reused downstream."""
+    try:
+        stream.seek(0)
+    except Exception:
+        pass
+
+
+def _stream_length(stream: Any) -> Optional[int]:
+    """Byte length of a seekable stream, measured by seeking — never by reading.
+
+    Returns ``None`` when the stream cannot be measured (non-seekable, or a test
+    double), in which case the caller falls back to a bounded read.
+    """
+    try:
+        stream.seek(0, os.SEEK_END)
+        length = stream.tell()
+        stream.seek(0)
+    except Exception:
+        return None
+    return length if isinstance(length, int) else None
 
 
 def validate_ole_content(content: bytes) -> bool:
@@ -116,11 +175,16 @@ def validate_ole_content(content: bytes) -> bool:
     return content[:8] == b'\xd0\xcf\x11\xe0\xa1\xb1\x1a\xe1'
 
 
-# Per-type size caps. Storage-fill DoS is the main risk; caps here are the
-# last line of defence in addition to any edge/nginx client_max_body_size.
-# Limits match or exceed the frontend's own client-side caps (including the
-# course migration dropzone's 5 GB-per-file ceiling) so no legitimate upload
-# flow hits a 413 it didn't already hit client-side.
+# Per-type size caps. Two risks, not one: storage-fill DoS, and memory
+# exhaustion — an accepted upload is handed to the caller as a single `bytes`
+# object (see upload_content.upload_file), so the cap is also the per-request
+# RAM ceiling and a handful of concurrent uploads at the old multi-GB caps
+# could OOM the worker for every tenant on the pod.
+#
+# Caps are sized to the flows that actually reach this validator: media
+# library, activity/assignment attachments, org branding, podcasts. The course
+# migration dropzone's 5 GB-per-file ceiling does NOT come through here — that
+# path streams to a temp file in migration_service with its own limits.
 _GB = 1024 * 1024 * 1024
 _MB = 1024 * 1024
 FILE_TYPES = {
@@ -152,7 +216,8 @@ FILE_TYPES = {
         'extensions': ['.zip'],
         'mime_types': ['application/zip', 'application/x-zip-compressed'],
         'max_size': 5 * _GB,  # bounded further by the zip-bomb guard
-        'validator': validate_zip_content
+        'validator': validate_zip_content,
+        'stream_validator': validate_zip_stream
     },
     'database': {
         'extensions': ['.sqlite', '.db', '.sqlite3'],
@@ -170,7 +235,8 @@ FILE_TYPES = {
             'application/vnd.openxmlformats-officedocument.presentationml.presentation',
         ],
         'max_size': 500 * _MB,
-        'validator': validate_zip_content  # OOXML formats are ZIP-based
+        'validator': validate_zip_content,  # OOXML formats are ZIP-based
+        'stream_validator': validate_zip_stream
     },
     'office_legacy': {
         # Binary OLE2 Word / Excel / PowerPoint.
@@ -187,7 +253,8 @@ FILE_TYPES = {
         'extensions': ['.zip'],
         'mime_types': ['application/zip', 'application/x-zip-compressed'],
         'max_size': 2 * _GB,  # bounded further by the zip-bomb guard
-        'validator': validate_zip_content
+        'validator': validate_zip_content,
+        'stream_validator': validate_zip_stream
     }
 }
 
@@ -282,27 +349,55 @@ def validate_upload(
         allowed_exts = [ext for t in allowed_types for ext in FILE_TYPES.get(t, {}).get('extensions', [])]
         raise HTTPException(status_code=415, detail=f"File type not allowed. Allowed: {allowed_exts}")
 
-    # SECURITY: enforce the size limit WHILE reading so an oversized upload can
-    # never be fully buffered into memory. Reading the whole stream first (the
-    # previous behaviour) let a single multi-GB upload exhaust process RAM
-    # before the limit was ever checked. We read at most size_limit + 1 bytes,
-    # which is enough to detect (and reject) any file that exceeds the cap.
     size_limit = max_size or config.get('max_size')
+
+    # SECURITY: decide on size BEFORE any of the body is pulled into memory.
+    # The multipart parser has already spooled the part to a temp file, so both
+    # the declared part size and a seek to the end are free; reading first (the
+    # previous behaviour) let an oversized upload allocate its full size in RAM
+    # before the limit was ever consulted.
+    buffered: Optional[bytes] = None
     if size_limit:
-        content = file.file.read(size_limit + 1)
-        if len(content) > size_limit:
-            file.file.seek(0)
-            raise HTTPException(
-                status_code=413,
-                detail=f"File too large (> {size_limit/1024/1024:.1f}MB)"
-            )
+        declared_size = getattr(file, 'size', None)
+        stream_size = _stream_length(file.file)
+        for measured in (declared_size, stream_size):
+            if isinstance(measured, int) and measured > size_limit:
+                _rewind(file.file)
+                raise HTTPException(
+                    status_code=413,
+                    detail=f"File too large (> {size_limit/1024/1024:.1f}MB)"
+                )
+        if stream_size is None:
+            # Stream we cannot measure: fall back to a bounded read of at most
+            # size_limit + 1 bytes, still never buffering more than the cap.
+            buffered = file.file.read(size_limit + 1)
+            if len(buffered) > size_limit:
+                _rewind(file.file)
+                raise HTTPException(
+                    status_code=413,
+                    detail=f"File too large (> {size_limit/1024/1024:.1f}MB)"
+                )
+
+    # Validate from a bounded sample: magic-byte validators only need a header,
+    # and zip-based types are checked straight off the seekable stream rather
+    # than through a second full in-memory copy.
+    stream_validator = config.get('stream_validator')
+    if buffered is not None:
+        valid = config['validator'](buffered)
+    elif stream_validator is not None:
+        valid = stream_validator(file.file)
     else:
-        content = file.file.read()
-    file.file.seek(0)
-    
-    # Validate file content
-    if not config['validator'](content):
+        _rewind(file.file)
+        valid = config['validator'](file.file.read(_MAGIC_PREFIX_BYTES))
+    _rewind(file.file)
+
+    if not valid:
         raise HTTPException(status_code=415, detail="File appears to be corrupted or invalid")
+
+    # Callers still receive the bytes (see services/utils/upload_content.py),
+    # so the size cap above doubles as the per-request memory ceiling.
+    content = buffered if buffered is not None else file.file.read()
+    _rewind(file.file)
 
     canonical_type = EXT_TO_CANONICAL_MIME.get(ext, file.content_type)
     return canonical_type, content

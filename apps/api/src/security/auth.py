@@ -161,6 +161,15 @@ async def authenticate_user(
         # it is fast).
         security_verify_password(password, _DUMMY_PASSWORD_HASH)
         return False
+    if not user.password:
+        # SECURITY: accounts with no local password (Google/SSO signups,
+        # admin-provisioned users, anonymized users) store an empty sentinel.
+        # pwdlib raises UnknownHashError on it, which escaped as a 500 and made
+        # "this address has an SSO account" distinguishable from "unknown
+        # address" — the very oracle the dummy-hash branch above exists to close.
+        # Treat it exactly like an unknown user, timing included.
+        security_verify_password(password, _DUMMY_PASSWORD_HASH)
+        return False
     if not security_verify_password(password, user.password):
         return False
     return user
@@ -174,6 +183,9 @@ def create_access_token(data: dict, expires_delta: timedelta | None = None):
     :func:`get_current_user` enforce both password-change-based revocation and
     the logout blocklist (see :func:`revoke_user_sessions_before`), neither of
     which can work on tokens missing an issuance timestamp.
+
+    Also stamps ``type: "access"`` so a token minted for one role can never be
+    spent in the other — see the token-type gate in :func:`get_current_user`.
     """
     to_encode = data.copy()
     now = datetime.now(timezone.utc)
@@ -183,6 +195,8 @@ def create_access_token(data: dict, expires_delta: timedelta | None = None):
         # SECURITY: Always set expiration (8 hours default)
         expire = now + JWT_ACCESS_TOKEN_EXPIRES
     to_encode.update({"exp": expire, "iat": now})
+    # setdefault, not update: a caller that deliberately names its own type wins.
+    to_encode.setdefault("type", "access")
     encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
     return encoded_jwt
 
@@ -599,6 +613,22 @@ async def get_current_user(
                 token_purpose is not None and token_purpose != "session"
             ):
                 raise credentials_exception
+
+            # SECURITY: a refresh JWT is signed with the same key and carries the
+            # same sub/exp/iat — and, via mint_session_tokens, the same
+            # ``purpose: "session"`` — so the purpose gate alone let one act as a
+            # full session token. That granted a stolen refresh token ~30 days of
+            # API access instead of 8 hours, with no rotation and none of the
+            # one-time-use / replay detection that /auth/refresh applies.
+            #
+            # Only a token that positively names a non-access type is rejected:
+            # access tokens minted before the ``type`` claim existed carry no type
+            # at all and are still in live browsers, so requiring "access" would
+            # sign every current user out on deploy.
+            token_type = payload.get("type")
+            if token_type is not None and token_type != "access":
+                raise credentials_exception
+
             username = payload.get("sub")
 
     token_data = TokenData(username=username)

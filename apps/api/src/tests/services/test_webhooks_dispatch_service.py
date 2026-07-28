@@ -49,6 +49,20 @@ def _make_response(status_code, *, body="ok", peer=("93.184.216.34", 443)):
     )
 
 
+# Captured before any patching so a patched `httpx.AsyncClient` can never leak
+# into the mock-transport clients built below.
+_REAL_ASYNC_CLIENT = httpx.AsyncClient
+
+
+def _mock_transport_client(handler):
+    """A real AsyncClient whose requests are served by ``handler``.
+
+    Delivery streams the response (``client.stream``), so the client has to be
+    a genuine httpx client rather than a mock with a ``post`` attribute.
+    """
+    return _REAL_ASYNC_CLIENT(transport=httpx.MockTransport(handler))
+
+
 def _make_fake_session_factory(db):
     """Return an async context manager factory that yields the test db session."""
     @asynccontextmanager
@@ -253,13 +267,15 @@ class TestWebhookDispatchHelpers:
             secret_encrypted="encrypted-secret",
             events=["course_created"],
         )
-        client = MagicMock()
-        client.post = AsyncMock(
-            side_effect=[
-                _make_response(500, body="first failure"),
-                _make_response(200, body="second success"),
-            ]
-        )
+        attempts = []
+
+        def handler(request):
+            attempts.append(request)
+            if len(attempts) == 1:
+                return httpx.Response(500, content=b"first failure")
+            return httpx.Response(200, content=b"second success")
+
+        client = _mock_transport_client(handler)
 
         with patch(
             "src.services.webhooks.dispatch._async_session_factory",
@@ -292,7 +308,9 @@ class TestWebhookDispatchHelpers:
                 {"course_uuid": "course_123"},
             )
 
-        assert client.post.await_count == 2
+        await client.aclose()
+
+        assert len(attempts) == 2
         mock_sleep.assert_awaited_once_with(1)
         mock_prune.assert_awaited_once_with(endpoint.id)
 
@@ -330,8 +348,13 @@ class TestWebhookDispatchHelpers:
             secret_encrypted="encrypted-secret",
             events=["course_created"],
         )
-        client = MagicMock()
-        client.post = AsyncMock(return_value=_make_response(200, body="ok"))
+        attempts = []
+
+        def handler(request):
+            attempts.append(request)
+            return httpx.Response(200, content=b"ok")
+
+        client = _mock_transport_client(handler)
 
         with patch(
             "src.services.webhooks.dispatch._async_session_factory",
@@ -371,7 +394,11 @@ class TestWebhookDispatchHelpers:
                 {"course_uuid": "course_123"},
             )
 
-        assert client.post.await_count == 3
+        await client.aclose()
+
+        # No request at all for the endpoint whose secret would not decrypt;
+        # three (retried) requests for the one blocked by the peer check.
+        assert len(attempts) == 3
 
         decrypt_logs = (
             await db.execute(
@@ -455,8 +482,13 @@ class TestWebhookDispatchHelpers:
             secret_encrypted="encrypted-secret",
             events=["course_created"],
         )
-        client = MagicMock()
-        client.post = AsyncMock(side_effect=RuntimeError("socket closed"))
+        attempts = []
+
+        def handler(request):
+            attempts.append(request)
+            raise RuntimeError("socket closed")
+
+        client = _mock_transport_client(handler)
 
         with patch(
             "src.services.webhooks.dispatch._async_session_factory",
@@ -487,7 +519,9 @@ class TestWebhookDispatchHelpers:
                 {"course_uuid": "course_123"},
             )
 
-        assert client.post.await_count == 3
+        await client.aclose()
+
+        assert len(attempts) == 3
         assert mock_sleep.await_count == 2
 
         logs = (

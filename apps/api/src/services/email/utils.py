@@ -1,6 +1,8 @@
 import logging
 import os
+import re
 import smtplib
+import ssl
 import time
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
@@ -15,37 +17,91 @@ from config.config import get_learnhouse_config
 logger = logging.getLogger(__name__)
 
 
+def _configured_host(cfg_value: Optional[str]) -> str:
+    """Bare, lowercase hostname of a configured domain value, "" when unset.
+
+    frontend_domain/domain may be a full URL, a bare host, or a "host:port" with
+    no scheme (the shipped default is "localhost:3000"). urlparse only populates
+    .hostname when a scheme or leading "//" is present, so prefix "//" for
+    schemeless values; otherwise the port would leak into the host and never
+    match a request host (which is always port-less).
+    """
+    cfg_value = (cfg_value or "").strip().rstrip("/")
+    if not cfg_value:
+        return ""
+    parsed = urlparse(cfg_value if "://" in cfg_value else f"//{cfg_value}")
+    host = parsed.hostname or cfg_value
+    return host.removeprefix("www.").lower()
+
+
+# A regexp that matches an unrelated, randomly-named host is a catch-all, not an
+# allowlist — and `re.fullmatch` accepted the historical shipped default
+# (`\b((?:https?://)[^\s/$.?#].[^\s]*)\b`) for *any* http(s) URL, which let an
+# attacker's Origin header become the base URL of an emailed magic-login link.
+# Probe every configured regexp with a canary host before trusting it.
+_ORIGIN_REGEXP_CANARIES = (
+    "https://not-an-allowed-origin-canary.invalid",
+    "http://not-an-allowed-origin-canary.invalid:8443",
+)
+
+
+def _is_scoped_origin_regexp(pattern: str) -> bool:
+    """True when ``pattern`` is a usable origin allowlist rather than a catch-all."""
+    try:
+        compiled = re.compile(pattern)
+    except re.error:
+        logger.error("Ignoring unparsable allowed_regexp for email URLs: %r", pattern)
+        return False
+    if any(compiled.fullmatch(canary) for canary in _ORIGIN_REGEXP_CANARIES):
+        logger.error(
+            "Ignoring catch-all allowed_regexp %r for email URLs: it matches "
+            "arbitrary hosts. Configure an anchored, domain-scoped pattern.",
+            pattern,
+        )
+        return False
+    return True
+
+
+def _is_verified_custom_domain(host: str) -> bool:
+    """True when ``host`` is a VERIFIED org custom domain for this deployment.
+
+    Multi-tenant orgs legitimately reach the API from their own domain, so a
+    check pinned to the platform domain alone would send their users links on
+    the wrong host. The CSRF middleware already resolves the request's Origin
+    against the ``custom_domains`` table (verified rows only) before the handler
+    runs and memoizes the answer for a short TTL — read that, because this
+    helper is synchronous and cannot await a DB session. On a miss the caller
+    falls back to the configured canonical base URL: correct-by-default and
+    never attacker-controlled.
+    """
+    if not host:
+        return False
+    try:
+        from src.security.csrf import _CUSTOM_DOMAIN_CACHE
+    except Exception:  # pragma: no cover - defensive, csrf has no heavy imports
+        return False
+    cached = _CUSTOM_DOMAIN_CACHE.get(host)
+    if not cached:
+        return False
+    allowed, expires_at = cached
+    return bool(allowed) and expires_at > time.monotonic()
+
+
 def _is_allowed_base_url(url: str) -> bool:
     """Validate that a URL is an allowed origin for email links."""
     config = get_learnhouse_config()
     url_stripped = url.rstrip("/")
 
+    parsed = urlparse(url_stripped)
+    if parsed.scheme not in ("http", "https") or not parsed.hostname:
+        return False
+
+    req_host = parsed.hostname.removeprefix("www.").lower()
+    base_domain = _configured_host(config.hosting_config.domain)
+    frontend_host = _configured_host(config.hosting_config.frontend_domain)
+    configured_hosts = {host for host in (base_domain, frontend_host) if host}
+
     if config.hosting_config.tenancy == "single":
-        parsed = urlparse(url_stripped)
-        if parsed.scheme not in ("http", "https") or not parsed.hostname:
-            return False
-
-        req_host = parsed.hostname.removeprefix("www.").lower()
-
-        configured_hosts = set()
-        for cfg_value in (
-            config.hosting_config.frontend_domain,
-            config.hosting_config.domain,
-        ):
-            cfg_value = (cfg_value or "").strip().rstrip("/")
-            if not cfg_value:
-                continue
-            # frontend_domain/domain may be a bare host or "host:port" with no
-            # scheme (the shipped default is "localhost:3000"). urlparse only
-            # populates .hostname when a scheme or leading "//" is present, so
-            # prefix "//" for schemeless values; otherwise the port would leak
-            # into the host and never match req_host (which is always port-less).
-            cfg_parsed = urlparse(cfg_value if "://" in cfg_value else f"//{cfg_value}")
-            cfg_host = cfg_parsed.hostname or cfg_value
-            cfg_host = cfg_host.removeprefix("www.").lower()
-            if cfg_host:
-                configured_hosts.add(cfg_host)
-
         if req_host in configured_hosts:
             return True
 
@@ -54,39 +110,46 @@ def _is_allowed_base_url(url: str) -> bool:
 
         return False
 
-    allowed_origins = config.hosting_config.allowed_origins
+    # Multi-tenancy. `url` comes from an attacker-controllable Origin/Referer
+    # header and ends up as the base of an emailed login link, so every branch
+    # below has to name a host the operator actually vouched for.
 
     # Check against configured allowed origins
-    for allowed in allowed_origins:
+    for allowed in config.hosting_config.allowed_origins:
         if url_stripped == allowed.rstrip("/"):
             return True
 
-    # Check against allowed_regexp if configured
-    import re
+    # The platform domain and any org subdomain of it (slug.learnhouse.io).
+    if req_host in configured_hosts:
+        return True
+    if base_domain and req_host.endswith(f".{base_domain}"):
+        return True
+
+    # Check against allowed_regexp, but only when it is actually scoped
     allowed_regexp = config.hosting_config.allowed_regexp
-    if allowed_regexp:
-        try:
-            if re.fullmatch(allowed_regexp, url_stripped):
-                return True
-        except re.error:
-            pass
+    if allowed_regexp and _is_scoped_origin_regexp(allowed_regexp):
+        if re.fullmatch(allowed_regexp, url_stripped):
+            return True
+
+    # Orgs on a verified custom domain must keep getting links on their own host
+    if _is_verified_custom_domain(parsed.hostname.lower()):
+        return True
 
     # Check against LEARNHOUSE_PLATFORM_URL (the main platform, e.g. https://www.learnhouse.app)
     platform_url = os.environ.get("LEARNHOUSE_PLATFORM_URL", "").rstrip("/")
     if platform_url:
-        parsed_url = urlparse(url_stripped)
-        parsed_platform = urlparse(platform_url)
-        # Normalize: strip www. from both hostnames for comparison
-        url_host = (parsed_url.hostname or "").removeprefix("www.")
-        platform_host = (parsed_platform.hostname or "").removeprefix("www.")
-        if url_host and url_host == platform_host and parsed_url.scheme == "https":
+        platform_host = (
+            (urlparse(platform_url).hostname or "").removeprefix("www.").lower()
+        )
+        if platform_host and req_host == platform_host and parsed.scheme == "https":
             return True
 
     # In development mode, allow localhost
-    if config.general_config.development_mode:
-        parsed = urlparse(url_stripped)
-        if parsed.hostname in ("localhost", "127.0.0.1"):
-            return True
+    if config.general_config.development_mode and parsed.hostname in (
+        "localhost",
+        "127.0.0.1",
+    ):
+        return True
 
     return False
 
@@ -328,6 +391,34 @@ def _send_email_resend(sender: str, to: str, subject: str, body: str, mailing):
 
 
 _SMTP_TIMEOUT = 15
+# Implicit-TLS SMTP port: the session is encrypted from the first byte, so there
+# is no STARTTLS upgrade to perform.
+_SMTP_IMPLICIT_TLS_PORT = 465
+
+
+def _smtp_port_number(port) -> int:
+    """Configured SMTP port as an int; 0 when it is unset or non-numeric."""
+    try:
+        return int(port)
+    except (TypeError, ValueError):
+        return 0
+
+
+def _smtp_tls_context() -> ssl.SSLContext:
+    """Certificate-verifying TLS context for outbound SMTP.
+
+    ``starttls()``/``SMTP_SSL`` with no ``context`` fall back to
+    ``ssl._create_stdlib_context()``, which is the *unverified* context
+    (``CERT_NONE``, ``check_hostname=False``). An on-path attacker answering the
+    connection with any self-signed certificate would then collect the SMTP
+    credentials and the plaintext of every password-reset, verification and
+    magic-login email.
+    """
+    context = ssl.create_default_context()
+    context.minimum_version = ssl.TLSVersion.TLSv1_2
+    context.check_hostname = True
+    context.verify_mode = ssl.CERT_REQUIRED
+    return context
 
 
 def _send_email_smtp(sender: str, to: str, subject: str, body: str, mailing):
@@ -341,12 +432,35 @@ def _send_email_smtp(sender: str, to: str, subject: str, body: str, mailing):
     server = None
     try:
         if mailing.smtp_use_tls:
-            server = smtplib.SMTP(mailing.smtp_host, mailing.smtp_port, timeout=_SMTP_TIMEOUT)
-            server.starttls()
+            context = _smtp_tls_context()
+            if _smtp_port_number(mailing.smtp_port) == _SMTP_IMPLICIT_TLS_PORT:
+                server = smtplib.SMTP_SSL(
+                    mailing.smtp_host,
+                    mailing.smtp_port,
+                    timeout=_SMTP_TIMEOUT,
+                    context=context,
+                )
+            else:
+                server = smtplib.SMTP(mailing.smtp_host, mailing.smtp_port, timeout=_SMTP_TIMEOUT)
+                server.starttls(context=context)
         else:
             server = smtplib.SMTP(mailing.smtp_host, mailing.smtp_port, timeout=_SMTP_TIMEOUT)
 
         if mailing.smtp_username and mailing.smtp_password:
+            # AUTH on a cleartext session hands the relay credentials to anyone
+            # on the path. Refuse rather than send them.
+            if not mailing.smtp_use_tls:
+                logger.error(
+                    "Refusing SMTP login to %s:%s: smtp_use_tls is false, so the "
+                    "credentials would be sent in cleartext. Enable smtp_use_tls "
+                    "or clear smtp_username/smtp_password.",
+                    mailing.smtp_host,
+                    mailing.smtp_port,
+                )
+                raise HTTPException(
+                    status_code=503,
+                    detail="Email service misconfigured: SMTP credentials require TLS",
+                )
             server.login(mailing.smtp_username, mailing.smtp_password)
 
         server.sendmail(mailing.system_email_address, to, msg.as_string())
@@ -354,6 +468,20 @@ def _send_email_smtp(sender: str, to: str, subject: str, body: str, mailing):
     except smtplib.SMTPException as e:
         logger.error("SMTP error sending to %s: %s", to, e, exc_info=True)
         raise HTTPException(status_code=503, detail="Email service error")
+    except ssl.SSLError as e:
+        # SSLError subclasses OSError, so this must stay above the OSError arm.
+        logger.error(
+            "SMTP TLS verification failed for %s:%s: %s. The relay's certificate "
+            "is not trusted or does not match its hostname — fix the relay's "
+            "certificate or point smtp_host at the name the certificate covers.",
+            mailing.smtp_host,
+            mailing.smtp_port,
+            e,
+            exc_info=True,
+        )
+        raise HTTPException(
+            status_code=503, detail="Email service TLS verification failed"
+        )
     except OSError as e:
         logger.error("SMTP connection error to %s:%s: %s", mailing.smtp_host, mailing.smtp_port, e, exc_info=True)
         raise HTTPException(status_code=503, detail="Email service unavailable")

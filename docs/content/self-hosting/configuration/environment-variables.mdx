@@ -59,9 +59,9 @@ optional: the feature stays disabled or uses a runtime fallback when the variabl
 | `LEARNHOUSE_INITIAL_ADMIN_PASSWORD` | Initial admin password used by the API install command and generated `.env` files. | secret string | required for install/bootstrap | API, CLI |
 | `LEARNHOUSE_INITIAL_ORG_NAME` | Initial organization display name used during install. | string | `Default Organization` | API, CLI |
 | `LEARNHOUSE_INITIAL_ORG_SLUG` | Initial organization slug used during install. | slug string | `default` | API, CLI |
-| `LEARNHOUSE_GOOGLE_CLIENT_ID` | Google OAuth client ID used by web auth proxy routes. | string | unset unless Google OAuth is enabled | Web, CLI |
+| `LEARNHOUSE_GOOGLE_CLIENT_ID` | Google OAuth client ID used by web auth proxy routes. The API also accepts it as a fallback audience for backend token validation. | string | unset unless Google OAuth is enabled | Web, CLI, API |
 | `LEARNHOUSE_GOOGLE_CLIENT_SECRET` | Google OAuth client secret used by the web token exchange route. | secret string | unset unless Google OAuth is enabled | Web, CLI |
-| `LEARNHOUSE_GOOGLE_OAUTH_CLIENT_ID` | Expected Google OAuth audience for backend ID-token validation. If unset, audience verification is disabled with a warning. | string | unset | API |
+| `LEARNHOUSE_GOOGLE_OAUTH_CLIENT_ID` | Expected Google OAuth audience for backend ID-token validation. Required to enable Google sign-in: if neither this nor `LEARNHOUSE_GOOGLE_CLIENT_ID` is set the audience cannot be checked and Google sign-in is refused. | string | unset | API |
 
 ## Web runtime
 

@@ -19,8 +19,10 @@ from src.core.events.database import get_db_session
 from src.db.users import PublicUser, AnonymousUser, APITokenUser
 from src.security.auth import get_current_user, resolve_acting_user_id
 from src.security.org_auth import is_org_member, enforce_org_mfa
+from src.security.rbac import check_resource_access, AccessAction
 from src.security.features_utils.usage import (
     reserve_ai_credit,
+    check_limits_with_usage,
 )
 from src.services.ai.llm import resolve_model_for_org, model_for_tier
 from src.services.ai.courseplanning import (
@@ -87,6 +89,30 @@ async def verify_user_org_membership(user_id: int, org_id: int, db_session: Asyn
     if member:
         await enforce_org_mfa(user_id, org_id, db_session)
     return member
+
+
+async def require_activity_write_access(
+    request: Request,
+    activity: Activity,
+    current_user: PublicUser | AnonymousUser | APITokenUser,
+    db_session: AsyncSession,
+) -> Course:
+    """Require write rights on the course that owns ``activity``.
+
+    Org membership only says "you belong to this tenant"; every other path that
+    writes activity content also demands authorship or admin/maintainer on the
+    owning course. These endpoints must not be a way around that.
+    """
+    statement = select(Course).where(Course.id == activity.course_id)
+    course = (await db_session.execute(statement)).scalars().first()
+
+    if not course:
+        raise HTTPException(status_code=404, detail="Course not found")
+
+    await check_resource_access(
+        request, db_session, current_user, course.course_uuid, AccessAction.UPDATE
+    )
+    return course
 
 
 @router.post(
@@ -247,7 +273,7 @@ async def iterate_course_planning_session(
         200: {"description": "Course, chapters, and activities created from the plan.", "model": FinalizeCoursePlanResponse},
         400: {"description": "Course already created from this session"},
         401: {"description": "Authentication required"},
-        403: {"description": "User is not a member of this organization"},
+        403: {"description": "User is not a member of this organization, cannot create courses, or the course limit is reached"},
         404: {"description": "Session or organization not found"},
     },
 )
@@ -281,6 +307,13 @@ async def finalize_course_plan(
     # Verify user is a member of the organization
     if not await verify_user_org_membership(resolve_acting_user_id(current_user), org.id, db_session):
         raise HTTPException(status_code=403, detail="User is not a member of this organization")
+
+    # Membership is not permission to create. Finalizing writes a real Course
+    # and makes the caller its CREATOR — which by itself grants update/delete
+    # rights — so require the same courses.action_create right and the same
+    # plan limit every other course-creation path enforces.
+    await check_resource_access(request, db_session, current_user, "course_x", AccessAction.CREATE)
+    await check_limits_with_usage("courses", org.id, db_session)
 
     plan = finalize_request.plan
 
@@ -422,8 +455,8 @@ async def finalize_course_plan(
         },
         400: {"description": "Maximum activity iterations reached"},
         401: {"description": "Authentication required"},
-        403: {"description": "Activity content generation disabled, user not a member of the organization, or insufficient credits"},
-        404: {"description": "Session, activity, or organization not found"},
+        403: {"description": "Activity content generation disabled, user not a member of the organization, unable to edit the activity's course, or insufficient credits"},
+        404: {"description": "Session, activity, course, or organization not found"},
     },
 )
 async def generate_activity_content(
@@ -466,8 +499,16 @@ async def generate_activity_content(
     if not activity:
         raise HTTPException(status_code=404, detail="Activity not found")
 
-    # Get the organization
-    statement = select(Organization).where(Organization.id == session.org_id)
+    # The activity is looked up globally, so authorization must follow the
+    # activity's org — not the org the caller chose when creating the planning
+    # session. A planning session never legitimately reaches across tenants,
+    # and on an iteration the existing content is fed back into the prompt and
+    # streamed to the caller, so this is a read of the victim's material.
+    if activity.org_id != session.org_id:
+        raise HTTPException(status_code=404, detail="Activity not found")
+
+    # Get the organization that actually owns the activity
+    statement = select(Organization).where(Organization.id == activity.org_id)
     org = (await db_session.execute(statement)).scalars().first()
 
     if not org or org.id is None:
@@ -476,6 +517,9 @@ async def generate_activity_content(
     # Verify user is a member of the organization
     if not await verify_user_org_membership(resolve_acting_user_id(current_user), org.id, db_session):
         raise HTTPException(status_code=403, detail="User is not a member of this organization")
+
+    # ...and that they may actually write this activity's course.
+    await require_activity_write_access(request, activity, current_user, db_session)
 
     # Get AI model — pro models cost more credits
     ai_model = await get_org_ai_model(org.id, db_session)
@@ -581,8 +625,8 @@ def validate_prosemirror_content(content: dict) -> tuple[bool, str]:
         200: {"description": "Activity content saved successfully."},
         400: {"description": "Invalid content structure"},
         401: {"description": "Authentication required"},
-        403: {"description": "User is not a member of this organization"},
-        404: {"description": "Activity or organization not found"},
+        403: {"description": "User is not a member of this organization or cannot edit this activity's course"},
+        404: {"description": "Activity, course or organization not found"},
         500: {"description": "Failed to save content due to an internal error"},
     },
 )
@@ -645,6 +689,12 @@ async def save_activity_content(
     # Verify user is a member of the organization
     if not await verify_user_org_membership(resolve_acting_user_id(current_user), org.id, db_session):
         raise HTTPException(status_code=403, detail="User is not a member of this organization")
+
+    # Both the activity uuid and the content are caller-supplied, so membership
+    # alone let any org member — a learner included — overwrite the body of
+    # every activity in the org. Demand the same rights the regular activity
+    # update path does.
+    await require_activity_write_access(request, activity, current_user, db_session)
 
     # Direct update using SQLAlchemy ORM
     try:

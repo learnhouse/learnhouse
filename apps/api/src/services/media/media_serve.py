@@ -46,6 +46,15 @@ def _mime_for(key: str) -> str:
 # `media.file_mime` is only usable as a fallback if it is one of these.
 _SERVABLE_MIMES = frozenset(_MIME_TYPES.values())
 
+# The only types a browser may be asked to render in place. Office documents,
+# zip archives and anything that fell back to octet-stream are always sent as a
+# download, so a stored file can never be interpreted as a document on the API
+# origin even if its bytes happen to parse as one.
+_INLINE_SAFE_MIMES = frozenset(
+    m for m in _SERVABLE_MIMES
+    if m.startswith(("image/", "audio/", "video/")) or m == "application/pdf"
+)
+
 
 def _serve_mime(media: Media, rel_key: str) -> str:
     """Decide the Content-Type from server-controlled state only.
@@ -98,7 +107,9 @@ def _headers(mime: str, is_public: bool, filename: str, download: bool) -> dict:
     cache = "public, max-age=86400" if is_public else "private, no-store"
     # Always send a filename so "save as" proposes something sensible; only the
     # disposition type changes. RFC 5987 encoding keeps non-ASCII names intact.
-    disposition = "attachment" if download else "inline"
+    # Inline rendering is opt-in per type, never a default: only the clamped
+    # image/audio/video/pdf types are safe to hand the browser to display.
+    disposition = "attachment" if download or mime not in _INLINE_SAFE_MIMES else "inline"
     return {
         "Content-Type": mime,
         "Accept-Ranges": "bytes",

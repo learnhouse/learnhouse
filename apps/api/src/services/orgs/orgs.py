@@ -1827,7 +1827,14 @@ async def rbac_check(
     action: Literal["create", "read", "update", "delete"],
     db_session: AsyncSession,
 ):
-    # Organizations are readable by anyone
+    # Organizations are readable by anyone: the org page, its slug lookup and
+    # its join mechanism are all served to logged-out visitors, and the OAuth
+    # signup flow validates an invite code as AnonymousUser.
+    #
+    # SECURITY: this makes "read" a no-op — it is NOT an authorization gate.
+    # Never guard org-scoped data that is not public (member lists, pending
+    # invites, config secrets) with rbac_check(..., "read", ...); gate those on
+    # require_org_membership / is_org_admin at the call site instead.
     if action == "read":
         return True
 

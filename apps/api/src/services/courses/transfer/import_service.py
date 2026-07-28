@@ -6,6 +6,7 @@ Supports both local filesystem and S3/R2 cloud storage
 
 import json
 import os
+import re
 import shutil
 import time
 import zipfile
@@ -30,6 +31,7 @@ from src.db.resource_authors import (
     ResourceAuthorshipStatusEnum,
 )
 from src.db.users import PublicUser, AnonymousUser, APITokenUser
+from src.security.file_validation import EXT_TO_CANONICAL_MIME, MIME_TO_SAFE_EXT
 from src.security.rbac import check_resource_access, AccessAction
 from src.security.features_utils.usage import check_limits_with_usage, increase_feature_usage
 
@@ -63,6 +65,70 @@ MAX_ENTRY_COUNT = 20000
 # upper 16 bits (Unix mode). 0xA000 is S_IFLNK. Matching the convention used
 # by zipfile authors, we bail out on any entry whose mode includes this flag.
 _ZIP_SYMLINK_MODE = 0xA000 << 16
+
+# temp_id is always a uuid4 minted by analyze_import_package, but it comes back
+# from the client on the import call, where it is joined into filesystem paths.
+_UUID_RE = re.compile(
+    r"^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$", re.I
+)
+
+# Extensions a package may persist under `content/`. Package entry names are
+# attacker-controlled and `content/` is served from the API origin, so an
+# imported ".html"/".svg"/".js" would be stored XSS. Media types come from the
+# canonical MIME map; the rest are server-generated streaming/caption sidecars
+# and media containers that map has no entry for.
+IMPORTABLE_EXTENSIONS = frozenset(MIME_TO_SAFE_EXT.values()) | {
+    'jpeg', 'ico', 'mov', 'avi', 'mkv', 'aac', 'flac',
+    'm3u8', 'ts', 'vtt', 'srt', 'txt', 'json',
+}
+
+
+def _require_temp_id(temp_id: str) -> None:
+    """Reject a temp_id that is not the UUID it was generated as.
+
+    Mirrors migration_service's `_require_uuid`: without this, a value like
+    "../../orgs" would steer every os.path.join below out of the temp tree.
+    """
+    if not isinstance(temp_id, str) or not _UUID_RE.match(temp_id):
+        raise HTTPException(status_code=400, detail="Invalid temp_id")
+
+
+def _resolve_within(base_real: str, *parts: str) -> str:
+    """Join parts under base_real, resolve, and verify containment.
+
+    Mirrors migration_service's helper of the same name; returns the resolved
+    path so callers only ever touch the sanitized value.
+    """
+    resolved = os.path.realpath(os.path.join(base_real, *parts))
+    if resolved != base_real and not resolved.startswith(base_real + os.sep):
+        raise HTTPException(status_code=400, detail="Invalid path")
+    return resolved
+
+
+def safe_stored_extension(filename: str) -> Optional[str]:
+    """Extension an imported package file may be stored under, or None to skip.
+
+    Known media extensions are canonicalized through the MIME maps (so ".JPEG"
+    is stored as "jpg") rather than copied verbatim; anything off
+    IMPORTABLE_EXTENSIONS is refused so the package cannot choose an extension
+    that makes the file renderable when served back.
+    """
+    ext = os.path.splitext(filename)[1].lower().lstrip('.')
+    if ext not in IMPORTABLE_EXTENSIONS:
+        return None
+    canonical_mime = EXT_TO_CANONICAL_MIME.get(f'.{ext}')
+    if canonical_mime:
+        return MIME_TO_SAFE_EXT.get(canonical_mime, ext)
+    return ext
+
+
+def _ignore_unsafe_package_files(src_dir: str, names: list[str]) -> set[str]:
+    """copytree filter dropping package files with a non-importable extension."""
+    return {
+        name for name in names
+        if not os.path.isdir(os.path.join(src_dir, name))
+        and safe_stored_extension(name) is None
+    }
 
 
 def validate_zip(content: bytes) -> bool:
@@ -373,10 +439,17 @@ async def import_courses(
     # RBAC check - user needs create permission for courses
     await check_resource_access(request, db_session, current_user, "course_x", AccessAction.CREATE)
 
+    # temp_id is client-supplied here: validate it as the UUID analyze minted
+    # and resolve every derived path back into TEMP_IMPORT_DIR before it reaches
+    # os.rename/open/rmtree. A value like "../../orgs" would otherwise rename
+    # the whole multi-tenant content tree out from under every org.
+    _require_temp_id(temp_id)
+    temp_base_real = os.path.realpath(TEMP_IMPORT_DIR)
+
     # Atomically claim the temp package by renaming it — prevents race if
     # two requests try to import the same temp_id simultaneously
-    temp_dir = os.path.join(TEMP_IMPORT_DIR, temp_id)
-    work_dir = os.path.join(TEMP_IMPORT_DIR, f"{temp_id}-importing")
+    temp_dir = _resolve_within(temp_base_real, temp_id)
+    work_dir = _resolve_within(temp_base_real, f"{temp_id}-importing")
     try:
         os.rename(temp_dir, work_dir)
     except FileNotFoundError:
@@ -390,8 +463,8 @@ async def import_courses(
             detail="This package is already being imported."
         )
 
-    extract_dir = os.path.join(work_dir, "extracted")
-    manifest_path = os.path.join(extract_dir, "manifest.json")
+    extract_dir = _resolve_within(work_dir, "extracted")
+    manifest_path = _resolve_within(extract_dir, "manifest.json")
 
     with open(manifest_path, 'r', encoding="utf-8") as f:
         manifest = json.load(f)
@@ -553,9 +626,12 @@ async def _import_single_course(
         for filename in os.listdir(source_thumbnails):
             source_file = os.path.join(source_thumbnails, filename)
             if os.path.isfile(source_file):
-                # Generate new filename
-                ext = filename.split('.')[-1] if '.' in filename else ''
-                new_filename = f"{new_course_uuid}_thumbnail_{uuid4()}.{ext}" if ext else f"{new_course_uuid}_thumbnail_{uuid4()}"
+                # Generate new filename. The stored extension is derived from
+                # the media allowlist, never carried over from the package.
+                ext = safe_stored_extension(filename)
+                if not ext:
+                    continue
+                new_filename = f"{new_course_uuid}_thumbnail_{uuid4()}.{ext}"
                 dest_file = os.path.join(f"{new_course_path}/thumbnails", new_filename)
                 shutil.copy2(source_file, dest_file)
 
@@ -759,7 +835,15 @@ async def _import_activity(
     source_files_dir = os.path.join(activity_path, "files")
 
     if os.path.exists(source_files_dir):
-        shutil.copytree(source_files_dir, new_activity_path, dirs_exist_ok=True)
+        # Entry names come from the uploaded package: files whose extension is
+        # not an importable media type are dropped instead of being written
+        # into content/, where they would be served from the API origin.
+        shutil.copytree(
+            source_files_dir,
+            new_activity_path,
+            dirs_exist_ok=True,
+            ignore=_ignore_unsafe_package_files,
+        )
         # Upload to S3 if configured
         if is_s3_enabled():
             if not upload_directory_to_s3(new_activity_path, new_activity_path):
@@ -888,10 +972,16 @@ async def _import_block(
                         # Get old file_id before renaming
                         old_file_id = new_block_content.get('file_id')
 
+                        # Drop anything the package named with a non-media
+                        # extension rather than republishing it under content/.
+                        file_ext = safe_stored_extension(filename)
+                        if not file_ext:
+                            os.remove(old_file_path)
+                            continue
+
                         # Generate new file ID (UUID without prefix, matching URL structure)
                         new_file_id = str(uuid4())
-                        file_ext = filename.split('.')[-1] if '.' in filename else ''
-                        new_filename = f"{new_file_id}.{file_ext}" if file_ext else new_file_id
+                        new_filename = f"{new_file_id}.{file_ext}"
                         new_file_path = f"{new_block_path}/{new_filename}"
                         os.rename(old_file_path, new_file_path)
 
