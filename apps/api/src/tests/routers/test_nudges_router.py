@@ -166,6 +166,32 @@ class TestDeletedUser:
         assert "expired" in response.text.lower()
 
 
+def _svix_sign(payload: str, secret: str, msg_id: str = "msg_1", ts: int | None = None):
+    """Produce the headers Resend would send.
+
+    Mirrors the scheme `resend.Webhooks.verify` checks: HMAC-SHA256 over
+    "{id}.{timestamp}.{payload}" keyed by the base64-decoded signing secret.
+    """
+    import base64
+    import hashlib
+    import hmac
+    import time
+
+    ts = ts if ts is not None else int(time.time())
+    key = base64.b64decode(secret.removeprefix("whsec_"))
+    signed = f"{msg_id}.{ts}.{payload}".encode()
+    sig = base64.b64encode(hmac.new(key, signed, hashlib.sha256).digest()).decode()
+    return {
+        "svix-id": msg_id,
+        "svix-timestamp": str(ts),
+        "svix-signature": f"v1,{sig}",
+        "content-type": "application/json",
+    }
+
+
+SIGNING_SECRET = "whsec_" + __import__("base64").b64encode(b"test-signing-key").decode()
+
+
 class TestDeliveryEvents:
     """The provider callback that stops us mailing dead or hostile addresses."""
 
@@ -175,7 +201,7 @@ class TestDeliveryEvents:
 
         from src.routers.nudges import internal_router
 
-        monkeypatch.setenv("LEARNHOUSE_EMAIL_WEBHOOK_SECRET", "s3cret")
+        monkeypatch.setenv("LEARNHOUSE_RESEND_WEBHOOK_SECRET", SIGNING_SECRET)
         app = FastAPI()
         app.include_router(internal_router, prefix="/api/v1/internal/emails")
         app.dependency_overrides[get_db_session] = lambda: db
@@ -198,61 +224,114 @@ class TestDeliveryEvents:
             )
         ).scalars().first()
 
-    async def test_hard_bounce_suppresses(self, wclient, db, admin_user):
-        r = await wclient.post(
+    async def _post(self, wclient, body: dict, **sign_kwargs):
+        import json as _json
+
+        payload = _json.dumps(body)
+        return await wclient.post(
             "/api/v1/internal/emails/delivery-events",
-            headers={"x-webhook-secret": "s3cret"},
-            json={
+            headers=_svix_sign(payload, SIGNING_SECRET, **sign_kwargs),
+            content=payload,
+        )
+
+    async def test_permanent_bounce_suppresses(self, wclient, db, admin_user):
+        """Resend says "Permanent", not "hard" — getting this wrong means the
+        endpoint silently discards every real bounce."""
+        r = await self._post(
+            wclient,
+            {
                 "type": "email.bounced",
-                "data": {"to": [admin_user.email], "bounce": {"type": "hard"}},
+                "data": {
+                    "to": [admin_user.email],
+                    "bounce": {"type": "Permanent", "subType": "General", "message": "no such user"},
+                },
             },
         )
-        assert r.status_code == 200
+        assert r.status_code == 200, r.text
         assert r.json()["suppressed"] == 1
         assert (await self._prefs(db, admin_user.id)).suppressed is True
 
-    async def test_soft_bounce_does_not_suppress(self, wclient, db, admin_user):
-        """A full mailbox is temporary; the address is still good."""
-        r = await wclient.post(
-            "/api/v1/internal/emails/delivery-events",
-            headers={"x-webhook-secret": "s3cret"},
-            json={
+    async def test_temporary_bounce_does_not_suppress(self, wclient, db, admin_user):
+        """A full mailbox is not a dead address."""
+        r = await self._post(
+            wclient,
+            {
                 "type": "email.bounced",
-                "data": {"to": [admin_user.email], "bounce": {"type": "soft"}},
+                "data": {"to": [admin_user.email], "bounce": {"type": "Temporary"}},
             },
         )
-        assert r.json()["reason"] == "soft bounce"
+        assert r.status_code == 200
+        assert "non-permanent" in r.json()["reason"]
+        assert await self._prefs(db, admin_user.id) is None
+
+    async def test_bounce_without_a_type_is_not_suppressed(self, wclient, db, admin_user):
+        """Unknown shape: leave the address alone rather than guess."""
+        await self._post(
+            wclient, {"type": "email.bounced", "data": {"to": [admin_user.email]}}
+        )
         assert await self._prefs(db, admin_user.id) is None
 
     async def test_complaint_suppresses(self, wclient, db, admin_user):
-        r = await wclient.post(
-            "/api/v1/internal/emails/delivery-events",
-            headers={"x-webhook-secret": "s3cret"},
-            json={"type": "email.complained", "data": {"to": admin_user.email}},
+        r = await self._post(
+            wclient, {"type": "email.complained", "data": {"to": admin_user.email}}
         )
         assert r.json()["reason"] == "complaint"
         pref = await self._prefs(db, admin_user.id)
         assert pref.suppressed is True and pref.suppressed_reason == "complaint"
 
+    async def test_provider_suppression_is_mirrored(self, wclient, db, admin_user):
+        r = await self._post(
+            wclient, {"type": "email.suppressed", "data": {"to": [admin_user.email]}}
+        )
+        assert r.json()["suppressed"] == 1
+
     async def test_unhandled_event_is_ignored(self, wclient, db, admin_user):
-        r = await wclient.post(
-            "/api/v1/internal/emails/delivery-events",
-            headers={"x-webhook-secret": "s3cret"},
-            json={"type": "email.delivered", "data": {"to": admin_user.email}},
+        r = await self._post(
+            wclient, {"type": "email.delivered", "data": {"to": admin_user.email}}
         )
         assert r.json()["reason"] == "unhandled event"
         assert await self._prefs(db, admin_user.id) is None
 
-    async def test_wrong_secret_is_rejected(self, wclient, db, admin_user):
+    async def test_a_forged_signature_is_rejected(self, wclient, db, admin_user):
+        import json as _json
+
+        payload = _json.dumps(
+            {"type": "email.complained", "data": {"to": admin_user.email}}
+        )
+        headers = _svix_sign(payload, SIGNING_SECRET)
+        headers["svix-signature"] = "v1,Zm9yZ2Vk"
         r = await wclient.post(
-            "/api/v1/internal/emails/delivery-events",
-            headers={"x-webhook-secret": "wrong"},
-            json={"type": "email.complained", "data": {"to": admin_user.email}},
+            "/api/v1/internal/emails/delivery-events", headers=headers, content=payload
         )
         assert r.status_code == 403
         assert await self._prefs(db, admin_user.id) is None
 
-    async def test_missing_secret_is_rejected(self, wclient, db, admin_user):
+    async def test_a_tampered_body_is_rejected(self, wclient, db, admin_user):
+        """The signature covers the body, so editing it after signing fails."""
+        import json as _json
+
+        signed = _json.dumps({"type": "email.delivered", "data": {"to": "x@y.z"}})
+        headers = _svix_sign(signed, SIGNING_SECRET)
+        tampered = _json.dumps(
+            {"type": "email.complained", "data": {"to": admin_user.email}}
+        )
+        r = await wclient.post(
+            "/api/v1/internal/emails/delivery-events", headers=headers, content=tampered
+        )
+        assert r.status_code == 403
+
+    async def test_a_stale_timestamp_is_rejected(self, wclient, db, admin_user):
+        """Replay protection: an old capture cannot be resent."""
+        import time
+
+        r = await self._post(
+            wclient,
+            {"type": "email.complained", "data": {"to": admin_user.email}},
+            ts=int(time.time()) - 60 * 60 * 24,
+        )
+        assert r.status_code == 403
+
+    async def test_missing_svix_headers_are_rejected(self, wclient, admin_user):
         r = await wclient.post(
             "/api/v1/internal/emails/delivery-events",
             json={"type": "email.complained", "data": {"to": admin_user.email}},
@@ -262,36 +341,15 @@ class TestDeliveryEvents:
     async def test_unset_secret_fails_closed(self, wclient, db, admin_user, monkeypatch):
         """An unauthenticated endpoint that suppresses addresses would be a
         denial of service on your own mail."""
-        monkeypatch.delenv("LEARNHOUSE_EMAIL_WEBHOOK_SECRET", raising=False)
-        r = await wclient.post(
-            "/api/v1/internal/emails/delivery-events",
-            headers={"x-webhook-secret": ""},
-            json={"type": "email.complained", "data": {"to": admin_user.email}},
+        monkeypatch.delenv("LEARNHOUSE_RESEND_WEBHOOK_SECRET", raising=False)
+        r = await self._post(
+            wclient, {"type": "email.complained", "data": {"to": admin_user.email}}
         )
         assert r.status_code == 403
 
-    async def test_unparseable_payload_is_ignored(self, wclient):
-        r = await wclient.post(
-            "/api/v1/internal/emails/delivery-events",
-            headers={"x-webhook-secret": "s3cret", "content-type": "application/json"},
-            content=b"not json",
-        )
-        assert r.status_code == 200
-        assert r.json()["status"] == "ignored"
-
     async def test_unknown_address_is_handled(self, wclient):
-        r = await wclient.post(
-            "/api/v1/internal/emails/delivery-events",
-            headers={"x-webhook-secret": "s3cret"},
-            json={"type": "email.complained", "data": {"to": "ghost@nowhere.test"}},
+        r = await self._post(
+            wclient, {"type": "email.complained", "data": {"to": "ghost@nowhere.test"}}
         )
         assert r.status_code == 200
         assert r.json()["suppressed"] == 0
-
-    async def test_bounce_without_a_type_is_treated_as_hard(self, wclient, db, admin_user):
-        r = await wclient.post(
-            "/api/v1/internal/emails/delivery-events",
-            headers={"x-webhook-secret": "s3cret"},
-            json={"type": "email.bounced", "data": {"to": [admin_user.email]}},
-        )
-        assert r.json()["suppressed"] == 1

@@ -18,6 +18,7 @@ from typing import Optional
 
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import func
 from sqlmodel import select
 
 from src.core.deployment_mode import get_deployment_mode
@@ -34,7 +35,7 @@ logger = logging.getLogger(__name__)
 
 # An admin hears from us at most this often, across every org they administer.
 # Someone who runs three organizations should not receive triple the mail.
-DEFAULT_WEEKLY_CAP = 2
+WEEKLY_CAP = 2
 # The gap is the binding constraint, not a separate daily cap: two days between
 # sends already implies at most one a day, so a daily cap would be dead weight.
 MIN_GAP_HOURS = 48
@@ -52,8 +53,8 @@ BACKFILL_TRACKS = frozenset({"dormancy", "reactivation"})
 # up on Tuesday: there is no ongoing relationship to pace, and the sequence
 # only works if its steps land close enough together to read as a sequence.
 # These override the ordinary caps for orgs that predate the start date.
-DEFAULT_LEGACY_WEEKLY_CAP = 7
-DEFAULT_LEGACY_MIN_GAP_HOURS = 20
+LEGACY_WEEKLY_CAP = 7
+LEGACY_MIN_GAP_HOURS = 20
 
 
 def _flag(name: str, default: bool = False) -> bool:
@@ -63,34 +64,8 @@ def _flag(name: str, default: bool = False) -> bool:
     return raw.strip().lower() in ("1", "true", "yes", "on")
 
 
-def _int_env(name: str, default: int) -> int:
-    try:
-        return int(os.environ.get(name, "") or default)
-    except ValueError:
-        return default
-
-
 def nudges_enabled() -> bool:
     return _flag("LEARNHOUSE_NUDGES_ENABLED", False)
-
-
-def send_slots() -> int:
-    """How many slots the day's sending is spread across.
-
-    ``1`` (the default) keeps the original behaviour: one daily run, everything
-    at once. Set it higher and run the job hourly — each org is pinned to a
-    slot by its id, so the day's mail trickles out instead of arriving as one
-    burst. A burst looks like a blast to spam filters and like a robot to
-    readers, and it also means a bad send hits everyone before anyone notices.
-    """
-    return max(1, _int_env("LEARNHOUSE_NUDGES_SLOTS", 1))
-
-
-def _slot_matches(org_id: int, now: datetime, slots: int) -> bool:
-    """Whether this org's slot is the one currently open."""
-    if slots <= 1:
-        return True
-    return org_id % slots == now.hour % slots
 
 
 def backfill_mode() -> str:
@@ -102,18 +77,25 @@ def backfill_mode() -> str:
     return (os.environ.get("LEARNHOUSE_NUDGES_BACKFILL_MODE") or "off").strip().lower()
 
 
-def start_date() -> Optional[datetime]:
-    """Orgs created before this are "pre-existing" and only the dormancy track
-    may reach them. Unset means every org counts as new."""
-    raw = os.environ.get("LEARNHOUSE_NUDGES_START_DATE")
-    if not raw:
-        return None
-    try:
-        parsed = datetime.fromisoformat(raw.strip())
-    except ValueError:
-        logger.warning("Ignoring unparseable LEARNHOUSE_NUDGES_START_DATE: %r", raw)
-        return None
-    return parsed if parsed.tzinfo else parsed.replace(tzinfo=timezone.utc)
+async def activation_date(db_session: AsyncSession) -> datetime:
+    """When this system started running here.
+
+    Orgs created before it are "pre-existing" and only the winback tracks may
+    reach them. Derived from the ledger rather than configured: the first row —
+    written by `nudges-seed`, or by the first live send — *is* the boundary,
+    so there is no date to remember to set and no way to set it wrongly.
+
+    An empty ledger means nothing has run here yet, so every existing org
+    predates the system and only the winback tracks may reach it. Running
+    `nudges-seed` is what pins the boundary and lets ordinary tracks start
+    applying to organizations created from then on.
+    """
+    earliest = (
+        await db_session.execute(select(func.min(NudgeSend.claimed_at)))
+    ).scalar_one_or_none()
+    if earliest is None:
+        return datetime.now(timezone.utc)
+    return earliest if earliest.tzinfo else earliest.replace(tzinfo=timezone.utc)
 
 
 @dataclass
@@ -125,7 +107,6 @@ class RunStats:
     skipped_optout: int = 0
     skipped_backfill: int = 0
     skipped_inactive_org: int = 0
-    skipped_slot: int = 0
     failed: int = 0
     budget_exhausted: bool = False
     by_nudge: dict = field(default_factory=dict)
@@ -143,7 +124,6 @@ class RunStats:
             "skipped_optout": self.skipped_optout,
             "skipped_backfill": self.skipped_backfill,
             "skipped_inactive_org": self.skipped_inactive_org,
-            "skipped_slot": self.skipped_slot,
             "budget_exhausted": self.budget_exhausted,
             "by_nudge": dict(sorted(self.by_nudge.items())),
         }
@@ -163,13 +143,14 @@ def dedupe_key(spec: NudgeSpec, org_id: int, user_id: int, now: datetime, dry_ru
     return f"dryrun:{key}" if dry_run else key
 
 
-def _is_preexisting(snapshot: OrgSnapshot, cutoff: Optional[datetime]) -> bool:
-    if cutoff is None or snapshot.created_at is None:
+def _is_preexisting(snapshot: OrgSnapshot, cutoff: datetime) -> bool:
+    """Whether this org predates the system running here."""
+    if snapshot.created_at is None:
         return False
     return snapshot.created_at < cutoff
 
 
-def _backfill_allows(spec: NudgeSpec, snapshot: OrgSnapshot, cutoff: Optional[datetime]) -> bool:
+def _backfill_allows(spec: NudgeSpec, snapshot: OrgSnapshot, cutoff: datetime) -> bool:
     """Whether a spec may reach an organization older than this system.
 
     This is the structural half of the backfill guard — the other half is
@@ -211,14 +192,6 @@ async def _recent_send_counts(
         stamp = sent_at if sent_at.tzinfo else sent_at.replace(tzinfo=timezone.utc)
         counts[user_id] = (count + 1, max(latest, stamp) if latest else stamp)
     return counts
-
-
-def legacy_caps() -> tuple[int, int]:
-    """Weekly cap and minimum gap for organizations older than the start date."""
-    return (
-        _int_env("LEARNHOUSE_NUDGES_LEGACY_WEEKLY_CAP", DEFAULT_LEGACY_WEEKLY_CAP),
-        _int_env("LEARNHOUSE_NUDGES_LEGACY_MIN_GAP_HOURS", DEFAULT_LEGACY_MIN_GAP_HOURS),
-    )
 
 
 def _cap_blocks(
@@ -376,13 +349,8 @@ async def run_nudges(
     """
     stats = RunStats()
     now = now or datetime.now(timezone.utc)
-    max_sends = max_sends if max_sends is not None else _int_env(
-        "LEARNHOUSE_NUDGES_MAX_SENDS", DEFAULT_MAX_SENDS
-    )
-    weekly_cap = _int_env("LEARNHOUSE_NUDGES_WEEKLY_CAP", DEFAULT_WEEKLY_CAP)
-    cutoff = start_date()
-    slots = send_slots()
-    legacy_weekly_cap, legacy_gap = legacy_caps()
+    max_sends = max_sends if max_sends is not None else DEFAULT_MAX_SENDS
+    cutoff = await activation_date(db_session)
 
     if not force and get_deployment_mode() != "saas":
         logger.info("Nudges skipped: deployment mode is not saas")
@@ -399,10 +367,6 @@ async def run_nudges(
             stats.budget_exhausted = True
             logger.info("Nudge budget of %s reached; deferring the rest", max_sends)
             break
-
-        if not _slot_matches(snapshot.org_id, now, slots):
-            stats.skipped_slot += 1
-            continue
 
         if not snapshot.org_active_flag:
             stats.skipped_inactive_org += 1
@@ -440,9 +404,9 @@ async def run_nudges(
             # no ongoing relationship to protect, and the reactivation ladder
             # only reads as a sequence if its steps arrive close together.
             cap, gap = (
-                (legacy_weekly_cap, legacy_gap)
+                (LEGACY_WEEKLY_CAP, LEGACY_MIN_GAP_HOURS)
                 if _is_preexisting(snapshot, cutoff)
-                else (weekly_cap, MIN_GAP_HOURS)
+                else (WEEKLY_CAP, MIN_GAP_HOURS)
             )
             if not seed and _cap_blocks(counts, admin.user_id, now, cap, gap):
                 stats.skipped_cap += 1
@@ -453,7 +417,10 @@ async def run_nudges(
             for spec in specs:
                 stats.considered += 1
 
-                if not _backfill_allows(spec, snapshot, cutoff):
+                # Seeding deliberately ignores the backfill gate: its whole
+                # job is to consume the keys for everything true today, and a
+                # key left unconsumed is one that fires on the first live run.
+                if not seed and not _backfill_allows(spec, snapshot, cutoff):
                     stats.skipped_backfill += 1
                     continue
 

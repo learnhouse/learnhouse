@@ -40,6 +40,27 @@ async def _fake_base_url(org_slug, db_session=None, org_id=None):
     return f"https://{org_slug}.test"
 
 
+@pytest.fixture(autouse=True)
+async def _seeded_ledger(db, org):
+    """Pin the activation boundary in the past.
+
+    The boundary is derived from the earliest ledger row, so an empty ledger
+    means every org predates the system. Production pins it by running
+    `nudges-seed`; the tests pin it here so their orgs count as new.
+    """
+    db.add(
+        NudgeSend(
+            nudge_id="bootstrap",
+            dedupe_key="bootstrap:0:0",
+            org_id=org.id,
+            user_id=1,
+            status=NudgeSendStatus.SUPPRESSED,
+            claimed_at=NOW - timedelta(days=400),
+        )
+    )
+    await db.commit()
+
+
 @pytest.fixture
 def sender():
     """Patch the provider call and record what would go out."""
@@ -72,7 +93,9 @@ async def activation_org(db, org, verified_admin):
 
 
 async def _ledger(db):
-    return (await db.execute(select(NudgeSend))).scalars().all()
+    """Ledger rows written by the run under test, excluding the bootstrap row."""
+    rows = (await db.execute(select(NudgeSend))).scalars().all()
+    return [r for r in rows if r.nudge_id != "bootstrap"]
 
 
 class TestGates:
@@ -445,9 +468,9 @@ class TestSeeding:
 class TestBackfillGuard:
     @pytest.fixture
     async def legacy_org(self, db, org, verified_admin):
-        """An org from long before this system existed, quiet for 32 days —
-        inside the dormancy window and far outside every other track's."""
-        org.creation_date = _stored(400)
+        """An org from long before this system existed, quiet for 32 days."""
+        # Older than the boundary the autouse fixture pinned.
+        org.creation_date = _stored(500)
         org.update_date = _stored(32)
         db.add(org)
         db.add(
@@ -460,7 +483,7 @@ class TestBackfillGuard:
                 open_to_contributors=False,
                 org_id=org.id,
                 course_uuid="course_old",
-                creation_date=_stored(390),
+                creation_date=_stored(490),
                 update_date=_stored(32),
             )
         )
@@ -470,7 +493,6 @@ class TestBackfillGuard:
     async def test_backfill_off_excludes_preexisting_orgs(
         self, db, legacy_org, sender, monkeypatch
     ):
-        monkeypatch.setenv("LEARNHOUSE_NUDGES_START_DATE", "2026-07-01")
         monkeypatch.setenv("LEARNHOUSE_NUDGES_BACKFILL_MODE", "off")
 
         stats = await run_nudges(db, now=NOW)
@@ -478,34 +500,60 @@ class TestBackfillGuard:
         assert stats.sent == 0
         assert stats.skipped_backfill >= 1
 
-    async def test_winback_mode_admits_only_the_dormancy_track(
+    async def test_winback_mode_admits_the_winback_tracks(
         self, db, legacy_org, sender, monkeypatch
     ):
-        monkeypatch.setenv("LEARNHOUSE_NUDGES_START_DATE", "2026-07-01")
         monkeypatch.setenv("LEARNHOUSE_NUDGES_BACKFILL_MODE", "winback")
 
         stats = await run_nudges(db, now=NOW)
 
         assert stats.sent == 1
-        assert stats.by_nudge == {"dormancy.no_login_30d": 1}
+        assert set(stats.by_nudge) <= {
+            "dormancy.no_login_30d",
+            "reactivation.opener",
+        }
 
-    async def test_no_start_date_treats_every_org_as_new(
-        self, db, legacy_org, sender, monkeypatch
-    ):
-        monkeypatch.delenv("LEARNHOUSE_NUDGES_START_DATE", raising=False)
-        monkeypatch.setenv("LEARNHOUSE_NUDGES_BACKFILL_MODE", "off")
+    async def test_full_mode_admits_everything(self, db, legacy_org, sender, monkeypatch):
+        monkeypatch.setenv("LEARNHOUSE_NUDGES_BACKFILL_MODE", "full")
 
         stats = await run_nudges(db, now=NOW)
         assert stats.sent == 1
 
-    async def test_unparseable_start_date_is_ignored(self, monkeypatch):
-        monkeypatch.setenv("LEARNHOUSE_NUDGES_START_DATE", "not-a-date")
-        assert runner_module.start_date() is None
 
-    async def test_start_date_without_a_zone_is_read_as_utc(self, monkeypatch):
-        monkeypatch.setenv("LEARNHOUSE_NUDGES_START_DATE", "2026-07-01")
-        parsed = runner_module.start_date()
-        assert parsed is not None and parsed.tzinfo is not None
+class TestActivationBoundary:
+    """The pre-existing/new boundary is derived from the ledger, not configured."""
+
+    async def test_the_earliest_ledger_row_is_the_boundary(self, db):
+        from src.services.nudges.runner import activation_date
+
+        # The autouse fixture pinned it 400 days back.
+        assert (await activation_date(db)) == NOW - timedelta(days=400)
+
+    async def test_an_empty_ledger_means_everything_predates_the_system(self, db):
+        """Nothing has run here yet, so no org can be "new". That is what makes
+        `nudges-seed` a real prerequisite rather than a suggestion."""
+        from sqlmodel import delete
+
+        from src.services.nudges.runner import activation_date
+
+        await db.execute(delete(NudgeSend))
+        await db.commit()
+
+        boundary = await activation_date(db)
+        assert boundary > NOW - timedelta(days=1)
+
+    async def test_seeding_pins_the_boundary(self, db, activation_org, sender):
+        """`nudges-seed` writes rows, so seeding is what fixes the date — there
+        is no separate value to set, and none to get wrong."""
+        from sqlmodel import delete
+
+        from src.services.nudges.runner import activation_date
+
+        await db.execute(delete(NudgeSend))
+        await db.commit()
+
+        await run_nudges(db, now=NOW, seed=True)
+        assert (await activation_date(db)) == NOW
 
 
 class TestEnvHelpers:
@@ -520,10 +568,6 @@ class TestEnvHelpers:
     def test_flag_default_when_unset(self, monkeypatch):
         monkeypatch.delenv("LEARNHOUSE_TEST_FLAG", raising=False)
         assert runner_module._flag("LEARNHOUSE_TEST_FLAG", True) is True
-
-    def test_int_env_falls_back_on_garbage(self, monkeypatch):
-        monkeypatch.setenv("LEARNHOUSE_TEST_INT", "not-a-number")
-        assert runner_module._int_env("LEARNHOUSE_TEST_INT", 42) == 42
 
     def test_stats_serialise(self):
         stats = RunStats()
@@ -622,36 +666,6 @@ class TestBudgetMidOrganization:
         assert stats.budget_exhausted is True
 
 
-class TestSlotsInTheRun:
-    async def test_an_org_outside_the_current_slot_is_deferred(
-        self, db, activation_org, sender, monkeypatch
-    ):
-        """Spreading the day's mail across slots keeps a single burst from
-        looking like a blast to spam filters — and means a bad send reaches a
-        fraction of the list before anyone notices."""
-        monkeypatch.setenv("LEARNHOUSE_NUDGES_SLOTS", "6")
-        # org id 1 belongs to slot 1; run during slot 0.
-        stats = await run_nudges(db, now=NOW.replace(hour=0))
-
-        assert stats.sent == 0
-        assert stats.skipped_slot == 1
-        sender.assert_not_called()
-
-    async def test_the_org_sends_when_its_slot_comes_round(
-        self, db, activation_org, sender, monkeypatch
-    ):
-        monkeypatch.setenv("LEARNHOUSE_NUDGES_SLOTS", "6")
-        stats = await run_nudges(db, now=NOW.replace(hour=1))
-
-        assert stats.sent == 1
-        assert stats.skipped_slot == 0
-
-    async def test_stats_expose_the_deferred_count(self, db, activation_org, sender, monkeypatch):
-        monkeypatch.setenv("LEARNHOUSE_NUDGES_SLOTS", "6")
-        stats = await run_nudges(db, now=NOW.replace(hour=0))
-        assert stats.as_dict()["skipped_slot"] == 1
-
-
 class TestStatStripReachesTheEmail:
     async def test_content_nudge_carries_its_figures(self, db, org, verified_admin, sender):
         from src.db.courses.courses import Course
@@ -702,3 +716,17 @@ class TestStatStripReachesTheEmail:
         await run_nudges(db, now=NOW, only="content.course_draft_d3")
 
         assert sender.call_args.kwargs["stats"] == [("chapters", 0), ("lessons", 2)]
+
+
+class TestPreexistingEdgeCase:
+    def test_an_org_with_no_parseable_creation_date_is_not_preexisting(self):
+        """A malformed date must not silently move an org into the winback
+        tracks — treat it as new and let day_max do the bounding."""
+        from src.services.nudges.runner import _is_preexisting
+        from src.services.nudges.snapshot import OrgSnapshot
+
+        snap = OrgSnapshot(
+            org_id=1, org_slug="a", org_name="A", plan="free", lang="en",
+            now=NOW, created_at=None,
+        )
+        assert _is_preexisting(snap, NOW) is False

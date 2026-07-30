@@ -47,6 +47,28 @@ def _gates(monkeypatch):
     )
 
 
+@pytest.fixture(autouse=True)
+async def _seeded_ledger(db, org):
+    """Pin the activation boundary in the past.
+
+    An empty ledger means every org predates the system; production pins the
+    boundary with `nudges-seed`, and the tests pin it here.
+    """
+    from src.db.nudges import NudgeSend, NudgeSendStatus
+
+    db.add(
+        NudgeSend(
+            nudge_id="bootstrap",
+            dedupe_key="bootstrap:0:0",
+            org_id=org.id,
+            user_id=1,
+            status=NudgeSendStatus.SUPPRESSED,
+            claimed_at=NOW - timedelta(days=400),
+        )
+    )
+    await db.commit()
+
+
 @pytest.fixture
 def sender():
     with patch("src.services.nudges.runner.send_nudge_email") as mock:

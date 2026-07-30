@@ -10,9 +10,8 @@ from unittest.mock import patch
 import pytest
 
 from src.services.email.nudge_translations import NUDGE_TRANSLATIONS
-from src.services.nudges import runner as runner_module
 from src.services.nudges.catalog import get_spec
-from src.services.nudges.runner import TRACK_STATS, _slot_matches, _stats_for
+from src.services.nudges.runner import TRACK_STATS, _stats_for
 from src.services.nudges.snapshot import OrgSnapshot
 from src.services.users.emails import _email_layout, _first_sentence, _stat_strip
 
@@ -146,39 +145,6 @@ class TestStatsSelection:
         for locale, strings in NUDGE_TRANSLATIONS.items():
             for key in keys:
                 assert f"nudge.stat.{key}" in strings, f"{locale}:{key}"
-
-
-class TestSendSlots:
-    def test_one_slot_admits_everything(self):
-        assert all(_slot_matches(i, NOW, 1) for i in range(50))
-
-    def test_slots_partition_orgs_across_the_day(self):
-        """Every org lands in exactly one of the day's slots."""
-        for org_id in range(60):
-            matches = [
-                hour
-                for hour in range(24)
-                if _slot_matches(org_id, NOW.replace(hour=hour), 6)
-            ]
-            assert len(matches) == 4  # 24 hours / 6 slots
-
-    def test_a_given_hour_admits_only_its_share(self):
-        admitted = [i for i in range(60) if _slot_matches(i, NOW.replace(hour=0), 6)]
-        assert len(admitted) == 10
-        assert all(i % 6 == 0 for i in admitted)
-
-    def test_slot_count_is_read_from_the_environment(self, monkeypatch):
-        monkeypatch.setenv("LEARNHOUSE_NUDGES_SLOTS", "4")
-        assert runner_module.send_slots() == 4
-
-    def test_default_is_a_single_slot(self, monkeypatch):
-        monkeypatch.delenv("LEARNHOUSE_NUDGES_SLOTS", raising=False)
-        assert runner_module.send_slots() == 1
-
-    @pytest.mark.parametrize("value", ["0", "-3", "nonsense"])
-    def test_nonsense_slot_counts_fall_back_to_one(self, monkeypatch, value):
-        monkeypatch.setenv("LEARNHOUSE_NUDGES_SLOTS", value)
-        assert runner_module.send_slots() == 1
 
 
 class TestAnalyticsEvent:

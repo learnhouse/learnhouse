@@ -9,7 +9,6 @@ HMAC token in the link is the authorisation.
 import html
 import logging
 import os
-import secrets
 from typing import Optional
 
 from fastapi import APIRouter, Depends, Form, Query, Request
@@ -141,27 +140,61 @@ async def unsubscribe_confirm(
 # Delivery feedback
 # --------------------------------------------------------------------------
 
-# Resend's event names for the two things that cost a sending domain its
-# reputation: mail to an address that does not exist, and mail the recipient
-# reported as spam.
-_HARD_BOUNCE_EVENTS = {"email.bounced"}
-_COMPLAINT_EVENTS = {"email.complained"}
+# Resend signs webhooks with Svix, not a shared header we choose: the request
+# carries svix-id / svix-timestamp / svix-signature and is verified against a
+# `whsec_` signing secret. `resend.Webhooks.verify` does the HMAC-SHA256 check
+# and also enforces a timestamp tolerance, so replays are rejected too.
+#
+# Only two events matter for reputation. A bounce whose type is "Permanent"
+# means the address does not exist; "Temporary" is a full mailbox and the
+# address is still good. A complaint means the recipient pressed the spam
+# button, which is the single most expensive signal a sending domain can earn.
+_SUPPRESSING_EVENTS = {
+    "email.bounced": "bounce",
+    "email.complained": "complaint",
+    # Resend refused to send because the address is already on its own
+    # suppression list — mirror that locally so we stop trying.
+    "email.suppressed": "suppressed_by_provider",
+}
+_PERMANENT_BOUNCE_TYPES = {"permanent"}
 
 internal_router = APIRouter()
 
 
-def _verify_webhook_secret(request: Request) -> None:
-    """Shared-secret check for the provider callback.
+def _verified_event(request: Request, raw_body: bytes) -> dict:
+    """Verify a Resend webhook and return its parsed payload.
 
-    Fails closed when unset: an unauthenticated endpoint that suppresses
-    addresses is a denial-of-service on your own mail.
+    Fails closed when the signing secret is unset: an unauthenticated endpoint
+    that suppresses addresses would be a denial of service on your own mail.
     """
     from fastapi import HTTPException
 
-    expected = (os.environ.get("LEARNHOUSE_EMAIL_WEBHOOK_SECRET") or "").strip()
-    supplied = (request.headers.get("x-webhook-secret") or "").strip()
-    if not expected or not secrets.compare_digest(expected, supplied):
-        raise HTTPException(status_code=403, detail="Invalid webhook secret")
+    secret = (os.environ.get("LEARNHOUSE_RESEND_WEBHOOK_SECRET") or "").strip()
+    if not secret:
+        logger.error("Delivery webhook received but no signing secret is configured")
+        raise HTTPException(status_code=403, detail="Webhook verification unavailable")
+
+    try:
+        import resend
+
+        return resend.Webhooks.verify(
+            {
+                # The exact bytes that were signed — re-serialising the parsed
+                # JSON would change the payload and fail verification.
+                "payload": raw_body.decode("utf-8"),
+                "headers": {
+                    "id": request.headers.get("svix-id", ""),
+                    "timestamp": request.headers.get("svix-timestamp", ""),
+                    "signature": request.headers.get("svix-signature", ""),
+                },
+                "webhook_secret": secret,
+            }
+        )
+    except Exception as exc:
+        # Covers a bad signature, a missing header, a stale timestamp and
+        # unparseable JSON. None of them should say which.
+        logger.warning("Rejected delivery webhook: %s", exc)
+        raise HTTPException(status_code=403, detail="Invalid webhook signature")
 
 
 @internal_router.post("/delivery-events")
@@ -169,36 +202,32 @@ async def delivery_events(
     request: Request,
     db_session: AsyncSession = Depends(get_db_session),
 ) -> dict:
-    """Consume bounce and complaint callbacks from the email provider.
+    """Consume bounce and complaint callbacks from Resend.
 
     Without this a dead address is mailed forever and a spam complaint changes
-    nothing — which is precisely how a domain's reputation degrades once
-    volume goes up. Only hard bounces suppress; a soft bounce is a full mailbox
-    or a temporary failure and the address is still good.
+    nothing, which is how a domain's reputation degrades once volume rises.
     """
-    _verify_webhook_secret(request)
-
-    try:
-        payload = await request.json()
-    except Exception:
-        return {"status": "ignored", "reason": "unparseable payload"}
+    raw_body = await request.body()
+    payload = _verified_event(request, raw_body)
 
     event_type = str(payload.get("type") or "")
+    reason = _SUPPRESSING_EVENTS.get(event_type)
+    if reason is None:
+        return {"status": "ignored", "reason": "unhandled event"}
+
     data = payload.get("data") or {}
+
+    if reason == "bounce":
+        bounce_type = str((data.get("bounce") or {}).get("type") or "").lower()
+        if bounce_type not in _PERMANENT_BOUNCE_TYPES:
+            # Transient or undetermined: the mailbox was full or the receiving
+            # server was unhappy today. Suppressing here would throw away good
+            # addresses.
+            return {"status": "ignored", "reason": f"non-permanent bounce ({bounce_type or "unknown"})"}
+
     recipients = data.get("to") or []
     if isinstance(recipients, str):
         recipients = [recipients]
-
-    if event_type in _COMPLAINT_EVENTS:
-        reason = "complaint"
-    elif event_type in _HARD_BOUNCE_EVENTS:
-        bounce_kind = str((data.get("bounce") or {}).get("type") or "").lower()
-        # "soft" is a full mailbox or a transient failure; the address is fine.
-        if bounce_kind and bounce_kind != "hard":
-            return {"status": "ignored", "reason": "soft bounce"}
-        reason = "bounce"
-    else:
-        return {"status": "ignored", "reason": "unhandled event"}
 
     suppressed = 0
     for address in recipients:
