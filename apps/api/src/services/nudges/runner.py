@@ -77,6 +77,12 @@ def backfill_mode() -> str:
     return (os.environ.get("LEARNHOUSE_NUDGES_BACKFILL_MODE") or "off").strip().lower()
 
 
+async def _ledger_has_rows(db_session: AsyncSession) -> bool:
+    return (
+        await db_session.execute(select(func.count()).select_from(NudgeSend))
+    ).scalar_one() > 0
+
+
 async def activation_date(db_session: AsyncSession) -> datetime:
     """When this system started running here.
 
@@ -109,6 +115,9 @@ class RunStats:
     skipped_inactive_org: int = 0
     failed: int = 0
     budget_exhausted: bool = False
+    # True when this run seeded the backlog rather than sending, which happens
+    # once, automatically, the first time the job runs anywhere.
+    auto_seeded: bool = False
     by_nudge: dict = field(default_factory=dict)
 
     def record(self, nudge_id: str) -> None:
@@ -125,6 +134,7 @@ class RunStats:
             "skipped_backfill": self.skipped_backfill,
             "skipped_inactive_org": self.skipped_inactive_org,
             "budget_exhausted": self.budget_exhausted,
+            "auto_seeded": self.auto_seeded,
             "by_nudge": dict(sorted(self.by_nudge.items())),
         }
 
@@ -359,6 +369,18 @@ async def run_nudges(
     if not force and not dry_run and not seed and not nudges_enabled():
         logger.info("Nudges skipped: LEARNHOUSE_NUDGES_ENABLED is not set")
         return stats
+
+    # First run here: seed instead of sending. Seeding consumes the dedupe
+    # keys for everything that happens to be true today, so switching the
+    # system on cannot fire a backlog accumulated over the org's whole life.
+    # Doing it automatically means there is no prerequisite step to forget.
+    if not seed and not dry_run and not await _ledger_has_rows(db_session):
+        logger.info("First nudge run here — seeding the backlog instead of sending")
+        seeded = await run_nudges(
+            db_session, seed=True, now=now, org_id=org_id, force=True
+        )
+        seeded.auto_seeded = True
+        return seeded
 
     media_base = get_media_base_url(None)
 
