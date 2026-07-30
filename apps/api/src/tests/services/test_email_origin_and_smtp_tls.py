@@ -173,13 +173,18 @@ class TestScopedOriginRegexp:
     def test_domain_scoped_patterns_are_accepted(self, pattern):
         assert _is_scoped_origin_regexp(pattern)
 
-    def test_shipped_config_default_is_domain_scoped(self):
-        # Pins the config.yaml default so the catch-all cannot come back.
+    def test_shipped_catch_all_default_cannot_host_an_email_link(self):
+        """The shipped default stays a catch-all on purpose — the same value
+        drives CORS and CSRF, so narrowing it would lock out every deployment
+        that relies on it. What must hold is that a catch-all can never decide
+        the host of an emailed link: it is recognized and ignored."""
         shipped = yaml.safe_load((API_ROOT / "config" / "config.yaml").read_text())
         pattern = shipped["hosting_config"]["allowed_regexp"]
-        assert _is_scoped_origin_regexp(pattern)
-        assert not re.fullmatch(pattern, "https://evil.com")
-        assert re.fullmatch(pattern, "http://acme.localhost:3000")
+
+        # It really does match anything (that is why CORS/CSRF still work)...
+        assert re.fullmatch(pattern, "https://evil.com")
+        # ...and it is exactly why email link building refuses to trust it.
+        assert not _is_scoped_origin_regexp(pattern)
 
 
 class TestVerifiedCustomDomains:

@@ -122,8 +122,22 @@ def safe_stored_extension(filename: str) -> Optional[str]:
     return ext
 
 
+# A SCORM package *is* a web app — its manifest, entry HTML, JS and CSS are the
+# activity. Those live under `.../<activity>/scorm/`, are served by the EE SCORM
+# route rather than the content router, and dropping them would silently import
+# a broken activity. Everything outside a scorm/ subtree keeps the allowlist.
+_SCORM_SUBTREE = f"{os.sep}scorm{os.sep}"
+
+
+def _is_scorm_subtree(src_dir: str) -> bool:
+    normalized = os.path.normpath(src_dir) + os.sep
+    return _SCORM_SUBTREE in normalized or normalized.endswith(f"{os.sep}scorm{os.sep}")
+
+
 def _ignore_unsafe_package_files(src_dir: str, names: list[str]) -> set[str]:
     """copytree filter dropping package files with a non-importable extension."""
+    if _is_scorm_subtree(src_dir):
+        return set()
     return {
         name for name in names
         if not os.path.isdir(os.path.join(src_dir, name))
@@ -997,6 +1011,12 @@ async def _import_block(
                         if 'file_id' in new_block_content:
                             content_updates['file_id'] = (old_file_id, new_file_id)
                             new_block_content['file_id'] = new_file_id
+                        # The stored extension is canonicalized (a .jpeg lands
+                        # as .jpg), and the frontend builds its URL as
+                        # file_id + "." + file_format — so a stale format here
+                        # requests a filename that does not exist.
+                        if new_block_content.get('file_format') != file_ext:
+                            new_block_content['file_format'] = file_ext
 
     new_block = Block(
         block_type=block_type,

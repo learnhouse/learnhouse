@@ -21,6 +21,9 @@ from fastapi import FastAPI, HTTPException
 from httpx import ASGITransport, AsyncClient
 
 from src.core.events.database import get_db_session
+from sqlmodel import select
+
+from src.db.courses.blocks import Block
 from src.db.users import AnonymousUser
 from src.routers import content_files
 from src.routers.content_files import router as content_files_router
@@ -318,6 +321,47 @@ class TestImportExtensionAllowlist:
         assert len(stored) == 1
         assert stored[0].endswith(".mp4")
 
+    async def test_canonicalized_extension_is_reflected_in_file_format(
+        self, db, org, course, chapter, tmp_path, monkeypatch
+    ):
+        """A .jpeg is stored as .jpg. The frontend builds its URL as
+        file_id + "." + file_format, so a stale format is a broken image."""
+        monkeypatch.chdir(tmp_path)
+        new_activity_path = tmp_path / "activity_new"
+        block_dir = new_activity_path / "dynamic" / "blocks" / "imageBlock" / "block-old"
+        block_dir.mkdir(parents=True)
+        (block_dir / "photo.jpeg").write_bytes(b"\xff\xd8\xff")
+
+        with patch(
+            "src.services.courses.transfer.import_service.is_s3_enabled",
+            return_value=False,
+        ):
+            new_block_uuid, _updates = await _import_block(
+                block_data={
+                    "block_type": "BLOCK_IMAGE",
+                    "content": {"file_id": "old", "file_format": "jpeg"},
+                },
+                original_block_uuid="block-old",
+                new_activity=SimpleNamespace(id=1, activity_uuid="activity-new"),
+                new_activity_path=str(new_activity_path),
+                new_course=SimpleNamespace(id=course.id),
+                new_chapter=SimpleNamespace(id=chapter.id),
+                organization=org,
+                db_session=db,
+            )
+
+        renamed = new_activity_path / "dynamic" / "blocks" / "imageBlock" / new_block_uuid
+        stored = os.listdir(renamed)
+        assert stored[0].endswith(".jpg")
+
+        block = (
+            await db.execute(select(Block).where(Block.block_uuid == new_block_uuid))
+        ).scalars().first()
+        assert block is not None
+        # The name on disk and the name the frontend asks for must agree.
+        assert block.content["file_format"] == "jpg"
+        assert stored[0] == f"{block.content['file_id']}.jpg"
+
 
 class TestImportTempIdTraversal:
     """F8 — temp_id reaches os.rename/open/rmtree and must be a UUID."""
@@ -441,6 +485,31 @@ class TestImportTempIdTraversal:
 
         ignored = import_service._ignore_unsafe_package_files(
             str(tmp_path), ["video", "clip.mp4", "evil.html"]
+        )
+
+        assert ignored == {"evil.html"}
+
+    def test_scorm_subtree_keeps_its_web_assets(self, tmp_path):
+        """A SCORM package *is* HTML/JS/CSS plus a manifest. Filtering those out
+        would import a silently broken activity, so scorm/ is exempt."""
+        scorm_dir = tmp_path / "activities" / "activity_x" / "scorm" / "extracted"
+        scorm_dir.mkdir(parents=True)
+        names = ["index.html", "imsmanifest.xml", "scormdriver.js", "style.css", "font.woff2"]
+        for name in names:
+            (scorm_dir / name).write_bytes(b"x")
+
+        ignored = import_service._ignore_unsafe_package_files(str(scorm_dir), names)
+
+        assert ignored == set()
+
+    def test_non_scorm_activity_files_are_still_filtered(self, tmp_path):
+        files_dir = tmp_path / "activities" / "activity_x" / "files"
+        files_dir.mkdir(parents=True)
+        (files_dir / "evil.html").write_bytes(b"x")
+        (files_dir / "clip.mp4").write_bytes(b"v")
+
+        ignored = import_service._ignore_unsafe_package_files(
+            str(files_dir), ["evil.html", "clip.mp4"]
         )
 
         assert ignored == {"evil.html"}

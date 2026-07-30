@@ -637,7 +637,8 @@ class TestSuggestStructureIsGated:
     ):
         reserve = AsyncMock()
         with patch.object(mig, "enforce_ai_rate_limit") as rate, \
-             patch.object(mig, "reserve_ai_credit", new=reserve):
+             patch.object(mig, "reserve_ai_credit", new=reserve), \
+             patch.object(mig, "_get_org_config", new=AsyncMock(return_value=object())):
             result = await mig.api_suggest_structure(
                 mock_request, org.id, self._body(migration_package), admin_user, db
             )
@@ -647,6 +648,23 @@ class TestSuggestStructureIsGated:
         # Usage is now attributed to a real org, and rate limited per user+org.
         reserve.assert_awaited_once_with(org.id, db, amount=1)
         rate.assert_called_once_with(admin_user.id, org.id)
+
+    async def test_org_without_a_config_row_is_not_metered(
+        self, db, org, admin_role, admin_user, migration_package, llm_generate,
+        no_redis, mock_request,
+    ):
+        """reserve_ai_credit answers 404 without a config row, so a legacy org
+        must not be turned away from migration entirely."""
+        reserve = AsyncMock()
+        with patch.object(mig, "enforce_ai_rate_limit"), \
+             patch.object(mig, "reserve_ai_credit", new=reserve), \
+             patch.object(mig, "_get_org_config", new=AsyncMock(return_value=None)):
+            result = await mig.api_suggest_structure(
+                mock_request, org.id, self._body(migration_package), admin_user, db
+            )
+
+        assert result.course_name == "Suggested Course"
+        reserve.assert_not_awaited()
 
 
 class TestUploadAndCreateAreGated:
