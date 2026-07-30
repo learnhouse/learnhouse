@@ -537,10 +537,33 @@ def _gzip_test_app() -> FastAPI:
 
         return StreamingResponse(_chunks(), media_type="video/mp4")
 
+    @application.get("/sse")
+    async def _sse():
+        async def _events():
+            for i in range(5):
+                yield f"data: chunk-{i} {'x' * 400}\n\n".encode()
+
+        return StreamingResponse(_events(), media_type="text/event-stream")
+
     return application
 
 
 class TestSelectiveGZip:
+    async def test_sse_stream_is_passed_through_intact(self):
+        """AI chat streams over SSE — compressing or half-compressing one
+        would break every live token as it arrives."""
+        application = _gzip_test_app()
+        transport = ASGITransport(app=application)
+        async with AsyncClient(transport=transport, base_url="http://test") as client:
+            resp = await client.get("/sse", headers={"Accept-Encoding": "gzip"})
+
+        assert resp.status_code == 200
+        assert resp.headers.get("content-encoding") is None
+        # Bodies must arrive verbatim, not as a gzip frame served under an
+        # identity header (or vice versa).
+        assert resp.text.startswith("data: chunk-0 ")
+        assert resp.text.count("data: chunk-") == 5
+
     async def test_json_is_compressed_but_media_is_not(self):
         application = _gzip_test_app()
         async with AsyncClient(
