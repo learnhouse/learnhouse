@@ -98,28 +98,35 @@ async def _loop() -> None:
 def start_scheduler() -> None:
     """Start the daily tick, unless the feature is switched off.
 
-    Deliberately checks the kill switch here as well as inside the job: an
+    Never raises: this runs during application startup, and a background email
+    job must not be able to stop the API from booting.
+
+    Deliberately checks the kill switch here as well as inside the job — an
     instance with nudges disabled should not carry a background task at all.
     """
     global _task
 
-    from src.core.deployment_mode import get_deployment_mode
-    from src.services.nudges.runner import nudges_enabled
+    try:
+        from src.core.deployment_mode import get_deployment_mode
+        from src.services.nudges.runner import nudges_enabled
 
-    if not nudges_enabled():
-        return
-    if get_deployment_mode() != "saas":
-        return
-    if os.environ.get("LEARNHOUSE_NUDGES_NO_SCHEDULER"):
-        # For deployments that would rather drive the CLI from their own cron.
-        logger.info("Nudge scheduler disabled; drive `nudges-run` yourself")
-        return
+        if not nudges_enabled():
+            return
+        if get_deployment_mode() != "saas":
+            return
+        if os.environ.get("LEARNHOUSE_NUDGES_NO_SCHEDULER"):
+            # For deployments that would rather drive the CLI from their own cron.
+            logger.info("Nudge scheduler disabled; drive `nudges-run` yourself")
+            return
 
-    _task = asyncio.create_task(_loop())
-    logger.info("Nudge scheduler started (daily at %02d:00 UTC)", RUN_AT_HOUR_UTC)
+        _task = asyncio.create_task(_loop())
+        logger.info("Nudge scheduler started (daily at %02d:00 UTC)", RUN_AT_HOUR_UTC)
+    except Exception as exc:
+        logger.warning("Nudge scheduler not started: %s", exc)
 
 
 async def stop_scheduler() -> None:
+    """Stop the tick. Never raises, for the same reason as `start_scheduler`."""
     global _task
     if _task is None:
         return
@@ -128,4 +135,5 @@ async def stop_scheduler() -> None:
         await _task
     except (asyncio.CancelledError, Exception):
         pass
-    _task = None
+    finally:
+        _task = None

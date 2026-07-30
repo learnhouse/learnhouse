@@ -65,12 +65,9 @@ def startup_app(app: FastAPI) -> Callable:
         _cleanup_task = asyncio.create_task(_periodic_migration_cleanup())
 
         # Lifecycle nudges run on their own daily tick so the feature needs no
-        # external scheduler. No-op unless enabled.
-        try:
-            from src.services.nudges.scheduler import start_scheduler
-            start_scheduler()
-        except Exception as e:
-            logger.warning("Nudge scheduler not started: %s", e)
+        # external scheduler. No-op unless enabled; never raises.
+        from src.services.nudges.scheduler import start_scheduler
+        start_scheduler()
 
         # Start the in-app HLS transcoding consumer (drains the Redis queue as a
         # background task; no separate worker). No-op unless LEARNHOUSE_HLS_ENABLED.
@@ -108,11 +105,8 @@ def shutdown_app(app: FastAPI) -> Callable:
             await asyncio.gather(*list(_webhook_tasks), return_exceptions=True)
         await close_webhook_client()
         # Stop the daily nudge tick.
-        try:
-            from src.services.nudges.scheduler import stop_scheduler
-            await stop_scheduler()
-        except Exception:
-            pass
+        from src.services.nudges.scheduler import stop_scheduler
+        await stop_scheduler()
         await close_database(app)
 
     return close_app

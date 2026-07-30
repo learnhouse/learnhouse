@@ -262,3 +262,35 @@ class TestLoop:
                 await scheduler._run_once()
 
         assert "sent=3" in caplog.text
+
+    async def test_cancelling_mid_run_stops_the_loop(self, monkeypatch):
+        """Shutdown must actually stop it — the cancellation has to propagate
+        rather than be swallowed by the retry handler."""
+        import asyncio
+
+        started = asyncio.Event()
+
+        async def slow_run():
+            started.set()
+            await asyncio.sleep(10)
+
+        monkeypatch.setattr(scheduler, "_seconds_until_next_run", lambda _now: 0)
+        monkeypatch.setattr(scheduler, "_claim_day", AsyncMock(return_value=True))
+        monkeypatch.setattr(scheduler, "_run_once", slow_run)
+
+        task = asyncio.create_task(scheduler._loop())
+        await asyncio.wait_for(started.wait(), timeout=1)
+        task.cancel()
+        with pytest.raises(asyncio.CancelledError):
+            await task
+
+    async def test_a_broken_start_never_stops_the_api_booting(self, monkeypatch):
+        """This runs during application startup; a background email job must
+        not be able to prevent the service coming up."""
+        monkeypatch.setattr(
+            "src.services.nudges.runner.nudges_enabled",
+            lambda: (_ for _ in ()).throw(RuntimeError("config exploded")),
+        )
+        scheduler._task = None
+        scheduler.start_scheduler()
+        assert scheduler._task is None
