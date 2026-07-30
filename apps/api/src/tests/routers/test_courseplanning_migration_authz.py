@@ -399,7 +399,8 @@ class TestFinalizeCoursePlanRequiresCreateRight:
 
         with patch.object(cp, "get_course_planning_session", return_value=session), \
              patch.object(cp, "save_course_planning_session"), \
-             patch.object(cp, "check_limits_with_usage", new=limits):
+             patch.object(cp, "check_limits_with_usage", new=limits), \
+             patch.object(cp, "_get_org_config", new=AsyncMock(return_value=object())):
             with pytest.raises(HTTPException) as exc:
                 await cp.finalize_course_plan(
                     mock_request,
@@ -426,7 +427,8 @@ class TestFinalizeCoursePlanRequiresCreateRight:
 
         with patch.object(cp, "get_course_planning_session", return_value=session), \
              patch.object(cp, "save_course_planning_session"), \
-             patch.object(cp, "check_limits_with_usage", new=limits):
+             patch.object(cp, "check_limits_with_usage", new=limits), \
+             patch.object(cp, "_get_org_config", new=AsyncMock(return_value=object())):
             result = await cp.finalize_course_plan(
                 mock_request,
                 FinalizeCoursePlanRequest(
@@ -451,6 +453,31 @@ class TestFinalizeCoursePlanRequiresCreateRight:
         assert author.user_id == admin_user.id
         assert author.authorship == ResourceAuthorshipEnum.CREATOR
 
+    async def test_org_without_a_config_row_still_finalizes(
+        self, db, org, admin_role, admin_user, mock_request
+    ):
+        """A legacy org with no config row must not be turned away: the limit
+        helper answers 404 without one, so it is only consulted when there is
+        something to meter against."""
+        session = _session(org.id)
+        limits = AsyncMock()
+
+        with patch.object(cp, "get_course_planning_session", return_value=session), \
+             patch.object(cp, "save_course_planning_session"), \
+             patch.object(cp, "check_limits_with_usage", new=limits), \
+             patch.object(cp, "_get_org_config", new=AsyncMock(return_value=None)):
+            result = await cp.finalize_course_plan(
+                mock_request,
+                FinalizeCoursePlanRequest(
+                    session_uuid=session.session_uuid, plan=_plan()
+                ),
+                admin_user,
+                db,
+            )
+
+        assert result.course_uuid.startswith("course_")
+        limits.assert_not_awaited()
+
     async def test_limit_rejection_stops_course_creation(
         self, db, org, admin_role, admin_user, mock_request
     ):
@@ -464,7 +491,8 @@ class TestFinalizeCoursePlanRequiresCreateRight:
 
         with patch.object(cp, "get_course_planning_session", return_value=session), \
              patch.object(cp, "save_course_planning_session"), \
-             patch.object(cp, "check_limits_with_usage", new=limits):
+             patch.object(cp, "check_limits_with_usage", new=limits), \
+             patch.object(cp, "_get_org_config", new=AsyncMock(return_value=object())):
             with pytest.raises(HTTPException) as exc:
                 await cp.finalize_course_plan(
                     mock_request,

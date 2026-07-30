@@ -23,6 +23,7 @@ from src.security.rbac import check_resource_access, AccessAction
 from src.security.features_utils.usage import (
     reserve_ai_credit,
     check_limits_with_usage,
+    _get_org_config,
 )
 from src.services.ai.llm import resolve_model_for_org, model_for_tier
 from src.services.ai.courseplanning import (
@@ -313,7 +314,12 @@ async def finalize_course_plan(
     # rights — so require the same courses.action_create right and the same
     # plan limit every other course-creation path enforces.
     await check_resource_access(request, db_session, current_user, "course_x", AccessAction.CREATE)
-    await check_limits_with_usage("courses", org.id, db_session)
+    # Only meter orgs that have a config row: `check_limits_with_usage` answers
+    # 404 without one, which would turn finalizing into a hard error for the
+    # handful of legacy orgs that never got one. Same guard the migration path
+    # uses (services/courses/migration/migration_service.py:415).
+    if await _get_org_config(org.id, db_session) is not None:
+        await check_limits_with_usage("courses", org.id, db_session)
 
     plan = finalize_request.plan
 
