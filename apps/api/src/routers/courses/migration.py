@@ -9,7 +9,6 @@ from src.core.redis import get_redis_client
 from src.db.organizations import Organization
 from src.db.users import PublicUser
 from src.security.auth import get_authenticated_user, resolve_acting_user_id
-from src.security.features_utils.usage import reserve_ai_credit, _get_org_config
 from src.security.org_auth import is_org_member, enforce_org_mfa
 from src.security.rbac import check_resource_access, AccessAction
 from src.services.security.rate_limiting import enforce_ai_rate_limit
@@ -174,14 +173,15 @@ async def api_suggest_structure(
     claim_migration_package(body.temp_id, user_id)
 
     # This endpoint spends the server's provider key on a caller-supplied
-    # prompt, so it goes through the same rate limit and credit reservation as
-    # the /ai routers instead of being free and unattributed.
+    # prompt, so it is rate limited per user and per org like the /ai routers.
+    # That is what bounds the abuse the missing authorization allowed.
+    #
+    # It deliberately does NOT reserve an AI credit. Metering it would be
+    # consistent with the /ai routers, but it would also start refusing a call
+    # that is free today — for orgs out of credits, and (via a 404 from
+    # reserve_ai_credit) for orgs with no config row. Billing this belongs in
+    # its own change, not in an authorization fix.
     enforce_ai_rate_limit(user_id, org_id)
-    # Only meter orgs that have a config row: reserve_ai_credit answers 404
-    # without one, which would turn migration into a hard error for the legacy
-    # orgs that never got one. Same guard finalize_course_plan uses.
-    if await _get_org_config(org_id, db_session) is not None:
-        await reserve_ai_credit(org_id, db_session, amount=1)
 
     try:
         return await suggest_structure(

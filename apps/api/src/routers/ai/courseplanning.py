@@ -22,8 +22,6 @@ from src.security.org_auth import is_org_member, enforce_org_mfa
 from src.security.rbac import check_resource_access, AccessAction
 from src.security.features_utils.usage import (
     reserve_ai_credit,
-    check_limits_with_usage,
-    _get_org_config,
 )
 from src.services.ai.llm import resolve_model_for_org, model_for_tier
 from src.services.ai.courseplanning import (
@@ -311,15 +309,14 @@ async def finalize_course_plan(
 
     # Membership is not permission to create. Finalizing writes a real Course
     # and makes the caller its CREATOR — which by itself grants update/delete
-    # rights — so require the same courses.action_create right and the same
-    # plan limit every other course-creation path enforces.
+    # rights — so require the same courses.action_create right every other
+    # course-creation path enforces.
+    #
+    # The plan's course limit is deliberately NOT enforced here. This path does
+    # skip the limit that `create_course` applies, but that is a billing gap
+    # rather than an authorization one, and adding it would start refusing a
+    # call that works today. Worth closing separately, on its own terms.
     await check_resource_access(request, db_session, current_user, "course_x", AccessAction.CREATE)
-    # Only meter orgs that have a config row: `check_limits_with_usage` answers
-    # 404 without one, which would turn finalizing into a hard error for the
-    # handful of legacy orgs that never got one. Same guard the migration path
-    # uses (services/courses/migration/migration_service.py:415).
-    if await _get_org_config(org.id, db_session) is not None:
-        await check_limits_with_usage("courses", org.id, db_session)
 
     plan = finalize_request.plan
 

@@ -302,7 +302,7 @@ class TestGenerateActivityContentIsTenantScoped:
         # No generation, no credits, and the victim's content never left org B.
         assert stream.calls == []
         assert "TENANT-B-SECRET" not in str(exc.value.detail)
-        reserve.assert_not_awaited()
+        reserve.assert_not_called()
         assert session.activity_iteration_counts == {}
 
     async def test_plain_member_cannot_generate_into_someone_elses_course(
@@ -328,7 +328,7 @@ class TestGenerateActivityContentIsTenantScoped:
 
         assert exc.value.status_code == 403
         assert stream.calls == []
-        reserve.assert_not_awaited()
+        reserve.assert_not_called()
 
     async def test_admin_iterates_on_their_own_activity(
         self, db, org, admin_role, admin_user, course, activity, mock_request
@@ -395,12 +395,9 @@ class TestFinalizeCoursePlanRequiresCreateRight:
         self, db, org, user_role, regular_user, mock_request
     ):
         session = _session(org.id)
-        limits = AsyncMock()
 
         with patch.object(cp, "get_course_planning_session", return_value=session), \
-             patch.object(cp, "save_course_planning_session"), \
-             patch.object(cp, "check_limits_with_usage", new=limits), \
-             patch.object(cp, "_get_org_config", new=AsyncMock(return_value=object())):
+             patch.object(cp, "save_course_planning_session"):
             with pytest.raises(HTTPException) as exc:
                 await cp.finalize_course_plan(
                     mock_request,
@@ -412,23 +409,19 @@ class TestFinalizeCoursePlanRequiresCreateRight:
                 )
 
         assert exc.value.status_code == 403
-        # Denied before anything is written, and before the limit is consulted.
-        limits.assert_not_awaited()
+        # Denied before anything is written.
         courses = (await db.execute(select(Course))).scalars().all()
         assert courses == []
         authors = (await db.execute(select(ResourceAuthor))).scalars().all()
         assert authors == []
 
-    async def test_admin_finalizes_and_the_plan_limit_is_checked(
+    async def test_admin_still_finalizes_and_becomes_the_creator(
         self, db, org, admin_role, admin_user, mock_request
     ):
         session = _session(org.id)
-        limits = AsyncMock()
 
         with patch.object(cp, "get_course_planning_session", return_value=session), \
-             patch.object(cp, "save_course_planning_session"), \
-             patch.object(cp, "check_limits_with_usage", new=limits), \
-             patch.object(cp, "_get_org_config", new=AsyncMock(return_value=object())):
+             patch.object(cp, "save_course_planning_session"):
             result = await cp.finalize_course_plan(
                 mock_request,
                 FinalizeCoursePlanRequest(
@@ -440,7 +433,6 @@ class TestFinalizeCoursePlanRequiresCreateRight:
 
         assert result.course_uuid.startswith("course_")
         assert len(result.chapters) == 1
-        limits.assert_awaited_once_with("courses", org.id, db)
 
         author = (
             await db.execute(
@@ -453,19 +445,18 @@ class TestFinalizeCoursePlanRequiresCreateRight:
         assert author.user_id == admin_user.id
         assert author.authorship == ResourceAuthorshipEnum.CREATOR
 
-    async def test_org_without_a_config_row_still_finalizes(
+    async def test_plan_course_limit_is_not_enforced_here(
         self, db, org, admin_role, admin_user, mock_request
     ):
-        """A legacy org with no config row must not be turned away: the limit
-        helper answers 404 without one, so it is only consulted when there is
-        something to meter against."""
+        """This path skips the plan's course limit that `create_course` applies.
+        That is a billing gap, not an authorization one, and enforcing it would
+        start refusing a call that works today — so it stays out of the fix and
+        is pinned here so the choice is visible rather than accidental."""
         session = _session(org.id)
-        limits = AsyncMock()
 
         with patch.object(cp, "get_course_planning_session", return_value=session), \
              patch.object(cp, "save_course_planning_session"), \
-             patch.object(cp, "check_limits_with_usage", new=limits), \
-             patch.object(cp, "_get_org_config", new=AsyncMock(return_value=None)):
+             patch("src.security.features_utils.usage.check_limits_with_usage") as limits:
             result = await cp.finalize_course_plan(
                 mock_request,
                 FinalizeCoursePlanRequest(
@@ -476,36 +467,8 @@ class TestFinalizeCoursePlanRequiresCreateRight:
             )
 
         assert result.course_uuid.startswith("course_")
-        limits.assert_not_awaited()
+        limits.assert_not_called()
 
-    async def test_limit_rejection_stops_course_creation(
-        self, db, org, admin_role, admin_user, mock_request
-    ):
-        """Looping finalize must not inflate an org past its paid course cap."""
-        session = _session(org.id)
-        limits = AsyncMock(
-            side_effect=HTTPException(
-                status_code=403, detail="Usage Limit has been reached for Courses"
-            )
-        )
-
-        with patch.object(cp, "get_course_planning_session", return_value=session), \
-             patch.object(cp, "save_course_planning_session"), \
-             patch.object(cp, "check_limits_with_usage", new=limits), \
-             patch.object(cp, "_get_org_config", new=AsyncMock(return_value=object())):
-            with pytest.raises(HTTPException) as exc:
-                await cp.finalize_course_plan(
-                    mock_request,
-                    FinalizeCoursePlanRequest(
-                        session_uuid=session.session_uuid, plan=_plan()
-                    ),
-                    admin_user,
-                    db,
-                )
-
-        assert exc.value.status_code == 403
-        courses = (await db.execute(select(Course))).scalars().all()
-        assert courses == []
 
 
 # ===========================================================================
@@ -602,69 +565,57 @@ class TestSuggestStructureIsGated:
         """The proof is the mock: no provider key spent for a foreign tenant."""
         outsider = await _mk_outsider(db, other_org, user_role)
 
-        reserve = AsyncMock()
-        with patch.object(mig, "enforce_ai_rate_limit") as rate, \
-             patch.object(mig, "reserve_ai_credit", new=reserve):
-            with pytest.raises(HTTPException) as exc:
-                await mig.api_suggest_structure(
-                    mock_request, org.id, self._body(migration_package), outsider, db
-                )
+        with pytest.raises(HTTPException) as exc:
+            await mig.api_suggest_structure(
+                mock_request, org.id, self._body(migration_package), outsider, db
+            )
 
         assert exc.value.status_code == 403
         llm_generate.assert_not_awaited()
-        reserve.assert_not_awaited()
-        rate.assert_not_called()
 
     async def test_member_without_course_create_right_is_refused(
         self, db, org, user_role, regular_user, migration_package, llm_generate,
         no_redis, mock_request,
     ):
-        reserve = AsyncMock()
-        with patch.object(mig, "enforce_ai_rate_limit"), \
-             patch.object(mig, "reserve_ai_credit", new=reserve):
-            with pytest.raises(HTTPException) as exc:
-                await mig.api_suggest_structure(
-                    mock_request, org.id, self._body(migration_package), regular_user, db
-                )
+        with pytest.raises(HTTPException) as exc:
+            await mig.api_suggest_structure(
+                mock_request, org.id, self._body(migration_package), regular_user, db
+            )
 
         assert exc.value.status_code == 403
         llm_generate.assert_not_awaited()
-        reserve.assert_not_awaited()
 
     async def test_authorized_member_still_gets_a_suggestion(
         self, db, org, admin_role, admin_user, migration_package, llm_generate,
         no_redis, mock_request,
     ):
-        reserve = AsyncMock()
-        with patch.object(mig, "enforce_ai_rate_limit") as rate, \
-             patch.object(mig, "reserve_ai_credit", new=reserve), \
-             patch.object(mig, "_get_org_config", new=AsyncMock(return_value=object())):
+        with patch.object(mig, "enforce_ai_rate_limit") as rate:
             result = await mig.api_suggest_structure(
                 mock_request, org.id, self._body(migration_package), admin_user, db
             )
 
         assert result.course_name == "Suggested Course"
         llm_generate.assert_awaited_once()
-        # Usage is now attributed to a real org, and rate limited per user+org.
-        reserve.assert_awaited_once_with(org.id, db, amount=1)
+        # Rate limited per user+org — that is what bounds the spend the missing
+        # authorization allowed.
         rate.assert_called_once_with(admin_user.id, org.id)
 
-    async def test_org_without_a_config_row_is_not_metered(
+    async def test_suggestion_is_not_billed_as_an_ai_credit(
         self, db, org, admin_role, admin_user, migration_package, llm_generate,
         no_redis, mock_request,
     ):
-        """reserve_ai_credit answers 404 without a config row, so a legacy org
-        must not be turned away from migration entirely."""
-        reserve = AsyncMock()
+        """Metering this would match the /ai routers, but it would also start
+        refusing a call that is free today (orgs out of credits, and orgs with
+        no config row, which reserve_ai_credit answers 404 for). Pinned so the
+        choice stays deliberate."""
         with patch.object(mig, "enforce_ai_rate_limit"), \
-             patch.object(mig, "reserve_ai_credit", new=reserve), \
-             patch.object(mig, "_get_org_config", new=AsyncMock(return_value=None)):
+             patch("src.security.features_utils.usage.reserve_ai_credit") as reserve:
             result = await mig.api_suggest_structure(
                 mock_request, org.id, self._body(migration_package), admin_user, db
             )
 
         assert result.course_name == "Suggested Course"
-        reserve.assert_not_awaited()
+        reserve.assert_not_called()
 
 
 class TestUploadAndCreateAreGated:
