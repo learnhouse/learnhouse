@@ -6,21 +6,16 @@ import { usePathname, useRouter } from 'next/navigation';
 import PageLoading from '@components/Objects/Loaders/PageLoading';
 import { getUriWithOrg } from '@services/config/config';
 import { useOrg } from '@components/Contexts/OrgContext';
+import ErrorUI from '@components/Objects/StyledElements/Error/Error';
 
 type AuthorizationProps = {
   children: React.ReactNode;
   authorizationMode: 'component' | 'page';
 };
 
-const ADMIN_PATHS = [
-  '/dash/org/*',
-  '/dash/org',
-  '/dash/users/*',
-  '/dash/users',
-  '/dash/courses/*',
-  '/dash/courses',
-  '/dash/org/settings/general',
-];
+// This component wraps the whole dashboard layout, so gate all of it: the old
+// allow-list named 3 sections and left /dash plus 10 others open to any member.
+const ADMIN_PATH_PREFIX = '/dash';
 
 const AdminAuthorization: React.FC<AuthorizationProps> = ({ children, authorizationMode }) => {
   const session = useLHSession() as any;
@@ -32,21 +27,11 @@ const AdminAuthorization: React.FC<AuthorizationProps> = ({ children, authorizat
 
   const isUserAuthenticated = useMemo(() => session.status === 'authenticated', [session.status]);
 
-  const checkPathname = useCallback((pattern: string, pathname: string) => {
-    // Ensure the inputs are strings
-    if (typeof pattern !== 'string' || typeof pathname !== 'string') {
-      return false;
-    }
-
-    // Convert pattern to a regex pattern
-    const regexPattern = new RegExp(`^${pattern.replace(/[/.*+?^${}()|[\]\\]/g, '\\$&').replace(/\\\*/g, '.*')}$`);
-
-    // Test the pathname against the regex pattern
-    return regexPattern.test(pathname);
-  }, []);
-
-
-  const isAdminPath = useMemo(() => ADMIN_PATHS.some(path => checkPathname(path, pathname)), [pathname, checkPathname]);
+  const isAdminPath = useMemo(() => {
+    if (typeof pathname !== 'string') return false;
+    // The trailing check keeps a hypothetical sibling like /dashboard out.
+    return pathname === ADMIN_PATH_PREFIX || pathname.startsWith(`${ADMIN_PATH_PREFIX}/`);
+  }, [pathname]);
 
   const authorizeUser = useCallback(() => {
     if (loading) {
@@ -62,12 +47,9 @@ const AdminAuthorization: React.FC<AuthorizationProps> = ({ children, authorizat
 
     if (authorizationMode === 'page') {
       if (isAdminPath) {
-        if (isAdmin) {
-          setIsAuthorized(true);
-        } else {
-          setIsAuthorized(false);
-          router.push('/dash');
-        }
+        // No redirect on denial: pushing to /dash raced the render below, so the
+        // message only flashed and the user never learned why.
+        setIsAuthorized(isAdmin);
       } else {
         setIsAuthorized(true);
       }
@@ -89,11 +71,9 @@ const AdminAuthorization: React.FC<AuthorizationProps> = ({ children, authorizat
   }
 
   if (authorizationMode === 'page' && !isAuthorized) {
-    return (
-      <div className="flex justify-center items-center h-screen">
-        <h1 className="text-2xl">You are not authorized to access this page</h1>
-      </div>
-    );
+    // 403 is what classifyError matches to the catalog's `permission` category,
+    // which supplies the copy and the Home / sign out / report actions.
+    return <ErrorUI error={{ status: 403, message: 'admin_only' }} />;
   }
 
   return <>{isAuthorized && children}</>;
