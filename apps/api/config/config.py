@@ -150,6 +150,26 @@ class LearnHouseConfig(BaseModel):
     judge0_config: Judge0Config | None
 
 
+def _env_bool(env_value, yaml_value):
+    """Resolve a boolean setting from an env string, falling back to YAML.
+
+    Env vars arrive as strings, and `"false" or yaml_value` evaluates to the
+    string "false" — which is truthy. So `LEARNHOUSE_SELF_HOSTED=false` used to
+    read as True and pin tenancy to "single", collapsing the CORS regex and
+    making the session cookie host-only; `LEARNHOUSE_SSL=false` produced https
+    magic links on a plain-HTTP install. Both failed with no error, and
+    explicitly disabling a flag is the natural way to write it.
+
+    `development_mode` and `saas_mode` already parse correctly above; this is
+    the same logic for the settings that were still using bare `or`.
+    """
+    if env_value is None or env_value == "":
+        return yaml_value
+    if isinstance(env_value, bool):
+        return env_value
+    return str(env_value).strip().lower() in ("true", "1", "yes", "on")
+
+
 def get_learnhouse_config() -> LearnHouseConfig:
 
     load_dotenv()
@@ -242,10 +262,10 @@ def get_learnhouse_config() -> LearnHouseConfig:
     contact_email = env_contact_email or yaml_config.get("contact_email")
 
     domain = env_domain or yaml_config.get("hosting_config", {}).get("domain")
-    ssl = env_ssl or yaml_config.get("hosting_config", {}).get("ssl")
+    ssl = _env_bool(env_ssl, yaml_config.get("hosting_config", {}).get("ssl"))
     port = env_port or yaml_config.get("hosting_config", {}).get("port")
-    use_default_org = env_use_default_org or yaml_config.get("hosting_config", {}).get(
-        "use_default_org"
+    use_default_org = _env_bool(
+        env_use_default_org, yaml_config.get("hosting_config", {}).get("use_default_org")
     )
     allowed_origins = env_allowed_origins or yaml_config.get("hosting_config", {}).get(
         "allowed_origins"
@@ -253,8 +273,8 @@ def get_learnhouse_config() -> LearnHouseConfig:
     allowed_regexp = env_allowed_regexp or yaml_config.get("hosting_config", {}).get(
         "allowed_regexp"
     )
-    self_hosted = env_self_hosted or yaml_config.get("hosting_config", {}).get(
-        "self_hosted"
+    self_hosted = _env_bool(
+        env_self_hosted, yaml_config.get("hosting_config", {}).get("self_hosted")
     )
 
     # Tenancy mode — single explicit knob that supersedes the older overlapping

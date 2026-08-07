@@ -6,6 +6,8 @@ import { Warning } from '@phosphor-icons/react'
 interface EELicenseDetail {
   error: 'ee_license_inactive'
   reason: string
+  /** Path to the public diagnostics endpoint, sent by the API since 1.3.5. */
+  diagnostics?: string
 }
 
 /**
@@ -50,6 +52,14 @@ export default function EELicenseError({ error }: { error: unknown }) {
                 What to check
               </summary>
               <ul className="mt-2 space-y-1 list-disc list-inside leading-relaxed">
+                {error.detail.diagnostics && (
+                  <li>
+                    Open{' '}
+                    <code className="font-mono">{error.detail.diagnostics}</code> — it
+                    answers even while the license is inactive, and its{' '}
+                    <code className="font-mono">hint</code> field names the fix.
+                  </li>
+                )}
                 <li>
                   For SaaS deployments: confirm{' '}
                   <code className="font-mono">LEARNHOUSE_SAAS=true</code> is set in the API
@@ -61,8 +71,8 @@ export default function EELicenseError({ error }: { error: unknown }) {
                   license server (or grace window) is reachable.
                 </li>
                 <li>
-                  Inspect the API pod logs for{' '}
-                  <code className="font-mono">[EE] inactive: …</code> at startup.
+                  If you have shell access, the API logs carry the same reason
+                  with full detail: <code className="font-mono">[EE] license inactive …</code>
                 </li>
               </ul>
             </details>
