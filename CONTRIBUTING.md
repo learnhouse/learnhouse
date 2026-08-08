@@ -12,6 +12,21 @@ npx learnhouse dev
 
 This will spin up PostgreSQL and Redis containers, install dependencies, and start the API, Web, and Collab servers. See the [CLI documentation](apps/cli/README.md) for more details.
 
+## Dependencies and lockfiles
+
+Every install in CI and in the Docker images is frozen, so a manifest change
+that skips the lockfile fails the build with `lockfile had changes, but
+lockfile is frozen`. After touching a `package.json`, `apps/api/pyproject.toml`
+or a version number, run:
+
+```bash
+scripts/lockfiles.sh          # regenerate every lockfile
+scripts/lockfiles.sh --check  # what CI runs
+```
+
+The `Lockfiles` workflow checks this on every PR, and pushes the regenerated
+files back to dependency-bot branches on its own.
+
 ## Submitting Contributions
 
 This project follows [GitHub's standard forking model](https://guides.github.com/activities/forking/). Please fork the project to submit pull requests.
