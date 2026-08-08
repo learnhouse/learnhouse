@@ -91,9 +91,34 @@ def _is_allowed_base_url(url: str) -> bool:
     return False
 
 
+def _configured_frontend_base_url() -> Optional[str]:
+    """Request-free frontend base URL, for callers with no HTTP request.
+
+    Background jobs (cron-invoked lifecycle mail) build links outside any
+    request, so the request-derived fallbacks below are unavailable to them.
+    Resolve from explicit config instead; returns None when nothing usable is
+    configured, so callers can decide whether that is fatal.
+    """
+    platform_url = os.environ.get("LEARNHOUSE_PLATFORM_URL")
+    if platform_url:
+        return platform_url.rstrip("/")
+
+    config = get_learnhouse_config()
+    scheme = "https" if config.hosting_config.ssl else "http"
+    frontend_domain = (config.hosting_config.frontend_domain or "").strip().rstrip("/")
+    if frontend_domain and "localhost" not in frontend_domain:
+        return f"{scheme}://{frontend_domain}"
+
+    base_domain = (config.hosting_config.domain or "").strip().rstrip("/")
+    if base_domain and "localhost" not in base_domain:
+        return f"{scheme}://{base_domain}"
+
+    return None
+
+
 async def get_org_signup_base_url(
     org_slug: str,
-    request: Request,
+    request: Optional[Request] = None,
     db_session=None,
     org_id: Optional[int] = None,
 ) -> str:
@@ -112,11 +137,16 @@ async def get_org_signup_base_url(
            to the user's existing session on the custom domain.
         2. Else fall back to ``{slug}.{hosting_config.domain}``.
         3. Misconfigured (no domain or localhost) → request-derived URL.
+
+    ``request`` is optional so background jobs can build links too; without
+    one, the request-derived fallbacks resolve from config instead.
     """
     config = get_learnhouse_config()
 
     if config.hosting_config.tenancy == "single":
-        return get_base_url_from_request(request)
+        if request is not None:
+            return get_base_url_from_request(request)
+        return _configured_frontend_base_url() or ""
 
     scheme = "https" if config.hosting_config.ssl else "http"
 
@@ -127,12 +157,14 @@ async def get_org_signup_base_url(
 
     base_domain = (config.hosting_config.domain or "").strip().rstrip("/")
     if not base_domain or "localhost" in base_domain:
-        return get_base_url_from_request(request)
+        if request is not None:
+            return get_base_url_from_request(request)
+        return _configured_frontend_base_url() or ""
 
     return f"{scheme}://{org_slug}.{base_domain}"
 
 
-def get_media_base_url(request: Request) -> str:
+def get_media_base_url(request: Optional[Request] = None) -> str:
     """Public base URL that serves ``/content/...`` files (org logos, etc.).
 
     Email HTML can't reference local assets, so an embedded org logo needs an
@@ -147,6 +179,9 @@ def get_media_base_url(request: Request) -> str:
        when a real domain is configured.
     3. The request's own host as a last resort (correct for single-tenant /
        self-hosted where API and content share the request origin).
+
+    ``request`` is optional so background jobs can resolve a logo URL; without
+    one, step 3 is unavailable and this returns "" rather than guessing.
     """
     override = os.environ.get("LEARNHOUSE_MEDIA_URL") or os.environ.get(
         "LEARNHOUSE_BACKEND_URL"
@@ -161,10 +196,12 @@ def get_media_base_url(request: Request) -> str:
         return f"{scheme}://api.{base_domain}"
 
     # Single-tenant / dev: the API answering this request also serves /content.
+    if request is None:
+        return ""
     return str(request.base_url).rstrip("/")
 
 
-def get_org_logo_url(org, request: Request) -> Optional[str]:
+def get_org_logo_url(org, request: Optional[Request] = None) -> Optional[str]:
     """Absolute URL of an org's uploaded logo, or None when it has none.
 
     Mirrors the frontend's ``getOrgLogoMediaDirectory`` path shape
@@ -176,6 +213,11 @@ def get_org_logo_url(org, request: Request) -> Optional[str]:
     if not org or not logo_image or not org_uuid:
         return None
     base = get_media_base_url(request)
+    if not base:
+        # No absolute media host resolvable (no request, nothing configured).
+        # A relative src would render broken in every mail client, so fall
+        # back to the default LearnHouse mark instead.
+        return None
     return f"{base}/content/orgs/{org_uuid}/logos/{logo_image}"
 
 
@@ -266,7 +308,19 @@ def get_base_url_from_request(request: Request) -> str:
     return f"{request.url.scheme}://{request.url.netloc}"
 
 
-def send_email(to: EmailStr, subject: str, body: str):
+def send_email(
+    to: EmailStr,
+    subject: str,
+    body: str,
+    headers: Optional[dict[str, str]] = None,
+):
+    """Send one HTML email.
+
+    ``headers`` carries extra SMTP headers through to the provider. Bulk
+    lifecycle mail needs ``List-Unsubscribe`` / ``List-Unsubscribe-Post``;
+    Gmail and Outlook penalise bulk senders that omit them. Transactional
+    callers pass nothing and are unaffected.
+    """
     from fastapi import HTTPException
 
     lh_config = get_learnhouse_config()
@@ -284,9 +338,9 @@ def send_email(to: EmailStr, subject: str, body: str):
         raise HTTPException(status_code=400, detail="Invalid recipient email address")
 
     if mailing.email_provider == "smtp":
-        return _send_email_smtp(sender, to_addr, subject, body, mailing)
+        return _send_email_smtp(sender, to_addr, subject, body, mailing, headers)
     else:
-        return _send_email_resend(sender, to_addr, subject, body, mailing)
+        return _send_email_resend(sender, to_addr, subject, body, mailing, headers)
 
 
 # Transient provider hiccups (read timeouts, connection resets, 5xx) usually
@@ -306,7 +360,14 @@ def _is_transient_email_error(exc: BaseException) -> bool:
     )
 
 
-def _send_email_resend(sender: str, to: str, subject: str, body: str, mailing):
+def _send_email_resend(
+    sender: str,
+    to: str,
+    subject: str,
+    body: str,
+    mailing,
+    headers: Optional[dict[str, str]] = None,
+):
     from fastapi import HTTPException
     resend.api_key = mailing.resend_api_key
     payload = {
@@ -315,6 +376,8 @@ def _send_email_resend(sender: str, to: str, subject: str, body: str, mailing):
         "subject": subject,
         "html": body,
     }
+    if headers:
+        payload["headers"] = dict(headers)
     for attempt in range(_RESEND_RETRIES + 1):
         try:
             return resend.Emails.send(payload)
@@ -330,12 +393,21 @@ def _send_email_resend(sender: str, to: str, subject: str, body: str, mailing):
 _SMTP_TIMEOUT = 15
 
 
-def _send_email_smtp(sender: str, to: str, subject: str, body: str, mailing):
+def _send_email_smtp(
+    sender: str,
+    to: str,
+    subject: str,
+    body: str,
+    mailing,
+    headers: Optional[dict[str, str]] = None,
+):
     from fastapi import HTTPException
     msg = MIMEMultipart("alternative")
     msg["From"] = sender
     msg["To"] = to
     msg["Subject"] = subject
+    for header_name, header_value in (headers or {}).items():
+        msg[header_name] = header_value
     msg.attach(MIMEText(body, "html"))
 
     server = None
