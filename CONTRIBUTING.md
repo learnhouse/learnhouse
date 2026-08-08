@@ -12,6 +12,8 @@ npx learnhouse dev
 
 This will spin up PostgreSQL and Redis containers, install dependencies, and start the API, Web, and Collab servers. See the [CLI documentation](apps/cli/README.md) for more details.
 
+Windows contributors should also read the [Windows development setup guide](docs/content/developers/contributing/windows-setup.mdx). WSL2 is the recommended path; native Windows is best-effort and has extra notes for path separators, Unicode output, shell scripts, and Docker volumes.
+
 ## Submitting Contributions
 
 This project follows [GitHub's standard forking model](https://guides.github.com/activities/forking/). Please fork the project to submit pull requests.

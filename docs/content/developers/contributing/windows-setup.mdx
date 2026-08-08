@@ -1,0 +1,181 @@
+import { Callout } from 'nextra/components'
+
+# Windows Development Setup
+
+LearnHouse development is most reliable on Windows when you run the project inside WSL2.
+Native Windows can work for parts of the stack, but it has more edge cases around paths,
+terminal encoding, shell scripts, and Docker volume mounts.
+
+<Callout type="info">
+This guide was written from a Windows checkout and a source review of the current
+development scripts. It avoids claiming that native Windows is fully supported end to end.
+Use WSL2 when you want the least surprising setup.
+</Callout>
+
+## Recommended path: WSL2
+
+Use WSL2 with Ubuntu for day-to-day LearnHouse development.
+
+### Prerequisites
+
+Install these on Windows:
+
+- Windows 11, or Windows 10 with WSL2 enabled
+- [Docker Desktop](https://www.docker.com/products/docker-desktop/) with the WSL2 backend enabled
+- Git for Windows, if you clone from Windows
+
+Install these inside your WSL2 distribution:
+
+- Node.js 18 or newer
+- Bun
+- uv
+- Git, if you clone inside WSL2
+
+### Setup
+
+Clone the repository inside the WSL filesystem, not under `/mnt/c`. This avoids slow file
+watching and Docker bind-mount problems.
+
+```bash
+mkdir -p ~/src
+cd ~/src
+git clone https://github.com/learnhouse/learnhouse.git
+cd learnhouse
+npx learnhouse dev
+```
+
+`npx learnhouse dev` creates missing local env files, starts PostgreSQL and Redis with Docker
+Compose, installs dependencies with Bun and uv, and starts the API, web app, and collaboration
+server.
+
+Once the command is running, open:
+
+| Service | URL |
+| --- | --- |
+| Web app | `http://localhost:3000` |
+| API | `http://localhost:1338` |
+| API docs | `http://localhost:1338/docs` |
+
+## Native Windows path
+
+Native Windows is best treated as a contributor convenience path, not the primary supported
+path. Use PowerShell 7 or Windows Terminal and install:
+
+- Git for Windows
+- Node.js 18 or newer
+- Bun for Windows
+- uv for Windows
+- Docker Desktop with Linux containers and Docker Compose v2
+
+Then run the same command from the repository root:
+
+```powershell
+git clone https://github.com/learnhouse/learnhouse.git
+cd learnhouse
+npx learnhouse dev
+```
+
+The CLI starts child processes through the Windows shell, so the web, API, and collaboration
+commands can be launched from PowerShell. If native Windows fails on filesystem, encoding, or
+Docker mount behavior, switch to the WSL2 path above before debugging the app itself.
+
+## Common Windows issues
+
+### Mixed path separators in backend tests
+
+Older LearnHouse branches had Windows-specific failures where course transfer paths mixed `\`
+and `/`. That was tracked in [issue #842](https://github.com/learnhouse/learnhouse/issues/842).
+Current `dev` normalizes the course-transfer paths used by `walk_directory`, S3 uploads, and
+course export ZIP entry names.
+
+If you still see separator mismatches on Windows:
+
+1. Make sure your branch is up to date with `dev`.
+2. Re-run the focused backend tests from `apps/api`.
+3. Treat any remaining `\` in S3 keys or ZIP entry names as a bug and normalize with POSIX
+   paths, for example `Path(...).as_posix()` or `replace("\\", "/")` at the storage boundary.
+
+### UnicodeEncodeError on CJK or emoji output
+
+Windows consoles can default to a legacy code page. The API CLI reconfigures stdout and stderr
+to UTF-8, and Docker entrypoints set `PYTHONIOENCODING=utf-8`, but subprocesses or older
+branches may still raise `UnicodeEncodeError`.
+
+Use a UTF-8 terminal session before running the API:
+
+```powershell
+chcp 65001
+$env:PYTHONUTF8 = "1"
+$env:PYTHONIOENCODING = "utf-8"
+npx learnhouse dev
+```
+
+If the error persists, run the same branch in WSL2. Include the exact traceback in any issue
+because the remaining fix is usually in the Python path that printed the text.
+
+### Shell scripts from PowerShell
+
+Files such as `apps/cli/install.sh`, `docker/start.sh`, and the Docker entrypoint scripts use
+POSIX shell syntax. Do not run them directly in `cmd.exe` or PowerShell.
+
+Use one of these instead:
+
+- Run `npx learnhouse dev` for local development.
+- Run shell scripts inside WSL2 or Git Bash.
+- Let Docker run container entrypoint scripts inside Linux containers.
+
+### Docker Compose volume and file watching problems
+
+Docker Desktop on Windows is sensitive to where the repository lives.
+
+- Prefer cloning inside WSL2, such as `~/src/learnhouse`.
+- Avoid OneDrive, synced folders, and very deep Windows paths.
+- Enable Docker Desktop's WSL integration for the distribution you use.
+- Keep Docker in Linux container mode.
+- If DB or Redis containers get into a bad state, stop the dev command and remove the dev
+  Compose stack:
+
+```bash
+docker compose -f .learnhouse/docker-compose.dev.yml -p learnhouse-dev down
+```
+
+Then run `npx learnhouse dev` again.
+
+## Running tests on Windows
+
+Run tests from the app directory that owns them.
+
+### API
+
+```bash
+cd apps/api
+uv sync
+uv run pytest
+```
+
+For a quick check of the course-transfer path behavior:
+
+```bash
+cd apps/api
+uv run pytest src/tests/services/test_storage_utils_service.py
+```
+
+### Web
+
+```bash
+cd apps/web
+bun install
+bun run test
+bun run lint:strict
+```
+
+### CLI
+
+```bash
+cd apps/cli
+bun install
+bun run test
+```
+
+CLI end-to-end tests require Docker. If they fail only on native Windows filesystem or volume
+behavior, rerun them from WSL2 before filing a LearnHouse bug.
