@@ -219,7 +219,8 @@ class TestSummaryAndBatch:
 
 
 class TestRecordActivity:
-    async def test_non_saas_is_noop(self):
+    async def test_oss_is_noop(self):
+        """Plain OSS has no consumer for the rows, so it must not write them."""
         from src.services.security import activity
         called = {"db": False}
 
@@ -229,6 +230,23 @@ class TestRecordActivity:
         with _oss(), patch.object(activity, "_insert_activity_row", _fail_insert):
             await activity.record_user_activity(1, org_id=ORG)
         assert called["db"] is False
+
+    async def test_ee_records(self):
+        """Self-hosted enterprise must record.
+
+        Enterprise deployments report their own active-user count, and that
+        count reads this table. While recording was SaaS-only the number was
+        structurally zero on every self-hosted install.
+        """
+        from src.services.security import activity
+        called = {"db": False}
+
+        async def _spy_insert(*a, **k):
+            called["db"] = True
+
+        with _mode("ee"), patch.object(activity, "_insert_activity_row", _spy_insert):
+            await activity.record_user_activity(1, org_id=ORG)
+        assert called["db"] is True
 
     async def test_no_org_ref_is_noop(self):
         from src.services.security import activity

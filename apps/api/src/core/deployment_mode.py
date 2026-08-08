@@ -11,10 +11,13 @@ Development override:
   Only effective when development_mode=true in config. Never set this in production.
 """
 
+import logging
 import os
 from typing import Literal
 from config.config import get_learnhouse_config
 from src.core.ee_hooks import is_ee_available, get_ee_hooks
+
+logger = logging.getLogger(__name__)
 
 DeploymentMode = Literal['saas', 'oss', 'ee']
 
@@ -49,10 +52,21 @@ def get_deployment_mode() -> DeploymentMode:
             return 'ee'
         # When EE is present, license + integrity verification gate the mode:
         # invalid / missing / revoked / tampered → degrade to 'oss' so the
-        # frontend transparently hides EE features. EE without is_license_active
-        # (older builds) keeps the original behavior.
+        # frontend transparently hides EE features.
+        #
+        # Fail CLOSED when the hooks module cannot be loaded. is_ee_available()
+        # only checks that an `ee` directory exists, so a present-but-broken EE
+        # package used to land here and fall through to 'ee' — full Enterprise
+        # with the license branch never reached and verify_manifest() never run,
+        # since its only caller lives inside the module that failed to import.
+        # Any import error in the EE tree silently unlocked every EE feature.
         hooks = get_ee_hooks()
-        if hooks is not None and hasattr(hooks, 'is_license_active'):
-            return 'ee' if hooks.is_license_active() else 'oss'
-        return 'ee'
+        if hooks is None or not hasattr(hooks, 'is_license_active'):
+            logger.error(
+                "EE directory is present but its hooks module did not load "
+                "(is_license_active unavailable) — refusing to enable EE. "
+                "Deployment will run as OSS until the import error is fixed."
+            )
+            return 'oss'
+        return 'ee' if hooks.is_license_active() else 'oss'
     return 'oss'

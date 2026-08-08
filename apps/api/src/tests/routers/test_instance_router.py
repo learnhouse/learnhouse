@@ -30,14 +30,25 @@ async def client(app):
 
 class TestInstanceRouter:
     async def test_get_instance_info_from_cache(self, client):
+        """The cache serves the DB lookup; it must not serve `mode`.
+
+        `mode` and `multi_org_enabled` are recomputed per request now. A stale
+        `mode` in the cached blob used to survive for the full 600s TTL, so an
+        operator who fixed a bad license key saw mode "oss" for ten minutes
+        after the heartbeat had already recovered, and concluded otherwise.
+        """
         with patch(
             "src.routers.instance.get_cached_instance_info",
-            return_value={"mode": "ee"},
+            return_value={"default_org_slug": "cached-org", "tenancy": "single", "mode": "ee"},
         ):
-            response = await client.get("/api/v1/instance/info")
+            with patch("src.routers.instance.get_deployment_mode", return_value="oss"):
+                response = await client.get("/api/v1/instance/info")
 
         assert response.status_code == 200
-        assert response.json()["mode"] == "ee"
+        body = response.json()
+        assert body["default_org_slug"] == "cached-org"  # cached
+        assert body["mode"] == "oss"  # live, overrides the stale cached value
+        assert body["multi_org_enabled"] is False
 
     async def test_get_instance_info_builds_response(self, client, db, org):
         config = SimpleNamespace(
