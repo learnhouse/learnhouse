@@ -558,6 +558,23 @@ async def get_current_user(
             return sa_user
         raise credentials_exception
 
+    # App-session tokens ("lh_app_") — like "lh_sa_", this prefix also starts
+    # with "lh_", so this branch MUST stay above the org-token branch below.
+    if auth_lower.startswith("bearer lh_app_"):
+        from src.services.apps.sessions import validate_app_session_token
+
+        token = auth_header[7:].strip()  # strip "Bearer "
+        app_session_user = await validate_app_session_token(token, db_session)
+        if app_session_user:
+            # AppSessionUser subclasses APITokenUser, so the same org
+            # boundary safety net applies.
+            await _verify_api_token_org_boundary(request, app_session_user, db_session)
+            request.state.user = app_session_user
+            request.state.is_api_token = True
+            request.state.is_app_session = True
+            return app_session_user
+        raise credentials_exception
+
     # Case-insensitive check for "Bearer " prefix with lh_ token (org-scoped)
     if auth_lower.startswith("bearer lh_"):
         token = auth_header[7:].strip()  # Remove "Bearer " prefix and trim

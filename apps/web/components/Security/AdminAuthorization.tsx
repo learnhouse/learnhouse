@@ -13,6 +13,7 @@ type AuthorizationProps = {
 };
 
 const ADMIN_PATHS = [
+  '/dash/apps/manage',
   '/dash/org/*',
   '/dash/org',
   '/dash/users/*',

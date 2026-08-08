@@ -145,6 +145,20 @@ class APITokenUser(SQLModel):
     created_by_user_id: int = 0  # User who created the token
 
 
+class AppSessionUser(APITokenUser):
+    """Represents an authenticated third-party app session (Bearer lh_app_...).
+
+    Deliberately IS a subclass of APITokenUser so every existing
+    ``isinstance(user, APITokenUser)`` enforcement (org boundary, token
+    rights checks, routers that reject API tokens) applies to app sessions
+    with no changes. ``rights`` holds the mint-time intersection of the
+    app's admin-approved scopes and the acting user's own rights;
+    ``created_by_user_id`` is the acting user driving the app.
+    """
+    app_uuid: str = ""
+    app_slug: str = ""
+
+
 class SuperadminAPITokenUser(SQLModel):
     """Represents an authenticated cross-org superadmin API token request.
 

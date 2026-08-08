@@ -42,6 +42,7 @@ import {
   Plus,
   Code,
   Lightning,
+  PuzzlePiece,
 } from '@phosphor-icons/react'
 import { motion } from 'motion/react'
 import { DiscordIcon } from '@components/Objects/Icons/DiscordIcon'
@@ -76,6 +77,7 @@ import { useQuery } from '@tanstack/react-query'
 import { queryKeys } from '@/lib/query/keys'
 import { RequestBodyWithAuthHeader } from '@services/utils/ts/requests'
 import { getAssignmentsFromACourse } from '@services/courses/assignments'
+import { listOrgApps } from '@services/apps/apps'
 import { getDeploymentMode } from '@services/config/config'
 import PlanBadge from '@components/Dashboard/Shared/PlanRestricted/PlanBadge'
 import { usePlan } from '@components/Hooks/usePlan'
@@ -141,6 +143,20 @@ function DashLeftMenu() {
     staleTime: 60_000,
   })
   const recentCourses = coursesData?.slice(0, 8) || []
+
+  // Installed third-party apps for the "Apps" section. Only fetched when the
+  // apps feature is enabled for the org (resolved_features drives visibility).
+  const appsFeatureEnabled =
+    org?.config?.config?.resolved_features?.apps?.enabled === true
+  const { data: orgAppsData } = useQuery({
+    queryKey: ['org-apps', org?.id],
+    queryFn: () => listOrgApps(org.id, access_token),
+    enabled: !!org?.id && !!access_token && appsFeatureEnabled,
+    staleTime: 60_000,
+  })
+  const enabledOrgApps = (orgAppsData || []).filter(
+    (app: any) => app.status === 'installed' && app.enabled
+  )
 
   // Lazy-load assignments only when the assignments hover menu is opened
   const [assignmentsFetched, setAssignmentsFetched] = useState(false)
@@ -233,6 +249,7 @@ function DashLeftMenu() {
   const showBoards = isEnabled('boards')
   const showPlaygrounds = isEnabled('playgrounds')
   const showPayments = isEnabled('payments')
+  const showApps = isEnabled('apps')
 
   return (
     <TooltipProvider delayDuration={0}>
@@ -771,6 +788,79 @@ function DashLeftMenu() {
                 )
               })()}
             </HoverMenu>
+
+            {/* Apps with hover menu */}
+            {showApps && (
+              <HoverMenu
+                content={
+                  <HoverMenuContent className="w-64">
+                    <HoverMenuLabel className="text-white/70 font-medium">{t('dashboard.apps.title', { defaultValue: 'Apps' })}</HoverMenuLabel>
+                    <HoverMenuSeparator />
+                    {enabledOrgApps.length === 0 && (
+                      <div className="px-3 py-2 text-sm text-white/40">
+                        {t('dashboard.apps.none_enabled_short', { defaultValue: 'No apps enabled yet' })}
+                      </div>
+                    )}
+                    {enabledOrgApps.map((app: any) => (
+                      <HoverMenuItem asChild key={app.app_uuid}>
+                        <Link href={`/dash/apps/${app.slug}`} className="flex items-center gap-2 px-3 py-2 text-sm text-white/70 hover:text-white hover:bg-white/[0.08] cursor-pointer transition-colors">
+                          <PuzzlePiece size={16} weight="fill" />
+                          <span className="truncate">{app.name}</span>
+                        </Link>
+                      </HoverMenuItem>
+                    ))}
+                    {canManageOrg && (
+                      <>
+                        <HoverMenuSeparator />
+                        <HoverMenuItem asChild>
+                          <Link href="/dash/apps/manage" className="flex items-center gap-2 px-3 py-2 text-sm text-white/70 hover:text-white hover:bg-white/[0.08] cursor-pointer transition-colors">
+                            <Gear size={16} weight="fill" />
+                            <span className="flex items-center">{t('dashboard.apps.manage', { defaultValue: 'Manage apps' })}<PlanBadge currentPlan={plan} requiredPlan="pro" variant="dark" /></span>
+                          </Link>
+                        </HoverMenuItem>
+                      </>
+                    )}
+                  </HoverMenuContent>
+                }
+              >
+                {(() => {
+                  const active = isActivePath('/dash/apps')
+                  return (
+                    <Link
+                      href="/dash/apps"
+                      aria-label="Open apps menu"
+                      aria-current={active ? 'page' : undefined}
+                      className={cn(
+                        "relative flex items-center w-full rounded-lg transition-all",
+                        active
+                          ? "text-white bg-white/[0.08]"
+                          : "text-white/50 hover:text-white hover:bg-white/[0.08]",
+                        isCollapsed ? "justify-center h-10" : "px-3 py-2 gap-3"
+                      )}
+                    >
+                      {active && (
+                        <span
+                          aria-hidden="true"
+                          className="absolute left-0.5 top-1/2 -translate-y-1/2 h-5 w-[3px] bg-white rounded-full"
+                        />
+                      )}
+                      <span className="relative flex items-center justify-center">
+                        <PuzzlePiece size={20} weight="fill" />
+                        {isCollapsed && (
+                          <CaretDown aria-hidden="true" size={8} weight="bold" className={cn("absolute -right-2.5", active ? "text-white/60" : "text-white/30")} />
+                        )}
+                      </span>
+                      {!isCollapsed && (
+                        <>
+                          <span className="text-sm font-medium flex-1 text-left">{t('dashboard.apps.title', { defaultValue: 'Apps' })}</span>
+                          <CaretDown aria-hidden="true" size={14} weight="bold" className={active ? "text-white/70" : "text-white/40"} />
+                        </>
+                      )}
+                    </Link>
+                  )
+                })()}
+              </HoverMenu>
+            )}
 
             {/* Analytics with hover menu */}
             <HoverMenu

@@ -13,6 +13,7 @@ from src.routers import mfa as mfa_router_module
 from src.routers import monitoring
 from src.routers import stream
 from src.routers import api_tokens
+from src.routers import apps as org_apps_router_module
 from src.routers import webhooks
 from src.routers.integrations import zapier as zapier_integration
 from src.routers.ai import ai, magicblocks, courseplanning, rag, images, quiz, assignment_gen, scenario, audio
@@ -118,6 +119,22 @@ v1_router.include_router(
     prefix="/orgs",
     tags=["webhooks"],
     dependencies=[Depends(require_authenticated_user), Depends(require_plan("pro", "Webhooks"))]
+)
+v1_router.include_router(
+    org_apps_router_module.router,
+    prefix="/orgs",
+    tags=["apps"],
+    # require_authenticated_user rejects API tokens AND app sessions — apps
+    # can never install/approve/manage apps.
+    dependencies=[Depends(require_authenticated_user), Depends(require_plan("pro", "Apps"))]
+)
+# App bundle assets: NO auth dependencies — sandboxed iframes send no
+# credentials; authorization is the HMAC-signed URL prefix validated in the
+# handler (see src/services/apps/sessions.py).
+v1_router.include_router(
+    org_apps_router_module.assets_router,
+    prefix="/apps",
+    tags=["apps"],
 )
 v1_router.include_router(
     zapier_integration.router,

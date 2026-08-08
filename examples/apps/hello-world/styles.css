@@ -1,0 +1,29 @@
+body {
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  color: #1f2937;
+  background: #ffffff;
+}
+main {
+  max-width: 640px;
+  margin: 0 auto;
+  padding: 2.5rem 1.5rem;
+}
+h1 {
+  letter-spacing: -0.03em;
+}
+.muted {
+  color: #9ca3af;
+}
+.error {
+  color: #dc2626;
+  background: #fef2f2;
+  border-radius: 8px;
+  padding: 0.5rem 0.75rem;
+}
+ul {
+  padding-left: 1.25rem;
+}
+li {
+  margin: 0.25rem 0;
+}

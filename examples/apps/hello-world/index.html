@@ -1,0 +1,25 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Hello World — LearnHouse App</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <main>
+      <h1>Hello <span id="org-name">…</span> 👋</h1>
+      <p class="muted">
+        This page is a third-party LearnHouse app. It runs in a sandboxed
+        iframe with no cookies, no storage and no network egress — every API
+        call below goes through the host bridge with a scoped token the app
+        never sees.
+      </p>
+      <h2>Your courses</h2>
+      <ul id="courses"><li class="muted">Loading…</li></ul>
+      <p id="error" class="error" hidden></p>
+    </main>
+    <script src="/apps-sdk/v1.js"></script>
+    <script src="app.js"></script>
+  </body>
+</html>
