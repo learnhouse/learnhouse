@@ -8,6 +8,8 @@ import pytest
 from fastapi import HTTPException
 from starlette.requests import Request
 
+import resend.exceptions as resend_exceptions
+
 from src.services.email.utils import (
     _is_allowed_base_url,
     get_base_url_from_request,
@@ -362,6 +364,77 @@ class TestEmailUtilsService:
             with pytest.raises(HTTPException) as exc_info:
                 send_email("to@test.com", "Subject", "<p>Body</p>")
         assert exc_info.value.status_code == 503
+
+    def test_recipient_rejection_logs_warning_not_error(self):
+        """A provider rejection of the address itself must not page.
+
+        It still raises 503 — only the log level changes, so nothing downstream
+        of send_email sees different behavior.
+        """
+        rejection = resend_exceptions.ValidationError(
+            message=(
+                "Invalid `to` field. Please use our testing email address "
+                "instead of domains like `example.com`."
+            ),
+            error_type="validation_error",
+            code=400,
+        )
+        with patch(
+            "src.services.email.utils.get_learnhouse_config",
+            return_value=_config(email_provider="resend", resend_api_key="key"),
+        ), patch(
+            "src.services.email.utils.resend.Emails.send",
+            side_effect=rejection,
+        ), patch("src.services.email.utils.logger") as mock_logger:
+            with pytest.raises(HTTPException) as exc_info:
+                send_email("nobody@example.com", "Subject", "<p>Body</p>")
+
+        assert exc_info.value.status_code == 503
+        mock_logger.error.assert_not_called()
+        mock_logger.warning.assert_called_once()
+
+    @pytest.mark.parametrize(
+        "failure",
+        [
+            resend_exceptions.ApplicationError(
+                message="Something went wrong", error_type="application_error", code=500
+            ),
+            resend_exceptions.RateLimitError(
+                message="Too many requests", error_type="rate_limit_exceeded", code=429
+            ),
+            resend_exceptions.InvalidApiKeyError(
+                message="Invalid API key", error_type="invalid_api_key", code=403
+            ),
+            resend_exceptions.MissingRequiredFieldsError(
+                message="Missing `subject` field",
+                error_type="missing_required_field",
+                code=422,
+            ),
+            resend_exceptions.ValidationError(
+                message="Invalid `from` field. The domain is not verified.",
+                error_type="validation_error",
+                code=400,
+            ),
+        ],
+    )
+    def test_deployment_wide_failures_still_log_error(self, failure):
+        """Anything that is not a recipient rejection keeps paging.
+
+        These are our-side or provider-side faults that break mail for every
+        user, so they must stay at error level even though several carry a 4xx.
+        """
+        with patch(
+            "src.services.email.utils.get_learnhouse_config",
+            return_value=_config(email_provider="resend", resend_api_key="key"),
+        ), patch(
+            "src.services.email.utils.resend.Emails.send",
+            side_effect=failure,
+        ), patch("src.services.email.utils.logger") as mock_logger:
+            with pytest.raises(HTTPException) as exc_info:
+                send_email("to@test.com", "Subject", "<p>Body</p>")
+
+        assert exc_info.value.status_code == 503
+        mock_logger.error.assert_called_once()
 
     def test_send_email_smtp_exception_raises_503(self):
         smtp_client = Mock()
