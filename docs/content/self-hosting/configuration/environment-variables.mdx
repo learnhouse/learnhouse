@@ -36,7 +36,7 @@ optional: the feature stays disabled or uses a runtime fallback when the variabl
 | `LEARNHOUSE_CUSTOM_DOMAIN_DEV_MODE` | Skips DNS verification for all custom domains and marks them verified immediately. Development/testing only. | boolean | `false` | API |
 | `LEARNHOUSE_PUBLIC` | Docker build argument that produces a community build by excluding non-community code. | boolean | `false` | Dockerfiles (root, API, Web) |
 | `LEARNHOUSE_PLATFORM_URL` | Base URL for LearnHouse platform links, upgrade URLs, and email allowlist checks. | URL | unset; backend flows fall back to `https://www.learnhouse.app` and the web token-exchange to `https://learnhouse.app` | API, Web |
-| `LEARNHOUSE_PLATFORM_API_KEY` | Shared secret for platform-only internal endpoints such as packs. | secret string | required for SaaS/platform endpoints | API |
+| `LEARNHOUSE_PLATFORM_API_KEY` | Shared secret for platform-only internal endpoints such as packs. When unset, those endpoints reject every request with a 403 and the API logs an error on the first rejected request. | secret string | required for SaaS/platform endpoints | API |
 | `CLOUD_INTERNAL_KEY` | Shared secret for SaaS-internal endpoints (custom-domain sync and the `cloud_internal` router). When unset, those endpoints reject every request and the API logs a startup warning. | secret string | unset; required for SaaS custom-domain provisioning | API |
 
 ## Database, Redis, and collaboration

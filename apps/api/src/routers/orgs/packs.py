@@ -1,4 +1,5 @@
 import hmac
+import logging
 import os
 from fastapi import APIRouter, Depends, Header, HTTPException
 from pydantic import BaseModel
@@ -26,14 +27,41 @@ from src.services.packs.packs import (
 # Internal router (platform-key auth)
 # ============================================================================
 
+logger = logging.getLogger(__name__)
+
+# Set the first time a request arrives with LEARNHOUSE_PLATFORM_API_KEY unset, so
+# the misconfiguration is reported once per process instead of on every request.
+_REPORTED_MISSING_PLATFORM_KEY = False
+
+
 async def verify_platform_key(x_platform_key: str = Header(...)):
+    """Fail-closed guard for the internal packs endpoints.
+
+    Mirrors verify_cloud_internal_key in org_plan.py: every rejection is a 403, so
+    a caller cannot tell an unconfigured server from a wrong key.
+
+    Both emptiness checks are load-bearing. hmac.compare_digest(b"", b"") returns
+    True, so dropping either one makes an unconfigured deployment accept every
+    request on all five internal pack endpoints. Comparison is on bytes because
+    compare_digest rejects non-ASCII str, and header values reach us decoded as
+    latin-1 — an arbitrary caller could otherwise trigger a TypeError.
+    """
+    global _REPORTED_MISSING_PLATFORM_KEY
+
     expected_key = os.getenv("LEARNHOUSE_PLATFORM_API_KEY", "")
-    if not expected_key:
-        raise HTTPException(
-            status_code=500,
-            detail="LEARNHOUSE_PLATFORM_API_KEY is not configured on the server",
+    if not expected_key and not _REPORTED_MISSING_PLATFORM_KEY:
+        _REPORTED_MISSING_PLATFORM_KEY = True
+        logger.error(
+            "LEARNHOUSE_PLATFORM_API_KEY is not set on this deployment: every "
+            "internal pack request is rejected, so pack activation and "
+            "active-user overage billing silently do nothing until it is set."
         )
-    if not hmac.compare_digest(x_platform_key, expected_key):
+
+    if (
+        not expected_key
+        or not x_platform_key
+        or not hmac.compare_digest(x_platform_key.encode(), expected_key.encode())
+    ):
         raise HTTPException(status_code=403, detail="Invalid platform API key")
 
 
@@ -65,7 +93,6 @@ class MarkCancelingRequest(BaseModel):
     responses={
         200: {"description": "Pack activated for the organization.", "model": OrgPackRead},
         403: {"description": "Invalid platform API key"},
-        500: {"description": "LEARNHOUSE_PLATFORM_API_KEY is not configured on the server"},
     },
 )
 async def api_activate_pack(
@@ -88,7 +115,6 @@ async def api_activate_pack(
     responses={
         200: {"description": "Pack marked as canceling.", "model": OrgPackRead},
         403: {"description": "Invalid platform API key"},
-        500: {"description": "LEARNHOUSE_PLATFORM_API_KEY is not configured on the server"},
     },
 )
 async def api_mark_pack_canceling(
@@ -111,7 +137,6 @@ async def api_mark_pack_canceling(
     responses={
         200: {"description": "Pack deactivated.", "model": OrgPackRead},
         403: {"description": "Invalid platform API key"},
-        500: {"description": "LEARNHOUSE_PLATFORM_API_KEY is not configured on the server"},
     },
 )
 async def api_deactivate_pack(
@@ -133,7 +158,6 @@ async def api_deactivate_pack(
     responses={
         200: {"description": "All packs deactivated; returns the number of packs affected."},
         403: {"description": "Invalid platform API key"},
-        500: {"description": "LEARNHOUSE_PLATFORM_API_KEY is not configured on the server"},
     },
 )
 async def api_deactivate_all_packs(
