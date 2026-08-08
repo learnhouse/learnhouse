@@ -170,6 +170,44 @@ def _env_bool(env_value, yaml_value):
     return str(env_value).strip().lower() in ("true", "1", "yes", "on")
 
 
+_yaml_cache: dict = {}
+
+
+def _load_yaml_config(yaml_path: str) -> dict:
+    """Parse config.yaml, memoised on (path, mtime, size).
+
+    Parsing dominates the cost of building the config — roughly 9ms of a 10ms
+    call, since this function is not otherwise cached and every caller re-reads
+    the file. That was tolerable while config was read at startup, and stopped
+    being tolerable once /instance/info began resolving deployment mode per
+    request.
+
+    Only the file parse is cached. Every environment variable is still read
+    live on each call, so nothing that reads env changes behaviour, and tests
+    that mutate the environment between calls keep working. Editing the file
+    invalidates on mtime/size, which keeps local edit-reload behaviour intact.
+    """
+    try:
+        st = os.stat(yaml_path)
+        key = (yaml_path, st.st_mtime_ns, st.st_size)
+    except OSError:
+        key = None
+
+    if key is not None and key in _yaml_cache:
+        return _yaml_cache[key]
+
+    with open(yaml_path, "r", encoding="utf-8") as f:
+        parsed = yaml.safe_load(f)
+
+    # Defensive: an empty file parses to None.
+    parsed = parsed if parsed is not None else {}
+
+    if key is not None:
+        _yaml_cache.clear()  # only ever one live config file
+        _yaml_cache[key] = parsed
+    return parsed
+
+
 def get_learnhouse_config() -> LearnHouseConfig:
 
     load_dotenv()
@@ -177,13 +215,7 @@ def get_learnhouse_config() -> LearnHouseConfig:
     # Get the YAML file
     yaml_path = os.path.join(os.path.dirname(__file__), "config.yaml")
 
-    # Load the YAML file
-    with open(yaml_path, "r", encoding="utf-8") as f:
-        yaml_config = yaml.safe_load(f)
-    
-    # Ensure yaml_config is not None (defensive programming)
-    if yaml_config is None:
-        yaml_config = {}
+    yaml_config = _load_yaml_config(yaml_path)
 
     # General Config
 

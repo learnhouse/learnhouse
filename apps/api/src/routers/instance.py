@@ -17,11 +17,17 @@ def _strip_port(domain: str) -> str:
 
 
 def _live_fields(tenancy: str) -> dict:
-    """The license-derived part of the payload, never cached."""
+    """The license-derived part of the payload, never cached.
+
+    Resolves the mode once. is_multi_org_allowed() calls get_deployment_mode()
+    internally, so asking for both separately doubles the work on a public
+    endpoint that runs this per request.
+    """
+    mode = get_deployment_mode()
     return {
-        "mode": get_deployment_mode(),
+        "mode": mode,
         # Deprecated: prefer `tenancy`. Will be removed in a future release.
-        "multi_org_enabled": tenancy == "multi" and is_multi_org_allowed(),
+        "multi_org_enabled": tenancy == "multi" and mode in ("ee", "saas"),
     }
 
 
