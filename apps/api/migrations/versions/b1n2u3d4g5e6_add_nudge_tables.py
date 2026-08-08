@@ -42,11 +42,18 @@ def upgrade() -> None:
         sa.Column('sent_at', sa.DateTime(timezone=True), nullable=True),
         sa.Column('error', sa.String(length=255), nullable=True),
         sa.Column('meta', sa.JSON(), nullable=True),
+        sa.Column('provider_id', sa.String(length=64), nullable=True),
+        sa.Column(
+            'delivery_checked', sa.Boolean(), nullable=False, server_default=sa.false()
+        ),
         sa.UniqueConstraint('dedupe_key', name='uq_nudge_send_dedupe'),
     )
     op.create_index('ix_nudge_send_user_sent', 'nudge_send', ['user_id', 'sent_at'])
     op.create_index('ix_nudge_send_org_nudge', 'nudge_send', ['org_id', 'nudge_id'])
     op.create_index('ix_nudge_send_nudge_sent', 'nudge_send', ['nudge_id', 'sent_at'])
+    op.create_index(
+        'ix_nudge_send_unchecked', 'nudge_send', ['delivery_checked', 'sent_at']
+    )
 
     op.create_table(
         'email_preference',
@@ -77,6 +84,7 @@ def upgrade() -> None:
 def downgrade() -> None:
     op.drop_index('ix_email_preference_user_id', table_name='email_preference')
     op.drop_table('email_preference')
+    op.drop_index('ix_nudge_send_unchecked', table_name='nudge_send')
     op.drop_index('ix_nudge_send_nudge_sent', table_name='nudge_send')
     op.drop_index('ix_nudge_send_org_nudge', table_name='nudge_send')
     op.drop_index('ix_nudge_send_user_sent', table_name='nudge_send')

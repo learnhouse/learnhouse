@@ -297,6 +297,9 @@ async def _claim(
         lang=snapshot.lang,
         claimed_at=now,
         meta={
+            # The recipient, so a delivery check days later knows which
+            # address to suppress without re-deriving it.
+            "email": admin.email,
             "track": spec.track,
             "plan": snapshot.plan,
             "course_count": snapshot.course_count,
@@ -381,6 +384,15 @@ async def run_nudges(
         )
         seeded.auto_seeded = True
         return seeded
+
+    # Ask the provider what became of recent messages before sending more.
+    # This is what lets bounces and complaints be noticed without a webhook.
+    try:
+        from src.services.nudges.delivery import reconcile_delivery
+
+        await reconcile_delivery(db_session, now=now)
+    except Exception as exc:
+        logger.warning("Delivery reconcile skipped: %s", exc)
 
     media_base = get_media_base_url(None)
 
@@ -495,6 +507,8 @@ async def run_nudges(
                 else:
                     row.status = NudgeSendStatus.SENT
                     row.sent_at = now
+                    if isinstance(result, dict) and result.get("id"):
+                        row.provider_id = str(result["id"])
                     stats.sent += 1
                     stats.record(spec.id)
                     counts[admin.user_id] = (

@@ -48,6 +48,8 @@ class NudgeSend(SQLModel, table=True):
         Index("ix_nudge_send_user_sent", "user_id", "sent_at"),
         Index("ix_nudge_send_org_nudge", "org_id", "nudge_id"),
         Index("ix_nudge_send_nudge_sent", "nudge_id", "sent_at"),
+        # Finds the handful of messages awaiting a delivery check.
+        Index("ix_nudge_send_unchecked", "delivery_checked", "sent_at"),
     )
 
     id: Optional[int] = Field(default=None, primary_key=True)
@@ -85,6 +87,15 @@ class NudgeSend(SQLModel, table=True):
         default=None, sa_column=Column(DateTime(timezone=True), nullable=True)
     )
     error: Optional[str] = Field(default=None, sa_column=Column(String(255), nullable=True))
+    # The provider's id for this message, so its delivery outcome can be read
+    # back later. Polling this is what removes the need to configure a webhook.
+    provider_id: Optional[str] = Field(
+        default=None, sa_column=Column(String(64), nullable=True)
+    )
+    # Set once the outcome has been read, so each message is polled at most once.
+    delivery_checked: bool = Field(
+        default=False, sa_column=Column(Boolean, nullable=False, default=False)
+    )
     # Snapshot of the segment values that made this nudge fire, for debugging a
     # send after the underlying org state has moved on. JSON (not JSONB): the
     # test suite runs on SQLite.
