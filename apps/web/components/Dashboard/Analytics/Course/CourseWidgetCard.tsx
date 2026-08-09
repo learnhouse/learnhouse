@@ -235,7 +235,7 @@ export function PaginationBar({
           disabled={!hasPrev}
           className="p-1.5 rounded-lg hover:bg-gray-100 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
         >
-          <CaretLeft size={14} weight="bold" className="text-gray-500" />
+          <CaretLeft size={14} weight="bold" className="text-gray-500" data-dir-flip />
         </button>
         {pages.map((p, i) =>
           p === 'dots' ? (
@@ -259,7 +259,7 @@ export function PaginationBar({
           disabled={!hasNext}
           className="p-1.5 rounded-lg hover:bg-gray-100 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
         >
-          <CaretRight size={14} weight="bold" className="text-gray-500" />
+          <CaretRight size={14} weight="bold" className="text-gray-500" data-dir-flip />
         </button>
       </div>
     </div>

@@ -326,7 +326,7 @@ function ActivityElement(props: ActivitiyElementProps) {
 
           {/* Status badge + quick actions */}
           {!props.selectionMode && (
-            <div className="flex items-center gap-2 flex-shrink-0 ml-auto">
+            <div className="flex items-center gap-2 flex-shrink-0 ms-auto">
               <button
                 onClick={changePublicStatus}
                 disabled={isPublishing}

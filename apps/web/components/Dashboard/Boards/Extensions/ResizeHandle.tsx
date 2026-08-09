@@ -21,7 +21,7 @@ export default function ResizeHandle({
     <div
       data-resize-handle
       onMouseDown={onMouseDown}
-      className={`absolute bottom-0 right-0 z-20 p-1 cursor-nwse-resize transition-opacity ${
+      className={`absolute bottom-0 end-0 z-20 p-1 cursor-nwse-resize transition-opacity ${
         selected ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'
       }`}
     >

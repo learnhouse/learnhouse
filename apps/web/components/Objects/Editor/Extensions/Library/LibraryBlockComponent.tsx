@@ -270,7 +270,7 @@ function LibraryBlockComponent(props: NodeViewProps) {
     return (
       <NodeViewWrapper className="my-4">
         <div className="group relative" contentEditable={false}>
-          <div className="absolute top-2 right-2 z-10">{toolbar}</div>
+          <div className="absolute top-2 end-2 z-10">{toolbar}</div>
           <MediaViewer
             resource={{ ...snapshot, name }}
             mediaUuid={resourceUuid}
@@ -296,7 +296,7 @@ function LibraryBlockComponent(props: NodeViewProps) {
   return (
     <NodeViewWrapper className="my-4">
       <div className="group relative" contentEditable={false}>
-        <div className="absolute top-2 right-2 z-10">{toolbar}</div>
+        <div className="absolute top-2 end-2 z-10">{toolbar}</div>
 
         {display === 'embed' && baseUrl ? (
           <div className="w-full rounded-xl overflow-hidden nice-shadow bg-white" style={{ height: '70vh', minHeight: 420 }}>

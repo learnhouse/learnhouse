@@ -40,6 +40,8 @@ import GeneralWrapperStyled from '@components/Objects/StyledElements/Wrappers/Ge
 import ActivityIndicators from '@components/Pages/Courses/ActivityIndicators'
 import UserAvatar from '@components/Objects/UserAvatar'
 import { useTranslation } from 'react-i18next'
+import { useDirection } from '@hooks/useDirection'
+import { formatDate } from '@/lib/format'
 import { useLHAnalytics, AnalyticsEvent } from '@services/analytics'
 
 const ReactConfetti = dynamic(() => import('react-confetti'), { ssr: false })
@@ -67,8 +69,8 @@ const ResourceActivity = lazy(() => import('@components/Objects/Activities/Resou
 const LoadingFallback = () => (
   <div className="flex items-center justify-center h-64">
     <div className="relative w-6 h-6">
-      <div className="absolute top-0 left-0 w-full h-full border-2 border-gray-100 rounded-full"></div>
-      <div className="absolute top-0 left-0 w-full h-full border-2 border-gray-400 rounded-full animate-spin border-t-transparent"></div>
+      <div className="absolute top-0 start-0 w-full h-full border-2 border-gray-100 rounded-full"></div>
+      <div className="absolute top-0 start-0 w-full h-full border-2 border-gray-400 rounded-full animate-spin border-t-transparent"></div>
     </div>
   </div>
 );
@@ -82,7 +84,7 @@ function ActivityContentSkeleton({ activityType }: { activityType?: string }) {
       <div className="rounded-lg overflow-hidden relative bg-zinc-900 animate-pulse" style={{ minHeight: '420px' }}>
         <div className="absolute inset-0 flex items-center justify-center">
           <div className="w-20 h-20 rounded-full bg-white/10 flex items-center justify-center">
-            <div className="ml-1 w-0 h-0 border-t-[12px] border-t-transparent border-b-[12px] border-b-transparent border-l-[18px] border-l-white/25" />
+            <div className="ms-1 w-0 h-0 border-t-[12px] border-t-transparent border-b-[12px] border-b-transparent border-s-[18px] border-s-white/25" />
           </div>
         </div>
       </div>
@@ -213,7 +215,9 @@ function ActivityActions({ activity, activityid, course, orgslug, assignment, sh
 }
 
 function ActivityClient(props: ActivityClientProps) {
-  const { t } = useTranslation()
+  const { t, i18n } = useTranslation()
+  // Slide offsets are physical pixels; flip their sign in RTL.
+  const { x: dx } = useDirection()
   const activityid = props.activityid
 
   function getRelativeTime(date: Date): string {
@@ -558,14 +562,14 @@ function ActivityClient(props: ActivityClientProps) {
                     animate={{ y: 0 }}
                     exit={{ y: -100 }}
                     transition={{ duration: 0.3 }}
-                    className="fixed top-0 left-0 right-0 bg-white/90 backdrop-blur-xl border-b border-gray-100"
+                    className="fixed top-0 start-0 end-0 bg-white/90 backdrop-blur-xl border-b border-gray-100"
                     style={{ zIndex: 'var(--z-modal-content)' }}
                   >
                     <div className="container mx-auto px-4 py-2">
                       <div className="flex items-center justify-between h-14">
                         {/* Progress Indicator - Moved to left */}
                         <motion.div 
-                          initial={isInitialRender.current ? false : { opacity: 0, x: -20 }}
+                          initial={isInitialRender.current ? false : { opacity: 0, x: -20 * dx }}
                           animate={{ opacity: 1, x: 0 }}
                           transition={{ delay: 0.2 }}
                           className="flex items-center space-x-2"
@@ -638,7 +642,7 @@ function ActivityClient(props: ActivityClientProps) {
 
                         {/* Minimize and Chapters - Moved to right */}
                         <motion.div
-                          initial={isInitialRender.current ? false : { opacity: 0, x: 20 }}
+                          initial={isInitialRender.current ? false : { opacity: 0, x: 20 * dx }}
                           animate={{ opacity: 1, x: 0 }}
                           transition={{ delay: 0.2 }}
                           className="flex items-center space-x-2"
@@ -707,7 +711,7 @@ function ActivityClient(props: ActivityClientProps) {
                       animate={{ y: 0 }}
                       exit={{ y: 100 }}
                       transition={{ duration: 0.3 }}
-                      className="fixed bottom-0 left-0 right-0 bg-white/90 backdrop-blur-xl border-t border-gray-100"
+                      className="fixed bottom-0 start-0 end-0 bg-white/90 backdrop-blur-xl border-t border-gray-100"
                       style={{ zIndex: 'var(--z-modal-content)' }}
                     >
                       <div className="container mx-auto px-4">
@@ -726,7 +730,7 @@ function ActivityClient(props: ActivityClientProps) {
                               <ChevronLeft size={20} className="text-gray-800 shrink-0" />
                               <div className="flex flex-col items-start">
                                 <span className="text-xs text-gray-500">{t('common.previous')}</span>
-                                <span className="text-sm capitalize font-semibold text-left">
+                                <span className="text-sm capitalize font-semibold text-start">
                                   {prevActivity ? prevActivity.name : t('activities.no_previous_activity')}
                                 </span>
                               </div>
@@ -760,7 +764,7 @@ function ActivityClient(props: ActivityClientProps) {
                             >
                               <div className="flex flex-col items-end">
                                 <span className="text-xs text-gray-500">{t('common.next')}</span>
-                                <span className="text-sm capitalize font-semibold text-right">
+                                <span className="text-sm capitalize font-semibold text-end">
                                   {nextActivity
                                     ? nextActivity.name
                                     : isLastActivity
@@ -924,7 +928,7 @@ function ActivityClient(props: ActivityClientProps) {
                                 {/* Dates */}
                                 <div className="flex flex-wrap items-center text-xs text-gray-500 gap-1 sm:gap-2">
                                   <span>
-                                    {t('courses.created_on')} {new Date(course.creation_date).toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' })}
+                                    {t('courses.created_on')} {formatDate(course.creation_date, i18n.language, { dateStyle: undefined, year: 'numeric', month: 'long', day: 'numeric' })}
                                   </span>
                                   <span className="mx-1">•</span>
                                   <span>
@@ -982,13 +986,13 @@ function ActivityClient(props: ActivityClientProps) {
                               <div className={`flex-1 min-w-0 ${activity.activity_type === 'TYPE_SCORM' ? 'rounded-xl overflow-hidden' : 'p-3 sm:p-7 rounded-lg'} ${bgColor} relative isolate`} style={{ zIndex: 'var(--z-base)' }}>
                                 <button
                                   onClick={() => setIsFocusMode(true)}
-                                  className={`absolute ${activity.activity_type === 'TYPE_SCORM' ? 'top-2 right-2' : 'top-4 right-4'} hidden sm:flex bg-white/80 hover:bg-white nice-shadow p-2 rounded-full cursor-pointer transition-all duration-200 group overflow-hidden pointer-events-auto`}
+                                  className={`absolute ${activity.activity_type === 'TYPE_SCORM' ? 'top-2 end-2' : 'top-4 end-4'} hidden sm:flex bg-white/80 hover:bg-white nice-shadow p-2 rounded-full cursor-pointer transition-all duration-200 group overflow-hidden pointer-events-auto`}
                                   style={{ zIndex: 'var(--z-interactive)' }}
                                   title={t('activities.focus_mode')}
                                 >
                                   <div className="flex items-center">
                                     <Maximize2 size={16} className="text-gray-700" />
-                                    <span className="text-xs font-bold text-gray-700 opacity-0 group-hover:opacity-100 transition-all duration-200 w-0 group-hover:w-auto group-hover:ml-2 whitespace-nowrap">
+                                    <span className="text-xs font-bold text-gray-700 opacity-0 group-hover:opacity-100 transition-all duration-200 w-0 group-hover:w-auto group-hover:ms-2 whitespace-nowrap">
                                       {t('activities.focus_mode')}
                                     </span>
                                   </div>
@@ -1725,7 +1729,7 @@ function AssignmentTools(props: {
         <button
           type="button"
           onClick={() => setIsGradeModalOpen(true)}
-          className={`${pillBg} rounded-md px-3 sm:px-4 nice-shadow flex flex-col items-start text-left p-2 sm:p-2.5 text-white hover:cursor-pointer transition delay-150 duration-300 ease-in-out`}
+          className={`${pillBg} rounded-md px-3 sm:px-4 nice-shadow flex flex-col items-start text-start p-2 sm:p-2.5 text-white hover:cursor-pointer transition delay-150 duration-300 ease-in-out`}
         >
           <span className="text-[10px] font-bold mb-1 uppercase text-white/90 flex items-center gap-1.5">
             <span>{t('common.status')}</span>
@@ -1784,10 +1788,10 @@ function AssignmentTools(props: {
                   : 'bg-gradient-to-br from-rose-50 via-orange-50 to-amber-50'
               }`}>
                 {/* Decorative blobs */}
-                <div className={`absolute -top-12 -right-12 w-44 h-44 rounded-full blur-3xl opacity-40 ${
+                <div className={`absolute -top-12 -end-12 w-44 h-44 rounded-full blur-3xl opacity-40 ${
                   isPassing ? 'bg-emerald-300' : 'bg-rose-300'
                 }`} />
-                <div className={`absolute -bottom-16 -left-12 w-44 h-44 rounded-full blur-3xl opacity-40 ${
+                <div className={`absolute -bottom-16 -start-12 w-44 h-44 rounded-full blur-3xl opacity-40 ${
                   isPassing ? 'bg-cyan-300' : 'bg-amber-300'
                 }`} />
 
@@ -1800,8 +1804,8 @@ function AssignmentTools(props: {
                     )}
                     {isPassing && (
                       <>
-                        <Sparkles size={16} className="absolute -top-1 -right-1 text-amber-500 drop-shadow" />
-                        <Sparkles size={12} className="absolute -bottom-1 -left-1 text-amber-400 drop-shadow" />
+                        <Sparkles size={16} className="absolute -top-1 -end-1 text-amber-500 drop-shadow" />
+                        <Sparkles size={12} className="absolute -bottom-1 -start-1 text-amber-400 drop-shadow" />
                       </>
                     )}
                   </div>
@@ -1852,7 +1856,7 @@ function AssignmentTools(props: {
                           >
                             {tb.submitted && (
                               <div
-                                className={`absolute inset-y-0 left-0 transition-all ${
+                                className={`absolute inset-y-0 start-0 transition-all ${
                                   passedTask ? 'bg-emerald-100/70' : 'bg-rose-100/70'
                                 }`}
                                 style={{ width: `${pct}%` }}
@@ -1860,7 +1864,7 @@ function AssignmentTools(props: {
                             )}
                             <div className="relative flex items-center justify-between gap-3">
                               <span className="text-sm text-gray-700 truncate" title={tb.description || `Task ${tb.index}`}>
-                                <span className="font-bold text-gray-400 mr-1.5">{tb.index}.</span>
+                                <span className="font-bold text-gray-400 me-1.5">{tb.index}.</span>
                                 {tb.description || `Task ${tb.index}`}
                               </span>
                               <span className={`text-xs font-bold flex-none ${

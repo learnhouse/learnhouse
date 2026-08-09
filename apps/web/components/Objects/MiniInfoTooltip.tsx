@@ -36,7 +36,7 @@ export default function MiniInfoTooltip({
       <div className="absolute -bottom-2 left-1/2 transform -translate-x-1/2 w-4 h-4 bg-white rotate-45"></div>
       <button
         onClick={onClose}
-        className="absolute top-1 right-1 text-gray-400 hover:text-gray-600"
+        className="absolute top-1 end-1 text-gray-400 hover:text-gray-600"
       >
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
           <path d="M18 6L6 18M6 6l12 12" />

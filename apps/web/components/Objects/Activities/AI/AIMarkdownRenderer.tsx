@@ -48,12 +48,12 @@ function AIMarkdownRenderer({ content, isStreaming = false }: AIMarkdownRenderer
           ),
           // Lists
           ul: ({ children }) => (
-            <ul className="list-disc list-inside text-white/80 text-sm mb-2 space-y-1 ml-2">
+            <ul className="list-disc list-inside text-white/80 text-sm mb-2 space-y-1 ms-2">
               {children}
             </ul>
           ),
           ol: ({ children }) => (
-            <ol className="list-decimal list-inside text-white/80 text-sm mb-2 space-y-1 ml-2">
+            <ol className="list-decimal list-inside text-white/80 text-sm mb-2 space-y-1 ms-2">
               {children}
             </ol>
           ),
@@ -89,7 +89,7 @@ function AIMarkdownRenderer({ content, isStreaming = false }: AIMarkdownRenderer
           ),
           // Blockquote
           blockquote: ({ children }) => (
-            <blockquote className="border-l-2 border-purple-500/50 pl-3 my-2 text-white/70 italic">
+            <blockquote className="border-s-2 border-purple-500/50 ps-3 my-2 text-white/70 italic">
               {children}
             </blockquote>
           ),
@@ -118,7 +118,7 @@ function AIMarkdownRenderer({ content, isStreaming = false }: AIMarkdownRenderer
             <thead className="bg-white/10">{children}</thead>
           ),
           th: ({ children }) => (
-            <th className="border border-white/20 px-2 py-1 text-left text-white/90 font-semibold">
+            <th className="border border-white/20 px-2 py-1 text-start text-white/90 font-semibold">
               {children}
             </th>
           ),
@@ -132,7 +132,7 @@ function AIMarkdownRenderer({ content, isStreaming = false }: AIMarkdownRenderer
         {content}
       </ReactMarkdown>
       {isStreaming && (
-        <span className="streaming-cursor inline-block w-1.5 h-4 bg-purple-400/90 ml-0.5 align-middle rounded-sm" />
+        <span className="streaming-cursor inline-block w-1.5 h-4 bg-purple-400/90 ms-0.5 align-middle rounded-sm" />
       )}
     </div>
   )

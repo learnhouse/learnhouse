@@ -89,7 +89,7 @@ function PodcastOverviewHeader({
 
   if (isLoading) {
     return (
-      <div className="pl-10 pr-10 text-sm tracking-tight bg-[#fcfbfc] z-10 nice-shadow relative animate-pulse">
+      <div className="ps-10 pe-10 text-sm tracking-tight bg-[#fcfbfc] z-10 nice-shadow relative animate-pulse">
         <div className="pt-6 pb-4">
           <div className="h-4 w-40 bg-gray-200 rounded mb-4" />
           <div className="flex items-center justify-between mt-4">
@@ -111,7 +111,7 @@ function PodcastOverviewHeader({
   }
 
   return (
-    <div className="pl-4 pr-4 sm:pl-10 sm:pr-10 text-sm tracking-tight bg-[#fcfbfc] z-10 nice-shadow relative">
+    <div className="ps-4 pe-4 sm:ps-10 sm:pe-10 text-sm tracking-tight bg-[#fcfbfc] z-10 nice-shadow relative">
       <div className="pt-6 pb-4">
         <Breadcrumbs
           items={[

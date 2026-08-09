@@ -66,7 +66,7 @@ function MenuLinks(props: { orgslug: string; primaryColor?: string }) {
     .filter(Boolean) as any[]
 
   return (
-    <div className="pl-1">
+    <div className="ps-1">
       <ul className="flex space-x-5">
         {rendered.map((it) => {
           const content = (

@@ -99,13 +99,13 @@ export default function TokenList() {
           <table className="w-full text-sm">
             <thead className="bg-white/[0.03] text-white/40 text-xs uppercase tracking-wider">
               <tr>
-                <th className="text-left px-4 py-3 font-medium">Name</th>
-                <th className="text-left px-4 py-3 font-medium">Prefix</th>
-                <th className="text-left px-4 py-3 font-medium">Status</th>
-                <th className="text-left px-4 py-3 font-medium">Created</th>
-                <th className="text-left px-4 py-3 font-medium">Expires</th>
-                <th className="text-left px-4 py-3 font-medium">Last used</th>
-                <th className="text-right px-4 py-3 font-medium">Actions</th>
+                <th className="text-start px-4 py-3 font-medium">Name</th>
+                <th className="text-start px-4 py-3 font-medium">Prefix</th>
+                <th className="text-start px-4 py-3 font-medium">Status</th>
+                <th className="text-start px-4 py-3 font-medium">Created</th>
+                <th className="text-start px-4 py-3 font-medium">Expires</th>
+                <th className="text-start px-4 py-3 font-medium">Last used</th>
+                <th className="text-end px-4 py-3 font-medium">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-white/[0.06]">
@@ -128,7 +128,7 @@ export default function TokenList() {
                       {t.expires_at ? fmtDate(t.expires_at) : 'Never'}
                     </td>
                     <td className="px-4 py-3 text-xs text-white/50">{fmtDate(t.last_used_at)}</td>
-                    <td className="px-4 py-3 text-right">
+                    <td className="px-4 py-3 text-end">
                       {status === 'active' && (
                         <button
                           onClick={() => setRevoking(t)}

@@ -68,7 +68,7 @@ export default function AccountDangerZone() {
           <AlertTriangle size={18} />
           {t('account.delete.title', { defaultValue: 'Delete account' })}
         </h1>
-        <h2 className="text-red-500/80 text-md pl-7">
+        <h2 className="text-red-500/80 text-md ps-7">
           {t('account.delete.zone_subtitle', {
             defaultValue: 'Permanently delete your account. This cannot be undone.',
           })}

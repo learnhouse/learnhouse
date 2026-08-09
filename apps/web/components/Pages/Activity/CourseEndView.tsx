@@ -273,7 +273,7 @@ const CourseEndView: React.FC<CourseEndViewProps> = ({
           {isLoadingCertificate ? (
             <div className="flex items-center justify-center py-8">
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-              <span className="ml-3 text-gray-600">{t('certificate.loading_certificate')}</span>
+              <span className="ms-3 text-gray-600">{t('certificate.loading_certificate')}</span>
             </div>
           ) : certificateError ? (
             <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-6">
@@ -295,7 +295,7 @@ const CourseEndView: React.FC<CourseEndViewProps> = ({
                   because html2canvas cannot measure a hidden subtree. */}
               <div
                 aria-hidden="true"
-                className="pointer-events-none fixed top-0 left-0 -z-50 opacity-0"
+                className="pointer-events-none fixed top-0 start-0 -z-50 opacity-0"
                 style={{ transform: 'translateX(-200vw)' }}
               >
                 <div ref={certificateCaptureRef} style={{ width: CERTIFICATE_CAPTURE_WIDTH }}>

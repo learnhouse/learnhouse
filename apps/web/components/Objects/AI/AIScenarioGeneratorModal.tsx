@@ -239,7 +239,7 @@ const AIScenarioGeneratorModal: React.FC<AIScenarioGeneratorModalProps> = ({
                             className="flex-1 text-neutral-700 bg-transparent border-0 text-sm outline-none"
                           />
                           <span className="text-[11px] text-neutral-400 flex items-center gap-1 whitespace-nowrap">
-                            <ArrowRight weight="duotone" size={12} /> {nodeLabel(node.id, opt.nextScenarioId)}
+                            <ArrowRight weight="duotone" size={12} data-dir-flip /> {nodeLabel(node.id, opt.nextScenarioId)}
                           </span>
                         </div>
                       ))}
@@ -256,7 +256,7 @@ const AIScenarioGeneratorModal: React.FC<AIScenarioGeneratorModalProps> = ({
                 onClick={handleInsert}
                 className="px-4 py-2 rounded-lg bg-neutral-900 text-white text-sm flex items-center gap-1.5 nice-shadow"
               >
-                <ArrowElbowDownLeft weight="duotone" size={15} /> Insert into editor
+                <ArrowElbowDownLeft weight="duotone" size={15} data-dir-flip /> Insert into editor
               </button>
             </div>
           )}

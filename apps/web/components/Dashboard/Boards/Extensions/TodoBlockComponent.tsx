@@ -169,7 +169,7 @@ export default function TodoBlockComponent({ node, updateAttributes, selected, d
         )}
 
         {/* Color swatches */}
-        <div className="flex items-center gap-1 ml-2">
+        <div className="flex items-center gap-1 ms-2">
           {TODO_COLORS.map((c) => (
             <button
               key={c.name}

@@ -154,7 +154,7 @@ const LearningItemsList = ({ value, onChange, error }: LearningItemsListProps) =
                     {item.emoji}
                   </button>
                   {showEmojiPicker === item.id && (
-                    <div ref={pickerRef} className="absolute z-50 top-9 left-0">
+                    <div ref={pickerRef} className="absolute z-50 top-9 start-0">
                       <Suspense fallback={
                         <div className="p-3 text-xs text-gray-400 bg-white border border-gray-200 rounded-lg shadow-lg w-[280px]">
                           Loading…

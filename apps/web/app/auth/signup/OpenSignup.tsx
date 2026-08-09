@@ -210,7 +210,7 @@ function OpenSignUpComponent({ org: propOrg }: OpenSignUpComponentProps = {}) {
                   const res = await resendVerificationEmail(formik.values.email, org?.id)
                   setResendState(res.success ? 'sent' : 'error')
                 }}
-                className="text-xs font-semibold text-green-800 hover:underline disabled:opacity-50 text-left w-fit"
+                className="text-xs font-semibold text-green-800 hover:underline disabled:opacity-50 text-start w-fit"
               >
                 {resendState === 'sending'
                   ? t('common.loading', { defaultValue: 'Sending…' })

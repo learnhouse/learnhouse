@@ -131,7 +131,7 @@ function OrgAccess() {
                 dialogTrigger={
                   <div className="relative w-full h-[150px] bg-slate-100 rounded-xl cursor-pointer hover:bg-slate-200 transition-colors">
                     {joinMethod == 'open' && (
-                      <div className="absolute top-3 left-3 bg-green-200 text-green-700 font-semibold text-xs px-2.5 py-1 rounded-lg">
+                      <div className="absolute top-3 start-3 bg-green-200 text-green-700 font-semibold text-xs px-2.5 py-1 rounded-lg">
                         {t('dashboard.users.signups.open.active')}
                       </div>
                     )}
@@ -152,7 +152,7 @@ function OrgAccess() {
                 dialogTrigger={
                   <div className="relative w-full h-[150px] bg-slate-100 rounded-xl cursor-pointer hover:bg-slate-200 transition-colors">
                     {joinMethod == 'inviteOnly' && (
-                      <div className="absolute top-3 left-3 bg-green-200 text-green-700 font-semibold text-xs px-2.5 py-1 rounded-lg">
+                      <div className="absolute top-3 start-3 bg-green-200 text-green-700 font-semibold text-xs px-2.5 py-1 rounded-lg">
                         {t('dashboard.users.signups.closed.active')}
                       </div>
                     )}
@@ -187,7 +187,7 @@ function OrgAccess() {
                   ))}
                 </div>
               ) : (
-              <table className="table-auto w-full text-left whitespace-nowrap rounded-md overflow-hidden">
+              <table className="table-auto w-full text-start whitespace-nowrap rounded-md overflow-hidden">
                 <thead className="bg-gray-100 text-gray-500 rounded-xl uppercase">
                   <tr className="font-bolder text-sm">
                     <th className="py-3 px-4">{t('dashboard.users.signups.invite_codes.table.code')}</th>
@@ -256,8 +256,8 @@ function OrgAccess() {
                 </>
               </table>
               )}
-              <div className='flex items-center justify-between mt-3 mr-2'>
-                <span className='text-xs text-gray-400 ml-2'>
+              <div className='flex items-center justify-between mt-3 me-2'>
+                <span className='text-xs text-gray-400 ms-2'>
                   {inviteCount} / 6 invite codes used
                 </span>
                 <Modal

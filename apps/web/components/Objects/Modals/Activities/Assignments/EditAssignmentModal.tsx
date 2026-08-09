@@ -279,7 +279,7 @@ const EditAssignmentForm: React.FC<EditAssignmentFormProps> = ({
                                 }`}
                             >
                                 {isSelected && (
-                                    <div className={`absolute top-2 right-2 w-4 h-4 rounded-full flex items-center justify-center ${gt.color} bg-white nice-shadow`}>
+                                    <div className={`absolute top-2 end-2 w-4 h-4 rounded-full flex items-center justify-center ${gt.color} bg-white nice-shadow`}>
                                         <Check size={10} strokeWidth={3} />
                                     </div>
                                 )}
@@ -459,7 +459,7 @@ function ToggleRow({
             >
                 <span
                     className={`inline-block h-3.5 w-3.5 transform rounded-full bg-white shadow transition-transform ${
-                        checked ? 'translate-x-5' : 'translate-x-1'
+                        checked ? 'translate-x-5 rtl:-translate-x-5' : 'translate-x-1 rtl:-translate-x-1'
                     }`}
                 />
             </button>
@@ -512,7 +512,7 @@ function RetryRow({
                 >
                     <span
                         className={`inline-block h-3.5 w-3.5 transform rounded-full bg-white shadow transition-transform ${
-                            allowRetries ? 'translate-x-5' : 'translate-x-1'
+                            allowRetries ? 'translate-x-5 rtl:-translate-x-5' : 'translate-x-1 rtl:-translate-x-1'
                         }`}
                     />
                 </button>

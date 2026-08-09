@@ -485,7 +485,7 @@ function TwoFactorAuthSection() {
           defaultValue: 'Two-factor authentication',
         })}
       </h1>
-      <h2 className="text-gray-500 text-md pl-7">
+      <h2 className="text-gray-500 text-md ps-7">
         {t('user.settings.security.mfa.subtitle', {
           defaultValue:
             'Ask for a one-time code from your authenticator app whenever you sign in.',

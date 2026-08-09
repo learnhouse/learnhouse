@@ -295,7 +295,7 @@ const AIQuizGeneratorModal: React.FC<AIQuizGeneratorModalProps> = ({
                 onClick={handleInsert}
                 className="px-4 py-2 rounded-lg bg-neutral-900 text-white text-sm flex items-center gap-1.5 nice-shadow"
               >
-                <ArrowElbowDownLeft weight="duotone" size={15} /> Insert into editor
+                <ArrowElbowDownLeft weight="duotone" size={15} data-dir-flip /> Insert into editor
               </button>
             </div>
           )}

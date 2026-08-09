@@ -110,7 +110,7 @@ function VerifyEmailClient({ org }: VerifyEmailClientProps) {
                                     {error ? t('auth.verification_failed') : t('auth.email_verified_success')}
                                 </span>
                                 {success && (
-                                    <span className="text-sm ml-2">
+                                    <span className="text-sm ms-2">
                                         · <Link href="/home" className="underline hover:no-underline">{t('auth.continue_to_dashboard', { defaultValue: 'Continue to your dashboard' })}</Link>
                                     </span>
                                 )}

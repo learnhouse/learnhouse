@@ -22,7 +22,7 @@ const STEPS = [
 
 function UnconfiguredPaymentsDisclaimer() {
   return (
-    <div className="ml-10 mr-10 mx-auto bg-white rounded-xl nice-shadow px-4 py-4">
+    <div className="ms-10 me-10 mx-auto bg-white rounded-xl nice-shadow px-4 py-4">
       {/* Empty state */}
       <div className="flex flex-col items-center py-12 px-6 text-center">
         {/* Icon cluster */}
@@ -38,7 +38,7 @@ function UnconfiguredPaymentsDisclaimer() {
         </p>
 
         {/* Steps */}
-        <div className="w-full max-w-md space-y-2 mb-8 text-left">
+        <div className="w-full max-w-md space-y-2 mb-8 text-start">
           {STEPS.map(({ icon: Icon, title, description }, i) => (
             <div
               key={i}

@@ -87,10 +87,10 @@ function OrgUserGroups() {
                             </div>
                         )}
                         <div className="relative flex-1 sm:flex-none">
-                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                            <Search className="absolute start-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
                             <input
                                 placeholder={t('dashboard.users.usergroups.search_placeholder')}
-                                className="pl-10 pr-4 py-2 w-full sm:w-[220px] border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-400 transition-all"
+                                className="ps-10 pe-4 py-2 w-full sm:w-[220px] border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-400 transition-all"
                                 value={searchValue}
                                 onChange={(e) => setSearchValue(e.target.value)}
                             />
@@ -194,7 +194,7 @@ function OrgUserGroups() {
                                     </div>
 
                                     {/* Actions */}
-                                    <div className="flex items-center gap-2 ml-4">
+                                    <div className="flex items-center gap-2 ms-4">
                                         <Modal
                                             isDialogOpen={
                                                 userGroupManagementModal &&
@@ -279,7 +279,7 @@ function MemberCountBadge({ usergroup_id, org_id, access_token }: { usergroup_id
 
     return (
         <Badge variant="secondary" className="bg-gray-100 text-gray-600 text-xs">
-            <Users className="w-3 h-3 mr-1" />
+            <Users className="w-3 h-3 me-1" />
             {count} {count === 1
                 ? t('dashboard.users.usergroups.member_count.singular')
                 : t('dashboard.users.usergroups.member_count.plural')}

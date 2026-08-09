@@ -61,7 +61,7 @@ export default function TokenCreatedDialog({
               </code>
               <button
                 onClick={handleCopy}
-                className="px-3 border-l border-white/[0.08] hover:bg-white/[0.04] transition-colors flex items-center gap-1.5 text-xs text-white/70 hover:text-white"
+                className="px-3 border-s border-white/[0.08] hover:bg-white/[0.04] transition-colors flex items-center gap-1.5 text-xs text-white/70 hover:text-white"
               >
                 {copied ? (
                   <>

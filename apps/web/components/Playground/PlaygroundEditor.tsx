@@ -295,7 +295,7 @@ export default function PlaygroundEditor({
           href="/playgrounds"
           className="flex items-center gap-1.5 text-sm text-neutral-400 hover:text-neutral-700 transition-colors flex-shrink-0 font-medium"
         >
-          <ArrowLeft size={14} weight="bold" />
+          <ArrowLeft size={14} weight="bold" data-dir-flip />
           <span>Playgrounds</span>
         </Link>
 

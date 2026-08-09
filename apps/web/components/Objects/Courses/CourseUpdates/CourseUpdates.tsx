@@ -71,7 +71,7 @@ function CourseUpdates() {
           stiffness: 1300,
           damping: 70,
         }}
-        style={{ position: 'absolute', top: '130%', right: 0 }}
+        style={{ position: 'absolute', top: '130%', insetInlineEnd: 0 }}
       >
         <UpdatesSection />
       </motion.div>}

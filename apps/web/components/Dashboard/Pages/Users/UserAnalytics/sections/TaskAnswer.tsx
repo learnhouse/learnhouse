@@ -56,9 +56,9 @@ function QuizItem({ item }: { item: any }) {
         {(item.options || []).map((option: any, i: number) => (
           <div
             key={i}
-            className={`flex items-center gap-2 rounded-lg pr-2 nice-shadow bg-white ${option.selected ? 'ring-1 ring-blue-200' : ''}`}
+            className={`flex items-center gap-2 rounded-lg pe-2 nice-shadow bg-white ${option.selected ? 'ring-1 ring-blue-200' : ''}`}
           >
-            <div className="font-bold flex items-center h-[28px] w-[32px] rounded-l-md text-slate-800 bg-slate-100/80">
+            <div className="font-bold flex items-center h-[28px] w-[32px] rounded-s-md text-slate-800 bg-slate-100/80">
               <p className="mx-auto text-xs">{option.letter}</p>
             </div>
             <p className="flex-1 py-1 text-xs text-neutral-600 font-medium break-words">

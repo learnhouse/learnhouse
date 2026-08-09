@@ -48,14 +48,14 @@ export default function EndpointList({
         <MagnifyingGlass
           size={14}
           weight="bold"
-          className="absolute left-6 top-1/2 -translate-y-1/2 text-white/40 pointer-events-none"
+          className="absolute start-6 top-1/2 -translate-y-1/2 text-white/40 pointer-events-none"
         />
         <input
           type="search"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           placeholder="Search endpoints…"
-          className="w-full bg-white/[0.04] border border-white/[0.1] rounded-lg pl-8 pr-3 py-2 text-sm text-white placeholder:text-white/30 focus:outline-none focus:border-white/30"
+          className="w-full bg-white/[0.04] border border-white/[0.1] rounded-lg ps-8 pe-3 py-2 text-sm text-white placeholder:text-white/30 focus:outline-none focus:border-white/30"
         />
       </div>
 
@@ -68,7 +68,7 @@ export default function EndpointList({
             <section key={cat} className="border-b border-white/[0.04] last:border-b-0">
               <button
                 onClick={() => toggleCategory(cat)}
-                className="w-full flex items-center justify-between px-3 py-2.5 text-left hover:bg-white/[0.02] transition-colors"
+                className="w-full flex items-center justify-between px-3 py-2.5 text-start hover:bg-white/[0.02] transition-colors"
               >
                 <span className="text-xs uppercase tracking-wider text-white/50 font-semibold">
                   {cat}
@@ -93,7 +93,7 @@ export default function EndpointList({
                         <button
                           onClick={() => onSelect(e.id)}
                           className={
-                            'w-full flex items-start gap-2.5 px-3 py-2 text-left border-l-2 transition-colors ' +
+                            'w-full flex items-start gap-2.5 px-3 py-2 text-start border-s-2 transition-colors ' +
                             (isActive
                               ? 'bg-white/[0.06] border-white'
                               : 'border-transparent hover:bg-white/[0.03]')

@@ -37,7 +37,7 @@ export default function CommandPaletteTrigger({ isCollapsed = false }: Props) {
       type="button"
       onClick={() => setOpen(true)}
       aria-label={t('dashboard.search.trigger')}
-      className="group flex h-9 w-full items-center gap-2.5 rounded-lg bg-white/[0.04] px-2.5 text-left transition-colors hover:bg-white/[0.07]"
+      className="group flex h-9 w-full items-center gap-2.5 rounded-lg bg-white/[0.04] px-2.5 text-start transition-colors hover:bg-white/[0.07]"
     >
       <MagnifyingGlass size={14} className="shrink-0 text-white/35 group-hover:text-white/60" />
       <span className="flex-1 text-[12.5px] font-normal text-white/40 group-hover:text-white/60">

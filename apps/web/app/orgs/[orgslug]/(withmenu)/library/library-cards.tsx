@@ -85,11 +85,11 @@ export function FolderCard({ folder, orgslug }: { folder: any; orgslug: string }
         }}
         aria-label={t('library.share')}
         title={t('library.share')}
-        className="absolute top-2 right-2 z-10 p-1 rounded-md text-gray-400 hover:text-gray-700 hover:bg-gray-100 opacity-0 group-hover:opacity-100 transition-opacity"
+        className="absolute top-2 end-2 z-10 p-1 rounded-md text-gray-400 hover:text-gray-700 hover:bg-gray-100 opacity-0 group-hover:opacity-100 transition-opacity"
       >
         <LinkSimple size={16} />
       </button>
-      <div className="flex items-center gap-3 pr-6">
+      <div className="flex items-center gap-3 pe-6">
         {thumb ? (
           <div className="w-10 h-10 rounded-lg bg-cover bg-center flex-shrink-0 ring-1 ring-inset ring-black/5" style={{ backgroundImage: `url(${thumb})` }} />
         ) : (
@@ -156,7 +156,7 @@ export function LibraryItemCard({ item, orgslug }: { item: any; orgslug: string 
   if (type === 'media') {
     return (
       <>
-        <button type="button" onClick={() => setPreviewOpen(true)} className={`${BIG} text-left`}>
+        <button type="button" onClick={() => setPreviewOpen(true)} className={`${BIG} text-start`}>
           {body}
         </button>
         <MediaLightbox

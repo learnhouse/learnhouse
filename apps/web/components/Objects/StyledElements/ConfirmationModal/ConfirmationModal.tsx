@@ -64,7 +64,7 @@ const ConfirmationModal = (params: ModalParams) => {
       noPadding
       customWidth="sm:max-w-[600px] sm:min-w-[500px]"
       dialogContent={
-        <div className="flex space-x-4 tracking-tight p-6 pr-10">
+        <div className="flex space-x-4 tracking-tight p-6 pe-10">
           <div className={`shrink-0 p-6 rounded-xl flex items-center ${iconColors}`}>
             {isWarning ? <AlertTriangle size={35} /> : <Info size={35} />}
           </div>

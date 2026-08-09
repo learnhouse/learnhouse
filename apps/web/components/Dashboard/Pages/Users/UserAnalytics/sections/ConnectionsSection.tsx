@@ -14,10 +14,10 @@ export default function ConnectionsSection({ connections }: { connections: any[]
       {connections.length === 0 ? (
         <Empty label={t(`${P}.connections.empty`)} />
       ) : (
-        <ol className="relative border-l border-gray-200 ml-2">
+        <ol className="relative border-s border-gray-200 ms-2">
           {connections.map((c, i) => (
-            <li key={i} className="mb-5 ml-5">
-              <span className="absolute -left-1.5 mt-1.5 h-3 w-3 rounded-full bg-blue-500 border-2 border-white" />
+            <li key={i} className="mb-5 ms-5">
+              <span className="absolute -start-1.5 mt-1.5 h-3 w-3 rounded-full bg-blue-500 border-2 border-white" />
               <div className="flex flex-wrap items-center gap-2">
                 <span className="font-semibold text-sm">{c.event_label || c.event_type}</span>
                 {c.method && <Badge variant="secondary">{c.method}</Badge>}

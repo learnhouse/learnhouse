@@ -131,6 +131,9 @@ const cmStyles: React.CSSProperties = {
   fontSize: '14px',
   fontFamily: "'JetBrains Mono', 'Fira Code', 'SF Mono', Menlo, monospace",
 }
+// rtl-ok: CodeMirror is dir="ltr" regardless of UI language — code reads
+// left-to-right by language spec, and the editor computes gutter, cursor and
+// selection geometry physically. The gutter border stays physical to match.
 const cmClassName = [
   '[&_.cm-editor]:!bg-[#1a1b26]',
   '[&_.cm-gutters]:!bg-[#1a1b26]',
@@ -755,7 +758,7 @@ function TaskCodeObject({ view, assignmentTaskUUID, user_id, onGraded }: TaskCod
             {/* Starter Code */}
             <div className="flex flex-col space-y-1">
               <label className="text-xs font-semibold text-slate-500">Starter Code</label>
-              <div className={`rounded-md overflow-hidden ${cmClassName}`}>
+              <div dir="ltr" className={`rounded-md overflow-hidden ${cmClassName}`}>
                 {cmTheme && (
                   <CodeMirror
                     value={code}
@@ -780,7 +783,7 @@ function TaskCodeObject({ view, assignmentTaskUUID, user_id, onGraded }: TaskCod
                 <span>Solution Code (optional, for instructor reference)</span>
               </button>
               {showSolution && (
-                <div className={`rounded-md overflow-hidden ${cmClassName}`}>
+                <div dir="ltr" className={`rounded-md overflow-hidden ${cmClassName}`}>
                   {cmTheme && (
                     <CodeMirror
                       value={contents.solution_code}
@@ -846,7 +849,7 @@ function TaskCodeObject({ view, assignmentTaskUUID, user_id, onGraded }: TaskCod
                     </div>
                     <button
                       onClick={() => removeTestCase(index)}
-                      className="w-6 h-6 flex items-center justify-center rounded-md bg-slate-100 text-slate-400 hover:bg-red-100 hover:text-red-500 ml-2"
+                      className="w-6 h-6 flex items-center justify-center rounded-md bg-slate-100 text-slate-400 hover:bg-red-100 hover:text-red-500 ms-2"
                     >
                       <Minus size={12} />
                     </button>
@@ -961,7 +964,7 @@ function TaskCodeObject({ view, assignmentTaskUUID, user_id, onGraded }: TaskCod
                 `canStudentSave`), so any further typing would be silently lost
                 on reload and would not reach the grader. Mirrors the read-only
                 treatment of the other task types. */}
-            <div className={`rounded-md overflow-hidden ${cmClassName}`}>
+            <div dir="ltr" className={`rounded-md overflow-hidden ${cmClassName}`}>
               {cmTheme && (
                 <CodeMirror
                   value={code}
@@ -1062,7 +1065,7 @@ function TaskCodeObject({ view, assignmentTaskUUID, user_id, onGraded }: TaskCod
             {/* Student's Code (read-only) */}
             <div className="flex flex-col space-y-1">
               <label className="text-xs font-semibold text-slate-500">Student&apos;s Code</label>
-              <div className={`rounded-md overflow-hidden ${cmClassName}`}>
+              <div dir="ltr" className={`rounded-md overflow-hidden ${cmClassName}`}>
                 {cmTheme && (
                   <CodeMirror
                     value={code}
@@ -1089,7 +1092,7 @@ function TaskCodeObject({ view, assignmentTaskUUID, user_id, onGraded }: TaskCod
                   <span>Reference Solution</span>
                 </button>
                 {showSolution && (
-                  <div className={`rounded-md overflow-hidden ${cmClassName}`}>
+                  <div dir="ltr" className={`rounded-md overflow-hidden ${cmClassName}`}>
                     {cmTheme && (
                       <CodeMirror
                         value={contents.solution_code}
@@ -1188,11 +1191,11 @@ function TestResultsPanel({
                 )}
                 <span className="font-medium text-slate-700">{result.label}</span>
                 {result.time && (
-                  <span className="text-[10px] text-slate-400 ml-auto">{result.time}s</span>
+                  <span className="text-[10px] text-slate-400 ms-auto">{result.time}s</span>
                 )}
               </div>
               {!result.passed && !isHidden && !detailsSuppressed && (
-                <div className="mt-1.5 pl-6 text-xs space-y-0.5">
+                <div className="mt-1.5 ps-6 text-xs space-y-0.5">
                   {result.expected_stdout !== null && (
                     <div>
                       <span className="text-slate-400">Expected: </span>
@@ -1220,7 +1223,7 @@ function TestResultsPanel({
                 </div>
               )}
               {isHidden && !result.passed && (
-                <div className="mt-1 pl-6 text-xs text-slate-400 italic">
+                <div className="mt-1 ps-6 text-xs text-slate-400 italic">
                   Details hidden — this is a hidden test case
                 </div>
               )}
@@ -1239,7 +1242,7 @@ function TestResultsPanel({
               <EyeOff size={14} className="text-slate-400 flex-none" />
               <span className="font-medium text-slate-500">{tc.label}</span>
             </div>
-            <div className="mt-1 pl-6 text-xs text-slate-400 italic">
+            <div className="mt-1 ps-6 text-xs text-slate-400 italic">
               Hidden test — run when your work is graded
             </div>
           </div>
@@ -1281,7 +1284,7 @@ function CodeOptionToggle({
       >
         <span
           className={`inline-block h-3 w-3 transform rounded-full bg-white shadow transition-transform ${
-            checked ? 'translate-x-3.5' : 'translate-x-0.5'
+            checked ? 'translate-x-3.5 rtl:-translate-x-3.5' : 'translate-x-0.5 rtl:-translate-x-0.5'
           }`}
         />
       </button>

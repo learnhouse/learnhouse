@@ -74,7 +74,7 @@ function MediaThumbnail({ media, orgslug, org_id, isDashboard = false, onChanged
           checkMethod="roles"
           orgId={org_id ?? org?.id}
         >
-          <div className={`absolute top-2 right-2 z-20 transition-opacity ${isMenuOpen ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`}>
+          <div className={`absolute top-2 end-2 z-20 transition-opacity ${isMenuOpen ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`}>
             <DropdownMenu open={isMenuOpen} onOpenChange={setIsMenuOpen}>
               <DropdownMenuTrigger asChild>
                 <button aria-label="Media actions" className="p-1.5 bg-white/90 backdrop-blur-sm rounded-full hover:bg-white transition-all shadow-md">
@@ -85,9 +85,9 @@ function MediaThumbnail({ media, orgslug, org_id, isDashboard = false, onChanged
                 <DropdownMenuItem asChild>
                   <button
                     onClick={() => setAccessOpen(true)}
-                    className="w-full text-left flex items-center px-2 py-1.5 text-sm text-gray-700 hover:bg-gray-50 rounded-md transition-colors"
+                    className="w-full text-start flex items-center px-2 py-1.5 text-sm text-gray-700 hover:bg-gray-50 rounded-md transition-colors"
                   >
-                    <Lock className="mr-2 h-4 w-4" /> {t('library.manage_access')}
+                    <Lock className="me-2 h-4 w-4" /> {t('library.manage_access')}
                   </button>
                 </DropdownMenuItem>
                 <DropdownMenuItem asChild>
@@ -96,8 +96,8 @@ function MediaThumbnail({ media, orgslug, org_id, isDashboard = false, onChanged
                     confirmationMessage={t('media.delete_media_confirm')}
                     dialogTitle={t('media.delete_media_title', { name: media.name })}
                     dialogTrigger={
-                      <button className="w-full text-left flex items-center px-2 py-1.5 text-sm text-red-600 hover:bg-red-50 rounded-md transition-colors">
-                        <Trash2 className="mr-2 h-4 w-4" /> {t('media.delete_media')}
+                      <button className="w-full text-start flex items-center px-2 py-1.5 text-sm text-red-600 hover:bg-red-50 rounded-md transition-colors">
+                        <Trash2 className="me-2 h-4 w-4" /> {t('media.delete_media')}
                       </button>
                     }
                     functionToExecute={handleDelete}

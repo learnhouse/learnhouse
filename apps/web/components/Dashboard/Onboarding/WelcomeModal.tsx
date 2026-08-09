@@ -245,7 +245,7 @@ export default function WelcomeModal() {
                   transition={{ delay: 0.6, duration: 0.4, ease }}
                 >
                   {t('onboarding.welcome.get_started')}
-                  <ArrowRight size={16} weight="bold" />
+                  <ArrowRight size={16} weight="bold" data-dir-flip />
                 </motion.button>
               ) : (
                 <button
@@ -256,7 +256,7 @@ export default function WelcomeModal() {
                   className="w-full flex items-center justify-center gap-2 py-3 text-sm font-semibold text-white bg-black rounded-lg hover:bg-gray-800 transition-colors"
                 >
                   {t('onboarding.welcome.lets_go')}
-                  <ArrowRight size={16} weight="bold" />
+                  <ArrowRight size={16} weight="bold" data-dir-flip />
                 </button>
               )}
             </div>

@@ -355,7 +355,7 @@ const UserProfileBuilder = () => {
           <div className="flex flex-col -space-y-1">
             <h1 className="font-bold text-xl text-gray-800 flex items-center">
               {t('user.settings.profile_builder.title')}
-              <span className="text-xs ml-2 bg-gray-200 text-gray-700 px-2 py-1 rounded-full">{t('user.settings.profile_builder.beta')}</span>
+              <span className="text-xs ms-2 bg-gray-200 text-gray-700 px-2 py-1 rounded-full">{t('user.settings.profile_builder.beta')}</span>
             </h1>
             <h2 className="text-gray-500 text-md">{t('user.settings.profile_builder.subtitle')}</h2>
           </div>
@@ -374,7 +374,7 @@ const UserProfileBuilder = () => {
         {/* Main Content */}
         <div className="grid grid-cols-4 gap-6">
           {/* Sections Panel */}
-          <div className="col-span-1 border-r pr-4">
+          <div className="col-span-1 border-e pe-4">
             <h3 className="font-medium mb-4">{t('user.settings.profile_builder.sections')}</h3>
             <DragDropContext onDragEnd={onDragEnd}>
               <Droppable droppableId="sections">
@@ -474,7 +474,7 @@ const UserProfileBuilder = () => {
                 <SelectTrigger className="w-full p-0 border-0 bg-black">
                   <div className="w-full">
                     <Button variant="default" className="w-full bg-black hover:bg-black/90 text-white">
-                      <Plus className="h-4 w-4 mr-2" />
+                      <Plus className="h-4 w-4 me-2" />
                       {t('user.settings.profile_builder.add_section')}
                     </Button>
                   </div>
@@ -640,7 +640,7 @@ const ImageGalleryEditor: React.FC<{
               }}
               className="w-full"
             >
-              <Plus className="h-4 w-4 mr-2" />
+              <Plus className="h-4 w-4 me-2" />
               {t('user.settings.profile_builder.editors.image_gallery.add_image')}
             </Button>
           </div>
@@ -765,7 +765,7 @@ const LinksEditor: React.FC<{
               }}
               className="w-full"
             >
-              <Plus className="h-4 w-4 mr-2" />
+              <Plus className="h-4 w-4 me-2" />
               {t('user.settings.profile_builder.editors.links.add_link')}
             </Button>
           </div>
@@ -868,7 +868,7 @@ const SkillsEditor: React.FC<{
               }}
               className="w-full"
             >
-              <Plus className="h-4 w-4 mr-2" />
+              <Plus className="h-4 w-4 me-2" />
               {t('user.settings.profile_builder.editors.skills.add_skill')}
             </Button>
           </div>
@@ -1007,7 +1007,7 @@ const ExperienceEditor: React.FC<{
                     }}
                     className="text-red-500 hover:text-red-600 hover:bg-red-50"
                   >
-                    <Trash2 className="h-4 w-4 mr-2" />
+                    <Trash2 className="h-4 w-4 me-2" />
                     {t('user.settings.general.remove')}
                   </Button>
                 </div>
@@ -1030,7 +1030,7 @@ const ExperienceEditor: React.FC<{
               }}
               className="w-full"
             >
-              <Plus className="h-4 w-4 mr-2" />
+              <Plus className="h-4 w-4 me-2" />
               {t('user.settings.profile_builder.editors.experience.add_experience')}
             </Button>
           </div>
@@ -1182,7 +1182,7 @@ const EducationEditor: React.FC<{
                     }}
                     className="text-red-500 hover:text-red-600 hover:bg-red-50"
                   >
-                    <Trash2 className="h-4 w-4 mr-2" />
+                    <Trash2 className="h-4 w-4 me-2" />
                     {t('user.settings.general.remove')}
                   </Button>
                 </div>
@@ -1206,7 +1206,7 @@ const EducationEditor: React.FC<{
               }}
               className="w-full"
             >
-              <Plus className="h-4 w-4 mr-2" />
+              <Plus className="h-4 w-4 me-2" />
               {t('user.settings.profile_builder.editors.education.add_education')}
             </Button>
           </div>
@@ -1296,7 +1296,7 @@ const AffiliationEditor: React.FC<{
                     }}
                     className="text-red-500 hover:text-red-600 hover:bg-red-50"
                   >
-                    <Trash2 className="h-4 w-4 mr-2" />
+                    <Trash2 className="h-4 w-4 me-2" />
                     {t('user.settings.general.remove')}
                   </Button>
                 </div>
@@ -1317,7 +1317,7 @@ const AffiliationEditor: React.FC<{
               }}
               className="w-full"
             >
-              <Plus className="h-4 w-4 mr-2" />
+              <Plus className="h-4 w-4 me-2" />
               {t('user.settings.profile_builder.editors.affiliation.add_affiliation')}
             </Button>
           </div>

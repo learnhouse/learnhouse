@@ -225,7 +225,7 @@ const FlipcardExtension: React.FC = (props: any) => {
                         e.stopPropagation()
                         handleQuestionEdit()
                       }}
-                      className="ml-2 opacity-60 hover:opacity-100 flex-shrink-0 pointer-events-auto"
+                      className="ms-2 opacity-60 hover:opacity-100 flex-shrink-0 pointer-events-auto"
                     >
                       <PencilSimple weight="duotone" size={14} />
                     </button>
@@ -267,7 +267,7 @@ const FlipcardExtension: React.FC = (props: any) => {
                         e.stopPropagation()
                         handleAnswerEdit()
                       }}
-                      className="ml-2 opacity-60 hover:opacity-100 flex-shrink-0 pointer-events-auto"
+                      className="ms-2 opacity-60 hover:opacity-100 flex-shrink-0 pointer-events-auto"
                     >
                       <PencilSimple weight="duotone" size={14} />
                     </button>

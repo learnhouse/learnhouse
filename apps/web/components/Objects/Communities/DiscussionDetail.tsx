@@ -113,7 +113,7 @@ export function DiscussionDetail({
               {discussion.emoji && (
                 <span className="text-3xl flex-shrink-0">{discussion.emoji}</span>
               )}
-              <span>{discussion.title}</span>
+              <span dir="auto">{discussion.title}</span>
             </h1>
           </div>
 
@@ -127,7 +127,7 @@ export function DiscussionDetail({
               <DropdownMenuContent align="end" className="w-44">
                 {onEdit && (
                   <DropdownMenuItem onClick={onEdit}>
-                    <Edit className="mr-2 h-4 w-4" />
+                    <Edit className="me-2 h-4 w-4" />
                     {t('communities.discussion_detail.edit')}
                   </DropdownMenuItem>
                 )}
@@ -137,8 +137,8 @@ export function DiscussionDetail({
                     confirmationButtonText={t('communities.discussion_detail.delete_button')}
                     dialogTitle={t('communities.discussion_detail.delete_title')}
                     dialogTrigger={
-                      <button className="w-full text-left flex items-center px-2 py-1.5 text-sm text-red-600 hover:bg-red-50 rounded-md transition-colors">
-                        <Trash2 className="mr-2 h-4 w-4" /> {t('communities.discussion_detail.delete')}
+                      <button className="w-full text-start flex items-center px-2 py-1.5 text-sm text-red-600 hover:bg-red-50 rounded-md transition-colors">
+                        <Trash2 className="me-2 h-4 w-4" /> {t('communities.discussion_detail.delete')}
                       </button>
                     }
                     functionToExecute={handleDelete}

@@ -293,7 +293,7 @@ export default function OrgEditBranding() {
 
   const extractVideoId = (url: string, type: 'youtube' | 'loom'): string | null => {
     if (type === 'youtube') {
-      const regex = /(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/
+      const regex = /(?:youtube\.com\/(?:[^/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?/\s]{11})/
       const match = url.match(regex)
       return match ? match[1] : null
     } else if (type === 'loom') {
@@ -711,7 +711,7 @@ export default function OrgEditBranding() {
                                     <button
                                       onClick={() => removePreview(preview.id)}
                                       className={cn(
-                                        "absolute -top-2 -right-2 bg-red-500 hover:bg-red-600 text-white rounded-full p-1.5",
+                                        "absolute -top-2 -end-2 bg-red-500 hover:bg-red-600 text-white rounded-full p-1.5",
                                         "opacity-0 group-hover:opacity-100 z-10 shadow-xs",
                                         "transition-opacity duration-200"
                                       )}
@@ -721,7 +721,7 @@ export default function OrgEditBranding() {
                                     <div
                                       {...provided.dragHandleProps}
                                       className={cn(
-                                        "absolute -top-2 -left-2 bg-gray-600 hover:bg-gray-700 text-white rounded-full p-1.5",
+                                        "absolute -top-2 -start-2 bg-gray-600 hover:bg-gray-700 text-white rounded-full p-1.5",
                                         "opacity-0 group-hover:opacity-100 cursor-grab active:cursor-grabbing z-10 shadow-xs",
                                         "transition-opacity duration-200"
                                       )}
@@ -1153,7 +1153,7 @@ export default function OrgEditBranding() {
                                 setFieldValue('links', newLinks);
                               }}
                             >
-                              <Plus className="h-4 w-4 mr-2" />
+                              <Plus className="h-4 w-4 me-2" />
                               {t('dashboard.organization.socials.add_link')}
                             </Button>
                           )}

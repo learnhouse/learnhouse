@@ -51,7 +51,7 @@ export function EmojiPicker({ value, onChange, triggerClassName, disabled = fals
               <span className="text-2xl">{value}</span>
               <button
                 onClick={handleClear}
-                className="absolute -top-2 -right-2 w-4 h-4 bg-gray-500 hover:bg-gray-600 text-white rounded-full flex items-center justify-center"
+                className="absolute -top-2 -end-2 w-4 h-4 bg-gray-500 hover:bg-gray-600 text-white rounded-full flex items-center justify-center"
               >
                 <X size={10} />
               </button>

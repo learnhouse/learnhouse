@@ -136,7 +136,7 @@ export default function RemoteCursors({ provider, canvasRef, pan, zoom }: Remote
 
         if (!el) {
           el = document.createElement('div')
-          el.className = 'pointer-events-none absolute left-0 top-0 z-50'
+          el.className = 'pointer-events-none absolute start-0 top-0 z-50'
           el.style.willChange = 'transform'
           el.style.transition = 'transform 350ms cubic-bezier(0.4, 0, 0.2, 1)'
           el.dataset.cid = String(c.clientId)

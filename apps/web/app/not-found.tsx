@@ -7,7 +7,10 @@ export default function NotFound() {
   return (
     <div className="flex min-h-screen w-full flex-col items-center justify-center 
    bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-zinc-200 to-slate-300">
-    <div className="nx-flex nx-items-center hover:nx-opacity-75 ltr:nx-mr-auto rtl:nx-ml-auto pb-20">
+    {/* The nx-* classes here were left over from a Nextra template and never
+        existed in this project's Tailwind build, so they rendered nothing.
+        Only pb-20 was ever doing anything. */}
+    <div className="pb-20">
         <Image quality={100}
           width={270}
           height={100}
@@ -30,7 +33,7 @@ export default function NotFound() {
         className="flex w-fit h-[50px] text-xl space-x-2 bg-black px-6 py-2 text-md rounded-lg font-bold text-white items-center shadow-md gap-2"
       >
         Go back to homepage
-        <ArrowRight className="tracking-tight transition-transform duration-150 ease-in-out ml-1" />
+        <ArrowRight className="tracking-tight transition-transform duration-150 ease-in-out ms-1" />
       </Link>
     </div>
     </div>
