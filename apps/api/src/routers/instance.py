@@ -49,8 +49,11 @@ async def get_instance_info(db_session: AsyncSession = Depends(get_db_session)):
     # can flip mid-runtime (a heartbeat recovering, a revocation landing), and
     # baking those into a 600s blob meant an operator who fixed a bad license
     # key watched /instance/info keep reporting mode "oss" for ten minutes and
-    # concluded the fix had not worked. Both fields are cheap — an attribute
-    # read on module-global state.
+    # concluded the fix had not worked.
+    #
+    # This is not free — get_deployment_mode() resolves the whole config, which
+    # is why config.yaml parsing is memoised. Measured at ~0.2ms per request
+    # against ~26ms before that memoisation.
     cached = get_cached_instance_info()
     if cached is not None:
         return {**cached, **_live_fields(cached.get("tenancy", "single"))}
