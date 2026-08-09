@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { useQuery } from '@tanstack/react-query'
 import { queryKeys } from '@/lib/query/keys'
 import { useTranslation } from 'react-i18next'
+import { formatDate } from '@/lib/format'
 import { useOrg } from '@components/Contexts/OrgContext'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
 import { getCourseThumbnailMediaDirectory } from '@services/media/media'
@@ -12,7 +13,7 @@ import { SafeImage } from '@components/Objects/SafeImage'
 import { BookOpen, PlusCircle, Clock } from '@phosphor-icons/react'
 
 export default function RecentCourses() {
-  const { t } = useTranslation()
+  const { t, i18n } = useTranslation()
   const org = useOrg() as any
   const session = useLHSession() as any
   const token = session?.data?.tokens?.access_token
@@ -101,7 +102,8 @@ export default function RecentCourses() {
                 )
               : null
             const updatedAt = course.update_date
-              ? new Date(course.update_date).toLocaleDateString('en-US', {
+              ? formatDate(course.update_date, i18n.language, {
+                  dateStyle: undefined,
                   month: 'short',
                   day: 'numeric',
                 })

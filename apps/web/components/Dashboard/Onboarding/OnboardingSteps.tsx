@@ -103,7 +103,7 @@ export default function OnboardingSteps() {
                     type="button"
                     onClick={() => !step.completed && toggle(step.id)}
                     disabled={step.completed}
-                    className="w-full flex items-center gap-3.5 px-5 py-4 text-left"
+                    className="w-full flex items-center gap-3.5 px-5 py-4 text-start"
                   >
                     <Icon
                       size={20}
@@ -149,9 +149,9 @@ export default function OnboardingSteps() {
                         exit={{ height: 0, opacity: 0 }}
                         transition={{ duration: 0.28, ease }}
                       >
-                        <div className="pr-5 pb-4 pl-[54px]">
+                        <div className="pe-5 pb-4 ps-[54px]">
                           <p className="text-[13px] text-gray-500 leading-relaxed -mt-1.5 mb-3">
-                            {step.description}
+                            {t(`onboarding.steps.${step.id}.description`, { defaultValue: step.description })}
                           </p>
 
                           {/* Walkthrough video placeholder */}
@@ -187,8 +187,8 @@ export default function OnboardingSteps() {
                                 }}
                                 className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg text-[13px] font-semibold text-white bg-gray-900 hover:bg-gray-800 transition-colors"
                               >
-                                {step.action}
-                                <ArrowUpRight size={14} weight="bold" />
+                                {t(`onboarding.steps.${step.id}.action`, { defaultValue: step.action })}
+                                <ArrowUpRight size={14} weight="bold" data-dir-flip />
                               </a>
                             ) : (
                               <Link
@@ -196,8 +196,8 @@ export default function OnboardingSteps() {
                                 onClick={() => track(AnalyticsEvent.OnboardingStepActionClicked, { step_id: step.id })}
                                 className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg text-[13px] font-semibold text-white bg-gray-900 hover:bg-gray-800 transition-colors"
                               >
-                                {step.action}
-                                <ArrowRight size={14} weight="bold" />
+                                {t(`onboarding.steps.${step.id}.action`, { defaultValue: step.action })}
+                                <ArrowRight size={14} weight="bold" data-dir-flip />
                               </Link>
                             )}
                           </div>
@@ -213,7 +213,7 @@ export default function OnboardingSteps() {
       </div>
 
       {/* Finish later */}
-      <div className="mt-3 pl-12">
+      <div className="mt-3 ps-12">
         <button
           onClick={dismiss}
           className="text-[13px] font-medium text-gray-400 hover:text-gray-600 transition-colors"

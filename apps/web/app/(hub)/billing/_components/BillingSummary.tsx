@@ -2,18 +2,17 @@
 import React from 'react'
 import { Receipt, TrendingUp } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
+import { formatCurrency, formatDate as fmtDate } from '@/lib/format'
 import type { UpcomingInvoice } from '../_lib/billingClient'
 
-function formatMoney(minorUnits: number, currency: string): string {
-  return new Intl.NumberFormat('en-US', {
-    style: 'currency',
-    currency: currency.toUpperCase(),
-  }).format(minorUnits / 100)
+function formatMoney(minorUnits: number, currency: string, lng: string): string {
+  return formatCurrency(minorUnits / 100, currency.toUpperCase(), lng)
 }
 
-function formatDate(unixSeconds?: number): string | null {
+function formatDate(unixSeconds: number | undefined, lng: string): string | null {
   if (!unixSeconds) return null
-  return new Date(unixSeconds * 1000).toLocaleDateString('en-US', {
+  return fmtDate(unixSeconds * 1000, lng, {
+    dateStyle: undefined,
     year: 'numeric',
     month: 'short',
     day: 'numeric',
@@ -42,10 +41,10 @@ export default function BillingSummary({
   accruingUsd: number
   hasActivePacks: boolean
 }) {
-  const { t } = useTranslation()
+  const { t, i18n } = useTranslation()
   if (!invoice) return null
 
-  const dueDate = formatDate(invoice.nextPaymentAttempt ?? invoice.periodEnd)
+  const dueDate = formatDate(invoice.nextPaymentAttempt ?? invoice.periodEnd, i18n.language)
 
   return (
     <div className="bg-white rounded-2xl nice-shadow overflow-hidden">
@@ -56,9 +55,9 @@ export default function BillingSummary({
             {t('billing.next_invoice', { defaultValue: 'Next invoice' })}
           </h2>
         </div>
-        <div className="text-right">
+        <div className="text-end">
           <p className="text-[20px] font-black leading-none text-black">
-            {formatMoney(invoice.amountDue, invoice.currency)}
+            {formatMoney(invoice.amountDue, invoice.currency, i18n.language)}
           </p>
           {dueDate && (
             <p className="text-[11px] text-black/35 font-medium mt-1">
@@ -75,13 +74,13 @@ export default function BillingSummary({
               {line.description ||
                 t('billing.line_subscription', { defaultValue: 'Subscription' })}
               {line.kind === 'overage' && (
-                <span className="ml-2 text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-amber-50 text-amber-700 border border-amber-200 whitespace-nowrap">
+                <span className="ms-2 text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-amber-50 text-amber-700 border border-amber-200 whitespace-nowrap">
                   {t('billing.active_members_short', { defaultValue: 'Active members' })}
                 </span>
               )}
             </span>
             <span className="font-semibold text-black whitespace-nowrap">
-              {formatMoney(line.amount, line.currency)}
+              {formatMoney(line.amount, line.currency, i18n.language)}
             </span>
           </div>
         ))}
@@ -95,7 +94,7 @@ export default function BillingSummary({
               })}
             </span>
             <span className="font-semibold text-amber-700 whitespace-nowrap">
-              +{formatMoney(accruingUsd * 100, invoice.currency)}
+              +{formatMoney(accruingUsd * 100, invoice.currency, i18n.language)}
             </span>
           </div>
         )}

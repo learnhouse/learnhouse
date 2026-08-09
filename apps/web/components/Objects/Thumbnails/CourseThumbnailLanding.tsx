@@ -22,6 +22,7 @@ import {
   DropdownMenuTrigger,
 } from "@components/ui/dropdown-menu"
 import { useTranslation } from 'react-i18next'
+import { formatDate } from '@/lib/format'
 
 type Course = {
   course_uuid: string
@@ -67,7 +68,7 @@ const AdminEditOptions: React.FC<AdminEditOptionsProps> = ({ course, orgslug, de
       checkMethod="roles"
       orgId={course.org_id}
     >
-      <div className="absolute top-2 right-2 z-20">
+      <div className="absolute top-2 end-2 z-20">
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <button className="p-1 bg-white rounded-full hover:bg-gray-100 transition-colors shadow-md">
@@ -77,12 +78,12 @@ const AdminEditOptions: React.FC<AdminEditOptionsProps> = ({ course, orgslug, de
           <DropdownMenuContent align="end" className="w-56">
             <DropdownMenuItem asChild>
               <Link prefetch href={getUriWithOrg(orgslug, `/dash/courses/course/${removeCoursePrefix(course.course_uuid)}/content`)}>
-                <FilePenLine className="mr-2 h-4 w-4" /> {t('courses.edit_content')}
+                <FilePenLine className="me-2 h-4 w-4" /> {t('courses.edit_content')}
               </Link>
             </DropdownMenuItem>
             <DropdownMenuItem asChild>
               <Link prefetch href={getUriWithOrg(orgslug, `/dash/courses/course/${removeCoursePrefix(course.course_uuid)}/general`)}>
-                <Settings2 className="mr-2 h-4 w-4" /> {t('common.settings')}
+                <Settings2 className="me-2 h-4 w-4" /> {t('common.settings')}
               </Link>
             </DropdownMenuItem>
             <DropdownMenuItem asChild>
@@ -91,8 +92,8 @@ const AdminEditOptions: React.FC<AdminEditOptionsProps> = ({ course, orgslug, de
                 confirmationMessage={t('courses.delete_course_confirm')}
                 dialogTitle={t('courses.delete_course_title', { name: course.name })}
                 dialogTrigger={
-                  <button className="w-full text-left flex items-center px-2 py-1 rounded-md text-sm bg-rose-500/10 hover:bg-rose-500/20 transition-colors text-red-600">
-                    <BookMinus className="mr-4 h-4 w-4" /> {t('courses.delete_course')}
+                  <button className="w-full text-start flex items-center px-2 py-1 rounded-md text-sm bg-rose-500/10 hover:bg-rose-500/20 transition-colors text-red-600">
+                    <BookMinus className="me-4 h-4 w-4" /> {t('courses.delete_course')}
                   </button>
                 }
                 functionToExecute={deleteCourse}
@@ -152,7 +153,7 @@ const CourseThumbnailLanding: React.FC<PropsType> = ({ course, orgslug, customLi
       </Link>
       <div className='flex flex-col w-full p-4 space-y-3'>
         <div className="space-y-2">
-          <h2 className="font-bold text-gray-800 leading-tight text-base min-h-[2.75rem] line-clamp-2">{course.name}</h2>
+          <h2 className="font-bold text-gray-800 leading-tight text-base min-h-[2.75rem] line-clamp-2" dir="auto">{course.name}</h2>
           <p className='text-xs text-gray-700 leading-normal min-h-[3.75rem] line-clamp-3'>{course.description}</p>
         </div>
         
@@ -160,7 +161,7 @@ const CourseThumbnailLanding: React.FC<PropsType> = ({ course, orgslug, customLi
           {course.update_date && (
             <div className="inline-flex h-5 min-w-[140px] items-center justify-center px-2 rounded-md bg-gray-100/80 border border-gray-200">
               <span className="text-[10px] font-medium text-gray-600 truncate">
-                {t('common.updated')} {new Date(course.update_date).toLocaleDateString(i18n.language === 'fr' ? 'fr-FR' : 'en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                {t('common.updated')} {formatDate(course.update_date, i18n.language, { dateStyle: undefined, month: 'short', day: 'numeric', year: 'numeric' })}
               </span>
             </div>
           )}
@@ -186,7 +187,7 @@ const CourseThumbnailLanding: React.FC<PropsType> = ({ course, orgslug, customLi
               ))}
               {hasMoreAuthors && (
                 <div 
-                  className="relative -ml-1"
+                  className="relative -ms-1"
                   style={{ zIndex: 0 }}
                 >
                   <div className="flex items-center justify-center w-[32px] h-[32px] text-[11px] font-medium text-gray-600 bg-gray-100 border-2 border-white rounded-full">
