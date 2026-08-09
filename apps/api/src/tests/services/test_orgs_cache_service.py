@@ -11,6 +11,7 @@ from unittest.mock import MagicMock, patch
 
 from src.services.orgs import cache as cache_module
 from src.services.orgs.cache import (
+    _INSTANCE_INFO_KEY,
     get_cached_org_config,
     invalidate_org_config_cache,
     set_cached_org_config,
@@ -160,7 +161,7 @@ class TestInstanceInfoCache:
         with patch("src.services.orgs.cache.get_redis_client", return_value=r):
             set_cached_instance_info({"version": "2.0"})
         r.setex.assert_called_once_with(
-            "org_cache:instance_info",
+            _INSTANCE_INFO_KEY,
             cache_module.CACHE_TTL_INSTANCE_INFO,
             json.dumps({"version": "2.0"}),
         )

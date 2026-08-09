@@ -1,0 +1,137 @@
+name: Lockfiles
+
+# Manifests are the source of truth; lockfiles are derived from them. When the
+# two disagree, every frozen install downstream fails — the Docker build, the
+# web lint, the API tests — with an error that says nothing about the cause:
+#
+#   error: lockfile had changes, but lockfile is frozen
+#
+# apps/web used to carry a second lockfile for another package manager, which
+# is how Renovate ended up regenerating that one and never bun.lock. Only
+# bun.lock remains, but a hand-edited version bump still regenerates nothing.
+# This job closes that gap: it verifies every lockfile, and on bot PRs it
+# commits the regenerated ones back to the branch.
+
+on:
+  pull_request:
+    paths:
+      - "**/package.json"
+      - "**/bun.lock"
+      - "apps/api/pyproject.toml"
+      - "apps/api/uv.lock"
+      - ".bun-version"
+      - "scripts/lockfiles.sh"
+      - ".github/workflows/lockfiles.yaml"
+  push:
+    branches:
+      - dev
+    paths:
+      - "**/package.json"
+      - "**/bun.lock"
+      - "apps/api/pyproject.toml"
+      - "apps/api/uv.lock"
+      - ".bun-version"
+      - "scripts/lockfiles.sh"
+      - ".github/workflows/lockfiles.yaml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+# See api-lint.yaml — one live run per PR, dev runs always finish.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  lockfiles:
+    name: Lockfiles in sync
+    runs-on: ubuntu-latest
+    permissions:
+      # Needed only by the push-back step, which is restricted to same-repo
+      # bot PRs below.
+      contents: write
+    env:
+      # Auto-fix applies to dependency-bot PRs raised on a branch in this repo.
+      # Fork PRs get a read-only token, and human PRs should see the failure
+      # rather than have a commit appear underneath them.
+      AUTOFIX: >-
+        ${{ github.event_name == 'pull_request'
+            && github.event.pull_request.head.repo.full_name == github.repository
+            && endsWith(github.event.pull_request.user.login, '[bot]') }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          # The head commit, not the merge commit, so the regenerated
+          # lockfiles apply to the branch. A SHA rather than the branch name —
+          # a ref taken from the event payload is attacker-controlled.
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          # A commit pushed with GITHUB_TOKEN does not start a new CI run, so
+          # the rest of the PR's checks would stay red on the stale SHA. Set
+          # LOCKFILE_SYNC_TOKEN (a PAT or app token with `contents: write`) to
+          # have the fix re-trigger them.
+          token: ${{ secrets.LOCKFILE_SYNC_TOKEN || secrets.GITHUB_TOKEN }}
+
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version-file: .bun-version
+
+      # No setup-python step: `uv lock` resolves from package metadata and
+      # never needs an interpreter.
+      - uses: astral-sh/setup-uv@v9.0.0
+        with:
+          version: latest
+          enable-cache: true
+          cache-dependency-glob: "apps/api/uv.lock"
+
+      - name: Cache bun install cache
+        uses: actions/cache@v6
+        with:
+          path: ~/.bun/install/cache
+          key: bun-lockfiles-${{ runner.os }}-${{ hashFiles('**/bun.lock') }}
+          restore-keys: bun-lockfiles-${{ runner.os }}-
+
+      - name: Check lockfiles
+        id: check
+        continue-on-error: true
+        run: scripts/lockfiles.sh --check
+
+      - name: Regenerate lockfiles
+        if: steps.check.outcome == 'failure'
+        run: scripts/lockfiles.sh
+
+      - name: Commit the regenerated lockfiles
+        id: push
+        if: steps.check.outcome == 'failure' && env.AUTOFIX == 'true'
+        env:
+          # Never interpolated into the script body — a branch name is
+          # attacker-controlled text.
+          HEAD_REF: ${{ github.event.pull_request.head.ref }}
+          HAS_PAT: ${{ secrets.LOCKFILE_SYNC_TOKEN != '' }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A -- '*package.json' '*bun.lock' apps/api/uv.lock
+          if git diff --cached --quiet; then
+            echo "Nothing to commit — the drift is outside the lockfiles."
+            exit 1
+          fi
+          git commit -m "chore(deps): regenerate lockfiles"
+          git push origin "HEAD:refs/heads/${HEAD_REF}"
+          {
+            echo "### Lockfiles regenerated"
+            echo
+            echo "The manifests in this PR were out of step with the lockfiles."
+            echo "The regenerated lockfiles have been pushed to the branch."
+            if [ "$HAS_PAT" != "true" ]; then
+              echo
+              echo "Pushed with \`GITHUB_TOKEN\`, so the other checks will not"
+              echo "re-run on their own — re-run them to see the new commit."
+            fi
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Report
+        if: steps.check.outcome == 'failure' && steps.push.outcome != 'success'
+        run: |
+          echo "::error::Lockfiles are out of date. Run scripts/lockfiles.sh and commit the result."
+          exit 1

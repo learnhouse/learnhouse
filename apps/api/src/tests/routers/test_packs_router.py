@@ -67,7 +67,7 @@ class TestInternalPacksRouter:
             else:
                 os.environ["LEARNHOUSE_PLATFORM_API_KEY"] = old
 
-        assert response.status_code == 500
+        assert response.status_code == 403
 
         old = os.environ.get("LEARNHOUSE_PLATFORM_API_KEY")
         os.environ["LEARNHOUSE_PLATFORM_API_KEY"] = "platform-secret"
@@ -75,6 +75,55 @@ class TestInternalPacksRouter:
             response = await client.post(
                 "/api/v1/internal/packs/1/activate",
                 headers={"x-platform-key": "wrong-key"},
+                json={"pack_id": "ai_500", "platform_subscription_id": "sub_123"},
+            )
+        finally:
+            if old is None:
+                os.environ.pop("LEARNHOUSE_PLATFORM_API_KEY", None)
+            else:
+                os.environ["LEARNHOUSE_PLATFORM_API_KEY"] = old
+
+        assert response.status_code == 403
+
+    async def test_unset_key_and_empty_header_is_rejected(self, client):
+        """An unconfigured deployment must never accept a request.
+
+        hmac.compare_digest(b"", b"") is True, so without the emptiness checks in
+        verify_platform_key this exact combination would return 200 and let any
+        caller activate packs on any organization.
+        """
+        old = os.environ.get("LEARNHOUSE_PLATFORM_API_KEY")
+        os.environ.pop("LEARNHOUSE_PLATFORM_API_KEY", None)
+        try:
+            with patch(
+                "src.routers.orgs.packs.activate_pack",
+                return_value=_mock_pack(),
+            ):
+                response = await client.post(
+                    "/api/v1/internal/packs/1/activate",
+                    headers={"x-platform-key": ""},
+                    json={"pack_id": "ai_500", "platform_subscription_id": "sub_123"},
+                )
+        finally:
+            if old is None:
+                os.environ.pop("LEARNHOUSE_PLATFORM_API_KEY", None)
+            else:
+                os.environ["LEARNHOUSE_PLATFORM_API_KEY"] = old
+
+        assert response.status_code == 403
+
+    async def test_non_ascii_key_header_is_rejected(self, client):
+        """A non-ASCII header must be a 403, not an unhandled TypeError -> 500.
+
+        Header values arrive decoded as latin-1 and hmac.compare_digest raises
+        TypeError on non-ASCII str, so the comparison runs on bytes.
+        """
+        old = os.environ.get("LEARNHOUSE_PLATFORM_API_KEY")
+        os.environ["LEARNHOUSE_PLATFORM_API_KEY"] = "platform-secret"
+        try:
+            response = await client.post(
+                "/api/v1/internal/packs/1/activate",
+                headers={"x-platform-key": "clé-invalide".encode("latin-1")},
                 json={"pack_id": "ai_500", "platform_subscription_id": "sub_123"},
             )
         finally:

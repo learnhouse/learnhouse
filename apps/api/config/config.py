@@ -150,6 +150,66 @@ class LearnHouseConfig(BaseModel):
     judge0_config: Judge0Config | None
 
 
+def _env_bool(env_value, yaml_value):
+    """Resolve a boolean setting from an env string, falling back to YAML.
+
+    Env vars arrive as strings, and `"false" or yaml_value` evaluates to the
+    string "false" — which is truthy. So `LEARNHOUSE_SELF_HOSTED=false` used to
+    read as True and pin tenancy to "single", collapsing the CORS regex and
+    making the session cookie host-only; `LEARNHOUSE_SSL=false` produced https
+    magic links on a plain-HTTP install. Both failed with no error, and
+    explicitly disabling a flag is the natural way to write it.
+
+    `development_mode` and `saas_mode` already parse correctly above; this is
+    the same logic for the settings that were still using bare `or`.
+    """
+    value = yaml_value if env_value is None or env_value == "" else env_value
+    if value is None or isinstance(value, bool):
+        return value
+    # YAML gives a real bool for `ssl: false` but a string for `ssl: "false"`,
+    # and the quoted form is easy to write by accident. Parse both sides the
+    # same way rather than only fixing the env side.
+    return str(value).strip().lower() in ("true", "1", "yes", "on")
+
+
+_yaml_cache: dict = {}
+
+
+def _load_yaml_config(yaml_path: str) -> dict:
+    """Parse config.yaml, memoised on (path, mtime, size).
+
+    Parsing dominates the cost of building the config — roughly 9ms of a 10ms
+    call, since this function is not otherwise cached and every caller re-reads
+    the file. That was tolerable while config was read at startup, and stopped
+    being tolerable once /instance/info began resolving deployment mode per
+    request.
+
+    Only the file parse is cached. Every environment variable is still read
+    live on each call, so nothing that reads env changes behaviour, and tests
+    that mutate the environment between calls keep working. Editing the file
+    invalidates on mtime/size, which keeps local edit-reload behaviour intact.
+    """
+    try:
+        st = os.stat(yaml_path)
+        key = (yaml_path, st.st_mtime_ns, st.st_size)
+    except OSError:
+        key = None
+
+    if key is not None and key in _yaml_cache:
+        return _yaml_cache[key]
+
+    with open(yaml_path, "r", encoding="utf-8") as f:
+        parsed = yaml.safe_load(f)
+
+    # Defensive: an empty file parses to None.
+    parsed = parsed if parsed is not None else {}
+
+    if key is not None:
+        _yaml_cache.clear()  # only ever one live config file
+        _yaml_cache[key] = parsed
+    return parsed
+
+
 def get_learnhouse_config() -> LearnHouseConfig:
 
     load_dotenv()
@@ -157,13 +217,7 @@ def get_learnhouse_config() -> LearnHouseConfig:
     # Get the YAML file
     yaml_path = os.path.join(os.path.dirname(__file__), "config.yaml")
 
-    # Load the YAML file
-    with open(yaml_path, "r", encoding="utf-8") as f:
-        yaml_config = yaml.safe_load(f)
-    
-    # Ensure yaml_config is not None (defensive programming)
-    if yaml_config is None:
-        yaml_config = {}
+    yaml_config = _load_yaml_config(yaml_path)
 
     # General Config
 
@@ -242,10 +296,10 @@ def get_learnhouse_config() -> LearnHouseConfig:
     contact_email = env_contact_email or yaml_config.get("contact_email")
 
     domain = env_domain or yaml_config.get("hosting_config", {}).get("domain")
-    ssl = env_ssl or yaml_config.get("hosting_config", {}).get("ssl")
+    ssl = _env_bool(env_ssl, yaml_config.get("hosting_config", {}).get("ssl"))
     port = env_port or yaml_config.get("hosting_config", {}).get("port")
-    use_default_org = env_use_default_org or yaml_config.get("hosting_config", {}).get(
-        "use_default_org"
+    use_default_org = _env_bool(
+        env_use_default_org, yaml_config.get("hosting_config", {}).get("use_default_org")
     )
     allowed_origins = env_allowed_origins or yaml_config.get("hosting_config", {}).get(
         "allowed_origins"
@@ -253,8 +307,8 @@ def get_learnhouse_config() -> LearnHouseConfig:
     allowed_regexp = env_allowed_regexp or yaml_config.get("hosting_config", {}).get(
         "allowed_regexp"
     )
-    self_hosted = env_self_hosted or yaml_config.get("hosting_config", {}).get(
-        "self_hosted"
+    self_hosted = _env_bool(
+        env_self_hosted, yaml_config.get("hosting_config", {}).get("self_hosted")
     )
 
     # Tenancy mode — single explicit knob that supersedes the older overlapping

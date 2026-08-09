@@ -964,6 +964,14 @@ EMAIL_TRANSLATIONS: dict[str, dict[str, str]] = {
 }
 
 
+# Lifecycle nudge copy lives in its own module to keep this bundle readable,
+# but shares the same namespace and the same `t()` lookup.
+from src.services.email.nudge_translations import NUDGE_TRANSLATIONS  # noqa: E402
+
+for _nudge_lang, _nudge_keys in NUDGE_TRANSLATIONS.items():
+    EMAIL_TRANSLATIONS.setdefault(_nudge_lang, {}).update(_nudge_keys)
+
+
 def normalize_language(lang: str | None) -> str:
     """Return a supported locale code, falling back to English."""
     if not lang:

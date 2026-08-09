@@ -19,6 +19,17 @@ CACHE_TTL_ORG_CONFIG = 120     # org config — same TTL as slug
 
 _KEY_PREFIX = "org_cache"
 
+# Versioned: the cached payload's SHAPE changed when `mode` and
+# `multi_org_enabled` moved out of it and became per-request. Deploys are
+# rolling, so old and new pods share this Redis for the length of a rollout.
+# On the old key an old pod would read the new trimmed blob and return it
+# verbatim, giving clients an /instance/info response with no `mode` at all —
+# which the frontend proxy writes into the LH_mode cookie, and which then
+# reads back as "oss". EE surfaces and the SaaS billing guard would switch off
+# fleet-wide for up to the cache TTL. Bumping the key means neither version
+# ever sees the other's payload; the stale key simply expires.
+_INSTANCE_INFO_KEY = f"{_KEY_PREFIX}:instance_info:v2"
+
 
 def get_cached_org_config(org_id: int) -> Optional[dict]:
     """Return cached org config for an org_id, or None."""
@@ -98,7 +109,7 @@ def get_cached_instance_info() -> Optional[dict]:
     if r is None:
         return None
     try:
-        raw = r.get(f"{_KEY_PREFIX}:instance_info")
+        raw = r.get(_INSTANCE_INFO_KEY)
         if raw:
             return json.loads(raw)
     except Exception:
@@ -112,6 +123,6 @@ def set_cached_instance_info(data: dict) -> None:
     if r is None:
         return
     try:
-        r.setex(f"{_KEY_PREFIX}:instance_info", CACHE_TTL_INSTANCE_INFO, json.dumps(data))
+        r.setex(_INSTANCE_INFO_KEY, CACHE_TTL_INSTANCE_INFO, json.dumps(data))
     except Exception:
         logger.debug("Instance info cache write failed", exc_info=True)
