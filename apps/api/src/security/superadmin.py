@@ -7,6 +7,40 @@ from src.db.users import User
 
 logger = logging.getLogger(__name__)
 
+#: Machine-readable body for "this surface is Enterprise Edition only".
+#: The web client matches this exact shape (403 + detail.error === 'ee_required')
+#: in apps/web/components/Admin/EELicenseError.tsx::isEERequiredError.
+#:
+#: Deliberately not the 503 'ee_license_inactive' shape: that one means EE is
+#: installed but its license check is failing, which is transient and worth a
+#: retry. This one means the feature does not exist on this deployment.
+EE_SUPERADMIN_REQUIRED_DETAIL = {
+    "error": "ee_required",
+    "feature": "superadmin",
+    "message": "Enterprise Edition license required.",
+}
+
+
+def ensure_ee_superadmin_surface() -> None:
+    """Block the superadmin surface on OSS deployments.
+
+    Denies only when the mode is definitively 'oss'. Both 'saas' and 'ee' pass
+    through untouched — never invert this to ``!= 'ee'``, which would 403 the
+    live SaaS deployment.
+
+    The import is lazy so the mode is resolved per request rather than frozen
+    when the dependency is constructed, and to stay clear of the
+    rbac -> superadmin -> auth -> users -> rbac import cycle this module
+    already works around.
+    """
+    from src.core.deployment_mode import get_deployment_mode
+
+    if get_deployment_mode() == 'oss':
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail=dict(EE_SUPERADMIN_REQUIRED_DETAIL),
+        )
+
 
 async def is_user_superadmin(user_id: int, db_session: AsyncSession) -> bool:
     """Check if a user is a superadmin by querying the database directly."""
@@ -51,6 +85,14 @@ async def require_superadmin(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Authentication required",
         )
+
+    # Defense in depth. The EE superadmin routers are already mounted behind
+    # their own OSS check, so on those routes this never fires — it is here so
+    # that any core route which adopts require_superadmin later inherits the
+    # gate instead of quietly shipping a superadmin surface to OSS.
+    # Ordered after the 401 so anonymous callers still get 401, and before the
+    # principal-type branches so OSS never reveals which principals would pass.
+    ensure_ee_superadmin_surface()
 
     # Org-scoped API tokens are never superadmins, regardless of who minted them.
     if isinstance(current_user, APITokenUser):

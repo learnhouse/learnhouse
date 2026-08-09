@@ -115,7 +115,11 @@ class TestRequireSuperadmin:
             email="plain@test.com",
             user_uuid="user_plain30",
         )
+        # 'ee' is the self-hosted-EE baseline: the suite pins 'oss' globally
+        # (see conftest), which would trip the EE gate before this assertion.
         with patch(
+            "src.core.deployment_mode.get_deployment_mode", return_value="ee"
+        ), patch(
             "src.security.superadmin.is_user_superadmin",
             new=AsyncMock(return_value=False),
         ):
@@ -134,6 +138,8 @@ class TestRequireSuperadmin:
             user_uuid="user_sadmin31",
         )
         with patch(
+            "src.core.deployment_mode.get_deployment_mode", return_value="ee"
+        ), patch(
             "src.security.superadmin.is_user_superadmin",
             new=AsyncMock(return_value=True),
         ):

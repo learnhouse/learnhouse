@@ -78,3 +78,21 @@ def test_get_deployment_mode_fails_closed_for_hooks_without_license_check():
         patch("src.core.deployment_mode.get_ee_hooks", return_value=hooks),
     ):
         assert get_deployment_mode() == "oss"
+
+
+def test_empty_ee_dir_does_not_count_as_ee_available(tmp_path, monkeypatch):
+    """A directory named "ee" with no hooks.py is not an EE install.
+
+    get_deployment_mode() already fails closed on a hooks module it cannot
+    load, but is_ee_available() is consulted on its own elsewhere, so it
+    should not claim EE is present either.
+    """
+    from src.core.ee_hooks import is_ee_available
+
+    monkeypatch.delenv("LEARNHOUSE_DISABLE_EE", raising=False)
+    monkeypatch.chdir(tmp_path)
+    (tmp_path / "ee").mkdir()
+    assert is_ee_available() is False
+
+    (tmp_path / "ee" / "hooks.py").write_text("")
+    assert is_ee_available() is True
