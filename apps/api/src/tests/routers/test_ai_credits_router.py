@@ -34,6 +34,19 @@ async def client(app):
         yield c
 
 
+@pytest.fixture(autouse=True)
+def ee_mode():
+    """Run this module against the self-hosted-EE baseline.
+
+    The credit mutators are superadmin-only and therefore Enterprise-only. The
+    suite pins 'oss' globally (see conftest), which would 403 them before any
+    of the behaviour under test runs. Tests that specifically want OSS patch
+    the same target again — the inner patch wins.
+    """
+    with patch("src.core.deployment_mode.get_deployment_mode", return_value="ee"):
+        yield
+
+
 class TestAICreditsRouter:
     async def test_org_member_and_admin_wrappers(self, db, org):
         with patch(
@@ -232,3 +245,41 @@ class TestAICreditsRouter:
                 json={"amount": -1},
             )
         assert response.status_code == 400
+
+
+class TestAICreditsOSSGate:
+    """The credit mutators are Enterprise-only; the read endpoint is not."""
+
+    async def test_mutators_403_in_oss(self, client, org):
+        with patch("src.core.deployment_mode.get_deployment_mode", return_value="oss"):
+            for path, payload in (
+                (f"/api/v1/orgs/{org.id}/ai-credits/add", {"amount": 10}),
+                (f"/api/v1/orgs/{org.id}/ai-credits/reset", {}),
+                (f"/api/v1/orgs/{org.id}/ai-credits/set", {"amount": 10}),
+            ):
+                response = await client.post(path, json=payload)
+                assert response.status_code == 403, path
+                assert response.json()["detail"]["error"] == "ee_required", path
+
+    async def test_get_still_works_in_oss(self, client, org):
+        # Regression guard: three non-admin billing and usage surfaces read
+        # this endpoint. Gating it would break org billing in every mode.
+        with patch("src.core.deployment_mode.get_deployment_mode", return_value="oss"), patch(
+            "src.routers.orgs.ai_credits.verify_user_is_org_member",
+            new_callable=AsyncMock,
+            return_value=True,
+        ), patch(
+            "src.routers.orgs.ai_credits.get_ai_credits_summary",
+            return_value={
+                "plan": "free",
+                "base_credits": 100,
+                "purchased_credits": 0,
+                "total_credits": 100,
+                "used_credits": 0,
+                "remaining_credits": 100,
+                "mode": "v1",
+            },
+        ):
+            response = await client.get(f"/api/v1/orgs/{org.id}/ai-credits")
+        assert response.status_code == 200
+        assert response.json()["remaining_credits"] == 100

@@ -26,13 +26,60 @@ export function isEELicenseInactiveError(err: unknown): err is { status: 503; de
   )
 }
 
+/** Shape of the FastAPI detail for a surface that only exists in EE. */
+interface EERequiredDetail {
+  error: 'ee_required'
+  feature: string
+  message: string
+}
+
+/**
+ * Detect the Enterprise-only 403 raised by
+ * `apps/api/src/security/superadmin.py::ensure_ee_superadmin_surface`.
+ *
+ * Distinct from `isEELicenseInactiveError` (503): that one means EE is
+ * installed but its license check is failing, which is transient. This one
+ * means the feature does not exist on this deployment, which is permanent —
+ * so it must not be presented as something to retry or reconfigure.
+ */
+export function isEERequiredError(err: unknown): err is { status: 403; detail: EERequiredDetail } {
+  if (!err || typeof err !== 'object') return false
+  const e = err as { status?: unknown; detail?: unknown }
+  if (e.status !== 403) return false
+  const d = e.detail
+  return (
+    !!d &&
+    typeof d === 'object' &&
+    (d as { error?: unknown }).error === 'ee_required'
+  )
+}
+
 /**
  * Render a clear banner when an EE-gated endpoint returns 503 with the
- * `ee_license_inactive` detail. Falls back to a generic error banner for any
- * other thrown error. Returns null when there's no error to show.
+ * `ee_license_inactive` detail, or 403 with `ee_required`. Falls back to a
+ * generic error banner for any other thrown error. Returns null when there's
+ * no error to show.
  */
 export default function EELicenseError({ error }: { error: unknown }) {
   if (!error) return null
+  if (isEERequiredError(error)) {
+    return (
+      <div className="rounded-2xl border border-sky-400/20 bg-sky-400/[0.06] p-5 my-4">
+        <div className="flex items-start gap-3">
+          <Warning size={20} weight="fill" className="text-sky-300 mt-0.5 shrink-0" />
+          <div className="min-w-0">
+            <div className="text-sm font-semibold text-sky-200">
+              Enterprise Edition license required
+            </div>
+            <p className="text-xs text-sky-200/80 mt-1.5 leading-relaxed">
+              This endpoint is part of LearnHouse Enterprise Edition and is not
+              available on this deployment.
+            </p>
+          </div>
+        </div>
+      </div>
+    )
+  }
   if (isEELicenseInactiveError(error)) {
     return (
       <div className="rounded-2xl border border-amber-400/20 bg-amber-400/[0.06] p-5 my-4">

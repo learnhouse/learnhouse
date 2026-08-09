@@ -14,7 +14,9 @@ def is_ee_available():
     """
     if os.environ.get("LEARNHOUSE_DISABLE_EE") == "1":
         return False
-    return os.path.exists("ee")
+    # Require the hooks module itself, not merely a directory named "ee":
+    # a directory without it imports nothing, so it is not an EE install.
+    return os.path.isdir("ee") and os.path.isfile(os.path.join("ee", "hooks.py"))
 
 def get_ee_hooks():
     """Safely import and return the EE hooks module if available."""

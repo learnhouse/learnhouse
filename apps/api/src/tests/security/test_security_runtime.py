@@ -141,7 +141,11 @@ class TestSuperadminRuntime:
             user_uuid="user_2",
         )
 
-        with patch("src.security.superadmin.is_user_superadmin", return_value=False):
+        # 'ee' is the self-hosted-EE baseline; the suite pins 'oss' globally,
+        # which would trip the EE gate before the superadmin flag is read.
+        with patch(
+            "src.core.deployment_mode.get_deployment_mode", return_value="ee"
+        ), patch("src.security.superadmin.is_user_superadmin", return_value=False):
             with pytest.raises(HTTPException) as exc_info:
                 await require_superadmin(current_user=current_user, db_session=Mock(spec=Session))
 
@@ -160,7 +164,9 @@ class TestSuperadminRuntime:
         )
         db_session = Mock(spec=Session)
 
-        with patch("src.security.superadmin.is_user_superadmin", return_value=True) as mock_is_superadmin:
+        with patch(
+            "src.core.deployment_mode.get_deployment_mode", return_value="ee"
+        ), patch("src.security.superadmin.is_user_superadmin", return_value=True) as mock_is_superadmin:
             result = await require_superadmin(current_user=current_user, db_session=db_session)
 
         assert result == current_user

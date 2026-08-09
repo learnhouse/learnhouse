@@ -157,10 +157,16 @@ def test_is_ee_available(monkeypatch):
     assert ee_hooks.is_ee_available() is False
 
     monkeypatch.delenv("LEARNHOUSE_DISABLE_EE", raising=False)
-    monkeypatch.setattr(ee_hooks.os.path, "exists", lambda path: True)
+    monkeypatch.setattr(ee_hooks.os.path, "isdir", lambda path: True)
+    monkeypatch.setattr(ee_hooks.os.path, "isfile", lambda path: True)
     assert ee_hooks.is_ee_available() is True
 
-    monkeypatch.setattr(ee_hooks.os.path, "exists", lambda path: False)
+    # A directory named "ee" with no hooks.py imports nothing, so it does not
+    # count as EE being available.
+    monkeypatch.setattr(ee_hooks.os.path, "isfile", lambda path: False)
+    assert ee_hooks.is_ee_available() is False
+
+    monkeypatch.setattr(ee_hooks.os.path, "isdir", lambda path: False)
     assert ee_hooks.is_ee_available() is False
 
 

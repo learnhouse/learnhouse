@@ -546,6 +546,14 @@ async def get_current_user(
     # cleanliness" — or every superadmin token will silently fall through
     # to org-token validation and fail.
     if auth_lower.startswith("bearer lh_sa_"):
+        # Superadmin tokens are an Enterprise Edition credential. On an OSS
+        # deployment they can only exist through a lapsed license or a direct
+        # DB insert, so refuse before touching the database. This matters
+        # because SuperadminAPITokenUser is not an APITokenUser subclass and
+        # therefore passes the api-token rejection on core routers.
+        from src.security.superadmin import ensure_ee_superadmin_surface
+
+        ensure_ee_superadmin_surface()
         token = auth_header[7:].strip()  # strip "Bearer "
         sa_user = await validate_superadmin_api_token(token, db_session)
         if sa_user:

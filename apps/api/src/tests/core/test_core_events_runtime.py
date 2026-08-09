@@ -337,7 +337,8 @@ async def test_periodic_migration_cleanup(monkeypatch, caplog):
 
 def test_ee_hooks_availability_and_loading(monkeypatch, caplog):
     monkeypatch.delenv("LEARNHOUSE_DISABLE_EE", raising=False)
-    monkeypatch.setattr(ee_hooks.os.path, "exists", lambda path: path == "ee")
+    monkeypatch.setattr(ee_hooks.os.path, "isdir", lambda path: path == "ee")
+    monkeypatch.setattr(ee_hooks.os.path, "isfile", lambda path: True)
     assert ee_hooks.is_ee_available() is True
 
     monkeypatch.setenv("LEARNHOUSE_DISABLE_EE", "1")
@@ -345,7 +346,7 @@ def test_ee_hooks_availability_and_loading(monkeypatch, caplog):
     assert ee_hooks.get_ee_hooks() is None
 
     monkeypatch.delenv("LEARNHOUSE_DISABLE_EE", raising=False)
-    monkeypatch.setattr(ee_hooks.os.path, "exists", lambda path: True)
+    monkeypatch.setattr(ee_hooks.os.path, "isdir", lambda path: True)
     monkeypatch.setattr(ee_hooks.importlib.util, "find_spec", lambda name: None)
     assert ee_hooks.get_ee_hooks() is None
 
