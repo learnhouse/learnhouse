@@ -5,6 +5,7 @@ import httpx
 import pytest
 from fastapi import HTTPException
 
+from src.services.utils import link_preview
 from src.services.utils.link_preview import fetch_link_preview
 from src.services.utils.ssrf_guard import SSRFBlockedError
 
@@ -511,3 +512,48 @@ async def test_fetch_link_preview_prefers_twitter_card_when_og_missing():
     assert result["title"] == "Twitter Title"
     assert result["description"] == "From twitter card"
     assert result["og_image"] == "https://cdn.example.com/tw.png"
+
+
+@pytest.mark.asyncio
+async def test_fetch_link_preview_decodes_with_utf8_when_charset_is_unknown():
+    """A charset Python has no codec for must not lose the preview: the read
+    falls back to utf-8 instead of raising LookupError out of the fetch."""
+    handler = _Handler(
+        [
+            _html_response(
+                "<html><head><title>Café</title></head></html>",
+                content_type="text/html; charset=totally-not-a-charset",
+            )
+        ]
+    )
+
+    with patch(
+        "src.services.utils.link_preview.resolve_and_validate_url",
+        return_value={_PEER_IP},
+    ), patch(
+        "src.services.utils.link_preview.assert_connected_peer_allowed"
+    ), _patch_client(handler):
+        result = await fetch_link_preview("https://example.com/page")
+
+    assert result["title"] == "Café"
+
+
+@pytest.mark.asyncio
+async def test_fetch_link_preview_stops_after_the_redirect_budget():
+    """An endless redirect chain is abandoned at _MAX_REDIRECTS hops and answers
+    a minimal preview, rather than being followed forever."""
+    hops = link_preview._MAX_REDIRECTS + 1
+    handler = _Handler(
+        [_redirect_response(f"https://example.com/hop{i}") for i in range(hops)]
+    )
+
+    with patch(
+        "src.services.utils.link_preview.resolve_and_validate_url",
+        return_value={_PEER_IP},
+    ), patch(
+        "src.services.utils.link_preview.assert_connected_peer_allowed"
+    ), _patch_client(handler):
+        result = await fetch_link_preview("https://example.com/page")
+
+    assert result == _MINIMAL_PREVIEW
+    assert len(handler.requested_urls) == hops

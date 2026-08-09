@@ -47,7 +47,11 @@ from src.services.ai.schemas.courseplanning import (
     SaveActivityContentRequest,
 )
 from src.services.courses.migration import migration_service as migrations
-from src.services.courses.migration.models import SuggestStructureRequest
+from src.services.courses.migration.models import (
+    CreateFromMigrationRequest,
+    MigrationTreeStructure,
+    SuggestStructureRequest,
+)
 
 VALID_DOC = {"type": "doc", "content": [{"type": "paragraph"}]}
 SECRET_DOC = {"type": "doc", "content": [{"type": "text", "text": "TENANT-B-SECRET"}]}
@@ -710,3 +714,53 @@ class TestMigrationPackageOwnership:
         broken.set.side_effect = RuntimeError("redis down")
         with patch.object(mig, "get_redis_client", return_value=broken):
             mig.claim_migration_package("temp-3", 7)
+
+    def test_a_claim_that_expired_mid_flight_is_not_treated_as_a_foreign_owner(self):
+        """The TTL can lapse between the SET NX and the GET. An absent owner is
+        nobody's package, so the caller must not be locked out of their own."""
+        racing = MagicMock()
+        racing.set.return_value = None  # key existed at SET time
+        racing.get.return_value = None  # ...and expired before the GET
+        with patch.object(mig, "get_redis_client", return_value=racing):
+            mig.claim_migration_package("temp-4", 7)
+
+    async def test_appending_files_to_a_foreign_package_is_refused_before_upload(
+        self, db, org, admin_role, admin_user, mock_request
+    ):
+        """The point of claiming on the way in: no bytes reach disk for a package
+        this user does not own."""
+        redis = self._FakeRedis()
+        redis.store[mig.MIGRATION_OWNER_KEY.format(temp_id="foreign-pkg")] = "999999"
+        upload = AsyncMock()
+
+        with patch.object(mig, "get_redis_client", return_value=redis), \
+             patch.object(mig, "upload_migration_files", new=upload):
+            with pytest.raises(HTTPException) as exc:
+                await mig.api_upload_migration_files(
+                    mock_request, org.id, [], "foreign-pkg", admin_user, db
+                )
+
+        assert exc.value.status_code == 404
+        upload.assert_not_awaited()
+
+    async def test_creating_a_course_from_a_foreign_package_is_refused(
+        self, db, org, admin_role, admin_user, mock_request
+    ):
+        temp_id = str(uuid4())
+        redis = self._FakeRedis()
+        redis.store[mig.MIGRATION_OWNER_KEY.format(temp_id=temp_id)] = "999999"
+        create = AsyncMock()
+        body = CreateFromMigrationRequest(
+            temp_id=temp_id,
+            structure=MigrationTreeStructure(course_name="C", chapters=[]),
+        )
+
+        with patch.object(mig, "get_redis_client", return_value=redis), \
+             patch.object(mig, "create_course_from_migration", new=create):
+            with pytest.raises(HTTPException) as exc:
+                await mig.api_create_from_migration(
+                    mock_request, org.id, body, admin_user, db
+                )
+
+        assert exc.value.status_code == 404
+        create.assert_not_awaited()

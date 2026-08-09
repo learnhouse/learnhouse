@@ -164,6 +164,20 @@ class TestUploadSizeEnforcement:
         # Never asked the stream for more than the cap plus the detection byte.
         assert stream.max_requested == 65
 
+    def test_unmeasurable_stream_under_the_cap_is_validated_from_its_buffer(self):
+        """The bounded read is the only read: that one buffer is both the
+        validator's sample and the content handed back to the caller."""
+        payload = _PNG_HEADER + b"\x00" * 32
+        stream = _UnseekableStream(payload)
+
+        mime, content = validate_upload(
+            _upload("logo.png", stream, "image/png"), ["image"], max_size=1024
+        )
+
+        assert mime == "image/png"
+        assert content == payload
+        assert stream.max_requested == 1025
+
     def test_small_image_still_returns_mime_and_full_content(self):
         payload = _PNG_HEADER + b"\x00" * 64
         stream = _CountingStream(payload)

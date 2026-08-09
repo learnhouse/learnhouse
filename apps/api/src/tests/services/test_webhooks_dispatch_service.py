@@ -82,6 +82,27 @@ def reset_dispatch_state():
 
 class TestWebhookDispatchHelpers:
     @pytest.mark.asyncio
+    async def test_read_capped_body_ignores_a_non_numeric_content_length(self):
+        """A garbage Content-Length is a hint we cannot use, not a reason to
+        drop the body — the streamed read below is what actually enforces the
+        cap."""
+        response = httpx.Response(
+            200, headers={"content-length": "not-a-number"}, content=b"payload"
+        )
+
+        assert await dispatch._read_capped_body(response) == "payload"
+
+    @pytest.mark.asyncio
+    async def test_read_capped_body_skips_a_body_that_declares_itself_too_large(self):
+        response = httpx.Response(
+            200,
+            headers={"content-length": str(dispatch.MAX_RESPONSE_BYTES + 1)},
+            content=b"payload",
+        )
+
+        assert await dispatch._read_capped_body(response) == ""
+
+    @pytest.mark.asyncio
     async def test_get_webhook_client_is_singleton_and_close_resets(self):
         fake_client = MagicMock()
         fake_client.aclose = AsyncMock()
