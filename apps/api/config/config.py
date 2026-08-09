@@ -163,11 +163,13 @@ def _env_bool(env_value, yaml_value):
     `development_mode` and `saas_mode` already parse correctly above; this is
     the same logic for the settings that were still using bare `or`.
     """
-    if env_value is None or env_value == "":
-        return yaml_value
-    if isinstance(env_value, bool):
-        return env_value
-    return str(env_value).strip().lower() in ("true", "1", "yes", "on")
+    value = yaml_value if env_value is None or env_value == "" else env_value
+    if value is None or isinstance(value, bool):
+        return value
+    # YAML gives a real bool for `ssl: false` but a string for `ssl: "false"`,
+    # and the quoted form is easy to write by accident. Parse both sides the
+    # same way rather than only fixing the env side.
+    return str(value).strip().lower() in ("true", "1", "yes", "on")
 
 
 _yaml_cache: dict = {}
