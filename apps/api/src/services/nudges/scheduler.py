@@ -28,6 +28,10 @@ RUN_AT_HOUR_UTC = 9
 # Held for well under a day so a pod that dies mid-run does not block tomorrow.
 _LOCK_TTL_SECONDS = 6 * 60 * 60
 
+# A moment's grace on boot so the run does not compete with startup work, and
+# so a rolling deploy's pods do not all reach the day-lock in the same instant.
+STARTUP_DELAY_SECONDS = 30
+
 _task: Optional[asyncio.Task] = None
 
 
@@ -79,20 +83,33 @@ async def _run_once() -> None:
         )
 
 
+async def _tick() -> None:
+    """Run today's job if nobody has yet."""
+    try:
+        today = datetime.now(timezone.utc)
+        if await _claim_day(today):
+            await _run_once()
+        else:
+            logger.info("Today's nudge run was already handled elsewhere")
+    except asyncio.CancelledError:
+        raise
+    except Exception as exc:
+        # A failed run must not kill the loop, or the feature silently stops
+        # until the next deploy.
+        logger.exception("Nudge run failed, will retry tomorrow: %s", exc)
+
+
 async def _loop() -> None:
+    # Try immediately on boot rather than sleeping first. A pod restarts on
+    # every deploy, so a loop that waits for a fixed hour resets its timer each
+    # time — on a daily-or-faster deploy cadence it would never fire at all.
+    # The day-lock and the ledger make an extra attempt free.
+    await asyncio.sleep(STARTUP_DELAY_SECONDS)
+    await _tick()
+
     while True:
-        now = datetime.now(timezone.utc)
-        await asyncio.sleep(_seconds_until_next_run(now))
-        try:
-            today = datetime.now(timezone.utc)
-            if await _claim_day(today):
-                await _run_once()
-        except asyncio.CancelledError:
-            raise
-        except Exception as exc:
-            # A failed run must not kill the loop, or the feature silently
-            # stops until the next deploy.
-            logger.exception("Nudge run failed, will retry tomorrow: %s", exc)
+        await asyncio.sleep(_seconds_until_next_run(datetime.now(timezone.utc)))
+        await _tick()
 
 
 def start_scheduler() -> None:
@@ -111,8 +128,13 @@ def start_scheduler() -> None:
         from src.services.nudges.runner import nudges_enabled
 
         if not nudges_enabled():
+            logger.info(
+                "Nudge scheduler idle: LEARNHOUSE_NUDGES_ENABLED is not set"
+            )
             return
-        if get_deployment_mode() != "saas":
+        mode = get_deployment_mode()
+        if mode != "saas":
+            logger.info("Nudge scheduler idle: deployment mode is %r, not 'saas'", mode)
             return
         if os.environ.get("LEARNHOUSE_NUDGES_NO_SCHEDULER"):
             # For deployments that would rather drive the CLI from their own cron.
