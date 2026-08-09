@@ -450,7 +450,7 @@ async def api_editor_ai_start_chat_session_stream(
     This endpoint is aware of the current editor content and can help modify it.
     """
     context = await editor_ai_start_chat_session_stream(
-        chat_session_object, current_user, db_session
+        chat_session_object, current_user, db_session, request
     )
 
     # Create the streaming generator
@@ -506,7 +506,7 @@ async def api_editor_ai_send_message_stream(
     This endpoint is aware of the current editor content and can help modify it.
     """
     context = await editor_ai_send_message_stream(
-        chat_session_object, current_user, db_session
+        chat_session_object, current_user, db_session, request
     )
 
     # Create the streaming generator

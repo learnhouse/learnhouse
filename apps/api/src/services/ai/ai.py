@@ -14,6 +14,8 @@ from src.core.events.database import get_db_session
 from src.db.users import PublicUser
 from src.db.courses.activities import Activity, ActivityRead
 from src.security.auth import get_current_user, resolve_acting_user_id
+from src.security.org_auth import enforce_org_mfa, is_org_member
+from src.security.rbac import check_resource_access, AccessAction
 from src.services.ai.base import (
     ask_ai,
     get_chat_session_history,
@@ -32,6 +34,32 @@ from src.services.courses.activities.utils import (
 )
 
 logger = logging.getLogger(__name__)
+
+
+async def _authorize_activity_ai_access(
+    request: Request,
+    course: CourseRead,
+    org_id: int,
+    current_user: PublicUser,
+    db_session: AsyncSession,
+) -> None:
+    """Gate activity AI chat on the owning organization and course.
+
+    ``activity_uuid`` is client-supplied, so without this any authenticated
+    user could stream another org's activity content back through the model —
+    and have that org billed for the credit. Must run before rate limiting and
+    credit reservation so an unauthorized caller never spends the victim's quota.
+    """
+    acting_user_id = resolve_acting_user_id(current_user)
+    if not await is_org_member(acting_user_id, org_id, db_session):
+        raise HTTPException(
+            status_code=403,
+            detail="You are not a member of this organization",
+        )
+    await enforce_org_mfa(acting_user_id, org_id, db_session)
+    await check_resource_access(
+        request, db_session, current_user, course.course_uuid, AccessAction.READ
+    )
 
 
 async def ai_start_activity_chat_session(
@@ -108,6 +136,11 @@ async def ai_start_activity_chat_session(
             status_code=404,
             detail="Organization not found",
         )
+
+    # F5/F6: authorize the client-supplied activity before any spend.
+    await _authorize_activity_ai_access(
+        request, course, org.id, current_user, db_session
+    )
 
     # F-9: per-user + per-org rate limit before any compute / credit spend.
     # Resolve through helper so API tokens bucket under their creator rather
@@ -253,6 +286,11 @@ async def ai_send_activity_chat_message(
     statement = select(Organization).where(Organization.id == course.org_id)
     org = (await db_session.execute(statement)).scalars().first()
 
+    # F5/F6: authorize the client-supplied activity before any spend.
+    await _authorize_activity_ai_access(
+        request, course, course.org_id, current_user, db_session
+    )
+
     # F-9: per-user + per-org rate limit before any compute / credit spend.
     from src.services.security.rate_limiting import enforce_ai_rate_limit
     enforce_ai_rate_limit(resolve_acting_user_id(current_user), course.org_id)
@@ -327,6 +365,8 @@ async def ai_send_activity_chat_message(
 async def _get_activity_and_course_info(
     activity_uuid: str,
     db_session: AsyncSession,
+    request: Request,
+    current_user: PublicUser,
 ) -> Tuple[ActivityRead, CourseRead, Organization, str, str]:
     """
     Helper function to get activity, course, and organization info with AI model.
@@ -395,6 +435,12 @@ async def _get_activity_and_course_info(
             detail="Organization not found",
         )
 
+    # F5: authorize before serializing any of the activity's content into the
+    # model context — and before the callers rate-limit / reserve credits.
+    await _authorize_activity_ai_access(
+        request, course, org.id, current_user, db_session
+    )
+
     # Get Activity Content Blocks
     content = activity.content
 
@@ -431,7 +477,7 @@ async def ai_start_activity_chat_session_stream(
     Returns context needed for streaming.
     """
     activity, course, org, ai_model, ai_friendly_text = await _get_activity_and_course_info(
-        chat_session_object.activity_uuid, db_session
+        chat_session_object.activity_uuid, db_session, request, current_user
     )
 
     # F-9: per-user + per-org rate limit before any compute / credit spend.
@@ -480,7 +526,7 @@ async def ai_send_activity_chat_message_stream(
     Returns context needed for streaming.
     """
     activity, course, org, ai_model, ai_friendly_text = await _get_activity_and_course_info(
-        chat_session_object.activity_uuid, db_session
+        chat_session_object.activity_uuid, db_session, request, current_user
     )
 
     # F-9: per-user + per-org rate limit before any compute / credit spend.

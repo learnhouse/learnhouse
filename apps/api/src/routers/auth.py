@@ -55,7 +55,6 @@ from src.security.session_context import (
     AUTH_METHOD_GOOGLE,
     AUTH_METHOD_PASSWORD,
     carry_session_claims,
-    session_claims,
 )
 from src.db.organizations import Organization
 
@@ -631,7 +630,13 @@ class ThirdPartyLogin(BaseModel):
         "profile and tokens."
     ),
     responses={
-        200: {"description": "OAuth login successful; cookies set and body contains user + tokens."},
+        200: {
+            "description": (
+                "OAuth login successful; cookies set and body contains user + tokens. "
+                "If the account has a confirmed second factor, no cookies are set and "
+                "the body is {mfa_required: true, mfa_token} instead."
+            )
+        },
         400: {"description": "Unknown org_id or unsupported provider"},
         401: {"description": "Third-party authentication failed"},
         403: {"description": "Organization is invite-only and no valid invite was provided"},
@@ -859,26 +864,30 @@ async def third_party_login(
                 except Exception:
                     pass
 
-    # Google OAuth mints directly (it does not carry a second factor). Stamp the
-    # session's provenance so the org auth-method / sharing policy can see it.
-    google_claims = session_claims(AUTH_METHOD_GOOGLE, org_id)
-    access_token = create_access_token(
-        data={"sub": user.email, "purpose": "session", **google_claims},
-        expires_delta=JWT_ACCESS_TOKEN_EXPIRES
+    # Issue the session through the same chokepoint as password and magic-link
+    # login, so an account with a confirmed second factor is challenged here too.
+    # Minting directly meant a Google sign-in skipped an enrolled TOTP factor
+    # entirely — and the org-wide require_2fa policy did not catch it either,
+    # because the factor exists and so the user counts as compliant. The
+    # provenance (amr/sorg) is stamped either way for the org auth-method policy.
+    issue = await issue_session_or_challenge(
+        db_session, user, amr=AUTH_METHOD_GOOGLE, org_id=org_id
     )
-    refresh_token = create_refresh_token(
-        data={"sub": user.email, "purpose": "session", **google_claims}
-    )
+    if issue.mfa_required:
+        return {
+            "mfa_required": True,
+            "mfa_token": issue.mfa_token,
+        }
 
-    set_auth_cookies(response, access_token, refresh_token, request)
+    set_auth_cookies(response, issue.access_token, issue.refresh_token, request)
 
     user = UserRead.model_validate(user)
 
     result = {
         "user": user,
         "tokens": {
-            "access_token": access_token,
-            "refresh_token": refresh_token,
+            "access_token": issue.access_token,
+            "refresh_token": issue.refresh_token,
             "expiry": get_token_expiry_ms(),
         },
     }

@@ -24,6 +24,7 @@ from src.db.resource_authors import (
     ResourceAuthorshipStatusEnum,
 )
 from src.security.auth import resolve_acting_user_id
+from src.security.org_auth import is_org_member, require_org_membership
 from src.security.rbac import check_resource_access, AccessAction
 from src.services.webhooks.dispatch import dispatch_webhooks
 
@@ -237,6 +238,21 @@ def _is_anonymous(current_user) -> bool:
     return resolve_acting_user_id(current_user) == 0
 
 
+async def _may_see_private(current_user, org_id: int, db_session: AsyncSession) -> bool:
+    """Whether the caller may see this org's private folders and resources.
+
+    The org-scoped listing endpoints take `org_id` straight from the path, so
+    being signed in *somewhere* must not unlock another tenant's library. Only
+    membership in the requested org does; a signed-in non-member is served
+    exactly what an anonymous visitor is served (public items only), which keeps
+    the public org library browsable without leaking private rows.
+    """
+    user_id = resolve_acting_user_id(current_user)
+    if not user_id:
+        return False
+    return await is_org_member(user_id, org_id, db_session)
+
+
 def _add_creator_author(db_session: AsyncSession, resource_uuid: str, user_id: int):
     db_session.add(
         ResourceAuthor(
@@ -262,6 +278,12 @@ async def create_folder(
 ) -> FolderRead:
     await check_resource_access(
         request, db_session, current_user, "folder_x", AccessAction.CREATE
+    )
+    # The "folder_x" placeholder has no organization of its own, so the RBAC
+    # check above accepts any role the caller holds in ANY org. The target org
+    # comes from the request body — gate it explicitly.
+    await require_org_membership(
+        resolve_acting_user_id(current_user), folder_object.org_id, db_session
     )
 
     parent_folder_id = None
@@ -471,8 +493,6 @@ async def get_folders(
 ) -> List[FolderRead]:
     """List folders for an org. Lists root folders by default; pass
     parent_folder_uuid to list a folder's direct sub-folders."""
-    anonymous = _is_anonymous(current_user)
-
     parent_id = None
     if parent_folder_uuid:
         parent = (
@@ -484,11 +504,13 @@ async def get_folders(
             raise HTTPException(status_code=404, detail="Parent folder not found")
         parent_id = parent.id
 
+    include_private = await _may_see_private(current_user, int(org_id), db_session)
+
     statement = select(Folder).where(
         Folder.org_id == int(org_id),
         Folder.parent_folder_id == parent_id,
     )
-    if anonymous:
+    if not include_private:
         statement = statement.where(Folder.public == True)  # noqa: E712
 
     sort_mode = await _get_folders_sort_mode(db_session, int(org_id))
@@ -497,7 +519,7 @@ async def get_folders(
     folders = (await db_session.execute(statement)).scalars().all()
 
     return [
-        await _folder_to_read(db_session, folder, include_private=not anonymous)
+        await _folder_to_read(db_session, folder, include_private=include_private)
         for folder in folders
     ]
 
@@ -778,7 +800,7 @@ async def search_library(
     if not query:
         return {"folders": [], "items": []}
 
-    anonymous = _is_anonymous(current_user)
+    include_private = await _may_see_private(current_user, int(org_id), db_session)
     like = f"%{query.lower()}%"
 
     # Cache folder paths (full breadcrumb chain) by folder id
@@ -802,7 +824,7 @@ async def search_library(
         Folder.org_id == int(org_id),
         func.lower(Folder.name).like(like),
     )
-    if anonymous:
+    if not include_private:
         fstmt = fstmt.where(Folder.public == True)  # noqa: E712
     folder_rows = (await db_session.execute(fstmt)).scalars().all()
 
@@ -849,7 +871,7 @@ async def search_library(
             res = rmap.get(r.resource_uuid)
             if not res:
                 continue
-            if anonymous and not getattr(res, "public", False):
+            if not include_private and not getattr(res, "public", False):
                 continue
             name = (getattr(res, "name", None) or getattr(res, "title", "") or "")
             if query.lower() not in name.lower():
@@ -877,7 +899,7 @@ async def get_org_root_items(
     db_session: AsyncSession,
 ) -> List[FolderContentItem]:
     """Resolve the items that live at the org library root (no parent folder)."""
-    anonymous = _is_anonymous(current_user)
+    include_private = await _may_see_private(current_user, int(org_id), db_session)
     content_rows = (
         await db_session.execute(
             select(FolderContent).where(
@@ -886,7 +908,7 @@ async def get_org_root_items(
             )
         )
     ).scalars().all()
-    return await _resolve_items(db_session, list(content_rows), include_private=not anonymous)
+    return await _resolve_items(db_session, list(content_rows), include_private=include_private)
 
 
 async def add_org_root_content(
@@ -900,6 +922,11 @@ async def add_org_root_content(
     """Place a resource at the org library root (folder_id NULL)."""
     await check_resource_access(
         request, db_session, current_user, "folder_x", AccessAction.CREATE
+    )
+    # "folder_x" carries no organization, so the check above is satisfied by any
+    # role the caller holds anywhere. org_id is caller-supplied — gate it.
+    await require_org_membership(
+        resolve_acting_user_id(current_user), int(org_id), db_session
     )
     await check_resource_access(
         request, db_session, current_user, resource_uuid, AccessAction.READ
@@ -940,6 +967,11 @@ async def remove_org_root_content(
 ):
     await check_resource_access(
         request, db_session, current_user, "folder_x", AccessAction.UPDATE
+    )
+    # Same "folder_x" placeholder caveat as add_org_root_content: the target org
+    # is only ever checked here.
+    await require_org_membership(
+        resolve_acting_user_id(current_user), int(org_id), db_session
     )
     rows = (
         await db_session.execute(

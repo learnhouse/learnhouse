@@ -377,11 +377,12 @@ class UserTrailDetail(BaseModel):
     summary="Issue a user token",
     description=(
         "Issue a JWT access token on behalf of a user. The user must belong to "
-        "the organization matching the org_slug. Requires `users.action_read` permission."
+        "the organization matching the org_slug. Requires `users.action_read` permission. "
+        "Privileged targets (org Admin/Maintainer, platform superadmin) are refused."
     ),
     responses={
         200: {"description": "Access token minted on behalf of the target user.", "model": TokenResponse},
-        403: {"description": "API token lacks permission, user not in org, or org_slug mismatch"},
+        403: {"description": "API token lacks permission, target is privileged, user not in org, or org_slug mismatch"},
         404: {"description": "User or organization not found"},
     },
 )

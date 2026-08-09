@@ -224,6 +224,17 @@ export default function GoogleCallbackPage() {
 
         const data = await oauthResponse.json()
 
+        // A Google account with 2FA enrolled gets a pending challenge instead of
+        // a session. Hand it to the login page, which owns the code form — same
+        // handoff the admin magic-link consume endpoint uses.
+        if (data.mfa_required && data.mfa_token) {
+          const mfaParams = new URLSearchParams({ mfa_token: data.mfa_token })
+          const next = new URLSearchParams(window.location.search).get('next')
+          if (next && /^\/(?!\/)/.test(next)) mfaParams.set('redirect_to', next)
+          router.push(`/auth/login?${mfaParams.toString()}`)
+          return
+        }
+
         // Validate response structure
         if (!data.tokens?.access_token) {
           throw new Error('Invalid response from server')

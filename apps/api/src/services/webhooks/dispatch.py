@@ -39,6 +39,11 @@ MAX_ATTEMPTS = 3
 # Exponential backoff delays in seconds: 1, 4, 16
 BACKOFF_DELAYS = [1, 4, 16]
 LOG_RETENTION_PER_ENDPOINT = 200
+# Only the first 500 bytes of a response are ever persisted, so there is no
+# reason to read more. The endpoint URL is user-supplied and delivery runs
+# fire-and-forget in the shared worker, so an endless (or gzip-bombed) response
+# body must never be buffered or decompressed here.
+MAX_RESPONSE_BYTES = 8 * 1024
 
 
 def _get_webhook_client() -> httpx.AsyncClient:
@@ -58,6 +63,31 @@ async def close_webhook_client() -> None:
     if _webhook_client is not None:
         await _webhook_client.aclose()
         _webhook_client = None
+
+
+async def _read_capped_body(response: httpx.Response) -> str:
+    """Read at most MAX_RESPONSE_BYTES of a streamed response body.
+
+    Breaking out of the iterator aborts the transfer — the surrounding
+    ``client.stream`` context closes the connection on exit.
+    """
+    declared = response.headers.get("content-length")
+    if declared:
+        try:
+            if int(declared) > MAX_RESPONSE_BYTES:
+                return ""
+        except ValueError:
+            pass
+
+    chunks = []
+    total = 0
+    async for chunk in response.aiter_bytes():
+        chunks.append(chunk)
+        total += len(chunk)
+        if total >= MAX_RESPONSE_BYTES:
+            break
+
+    return b"".join(chunks)[:MAX_RESPONSE_BYTES].decode("utf-8", errors="replace")
 
 
 @dataclass
@@ -188,6 +218,10 @@ async def _deliver_to_endpoint(
         "X-Webhook-Event": event_name,
         "X-Webhook-Delivery": delivery_uuid,
         "X-Webhook-Signature": signature,
+        # Refuse compressed responses: httpx would transparently inflate them,
+        # so a small gzip bomb from a user-supplied endpoint could otherwise
+        # expand to gigabytes inside the worker.
+        "Accept-Encoding": "identity",
     }
 
     client = _get_webhook_client()
@@ -208,16 +242,21 @@ async def _deliver_to_endpoint(
             # to was one of the approved IPs (defeats DNS rebinding).
             validated_ips = resolve_and_validate_url(ep.url)
 
-            resp = await client.post(ep.url, content=payload_bytes, headers=headers)
-            try:
-                assert_connected_peer_allowed(resp, validated_ips)
-            except SSRFBlockedError as ssrf_exc:
-                log_entry.success = False
-                log_entry.error_message = f"SSRF guard: {ssrf_exc}"[:1000]
-            else:
-                log_entry.response_status = resp.status_code
-                log_entry.response_body = resp.text[:500] if resp.text else None
-                log_entry.success = 200 <= resp.status_code < 300
+            # Streamed so the response body is capped as it arrives instead of
+            # being buffered whole before we truncate it to 500 bytes.
+            async with client.stream(
+                "POST", ep.url, content=payload_bytes, headers=headers
+            ) as resp:
+                try:
+                    assert_connected_peer_allowed(resp, validated_ips)
+                except SSRFBlockedError as ssrf_exc:
+                    log_entry.success = False
+                    log_entry.error_message = f"SSRF guard: {ssrf_exc}"[:1000]
+                else:
+                    body = await _read_capped_body(resp)
+                    log_entry.response_status = resp.status_code
+                    log_entry.response_body = body[:500] if body else None
+                    log_entry.success = 200 <= resp.status_code < 300
 
         except SSRFBlockedError as e:
             log_entry.success = False

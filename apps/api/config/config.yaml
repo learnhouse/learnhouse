@@ -27,6 +27,18 @@ hosting_config:
     - http://localhost:3001
   cookies_config:
     domain: ".localhost"
+  # This one value is read by three consumers: CORS (core/middleware/cors.py),
+  # CSRF (security/csrf.py) and the base URL of emailed login / verification
+  # links (services/email/utils.py). The default below is a catch-all, which
+  # means CORS and CSRF are effectively open unless you scope it — set
+  # LEARNHOUSE_ALLOWED_REGEXP to your own domain in any real deployment, e.g.
+  # '^https://(?:[a-z0-9-]+\.)*example\.com$'.
+  #
+  # Narrowing this default is deliberately NOT done here: it would CORS-block
+  # and CSRF-403 every deployment that relies on it. Email links do not depend
+  # on it being scoped — services/email/utils.py ignores a catch-all pattern
+  # and validates the Origin against the configured domain, its subdomains and
+  # the verified custom domains instead.
   allowed_regexp: '\b((?:https?://)[^\s/$.?#].[^\s]*)\b'
   content_delivery:
     type: "filesystem" # "filesystem" or "s3api"

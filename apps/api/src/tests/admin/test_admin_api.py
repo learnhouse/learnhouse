@@ -1057,17 +1057,45 @@ class TestGetUserCertificates:
 
 class TestIssueUserToken:
 
+    @pytest.fixture
+    def reader_token(self, token_user):
+        """Impersonation needs the token to actually hold users.action_read."""
+        token_user.rights = {"users": {"action_read": True}}
+        return token_user
+
+    @pytest.fixture
+    async def member(self, org, db):
+        """A non-privileged target — admins/maintainers cannot be impersonated."""
+        u = User(
+            id=77,
+            username="member",
+            first_name="Mem",
+            last_name="Ber",
+            email="member@example.com",
+            password="hashed",
+            user_uuid="user_member77",
+        )
+        db.add(u)
+        await db.commit()
+        await db.refresh(u)
+        db.add(UserOrganization(
+            user_id=u.id, org_id=org.id, role_id=4,
+            creation_date=str(datetime.now()), update_date=str(datetime.now()),
+        ))
+        await db.commit()
+        return u
+
     @patch("src.services.admin.admin.create_access_token", return_value="jwt_test_token")
-    async def test_issues_token(self, mock_create, token_user, user, db):
-        result = await issue_user_token(token_user, user.id, db)
+    async def test_issues_token(self, mock_create, reader_token, member, db):
+        result = await issue_user_token(reader_token, member.id, db)
         assert result["access_token"] == "jwt_test_token"
         assert result["token_type"] == "bearer"
-        assert result["user_id"] == user.id
-        assert result["user_uuid"] == user.user_uuid
+        assert result["user_id"] == member.id
+        assert result["user_uuid"] == member.user_uuid
 
-    async def test_user_not_found(self, token_user, db):
+    async def test_user_not_found(self, reader_token, db):
         with pytest.raises(HTTPException) as exc:
-            await issue_user_token(token_user, 9999, db)
+            await issue_user_token(reader_token, 9999, db)
         assert exc.value.status_code == 404
 
     async def test_user_not_in_org(self, token_user, other_org, db):

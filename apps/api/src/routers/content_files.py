@@ -16,6 +16,7 @@ import os
 from fastapi import APIRouter, Depends, HTTPException, Request
 from fastapi.responses import StreamingResponse, Response
 from pathlib import Path
+from urllib.parse import quote
 from sqlmodel import select
 from botocore.exceptions import ClientError
 
@@ -37,7 +38,21 @@ from src.services.courses.transfer.storage_utils import (
 
 router = APIRouter()
 
-# MIME type mapping
+# MIME type mapping.
+#
+# SECURITY: no type a browser executes as a document is listed here — no
+# text/html, application/javascript, text/css or application/xml. Content keys
+# can carry a caller-chosen extension (course import packages name their own
+# files), and this endpoint answers on the shared API origin where every
+# tenant's session cookies live, so a renderable Content-Type would be a
+# stored-XSS primitive. Unknown extensions fall back to application/octet-stream
+# and, like every non-media type, are served as an attachment.
+#
+# SVG is the one exception: org logos and thumbnails are legitimately uploaded
+# as SVG, so refusing to render it would blank them out. It keeps its real type
+# and stays inline, but is served under `_SVG_CSP` — scripting inside an SVG is
+# already disabled when it loads through <img>, and the CSP covers the
+# remaining case of someone opening the URL top-level or framing it.
 MIME_TYPES = {
     '.mp4': 'video/mp4',
     '.webm': 'video/webm',
@@ -55,26 +70,52 @@ MIME_TYPES = {
     '.png': 'image/png',
     '.gif': 'image/gif',
     '.webp': 'image/webp',
-    '.svg': 'image/svg+xml',
     '.ico': 'image/x-icon',
+    '.svg': 'image/svg+xml',
     '.pdf': 'application/pdf',
     '.doc': 'application/msword',
     '.docx': 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
     '.zip': 'application/zip',
     '.json': 'application/json',
-    '.xml': 'application/xml',
-    '.html': 'text/html',
-    '.css': 'text/css',
-    '.js': 'application/javascript',
     '.txt': 'text/plain',
 }
 
 CHUNK_SIZE = 1024 * 1024  # 1MB
 
+# Only these types are rendered inline; everything else is downloaded. Same
+# treatment as `src/services/media/media_serve.py`.
+_INLINE_MIME_PREFIXES = ('image/', 'audio/', 'video/')
+_INLINE_MIME_TYPES = frozenset({'application/pdf'})
+
+# Neutralizes an SVG opened top-level or framed: no script, no subresources,
+# and an opaque origin, so it cannot reach the API it is served from.
+_SVG_CSP = "default-src 'none'; style-src 'unsafe-inline'; sandbox"
+
 
 def _get_mime_type(file_path: str) -> str:
     ext = Path(file_path).suffix.lower()
     return MIME_TYPES.get(ext, 'application/octet-stream')
+
+
+def _security_headers(mime_type: str) -> dict[str, str]:
+    """Extra response headers for types that need containment."""
+    if mime_type == 'image/svg+xml':
+        return {'Content-Security-Policy': _SVG_CSP}
+    return {}
+
+
+def _content_disposition(mime_type: str, file_path: str) -> str:
+    """Build the Content-Disposition header for a served file.
+
+    Renderable media stays inline (players and <img> need it); anything else —
+    including every unrecognized extension — is forced to download so the file
+    can never be interpreted as a document on the API origin. RFC 5987
+    encoding keeps non-ASCII filenames intact.
+    """
+    inline = mime_type.startswith(_INLINE_MIME_PREFIXES) or mime_type in _INLINE_MIME_TYPES
+    disposition = "inline" if inline else "attachment"
+    filename = Path(file_path).name or "file"
+    return f"{disposition}; filename*=UTF-8''{quote(filename, safe='')}"
 
 
 def _validate_content_path(file_path: str) -> str | None:
@@ -278,6 +319,8 @@ async def serve_content_file(
         "Content-Type": mime_type,
         "Cache-Control": "public, max-age=86400",
         "X-Content-Type-Options": "nosniff",
+        "Content-Disposition": _content_disposition(mime_type, safe_path),
+        **_security_headers(mime_type),
     }
 
     range_header = request.headers.get("range")
@@ -418,5 +461,8 @@ async def head_content_file(
             "Content-Length": str(file_size),
             "Content-Type": mime_type,
             "Cache-Control": "public, max-age=86400",
+            "X-Content-Type-Options": "nosniff",
+            "Content-Disposition": _content_disposition(mime_type, safe_path),
+            **_security_headers(mime_type),
         },
     )

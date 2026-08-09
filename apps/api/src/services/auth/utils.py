@@ -19,9 +19,27 @@ from src.db.user_audit_events import UserAuditEventType
 
 logger = logging.getLogger(__name__)
 
-# Emit the "audience not configured" warning at most once per process to
+# Emit the "audience not configured" error at most once per process to
 # avoid flooding logs on every login attempt.
 _LOGGED_MISSING_GOOGLE_CLIENT_ID = False
+
+# Accept either spelling. The API originally read only the _OAUTH_ name, while
+# the CLI env template and the web app provision the very same value as
+# LEARNHOUSE_GOOGLE_CLIENT_ID — so a deployment that had the client id all along
+# still ran with audience verification disabled.
+GOOGLE_CLIENT_ID_ENV_VARS = (
+    "LEARNHOUSE_GOOGLE_OAUTH_CLIENT_ID",
+    "LEARNHOUSE_GOOGLE_CLIENT_ID",
+)
+
+
+def get_expected_google_client_id() -> Optional[str]:
+    """Return the configured Google OAuth client_id, or ``None`` if unset."""
+    for name in GOOGLE_CLIENT_ID_ENV_VARS:
+        value = os.environ.get(name)
+        if value and value.strip():
+            return value.strip()
+    return None
 
 
 async def _verify_google_token_audience(access_token: str) -> None:
@@ -36,29 +54,30 @@ async def _verify_google_token_audience(access_token: str) -> None:
     the tokeninfo endpoint first and comparing ``aud`` to our registered
     client_id closes that confused-deputy window.
 
-    If ``LEARNHOUSE_GOOGLE_OAUTH_CLIENT_ID`` is not set we log a one-shot
-    warning and fall through so existing deployments keep working, but
-    operators should set it in production.
+    If no client_id is configured we fail closed: Google sign-in is refused
+    for the whole deployment until an operator sets one of
+    ``LEARNHOUSE_GOOGLE_OAUTH_CLIENT_ID`` / ``LEARNHOUSE_GOOGLE_CLIENT_ID``.
     """
     global _LOGGED_MISSING_GOOGLE_CLIENT_ID
 
-    # Accept either name. The web deployment provisions this same value as
-    # LEARNHOUSE_GOOGLE_CLIENT_ID, and reading only the _OAUTH_ spelling meant a
-    # deployment that had the client id all along still ran with audience
-    # verification silently disabled.
-    expected_client_id = os.environ.get("LEARNHOUSE_GOOGLE_OAUTH_CLIENT_ID") or os.environ.get(
-        "LEARNHOUSE_GOOGLE_CLIENT_ID"
-    )
+    expected_client_id = get_expected_google_client_id()
     if not expected_client_id:
+        # Fail closed. Falling through here meant the check was off by default —
+        # nothing in a stock deployment sets the variable — so any Google access
+        # token, including one minted by an attacker's own OAuth client for a
+        # victim who signed in on the attacker's site, was accepted as proof of
+        # identity and exchanged for a full LearnHouse session.
         if not _LOGGED_MISSING_GOOGLE_CLIENT_ID:
-            logger.warning(
-                "Google OAuth audience verification is DISABLED — neither "
-                "LEARNHOUSE_GOOGLE_OAUTH_CLIENT_ID nor LEARNHOUSE_GOOGLE_CLIENT_ID "
-                "is set. Set one to your Google OAuth client_id to block "
-                "confused-deputy token reuse."
+            logger.error(
+                "Google sign-in is refused: neither LEARNHOUSE_GOOGLE_OAUTH_CLIENT_ID "
+                "nor LEARNHOUSE_GOOGLE_CLIENT_ID is set, so the OAuth audience cannot "
+                "be verified. Set one to your Google OAuth client_id to enable it."
             )
             _LOGGED_MISSING_GOOGLE_CLIENT_ID = True
-        return
+        raise HTTPException(
+            status_code=401,
+            detail="Google sign-in is not configured on this server",
+        )
 
     async with httpx.AsyncClient(timeout=5) as client:
         r = await client.get(

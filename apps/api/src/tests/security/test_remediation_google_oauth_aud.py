@@ -5,8 +5,10 @@ When ``LEARNHOUSE_GOOGLE_OAUTH_CLIENT_ID`` is set, tokens minted for a
 different OAuth client (``aud`` mismatch) must be rejected with 401 —
 blocks the classic OAuth confused-deputy attack.
 
-When the env var is unset, a one-shot warning is logged but tokens are
-still accepted (preserves existing deployments).
+When neither ``LEARNHOUSE_GOOGLE_OAUTH_CLIENT_ID`` nor its
+``LEARNHOUSE_GOOGLE_CLIENT_ID`` alias is set we cannot check ``aud`` at
+all, so sign-in is refused rather than accepted unverified — falling
+through would leave the confused-deputy attack open by default.
 """
 
 from unittest.mock import patch
@@ -83,22 +85,39 @@ async def test_accepts_token_minted_for_our_client(monkeypatch):
 
 
 @pytest.mark.asyncio
-async def test_warns_but_accepts_when_client_id_unset(monkeypatch, caplog):
+async def test_refuses_when_no_client_id_is_configured(monkeypatch):
     """
-    No LEARNHOUSE_GOOGLE_OAUTH_CLIENT_ID set — log once, fall through.
-    Existing deployments without the env var keep working.
+    Neither env spelling set — refuse rather than accept an unverifiable
+    token. Both names must be cleared: either one alone is enough to
+    configure the check.
     """
     monkeypatch.delenv("LEARNHOUSE_GOOGLE_OAUTH_CLIENT_ID", raising=False)
+    monkeypatch.delenv("LEARNHOUSE_GOOGLE_CLIENT_ID", raising=False)
 
-    import logging
-    caplog.set_level(logging.WARNING, logger="src.services.auth.utils")
+    with pytest.raises(HTTPException) as exc:
+        await _verify_google_token_audience("unverifiable-token")
+    assert exc.value.status_code == 401
 
-    # Twice — second call must NOT log again (one-shot flag).
-    await _verify_google_token_audience("tok1")
-    await _verify_google_token_audience("tok2")
 
-    matching = [r for r in caplog.records if "audience verification is DISABLED" in r.getMessage()]
-    assert len(matching) == 1
+@pytest.mark.asyncio
+async def test_accepts_token_when_only_the_alias_env_var_is_set(monkeypatch):
+    """The CLI env template emits LEARNHOUSE_GOOGLE_CLIENT_ID; honour it."""
+    monkeypatch.delenv("LEARNHOUSE_GOOGLE_OAUTH_CLIENT_ID", raising=False)
+    monkeypatch.setenv("LEARNHOUSE_GOOGLE_CLIENT_ID", "our-client-id")
+
+    class _FakeClient:
+        async def __aenter__(self_inner):
+            return self_inner
+
+        async def __aexit__(self_inner, *exc):
+            return False
+
+        async def get(self_inner, url, params=None):
+            return _tokeninfo_response(aud="our-client-id")
+
+    with patch.object(httpx, "AsyncClient", return_value=_FakeClient()):
+        # Should not raise.
+        await _verify_google_token_audience("legitimate-token")
 
 
 @pytest.mark.asyncio

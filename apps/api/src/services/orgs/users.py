@@ -1103,8 +1103,35 @@ async def get_list_of_invited_users(
             detail="Organization not found",
         )
 
-    # RBAC check
-    await rbac_check(request, org.org_uuid, current_user, "read", db_session)
+    # SECURITY: pending invites carry the invitee's email address and the
+    # invite code — a ready-made phishing list. rbac_check short-circuits every
+    # "read" to True, so it is no gate at all here: mirror the member-listing
+    # path instead and require an admin/maintainer of *this* org.
+    if isinstance(current_user, AnonymousUser):
+        raise HTTPException(
+            status_code=401,
+            detail="Authentication required",
+        )
+
+    acting_user_id = resolve_acting_user_id(current_user)
+
+    if not await is_org_member(acting_user_id, org.id, db_session):
+        raise HTTPException(
+            status_code=403,
+            detail="You must be a member of this organization to view its invites",
+        )
+
+    # Org-wide two-factor policy, applied after the membership gate.
+    await enforce_org_mfa(acting_user_id, org.id, db_session)
+
+    from src.security.superadmin import is_user_superadmin
+    if not await is_user_superadmin(acting_user_id, db_session):
+        from src.security.org_auth import is_org_admin
+        if not await is_org_admin(acting_user_id, org.id, db_session):
+            raise HTTPException(
+                status_code=403,
+                detail="Only administrators and maintainers can view organization invites",
+            )
 
     # Connect to Redis
     r = redis.Redis.from_url(redis_conn_string)
