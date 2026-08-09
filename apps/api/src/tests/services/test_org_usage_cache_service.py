@@ -8,6 +8,7 @@ from fastapi import HTTPException
 
 from src.db.organization_config import OrganizationConfig
 from src.services.orgs import cache as org_cache
+from src.services.orgs.cache import _INSTANCE_INFO_KEY
 from src.services.orgs import uploads as org_uploads
 from src.services.orgs import usage as org_usage
 
@@ -46,14 +47,14 @@ class TestOrgCacheHelpers:
             org_cache.set_cached_instance_info({"instance": "cached"})
 
         redis_client.get.assert_any_call("org_cache:slug:cached-org")
-        redis_client.get.assert_any_call("org_cache:instance_info")
+        redis_client.get.assert_any_call(_INSTANCE_INFO_KEY)
         redis_client.setex.assert_any_call(
             "org_cache:slug:cached-org",
             org_cache.CACHE_TTL_ORG_SLUG,
             '{"slug": "cached-org"}',
         )
         redis_client.setex.assert_any_call(
-            "org_cache:instance_info",
+            _INSTANCE_INFO_KEY,
             org_cache.CACHE_TTL_INSTANCE_INFO,
             '{"instance": "cached"}',
         )

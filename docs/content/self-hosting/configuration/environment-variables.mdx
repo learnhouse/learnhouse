@@ -27,7 +27,7 @@ optional: the feature stays disabled or uses a runtime fallback when the variabl
 | `LEARNHOUSE_TENANCY` | Selects `single` host tenancy or `multi` subdomain tenancy. Multi-tenancy requires EE or SaaS mode. | enum: `single`, `multi` | `single` unless inferred as multi-tenant | API, EE CLI |
 | `LEARNHOUSE_DOMAIN` | Public domain used for org routing, cookie decisions, and custom-domain CNAME targets. Include the port for local development. | hostname | `localhost:3000` | API, CLI |
 | `LEARNHOUSE_FRONTEND_DOMAIN` | Frontend host used by the API when it needs the public frontend domain separately from the backend host. | hostname | `localhost:3000` | API, EE CLI |
-| `LEARNHOUSE_SSL` | Backend-side SSL flag for generated URLs and hosting config. | boolean | `false` | API |
+| `LEARNHOUSE_SSL` | Backend-side SSL flag: picks `https` vs `http` for generated links (password reset, email verification, invites, magic links, SSO redirect, media URLs). Accepts `true`/`1`/`yes`/`on` (case-insensitive); anything else is off. Previously any non-empty value enabled it, including the string `false` — check your value before upgrading. | boolean | `false` | API |
 | `LEARNHOUSE_PORT` | Backend port. Local config defaults to `1338`; the production CLI template emits `9000`. | integer | `1338` locally, `9000` in generated Docker installs | API, CLI, API container |
 | `LEARNHOUSE_ALLOWED_ORIGINS` | Comma-separated CORS allowlist. | CSV of URLs | `http://localhost:3000,http://localhost:3001` | API |
 | `LEARNHOUSE_ALLOWED_REGEXP` | Additional CORS origin regex used by multi-tenant deployments. | regex string | `\b((?:https?://)[^\s/$.?#].[^\s]*)\b` | API |
