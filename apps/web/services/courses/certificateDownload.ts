@@ -28,6 +28,16 @@ export async function downloadCertificateNodeAsPdf(
     import('jspdf'),
   ])
 
+  // Wait for webfonts before rasterising. html2canvas snapshots whatever is
+  // painted at that instant, so if the Arabic face hasn't loaded yet the PDF
+  // is written with fallback glyphs — or tofu — and nobody notices, because
+  // the on-screen certificate looks fine by the time anyone opens the file.
+  try {
+    await document.fonts?.ready
+  } catch {
+    // Font Loading API unavailable — proceed; worst case is a fallback face.
+  }
+
   const canvas = await html2canvas(node, {
     scale: 2, // Higher resolution
     useCORS: true, // org logo is served from the media host

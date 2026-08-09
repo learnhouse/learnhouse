@@ -162,8 +162,9 @@ function MathEquationBlockComponent(props: any) {
 
   // Activity view mode - show only the equation with subtle styling
   if (!isEditable) {
+    // Math notation is left-to-right by specification, in every language.
     return (
-      <NodeViewWrapper className="block-math-equation">
+      <NodeViewWrapper className="block-math-equation" dir="ltr">
         <div className="bg-neutral-50 rounded-xl p-5 nice-shadow">
           <Suspense fallback={<div className="text-gray-400 text-sm p-2">Loading math...</div>}><BlockMath>{equation}</BlockMath></Suspense>
         </div>
@@ -171,6 +172,8 @@ function MathEquationBlockComponent(props: any) {
     )
   }
 
+  // The chrome around the editor follows the UI direction; only the rendered
+  // equation below is locked to LTR.
   return (
     <NodeViewWrapper className="block-math-equation">
       <div className="bg-neutral-50 rounded-xl px-5 py-4 nice-shadow transition-all ease-linear">

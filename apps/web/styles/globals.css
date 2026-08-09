@@ -49,13 +49,13 @@
 /* Board block content: rich text (lists, bold, italic, etc.) */
 .board-editor .board-card-content ul {
   list-style-type: disc;
-  padding-left: 1.25rem;
+  padding-inline-start: 1.25rem;
   margin-bottom: 0.25rem;
 }
 
 .board-editor .board-card-content ol {
   list-style-type: decimal;
-  padding-left: 1.25rem;
+  padding-inline-start: 1.25rem;
   margin-bottom: 0.25rem;
 }
 
@@ -90,8 +90,8 @@
 }
 
 .board-editor .board-card-content blockquote {
-  border-left: 2px solid #d1d5db;
-  padding-left: 0.75rem;
+  border-inline-start: 2px solid #d1d5db;
+  padding-inline-start: 0.75rem;
   margin: 0.25rem 0;
   color: #6b7280;
   font-style: italic;
@@ -219,6 +219,42 @@
     letter-spacing: -0.02em;
   }
 
+  /* Companion to the same override in @layer base. This declaration has to
+     live here as well because the -0.02em above is duplicated into two layers,
+     and utilities outranks base — so a base-layer override alone loses on
+     <html> and <body>, and Arabic keeps tracking meant for Latin. */
+  [dir='rtl'],
+  [dir='rtl'] body,
+  :lang(ar),
+  :lang(ar) body,
+  :lang(fa),
+  :lang(fa) body {
+    letter-spacing: normal;
+  }
+
+  /* Arabic is set in Tajawal, full stop — not layered as a per-glyph fallback.
+     Tajawal carries a Latin subset, so forcing it keeps a mixed Arabic screen
+     in one typeface instead of alternating between two designs with different
+     proportions mid-sentence.
+
+     `!important` is required, not defensive: the org's custom font is applied
+     as an inline style on .lh-org-font-root, and an inline declaration beats
+     any normal rule regardless of specificity. Monospace is unaffected —
+     code, pre and the editors set font-family on their own elements, and
+     cascade contests only happen element by element. */
+  [dir='rtl'],
+  [dir='rtl'] body,
+  [dir='rtl'] .lh-org-font-root,
+  [dir='rtl'] input,
+  [dir='rtl'] textarea,
+  [dir='rtl'] select,
+  [dir='rtl'] button,
+  :lang(ar),
+  :lang(ar) body,
+  :lang(ar) .lh-org-font-root {
+    font-family: var(--font-arabic), -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif !important;
+  }
+
   a {
     color: inherit;
     text-decoration: none;
@@ -250,12 +286,14 @@
   .ProseMirror p.is-editor-empty:first-child::before {
     color: #adb5bd;
     content: attr(data-placeholder);
-    float: left;
+    float: inline-start;
     height: 0;
     pointer-events: none;
   }
   /* Give a remote user a caret */
   .collaboration-cursor__caret {
+    /* rtl-ok: symmetric 1px caret — identical borders and negative
+       margins on both sides, so there is nothing to mirror. */
     border-left: 1px solid #0d0d0d;
     border-right: 1px solid #0d0d0d;
     margin-left: -1px;
@@ -271,7 +309,7 @@
     font-size: 12px;
     font-style: normal;
     font-weight: 600;
-    left: -1px;
+    inset-inline-start: -1px;
     line-height: normal;
     padding: 0.1rem 0.3rem;
     position: absolute;
@@ -396,6 +434,180 @@
     @apply bg-background text-foreground;
     font-family: var(--font-default, 'Wix Madefor Text'), -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
     letter-spacing: -0.02em;
+  }
+
+  /* The -0.02em tracking above is tuned for Latin. Arabic is a cursive script
+     where letters join along a baseline, and negative tracking crushes those
+     joins — in some renderers it breaks them outright. Keyed on :lang() as well
+     as [dir] so Arabic content inside an English UI is covered too.
+     `body` is listed explicitly: it carries its own letter-spacing above, which
+     would otherwise beat a value merely inherited from <html>. */
+  [dir='rtl'],
+  [dir='rtl'] body,
+  :lang(ar),
+  :lang(ar) body,
+  :lang(fa),
+  :lang(fa) body {
+    letter-spacing: normal;
+  }
+
+  /* Arabic is set in Tajawal, full stop — not layered as a per-glyph fallback.
+     Tajawal carries a Latin subset, so forcing it keeps a mixed Arabic screen
+     in one typeface instead of alternating between two designs with different
+     proportions mid-sentence.
+
+     `!important` is required, not defensive: the org's custom font is applied
+     as an inline style on .lh-org-font-root, and an inline declaration beats
+     any normal rule regardless of specificity. Monospace is unaffected —
+     code, pre and the editors set font-family on their own elements, and
+     cascade contests only happen element by element. */
+  [dir='rtl'],
+  [dir='rtl'] body,
+  [dir='rtl'] .lh-org-font-root,
+  [dir='rtl'] input,
+  [dir='rtl'] textarea,
+  [dir='rtl'] select,
+  [dir='rtl'] button,
+  :lang(ar),
+  :lang(ar) body,
+  :lang(ar) .lh-org-font-root {
+    font-family: var(--font-arabic), -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif !important;
+  }
+
+  /* Arabic has deep descenders (ج ح خ ع غ) and stacked diacritics that get
+     clipped at the line-heights a Latin-only UI can get away with. Overriding
+     the theme tokens lifts every leading-* utility at once, rather than
+     chasing them one at a time. */
+  [dir='rtl'] {
+    --leading-tight: 1.45;
+    --leading-snug: 1.55;
+    --leading-normal: 1.75;
+    --leading-relaxed: 1.9;
+  }
+
+  /* leading-none is a literal `line-height: 1` with no theme token behind it,
+     so it needs overriding directly. */
+  [dir='rtl'] .leading-none {
+    line-height: 1.2;
+  }
+
+  /* ── Directional icons ──────────────────────────────────────────────────
+     A chevron pointing "forward" points the other way in RTL. Rather than
+     swapping the component at ~250 call sites — which would need a mounted
+     gate at every one to avoid a hydration mismatch, and would leave every
+     NEW call site as a fresh bug — mirror them in CSS.
+
+     lucide emits a `lucide-<name>` class on every icon, so it can be targeted
+     by name. Libraries that don't (phosphor, @radix-ui/react-icons) opt in
+     with `data-dir-flip`.
+
+     Uses `scale:` rather than `transform: scaleX(-1)` because Tailwind v4
+     compiles its translate and rotate utilities to the independent
+     `translate:` and `rotate:` properties — so this composes with them
+     instead of overwriting them. It
+     does still collide with Tailwind's own `scale-*` utilities; those few
+     elements opt out with data-dir-flip="false".
+
+     Deliberately NOT listed: vertical icons (chevron-up/down, sort
+     indicators), and media transport (play, skip, rewind). Media controls are
+     universally left-to-right — Arabic YouTube does not mirror the play
+     button. */
+  [dir='rtl'] :is(
+    .lucide-chevron-left,
+    .lucide-chevron-right,
+    .lucide-chevrons-left,
+    .lucide-chevrons-right,
+    .lucide-arrow-left,
+    .lucide-arrow-right,
+    .lucide-arrow-up-left,
+    .lucide-arrow-up-right,
+    .lucide-arrow-down-left,
+    .lucide-arrow-down-right,
+    .lucide-move-left,
+    .lucide-move-right,
+    .lucide-corner-up-left,
+    .lucide-corner-up-right,
+    .lucide-corner-down-left,
+    .lucide-corner-down-right,
+    .lucide-log-in,
+    .lucide-log-out,
+    .lucide-panel-left-open,
+    .lucide-panel-left-close,
+    .lucide-panel-right-open,
+    .lucide-panel-right-close,
+    .lucide-reply,
+    .lucide-reply-all,
+    .lucide-forward,
+    .lucide-undo,
+    .lucide-undo-2,
+    .lucide-redo,
+    .lucide-redo-2,
+    .lucide-indent-increase,
+    .lucide-indent-decrease,
+    .lucide-list-start,
+    .lucide-list-end
+  ),
+  [dir='rtl'] [data-dir-flip=''],
+  [dir='rtl'] [data-dir-flip='true'] {
+    scale: -1 1;
+  }
+
+  /* Opt-out for icons whose arrow isn't directional prose, or that already
+     carry a Tailwind scale-* utility. */
+  [dir='rtl'] [data-dir-flip='false'] {
+    scale: none;
+  }
+
+  /* Charts stay left-to-right. recharts computes absolute SVG x-coordinates,
+     so dir=rtl flips the DOM but not the geometry — axis labels detach from
+     their ticks and the plot area lands outside its own box. Locking the
+     wrapper means an Arabic reader sees a left-to-right time axis, which is
+     the same compromise Excel and Google Sheets make. Labels are still
+     translated; only the axis direction is fixed. */
+  [dir='rtl'] .recharts-wrapper,
+  [dir='rtl'] .recharts-responsive-container {
+    direction: ltr;
+  }
+
+  /* ── Authored content direction ─────────────────────────────────────────
+     The UI language and the content language are independent: an English-UI
+     org can host Arabic courses, and an Arabic-UI org can host English ones.
+     So rich text must follow the text itself, not the chrome around it.
+
+     `unicode-bidi: plaintext` resolves direction per block from its first
+     strong character — the same rule as dir="auto", but applied in CSS. Doing
+     it this way means the ProseMirror document schema is untouched, so
+     nothing new is written into stored activity JSON and the Yjs collab path
+     sees no new node attributes.
+
+     text-align: start is required alongside it, otherwise an Arabic paragraph
+     resolves right-to-left but still renders flush left. */
+  .ProseMirror :is(p, h1, h2, h3, h4, h5, h6, li, blockquote, td, th, pre),
+  .board-card-content :is(p, h1, h2, h3, li, blockquote) {
+    unicode-bidi: plaintext;
+    text-align: start;
+  }
+
+  /* Code is left-to-right by language spec even inside RTL prose. */
+  .ProseMirror :is(pre, code) {
+    unicode-bidi: normal;
+    direction: ltr;
+    text-align: start;
+  }
+
+  /* Identifiers that must never be bidi-reordered. A URL or an API key with
+     Arabic around it renders in a genuinely misleading order otherwise. */
+  [data-ltr-content] {
+    direction: ltr;
+    unicode-bidi: bidi-override;
+    text-align: start;
+  }
+
+  /* Toasts carry a mix of translated copy and raw English API errors — see
+     components/Objects/StyledElements/Toast/Toast.tsx. */
+  .lh-toast {
+    unicode-bidi: plaintext;
+    text-align: start;
   }
 }
 
@@ -730,6 +942,8 @@
 }
 
 .editor-drop-indicator::before {
+/* rtl-ok: the two end-caps of a horizontal drop indicator. Mirroring
+   swaps which cap is which and changes nothing visually. */
   left: -3px;
 }
 
@@ -802,6 +1016,8 @@
 }
 
 .tippy-box[data-placement^='left'] > .tippy-arrow {
+/* rtl-ok: Tippy resolves placement to a physical side before applying
+   it, so these selectors are already direction-correct. */
   right: 0;
 }
 
@@ -921,7 +1137,7 @@
   background: transparent;
   border-radius: 6px;
   cursor: pointer;
-  text-align: left;
+  text-align: start;
   transition: background 0.15s ease;
 }
 
@@ -943,7 +1159,7 @@
   background: #f9fafb;
   border: 1px solid #e5e7eb;
   border-radius: 6px;
-  margin-right: 10px;
+  margin-inline-end: 10px;
   color: #374151;
   flex-shrink: 0;
 }
@@ -1065,7 +1281,7 @@
   width: 2px;
   height: 1em;
   background: linear-gradient(180deg, rgb(164, 45, 238) 0%, rgb(35, 40, 93) 100%);
-  margin-left: 2px;
+  margin-inline-start: 2px;
   animation: ai-cursor-blink 1s ease-in-out infinite;
   vertical-align: text-bottom;
 }
@@ -1085,7 +1301,7 @@
 .ai-message-streaming .ai-content::after {
   content: '';
   position: absolute;
-  right: 0;
+  inset-inline-end: 0;
   bottom: 0;
   width: 100%;
   height: 2px;
@@ -1458,6 +1674,11 @@
 
   /* Top-right (avatars, clock, timer, share) — center on top, smaller */
   .board-topright {
+    /* rtl-ok: the board canvas is dir="ltr"-locked (Yjs shares absolute
+       left/top coordinates between collaborators, so a logical coordinate
+       system would desync an RTL client from an LTR one). `right: auto`
+       only defeats a right-* utility, and left:50% + translateX(-50%) is
+       symmetric anyway. */
     right: auto !important;
     left: 50% !important;
     transform: translateX(-50%) scale(0.78);
@@ -1466,6 +1687,7 @@
   }
 
   /* Social stack — just center it, keep the desktop design as-is */
+  /* rtl-ok: board canvas is dir="ltr"-locked, and this centering is symmetric. */
   .board-social {
     position: fixed !important;
     right: auto !important;
@@ -1508,14 +1730,22 @@
   color: #6b7280;
   background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%236b7280' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
   background-repeat: no-repeat;
+  /* background-position has no logical form, so the chevron is mirrored
+     explicitly for RTL further down. Keep the two in sync. */
   background-position: right 5px center;
   background-size: 12px;
-  padding-right: 20px;
+  padding-inline-end: 20px;
   flex-shrink: 0;
   transition: all 0.2s ease-in-out;
   box-shadow: 0 4px 6px -1px rgba(209, 213, 219, 0.25),
     0 2px 4px -2px rgba(209, 213, 219, 0.25);
   outline: 1px solid rgba(229, 231, 235, 0.4);
+}
+
+/* The dropdown chevron is a background image, and background-position has no
+   logical form — so it has to be mirrored by hand. */
+[dir='rtl'] .editor-tool-select {
+  background-position: left 5px center;
 }
 
 .editor-tool-select:hover { background-color: #f9fafb; }
@@ -1533,7 +1763,7 @@
 .editor-menu-dropdown {
   position: absolute;
   top: 100%;
-  left: 0;
+  inset-inline-start: 0;
   background: white;
   border-radius: 6px;
   z-index: var(--z-tooltip);
@@ -1565,7 +1795,7 @@
 }
 
 .editor-menu-item .icon {
-  margin-right: 8px;
+  margin-inline-end: 8px;
   display: flex;
   align-items: center;
   color: #6b7280;
@@ -1616,6 +1846,7 @@
   outline: 1px solid rgba(229, 231, 235, 0.5);
   position: fixed;
   z-index: var(--z-editor-toolbar);
+  /* rtl-ok: symmetric — equivalent to inset-inline: 0. */
   left: 0;
   right: 0;
   width: auto;
@@ -1684,7 +1915,7 @@
 }
 
 .activity-editor-user-profile {
-  padding-right: 8px;
+  padding-inline-end: 8px;
 }
 
 .activity-editor-user-profile svg {
@@ -1696,7 +1927,7 @@
   justify-content: center;
   align-items: center;
   display: flex;
-  margin-left: 10px;
+  margin-inline-start: 10px;
   color: #494949;
   min-width: 0;
   white-space: nowrap;
@@ -1711,6 +1942,7 @@
 }
 
 .activity-editor-doc-name svg {
+  /* rtl-ok: symmetric margins. */
   margin-left: 4px;
   margin-right: 4px;
   padding: 3px;
@@ -1733,7 +1965,7 @@
   object-fit: cover;
   object-position: top;
   border-radius: 7px;
-  margin-left: 6px;
+  margin-inline-start: 6px;
 }
 
 .activity-editor-info-thumbnail:hover {
@@ -1891,7 +2123,7 @@
 .activity-editor-content-wrapper ul,
 .activity-editor-content-wrapper ol {
   padding: 0 1rem;
-  padding-left: 20px;
+  padding-inline-start: 20px;
 }
 
 .activity-editor-content-wrapper ul {
@@ -1928,12 +2160,13 @@
 .activity-editor-content-wrapper table th {
   background-color: rgba(217, 217, 217, 0.4);
   font-weight: bold;
-  text-align: left;
+  text-align: start;
 }
 
 .activity-editor-content-wrapper table .selectedCell:after {
   background: rgba(139, 139, 139, 0.2);
   content: "";
+  /* rtl-ok: symmetric full-bleed overlay. */
   left: 0; right: 0; top: 0; bottom: 0;
   pointer-events: none;
   position: absolute;
@@ -1945,7 +2178,7 @@
   bottom: -2px;
   pointer-events: none;
   position: absolute;
-  right: -2px;
+  inset-inline-end: -2px;
   top: 0;
   width: 4px;
 }
@@ -1991,7 +2224,7 @@
 
 .canva-content-wrapper > div:first-child {
   width: 20%;
-  padding-right: 1rem;
+  padding-inline-end: 1rem;
 }
 
 .canva-content-wrapper > div:last-child {
@@ -2000,7 +2233,7 @@
 
 .canva-content-wrapper:has(> div:first-child:not(:last-child)) > div:first-child {
   width: 20%;
-  padding-right: 1rem;
+  padding-inline-end: 1rem;
 }
 
 .canva-content-wrapper:has(> div:first-child:not(:last-child)) > div:last-child {
@@ -2009,7 +2242,7 @@
 
 .canva-content-wrapper:has(> div:first-child:last-child) > div:first-child {
   width: 100%;
-  padding-right: 0;
+  padding-inline-end: 0;
 }
 
 .canva-content-wrapper .ProseMirror {
@@ -2063,7 +2296,7 @@
 .canva-content-wrapper .ProseMirror ul,
 .canva-content-wrapper .ProseMirror ol {
   padding: 0 1rem;
-  padding-left: 20px;
+  padding-inline-start: 20px;
 }
 
 .canva-content-wrapper .ProseMirror ul {
@@ -2100,12 +2333,13 @@
 .canva-content-wrapper .ProseMirror table th {
   background-color: rgba(217, 217, 217, 0.4);
   font-weight: bold;
-  text-align: left;
+  text-align: start;
 }
 
 .canva-content-wrapper .ProseMirror table .selectedCell:after {
   background: rgba(139, 139, 139, 0.2);
   content: "";
+  /* rtl-ok: symmetric full-bleed overlay. */
   left: 0; right: 0; top: 0; bottom: 0;
   pointer-events: none;
   position: absolute;
@@ -2117,7 +2351,7 @@
   bottom: -2px;
   pointer-events: none;
   position: absolute;
-  right: -2px;
+  inset-inline-end: -2px;
   top: 0;
   width: 4px;
 }
@@ -2239,7 +2473,7 @@
 .editor-preview-wrapper .ProseMirror ul,
 .editor-preview-wrapper .ProseMirror ol {
   padding: 0 1rem;
-  padding-left: 20px;
+  padding-inline-start: 20px;
 }
 
 .editor-preview-wrapper .ProseMirror ul { list-style-type: disc; }
@@ -2266,7 +2500,7 @@
 .editor-preview-wrapper .ProseMirror table th {
   background-color: rgba(217, 217, 217, 0.4);
   font-weight: bold;
-  text-align: left;
+  text-align: start;
 }
 
 .editor-preview-wrapper iframe {
