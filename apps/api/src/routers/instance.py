@@ -3,7 +3,6 @@ from sqlmodel import select
 from sqlmodel.ext.asyncio.session import AsyncSession
 from src.db.organizations import Organization
 from src.core.events.database import get_db_session
-from src.core.ee_hooks import is_multi_org_allowed
 from src.core.deployment_mode import get_deployment_mode
 from src.services.orgs.cache import get_cached_instance_info, set_cached_instance_info
 from config.config import get_learnhouse_config
