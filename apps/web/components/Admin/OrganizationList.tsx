@@ -104,13 +104,16 @@ function Sparkline({ data, max }: { data: number[]; max: number }) {
 
 function AdminUserTooltip({ users }: { users: AdminUserInfo[] }) {
   const [open, setOpen] = useState(false)
-  const [pos, setPos] = useState<{ top: number; left: number } | null>(null)
+  const [pos, setPos] = useState<{ top: number; left: number; rtl: boolean } | null>(null)
   const btnRef = useRef<HTMLButtonElement>(null)
 
   useEffect(() => {
     if (open && btnRef.current) {
       const rect = btnRef.current.getBoundingClientRect()
-      setPos({ top: rect.top - 8, left: rect.left })
+      // Anchor to the edge the tooltip grows away from, so it doesn't run off
+      // the viewport when the UI is right-to-left.
+      const rtl = document.documentElement.dir === 'rtl'
+      setPos({ top: rect.top - 8, left: rtl ? window.innerWidth - rect.right : rect.left, rtl })
     }
   }, [open])
 
@@ -131,7 +134,7 @@ function AdminUserTooltip({ users }: { users: AdminUserInfo[] }) {
       {open && pos && (
         <div
           className="fixed z-[9999] w-64 bg-[#1a1a1b] border border-white/[0.12] rounded-lg shadow-xl p-2 space-y-1"
-          style={{ top: pos.top, left: pos.left, transform: 'translateY(-100%)' }}
+          style={{ top: pos.top, ...(pos.rtl ? { right: pos.left } : { left: pos.left }), transform: 'translateY(-100%)' }}
           onMouseEnter={() => setOpen(true)}
           onMouseLeave={() => setOpen(false)}
         >
@@ -329,13 +332,13 @@ export default function OrganizationList() {
       <div className="flex flex-col gap-3 mb-4">
         <div className="flex items-center justify-between">
           <div className="relative">
-            <MagnifyingGlass size={14} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-white/30" />
+            <MagnifyingGlass size={14} className="absolute start-2.5 top-1/2 -translate-y-1/2 text-white/30" />
             <input
               type="text"
               value={search}
               onChange={(e) => handleSearch(e.target.value)}
               placeholder="Search organizations..."
-              className="bg-white/[0.05] border border-white/[0.08] rounded-lg pl-8 pr-3 py-1.5 text-sm text-white placeholder:text-white/25 focus:outline-none focus:border-white/20 w-64"
+              className="bg-white/[0.05] border border-white/[0.08] rounded-lg ps-8 pe-3 py-1.5 text-sm text-white placeholder:text-white/25 focus:outline-none focus:border-white/20 w-64"
             />
           </div>
           <div className="flex items-center gap-3">
@@ -354,7 +357,7 @@ export default function OrganizationList() {
         <div className="flex items-center justify-between">
           {isSaaS ? (
             <div className="flex items-center gap-2">
-              <span className="text-xs text-white/40 mr-1">Plan:</span>
+              <span className="text-xs text-white/40 me-1">Plan:</span>
               {PLANS_SAAS.map((p) => (
                 <button
                   key={p}
@@ -373,7 +376,7 @@ export default function OrganizationList() {
             <div />
           )}
           <div className="flex items-center gap-2">
-            <span className="text-xs text-white/40 mr-1">Sort:</span>
+            <span className="text-xs text-white/40 me-1">Sort:</span>
             {([
               ['id', 'Default'],
               ['newest', 'Newest'],
@@ -423,7 +426,7 @@ export default function OrganizationList() {
           </div>
         ) : (
           <>
-      <table className="w-full text-left">
+      <table className="w-full text-start">
         <thead>
           <tr className="border-b border-white/[0.08]">
             <th className="px-4 py-3 text-xs font-medium text-white/40 uppercase tracking-wider">Organization</th>
@@ -462,7 +465,7 @@ export default function OrganizationList() {
                       {org.description ? (
                         <p className="text-xs text-white/30 truncate max-w-[260px]">{org.description}</p>
                       ) : (
-                        <p className="text-xs text-white/40 font-mono">{org.slug}</p>
+                        <p data-ltr-content className="text-xs text-white/40 font-mono">{org.slug}</p>
                       )}
                     </div>
                   </Link>
@@ -471,7 +474,7 @@ export default function OrganizationList() {
                   <div className="space-y-1">
                     <a href={safeHref(orgUrl)} rel="noopener" className="flex items-center gap-1.5 text-xs text-blue-400/80 hover:text-blue-400 transition-colors font-mono">
                       <Globe size={12} weight="bold" className="shrink-0" />
-                      <span className="truncate max-w-[180px]">{org.slug}.{domain}</span>
+                      <span data-ltr-content className="truncate max-w-[180px]">{org.slug}.{domain}</span>
                     </a>
                     {org.custom_domains.map((d) => (
                       <a key={d} href={safeHref(`${typeof window !== 'undefined' ? window.location.protocol : 'http:'}//${d}`)} rel="noopener" className="flex items-center gap-1.5 text-xs text-emerald-400/80 hover:text-emerald-400 transition-colors">
@@ -541,7 +544,7 @@ export default function OrganizationList() {
               disabled={page === 1}
               className="p-1.5 rounded text-white/40 hover:text-white hover:bg-white/[0.08] transition-colors disabled:opacity-20 disabled:cursor-not-allowed"
             >
-              <CaretLeft size={14} weight="bold" />
+              <CaretLeft size={14} weight="bold" data-dir-flip />
             </button>
             {Array.from({ length: totalPages }, (_, i) => i + 1)
               .filter((p) => p === 1 || p === totalPages || Math.abs(p - page) <= 1)
@@ -567,7 +570,7 @@ export default function OrganizationList() {
               disabled={page === totalPages}
               className="p-1.5 rounded text-white/40 hover:text-white hover:bg-white/[0.08] transition-colors disabled:opacity-20 disabled:cursor-not-allowed"
             >
-              <CaretRight size={14} weight="bold" />
+              <CaretRight size={14} weight="bold" data-dir-flip />
             </button>
           </div>
         </div>

@@ -14,7 +14,7 @@ const FileUploadBlockInput: React.FC<InputHTMLAttributes<HTMLInputElement>> = ({
   return (
     <input
       className={cn(
-        'p-3 rounded-lg file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 hover:file:cursor-pointer file:bg-slate-200 cursor-pointer file:text-slate-600 text-sm',
+        'p-3 rounded-lg file:me-4 file:py-2 file:px-4 file:rounded-full file:border-0 hover:file:cursor-pointer file:bg-slate-200 cursor-pointer file:text-slate-600 text-sm',
         className
       )}
       onChange={onChange}

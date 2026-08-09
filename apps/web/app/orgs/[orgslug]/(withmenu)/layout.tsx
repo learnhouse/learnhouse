@@ -107,7 +107,11 @@ function LayoutContent({ children, orgslug }: { children: ReactNode; orgslug: st
 
   return (
     <div
-      className="flex flex-col min-h-screen"
+      // lh-org-font-root gives globals.css a hook to override this inline
+      // font-family in Arabic, where Tajawal replaces the org's custom face
+      // outright. An inline style beats any normal rule, so the override has to
+      // target this element specifically.
+      className="lh-org-font-root flex flex-col min-h-screen"
       style={{
         backgroundColor: primaryColor ? hexToRgba(primaryColor, 0.05) : 'transparent',
         ...(customFont ? { fontFamily: `'${customFont}', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif` } : {}),

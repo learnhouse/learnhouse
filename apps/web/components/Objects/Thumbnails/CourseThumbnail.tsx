@@ -25,6 +25,7 @@ import {
   DropdownMenuTrigger,
 } from "@components/ui/dropdown-menu"
 import { useTranslation } from 'react-i18next'
+import { formatDate } from '@/lib/format'
 import { useLHAnalytics, AnalyticsEvent } from '@services/analytics'
 
 type Course = {
@@ -160,7 +161,7 @@ function CourseThumbnail({ course, orgslug, customLink, isDashboard = false, isS
         <button
           onClick={handleSelectClick}
           aria-label={isSelected ? 'Deselect course' : 'Select course'}
-          className={`absolute top-2 left-2 z-20 p-1.5 bg-white/90 backdrop-blur-sm rounded-full hover:bg-white transition-all shadow-md ${
+          className={`absolute top-2 start-2 z-20 p-1.5 bg-white/90 backdrop-blur-sm rounded-full hover:bg-white transition-all shadow-md ${
             isSelected ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'
           }`}
         >
@@ -200,7 +201,7 @@ function CourseThumbnail({ course, orgslug, customLink, isDashboard = false, isS
         />
         <div className="absolute inset-0 bg-black/0 group-hover:bg-black/5 transition-colors duration-300" />
         {isDashboard && (
-          <div className="absolute bottom-2 left-2">
+          <div className="absolute bottom-2 start-2">
             {course.published ? (
               <span className="px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide bg-green-100 text-green-700 rounded-full">
                 {t('courses.published')}
@@ -221,7 +222,7 @@ function CourseThumbnail({ course, orgslug, customLink, isDashboard = false, isS
             href={courseLink}
             onClick={handleCardOpen}
             className="text-base font-bold text-gray-900 leading-tight hover:text-black transition-colors line-clamp-1"
-          >
+           dir="auto">
             {course.name}
           </Link>
         </div>
@@ -265,7 +266,7 @@ function CourseThumbnail({ course, orgslug, customLink, isDashboard = false, isS
             
             {course.update_date && (
               <span className="text-[9px] font-bold text-gray-400 uppercase tracking-widest">
-                {new Date(course.update_date).toLocaleDateString(i18n.language === 'fr' ? 'fr-FR' : 'en-US', { month: 'short', day: 'numeric' })}
+                {formatDate(course.update_date, i18n.language, { dateStyle: undefined, month: 'short', day: 'numeric' })}
               </span>
             )}
           </div>
@@ -303,7 +304,7 @@ const AdminEditOptions = ({ course, orgSlug, deleteCourse, cloneCourse, exportCo
       checkMethod="roles"
       orgId={course.org_id}
     >
-      <div className={`absolute top-2 right-2 z-20 transition-opacity ${
+      <div className={`absolute top-2 end-2 z-20 transition-opacity ${
         isDashboard && !isOpen ? 'opacity-0 group-hover:opacity-100' : 'opacity-100'
       }`}>
         <DropdownMenu open={isOpen} onOpenChange={setIsOpen}>
@@ -315,12 +316,12 @@ const AdminEditOptions = ({ course, orgSlug, deleteCourse, cloneCourse, exportCo
           <DropdownMenuContent align="end" className="w-52">
             <DropdownMenuItem asChild>
               <Link prefetch={false} href={getUriWithOrg(orgSlug, `/dash/courses/course/${removeCoursePrefix(course.course_uuid)}/content`)} className="flex items-center cursor-pointer">
-                <FilePenLine className="mr-2 h-4 w-4" /> {t('courses.edit_content')}
+                <FilePenLine className="me-2 h-4 w-4" /> {t('courses.edit_content')}
               </Link>
             </DropdownMenuItem>
             <DropdownMenuItem asChild>
               <Link prefetch={false} href={getUriWithOrg(orgSlug, `/dash/courses/course/${removeCoursePrefix(course.course_uuid)}/general`)} className="flex items-center cursor-pointer">
-                <Settings2 className="mr-2 h-4 w-4" /> {t('common.settings')}
+                <Settings2 className="me-2 h-4 w-4" /> {t('common.settings')}
               </Link>
             </DropdownMenuItem>
             <DropdownMenuItem asChild>
@@ -329,8 +330,8 @@ const AdminEditOptions = ({ course, orgSlug, deleteCourse, cloneCourse, exportCo
                 confirmationMessage={t('courses.clone_course_confirm')}
                 dialogTitle={t('courses.clone_course_title', { name: course.name })}
                 dialogTrigger={
-                  <button className="w-full text-left flex items-center px-2 py-1.5 text-sm text-gray-700 hover:bg-gray-50 rounded-md transition-colors">
-                    <Copy className="mr-2 h-4 w-4" /> {t('courses.clone_course')}
+                  <button className="w-full text-start flex items-center px-2 py-1.5 text-sm text-gray-700 hover:bg-gray-50 rounded-md transition-colors">
+                    <Copy className="me-2 h-4 w-4" /> {t('courses.clone_course')}
                   </button>
                 }
                 functionToExecute={cloneCourse}
@@ -340,17 +341,17 @@ const AdminEditOptions = ({ course, orgSlug, deleteCourse, cloneCourse, exportCo
             <DropdownMenuItem asChild>
               <button
                 onClick={exportCourse}
-                className="w-full text-left flex items-center px-2 py-1.5 text-sm text-gray-700 hover:bg-gray-50 rounded-md transition-colors"
+                className="w-full text-start flex items-center px-2 py-1.5 text-sm text-gray-700 hover:bg-gray-50 rounded-md transition-colors"
               >
-                <Download className="mr-2 h-4 w-4" /> {t('courses.export_course')}
+                <Download className="me-2 h-4 w-4" /> {t('courses.export_course')}
               </button>
             </DropdownMenuItem>
             <DropdownMenuItem asChild>
               <button
                 onClick={() => setAccessOpen(true)}
-                className="w-full text-left flex items-center px-2 py-1.5 text-sm text-gray-700 hover:bg-gray-50 rounded-md transition-colors"
+                className="w-full text-start flex items-center px-2 py-1.5 text-sm text-gray-700 hover:bg-gray-50 rounded-md transition-colors"
               >
-                <Lock className="mr-2 h-4 w-4" /> {t('library.manage_access')}
+                <Lock className="me-2 h-4 w-4" /> {t('library.manage_access')}
               </button>
             </DropdownMenuItem>
             <DropdownMenuItem asChild>
@@ -359,8 +360,8 @@ const AdminEditOptions = ({ course, orgSlug, deleteCourse, cloneCourse, exportCo
                 confirmationMessage={t('courses.delete_course_confirm')}
                 dialogTitle={t('courses.delete_course_title', { name: course.name })}
                 dialogTrigger={
-                  <button className="w-full text-left flex items-center px-2 py-1.5 text-sm text-red-600 hover:bg-red-50 rounded-md transition-colors">
-                    <BookMinus className="mr-2 h-4 w-4" /> {t('courses.delete_course')}
+                  <button className="w-full text-start flex items-center px-2 py-1.5 text-sm text-red-600 hover:bg-red-50 rounded-md transition-colors">
+                    <BookMinus className="me-2 h-4 w-4" /> {t('courses.delete_course')}
                   </button>
                 }
                 functionToExecute={deleteCourse}

@@ -280,7 +280,7 @@ function ActivityChatMessageBox(props: ActivityChatMessageBoxProps) {
               mass: 0.2,
               velocity: 2,
             }}
-            className="fixed top-0 left-0 w-full h-full z-[9999] flex justify-center items-center "
+            className="fixed top-0 start-0 w-full h-full z-[9999] flex justify-center items-center "
             style={{ pointerEvents: 'none' }}
           >
             <div
@@ -325,7 +325,7 @@ function ActivityChatMessageBox(props: ActivityChatMessageBoxProps) {
                   />
                 </div>
                 <div
-                  className={`flex space-x-2 items-center -ml-[100px] ${isInputDisabled ? 'animate-pulse' : ''
+                  className={`flex space-x-2 items-center -ms-[100px] ${isInputDisabled ? 'animate-pulse' : ''
                     }`}
                 >
                   <Image
@@ -355,7 +355,7 @@ function ActivityChatMessageBox(props: ActivityChatMessageBoxProps) {
                 !aiChatBotState.error.isError ? (
                 <div
                   ref={messagesContainerRef}
-                  className={`flex flex-col w-full space-y-3 overflow-y-auto scroll-smooth pr-2 ${
+                  className={`flex flex-col w-full space-y-3 overflow-y-auto scroll-smooth pe-2 ${
                     aiChatBotState.isFullscreen ? 'flex-1' : 'h-[237px]'
                   }`}
                   style={{
@@ -587,7 +587,7 @@ function AIMessageComponent({ message, isAI, isStreaming = false }: AIMessageCom
             />
           </div>
         ) : (
-          <div className="inline-block bg-white/5 rounded-xl rounded-tl-sm px-3 py-2 max-w-[85%]">
+          <div className="inline-block bg-white/5 rounded-xl rounded-ss-sm px-3 py-2 max-w-[85%]">
             <p className="text-white/90 text-sm leading-relaxed">
               {message.message}
             </p>
@@ -953,7 +953,7 @@ function AISidePanelInline(props: AISidePanelProps) {
           {aiChatBotState.messages.length > 0 && !aiChatBotState.error.isError ? (
             <div
               ref={messagesContainerRef}
-              className="flex flex-col flex-1 w-full space-y-3 overflow-y-auto scroll-smooth pr-2"
+              className="flex flex-col flex-1 w-full space-y-3 overflow-y-auto scroll-smooth pe-2"
               style={{
                 scrollbarWidth: 'thin',
                 scrollbarColor: 'rgba(255,255,255,0.1) transparent'

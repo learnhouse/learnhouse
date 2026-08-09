@@ -204,7 +204,7 @@ function PlaylistPlayer({
       <div className="px-4 pt-3 pb-2 border-b border-gray-100 flex items-center gap-2">
         <Radio weight="duotone" size={14} className="text-gray-400 flex-shrink-0" />
         <span className="text-sm font-semibold text-gray-900">{podcastName}</span>
-        <span className="text-xs text-gray-400 ml-auto">{episodes.length} episodes</span>
+        <span className="text-xs text-gray-400 ms-auto">{episodes.length} episodes</span>
       </div>
 
       {/* Episode list */}
@@ -282,13 +282,16 @@ function PlaylistPlayer({
               <SkipForward weight="duotone" size={14} className="text-gray-600" />
             </button>
 
-            <span className="text-xs text-gray-500 tabular-nums flex-shrink-0 w-8 text-right">
+            <span className="text-xs text-gray-500 tabular-nums flex-shrink-0 w-8 text-end">
               {formatTime(currentTime)}
             </span>
 
             <div
               ref={progressRef}
               onClick={seekTo}
+              // dir="ltr": see InlineAudioPlayer — fill, thumb and seek math all
+              // assume left-to-right, and audio transport is LTR everywhere.
+              dir="ltr"
               className="flex-1 h-1 bg-gray-200 rounded-full cursor-pointer relative group"
             >
               <div className="h-full bg-gray-900 rounded-full transition-all duration-100" style={{ width: `${progress}%` }} />

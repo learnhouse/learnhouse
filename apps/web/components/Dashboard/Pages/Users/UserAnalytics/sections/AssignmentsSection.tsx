@@ -43,7 +43,7 @@ function AssignmentRow({ a }: { a: any }) {
       <button
         type="button"
         onClick={() => hasTasks && setOpen((o) => !o)}
-        className="w-full flex items-center justify-between gap-3 p-4 text-left"
+        className="w-full flex items-center justify-between gap-3 p-4 text-start"
       >
         <div className="flex items-center gap-2 min-w-0">
           {hasTasks ? (open ? <ChevronDown size={16} /> : <ChevronRight size={16} />) : <span className="w-4" />}

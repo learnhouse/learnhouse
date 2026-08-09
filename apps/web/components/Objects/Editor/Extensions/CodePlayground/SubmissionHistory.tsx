@@ -139,7 +139,7 @@ export default function SubmissionHistory({
               {isExpanded ? (
                 <CaretDown weight="duotone" size={14} className="text-neutral-400 shrink-0" />
               ) : (
-                <CaretRight weight="duotone" size={14} className="text-neutral-400 shrink-0" />
+                <CaretRight weight="duotone" size={14} className="text-neutral-400 shrink-0" data-dir-flip />
               )}
 
               {sub.passed ? (
@@ -195,7 +195,7 @@ export default function SubmissionHistory({
               onClick={() => setPage((p) => p - 1)}
               className="flex items-center gap-1 text-xs text-neutral-500 hover:text-neutral-700 disabled:opacity-30 disabled:cursor-not-allowed"
             >
-              <CaretLeft weight="duotone" size={14} />
+              <CaretLeft weight="duotone" size={14} data-dir-flip />
               Previous
             </button>
             <span className="text-[11px] text-neutral-400">
@@ -207,7 +207,7 @@ export default function SubmissionHistory({
               className="flex items-center gap-1 text-xs text-neutral-500 hover:text-neutral-700 disabled:opacity-30 disabled:cursor-not-allowed"
             >
               Next
-              <CaretRight weight="duotone" size={14} />
+              <CaretRight weight="duotone" size={14} data-dir-flip />
             </button>
           </div>
         )

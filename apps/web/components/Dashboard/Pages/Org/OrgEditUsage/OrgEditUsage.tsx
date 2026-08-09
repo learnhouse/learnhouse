@@ -429,7 +429,7 @@ function PlanUpsell({ orgSlug, currentPlan }: { orgSlug: string; currentPlan: st
               style={{ background: `linear-gradient(to bottom, ${plan.topGlow}, transparent)` }}
             >
               {plan.popular && (
-                <span className="absolute top-4 right-4 text-[10px] font-bold uppercase tracking-wider text-purple-700 bg-purple-100 px-2 py-0.5 rounded-full">
+                <span className="absolute top-4 end-4 text-[10px] font-bold uppercase tracking-wider text-purple-700 bg-purple-100 px-2 py-0.5 rounded-full">
                   {t('dashboard.organization.usage.upsell.popular', { defaultValue: 'Popular' })}
                 </span>
               )}
@@ -445,7 +445,7 @@ function PlanUpsell({ orgSlug, currentPlan }: { orgSlug: string; currentPlan: st
                     <Check size={14} weight="bold" className="text-emerald-500 mt-0.5 flex-none" />
                     <span>
                       {f.label}
-                      {f.badge && <span className="ml-1 text-[10px] font-semibold text-gray-400">{f.badge}</span>}
+                      {f.badge && <span className="ms-1 text-[10px] font-semibold text-gray-400">{f.badge}</span>}
                     </span>
                   </li>
                 ))}
@@ -456,7 +456,7 @@ function PlanUpsell({ orgSlug, currentPlan }: { orgSlug: string; currentPlan: st
                   className={`inline-flex items-center justify-center gap-1.5 w-full py-2.5 rounded-lg text-sm font-semibold transition-colors ${plan.ctaStyle}`}
                 >
                   {t('dashboard.organization.usage.upsell.upgrade_to', { plan: plan.name, defaultValue: `Upgrade to ${plan.name}` })}
-                  <ArrowRight size={14} weight="bold" />
+                  <ArrowRight size={14} weight="bold" data-dir-flip />
                 </a>
               )}
             </div>
@@ -468,7 +468,7 @@ function PlanUpsell({ orgSlug, currentPlan }: { orgSlug: string; currentPlan: st
         <div className="px-6 pb-5 -mt-1">
           <a href={compareUrl} className="text-xs font-semibold text-gray-500 hover:text-gray-800 inline-flex items-center gap-1">
             {t('dashboard.organization.usage.upsell.compare', { defaultValue: 'Compare all plans' })}
-            <ArrowRight size={12} weight="bold" />
+            <ArrowRight size={12} weight="bold" data-dir-flip />
           </a>
         </div>
       )}

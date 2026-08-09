@@ -57,12 +57,15 @@ const PAGE_SIZE = 20
 function OrgListTooltip({ orgs }: { orgs: OrgMembership[] }) {
   const [open, setOpen] = useState(false)
   const btnRef = React.useRef<HTMLButtonElement>(null)
-  const [pos, setPos] = useState<{ top: number; left: number } | null>(null)
+  const [pos, setPos] = useState<{ top: number; left: number; rtl: boolean } | null>(null)
 
   useEffect(() => {
     if (open && btnRef.current) {
       const rect = btnRef.current.getBoundingClientRect()
-      setPos({ top: rect.top - 8, left: rect.left })
+      // Anchor to the edge the tooltip grows away from, so it doesn't run off
+      // the viewport when the UI is right-to-left.
+      const rtl = document.documentElement.dir === 'rtl'
+      setPos({ top: rect.top - 8, left: rtl ? window.innerWidth - rect.right : rect.left, rtl })
     }
   }, [open])
 
@@ -83,7 +86,7 @@ function OrgListTooltip({ orgs }: { orgs: OrgMembership[] }) {
       {open && pos && (
         <div
           className="fixed z-[9999] w-64 bg-[#1a1a1b] border border-white/[0.12] rounded-lg shadow-xl p-2 space-y-1 max-h-64 overflow-y-auto"
-          style={{ top: pos.top, left: pos.left, transform: 'translateY(-100%)' }}
+          style={{ top: pos.top, ...(pos.rtl ? { right: pos.left } : { left: pos.left }), transform: 'translateY(-100%)' }}
           onMouseEnter={() => setOpen(true)}
           onMouseLeave={() => setOpen(false)}
         >
@@ -102,7 +105,7 @@ function OrgListTooltip({ orgs }: { orgs: OrgMembership[] }) {
                   {o.name}
                 </span>
               </div>
-              <span className="text-[10px] text-white/40 shrink-0 ml-2">
+              <span className="text-[10px] text-white/40 shrink-0 ms-2">
                 {o.role_name}
               </span>
             </div>
@@ -236,14 +239,14 @@ export default function UserList() {
           <div className="relative">
             <MagnifyingGlass
               size={14}
-              className="absolute left-2.5 top-1/2 -translate-y-1/2 text-white/30"
+              className="absolute start-2.5 top-1/2 -translate-y-1/2 text-white/30"
             />
             <input
               type="text"
               value={search}
               onChange={(e) => handleSearch(e.target.value)}
               placeholder="Search users..."
-              className="bg-white/[0.05] border border-white/[0.08] rounded-lg pl-8 pr-3 py-1.5 text-sm text-white placeholder:text-white/25 focus:outline-none focus:border-white/20 w-64"
+              className="bg-white/[0.05] border border-white/[0.08] rounded-lg ps-8 pe-3 py-1.5 text-sm text-white placeholder:text-white/25 focus:outline-none focus:border-white/20 w-64"
             />
           </div>
           <span className="text-xs text-white/30">
@@ -253,7 +256,7 @@ export default function UserList() {
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-4">
             <div className="flex items-center gap-2">
-              <span className="text-xs text-white/40 mr-1">Role:</span>
+              <span className="text-xs text-white/40 me-1">Role:</span>
               {SUPERADMIN_FILTERS.map((f) => (
                 <button
                   key={f}
@@ -290,7 +293,7 @@ export default function UserList() {
             </div>
           </div>
           <div className="flex items-center gap-2">
-            <span className="text-xs text-white/40 mr-1">Sort:</span>
+            <span className="text-xs text-white/40 me-1">Sort:</span>
             {(
               [
                 ['id', 'Default'],
@@ -336,7 +339,7 @@ export default function UserList() {
           </div>
         ) : (
           <>
-            <table className="w-full text-left">
+            <table className="w-full text-start">
               <thead>
                 <tr className="border-b border-white/[0.08]">
                   <th className="px-4 py-3 text-xs font-medium text-white/40 uppercase tracking-wider">
@@ -456,7 +459,7 @@ export default function UserList() {
                     disabled={page === 1}
                     className="p-1.5 rounded text-white/40 hover:text-white hover:bg-white/[0.08] transition-colors disabled:opacity-20 disabled:cursor-not-allowed"
                   >
-                    <CaretLeft size={14} weight="bold" />
+                    <CaretLeft size={14} weight="bold" data-dir-flip />
                   </button>
                   {Array.from({ length: totalPages }, (_, i) => i + 1)
                     .filter(
@@ -491,7 +494,7 @@ export default function UserList() {
                     disabled={page === totalPages}
                     className="p-1.5 rounded text-white/40 hover:text-white hover:bg-white/[0.08] transition-colors disabled:opacity-20 disabled:cursor-not-allowed"
                   >
-                    <CaretRight size={14} weight="bold" />
+                    <CaretRight size={14} weight="bold" data-dir-flip />
                   </button>
                 </div>
               </div>

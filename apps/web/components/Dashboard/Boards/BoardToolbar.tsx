@@ -170,7 +170,7 @@ export default function BoardToolbar({
                             : 'bg-neutral-100 text-neutral-600 hover:bg-neutral-200'
                         )}
                       >
-                        <svg width="18" height="12" viewBox="0 0 18 12" className="mr-1">
+                        <svg width="18" height="12" viewBox="0 0 18 12" className="me-1">
                           <line
                             x1="0" y1="6" x2="18" y2="6"
                             stroke="currentColor"

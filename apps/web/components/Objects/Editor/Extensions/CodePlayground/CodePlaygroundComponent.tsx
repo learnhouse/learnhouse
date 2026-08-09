@@ -1119,7 +1119,7 @@ const CodePlaygroundComponent: React.FC = (props: any) => {
             >
               <GearSix weight="duotone" size={12} />
               Advanced
-              <CaretRight weight="duotone" size={12} className={`ml-auto transition-transform ${showAdvanced ? 'rotate-90' : ''}`} />
+              <CaretRight weight="duotone" size={12} className={`ml-auto transition-transform ${showAdvanced ? 'rotate-90' : ''}`} data-dir-flip />
             </button>
             {showAdvanced && (
               <div className="mt-3 space-y-3">
@@ -1170,7 +1170,7 @@ const CodePlaygroundComponent: React.FC = (props: any) => {
                     onClick={() => updateAttributes({ timedMode: !timedMode })}
                     className={`w-10 h-5 rounded-full transition-colors ${timedMode ? 'bg-blue-500' : 'bg-neutral-200'}`}
                   >
-                    <span className={`block w-4 h-4 rounded-full bg-white transition-transform shadow-sm ${timedMode ? 'translate-x-5' : 'translate-x-0.5'}`} />
+                    <span className={`block w-4 h-4 rounded-full bg-white transition-transform shadow-sm ${timedMode ? 'translate-x-5 rtl:-translate-x-5' : 'translate-x-0.5 rtl:-translate-x-0.5'}`} />
                   </button>
                 </div>
                 {timedMode && (
@@ -1304,7 +1304,7 @@ const CodePlaygroundComponent: React.FC = (props: any) => {
                   {solutionView === 'diff' ? (
                     <CodeDiff studentCode={code} solutionCode={solutionCode} />
                   ) : (
-                    <div className={`rounded-lg overflow-hidden border border-neutral-200 nice-shadow ${cmClassName}`}>
+                    <div dir="ltr" className={`rounded-lg overflow-hidden border border-neutral-200 nice-shadow ${cmClassName}`}>
                       {solutionExtensions.length > 0 && (
                         <CodeMirror value={solutionCode} extensions={solutionExtensions} editable={false} height="auto" maxHeight="300px" style={cmStyles} basicSetup={{ lineNumbers: true, foldGutter: false, highlightActiveLine: false }} />
                       )}
@@ -1325,7 +1325,7 @@ const CodePlaygroundComponent: React.FC = (props: any) => {
                   <div className="flex items-center gap-2.5 px-3 py-2 rounded-lg bg-amber-50/60 border border-amber-100 hover:bg-amber-50 transition-colors nice-shadow">
                     <Lightbulb weight="duotone" size={12} className="text-amber-400 flex-shrink-0" />
                     <span className="text-[12px] font-medium text-amber-700 flex-1">Hint {i + 1}</span>
-                    <CaretRight weight="duotone" size={12} className={`text-amber-300 transition-transform ${expandedHints.has(i) ? 'rotate-90' : ''}`} />
+                    <CaretRight weight="duotone" size={12} className={`text-amber-300 transition-transform ${expandedHints.has(i) ? 'rotate-90' : ''}`} data-dir-flip />
                   </div>
                   {expandedHints.has(i) && (
                     <div className="mt-1.5 ml-8 mr-3 text-[12px] text-neutral-600 leading-relaxed pb-1">{hint}</div>
@@ -1782,7 +1782,7 @@ const CodePlaygroundComponent: React.FC = (props: any) => {
               </div>
             )}
             {/* Editor — dark Tokyo Night theme area */}
-            <div className={`flex-1 overflow-hidden ${cmClassName}`}>
+            <div dir="ltr" className={`flex-1 overflow-hidden ${cmClassName}`}>
               {activeFileTab === 'main' ? (
                 extensions.length > 0 && (
                   <CodeMirror

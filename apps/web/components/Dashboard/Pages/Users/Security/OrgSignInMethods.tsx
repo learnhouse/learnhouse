@@ -189,7 +189,7 @@ const OrgSignInMethods: React.FC = () => {
             disabled={controlsDisabled || !isDirty || draftMethods.length === 0}
             className="bg-black text-white hover:bg-black/90"
           >
-            {saving && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
+            {saving && <Loader2 className="w-4 h-4 me-2 animate-spin" />}
             {saving
               ? t('dashboard.organization.security.saving_short', { defaultValue: 'Saving…' })
               : t('dashboard.organization.security.save', { defaultValue: 'Save changes' })}

@@ -129,13 +129,13 @@ function PMNode({ node, ctx }: { node: any; ctx: RendererCtx }): React.ReactElem
     }
     case 'bulletList':
       return (
-        <ul className="list-disc pl-5 my-1.5 text-xs text-gray-700 leading-relaxed space-y-0.5">
+        <ul className="list-disc ps-5 my-1.5 text-xs text-gray-700 leading-relaxed space-y-0.5">
           {renderChildren(node.content, ctx)}
         </ul>
       )
     case 'orderedList':
       return (
-        <ol className="list-decimal pl-5 my-1.5 text-xs text-gray-700 leading-relaxed space-y-0.5">
+        <ol className="list-decimal ps-5 my-1.5 text-xs text-gray-700 leading-relaxed space-y-0.5">
           {renderChildren(node.content, ctx)}
         </ol>
       )
@@ -143,7 +143,7 @@ function PMNode({ node, ctx }: { node: any; ctx: RendererCtx }): React.ReactElem
       return <li>{renderChildren(node.content, ctx)}</li>
     case 'blockquote':
       return (
-        <blockquote className="border-l-2 border-gray-200 pl-3 my-2 text-xs text-gray-600 italic">
+        <blockquote className="border-s-2 border-gray-200 ps-3 my-2 text-xs text-gray-600 italic">
           {renderChildren(node.content, ctx)}
         </blockquote>
       )
@@ -241,11 +241,11 @@ const markdownComponents: MarkdownComponents = {
     <h6 className="text-[11px] font-semibold uppercase tracking-wider text-gray-500 mt-1.5 mb-1" {...p} />
   ),
   p: ({ node: _node, ...p }) => <p className="my-1.5" {...p} />,
-  ul: ({ node: _node, ...p }) => <ul className="list-disc pl-5 my-1.5 space-y-0.5" {...p} />,
-  ol: ({ node: _node, ...p }) => <ol className="list-decimal pl-5 my-1.5 space-y-0.5" {...p} />,
+  ul: ({ node: _node, ...p }) => <ul className="list-disc ps-5 my-1.5 space-y-0.5" {...p} />,
+  ol: ({ node: _node, ...p }) => <ol className="list-decimal ps-5 my-1.5 space-y-0.5" {...p} />,
   li: ({ node: _node, ...p }) => <li {...p} />,
   blockquote: ({ node: _node, ...p }) => (
-    <blockquote className="border-l-2 border-gray-200 pl-3 my-2 text-gray-600 italic" {...p} />
+    <blockquote className="border-s-2 border-gray-200 ps-3 my-2 text-gray-600 italic" {...p} />
   ),
   hr: () => <hr className="my-2 border-gray-100" />,
   a: ({ node: _node, ...p }) => (
@@ -292,7 +292,7 @@ const markdownComponents: MarkdownComponents = {
       <table className="text-[11px] border-collapse" {...p} />
     </div>
   ),
-  th: ({ node: _node, ...p }) => <th className="border border-gray-200 px-2 py-1 bg-gray-50 text-left" {...p} />,
+  th: ({ node: _node, ...p }) => <th className="border border-gray-200 px-2 py-1 bg-gray-50 text-start" {...p} />,
   td: ({ node: _node, ...p }) => <td className="border border-gray-200 px-2 py-1" {...p} />,
 }
 

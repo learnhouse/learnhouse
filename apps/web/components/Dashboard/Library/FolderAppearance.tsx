@@ -64,7 +64,7 @@ export default function FolderAppearance({ color, onColorChange, file, onFileCha
               {t('library.replace_cover')}
               <input type="file" accept="image/*" className="absolute inset-0 w-full h-full opacity-0 cursor-pointer" onChange={(e) => onFileChange(e.target.files?.[0] || null)} />
             </label>
-            <button type="button" onClick={() => onFileChange(null)} className="ml-auto text-gray-400 hover:text-rose-600 p-1" aria-label="Remove cover">
+            <button type="button" onClick={() => onFileChange(null)} className="ms-auto text-gray-400 hover:text-rose-600 p-1" aria-label="Remove cover">
               <X size={16} />
             </button>
           </div>

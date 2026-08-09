@@ -199,7 +199,7 @@ const ScenariosExtension: React.FC = (props: any) => {
                       <button
                         key={option.id}
                         onClick={() => handleOptionClick(option.nextScenarioId)}
-                        className="w-full bg-white border border-neutral-200 hover:border-blue-300 hover:bg-blue-50 rounded-lg p-3 transition-all group text-left nice-shadow"
+                        className="w-full bg-white border border-neutral-200 hover:border-blue-300 hover:bg-blue-50 rounded-lg p-3 transition-all group text-start nice-shadow"
                       >
                         <div className="flex items-center gap-3">
                           <div className="w-7 h-7 bg-neutral-100 group-hover:bg-blue-100 rounded-md flex items-center justify-center flex-shrink-0 transition-colors">
@@ -210,7 +210,7 @@ const ScenariosExtension: React.FC = (props: any) => {
                           <div className="flex-1 text-neutral-700 font-medium group-hover:text-blue-900 transition-colors">
                             {option.text}
                           </div>
-                          <ArrowRight weight="duotone" size={16} className="text-neutral-400 group-hover:text-blue-500 group-hover:translate-x-1 transition-all" />
+                          <ArrowRight weight="duotone" size={16} className="text-neutral-400 group-hover:text-blue-500 group-hover:translate-x-1 rtl:group-hover:-translate-x-1 transition-all" data-dir-flip />
                         </div>
                       </button>
                     ))}

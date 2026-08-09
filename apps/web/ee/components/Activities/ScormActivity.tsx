@@ -507,7 +507,7 @@ function ScormActivity({ activity, course }: ScormActivityProps) {
       {resuming && !saveError && (
         <div
           role="status"
-          className="absolute top-3 right-3 z-20 px-3 py-1.5 rounded-full bg-neutral-900/90 text-white text-xs font-medium shadow-lg"
+          className="absolute top-3 end-3 z-20 px-3 py-1.5 rounded-full bg-neutral-900/90 text-white text-xs font-medium shadow-lg"
         >
           Resuming where you left off
         </div>

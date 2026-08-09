@@ -14,6 +14,7 @@ import { queryKeys } from '@/lib/query/keys'
 import Link from 'next/link'
 import { useLHAnalytics, AnalyticsEvent } from '@services/analytics'
 import { useTranslation } from 'react-i18next'
+import { formatCurrency } from '@/lib/format'
 
 interface Author {
   user: {
@@ -139,7 +140,7 @@ const CourseActionsMobile = ({ courseuuid, orgslug, course, trailData }: CourseA
   // Clean up course UUID by removing 'course_' prefix if it exists
   const cleanCourseUuid = course.course_uuid?.replace('course_', '');
   const resourceUuid = cleanCourseUuid ? `course_${cleanCourseUuid}` : null;
-    const { t } = useTranslation()
+    const { t, i18n } = useTranslation()
 
   const isStarted = trailData?.runs?.find(
     (run: any) => {
@@ -265,7 +266,7 @@ const CourseActionsMobile = ({ courseuuid, orgslug, course, trailData }: CourseA
         {linkedOffers.length > 0 ? (() => {
           const offer = linkedOffers[0];
           const formattedPrice = offer?.amount != null
-            ? new Intl.NumberFormat('en-US', { style: 'currency', currency: offer.currency ?? 'USD' }).format(offer.amount)
+            ? formatCurrency(offer.amount, offer.currency ?? 'USD', i18n.language)
             : null;
           const storeHref = org?.slug ? getUriWithOrg(org.slug, `/store/offers/${offer.offer_id}`) : '#';
 

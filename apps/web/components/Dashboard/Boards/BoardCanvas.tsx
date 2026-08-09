@@ -203,6 +203,12 @@ function BoardEditorInner({
     editorProps: {
       attributes: {
         class: 'board-editor outline-none min-h-[2000px] min-w-[3000px] relative',
+        // The canvas coordinate space is dir="ltr" in every locale. Cards store
+        // absolute left/top pixels in the Yjs doc, and those coordinates are
+        // shared live between collaborators — mirroring the canvas for an RTL
+        // client would put its cards somewhere else than everyone else sees.
+        // Card *text* still follows its own direction via dir="auto".
+        dir: 'ltr',
       },
       // Block free-floating text at the canvas root — typing must happen inside
       // a card or note. Without this, a click on empty canvas lets ProseMirror
@@ -812,7 +818,7 @@ function BoardEditorInner({
                 top: mousePos.y + 16,
               }}
             >
-              <div className="flex items-center gap-1.5 rounded-full bg-neutral-800 pl-1.5 pr-2.5 py-1 shadow-lg">
+              <div className="flex items-center gap-1.5 rounded-full bg-neutral-800 ps-1.5 pe-2.5 py-1 shadow-lg">
                 <div className="w-5 h-5 rounded-full bg-white/15 flex items-center justify-center">
                   <Icon size={11} weight="bold" className="text-white" />
                 </div>
@@ -872,7 +878,7 @@ function BoardEditorInner({
       />
 
       {/* Bottom right stack: effects → chat → zoom */}
-      <div className="absolute bottom-5 right-5 z-20 flex flex-col items-end gap-1.5 pointer-events-none board-enter-delayed board-social">
+      <div className="absolute bottom-5 end-5 z-20 flex flex-col items-end gap-1.5 pointer-events-none board-enter-delayed board-social">
         {/* Ephemeral Chat */}
         <EphemeralChat ydoc={ydoc} provider={provider} />
 
@@ -891,7 +897,7 @@ function BoardEditorInner({
       {/* Feedback button — bottom left */}
       <button
         onClick={() => setFeedbackOpen(true)}
-        className="absolute bottom-5 left-5 z-20 flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-medium text-neutral-500 hover:text-neutral-700 nice-shadow transition-colors board-enter-delayed board-feedback"
+        className="absolute bottom-5 start-5 z-20 flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-medium text-neutral-500 hover:text-neutral-700 nice-shadow transition-colors board-enter-delayed board-feedback"
         style={{
           background: 'rgba(255, 255, 255, 0.95)',
           backdropFilter: 'blur(12px)',

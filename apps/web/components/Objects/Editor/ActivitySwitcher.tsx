@@ -176,7 +176,7 @@ export default function ActivitySwitcher({
               initial={{ opacity: 0 }}
               animate={{ opacity: 1, transition: { duration: 0.2, ease, delay: 0.08 } }}
               exit={{ opacity: 0, transition: { duration: 0.12, ease } }}
-              className="flex items-center gap-1 pl-1 pr-1.5 py-0.5"
+              className="flex items-center gap-1 ps-1 pe-1.5 py-0.5"
             >
               <button
                 type="button"

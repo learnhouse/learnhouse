@@ -114,7 +114,7 @@ export default function ActivityNavigation(props: ActivityNavigationProps): Reac
               <ChevronLeft size={20} className="text-gray-800 shrink-0" />
               <div className="flex flex-col items-start">
                 <span className="text-xs text-gray-500">{t('common.previous')}</span>
-                <span className="text-sm capitalize font-semibold text-left">
+                <span className="text-sm capitalize font-semibold text-start">
                   {prevActivity ? prevActivity.name : t('activities.no_previous_activity')}
                 </span>
               </div>
@@ -132,7 +132,7 @@ export default function ActivityNavigation(props: ActivityNavigationProps): Reac
             >
               <div className="flex flex-col items-end">
                 <span className="text-xs text-gray-500">{t('common.next')}</span>
-                <span className="text-sm capitalize font-semibold text-right">
+                <span className="text-sm capitalize font-semibold text-end">
                   {nextActivity ? nextActivity.name : t('activities.no_next_activity')}
                 </span>
               </div>
@@ -156,7 +156,7 @@ export default function ActivityNavigation(props: ActivityNavigationProps): Reac
                 <ChevronLeft size={16} className="shrink-0" />
                 <div className="flex flex-col items-start">
                   <span className="text-xs text-gray-500">{t('common.previous')}</span>
-                  <span className="text-sm capitalize font-semibold text-left">
+                  <span className="text-sm capitalize font-semibold text-start">
                     {prevActivity ? prevActivity.name : t('activities.no_previous_activity')}
                   </span>
                 </div>
@@ -180,7 +180,7 @@ export default function ActivityNavigation(props: ActivityNavigationProps): Reac
               >
                 <div className="flex flex-col items-end">
                   <span className="text-xs text-gray-500">{t('common.next')}</span>
-                  <span className="text-sm capitalize font-semibold text-right">
+                  <span className="text-sm capitalize font-semibold text-end">
                     {nextActivity ? nextActivity.name : t('activities.no_next_activity')}
                   </span>
                 </div>

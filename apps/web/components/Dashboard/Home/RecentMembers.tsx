@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { useQuery } from '@tanstack/react-query'
 import { queryKeys } from '@/lib/query/keys'
 import { useTranslation } from 'react-i18next'
+import { formatDate } from '@/lib/format'
 import { useOrg } from '@components/Contexts/OrgContext'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
 import { getAPIUrl } from '@services/config/config'
@@ -11,7 +12,7 @@ import { apiFetch } from '@services/utils/ts/requests'
 import { Users, ShieldCheck, Clock, EnvelopeSimple } from '@phosphor-icons/react'
 
 export default function RecentMembers() {
-  const { t } = useTranslation()
+  const { t, i18n } = useTranslation()
   const org = useOrg() as any
   const session = useLHSession() as any
   const token = session?.data?.tokens?.access_token
@@ -75,7 +76,8 @@ export default function RecentMembers() {
             const user = member.user
             const role = member.role
             const joinedAt = member.joined_at
-              ? new Date(member.joined_at).toLocaleDateString('en-US', {
+              ? formatDate(member.joined_at, i18n.language, {
+                  dateStyle: undefined,
                   month: 'short',
                   day: 'numeric',
                   year: 'numeric',

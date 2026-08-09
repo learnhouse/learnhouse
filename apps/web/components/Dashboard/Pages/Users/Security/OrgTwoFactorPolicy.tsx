@@ -262,7 +262,7 @@ const OrgTwoFactorPolicy: React.FC = () => {
               onClick={loadData}
               className="mt-4 bg-black text-white hover:bg-black/90"
             >
-              <RefreshCw className="w-4 h-4 mr-2" />
+              <RefreshCw className="w-4 h-4 me-2" />
               {t('dashboard.organization.security.retry', { defaultValue: 'Retry' })}
             </Button>
           </div>
@@ -318,7 +318,7 @@ const OrgTwoFactorPolicy: React.FC = () => {
               })}
             </p>
           </div>
-          <div className="text-right">
+          <div className="text-end">
             <div className="text-2xl font-bold tracking-tight text-gray-800">{percent}%</div>
             <button
               type="button"
@@ -439,7 +439,7 @@ const OrgTwoFactorPolicy: React.FC = () => {
                       <div className="text-sm font-medium text-gray-800 truncate">
                         {memberName(m)}
                         {String(m.user_id) === String(currentUserId) && (
-                          <span className="ml-2 text-[11px] font-medium text-gray-400">
+                          <span className="ms-2 text-[11px] font-medium text-gray-400">
                             {t('dashboard.organization.security.you', { defaultValue: 'you' })}
                           </span>
                         )}
@@ -572,7 +572,7 @@ const OrgTwoFactorPolicy: React.FC = () => {
                     })}
               </span>
             </div>
-            <p className="text-xs text-gray-500 leading-relaxed pl-6">
+            <p className="text-xs text-gray-500 leading-relaxed ps-6">
               {t('dashboard.organization.security.no_restart_note', {
                 defaultValue:
                   'Saving changes to an already-active policy does not restart anyone’s countdown — existing deadlines stay anchored to the date above. The countdown only resets if you turn the requirement off and back on.',
@@ -690,7 +690,7 @@ const OrgTwoFactorPolicy: React.FC = () => {
             disabled={controlsDisabled || !isDirty}
             className="bg-black text-white hover:bg-black/90"
           >
-            {saving && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
+            {saving && <Loader2 className="w-4 h-4 me-2 animate-spin" />}
             {saving
               ? t('dashboard.organization.security.saving_short', { defaultValue: 'Saving…' })
               : t('dashboard.organization.security.save', { defaultValue: 'Save changes' })}
@@ -801,7 +801,7 @@ const OrgTwoFactorPolicy: React.FC = () => {
                 disabled={saving}
                 className="bg-red-600 text-white hover:bg-red-700"
               >
-                {saving && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
+                {saving && <Loader2 className="w-4 h-4 me-2 animate-spin" />}
                 {t('dashboard.organization.security.confirm_button', {
                   defaultValue: 'Yes, require two-factor',
                 })}

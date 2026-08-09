@@ -143,13 +143,13 @@ function ResourceList({
   return (
     <div>
       <div className="relative mb-3">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4" />
+        <Search className="absolute start-3 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4" />
         <input
           type="text"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           placeholder={t('library.search')}
-          className="w-full pl-10 pr-3 py-2 bg-white nice-shadow rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-black/10 border-0"
+          className="w-full ps-10 pe-3 py-2 bg-white nice-shadow rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-black/10 border-0"
         />
       </div>
 
@@ -161,7 +161,7 @@ function ResourceList({
         <div className="py-10 text-center text-sm text-gray-400">{t('library.no_resources')}</div>
       ) : tab === 'media' ? (
         // Files need to be recognisable, so media gets thumbnails instead of rows.
-        <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 max-h-[400px] overflow-y-auto pr-1">
+        <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 max-h-[400px] overflow-y-auto pe-1">
           {filtered.map((item) => {
             const uuid = item[uuidKey]
             const isAdded = added.has(uuid)
@@ -172,7 +172,7 @@ function ResourceList({
                 type="button"
                 onClick={() => (mode === 'add' ? handleAdd(uuid) : handleSelect(item))}
                 disabled={pending === uuid}
-                className={`group text-left rounded-xl overflow-hidden border transition-colors disabled:opacity-50 ${
+                className={`group text-start rounded-xl overflow-hidden border transition-colors disabled:opacity-50 ${
                   isSelected || isAdded ? 'border-black' : 'border-gray-100 hover:border-gray-300'
                 }`}
               >
@@ -207,7 +207,7 @@ function ResourceList({
                   isSelected ? 'border-black bg-gray-50' : 'border-gray-100 hover:bg-gray-50'
                 }`}
               >
-                <span className="text-sm font-medium text-gray-800 truncate pr-3">{item.name}</span>
+                <span className="text-sm font-medium text-gray-800 truncate pe-3">{item.name}</span>
                 {mode === 'add' ? (
                   isAdded ? (
                     <span className="inline-flex items-center gap-1 text-xs font-semibold text-green-600">
@@ -288,7 +288,7 @@ function TabButton({
       {t(`library.tabs.${tab}`)}
       {count !== undefined && (
         <span
-          className={`ml-1 inline-flex items-center justify-center min-w-[18px] h-[18px] px-1 rounded-full text-[11px] font-semibold ${
+          className={`ms-1 inline-flex items-center justify-center min-w-[18px] h-[18px] px-1 rounded-full text-[11px] font-semibold ${
             active ? 'bg-black text-white' : 'bg-gray-100 text-gray-500'
           }`}
         >

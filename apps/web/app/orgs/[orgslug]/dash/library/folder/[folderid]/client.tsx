@@ -71,7 +71,7 @@ function FolderView({ orgslug, org_id, folderid, initialFolder }: Props) {
 
   if (!folder) {
     return (
-      <div className="pl-4 sm:pl-10 mr-4 sm:mr-10 pt-6">
+      <div className="ps-4 sm:ps-10 me-4 sm:me-10 pt-6">
         <p className="text-gray-400">{t('library.folder_not_found')}</p>
       </div>
     )
@@ -161,7 +161,7 @@ function FolderView({ orgslug, org_id, folderid, initialFolder }: Props) {
 
   return (
     <div className="flex w-full">
-      <div className="pl-4 sm:pl-10 mr-4 sm:mr-10 tracking-tight flex flex-col space-y-5 w-full">
+      <div className="ps-4 sm:ps-10 me-4 sm:me-10 tracking-tight flex flex-col space-y-5 w-full">
         {/* Persistent library header (with content targeting THIS folder) */}
         <LibraryHeader
           orgslug={orgslug}

@@ -63,7 +63,7 @@ export default function NewAssignmentModal({
     : null
 
   const rowBtn =
-    'w-full flex items-center gap-3 rounded-xl border border-gray-100 bg-white nice-shadow px-4 py-3 text-left hover:bg-gray-50/60 transition-colors'
+    'w-full flex items-center gap-3 rounded-xl border border-gray-100 bg-white nice-shadow px-4 py-3 text-start hover:bg-gray-50/60 transition-colors'
 
   const content = (
     <div className="space-y-4">
@@ -77,7 +77,7 @@ export default function NewAssignmentModal({
             })}
           />
           {courses && courses.length > 0 ? (
-            <div className="space-y-2 max-h-[55vh] overflow-y-auto pr-1">
+            <div className="space-y-2 max-h-[55vh] overflow-y-auto pe-1">
               {courses.map((c: any) => (
                 <button
                   key={c.course_uuid}
@@ -137,7 +137,7 @@ export default function NewAssignmentModal({
               ))}
             </div>
           ) : chapters.length > 0 ? (
-            <div className="space-y-2 max-h-[55vh] overflow-y-auto pr-1">
+            <div className="space-y-2 max-h-[55vh] overflow-y-auto pe-1">
               {chapters.map((ch: any, i: number) => (
                 <button
                   key={ch.chapter_uuid || ch.id}

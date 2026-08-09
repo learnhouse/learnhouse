@@ -223,10 +223,10 @@ const OrgAuditLogs = () => {
                   </SelectContent>
                 </Select>
                 <div className="relative">
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-400" />
+                  <Search className="absolute start-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-400" />
                   <Input
                     placeholder={t('dashboard.organization.audit_logs.placeholders.search')}
-                    className="pl-9 w-[180px] h-9 text-xs border-none focus-visible:ring-0 rounded-none"
+                    className="ps-9 w-[180px] h-9 text-xs border-none focus-visible:ring-0 rounded-none"
                     value={filters.searchValue}
                     onChange={(e) => {
                       setFilters({ ...filters, searchValue: e.target.value })
@@ -325,7 +325,7 @@ const OrgAuditLogs = () => {
         </div>
 
         <div className="overflow-x-auto">
-        <table className="table-auto w-full text-left whitespace-nowrap rounded-md overflow-hidden">
+        <table className="table-auto w-full text-start whitespace-nowrap rounded-md overflow-hidden">
           <thead className="bg-gray-100 text-gray-500 rounded-xl uppercase">
             <tr className="font-bolder text-[10px] tracking-wider">
               <th className="py-3 px-4">{t('dashboard.organization.audit_logs.table.timestamp')}</th>
@@ -333,8 +333,8 @@ const OrgAuditLogs = () => {
               <th className="py-3 px-4">{t('dashboard.organization.audit_logs.table.resource')}</th>
               <th className="py-3 px-4">{t('dashboard.organization.audit_logs.table.path_method')}</th>
               <th className="py-3 px-4">{t('dashboard.organization.audit_logs.table.ip_address')}</th>
-              <th className="py-3 px-4 text-right">{t('dashboard.organization.audit_logs.table.status')}</th>
-              <th className="py-3 px-4 text-right">{t('dashboard.organization.audit_logs.table.payload')}</th>
+              <th className="py-3 px-4 text-end">{t('dashboard.organization.audit_logs.table.status')}</th>
+              <th className="py-3 px-4 text-end">{t('dashboard.organization.audit_logs.table.payload')}</th>
             </tr>
           </thead>
           <tbody className="bg-white relative">
@@ -352,8 +352,8 @@ const OrgAuditLogs = () => {
                     <td className="py-3 px-4"><div className="h-4 bg-gray-100 rounded w-16" /></td>
                     <td className="py-3 px-4"><div className="h-4 bg-gray-100 rounded w-32" /></td>
                     <td className="py-3 px-4"><div className="h-4 bg-gray-100 rounded w-20" /></td>
-                    <td className="py-3 px-4 text-right"><div className="h-5 bg-gray-100 rounded w-12 ml-auto" /></td>
-                    <td className="py-3 px-4 text-right"><div className="h-5 bg-gray-100 rounded w-6 ml-auto" /></td>
+                    <td className="py-3 px-4 text-end"><div className="h-5 bg-gray-100 rounded w-12 ms-auto" /></td>
+                    <td className="py-3 px-4 text-end"><div className="h-5 bg-gray-100 rounded w-6 ms-auto" /></td>
                   </tr>
                 ))}
               </>
@@ -423,12 +423,12 @@ const OrgAuditLogs = () => {
                       {log.ip_address || '—'}
                     </div>
                   </td>
-                  <td className="py-3 px-4 text-right">
+                  <td className="py-3 px-4 text-end">
                     <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${getStatusColor(log.status_code)}`}>
                       {log.status_code}
                     </span>
                   </td>
-                  <td className="py-3 px-4 text-right">
+                  <td className="py-3 px-4 text-end">
                       {log.payload && Object.keys(log.payload).length > 0 ? (
                       <Modal
                         dialogTitle={t('dashboard.organization.audit_logs.modals.payload.title')}

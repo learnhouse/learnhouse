@@ -114,14 +114,14 @@ function DiscussionContentEditor({ content }: { content: any }) {
 
         .discussion-content-readonly .ProseMirror .discussion-bullet-list {
           list-style-type: disc;
-          padding-left: 1.5rem;
+          padding-inline-start: 1.5rem;
           margin-bottom: 0.5rem;
           color: #374151;
         }
 
         .discussion-content-readonly .ProseMirror .discussion-ordered-list {
           list-style-type: decimal;
-          padding-left: 1.5rem;
+          padding-inline-start: 1.5rem;
           margin-bottom: 0.5rem;
           color: #374151;
         }
@@ -131,8 +131,8 @@ function DiscussionContentEditor({ content }: { content: any }) {
         }
 
         .discussion-content-readonly .ProseMirror .discussion-blockquote {
-          border-left: 3px solid #d1d5db;
-          padding-left: 1rem;
+          border-inline-start: 3px solid #d1d5db;
+          padding-inline-start: 1rem;
           color: #6b7280;
           font-style: italic;
           margin: 0.5rem 0;

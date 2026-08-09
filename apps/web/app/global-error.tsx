@@ -3,6 +3,7 @@
 import * as Sentry from "@sentry/nextjs";
 import '../styles/globals.css'
 import { classifyError } from '@lib/errors/classify'
+import { detectClientLanguage, directionForLanguage, type Direction } from '@lib/direction'
 import { AlertTriangle, ChevronDown, ChevronRight, Home, LogOut, MessageSquareWarning, RefreshCcw } from 'lucide-react'
 import { useEffect, useState } from 'react'
 
@@ -21,6 +22,14 @@ export default function GlobalError({
   const [eventId, setEventId] = useState<string | undefined>()
   const [showDetails, setShowDetails] = useState(false)
   const [signingOut, setSigningOut] = useState(false)
+
+  // dir-init.js can't help here: this boundary renders its own <html>, so the
+  // attribute has to come from React. Detect once, on the client. A
+  // server-rendered error page is LTR for one frame — acceptable on an error
+  // screen, and not worth a second blocking script.
+  const [dir] = useState<Direction>(() =>
+    typeof window === 'undefined' ? 'ltr' : directionForLanguage(detectClientLanguage())
+  )
 
   const { category, detail, status } = classifyError(error)
 
@@ -71,7 +80,7 @@ export default function GlobalError({
   const btn = 'flex items-center gap-2 px-5 py-2 rounded-full font-bold text-sm transition-colors shadow-sm'
 
   return (
-    <html lang="en">
+    <html lang="en" dir={dir} suppressHydrationWarning>
       <body className="flex flex-col items-center justify-center min-h-screen bg-gray-50 p-4">
         <div className="flex flex-col items-center space-y-6 max-w-xl text-center">
           <div className="bg-rose-100 p-4 rounded-2xl">
@@ -116,7 +125,7 @@ export default function GlobalError({
                 <span>{showDetails ? 'Hide technical details' : 'Show technical details'}</span>
               </button>
               {showDetails && (
-                <div className="mt-3 bg-gray-100 border border-gray-200 rounded-xl p-4 text-left text-xs font-mono text-gray-700 break-all space-y-1.5">
+                <div className="mt-3 bg-gray-100 border border-gray-200 rounded-xl p-4 text-start text-xs font-mono text-gray-700 break-all space-y-1.5">
                   {detail && <div><span className="text-gray-400">cause </span>{detail}</div>}
                   {status !== undefined && <div><span className="text-gray-400">status </span>{status}</div>}
                   {error?.digest && <div><span className="text-gray-400">digest </span>{error.digest}</div>}

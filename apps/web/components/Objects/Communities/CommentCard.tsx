@@ -203,7 +203,7 @@ export function CommentCard({ comment, canManage = false, onDeleted, onUpdated }
                   <span className="font-medium text-gray-900 text-sm">{authorName}</span>
                   <span className="text-gray-400 text-xs">{timeAgo}</span>
                 </div>
-                <p className="text-sm text-gray-700 whitespace-pre-wrap">
+                <p className="text-sm text-gray-700 whitespace-pre-wrap" dir="auto">
                   {comment.content}
                 </p>
               </>
@@ -224,7 +224,7 @@ export function CommentCard({ comment, canManage = false, onDeleted, onUpdated }
             <DropdownMenuContent align="end" className="w-36">
               {isAuthor && (
                 <DropdownMenuItem onClick={() => setIsEditing(true)}>
-                  <Pencil className="mr-2 h-4 w-4" />
+                  <Pencil className="me-2 h-4 w-4" />
                   {t('communities.comments.edit')}
                 </DropdownMenuItem>
               )}
@@ -233,7 +233,7 @@ export function CommentCard({ comment, canManage = false, onDeleted, onUpdated }
                   onClick={handleDelete}
                   className="text-red-600 focus:text-red-600 focus:bg-red-50"
                 >
-                  <Trash2 className="mr-2 h-4 w-4" />
+                  <Trash2 className="me-2 h-4 w-4" />
                   {t('communities.comments.delete')}
                 </DropdownMenuItem>
               )}

@@ -85,7 +85,7 @@ function DashMobileMenu() {
     <>
       {/* Floating pill */}
       <nav
-        aria-label="Dashboard mobile navigation"
+        aria-label={t('dashboard.nav.mobile_navigation')}
         className="fixed inset-x-0 mx-auto w-fit z-[9999]"
         style={{ bottom: 'calc(env(safe-area-inset-bottom) + 1.5rem)' }}
       >
@@ -97,7 +97,7 @@ function DashMobileMenu() {
           <Link
             href="/dash"
             className="flex items-center justify-center px-2.5 py-2.5 rounded-full transition-all duration-200"
-            aria-label="Home"
+            aria-label={t('common.home')}
           >
             <img
               src="/lrn-dash.svg"
@@ -134,7 +134,7 @@ function DashMobileMenu() {
           {/* Search */}
           <button
             onClick={openSearch}
-            aria-label="Search"
+            aria-label={t('common.search')}
             className="p-2.5 rounded-full transition-all duration-200 text-white/60 hover:text-white hover:bg-white/[0.1]"
           >
             <MagnifyingGlass size={18} weight="bold" />
@@ -181,7 +181,7 @@ function DashMobileMenu() {
               animate={{ opacity: 1, y: 0, scale: 1 }}
               exit={{ opacity: 0, y: 8, scale: 0.97 }}
               transition={{ type: 'spring', damping: 30, stiffness: 360 }}
-              className="fixed left-4 right-4 z-[9998] max-w-sm mx-auto bg-[#0e0e10]/95 backdrop-blur-xl rounded-2xl overflow-hidden"
+              className="fixed start-4 end-4 z-[9998] max-w-sm mx-auto bg-[#0e0e10]/95 backdrop-blur-xl rounded-2xl overflow-hidden"
               style={{
                 bottom: 'calc(env(safe-area-inset-bottom) + 5.5rem)',
                 boxShadow: '0 8px 32px rgba(0,0,0,0.4)',
@@ -242,11 +242,11 @@ function DashMobileMenu() {
                   className="flex items-center w-full rounded-lg px-2.5 py-2 gap-2.5 text-white/40 hover:text-white/80 hover:bg-white/[0.05] transition-all"
                 >
                   <Globe size={15} weight="fill" />
-                  <span className="text-sm font-medium flex-1 text-left">{t('common.language')}</span>
+                  <span className="text-sm font-medium flex-1 text-start">{t('common.language')}</span>
                   <CaretDown size={10} weight="bold" className={cn('transition-transform', langExpanded && 'rotate-180')} />
                 </button>
                 {langExpanded && (
-                  <div className="ml-2 pl-3 border-l border-white/[0.05] space-y-px">
+                  <div className="ms-2 ps-3 border-s border-white/[0.05] space-y-px">
                     {AVAILABLE_LANGUAGES.map(lang => (
                       <button
                         key={lang.code}
@@ -295,7 +295,7 @@ function DashMobileMenu() {
                     aria-label={t('user.sign_out')}
                     className="p-1.5 rounded-lg text-white/30 hover:text-red-400 hover:bg-white/[0.05] transition-all"
                   >
-                    <SignOut size={14} weight="fill" />
+                    <SignOut size={14} weight="fill" data-dir-flip />
                   </button>
                 </div>
               </div>
@@ -364,7 +364,7 @@ const PanelItem = ({
     {active && (
       <span
         aria-hidden="true"
-        className="absolute left-0.5 top-1/2 -translate-y-1/2 h-4 w-[2px] bg-white rounded-full"
+        className="absolute start-0.5 top-1/2 -translate-y-1/2 h-4 w-[2px] bg-white rounded-full"
       />
     )}
     {icon}

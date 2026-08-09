@@ -6,6 +6,8 @@ import Link from 'next/link';
 import { useOrg } from '@components/Contexts/OrgContext';
 import { getUriWithOrg } from '@services/config/config';
 import { useLHAnalytics, useTrackView, AnalyticsEvent } from '@services/analytics';
+import { useTranslation } from 'react-i18next';
+import { formatCurrency } from '@/lib/format';
 
 interface OfferMeta {
   offer_id: number;
@@ -32,6 +34,7 @@ interface PaymentWallProps {
  *   }
  */
 function PaymentWall({ offer, resourceName, resourceThumbnail, orgslug }: PaymentWallProps) {
+  const { i18n } = useTranslation();
   const org = useOrg() as any;
   const slug = orgslug ?? org?.slug;
   const { track } = useLHAnalytics('learner');
@@ -43,10 +46,7 @@ function PaymentWall({ offer, resourceName, resourceThumbnail, orgslug }: Paymen
     'learner',
   );
 
-  const formattedPrice = new Intl.NumberFormat('en-US', {
-    style: 'currency',
-    currency: offer.currency,
-  }).format(offer.amount);
+  const formattedPrice = formatCurrency(offer.amount, offer.currency, i18n.language);
 
   const storeHref = slug
     ? getUriWithOrg(slug, `/store/offers/${offer.offer_id}`)

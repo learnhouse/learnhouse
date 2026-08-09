@@ -158,7 +158,7 @@ function CalloutComponent(props: any) {
             <div
               ref={pickerRef}
               contentEditable={false}
-              className="absolute top-8 left-0 z-50 bg-white rounded-xl shadow-lg ring-1 ring-black/10 py-1.5 min-w-[140px] overflow-hidden"
+              className="absolute top-8 start-0 z-50 bg-white rounded-xl shadow-lg ring-1 ring-black/10 py-1.5 min-w-[140px] overflow-hidden"
             >
               {(Object.entries(CALLOUT_TYPES) as [CalloutType, typeof CALLOUT_TYPES[CalloutType]][]).map(
                 ([type, cfg]) => {

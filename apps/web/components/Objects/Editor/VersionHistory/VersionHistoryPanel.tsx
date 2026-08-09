@@ -9,6 +9,7 @@ import { motion, AnimatePresence } from 'motion/react'
 import EditorPreview from '../EditorPreview'
 import { CourseProvider } from '@components/Contexts/CourseContext'
 import { useTranslation } from 'react-i18next'
+import { useDirection } from '@hooks/useDirection'
 
 interface VersionHistoryPanelProps {
   isOpen: boolean
@@ -28,6 +29,8 @@ function VersionHistoryPanel({
   courseUuid,
 }: VersionHistoryPanelProps) {
   const { t } = useTranslation()
+  // Drawer enters from the inline end — '100%' is a physical offset.
+  const { x: dx } = useDirection()
   const session = useLHSession() as any
   const access_token = session?.data?.tokens?.access_token
   const { versions, isLoading, error } = useActivityVersions(activityUuid, 20, isOpen)
@@ -96,11 +99,11 @@ function VersionHistoryPanel({
         onClick={onClose}
       >
         <motion.div
-          initial={{ x: '100%' }}
+          initial={{ x: `${100 * dx}%` }}
           animate={{ x: 0 }}
-          exit={{ x: '100%' }}
+          exit={{ x: `${100 * dx}%` }}
           transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-          className="absolute right-0 top-0 h-full w-96 bg-white shadow-2xl"
+          className="absolute end-0 top-0 h-full w-96 bg-white shadow-2xl"
           onClick={(e) => e.stopPropagation()}
         >
           {/* Header */}

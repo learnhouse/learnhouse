@@ -163,7 +163,7 @@ export function CommentSection({ discussionUuid, communityUuid, isLocked = false
                     ? 'border-gray-300'
                     : 'border-gray-200'
               }`}>
-                <textarea
+                <textarea dir="auto"
                   ref={textareaRef}
                   value={newComment}
                   onChange={(e) => {

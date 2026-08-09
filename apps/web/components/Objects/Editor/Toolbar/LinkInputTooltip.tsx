@@ -26,7 +26,7 @@ const LinkInputTooltip: React.FC<LinkInputTooltipProps> = ({ onSave, onCancel, c
   }
 
   return (
-    <div className="absolute top-full left-0 bg-white border border-gray-300/50 rounded-md shadow-sm p-2 mt-1" style={{ zIndex: 'var(--z-editor-bubble)' }}>
+    <div className="absolute top-full start-0 bg-white border border-gray-300/50 rounded-md shadow-sm p-2 mt-1" style={{ zIndex: 'var(--z-editor-bubble)' }}>
       <form onSubmit={handleSubmit} className="flex items-center gap-1">
         <input
           type="text"

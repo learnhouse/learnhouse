@@ -290,7 +290,7 @@ function OrgUsersAdd() {
                     setSendResults(null)
                     setSendSummary(null)
                   }}
-                  className="ml-auto text-xs text-gray-400 hover:text-gray-600 transition-colors"
+                  className="ms-auto text-xs text-gray-400 hover:text-gray-600 transition-colors"
                 >
                   <X className="w-4 h-4" />
                 </button>
@@ -336,13 +336,13 @@ function OrgUsersAdd() {
               </div>
             )}
             <div className="relative flex-1 lg:flex-none">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+              <Search className="absolute start-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
               <input
                 placeholder={
                   t('dashboard.users.invite_members.invited_users.search_placeholder') ||
                   'Search by email...'
                 }
-                className="pl-10 pr-4 py-2 w-full sm:w-[200px] border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-400 transition-all"
+                className="ps-10 pe-4 py-2 w-full sm:w-[200px] border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-400 transition-all"
                 value={searchValue}
                 onChange={(e) => handleSearchChange(e.target.value)}
               />
@@ -359,7 +359,7 @@ function OrgUsersAdd() {
                   <div className="h-4 bg-gray-100 rounded flex-1" />
                   <div className="h-5 bg-gray-100 rounded w-20" />
                   <div className="h-5 bg-gray-100 rounded w-16" />
-                  <div className="h-7 bg-gray-100 rounded w-16 ml-auto" />
+                  <div className="h-7 bg-gray-100 rounded w-16 ms-auto" />
                 </div>
               ))}
             </div>
@@ -382,16 +382,16 @@ function OrgUsersAdd() {
             <table className="w-full">
               <thead>
                 <tr className="border-b border-gray-100">
-                  <th className="text-left text-xs font-semibold text-gray-500 uppercase tracking-wider px-6 py-3">
+                  <th className="text-start text-xs font-semibold text-gray-500 uppercase tracking-wider px-6 py-3">
                     {t('dashboard.users.invite_members.invited_users.table.email')}
                   </th>
-                  <th className="text-left text-xs font-semibold text-gray-500 uppercase tracking-wider px-6 py-3">
+                  <th className="text-start text-xs font-semibold text-gray-500 uppercase tracking-wider px-6 py-3">
                     {t('dashboard.users.invite_members.invited_users.table.signup_status')}
                   </th>
-                  <th className="text-left text-xs font-semibold text-gray-500 uppercase tracking-wider px-6 py-3">
+                  <th className="text-start text-xs font-semibold text-gray-500 uppercase tracking-wider px-6 py-3">
                     {t('dashboard.users.invite_members.invited_users.table.email_sent')}
                   </th>
-                  <th className="text-right text-xs font-semibold text-gray-500 uppercase tracking-wider px-6 py-3">
+                  <th className="text-end text-xs font-semibold text-gray-500 uppercase tracking-wider px-6 py-3">
                     {t('dashboard.users.invite_members.invited_users.table.actions') || 'Actions'}
                   </th>
                 </tr>
@@ -428,7 +428,7 @@ function OrgUsersAdd() {
                         </span>
                       )}
                     </td>
-                    <td className="px-6 py-4 text-right">
+                    <td className="px-6 py-4 text-end">
                       <ConfirmationModal
                         confirmationButtonText={
                           t('dashboard.users.invite_members.invited_users.remove_button') ||

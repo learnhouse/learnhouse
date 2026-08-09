@@ -85,7 +85,7 @@ export default function AuthMobileHeader({ org }: AuthMobileHeaderProps) {
 
       {/* Unsplash attribution (required by Unsplash API guidelines) */}
       {background_type === 'unsplash' && background_image && unsplash_photographer_name && (
-        <span className="relative z-10 ml-auto text-[10px] leading-tight text-white/70 truncate max-w-[45%] text-right">
+        <span className="relative z-10 ms-auto text-[10px] leading-tight text-white/70 truncate max-w-[45%] text-end">
           Photo by{' '}
           <a
             href={withUtm(unsplash_photographer_url) || withUtm(unsplash_photo_url)}

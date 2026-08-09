@@ -130,7 +130,7 @@ function ScormResults({ activityUuid }: { activityUuid: string }) {
         <div className="overflow-x-auto rounded-lg border border-neutral-200 dark:border-neutral-800">
           <table className="w-full text-sm">
             <thead>
-              <tr className="text-left text-xs text-neutral-500 dark:text-neutral-400 border-b border-neutral-200 dark:border-neutral-800">
+              <tr className="text-start text-xs text-neutral-500 dark:text-neutral-400 border-b border-neutral-200 dark:border-neutral-800">
                 <th className="px-3 py-2 font-medium">Learner</th>
                 <th className="px-3 py-2 font-medium">Completion</th>
                 <th className="px-3 py-2 font-medium">Success</th>

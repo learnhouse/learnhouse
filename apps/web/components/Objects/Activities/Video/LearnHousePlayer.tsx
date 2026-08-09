@@ -321,7 +321,12 @@ const LearnHousePlayer: React.FC<LearnHousePlayerProps> = ({
   return (
     // h-full chain is required for the player's `fill` mode to size to the
     // aspect-video parent (otherwise the video collapses to zero height).
-    <div className="learnhouse-player relative w-full h-full" data-vjs-player>
+    // dir="ltr": video.js styles its controls physically throughout — progress
+    // fill, buffered overlay, volume slider. Under dir=rtl the DOM flips but
+    // those styles don't, so the progress bar and the buffered overlay end up
+    // filling in opposite directions. Transport controls are left-to-right
+    // everywhere anyway.
+    <div dir="ltr" className="learnhouse-player relative w-full h-full" data-vjs-player>
       <div ref={containerRef} className="w-full h-full" />
       {loadError && (
         <div className="absolute inset-0 z-10 flex flex-col items-center justify-center gap-3 bg-black/80 p-4 text-center text-white">

@@ -4,6 +4,8 @@ import Link from 'next/link'
 import { ArrowRight, RefreshCcw, SquareCheck, Sparkles, ChevronDown, ChevronUp } from 'lucide-react'
 import { getUriWithOrg } from '@services/config/config'
 import { useLHAnalytics, AnalyticsEvent } from '@services/analytics'
+import { useTranslation } from 'react-i18next'
+import { formatCurrency } from '@/lib/format'
 
 interface OfferCardProps {
   offer: {
@@ -21,6 +23,7 @@ interface OfferCardProps {
 }
 
 export function OfferCard({ offer, orgslug }: OfferCardProps) {
+  const { i18n } = useTranslation()
   const { track } = useLHAnalytics('learner')
   const [expanded, setExpanded] = useState(false)
   const isSubscription = offer.offer_type === 'subscription'
@@ -28,10 +31,7 @@ export function OfferCard({ offer, orgslug }: OfferCardProps) {
     ? offer.benefits.split(',').map((b) => b.trim()).filter(Boolean)
     : []
 
-  const formattedPrice = new Intl.NumberFormat('en-US', {
-    style: 'currency',
-    currency: offer.currency ?? 'USD',
-  }).format(offer.amount)
+  const formattedPrice = formatCurrency(offer.amount, offer.currency ?? 'USD', i18n.language)
 
   return (
     <div className="bg-white rounded-xl nice-shadow overflow-hidden">
@@ -52,7 +52,7 @@ export function OfferCard({ offer, orgslug }: OfferCardProps) {
               <p className="text-sm text-gray-500 mt-1 leading-relaxed line-clamp-2">{offer.description}</p>
             )}
           </div>
-          <div className="shrink-0 text-right">
+          <div className="shrink-0 text-end">
             <div className={`text-xl font-black ${isSubscription ? 'text-indigo-700' : 'text-gray-900'}`}>
               {formattedPrice}
             </div>

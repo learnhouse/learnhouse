@@ -74,11 +74,11 @@ export default function PricingGrid({
         className="relative flex flex-col rounded-2xl p-7 bg-white nice-shadow overflow-hidden"
       >
         <div
-          className="absolute top-0 left-0 w-[200px] h-[200px] pointer-events-none"
+          className="absolute top-0 start-0 w-[200px] h-[200px] pointer-events-none"
           style={{ background: `radial-gradient(ellipse at top left, ${plan.topGlow} 0%, transparent 70%)` }}
         />
         <div
-          className="absolute top-0 left-0 bottom-0 w-[140px] pointer-events-none"
+          className="absolute top-0 start-0 bottom-0 w-[140px] pointer-events-none"
           style={{
             backgroundImage: `radial-gradient(circle, ${plan.patternColor} 1px, transparent 1px)`,
             backgroundSize: '16px 16px',
@@ -89,7 +89,7 @@ export default function PricingGrid({
 
         {plan.popular && (
           <span
-            className={`absolute top-4 right-4 text-[10px] font-bold px-2 py-0.5 rounded-md text-white ${
+            className={`absolute top-4 end-4 text-[10px] font-bold px-2 py-0.5 rounded-md text-white ${
               isPersonal ? 'bg-amber-500' : plan.id === 'pro' ? 'bg-purple-600' : 'bg-blue-600'
             }`}
           >
@@ -140,7 +140,7 @@ export default function PricingGrid({
                 <span className="text-[13.5px] font-medium leading-snug text-black/60">
                   {f.label}
                   {f.badge && (
-                    <span className="ml-1.5 inline-flex items-center gap-1 px-1.5 py-0.5 text-[10px] font-medium text-black/35 border border-black/[0.06] rounded-md">
+                    <span className="ms-1.5 inline-flex items-center gap-1 px-1.5 py-0.5 text-[10px] font-medium text-black/35 border border-black/[0.06] rounded-md">
                       {f.badge}
                     </span>
                   )}
@@ -205,7 +205,7 @@ export default function PricingGrid({
           >
             Annual
             {annualSavePct > 0 && (
-              <span className="ml-1.5 text-[10px] font-bold text-white bg-emerald-500 px-1.5 py-0.5 rounded-full">
+              <span className="ms-1.5 text-[10px] font-bold text-white bg-emerald-500 px-1.5 py-0.5 rounded-full">
                 Save {annualSavePct}%
               </span>
             )}

@@ -260,12 +260,12 @@ export default function UserAuditExport({ userIds, days = 365, defaultDossier, l
         {!busy && <ChevronDown size={12} />}
       </button>
       {open && (
-        <div className="absolute right-0 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg z-30 min-w-[190px] overflow-hidden">
+        <div className="absolute end-0 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg z-30 min-w-[190px] overflow-hidden">
           {(['pdf', 'csv', 'json'] as Fmt[]).map((f) => (
             <button
               key={f}
               onClick={() => handle(f)}
-              className="w-full text-left px-3 py-2 text-xs font-medium text-gray-700 hover:bg-gray-50 uppercase"
+              className="w-full text-start px-3 py-2 text-xs font-medium text-gray-700 hover:bg-gray-50 uppercase"
             >
               {f}
             </button>

@@ -81,7 +81,7 @@ export function DashTabBar({ tabs }: DashTabBarProps) {
     <div className="relative min-w-0 overflow-hidden">
       {/* Left gradient + button */}
       <div
-        className={`absolute left-0 inset-y-0 w-12 bg-gradient-to-r from-[#fcfbfc] to-transparent z-10 flex items-center pointer-events-none transition-opacity duration-200 ${
+        className={`absolute start-0 inset-y-0 w-12 bg-gradient-to-r from-[#fcfbfc] to-transparent z-10 flex items-center pointer-events-none transition-opacity duration-200 ${
           canScrollLeft ? 'opacity-100' : 'opacity-0'
         }`}
       >
@@ -156,7 +156,7 @@ export function DashTabBar({ tabs }: DashTabBarProps) {
 
       {/* Right gradient + button */}
       <div
-        className={`absolute right-0 inset-y-0 w-12 bg-gradient-to-l from-[#fcfbfc] to-transparent z-10 flex items-center justify-end pointer-events-none transition-opacity duration-200 ${
+        className={`absolute end-0 inset-y-0 w-12 bg-gradient-to-l from-[#fcfbfc] to-transparent z-10 flex items-center justify-end pointer-events-none transition-opacity duration-200 ${
           canScrollRight ? 'opacity-100' : 'opacity-0'
         }`}
       >

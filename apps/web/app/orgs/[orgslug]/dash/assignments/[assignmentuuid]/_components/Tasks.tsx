@@ -117,7 +117,7 @@ function AssignmentTasks({ assignment_uuid }: any) {
                             type='button'
                             key={task.id}
                             onClick={() => setSelectTask(task.assignment_task_uuid)}
-                            className={`group relative text-left rounded-xl border transition-all overflow-hidden
+                            className={`group relative text-start rounded-xl border transition-all overflow-hidden
                                 ${isSelected
                                     ? 'border-gray-900 bg-white shadow-[0_4px_14px_rgba(15,23,42,0.08)]'
                                     : 'border-gray-100 bg-white hover:border-gray-200 hover:shadow-[0_2px_8px_rgba(15,23,42,0.05)]'}
@@ -125,13 +125,13 @@ function AssignmentTasks({ assignment_uuid }: any) {
                         >
                             {/* Accent bar when selected */}
                             <span
-                                className={`absolute left-0 top-0 bottom-0 w-[3px] transition-colors
+                                className={`absolute start-0 top-0 bottom-0 w-[3px] transition-colors
                                     ${isSelected ? 'bg-gray-900' : 'bg-transparent'}
                                 `}
                                 aria-hidden
                             />
 
-                            <div className='p-3 pl-[14px]'>
+                            <div className='p-3 ps-[14px]'>
                                 {/* Meta row */}
                                 <div className='flex items-center justify-between mb-1.5'>
                                     <div className='flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-wide text-gray-400'>

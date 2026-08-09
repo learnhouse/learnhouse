@@ -529,7 +529,7 @@ function HistoryList({
           key={item.ai_generation_uuid}
           type="button"
           onClick={() => onLoad(item)}
-          className="group text-left rounded-lg border border-gray-100 bg-white nice-shadow px-3.5 py-3 hover:border-gray-200 transition-all"
+          className="group text-start rounded-lg border border-gray-100 bg-white nice-shadow px-3.5 py-3 hover:border-gray-200 transition-all"
         >
           <div className="flex items-start justify-between gap-2">
             <div className="min-w-0">

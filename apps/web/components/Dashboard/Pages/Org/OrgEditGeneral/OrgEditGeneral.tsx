@@ -150,7 +150,7 @@ const OrgEditGeneral: React.FC = () => {
                     <div>
                       <Label htmlFor="name">
                         {t('dashboard.organization.settings.name')}
-                        <span className="text-gray-500 text-sm ml-2">
+                        <span className="text-gray-500 text-sm ms-2">
                           ({60 - (values.name?.length || 0)} characters left)
                         </span>
                       </Label>
@@ -170,7 +170,7 @@ const OrgEditGeneral: React.FC = () => {
                     <div>
                       <Label htmlFor="description">
                         {t('dashboard.organization.settings.short_description')}
-                        <span className="text-gray-500 text-sm ml-2">
+                        <span className="text-gray-500 text-sm ms-2">
                           ({100 - (values.description?.length || 0)} characters left)
                         </span>
                       </Label>
@@ -212,7 +212,7 @@ const OrgEditGeneral: React.FC = () => {
                     <div>
                       <Label htmlFor="about">
                         {t('dashboard.organization.settings.about')}
-                        <span className="text-gray-500 text-sm ml-2">
+                        <span className="text-gray-500 text-sm ms-2">
                           ({400 - (values.about?.length || 0)} characters left)
                         </span>
                       </Label>
@@ -233,7 +233,7 @@ const OrgEditGeneral: React.FC = () => {
                     <div>
                       <Label htmlFor="footerText">
                         {t('dashboard.organization.settings.footer_text')}
-                        <span className="text-gray-500 text-sm ml-2">
+                        <span className="text-gray-500 text-sm ms-2">
                           ({100 - (footerText?.length || 0)} characters left)
                         </span>
                       </Label>

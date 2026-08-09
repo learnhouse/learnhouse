@@ -98,7 +98,7 @@ export default function UpgradeModal({ open, onClose, source = 'free_plan_banner
               {/* Close button */}
               <button
                 onClick={onClose}
-                className="absolute top-4 right-4 z-10 p-1.5 text-gray-400 hover:text-gray-600 rounded-lg transition-colors"
+                className="absolute top-4 end-4 z-10 p-1.5 text-gray-400 hover:text-gray-600 rounded-lg transition-colors"
               >
                 <X size={18} weight="bold" />
               </button>
@@ -158,7 +158,7 @@ export default function UpgradeModal({ open, onClose, source = 'free_plan_banner
                         className="mt-5 w-full flex items-center justify-center gap-2 py-2.5 text-xs font-semibold rounded-lg transition-colors bg-black hover:bg-gray-800 text-white"
                       >
                         {t('upgrade_modal.choose_plan', { plan: 'Standard' })}
-                        <ArrowRight size={14} weight="bold" />
+                        <ArrowRight size={14} weight="bold" data-dir-flip />
                       </a>
                     </div>
                   </div>
@@ -205,7 +205,7 @@ export default function UpgradeModal({ open, onClose, source = 'free_plan_banner
                         className="mt-5 w-full flex items-center justify-center gap-2 py-2.5 text-xs font-semibold rounded-lg transition-colors bg-black hover:bg-gray-800 text-white"
                       >
                         {t('upgrade_modal.choose_plan', { plan: 'Pro' })}
-                        <ArrowRight size={14} weight="bold" />
+                        <ArrowRight size={14} weight="bold" data-dir-flip />
                       </a>
                     </div>
                   </div>

@@ -519,7 +519,7 @@ function EditCourseSEO(props: EditCourseSEOProps) {
                     {t('dashboard.courses.seo.form.robots_noindex_label')}
                   </label>
                 </div>
-                <p className="text-xs text-gray-400 ml-7">
+                <p className="text-xs text-gray-400 ms-7">
                   {t('dashboard.courses.seo.form.robots_noindex_hint')}
                 </p>
 
@@ -537,7 +537,7 @@ function EditCourseSEO(props: EditCourseSEOProps) {
                     {t('dashboard.courses.seo.form.robots_nofollow_label')}
                   </label>
                 </div>
-                <p className="text-xs text-gray-400 ml-7">
+                <p className="text-xs text-gray-400 ms-7">
                   {t('dashboard.courses.seo.form.robots_nofollow_hint')}
                 </p>
 
@@ -556,7 +556,7 @@ function EditCourseSEO(props: EditCourseSEOProps) {
                       {t('dashboard.courses.seo.form.enable_jsonld_label')}
                     </label>
                   </div>
-                  <p className="text-xs text-gray-400 ml-7 mt-1">
+                  <p className="text-xs text-gray-400 ms-7 mt-1">
                     {t('dashboard.courses.seo.form.enable_jsonld_hint')}
                   </p>
                 </div>

@@ -70,7 +70,7 @@ export default function PlanSummaryCard({
     >
       <div className="relative px-7 pt-7 pb-6 border-b border-black/[0.05] overflow-hidden">
         <div
-          className="absolute top-0 left-0 w-[220px] h-[220px] pointer-events-none"
+          className="absolute top-0 start-0 w-[220px] h-[220px] pointer-events-none"
           style={{ background: `radial-gradient(ellipse at top left, ${plan.topGlow} 0%, transparent 70%)` }}
         />
         <div className="relative z-10">

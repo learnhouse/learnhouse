@@ -167,7 +167,7 @@ export default function PodcastBlockComponent({ node, updateAttributes, selected
             <button
               key={p.podcast_uuid}
               onClick={() => selectPodcast(p.podcast_uuid)}
-              className="flex items-center gap-2.5 w-full px-2.5 py-2 rounded-lg bg-neutral-800 hover:bg-neutral-700 transition-colors text-left"
+              className="flex items-center gap-2.5 w-full px-2.5 py-2 rounded-lg bg-neutral-800 hover:bg-neutral-700 transition-colors text-start"
             >
               {p.thumbnail_image && orgUUID ? (
                 <img
@@ -205,7 +205,7 @@ export default function PodcastBlockComponent({ node, updateAttributes, selected
             onClick={goBackToPodcasts}
             className="text-neutral-500 hover:text-neutral-300 transition-colors"
           >
-            <ArrowLeft size={12} />
+            <ArrowLeft size={12} data-dir-flip />
           </button>
           <div className="flex items-center gap-1">
             <Headphones size={11} className="text-neutral-500" />
@@ -223,9 +223,9 @@ export default function PodcastBlockComponent({ node, updateAttributes, selected
             <button
               key={ep.episode_uuid}
               onClick={() => selectEpisode(ep.episode_uuid)}
-              className="flex items-center justify-between w-full px-2.5 py-2 rounded-lg bg-neutral-800 hover:bg-neutral-700 transition-colors text-left"
+              className="flex items-center justify-between w-full px-2.5 py-2 rounded-lg bg-neutral-800 hover:bg-neutral-700 transition-colors text-start"
             >
-              <span className="text-xs font-medium text-neutral-200 truncate mr-2">{ep.title}</span>
+              <span className="text-xs font-medium text-neutral-200 truncate me-2">{ep.title}</span>
               <span className="text-[10px] text-neutral-500 shrink-0">
                 {formatDuration(ep.duration_seconds)}
               </span>
@@ -292,7 +292,7 @@ export default function PodcastBlockComponent({ node, updateAttributes, selected
               {isPlaying ? (
                 <Pause size={14} weight="fill" className="text-neutral-900" />
               ) : (
-                <Play size={14} weight="fill" className="text-neutral-900 ml-0.5" />
+                <Play size={14} weight="fill" className="text-neutral-900 ms-0.5" />
               )}
             </button>
             <span className="text-[10px] text-neutral-400 font-mono tabular-nums">

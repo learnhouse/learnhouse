@@ -237,9 +237,9 @@ function DashLeftMenu() {
   return (
     <TooltipProvider delayDuration={0}>
     <nav
-      aria-label="Dashboard sidebar navigation"
+      aria-label={t('dashboard.nav.sidebar_navigation')}
       className={cn(
-        "flex flex-col text-white h-screen sticky top-0 z-overlay border-r border-white/[0.08] bg-[#0f0f10] transition-all duration-300",
+        "flex flex-col text-white h-screen sticky top-0 z-overlay border-e border-white/[0.08] bg-[#0f0f10] transition-all duration-300",
         isCollapsed ? "w-[72px]" : "w-64"
       )}
     >
@@ -282,7 +282,7 @@ function DashLeftMenu() {
 
         {!isCollapsed && (
           <button
-            aria-label="Collapse sidebar"
+            aria-label={t('dashboard.nav.collapse_sidebar')}
             onClick={toggleCollapse}
             className="p-2 rounded-lg text-white/40 hover:text-white hover:bg-white/[0.08] transition-all"
           >
@@ -295,9 +295,9 @@ function DashLeftMenu() {
         {showOnboarding && (
           <>
             {/* faint full-width track so the border reads as purple even at 0% */}
-            <div className="absolute -bottom-px left-0 right-0 h-[2px] bg-indigo-500/15" />
+            <div className="absolute -bottom-px start-0 end-0 h-[2px] bg-indigo-500/15" />
             <motion.div
-              className="absolute -bottom-px left-0 h-[2px] rounded-r-full"
+              className="absolute -bottom-px start-0 h-[2px] rounded-e-full"
               style={{
                 background: 'linear-gradient(90deg, #6366f1 0%, #8b5cf6 55%, #a855f7 100%)',
                 boxShadow:
@@ -371,7 +371,7 @@ function DashLeftMenu() {
                 return (
                   <Link
                     href="/dash/courses"
-                    aria-label="Open courses menu"
+                    aria-label={t('dashboard.nav.open_courses_menu')}
                     aria-current={active ? 'page' : undefined}
                     className={cn(
                       "relative flex items-center w-full rounded-lg transition-all",
@@ -384,18 +384,18 @@ function DashLeftMenu() {
                     {active && (
                       <span
                         aria-hidden="true"
-                        className="absolute left-0.5 top-1/2 -translate-y-1/2 h-5 w-[3px] bg-white rounded-full"
+                        className="absolute start-0.5 top-1/2 -translate-y-1/2 h-5 w-[3px] bg-white rounded-full"
                       />
                     )}
                     <span className="relative flex items-center justify-center">
                       <BookOpen size={20} weight="fill" />
                       {isCollapsed && (
-                        <CaretDown aria-hidden="true" size={8} weight="bold" className={cn("absolute -right-2.5", active ? "text-white/60" : "text-white/30")} />
+                        <CaretDown aria-hidden="true" size={8} weight="bold" className={cn("absolute -end-2.5", active ? "text-white/60" : "text-white/30")} />
                       )}
                     </span>
                     {!isCollapsed && (
                       <>
-                        <span className="text-sm font-medium flex-1 text-left">{t('courses.courses')}</span>
+                        <span className="text-sm font-medium flex-1 text-start">{t('courses.courses')}</span>
                         <CaretDown aria-hidden="true" size={14} weight="bold" className={active ? "text-white/70" : "text-white/40"} />
                       </>
                     )}
@@ -445,7 +445,7 @@ function DashLeftMenu() {
                 return (
                   <Link
                     href="/dash/assignments"
-                    aria-label="Open assignments menu"
+                    aria-label={t('dashboard.nav.open_assignments_menu')}
                     aria-current={active ? 'page' : undefined}
                     className={cn(
                       "relative flex items-center w-full rounded-lg transition-all",
@@ -458,18 +458,18 @@ function DashLeftMenu() {
                     {active && (
                       <span
                         aria-hidden="true"
-                        className="absolute left-0.5 top-1/2 -translate-y-1/2 h-5 w-[3px] bg-white rounded-full"
+                        className="absolute start-0.5 top-1/2 -translate-y-1/2 h-5 w-[3px] bg-white rounded-full"
                       />
                     )}
                     <span className="relative flex items-center justify-center">
                       <Files size={20} weight="fill" />
                       {isCollapsed && (
-                        <CaretDown aria-hidden="true" size={8} weight="bold" className={cn("absolute -right-2.5", active ? "text-white/60" : "text-white/30")} />
+                        <CaretDown aria-hidden="true" size={8} weight="bold" className={cn("absolute -end-2.5", active ? "text-white/60" : "text-white/30")} />
                       )}
                     </span>
                     {!isCollapsed && (
                       <>
-                        <span className="text-sm font-medium flex-1 text-left">{t('common.assignments')}</span>
+                        <span className="text-sm font-medium flex-1 text-start">{t('common.assignments')}</span>
                         <CaretDown aria-hidden="true" size={14} weight="bold" className={active ? "text-white/70" : "text-white/40"} />
                       </>
                     )}
@@ -567,7 +567,7 @@ function DashLeftMenu() {
                 return (
                   <Link
                     href="/dash/users/settings/users"
-                    aria-label="Open users menu"
+                    aria-label={t('dashboard.nav.open_users_menu')}
                     aria-current={active ? 'page' : undefined}
                     className={cn(
                       "relative flex items-center w-full rounded-lg transition-all",
@@ -580,18 +580,18 @@ function DashLeftMenu() {
                     {active && (
                       <span
                         aria-hidden="true"
-                        className="absolute left-0.5 top-1/2 -translate-y-1/2 h-5 w-[3px] bg-white rounded-full"
+                        className="absolute start-0.5 top-1/2 -translate-y-1/2 h-5 w-[3px] bg-white rounded-full"
                       />
                     )}
                     <span className="relative flex items-center justify-center">
                       <Users size={20} weight="fill" />
                       {isCollapsed && (
-                        <CaretDown aria-hidden="true" size={8} weight="bold" className={cn("absolute -right-2.5", active ? "text-white/60" : "text-white/30")} />
+                        <CaretDown aria-hidden="true" size={8} weight="bold" className={cn("absolute -end-2.5", active ? "text-white/60" : "text-white/30")} />
                       )}
                     </span>
                     {!isCollapsed && (
                       <>
-                        <span className="text-sm font-medium flex-1 text-left">{t('common.users')}</span>
+                        <span className="text-sm font-medium flex-1 text-start">{t('common.users')}</span>
                         <CaretDown aria-hidden="true" size={14} weight="bold" className={active ? "text-white/70" : "text-white/40"} />
                       </>
                     )}
@@ -662,7 +662,7 @@ function DashLeftMenu() {
                 return (
                   <Link
                     href="/dash/org/settings/general"
-                    aria-label="Open organization menu"
+                    aria-label={t('dashboard.nav.open_organization_menu')}
                     aria-current={active ? 'page' : undefined}
                     className={cn(
                       "relative flex items-center w-full rounded-lg transition-all",
@@ -675,18 +675,18 @@ function DashLeftMenu() {
                     {active && (
                       <span
                         aria-hidden="true"
-                        className="absolute left-0.5 top-1/2 -translate-y-1/2 h-5 w-[3px] bg-white rounded-full"
+                        className="absolute start-0.5 top-1/2 -translate-y-1/2 h-5 w-[3px] bg-white rounded-full"
                       />
                     )}
                     <span className="relative flex items-center justify-center">
                       <Buildings size={20} weight="fill" />
                       {isCollapsed && (
-                        <CaretDown aria-hidden="true" size={8} weight="bold" className={cn("absolute -right-2.5", active ? "text-white/60" : "text-white/30")} />
+                        <CaretDown aria-hidden="true" size={8} weight="bold" className={cn("absolute -end-2.5", active ? "text-white/60" : "text-white/30")} />
                       )}
                     </span>
                     {!isCollapsed && (
                       <>
-                        <span className="text-sm font-medium flex-1 text-left">{t('common.organization')}</span>
+                        <span className="text-sm font-medium flex-1 text-start">{t('common.organization')}</span>
                         <CaretDown aria-hidden="true" size={14} weight="bold" className={active ? "text-white/70" : "text-white/40"} />
                       </>
                     )}
@@ -739,7 +739,7 @@ function DashLeftMenu() {
                 return (
                   <Link
                     href="/dash/developers/api"
-                    aria-label="Open developers menu"
+                    aria-label={t('dashboard.nav.open_developers_menu')}
                     aria-current={active ? 'page' : undefined}
                     className={cn(
                       "relative flex items-center w-full rounded-lg transition-all",
@@ -752,18 +752,18 @@ function DashLeftMenu() {
                     {active && (
                       <span
                         aria-hidden="true"
-                        className="absolute left-0.5 top-1/2 -translate-y-1/2 h-5 w-[3px] bg-white rounded-full"
+                        className="absolute start-0.5 top-1/2 -translate-y-1/2 h-5 w-[3px] bg-white rounded-full"
                       />
                     )}
                     <span className="relative flex items-center justify-center">
                       <Code size={20} weight="fill" />
                       {isCollapsed && (
-                        <CaretDown aria-hidden="true" size={8} weight="bold" className={cn("absolute -right-2.5", active ? "text-white/60" : "text-white/30")} />
+                        <CaretDown aria-hidden="true" size={8} weight="bold" className={cn("absolute -end-2.5", active ? "text-white/60" : "text-white/30")} />
                       )}
                     </span>
                     {!isCollapsed && (
                       <>
-                        <span className="text-sm font-medium flex-1 text-left">{t('dashboard.developers.breadcrumb', { defaultValue: 'Developers' })}</span>
+                        <span className="text-sm font-medium flex-1 text-start">{t('dashboard.developers.breadcrumb', { defaultValue: 'Developers' })}</span>
                         <CaretDown aria-hidden="true" size={14} weight="bold" className={active ? "text-white/70" : "text-white/40"} />
                       </>
                     )}
@@ -798,7 +798,7 @@ function DashLeftMenu() {
                 return (
                   <Link
                     href="/dash/analytics"
-                    aria-label="Analytics"
+                    aria-label={t('common.analytics')}
                     aria-current={active ? 'page' : undefined}
                     className={cn(
                       "relative flex items-center w-full rounded-lg transition-all",
@@ -811,18 +811,18 @@ function DashLeftMenu() {
                     {active && (
                       <span
                         aria-hidden="true"
-                        className="absolute left-0.5 top-1/2 -translate-y-1/2 h-5 w-[3px] bg-white rounded-full"
+                        className="absolute start-0.5 top-1/2 -translate-y-1/2 h-5 w-[3px] bg-white rounded-full"
                       />
                     )}
                     <span className="relative flex items-center justify-center">
                       <ChartBar size={20} weight="fill" />
                       {isCollapsed && (
-                        <CaretDown aria-hidden="true" size={8} weight="bold" className={cn("absolute -right-2.5", active ? "text-white/60" : "text-white/30")} />
+                        <CaretDown aria-hidden="true" size={8} weight="bold" className={cn("absolute -end-2.5", active ? "text-white/60" : "text-white/30")} />
                       )}
                     </span>
                     {!isCollapsed && (
                       <>
-                        <span className="text-sm font-medium flex-1 text-left">{t('common.analytics')}</span>
+                        <span className="text-sm font-medium flex-1 text-start">{t('common.analytics')}</span>
                         <CaretDown aria-hidden="true" size={14} weight="bold" className={active ? "text-white/70" : "text-white/40"} />
                       </>
                     )}
@@ -887,7 +887,7 @@ function DashLeftMenu() {
                 }
               >
                 <button
-                  aria-label="Other"
+                  aria-label={t('dashboard.nav.other')}
                   className={cn(
                     "flex items-center w-full rounded-lg text-white/30 hover:text-white/50 hover:bg-white/[0.05] transition-all",
                     isCollapsed ? "justify-center h-10" : "px-3 py-2 gap-3"
@@ -896,12 +896,12 @@ function DashLeftMenu() {
                   <span className="relative flex items-center justify-center">
                     <DotsThree size={20} weight="bold" />
                     {isCollapsed && (
-                      <CaretDown aria-hidden="true" size={8} weight="bold" className="absolute -right-2.5 text-white/20" />
+                      <CaretDown aria-hidden="true" size={8} weight="bold" className="absolute -end-2.5 text-white/20" />
                     )}
                   </span>
                   {!isCollapsed && (
                     <>
-                      <span className="text-sm font-medium flex-1 text-left">{t('common.other')}</span>
+                      <span className="text-sm font-medium flex-1 text-start">{t('common.other')}</span>
                       <CaretDown aria-hidden="true" size={14} weight="bold" className="text-white/20" />
                     </>
                   )}
@@ -1044,7 +1044,7 @@ function DashLeftMenu() {
             <Tooltip>
               <TooltipTrigger asChild>
                 <button
-                  aria-label="Expand sidebar"
+                  aria-label={t('dashboard.nav.expand_sidebar')}
                   onClick={toggleCollapse}
                   className="flex items-center justify-center w-full h-10 rounded-lg text-white/40 hover:text-white hover:bg-white/[0.08] transition-all"
                 >
@@ -1085,7 +1085,7 @@ function DashLeftMenu() {
               </HoverMenuContent>
             }
           >
-            <button aria-label="Open language menu" className={cn(
+            <button aria-label={t('dashboard.nav.open_language_menu')} className={cn(
               "flex items-center w-full rounded-lg text-white/50 hover:text-white hover:bg-white/[0.08] transition-all group",
               isCollapsed ? "justify-center h-10" : "px-3 py-2 gap-3"
             )}>
@@ -1150,7 +1150,7 @@ function DashLeftMenu() {
               </HoverMenuContent>
             }
           >
-            <button aria-label="Open help menu" className={cn(
+            <button aria-label={t('dashboard.nav.open_help_menu')} className={cn(
               "flex items-center w-full rounded-lg text-white/50 hover:text-white hover:bg-white/[0.08] transition-all group",
               isCollapsed ? "justify-center h-10" : "px-3 py-2 gap-3"
             )}>
@@ -1209,7 +1209,7 @@ function DashLeftMenu() {
                 </HoverMenuContent>
               }
             >
-              <button aria-label="Open organizations menu" className={cn(
+              <button aria-label={t('dashboard.nav.open_organizations_menu')} className={cn(
                 "flex items-center w-full rounded-lg text-white/50 hover:text-white hover:bg-white/[0.08] transition-all group",
                 isCollapsed ? "justify-center h-10" : "px-3 py-2 gap-3"
               )}>
@@ -1248,7 +1248,7 @@ function DashLeftMenu() {
                   onClick={() => logOutUI()}
                   className="flex items-center gap-2 px-3 py-2 text-sm text-red-500 hover:text-red-400 hover:bg-white/[0.08] cursor-pointer transition-colors"
                 >
-                  <SignOut size={16} weight="fill" />
+                  <SignOut size={16} weight="fill" data-dir-flip />
                   <span>{t('user.sign_out')}</span>
                 </HoverMenuItem>
               </HoverMenuContent>
@@ -1260,7 +1260,7 @@ function DashLeftMenu() {
             )}>
               <UserAvatar width={24} rounded="rounded-full" shadow="shadow-none" />
               {!isCollapsed && (
-                <div className="flex flex-col min-w-0 flex-1 text-left">
+                <div className="flex flex-col min-w-0 flex-1 text-start">
                   <span className="text-sm font-medium truncate text-white/90">{session?.data?.user?.username}</span>
                   <span className="text-xs text-white/40 truncate">{session?.data?.user?.email}</span>
                 </div>
@@ -1305,7 +1305,7 @@ const MenuLink = ({ href, icon, label, isCollapsed, isExternal, active, onClick 
       {active && (
         <span
           aria-hidden="true"
-          className="absolute left-0.5 top-1/2 -translate-y-1/2 h-5 w-[3px] bg-white rounded-full"
+          className="absolute start-0.5 top-1/2 -translate-y-1/2 h-5 w-[3px] bg-white rounded-full"
         />
       )}
       {icon}

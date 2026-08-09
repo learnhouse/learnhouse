@@ -3,12 +3,10 @@ import React, { useState } from 'react'
 import { ChevronDown, ExternalLink, FileText } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import type { PastInvoice } from '../_lib/billingClient'
+import { formatCurrency, formatDate } from '@/lib/format'
 
-function formatMoney(minorUnits: number, currency: string): string {
-  return new Intl.NumberFormat('en-US', {
-    style: 'currency',
-    currency: currency.toUpperCase(),
-  }).format(minorUnits / 100)
+function formatMoney(minorUnits: number, currency: string, lng: string): string {
+  return formatCurrency(minorUnits / 100, currency.toUpperCase(), lng)
 }
 
 const STATUS_STYLES: Record<string, string> = {
@@ -20,7 +18,7 @@ const STATUS_STYLES: Record<string, string> = {
 }
 
 export default function InvoiceHistory({ invoices }: { invoices: PastInvoice[] }) {
-  const { t } = useTranslation()
+  const { t, i18n } = useTranslation()
   const [open, setOpen] = useState(false)
 
   if (!invoices || invoices.length === 0) return null
@@ -47,7 +45,8 @@ export default function InvoiceHistory({ invoices }: { invoices: PastInvoice[] }
       {open && (
         <div className="border-t border-black/[0.05] divide-y divide-black/[0.04]">
           {invoices.map((inv) => {
-            const date = new Date(inv.created * 1000).toLocaleDateString('en-US', {
+            const date = formatDate(inv.created * 1000, i18n.language, {
+              dateStyle: undefined,
               year: 'numeric',
               month: 'short',
               day: 'numeric',
@@ -78,6 +77,7 @@ export default function InvoiceHistory({ invoices }: { invoices: PastInvoice[] }
                     {formatMoney(
                       inv.status === 'paid' ? inv.amountPaid : inv.amountDue,
                       inv.currency,
+                      i18n.language,
                     )}
                   </span>
                   {inv.hostedInvoiceUrl && (
