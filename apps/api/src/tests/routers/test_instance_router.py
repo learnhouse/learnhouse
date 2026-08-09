@@ -104,9 +104,6 @@ class TestInstanceRouter:
             "src.routers.instance.get_deployment_mode",
             return_value="saas",
         ), patch(
-            "src.routers.instance.is_multi_org_allowed",
-            return_value=True,
-        ), patch(
             "src.routers.instance.set_cached_instance_info",
         ) as mock_set_cache:
             response = await client.get("/api/v1/instance/info")
@@ -138,9 +135,6 @@ class TestInstanceRouter:
         ), patch(
             "src.routers.instance.get_deployment_mode",
             return_value="ee",
-        ), patch(
-            "src.routers.instance.is_multi_org_allowed",
-            return_value=True,
         ), patch(
             "src.routers.instance.set_cached_instance_info",
         ):
@@ -175,9 +169,6 @@ class TestInstanceRouter:
             ), patch(
                 "src.routers.instance.get_deployment_mode",
                 return_value="oss",
-            ), patch(
-                "src.routers.instance.is_multi_org_allowed",
-                return_value=False,
             ), patch(
                 "src.routers.instance.set_cached_instance_info",
             ):
