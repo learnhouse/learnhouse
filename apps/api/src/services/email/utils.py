@@ -360,6 +360,26 @@ def _is_transient_email_error(exc: BaseException) -> bool:
     )
 
 
+def _is_recipient_rejected(exc: BaseException) -> bool:
+    """True only when the provider rejected the RECIPIENT address itself.
+
+    A bad address supplied by a caller (a provisioning integration creating
+    accounts on example.com, a typo in an admin-entered email) is a property of
+    that address: retrying cannot help, and it is not an incident worth paging
+    on. Everything else stays at error level, because it means mail is broken
+    for everyone — an unverified sending domain (invalid_from_address), an empty
+    subject or body from a template regression (missing_required_field), an
+    auth failure, a rate limit, a 5xx, or a non-JSON body from an intermediary
+    (application_error). Classifying on the bare 4xx status would sweep all of
+    those into silence, so we require positive evidence: a validation error that
+    names the `to` field.
+    """
+    if str(getattr(exc, "error_type", "")).lower() != "validation_error":
+        return False
+    message = str(exc).lower()
+    return "`to`" in message or "to field" in message
+
+
 def _send_email_resend(
     sender: str,
     to: str,
@@ -386,7 +406,10 @@ def _send_email_resend(
                 logger.warning("Resend email to %s failed (%s), retrying once", to, e)
                 time.sleep(_RESEND_RETRY_DELAY_SECONDS)
                 continue
-            logger.error("Resend email failed to %s: %s", to, e, exc_info=True)
+            if _is_recipient_rejected(e):
+                logger.warning("Resend rejected the recipient address %s: %s", to, e)
+            else:
+                logger.error("Resend email failed to %s: %s", to, e, exc_info=True)
             raise HTTPException(status_code=503, detail="Email service temporarily unavailable")
 
 
