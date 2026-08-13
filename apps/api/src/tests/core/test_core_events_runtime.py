@@ -167,26 +167,6 @@ async def test_content_and_logs_helpers(monkeypatch, tmp_path):
     await logs_events.create_logs_dir()
     assert mkdir_calls == ["logs"]
 
-    basic_config_calls = []
-    info_calls = []
-
-    async def fake_create_logs_dir():
-        return None
-
-    monkeypatch.setattr(logs_events, "create_logs_dir", fake_create_logs_dir)
-    monkeypatch.setattr(logs_events.logging, "FileHandler", lambda path: f"file:{path}")
-    monkeypatch.setattr(logs_events.logging, "StreamHandler", lambda: "stream")
-    monkeypatch.setattr(
-        logs_events.logging,
-        "basicConfig",
-        lambda **kwargs: basic_config_calls.append(kwargs),
-    )
-    monkeypatch.setattr(logs_events.logging, "info", lambda message: info_calls.append(message))
-
-    await logs_events.init_logging()
-
-    assert basic_config_calls and basic_config_calls[0]["handlers"] == ["file:logs/learnhouse.log", "stream"]
-    assert info_calls == ["Logging initiated"]
 
 
 @pytest.mark.asyncio

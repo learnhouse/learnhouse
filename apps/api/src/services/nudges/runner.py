@@ -78,29 +78,56 @@ def backfill_mode() -> str:
 
 
 async def _ledger_has_rows(db_session: AsyncSession) -> bool:
+    """Whether a real run has happened here.
+
+    Dry-run rows are excluded: a rehearsal must not convince the system it has
+    already started, which would suppress the auto-seed and pin the boundary at
+    the rehearsal's timestamp.
+    """
     return (
-        await db_session.execute(select(func.count()).select_from(NudgeSend))
+        await db_session.execute(
+            select(func.count())
+            .select_from(NudgeSend)
+            .where(NudgeSend.status != NudgeSendStatus.DRY_RUN)
+        )
     ).scalar_one() > 0
 
 
-async def activation_date(db_session: AsyncSession) -> datetime:
+async def activation_date(
+    db_session: AsyncSession, now: Optional[datetime] = None
+) -> datetime:
     """When this system started running here.
 
-    Orgs created before it are "pre-existing" and only the winback tracks may
-    reach them. Derived from the ledger rather than configured: the first row —
-    written by `nudges-seed`, or by the first live send — *is* the boundary,
-    so there is no date to remember to set and no way to set it wrongly.
+    Orgs created before it are "pre-existing" and reachable only by the winback
+    tracks. An explicit `LEARNHOUSE_NUDGES_ACTIVATION_DATE` wins; otherwise it
+    falls back to the ledger's first real row.
 
-    An empty ledger means nothing has run here yet, so every existing org
-    predates the system and only the winback tracks may reach it. Running
-    `nudges-seed` is what pins the boundary and lets ordinary tracks start
-    applying to organizations created from then on.
+    Deriving it from the ledger alone was a mistake worth naming: the first run
+    wrote the row *and* read it, so the boundary was whatever instant the job
+    happened to start, and nothing could ever move an organization out of the
+    pre-existing set afterwards. Making it configurable means the operator can
+    place the line deliberately — including in the past, to treat existing
+    organizations as ordinary.
     """
+    raw = (os.environ.get("LEARNHOUSE_NUDGES_ACTIVATION_DATE") or "").strip()
+    if raw:
+        try:
+            parsed = datetime.fromisoformat(raw)
+            return parsed if parsed.tzinfo else parsed.replace(tzinfo=timezone.utc)
+        except ValueError:
+            logger.warning(
+                "Ignoring unparseable LEARNHOUSE_NUDGES_ACTIVATION_DATE: %r", raw
+            )
+
     earliest = (
-        await db_session.execute(select(func.min(NudgeSend.claimed_at)))
+        await db_session.execute(
+            select(func.min(NudgeSend.claimed_at)).where(
+                NudgeSend.status != NudgeSendStatus.DRY_RUN
+            )
+        )
     ).scalar_one_or_none()
     if earliest is None:
-        return datetime.now(timezone.utc)
+        return now or datetime.now(timezone.utc)
     return earliest if earliest.tzinfo else earliest.replace(tzinfo=timezone.utc)
 
 
@@ -118,6 +145,7 @@ class RunStats:
     # True when this run seeded the backlog rather than sending, which happens
     # once, automatically, the first time the job runs anywhere.
     auto_seeded: bool = False
+    seeded: int = 0
     by_nudge: dict = field(default_factory=dict)
 
     def record(self, nudge_id: str) -> None:
@@ -135,11 +163,19 @@ class RunStats:
             "skipped_inactive_org": self.skipped_inactive_org,
             "budget_exhausted": self.budget_exhausted,
             "auto_seeded": self.auto_seeded,
+            "seeded": self.seeded,
             "by_nudge": dict(sorted(self.by_nudge.items())),
         }
 
 
-def dedupe_key(spec: NudgeSpec, org_id: int, user_id: int, now: datetime, dry_run: bool) -> str:
+def dedupe_key(
+    spec: NudgeSpec,
+    org_id: int,
+    user_id: int,
+    now: datetime,
+    dry_run: bool,
+    seed: bool = False,
+) -> str:
     """The idempotency boundary.
 
     A dry run uses a separate namespace so a rehearsal never consumes the key
@@ -150,7 +186,13 @@ def dedupe_key(spec: NudgeSpec, org_id: int, user_id: int, now: datetime, dry_ru
         key = f"{key}:{now.year}-Q{(now.month - 1) // 3 + 1}"
     elif spec.repeat == "monthly":
         key = f"{key}:{now.year}-{now.month:02d}"
-    return f"dryrun:{key}" if dry_run else key
+    if dry_run:
+        return f"dryrun:{key}"
+    if seed:
+        # Seeding must not spend the key the real send needs. Suppressing the
+        # backlog is about not firing it today, not about never firing it.
+        return f"seed:{key}"
+    return key
 
 
 def _is_preexisting(snapshot: OrgSnapshot, cutoff: datetime) -> bool:
@@ -363,7 +405,7 @@ async def run_nudges(
     stats = RunStats()
     now = now or datetime.now(timezone.utc)
     max_sends = max_sends if max_sends is not None else DEFAULT_MAX_SENDS
-    cutoff = await activation_date(db_session)
+    cutoff = await activation_date(db_session, now=now)
 
     if not force and get_deployment_mode() != "saas":
         logger.info("Nudges skipped: deployment mode is not saas")
@@ -377,13 +419,31 @@ async def run_nudges(
     # keys for everything that happens to be true today, so switching the
     # system on cannot fire a backlog accumulated over the org's whole life.
     # Doing it automatically means there is no prerequisite step to forget.
-    if not seed and not dry_run and not await _ledger_has_rows(db_session):
+    # Only an unscoped run may seed: seeding from `--org-id` or `--only` would
+    # pin the global boundary while consuming one org's keys, leaving every
+    # other organization both unseeded and permanently pre-existing.
+    if (
+        not seed
+        and not dry_run
+        and org_id is None
+        and only is None
+        and not await _ledger_has_rows(db_session)
+    ):
         logger.info("First nudge run here — seeding the backlog instead of sending")
         seeded = await run_nudges(
             db_session, seed=True, now=now, org_id=org_id, force=True
         )
         seeded.auto_seeded = True
         return seeded
+
+    logger.info(
+        "Nudge run starting: mode=%s cutoff=%s weekly_cap=%s max_sends=%s%s",
+        backfill_mode(),
+        cutoff.isoformat(),
+        WEEKLY_CAP,
+        max_sends,
+        " [dry-run]" if dry_run else (" [seed]" if seed else ""),
+    )
 
     # Ask the provider what became of recent messages before sending more.
     # This is what lets bounces and complaints be noticed without a webhook.
@@ -392,12 +452,28 @@ async def run_nudges(
 
         await reconcile_delivery(db_session, now=now)
     except Exception as exc:
+        # reconcile_delivery commits on the shared session; a failure mid-commit
+        # leaves it needing a rollback, and without one the first _claim raises
+        # PendingRollbackError and takes the whole run down.
         logger.warning("Delivery reconcile skipped: %s", exc)
+        try:
+            await db_session.rollback()
+        except Exception:
+            pass
 
     media_base = get_media_base_url(None)
 
+    preexisting = 0
+    considered_orgs = 0
+
     async for snapshot in iter_snapshots(db_session, now=now, org_id=org_id):
-        if stats.sent >= max_sends:
+        considered_orgs += 1
+        if _is_preexisting(snapshot, cutoff):
+            preexisting += 1
+        # Counted against attempts, not successes: a run where every send fails
+        # would otherwise never trip the fuse and would burn a once-forever key
+        # for every eligible organization in one pass.
+        if stats.sent + stats.failed >= max_sends:
             stats.budget_exhausted = True
             logger.info("Nudge budget of %s reached; deferring the rest", max_sends)
             break
@@ -426,7 +502,7 @@ async def run_nudges(
         )
 
         for admin in admins:
-            if stats.sent >= max_sends:
+            if stats.sent + stats.failed >= max_sends:
                 stats.budget_exhausted = True
                 break
 
@@ -458,7 +534,9 @@ async def run_nudges(
                     stats.skipped_backfill += 1
                     continue
 
-                key = dedupe_key(spec, snapshot.org_id, admin.user_id, now, dry_run)
+                key = dedupe_key(
+                    spec, snapshot.org_id, admin.user_id, now, dry_run, seed
+                )
                 row = await _claim(
                     db_session, spec, snapshot, admin, key, now, dry_run or seed
                 )
@@ -470,6 +548,8 @@ async def run_nudges(
                     row.status = NudgeSendStatus.SUPPRESSED
                     db_session.add(row)
                     await db_session.commit()
+                    stats.seeded += 1
+                    stats.record(spec.id)
                     break
 
                 if dry_run:
@@ -521,4 +601,10 @@ async def run_nudges(
                 await db_session.commit()
                 break
 
+    logger.info(
+        "Nudge run finished: %s orgs scanned, %s predate the system | %s",
+        considered_orgs,
+        preexisting,
+        stats.as_dict(),
+    )
     return stats

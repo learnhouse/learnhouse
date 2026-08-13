@@ -453,16 +453,22 @@ class TestSeeding:
         assert len(rows) == 1
         assert rows[0].status == NudgeSendStatus.SUPPRESSED
 
-    async def test_seeded_keys_are_permanently_consumed(
+    async def test_seeding_holds_back_today_without_spending_the_key(
         self, db, activation_org, sender
     ):
-        """The point of seeding: switching the system on must not fire a
-        backlog of everything that happens to be true that day."""
-        await run_nudges(db, now=NOW, seed=True)
-        stats = await run_nudges(db, now=NOW)
+        """Seeding stops the backlog firing *today*. It must not consume the
+        key forever: the seed writes under a `seed:` namespace so the live send
+        still has its own, which is what lets an org be reached once the gates
+        are opened later."""
+        seeded = await run_nudges(db, now=NOW, seed=True)
+        assert seeded.seeded == 1
 
-        assert stats.sent == 0
-        sender.assert_not_called()
+        rows = await _ledger(db)
+        assert all(r.dedupe_key.startswith("seed:") for r in rows)
+
+        stats = await run_nudges(db, now=NOW)
+        assert stats.sent == 1
+        assert sender.call_count == 1
 
 
 class TestBackfillGuard:
@@ -730,3 +736,136 @@ class TestPreexistingEdgeCase:
             now=NOW, created_at=None,
         )
         assert _is_preexisting(snap, NOW) is False
+
+
+class TestExplicitActivationDate:
+    """The boundary was derived from the ledger's own first row, so the first
+    run wrote it and read it — the cutoff became whatever instant the job
+    happened to start, and no org could ever leave the pre-existing set."""
+
+    async def test_an_explicit_date_wins(self, db, monkeypatch):
+        from src.services.nudges.runner import activation_date
+
+        monkeypatch.setenv("LEARNHOUSE_NUDGES_ACTIVATION_DATE", "2020-01-01")
+        boundary = await activation_date(db, now=NOW)
+
+        assert boundary.year == 2020
+        assert boundary.tzinfo is not None
+
+    async def test_a_past_date_makes_existing_orgs_ordinary(
+        self, db, activation_org, sender, monkeypatch
+    ):
+        """The operator's escape hatch: place the line before the fleet and
+        every org is treated as new."""
+        from src.services.nudges.runner import _is_preexisting, activation_date
+        from src.services.nudges.eligibility import build_snapshots
+
+        monkeypatch.setenv("LEARNHOUSE_NUDGES_ACTIVATION_DATE", "2000-01-01")
+        cutoff = await activation_date(db, now=NOW)
+        snap = (await build_snapshots(db, [activation_org], now=NOW))[0]
+
+        assert _is_preexisting(snap, cutoff) is False
+
+    async def test_garbage_falls_back_to_the_ledger(self, db, monkeypatch):
+        from src.services.nudges.runner import activation_date
+
+        monkeypatch.setenv("LEARNHOUSE_NUDGES_ACTIVATION_DATE", "not-a-date")
+        assert (await activation_date(db, now=NOW)) == NOW - timedelta(days=400)
+
+    async def test_dry_run_rows_do_not_pin_the_boundary(self, db, monkeypatch):
+        """A rehearsal must not convince the system it has already started."""
+        from sqlmodel import delete
+
+        from src.services.nudges.runner import _ledger_has_rows, activation_date
+
+        monkeypatch.delenv("LEARNHOUSE_NUDGES_ACTIVATION_DATE", raising=False)
+        await db.execute(delete(NudgeSend))
+        db.add(
+            NudgeSend(
+                nudge_id="x.y",
+                dedupe_key="dryrun:x.y:1:1",
+                org_id=1,
+                user_id=1,
+                status=NudgeSendStatus.DRY_RUN,
+                claimed_at=NOW - timedelta(days=5),
+            )
+        )
+        await db.commit()
+
+        assert await _ledger_has_rows(db) is False
+        assert (await activation_date(db, now=NOW)) == NOW
+
+
+class TestScopedRunsNeverSeed:
+    async def test_an_org_scoped_run_on_an_empty_ledger_does_not_seed(
+        self, db, activation_org, sender
+    ):
+        """Seeding from --org-id would pin the global boundary while consuming
+        one org's keys, stranding every other org as permanently pre-existing."""
+        from sqlmodel import delete
+
+        await db.execute(delete(NudgeSend))
+        await db.commit()
+
+        stats = await run_nudges(db, now=NOW, org_id=activation_org.id)
+        assert stats.auto_seeded is False
+
+    async def test_a_spec_scoped_run_does_not_seed(self, db, activation_org, sender):
+        from sqlmodel import delete
+
+        await db.execute(delete(NudgeSend))
+        await db.commit()
+
+        stats = await run_nudges(db, now=NOW, only="activation.first_course_d1")
+        assert stats.auto_seeded is False
+
+
+class TestBudgetCountsAttempts:
+    async def test_failures_consume_the_budget(
+        self, db, org, admin_role, verified_admin, sender
+    ):
+        """Counting only successes meant a broken provider could burn a
+        once-forever key for every eligible org in a single pass — the fuse
+        could never trip because nothing ever succeeded."""
+        from datetime import datetime as dt
+
+        from src.db.user_organizations import UserOrganization
+        from src.db.users import User
+
+        org.creation_date = _stored(1.5)
+        org.update_date = _stored(1.5)
+        db.add(org)
+        for index in range(2, 6):
+            db.add(
+                User(
+                    id=index + 20,
+                    username=f"a{index}",
+                    first_name="A",
+                    last_name=str(index),
+                    email=f"a{index}@test.com",
+                    password="x",
+                    user_uuid=f"user_a{index}",
+                    email_verified=True,
+                    creation_date=str(dt.now()),
+                    update_date=str(dt.now()),
+                )
+            )
+            db.add(
+                UserOrganization(
+                    user_id=index + 20,
+                    org_id=org.id,
+                    role_id=admin_role.id,
+                    creation_date=str(dt.now()),
+                    update_date=str(dt.now()),
+                )
+            )
+        await db.commit()
+
+        sender.return_value = False
+        stats = await run_nudges(db, now=NOW, max_sends=2)
+
+        # Stopped after two attempts rather than working through all five.
+        assert stats.failed == 2
+        assert stats.sent == 0
+        assert stats.budget_exhausted is True
+        assert sender.call_count == 2

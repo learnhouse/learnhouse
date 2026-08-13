@@ -133,23 +133,62 @@ async def test_create_logs_dir_creates_missing_directory(monkeypatch):
 
 
 @pytest.mark.asyncio
-async def test_init_logging_configures_logging(monkeypatch):
-    calls = []
+def test_init_logging_attaches_a_stdout_handler():
+    """Until this runs the root logger has no handler, so Python's fallback
+    drops everything below WARNING and every logger.info in the codebase is
+    invisible in production."""
+    root = logging.getLogger()
+    before = list(root.handlers)
+    try:
+        root.handlers = []
+        logs.init_logging()
 
-    async def create_logs_dir():
-        calls.append("create")
+        ours = [h for h in root.handlers if getattr(h, "_learnhouse", False)]
+        assert len(ours) == 1
+        assert isinstance(ours[0], logging.StreamHandler)
+        assert root.level == logging.INFO
+    finally:
+        root.handlers = before
 
-    monkeypatch.setattr(logs, "create_logs_dir", create_logs_dir)
-    monkeypatch.setattr(logs.logging, "FileHandler", lambda *args, **kwargs: object())
-    monkeypatch.setattr(logs.logging, "StreamHandler", lambda *args, **kwargs: object())
-    monkeypatch.setattr(logs.logging, "basicConfig", lambda **kwargs: calls.append(kwargs))
-    monkeypatch.setattr(logs.logging, "info", lambda message: calls.append(message))
 
-    await logs.init_logging()
+def test_init_logging_is_idempotent():
+    """Startup can run more than once in a process; a second call must not
+    double every log line."""
+    root = logging.getLogger()
+    before = list(root.handlers)
+    try:
+        root.handlers = []
+        logs.init_logging()
+        logs.init_logging()
+        assert len([h for h in root.handlers if getattr(h, "_learnhouse", False)]) == 1
+    finally:
+        root.handlers = before
 
-    assert calls[0] == "create"
-    assert calls[1]["level"] == logging.INFO
-    assert calls[-1] == "Logging initiated"
+
+def test_init_logging_honours_an_explicit_level(monkeypatch):
+    monkeypatch.setenv("LEARNHOUSE_LOG_LEVEL", "WARNING")
+    root = logging.getLogger()
+    before, before_level = list(root.handlers), root.level
+    try:
+        root.handlers = []
+        logs.init_logging()
+        assert root.level == logging.WARNING
+    finally:
+        root.handlers, root.level = before, before_level
+
+
+def test_init_logging_leaves_uvicorn_handlers_alone():
+    """basicConfig(force=True) would tear these down and take the access log
+    with it."""
+    root = logging.getLogger()
+    before = list(root.handlers)
+    sentinel = logging.NullHandler()
+    try:
+        root.handlers = [sentinel]
+        logs.init_logging()
+        assert sentinel in root.handlers
+    finally:
+        root.handlers = before
 
 
 def test_is_ee_available(monkeypatch):
