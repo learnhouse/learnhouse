@@ -1,9 +1,12 @@
-// Two faults this pins down:
+// Three faults this pins down:
 //
 // 1. ADMIN_PATHS named 3 sections while AdminAuthorization wraps the whole dash
 //    layout, so /dash and 10 other sections were reachable by any member.
 // 2. Denial set isAuthorized(false) *and* router.push('/dash'), so the message
 //    flashed for a frame and the user was bounced with no explanation.
+// 3. isAuthorized started at `false` while the decision is made in an effect,
+//    which runs after the commit — so the denial surface painted for a frame on
+//    every load, admins included.
 
 import { describe, expect, test } from "bun:test";
 import { readFileSync } from "node:fs";
@@ -70,5 +73,39 @@ describe("denial explains itself instead of bouncing", () => {
     const classified = classifyError({ status: 403, message: "admin_only" });
     expect(classified.category.kind).toBe("permission");
     expect(classified.category.resolutions).toContain("home");
+  });
+});
+
+describe("the denial surface cannot paint before the decision is made", () => {
+  test("authorization starts undecided rather than denied", () => {
+    expect(SOURCE).toContain("useState<boolean | null>(null)");
+  });
+
+  test("undecided shows the loader, and only in page mode", () => {
+    // Component mode renders inline (sidebar, dashboard home), where a
+    // full-screen spinner would be worse than rendering nothing.
+    expect(SOURCE).toContain("authorizationMode === 'page' && isAuthorized === null");
+  });
+
+  test("only a decided false reaches ErrorUI", () => {
+    // The regression this guards: `!isAuthorized` reads the undecided null as a
+    // denial, which is exactly the frame that used to flash.
+    const errorUI = SOURCE.indexOf("<ErrorUI");
+    const guard = SOURCE.lastIndexOf("if (authorizationMode === 'page'", errorUI);
+    expect(errorUI).toBeGreaterThan(-1);
+    expect(guard).toBeGreaterThan(-1);
+
+    expect(SOURCE.slice(guard, errorUI)).toContain("isAuthorized === false");
+  });
+
+  test("a signed-out visitor is never told they lack permission", () => {
+    // The unauthenticated branch returns without deciding, so the loader holds
+    // the screen while the /login navigation is in flight.
+    const start = SOURCE.indexOf("if (!isUserAuthenticated)");
+    const end = SOURCE.indexOf("if (authorizationMode === 'page')", start);
+    expect(start).toBeGreaterThan(-1);
+    expect(end).toBeGreaterThan(start);
+
+    expect(SOURCE.slice(start, end)).not.toContain("setIsAuthorized");
   });
 });
