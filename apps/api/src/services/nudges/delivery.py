@@ -28,10 +28,17 @@ from src.services.nudges.preferences import suppress_address
 logger = logging.getLogger(__name__)
 
 # `last_event` values meaning the address should not be mailed again.
+# Only `complained` suppresses on this path. Polling returns a bare "bounced"
+# with no sub-type, so a full mailbox is indistinguishable from a dead address —
+# and the webhook path refuses to suppress on that for exactly this reason
+# (routers/nudges.py checks bounce.type). Suppressing here would throw away good
+# addresses permanently, with no way to undo it.
 TERMINAL_EVENTS = {
-    "bounced": "bounce",
     "complained": "complaint",
 }
+
+# Seen but not acted on. Recorded so the ledger shows what happened.
+OBSERVED_EVENTS = {"bounced", "delivered", "sent", "opened", "clicked"}
 
 # Wait before judging a message. A receiving server retries a transient failure
 # for a while, and a message read too early can look bounced when it is only
@@ -46,9 +53,18 @@ MAX_PER_RUN = 500
 
 
 async def _last_event(provider_id: str) -> Optional[str]:
-    """Ask the provider what became of one message."""
+    """Ask the provider what became of one message.
+
+    The key is set here rather than assumed: `resend.api_key` is otherwise
+    only assigned inside the send path, and this runs *before* the send loop —
+    so in a one-shot CLI process every lookup would 401, be swallowed per row,
+    and report zero checked while bounces went unnoticed.
+    """
     import resend
 
+    from config.config import get_learnhouse_config
+
+    resend.api_key = get_learnhouse_config().mailing_config.resend_api_key
     email = await asyncio.to_thread(resend.Emails.get, provider_id)
     if isinstance(email, dict):
         return email.get("last_event")
@@ -99,6 +115,11 @@ async def reconcile_delivery(
             address = (row.meta or {}).get("email")
             if address and await suppress_address(db_session, address, reason):
                 suppressed += 1
+
+        # A delayed message has not finished failing yet; leaving it unchecked
+        # means the bounce that lands at hour 60 is still seen.
+        if str(event or "").lower() == "delivery_delayed":
+            continue
 
         row.delivery_checked = True
         db_session.add(row)

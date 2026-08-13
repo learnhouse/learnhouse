@@ -56,10 +56,8 @@ async def _pref(db, user_id):
 
 
 class TestOutcomes:
-    @pytest.mark.parametrize(
-        "event,reason", [("bounced", "bounce"), ("complained", "complaint")]
-    )
-    async def test_a_failed_message_suppresses_the_address(
+    @pytest.mark.parametrize("event,reason", [("complained", "complaint")])
+    async def test_a_complaint_suppresses_the_address(
         self, db, sent_row, admin_user, event, reason
     ):
         sent_row()
@@ -74,7 +72,37 @@ class TestOutcomes:
         pref = await _pref(db, admin_user.id)
         assert pref.suppressed is True and pref.suppressed_reason == reason
 
-    @pytest.mark.parametrize("event", ["delivered", "sent", "opened", "delivery_delayed"])
+    async def test_a_polled_bounce_does_not_suppress(self, db, sent_row, admin_user):
+        """Polling returns a bare "bounced" with no sub-type, so a full mailbox
+        is indistinguishable from a dead address. The webhook path refuses to
+        suppress on that; this path must too, because suppression is one-way."""
+        sent_row()
+        await db.commit()
+
+        with patch(
+            "src.services.nudges.delivery._last_event",
+            AsyncMock(return_value="bounced"),
+        ):
+            result = await reconcile_delivery(db, now=NOW)
+
+        assert result == {"checked": 1, "suppressed": 0}
+        assert await _pref(db, admin_user.id) is None
+
+    async def test_a_delayed_message_stays_under_watch(self, db, sent_row):
+        """It has not finished failing yet — marking it checked would mean the
+        bounce that lands at hour 60 is never seen."""
+        sent_row()
+        await db.commit()
+
+        with patch(
+            "src.services.nudges.delivery._last_event",
+            AsyncMock(return_value="delivery_delayed"),
+        ):
+            result = await reconcile_delivery(db, now=NOW)
+
+        assert result == {"checked": 0, "suppressed": 0}
+
+    @pytest.mark.parametrize("event", ["delivered", "sent", "opened"])
     async def test_a_healthy_message_suppresses_nothing(
         self, db, sent_row, admin_user, event
     ):
@@ -182,7 +210,8 @@ class TestFailureHandling:
         assert result == {"checked": 0, "suppressed": 0}
 
         with patch(
-            "src.services.nudges.delivery._last_event", AsyncMock(return_value="bounced")
+            "src.services.nudges.delivery._last_event",
+            AsyncMock(return_value="complained"),
         ):
             retried = await reconcile_delivery(db, now=NOW)
         assert retried["suppressed"] == 1
@@ -194,7 +223,8 @@ class TestFailureHandling:
         await db.commit()
 
         with patch(
-            "src.services.nudges.delivery._last_event", AsyncMock(return_value="bounced")
+            "src.services.nudges.delivery._last_event",
+            AsyncMock(return_value="complained"),
         ):
             result = await reconcile_delivery(db, now=NOW)
 
@@ -277,4 +307,40 @@ class TestReconcileInsideARun:
         await db.commit()
 
         stats = await runner_module.run_nudges(db, now=NOW)
+        assert stats.failed == 0
+
+
+class TestReconcileFailureLeavesTheSessionUsable:
+    async def test_a_reconcile_that_breaks_the_session_does_not_kill_the_run(
+        self, db, org, monkeypatch
+    ):
+        """reconcile_delivery commits on the caller's session. Without a
+        rollback here, the first _claim raises PendingRollbackError — which
+        _claim does not catch — and the whole run dies on one bad lookup."""
+        from src.services.nudges import runner as runner_module
+
+        monkeypatch.setenv("LEARNHOUSE_NUDGES_ENABLED", "true")
+        monkeypatch.setattr(runner_module, "get_deployment_mode", lambda: "saas")
+
+        async def poison(session, **kwargs):
+            raise RuntimeError("commit blew up mid-transaction")
+
+        monkeypatch.setattr(
+            "src.services.nudges.delivery.reconcile_delivery", poison
+        )
+        db.add(
+            NudgeSend(
+                nudge_id="bootstrap",
+                dedupe_key="bootstrap:0:0",
+                org_id=org.id,
+                user_id=1,
+                status=NudgeSendStatus.SUPPRESSED,
+                claimed_at=NOW - timedelta(days=400),
+            )
+        )
+        await db.commit()
+
+        stats = await runner_module.run_nudges(db, now=NOW)
+
+        # The run completed rather than dying on the poisoned session.
         assert stats.failed == 0
