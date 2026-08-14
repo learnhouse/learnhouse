@@ -44,6 +44,7 @@ import {
 import { useLHSession } from '@components/Contexts/LHSessionContext'
 import { signOut } from '@components/Contexts/AuthContext'
 import UserAvatar from '@components/Objects/UserAvatar'
+import DemoEntryCard from '@components/Objects/Demo/DemoEntryCard'
 import { createNewOrganization } from '@services/organizations/orgs'
 import { useLHAnalytics } from '@services/analytics/useLHAnalytics'
 import { AnalyticsEvent } from '@services/analytics/events'
@@ -1051,7 +1052,15 @@ export default function CreateNewOrgPage() {
                     exit="exit"
                     transition={trans}
                   >
-                    {step === 'use-type' && <StepUseType useType={useType} onSelect={setUseType} t={t} />}
+                    {step === 'use-type' && (
+                      <>
+                        <StepUseType useType={useType} onSelect={setUseType} t={t} />
+                        {/* A side path, not a wizard step: creating a real
+                            organization is untouched by it, and the card
+                            renders nothing when the instance has no demo. */}
+                        <DemoEntryCard className="mt-6" />
+                      </>
+                    )}
                     {step === 'usage' && useType === 'personal' && (
                       <StepUsagePersonal goals={personalGoals} onChange={setPersonalGoals} t={t} />
                     )}

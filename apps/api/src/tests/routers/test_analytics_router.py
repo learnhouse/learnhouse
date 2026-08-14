@@ -519,6 +519,10 @@ class TestAnalyticsRouter:
         db_session.execute.side_effect = [
             _make_execute_result(first_result=SimpleNamespace(id=100, course_uuid="course_1", name="Course 1")),
             _make_execute_result(all_result=[SimpleNamespace(user_id=7, creation_date="2024-01-01")]),
+            # Enriching the rows with user names first asks whether this is the
+            # demo organization, because there the names of other visitors must
+            # not be handed out. Not a demo here.
+            _make_execute_result(first_result=False),
             _make_execute_result(
                 all_result=[
                     SimpleNamespace(
