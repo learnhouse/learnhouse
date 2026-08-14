@@ -1,0 +1,204 @@
+{
+  "slug": "product-knowledge",
+  "name": "Knowing What We Sell",
+  "description": "The catalogue, the pricing, and the questions customers actually ask.",
+  "about": "You cannot help a customer choose between two products you do not understand. This course covers how the Riverbend catalogue is organised, how pricing and lead times really work, and the handful of questions that come up in almost every conversation.",
+  "learnings": "Navigate the catalogue; explain pricing and lead times accurately; answer the five most common customer questions; know what you are not allowed to promise.",
+  "tags": "product,catalogue,pricing",
+  "thumbnail": "product-knowledge.webp",
+  "section": "core-skills",
+  "public": true,
+  "published": true,
+  "certification": false,
+  "updates": [
+    {
+      "title": "Lead times revised for the new season",
+      "content": "Standard lead times have moved out by two days across the board. The pricing chapter has the current figures.",
+      "days_ago": 12
+    }
+  ],
+  "chapters": [
+    {
+      "slug": "pk-catalogue",
+      "name": "The catalogue",
+      "description": "How it is organised, and why.",
+      "activities": [
+        {
+          "slug": "pk-how-it-is-organised",
+          "name": "How the catalogue is organised",
+          "kind": "document",
+          "body": [
+            "h2:Three levels, and only three",
+            "p:Everything Riverbend sells sits in a category, a family within that category, and a line within that family. A customer asking for a product by name is usually naming a family, not the line they want — which is where most mis-shipments start.",
+            {"ul": [
+              "Category: the broad area. Roughly a dozen of them, and they rarely change.",
+              "Family: a group that shares a purpose and usually a supplier.",
+              "Line: the actual thing with a code, a price and a stock level. This is what goes on an order."
+            ]},
+            "h2:Why the distinction matters",
+            "p:Two lines in the same family can differ in lead time by three weeks. Confirming the family and shipping the wrong line is the single most common avoidable error here, and it is always caught after the delivery rather than before.",
+            {"info": "Always read the line code back to the customer before confirming an order. It takes four seconds and prevents the most expensive mistake in this course."},
+            {"quiz": {
+              "q": "A customer names a product but not a code. What are they most likely naming?",
+              "a": [
+                ["A family, which may contain several different lines", true],
+                ["A specific line, which you can order directly", false],
+                ["A category, which is too broad to order from", false]
+              ]
+            }}
+          ]
+        },
+        {
+          "slug": "pk-stock",
+          "name": "Reading stock levels",
+          "kind": "document",
+          "body": [
+            "h2:Available is not the same as in stock",
+            "p:The number on a line is what is physically in the warehouse. What a customer can actually have is that number minus everything already committed to other orders. Quoting the first number as though it were the second is how two customers get promised the same last unit.",
+            {"ol": [
+              "In stock: physically present, including units already spoken for.",
+              "Committed: allocated to orders that have not shipped.",
+              "Available: in stock minus committed. This is the only number worth quoting."
+            ]},
+            {"warn": "Never promise the last available unit without checking committed stock. If two people do this on the same afternoon, one customer gets a phone call nobody wants to make."}
+          ]
+        },
+        {
+          "slug": "pk-substitutes",
+          "name": "Suggesting a substitute",
+          "kind": "document",
+          "body": [
+            "h2:A good substitute solves the same problem",
+            "p:When something is unavailable, the useful question is not 'what is similar?' but 'what were they going to do with it?'. Two lines can look nearly identical on paper and be useless for a particular job.",
+            {"ul": [
+              "Ask what it is for before offering an alternative.",
+              "Say plainly how the substitute differs. Discovering the difference on delivery is far worse than hearing it now.",
+              "If there is no good substitute, say so. Pushing a poor one costs a return and some trust."
+            ]},
+            "p:Substitutions that get refused politely are fine. Substitutions that get accepted and then returned are expensive, and they are almost always the result of glossing over a difference at this stage."
+          ]
+        }
+      ]
+    },
+    {
+      "slug": "pk-pricing",
+      "name": "Pricing and lead times",
+      "description": "The two things customers ask about most.",
+      "activities": [
+        {
+          "slug": "pk-how-pricing-works",
+          "name": "How pricing works",
+          "kind": "document",
+          "body": [
+            "h2:List, tier, and agreed",
+            "p:Three prices exist for any line and they are not interchangeable. Quoting the wrong one is not a rounding error — it is a promise the company then has to either honour or retract.",
+            {"ol": [
+              "List: the published price. What a new customer sees.",
+              "Tier: an automatic discount based on volume over the last twelve months.",
+              "Agreed: a negotiated price on the account, which overrides both."
+            ]},
+            "p:Always check the account before quoting. A customer on an agreed price who is quoted list will assume we are trying it on, and they will be partly right.",
+            {"quiz": {
+              "q": "A customer has an agreed price on their account. Which price applies?",
+              "a": [
+                ["The agreed price, which overrides list and tier", true],
+                ["Whichever is lowest of the three", false],
+                ["The tier price, since it is calculated automatically", false]
+              ]
+            }}
+          ]
+        },
+        {
+          "slug": "pk-lead-times",
+          "name": "Lead times, honestly",
+          "kind": "document",
+          "body": [
+            "h2:Quote the range, not the best case",
+            "p:Every lead time has a typical case and a bad case. Quoting the typical one as though it were guaranteed feels helpful and generates a complaint about a fortnight later. Quote the range and say which end you expect.",
+            "h2:What actually moves a date",
+            {"ul": [
+              "Whether the line is held in the warehouse or ordered from the supplier.",
+              "Where it is going. Some destinations add days that have nothing to do with us.",
+              "Whether the order is complete. A single unavailable line holds the whole shipment unless the customer asks to split it."
+            ]},
+            {"info": "That last point is worth raising proactively. Many customers would happily take a partial delivery and never think to ask."},
+            {"quiz": {
+              "q": "One line on a multi-item order is unavailable. What happens by default?",
+              "a": [
+                ["The whole order waits, unless the customer asks to split it", true],
+                ["The available items ship immediately and the rest follows", false],
+                ["The unavailable line is dropped from the order", false]
+              ]
+            }}
+          ]
+        },
+        {
+          "slug": "pk-what-not-to-promise",
+          "name": "What you must not promise",
+          "kind": "document",
+          "body": [
+            "h2:Four things that are not yours to give",
+            {"ol": [
+              "A price below the agreed price on the account.",
+              "A delivery date that is not in the system, however confident you feel.",
+              "Availability of a line you have not checked in the last hour.",
+              "Any commitment about a supplier's own timelines."
+            ]},
+            "p:These are not bureaucratic. Each one has produced a real dispute, and in every case the customer was reasonable to be annoyed — they were told something by someone who works here, which makes it a company promise regardless of who said it.",
+            {"warn": "If you have already promised one of these by mistake, say so immediately to your team lead. Fixing it the same day is nearly always possible; fixing it after delivery is not."}
+          ]
+        }
+      ]
+    },
+    {
+      "slug": "pk-questions",
+      "name": "The questions everyone asks",
+      "description": "And the assignment.",
+      "activities": [
+        {
+          "slug": "pk-common-questions",
+          "name": "The five recurring questions",
+          "kind": "document",
+          "body": [
+            "h2:Learn these and you have covered most conversations",
+            {"ul": [
+              "Can I have it sooner? Sometimes, by splitting the order or paying for a faster service. Check both before saying no.",
+              "Why is it more expensive than last time? Usually a tier change or an expired agreed price. Check the account before answering.",
+              "Is this the same as the one I had before? Check the line code, not the family name.",
+              "Can I return it if it is wrong? Yes, within the returns window, unless it was made to order.",
+              "Do you have anything cheaper? Ask what it is for first — the cheaper line is often unsuitable and the return costs more than the difference."
+            ]},
+            "p:In every one of these, the answer starts with looking something up. Answering from memory is where the errors come from."
+          ]
+        },
+        {
+          "slug": "pk-walkthrough",
+          "name": "A full order, start to finish",
+          "kind": "document",
+          "body": [
+            "h2:One order, followed all the way through",
+            "p:A customer calls asking for forty units of something they describe by family name. Here is the whole path, with the decision points marked.",
+            {"ol": [
+              "Identify the line. Two lines match the family; one has a three-week lead time. Read the code back before going further.",
+              "Check the account. There is an agreed price, so list and tier are both irrelevant.",
+              "Check available stock, not stock on hand. Twenty-eight are genuinely free.",
+              "Offer the split: twenty-eight now, twelve in three weeks. The customer takes it.",
+              "Confirm in writing, with both dates and the line code."
+            ]},
+            "p:The order took six minutes. Five of those were checking things rather than typing, which is the correct ratio. Every error this course warns about would have been introduced by skipping one of those checks."
+          ]
+        },
+        {
+          "slug": "pk-catalogue-check",
+          "name": "Catalogue and pricing check",
+          "kind": "assignment",
+          "body": [
+            "h2:Quote four orders correctly",
+            "p:Four customer requests, each with an account attached. For each one, identify the correct line, work out which price applies, and give a lead time as a range.",
+            "p:One of the four is a trap: the customer names a family that contains two lines with very different lead times. Getting that one right is most of the mark."
+          ]
+        }
+      ]
+    }
+  ]
+}
