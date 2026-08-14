@@ -36,6 +36,7 @@ from src.services.security.rate_limiting import (
 from src.security.org_auth import is_org_member, enforce_org_mfa
 from src.security.rbac.constants import ADMIN_ROLE_ID
 from src.services.orgs.invites import send_invite_email
+from src.services.demo.guards import hide_other_visitors
 from src.services.orgs.orgs import get_org_default_language, rbac_check
 from src.services.search.normalization import LIKE_ESCAPE_CHAR, build_like_pattern
 from src.services.users.emails import send_role_changed_email
@@ -62,6 +63,17 @@ def _csv_safe(value):
 # input (and ":"/whitespace that would shape the Redis invite key), not to
 # fully validate deliverability — the mail provider is the source of truth.
 _EMAIL_RE = re.compile(r"^[^@\s:]{1,64}@[^@\s:]{1,255}\.[a-zA-Z]{2,}$")
+
+
+def _hide_other_visitors(statement, org: Organization, acting_user_id: int):
+    """Restrict a member listing to the seeded students plus the caller.
+
+    The seeded students are the point of the members page, so they stay; other
+    visitors do not. See ``hide_other_visitors`` for why.
+    """
+    if not org.is_demo:
+        return statement
+    return hide_other_visitors(statement, acting_user_id)
 
 
 def _looks_like_email(value: str) -> bool:
@@ -146,6 +158,8 @@ async def get_organization_users(
         .where(Organization.id == org_id)
     )
 
+    base_statement = _hide_other_visitors(base_statement, org, acting_user_id)
+
     # Apply search filter if provided
     if search:
         search_pattern = build_like_pattern(search)
@@ -181,6 +195,13 @@ async def get_organization_users(
             .join(Organization)
             .where(Organization.id == org_id)
             .join(UserGroupUser, (UserGroupUser.user_id == User.id) & (UserGroupUser.usergroup_id == usergroup_id))
+        )
+        # This count is built from its own query rather than from
+        # base_statement, so it needs the demo filter applied again — otherwise
+        # the page hides the visitors but the tally above it still counts them,
+        # which both looks broken and leaks how many people are in there.
+        in_group_count_stmt = _hide_other_visitors(
+            in_group_count_stmt, org, acting_user_id
         )
         if search:
             search_pattern = build_like_pattern(search)
@@ -377,6 +398,8 @@ async def export_organization_users_csv(
         .join(Organization)
         .where(Organization.id == org_id)
     )
+
+    base_statement = _hide_other_visitors(base_statement, org, export_acting_user_id)
 
     if search:
         search_pattern = build_like_pattern(search)
@@ -828,12 +851,19 @@ async def update_user_role(
         },
     )
 
-    # Send role change notification email
+    # Send role change notification email.
+    #
+    # Not in the demo. Changing a role there is worth demonstrating and the
+    # refresh undoes it, but the two side effects below reach outside the
+    # sandbox: the email goes to another visitor's real inbox carrying an
+    # organization name that visitor chose, and the Loops call puts a real
+    # address into the marketing audience. Both are the demo being used as a
+    # relay rather than as a demo.
     role_change_user = None
     try:
         user_stmt = select(User).where(User.id == user_id)
         role_change_user = (await db_session.execute(user_stmt)).scalars().first()
-        if role_change_user and role_change_user.email:
+        if role_change_user and role_change_user.email and not org.is_demo:
             org_config_stmt = select(OrganizationConfig).where(OrganizationConfig.org_id == org.id)
             org_config = (await db_session.execute(org_config_stmt)).scalars().first()
             # The org's own host (verified custom domain when it has one), so
@@ -858,7 +888,7 @@ async def update_user_role(
     # audience. Best-effort, SaaS-gated, never fails the role change. Note this
     # targets the PROMOTED user (not the acting admin), so the sync must happen
     # here in the API rather than from a client call that only knows the caller.
-    if role_id == ADMIN_ROLE_ID:
+    if role_id == ADMIN_ROLE_ID and not org.is_demo:
         try:
             from src.services.marketing.loops import record_org_admin_in_loops
             if role_change_user and role_change_user.email:
@@ -907,6 +937,17 @@ async def invite_batch_users(
 
     # RBAC check
     await rbac_check(request, org.org_uuid, current_user, "create", db_session)
+
+    # This is the endpoint that actually sends the mail, so it needs the demo
+    # guard even though create_invite_code already has one — an invite code is
+    # optional here, and without one send_invite_email still delivers, pointing
+    # at the org's /signup. Every visitor to the shared demo holds admin on it,
+    # and the free-tier age gate below exempts paid plans, which the demo is by
+    # design: an account minutes old could otherwise have the platform email 25
+    # strangers at a time under an organization name it controls.
+    from src.services.demo.guards import require_not_demo_org
+
+    await require_not_demo_org(org_id, db_session)
 
     acting_user_id = resolve_acting_user_id(current_user)
 

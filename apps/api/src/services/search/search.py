@@ -225,6 +225,18 @@ async def search_across_org(
                 )
             )
         )
+
+        # Membership is what gates this, and in the shared demo everyone who
+        # ever opened it is a member — so a two-letter query returned a roster
+        # of real people, with their names, usernames, bios and avatars, to any
+        # visitor. The seeded students remain searchable; they are the point.
+        from src.services.demo.guards import hide_other_visitors
+
+        if org.is_demo:
+            users_q = hide_other_visitors(
+                users_q, resolve_acting_user_id(current_user)
+            )
+
         users, total_users = await _paginate_and_count(db_session, users_q, page, limit)
 
     # ── Communities ──────────────────────────────────────────────────────────

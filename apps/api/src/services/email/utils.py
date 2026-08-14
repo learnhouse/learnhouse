@@ -400,6 +400,21 @@ def send_email(
         logger.error("Refusing to send email: invalid recipient %r", to)
         raise HTTPException(status_code=400, detail="Invalid recipient email address")
 
+    # The demo organization's fake students hold addresses on a reserved
+    # `.invalid` domain, which by RFC 2606 can never resolve. Dropping them here
+    # rather than trusting every caller to filter makes "a demo student cannot
+    # receive mail" a property of the system instead of a convention: no code
+    # path added later can accidentally mail forty fictional people, and the
+    # provider is never handed an address it will bounce (which costs sender
+    # reputation on a shared domain).
+    from src.services.demo.flags import is_demo_email
+
+    if is_demo_email(to_addr):
+        logger.warning(
+            "Dropping email to demo address %s (subject=%r)", to_addr, subject
+        )
+        return None
+
     if mailing.email_provider == "smtp":
         return _send_email_smtp(sender, to_addr, subject, body, mailing, headers)
     else:

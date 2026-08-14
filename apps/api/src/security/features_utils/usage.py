@@ -195,6 +195,17 @@ async def log_usage_event(
     if feature not in PLAN_BASED_FEATURES:
         return
 
+    # UsageEvent is the billing ledger that get_peak_usage and
+    # calculate_billable_overage read. The demo generator never calls this, but
+    # the demo creates and destroys members and courses on every refresh, so a
+    # future caller wiring usage logging into a path the refresh touches would
+    # quietly start billing against synthetic churn. Cheaper to make that
+    # impossible here than to re-audit every call site later.
+    from src.services.demo.guards import is_demo_org
+
+    if await is_demo_org(org_id, db_session):
+        return
+
     # Get current actual count
     usage_after = await _get_actual_usage(feature, org_id, db_session)
 

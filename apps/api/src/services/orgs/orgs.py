@@ -157,12 +157,20 @@ async def _enforce_free_org_cap(
 
     Only orgs where the user is admin count toward the cap. A user with at least
     one paid organization is exempt (a customer, not free-tier).
+
+    The shared demo organization is excluded. Visitors are joined to it as
+    admin, so without this filter simply looking at the demo would consume one
+    of a user's three free slots — and a user who looked at it three times over
+    could not create a real organization at all.
     """
     admin_org_ids = (
         await db_session.execute(
-            select(UserOrganization.org_id).where(
+            select(UserOrganization.org_id)
+            .join(Organization, Organization.id == UserOrganization.org_id)
+            .where(
                 UserOrganization.user_id == int(current_user.id),
                 UserOrganization.role_id == ADMIN_ROLE_ID,
+                Organization.is_demo.is_(False),
             )
         )
     ).scalars().all()
@@ -439,6 +447,32 @@ async def update_org(
     # RBAC check
     await rbac_check(request, org.org_uuid, current_user, "update", db_session)
 
+    # Everything else on the demo org is fair game — editing the name or logo
+    # is part of what a prospect is here to try, and the refresh puts it back.
+    # Two fields are not:
+    #
+    # `slug` is how the demo is reached and how visitors are joined to it, so
+    # one visitor renaming it would take the demo offline for everyone until
+    # the next provision.
+    #
+    # `scripts` is arbitrary JavaScript: OrgScripts injects each entry as a
+    # real <script> element on every page of the org. Every demo visitor holds
+    # admin, and the demo is a shared public subdomain, so without this one
+    # visitor could run code in every later visitor's browser. The refresh also
+    # resets it, but this stops it being set at all rather than merely being
+    # undone at the next tick.
+    if org.is_demo:
+        if org_object.slug is not None and org_object.slug != org.slug:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="The demo organization's address cannot be changed.",
+            )
+        if org_object.scripts is not None:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Custom scripts cannot be set on the demo organization.",
+            )
+
     # Verify if the new slug is already in use
     statement = select(Organization).where(Organization.slug == org_object.slug)
     slug_available = (await db_session.execute(statement)).scalars().first()
@@ -692,6 +726,18 @@ async def delete_org(
         raise HTTPException(
             status_code=404,
             detail="Organization not found",
+        )
+
+    # The demo organization is shared, and every visitor holds admin on it — so
+    # the RBAC check below would happily let any one of them delete it for
+    # everybody. It also has its own teardown path: this one leaves the org's
+    # media behind in storage and sends a "your organization was deleted"
+    # email, which is the wrong message for something that was always shared
+    # and temporary.
+    if org.is_demo:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="The demo organization cannot be deleted.",
         )
 
     # Store org info for logging before deletion

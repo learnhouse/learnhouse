@@ -120,7 +120,45 @@ export async function requireOrgBillingAccess(
   if (!canManageOrgBilling(user, orgId)) {
     return { error: NextResponse.json({ error: "Forbidden" }, { status: 403 }) };
   }
+  if (isDemoOrg(user, orgId)) {
+    // The demo runs on the pro plan so every feature is demonstrable, which
+    // also makes it look like an ordinary billable organization — and every
+    // visitor holds admin on it, so the authorization check above passes for
+    // all of them. Without this a prospect clicking Upgrade could start a real
+    // Stripe subscription against a shared sandbox that is rewritten on a
+    // schedule, for an organization that would never be theirs.
+    //
+    // Enforced here rather than per route: this is the single chokepoint every
+    // org-scoped billing endpoint already passes through.
+    return {
+      error: NextResponse.json(
+        { error: "Billing is not available for the demo organization" },
+        { status: 404 },
+      ),
+    };
+  }
   return { user };
+}
+
+/**
+ * Whether `orgId` is the shared demo organization, according to the caller's
+ * verified session.
+ *
+ * Read from the session roles rather than fetched: the session is already
+ * loaded and already trusted for authorization, each role entry carries its
+ * org's `is_demo`, and it adds no request. An earlier version called
+ * `GET /orgs/{id}` — which does not exist (405), so the guard silently never
+ * fired.
+ *
+ * A superadmin who has never entered the demo has no role entry for it and so
+ * is not caught here; they would be deliberately billing a sandbox, and the
+ * backend still refuses the plan write.
+ */
+function isDemoOrg(user: AuthedUser, orgId: string | number): boolean {
+  const target = String(orgId);
+  return user.roles.some(
+    (r: any) => String(r?.org?.id) === target && r?.org?.is_demo === true,
+  );
 }
 
 /**

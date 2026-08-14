@@ -67,17 +67,42 @@ async def _enforce_plan(org_id: int, db_session: AsyncSession) -> None:
             )
 
 
-async def _verify_target_in_org(user_id: int, org_id: int, db_session: AsyncSession) -> None:
+async def _org_member_ids(
+    user_ids: list[int], org_id: int, db_session: AsyncSession, acting_user_id: int
+) -> set[int]:
+    """Which of `user_ids` this caller may pull a dossier for.
+
+    Membership is the rule everywhere else. In the shared demo it is not
+    enough: every visitor is a member and an admin, so "member of this org"
+    includes every stranger who has ever opened the demo — and a dossier is the
+    most revealing thing in the product, carrying an email address, login IPs,
+    user agents and a cross-organization connection history. Only the seeded
+    students, and the caller themselves, are answerable there.
+    """
+    from src.db.users import User
+    from src.services.demo.guards import hide_other_visitors, is_demo_org
+
+    statement = (
+        select(UserOrganization.user_id)
+        .join(User, User.id == UserOrganization.user_id)
+        .where(
+            UserOrganization.org_id == org_id,
+            UserOrganization.user_id.in_(user_ids),  # type: ignore[attr-defined]
+        )
+    )
+    if await is_demo_org(org_id, db_session):
+        statement = hide_other_visitors(statement, acting_user_id)
+
+    return set((await db_session.execute(statement)).scalars().all())
+
+
+async def _verify_target_in_org(
+    user_id: int, org_id: int, db_session: AsyncSession, acting_user_id: int
+) -> None:
     """Ensure the TARGET user belongs to this org (no cross-org disclosure)."""
     if await is_user_superadmin(user_id, db_session):
         return
-    membership = (await db_session.execute(
-        select(UserOrganization).where(
-            UserOrganization.user_id == user_id,
-            UserOrganization.org_id == org_id,
-        )
-    )).scalars().first()
-    if not membership:
+    if not await _org_member_ids([user_id], org_id, db_session, acting_user_id):
         raise HTTPException(status_code=404, detail="User is not a member of this organization")
 
 
@@ -180,9 +205,9 @@ async def get_user_dossier(
     current_user: PublicUser | AnonymousUser | APITokenUser = Depends(get_current_user),
     db_session: AsyncSession = Depends(get_db_session),
 ):
-    await _require_admin(current_user, org_id, db_session)
+    acting_user_id = await _require_admin(current_user, org_id, db_session)
     await _enforce_plan(org_id, db_session)
-    await _verify_target_in_org(user_id, org_id, db_session)
+    await _verify_target_in_org(user_id, org_id, db_session, acting_user_id)
 
     days = _safe_days(request)
     fetcher = await _make_behavior_fetcher(org_id, user_id, days)
@@ -215,18 +240,13 @@ async def get_users_summary(
     current_user: PublicUser | AnonymousUser | APITokenUser = Depends(get_current_user),
     db_session: AsyncSession = Depends(get_db_session),
 ):
-    await _require_admin(current_user, org_id, db_session)
+    acting_user_id = await _require_admin(current_user, org_id, db_session)
     await _enforce_plan(org_id, db_session)
 
     user_ids = _parse_user_ids(request)
-    # Only include users who actually belong to this org (silently drop others —
+    # Only include users this caller may see (silently drop the others —
     # never disclose that a given id exists elsewhere).
-    members = set((await db_session.execute(
-        select(UserOrganization.user_id).where(
-            UserOrganization.org_id == org_id,
-            UserOrganization.user_id.in_(user_ids),  # type: ignore[attr-defined]
-        )
-    )).scalars().all())
+    members = await _org_member_ids(user_ids, org_id, db_session, acting_user_id)
     scoped_ids = [uid for uid in user_ids if uid in members]
 
     rows = await build_users_summary(db_session, scoped_ids, org_id)
@@ -356,7 +376,7 @@ async def export_audit(
     current_user: PublicUser | AnonymousUser | APITokenUser = Depends(get_current_user),
     db_session: AsyncSession = Depends(get_db_session),
 ):
-    await _require_admin(current_user, org_id, db_session)
+    acting_user_id = await _require_admin(current_user, org_id, db_session)
     await _enforce_plan(org_id, db_session)
 
     fmt = request.query_params.get("format", "json")
@@ -364,12 +384,7 @@ async def export_audit(
         raise HTTPException(status_code=400, detail="format must be 'json' or 'csv'")
 
     user_ids = _parse_user_ids(request)
-    members = set((await db_session.execute(
-        select(UserOrganization.user_id).where(
-            UserOrganization.org_id == org_id,
-            UserOrganization.user_id.in_(user_ids),  # type: ignore[attr-defined]
-        )
-    )).scalars().all())
+    members = await _org_member_ids(user_ids, org_id, db_session, acting_user_id)
     scoped_ids = [uid for uid in user_ids if uid in members]
     if not scoped_ids:
         raise HTTPException(status_code=404, detail="No requested users belong to this organization")

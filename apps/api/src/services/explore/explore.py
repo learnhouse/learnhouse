@@ -44,6 +44,12 @@ async def get_orgs_for_explore(
         select(Organization)
         .where(
             Organization.explore == True,
+            # The demo org is created with explore=False and rejects being
+            # flipped on, so this is belt and braces — but Explore is a public
+            # directory of real schools, and listing a shared sandbox whose
+            # contents reset every hour would be misleading whatever else goes
+            # wrong.
+            Organization.is_demo.is_(False),
         )
     )
 

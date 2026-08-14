@@ -65,6 +65,15 @@ async def create_invite_code(
     db_session: AsyncSession,
     usergroup_id: Optional[int] = None,
 ):
+    # Every visitor to the shared demo holds admin on it, so without this an
+    # invite code minted there is a way for anyone to have the platform email
+    # arbitrary strangers on our domain. This is the abuse vector the demo
+    # would otherwise open, and it is blocked at the service rather than in
+    # the UI for that reason.
+    from src.services.demo.guards import require_not_demo_org
+
+    await require_not_demo_org(org_id, db_session)
+
     # Redis init
     LH_CONFIG = get_learnhouse_config()
     redis_conn_string = LH_CONFIG.redis_config.redis_connection_string
