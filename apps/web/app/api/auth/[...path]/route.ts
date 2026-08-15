@@ -209,8 +209,22 @@ async function proxyRequest(
     // Best-effort backend token invalidation
     try {
       const logoutHeaders: HeadersInit = {}
+      // Both cookies must go: the backend identifies the session to revoke from
+      // LH_access (Authorization header or the LH_access cookie — never
+      // LH_refresh), so sending only the refresh cookie made every logout 401
+      // and skipped server-side revocation entirely.
+      const logoutCookieParts: string[] = []
+      if (accessToken?.value) {
+        logoutCookieParts.push(`${ACCESS_TOKEN_COOKIE}=${accessToken.value}`)
+      }
       if (refreshToken?.value) {
-        logoutHeaders['Cookie'] = `${REFRESH_TOKEN_COOKIE}=${refreshToken.value}`
+        logoutCookieParts.push(`${REFRESH_TOKEN_COOKIE}=${refreshToken.value}`)
+      }
+      if (logoutCookieParts.length > 0) {
+        logoutHeaders['Cookie'] = logoutCookieParts.join('; ')
+      }
+      if (authHeader) {
+        logoutHeaders['Authorization'] = authHeader
       }
       // Backend logout is DELETE /auth/logout — using POST returned 405 and
       // silently skipped server-side session revocation, so revoked tokens

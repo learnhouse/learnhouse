@@ -704,12 +704,29 @@ async def update_user_password(
 
     # Update user
     user.password = security_hash_password(form.new_password)
+    # SECURITY: stamp the change so every token minted before it is rejected by
+    # get_current_user and /auth/refresh. Without this, a session stolen before
+    # the password change survives it for the full refresh-token lifetime — the
+    # reset-code flow already stamps it, this one did not.
+    user.password_changed_at = datetime.now(timezone.utc).replace(tzinfo=None)
     user.update_date = str(datetime.now())
 
     # Update user in database
     db_session.add(user)
     await db_session.commit()
     await db_session.refresh(user)
+
+    # Belt-and-braces: also push the Redis revocation cutoff so tokens without
+    # an ``iat`` (pre-upgrade) die too. Never block the password change on it.
+    if user.id is not None:
+        try:
+            # Imported here: src.security.auth imports this module, so a
+            # top-level import would be circular.
+            from src.security.auth import revoke_user_sessions_before
+
+            revoke_user_sessions_before(user.id)
+        except Exception:
+            pass
 
     user = UserRead.model_validate(user)
 
