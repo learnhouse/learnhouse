@@ -7,6 +7,10 @@ export function generateCaddyfile(config: SetupConfig): string {
   email ${email}
 }
 
+www.${config.domain} {
+  redir https://${config.domain}{uri} permanent
+}
+
 ${config.domain} {
   reverse_proxy learnhouse-app:80
 }
