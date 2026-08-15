@@ -1,0 +1,296 @@
+{
+  "slug": "onboarding-essentials",
+  "name": "Your First Two Weeks",
+  "description": "What to read, who to meet, and what nobody will think to tell you.",
+  "about": "New starters lose their first fortnight to questions they feel silly asking. This course answers them up front: how the week is shaped, who owns what, where things are written down, and how to ask for help without feeling like a nuisance.",
+  "learnings": "Find your way around Riverbend; know who to ask; run a useful first one-to-one; set up your tools properly.",
+  "tags": "onboarding,new starter,basics",
+  "thumbnail": "onboarding-essentials.webp",
+  "section": "getting-started",
+  "public": true,
+  "published": true,
+  "certification": true,
+  "certification_name": "Riverbend Onboarding",
+  "certification_description": "Awarded to recognise that the holder has completed Riverbend's onboarding programme and can find their way around the company, its people and its documentation.",
+  "certification_type": "completion",
+  "certificate_pattern": "modern",
+  "updates": [
+    {
+      "title": "Refreshed for the new intake",
+      "content": "The tools chapter now covers the shared calendar properly, and the org chart has been redrawn after the January reshuffle.",
+      "days_ago": 9
+    },
+    {
+      "title": "Added: how to ask for help",
+      "content": "New activity in chapter three, after feedback that people were sitting on blockers for days rather than asking.",
+      "days_ago": 26
+    }
+  ],
+  "chapters": [
+    {
+      "slug": "oe-landing",
+      "name": "Landing",
+      "description": "The shape of your first week.",
+      "activities": [
+        {
+          "slug": "oe-first-week",
+          "name": "What your first week looks like",
+          "kind": "document",
+          "body": [
+            "h2:The week is deliberately quiet",
+            "p:Nobody expects output from you this week. The work is to build a map: of the company, of your team, and of where things are written down. People who rush past this stage spend their second month asking questions they could have answered in week one.",
+            "h2:What is already booked",
+            {
+              "ol": [
+                "Monday: a welcome session with your manager, and your accounts switched on.",
+                "Tuesday and Wednesday: shadowing whoever does the job closest to yours.",
+                "Thursday: a walk through the product with someone from the support team.",
+                "Friday: a half-hour with your manager to say what is still confusing."
+              ]
+            },
+            "p:Everything else is yours to fill. If a day looks empty, that is on purpose — use it to read, to poke at the product, and to write down what does not make sense yet.",
+            {
+              "info": "Keep a running list of things that confused you. It is the most useful document you will ever write here, and it expires within a month."
+            },
+            {
+              "quiz": {
+                "q": "What is the main goal of your first week?",
+                "a": [
+                  [
+                    "Building a map of the company, the team and the documentation",
+                    true
+                  ],
+                  [
+                    "Shipping your first piece of work",
+                    false
+                  ],
+                  [
+                    "Meeting every single person in the company",
+                    false
+                  ]
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "slug": "oe-who-does-what",
+          "name": "Who does what",
+          "kind": "document",
+          "body": [
+            "h2:Four groups, and what they own",
+            "p:Riverbend is small enough that you will eventually know everyone, and large enough that you will not manage it this month. Start with the four groups you will actually deal with.",
+            {
+              "ul": [
+                "Supply: decides what we stock and what it costs. Ask them anything about availability.",
+                "Accounts: owns the relationship with each customer, including the awkward conversations about money.",
+                "Support: answers customers directly, and knows more about how the product really behaves than anyone.",
+                "Operations: keeps the warehouse and the deliveries honest. If a date is at risk, they know first."
+              ]
+            },
+            "h2:The rule of thumb",
+            "p:If a question is about what we sell, ask Supply. If it is about a specific customer, ask whoever owns that account. If it is about something that broke, ask Support before you guess. Nobody minds being asked; everybody minds finding out late.",
+            {
+              "quiz": {
+                "q": "A customer asks whether an item will be back in stock next month. Who do you ask first?",
+                "a": [
+                  [
+                    "Supply",
+                    true
+                  ],
+                  [
+                    "Operations",
+                    false
+                  ],
+                  [
+                    "Accounts",
+                    false
+                  ]
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "slug": "oe-tools",
+          "name": "Setting up your tools",
+          "kind": "document",
+          "body": [
+            "h2:Do these four things today",
+            {
+              "ol": [
+                "Sign in to every account in your welcome email, and turn on two-factor authentication while you are there.",
+                "Add yourself to the shared team calendar so people can see when you are free.",
+                "Set a profile photo and a real name. It matters more than it sounds when half the company only meets you in writing.",
+                "Install the handbook bookmark. Almost every process question is answered there."
+              ]
+            },
+            {
+              "warn": "Do not forward work documents to a personal address to read them at home. It is the single most common way company data leaks, and it is entirely avoidable."
+            },
+            "p:If something will not let you in, say so on the first day rather than working around it. Access problems are five minutes for the person who can fix them and a week of quiet frustration for you."
+          ]
+        }
+      ]
+    },
+    {
+      "slug": "oe-working",
+      "name": "How we work",
+      "description": "The habits that make the rest of it easier.",
+      "activities": [
+        {
+          "slug": "oe-meetings",
+          "name": "Meetings, and how to survive them",
+          "kind": "document",
+          "body": [
+            "h2:Every meeting needs three things",
+            "p:A reason to exist, a person responsible for it, and a written outcome. If a meeting invite arrives without those, it is entirely reasonable to reply and ask what the meeting is for. People will thank you.",
+            "h2:Your part in them",
+            {
+              "ul": [
+                "Read whatever was circulated beforehand. Meetings where nobody read the document become meetings where somebody reads the document aloud.",
+                "Say the uncomfortable thing early. A concern raised at the end is a concern raised too late.",
+                "If you agreed to do something, write it down yourself. Do not rely on someone else's notes."
+              ]
+            },
+            {
+              "info": "Declining a meeting you have nothing to contribute to is not rude here. Attending in silence for an hour is the more expensive option."
+            },
+            {
+              "quiz": {
+                "q": "You are invited to a meeting with no agenda. What is the expected response?",
+                "a": [
+                  [
+                    "Reply and ask what the meeting is for",
+                    true
+                  ],
+                  [
+                    "Attend and hope it becomes clear",
+                    false
+                  ],
+                  [
+                    "Decline without saying anything",
+                    false
+                  ]
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "slug": "oe-writing-things-down",
+          "name": "Writing things down",
+          "kind": "document",
+          "body": [
+            "h2:If it is not written down, it did not happen",
+            "p:Riverbend runs across three sites and two time zones. A decision made in conversation and never recorded will be re-made, differently, within a month. That is not a hypothetical — it is the single most common source of rework here.",
+            "h2:What is worth recording",
+            {
+              "ul": [
+                "Decisions, and crucially the reason for them. The reason is what stops the decision being reopened.",
+                "Anything a customer was promised, including dates.",
+                "Anything that surprised you, while it is still surprising."
+              ]
+            },
+            "p:What is not worth recording: a transcript of every conversation. Aim for the shortest note a colleague could act on in six months without asking you a follow-up question."
+          ]
+        },
+        {
+          "slug": "oe-asking-for-help",
+          "name": "How to ask for help",
+          "kind": "document",
+          "body": [
+            "h2:The two-hour rule",
+            "p:If you have been stuck on the same thing for two hours, stop and ask. Nobody here is impressed by silent struggling, and the cost of a blocked person is much higher than the cost of a five-minute answer.",
+            "h2:Ask a question people can answer",
+            "p:A good request tells the other person what you were trying to do, what you tried, and what happened instead. A bad one says it is not working. The difference is roughly a day of turnaround.",
+            {
+              "ul": [
+                "What I was trying to do.",
+                "What I tried, and what I expected.",
+                "What actually happened, with the exact error or wording.",
+                "What I think might be going on, if anything."
+              ]
+            },
+            {
+              "info": "Asking in a shared channel rather than a direct message means the answer helps the next person too — and you are rarely the first to hit it."
+            },
+            {
+              "quiz": {
+                "q": "How long should you stay stuck before asking for help?",
+                "a": [
+                  [
+                    "About two hours",
+                    true
+                  ],
+                  [
+                    "Until the end of the day",
+                    false
+                  ],
+                  [
+                    "Until your next one-to-one",
+                    false
+                  ]
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "slug": "oe-settling",
+      "name": "Settling in",
+      "description": "The first month, and proving you have landed.",
+      "activities": [
+        {
+          "slug": "oe-first-one-to-one",
+          "name": "Your first one-to-one",
+          "kind": "document",
+          "body": [
+            "h2:It is your meeting, not your manager's",
+            "p:The half hour is yours to spend. Managers who fill it with status updates are wasting it, and so are new starters who arrive with nothing to say. Bring two or three things you actually want addressed.",
+            "h2:Things worth raising early",
+            {
+              "ul": [
+                "What would a good first three months look like, specifically?",
+                "Which of the things I am confused about should I stop worrying about?",
+                "Who should I be talking to that I have not met yet?"
+              ]
+            },
+            "p:Ask what good looks like now rather than at your first review. Expectations discovered in month three are expectations you spent two months missing."
+          ]
+        },
+        {
+          "slug": "oe-common-mistakes",
+          "name": "The mistakes everyone makes",
+          "kind": "document",
+          "body": [
+            "h2:Four you can skip",
+            {
+              "ol": [
+                "Waiting to be given work. Nobody is holding a queue for you. Ask what would be useful and pick something up.",
+                "Nodding along to acronyms. Ask the first time and it takes ten seconds; ask in month four and it is awkward for everyone.",
+                "Promising a customer a date you have not checked. Once said, it is very hard to unsay.",
+                "Assuming everything undocumented is deliberate. Most of it is just nobody having got to it — including things you could write up yourself."
+              ]
+            },
+            {
+              "info": "The fourth one is an opportunity. New starters see the gaps clearly for about six weeks, and then stop noticing them like everyone else."
+            }
+          ]
+        },
+        {
+          "slug": "oe-orientation-check",
+          "name": "Orientation check",
+          "kind": "assignment",
+          "body": [
+            "h2:Show that you have landed",
+            "p:A short check covering the ground in this course: who owns what, how we record decisions, and how to ask for help well. It is marked, but it is not a trap — everything here is answered somewhere in the three chapters above.",
+            "p:There is a written question at the end asking what confused you most in your first fortnight. Answer it honestly. Those answers are what this course gets rewritten from."
+          ]
+        }
+      ]
+    }
+  ]
+}

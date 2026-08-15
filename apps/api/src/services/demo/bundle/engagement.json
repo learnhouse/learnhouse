@@ -1,0 +1,274 @@
+{
+  "community": {
+    "slug": "riverbend-commons",
+    "name": "The Commons",
+    "description": "Where people at Riverbend ask the questions that do not fit anywhere else. Anyone can post; be specific and be kind.",
+    "public": true,
+    "discussions": [
+      {
+        "slug": "d-escalation-threshold",
+        "title": "Where exactly is the line on escalating a refund?",
+        "label": "question",
+        "emoji": "🤔",
+        "author": "student-04",
+        "days_ago": 3,
+        "upvotes": 12,
+        "content": "The course says escalate above the threshold, and I know where to find the number. What I cannot work out is the case where a customer asks for two smaller refunds in the same week that add up to more than it.\n\nDo I treat them separately, or together? Splitting to stay underneath is explicitly not allowed when we do it, so I assume the same applies when it happens by accident.",
+        "comments": [
+          {
+            "author": "student-11",
+            "days_ago": 3,
+            "upvotes": 8,
+            "content": "Together. The rule is about the total exposure on the account, not the shape of the requests. I raise anything that crosses the line cumulatively within a month and nobody has ever minded."
+          },
+          {
+            "author": "student-02",
+            "days_ago": 2,
+            "upvotes": 3,
+            "content": "Worth adding a note on the account when you do, so whoever picks it up next can see why it was escalated rather than working it out from the amounts."
+          }
+        ]
+      },
+      {
+        "slug": "d-first-week-notes",
+        "title": "The running confusion list actually works",
+        "label": "showcase",
+        "emoji": "📓",
+        "author": "student-17",
+        "days_ago": 8,
+        "upvotes": 21,
+        "content": "Sceptical about this one at first, but I kept the list through my first fortnight and it turned into the most useful thing I have written here.\n\nHalf of it answered itself by week three. The other half became four questions for my manager that we would otherwise never have got to, and two of them turned out to be gaps in the handbook rather than gaps in me.",
+        "comments": [
+          {
+            "author": "student-23",
+            "days_ago": 7,
+            "upvotes": 5,
+            "content": "Same. The bit nobody says is that the list stops being possible after about six weeks — you stop noticing what is strange."
+          }
+        ]
+      },
+      {
+        "slug": "d-substitutes",
+        "title": "How do you phrase a substitute without overselling it?",
+        "label": "question",
+        "emoji": "📦",
+        "author": "student-08",
+        "days_ago": 12,
+        "upvotes": 9,
+        "content": "When the line they want is unavailable I always feel like I am either underselling the alternative or glossing over the difference. Both end badly — one loses the sale, the other comes back as a return.\n\nWhat wording do people use?",
+        "comments": [
+          {
+            "author": "student-31",
+            "days_ago": 11,
+            "upvotes": 14,
+            "content": "I say what it is for first, then name the difference before the similarity: \"This one is the same spec but the lead time is three weeks rather than one — does that still work for the job?\" Putting the drawback first means they trust the rest of it."
+          },
+          {
+            "author": "student-15",
+            "days_ago": 10,
+            "upvotes": 4,
+            "content": "And if there genuinely is not a good substitute, saying so outright has never once lost me an account. Pushing a bad one has."
+          }
+        ]
+      },
+      {
+        "slug": "d-report-definitions",
+        "title": "Reminder: check whether the metric definition moved",
+        "label": "idea",
+        "emoji": "📊",
+        "author": "student-29",
+        "days_ago": 19,
+        "upvotes": 16,
+        "content": "We spent most of a meeting last month explaining a jump that turned out to be a definition change — returns started being counted when processed rather than when requested.\n\nSuggestion: whoever changes a definition adds a line to the report footer with the date. Costs nothing, saves an afternoon.",
+        "comments": [
+          {
+            "author": "student-06",
+            "days_ago": 18,
+            "upvotes": 7,
+            "content": "Strongly in favour. Would also catch the case where the person who changed it has left."
+          }
+        ]
+      },
+      {
+        "slug": "d-welcome",
+        "title": "Welcome — how this space works",
+        "label": "announcement",
+        "emoji": "👋",
+        "author": "student-00",
+        "days_ago": 40,
+        "upvotes": 27,
+        "pinned": true,
+        "content": "This is the place for questions that do not have an obvious owner, and for writing up something you worked out the hard way so the next person does not have to.\n\nTwo norms: be specific enough that someone can actually answer, and answer in the open rather than by direct message. The second one is what makes the first one worth doing."
+      }
+    ]
+  },
+  "boards": [
+    {
+      "slug": "b-onboarding-map",
+      "name": "Onboarding journey map",
+      "description": "Where new starters get stuck in their first fortnight, mapped by the people who just went through it.",
+      "public": true,
+      "owner": "student-00",
+      "members": [
+        "student-04",
+        "student-11",
+        "student-17"
+      ]
+    },
+    {
+      "slug": "b-support-playbook",
+      "name": "Support escalation playbook",
+      "description": "Working canvas for the escalation triggers — what to do, who owns it, what the customer hears.",
+      "public": true,
+      "owner": "student-11",
+      "members": [
+        "student-02",
+        "student-08"
+      ]
+    },
+    {
+      "slug": "b-q3-retro",
+      "name": "Quarterly retro",
+      "description": "What went well, what did not, and what we are actually changing about it.",
+      "public": false,
+      "owner": "student-23",
+      "members": [
+        "student-15",
+        "student-29",
+        "student-06"
+      ]
+    }
+  ],
+  "playgrounds": [
+    {
+      "slug": "p-escalation-decider",
+      "name": "Should I escalate this?",
+      "description": "Four questions that settle it. Built from the triggers in Customer Support Fundamentals.",
+      "published": true,
+      "owner": "student-11",
+      "course": "customer-support-fundamentals",
+      "html": "<div style=\"font-family:system-ui,sans-serif;max-width:640px;margin:0 auto;padding:24px;color:#111\"><h2 style=\"margin:0 0 4px\">Should I escalate this?</h2><p style=\"color:#666;margin:0 0 20px\">Tick anything that is true. Any one of them is enough.</p><form id=\"f\"><label style=\"display:block;padding:12px;border:1px solid #e5e5e5;border-radius:10px;margin-bottom:8px;cursor:pointer\"><input type=\"checkbox\"> More than one customer has reported this in the last hour</label><label style=\"display:block;padding:12px;border:1px solid #e5e5e5;border-radius:10px;margin-bottom:8px;cursor:pointer\"><input type=\"checkbox\"> Legal action, a regulator or the press has been mentioned</label><label style=\"display:block;padding:12px;border:1px solid #e5e5e5;border-radius:10px;margin-bottom:8px;cursor:pointer\"><input type=\"checkbox\"> A refund or credit above the threshold is on the table</label><label style=\"display:block;padding:12px;border:1px solid #e5e5e5;border-radius:10px;margin-bottom:16px;cursor:pointer\"><input type=\"checkbox\"> Three days have passed without progress</label></form><div id=\"out\" style=\"padding:16px;border-radius:10px;background:#f4f4f5;font-weight:600\">Nothing ticked — it is yours to handle.</div><script>const f=document.getElementById('f'),o=document.getElementById('out');f.addEventListener('change',()=>{const n=[...f.querySelectorAll('input')].filter(i=>i.checked).length;o.textContent=n?'Escalate now — '+n+' trigger'+(n>1?'s':'')+' met.':'Nothing ticked — it is yours to handle.';o.style.background=n?'#fee2e2':'#f4f4f5';o.style.color=n?'#991b1b':'#111';});</script></div>"
+    },
+    {
+      "slug": "p-available-stock",
+      "name": "Available stock calculator",
+      "description": "Stock on hand minus committed. The number you are allowed to quote.",
+      "published": true,
+      "owner": "student-08",
+      "course": "product-knowledge",
+      "html": "<div style=\"font-family:system-ui,sans-serif;max-width:520px;margin:0 auto;padding:24px;color:#111\"><h2 style=\"margin:0 0 4px\">What can I actually promise?</h2><p style=\"color:#666;margin:0 0 20px\">Quote available stock, never stock on hand.</p><label style=\"display:block;margin-bottom:12px\">Stock on hand<br><input id=\"a\" type=\"number\" value=\"40\" style=\"width:100%;padding:10px;border:1px solid #ddd;border-radius:8px;font-size:16px\"></label><label style=\"display:block;margin-bottom:16px\">Committed to other orders<br><input id=\"b\" type=\"number\" value=\"12\" style=\"width:100%;padding:10px;border:1px solid #ddd;border-radius:8px;font-size:16px\"></label><div id=\"r\" style=\"padding:16px;border-radius:10px;background:#ecfdf5;color:#065f46;font-weight:700;font-size:18px\">Available: 28</div><script>const a=document.getElementById('a'),b=document.getElementById('b'),r=document.getElementById('r');function u(){const v=Math.max(0,(+a.value||0)-(+b.value||0));r.textContent='Available: '+v;r.style.background=v?'#ecfdf5':'#fef2f2';r.style.color=v?'#065f46':'#991b1b';}a.oninput=u;b.oninput=u;u();</script></div>"
+    }
+  ],
+  "podcasts": [
+    {
+      "slug": "riverbend-briefing",
+      "name": "The Riverbend Briefing",
+      "description": "What changed this week and what it means on a live account.",
+      "about": "A short internal briefing from the Riverbend team. Each episode takes one thing that changed — a threshold, a process, a number that moved — and explains what to actually do about it.",
+      "tags": "internal,weekly,briefing",
+      "cover": "riverbend-briefing.webp",
+      "episodes": [
+        {
+          "slug": "ep-briefing-1",
+          "title": "The escalation thresholds moved",
+          "description": "The refund threshold changed this month. What that means on a live account, and the one case people keep getting wrong.",
+          "audio": "ep-briefing-1.mp3",
+          "duration_seconds": 19,
+          "days_ago": 4
+        },
+        {
+          "slug": "ep-briefing-2",
+          "title": "Returns are down. Mostly.",
+          "description": "Returns fell eighteen per cent last quarter. Most of that is a processing backlog rather than good news, and here is how to tell the difference.",
+          "audio": "ep-briefing-2.mp3",
+          "duration_seconds": 20,
+          "days_ago": 11
+        },
+        {
+          "slug": "ep-briefing-3",
+          "title": "Two people, one last unit",
+          "description": "Committed stock, available stock, and the phone call nobody wants to make.",
+          "audio": "ep-briefing-3.mp3",
+          "duration_seconds": 15,
+          "days_ago": 18
+        },
+        {
+          "slug": "ep-briefing-4",
+          "title": "What the spring intake told us",
+          "description": "Four things we changed after asking new starters what actually confused them in their first fortnight.",
+          "audio": "ep-briefing-4.mp3",
+          "duration_seconds": 17,
+          "days_ago": 25
+        }
+      ]
+    },
+    {
+      "slug": "support-notes",
+      "name": "Support Notes",
+      "description": "Short episodes on the conversations that are hard to have well.",
+      "about": "Companion audio for Customer Support Fundamentals. Each episode is one conversation pattern, with what to say and what to avoid.",
+      "tags": "support,customers",
+      "cover": "support-notes.webp",
+      "episodes": [
+        {
+          "slug": "ep-support-1",
+          "title": "The first reply",
+          "description": "Acknowledge, restate, commit. Why a time attached is the whole job, and why 'I will look into it' is not a commitment.",
+          "audio": "ep-support-1.mp3",
+          "duration_seconds": 18,
+          "days_ago": 7
+        },
+        {
+          "slug": "ep-support-2",
+          "title": "Saying no well",
+          "description": "A clear refusal beats a soft maybe. The three-part shape, and finding the adjacent yes.",
+          "audio": "ep-support-2.mp3",
+          "duration_seconds": 14,
+          "days_ago": 14
+        },
+        {
+          "slug": "ep-support-3",
+          "title": "When it was our mistake",
+          "description": "Owning it plainly, fixing the thing first, and never naming a colleague to a customer.",
+          "audio": "ep-support-3.mp3",
+          "duration_seconds": 17,
+          "days_ago": 21
+        }
+      ]
+    },
+    {
+      "slug": "numbers-plainly",
+      "name": "Numbers, Plainly",
+      "description": "Reading a report without being misled by it.",
+      "about": "Companion audio for Working with Numbers. No statistics — just the questions that stop you acting confidently on a coincidence.",
+      "tags": "data,reporting",
+      "cover": "numbers-plainly.webp",
+      "episodes": [
+        {
+          "slug": "ep-numbers-1",
+          "title": "An average hides the shape",
+          "description": "What the median tells you that the mean will not, and why it matters for anything money-shaped.",
+          "audio": "ep-numbers-1.mp3",
+          "duration_seconds": 13,
+          "days_ago": 9
+        },
+        {
+          "slug": "ep-numbers-2",
+          "title": "Before you believe a number",
+          "description": "What is counted, over what period, and has the definition changed since last time?",
+          "audio": "ep-numbers-2.mp3",
+          "duration_seconds": 16,
+          "days_ago": 16
+        },
+        {
+          "slug": "ep-numbers-3",
+          "title": "Two things moved together",
+          "description": "Working out whether one caused the other, and what else changed in the same month.",
+          "audio": "ep-numbers-3.mp3",
+          "duration_seconds": 14,
+          "days_ago": 23
+        }
+      ]
+    }
+  ]
+}

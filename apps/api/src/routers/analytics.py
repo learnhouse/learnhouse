@@ -38,6 +38,41 @@ logger = logging.getLogger(__name__)
 router = APIRouter()
 
 
+async def _users_map(
+    user_ids: list[int],
+    org_id: int,
+    db_session: AsyncSession,
+    acting_user_id: int,
+) -> dict[int, dict]:
+    """Names and avatars for the users a chart row refers to.
+
+    In the shared demo every visitor is an admin, so returning this unfiltered
+    handed one visitor the real name, avatar and email address of every other
+    person who had ever opened it. The seeded students are what the dashboard
+    exists to show; other visitors are dropped, which leaves their rows in the
+    chart without an identity attached.
+    """
+    from src.services.demo.guards import hide_other_visitors, is_demo_org
+
+    statement = select(User).where(User.id.in_(user_ids))  # type: ignore[attr-defined]
+    if await is_demo_org(org_id, db_session):
+        statement = hide_other_visitors(statement, acting_user_id)
+
+    users = (await db_session.execute(statement)).scalars().all()
+    return {
+        u.id: {
+            "user_uuid": u.user_uuid,
+            "first_name": u.first_name,
+            "last_name": u.last_name,
+            "username": u.username,
+            "email": u.email,
+            "avatar_image": u.avatar_image,
+        }
+        for u in users
+    }
+
+
+
 # -------------------------------------------------------------------
 # Request / response models
 # -------------------------------------------------------------------
@@ -368,18 +403,9 @@ async def query_dashboard_detail(
     user_ids = list({int(row["user_id"]) for row in ch_data if row.get("user_id")})
     users_map: dict[int, dict] = {}
     if user_ids:
-        users = (await db_session.execute(select(User).where(User.id.in_(user_ids)))).scalars().all()  # type: ignore
-        users_map = {
-            u.id: {
-                "user_uuid": u.user_uuid,
-                "first_name": u.first_name,
-                "last_name": u.last_name,
-                "username": u.username,
-                "email": u.email,
-                "avatar_image": u.avatar_image,
-            }
-            for u in users
-        }
+        users_map = await _users_map(
+            user_ids, org_id, db_session, resolve_acting_user_id(current_user)
+        )
 
     return {"data": ch_data, "users": users_map}
 
@@ -643,18 +669,9 @@ async def query_course_dashboard_detail(
     user_ids = list({int(row["user_id"]) for row in ch_data if row.get("user_id")})
     users_map: dict[int, dict] = {}
     if user_ids:
-        users = (await db_session.execute(select(User).where(User.id.in_(user_ids)))).scalars().all()  # type: ignore
-        users_map = {
-            u.id: {
-                "user_uuid": u.user_uuid,
-                "first_name": u.first_name,
-                "last_name": u.last_name,
-                "username": u.username,
-                "email": u.email,
-                "avatar_image": u.avatar_image,
-            }
-            for u in users
-        }
+        users_map = await _users_map(
+            user_ids, org_id, db_session, resolve_acting_user_id(current_user)
+        )
 
     return {"data": ch_data, "users": users_map}
 

@@ -1,0 +1,101 @@
+{
+  "provider": "custom",
+  "groups": [
+    {
+      "slug": "all-access",
+      "name": "Riverbend All-Access",
+      "description": "Every course in the academy, including anything added later.",
+      "courses": [
+        "onboarding-essentials",
+        "communication-at-work",
+        "customer-support-fundamentals",
+        "product-knowledge",
+        "data-literacy",
+        "compliance-essentials"
+      ]
+    },
+    {
+      "slug": "compliance-pack",
+      "name": "Compliance & Product",
+      "description": "The two courses every account-facing role has to have done.",
+      "courses": ["compliance-essentials", "product-knowledge"]
+    }
+  ],
+  "offers": [
+    {
+      "slug": "all-access-monthly",
+      "name": "All-Access",
+      "description": "Every course, every update, for the whole team. Cancel whenever.",
+      "offer_type": "subscription",
+      "price_type": "fixed_price",
+      "amount": 19.0,
+      "currency": "USD",
+      "benefits": "All six courses,New courses as they launch,Certificates on completion,Cohort reporting",
+      "group": "all-access"
+    },
+    {
+      "slug": "customer-support-pro",
+      "name": "Customer Support Fundamentals",
+      "description": "The full course, including the graded scenarios and the escalation playbook.",
+      "offer_type": "one_time",
+      "price_type": "fixed_price",
+      "amount": 49.0,
+      "currency": "USD",
+      "benefits": "Lifetime access,Certificate on completion,Graded scenarios",
+      "course": "customer-support-fundamentals"
+    },
+    {
+      "slug": "compliance-bundle",
+      "name": "Compliance & Product bundle",
+      "description": "Two courses at a lower price than buying them separately.",
+      "offer_type": "one_time",
+      "price_type": "fixed_price",
+      "amount": 79.0,
+      "currency": "USD",
+      "benefits": "Two full courses,Lifetime access,Annual refresher included",
+      "group": "compliance-pack"
+    },
+    {
+      "slug": "data-literacy-course",
+      "name": "Working with Numbers",
+      "description": "Read a report without being misled by it. Four hours, no statistics.",
+      "offer_type": "one_time",
+      "price_type": "fixed_price",
+      "amount": 39.0,
+      "currency": "USD",
+      "benefits": "Lifetime access,Worked examples,Report critique exercise",
+      "course": "data-literacy"
+    },
+    {
+      "slug": "writing-clearly-pwyw",
+      "name": "Writing Clearly at Work",
+      "description": "Pay what you think it is worth. Suggested price below.",
+      "offer_type": "one_time",
+      "price_type": "customer_choice",
+      "amount": 15.0,
+      "currency": "USD",
+      "benefits": "Lifetime access,Rewrite exercise with feedback",
+      "course": "communication-at-work"
+    }
+  ],
+  "enrollments": [
+    { "offer": "all-access-monthly", "student": "student-00", "status": "active", "days_ago": 41 },
+    { "offer": "all-access-monthly", "student": "student-04", "status": "active", "days_ago": 33 },
+    { "offer": "all-access-monthly", "student": "student-11", "status": "active", "days_ago": 28 },
+    { "offer": "all-access-monthly", "student": "student-17", "status": "active", "days_ago": 22 },
+    { "offer": "all-access-monthly", "student": "student-23", "status": "cancelled", "days_ago": 37 },
+    { "offer": "customer-support-pro", "student": "student-02", "status": "active", "days_ago": 30 },
+    { "offer": "customer-support-pro", "student": "student-08", "status": "active", "days_ago": 25 },
+    { "offer": "customer-support-pro", "student": "student-15", "status": "completed", "days_ago": 19 },
+    { "offer": "customer-support-pro", "student": "student-29", "status": "active", "days_ago": 12 },
+    { "offer": "compliance-bundle", "student": "student-06", "status": "active", "days_ago": 27 },
+    { "offer": "compliance-bundle", "student": "student-31", "status": "active", "days_ago": 16 },
+    { "offer": "compliance-bundle", "student": "student-19", "status": "refunded", "days_ago": 21 },
+    { "offer": "data-literacy-course", "student": "student-12", "status": "active", "days_ago": 14 },
+    { "offer": "data-literacy-course", "student": "student-26", "status": "active", "days_ago": 9 },
+    { "offer": "data-literacy-course", "student": "student-33", "status": "pending", "days_ago": 2 },
+    { "offer": "writing-clearly-pwyw", "student": "student-05", "status": "active", "days_ago": 18 },
+    { "offer": "writing-clearly-pwyw", "student": "student-21", "status": "active", "days_ago": 8 },
+    { "offer": "writing-clearly-pwyw", "student": "student-37", "status": "active", "days_ago": 3 }
+  ]
+}

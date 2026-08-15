@@ -1331,6 +1331,13 @@ async def issue_magic_link(
 
     user = await _get_user_in_org(user_id, token_user.org_id, db_session)
 
+    # Same check issue_user_token applies, for the same reason: consuming this
+    # link mints a full session for the target, so leaving it off made the
+    # magic-link route a way around the impersonation rules rather than a
+    # variation on them. A token that may not mint a session for an Admin,
+    # Maintainer or superadmin directly must not be able to mail itself one.
+    await _check_token_can_impersonate(user, token_user.org_id, db_session)
+
     safe_redirect = _validate_magic_link_redirect(redirect_to)
 
     ttl = max(60, min(ttl_seconds, 900))

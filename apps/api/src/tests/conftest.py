@@ -27,6 +27,15 @@ os.environ["TESTING"] = "true"
 # same function. Tests that need 'saas' or 'ee' patch it explicitly.
 os.environ["LEARNHOUSE_DISABLE_EE"] = "1"
 
+# Pin the demo organization off for the whole suite.
+#
+# config.py calls load_dotenv() while parsing, so a developer running the local
+# demo stack has LEARNHOUSE_DEMO_ENABLED=1 in apps/api/.env and it leaks into
+# the test process — the demo scheduler then starts a background task, and
+# tests that assert on the application's task lifecycle fail on that machine
+# and nowhere else. Tests that need the feature on enable it themselves.
+os.environ["LEARNHOUSE_DEMO_ENABLED"] = "0"
+
 # Set a valid JWT secret key for tests (must be at least 32 characters)
 os.environ["LEARNHOUSE_AUTH_JWT_SECRET_KEY"] = (
     "test-secret-key-for-unit-tests-32chars!"

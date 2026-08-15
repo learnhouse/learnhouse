@@ -480,7 +480,17 @@ async def iter_snapshots(
     """
     cursor = 0
     while True:
-        query = select(Organization).order_by(Organization.id).limit(chunk_size)
+        # The shared demo org is excluded from every nudge. Its admins are
+        # prospects who joined to look around, and its activity is synthetic —
+        # nudging them about how quiet their academy is, or congratulating them
+        # on fake enrolments, is worse than staying silent. The filter is on the
+        # scan itself so no nudge in the catalog can opt back in.
+        query = (
+            select(Organization)
+            .where(Organization.is_demo.is_(False))
+            .order_by(Organization.id)
+            .limit(chunk_size)
+        )
         if org_id is not None:
             query = query.where(Organization.id == org_id)
         else:

@@ -13,11 +13,11 @@ Override the model with OLLAMA_TEST_MODEL if you pulled a different one.
 
 import json
 import os
-import socket
 from types import SimpleNamespace
 
 import pytest
 
+from src.tests.services._ollama import ollama_ready, skip_reason
 from src.services.ai.llm import client as llm_client
 from src.services.ai.llm import provider as llm_provider
 
@@ -26,17 +26,11 @@ OLLAMA_BASE_URL = f"http://{OLLAMA_HOST}:{OLLAMA_PORT}/v1"
 OLLAMA_MODEL = os.environ.get("OLLAMA_TEST_MODEL", "llama3.2")
 
 
-def _ollama_running() -> bool:
-    try:
-        with socket.create_connection((OLLAMA_HOST, OLLAMA_PORT), timeout=0.5):
-            return True
-    except OSError:
-        return False
-
-
 pytestmark = [
     pytest.mark.ollama,
-    pytest.mark.skipif(not _ollama_running(), reason="Ollama not reachable on localhost:11434"),
+    pytest.mark.skipif(
+        not ollama_ready(OLLAMA_MODEL), reason=skip_reason(OLLAMA_MODEL)
+    ),
 ]
 
 

@@ -74,6 +74,12 @@ def startup_app(app: FastAPI) -> Callable:
         from src.services.nudges.scheduler import start_scheduler
         start_scheduler()
 
+        # The shared demo organization refreshes itself on an interval, so the
+        # feature needs no external scheduler. No-op unless
+        # LEARNHOUSE_DEMO_ENABLED; never raises.
+        from src.services.demo.scheduler import start_scheduler as start_demo_scheduler
+        start_demo_scheduler()
+
         # Start the in-app HLS transcoding consumer (drains the Redis queue as a
         # background task; no separate worker). No-op unless LEARNHOUSE_HLS_ENABLED.
         from src.services.utils.hls_jobs import start_consumer
@@ -112,6 +118,9 @@ def shutdown_app(app: FastAPI) -> Callable:
         # Stop the daily nudge tick.
         from src.services.nudges.scheduler import stop_scheduler
         await stop_scheduler()
+        # Stop the demo refresh tick.
+        from src.services.demo.scheduler import stop_scheduler as stop_demo_scheduler
+        await stop_demo_scheduler()
         await close_database(app)
 
     return close_app

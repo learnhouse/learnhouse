@@ -1,0 +1,204 @@
+{
+  "slug": "data-literacy",
+  "name": "Working with Numbers",
+  "description": "Reading a report without being misled by it.",
+  "about": "Most people at Riverbend read numbers every week and were never taught how. This course is not statistics — it is the practical business of knowing what a figure covers, what it leaves out, and when a chart is quietly telling you something untrue.",
+  "learnings": "Read a report critically; spot the common ways numbers mislead; ask the right question about an average; present a figure honestly.",
+  "tags": "data,reporting,analysis",
+  "thumbnail": "data-literacy.webp",
+  "section": "compliance-and-data",
+  "public": true,
+  "published": true,
+  "certification": false,
+  "updates": [
+    {
+      "title": "New section on averages",
+      "content": "Added after a monthly report was read as good news when the median told the opposite story.",
+      "days_ago": 33
+    }
+  ],
+  "chapters": [
+    {
+      "slug": "dl-reading",
+      "name": "Reading a report",
+      "description": "What a number is actually telling you.",
+      "activities": [
+        {
+          "slug": "dl-what-does-it-count",
+          "name": "What is actually being counted",
+          "kind": "document",
+          "body": [
+            "h2:Every figure has a definition, and it is rarely on the chart",
+            "p:A report says orders were up eleven per cent. Before that means anything, you need to know what counts as an order. Placed, or shipped? Does a cancelled order that was placed and refunded still count? Are the two months being compared the same length?",
+            "h2:Three questions before you believe a number",
+            {"ol": [
+              "What exactly is in the count, and what is excluded?",
+              "Over what period, and is the comparison period genuinely comparable?",
+              "Has the definition changed since the last time this was reported?"
+            ]},
+            "p:That third one catches more mistakes than the other two together. A definition quietly changing between two reports produces a dramatic-looking trend that is entirely an artefact.",
+            {"quiz": {
+              "q": "A metric jumps sharply between two months. What should you check first?",
+              "a": [
+                ["Whether the definition of the metric changed", true],
+                ["Whether the increase is statistically significant", false],
+                ["Whether the chart axis starts at zero", false]
+              ]
+            }}
+          ]
+        },
+        {
+          "slug": "dl-averages",
+          "name": "The trouble with averages",
+          "kind": "document",
+          "body": [
+            "h2:An average hides the shape",
+            "p:Average order value went up. That is consistent with every customer spending a little more, and equally consistent with most customers spending less while two very large orders dragged the mean upward. Those two situations call for opposite responses.",
+            {"ul": [
+              "The mean is pulled around by extremes. In anything money-shaped, there are always extremes.",
+              "The median tells you about the typical case, which is usually what you actually wanted.",
+              "If mean and median are far apart, the distribution is skewed and the average is a poor summary."
+            ]},
+            {"info": "Ask for the median alongside the mean. If the person who produced the report cannot supply it, that is itself useful information about how the report was built."},
+            {"quiz": {
+              "q": "Mean order value rose but median order value fell. What is the likely explanation?",
+              "a": [
+                ["A small number of very large orders pulled the mean up", true],
+                ["Most customers are spending more per order", false],
+                ["The total number of orders increased", false]
+              ]
+            }}
+          ]
+        },
+        {
+          "slug": "dl-charts",
+          "name": "How charts mislead",
+          "kind": "document",
+          "body": [
+            "h2:Usually carelessness, occasionally not",
+            "p:Most misleading charts are not dishonest. They are produced quickly by someone who already knows the conclusion and is illustrating it. The effect on the reader is the same either way.",
+            {"ul": [
+              "A truncated axis turns a two per cent change into a cliff.",
+              "A comparison against an unusually bad period makes anything look like recovery.",
+              "Percentages without absolute numbers hide that a hundred per cent rise was two orders becoming four.",
+              "A moving average smooths away the very spike someone needs to see."
+            ]},
+            "p:The fix is boring and reliable: ask for the underlying numbers. Anyone producing an honest chart will hand them over without hesitating."
+          ]
+        }
+      ]
+    },
+    {
+      "slug": "dl-asking",
+      "name": "Asking better questions",
+      "description": "Turning a vague worry into an answerable question.",
+      "activities": [
+        {
+          "slug": "dl-answerable-questions",
+          "name": "Making a question answerable",
+          "kind": "document",
+          "body": [
+            "h2:'How are we doing?' cannot be answered",
+            "p:Vague questions produce vague reports that nobody acts on. The work is turning a feeling into something with a definition, a period and a comparison.",
+            "h2:The same question, three times",
+            {"ol": [
+              "Weak: are customers happy?",
+              "Better: are complaints going up?",
+              "Answerable: has the number of complaints per hundred shipped orders changed over the last six months, compared with the six before?"
+            ]},
+            "p:The third version specifies what is counted, what it is divided by, and what it is compared against. It is also the only one that produces an answer you could disagree with — which is what makes it worth asking.",
+            {"quiz": {
+              "q": "What makes a question about data answerable?",
+              "a": [
+                ["A clear definition, a period, and a comparison", true],
+                ["Access to the full dataset", false],
+                ["Asking someone from the analytics team", false]
+              ]
+            }}
+          ]
+        },
+        {
+          "slug": "dl-correlation",
+          "name": "Two things moving together",
+          "kind": "document",
+          "body": [
+            "h2:The most expensive mistake in this course",
+            "p:Complaints fell in the same month a new process launched. It is very tempting to conclude the process worked. It is also the month a large seasonal customer stopped ordering, which removed most of the complaint volume by itself.",
+            {"ul": [
+              "Ask what else changed in the same period. Something always did.",
+              "Ask whether the effect appeared before the supposed cause. It happens more often than you would expect.",
+              "Ask whether the size of the effect is plausible for the size of the change."
+            ]},
+            "p:You will rarely be able to prove causation from a business report, and that is fine. The goal is to stop acting confidently on a coincidence, not to run an experiment.",
+            {"warn": "Be most careful when the data agrees with you. That is when nobody in the room asks the awkward question."}
+          ]
+        },
+        {
+          "slug": "dl-presenting",
+          "name": "Presenting a number honestly",
+          "kind": "document",
+          "body": [
+            "h2:Say what would change your mind",
+            "p:The most credible way to present a finding is to state plainly what it does not show. It costs you nothing, and it stops someone else finding the hole and discounting the whole thing.",
+            {"ol": [
+              "The number, with its definition.",
+              "The period and the comparison.",
+              "What else changed that might explain it.",
+              "What you would need to be more confident."
+            ]},
+            "p:A report structured this way survives being questioned. One that presents only the supporting evidence does not, and the questioning tends to happen in the meeting where a decision was going to be made."
+          ]
+        }
+      ]
+    },
+    {
+      "slug": "dl-practice",
+      "name": "Practice",
+      "description": "Applying it to a real-shaped report.",
+      "activities": [
+        {
+          "slug": "dl-worked-example",
+          "name": "A worked example",
+          "kind": "document",
+          "body": [
+            "h2:The quarterly summary, pulled apart",
+            "p:A summary reports that returns are down eighteen per cent and treats it as a win. Working through it properly:",
+            {"ol": [
+              "Definition: returns are counted when processed, not when requested. The processing backlog grew that quarter.",
+              "Period: the comparison quarter included a recall, which was unusually bad.",
+              "Absolute numbers: the fall is from 61 to 50, so eleven returns.",
+              "Other changes: total shipments also fell, so the return rate barely moved."
+            ]},
+            "p:The honest version of the headline is that returns fell roughly in line with shipments, and some of the reduction is a backlog rather than a real improvement. That is much less exciting and considerably more useful.",
+            {"info": "Nothing in that analysis required statistics. It required reading the definition and asking what else moved."}
+          ]
+        },
+        {
+          "slug": "dl-spotting-errors",
+          "name": "Common errors to recognise",
+          "kind": "document",
+          "body": [
+            "h2:A short list worth memorising",
+            {"ul": [
+              "Comparing a partial period against a complete one. The current month always looks terrible on the fifth.",
+              "Averaging an average. The result is not the average of the underlying data unless the groups are the same size.",
+              "Reporting a rate without the denominator, so nobody can tell if it moved because the top or the bottom changed.",
+              "Rounding twice, so the parts no longer sum to the total and someone spends an afternoon on it."
+            ]},
+            "p:None of these are sophisticated. All of them have caused a wrong decision here at some point, which is why the list exists."
+          ]
+        },
+        {
+          "slug": "dl-report-critique",
+          "name": "Report critique",
+          "kind": "assignment",
+          "body": [
+            "h2:Find what is wrong with this report",
+            "p:You will be given a one-page summary containing several of the problems in this course: a truncated axis, a metric whose definition changed, an average concealing a skew, and a causal claim resting on a coincidence.",
+            "p:Identify each one and say what you would ask for to check it. Marked on the problems you find and on the quality of the follow-up question — spotting a flaw without knowing what to ask next is only half the job."
+          ]
+        }
+      ]
+    }
+  ]
+}

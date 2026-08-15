@@ -1,0 +1,332 @@
+{
+  "slug": "compliance-essentials",
+  "name": "Compliance Essentials",
+  "description": "The rules that are not optional, and why they exist.",
+  "about": "Compliance training has a reputation for being a box to tick. This one is written to be read: what the obligations actually are at Riverbend, what happens when they are missed, and what to do in the specific moments where people usually get it wrong.",
+  "learnings": "Handle customer data correctly; recognise and report a breach; understand the approval thresholds; know what to do when asked to bend a rule.",
+  "tags": "compliance,data protection,policy",
+  "thumbnail": "compliance-essentials.webp",
+  "section": "compliance-and-data",
+  "public": false,
+  "published": true,
+  "certification": true,
+  "certification_name": "Compliance Essentials",
+  "certification_description": "Awarded to recognise completion of Riverbend's annual compliance assessment, covering data handling, breach reporting and approval thresholds.",
+  "certification_type": "professional",
+  "certificate_pattern": "academic",
+  "updates": [
+    {
+      "title": "Reporting window shortened",
+      "content": "Suspected breaches must now be reported within one hour of noticing, not by end of day. Chapter two is updated.",
+      "days_ago": 3
+    },
+    {
+      "title": "Annual review completed",
+      "content": "Reviewed with no changes to the approval thresholds. Next review scheduled for the same time next year.",
+      "days_ago": 48
+    }
+  ],
+  "chapters": [
+    {
+      "slug": "ce-data",
+      "name": "Handling customer data",
+      "description": "What we hold, and what we may do with it.",
+      "activities": [
+        {
+          "slug": "ce-what-we-hold",
+          "name": "What we hold and why",
+          "kind": "document",
+          "body": [
+            "h2:Only what the work requires",
+            "p:Riverbend holds contact details, delivery addresses, order history and payment references. We do not hold full card numbers, and there is no situation in which anyone here needs one. If a customer starts reading one out, stop them.",
+            "h2:The principle underneath all of it",
+            "p:Data is collected for a stated purpose and used for that purpose. An address given for delivery is not a marketing list. This is not a technicality — it is the single rule that most of the others follow from.",
+            {
+              "ul": [
+                "Collect only what the task needs.",
+                "Use it only for what it was given for.",
+                "Keep it only while there is a reason to.",
+                "Share it only with people who need it to do their job."
+              ]
+            },
+            {
+              "warn": "Never take customer data out of company systems. That includes pasting a list into a personal spreadsheet to work on it more conveniently, which is by far the most common version of this."
+            },
+            {
+              "quiz": {
+                "q": "A customer starts reading out their full card number. What do you do?",
+                "a": [
+                  [
+                    "Stop them — we never take full card numbers",
+                    true
+                  ],
+                  [
+                    "Write it down and delete it after processing",
+                    false
+                  ],
+                  [
+                    "Enter it into the order notes for the finance team",
+                    false
+                  ]
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "slug": "ce-access",
+          "name": "Who may see what",
+          "kind": "document",
+          "body": [
+            "h2:Access follows the job, not the seniority",
+            "p:A team lead does not automatically get to see an account they have no involvement with, and a new starter working an account sees everything they need for it. Curiosity is not a business reason, and looking up an account you have no work on is a disciplinary matter rather than a small thing.",
+            {
+              "ul": [
+                "Look at an account because you are working on it, not because you recognise the name.",
+                "Do not share your login. Every action is recorded against the account that performed it, which protects you as much as anyone.",
+                "If you can see something you do not think you should, say so. Over-broad access is a fault to report, not a perk."
+              ]
+            },
+            {
+              "info": "Access reviews happen quarterly. If your job changed, your access should have changed with it — flag it rather than waiting for the review to catch up."
+            }
+          ]
+        },
+        {
+          "slug": "ce-requests",
+          "name": "When a customer asks about their data",
+          "kind": "document",
+          "body": [
+            "h2:They have rights, and there is a clock",
+            "p:A customer may ask what we hold about them, ask for it to be corrected, or ask for it to be deleted. These requests have legal deadlines, and the clock starts when the request arrives — not when someone gets round to recognising it as one.",
+            {
+              "ol": [
+                "Recognise it. It will rarely use formal wording; 'what do you have on me?' counts.",
+                "Log it the same day, through the compliance channel rather than in the ticket.",
+                "Do not action it yourself, and do not promise a timescale on the spot.",
+                "Confirm to the customer that it has been passed on."
+              ]
+            },
+            "p:Deleting an account because a customer asked, without going through this process, is itself a problem: some records must be retained for accounting, and an enthusiastic deletion can breach a different obligation.",
+            {
+              "quiz": {
+                "q": "A customer asks in a support chat what data you hold about them. What is the first step?",
+                "a": [
+                  [
+                    "Log it as a data request the same day and pass it on",
+                    true
+                  ],
+                  [
+                    "Send them their order history straight away to be helpful",
+                    false
+                  ],
+                  [
+                    "Ask them to put the request in writing by post",
+                    false
+                  ]
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "slug": "ce-incidents",
+      "name": "When something goes wrong",
+      "description": "Breaches, and the hour that matters.",
+      "activities": [
+        {
+          "slug": "ce-what-is-a-breach",
+          "name": "What counts as a breach",
+          "kind": "document",
+          "body": [
+            "h2:Wider than most people assume",
+            "p:People picture a breach as an attacker. Most real ones are ordinary mistakes, and they count just the same.",
+            {
+              "ul": [
+                "An email with customer details sent to the wrong recipient.",
+                "A document shared with a link set to anyone rather than to named people.",
+                "A laptop or phone with company access lost, even briefly.",
+                "An account left signed in on a shared machine.",
+                "Data copied somewhere it should not be, even with good intentions."
+              ]
+            },
+            "p:Note that four of those five are accidents by someone acting in good faith. That is the point: reporting is not an admission of wrongdoing, it is how the damage gets contained.",
+            {
+              "quiz": {
+                "q": "You email an order confirmation to the wrong customer. Is this a breach?",
+                "a": [
+                  [
+                    "Yes — it must be reported like any other",
+                    true
+                  ],
+                  [
+                    "No, as long as you recall the message",
+                    false
+                  ],
+                  [
+                    "Only if the recipient opens it",
+                    false
+                  ]
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "slug": "ce-reporting",
+          "name": "Reporting it",
+          "kind": "document",
+          "body": [
+            "h2:Within one hour of noticing",
+            "p:The reporting window is one hour from the moment you notice, not from the moment you are sure. Riverbend has regulatory deadlines that depend on this, and they are measured from when the company first knew — which means from when you knew.",
+            "h2:What to do, in order",
+            {
+              "ol": [
+                "Report it in the compliance channel. Do not investigate first.",
+                "Do not try to undo it. Recalling a message or deleting a share can destroy the evidence needed to work out the scope.",
+                "Write down what happened while it is fresh, including times.",
+                "Carry on with your day. Containment is not your job from this point."
+              ]
+            },
+            {
+              "warn": "Nobody at Riverbend has been disciplined for reporting a breach they caused. People have been disciplined for concealing one. The difference is usually a couple of hours of hesitation."
+            },
+            {
+              "quiz": {
+                "q": "You realise you may have shared a document too widely. What comes first?",
+                "a": [
+                  [
+                    "Report it in the compliance channel",
+                    true
+                  ],
+                  [
+                    "Change the sharing settings, then report it",
+                    false
+                  ],
+                  [
+                    "Check who accessed it before deciding whether to report",
+                    false
+                  ]
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "slug": "ce-suspicious",
+          "name": "Recognising a scam",
+          "kind": "document",
+          "body": [
+            "h2:The ones that work look ordinary",
+            "p:The attempts that succeed here are not obviously fraudulent emails. They are a supplier asking to update their bank details, or an urgent message that appears to come from someone senior asking for a payment to be made quickly and quietly.",
+            {
+              "ul": [
+                "Any change to payment details is verified by phoning a number you already had, never one in the message.",
+                "Urgency plus secrecy is the signature of this kind of fraud. Treat the combination as the alarm itself.",
+                "Seniority is not authority in this context. A request that skips the normal process is suspect regardless of who appears to have sent it."
+              ]
+            },
+            "p:Verifying costs a phone call and mild awkwardness. Not verifying has cost other companies a great deal of money, and the person who processed the payment was following instructions in every case.",
+            {
+              "quiz": {
+                "q": "A supplier emails asking to update their bank details. How do you verify?",
+                "a": [
+                  [
+                    "Phone them on a number you already held, not one from the email",
+                    true
+                  ],
+                  [
+                    "Reply to the email asking them to confirm",
+                    false
+                  ],
+                  [
+                    "Check the sender address matches previous emails",
+                    false
+                  ]
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "slug": "ce-judgement",
+      "name": "Judgement calls",
+      "description": "Thresholds, pressure, and the assessment.",
+      "activities": [
+        {
+          "slug": "ce-thresholds",
+          "name": "Approval thresholds",
+          "kind": "document",
+          "body": [
+            "h2:Know the two that apply to you",
+            "p:Most people only need to remember two numbers: the value above which a discount needs a second signature, and the value above which a refund does. Both are in the handbook and both change occasionally, so check rather than remember.",
+            {
+              "ul": [
+                "Below the threshold: your decision, recorded as usual.",
+                "Above it: a second named person approves before you commit to anything with the customer.",
+                "Never split a request into two smaller ones to stay underneath. That is treated as deliberate circumvention, and it is obvious in the records."
+              ]
+            },
+            {
+              "info": "Approval is about having a second pair of eyes, not about distrust. The threshold exists because single-person decisions above a certain size are where errors become expensive."
+            }
+          ]
+        },
+        {
+          "slug": "ce-pressure",
+          "name": "When you are asked to bend a rule",
+          "kind": "document",
+          "body": [
+            "h2:It will be reasonable-sounding and urgent",
+            "p:Nobody will ask you to do something obviously wrong. You will be asked to skip a check because a customer is waiting, or to approve something now and record it later. The pressure is usually genuine and the request is still not acceptable.",
+            {
+              "ol": [
+                "Say plainly that you cannot do it that way.",
+                "Offer the version you can do, including how long it takes.",
+                "If the pressure continues, say you are going to check with compliance — and then do.",
+                "Write down what was asked and by whom, the same day."
+              ]
+            },
+            "p:That last step protects you. If a decision is later questioned, the difference between a note written on the day and a recollection months later is considerable.",
+            {
+              "warn": "If you are asked to keep a request off the record, that fact alone is worth reporting, whatever the request was."
+            },
+            {
+              "quiz": {
+                "q": "You are pressed to approve something above your threshold because a customer is waiting. What do you do?",
+                "a": [
+                  [
+                    "Decline, offer the compliant option, and record the request",
+                    true
+                  ],
+                  [
+                    "Approve it and get the second signature afterwards",
+                    false
+                  ],
+                  [
+                    "Split it into two smaller approvals",
+                    false
+                  ]
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "slug": "ce-assessment",
+          "name": "Compliance assessment",
+          "kind": "assignment",
+          "body": [
+            "h2:Required annually",
+            "p:Six scenarios drawn from things that have actually happened: a misdirected email, a supplier changing bank details, a data request arriving in a support chat, an access question, a threshold decision, and a request to skip a step under time pressure.",
+            "p:For each, say what you would do and in what order. The reporting timings and the verification step for payment details are the parts that must be right — the rest is marked on reasoning."
+          ]
+        }
+      ]
+    }
+  ]
+}

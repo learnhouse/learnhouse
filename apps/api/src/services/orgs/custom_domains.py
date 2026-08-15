@@ -244,6 +244,13 @@ async def add_custom_domain(
     current_user: PublicUser | AnonymousUser | APITokenUser,
 ) -> CustomDomainRead:
     """Add a new custom domain for an organization."""
+    # The demo is shared and its content resets hourly. Letting a visitor point
+    # DNS at it means free hosting on someone else's domain and a support
+    # ticket when the content they attached it to is put back.
+    from src.services.demo.guards import require_not_demo_org
+
+    await require_not_demo_org(org_id, db_session)
+
     acting_user_id = resolve_acting_user_id(current_user)
     # VERIFICATION 1: User must be authenticated
     await authorization_verify_if_user_is_anon(acting_user_id)
