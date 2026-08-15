@@ -1046,7 +1046,18 @@ async def logout(
     ``get_current_user`` via a Redis blocklist, so stolen tokens cannot
     outlive logout simply by being replayed outside the browser.
     """
+    # Identify the session from either credential. A caller that presents only
+    # the refresh cookie is still logging out a real session, and refusing it
+    # meant the revocation below never ran — a proxy that forwarded one cookie
+    # and not the other silently turned every logout into cookie-clearing only.
     token = extract_jwt_from_request(request)
+    payload = decode_jwt(token) if token else None
+    if not payload or not payload.get("sub"):
+        refresh_token = request.cookies.get(JWT_REFRESH_COOKIE_NAME)
+        if refresh_token:
+            payload = decode_refresh_token(refresh_token) or payload
+            token = token or refresh_token
+
     if not token:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
@@ -1056,7 +1067,6 @@ async def logout(
 
     # Best-effort resolve the user to revoke every session they have across
     # devices (not just the one tied to this cookie).
-    payload = decode_jwt(token)
     if payload and payload.get("sub"):
         try:
             user_record = await security_get_user(
