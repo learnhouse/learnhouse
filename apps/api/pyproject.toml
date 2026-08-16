@@ -7,13 +7,13 @@ authors = [
     {name = "Badr B. (swve)"}
 ]
 dependencies = [
-    "boto3==1.43.69",
-    "botocore==1.43.69",
+    "boto3==1.43.70",
+    "botocore==1.43.70",
     "faker==40.36.0",
     "fastapi==0.141.1",
     "httpx==0.28.1",
-    "google-genai==2.17.0",
-    "pydantic-ai-slim[openai,anthropic,google,mistral]==2.28.0",
+    "google-genai==2.18.0",
+    "pydantic-ai-slim[openai,anthropic,google,mistral]==2.29.0",
     "pwdlib[argon2]==0.3.1",
     "psycopg2-binary==2.9.12",
     "asyncpg==0.31.0",
@@ -29,7 +29,7 @@ dependencies = [
     "resend==2.36.0",
     "sqlmodel==0.0.39",
     "tiktoken==0.13.0",
-    "uvicorn==0.52.1",
+    "uvicorn==0.52.2",
     "typer==0.27.1",
     "alembic==1.19.1",
     "alembic-postgresql-enum==1.10.0",
