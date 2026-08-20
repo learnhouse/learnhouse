@@ -28,7 +28,7 @@ jobs:
 
       - uses: oven-sh/setup-bun@v2
         with:
-          bun-version: latest
+          bun-version-file: .bun-version
 
       # Build the CLI from this repo so the suite installs the self-host with
       # the current CLI (it still pulls the published app image).
