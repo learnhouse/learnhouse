@@ -162,6 +162,17 @@ def _walk_prosemirror_node(node: dict, parts: list[str]) -> None:
             parts.append(f"[{node_type}] {texts}")
         return
 
+    # Handle H5P blocks — embed-only, the interactive content lives on the
+    # author's own H5P host, so the author-supplied title is the only text we
+    # have. Handled explicitly so it does not fall through to the generic
+    # recursion, which would yield nothing for this atom node.
+    if node_type == "blockH5P":
+        attrs = node.get("attrs")
+        title = attrs.get("title") if isinstance(attrs, dict) else None
+        if isinstance(title, str) and title.strip():
+            parts.append(f"[H5P interactive content] {title.strip()}")
+        return
+
     # Handle table
     if node_type == "table":
         for row in _child_nodes(node):

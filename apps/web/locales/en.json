@@ -5023,6 +5023,7 @@
       "image": "Image",
       "video": "Video",
       "pdf": "PDF Document",
+      "h5p": "H5P Interactive Content",
       "youtube": "YouTube Video",
       "quiz": "Interactive Quiz",
       "math": "Math Equation (LaTeX)",
@@ -5079,6 +5080,22 @@
         "document_title": "PDF Document",
         "expand_pdf": "Expand PDF",
         "download_pdf": "Download PDF"
+      },
+      "h5p_block": {
+        "default_title": "H5P interactive content",
+        "description": "Paste the embed URL of an H5P activity to show it here.",
+        "hosted_hint": "The content stays on your own H5P host (H5P.com, Lumi, or a self-hosted Drupal, Moodle or WordPress site). You can paste the embed URL or the whole iframe snippet the host gives you.",
+        "url_label": "H5P embed URL",
+        "url_placeholder": "https://your-team.h5p.com/content/123456/embed",
+        "title_label": "Title",
+        "title_placeholder": "Title (used for accessibility and search)",
+        "edit_content": "Edit H5P content",
+        "remove_content": "Remove H5P content",
+        "errors": {
+          "empty": "Enter an H5P embed URL.",
+          "unparseable": "That does not look like a valid URL. Paste the embed URL or iframe snippet from your H5P host.",
+          "unsupported_protocol": "Only http and https URLs can be embedded."
+        }
       },
       "quiz_block": {
         "all_correct": "All answers are correct!",

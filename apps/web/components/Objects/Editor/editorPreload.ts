@@ -9,6 +9,7 @@ const COMPONENT_LOADERS: Record<string, () => Promise<unknown>> = {
   blockMathEquation: () =>
     import('./Extensions/MathEquation/MathEquationBlockComponent'),
   blockPDF: () => import('./Extensions/PDF/PDFBlockComponent'),
+  blockH5P: () => import('./Extensions/H5P/H5PBlockComponent'),
   blockLibrary: () => import('./Extensions/Library/LibraryBlockComponent'),
   blockQuiz: () => import('./Extensions/Quiz/QuizBlockComponent'),
   blockEmbed: () => import('./Extensions/EmbedObjects/EmbedObjectsComponent'),
