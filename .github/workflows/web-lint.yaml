@@ -25,7 +25,7 @@ jobs:
           fetch-depth: 0
       - uses: oven-sh/setup-bun@v2
         with:
-          bun-version: latest
+          bun-version-file: .bun-version
       # setup-bun restores the toolchain, not the packages. Without this the
       # web install re-downloads its whole tree on every lint run.
       - name: Cache bun install cache
