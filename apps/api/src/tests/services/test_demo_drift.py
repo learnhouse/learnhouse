@@ -438,3 +438,171 @@ async def test_a_storefront_failure_does_not_cost_the_whole_demo(db, monkeypatch
     ).scalar_one()
     assert courses == 6, "the catalogue is incomplete"
     assert "store:failed" in stats.steps, "the failure was not recorded"
+
+
+async def test_a_storefront_drift_failure_does_not_cost_the_whole_demo(db, monkeypatch):
+    """The other half of the storefront, and the second production outage.
+
+    The seeding step was guarded after the first failure; this sweep was not,
+    and it referenced a column the Enterprise release in production does not
+    have. Both halves touch the same separately-released models, so both have
+    to fail the same way: without the storefront, not without the demo.
+    """
+    from src.services.demo import sync as sync_module
+
+    async def _explode(*args, **kwargs):
+        raise AttributeError("enrollment_uuid")
+
+    monkeypatch.setattr(sync_module, "_delete_store_drift", _explode)
+
+    stats = await sync_demo(db, today=EPOCH_DAY)
+
+    org = (
+        await db.execute(select(Organization).where(Organization.is_demo.is_(True)))
+    ).scalars().first()
+    assert org is not None, "the demo was not built"
+
+    courses = (
+        await db.execute(
+            select(func.count()).select_from(Course).where(Course.org_id == org.id)
+        )
+    ).scalar_one()
+    assert courses == 6
+    assert "store-drift:failed" in stats.steps
+
+
+def test_both_store_steps_ask_the_same_capability_question():
+    """They disagreed once, and the demo stopped provisioning because of it.
+
+    The seeding skipped itself on an older Enterprise build while the drift
+    sweep went ahead and referenced a column that build does not have.
+    """
+    import inspect
+
+    from src.services.demo import sync as sync_module
+
+    for fn in (sync_module._sync_store, sync_module._delete_store_drift):
+        source = inspect.getsource(fn)
+        assert "_store_unsupported_reason()" in source, (
+            f"{fn.__name__} does not use the shared storefront capability gate"
+        )
+
+
+# ---------------------------------------------------------------------------
+# the storefront capability gate
+#
+# This is the code that decides whether a build can host the storefront, and
+# it exists for an environment CI does not have: an Enterprise tree, present
+# and importable, but older than the demo needs. Both production failures lived
+# in exactly that gap, so the decision is tested here against stand-in modules
+# rather than left to the next deploy to evaluate.
+# ---------------------------------------------------------------------------
+
+def _fake_ee(monkeypatch, *, provider_members, enrolment_attrs):
+    """Install a stand-in Enterprise payments package for one test."""
+    import sys
+    import types
+    from enum import Enum
+
+    provider = Enum("PaymentProviderEnum", provider_members, type=str)
+    enrolment = type("PaymentsEnrollment", (), dict(enrolment_attrs))
+
+    payments = types.ModuleType("ee.db.payments.payments")
+    payments.PaymentProviderEnum = provider
+    enrolments = types.ModuleType("ee.db.payments.payments_enrollments")
+    enrolments.PaymentsEnrollment = enrolment
+
+    for name, module in (
+        ("ee", types.ModuleType("ee")),
+        ("ee.db", types.ModuleType("ee.db")),
+        ("ee.db.payments", types.ModuleType("ee.db.payments")),
+        ("ee.db.payments.payments", payments),
+        ("ee.db.payments.payments_enrollments", enrolments),
+    ):
+        monkeypatch.setitem(sys.modules, name, module)
+
+    # The gate asks the deployment first; the suite pins oss.
+    monkeypatch.setattr(
+        "src.core.deployment_mode.get_deployment_mode", lambda: "saas"
+    )
+
+
+def test_the_gate_refuses_a_community_install(monkeypatch):
+    """No payments package at all — normal, and not a fault."""
+    import sys
+
+    from src.services.demo.sync import _store_unsupported_reason
+
+    monkeypatch.setattr(
+        "src.core.deployment_mode.get_deployment_mode", lambda: "saas"
+    )
+    for name in list(sys.modules):
+        if name == "ee" or name.startswith("ee."):
+            monkeypatch.delitem(sys.modules, name, raising=False)
+    monkeypatch.setattr(sys, "path", [p for p in sys.path if "ee" not in p])
+
+    reason = _store_unsupported_reason()
+    assert reason is not None
+    assert "community install" in reason
+
+
+def test_the_gate_refuses_a_build_without_the_custom_provider(monkeypatch):
+    """Production's build. STRIPE would be a checkout somebody could complete."""
+    from src.services.demo.sync import _store_unsupported_reason
+
+    _fake_ee(
+        monkeypatch,
+        provider_members={"STRIPE": "stripe"},
+        enrolment_attrs={"enrollment_uuid": "x"},
+    )
+
+    reason = _store_unsupported_reason()
+    assert reason is not None
+    assert "CUSTOM" in reason
+    assert "STRIPE" in reason, "the message should name what the build does have"
+
+
+def test_the_gate_refuses_a_build_without_enrollment_uuid(monkeypatch):
+    """The second production failure: the sweep matches enrolments by uuid."""
+    from src.services.demo.sync import _store_unsupported_reason
+
+    _fake_ee(
+        monkeypatch,
+        provider_members={"STRIPE": "stripe", "CUSTOM": "custom"},
+        enrolment_attrs={},
+    )
+
+    reason = _store_unsupported_reason()
+    assert reason is not None
+    assert "enrollment_uuid" in reason
+
+
+def test_the_gate_allows_a_complete_build(monkeypatch):
+    """Everything present: the storefront is seeded and swept as before."""
+    from src.services.demo.sync import _store_unsupported_reason
+
+    _fake_ee(
+        monkeypatch,
+        provider_members={"STRIPE": "stripe", "CUSTOM": "custom"},
+        enrolment_attrs={"enrollment_uuid": "x"},
+    )
+
+    assert _store_unsupported_reason() is None
+
+
+def test_the_gate_refuses_oss_regardless_of_what_is_installed(monkeypatch):
+    """Payments is Enterprise-gated, so an oss deployment has no storefront."""
+    from src.services.demo.sync import _store_unsupported_reason
+
+    _fake_ee(
+        monkeypatch,
+        provider_members={"STRIPE": "stripe", "CUSTOM": "custom"},
+        enrolment_attrs={"enrollment_uuid": "x"},
+    )
+    monkeypatch.setattr(
+        "src.core.deployment_mode.get_deployment_mode", lambda: "oss"
+    )
+
+    reason = _store_unsupported_reason()
+    assert reason is not None
+    assert "oss mode" in reason
