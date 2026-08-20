@@ -7,6 +7,7 @@ import { getUriWithOrg } from '@services/config/config'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useTranslation } from 'react-i18next'
+import { useCourseCertification } from '@components/Hooks/useCourseCertification'
 
 interface Props {
   course: any
@@ -305,6 +306,13 @@ function ActivityIndicators(props: Props) {
   const enableNavigation = props.enableNavigation || false
   const router = useRouter()
 
+  // The trophy promises a certificate, so it only makes sense on a course that
+  // actually has certification. A definitive "no certification" hides it; a
+  // pending or failed lookup leaves it as it is today.
+  const { isEnabled: certificationEnabled, isUnknown: certificationUnknown } =
+    useCourseCertification(props.course_uuid)
+  const showCertificationBadge = certificationEnabled || certificationUnknown
+
   const done_activity_style = 'bg-teal-500 hover:bg-teal-600'
   const black_activity_style = 'bg-zinc-200/80 hover:bg-zinc-300'
   const current_activity_style = 'bg-gray-500 animate-pulse hover:bg-gray-600'
@@ -460,11 +468,13 @@ function ActivityIndicators(props: Props) {
           </div>
         </div>
 
-        <CertificationBadge
-          courseid={courseid}
-          orgslug={orgslug}
-          isCompleted={isCourseCompleted}
-        />
+        {showCertificationBadge && (
+          <CertificationBadge
+            courseid={courseid}
+            orgslug={orgslug}
+            isCompleted={isCourseCompleted}
+          />
+        )}
 
         {enableNavigation && (
           <button
@@ -583,11 +593,13 @@ function ActivityIndicators(props: Props) {
           })}
 
           {/* Certification Badge */}
-          <CertificationBadge
-            courseid={courseid}
-            orgslug={orgslug}
-            isCompleted={isCourseCompleted}
-          />
+          {showCertificationBadge && (
+            <CertificationBadge
+              courseid={courseid}
+              orgslug={orgslug}
+              isCompleted={isCourseCompleted}
+            />
+          )}
         </div>
 
         {enableNavigation && (

@@ -9,6 +9,8 @@ import FeatureGate from '@components/Dashboard/Shared/FeatureGate/FeatureGate'
 import { useOrg } from '@components/Contexts/OrgContext'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
 import { queryKeys } from '@/lib/query/keys'
+import { sortLibrary } from '@lib/library/sort'
+import { type FolderSortMode } from '@components/Dashboard/Library/FolderSortDropdown'
 import { getOrgFolders, getOrgRootItems } from '@services/folders/folders'
 import { FolderSimple } from '@phosphor-icons/react'
 import { FolderCard, LibraryItemCard } from './library-cards'
@@ -34,8 +36,17 @@ function LibraryClient({ orgslug }: { orgslug: string }) {
 
   // Folders are a transparent, optional layer: a fetch failure must degrade to
   // an empty state rather than blanking the page or blocking course discovery.
-  const folders = Array.isArray(data) ? data : []
-  const rootItems = Array.isArray(rootItemsData) ? rootItemsData : []
+  // Same org-level sort mode the dashboard reads, so learners see the library in
+  // the exact order an admin arranged it in. Until the org config is actually
+  // here, 'manual' trusts the API order rather than assuming A→Z.
+  const sortMode: FolderSortMode = org
+    ? org?.config?.config?.general?.folders?.sort_mode ?? 'name_asc'
+    : 'manual'
+  const { folders, items: rootItems } = sortLibrary(
+    Array.isArray(data) ? data : [],
+    Array.isArray(rootItemsData) ? rootItemsData : [],
+    sortMode
+  )
 
   useTrackView(
     AnalyticsEvent.LibraryViewed,

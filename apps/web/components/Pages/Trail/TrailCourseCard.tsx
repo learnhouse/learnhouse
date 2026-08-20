@@ -7,6 +7,7 @@ import { getCourseThumbnailMediaDirectory } from '@services/media/media'
 import { revalidateTags } from '@services/utils/ts/requests'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
 import { getUserCertificates } from '@services/courses/certifications'
+import { useCourseCertification } from '@components/Hooks/useCourseCertification'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
@@ -47,6 +48,19 @@ function TrailCourseCard(props: TrailCourseCardProps) {
   const [isLoadingCertificate, setIsLoadingCertificate] = useState(false)
   const queryClient = useQueryClient()
 
+  // Only a definitive "this course has no certification" hides the certificate
+  // row; a pending or failed lookup keeps the existing behaviour. Asked for only
+  // at 100% — that is the only progress where anything below consumes it, and a
+  // trail of N unfinished courses must not fire N certification requests.
+  const {
+    isEnabled: certificationEnabled,
+    isUnknown: certificationUnknown,
+    isLoading: isLoadingCertificationStatus,
+  } = useCourseCertification(
+    course_progress === 100 ? props.course.course_uuid : undefined
+  )
+  const showCertificateUI = certificationEnabled || certificationUnknown
+
   const handleMouseEnter = () => {
     queryClient.prefetchQuery({
       queryKey: queryKeys.courses.meta(courseid),
@@ -67,6 +81,7 @@ function TrailCourseCard(props: TrailCourseCardProps) {
   useEffect(() => {
     const fetchCourseCertificate = async () => {
       if (!access_token || course_progress < 100 || !org?.id) return;
+      if (isLoadingCertificationStatus || !showCertificateUI) return;
 
       setIsLoadingCertificate(true);
       try {
@@ -87,7 +102,7 @@ function TrailCourseCard(props: TrailCourseCardProps) {
     };
 
     fetchCourseCertificate();
-  }, [access_token, course_progress, props.course.course_uuid, org?.id]);
+  }, [access_token, course_progress, props.course.course_uuid, org?.id, isLoadingCertificationStatus, showCertificateUI]);
 
   useEffect(() => { }, [props.course, org])
 
@@ -172,12 +187,12 @@ function TrailCourseCard(props: TrailCourseCardProps) {
         <div className="pt-1.5 flex items-center justify-between border-t border-gray-100">
           {/* Certificate or Progress indicator */}
           {course_progress === 100 ? (
-            isLoadingCertificate ? (
+            showCertificateUI && (isLoadingCertificate || isLoadingCertificationStatus) ? (
               <div className="flex items-center gap-1.5 text-gray-400">
                 <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-yellow-500"></div>
                 <span className="text-[10px] font-bold uppercase tracking-wider">{t('common.loading')}</span>
               </div>
-            ) : courseCertificate ? (
+            ) : showCertificateUI && courseCertificate ? (
               <div className="flex items-center gap-1.5 text-yellow-600">
                 <Award size={12} />
                 <span className="text-[10px] font-bold uppercase tracking-wider">{t('certificate.certificate')}</span>
@@ -195,7 +210,7 @@ function TrailCourseCard(props: TrailCourseCardProps) {
             </div>
           )}
 
-          {course_progress === 100 && courseCertificate ? (
+          {course_progress === 100 && showCertificateUI && courseCertificate ? (
             <Link
               href={getUriWithOrg(props.orgslug, `/certificates/${courseCertificate.certificate_user.user_certification_uuid}/verify`)}
               target="_blank"
