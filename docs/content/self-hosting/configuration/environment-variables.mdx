@@ -105,6 +105,7 @@ optional: the feature stays disabled or uses a runtime fallback when the variabl
 | `LEARNHOUSE_EMAIL_PROVIDER` | Outbound email provider. | enum: `resend`, `smtp` | `resend` | API, CLI |
 | `LEARNHOUSE_RESEND_API_KEY` | Resend API key when `LEARNHOUSE_EMAIL_PROVIDER=resend`. | secret string | unset; required to send via Resend | API, CLI |
 | `LEARNHOUSE_SYSTEM_EMAIL_ADDRESS` | Sender address for system email. | email | unset; CLI setup can emit `noreply@{domain}` | API, CLI |
+| `LEARNHOUSE_SYSTEM_EMAIL_SENDER_NAME` | Display name on system email, as in `Name <address>`. The address itself is not configurable per sender. | string | `LearnHouse` | API |
 | `LEARNHOUSE_SMTP_HOST` | SMTP server hostname when `LEARNHOUSE_EMAIL_PROVIDER=smtp`. | hostname | unset | API, CLI |
 | `LEARNHOUSE_SMTP_PORT` | SMTP server port. | integer | `587` | API, CLI |
 | `LEARNHOUSE_SMTP_USERNAME` | SMTP authentication username. | string | unset | API, CLI |

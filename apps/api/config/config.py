@@ -106,6 +106,12 @@ class HostingConfig(BaseModel):
 class MailingConfig(BaseModel):
     email_provider: Literal["resend", "smtp"]
     system_email_address: str
+    # Display name only. The From ADDRESS is always ``system_email_address``:
+    # it is the domain carrying the verified SPF/DKIM records, so making it
+    # configurable would break DKIM alignment and burn a shared sending
+    # reputation. Organizations may override this name per-org; see
+    # ``src/services/email/sender.py``.
+    system_email_sender_name: Optional[str] = "LearnHouse"
     resend_api_key: Optional[str] = None
     smtp_host: Optional[str] = None
     smtp_port: Optional[int] = 587
@@ -484,6 +490,7 @@ def get_learnhouse_config() -> LearnHouseConfig:
     env_email_provider = os.environ.get("LEARNHOUSE_EMAIL_PROVIDER")
     env_resend_api_key = os.environ.get("LEARNHOUSE_RESEND_API_KEY")
     env_system_email_address = os.environ.get("LEARNHOUSE_SYSTEM_EMAIL_ADDRESS")
+    env_system_email_sender_name = os.environ.get("LEARNHOUSE_SYSTEM_EMAIL_SENDER_NAME")
     env_smtp_host = os.environ.get("LEARNHOUSE_SMTP_HOST")
     env_smtp_port = os.environ.get("LEARNHOUSE_SMTP_PORT")
     env_smtp_username = os.environ.get("LEARNHOUSE_SMTP_USERNAME")
@@ -499,6 +506,11 @@ def get_learnhouse_config() -> LearnHouseConfig:
     system_email_address = env_system_email_address or yaml_config.get(
         "mailing_config", {}
     ).get("system_email_address")
+    # Defaults to "LearnHouse" so an unset deployment keeps the historical
+    # From name exactly as it was.
+    system_email_sender_name = env_system_email_sender_name or yaml_config.get(
+        "mailing_config", {}
+    ).get("system_email_sender_name", "LearnHouse")
     smtp_host = env_smtp_host or yaml_config.get("mailing_config", {}).get("smtp_host")
     smtp_port = int(env_smtp_port) if env_smtp_port else yaml_config.get("mailing_config", {}).get("smtp_port", 587)
     smtp_username = env_smtp_username or yaml_config.get("mailing_config", {}).get("smtp_username")
@@ -722,6 +734,7 @@ def get_learnhouse_config() -> LearnHouseConfig:
         mailing_config=MailingConfig(
             email_provider=email_provider,
             system_email_address=system_email_address,
+            system_email_sender_name=system_email_sender_name,
             resend_api_key=resend_api_key,
             smtp_host=smtp_host,
             smtp_port=smtp_port,

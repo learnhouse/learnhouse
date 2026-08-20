@@ -219,6 +219,9 @@ async def _try_send_org_created(request: Request, org, current_user, db_session)
         base = await get_org_signup_base_url(
             org.slug, request, db_session=db_session, org_id=org.id
         )
+        # Deliberately platform-branded: the org was created seconds ago, so it
+        # has no configured sender name yet, and this mail is the platform
+        # confirming an action taken on the platform.
         send_org_created_email(email, org.name, f"{base.rstrip('/')}/dash")
     except Exception:
         logging.exception("send_org_created_email failed")
@@ -775,6 +778,9 @@ async def delete_org(
     if acting_email:
         try:
             from src.services.users.emails import send_org_deleted_email
+            # Platform-branded on purpose: the org (and its config, including
+            # any sender name) no longer exists, and mail confirming a deletion
+            # should not arrive under the deleted org's own name.
             send_org_deleted_email(acting_email, org_name)
         except Exception:
             logging.exception("send_org_deleted_email failed")
@@ -1325,6 +1331,107 @@ async def update_org_footer_text_config(
     await db_session.refresh(org_config)
 
     return {"detail": "Footer text configuration updated"}
+
+
+async def update_org_email_sender_name_config(
+    request: Request,
+    email_sender_name: str,
+    org_id: int,
+    current_user: PublicUser | AnonymousUser,
+    db_session: AsyncSession,
+):
+    """Set the display name on transactional email sent for this org.
+
+    Only the NAME is configurable. The From address stays the platform's
+    ``system_email_address`` — it is the domain holding the verified SPF/DKIM
+    records, and letting an org pick its own address would break DKIM
+    alignment and damage a sending reputation shared by every tenant.
+
+    The submitted value is admin-typed text that ends up in an RFC 5322
+    header, so it is validated with the same sanitizer the send path uses.
+    Rejecting here (rather than silently storing something that sanitizes to
+    nothing) means the dashboard shows what was actually saved.
+    """
+    from src.services.email.sender import (
+        MAX_SENDER_NAME_LENGTH,
+        sanitize_sender_name,
+    )
+
+    submitted = email_sender_name or ""
+    if len(submitted) > MAX_SENDER_NAME_LENGTH:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Sender name must be {MAX_SENDER_NAME_LENGTH} characters or less",
+        )
+
+    sanitized = sanitize_sender_name(submitted)
+    if submitted.strip() and not sanitized:
+        raise HTTPException(
+            status_code=400,
+            detail="Sender name contains no usable characters",
+        )
+
+    statement = select(Organization).where(Organization.id == org_id)
+    org = (await db_session.execute(statement)).scalars().first()
+
+    if not org:
+        raise HTTPException(status_code=404, detail="Organization not found")
+
+    await rbac_check(request, org.org_uuid, current_user, "update", db_session)
+
+    statement = select(OrganizationConfig).where(OrganizationConfig.org_id == org.id)
+    org_config = (await db_session.execute(statement)).scalars().first()
+
+    if org_config is None:
+        raise HTTPException(status_code=404, detail="Organization config not found")
+
+    updated_config = _deep_copy_config(org_config)
+
+    if _is_v2_config(updated_config):
+        updated_config.setdefault("customization", {}).setdefault("general", {})
+        updated_config["customization"]["general"]["email_sender_name"] = sanitized
+    else:
+        updated_config.setdefault("general", {"enabled": True, "color": "", "watermark": True})
+        updated_config["general"]["email_sender_name"] = sanitized
+
+    org_config.config = updated_config
+    org_config.update_date = str(datetime.now())
+
+    db_session.add(org_config)
+    await db_session.commit()
+    await db_session.refresh(org_config)
+
+    return {"detail": "Email sender name updated"}
+
+
+def resolve_org_sender_name(org_config: OrganizationConfig | None) -> str:
+    """The org's configured email display name, or "" when it has none.
+
+    "" is the signal to fall back to the platform default, so an org that never
+    touched the setting keeps sending under the deployment's own name. Read
+    through the sanitizer as well as written through it: a value stored before
+    validation existed, or edited straight in the database, must not reach a
+    header unfiltered.
+    """
+    from src.services.email.sender import sanitize_sender_name
+
+    if org_config is None or not isinstance(org_config.config, dict):
+        return ""
+    cfg = org_config.config
+
+    def _section(parent: dict, key: str) -> dict:
+        # A config blob can carry an explicit ``null`` for a section it has
+        # never populated, and ``{}.get(k, {})`` returns that None rather than
+        # the default. Every org-scoped email reads this, so a missing section
+        # must yield "no name", not an AttributeError mid-send.
+        value = parent.get(key)
+        return value if isinstance(value, dict) else {}
+
+    v2 = _section(_section(cfg, "customization"), "general").get("email_sender_name")
+    if v2:
+        return sanitize_sender_name(v2)
+    v1 = _section(cfg, "general").get("email_sender_name")
+    return sanitize_sender_name(v1) if v1 else ""
 
 
 async def update_org_font_config(

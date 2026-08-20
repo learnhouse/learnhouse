@@ -5,6 +5,7 @@ import * as Yup from 'yup'
 import {
   updateOrganization,
   updateOrgFooterTextConfig,
+  updateOrgEmailSenderNameConfig,
   updateOrgDefaultLanguageConfig,
 } from '@services/settings/org'
 import { AVAILABLE_LANGUAGES } from '@/lib/languages'
@@ -55,6 +56,10 @@ const ORG_LABELS = [
   { value: 'early_education', label: '🎯 Early Education' },
 ] as const
 
+// Mirrors MAX_SENDER_NAME_LENGTH in apps/api/src/services/email/sender.py, which
+// re-validates (and sanitizes) every submitted value server-side.
+const MAX_EMAIL_SENDER_NAME_LENGTH = 64
+
 const validationSchema = Yup.object().shape({
   name: Yup.string()
     .required('Name is required')
@@ -88,6 +93,13 @@ const OrgEditGeneral: React.FC = () => {
   const [footerText, setFooterText] = React.useState<string>(org?.config?.config?.customization?.general?.footer_text || org?.config?.config?.general?.footer_text || '')
   const [_isFooterSaving, _setIsFooterSaving] = React.useState(false)
 
+  // Email sender display name state
+  const [emailSenderName, setEmailSenderName] = React.useState<string>(
+    org?.config?.config?.customization?.general?.email_sender_name ||
+    org?.config?.config?.general?.email_sender_name ||
+    ''
+  )
+
   // Default language state
   const [defaultLanguage, setDefaultLanguage] = React.useState<string>(
     org?.config?.config?.customization?.general?.default_language ||
@@ -108,6 +120,9 @@ const OrgEditGeneral: React.FC = () => {
       await updateOrganization(org.id, values, access_token)
       // Also save footer text
       await updateOrgFooterTextConfig(org.id, footerText, access_token)
+      // Save the email sender display name (name only — the sending address is
+      // always the platform's)
+      await updateOrgEmailSenderNameConfig(org.id, emailSenderName, access_token)
       // Save default language
       await updateOrgDefaultLanguageConfig(org.id, defaultLanguage, access_token)
       await revalidateTags(['organizations'], org.slug)
@@ -246,6 +261,24 @@ const OrgEditGeneral: React.FC = () => {
                         maxLength={100}
                       />
                       <p className="text-gray-500 text-sm mt-1">{t('dashboard.organization.settings.footer_text_desc')}</p>
+                    </div>
+
+                    <div>
+                      <Label htmlFor="emailSenderName">
+                        {t('dashboard.organization.settings.email_sender_name')}
+                        <span className="text-gray-500 text-sm ms-2">
+                          ({MAX_EMAIL_SENDER_NAME_LENGTH - (emailSenderName?.length || 0)} characters left)
+                        </span>
+                      </Label>
+                      <Input
+                        id="emailSenderName"
+                        name="emailSenderName"
+                        value={emailSenderName}
+                        onChange={(e) => setEmailSenderName(e.target.value)}
+                        placeholder={t('dashboard.organization.settings.email_sender_name_placeholder')}
+                        maxLength={MAX_EMAIL_SENDER_NAME_LENGTH}
+                      />
+                      <p className="text-gray-500 text-sm mt-1">{t('dashboard.organization.settings.email_sender_name_desc')}</p>
                     </div>
 
                     <div>

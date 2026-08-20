@@ -17,7 +17,7 @@ from src.db.organization_config import OrganizationConfig
 from src.db.organizations import Organization, OrganizationRead
 from src.db.users import User, UserRead
 from config.config import get_learnhouse_config
-from src.services.orgs.orgs import get_org_default_language
+from src.services.orgs.orgs import get_org_default_language, resolve_org_sender_name
 from src.services.users.emails import send_email_verification_email
 from src.services.email.utils import (
     get_base_url_from_request,
@@ -83,6 +83,9 @@ async def send_verification_email(
     org_read = None
     org_uuid = NO_ORG_UUID
     lang = "en"
+    # Stays empty for org-less (platform) signups, so those keep the platform's
+    # own From name rather than borrowing some organization's.
+    sender_name = ""
 
     if org_id is not None:
         statement = select(Organization).where(Organization.id == org_id)
@@ -99,6 +102,7 @@ async def send_verification_email(
         org_config_stmt = select(OrganizationConfig).where(OrganizationConfig.org_id == org.id)
         org_config = (await db_session.execute(org_config_stmt)).scalars().first()
         lang = get_org_default_language(org_config)
+        sender_name = resolve_org_sender_name(org_config)
 
     # Get Redis connection
     r = get_redis_connection()
@@ -162,6 +166,7 @@ async def send_verification_email(
         email=user.email,
         base_url=base_url,
         lang=lang,
+        sender_name=sender_name,
     )
 
     if not email_sent:

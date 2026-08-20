@@ -56,6 +56,8 @@ class OrgSnapshot:
     org_active_flag: bool = True
     logo_image: Optional[str] = None
     org_uuid: Optional[str] = None
+    # From display name for this org's mail; "" means use the platform default.
+    sender_name: str = ""
 
     created_at: Optional[datetime] = None
     org_updated_at: Optional[datetime] = None

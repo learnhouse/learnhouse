@@ -13,6 +13,7 @@ from pydantic import EmailStr
 from fastapi import Request
 import resend
 from config.config import get_learnhouse_config
+from src.services.email.sender import DEFAULT_SENDER_NAME, format_sender
 
 logger = logging.getLogger(__name__)
 
@@ -376,6 +377,7 @@ def send_email(
     subject: str,
     body: str,
     headers: Optional[dict[str, str]] = None,
+    sender_name: Optional[str] = None,
 ):
     """Send one HTML email.
 
@@ -383,12 +385,26 @@ def send_email(
     lifecycle mail needs ``List-Unsubscribe`` / ``List-Unsubscribe-Post``;
     Gmail and Outlook penalise bulk senders that omit them. Transactional
     callers pass nothing and are unaffected.
+
+    ``sender_name`` is the DISPLAY NAME only — an organization's own name on
+    org-scoped mail, ``None`` on platform mail so it falls back to the
+    deployment default. The From ADDRESS is always
+    ``mailing.system_email_address`` and is deliberately not configurable: it
+    is the domain holding the verified SPF/DKIM records, and an org-chosen
+    address would fail DKIM alignment on every message while damaging a
+    sending reputation shared across tenants. The name is admin-supplied text
+    landing in an RFC 5322 header, so it is sanitized in ``format_sender``
+    before it gets anywhere near one.
     """
     from fastapi import HTTPException
 
     lh_config = get_learnhouse_config()
     mailing = lh_config.mailing_config
-    sender = f"LearnHouse <{mailing.system_email_address}>"
+    sender = format_sender(
+        sender_name,
+        mailing.system_email_address,
+        getattr(mailing, "system_email_sender_name", DEFAULT_SENDER_NAME),
+    )
 
     # Resend (and most providers) require a plain `email@example.com` string.
     # Pydantic's EmailStr is a str subclass, but third-party JSON serializers
