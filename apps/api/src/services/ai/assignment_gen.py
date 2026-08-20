@@ -25,6 +25,11 @@ from src.services.ai.schemas.assignment import (
     GeneratedAssignmentPlan,
     GeneratedTask,
 )
+from src.services.courses.activities.quiz_modes import (
+    GRADING_MODE_ALL_OR_NOTHING,
+    RESPONSE_TYPE_MULTIPLE,
+    count_correct_options,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -34,7 +39,13 @@ MAX_CONTEXT_CHARS = 8000
 _SYSTEM_PROMPT = """You are an expert instructional designer generating a graded assignment for a course.
 
 You know these task types and MUST use their exact structure:
-- QUIZ: multiple-choice; each question has options, each option marked correct or not. At least one correct option per question.
+- QUIZ: each question has options, each option marked correct or not, and a response_type:
+    * response_type "single": exactly ONE option is correct — the learner picks one.
+    * response_type "multiple": a select-all-that-apply question — mark EVERY correct
+      option correct (two or more), and the learner must find all of them.
+  At least one correct option per question, and response_type must match the number of
+  correct options you mark. Use "multiple" when the material genuinely has several right
+  answers; do not force it.
 - FORM: fill-in-the-blank; each question has one or more blanks, each with the correct answer (and optional hint).
 - SHORT_ANSWER: an open text prompt with a list of accepted answers and a match_mode (default case_insensitive).
 - NUMBER_ANSWER: a prompt expecting a numeric answer, with correct_value and a tolerance (use 0 for exact).
@@ -83,14 +94,23 @@ def _quiz_contents(task: AITask) -> dict:
             }
             for opt in q.options
         ]
+        # The answer key wins over the declared mode. A model that marks two
+        # options correct while labelling the question "single" would otherwise
+        # produce a pick-one question the learner can never get right.
+        response_type = q.response_type
+        if count_correct_options(options) >= 2:
+            response_type = RESPONSE_TYPE_MULTIPLE
         questions.append(
             {
                 "questionUUID": f"question_{uuid4()}",
                 "questionText": q.question_text,
+                "response_type": response_type,
                 "options": options,
             }
         )
-    return {"questions": questions}
+    # Generated quizzes grade all-or-nothing, same as every hand-authored one;
+    # the teacher can switch the task to partial credit in the task editor.
+    return {"questions": questions, "grading_mode": GRADING_MODE_ALL_OR_NOTHING}
 
 
 def _form_contents(task: AITask) -> dict:

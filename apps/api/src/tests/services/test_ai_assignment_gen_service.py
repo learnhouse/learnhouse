@@ -33,7 +33,34 @@ def test_quiz_contents_shape():
     opt = gt.contents["questions"][0]["options"][0]
     assert set(opt) == {"optionUUID", "text", "fileID", "type", "assigned_right_answer"}
     assert opt["assigned_right_answer"] is True and opt["type"] == "text"
+    assert gt.contents["questions"][0]["response_type"] == "single"
+    assert gt.contents["grading_mode"] == "all_or_nothing"
     assert gt.max_grade_value == 100
+
+
+def test_quiz_contents_marks_select_all_that_apply_questions_multiple():
+    t = AITask(
+        title="t", description="d", assignment_type="QUIZ",
+        quiz=AIQuizContents(questions=[AIQuizQuestion(
+            question_text="Q", response_type="multiple", options=[
+                AIQuizOption(text="A", is_correct=True),
+                AIQuizOption(text="B", is_correct=True),
+                AIQuizOption(text="C", is_correct=False)])]),
+    )
+    assert ag._quiz_contents(t)["questions"][0]["response_type"] == "multiple"
+
+
+def test_quiz_contents_promotes_a_mislabelled_single_with_two_correct_options():
+    """The answer key wins: a "single" question with 2 correct options is
+    unanswerable under radio semantics, so it is stored as multiple."""
+    t = AITask(
+        title="t", description="d", assignment_type="QUIZ",
+        quiz=AIQuizContents(questions=[AIQuizQuestion(
+            question_text="Q", response_type="single", options=[
+                AIQuizOption(text="A", is_correct=True),
+                AIQuizOption(text="B", is_correct=True)])]),
+    )
+    assert ag._quiz_contents(t)["questions"][0]["response_type"] == "multiple"
 
 
 def test_form_contents_shape():
@@ -65,7 +92,8 @@ def test_file_submission_contents_empty():
 
 def test_builders_default_when_subobject_missing():
     # assignment_type says QUIZ but no quiz payload -> empty questions
-    assert ag._quiz_contents(AITask(title="t", description="d", assignment_type="QUIZ")) == {"questions": []}
+    assert ag._quiz_contents(AITask(title="t", description="d", assignment_type="QUIZ")) == {
+        "questions": [], "grading_mode": "all_or_nothing"}
     assert ag._form_contents(AITask(title="t", description="d", assignment_type="FORM")) == {"questions": []}
     sa = ag._short_answer_contents(AITask(title="t", description="d", assignment_type="SHORT_ANSWER"))
     assert sa["correct_answers"] == []

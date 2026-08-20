@@ -29,6 +29,25 @@ def test_to_block_quiz_stamps_ids():
     assert q["question_id"].startswith("question_")
     assert q["answers"][1]["answer_id"].startswith("answer_")
     assert q["answers"][1]["correct"] is True
+    assert q["response_type"] == "single"
+
+
+def test_to_block_quiz_keeps_a_declared_select_all_that_apply_question():
+    generated = GeneratedQuiz(questions=[GenQuizQuestion(
+        question="Which are primes?", response_type="multiple",
+        answers=[GenQuizAnswer(answer="2", correct=True),
+                 GenQuizAnswer(answer="3", correct=True),
+                 GenQuizAnswer(answer="4", correct=False)])])
+    assert quizsvc._to_block_quiz(generated)["questions"][0]["response_type"] == "multiple"
+
+
+def test_to_block_quiz_promotes_a_mislabelled_single_with_two_correct_answers():
+    """Two correct answers make it select-all-that-apply whatever the model said."""
+    generated = GeneratedQuiz(questions=[GenQuizQuestion(
+        question="Which are primes?", response_type="single",
+        answers=[GenQuizAnswer(answer="2", correct=True),
+                 GenQuizAnswer(answer="3", correct=True)])])
+    assert quizsvc._to_block_quiz(generated)["questions"][0]["response_type"] == "multiple"
 
 
 def test_build_prompt_includes_difficulty_and_context():

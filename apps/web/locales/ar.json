@@ -1066,7 +1066,18 @@
     },
     "quiz": {
       "correct_answer": "صحيح",
-      "incorrect_answer": "خطأ"
+      "incorrect_answer": "خطأ",
+      "select_one": "اختر إجابة واحدة",
+      "select_all_that_apply": "اختر كل ما ينطبق",
+      "response_type_single": "إجابة واحدة",
+      "response_type_multiple": "إجابات متعددة",
+      "no_correct_option_warning": "لا يوجد خيار صحيح — سيتم تخطي هذا السؤال عند التصحيح",
+      "question_fallback_label": "سؤال",
+      "grading_mode_label": "التصحيح",
+      "grading_all_or_nothing": "الكل أو لا شيء",
+      "grading_partial_credit": "درجة جزئية",
+      "grading_all_or_nothing_hint": "لا يحصل السؤال على درجة إلا إذا طابقت الإجابات المختارة مفتاح الإجابة تمامًا.",
+      "grading_partial_credit_hint": "تحصل أسئلة «اختر كل ما ينطبق» على جزء من الدرجة؛ وكل اختيار خاطئ يلغي اختيارًا صحيحًا."
     },
     "quick_grade": {
       "full": "كاملة",
@@ -4672,7 +4683,12 @@
         "question_label": "السؤال",
         "delete_question": "حذف السؤال",
         "empty_editable": "لا توجد أسئلة بعد. أضف سؤالك الأول للبدء.",
-        "empty_readonly": "لا يحتوي هذا الاختبار على أسئلة بعد."
+        "empty_readonly": "لا يحتوي هذا الاختبار على أسئلة بعد.",
+        "select_one": "اختر إجابة واحدة",
+        "select_all_that_apply": "اختر كل ما ينطبق",
+        "response_type_single": "إجابة واحدة",
+        "response_type_multiple": "إجابات متعددة",
+        "no_correct_answer_warning": "لا توجد إجابة صحيحة — سيتم تخطي هذا السؤال"
       },
       "math_block": {
         "templates": "القوالب",
