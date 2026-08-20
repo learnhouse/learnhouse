@@ -398,3 +398,43 @@ async def test_a_visitors_submissions_and_certificate_are_removed(db, demo_org, 
         await db.execute(select(func.count()).select_from(CertificateUser))
     ).scalar_one()
     assert seeded > 0
+
+
+# ---------------------------------------------------------------------------
+# the storefront, which lives in another repository
+# ---------------------------------------------------------------------------
+
+async def test_a_storefront_failure_does_not_cost_the_whole_demo(db, monkeypatch):
+    """The store is the one step whose code ships on a separate cadence.
+
+    Regression test for a real outage: the seeding referenced a payment
+    provider that existed on the Enterprise branch it was written against and
+    not in the Enterprise release production ran, so every refresh died with an
+    AttributeError and the demo never provisioned at all. Neither the test
+    suite nor CI could see it — CI has no Enterprise package, and the step
+    skips itself when payments are unavailable.
+
+    Six courses, forty learners and a grading inbox are the sales asset. Losing
+    the storefront is a missing feature; losing the demo is no demo.
+    """
+    from src.services.demo import sync as sync_module
+
+    async def _explode(*args, **kwargs):
+        raise AttributeError("type object 'PaymentProviderEnum' has no attribute 'CUSTOM'")
+
+    monkeypatch.setattr(sync_module, "_sync_store", _explode)
+
+    stats = await sync_demo(db, today=EPOCH_DAY)
+
+    org = (
+        await db.execute(select(Organization).where(Organization.is_demo.is_(True)))
+    ).scalars().first()
+    assert org is not None, "the demo was not built"
+
+    courses = (
+        await db.execute(
+            select(func.count()).select_from(Course).where(Course.org_id == org.id)
+        )
+    ).scalar_one()
+    assert courses == 6, "the catalogue is incomplete"
+    assert "store:failed" in stats.steps, "the failure was not recorded"

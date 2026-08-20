@@ -388,7 +388,29 @@ async def _sync_demo_inner(
     await _sync_certifications(db_session, bundle, org, registry, courses_by_key, stats)
     await _sync_course_updates(db_session, bundle, org, registry, epoch, courses_by_key, stats)
     await _sync_engagement(db_session, bundle, org, registry, epoch, users_by_key, stats)
-    await _sync_store(db_session, bundle, org, registry, epoch, users_by_key, stats)
+    # The storefront is the one part of the demo whose code lives in another
+    # repository on its own release cadence, so it can break on a version skew
+    # that nothing here or in CI would catch. A failure there must cost the
+    # storefront, not the entire demo: six courses, forty learners and the
+    # grading inbox are the sales asset, and a demo that refuses to exist
+    # because one optional feature drifted is the worse outcome.
+    #
+    # Deliberately narrow — the surrounding phases stay fatal, because a
+    # failure in any of them means the demo is wrong rather than incomplete.
+    # Inside a savepoint, not a bare try: a statement that fails mid-step
+    # aborts the surrounding transaction on Postgres, so catching the exception
+    # without rolling back to a savepoint would leave every later phase failing
+    # on "current transaction is aborted".
+    try:
+        async with db_session.begin_nested():
+            await _sync_store(
+                db_session, bundle, org, registry, epoch, users_by_key, stats
+            )
+    except Exception as exc:
+        stats.steps.append("store:failed")
+        logger.exception(
+            "Demo store step failed; continuing without a storefront: %s", exc
+        )
 
     await db_session.flush()
 
@@ -2181,6 +2203,25 @@ async def _sync_store(
             "Demo store skipped: payments models unavailable (%s). "
             "Expected on a community install.",
             exc,
+        )
+        return
+
+    # The storefront needs a provider that takes no money. CUSTOM means "this
+    # organization drives its own enrolments through the public API", which is
+    # exactly the demo's situation; STRIPE would be a real checkout somebody
+    # could complete in a shared sandbox.
+    #
+    # It is a newer member of the enum than the payments tables themselves, so
+    # an Enterprise build can have the models and not this value — which is not
+    # a community install and not a fault, just an older Enterprise release.
+    # Seeding a storefront without it is not an option, so the step is skipped
+    # and says why.
+    if not hasattr(PaymentProviderEnum, "CUSTOM"):
+        logger.info(
+            "Demo store skipped: this Enterprise build's PaymentProviderEnum "
+            "has no CUSTOM provider (has: %s), and the demo will not configure "
+            "a storefront against a real payment provider.",
+            ", ".join(p.name for p in PaymentProviderEnum),
         )
         return
 
