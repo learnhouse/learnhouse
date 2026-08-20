@@ -609,6 +609,19 @@
     unicode-bidi: plaintext;
     text-align: start;
   }
+
+  /* Math notation is left-to-right by specification, in every language. KaTeX
+     positions its atoms as inline-blocks and never sets a direction of its own,
+     so an RTL page reverses the whole equation. The editor's math block sets
+     dir="ltr" on its wrapper; markdown-rendered math has no wrapper to hang it
+     on, so lock it here. `isolate` keeps an inline formula from being reordered
+     against the Arabic sentence around it. */
+  .katex,
+  .katex-display {
+    direction: ltr;
+    unicode-bidi: isolate;
+    text-align: initial;
+  }
 }
 
     /* Confirmation Modal Animations */

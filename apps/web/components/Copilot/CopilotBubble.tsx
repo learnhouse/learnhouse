@@ -34,6 +34,7 @@ import {
 } from '@phosphor-icons/react'
 import {
   AssistantMessage,
+  EMPTY_SOURCES,
   CourseDropdown,
   SessionItem,
   groupSessionsByDate,
@@ -418,7 +419,7 @@ function BubbleInner({ orgslug, open, onOpenChange, sessionToLoad }: CopilotBubb
                     <AssistantMessage
                       key={i}
                       content={msg.content}
-                      sources={msg.sources || []}
+                      sources={msg.sources || EMPTY_SOURCES}
                       orgslug={orgslug}
                       isStreaming={isThisStreaming && !!msg.content}
                       isWaiting={isThisStreaming && isWaiting && !msg.content}
