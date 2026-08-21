@@ -37,7 +37,11 @@ from src.security.org_auth import is_org_member, enforce_org_mfa
 from src.security.rbac.constants import ADMIN_ROLE_ID
 from src.services.orgs.invites import send_invite_email
 from src.services.demo.guards import hide_other_visitors
-from src.services.orgs.orgs import get_org_default_language, rbac_check
+from src.services.orgs.orgs import (
+    get_org_default_language,
+    rbac_check,
+    resolve_org_sender_name,
+)
 from src.services.search.normalization import LIKE_ESCAPE_CHAR, build_like_pattern
 from src.services.users.emails import send_role_changed_email
 from src.services.webhooks.dispatch import dispatch_webhooks
@@ -880,6 +884,7 @@ async def update_user_role(
                 new_role_name=role.name,
                 lang=get_org_default_language(org_config),
                 cta_url=org_base_url.rstrip("/") or "/",
+                sender_name=resolve_org_sender_name(org_config),
             )
     except Exception:
         logger.warning("Failed to send role change email to user %s", user_id)

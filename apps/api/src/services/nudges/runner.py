@@ -577,6 +577,7 @@ async def run_nudges(
                     has_cta=spec.has_cta,
                     track=spec.track,
                     stats=_stats_for(spec, snapshot),
+                    sender_name=snapshot.sender_name,
                     **_copy_vars(snapshot, spec),
                 )
 

@@ -378,3 +378,91 @@ class TestResendTransientRetry:
 
         assert exc_info.value.status_code == 503
         assert len(calls) == 1  # a quota error will not clear on retry
+
+
+class TestSenderNameRouting:
+    """Which emails carry an organization's display name, and which never do.
+
+    Org-scoped mail is *about* one organization, so it may go out under that
+    organization's name. Platform mail (org-less signup, platform password
+    reset, account deletion) must not borrow one — the recipient has no
+    relationship with any org in that moment.
+    """
+
+    def test_org_scoped_emails_forward_the_org_name(self):
+        with patch("src.services.users.emails.send_email", return_value=True) as sent:
+            send_password_reset_email(
+                generated_reset_code="code",
+                user=_user(),
+                organization=_org(),
+                email="user@test.com",
+                base_url="https://org.test",
+                sender_name="Acme Academy",
+            )
+            assert sent.call_args.kwargs["sender_name"] == "Acme Academy"
+
+            send_invitation_email(
+                email="user@test.com",
+                org_name="Org & Co",
+                inviter_username="admin",
+                signup_url="https://org.test/signup",
+                sender_name="Acme Academy",
+            )
+            assert sent.call_args.kwargs["sender_name"] == "Acme Academy"
+
+            send_email_verification_email(
+                token="tok",
+                user=_user(),
+                organization=_org(),
+                email="user@test.com",
+                base_url="https://org.test",
+                sender_name="Acme Academy",
+            )
+            assert sent.call_args.kwargs["sender_name"] == "Acme Academy"
+
+    def test_org_scoped_notifications_forward_the_org_name(self):
+        with patch(
+            "src.services.users.emails.send_email", return_value=True
+        ) as sent:
+            send_org_join_email(
+                email="user@test.com",
+                username="user",
+                org_name="Org & Co",
+                cta_url="https://org.test",
+                sender_name="Acme Academy",
+            )
+            assert sent.call_args.kwargs["sender_name"] == "Acme Academy"
+
+            send_role_changed_email(
+                email="user@test.com",
+                username="user",
+                org_name="Org & Co",
+                new_role_name="Admin",
+                sender_name="Acme Academy",
+            )
+            assert sent.call_args.kwargs["sender_name"] == "Acme Academy"
+
+    def test_platform_emails_send_no_org_name(self):
+        with patch("src.services.users.emails.send_email", return_value=True) as sent:
+            send_password_reset_email_platform(
+                generated_reset_code="code",
+                user=_user(),
+                email="user@test.com",
+                base_url="https://platform.test",
+            )
+            assert "sender_name" not in sent.call_args.kwargs
+
+            send_account_deleted_email("user@test.com", "user")
+            assert "sender_name" not in sent.call_args.kwargs
+
+    def test_org_scoped_default_is_still_no_name(self):
+        """Callers without org context keep the platform default by omission,
+        so nothing had to change at the platform-scoped call sites."""
+        with patch("src.services.users.emails.send_email", return_value=True) as sent:
+            send_invitation_email(
+                email="user@test.com",
+                org_name="Org & Co",
+                inviter_username="admin",
+                signup_url="https://org.test/signup",
+            )
+            assert sent.call_args.kwargs["sender_name"] is None

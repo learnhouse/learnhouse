@@ -27,7 +27,7 @@ from src.security.rbac.rbac import (
 )
 from src.db.organization_config import OrganizationConfig
 from src.db.organizations import Organization, OrganizationRead
-from src.services.orgs.orgs import get_org_default_language
+from src.services.orgs.orgs import get_org_default_language, resolve_org_sender_name
 from src.db.users import (
     AnonymousUser,
     InternalUser,
@@ -331,6 +331,7 @@ async def create_user(
             cta_url=await _get_welcome_cta_url(request, db_session, org_id),
             org_name=org.name if org else None,
             logo_url=get_org_logo_url(org, request) if org else None,
+            sender_name=resolve_org_sender_name(org_config),
         )
     elif get_deployment_mode() == 'saas':
         # Import here to avoid circular imports

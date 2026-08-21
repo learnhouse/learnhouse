@@ -18,7 +18,11 @@ from src.db.organization_config import OrganizationConfig
 from src.db.organizations import Organization, OrganizationRead
 from src.db.usergroups import UserGroup
 from src.db.users import AnonymousUser, PublicUser, UserRead
-from src.services.orgs.orgs import get_org_default_language, rbac_check
+from src.services.orgs.orgs import (
+    get_org_default_language,
+    rbac_check,
+    resolve_org_sender_name,
+)
 from src.services.users.emails import send_invitation_email
 
 logger = logging.getLogger(__name__)
@@ -402,11 +406,13 @@ async def send_invite_email(
         signup_url = f"{org_base_url}/signup"
 
     lang = "en"
+    sender_name = ""
     if db_session is not None:
         try:
             org_config_stmt = select(OrganizationConfig).where(OrganizationConfig.org_id == org.id)
             org_config = (await db_session.execute(org_config_stmt)).scalars().first()
             lang = get_org_default_language(org_config)
+            sender_name = resolve_org_sender_name(org_config)
         except Exception:
             pass
 
@@ -423,6 +429,7 @@ async def send_invite_email(
             invite_code=invite_code,
             signup_url=signup_url,
             lang=lang,
+            sender_name=sender_name,
         )
         return result is not None
     except Exception:

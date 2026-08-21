@@ -36,7 +36,7 @@ from src.db.users import User
 from src.security.features_utils.usage import _plan_from_config_dict
 from src.security.rbac.constants import ADMIN_ROLE_ID
 from src.services.nudges.snapshot import AdminRow, OrgSnapshot, parse_ts
-from src.services.orgs.orgs import get_org_default_language
+from src.services.orgs.orgs import get_org_default_language, resolve_org_sender_name
 
 logger = logging.getLogger(__name__)
 
@@ -416,6 +416,7 @@ async def build_snapshots(
                 logo_image=getattr(org, "logo_image", None),
                 plan=_plan_from_config_dict(config.config if config else {}),
                 lang=get_org_default_language(config),
+                sender_name=resolve_org_sender_name(config),
                 org_active_flag=_org_is_active(config),
                 created_at=parse_ts(org.creation_date),
                 org_updated_at=parse_ts(org.update_date),

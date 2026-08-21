@@ -219,6 +219,11 @@ class GeneralCustomization(BaseModel):
     watermark: bool = True
     font: str = ""
     default_language: str = "en"
+    # Display name on transactional email from this org. The From ADDRESS is
+    # never configurable (it stays the platform's verified sending domain, so
+    # DKIM keeps aligning) — only the name a recipient sees. Empty means "use
+    # the platform default".
+    email_sender_name: str = ""
 
 
 class SeoOrgConfig(BaseModel):

@@ -106,6 +106,26 @@ export async function updateOrgFooterTextConfig(
   return res
 }
 
+/**
+ * Set the display name shown on transactional email for this organization.
+ *
+ * Only the NAME is configurable — the sending address stays the platform's
+ * verified system address, so SPF/DKIM keep aligning. Pass an empty string to
+ * fall back to the platform default.
+ */
+export async function updateOrgEmailSenderNameConfig(
+  org_id: string,
+  email_sender_name: string,
+  access_token: string
+) {
+  const result: any = await fetch(
+    `${getAPIUrl()}orgs/${org_id}/config/email_sender_name?email_sender_name=${encodeURIComponent(email_sender_name)}`,
+    RequestBodyWithAuthHeader('PUT', null, null, access_token)
+  )
+  const res = await errorHandling(result)
+  return res
+}
+
 export async function updateOrgFontConfig(
   org_id: string,
   font: string,

@@ -233,6 +233,7 @@ def send_account_creation_email(
     cta_url: str | None = None,
     org_name: str | None = None,
     logo_url: str | None = None,
+    sender_name: str | None = None,
 ):
     """Welcome email sent once an account exists.
 
@@ -288,6 +289,7 @@ def send_account_creation_email(
             footer_note=footer_note,
             logo_html=logo_html,
         ),
+        sender_name=sender_name,
     )
 
 
@@ -375,6 +377,7 @@ def send_password_reset_email(
     email: EmailStr,
     base_url: str,
     lang: str = "en",
+    sender_name: str | None = None,
 ):
     safe_username = html.escape(user.username)
     safe_code = html.escape(generated_reset_code)
@@ -407,6 +410,7 @@ def send_password_reset_email(
             body_content=body_content,
             footer_note=t(lang, "password_reset.footer_org"),
         ),
+        sender_name=sender_name,
     )
 
 
@@ -458,6 +462,7 @@ def send_invitation_email(
     signup_url: str,
     invite_code: Optional[str] = None,
     lang: str = "en",
+    sender_name: str | None = None,
 ):
     safe_org_name = html.escape(org_name)
     safe_inviter = html.escape(inviter_username)
@@ -502,6 +507,7 @@ def send_invitation_email(
             body_content=body_content,
             footer_note=t(lang, "invitation.footer", inviter=safe_inviter),
         ),
+        sender_name=sender_name,
     )
 
 
@@ -512,6 +518,7 @@ def send_org_join_email(
     cta_url: str,
     lang: str = "en",
     logo_url: str | None = None,
+    sender_name: str | None = None,
 ):
     """Greeting sent when an EXISTING account becomes a member of an organization.
 
@@ -550,6 +557,7 @@ def send_org_join_email(
             footer_note=t(lang, "org_join.footer", org_name=safe_org_name),
             logo_html=_org_logo_img(logo_url, org_name) if logo_url else LOGO_SVG,
         ),
+        sender_name=sender_name,
     )
 
 
@@ -560,6 +568,7 @@ def send_role_changed_email(
     new_role_name: str,
     lang: str = "en",
     cta_url: str | None = None,
+    sender_name: str | None = None,
 ):
     """
     Send an email notifying a user that their role has changed in an organization.
@@ -605,6 +614,7 @@ def send_role_changed_email(
             body_content=body_content,
             footer_note=t(lang, "role_changed.footer", org_name=safe_org_name),
         ),
+        sender_name=sender_name,
     )
 
 
@@ -615,6 +625,7 @@ def send_email_verification_email(
     email: EmailStr,
     base_url: str,
     lang: str = "en",
+    sender_name: str | None = None,
 ):
     """
     Send email verification email with verification link.
@@ -663,6 +674,7 @@ def send_email_verification_email(
             body_content=body_content,
             footer_note=t(lang, "email_verification.footer"),
         ),
+        sender_name=sender_name,
     )
 
 
@@ -677,6 +689,7 @@ def send_nudge_email(
     has_cta: bool = True,
     track: str = "",
     stats: list[tuple[str, int]] | None = None,
+    sender_name: str | None = None,
     **copy_vars,
 ):
     """Send one lifecycle nudge.
@@ -763,4 +776,5 @@ def send_nudge_email(
             preheader=preheader,
         ),
         headers=headers or None,
+        sender_name=sender_name,
     )
