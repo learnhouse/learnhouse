@@ -219,8 +219,10 @@ async def test_demo_runs_on_pro_with_everything_unlocked(db, synced):
     ).scalars().first()
 
     assert config.config["plan"] == "pro"
-    # The tiers pro itself withholds must be forced on.
-    for enterprise_only in ("audit_logs", "scorm", "sso"):
+    # The tiers pro itself withholds, and that the demo can safely serve.
+    # audit_logs, scorm and sso are excluded on purpose — see
+    # test_the_demo_does_not_unlock_what_it_cannot_clean_up.
+    for enterprise_only in ("analytics_advanced", "custom_domains"):
         assert config.config["overrides"][enterprise_only]["force_enabled"] is True
 
 
@@ -258,15 +260,71 @@ async def test_every_showcase_feature_resolves_as_available(db, synced):
     assert not unavailable, f"hidden from the demo: {unavailable}"
 
 
-async def test_enterprise_only_features_follow_the_deployment_not_the_config(db, synced):
-    """sso / audit_logs / payments / scorm are gated by deployment mode.
+async def test_the_demo_does_not_unlock_what_it_cannot_clean_up(db, synced):
+    """Three Enterprise surfaces are deliberately left off.
 
-    The demo config force-enables them, but resolve_feature refuses them
-    outright in OSS mode — a platform rule the demo neither can nor should
-    defeat. The suite pins OSS (conftest sets LEARNHOUSE_DISABLE_EE), so this
-    documents where the ceiling actually is: on a SaaS or EE deployment the
-    same config makes them available, and on a self-hosted OSS install they
-    stay hidden however the demo is configured.
+    audit_logs, scorm and sso are served by Enterprise routers that know
+    nothing about the demo: no is_demo guard, and none of their tables in the
+    drift sweep. Every visitor is an admin of this shared org, so turning them
+    on would publish surfaces nothing reverts — and the audit one would hand
+    back exactly the visitor identities the audit router was taught to hide.
+
+    A prospect losing three settings pages is the cheaper loss, and this test
+    is what stops somebody restoring them for completeness.
+    """
+    from src.db.organization_config import OrganizationConfig
+
+    org = (
+        await db.execute(select(Organization).where(Organization.is_demo.is_(True)))
+    ).scalars().first()
+    config = (
+        await db.execute(
+            select(OrganizationConfig).where(OrganizationConfig.org_id == org.id)
+        )
+    ).scalars().first()
+
+    overrides = config.config["overrides"]
+    for feature in ("audit_logs", "scorm", "sso"):
+        assert feature not in overrides, (
+            f"{feature} is force-enabled but nothing sweeps what it creates"
+        )
+
+
+async def test_payments_is_only_unlocked_where_the_storefront_can_be_swept(db, synced):
+    """The feature follows the build's capability, not a hardcoded True.
+
+    Regression test for a hole opened while fixing another: the storefront
+    seeding and its drift sweep were both switched off on an Enterprise build
+    too old to support them, while the payments feature stayed force-enabled.
+    That combination is worse than no storefront — a visitor-admin could point
+    the demo's payments config at their own account and publish an offer, and
+    nothing would ever take it down.
+    """
+    from src.db.organization_config import OrganizationConfig
+    from src.services.demo.sync import _store_unsupported_reason
+
+    org = (
+        await db.execute(select(Organization).where(Organization.is_demo.is_(True)))
+    ).scalars().first()
+    config = (
+        await db.execute(
+            select(OrganizationConfig).where(OrganizationConfig.org_id == org.id)
+        )
+    ).scalars().first()
+
+    unlocked = config.config["overrides"]["payments"]["force_enabled"]
+    assert unlocked is (_store_unsupported_reason() is None)
+
+    # The suite pins oss mode, where there is no storefront to sweep.
+    assert unlocked is False
+
+
+async def test_enterprise_only_features_follow_the_deployment_not_the_config(db, synced):
+    """Deployment mode has the last word, whatever the config asks for.
+
+    The suite pins OSS (conftest sets LEARNHOUSE_DISABLE_EE), so this documents
+    where the ceiling actually is: an Enterprise-only feature stays unavailable
+    on a self-hosted OSS install however the demo is configured.
     """
     from src.core.deployment_mode import EE_ONLY_FEATURES
     from src.db.organization_config import OrganizationConfig
@@ -281,11 +339,6 @@ async def test_enterprise_only_features_follow_the_deployment_not_the_config(db,
         )
     ).scalars().first()
 
-    # The config asks for them...
-    for feature in ("audit_logs", "scorm", "sso"):
-        assert config.config["overrides"][feature]["force_enabled"] is True
-
-    # ...and the deployment mode still has the last word.
     for feature in EE_ONLY_FEATURES:
         resolved = resolve_feature(feature, config.config, org.id)
         assert resolved["available"] is False

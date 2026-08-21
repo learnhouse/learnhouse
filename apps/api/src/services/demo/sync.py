@@ -242,10 +242,17 @@ def _demo_org_config() -> dict:
             # Pro already gives unlimited courses/assignments and 500 members;
             # these keep headroom as visitors accumulate.
             "members": {"extra_limit": 500},
-            # Enterprise-only tiers, forced on so nothing is hidden.
-            "audit_logs": {"force_enabled": True},
-            "scorm": {"force_enabled": True},
-            "sso": {"force_enabled": True},
+            # Enterprise tiers the demo can show safely.
+            #
+            # audit_logs, scorm and sso are deliberately NOT here. Every
+            # visitor is an admin of this org, and those three surfaces are
+            # served by Enterprise routers that know nothing about the demo:
+            # they have no is_demo guard, and none of their tables is in the
+            # drift sweep. The audit one is the sharp case — the sync sweeps
+            # UserAuditEvent and the audit router hides other visitors
+            # precisely so one prospect cannot read another's identity, and
+            # force-enabling the Enterprise audit surface would hand it back.
+            # A prospect missing three settings pages is a cheaper loss.
             "analytics_advanced": {"force_enabled": True},
             "custom_domains": {"force_enabled": True},
             # Belt and braces: these are all enabled by pro, but stating them
@@ -261,7 +268,13 @@ def _demo_org_config() -> dict:
             "playgrounds": {"force_enabled": True},
             "podcasts": {"force_enabled": True},
             "webhooks": {"force_enabled": True},
-            "payments": {"force_enabled": True},
+            # Only where the storefront can actually be seeded AND swept.
+            # Turning the feature on while the sweep is off is worse than
+            # having no storefront: every visitor is an admin, so one of them
+            # can point the demo's payments config at their own account and
+            # publish an offer against a bundle course, and nothing would ever
+            # take it down. The next prospect would meet a real checkout.
+            "payments": {"force_enabled": _store_unsupported_reason() is None},
             "api": {"force_enabled": True},
             "seo": {"force_enabled": True},
             "analytics": {"force_enabled": True},
@@ -2140,6 +2153,60 @@ async def _sync_playground(
 
 # --- store ------------------------------------------------------------------
 
+def _store_unsupported_reason() -> Optional[str]:
+    """Why this build cannot host the demo storefront, or None if it can.
+
+    The storefront is the only part of the demo whose models live in the
+    Enterprise tree, which ships on its own release cadence. So this asks what
+    the build in front of us can actually do instead of assuming, and names the
+    gap when it cannot: an older Enterprise release is not a fault, and is not a
+    community install either, and one undifferentiated "skipped" line cost a
+    debugging round trip while somebody watched a demo refuse to build.
+
+    Both store steps ask the same question here so they can never disagree
+    about whether the storefront exists — the seeding skipping while the drift
+    sweep carried on is exactly how the second production failure happened.
+    """
+    from src.core.deployment_mode import get_deployment_mode
+
+    if get_deployment_mode() == "oss":
+        return "payments are unavailable in oss mode"
+
+    try:
+        from ee.db.payments.payments import (  # type: ignore[import-not-found]
+            PaymentProviderEnum,
+        )
+        from ee.db.payments.payments_enrollments import (  # type: ignore[import-not-found]
+            PaymentsEnrollment,
+        )
+    except ImportError as exc:
+        return (
+            f"payments models unavailable ({exc}) — expected on a community install"
+        )
+
+    # CUSTOM means "this organization drives its own enrolments", the only
+    # provider that takes no money. STRIPE would be a real checkout somebody
+    # could complete inside a sandbox anyone can enter as an admin, so without
+    # CUSTOM there is nothing safe to configure.
+    if not hasattr(PaymentProviderEnum, "CUSTOM"):
+        return (
+            "this Enterprise build's PaymentProviderEnum has no CUSTOM provider "
+            f"(has: {', '.join(p.name for p in PaymentProviderEnum)}), and the "
+            "demo will not point a storefront at a real payment provider"
+        )
+
+    # The drift sweep matches seeded enrolments by uuid. Older builds have the
+    # table without that column, and discovering it halfway through the sweep
+    # is what stopped the demo provisioning the second time.
+    if not hasattr(PaymentsEnrollment, "enrollment_uuid"):
+        return (
+            "this Enterprise build's PaymentsEnrollment has no enrollment_uuid, "
+            "so seeded enrolments could not be tracked or swept"
+        )
+
+    return None
+
+
 async def _sync_store(
     db_session: AsyncSession,
     bundle: Bundle,
@@ -2161,17 +2228,13 @@ async def _sync_store(
     if not store.offers:
         return
 
-    # "Can I import the models?" is not the same question as "is this feature
-    # on?". Payments is in EE_ONLY_FEATURES, so resolve_feature blocks it
-    # outright in oss mode — including on a machine that has the ee/ tree
-    # present but no active licence, where the import below would succeed.
-    # Seeding there produces a storefront the rest of the application refuses
-    # to serve, and payments tables on an install whose schema has no
-    # migration for them.
-    from src.core.deployment_mode import get_deployment_mode
-
-    if get_deployment_mode() == "oss":
-        logger.info("Demo store skipped: payments unavailable in oss mode.")
+    # One question, asked in one place: can this build host the storefront at
+    # all? "Can I import the models?" is not the same as "is this feature on
+    # and complete?" — payments is Enterprise-gated, and an Enterprise tree can
+    # be present, importable, and still older than the demo needs.
+    unsupported = _store_unsupported_reason()
+    if unsupported:
+        logger.info("Demo store skipped: %s.", unsupported)
         return
 
     try:
@@ -2206,24 +2269,6 @@ async def _sync_store(
         )
         return
 
-    # The storefront needs a provider that takes no money. CUSTOM means "this
-    # organization drives its own enrolments through the public API", which is
-    # exactly the demo's situation; STRIPE would be a real checkout somebody
-    # could complete in a shared sandbox.
-    #
-    # It is a newer member of the enum than the payments tables themselves, so
-    # an Enterprise build can have the models and not this value — which is not
-    # a community install and not a fault, just an older Enterprise release.
-    # Seeding a storefront without it is not an option, so the step is skipped
-    # and says why.
-    if not hasattr(PaymentProviderEnum, "CUSTOM"):
-        logger.info(
-            "Demo store skipped: this Enterprise build's PaymentProviderEnum "
-            "has no CUSTOM provider (has: %s), and the demo will not configure "
-            "a storefront against a real payment provider.",
-            ", ".join(p.name for p in PaymentProviderEnum),
-        )
-        return
 
     stats.steps.append("store")
 
@@ -2568,7 +2613,23 @@ async def _delete_drift(
     await _delete_unowned_org_drift(db_session, org, registry, stats)
     await _delete_certification_drift(db_session, org, registry, stats)
     await _delete_visitor_progress_drift(db_session, org, registry, stats)
-    await _delete_store_drift(db_session, org, registry, stats)
+    # Same treatment as the seeding step, and for the same reason: this is the
+    # other half of the storefront, it touches the same Enterprise models, and
+    # a version skew here must cost the storefront rather than the demo. The
+    # capability gate above should already have stopped it, but the gate can
+    # only know about the gaps we have met so far — this covers the next one.
+    #
+    # A savepoint rather than a bare try: a statement failing mid-sweep aborts
+    # the surrounding transaction on Postgres, and every later phase would then
+    # fail on "current transaction is aborted".
+    try:
+        async with db_session.begin_nested():
+            await _delete_store_drift(db_session, org, registry, stats)
+    except Exception as exc:
+        stats.steps.append("store-drift:failed")
+        logger.exception(
+            "Demo store drift sweep failed; continuing without it: %s", exc
+        )
 
     # Users who are not registry-owned demo students and hold no membership are
     # not touched here: visitors are real accounts that exist outside the demo.
@@ -2950,11 +3011,12 @@ async def _delete_store_drift(
     Groups are matched by primary key rather than uuid: PaymentsGroup has no
     uuid column, so the registry stores a synthetic one.
     """
-    # Same gate as the seeding step: in oss mode there is no storefront to
-    # sweep, and the tables may not exist even where the models import.
-    from src.core.deployment_mode import get_deployment_mode
-
-    if get_deployment_mode() == "oss":
+    # The same gate the seeding step uses. Asking a different question here is
+    # what broke production: the seeding skipped itself on an older Enterprise
+    # build while this sweep went ahead and referenced a column that build does
+    # not have.
+    unsupported = _store_unsupported_reason()
+    if unsupported:
         return
 
     try:
