@@ -14,6 +14,7 @@ import VideoBlock from './Extensions/Video/VideoBlock'
 import AudioBlock from './Extensions/Audio/AudioBlock'
 import MathEquationBlock from './Extensions/MathEquation/MathEquationBlock'
 import PDFBlock from './Extensions/PDF/PDFBlock'
+import H5PBlock from './Extensions/H5P/H5PBlock'
 import LibraryBlock from './Extensions/Library/LibraryBlock'
 import QuizBlock from './Extensions/Quiz/QuizBlock'
 import { Table } from '@tiptap/extension-table'
@@ -84,6 +85,10 @@ function EditorPreview({ content, activity }: EditorPreviewProps) {
         activity: activity,
       }),
       PDFBlock.configure({
+        editable: false,
+        activity: activity,
+      }),
+      H5PBlock.configure({
         editable: false,
         activity: activity,
       }),

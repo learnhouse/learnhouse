@@ -4569,6 +4569,7 @@
       "image": "صورة",
       "video": "فيديو",
       "pdf": "مستند PDF",
+      "h5p": "محتوى H5P التفاعلي",
       "youtube": "فيديو يوتيوب",
       "quiz": "اختبار تفاعلي",
       "math": "معادلة رياضية (LaTeX)",
@@ -4657,6 +4658,22 @@
         "document_title": "مستند PDF",
         "expand_pdf": "توسيع PDF",
         "download_pdf": "تحميل PDF"
+      },
+      "h5p_block": {
+        "default_title": "محتوى H5P تفاعلي",
+        "description": "الصق رابط التضمين الخاص بنشاط H5P لعرضه هنا.",
+        "hosted_hint": "يبقى المحتوى على خادم H5P الخاص بك (H5P.com أو Lumi أو موقع Drupal أو Moodle أو WordPress مستضاف ذاتيًا). يمكنك لصق رابط التضمين أو مقتطف iframe كاملاً كما يقدمه المزوّد.",
+        "url_label": "رابط تضمين H5P",
+        "url_placeholder": "https://your-team.h5p.com/content/123456/embed",
+        "title_label": "العنوان",
+        "title_placeholder": "العنوان (يُستخدم لإمكانية الوصول والبحث)",
+        "edit_content": "تعديل محتوى H5P",
+        "remove_content": "إزالة محتوى H5P",
+        "errors": {
+          "empty": "أدخل رابط تضمين H5P.",
+          "unparseable": "لا يبدو هذا رابطًا صالحًا. الصق رابط التضمين أو مقتطف iframe من مزوّد H5P.",
+          "unsupported_protocol": "يمكن تضمين روابط http و https فقط."
+        }
       },
       "quiz_block": {
         "all_correct": "جميع الإجابات صحيحة!",

@@ -1,0 +1,41 @@
+# H5P Interactive Content
+
+The **H5P** block puts an interactive H5P activity — a course presentation, an interactive video, a drag-and-drop, a branching scenario — inside a course page. Type `/` in the editor and pick **H5P**, then paste the embed URL of the activity.
+
+## Embed only
+
+LearnHouse does not host H5P. There is no upload field for `.h5p` packages and no H5P authoring tool built into the editor. You create the content on an H5P host you control, and the block renders it in a sandboxed iframe.
+
+That means:
+
+- The activity, its media and its user data stay on your H5P host.
+- Learner progress inside the activity is tracked by that host, not by LearnHouse.
+- If the host is unreachable, the block shows nothing — there is no local copy.
+
+## Why we do not bundle H5P
+
+The H5P core — the player, the editor and the content types — is licensed under the **AGPL**. Shipping it inside LearnHouse would put LearnHouse itself under the AGPL, which does not match the licence the project is distributed under. Embedding a page that someone else serves carries no such obligation, so embedding is what the block does.
+
+## Supported hosts
+
+Anything that hands you an H5P embed URL works. There is no allowlist of domains, precisely so that self-hosted installs keep working:
+
+- **H5P.com** — the hosted service. Use the *Embed* link under an activity, or paste the content page URL and the block converts it.
+- **Lumi** — export to a web page and host it yourself, then paste that URL.
+- **Drupal** with the H5P module — `https://your-site/h5p/embed/<id>`.
+- **Moodle** with H5P activities — `https://your-site/h5p/embed.php?url=...`.
+- **WordPress** with the H5P plugin — the `admin-ajax.php?action=h5p_embed&id=<id>` URL from the *Embed* button.
+
+You can paste either the URL or the entire `<iframe …>` snippet the host gives you; the block pulls the `src` out of the snippet for you.
+
+Only `http` and `https` URLs are accepted. Anything else is rejected with an error before it reaches the page.
+
+## Sizing
+
+H5P activities report their own height to the page they are embedded in, and the block listens for that message and resizes the frame to match. The height is remembered with the block, so the activity opens at roughly the right size the next time the page loads.
+
+## Notes for administrators
+
+- Your H5P host must allow being framed. If it sends `X-Frame-Options: DENY` or a restrictive `Content-Security-Policy: frame-ancestors`, the block will stay blank — allow your LearnHouse domain on the H5P side.
+- Serve the H5P host over HTTPS. A plain-HTTP frame inside an HTTPS course page is blocked by the browser as mixed content.
+- The frame is sandboxed and carries no LearnHouse session or credentials.
