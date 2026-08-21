@@ -60,6 +60,11 @@ from src.services.courses.activities.uploads.sub_file import upload_submission_f
 from src.services.courses.activities.uploads.tasks_ref_files import (
     upload_reference_file,
 )
+from src.services.courses.activities.quiz_modes import (
+    resolve_grading_mode,
+    resolve_response_type,
+    score_question,
+)
 from src.services.trail.trail import check_trail_presence
 from src.services.courses.certifications import (
     check_course_completion_and_create_certificate,
@@ -222,6 +227,19 @@ def _strip_answer_key(contents, keep_answer_keys: bool = False):
         return contents
     c = copy.deepcopy(contents)
 
+    # Stamp the resolved quiz response mode onto this COPY before anything is
+    # removed. A question authored before `response_type` existed carries no
+    # mode, and the client can only infer one from the answer key — which is
+    # about to be stripped. Without this the learner would get radio semantics
+    # on every legacy select-all-that-apply question. Stored data is untouched;
+    # only the outgoing payload gains the field.
+    for q in c.get("questions") or []:
+        if not isinstance(q, dict) or "response_type" in q:
+            continue
+        options = q.get("options")
+        if isinstance(options, list) and options:
+            q["response_type"] = resolve_response_type(q)
+
     # Always removed — even in reveal mode — because these expose the full
     # solution / hidden grader inputs rather than just "which answer was right".
     c.pop("solution_code", None)
@@ -253,6 +271,13 @@ def _strip_answer_key(contents, keep_answer_keys: bool = False):
         for q in questions:
             if not isinstance(q, dict):
                 continue
+            # NOTE: `response_type` (single vs multiple response) is deliberately
+            # NOT stripped. It is not an answer key — it says how many options
+            # may be picked, not which ones — and the learner's UI needs it to
+            # render radio vs checkbox semantics. Same for the task-level
+            # `grading_mode`. Removing either would silently drop every quiz
+            # back to the inferred mode, and the inference reads the answer key
+            # that was just stripped.
             for opt in q.get("options") or []:
                 if isinstance(opt, dict):
                     opt.pop("assigned_right_answer", None)
@@ -445,11 +470,19 @@ def _grade_quiz_task(contents: dict, submission_data: dict, task_max: int) -> in
     """
     Grade a quiz task PER QUESTION (not per option).
 
-    A question is correct only when the student's selected option set exactly
-    matches the answer key: every option the student marked must equal that
-    option's ``assigned_right_answer`` (all correct options selected, no
-    incorrect option selected). The score is ``correct_questions /
-    total_questions * task_max``.
+    Under the default all-or-nothing grading mode a question is correct only
+    when the student's selected option set exactly matches the answer key:
+    every option the student marked must equal that option's
+    ``assigned_right_answer`` (all correct options selected, no incorrect
+    option selected).
+
+    Under ``contents["grading_mode"] == "partial_credit"`` a select-all-that-
+    apply question instead scores a fraction — see
+    ``quiz_modes.score_question``. Single-response questions score 1 or 0 under
+    either mode. The task score is
+    ``round(sum(question_scores) / total_questions * task_max)``, which reduces
+    to the old ``correct_questions / total_questions`` whenever every question
+    scores 0 or 1 (i.e. always, in all-or-nothing mode).
 
     Per-question is the only defensible model: the previous per-option scoring
     gave phantom credit for non-answers (a blank 4-option question still "matched"
@@ -473,8 +506,10 @@ def _grade_quiz_task(contents: dict, submission_data: dict, task_max: int) -> in
         if q_uuid and o_uuid:
             answer_by_key[(q_uuid, o_uuid)] = bool(sub.get("answer"))
 
+    grading_mode = resolve_grading_mode(contents)
+
     total_questions = 0
-    correct_questions = 0
+    earned_score = 0.0
     for question in questions:
         if not isinstance(question, dict):
             continue
@@ -494,20 +529,22 @@ def _grade_quiz_task(contents: dict, submission_data: dict, task_max: int) -> in
             continue
         total_questions += 1
         q_uuid = question.get("questionUUID")
-        question_correct = True
-        for option in options:
-            o_uuid = option.get("optionUUID")
-            expected = bool(option.get("assigned_right_answer"))
-            student_answer = answer_by_key.get((q_uuid, o_uuid), False)
-            if student_answer != expected:
-                question_correct = False
-                break
-        if question_correct:
-            correct_questions += 1
+        answers = [
+            (
+                bool(option.get("assigned_right_answer")),
+                answer_by_key.get((q_uuid, option.get("optionUUID")), False),
+            )
+            for option in options
+        ]
+        earned_score += score_question(
+            answers,
+            resolve_response_type(question),
+            grading_mode,
+        )
 
     if total_questions == 0 or task_max <= 0:
         return 0
-    return round(correct_questions / total_questions * task_max)
+    return round(earned_score / total_questions * task_max)
 
 
 def _grade_form_task(contents: dict, submission_data: dict, task_max: int) -> int:

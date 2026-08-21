@@ -22,8 +22,12 @@ class GenQuizQuestion(BaseModel):
     question: str
     # Only `multiple_choice` is generated: QuizBlockComponent renders every
     # question as multiple-choice, so a `custom_answer` would degenerate into a
-    # single answer-revealing option.
+    # single answer-revealing option. How MANY options may be picked is a
+    # separate axis, carried by `response_type` below.
     type: Literal["multiple_choice"] = "multiple_choice"
+    # "single" = pick exactly one answer; "multiple" = select all that apply.
+    # Must agree with how many answers are marked correct.
+    response_type: Literal["single", "multiple"] = "single"
     answers: List[GenQuizAnswer] = Field(default_factory=list)
 
 

@@ -17,6 +17,14 @@ const ReactConfetti = dynamic(() => import('react-confetti'), { ssr: false })
 const AIQuizGeneratorModal = dynamic(() => import('@components/Objects/AI/AIQuizGeneratorModal'), { ssr: false })
 import { useEditorProvider } from '@components/Contexts/Editor/EditorContext'
 import { useTranslation } from 'react-i18next'
+import {
+  QUIZ_GRADING_ALL_OR_NOTHING,
+  QUIZ_RESPONSE_MULTIPLE,
+  QUIZ_RESPONSE_SINGLE,
+  QuizResponseType,
+  resolveQuizResponseType,
+  scoreQuizQuestion,
+} from '@/lib/quiz/modes'
 
 interface Answer {
   answer_id: string
@@ -26,8 +34,21 @@ interface Answer {
 interface Question {
   question_id: string
   question: string
+  // The kind of question. `custom_answer` is legacy and never rendered — HOW
+  // MANY answers may be picked is a separate axis, carried by `response_type`
+  // (same field name as the graded assignment quiz task).
   type: 'multiple_choice' | 'custom_answer'
+  // 'single' = pick one, 'multiple' = select all that apply. Absent on blocks
+  // authored before the mode existed — always read it through
+  // `questionResponseType`, never directly.
+  response_type?: QuizResponseType
   answers: Answer[]
+}
+
+/** The response mode of a question: explicit when set, inferred from the key. */
+function questionResponseType(question: Question): QuizResponseType {
+  const correctCount = (question.answers ?? []).filter((a) => a.correct).length
+  return resolveQuizResponseType(question.response_type, correctCount)
 }
 
 function QuizBlockComponent(props: any) {
@@ -68,9 +89,16 @@ function QuizBlockComponent(props: any) {
       setUserAnswers(
         userAnswers.filter((_, index) => index !== existingAnswerIndex)
       )
-    } else {
-      setUserAnswers([...userAnswers, { question_id, answer_id }])
+      return
     }
+
+    const question = questions.find((q: Question) => q.question_id === question_id)
+    // Radio semantics on a pick-one question: the new choice replaces the old.
+    const kept =
+      question && questionResponseType(question) === QUIZ_RESPONSE_SINGLE
+        ? userAnswers.filter((answer: any) => answer.question_id !== question_id)
+        : userAnswers
+    setUserAnswers([...kept, { question_id, answer_id }])
   }
 
   const refreshUserSubmission = () => {
@@ -82,30 +110,35 @@ function QuizBlockComponent(props: any) {
   const handleUserSubmission = () => {
     setSubmitted(true)
 
-    const correctAnswers = questions.every((question: Question) => {
-      const correctAnswers = question.answers.filter(
-        (answer: Answer) => answer.correct
-      )
-      const userAnswersForQuestion = userAnswers.filter(
-        (userAnswer: any) => userAnswer.question_id === question.question_id
-      )
+    // This block is an ungraded client-side self-check, so it stays
+    // all-or-nothing (no partial credit here) — but pass/fail now runs through
+    // the same scoring helper as the graded quiz task, so single- and
+    // multiple-response questions are judged the same way in both places.
+    // A question with no correct answer marked can't be judged at all; it is
+    // skipped rather than failing the whole quiz.
+    const gradable = questions.filter((question: Question) =>
+      (question.answers ?? []).some((answer: Answer) => answer.correct)
+    )
 
-      if (correctAnswers.length === 0 && userAnswersForQuestion.length === 0) {
-        return true
-      }
-
+    const allCorrect = gradable.every((question: Question) => {
+      const outcomes = question.answers.map((answer: Answer) => ({
+        correct: !!answer.correct,
+        selected: userAnswers.some(
+          (userAnswer: any) =>
+            userAnswer.question_id === question.question_id &&
+            userAnswer.answer_id === answer.answer_id
+        ),
+      }))
       return (
-        correctAnswers.length === userAnswersForQuestion.length &&
-        correctAnswers.every((correctAnswer: Answer) =>
-          userAnswersForQuestion.some(
-            (userAnswer: any) =>
-              userAnswer.answer_id === correctAnswer.answer_id
-          )
-        )
+        scoreQuizQuestion(
+          outcomes,
+          questionResponseType(question),
+          QUIZ_GRADING_ALL_OR_NOTHING
+        ) === 1
       )
     })
 
-    setSubmissionMessage(correctAnswers ? 'correct' : 'incorrect')
+    setSubmissionMessage(allCorrect ? 'correct' : 'incorrect')
   }
 
   const getAnswerLetter = (answerIndex: number) => {
@@ -125,6 +158,7 @@ function QuizBlockComponent(props: any) {
       question_id: uuidv4(),
       question: '',
       type: 'multiple_choice',
+      response_type: QUIZ_RESPONSE_SINGLE,
       answers: [{ answer_id: uuidv4(), answer: '', correct: false }],
     }
     saveQuestions([...questions, newQuestion])
@@ -201,20 +235,53 @@ function QuizBlockComponent(props: any) {
   }
 
   const markAnswerCorrect = (question_id: string, answer_id: string) => {
-    const newQuestions = questions.map((question: Question) =>
-      question.question_id === question_id
-        ? {
-            ...question,
-            answers: question.answers.map((answer: Answer) => ({
-              ...answer,
-              correct:
-                answer.answer_id === answer_id
-                  ? !answer.correct
-                  : answer.correct,
-            })),
+    const newQuestions = questions.map((question: Question) => {
+      if (question.question_id !== question_id) return question
+      const wasCorrect = !!question.answers.find(
+        (answer: Answer) => answer.answer_id === answer_id
+      )?.correct
+      // On a pick-one question the key is a radio group: marking an answer
+      // correct un-marks whatever was correct before.
+      const isSingle = questionResponseType(question) === QUIZ_RESPONSE_SINGLE
+      return {
+        ...question,
+        answers: question.answers.map((answer: Answer) => {
+          if (answer.answer_id === answer_id) {
+            return { ...answer, correct: !wasCorrect }
           }
-        : question
-    )
+          if (isSingle && !wasCorrect) return { ...answer, correct: false }
+          return answer
+        }),
+      }
+    })
+    saveQuestions(newQuestions)
+  }
+
+  const setQuestionResponseType = (
+    question_id: string,
+    responseType: QuizResponseType
+  ) => {
+    const newQuestions = questions.map((question: Question) => {
+      if (question.question_id !== question_id) return question
+      if (responseType !== QUIZ_RESPONSE_SINGLE) {
+        return { ...question, response_type: responseType }
+      }
+      // Switching a multi-correct question to pick-one would otherwise leave a
+      // key the learner cannot satisfy: keep the first correct answer only.
+      let kept = false
+      return {
+        ...question,
+        response_type: responseType,
+        answers: question.answers.map((answer: Answer) => {
+          if (!answer.correct) return answer
+          if (!kept) {
+            kept = true
+            return answer
+          }
+          return { ...answer, correct: false }
+        }),
+      }
+    })
     saveQuestions(newQuestions)
   }
 
@@ -304,7 +371,13 @@ function QuizBlockComponent(props: any) {
         {/* Questions */}
         {totalQuestions > 0 && (
           <div className="space-y-3">
-            {questions.map((question: Question, qIndex: number) => (
+            {questions.map((question: Question, qIndex: number) => {
+              const responseType = questionResponseType(question)
+              const isSingleResponse = responseType === QUIZ_RESPONSE_SINGLE
+              const hasNoCorrectAnswer = !(question.answers ?? []).some(
+                (answer: Answer) => answer.correct
+              )
+              return (
               <div key={question.question_id}>
                 {/* Question header */}
                 <div className="flex items-start justify-between gap-2 mb-1.5 px-1">
@@ -354,8 +427,61 @@ function QuizBlockComponent(props: any) {
                   )}
                 </div>
 
+                {/* Response mode — switch in edit mode, hint in take mode */}
+                {isEditable ? (
+                  <div className="flex flex-wrap items-center gap-1 mb-1.5 px-1">
+                    {([QUIZ_RESPONSE_SINGLE, QUIZ_RESPONSE_MULTIPLE] as QuizResponseType[]).map(
+                      (mode) => (
+                        <button
+                          key={mode}
+                          type="button"
+                          aria-pressed={responseType === mode}
+                          onClick={() =>
+                            setQuestionResponseType(question.question_id, mode)
+                          }
+                          className={cn(
+                            'text-[10px] font-medium px-2 py-0.5 rounded-md transition-colors outline-none',
+                            responseType === mode
+                              ? 'bg-neutral-800 text-white'
+                              : 'bg-neutral-200 text-neutral-600 hover:bg-neutral-300'
+                          )}
+                        >
+                          {mode === QUIZ_RESPONSE_SINGLE
+                            ? t('editor.blocks.quiz_block.response_type_single')
+                            : t('editor.blocks.quiz_block.response_type_multiple')}
+                        </button>
+                      )
+                    )}
+                    {hasNoCorrectAnswer && (
+                      // Non-blocking: a question with no correct answer can't be
+                      // judged, so it is skipped when the learner submits.
+                      <span className="text-[10px] font-medium px-2 py-0.5 rounded-md bg-amber-100 text-amber-700">
+                        {t('editor.blocks.quiz_block.no_correct_answer_warning')}
+                      </span>
+                    )}
+                  </div>
+                ) : (
+                  !isSingleResponse && (
+                    <p className="mb-1.5 px-1 text-[10px] font-medium text-neutral-500">
+                      {t('editor.blocks.quiz_block.select_all_that_apply')}
+                    </p>
+                  )
+                )}
+
                 {/* Answers */}
-                <div className="space-y-1">
+                <div
+                  className="space-y-1"
+                  role={isEditable ? undefined : isSingleResponse ? 'radiogroup' : 'group'}
+                  aria-label={
+                    isEditable
+                      ? undefined
+                      : `${question.question || t('editor.blocks.quiz_block.question_label', { defaultValue: 'Question' })} — ${
+                          isSingleResponse
+                            ? t('editor.blocks.quiz_block.select_one')
+                            : t('editor.blocks.quiz_block.select_all_that_apply')
+                        }`
+                  }
+                >
                   {question.answers.map((answer: Answer, aIndex: number) => {
                     const isSelected = userAnswers.some(
                       (userAnswer: any) =>
@@ -398,7 +524,10 @@ function QuizBlockComponent(props: any) {
                     )
 
                     const chip = cn(
-                      'shrink-0 w-6 h-6 rounded-md flex items-center justify-center text-[11px] font-bold transition-colors',
+                      'shrink-0 w-6 h-6 flex items-center justify-center text-[11px] font-bold transition-colors',
+                      // Shape is the affordance: a circle means pick one, a
+                      // square means select all that apply.
+                      isSingleResponse ? 'rounded-full' : 'rounded-md',
                       // Take mode — default
                       !isEditable &&
                         !submitted &&
@@ -437,6 +566,29 @@ function QuizBlockComponent(props: any) {
                             answer.answer_id
                           )
                         }
+                        // The rows stay divs (native inputs are out of scope
+                        // here), so they carry the radio/checkbox roles and
+                        // keyboard activation by hand.
+                        role={
+                          isEditable
+                            ? undefined
+                            : isSingleResponse
+                            ? 'radio'
+                            : 'checkbox'
+                        }
+                        aria-checked={isEditable ? undefined : isSelected}
+                        aria-disabled={!isEditable && submitted ? true : undefined}
+                        tabIndex={!isEditable && !submitted ? 0 : undefined}
+                        onKeyDown={(e) => {
+                          if (isEditable || submitted) return
+                          if (e.key === 'Enter' || e.key === ' ' || e.key === 'Spacebar') {
+                            e.preventDefault()
+                            handleAnswerClick(
+                              question.question_id,
+                              answer.answer_id
+                            )
+                          }
+                        }}
                         className={row}
                       >
                         {/* Letter chip — clickable in edit mode to toggle correct */}
@@ -542,7 +694,8 @@ function QuizBlockComponent(props: any) {
                   )}
                 </div>
               </div>
-            ))}
+              )
+            })}
           </div>
         )}
 

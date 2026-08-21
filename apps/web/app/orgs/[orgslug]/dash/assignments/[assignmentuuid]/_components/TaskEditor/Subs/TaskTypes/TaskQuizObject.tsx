@@ -4,7 +4,7 @@ import { useAssignmentsTask, useAssignmentsTaskDispatch } from '@components/Cont
 import { useLHSession } from '@components/Contexts/LHSessionContext';
 import AssignmentBoxUI from '@components/Objects/Activities/Assignment/AssignmentBoxUI';
 import { getAssignmentTask, getAssignmentTaskSubmissionsUser, handleAssignmentTaskSubmission, updateAssignmentTask } from '@services/courses/assignments';
-import { Check, Info, Minus, Plus, PlusCircle, X } from 'lucide-react';
+import { AlertTriangle, Check, CircleDot, Info, ListChecks, Minus, Plus, PlusCircle, X } from 'lucide-react';
 import React, { useEffect, useMemo, useState } from 'react';
 import toast from 'react-hot-toast';
 import { v4 as uuidv4 } from 'uuid';
@@ -13,10 +13,25 @@ import { useQueryClient } from '@tanstack/react-query';
 import { queryKeys } from '@/lib/query/keys';
 import { applyManualGrade } from './applyManualGrade';
 import { serializeSelectedOptions } from './autosaveSerialize';
+import {
+    QUIZ_GRADING_ALL_OR_NOTHING,
+    QUIZ_GRADING_PARTIAL_CREDIT,
+    QUIZ_RESPONSE_MULTIPLE,
+    QUIZ_RESPONSE_SINGLE,
+    QuizGradingMode,
+    QuizResponseType,
+    resolveQuizGradingMode,
+    resolveQuizResponseType,
+    scoreQuizQuestion,
+} from '@/lib/quiz/modes';
 
 type QuizSchema = {
     questionText: string;
     questionUUID?: string;
+    // 'single' = pick one, 'multiple' = select all that apply. Absent on
+    // questions authored before the mode existed — always read it through
+    // `questionResponseType`, never directly.
+    response_type?: QuizResponseType;
     options: {
         optionUUID?: string;
         text: string;
@@ -25,6 +40,21 @@ type QuizSchema = {
         assigned_right_answer: boolean;
     }[];
 };
+
+/** Options the answer key marks correct. 0 when the key was stripped. */
+function correctOptionCount(question: QuizSchema): number {
+    return (question.options ?? []).filter((option) => !!option.assigned_right_answer).length;
+}
+
+/**
+ * The response mode of a question. The server stamps `response_type` onto the
+ * learner's payload even for legacy questions (the key it would be inferred
+ * from is stripped before it reaches the student), so this resolves correctly
+ * in every view.
+ */
+function questionResponseType(question: QuizSchema): QuizResponseType {
+    return resolveQuizResponseType(question.response_type, correctOptionCount(question));
+}
 
 type QuizSubmitSchema = {
     questions: QuizSchema[];
@@ -74,8 +104,12 @@ function TaskQuizObject({ view, assignmentTaskUUID, user_id, onGraded }: TaskQui
 
     /* TEACHER VIEW CODE */
     const [questions, setQuestions] = useState<QuizSchema[]>([
-        { questionText: '', questionUUID: 'question_' + uuidv4(), options: [{ text: '', fileID: '', type: 'text', assigned_right_answer: false, optionUUID: 'option_' + uuidv4() }] },
+        { questionText: '', questionUUID: 'question_' + uuidv4(), response_type: QUIZ_RESPONSE_SINGLE, options: [{ text: '', fileID: '', type: 'text', assigned_right_answer: false, optionUUID: 'option_' + uuidv4() }] },
     ]);
+    // Lives in the task `contents` (opaque JSON, no column). All-or-nothing is
+    // the pre-existing behaviour, so it stays the default for every task that
+    // has no stored value.
+    const [gradingMode, setGradingMode] = useState<QuizGradingMode>(QUIZ_GRADING_ALL_OR_NOTHING);
 
     const handleQuestionChange = (index: number, value: string) => {
         const updatedQuestions = [...questions];
@@ -106,7 +140,7 @@ function TaskQuizObject({ view, assignmentTaskUUID, user_id, onGraded }: TaskQui
     };
 
     const addQuestion = () => {
-        setQuestions([...questions, { questionText: '', questionUUID: 'question_' + uuidv4(), options: [{ text: '', fileID: '', type: 'text', assigned_right_answer: false, optionUUID: 'option_' + uuidv4() }] }]);
+        setQuestions([...questions, { questionText: '', questionUUID: 'question_' + uuidv4(), response_type: QUIZ_RESPONSE_SINGLE, options: [{ text: '', fileID: '', type: 'text', assigned_right_answer: false, optionUUID: 'option_' + uuidv4() }] }]);
     };
 
     const removeQuestion = (qIndex: number) => {
@@ -117,10 +151,45 @@ function TaskQuizObject({ view, assignmentTaskUUID, user_id, onGraded }: TaskQui
 
     const toggleOption = (qIndex: number, oIndex: number) => {
         const updatedQuestions = [...questions];
-        // Find the option to toggle
-        const optionToToggle = updatedQuestions[qIndex].options[oIndex];
-        // Toggle the 'correct' property of the option
-        optionToToggle.assigned_right_answer = !optionToToggle.assigned_right_answer;
+        const question = updatedQuestions[qIndex];
+        if (!question) return;
+        const wasCorrect = !!question.options[oIndex]?.assigned_right_answer;
+        const isSingle = questionResponseType(question) === QUIZ_RESPONSE_SINGLE;
+        // On a single-response question the key behaves like a radio group:
+        // marking an option correct un-marks whatever was correct before, so
+        // the authored key can never contradict the mode the learner is shown.
+        updatedQuestions[qIndex] = {
+            ...question,
+            options: question.options.map((option, index) => {
+                if (index === oIndex) return { ...option, assigned_right_answer: !wasCorrect };
+                if (isSingle && !wasCorrect) return { ...option, assigned_right_answer: false };
+                return option;
+            }),
+        };
+        setQuestions(updatedQuestions);
+    };
+
+    const setQuestionResponseType = (qIndex: number, responseType: QuizResponseType) => {
+        const updatedQuestions = [...questions];
+        const question = updatedQuestions[qIndex];
+        if (!question) return;
+        let options = question.options;
+        if (responseType === QUIZ_RESPONSE_SINGLE) {
+            // Switching a multi-correct question to pick-one would otherwise
+            // leave a key the learner cannot satisfy. Keep the first correct
+            // option and drop the rest — explicitly, rather than relying on the
+            // grader to sort it out.
+            let kept = false;
+            options = question.options.map((option) => {
+                if (!option.assigned_right_answer) return option;
+                if (!kept) {
+                    kept = true;
+                    return option;
+                }
+                return { ...option, assigned_right_answer: false };
+            });
+        }
+        updatedQuestions[qIndex] = { ...question, response_type: responseType, options };
         setQuestions(updatedQuestions);
     };
 
@@ -129,6 +198,7 @@ function TaskQuizObject({ view, assignmentTaskUUID, user_id, onGraded }: TaskQui
         const values = {
             contents: {
                 questions,
+                grading_mode: gradingMode,
             },
         };
         const res = await updateAssignmentTask(values, assignmentTaskState.assignmentTask.assignment_task_uuid, assignment.assignment_object.assignment_uuid, access_token);
@@ -206,6 +276,10 @@ function TaskQuizObject({ view, assignmentTaskUUID, user_id, onGraded }: TaskQui
             (submission) => submission.questionUUID === questionUUID && submission.optionUUID === optionUUID
         );
 
+        const willBeSelected = submissionIndex === -1
+            ? true
+            : !updatedSubmissions[submissionIndex].answer;
+
         if (submissionIndex === -1) {
             updatedSubmissions.push({ questionUUID, optionUUID, answer: true });
         } else {
@@ -214,6 +288,18 @@ function TaskQuizObject({ view, assignmentTaskUUID, user_id, onGraded }: TaskQui
             // detection after hydration.
             const prev = updatedSubmissions[submissionIndex];
             updatedSubmissions[submissionIndex] = { ...prev, answer: !prev.answer };
+        }
+
+        // Radio semantics on a single-response question: picking an option
+        // replaces the previous pick. Clicking the selected option still clears
+        // it — there is no other way for the learner to un-answer a question.
+        if (willBeSelected && questionResponseType(question) === QUIZ_RESPONSE_SINGLE) {
+            for (let i = 0; i < updatedSubmissions.length; i++) {
+                const entry = updatedSubmissions[i];
+                if (entry.questionUUID === questionUUID && entry.optionUUID !== optionUUID && entry.answer) {
+                    updatedSubmissions[i] = { ...entry, answer: false };
+                }
+            }
         }
 
         setUserSubmissions({
@@ -229,6 +315,7 @@ function TaskQuizObject({ view, assignmentTaskUUID, user_id, onGraded }: TaskQui
             if (res.success) {
                 setAssignmentTaskOutsideProvider(res.data);
                 setQuestions(res.data.contents.questions);
+                setGradingMode(resolveQuizGradingMode(res.data.contents?.grading_mode));
             }
 
         }
@@ -244,6 +331,7 @@ function TaskQuizObject({ view, assignmentTaskUUID, user_id, onGraded }: TaskQui
             if (task.contents?.questions) {
                 setQuestions(task.contents.questions);
             }
+            setGradingMode(resolveQuizGradingMode(task.contents?.grading_mode));
         }
     }
 
@@ -442,9 +530,9 @@ function TaskQuizObject({ view, assignmentTaskUUID, user_id, onGraded }: TaskQui
                 return;
             }
             const maxPoints = assignmentTaskOutsideProvider?.max_grade_value || 100;
-            // Grade PER QUESTION (mirrors the server's _grade_quiz_task): a
-            // question counts only when the student's selected option set exactly
-            // matches the answer key. Per-option scoring gave phantom credit for
+            // Grade PER QUESTION (mirrors the server's _grade_quiz_task, which
+            // shares its scoring rules with `scoreQuizQuestion` in
+            // @/lib/quiz/modes). Per-option scoring gave phantom credit for
             // unanswered questions (unselected wrong options "matched"). A
             // question with no correct option is skipped by the server too (a
             // blank submission would "match" an all-false key), so exclude it
@@ -452,21 +540,23 @@ function TaskQuizObject({ view, assignmentTaskUUID, user_id, onGraded }: TaskQui
             const gradableQuestions = questions.filter(
                 (q) => (q.options?.length ?? 0) > 0 && q.options.some((o) => !!o.assigned_right_answer)
             );
-            let correctQuestions = 0;
+            let earnedScore = 0;
 
             gradableQuestions.forEach((question) => {
-                const questionCorrect = question.options.every((option) => {
+                const outcomes = question.options.map((option) => {
                     const submission = userSubmissions.submissions.find(
                         (sub) => sub.questionUUID === question.questionUUID && sub.optionUUID === option.optionUUID
                     );
-                    const studentAnswer = !!submission?.answer;
-                    return studentAnswer === !!option.assigned_right_answer;
+                    return {
+                        correct: !!option.assigned_right_answer,
+                        selected: !!submission?.answer,
+                    };
                 });
-                if (questionCorrect) correctQuestions++;
+                earnedScore += scoreQuizQuestion(outcomes, questionResponseType(question), gradingMode);
             });
 
             const finalGrade = gradableQuestions.length > 0
-                ? Math.round((correctQuestions / gradableQuestions.length) * maxPoints)
+                ? Math.round((earnedScore / gradableQuestions.length) * maxPoints)
                 : 0;
 
             // Save the grade to the server
@@ -499,6 +589,7 @@ function TaskQuizObject({ view, assignmentTaskUUID, user_id, onGraded }: TaskQui
         // Teacher area
         if (view == 'teacher' && assignmentTaskState.assignmentTask.contents?.questions) {
             setQuestions(assignmentTaskState.assignmentTask.contents.questions);
+            setGradingMode(resolveQuizGradingMode(assignmentTaskState.assignmentTask.contents?.grading_mode));
         }
         // Student area: hydrate from already-fetched context payloads.
         else if (view == 'student') {
@@ -526,8 +617,41 @@ function TaskQuizObject({ view, assignmentTaskUUID, user_id, onGraded }: TaskQui
     if (questions && questions.length >= 0) {
         return (
             <AssignmentBoxUI submitFC={submitFC} saveFC={saveFC} gradeFC={gradeFC} gradeCustomFC={gradeCustomFC} view={view} currentPoints={userSubmissionObject?.grade} currentFeedback={userSubmissionObject?.task_submission_grade_feedback} maxPoints={assignmentTaskOutsideProvider?.max_grade_value} dirtyValue={serializeSelectedOptions(userSubmissions.submissions)} savedValue={serializeSelectedOptions(initialUserSubmissions.submissions)} taskUUID={assignmentTaskUUID} type="quiz" autoGradable={true}>
+                {view === 'teacher' && (
+                    <div className="flex flex-wrap gap-2 items-center mb-4 py-2 px-3 bg-white rounded-md nice-shadow">
+                        <p className="text-xs font-bold text-slate-500">{t('assignments.quiz.grading_mode_label')}</p>
+                        <div className="flex gap-1" role="group" aria-label={t('assignments.quiz.grading_mode_label')}>
+                            {([QUIZ_GRADING_ALL_OR_NOTHING, QUIZ_GRADING_PARTIAL_CREDIT] as QuizGradingMode[]).map((mode) => (
+                                <button
+                                    key={mode}
+                                    type="button"
+                                    aria-pressed={gradingMode === mode}
+                                    onClick={() => setGradingMode(mode)}
+                                    className={`text-xs font-bold px-2 py-0.5 rounded-md transition-all ease-linear ${gradingMode === mode
+                                        ? 'bg-slate-800 text-white'
+                                        : 'bg-slate-100 text-slate-500 hover:bg-slate-200'
+                                        }`}
+                                >
+                                    {mode === QUIZ_GRADING_ALL_OR_NOTHING
+                                        ? t('assignments.quiz.grading_all_or_nothing')
+                                        : t('assignments.quiz.grading_partial_credit')}
+                                </button>
+                            ))}
+                        </div>
+                        <p className="text-[11px] text-slate-400 basis-full sm:basis-auto">
+                            {gradingMode === QUIZ_GRADING_PARTIAL_CREDIT
+                                ? t('assignments.quiz.grading_partial_credit_hint')
+                                : t('assignments.quiz.grading_all_or_nothing_hint')}
+                        </p>
+                    </div>
+                )}
                 <div className="flex flex-col space-y-6">
-                    {questions && questions.map((question, qIndex) => (
+                    {questions && questions.map((question, qIndex) => {
+                        const responseType = questionResponseType(question);
+                        const isSingleResponse = responseType === QUIZ_RESPONSE_SINGLE;
+                        const hasNoCorrectOption = correctOptionCount(question) === 0;
+                        const optionsGroupLabel = `${question.questionText || t('assignments.quiz.question_fallback_label', { defaultValue: 'Question' })} — ${isSingleResponse ? t('assignments.quiz.select_one') : t('assignments.quiz.select_all_that_apply')}`;
+                        return (
                         <div key={qIndex} className="flex flex-col space-y-1.5">
                             <div className="flex space-x-2 items-center">
                                 {view === 'teacher' ? (
@@ -551,12 +675,68 @@ function TaskQuizObject({ view, assignmentTaskUUID, user_id, onGraded }: TaskQui
                                     </div>
                                 )}
                             </div>
-                            <div className="flex flex-col space-y-2">
+                            {view === 'teacher' && (
+                                <div className="flex flex-wrap gap-1 items-center px-1">
+                                    {([QUIZ_RESPONSE_SINGLE, QUIZ_RESPONSE_MULTIPLE] as QuizResponseType[]).map((mode) => (
+                                        <button
+                                            key={mode}
+                                            type="button"
+                                            aria-pressed={responseType === mode}
+                                            onClick={() => setQuestionResponseType(qIndex, mode)}
+                                            className={`flex items-center space-x-1 text-[11px] font-bold px-2 py-0.5 rounded-md transition-all ease-linear ${responseType === mode
+                                                ? 'bg-slate-800 text-white'
+                                                : 'bg-slate-100 text-slate-500 hover:bg-slate-200'
+                                                }`}
+                                        >
+                                            {mode === QUIZ_RESPONSE_SINGLE ? <CircleDot size={11} /> : <ListChecks size={11} />}
+                                            <span>
+                                                {mode === QUIZ_RESPONSE_SINGLE
+                                                    ? t('assignments.quiz.response_type_single')
+                                                    : t('assignments.quiz.response_type_multiple')}
+                                            </span>
+                                        </button>
+                                    ))}
+                                    {hasNoCorrectOption && (
+                                        // Non-blocking: the server skips a question with no
+                                        // correct option entirely, so the teacher should know
+                                        // it will not count — but they may still be mid-edit.
+                                        <span className="flex items-center space-x-1 text-[11px] font-bold px-2 py-0.5 rounded-md bg-amber-100 text-amber-700">
+                                            <AlertTriangle size={11} />
+                                            <span>{t('assignments.quiz.no_correct_option_warning')}</span>
+                                        </span>
+                                    )}
+                                </div>
+                            )}
+                            {view !== 'teacher' && !isSingleResponse && (
+                                <p className="px-1 text-[11px] font-bold text-slate-500 flex items-center space-x-1">
+                                    <ListChecks size={11} />
+                                    <span>{t('assignments.quiz.select_all_that_apply')}</span>
+                                </p>
+                            )}
+                            <div
+                                className="flex flex-col space-y-2"
+                                role={view === 'student' ? (isSingleResponse ? 'radiogroup' : 'group') : undefined}
+                                aria-label={view === 'student' ? optionsGroupLabel : undefined}
+                            >
                                 {question.options.map((option, oIndex) => (
                                     <div className="flex" key={oIndex}>
                                         <div
                                             onClick={() => view === 'student' && !submissionIsGraded && chooseOption(qIndex, oIndex)}
-                                            className={"answer outline outline-3 outline-white pe-2 shadow-sm w-full flex items-center space-x-2 h-[30px] hover:bg-opacity-100 hover:shadow-md rounded-lg bg-white text-sm duration-150 ease-linear nice-shadow " + (view == 'student' && !submissionIsGraded ? 'cursor-pointer active:scale-110' : '')}
+                                            // The option rows stay divs (rewriting them as native
+                                            // inputs is a much bigger change), so they carry the
+                                            // radio/checkbox roles and keyboard activation by hand.
+                                            role={view === 'student' ? (isSingleResponse ? 'radio' : 'checkbox') : undefined}
+                                            aria-checked={view === 'student' ? isOptionSelected(question.questionUUID, option.optionUUID) : undefined}
+                                            aria-disabled={view === 'student' && submissionIsGraded ? true : undefined}
+                                            tabIndex={view === 'student' && !submissionIsGraded ? 0 : undefined}
+                                            onKeyDown={(e) => {
+                                                if (view !== 'student' || submissionIsGraded) return;
+                                                if (e.key === 'Enter' || e.key === ' ' || e.key === 'Spacebar') {
+                                                    e.preventDefault();
+                                                    chooseOption(qIndex, oIndex);
+                                                }
+                                            }}
+                                            className={"answer outline outline-3 outline-white pe-2 shadow-sm w-full flex items-center space-x-2 h-[30px] hover:bg-opacity-100 hover:shadow-md rounded-lg bg-white text-sm duration-150 ease-linear nice-shadow " + (view == 'student' && !submissionIsGraded ? 'cursor-pointer active:scale-110 focus-visible:outline-slate-400' : '')}
                                         >
                                             <div className="font-bold text-base flex items-center h-full w-[40px] rounded-s-md text-slate-800 bg-slate-100/80">
                                                 <p className="mx-auto font-bold text-sm">{String.fromCharCode(65 + oIndex)}</p>
@@ -649,12 +829,22 @@ function TaskQuizObject({ view, assignmentTaskUUID, user_id, onGraded }: TaskQui
                                             })()}
                                             {view === 'student' && (
                                                 <div
-                                                    className={`w-[20px] flex-none flex items-center h-[20px] rounded-lg ${
+                                                    // Shape is the affordance: a circle means pick
+                                                    // one, a square means select all that apply.
+                                                    // The row above owns the role/aria state, so
+                                                    // this is decorative to a screen reader.
+                                                    aria-hidden="true"
+                                                    className={`w-[20px] flex-none flex items-center h-[20px] ${isSingleResponse ? 'rounded-full' : 'rounded-md'} ${
                                                         isOptionSelected(question.questionUUID, option.optionUUID)
                                                             ? "bg-green-200/60 text-green-500 hover:bg-green-300"
                                                             : "bg-slate-200/60 text-slate-500 hover:bg-slate-300"
                                                     } text-sm transition-all ease-linear ${submissionIsGraded ? '' : 'cursor-pointer'}`}
-                                                    onClick={() => !submissionIsGraded && chooseOption(qIndex, oIndex)}
+                                                    onClick={(e) => {
+                                                        // The whole row already handles the click;
+                                                        // letting this one bubble ran chooseOption twice.
+                                                        e.stopPropagation();
+                                                        if (!submissionIsGraded) chooseOption(qIndex, oIndex);
+                                                    }}
                                                 >
                                                     {isOptionSelected(question.questionUUID, option.optionUUID) ? (
                                                         <Check size={12} className="mx-auto" />
@@ -670,7 +860,7 @@ function TaskQuizObject({ view, assignmentTaskUUID, user_id, onGraded }: TaskQui
                                                 // Marks what the LEARNER chose. The answer key is already
                                                 // shown by the "Marked as True/False" badge above, so a
                                                 // cross on every unchosen option only added noise.
-                                                <div className={`w-[20px] flex-none flex items-center h-[20px] rounded-lg ${
+                                                <div className={`w-[20px] flex-none flex items-center h-[20px] ${isSingleResponse ? 'rounded-full' : 'rounded-md'} ${
                                                     isOptionSelected(question.questionUUID, option.optionUUID)
                                                         ? "bg-green-200/60 text-green-500"
                                                         : "bg-slate-200/60 text-slate-500"
@@ -697,7 +887,8 @@ function TaskQuizObject({ view, assignmentTaskUUID, user_id, onGraded }: TaskQui
                                 ))}
                             </div>
                         </div>
-                    ))}
+                        );
+                    })}
                 </div>
                 {view === 'teacher' && questions.length <= 5 && (
                     <div className="flex justify-center mx-auto px-2">

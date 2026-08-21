@@ -32,6 +32,10 @@ class AIQuizOption(BaseModel):
 
 class AIQuizQuestion(BaseModel):
     question_text: str
+    # "single" = pick exactly one option; "multiple" = select all that apply.
+    # The learner UI renders radio vs checkbox semantics from this, so it must
+    # agree with how many options are marked correct.
+    response_type: Literal["single", "multiple"] = "single"
     options: List[AIQuizOption] = Field(default_factory=list)
 
 

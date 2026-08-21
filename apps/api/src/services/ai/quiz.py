@@ -29,6 +29,12 @@ Rules:
 - Produce clear, unambiguous multiple-choice questions at the requested difficulty.
 - Each question has 3-5 answer options; mark exactly the correct one(s) correct.
   At least one option MUST be correct.
+- Set response_type per question:
+    * "single" — exactly one answer is correct, the learner picks one.
+    * "multiple" — a select-all-that-apply question: mark EVERY correct answer
+      correct (two or more) and the learner must find all of them.
+  response_type MUST match the number of answers you marked correct. Use
+  "multiple" only when the content genuinely has several right answers.
 - Write in the same language as the user's request/content.
 - Base questions strictly on the provided course content when it is supplied;
   do not invent facts that contradict it.
@@ -57,11 +63,19 @@ def _to_block_quiz(generated: GeneratedQuiz) -> dict:
             }
             for a in q.answers
         ]
+        # The answer key wins over the declared mode: two correct answers make
+        # the question a select-all-that-apply no matter what the model called
+        # it, and a "single" label there would render radio semantics the
+        # learner cannot satisfy.
+        response_type = q.response_type
+        if sum(1 for a in answers if a["correct"]) >= 2:
+            response_type = "multiple"
         questions.append(
             {
                 "question_id": f"question_{uuid4()}",
                 "question": q.question,
                 "type": q.type,
+                "response_type": response_type,
                 "answers": answers,
             }
         )

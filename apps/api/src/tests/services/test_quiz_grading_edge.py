@@ -391,3 +391,356 @@ class TestStripAnswerKey:
         # Visible test + starter code still available.
         assert s["starter_code"] == "# go"
         assert s["test_cases"][0]["expectedStdout"] == "2"
+
+
+# --------------------------------------------------------------------------- #
+# Single-response vs multiple-response questions, and partial credit
+#
+# A question carries `response_type: "single" | "multiple"`; a task carries
+# `grading_mode: "all_or_nothing" | "partial_credit"`. Neither exists on content
+# authored before those shipped, so the resolution helpers infer the response
+# type from the answer key (2+ correct options -> multiple) and default the
+# grading mode to all-or-nothing. These tests pin BOTH the new behaviour and the
+# guarantee that legacy content grades exactly as it did.
+# --------------------------------------------------------------------------- #
+from src.services.courses.activities.quiz_modes import (  # noqa: E402
+    GRADING_MODE_ALL_OR_NOTHING,
+    GRADING_MODE_PARTIAL_CREDIT,
+    RESPONSE_TYPE_MULTIPLE,
+    RESPONSE_TYPE_SINGLE,
+    resolve_grading_mode,
+    resolve_response_type,
+)
+
+
+def _mode_question(q_uuid, options, response_type=None):
+    """Like `_question`, but may carry an explicit `response_type`."""
+    q = _question(q_uuid, options)
+    if response_type is not None:
+        q["response_type"] = response_type
+    return q
+
+
+def _mode_contents(*questions, grading_mode=None):
+    c = _contents(*questions)
+    if grading_mode is not None:
+        c["grading_mode"] = grading_mode
+    return c
+
+
+def _picks(q_uuid, *option_uuids):
+    return [_sub(q_uuid, o_uuid, True) for o_uuid in option_uuids]
+
+
+class TestResponseTypeResolution:
+    def test_absent_field_with_one_correct_option_infers_single(self):
+        q = _question("q1", [("a", True), ("b", False), ("c", False)])
+        assert resolve_response_type(q) == RESPONSE_TYPE_SINGLE
+
+    def test_absent_field_with_two_correct_options_infers_multiple(self):
+        q = _question("q1", [("a", True), ("b", True), ("c", False)])
+        assert resolve_response_type(q) == RESPONSE_TYPE_MULTIPLE
+
+    def test_absent_field_with_no_correct_option_infers_single(self):
+        q = _question("q1", [("a", False), ("b", False)])
+        assert resolve_response_type(q) == RESPONSE_TYPE_SINGLE
+
+    def test_explicit_field_wins_over_inference(self):
+        q = _mode_question("q1", [("a", True), ("b", False)], RESPONSE_TYPE_MULTIPLE)
+        assert resolve_response_type(q) == RESPONSE_TYPE_MULTIPLE
+
+    def test_unknown_value_falls_back_to_inference(self):
+        """A typo must never downgrade a 2-correct question to a pick-one."""
+        q = _mode_question("q1", [("a", True), ("b", True)], "pick_one_maybe")
+        assert resolve_response_type(q) == RESPONSE_TYPE_MULTIPLE
+
+    def test_value_is_case_and_whitespace_tolerant(self):
+        q = _mode_question("q1", [("a", True), ("b", False)], "  MULTIPLE ")
+        assert resolve_response_type(q) == RESPONSE_TYPE_MULTIPLE
+
+    def test_non_dict_question_is_single(self):
+        assert resolve_response_type("junk") == RESPONSE_TYPE_SINGLE
+
+
+class TestGradingModeResolution:
+    def test_absent_defaults_to_all_or_nothing(self):
+        assert resolve_grading_mode({"questions": []}) == GRADING_MODE_ALL_OR_NOTHING
+
+    def test_explicit_partial_credit(self):
+        assert resolve_grading_mode({"grading_mode": "partial_credit"}) == GRADING_MODE_PARTIAL_CREDIT
+
+    def test_unknown_value_defaults_to_all_or_nothing(self):
+        assert resolve_grading_mode({"grading_mode": "generous"}) == GRADING_MODE_ALL_OR_NOTHING
+        assert resolve_grading_mode({"grading_mode": 7}) == GRADING_MODE_ALL_OR_NOTHING
+        assert resolve_grading_mode(None) == GRADING_MODE_ALL_OR_NOTHING
+
+
+class TestLegacyContentIsUnaffected:
+    """No `response_type`, no `grading_mode` — scores must not shift."""
+
+    def test_legacy_single_correct_question_grades_as_before(self):
+        contents = _contents(_question("q1", [("a", True), ("b", False), ("c", False)]))
+        assert _grade_quiz_task(contents, _submission(*_picks("q1", "a")), 100) == 100
+        assert _grade_quiz_task(contents, _submission(*_picks("q1", "b")), 100) == 0
+        assert _grade_quiz_task(contents, _submission(), 100) == 0
+
+    def test_legacy_two_correct_question_still_needs_the_exact_set(self):
+        """Inferred multiple + default all-or-nothing == the old exact-set rule."""
+        contents = _contents(
+            _question("q1", [("a", True), ("b", True), ("c", False), ("d", False)])
+        )
+        assert _grade_quiz_task(contents, _submission(*_picks("q1", "a", "b")), 100) == 100
+        assert _grade_quiz_task(contents, _submission(*_picks("q1", "a")), 100) == 0
+        assert _grade_quiz_task(contents, _submission(*_picks("q1", "a", "b", "c")), 100) == 0
+
+    def test_legacy_mixed_exam_score_is_unchanged(self):
+        contents = _contents(
+            _question("q1", [("a", True), ("b", False)]),
+            _question("q2", [("c", True), ("d", True), ("e", False)]),
+            _question("q3", [("f", True), ("g", False)]),
+        )
+        subs = _submission(*_picks("q1", "a"), *_picks("q2", "c"), *_picks("q3", "f"))
+        # q2 is short one correct option -> 2/3.
+        assert _grade_quiz_task(contents, subs, 100) == 67
+
+
+class TestExplicitMultipleAllOrNothing:
+    def _contents(self):
+        return _mode_contents(
+            _mode_question(
+                "q1",
+                [("a", True), ("b", True), ("c", False), ("d", False)],
+                RESPONSE_TYPE_MULTIPLE,
+            ),
+            grading_mode=GRADING_MODE_ALL_OR_NOTHING,
+        )
+
+    def test_exact_set_earns_full_credit(self):
+        assert _grade_quiz_task(self._contents(), _submission(*_picks("q1", "a", "b")), 100) == 100
+
+    def test_partial_selection_earns_nothing(self):
+        assert _grade_quiz_task(self._contents(), _submission(*_picks("q1", "a")), 100) == 0
+
+    def test_superset_earns_nothing(self):
+        subs = _submission(*_picks("q1", "a", "b", "c"))
+        assert _grade_quiz_task(self._contents(), subs, 100) == 0
+
+    def test_all_options_selected_earns_nothing(self):
+        subs = _submission(*_picks("q1", "a", "b", "c", "d"))
+        assert _grade_quiz_task(self._contents(), subs, 100) == 0
+
+
+class TestExplicitMultiplePartialCredit:
+    """score = clamp((correct_selected - incorrect_selected) / total_correct, 0, 1)."""
+
+    def _contents(self):
+        return _mode_contents(
+            _mode_question(
+                "q1",
+                [("a", True), ("b", True), ("c", False), ("d", False)],
+                RESPONSE_TYPE_MULTIPLE,
+            ),
+            grading_mode=GRADING_MODE_PARTIAL_CREDIT,
+        )
+
+    def test_exact_set_still_earns_full_credit(self):
+        assert _grade_quiz_task(self._contents(), _submission(*_picks("q1", "a", "b")), 100) == 100
+
+    def test_half_the_correct_options_earns_half(self):
+        # (1 - 0) / 2 = 0.5
+        assert _grade_quiz_task(self._contents(), _submission(*_picks("q1", "a")), 100) == 50
+
+    def test_one_wrong_pick_cancels_one_right_pick(self):
+        # (1 - 1) / 2 = 0
+        assert _grade_quiz_task(self._contents(), _submission(*_picks("q1", "a", "c")), 100) == 0
+
+    def test_both_correct_plus_one_wrong_earns_half(self):
+        # (2 - 1) / 2 = 0.5
+        assert _grade_quiz_task(self._contents(), _submission(*_picks("q1", "a", "b", "c")), 100) == 50
+
+    def test_selecting_everything_earns_nothing(self):
+        # (2 - 2) / 2 = 0 — no free credit for shotgunning the whole list.
+        subs = _submission(*_picks("q1", "a", "b", "c", "d"))
+        assert _grade_quiz_task(self._contents(), subs, 100) == 0
+
+    def test_score_is_clamped_at_zero(self):
+        """More wrong picks than correct options must not go negative."""
+        contents = _mode_contents(
+            _mode_question(
+                "q1",
+                [("a", True), ("b", False), ("c", False), ("d", False)],
+                RESPONSE_TYPE_MULTIPLE,
+            ),
+            _mode_question("q2", [("e", True), ("f", False)], RESPONSE_TYPE_SINGLE),
+            grading_mode=GRADING_MODE_PARTIAL_CREDIT,
+        )
+        # q1: (0 - 3) / 1 = -3 -> clamped to 0. q2 correct -> 1.
+        # A negative q1 would have dragged the whole task below the real score.
+        subs = _submission(*_picks("q1", "b", "c", "d"), *_picks("q2", "e"))
+        assert _grade_quiz_task(contents, subs, 100) == 50
+
+    def test_three_correct_of_five_with_two_wrong_picks(self):
+        contents = _mode_contents(
+            _mode_question(
+                "q1",
+                [("a", True), ("b", True), ("c", True), ("d", False), ("e", False)],
+                RESPONSE_TYPE_MULTIPLE,
+            ),
+            grading_mode=GRADING_MODE_PARTIAL_CREDIT,
+        )
+        # (3 - 2) / 3 = 0.333... -> 33
+        subs = _submission(*_picks("q1", "a", "b", "c", "d", "e"))
+        assert _grade_quiz_task(contents, subs, 100) == 33
+
+    def test_partial_scores_are_summed_across_questions(self):
+        contents = _mode_contents(
+            _mode_question("q1", [("a", True), ("b", True), ("c", False)], RESPONSE_TYPE_MULTIPLE),
+            _mode_question("q2", [("d", True), ("e", False)], RESPONSE_TYPE_SINGLE),
+            grading_mode=GRADING_MODE_PARTIAL_CREDIT,
+        )
+        # q1 = 0.5, q2 = 1 -> 1.5 / 2 = 75
+        subs = _submission(*_picks("q1", "a"), *_picks("q2", "d"))
+        assert _grade_quiz_task(contents, subs, 100) == 75
+
+
+class TestSingleResponseUnderPartialCredit:
+    """Single-response questions are 1 or 0 in both modes — nothing to split."""
+
+    def _contents(self, grading_mode):
+        return _mode_contents(
+            _mode_question(
+                "q1",
+                [("a", True), ("b", False), ("c", False)],
+                RESPONSE_TYPE_SINGLE,
+            ),
+            grading_mode=grading_mode,
+        )
+
+    def test_right_pick_is_full_credit(self):
+        for mode in (GRADING_MODE_ALL_OR_NOTHING, GRADING_MODE_PARTIAL_CREDIT):
+            assert _grade_quiz_task(self._contents(mode), _submission(*_picks("q1", "a")), 100) == 100
+
+    def test_wrong_pick_is_zero(self):
+        for mode in (GRADING_MODE_ALL_OR_NOTHING, GRADING_MODE_PARTIAL_CREDIT):
+            assert _grade_quiz_task(self._contents(mode), _submission(*_picks("q1", "b")), 100) == 0
+
+    def test_a_question_declared_single_but_keyed_with_two_correct_needs_both(self):
+        """The key still rules the score: an exact-set match is required.
+
+        The authoring UI keeps at most one correct option on a single-response
+        question, so this is a repair case for content edited elsewhere — it
+        must not silently award credit for picking just one of the two.
+        """
+        contents = _mode_contents(
+            _mode_question(
+                "q1", [("a", True), ("b", True), ("c", False)], RESPONSE_TYPE_SINGLE
+            ),
+            grading_mode=GRADING_MODE_PARTIAL_CREDIT,
+        )
+        assert _grade_quiz_task(contents, _submission(*_picks("q1", "a")), 100) == 0
+        assert _grade_quiz_task(contents, _submission(*_picks("q1", "a", "b")), 100) == 100
+
+
+class TestZeroCorrectQuestionsStaySkipped:
+    def test_skipped_under_all_or_nothing(self):
+        contents = _mode_contents(
+            _mode_question("q1", [("a", False), ("b", False)], RESPONSE_TYPE_MULTIPLE),
+            _mode_question("q2", [("c", True), ("d", False)], RESPONSE_TYPE_SINGLE),
+        )
+        # Only q2 counts: 1/1 -> 100, not 1/2 -> 50.
+        assert _grade_quiz_task(contents, _submission(*_picks("q2", "c")), 100) == 100
+
+    def test_skipped_under_partial_credit(self):
+        contents = _mode_contents(
+            _mode_question("q1", [("a", False), ("b", False)], RESPONSE_TYPE_MULTIPLE),
+            _mode_question("q2", [("c", True), ("d", True), ("e", False)], RESPONSE_TYPE_MULTIPLE),
+            grading_mode=GRADING_MODE_PARTIAL_CREDIT,
+        )
+        # q1 out of the denominator; q2 = 0.5 -> 50.
+        assert _grade_quiz_task(contents, _submission(*_picks("q2", "c")), 100) == 50
+
+    def test_every_question_zero_correct_returns_zero(self):
+        contents = _mode_contents(
+            _mode_question("q1", [("a", False)], RESPONSE_TYPE_SINGLE),
+            grading_mode=GRADING_MODE_PARTIAL_CREDIT,
+        )
+        assert _grade_quiz_task(contents, _submission(*_picks("q1", "a")), 100) == 0
+
+
+class TestStripAnswerKeyKeepsResponseMode:
+    """The learner needs the mode to render radio vs checkbox — it is not a key."""
+
+    def _contents(self):
+        return {
+            "grading_mode": "partial_credit",
+            "questions": [
+                {
+                    "questionUUID": "q1",
+                    "questionText": "Pick every prime",
+                    "response_type": "multiple",
+                    "options": [
+                        {"optionUUID": "a", "text": "2", "assigned_right_answer": True},
+                        {"optionUUID": "b", "text": "3", "assigned_right_answer": True},
+                        {"optionUUID": "c", "text": "4", "assigned_right_answer": False},
+                    ],
+                }
+            ],
+        }
+
+    def test_mode_survives_the_full_strip_but_the_key_does_not(self):
+        s = _strip_answer_key(self._contents())
+        assert s["questions"][0]["response_type"] == "multiple"
+        assert s["grading_mode"] == "partial_credit"
+        for o in s["questions"][0]["options"]:
+            assert "assigned_right_answer" not in o
+            assert "text" in o
+
+    def test_mode_survives_reveal_mode_too(self):
+        s = _strip_answer_key(self._contents(), keep_answer_keys=True)
+        assert s["questions"][0]["response_type"] == "multiple"
+        assert s["questions"][0]["options"][0]["assigned_right_answer"] is True
+
+
+class TestStripAnswerKeyStampsInferredMode:
+    """Legacy questions carry no mode, and the client can't infer one once the
+    key is gone — so the strip resolves it onto the outgoing copy."""
+
+    def _legacy(self):
+        return {
+            "questions": [
+                {
+                    "questionUUID": "q1",
+                    "options": [
+                        {"optionUUID": "a", "assigned_right_answer": True},
+                        {"optionUUID": "b", "assigned_right_answer": True},
+                        {"optionUUID": "c", "assigned_right_answer": False},
+                    ],
+                },
+                {
+                    "questionUUID": "q2",
+                    "options": [
+                        {"optionUUID": "d", "assigned_right_answer": True},
+                        {"optionUUID": "e", "assigned_right_answer": False},
+                    ],
+                },
+            ]
+        }
+
+    def test_two_correct_options_arrive_as_multiple(self):
+        s = _strip_answer_key(self._legacy())
+        assert s["questions"][0]["response_type"] == "multiple"
+        assert s["questions"][1]["response_type"] == "single"
+
+    def test_stored_contents_are_not_mutated(self):
+        original = self._legacy()
+        _strip_answer_key(original)
+        assert "response_type" not in original["questions"][0]
+
+    def test_explicit_mode_is_left_alone(self):
+        c = self._legacy()
+        c["questions"][0]["response_type"] = "single"
+        assert _strip_answer_key(c)["questions"][0]["response_type"] == "single"
+
+    def test_questions_without_options_are_untouched(self):
+        c = {"questions": [{"questionUUID": "q1", "blanks": [{"blankUUID": "b1", "correctAnswer": "42"}]}]}
+        assert "response_type" not in _strip_answer_key(c)["questions"][0]

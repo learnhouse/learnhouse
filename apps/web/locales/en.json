@@ -1510,7 +1510,18 @@
     "retry_no_attempts_left": "No retries left",
     "quiz": {
       "correct_answer": "Correct",
-      "incorrect_answer": "Wrong"
+      "incorrect_answer": "Wrong",
+      "select_one": "Select one answer",
+      "select_all_that_apply": "Select all that apply",
+      "response_type_single": "Single answer",
+      "response_type_multiple": "Multiple answers",
+      "no_correct_option_warning": "No correct option — this question is skipped when grading",
+      "question_fallback_label": "Question",
+      "grading_mode_label": "Grading",
+      "grading_all_or_nothing": "All or nothing",
+      "grading_partial_credit": "Partial credit",
+      "grading_all_or_nothing_hint": "A question scores only when the selected answers match the key exactly.",
+      "grading_partial_credit_hint": "Select-all-that-apply questions earn part of the marks; each wrong selection cancels a right one."
     },
     "form": {
       "expected_answer": "Expected"
@@ -5116,7 +5127,12 @@
         "question_label": "Question",
         "delete_question": "Delete question",
         "empty_editable": "No questions yet. Add your first one to get started.",
-        "empty_readonly": "This quiz has no questions yet."
+        "empty_readonly": "This quiz has no questions yet.",
+        "select_one": "Select one answer",
+        "select_all_that_apply": "Select all that apply",
+        "response_type_single": "Single answer",
+        "response_type_multiple": "Multiple answers",
+        "no_correct_answer_warning": "No correct answer — this question is skipped"
       },
       "math_block": {
         "templates": "Templates",
