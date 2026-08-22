@@ -327,7 +327,7 @@ async def finalize_course_plan(
         description=plan.description,
         about=plan.description,
         learnings=plan.learnings,
-        tags=plan.tags,
+        tags="|".join(plan.tags),
         public=False,  # Start as unpublished
         published=False,
         open_to_contributors=False,

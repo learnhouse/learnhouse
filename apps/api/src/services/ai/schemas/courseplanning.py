@@ -1,4 +1,4 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, field_validator
 from typing import Optional, List, Dict, Literal
 
 
@@ -31,8 +31,21 @@ class CoursePlan(BaseModel):
     name: str
     description: str
     learnings: str = ""
-    tags: str = ""
+    tags: list[str] = []
     chapters: List[ChapterPlan] = []
+
+    @field_validator("tags", mode="before")
+    @classmethod
+    def _coerce_tags(cls, v):
+        # The prompt asks for a JSON array, but a stray generation (or an
+        # older client) may still send a delimited string. Accept either and
+        # normalize to a clean list, so tags never 422 the finalize call. The
+        # storage separator (pipe) is finalize's job, not the model's.
+        if v is None:
+            return []
+        if isinstance(v, str):
+            v = v.replace("|", ",").split(",")
+        return [t.strip() for t in v if isinstance(t, str) and t.strip()]
 
 
 class CoursePlanningMessage(BaseModel):
