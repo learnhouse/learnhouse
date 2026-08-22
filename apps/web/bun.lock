@@ -1,5 +1,5 @@
 {
-  "lockfileVersion": 1,
+  "lockfileVersion": 3,
   "configVersion": 1,
   "workspaces": {
     "": {
@@ -161,7 +161,9 @@
   "overrides": {
     "@types/react": "19.2.18",
     "@types/react-dom": "19.2.4",
-    "brace-expansion@5": ">=5.0.7",
+    "brace-expansion@5": {
+      ".": ">=5.0.7",
+    },
     "dompurify": ">=3.2.4",
     "fast-uri": ">=3.1.4",
     "js-yaml": ">=4.1.1",

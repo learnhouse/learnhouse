@@ -1,4 +1,4 @@
-FROM oven/bun:1.3.14-alpine AS base
+FROM oven/bun:1.4.0-alpine AS base
 
 # Install dependencies only when needed
 FROM base AS deps
@@ -8,17 +8,9 @@ WORKDIR /app
 COPY package.json bun.lock* ./
 RUN bun install --frozen-lockfile
 
-# Rebuild the source code only when needed.
-#
-# Bun installs the dependencies, but Node runs the build. `bun run build`
-# completes the Next build and then segfaults during process teardown (bun
-# 1.3.14), which surfaces as exit 139 and fails the image even though the
-# output is already written. Node is the runtime the production stage below
-# uses anyway. Same change as the root Dockerfile, which the community images
-# build from; this one is what the SaaS, PR and Enterprise frontend images use.
-FROM node:24-alpine AS builder
+# Rebuild the source code only when needed
+FROM base AS builder
 WORKDIR /app
-RUN apk update && apk add --no-cache libc6-compat && rm -rf /var/cache/apk/*
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 
@@ -30,10 +22,10 @@ RUN rm -f .env*
 ARG LEARNHOUSE_PUBLIC=false
 RUN if [ "$LEARNHOUSE_PUBLIC" = "true" ]; then rm -rf /app/ee; fi
 
-RUN node node_modules/next/dist/bin/next build
+RUN bun run build
 
-# Production image — use Node for the Next.js standalone server
-FROM node:24-alpine AS runner
+# Production image — the Next.js standalone server runs on Bun
+FROM oven/bun:1.4.0-alpine AS runner
 WORKDIR /app
 
 RUN apk update && apk add --no-cache curl && rm -rf /var/cache/apk/*

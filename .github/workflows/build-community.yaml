@@ -104,6 +104,33 @@ jobs:
           if-no-files-found: error
           retention-days: 1
 
+  service-images:
+    name: Service image (${{ matrix.service }})
+    runs-on: ubuntu-latest
+    # apps/web/Dockerfile and apps/collab/Dockerfile build the per-service
+    # images. Nothing in this repo built them: the job above only builds the
+    # root Dockerfile, so a change that broke a service image passed every
+    # check here and failed later, in the pipeline that ships it. Build them,
+    # never push them — publishing those tags stays with the image pipeline.
+    strategy:
+      fail-fast: false
+      matrix:
+        service: [web, collab]
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v4
+
+      - name: Build ${{ matrix.service }} image
+        uses: docker/build-push-action@v7
+        with:
+          context: ./apps/${{ matrix.service }}
+          platforms: linux/amd64
+          push: false
+          cache-from: type=gha,scope=service-${{ matrix.service }}
+          cache-to: type=gha,mode=max,scope=service-${{ matrix.service }}
+
   merge:
     name: Create multi-platform manifest
     runs-on: ubuntu-latest
