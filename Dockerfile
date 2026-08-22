@@ -11,8 +11,15 @@ RUN bun install --frozen-lockfile
 # ───────────────────────────────────────────────
 # Stage 2: Frontend build
 # ───────────────────────────────────────────────
-FROM oven/bun:1.3.14-alpine AS frontend-builder
+# Bun installs the dependencies, but Node runs the build. `bun run build`
+# completes the Next build and then segfaults during process teardown
+# (bun 1.3.14, both amd64 and arm64), which surfaces as exit 139 and fails the
+# image even though the output is already written. Node is the runtime the
+# production stage below uses anyway, so building on it keeps one less runtime
+# in the hot path.
+FROM node:24-alpine AS frontend-builder
 WORKDIR /app
+RUN apk update && apk add --no-cache libc6-compat && rm -rf /var/cache/apk/*
 COPY --from=frontend-deps /app/node_modules ./node_modules
 COPY apps/web .
 
@@ -22,7 +29,7 @@ ENV NEXT_TELEMETRY_DISABLED=1
 # Remove .env files to avoid leaking secrets into the build
 RUN rm -f .env*
 
-RUN bun run build
+RUN node node_modules/next/dist/bin/next build
 
 # ───────────────────────────────────────────────
 # Stage 3: Frontend production image
