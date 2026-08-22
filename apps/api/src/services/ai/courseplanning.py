@@ -200,7 +200,7 @@ When the user describes a course they want to create, generate a structured cour
 1. A compelling course name
 2. A clear, engaging description
 3. Key learnings (comma-separated list of what students will learn)
-4. Relevant tags (comma-separated)
+4. Relevant tags (pipe-separated, e.g. python|beginner|data)
 5. Chapters organized logically to build knowledge progressively
 6. Activities within each chapter that support the learning objectives
 
@@ -239,7 +239,7 @@ You MUST respond with a valid JSON object following this exact structure:
   "name": "Course Title",
   "description": "A compelling course description...",
   "learnings": "Learning outcome 1, Learning outcome 2, Learning outcome 3",
-  "tags": "tag1, tag2, tag3",
+  "tags": "tag1|tag2|tag3",
   "chapters": [
     {{
       "name": "Chapter 1 Title",

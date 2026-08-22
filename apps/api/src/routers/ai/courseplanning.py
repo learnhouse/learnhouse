@@ -24,6 +24,7 @@ from src.security.features_utils.usage import (
     reserve_ai_credit,
 )
 from src.services.ai.llm import resolve_model_for_org, model_for_tier
+from src.services.ai.course_tags import normalize_course_tags
 from src.services.ai.courseplanning import (
     get_course_planning_session,
     create_course_planning_session,
@@ -327,7 +328,7 @@ async def finalize_course_plan(
         description=plan.description,
         about=plan.description,
         learnings=plan.learnings,
-        tags=plan.tags,
+        tags=normalize_course_tags(plan.tags),
         public=False,  # Start as unpublished
         published=False,
         open_to_contributors=False,
