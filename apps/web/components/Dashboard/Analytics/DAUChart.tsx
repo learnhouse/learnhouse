@@ -15,6 +15,20 @@ const kFormatter = (v: number) => (v >= 1000 ? `${(v / 1000).toFixed(0)}K` : Str
 const shortDate = (v: string) =>
   new Date(v).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
 
+// Recharts types the tooltip label as ReactNode, which includes undefined, so
+// it cannot go straight into new Date(). Narrow to what Date actually accepts
+// and fall back to an empty label rather than rendering "Invalid Date".
+const fullDate = (label: unknown) => {
+  if (typeof label !== 'string' && typeof label !== 'number') return ''
+  const parsed = new Date(label)
+  if (Number.isNaN(parsed.getTime())) return ''
+  return parsed.toLocaleDateString('en-US', {
+    month: 'long',
+    day: 'numeric',
+    year: 'numeric',
+  })
+}
+
 export default function DAUChart({ days = '30' }: { days?: string }) {
   const { data, isLoading } = useAnalyticsPipe('daily_active_users', { days })
   const rows = data?.data ?? []
@@ -59,13 +73,7 @@ export default function DAUChart({ days = '30' }: { days?: string }) {
                   border: '1px solid #f3f4f6',
                   boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)',
                 }}
-                labelFormatter={(label) =>
-                  new Date(label).toLocaleDateString('en-US', {
-                    month: 'long',
-                    day: 'numeric',
-                    year: 'numeric',
-                  })
-                }
+                labelFormatter={fullDate}
                 formatter={(value = 0) => [`${value.toLocaleString()}`, 'Users']}
               />
               <Area
