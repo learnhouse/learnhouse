@@ -236,7 +236,7 @@ export function DiscussionCard({
               )}
 
               {isSelectMode ? (
-                <h3 className="text-sm font-medium text-gray-900 line-clamp-1">
+                <h3 className="text-sm font-medium text-gray-900 line-clamp-1" dir="auto">
                   {discussion.title}
                 </h3>
               ) : (
@@ -245,7 +245,7 @@ export function DiscussionCard({
                   onClick={onClick}
                   className="block group flex-1 min-w-0"
                 >
-                  <h3 className="text-sm font-medium text-gray-900 group-hover:text-indigo-600 transition-colors line-clamp-1">
+                  <h3 className="text-sm font-medium text-gray-900 group-hover:text-indigo-600 transition-colors line-clamp-1" dir="auto">
                     {discussion.title}
                   </h3>
                 </Link>
@@ -316,11 +316,11 @@ export function DiscussionCard({
                 {canManage && (
                   <>
                     <DropdownMenuItem onClick={handlePin} className="cursor-pointer">
-                      <Pin size={14} className="mr-2" />
+                      <Pin size={14} className="me-2" />
                       {discussion.is_pinned ? t('communities.discussion_card.unpin_discussion') : t('communities.discussion_card.pin_discussion')}
                     </DropdownMenuItem>
                     <DropdownMenuItem onClick={handleLock} className="cursor-pointer">
-                      <Lock size={14} className="mr-2" />
+                      <Lock size={14} className="me-2" />
                       {discussion.is_locked ? t('communities.discussion_card.unlock_discussion') : t('communities.discussion_card.lock_discussion')}
                     </DropdownMenuItem>
                     <DropdownMenuSeparator />
@@ -331,8 +331,8 @@ export function DiscussionCard({
                   confirmationButtonText={t('communities.comments.delete')}
                   dialogTitle={t('communities.discussion_card.delete_title')}
                   dialogTrigger={
-                    <button className="w-full text-left flex items-center px-2 py-1.5 text-sm text-red-600 hover:bg-red-50 rounded-sm transition-colors cursor-pointer">
-                      <Trash2 size={14} className="mr-2" />
+                    <button className="w-full text-start flex items-center px-2 py-1.5 text-sm text-red-600 hover:bg-red-50 rounded-sm transition-colors cursor-pointer">
+                      <Trash2 size={14} className="me-2" />
                       {t('communities.discussion_card.delete_discussion')}
                     </button>
                   }

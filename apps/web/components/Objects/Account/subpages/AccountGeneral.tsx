@@ -340,7 +340,7 @@ const UserEditForm = ({
             <div>
               <Label htmlFor="bio">
                 {t('user.settings.general.bio')}
-                <span className="text-gray-500 text-sm ml-2">
+                <span className="text-gray-500 text-sm ms-2">
                   ({t('user.settings.general.characters_left', { count: 400 - (values.bio?.length || 0) })})
                 </span>
               </Label>
@@ -462,13 +462,13 @@ const UserEditForm = ({
                 <Label className="font-bold">{t('user.settings.general.profile_picture')}</Label>
                 {profilePicture.error && (
                   <div className="flex items-center bg-red-200 rounded-md text-red-950 px-4 py-2 text-sm">
-                    <FileWarning size={16} className="mr-2" />
+                    <FileWarning size={16} className="me-2" />
                     <span className="font-semibold first-letter:uppercase">{profilePicture.error}</span>
                   </div>
                 )}
                 {profilePicture.success && (
                   <div className="flex items-center bg-green-200 rounded-md text-green-950 px-4 py-2 text-sm">
-                    <Check size={16} className="mr-2" />
+                    <Check size={16} className="me-2" />
                     <span className="font-semibold first-letter:uppercase">{profilePicture.success}</span>
                   </div>
                 )}
@@ -483,7 +483,7 @@ const UserEditForm = ({
                 )}
                 {profilePicture.isLoading ? (
                   <div className="font-bold animate-pulse antialiased bg-green-200 text-gray text-sm rounded-md px-4 py-2 flex items-center">
-                    <ArrowBigUpDash size={16} className="mr-2" />
+                    <ArrowBigUpDash size={16} className="me-2" />
                     <span>{t('user.settings.general.uploading')}</span>
                   </div>
                 ) : (
@@ -501,7 +501,7 @@ const UserEditForm = ({
                       onClick={() => document.getElementById('fileInput')?.click()}
                       className="w-full"
                     >
-                      <UploadCloud size={16} className="mr-2" />
+                      <UploadCloud size={16} className="me-2" />
                       {t('user.settings.general.change_avatar')}
                     </Button>
                     <AIImageButton
@@ -513,7 +513,7 @@ const UserEditForm = ({
                 )}
                 <div className="flex items-center text-xs text-gray-500">
                   <span className="flex items-center">
-                    <Info size={13} className="mr-2" />
+                    <Info size={13} className="me-2" />
                     <p>{t('user.settings.general.recommended_size')}</p>
                   </span>
                 </div>

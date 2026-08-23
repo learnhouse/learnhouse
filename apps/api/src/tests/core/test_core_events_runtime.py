@@ -167,26 +167,6 @@ async def test_content_and_logs_helpers(monkeypatch, tmp_path):
     await logs_events.create_logs_dir()
     assert mkdir_calls == ["logs"]
 
-    basic_config_calls = []
-    info_calls = []
-
-    async def fake_create_logs_dir():
-        return None
-
-    monkeypatch.setattr(logs_events, "create_logs_dir", fake_create_logs_dir)
-    monkeypatch.setattr(logs_events.logging, "FileHandler", lambda path: f"file:{path}")
-    monkeypatch.setattr(logs_events.logging, "StreamHandler", lambda: "stream")
-    monkeypatch.setattr(
-        logs_events.logging,
-        "basicConfig",
-        lambda **kwargs: basic_config_calls.append(kwargs),
-    )
-    monkeypatch.setattr(logs_events.logging, "info", lambda message: info_calls.append(message))
-
-    await logs_events.init_logging()
-
-    assert basic_config_calls and basic_config_calls[0]["handlers"] == ["file:logs/learnhouse.log", "stream"]
-    assert info_calls == ["Logging initiated"]
 
 
 @pytest.mark.asyncio
@@ -337,7 +317,8 @@ async def test_periodic_migration_cleanup(monkeypatch, caplog):
 
 def test_ee_hooks_availability_and_loading(monkeypatch, caplog):
     monkeypatch.delenv("LEARNHOUSE_DISABLE_EE", raising=False)
-    monkeypatch.setattr(ee_hooks.os.path, "exists", lambda path: path == "ee")
+    monkeypatch.setattr(ee_hooks.os.path, "isdir", lambda path: path == "ee")
+    monkeypatch.setattr(ee_hooks.os.path, "isfile", lambda path: True)
     assert ee_hooks.is_ee_available() is True
 
     monkeypatch.setenv("LEARNHOUSE_DISABLE_EE", "1")
@@ -345,7 +326,7 @@ def test_ee_hooks_availability_and_loading(monkeypatch, caplog):
     assert ee_hooks.get_ee_hooks() is None
 
     monkeypatch.delenv("LEARNHOUSE_DISABLE_EE", raising=False)
-    monkeypatch.setattr(ee_hooks.os.path, "exists", lambda path: True)
+    monkeypatch.setattr(ee_hooks.os.path, "isdir", lambda path: True)
     monkeypatch.setattr(ee_hooks.importlib.util, "find_spec", lambda name: None)
     assert ee_hooks.get_ee_hooks() is None
 

@@ -228,7 +228,15 @@
     "leave_organization_title": "Leave organization?",
     "leave_organization_desc": "You will lose access to {{org}} and be removed from its members. You can re-join later if invited.",
     "leave_organization_error": "Could not leave this organization. Please try again.",
-    "leaving": "Leaving…"
+    "leaving": "Leaving…",
+    "select": "Select…",
+    "continue": "Continue",
+    "dismiss": "Dismiss",
+    "sign_out": "Sign out",
+    "move_up": "Move up",
+    "move_down": "Move down",
+    "less": "Less",
+    "more": "More"
   },
   "banner": {
     "viewing_as_guest": "You're viewing {{name}} as a guest.",
@@ -367,7 +375,31 @@
     "image_subtitle_signup": "Create your account and launch your first course in minutes.",
     "image_title_verify": "Verify your email.",
     "image_subtitle_verify": "One quick step to secure your account and get started.",
-    "resend_verification": "Didn't get it? Resend email"
+    "resend_verification": "Didn't get it? Resend email",
+    "no_sign_up_method_available": "This organization has restricted how members sign in, so accounts can’t be created here. Contact an administrator.",
+    "continue_to_dashboard": "Continue to your dashboard",
+    "mfa_invalid_code": "That code isn't right. Check your device's clock is set automatically, then try the next code.",
+    "mfa_title": "Two-step verification",
+    "mfa_subtitle_backup": "Enter one of the backup codes you saved.",
+    "mfa_subtitle": "Enter the 6-digit code from your authenticator app.",
+    "mfa_backup_code": "Backup code",
+    "mfa_code": "Verification code",
+    "mfa_verify": "Verify",
+    "mfa_use_authenticator": "Use your authenticator app instead",
+    "mfa_use_backup": "Use a backup code instead",
+    "mfa_back_to_login": "Back to sign in",
+    "magic_title": "Sign in with a link",
+    "magic_sent_title": "Check your email",
+    "magic_sent_body": "If an account exists for {{email}}, we just sent it a secure link to sign in. It expires shortly, so use it soon.",
+    "magic_back_to_login": "Back to sign in",
+    "magic_subtitle": "Enter your email and we’ll send you a link that signs you in — no password needed.",
+    "magic_send": "Email me a login link",
+    "magic_use_password": "Sign in with a password instead",
+    "choose_sign_in_method": "Choose how you’d like to sign in.",
+    "no_sign_in_method_available": "This organization has restricted how members sign in, and none of the allowed methods are available here. Contact an administrator.",
+    "complete_profile": {
+      "title": "Complete your profile"
+    }
   },
   "validation": {
     "required": "Required",
@@ -375,7 +407,9 @@
     "password_min_length": "Password must be at least 8 characters",
     "username_min_length": "Username must be at least 4 characters",
     "title_required": "Title is required",
-    "content_required": "Content is required"
+    "content_required": "Content is required",
+    "invalid_number": "Must be a number",
+    "invalid_option": "Choose one of the available options"
   },
   "courses": {
     "my_courses": "My Courses",
@@ -490,6 +524,7 @@
     "successfully_completed": "You've successfully completed",
     "keep_going": "Keep Going! 💪",
     "keep_going_description": "You're doing great! Complete the remaining activities to unlock your course completion certificate.",
+    "keep_going_description_no_certificate": "You're doing great! Complete the remaining activities to finish the course.",
     "making_great_progress": "You're making great progress in",
     "continue_learning": "Continue Learning",
     "back_to_course": "Back to Course",
@@ -1475,7 +1510,18 @@
     "retry_no_attempts_left": "No retries left",
     "quiz": {
       "correct_answer": "Correct",
-      "incorrect_answer": "Wrong"
+      "incorrect_answer": "Wrong",
+      "select_one": "Select one answer",
+      "select_all_that_apply": "Select all that apply",
+      "response_type_single": "Single answer",
+      "response_type_multiple": "Multiple answers",
+      "no_correct_option_warning": "No correct option — this question is skipped when grading",
+      "question_fallback_label": "Question",
+      "grading_mode_label": "Grading",
+      "grading_all_or_nothing": "All or nothing",
+      "grading_partial_credit": "Partial credit",
+      "grading_all_or_nothing_hint": "A question scores only when the selected answers match the key exactly.",
+      "grading_partial_credit_hint": "Select-all-that-apply questions earn part of the marks; each wrong selection cancels a right one."
     },
     "form": {
       "expected_answer": "Expected"
@@ -1680,7 +1726,8 @@
           "industry": "Industry",
           "expertise": "Expertise",
           "community": "Community"
-        }
+        },
+        "signin_again": "Please sign in again"
       },
       "password": {
         "title": "Change Password",
@@ -1691,7 +1738,8 @@
         "updating": "Updating...",
         "password_updated": "Password updated successfully",
         "relogin_message": "Please login again with your new password",
-        "logout_warning": "You will be logged out after changing your password"
+        "logout_warning": "You will be logged out after changing your password",
+        "update_failed": "Could not update password. Please sign in again."
       },
       "profile_builder": {
         "title": "Profile Builder",
@@ -1831,7 +1879,61 @@
         "current_session_title": "Current session",
         "current_session_subtitle": "The device you are signed in from right now.",
         "this_device": "This device",
-        "sign_out": "Sign out"
+        "sign_out": "Sign out",
+        "mfa": {
+          "rate_limited": "Too many attempts. Please wait a moment and try again.",
+          "status_error": "Could not load your two-factor settings.",
+          "copy_failed": "Could not copy. Please select the text and copy it manually.",
+          "codes_file_header": "LearnHouse two-factor backup codes. Each code can be used once.",
+          "already_enabled": "Two-factor authentication is already enabled on this account.",
+          "setup_failed": "Could not start two-factor setup. Please try again.",
+          "enabled_toast": "Two-factor authentication is now enabled.",
+          "invalid_code": "That code is not valid. Please try again.",
+          "regenerate_failed": "Could not regenerate your backup codes. Please try again.",
+          "disabled_toast": "Two-factor authentication has been turned off.",
+          "disable_failed": "Could not turn off two-factor authentication. Please try again.",
+          "retry_in": "You can try again in {{seconds}}s.",
+          "code_label": "Authentication code",
+          "code_hint": "Enter the 6-digit code currently shown in your authenticator app.",
+          "title": "Two-factor authentication",
+          "subtitle": "Ask for a one-time code from your authenticator app whenever you sign in.",
+          "retry": "Retry",
+          "codes_once_title": "This is the only time these codes will be shown.",
+          "codes_once_body": "Save them somewhere safe now. Each code can be used once to sign in if you lose access to your authenticator app. Once you leave this screen they cannot be retrieved — you would have to generate new ones.",
+          "copied": "Copied",
+          "copy_all": "Copy all",
+          "download": "Download .txt",
+          "codes_ack": "I have saved these codes somewhere safe.",
+          "done": "Done",
+          "step_password_title": "Confirm your password",
+          "step_password_body": "For your security, enter your current password to continue.",
+          "continue": "Continue",
+          "step_scan_title": "Scan this with your authenticator app",
+          "step_scan_body": "Open an authenticator app (1Password, Google Authenticator, Authy, …) and scan the code below.",
+          "qr_alt": "Two-factor setup QR code",
+          "qr_failed": "The QR code could not be drawn. Use the setup key instead.",
+          "secret_label": "Or enter this setup key manually",
+          "copy_secret": "Copy setup key",
+          "secret_hint": "Useful for desktop authenticator apps that cannot scan a QR code.",
+          "step_verify_title": "Confirm the code from your app",
+          "back": "Back",
+          "wait_seconds": "Wait {{seconds}}s",
+          "verify_and_enable": "Verify and enable",
+          "enabled": "Enabled",
+          "enabled_since": "Since {{date}}",
+          "enabled_hint": "A code from your authenticator app is required to sign in.",
+          "regenerate": "Regenerate backup codes",
+          "disable": "Disable",
+          "codes_remaining": "{{remaining}} backup codes remaining",
+          "codes_low": "generate a new set so you do not get locked out.",
+          "regenerate_body": "Generating a new set immediately invalidates all of your existing backup codes.",
+          "regenerate_confirm": "Generate new codes",
+          "disable_warning": "Turning this off removes the second step from sign-in and deletes your backup codes.",
+          "disable_confirm": "Turn off two-factor",
+          "not_enabled": "Not enabled",
+          "not_enabled_hint": "Protect your account by also requiring a one-time code from your authenticator app when you sign in.",
+          "enable": "Enable"
+        }
       }
     },
     "sign_out": "Sign out",
@@ -1866,6 +1968,22 @@
     "minutes_ago": "{{count}} minutes ago"
   },
   "dashboard": {
+    "nav": {
+      "sidebar_navigation": "Dashboard sidebar navigation",
+      "mobile_navigation": "Dashboard mobile navigation",
+      "top_navigation": "Top navigation",
+      "collapse_sidebar": "Collapse sidebar",
+      "expand_sidebar": "Expand sidebar",
+      "open_courses_menu": "Open courses menu",
+      "open_assignments_menu": "Open assignments menu",
+      "open_users_menu": "Open users menu",
+      "open_organization_menu": "Open organization menu",
+      "open_organizations_menu": "Open organizations menu",
+      "open_developers_menu": "Open developers menu",
+      "open_language_menu": "Open language menu",
+      "open_help_menu": "Open help menu",
+      "other": "Other"
+    },
     "home": {
       "cards": {
         "courses": {
@@ -2601,7 +2719,10 @@
           "publish_all_success": "All activities published successfully",
           "unpublish_all": "Unpublish All",
           "unpublish_all_success": "All activities unpublished successfully",
-          "publish_all_error": "Failed to update some activities"
+          "publish_all_error": "Failed to update some activities",
+          "back": "Go back",
+          "save_name": "Save name",
+          "rename_chapter": "Rename chapter"
         },
         "bulk_actions": {
           "selected": "{{count}} selected",
@@ -2616,7 +2737,9 @@
           "publish_error": "Failed to publish some activities",
           "unpublish_success": "{{count}} activities unpublished successfully",
           "unpublish_error": "Failed to unpublish some activities",
-          "partial_error": "{{failed}} of {{total}} activities failed to update"
+          "partial_error": "{{failed}} of {{total}} activities failed to update",
+          "publish_tooltip": "Publish selected",
+          "unpublish_tooltip": "Unpublish selected"
         },
         "chapter_element": {
           "chapter_name_placeholder": "Chapter name"
@@ -2772,6 +2895,9 @@
           "danger": {
             "title": "Danger Zone",
             "subtitle": "Irreversible and destructive actions for this organization"
+          },
+          "seo": {
+            "subtitle": "Manage search engine optimization settings"
           }
         },
         "name": "Organization Name",
@@ -2790,6 +2916,9 @@
         "footer_text": "Footer Text",
         "footer_text_placeholder": "Enter footer text...",
         "footer_text_desc": "Custom text displayed at the bottom of your organization pages",
+        "email_sender_name": "Email Sender Name",
+        "email_sender_name_placeholder": "Your organization's name",
+        "email_sender_name_desc": "The name recipients see on emails sent for this organization. Only the name changes \u2014 the sending address stays the platform's, which is what keeps these emails passing SPF and DKIM checks. Leave empty to use the platform default.",
         "default_language": "Default Language",
         "default_language_desc": "The language new visitors see by default and the language used for emails sent on behalf of this organization. Members can still switch their own UI language.",
         "watermark_label": "\"Made with LearnHouse\" watermark",
@@ -3376,7 +3505,13 @@
         "base_credits": "Base Credits",
         "purchased": "Purchased",
         "used": "Used",
-        "remaining": "Remaining"
+        "remaining": "Remaining",
+        "upsell": {
+          "title": "Do more with a higher plan",
+          "subtitle": "Upgrade to raise your limits and unlock more features.",
+          "popular": "Popular",
+          "compare": "Compare all plans"
+        }
       },
       "general": {
         "validation": {
@@ -3399,6 +3534,76 @@
         "custom_required": "A label and a URL are required",
         "plan_locked": "Requires {{plan}} plan",
         "feature_off": "Feature is off"
+      },
+      "danger_zone": {
+        "delete_org_tooltip": "Permanently delete org"
+      },
+      "security": {
+        "saving": "Saving security policy…",
+        "save_error": "Could not save the security policy.",
+        "save_success": "Security policy updated",
+        "admin_mfa_first": "Enable two-factor on your own account before requiring it for the organization.",
+        "admin_mfa_first_why": "Otherwise the policy would lock you out of your own organization the moment it saves — and no admin would be left to turn it back off.",
+        "admin_mfa_first_cta": "Set up two-factor on your account",
+        "not_admin_title": "You don’t have access to this setting",
+        "not_admin_body": "Only organization admins can view or change the two-factor requirement.",
+        "read_only": "You can review this page, but only an organization admin can change the policy.",
+        "methods_title": "Allowed sign-in methods",
+        "methods_description": "Choose how members are allowed to sign in to this organization. Leave every method checked to keep sign-in unrestricted.",
+        "methods_empty_warning": "With no method selected, no one could sign in to this organization. Pick at least one.",
+        "methods_effect": "Unchecked methods disappear from this organization’s login page, and members already signed in with one are asked to sign in again with an allowed method.",
+        "session_sharing_label": "Allow sharing sessions with learnhouse.io",
+        "session_sharing_hint": "When off, signing in at learnhouse.io won’t let members into this org — they must sign in again from this org’s login page using an allowed method.",
+        "saving_short": "Saving…",
+        "save": "Save changes",
+        "cancel": "Cancel",
+        "load_error": "Could not load your organization’s two-factor status.",
+        "reset_error": "Could not reset this member’s two-factor.",
+        "load_error_title": "Something went wrong",
+        "retry": "Retry",
+        "subtitle": "Require two-factor authentication for everyone in this organization.",
+        "compliance_title": "Two-factor coverage",
+        "compliance_count": "{{enabled}} of {{total}} members have two-factor enabled",
+        "refresh": "Refresh",
+        "stat_enrolled": "Enrolled",
+        "stat_exempt": "Exempt (external sign-in)",
+        "stat_blocked": "Would be blocked",
+        "blocked_hint_active": "These members lose access to this organization when their grace period ends, unless they enroll.",
+        "members_title": "Members",
+        "members_sorted": "not enrolled first",
+        "members_empty": "No members in this organization yet.",
+        "you": "you",
+        "badge_enrolled": "Enrolled",
+        "badge_exempt": "Exempt — {{method}}",
+        "badge_not_enrolled": "Not enrolled",
+        "reset_hint": "Clear this member’s two-factor so they can set it up again",
+        "resetting": "Resetting…",
+        "reset_confirm": "Confirm reset?",
+        "reset_2fa": "Reset 2FA",
+        "show_less": "Show less",
+        "show_all": "Show all {{count}} members",
+        "policy_title": "Require two-factor authentication",
+        "policy_description": "Members without a second factor are blocked from this organization once their grace period ends. They keep their account and any other organization they belong to, and regain access the moment they enroll.",
+        "active_since": "Policy active since {{date}}",
+        "active_no_date": "Policy is active",
+        "no_restart_note": "Saving changes to an already-active policy does not restart anyone’s countdown — existing deadlines stay anchored to the date above. The countdown only resets if you turn the requirement off and back on.",
+        "grace_label": "Grace period",
+        "grace_immediately": "Immediately",
+        "grace_days": "{{count}} days",
+        "grace_hint_immediate": "Members without two-factor are blocked as soon as the policy is saved.",
+        "grace_hint_days": "Members get {{count}} days to enroll before they are blocked. New members get the same window from the day they join.",
+        "exempt_label": "Exempt users who sign in via Google or SSO",
+        "exempt_hint": "Their identity provider already handles multi-factor, so asking them for a second factor here adds nothing.",
+        "self_blocking": "Your own deadline has passed. Enroll now to keep access to this organization.",
+        "self_days_left": "You have {{count}} days left to enroll in two-factor yourself.",
+        "confirm_title": "Require two-factor for everyone?",
+        "confirm_none": "Everyone in this organization either has two-factor enabled or is exempt. No one loses access.",
+        "confirm_immediate": "{{count}} of {{total}} members will lose access to this organization immediately, as soon as you save.",
+        "confirm_deadline": "{{count}} of {{total}} members will lose access to this organization on {{date}} unless they enable two-factor before then.",
+        "confirm_list_title": "Who is affected",
+        "confirm_exempt_note": "{{count}} members are exempt because they sign in through an external identity provider.",
+        "confirm_reversible": "This is reversible: turning the requirement off restores access immediately.",
+        "confirm_button": "Yes, require two-factor"
       }
     },
     "users": {
@@ -3410,7 +3615,9 @@
           "signups": "Signups & Invite Codes",
           "add": "Invite Members",
           "audit_logs": "Audit Logs",
-          "analytics": "Analytics"
+          "analytics": "Analytics",
+          "sign_in": "Sign-in",
+          "two_factor": "Two-factor"
         },
         "pages": {
           "users": {
@@ -3440,6 +3647,14 @@
           "audit_logs": {
             "title": "Audit Logs",
             "subtitle": "Track and monitor all activities within your organization"
+          },
+          "two_factor": {
+            "title": "Two-factor",
+            "subtitle": "Require two-factor authentication for members of this organization"
+          },
+          "sign_in": {
+            "title": "Sign-in",
+            "subtitle": "Choose how members are allowed to sign in to this organization"
           }
         },
         "mobile": {
@@ -3618,11 +3833,14 @@
           "remove_error": "Error removing user",
           "updating_role": "Updating role...",
           "role_update_success": "Role updated successfully",
-          "role_update_error": "Error updating role"
+          "role_update_error": "Error updating role",
+          "export_csv": "Export users (CSV)"
         },
         "pagination": {
           "showing": "Showing {{start}}-{{end}} of {{total}}",
-          "page": "Page {{current}} of {{total}}"
+          "page": "Page {{current}} of {{total}}",
+          "previous": "Previous page",
+          "next": "Next page"
         },
         "modals": {
           "update_role": {
@@ -3966,7 +4184,9 @@
                 "coursechapters": "Course Chapters",
                 "activities": "Activities",
                 "roles": "Roles",
-                "dashboard": "Dashboard"
+                "dashboard": "Dashboard",
+                "folders": "Folders",
+                "media": "Media"
               },
               "actions": {
                 "create": "create",
@@ -4008,7 +4228,9 @@
                 "coursechapters": "Course Chapters",
                 "activities": "Activities",
                 "roles": "Roles",
-                "dashboard": "Dashboard"
+                "dashboard": "Dashboard",
+                "folders": "Folders",
+                "media": "Media"
               },
               "actions": {
                 "create": "create",
@@ -4055,7 +4277,9 @@
             "coursechapters": "Course Chapters",
             "activities": "Activities",
             "roles": "Roles",
-            "dashboard": "Dashboard"
+            "dashboard": "Dashboard",
+            "folders": "Folders",
+            "media": "Media"
           }
         },
         "toasts": {
@@ -4063,6 +4287,38 @@
           "delete_success": "Deleted role",
           "delete_error": "Error deleting role"
         }
+      },
+      "security": {
+        "two_factor_title": "Two-factor"
+      },
+      "signup_fields": {
+        "no_rights": "You do not have permission to change signup fields.",
+        "label_required": "Every field needs a label.",
+        "duplicate_key": "Two fields share the same key. Give them different labels.",
+        "options_required": "Dropdown fields need at least one option.",
+        "saving": "Saving signup fields…",
+        "saved": "Signup fields updated.",
+        "save_error": "Could not save signup fields. Please try again.",
+        "title": "Custom signup fields",
+        "subtitle": "Extra questions asked when someone joins. Answers are saved on each member.",
+        "public_notice": "Labels, help text and options appear on your public signup page — anyone can read them. Do not put anything confidential here.",
+        "empty": "No custom fields. Your signup form asks only the standard questions.",
+        "label_placeholder": "Question label",
+        "badge_saved": "in use",
+        "badge_new": "new",
+        "type": "Field type",
+        "required": "Required",
+        "delete_confirm": "Removing this field abandons the answers already collected under its key. Click the bin again to confirm.",
+        "key": "Key",
+        "key_locked": "Locked — changing it would orphan the answers already collected.",
+        "key_hint": "Set automatically from the label.",
+        "help_text": "Help text",
+        "max_length": "Max length",
+        "min_value": "Min",
+        "max_value": "Max",
+        "add": "Add field",
+        "options": "Options (one per line)",
+        "options_placeholder": "First option\\nSecond option"
       }
     },
     "assignments": {
@@ -4422,7 +4678,10 @@
             "max_retries_bounded": "Total graded attempts (initial submission + retries)",
             "cancel": "Cancel",
             "save": "Save Changes",
-            "saving": "Saving..."
+            "saving": "Saving...",
+            "pass_threshold_label": "Passing threshold",
+            "pass_threshold_description": "Minimum score to pass. Leave blank to use the default (50%, or 60% for letter grades).",
+            "pass_threshold_placeholder": "Auto"
           },
           "toasts": {
             "updating": "Updating assignment...",
@@ -4779,6 +5038,7 @@
       "image": "Image",
       "video": "Video",
       "pdf": "PDF Document",
+      "h5p": "H5P Interactive Content",
       "youtube": "YouTube Video",
       "quiz": "Interactive Quiz",
       "math": "Math Equation (LaTeX)",
@@ -4836,6 +5096,22 @@
         "expand_pdf": "Expand PDF",
         "download_pdf": "Download PDF"
       },
+      "h5p_block": {
+        "default_title": "H5P interactive content",
+        "description": "Paste the embed URL of an H5P activity to show it here.",
+        "hosted_hint": "The content stays on your own H5P host (H5P.com, Lumi, or a self-hosted Drupal, Moodle or WordPress site). You can paste the embed URL or the whole iframe snippet the host gives you.",
+        "url_label": "H5P embed URL",
+        "url_placeholder": "https://your-team.h5p.com/content/123456/embed",
+        "title_label": "Title",
+        "title_placeholder": "Title (used for accessibility and search)",
+        "edit_content": "Edit H5P content",
+        "remove_content": "Remove H5P content",
+        "errors": {
+          "empty": "Enter an H5P embed URL.",
+          "unparseable": "That does not look like a valid URL. Paste the embed URL or iframe snippet from your H5P host.",
+          "unsupported_protocol": "Only http and https URLs can be embedded."
+        }
+      },
       "quiz_block": {
         "all_correct": "All answers are correct!",
         "some_incorrect": "Some answers are incorrect!",
@@ -4851,7 +5127,12 @@
         "question_label": "Question",
         "delete_question": "Delete question",
         "empty_editable": "No questions yet. Add your first one to get started.",
-        "empty_readonly": "This quiz has no questions yet."
+        "empty_readonly": "This quiz has no questions yet.",
+        "select_one": "Select one answer",
+        "select_all_that_apply": "Select all that apply",
+        "response_type_single": "Single answer",
+        "response_type_multiple": "Multiple answers",
+        "no_correct_answer_warning": "No correct answer — this question is skipped"
       },
       "math_block": {
         "templates": "Templates",
@@ -5752,7 +6033,9 @@
     "accruing_this_month": "Active members this month (billed on your next renewal)",
     "packs_billed_separately": "Add-ons are separate subscriptions and are invoiced on their own schedule.",
     "invoice_history": "Invoice history",
-    "view": "View"
+    "view": "View",
+    "checkout_settling": "Payment received — your new plan is being applied and will appear shortly.",
+    "checkout_settling_delayed": "Payment received, but your plan has not updated yet. Refresh in a moment — contact support if it persists."
   },
   "hub_new": {
     "useType": {
@@ -5906,5 +6189,20 @@
     "subtitle": "Plans and billing across your organizations",
     "opening": "Opening…",
     "manage_billing": "Manage billing"
+  },
+  "mfa": {
+    "policy": {
+      "banner_message_overdue": "{{org}} requires two-factor authentication and the deadline has passed. Enable it below to regain access.",
+      "banner_message_today": "{{org}} requires two-factor authentication. You need to set it up today.",
+      "banner_message_one_day": "{{org}} requires two-factor authentication. You have 1 day left to set it up.",
+      "banner_message": "{{org}} requires two-factor authentication. You have {{days}} days left to set it up.",
+      "set_up_now": "Set up now",
+      "blocked_title": "Two-factor authentication is required",
+      "blocked_description": "The deadline set by {{org}} for enabling two-factor authentication has passed. To keep using {{org}}, add a second factor to your account — it only takes a minute.",
+      "blocked_scope_note": "This only affects {{org}}. Your other organizations are unaffected.",
+      "set_up_2fa": "Set up two-factor authentication",
+      "signed_in_as": "Signed in as {{email}}",
+      "sign_in_to_org": "Sign in to this organization"
+    }
   }
 }

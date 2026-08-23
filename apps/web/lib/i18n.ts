@@ -4,6 +4,7 @@ import i18n from 'i18next';
 import { initReactI18next } from 'react-i18next';
 import LanguageDetector from 'i18next-browser-languagedetector';
 import en from '../locales/en.json';
+import { loadDateLocale } from './format';
 
 const LOCALE_LOADERS: Record<string, () => Promise<{ default: any }>> = {
   fr: () => import('../locales/fr.json'),
@@ -70,15 +71,20 @@ i18n
   });
 
 // Load the detected language if it's not English — export the promise
-// so I18nProvider can wait for resources before rendering
-export const initialLocaleReady = loadLocale(i18n.language.split('-')[0]);
+// so I18nProvider can wait for resources before rendering.
+// The date locale rides along: dayjs keeps its own registry, and without this
+// every "2 hours ago" renders in English no matter the language.
+export const initialLocaleReady = Promise.all([
+  loadLocale(i18n.language.split('-')[0]),
+  loadDateLocale(i18n.language),
+]).then(() => undefined);
 
 /**
  * Switch language safely — preloads the bundle before switching
  * so the UI never flashes English as a fallback.
  */
 export async function changeLanguage(lng: string) {
-  await loadLocale(lng)
+  await Promise.all([loadLocale(lng), loadDateLocale(lng)])
   return i18n.changeLanguage(lng)
 }
 

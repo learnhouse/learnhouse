@@ -60,7 +60,8 @@ export default function EndpointDetail({
   const [bodyText, setBodyText] = useState<string>(
     endpoint.sampleBody ? JSON.stringify(endpoint.sampleBody, null, 2) : '',
   )
-  const [bodyParseError, setBodyParseError] = useState('')
+  // Only the setter is used — the value is never rendered.
+  const [, setBodyParseError] = useState('')
 
   const parsedBody: { ok: boolean; value: unknown } = useMemo(() => {
     if (!hasBody) return { ok: true, value: undefined }
@@ -273,9 +274,19 @@ export default function EndpointDetail({
             {/* If the API returned a deactivated-license error, show the
                 explainer banner above the raw JSON so the user sees the cause
                 directly instead of just a 503 detail blob. */}
-            {isEELicenseInactiveError({ status: result.status, detail: result.body }) && (
-              <EELicenseError error={{ status: result.status, detail: result.body }} />
-            )}
+            {(() => {
+              // FastAPI wraps HTTPException payloads as {detail: ...}, and the
+              // playground stores that whole envelope in result.body. Passing
+              // it straight through meant the matcher read `.error` off the
+              // wrapper, found undefined, and the banner never rendered on any
+              // license 503. Unwrap first, keeping the raw body as a fallback
+              // for handlers that return the detail unwrapped.
+              const err = {
+                status: result.status,
+                detail: (result.body as { detail?: unknown })?.detail ?? result.body,
+              }
+              return isEELicenseInactiveError(err) ? <EELicenseError error={err} /> : null
+            })()}
             <pre className="rounded-lg border border-white/[0.08] bg-black/40 px-3 py-2.5 text-xs font-mono text-white/85 whitespace-pre-wrap break-all overflow-x-auto max-h-96">
               {typeof result.body === 'string' ? result.body : JSON.stringify(result.body, null, 2)}
             </pre>
@@ -304,7 +315,7 @@ function ParamRow({
 }: {
   param: PathParam
   value: string
-  onChange: (v: string) => void
+  onChange: (_v: string) => void
 }) {
   return (
     <div>

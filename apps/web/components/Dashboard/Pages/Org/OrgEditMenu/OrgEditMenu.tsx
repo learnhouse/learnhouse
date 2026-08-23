@@ -114,7 +114,7 @@ function IconPicker({
       >
         {/* eslint-disable-next-line react-hooks/static-components */}
         <Current size={18} weight="fill" className="text-gray-600" />
-        <span className="absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full bg-black flex items-center justify-center ring-2 ring-white">
+        <span className="absolute -bottom-0.5 -end-0.5 w-3 h-3 rounded-full bg-black flex items-center justify-center ring-2 ring-white">
           <CaretDown size={7} weight="bold" className="text-white" />
         </span>
       </button>
@@ -358,10 +358,10 @@ const OrgEditMenu: React.FC = () => {
                               <p className="text-xs text-gray-400">
                                 {meta?.link}
                                 {!planAllowed && requiredPlan && (
-                                  <span className="text-amber-600 inline-flex items-center gap-1 ml-2"><Lock size={10} />{t('dashboard.organization.menu.plan_locked', { plan: requiredPlan })}</span>
+                                  <span className="text-amber-600 inline-flex items-center gap-1 ms-2"><Lock size={10} />{t('dashboard.organization.menu.plan_locked', { plan: requiredPlan })}</span>
                                 )}
                                 {planAllowed && !featureEnabled && (
-                                  <span className="text-gray-400 ml-2">· {t('dashboard.organization.menu.feature_off')}</span>
+                                  <span className="text-gray-400 ms-2">· {t('dashboard.organization.menu.feature_off')}</span>
                                 )}
                               </p>
                             )}

@@ -9,7 +9,7 @@ from io import BytesIO
 from itertools import count
 from types import SimpleNamespace
 from unittest.mock import AsyncMock, patch
-from uuid import UUID
+from uuid import UUID, uuid4
 
 import pytest
 from fastapi import HTTPException, UploadFile
@@ -661,7 +661,7 @@ class TestImportHelpers:
         tmp_path,
         monkeypatch,
     ):
-        temp_id = "temp-course-package"
+        temp_id = str(uuid4())
         temp_dir = tmp_path / temp_id / "extracted"
         temp_dir.mkdir(parents=True)
         manifest = {
@@ -745,7 +745,7 @@ class TestImportHelpers:
             )
         assert org_exc.value.status_code == 404
 
-        temp_id = "temp-failed"
+        temp_id = str(uuid4())
         work_dir = tmp_path / f"{temp_id}-importing"
         extracted_dir = work_dir / "extracted"
         extracted_dir.mkdir(parents=True)
@@ -863,7 +863,7 @@ class TestImportHelpers:
         expected_status,
         expected_detail,
     ):
-        temp_id = "temp-locking"
+        temp_id = str(uuid4())
         (tmp_path / temp_id / "extracted").mkdir(parents=True)
         (tmp_path / temp_id / "extracted" / "manifest.json").write_text("{}")
         monkeypatch.setattr("src.services.courses.transfer.import_service.TEMP_IMPORT_DIR", str(tmp_path))

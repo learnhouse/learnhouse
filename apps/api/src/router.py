@@ -5,12 +5,14 @@ from src.routers import audit as audit_router_module
 from src.routers import code_execution
 from src.routers import code_submissions
 from src.routers import health
+from src.routers import demo as demo_router_module
 from src.routers import instance
 from src.routers import plans
 from src.routers import usergroups
 from src.routers import dev, trail, users, auth, orgs, roles, search
 from src.routers import mfa as mfa_router_module
 from src.routers import monitoring
+from src.routers import nudges as nudges_router_module
 from src.routers import stream
 from src.routers import api_tokens
 from src.routers import webhooks
@@ -135,6 +137,20 @@ v1_router.include_router(
     custom_domains.public_router,
     prefix="/orgs",
     tags=["custom-domains"],
+)
+# Public unsubscribe endpoints (no auth — the HMAC token in the link is the
+# authorisation; a nudge recipient may have no session at all)
+v1_router.include_router(
+    nudges_router_module.public_router,
+    prefix="/emails",
+    tags=["emails"],
+)
+# Email delivery feedback from the provider (protected by a shared secret).
+# Bounces and complaints have to reach us or a dead address is mailed forever.
+v1_router.include_router(
+    nudges_router_module.internal_router,
+    prefix="/internal/emails",
+    tags=["emails-internal"],
 )
 # Internal domain listing endpoint (protected by internal key)
 v1_router.include_router(
@@ -357,6 +373,9 @@ v1_router.include_router(
 
 # Instance info (public, no auth)
 v1_router.include_router(instance.router, prefix="/instance", tags=["instance"])
+# Demo: /demo/status is public (the onboarding page calls it before the
+# visitor has done anything); /demo/enter resolves the user itself.
+v1_router.include_router(demo_router_module.router, prefix="/demo", tags=["demo"])
 
 # Sentry feedback relay (rejects API tokens; works for both anonymous and
 # authenticated callers so the in-app feedback modal keeps working everywhere)

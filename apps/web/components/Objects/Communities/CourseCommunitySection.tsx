@@ -14,12 +14,12 @@ import { useLHSession } from '@components/Contexts/LHSessionContext'
 import { useQuery } from '@tanstack/react-query'
 import { queryKeys } from '@/lib/query/keys'
 
-interface CourseCommunitySection {
+interface CourseCommunitySectionProps {
   courseUuid: string
   orgslug: string
 }
 
-export function CourseCommunitySection({ courseUuid, orgslug }: CourseCommunitySection) {
+export function CourseCommunitySection({ courseUuid, orgslug }: CourseCommunitySectionProps) {
   const { t } = useTranslation()
   const session = useLHSession() as any
   const accessToken = session?.data?.tokens?.access_token
@@ -105,7 +105,7 @@ export function CourseCommunitySection({ courseUuid, orgslug }: CourseCommunityS
                       </span>
                     </div>
                     <div className="flex-1 min-w-0">
-                      <h4 className="font-medium text-gray-900 line-clamp-1">
+                      <h4 className="font-medium text-gray-900 line-clamp-1" dir="auto">
                         {discussion.title}
                       </h4>
                       <p className="text-xs text-gray-400 mt-1">

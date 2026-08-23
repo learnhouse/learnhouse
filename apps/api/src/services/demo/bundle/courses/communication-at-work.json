@@ -1,0 +1,214 @@
+{
+  "slug": "communication-at-work",
+  "name": "Writing Clearly at Work",
+  "description": "Shorter messages, fewer meetings, less confusion.",
+  "about": "Most of what goes wrong at Riverbend goes wrong in writing: a request nobody understood, an update that buried the important part, a message that read as blunt when it was only rushed. This course is about the small habits that fix that.",
+  "learnings": "Write requests people can act on; structure an update; give feedback that lands; know when writing is the wrong tool.",
+  "tags": "communication,writing,collaboration",
+  "thumbnail": "communication-at-work.webp",
+  "section": "getting-started",
+  "public": true,
+  "published": true,
+  "certification": false,
+  "updates": [
+    {
+      "title": "New chapter on difficult messages",
+      "content": "Added after several requests for guidance on delivering bad news to a customer in writing.",
+      "days_ago": 17
+    }
+  ],
+  "chapters": [
+    {
+      "slug": "cw-basics",
+      "name": "The basics",
+      "description": "Getting to the point.",
+      "activities": [
+        {
+          "slug": "cw-lead-with-the-point",
+          "name": "Lead with the point",
+          "kind": "document",
+          "body": [
+            "h2:Put the ask in the first line",
+            "p:Most work messages bury the request under context. The reader gets three paragraphs of background and only then discovers what they are being asked to do — by which point they have skimmed it. Invert that. The first line says what you need and by when; the context follows for whoever wants it.",
+            "h2:Two versions of the same message",
+            "p:Weak: a long explanation of a stock discrepancy, ending with a question about whether to hold the order. Strong: 'Can you confirm by Thursday whether we hold order 4192? Background below.' Same information, a fraction of the effort to act on.",
+            {"ul": [
+              "One message, one ask. Two asks in one message reliably gets one answer.",
+              "Name the person you need it from. 'Someone should look at this' is a message to nobody.",
+              "Give a date. 'When you get a chance' means next month."
+            ]},
+            {"quiz": {
+              "q": "Where should the request go in a work message?",
+              "a": [
+                ["In the first line, before the context", true],
+                ["At the end, after the reasoning", false],
+                ["In the subject line only", false]
+              ]
+            }}
+          ]
+        },
+        {
+          "slug": "cw-length",
+          "name": "Cutting it down",
+          "kind": "document",
+          "body": [
+            "h2:Length is a cost you pass to the reader",
+            "p:A message that takes you ten minutes to write and two minutes to read is a good trade when forty people read it. Writing long is easier; writing short is a courtesy.",
+            "h2:What to cut first",
+            {"ol": [
+              "The warm-up. 'I hope this finds you well, I wanted to reach out regarding' — delete it and start at the real first sentence.",
+              "The history. Unless the reader needs it to decide, link to it instead of retelling it.",
+              "The hedging. 'I was maybe wondering if it might be possible to perhaps' is one word: 'can'.",
+              "Anything you wrote to sound thorough rather than to be understood."
+            ]},
+            {"info": "Re-read anything longer than a screen before sending. You will cut a third of it, and it will be a better message."}
+          ]
+        },
+        {
+          "slug": "cw-tone",
+          "name": "Tone, and why brief is not rude",
+          "kind": "document",
+          "body": [
+            "h2:Short messages read colder than they are",
+            "p:Written text strips out everything a face and a voice provide. A three-word reply that felt efficient to you can read as annoyed to someone having a bad day. This is not a reason to pad your writing — it is a reason to be deliberate about a few small signals.",
+            {"ul": [
+              "Say what you appreciated when it is true. One specific sentence beats a paragraph of general warmth.",
+              "Explain a 'no' briefly. An unexplained refusal invites people to invent a reason, and the invented one is usually worse.",
+              "Ask rather than assert when you are not certain. 'Am I reading this right?' costs nothing and prevents a lot."
+            ]},
+            "p:And if a thread has gone around more than twice without converging, stop writing and talk. Some disagreements are only visible in a voice.",
+            {"quiz": {
+              "q": "A written thread has gone back and forth three times without agreement. What should you do?",
+              "a": [
+                ["Stop writing and have a conversation", true],
+                ["Write a longer, more detailed message", false],
+                ["Escalate to a manager immediately", false]
+              ]
+            }}
+          ]
+        }
+      ]
+    },
+    {
+      "slug": "cw-updates",
+      "name": "Updates and status",
+      "description": "Telling people what is going on.",
+      "activities": [
+        {
+          "slug": "cw-status-update",
+          "name": "Writing a status update",
+          "kind": "document",
+          "body": [
+            "h2:Three lines, in this order",
+            {"ol": [
+              "Where it stands, in one sentence, in plain language.",
+              "What has changed since last time, especially anything that got worse.",
+              "What you need from anyone reading."
+            ]},
+            "p:That is the whole format. It works for a project, a customer account, or a piece of work you picked up yesterday. What it does not include is a list of everything you did — activity is not progress, and a reader cannot tell the difference from a task list.",
+            "h2:Say when things slip",
+            "p:A slipped date reported early is a scheduling problem. The same date reported the day it was due is a trust problem. Nobody at Riverbend has ever been in trouble for flagging a delay in good time.",
+            {"warn": "Never let a customer discover a delay from the absence of a delivery. If a date is at risk, it is told, not discovered."}
+          ]
+        },
+        {
+          "slug": "cw-handover",
+          "name": "Handing work over",
+          "kind": "document",
+          "body": [
+            "h2:Write it for someone who was not there",
+            "p:Handovers fail because the person writing them still has all the context in their head and cannot see what is missing. Assume the reader knows the product but nothing about this particular piece of work.",
+            {"ul": [
+              "What the work is for, and who wanted it.",
+              "What state it is in right now, honestly, including the parts that are held together loosely.",
+              "What you would do next, and what you would avoid.",
+              "Who to ask when the note runs out."
+            ]},
+            "p:That last line is the one most people forget, and it is the one that saves the handover when everything else in it has gone stale."
+          ]
+        },
+        {
+          "slug": "cw-difficult-news",
+          "name": "Delivering difficult news",
+          "kind": "document",
+          "body": [
+            "h2:Say it in the first sentence",
+            "p:There is a strong pull to soften bad news by delaying it. It does not work. The reader knows something is wrong by the second paragraph and reads the rest impatiently, or misses the point entirely and finds out later.",
+            "h2:The shape that works",
+            {"ol": [
+              "What has happened, plainly.",
+              "What it means for them, specifically.",
+              "What you are doing about it.",
+              "What you need from them, if anything."
+            ]},
+            "p:Do not apologise four times. One clear apology, then the plan. Repeated apology reads as anxiety and makes the reader less confident that it is under control.",
+            {"info": "If the news is genuinely serious, write the message and then call. The written version stops it being misremembered; the call stops it being read coldly."},
+            {"quiz": {
+              "q": "Where does the bad news go in a difficult message?",
+              "a": [
+                ["In the first sentence", true],
+                ["After the context, so it lands gently", false],
+                ["At the very end, with the next steps", false]
+              ]
+            }}
+          ]
+        }
+      ]
+    },
+    {
+      "slug": "cw-together",
+      "name": "Working with others",
+      "description": "Feedback, disagreement, and the assignment.",
+      "activities": [
+        {
+          "slug": "cw-feedback",
+          "name": "Giving feedback that lands",
+          "kind": "document",
+          "body": [
+            "h2:Be specific about the thing, not the person",
+            "p:'This section is hard to follow because the numbers change halfway through' is useful. 'This is sloppy' is not — there is nothing to act on in it, and the reader spends their energy on feeling bad rather than on fixing it.",
+            "h2:A workable pattern",
+            {"ul": [
+              "Name the specific thing you are reacting to.",
+              "Say what effect it had on you as a reader or user.",
+              "Suggest a direction, without insisting on your version."
+            ]},
+            "p:And separate the strong opinions from the weak ones. If everything you say carries the same weight, people cannot tell what actually matters to you, and they will either fight all of it or none of it."
+          ]
+        },
+        {
+          "slug": "cw-disagreeing",
+          "name": "Disagreeing well",
+          "kind": "document",
+          "body": [
+            "h2:Argue about the decision, not the person who made it",
+            "p:Disagreement is not a problem here; it is most of how decisions get any better. What causes damage is disagreement that becomes about competence, or that arrives so late that reversing course is expensive.",
+            {"ul": [
+              "Say what you would do instead. Objection without an alternative is very hard to act on.",
+              "Say how strongly you hold it. 'I would lean the other way' and 'I think this will fail' need different responses.",
+              "Once it is decided, commit to it properly — including in front of people who were not in the room."
+            ]},
+            {"quiz": {
+              "q": "What does a useful disagreement include?",
+              "a": [
+                ["An alternative, and how strongly you hold the view", true],
+                ["A full account of everything wrong with the proposal", false],
+                ["A private message to the decision-maker's manager", false]
+              ]
+            }}
+          ]
+        },
+        {
+          "slug": "cw-rewrite-exercise",
+          "name": "Rewrite exercise",
+          "kind": "assignment",
+          "body": [
+            "h2:Take a bad message and fix it",
+            "p:You will be given a real-shaped internal message: too long, request buried at the bottom, no date, and a slipped deadline mentioned in passing. Rewrite it using what this course covers.",
+            "p:Marked on whether the ask is in the first line, whether the delay is stated plainly, and whether you cut it to something a busy reader would actually finish. Shorter is not automatically better — losing the deadline loses the marks."
+          ]
+        }
+      ]
+    }
+  ]
+}

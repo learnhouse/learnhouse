@@ -37,7 +37,7 @@ export interface CoursePlan {
   name: string
   description: string
   learnings: string
-  tags: string
+  tags: string[]
   chapters: ChapterPlan[]
 }
 

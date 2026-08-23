@@ -46,6 +46,7 @@ from src.services.analytics.analytics import track
 from src.services.analytics import events as analytics_events
 from src.services.webhooks.dispatch import dispatch_webhooks
 from src.security.auth import create_access_token
+from src.security.session_context import AUTH_METHOD_API_TOKEN, session_claims
 from src.security.features_utils.plan_check import get_org_plan
 from src.security.features_utils.plans import plan_meets_requirement
 from src.security.features_utils.usage import (
@@ -129,6 +130,37 @@ def _role_priority(role_id: int) -> int:
     return _ROLE_PRIORITY.get(role_id, _DEFAULT_ROLE_PRIORITY)
 
 
+async def _check_token_can_impersonate(
+    user: User,
+    org_id: int,
+    db_session: AsyncSession,
+) -> None:
+    """Refuse to mint a session for a privileged account.
+
+    Same reasoning as :func:`_check_token_can_assign_role`: elevated authority
+    only comes from an interactive admin flow, so a leaked token cannot borrow
+    an org Admin/Maintainer's — or a platform superadmin's — session and inherit
+    every check that trusts it.
+    """
+    if user.is_superadmin:
+        raise HTTPException(
+            status_code=403,
+            detail="API tokens cannot issue tokens for superadmin accounts",
+        )
+
+    membership = (await db_session.execute(
+        select(UserOrganization).where(
+            UserOrganization.user_id == user.id,
+            UserOrganization.org_id == org_id,
+        )
+    )).scalars().first()
+    if membership is not None and membership.role_id in {ADMIN_ROLE_ID, MAINTAINER_ROLE_ID}:
+        raise HTTPException(
+            status_code=403,
+            detail="API tokens cannot issue tokens for Admin or Maintainer accounts",
+        )
+
+
 async def _check_token_can_assign_role(
     token_user: APITokenUser,
     role: Role,
@@ -176,15 +208,35 @@ async def issue_user_token(
     user_id: int,
     db_session: AsyncSession,
 ) -> dict:
-    """Issue a JWT access token on behalf of a user in the token's org."""
+    """Issue a JWT access token on behalf of a user in the token's org.
+
+    Refuses privileged targets: without that, any token — whatever its rights —
+    could mint a full session for the org's administrator and inherit every
+    permission the token itself was never granted.
+
+    Deliberately not gated on a ``users`` rights bucket: tokens are issued with
+    content buckets only (courses, activities, usergroups, …), so requiring one
+    would reject every token in existence rather than scope anything. Scoping
+    impersonation properly needs ``users`` to become a grantable bucket first.
+    """
 
     user = await _get_user_in_org(user_id, token_user.org_id, db_session)
+
+    await _check_token_can_impersonate(user, token_user.org_id, db_session)
 
     # Issue a short-lived token (1 hour) for headless use — shorter than the
     # default 8-hour session token to limit blast radius if leaked.
     from datetime import timedelta
+    # ``purpose`` has to stay "session" — get_current_user rejects every other
+    # value — so the machine origin is recorded in ``amr`` instead: the session
+    # is auditable as API-token-minted rather than indistinguishable from a
+    # human login, and stays bound to the token's org via ``sorg``.
     access_token = create_access_token(
-        data={"sub": user.email},
+        data={
+            "sub": user.email,
+            "purpose": "session",
+            **session_claims(AUTH_METHOD_API_TOKEN, token_user.org_id),
+        },
         expires_delta=timedelta(hours=1),
     )
     return {
@@ -1278,6 +1330,13 @@ async def issue_magic_link(
     """
 
     user = await _get_user_in_org(user_id, token_user.org_id, db_session)
+
+    # Same check issue_user_token applies, for the same reason: consuming this
+    # link mints a full session for the target, so leaving it off made the
+    # magic-link route a way around the impersonation rules rather than a
+    # variation on them. A token that may not mint a session for an Admin,
+    # Maintainer or superadmin directly must not be able to mail itself one.
+    await _check_token_can_impersonate(user, token_user.org_id, db_session)
 
     safe_redirect = _validate_magic_link_redirect(redirect_to)
 

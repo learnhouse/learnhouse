@@ -326,7 +326,7 @@ function ActivityElement(props: ActivitiyElementProps) {
 
           {/* Status badge + quick actions */}
           {!props.selectionMode && (
-            <div className="flex items-center gap-2 flex-shrink-0 ml-auto">
+            <div className="flex items-center gap-2 flex-shrink-0 ms-auto">
               <button
                 onClick={changePublicStatus}
                 disabled={isPublishing}
@@ -350,9 +350,11 @@ function ActivityElement(props: ActivitiyElementProps) {
                 ) : (
                   <EyeOff size={10} />
                 )}
-                {props.activity.published
-                  ? t('dashboard.courses.structure.activity.status.published')
-                  : t('dashboard.courses.structure.activity.status.draft')}
+                <span>
+                  {props.activity.published
+                    ? t('dashboard.courses.structure.activity.status.published')
+                    : t('dashboard.courses.structure.activity.status.draft')}
+                </span>
               </button>
               <div className="w-px h-5 bg-gray-200/80 mx-1" />
               <div className="flex items-center gap-1">
@@ -474,14 +476,16 @@ function ActivityElement(props: ActivitiyElementProps) {
                 <DropdownMenuContent align="end" className="w-48">
                   <DropdownMenuItem onClick={() => setSelectedActivity(props.activity.id)}>
                     <Pencil size={14} />
-                    {t('dashboard.courses.structure.actions.rename')}
+                    <span>{t('dashboard.courses.structure.actions.rename')}</span>
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem onClick={changePublicStatus} disabled={isPublishing}>
                     {props.activity.published ? <EyeOff size={14} /> : <Globe size={14} />}
-                    {props.activity.published
-                      ? t('dashboard.courses.structure.actions.unpublish')
-                      : t('dashboard.courses.structure.actions.publish')}
+                    <span>
+                      {props.activity.published
+                        ? t('dashboard.courses.structure.actions.unpublish')
+                        : t('dashboard.courses.structure.actions.publish')}
+                    </span>
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem
@@ -492,7 +496,7 @@ function ActivityElement(props: ActivitiyElementProps) {
                     className="text-red-600 focus:text-red-600 focus:bg-red-50"
                   >
                     <Trash2 size={14} />
-                    {t('dashboard.courses.structure.bulk_actions.delete')}
+                    <span>{t('dashboard.courses.structure.bulk_actions.delete')}</span>
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>

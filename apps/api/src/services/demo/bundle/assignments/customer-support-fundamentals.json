@@ -1,0 +1,92 @@
+{
+  "activity_key": "cs-support-scenarios",
+  "title": "Support scenarios",
+  "description": "Four incoming messages of the kind that actually arrive: an angry customer with a genuine fault, a request we cannot fulfil, a case that meets an escalation trigger, and one where the customer is mistaken but polite.",
+  "grading_type": "PERCENTAGE",
+  "pass_threshold_percentage": 70,
+  "due_in_days": 11,
+  "published": true,
+  "auto_grading": true,
+  "show_correct_answers": false,
+  "allow_retries": true,
+  "max_retries": 1,
+  "tasks": [
+    {
+      "slug": "cs-t1-escalation",
+      "title": "Escalation calls",
+      "description": "For each situation, decide whether it escalates now.",
+      "hint": "Chapter three lists four triggers. They are deliberately mechanical.",
+      "type": "QUIZ",
+      "max_grade_value": 60,
+      "contents": {
+        "questions": [
+          {
+            "questionUUID": "question_cs_t1_q1",
+            "questionText": "A customer mentions they are considering legal action. What do you do?",
+            "options": [
+              { "optionUUID": "option_cs_t1_q1_a", "text": "Escalate immediately", "type": "text", "fileID": "", "assigned_right_answer": true },
+              { "optionUUID": "option_cs_t1_q1_b", "text": "Resolve it yourself first to avoid alarming anyone", "type": "text", "fileID": "", "assigned_right_answer": false },
+              { "optionUUID": "option_cs_t1_q1_c", "text": "Wait to see whether they raise it again", "type": "text", "fileID": "", "assigned_right_answer": false }
+            ]
+          },
+          {
+            "questionUUID": "question_cs_t1_q2",
+            "questionText": "Three customers report the same fault within an hour. What is this?",
+            "options": [
+              { "optionUUID": "option_cs_t1_q2_a", "text": "An incident — say so in the team channel now", "type": "text", "fileID": "", "assigned_right_answer": true },
+              { "optionUUID": "option_cs_t1_q2_b", "text": "Three tickets to work through in priority order", "type": "text", "fileID": "", "assigned_right_answer": false }
+            ]
+          },
+          {
+            "questionUUID": "question_cs_t1_q3",
+            "questionText": "Which of these outranks the others for urgency?",
+            "options": [
+              { "optionUUID": "option_cs_t1_q3_a", "text": "A paid customer who cannot receive their delivery", "type": "text", "fileID": "", "assigned_right_answer": true },
+              { "optionUUID": "option_cs_t1_q3_b", "text": "A customer asking forcefully for a new feature", "type": "text", "fileID": "", "assigned_right_answer": false },
+              { "optionUUID": "option_cs_t1_q3_c", "text": "A customer whose workaround is inconvenient", "type": "text", "fileID": "", "assigned_right_answer": false }
+            ]
+          }
+        ]
+      },
+      "submissions": {
+        "correct": { "submissions": [
+          { "questionUUID": "question_cs_t1_q1", "optionUUID": "option_cs_t1_q1_a", "answer": true },
+          { "questionUUID": "question_cs_t1_q2", "optionUUID": "option_cs_t1_q2_a", "answer": true },
+          { "questionUUID": "question_cs_t1_q3", "optionUUID": "option_cs_t1_q3_a", "answer": true }
+        ]},
+        "partial": { "submissions": [
+          { "questionUUID": "question_cs_t1_q1", "optionUUID": "option_cs_t1_q1_a", "answer": true },
+          { "questionUUID": "question_cs_t1_q2", "optionUUID": "option_cs_t1_q2_b", "answer": true },
+          { "questionUUID": "question_cs_t1_q3", "optionUUID": "option_cs_t1_q3_a", "answer": true }
+        ]},
+        "incorrect": { "submissions": [
+          { "questionUUID": "question_cs_t1_q1", "optionUUID": "option_cs_t1_q1_b", "answer": true },
+          { "questionUUID": "question_cs_t1_q2", "optionUUID": "option_cs_t1_q2_b", "answer": true },
+          { "questionUUID": "question_cs_t1_q3", "optionUUID": "option_cs_t1_q3_b", "answer": true }
+        ]}
+      }
+    },
+    {
+      "slug": "cs-t2-first-reply",
+      "title": "Draft the first reply",
+      "description": "A customer's order shipped to their previous address. Write the first reply.",
+      "hint": "Acknowledge, restate, commit — with a time attached.",
+      "type": "SHORT_ANSWER",
+      "max_grade_value": 40,
+      "contents": {
+        "correct_answers": [
+          "by end of day",
+          "by tomorrow",
+          "by thursday",
+          "i will come back to you by"
+        ],
+        "match_mode": "contains"
+      },
+      "submissions": {
+        "correct": { "answer": "Your order went to your old address and that is our error. I am arranging a replacement now and will come back to you by end of day with the new delivery date." },
+        "partial": { "answer": "Sorry about that — it looks like it went to the old address. I will come back to you by tomorrow." },
+        "incorrect": { "answer": "Apologies for any inconvenience caused. I will look into this and get back to you." }
+      }
+    }
+  ]
+}

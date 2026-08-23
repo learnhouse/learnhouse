@@ -122,7 +122,7 @@ function LibraryHome({ orgslug, org_id, initialFolders }: Props) {
 
   return (
     <div className="flex w-full">
-      <div className="pl-4 sm:pl-10 mr-4 sm:mr-10 tracking-tight flex flex-col space-y-5 w-full">
+      <div className="ps-4 sm:ps-10 me-4 sm:me-10 tracking-tight flex flex-col space-y-5 w-full">
         <LibraryHeader
           orgslug={orgslug}
           org_id={org_id}

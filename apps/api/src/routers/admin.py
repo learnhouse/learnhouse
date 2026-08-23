@@ -377,11 +377,12 @@ class UserTrailDetail(BaseModel):
     summary="Issue a user token",
     description=(
         "Issue a JWT access token on behalf of a user. The user must belong to "
-        "the organization matching the org_slug. Requires `users.action_read` permission."
+        "the organization matching the org_slug. Requires `users.action_read` permission. "
+        "Privileged targets (org Admin/Maintainer, platform superadmin) are refused."
     ),
     responses={
         200: {"description": "Access token minted on behalf of the target user.", "model": TokenResponse},
-        403: {"description": "API token lacks permission, user not in org, or org_slug mismatch"},
+        403: {"description": "API token lacks permission, target is privileged, user not in org, or org_slug mismatch"},
         404: {"description": "User or organization not found"},
     },
 )
@@ -894,12 +895,22 @@ async def api_admin_get_user_by_email(
     description=(
         "Generate a short-lived URL that, when opened in a browser, will log "
         "the target user in and optionally redirect them to a specific path. "
-        "Token lifetime is clamped to 60–900 seconds."
+        "Token lifetime is clamped to 60–900 seconds.\n\n"
+        "The target must be an ordinary member. Consuming the link mints a full "
+        "session, so the same rule as `/users/{user_id}/token` applies: an API "
+        "token cannot sign in as an organization Admin or Maintainer, or as a "
+        "platform superadmin."
     ),
     responses={
         200: {"description": "Magic sign-in URL and underlying JWT. Token lifetime is already clamped.", "model": MagicLinkResponse},
         400: {"description": "redirect_to is not a same-origin path"},
-        403: {"description": "User not in this org"},
+        403: {
+            "description": (
+                "User not in this org, or the target is an Admin, Maintainer or "
+                "superadmin — distinguish by the detail message before treating "
+                "it as a membership problem"
+            )
+        },
         404: {"description": "User not found"},
     },
 )

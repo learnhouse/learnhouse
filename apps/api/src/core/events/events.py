@@ -6,7 +6,7 @@ from config.config import LearnHouseConfig, get_learnhouse_config
 from src.core.events.autoinstall import auto_install
 from src.core.events.content import check_content_directory
 from src.core.events.database import close_database, connect_to_db
-from src.core.events.logs import create_logs_dir
+from src.core.events.logs import create_logs_dir, init_logging
 from src.core.ee_hooks import run_ee_startup
 
 logger = logging.getLogger(__name__)
@@ -46,6 +46,11 @@ def startup_app(app: FastAPI) -> Callable:
         # Connect to database
         await connect_to_db(app)
 
+        # Send application logs to stdout. Until this runs, the root logger
+        # has no handler and Python's fallback drops everything below WARNING,
+        # so every logger.info in the codebase is invisible in production.
+        init_logging()
+
         # Create logs directory
         await create_logs_dir()
 
@@ -63,6 +68,17 @@ def startup_app(app: FastAPI) -> Callable:
         cleanup_old_temp_migrations()
         global _cleanup_task
         _cleanup_task = asyncio.create_task(_periodic_migration_cleanup())
+
+        # Lifecycle nudges run on their own daily tick so the feature needs no
+        # external scheduler. No-op unless enabled; never raises.
+        from src.services.nudges.scheduler import start_scheduler
+        start_scheduler()
+
+        # The shared demo organization refreshes itself on an interval, so the
+        # feature needs no external scheduler. No-op unless
+        # LEARNHOUSE_DEMO_ENABLED; never raises.
+        from src.services.demo.scheduler import start_scheduler as start_demo_scheduler
+        start_demo_scheduler()
 
         # Start the in-app HLS transcoding consumer (drains the Redis queue as a
         # background task; no separate worker). No-op unless LEARNHOUSE_HLS_ENABLED.
@@ -99,6 +115,12 @@ def shutdown_app(app: FastAPI) -> Callable:
         if _webhook_tasks:  # pragma: no cover
             await asyncio.gather(*list(_webhook_tasks), return_exceptions=True)
         await close_webhook_client()
+        # Stop the daily nudge tick.
+        from src.services.nudges.scheduler import stop_scheduler
+        await stop_scheduler()
+        # Stop the demo refresh tick.
+        from src.services.demo.scheduler import stop_scheduler as stop_demo_scheduler
+        await stop_demo_scheduler()
         await close_database(app)
 
     return close_app

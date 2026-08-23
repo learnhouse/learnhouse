@@ -27,7 +27,7 @@ from src.security.rbac.rbac import (
 )
 from src.db.organization_config import OrganizationConfig
 from src.db.organizations import Organization, OrganizationRead
-from src.services.orgs.orgs import get_org_default_language
+from src.services.orgs.orgs import get_org_default_language, resolve_org_sender_name
 from src.db.users import (
     AnonymousUser,
     InternalUser,
@@ -331,6 +331,7 @@ async def create_user(
             cta_url=await _get_welcome_cta_url(request, db_session, org_id),
             org_name=org.name if org else None,
             logo_url=get_org_logo_url(org, request) if org else None,
+            sender_name=resolve_org_sender_name(org_config),
         )
     elif get_deployment_mode() == 'saas':
         # Import here to avoid circular imports
@@ -692,20 +693,41 @@ async def update_user_password(
             detail="User does not exist",
         )
 
-    # Verify old password before allowing change
-    if not security_verify_password(form.old_password, user.password):
+    # Verify old password before allowing change. Accounts with no local
+    # password (Google/SSO signups, admin-provisioned users) store an empty
+    # sentinel that pwdlib rejects with UnknownHashError, which surfaced as a 500
+    # instead of an answer — there is no old password to prove here, so refuse it
+    # the same way a wrong one is refused.
+    if not user.password or not security_verify_password(form.old_password, user.password):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED, detail="Wrong password"
         )
 
     # Update user
     user.password = security_hash_password(form.new_password)
+    # SECURITY: stamp the change so every token minted before it is rejected by
+    # get_current_user and /auth/refresh. Without this, a session stolen before
+    # the password change survives it for the full refresh-token lifetime — the
+    # reset-code flow already stamps it, this one did not.
+    user.password_changed_at = datetime.now(timezone.utc).replace(tzinfo=None)
     user.update_date = str(datetime.now())
 
     # Update user in database
     db_session.add(user)
     await db_session.commit()
     await db_session.refresh(user)
+
+    # Belt-and-braces: also push the Redis revocation cutoff so tokens without
+    # an ``iat`` (pre-upgrade) die too. Never block the password change on it.
+    if user.id is not None:
+        try:
+            # Imported here: src.security.auth imports this module, so a
+            # top-level import would be circular.
+            from src.security.auth import revoke_user_sessions_before
+
+            revoke_user_sessions_before(user.id)
+        except Exception:
+            pass
 
     user = UserRead.model_validate(user)
 

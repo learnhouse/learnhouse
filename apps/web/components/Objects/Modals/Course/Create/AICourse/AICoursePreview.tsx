@@ -179,7 +179,7 @@ function AICoursePreview({
             {t('courses.create.ai.tab_content')}
             {totalActivities > 0 && (
               <span className={cn(
-                "ml-1 px-1.5 py-0.5 rounded-full text-[10px] font-bold",
+                "ms-1 px-1.5 py-0.5 rounded-full text-[10px] font-bold",
                 generatedCount === totalActivities && totalActivities > 0
                   ? "bg-green-500/20 text-green-300"
                   : "bg-white/10 text-white/40"

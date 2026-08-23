@@ -15,6 +15,7 @@ import {
   fetchAIAssignmentHistory,
   deleteAIAssignmentHistory,
 } from '@services/ai/generation'
+import { QUIZ_RESPONSE_SINGLE, resolveQuizResponseType } from '@/lib/quiz/modes'
 
 // ---------------------------------------------------------------------------
 // "Generate tasks with AI" — teacher-facing entry point on the assignment
@@ -529,7 +530,7 @@ function HistoryList({
           key={item.ai_generation_uuid}
           type="button"
           onClick={() => onLoad(item)}
-          className="group text-left rounded-lg border border-gray-100 bg-white nice-shadow px-3.5 py-3 hover:border-gray-200 transition-all"
+          className="group text-start rounded-lg border border-gray-100 bg-white nice-shadow px-3.5 py-3 hover:border-gray-200 transition-all"
         >
           <div className="flex items-start justify-between gap-2">
             <div className="min-w-0">
@@ -688,6 +689,14 @@ function TaskContentEditor({
               placeholder="Question"
               className={inputCls + ' font-semibold'}
             />
+            <span className="w-fit px-2 py-0.5 rounded-md bg-gray-100 text-gray-500 text-[11px] font-bold">
+              {resolveQuizResponseType(
+                q.response_type,
+                (q.options ?? []).filter((o: any) => !!o.assigned_right_answer).length
+              ) === QUIZ_RESPONSE_SINGLE
+                ? 'Single answer'
+                : 'Multiple answers'}
+            </span>
             <div className="flex flex-col gap-1.5">
               {(q.options ?? []).map((o: any, oi: number) => (
                 <div key={oi} className="flex items-center gap-2">
@@ -708,8 +717,25 @@ function TaskContentEditor({
                     type="button"
                     onClick={() =>
                       onUpdateContents(index, (contents) => {
-                        const opt = contents.questions[qi].options[oi]
-                        opt.assigned_right_answer = !opt.assigned_right_answer
+                        const question = contents.questions[qi]
+                        const opt = question.options[oi]
+                        const wasCorrect = !!opt.assigned_right_answer
+                        opt.assigned_right_answer = !wasCorrect
+                        // Keep the key consistent with the question's response
+                        // mode: on a pick-one question, marking an option
+                        // correct un-marks whatever was correct before.
+                        const isSingle =
+                          resolveQuizResponseType(
+                            question.response_type,
+                            (question.options ?? []).filter(
+                              (o: any) => !!o.assigned_right_answer
+                            ).length
+                          ) === QUIZ_RESPONSE_SINGLE
+                        if (isSingle && !wasCorrect) {
+                          question.options.forEach((other: any, i: number) => {
+                            if (i !== oi) other.assigned_right_answer = false
+                          })
+                        }
                       })
                     }
                     className={`flex items-center gap-1 px-2 py-1 rounded-md text-[11px] font-bold transition-colors ${

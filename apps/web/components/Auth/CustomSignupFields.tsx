@@ -185,7 +185,7 @@ export default function CustomSignupFields({
                 <span className="text-[13px] text-black/70 leading-snug">
                   {label}
                   {error && (
-                    <span className="ml-2 text-red-500 text-xs">{error}</span>
+                    <span className="ms-2 text-red-500 text-xs">{error}</span>
                   )}
                 </span>
               </label>

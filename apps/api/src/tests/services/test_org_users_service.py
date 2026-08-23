@@ -829,7 +829,7 @@ class TestOrgUsersService:
                 self.index += 1
                 return _Result(result)
 
-        fake_org = SimpleNamespace(id=org.id, org_uuid=org.org_uuid)
+        fake_org = SimpleNamespace(id=org.id, org_uuid=org.org_uuid, is_demo=False)
         fake_user = SimpleNamespace(id=88)
         fake_link = UserOrganization(
             user_id=fake_user.id,
@@ -967,7 +967,7 @@ class TestOrgUsersService:
 
         _Session = _Session2
 
-        fake_org = SimpleNamespace(id=org.id, org_uuid=org.org_uuid)
+        fake_org = SimpleNamespace(id=org.id, org_uuid=org.org_uuid, is_demo=False)
         fake_user = SimpleNamespace(id=90)
 
         with patch(

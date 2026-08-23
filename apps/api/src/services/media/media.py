@@ -23,6 +23,8 @@ from src.db.resource_authors import (
 )
 from src.db.media.media_share_token import MediaShareToken
 from src.security.auth import resolve_acting_user_id
+from src.security.file_validation import EXT_TO_CANONICAL_MIME
+from src.security.org_auth import is_org_member, require_org_role_permission
 from src.security.rbac import check_resource_access, AccessAction
 from src.services.media.media_access import media_in_any_private_folder
 from src.services.utils.upload_content import upload_file
@@ -58,6 +60,20 @@ async def create_media(
     db_session: AsyncSession,
     file: Optional[UploadFile] = None,
 ) -> MediaRead:
+    # Resolve the target org before authorizing so an org that does not exist
+    # still answers 404 rather than "not a member of it".
+    await _get_org_uuid(db_session, media_object.org_id)
+
+    # `media_x` is a placeholder, not a real uuid, so RBAC cannot resolve a
+    # target org from it and falls back to the caller's roles in ANY org. The
+    # org is caller-supplied here, so pin the create right to THAT org first.
+    await require_org_role_permission(
+        resolve_acting_user_id(current_user),
+        media_object.org_id,
+        db_session,
+        "media",
+        "action_create",
+    )
     await check_resource_access(
         request, db_session, current_user, "media_x", AccessAction.CREATE
     )
@@ -96,7 +112,11 @@ async def create_media(
         # Server-only key (under content/), never returned to clients.
         media.storage_key = f"orgs/{org_uuid}/{directory}/{filename}"
         media.file_format = parts[1] if len(parts) > 1 else ""
-        media.file_mime = file.content_type or ""
+        # Derive the MIME from the STORED extension, which `upload_file` built
+        # from the validated (magic-byte checked) content type. The client's
+        # own `file.content_type` header is not persisted: this value becomes a
+        # response header when the file is served, so it stays server-decided.
+        media.file_mime = EXT_TO_CANONICAL_MIME.get(f".{media.file_format}".lower(), "")
         try:
             file.file.seek(0)
             media.file_size = len(await file.read())
@@ -229,9 +249,14 @@ async def get_media_list(
     page: int = 1,
     limit: int = 50,
 ) -> List[MediaRead]:
-    anonymous = resolve_acting_user_id(current_user) == 0
-    statement = select(Media).where(Media.org_id == int(org_id))
-    if anonymous:
+    org_id_int = int(org_id)
+    user_id = resolve_acting_user_id(current_user)
+    # Membership in the requested org — not merely being signed in — is what
+    # opens up the private library. A logged-in non-member sees exactly what an
+    # anonymous visitor sees, so `org_id` in the URL is not a way in.
+    restricted = not user_id or not await is_org_member(user_id, org_id_int, db_session)
+    statement = select(Media).where(Media.org_id == org_id_int)
+    if restricted:
         statement = statement.where(Media.public == True)  # noqa: E712
         # Most-restrictive: also hide media that sit in any private folder.
         from src.db.folders.folder_content import FolderContent

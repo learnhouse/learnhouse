@@ -216,7 +216,7 @@ export default function PlanUsage({
           </p>
           <button
             onClick={onSwitch}
-            className="text-[13px] font-bold px-3.5 py-1.5 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors flex-shrink-0 ml-4"
+            className="text-[13px] font-bold px-3.5 py-1.5 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors flex-shrink-0 ms-4"
           >
             {t('billing.upgrade', { defaultValue: 'Upgrade' })}
           </button>

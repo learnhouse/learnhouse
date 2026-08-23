@@ -1,0 +1,102 @@
+{
+  "activity_key": "oe-orientation-check",
+  "title": "Orientation check",
+  "description": "A short check on the ground covered in Your First Two Weeks. Everything here is answered somewhere in the three chapters.",
+  "grading_type": "PERCENTAGE",
+  "pass_threshold_percentage": 60,
+  "due_in_days": 9,
+  "published": true,
+  "auto_grading": true,
+  "show_correct_answers": true,
+  "allow_retries": true,
+  "max_retries": 2,
+  "tasks": [
+    {
+      "slug": "oe-t1-who-owns-what",
+      "title": "Who owns what",
+      "description": "Match the question to the team that answers it.",
+      "hint": "Chapter one, 'Who does what'.",
+      "type": "QUIZ",
+      "max_grade_value": 40,
+      "contents": {
+        "questions": [
+          {
+            "questionUUID": "question_oe_t1_q1",
+            "questionText": "A customer asks whether an item will be back in stock next month. Who answers that?",
+            "options": [
+              { "optionUUID": "option_oe_t1_q1_a", "text": "Supply", "type": "text", "fileID": "", "assigned_right_answer": true },
+              { "optionUUID": "option_oe_t1_q1_b", "text": "Operations", "type": "text", "fileID": "", "assigned_right_answer": false },
+              { "optionUUID": "option_oe_t1_q1_c", "text": "Accounts", "type": "text", "fileID": "", "assigned_right_answer": false }
+            ]
+          },
+          {
+            "questionUUID": "question_oe_t1_q2",
+            "questionText": "A delivery date is at risk. Which team knows first?",
+            "options": [
+              { "optionUUID": "option_oe_t1_q2_a", "text": "Operations", "type": "text", "fileID": "", "assigned_right_answer": true },
+              { "optionUUID": "option_oe_t1_q2_b", "text": "Supply", "type": "text", "fileID": "", "assigned_right_answer": false },
+              { "optionUUID": "option_oe_t1_q2_c", "text": "Support", "type": "text", "fileID": "", "assigned_right_answer": false }
+            ]
+          }
+        ]
+      },
+      "submissions": {
+        "correct": {
+          "submissions": [
+            { "questionUUID": "question_oe_t1_q1", "optionUUID": "option_oe_t1_q1_a", "answer": true },
+            { "questionUUID": "question_oe_t1_q2", "optionUUID": "option_oe_t1_q2_a", "answer": true }
+          ]
+        },
+        "partial": {
+          "submissions": [
+            { "questionUUID": "question_oe_t1_q1", "optionUUID": "option_oe_t1_q1_a", "answer": true },
+            { "questionUUID": "question_oe_t1_q2", "optionUUID": "option_oe_t1_q2_b", "answer": true }
+          ]
+        },
+        "incorrect": {
+          "submissions": [
+            { "questionUUID": "question_oe_t1_q1", "optionUUID": "option_oe_t1_q1_c", "answer": true },
+            { "questionUUID": "question_oe_t1_q2", "optionUUID": "option_oe_t1_q2_c", "answer": true }
+          ]
+        }
+      }
+    },
+    {
+      "slug": "oe-t2-two-hour-rule",
+      "title": "The two-hour rule",
+      "description": "How long should you stay stuck on the same problem before asking for help? Answer in hours, as a number.",
+      "hint": "Chapter two, 'How to ask for help'.",
+      "type": "NUMBER_ANSWER",
+      "max_grade_value": 20,
+      "contents": { "correct_value": 2, "tolerance": 0 },
+      "submissions": {
+        "correct": { "answer": 2 },
+        "partial": { "answer": 2 },
+        "incorrect": { "answer": 8 }
+      }
+    },
+    {
+      "slug": "oe-t3-what-confused-you",
+      "title": "What confused you most?",
+      "description": "In a sentence or two: what was hardest to work out in your first fortnight? These answers are what this course gets rewritten from.",
+      "hint": "There is no wrong answer here — it is marked for being answered honestly.",
+      "type": "SHORT_ANSWER",
+      "max_grade_value": 40,
+      "contents": {
+        "correct_answers": [
+          "who to ask",
+          "where things are documented",
+          "the acronyms",
+          "what good looks like",
+          "who owns which account"
+        ],
+        "match_mode": "contains"
+      },
+      "submissions": {
+        "correct": { "answer": "Who to ask — I could not work out which team owned which question for the first week." },
+        "partial": { "answer": "The acronyms, mostly. I nodded along for far too long before asking." },
+        "incorrect": { "answer": "Nothing really, it was all quite clear." }
+      }
+    }
+  ]
+}

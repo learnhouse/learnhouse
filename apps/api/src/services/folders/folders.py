@@ -24,6 +24,7 @@ from src.db.resource_authors import (
     ResourceAuthorshipStatusEnum,
 )
 from src.security.auth import resolve_acting_user_id
+from src.security.org_auth import is_org_member, require_org_membership
 from src.security.rbac import check_resource_access, AccessAction
 from src.services.webhooks.dispatch import dispatch_webhooks
 
@@ -76,6 +77,55 @@ def _apply_folder_sort(statement, sort_mode: str):
     return statement.order_by(Folder.name.asc())
 
 
+def _item_name(item: FolderContentItem) -> str:
+    """Display name of a resolved item — courses/media expose `name`, some
+    resources only carry a `title`. Lowercased to match the client comparator."""
+    resource = item.resource or {}
+    return str(resource.get("name") or resource.get("title") or "").lower()
+
+
+def _item_date(item: FolderContentItem) -> str:
+    """Creation timestamp of a resolved item, in the same fallback order the
+    client comparator uses (creation_date -> created_at -> update_date).
+    'newest'/'oldest' mean creation date on both sides — every course carries a
+    non-empty update_date, so preferring it would put the API and the browser in
+    permanent disagreement. Timestamps are stored as sortable strings."""
+    resource = item.resource or {}
+    return str(
+        resource.get("creation_date")
+        or resource.get("created_at")
+        or resource.get("update_date")
+        or ""
+    )
+
+
+def _sort_items(
+    items: List[FolderContentItem], sort_mode: str
+) -> List[FolderContentItem]:
+    """Order a folder's CONTENT items by the org's sort mode, mirroring
+    _apply_folder_sort so folders and their content agree.
+
+    FolderContent.position is applied first and Python's sort is stable, so the
+    admin's drag order stays the tiebreaker for the name modes — and is the only
+    key in 'manual' mode. The date modes break ties by name instead, the way the
+    client comparator does (`_dateOf(b) - _dateOf(a) || byName(a, b)`).
+    """
+    items.sort(key=lambda i: i.position)
+    if sort_mode == "manual":
+        return items
+    if sort_mode == "name_desc":
+        items.sort(key=_item_name, reverse=True)
+    elif sort_mode == "newest":
+        items.sort(key=_item_name)
+        items.sort(key=_item_date, reverse=True)
+    elif sort_mode == "oldest":
+        items.sort(key=_item_name)
+        items.sort(key=_item_date)
+    else:  # name_asc (default)
+        items.sort(key=_item_name)
+    return items
+
+
 # ----------------------------------------------------------------------------
 # Resource resolution — folders are polymorphic containers
 # ----------------------------------------------------------------------------
@@ -118,8 +168,14 @@ async def _resolve_items(
     db_session: AsyncSession,
     content_rows: list[FolderContent],
     include_private: bool,
+    sort_mode: str = "manual",
 ) -> List[FolderContentItem]:
-    """Resolve FolderContent rows into typed items, batching per resource type."""
+    """Resolve FolderContent rows into typed items, batching per resource type.
+
+    The resolved items are ordered by the org's sort mode, the same mode the
+    sibling folders are ordered by — otherwise a folder's content would render
+    in a different order than the dashboard shows.
+    """
     registry = _resource_registry()
 
     by_prefix: dict[str, list[str]] = {}
@@ -151,8 +207,7 @@ async def _resolve_items(
                 )
             )
 
-    items.sort(key=lambda i: i.position)
-    return items
+    return _sort_items(items, sort_mode)
 
 
 async def _build_breadcrumbs(db_session: AsyncSession, folder: Folder) -> List[FolderBreadcrumb]:
@@ -221,7 +276,9 @@ async def _folder_to_read(
                 select(FolderContent).where(FolderContent.folder_id == folder.id)
             )
         ).scalars().all()
-        items = await _resolve_items(db_session, list(content_rows), include_private)
+        items = await _resolve_items(
+            db_session, list(content_rows), include_private, sort_mode
+        )
         breadcrumbs = await _build_breadcrumbs(db_session, folder)
 
     return FolderRead(
@@ -235,6 +292,21 @@ async def _folder_to_read(
 
 def _is_anonymous(current_user) -> bool:
     return resolve_acting_user_id(current_user) == 0
+
+
+async def _may_see_private(current_user, org_id: int, db_session: AsyncSession) -> bool:
+    """Whether the caller may see this org's private folders and resources.
+
+    The org-scoped listing endpoints take `org_id` straight from the path, so
+    being signed in *somewhere* must not unlock another tenant's library. Only
+    membership in the requested org does; a signed-in non-member is served
+    exactly what an anonymous visitor is served (public items only), which keeps
+    the public org library browsable without leaking private rows.
+    """
+    user_id = resolve_acting_user_id(current_user)
+    if not user_id:
+        return False
+    return await is_org_member(user_id, org_id, db_session)
 
 
 def _add_creator_author(db_session: AsyncSession, resource_uuid: str, user_id: int):
@@ -262,6 +334,12 @@ async def create_folder(
 ) -> FolderRead:
     await check_resource_access(
         request, db_session, current_user, "folder_x", AccessAction.CREATE
+    )
+    # The "folder_x" placeholder has no organization of its own, so the RBAC
+    # check above accepts any role the caller holds in ANY org. The target org
+    # comes from the request body — gate it explicitly.
+    await require_org_membership(
+        resolve_acting_user_id(current_user), folder_object.org_id, db_session
     )
 
     parent_folder_id = None
@@ -471,8 +549,6 @@ async def get_folders(
 ) -> List[FolderRead]:
     """List folders for an org. Lists root folders by default; pass
     parent_folder_uuid to list a folder's direct sub-folders."""
-    anonymous = _is_anonymous(current_user)
-
     parent_id = None
     if parent_folder_uuid:
         parent = (
@@ -484,11 +560,13 @@ async def get_folders(
             raise HTTPException(status_code=404, detail="Parent folder not found")
         parent_id = parent.id
 
+    include_private = await _may_see_private(current_user, int(org_id), db_session)
+
     statement = select(Folder).where(
         Folder.org_id == int(org_id),
         Folder.parent_folder_id == parent_id,
     )
-    if anonymous:
+    if not include_private:
         statement = statement.where(Folder.public == True)  # noqa: E712
 
     sort_mode = await _get_folders_sort_mode(db_session, int(org_id))
@@ -497,7 +575,7 @@ async def get_folders(
     folders = (await db_session.execute(statement)).scalars().all()
 
     return [
-        await _folder_to_read(db_session, folder, include_private=not anonymous)
+        await _folder_to_read(db_session, folder, include_private=include_private)
         for folder in folders
     ]
 
@@ -576,7 +654,8 @@ async def reorder_folder_content(
 ) -> dict:
     """Persist the manual (admin drag) ordering of a folder's CONTENT items
     (courses, media, …). Position is derived from the array index — matching how
-    `_resolve_folder_content` sorts items by FolderContent.position. Admin only.
+    `_sort_items` orders items by FolderContent.position in 'manual' mode (and
+    uses it as the tiebreaker in every other mode). Admin only.
     """
     from src.db.organizations import Organization
     from src.services.orgs.orgs import rbac_check
@@ -778,7 +857,7 @@ async def search_library(
     if not query:
         return {"folders": [], "items": []}
 
-    anonymous = _is_anonymous(current_user)
+    include_private = await _may_see_private(current_user, int(org_id), db_session)
     like = f"%{query.lower()}%"
 
     # Cache folder paths (full breadcrumb chain) by folder id
@@ -802,7 +881,7 @@ async def search_library(
         Folder.org_id == int(org_id),
         func.lower(Folder.name).like(like),
     )
-    if anonymous:
+    if not include_private:
         fstmt = fstmt.where(Folder.public == True)  # noqa: E712
     folder_rows = (await db_session.execute(fstmt)).scalars().all()
 
@@ -849,7 +928,7 @@ async def search_library(
             res = rmap.get(r.resource_uuid)
             if not res:
                 continue
-            if anonymous and not getattr(res, "public", False):
+            if not include_private and not getattr(res, "public", False):
                 continue
             name = (getattr(res, "name", None) or getattr(res, "title", "") or "")
             if query.lower() not in name.lower():
@@ -877,7 +956,7 @@ async def get_org_root_items(
     db_session: AsyncSession,
 ) -> List[FolderContentItem]:
     """Resolve the items that live at the org library root (no parent folder)."""
-    anonymous = _is_anonymous(current_user)
+    include_private = await _may_see_private(current_user, int(org_id), db_session)
     content_rows = (
         await db_session.execute(
             select(FolderContent).where(
@@ -886,7 +965,10 @@ async def get_org_root_items(
             )
         )
     ).scalars().all()
-    return await _resolve_items(db_session, list(content_rows), include_private=not anonymous)
+    sort_mode = await _get_folders_sort_mode(db_session, int(org_id))
+    return await _resolve_items(
+        db_session, list(content_rows), include_private=include_private, sort_mode=sort_mode
+    )
 
 
 async def add_org_root_content(
@@ -900,6 +982,11 @@ async def add_org_root_content(
     """Place a resource at the org library root (folder_id NULL)."""
     await check_resource_access(
         request, db_session, current_user, "folder_x", AccessAction.CREATE
+    )
+    # "folder_x" carries no organization, so the check above is satisfied by any
+    # role the caller holds anywhere. org_id is caller-supplied — gate it.
+    await require_org_membership(
+        resolve_acting_user_id(current_user), int(org_id), db_session
     )
     await check_resource_access(
         request, db_session, current_user, resource_uuid, AccessAction.READ
@@ -940,6 +1027,11 @@ async def remove_org_root_content(
 ):
     await check_resource_access(
         request, db_session, current_user, "folder_x", AccessAction.UPDATE
+    )
+    # Same "folder_x" placeholder caveat as add_org_root_content: the target org
+    # is only ever checked here.
+    await require_org_membership(
+        resolve_acting_user_id(current_user), int(org_id), db_session
     )
     rows = (
         await db_session.execute(

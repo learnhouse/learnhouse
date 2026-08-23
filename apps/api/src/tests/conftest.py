@@ -15,6 +15,27 @@ sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "../.
 # Set testing environment variable to use SQLite (must be before any app imports)
 os.environ["TESTING"] = "true"
 
+# Pin the deployment mode to 'oss' for the whole suite.
+#
+# Unpinned, get_deployment_mode() resolves against the filesystem: 'oss' in CI
+# (no ee/ checkout) but potentially 'ee' on a developer machine with the
+# apps/api/ee symlink. That divergence hides EE-gating regressions locally.
+# Going through LEARNHOUSE_DISABLE_EE rather than patching
+# get_deployment_mode is deliberate — several modules import that symbol at
+# load time, so a patch would reach only the lazy importers and leave the
+# suite split-brained, silently relaxing the SaaS plan gates that key off the
+# same function. Tests that need 'saas' or 'ee' patch it explicitly.
+os.environ["LEARNHOUSE_DISABLE_EE"] = "1"
+
+# Pin the demo organization off for the whole suite.
+#
+# config.py calls load_dotenv() while parsing, so a developer running the local
+# demo stack has LEARNHOUSE_DEMO_ENABLED=1 in apps/api/.env and it leaks into
+# the test process — the demo scheduler then starts a background task, and
+# tests that assert on the application's task lifecycle fail on that machine
+# and nowhere else. Tests that need the feature on enable it themselves.
+os.environ["LEARNHOUSE_DEMO_ENABLED"] = "0"
+
 # Set a valid JWT secret key for tests (must be at least 32 characters)
 os.environ["LEARNHOUSE_AUTH_JWT_SECRET_KEY"] = (
     "test-secret-key-for-unit-tests-32chars!"

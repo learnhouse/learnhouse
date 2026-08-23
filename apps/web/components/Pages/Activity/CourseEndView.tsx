@@ -10,6 +10,7 @@ import { useWindowSize } from 'usehooks-ts';
 import { useOrg } from '@components/Contexts/OrgContext';
 import { useLHSession } from '@components/Contexts/LHSessionContext';
 import { getUserCertificates } from '@services/courses/certifications';
+import { useCourseCertification } from '@components/Hooks/useCourseCertification';
 import CertificatePreview from '@components/Dashboard/Pages/Course/EditCourseCertification/CertificatePreview';
 import {
   downloadCertificateNodeAsPdf,
@@ -46,6 +47,17 @@ const CourseEndView: React.FC<CourseEndViewProps> = ({
   // The visible copy is fluid (max-w-2xl and narrower on mobile), so capturing
   // it directly would make the exported file depend on the viewer's screen.
   const certificateCaptureRef = useRef<HTMLDivElement>(null);
+
+  // Certificate copy is hidden only when this course definitively has no
+  // certification. While the answer is loading — or if the request failed —
+  // we keep the certificate UI, so a blip never tells a certified course's
+  // students that no certificate is coming.
+  const {
+    isEnabled: certificationEnabled,
+    isUnknown: certificationUnknown,
+    isLoading: isLoadingCertificationStatus,
+  } = useCourseCertification(courseUuid);
+  const showCertificateUI = certificationEnabled || certificationUnknown;
 
   // Recipient's display name for the certificate (full name -> username ->
   // session user). Empty when unknown so the "Presented to" line is skipped.
@@ -104,6 +116,10 @@ const CourseEndView: React.FC<CourseEndViewProps> = ({
     const fetchUserCertificate = async () => {
       if (!isCourseCompleted) return;
 
+      // Nothing to fetch until we know the course certifies at all, and
+      // nothing to fetch ever if it does not.
+      if (isLoadingCertificationStatus || !showCertificateUI) return;
+
       if (!session?.data?.tokens?.access_token) {
         setCertificateError(t('auth.authenticate_to_contribute')); // Reusing an auth error key
         return;
@@ -137,7 +153,7 @@ const CourseEndView: React.FC<CourseEndViewProps> = ({
     };
 
     fetchUserCertificate();
-  }, [isCourseCompleted, courseUuid, session?.data?.tokens?.access_token, org?.id]);
+  }, [isCourseCompleted, courseUuid, session?.data?.tokens?.access_token, org?.id, isLoadingCertificationStatus, showCertificateUI]);
 
   // Generate the PDF from the SAME <CertificatePreview> the learner sees.
   //
@@ -270,10 +286,13 @@ const CourseEndView: React.FC<CourseEndViewProps> = ({
             {t('certificate.dedication_message')}
           </p>
 
-          {isLoadingCertificate ? (
+          {/* Courses without certification skip this block entirely — no
+              spinner, no "no certificate" box for something never offered. */}
+          {showCertificateUI && (
+            isLoadingCertificate || isLoadingCertificationStatus ? (
             <div className="flex items-center justify-center py-8">
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-              <span className="ml-3 text-gray-600">{t('certificate.loading_certificate')}</span>
+              <span className="ms-3 text-gray-600">{t('certificate.loading_certificate')}</span>
             </div>
           ) : certificateError ? (
             <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-6">
@@ -295,7 +314,7 @@ const CourseEndView: React.FC<CourseEndViewProps> = ({
                   because html2canvas cannot measure a hidden subtree. */}
               <div
                 aria-hidden="true"
-                className="pointer-events-none fixed top-0 left-0 -z-50 opacity-0"
+                className="pointer-events-none fixed top-0 start-0 -z-50 opacity-0"
                 style={{ transform: 'translateX(-200vw)' }}
               >
                 <div ref={certificateCaptureRef} style={{ width: CERTIFICATE_CAPTURE_WIDTH }}>
@@ -327,6 +346,7 @@ const CourseEndView: React.FC<CourseEndViewProps> = ({
                 {t('certificate.no_certificate_available')}
               </p>
             </div>
+            )
           )}
 
           <div className="pt-6">
@@ -401,7 +421,9 @@ const CourseEndView: React.FC<CourseEndViewProps> = ({
           )}
           
           <p className="text-gray-500">
-            {t('courses.keep_going_description')}
+            {showCertificateUI
+              ? t('courses.keep_going_description')
+              : t('courses.keep_going_description_no_certificate')}
           </p>
 
           <div className="pt-6">

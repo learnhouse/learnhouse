@@ -1,0 +1,311 @@
+{
+  "slug": "customer-support-fundamentals",
+  "name": "Customer Support Fundamentals",
+  "description": "Handling the conversation when something has gone wrong.",
+  "about": "Support at Riverbend is not a script. Customers arrive mid-problem, often annoyed, usually missing information. This course covers how to take the heat out of a conversation, work out what is actually wrong, and know when to stop and hand it on.",
+  "learnings": "Triage an incoming issue; write a reply that resolves rather than deflects; handle an angry customer; know exactly when to escalate.",
+  "tags": "support,customers,service",
+  "thumbnail": "customer-support-fundamentals.webp",
+  "section": "core-skills",
+  "public": true,
+  "published": true,
+  "certification": true,
+  "certification_name": "Customer Support Fundamentals",
+  "certification_description": "Awarded on assessment. The holder has demonstrated they can triage an incoming issue, handle a difficult conversation, and apply Riverbend's escalation triggers correctly.",
+  "certification_type": "assessment",
+  "certificate_pattern": "royal",
+  "updates": [
+    {
+      "title": "Escalation thresholds updated",
+      "content": "The money threshold for immediate escalation has changed. Chapter three has the current numbers.",
+      "days_ago": 5
+    },
+    {
+      "title": "Added worked example for refunds",
+      "content": "The refund conversation now has a full worked example, including what to say when the answer is no.",
+      "days_ago": 21
+    }
+  ],
+  "chapters": [
+    {
+      "slug": "cs-first-contact",
+      "name": "First contact",
+      "description": "The first reply sets the tone for everything after it.",
+      "activities": [
+        {
+          "slug": "cs-what-is-actually-wrong",
+          "name": "Working out what is actually wrong",
+          "kind": "document",
+          "body": [
+            "h2:The reported problem is rarely the real one",
+            "p:A customer writes to say the portal is broken. In practice that sentence covers a forgotten password, an expired card, a genuine outage, and an order that shipped to an old address. Treat the opening message as a symptom, not a diagnosis.",
+            "h2:Three questions that resolve most of it",
+            {
+              "ol": [
+                "What were you trying to do when it happened?",
+                "What did you expect to see, and what did you see instead?",
+                "When did it last work?"
+              ]
+            },
+            "p:Ask all three at once rather than one per reply. Every round trip costs the customer half a day and makes them angrier than the original fault did.",
+            {
+              "info": "Check the account before you ask. Half the time the answer is already in the order history, and asking a question you could have answered yourself reads as not caring."
+            },
+            {
+              "quiz": {
+                "q": "What should you do before asking a customer for more detail?",
+                "a": [
+                  [
+                    "Check their account and order history first",
+                    true
+                  ],
+                  [
+                    "Ask them to restate the problem more clearly",
+                    false
+                  ],
+                  [
+                    "Escalate to the account owner",
+                    false
+                  ]
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "slug": "cs-first-reply",
+          "name": "Writing the first reply",
+          "kind": "document",
+          "body": [
+            "h2:Acknowledge, state, commit",
+            "p:The first reply does three jobs: it shows a human read the message, it says what you now understand the problem to be, and it commits to a next step with a time attached. Everything else can wait for the second reply.",
+            {
+              "ul": [
+                "Acknowledge the actual inconvenience, not a generic apology for any inconvenience caused.",
+                "Restate the problem in your own words so they can correct you if you have it wrong.",
+                "Say what happens next and when. 'I will come back to you by end of day Thursday' is a commitment; 'I will look into it' is not."
+              ]
+            },
+            "h2:Never say this",
+            "p:Avoid telling a customer the system is working as intended. It may be true and it is never useful — it tells someone with a problem that their problem is not going to be solved. Describe what you can do instead.",
+            {
+              "quiz": {
+                "q": "Which of these is a real commitment in a first reply?",
+                "a": [
+                  [
+                    "I will come back to you by end of day Thursday",
+                    true
+                  ],
+                  [
+                    "I will look into this and get back to you",
+                    false
+                  ],
+                  [
+                    "This is working as intended",
+                    false
+                  ]
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "slug": "cs-priority",
+          "name": "Deciding what is urgent",
+          "kind": "document",
+          "body": [
+            "h2:Urgency is about consequence, not volume",
+            "p:The loudest message is not the most urgent one. Sort by what happens if you leave it until tomorrow: a customer who cannot receive a delivery they have already paid for outranks a customer asking for a feature, however forcefully.",
+            {
+              "ol": [
+                "Blocked and paid: they have given us money and cannot get what they bought. Today.",
+                "Blocked and unpaid: they cannot complete a purchase. Today if you can.",
+                "Degraded: it works, badly, and there is a workaround. This week.",
+                "Wishlist: it does not do a thing they want. Log it and say so honestly."
+              ]
+            },
+            {
+              "warn": "Anything affecting more than one customer at once stops being a support ticket and becomes an incident. Say so in the team channel immediately rather than working through them one at a time."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "slug": "cs-difficult",
+      "name": "Difficult conversations",
+      "description": "Anger, refusals, and mistakes we made.",
+      "activities": [
+        {
+          "slug": "cs-angry-customer",
+          "name": "When the customer is angry",
+          "kind": "document",
+          "body": [
+            "h2:It is almost never about you",
+            "p:By the time someone is angry at support, they have usually already lost time, been passed around, or explained themselves twice. The anger belongs to the situation. Answering it defensively puts you in the argument; answering the problem takes you out of it.",
+            "h2:What actually reduces the temperature",
+            {
+              "ul": [
+                "Name what went wrong, specifically. Vague sympathy reads as a brush-off.",
+                "Take the next step yourself rather than telling them who to contact.",
+                "Give a time and then beat it. Nothing rebuilds trust faster than an update arriving before it was promised."
+              ]
+            },
+            "p:What does not help: matching their tone, over-apologising, or explaining our internal process. The customer does not care which team owns the fault, and telling them makes it sound like an excuse.",
+            {
+              "info": "If a message is genuinely abusive rather than angry, you are not required to absorb it. Hand it to your team lead and say why."
+            },
+            {
+              "quiz": {
+                "q": "A customer is angry after being passed between two teams. What helps most?",
+                "a": [
+                  [
+                    "Taking the next step yourself instead of redirecting them again",
+                    true
+                  ],
+                  [
+                    "Explaining which team is responsible for the delay",
+                    false
+                  ],
+                  [
+                    "Apologising repeatedly for the inconvenience",
+                    false
+                  ]
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "slug": "cs-saying-no",
+          "name": "Saying no",
+          "kind": "document",
+          "body": [
+            "h2:A clear no beats a soft maybe",
+            "p:Refusing a request badly costs more than refusing it at all. A customer told 'probably not, but let me check' will wait a week and then be angry about the same answer they could have had immediately.",
+            "h2:The shape of a good refusal",
+            {
+              "ol": [
+                "The answer, plainly: we are not able to do that.",
+                "The reason, in one sentence, in terms that affect them.",
+                "The nearest thing we can do instead."
+              ]
+            },
+            "p:That third step is the whole job. Almost every refusal has an adjacent yes — a partial refund instead of a full one, a substitute item, an earlier delivery slot. Find it before you reply.",
+            {
+              "quiz": {
+                "q": "What is the most important part of refusing a customer request?",
+                "a": [
+                  [
+                    "Offering the nearest thing you can actually do",
+                    true
+                  ],
+                  [
+                    "Explaining the policy in full",
+                    false
+                  ],
+                  [
+                    "Softening the answer so it feels less final",
+                    false
+                  ]
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "slug": "cs-our-mistake",
+          "name": "When it was our mistake",
+          "kind": "document",
+          "body": [
+            "h2:Say so first, plainly",
+            "p:Customers forgive errors far more readily than they forgive evasiveness. 'We shipped the wrong item and that is our error' ends the argument. 'There appears to have been a discrepancy in fulfilment' starts one.",
+            {
+              "ul": [
+                "Own it without hedging, and without blaming a named colleague or a supplier.",
+                "Fix the immediate problem before discussing compensation. Get them the thing they paid for.",
+                "Say what stops it happening again, only if you actually know. Inventing a fix is worse than admitting you do not have one yet."
+              ]
+            },
+            {
+              "warn": "Never tell a customer that a colleague made a mistake. Riverbend made the mistake. Internally, name the process rather than the person."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "slug": "cs-escalation",
+      "name": "Escalation",
+      "description": "Knowing when it stops being yours.",
+      "activities": [
+        {
+          "slug": "cs-when-to-escalate",
+          "name": "When to escalate",
+          "kind": "document",
+          "body": [
+            "h2:Four triggers, no judgement call required",
+            {
+              "ol": [
+                "More than one customer reports the same fault within an hour.",
+                "The customer mentions legal action, a regulator, or the press.",
+                "A refund or credit above the current threshold is on the table.",
+                "You have been going back and forth for three days without progress."
+              ]
+            },
+            "p:Any of those, escalate immediately. These are deliberately mechanical: they are the situations where a well-meaning attempt to handle it yourself reliably makes it worse.",
+            "h2:Escalating is not failing",
+            "p:The cost of escalating something that turned out to be simple is a few minutes of a lead's time. The cost of not escalating something serious is measured in customers. Nobody here has ever been criticised for escalating too early.",
+            {
+              "quiz": {
+                "q": "A customer mentions they are considering legal action. What do you do?",
+                "a": [
+                  [
+                    "Escalate immediately",
+                    true
+                  ],
+                  [
+                    "Try to resolve it yourself first to avoid alarming anyone",
+                    false
+                  ],
+                  [
+                    "Wait to see whether they raise it again",
+                    false
+                  ]
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "slug": "cs-handover-notes",
+          "name": "Handing a case over",
+          "kind": "document",
+          "body": [
+            "h2:The receiving person should not have to read the thread",
+            "p:A handover that says 'see thread' is not a handover. Whoever picks it up is now doing your reading as well as their work, usually while the customer waits.",
+            {
+              "ul": [
+                "One line on what the customer wants.",
+                "What has been tried, and what was ruled out.",
+                "What the customer has been promised, and when.",
+                "Why it is being escalated now."
+              ]
+            },
+            "p:That fourth line matters most. It tells the next person whether they are being asked for a decision, an authority they have and you do not, or simply a second opinion."
+          ]
+        },
+        {
+          "slug": "cs-support-scenarios",
+          "name": "Support scenarios",
+          "kind": "assignment",
+          "body": [
+            "h2:Four cases, four decisions",
+            "p:You will work through four incoming messages of the kind that actually arrive here: an angry customer with a genuine fault, a request we cannot fulfil, a case that meets an escalation trigger, and one where the customer is mistaken but polite.",
+            "p:For each, decide the priority, say whether it escalates, and draft the first reply. Marked on the escalation calls and on whether your replies contain a real commitment rather than a promise to look into it."
+          ]
+        }
+      ]
+    }
+  ]
+}

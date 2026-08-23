@@ -98,13 +98,13 @@ export default function BackgroundTasksPanel() {
   ).length
 
   return (
-    <div className="fixed top-4 right-4 z-[9999] w-[320px] max-w-[calc(100vw-2rem)]">
+    <div className="fixed top-4 end-4 z-[9999] w-[320px] max-w-[calc(100vw-2rem)]">
       <div className="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-xl">
         {/* Header */}
         <button
           type="button"
           onClick={() => setCollapsed((c) => !c)}
-          className="flex w-full items-center justify-between gap-2 bg-gray-50 px-3 py-2 text-left"
+          className="flex w-full items-center justify-between gap-2 bg-gray-50 px-3 py-2 text-start"
         >
           <span className="flex items-center gap-2 text-sm font-semibold text-gray-700">
             {activeCount > 0 ? (
@@ -123,7 +123,7 @@ export default function BackgroundTasksPanel() {
                   e.stopPropagation()
                   clearFinished()
                 }}
-                className="mr-1 cursor-pointer text-[11px] font-medium text-gray-400 hover:text-gray-600"
+                className="me-1 cursor-pointer text-[11px] font-medium text-gray-400 hover:text-gray-600"
               >
                 Clear
               </span>

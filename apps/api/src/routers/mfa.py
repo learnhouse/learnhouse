@@ -702,14 +702,23 @@ async def api_org_mfa_compliance_list(
             detail={"code": "NOT_ORG_ADMIN", "message": "Only org admins can view this."},
         )
 
-    rows = (
-        await db_session.execute(
-            select(User, UserMFA)
-            .join(UserOrganization, UserOrganization.user_id == User.id)
-            .join(UserMFA, UserMFA.user_id == User.id, isouter=True)
-            .where(UserOrganization.org_id == org_id)
-        )
-    ).all()
+    statement = (
+        select(User, UserMFA)
+        .join(UserOrganization, UserOrganization.user_id == User.id)
+        .join(UserMFA, UserMFA.user_id == User.id, isouter=True)
+        .where(UserOrganization.org_id == org_id)
+    )
+
+    # In the shared demo every visitor is an admin, so without this the same
+    # listing the members page was just taught to filter is served here in a
+    # more damaging form: it pairs each real visitor's email with whether they
+    # have two-factor enabled, sorted with the unprotected accounts first.
+    from src.services.demo.guards import hide_other_visitors, is_demo_org
+
+    if await is_demo_org(org_id, db_session):
+        statement = hide_other_visitors(statement, user.id)
+
+    rows = (await db_session.execute(statement)).all()
 
     members = []
     enabled_count = 0
@@ -773,6 +782,17 @@ async def api_org_reset_member_mfa(
             status_code=status.HTTP_403_FORBIDDEN,
             detail={"code": "NOT_ORG_ADMIN", "message": "Only org admins can reset a member's two-factor."},
         )
+
+    # Two-factor is a property of the account, not of a membership: UserMFA and
+    # UserMFABackupCode have no org column, so disable_mfa below strips the
+    # target's factor everywhere they log in. That is the right tool for a real
+    # organization recovering a colleague's account, and completely wrong for a
+    # sandbox that hands admin to anyone who clicks into it — an attacker could
+    # clear the two-factor of any other person who had ever opened the demo,
+    # then attack their password with the second factor gone.
+    from src.services.demo.guards import require_not_demo_org
+
+    await require_not_demo_org(org_id, db_session)
 
     # Self-service disable is code-gated on purpose (a hijacked admin session must
     # not be able to strip the owner's own factor); route the admin's own account

@@ -20,20 +20,12 @@ export default function PlaygroundPreview({
   const lastRenderedRef = useRef<string | null>(null)
   const writeTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
-  // Write HTML directly into the iframe document (no reload, no flicker)
+  // srcdoc, not document.write() — the frame is sandboxed onto an opaque
+  // origin, so its document isn't reachable from here.
   const writeToIframe = useCallback((content: string) => {
     const iframe = iframeRef.current
     if (!iframe) return
-    try {
-      const doc = iframe.contentDocument || iframe.contentWindow?.document
-      if (!doc) return
-      doc.open()
-      doc.write(content)
-      doc.close()
-    } catch {
-      // cross-origin fallback — shouldn't happen with srcdoc
-      iframe.srcdoc = content
-    }
+    iframe.srcdoc = content
   }, [])
 
   useEffect(() => {
@@ -86,7 +78,7 @@ export default function PlaygroundPreview({
 
       {/* Streaming indicator — top left */}
       {isStreaming && (
-        <div className="absolute top-3 left-3 z-10 flex items-center gap-1.5 px-2.5 py-1.5 bg-black/75 backdrop-blur-sm rounded-full nice-shadow">
+        <div className="absolute top-3 start-3 z-10 flex items-center gap-1.5 px-2.5 py-1.5 bg-black/75 backdrop-blur-sm rounded-full nice-shadow">
           <CircleNotch size={11} weight="bold" className="animate-spin text-sky-400" />
           <span className="text-[11px] text-white font-bold">Generating…</span>
         </div>
@@ -97,7 +89,7 @@ export default function PlaygroundPreview({
         <button
           onClick={onToggleFullscreen}
           title={isFullscreen ? 'Exit fullscreen' : 'Fullscreen preview'}
-          className="absolute top-3 right-3 z-10 flex items-center justify-center w-8 h-8 bg-black/60 hover:bg-black/80 backdrop-blur-sm rounded-lg nice-shadow transition-all"
+          className="absolute top-3 end-3 z-10 flex items-center justify-center w-8 h-8 bg-black/60 hover:bg-black/80 backdrop-blur-sm rounded-lg nice-shadow transition-all"
         >
           {isFullscreen
             ? <ArrowsInSimple size={14} weight="bold" className="text-white" />
@@ -110,7 +102,7 @@ export default function PlaygroundPreview({
       <iframe
         ref={iframeRef}
         className="w-full h-full border-0"
-        sandbox="allow-scripts allow-same-origin allow-forms allow-popups"
+        sandbox="allow-scripts allow-forms allow-popups"
         title="Playground Preview"
       />
     </div>

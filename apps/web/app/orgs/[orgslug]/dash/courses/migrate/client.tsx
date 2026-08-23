@@ -203,7 +203,7 @@ export default function MigrationClient({ orgslug }: MigrationClientProps) {
       : steps.findIndex((s) => s.key === step)
 
   return (
-    <div className="h-full w-full bg-[#f8f8f8] pl-10 pr-10">
+    <div className="h-full w-full bg-[#f8f8f8] ps-10 pe-10">
       <div className="mb-6 pt-6">
         <Breadcrumbs
           items={[

@@ -160,7 +160,7 @@ function AssignmentBoxUI({ type, view, currentPoints, currentFeedback, maxPoints
                 <div className='flex flex-wrap gap-2 items-center'>
                     {/* Auto-save status — answers persist automatically. */}
                     {autoSaveEnabled && (auto.isDirty || auto.status !== 'idle') && (
-                        <div className='flex space-x-1.5 items-center font-medium px-2 py-1 text-xs text-slate-400 sm:mr-2'>
+                        <div className='flex space-x-1.5 items-center font-medium px-2 py-1 text-xs text-slate-400 sm:me-2'>
                             {auto.isBlocked ? (
                                 // Refused by policy, not a transient failure — no retry
                                 // is coming, so promising one would be a lie. The task

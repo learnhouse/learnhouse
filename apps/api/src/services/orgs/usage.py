@@ -118,6 +118,17 @@ async def get_org_usage_and_limits(
     # reported as "unlimited". Read the real per-plan limit directly.
     admin_seats_limit = 0 if mode != 'saas' else get_plan_limit(org_plan, "admin_seats")
 
+    # The demo joins every visitor as an admin, so a free-plan seat limit is
+    # permanently "reached" and the first screen of the demo greets a prospect
+    # with a red "Limit reached" warning — about the one dimension the demo is
+    # deliberately not billed on. Because admin_seats has no feature config, it
+    # cannot be raised through the config overrides that unlock everything else,
+    # so it is handled here. 0 means unlimited.
+    from src.services.demo.guards import is_demo_org
+
+    if await is_demo_org(org_id, db_session):
+        admin_seats_limit = 0
+
     def calc_remaining(usage: int, limit: int) -> int | str:
         if limit == 0:
             return "unlimited"

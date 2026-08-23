@@ -101,7 +101,7 @@ function OrgSubscriptionRow({ org, enabled }: { org: any; enabled: boolean }) {
         </div>
       )}
 
-      <div className="ml-3 flex-1 min-w-0">
+      <div className="ms-3 flex-1 min-w-0">
         <div className="font-semibold text-gray-900 tracking-tight truncate">{org.name}</div>
         <div className="mt-1 flex items-center gap-2 flex-wrap">
           {subLoading ? (
@@ -120,16 +120,16 @@ function OrgSubscriptionRow({ org, enabled }: { org: any; enabled: boolean }) {
         </div>
       </div>
 
-      <span className="ml-3 hidden sm:flex items-center gap-1 text-xs font-semibold text-black/40 group-hover:text-black/70 transition-colors flex-shrink-0">
+      <span className="ms-3 hidden sm:flex items-center gap-1 text-xs font-semibold text-black/40 group-hover:text-black/70 transition-colors flex-shrink-0">
         {t('subscriptions.manage_plan', { defaultValue: 'Manage plan' })}
         <ChevronRight
           size={16}
-          className="group-hover:translate-x-0.5 transition-transform"
+          className="group-hover:translate-x-0.5 rtl:group-hover:-translate-x-0.5 transition-transform"
         />
       </span>
       <ChevronRight
         size={18}
-        className="ml-3 sm:hidden text-black/25 group-hover:text-black/60 transition-all flex-shrink-0"
+        className="ms-3 sm:hidden text-black/25 group-hover:text-black/60 transition-all flex-shrink-0"
       />
     </Link>
   )

@@ -270,7 +270,7 @@ function NewAssignment({ submitActivity: _submitActivity, chapterId, course, clo
               >
                 <span
                   className={`inline-block h-3.5 w-3.5 transform rounded-full bg-white shadow transition-transform ${
-                    allowRetries ? 'translate-x-5' : 'translate-x-1'
+                    allowRetries ? 'translate-x-5 rtl:-translate-x-5' : 'translate-x-1 rtl:-translate-x-1'
                   }`}
                 />
               </button>
@@ -385,7 +385,7 @@ function GradingTypeSelector({ value, onChange, translationPrefix }: { value: st
             }`}
           >
             {isSelected && (
-              <div className={`absolute top-1.5 right-1.5 w-3.5 h-3.5 rounded-full flex items-center justify-center ${gt.color} bg-white nice-shadow`}>
+              <div className={`absolute top-1.5 end-1.5 w-3.5 h-3.5 rounded-full flex items-center justify-center ${gt.color} bg-white nice-shadow`}>
                 <Check size={8} strokeWidth={3} />
               </div>
             )}
@@ -440,7 +440,7 @@ function SmallToggleRow({
       >
         <span
           className={`inline-block h-3.5 w-3.5 transform rounded-full bg-white shadow transition-transform ${
-            checked ? 'translate-x-5' : 'translate-x-1'
+            checked ? 'translate-x-5 rtl:-translate-x-5' : 'translate-x-1 rtl:-translate-x-1'
           }`}
         />
       </button>

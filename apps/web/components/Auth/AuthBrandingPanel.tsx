@@ -123,14 +123,14 @@ export default function AuthBrandingPanel({ org, welcomeText, title, subtitle }:
         {noOrg && (
           <>
             <div
-              className="absolute top-0 left-0 right-0 h-[38%] z-[5] backdrop-blur-sm"
+              className="absolute top-0 start-0 end-0 h-[38%] z-[5] backdrop-blur-sm"
               style={{
                 maskImage: 'linear-gradient(to bottom, black 10%, transparent 100%)',
                 WebkitMaskImage: 'linear-gradient(to bottom, black 10%, transparent 100%)',
               }}
             />
             <div
-              className="absolute top-0 left-0 right-0 h-[38%] z-[5] bg-black/35"
+              className="absolute top-0 start-0 end-0 h-[38%] z-[5] bg-black/35"
               style={{
                 maskImage: 'linear-gradient(to bottom, black 10%, transparent 100%)',
                 WebkitMaskImage: 'linear-gradient(to bottom, black 10%, transparent 100%)',
@@ -224,7 +224,7 @@ export default function AuthBrandingPanel({ org, welcomeText, title, subtitle }:
           {/* Unsplash attribution (required by Unsplash API guidelines) */}
           {background_type === 'unsplash' && background_image && unsplash_photographer_name && (
             <div className={cn(
-              "absolute bottom-3 left-4 right-4 z-10 text-[11px] leading-tight",
+              "absolute bottom-3 start-4 end-4 z-10 text-[11px] leading-tight",
               text_color === 'light' ? "text-white/70" : "text-gray-700"
             )}>
               Photo by{' '}

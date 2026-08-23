@@ -1,5 +1,5 @@
-from typing import Dict, Any
-from fastapi import HTTPException
+from typing import Dict, Any, Optional
+from fastapi import HTTPException, Request
 from sqlmodel import select
 from sqlmodel.ext.asyncio.session import AsyncSession
 
@@ -8,6 +8,8 @@ from src.security.features_utils.usage import reserve_ai_credit
 from src.db.courses.courses import Course, CourseRead
 from src.db.users import PublicUser
 from src.security.auth import resolve_acting_user_id
+from src.security.org_auth import enforce_org_mfa, is_org_member
+from src.security.rbac import check_resource_access, AccessAction
 from src.db.courses.activities import Activity, ActivityRead
 from src.services.ai.base import get_chat_session_history
 from src.services.ai.llm import model_for_tier
@@ -16,6 +18,32 @@ from src.services.ai.schemas.editor import (
     SendEditorAIChatMessage,
     EDITOR_AI_SYSTEM_PROMPT,
 )
+
+
+# ProseMirror only defines heading levels 1-6.
+MAX_HEADING_LEVEL = 6
+
+
+def _safe_heading_level(attrs: Any) -> int:
+    """Clamp a client-supplied heading level to the ProseMirror range.
+
+    ``level`` is used as a string repeat count, so an unbounded (or negative,
+    or non-integer) value straight out of the request body would either ask for
+    a multi-gigabyte allocation or raise. Anything that isn't a real int falls
+    back to 1.
+    """
+    if not isinstance(attrs, dict):
+        return 1
+    level = attrs.get('level', 1)
+    if isinstance(level, bool) or not isinstance(level, int):
+        return 1
+    return max(1, min(level, MAX_HEADING_LEVEL))
+
+
+def _node_attrs(node: Any) -> dict:
+    """Read a node's ``attrs`` defensively — the document is free-form JSON."""
+    attrs = node.get('attrs') if isinstance(node, dict) else None
+    return attrs if isinstance(attrs, dict) else {}
 
 
 def _serialize_tiptap_content_to_text(content: Any) -> str:
@@ -38,7 +66,7 @@ def _serialize_tiptap_content_to_text(content: Any) -> str:
 
             # Handle heading nodes - add level indicator
             if node_type == 'heading':
-                level = node.get('attrs', {}).get('level', 1)
+                level = _safe_heading_level(node.get('attrs'))
                 text_parts.append(f"\n{'#' * level} ")
 
             # Handle list items
@@ -55,7 +83,7 @@ def _serialize_tiptap_content_to_text(content: Any) -> str:
 
             # Handle code blocks
             if node_type == 'codeBlock':
-                lang = node.get('attrs', {}).get('language', '')
+                lang = _node_attrs(node).get('language', '')
                 text_parts.append(f"\n```{lang}\n")
 
             # Handle paragraphs
@@ -64,10 +92,15 @@ def _serialize_tiptap_content_to_text(content: Any) -> str:
 
             # Handle quiz blocks
             if node_type == 'blockQuiz':
-                questions = node.get('attrs', {}).get('questions', [])
-                for q in questions:
+                questions = _node_attrs(node).get('questions', [])
+                for q in questions if isinstance(questions, list) else []:
+                    if not isinstance(q, dict):
+                        continue
                     text_parts.append(f"\n[QUIZ] {q.get('question', '')}")
-                    for a in q.get('answers', []):
+                    answers = q.get('answers', [])
+                    for a in answers if isinstance(answers, list) else []:
+                        if not isinstance(a, dict):
+                            continue
                         # TipTap quiz answers use 'answer'/'correct' (see Quiz block schema);
                         # accept legacy 'text'/'isCorrect' as a fallback.
                         marker = '(correct)' if (a.get('correct') or a.get('isCorrect')) else ''
@@ -77,15 +110,17 @@ def _serialize_tiptap_content_to_text(content: Any) -> str:
 
             # Handle flipcards
             if node_type == 'flipcard':
-                attrs = node.get('attrs', {})
+                attrs = _node_attrs(node)
                 text_parts.append(f"\n[FLIPCARD]\nQ: {attrs.get('question', '')}\nA: {attrs.get('answer', '')}")
                 return
 
             # A library block only references an asset; name it so the model has
             # something to reason about instead of an empty node.
             if node_type == 'blockLibrary':
-                attrs = node.get('attrs', {})
+                attrs = _node_attrs(node)
                 snapshot = attrs.get('snapshot') or {}
+                if not isinstance(snapshot, dict):
+                    snapshot = {}
                 name = snapshot.get('name') or attrs.get('resourceUuid', '')
                 kind = attrs.get('resourceType', 'resource')
                 text_parts.append(f"\n[LIBRARY {str(kind).upper()}] {name}")
@@ -115,10 +150,39 @@ def _serialize_tiptap_content_to_text(content: Any) -> str:
     return ''.join(text_parts).strip()
 
 
+async def _authorize_editor_ai_access(
+    course: CourseRead,
+    org_id: int,
+    current_user: PublicUser,
+    db_session: AsyncSession,
+    request: Optional[Request] = None,
+) -> None:
+    """Gate editor AI on the organization owning the client-supplied activity.
+
+    Without it an outsider can point the endpoint at any activity, drain that
+    org's AI credits and read back its course/activity names. Runs before rate
+    limiting and credit reservation, mirroring the MagicBlocks gate. When a
+    Request is available we also check course-level write rights, since using
+    the editor assistant is an authoring action.
+    """
+    acting_user_id = resolve_acting_user_id(current_user)
+    if not await is_org_member(acting_user_id, org_id, db_session):
+        raise HTTPException(
+            status_code=403,
+            detail="You are not a member of this organization",
+        )
+    await enforce_org_mfa(acting_user_id, org_id, db_session)
+    if request is not None:
+        await check_resource_access(
+            request, db_session, current_user, course.course_uuid, AccessAction.UPDATE
+        )
+
+
 async def editor_ai_start_chat_session_stream(
     chat_session_object: StartEditorAIChatSession,
     current_user: PublicUser,
     db_session: AsyncSession,
+    request: Optional[Request] = None,
 ) -> Dict[str, Any]:
     """
     Start a new AI Editor chat session with streaming response.
@@ -179,6 +243,11 @@ async def editor_ai_start_chat_session_stream(
     if not org or org.id is None:
         raise HTTPException(status_code=404, detail="Organization not found")
 
+    # F32: authorize the caller against the owning org before any spend.
+    await _authorize_editor_ai_access(
+        course, org.id, current_user, db_session, request
+    )
+
     # F-9: per-user + per-org rate limit before any compute / credit spend.
     # Resolve through helper so API tokens bucket under their creator rather
     # than all sharing user_id=0.
@@ -227,6 +296,7 @@ async def editor_ai_send_message_stream(
     chat_session_object: SendEditorAIChatMessage,
     current_user: PublicUser,
     db_session: AsyncSession,
+    request: Optional[Request] = None,
 ) -> Dict[str, Any]:
     """
     Send a message in an existing AI Editor chat session with streaming response.
@@ -286,6 +356,11 @@ async def editor_ai_send_message_stream(
 
     if not org or org.id is None:
         raise HTTPException(status_code=404, detail="Organization not found")
+
+    # F32: authorize the caller against the owning org before any spend.
+    await _authorize_editor_ai_access(
+        course, org.id, current_user, db_session, request
+    )
 
     # F-9: per-user + per-org rate limit before any compute / credit spend.
     # Resolve through helper so API tokens bucket under their creator rather

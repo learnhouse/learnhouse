@@ -654,7 +654,7 @@ async def update_playground_thumbnail(
 async def get_playground_usergroups(
     request: Request,
     playground_uuid: str,
-    current_user: PublicUser,
+    current_user: PublicUser | AnonymousUser,
     db_session: AsyncSession,
 ) -> List[dict]:
     playground = (await db_session.execute(
@@ -662,6 +662,25 @@ async def get_playground_usergroups(
     )).scalars().first()
     if not playground:
         raise HTTPException(status_code=404, detail="Playground not found")
+
+    # This listing is the playground's access-control configuration — cohort
+    # names, descriptions, and the very usergroup uuids that
+    # add_usergroup_to_playground consumes — so it is gated exactly like the
+    # mutations that manage it, not like a public read of the playground.
+    if isinstance(current_user, AnonymousUser):
+        raise HTTPException(status_code=401, detail="Authentication required")
+
+    await _check_read_access(playground, current_user, db_session)
+
+    acting_user_id = resolve_acting_user_id(current_user)
+    rights = await _get_user_rights(acting_user_id, playground.org_id, db_session)
+    pg_rights = rights.get("playgrounds", {})
+    is_owner = playground.created_by == acting_user_id
+    can_manage = pg_rights.get("action_update", False) or (
+        is_owner and pg_rights.get("action_update_own", False)
+    )
+    if not can_manage:
+        raise HTTPException(status_code=403, detail="Insufficient permissions")
 
     ugrs = (await db_session.execute(
         select(UserGroupResource).where(

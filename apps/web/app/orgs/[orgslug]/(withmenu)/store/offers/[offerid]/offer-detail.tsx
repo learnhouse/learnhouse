@@ -1,5 +1,7 @@
 'use client'
 import React, { useState } from 'react'
+import { useTranslation } from 'react-i18next'
+import { formatCurrency } from '@/lib/format'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import GeneralWrapperStyled from '@components/Objects/StyledElements/Wrappers/GeneralWrapper'
@@ -97,6 +99,7 @@ function ResourceCard({ resource, orgslug }: { resource: Resource; orgslug: stri
 }
 
 export default function OfferDetailClient({ orgslug, orgId, offerUuid, offer, access_token }: OfferDetailClientProps) {
+  const { i18n } = useTranslation()
   const session = useLHSession() as any
   const token = session?.data?.tokens?.access_token ?? access_token
   const router = useRouter()
@@ -235,10 +238,7 @@ export default function OfferDetailClient({ orgslug, orgId, offerUuid, offer, ac
                   {offer.price_type === 'customer_choice' ? 'Pay what you want (min.)' : isSubscription ? 'Subscription price' : 'One-time price'}
                 </p>
                 <div className={`text-4xl font-black ${isSubscription ? 'text-indigo-700' : 'text-gray-900'}`}>
-                  {new Intl.NumberFormat('en-US', {
-                    style: 'currency',
-                    currency: offer.currency,
-                  }).format(offer.amount)}
+                  {formatCurrency(offer.amount, offer.currency, i18n.language)}
                 </div>
                 {isSubscription && (
                   <p className="text-sm text-indigo-400 font-medium mt-0.5">recurring</p>

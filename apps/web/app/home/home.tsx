@@ -3,6 +3,7 @@ import { useLHSession } from '@components/Contexts/LHSessionContext'
 import { canManageOrgFromSession } from '@components/Hooks/useAdminStatus'
 import { useLHAnalytics } from '@services/analytics/useLHAnalytics'
 import { AnalyticsEvent } from '@services/analytics/events'
+import DemoEntryCard from '@components/Objects/Demo/DemoEntryCard'
 import UserAvatar from '@components/Objects/UserAvatar'
 import { getAPIUrl, getUriWithOrg, getLEARNHOUSE_PLATFORM_URL_VAL } from '@services/config/config'
 import { apiFetch } from '@services/utils/ts/requests'
@@ -227,6 +228,9 @@ function HomeClient() {
                   {t('common.create_organization', { defaultValue: 'Create organization' })}
                 </Link>
               )}
+
+              {/* Renders nothing when this instance has no demo. */}
+              {isAuthenticated && <DemoEntryCard className="mt-1" />}
             </div>
 
             {/* Footer */}
@@ -332,9 +336,18 @@ function OrgRow({ org, access_token }: { org: any; access_token: string }) {
           </div>
         )}
 
-        <div className="ml-3 flex-1 min-w-0">
-          <div className="font-semibold text-gray-900 tracking-tight truncate">
-            {org.name}
+        <div className="ms-3 flex-1 min-w-0">
+          <div className="flex items-center gap-2 min-w-0">
+            <span className="font-semibold text-gray-900 tracking-tight truncate">
+              {org.name}
+            </span>
+            {org.is_demo && (
+              // Marks the shared sandbox in a list of the user's real
+              // organizations, so nobody mistakes it for one of theirs.
+              <span className="shrink-0 rounded-md bg-amber-100 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-amber-800">
+                {t('demo.badge', { defaultValue: 'Demo' })}
+              </span>
+            )}
           </div>
           {org.description ? (
             <p className="text-xs text-black/40 truncate mt-0.5">{org.description}</p>
@@ -345,7 +358,7 @@ function OrgRow({ org, access_token }: { org: any; access_token: string }) {
 
         <ChevronRight
           size={18}
-          className="ml-3 text-black/25 group-hover:text-black/60 group-hover:translate-x-0.5 transition-all flex-shrink-0"
+          className="ms-3 text-black/25 group-hover:text-black/60 group-hover:translate-x-0.5 rtl:group-hover:-translate-x-0.5 transition-all flex-shrink-0"
         />
       </Link>
 
@@ -354,7 +367,7 @@ function OrgRow({ org, access_token }: { org: any; access_token: string }) {
         <DropdownMenuTrigger asChild>
           <button
             aria-label={t('common.org_actions', { defaultValue: 'Organization actions' })}
-            className="ml-1.5 p-2 rounded-lg text-black/30 hover:text-black hover:bg-black/[0.04] transition-colors flex-shrink-0"
+            className="ms-1.5 p-2 rounded-lg text-black/30 hover:text-black hover:bg-black/[0.04] transition-colors flex-shrink-0"
           >
             <MoreVertical size={16} />
           </button>

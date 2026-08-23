@@ -432,7 +432,7 @@ function ScormCourseImport({ orgId, orgslug, closeModal }: ScormCourseImportProp
                 {selectedCount} {t('common.of')} {assignments.length} {t('courses.scorm.selected')}
               </span>
             </div>
-            <div className="space-y-2 max-h-[200px] overflow-y-auto pr-1">
+            <div className="space-y-2 max-h-[200px] overflow-y-auto pe-1">
               {assignments.map((assignment, index) => (
                 <div
                   key={assignment.scoIdentifier}

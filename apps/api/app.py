@@ -15,7 +15,9 @@ import uvicorn
 import sentry_sdk
 from sentry_sdk.integrations.logging import LoggingIntegration, ignore_logger
 from fastapi import FastAPI
-from fastapi.middleware.gzip import GZipMiddleware
+from starlette.datastructures import Headers
+from starlette.middleware.gzip import GZipMiddleware, GZipResponder, IdentityResponder
+from starlette.types import ASGIApp, Message, Receive, Scope, Send
 
 from config.config import LearnHouseConfig, get_learnhouse_config
 from src.core.ee_hooks import register_ee_middlewares
@@ -32,6 +34,66 @@ learnhouse_config: LearnHouseConfig = get_learnhouse_config()
 # learns to take the pod out of rotation. It is not a second, separate incident
 # to report, and during an outage every probe on every pod files one.
 _HEALTH_TRANSACTIONS = ("/api/v1/health", "/health")
+
+
+# Content types worth compressing. Everything else — video, audio, images,
+# PDFs, zips — is already compressed, so gzipping it burns CPU for ~0 bytes
+# saved. That matters here because Starlette compresses inline in the ASGI
+# `send` coroutine, on the event loop: a few concurrent range-less GETs of a
+# course video would otherwise pin the workers for the whole transfer.
+_COMPRESSIBLE_PREFIXES = (
+    "text/",
+    "application/json",
+    "application/ld+json",
+    "application/manifest+json",
+    "application/javascript",
+    "application/xml",
+    "application/xhtml+xml",
+    "image/svg+xml",
+)
+
+
+def _is_compressible(content_type: str) -> bool:
+    media_type = content_type.split(";", 1)[0].strip().lower()
+    return media_type.startswith(_COMPRESSIBLE_PREFIXES)
+
+
+class _SelectiveGZipResponder(GZipResponder):
+    """GZipResponder that opts out once the response's Content-Type is known.
+
+    Starlette picks the responder from the request's Accept-Encoding alone, so
+    the content type is only visible on `http.response.start`. Marking the
+    response excluded there routes it down Starlette's own pass-through path,
+    which forwards every body chunk untouched.
+    """
+
+    async def send_with_compression(self, message: Message) -> None:
+        if message["type"] == "http.response.start":
+            await super().send_with_compression(message)
+            if not self.content_type_is_excluded:
+                content_type = Headers(raw=message["headers"]).get("content-type", "")
+                self.content_type_is_excluded = not _is_compressible(content_type)
+            return
+        await super().send_with_compression(message)
+
+
+class SelectiveGZipMiddleware(GZipMiddleware):
+    """GZipMiddleware that only compresses compressible content types."""
+
+    async def __call__(self, scope: Scope, receive: Receive, send: Send) -> None:
+        if scope["type"] != "http":
+            await self.app(scope, receive, send)
+            return
+
+        responder: ASGIApp
+        if "gzip" in Headers(scope=scope).get("Accept-Encoding", ""):
+            responder = _SelectiveGZipResponder(
+                self.app, self.minimum_size, compresslevel=self.compresslevel
+            )
+        else:
+            responder = IdentityResponder(self.app, self.minimum_size)
+
+        await responder(scope, receive, send)
 
 
 def _before_send(event, hint):
@@ -71,12 +133,14 @@ app = FastAPI(
     description=learnhouse_config.site_description,
     docs_url="/docs" if learnhouse_config.general_config.development_mode else None,
     redoc_url="/redoc" if learnhouse_config.general_config.development_mode else None,
-    version="1.3.4",
+    version="1.3.5",
 )
 
 # Middleware
 configure_cors(app)
-app.add_middleware(GZipMiddleware, minimum_size=1000)
+# compresslevel 9 costs several times the CPU of 6 for a couple of percent on
+# JSON; 6 is gzip's own default.
+app.add_middleware(SelectiveGZipMiddleware, minimum_size=1000, compresslevel=6)
 register_ee_middlewares(app)
 
 # Lifecycle

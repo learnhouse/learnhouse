@@ -1,7 +1,7 @@
 # ───────────────────────────────────────────────
 # Stage 1: Frontend dependency install
 # ───────────────────────────────────────────────
-FROM oven/bun:1-alpine AS frontend-deps
+FROM oven/bun:1.4.0-alpine AS frontend-deps
 RUN apk update && apk add --no-cache libc6-compat && rm -rf /var/cache/apk/*
 WORKDIR /app
 
@@ -11,7 +11,7 @@ RUN bun install --frozen-lockfile
 # ───────────────────────────────────────────────
 # Stage 2: Frontend build
 # ───────────────────────────────────────────────
-FROM oven/bun:1-alpine AS frontend-builder
+FROM oven/bun:1.4.0-alpine AS frontend-builder
 WORKDIR /app
 COPY --from=frontend-deps /app/node_modules ./node_modules
 COPY apps/web .
@@ -27,7 +27,7 @@ RUN bun run build
 # ───────────────────────────────────────────────
 # Stage 3: Frontend production image
 # ───────────────────────────────────────────────
-FROM node:24-alpine AS frontend-runner
+FROM oven/bun:1.4.0-alpine AS frontend-runner
 WORKDIR /app
 
 RUN apk update && apk add --no-cache curl && rm -rf /var/cache/apk/*
@@ -53,7 +53,7 @@ RUN chmod +x server-wrapper.js
 # ───────────────────────────────────────────────
 # Stage 4: Collab server build
 # ───────────────────────────────────────────────
-FROM oven/bun:1-alpine AS collab-builder
+FROM oven/bun:1.4.0-alpine AS collab-builder
 WORKDIR /app
 
 COPY apps/collab/package.json apps/collab/bun.lock* ./
@@ -111,7 +111,11 @@ COPY ./apps/api/docker-entrypoint.sh /app/api/docker-entrypoint.sh
 COPY ./docker/start.sh /app/start.sh
 RUN chmod +x /app/api/docker-entrypoint.sh /app/start.sh
 
-ENV PORT=8000 LEARNHOUSE_PORT=9000 COLLAB_PORT=4000 HOSTNAME=0.0.0.0 LEARNHOUSE_OSS=true NEXT_PUBLIC_LEARNHOUSE_OSS=true
+# PYTHONDONTWRITEBYTECODE: the image ships read-only source and gains nothing
+# from writing .pyc files back into it. It also keeps __pycache__ out of the
+# enterprise tree, where stale bytecode could otherwise shadow a source file
+# that verifies clean against the signed manifest.
+ENV PORT=8000 LEARNHOUSE_PORT=9000 COLLAB_PORT=4000 HOSTNAME=0.0.0.0 LEARNHOUSE_OSS=true NEXT_PUBLIC_LEARNHOUSE_OSS=true PYTHONDONTWRITEBYTECODE=1
 
 EXPOSE 80 9000 4000
 

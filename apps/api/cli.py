@@ -358,6 +358,275 @@ async def _compute_active_user_overage(year: int, month: int) -> None:
 
 
 @cli.command()
+def nudges_run(
+    dry_run: Annotated[bool, typer.Option(help="Render and log, but send nothing")] = False,
+    seed: Annotated[
+        bool,
+        typer.Option(
+            help="Write suppressed ledger rows instead of sending. Run once "
+            "before enabling, so switching on doesn't fire a backlog."
+        ),
+    ] = False,
+    max_sends: Annotated[int, typer.Option(help="Hard ceiling for this run")] = 0,
+    only: Annotated[str, typer.Option(help="Restrict to a single nudge id")] = "",
+    org_id: Annotated[int, typer.Option(help="Restrict to a single org id")] = 0,
+    force: Annotated[
+        bool, typer.Option(help="Bypass the SaaS and kill-switch gates (staging)")
+    ] = False,
+):
+    """
+    Daily: send lifecycle nudges to organization admins.
+
+    Cron-invoked. Sends nothing unless LEARNHOUSE_NUDGES_ENABLED is set and the
+    deployment is SaaS — so deploying this command is not the same as arming
+    it. Start with --dry-run, then --seed, then a small --max-sends.
+    """
+    asyncio.run(
+        _run_nudges(
+            dry_run=dry_run,
+            seed=seed,
+            max_sends=max_sends or None,
+            only=only or None,
+            org_id=org_id or None,
+            force=force,
+        )
+    )
+
+
+async def _run_nudges(
+    *,
+    dry_run: bool,
+    seed: bool,
+    max_sends,
+    only,
+    org_id,
+    force: bool,
+) -> None:
+    from src.services.nudges.runner import run_nudges
+
+    learnhouse_config = get_learnhouse_config()
+    sql_url = learnhouse_config.database_config.sql_connection_string  # type: ignore
+    async_engine = create_async_engine(_to_async_url(sql_url), echo=False, pool_pre_ping=True)
+
+    try:
+        async with AsyncSession(async_engine, expire_on_commit=False) as db_session:
+            stats = await run_nudges(
+                db_session,
+                dry_run=dry_run,
+                seed=seed,
+                max_sends=max_sends,
+                only=only,
+                org_id=org_id,
+                force=force,
+            )
+    finally:
+        await async_engine.dispose()
+
+    mode = "seed" if seed else ("dry-run" if dry_run else "live")
+    result = stats.as_dict()
+    print(f"Nudge run ({mode}): sent={result['sent']} failed={result['failed']}")
+    print(
+        "  skipped: "
+        f"dedupe={result['skipped_dedupe']} "
+        f"cap={result['skipped_cap']} "
+        f"optout={result['skipped_optout']} "
+        f"backfill={result['skipped_backfill']} "
+        f"inactive_org={result['skipped_inactive_org']}"
+    )
+    if result["budget_exhausted"]:
+        print("  budget exhausted — remaining candidates deferred to the next run")
+    for nudge_id, count in result["by_nudge"].items():
+        print(f"    {nudge_id}: {count}")
+
+
+@cli.command()
+def nudges_stats(
+    days: Annotated[int, typer.Option(help="Window to report on")] = 30,
+):
+    """Report what the nudge ledger has recorded. Sends nothing."""
+    asyncio.run(_nudges_stats(days))
+
+
+async def _nudges_stats(days: int) -> None:
+    from datetime import datetime, timedelta, timezone
+
+    from sqlalchemy import func
+    from sqlmodel import select
+
+    from src.db.nudges import NudgeSend
+
+    learnhouse_config = get_learnhouse_config()
+    sql_url = learnhouse_config.database_config.sql_connection_string  # type: ignore
+    async_engine = create_async_engine(_to_async_url(sql_url), echo=False, pool_pre_ping=True)
+    since = datetime.now(timezone.utc) - timedelta(days=days)
+
+    try:
+        async with AsyncSession(async_engine, expire_on_commit=False) as db_session:
+            rows = (
+                await db_session.execute(
+                    select(NudgeSend.nudge_id, NudgeSend.status, func.count())
+                    .where(NudgeSend.claimed_at >= since)
+                    .group_by(NudgeSend.nudge_id, NudgeSend.status)
+                    .order_by(NudgeSend.nudge_id)
+                )
+            ).all()
+    finally:
+        await async_engine.dispose()
+
+    if not rows:
+        print(f"No nudge activity in the last {days} days.")
+        return
+
+    print(f"Nudge activity, last {days} days:")
+    for nudge_id, status, count in rows:
+        print(f"  {nudge_id:45} {status:10} {count}")
+    # A row still in "claimed" means a process died between the ledger write
+    # and the provider call — worth knowing about, never auto-retried.
+    stuck = sum(count for _n, status, count in rows if status == "claimed")
+    if stuck:
+        print(f"\n  {stuck} row(s) stuck in 'claimed' — a run died mid-send.")
+
+
+@cli.command(name="demo-sync")
+def demo_sync():
+    """
+    Create or refresh the shared demo organization.
+
+    Safe to run repeatedly — that is the point. The first run builds the demo
+    from the bundle; every run after it puts back whatever a visitor changed
+    and writes nothing if nothing changed.
+
+    The in-app scheduler calls the same code on an interval. This command is
+    for operators who would rather drive it from their own cron (set
+    LEARNHOUSE_DEMO_NO_SCHEDULER) or want to force a refresh now.
+    """
+    asyncio.run(_demo_sync())
+
+
+async def _demo_sync() -> None:
+    from src.services.demo.sync import sync_demo
+
+    learnhouse_config = get_learnhouse_config()
+    sql_url = learnhouse_config.database_config.sql_connection_string  # type: ignore
+    async_engine = create_async_engine(_to_async_url(sql_url), echo=False, pool_pre_ping=True)
+
+    try:
+        async with AsyncSession(async_engine, expire_on_commit=False) as db_session:
+            stats = await sync_demo(db_session)
+    finally:
+        await async_engine.dispose()
+
+    action = "provisioned" if stats.provisioned else "refreshed"
+    print(f"Demo {action} (epoch {stats.epoch})")
+    print(f"  created:       {stats.created}")
+    print(f"  updated:       {stats.updated}")
+    print(f"  drift removed: {stats.drift_deleted}")
+    if not stats.created and not stats.updated and not stats.drift_deleted:
+        print("  nothing to do — the demo already matches the bundle")
+
+
+@cli.command(name="demo-status")
+def demo_status():
+    """Show the demo organization's state and what it currently contains."""
+    asyncio.run(_demo_status())
+
+
+async def _demo_status() -> None:
+    from sqlalchemy import func, select
+
+    from src.db.demo_entities import DemoEntity
+    from src.db.demo_state import DEMO_STATE_ID, DemoState
+    from src.db.organizations import Organization
+
+    learnhouse_config = get_learnhouse_config()
+    sql_url = learnhouse_config.database_config.sql_connection_string  # type: ignore
+    async_engine = create_async_engine(_to_async_url(sql_url), echo=False, pool_pre_ping=True)
+
+    try:
+        async with AsyncSession(async_engine, expire_on_commit=False) as db_session:
+            state = (
+                await db_session.execute(
+                    select(DemoState).where(DemoState.id == DEMO_STATE_ID)
+                )
+            ).scalars().first()
+            if state is None:
+                print("No demo organization has been created yet.")
+                print("Run: uv run python cli.py demo-sync")
+                return
+
+            org = None
+            if state.org_id:
+                org = (
+                    await db_session.execute(
+                        select(Organization).where(Organization.id == state.org_id)
+                    )
+                ).scalars().first()
+
+            print(f"State:          {state.state}")
+            print(f"Bundle version: {state.bundle_version}")
+            print(f"Content epoch:  {state.content_epoch}")
+            print(f"Last refresh:   {state.last_refresh_at}")
+            if state.last_error:
+                print(f"Last error:     {state.last_error}")
+            if org is not None:
+                print(f"Organization:   {org.name} (/{org.slug}, id={org.id})")
+
+            rows = (
+                await db_session.execute(
+                    select(DemoEntity.kind, func.count())
+                    .group_by(DemoEntity.kind)
+                    .order_by(DemoEntity.kind)
+                )
+            ).all()
+            if rows:
+                print("\nRegistered rows:")
+                for kind, count in rows:
+                    print(f"  {kind:18} {count}")
+    finally:
+        await async_engine.dispose()
+
+
+@cli.command(name="demo-teardown")
+def demo_teardown(
+    yes: Annotated[bool, typer.Option("--yes", help="Skip the confirmation")] = False,
+):
+    """
+    Delete the demo organization, its students, its files and its state.
+
+    Everything it owns goes with the organization via cascade; the fake student
+    accounts, their uploaded files and the authorship rows that reference
+    content by a bare uuid are removed explicitly, because none of those are
+    org-owned rows the cascade can reach.
+    """
+    if not yes:
+        typer.confirm(
+            "Delete the demo organization and all forty demo student accounts?",
+            abort=True,
+        )
+    asyncio.run(_demo_teardown())
+
+
+async def _demo_teardown() -> None:
+    from src.services.demo.teardown import teardown_demo
+
+    learnhouse_config = get_learnhouse_config()
+    sql_url = learnhouse_config.database_config.sql_connection_string  # type: ignore
+    async_engine = create_async_engine(_to_async_url(sql_url), echo=False, pool_pre_ping=True)
+
+    try:
+        async with AsyncSession(async_engine, expire_on_commit=False) as db_session:
+            removed = await teardown_demo(db_session)
+            await db_session.commit()
+
+            for line in removed:
+                print(line)
+            if not removed:
+                print("No demo organization found.")
+    finally:
+        await async_engine.dispose()
+
+
+@cli.command()
 def main():
     cli()
 

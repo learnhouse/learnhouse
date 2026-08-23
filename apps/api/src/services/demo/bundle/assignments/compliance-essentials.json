@@ -1,0 +1,84 @@
+{
+  "activity_key": "ce-assessment",
+  "title": "Compliance assessment",
+  "description": "Six scenarios drawn from things that have actually happened. The reporting timings and the verification step for payment details must be right; the rest is marked on reasoning.",
+  "grading_type": "PERCENTAGE",
+  "pass_threshold_percentage": 80,
+  "due_in_days": 4,
+  "published": true,
+  "auto_grading": true,
+  "show_correct_answers": false,
+  "allow_retries": true,
+  "max_retries": 3,
+  "tasks": [
+    {
+      "slug": "ce-t1-scenarios",
+      "title": "The scenarios",
+      "description": "Three of the six, marked automatically.",
+      "hint": "When in doubt, report it and do not investigate first.",
+      "type": "QUIZ",
+      "max_grade_value": 60,
+      "contents": {
+        "questions": [
+          {
+            "questionUUID": "question_ce_t1_q1",
+            "questionText": "You realise you may have shared a document too widely. What comes first?",
+            "options": [
+              { "optionUUID": "option_ce_t1_q1_a", "text": "Report it in the compliance channel", "type": "text", "fileID": "", "assigned_right_answer": true },
+              { "optionUUID": "option_ce_t1_q1_b", "text": "Change the sharing settings, then report it", "type": "text", "fileID": "", "assigned_right_answer": false },
+              { "optionUUID": "option_ce_t1_q1_c", "text": "Check who accessed it before deciding", "type": "text", "fileID": "", "assigned_right_answer": false }
+            ]
+          },
+          {
+            "questionUUID": "question_ce_t1_q2",
+            "questionText": "A supplier emails asking to update their bank details. How do you verify?",
+            "options": [
+              { "optionUUID": "option_ce_t1_q2_a", "text": "Phone them on a number you already held", "type": "text", "fileID": "", "assigned_right_answer": true },
+              { "optionUUID": "option_ce_t1_q2_b", "text": "Reply to the email asking them to confirm", "type": "text", "fileID": "", "assigned_right_answer": false },
+              { "optionUUID": "option_ce_t1_q2_c", "text": "Check the sender address matches previous emails", "type": "text", "fileID": "", "assigned_right_answer": false }
+            ]
+          },
+          {
+            "questionUUID": "question_ce_t1_q3",
+            "questionText": "A customer asks in a support chat what data you hold about them. What is the first step?",
+            "options": [
+              { "optionUUID": "option_ce_t1_q3_a", "text": "Log it as a data request the same day and pass it on", "type": "text", "fileID": "", "assigned_right_answer": true },
+              { "optionUUID": "option_ce_t1_q3_b", "text": "Send them their order history straight away", "type": "text", "fileID": "", "assigned_right_answer": false }
+            ]
+          }
+        ]
+      },
+      "submissions": {
+        "correct": { "submissions": [
+          { "questionUUID": "question_ce_t1_q1", "optionUUID": "option_ce_t1_q1_a", "answer": true },
+          { "questionUUID": "question_ce_t1_q2", "optionUUID": "option_ce_t1_q2_a", "answer": true },
+          { "questionUUID": "question_ce_t1_q3", "optionUUID": "option_ce_t1_q3_a", "answer": true }
+        ]},
+        "partial": { "submissions": [
+          { "questionUUID": "question_ce_t1_q1", "optionUUID": "option_ce_t1_q1_b", "answer": true },
+          { "questionUUID": "question_ce_t1_q2", "optionUUID": "option_ce_t1_q2_a", "answer": true },
+          { "questionUUID": "question_ce_t1_q3", "optionUUID": "option_ce_t1_q3_a", "answer": true }
+        ]},
+        "incorrect": { "submissions": [
+          { "questionUUID": "question_ce_t1_q1", "optionUUID": "option_ce_t1_q1_c", "answer": true },
+          { "questionUUID": "question_ce_t1_q2", "optionUUID": "option_ce_t1_q2_b", "answer": true },
+          { "questionUUID": "question_ce_t1_q3", "optionUUID": "option_ce_t1_q3_b", "answer": true }
+        ]}
+      }
+    },
+    {
+      "slug": "ce-t2-reporting-window",
+      "title": "The reporting window",
+      "description": "How many hours do you have to report a suspected breach from the moment you notice it?",
+      "hint": "It changed recently. Check the course update.",
+      "type": "NUMBER_ANSWER",
+      "max_grade_value": 40,
+      "contents": { "correct_value": 1, "tolerance": 0 },
+      "submissions": {
+        "correct": { "answer": 1 },
+        "partial": { "answer": 1 },
+        "incorrect": { "answer": 24 }
+      }
+    }
+  ]
+}

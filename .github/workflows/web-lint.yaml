@@ -25,7 +25,7 @@ jobs:
           fetch-depth: 0
       - uses: oven-sh/setup-bun@v2
         with:
-          bun-version: latest
+          bun-version-file: .bun-version
       # setup-bun restores the toolchain, not the packages. Without this the
       # web install re-downloads its whole tree on every lint run.
       - name: Cache bun install cache
@@ -67,3 +67,35 @@ jobs:
           echo "Strict-linting changed files:"
           echo "$CHANGED"
           echo "$CHANGED" | xargs bun run lint:strict --no-error-on-unmatched-pattern
+
+  # The image build type-checks as a side effect of `next build`, but it does so
+  # inside a Docker layer that is cached on the dependency manifests. A tsconfig
+  # deprecation or a compiler upgrade can therefore sit broken for months and
+  # only surface when something unrelated invalidates the cache. This job runs
+  # the same check on a fresh install, so type errors fail the PR that
+  # introduces them instead of the next lockfile bump.
+  typecheck:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version-file: .bun-version
+      - name: Cache bun install cache
+        uses: actions/cache@v6
+        with:
+          path: ~/.bun/install/cache
+          key: bun-web-${{ runner.os }}-${{ hashFiles('apps/web/bun.lock') }}
+          restore-keys: bun-web-${{ runner.os }}-
+      - name: Install dependencies
+        run: bun install --frozen-lockfile
+        working-directory: ./apps/web
+      # tsconfig includes next-env.d.ts and .next/types, both generated. Without
+      # this every route and image import resolves to nothing and tsc reports
+      # hundreds of phantom errors.
+      - name: Generate Next.js route types
+        run: bunx next typegen
+        working-directory: ./apps/web
+      - name: Type check
+        run: bunx tsc --noEmit
+        working-directory: ./apps/web

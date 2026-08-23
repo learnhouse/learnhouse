@@ -90,6 +90,18 @@
       "matchUpdateTypes": ["minor", "patch"],
       "groupName": "all non-major dependencies",
       "groupSlug": "all-minor-patch"
+    },
+    {
+      "description": "workos declares a cryptography floor and both are pinned exactly. Split across two PRs, neither one resolves — uv fails the lock and every PR that touches them goes red. This rule is last so it wins over the groups above.",
+      "matchPackageNames": ["workos", "cryptography"],
+      "matchUpdateTypes": ["major", "minor", "patch"],
+      "groupName": "workos & cryptography",
+      "groupSlug": "workos-cryptography"
+    },
+    {
+      "description": "TypeScript 7 is the native compiler; @typescript-eslint 8.x still crashes on it (ts.ModuleKind.Cjs is undefined), which takes next-lint down with ESLint exit 2. Lift this cap once typescript-eslint ships TypeScript 7 support.",
+      "matchPackageNames": ["typescript"],
+      "allowedVersions": "<7"
     }
   ]
 }

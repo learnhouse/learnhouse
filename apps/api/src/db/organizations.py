@@ -33,6 +33,10 @@ class Organization(OrganizationBase, table=True):
     org_uuid: str = Field(default="", unique=True)
     slug: str = Field(unique=True, index=True)  # Override to add unique constraint
     explore: Optional[bool] = Field(default=False, index=True)  # Override to add index
+    # Marks the shared, auto-refreshing demo organization. Indexed because it
+    # is a filter on org-wide scans (billing overage, nudge eligibility,
+    # explore, the free-org cap) rather than a per-row lookup.
+    is_demo: bool = Field(default=False, index=True)
     creation_date: str = ""
     update_date: str = ""
 
@@ -63,6 +67,11 @@ class OrganizationRead(OrganizationBase):
     id: int
     org_uuid: str
     config: Optional[OrganizationConfig | dict] = None
+    # Deliberately on Read and not on OrganizationBase: if it lived on the base
+    # it would be inherited by OrganizationCreate/Update and a client could
+    # declare its own org a demo, which would exempt it from the free-org cap
+    # and from active-user billing.
+    is_demo: bool = False
     creation_date: str
     update_date: str
 

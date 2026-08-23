@@ -37,6 +37,7 @@ import {
 } from '@services/ai/ai'
 import UserAvatar from '@components/Objects/UserAvatar'
 import { useTranslation } from 'react-i18next'
+import { useDirection } from '@hooks/useDirection'
 import { useLHAnalytics, AnalyticsEvent } from '@services/analytics'
 import AIMarkdownRenderer from '@components/Objects/Activities/AI/AIMarkdownRenderer'
 import { setAIHighlight, clearAIHighlight } from '../Extensions/AISelectionHighlight/AISelectionHighlight'
@@ -55,6 +56,8 @@ type AIMessage = {
 
 function AIEditorSidePanel(props: AIEditorSidePanelProps) {
   const { t } = useTranslation()
+  // Panel slides in from the inline end; the offset is physical pixels.
+  const { x: dx } = useDirection()
   const { track } = useLHAnalytics('editor')
   const session = useLHSession() as any
   const access_token = session?.data?.tokens?.access_token
@@ -992,9 +995,9 @@ function AIEditorSidePanel(props: AIEditorSidePanelProps) {
 
   return (
     <motion.div
-      initial={isInitialRender.current ? false : { opacity: 0, x: 20 }}
+      initial={isInitialRender.current ? false : { opacity: 0, x: 20 * dx }}
       animate={{ opacity: 1, x: 0 }}
-      exit={{ opacity: 0, x: 20 }}
+      exit={{ opacity: 0, x: 20 * dx }}
       transition={
         isInitialRender.current
           ? { duration: 0 }
@@ -1309,7 +1312,7 @@ function AIEditorSidePanel(props: AIEditorSidePanelProps) {
                   </span>
                   <button
                     onClick={clearSelectionHighlight}
-                    className="ml-auto p-1 rounded hover:bg-purple-500/20 transition-colors"
+                    className="ms-auto p-1 rounded hover:bg-purple-500/20 transition-colors"
                     title={t('editor.ai_panel.clear_selection')}
                   >
                     <X size={12} className="text-purple-400/60 hover:text-purple-400" />
@@ -1339,7 +1342,7 @@ function AIEditorSidePanel(props: AIEditorSidePanelProps) {
                   </div>
                   <button
                     onClick={clearSelectionHighlight}
-                    className="ml-auto p-1 rounded hover:bg-violet-500/20 transition-colors"
+                    className="ms-auto p-1 rounded hover:bg-violet-500/20 transition-colors"
                     title={t('editor.ai_panel.clear_selection')}
                   >
                     <X size={12} className="text-violet-400/60 hover:text-violet-400" />
@@ -1435,7 +1438,7 @@ function AIEditorMessageComponent({
             />
           </div>
         ) : (
-          <div className="inline-block bg-white/5 rounded-xl rounded-tl-sm px-3 py-2 max-w-[85%]">
+          <div className="inline-block bg-white/5 rounded-xl rounded-ss-sm px-3 py-2 max-w-[85%]">
             <p className="text-white/90 text-sm leading-relaxed">
               {message.message}
             </p>

@@ -1,0 +1,79 @@
+{
+  "activity_key": "cw-rewrite-exercise",
+  "title": "Rewrite exercise",
+  "description": "Take a badly written internal message and fix it: request buried at the bottom, no date, and a slipped deadline mentioned in passing.",
+  "grading_type": "PERCENTAGE",
+  "pass_threshold_percentage": 60,
+  "due_in_days": 6,
+  "published": true,
+  "auto_grading": true,
+  "show_correct_answers": true,
+  "allow_retries": true,
+  "max_retries": 2,
+  "tasks": [
+    {
+      "slug": "cw-t1-structure",
+      "title": "Where does the ask go?",
+      "description": "Two questions on the structure of a clear message.",
+      "hint": "Chapter one, 'Lead with the point'.",
+      "type": "QUIZ",
+      "max_grade_value": 50,
+      "contents": {
+        "questions": [
+          {
+            "questionUUID": "question_cw_t1_q1",
+            "questionText": "Where should the request go in a work message?",
+            "options": [
+              { "optionUUID": "option_cw_t1_q1_a", "text": "In the first line, before the context", "type": "text", "fileID": "", "assigned_right_answer": true },
+              { "optionUUID": "option_cw_t1_q1_b", "text": "At the end, after the reasoning", "type": "text", "fileID": "", "assigned_right_answer": false }
+            ]
+          },
+          {
+            "questionUUID": "question_cw_t1_q2",
+            "questionText": "A deadline has slipped. When should you say so?",
+            "options": [
+              { "optionUUID": "option_cw_t1_q2_a", "text": "As soon as the date is at risk", "type": "text", "fileID": "", "assigned_right_answer": true },
+              { "optionUUID": "option_cw_t1_q2_b", "text": "On the day it was due, with a plan", "type": "text", "fileID": "", "assigned_right_answer": false },
+              { "optionUUID": "option_cw_t1_q2_c", "text": "Once you know the new date for certain", "type": "text", "fileID": "", "assigned_right_answer": false }
+            ]
+          }
+        ]
+      },
+      "submissions": {
+        "correct": { "submissions": [
+          { "questionUUID": "question_cw_t1_q1", "optionUUID": "option_cw_t1_q1_a", "answer": true },
+          { "questionUUID": "question_cw_t1_q2", "optionUUID": "option_cw_t1_q2_a", "answer": true }
+        ]},
+        "partial": { "submissions": [
+          { "questionUUID": "question_cw_t1_q1", "optionUUID": "option_cw_t1_q1_a", "answer": true },
+          { "questionUUID": "question_cw_t1_q2", "optionUUID": "option_cw_t1_q2_c", "answer": true }
+        ]},
+        "incorrect": { "submissions": [
+          { "questionUUID": "question_cw_t1_q1", "optionUUID": "option_cw_t1_q1_b", "answer": true },
+          { "questionUUID": "question_cw_t1_q2", "optionUUID": "option_cw_t1_q2_b", "answer": true }
+        ]}
+      }
+    },
+    {
+      "slug": "cw-t2-rewrite",
+      "title": "The rewrite",
+      "description": "Rewrite the message so the ask is in the first line, the delay is stated plainly, and it is short enough that a busy reader finishes it.",
+      "hint": "Keep the deadline. Cutting it loses more marks than length gains.",
+      "type": "SHORT_ANSWER",
+      "max_grade_value": 50,
+      "contents": {
+        "correct_answers": [
+          "can you confirm by thursday",
+          "please confirm by thursday",
+          "we will miss friday"
+        ],
+        "match_mode": "contains"
+      },
+      "submissions": {
+        "correct": { "answer": "Can you confirm by Thursday whether we hold order 4192? We will miss Friday on the original plan — detail below." },
+        "partial": { "answer": "Please confirm by Thursday about order 4192. Background follows." },
+        "incorrect": { "answer": "Following up on my earlier note regarding the order, I wanted to reach out and see whether there had been any movement on this at your end." }
+      }
+    }
+  ]
+}

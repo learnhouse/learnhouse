@@ -253,6 +253,27 @@ async def get_active_user_summary(
     if year is None or month is None:
         year, month = current_utc_year_month()
 
+    # The demo organization seeds UserActivityDay rows so its dashboards and
+    # the Users page are not empty. Those rows are synthetic, and this function
+    # is what the platform reads to build a Stripe invoice line — so the demo
+    # is zeroed here, at the single point both the per-org endpoint and the
+    # month-end batch (get_all_orgs_with_active_user_overage) funnel through.
+    # Returning zero overage_units also drops it from that batch's results.
+    from src.services.demo.guards import is_demo_org
+
+    if await is_demo_org(org_id, db_session):
+        return {
+            "org_id": org_id,
+            "plan": "demo",
+            "year": year,
+            "month": month,
+            "active_users": 0,
+            "plan_limit": 0,
+            "members_beyond_included": 0,
+            "overage_units": 0,
+            "overage_usd": 0,
+        }
+
     if _is_non_saas():
         plan = "self-hosted"
         plan_limit = 0

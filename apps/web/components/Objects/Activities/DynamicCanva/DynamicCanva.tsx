@@ -33,6 +33,7 @@ import VideoBlock from '@components/Objects/Editor/Extensions/Video/VideoBlock'
 import AudioBlock from '@components/Objects/Editor/Extensions/Audio/AudioBlock'
 import MathEquationBlock from '@components/Objects/Editor/Extensions/MathEquation/MathEquationBlock'
 import PDFBlock from '@components/Objects/Editor/Extensions/PDF/PDFBlock'
+import H5PBlock from '@components/Objects/Editor/Extensions/H5P/H5PBlock'
 import LibraryBlock from '@components/Objects/Editor/Extensions/Library/LibraryBlock'
 import QuizBlock from '@components/Objects/Editor/Extensions/Quiz/QuizBlock'
 import MagicBlock from '@components/Objects/Editor/Extensions/MagicBlocks/MagicBlock'
@@ -141,6 +142,10 @@ function Canva(props: Editor) {
       }),
       PDFBlock.configure({
         editable: true,
+        activity: props.activity,
+      }),
+      H5PBlock.configure({
+        editable: isEditable,
         activity: props.activity,
       }),
       LibraryBlock.configure({

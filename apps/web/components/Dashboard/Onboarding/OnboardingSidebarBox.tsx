@@ -35,7 +35,7 @@ export default function OnboardingSidebarBox() {
       {/* Blueprint grid — purple, edge-to-edge, fading down from the top border
           (same motif as the upgrade box, in the onboarding's violet tone). */}
       <div
-        className="absolute -left-3 -right-3 -top-2 bottom-0 pointer-events-none"
+        className="absolute -start-3 -end-3 -top-2 bottom-0 pointer-events-none"
         style={{
           backgroundImage: `
             linear-gradient(rgba(139,92,246,0.10) 1px, transparent 1px),
@@ -49,7 +49,7 @@ export default function OnboardingSidebarBox() {
       />
       {/* Purple glow blooming down from the progress border. */}
       <div
-        className="absolute -left-3 -right-3 -top-2 h-16 pointer-events-none"
+        className="absolute -start-3 -end-3 -top-2 h-16 pointer-events-none"
         style={{
           background:
             'radial-gradient(110% 90% at 50% 0%, rgba(139,92,246,0.20), rgba(99,102,241,0.05) 45%, transparent 78%)',
@@ -74,7 +74,11 @@ export default function OnboardingSidebarBox() {
             {t('onboarding.up_next', { defaultValue: 'Up next' })}
           </p>
           <p className="mt-0.5 text-[12px] font-medium leading-snug text-white/80 truncate">
-            {currentStep.title}
+            {/* The step definitions in useOnboarding carry English titles as
+                their source text; the translations live under
+                onboarding.steps.*. Rendering currentStep.title directly showed
+                English here in every language. Matches OnboardingSteps.tsx. */}
+            {t(`onboarding.steps.${currentStep.id}.title`, { defaultValue: currentStep.title })}
           </p>
         </div>
 
@@ -84,7 +88,7 @@ export default function OnboardingSidebarBox() {
           className="group mt-3 flex items-center justify-center gap-1.5 w-full rounded-lg bg-indigo-500 hover:bg-indigo-400 text-white text-[12px] font-semibold py-2 transition-colors"
         >
           {t('onboarding.continue_setup', { defaultValue: 'Continue setup' })}
-          <ArrowRight size={12} weight="bold" className="transition-transform group-hover:translate-x-0.5" />
+          <ArrowRight size={12} weight="bold" className="transition-transform group-hover:translate-x-0.5 rtl:group-hover:-translate-x-0.5" data-dir-flip />
         </Link>
       </div>
     </motion.div>

@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { motion, AnimatePresence } from 'motion/react'
 import { useTranslation } from 'react-i18next'
+import { dirMultiplier, directionForLanguage } from '@/lib/direction'
 import { useFormik } from 'formik'
 import * as Form from '@radix-ui/react-form'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
@@ -43,6 +44,7 @@ import {
 import { useLHSession } from '@components/Contexts/LHSessionContext'
 import { signOut } from '@components/Contexts/AuthContext'
 import UserAvatar from '@components/Objects/UserAvatar'
+import DemoEntryCard from '@components/Objects/Demo/DemoEntryCard'
 import { createNewOrganization } from '@services/organizations/orgs'
 import { useLHAnalytics } from '@services/analytics/useLHAnalytics'
 import { AnalyticsEvent } from '@services/analytics/events'
@@ -87,6 +89,9 @@ const TOTAL_STEPS = 4
 
 // ── Animation ─────────────────────────────────────────────────────────────────
 
+// `dir` is the step direction (+1 forward, -1 back), not text direction. The
+// custom prop passed at the call site already folds in the text direction, so
+// "forward" always slides toward the inline end.
 const slide = {
   enter: (dir: number) => ({ opacity: 0, x: dir * 24, filter: 'blur(3px)' }),
   center: { opacity: 1, x: 0, filter: 'blur(0px)' },
@@ -144,7 +149,7 @@ function StepPills({ current }: { current: number }) {
           transition={{ duration: 0.3, ease: [0.4, 0, 0.2, 1] }}
         />
       ))}
-      <span className="ml-1 text-xs text-gray-400 tabular-nums">
+      <span className="ms-1 text-xs text-gray-400 tabular-nums">
         {current}/{TOTAL_STEPS}
       </span>
     </div>
@@ -278,7 +283,7 @@ function StepUseType({
             type="button"
             onClick={() => onSelect(opt.id)}
             whileTap={{ scale: 0.985 }}
-            className={`w-full h-full text-left px-6 py-6 rounded-2xl transition-all duration-200 cursor-pointer flex flex-col
+            className={`w-full h-full text-start px-6 py-6 rounded-2xl transition-all duration-200 cursor-pointer flex flex-col
               ${selected ? 'bg-gray-900 ring-2 ring-gray-900 shadow-lg shadow-gray-900/20' : 'bg-white nice-shadow hover:shadow-lg hover:shadow-gray-200/60'}`}
           >
             <div className="flex items-start justify-between mb-5">
@@ -602,7 +607,7 @@ function CreateOrgForm({
                   required
                 />
               </Form.Control>
-              <span className="px-4 py-3 bg-gray-50 text-black/25 border-l border-gray-100 shrink-0 text-[13px] font-medium select-none">
+              <span className="px-4 py-3 bg-gray-50 text-black/25 border-s border-gray-100 shrink-0 text-[13px] font-medium select-none">
                 .learnhouse.io
               </span>
             </div>
@@ -629,7 +634,7 @@ function CreateOrgForm({
                   {needsPayment
                     ? t('hub_new.createOrg.submitPaid', { defaultValue: 'Create & continue to payment' })
                     : t('hub_new.createOrg.submit', { defaultValue: 'Create organization' })}
-                  <ArrowRight size={15} />
+                  <ArrowRight size={15} data-dir-flip />
                 </>
               )}
             </motion.button>
@@ -700,7 +705,7 @@ function CreateOrgSuccess({ slug, t }: { slug: string; t: any }) {
           ) : (
             <>
               {t('hub_new.success.goToOrg', { defaultValue: 'Go to organization' })}
-              <ArrowRight size={15} />
+              <ArrowRight size={15} data-dir-flip />
             </>
           )}
         </button>
@@ -718,7 +723,7 @@ function CreateOrgSuccess({ slug, t }: { slug: string; t: any }) {
 // ── Page ──────────────────────────────────────────────────────────────────────
 
 export default function CreateNewOrgPage() {
-  const { t } = useTranslation()
+  const { t, i18n } = useTranslation()
   const router = useRouter()
   const queryClient = useQueryClient()
   const session = useLHSession() as any
@@ -734,6 +739,9 @@ export default function CreateNewOrgPage() {
 
   const [step, setStep] = useState<Step>('use-type')
   const [dir, setDir] = useState<1 | -1>(1)
+  // Fold text direction into the slide axis so a "next" step always moves
+  // toward the inline end, mirroring in Arabic.
+  const slideAxis = dirMultiplier(directionForLanguage(i18n.language))
   const [useType, setUseType] = useState<UseType>(null)
   const [personalGoals, setPersonalGoals] = useState<string[]>([])
   const [orgUsage, setOrgUsage] = useState({ teamSize: '', useCase: '' })
@@ -963,7 +971,7 @@ export default function CreateNewOrgPage() {
               href="/home"
               className="flex items-center gap-1.5 text-sm font-semibold text-black/35 hover:text-black transition-colors w-fit"
             >
-              <ArrowLeft size={14} />
+              <ArrowLeft size={14} data-dir-flip />
               {t('hub_new.topBar.back', { defaultValue: 'Organizations' })}
             </Link>
             <div className="flex justify-center">
@@ -1012,10 +1020,10 @@ export default function CreateNewOrgPage() {
             ) : (
               <>
                 {/* Header */}
-                <AnimatePresence mode="wait" custom={dir}>
+                <AnimatePresence mode="wait" custom={dir * slideAxis}>
                   <motion.div
                     key={`hdr-${step}`}
-                    custom={dir}
+                    custom={dir * slideAxis}
                     variants={slide}
                     initial="enter"
                     animate="center"
@@ -1034,17 +1042,25 @@ export default function CreateNewOrgPage() {
                 </AnimatePresence>
 
                 {/* Body */}
-                <AnimatePresence mode="wait" custom={dir}>
+                <AnimatePresence mode="wait" custom={dir * slideAxis}>
                   <motion.div
                     key={`body-${step}`}
-                    custom={dir}
+                    custom={dir * slideAxis}
                     variants={slide}
                     initial="enter"
                     animate="center"
                     exit="exit"
                     transition={trans}
                   >
-                    {step === 'use-type' && <StepUseType useType={useType} onSelect={setUseType} t={t} />}
+                    {step === 'use-type' && (
+                      <>
+                        <StepUseType useType={useType} onSelect={setUseType} t={t} />
+                        {/* A side path, not a wizard step: creating a real
+                            organization is untouched by it, and the card
+                            renders nothing when the instance has no demo. */}
+                        <DemoEntryCard className="mt-6" />
+                      </>
+                    )}
                     {step === 'usage' && useType === 'personal' && (
                       <StepUsagePersonal goals={personalGoals} onChange={setPersonalGoals} t={t} />
                     )}
@@ -1095,7 +1111,7 @@ export default function CreateNewOrgPage() {
                         onClick={goBack}
                         className="flex items-center gap-1.5 px-4 py-2 text-sm font-medium text-gray-500 hover:text-gray-700 rounded-xl hover:bg-gray-100 transition-colors cursor-pointer"
                       >
-                        <ArrowLeft size={14} />
+                        <ArrowLeft size={14} data-dir-flip />
                         {t('hub_new.navigation.back', { defaultValue: 'Back' })}
                       </button>
                     )}
@@ -1111,7 +1127,7 @@ export default function CreateNewOrgPage() {
                         }`}
                       >
                         {t('hub_new.navigation.continue', { defaultValue: 'Continue' })}
-                        <ArrowRight size={15} />
+                        <ArrowRight size={15} data-dir-flip />
                       </motion.button>
                     )}
                   </div>
@@ -1124,7 +1140,7 @@ export default function CreateNewOrgPage() {
                       onClick={goBack}
                       className="flex items-center gap-1.5 px-4 py-2 text-sm font-medium text-gray-500 hover:text-gray-700 rounded-xl hover:bg-gray-100 transition-colors cursor-pointer"
                     >
-                      <ArrowLeft size={14} />
+                      <ArrowLeft size={14} data-dir-flip />
                       {t('hub_new.navigation.back', { defaultValue: 'Back' })}
                     </button>
                   </div>

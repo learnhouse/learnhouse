@@ -21,6 +21,7 @@ import {
   ListOrdered,
   MousePointerClick,
   Pilcrow,
+  Puzzle,
   RotateCw,
   Sigma,
   Table,
@@ -256,6 +257,17 @@ export const slashCommands: SlashCommandItem[] = [
     keywords: ['quiz', 'question', 'test', 'interactive'],
     command: (editor) => {
       editor.chain().focus().insertContent({ type: 'blockQuiz' }).run()
+    },
+  },
+  {
+    id: 'h5p',
+    title: 'H5P',
+    description: 'Embed interactive H5P content by URL',
+    icon: <Puzzle size={18} />,
+    category: 'interactive',
+    keywords: ['h5p', 'interactive', 'embed', 'lumi', 'moodle', 'hvp', 'activity'],
+    command: (editor) => {
+      editor.chain().focus().insertContent({ type: 'blockH5P' }).run()
     },
   },
   {

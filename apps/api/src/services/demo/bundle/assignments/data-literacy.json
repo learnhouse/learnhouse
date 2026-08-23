@@ -1,0 +1,83 @@
+{
+  "activity_key": "dl-report-critique",
+  "title": "Report critique",
+  "description": "A one-page summary containing several of the problems in this course: a truncated axis, a metric whose definition changed, an average concealing a skew, and a causal claim resting on a coincidence.",
+  "grading_type": "PERCENTAGE",
+  "pass_threshold_percentage": 60,
+  "due_in_days": 14,
+  "published": true,
+  "auto_grading": true,
+  "show_correct_answers": true,
+  "allow_retries": true,
+  "max_retries": 3,
+  "tasks": [
+    {
+      "slug": "dl-t1-reading",
+      "title": "Reading the report",
+      "description": "Three questions about the summary you were given.",
+      "hint": "Ask what is counted, over what period, and what else moved.",
+      "type": "QUIZ",
+      "max_grade_value": 60,
+      "contents": {
+        "questions": [
+          {
+            "questionUUID": "question_dl_t1_q1",
+            "questionText": "Mean order value rose but median order value fell. What is the likely explanation?",
+            "options": [
+              { "optionUUID": "option_dl_t1_q1_a", "text": "A small number of very large orders pulled the mean up", "type": "text", "fileID": "", "assigned_right_answer": true },
+              { "optionUUID": "option_dl_t1_q1_b", "text": "Most customers are spending more per order", "type": "text", "fileID": "", "assigned_right_answer": false },
+              { "optionUUID": "option_dl_t1_q1_c", "text": "The total number of orders increased", "type": "text", "fileID": "", "assigned_right_answer": false }
+            ]
+          },
+          {
+            "questionUUID": "question_dl_t1_q2",
+            "questionText": "A metric jumps sharply between two months. What do you check first?",
+            "options": [
+              { "optionUUID": "option_dl_t1_q2_a", "text": "Whether the definition of the metric changed", "type": "text", "fileID": "", "assigned_right_answer": true },
+              { "optionUUID": "option_dl_t1_q2_b", "text": "Whether the change is statistically significant", "type": "text", "fileID": "", "assigned_right_answer": false }
+            ]
+          },
+          {
+            "questionUUID": "question_dl_t1_q3",
+            "questionText": "Complaints fell in the same month a new process launched. What should you ask?",
+            "options": [
+              { "optionUUID": "option_dl_t1_q3_a", "text": "What else changed in the same period", "type": "text", "fileID": "", "assigned_right_answer": true },
+              { "optionUUID": "option_dl_t1_q3_b", "text": "How to roll the process out more widely", "type": "text", "fileID": "", "assigned_right_answer": false }
+            ]
+          }
+        ]
+      },
+      "submissions": {
+        "correct": { "submissions": [
+          { "questionUUID": "question_dl_t1_q1", "optionUUID": "option_dl_t1_q1_a", "answer": true },
+          { "questionUUID": "question_dl_t1_q2", "optionUUID": "option_dl_t1_q2_a", "answer": true },
+          { "questionUUID": "question_dl_t1_q3", "optionUUID": "option_dl_t1_q3_a", "answer": true }
+        ]},
+        "partial": { "submissions": [
+          { "questionUUID": "question_dl_t1_q1", "optionUUID": "option_dl_t1_q1_a", "answer": true },
+          { "questionUUID": "question_dl_t1_q2", "optionUUID": "option_dl_t1_q2_b", "answer": true },
+          { "questionUUID": "question_dl_t1_q3", "optionUUID": "option_dl_t1_q3_a", "answer": true }
+        ]},
+        "incorrect": { "submissions": [
+          { "questionUUID": "question_dl_t1_q1", "optionUUID": "option_dl_t1_q1_b", "answer": true },
+          { "questionUUID": "question_dl_t1_q2", "optionUUID": "option_dl_t1_q2_b", "answer": true },
+          { "questionUUID": "question_dl_t1_q3", "optionUUID": "option_dl_t1_q3_b", "answer": true }
+        ]}
+      }
+    },
+    {
+      "slug": "dl-t2-absolute-numbers",
+      "title": "The absolute number",
+      "description": "Returns are reported as down 18%, from 61 in the comparison quarter. How many returns were there this quarter?",
+      "hint": "Round to the nearest whole return.",
+      "type": "NUMBER_ANSWER",
+      "max_grade_value": 40,
+      "contents": { "correct_value": 50, "tolerance": 1 },
+      "submissions": {
+        "correct": { "answer": 50 },
+        "partial": { "answer": 51 },
+        "incorrect": { "answer": 18 }
+      }
+    }
+  ]
+}

@@ -30,7 +30,7 @@ jobs:
 
       - uses: oven-sh/setup-bun@v2
         with:
-          bun-version: latest
+          bun-version-file: .bun-version
 
       # setup-bun restores the toolchain, not the packages.
       - name: Cache bun install cache
@@ -55,7 +55,7 @@ jobs:
 
       - uses: oven-sh/setup-bun@v2
         with:
-          bun-version: latest
+          bun-version-file: .bun-version
 
       # setup-bun restores the toolchain, not the packages.
       - name: Cache bun install cache

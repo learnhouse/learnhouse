@@ -4,6 +4,10 @@ from typing import Literal, Optional
 from pydantic import BaseModel
 from dotenv import load_dotenv
 
+# One-shot guard for the missing-credential report below: config is loaded on
+# every request, and repeating the report drowns out every other startup log.
+_LOGGED_MISSING_INTERNAL_KEYS = False
+
 
 class CookieConfig(BaseModel):
     domain: str
@@ -102,6 +106,12 @@ class HostingConfig(BaseModel):
 class MailingConfig(BaseModel):
     email_provider: Literal["resend", "smtp"]
     system_email_address: str
+    # Display name only. The From ADDRESS is always ``system_email_address``:
+    # it is the domain carrying the verified SPF/DKIM records, so making it
+    # configurable would break DKIM alignment and burn a shared sending
+    # reputation. Organizations may override this name per-org; see
+    # ``src/services/email/sender.py``.
+    system_email_sender_name: Optional[str] = "LearnHouse"
     resend_api_key: Optional[str] = None
     smtp_host: Optional[str] = None
     smtp_port: Optional[int] = 587
@@ -146,6 +156,66 @@ class LearnHouseConfig(BaseModel):
     judge0_config: Judge0Config | None
 
 
+def _env_bool(env_value, yaml_value):
+    """Resolve a boolean setting from an env string, falling back to YAML.
+
+    Env vars arrive as strings, and `"false" or yaml_value` evaluates to the
+    string "false" — which is truthy. So `LEARNHOUSE_SELF_HOSTED=false` used to
+    read as True and pin tenancy to "single", collapsing the CORS regex and
+    making the session cookie host-only; `LEARNHOUSE_SSL=false` produced https
+    magic links on a plain-HTTP install. Both failed with no error, and
+    explicitly disabling a flag is the natural way to write it.
+
+    `development_mode` and `saas_mode` already parse correctly above; this is
+    the same logic for the settings that were still using bare `or`.
+    """
+    value = yaml_value if env_value is None or env_value == "" else env_value
+    if value is None or isinstance(value, bool):
+        return value
+    # YAML gives a real bool for `ssl: false` but a string for `ssl: "false"`,
+    # and the quoted form is easy to write by accident. Parse both sides the
+    # same way rather than only fixing the env side.
+    return str(value).strip().lower() in ("true", "1", "yes", "on")
+
+
+_yaml_cache: dict = {}
+
+
+def _load_yaml_config(yaml_path: str) -> dict:
+    """Parse config.yaml, memoised on (path, mtime, size).
+
+    Parsing dominates the cost of building the config — roughly 9ms of a 10ms
+    call, since this function is not otherwise cached and every caller re-reads
+    the file. That was tolerable while config was read at startup, and stopped
+    being tolerable once /instance/info began resolving deployment mode per
+    request.
+
+    Only the file parse is cached. Every environment variable is still read
+    live on each call, so nothing that reads env changes behaviour, and tests
+    that mutate the environment between calls keep working. Editing the file
+    invalidates on mtime/size, which keeps local edit-reload behaviour intact.
+    """
+    try:
+        st = os.stat(yaml_path)
+        key = (yaml_path, st.st_mtime_ns, st.st_size)
+    except OSError:
+        key = None
+
+    if key is not None and key in _yaml_cache:
+        return _yaml_cache[key]
+
+    with open(yaml_path, "r", encoding="utf-8") as f:
+        parsed = yaml.safe_load(f)
+
+    # Defensive: an empty file parses to None.
+    parsed = parsed if parsed is not None else {}
+
+    if key is not None:
+        _yaml_cache.clear()  # only ever one live config file
+        _yaml_cache[key] = parsed
+    return parsed
+
+
 def get_learnhouse_config() -> LearnHouseConfig:
 
     load_dotenv()
@@ -153,13 +223,7 @@ def get_learnhouse_config() -> LearnHouseConfig:
     # Get the YAML file
     yaml_path = os.path.join(os.path.dirname(__file__), "config.yaml")
 
-    # Load the YAML file
-    with open(yaml_path, "r", encoding="utf-8") as f:
-        yaml_config = yaml.safe_load(f)
-    
-    # Ensure yaml_config is not None (defensive programming)
-    if yaml_config is None:
-        yaml_config = {}
+    yaml_config = _load_yaml_config(yaml_path)
 
     # General Config
 
@@ -238,10 +302,10 @@ def get_learnhouse_config() -> LearnHouseConfig:
     contact_email = env_contact_email or yaml_config.get("contact_email")
 
     domain = env_domain or yaml_config.get("hosting_config", {}).get("domain")
-    ssl = env_ssl or yaml_config.get("hosting_config", {}).get("ssl")
+    ssl = _env_bool(env_ssl, yaml_config.get("hosting_config", {}).get("ssl"))
     port = env_port or yaml_config.get("hosting_config", {}).get("port")
-    use_default_org = env_use_default_org or yaml_config.get("hosting_config", {}).get(
-        "use_default_org"
+    use_default_org = _env_bool(
+        env_use_default_org, yaml_config.get("hosting_config", {}).get("use_default_org")
     )
     allowed_origins = env_allowed_origins or yaml_config.get("hosting_config", {}).get(
         "allowed_origins"
@@ -249,8 +313,8 @@ def get_learnhouse_config() -> LearnHouseConfig:
     allowed_regexp = env_allowed_regexp or yaml_config.get("hosting_config", {}).get(
         "allowed_regexp"
     )
-    self_hosted = env_self_hosted or yaml_config.get("hosting_config", {}).get(
-        "self_hosted"
+    self_hosted = _env_bool(
+        env_self_hosted, yaml_config.get("hosting_config", {}).get("self_hosted")
     )
 
     # Tenancy mode — single explicit knob that supersedes the older overlapping
@@ -426,6 +490,7 @@ def get_learnhouse_config() -> LearnHouseConfig:
     env_email_provider = os.environ.get("LEARNHOUSE_EMAIL_PROVIDER")
     env_resend_api_key = os.environ.get("LEARNHOUSE_RESEND_API_KEY")
     env_system_email_address = os.environ.get("LEARNHOUSE_SYSTEM_EMAIL_ADDRESS")
+    env_system_email_sender_name = os.environ.get("LEARNHOUSE_SYSTEM_EMAIL_SENDER_NAME")
     env_smtp_host = os.environ.get("LEARNHOUSE_SMTP_HOST")
     env_smtp_port = os.environ.get("LEARNHOUSE_SMTP_PORT")
     env_smtp_username = os.environ.get("LEARNHOUSE_SMTP_USERNAME")
@@ -441,6 +506,11 @@ def get_learnhouse_config() -> LearnHouseConfig:
     system_email_address = env_system_email_address or yaml_config.get(
         "mailing_config", {}
     ).get("system_email_address")
+    # Defaults to "LearnHouse" so an unset deployment keeps the historical
+    # From name exactly as it was.
+    system_email_sender_name = env_system_email_sender_name or yaml_config.get(
+        "mailing_config", {}
+    ).get("system_email_sender_name", "LearnHouse")
     smtp_host = env_smtp_host or yaml_config.get("mailing_config", {}).get("smtp_host")
     smtp_port = int(env_smtp_port) if env_smtp_port else yaml_config.get("mailing_config", {}).get("smtp_port", 587)
     smtp_username = env_smtp_username or yaml_config.get("mailing_config", {}).get("smtp_username")
@@ -609,18 +679,40 @@ def get_learnhouse_config() -> LearnHouseConfig:
     # control plane (custom domains, plans, internal cron) to the per-tenant
     # backend. Self-hosted EE / OSS deployments don't run that control plane
     # and don't need them, so suppress the warning in those modes.
-    if not development_mode and saas_mode:
+    # Reported ONCE per process, as a single aggregated line. This block used to
+    # warn on every config load, which emitted the same two lines thousands of
+    # times a day and buried the one-shot warnings around them — a disabled
+    # Google audience check sat unnoticed in that noise. One loud line per
+    # process is what actually gets read.
+    global _LOGGED_MISSING_INTERNAL_KEYS
+    if not development_mode and saas_mode and not _LOGGED_MISSING_INTERNAL_KEYS:
+        _LOGGED_MISSING_INTERNAL_KEYS = True
         import logging as _cfg_log
         _log = _cfg_log.getLogger(__name__)
+
+        missing = []
         if not os.environ.get("CLOUD_INTERNAL_KEY"):
-            _log.warning(
-                "CLOUD_INTERNAL_KEY is not set. Internal endpoints "
-                "(custom domain sync, cloud_internal) will reject every request."
+            missing.append(
+                "CLOUD_INTERNAL_KEY (custom domain sync, cloud_internal plan writes)"
             )
         if not os.environ.get("LEARNHOUSE_PLATFORM_API_KEY"):
-            _log.warning(
-                "LEARNHOUSE_PLATFORM_API_KEY is not set. Platform endpoints "
-                "(packs internal_router) will reject every request."
+            missing.append(
+                "LEARNHOUSE_PLATFORM_API_KEY (pack activation, active-user overage billing)"
+            )
+        if not (
+            os.environ.get("LEARNHOUSE_GOOGLE_OAUTH_CLIENT_ID")
+            or os.environ.get("LEARNHOUSE_GOOGLE_CLIENT_ID")
+        ):
+            missing.append(
+                "LEARNHOUSE_GOOGLE_OAUTH_CLIENT_ID (Google OAuth audience "
+                "verification — absent means it is DISABLED, not merely unset)"
+            )
+        if missing:
+            _log.critical(
+                "SaaS deployment is missing %d required credential(s); the "
+                "features behind them fail silently until these are set: %s",
+                len(missing),
+                "; ".join(missing),
             )
 
     # Create LearnHouseConfig object
@@ -642,6 +734,7 @@ def get_learnhouse_config() -> LearnHouseConfig:
         mailing_config=MailingConfig(
             email_provider=email_provider,
             system_email_address=system_email_address,
+            system_email_sender_name=system_email_sender_name,
             resend_api_key=resend_api_key,
             smtp_host=smtp_host,
             smtp_port=smtp_port,

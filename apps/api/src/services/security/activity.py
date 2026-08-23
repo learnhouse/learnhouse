@@ -4,7 +4,17 @@ Best-effort user-activity tracking for active-user billing.
 An "active user" is a member seen on the site on at least 2 distinct UTC
 calendar days in a month. This module records one row per (org, user, day)
 so that count is authoritative. Everything here is best-effort: it must never
-raise into a request path, and it is a no-op outside SaaS mode.
+raise into a request path.
+
+Recording runs on SaaS and on self-hosted enterprise deployments. It used to
+be SaaS-only, on the assumption that active-user counts existed purely for
+overage billing. They are also what an enterprise deployment reports as its
+own usage, and with recording disabled that number was structurally zero on
+every self-hosted install. Plain OSS still skips it — nothing there consumes
+the table, so the write would buy nothing.
+
+The rows never leave the deployment's own database. Only aggregate counts are
+reported, and only by deployments that already report usage.
 """
 
 import logging
@@ -12,10 +22,20 @@ from datetime import date, datetime, timezone
 
 from typing import Optional
 
-from src.security.features_utils.usage import _is_non_saas
 from src.core.redis import get_redis_client
 
 logger = logging.getLogger(__name__)
+
+
+def _activity_tracking_enabled() -> bool:
+    """True on deployments where something actually consumes the activity rows.
+
+    SaaS uses them for overage billing; enterprise reports them as its own
+    usage. Plain OSS has no consumer, so it skips the write entirely.
+    """
+    from src.core.deployment_mode import get_deployment_mode
+
+    return get_deployment_mode() in ('saas', 'ee')
 
 # Cache org slug/uuid -> id for a day; org identity is effectively immutable.
 _ORG_ID_CACHE_TTL = 86400
@@ -116,7 +136,7 @@ async def record_user_activity(
     blockers, which only affect client-side third-party requests.
     """
     try:
-        if _is_non_saas():
+        if not _activity_tracking_enabled():
             return
         if not user_id:
             return

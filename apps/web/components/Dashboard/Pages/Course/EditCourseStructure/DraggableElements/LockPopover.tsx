@@ -184,7 +184,7 @@ export default function LockPopover({
                 type="button"
                 disabled={saving}
                 onClick={() => handleSelect(opt.value)}
-                className={`w-full flex items-start gap-3 p-2.5 rounded-lg text-left transition-colors ${
+                className={`w-full flex items-start gap-3 p-2.5 rounded-lg text-start transition-colors ${
                   selected ? 'bg-gray-50' : 'hover:bg-gray-50'
                 } ${saving ? 'opacity-50' : ''}`}
               >
@@ -251,7 +251,7 @@ export default function LockPopover({
                   <div className="text-[11px] text-gray-500">
                     {t('course.lock.usergroups_add_a_group', 'Add a group')}
                   </div>
-                  <div className="max-h-32 overflow-y-auto space-y-1 pr-0.5">
+                  <div className="max-h-32 overflow-y-auto space-y-1 pe-0.5">
                     {available.map((g) => (
                       <button
                         key={g.usergroup_uuid}

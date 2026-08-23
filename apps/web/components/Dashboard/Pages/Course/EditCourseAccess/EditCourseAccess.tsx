@@ -47,7 +47,7 @@ const AccessCard = React.forwardRef<HTMLDivElement, AccessCardProps>(
                 style={{ minHeight: 180 }}
             >
                 {selected && (
-                    <div className="absolute top-3 right-3 flex items-center gap-1 text-[11px] font-semibold text-indigo-700 bg-indigo-50 border border-indigo-100 rounded-full pl-1 pr-2 py-0.5">
+                    <div className="absolute top-3 end-3 flex items-center gap-1 text-[11px] font-semibold text-indigo-700 bg-indigo-50 border border-indigo-100 rounded-full ps-1 pe-2 py-0.5">
                         <span className="w-4 h-4 rounded-full bg-indigo-600 flex items-center justify-center">
                             <Check size={10} strokeWidth={3.5} className="text-white" />
                         </span>
@@ -148,7 +148,7 @@ function EditCourseAccess(_props: EditCourseAccessProps) {
     return (
         <div>
             <div className="h-6" />
-            <div className="ml-10 mr-10 mx-auto bg-white rounded-xl shadow-xs">
+            <div className="ms-10 me-10 mx-auto bg-white rounded-xl shadow-xs">
 
                 {/* Header — matches OrgUsers header */}
                 <div className="px-6 py-5 border-b border-gray-100">
@@ -307,10 +307,10 @@ function UserGroupsSection({ usergroups }: { usergroups: any[] }) {
                     <table className="w-full">
                         <thead>
                             <tr className="border-b border-gray-100">
-                                <th className="text-left text-xs font-semibold text-gray-500 uppercase tracking-wider px-6 py-3">
+                                <th className="text-start text-xs font-semibold text-gray-500 uppercase tracking-wider px-6 py-3">
                                     {t('dashboard.courses.access.usergroups.table.name')}
                                 </th>
-                                <th className="text-right text-xs font-semibold text-gray-500 uppercase tracking-wider px-6 py-3">
+                                <th className="text-end text-xs font-semibold text-gray-500 uppercase tracking-wider px-6 py-3">
                                     {t('dashboard.courses.access.usergroups.table.actions')}
                                 </th>
                             </tr>
@@ -338,7 +338,7 @@ function UserGroupsSection({ usergroups }: { usergroups: any[] }) {
                                             </div>
                                         </div>
                                     </td>
-                                    <td className="px-6 py-4 text-right">
+                                    <td className="px-6 py-4 text-end">
                                         <ConfirmationModal
                                             confirmationButtonText={t('dashboard.courses.access.usergroups.modals.unlink_button')}
                                             confirmationMessage={t('dashboard.courses.access.usergroups.modals.unlink_message')}

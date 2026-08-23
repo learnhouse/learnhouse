@@ -165,7 +165,7 @@ const AIImagePicker: React.FC<AIImagePickerProps> = ({ onSelect, onSelectFile, o
       disabled={usingKey === key}
       className="px-3 py-1.5 rounded-lg bg-white text-neutral-900 text-sm font-medium flex items-center gap-1.5 nice-shadow disabled:opacity-60"
     >
-      {usingKey === key ? <CircleNotch weight="duotone" size={15} className="animate-spin" /> : <ArrowUpRight weight="duotone" size={15} />}
+      {usingKey === key ? <CircleNotch weight="duotone" size={15} className="animate-spin" /> : <ArrowUpRight weight="duotone" size={15} data-dir-flip />}
       Use
     </button>
   )
@@ -183,7 +183,7 @@ const AIImagePicker: React.FC<AIImagePickerProps> = ({ onSelect, onSelectFile, o
           {/* Prompt composer */}
           <div className="px-5 pt-4 pb-3 space-y-3">
             {refineFrom && (
-              <div className="flex items-center gap-2 text-xs text-neutral-600 bg-neutral-100 rounded-full pl-1.5 pr-2.5 py-1 w-fit">
+              <div className="flex items-center gap-2 text-xs text-neutral-600 bg-neutral-100 rounded-full ps-1.5 pe-2.5 py-1 w-fit">
                 <img src={refineFrom.url} alt="" className="w-6 h-6 rounded-full object-cover" />
                 <span className="font-medium">Refining from this image</span>
                 <button onClick={() => setRefineFrom(null)} className="text-neutral-400 hover:text-neutral-700">
@@ -211,7 +211,7 @@ const AIImagePicker: React.FC<AIImagePickerProps> = ({ onSelect, onSelectFile, o
                 <button
                   onClick={handleGenerate}
                   disabled={generating || !prompt.trim()}
-                  className="ml-auto px-4 py-2 rounded-xl bg-neutral-900 text-white text-sm font-medium flex items-center gap-2 nice-shadow disabled:opacity-40 transition-opacity hover:bg-neutral-800"
+                  className="ms-auto px-4 py-2 rounded-xl bg-neutral-900 text-white text-sm font-medium flex items-center gap-2 nice-shadow disabled:opacity-40 transition-opacity hover:bg-neutral-800"
                 >
                   {generating ? <CircleNotch weight="duotone" size={15} className="animate-spin" /> : <Sparkle weight="duotone" size={15} />}
                   {generating ? 'Generating…' : refineFrom ? 'Refine' : 'Generate'}

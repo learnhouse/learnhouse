@@ -35,7 +35,7 @@ function AdminTopMenu() {
       <div className="h-14" />
       {/* Fixed menu bar */}
       <div
-        className="fixed top-0 left-0 right-0 h-14 bg-black border-b border-white/[0.08] flex items-center text-white px-4 gap-6"
+        className="fixed top-0 start-0 end-0 h-14 bg-black border-b border-white/[0.08] flex items-center text-white px-4 gap-6"
         style={{ zIndex: 'var(--z-overlay)' }}
       >
         {/* Logo */}
@@ -97,7 +97,7 @@ function AdminTopMenu() {
             className="flex items-center gap-1.5 rounded-lg text-red-500 hover:text-red-400 hover:bg-white/[0.08] transition-all px-2 py-1.5"
             title="Sign Out"
           >
-            <SignOut size={16} weight="fill" />
+            <SignOut size={16} weight="fill" data-dir-flip />
             <span className="text-xs font-medium hidden sm:inline">Sign Out</span>
           </button>
         </div>

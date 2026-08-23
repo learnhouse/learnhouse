@@ -79,7 +79,7 @@ export function CourseDetailSkeleton() {
             {/* Chapter heading */}
             <div className="h-4 w-1/3 bg-gray-200 dark:bg-gray-700 rounded animate-pulse" />
             {/* Activities */}
-            <div className="space-y-2 pl-4">
+            <div className="space-y-2 ps-4">
               {Array.from({ length: 3 }).map((_, j) => (
                 <div key={j} className="flex items-center gap-3">
                   <div className="w-4 h-4 rounded bg-gray-200 dark:bg-gray-700 animate-pulse flex-shrink-0" />

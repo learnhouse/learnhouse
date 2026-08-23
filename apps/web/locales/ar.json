@@ -9,7 +9,7 @@
     "assignments": "الواجبات",
     "boards": "اللوحات",
     "payments": "المدفوعات",
-    "playgrounds": "Playgrounds",
+    "playgrounds": "ساحات التجربة",
     "organization": "المنظمة",
     "dashboard": "لوحة التحكم",
     "settings": "الإعدادات",
@@ -118,20 +118,20 @@
           "title": "ميزة قياسية"
         },
         "boards": {
-          "title": "Standard Feature",
-          "description": "Boards is a premium feature available only to organizations on our Standard plan or higher. Upgrade to unlock collaborative boards for real-time brainstorming and planning."
+          "title": "ميزة خطة Standard",
+          "description": "اللوحات ميزة متقدمة متاحة فقط للمؤسسات المشتركة في خطة Standard أو أعلى. قم بالترقية لفتح اللوحات التعاونية للعصف الذهني والتخطيط الآني."
         },
         "playgrounds": {
-          "title": "Standard Feature",
-          "description": "Playgrounds is a premium feature available only to organizations on our Standard plan or higher. Upgrade to create interactive AI-generated experiences for your learners."
+          "title": "ميزة خطة Standard",
+          "description": "ساحات التجربة ميزة متقدمة متاحة فقط للمؤسسات المشتركة في خطة Standard أو أعلى. قم بالترقية لإنشاء تجارب تفاعلية مولّدة بالذكاء الاصطناعي للمتعلمين."
         },
         "scorm": {
-          "title": "Enterprise Feature",
-          "description": "SCORM support is a premium feature available only to organizations on our Enterprise plan. Upgrade to import and deliver SCORM packages alongside your courses."
+          "title": "ميزة خطة Enterprise",
+          "description": "دعم SCORM ميزة متقدمة متاحة فقط للمؤسسات المشتركة في خطة Enterprise. قم بالترقية لاستيراد حزم SCORM وتقديمها إلى جانب دوراتك."
         },
         "webhooks": {
-          "title": "Pro Feature",
-          "description": "Automations is a premium feature available only to organizations on our Pro plan or higher. Upgrade to wire your courses up to webhooks and external integrations."
+          "title": "ميزة خطة Pro",
+          "description": "الأتمتة ميزة متقدمة متاحة فقط للمؤسسات المشتركة في خطة Pro أو أعلى. قم بالترقية لربط دوراتك بالـ webhooks والتكاملات الخارجية."
         },
         "api_access": {
           "title": "ميزة Pro",
@@ -152,7 +152,7 @@
           "payments": "المدفوعات",
           "trail": "تتبع التقدم",
           "boards": "اللوحات",
-          "playgrounds": "Playgrounds",
+          "playgrounds": "ساحات التجربة",
           "library": "مكتبة",
           "folders": "مكتبة"
         },
@@ -209,9 +209,9 @@
     "powered_by": "مدعوم بواسطة",
     "results": "نتيجة",
     "no_content_yet": "لا يوجد محتوى بعد",
-    "other": "Other",
-    "disabled": "Disabled",
-    "store": "Store",
+    "other": "أخرى",
+    "disabled": "معطّل",
+    "store": "المتجر",
     "organizations": "المؤسسات",
     "billing": "الفوترة",
     "create_organization": "إنشاء مؤسسة",
@@ -228,7 +228,15 @@
     "leave_organization_title": "مغادرة المؤسسة؟",
     "leave_organization_desc": "ستفقد إمكانية الوصول إلى {{org}} وستُزال من أعضائها. يمكنك الانضمام مجددًا لاحقًا إذا تلقيت دعوة.",
     "leave_organization_error": "تعذرت مغادرة هذه المؤسسة. يُرجى المحاولة مرة أخرى.",
-    "leaving": "جارٍ المغادرة…"
+    "leaving": "جارٍ المغادرة…",
+    "select": "اختر…",
+    "continue": "متابعة",
+    "dismiss": "إغلاق",
+    "sign_out": "تسجيل الخروج",
+    "move_up": "تحريك لأعلى",
+    "move_down": "تحريك لأسفل",
+    "less": "أقل",
+    "more": "المزيد"
   },
   "banner": {
     "viewing_as_guest": "أنت تتصفح {{name}} كضيف.",
@@ -367,7 +375,31 @@
     "image_title_verify": "تحقّق من بريدك الإلكتروني.",
     "image_subtitle_verify": "خطوة سريعة واحدة لتأمين حسابك والبدء.",
     "turnstile_failed": "فشل التحقق. يرجى المحاولة مرة أخرى.",
-    "resend_verification": "لم تستقبل البريد؟ أعد إرسال البريد الإلكتروني"
+    "resend_verification": "لم تستقبل البريد؟ أعد إرسال البريد الإلكتروني",
+    "no_sign_up_method_available": "قيّدت هذه المؤسسة طرق تسجيل الدخول، لذا لا يمكن إنشاء حسابات هنا. تواصل مع أحد المسؤولين.",
+    "continue_to_dashboard": "المتابعة إلى لوحة التحكم",
+    "mfa_invalid_code": "هذا الرمز غير صحيح. تأكد من ضبط ساعة جهازك تلقائيًا، ثم جرّب الرمز التالي.",
+    "mfa_title": "التحقق بخطوتين",
+    "mfa_subtitle_backup": "أدخل أحد رموز النسخ الاحتياطي التي حفظتها.",
+    "mfa_subtitle": "أدخل الرمز المكوّن من 6 أرقام من تطبيق المصادقة.",
+    "mfa_backup_code": "رمز احتياطي",
+    "mfa_code": "رمز التحقق",
+    "mfa_verify": "تحقّق",
+    "mfa_use_authenticator": "استخدم تطبيق المصادقة بدلًا من ذلك",
+    "mfa_use_backup": "استخدم رمزًا احتياطيًا بدلًا من ذلك",
+    "mfa_back_to_login": "العودة إلى تسجيل الدخول",
+    "magic_title": "تسجيل الدخول برابط",
+    "magic_sent_title": "تحقّق من بريدك الإلكتروني",
+    "magic_sent_body": "إذا كان هناك حساب مرتبط بـ {{email}}، فقد أرسلنا إليه للتو رابطًا آمنًا لتسجيل الدخول. ينتهي الرابط قريبًا، لذا استخدمه في أقرب وقت.",
+    "magic_back_to_login": "العودة إلى تسجيل الدخول",
+    "magic_subtitle": "أدخل بريدك الإلكتروني وسنرسل إليك رابطًا يسجّل دخولك — دون الحاجة إلى كلمة مرور.",
+    "magic_send": "أرسل لي رابط تسجيل الدخول",
+    "magic_use_password": "تسجيل الدخول بكلمة مرور بدلًا من ذلك",
+    "choose_sign_in_method": "اختر طريقة تسجيل الدخول التي تفضّلها.",
+    "no_sign_in_method_available": "قيّدت هذه المؤسسة طرق تسجيل الدخول، ولا تتوفر أي من الطرق المسموح بها هنا. تواصل مع أحد المسؤولين.",
+    "complete_profile": {
+      "title": "أكمل ملفك الشخصي"
+    }
   },
   "verify_email": {
     "title": "تأكيد البريد الإلكتروني",
@@ -385,7 +417,9 @@
     "password_min_length": "كلمة المرور يجب أن تكون 8 رموز على الأقل",
     "username_min_length": "اسم المستخدم يجب أن يكون 4 رموز على الأقل",
     "title_required": "العنوان مطلوب",
-    "content_required": "المحتوى مطلوب"
+    "content_required": "المحتوى مطلوب",
+    "invalid_number": "يجب أن يكون رقمًا",
+    "invalid_option": "اختر أحد الخيارات المتاحة"
   },
   "courses": {
     "my_courses": "دوراتي",
@@ -492,6 +526,7 @@
     "successfully_completed": "لقد أكملت بنجاح",
     "keep_going": "استمر في العمل الجيد! 💪",
     "keep_going_description": "أنت تبلي بلاءً حسناً! أكمل الأنشطة المتبقية للحصول على شهادة الإكمال.",
+    "keep_going_description_no_certificate": "أنت تبلي بلاءً حسناً! أكمل الأنشطة المتبقية لإنهاء الدورة.",
     "making_great_progress": "أنت تحرز تقدماً رائعاً في",
     "continue_learning": "مواصلة التعلم",
     "back_to_course": "العودة للدورة",
@@ -995,7 +1030,13 @@
     "autosave_unsaved": "تغييرات غير محفوظة",
     "autosaved": "تم الحفظ",
     "autosaving": "جارٍ الحفظ…",
-    "save_answers": "حفظ الإجابات"
+    "save_answers": "حفظ الإجابات",
+    "grid_columns_2": "عمودان",
+    "grid_columns_3": "3 أعمدة",
+    "grid_columns_4": "4 أعمدة",
+    "add_card": "إضافة بطاقة",
+    "ungroup_cards": "إلغاء تجميع البطاقات",
+    "group_into_grid": "تجميع في شبكة"
   },
   "assignments": {
     "submit_assignment": "تسليم الواجب",
@@ -1026,7 +1067,18 @@
     },
     "quiz": {
       "correct_answer": "صحيح",
-      "incorrect_answer": "خطأ"
+      "incorrect_answer": "خطأ",
+      "select_one": "اختر إجابة واحدة",
+      "select_all_that_apply": "اختر كل ما ينطبق",
+      "response_type_single": "إجابة واحدة",
+      "response_type_multiple": "إجابات متعددة",
+      "no_correct_option_warning": "لا يوجد خيار صحيح — سيتم تخطي هذا السؤال عند التصحيح",
+      "question_fallback_label": "سؤال",
+      "grading_mode_label": "التصحيح",
+      "grading_all_or_nothing": "الكل أو لا شيء",
+      "grading_partial_credit": "درجة جزئية",
+      "grading_all_or_nothing_hint": "لا يحصل السؤال على درجة إلا إذا طابقت الإجابات المختارة مفتاح الإجابة تمامًا.",
+      "grading_partial_credit_hint": "تحصل أسئلة «اختر كل ما ينطبق» على جزء من الدرجة؛ وكل اختيار خاطئ يلغي اختيارًا صحيحًا."
     },
     "quick_grade": {
       "full": "كاملة",
@@ -1103,7 +1155,7 @@
       "users": "أعضاء",
       "communities": "مجتمعات",
       "discussions": "مناقشات",
-      "playgrounds": "Playgrounds",
+      "playgrounds": "ساحات التجربة",
       "podcasts": "بودكاست"
     }
   },
@@ -1239,7 +1291,8 @@
           "industry": "الصناعة",
           "expertise": "الخبرة",
           "community": "المجتمع"
-        }
+        },
+        "signin_again": "يرجى تسجيل الدخول مرة أخرى"
       },
       "password": {
         "title": "تغيير كلمة المرور",
@@ -1250,7 +1303,8 @@
         "updating": "جاري التحديث...",
         "password_updated": "تم تحديث كلمة المرور بنجاح",
         "relogin_message": "يرجى تسجيل الدخول مرة أخرى باستخدام كلمة المرور الجديدة",
-        "logout_warning": "سيتم تسجيل خروجك بعد تغيير كلمة المرور"
+        "logout_warning": "سيتم تسجيل خروجك بعد تغيير كلمة المرور",
+        "update_failed": "تعذّر تحديث كلمة المرور. يرجى تسجيل الدخول مرة أخرى."
       },
       "profile_builder": {
         "title": "منشئ الملف الشخصي",
@@ -1390,7 +1444,61 @@
         "current_session_title": "الجلسة الحالية",
         "current_session_subtitle": "الجهاز الذي سجلت الدخول منه الآن.",
         "this_device": "هذا الجهاز",
-        "sign_out": "تسجيل الخروج"
+        "sign_out": "تسجيل الخروج",
+        "mfa": {
+          "rate_limited": "محاولات كثيرة جدًا. يرجى الانتظار قليلًا ثم المحاولة مرة أخرى.",
+          "status_error": "تعذّر تحميل إعدادات التحقق بخطوتين.",
+          "copy_failed": "تعذّر النسخ. يرجى تحديد النص ونسخه يدويًا.",
+          "codes_file_header": "رموز النسخ الاحتياطي للتحقق بخطوتين في LearnHouse. يمكن استخدام كل رمز مرة واحدة.",
+          "already_enabled": "التحقق بخطوتين مفعّل بالفعل على هذا الحساب.",
+          "setup_failed": "تعذّر بدء إعداد التحقق بخطوتين. يرجى المحاولة مرة أخرى.",
+          "enabled_toast": "تم تفعيل التحقق بخطوتين.",
+          "invalid_code": "هذا الرمز غير صالح. يرجى المحاولة مرة أخرى.",
+          "regenerate_failed": "تعذّر إنشاء رموز احتياطية جديدة. يرجى المحاولة مرة أخرى.",
+          "disabled_toast": "تم إيقاف التحقق بخطوتين.",
+          "disable_failed": "تعذّر إيقاف التحقق بخطوتين. يرجى المحاولة مرة أخرى.",
+          "retry_in": "يمكنك المحاولة مرة أخرى بعد {{seconds}} ثانية.",
+          "code_label": "رمز المصادقة",
+          "code_hint": "أدخل الرمز المكوّن من 6 أرقام الظاهر حاليًا في تطبيق المصادقة.",
+          "title": "التحقق بخطوتين",
+          "subtitle": "اطلب رمزًا لمرة واحدة من تطبيق المصادقة في كل مرة تسجّل فيها الدخول.",
+          "retry": "إعادة المحاولة",
+          "codes_once_title": "هذه هي المرة الوحيدة التي ستُعرض فيها هذه الرموز.",
+          "codes_once_body": "احفظها في مكان آمن الآن. يمكن استخدام كل رمز مرة واحدة لتسجيل الدخول إذا فقدت الوصول إلى تطبيق المصادقة. بمجرد مغادرة هذه الشاشة لا يمكن استرجاعها — سيتعيّن عليك إنشاء رموز جديدة.",
+          "copied": "تم النسخ",
+          "copy_all": "نسخ الكل",
+          "download": "تنزيل ملف .txt",
+          "codes_ack": "لقد حفظت هذه الرموز في مكان آمن.",
+          "done": "تم",
+          "step_password_title": "أكّد كلمة المرور",
+          "step_password_body": "لأمانك، أدخل كلمة المرور الحالية للمتابعة.",
+          "continue": "متابعة",
+          "step_scan_title": "امسح هذا الرمز بتطبيق المصادقة",
+          "step_scan_body": "افتح تطبيق مصادقة (1Password أو Google Authenticator أو Authy…) وامسح الرمز أدناه.",
+          "qr_alt": "رمز QR لإعداد التحقق بخطوتين",
+          "qr_failed": "تعذّر عرض رمز QR. استخدم مفتاح الإعداد بدلًا من ذلك.",
+          "secret_label": "أو أدخل مفتاح الإعداد هذا يدويًا",
+          "copy_secret": "نسخ مفتاح الإعداد",
+          "secret_hint": "مفيد لتطبيقات المصادقة على سطح المكتب التي لا يمكنها مسح رمز QR.",
+          "step_verify_title": "أكّد الرمز من تطبيقك",
+          "back": "رجوع",
+          "wait_seconds": "انتظر {{seconds}} ثانية",
+          "verify_and_enable": "تحقّق وفعّل",
+          "enabled": "مفعّل",
+          "enabled_since": "منذ {{date}}",
+          "enabled_hint": "يلزم إدخال رمز من تطبيق المصادقة لتسجيل الدخول.",
+          "regenerate": "إنشاء رموز احتياطية جديدة",
+          "disable": "تعطيل",
+          "codes_remaining": "بقي {{remaining}} من الرموز الاحتياطية",
+          "codes_low": "أنشئ مجموعة جديدة حتى لا تفقد الوصول إلى حسابك.",
+          "regenerate_body": "إنشاء مجموعة جديدة يُبطل فورًا جميع رموزك الاحتياطية الحالية.",
+          "regenerate_confirm": "إنشاء رموز جديدة",
+          "disable_warning": "إيقاف هذه الميزة يزيل الخطوة الثانية من تسجيل الدخول ويحذف رموزك الاحتياطية.",
+          "disable_confirm": "إيقاف التحقق بخطوتين",
+          "not_enabled": "غير مفعّل",
+          "not_enabled_hint": "احمِ حسابك باشتراط رمز لمرة واحدة من تطبيق المصادقة عند تسجيل الدخول.",
+          "enable": "تفعيل"
+        }
       }
     },
     "sign_out": "تسجيل الخروج",
@@ -1425,6 +1533,22 @@
     "minutes_ago": "منذ {{count}} دقائق"
   },
   "dashboard": {
+    "nav": {
+      "sidebar_navigation": "شريط التنقل الجانبي للوحة التحكم",
+      "mobile_navigation": "تنقل لوحة التحكم للجوال",
+      "top_navigation": "التنقل العلوي",
+      "collapse_sidebar": "طي الشريط الجانبي",
+      "expand_sidebar": "توسيع الشريط الجانبي",
+      "open_courses_menu": "فتح قائمة الدورات",
+      "open_assignments_menu": "فتح قائمة الواجبات",
+      "open_users_menu": "فتح قائمة المستخدمين",
+      "open_organization_menu": "فتح قائمة المؤسسة",
+      "open_organizations_menu": "فتح قائمة المؤسسات",
+      "open_developers_menu": "فتح قائمة المطورين",
+      "open_language_menu": "فتح قائمة اللغات",
+      "open_help_menu": "فتح قائمة المساعدة",
+      "other": "أخرى"
+    },
     "home": {
       "cards": {
         "courses": {
@@ -1542,7 +1666,7 @@
           "access": "الوصول",
           "contributors": "المساهمون",
           "certification": "الشهادات",
-          "seo": "SEO",
+          "seo": "تحسين محركات البحث",
           "analytics": "التحليلات"
         },
         "access_denied": {
@@ -2091,7 +2215,10 @@
           "publish_all_success": "تم نشر جميع الأنشطة بنجاح",
           "unpublish_all": "إلغاء نشر الكل",
           "unpublish_all_success": "تم إلغاء نشر جميع الأنشطة بنجاح",
-          "publish_all_error": "فشل تحديث بعض الأنشطة"
+          "publish_all_error": "فشل تحديث بعض الأنشطة",
+          "back": "رجوع",
+          "save_name": "حفظ الاسم",
+          "rename_chapter": "إعادة تسمية الفصل"
         },
         "bulk_actions": {
           "selected": "{{count}} محدد",
@@ -2106,7 +2233,9 @@
           "publish_error": "فشل نشر بعض الأنشطة",
           "unpublish_success": "تم إلغاء نشر {{count}} أنشطة بنجاح",
           "unpublish_error": "فشل إلغاء نشر بعض الأنشطة",
-          "partial_error": "فشل تحديث {{failed}} من أصل {{total}} أنشطة"
+          "partial_error": "فشل تحديث {{failed}} من أصل {{total}} أنشطة",
+          "publish_tooltip": "نشر المحدد",
+          "unpublish_tooltip": "إلغاء نشر المحدد"
         },
         "chapter_element": {
           "chapter_name_placeholder": "اسم الفصل"
@@ -2126,7 +2255,7 @@
             "dynamic_page": "صفحة ديناميكية",
             "scorm": "Scorm",
             "markdown": "Markdown",
-            "embed": "Embed",
+            "embed": "تضمين",
             "custom": "مخصص",
             "resource": "مورد"
           },
@@ -2279,8 +2408,8 @@
           "domains": "النطاقات",
           "seo": "تحسين محركات البحث",
           "automations": "الأتمتة",
-          "api": "API Access",
-          "menu": "Menu",
+          "api": "الوصول عبر API",
+          "menu": "القائمة",
           "danger": "منطقة الخطر"
         },
         "pages": {
@@ -2321,16 +2450,19 @@
             "title": "النطاقات المخصصة"
           },
           "api": {
-            "title": "API Access",
-            "subtitle": "Manage API tokens and programmatic access"
+            "title": "الوصول عبر API",
+            "subtitle": "إدارة رموز API والوصول البرمجي"
           },
           "menu": {
-            "title": "Public menu",
-            "subtitle": "Choose and order the links shown in your public navigation"
+            "title": "القائمة العامة",
+            "subtitle": "اختر ترتيب الروابط الظاهرة في التنقل العام"
           },
           "danger": {
             "title": "منطقة الخطر",
             "subtitle": "إجراءات لا يمكن عكسها وضارة لهذه المنظمة"
+          },
+          "seo": {
+            "subtitle": "إدارة إعدادات تحسين محركات البحث"
           }
         },
         "name": "اسم المنظمة",
@@ -2349,6 +2481,9 @@
         "footer_text": "نص التذييل",
         "footer_text_placeholder": "أدخل نص التذييل...",
         "footer_text_desc": "نص مخصص يظهر في أسفل صفحات منظمتك",
+        "email_sender_name": "اسم مُرسِل البريد الإلكتروني",
+        "email_sender_name_placeholder": "اسم منظمتك",
+        "email_sender_name_desc": "الاسم الذي يراه المستلمون في رسائل البريد الإلكتروني المُرسَلة لهذه المنظمة. الاسم وحده هو ما يتغير — أما عنوان الإرسال فيبقى عنوان المنصة، وهذا ما يُبقي هذه الرسائل مجتازة لفحوصات SPF و DKIM. اتركه فارغًا لاستخدام الاسم الافتراضي للمنصة.",
         "default_language": "اللغة الافتراضية",
         "default_language_desc": "اللغة التي يراها الزوار الجدد افتراضيًا واللغة المستخدمة للرسائل المُرسَلة باسم هذه المؤسسة. لا يزال بإمكان الأعضاء تغيير لغة واجهتهم.",
         "watermark_desc": "إظهار علامة LearnHouse المائية على صفحات منظمتك",
@@ -2493,11 +2628,11 @@
           "save_success": "تم تحديث إعدادات الذكاء الاصطناعي بنجاح",
           "save_error": "فشل تحديث إعدادات الذكاء الاصطناعي"
         },
-        "ai_copilot": "AI Copilot",
-        "ai_copilot_description": "Let learners ask questions about course content. Uses indexed material to provide grounded answers with source citations.",
-        "feature_editor_description": "AI-powered content editing assistance for course creators.",
-        "feature_activity_description": "AI assistant available within activities to help learners.",
-        "always_on": "Always on"
+        "ai_copilot": "مساعد الذكاء الاصطناعي",
+        "ai_copilot_description": "يتيح للمتعلمين طرح أسئلة حول محتوى الدورة. يعتمد على المواد المفهرسة لتقديم إجابات موثّقة مع ذكر المصادر.",
+        "feature_editor_description": "مساعدة تحرير المحتوى بالذكاء الاصطناعي لمنشئي الدورات.",
+        "feature_activity_description": "مساعد ذكاء اصطناعي متاح داخل الأنشطة لمساعدة المتعلمين.",
+        "always_on": "مفعّل دائمًا"
       },
       "features": {
         "title": "إعدادات الميزات",
@@ -2522,12 +2657,12 @@
             "title": "البودكاست"
           },
           "boards": {
-            "title": "Boards",
-            "description": "Create collaborative boards with lists and cards for project management"
+            "title": "اللوحات",
+            "description": "أنشئ لوحات تعاونية بقوائم وبطاقات لإدارة المشاريع"
           },
           "playgrounds": {
-            "title": "Playgrounds",
-            "description": "Create interactive AI-generated experiences for your learners"
+            "title": "ساحات التجربة",
+            "description": "أنشئ تجارب تفاعلية مولّدة بالذكاء الاصطناعي للمتعلمين"
           }
         },
         "toasts": {
@@ -2608,7 +2743,7 @@
         "select_section": "اختر قسماً لتعديله أو أضف قسماً جديداً",
         "section_types": {
           "hero": {
-            "label": "Hero",
+            "label": "القسم الرئيسي",
             "description": "أضف قسم Hero مع عنوان ونداء للعمل"
           },
           "text_and_image": {
@@ -2746,7 +2881,7 @@
           "select": "اختر"
         },
         "org_id_not_found": "لم يتم العثور على معرف المنظمة",
-        "unknown_section_type": "Unknown section type"
+        "unknown_section_type": "نوع قسم غير معروف"
       },
       "theme": {
         "primary_color": "اللون الأساسي",
@@ -2801,36 +2936,36 @@
         "copied_to_clipboard": "تم النسخ إلى الحافظة",
         "save_failed": "فشل حفظ إعدادات SEO",
         "org_seo": {
-          "quick_links": "Quick Links",
-          "important_seo_urls": "Important SEO URLs for your organization",
-          "sitemap": "Sitemap:",
-          "robots_txt": "Robots.txt:",
-          "default_meta_tags": "Default Meta Tags",
-          "set_default_metadata": "Set default metadata for all pages",
-          "title_suffix": "Title Suffix",
-          "title_suffix_hint": "Appended to all page titles, e.g. \" | My Academy\"",
-          "default_description": "Default Description",
-          "default_description_hint": "Fallback description when a page has no specific one",
-          "social_open_graph": "Social & Open Graph",
-          "social_open_graph_hint": "Control how your pages appear when shared on social media",
-          "default_og_image": "Default OG Image",
-          "default_og_image_hint": "Default sharing image for social media (1200x630 recommended)",
-          "twitter_handle": "Twitter Handle",
-          "twitter_handle_hint": "Shown on Twitter cards as the site account",
-          "search_engine_verification": "Search Engine Verification",
-          "search_engine_verification_hint": "Verify ownership with search engines",
+          "quick_links": "روابط سريعة",
+          "important_seo_urls": "روابط مهمة لتحسين محركات البحث في مؤسستك",
+          "sitemap": "خريطة الموقع:",
+          "robots_txt": "ملف Robots.txt:",
+          "default_meta_tags": "وسوم Meta الافتراضية",
+          "set_default_metadata": "حدّد البيانات الوصفية الافتراضية لجميع الصفحات",
+          "title_suffix": "لاحقة العنوان",
+          "title_suffix_hint": "تُضاف إلى عناوين جميع الصفحات، مثل \" | أكاديميتي\"",
+          "default_description": "الوصف الافتراضي",
+          "default_description_hint": "وصف احتياطي يُستخدم عندما لا يكون للصفحة وصف خاص",
+          "social_open_graph": "الشبكات الاجتماعية وOpen Graph",
+          "social_open_graph_hint": "تحكّم في شكل صفحاتك عند مشاركتها على الشبكات الاجتماعية",
+          "default_og_image": "صورة Open Graph الافتراضية",
+          "default_og_image_hint": "صورة المشاركة الافتراضية للشبكات الاجتماعية (يُوصى بمقاس 1200×630)",
+          "twitter_handle": "حساب Twitter",
+          "twitter_handle_hint": "يظهر في بطاقات Twitter كحساب الموقع",
+          "search_engine_verification": "التحقق من محركات البحث",
+          "search_engine_verification_hint": "أثبت ملكية الموقع لدى محركات البحث",
           "google_search_console": "Google Search Console",
-          "google_search_console_hint": "Verification code from Google Search Console",
-          "indexing_controls": "Indexing Controls",
-          "indexing_controls_hint": "Control which pages search engines can index",
-          "hide_communities": "Hide Communities",
-          "hide_communities_hint": "Hide community pages from search engines"
+          "google_search_console_hint": "رمز التحقق من Google Search Console",
+          "indexing_controls": "التحكم في الفهرسة",
+          "indexing_controls_hint": "تحكّم في الصفحات التي يمكن لمحركات البحث فهرستها",
+          "hide_communities": "إخفاء المجتمعات",
+          "hide_communities_hint": "إخفاء صفحات المجتمعات عن محركات البحث"
         }
       },
       "automations": {
-        "webhooks_title": "Webhooks",
-        "webhooks_subtitle": "Send real-time event notifications to external services like Make.com, n8n, or your own API",
-        "webhooks_description": "Webhook endpoints receive HTTP POST requests when events happen in your organization."
+        "webhooks_title": "الـ Webhooks",
+        "webhooks_subtitle": "أرسل إشعارات فورية بالأحداث إلى خدمات خارجية مثل Make.com أو n8n أو واجهة API خاصة بك",
+        "webhooks_description": "تتلقى نقاط الـ webhook طلبات HTTP POST عند وقوع أحداث في مؤسستك."
       },
       "domains": {
         "domain_required": "النطاق مطلوب",
@@ -2864,100 +2999,176 @@
         "verify_domain_desc": "أضف سجلات DNS التالية لدى مزود النطاق الخاص بك للتحقق من الملكية.",
         "issuer": "المُصدر",
         "expires": "ينتهي",
-        "title": "Custom Domains",
-        "subtitle": "Configure custom domains to access your organization",
-        "empty_description": "Add your own domain to provide a branded experience for your learners.",
-        "add_domain": "Add Domain",
-        "domain_name": "Domain Name",
-        "enter_domain": "Enter your domain",
-        "verify": "Verify",
-        "verify_domain": "Verify Domain",
-        "verifying": "Verifying...",
-        "verify_dns": "Verify DNS",
-        "remove": "Remove",
-        "pending": "Pending",
-        "active": "Active",
-        "failed": "Failed",
-        "ssl_active": "SSL Active",
-        "failed_add": "Failed to add domain",
-        "failed_delete": "Failed to delete domain",
-        "failed_verify": "Failed to verify domain",
-        "verifying_domain": "Verifying domain...",
-        "domain_verified": "Domain verified successfully",
-        "domain_added": "Domain added",
-        "domain_removed": "Domain removed",
-        "no_domains_yet": "No custom domains yet",
-        "add_first_domain": "Add your first domain to get started",
-        "add_custom_domain": "Add Custom Domain",
-        "add_custom_domain_desc": "Enter the domain you want to use for your organization.",
-        "domain_label": "Domain",
-        "domain_hint": "Enter a domain or subdomain (e.g., learn.mycompany.com or academy.example.org)"
+        "title": "النطاقات المخصّصة",
+        "subtitle": "اضبط نطاقات مخصّصة للوصول إلى مؤسستك",
+        "empty_description": "أضف نطاقك الخاص لتوفير تجربة تحمل هويتك للمتعلمين.",
+        "add_domain": "إضافة نطاق",
+        "domain_name": "اسم النطاق",
+        "enter_domain": "أدخل نطاقك",
+        "verify": "تحقّق",
+        "verify_domain": "التحقق من النطاق",
+        "verifying": "جارٍ التحقق...",
+        "verify_dns": "التحقق من DNS",
+        "remove": "إزالة",
+        "pending": "قيد الانتظار",
+        "active": "نشط",
+        "failed": "فشل",
+        "ssl_active": "SSL نشط",
+        "failed_add": "فشل في إضافة النطاق",
+        "failed_delete": "فشل في حذف النطاق",
+        "failed_verify": "فشل في التحقق من النطاق",
+        "verifying_domain": "جارٍ التحقق من النطاق...",
+        "domain_verified": "تم التحقق من النطاق بنجاح",
+        "domain_added": "تمت إضافة النطاق",
+        "domain_removed": "تمت إزالة النطاق",
+        "no_domains_yet": "لا توجد نطاقات مخصّصة بعد",
+        "add_first_domain": "أضف نطاقك الأول للبدء",
+        "add_custom_domain": "إضافة نطاق مخصّص",
+        "add_custom_domain_desc": "أدخل النطاق الذي تريد استخدامه لمؤسستك.",
+        "domain_label": "النطاق",
+        "domain_hint": "أدخل نطاقًا أو نطاقًا فرعيًا (مثل learn.mycompany.com أو academy.example.org)"
       },
       "api_access": {
-        "title": "API Access",
-        "api_tokens": "API Tokens",
-        "docs_playground": "Documentation & Playground",
-        "something_not_working": "Something not working as expected?",
-        "tokens_description": "API tokens allow external applications to access your organization's data securely.",
-        "create_token": "Create Token",
-        "no_tokens_yet": "No API tokens yet",
-        "create_first_token": "Create your first token to get started",
-        "create_api_token": "Create API Token",
-        "token_name": "Token Name *",
-        "expires": "Expires",
-        "never": "Never",
-        "revoked": "Revoked",
-        "revoke": "Revoke",
-        "api_docs_title": "API Documentation & Playground",
-        "create_token_desc": "Create a new API token for programmatic access. The token will only be shown once.",
-        "token_name_label": "Token Name *",
-        "description_label": "Description",
-        "expiration_label": "Expiration Date (optional)",
-        "expiration_hint": "Leave empty for a token that never expires",
-        "permissions_label": "Permissions",
-        "read_only": "Read Only",
-        "full_access": "Full Access",
-        "custom": "Custom",
-        "cancel": "Cancel",
-        "save_token_warning": "Save your token now!",
-        "save_token_hint": "This is the only time you'll see this token. Copy it and store it securely.",
-        "your_api_token": "Your API Token",
-        "done": "Done"
+        "title": "الوصول عبر API",
+        "api_tokens": "رموز API",
+        "docs_playground": "التوثيق وساحة التجربة",
+        "something_not_working": "هل هناك شيء لا يعمل كما هو متوقع؟",
+        "tokens_description": "تتيح رموز API للتطبيقات الخارجية الوصول إلى بيانات مؤسستك بشكل آمن.",
+        "create_token": "إنشاء رمز",
+        "no_tokens_yet": "لا توجد رموز API بعد",
+        "create_first_token": "أنشئ رمزك الأول للبدء",
+        "create_api_token": "إنشاء رمز API",
+        "token_name": "اسم الرمز *",
+        "expires": "تاريخ الانتهاء",
+        "never": "أبدًا",
+        "revoked": "مُلغى",
+        "revoke": "إلغاء",
+        "api_docs_title": "توثيق API وساحة التجربة",
+        "create_token_desc": "أنشئ رمز API جديدًا للوصول البرمجي. سيُعرض الرمز مرة واحدة فقط.",
+        "token_name_label": "اسم الرمز *",
+        "description_label": "الوصف",
+        "expiration_label": "تاريخ الانتهاء (اختياري)",
+        "expiration_hint": "اتركه فارغًا لرمز لا ينتهي أبدًا",
+        "permissions_label": "الأذونات",
+        "read_only": "قراءة فقط",
+        "full_access": "وصول كامل",
+        "custom": "مخصّص",
+        "cancel": "إلغاء",
+        "save_token_warning": "احفظ رمزك الآن!",
+        "save_token_hint": "هذه هي المرة الوحيدة التي سيظهر فيها هذا الرمز. انسخه واحفظه في مكان آمن.",
+        "your_api_token": "رمز API الخاص بك",
+        "done": "تم"
       },
       "usage": {
-        "plan_resource_usage": "Plan & Resource Usage",
-        "courses": "Courses",
-        "members_label": "Members",
-        "admin_seats": "Admin Seats",
-        "unlimited": "Unlimited",
-        "ai_credits": "AI Credits",
-        "credit_usage": "Credit Usage",
-        "base_credits": "Base Credits",
-        "purchased": "Purchased",
-        "used": "Used",
-        "remaining": "Remaining"
+        "plan_resource_usage": "الخطة واستهلاك الموارد",
+        "courses": "الدورات",
+        "members_label": "الأعضاء",
+        "admin_seats": "مقاعد المشرفين",
+        "unlimited": "غير محدود",
+        "ai_credits": "أرصدة الذكاء الاصطناعي",
+        "credit_usage": "استهلاك الأرصدة",
+        "base_credits": "الأرصدة الأساسية",
+        "purchased": "المشتراة",
+        "used": "المستخدمة",
+        "remaining": "المتبقية",
+        "upsell": {
+          "title": "أنجز المزيد مع خطة أعلى",
+          "subtitle": "قم بالترقية لرفع حدودك وفتح المزيد من الميزات.",
+          "popular": "الأكثر شيوعًا",
+          "compare": "قارن جميع الخطط"
+        }
       },
       "general": {
         "validation": {
-          "short_description_required": "Short description is required",
-          "short_description_max": "Short description must be 100 characters or less",
-          "about_max": "About text must be 400 characters or less",
-          "label_required": "Organization label is required"
+          "short_description_required": "الوصف المختصر مطلوب",
+          "short_description_max": "يجب ألا يتجاوز الوصف المختصر 100 حرف",
+          "about_max": "يجب ألا يتجاوز نص «نبذة عنا» 400 حرف",
+          "label_required": "اسم المؤسسة مطلوب"
         }
       },
       "menu": {
-        "title": "Public navigation",
-        "subtitle": "Toggle, reorder, rename links and add your own. Links only appear if the related feature is on your plan and enabled.",
-        "save": "Save changes",
-        "saving": "Saving menu…",
-        "saved": "Menu updated",
-        "error": "Couldn't update the menu",
-        "add_custom": "Add a custom link",
-        "add": "Add",
-        "label_placeholder": "Label",
-        "custom_required": "A label and a URL are required",
-        "plan_locked": "Requires {{plan}} plan",
-        "feature_off": "Feature is off"
+        "title": "التنقل العام",
+        "subtitle": "فعّل الروابط وأعد ترتيبها وسمّها، وأضف روابطك الخاصة. تظهر الروابط فقط إذا كانت الميزة المرتبطة بها ضمن خطتك ومفعّلة.",
+        "save": "حفظ التغييرات",
+        "saving": "جارٍ حفظ القائمة…",
+        "saved": "تم تحديث القائمة",
+        "error": "تعذّر تحديث القائمة",
+        "add_custom": "إضافة رابط مخصّص",
+        "add": "إضافة",
+        "label_placeholder": "التسمية",
+        "custom_required": "التسمية والرابط مطلوبان",
+        "plan_locked": "يتطلب خطة {{plan}}",
+        "feature_off": "الميزة معطّلة"
+      },
+      "danger_zone": {
+        "delete_org_tooltip": "حذف المؤسسة نهائيًا"
+      },
+      "security": {
+        "saving": "جارٍ حفظ سياسة الأمان…",
+        "save_error": "تعذّر حفظ سياسة الأمان.",
+        "save_success": "تم تحديث سياسة الأمان",
+        "admin_mfa_first": "فعّل التحقق بخطوتين على حسابك قبل اشتراطه على المؤسسة.",
+        "admin_mfa_first_why": "وإلا فستمنعك السياسة من الدخول إلى مؤسستك بمجرد حفظها — ولن يبقى أي مسؤول قادر على إيقافها.",
+        "admin_mfa_first_cta": "إعداد التحقق بخطوتين على حسابك",
+        "not_admin_title": "ليس لديك صلاحية الوصول إلى هذا الإعداد",
+        "not_admin_body": "يمكن لمسؤولي المؤسسة فقط عرض شرط التحقق بخطوتين أو تغييره.",
+        "read_only": "يمكنك مراجعة هذه الصفحة، لكن لا يمكن تغيير السياسة إلا لمسؤول المؤسسة.",
+        "methods_title": "طرق تسجيل الدخول المسموح بها",
+        "methods_description": "اختر الطرق المسموح بها لأعضاء هذه المؤسسة لتسجيل الدخول. اترك جميع الطرق محددة لإبقاء تسجيل الدخول دون قيود.",
+        "methods_empty_warning": "من دون تحديد أي طريقة، لن يتمكن أحد من تسجيل الدخول إلى هذه المؤسسة. اختر طريقة واحدة على الأقل.",
+        "methods_effect": "تختفي الطرق غير المحددة من صفحة تسجيل الدخول لهذه المؤسسة، ويُطلب من الأعضاء الذين سجّلوا الدخول بإحداها تسجيل الدخول مجددًا بطريقة مسموح بها.",
+        "session_sharing_label": "السماح بمشاركة الجلسات مع learnhouse.io",
+        "session_sharing_hint": "عند الإيقاف، لن يُدخل تسجيل الدخول عبر learnhouse.io الأعضاء إلى هذه المؤسسة — عليهم تسجيل الدخول مجددًا من صفحة تسجيل الدخول الخاصة بها بطريقة مسموح بها.",
+        "saving_short": "جارٍ الحفظ…",
+        "save": "حفظ التغييرات",
+        "cancel": "إلغاء",
+        "load_error": "تعذّر تحميل حالة التحقق بخطوتين في مؤسستك.",
+        "reset_error": "تعذّر إعادة تعيين التحقق بخطوتين لهذا العضو.",
+        "load_error_title": "حدث خطأ ما",
+        "retry": "إعادة المحاولة",
+        "subtitle": "اشترط التحقق بخطوتين على جميع أعضاء هذه المؤسسة.",
+        "compliance_title": "تغطية التحقق بخطوتين",
+        "compliance_count": "{{enabled}} من {{total}} عضوًا فعّلوا التحقق بخطوتين",
+        "refresh": "تحديث",
+        "stat_enrolled": "مسجّلون",
+        "stat_exempt": "مستثنون (تسجيل دخول خارجي)",
+        "stat_blocked": "سيتم حظرهم",
+        "blocked_hint_active": "يفقد هؤلاء الأعضاء الوصول إلى هذه المؤسسة عند انتهاء مهلتهم، ما لم يسجّلوا.",
+        "members_title": "الأعضاء",
+        "members_sorted": "غير المسجّلين أولًا",
+        "members_empty": "لا يوجد أعضاء في هذه المؤسسة بعد.",
+        "you": "أنت",
+        "badge_enrolled": "مسجّل",
+        "badge_exempt": "مستثنى — {{method}}",
+        "badge_not_enrolled": "غير مسجّل",
+        "reset_hint": "امسح التحقق بخطوتين لهذا العضو ليتمكن من إعداده من جديد",
+        "resetting": "جارٍ إعادة التعيين…",
+        "reset_confirm": "تأكيد إعادة التعيين؟",
+        "reset_2fa": "إعادة تعيين التحقق بخطوتين",
+        "show_less": "عرض أقل",
+        "show_all": "عرض جميع الأعضاء ({{count}})",
+        "policy_title": "اشتراط التحقق بخطوتين",
+        "policy_description": "يُمنع الأعضاء الذين لا يملكون عامل تحقق ثانٍ من هذه المؤسسة بمجرد انتهاء مهلتهم. يحتفظون بحسابهم وبأي مؤسسة أخرى ينتمون إليها، ويستعيدون الوصول فور تسجيلهم.",
+        "active_since": "السياسة نشطة منذ {{date}}",
+        "active_no_date": "السياسة نشطة",
+        "no_restart_note": "حفظ التغييرات على سياسة نشطة بالفعل لا يعيد تشغيل مهلة أي شخص — تبقى المواعيد النهائية القائمة مرتبطة بالتاريخ أعلاه. تُعاد المهلة فقط إذا أوقفت الاشتراط ثم أعدت تفعيله.",
+        "grace_label": "المهلة",
+        "grace_immediately": "فورًا",
+        "grace_days": "{{count}} يومًا",
+        "grace_hint_immediate": "يُحظر الأعضاء الذين لا يملكون تحققًا بخطوتين فور حفظ السياسة.",
+        "grace_hint_days": "يحصل الأعضاء على {{count}} يومًا للتسجيل قبل حظرهم. ويحصل الأعضاء الجدد على المهلة نفسها من يوم انضمامهم.",
+        "exempt_label": "استثناء المستخدمين الذين يسجّلون الدخول عبر Google أو SSO",
+        "exempt_hint": "مزوّد الهوية لديهم يتولى المصادقة متعددة العوامل بالفعل، لذا فإن طلب عامل ثانٍ هنا لا يضيف شيئًا.",
+        "self_blocking": "انقضى الموعد النهائي الخاص بك. سجّل الآن للحفاظ على وصولك إلى هذه المؤسسة.",
+        "self_days_left": "بقي لديك {{count}} يومًا للتسجيل في التحقق بخطوتين بنفسك.",
+        "confirm_title": "اشتراط التحقق بخطوتين على الجميع؟",
+        "confirm_none": "جميع أعضاء هذه المؤسسة إما فعّلوا التحقق بخطوتين أو مستثنون. لن يفقد أحد الوصول.",
+        "confirm_immediate": "سيفقد {{count}} من {{total}} عضوًا الوصول إلى هذه المؤسسة فورًا بمجرد الحفظ.",
+        "confirm_deadline": "سيفقد {{count}} من {{total}} عضوًا الوصول إلى هذه المؤسسة في {{date}} ما لم يفعّلوا التحقق بخطوتين قبل ذلك.",
+        "confirm_list_title": "من سيتأثر",
+        "confirm_exempt_note": "{{count}} عضوًا مستثنون لأنهم يسجّلون الدخول عبر مزوّد هوية خارجي.",
+        "confirm_reversible": "هذا الإجراء قابل للتراجع: إيقاف الاشتراط يعيد الوصول فورًا.",
+        "confirm_button": "نعم، اشترط التحقق بخطوتين"
       }
     },
     "users": {
@@ -2968,7 +3179,10 @@
           "roles": "الأدوار",
           "signups": "التسجيلات وأكواد الدعوة",
           "add": "دعوة أعضاء",
-          "audit_logs": "سجلات التدقيق"
+          "audit_logs": "سجلات التدقيق",
+          "analytics": "التحليلات",
+          "sign_in": "تسجيل الدخول",
+          "two_factor": "التحقق بخطوتين"
         },
         "pages": {
           "users": {
@@ -2994,6 +3208,18 @@
           "audit_logs": {
             "title": "سجلات التدقيق",
             "subtitle": "تتبع وراقب كل الأنشطة داخل منظمتك"
+          },
+          "analytics": {
+            "title": "تحليلات الطلاب",
+            "subtitle": "سجل كامل وقابل للتصدير لنشاط التعلم لكل طالب"
+          },
+          "two_factor": {
+            "title": "التحقق بخطوتين",
+            "subtitle": "اشترط التحقق بخطوتين على أعضاء هذه المؤسسة"
+          },
+          "sign_in": {
+            "title": "تسجيل الدخول",
+            "subtitle": "اختر الطرق المسموح بها لأعضاء هذه المؤسسة لتسجيل الدخول"
           }
         },
         "mobile": {
@@ -3014,19 +3240,143 @@
         "failed_load": "فشل تحميل ملف الطالب.",
         "back_to_students": "العودة إلى الطلاب",
         "no_behavioral": "لا توجد بيانات سلوكية (قد لا تكون التحليلات مُهيأة لهذه الفترة).",
-        "ranges": { "d30": "30 يومًا", "d90": "90 يومًا", "y1": "سنة واحدة" },
-        "kpi": { "courses": "الدورات", "completed": "{{count}} مكتملة", "avg_progress": "متوسط التقدم", "time_spent": "الوقت المستغرق", "assignments": "الواجبات", "avg_grade": "متوسط {{grade}}", "certificates": "الشهادات", "connections": "الاتصالات", "last": "آخر {{date}}" },
-        "tabs": { "connections": "الاتصالات", "courses": "الدورات", "assignments": "الواجبات", "code": "البرمجة", "community": "المجتمع", "certificates": "الشهادات", "behavior": "السلوك" },
-        "identity": { "verified": "مُوثَّق", "unverified": "غير مُوثَّق", "via": "عبر {{method}}" },
-        "connections": { "title": "الاتصالات", "empty": "لا توجد اتصالات مسجلة بعد." },
-        "courses": { "title": "تقدم الدورة", "empty": "غير مسجل في أي دورة.", "activities": "{{done}}/{{total}} نشاط", "enrolled": "مُسجَّل في {{date}}" },
-        "assignments": { "title": "الواجبات", "empty": "لا توجد واجبات مُقدَّمة.", "attempt": "المحاولة {{number}}", "feedback": "الملاحظات:" },
-        "code": { "title": "تمارين البرمجة", "empty": "لا توجد أكواد مُقدَّمة.", "activity": "النشاط", "result": "النتيجة", "tests": "الاختبارات", "time": "الوقت", "when": "متى", "passed": "ناجح", "failed": "فاشل" },
-        "community": { "title": "المشاركة المجتمعية", "empty": "لا يوجد نشاط مجتمعي.", "discussions": "المناقشات", "comments": "التعليقات" },
-        "certificates": { "title": "الشهادات المكتسبة", "empty": "لم يتم اكتساب أي شهادات." },
-        "behavior": { "title": "التحليلات السلوكية", "time_by_course": "الوقت المستغرق حسب الدورة", "searches": "عمليات البحث" },
-        "status": { "completed": "مكتمل", "in_progress": "قيد التقدم", "paused": "متوقف مؤقتًا", "cancelled": "مُلغى", "graded": "مُقيَّم", "submitted": "مُقدَّم", "pending": "قيد الانتظار", "late": "متأخر", "not_submitted": "لم يُقدَّم" },
-        "comparison": { "student": "الطالب", "enrolled": "مُسجَّل", "completed": "مكتمل", "certificates": "الشهادات", "last_connection": "آخر اتصال", "view": "عرض" }
+        "ranges": {
+          "d30": "30 يومًا",
+          "d90": "90 يومًا",
+          "y1": "سنة واحدة"
+        },
+        "kpi": {
+          "courses": "الدورات",
+          "completed": "{{count}} مكتملة",
+          "avg_progress": "متوسط التقدم",
+          "time_spent": "الوقت المستغرق",
+          "assignments": "الواجبات",
+          "avg_grade": "متوسط {{grade}}",
+          "certificates": "الشهادات",
+          "connections": "الاتصالات",
+          "last": "آخر {{date}}"
+        },
+        "tabs": {
+          "connections": "الاتصالات",
+          "courses": "الدورات",
+          "assignments": "الواجبات",
+          "code": "البرمجة",
+          "community": "المجتمع",
+          "certificates": "الشهادات",
+          "behavior": "السلوك"
+        },
+        "identity": {
+          "verified": "مُوثَّق",
+          "unverified": "غير مُوثَّق",
+          "via": "عبر {{method}}"
+        },
+        "connections": {
+          "title": "الاتصالات",
+          "empty": "لا توجد اتصالات مسجلة بعد.",
+          "device": "الجهاز",
+          "raw_agent": "وكيل المستخدم الخام",
+          "unknown_device": "جهاز غير معروف"
+        },
+        "courses": {
+          "title": "تقدم الدورة",
+          "empty": "غير مسجل في أي دورة.",
+          "activities": "{{done}}/{{total}} نشاط",
+          "enrolled": "مُسجَّل في {{date}}"
+        },
+        "assignments": {
+          "title": "الواجبات",
+          "empty": "لا توجد واجبات مُقدَّمة.",
+          "attempt": "المحاولة {{number}}",
+          "feedback": "الملاحظات:",
+          "tasks": "تم تسليم {{done}}/{{total}} مهمة",
+          "no_tasks": "لا توجد مهام في هذا الواجب."
+        },
+        "code": {
+          "title": "تمارين البرمجة",
+          "empty": "لا توجد أكواد مُقدَّمة.",
+          "activity": "النشاط",
+          "result": "النتيجة",
+          "tests": "الاختبارات",
+          "time": "الوقت",
+          "when": "متى",
+          "passed": "ناجح",
+          "failed": "فاشل",
+          "language": "اللغة",
+          "course": "الدورة",
+          "untitled_activity": "نشاط بلا عنوان"
+        },
+        "community": {
+          "title": "المشاركة المجتمعية",
+          "empty": "لا يوجد نشاط مجتمعي.",
+          "discussions": "المناقشات",
+          "comments": "التعليقات",
+          "in_discussion": "في \"{{title}}\"",
+          "community": "المجتمع"
+        },
+        "certificates": {
+          "title": "الشهادات المكتسبة",
+          "empty": "لم يتم اكتساب أي شهادات.",
+          "credential_id": "معرّف الشهادة"
+        },
+        "behavior": {
+          "title": "التحليلات السلوكية",
+          "time_by_course": "الوقت المستغرق حسب الدورة",
+          "searches": "عمليات البحث",
+          "views": "مشاهدات الصفحات والمحتوى",
+          "untitled_course": "دورة بلا عنوان"
+        },
+        "status": {
+          "completed": "مكتمل",
+          "in_progress": "قيد التقدم",
+          "paused": "متوقف مؤقتًا",
+          "cancelled": "مُلغى",
+          "graded": "مُقيَّم",
+          "submitted": "مُقدَّم",
+          "pending": "قيد الانتظار",
+          "late": "متأخر",
+          "not_submitted": "لم يُقدَّم"
+        },
+        "comparison": {
+          "student": "الطالب",
+          "enrolled": "مُسجَّل",
+          "completed": "مكتمل",
+          "certificates": "الشهادات",
+          "last_connection": "آخر اتصال",
+          "view": "عرض"
+        },
+        "export_include_raw": "تضمين بيانات التسليم الخام",
+        "answer": {
+          "question": "السؤال",
+          "answered": "تمت الإجابة",
+          "expected": "الإجابة المتوقعة",
+          "no_answer": "لم تُقدَّم إجابة",
+          "correct": "صحيحة",
+          "incorrect": "خاطئة",
+          "correct_answer": "الإجابة الصحيحة",
+          "not_graded": "لم تُصحَّح تلقائيًا",
+          "score": "{{correct}}/{{total}} صحيحة",
+          "explanation": "الشرح",
+          "raw_note": "مهمة مخصصة — تُعرض كحقول خام",
+          "not_submitted": "لم تُقدَّم",
+          "manual": "مُصحَّحة يدويًا",
+          "source_code": "الكود المُقدَّم",
+          "test_cases": "حالات الاختبار",
+          "hidden_test": "اختبار مخفي {{number}}",
+          "test_passed": "ناجح",
+          "test_failed": "فاشل",
+          "actual": "المخرجات",
+          "download_file": "تنزيل الملف"
+        },
+        "task_types": {
+          "QUIZ": "اختبار قصير",
+          "FORM": "املأ الفراغات",
+          "SHORT_ANSWER": "إجابة قصيرة",
+          "NUMBER_ANSWER": "إجابة رقمية",
+          "FILE_SUBMISSION": "رفع ملف",
+          "CODE": "تمرين برمجي",
+          "CUSTOM": "مهمة مخصصة",
+          "OTHER": "أخرى"
+        }
       },
       "active_users": {
         "title": "المستخدمون النشطون",
@@ -3045,7 +3395,8 @@
           "remove_error": "فشل إزالة المستخدم",
           "updating_role": "جاري تحديث الدور...",
           "role_update_success": "تم تحديث الدور بنجاح",
-          "role_update_error": "خطأ في تحديث الدور"
+          "role_update_error": "خطأ في تحديث الدور",
+          "export_csv": "تصدير المستخدمين (CSV)"
         },
         "modals": {
           "update_role": {
@@ -3063,8 +3414,12 @@
         "no_users": "لا يوجد مستخدمون في هذه المنظمة بعد",
         "pagination": {
           "showing": "عرض {{start}}-{{end}} من {{total}}",
-          "page": "صفحة {{current}} من {{total}}"
-        }
+          "page": "صفحة {{current}} من {{total}}",
+          "previous": "الصفحة السابقة",
+          "next": "الصفحة التالية"
+        },
+        "beyond_included": "{{count}} خارج خطتك",
+        "beyond_included_tooltip": "هؤلاء الأعضاء يتجاوزون العدد المشمول في خطتك. يُحتسب فقط النشطون منهم هذا الشهر. راجع الفوترة للتفاصيل."
       },
       "signups": {
         "title": "طريقة الانضمام",
@@ -3394,7 +3749,9 @@
                 "coursechapters": "فصول الدورات",
                 "activities": "الأنشطة",
                 "roles": "الأدوار",
-                "dashboard": "لوحة التحكم"
+                "dashboard": "لوحة التحكم",
+                "folders": "المجلدات",
+                "media": "الوسائط"
               },
               "actions": {
                 "create": "إنشاء",
@@ -3457,7 +3814,9 @@
                 "organizations": "المنظمات",
                 "roles": "الأدوار",
                 "usergroups": "مجموعات المستخدمين",
-                "users": "المستخدمون"
+                "users": "المستخدمون",
+                "folders": "المجلدات",
+                "media": "الوسائط"
               },
               "select": "تحديد",
               "select_all": "تحديد الكل",
@@ -3488,9 +3847,43 @@
             "organizations": "المؤسسات",
             "roles": "الأدوار",
             "usergroups": "مجموعات المستخدمين",
-            "users": "المستخدمون"
+            "users": "المستخدمون",
+            "folders": "المجلدات",
+            "media": "الوسائط"
           }
         }
+      },
+      "security": {
+        "two_factor_title": "التحقق بخطوتين"
+      },
+      "signup_fields": {
+        "no_rights": "ليس لديك صلاحية تغيير حقول التسجيل.",
+        "label_required": "كل حقل يحتاج إلى تسمية.",
+        "duplicate_key": "حقلان يتشاركان المفتاح نفسه. امنحهما تسميتين مختلفتين.",
+        "options_required": "حقول القائمة المنسدلة تحتاج إلى خيار واحد على الأقل.",
+        "saving": "جارٍ حفظ حقول التسجيل…",
+        "saved": "تم تحديث حقول التسجيل.",
+        "save_error": "تعذّر حفظ حقول التسجيل. يرجى المحاولة مرة أخرى.",
+        "title": "حقول تسجيل مخصّصة",
+        "subtitle": "أسئلة إضافية تُطرح عند انضمام شخص ما. تُحفظ الإجابات لدى كل عضو.",
+        "public_notice": "تظهر التسميات والنصوص التوضيحية والخيارات في صفحة التسجيل العامة — يمكن لأي شخص قراءتها. لا تضع هنا أي معلومات سرية.",
+        "empty": "لا توجد حقول مخصّصة. يطرح نموذج التسجيل الأسئلة القياسية فقط.",
+        "label_placeholder": "تسمية السؤال",
+        "badge_saved": "قيد الاستخدام",
+        "badge_new": "جديد",
+        "type": "نوع الحقل",
+        "required": "مطلوب",
+        "delete_confirm": "إزالة هذا الحقل تترك الإجابات المجمّعة تحت مفتاحه دون استخدام. انقر على سلة المهملات مرة أخرى للتأكيد.",
+        "key": "المفتاح",
+        "key_locked": "مقفل — تغييره سيفصل الإجابات المجمّعة بالفعل.",
+        "key_hint": "يُضبط تلقائيًا من التسمية.",
+        "help_text": "نص توضيحي",
+        "max_length": "الحد الأقصى للطول",
+        "min_value": "الحد الأدنى",
+        "max_value": "الحد الأقصى",
+        "add": "إضافة حقل",
+        "options": "الخيارات (خيار في كل سطر)",
+        "options_placeholder": "الخيار الأول\\nالخيار الثاني"
       }
     },
     "assignments": {
@@ -3850,7 +4243,10 @@
             "allow_retries_description": "اسمح للطلاب بإعادة تعيين وإعادة محاولة الواجب بعد تقييمه. كل محاولة تمحو إجاباتهم السابقة وتحتسب كمحاولة جديدة.",
             "max_retries_label": "الحد الأقصى للمحاولات",
             "max_retries_unlimited": "0 تعني محاولات غير محدودة",
-            "max_retries_bounded": "إجمالي المحاولات المقيّمة (التقديم الأولي + إعادة المحاولات)"
+            "max_retries_bounded": "إجمالي المحاولات المقيّمة (التقديم الأولي + إعادة المحاولات)",
+            "pass_threshold_label": "حد النجاح",
+            "pass_threshold_description": "أدنى درجة للنجاح. اتركه فارغًا لاستخدام القيمة الافتراضية (50%، أو 60% للتقديرات الحرفية).",
+            "pass_threshold_placeholder": "تلقائي"
           },
           "toasts": {
             "updating": "جاري تحديث الواجب...",
@@ -3927,7 +4323,7 @@
         "users": "المستخدمون",
         "communities": "المجتمعات",
         "discussions": "المناقشات",
-        "playgrounds": "Playgrounds",
+        "playgrounds": "ساحات التجربة",
         "podcasts": "البودكاست"
       },
       "entries": {
@@ -4080,6 +4476,10 @@
         "org_api": {
           "description": "رموز API والوصول البرمجي",
           "keywords": "api, رموز, وصول, برمجي, مفاتيح"
+        },
+        "users_analytics": {
+          "description": "نشاط التعلم لكل طالب والسجل التدقيقي",
+          "keywords": "تحليلات، تدقيق، طالب، تقدم، نشاط، تصدير، قانوني، امتثال"
         }
       }
     },
@@ -4183,6 +4583,7 @@
       "image": "صورة",
       "video": "فيديو",
       "pdf": "مستند PDF",
+      "h5p": "محتوى H5P التفاعلي",
       "youtube": "فيديو يوتيوب",
       "quiz": "اختبار تفاعلي",
       "math": "معادلة رياضية (LaTeX)",
@@ -4272,6 +4673,22 @@
         "expand_pdf": "توسيع PDF",
         "download_pdf": "تحميل PDF"
       },
+      "h5p_block": {
+        "default_title": "محتوى H5P تفاعلي",
+        "description": "الصق رابط التضمين الخاص بنشاط H5P لعرضه هنا.",
+        "hosted_hint": "يبقى المحتوى على خادم H5P الخاص بك (H5P.com أو Lumi أو موقع Drupal أو Moodle أو WordPress مستضاف ذاتيًا). يمكنك لصق رابط التضمين أو مقتطف iframe كاملاً كما يقدمه المزوّد.",
+        "url_label": "رابط تضمين H5P",
+        "url_placeholder": "https://your-team.h5p.com/content/123456/embed",
+        "title_label": "العنوان",
+        "title_placeholder": "العنوان (يُستخدم لإمكانية الوصول والبحث)",
+        "edit_content": "تعديل محتوى H5P",
+        "remove_content": "إزالة محتوى H5P",
+        "errors": {
+          "empty": "أدخل رابط تضمين H5P.",
+          "unparseable": "لا يبدو هذا رابطًا صالحًا. الصق رابط التضمين أو مقتطف iframe من مزوّد H5P.",
+          "unsupported_protocol": "يمكن تضمين روابط http و https فقط."
+        }
+      },
       "quiz_block": {
         "all_correct": "جميع الإجابات صحيحة!",
         "some_incorrect": "بعض الإجابات غير صحيحة!",
@@ -4283,7 +4700,16 @@
         "reset_answers": "إعادة تعيين الإجابات",
         "mark_correct": "تحديد كصحيح",
         "mark_incorrect": "تحديد كخاطئ",
-        "delete_answer": "حذف الإجابة"
+        "delete_answer": "حذف الإجابة",
+        "question_label": "السؤال",
+        "delete_question": "حذف السؤال",
+        "empty_editable": "لا توجد أسئلة بعد. أضف سؤالك الأول للبدء.",
+        "empty_readonly": "لا يحتوي هذا الاختبار على أسئلة بعد.",
+        "select_one": "اختر إجابة واحدة",
+        "select_all_that_apply": "اختر كل ما ينطبق",
+        "response_type_single": "إجابة واحدة",
+        "response_type_multiple": "إجابات متعددة",
+        "no_correct_answer_warning": "لا توجد إجابة صحيحة — سيتم تخطي هذا السؤال"
       },
       "math_block": {
         "templates": "القوالب",
@@ -4310,7 +4736,8 @@
         "paste_directly": "الصق أي عنوان URL تضمين مباشرة",
         "how_to_embed": "كيفية تضمين {{name}}",
         "paste_code": "الصق كود التضمين (iframe أو سكريبت تضمين وغيرهما)",
-        "paste_iframe": "الصق iframe أو كود التضمين من أي منصة"
+        "paste_iframe": "الصق iframe أو كود التضمين من أي منصة",
+        "remove_embed": "إزالة التضمين"
       },
       "web_preview_block": {
         "website_preview": "معاينة الموقع",
@@ -4342,7 +4769,9 @@
       "button_block": {
         "enter_link_url": "أدخل رابط URL"
       },
-      "magic_block": "كتلة سحرية (مولدة بالذكاء الاصطناعي)"
+      "magic_block": "كتلة سحرية (مولدة بالذكاء الاصطناعي)",
+      "library": "المكتبة",
+      "flipcard_grid": "شبكة البطاقات التعليمية"
     },
     "ai_panel": {
       "add_definition": "إضافة تعريف",
@@ -4877,7 +5306,7 @@
       "note": "ملاحظة",
       "sticker": "ملصق",
       "youtube": "YouTube",
-      "ai_playground": "AI Playground",
+      "ai_playground": "ساحة الذكاء الاصطناعي",
       "activity": "نشاط",
       "embed": "تضمين",
       "webpage": "صفحة ويب",
@@ -4900,7 +5329,7 @@
       "title": "المؤثرات",
       "inferno": "جحيم",
       "blizzard": "عاصفة ثلجية",
-      "matrix": "Matrix",
+      "matrix": "مصفوفة",
       "fireworks": "ألعاب نارية",
       "earthquake": "زلزال",
       "black_hole": "ثقب أسود",
@@ -4957,7 +5386,7 @@
       "open_in_new_tab": "فتح في علامة تبويب جديدة"
     },
     "playground_block": {
-      "title": "AI Playground",
+      "title": "ساحة الذكاء الاصطناعي",
       "description": "إنشاء عناصر تفاعلية مدعومة بالذكاء الاصطناعي",
       "generate": "إنشاء",
       "edit": "تعديل",
@@ -4965,7 +5394,7 @@
       "generating": "جارٍ إنشاء محتوى تفاعلي...",
       "streaming": "جارٍ الإنشاء...",
       "empty_state": "صف ما تريد إنشاءه وشاهده يتحقق",
-      "chat_header": "AI Playground",
+      "chat_header": "ساحة الذكاء الاصطناعي",
       "prompt_text": "صف عنصراً تفاعلياً لإنشائه",
       "ai_content": "محتوى مُنشأ بالذكاء الاصطناعي",
       "check_preview": "تحقق من المعاينة على اليسار",
@@ -5273,20 +5702,20 @@
   "playgrounds": {
     "no_playgrounds_yet": "لا توجد playgrounds بعد",
     "playgrounds_description": "أنشئ تجارب تفاعلية مولدة بالذكاء الاصطناعي لمتعلميك.",
-    "new_playground": "New Playground",
-    "search_placeholder": "Search playgrounds...",
-    "no_results_for": "No results for",
-    "try_different_search": "Try a different search term",
-    "new_playground_modal_title": "New Playground",
-    "new_playground_modal_desc": "Give your playground a name to get started.",
-    "creating": "Creating...",
-    "create": "Create",
-    "failed_create": "Failed to create playground",
+    "new_playground": "ساحة تجربة جديدة",
+    "search_placeholder": "ابحث في ساحات التجربة...",
+    "no_results_for": "لا توجد نتائج لـ",
+    "try_different_search": "جرّب مصطلح بحث مختلفًا",
+    "new_playground_modal_title": "ساحة تجربة جديدة",
+    "new_playground_modal_desc": "امنح ساحة التجربة اسمًا للبدء.",
+    "creating": "جارٍ الإنشاء...",
+    "create": "إنشاء",
+    "failed_create": "فشل في إنشاء ساحة التجربة",
     "view": {
       "open_editor_to_generate": "افتح المحرر لإنشاء المحتوى.",
       "check_back_later": "تحقق لاحقاً.",
       "open_editor": "فتح المحرر",
-      "breadcrumb": "Playgrounds",
+      "breadcrumb": "ساحات التجربة",
       "about": "حول",
       "author": "المؤلف",
       "access": "الوصول",
@@ -5302,86 +5731,86 @@
     }
   },
   "library": {
-    "library": "Library",
-    "my_library": "My Library",
-    "new_folder": "New Folder",
+    "library": "المكتبة",
+    "my_library": "مكتبتي",
+    "new_folder": "مجلد جديد",
     "tabs": {
-      "courses": "Courses",
-      "podcasts": "Podcasts",
-      "communities": "Communities",
-      "boards": "Boards",
-      "playgrounds": "Playgrounds",
-      "media": "Media"
+      "courses": "الدورات",
+      "podcasts": "البودكاست",
+      "communities": "المجتمعات",
+      "boards": "اللوحات",
+      "playgrounds": "ساحات التجربة",
+      "media": "الوسائط"
     },
-    "add_content": "Add content",
-    "upload_media": "Upload media",
-    "empty_folder": "This folder is empty",
-    "error_loading": "Couldn't load the library. Please refresh to try again.",
-    "folder": "Folder",
-    "folders": "Folders",
-    "items": "items",
-    "move": "Move",
-    "rename": "Rename",
-    "manage_access": "Manage access",
-    "delete_folder": "Delete folder",
-    "delete_folder_confirm": "Are you sure you want to delete this folder and everything inside it?",
-    "folder_name": "Folder name",
-    "enter_folder_name": "Enter folder name",
-    "create_folder": "Create folder",
-    "description": "Description",
-    "add": "Add",
-    "added": "Added",
-    "content_add_error": "Failed to add content",
-    "content_added": "Content added",
-    "content_remove_error": "Failed to remove content",
-    "content_removed": "Content removed",
-    "creating_folder": "Creating folder…",
-    "deleting_folder": "Deleting folder…",
-    "empty_folder_description": "Add sub-folders or content to get started.",
-    "folder_created_error": "Failed to create folder",
-    "folder_created_success": "Folder created",
-    "folder_deleted_error": "Failed to delete folder",
-    "folder_deleted_success": "Folder deleted",
-    "folder_name_required": "Folder name is required",
-    "folder_not_found": "Folder not found",
-    "folder_updated_error": "Failed to update folder",
-    "folder_updated_success": "Folder updated",
-    "no_items": "Your library is empty",
-    "no_items_description": "Create a folder or upload media to organize your content.",
-    "no_resources": "No resources available",
-    "open": "Open",
-    "private": "Private",
-    "public": "Public",
-    "remove_from_folder": "Remove from folder",
-    "remove_from_folder_confirm": "Remove this item from the folder? The item itself won't be deleted.",
-    "removing_content": "Removing…",
-    "rename_folder": "Rename folder",
-    "save": "Save",
-    "saving_folder": "Saving…",
-    "search": "Search",
-    "untitled": "Untitled",
-    "visibility": "Visibility",
-    "resources_label": "Resources",
-    "no_results": "No results",
-    "color": "Color",
-    "thumbnail": "Cover image",
-    "remove_thumbnail": "Remove cover",
+    "add_content": "إضافة محتوى",
+    "upload_media": "رفع وسائط",
+    "empty_folder": "هذا المجلد فارغ",
+    "error_loading": "تعذّر تحميل المكتبة. يرجى تحديث الصفحة والمحاولة مرة أخرى.",
+    "folder": "مجلد",
+    "folders": "المجلدات",
+    "items": "عناصر",
+    "move": "نقل",
+    "rename": "إعادة تسمية",
+    "manage_access": "إدارة الوصول",
+    "delete_folder": "حذف المجلد",
+    "delete_folder_confirm": "هل أنت متأكد من حذف هذا المجلد وكل ما بداخله؟",
+    "folder_name": "اسم المجلد",
+    "enter_folder_name": "أدخل اسم المجلد",
+    "create_folder": "إنشاء مجلد",
+    "description": "الوصف",
+    "add": "إضافة",
+    "added": "تمت الإضافة",
+    "content_add_error": "فشل في إضافة المحتوى",
+    "content_added": "تمت إضافة المحتوى",
+    "content_remove_error": "فشل في إزالة المحتوى",
+    "content_removed": "تمت إزالة المحتوى",
+    "creating_folder": "جارٍ إنشاء المجلد…",
+    "deleting_folder": "جارٍ حذف المجلد…",
+    "empty_folder_description": "أضف مجلدات فرعية أو محتوى للبدء.",
+    "folder_created_error": "فشل في إنشاء المجلد",
+    "folder_created_success": "تم إنشاء المجلد",
+    "folder_deleted_error": "فشل في حذف المجلد",
+    "folder_deleted_success": "تم حذف المجلد",
+    "folder_name_required": "اسم المجلد مطلوب",
+    "folder_not_found": "لم يتم العثور على المجلد",
+    "folder_updated_error": "فشل في تحديث المجلد",
+    "folder_updated_success": "تم تحديث المجلد",
+    "no_items": "مكتبتك فارغة",
+    "no_items_description": "أنشئ مجلدًا أو ارفع وسائط لتنظيم محتواك.",
+    "no_resources": "لا توجد موارد متاحة",
+    "open": "فتح",
+    "private": "خاص",
+    "public": "عام",
+    "remove_from_folder": "إزالة من المجلد",
+    "remove_from_folder_confirm": "هل تريد إزالة هذا العنصر من المجلد؟ لن يتم حذف العنصر نفسه.",
+    "removing_content": "جارٍ الإزالة…",
+    "rename_folder": "إعادة تسمية المجلد",
+    "save": "حفظ",
+    "saving_folder": "جارٍ الحفظ…",
+    "search": "بحث",
+    "untitled": "بلا عنوان",
+    "visibility": "الظهور",
+    "resources_label": "الموارد",
+    "no_results": "لا توجد نتائج",
+    "color": "اللون",
+    "thumbnail": "صورة الغلاف",
+    "remove_thumbnail": "إزالة الغلاف",
     "filters": {
-      "all": "All",
-      "folders": "Folders",
-      "courses": "Courses",
-      "media": "Media"
+      "all": "الكل",
+      "folders": "المجلدات",
+      "courses": "الدورات",
+      "media": "الوسائط"
     },
-    "edit": "Edit",
-    "edit_folder": "Edit folder",
-    "share": "Share",
-    "copy_link": "Copy link",
-    "link_copied": "Link copied to clipboard",
-    "link_copy_error": "Couldn't copy the link",
-    "thumbnail_error": "Couldn't upload the cover image",
-    "open_resource": "Open",
-    "replace_cover": "Replace",
-    "cover_hint": "PNG, JPG, WEBP",
+    "edit": "تعديل",
+    "edit_folder": "تعديل المجلد",
+    "share": "مشاركة",
+    "copy_link": "نسخ الرابط",
+    "link_copied": "تم نسخ الرابط",
+    "link_copy_error": "تعذّر نسخ الرابط",
+    "thumbnail_error": "تعذّر رفع صورة الغلاف",
+    "open_resource": "فتح",
+    "replace_cover": "استبدال",
+    "cover_hint": "PNG أو JPG أو WEBP",
     "sort": {
       "sort_by": "فرز حسب",
       "name_asc": "الاسم (أ–ي)",
@@ -5392,77 +5821,88 @@
       "drag_to_reorder": "اسحب لإعادة الترتيب",
       "sort_error": "تعذر تحديث ترتيب الفرز",
       "reorder_error": "تعذر حفظ الترتيب الجديد"
-    }
+    },
+    "preview": "معاينة",
+    "no_access": "ليس لديك حق الوصول إلى هذا الملف.",
+    "choose_from_library": "اختر من المكتبة",
+    "upload_to_library": "رفع",
+    "upload_to_library_hint": "تُضاف الملفات المرفوعة إلى مكتبتك ليمكنك إعادة استخدامها في أماكن أخرى.",
+    "no_resource_selected": "لم يتم اختيار أي عنصر من المكتبة.",
+    "private_media_warning": "خاص — لن يراه المتعلمون الذين لا يملكون حق الوصول.",
+    "replace_resource": "استبدال",
+    "remove_resource": "إزالة",
+    "show_as_card": "عرض كبطاقة",
+    "show_inline": "عرض ضمن النص"
   },
   "media": {
-    "media": "Media",
-    "file": "File",
-    "embed": "Embed",
-    "download": "Download",
-    "add_media": "Add media",
-    "upload": "Upload",
-    "media_name": "Media name",
+    "media": "الوسائط",
+    "file": "ملف",
+    "embed": "تضمين",
+    "download": "تنزيل",
+    "add_media": "إضافة وسائط",
+    "upload": "رفع",
+    "media_name": "اسم الوسائط",
     "media_url": "URL",
-    "delete_media": "Delete media",
-    "delete_media_confirm": "Are you sure you want to delete this media?",
-    "choose_file": "Choose a file",
-    "deleting_media": "Deleting…",
-    "description": "Description",
-    "file_required": "A file is required",
-    "media_deleted_error": "Failed to delete media",
-    "media_deleted_success": "Media deleted",
-    "media_uploaded_error": "Failed to add media",
-    "media_uploaded_success": "Media added",
-    "name": "Name",
-    "name_required": "Name is required",
-    "public": "Public",
-    "upload_file": "Upload file",
-    "upload_media": "Upload media",
-    "uploading_media": "Uploading…",
+    "delete_media": "حذف الوسائط",
+    "delete_media_confirm": "هل أنت متأكد من حذف هذه الوسائط؟",
+    "choose_file": "اختر ملفًا",
+    "deleting_media": "جارٍ الحذف…",
+    "description": "الوصف",
+    "file_required": "الملف مطلوب",
+    "media_deleted_error": "فشل في حذف الوسائط",
+    "media_deleted_success": "تم حذف الوسائط",
+    "media_uploaded_error": "فشل في إضافة الوسائط",
+    "media_uploaded_success": "تمت إضافة الوسائط",
+    "name": "الاسم",
+    "name_required": "الاسم مطلوب",
+    "public": "عام",
+    "upload_file": "رفع ملف",
+    "upload_media": "رفع وسائط",
+    "uploading_media": "جارٍ الرفع…",
     "url": "URL",
-    "url_required": "A URL is required",
-    "upload_hint": "Images, video, audio, PDF, Office docs & ZIP",
-    "remove": "Remove",
-    "open_pdf": "Open PDF"
+    "url_required": "الرابط مطلوب",
+    "upload_hint": "صور وفيديو وصوت وملفات PDF ومستندات Office وملفات ZIP",
+    "remove": "إزالة",
+    "open_pdf": "فتح ملف PDF"
   },
   "access": {
     "public": {
-      "title": "Public",
-      "description": "Anyone can view this.",
-      "confirmation_title": "Make public?",
-      "confirmation_message": "This will be visible to everyone.",
-      "confirmation_button": "Make public"
+      "title": "عام",
+      "description": "يمكن لأي شخص عرض هذا.",
+      "confirmation_title": "جعله عامًا؟",
+      "confirmation_message": "سيصبح هذا مرئيًا للجميع.",
+      "confirmation_button": "اجعله عامًا"
     },
     "users_only": {
-      "title": "Users only",
-      "description": "Only signed-in members (and selected groups) can view this.",
-      "confirmation_title": "Restrict access?",
-      "confirmation_message": "Only authenticated users and linked groups will be able to view this.",
-      "confirmation_button": "Restrict access"
+      "title": "المستخدمون فقط",
+      "description": "يمكن فقط للأعضاء المسجّلين (والمجموعات المحددة) عرض هذا.",
+      "confirmation_title": "تقييد الوصول؟",
+      "confirmation_message": "لن يتمكن من عرض هذا سوى المستخدمين المسجّلين والمجموعات المرتبطة.",
+      "confirmation_button": "تقييد الوصول"
     },
-    "active": "Active",
-    "visibility_update_error": "Failed to update visibility",
-    "visibility_updated": "Visibility updated",
+    "active": "نشط",
+    "visibility_update_error": "فشل في تحديث الظهور",
+    "visibility_updated": "تم تحديث الظهور",
     "usergroups": {
-      "title": "User groups",
-      "subtitle": "Restrict access to specific user groups.",
-      "link_to_usergroup": "Link a user group",
-      "table_name": "Name",
-      "table_actions": "Actions",
-      "usergroup_name": "Group",
-      "delete_link": "Unlink",
-      "warning": "Members of linked groups will be able to access this resource.",
-      "no_usergroups": "No user groups linked yet.",
-      "create_usergroup": "Create a user group",
-      "link_button": "Link",
-      "link_title": "Link a user group",
-      "link_success": "User group linked",
-      "link_error": "Failed to link user group",
-      "unlink_button": "Unlink",
-      "unlink_title": "Unlink user group",
-      "unlink_message": "Remove this group's access?",
-      "unlink_success": "User group unlinked",
-      "unlink_error": "Failed to unlink user group"
+      "title": "مجموعات المستخدمين",
+      "subtitle": "قصر الوصول على مجموعات مستخدمين محددة.",
+      "link_to_usergroup": "ربط مجموعة مستخدمين",
+      "table_name": "الاسم",
+      "table_actions": "الإجراءات",
+      "usergroup_name": "المجموعة",
+      "delete_link": "إلغاء الربط",
+      "warning": "سيتمكن أعضاء المجموعات المرتبطة من الوصول إلى هذا المورد.",
+      "no_usergroups": "لا توجد مجموعات مستخدمين مرتبطة بعد.",
+      "create_usergroup": "إنشاء مجموعة مستخدمين",
+      "link_button": "ربط",
+      "link_title": "ربط مجموعة مستخدمين",
+      "link_success": "تم ربط مجموعة المستخدمين",
+      "link_error": "فشل في ربط مجموعة المستخدمين",
+      "unlink_button": "إلغاء الربط",
+      "unlink_title": "إلغاء ربط مجموعة المستخدمين",
+      "unlink_message": "هل تريد إزالة وصول هذه المجموعة؟",
+      "unlink_success": "تم إلغاء ربط مجموعة المستخدمين",
+      "unlink_error": "فشل في إلغاء ربط مجموعة المستخدمين"
     }
   },
   "plan": {
@@ -5576,7 +6016,33 @@
     "scheduled_desc": "ستتحول خطتك إلى {{plan}} في نهاية دورة الفوترة الحالية. ستحتفظ بالوصول الكامل إلى خطتك الحالية حتى ذلك الحين.",
     "plan_plus_purchased": "الخطة: {{plan}} + تم الشراء: {{purchased}}",
     "base_plus_purchased": "الأساس: {{base}} + تم الشراء: {{purchased}}",
-    "pack_ai_desc": "تمت إضافة {{quantity}} رصيد AI إضافي إلى مؤسستك"
+    "pack_ai_desc": "تمت إضافة {{quantity}} رصيد AI إضافي إلى مؤسستك",
+    "addons_subtitle": "اشترِ أرصدة ذكاء اصطناعي إضافية كاشتراكات شهرية.",
+    "unlimited_lower": "غير محدود",
+    "limit_reached_upgrade": "تم بلوغ الحد — قم بالترقية للمتابعة",
+    "remaining": "متبقٍ {{n}}",
+    "remaining_nearing": "متبقٍ {{n}} — تقترب من الحد",
+    "usage_subtitle_free": "الخطط المجانية محدودة. قم بالترقية لتجاوز أي حد.",
+    "usage_subtitle_paid": "تتضمن خطتك هذه الكميات. تجاوز حد الأعضاء مسموح به ويُحتسب في الفاتورة — لا شيء يتوقف.",
+    "members_hint": "كل من انضم إلى مؤسستك.",
+    "members_beyond_plan": "{{included}} مشمولون · {{beyond}} خارج خطتك",
+    "members_within_plan": "{{included}} مشمولون في خطتك",
+    "active_members": "الأعضاء النشطون",
+    "active_members_short": "الأعضاء النشطون",
+    "active_members_hint": "يُحتسب العضو عند نشاطه في يومين أو أكثر خلال هذا الشهر. المقاعد المشمولة في خطتك وعددها {{included}} مجانية — وتُحتسب عليك ١ دولار شهريًا لكل عضو نشط يتجاوزها.",
+    "overage_this_month": "{{amount}} دولار هذا الشهر حتى الآن",
+    "no_extra_charges": "لا توجد رسوم إضافية هذا الشهر",
+    "admin_seats_hint": "الأعضاء الذين يمكنهم الوصول إلى لوحة التحكم. وهم جزء من أعضائك.",
+    "credits_reset_on": "يُعاد التعيين في {{date}}",
+    "next_invoice": "الفاتورة القادمة",
+    "due_on": "تستحق في {{date}}",
+    "line_subscription": "الاشتراك",
+    "accruing_this_month": "الأعضاء النشطون هذا الشهر (تُحتسب عند التجديد القادم)",
+    "packs_billed_separately": "الإضافات اشتراكات منفصلة وتُفوتر وفق جدولها الخاص.",
+    "invoice_history": "سجل الفواتير",
+    "view": "عرض",
+    "checkout_settling": "تم استلام الدفعة — يجري تطبيق خطتك الجديدة وستظهر قريبًا.",
+    "checkout_settling_delayed": "تم استلام الدفعة، لكن لم يتم تحديث خطتك بعد. حدّث الصفحة بعد لحظات — وتواصل مع الدعم إذا استمرت المشكلة."
   },
   "hub_new": {
     "useType": {
@@ -5738,5 +6204,20 @@
     "folder_count_one": "{{count}} مجلد",
     "item_count": "{{count}} عناصر",
     "item_count_one": "{{count}} عنصر"
+  },
+  "mfa": {
+    "policy": {
+      "banner_message_overdue": "تشترط {{org}} التحقق بخطوتين وقد انقضى الموعد النهائي. فعّله أدناه لاستعادة الوصول.",
+      "banner_message_today": "تشترط {{org}} التحقق بخطوتين. عليك إعداده اليوم.",
+      "banner_message_one_day": "تشترط {{org}} التحقق بخطوتين. بقي لديك يوم واحد لإعداده.",
+      "banner_message": "تشترط {{org}} التحقق بخطوتين. بقي لديك {{days}} يومًا لإعداده.",
+      "set_up_now": "إعداده الآن",
+      "blocked_title": "التحقق بخطوتين مطلوب",
+      "blocked_description": "انقضى الموعد النهائي الذي حددته {{org}} لتفعيل التحقق بخطوتين. لمواصلة استخدام {{org}}، أضف عامل تحقق ثانيًا إلى حسابك — لن يستغرق الأمر سوى دقيقة.",
+      "blocked_scope_note": "يؤثر هذا على {{org}} فقط. لن تتأثر مؤسساتك الأخرى.",
+      "set_up_2fa": "إعداد التحقق بخطوتين",
+      "signed_in_as": "مسجّل الدخول باسم {{email}}",
+      "sign_in_to_org": "تسجيل الدخول إلى هذه المؤسسة"
+    }
   }
 }

@@ -319,10 +319,10 @@ function OrgUsers() {
                     </ToolTip>
                   )}
                 <div className="relative">
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                  <Search className="absolute start-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
                   <input
                     placeholder={t('dashboard.users.active_users.search_placeholder') || 'Search users...'}
-                    className="pl-10 pr-4 py-2 w-full sm:w-[220px] border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-400 transition-all"
+                    className="ps-10 pe-4 py-2 w-full sm:w-[220px] border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-400 transition-all"
                     value={searchValue}
                     onChange={(e) => handleSearchChange(e.target.value)}
                   />
@@ -474,7 +474,7 @@ function OrgUsers() {
                       {/* Role */}
                       <div className="h-8 bg-gray-100 rounded-md w-24" />
                       {/* Actions */}
-                      <div className="h-8 bg-gray-100 rounded-md w-24 ml-auto" />
+                      <div className="h-8 bg-gray-100 rounded-md w-24 ms-auto" />
                     </div>
                   ))}
                 </div>
@@ -510,7 +510,7 @@ function OrgUsers() {
                 <table className="w-full">
                   <thead>
                     <tr className="border-b border-gray-100">
-                      <th className="text-left px-6 py-3 w-10">
+                      <th className="text-start px-6 py-3 w-10">
                         <input
                           type="checkbox"
                           checked={allVisibleSelected}
@@ -518,14 +518,14 @@ function OrgUsers() {
                           className="w-4 h-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500 cursor-pointer"
                         />
                       </th>
-                      <th className="text-left text-xs font-semibold text-gray-500 uppercase tracking-wider px-6 py-3">
+                      <th className="text-start text-xs font-semibold text-gray-500 uppercase tracking-wider px-6 py-3">
                         {t('dashboard.users.active_users.table.user') || 'User'}
                       </th>
-                      <th className="text-left text-xs font-semibold text-gray-500 uppercase tracking-wider px-6 py-3">
+                      <th className="text-start text-xs font-semibold text-gray-500 uppercase tracking-wider px-6 py-3">
                         {t('dashboard.users.active_users.table.groups') || 'Groups'}
                       </th>
                       <th
-                        className="text-left text-xs font-semibold text-gray-500 uppercase tracking-wider px-6 py-3 cursor-pointer select-none hover:text-gray-700 transition-colors"
+                        className="text-start text-xs font-semibold text-gray-500 uppercase tracking-wider px-6 py-3 cursor-pointer select-none hover:text-gray-700 transition-colors"
                         onClick={toggleSortOrder}
                       >
                         <div className="inline-flex items-center gap-1">
@@ -537,22 +537,22 @@ function OrgUsers() {
                           )}
                         </div>
                       </th>
-                      <th className="text-left text-xs font-semibold text-gray-500 uppercase tracking-wider px-6 py-3">
+                      <th className="text-start text-xs font-semibold text-gray-500 uppercase tracking-wider px-6 py-3">
                         Status
                       </th>
-                      <th className="text-left text-xs font-semibold text-gray-500 uppercase tracking-wider px-6 py-3">
+                      <th className="text-start text-xs font-semibold text-gray-500 uppercase tracking-wider px-6 py-3">
                         {t('dashboard.users.active_users.table.role') || 'Role'}
                       </th>
                       {/* One column per custom signup field the org collects. */}
                       {customFields.map((field) => (
                         <th
                           key={field.key}
-                          className="text-left text-xs font-semibold text-gray-500 uppercase tracking-wider px-6 py-3 whitespace-nowrap"
+                          className="text-start text-xs font-semibold text-gray-500 uppercase tracking-wider px-6 py-3 whitespace-nowrap"
                         >
                           {field.label || field.key}
                         </th>
                       ))}
-                      <th className="text-right text-xs font-semibold text-gray-500 uppercase tracking-wider px-6 py-3">
+                      <th className="text-end text-xs font-semibold text-gray-500 uppercase tracking-wider px-6 py-3">
                         {t('dashboard.users.active_users.table.actions') || 'Actions'}
                       </th>
                     </tr>
@@ -739,7 +739,7 @@ function OrgUsers() {
                         ))}
 
                         {/* Actions */}
-                        <td className="px-6 py-4 text-right">
+                        <td className="px-6 py-4 text-end">
                           <div className="inline-flex items-center gap-1.5">
                             <button
                               onClick={() => setAnalyticsUserId(user.user.id)}

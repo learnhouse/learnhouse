@@ -46,6 +46,17 @@ def _bypass_rbac():
 
 
 @pytest.fixture
+def fs_file_unknown_ext():
+    """A stored file whose extension carries no MIME of its own."""
+    rel = "orgs/org_test/media/randdir/legacyfile.xyz"
+    path = Path("content") / rel
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_bytes(PDF_BYTES)
+    yield rel
+    shutil.rmtree(Path("content") / "orgs" / "org_test", ignore_errors=True)
+
+
+@pytest.fixture
 def fs_file():
     """Create a real file under content/ for filesystem serving; clean up after."""
     rel = "orgs/org_test/media/randdir/testfile.pdf"
@@ -58,12 +69,12 @@ def fs_file():
 
 async def _mk_media(
     db, org, storage_key="", public=True, media_type=MediaTypeEnum.UPLOAD, name="m",
-    file_format="pdf",
+    file_format="pdf", file_mime="application/pdf",
 ):
     m = Media(
         name=name, media_type=media_type, public=public, org_id=org.id,
         media_uuid=f"media_{name}", file_id="testfile.pdf", storage_key=storage_key,
-        file_format=file_format, file_mime="application/pdf",
+        file_format=file_format, file_mime=file_mime,
         creation_date=str(datetime.now()), update_date=str(datetime.now()),
     )
     db.add(m)
@@ -324,3 +335,50 @@ class TestServeS3Errors:
              patch("src.services.media.media_serve.get_s3_bucket_name", return_value="b"):
             res = await client.get(f"/api/v1/media/{m.media_uuid}/file")
         assert res.status_code == 502
+
+
+class TestServedContentTypeIsNotClientControlled:
+    """The Content-Type decides how a browser treats a stored file, so it is
+    derived from server-side state only. Rows written before that — which kept
+    the client's own upload header in `file_mime` — must not influence it.
+    """
+
+    @pytest.mark.parametrize(
+        "poisoned",
+        ["text/html", "text/html; charset=utf-8", "TEXT/HTML", "image/svg+xml",
+         "application/xhtml+xml", "text/javascript"],
+    )
+    async def test_stored_mime_never_overrides_known_extension(
+        self, client, db, org, fs_file, poisoned
+    ):
+        m = await _mk_media(
+            db, org, storage_key=fs_file, name=f"poison{abs(hash(poisoned))}",
+            file_mime=poisoned,
+        )
+        res = await client.get(f"/api/v1/media/{m.media_uuid}/file")
+        assert res.status_code == 200, res.text
+        assert res.headers["content-type"].startswith("application/pdf")
+
+    async def test_unknown_extension_with_poisoned_mime_falls_back_to_octet_stream(
+        self, client, db, org, fs_file_unknown_ext
+    ):
+        m = await _mk_media(
+            db, org, storage_key=fs_file_unknown_ext, name="poisonlegacy",
+            file_format="xyz", file_mime="text/html",
+        )
+        res = await client.get(f"/api/v1/media/{m.media_uuid}/file")
+        assert res.status_code == 200, res.text
+        assert res.headers["content-type"].startswith("application/octet-stream")
+
+    async def test_unknown_extension_keeps_a_servable_stored_mime(
+        self, client, db, org, fs_file_unknown_ext
+    ):
+        # Legacy rows without a recognised extension still serve correctly as
+        # long as the stored type is one this endpoint is allowed to emit.
+        m = await _mk_media(
+            db, org, storage_key=fs_file_unknown_ext, name="legacyok",
+            file_format="xyz", file_mime="application/pdf",
+        )
+        res = await client.get(f"/api/v1/media/{m.media_uuid}/file")
+        assert res.status_code == 200, res.text
+        assert res.headers["content-type"].startswith("application/pdf")

@@ -6,6 +6,7 @@ import LHSessionProvider from '@components/Contexts/LHSessionContext'
 import AuthFetchInterceptor from '@components/Contexts/AuthFetchInterceptor'
 import PostHogProvider from '@components/Contexts/PostHogProvider'
 import I18nProvider from '@components/Contexts/I18nContext'
+import DirectionProvider from '@components/Contexts/DirectionProvider'
 import { BackgroundTasksProvider } from '@components/Contexts/BackgroundTasksContext'
 import BackgroundTasksPanel from '@components/BackgroundTasks/BackgroundTasksPanel'
 import { QueryClientProvider } from '@tanstack/react-query'
@@ -22,10 +23,13 @@ export default function Providers({ children }: { children: React.ReactNode }) {
         <LHSessionProvider>
           <PostHogProvider>
             <I18nProvider>
-              <BackgroundTasksProvider>
-                {children}
-                <BackgroundTasksPanel />
-              </BackgroundTasksProvider>
+              {/* Inside I18nProvider so it re-renders when the language changes. */}
+              <DirectionProvider>
+                <BackgroundTasksProvider>
+                  {children}
+                  <BackgroundTasksPanel />
+                </BackgroundTasksProvider>
+              </DirectionProvider>
             </I18nProvider>
           </PostHogProvider>
         </LHSessionProvider>

@@ -289,7 +289,7 @@ const CertificatePage: React.FC<CertificatePageProps> = ({ orgslug, courseid, qr
         {certificatePreviewProps && (
           <div
             aria-hidden="true"
-            className="pointer-events-none fixed top-0 left-0 -z-50 opacity-0"
+            className="pointer-events-none fixed top-0 start-0 -z-50 opacity-0"
             style={{ transform: 'translateX(-200vw)' }}
           >
             <div ref={certificateCaptureRef} style={{ width: CERTIFICATE_CAPTURE_WIDTH }}>

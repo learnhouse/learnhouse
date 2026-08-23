@@ -165,6 +165,38 @@ async def user(db, org):
 
 
 @pytest.fixture
+async def learner_user(db, org):
+    """A plain member — a legitimate magic-link target.
+
+    issue_magic_link refuses Admins, Maintainers and superadmins, the same rule
+    issue_user_token applies: a leaked API token must not be able to borrow an
+    elevated session. The `user` fixture is an Admin, so these tests need
+    somebody ordinary.
+    """
+    u = User(
+        id=77,
+        username="learner",
+        first_name="Lear",
+        last_name="Ner",
+        email="learner@example.com",
+        password="hashed",
+        user_uuid="user_learner77",
+    )
+    db.add(u)
+    await db.commit()
+    await db.refresh(u)
+
+    db.add(
+        UserOrganization(
+            user_id=u.id, org_id=org.id, role_id=4,
+            creation_date=str(datetime.now()), update_date=str(datetime.now()),
+        )
+    )
+    await db.commit()
+    return u
+
+
+@pytest.fixture
 def token_user(org, user):
     return APITokenUser(
         id=1,
@@ -1057,17 +1089,45 @@ class TestGetUserCertificates:
 
 class TestIssueUserToken:
 
+    @pytest.fixture
+    def reader_token(self, token_user):
+        """Impersonation needs the token to actually hold users.action_read."""
+        token_user.rights = {"users": {"action_read": True}}
+        return token_user
+
+    @pytest.fixture
+    async def member(self, org, db):
+        """A non-privileged target — admins/maintainers cannot be impersonated."""
+        u = User(
+            id=77,
+            username="member",
+            first_name="Mem",
+            last_name="Ber",
+            email="member@example.com",
+            password="hashed",
+            user_uuid="user_member77",
+        )
+        db.add(u)
+        await db.commit()
+        await db.refresh(u)
+        db.add(UserOrganization(
+            user_id=u.id, org_id=org.id, role_id=4,
+            creation_date=str(datetime.now()), update_date=str(datetime.now()),
+        ))
+        await db.commit()
+        return u
+
     @patch("src.services.admin.admin.create_access_token", return_value="jwt_test_token")
-    async def test_issues_token(self, mock_create, token_user, user, db):
-        result = await issue_user_token(token_user, user.id, db)
+    async def test_issues_token(self, mock_create, reader_token, member, db):
+        result = await issue_user_token(reader_token, member.id, db)
         assert result["access_token"] == "jwt_test_token"
         assert result["token_type"] == "bearer"
-        assert result["user_id"] == user.id
-        assert result["user_uuid"] == user.user_uuid
+        assert result["user_id"] == member.id
+        assert result["user_uuid"] == member.user_uuid
 
-    async def test_user_not_found(self, token_user, db):
+    async def test_user_not_found(self, reader_token, db):
         with pytest.raises(HTTPException) as exc:
-            await issue_user_token(token_user, 9999, db)
+            await issue_user_token(reader_token, 9999, db)
         assert exc.value.status_code == 404
 
     async def test_user_not_in_org(self, token_user, other_org, db):
@@ -1590,10 +1650,10 @@ class TestIssueMagicLink:
 
     @patch("src.services.admin.admin.get_base_url_from_request", return_value="https://myorg.example.com")
     @patch("src.services.admin.admin.create_access_token", return_value="magic_jwt_abc")
-    async def test_issues_link(self, mock_create, mock_base_url, token_user, user, mock_request, db):
+    async def test_issues_link(self, mock_create, mock_base_url, token_user, learner_user, mock_request, db):
         result = await issue_magic_link(
             token_user=token_user,
-            user_id=user.id,
+            user_id=learner_user.id,
             redirect_to="/course/foo",
             ttl_seconds=300,
             org_slug="test-org",
@@ -1611,9 +1671,9 @@ class TestIssueMagicLink:
 
     @patch("src.services.admin.admin.get_base_url_from_request", return_value="https://myorg.example.com")
     @patch("src.services.admin.admin.create_access_token", return_value="magic_jwt_clamp")
-    async def test_ttl_clamped_low(self, mock_create, mock_base_url, token_user, user, mock_request, db):
+    async def test_ttl_clamped_low(self, mock_create, mock_base_url, token_user, learner_user, mock_request, db):
         await issue_magic_link(
-            token_user=token_user, user_id=user.id, redirect_to=None,
+            token_user=token_user, user_id=learner_user.id, redirect_to=None,
             ttl_seconds=10,
             org_slug="test-org", request=mock_request, db_session=db,
         )
@@ -1622,9 +1682,9 @@ class TestIssueMagicLink:
 
     @patch("src.services.admin.admin.get_base_url_from_request", return_value="https://myorg.example.com")
     @patch("src.services.admin.admin.create_access_token", return_value="magic_jwt_clamp")
-    async def test_ttl_clamped_high(self, mock_create, mock_base_url, token_user, user, mock_request, db):
+    async def test_ttl_clamped_high(self, mock_create, mock_base_url, token_user, learner_user, mock_request, db):
         await issue_magic_link(
-            token_user=token_user, user_id=user.id, redirect_to=None,
+            token_user=token_user, user_id=learner_user.id, redirect_to=None,
             ttl_seconds=10000,
             org_slug="test-org", request=mock_request, db_session=db,
         )
@@ -1642,10 +1702,10 @@ class TestIssueMagicLink:
 
     @patch("src.services.admin.admin.get_base_url_from_request", return_value="https://myorg.example.com")
     @patch("src.services.admin.admin.create_access_token", return_value="magic_jwt_x")
-    async def test_rejects_absolute_redirect(self, mock_create, mock_base_url, token_user, user, mock_request, db):
+    async def test_rejects_absolute_redirect(self, mock_create, mock_base_url, token_user, learner_user, mock_request, db):
         with pytest.raises(HTTPException) as exc:
             await issue_magic_link(
-                token_user=token_user, user_id=user.id,
+                token_user=token_user, user_id=learner_user.id,
                 redirect_to="https://evil.com/phish",
                 ttl_seconds=300, org_slug="test-org",
                 request=mock_request, db_session=db,
@@ -1654,10 +1714,10 @@ class TestIssueMagicLink:
 
     @patch("src.services.admin.admin.get_base_url_from_request", return_value="https://myorg.example.com")
     @patch("src.services.admin.admin.create_access_token", return_value="magic_jwt_x")
-    async def test_rejects_protocol_relative_redirect(self, mock_create, mock_base_url, token_user, user, mock_request, db):
+    async def test_rejects_protocol_relative_redirect(self, mock_create, mock_base_url, token_user, learner_user, mock_request, db):
         with pytest.raises(HTTPException) as exc:
             await issue_magic_link(
-                token_user=token_user, user_id=user.id,
+                token_user=token_user, user_id=learner_user.id,
                 redirect_to="//evil.com/phish",
                 ttl_seconds=300, org_slug="test-org",
                 request=mock_request, db_session=db,
@@ -1666,15 +1726,37 @@ class TestIssueMagicLink:
 
     @patch("src.services.admin.admin.get_base_url_from_request", return_value="https://myorg.example.com")
     @patch("src.services.admin.admin.create_access_token", return_value="magic_jwt_x")
-    async def test_rejects_non_slash_redirect(self, mock_create, mock_base_url, token_user, user, mock_request, db):
+    async def test_rejects_non_slash_redirect(self, mock_create, mock_base_url, token_user, learner_user, mock_request, db):
         with pytest.raises(HTTPException) as exc:
             await issue_magic_link(
-                token_user=token_user, user_id=user.id,
+                token_user=token_user, user_id=learner_user.id,
                 redirect_to="course/foo",  # missing leading slash
                 ttl_seconds=300, org_slug="test-org",
                 request=mock_request, db_session=db,
             )
         assert exc.value.status_code == 400
+
+
+    async def test_refuses_to_link_into_an_admin_account(
+        self, token_user, user, mock_request, db
+    ):
+        """Consuming a magic link mints a full session for the target.
+
+        Leaving the impersonation check off here made this route a way around
+        the rule rather than a variation on it: a token barred from issuing a
+        session for an Admin directly could mail itself one instead.
+        """
+        with pytest.raises(HTTPException) as exc:
+            await issue_magic_link(
+                token_user=token_user,
+                user_id=user.id,
+                redirect_to=None,
+                ttl_seconds=300,
+                org_slug="test-org",
+                request=mock_request,
+                db_session=db,
+            )
+        assert exc.value.status_code == 403
 
 
 class TestMagicLinkConsume:

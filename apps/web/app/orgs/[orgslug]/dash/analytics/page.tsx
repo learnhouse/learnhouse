@@ -72,7 +72,7 @@ export default function AnalyticsDashboard() {
     <FeatureGate feature="analytics">
     <div className="h-full w-full bg-[#f8f8f8] flex flex-col">
       {/* Sticky header box */}
-      <div className="pl-4 pr-4 sm:pl-10 sm:pr-10 tracking-tight bg-[#fcfbfc] z-10 nice-shadow flex-shrink-0 relative">
+      <div className="ps-4 pe-4 sm:ps-10 sm:pe-10 tracking-tight bg-[#fcfbfc] z-10 nice-shadow flex-shrink-0 relative">
         <div className="pt-6 pb-4">
           <Breadcrumbs items={[
             { label: t('analytics.title'), href: '/dash/analytics', icon: <ChartBar size={14} /> }

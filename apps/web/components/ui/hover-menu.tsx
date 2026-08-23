@@ -15,7 +15,12 @@ const HoverMenu = React.forwardRef<HTMLDivElement, HoverMenuProps>(
   ({ children, content, contentClassName, align = "start" }, ref) => {
     const triggerRef = React.useRef<HTMLDivElement>(null)
     const [isHovered, setIsHovered] = React.useState(false)
-    const [position, setPosition] = React.useState<{ top: number; left: number } | null>(null)
+    // Anchored on `left` in LTR and on `right` in RTL. Anchoring from the edge
+    // the menu grows away from means we don't need to know its width before it
+    // renders, which is what a naive `left: rect.left - width` would require.
+    const [position, setPosition] = React.useState<
+      { top: number; left: number; right?: undefined } | { top: number; right: number; left?: undefined } | null
+    >(null)
     const hoverTimeoutRef = React.useRef<NodeJS.Timeout | null>(null)
     const leaveTimeoutRef = React.useRef<NodeJS.Timeout | null>(null)
 
@@ -30,10 +35,17 @@ const HoverMenu = React.forwardRef<HTMLDivElement, HoverMenuProps>(
           top = rect.top + rect.height / 2
         }
 
-        setPosition({
-          top,
-          left: rect.right + 8, // 8px gap (ml-2)
-        })
+        // The flyout opens toward the inline end: right of the trigger in LTR,
+        // left of it in RTL. Read direction from the DOM rather than a hook —
+        // this only runs on hover, so it is always client-side and always sees
+        // the direction the user is actually looking at.
+        const isRTL = document.documentElement.dir === 'rtl'
+
+        setPosition(
+          isRTL
+            ? { top, right: window.innerWidth - rect.left + 8 } // 8px gap
+            : { top, left: rect.right + 8 }
+        )
       }
     }, [align])
 
@@ -87,7 +99,7 @@ const HoverMenu = React.forwardRef<HTMLDivElement, HoverMenuProps>(
               style={{
                 position: 'fixed',
                 top: position.top,
-                left: position.left,
+                ...(position.left !== undefined ? { left: position.left } : { right: position.right }),
                 transform: align === "end" ? "translateY(-100%)" : align === "center" ? "translateY(-50%)" : undefined,
               }}
               className={cn(
@@ -97,7 +109,7 @@ const HoverMenu = React.forwardRef<HTMLDivElement, HoverMenuProps>(
               )}
             >
               {/* Invisible bridge to prevent gap issues */}
-              <div className="absolute -left-2 top-0 bottom-0 w-2" />
+              <div className="absolute -start-2 top-0 bottom-0 w-2" />
               {content}
             </div>
           </Portal.Root>

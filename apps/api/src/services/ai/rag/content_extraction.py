@@ -28,6 +28,38 @@ logger = logging.getLogger(__name__)
 
 MAX_PDF_CHARS = 100_000
 
+# ProseMirror only defines heading levels 1-6.
+MAX_HEADING_LEVEL = 6
+
+
+def _safe_heading_level(node: dict) -> int:
+    """Clamp a stored heading level to the ProseMirror range.
+
+    ``activity.content`` is a free-form JSON column, so ``level`` is untrusted:
+    used raw as a string repeat count an oversized value asks for a multi-GB
+    allocation and OOM-kills the indexing worker. Anything that isn't a real
+    int falls back to 1.
+    """
+    attrs = node.get("attrs")
+    if not isinstance(attrs, dict):
+        return 1
+    level = attrs.get("level", 1)
+    if isinstance(level, bool) or not isinstance(level, int):
+        return 1
+    return max(1, min(level, MAX_HEADING_LEVEL))
+
+
+def _child_nodes(node: dict) -> list:
+    """Return only the dict children of a stored node.
+
+    ``content`` may be missing, a scalar, or hold non-node entries; dropping
+    those here keeps a poisoned row from crashing the whole re-index.
+    """
+    children = node.get("content")
+    if not isinstance(children, list):
+        return []
+    return [child for child in children if isinstance(child, dict)]
+
 
 def _is_safe_content_path(file_path: str) -> bool:
     """Reject obviously unsafe stored-file paths before reading them.
@@ -67,13 +99,13 @@ def _walk_prosemirror_node(node: dict, parts: list[str]) -> None:
     # Handle text nodes directly
     if node_type == "text":
         text = node.get("text", "")
-        if text:
+        if text and isinstance(text, str):
             parts.append(text)
         return
 
     # Add heading markers
     if node_type == "heading":
-        level = node.get("attrs", {}).get("level", 1)
+        level = _safe_heading_level(node)
         prefix = "#" * level + " "
         texts = _collect_inline_text(node)
         if texts:
@@ -90,13 +122,13 @@ def _walk_prosemirror_node(node: dict, parts: list[str]) -> None:
 
     # Handle list items
     if node_type in ("bulletList", "orderedList"):
-        for child in node.get("content", []):
+        for child in _child_nodes(node):
             _walk_prosemirror_node(child, parts)
         return
 
     if node_type == "listItem":
         texts = []
-        for child in node.get("content", []):
+        for child in _child_nodes(node):
             if child.get("type") == "paragraph":
                 t = _collect_inline_text(child)
                 if t:
@@ -109,7 +141,7 @@ def _walk_prosemirror_node(node: dict, parts: list[str]) -> None:
 
     # Handle blockquote
     if node_type == "blockquote":
-        for child in node.get("content", []):
+        for child in _child_nodes(node):
             sub_parts = []
             _walk_prosemirror_node(child, sub_parts)
             for p in sub_parts:
@@ -130,11 +162,22 @@ def _walk_prosemirror_node(node: dict, parts: list[str]) -> None:
             parts.append(f"[{node_type}] {texts}")
         return
 
+    # Handle H5P blocks — embed-only, the interactive content lives on the
+    # author's own H5P host, so the author-supplied title is the only text we
+    # have. Handled explicitly so it does not fall through to the generic
+    # recursion, which would yield nothing for this atom node.
+    if node_type == "blockH5P":
+        attrs = node.get("attrs")
+        title = attrs.get("title") if isinstance(attrs, dict) else None
+        if isinstance(title, str) and title.strip():
+            parts.append(f"[H5P interactive content] {title.strip()}")
+        return
+
     # Handle table
     if node_type == "table":
-        for row in node.get("content", []):
+        for row in _child_nodes(node):
             cells = []
-            for cell in row.get("content", []):
+            for cell in _child_nodes(row):
                 cell_text = _collect_inline_text(cell)
                 if cell_text:
                     cells.append(cell_text)
@@ -143,23 +186,22 @@ def _walk_prosemirror_node(node: dict, parts: list[str]) -> None:
         return
 
     # Default: recurse into children
-    for child in node.get("content", []):
-        if isinstance(child, dict):
-            _walk_prosemirror_node(child, parts)
+    for child in _child_nodes(node):
+        _walk_prosemirror_node(child, parts)
 
 
 def _collect_inline_text(node: dict) -> str:
     """Collect all inline text from a node's content."""
     texts = []
-    for child in node.get("content", []):
-        if isinstance(child, dict):
-            if child.get("type") == "text":
-                texts.append(child.get("text", ""))
-            elif child.get("type") == "hardBreak":
-                texts.append("\n")
-            else:
-                # Recurse for nested inline elements (marks, etc.)
-                texts.append(_collect_inline_text(child))
+    for child in _child_nodes(node):
+        if child.get("type") == "text":
+            text = child.get("text", "")
+            texts.append(text if isinstance(text, str) else "")
+        elif child.get("type") == "hardBreak":
+            texts.append("\n")
+        else:
+            # Recurse for nested inline elements (marks, etc.)
+            texts.append(_collect_inline_text(child))
     return "".join(texts)
 
 

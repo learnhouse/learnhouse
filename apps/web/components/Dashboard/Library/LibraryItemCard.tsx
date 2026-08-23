@@ -140,7 +140,7 @@ export default function LibraryItemCard({ item, orgslug, onRemove }: Props) {
 
   return (
     <div className="group relative flex flex-col bg-white rounded-xl nice-shadow overflow-hidden w-full transition-all hover:bg-gray-50/40">
-      <div className={`absolute top-2 right-2 z-20 transition-opacity ${isMenuOpen ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`}>
+      <div className={`absolute top-2 end-2 z-20 transition-opacity ${isMenuOpen ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`}>
         <DropdownMenu open={isMenuOpen} onOpenChange={setIsMenuOpen}>
           <DropdownMenuTrigger asChild>
             <button aria-label="Item actions" className="p-1.5 bg-white/90 backdrop-blur-sm rounded-full hover:bg-white transition-all shadow-md">
@@ -152,23 +152,23 @@ export default function LibraryItemCard({ item, orgslug, onRemove }: Props) {
               <DropdownMenuItem asChild>
                 <button
                   onClick={() => setPreviewOpen(true)}
-                  className="w-full text-left flex items-center px-2 py-1.5 text-sm text-gray-700 hover:bg-gray-50 rounded-md transition-colors"
+                  className="w-full text-start flex items-center px-2 py-1.5 text-sm text-gray-700 hover:bg-gray-50 rounded-md transition-colors"
                 >
-                  <Eye className="mr-2 h-4 w-4" /> {t('library.preview')}
+                  <Eye className="me-2 h-4 w-4" /> {t('library.preview')}
                 </button>
               </DropdownMenuItem>
             )}
             {downloadUrl && (
               <DropdownMenuItem asChild>
                 <a href={downloadUrl} className="flex items-center cursor-pointer">
-                  <DownloadSimple className="mr-2 h-4 w-4" /> {t('media.download')}
+                  <DownloadSimple className="me-2 h-4 w-4" /> {t('media.download')}
                 </a>
               </DropdownMenuItem>
             )}
             {href && (
               <DropdownMenuItem asChild>
                 <a href={href} target="_blank" rel="noopener noreferrer" className="flex items-center cursor-pointer">
-                  <ArrowSquareOut className="mr-2 h-4 w-4" /> {t('library.open')}
+                  <ArrowSquareOut className="me-2 h-4 w-4" /> {t('library.open')}
                 </a>
               </DropdownMenuItem>
             )}
@@ -183,16 +183,16 @@ export default function LibraryItemCard({ item, orgslug, onRemove }: Props) {
                       t('library.link_copy_error'),
                     )
                   }
-                  className="w-full text-left flex items-center px-2 py-1.5 text-sm text-gray-700 hover:bg-gray-50 rounded-md transition-colors"
+                  className="w-full text-start flex items-center px-2 py-1.5 text-sm text-gray-700 hover:bg-gray-50 rounded-md transition-colors"
                 >
-                  <LinkSimple className="mr-2 h-4 w-4" /> {t('library.copy_link')}
+                  <LinkSimple className="me-2 h-4 w-4" /> {t('library.copy_link')}
                 </button>
               </DropdownMenuItem>
             )}
             {type === 'media' && (
               <DropdownMenuItem asChild>
-                <button onClick={() => setAccessOpen(true)} className="w-full text-left flex items-center px-2 py-1.5 text-sm text-gray-700 hover:bg-gray-50 rounded-md transition-colors">
-                  <Lock className="mr-2 h-4 w-4" /> {t('library.manage_access')}
+                <button onClick={() => setAccessOpen(true)} className="w-full text-start flex items-center px-2 py-1.5 text-sm text-gray-700 hover:bg-gray-50 rounded-md transition-colors">
+                  <Lock className="me-2 h-4 w-4" /> {t('library.manage_access')}
                 </button>
               </DropdownMenuItem>
             )}
@@ -202,8 +202,8 @@ export default function LibraryItemCard({ item, orgslug, onRemove }: Props) {
                 confirmationMessage={t('library.remove_from_folder_confirm')}
                 dialogTitle={t('library.remove_from_folder')}
                 dialogTrigger={
-                  <button className="w-full text-left flex items-center px-2 py-1.5 text-sm text-red-600 hover:bg-red-50 rounded-md transition-colors">
-                    <FolderMinus className="mr-2 h-4 w-4" /> {t('library.remove_from_folder')}
+                  <button className="w-full text-start flex items-center px-2 py-1.5 text-sm text-red-600 hover:bg-red-50 rounded-md transition-colors">
+                    <FolderMinus className="me-2 h-4 w-4" /> {t('library.remove_from_folder')}
                   </button>
                 }
                 functionToExecute={onRemove}
@@ -216,7 +216,7 @@ export default function LibraryItemCard({ item, orgslug, onRemove }: Props) {
 
       {type === 'media' ? (
         // Media opens in-app rather than dumping the raw file in a new tab.
-        <button type="button" onClick={() => setPreviewOpen(true)} className="block w-full text-left">
+        <button type="button" onClick={() => setPreviewOpen(true)} className="block w-full text-start">
           {body}
         </button>
       ) : internalHref ? (

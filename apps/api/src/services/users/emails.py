@@ -74,29 +74,143 @@ def _org_logo_img(logo_url: str, alt: str) -> str:
     )
 
 
+def _first_sentence(text: str, limit: int = 110) -> str:
+    """Opening sentence of a body string, for use as preheader text.
+
+    Handles the full stops of every locale we ship — the CJK ideographic
+    period, the Arabic and Devanagari terminators — then falls back to a word
+    boundary. Inbox previews are cut around 100 characters anyway.
+    """
+    if not text:
+        return ""
+
+    for terminator in ("。", "۔", "।", ". ", "! ", "? ", "؟ "):
+        head, sep, _tail = text.partition(terminator)
+        if sep and len(head) <= limit:
+            return (head + sep).strip()
+
+    if len(text) <= limit:
+        return text.strip()
+    return text[:limit].rsplit(" ", 1)[0].strip() + "…"
+
+
+def _reply_to_address() -> str:
+    """Where a reply to a lifecycle email should land, or "" if unconfigured."""
+    try:
+        from config.config import get_learnhouse_config
+
+        return (get_learnhouse_config().contact_email or "").strip()
+    except Exception:  # pragma: no cover - config is always present in practice
+        return ""
+
+
+def _stat_strip(stats: list[tuple[str, int]]) -> str:
+    """A row of label/value pairs, e.g. "LESSONS 8   LEARNERS 0".
+
+    Deliberately not prose. Writing "8 lessons" into copy means solving plural
+    agreement in twenty languages — Russian has three forms, Arabic six — and
+    without an ICU library the result is "1 lessons" in production. A label
+    beside a bare figure needs no agreement in any of them, and it reads faster
+    than a sentence anyway.
+    """
+    if not stats:
+        return ""
+
+    cells = []
+    for label, value in stats:
+        cells.append(
+            '<td style="padding: 0 14px; text-align: center;">'
+            '<div style="font-size: 22px; font-weight: 900; color: #000000; '
+            f'line-height: 1.2;">{value}</div>'
+            '<div style="font-size: 10px; font-weight: 700; letter-spacing: 0.08em; '
+            'text-transform: uppercase; color: rgba(0,0,0,0.35); margin-top: 2px;">'
+            f"{html.escape(label)}</div>"
+            "</td>"
+        )
+
+    return (
+        '<table role="presentation" cellpadding="0" cellspacing="0" border="0" '
+        'align="center" style="margin: 0 auto 24px auto; border-collapse: collapse;">'
+        f"<tr>{''.join(cells)}</tr>"
+        "</table>"
+    )
+
+
+def _preheader_block(text: str) -> str:
+    """The grey line an inbox list shows after the subject.
+
+    Without one, clients scrape the first visible text — which here is the
+    heading, so the list entry reads as the subject said twice. Setting it
+    explicitly buys a second line of information in the only place a reader
+    looks before deciding to open.
+
+    The zero-width padding after the text stops the client continuing into the
+    body copy once the preheader runs out.
+    """
+    if not text:
+        return ""
+    padding = "&#847;&zwnj;&nbsp;" * 60
+    hide = (
+        "display:none;max-height:0;overflow:hidden;mso-hide:all;"
+        "font-size:1px;line-height:1px;color:#ffffff;opacity:0;"
+    )
+    return (
+        f'<div style="{hide}">{html.escape(text)}</div>'
+        f'<div style="{hide}">{padding}</div>'
+    )
+
+
 def _email_layout(
     title: str,
     body_content: str,
     footer_note: str = "",
     logo_html: str = LOGO_SVG,
+    unsubscribe_url: str = "",
+    unsubscribe_label: str = "Unsubscribe from these emails",
+    preheader: str = "",
 ) -> str:
     """Wrap content in the standard email layout.
 
     ``logo_html`` defaults to the LearnHouse mark; white-labeled emails pass the
     org's logo <img> instead.
+
+    ``unsubscribe_url`` is set only by bulk lifecycle mail. Transactional email
+    (password reset, invitation, verification) leaves it empty and renders
+    byte-identically to before — you cannot unsubscribe from a password reset.
+    The link is deliberately legible rather than hidden: someone who wants out
+    and can't find the exit reports spam instead, which costs the sending domain
+    far more than the opt-out does.
     """
-    footer_html = ""
+    note_html = ""
     if footer_note:
+        note_html = f'\n            <p style="{STYLES["footer_text"]}">{footer_note}</p>'
+
+    unsub_html = ""
+    if unsubscribe_url:
+        unsub_html = (
+            f'\n            <p style="{STYLES["footer_text"]} margin-top: 12px;">'
+            f'<a href="{html.escape(unsubscribe_url)}" '
+            'style="color: rgba(0,0,0,0.35); text-decoration: underline;">'
+            f'{html.escape(unsubscribe_label)}</a></p>'
+        )
+
+    footer_html = ""
+    if note_html or unsub_html:
         footer_html = f"""
         <div style="{STYLES['footer']}">
-            <hr style="{STYLES['divider']}" />
-            <p style="{STYLES['footer_text']}">{footer_note}</p>
+            <hr style="{STYLES['divider']}" />{note_html}{unsub_html}
         </div>"""
+
+    # Prefixed with its own newline so that an absent preheader leaves the
+    # document byte-identical to before — the twelve transactional emails
+    # share this layout and none of their output may shift.
+    block = _preheader_block(preheader)
+    preheader_html = f"\n    {block}" if block else ""
 
     return f"""<!DOCTYPE html>
 <html>
 <head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"></head>
-<body style="{STYLES['body']}">
+<body style="{STYLES['body']}">{preheader_html}
     <div style="{STYLES['wrapper']}">
         <div style="{STYLES['container']}">
             <div style="{STYLES['header']}">
@@ -119,6 +233,7 @@ def send_account_creation_email(
     cta_url: str | None = None,
     org_name: str | None = None,
     logo_url: str | None = None,
+    sender_name: str | None = None,
 ):
     """Welcome email sent once an account exists.
 
@@ -174,6 +289,7 @@ def send_account_creation_email(
             footer_note=footer_note,
             logo_html=logo_html,
         ),
+        sender_name=sender_name,
     )
 
 
@@ -261,6 +377,7 @@ def send_password_reset_email(
     email: EmailStr,
     base_url: str,
     lang: str = "en",
+    sender_name: str | None = None,
 ):
     safe_username = html.escape(user.username)
     safe_code = html.escape(generated_reset_code)
@@ -293,6 +410,7 @@ def send_password_reset_email(
             body_content=body_content,
             footer_note=t(lang, "password_reset.footer_org"),
         ),
+        sender_name=sender_name,
     )
 
 
@@ -344,6 +462,7 @@ def send_invitation_email(
     signup_url: str,
     invite_code: Optional[str] = None,
     lang: str = "en",
+    sender_name: str | None = None,
 ):
     safe_org_name = html.escape(org_name)
     safe_inviter = html.escape(inviter_username)
@@ -388,6 +507,7 @@ def send_invitation_email(
             body_content=body_content,
             footer_note=t(lang, "invitation.footer", inviter=safe_inviter),
         ),
+        sender_name=sender_name,
     )
 
 
@@ -398,6 +518,7 @@ def send_org_join_email(
     cta_url: str,
     lang: str = "en",
     logo_url: str | None = None,
+    sender_name: str | None = None,
 ):
     """Greeting sent when an EXISTING account becomes a member of an organization.
 
@@ -436,6 +557,7 @@ def send_org_join_email(
             footer_note=t(lang, "org_join.footer", org_name=safe_org_name),
             logo_html=_org_logo_img(logo_url, org_name) if logo_url else LOGO_SVG,
         ),
+        sender_name=sender_name,
     )
 
 
@@ -446,6 +568,7 @@ def send_role_changed_email(
     new_role_name: str,
     lang: str = "en",
     cta_url: str | None = None,
+    sender_name: str | None = None,
 ):
     """
     Send an email notifying a user that their role has changed in an organization.
@@ -491,6 +614,7 @@ def send_role_changed_email(
             body_content=body_content,
             footer_note=t(lang, "role_changed.footer", org_name=safe_org_name),
         ),
+        sender_name=sender_name,
     )
 
 
@@ -501,6 +625,7 @@ def send_email_verification_email(
     email: EmailStr,
     base_url: str,
     lang: str = "en",
+    sender_name: str | None = None,
 ):
     """
     Send email verification email with verification link.
@@ -549,4 +674,107 @@ def send_email_verification_email(
             body_content=body_content,
             footer_note=t(lang, "email_verification.footer"),
         ),
+        sender_name=sender_name,
+    )
+
+
+def send_nudge_email(
+    nudge_id: str,
+    email: EmailStr,
+    org_name: str,
+    cta_url: str,
+    unsubscribe_url: str,
+    lang: str = "en",
+    logo_url: str | None = None,
+    has_cta: bool = True,
+    track: str = "",
+    stats: list[tuple[str, int]] | None = None,
+    sender_name: str | None = None,
+    **copy_vars,
+):
+    """Send one lifecycle nudge.
+
+    Generic over the catalog: the nudge id selects its copy from the
+    ``nudge.<id>.*`` namespace, so adding a nudge never means adding a function
+    here. ``copy_vars`` fills the placeholders that nudge's strings declare
+    (course name, plan name, and so on) — every value is escaped before it
+    reaches the template.
+
+    ``track`` selects the illustration. It is drawn as a table mosaic rather
+    than an image because Gmail strips inline SVG and both Gmail and Outlook
+    block ``data:`` URIs, so an embedded picture would render as a blank gap
+    for a large share of readers.
+
+    Unlike transactional mail this always carries an unsubscribe link and the
+    matching ``List-Unsubscribe`` headers. Gmail and Outlook expect them on
+    bulk mail, and without them a run at any real volume puts the sending
+    domain at risk.
+
+    Failures are swallowed via ``_send_notification_email``: a nudge nobody
+    asked for must never be the reason a batch job dies.
+    """
+    safe_org_name = html.escape(org_name)
+    raw_vars = {key: str(value) for key, value in copy_vars.items() if value is not None}
+    raw_vars.setdefault("org_name", org_name)
+    safe_vars = {key: html.escape(value) for key, value in raw_vars.items()}
+
+    heading = t(lang, f"nudge.{nudge_id}.heading", **safe_vars)
+    body_text = t(lang, f"nudge.{nudge_id}.body", **safe_vars)
+    # The subject is plain text, not HTML: escaping it would deliver
+    # "Maths &amp; Physics" to the inbox, and ampersands in course names are
+    # common enough that this is not an edge case.
+    subject = t(lang, f"nudge.{nudge_id}.subject", **raw_vars)
+
+    from src.services.nudges.illustrations import render_illustration
+
+    stat_html = _stat_strip(
+        [(t(lang, f"nudge.stat.{key}"), value) for key, value in (stats or [])]
+    )
+
+    body_content = f"""
+        {render_illustration(track)}
+        <h1 style="{STYLES['h1']}">{heading}</h1>
+        <p style="{STYLES['p']}">
+            {body_text}
+        </p>
+        {stat_html}"""
+    if has_cta and cta_url:
+        cta = t(lang, f"nudge.{nudge_id}.cta", **safe_vars)
+        body_content += f"""
+        <a href="{html.escape(cta_url)}" style="{STYLES['button']}">
+            {cta}
+        </a>
+        <p style="{STYLES['link_text']}">{html.escape(cta_url)}</p>
+    """
+
+    # The preheader is the body's opening sentence rather than a thirty-first
+    # set of translated strings. It is already localised, and it gives the
+    # inbox list a second line of information instead of echoing the subject.
+    preheader = _first_sentence(t(lang, f"nudge.{nudge_id}.body", **raw_vars))
+
+    headers: dict[str, str] = {}
+    if unsubscribe_url:
+        headers["List-Unsubscribe"] = f"<{unsubscribe_url}>"
+        headers["List-Unsubscribe-Post"] = "List-Unsubscribe=One-Click"
+
+    # Several nudges invite a reply. Without this they would arrive from the
+    # no-reply sender and the invitation would be a lie.
+    reply_to = _reply_to_address()
+    if reply_to:
+        headers["Reply-To"] = reply_to
+
+    return _send_notification_email(
+        to=email,
+        subject=subject,
+        body=_email_layout(
+            title=heading,
+            body_content=body_content,
+            footer_note=t(lang, "nudge.common.footer", org_name=safe_org_name),
+            logo_html=_org_logo_img(logo_url, org_name) if logo_url else LOGO_SVG,
+            unsubscribe_url=unsubscribe_url,
+            unsubscribe_label=t(lang, "nudge.common.unsubscribe"),
+            preheader=preheader,
+        ),
+        headers=headers or None,
+        sender_name=sender_name,
     )

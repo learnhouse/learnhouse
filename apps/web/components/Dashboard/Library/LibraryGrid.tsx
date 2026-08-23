@@ -39,7 +39,7 @@ function CourseItem({ item, orgslug, onRemove }: { item: any; orgslug: string; o
         isDashboard={true}
         customLink={getUriWithOrg(orgslug, `/dash/courses/course/${removeCoursePrefix(resource.course_uuid || item.resource_uuid)}/general`)}
       />
-      <div className="absolute top-2 left-2 z-30 opacity-0 group-hover:opacity-100 transition-opacity">
+      <div className="absolute top-2 start-2 z-30 opacity-0 group-hover:opacity-100 transition-opacity">
         <ConfirmationModal
           confirmationButtonText={t('library.remove_from_folder')}
           confirmationMessage={t('library.remove_from_folder_confirm')}
@@ -134,7 +134,7 @@ export default function LibraryGrid({
                           >
                             <div
                               {...dragProvided.dragHandleProps}
-                              className="absolute top-2 left-2 z-30 cursor-grab active:cursor-grabbing text-gray-300 hover:text-gray-500 transition-colors"
+                              className="absolute top-2 start-2 z-30 cursor-grab active:cursor-grabbing text-gray-300 hover:text-gray-500 transition-colors"
                               title={t('library.sort.drag_to_reorder', { defaultValue: 'Drag to reorder' })}
                             >
                               <GripVertical size={16} />
@@ -195,7 +195,7 @@ export default function LibraryGrid({
                           >
                             <div
                               {...dragProvided.dragHandleProps}
-                              className="absolute top-2 right-2 z-30 cursor-grab active:cursor-grabbing text-gray-300 hover:text-gray-500 transition-colors bg-white/90 backdrop-blur-sm rounded-full p-1 shadow-md"
+                              className="absolute top-2 end-2 z-30 cursor-grab active:cursor-grabbing text-gray-300 hover:text-gray-500 transition-colors bg-white/90 backdrop-blur-sm rounded-full p-1 shadow-md"
                               title={t('library.sort.drag_to_reorder', { defaultValue: 'Drag to reorder' })}
                             >
                               <GripVertical size={16} />

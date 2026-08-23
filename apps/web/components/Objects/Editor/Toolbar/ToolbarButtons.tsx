@@ -22,6 +22,7 @@ import {
   Link,
   ListBullets,
   ListNumbers,
+  PuzzlePiece,
   Rows,
   RowsPlusBottom,
   SealQuestion,
@@ -453,6 +454,23 @@ export const ToolbarButtons = React.memo(({ editor }: any) => {
           aria-label={t('editor.blocks.quiz')}
         >
           <SealQuestion size={15} weight="fill" />
+        </div>
+      </ToolTip>
+      <ToolTip content={t('editor.blocks.h5p')}>
+        <div
+          className="editor-tool-btn editor-tool-btn-interactive"
+          onClick={() =>
+            editor
+              .chain()
+              .focus()
+              .insertContent({
+                type: 'blockH5P',
+              })
+              .run()
+          }
+          aria-label={t('editor.blocks.h5p')}
+        >
+          <PuzzlePiece size={15} weight="fill" />
         </div>
       </ToolTip>
       <div className="relative inline-block shrink-0">

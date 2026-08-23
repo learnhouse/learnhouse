@@ -1,0 +1,72 @@
+{
+  "activity_key": "pk-catalogue-check",
+  "title": "Catalogue and pricing check",
+  "description": "Four customer requests, each with an account attached. Identify the correct line, work out which price applies, and give a lead time as a range.",
+  "grading_type": "PERCENTAGE",
+  "pass_threshold_percentage": 65,
+  "due_in_days": 8,
+  "published": true,
+  "auto_grading": true,
+  "show_correct_answers": true,
+  "allow_retries": true,
+  "max_retries": 2,
+  "tasks": [
+    {
+      "slug": "pk-t1-pricing",
+      "title": "Which price applies?",
+      "description": "Two accounts, two pricing questions.",
+      "hint": "Agreed overrides tier, and tier overrides list.",
+      "type": "QUIZ",
+      "max_grade_value": 60,
+      "contents": {
+        "questions": [
+          {
+            "questionUUID": "question_pk_t1_q1",
+            "questionText": "A customer has an agreed price on their account, and their volume also qualifies them for a tier discount. Which price applies?",
+            "options": [
+              { "optionUUID": "option_pk_t1_q1_a", "text": "The agreed price", "type": "text", "fileID": "", "assigned_right_answer": true },
+              { "optionUUID": "option_pk_t1_q1_b", "text": "Whichever of the two is lower", "type": "text", "fileID": "", "assigned_right_answer": false },
+              { "optionUUID": "option_pk_t1_q1_c", "text": "The tier price", "type": "text", "fileID": "", "assigned_right_answer": false }
+            ]
+          },
+          {
+            "questionUUID": "question_pk_t1_q2",
+            "questionText": "One line on a multi-item order is unavailable. What happens by default?",
+            "options": [
+              { "optionUUID": "option_pk_t1_q2_a", "text": "The whole order waits, unless the customer asks to split it", "type": "text", "fileID": "", "assigned_right_answer": true },
+              { "optionUUID": "option_pk_t1_q2_b", "text": "The available items ship and the rest follows", "type": "text", "fileID": "", "assigned_right_answer": false }
+            ]
+          }
+        ]
+      },
+      "submissions": {
+        "correct": { "submissions": [
+          { "questionUUID": "question_pk_t1_q1", "optionUUID": "option_pk_t1_q1_a", "answer": true },
+          { "questionUUID": "question_pk_t1_q2", "optionUUID": "option_pk_t1_q2_a", "answer": true }
+        ]},
+        "partial": { "submissions": [
+          { "questionUUID": "question_pk_t1_q1", "optionUUID": "option_pk_t1_q1_a", "answer": true },
+          { "questionUUID": "question_pk_t1_q2", "optionUUID": "option_pk_t1_q2_b", "answer": true }
+        ]},
+        "incorrect": { "submissions": [
+          { "questionUUID": "question_pk_t1_q1", "optionUUID": "option_pk_t1_q1_b", "answer": true },
+          { "questionUUID": "question_pk_t1_q2", "optionUUID": "option_pk_t1_q2_b", "answer": true }
+        ]}
+      }
+    },
+    {
+      "slug": "pk-t2-available-stock",
+      "title": "Available stock",
+      "description": "A line shows 40 units in stock, of which 12 are committed to other orders. How many can you promise a new customer?",
+      "hint": "Available is stock on hand minus committed.",
+      "type": "NUMBER_ANSWER",
+      "max_grade_value": 40,
+      "contents": { "correct_value": 28, "tolerance": 0 },
+      "submissions": {
+        "correct": { "answer": 28 },
+        "partial": { "answer": 28 },
+        "incorrect": { "answer": 40 }
+      }
+    }
+  ]
+}

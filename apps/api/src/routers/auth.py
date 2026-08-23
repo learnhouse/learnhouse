@@ -52,11 +52,9 @@ from src.services.users.email_verification import (
 )
 from src.services.auth.session import issue_session_or_challenge
 from src.security.session_context import (
-    AMR_CLAIM,
     AUTH_METHOD_GOOGLE,
     AUTH_METHOD_PASSWORD,
-    SORG_CLAIM,
-    session_claims,
+    carry_session_claims,
 )
 from src.db.organizations import Organization
 
@@ -420,7 +418,8 @@ async def refresh(
         # Carry the session's provenance across rotation. Without this a refresh
         # would silently launder a method-bound/org-bound session into a
         # claim-less one that bypasses the org auth-method / sharing policy.
-        carried = session_claims(payload.get(AMR_CLAIM), payload.get(SORG_CLAIM))
+        # A session that records no method also picks up its grace deadline here.
+        carried = carry_session_claims(payload)
         new_access_token = create_access_token(
             data={"sub": email, **carried},
             expires_delta=JWT_ACCESS_TOKEN_EXPIRES,
@@ -631,7 +630,13 @@ class ThirdPartyLogin(BaseModel):
         "profile and tokens."
     ),
     responses={
-        200: {"description": "OAuth login successful; cookies set and body contains user + tokens."},
+        200: {
+            "description": (
+                "OAuth login successful; cookies set and body contains user + tokens. "
+                "If the account has a confirmed second factor, no cookies are set and "
+                "the body is {mfa_required: true, mfa_token} instead."
+            )
+        },
         400: {"description": "Unknown org_id or unsupported provider"},
         401: {"description": "Third-party authentication failed"},
         403: {"description": "Organization is invite-only and no valid invite was provided"},
@@ -859,26 +864,30 @@ async def third_party_login(
                 except Exception:
                     pass
 
-    # Google OAuth mints directly (it does not carry a second factor). Stamp the
-    # session's provenance so the org auth-method / sharing policy can see it.
-    google_claims = session_claims(AUTH_METHOD_GOOGLE, org_id)
-    access_token = create_access_token(
-        data={"sub": user.email, "purpose": "session", **google_claims},
-        expires_delta=JWT_ACCESS_TOKEN_EXPIRES
+    # Issue the session through the same chokepoint as password and magic-link
+    # login, so an account with a confirmed second factor is challenged here too.
+    # Minting directly meant a Google sign-in skipped an enrolled TOTP factor
+    # entirely — and the org-wide require_2fa policy did not catch it either,
+    # because the factor exists and so the user counts as compliant. The
+    # provenance (amr/sorg) is stamped either way for the org auth-method policy.
+    issue = await issue_session_or_challenge(
+        db_session, user, amr=AUTH_METHOD_GOOGLE, org_id=org_id
     )
-    refresh_token = create_refresh_token(
-        data={"sub": user.email, "purpose": "session", **google_claims}
-    )
+    if issue.mfa_required:
+        return {
+            "mfa_required": True,
+            "mfa_token": issue.mfa_token,
+        }
 
-    set_auth_cookies(response, access_token, refresh_token, request)
+    set_auth_cookies(response, issue.access_token, issue.refresh_token, request)
 
     user = UserRead.model_validate(user)
 
     result = {
         "user": user,
         "tokens": {
-            "access_token": access_token,
-            "refresh_token": refresh_token,
+            "access_token": issue.access_token,
+            "refresh_token": issue.refresh_token,
             "expiry": get_token_expiry_ms(),
         },
     }
@@ -1037,7 +1046,18 @@ async def logout(
     ``get_current_user`` via a Redis blocklist, so stolen tokens cannot
     outlive logout simply by being replayed outside the browser.
     """
+    # Identify the session from either credential. A caller that presents only
+    # the refresh cookie is still logging out a real session, and refusing it
+    # meant the revocation below never ran — a proxy that forwarded one cookie
+    # and not the other silently turned every logout into cookie-clearing only.
     token = extract_jwt_from_request(request)
+    payload = decode_jwt(token) if token else None
+    if not payload or not payload.get("sub"):
+        refresh_token = request.cookies.get(JWT_REFRESH_COOKIE_NAME)
+        if refresh_token:
+            payload = decode_refresh_token(refresh_token) or payload
+            token = token or refresh_token
+
     if not token:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
@@ -1047,7 +1067,6 @@ async def logout(
 
     # Best-effort resolve the user to revoke every session they have across
     # devices (not just the one tied to this cookie).
-    payload = decode_jwt(token)
     if payload and payload.get("sub"):
         try:
             user_record = await security_get_user(
@@ -1125,7 +1144,23 @@ async def api_verify_email(
     # through the same second-factor gate. A brand-new user cannot have MFA yet,
     # but an existing user re-verifying their address can — and without this the
     # verification link would be a way around their own second factor.
-    issue = await issue_session_or_challenge(db_session, user)
+    #
+    # Stamp the provenance like every other sign-in path. Minting a claim-less
+    # session here meant a freshly-verified member could not be matched against
+    # the org's allowed-method policy at all.
+    from src.security.session_context import AUTH_METHOD_MAGIC_LOGIN
+
+    verified_org = (
+        await db_session.execute(
+            select(Organization).where(Organization.org_uuid == body.org_uuid)
+        )
+    ).scalars().first()
+    issue = await issue_session_or_challenge(
+        db_session,
+        user,
+        amr=AUTH_METHOD_MAGIC_LOGIN,
+        org_id=verified_org.id if verified_org else None,
+    )
     if issue.mfa_required:  # pragma: no cover - same 2FA branch as /login, exercised there
         return {
             "message": message,

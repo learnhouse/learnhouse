@@ -1,0 +1,108 @@
+{
+  "bundle_version": "1.0.0",
+
+  "org": {
+    "name": "Riverbend Academy",
+    "description": "The internal learning platform of Riverbend Supply Co.",
+    "about": "Riverbend Academy is where everyone at Riverbend Supply Co. learns the work: how we onboard, how we write to each other, how we look after customers, and what we are required to get right. Every course here is short, practical and written by the team that does the job.",
+    "email": "academy@riverbend.example",
+    "logo": "org/logo.webp",
+    "thumbnail": "org/thumbnail.webp"
+  },
+
+  "students": {
+    "count": 40,
+    "with_avatar": 24,
+    "avatar_count": 24
+  },
+
+  "sections": [
+    { "slug": "getting-started", "name": "Getting Started", "color": "violet" },
+    { "slug": "core-skills", "name": "Core Skills", "color": "blue" },
+    { "slug": "compliance-and-data", "name": "Compliance & Data", "color": "amber" }
+  ],
+
+  "cohorts": [
+    {
+      "slug": "spring-intake",
+      "name": "Spring Intake",
+      "description": "Everyone who joined Riverbend in the first half of the year.",
+      "share": 0.4
+    },
+    {
+      "slug": "autumn-intake",
+      "name": "Autumn Intake",
+      "description": "The second intake of the year, still working through the core path.",
+      "share": 0.4
+    },
+    {
+      "slug": "team-leads",
+      "name": "Team Leads",
+      "description": "Anyone who runs a team. Gets the compliance material early.",
+      "share": 0.2,
+      "restricted_courses": ["compliance-essentials"]
+    }
+  ],
+
+  "personas": [
+    {
+      "id": "completer",
+      "weight": 12,
+      "min_courses": 6, "max_courses": 6,
+      "min_completion": 1.0, "max_completion": 1.0,
+      "assignments": "graded", "min_grade_pct": 82, "max_grade_pct": 98
+    },
+    {
+      "id": "steady",
+      "weight": 25,
+      "min_courses": 3, "max_courses": 5,
+      "min_completion": 0.55, "max_completion": 0.85,
+      "assignments": "graded", "min_grade_pct": 65, "max_grade_pct": 85
+    },
+    {
+      "id": "struggling",
+      "weight": 15,
+      "min_courses": 2, "max_courses": 4,
+      "min_completion": 0.3, "max_completion": 0.55,
+      "assignments": "graded", "min_grade_pct": 35, "max_grade_pct": 58
+    },
+    {
+      "id": "starter",
+      "weight": 20,
+      "min_courses": 1, "max_courses": 3,
+      "min_completion": 0.05, "max_completion": 0.2,
+      "assignments": "pending"
+    },
+    {
+      "id": "binger",
+      "weight": 10,
+      "min_courses": 1, "max_courses": 2,
+      "min_completion": 1.0, "max_completion": 1.0,
+      "assignments": "graded", "min_grade_pct": 70, "max_grade_pct": 95
+    },
+    {
+      "id": "lurker",
+      "weight": 10,
+      "min_courses": 1, "max_courses": 2,
+      "min_completion": 0.0, "max_completion": 0.0,
+      "assignments": "none"
+    },
+    {
+      "id": "dropped",
+      "weight": 8,
+      "min_courses": 2, "max_courses": 3,
+      "min_completion": 0.2, "max_completion": 0.4,
+      "assignments": "none",
+      "run_status": "STATUS_PAUSED"
+    }
+  ],
+
+  "courses": [
+    "onboarding-essentials",
+    "communication-at-work",
+    "customer-support-fundamentals",
+    "product-knowledge",
+    "data-literacy",
+    "compliance-essentials"
+  ]
+}

@@ -122,6 +122,15 @@ async def create_api_token(
     # VERIFICATION 3+4: Membership + permission (superadmins bypass)
     await require_org_role_permission(current_user.id, org_id, db_session, "roles", "action_create")
 
+    # A token scoped to the shared demo is a key to the headless /admin surface
+    # for an organization whose "members" are real people who once clicked a
+    # link. From there it reaches the user export, the anonymize endpoint and
+    # the magic-link route. The refresh does sweep minted tokens as drift, but
+    # ten minutes is ample, and a session minted with one outlives the sweep.
+    from src.services.demo.guards import require_not_demo_org
+
+    await require_not_demo_org(org_id, db_session)
+
     # VERIFICATION 5: Validate token name
     if not token_data.name or token_data.name.strip() == "":
         raise HTTPException(

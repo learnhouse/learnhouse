@@ -153,7 +153,7 @@ export default function OrgDetailPage() {
           href="/admin/organizations"
           className="inline-flex items-center gap-1.5 text-sm text-white/40 hover:text-white/60 transition-colors mb-3"
         >
-          <ArrowLeft size={14} weight="bold" />
+          <ArrowLeft size={14} weight="bold" data-dir-flip />
           Back to Organizations
         </Link>
         <div className="flex items-center gap-4">
@@ -361,7 +361,7 @@ function OverviewTab({ org, orgId, accessToken }: { org: any; orgId: string; acc
                     )}
                     <div>
                       <span className="text-sm text-white/80">{u.username}</span>
-                      <span className="text-xs text-white/30 ml-2">{u.email}</span>
+                      <span className="text-xs text-white/30 ms-2">{u.email}</span>
                     </div>
                   </div>
                 ))}
@@ -434,7 +434,7 @@ function CoursesTab({
       <div className="flex items-center justify-between mb-4">
         <span className="text-sm text-white/40">{total} course{total !== 1 ? 's' : ''}</span>
       </div>
-      <table className="w-full text-left">
+      <table className="w-full text-start">
         <thead>
           <tr className="border-b border-white/[0.08]">
             <th className="px-4 py-3 text-xs font-medium text-white/40 uppercase tracking-wider">Course</th>
@@ -475,7 +475,7 @@ function CoursesTab({
                         <p className="text-xs text-white/30 truncate max-w-xs">{course.description}</p>
                       )}
                     </div>
-                    <ArrowSquareOut size={14} weight="bold" className="text-white/20 ml-auto shrink-0" />
+                    <ArrowSquareOut size={14} weight="bold" className="text-white/20 ms-auto shrink-0" />
                   </div>
                 </td>
                 <td className="px-4 py-3">
@@ -554,14 +554,14 @@ function UsersTab({ orgId, accessToken }: { orgId: string; accessToken: string }
           <div className="relative">
             <MagnifyingGlass
               size={14}
-              className="absolute left-2.5 top-1/2 -translate-y-1/2 text-white/30"
+              className="absolute start-2.5 top-1/2 -translate-y-1/2 text-white/30"
             />
             <input
               type="text"
               value={searchInput}
               onChange={(e) => setSearchInput(e.target.value)}
               placeholder="Search users..."
-              className="bg-white/[0.05] border border-white/[0.08] rounded-lg pl-8 pr-3 py-1.5 text-sm text-white placeholder:text-white/25 focus:outline-none focus:border-white/20 w-48"
+              className="bg-white/[0.05] border border-white/[0.08] rounded-lg ps-8 pe-3 py-1.5 text-sm text-white placeholder:text-white/25 focus:outline-none focus:border-white/20 w-48"
             />
           </div>
         </form>
@@ -574,7 +574,7 @@ function UsersTab({ orgId, accessToken }: { orgId: string; accessToken: string }
         </div>
       ) : (
         <>
-          <table className="w-full text-left">
+          <table className="w-full text-start">
             <thead>
               <tr className="border-b border-white/[0.08]">
                 <th className="px-4 py-3 text-xs font-medium text-white/40 uppercase tracking-wider">User</th>
@@ -964,7 +964,7 @@ function PlanTab({
             <button
               key={plan.id}
               onClick={() => setSelectedPlan(plan.id)}
-              className={`text-left p-4 rounded-xl border transition-all ${
+              className={`text-start p-4 rounded-xl border transition-all ${
                 selectedPlan === plan.id
                   ? 'border-white/30 bg-white/[0.06]'
                   : 'border-white/[0.08] bg-white/[0.02] hover:border-white/[0.15]'
@@ -1269,7 +1269,7 @@ function ToggleSwitch({
     >
       <span
         className={`inline-block h-3.5 w-3.5 transform rounded-full bg-white transition-transform ${
-          enabled ? 'translate-x-[18px]' : 'translate-x-[3px]'
+          enabled ? 'translate-x-[18px] rtl:-translate-x-[18px]' : 'translate-x-[3px] rtl:-translate-x-[3px]'
         }`}
       />
     </button>
@@ -1412,7 +1412,7 @@ function FeaturesTab({
 
                 {/* Special sub-controls */}
                 {key === 'ai' && enabled && (
-                  <div className="mt-3 pl-3 border-l-2 border-white/[0.06] flex items-center justify-between">
+                  <div className="mt-3 ps-3 border-s-2 border-white/[0.06] flex items-center justify-between">
                     <div>
                       <p className="text-xs text-white/70">AI Copilot</p>
                       <p className="text-[11px] text-white/40">Inline writing/coding suggestions</p>
@@ -1429,7 +1429,7 @@ function FeaturesTab({
                   </div>
                 )}
                 {key === 'members' && enabled && (
-                  <div className="mt-3 pl-3 border-l-2 border-white/[0.06] flex items-center justify-between gap-3">
+                  <div className="mt-3 ps-3 border-s-2 border-white/[0.06] flex items-center justify-between gap-3">
                     <div className="min-w-0">
                       <p className="text-xs text-white/70">Signup mode</p>
                       <p className="text-[11px] text-white/40">
@@ -1658,7 +1658,7 @@ function Pagination({
           disabled={page === 1}
           className="p-1.5 rounded text-white/40 hover:text-white hover:bg-white/[0.08] transition-colors disabled:opacity-20 disabled:cursor-not-allowed"
         >
-          <CaretLeft size={14} weight="bold" />
+          <CaretLeft size={14} weight="bold" data-dir-flip />
         </button>
         {Array.from({ length: totalPages }, (_, i) => i + 1)
           .filter((p) => p === 1 || p === totalPages || Math.abs(p - page) <= 1)
@@ -1684,7 +1684,7 @@ function Pagination({
           disabled={page === totalPages}
           className="p-1.5 rounded text-white/40 hover:text-white hover:bg-white/[0.08] transition-colors disabled:opacity-20 disabled:cursor-not-allowed"
         >
-          <CaretRight size={14} weight="bold" />
+          <CaretRight size={14} weight="bold" data-dir-flip />
         </button>
       </div>
     </div>

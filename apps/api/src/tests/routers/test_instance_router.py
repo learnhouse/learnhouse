@@ -30,14 +30,62 @@ async def client(app):
 
 class TestInstanceRouter:
     async def test_get_instance_info_from_cache(self, client):
+        """The cache serves the DB lookup; it must not serve `mode`.
+
+        `mode` and `multi_org_enabled` are recomputed per request now. A stale
+        `mode` in the cached blob used to survive for the full 600s TTL, so an
+        operator who fixed a bad license key saw mode "oss" for ten minutes
+        after the heartbeat had already recovered, and concluded otherwise.
+        """
         with patch(
             "src.routers.instance.get_cached_instance_info",
-            return_value={"mode": "ee"},
+            return_value={"default_org_slug": "cached-org", "tenancy": "single", "mode": "ee"},
+        ):
+            with patch("src.routers.instance.get_deployment_mode", return_value="oss"):
+                response = await client.get("/api/v1/instance/info")
+
+        assert response.status_code == 200
+        body = response.json()
+        assert body["default_org_slug"] == "cached-org"  # cached
+        assert body["mode"] == "oss"  # live, overrides the stale cached value
+        assert body["multi_org_enabled"] is False
+
+    async def test_license_derived_fields_are_never_cached(self, client, db, org):
+        """What gets written to Redis must not carry `mode`.
+
+        Deploys are rolling and the cache is shared, so any pod running older
+        code will return a cached blob verbatim. If these fields are ever put
+        back into the stored payload, that pod serves a stale `mode` — and if
+        they are stored under a key an older build also reads, it serves a
+        response missing `mode` entirely.
+        """
+        stored = {}
+
+        config = SimpleNamespace(
+            hosting_config=SimpleNamespace(frontend_domain="localhost:3000", tenancy="multi")
+        )
+        with patch("src.routers.instance.get_cached_instance_info", return_value=None), patch(
+            "src.routers.instance.set_cached_instance_info", side_effect=lambda d: stored.update(d)
+        ), patch("src.routers.instance.get_learnhouse_config", return_value=config), patch(
+            "src.routers.instance.get_deployment_mode", return_value="saas"
         ):
             response = await client.get("/api/v1/instance/info")
 
         assert response.status_code == 200
-        assert response.json()["mode"] == "ee"
+        assert "mode" not in stored
+        assert "multi_org_enabled" not in stored
+        # ...but the response the client actually receives still has both.
+        assert response.json()["mode"] == "saas"
+        assert response.json()["multi_org_enabled"] is True
+
+    async def test_instance_info_cache_key_is_versioned(self):
+        """The key must not collide with the pre-change payload shape."""
+        from src.services.orgs.cache import _INSTANCE_INFO_KEY
+
+        assert _INSTANCE_INFO_KEY.endswith(":v2"), (
+            "bump the key version whenever the cached instance-info shape changes, "
+            "or a rolling deploy will have two builds reading one payload"
+        )
 
     async def test_get_instance_info_builds_response(self, client, db, org):
         config = SimpleNamespace(
@@ -55,9 +103,6 @@ class TestInstanceRouter:
         ), patch(
             "src.routers.instance.get_deployment_mode",
             return_value="saas",
-        ), patch(
-            "src.routers.instance.is_multi_org_allowed",
-            return_value=True,
         ), patch(
             "src.routers.instance.set_cached_instance_info",
         ) as mock_set_cache:
@@ -90,9 +135,6 @@ class TestInstanceRouter:
         ), patch(
             "src.routers.instance.get_deployment_mode",
             return_value="ee",
-        ), patch(
-            "src.routers.instance.is_multi_org_allowed",
-            return_value=True,
         ), patch(
             "src.routers.instance.set_cached_instance_info",
         ):
@@ -127,9 +169,6 @@ class TestInstanceRouter:
             ), patch(
                 "src.routers.instance.get_deployment_mode",
                 return_value="oss",
-            ), patch(
-                "src.routers.instance.is_multi_org_allowed",
-                return_value=False,
             ), patch(
                 "src.routers.instance.set_cached_instance_info",
             ):

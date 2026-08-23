@@ -433,8 +433,21 @@ const CertificatePreview: React.FC<CertificatePreviewProps> = ({
 
   const theme = getPatternTheme(certificatePattern);
 
+  // dir="ltr" deliberately, and this file keeps its physical utilities.
+  //
+  // The certificate is rasterised by html2canvas for PDF export, and CSS
+  // logical properties are the family html2canvas reproduces worst — it
+  // reimplements layout rather than reading the browser's, and it clones into
+  // an offscreen iframe where dir inheritance is unreliable. Converting this
+  // file would risk silently breaking every downloaded certificate, and PDFs
+  // are not something anyone checks during review.
+  //
+  // Most of the physical classes here are symmetric corner ornaments anyway,
+  // which carry no directional meaning. Arabic is handled where it matters:
+  // the text nodes below use dir="auto". A properly RTL certificate belongs in
+  // a separate template variant, not a flip of this one.
   return (
-    <div className="bg-gradient-to-br from-blue-50 to-indigo-50 border border-blue-200 rounded-xl p-4 w-full h-full">
+    <div dir="ltr" className="bg-gradient-to-br from-blue-50 to-indigo-50 border border-blue-200 rounded-xl p-4 w-full h-full">
       <div className="bg-white rounded-lg shadow-sm p-6 relative overflow-hidden w-full h-full flex flex-col">
         {/* Dynamic Certificate Pattern */}
         {renderCertificatePattern(certificatePattern)}
@@ -489,18 +502,18 @@ const CertificatePreview: React.FC<CertificatePreviewProps> = ({
 
           {/* Certificate Content */}
           <div className="flex flex-col justify-center items-center flex-1 max-w-full">
-            <h4 className={`font-bold text-sm sm:text-base ${theme.primary} mb-2 text-center`}>
+            <h4 dir="auto" className={`font-bold text-sm sm:text-base ${theme.primary} mb-2 text-center`}>
               {certificationName || 'Certification Name'}
             </h4>
             {learnerName && (
               <div className="flex flex-col items-center mb-2">
                 <span className={`text-[10px] sm:text-xs ${theme.secondary} uppercase tracking-wider`}>Presented to</span>
-                <span className={`font-semibold text-sm sm:text-base ${theme.primary} text-center`}>
+                <span dir="auto" className={`font-semibold text-sm sm:text-base ${theme.primary} text-center`}>
                   {learnerName}
                 </span>
               </div>
             )}
-            <p className={`text-xs sm:text-sm ${theme.secondary} text-center leading-relaxed max-w-xs sm:max-w-sm`}>
+            <p dir="auto" className={`text-xs sm:text-sm ${theme.secondary} text-center leading-relaxed max-w-xs sm:max-w-sm`}>
               {certificationDescription || 'Certification description will appear here...'}
             </p>
           </div>
@@ -538,7 +551,7 @@ const CertificatePreview: React.FC<CertificatePreviewProps> = ({
                 <User className={`w-2.5 h-2.5 sm:w-3 sm:h-3 ${theme.icon}`} />
                 <span className={`text-xs ${theme.secondary} font-medium`}>Instructor</span>
               </div>
-              <div className={`text-xs ${theme.primary} font-semibold`}>
+              <div className={`text-xs ${theme.primary} font-semibold`} dir="auto">
                 {certificateInstructor || 'Dr. Jane Smith'}
               </div>
               <div className={`h-px w-10 sm:w-12 ${theme.secondary.replace('text-', 'bg-')} opacity-50`}></div>
@@ -559,7 +572,7 @@ const CertificatePreview: React.FC<CertificatePreviewProps> = ({
                   </div>
                 )}
               </div>
-              <div className={`text-xs ${theme.secondary} font-medium`}>
+              <div className={`text-xs ${theme.secondary} font-medium`} dir="auto">
                 {org?.name || 'LearnHouse'}
               </div>
             </div>

@@ -18,16 +18,16 @@ optional: the feature stays disabled or uses a runtime fallback when the variabl
 | --- | --- | --- | --- | --- |
 | `LEARNHOUSE_SITE_NAME` | Instance name returned by the API. | string | `LearnHouse` | API |
 | `LEARNHOUSE_SITE_DESCRIPTION` | Short instance description returned by the API. | string | `LearnHouse is an open-source platform tailored for learning experiences.` | API |
-| `LEARNHOUSE_CONTACT_EMAIL` | Contact email for the instance. | email | `hi@learnhouse.app` | API |
+| `LEARNHOUSE_CONTACT_EMAIL` | Contact email for the instance. | email | `hello@learnhouse.app` | API |
 | `LEARNHOUSE_ENV` | Environment label for backend and Sentry reporting. | string | `dev` | API, Web |
 | `LEARNHOUSE_DEVELOPMENT_MODE` | Enables development-only API behavior such as docs routes and EE dev override. | boolean | `false` | API, CLI |
 | `LEARNHOUSE_SAAS` | Enables SaaS deployment mode, plan gating, and platform endpoint warnings. | boolean | `false` | API |
-| `LEARNHOUSE_SELF_HOSTED` | Legacy self-hosting flag used in tenancy inference. Prefer `LEARNHOUSE_TENANCY`. Parsed loosely: any non-empty value (including the string `false`) enables it, so leave it unset to keep it off. | boolean-like string | unset (off) | API |
-| `LEARNHOUSE_USE_DEFAULT_ORG` | Legacy default-org flag used in tenancy inference. Prefer `LEARNHOUSE_TENANCY`. Parsed loosely: any non-empty value (including the string `false`) enables it, so leave it unset to keep it off. | boolean-like string | unset (off) | API |
+| `LEARNHOUSE_SELF_HOSTED` | Legacy self-hosting flag used in tenancy inference. Prefer `LEARNHOUSE_TENANCY`. Accepts `true`/`1`/`yes`/`on` (case-insensitive); anything else is off. Previously any non-empty value enabled it, including the string `false`. | boolean | unset (off) | API |
+| `LEARNHOUSE_USE_DEFAULT_ORG` | Legacy default-org flag used in tenancy inference. Prefer `LEARNHOUSE_TENANCY`. Accepts `true`/`1`/`yes`/`on` (case-insensitive); anything else is off. Previously any non-empty value enabled it, including the string `false`. | boolean | unset (off) | API |
 | `LEARNHOUSE_TENANCY` | Selects `single` host tenancy or `multi` subdomain tenancy. Multi-tenancy requires EE or SaaS mode. | enum: `single`, `multi` | `single` unless inferred as multi-tenant | API, EE CLI |
 | `LEARNHOUSE_DOMAIN` | Public domain used for org routing, cookie decisions, and custom-domain CNAME targets. Include the port for local development. | hostname | `localhost:3000` | API, CLI |
 | `LEARNHOUSE_FRONTEND_DOMAIN` | Frontend host used by the API when it needs the public frontend domain separately from the backend host. | hostname | `localhost:3000` | API, EE CLI |
-| `LEARNHOUSE_SSL` | Backend-side SSL flag for generated URLs and hosting config. | boolean | `false` | API |
+| `LEARNHOUSE_SSL` | Backend-side SSL flag: picks `https` vs `http` for generated links (password reset, email verification, invites, magic links, SSO redirect, media URLs). Accepts `true`/`1`/`yes`/`on` (case-insensitive); anything else is off. Previously any non-empty value enabled it, including the string `false` — check your value before upgrading. | boolean | `false` | API |
 | `LEARNHOUSE_PORT` | Backend port. Local config defaults to `1338`; the production CLI template emits `9000`. | integer | `1338` locally, `9000` in generated Docker installs | API, CLI, API container |
 | `LEARNHOUSE_ALLOWED_ORIGINS` | Comma-separated CORS allowlist. | CSV of URLs | `http://localhost:3000,http://localhost:3001` | API |
 | `LEARNHOUSE_ALLOWED_REGEXP` | Additional CORS origin regex used by multi-tenant deployments. | regex string | `\b((?:https?://)[^\s/$.?#].[^\s]*)\b` | API |
@@ -36,7 +36,7 @@ optional: the feature stays disabled or uses a runtime fallback when the variabl
 | `LEARNHOUSE_CUSTOM_DOMAIN_DEV_MODE` | Skips DNS verification for all custom domains and marks them verified immediately. Development/testing only. | boolean | `false` | API |
 | `LEARNHOUSE_PUBLIC` | Docker build argument that produces a community build by excluding non-community code. | boolean | `false` | Dockerfiles (root, API, Web) |
 | `LEARNHOUSE_PLATFORM_URL` | Base URL for LearnHouse platform links, upgrade URLs, and email allowlist checks. | URL | unset; backend flows fall back to `https://www.learnhouse.app` and the web token-exchange to `https://learnhouse.app` | API, Web |
-| `LEARNHOUSE_PLATFORM_API_KEY` | Shared secret for platform-only internal endpoints such as packs. | secret string | required for SaaS/platform endpoints | API |
+| `LEARNHOUSE_PLATFORM_API_KEY` | Shared secret for platform-only internal endpoints such as packs. When unset, those endpoints reject every request with a 403 and the API logs an error on the first rejected request. | secret string | required for SaaS/platform endpoints | API |
 | `CLOUD_INTERNAL_KEY` | Shared secret for SaaS-internal endpoints (custom-domain sync and the `cloud_internal` router). When unset, those endpoints reject every request and the API logs a startup warning. | secret string | unset; required for SaaS custom-domain provisioning | API |
 
 ## Database, Redis, and collaboration
@@ -59,9 +59,9 @@ optional: the feature stays disabled or uses a runtime fallback when the variabl
 | `LEARNHOUSE_INITIAL_ADMIN_PASSWORD` | Initial admin password used by the API install command and generated `.env` files. | secret string | required for install/bootstrap | API, CLI |
 | `LEARNHOUSE_INITIAL_ORG_NAME` | Initial organization display name used during install. | string | `Default Organization` | API, CLI |
 | `LEARNHOUSE_INITIAL_ORG_SLUG` | Initial organization slug used during install. | slug string | `default` | API, CLI |
-| `LEARNHOUSE_GOOGLE_CLIENT_ID` | Google OAuth client ID used by web auth proxy routes. | string | unset unless Google OAuth is enabled | Web, CLI |
+| `LEARNHOUSE_GOOGLE_CLIENT_ID` | Google OAuth client ID used by web auth proxy routes. The API also accepts it as a fallback audience for backend token validation. | string | unset unless Google OAuth is enabled | Web, CLI, API |
 | `LEARNHOUSE_GOOGLE_CLIENT_SECRET` | Google OAuth client secret used by the web token exchange route. | secret string | unset unless Google OAuth is enabled | Web, CLI |
-| `LEARNHOUSE_GOOGLE_OAUTH_CLIENT_ID` | Expected Google OAuth audience for backend ID-token validation. If unset, audience verification is disabled with a warning. | string | unset | API |
+| `LEARNHOUSE_GOOGLE_OAUTH_CLIENT_ID` | Expected Google OAuth audience for backend ID-token validation. Required to enable Google sign-in: if neither this nor `LEARNHOUSE_GOOGLE_CLIENT_ID` is set the audience cannot be checked and Google sign-in is refused. | string | unset | API |
 
 ## Web runtime
 
@@ -105,6 +105,7 @@ optional: the feature stays disabled or uses a runtime fallback when the variabl
 | `LEARNHOUSE_EMAIL_PROVIDER` | Outbound email provider. | enum: `resend`, `smtp` | `resend` | API, CLI |
 | `LEARNHOUSE_RESEND_API_KEY` | Resend API key when `LEARNHOUSE_EMAIL_PROVIDER=resend`. | secret string | unset; required to send via Resend | API, CLI |
 | `LEARNHOUSE_SYSTEM_EMAIL_ADDRESS` | Sender address for system email. | email | unset; CLI setup can emit `noreply@{domain}` | API, CLI |
+| `LEARNHOUSE_SYSTEM_EMAIL_SENDER_NAME` | Display name on system email, as in `Name <address>`. The address itself is not configurable per sender. | string | `LearnHouse` | API |
 | `LEARNHOUSE_SMTP_HOST` | SMTP server hostname when `LEARNHOUSE_EMAIL_PROVIDER=smtp`. | hostname | unset | API, CLI |
 | `LEARNHOUSE_SMTP_PORT` | SMTP server port. | integer | `587` | API, CLI |
 | `LEARNHOUSE_SMTP_USERNAME` | SMTP authentication username. | string | unset | API, CLI |

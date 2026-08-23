@@ -9,8 +9,11 @@ interface MagicBlockPreviewProps {
 }
 
 /**
- * Sandboxed iframe preview for MagicBlock HTML content
- * Uses blob URLs and sandbox attributes for security
+ * Sandboxed iframe preview for MagicBlock HTML content.
+ *
+ * The document goes in through srcDoc rather than a blob: URL — a blob
+ * document inherits the creating page's origin, whereas a srcDoc frame without
+ * allow-same-origin lands on an opaque one.
  */
 function MagicBlockPreview({
   htmlContent,
@@ -18,15 +21,15 @@ function MagicBlockPreview({
   streamingContent = '',
 }: MagicBlockPreviewProps) {
   const iframeRef = React.useRef<HTMLIFrameElement>(null)
-  const [blobUrl, setBlobUrl] = React.useState<string | null>(null)
+  const [previewHtml, setPreviewHtml] = React.useState<string | null>(null)
 
   // Content to render (prioritize streaming content, then saved content)
   const contentToRender = streamingContent || htmlContent
 
-  // Create blob URL for secure iframe content
+  // Build the document handed to the sandboxed iframe
   React.useEffect(() => {
     if (!contentToRender) {
-      setBlobUrl(null)
+      setPreviewHtml(null)
       return
     }
 
@@ -58,15 +61,7 @@ ${html}
 </html>`
     }
 
-    // Create blob URL
-    const blob = new Blob([wrappedHtml], { type: 'text/html' })
-    const url = URL.createObjectURL(blob)
-    setBlobUrl(url)
-
-    // Cleanup
-    return () => {
-      URL.revokeObjectURL(url)
-    }
+    setPreviewHtml(wrappedHtml)
   }, [contentToRender])
 
   // Show loading state
@@ -82,7 +77,7 @@ ${html}
   }
 
   // Show empty state
-  if (!blobUrl && !isLoading) {
+  if (!previewHtml && !isLoading) {
     return (
       <div className="flex items-center justify-center w-full h-full bg-black/30 border-2 border-dashed border-white/10" style={{ minHeight: '100%' }}>
         <div className="text-center space-y-2 px-4">
@@ -98,17 +93,17 @@ ${html}
   return (
     <div className="relative w-full h-full" style={{ minHeight: 0 }}>
       {isLoading && streamingContent && (
-        <div className="absolute top-4 right-4 z-10 flex items-center gap-2 bg-black/70 backdrop-blur-sm px-3 py-1.5 rounded-full shadow-sm ring-1 ring-inset ring-white/10">
+        <div className="absolute top-4 end-4 z-10 flex items-center gap-2 bg-black/70 backdrop-blur-sm px-3 py-1.5 rounded-full shadow-sm ring-1 ring-inset ring-white/10">
           <Loader2 className="w-4 h-4 animate-spin text-purple-400" />
           <span className="text-xs text-white/70">Generating...</span>
         </div>
       )}
       <iframe
         ref={iframeRef}
-        src={blobUrl || undefined}
+        srcDoc={previewHtml || undefined}
         className="w-full h-full bg-white block"
         style={{ border: 'none', minHeight: '100%' }}
-        sandbox="allow-scripts allow-same-origin"
+        sandbox="allow-scripts"
         title="MagicBlock Preview"
       />
     </div>

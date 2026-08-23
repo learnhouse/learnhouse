@@ -7,7 +7,10 @@ import GeneralWrapperStyled from '@components/Objects/StyledElements/Wrappers/Ge
 import FeatureGate from '@components/Dashboard/Shared/FeatureGate/FeatureGate'
 import { Breadcrumbs } from '@components/Objects/Breadcrumbs/Breadcrumbs'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
+import { useOrg } from '@components/Contexts/OrgContext'
 import { queryKeys } from '@/lib/query/keys'
+import { sortLibrary } from '@lib/library/sort'
+import { type FolderSortMode } from '@components/Dashboard/Library/FolderSortDropdown'
 import { getFolderById, removeFolderPrefix } from '@services/folders/folders'
 import { getUriWithOrg } from '@services/config/config'
 import { shareFolderLink } from '@components/Dashboard/Library/shareFolder'
@@ -24,8 +27,18 @@ function FolderClient({
 }) {
   const { t } = useTranslation()
   const session = useLHSession() as any
+  const org = useOrg() as any
   const access_token = session?.data?.tokens?.access_token
   const folderUuid = `folder_${folderid}`
+
+  // Same org-level sort mode the dashboard reads, so learners see the folder in
+  // the exact order an admin arranged it in. The folder query is independent of
+  // the org query, so the content can arrive first — until the org config is
+  // actually here, 'manual' keeps the (already correctly sorted) API order
+  // instead of flashing A→Z or destroying a manual-mode drag order.
+  const sortMode: FolderSortMode = org
+    ? org?.config?.config?.general?.folders?.sort_mode ?? 'name_asc'
+    : 'manual'
 
   const { data: folder, isLoading } = useQuery({
     queryKey: queryKeys.folders.detail(folderUuid),
@@ -58,8 +71,11 @@ function FolderClient({
     )
   }
 
-  const subfolders = folder?.subfolders || []
-  const items = folder?.items || []
+  const { folders: subfolders, items } = sortLibrary(
+    folder?.subfolders || [],
+    folder?.items || [],
+    sortMode
+  )
   const breadcrumbs = folder?.breadcrumbs || []
   const isEmpty = subfolders.length === 0 && items.length === 0
 

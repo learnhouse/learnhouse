@@ -76,7 +76,7 @@ function ErrorUI({
         <div className="bg-rose-100 p-3 rounded-2xl shrink-0">
           <AlertTriangle className="text-rose-700" size={compact ? 28 : 38} />
         </div>
-        <div className="flex flex-col text-left">
+        <div className="flex flex-col text-start">
           <p className={`font-bold text-rose-700 ${compact ? 'text-xl' : 'text-2xl md:text-3xl'}`}>
             {title}
           </p>
@@ -104,7 +104,7 @@ function ErrorUI({
             <span>{showDetails ? 'Hide technical details' : 'Show technical details'}</span>
           </button>
           {showDetails && (
-            <div className="mt-3 bg-gray-50 border border-gray-200 rounded-xl p-4 text-left">
+            <div className="mt-3 bg-gray-50 border border-gray-200 rounded-xl p-4 text-start">
               <dl className="space-y-1.5 text-xs font-mono text-gray-600 break-words">
                 {detail && (
                   <div className="flex gap-2">

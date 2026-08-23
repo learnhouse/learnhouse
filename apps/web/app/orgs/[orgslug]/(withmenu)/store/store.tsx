@@ -1,5 +1,7 @@
 'use client'
 import React from 'react'
+import { useTranslation } from 'react-i18next'
+import { formatCurrency } from '@/lib/format'
 import Link from 'next/link'
 import GeneralWrapperStyled from '@components/Objects/StyledElements/Wrappers/GeneralWrapper'
 import { getUriWithOrg } from '@services/config/config'
@@ -91,6 +93,7 @@ function CourseBoxes({ resources, orgUuid }: { resources: Resource[]; orgUuid: s
 }
 
 function OfferCard({ offer, orgslug, orgUuid, position }: { offer: Offer; orgslug: string; orgUuid: string; position: number }) {
+  const { i18n } = useTranslation()
   const isSubscription = offer.offer_type === 'subscription'
   const benefits = offer.benefits ? offer.benefits.split(',').map(b => b.trim()).filter(Boolean) : []
   const resources = offer.included_resources ?? []
@@ -116,7 +119,7 @@ function OfferCard({ offer, orgslug, orgUuid, position }: { offer: Offer; orgslu
           )}
 
           {/* Type badge */}
-          <div className="absolute top-2.5 left-2.5">
+          <div className="absolute top-2.5 start-2.5">
             {isSubscription ? (
               <span className="inline-flex items-center gap-1 text-xs font-semibold text-white bg-indigo-600/90 backdrop-blur-sm rounded-full px-2.5 py-0.5">
                 <RefreshCcw size={10} /> Subscription
@@ -183,7 +186,7 @@ function OfferCard({ offer, orgslug, orgUuid, position }: { offer: Offer; orgslu
           <div className="mt-auto pt-3 border-t border-gray-100 flex items-center justify-between">
             <div>
               <div className={`text-xl font-black ${isSubscription ? 'text-indigo-700' : 'text-gray-900'}`}>
-                {new Intl.NumberFormat('en-US', { style: 'currency', currency: offer.currency }).format(offer.amount)}
+                {formatCurrency(offer.amount, offer.currency, i18n.language)}
               </div>
               {offer.price_type === 'customer_choice' && (
                 <p className="text-xs text-gray-400 leading-none">min.</p>

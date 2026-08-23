@@ -100,6 +100,17 @@ async def api_update_org_plan(
             detail="Organization not found",
         )
 
+    # The demo's plan is owned by its bundle config and is rewritten on every
+    # refresh, so a write here would be silently undone within the hour. More
+    # importantly, this endpoint is what the billing platform calls after a
+    # successful payment — a plan write landing on the demo means somebody was
+    # charged for it.
+    if org.is_demo:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="The demo organization's plan cannot be changed.",
+        )
+
     # Load the existing org config (so we only mutate the plan key)
     org_config = (
         await db_session.execute(

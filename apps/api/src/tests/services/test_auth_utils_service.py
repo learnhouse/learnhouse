@@ -13,6 +13,16 @@ from src.services.auth.utils import get_google_user_info, signWithGoogle
 
 
 class TestAuthUtilsService:
+    @pytest.fixture(autouse=True)
+    def _audience_verified(self):
+        """Audience verification has its own suite; stub it so these tests
+        exercise the userinfo call rather than the (now fail-closed) check."""
+        with patch(
+            "src.services.auth.utils._verify_google_token_audience",
+            new_callable=AsyncMock,
+        ) as verify:
+            yield verify
+
     @pytest.mark.asyncio
     async def test_get_google_user_info_success_and_failure(self):
         response = Mock(status_code=200)

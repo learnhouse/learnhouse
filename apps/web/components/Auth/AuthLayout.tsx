@@ -35,7 +35,7 @@ export default function AuthLayout({ org, welcomeText, title, subtitle, children
       {/* Language switcher — must sit ABOVE the right-hand branding panel
           (z-10), otherwise the panel intercepts its clicks. `z-dropdown`
           resolves to z-index:auto here, so use a concrete z-50. */}
-      <div className="absolute top-4 right-4 z-50">
+      <div className="absolute top-4 end-4 z-50">
         <LanguageSwitcher />
       </div>
 

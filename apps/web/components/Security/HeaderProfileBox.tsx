@@ -175,7 +175,7 @@ export const HeaderProfileBox = ({ primaryColor = '' }: { primaryColor?: string 
                 className={`px-3 py-2 rounded-lg transition-colors text-sm font-bold ${colors.hoverBg} ${colors.text}`}
                 href={getUriWithOrg(org?.slug, '/login')} >{t('auth.login')}</Link>
             </li>
-            <li className={`rounded-lg shadow-sm transition-colors px-4 py-2 text-xs sm:text-sm font-bold ml-1 sm:ml-2 ${colors.signUpBtn}`}>
+            <li className={`rounded-lg shadow-sm transition-colors px-4 py-2 text-xs sm:text-sm font-bold ms-1 sm:ms-2 ${colors.signUpBtn}`}>
               <Link href={getUriWithOrg(org?.slug, '/signup')}>{t('auth.sign_up')}</Link>
             </li>
           </ul>
@@ -330,7 +330,7 @@ export const HeaderProfileBox = ({ primaryColor = '' }: { primaryColor?: string 
                   }}
                   className="flex items-center space-x-2 text-red-600 focus:text-red-600"
                 >
-                  <SignOut size={16} weight="fill" />
+                  <SignOut size={16} weight="fill" data-dir-flip />
                   <span>Sign Out</span>
                 </DropdownMenuItem>
               </DropdownMenuContent>

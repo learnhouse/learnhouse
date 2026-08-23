@@ -55,6 +55,7 @@ from src.services.orgs.orgs import (
     update_org_color_config,
     update_org_font_config,
     update_org_footer_text_config,
+    update_org_email_sender_name_config,
     update_org_default_language_config,
     update_org_watermark_config,
     update_org_thumbnail,
@@ -772,6 +773,38 @@ async def api_update_org_footer_text_config(
     """
     return await update_org_footer_text_config(
         request, footer_text, org_id, current_user, db_session
+    )
+
+
+@router.put(
+    "/{org_id}/config/email_sender_name",
+    summary="Update organization email sender name",
+    description=(
+        "Update the display name shown on transactional email sent for this "
+        "organization. Only the NAME changes: the sending address stays the "
+        "platform's verified system address so SPF/DKIM keep aligning. Leave "
+        "empty to fall back to the platform default. Admin only."
+    ),
+    responses={
+        200: {"description": "Email sender name updated."},
+        400: {"description": "Sender name is too long or has no usable characters"},
+        401: {"description": "Not authenticated"},
+        403: {"description": "Caller is not an organization administrator"},
+        404: {"description": "Organization not found"},
+    },
+)
+async def api_update_org_email_sender_name_config(
+    request: Request,
+    org_id: int,
+    email_sender_name: str = "",
+    current_user: PublicUser = Depends(get_current_user),
+    db_session: AsyncSession = Depends(get_db_session),
+):
+    """
+    Update organization email sender name configuration
+    """
+    return await update_org_email_sender_name_config(
+        request, email_sender_name, org_id, current_user, db_session
     )
 
 

@@ -30,6 +30,26 @@ from src.security.superadmin import require_superadmin
 reject_any_api_token = ee_superadmin_tokens.reject_any_api_token
 
 
+@pytest.fixture(autouse=True)
+def _enterprise_mode(monkeypatch):
+    """Run these as an Enterprise deployment, which is what they describe.
+
+    conftest pins LEARNHOUSE_DISABLE_EE=1 for the whole suite, so
+    get_deployment_mode() answers 'oss' and require_superadmin refuses with
+    403 ee_required before any of the token logic below is reached. The module
+    still imported (importorskip only asks whether the ee/ package is on disk),
+    so on a checkout that has it every test here failed on the gate rather than
+    on what it was written to check.
+
+    Patching the definition rather than an importer is deliberate:
+    src/security/superadmin.py imports the function inside the call, so this
+    reaches it.
+    """
+    import src.core.deployment_mode as deployment_mode
+
+    monkeypatch.setattr(deployment_mode, "get_deployment_mode", lambda: "ee")
+
+
 def _mock_request(auth_header: str = ""):
     request = Mock(spec=Request)
     request.headers = Mock()

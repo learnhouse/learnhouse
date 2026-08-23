@@ -32,6 +32,7 @@ import AudioBlock from './Extensions/Audio/AudioBlock'
 import { Eye, Monitor, History, AlertTriangle, RefreshCw, Loader2 } from 'lucide-react'
 import MathEquationBlock from './Extensions/MathEquation/MathEquationBlock'
 import PDFBlock from './Extensions/PDF/PDFBlock'
+import H5PBlock from './Extensions/H5P/H5PBlock'
 import LibraryBlock from './Extensions/Library/LibraryBlock'
 import QuizBlock from './Extensions/Quiz/QuizBlock'
 import { Table } from '@tiptap/extension-table'
@@ -174,6 +175,7 @@ function Editor(props: EditorProps) {
       AudioBlock.configure({ editable: true, activity: stableActivity }),
       MathEquationBlock.configure({ editable: true, activity: stableActivity }),
       PDFBlock.configure({ editable: true, activity: stableActivity }),
+      H5PBlock.configure({ editable: true, activity: stableActivity }),
       LibraryBlock.configure({ editable: true, activity: stableActivity }),
       QuizBlock.configure({ editable: true, activity: stableActivity }),
       Youtube.configure({ controls: true, modestBranding: true }),
@@ -587,7 +589,7 @@ function Editor(props: EditorProps) {
 
                   {/* Conflict Modal */}
                   {showConflictModal && conflictInfo?.hasConflict && (
-                    <div className="absolute top-full right-0 mt-2 w-72 bg-white rounded-lg shadow-xl border border-gray-200 p-4 z-50">
+                    <div className="absolute top-full end-0 mt-2 w-72 bg-white rounded-lg shadow-xl border border-gray-200 p-4 z-50">
                       <div className="flex items-start gap-2 mb-3">
                         <AlertTriangle className="text-amber-500 flex-shrink-0 mt-0.5" size={18} />
                         <div>

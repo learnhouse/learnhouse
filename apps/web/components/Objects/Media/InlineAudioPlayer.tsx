@@ -148,13 +148,18 @@ function InlineAudioPlayer({ src, title }: { src: string; title?: string }) {
         </button>
 
         {/* Time + Progress */}
-        <span className="text-xs text-gray-500 w-10 text-right tabular-nums flex-shrink-0">
+        <span className="text-xs text-gray-500 w-10 text-end tabular-nums flex-shrink-0">
           {formatTime(currentTime)}
         </span>
 
         <div
           ref={progressRef}
           onClick={seekTo}
+          // dir="ltr": the fill is a normal-flow div sized by width, while the
+          // thumb is positioned with `left` and seekTo measures from rect.left.
+          // Under RTL the fill would run one way and the thumb the other.
+          // Audio transport is left-to-right everywhere, same as the video player.
+          dir="ltr"
           className="flex-1 h-1.5 bg-gray-200 rounded-full cursor-pointer relative group"
         >
           <div

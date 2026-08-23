@@ -4,7 +4,7 @@ from sqlalchemy import ColumnElement, func, true as sa_true
 from sqlmodel import select, or_, and_
 from sqlmodel.ext.asyncio.session import AsyncSession
 from pydantic import BaseModel, ConfigDict
-from src.db.users import PublicUser, AnonymousUser, UserRead, User, APITokenUser
+from src.db.users import PublicUser, AnonymousUser, UserReadPublic, User, APITokenUser
 from src.db.courses.courses import CourseRead
 from src.db.folders.folders import Folder, FolderRead
 from src.db.organizations import Organization
@@ -41,7 +41,11 @@ class SearchResult(BaseModel):
 
     courses: List[CourseRead]
     folders: List[FolderRead]
-    users: List[UserRead]
+    # SECURITY: the stripped projection, never ``UserRead``. Search is open to
+    # every org member, and ``UserRead`` carries email / signup_method /
+    # is_superadmin / extra_metadata (the answers to the org's custom signup
+    # fields) — PII the member directory deliberately restricts to admins.
+    users: List[UserReadPublic]
     communities: List[CommunityRead]
     discussions: List[SearchDiscussionRead]
     playgrounds: List[PlaygroundRead]
@@ -138,6 +142,9 @@ async def search_across_org(
     - Org members additionally see org-scoped non-public content where the
       resource itself doesn't restrict it further (e.g. unpublished items and
       usergroup-restricted playgrounds are always excluded from search).
+    - User hits are serialized as ``UserReadPublic``, never ``UserRead``: search
+      is open to every member, so it must not expose the PII the dedicated
+      member directory restricts to admins.
     - Pattern matching goes through SQLAlchemy `ilike` — fully parameterized.
     - Limit is capped at 50 per page.
     """
@@ -218,6 +225,18 @@ async def search_across_org(
                 )
             )
         )
+
+        # Membership is what gates this, and in the shared demo everyone who
+        # ever opened it is a member — so a two-letter query returned a roster
+        # of real people, with their names, usernames, bios and avatars, to any
+        # visitor. The seeded students remain searchable; they are the point.
+        from src.services.demo.guards import hide_other_visitors
+
+        if org.is_demo:
+            users_q = hide_other_visitors(
+                users_q, resolve_acting_user_id(current_user)
+            )
+
         users, total_users = await _paginate_and_count(db_session, users_q, page, limit)
 
     # ── Communities ──────────────────────────────────────────────────────────
@@ -282,7 +301,7 @@ async def search_across_org(
 
     folder_reads = [FolderRead.model_validate(f) for f in folders]
 
-    user_reads = [UserRead.model_validate(u) for u in users]
+    user_reads = [UserReadPublic.model_validate(u) for u in users]
     community_reads = [CommunityRead.model_validate(c) for c in communities]
     discussion_reads = [
         SearchDiscussionRead(

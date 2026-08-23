@@ -221,7 +221,7 @@ export default function PlaygroundViewClient({
             style={{ height: 'calc(100vh - 200px)', minHeight: 480 }}
           >
             {/* Toolbar — top right of preview */}
-            <div className="absolute top-3 right-3 z-10 flex items-center gap-2">
+            <div className="absolute top-3 end-3 z-10 flex items-center gap-2">
               <button
                 onClick={handleDownload}
                 className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-bold bg-white/80 backdrop-blur-sm nice-shadow text-neutral-500 hover:text-neutral-800 transition-colors"
@@ -244,7 +244,8 @@ export default function PlaygroundViewClient({
             {playground.html_content ? (
               <iframe
                 srcDoc={playground.html_content}
-                sandbox="allow-scripts allow-same-origin allow-forms allow-popups"
+                // srcDoc content runs on an opaque origin (no allow-same-origin)
+                sandbox="allow-scripts allow-forms allow-popups"
                 className="w-full h-full border-0"
                 title={playground.name}
               />

@@ -254,7 +254,7 @@ export default function UsageOverview() {
                 <Link href={feature.href}>
                   <ArrowRight
                     size={12}
-                    className="text-gray-300 hover:text-gray-500 transition-colors"
+                    className="text-gray-300 hover:text-gray-500 transition-colors" data-dir-flip
                   />
                 </Link>
               ) : (

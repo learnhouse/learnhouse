@@ -66,6 +66,26 @@ learnhouse start
 
 The `LEARNHOUSE_SYSTEM_EMAIL_ADDRESS` is the "from" address used for all outgoing emails. When using Resend, this address must belong to a domain that is verified in your Resend account. When using SMTP, ensure the address is permitted by your SMTP server.
 
+## Sender Display Name
+
+Emails arrive as `LearnHouse <noreply@example.com>`. `LEARNHOUSE_SYSTEM_EMAIL_SENDER_NAME` replaces the `LearnHouse` part for the whole deployment:
+
+```env
+LEARNHOUSE_SYSTEM_EMAIL_SENDER_NAME=Acme Academy
+```
+
+It defaults to `LearnHouse`, so leaving it unset changes nothing.
+
+### Per-organization override
+
+Organization administrators can set their own name under **Dashboard → Organization → Settings → General → Email Sender Name**. Mail sent for that organization (invitations, password resets, verification, role changes, welcome mail, lifecycle nudges) then carries the organization's name instead of the deployment default. Mail that is not about a single organization — platform password resets, org-less signups, account deletion, magic-login links — always uses the deployment default.
+
+<Callout type="info">
+Only the display **name** is configurable, never the sending **address**. The address stays `LEARNHOUSE_SYSTEM_EMAIL_ADDRESS`, which is the domain carrying your verified SPF and DKIM records. An organization sending from an address on some other domain would fail DKIM alignment on every message, and on a shared sending domain that damages deliverability for every other tenant too.
+</Callout>
+
+Names are sanitized before they reach the header: control characters and line breaks are removed, whitespace runs are collapsed, and the result is capped at 64 characters. A carriage return or newline in a header value is header injection, so this is enforced on write and again on send.
+
 <Callout type="info">
 If email is not configured, features like user invitations and password resets will not work. Users can still be created manually by an administrator.
 </Callout>
