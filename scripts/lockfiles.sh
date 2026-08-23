@@ -52,6 +52,26 @@ if [[ "$(bun --version)" != "$WANT_BUN" ]]; then
   echo "  note: local bun is $(bun --version); CI resolves with $WANT_BUN." >&2
 fi
 
+# The Dockerfiles pin bun as an image tag, which nothing else validates. A tag
+# left behind on an older bun is how the frontend image ended up building on a
+# different runtime than CI: the build crashed on a bug CI never saw. Every
+# `oven/bun:` base must name the version in .bun-version.
+note "bun image tags"
+DOCKERFILE_BUN_MISMATCH=0
+while IFS= read -r line; do
+  file="${line%%:*}"
+  tag="$(printf '%s' "${line#*oven/bun:}" | sed 's/[[:space:]].*//; s/-alpine$//; s/-slim$//; s/-distroless$//')"
+  if [[ "$tag" != "$WANT_BUN" ]]; then
+    echo "  $file pins oven/bun:$tag, .bun-version says $WANT_BUN" >&2
+    DOCKERFILE_BUN_MISMATCH=1
+  fi
+done < <(git grep -n 'FROM oven/bun:' -- '*Dockerfile' | sed 's/:[0-9]*:/:/')
+if (( DOCKERFILE_BUN_MISMATCH )); then
+  FAILED+=("Dockerfile bun tags")
+else
+  echo "  all FROM oven/bun: tags are $WANT_BUN"
+fi
+
 # ── bun lockfiles ──────────────────────────────────────────────────────────
 for ws in "${BUN_WORKSPACES[@]}"; do
   [[ -f "$ws/package.json" ]] || continue
