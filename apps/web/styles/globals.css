@@ -110,6 +110,16 @@
   margin: 0.5rem 0;
 }
 
+/* Tailwind's preflight leaves `hr` at border-color: currentColor, which draws
+   the divider in body-text near-black. Match the light rule used everywhere
+   else, and give it symmetric spacing (.ProseMirror only sets margin-top). */
+.activity-editor-content-wrapper .ProseMirror hr,
+.canva-content-wrapper .ProseMirror hr {
+  border: none;
+  border-top: 1px solid rgba(0, 0, 0, 0.1);
+  margin: 1.25rem 0;
+}
+
 /* Embed service icons scroll animation */
 @keyframes embed-icons-scroll {
   0% { transform: translateX(0); }
@@ -1603,6 +1613,13 @@
   outline: 1px solid rgba(100, 116, 139, 0.25);
 }
 .editor-tool-btn-code.is-active:hover { background: rgba(100, 116, 139, 0.24); }
+
+.editor-tool-btn-divider {
+  background: rgba(100, 116, 139, 0.06);
+  color: rgb(71, 85, 105);
+  outline: 1px solid rgba(100, 116, 139, 0.1);
+}
+.editor-tool-btn-divider:hover { background: rgba(100, 116, 139, 0.12); }
 
 .editor-tool-btn-embed {
   background: rgba(20, 184, 166, 0.06);

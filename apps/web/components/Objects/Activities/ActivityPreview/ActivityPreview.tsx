@@ -102,6 +102,15 @@ function renderChildren(nodes: any[] | undefined, ctx: RendererCtx): React.React
   return nodes.map((n, i) => <PMNode key={i} node={n} ctx={ctx} />)
 }
 
+// Blocks with no renderable children — previewed as a labelled chip.
+const ATOM_BLOCK_LABELS: Record<string, string> = {
+  blockH5P: 'Interactive content',
+  blockVideo: 'Video',
+  blockAudio: 'Audio',
+  blockPDF: 'PDF',
+  blockQuiz: 'Quiz',
+}
+
 function PMNode({ node, ctx }: { node: any; ctx: RendererCtx }): React.ReactElement | null {
   if (!node) return null
   switch (node.type) {
@@ -202,12 +211,25 @@ function PMNode({ node, ctx }: { node: any; ctx: RendererCtx }): React.ReactElem
         </div>
       )
     }
-    default:
+    default: {
+      // Atom blocks carry no child content, so the fallback below renders
+      // nothing for them and a preview made only of blocks looks empty.
+      // Show a chip naming the block instead.
+      const atomLabel = ATOM_BLOCK_LABELS[node.type]
+      if (atomLabel) {
+        return (
+          <div className="my-2 inline-flex items-center gap-1.5 rounded-md border border-gray-100 bg-gray-50 px-2 py-1 text-[11px] text-gray-600">
+            <span className="font-medium">{atomLabel}</span>
+            {node.attrs?.title ? <span className="truncate">{node.attrs.title}</span> : null}
+          </div>
+        )
+      }
       // Fall back to rendering children so unknown wrappers don't swallow text.
       if (Array.isArray(node.content)) {
         return <>{renderChildren(node.content, ctx)}</>
       }
       return null
+    }
   }
 }
 

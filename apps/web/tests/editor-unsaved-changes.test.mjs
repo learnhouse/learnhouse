@@ -107,3 +107,35 @@ describe("editor unsaved changes guard", () => {
     ).toBe(false);
   });
 });
+
+describe("getEditorContentSnapshot — H5P height", () => {
+  const doc = (height, url = "https://team.h5p.com/content/1/embed") => ({
+    type: "doc",
+    content: [{ type: "blockH5P", attrs: { h5pUrl: url, title: "Quiz", height } }],
+  });
+
+  test("a host-reported height change alone does not make the doc dirty", () => {
+    const saved = getEditorContentSnapshot(doc(400));
+    expect(hasEditorContentChanged(saved, doc(812))).toBe(false);
+  });
+
+  test("a real edit alongside the height change still counts", () => {
+    const saved = getEditorContentSnapshot(doc(400));
+    expect(
+      hasEditorContentChanged(saved, doc(812, "https://team.h5p.com/content/2/embed"))
+    ).toBe(true);
+  });
+
+  test("height is ignored only on blockH5P", () => {
+    const saved = getEditorContentSnapshot({
+      type: "doc",
+      content: [{ type: "blockVideo", attrs: { height: 400 } }],
+    });
+    expect(
+      hasEditorContentChanged(saved, {
+        type: "doc",
+        content: [{ type: "blockVideo", attrs: { height: 812 } }],
+      })
+    ).toBe(true);
+  });
+});

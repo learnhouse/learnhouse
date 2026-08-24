@@ -1,5 +1,39 @@
+// H5P frames report their own height to us over postMessage, so `blockH5P`
+// nodes can gain a new `height` attribute on first load without the author
+// touching anything. Ignore it when deciding whether the document is dirty —
+// otherwise opening an activity is enough to trigger the leave-confirm. The
+// value still rides along on the next real save.
+const IGNORED_ATTRS: Record<string, readonly string[]> = {
+  blockH5P: ["height"],
+};
+
+function stripVolatileAttrs(value: unknown): unknown {
+  if (Array.isArray(value)) return value.map(stripVolatileAttrs);
+  if (!value || typeof value !== "object") return value;
+
+  const node = value as Record<string, unknown>;
+  const ignored =
+    typeof node.type === "string" ? IGNORED_ATTRS[node.type] : undefined;
+
+  const out: Record<string, unknown> = {};
+  for (const [key, item] of Object.entries(node)) {
+    if (key === "attrs" && ignored && item && typeof item === "object") {
+      const attrs: Record<string, unknown> = {};
+      for (const [attrKey, attrValue] of Object.entries(
+        item as Record<string, unknown>
+      )) {
+        if (!ignored.includes(attrKey)) attrs[attrKey] = attrValue;
+      }
+      out[key] = attrs;
+      continue;
+    }
+    out[key] = stripVolatileAttrs(item);
+  }
+  return out;
+}
+
 export function getEditorContentSnapshot(content: unknown): string {
-  return JSON.stringify(content ?? null);
+  return JSON.stringify(stripVolatileAttrs(content) ?? null);
 }
 
 export function hasEditorContentChanged(

@@ -98,8 +98,13 @@ export function normalizeH5PUrl(input: string): H5PUrlResult {
   // A URL never contains raw whitespace; this catches pasted prose early.
   if (/\s/.test(candidate)) return { ok: false, reason: 'unparseable' }
 
+  // `host:8080/embed` is a schemeless host with a port, not a scheme — the
+  // negative lookahead keeps it out of the scheme branch so a self-hosted
+  // intranet URL isn't rejected as an unsupported protocol. Real schemes we
+  // refuse (javascript:, data:, file:) never start with a digit.
   const hasScheme =
-    /^[a-zA-Z][a-zA-Z0-9+.-]*:/.test(candidate) || candidate.startsWith('//')
+    /^[a-zA-Z][a-zA-Z0-9+.-]*:(?!\d)/.test(candidate) || candidate.startsWith('//')
+  const hasExplicitPort = !hasScheme && /^[^/?#]+:\d+(?=$|[/?#])/.test(candidate)
   if (candidate.startsWith('//')) {
     candidate = `https:${candidate}`
   } else if (!hasScheme) {
@@ -125,7 +130,7 @@ export function normalizeH5PUrl(input: string): H5PUrlResult {
   // `http://h5p-server/h5p/embed/1` stay valid that way.
   const isDotted = parsed.hostname.includes('.')
   const isLocal = parsed.hostname === 'localhost' || parsed.hostname.startsWith('[')
-  if (!hasScheme && !isDotted && !isLocal) {
+  if (!hasScheme && !hasExplicitPort && !isDotted && !isLocal) {
     return { ok: false, reason: 'unparseable' }
   }
 
