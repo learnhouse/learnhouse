@@ -102,6 +102,11 @@
       "description": "TypeScript 7 is the native compiler; @typescript-eslint 8.x still crashes on it (ts.ModuleKind.Cjs is undefined), which takes next-lint down with ESLint exit 2. Lift this cap once typescript-eslint ships TypeScript 7 support.",
       "matchPackageNames": ["typescript"],
       "allowedVersions": "<7"
+    },
+    {
+      "description": "rehype-katex and react-katex both require katex ^0.16, so a 0.17+ direct dependency resolves to a second nested copy: math is rendered with 0.16 class names while the katex.min.css we import carries the renamed 0.18 ones (.base -> .katex-base) and comes out unstyled. Lift this cap once both libraries support the newer major.",
+      "matchPackageNames": ["katex"],
+      "allowedVersions": "<0.17"
     }
   ]
 }
