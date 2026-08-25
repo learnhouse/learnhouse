@@ -126,6 +126,12 @@ describe("getEditorContentSnapshot — H5P height", () => {
     ).toBe(true);
   });
 
+  test("a node type that collides with Object.prototype does not crash", () => {
+    const doc = { type: "doc", content: [{ type: "__proto__", attrs: { a: 1 } }] };
+    expect(() => getEditorContentSnapshot(doc)).not.toThrow();
+    expect(hasEditorContentChanged(getEditorContentSnapshot(doc), doc)).toBe(false);
+  });
+
   test("height is ignored only on blockH5P", () => {
     const saved = getEditorContentSnapshot({
       type: "doc",

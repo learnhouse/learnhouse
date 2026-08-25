@@ -167,4 +167,10 @@ describe("normalizeH5PUrl — schemeless input", () => {
     // a javascript: URL.
     expect(normalizeH5PUrl("javascript:8080/x").url.startsWith("https://")).toBe(true);
   });
+
+  test("prose with a colon is still rejected, not saved as a dead embed", () => {
+    // No path, so it is not `host:port/...` and the bare-word rule applies.
+    expect(normalizeH5PUrl("step:1").ok).toBe(false);
+    expect(normalizeH5PUrl("chapter:2").ok).toBe(false);
+  });
 });

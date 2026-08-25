@@ -3,37 +3,31 @@
 // touching anything. Ignore it when deciding whether the document is dirty —
 // otherwise opening an activity is enough to trigger the leave-confirm. The
 // value still rides along on the next real save.
-const IGNORED_ATTRS: Record<string, readonly string[]> = {
+const VOLATILE_ATTRS: Record<string, readonly string[]> = {
   blockH5P: ["height"],
 };
 
-function stripVolatileAttrs(value: unknown): unknown {
-  if (Array.isArray(value)) return value.map(stripVolatileAttrs);
-  if (!value || typeof value !== "object") return value;
-
-  const node = value as Record<string, unknown>;
-  const ignored =
-    typeof node.type === "string" ? IGNORED_ATTRS[node.type] : undefined;
-
-  const out: Record<string, unknown> = {};
-  for (const [key, item] of Object.entries(node)) {
-    if (key === "attrs" && ignored && item && typeof item === "object") {
-      const attrs: Record<string, unknown> = {};
-      for (const [attrKey, attrValue] of Object.entries(
-        item as Record<string, unknown>
-      )) {
-        if (!ignored.includes(attrKey)) attrs[attrKey] = attrValue;
-      }
-      out[key] = attrs;
-      continue;
-    }
-    out[key] = stripVolatileAttrs(item);
-  }
-  return out;
-}
-
 export function getEditorContentSnapshot(content: unknown): string {
-  return JSON.stringify(stripVolatileAttrs(content) ?? null);
+  // A replacer keeps this to the single walk JSON.stringify already does; the
+  // editor calls it on every keystroke, so a parallel copy of the document
+  // would be a real cost. `this` is the object the key belongs to, which is
+  // how an `attrs` value finds out which node type it hangs off.
+  return JSON.stringify(content ?? null, function (this: any, key, value) {
+    if (key !== "attrs" || !value || typeof value !== "object") return value;
+    // Own-property only: node types come from stored content, and a node typed
+    // "__proto__" would otherwise resolve to Object.prototype.
+    const type = this?.type;
+    const volatile =
+      typeof type === "string" && Object.hasOwn(VOLATILE_ATTRS, type)
+        ? VOLATILE_ATTRS[type]
+        : undefined;
+    if (!volatile) return value;
+    const kept: Record<string, unknown> = {};
+    for (const [attrKey, attrValue] of Object.entries(value)) {
+      if (!volatile.includes(attrKey)) kept[attrKey] = attrValue;
+    }
+    return kept;
+  });
 }
 
 export function hasEditorContentChanged(
