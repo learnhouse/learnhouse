@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getAPIUrl } from '@services/config/config'
+import { bodyWasDecoded, canRecompress } from '../../../../services/scorm/proxyCompression'
 
 /**
  * Proxy route for SCORM content
@@ -23,25 +24,6 @@ const FORWARDED_RESPONSE_HEADERS = [
   'etag',
   'last-modified',
 ]
-
-/**
- * Whether `fetch` decompressed the upstream body underneath us.
- *
- * The API gzips every response over 1000 bytes, and undici's `fetch`
- * transparently decodes it — but leaves the upstream `content-length` (the
- * COMPRESSED size) on the response headers. Forwarding that header alongside
- * the decompressed body tells the browser to stop reading early, which
- * truncates every SCORM asset big enough to be gzipped: `modernizr.js` and
- * `scriptLoader.js` die on `Uncaught SyntaxError: Unexpected end of input`,
- * while files under the gzip threshold load fine.
- *
- * We do not forward `content-encoding` either, so the bytes and the headers
- * agree: no encoding, and a length only when it still describes the body.
- */
-function bodyWasDecoded(response: Response): boolean {
-  const encoding = response.headers.get('content-encoding')?.trim().toLowerCase()
-  return !!encoding && encoding !== 'identity'
-}
 
 export async function GET(
   request: NextRequest,
@@ -118,8 +100,23 @@ export async function GET(
       headers.set('cache-control', 'private, max-age=3600, must-revalidate')
     }
 
+    // Re-compress what the API had already compressed and `fetch` unpacked on
+    // the way in, so the browser hop is not the one that carries the raw bytes.
+    // `vary` goes on every response, compressed or not: the body now depends on
+    // the request's accept-encoding, and a cache that missed that would serve
+    // gzip to a client that cannot read it.
+    headers.set('vary', 'accept-encoding')
+
+    let body = response.body
+    if (body && canRecompress(response, request.headers.get('accept-encoding'))) {
+      body = body.pipeThrough(new CompressionStream('gzip'))
+      headers.set('content-encoding', 'gzip')
+      // The length of the plaintext no longer describes what goes out.
+      headers.delete('content-length')
+    }
+
     // Stream the body through (200 or 206 for Range responses)
-    return new NextResponse(response.body, {
+    return new NextResponse(body, {
       status: response.status,
       headers,
     })
