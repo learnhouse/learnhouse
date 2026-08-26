@@ -9,6 +9,7 @@ import { OrgMFAPolicyGate } from '@components/Objects/Banners/OrgMFAPolicyGate'
 import { PodcastPlayerProvider } from '@components/Contexts/PodcastPlayerContext'
 import AppliedLearningGate from '@components/Acyberschool/AppliedLearningGate'
 import AcyberLearningAssistant from '@components/Acyberschool/AcyberLearningAssistant'
+import AcyberMobileDock from '@components/Acyberschool/AcyberMobileDock'
 import dynamic from 'next/dynamic'
 const PodcastPlayer = dynamic(() => import('@components/Objects/Podcasts/PodcastPlayer'), { ssr: false })
 import Link from 'next/link'
@@ -29,7 +30,7 @@ function OrgFooter() {
   const footerText = org?.config?.config?.customization?.general?.footer_text || org?.config?.config?.general?.footer_text || ''
 
   return (
-    <footer className="w-full py-8 mt-10 border-t border-black/[0.05] bg-white">
+    <footer className="mb-20 w-full border-t border-black/[0.05] bg-white py-8 md:mb-0">
       <div className="flex flex-col items-center justify-center gap-2 px-4 text-center">
         {footerText && <p className="text-sm text-gray-500">{footerText}</p>}
         <Link href="https://www.acyberschool.com" target="_blank" rel="noopener noreferrer" className="text-xs font-semibold text-black/40 hover:text-black/65">
@@ -85,7 +86,7 @@ function LayoutContent({ children, orgslug }: { children: ReactNode; orgslug: st
 
   return (
     <div
-      className="lh-org-font-root flex flex-col min-h-screen"
+      className="lh-org-font-root flex min-h-screen flex-col"
       style={{
         backgroundColor: primaryColor ? hexToRgba(primaryColor, 0.05) : 'transparent',
         ...(customFont ? { fontFamily: `'${customFont}', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif` } : {}),
@@ -97,7 +98,8 @@ function LayoutContent({ children, orgslug }: { children: ReactNode; orgslug: st
       {!chromeless && <OrgMFAPolicyGate />}
       {!chromeless && <AppliedLearningGate />}
       {!chromeless && <AcyberLearningAssistant />}
-      <div className="flex-1 relative" style={{ zIndex: 'var(--z-content)' }}>
+      {!chromeless && <AcyberMobileDock orgslug={orgslug} />}
+      <div className="relative flex-1 pb-20 md:pb-0" style={{ zIndex: 'var(--z-content)' }}>
         {children}
       </div>
       {!isFullBleedPage && !chromeless && <OrgFooter />}
