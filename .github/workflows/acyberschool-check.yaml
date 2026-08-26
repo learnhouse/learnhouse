@@ -9,6 +9,7 @@ on:
 permissions:
   contents: read
 
+# Keep this branch-specific check green before asking the user to retest locally.
 jobs:
   web:
     name: Web typecheck
