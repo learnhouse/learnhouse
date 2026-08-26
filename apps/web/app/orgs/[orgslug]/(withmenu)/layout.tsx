@@ -8,6 +8,7 @@ import { OrgJoinBanner, OrgJoinBannerProvider } from '@components/Objects/Banner
 import { OrgMFAPolicyGate } from '@components/Objects/Banners/OrgMFAPolicyGate'
 import { PodcastPlayerProvider } from '@components/Contexts/PodcastPlayerContext'
 import AppliedLearningGate from '@components/Acyberschool/AppliedLearningGate'
+import AcyberLearningAssistant from '@components/Acyberschool/AcyberLearningAssistant'
 import dynamic from 'next/dynamic'
 const PodcastPlayer = dynamic(() => import('@components/Objects/Podcasts/PodcastPlayer'), { ssr: false })
 import Link from 'next/link'
@@ -15,7 +16,6 @@ import { PageViewTracker } from '@components/Analytics/PageViewTracker'
 import { usePathname, useSearchParams } from 'next/navigation'
 import { getGoogleFontUrl, DEFAULT_FONT } from '@/lib/fonts'
 
-// Helper to convert hex to rgba
 const hexToRgba = (hex: string, alpha: number): string => {
   if (!hex || hex.length < 7) return 'transparent'
   const r = parseInt(hex.slice(1, 3), 16)
@@ -46,11 +46,8 @@ function LayoutContent({ children, orgslug }: { children: ReactNode; orgslug: st
   const customFont = org?.config?.config?.customization?.general?.font || org?.config?.config?.general?.font || ''
   const pathname = usePathname()
   const searchParams = useSearchParams()
-  // chrome=none strips the org navigation/footer so this route can be embedded
-  // inside another view (e.g. a Resource activity iframe) without duplicate chrome.
   const chromeless = searchParams?.get('chrome') === 'none'
 
-  // Inject Google Font stylesheet into document head
   useEffect(() => {
     if (!customFont || customFont === DEFAULT_FONT) return
 
@@ -99,6 +96,7 @@ function LayoutContent({ children, orgslug }: { children: ReactNode; orgslug: st
       {!chromeless && <OrgMenu orgslug={orgslug} />}
       {!chromeless && <OrgMFAPolicyGate />}
       {!chromeless && <AppliedLearningGate />}
+      {!chromeless && <AcyberLearningAssistant />}
       <div className="flex-1 relative" style={{ zIndex: 'var(--z-content)' }}>
         {children}
       </div>
