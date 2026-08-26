@@ -1,7 +1,7 @@
 'use client'
 
-import React, { useEffect, useMemo, useRef, useState } from 'react'
-import { usePathname, useRouter } from 'next/navigation'
+import React, { useEffect, useMemo, useState } from 'react'
+import { usePathname } from 'next/navigation'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { BriefcaseBusiness, CheckCircle2, X } from 'lucide-react'
 import toast from 'react-hot-toast'
@@ -19,51 +19,25 @@ import {
 const BRAND_RED = '#C51635'
 const BRAND_NAVY = '#0B263D'
 
-function cleanUuid(value?: string) {
-  return (value || '').replace('course_', '').replace('activity_', '')
-}
-
 function parseActivityPath(pathname: string | null) {
   if (!pathname) return null
   const match = pathname.match(/\/course\/([^/]+)\/activity\/([^/?#]+)/)
   if (!match || match[2] === 'end') return null
-  return { courseUuid: cleanUuid(match[1]), activityUuid: cleanUuid(match[2]) }
+  return { courseUuid: decodeURIComponent(match[1]), activityUuid: decodeURIComponent(match[2]) }
 }
 
 function findModuleName(course: any, activityUuid: string) {
-  const clean = cleanUuid(activityUuid)
   for (const chapter of course?.chapters || []) {
     const found = (chapter.activities || []).some(
-      (activity: any) => cleanUuid(activity.activity_uuid) === clean
+      (item: any) => item.activity_uuid === activityUuid
     )
     if (found) return chapter.name || ''
   }
   return ''
 }
 
-function looksLikeForwardNavigation(target: EventTarget | null) {
-  if (!(target instanceof Element)) return false
-  const anchor = target.closest('a[href]') as HTMLAnchorElement | null
-  if (anchor?.href && (/\/activity\//.test(anchor.href) || /\/course\//.test(anchor.href))) return true
-
-  let node: Element | null = target
-  for (let i = 0; i < 5 && node; i += 1, node = node.parentElement) {
-    const text = (node.textContent || '').replace(/\s+/g, ' ').trim().toLowerCase()
-    if (
-      text.startsWith('next ') ||
-      text === 'next' ||
-      text.includes('finish course') ||
-      text.includes('mark as complete')
-    ) {
-      return true
-    }
-  }
-  return false
-}
-
 export default function AppliedLearningGate() {
   const pathname = usePathname()
-  const router = useRouter()
   const org = useOrg() as any
   const session = useLHSession() as any
   const queryClient = useQueryClient()
@@ -78,14 +52,12 @@ export default function AppliedLearningGate() {
   const reflectionQuery = useQuery({
     queryKey: ['applied-learning', 'reflection', activityUuid],
     queryFn: () => getAppliedLearningReflection(activityUuid, token),
-    enabled: !!activityUuid && session?.status === 'authenticated',
+    enabled: !!activityUuid && session?.status === 'authenticated' && !!token,
     staleTime: 30_000,
   })
 
   const existing = reflectionQuery.data as AppliedLearningEntry | null | undefined
   const satisfied = !!existing?.planned_application?.trim()
-  const satisfiedRef = useRef(false)
-  const routeRef = useRef<{ pathname: string; activityUuid: string; satisfied: boolean } | null>(null)
   const [open, setOpen] = useState(false)
   const [saving, setSaving] = useState(false)
   const [plannedApplication, setPlannedApplication] = useState('')
@@ -94,8 +66,8 @@ export default function AppliedLearningGate() {
   const [evidenceNotes, setEvidenceNotes] = useState('')
 
   useEffect(() => {
-    satisfiedRef.current = satisfied
-  }, [satisfied])
+    setOpen(false)
+  }, [activityUuid])
 
   useEffect(() => {
     setPlannedApplication(existing?.planned_application || '')
@@ -103,51 +75,6 @@ export default function AppliedLearningGate() {
     setMeasurableChange(existing?.measurable_change || '')
     setEvidenceNotes(existing?.evidence_notes || '')
   }, [existing?.entry_uuid, activityUuid])
-
-  // Fallback route guard. It catches navigation triggered programmatically by
-  // the existing completion control, then returns the learner to the lesson if
-  // they tried to leave without recording application.
-  useEffect(() => {
-    if (!pathname) return
-    const previous = routeRef.current
-    if (
-      previous &&
-      previous.activityUuid &&
-      previous.pathname !== pathname &&
-      !previous.satisfied
-    ) {
-      sessionStorage.setItem('acyber-apply-open', previous.activityUuid)
-      router.replace(previous.pathname)
-      return
-    }
-
-    routeRef.current = {
-      pathname,
-      activityUuid,
-      satisfied: satisfiedRef.current,
-    }
-
-    const requested = sessionStorage.getItem('acyber-apply-open')
-    if (requested && requested === activityUuid) {
-      sessionStorage.removeItem('acyber-apply-open')
-      setOpen(true)
-    }
-  }, [pathname, activityUuid, router])
-
-  // Prevent ordinary links and buttons from leaving the activity while the
-  // reflection is missing. The fallback route guard above covers any control
-  // that navigates entirely in code.
-  useEffect(() => {
-    if (!activityUuid || reflectionQuery.isLoading || satisfied) return
-    const handleClick = (event: MouseEvent) => {
-      if (!looksLikeForwardNavigation(event.target)) return
-      event.preventDefault()
-      event.stopPropagation()
-      setOpen(true)
-    }
-    document.addEventListener('click', handleClick, true)
-    return () => document.removeEventListener('click', handleClick, true)
-  }, [activityUuid, reflectionQuery.isLoading, satisfied])
 
   if (!route || session?.status !== 'authenticated') return null
 
@@ -160,35 +87,42 @@ export default function AppliedLearningGate() {
 
   const save = async () => {
     if (plannedApplication.trim().length < 3) {
-      toast.error('Tell us how you will apply this learning before continuing.')
+      toast.error('Tell us how you will apply this learning before saving.')
       return
     }
+    if (!org?.id || !courseUuid || !activityUuid || !token) {
+      toast.error('This lesson is still loading. Please try again in a moment.')
+      return
+    }
+
     setSaving(true)
     try {
       const saved = await saveAppliedLearningReflection(
         {
           org_id: org.id,
-          course_uuid: course?.course_uuid || `course_${courseUuid}`,
-          activity_uuid: activity?.activity_uuid || `activity_${activityUuid}`,
+          course_uuid: course?.course_uuid || courseUuid,
+          activity_uuid: activity?.activity_uuid || activityUuid,
           activity_name: activity?.name || '',
           module_name: moduleName,
-          planned_application: plannedApplication,
-          previous_application: previousApplication,
-          measurable_change: measurableChange,
-          evidence_notes: evidenceNotes,
+          planned_application: plannedApplication.trim(),
+          previous_application: previousApplication.trim(),
+          measurable_change: measurableChange.trim(),
+          evidence_notes: evidenceNotes.trim(),
           application_status: status,
         },
         token
       )
+
       queryClient.setQueryData(['applied-learning', 'reflection', activityUuid], saved)
-      queryClient.invalidateQueries({ queryKey: ['applied-learning', 'portfolio'] })
-      queryClient.invalidateQueries({ queryKey: ['applied-learning', 'summary'] })
-      satisfiedRef.current = true
-      if (routeRef.current) routeRef.current.satisfied = true
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ['applied-learning', 'portfolio'] }),
+        queryClient.invalidateQueries({ queryKey: ['applied-learning', 'summary'] }),
+        queryClient.invalidateQueries({ queryKey: ['applied-learning', 'assistant-context'] }),
+      ])
       setOpen(false)
-      toast.success('Saved to your applied learning portfolio.')
+      toast.success('Saved to your portfolio.')
     } catch (error: any) {
-      toast.error(error?.message || 'Could not save your application note. Please try again.')
+      toast.error(error?.message || 'Could not save to your portfolio. Please try again.')
     } finally {
       setSaving(false)
     }
@@ -203,7 +137,7 @@ export default function AppliedLearningGate() {
         style={{ backgroundColor: satisfied ? BRAND_NAVY : BRAND_RED }}
       >
         {satisfied ? <CheckCircle2 className="h-4 w-4" /> : <BriefcaseBusiness className="h-4 w-4" />}
-        {satisfied ? 'Applied learning saved' : 'Apply this at work'}
+        {satisfied ? 'Application saved' : 'Apply this at work'}
       </button>
 
       {open && (
@@ -211,11 +145,11 @@ export default function AppliedLearningGate() {
           <div className="max-h-[94vh] w-full overflow-y-auto rounded-t-[28px] bg-white shadow-2xl sm:max-w-2xl sm:rounded-[28px]">
             <div className="sticky top-0 z-10 flex items-start justify-between border-b border-black/[0.07] bg-white px-5 py-5 sm:px-7">
               <div>
-                <p className="text-[10px] font-black uppercase tracking-[0.2em]" style={{ color: BRAND_RED }}>Before you continue</p>
-                <h2 className="mt-1 text-2xl font-black tracking-[-0.035em] text-[#101418]">Apply what you just learned.</h2>
-                <p className="mt-1 text-sm text-black/50">This becomes part of your lifetime learning portfolio.</p>
+                <p className="text-[10px] font-black uppercase tracking-[0.2em]" style={{ color: BRAND_RED }}>Apply this at work</p>
+                <h2 className="mt-1 text-2xl font-black tracking-[-0.035em] text-[#101418]">Turn this lesson into action.</h2>
+                <p className="mt-1 text-sm text-black/50">Your answer is saved to your lifetime learning portfolio.</p>
               </div>
-              <button onClick={() => setOpen(false)} className="rounded-full p-2 text-black/40 hover:bg-black/[0.05]" aria-label="Close">
+              <button type="button" onClick={() => setOpen(false)} className="rounded-full p-2 text-black/40 hover:bg-black/[0.05]" aria-label="Close">
                 <X className="h-5 w-5" />
               </button>
             </div>
@@ -224,60 +158,30 @@ export default function AppliedLearningGate() {
               <div>
                 <label className="text-sm font-extrabold text-[#101418]">How will you apply what you just learned in your organisation?</label>
                 <p className="mt-1 text-xs leading-5 text-black/45">Name the task, decision, process or behaviour you will change.</p>
-                <textarea
-                  value={plannedApplication}
-                  onChange={(e) => setPlannedApplication(e.target.value)}
-                  rows={4}
-                  placeholder="For example: In our next management meeting I will use this approach to..."
-                  className="mt-3 w-full resize-y rounded-2xl border border-black/10 bg-[#FAFAFA] p-4 text-sm leading-6 outline-none transition focus:border-[#C51635]/50 focus:ring-4 focus:ring-[#C51635]/[0.07]"
-                />
+                <textarea value={plannedApplication} onChange={(e) => setPlannedApplication(e.target.value)} rows={4} placeholder="For example: In our next management meeting I will use this approach to..." className="mt-3 w-full resize-y rounded-2xl border border-black/10 bg-[#FAFAFA] p-4 text-sm leading-6 outline-none transition focus:border-[#C51635]/50 focus:ring-4 focus:ring-[#C51635]/[0.07]" />
               </div>
 
               <div>
                 <label className="text-sm font-extrabold text-[#101418]">Have you already applied something from this or earlier learning?</label>
-                <p className="mt-1 text-xs leading-5 text-black/45">Optional. Record what you actually did, not what you intended to do.</p>
-                <textarea
-                  value={previousApplication}
-                  onChange={(e) => setPreviousApplication(e.target.value)}
-                  rows={3}
-                  placeholder="I applied..."
-                  className="mt-3 w-full resize-y rounded-2xl border border-black/10 bg-[#FAFAFA] p-4 text-sm leading-6 outline-none transition focus:border-[#C51635]/50 focus:ring-4 focus:ring-[#C51635]/[0.07]"
-                />
+                <p className="mt-1 text-xs leading-5 text-black/45">Optional. Record what you actually did.</p>
+                <textarea value={previousApplication} onChange={(e) => setPreviousApplication(e.target.value)} rows={3} placeholder="I applied..." className="mt-3 w-full resize-y rounded-2xl border border-black/10 bg-[#FAFAFA] p-4 text-sm leading-6 outline-none transition focus:border-[#C51635]/50 focus:ring-4 focus:ring-[#C51635]/[0.07]" />
               </div>
 
               <div>
                 <label className="text-sm font-extrabold text-[#101418]">What measurable change can you record?</label>
-                <p className="mt-1 text-xs leading-5 text-black/45">Optional today. Come back and update it when the result is visible.</p>
-                <textarea
-                  value={measurableChange}
-                  onChange={(e) => setMeasurableChange(e.target.value)}
-                  rows={3}
-                  placeholder="Time saved, revenue gained, errors reduced, response time improved, people reached, decision quality improved..."
-                  className="mt-3 w-full resize-y rounded-2xl border border-black/10 bg-[#FAFAFA] p-4 text-sm leading-6 outline-none transition focus:border-[#C51635]/50 focus:ring-4 focus:ring-[#C51635]/[0.07]"
-                />
+                <p className="mt-1 text-xs leading-5 text-black/45">Optional today. You can update this later when the result is visible.</p>
+                <textarea value={measurableChange} onChange={(e) => setMeasurableChange(e.target.value)} rows={3} placeholder="Time saved, revenue gained, errors reduced, response time improved, people reached..." className="mt-3 w-full resize-y rounded-2xl border border-black/10 bg-[#FAFAFA] p-4 text-sm leading-6 outline-none transition focus:border-[#C51635]/50 focus:ring-4 focus:ring-[#C51635]/[0.07]" />
               </div>
 
               <details className="rounded-2xl border border-black/[0.07] bg-white px-4 py-3">
                 <summary className="cursor-pointer text-sm font-bold text-black/60">Add proof or notes</summary>
-                <textarea
-                  value={evidenceNotes}
-                  onChange={(e) => setEvidenceNotes(e.target.value)}
-                  rows={3}
-                  placeholder="Link, document name, metric source or other evidence..."
-                  className="mt-3 w-full resize-y rounded-xl border border-black/10 bg-[#FAFAFA] p-3 text-sm leading-6 outline-none"
-                />
+                <textarea value={evidenceNotes} onChange={(e) => setEvidenceNotes(e.target.value)} rows={3} placeholder="Link, document name, metric source or other evidence..." className="mt-3 w-full resize-y rounded-xl border border-black/10 bg-[#FAFAFA] p-3 text-sm leading-6 outline-none" />
               </details>
             </div>
 
             <div className="sticky bottom-0 flex flex-col gap-3 border-t border-black/[0.07] bg-white px-5 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-7">
-              <p className="text-xs leading-5 text-black/45">You can update outcomes later as the measurable change becomes clear.</p>
-              <button
-                type="button"
-                onClick={save}
-                disabled={saving}
-                className="min-h-12 shrink-0 rounded-xl px-6 py-3 text-sm font-extrabold text-white disabled:opacity-60"
-                style={{ backgroundColor: BRAND_RED }}
-              >
+              <p className="text-xs leading-5 text-black/45">Saving this does not interrupt your course navigation.</p>
+              <button type="button" onClick={save} disabled={saving} className="min-h-12 shrink-0 rounded-xl px-6 py-3 text-sm font-extrabold text-white disabled:opacity-60" style={{ backgroundColor: BRAND_RED }}>
                 {saving ? 'Saving...' : 'Save to portfolio'}
               </button>
             </div>
