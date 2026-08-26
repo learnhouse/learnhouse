@@ -1,13 +1,15 @@
 site_name: Acyberschool
-site_description: Applied learning that changes what you can do at work from day one.
+site_description: Learning should change what you are capable of applying at work, from day 1.
 contact_email: acyberschool@gmail.com
 
-# Acyberschool self-hosted defaults. Secrets remain in environment variables.
+# This config is optimized for local development. Production values should be supplied by environment variables.
+
 general:
+  # SECURITY: default to production-safe; enable with LEARNHOUSE_DEVELOPMENT_MODE=true for local dev.
   development_mode: false
 
 security:
-  # Required via LEARNHOUSE_AUTH_JWT_SECRET_KEY (minimum 32 characters).
+  # SECURITY: Set via LEARNHOUSE_AUTH_JWT_SECRET_KEY env var (required, min 32 chars).
   auth_jwt_secret_key: ""
 
 hosting_config:
@@ -31,7 +33,6 @@ hosting_config:
 mailing_config:
   email_provider: "resend"
   system_email_address: ""
-  system_email_sender_name: "Acyberschool"
   resend_api_key: ""
   smtp_host: ""
   smtp_port: 587
@@ -54,14 +55,13 @@ payments_config:
     stripe_webhook_connect_secret: ""
 
 ai_config:
-  # The Acyberschool learner assistant is enabled by default. The secret API key
-  # is NEVER stored in GitHub: set LEARNHOUSE_AI_API_KEY in the runtime environment.
+  # Acyberschool uses the provider-neutral LearnHouse AI layer with OpenAI by default.
+  # Keep the secret outside GitHub and provide it at runtime via LEARNHOUSE_AI_API_KEY.
   is_ai_enabled: true
   provider: "openai"
   api_key: ""
   base_url: ""
-  # Blank model fields use provider-aware defaults from llm/tiers.py:
-  # fast=gpt-5.4-nano, standard=gpt-5.4-mini, pro=gpt-5.4 for OpenAI.
+  # Blank model fields use provider-aware defaults from src/services/ai/llm/tiers.py.
   model_fast: ""
   model_standard: ""
   model_pro: ""
