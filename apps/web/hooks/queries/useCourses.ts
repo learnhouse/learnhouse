@@ -14,9 +14,9 @@ export function useCourses(orgSlug: string) {
   const session = useLHSession() as any
   const accessToken = session?.data?.tokens?.access_token as string | undefined
 
-  return useQuery({
+  return useQuery<any[]>({
     queryKey: queryKeys.courses.list(orgSlug),
-    queryFn: () => getOrgCourses(orgSlug, {}, accessToken),
+    queryFn: async () => (await getOrgCourses(orgSlug, {}, accessToken)) as any[],
     enabled: !!orgSlug,
     staleTime: 60_000,
   })
