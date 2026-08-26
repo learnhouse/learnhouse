@@ -1,22 +1,16 @@
-site_name: LearnHouse
-site_description: LearnHouse is an open-source platform tailored for learning experiences.
-contact_email: hello@learnhouse.app
+site_name: Acyberschool
+site_description: Applied learning that changes what you can do at work from day one.
+contact_email: acyberschool@gmail.com
 
-# This config is optimized for local development. You can change the values according to your needs.
-
+# Acyberschool self-hosted defaults. Secrets remain in environment variables.
 general:
-  # SECURITY: default to production-safe; enable with LEARNHOUSE_DEVELOPMENT_MODE=true for local dev.
   development_mode: false
 
 security:
-  # SECURITY: Set via LEARNHOUSE_AUTH_JWT_SECRET_KEY env var (required, min 32 chars).
-  # Generate with: python -c "import secrets; print(secrets.token_urlsafe(32))"
+  # Required via LEARNHOUSE_AUTH_JWT_SECRET_KEY (minimum 32 characters).
   auth_jwt_secret_key: ""
 
 hosting_config:
-  # tenancy: "single" (default) serves the default org on any host (localhost
-  # or self-hosted VPS). "multi" enables slug.{domain} subdomain detection and
-  # requires the EE folder. Override with LEARNHOUSE_TENANCY.
   tenancy: single
   domain: localhost:3000
   frontend_domain: localhost:3000
@@ -27,28 +21,17 @@ hosting_config:
     - http://localhost:3001
   cookies_config:
     domain: ".localhost"
-  # This one value is read by three consumers: CORS (core/middleware/cors.py),
-  # CSRF (security/csrf.py) and the base URL of emailed login / verification
-  # links (services/email/utils.py). The default below is a catch-all, which
-  # means CORS and CSRF are effectively open unless you scope it — set
-  # LEARNHOUSE_ALLOWED_REGEXP to your own domain in any real deployment, e.g.
-  # '^https://(?:[a-z0-9-]+\.)*example\.com$'.
-  #
-  # Narrowing this default is deliberately NOT done here: it would CORS-block
-  # and CSRF-403 every deployment that relies on it. Email links do not depend
-  # on it being scoped — services/email/utils.py ignores a catch-all pattern
-  # and validates the Origin against the configured domain, its subdomains and
-  # the verified custom domains instead.
   allowed_regexp: '\b((?:https?://)[^\s/$.?#].[^\s]*)\b'
   content_delivery:
-    type: "filesystem" # "filesystem" or "s3api"
+    type: "filesystem"
     s3api:
       bucket_name: ""
       endpoint_url: ""
 
 mailing_config:
-  email_provider: "resend" # "resend" or "smtp"
+  email_provider: "resend"
   system_email_address: ""
+  system_email_sender_name: "Acyberschool"
   resend_api_key: ""
   smtp_host: ""
   smtp_port: 587
@@ -63,52 +46,33 @@ redis_config:
   redis_connection_string: redis://localhost:6379/learnhouse
 
 payments_config:
-  # See ee/services/payments/README.md for full setup instructions.
-  # To add a new payment provider, add its credentials block here and register
-  # it in ee/db/payments/payments.py (PaymentProviderEnum) and config/config.py.
   stripe:
-    # Platform API keys — Stripe Dashboard → Developers → API keys
-    stripe_secret_key: ""        # sk_live_... (or sk_test_... for development)
-    stripe_publishable_key: ""   # pk_live_... (or pk_test_... for development)
-    # Stripe Connect OAuth client ID — Stripe Dashboard → Settings → Connect → OAuth
-    stripe_client_id: ""         # ca_...
-    # Webhook signing secrets — Stripe Dashboard → Developers → Webhooks
-    # Standard endpoint:  POST /payments/stripe/webhook/standard
-    stripe_webhook_standard_secret: ""   # whsec_...
-    # Connect endpoint:   POST /payments/stripe/webhook/connect
-    stripe_webhook_connect_secret: ""    # whsec_...
+    stripe_secret_key: ""
+    stripe_publishable_key: ""
+    stripe_client_id: ""
+    stripe_webhook_standard_secret: ""
+    stripe_webhook_connect_secret: ""
 
 ai_config:
-  is_ai_enabled: false
-  # Provider-agnostic generation (Pydantic AI). Set provider + api_key to use any
-  # supported provider: google | openai | anthropic | deepseek | moonshot | mistral | openrouter | bedrock | ollama.
-  # base_url is optional (OpenAI-compatible / local endpoints, e.g. Ollama).
-  # For "openrouter": leave base_url blank (auto-set) and use OpenRouter model slugs like
-  # "anthropic/claude-sonnet-4-5" or "openai/gpt-4o-mini" in the model_* fields below.
-  # For "bedrock": use standard AWS credentials (env/role/profile) + AWS_REGION; api_key optional.
-  provider: "google"
+  # The Acyberschool learner assistant is enabled by default. The secret API key
+  # is NEVER stored in GitHub: set LEARNHOUSE_AI_API_KEY in the runtime environment.
+  is_ai_enabled: true
+  provider: "openai"
   api_key: ""
   base_url: ""
-  # Three model tiers. Leave blank to use the built-in Gemini 3 defaults.
-  model_fast: ""        # titles, follow-ups, migration                 (default: gemini-3.1-flash-lite)
-  model_standard: ""    # chat, RAG, course planning / blocks (std plan) (default: gemini-3.5-flash)
-  model_pro: ""         # course planning / blocks (Pro+ plan)          (default: gemini-3.1-pro-preview)
-  # RAG embeddings follow the chosen provider (Google / OpenAI family incl. Ollama). Override
-  # any of these; embedding_dimensions defaults to 768 to match the pgvector column (changing
-  # it requires a DB migration + re-index). Providers without embeddings (Anthropic, DeepSeek, Moonshot,
-  # Mistral, OpenRouter, Bedrock) fall back to Google when gemini_api_key is set.
-  embedding_provider: ""    # default: same as `provider`
-  embedding_model: ""       # default per provider (e.g. gemini-embedding-001, text-embedding-3-small)
-  embedding_dimensions: ""  # default: 768
-  # Google/Gemini key. Also the embeddings fallback for providers that lack an embeddings API.
+  # Blank model fields use provider-aware defaults from llm/tiers.py:
+  # fast=gpt-5.4-nano, standard=gpt-5.4-mini, pro=gpt-5.4 for OpenAI.
+  model_fast: ""
+  model_standard: ""
+  model_pro: ""
+  embedding_provider: ""
+  embedding_model: ""
+  embedding_dimensions: ""
   gemini_api_key: ""
-  # Media generation (Google-only, uses the Google GenAI SDK regardless of `provider`,
-  # resolving its key from `api_key` when provider=google, else `gemini_api_key`).
-  image_model: ""       # AI image generation           (default: gemini-2.5-flash-image)
-  tts_model: ""         # AI audio / podcast generation  (default: gemini-2.5-flash-preview-tts)
+  image_model: ""
+  tts_model: ""
 
 tinybird_config:
-  # Set api_url to enable analytics automatically
   api_url: ""
   ingest_token: ""
   read_token: ""
