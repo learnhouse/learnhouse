@@ -1,9 +1,9 @@
 'use client'
 
-import React, { useMemo, useRef, useState } from 'react'
+import React, { useEffect, useMemo, useRef, useState } from 'react'
 import { usePathname } from 'next/navigation'
 import { useQuery } from '@tanstack/react-query'
-import { ArrowUp, Bot, Sparkles, X } from 'lucide-react'
+import { ArrowUp, Bot, BriefcaseBusiness, Check, Pencil, Sparkles, X } from 'lucide-react'
 import ReactMarkdown from 'react-markdown'
 
 import { useOrg } from '@components/Contexts/OrgContext'
@@ -20,6 +20,19 @@ const RED = '#C51635'
 const NAVY = '#0B263D'
 
 type Message = { id: string; role: 'user' | 'assistant'; content: string }
+type WorkContext = {
+  organisation: string
+  role: string
+  sector: string
+  priority: string
+}
+
+const EMPTY_CONTEXT: WorkContext = {
+  organisation: '',
+  role: '',
+  sector: '',
+  priority: '',
+}
 
 function clean(value?: string) {
   return (value || '').replace('activity_', '').replace('course_', '')
@@ -38,6 +51,7 @@ export default function AcyberLearningAssistant() {
   const org = useOrg() as any
   const session = useLHSession() as any
   const token = session?.data?.tokens?.access_token as string | undefined
+  const userId = session?.data?.user?.id || session?.data?.user?.user_uuid || session?.data?.user?.email || 'learner'
   const { data: activity } = useActivity(route?.activityUuid || '')
   const [open, setOpen] = useState(false)
   const [input, setInput] = useState('')
@@ -46,7 +60,26 @@ export default function AcyberLearningAssistant() {
   const [streaming, setStreaming] = useState(false)
   const [streamText, setStreamText] = useState('')
   const [error, setError] = useState<string | null>(null)
+  const [workContext, setWorkContext] = useState<WorkContext>(EMPTY_CONTEXT)
+  const [draftContext, setDraftContext] = useState<WorkContext>(EMPTY_CONTEXT)
+  const [editingContext, setEditingContext] = useState(false)
   const bottomRef = useRef<HTMLDivElement>(null)
+
+  const storageKey = `acyberschool-work-context:${userId}`
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    try {
+      const raw = window.localStorage.getItem(storageKey)
+      if (!raw) return
+      const saved = JSON.parse(raw) as Partial<WorkContext>
+      const normalized = { ...EMPTY_CONTEXT, ...saved }
+      setWorkContext(normalized)
+      setDraftContext(normalized)
+    } catch {
+      // A broken local value should never stop the learning assistant.
+    }
+  }, [storageKey])
 
   const { data: portfolio = [] } = useQuery({
     queryKey: ['applied-learning', 'assistant-context', org?.id],
@@ -58,22 +91,41 @@ export default function AcyberLearningAssistant() {
   if (!route || session?.status !== 'authenticated') return null
 
   const latestApplication = portfolio?.[0]
+  const hasWorkContext = Object.values(workContext).some((value) => value.trim())
 
   const contextualize = (question: string) => {
     const pieces = [
       `You are helping a learner apply the current lesson in real work.`,
-      org?.name ? `Learning organisation: ${org.name}.` : '',
       activity?.name ? `Current lesson: ${activity.name}.` : '',
+      workContext.organisation ? `Learner's organisation: ${workContext.organisation}.` : '',
+      workContext.role ? `Learner's role: ${workContext.role}.` : '',
+      workContext.sector ? `Learner's sector or industry: ${workContext.sector}.` : '',
+      workContext.priority ? `Current work priority or challenge: ${workContext.priority}.` : '',
+      !workContext.organisation && org?.name ? `Learning space: ${org.name}.` : '',
       latestApplication?.planned_application
         ? `The learner's most recent application intention is: ${latestApplication.planned_application}`
         : '',
       latestApplication?.measurable_change
         ? `The learner has recorded this measurable change from prior application: ${latestApplication.measurable_change}`
         : '',
-      `Answer the learner's question directly. Use plain language. When useful, connect the answer to a practical workplace action and a measurable outcome. Do not assume the course is about AI; follow the subject matter of the current lesson. Separate what is known from what is a suggestion or hypothesis.`,
+      `Answer the learner's question directly. Use plain language. Make the answer specific to the learner's work context when it is available. When useful, give one practical next action and one sensible measure of change. Do not assume the course is about AI; follow the subject matter of the current lesson. Separate what is known from what is a suggestion or hypothesis.`,
       `Learner question: ${question}`,
     ]
     return pieces.filter(Boolean).join('\n\n')
+  }
+
+  const saveWorkContext = () => {
+    const normalized = {
+      organisation: draftContext.organisation.trim(),
+      role: draftContext.role.trim(),
+      sector: draftContext.sector.trim(),
+      priority: draftContext.priority.trim(),
+    }
+    setWorkContext(normalized)
+    if (typeof window !== 'undefined') {
+      window.localStorage.setItem(storageKey, JSON.stringify(normalized))
+    }
+    setEditingContext(false)
   }
 
   const send = async (value?: string) => {
@@ -114,10 +166,14 @@ export default function AcyberLearningAssistant() {
     }
 
     const prompt = contextualize(question)
-    if (sessionUuid) {
-      await sendActivityAIChatMessageStream(prompt, sessionUuid, activity.activity_uuid, token, callbacks)
-    } else {
-      await startActivityAIChatSessionStream(prompt, activity.activity_uuid, token, callbacks)
+    try {
+      if (sessionUuid) {
+        await sendActivityAIChatMessageStream(prompt, sessionUuid, activity.activity_uuid, token, callbacks)
+      } else {
+        await startActivityAIChatSessionStream(prompt, activity.activity_uuid, token, callbacks)
+      }
+    } catch (err: any) {
+      callbacks.onError(err?.message || 'The learning assistant is unavailable right now.')
     }
   }
 
@@ -142,19 +198,96 @@ export default function AcyberLearningAssistant() {
 
       {open && (
         <div className="fixed inset-0 z-[1000] flex items-end justify-center bg-black/45 sm:items-center sm:p-5">
-          <section className="flex h-[88vh] w-full flex-col overflow-hidden rounded-t-[28px] bg-white shadow-2xl sm:h-[720px] sm:max-h-[88vh] sm:max-w-2xl sm:rounded-[28px]">
+          <section className="flex h-[90vh] w-full flex-col overflow-hidden rounded-t-[28px] bg-white shadow-2xl sm:h-[760px] sm:max-h-[90vh] sm:max-w-2xl sm:rounded-[28px]">
             <header className="flex items-start justify-between border-b border-black/[0.07] px-5 py-4 sm:px-6">
-              <div className="flex items-center gap-3">
-                <span className="flex h-10 w-10 items-center justify-center rounded-xl text-white" style={{ backgroundColor: NAVY }}><Bot className="h-5 w-5" /></span>
-                <div>
+              <div className="flex min-w-0 items-center gap-3">
+                <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-white" style={{ backgroundColor: NAVY }}>
+                  <Bot className="h-5 w-5" />
+                </span>
+                <div className="min-w-0">
                   <p className="text-[10px] font-black uppercase tracking-[0.18em]" style={{ color: RED }}>Learning assistant</p>
-                  <h2 className="text-lg font-black">Ask about this lesson</h2>
+                  <h2 className="truncate text-lg font-black">Ask about this lesson</h2>
                 </div>
               </div>
-              <button onClick={() => setOpen(false)} className="rounded-full p-2 text-black/40 hover:bg-black/[0.04]" aria-label="Close AI assistant"><X className="h-5 w-5" /></button>
+              <button onClick={() => setOpen(false)} className="rounded-full p-2 text-black/40 hover:bg-black/[0.04]" aria-label="Close AI assistant">
+                <X className="h-5 w-5" />
+              </button>
             </header>
 
             <div className="flex-1 overflow-y-auto px-5 py-5 sm:px-6">
+              <div className="mb-4 rounded-2xl border border-black/[0.07] bg-[#FAFAFA] p-4">
+                <div className="flex items-start justify-between gap-3">
+                  <div className="flex gap-3">
+                    <span className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-white text-[#0B263D] shadow-sm">
+                      <BriefcaseBusiness className="h-4 w-4" />
+                    </span>
+                    <div>
+                      <p className="text-xs font-black text-[#101418]">Your work context</p>
+                      {hasWorkContext ? (
+                        <p className="mt-1 text-xs leading-5 text-black/48">
+                          {[workContext.role, workContext.organisation, workContext.sector].filter(Boolean).join(' · ')}
+                          {workContext.priority ? ` · Focus: ${workContext.priority}` : ''}
+                        </p>
+                      ) : (
+                        <p className="mt-1 text-xs leading-5 text-black/48">Add a little context once so examples and application guidance fit your actual work.</p>
+                      )}
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setDraftContext(workContext)
+                      setEditingContext((value) => !value)
+                    }}
+                    className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-black/40 hover:bg-white hover:text-black/70"
+                    aria-label="Edit work context"
+                  >
+                    <Pencil className="h-3.5 w-3.5" />
+                  </button>
+                </div>
+
+                {editingContext && (
+                  <div className="mt-4 grid gap-3 sm:grid-cols-2">
+                    <input
+                      value={draftContext.organisation}
+                      onChange={(e) => setDraftContext((old) => ({ ...old, organisation: e.target.value }))}
+                      placeholder="Organisation"
+                      className="min-h-11 rounded-xl border border-black/10 bg-white px-3 text-sm outline-none focus:border-[#C51635]/40"
+                    />
+                    <input
+                      value={draftContext.role}
+                      onChange={(e) => setDraftContext((old) => ({ ...old, role: e.target.value }))}
+                      placeholder="Your role"
+                      className="min-h-11 rounded-xl border border-black/10 bg-white px-3 text-sm outline-none focus:border-[#C51635]/40"
+                    />
+                    <input
+                      value={draftContext.sector}
+                      onChange={(e) => setDraftContext((old) => ({ ...old, sector: e.target.value }))}
+                      placeholder="Sector or industry"
+                      className="min-h-11 rounded-xl border border-black/10 bg-white px-3 text-sm outline-none focus:border-[#C51635]/40"
+                    />
+                    <input
+                      value={draftContext.priority}
+                      onChange={(e) => setDraftContext((old) => ({ ...old, priority: e.target.value }))}
+                      placeholder="Current priority or challenge"
+                      className="min-h-11 rounded-xl border border-black/10 bg-white px-3 text-sm outline-none focus:border-[#C51635]/40"
+                    />
+                    <div className="sm:col-span-2 flex justify-end">
+                      <button
+                        type="button"
+                        onClick={saveWorkContext}
+                        className="inline-flex min-h-10 items-center gap-2 rounded-xl px-4 py-2 text-xs font-extrabold text-white"
+                        style={{ backgroundColor: RED }}
+                      >
+                        <Check className="h-3.5 w-3.5" />
+                        Save context
+                      </button>
+                    </div>
+                    <p className="sm:col-span-2 text-[10px] leading-4 text-black/35">This context stays private on this device and is used only to make your learning guidance more relevant.</p>
+                  </div>
+                )}
+              </div>
+
               {messages.length === 0 && !streaming && (
                 <div className="rounded-[22px] p-5 text-white" style={{ backgroundColor: NAVY }}>
                   <p className="text-sm font-extrabold">Use AI to understand more, then bring it back to your work.</p>
@@ -167,10 +300,13 @@ export default function AcyberLearningAssistant() {
                 </div>
               )}
 
-              <div className="space-y-4">
+              <div className="mt-4 space-y-4">
                 {messages.map((message) => (
                   <div key={message.id} className={message.role === 'user' ? 'flex justify-end' : 'flex justify-start'}>
-                    <div className={`max-w-[88%] rounded-2xl px-4 py-3 text-sm leading-6 ${message.role === 'user' ? 'text-white' : 'border border-black/[0.07] bg-[#F7F8FA] text-[#101418]'}`} style={message.role === 'user' ? { backgroundColor: RED } : undefined}>
+                    <div
+                      className={`max-w-[88%] rounded-2xl px-4 py-3 text-sm leading-6 ${message.role === 'user' ? 'text-white' : 'border border-black/[0.07] bg-[#F7F8FA] text-[#101418]'}`}
+                      style={message.role === 'user' ? { backgroundColor: RED } : undefined}
+                    >
                       {message.role === 'assistant' ? <ReactMarkdown>{message.content}</ReactMarkdown> : message.content}
                     </div>
                   </div>
@@ -202,7 +338,9 @@ export default function AcyberLearningAssistant() {
                   placeholder="Ask for an explanation, example or help applying this..."
                   className="max-h-32 min-h-[46px] flex-1 resize-none bg-transparent px-2 py-2 text-sm leading-5 outline-none"
                 />
-                <button disabled={!input.trim() || streaming} onClick={() => send()} className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-white disabled:opacity-30" style={{ backgroundColor: RED }} aria-label="Send"><ArrowUp className="h-4 w-4" /></button>
+                <button disabled={!input.trim() || streaming} onClick={() => send()} className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-white disabled:opacity-30" style={{ backgroundColor: RED }} aria-label="Send">
+                  <ArrowUp className="h-4 w-4" />
+                </button>
               </div>
               <p className="mt-2 text-center text-[10px] text-black/35">Use AI to support your thinking. Your judgement and application remain yours.</p>
             </footer>
