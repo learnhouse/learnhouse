@@ -11,7 +11,7 @@ type UserAvatarProps = {
   avatar_url?: string
   use_with_session?: boolean
   rounded?: 'rounded-md' | 'rounded-xl' | 'rounded-lg' | 'rounded-full' | 'rounded'
-  border?: 'border-2' | 'border-4' | 'border-8'
+  border?: 'border' | 'border-2' | 'border-4' | 'border-8'
   borderColor?: string
   predefined_avatar?: 'ai' | 'empty'
   backgroundColor?: 'bg-white' | 'bg-gray-100'
@@ -30,9 +30,7 @@ function UserAvatar(props: UserAvatarProps) {
 
   useEffect(() => {
     const fetchUserData = async () => {
-      // Skip fetching if no access token (user not authenticated)
       if (!access_token) return
-      // Skip fetching if avatar is already determined — the popup will fetch its own data
       if (props.avatar_url || props.predefined_avatar) return
 
       if (props.username) {
@@ -60,7 +58,6 @@ function UserAvatar(props: UserAvatarProps) {
   }
 
   const extractExternalUrl = (url: string): string | null => {
-    // Check if the URL contains an embedded external URL
     const matches = url.match(/avatars\/(https?:\/\/[^/]+.*$)/)
     if (matches && matches[1]) {
       return matches[1]
@@ -69,63 +66,47 @@ function UserAvatar(props: UserAvatarProps) {
   }
 
   const getAvatarUrl = (): string => {
-    // If predefined avatar is specified
     if (props.predefined_avatar) {
       const avatarType = props.predefined_avatar === 'ai' ? 'ai_avatar.png' : 'empty_avatar.png'
       return getUriWithOrg(params.orgslug, `/${avatarType}`)
     }
 
-    // If avatar_url prop is provided
     if (props.avatar_url) {
-      // Check if it's a malformed URL (external URL processed through getUserAvatarMediaDirectory)
       const extractedUrl = extractExternalUrl(props.avatar_url)
       if (extractedUrl) {
         return extractedUrl
       }
-      // If it's a direct external URL
       if (isExternalUrl(props.avatar_url)) {
         return props.avatar_url
       }
-      // Otherwise use as is
       return props.avatar_url
     }
 
-    // If we have user data from userId/username fetch
     if (userData?.avatar_image) {
       const avatarUrl = userData.avatar_image
-      // If it's an external URL (e.g., from Google, Facebook, etc.), use it directly
       if (isExternalUrl(avatarUrl)) {
         return avatarUrl
       }
-      // Otherwise, get the local avatar URL
       return getUserAvatarMediaDirectory(userData.user_uuid, avatarUrl)
     }
 
-    // If a specific userId or username was requested but user has no avatar,
-    // don't fall back to session avatar - use empty avatar instead
     if (props.userId || props.username) {
       return getUriWithOrg(params.orgslug, '/empty_avatar.png')
     }
 
-    // Only use session avatar when no specific user is requested
     if (session?.data?.user?.avatar_image) {
       const avatarUrl = session.data.user.avatar_image
-      // If it's an external URL (e.g., from Google, Facebook, etc.), use it directly
       if (isExternalUrl(avatarUrl)) {
         return avatarUrl
       }
-      // Otherwise, get the local avatar URL
       return getUserAvatarMediaDirectory(session.data.user.user_uuid, avatarUrl)
     }
 
-    // Fallback to empty avatar
     return getUriWithOrg(params.orgslug, '/empty_avatar.png')
   }
 
   const emptyAvatarUrl = getUriWithOrg(params.orgslug, '/empty_avatar.png')
   const resolvedAvatarUrl = getAvatarUrl()
-  // Tracking the failed URL (rather than a boolean) resets automatically when
-  // the resolved source changes, avoiding a setState-in-effect.
   const hasError = erroredUrl === resolvedAvatarUrl
 
   const avatarImage = (
@@ -135,7 +116,6 @@ function UserAvatar(props: UserAvatarProps) {
       height={props.width ?? 50}
       src={hasError ? emptyAvatarUrl : resolvedAvatarUrl}
       onError={() => {
-        // Fall back to the empty avatar placeholder when the image fails to load
         if (resolvedAvatarUrl !== emptyAvatarUrl) {
           setErroredUrl(resolvedAvatarUrl)
         }
