@@ -132,7 +132,7 @@ export default function HomeClient() {
               <p className="text-xs font-bold text-[#101418]">{firstName || 'Learner'}</p>
               <p className="text-[10px] text-black/40">Learning that moves into work</p>
             </div>
-            <UserAvatar border="border" rounded="rounded-full" width={36} />
+            <UserAvatar border="border-2" rounded="rounded-full" width={36} />
             <button
               type="button"
               onClick={() => signOut({ redirect: true, callbackUrl: '/login' })}
