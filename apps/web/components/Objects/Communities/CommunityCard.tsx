@@ -9,7 +9,7 @@ import { getCommunityThumbnailMediaDirectory } from '@services/media/media'
 import { revalidateTags } from '@services/utils/ts/requests'
 import { useQueryClient } from '@tanstack/react-query'
 import { queryKeys } from '@/lib/query/keys'
-import { MoreVertical, Users, Trash2, Edit, MessageCircle, ExternalLink } from 'lucide-react'
+import { MoreVertical, Users, Trash2, Edit, MessageCircle, ExternalLink, Settings } from 'lucide-react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import React from 'react'
@@ -39,10 +39,10 @@ function CommunityCard(props: PropsType) {
   const communityId = removeCommunityPrefix(props.community.community_uuid)
   const variant = props.variant || 'dashboard'
 
-  // Different links based on variant
-  const communityLink = variant === 'dashboard'
-    ? getUriWithOrg(props.orgslug, `/dash/communities/${communityId}/general`)
-    : getUriWithOrg(props.orgslug, `/community/${communityId}`)
+  // Acyberschool: both admin and learner cards open the live conversation feed.
+  // Settings remain available as a secondary admin action.
+  const communityLink = getUriWithOrg(props.orgslug, `/community/${communityId}`)
+  const settingsLink = getUriWithOrg(props.orgslug, `/dash/communities/${communityId}/general`)
 
   return (
     <div
@@ -93,7 +93,7 @@ function CommunityCard(props: PropsType) {
           </p>
         )}
 
-        <div className="pt-1.5 flex items-center justify-between border-t border-gray-100">
+        <div className="pt-1.5 flex items-center justify-between border-t border-gray-100 gap-2">
           <div className="flex items-center gap-1.5 text-gray-500">
             <MessageCircle size={12} />
             <span className="text-[10px] font-bold uppercase tracking-wider">
@@ -101,21 +101,22 @@ function CommunityCard(props: PropsType) {
             </span>
           </div>
 
-          {variant === 'dashboard' ? (
-            <Link
-              href={getUriWithOrg(props.orgslug, `/dash/communities/${communityId}/general`)}
-              className="text-[10px] font-bold text-gray-400 hover:text-gray-900 transition-colors uppercase tracking-wider"
-            >
-              {t('dashboard.courses.communities.card.open_settings')}
-            </Link>
-          ) : (
+          <div className="flex items-center gap-3">
             <Link
               href={communityLink}
-              className="text-[10px] font-bold text-gray-400 hover:text-gray-900 transition-colors uppercase tracking-wider"
+              className="text-[10px] font-bold text-gray-700 hover:text-black transition-colors uppercase tracking-wider"
             >
-              {t('dashboard.courses.communities.card.view_community')}
+              {t('dashboard.courses.communities.card.view_community', { defaultValue: 'View conversations' })}
             </Link>
-          )}
+            {variant === 'dashboard' && (
+              <Link
+                href={settingsLink}
+                className="text-[10px] font-bold text-gray-400 hover:text-gray-900 transition-colors uppercase tracking-wider"
+              >
+                {t('common.settings', { defaultValue: 'Settings' })}
+              </Link>
+            )}
+          </div>
         </div>
       </div>
     </div>
@@ -153,10 +154,18 @@ const CommunityAdminEditsArea = (props: any) => {
           <DropdownMenuContent align="end" className="w-48">
             <DropdownMenuItem asChild>
               <Link
+                href={getUriWithOrg(props.orgslug, `/community/${removeCommunityPrefix(props.community_uuid)}`)}
+                className="flex items-center px-2 py-1.5 text-sm text-gray-700 hover:bg-gray-50 rounded-md transition-colors"
+              >
+                <ExternalLink className="me-2 h-4 w-4" /> {t('dashboard.courses.communities.card.view_community', { defaultValue: 'View conversations' })}
+              </Link>
+            </DropdownMenuItem>
+            <DropdownMenuItem asChild>
+              <Link
                 href={getUriWithOrg(props.orgslug, `/dash/communities/${removeCommunityPrefix(props.community_uuid)}/general`)}
                 className="flex items-center px-2 py-1.5 text-sm text-gray-700 hover:bg-gray-50 rounded-md transition-colors"
               >
-                <ExternalLink className="me-2 h-4 w-4" /> {t('dashboard.courses.communities.card.open_settings')}
+                <Settings className="me-2 h-4 w-4" /> {t('common.settings', { defaultValue: 'Settings' })}
               </Link>
             </DropdownMenuItem>
             {props.onEdit && (
