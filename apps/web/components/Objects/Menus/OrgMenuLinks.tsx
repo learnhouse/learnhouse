@@ -1,25 +1,24 @@
 import { useOrg } from '@components/Contexts/OrgContext'
 import { getUriWithOrg } from '@services/config/config'
-import { Books, FolderSimple, ChatsCircle, Headphones, Cube, ShoppingBag } from '@phosphor-icons/react'
+import { Books, ChatsCircle, Briefcase } from '@phosphor-icons/react'
 import { menuIcon } from '@components/Objects/Menus/menuIcons'
 import Link from 'next/link'
 import React from 'react'
 import { useTranslation } from 'react-i18next'
 import { getMenuColorClasses } from '@services/utils/ts/colorUtils'
 
-type Builtin = { feature: string; link: string; labelKey: string; Icon: any }
+type Builtin = { feature?: string; link: string; labelKey?: string; label?: string; Icon: any }
 
 const BUILTIN: Record<string, Builtin> = {
   courses: { feature: 'courses', link: '/courses', labelKey: 'courses.courses', Icon: Books },
-  library: { feature: 'folders', link: '/library', labelKey: 'library.library', Icon: FolderSimple },
-  podcasts: { feature: 'podcasts', link: '/podcasts', labelKey: 'podcasts.podcasts', Icon: Headphones },
+  portfolio: { link: '/portfolio', label: 'My Portfolio', Icon: Briefcase },
   communities: { feature: 'communities', link: '/communities', labelKey: 'communities.title', Icon: ChatsCircle },
-  playgrounds: { feature: 'playgrounds', link: '/playgrounds', labelKey: 'common.playgrounds', Icon: Cube },
-  store: { feature: 'payments', link: '/store', labelKey: 'common.store', Icon: ShoppingBag },
 }
 
-// Default order when an org has no custom menu config.
-const DEFAULT_ORDER = ['courses', 'library', 'podcasts', 'communities', 'playgrounds', 'store']
+// Acyberschool learner navigation is intentionally small. Trainers keep the
+// richer creation/admin tools inside Dashboard rather than exposing them as a
+// learner navigation maze.
+const DEFAULT_ORDER = ['courses', 'portfolio', 'communities']
 
 function MenuLinks(props: { orgslug: string; primaryColor?: string }) {
   const { t } = useTranslation()
@@ -27,12 +26,13 @@ function MenuLinks(props: { orgslug: string; primaryColor?: string }) {
   const colors = getMenuColorClasses(props.primaryColor || '')
 
   const rf = org?.config?.config?.resolved_features
-  const isEnabled = (feature: string) => rf?.[feature]?.enabled === true
+  const isEnabled = (feature?: string) => !feature || rf?.[feature]?.enabled === true
 
   const configItems: any[] | undefined =
     org?.config?.config?.customization?.menu?.items ?? org?.config?.config?.general?.menu?.items
 
-  // Build the items to render (config-driven, else feature-driven defaults)
+  // Preserve explicit trainer-configured custom links, but use the focused
+  // Acyberschool navigation when no custom menu is configured.
   const source =
     configItems && configItems.length
       ? [...configItems].sort((a, b) => (a.order ?? 0) - (b.order ?? 0))
@@ -54,10 +54,10 @@ function MenuLinks(props: { orgslug: string; primaryColor?: string }) {
       const meta = BUILTIN[item.type]
       if (!meta) return null
       if (!item.enabled) return null
-      if (!isEnabled(meta.feature)) return null // plan/feature gating
+      if (!isEnabled(meta.feature)) return null
       return {
         key: item.type,
-        label: item.label || t(meta.labelKey),
+        label: item.label || meta.label || (meta.labelKey ? t(meta.labelKey) : item.type),
         Icon: meta.Icon,
         href: getUriWithOrg(props.orgslug, meta.link),
         external: false,
