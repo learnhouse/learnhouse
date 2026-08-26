@@ -1,0 +1,44 @@
+name: Acyberschool Check
+
+on:
+  push:
+    branches:
+      - acyberschool-dev
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  web:
+    name: Web typecheck
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version-file: .bun-version
+      - name: Install web dependencies
+        working-directory: apps/web
+        run: bun install --frozen-lockfile
+      - name: Generate Next route types
+        working-directory: apps/web
+        run: bunx next typegen
+      - name: Type check
+        working-directory: apps/web
+        run: bunx tsc --noEmit
+
+  api:
+    name: API syntax check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.12'
+      - name: Compile Acyberschool API changes
+        run: |
+          python -m py_compile apps/api/src/routers/applied_learning.py
+          python -m py_compile apps/api/src/db/applied_learning.py
+          python -m py_compile apps/api/src/services/ai/llm/tiers.py
+          python -m py_compile apps/api/config/config.py
