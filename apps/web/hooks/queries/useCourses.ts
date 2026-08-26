@@ -5,6 +5,11 @@ import { useLHSession } from '@components/Contexts/LHSessionContext'
 import { queryKeys } from '@lib/query/keys'
 import { getOrgCourses, getCourseMetadata } from '@services/courses/courses'
 
+function normalizeCourseUuid(courseUuid: string) {
+  if (!courseUuid) return ''
+  return courseUuid.startsWith('course_') ? courseUuid : `course_${courseUuid}`
+}
+
 export function useCourses(orgSlug: string) {
   const session = useLHSession() as any
   const accessToken = session?.data?.tokens?.access_token as string | undefined
@@ -20,11 +25,12 @@ export function useCourses(orgSlug: string) {
 export function useCourseMeta(courseUuid: string) {
   const session = useLHSession() as any
   const accessToken = session?.data?.tokens?.access_token as string | undefined
+  const normalizedUuid = normalizeCourseUuid(courseUuid)
 
   return useQuery({
-    queryKey: queryKeys.courses.meta(courseUuid),
-    queryFn: () => getCourseMetadata(courseUuid, {}, accessToken, { slim: true }),
-    enabled: !!courseUuid,
+    queryKey: queryKeys.courses.meta(normalizedUuid),
+    queryFn: () => getCourseMetadata(normalizedUuid, {}, accessToken, { slim: true }),
+    enabled: !!normalizedUuid,
     staleTime: 60_000,
   })
 }
