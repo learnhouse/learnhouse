@@ -2,12 +2,14 @@
 
 import React from 'react'
 import Link from 'next/link'
-import { ArrowRight, BookOpen, BriefcaseBusiness, CheckCircle2, Layers3 } from 'lucide-react'
+import { useQuery } from '@tanstack/react-query'
+import { ArrowRight, BookOpen, BriefcaseBusiness, CheckCircle2, Layers3, Target, TrendingUp } from 'lucide-react'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
 import { useOrg } from '@components/Contexts/OrgContext'
 import { useTrail } from '@/hooks/queries/useTrail'
 import { getCourseThumbnailMediaDirectory } from '@services/media/media'
 import { getUriWithOrg } from '@services/config/config'
+import { getAppliedLearningSummary } from '@services/applied-learning/appliedLearning'
 
 const BRAND_RED = '#C51635'
 const BRAND_NAVY = '#0B263D'
@@ -90,14 +92,57 @@ function CourseEntryCard({ course, orgslug, org, completed }: { course: Course; 
   )
 }
 
+function StackedProgress({ learned, applied, measured }: { learned: number; applied: number; measured: number }) {
+  const stages = [
+    { label: 'Learned', value: learned, helper: 'Learning steps completed', icon: BookOpen },
+    { label: 'Applied', value: applied, helper: 'Ideas put to work', icon: Target },
+    { label: 'Measured', value: measured, helper: 'Changes with a recorded result', icon: TrendingUp },
+  ]
+
+  return (
+    <div className="mb-9 overflow-hidden rounded-[24px] border border-black/[0.07] bg-[#F7F8FA]">
+      <div className="grid grid-cols-1 sm:grid-cols-3">
+        {stages.map((stage, index) => {
+          const Icon = stage.icon
+          return (
+            <div key={stage.label} className={`relative p-5 sm:p-6 ${index < stages.length - 1 ? 'border-b border-black/[0.07] sm:border-b-0 sm:border-r' : ''}`}>
+              <div className="flex items-center justify-between gap-4">
+                <div>
+                  <p className="text-[10px] font-black uppercase tracking-[0.18em] text-black/45">{stage.label}</p>
+                  <p className="mt-1 text-3xl font-black tracking-[-0.04em] text-[#0B263D]">{stage.value}</p>
+                </div>
+                <span className="flex h-10 w-10 items-center justify-center rounded-full bg-white shadow-sm">
+                  <Icon className="h-5 w-5" style={{ color: index === 0 ? BRAND_NAVY : BRAND_RED }} />
+                </span>
+              </div>
+              <p className="mt-2 text-xs leading-5 text-black/48">{stage.helper}</p>
+            </div>
+          )
+        })}
+      </div>
+      <div className="h-1.5 w-full bg-black/[0.04]">
+        <div className="h-full" style={{ width: learned > 0 ? `${Math.min(100, Math.max(8, (measured / learned) * 100))}%` : '0%', backgroundColor: BRAND_RED }} />
+      </div>
+    </div>
+  )
+}
+
 export default function AcyberLearningHome({ orgslug, courses = [], isLoading = false }: { orgslug: string; courses?: Course[]; isLoading?: boolean }) {
   const org = useOrg() as any
   const session = useLHSession() as any
   const { data: trailData } = useTrail(org?.id)
+  const token = session?.data?.tokens?.access_token as string | undefined
   const firstName = session?.data?.user?.first_name || ''
   const totalCompleted = Array.isArray(trailData?.runs)
     ? trailData.runs.reduce((sum: number, run: any) => sum + (Array.isArray(run?.steps) ? run.steps.length : 0), 0)
     : 0
+
+  const { data: appliedSummary } = useQuery({
+    queryKey: ['applied-learning', 'summary', org?.id],
+    queryFn: () => getAppliedLearningSummary(org?.id, token),
+    enabled: !!org?.id && session?.status === 'authenticated',
+    staleTime: 30_000,
+  })
 
   return (
     <main className="min-h-[calc(100vh-60px)] bg-white text-[#101418]">
@@ -157,6 +202,8 @@ export default function AcyberLearningHome({ orgslug, courses = [], isLoading = 
             <span className="flex items-center gap-2"><CheckCircle2 className="h-4 w-4" /> {totalCompleted} steps completed</span>
           </div>
         </div>
+
+        <StackedProgress learned={totalCompleted} applied={appliedSummary?.applied || 0} measured={appliedSummary?.measured || 0} />
 
         {isLoading ? (
           <div className="h-[270px] animate-pulse rounded-[28px] bg-black/[0.04]" />
