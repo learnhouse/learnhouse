@@ -49,18 +49,32 @@ export type ReflectionPayload = {
   application_status?: 'planned' | 'applied' | 'measured'
 }
 
+function normalizeCourseUuid(value: string) {
+  return value.startsWith('course_') ? value : `course_${value}`
+}
+
+function normalizeActivityUuid(value: string) {
+  return value.startsWith('activity_') ? value : `activity_${value}`
+}
+
 export async function getAppliedLearningReflection(activityUuid: string, token?: string) {
+  const normalizedUuid = normalizeActivityUuid(activityUuid)
   const res = await secureFetch(
-    `${getAPIUrl()}applied-learning/reflection/${encodeURIComponent(activityUuid)}`,
+    `${getAPIUrl()}applied-learning/reflection/${encodeURIComponent(normalizedUuid)}`,
     RequestBodyWithAuthHeader('GET', null, null, token)
   )
   return errorHandling(res) as Promise<AppliedLearningEntry | null>
 }
 
 export async function saveAppliedLearningReflection(payload: ReflectionPayload, token?: string) {
+  const normalizedPayload: ReflectionPayload = {
+    ...payload,
+    course_uuid: normalizeCourseUuid(payload.course_uuid),
+    activity_uuid: normalizeActivityUuid(payload.activity_uuid),
+  }
   const res = await secureFetch(
     `${getAPIUrl()}applied-learning/reflection`,
-    RequestBodyWithAuthHeader('POST', payload, null, token)
+    RequestBodyWithAuthHeader('POST', normalizedPayload, null, token)
   )
   return errorHandling(res) as Promise<AppliedLearningEntry>
 }
