@@ -1,8 +1,8 @@
-"""Central plan-based model tiering.
+"""Central model tiering for Acyberschool AI features.
 
-Single source of truth replacing the duplicated ``get_org_ai_model()`` functions that lived
-in four routers. Model names come from config (``ai_config.model_*``) and fall back to the
-historical Gemini defaults, so behavior is unchanged until an operator overrides them.
+Configured model names always win. When they are omitted, defaults are selected for
+the active provider so changing from Google to OpenAI never accidentally sends a
+Gemini model id to an OpenAI endpoint.
 """
 
 from __future__ import annotations
@@ -21,37 +21,62 @@ logger = logging.getLogger(__name__)
 Tier = Literal["fast", "standard", "pro"]
 Purpose = Literal["chat", "planning"]
 
-# Three tiers, defaulting to the current Gemini 3 family (verified live against the API,
-# June 2026 — these exact IDs return from models.list() and support generateContent):
-#   fast     -> gemini-3.1-flash-lite (GA)      — titles, follow-ups, migration
-#   standard -> gemini-3.5-flash (GA)           — chat, RAG, planning/blocks (std plans)
-#   pro      -> gemini-3.1-pro-preview          — planning/blocks (Pro+ plans)
-_TIER_DEFAULTS: dict[str, str] = {
+_PROVIDER_DEFAULTS: dict[str, dict[Tier, str]] = {
+    "openai": {
+        "fast": "gpt-5.4-nano",
+        "standard": "gpt-5.4-mini",
+        "pro": "gpt-5.4",
+    },
+    "openai-compatible": {
+        "fast": "gpt-5.4-nano",
+        "standard": "gpt-5.4-mini",
+        "pro": "gpt-5.4",
+    },
+    "google": {
+        "fast": "gemini-3.1-flash-lite",
+        "standard": "gemini-3.5-flash",
+        "pro": "gemini-3.1-pro-preview",
+    },
+    "google-gla": {
+        "fast": "gemini-3.1-flash-lite",
+        "standard": "gemini-3.5-flash",
+        "pro": "gemini-3.1-pro-preview",
+    },
+    "gemini": {
+        "fast": "gemini-3.1-flash-lite",
+        "standard": "gemini-3.5-flash",
+        "pro": "gemini-3.1-pro-preview",
+    },
+}
+
+_FALLBACK_DEFAULTS: dict[Tier, str] = {
     "fast": "gemini-3.1-flash-lite",
     "standard": "gemini-3.5-flash",
     "pro": "gemini-3.1-pro-preview",
 }
 
-_TIER_CONFIG_ATTR: dict[str, str] = {
+_TIER_CONFIG_ATTR: dict[Tier, str] = {
     "fast": "model_fast",
     "standard": "model_standard",
     "pro": "model_pro",
 }
 
-# Maps a feature purpose to its (standard-plan tier, pro-plan tier). `planning` (course
-# planning) uses `standard` for free/standard plans and `pro` for Pro+ plans; `chat` always
-# uses `standard`. Interactive widget features (MagicBlocks, boards, playgrounds) intentionally
-# bypass this and use the `fast` tier directly for low latency — see their routers.
-_PURPOSE_TIERS: dict[str, tuple[Tier, Tier]] = {
+_PURPOSE_TIERS: dict[Purpose, tuple[Tier, Tier]] = {
     "chat": ("standard", "standard"),
     "planning": ("standard", "pro"),
 }
 
 
 def model_for_tier(tier: Tier) -> str:
-    """Return the configured model name for a tier, falling back to the Gemini default."""
+    """Return an explicit model or a sensible default for the configured provider."""
     cfg = get_learnhouse_config().ai_config
-    return getattr(cfg, _TIER_CONFIG_ATTR[tier], None) or _TIER_DEFAULTS[tier]
+    configured = getattr(cfg, _TIER_CONFIG_ATTR[tier], None)
+    if configured:
+        return configured
+
+    provider = (getattr(cfg, "provider", None) or "google").strip().lower()
+    defaults = _PROVIDER_DEFAULTS.get(provider, _FALLBACK_DEFAULTS)
+    return defaults[tier]
 
 
 async def resolve_model_for_org(
@@ -60,7 +85,7 @@ async def resolve_model_for_org(
     *,
     purpose: Purpose = "chat",
 ) -> str:
-    """Resolve the model name for an org and feature purpose, honoring pro-plan upgrades."""
+    """Resolve the model for an org and feature purpose, honoring plan upgrades."""
     standard_tier, pro_tier = _PURPOSE_TIERS[purpose]
     try:
         current_plan = await get_org_plan(org_id, db_session)
