@@ -15,8 +15,11 @@ from src.db.applied_learning import (
     AppliedLearningEntry,
     AppliedLearningEntryRead,
 )
+from src.db.courses.activities import Activity
+from src.db.courses.courses import Course
 from src.db.users import AnonymousUser, PublicUser
 from src.security.auth import get_current_user
+from src.security.org_auth import is_org_member
 
 router = APIRouter()
 
@@ -29,6 +32,41 @@ def require_user(current_user: Union[PublicUser, AnonymousUser]) -> PublicUser:
     if isinstance(current_user, AnonymousUser):
         raise HTTPException(status_code=401, detail="Authentication required")
     return current_user
+
+
+async def require_org_membership(user: PublicUser, org_id: int, db_session: AsyncSession) -> None:
+    if not await is_org_member(user.id, org_id, db_session):
+        raise HTTPException(status_code=403, detail="You do not have access to this organization")
+
+
+async def validate_learning_context(
+    user: PublicUser,
+    org_id: int,
+    course_uuid: str,
+    activity_uuid: str,
+    db_session: AsyncSession,
+) -> tuple[Course, Activity]:
+    """Pin an application record to a real activity in a course inside the learner's org."""
+    await require_org_membership(user, org_id, db_session)
+
+    course_stmt = select(Course).where(
+        Course.org_id == org_id,
+        Course.course_uuid == course_uuid,
+    )
+    course = (await db_session.execute(course_stmt)).scalars().first()
+    if course is None:
+        raise HTTPException(status_code=404, detail="Course not found in this organization")
+
+    activity_stmt = select(Activity).where(
+        Activity.org_id == org_id,
+        Activity.course_id == course.id,
+        Activity.activity_uuid == activity_uuid,
+    )
+    activity = (await db_session.execute(activity_stmt)).scalars().first()
+    if activity is None:
+        raise HTTPException(status_code=404, detail="Activity not found in this course")
+
+    return course, activity
 
 
 class SaveReflectionRequest(BaseModel):
@@ -69,7 +107,10 @@ async def get_reflection(
         AppliedLearningEntry.activity_uuid == activity_uuid,
     )
     entry = (await db_session.execute(statement)).scalars().first()
-    return AppliedLearningEntryRead.model_validate(entry) if entry else None
+    if entry is None:
+        return None
+    await require_org_membership(user, entry.org_id, db_session)
+    return AppliedLearningEntryRead.model_validate(entry)
 
 
 @router.post("/reflection", response_model=AppliedLearningEntryRead)
@@ -78,13 +119,24 @@ async def save_reflection(
     current_user: Union[PublicUser, AnonymousUser] = Depends(get_current_user),
     db_session: AsyncSession = Depends(get_db_session),
 ):
-    """Create or update the learner's application record for a lesson."""
+    """Create or update the learner's application record for a real course activity."""
     user = require_user(current_user)
+    await validate_learning_context(
+        user,
+        body.org_id,
+        body.course_uuid,
+        body.activity_uuid,
+        db_session,
+    )
+
     statement = select(AppliedLearningEntry).where(
         AppliedLearningEntry.user_id == user.id,
         AppliedLearningEntry.activity_uuid == body.activity_uuid,
     )
     entry = (await db_session.execute(statement)).scalars().first()
+
+    if entry is not None and entry.org_id != body.org_id:
+        raise HTTPException(status_code=409, detail="This learning record belongs to another organization")
 
     status = body.application_status if body.application_status in {"planned", "applied", "measured"} else "planned"
 
@@ -123,6 +175,9 @@ async def list_my_portfolio(
     db_session: AsyncSession = Depends(get_db_session),
 ):
     user = require_user(current_user)
+    if org_id is not None:
+        await require_org_membership(user, org_id, db_session)
+
     statement = select(AppliedLearningEntry).where(AppliedLearningEntry.user_id == user.id)
     if org_id is not None:
         statement = statement.where(AppliedLearningEntry.org_id == org_id)
@@ -140,6 +195,9 @@ async def my_portfolio_summary(
     db_session: AsyncSession = Depends(get_db_session),
 ):
     user = require_user(current_user)
+    if org_id is not None:
+        await require_org_membership(user, org_id, db_session)
+
     filters = [AppliedLearningEntry.user_id == user.id]
     if org_id is not None:
         filters.append(AppliedLearningEntry.org_id == org_id)
@@ -168,6 +226,9 @@ async def list_my_capstones(
     db_session: AsyncSession = Depends(get_db_session),
 ):
     user = require_user(current_user)
+    if org_id is not None:
+        await require_org_membership(user, org_id, db_session)
+
     statement = select(AppliedLearningCapstone).where(AppliedLearningCapstone.user_id == user.id)
     if org_id is not None:
         statement = statement.where(AppliedLearningCapstone.org_id == org_id)
@@ -184,11 +245,25 @@ async def save_capstone(
 ):
     """Create a new capstone or update a learner-owned draft."""
     user = require_user(current_user)
+    await require_org_membership(user, body.org_id, db_session)
+
+    selected = list(dict.fromkeys(body.selected_entry_uuids))
+    if selected:
+        selected_stmt = select(AppliedLearningEntry).where(
+            AppliedLearningEntry.entry_uuid.in_(selected),
+            AppliedLearningEntry.user_id == user.id,
+            AppliedLearningEntry.org_id == body.org_id,
+        )
+        selected_entries = (await db_session.execute(selected_stmt)).scalars().all()
+        if len(selected_entries) != len(selected):
+            raise HTTPException(status_code=400, detail="One or more selected portfolio entries are invalid")
+
     capstone = None
     if body.capstone_uuid:
         statement = select(AppliedLearningCapstone).where(
             AppliedLearningCapstone.capstone_uuid == body.capstone_uuid,
             AppliedLearningCapstone.user_id == user.id,
+            AppliedLearningCapstone.org_id == body.org_id,
         )
         capstone = (await db_session.execute(statement)).scalars().first()
         if capstone is None:
@@ -210,7 +285,7 @@ async def save_capstone(
     capstone.measurable_impact = body.measurable_impact.strip()
     capstone.lessons_learned = body.lessons_learned.strip()
     capstone.next_steps = body.next_steps.strip()
-    capstone.selected_entry_uuids = list(dict.fromkeys(body.selected_entry_uuids))
+    capstone.selected_entry_uuids = selected
     capstone.status = body.status if body.status in {"draft", "ready", "submitted"} else "draft"
     capstone.updated_at = now_iso()
 
