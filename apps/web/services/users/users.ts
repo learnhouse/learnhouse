@@ -50,6 +50,31 @@ export async function getCoursesByUser(user_id: string, access_token: string) {
   const res = await getResponseMetadata(result)
   return res
 }
+
+/** Update the signed-in learner while preserving all existing profile data. */
+export async function updateUserProfile(
+  user: any,
+  profile: Record<string, any>,
+  access_token: string
+) {
+  const payload = {
+    username: user.username,
+    first_name: user.first_name || '',
+    last_name: user.last_name || '',
+    email: user.email,
+    avatar_image: user.avatar_image || '',
+    bio: user.bio || '',
+    details: user.details || {},
+    profile,
+  }
+
+  const result = await fetch(
+    `${getAPIUrl()}users/${user.id}`,
+    RequestBodyWithAuthHeader('PUT', payload, null, access_token)
+  )
+  return await errorHandling(result)
+}
+
 export async function updateUserAvatar(
   user_uuid: any,
   avatar_file: any,
