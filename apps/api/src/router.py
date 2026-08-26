@@ -2,6 +2,7 @@ from fastapi import APIRouter, Depends
 from src.routers import admin as admin_router_module
 from src.routers import analytics as analytics_router_module
 from src.routers import audit as audit_router_module
+from src.routers import applied_learning
 from src.routers import code_execution
 from src.routers import code_submissions
 from src.routers import health
@@ -267,6 +268,12 @@ v1_router.include_router(
     trail.router,
     prefix="/trail",
     tags=["trail"],
+    dependencies=[Depends(require_authenticated_user)]
+)
+v1_router.include_router(
+    applied_learning.router,
+    prefix="/applied-learning",
+    tags=["applied-learning"],
     dependencies=[Depends(require_authenticated_user)]
 )
 v1_router.include_router(
