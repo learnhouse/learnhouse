@@ -146,4 +146,31 @@ describe("normalizeH5PUrl — schemeless input", () => {
       "https://example.org/h5p/embed/5"
     );
   });
+
+  test("schemeless host with a port is not mistaken for a scheme", () => {
+    expect(normalizeH5PUrl("h5p-server:8080/h5p/embed/1")).toEqual({
+      ok: true,
+      url: "https://h5p-server:8080/h5p/embed/1",
+    });
+    expect(normalizeH5PUrl("example.com:8080/h5p/embed/1")).toEqual({
+      ok: true,
+      url: "https://example.com:8080/h5p/embed/1",
+    });
+    expect(normalizeH5PUrl("localhost:8080/embed")).toEqual({
+      ok: true,
+      url: "https://localhost:8080/embed",
+    });
+  });
+
+  test("a scheme followed by digits never reaches the frame as that scheme", () => {
+    // It parses as host `javascript`, port 8080 — harmless, and crucially not
+    // a javascript: URL.
+    expect(normalizeH5PUrl("javascript:8080/x").url.startsWith("https://")).toBe(true);
+  });
+
+  test("prose with a colon is still rejected, not saved as a dead embed", () => {
+    // No path, so it is not `host:port/...` and the bare-word rule applies.
+    expect(normalizeH5PUrl("step:1").ok).toBe(false);
+    expect(normalizeH5PUrl("chapter:2").ok).toBe(false);
+  });
 });

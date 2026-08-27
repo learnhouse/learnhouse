@@ -1,5 +1,33 @@
+// H5P frames report their own height to us over postMessage, so `blockH5P`
+// nodes can gain a new `height` attribute on first load without the author
+// touching anything. Ignore it when deciding whether the document is dirty —
+// otherwise opening an activity is enough to trigger the leave-confirm. The
+// value still rides along on the next real save.
+const VOLATILE_ATTRS: Record<string, readonly string[]> = {
+  blockH5P: ["height"],
+};
+
 export function getEditorContentSnapshot(content: unknown): string {
-  return JSON.stringify(content ?? null);
+  // A replacer keeps this to the single walk JSON.stringify already does; the
+  // editor calls it on every keystroke, so a parallel copy of the document
+  // would be a real cost. `this` is the object the key belongs to, which is
+  // how an `attrs` value finds out which node type it hangs off.
+  return JSON.stringify(content ?? null, function (this: any, key, value) {
+    if (key !== "attrs" || !value || typeof value !== "object") return value;
+    // Own-property only: node types come from stored content, and a node typed
+    // "__proto__" would otherwise resolve to Object.prototype.
+    const type = this?.type;
+    const volatile =
+      typeof type === "string" && Object.hasOwn(VOLATILE_ATTRS, type)
+        ? VOLATILE_ATTRS[type]
+        : undefined;
+    if (!volatile) return value;
+    const kept: Record<string, unknown> = {};
+    for (const [attrKey, attrValue] of Object.entries(value)) {
+      if (!volatile.includes(attrKey)) kept[attrKey] = attrValue;
+    }
+    return kept;
+  });
 }
 
 export function hasEditorContentChanged(

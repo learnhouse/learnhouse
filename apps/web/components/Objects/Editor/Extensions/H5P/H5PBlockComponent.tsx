@@ -4,16 +4,14 @@ import { PuzzlePiece, Link as LinkIcon, PencilSimple, X, WarningCircle } from '@
 import { useEditorProvider } from '@components/Contexts/Editor/EditorContext'
 import { useTranslation } from 'react-i18next'
 import { normalizeH5PUrl, type H5PUrlErrorReason } from '@/lib/media/h5pUrl'
-
-// Matches the `height` attribute default on the H5PBlock node.
-const DEFAULT_HEIGHT = 400
-// The host controls the number in the resize message, so clamp it before it
-// reaches a style attribute.
-const MIN_HEIGHT = 120
-const MAX_HEIGHT = 4000
-// Only persist a resize once it has actually moved, so a noisy host does not
-// flood the document with attribute updates.
-const HEIGHT_PERSIST_THRESHOLD = 16
+import {
+  clampHeight,
+  parseH5PMessage,
+  replyTarget,
+  shouldPrepareResize,
+  DEFAULT_HEIGHT,
+  HEIGHT_PERSIST_THRESHOLD,
+} from '@/lib/media/h5pProtocol'
 
 const ERROR_KEYS: Record<H5PUrlErrorReason, string> = {
   empty: 'editor.blocks.h5p_block.errors.empty',
@@ -21,8 +19,12 @@ const ERROR_KEYS: Record<H5PUrlErrorReason, string> = {
   unsupported_protocol: 'editor.blocks.h5p_block.errors.unsupported_protocol',
 }
 
-function clampHeight(value: number): number {
-  return Math.round(Math.min(MAX_HEIGHT, Math.max(MIN_HEIGHT, value)))
+function respondToFrame(
+  frame: HTMLIFrameElement,
+  event: MessageEvent,
+  message: Record<string, unknown>
+): void {
+  frame.contentWindow?.postMessage(message, replyTarget(event.origin))
 }
 
 function H5PBlockComponent(props: any) {
@@ -30,8 +32,11 @@ function H5PBlockComponent(props: any) {
   const editorState = useEditorProvider() as any
   const isEditable = editorState?.isEditable
 
-  const [h5pUrl, setH5pUrl] = useState<string>(props.node.attrs.h5pUrl || '')
-  const [title, setTitle] = useState<string>(props.node.attrs.title || '')
+  // Read straight from the node attributes: they are the document, and a
+  // local mirror would drift on undo/redo or when a version-history preview
+  // swaps the content underneath us.
+  const h5pUrl: string = props.node.attrs.h5pUrl || ''
+  const title: string = props.node.attrs.title || ''
   const [frameHeight, setFrameHeight] = useState<number>(
     clampHeight(Number(props.node.attrs.height) || DEFAULT_HEIGHT)
   )
@@ -44,19 +49,47 @@ function H5PBlockComponent(props: any) {
   const persistedHeightRef = useRef<number>(
     clampHeight(Number(props.node.attrs.height) || DEFAULT_HEIGHT)
   )
-  // The node-view props object is new on every render; keep the writer in a
-  // ref so the message listener is attached once, not on each render.
-  const updateAttributesRef = useRef(props.updateAttributes)
+  // The node-view props object is new on every render; keep what the message
+  // listener needs in refs so it is attached once, not on each render.
+  const editorRef = useRef(props.editor)
+  const getPosRef = useRef(props.getPos)
   useEffect(() => {
-    updateAttributesRef.current = props.updateAttributes
+    editorRef.current = props.editor
+    getPosRef.current = props.getPos
   })
+
+  // The height is reported by the embedded content, not chosen by the author,
+  // so it must never become an undo step: otherwise Ctrl+Z answers a resize
+  // instead of the author's last edit, and the frame — which follows the
+  // attribute — immediately writes the old height back, wiping the redo
+  // branch. Write it straight into the document with history switched off.
+  const persistHeight = useCallback((next: number) => {
+    const editor = editorRef.current
+    const pos = typeof getPosRef.current === 'function' ? getPosRef.current() : undefined
+    if (!editor || typeof pos !== 'number') return
+    editor.commands.command(({ tr }: any) => {
+      tr.setNodeAttribute(pos, 'height', next)
+      tr.setMeta('addToHistory', false)
+      return true
+    })
+  }, [])
+
+  // The attribute can move without us: undo/redo, or a preview replacing the
+  // whole document. Follow it, and keep the persisted marker in step so our
+  // own writes below don't bounce back through here.
+  useEffect(() => {
+    const next = clampHeight(Number(props.node.attrs.height) || DEFAULT_HEIGHT)
+    if (next !== persistedHeightRef.current) {
+      persistedHeightRef.current = next
+      setFrameHeight(next)
+    }
+  }, [props.node.attrs.height])
 
   const frameTitle = title || t('editor.blocks.h5p_block.default_title')
 
-  // H5P's standard resizer posts {context:'h5p', action:'resize', scrollHeight}
-  // to the parent window. Anything can postMessage at us, so we only act on a
-  // message whose source is this very iframe, with the exact shape we expect,
-  // and a height we clamp ourselves.
+  // Drive the parent side of H5P's embed handshake (see lib/media/h5pProtocol).
+  // The one part that needs the DOM lives here: acting only on messages from
+  // this very iframe, since anything on the page can postMessage at us.
   useEffect(() => {
     if (!h5pUrl) return
 
@@ -64,32 +97,56 @@ function H5PBlockComponent(props: any) {
       const frame = iframeRef.current
       if (!frame || !event.source || event.source !== frame.contentWindow) return
 
-      let payload: any = event.data
-      if (typeof payload === 'string') {
-        try {
-          payload = JSON.parse(payload)
-        } catch {
+      const message = parseH5PMessage(event.data)
+      if (!message) return
+
+      switch (message.kind) {
+        case 'hello':
+          respondToFrame(frame, event, { context: 'h5p', action: 'hello' })
+          return
+
+        case 'prepareResize': {
+          if (!shouldPrepareResize(frame.clientHeight, message)) return
+          if (message.clientHeight > 0) {
+            const shrunk = clampHeight(message.clientHeight)
+            // The content re-measures the moment it receives our reply, so the
+            // frame has to be that height *now* — a React state update is not
+            // guaranteed to have committed by then. Write the style directly
+            // and let state catch up for the next render.
+            frame.style.height = `${shrunk}px`
+            setFrameHeight(shrunk)
+          }
+          respondToFrame(frame, event, { context: 'h5p', action: 'resizePrepared' })
           return
         }
-      }
-      if (!payload || typeof payload !== 'object') return
-      if (payload.context !== 'h5p' || payload.action !== 'resize') return
 
-      const raw = Number(payload.scrollHeight)
-      if (!Number.isFinite(raw) || raw <= 0) return
+        case 'resize': {
+          const next = clampHeight(message.scrollHeight)
+          setFrameHeight(next)
 
-      const next = clampHeight(raw)
-      setFrameHeight(next)
-
-      if (isEditable && Math.abs(next - persistedHeightRef.current) > HEIGHT_PERSIST_THRESHOLD) {
-        persistedHeightRef.current = next
-        updateAttributesRef.current({ height: next })
+          if (
+            isEditable &&
+            Math.abs(next - persistedHeightRef.current) > HEIGHT_PERSIST_THRESHOLD
+          ) {
+            persistedHeightRef.current = next
+            persistHeight(next)
+          }
+          return
+        }
       }
     }
 
     window.addEventListener('message', handleMessage)
     return () => window.removeEventListener('message', handleMessage)
-  }, [h5pUrl, isEditable])
+  }, [h5pUrl, isEditable, persistHeight])
+
+  // The content may have finished its first internal resize before our
+  // listener existed, in which case its `hello` is already gone. `ready` makes
+  // it start the handshake over.
+  const handleFrameLoad = useCallback(() => {
+    const frame = iframeRef.current
+    frame?.contentWindow?.postMessage({ context: 'h5p', action: 'ready' }, '*')
+  }, [])
 
   const handleSubmit = useCallback(
     (event: React.FormEvent) => {
@@ -101,21 +158,31 @@ function H5PBlockComponent(props: any) {
       }
       const nextTitle = titleDraft.trim()
       setError(null)
-      setH5pUrl(result.url)
-      setTitle(nextTitle)
       setUrlDraft(result.url)
       setIsEditing(false)
-      props.updateAttributes({ h5pUrl: result.url, title: nextTitle })
+      if (result.url === h5pUrl) {
+        props.updateAttributes({ title: nextTitle })
+        return
+      }
+      // Different content: its height is anyone's guess until it reports one,
+      // so start from the default rather than inheriting the old activity's.
+      setFrameHeight(DEFAULT_HEIGHT)
+      persistedHeightRef.current = DEFAULT_HEIGHT
+      props.updateAttributes({ h5pUrl: result.url, title: nextTitle, height: DEFAULT_HEIGHT })
     },
-    [urlDraft, titleDraft, props, t]
+    [urlDraft, titleDraft, h5pUrl, props, t]
   )
 
   const handleRemove = useCallback(() => {
-    setH5pUrl('')
     setUrlDraft('')
+    setTitleDraft('')
+    setFrameHeight(DEFAULT_HEIGHT)
+    persistedHeightRef.current = DEFAULT_HEIGHT
     setError(null)
     setIsEditing(false)
-    props.updateAttributes({ h5pUrl: '' })
+    // Clear the title too: it is what the RAG indexer reads, so leaving it
+    // behind keeps search citing content the activity no longer contains.
+    props.updateAttributes({ h5pUrl: '', title: '', height: DEFAULT_HEIGHT })
   }, [props])
 
   const handleStartEditing = useCallback(() => {
@@ -132,6 +199,7 @@ function H5PBlockComponent(props: any) {
       title={frameTitle}
       className="w-full block border-0 rounded-lg bg-white"
       style={{ height: `${frameHeight}px` }}
+      onLoad={handleFrameLoad}
       /*
         H5P needs allow-same-origin: its own JavaScript reads resources from
         its own origin. That means the frame is isolated from US, not from

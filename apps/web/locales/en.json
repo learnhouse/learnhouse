@@ -5221,7 +5221,8 @@
         "suggestion_timeline_prompt": "Create an interactive timeline showing major historical events with expandable details"
       },
       "library": "Library",
-      "flipcard_grid": "Flashcard Grid"
+      "flipcard_grid": "Flashcard Grid",
+      "divider": "Divider"
     }
   },
   "analytics": {

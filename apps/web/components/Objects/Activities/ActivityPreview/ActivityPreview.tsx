@@ -102,6 +102,15 @@ function renderChildren(nodes: any[] | undefined, ctx: RendererCtx): React.React
   return nodes.map((n, i) => <PMNode key={i} node={n} ctx={ctx} />)
 }
 
+// Blocks with no renderable children — previewed as a labelled chip.
+const ATOM_BLOCK_LABELS: Record<string, string> = {
+  blockH5P: 'Interactive content',
+  blockVideo: 'Video',
+  blockAudio: 'Audio',
+  blockPDF: 'PDF',
+  blockQuiz: 'Quiz',
+}
+
 function PMNode({ node, ctx }: { node: any; ctx: RendererCtx }): React.ReactElement | null {
   if (!node) return null
   switch (node.type) {
@@ -202,12 +211,36 @@ function PMNode({ node, ctx }: { node: any; ctx: RendererCtx }): React.ReactElem
         </div>
       )
     }
-    default:
+    default: {
+      // Atom blocks carry no child content, so the fallback below renders
+      // nothing for them and a preview made only of blocks looks empty.
+      // Show a chip naming the block instead.
+      // Own-property only, and string-only: node types and titles come from
+      // stored content, so a node typed "__proto__" or a non-string title
+      // would otherwise be rendered as a React child and throw.
+      const atomLabel =
+        typeof node.type === 'string' && Object.hasOwn(ATOM_BLOCK_LABELS, node.type)
+          ? ATOM_BLOCK_LABELS[node.type]
+          : undefined
+      // An H5P block whose URL was removed shows nothing to a learner and is
+      // skipped by the content indexer; the preview should agree.
+      const isEmptyH5P =
+        node.type === 'blockH5P' && !String(node.attrs?.h5pUrl ?? '').trim()
+      if (atomLabel && !isEmptyH5P) {
+        const atomTitle = typeof node.attrs?.title === 'string' ? node.attrs.title : ''
+        return (
+          <div className="my-2 inline-flex items-center gap-1.5 rounded-md border border-gray-100 bg-gray-50 px-2 py-1 text-[11px] text-gray-600">
+            <span className="font-medium">{atomLabel}</span>
+            {atomTitle ? <span className="truncate">{atomTitle}</span> : null}
+          </div>
+        )
+      }
       // Fall back to rendering children so unknown wrappers don't swallow text.
       if (Array.isArray(node.content)) {
         return <>{renderChildren(node.content, ctx)}</>
       }
       return null
+    }
   }
 }
 
