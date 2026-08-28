@@ -1,16 +1,29 @@
 import { NodeViewWrapper } from '@tiptap/react'
-import React, { useCallback, useEffect, useRef, useState } from 'react'
-import { PuzzlePiece, Link as LinkIcon, PencilSimple, X, WarningCircle } from '@phosphor-icons/react'
+import React, { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
+import {
+  PuzzlePiece,
+  Link as LinkIcon,
+  PencilSimple,
+  X,
+  WarningCircle,
+  ArrowsOutLineVertical,
+  CheckCircle,
+} from '@phosphor-icons/react'
 import { useEditorProvider } from '@components/Contexts/Editor/EditorContext'
 import { useTranslation } from 'react-i18next'
 import { normalizeH5PUrl, type H5PUrlErrorReason } from '@/lib/media/h5pUrl'
 import {
   clampHeight,
+  isAutoSized,
+  normalizeSizeMode,
   parseH5PMessage,
   replyTarget,
+  resolveManualHeight,
   shouldPrepareResize,
   DEFAULT_HEIGHT,
   HEIGHT_PERSIST_THRESHOLD,
+  SIZE_MODES,
+  type H5PSizeMode,
 } from '@/lib/media/h5pProtocol'
 
 const ERROR_KEYS: Record<H5PUrlErrorReason, string> = {
@@ -18,6 +31,9 @@ const ERROR_KEYS: Record<H5PUrlErrorReason, string> = {
   unparseable: 'editor.blocks.h5p_block.errors.unparseable',
   unsupported_protocol: 'editor.blocks.h5p_block.errors.unsupported_protocol',
 }
+
+// How far one arrow-key press moves the resize handle.
+const KEYBOARD_RESIZE_STEP = 20
 
 function respondToFrame(
   frame: HTMLIFrameElement,
@@ -37,6 +53,8 @@ function H5PBlockComponent(props: any) {
   // swaps the content underneath us.
   const h5pUrl: string = props.node.attrs.h5pUrl || ''
   const title: string = props.node.attrs.title || ''
+  const sizeMode: H5PSizeMode = normalizeSizeMode(props.node.attrs.sizeMode)
+  const isAuto = isAutoSized(sizeMode)
   const [frameHeight, setFrameHeight] = useState<number>(
     clampHeight(Number(props.node.attrs.height) || DEFAULT_HEIGHT)
   )
@@ -46,6 +64,7 @@ function H5PBlockComponent(props: any) {
   const [error, setError] = useState<string | null>(null)
 
   const iframeRef = useRef<HTMLIFrameElement>(null)
+  const containerRef = useRef<HTMLDivElement>(null)
   const persistedHeightRef = useRef<number>(
     clampHeight(Number(props.node.attrs.height) || DEFAULT_HEIGHT)
   )
@@ -57,6 +76,27 @@ function H5PBlockComponent(props: any) {
     editorRef.current = props.editor
     getPosRef.current = props.getPos
   })
+
+  // The ratio modes size the frame from the block's own width, so the block
+  // has to know it — and has to notice when it changes, which happens without
+  // a re-render (window resize, sidebar opening, the editor going full width).
+  const [containerWidth, setContainerWidth] = useState(0)
+  useLayoutEffect(() => {
+    const node = containerRef.current
+    if (!node) return
+    setContainerWidth(node.clientWidth)
+    if (typeof ResizeObserver === 'undefined') return
+    const observer = new ResizeObserver((entries) => {
+      for (const entry of entries) setContainerWidth(entry.contentRect.width)
+    })
+    observer.observe(node)
+    return () => observer.disconnect()
+  }, [h5pUrl, isEditing])
+
+  // Live height while the author drags the bottom edge. Kept out of the
+  // document until they let go, so one drag is one undo step.
+  const [dragHeight, setDragHeight] = useState<number | null>(null)
+  const dragStateRef = useRef<{ startY: number; startHeight: number } | null>(null)
 
   // The height is reported by the embedded content, not chosen by the author,
   // so it must never become an undo step: otherwise Ctrl+Z answers a resize
@@ -85,13 +125,25 @@ function H5PBlockComponent(props: any) {
     }
   }, [props.node.attrs.height])
 
+  const manualHeight = useMemo(
+    () => resolveManualHeight(sizeMode, containerWidth, frameHeight),
+    [sizeMode, containerWidth, frameHeight]
+  )
+  // While dragging, the pointer wins over everything else.
+  const displayHeight = dragHeight ?? manualHeight ?? frameHeight
+
   const frameTitle = title || t('editor.blocks.h5p_block.default_title')
 
   // Drive the parent side of H5P's embed handshake (see lib/media/h5pProtocol).
   // The one part that needs the DOM lives here: acting only on messages from
   // this very iframe, since anything on the page can postMessage at us.
+  //
+  // A manually sized block stays out of the handshake on purpose. Answering it
+  // is what makes the content hand its scrolling over to us, and content that
+  // has done that inside a frame it did not choose the height of is simply
+  // clipped — which is the problem manual sizing exists to solve.
   useEffect(() => {
-    if (!h5pUrl) return
+    if (!h5pUrl || !isAuto) return
 
     const handleMessage = (event: MessageEvent) => {
       const frame = iframeRef.current
@@ -138,15 +190,93 @@ function H5PBlockComponent(props: any) {
 
     window.addEventListener('message', handleMessage)
     return () => window.removeEventListener('message', handleMessage)
-  }, [h5pUrl, isEditable, persistHeight])
+  }, [h5pUrl, isAuto, isEditable, persistHeight])
 
   // The content may have finished its first internal resize before our
   // listener existed, in which case its `hello` is already gone. `ready` makes
   // it start the handshake over.
   const handleFrameLoad = useCallback(() => {
+    if (!isAuto) return
     const frame = iframeRef.current
     frame?.contentWindow?.postMessage({ context: 'h5p', action: 'ready' }, '*')
+  }, [isAuto])
+
+  const commitHeight = useCallback(
+    (mode: H5PSizeMode, height: number) => {
+      setFrameHeight(height)
+      persistedHeightRef.current = height
+      props.updateAttributes({ sizeMode: mode, height })
+    },
+    [props]
+  )
+
+  const handleSizeModeChange = useCallback(
+    (mode: H5PSizeMode) => {
+      if (mode === sizeMode) return
+      const next = resolveManualHeight(mode, containerWidth, frameHeight)
+      if (next === null) {
+        // Back to auto. The frame remounts (see the iframe key below) and the
+        // handshake starts over, so the content reports its own height again.
+        props.updateAttributes({ sizeMode: 'auto' })
+        return
+      }
+      commitHeight(mode, next)
+    },
+    [sizeMode, containerWidth, frameHeight, commitHeight, props]
+  )
+
+  const handleResizePointerDown = useCallback(
+    (event: React.PointerEvent<HTMLDivElement>) => {
+      // Without this the drag turns into a text selection, and the node view's
+      // own drag handle picks the block up instead.
+      event.preventDefault()
+      event.stopPropagation()
+      dragStateRef.current = { startY: event.clientY, startHeight: displayHeight }
+      event.currentTarget.setPointerCapture(event.pointerId)
+      setDragHeight(displayHeight)
+    },
+    [displayHeight]
+  )
+
+  const handleResizePointerMove = useCallback((event: React.PointerEvent<HTMLDivElement>) => {
+    const drag = dragStateRef.current
+    if (!drag) return
+    setDragHeight(clampHeight(drag.startHeight + (event.clientY - drag.startY)))
   }, [])
+
+  const handleResizePointerUp = useCallback(
+    (event: React.PointerEvent<HTMLDivElement>) => {
+      const drag = dragStateRef.current
+      if (!drag) return
+      dragStateRef.current = null
+      // pointercancel has already released the capture implicitly, and
+      // releasing one we no longer hold throws.
+      if (event.currentTarget.hasPointerCapture?.(event.pointerId)) {
+        event.currentTarget.releasePointerCapture(event.pointerId)
+      }
+      const next = clampHeight(drag.startHeight + (event.clientY - drag.startY))
+      setDragHeight(null)
+      commitHeight('custom', next)
+    },
+    [commitHeight]
+  )
+
+  // The handle is a real control, so it answers the arrow keys too — dragging
+  // is not available to anyone working without a pointer.
+  const handleResizeKeyDown = useCallback(
+    (event: React.KeyboardEvent<HTMLDivElement>) => {
+      const step =
+        event.key === 'ArrowDown'
+          ? KEYBOARD_RESIZE_STEP
+          : event.key === 'ArrowUp'
+            ? -KEYBOARD_RESIZE_STEP
+            : 0
+      if (!step) return
+      event.preventDefault()
+      commitHeight('custom', clampHeight(displayHeight + step))
+    },
+    [commitHeight, displayHeight]
+  )
 
   const handleSubmit = useCallback(
     (event: React.FormEvent) => {
@@ -166,6 +296,7 @@ function H5PBlockComponent(props: any) {
       }
       // Different content: its height is anyone's guess until it reports one,
       // so start from the default rather than inheriting the old activity's.
+      // The chosen size mode is the author's, not the activity's, so it stays.
       setFrameHeight(DEFAULT_HEIGHT)
       persistedHeightRef.current = DEFAULT_HEIGHT
       props.updateAttributes({ h5pUrl: result.url, title: nextTitle, height: DEFAULT_HEIGHT })
@@ -182,7 +313,7 @@ function H5PBlockComponent(props: any) {
     setIsEditing(false)
     // Clear the title too: it is what the RAG indexer reads, so leaving it
     // behind keeps search citing content the activity no longer contains.
-    props.updateAttributes({ h5pUrl: '', title: '', height: DEFAULT_HEIGHT })
+    props.updateAttributes({ h5pUrl: '', title: '', height: DEFAULT_HEIGHT, sizeMode: 'auto' })
   }, [props])
 
   const handleStartEditing = useCallback(() => {
@@ -194,11 +325,15 @@ function H5PBlockComponent(props: any) {
 
   const frame = (
     <iframe
+      // Whether we take part in the handshake is decided when the content
+      // loads, so switching between auto and a manual size has to reload it —
+      // content that already handed its scrolling over never takes it back.
+      key={isAuto ? 'h5p-auto' : 'h5p-manual'}
       ref={iframeRef}
       src={h5pUrl}
       title={frameTitle}
       className="w-full block border-0 rounded-lg bg-white"
-      style={{ height: `${frameHeight}px` }}
+      style={{ height: `${displayHeight}px` }}
       onLoad={handleFrameLoad}
       /*
         H5P needs allow-same-origin: its own JavaScript reads resources from
@@ -224,7 +359,9 @@ function H5PBlockComponent(props: any) {
   if (!isEditable) {
     return (
       <NodeViewWrapper className="block-h5p w-full">
-        <div className="w-full rounded-xl overflow-hidden nice-shadow bg-white">{frame}</div>
+        <div ref={containerRef} className="w-full rounded-xl overflow-hidden nice-shadow bg-white">
+          {frame}
+        </div>
       </NodeViewWrapper>
     )
   }
@@ -263,7 +400,57 @@ function H5PBlockComponent(props: any) {
         </div>
 
         {h5pUrl && !isEditing ? (
-          <div className="w-full rounded-lg overflow-hidden nice-shadow bg-white">{frame}</div>
+          <div className="space-y-3">
+            {/* Size controls */}
+            <div className="flex items-center gap-2 flex-wrap">
+              <div className="text-sm text-neutral-500 font-medium flex items-center gap-1">
+                <ArrowsOutLineVertical weight="duotone" size={14} />
+                {t('editor.blocks.h5p_block.size_label')}:
+              </div>
+              {SIZE_MODES.map((mode) => (
+                <button
+                  key={mode}
+                  type="button"
+                  onClick={() => handleSizeModeChange(mode)}
+                  title={t(`editor.blocks.h5p_block.sizes.${mode}_hint`)}
+                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm transition-colors outline-none ${
+                    sizeMode === mode
+                      ? 'bg-neutral-700 text-white'
+                      : 'bg-neutral-200 text-neutral-700 hover:bg-neutral-300'
+                  }`}
+                >
+                  {sizeMode === mode && <CheckCircle weight="duotone" size={14} />}
+                  {t(`editor.blocks.h5p_block.sizes.${mode}`)}
+                </button>
+              ))}
+              {sizeMode === 'custom' && (
+                <span className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm bg-neutral-700 text-white">
+                  <CheckCircle weight="duotone" size={14} />
+                  {t('editor.blocks.h5p_block.sizes.custom', { height: displayHeight })}
+                </span>
+              )}
+            </div>
+
+            <div ref={containerRef} className="w-full rounded-lg overflow-hidden nice-shadow bg-white">
+              {frame}
+              {/* Drag the bottom edge for a height none of the presets give. */}
+              <div
+                role="separator"
+                aria-orientation="horizontal"
+                aria-label={t('editor.blocks.h5p_block.resize_handle')}
+                aria-valuenow={displayHeight}
+                tabIndex={0}
+                onPointerDown={handleResizePointerDown}
+                onPointerMove={handleResizePointerMove}
+                onPointerUp={handleResizePointerUp}
+                onPointerCancel={handleResizePointerUp}
+                onKeyDown={handleResizeKeyDown}
+                className="group flex items-center justify-center h-3 cursor-ns-resize touch-none bg-neutral-50 hover:bg-neutral-100 focus:bg-neutral-100 outline-none"
+              >
+                <span className="h-0.5 w-10 rounded-full bg-neutral-300 group-hover:bg-neutral-400 group-focus:bg-neutral-400" />
+              </div>
+            </div>
+          </div>
         ) : (
           <form onSubmit={handleSubmit} className="bg-white rounded-lg nice-shadow p-4">
             <p className="text-sm text-neutral-600 mb-1">

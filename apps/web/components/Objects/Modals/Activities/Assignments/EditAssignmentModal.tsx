@@ -172,6 +172,9 @@ const EditAssignmentForm: React.FC<EditAssignmentFormProps> = ({
             if (!payload.allow_retries) {
                 payload.max_retries = 0;
             }
+            // Clearing the date means "no deadline". Send null, not the empty
+            // string the input clears itself to, so the column reads as unset.
+            payload.due_date = values.due_date || null;
             // Blank -> null (fall back to the default); otherwise clamp to 0-100.
             payload.pass_threshold_percentage =
                 values.pass_threshold_percentage === '' ||
@@ -236,22 +239,34 @@ const EditAssignmentForm: React.FC<EditAssignmentFormProps> = ({
                 </Form.Control>
             </Form.Field>
 
+            {/* Optional: a self-paced course has no date that means anything to
+                a learner who enrolled today. */}
             <Form.Field name="due_date" className="space-y-1.5">
-                <Form.Label className={labelClass}>
-                    {t('dashboard.assignments.modals.edit.form.due_date_label')}
-                </Form.Label>
-                <Form.Message match="valueMissing" className={errorClass}>
-                    {t('dashboard.assignments.modals.edit.form.due_date_required')}
-                </Form.Message>
+                <div className="flex items-center justify-between">
+                    <Form.Label className={labelClass}>
+                        {t('dashboard.assignments.modals.edit.form.due_date_label')}
+                    </Form.Label>
+                    {formik.values.due_date && (
+                        <button
+                            type="button"
+                            onClick={() => formik.setFieldValue('due_date', '', false)}
+                            className="text-[10px] font-medium text-gray-400 hover:text-gray-700 transition-colors"
+                        >
+                            {t('dashboard.assignments.modals.edit.form.due_date_clear')}
+                        </button>
+                    )}
+                </div>
                 <Form.Control asChild>
                     <input
                         type="date"
                         onChange={formik.handleChange}
                         value={formik.values.due_date}
-                        required
                         className={inputClass}
                     />
                 </Form.Control>
+                <p className="text-[10px] text-gray-400">
+                    {t('dashboard.assignments.modals.edit.form.due_date_hint')}
+                </p>
             </Form.Field>
 
             {/* Grading type */}

@@ -118,3 +118,108 @@ export function shouldPrepareResize(
 export function replyTarget(origin: string | undefined): string {
   return origin && origin !== 'null' ? origin : '*'
 }
+
+/**
+ * Manual sizing.
+ *
+ * The handshake above only works when the embedded activity plays its part.
+ * Plenty do not: a host that never loaded h5p-resizer.js, or content whose own
+ * reported height is smaller than the media inside it — an interactive video
+ * measured from its poster frame is the usual one — leaves the frame short and
+ * the learner has to open fullscreen to see anything at all.
+ *
+ * So the author can take the height over. A manual mode deliberately skips the
+ * handshake: content that never hears `hello` back keeps managing its own
+ * scrolling, which is what makes a frame we chose the height of usable rather
+ * than a window onto clipped content.
+ */
+export type H5PSizeMode =
+  | 'auto'
+  | 'widescreen'
+  | 'classic'
+  | 'short'
+  | 'medium'
+  | 'tall'
+  | 'custom'
+
+// The modes offered as buttons, in the order they are shown. `custom` is not
+// here on purpose: it is what dragging the block's bottom edge produces, not
+// something to pick.
+export const SIZE_MODES: readonly H5PSizeMode[] = [
+  'auto',
+  'widescreen',
+  'classic',
+  'short',
+  'medium',
+  'tall',
+] as const
+
+// Ratio modes track the block's width, so the activity keeps its proportions
+// on a phone as well as on a wide editor.
+const ASPECT_RATIOS: Partial<Record<H5PSizeMode, number>> = {
+  widescreen: 16 / 9,
+  classic: 4 / 3,
+}
+
+const FIXED_HEIGHTS: Partial<Record<H5PSizeMode, number>> = {
+  short: 320,
+  medium: 520,
+  tall: 760,
+}
+
+/**
+ * The stored attribute comes from a document that may predate this feature,
+ * or have been written by a version that knew other names. Anything we don't
+ * recognise means "size it the way it always was".
+ */
+export function normalizeSizeMode(value: unknown): H5PSizeMode {
+  switch (value) {
+    case 'widescreen':
+    case 'classic':
+    case 'short':
+    case 'medium':
+    case 'tall':
+    case 'custom':
+      return value
+    default:
+      return 'auto'
+  }
+}
+
+export function isAutoSized(mode: unknown): boolean {
+  return normalizeSizeMode(mode) === 'auto'
+}
+
+/**
+ * The height a manual mode asks for, or null when the content decides.
+ *
+ * `containerWidth` only matters to the ratio modes. It is 0 before the first
+ * layout pass, where falling back to the stored height keeps the frame at its
+ * last size for that one render instead of collapsing it to MIN_HEIGHT.
+ */
+export function resolveManualHeight(
+  mode: unknown,
+  containerWidth: number,
+  storedHeight: number
+): number | null {
+  const resolved = normalizeSizeMode(mode)
+  if (resolved === 'auto') return null
+
+  // The stored height is read off a node attribute, so it can be missing or
+  // junk; clampHeight would pass NaN straight through to a style attribute.
+  const stored = Number.isFinite(storedHeight) ? storedHeight : DEFAULT_HEIGHT
+
+  const ratio = ASPECT_RATIOS[resolved]
+  if (ratio) {
+    if (!Number.isFinite(containerWidth) || containerWidth <= 0) {
+      return clampHeight(stored)
+    }
+    return clampHeight(containerWidth / ratio)
+  }
+
+  const fixed = FIXED_HEIGHTS[resolved]
+  if (fixed) return clampHeight(fixed)
+
+  // custom: whatever the author dragged it to.
+  return clampHeight(stored)
+}

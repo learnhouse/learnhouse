@@ -148,7 +148,11 @@ describe('Arabic translations', () => {
     )
 
   test('ar.json covers every en.json key', () => {
-    const missing = flatten(en).filter((k) => !new Set(flatten(ar)).has(k))
+    // Build the Arabic key set once. Inside the filter it was rebuilt — and
+    // the whole file re-flattened — for every English key, which put the test
+    // on the edge of its own timeout.
+    const arabicKeys = new Set(flatten(ar))
+    const missing = flatten(en).filter((k) => !arabicKeys.has(k))
     expect(missing).toEqual([])
   })
 })
