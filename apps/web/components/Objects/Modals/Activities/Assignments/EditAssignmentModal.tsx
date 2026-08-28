@@ -124,6 +124,13 @@ const GRADING_TYPES: {
     },
 ];
 
+// The date input speaks YYYY-MM-DD and nothing else. Values it cannot show
+// come back as '' rather than being carried invisibly through the form.
+function toDateInputValue(raw?: string | null): string {
+    const match = /^\d{4}-\d{2}-\d{2}/.exec((raw ?? '').trim());
+    return match ? match[0] : '';
+}
+
 const EditAssignmentForm: React.FC<EditAssignmentFormProps> = ({
     onClose,
     assignment,
@@ -143,7 +150,13 @@ const EditAssignmentForm: React.FC<EditAssignmentFormProps> = ({
         initialValues: {
             title: assignment.title || '',
             description: assignment.description || '',
-            due_date: assignment.due_date || '',
+            // `<input type="date">` shows nothing for a value carrying a time
+            // component, so a stored "2026-01-01T09:00:00" would render as an
+            // empty field the teacher reads as "no deadline" — and, now that
+            // the field is optional and no longer blocks submit, quietly save
+            // the old deadline straight back. Trim it to the day the input can
+            // actually display.
+            due_date: toDateInputValue(assignment.due_date),
             grading_type: assignment.grading_type || 'ALPHABET',
             auto_grading: assignment.auto_grading || false,
             anti_copy_paste: assignment.anti_copy_paste || false,

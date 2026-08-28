@@ -3,8 +3,20 @@
 // touching anything. Ignore it when deciding whether the document is dirty —
 // otherwise opening an activity is enough to trigger the leave-confirm. The
 // value still rides along on the next real save.
-const VOLATILE_ATTRS: Record<string, readonly string[]> = {
-  blockH5P: ["height"],
+//
+// That only holds while the block is on `auto`. Under any other `sizeMode` the
+// height is the author's own choice, and dragging the frame's bottom edge on a
+// block already set to `custom` moves nothing else — so stripping it there
+// would let a real edit be thrown away with no leave-confirm at all.
+//
+// The rule is a function of the node's attributes rather than a flat key list
+// precisely because that distinction lives in a sibling attribute.
+const VOLATILE_ATTRS: Record<
+  string,
+  (_attrs: Record<string, unknown>) => readonly string[]
+> = {
+  blockH5P: (attrs) =>
+    !attrs.sizeMode || attrs.sizeMode === "auto" ? ["height"] : [],
 };
 
 export function getEditorContentSnapshot(content: unknown): string {
@@ -17,11 +29,13 @@ export function getEditorContentSnapshot(content: unknown): string {
     // Own-property only: node types come from stored content, and a node typed
     // "__proto__" would otherwise resolve to Object.prototype.
     const type = this?.type;
-    const volatile =
+    const rule =
       typeof type === "string" && Object.hasOwn(VOLATILE_ATTRS, type)
         ? VOLATILE_ATTRS[type]
         : undefined;
-    if (!volatile) return value;
+    if (!rule) return value;
+    const volatile = rule(value as Record<string, unknown>);
+    if (!volatile.length) return value;
     const kept: Record<string, unknown> = {};
     for (const [attrKey, attrValue] of Object.entries(value)) {
       if (!volatile.includes(attrKey)) kept[attrKey] = attrValue;

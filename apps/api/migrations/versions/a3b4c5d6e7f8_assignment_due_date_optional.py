@@ -8,7 +8,7 @@ deadline check already treats a missing or unparseable value as "no deadline".
 Nothing is backfilled — existing rows keep the date they have.
 
 Revision ID: a3b4c5d6e7f8
-Revises: n4o5p6q7r8s9
+Revises: c7d8e9f0a1b2
 Create Date: 2026-08-28
 
 """
@@ -21,7 +21,7 @@ import sqlmodel  # noqa: F401
 
 # revision identifiers, used by Alembic.
 revision: str = 'a3b4c5d6e7f8'
-down_revision: Union[str, None] = 'n4o5p6q7r8s9'
+down_revision: Union[str, None] = 'c7d8e9f0a1b2'
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 

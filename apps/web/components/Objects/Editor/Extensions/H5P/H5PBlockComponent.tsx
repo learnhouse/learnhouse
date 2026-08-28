@@ -22,6 +22,8 @@ import {
   shouldPrepareResize,
   DEFAULT_HEIGHT,
   HEIGHT_PERSIST_THRESHOLD,
+  MAX_HEIGHT,
+  MIN_HEIGHT,
   SIZE_MODES,
   type H5PSizeMode,
 } from '@/lib/media/h5pProtocol'
@@ -34,6 +36,10 @@ const ERROR_KEYS: Record<H5PUrlErrorReason, string> = {
 
 // How far one arrow-key press moves the resize handle.
 const KEYBOARD_RESIZE_STEP = 20
+// A pointer that never really moved was a click, not a drag. Committing one
+// would flip the block to a custom size — and reload the frame — because the
+// author brushed the handle.
+const DRAG_THRESHOLD = 3
 
 function respondToFrame(
   frame: HTMLIFrameElement,
@@ -254,12 +260,21 @@ function H5PBlockComponent(props: any) {
       if (event.currentTarget.hasPointerCapture?.(event.pointerId)) {
         event.currentTarget.releasePointerCapture(event.pointerId)
       }
-      const next = clampHeight(drag.startHeight + (event.clientY - drag.startY))
+      const travelled = event.clientY - drag.startY
       setDragHeight(null)
-      commitHeight('custom', next)
+      if (Math.abs(travelled) < DRAG_THRESHOLD) return
+      commitHeight('custom', clampHeight(drag.startHeight + travelled))
     },
     [commitHeight]
   )
+
+  // A cancelled pointer is the browser taking the gesture over (a touch turning
+  // into a page scroll, mostly). Drop the drag rather than committing a height
+  // the author never let go of.
+  const handleResizePointerCancel = useCallback(() => {
+    dragStateRef.current = null
+    setDragHeight(null)
+  }, [])
 
   // The handle is a real control, so it answers the arrow keys too — dragging
   // is not available to anyone working without a pointer.
@@ -273,7 +288,11 @@ function H5PBlockComponent(props: any) {
             : 0
       if (!step) return
       event.preventDefault()
-      commitHeight('custom', clampHeight(displayHeight + step))
+      const next = clampHeight(displayHeight + step)
+      // Already against MIN_HEIGHT or MAX_HEIGHT: don't spend an undo step —
+      // or a frame reload, if the block is still on auto — on nothing.
+      if (next === displayHeight) return
+      commitHeight('custom', next)
     },
     [commitHeight, displayHeight]
   )
@@ -438,12 +457,18 @@ function H5PBlockComponent(props: any) {
                 role="separator"
                 aria-orientation="horizontal"
                 aria-label={t('editor.blocks.h5p_block.resize_handle')}
+                // A focusable separator is a splitter widget, and its value
+                // defaults to a 0-100 range — a bare pixel height would be
+                // announced as a percentage of nothing.
                 aria-valuenow={displayHeight}
+                aria-valuemin={MIN_HEIGHT}
+                aria-valuemax={MAX_HEIGHT}
+                aria-valuetext={`${displayHeight}px`}
                 tabIndex={0}
                 onPointerDown={handleResizePointerDown}
                 onPointerMove={handleResizePointerMove}
                 onPointerUp={handleResizePointerUp}
-                onPointerCancel={handleResizePointerUp}
+                onPointerCancel={handleResizePointerCancel}
                 onKeyDown={handleResizeKeyDown}
                 className="group flex items-center justify-center h-3 cursor-ns-resize touch-none bg-neutral-50 hover:bg-neutral-100 focus:bg-neutral-100 outline-none"
               >

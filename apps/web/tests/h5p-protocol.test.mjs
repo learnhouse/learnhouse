@@ -105,6 +105,21 @@ describe("replyTarget", () => {
   });
 });
 
+describe("SIZE_MODES", () => {
+  test("is exactly the picker's six buttons, in order", () => {
+    // Pinned as a list, not iterated: the component renders one button per
+    // entry, and handleSizeModeChange is the only producer of 'auto'. Drop
+    // 'auto' from here and a manually sized block can never be handed back to
+    // the H5P handshake.
+    expect(SIZE_MODES).toEqual(["auto", "widescreen", "classic", "short", "medium", "tall"]);
+  });
+
+  test("'custom' is deliberately not a button — dragging produces it", () => {
+    expect(SIZE_MODES).not.toContain("custom");
+    expect(normalizeSizeMode("custom")).toBe("custom");
+  });
+});
+
 describe("normalizeSizeMode", () => {
   test("keeps every mode the picker can produce", () => {
     for (const mode of SIZE_MODES) {
