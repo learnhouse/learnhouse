@@ -11,7 +11,7 @@ import { useTranslation } from 'react-i18next'
 import FeatureGate from '@components/Dashboard/Shared/FeatureGate/FeatureGate'
 import useAdminStatus from '@components/Hooks/useAdminStatus'
 import { Switch } from '@components/ui/switch'
-import { ShieldAlert, BrainCircuit, MessageCircle, Pencil, Sparkles } from 'lucide-react'
+import { ShieldAlert, BrainCircuit, MessageCircle, Pencil, Sparkles, Info } from 'lucide-react'
 import Image from 'next/image'
 
 const OrgEditAI: React.FC = () => {
@@ -87,7 +87,7 @@ const OrgEditAI: React.FC = () => {
   }
 
   return (
-    <FeatureGate feature="ai">
+    <FeatureGate feature="ai" allowWhenDisabled>
       <div className="sm:mx-10 mx-0 space-y-4">
         {/* Header */}
         <div className="flex items-center gap-3">
@@ -113,6 +113,16 @@ const OrgEditAI: React.FC = () => {
             <ShieldAlert className="w-4 h-4 text-amber-600 flex-shrink-0" />
             <p className="text-sm text-amber-800">
               {t('dashboard.organization.ai.admin_only')}
+            </p>
+          </div>
+        )}
+
+        {/* Off-state notice, only once the org has loaded so it never flashes */}
+        {org && !aiEnabled && (
+          <div className="flex items-center gap-3 px-4 py-3 rounded-xl bg-gray-50 border border-gray-200/80">
+            <Info className="w-4 h-4 text-gray-500 flex-shrink-0" />
+            <p className="text-sm text-gray-600">
+              {t('dashboard.organization.ai.currently_disabled')}
             </p>
           </div>
         )}
