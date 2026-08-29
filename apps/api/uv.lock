@@ -1020,7 +1020,7 @@ requires-dist = [
     { name = "redis", specifier = "==8.1.0" },
     { name = "regex", specifier = "==2026.7.19" },
     { name = "requests", specifier = "==2.34.2" },
-    { name = "resend", specifier = "==2.40.2" },
+    { name = "resend", specifier = "==2.41.0" },
     { name = "sentry-sdk", extras = ["fastapi"], specifier = "==2.68.1" },
     { name = "sqlalchemy-utils", specifier = "==0.42.1" },
     { name = "sqlmodel", specifier = "==0.0.39" },
@@ -1860,15 +1860,15 @@ wheels = [
 
 [[package]]
 name = "resend"
-version = "2.40.2"
+version = "2.41.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "requests" },
     { name = "typing-extensions" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/2c/06/616e0116ef367db3323f1075565ef23a68849da45fa1c82fab347f078525/resend-2.40.2.tar.gz", hash = "sha256:43f821f0935902ea26b1fdc26ebf41696581e31c59f8b29fa9576416c31c662e", size = 59584, upload-time = "2026-08-25T20:58:03.227Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/6c/6e/a0dd4892ed1776bf89bf25cd5a24bfcc440112e50f4db5f6734aa76bb372/resend-2.41.0.tar.gz", hash = "sha256:bac200c6753ca72c1c9faf480404d9f072a1494b43792c01290210577f3890f9", size = 60889, upload-time = "2026-08-26T16:41:46.073Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/eb/d7/d9dbeb92c05ed1d963c3df09eaa66410f96c5ea4a098e3d90fa8ecb7710b/resend-2.40.2-py2.py3-none-any.whl", hash = "sha256:6c3a93280fb815850282b2b77ad784e756f8ec6143d9052854ac4ec36145cbe2", size = 91695, upload-time = "2026-08-25T20:58:00.731Z" },
+    { url = "https://files.pythonhosted.org/packages/b6/c7/0830f74661d6a4d579c69b16bd5d62f30bf9da858c88d2b907c2c5aab373/resend-2.41.0-py2.py3-none-any.whl", hash = "sha256:a70c8bcc60bab601342d667d7d42e08aebc4cc527b9d963f23ec1ded79895aa5", size = 91846, upload-time = "2026-08-26T16:41:44.801Z" },
 ]
 
 [[package]]

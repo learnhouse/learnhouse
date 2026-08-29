@@ -26,7 +26,7 @@ dependencies = [
     "pyyaml==6.0.3",
     "redis==8.1.0",
     "requests==2.34.2",
-    "resend==2.40.2",
+    "resend==2.41.0",
     "sqlmodel==0.0.39",
     "tiktoken==0.14.0",
     "uvicorn==0.52.4",
