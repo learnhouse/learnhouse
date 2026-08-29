@@ -152,8 +152,18 @@ function OpenSignUpComponent({ org: propOrg }: OpenSignUpComponentProps = {}) {
     return `${window.location.origin}/redirect_from_auth?next=${encodeURIComponent(dest)}`
   }
 
-  const handleGoogleSignIn = () => {
-    track(AnalyticsEvent.SignupGoogleClicked)
+  const handleGoogleSignIn = async () => {
+    setError('')
+    // Analytics is a side channel: a blocked/failed capture must never stop a
+    // sign-in. `track` is SYNCHRONOUS (services/analytics/useLHAnalytics.ts
+    // calls posthog.group/capture and backendTrack directly and returns void),
+    // so a Promise.resolve(...).catch() around it catches nothing — the throw
+    // happens while the argument is evaluated, before .catch is attached, and
+    // in this async handler it would become the very unhandled rejection this
+    // fix exists to remove. Only a real try/catch works here.
+    try {
+      track(AnalyticsEvent.SignupGoogleClicked)
+    } catch { /* a blocked capture must never stop a sign-in */ }
     // Store org context in cookies before OAuth redirect
     if (org?.slug) {
       const topDomain = getLEARNHOUSE_TOP_DOMAIN_VAL();
@@ -166,8 +176,33 @@ function OpenSignUpComponent({ org: propOrg }: OpenSignUpComponentProps = {}) {
       document.cookie = `LH_oauth_orgslug=${org.slug}${baseAttributes}${domainAttr}`;
       document.cookie = `LH_oauth_org_id=${org.id}${baseAttributes}${domainAttr}`;
     }
-    // Use absolute URL with current origin for custom domain support
-    signIn('google', { callbackUrl: buildCallbackUrl() });
+    // signIn() awaits a fetch to /api/auth/google/authorize before redirecting.
+    // Unawaited, a transport failure ("Failed to fetch" / Safari's "Load
+    // failed") became an unhandled rejection AND a button that silently did
+    // nothing. Await it, and surface both a network throw and the {ok:false}
+    // it returns when OAuth isn't configured.
+    setIsSubmitting(true)
+    try {
+      // Use absolute URL with current origin for custom domain support
+      const result = await signIn('google', { callbackUrl: buildCallbackUrl() })
+      if (result && result.ok === false) {
+        setError(getErrorMessage(result.error, t('common.something_went_wrong')))
+        setIsSubmitting(false)
+        return
+      }
+      // A resolved `undefined` now means one thing only: signIn assigned
+      // window.location.href and the document is navigating away. Leave the
+      // button disabled so the user can't fire a second OAuth handshake while
+      // it does. (The other case that used to land here — an authorize URL
+      // safeExternalUrl rejected, which navigates nowhere — returns
+      // { ok: false } from AuthContext's signIn and is handled above. Without
+      // that, taking ownership of isSubmitting here would strand the whole
+      // form disabled.) Do not "fix" this by erroring on undefined — that
+      // paints an error banner over every successful redirect.
+    } catch (err) {
+      setError(getErrorMessage((err as any)?.detail, t('common.something_went_wrong')))
+      setIsSubmitting(false)
+    }
   };
 
   return (

@@ -872,12 +872,19 @@ async def update_user_role(
             org_config = (await db_session.execute(org_config_stmt)).scalars().first()
             # The org's own host (verified custom domain when it has one), so
             # the recipient can act on the permissions they were just given.
-            from src.services.email.utils import get_org_signup_base_url
+            from src.services.email.utils import (
+                get_org_signup_base_url,
+                send_email_in_threadpool,
+            )
 
             org_base_url = await get_org_signup_base_url(
                 org.slug, request, db_session=db_session, org_id=org.id
             )
-            send_role_changed_email(
+            # Off the event loop: the provider client blocks and prod runs a
+            # single uvicorn worker, so an inline send parked every concurrent
+            # request on the pod for the provider's timeout.
+            await send_email_in_threadpool(
+                send_role_changed_email,
                 email=role_change_user.email,
                 username=role_change_user.username,
                 org_name=org.name,
@@ -886,8 +893,15 @@ async def update_user_role(
                 cta_url=org_base_url.rstrip("/") or "/",
                 sender_name=resolve_org_sender_name(org_config),
             )
-    except Exception:
-        logger.warning("Failed to send role change email to user %s", user_id)
+    except Exception as exc:
+        # The try also covers the user/org-config queries and the base-URL
+        # resolution, so a cause that is not the provider's is our bug and has
+        # been logged nowhere else — and a bare warning never reaches Sentry.
+        from src.services.email.utils import log_swallowed_email_failure
+
+        log_swallowed_email_failure(
+            logger, exc, "Failed to send role change email to user %s", user_id
+        )
 
     # If the user was just promoted to ADMIN, add them to the Loops marketing
     # audience. Best-effort, SaaS-gated, never fails the role change. Note this

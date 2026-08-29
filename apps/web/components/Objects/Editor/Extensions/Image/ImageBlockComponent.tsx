@@ -49,7 +49,11 @@ function ImageBlockComponent(props: any) {
   const unsplashPhotographerUrl: string | null = props.node.attrs.unsplash_photographer_url || null
   const unsplashPhotoUrl: string | null = props.node.attrs.unsplash_photo_url || null
 
-  const fileId = blockObject
+  // Guard `content`, not just `blockObject`: a block can be persisted with a
+  // truthy-but-contentless object (a malformed AI-generated node, an upload
+  // whose response could not be parsed) and dereferencing `content.file_id`
+  // takes the whole editor down instead of showing the upload placeholder.
+  const fileId = blockObject?.content?.file_id
     ? `${blockObject.content.file_id}.${blockObject.content.file_format}`
     : null
 
@@ -121,15 +125,15 @@ function ImageBlockComponent(props: any) {
     const imageUrl = getActivityBlockMediaDirectory(
       org?.org_uuid,
       course?.courseStructure?.course_uuid,
-      blockObject.content.activity_uuid || props.extension.options.activity.activity_uuid,
-      blockObject.block_uuid,
+      blockObject?.content?.activity_uuid || props.extension.options.activity.activity_uuid,
+      blockObject?.block_uuid,
       fileId,
       'imageBlock'
     );
 
     const link = document.createElement('a');
     link.href = imageUrl || '';
-    link.download = `image-${blockObject?.block_uuid || 'download'}.${blockObject?.content.file_format || 'jpg'}`;
+    link.download = `image-${blockObject?.block_uuid || 'download'}.${blockObject?.content?.file_format || 'jpg'}`;
     link.setAttribute('download', '');
     link.setAttribute('target', '_blank');
     link.setAttribute('rel', 'noopener noreferrer');
@@ -149,12 +153,15 @@ function ImageBlockComponent(props: any) {
     });
   };
 
-  const uploadedImageUrl = blockObject ? getActivityBlockMediaDirectory(
+  // Keyed on fileId, the same predicate as the upload zone below. Keying on
+  // `content` alone let a half-formed block (`content: {}`) build a directory
+  // URL ending in '/', so the uploader AND a broken <img> rendered at once.
+  const uploadedImageUrl = fileId ? getActivityBlockMediaDirectory(
     org?.org_uuid,
     course?.courseStructure?.course_uuid,
-    blockObject.content.activity_uuid || props.extension.options.activity.activity_uuid,
-    blockObject.block_uuid,
-    fileId || '',
+    blockObject?.content?.activity_uuid || props.extension.options.activity.activity_uuid,
+    blockObject?.block_uuid,
+    fileId,
     'imageBlock'
   ) : null;
 
@@ -229,7 +236,7 @@ function ImageBlockComponent(props: any) {
                 >
                   <ArrowsOut weight="duotone" className="w-4 h-4 text-white" />
                 </button>
-                {blockObject && (
+                {fileId && (
                   <button
                     onClick={handleDownload}
                     className="p-2 outline-none bg-black/50 hover:bg-black/70 rounded-lg transition-colors"
@@ -287,8 +294,10 @@ function ImageBlockComponent(props: any) {
             </span>
           </div>
 
-          {/* Upload Zone - shown when no image */}
-          {!blockObject && !unsplashUrl && isEditable && (
+          {/* Upload Zone - shown when no usable image. Keyed on fileId, not on
+              blockObject: a block whose object lost its `content` has nothing to
+              render and must fall back to the uploader. */}
+          {!fileId && !unsplashUrl && isEditable && (
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
               <div
                 onClick={() => fileInputRef.current?.click()}

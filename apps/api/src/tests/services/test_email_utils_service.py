@@ -371,8 +371,9 @@ class TestEmailUtilsService:
     def test_recipient_rejection_logs_warning_not_error(self):
         """A provider rejection of the address itself must not page.
 
-        It still raises 503 — only the log level changes, so nothing downstream
-        of send_email sees different behavior.
+        It is also permanent, so it surfaces as 422 rather than the transient
+        503 the other failure classes get — a 503 invites a retry that can
+        never succeed.
         """
         rejection = resend_exceptions.ValidationError(
             message=(
@@ -392,7 +393,7 @@ class TestEmailUtilsService:
             with pytest.raises(HTTPException) as exc_info:
                 send_email("nobody@example.com", "Subject", "<p>Body</p>")
 
-        assert exc_info.value.status_code == 503
+        assert exc_info.value.status_code == 422
         mock_logger.error.assert_not_called()
         mock_logger.warning.assert_called_once()
 

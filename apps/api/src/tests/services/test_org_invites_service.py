@@ -647,3 +647,35 @@ class TestGetRedis:
         mock_pool.assert_called_once_with("redis://test", max_connections=10)
         mock_redis.assert_called_once_with(connection_pool=fake_pool)
         assert result is fake_client
+
+
+class TestInviteSendDoesNotBlockTheEventLoop:
+    """A batch invite calls this once per address, and the client blocks.
+
+    Inline, one stalled provider response froze the single uvicorn worker for
+    the full timeout-plus-retry window and every unrelated request with it.
+    """
+
+    @pytest.mark.asyncio
+    async def test_send_runs_on_a_worker_thread(self, mock_request, org, admin_user):
+        import threading
+
+        on_main_thread = []
+
+        def recording_send(**kwargs):
+            on_main_thread.append(threading.current_thread() is threading.main_thread())
+            return {"id": "email"}
+
+        with patch(
+            "src.services.email.utils.get_org_signup_base_url",
+            new_callable=AsyncMock,
+            return_value="https://test-org.learnhouse.io",
+        ), patch(
+            "src.services.orgs.invites.send_invitation_email", new=recording_send
+        ):
+            result = await send_invite_email(
+                org, None, admin_user, admin_user.email, mock_request
+            )
+
+        assert result is True
+        assert on_main_thread == [False]

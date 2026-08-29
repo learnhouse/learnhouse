@@ -5,9 +5,11 @@ on:
       - dev
     paths:
       - "apps/web/**"
+      - ".github/workflows/web-lint.yaml"
   pull_request:
     paths:
       - "apps/web/**"
+      - ".github/workflows/web-lint.yaml"
 permissions:
   contents: read
 
@@ -67,6 +69,41 @@ jobs:
           echo "Strict-linting changed files:"
           echo "$CHANGED"
           echo "$CHANGED" | xargs bun run lint:strict --no-error-on-unmatched-pattern
+
+  # apps/web has had a `bun test tests` suite for a long time and nothing ran it:
+  # web-lint only lints, and e2e.yaml runs a different suite (apps/e2e, against
+  # the published image, on dispatch/nightly). The cost of that was not
+  # theoretical — tests/catalog-pagination.test.mjs imported a module that does
+  # not exist from the commit that added it and failed to load ever since, and
+  # every Sentry suppression rule was pinned by a test no gate executed. This
+  # job runs them on every PR, so deleting a rule or breaking a test shows up
+  # red on the PR instead of silently.
+  #
+  # It does NOT block the merge yet: `dev` has branch protection but no
+  # required_status_checks and no rulesets (verified via
+  # `gh api repos/learnhouse/learnhouse/branches/dev/protection` and
+  # `.../rules/branches/dev`), so nothing here is enforced by GitHub. Adding
+  # `web-tests` to dev's required checks is a repo-settings change, not a
+  # workflow one — until someone makes it, treat a red run as a review signal.
+  web-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version-file: .bun-version
+      - name: Cache bun install cache
+        uses: actions/cache@v6
+        with:
+          path: ~/.bun/install/cache
+          key: bun-web-${{ runner.os }}-${{ hashFiles('apps/web/bun.lock') }}
+          restore-keys: bun-web-${{ runner.os }}-
+      - name: Install dependencies
+        run: bun install --frozen-lockfile
+        working-directory: ./apps/web
+      - name: Unit tests
+        run: bun test tests
+        working-directory: ./apps/web
 
   # The image build type-checks as a side effect of `next build`, but it does so
   # inside a Docker layer that is cached on the dependency manifests. A tsconfig

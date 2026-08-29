@@ -5,6 +5,7 @@ from unittest.mock import Mock, patch
 
 import pytest
 
+from src.services.ai.llm import AIQuotaExhaustedError
 from src.services.playgrounds.playgrounds_generator import (
     build_playground_system_prompt,
     create_playground_session,
@@ -221,13 +222,40 @@ class TestPlaygroundsGeneratorService:
         assert "CURRENT HTML CODE:" in captured["user_prompt"]
         save_session.assert_called_once()
 
+        # A provider failure must propagate, not be yielded as a content chunk:
+        # the router consumes whatever this generator yields as generated HTML,
+        # so a swallowed error looked like a successful generation and the org
+        # was still charged for it.
+        iteration_count_before = session.iteration_count
         with patch(
             "src.services.playgrounds.playgrounds_generator.generate_stream",
             _fake_stream([], raise_exc=RuntimeError("boom")),
-        ):
-            error_chunks = [
-                chunk
-                async for chunk in generate_playground_stream("Build it", session)
-            ]
+        ), patch(
+            "src.services.playgrounds.playgrounds_generator.save_playground_session"
+        ) as save_session:
+            with pytest.raises(RuntimeError, match="boom"):
+                [
+                    chunk
+                    async for chunk in generate_playground_stream("Build it", session)
+                ]
 
-        assert error_chunks == ["Error: An internal error occurred while generating content."]
+        # Nothing was committed as a successful iteration.
+        save_session.assert_not_called()
+        assert session.iteration_count == iteration_count_before
+
+        # Quota exhaustion propagates too, so the router can emit its typed
+        # error frame and refund the credit.
+        with patch(
+            "src.services.playgrounds.playgrounds_generator.generate_stream",
+            _fake_stream([], raise_exc=AIQuotaExhaustedError("no credits")),
+        ), patch(
+            "src.services.playgrounds.playgrounds_generator.save_playground_session"
+        ) as save_session:
+            with pytest.raises(AIQuotaExhaustedError):
+                [
+                    chunk
+                    async for chunk in generate_playground_stream("Build it", session)
+                ]
+
+        save_session.assert_not_called()
+        assert session.iteration_count == iteration_count_before

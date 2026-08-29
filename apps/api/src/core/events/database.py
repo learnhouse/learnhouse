@@ -1,11 +1,13 @@
 import asyncio
 import logging
 import os
+import re
 import importlib
 from config.config import get_learnhouse_config
 from fastapi import FastAPI
 from sqlmodel import SQLModel, Session
 from sqlalchemy import event
+from sqlalchemy import inspect as sa_inspect
 from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker
 from sqlmodel.ext.asyncio.session import AsyncSession
 
@@ -52,6 +54,32 @@ learnhouse_config = get_learnhouse_config()
 
 # Check if we're in test mode
 is_testing = os.getenv("TESTING", "false").lower() == "true"
+
+
+def _pool_env(name: str, default: int, minimum: int = 0) -> int:
+    """Read an int pool setting from the environment, falling back loudly.
+
+    ``minimum`` exists because SQLAlchemy reads the boundary values as
+    *unlimited*, not as zero: pool_size=0 removes the pool's ceiling entirely
+    and max_overflow=-1 removes the overflow's. Either would quietly undo the
+    arithmetic this whole block is about, so a value below the minimum is
+    refused rather than honoured.
+    """
+    raw = os.getenv(name)
+    if raw is None or not raw.strip():
+        return default
+    try:
+        value = int(raw)
+    except (TypeError, ValueError):
+        logging.warning("%s=%r is not an integer — using %s.", name, raw, default)
+        return default
+    if value < minimum:
+        logging.warning(
+            "%s=%s is below the minimum of %s — using %s.", name, value, minimum, default
+        )
+        return default
+    return value
+
 
 if is_testing:
     engine = create_async_engine(
@@ -101,24 +129,79 @@ else:
         or os.getenv("LEARNHOUSE_PGBOUNCER", "").lower() in ("1", "true", "yes")
     )
 
+    # Pool sizing against a pooler is arithmetic, not a knob to turn up.
+    # Supavisor in *session* mode caps the whole project at a fixed number of
+    # client connections (15 on the current plan), and every process claims up
+    # to pool_size + max_overflow of them. At 5 + 10 a single uvicorn process
+    # could hold the entire budget on its own, so two replicas were guaranteed
+    # to hit "max clients reached in session mode" (EMAXCONNSESSION) under any
+    # real load, and the failed boots that followed opened another batch of
+    # connections against the pooler that was already out of clients.
+    #
+    # THE INVARIANT, whatever these numbers become:
+    #   sum over ALL processes of (pool_size + max_overflow)
+    #       < the pooler's session-mode client limit
+    # "all processes" means every replica times every uvicorn worker, plus the
+    # entrypoint's `alembic upgrade head`, plus any cli.py / cron process. Code
+    # cannot see the pooler's limit or the replica count, so the default below
+    # is only sized for ONE replica; more than that is an ops setting, not a
+    # default. The log line prints the arithmetic so the deployed numbers can be
+    # checked against the pooler in pod logs.
+    #
+    # Why 5 + 5 and not 3 + 2: pool_size is the steady-state ceiling and it was
+    # 5 before this change — dropping it to 3 would have cut the concurrency a
+    # single uvicorn worker actually serves, converting a pooler-level error
+    # into in-process QueuePool timeouts (i.e. 500s) without adding capacity
+    # anywhere. Only max_overflow, the burst headroom, is reduced: 15 -> 10 per
+    # process, which is what makes a second process fit under a 15-client limit.
+    _pooled_ceiling_note = (
+        "the sum of (pool_size + max_overflow) across ALL processes — replicas, "
+        "workers, the entrypoint's alembic run and CLI commands — must stay "
+        "below the pooler's session-mode client limit; set "
+        "LEARNHOUSE_DB_POOL_SIZE / LEARNHOUSE_DB_MAX_OVERFLOW explicitly when "
+        "running more than one replica"
+    )
+
     if is_pooled:
+        pool_size = _pool_env("LEARNHOUSE_DB_POOL_SIZE", 5, minimum=1)
+        max_overflow = _pool_env("LEARNHOUSE_DB_MAX_OVERFLOW", 5, minimum=0)
+        # Saturation should degrade into latency, not into an immediate 5xx: a
+        # request that waits 20s and then succeeds is far better than one that
+        # raises QueuePool TimeoutError at 10s. It stays below SQLAlchemy's 30s
+        # default because /health takes a session from this same pool, and a
+        # 30s wait there outlasts every k8s probe timeout — the pod would stop
+        # answering probes instead of shedding load.
+        pool_timeout = _pool_env("LEARNHOUSE_DB_POOL_TIMEOUT", 20, minimum=1)
         engine_kwargs = dict(
             pool_pre_ping=True,
-            pool_size=5,
-            max_overflow=10,
+            pool_size=pool_size,
+            max_overflow=max_overflow,
             pool_recycle=1800,
-            pool_timeout=30,
+            pool_timeout=pool_timeout,
             connect_args=_connect_args,
         )
-        logging.info("DB engine: detected connection pooler — using small client-side pool.")
+        logging.info(
+            "DB engine: detected connection pooler — pool_size=%s, max_overflow=%s, "
+            "pool_timeout=%ss, up to %s connections from this process. Invariant: %s.",
+            pool_size, max_overflow, pool_timeout, pool_size + max_overflow,
+            _pooled_ceiling_note,
+        )
     else:
+        pool_size = _pool_env("LEARNHOUSE_DB_POOL_SIZE", 20, minimum=1)
+        max_overflow = _pool_env("LEARNHOUSE_DB_MAX_OVERFLOW", 10, minimum=0)
+        pool_timeout = _pool_env("LEARNHOUSE_DB_POOL_TIMEOUT", 30, minimum=1)
         engine_kwargs = dict(
             pool_pre_ping=True,
-            pool_size=20,
-            max_overflow=10,
+            pool_size=pool_size,
+            max_overflow=max_overflow,
             pool_recycle=300,
-            pool_timeout=30,
+            pool_timeout=pool_timeout,
             connect_args=_connect_args,
+        )
+        logging.info(
+            "DB engine: direct database connection (pool_size=%s, max_overflow=%s, "
+            "pool_timeout=%ss, up to %s connections from this process).",
+            pool_size, max_overflow, pool_timeout, pool_size + max_overflow,
         )
 
     engine = create_async_engine(sql_url, echo=False, **engine_kwargs)  # type: ignore
@@ -367,18 +450,30 @@ if not is_testing:
 # (bad password, unknown database) where retrying only delays the real signal.
 _STARTUP_CONNECT_ATTEMPTS = int(os.getenv("LEARNHOUSE_DB_STARTUP_ATTEMPTS", "5"))
 _STARTUP_CONNECT_BACKOFF_SECONDS = 2.0
+#
+# The markers are anchored on purpose. A bare "does not exist" used to be in
+# this list, which matched every missing-relation and missing-column message
+# too — so a transient failure that happened to mention one was classified
+# permanent and skipped the retry entirely.
 _PERMANENT_CONNECT_ERROR_MARKERS = (
     "password authentication failed",
-    "role \"",
-    "does not exist",
     "no pg_hba.conf entry",
     "permission denied",
 )
 
+# The other two permanent cases are a missing database and a missing role, and
+# both need BOTH halves of the message. Matching only the `database "` prefix
+# would classify as permanent any future pooler/proxy error that happens to
+# quote a database name — which is the same over-matching the bare
+# "does not exist" had, just narrower.
+_PERMANENT_CONNECT_ERROR_PATTERN = re.compile(r'(?:database|role) "[^"]*" does not exist')
+
 
 def _is_transient_connect_error(exc: BaseException) -> bool:
     message = str(exc).lower()
-    return not any(marker in message for marker in _PERMANENT_CONNECT_ERROR_MARKERS)
+    if any(marker in message for marker in _PERMANENT_CONNECT_ERROR_MARKERS):
+        return False
+    return _PERMANENT_CONNECT_ERROR_PATTERN.search(message) is None
 
 
 async def _bootstrap_schema():
@@ -393,9 +488,114 @@ async def _bootstrap_schema():
                 "Install pgvector on your PostgreSQL server to enable course chatbot. "
                 "Error: %s", e
             )
-        # Create all tables
+        # Create all tables — but only on a database alembic does not own.
+        #
+        # create_all is checkfirst=True, which sounds safe and is not: on an
+        # alembic-managed database that is merely BEHIND head it happily creates
+        # the tables belonging to revisions that have NOT been applied yet, and
+        # the next `alembic upgrade head` then dies on their CREATE TABLE. That
+        # is not hypothetical here — LEARNHOUSE_RUN_MIGRATIONS=false is exactly
+        # the mode where the schema can be behind at this point (an external Job
+        # owns migrations and may not have run yet), and it is the mode
+        # `_log_schema_drift` below exists to serve. So in the one configuration
+        # where drift is expected, this call would silently poison the Job's
+        # next upgrade.
+        #
+        # Once alembic_version exists, alembic owns the whole schema. cli.py's
+        # `install` takes the same guard for the same reason.
         if not is_testing:
-            await conn.run_sync(SQLModel.metadata.create_all)
+            alembic_managed = await conn.run_sync(
+                lambda sync_conn: "alembic_version"
+                in sa_inspect(sync_conn).get_table_names()
+            )
+            if alembic_managed:
+                logging.debug(
+                    "Schema is managed by alembic (alembic_version present) — "
+                    "skipping create_all."
+                )
+            else:
+                await conn.run_sync(SQLModel.metadata.create_all)
+
+
+_alembic_head_cache = None
+
+
+def _alembic_head_revision():
+    """The migration revision this build of the code expects.
+
+    Memoised: resolving the revision map makes alembic *execute* every file in
+    migrations/versions as a Python module (66 of them), which is real startup
+    latency on a path the team has been trimming. The answer cannot change
+    within a process.
+    """
+    global _alembic_head_cache
+    if _alembic_head_cache is not None:
+        return _alembic_head_cache
+
+    from alembic.config import Config
+    from alembic.script import ScriptDirectory
+
+    # .../apps/api/src/core/events/database.py -> .../apps/api
+    api_root = os.path.dirname(
+        os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+    )
+    alembic_config = Config()
+    alembic_config.set_main_option(
+        "script_location", os.path.join(api_root, "migrations")
+    )
+    _alembic_head_cache = ScriptDirectory.from_config(alembic_config).get_current_head()
+    return _alembic_head_cache
+
+
+async def _log_schema_drift():
+    """Say out loud when the database is behind the code's migrations.
+
+    ``SQLModel.metadata.create_all`` above only ever issues CREATE TABLE — it
+    never ALTERs an existing one — so a column a migration added is invisible to
+    it. Before the entrypoint learned to run ``alembic upgrade head`` that
+    surfaced as an UndefinedColumnError several startup steps later, on whatever
+    query happened to touch the new column first, with nothing in the message
+    about migrations. One SELECT per boot turns that into a one-line diagnosis.
+
+    Never fatal: booting is decided by the migration step in the entrypoint, not
+    by this check.
+
+    Skipped entirely when the entrypoint owns migrations (the default), because
+    then the boot is already gated on `alembic upgrade head` succeeding and the
+    answer is known. It exists for LEARNHOUSE_RUN_MIGRATIONS=false, where an
+    external Job owns migrations and nothing else would notice it never ran.
+    """
+    if is_testing:
+        return
+    if os.getenv("LEARNHOUSE_RUN_MIGRATIONS", "true").lower() == "true":
+        return
+
+    try:
+        from sqlalchemy import text
+
+        # SELECT first: on a database that has no alembic_version at all there
+        # is nothing to compare against, and building the ScriptDirectory to
+        # find that out would execute all 66 migration modules for nothing.
+        async with engine.connect() as conn:
+            row = (
+                await conn.execute(text("SELECT version_num FROM alembic_version"))
+            ).first()
+        db_revision = row[0] if row else None
+        head = _alembic_head_revision()
+    except Exception:
+        # No alembic_version table yet (a database only ever built by
+        # create_all), no migrations directory in the image, or the DB blinked —
+        # none of which is worth a word in the startup logs.
+        logging.debug("Schema drift check skipped", exc_info=True)
+        return
+
+    if head and db_revision != head:
+        logging.error(
+            "Database schema is out of date: alembic_version is at %s, this "
+            "release expects %s. Run `alembic upgrade head` — the container "
+            "entrypoint does this unless LEARNHOUSE_RUN_MIGRATIONS is not 'true'.",
+            db_revision or "<empty>", head,
+        )
 
 
 async def connect_to_db(app: FastAPI):
@@ -419,6 +619,8 @@ async def connect_to_db(app: FastAPI):
             except Exception:
                 logging.debug("Engine dispose before retry failed", exc_info=True)
             await asyncio.sleep(delay)
+
+    await _log_schema_drift()
 
     app.db_engine = engine  # type: ignore
     logging.info("LearnHouse database has been started.")

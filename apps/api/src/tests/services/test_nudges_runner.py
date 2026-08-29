@@ -869,3 +869,109 @@ class TestBudgetCountsAttempts:
         assert stats.sent == 0
         assert stats.budget_exhausted is True
         assert sender.call_count == 2
+
+
+async def _extra_admins(db, org, admin_role, count: int, start_id: int = 40) -> None:
+    """Add ``count`` more verified admins to ``org`` so the run has candidates."""
+    from datetime import datetime as dt
+
+    from src.db.user_organizations import UserOrganization
+    from src.db.users import User
+
+    for index in range(count):
+        uid = start_id + index
+        db.add(
+            User(
+                id=uid,
+                username=f"extra{uid}",
+                first_name="Extra",
+                last_name=str(uid),
+                email=f"extra{uid}@test.com",
+                password="x",
+                user_uuid=f"user_extra{uid}",
+                email_verified=True,
+                creation_date=str(dt.now()),
+                update_date=str(dt.now()),
+            )
+        )
+        db.add(
+            UserOrganization(
+                user_id=uid,
+                org_id=org.id,
+                role_id=admin_role.id,
+                creation_date=str(dt.now()),
+                update_date=str(dt.now()),
+            )
+        )
+    await db.commit()
+
+
+class TestSendsDoNotBlockTheEventLoop:
+    async def test_nudge_send_runs_on_a_worker_thread(self, db, activation_org):
+        """The provider client is synchronous and this is a per-recipient loop.
+
+        Inline, one stalled send parked the only uvicorn worker for the whole
+        timeout-plus-retry window — multiplied by the recipient count — while
+        every unrelated request on the pod waited behind it.
+        """
+        import threading
+
+        on_main_thread = []
+
+        def recording_send(**kwargs):
+            on_main_thread.append(threading.current_thread() is threading.main_thread())
+            return {"id": "sent"}
+
+        with patch("src.services.nudges.runner.send_nudge_email", new=recording_send):
+            stats = await run_nudges(db, now=NOW)
+
+        assert stats.sent == 1
+        assert on_main_thread == [False]
+
+
+class TestConsecutiveFailureBreaker:
+    async def test_run_stops_once_sends_fail_back_to_back(
+        self, db, org, admin_role, verified_admin, sender
+    ):
+        """A systemic failure fails identically for everyone still queued.
+
+        Each non-provider failure is a Sentry ERROR (emails.py logs the causes
+        `send_email` has not already reported), so finishing the run would spend
+        one event and one burnt dedupe key per recipient on a single fault.
+        """
+        org.creation_date = _stored(1.5)
+        org.update_date = _stored(1.5)
+        db.add(org)
+        await _extra_admins(db, org, admin_role, count=5)
+
+        sender.return_value = False
+        stats = await run_nudges(db, now=NOW)
+
+        assert sender.call_count == runner_module.CONSECUTIVE_FAILURE_LIMIT
+        assert stats.failed == runner_module.CONSECUTIVE_FAILURE_LIMIT
+        assert stats.aborted_consecutive_failures is True
+        assert stats.as_dict()["aborted_consecutive_failures"] is True
+
+    async def test_a_success_resets_the_streak(
+        self, db, org, admin_role, verified_admin, sender, monkeypatch
+    ):
+        """Only *consecutive* failures trip it — one bad address is not an outage."""
+        monkeypatch.setattr(runner_module, "CONSECUTIVE_FAILURE_LIMIT", 2)
+        org.creation_date = _stored(1.5)
+        org.update_date = _stored(1.5)
+        db.add(org)
+        await _extra_admins(db, org, admin_role, count=3)
+
+        sender.side_effect = [False, {"id": "sent"}, False, {"id": "sent"}]
+        stats = await run_nudges(db, now=NOW)
+
+        assert sender.call_count == 4
+        assert stats.failed == 2
+        assert stats.sent == 2
+        assert stats.aborted_consecutive_failures is False
+
+    async def test_a_healthy_run_never_trips_it(self, db, activation_org, sender):
+        stats = await run_nudges(db, now=NOW)
+
+        assert stats.sent == 1
+        assert stats.aborted_consecutive_failures is False

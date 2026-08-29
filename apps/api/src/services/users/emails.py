@@ -7,7 +7,7 @@ from pydantic import EmailStr
 from src.db.organizations import OrganizationRead
 from src.db.users import UserRead
 from src.services.email.translations import t
-from src.services.email.utils import send_email
+from src.services.email.utils import log_swallowed_email_failure, send_email
 
 logger = logging.getLogger(__name__)
 
@@ -23,11 +23,23 @@ def _send_notification_email(**kwargs):
 
     Mail the user is actively waiting on (password reset, invitation, address
     verification) still calls ``send_email`` directly and still raises.
+
+    ``critical=False`` also drops the provider-side failure log inside
+    ``send_email`` from error to warning. Sentry captures at ``logging.ERROR``,
+    so without it a provider quota outage raised one Sentry event per welcome
+    email — hundreds in a day — for mail whose loss nobody was waiting on.
+
+    A *delivery* failure stays at warning. A failure that is not the provider's
+    — a config load that blew up, a template regression — still reaches Sentry
+    at ERROR, because nothing else has logged it and it is our bug.
     """
+    kwargs.setdefault("critical", False)
     try:
         return send_email(**kwargs)
     except Exception as e:
-        logger.warning("Non-critical email to %s not sent: %s", kwargs.get("to"), e)
+        log_swallowed_email_failure(
+            logger, e, "Non-critical email to %s not sent: %s", kwargs.get("to"), e
+        )
         return False
 
 

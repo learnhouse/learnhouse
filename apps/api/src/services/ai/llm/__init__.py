@@ -18,7 +18,17 @@ from src.services.ai.llm.embeddings import (
     embed_query,
     embedding_dimensions,
 )
-from src.services.ai.llm.provider import AINotConfiguredError, build_model
+from src.services.ai.llm.provider import (
+    AI_QUOTA_USER_MESSAGE,
+    AINotConfiguredError,
+    AIQuotaExhaustedError,
+    QUOTA_DEPLETION_MARKERS,
+    build_model,
+    is_quota_exhausted,
+    is_rate_limited,
+    provider_error_label,
+    translate_provider_errors,
+)
 from src.services.ai.llm.tiers import (
     model_for_tier,
     resolve_model_for_org,
@@ -34,7 +44,14 @@ __all__ = [
     "embed_documents",
     "embed_query",
     "embedding_dimensions",
+    "AI_QUOTA_USER_MESSAGE",
     "AINotConfiguredError",
+    "AIQuotaExhaustedError",
+    "QUOTA_DEPLETION_MARKERS",
+    "is_quota_exhausted",
+    "is_rate_limited",
+    "provider_error_label",
+    "translate_provider_errors",
     "model_for_tier",
     "resolve_model_for_org",
 ]

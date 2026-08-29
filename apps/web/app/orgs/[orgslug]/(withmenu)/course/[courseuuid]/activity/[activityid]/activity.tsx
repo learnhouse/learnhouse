@@ -245,7 +245,14 @@ function ActivityClient(props: ActivityClientProps) {
   const org = useOrg() as any
 
   const { data: course, isLoading: courseLoading } = useCourseMeta(courseuuid)
-  const { data: activity, isLoading: activityLoading } = useActivity(activityid)
+  // 'end' is the course-end sentinel, not an activity uuid: it renders
+  // CourseEndView (below) and there is nothing to fetch. Asking the API for
+  // `activity_end` only ever earned a 404 — free while the service swallowed
+  // it, a request plus a retry (lib/query/client.ts sets retry: 1) now that it
+  // rejects.
+  const { data: activity, isLoading: activityLoading } = useActivity(
+    activityid === 'end' ? '' : activityid
+  )
   const session = useLHSession() as any;
   const pathname = usePathname()
   const access_token = session?.data?.tokens?.access_token;
@@ -967,8 +974,20 @@ function ActivityClient(props: ActivityClientProps) {
                         </div>
                       </div>
 
-                      {activityLoading || !activity ? (
+                      {activityLoading ? (
                         <ActivityContentSkeleton activityType={displayActivityType} />
+                      ) : !activity ? (
+                        // The activity fetch rejects on a non-2xx (403 on a
+                        // private course, 5xx on a backend fault), so `activity`
+                        // is undefined rather than an error object. Say so —
+                        // leaving the skeleton up would spin forever.
+                        <div className="p-7 rounded-lg bg-gray-800">
+                          <div className="text-white">
+                            <h1 className="font-bold text-2xl">
+                              {t('common.something_went_wrong')}
+                            </h1>
+                          </div>
+                        </div>
                       ) : activity.published == false ? (
                         <div className="p-7 rounded-lg bg-gray-800">
                           <div className="text-white">

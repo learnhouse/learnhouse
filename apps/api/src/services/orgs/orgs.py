@@ -214,7 +214,10 @@ async def _try_send_org_created(request: Request, org, current_user, db_session)
         email = getattr(current_user, "email", None)
         if not email:
             return
-        from src.services.email.utils import get_org_signup_base_url
+        from src.services.email.utils import (
+            get_org_signup_base_url,
+            send_email_in_threadpool,
+        )
         from src.services.users.emails import send_org_created_email
         base = await get_org_signup_base_url(
             org.slug, request, db_session=db_session, org_id=org.id
@@ -222,7 +225,16 @@ async def _try_send_org_created(request: Request, org, current_user, db_session)
         # Deliberately platform-branded: the org was created seconds ago, so it
         # has no configured sender name yet, and this mail is the platform
         # confirming an action taken on the platform.
-        send_org_created_email(email, org.name, f"{base.rstrip('/')}/dash")
+        #
+        # Off the event loop: the send is a blocking `requests` call, and prod
+        # runs one uvicorn worker — inline, a stalled provider held up every
+        # concurrent request on the pod, not just this create.
+        await send_email_in_threadpool(
+            send_org_created_email,
+            email=email,
+            org_name=org.name,
+            dashboard_url=f"{base.rstrip('/')}/dash",
+        )
     except Exception:
         logging.exception("send_org_created_email failed")
 
@@ -777,11 +789,19 @@ async def delete_org(
     # Best-effort deletion confirmation to the acting admin.
     if acting_email:
         try:
+            from src.services.email.utils import send_email_in_threadpool
             from src.services.users.emails import send_org_deleted_email
             # Platform-branded on purpose: the org (and its config, including
             # any sender name) no longer exists, and mail confirming a deletion
             # should not arrive under the deleted org's own name.
-            send_org_deleted_email(acting_email, org_name)
+            #
+            # Off the event loop for the same reason as every other send here:
+            # the provider client blocks, and one worker serves the whole pod.
+            await send_email_in_threadpool(
+                send_org_deleted_email,
+                email=acting_email,
+                org_name=org_name,
+            )
         except Exception:
             logging.exception("send_org_deleted_email failed")
 

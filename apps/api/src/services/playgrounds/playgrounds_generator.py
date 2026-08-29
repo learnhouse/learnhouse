@@ -5,7 +5,7 @@ import redis
 import json
 
 from config.config import get_learnhouse_config
-from src.services.ai.llm import generate_stream, model_for_tier
+from src.services.ai.llm import AIQuotaExhaustedError, generate_stream, model_for_tier
 from src.services.playgrounds.schemas.playgrounds_generator import (
     PlaygroundContext,
     PlaygroundSessionData,
@@ -243,12 +243,18 @@ Please modify the HTML code above according to the user's request. Output ONLY t
 
         save_playground_session(session)
 
-    except Exception:
-        # Never surface raw exception text to the client stream: it can contain
-        # internal details (provider error bodies, keys, stack context). Log it
-        # server-side and emit a generic message instead.
-        logger.exception("Playground generation stream failed")
-        yield "Error: An internal error occurred while generating content."
+    except AIQuotaExhaustedError:
+        # A known billing state, not a server fault: log at WARNING (so it does
+        # not page anyone) and let the router turn it into a typed SSE error the
+        # UI can explain, plus a credit refund.
+        logger.warning("Playground generation unavailable: provider quota exhausted")
+        raise
+    # Every other failure propagates untouched. This function must NOT yield an
+    # error string: the router consumes whatever it yields as a normal content
+    # chunk, so a swallowed 5xx / timeout / safety refusal / parse error looked
+    # like a successful generation and the org kept paying GENERATION_CREDIT_COST
+    # for nothing. The router's `except Exception` owns the client-facing error
+    # frame (which never carries the raw exception text) and the refund.
 
 
 def extract_html_from_response(response: str) -> str:

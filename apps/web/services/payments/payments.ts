@@ -45,14 +45,14 @@ export async function getOrgCustomers(orgId: number, access_token: string) {
   return res;
 }
 
-export async function getUserEnrollments(orgId: number, access_token: string) {
-  const result = await secureFetch(
-    `${getAPIUrl()}payments/${encodeURIComponent(String(orgId))}/enrollments/mine`,
-    RequestBodyWithAuthHeader('GET', null, null, access_token)
-  );
-  const res = await errorHandling(result);
-  return res;
-}
+// `getUserEnrollments` deliberately does NOT live here. It used to — an
+// unimported second copy hitting the same `payments/{orgId}/enrollments/mine`
+// endpoint through plain `errorHandling`, in a 'use server' module. A 403 with
+// no `detail` (the normal answer for an org without payments enabled) threw
+// `Error('Forbidden')` straight out of a Server Action, which is exactly the
+// unhandled SSR error the account route was reported for. The live copy in
+// services/payments/offers.ts absorbs 403/404 as "no purchases" and attaches
+// the API detail to anything else. Import it from there; do not re-add one here.
 
 export async function getStripeOverview(orgId: number, access_token: string) {
   const result = await secureFetch(

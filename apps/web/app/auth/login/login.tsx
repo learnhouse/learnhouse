@@ -202,8 +202,22 @@ const LoginClient = (props: LoginClientProps) => {
     }
   }, [mfaCode, useBackupCode, mfaSubmitting, mfaToken]) // eslint-disable-line
 
-  const handleGoogleSignIn = () => {
-    track(AnalyticsEvent.LoginGoogleClicked)
+  // The result of signIn() used to be discarded, so a Google button that failed
+  // for any reason did nothing at all and said nothing. Note the difference from
+  // the /signup handlers: those call the MODULE-level signIn (which lets a fetch
+  // rejection escape — that is what LEARNHOUSE-WEB-5Z/63 were), while this one is
+  // useAuth().signIn, whose own try/catch converts a transport failure into
+  // `{ ok: false, error: 'Failed to fetch' }`. Same dead button, no unhandled
+  // rejection. The try/catch below is belt-and-braces for the day that changes.
+  const handleGoogleSignIn = async () => {
+    setError('')
+    setErrorType(null)
+    // Analytics is a side channel and `track` is synchronous: in an async
+    // handler a throw from it would become an unhandled rejection, which is the
+    // exact defect class this handler is being fixed for.
+    try {
+      track(AnalyticsEvent.LoginGoogleClicked)
+    } catch { /* a blocked capture must never stop a sign-in */ }
     // Store org context in cookies before OAuth redirect
     if (props.org?.slug) {
       const topDomain = getLEARNHOUSE_TOP_DOMAIN_VAL();
@@ -217,8 +231,26 @@ const LoginClient = (props: LoginClientProps) => {
       document.cookie = `LH_oauth_orgslug=${props.org.slug}${baseAttributes}${domainAttr}`;
       document.cookie = `LH_oauth_org_id=${props.org.id}${baseAttributes}${domainAttr}`;
     }
-    // Use absolute URL with current origin for custom domain support
-    signIn('google', { callbackUrl: buildCallbackUrl() });
+    setIsSubmitting(true)
+    try {
+      // Use absolute URL with current origin for custom domain support
+      const result = await signIn('google', { callbackUrl: buildCallbackUrl() })
+      if (result && result.ok === false) {
+        setError(result.error || t('common.something_went_wrong'))
+        setIsSubmitting(false)
+        return
+      }
+      // Success redirects the whole document; leave the button disabled so the
+      // user can't fire a second OAuth handshake while it navigates. This is
+      // only safe because AuthContext's signIn returns { ok: false } — handled
+      // above — for every path that does NOT navigate, including an authorize
+      // URL safeExternalUrl rejected. If that ever goes back to a bare
+      // `return`, isSubmitting sticks and this page's password and magic-link
+      // buttons are disabled with it.
+    } catch (err) {
+      setError((err as any)?.message || t('common.something_went_wrong'))
+      setIsSubmitting(false)
+    }
   };
 
   // Check if SSO is enabled for this organization (requires enterprise plan)

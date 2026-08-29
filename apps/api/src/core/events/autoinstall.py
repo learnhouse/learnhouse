@@ -26,10 +26,25 @@ async def auto_install():
 
     Tables are already created by ``connect_to_db``, which runs before this.
     """
-    async with _async_session_factory() as db_session:
-        any_org = (
-            await db_session.execute(select(Organization).limit(1))
-        ).scalars().first()
+    # This is the first query any boot runs against a real table, so it is where
+    # a database that is behind the code's migrations shows up — as a bare
+    # UndefinedColumnError naming a column nobody was thinking about. Left
+    # unannotated it produced 1632 crash-loop events that read as an Organization
+    # bug rather than a missing `alembic upgrade head`. Deliberately not caught:
+    # a pod on a stale schema answers every request with a 500, so failing the
+    # boot is the honest signal. Only the diagnosis is added.
+    try:
+        async with _async_session_factory() as db_session:
+            any_org = (
+                await db_session.execute(select(Organization).limit(1))
+            ).scalars().first()
+    except Exception:
+        logger.error(
+            "Startup schema check failed — the database is most likely behind "
+            "this release's migrations. Run `alembic upgrade head` (the container "
+            "entrypoint does this unless LEARNHOUSE_RUN_MIGRATIONS is not 'true')."
+        )
+        raise
 
     if not any_org:
         logger.info("No organizations found. Starting auto-installation")

@@ -33,7 +33,7 @@ from src.services.ai.generations import (
     record_generation,
 )
 from src.services.ai.image.generator import OUTPUT_EXT, generate_image
-from src.services.ai.llm import AINotConfiguredError
+from src.services.ai.llm import AINotConfiguredError, AIQuotaExhaustedError
 from src.services.ai.schemas.image import (
     AIImageHistoryItem,
     GenerateImageRequest,
@@ -50,6 +50,20 @@ router = APIRouter()
 IMAGE_CREDIT_COST = 5
 
 AI_IMAGE_DIR = "ai_images"
+
+
+def _refund_image_credit(org_id: int) -> None:
+    """Hand the reserved credits back, never at the cost of the real error.
+
+    ``refund_ai_credit`` raises ``HTTPException(500)`` when Redis is
+    unreachable, which would replace the actionable 429/403/502 below with a
+    5xx — one the Sentry Starlette integration then captures. The streaming
+    generators wrap their refunds the same way.
+    """
+    try:
+        refund_ai_credit(org_id, IMAGE_CREDIT_COST)
+    except Exception:
+        logger.debug("AI credit refund failed", exc_info=True)
 
 
 def _media_path(org_uuid: str, file_id: str) -> str:
@@ -94,6 +108,7 @@ async def _load_org_and_authorize(
         401: {"description": "Authentication required"},
         403: {"description": "Not an org member, AI disabled, or insufficient credits"},
         404: {"description": "Organization not found"},
+        429: {"description": "AI provider quota exhausted — retry after an admin tops up"},
     },
 )
 async def api_generate_image(
@@ -143,10 +158,25 @@ async def api_generate_image(
     try:
         image_bytes = await generate_image(body.prompt, input_images=input_images or None)
     except AINotConfiguredError as e:
-        refund_ai_credit(org.id, IMAGE_CREDIT_COST)
+        _refund_image_credit(org.id)
         raise HTTPException(status_code=403, detail=str(e))
+    except AIQuotaExhaustedError:
+        _refund_image_credit(org.id)
+        # 429, not 502: the provider is reachable, its quota is spent. A 5xx
+        # tells the client "upstream is broken, retry" — which burns more
+        # nothing — and is captured as an error event by the Sentry Starlette
+        # integration. The truthful answer is "an admin must top the account up".
+        logger.warning("Image generation refused: AI provider quota exhausted")
+        raise HTTPException(
+            status_code=429,
+            detail=(
+                "AI image generation is temporarily unavailable: the AI provider "
+                "quota is exhausted. Please contact your administrator."
+            ),
+            headers={"Retry-After": "3600"},
+        )
     except Exception:
-        refund_ai_credit(org.id, IMAGE_CREDIT_COST)
+        _refund_image_credit(org.id)
         # Do not log the traceback: the chained SDK error can embed the API key.
         # generate_image already logs the sanitized exception type.
         logger.error("Image generation failed")
@@ -167,7 +197,7 @@ async def api_generate_image(
             allowed_formats=[OUTPUT_EXT],
         )
     except Exception:
-        refund_ai_credit(org.id, IMAGE_CREDIT_COST)
+        _refund_image_credit(org.id)
         logger.exception("Failed to store generated image")
         raise HTTPException(status_code=500, detail="Failed to store generated image")
 

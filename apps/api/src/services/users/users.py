@@ -18,6 +18,10 @@ from src.services.users.usergroups import add_users_to_usergroup
 from src.services.users.emails import (
     send_account_creation_email,
 )
+from src.services.email.utils import (
+    log_swallowed_email_failure,
+    send_email_in_threadpool,
+)
 from src.services.orgs.invites import get_invite_code
 from src.services.users.avatars import upload_avatar
 from src.db.roles import Role, RoleRead
@@ -324,7 +328,8 @@ async def create_user(
         from src.services.email.utils import get_org_logo_url
         org_stmt = select(Organization).where(Organization.id == org_id)
         org = (await db_session.execute(org_stmt)).scalars().first()
-        send_account_creation_email(
+        await send_email_in_threadpool(
+            send_account_creation_email,
             user=user_read,
             email=user_read.email,
             lang=get_org_default_language(org_config),
@@ -336,7 +341,29 @@ async def create_user(
     elif get_deployment_mode() == 'saas':
         # Import here to avoid circular imports
         from src.services.users.email_verification import send_verification_email
-        await send_verification_email(request, db_session, user, org_id)
+        # The account and its org link are committed above. Mail that cannot be
+        # delivered (provider quota exhausted, recipient domain rejected,
+        # provider timeout) must not turn a signup that SUCCEEDED into a 503 —
+        # the caller then retries and gets "Email or username is already in
+        # use", which reads as the account not existing. Recovery already
+        # exists: POST /api/v1/auth/resend-verification.
+        #
+        # The swallow is wider than the provider, though: send_verification_email
+        # also talks to Redis and to the org tables. log_swallowed_email_failure
+        # keeps a delivery failure quiet (send_email already reported it) and
+        # sends every other cause to Sentry at ERROR, so a Redis outage that
+        # leaves every signup unverifiable still pages.
+        try:
+            await send_verification_email(request, db_session, user, org_id)
+        except Exception as e:
+            log_swallowed_email_failure(
+                logging.getLogger(__name__),
+                e,
+                "Verification email not sent for user %s (org %s): %s",
+                user.id,
+                org_id,
+                e,
+            )
 
     return user_read
 
@@ -509,14 +536,27 @@ async def create_user_without_org(
     # OAuth users get welcome email (already verified)
     # Non-OAuth SaaS users get verification email (no org needed)
     if is_oauth or get_deployment_mode() != 'saas':
-        send_account_creation_email(
+        await send_email_in_threadpool(
+            send_account_creation_email,
             user=user_read,
             email=user_read.email,
             cta_url=await _get_welcome_cta_url(request, db_session, org_id=None),
         )
     else:
         from src.services.users.email_verification import send_verification_email
-        await send_verification_email(request, db_session, user, org_id=None)
+        # Same reasoning as create_user: the User row is committed above, so a
+        # mail failure must not 503 a signup that already happened — and the
+        # same level split, so a non-delivery cause (Redis, template) pages.
+        try:
+            await send_verification_email(request, db_session, user, org_id=None)
+        except Exception as e:
+            log_swallowed_email_failure(
+                logging.getLogger(__name__),
+                e,
+                "Verification email not sent for user %s (platform signup): %s",
+                user.id,
+                e,
+            )
 
     return user_read
 
@@ -983,7 +1023,11 @@ async def delete_user_by_id(
     if deleted_email:
         try:
             from src.services.users.emails import send_account_deleted_email
-            send_account_deleted_email(deleted_email, deleted_username or "")
+            await send_email_in_threadpool(
+                send_account_deleted_email,
+                email=deleted_email,
+                username=deleted_username or "",
+            )
         except Exception:
             logging.exception("send_account_deleted_email failed")
 

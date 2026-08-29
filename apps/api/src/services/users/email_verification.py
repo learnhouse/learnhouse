@@ -6,6 +6,7 @@ Supports both org-based and org-less (platform) signups.
 """
 from datetime import datetime, timezone
 import json
+import logging
 import os
 import secrets
 import redis
@@ -22,9 +23,13 @@ from src.services.users.emails import send_email_verification_email
 from src.services.email.utils import (
     get_base_url_from_request,
     get_trusted_base_url_from_request,
+    log_swallowed_email_failure,
+    send_email_in_threadpool,
 )
 from src.services.security.rate_limiting import check_verification_resend_rate_limit
 from src.services.webhooks.dispatch import dispatch_webhooks
+
+logger = logging.getLogger(__name__)
 
 
 # Token expiration time in seconds (1 hour)
@@ -92,6 +97,20 @@ async def send_verification_email(
         org = (await db_session.execute(statement)).scalars().first()
 
         if not org:
+            # Logged here, at ERROR, on purpose. Callers swallow this call and
+            # classify the failure by status code, and 400 is in
+            # EMAIL_DELIVERY_STATUS_CODES because `send_email` uses 400 for an
+            # invalid recipient — a cause that has already reported itself and
+            # is deliberately kept at warning. This 400 is a different animal:
+            # the signup just linked the user to org_id, so a missing row means
+            # the org vanished mid-request or the id is bogus, and nothing else
+            # will ever report it. Splitting on `detail` text at the swallow
+            # site would be the fragile version of this.
+            logger.error(
+                "Verification email skipped: organization %s not found for user %s",
+                org_id,
+                getattr(user, "id", None),
+            )
             raise HTTPException(
                 status_code=400,
                 detail="Organization not found",
@@ -158,8 +177,11 @@ async def send_verification_email(
     else:
         base_url = get_base_url_from_request(request)
 
-    # Send verification email
-    email_sent = send_email_verification_email(
+    # Send verification email. The provider client is synchronous, so it goes to
+    # a worker thread — awaiting it inline parks the event loop for the whole
+    # provider read timeout, and prod runs a single uvicorn worker.
+    email_sent = await send_email_in_threadpool(
+        send_email_verification_email,
         token=token,
         user=user_read,
         organization=org_read,
@@ -313,7 +335,24 @@ async def resend_verification_email(
     user = (await db_session.execute(statement)).scalars().first()
 
     if user and not user.email_verified:
-        await send_verification_email(request, db_session, user, org_id)
+        # This is the recovery path signup leans on when its own send fails, so
+        # it has to survive the outage it exists to recover from. Letting the
+        # failure escape also breaks the generic-response contract above: a 422
+        # "recipient rejected by the email provider" is deterministic and
+        # per-address, and only reachable when the account exists AND is
+        # unverified — an enumeration oracle. The level split still pages for
+        # any cause that is not the provider (Redis, org lookup, template).
+        try:
+            await send_verification_email(request, db_session, user, org_id)
+        except Exception as e:
+            log_swallowed_email_failure(
+                logger,
+                e,
+                "Verification email resend failed for user %s (org %s): %s",
+                user.id,
+                org_id,
+                e,
+            )
 
     return GENERIC_RESPONSE
 

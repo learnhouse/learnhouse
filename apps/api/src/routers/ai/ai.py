@@ -16,6 +16,7 @@ from src.services.ai.editor import (
     editor_ai_send_message_stream,
 )
 from src.services.ai.base import ask_ai_stream, save_message_to_history, generate_follow_up_suggestions
+from src.services.ai.llm import AI_QUOTA_USER_MESSAGE, AIQuotaExhaustedError
 from src.services.ai.schemas.ai import (
     ActivityAIChatSessionResponse,
     SendActivityAIChatMessage,
@@ -138,6 +139,12 @@ async def activity_chat_event_generator(
         # (full_response empty), so a disconnect *after* a full response can't
         # be abused to get free AI. Re-raise so Starlette observes the cancel.
         raise
+    except AIQuotaExhaustedError:
+        stream_failed = True
+        # A billing state an admin can fix, not a server fault: WARNING keeps it
+        # out of Sentry, and the typed code lets the UI say something useful.
+        logger.warning("Activity chat unavailable: AI provider quota exhausted")
+        yield f"data: {json.dumps({'type': 'error', 'code': 'ai_quota_exhausted', 'message': AI_QUOTA_USER_MESSAGE})}\n\n"
     except Exception:
         stream_failed = True
         logger.exception("Error in activity_chat_event_generator")
@@ -413,6 +420,10 @@ async def editor_chat_event_generator(
         # empty), so a disconnect *after* a full response can't be abused to
         # get free AI. Re-raise so Starlette observes the cancel.
         raise
+    except AIQuotaExhaustedError:
+        stream_failed = True
+        logger.warning("Editor chat unavailable: AI provider quota exhausted")
+        yield f"data: {json.dumps({'type': 'error', 'code': 'ai_quota_exhausted', 'message': AI_QUOTA_USER_MESSAGE})}\n\n"
     except Exception:
         stream_failed = True
         logger.exception("Error in editor_chat_event_generator")

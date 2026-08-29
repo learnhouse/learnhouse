@@ -89,12 +89,42 @@ export async function getBillingPortalSession(orgId: number, return_url: string,
   return getResponseMetadata(result);
 }
 
+/**
+ * The signed-in user's paid enrollments.
+ *
+ * A 403/404 here is the normal answer for an org with payments disabled or a
+ * user with nothing to show — not a failure. Throwing on it meant every visit
+ * to /account/purchases and /account/my-courses in such an org raised an
+ * unhandled Server Action error ("Forbidden", the bare HTTP reason phrase) that
+ * Next reported through instrumentation before react-query ever saw it. Any
+ * remaining error carries the API's `detail` rather than `statusText`, which
+ * says nothing to the user and nothing to whoever reads it in Sentry.
+ */
 export async function getUserEnrollments(orgId: number, access_token: string) {
   const result = await secureFetch(
     `${getAPIUrl()}payments/${encodeURIComponent(String(orgId))}/enrollments/mine`,
     RequestBodyWithAuthHeader('GET', null, null, access_token)
   );
   const metadata = await getResponseMetadata(result);
-  if (!metadata.success) throw new Error(metadata.HTTPmessage || 'Failed to fetch enrollments')
+  if (metadata.status === 403 || metadata.status === 404) {
+    // "Payments aren't enabled for this org" / "nothing entitled" — an expected
+    // empty result, not an exception. Leave a trace anyway: absorbed purely on
+    // status, this branch is indistinguishable from a genuine entitlement
+    // regression that starts 403ing every lookup, which would otherwise show
+    // every paying user an empty purchases page with nothing anywhere to say so.
+    console.warn(
+      `[payments] enrollments/mine returned ${metadata.status} for org ${orgId}; treating as no purchases.`,
+      metadata.data?.detail ?? null
+    );
+    return { ...metadata, success: true, data: [] };
+  }
+  if (!metadata.success) {
+    const detail = metadata.data?.detail;
+    throw new Error(
+      typeof detail === 'string'
+        ? detail
+        : `Could not load your purchases (HTTP ${metadata.status})`
+    );
+  }
   return metadata;
 }

@@ -3,6 +3,7 @@ import { Metadata } from 'next'
 import { getServerSession } from '@/lib/auth/server'
 import { getOrgThumbnailMediaDirectory } from '@services/media/media'
 import AccountClient from '@components/Objects/Account/AccountClient'
+import { ssrMetadataFetch } from '@services/utils/ts/ssrMetadata'
 import { redirect } from 'next/navigation'
 
 type MetadataProps = {
@@ -24,13 +25,22 @@ const getSubpageTitle = (subpage: string): string => {
 
 export async function generateMetadata(props: MetadataProps): Promise<Metadata> {
   const params = await props.params
-  const org = await getOrganizationContextInfo(params.orgslug, {
-    revalidate: 120,
-    tags: ['organizations'],
-  })
+  // Same guard as the org home page: a 503 on the org endpoint must not 500
+  // this route from generateMetadata. robots stays a hard noindex either way —
+  // account pages are never indexable, so there is nothing here for a transient
+  // failure to de-index.
+  const { data: org } = await ssrMetadataFetch(
+    '/orgs/[orgslug]/account/[subpage]',
+    'getOrganizationContextInfo',
+    getOrganizationContextInfo(params.orgslug, {
+      revalidate: 120,
+      tags: ['organizations'],
+    })
+  )
 
-  const title = `${getSubpageTitle(params.subpage)} — ${org.name}`
-  const description = `Manage your account settings at ${org.name}`
+  const orgName = org?.name || 'LearnHouse'
+  const title = `${getSubpageTitle(params.subpage)} — ${orgName}`
+  const description = `Manage your account settings at ${orgName}`
 
   return {
     title,
@@ -48,7 +58,7 @@ export async function generateMetadata(props: MetadataProps): Promise<Metadata> 
           url: getOrgThumbnailMediaDirectory(org?.org_uuid, org?.thumbnail_image),
           width: 800,
           height: 600,
-          alt: org.name,
+          alt: orgName,
         },
       ],
     },

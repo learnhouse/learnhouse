@@ -29,7 +29,11 @@ function PDFBlockComponent(props: any) {
   const [error, setError] = React.useState<string | null>(null)
   const [progress, setProgress] = React.useState(0)
   const fileInputRef = React.useRef<HTMLInputElement>(null)
-  const fileId = blockObject
+  // Guard `content`, not just `blockObject`: a block can be persisted with a
+  // truthy-but-contentless object (a malformed AI-generated node, an upload
+  // whose response could not be parsed) and dereferencing `content.file_id`
+  // takes the whole editor down instead of showing the upload placeholder.
+  const fileId = blockObject?.content?.file_id
     ? `${blockObject.content.file_id}.${blockObject.content.file_format}`
     : null
   const editorState = useEditorProvider() as any
@@ -76,16 +80,16 @@ function PDFBlockComponent(props: any) {
 
     const pdfUrl = getActivityBlockMediaDirectory(
       org?.org_uuid,
-      course?.courseStructure.course_uuid,
-      blockObject.content.activity_uuid || props.extension.options.activity.activity_uuid,
-      blockObject.block_uuid,
+      course?.courseStructure?.course_uuid,
+      blockObject?.content?.activity_uuid || props.extension.options.activity.activity_uuid,
+      blockObject?.block_uuid,
       fileId,
       'pdfBlock'
     );
 
     const link = document.createElement('a');
     link.href = pdfUrl || '';
-    link.download = `document-${blockObject?.block_uuid || 'download'}.${blockObject?.content.file_format || 'pdf'}`;
+    link.download = `document-${blockObject?.block_uuid || 'download'}.${blockObject?.content?.file_format || 'pdf'}`;
     link.setAttribute('download', '');
     link.setAttribute('target', '_blank');
     link.setAttribute('rel', 'noopener noreferrer');
@@ -98,19 +102,25 @@ function PDFBlockComponent(props: any) {
     setIsModalOpen(true);
   };
 
-  const pdfUrl = blockObject ? getActivityBlockMediaDirectory(
+  // Keyed on fileId, the same predicate as the upload zone. Keying on `content`
+  // alone let a half-formed block (`content: {}`) build a directory URL ending
+  // in '/', which rendered a broken <iframe> instead of the "no PDF" branch.
+  const pdfUrl = fileId ? getActivityBlockMediaDirectory(
     org?.org_uuid,
-    course?.courseStructure.course_uuid,
-    blockObject.content.activity_uuid || props.extension.options.activity.activity_uuid,
-    blockObject.block_uuid,
-    fileId || '',
+    course?.courseStructure?.course_uuid,
+    blockObject?.content?.activity_uuid || props.extension.options.activity.activity_uuid,
+    blockObject?.block_uuid,
+    fileId,
     'pdfBlock'
   ) : null;
 
   useEffect(() => { }, [course, org])
 
-  // View mode without PDF
-  if (!isEditable && !blockObject) {
+  // View mode without PDF. Keyed on pdfUrl (i.e. on fileId), not on
+  // blockObject: a block whose object lost its `content`, or kept a `content`
+  // with no file_id, has no file to show and must land here rather than fall
+  // through to the editor UI or render a broken iframe.
+  if (!isEditable && !pdfUrl) {
     return (
       <NodeViewWrapper className="block-pdf">
         <div className="bg-neutral-50 rounded-xl px-5 py-4 nice-shadow">
@@ -186,8 +196,8 @@ function PDFBlockComponent(props: any) {
             </span>
           </div>
 
-          {/* Upload Zone - shown when no PDF */}
-          {!blockObject && (
+          {/* Upload Zone - shown when no usable PDF (see the note above). */}
+          {!fileId && (
             <form onSubmit={handleSubmit}>
               <div
                 onClick={() => fileInputRef.current?.click()}

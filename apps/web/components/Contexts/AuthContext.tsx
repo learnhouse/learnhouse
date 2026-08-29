@@ -992,7 +992,21 @@ export function SessionProvider({
 
           const { url: googleAuthUrl } = await authResponse.json()
           const safeGoogleUrl = safeExternalUrl(googleAuthUrl)
-          if (safeGoogleUrl) window.location.href = safeGoogleUrl
+          // A rejected URL navigates nowhere. Returning a bare `undefined` here
+          // is indistinguishable from the success path (which also returns
+          // undefined, after assigning window.location.href), so every caller
+          // read it as "we're redirecting" and left its button disabled with no
+          // error. Say so explicitly instead.
+          if (!safeGoogleUrl) {
+            console.error('Google OAuth returned an unusable authorize URL:', googleAuthUrl)
+            return {
+              ok: false,
+              error: 'Google sign-in is unavailable right now',
+              url: null,
+              status: 502,
+            }
+          }
+          window.location.href = safeGoogleUrl
           return
         }
 
@@ -1248,7 +1262,18 @@ export async function signIn(
 
     const { url: googleAuthUrl } = await authResponse.json()
     const safeGoogleUrl = safeExternalUrl(googleAuthUrl)
-    if (safeGoogleUrl) window.location.href = safeGoogleUrl
+    // Same as the context signIn above: a rejected URL must not resolve like a
+    // successful redirect, or the caller disables its button forever.
+    if (!safeGoogleUrl) {
+      console.error('Google OAuth returned an unusable authorize URL:', googleAuthUrl)
+      return {
+        ok: false,
+        error: 'Google sign-in is unavailable right now',
+        url: null,
+        status: 502,
+      }
+    }
+    window.location.href = safeGoogleUrl
     return
   }
 

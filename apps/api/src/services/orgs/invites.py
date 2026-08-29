@@ -23,6 +23,7 @@ from src.services.orgs.orgs import (
     rbac_check,
     resolve_org_sender_name,
 )
+from src.services.email.utils import send_email_in_threadpool
 from src.services.users.emails import send_invitation_email
 
 logger = logging.getLogger(__name__)
@@ -422,7 +423,12 @@ async def send_invite_email(
         # write-time validation (e.g. imported via OAuth).
         from src.services.security.profile_validation import sanitize_display_name
 
-        result = send_invitation_email(
+        # Off the event loop: the resend/smtp clients underneath are
+        # synchronous, and a batch invite calls this once per address. Inline,
+        # one stalled provider response froze the single uvicorn worker for the
+        # whole timeout-plus-retry window and every other request with it.
+        result = await send_email_in_threadpool(
+            send_invitation_email,
             email=email,
             org_name=sanitize_display_name(org.name, fallback="A LearnHouse organization"),
             inviter_username=sanitize_display_name(user.username),

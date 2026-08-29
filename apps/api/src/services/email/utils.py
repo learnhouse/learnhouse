@@ -11,6 +11,7 @@ from urllib.parse import urlparse
 
 from pydantic import EmailStr
 from fastapi import Request
+from starlette.concurrency import run_in_threadpool
 import resend
 from config.config import get_learnhouse_config
 from src.services.email.sender import DEFAULT_SENDER_NAME, format_sender
@@ -378,6 +379,7 @@ def send_email(
     body: str,
     headers: Optional[dict[str, str]] = None,
     sender_name: Optional[str] = None,
+    critical: bool = True,
 ):
     """Send one HTML email.
 
@@ -395,6 +397,15 @@ def send_email(
     sending reputation shared across tenants. The name is admin-supplied text
     landing in an RFC 5322 header, so it is sanitized in ``format_sender``
     before it gets anywhere near one.
+
+    ``critical`` says whether a human is waiting on this message. Mail nobody
+    is waiting on (welcome/lifecycle notifications, sent after the action they
+    describe was already committed) passes ``critical=False`` and logs delivery
+    failures at warning level. Sentry's LoggingIntegration captures at
+    ``logging.ERROR``, so a provider quota outage used to raise one Sentry event
+    per welcome email — 267 in a single day — for mail whose loss nobody
+    noticed. Mail the user IS waiting on (password reset, invitation, address
+    verification) keeps ``critical=True`` and keeps paging.
     """
     from fastapi import HTTPException
 
@@ -432,9 +443,29 @@ def send_email(
         return None
 
     if mailing.email_provider == "smtp":
-        return _send_email_smtp(sender, to_addr, subject, body, mailing, headers)
+        return _send_email_smtp(
+            sender, to_addr, subject, body, mailing, headers, critical=critical
+        )
     else:
-        return _send_email_resend(sender, to_addr, subject, body, mailing, headers)
+        return _send_email_resend(
+            sender, to_addr, subject, body, mailing, headers, critical=critical
+        )
+
+
+async def send_email_in_threadpool(send, /, **kwargs):
+    """Await a blocking mail helper on a worker thread.
+
+    Every provider client below is synchronous: ``resend`` is ``requests``, and
+    ``smtplib`` blocks on a socket. Awaiting them straight from an ``async def``
+    endpoint parks the whole event loop on one HTTP call, and prod runs a single
+    uvicorn worker — one slow provider response froze every concurrent request
+    on the pod for the read timeout, then again for the retry. Async callers
+    pass the sync helper they would have called (``send_email`` itself, or one
+    of the templated senders in ``services/users/emails.py``) plus its keyword
+    arguments, and the blocking work — render, HTTP, retry sleep — happens off
+    the loop.
+    """
+    return await run_in_threadpool(lambda: send(**kwargs))
 
 
 # Transient provider hiccups (read timeouts, connection resets, 5xx) usually
@@ -442,6 +473,24 @@ def send_email(
 # delivered email instead of a 503 on a password-reset request.
 _RESEND_RETRIES = 1
 _RESEND_RETRY_DELAY_SECONDS = 1.0
+
+# resend's shipped HTTP client waits 30s for a read, so one stalled send cost
+# 30s — 61s once the retry above is counted — of a request the user is watching.
+# A transactional send that has not answered in 10s is not going to, and this
+# caps the worst case at ~21s across both attempts.
+_RESEND_TIMEOUT_SECONDS = 10
+
+
+def _pin_resend_timeout() -> None:
+    """Replace resend's shared HTTP client with one that gives up sooner."""
+    requests_client = getattr(resend, "RequestsClient", None)
+    if requests_client is None:  # SDK without a pluggable HTTP client
+        logger.debug("resend SDK exposes no RequestsClient; keeping its default timeout")
+        return
+    resend.default_http_client = requests_client(timeout=_RESEND_TIMEOUT_SECONDS)
+
+
+_pin_resend_timeout()
 
 
 def _is_transient_email_error(exc: BaseException) -> bool:
@@ -467,11 +516,55 @@ def _is_recipient_rejected(exc: BaseException) -> bool:
     (application_error). Classifying on the bare 4xx status would sweep all of
     those into silence, so we require positive evidence: a validation error that
     names the `to` field.
+
+    The field name has to be matched at a word boundary. A bare ``"to field" in
+    message`` also matches "reply_to field", and nudge mail sets a Reply-To
+    header from the org's configured contact address — so a misconfigured
+    contact address would be misread as a recipient rejection and go out at
+    warning level (invisible to Sentry) as a permanent 422.
     """
     if str(getattr(exc, "error_type", "")).lower() != "validation_error":
         return False
     message = str(exc).lower()
-    return "`to`" in message or "to field" in message
+    return re.search(r"(?<![\w`])`?to`? field|`to`", message) is not None
+
+
+# Every status ``send_email`` raises for a delivery failure it has ALREADY
+# reported itself: 400 (invalid recipient, logged at error unconditionally),
+# 422 (recipient rejected, logged at warning on purpose) and 503 (provider
+# down/quota/TLS, logged at error when critical=True). Anything else that
+# reaches a caller's swallow came from BEFORE the provider call — a dead Redis,
+# a missing org row, a template regression — and nothing has logged it.
+EMAIL_DELIVERY_STATUS_CODES = frozenset({400, 422, 503})
+
+
+def log_swallowed_email_failure(logger, exc: BaseException, msg: str, *args) -> None:
+    """Log a swallowed email failure at a level that matches its cause.
+
+    Swallowing is right where the action the mail describes has already been
+    committed — a dead provider must not turn a signup that succeeded into a
+    503. Swallowing every cause at *warning* is not: Sentry's LoggingIntegration
+    captures at ``logging.ERROR`` (apps/api/app.py), so warnings never leave the
+    pod. A Redis outage inside ``send_verification_email`` would then make every
+    SaaS signup silently unverifiable with nobody paged — worse than the bug the
+    swallow was added to fix.
+
+    So the level is split by cause: a provider-delivery failure stays at warning
+    because ``send_email`` already emitted its own event, and everything else
+    goes through ``logger.exception`` so it reaches Sentry at ERROR with a
+    traceback.
+
+    Must be called from inside an ``except`` block — ``logger.exception``
+    attaches the exception currently being handled.
+    """
+    from fastapi import HTTPException
+
+    # stacklevel=2 so the record points at the swallowing call site rather than
+    # at this helper — otherwise every one of them reads as utils.py.
+    if isinstance(exc, HTTPException) and exc.status_code in EMAIL_DELIVERY_STATUS_CODES:
+        logger.warning(msg, *args, stacklevel=2)
+        return
+    logger.exception(msg, *args, stacklevel=2)
 
 
 def _send_email_resend(
@@ -481,6 +574,7 @@ def _send_email_resend(
     body: str,
     mailing,
     headers: Optional[dict[str, str]] = None,
+    critical: bool = True,
 ):
     from fastapi import HTTPException
     resend.api_key = mailing.resend_api_key
@@ -501,9 +595,17 @@ def _send_email_resend(
                 time.sleep(_RESEND_RETRY_DELAY_SECONDS)
                 continue
             if _is_recipient_rejected(e):
+                # Permanent, and a property of that one address: the send can
+                # never succeed, so it must not come back as a 503 the caller
+                # (or a proxy, or an impatient admin) will retry forever.
                 logger.warning("Resend rejected the recipient address %s: %s", to, e)
-            else:
-                logger.error("Resend email failed to %s: %s", to, e, exc_info=True)
+                raise HTTPException(
+                    status_code=422,
+                    detail="The recipient email address was rejected by the email provider",
+                )
+            (logger.error if critical else logger.warning)(
+                "Resend email failed to %s: %s", to, e, exc_info=critical
+            )
             raise HTTPException(status_code=503, detail="Email service temporarily unavailable")
 
 
@@ -545,8 +647,13 @@ def _send_email_smtp(
     body: str,
     mailing,
     headers: Optional[dict[str, str]] = None,
+    critical: bool = True,
 ):
     from fastapi import HTTPException
+    # Same rule as the Resend path: a delivery failure only pages when someone
+    # is waiting on the message. The misconfiguration branch below is exempt —
+    # cleartext credentials are a deployment fault, not a delivery one.
+    log_failure = logger.error if critical else logger.warning
     msg = MIMEMultipart("alternative")
     msg["From"] = sender
     msg["To"] = to
@@ -592,24 +699,24 @@ def _send_email_smtp(
         server.sendmail(mailing.system_email_address, to, msg.as_string())
         return {"id": None, "to": to}
     except smtplib.SMTPException as e:
-        logger.error("SMTP error sending to %s: %s", to, e, exc_info=True)
+        log_failure("SMTP error sending to %s: %s", to, e, exc_info=critical)
         raise HTTPException(status_code=503, detail="Email service error")
     except ssl.SSLError as e:
         # SSLError subclasses OSError, so this must stay above the OSError arm.
-        logger.error(
+        log_failure(
             "SMTP TLS verification failed for %s:%s: %s. The relay's certificate "
             "is not trusted or does not match its hostname — fix the relay's "
             "certificate or point smtp_host at the name the certificate covers.",
             mailing.smtp_host,
             mailing.smtp_port,
             e,
-            exc_info=True,
+            exc_info=critical,
         )
         raise HTTPException(
             status_code=503, detail="Email service TLS verification failed"
         )
     except OSError as e:
-        logger.error("SMTP connection error to %s:%s: %s", mailing.smtp_host, mailing.smtp_port, e, exc_info=True)
+        log_failure("SMTP connection error to %s:%s: %s", mailing.smtp_host, mailing.smtp_port, e, exc_info=critical)
         raise HTTPException(status_code=503, detail="Email service unavailable")
     finally:
         if server is not None:

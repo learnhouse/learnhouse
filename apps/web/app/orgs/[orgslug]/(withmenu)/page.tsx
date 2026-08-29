@@ -3,6 +3,7 @@ import { getOrganizationContextInfo } from '@services/organizations/orgs'
 import { getOrgThumbnailMediaDirectory, getOrgOgImageMediaDirectory } from '@services/media/media'
 import { getOrgSeoConfig, buildPageTitle } from '@/lib/seo/utils'
 import { getServerCanonicalUrl } from '@/lib/seo/utils.server'
+import { fallbackRobots, ssrMetadataFetch } from '@services/utils/ts/ssrMetadata'
 import HomeClient from './home-client'
 
 type MetadataProps = {
@@ -12,11 +13,31 @@ type MetadataProps = {
 
 export async function generateMetadata(props: MetadataProps): Promise<Metadata> {
   const params = await props.params;
-  // Get Org context information
-  const org = await getOrganizationContextInfo(params.orgslug, {
-    revalidate: 120,
-    tags: ['organizations'],
-  })
+  // Get Org context information.
+  //
+  // LEARNHOUSE-WEB-5P was exactly this call, unguarded: the API answered 503
+  // for ten minutes and every request to /orgs/[orgslug] 500'd inside
+  // generateMetadata on `org.name`. A metadata fetch must never be able to take
+  // the route down — see services/utils/ts/ssrMetadata.ts for why the two
+  // failure classes get different robots treatment.
+  const { data: org, error: orgError } = await ssrMetadataFetch(
+    '/orgs/[orgslug]',
+    'getOrganizationContextInfo',
+    getOrganizationContextInfo(params.orgslug, {
+      revalidate: 120,
+      tags: ['organizations'],
+    })
+  )
+
+  if (!org) {
+    return {
+      title: 'LearnHouse',
+      description: '',
+      // noindex for a 404/403 org; no robots directive at all when the API just
+      // fell over, so a blip cannot de-index a live org's home page.
+      ...fallbackRobots(orgError),
+    }
+  }
 
   const seoConfig = getOrgSeoConfig(org)
   const ogImageUrl = seoConfig.default_og_image

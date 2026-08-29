@@ -9,7 +9,7 @@ import Modal from '@components/Objects/StyledElements/Modal/Modal'
 import FeatureGate from '@components/Dashboard/Shared/FeatureGate/FeatureGate'
 import { getAPIUrl } from '@services/config/config'
 import { searchMatchesAny } from '@/lib/search/normalize'
-import { deleteUserGroup } from '@services/usergroups/usergroups'
+import { deleteUserGroup, getUserGroups } from '@services/usergroups/usergroups'
 import { apiFetch, asArray } from '@services/utils/ts/requests'
 import { Pencil, SquareUserRound, Users, X, Search, Calendar } from 'lucide-react'
 import React, { useState, useMemo } from 'react'
@@ -33,7 +33,10 @@ function OrgUserGroups() {
 
     const { data: usergroups, isLoading: isUsergroupsLoading } = useQuery({
         queryKey: queryKeys.usergroups.list(org?.id),
-        queryFn: () => apiFetch(`${getAPIUrl()}usergroups/org/${org.id}?org_id=${org.id}`, access_token),
+        // One queryFn per key: the ['usergroups', orgId] entry is shared with
+        // OrgUsers and half a dozen modals, so every observer goes through the
+        // same service. `select` stays as a cheap render-side guarantee.
+        queryFn: () => getUserGroups(org.id, access_token),
         select: (res: any) => asArray<any>(res),
         enabled: !!org?.id && !!access_token,
         staleTime: 60_000,

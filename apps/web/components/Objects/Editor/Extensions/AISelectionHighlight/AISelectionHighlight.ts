@@ -1,6 +1,7 @@
 import { Extension } from '@tiptap/core'
 import { Plugin, PluginKey } from '@tiptap/pm/state'
 import { Decoration, DecorationSet } from '@tiptap/pm/view'
+import { clampRange } from './range'
 
 export interface AISelectionHighlightOptions {
   className: string
@@ -67,19 +68,16 @@ const AISelectionHighlight = Extension.create<AISelectionHighlightOptions, AISel
               // Store in extension storage
               storage.highlightRange = range
 
-              if (range && range.from < range.to) {
-                // Validate range is within document bounds
-                const docSize = newState.doc.content.size
-                const from = Math.max(0, Math.min(range.from, docSize))
-                const to = Math.max(0, Math.min(range.to, docSize))
+              // Shared with the AI side panel — see ./range.ts for why a stored
+              // range must never be trusted against the current document.
+              const clamped = clampRange(newState.doc.content.size, range)
 
-                if (from < to) {
-                  // Create decoration for the selection range
-                  const decoration = Decoration.inline(from, to, {
-                    class: options.className,
-                  })
-                  return DecorationSet.create(newState.doc, [decoration])
-                }
+              if (clamped) {
+                // Create decoration for the selection range
+                const decoration = Decoration.inline(clamped.from, clamped.to, {
+                  class: options.className,
+                })
+                return DecorationSet.create(newState.doc, [decoration])
               }
 
               // Clear decorations if range is null or invalid

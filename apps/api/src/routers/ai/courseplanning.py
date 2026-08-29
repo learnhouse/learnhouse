@@ -1,6 +1,8 @@
+import asyncio
 import json
 import logging
 from datetime import datetime
+from typing import Optional
 from uuid import uuid4
 
 from fastapi import APIRouter, Depends, HTTPException, Request
@@ -21,9 +23,15 @@ from src.security.auth import get_current_user, resolve_acting_user_id
 from src.security.org_auth import is_org_member, enforce_org_mfa
 from src.security.rbac import check_resource_access, AccessAction
 from src.security.features_utils.usage import (
+    refund_ai_credit,
     reserve_ai_credit,
 )
-from src.services.ai.llm import resolve_model_for_org, model_for_tier
+from src.services.ai.llm import (
+    AI_QUOTA_USER_MESSAGE,
+    AIQuotaExhaustedError,
+    resolve_model_for_org,
+    model_for_tier,
+)
 from src.services.ai.courseplanning import (
     get_course_planning_session,
     create_course_planning_session,
@@ -50,31 +58,105 @@ logger = logging.getLogger(__name__)
 router = APIRouter()
 
 
-async def event_generator(generator, session_uuid: str):
+# A typed SSE error the UI can explain, as opposed to the generic "something
+# broke" frame: the provider is reachable, its quota is spent, and only an admin
+# topping the AI account up will fix it.
+AI_QUOTA_ERROR_FRAME = {
+    "type": "error",
+    "code": "ai_quota_exhausted",
+    "message": AI_QUOTA_USER_MESSAGE,
+}
+
+
+def _refund_unproductive_stream(
+    org_id: Optional[int], credit_cost: int, produced_output: bool, stream_failed: bool
+) -> None:
+    """Refund the pre-stream reservation when the stream yielded nothing.
+
+    Credits are reserved before the StreamingResponse is returned, so without
+    this a provider outage bills the org for zero output. One definition of the
+    rule for both generators below; same shape as ``editor_chat_event_generator``
+    in ``src/routers/ai/ai.py``. A client disconnect *after* real output is not
+    refundable, which is why ``produced_output`` — not just failure — decides.
+    """
+    if org_id is None or not (stream_failed or not produced_output):
+        return
+    try:
+        refund_ai_credit(org_id, credit_cost)
+    except Exception:
+        logger.debug("AI credit refund failed", exc_info=True)
+
+
+async def event_generator(
+    generator,
+    session_uuid: str,
+    org_id: Optional[int] = None,
+    credit_cost: int = 1,
+):
     """Convert async generator to SSE format"""
+    produced_output = False
+    stream_failed = False
     try:
         async for chunk in generator:
+            produced_output = True
             yield f"data: {json.dumps({'type': 'chunk', 'content': chunk})}\n\n"
         yield f"data: {json.dumps({'type': 'done', 'session_uuid': session_uuid})}\n\n"
+    except asyncio.CancelledError:
+        # Client disconnect: re-raise so Starlette observes the cancel. The
+        # finally block still refunds when nothing was produced.
+        raise
+    except AIQuotaExhaustedError:
+        stream_failed = True
+        # Known billing state, not an application fault — WARNING keeps it out
+        # of Sentry (LoggingIntegration promotes ERROR into an event).
+        logger.warning(
+            "Course planning unavailable for session %s: AI provider quota exhausted",
+            session_uuid,
+        )
+        yield f"data: {json.dumps(AI_QUOTA_ERROR_FRAME)}\n\n"
     except Exception:
+        stream_failed = True
         logger.exception("Error in event_generator for session %s", session_uuid)
         yield f"data: {json.dumps({'type': 'error', 'message': 'An internal error occurred while generating the stream.'})}\n\n"
+    finally:
+        _refund_unproductive_stream(org_id, credit_cost, produced_output, stream_failed)
 
 
-async def event_generator_with_save(generator, session_uuid: str, activity_uuid: str):
+async def event_generator_with_save(
+    generator,
+    session_uuid: str,
+    activity_uuid: str,
+    org_id: Optional[int] = None,
+    credit_cost: int = 1,
+):
     """Convert async generator to SSE format.
     Note: Content saving is handled by the dedicated /save-activity-content endpoint
     called from the frontend after parsing the stream."""
+    produced_output = False
+    stream_failed = False
     try:
         async for chunk in generator:
+            produced_output = True
             yield f"data: {json.dumps({'type': 'chunk', 'content': chunk})}\n\n"
 
         # Content is saved via the dedicated save endpoint called from frontend
         logger.info(f"[AI Content] Streaming complete for activity {activity_uuid}, content will be saved via explicit API call")
         yield f"data: {json.dumps({'type': 'done', 'session_uuid': session_uuid})}\n\n"
+    except asyncio.CancelledError:
+        raise
+    except AIQuotaExhaustedError:
+        stream_failed = True
+        logger.warning(
+            "Activity content generation unavailable for activity %s: AI provider quota exhausted",
+            activity_uuid,
+        )
+        yield f"data: {json.dumps(AI_QUOTA_ERROR_FRAME)}\n\n"
     except Exception:
+        stream_failed = True
         logger.exception("Error in event_generator_with_save for activity %s", activity_uuid)
         yield f"data: {json.dumps({'type': 'error', 'message': 'An internal error occurred while generating activity content.'})}\n\n"
+    finally:
+        _refund_unproductive_stream(org_id, credit_cost, produced_output, stream_failed)
 
 
 async def get_org_ai_model(org_id: int, db_session: AsyncSession) -> str:
@@ -171,7 +253,7 @@ async def start_course_planning_session(
     )
 
     return StreamingResponse(
-        event_generator(stream, session.session_uuid),
+        event_generator(stream, session.session_uuid, org_id=org.id, credit_cost=credit_cost),
         media_type="text/event-stream",
         headers={
             "Cache-Control": "no-cache",
@@ -253,7 +335,7 @@ async def iterate_course_planning_session(
     )
 
     return StreamingResponse(
-        event_generator(stream, session.session_uuid),
+        event_generator(stream, session.session_uuid, org_id=org.id, credit_cost=credit_cost),
         media_type="text/event-stream",
         headers={
             "Cache-Control": "no-cache",
@@ -555,7 +637,9 @@ async def generate_activity_content(
 
     # Use event_generator_with_save to automatically save content to database when streaming completes
     return StreamingResponse(
-        event_generator_with_save(stream, session.session_uuid, activity_uuid),
+        event_generator_with_save(
+            stream, session.session_uuid, activity_uuid, org_id=org.id, credit_cost=credit_cost
+        ),
         media_type="text/event-stream",
         headers={
             "Cache-Control": "no-cache",

@@ -492,6 +492,8 @@ class TestOrgUsersService:
             "src.services.orgs.users.send_role_changed_email",
             side_effect=Exception("smtp down"),
         ), patch(
+            "src.services.orgs.users.logger.exception"
+        ) as exception_mock, patch(
             "src.services.orgs.users.logger.warning"
         ) as warning_mock:
             result = await update_user_role(
@@ -501,7 +503,50 @@ class TestOrgUsersService:
         assert result == {"detail": "User role updated"}
         invalidate_cache.assert_called_once_with(regular_user.id)
         dispatch_mock.assert_awaited_once()
+        # A bare exception escaping the send is NOT a delivery failure —
+        # `send_role_changed_email` swallows those itself and returns False — so
+        # it is our bug, nothing else has logged it, and a warning would never
+        # reach Sentry (LoggingIntegration captures at logging.ERROR).
+        exception_mock.assert_called_once()
+        warning_mock.assert_not_called()
+
+    @pytest.mark.asyncio
+    async def test_update_user_role_delivery_failure_stays_at_warning(
+        self, mock_request, db, org, admin_user, regular_user
+    ):
+        """A provider failure has already reported itself; do not double-report.
+
+        `send_email` raises 503 for a dead provider and logs it on the way out,
+        so the swallow here must stay at warning or every quota outage pages
+        twice for the same fault.
+        """
+        role = await _make_role(db, org, id=12, name="Grader", role_uuid="role_grader")
+
+        with patch(
+            "src.services.orgs.users.rbac_check",
+            new_callable=AsyncMock,
+        ), patch(
+            "src.routers.users._invalidate_session_cache"
+        ), patch(
+            "src.services.orgs.users.dispatch_webhooks",
+            new_callable=AsyncMock,
+        ), patch(
+            "src.services.orgs.users.send_role_changed_email",
+            side_effect=HTTPException(
+                status_code=503, detail="Email service temporarily unavailable"
+            ),
+        ), patch(
+            "src.services.orgs.users.logger.exception"
+        ) as exception_mock, patch(
+            "src.services.orgs.users.logger.warning"
+        ) as warning_mock:
+            result = await update_user_role(
+                mock_request, org.id, regular_user.id, role.role_uuid, db, admin_user
+            )
+
+        assert result == {"detail": "User role updated"}
         warning_mock.assert_called_once()
+        exception_mock.assert_not_called()
 
     @pytest.mark.asyncio
     async def test_invite_batch_users_guard_paths_and_summary(

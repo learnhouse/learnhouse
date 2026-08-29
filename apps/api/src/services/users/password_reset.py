@@ -17,7 +17,10 @@ from src.services.users.emails import (
     send_password_reset_email,
     send_password_reset_email_platform,
 )
-from src.services.email.utils import get_base_url_from_request
+from src.services.email.utils import (
+    get_base_url_from_request,
+    send_email_in_threadpool,
+)
 from src.db.users import (
     AnonymousUser,
     PublicUser,
@@ -170,15 +173,34 @@ async def send_reset_password_code(
     base_url = await get_org_signup_base_url(
         org.slug, request, db_session=db_session, org_id=org.id
     )
-    isEmailSent = send_password_reset_email(
-        generated_reset_code=generated_reset_code,
-        user=user_read,
-        organization=org_read,
-        email=user_read.email,
-        base_url=base_url,
-        lang=get_org_default_language(org_config),
-        sender_name=resolve_org_sender_name(org_config),
-    )
+    # Offloaded to a worker thread: the provider client blocks, and this is an
+    # async endpoint on a single-worker uvicorn — an inline send freezes every
+    # other in-flight request for the provider's read timeout.
+    # The provider client raises on a read timeout or a transport error rather
+    # than returning falsy, so catch as well as check: an uncaught ResendError
+    # here escaped as a raw 500 with the provider's traceback instead of the
+    # handled response below.
+    try:
+        isEmailSent = await send_email_in_threadpool(
+            send_password_reset_email,
+            generated_reset_code=generated_reset_code,
+            user=user_read,
+            organization=org_read,
+            email=user_read.email,
+            base_url=base_url,
+            lang=get_org_default_language(org_config),
+            sender_name=resolve_org_sender_name(org_config),
+        )
+    except HTTPException:
+        # A 503 from the mail layer is the deliberate, user-facing answer for a
+        # provider outage on mail the user is actively waiting for. Let it
+        # through rather than flattening it into the generic 500 below.
+        raise
+    except Exception:
+        logging.exception(
+            f"Failed to send password reset email to user: {user.user_uuid}"
+        )
+        isEmailSent = False
 
     if not isEmailSent:
         logging.error(f"Failed to send password reset email to user: {user.user_uuid}")
@@ -354,12 +376,27 @@ async def send_reset_password_code_platform(
     user_read = UserRead.model_validate(user)
 
     base_url = get_base_url_from_request(request)
-    isEmailSent = send_password_reset_email_platform(
-        generated_reset_code=generated_reset_code,
-        user=user_read,
-        email=user_read.email,
-        base_url=base_url,
-    )
+    # Offloaded to a worker thread — see send_reset_password_code above.
+    # Same as the org-scoped path above: a raised provider error must land on
+    # the handled 500, not escape as the provider's own exception.
+    try:
+        isEmailSent = await send_email_in_threadpool(
+            send_password_reset_email_platform,
+            generated_reset_code=generated_reset_code,
+            user=user_read,
+            email=user_read.email,
+            base_url=base_url,
+        )
+    except HTTPException:
+        # A 503 from the mail layer is the deliberate, user-facing answer for a
+        # provider outage on mail the user is actively waiting for. Let it
+        # through rather than flattening it into the generic 500 below.
+        raise
+    except Exception:
+        logging.exception(
+            f"Failed to send password reset email to user: {user.user_uuid}"
+        )
+        isEmailSent = False
 
     if not isEmailSent:
         logging.error(f"Failed to send password reset email to user: {user.user_uuid}")

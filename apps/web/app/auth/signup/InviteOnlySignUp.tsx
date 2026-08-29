@@ -139,7 +139,13 @@ function InviteOnlySignUpComponent(props: InviteOnlySignUpProps) {
     return `${window.location.origin}/redirect_from_auth?next=${encodeURIComponent(dest)}`
   }
 
-  const handleGoogleSignIn = () => {
+  // Same shape as OpenSignup.tsx's handler, and it has to be: /signup renders
+  // THIS component for an invite-only org, so both are the culprit `/signup`
+  // that LEARNHOUSE-WEB-5Z ("Failed to fetch") and -63 ("Load failed") were
+  // reported on. Unawaited, signIn's transport failure became an unhandled
+  // rejection and a button that silently did nothing.
+  const handleGoogleSignIn = async () => {
+    setError('')
     // Store org context in cookies before OAuth redirect
     if (org?.slug) {
       const topDomain = getLEARNHOUSE_TOP_DOMAIN_VAL();
@@ -159,8 +165,24 @@ function InviteOnlySignUpComponent(props: InviteOnlySignUpProps) {
         document.cookie = `LH_oauth_invite_code=${encodeURIComponent(props.inviteCode)}${baseAttributes}${domainAttr}`;
       }
     }
-    // Use absolute URL with current origin for custom domain support
-    signIn('google', { callbackUrl: buildCallbackUrl() });
+    setIsSubmitting(true)
+    try {
+      // Use absolute URL with current origin for custom domain support
+      const result = await signIn('google', { callbackUrl: buildCallbackUrl() })
+      if (result && result.ok === false) {
+        setError(getErrorMessage(result.error, t('common.something_went_wrong')))
+        setIsSubmitting(false)
+        return
+      }
+      // Success redirects the whole document; leave the button disabled so the
+      // user can't fire a second OAuth handshake while it navigates. Safe only
+      // because AuthContext's signIn returns { ok: false } — handled above —
+      // for every non-navigating path, including a rejected authorize URL.
+      // A bare `return` there would strand this form's submit button too.
+    } catch (err) {
+      setError(getErrorMessage((err as any)?.detail, t('common.something_went_wrong')))
+      setIsSubmitting(false)
+    }
   };
 
   return (

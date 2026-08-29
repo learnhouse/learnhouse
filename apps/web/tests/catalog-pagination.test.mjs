@@ -1,8 +1,14 @@
 import { describe, expect, test } from "bun:test";
 
+// The module is catalogPaginationUtils.ts, not catalogPagination.ts. This
+// import was wrong from the commit that added the file (85816575) and the
+// suite failed to load ever since — nothing in CI ran `bun test tests`, so
+// nobody saw it. The web-tests job in .github/workflows/web-lint.yaml is what
+// stops that happening again.
+
 import {
   getCatalogPageNumbers,
-} from "../components/Objects/Catalog/catalogPagination.ts";
+} from "../components/Objects/Catalog/catalogPaginationUtils.ts";
 
 describe("getCatalogPageNumbers", () => {
   test("returns no pages when there are no results", () => {

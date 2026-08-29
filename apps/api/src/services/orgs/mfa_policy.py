@@ -21,10 +21,10 @@ from fastapi import HTTPException, status
 from sqlmodel import select
 from sqlmodel.ext.asyncio.session import AsyncSession
 
-from src.db.organization_config import OrganizationConfig
 from src.db.user_organizations import UserOrganization
 from src.db.users import User
 from src.services.auth.mfa import is_mfa_active
+from src.services.orgs.security_config import get_org_security_config
 
 logger = logging.getLogger(__name__)
 
@@ -83,16 +83,14 @@ def _parse_dt(value: Optional[str]) -> Optional[datetime]:
     return None
 
 
-async def get_org_mfa_policy(db_session: AsyncSession, org_id: int) -> OrgMFAPolicy:
-    row = (
-        await db_session.execute(
-            select(OrganizationConfig).where(OrganizationConfig.org_id == org_id)
-        )
-    ).scalars().first()
-    if row is None or not isinstance(row.config, dict):
-        return OrgMFAPolicy()
+def parse_org_mfa_policy(security: dict, org_id: Optional[int] = None) -> OrgMFAPolicy:
+    """Normalize a raw ``admin_toggles.security`` dict into the policy.
 
-    security = (row.config.get("admin_toggles") or {}).get("security") or {}
+    Split out from the loader so a caller that already holds the dict — the
+    policy PUT, which answers with what it just wrote — can build the policy
+    without paying a second read of the row it just saved. ``org_id`` is only
+    used to identify the org in the log line when the blob is malformed.
+    """
     try:
         return OrgMFAPolicy(
             require_2fa=bool(security.get("require_2fa", False)),
@@ -100,12 +98,23 @@ async def get_org_mfa_policy(db_session: AsyncSession, org_id: int) -> OrgMFAPol
             enabled_at=security.get("require_2fa_enabled_at"),
             exempt_external_auth=bool(security.get("exempt_external_auth", True)),
         )
-    except (TypeError, ValueError):
+    except (TypeError, ValueError, AttributeError):
         # Malformed config must not fail open into "policy enforced but with a
         # nonsense deadline"; fall back to the safe default of no policy and
-        # let an admin fix the config.
+        # let an admin fix the config. AttributeError is in the list because a
+        # ``security`` key of the wrong type (a list, say) has no ``.get`` —
+        # the loader path normalizes that to {} before it gets here, but this
+        # function is also called with a dict a caller built itself.
         logger.exception("Malformed security config for org %s", org_id)
         return OrgMFAPolicy()
+
+
+async def get_org_mfa_policy(db_session: AsyncSession, org_id: int) -> OrgMFAPolicy:
+    # Shared with the auth-method policy, which reads the same row on the same
+    # request — see :mod:`src.services.orgs.security_config`. An absent or
+    # malformed config arrives as {}, i.e. the "no policy" defaults.
+    security = await get_org_security_config(db_session, org_id)
+    return parse_org_mfa_policy(security, org_id)
 
 
 async def evaluate_mfa_compliance(

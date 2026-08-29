@@ -21,7 +21,13 @@ from typing import Optional
 
 from config.config import get_learnhouse_config
 from src.services.ai.llm import AINotConfiguredError
-from src.services.ai.llm.provider import _GOOGLE_ALIASES
+from src.services.ai.llm.provider import (
+    _GOOGLE_ALIASES,
+    AIQuotaExhaustedError,
+    is_rate_limited,
+    provider_error_label,
+    translate_provider_errors,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -39,10 +45,12 @@ OUTPUT_EXT = "png"
 # Guard against pathologically large prompts before we spend a credit / call out.
 MAX_PROMPT_CHARS = 4000
 
-# Bounded retry for transient upstream errors (rate limit / capacity).
+# Bounded retry for transient upstream errors (capacity). 429 is deliberately
+# absent: `is_rate_limited` decides that one, so a depletion 429 that somehow
+# reaches here un-translated is not retried on its status alone.
 _MAX_ATTEMPTS = 3
 _RETRY_BACKOFF_SECONDS = 1.5
-_RETRYABLE_STATUS = {429, 500, 502, 503, 504}
+_RETRYABLE_STATUS = {500, 502, 503, 504}
 
 
 def _sniff_mime(data: bytes) -> str:
@@ -59,13 +67,28 @@ def _sniff_mime(data: bytes) -> str:
 
 
 def _is_retryable(exc: Exception) -> bool:
-    """True for transient Google API errors worth retrying."""
+    """True for transient Google API errors worth retrying.
+
+    A depletion refusal is explicitly NOT retryable: it has already been
+    normalised to ``AIQuotaExhaustedError`` by ``translate_provider_errors``
+    around the call, and retrying a spent prepay balance only multiplies the
+    latency and the Sentry events. A per-minute 429 — same status, same
+    "check your plan and billing details" sentence — still is, and that is the
+    only reason this file shares one classifier with the text layer instead of
+    keeping its own idea of which 429s are hopeless.
+    """
+    if isinstance(exc, AIQuotaExhaustedError):
+        return False
+    if is_rate_limited(exc):
+        return True
     code = getattr(exc, "code", None) or getattr(exc, "status_code", None)
     if isinstance(code, int) and code in _RETRYABLE_STATUS:
         return True
     # google.genai raises ServerError (5xx) / APIError with a numeric status.
+    # "ResourceExhausted" is deliberately absent: with no status and no body to
+    # read, the class name alone cannot say whether the balance is spent.
     name = type(exc).__name__
-    return name in ("ServerError", "ServiceUnavailable", "ResourceExhausted")
+    return name in ("ServerError", "ServiceUnavailable")
 
 
 def _resolve_image_config() -> tuple[str, str]:
@@ -113,8 +136,10 @@ async def generate_image(
 ) -> bytes:
     """Generate (or edit) an image with the nano banana model. Returns PNG bytes.
 
-    Raises ``AINotConfiguredError`` when no Google key is configured, or a plain
-    ``RuntimeError`` when the model returns no image (e.g. a safety refusal).
+    Raises ``AINotConfiguredError`` when no Google key is configured,
+    ``AIQuotaExhaustedError`` when the provider's quota/prepay balance is spent
+    (terminal — never retried), or a plain ``RuntimeError`` when the model
+    returns no image (e.g. a safety refusal).
     """
     from google import genai
     from google.genai import types
@@ -156,15 +181,17 @@ async def generate_image(
     response = None
     for attempt in range(1, _MAX_ATTEMPTS + 1):
         try:
-            response = await client.aio.models.generate_content(
-                model=model,
-                contents=contents,
-                config=config,
-            )
+            with translate_provider_errors():
+                response = await client.aio.models.generate_content(
+                    model=model,
+                    contents=contents,
+                    config=config,
+                )
             break
         except Exception as e:  # noqa: BLE001 — surface a clean error to the router
-            # Log only the exception type: the underlying SDK error can embed the
-            # API key (request URL/headers), so never log the message or traceback.
+            # Log only the exception type (and its HTTP status): the underlying
+            # SDK error can embed the API key in the request URL/headers, so the
+            # message and the traceback are never logged on any branch below.
             if _is_retryable(e) and attempt < _MAX_ATTEMPTS:
                 logger.warning(
                     "Image generation transient error (%s), retry %d/%d",
@@ -172,7 +199,17 @@ async def generate_image(
                 )
                 await asyncio.sleep(_RETRY_BACKOFF_SECONDS * attempt)
                 continue
-            logger.error("Image generation call failed: %s", type(e).__name__)
+            if isinstance(e, AIQuotaExhaustedError):
+                # A known billing state, not a fault: WARNING keeps it out of
+                # Sentry (LoggingIntegration promotes ERROR to an event) while
+                # the router still turns it into an actionable 429.
+                logger.warning("Image generation unavailable: provider quota exhausted")
+                raise
+            # Include the status alongside the class so the Sentry title is not
+            # just "ClientError" for every distinct Google failure mode. The
+            # status is not secret; the message and traceback are (they can
+            # embed the API key), so neither is ever logged.
+            logger.error("Image generation call failed: %s", provider_error_label(e))
             raise RuntimeError("Image generation failed") from e
 
     image_bytes = _extract_image_bytes(response)

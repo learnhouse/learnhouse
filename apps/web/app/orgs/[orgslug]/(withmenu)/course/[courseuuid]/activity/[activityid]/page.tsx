@@ -7,6 +7,7 @@ import { Metadata } from 'next'
 import { getServerSession } from '@/lib/auth/server'
 import { getOrgSeoConfig } from '@/lib/seo/utils'
 import { getServerCanonicalUrl } from '@/lib/seo/utils.server'
+import { fallbackRobots, ssrMetadataFetch } from '@services/utils/ts/ssrMetadata'
 
 type MetadataProps = {
   params: Promise<{ orgslug: string; courseuuid: string; activityid: string }>
@@ -18,21 +19,43 @@ export async function generateMetadata(props: MetadataProps): Promise<Metadata> 
   const session = await getServerSession()
   const access_token = session?.tokens?.access_token || null
 
-  const [org, course_meta, activity] = await Promise.all([
-    getOrganizationContextInfo(params.orgslug, {
+  // Every fetch is guarded, and every rejection is kept rather than discarded.
+  // A private or unpublished course answers 403 ("Resource is not public or not
+  // published") for an anonymous visitor: a normal authorization outcome, not a
+  // server fault — unguarded it failed the whole render and paged Sentry from
+  // SSR on every such visit. A 5xx is the opposite: it IS our bug, it still
+  // goes to Sentry (ssrMetadataFetch does that), and it must not produce a
+  // noindex — 200 + noindex is a removal signal to Googlebot, so a brief API
+  // outage would de-index every public activity page.
+  const ROUTE = '/orgs/[orgslug]/course/[courseuuid]/activity/[activityid]'
+  const [orgFetch, courseFetch, activityFetch] = await Promise.all([
+    ssrMetadataFetch(ROUTE, 'getOrganizationContextInfo', getOrganizationContextInfo(params.orgslug, {
       revalidate: 120,
       tags: ['organizations'],
-    }),
-    getCourseMetadata(params.courseuuid, { revalidate: 120, tags: ['courses'] }, access_token || null, { slim: true }),
-    getActivityWithAuthHeader(
+    })),
+    ssrMetadataFetch(ROUTE, 'getCourseMetadata', getCourseMetadata(params.courseuuid, { revalidate: 120, tags: ['courses'] }, access_token || null, { slim: true })),
+    ssrMetadataFetch(ROUTE, 'getActivityWithAuthHeader', getActivityWithAuthHeader(
       params.activityid,
       { revalidate: 120, tags: ['activities'] },
       access_token || null
-    ),
+    )),
   ])
+  const org = orgFetch.data
+  const course_meta = courseFetch.data
+  const activity = activityFetch.data
 
   // Check if this is the course end page
   const isCourseEnd = params.activityid === 'end';
+
+  // Nothing to describe.
+  if (!course_meta || (!isCourseEnd && !activity?.name)) {
+    return {
+      title: org?.name ? `Course — ${org.name}` : 'LearnHouse',
+      description: '',
+      ...fallbackRobots(courseFetch.error, isCourseEnd ? null : activityFetch.error),
+    }
+  }
+
   const seoConfig = getOrgSeoConfig(org)
   const rawTitle = isCourseEnd ? `Congratulations — ${course_meta.name} Course` : `${activity.name} — ${course_meta.name} Course`
   const pageTitle = seoConfig.default_meta_title_suffix ? `${rawTitle}${seoConfig.default_meta_title_suffix}` : rawTitle
@@ -52,8 +75,8 @@ export async function generateMetadata(props: MetadataProps): Promise<Metadata> 
   // SEO
   return {
     title: pageTitle,
-    description: course_meta.description || seoConfig.default_meta_description || '',
-    keywords: course_meta.learnings,
+    description: course_meta?.description || seoConfig.default_meta_description || '',
+    keywords: course_meta?.learnings,
     robots: {
       index: true,
       follow: true,
@@ -69,22 +92,22 @@ export async function generateMetadata(props: MetadataProps): Promise<Metadata> 
     },
     openGraph: {
       title: pageTitle,
-      description: course_meta.description || seoConfig.default_meta_description || '',
-      publishedTime: course_meta.creation_date,
-      tags: course_meta.learnings,
+      description: course_meta?.description || seoConfig.default_meta_description || '',
+      publishedTime: course_meta?.creation_date,
+      tags: course_meta?.learnings,
       images: [
         {
           url: imageUrl,
           width: 800,
           height: 600,
-          alt: course_meta.name,
+          alt: course_meta?.name,
         },
       ],
     },
     twitter: {
       card: 'summary_large_image',
       title: pageTitle,
-      description: course_meta.description || seoConfig.default_meta_description || '',
+      description: course_meta?.description || seoConfig.default_meta_description || '',
       images: [imageUrl],
       ...(seoConfig.twitter_handle && { site: seoConfig.twitter_handle }),
     },

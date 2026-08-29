@@ -27,13 +27,35 @@ function ClientAdminLayout({
                 <CommandPaletteProvider>
                     <UpgradeModalProvider>
                         {isMobile && <DashMobileMenu />}
-                        {/* Built-in page translation (Chrome/Edge/Firefox) swaps text
-                            nodes out from under React. On the editor — where nodes are
-                            constantly inserted and moved — that desyncs the two trees
-                            and the next render dies on "insertBefore ... not a child of
-                            this node", taking the whole page with it. The dashboard is
-                            already translated by i18n, so opting it out costs nothing.
-                            Public course pages stay translatable. */}
+                        {/* This is the ORIGINAL translation opt-out, not a copy
+                            of the one on <body>. It landed in 4080d4ca on
+                            2026-07-25; the document-root translate="no" in
+                            app/layout.tsx came later, during the 2026-08 Sentry
+                            sweep. Dating it matters: because the dash was
+                            already opted out here — with both the attribute and
+                            the class — a month before LEARNHOUSE-WEB-6A first
+                            fired on 2026-08-24, browser translation cannot be
+                            what crashed the dash routes in that issue. See the
+                            comment in app/layout.tsx; 6A/5M/6J stay open.
+
+                            The `notranslate` class is deliberate HERE and
+                            deliberately absent on <body>: it makes a translation
+                            traversal skip the subtree outright, with no way for
+                            a descendant to opt back in. That is what we want for
+                            the dashboard chrome, and exactly what we must not
+                            have at the root, where DynamicCanva re-enables
+                            translation for learner-facing course prose.
+
+                            Known consequence, not a hypothetical: /dash/boards
+                            embeds authored course content inside this div —
+                            Dashboard/Boards/Extensions/ActivityBlockComponent
+                            lazy-loads DynamicCanva — so DynamicCanva's
+                            translate="yes" is already inert there. Board embeds
+                            are author-side previews, so that is acceptable; the
+                            learner-facing course pages are outside this div and
+                            stay translatable. If board embeds ever need to be
+                            translatable, drop the class here (keeping the
+                            attribute) rather than moving the re-enable. */}
                         <div translate="no" className="notranslate flex flex-col lg:flex-row">
                             {!isMobile && <DashLeftMenu />}
                             <div className="flex flex-col w-full min-w-0 relative isolate pb-24 lg:pb-0">

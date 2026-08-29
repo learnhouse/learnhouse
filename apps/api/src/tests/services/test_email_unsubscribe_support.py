@@ -156,7 +156,7 @@ class TestSendEmailHeaders:
 
         captured = {}
 
-        def fake_resend(sender, to, subject, body, mailing, headers=None):
+        def fake_resend(sender, to, subject, body, mailing, headers=None, critical=True):
             captured["headers"] = headers
             return {"id": "sent"}
 

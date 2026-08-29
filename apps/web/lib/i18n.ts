@@ -4,7 +4,7 @@ import i18n from 'i18next';
 import { initReactI18next } from 'react-i18next';
 import LanguageDetector from 'i18next-browser-languagedetector';
 import en from '../locales/en.json';
-import { loadDateLocale } from './format';
+import { loadDateLocale, normalizeLanguageTag } from './format';
 
 const LOCALE_LOADERS: Record<string, () => Promise<{ default: any }>> = {
   fr: () => import('../locales/fr.json'),
@@ -64,6 +64,14 @@ i18n
       caches: ['localStorage', 'cookie'],
       lookupLocalStorage: 'i18nextLng',
       lookupCookie: 'i18next',
+      // Every source above yields an arbitrary string — `navigator` reports
+      // POSIX forms like `en-US@posix` on glibc hosts — and whatever we accept
+      // is written straight back into localStorage AND the cookie by `caches`.
+      // Without this a single bad tag sticks to the user across reloads and
+      // crashes every Intl call (RangeError: Invalid language tag) until they
+      // clear site data. Canonicalising here also runs over the CACHED value,
+      // so anyone already poisoned recovers on their next load.
+      convertDetectedLanguage: (lng: string) => normalizeLanguageTag(lng),
     },
     react: {
       useSuspense: false,

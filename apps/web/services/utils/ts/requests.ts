@@ -111,6 +111,11 @@ const UPLOAD_TIMEOUT_MS = 30 * 60 * 1000
  * Resolves with the parsed JSON body and rejects with the backend `detail`
  * message (or an HTTP-status message when the body isn't JSON, which is what
  * an nginx 413 or a gateway 502 returns).
+ *
+ * A 2xx whose body is not the expected JSON object rejects as well. Every
+ * caller (Image / PDF / Video blocks) needs the Block object this returns and
+ * stores it in the document; resolving `{}` instead used to persist a
+ * contentless block that then crashed the NodeView on `content.file_id`.
  */
 export function uploadFormWithProgress<T = any>(
   url: string,
@@ -133,14 +138,15 @@ export function uploadFormWithProgress<T = any>(
     }
 
     xhr.onload = () => {
-      // Status first, body second: a successful upload with an empty body must
-      // not be reported as a failure, and a non-JSON error body must not hide
-      // the status code.
+      // Status first, body second: a non-JSON error body must not hide the
+      // status code.
       if (xhr.status >= 200 && xhr.status < 300) {
         try {
           resolve(JSON.parse(xhr.responseText))
         } catch {
-          resolve({} as T)
+          reject(
+            new Error('Upload succeeded but the server returned an unreadable response.')
+          )
         }
         return
       }
@@ -191,26 +197,36 @@ export const apiFetch = async (url: string, token?: string) => {
   return errorHandling(request)
 }
 
+/**
+ * Turn a non-2xx Response into the Error the callers expect: `message` is the
+ * backend `detail`, with `status` and `detail` attached so a caller can tell an
+ * authorization outcome from a backend fault.
+ */
+const buildApiError = async (res: any) => {
+  let detail: any = res.statusText
+  try {
+    const body = await res.json()
+    detail = body.detail || body.message || body
+  } catch (_e) {
+    // If we can't parse JSON, use statusText
+  }
+  let message: string
+  if (typeof detail === 'string') {
+    message = detail
+  } else if (detail && typeof detail === 'object' && typeof detail.message === 'string') {
+    message = detail.message
+  } else {
+    message = JSON.stringify(detail)
+  }
+  const error: any = new Error(message)
+  error.status = res.status
+  error.detail = detail
+  return error
+}
+
 export const errorHandling = async (res: any) => {
   if (!res.ok) {
-    let detail: any = res.statusText
-    try {
-      const body = await res.json()
-      detail = body.detail || body.message || body
-    } catch (_e) {
-      // If we can't parse JSON, use statusText
-    }
-    let message: string
-    if (typeof detail === 'string') {
-      message = detail
-    } else if (detail && typeof detail === 'object' && typeof detail.message === 'string') {
-      message = detail.message
-    } else {
-      message = JSON.stringify(detail)
-    }
-    const error: any = new Error(message)
-    error.status = res.status
-    error.detail = detail
+    const error = await buildApiError(res)
     // Only treat a 401 as an EXPIRED session (→ force login) when the user
     // actually had one. An anonymous visitor on public content legitimately gets
     // 401s from auth-required endpoints (progress, enrollment, …) and must NOT be
@@ -226,6 +242,24 @@ export const errorHandling = async (res: any) => {
   return res.json()
 }
 
+/**
+ * Same throw-on-non-2xx contract as `errorHandling`, WITHOUT the authExpired
+ * dispatch — the 401 surfaces as a rejected promise and nothing else.
+ *
+ * For endpoints whose failure must not evict the user. Converting a service to
+ * `errorHandling` to fix a response-shape bug silently hands every one of its
+ * call sites a forced logout on the first 401, which on a learner-facing
+ * surface (a course card, a lock popover) is a much worse regression than the
+ * shape bug being fixed — and this codebase has an open, unexplained-logout
+ * investigation. Use this when you want the throw and not the redirect; a
+ * genuinely expired session is still caught by the surrounding page's own
+ * authenticated calls, which do go through `errorHandling`.
+ */
+export const errorHandlingWithoutAuthRedirect = async (res: any) => {
+  if (!res.ok) throw await buildApiError(res)
+  return res.json()
+}
+
 type CustomResponseTyping = {
   success: boolean
   data: any
@@ -233,6 +267,21 @@ type CustomResponseTyping = {
   HTTPmessage: string
 }
 
+/**
+ * Wrap a fetch result as {success, data, status, HTTPmessage}.
+ *
+ * Contract, and the reason it is worth spelling out: on a NON-2xx, `data` is
+ * the API's error body (`{detail: ...}`), not a result. Dozens of call sites
+ * read `res.data.detail` to build their toast, so it stays that way — but it
+ * means the wrapper can never be unwrapped blindly. Two rules follow:
+ *   - Anything rendered as a list must go through `asArray` (below), never
+ *     `res?.data ?? []` — `??` and `||` pass a non-null error object straight
+ *     through, which is what "x.map is not a function" always turns out to be.
+ *   - A service whose only job is to GET a collection should use `apiFetch`
+ *     instead of this helper. `apiFetch` throws on a non-2xx, so the error
+ *     lands in the caller's catch / react-query `error` and can never be
+ *     mistaken for data in the first place.
+ */
 export const getResponseMetadata = async (
   fetch_result: any
 ): Promise<CustomResponseTyping> => {
@@ -265,6 +314,8 @@ export const getResponseMetadata = async (
  */
 export const asArray = <T = any>(value: any): T[] => {
   if (Array.isArray(value)) return value as T[]
+  // A failed request never carries a result, whatever shape its body took.
+  if (value && typeof value === 'object' && value.success === false) return []
   if (Array.isArray(value?.data)) return value.data as T[]
   return []
 }

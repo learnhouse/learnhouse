@@ -23,6 +23,7 @@ from src.services.ai.llm.provider import (
     AINotConfiguredError,
     _GOOGLE_ALIASES,
     _OPENAI_ALIASES,
+    translate_provider_errors,
 )
 
 logger = logging.getLogger(__name__)
@@ -132,11 +133,15 @@ def _embedder() -> Embedder:
 
 async def embed_documents(texts: list[str]) -> list[list[float]]:
     """Embed a batch of documents; returns one vector per input."""
-    result = await _embedder().embed(texts, input_type="document")
+    # Same classifier as the text layer: a quota refusal must reach the caller
+    # as AIQuotaExhaustedError so the RAG retry loop stops instead of looping.
+    with translate_provider_errors():
+        result = await _embedder().embed(texts, input_type="document")
     return [list(v) for v in result.embeddings]
 
 
 async def embed_query(text: str) -> list[float]:
     """Embed a single query string."""
-    result = await _embedder().embed(text, input_type="query")
+    with translate_provider_errors():
+        result = await _embedder().embed(text, input_type="query")
     return list(result.embeddings[0])

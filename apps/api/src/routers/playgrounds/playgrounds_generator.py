@@ -3,6 +3,7 @@ from fastapi import APIRouter, Depends, HTTPException, Request
 from fastapi.responses import StreamingResponse
 from sqlmodel import select
 from sqlmodel.ext.asyncio.session import AsyncSession
+import asyncio
 import json
 import logging
 
@@ -12,9 +13,13 @@ from src.db.courses.courses import Course
 from src.core.events.database import get_db_session
 from src.db.users import PublicUser, AnonymousUser, APITokenUser
 from src.security.auth import get_current_user, resolve_acting_user_id
-from src.security.features_utils.usage import reserve_ai_credit
+from src.security.features_utils.usage import refund_ai_credit, reserve_ai_credit
 from src.security.features_utils.dependencies import require_playgrounds_feature
-from src.services.ai.llm import model_for_tier
+from src.services.ai.llm import (
+    AI_QUOTA_USER_MESSAGE,
+    AIQuotaExhaustedError,
+    model_for_tier,
+)
 from src.services.playgrounds.playgrounds_generator import (
     get_playground_session,
     create_playground_session,
@@ -30,16 +35,55 @@ from src.services.playgrounds.schemas.playgrounds_generator import (
 
 router = APIRouter(dependencies=[Depends(require_playgrounds_feature)])
 
+# Credits reserved per generation turn, refunded when the stream produces nothing.
+GENERATION_CREDIT_COST = 3
 
-async def event_generator(generator, session_uuid: str):
-    """Convert async generator to SSE format."""
+
+async def event_generator(
+    generator,
+    session_uuid: str,
+    org_id: Optional[int] = None,
+    credit_cost: int = GENERATION_CREDIT_COST,
+):
+    """Convert async generator to SSE format.
+
+    Refunds the credits reserved by the caller when the stream produced no
+    output — a provider outage must not silently bill the org for nothing.
+    Mirrors ``editor_chat_event_generator`` in ``src/routers/ai/ai.py``.
+    """
+    produced_output = False
+    stream_failed = False
     try:
         async for chunk in generator:
+            produced_output = True
             yield f"data: {json.dumps({'type': 'chunk', 'content': chunk})}\n\n"
         yield f"data: {json.dumps({'type': 'done', 'session_uuid': session_uuid})}\n\n"
+    except asyncio.CancelledError:
+        # Client disconnect. Do NOT force a refund: if the model already produced
+        # output the credits were legitimately spent. The finally block still
+        # refunds when nothing was produced, so a disconnect after a full
+        # response can't be abused for free AI. Re-raise so Starlette sees it.
+        raise
+    except AIQuotaExhaustedError:
+        stream_failed = True
+        # Not a server fault — a billing state an admin can fix. WARNING keeps it
+        # out of Sentry, and the typed code lets the UI say something useful
+        # instead of "an internal error occurred".
+        logging.warning(
+            "Playground generation unavailable for session %s: provider quota exhausted",
+            session_uuid,
+        )
+        yield f"data: {json.dumps({'type': 'error', 'code': 'ai_quota_exhausted', 'message': AI_QUOTA_USER_MESSAGE})}\n\n"
     except Exception:
+        stream_failed = True
         logging.exception("Error in playground event stream for session %s", session_uuid)
         yield f"data: {json.dumps({'type': 'error', 'message': 'An internal error occurred.'})}\n\n"
+    finally:
+        if org_id is not None and (stream_failed or not produced_output):
+            try:
+                refund_ai_credit(org_id, credit_cost)
+            except Exception:
+                logging.debug("AI credit refund failed", exc_info=True)
 
 
 async def get_org_ai_model(org_id: int, db_session: AsyncSession) -> str:
@@ -126,7 +170,7 @@ async def start_playground_session(
     # F-9: per-user + per-org rate limit before any compute / credit spend.
     from src.services.security.rate_limiting import enforce_ai_rate_limit
     enforce_ai_rate_limit(generate_acting_user_id, org.id)
-    await reserve_ai_credit(org.id, db_session, amount=3)
+    await reserve_ai_credit(org.id, db_session, amount=GENERATION_CREDIT_COST)
 
     ai_model = await get_org_ai_model(org.id, db_session)
 
@@ -152,7 +196,7 @@ async def start_playground_session(
     )
 
     return StreamingResponse(
-        event_generator(stream, session.session_uuid),
+        event_generator(stream, session.session_uuid, org_id=org.id),
         media_type="text/event-stream",
         headers={
             "Cache-Control": "no-cache",
@@ -226,7 +270,7 @@ async def iterate_playground_session(
     # F-9: per-user + per-org rate limit before any compute / credit spend.
     from src.services.security.rate_limiting import enforce_ai_rate_limit
     enforce_ai_rate_limit(iterate_acting_user_id, org.id)
-    await reserve_ai_credit(org.id, db_session, amount=3)
+    await reserve_ai_credit(org.id, db_session, amount=GENERATION_CREDIT_COST)
 
     ai_model = await get_org_ai_model(org.id, db_session)
 
@@ -249,7 +293,7 @@ async def iterate_playground_session(
     )
 
     return StreamingResponse(
-        event_generator(stream, session.session_uuid),
+        event_generator(stream, session.session_uuid, org_id=org.id),
         media_type="text/event-stream",
         headers={
             "Cache-Control": "no-cache",

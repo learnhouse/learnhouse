@@ -2,6 +2,7 @@ import { getAPIUrl } from '@services/config/config'
 import {
   RequestBodyFormWithAuthHeader,
   RequestBodyWithAuthHeader,
+  errorHandlingWithoutAuthRedirect,
   getResponseMetadata,
 } from '@services/utils/ts/requests'
 
@@ -205,6 +206,23 @@ export async function deleteActivity(activity_uuid: any, access_token: string) {
   return res
 }
 
+/**
+ * Fetch one activity, REJECTING on a non-2xx with the status attached.
+ *
+ * The status matters as much as the failure here. `generateMetadata` on the
+ * activity route decides `robots` from the rejection class: an access outcome
+ * (401/403/404) is noindex, a backend fault is no robots directive at all.
+ * While this function ended with a bare `result.json()` it never rejected on a
+ * status-carrying failure — the API's JSON-bodied 5xx resolved as
+ * `{detail: ...}`, `activity?.name` was undefined, and the fallback branch ran
+ * with BOTH errors null, emitting `index:false, follow:false` on a healthy
+ * public activity page. The de-index guard could only ever fire for a non-JSON
+ * gateway page or a socket error.
+ *
+ * `errorHandlingWithoutAuthRedirect`, not `errorHandling`: this is a
+ * learner-facing surface that anonymous visitors hit on public content, and the
+ * authExpired dispatch would turn a single 401 here into a forced logout.
+ */
 export async function getActivityWithAuthHeader(
   activity_uuid: any,
   next: any,
@@ -214,8 +232,7 @@ export async function getActivityWithAuthHeader(
     `${getAPIUrl()}activities/activity_${activity_uuid}`,
     RequestBodyWithAuthHeader('GET', null, next, access_token || undefined)
   )
-  const res = await result.json()
-  return res
+  return errorHandlingWithoutAuthRedirect(result)
 }
 
 export async function updateActivity(
@@ -332,13 +349,19 @@ export async function updateExternalVideoActivity(
   return getResponseMetadata(result)
 }
 
+/**
+ * Same missing-status-check shape as getActivityWithAuthHeader had, with a
+ * different victim: on a non-2xx the error body was returned as if it were
+ * metadata, so WebPreviewComponent's `updateAttributes({ ...data, url })` wrote
+ * `{detail: "..."}` into the block's attrs and stored it in the document. It
+ * rejects now, which is what that component's catch/`setError` branch is for.
+ */
 export async function getUrlPreview(url: string) {
   const result = await fetch(
     `${getAPIUrl()}utils/link-preview?url=${encodeURIComponent(url)}`,
     RequestBodyWithAuthHeader('GET', null, null, undefined)
   )
-  const res = await result.json()
-  return res
+  return errorHandlingWithoutAuthRedirect(result)
 }
 
 // Versioning API functions

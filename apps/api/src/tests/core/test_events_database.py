@@ -541,12 +541,12 @@ def test_postgres_shorthand_url_is_rewritten_to_asyncpg(monkeypatch):
     assert received_urls[0].startswith("postgresql+asyncpg://"), received_urls[0]
 
 
-def test_pooler_url_uses_small_pool_and_logs(monkeypatch, caplog):
-    """A Supavisor pooler URL should trigger the small pool path and log a message."""
-    received_kwargs = {}
+def _capture_engine_kwargs():
+    """Engine factory that records the kwargs it was called with."""
+    received = {}
 
     def capture_engine(url, *args, **kwargs):
-        received_kwargs.update(kwargs)
+        received.update(kwargs)
 
         class _FakeSyncEngine:
             pass
@@ -556,9 +556,225 @@ def test_pooler_url_uses_small_pool_and_logs(monkeypatch, caplog):
 
         return _E()
 
+    return received, capture_engine
+
+
+def test_pooler_url_uses_small_pool_and_logs(monkeypatch, caplog):
+    """A Supavisor pooler URL should trigger the small pool path and log a message."""
+    received_kwargs, capture_engine = _capture_engine_kwargs()
+
+    monkeypatch.delenv("LEARNHOUSE_DB_POOL_SIZE", raising=False)
+    monkeypatch.delenv("LEARNHOUSE_DB_MAX_OVERFLOW", raising=False)
+
     # :6543/ is the Supavisor port; detected as a pooler
     with caplog.at_level(logging.INFO):
         _reload_with_url(monkeypatch, "postgresql://host:6543/db", capture_engine)
 
-    assert received_kwargs.get("pool_size") == 5
+    # Two things have to hold at once, and the second is why 3 + 2 was wrong.
+    #
+    # (1) One process must not be able to claim a whole session-mode pooler on
+    #     its own. That is the arithmetic that produced EMAXCONNSESSION (727
+    #     events) when it was 5 + 10 = 15 per process against a 15-client
+    #     Supavisor.
+    ceiling = received_kwargs["pool_size"] + received_kwargs["max_overflow"]
+    assert ceiling <= 10, f"a pooled process may hold {ceiling} connections"
+    # (2) Steady-state capacity must not drop below what one uvicorn worker
+    #     actually serves. pool_size was 5 before this change; cutting it turns
+    #     a pooler-level error into in-process QueuePool timeouts (500s) without
+    #     adding capacity anywhere.
+    assert received_kwargs["pool_size"] >= 5, (
+        "shrinking pool_size below its previous value trades a pooler error for "
+        "an in-process one"
+    )
+    # Saturation should degrade into latency, not an immediate 5xx — but stay
+    # under SQLAlchemy's 30s default, because /health takes a session from this
+    # same pool and a 30s wait there outlasts every k8s probe timeout.
+    assert 10 < received_kwargs["pool_timeout"] < 30
     assert "connection pooler" in caplog.text
+    # The deployed numbers have to be visible in the pod logs, not just in
+    # source, and so does the rule ops must satisfy to change them.
+    assert "pool_size=" in caplog.text and "max_overflow=" in caplog.text
+    assert "pool_timeout=" in caplog.text
+    assert "more than one replica" in caplog.text
+
+
+def test_pool_size_is_configurable_from_the_environment(monkeypatch, caplog):
+    """The pooled ceiling must follow the pooler's limit without a code change."""
+    received_kwargs, capture_engine = _capture_engine_kwargs()
+
+    monkeypatch.setenv("LEARNHOUSE_DB_POOL_SIZE", "7")
+    monkeypatch.setenv("LEARNHOUSE_DB_MAX_OVERFLOW", "1")
+    with caplog.at_level(logging.INFO):
+        _reload_with_url(monkeypatch, "postgresql://host:6543/db", capture_engine)
+
+    assert received_kwargs["pool_size"] == 7
+    assert received_kwargs["max_overflow"] == 1
+    assert "pool_size=7" in caplog.text
+
+    # A direct (non-pooled) connection honours the same two variables.
+    received_kwargs, capture_engine = _capture_engine_kwargs()
+    _reload_with_url(monkeypatch, "postgresql://host:5432/db", capture_engine)
+    assert received_kwargs["pool_size"] == 7
+    assert received_kwargs["max_overflow"] == 1
+
+
+def test_unparsable_pool_env_falls_back_to_the_safe_default(monkeypatch, caplog):
+    """A typo in the env must not silently produce an unbounded or zero pool."""
+    received_kwargs, capture_engine = _capture_engine_kwargs()
+
+    monkeypatch.setenv("LEARNHOUSE_DB_POOL_SIZE", "lots")
+    monkeypatch.setenv("LEARNHOUSE_DB_MAX_OVERFLOW", "-4")
+    with caplog.at_level(logging.WARNING):
+        _reload_with_url(monkeypatch, "postgresql://host:6543/db", capture_engine)
+
+    assert received_kwargs["pool_size"] + received_kwargs["max_overflow"] <= 10
+    assert received_kwargs["pool_size"] >= 5
+    assert "LEARNHOUSE_DB_POOL_SIZE" in caplog.text
+    assert "LEARNHOUSE_DB_MAX_OVERFLOW" in caplog.text
+
+
+def test_saturated_pooler_is_transient_but_bad_credentials_are_not():
+    """EMAXCONNSESSION must be retried; a permanent error must fail fast.
+
+    The marker list is the whole transient/permanent split. A bare
+    "does not exist" used to be in it, which swallowed every missing-relation
+    and missing-column message. Anchoring on the `database "` prefix alone was
+    still too loose — it claimed any error that merely quotes a database name —
+    so the rule now requires BOTH halves: a quoted database/role identifier AND
+    "does not exist".
+    """
+    transient = [
+        "(EMAXCONNSESSION) max clients reached in session mode - "
+        "max clients are limited to pool_size: 15",
+        "connection was closed in the middle of operation",
+        'column organization.is_demo does not exist',
+        'relation "organization" does not exist',
+        # A pooler/proxy message that merely quotes the database name. The
+        # `database "` prefix on its own classified this as permanent and
+        # skipped the retry entirely.
+        'could not route to database "learnhouse": upstream unavailable',
+        'server closed the connection unexpectedly (database "learnhouse")',
+    ]
+    permanent = [
+        'password authentication failed for user "postgres"',
+        'database "learnhouse" does not exist',
+        'role "postgres" does not exist',
+        "no pg_hba.conf entry for host",
+        "permission denied for database",
+    ]
+
+    for message in transient:
+        assert database._is_transient_connect_error(Exception(message)), message
+    for message in permanent:
+        assert not database._is_transient_connect_error(Exception(message)), message
+
+
+class _DriftConnection:
+    """Minimal async connection returning one alembic_version row."""
+
+    def __init__(self, row):
+        self._row = row
+
+    async def __aenter__(self):
+        return self
+
+    async def __aexit__(self, *exc_info):
+        return False
+
+    async def execute(self, statement):
+        return _FakeResult(self._row)
+
+
+class _DriftEngine:
+    def __init__(self, row=None, error=None):
+        self.row = row
+        self.error = error
+
+    def connect(self):
+        if self.error is not None:
+            raise self.error
+        return _DriftConnection(self.row)
+
+
+async def test_schema_drift_is_reported_with_both_revisions(monkeypatch, caplog):
+    """A database behind the code's migrations must name both revisions once."""
+    monkeypatch.setattr(database, "is_testing", False)
+    # The check is skipped when the entrypoint owns migrations (the default),
+    # because the boot is already gated on `alembic upgrade head`. It exists for
+    # deployments where an external Job owns them and nothing else would notice.
+    monkeypatch.setenv("LEARNHOUSE_RUN_MIGRATIONS", "false")
+    monkeypatch.setattr(database, "_alembic_head_revision", lambda: "headrev")
+    monkeypatch.setattr(database, "engine", _DriftEngine(row=("oldrev",)))
+
+    with caplog.at_level(logging.ERROR):
+        await database._log_schema_drift()
+
+    assert "oldrev" in caplog.text and "headrev" in caplog.text
+    assert "alembic upgrade head" in caplog.text
+
+
+async def test_schema_drift_is_silent_when_in_sync_and_never_raises(monkeypatch, caplog):
+    """No noise at head, and a failing probe must never take down a boot."""
+    monkeypatch.setattr(database, "is_testing", False)
+    # The check is skipped when the entrypoint owns migrations (the default),
+    # because the boot is already gated on `alembic upgrade head`. It exists for
+    # deployments where an external Job owns them and nothing else would notice.
+    monkeypatch.setenv("LEARNHOUSE_RUN_MIGRATIONS", "false")
+    monkeypatch.setattr(database, "_alembic_head_revision", lambda: "headrev")
+    monkeypatch.setattr(database, "engine", _DriftEngine(row=("headrev",)))
+    with caplog.at_level(logging.ERROR):
+        await database._log_schema_drift()
+    assert caplog.text == ""
+
+    # No alembic_version table at all (a create_all-only database) — the boot
+    # continues; the entrypoint's `alembic upgrade head` is what gates it.
+    monkeypatch.setattr(
+        database,
+        "engine",
+        _DriftEngine(error=RuntimeError('relation "alembic_version" does not exist')),
+    )
+    with caplog.at_level(logging.ERROR):
+        await database._log_schema_drift()
+    assert caplog.text == ""
+
+
+async def test_schema_drift_check_is_skipped_when_the_entrypoint_migrates(monkeypatch, caplog):
+    """Don't pay for the check when the boot is already gated on migrations.
+
+    Resolving the head makes alembic execute all 66 files in migrations/versions
+    as Python modules. With LEARNHOUSE_RUN_MIGRATIONS at its default the
+    entrypoint has already run `alembic upgrade head` and failed the boot if it
+    did not succeed, so the answer is known.
+    """
+    calls = []
+    monkeypatch.setattr(database, "is_testing", False)
+    monkeypatch.setenv("LEARNHOUSE_RUN_MIGRATIONS", "true")
+    monkeypatch.setattr(
+        database, "_alembic_head_revision", lambda: calls.append(1) or "headrev"
+    )
+    monkeypatch.setattr(database, "engine", _DriftEngine(row=("oldrev",)))
+
+    with caplog.at_level(logging.ERROR):
+        await database._log_schema_drift()
+
+    assert calls == []
+    assert caplog.text == ""
+
+
+def test_alembic_head_revision_is_memoised(monkeypatch):
+    """Once per process, not once per call — it executes 66 modules."""
+    monkeypatch.setattr(database, "_alembic_head_cache", None)
+    first = database._alembic_head_revision()
+    assert first
+    assert database._alembic_head_cache == first
+    monkeypatch.setattr(database, "_alembic_head_cache", "sentinel")
+    assert database._alembic_head_revision() == "sentinel"
+
+
+def test_alembic_head_revision_resolves_to_a_single_head():
+    """`alembic upgrade head` in the entrypoint is only unambiguous with one head.
+
+    Two heads would make the migration step in docker-entrypoint.sh fail on
+    every pod boot, which is the same crash loop by another route.
+    """
+    assert database._alembic_head_revision()

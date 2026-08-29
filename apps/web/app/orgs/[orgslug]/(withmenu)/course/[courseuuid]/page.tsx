@@ -7,6 +7,7 @@ import { getCourseThumbnailMediaDirectory, getOrgOgImageMediaDirectory } from '@
 import { getServerSession } from '@/lib/auth/server'
 import { getOrgSeoConfig, buildPageTitle } from '@/lib/seo/utils'
 import { getServerCanonicalUrl } from '@/lib/seo/utils.server'
+import { fallbackRobots, ssrMetadataFetch } from '@services/utils/ts/ssrMetadata'
 
 
 type MetadataProps = {
@@ -21,31 +22,46 @@ export async function generateMetadata(props: MetadataProps): Promise<Metadata> 
 
   // Parallelize org + course metadata fetches
   // Use revalidate: 120 to match the page component and enable Next.js fetch dedup
-  const [org, courseResult] = await Promise.all([
-    getOrganizationContextInfo(params.orgslug, {
-      revalidate: 120,
-      tags: ['organizations'],
-    }),
-    getCourseMetadata(
-      params.courseuuid,
-      { revalidate: 120, tags: ['courses'] },
-      access_token ?? undefined,
-      { slim: true }
-    ).catch(() => null),
+  //
+  // Both are guarded, and the rejection is KEPT rather than discarded: a 403
+  // ("Resource is not public or not published") is a normal outcome and must be
+  // silent + noindex, while a 5xx is our bug and must reach Sentry WITHOUT a
+  // noindex — otherwise an API blip removes published courses from search.
+  const [orgFetch, courseFetch] = await Promise.all([
+    ssrMetadataFetch(
+      '/orgs/[orgslug]/course/[courseuuid]',
+      'getOrganizationContextInfo',
+      getOrganizationContextInfo(params.orgslug, {
+        revalidate: 120,
+        tags: ['organizations'],
+      })
+    ),
+    ssrMetadataFetch(
+      '/orgs/[orgslug]/course/[courseuuid]',
+      'getCourseMetadata',
+      getCourseMetadata(
+        params.courseuuid,
+        { revalidate: 120, tags: ['courses'] },
+        access_token ?? undefined,
+        { slim: true }
+      )
+    ),
   ])
+  const org = orgFetch.data
 
-  if (!courseResult) {
+  if (!courseFetch.data) {
     return {
       title: `Course — ${org?.name || 'LearnHouse'}`,
       description: 'View this course on LearnHouse',
+      ...fallbackRobots(courseFetch.error),
     }
   }
-  const course_meta = courseResult
+  const course_meta = courseFetch.data
 
   // SEO - use custom SEO fields with fallbacks to existing fields
   const seoConfig = getOrgSeoConfig(org)
   const seo = course_meta.seo || {}
-  const defaultTitle = buildPageTitle(course_meta.name, org.name, seoConfig)
+  const defaultTitle = buildPageTitle(course_meta.name, org?.name || 'LearnHouse', seoConfig)
   const defaultDescription = course_meta.description || seoConfig.default_meta_description || ''
   const orgOgImageUrl = seoConfig.default_og_image
     ? getOrgOgImageMediaDirectory(org?.org_uuid, seoConfig.default_og_image)

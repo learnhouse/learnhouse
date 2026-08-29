@@ -10,6 +10,8 @@
 #  ↳ Created and maintained by @swve © 2022–present
 
 import logging
+import threading
+import time
 
 import uvicorn
 import sentry_sdk
@@ -96,9 +98,142 @@ class SelectiveGZipMiddleware(GZipMiddleware):
         await responder(scope, receive, send)
 
 
+# When a lifespan handler raises, uvicorn logs the formatted traceback and then
+# a constant line — both at ERROR on uvicorn.error, both promoted to Sentry
+# events by LoggingIntegration below. Neither carries an exception interface, so
+# Sentry groups every distinct cause into one constant-string issue with no
+# stack trace, while the real exception is already captured on the same trace
+# with mechanism=starlette. 2424 events of pure echo.
+#
+# uvicorn logs the bare traceback from BOTH lifespan paths (lifespan/on.py:121
+# startup.failed and :134 shutdown.failed), so both constants are listed here:
+# dropping the traceback but keeping "Application shutdown failed. Exiting."
+# would just move the causeless constant-string issue onto the shutdown path.
+_STARTUP_FAILURE_LOG = "Application startup failed. Exiting."
+_SHUTDOWN_FAILURE_LOG = "Application shutdown failed. Exiting."
+_LIFESPAN_FAILURE_LOGS = (_STARTUP_FAILURE_LOG, _SHUTDOWN_FAILURE_LOG)
+_TRACEBACK_PREFIX = "Traceback (most recent call last):"
+
+# The google-genai and pydantic-ai integrations capture at the SDK boundary, so
+# a provider call that raises is reported as handled: no even when the app
+# catches it, logs it first-party and returns a clean error — once per retry.
+#
+# Only DEPLETION is deduplicated here, not rate limiting. Google returns
+# RESOURCE_EXHAUSTED (and the words "quota exceeded") for a per-minute RPM limit
+# as well as for a spent balance, and an RPM limit is actionable — backoff,
+# concurrency cap, quota increase — so those markers are deliberately NOT in
+# this list. Depletion is the one class no code change resolves.
+#
+# And depletion is not silenced either: this org has already had a full AI
+# outage from a depleted key, so it must keep an alerting surface. The rule
+# THROTTLES rather than drops — the first capture in each window still reaches
+# Sentry, later duplicates (the SDK captures once per call, and streaming
+# endpoints call repeatedly) do not. The issue therefore still exists, still
+# alerts, and stops being 3 events per request.
+_FIRST_PARTY_HANDLED_MECHANISMS = ("google_genai", "pydantic_ai")
+# Kept in step with src/services/ai/llm/provider.py's QUOTA_DEPLETION_MARKERS,
+# which is what the app itself treats as a terminal refusal — the two lists are
+# pinned together by a test rather than by an import, because an AI import error
+# at app.py module scope would be a total API outage.
+#
+# It is the SAME list, element for element, not a subset: provider.py already
+# excludes per-day/longer-window quota wording ("it is not a spent balance"),
+# so there is nothing here for a subset to narrow. The test below asserts
+# equality in both directions — a one-way subset check would let provider.py
+# grow a marker that this file then failed to throttle on, which is the drift
+# the pairing exists to catch.
+_QUOTA_DEPLETED_MARKERS = (
+    "credits are depleted",
+    "insufficient_quota",
+    "insufficient quota",
+    "billing account",
+    "billing limit",
+)
+_QUOTA_REPORT_INTERVAL_SECONDS = 900.0
+_quota_report_lock = threading.Lock()
+# The window is keyed, not global. Depletion is not one Sentry issue: in prod it
+# is four (image generation, two on the activities endpoint, playground
+# generation), and a single shared timestamp meant the first depletion of a
+# window suppressed the first event of every OTHER issue — so a newly-opening
+# issue could be delayed 15 minutes, or never open at all if the depletion
+# cleared inside the window. That defeats the "depletion keeps an alerting
+# surface" justification the whole rule rests on.
+#
+# The key is (transaction, exception type, mechanism). Be honest about what that
+# is: before_send cannot see Sentry's server-side grouping, so this is an
+# APPROXIMATION of it, deliberately on the coarse side. Two issues on the same
+# endpoint with the same exception type (prod's 8C and 8D, which differ only by
+# model) still share a bucket. What it does fix is the cross-endpoint case,
+# which is three of the four.
+#
+# Cardinality is bounded by (routed transactions x exception types), but the map
+# is capped anyway: a 404-ish transaction is whatever the router matched, and an
+# unbounded dict on a before_send path is not worth the risk.
+_QUOTA_REPORT_MAX_KEYS = 256
+# Values are time.monotonic() stamps. Absence, not 0.0, means "never reported":
+# monotonic() is uptime-based on Linux, so a 0.0 seed would suppress the FIRST
+# depletion of every boot in the first 15 minutes.
+_quota_last_reported_at: dict = {}
+
+
+def _is_lifespan_failure_log_echo(event) -> bool:
+    if event.get("exception"):
+        return False
+    if event.get("logger") != "uvicorn.error":
+        return False
+    message = (event.get("logentry") or {}).get("formatted") or event.get("message") or ""
+    return message in _LIFESPAN_FAILURE_LOGS or message.startswith(_TRACEBACK_PREFIX)
+
+
+def _is_provider_quota_depletion(event) -> bool:
+    values = (event.get("exception") or {}).get("values") or []
+    if not values:
+        return False
+    captured = values[-1]
+    mechanism = (captured.get("mechanism") or {}).get("type")
+    if mechanism not in _FIRST_PARTY_HANDLED_MECHANISMS:
+        return False
+    message = (captured.get("value") or "").lower()
+    return any(marker in message for marker in _QUOTA_DEPLETED_MARKERS)
+
+
+def _quota_throttle_key(event):
+    """The bucket a depletion capture is throttled in. See the note above."""
+    captured = ((event.get("exception") or {}).get("values") or [{}])[-1]
+    return (
+        event.get("transaction") or "",
+        captured.get("type") or "",
+        (captured.get("mechanism") or {}).get("type") or "",
+    )
+
+
+def _quota_report_is_due(key, now: float) -> bool:
+    """One provider-depletion capture per window PER KEY reaches Sentry."""
+    with _quota_report_lock:
+        last = _quota_last_reported_at.get(key)
+        if last is not None and now - last < _QUOTA_REPORT_INTERVAL_SECONDS:
+            return False
+        if (
+            key not in _quota_last_reported_at
+            and len(_quota_last_reported_at) >= _QUOTA_REPORT_MAX_KEYS
+        ):
+            # Drop the whole map rather than evict one entry: the only cost is
+            # that the next capture of each key reports, which is the safe
+            # direction — this rule must never be the reason an issue goes dark.
+            _quota_last_reported_at.clear()
+        _quota_last_reported_at[key] = now
+        return True
+
+
 def _before_send(event, hint):
     transaction = event.get("transaction") or ""
     if transaction in _HEALTH_TRANSACTIONS:
+        return None
+    if _is_lifespan_failure_log_echo(event):
+        return None
+    if _is_provider_quota_depletion(event) and not _quota_report_is_due(
+        _quota_throttle_key(event), time.monotonic()
+    ):
         return None
     return event
 

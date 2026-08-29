@@ -23,7 +23,7 @@ from sqlmodel import select
 
 from src.core.deployment_mode import get_deployment_mode
 from src.db.nudges import NudgeSend, NudgeSendStatus
-from src.services.email.utils import get_media_base_url
+from src.services.email.utils import get_media_base_url, send_email_in_threadpool
 from src.services.nudges import links
 from src.services.nudges.catalog import NudgeSpec, matching_specs, next_plan
 from src.services.nudges.eligibility import iter_snapshots
@@ -43,6 +43,15 @@ MIN_GAP_HOURS = 48
 # Blast radius fuse. Reached, the run stops and logs what it deferred; nothing
 # was claimed, so those candidates are simply reconsidered tomorrow.
 DEFAULT_MAX_SENDS = 500
+
+# Second fuse, for a fault rather than a budget. A systemic failure — provider
+# down, quota gone, a config load or template regression that breaks every
+# render — fails identically for every remaining recipient, and each failure
+# whose cause is not the provider is a Sentry ERROR (see
+# `_send_notification_email` in services/users/emails.py). A 500-recipient run
+# would then spend 500 events and 500 burnt dedupe keys reporting one fault.
+# Five in a row is not a run worth finishing.
+CONSECUTIVE_FAILURE_LIMIT = 5
 
 # The only tracks allowed to reach organizations that predate this system.
 # Both exist for exactly that audience; everything else is bounded by day_max
@@ -142,6 +151,8 @@ class RunStats:
     skipped_inactive_org: int = 0
     failed: int = 0
     budget_exhausted: bool = False
+    # True when the run stopped early because sends kept failing back to back.
+    aborted_consecutive_failures: bool = False
     # True when this run seeded the backlog rather than sending, which happens
     # once, automatically, the first time the job runs anywhere.
     auto_seeded: bool = False
@@ -162,6 +173,7 @@ class RunStats:
             "skipped_backfill": self.skipped_backfill,
             "skipped_inactive_org": self.skipped_inactive_org,
             "budget_exhausted": self.budget_exhausted,
+            "aborted_consecutive_failures": self.aborted_consecutive_failures,
             "auto_seeded": self.auto_seeded,
             "seeded": self.seeded,
             "by_nudge": dict(sorted(self.by_nudge.items())),
@@ -465,8 +477,11 @@ async def run_nudges(
 
     preexisting = 0
     considered_orgs = 0
+    consecutive_failures = 0
 
     async for snapshot in iter_snapshots(db_session, now=now, org_id=org_id):
+        if stats.aborted_consecutive_failures:
+            break
         considered_orgs += 1
         if _is_preexisting(snapshot, cutoff):
             preexisting += 1
@@ -502,6 +517,9 @@ async def run_nudges(
         )
 
         for admin in admins:
+            if stats.aborted_consecutive_failures:
+                break
+
             if stats.sent + stats.failed >= max_sends:
                 stats.budget_exhausted = True
                 break
@@ -566,7 +584,14 @@ async def run_nudges(
                         f"/logos/{snapshot.logo_image}"
                     )
 
-                result = send_nudge_email(
+                # Off the event loop: `send_nudge_email` ends in the synchronous
+                # `requests`-based resend client, and this is a per-recipient
+                # loop. Awaiting it inline parked the single uvicorn worker for
+                # up to ~21s per stalled send (10s read timeout, one retry, a
+                # 1s sleep between them) — multiplied by the recipient count —
+                # while every unrelated request on the pod waited behind it.
+                result = await send_email_in_threadpool(
+                    send_nudge_email,
                     nudge_id=spec.id,
                     email=admin.email,
                     org_name=snapshot.org_name,
@@ -585,7 +610,9 @@ async def run_nudges(
                     row.status = NudgeSendStatus.FAILED
                     row.error = "provider rejected or unavailable"
                     stats.failed += 1
+                    consecutive_failures += 1
                 else:
+                    consecutive_failures = 0
                     row.status = NudgeSendStatus.SENT
                     row.sent_at = now
                     if isinstance(result, dict) and result.get("id"):
@@ -600,6 +627,14 @@ async def run_nudges(
 
                 db_session.add(row)
                 await db_session.commit()
+
+                if consecutive_failures >= CONSECUTIVE_FAILURE_LIMIT:
+                    stats.aborted_consecutive_failures = True
+                    logger.error(
+                        "Nudge run stopped: %s sends failed back to back, "
+                        "the rest of the run would fail the same way",
+                        consecutive_failures,
+                    )
                 break
 
     logger.info(

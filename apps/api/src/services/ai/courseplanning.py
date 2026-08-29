@@ -6,7 +6,12 @@ import json
 import base64
 
 from config.config import get_learnhouse_config
-from src.services.ai.llm import generate_stream, attachments_to_parts, model_for_tier
+from src.services.ai.llm import (
+    AIQuotaExhaustedError,
+    attachments_to_parts,
+    generate_stream,
+    model_for_tier,
+)
 from src.services.ai.schemas.courseplanning import (
     CoursePlan,
     CoursePlanningSessionData,
@@ -467,9 +472,16 @@ IMPORTANT: You MUST incorporate the materials provided above into the course pla
 
         save_course_planning_session(session)
 
+    except AIQuotaExhaustedError:
+        # Propagate the typed error untouched: the router needs to tell a quota
+        # refusal (actionable, refundable, not a fault) from a real failure.
+        raise
     except Exception as e:
-        # Raise the exception so it's handled by the event_generator error handler
-        raise RuntimeError(f"Course planning error: {str(e)}")
+        # Raise the exception so it's handled by the event_generator error handler.
+        # Only the class name goes in the message: the provider's body would land
+        # in the Sentry issue title and re-fingerprint on every distinct error.
+        # `from e` keeps the real cause attached to the event.
+        raise RuntimeError(f"Course planning error: {type(e).__name__}") from e
 
 
 async def generate_activity_content_stream(
@@ -534,9 +546,12 @@ Please modify the content according to the user's request. Output ONLY the compl
         session.activity_iteration_counts[activity_uuid] = iteration_count + 1
         save_course_planning_session(session)
 
+    except AIQuotaExhaustedError:
+        raise
     except Exception as e:
-        # Raise the exception so it's handled by the event_generator error handler
-        raise RuntimeError(f"Activity content generation error: {str(e)}")
+        # Same reasoning as generate_course_plan_stream above: class name only in
+        # the message, real cause preserved via `from e`.
+        raise RuntimeError(f"Activity content generation error: {type(e).__name__}") from e
 
 
 def extract_plan_from_response(response: str) -> Optional[CoursePlan]:

@@ -925,7 +925,10 @@ async def magic_link_request(
     )
     from src.services.orgs.auth_policy import is_login_method_allowed
     from src.security.session_context import AUTH_METHOD_MAGIC_LOGIN
-    from src.services.email.utils import get_base_url_from_request
+    from src.services.email.utils import (
+        get_base_url_from_request,
+        send_email_in_threadpool,
+    )
 
     is_allowed, retry_after = check_login_rate_limit(request)
     if not is_allowed:
@@ -956,11 +959,16 @@ async def magic_link_request(
 
     try:
         token = issue_magic_login_token(user.email, org.id if org else None)
-        send_magic_login_email(
-            UserRead.model_validate(user),
-            user.email,
-            get_base_url_from_request(request),
-            token,
+        # Off the event loop: the provider clients underneath are synchronous,
+        # and prod runs a single uvicorn worker — inline, one stalled send
+        # parked every other request on the pod for the timeout-plus-retry
+        # window while the user waited on a login link.
+        await send_email_in_threadpool(
+            send_magic_login_email,
+            user=UserRead.model_validate(user),
+            email=user.email,
+            base_url=get_base_url_from_request(request),
+            token=token,
         )
     except Exception:
         import logging

@@ -39,7 +39,11 @@ from src.services.auth.session import (
     mint_session_tokens,
 )
 from src.services.orgs.auth_policy import auth_policy_exception, evaluate_org_auth
-from src.services.orgs.mfa_policy import evaluate_mfa_compliance, get_org_mfa_policy
+from src.services.orgs.mfa_policy import evaluate_mfa_compliance
+from src.services.orgs.security_config import (
+    get_org_security_config,
+    invalidate_org_security_config,
+)
 from src.services.security.rate_limiting import check_rate_limit, get_client_ip
 from src.security.org_auth import is_org_admin
 from src.db.organization_config import OrganizationConfig
@@ -532,12 +536,20 @@ async def api_get_org_security_policy(
     return await _org_security_policy_payload(db_session, org_id)
 
 
-async def _org_security_policy_payload(db_session: AsyncSession, org_id: int) -> dict:
-    """The saved policy, in the one shape both the GET and the PUT answer with."""
-    from src.services.orgs.auth_policy import get_org_auth_policy
+def _security_policy_payload(security: dict, org_id: int) -> dict:
+    """The saved policy, in the one shape both the GET and the PUT answer with.
 
-    policy = await get_org_mfa_policy(db_session, org_id)
-    auth_policy = await get_org_auth_policy(db_session, org_id)
+    Takes the raw ``admin_toggles.security`` dict rather than the session, so
+    the PUT — which is holding the dict it just wrote — can answer without
+    reading the row back. Both policies are parsed through the same normalizers
+    the loaders use, so the PUT's answer cannot drift from what the next GET
+    will report.
+    """
+    from src.services.orgs.auth_policy import parse_org_auth_policy
+    from src.services.orgs.mfa_policy import parse_org_mfa_policy
+
+    policy = parse_org_mfa_policy(security, org_id)
+    auth_policy = parse_org_auth_policy(security, org_id)
     return {
         "require_2fa": policy.require_2fa,
         "require_2fa_grace_days": policy.grace_days,
@@ -546,6 +558,12 @@ async def _org_security_policy_payload(db_session: AsyncSession, org_id: int) ->
         "allowed_auth_methods": auth_policy.allowed_auth_methods,
         "allow_central_session_sharing": auth_policy.allow_central_session_sharing,
     }
+
+
+async def _org_security_policy_payload(db_session: AsyncSession, org_id: int) -> dict:
+    """Read the org's security config once, and shape it for the settings GET."""
+    security = await get_org_security_config(db_session, org_id)
+    return _security_policy_payload(security, org_id)
 
 
 @router.put(
@@ -677,7 +695,16 @@ async def api_set_org_mfa_policy(
     db_session.add(row)
     await db_session.commit()
 
-    return await _org_security_policy_payload(db_session, org_id)
+    # The access gates earlier in this same request read the security config
+    # through a session-scoped memo, which is now holding the pre-save values.
+    # Drop it so anything else on this session — a gate running after the
+    # handler body, or a later save on a reused session — sees the new policy.
+    invalidate_org_security_config(db_session, org_id)
+
+    # Answered from the dict just written rather than by reading the row back:
+    # this handler already loaded the row itself, and a re-read here was the
+    # second `SELECT ... FROM organizationconfig` on this transaction.
+    return _security_policy_payload(security, org_id)
 
 
 @router.get(

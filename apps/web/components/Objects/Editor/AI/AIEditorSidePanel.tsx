@@ -41,6 +41,8 @@ import { useDirection } from '@hooks/useDirection'
 import { useLHAnalytics, AnalyticsEvent } from '@services/analytics'
 import AIMarkdownRenderer from '@components/Objects/Activities/AI/AIMarkdownRenderer'
 import { setAIHighlight, clearAIHighlight } from '../Extensions/AISelectionHighlight/AISelectionHighlight'
+import { clampRange, mapRange } from '../Extensions/AISelectionHighlight/range'
+import { captureError } from '@lib/errors/report'
 
 type AIEditorSidePanelProps = {
   editor: Editor
@@ -334,6 +336,68 @@ function AIEditorSidePanel(props: AIEditorSidePanelProps) {
   const insertPositionRef = useRef<number | null>(null)
   const streamingStartPosRef = useRef<number | null>(null)
 
+  /**
+   * Keep the pending selection range pointing at the text the user selected.
+   *
+   * selectionRangeRef is captured in sendMessage and read back in the
+   * onContentStart stream callback — a full network round-trip later — and it
+   * is read to WRITE: `setTextSelection(range).deleteSelection()`. The user is
+   * free to type, undo or paste while the request is in flight, and every one of
+   * those transactions shifts the positions the numbers refer to.
+   *
+   * Clamping alone would be the wrong tool here and is arguably worse than a
+   * crash: setTextSelection clamps internally anyway, so a stale range never
+   * throws — it just deletes whatever text now sits at those offsets, silently,
+   * with nothing sent to Sentry. Mapping through each transaction is what makes
+   * the deletion hit the original selection; see mapRange for the bias choice.
+   * A range whose text the user deleted themselves maps to nothing and becomes
+   * null, so onContentStart skips the delete entirely.
+   *
+   * Map the appended transactions too, not just the dispatched one. tiptap emits
+   * `{ editor, transaction, appendedTransactions }` once, AFTER
+   * `view.updateState(state)` has applied all of them (@tiptap/core, Editor's
+   * dispatchTransaction), so `transaction.doc` is an intermediate document, not
+   * the one the editor now holds. Ignoring the appended steps would leave the
+   * stored range unmapped through any plugin-appended edit and clamp it against
+   * a stale size — the exact silent-corruption case this subscription exists to
+   * prevent. Nothing in this app calls appendTransaction today (NoTextInput uses
+   * filterTransaction), but this is the single choke point for a range that gets
+   * written through, so it has to be correct for the general case rather than
+   * for the current extension set.
+   */
+  useEffect(() => {
+    const editor = props.editor
+    if (!editor) return
+
+    const onTransaction = ({
+      transaction,
+      appendedTransactions,
+    }: {
+      transaction: any
+      appendedTransactions?: any[]
+    }) => {
+      const stored = selectionRangeRef.current
+      if (!stored) return
+
+      let mapped: { from: number; to: number } | null = stored
+      for (const tr of [transaction, ...(appendedTransactions ?? [])]) {
+        if (!tr?.docChanged) continue
+        mapped = mapRange(tr.mapping, tr.doc.content.size, mapped)
+        if (!mapped) break
+      }
+
+      // Every transaction in the batch left the document alone: nothing to do.
+      if (mapped === stored) return
+
+      selectionRangeRef.current = mapped
+    }
+
+    editor.on('transaction', onTransaction)
+    return () => {
+      editor.off('transaction', onTransaction)
+    }
+  }, [props.editor])
+
   // Block types that are truly atomic (atom: true, no editable content)
   const ATOMIC_BLOCK_TYPES = [
     'blockQuiz',
@@ -464,18 +528,78 @@ function AIEditorSidePanel(props: AIEditorSidePanelProps) {
 
   /**
    * Remove AI streaming marks from a range in the editor
+   *
+   * Called from a timer 1.5s after the insert, so the positions handed in were
+   * computed against a document that has since moved on — further streamed
+   * inserts, the user typing, an undo. The clamp keeps the unsetMark aimed at
+   * text that still exists rather than at a range hanging off the end of a
+   * document that shrank under it.
+   *
+   * This is NOT what closed LEARNHOUSE-WEB-5X ("RangeError: Position -1 outside
+   * of fragment", mechanism auto.browser.browserapierrors.setTimeout). That
+   * throw came from tiptap's own `Delete` core extension: its onUpdate schedules
+   * `setTimeout(callback, 0)` and the callback walks `nextTransaction.steps`,
+   * doing `nextTransaction.doc.nodeAt(newStart - 1)` for every RemoveMarkStep —
+   * `newStart` comes from tiptap's mapping, not from anything this component
+   * passes in, and any step whose mapped start is 0 hit nodeAt(-1). The Sentry
+   * stack matches that frame for frame (vendor fn → Array.forEach → vendor cb →
+   * nodeAt → findIndex) with no app frame anywhere in it.
+   *
+   * @tiptap/core guards that read as `newStart > 0 ? … : false` (see
+   * src/extensions/delete.ts in @tiptap/core/dist/index.cjs). The guard first
+   * appears in 3.22.0 — I diffed the published tarballs: 3.21.0 still has the
+   * bare `nodeAt(newStart - 1)`, 3.22.0 and every release after it (3.29.2,
+   * 3.30.0, 3.30.2) have the guard. 3.22.0 is therefore the real floor, NOT
+   * 3.30.2 as this comment previously claimed.
+   *
+   * That also lines the timeline up. `git show df9cf41b:apps/web/bun.lock` (the
+   * deploy in force when 5X fired on 2026-08-06) resolves @tiptap/core@3.20.0,
+   * i.e. unguarded; fb1d1658 on 2026-08-09 ("upgrade tiptap to 3.29.2 to fix a
+   * crash while editing") crossed the floor, and 5X has not fired since. The
+   * later 3.30.0 → 3.30.2 bump in b205d03d is unrelated to this throw.
+   *
+   * package.json pins 3.30.2 exactly, so we are well clear; a downgrade would
+   * only reopen this below 3.22.0. If a RangeError of this shape returns with no
+   * app frame in the stack, check @tiptap/core before looking at this file.
    */
   const removeStreamingMarks = (startPos: number, endPos: number) => {
-    if (startPos < endPos) {
-      props.editor
-        .chain()
-        .focus()
-        .setTextSelection({ from: startPos, to: endPos })
-        .unsetMark('aiStreaming')
-        .setTextSelection(endPos)
-        .run()
-    }
+    if (!props.editor || props.editor.isDestroyed) return
+
+    const range = clampRange(props.editor.state.doc.content.size, {
+      from: startPos,
+      to: endPos,
+    })
+    if (!range) return
+
+    props.editor
+      .chain()
+      .focus()
+      .setTextSelection(range)
+      .unsetMark('aiStreaming')
+      .setTextSelection(range.to)
+      .run()
   }
+
+  // Streaming-mark timers, cleared on unmount so a panel that closes mid
+  // animation never dispatches into an editor that is on its way out.
+  const streamingMarkTimersRef = useRef<ReturnType<typeof setTimeout>[]>([])
+
+  const scheduleStreamingMarkRemoval = (startPos: number, endPos: number) => {
+    const timer = setTimeout(() => {
+      streamingMarkTimersRef.current = streamingMarkTimersRef.current.filter(
+        (id) => id !== timer
+      )
+      removeStreamingMarks(startPos, endPos)
+    }, 1500)
+    streamingMarkTimersRef.current.push(timer)
+  }
+
+  useEffect(() => {
+    return () => {
+      streamingMarkTimersRef.current.forEach(clearTimeout)
+      streamingMarkTimersRef.current = []
+    }
+  }, [])
 
   /**
    * Insert a single TipTap JSON node with appropriate handling
@@ -485,9 +609,13 @@ function AIEditorSidePanel(props: AIEditorSidePanelProps) {
 
     // For special blocks (atomic or with React node views), insert directly
     if (isSpecial) {
-      const cleanContent = JSON.parse(JSON.stringify(node))
-
       try {
+        // Inside the try on purpose: the clone is a serialization step and can
+        // throw on its own (a cyclic value reaches JSON.stringify as
+        // "Converting circular structure to JSON"). Outside, that throw escapes
+        // past the fallback that exists precisely to keep a bad node from
+        // killing the insert.
+        const cleanContent = JSON.parse(JSON.stringify(node))
         const editor = props.editor
         const schemaNodeType = editor.schema.nodes[cleanContent.type]
 
@@ -496,15 +624,23 @@ function AIEditorSidePanel(props: AIEditorSidePanelProps) {
         }
 
         editor.chain().focus().insertContent(cleanContent).run()
-      } catch {
-        // Fallback: try with just type and attrs
+      } catch (primaryError) {
+        // Fallback: try with just type and attrs. This drops the node's
+        // children, so it is a degradation even when it succeeds.
         try {
           props.editor.chain().focus().insertContent({
             type: node.type,
             attrs: node.attrs || {}
           }).run()
-        } catch {
-          // Silent fail
+        } catch (fallbackError) {
+          // Both paths failed: the node is gone from the document with nothing
+          // on screen to say so. Report it — a silently dropped AI insert is
+          // invisible to the user and unauditable for us.
+          captureError(fallbackError, {
+            where: 'AIEditorSidePanel.insertSingleNode',
+            nodeType: node?.type,
+            primaryError: String(primaryError),
+          })
         }
       }
     } else {
@@ -548,9 +684,7 @@ function AIEditorSidePanel(props: AIEditorSidePanelProps) {
 
         // Schedule removal of streaming marks after animation
         if (startPos < endPos) {
-          setTimeout(() => {
-            removeStreamingMarks(startPos, endPos)
-          }, 1500)
+          scheduleStreamingMarkRemoval(startPos, endPos)
         }
         return
       }
@@ -568,9 +702,10 @@ function AIEditorSidePanel(props: AIEditorSidePanelProps) {
 
       // For special blocks (atomic or with React node views), insert directly
       if (isSpecial) {
-        const cleanContent = JSON.parse(JSON.stringify(content))
-
         try {
+          // See insertSingleNode — the clone belongs inside the try so a
+          // serialization failure lands in the fallback instead of escaping.
+          const cleanContent = JSON.parse(JSON.stringify(content))
           const editor = props.editor
           const schemaNodeType = editor.schema.nodes[cleanContent.type]
           if (!schemaNodeType) {
@@ -578,15 +713,21 @@ function AIEditorSidePanel(props: AIEditorSidePanelProps) {
           }
 
           editor.chain().focus().insertContent(cleanContent).run()
-        } catch {
+        } catch (primaryError) {
           // Fallback: try with just type and attrs (no content)
           try {
             props.editor.chain().focus().insertContent({
               type: content.type,
               attrs: content.attrs || {}
             }).run()
-          } catch {
-            // Silent fail
+          } catch (fallbackError) {
+            // See insertSingleNode — a dropped insert has to reach Sentry or
+            // nobody ever learns the content vanished.
+            captureError(fallbackError, {
+              where: 'AIEditorSidePanel.insertContentWithAnimation',
+              nodeType: content?.type,
+              primaryError: String(primaryError),
+            })
           }
         }
         return
@@ -600,9 +741,7 @@ function AIEditorSidePanel(props: AIEditorSidePanelProps) {
 
       // Schedule removal of streaming marks after animation
       if (startPos < endPos) {
-        setTimeout(() => {
-          removeStreamingMarks(startPos, endPos)
-        }, 1500)
+        scheduleStreamingMarkRemoval(startPos, endPos)
       }
     } catch {
       // Fallback: try inserting as plain text
@@ -649,9 +788,19 @@ function AIEditorSidePanel(props: AIEditorSidePanelProps) {
       ? props.editor.state.doc.textBetween(selection.from, selection.to)
       : undefined
 
-    // Store selection range for later use
+    // Store selection range for later use.
+    //
+    // insertPositionRef is set on BOTH branches, and that matters: it is read
+    // synchronously below to build `cursor_position` on the outgoing request,
+    // before any stream callback has run. Setting it only in the no-selection
+    // branch (as this did) meant a message sent WITH a selection shipped
+    // whatever offset the previous no-selection message had left in the ref —
+    // an offset into an older document, telling the backend to reason about the
+    // wrong part of the activity. onContentStart refines this later for the
+    // local insert; it cannot fix what was already sent.
     if (hasSelection) {
       selectionRangeRef.current = { from: selection.from, to: selection.to }
+      insertPositionRef.current = selection.from
     } else {
       selectionRangeRef.current = null
       insertPositionRef.current = selection.from
@@ -680,17 +829,36 @@ function AIEditorSidePanel(props: AIEditorSidePanelProps) {
         isStreamingContentRef.current = true
         contentBufferRef.current = ''
 
-        // If there was selected text, delete it first
-        if (selectionRangeRef.current) {
+        // If there was selected text, delete it first.
+        //
+        // The range has been mapped through every transaction that landed while
+        // the request was in flight (see the `transaction` subscription above),
+        // so it still covers the user's original selection. clampRange is the
+        // last line of defence, and reading it into a local first matters: the
+        // deleteSelection below fires the same subscription, which collapses the
+        // ref to null mid-chain.
+        const pendingSelection = clampRange(
+          props.editor.state.doc.content.size,
+          selectionRangeRef.current
+        )
+        selectionRangeRef.current = null
+
+        if (pendingSelection) {
           props.editor
             .chain()
             .focus()
-            .setTextSelection(selectionRangeRef.current)
+            .setTextSelection(pendingSelection)
             .deleteSelection()
             .run()
           // Update insert position to where selection was
-          insertPositionRef.current = selectionRangeRef.current.from
-          selectionRangeRef.current = null
+          insertPositionRef.current = pendingSelection.from
+        } else {
+          // Selection did not survive (the user deleted it while waiting), so
+          // aim the local insert at the caret instead of at a position from an
+          // earlier message. This only moves where the text lands on screen —
+          // the request, and its cursor_position, went out before any callback
+          // ran; that field is set in sendMessage.
+          insertPositionRef.current = props.editor.state.selection.from
         }
 
         // Store the starting position for content insertion
@@ -1302,12 +1470,19 @@ function AIEditorSidePanel(props: AIEditorSidePanelProps) {
                   <Type size={14} className="text-purple-400 flex-shrink-0" />
                   <span className="text-xs text-purple-300/80 truncate">
                     {(() => {
-                      const sel = aiEditorState.persistentSelection
-                      if (sel && props.editor) {
-                        const text = props.editor.state.doc.textBetween(sel.from, sel.to)
-                        return text.length > 50 ? `"${text.slice(0, 50)}..."` : `"${text}"`
-                      }
-                      return ''
+                      if (!props.editor) return ''
+                      // persistentSelection only refreshes while the editor has
+                      // focus, so it is stale for as long as the user is typing
+                      // in the chat box below. Reading it unclamped against a
+                      // document the AI stream has since shortened throws
+                      // during render and takes the editor page down.
+                      const sel = clampRange(
+                        props.editor.state.doc.content.size,
+                        aiEditorState.persistentSelection
+                      )
+                      if (!sel) return ''
+                      const text = props.editor.state.doc.textBetween(sel.from, sel.to)
+                      return text.length > 50 ? `"${text.slice(0, 50)}..."` : `"${text}"`
                     })()}
                   </span>
                   <button

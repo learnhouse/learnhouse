@@ -1,10 +1,12 @@
 """Tests for src/services/orgs/join_notifications.py."""
 
 import re
+import threading
 from datetime import datetime
 from unittest.mock import AsyncMock, patch
 
 import pytest
+from fastapi import HTTPException
 
 from src.db.users import User
 from src.services.orgs.join_notifications import notify_user_joined_org
@@ -86,3 +88,71 @@ class TestNotifyUserJoinedOrg:
             side_effect=RuntimeError("provider down"),
         ):
             await notify_user_joined_org(mock_request, db, user, org.id)
+
+    @pytest.mark.asyncio
+    async def test_send_runs_off_the_event_loop_thread(self, mock_request, db, org):
+        """The provider client blocks; admin provisioning walks this per user.
+
+        Inline, one stalled send parks the single uvicorn worker for the whole
+        timeout-plus-retry window and every unrelated request with it.
+        """
+        user = await _make_user(db, user_uuid="user_offload")
+        on_main_thread = []
+
+        def recording_send(**kwargs):
+            on_main_thread.append(threading.current_thread() is threading.main_thread())
+            return True
+
+        with patch(
+            "src.services.email.utils.get_org_signup_base_url",
+            new=AsyncMock(return_value="https://acme.test/"),
+        ), patch("src.services.users.emails.send_email", new=recording_send):
+            await notify_user_joined_org(mock_request, db, user, org.id)
+
+        assert on_main_thread == [False]
+
+    @pytest.mark.asyncio
+    async def test_lookup_failure_is_logged_at_error(self, mock_request, db, org):
+        """The swallow also covers the queries and the URL resolution.
+
+        Those failures break the greeting on every join path and nothing else
+        reports them, so a warning (which Sentry's ERROR-level capture never
+        sees) would make them invisible.
+        """
+        user = await _make_user(db, user_uuid="user_url_broken")
+
+        with patch(
+            "src.services.email.utils.get_org_signup_base_url",
+            new=AsyncMock(side_effect=RuntimeError("no base url")),
+        ), patch(
+            "src.services.orgs.join_notifications.logger.exception"
+        ) as exception_mock, patch(
+            "src.services.orgs.join_notifications.logger.warning"
+        ) as warning_mock:
+            await notify_user_joined_org(mock_request, db, user, org.id)
+
+        exception_mock.assert_called_once()
+        warning_mock.assert_not_called()
+
+    @pytest.mark.asyncio
+    async def test_delivery_failure_stays_at_warning(self, mock_request, db, org):
+        """A provider failure has already logged itself inside `send_email`."""
+        user = await _make_user(db, user_uuid="user_provider_down")
+
+        with patch(
+            "src.services.email.utils.get_org_signup_base_url",
+            new=AsyncMock(return_value="https://acme.test/"),
+        ), patch(
+            "src.services.orgs.join_notifications.logger.exception"
+        ) as exception_mock, patch(
+            "src.services.orgs.join_notifications.logger.warning"
+        ) as warning_mock, patch(
+            "src.services.users.emails.send_org_join_email",
+            side_effect=HTTPException(
+                status_code=503, detail="Email service temporarily unavailable"
+            ),
+        ):
+            await notify_user_joined_org(mock_request, db, user, org.id)
+
+        warning_mock.assert_called_once()
+        exception_mock.assert_not_called()

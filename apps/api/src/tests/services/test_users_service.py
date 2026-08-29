@@ -754,8 +754,12 @@ class TestUserPasswordAvatarSession:
         assert created.email_verified is False
         mock_send.assert_awaited_once()
 
-        # Surface that send-email failures are intentionally not swallowed —
-        # callers may need to react (e.g., roll back analytics, notify ops).
+        # The User row is committed before the verification email is attempted,
+        # so a mail failure must NOT fail the signup. It used to: a Resend quota
+        # exhaustion turned every /api/v1/users/ signup into a 503 for an
+        # account that had in fact been created, and the retry then answered
+        # "Email or username is already in use". Recovery is
+        # POST /api/v1/auth/resend-verification.
         with patch(
             "src.services.users.users.validate_password_complexity",
             return_value=Mock(is_valid=True),
@@ -770,13 +774,15 @@ class TestUserPasswordAvatarSession:
             "src.services.users.users.authorization_verify_based_on_roles_and_authorship",
             new_callable=AsyncMock,
         ):
-            with pytest.raises(Exception, match="boom"):
-                await create_user_without_org(
-                    mock_request,
-                    db,
-                    admin_user,
-                    _user_create("weak-platform-fail", "weak-platform-fail@test.com"),
-                )
+            survived = await create_user_without_org(
+                mock_request,
+                db,
+                admin_user,
+                _user_create("weak-platform-fail", "weak-platform-fail@test.com"),
+            )
+
+        assert survived.email == "weak-platform-fail@test.com"
+        assert survived.email_verified is False
 
     @pytest.mark.asyncio
     async def test_create_user_with_invite_success_and_redis_update(

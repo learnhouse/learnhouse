@@ -420,14 +420,16 @@ async def update_activity(
     await db_session.commit()
     await db_session.refresh(activity)
 
-    # Trigger background re-indexing for RAG when content changes
+    # Trigger background re-indexing for RAG when content changes. Detached on
+    # purpose: the activity is already committed above, so an AI/provider outage
+    # must never fail the save. The strong ref keeps the task from being GC'd.
+    # _trigger_course_embedding logs its own (non-critical) failure — no
+    # done-callback logging here: it would double-report, contradict that level,
+    # and t.exception() itself raises when the task is cancelled at shutdown.
     if 'content' in update_data:
         task = asyncio.create_task(_trigger_course_embedding(activity.course_id, activity.org_id))
         _embedding_tasks.add(task)
         task.add_done_callback(_embedding_tasks.discard)
-        task.add_done_callback(
-            lambda t: logger.error("Embedding task failed: %s", t.exception()) if t.exception() else None
-        )
 
     activity = ActivityRead.model_validate(activity)
 
@@ -436,6 +438,14 @@ async def update_activity(
 
 async def _trigger_course_embedding(course_id: int, org_id: int) -> None:
     """Background task to re-index course embeddings after content update."""
+    # Imported here (not at module scope) so the AI layer's provider SDKs stay
+    # off the import path of every activity request, and bound before the try so
+    # the handlers below can never hit a NameError.
+    from src.services.ai.llm.provider import (
+        AIQuotaExhaustedError,
+        provider_error_label,
+    )
+
     try:
         from src.core.events.database import get_db_session
         from src.services.ai.rag.embedding_service import embed_course_content
@@ -446,8 +456,25 @@ async def _trigger_course_embedding(course_id: int, org_id: int) -> None:
                 logger.warning("Skipping embedding for deleted course %d", course_id)
                 return
             await embed_course_content(course_id, org_id, session)
+    except AIQuotaExhaustedError:
+        # A billing state, not a defect: WARNING keeps it out of Sentry, exactly
+        # as the embedding service and the AI routers treat it.
+        logger.warning(
+            "Background embedding update skipped for course %d: AI provider quota exhausted",
+            course_id,
+        )
     except Exception as e:
-        logger.warning("Background embedding update failed (non-critical): %s", e)
+        # ERROR, because this is the silent half of the failure: the activity was
+        # saved but its course keeps serving stale embeddings and nothing tells
+        # the user. LoggingIntegration turns this into the one Sentry issue for
+        # the whole background path. Only the class + status is interpolated —
+        # the provider's body would re-fingerprint the issue on every distinct
+        # message (and can embed the request URL, hence the API key).
+        logger.error(
+            "Background embedding update failed for course %d: %s",
+            course_id,
+            provider_error_label(e),
+        )
 
 
 async def delete_activity(

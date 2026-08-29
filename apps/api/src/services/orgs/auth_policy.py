@@ -29,16 +29,15 @@ from dataclasses import dataclass, field
 from typing import Any, Dict, List, Optional
 
 from fastapi import HTTPException, status
-from sqlmodel import select
 from sqlmodel.ext.asyncio.session import AsyncSession
 
-from src.db.organization_config import OrganizationConfig
 from src.security.session_context import (
     AUTH_METHOD_API_TOKEN,
     POLICY_AUTH_METHODS,
     SessionProvenance,
     get_session_provenance,
 )
+from src.services.orgs.security_config import get_org_security_config
 
 logger = logging.getLogger(__name__)
 
@@ -81,16 +80,14 @@ class OrgAuthPolicy:
         return bool(allowed) and not _ALL_METHODS.issubset(allowed)
 
 
-async def get_org_auth_policy(db_session: AsyncSession, org_id: int) -> OrgAuthPolicy:
-    row = (
-        await db_session.execute(
-            select(OrganizationConfig).where(OrganizationConfig.org_id == org_id)
-        )
-    ).scalars().first()
-    if row is None or not isinstance(row.config, dict):
-        return OrgAuthPolicy()
+def parse_org_auth_policy(security: Dict[str, Any], org_id: Optional[int] = None) -> OrgAuthPolicy:
+    """Normalize a raw ``admin_toggles.security`` dict into the policy.
 
-    security = (row.config.get("admin_toggles") or {}).get("security") or {}
+    Split out from the loader so a caller that already holds the dict — the
+    policy PUT, which answers with what it just wrote — can build the policy
+    without paying a second read of the row it just saved. ``org_id`` is only
+    used to identify the org in the log line when the blob is malformed.
+    """
     try:
         methods = security.get("allowed_auth_methods")
         if not isinstance(methods, list):
@@ -106,6 +103,14 @@ async def get_org_auth_policy(db_session: AsyncSession, org_id: int) -> OrgAuthP
     except (TypeError, ValueError, AttributeError):
         logger.exception("Malformed auth-method config for org %s", org_id)
         return OrgAuthPolicy()
+
+
+async def get_org_auth_policy(db_session: AsyncSession, org_id: int) -> OrgAuthPolicy:
+    # Shared with the 2FA policy, which reads the same row on the same request —
+    # see :mod:`src.services.orgs.security_config`. An absent or malformed config
+    # arrives as {}, which falls through to the permissive defaults.
+    security = await get_org_security_config(db_session, org_id)
+    return parse_org_auth_policy(security, org_id)
 
 
 def _method_label(method: str) -> str:

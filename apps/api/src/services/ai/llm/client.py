@@ -25,7 +25,7 @@ from pydantic_ai.messages import (
 )
 from pydantic_ai.settings import ModelSettings
 
-from src.services.ai.llm.provider import build_model
+from src.services.ai.llm.provider import build_model, translate_provider_errors
 
 logger = logging.getLogger(__name__)
 
@@ -135,11 +135,14 @@ async def generate(
     ``output_type`` (a Pydantic model) for structured output.
     """
     agent = _agent(model_name, system_prompt, output_type)
-    result = await agent.run(
-        user_prompt,
-        message_history=to_message_history(history) or None,
-        model_settings=_settings(max_tokens, temperature, timeout),
-    )
+    # Every text generation in the backend funnels through here, so this is the
+    # one place that needs to classify provider failures (see provider.py).
+    with translate_provider_errors():
+        result = await agent.run(
+            user_prompt,
+            message_history=to_message_history(history) or None,
+            model_settings=_settings(max_tokens, temperature, timeout),
+        )
     return result.output
 
 
@@ -155,10 +158,13 @@ async def generate_stream(
 ) -> AsyncGenerator[str, None]:
     """Stream text deltas for a single generation, yielding chunks as they arrive."""
     agent = _agent(model_name, system_prompt, str)
-    async with agent.run_stream(
-        user_prompt,
-        message_history=to_message_history(history) or None,
-        model_settings=_settings(max_tokens, temperature, timeout),
-    ) as result:
-        async for chunk in result.stream_text(delta=True):
-            yield chunk
+    # A provider can refuse on connect or mid-stream; both go through the same
+    # classifier so callers see one exception type either way.
+    with translate_provider_errors():
+        async with agent.run_stream(
+            user_prompt,
+            message_history=to_message_history(history) or None,
+            model_settings=_settings(max_tokens, temperature, timeout),
+        ) as result:
+            async for chunk in result.stream_text(delta=True):
+                yield chunk

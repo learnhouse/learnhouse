@@ -221,7 +221,41 @@ function Canva(props: Editor) {
         <AICanvaToolkit activity={props.activity} editor={editor} />
         <div className="canva-content-wrapper">
           {!props.hideTableOfContents && <TableOfContents editor={editor} />}
-          <EditorContent editor={editor} />
+          {/* Re-enables browser page translation for the authored course
+              content, which app/layout.tsx turns off for the whole document.
+
+              That opt-out is hardening against a known React failure mode — a
+              translation engine swaps text nodes out from under React's fiber
+              tree and the next commit throws "NotFoundError: Failed to execute
+              'insertBefore'" — and NOT a diagnosed fix for LEARNHOUSE-WEB-5M /
+              -6A / -6J; see the comment in app/layout.tsx for why that
+              attribution was withdrawn. Without this line the hardening would
+              cost learners on a foreign locale the one thing they most need
+              translated, so the prose is handed back here.
+
+              The plain-ProseMirror part of this subtree is safe to hand back:
+              those nodes are rendered and reconciled by ProseMirror, so React
+              holds no fiber pointing at them and cannot commit against a node
+              the translator moved. `translate` is inherited, so one attribute
+              does it.
+
+              Two residuals, both accepted deliberately:
+
+                - Custom blocks (quiz, callout, flipcard, scenarios, image,
+                  video — configured above) render through React NodeViews
+                  inside this subtree and ARE React-reconciled, so translation is
+                  live for them again. That is the state they were in before the
+                  root opt-out, and they produced no recorded event. If one ever
+                  does crash this way, put translate="no" on that node view
+                  rather than removing this attribute.
+                - On /dash/boards this attribute is inert: the board embed
+                  renders Canva inside ClientAdminLayout's `notranslate` div, and
+                  the class form of the opt-out cannot be flipped back on by a
+                  descendant. Author-side preview, so no learner impact.
+
+              Scope this no wider. TableOfContents above is a plain React list
+              that re-renders on every editor update. */}
+          <EditorContent editor={editor} translate="yes" />
         </div>
       </div>
     </EditorOptionsProvider>

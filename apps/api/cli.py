@@ -13,8 +13,9 @@ for _stream in (sys.stdout, sys.stderr):
         except Exception:
             pass
 
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, inspect as sa_inspect
 from sqlalchemy.ext.asyncio import create_async_engine
+from sqlalchemy.pool import NullPool
 from sqlmodel import SQLModel
 from sqlmodel.ext.asyncio.session import AsyncSession
 import typer
@@ -30,16 +31,63 @@ from src.services.setup.setup import (
 cli = typer.Typer()
 
 
+# src/core/events/database.py accepts three PostgreSQL schemes —
+# `postgresql+psycopg2://`, `postgresql://` and `postgres://` — so all three
+# are configurations the running app supports, and every one of them has to be
+# normalized before an engine is built here.
+#
+# `postgres://` is the one that bites: it is a valid libpq/Heroku-style URL but
+# NOT a SQLAlchemy dialect name, so `create_engine("postgres://...")` raises
+# `NoSuchModuleError: Can't load plugin: sqlalchemy.dialects:postgres` (checked
+# against the SQLAlchemy 2.0.x pinned here). Passing it through untouched, as
+# these helpers used to, made every CLI command unusable on such a deployment.
+#
+# Prefixes are matched with startswith, longest-driver-first, and the body is
+# re-attached — never `str.replace`, which would rewrite a `postgres` occurring
+# anywhere else in the URL (a hostname, a database name, a password).
+_PG_SCHEME_PREFIXES = (
+    "postgresql+psycopg2://",
+    "postgresql+asyncpg://",
+    "postgresql://",
+    "postgres://",
+)
+
+
+def _split_pg_scheme(url: str):
+    """(matched prefix, rest) for a PostgreSQL URL, or (None, url) otherwise."""
+    for prefix in _PG_SCHEME_PREFIXES:
+        if url.startswith(prefix):
+            return prefix, url[len(prefix):]
+    return None, url
+
+
 def _to_async_url(url: str) -> str:
-    if "+asyncpg" in url:
+    prefix, body = _split_pg_scheme(url)
+    if prefix is None or prefix == "postgresql+asyncpg://":
         return url
-    if url.startswith("postgresql://"):
-        return url.replace("postgresql://", "postgresql+asyncpg://", 1)
-    return url
+    return "postgresql+asyncpg://" + body
 
 
 def _to_sync_url(url: str) -> str:
-    return url.replace("+asyncpg", "")
+    prefix, body = _split_pg_scheme(url)
+    if prefix is None or prefix == "postgresql+psycopg2://":
+        return url
+    return "postgresql://" + body
+
+
+# Every command below is a one-shot process: it opens an engine, runs a handful
+# of statements and exits. SQLAlchemy's default pool (5 + 10) would let a single
+# such run claim 15 connections — the entire client budget of a Supavisor
+# session-mode pooler capped at 15, which is the exact "max clients reached in
+# session mode" (EMAXCONNSESSION) condition the pool arithmetic in
+# src/core/events/database.py exists to prevent, and cron-shaped commands
+# (overage, nudges) run precisely while the API is also serving. NullPool holds
+# at most one connection at a time and costs nothing here: there is no
+# steady-state concurrency to pool for.
+def _one_shot_async_engine(sql_url: str):
+    return create_async_engine(
+        _to_async_url(sql_url), echo=False, pool_pre_ping=True, poolclass=NullPool
+    )
 
 
 @cli.command()
@@ -59,10 +107,36 @@ async def _install_async(short: bool) -> None:
     learnhouse_config = get_learnhouse_config()
     sql_url = learnhouse_config.database_config.sql_connection_string  # type: ignore
 
+    # Both engines use NullPool: they are opened for a handful of statements
+    # during a one-shot install and then thrown away, so pooling buys nothing.
+    # With SQLAlchemy's defaults (5 + 10 each) this function could claim up to
+    # 30 connections — and `auto_install` awaits it IN-PROCESS on any deployment
+    # that has no organizations yet, on top of the application engine's own
+    # pool. Against a Supavisor session-mode pooler capped at 15 clients that is
+    # the exact "max clients reached in session mode" condition the pool sizing
+    # in src/core/events/database.py exists to prevent, and it sat entirely
+    # outside that arithmetic. NullPool holds at most one connection at a time.
+
     # Schema DDL runs on a sync engine (SQLModel.metadata.create_all is sync).
-    sync_engine = create_engine(_to_sync_url(sql_url), echo=False, pool_pre_ping=True)
-    SQLModel.metadata.create_all(sync_engine)
-    sync_engine.dispose()
+    sync_engine = create_engine(
+        _to_sync_url(sql_url), echo=False, pool_pre_ping=True, poolclass=NullPool
+    )
+    try:
+        # create_all is checkfirst=True, so on an alembic-managed database that
+        # is merely BEHIND head it would create the tables of not-yet-applied
+        # revisions — and the next `alembic upgrade head` then dies on their
+        # CREATE TABLE. Once alembic owns the schema, it owns all of it.
+        with sync_engine.connect() as conn:
+            alembic_managed = "alembic_version" in sa_inspect(conn).get_table_names()
+        if alembic_managed:
+            print(
+                "Schema is managed by alembic (alembic_version present) — "
+                "skipping create_all. Run `alembic upgrade head` to change it."
+            )
+        else:
+            SQLModel.metadata.create_all(sync_engine)
+    finally:
+        sync_engine.dispose()
 
     # The install_* coroutines use sqlmodel.ext.asyncio.session.AsyncSession.
     # expire_on_commit=False keeps already-loaded attributes accessible after
@@ -70,7 +144,7 @@ async def _install_async(short: bool) -> None:
     # `install_create_organization_user` triggers async refresh outside the
     # session's greenlet context and raises MissingGreenlet.
     async_engine = create_async_engine(
-        _to_async_url(sql_url), echo=False, pool_pre_ping=True
+        _to_async_url(sql_url), echo=False, pool_pre_ping=True, poolclass=NullPool
     )
 
     try:
@@ -337,7 +411,7 @@ async def _compute_active_user_overage(year: int, month: int) -> None:
 
     learnhouse_config = get_learnhouse_config()
     sql_url = learnhouse_config.database_config.sql_connection_string  # type: ignore
-    async_engine = create_async_engine(_to_async_url(sql_url), echo=False, pool_pre_ping=True)
+    async_engine = _one_shot_async_engine(sql_url)
 
     try:
         async with AsyncSession(async_engine, expire_on_commit=False) as db_session:
@@ -406,7 +480,7 @@ async def _run_nudges(
 
     learnhouse_config = get_learnhouse_config()
     sql_url = learnhouse_config.database_config.sql_connection_string  # type: ignore
-    async_engine = create_async_engine(_to_async_url(sql_url), echo=False, pool_pre_ping=True)
+    async_engine = _one_shot_async_engine(sql_url)
 
     try:
         async with AsyncSession(async_engine, expire_on_commit=False) as db_session:
@@ -457,7 +531,7 @@ async def _nudges_stats(days: int) -> None:
 
     learnhouse_config = get_learnhouse_config()
     sql_url = learnhouse_config.database_config.sql_connection_string  # type: ignore
-    async_engine = create_async_engine(_to_async_url(sql_url), echo=False, pool_pre_ping=True)
+    async_engine = _one_shot_async_engine(sql_url)
     since = datetime.now(timezone.utc) - timedelta(days=days)
 
     try:
@@ -508,7 +582,7 @@ async def _demo_sync() -> None:
 
     learnhouse_config = get_learnhouse_config()
     sql_url = learnhouse_config.database_config.sql_connection_string  # type: ignore
-    async_engine = create_async_engine(_to_async_url(sql_url), echo=False, pool_pre_ping=True)
+    async_engine = _one_shot_async_engine(sql_url)
 
     try:
         async with AsyncSession(async_engine, expire_on_commit=False) as db_session:
@@ -540,7 +614,7 @@ async def _demo_status() -> None:
 
     learnhouse_config = get_learnhouse_config()
     sql_url = learnhouse_config.database_config.sql_connection_string  # type: ignore
-    async_engine = create_async_engine(_to_async_url(sql_url), echo=False, pool_pre_ping=True)
+    async_engine = _one_shot_async_engine(sql_url)
 
     try:
         async with AsyncSession(async_engine, expire_on_commit=False) as db_session:
@@ -611,7 +685,7 @@ async def _demo_teardown() -> None:
 
     learnhouse_config = get_learnhouse_config()
     sql_url = learnhouse_config.database_config.sql_connection_string  # type: ignore
-    async_engine = create_async_engine(_to_async_url(sql_url), echo=False, pool_pre_ping=True)
+    async_engine = _one_shot_async_engine(sql_url)
 
     try:
         async with AsyncSession(async_engine, expire_on_commit=False) as db_session:

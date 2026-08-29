@@ -17,6 +17,7 @@ import {
 
 import { useAuth } from '@components/Contexts/AuthContext'
 import { getCourseMetadata } from '@services/courses/courses'
+import { asArray } from '@services/utils/ts/requests'
 
 interface ActivitySwitcherProps {
   course: { course_uuid: string }
@@ -82,7 +83,10 @@ export default function ActivitySwitcher({
     placeholderData: (prev) => prev,
   })
 
-  const chapters: any[] = data?.chapters ?? []
+  // `?? []` is not a guard: it only replaces null/undefined, so any other
+  // shape the API hands back (an error body, a string) goes straight to
+  // `.map` and takes the editor page down with "is not a function".
+  const chapters: any[] = asArray(data?.chapters)
   const hasChapters = chapters.length > 0
 
   const cancelClose = () => {
@@ -210,7 +214,7 @@ export default function ActivitySwitcher({
                     <Folder size={9} />
                     <span className="truncate max-w-[100px]">{chapter.name}</span>
                   </div>
-                  {(chapter.activities ?? []).map((act: any) => {
+                  {asArray(chapter.activities).map((act: any) => {
                     const isCurrent = act.activity_uuid === currentActivityUuid
                     const cleanActivityUuid =
                       (act.activity_uuid ?? '').replace('activity_', '')

@@ -56,7 +56,11 @@ async def notify_user_joined_org(
         ).scalars().first()
 
         # Imported here: these modules pull in org services that import this one.
-        from src.services.email.utils import get_org_logo_url, get_org_signup_base_url
+        from src.services.email.utils import (
+            get_org_logo_url,
+            get_org_signup_base_url,
+            send_email_in_threadpool,
+        )
         from src.services.orgs.orgs import (
             get_org_default_language,
             resolve_org_sender_name,
@@ -67,7 +71,10 @@ async def notify_user_joined_org(
             org.slug, request, db_session=db_session, org_id=org_id
         )
 
-        send_org_join_email(
+        # Off the event loop: the provider client is synchronous, and admin
+        # provisioning walks this once per user it adds.
+        await send_email_in_threadpool(
+            send_org_join_email,
             email=user.email,
             username=user.username,
             org_name=org.name,
@@ -79,10 +86,21 @@ async def notify_user_joined_org(
             logo_url=get_org_logo_url(org, request),
             sender_name=resolve_org_sender_name(org_config),
         )
-    except Exception:
-        logger.warning(
+    except Exception as exc:
+        # Not a flat warning. This block also wraps the Organization and
+        # OrganizationConfig queries and `get_org_signup_base_url`, so a dead
+        # DB or a URL-resolution regression breaks the greeting on every join
+        # path — and `exc_info=True` on a *warning* buys nothing, because
+        # Sentry's LoggingIntegration captures at logging.ERROR (apps/api/app.py).
+        # `log_swallowed_email_failure` keeps a provider-delivery failure at
+        # warning (send_email already reported it) and sends every other cause
+        # to ERROR with a traceback.
+        from src.services.email.utils import log_swallowed_email_failure
+
+        log_swallowed_email_failure(
+            logger,
+            exc,
             "Failed to send org join email to user %s for org %s",
             getattr(user, "id", None),
             org_id,
-            exc_info=True,
         )

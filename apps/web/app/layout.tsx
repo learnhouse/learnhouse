@@ -57,7 +57,65 @@ export default function RootLayout({
         {/* eslint-disable-next-line @next/next/no-sync-scripts */}
         <script src="/embed-bg.js" />
       </head>
-      <body suppressHydrationWarning>
+      {/* Built-in page translation (Chrome/Edge/Yandex, and Chrome on Android
+          where it is on by default) replaces text nodes with <font> wrappers it
+          inserts itself. React's fiber tree still points at the originals, so
+          the next commit can call insertBefore/removeChild against a node that
+          is no longer a child of the parent it recorded, and the page dies on
+          "NotFoundError: Failed to execute 'insertBefore'". That is a real and
+          documented React failure mode, and this attribute closes it.
+
+          READ THIS BEFORE CITING IT AS A FIX. It is hardening, NOT a diagnosed
+          fix for any recorded Sentry issue. It was originally written up as the
+          cause of LEARNHOUSE-WEB-5M / -6A / -6J and that attribution does not
+          survive its own evidence:
+
+            - The dash subtree has carried BOTH translate="no" and the
+              `notranslate` class since 4080d4ca (2026-07-25) — see
+              app/orgs/[orgslug]/dash/ClientAdminLayout.tsx. That is a month
+              before 6A's first event (2026-08-24). Whatever crashed there was
+              already opted out of translation for the issue's entire life.
+            - 6A's 14 events are not one route. They span /dash/courses,
+              /dash/courses/course/:uuid/{general,content} (inside that
+              already-opted-out div), plus /courses, /course/:uuid and /new
+              (outside it), across four hosts and Chrome, Edge and Chrome Mobile.
+              The "culprit" shown in Sentry is just the first event's route.
+            - Every frame in 5M's and 6A's stacks is minified React internals
+              (a recursive lo/ll commit pair ending at a root commit) with no app
+              frame at all, and this project has no source maps uploaded, so
+              there is nothing in the event tying the crash to a translated node,
+              a portal, or any component we own.
+
+          So the real cause of 5M/6A/6J is unknown and those issues stay OPEN in
+          Sentry. Do not close them against this attribute or this file. The next
+          real step is uploading source maps, not another DOM guess.
+
+          Placement is still <body> rather than a subtree, on its own merits:
+          React portals (every Radix dialog, dropdown and the toaster) mount into
+          document.body, outside any inner wrapper, and `translate` is inherited
+          so one attribute covers the whole document including those portals.
+
+          THIS IS DELIBERATELY NOT THE LAST WORD. Turning translation off for the
+          whole product would be a real regression: LearnHouse ships 21 locales,
+          and users do read the product through the browser translator (the
+          events above came from zh-TW and pt-BR readers). `translate` is
+          inherited, so the scoping happens by re-enabling downwards. The
+          authored course prose — the content a learner most needs machine
+          translated — is re-enabled on the ProseMirror surface in
+          DynamicCanva.tsx, where React does not reconcile the text nodes and so
+          cannot hit this failure mode. Anything else that must stay translatable
+          re-enables itself the same way, with translate="yes" on the narrowest
+          wrapper React does not own.
+
+          The opt-out here is the `translate` attribute ONLY, deliberately
+          without the legacy `notranslate` class. `translate` is defined by HTML
+          as an inherited state a descendant can flip back on, which is what
+          makes the scoping above possible; `notranslate` is a Google Translate
+          convention that makes a traversal skip the subtree outright, with no
+          documented way for a descendant to opt back in. Adding it here would
+          silently undo DynamicCanva's re-enable. Chrome and Edge both honour the
+          attribute on its own. */}
+      <body suppressHydrationWarning translate="no">
         <Providers>
           <main className="animate-fade-in">
             {children}

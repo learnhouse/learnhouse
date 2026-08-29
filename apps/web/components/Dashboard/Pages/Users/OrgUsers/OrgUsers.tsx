@@ -10,7 +10,8 @@ import ToolTip from '@components/Objects/StyledElements/Tooltip/Tooltip'
 import { getAPIUrl } from '@services/config/config'
 import { getUserAvatarMediaDirectory } from '@services/media/media'
 import { removeUserFromOrg, removeUsersFromOrg, updateUserRole } from '@services/organizations/orgs'
-import { apiFetch } from '@services/utils/ts/requests'
+import { apiFetch, asArray } from '@services/utils/ts/requests'
+import { getUserGroups } from '@services/usergroups/usergroups'
 import { LogOut, Search, ChevronLeft, ChevronRight, Shield, User, Crown, Users, CheckCircle2, XCircle, Mail, Globe, ArrowUp, ArrowDown, X, Filter, Download, BarChart3, GitCompare, ExternalLink } from 'lucide-react'
 import Link from 'next/link'
 import { useParams } from 'next/navigation'
@@ -119,15 +120,19 @@ function OrgUsers() {
     staleTime: 60_000,
   })
 
-  // Fetch available usergroups for filter dropdown
+  // Fetch available usergroups for filter dropdown.
+  // Go through the shared service rather than an inline apiFetch: every other
+  // observer of the ['usergroups', orgId] key uses it, and react-query keeps one
+  // cache entry per key — two queryFns returning different shapes meant this
+  // dropdown could be handed whatever the last component to load had written.
   const { data: usergroups } = useQuery({
     queryKey: queryKeys.usergroups.list(org?.id),
-    queryFn: () => apiFetch(`${getAPIUrl()}usergroups/org/${org.id}?org_id=${org.id}`, access_token),
+    queryFn: () => getUserGroups(org.id, access_token),
     enabled: !!org?.id && !!access_token,
     staleTime: 60_000,
   })
 
-  const orgUsers = data?.items || []
+  const orgUsers = asArray(data?.items)
   const total = data?.total || 0
   const isInitialLoading = !data && isFetching
   const isPageTransitioning = !!data && isFetching
@@ -352,7 +357,7 @@ function OrgUsers() {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">All roles</SelectItem>
-                  {roles?.map((role: any) => (
+                  {asArray(roles).map((role: any) => (
                     <SelectItem key={role.id} value={role.id.toString()}>
                       {role.name}
                     </SelectItem>
@@ -379,7 +384,7 @@ function OrgUsers() {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">All groups</SelectItem>
-                  {usergroups?.map((group: any) => (
+                  {asArray(usergroups).map((group: any) => (
                     <SelectItem key={group.id} value={group.id.toString()}>
                       {group.name}
                     </SelectItem>
@@ -707,7 +712,7 @@ function OrgUsers() {
                               </SelectValue>
                             </SelectTrigger>
                             <SelectContent>
-                              {roles?.map((role: any) => (
+                              {asArray(roles).map((role: any) => (
                                 <SelectItem key={role.id} value={role.role_uuid}>
                                   <div className="flex items-center gap-2">
                                     {role.name.toLowerCase().includes('admin') ? (

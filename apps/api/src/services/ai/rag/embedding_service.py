@@ -20,6 +20,7 @@ from src.services.ai.llm.embeddings import (
     embed_documents,
     embed_query,
 )
+from src.services.ai.llm.provider import AIQuotaExhaustedError, provider_error_label
 from src.services.ai.rag.content_extraction import extract_all_course_content
 
 logger = logging.getLogger(__name__)
@@ -55,14 +56,27 @@ async def generate_embeddings(texts: list[str]) -> list[list[float]]:
             try:
                 all_embeddings.extend(await embed_documents(batch))
                 break
+            except AIQuotaExhaustedError:
+                # Terminal, not transient: retrying a spent quota only triples
+                # the upstream calls and the Sentry events. WARNING (not ERROR)
+                # because a known billing state is not an application fault —
+                # LoggingIntegration turns every ERROR into a Sentry issue.
+                logger.warning("Embedding skipped: AI provider quota exhausted")
+                raise
             except Exception as e:
                 if attempt == MAX_RETRIES - 1:
-                    logger.error("Embedding failed after %d attempts: %s", MAX_RETRIES, e)
+                    # Log the class + status, never the provider's message: it
+                    # carries the response body, which changes the Sentry issue
+                    # title (and therefore the grouping) on every distinct error.
+                    logger.error(
+                        "Embedding failed after %d attempts: %s",
+                        MAX_RETRIES, provider_error_label(e),
+                    )
                     raise
                 wait = 2 ** attempt
                 logger.warning(
                     "Embedding attempt %d/%d failed, retrying in %ds: %s",
-                    attempt + 1, MAX_RETRIES, wait, e,
+                    attempt + 1, MAX_RETRIES, wait, provider_error_label(e),
                 )
                 await asyncio.sleep(wait)
 
@@ -77,9 +91,17 @@ async def embed_single_text(text: str) -> list[float]:
     for attempt in range(MAX_RETRIES):
         try:
             return await embed_query(text)
+        except AIQuotaExhaustedError:
+            # This path is interactive (RAG query), so blind retries here add
+            # user-visible latency to a request that cannot succeed.
+            logger.warning("Query embedding skipped: AI provider quota exhausted")
+            raise
         except Exception as e:
             if attempt == MAX_RETRIES - 1:
-                logger.error("Single embedding failed after %d attempts: %s", MAX_RETRIES, e)
+                logger.error(
+                    "Single embedding failed after %d attempts: %s",
+                    MAX_RETRIES, provider_error_label(e),
+                )
                 raise
             await asyncio.sleep(2 ** attempt)
     raise RuntimeError("unreachable")

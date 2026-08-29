@@ -430,4 +430,6 @@ async def test_try_send_org_created_links_to_the_new_org_dashboard():
     ), patch("src.services.users.emails.send_org_created_email") as send_mock:
         await _try_send_org_created(MagicMock(), org, user, MagicMock())
 
-    assert send_mock.call_args.args[2] == "https://acme.learn.test/dash"
+    # Keyword arguments: the send now goes through `send_email_in_threadpool`,
+    # which forwards **kwargs to the blocking helper on a worker thread.
+    assert send_mock.call_args.kwargs["dashboard_url"] == "https://acme.learn.test/dash"

@@ -39,6 +39,40 @@ const DAYJS_LOCALES: Record<string, () => Promise<unknown>> = {
 }
 
 /**
+ * Language tags reaching this app are NOT guaranteed to be BCP-47.
+ *
+ * `i18n.language` is whatever i18next's browser detector found, and every one of
+ * its sources hands back an arbitrary string: `navigator.language` on
+ * glibc/POSIX hosts reports forms like `en-US@posix`, the `?lng=` query param is
+ * user-supplied, and the `i18next` cookie / `i18nextLng` localStorage entry
+ * echo back whatever was detected earlier. Feed any of those to an Intl
+ * constructor and it throws `RangeError: Invalid language tag`, which takes down
+ * the whole render (it crashed the org landing page's thumbnail grid).
+ *
+ * So degrade instead of throwing: normalise the obvious POSIX/ISO-15897 spellings,
+ * then fall back full tag -> base subtag -> 'en'.
+ */
+export function normalizeLanguageTag(lng?: string | null): string {
+  // `en_US@posix` -> `en-US`. Underscores and an `@modifier` are the two forms
+  // that reach us most and are both trivially recoverable.
+  const raw = String(lng ?? '').trim().split('@')[0].replace(/_/g, '-')
+
+  for (const candidate of [raw, baseCode(raw)]) {
+    if (!candidate) continue
+    try {
+      // Exactly the validity check the Intl constructors run, without building
+      // a formatter — so anything this accepts, they accept.
+      Intl.getCanonicalLocales(candidate)
+      return candidate
+    } catch {
+      /* not a valid BCP-47 tag — try the next fallback */
+    }
+  }
+
+  return 'en'
+}
+
+/**
  * NUMERALS — a deliberate product decision, kept behind one function.
  *
  * `Intl.NumberFormat('ar')` resolves to Eastern Arabic-Indic digits (٠١٢٣٤) on
@@ -52,10 +86,16 @@ const DAYJS_LOCALES: Record<string, () => Promise<unknown>> = {
  * So: Latin digits and the Gregorian calendar, everywhere. Month names and
  * relative times still localise. Flip this one function if an org asks for
  * native numerals.
+ *
+ * This is also the single choke point every Intl constructor in this file goes
+ * through, so normalizeLanguageTag() here is what keeps a malformed tag from
+ * reaching formatDate/formatNumber/formatCurrency/formatPercent. Do not add a
+ * `new Intl.*` anywhere that bypasses it.
  */
 function intlLocale(lng?: string): string {
-  const base = baseCode(lng)
-  return base === 'ar' || base === 'fa' ? `${base}-u-nu-latn` : lng || 'en'
+  const tag = normalizeLanguageTag(lng)
+  const base = baseCode(tag)
+  return base === 'ar' || base === 'fa' ? `${base}-u-nu-latn` : tag
 }
 
 /**
