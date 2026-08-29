@@ -57,6 +57,14 @@ class UserUpdatePassword(SQLModel):
 
 
 class UserRead(UserBase):
+    # SECURITY/ROBUSTNESS: a response model must not re-validate what is already
+    # stored. EmailStr (email-validator) rejects special-use names such as
+    # ".local", so one anonymized account — "deleted-user-<id>@anonymized.local",
+    # written by the GDPR scrub — turned every endpoint that returns its org's
+    # members into a 500: the members list, the CSV export, course learners.
+    # Addresses are validated where they enter the system (UserCreate,
+    # UserUpdate, the auth and admin request bodies), not on the way out.
+    email: str
     id: int
     user_uuid: str
     email_verified: bool = False
