@@ -19,6 +19,7 @@ import {
   Library,
   List,
   ListOrdered,
+  Minus,
   MousePointerClick,
   Pilcrow,
   Puzzle,
@@ -427,6 +428,17 @@ export const slashCommands: SlashCommandItem[] = [
   },
 
   // UI Elements category
+  {
+    id: 'divider',
+    title: 'Divider',
+    description: 'Horizontal line to separate sections',
+    icon: <Minus size={18} />,
+    category: 'ui',
+    keywords: ['divider', 'separator', 'rule', 'line', 'hr', 'horizontal', 'break', 'split'],
+    command: (editor) => {
+      editor.chain().focus().setHorizontalRule().run()
+    },
+  },
   {
     id: 'badge',
     title: 'Badge',

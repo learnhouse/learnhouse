@@ -110,6 +110,38 @@
   margin: 0.5rem 0;
 }
 
+/* Tailwind's preflight leaves `hr` at border-color: currentColor, which draws
+   the divider in body-text near-black. Match the light rule used everywhere
+   else, and give it symmetric spacing (.ProseMirror only sets margin-top).
+   All three ProseMirror surfaces: the editor, the learner view, and the
+   preview used by version history and the merge-conflict dialog — which
+   synthesizes an `hr` as its "keep both" seam. */
+.activity-editor-content-wrapper .ProseMirror hr,
+.canva-content-wrapper .ProseMirror hr,
+.editor-preview-wrapper .ProseMirror hr {
+  border: none;
+  border-top: 1px solid rgba(0, 0, 0, 0.1);
+  margin: 1.25rem 0;
+}
+
+/* In the editor the line also has to be a target: a 1px-tall box is nearly
+   impossible to hover, and the drag handle (the only delete/duplicate
+   affordance) only appears for the block under the pointer. Padding widens
+   the hit area without moving the line, which content-box keeps at the top
+   edge of the padding. */
+.activity-editor-content-wrapper .ProseMirror hr {
+  box-sizing: content-box;
+  padding: 0.5rem 0;
+  margin: 0.75rem 0;
+  cursor: pointer;
+}
+
+/* Selection is suppressed project-wide with !important (see above), so the
+   selected divider has to say so in its own colour. */
+.activity-editor-content-wrapper .ProseMirror hr.ProseMirror-selectednode {
+  border-top-color: rgba(59, 130, 246, 0.6);
+}
+
 /* Embed service icons scroll animation */
 @keyframes embed-icons-scroll {
   0% { transform: translateX(0); }
@@ -1616,6 +1648,13 @@
   outline: 1px solid rgba(100, 116, 139, 0.25);
 }
 .editor-tool-btn-code.is-active:hover { background: rgba(100, 116, 139, 0.24); }
+
+.editor-tool-btn-divider {
+  background: rgba(100, 116, 139, 0.06);
+  color: rgb(71, 85, 105);
+  outline: 1px solid rgba(100, 116, 139, 0.1);
+}
+.editor-tool-btn-divider:hover { background: rgba(100, 116, 139, 0.12); }
 
 .editor-tool-btn-embed {
   background: rgba(20, 184, 166, 0.06);

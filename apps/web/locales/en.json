@@ -3065,6 +3065,7 @@
         "enable_ai": "Enable AI Features",
         "enable_ai_description": "Allow AI-powered features across your organization's content and learning experiences",
         "admin_only": "Only administrators can modify AI settings.",
+        "currently_disabled": "AI features are currently turned off for this organization. Turn on the switch below to restore them.",
         "features_enabled": "AI Features Available",
         "feature_editor": "AI-powered content editor assistance",
         "feature_activity": "AI learning activity interactions",
@@ -4645,6 +4646,8 @@
             "description_required": "Please provide a description for your assignment",
             "due_date_label": "Due Date",
             "due_date_required": "Please provide a due date for your assignment",
+            "due_date_hint": "Optional — leave empty for a self-paced course with no deadline.",
+            "due_date_clear": "No deadline",
             "grading_type_label": "Grading Type",
             "grading_type_hint": "How grades are displayed to students",
             "grading_type_required": "Please provide a grading type for your assignment",
@@ -4698,6 +4701,8 @@
             "description_required": "Please provide a description for your assignment",
             "due_date_label": "Due Date",
             "due_date_required": "Please provide a due date for your assignment",
+            "due_date_hint": "Optional — leave empty for a self-paced course with no deadline.",
+            "due_date_clear": "No deadline",
             "grading_type_label": "Grading Type",
             "grading_type_hint": "How grades are displayed to students",
             "grading_type_required": "Please provide a grading type for your assignment",
@@ -5110,7 +5115,25 @@
           "empty": "Enter an H5P embed URL.",
           "unparseable": "That does not look like a valid URL. Paste the embed URL or iframe snippet from your H5P host.",
           "unsupported_protocol": "Only http and https URLs can be embedded."
-        }
+        },
+        "size_label": "Size",
+        "sizes": {
+          "auto": "Auto",
+          "auto_hint": "Let the activity report its own height.",
+          "widescreen": "16:9",
+          "widescreen_hint": "Widescreen — best for interactive video.",
+          "classic": "4:3",
+          "classic_hint": "Classic — best for slide-based presentations.",
+          "short": "Short",
+          "short_hint": "A fixed 320 pixel frame.",
+          "medium": "Medium",
+          "medium_hint": "A fixed 520 pixel frame.",
+          "tall": "Tall",
+          "tall_hint": "A fixed 760 pixel frame.",
+          "custom": "Custom ({{height}}px)",
+          "custom_hint": "Dragged to a height of your own."
+        },
+        "resize_handle": "Resize the H5P frame"
       },
       "quiz_block": {
         "all_correct": "All answers are correct!",
@@ -5221,7 +5244,8 @@
         "suggestion_timeline_prompt": "Create an interactive timeline showing major historical events with expandable details"
       },
       "library": "Library",
-      "flipcard_grid": "Flashcard Grid"
+      "flipcard_grid": "Flashcard Grid",
+      "divider": "Divider"
     }
   },
   "analytics": {

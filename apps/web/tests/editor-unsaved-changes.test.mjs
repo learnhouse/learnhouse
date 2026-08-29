@@ -107,3 +107,83 @@ describe("editor unsaved changes guard", () => {
     ).toBe(false);
   });
 });
+
+describe("getEditorContentSnapshot — H5P height", () => {
+  const doc = (height, url = "https://team.h5p.com/content/1/embed") => ({
+    type: "doc",
+    content: [{ type: "blockH5P", attrs: { h5pUrl: url, title: "Quiz", height } }],
+  });
+
+  test("a host-reported height change alone does not make the doc dirty", () => {
+    const saved = getEditorContentSnapshot(doc(400));
+    expect(hasEditorContentChanged(saved, doc(812))).toBe(false);
+  });
+
+  test("a real edit alongside the height change still counts", () => {
+    const saved = getEditorContentSnapshot(doc(400));
+    expect(
+      hasEditorContentChanged(saved, doc(812, "https://team.h5p.com/content/2/embed"))
+    ).toBe(true);
+  });
+
+  test("a node type that collides with Object.prototype does not crash", () => {
+    const doc = { type: "doc", content: [{ type: "__proto__", attrs: { a: 1 } }] };
+    expect(() => getEditorContentSnapshot(doc)).not.toThrow();
+    expect(hasEditorContentChanged(getEditorContentSnapshot(doc), doc)).toBe(false);
+  });
+
+  test("a height an author dragged does make the doc dirty", () => {
+    // Under `custom` the height IS the author's edit, and a drag on a block
+    // already set to custom moves no other attribute — so if this were treated
+    // as volatile the resize would be lost with no leave-confirm.
+    const dragged = (height) => ({
+      type: "doc",
+      content: [
+        {
+          type: "blockH5P",
+          attrs: { h5pUrl: "https://team.h5p.com/content/1/embed", sizeMode: "custom", height },
+        },
+      ],
+    });
+    expect(hasEditorContentChanged(getEditorContentSnapshot(dragged(500)), dragged(900))).toBe(true);
+  });
+
+  test("a preset size still counts the height it pinned", () => {
+    const preset = (height) => ({
+      type: "doc",
+      content: [
+        {
+          type: "blockH5P",
+          attrs: { h5pUrl: "https://team.h5p.com/content/1/embed", sizeMode: "widescreen", height },
+        },
+      ],
+    });
+    expect(hasEditorContentChanged(getEditorContentSnapshot(preset(540)), preset(720))).toBe(true);
+  });
+
+  test("an explicit auto is as volatile as a missing sizeMode", () => {
+    const auto = (height) => ({
+      type: "doc",
+      content: [
+        {
+          type: "blockH5P",
+          attrs: { h5pUrl: "https://team.h5p.com/content/1/embed", sizeMode: "auto", height },
+        },
+      ],
+    });
+    expect(hasEditorContentChanged(getEditorContentSnapshot(auto(400)), auto(812))).toBe(false);
+  });
+
+  test("height is ignored only on blockH5P", () => {
+    const saved = getEditorContentSnapshot({
+      type: "doc",
+      content: [{ type: "blockVideo", attrs: { height: 400 } }],
+    });
+    expect(
+      hasEditorContentChanged(saved, {
+        type: "doc",
+        content: [{ type: "blockVideo", attrs: { height: 812 } }],
+      })
+    ).toBe(true);
+  });
+});

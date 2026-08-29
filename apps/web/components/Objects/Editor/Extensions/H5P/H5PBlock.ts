@@ -42,6 +42,13 @@ export default Node.create({
       title: {
         default: '',
       },
+      // How the height above is arrived at: 'auto' lets the activity report
+      // it, anything else is the author overriding a frame the activity sizes
+      // badly (see lib/media/h5pProtocol). Old documents have no value here
+      // and read as 'auto', which is what they have always done.
+      sizeMode: {
+        default: 'auto',
+      },
     }
   },
 
