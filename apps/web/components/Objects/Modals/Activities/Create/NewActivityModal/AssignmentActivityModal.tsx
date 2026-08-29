@@ -71,7 +71,9 @@ function NewAssignment({ submitActivity: _submitActivity, chapterId, course, clo
       {
         title: activityName,
         description: activityDescription,
-        due_date: dueDate,
+        // Empty means no deadline; send null rather than an empty string so the
+        // column reads as unset instead of as a value nothing can parse.
+        due_date: dueDate || null,
         grading_type: gradingType,
         auto_grading: autoGrading,
         anti_copy_paste: antiCopyPaste,
@@ -175,24 +177,37 @@ function NewAssignment({ submitActivity: _submitActivity, chapterId, course, clo
           </Form.Control>
         </Form.Field>
 
+        {/* Optional: a self-paced course has no date that means anything to a
+            learner who enrolled today. */}
         <Form.Field
           name="assignment-activity-due-date"
           className="space-y-1.5"
         >
-          <Form.Label className="text-sm font-medium text-gray-700">
-            {t('dashboard.assignments.modals.create.form.due_date_label')}
-          </Form.Label>
-          <Form.Message match="valueMissing" className="text-xs text-red-500">
-            {t('dashboard.assignments.modals.create.form.due_date_required')}
-          </Form.Message>
+          <div className="flex items-center justify-between">
+            <Form.Label className="text-sm font-medium text-gray-700">
+              {t('dashboard.assignments.modals.create.form.due_date_label')}
+            </Form.Label>
+            {dueDate && (
+              <button
+                type="button"
+                onClick={() => setDueDate('')}
+                className="text-[10px] font-medium text-gray-400 hover:text-gray-700 transition-colors"
+              >
+                {t('dashboard.assignments.modals.create.form.due_date_clear')}
+              </button>
+            )}
+          </div>
           <Form.Control asChild>
             <input
               onChange={(e) => setDueDate(e.target.value)}
+              value={dueDate}
               type="date"
-              required
               className={inputClass}
             />
           </Form.Control>
+          <p className="text-[10px] text-gray-400">
+            {t('dashboard.assignments.modals.create.form.due_date_hint')}
+          </p>
         </Form.Field>
       </div>
 

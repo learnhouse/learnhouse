@@ -2,11 +2,16 @@ import { describe, expect, test } from "bun:test";
 
 import {
   clampHeight,
+  isAutoSized,
+  normalizeSizeMode,
   parseH5PMessage,
   replyTarget,
+  resolveManualHeight,
   shouldPrepareResize,
+  DEFAULT_HEIGHT,
   MAX_HEIGHT,
   MIN_HEIGHT,
+  SIZE_MODES,
 } from "../lib/media/h5pProtocol.ts";
 
 describe("parseH5PMessage — the shapes H5P sends", () => {
@@ -97,5 +102,80 @@ describe("replyTarget", () => {
     expect(replyTarget("null")).toBe("*");
     expect(replyTarget("")).toBe("*");
     expect(replyTarget(undefined)).toBe("*");
+  });
+});
+
+describe("SIZE_MODES", () => {
+  test("is exactly the picker's six buttons, in order", () => {
+    // Pinned as a list, not iterated: the component renders one button per
+    // entry, and handleSizeModeChange is the only producer of 'auto'. Drop
+    // 'auto' from here and a manually sized block can never be handed back to
+    // the H5P handshake.
+    expect(SIZE_MODES).toEqual(["auto", "widescreen", "classic", "short", "medium", "tall"]);
+  });
+
+  test("'custom' is deliberately not a button — dragging produces it", () => {
+    expect(SIZE_MODES).not.toContain("custom");
+    expect(normalizeSizeMode("custom")).toBe("custom");
+  });
+});
+
+describe("normalizeSizeMode", () => {
+  test("keeps every mode the picker can produce", () => {
+    for (const mode of SIZE_MODES) {
+      expect(normalizeSizeMode(mode)).toBe(mode);
+    }
+    expect(normalizeSizeMode("custom")).toBe("custom");
+  });
+
+  test("a document written before sizing existed reads as auto", () => {
+    expect(normalizeSizeMode(undefined)).toBe("auto");
+    expect(normalizeSizeMode(null)).toBe("auto");
+    expect(normalizeSizeMode("")).toBe("auto");
+    expect(normalizeSizeMode("cinema")).toBe("auto");
+    expect(normalizeSizeMode(16 / 9)).toBe("auto");
+  });
+
+  test("isAutoSized follows it", () => {
+    expect(isAutoSized(undefined)).toBe(true);
+    expect(isAutoSized("auto")).toBe(true);
+    expect(isAutoSized("widescreen")).toBe(false);
+    expect(isAutoSized("custom")).toBe(false);
+  });
+});
+
+describe("resolveManualHeight", () => {
+  test("auto leaves the height to the content", () => {
+    expect(resolveManualHeight("auto", 960, 812)).toBeNull();
+    expect(resolveManualHeight("nonsense", 960, 812)).toBeNull();
+  });
+
+  test("ratio modes follow the block's width", () => {
+    expect(resolveManualHeight("widescreen", 960, 400)).toBe(540);
+    expect(resolveManualHeight("classic", 960, 400)).toBe(720);
+    // A narrow phone gets a proportionally shorter frame, not the desktop one.
+    expect(resolveManualHeight("widescreen", 320, 400)).toBe(180);
+  });
+
+  test("a ratio falls back to the stored height until the block has a width", () => {
+    expect(resolveManualHeight("widescreen", 0, 812)).toBe(812);
+    expect(resolveManualHeight("widescreen", Number.NaN, 812)).toBe(812);
+  });
+
+  test("fixed modes ignore both the width and the stored height", () => {
+    expect(resolveManualHeight("short", 960, 812)).toBe(320);
+    expect(resolveManualHeight("medium", 320, 812)).toBe(520);
+    expect(resolveManualHeight("tall", 0, 812)).toBe(760);
+  });
+
+  test("custom is whatever was dragged, within bounds", () => {
+    expect(resolveManualHeight("custom", 960, 812)).toBe(812);
+    expect(resolveManualHeight("custom", 960, 5)).toBe(MIN_HEIGHT);
+    expect(resolveManualHeight("custom", 960, 1e9)).toBe(MAX_HEIGHT);
+  });
+
+  test("a missing stored height does not reach a style attribute as NaN", () => {
+    expect(resolveManualHeight("custom", 960, Number.NaN)).toBe(DEFAULT_HEIGHT);
+    expect(resolveManualHeight("widescreen", 0, Number.NaN)).toBe(DEFAULT_HEIGHT);
   });
 });

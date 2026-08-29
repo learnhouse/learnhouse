@@ -1131,9 +1131,15 @@ async def update_assignment(
     await authorize_assignment_access(request, db_session, current_user, course.course_uuid, AccessAction.UPDATE)
 
     # Update only the fields that were passed in. Non-None values are applied;
-    # additionally allow explicitly clearing pass_threshold_percentage back to
-    # NULL (the grading-type default) when the caller sent it as null — otherwise
-    # a set threshold could never be removed and would keep over-gating certs.
+    # a null is normally read as "not sent" rather than "clear this", because
+    # every optional field on AssignmentUpdate defaults to None.
+    #
+    # Two fields need to be genuinely clearable, so an explicit null empties
+    # them: pass_threshold_percentage back to NULL (the grading-type default),
+    # otherwise a set threshold could never be removed and would keep
+    # over-gating certificates; and due_date, so an assignment can be moved to
+    # a self-paced course and lose its deadline instead of keeping one the
+    # teacher can only ever push further out.
     #
     # The structural foreign keys are never reassigned here: RBAC above only
     # authorizes the assignment's *current* course, so honoring a client-supplied
@@ -1141,13 +1147,14 @@ async def update_assignment(
     # org/course. AssignmentUpdate no longer exposes them; this guard keeps the
     # invariant even if the model regains those fields later.
     IMMUTABLE_FIELDS = frozenset({"org_id", "course_id", "chapter_id", "activity_id"})
+    CLEARABLE_FIELDS = frozenset({"pass_threshold_percentage", "due_date"})
     provided = getattr(assignment_object, "model_fields_set", set())
     for var, value in vars(assignment_object).items():
         if var in IMMUTABLE_FIELDS:
             continue
         if value is not None:
             setattr(assignment, var, value)
-        elif var == "pass_threshold_percentage" and var in provided:
+        elif var in CLEARABLE_FIELDS and var in provided:
             setattr(assignment, var, None)
     assignment.update_date = str(datetime.now())
 

@@ -132,6 +132,48 @@ describe("getEditorContentSnapshot — H5P height", () => {
     expect(hasEditorContentChanged(getEditorContentSnapshot(doc), doc)).toBe(false);
   });
 
+  test("a height an author dragged does make the doc dirty", () => {
+    // Under `custom` the height IS the author's edit, and a drag on a block
+    // already set to custom moves no other attribute — so if this were treated
+    // as volatile the resize would be lost with no leave-confirm.
+    const dragged = (height) => ({
+      type: "doc",
+      content: [
+        {
+          type: "blockH5P",
+          attrs: { h5pUrl: "https://team.h5p.com/content/1/embed", sizeMode: "custom", height },
+        },
+      ],
+    });
+    expect(hasEditorContentChanged(getEditorContentSnapshot(dragged(500)), dragged(900))).toBe(true);
+  });
+
+  test("a preset size still counts the height it pinned", () => {
+    const preset = (height) => ({
+      type: "doc",
+      content: [
+        {
+          type: "blockH5P",
+          attrs: { h5pUrl: "https://team.h5p.com/content/1/embed", sizeMode: "widescreen", height },
+        },
+      ],
+    });
+    expect(hasEditorContentChanged(getEditorContentSnapshot(preset(540)), preset(720))).toBe(true);
+  });
+
+  test("an explicit auto is as volatile as a missing sizeMode", () => {
+    const auto = (height) => ({
+      type: "doc",
+      content: [
+        {
+          type: "blockH5P",
+          attrs: { h5pUrl: "https://team.h5p.com/content/1/embed", sizeMode: "auto", height },
+        },
+      ],
+    });
+    expect(hasEditorContentChanged(getEditorContentSnapshot(auto(400)), auto(812))).toBe(false);
+  });
+
   test("height is ignored only on blockH5P", () => {
     const saved = getEditorContentSnapshot({
       type: "doc",

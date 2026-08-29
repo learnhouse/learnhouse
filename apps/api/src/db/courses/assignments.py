@@ -18,7 +18,12 @@ class AssignmentBase(SQLModel):
 
     title: str
     description: str
-    due_date: str
+    # Optional on purpose. A deadline makes no sense in a self-paced course,
+    # where learners start whenever they enrol, so an assignment may simply not
+    # have one. None (and the empty string an HTML date input clears itself to)
+    # both mean "no deadline": every deadline check treats an unparseable value
+    # as not set, so neither locks anyone out.
+    due_date: Optional[str] = None
     published: Optional[bool] = False
     grading_type: GradingTypeEnum
     # When True, submissions are graded + marked as done automatically on
