@@ -3065,6 +3065,7 @@
         "enable_ai": "Enable AI Features",
         "enable_ai_description": "Allow AI-powered features across your organization's content and learning experiences",
         "admin_only": "Only administrators can modify AI settings.",
+        "currently_disabled": "AI features are currently turned off for this organization. Turn on the switch below to restore them.",
         "features_enabled": "AI Features Available",
         "feature_editor": "AI-powered content editor assistance",
         "feature_activity": "AI learning activity interactions",
