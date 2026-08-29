@@ -2507,7 +2507,7 @@ class TestAnonymizeUser:
 
         await db.refresh(user)
         assert user.email != original_email
-        assert user.email == f"deleted-user-{user.id}@anonymized.local"
+        assert user.email == f"deleted-user-{user.id}@anonymized.example.com"
         assert user.first_name == "Deleted"
         assert user.password == ""
         assert user.email_verified is False

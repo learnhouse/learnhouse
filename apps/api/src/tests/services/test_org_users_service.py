@@ -188,6 +188,45 @@ class TestOrgUsersService:
         assert result["items"][0].user.username == "ungrouped"
 
     @pytest.mark.asyncio
+    async def test_get_organization_users_lists_anonymized_members(
+        self, mock_request, db, org, admin_user
+    ):
+        """A GDPR-scrubbed member must not take the whole listing down.
+
+        The scrub rewrites the address to a reserved-domain placeholder. When
+        UserRead still typed email as EmailStr, model_validate raised on that
+        row and the endpoint answered 500 — so one deleted account emptied the
+        members page for its entire organization. Rows scrubbed before the
+        placeholder domain changed still carry ".local", so the listing has to
+        stay tolerant of them.
+        """
+        member_role = await _make_role(db, org, id=40, name="Member", role_uuid="role_member_anon")
+        scrubbed = await _make_user(
+            db,
+            id=41,
+            username="deleted_user_41",
+            first_name="Deleted",
+            last_name="User",
+            email="deleted-user-41@anonymized.local",
+            email_verified=False,
+            signup_method="anonymized",
+            user_uuid="user_deleted_41",
+        )
+        await _link_user(db, scrubbed.id, org.id, member_role.id)
+
+        with patch(
+            "src.services.orgs.users.is_org_member", return_value=True
+        ), patch(
+            "src.security.superadmin.is_user_superadmin", return_value=False
+        ), patch(
+            "src.security.org_auth.is_org_admin", return_value=True
+        ):
+            result = await get_organization_users(mock_request, org.id, db, admin_user)
+
+        emails = [item.user.email for item in result["items"]]
+        assert "deleted-user-41@anonymized.local" in emails
+
+    @pytest.mark.asyncio
     async def test_get_organization_users_and_export_guard_paths(
         self, mock_request, db, org, admin_user, anonymous_user
     ):
