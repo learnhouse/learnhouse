@@ -478,6 +478,29 @@ function AIEditorSidePanel(props: AIEditorSidePanelProps) {
   }
 
   /**
+   * Recursively extract plain text from a TipTap/ProseMirror JSON node or array.
+   */
+  const extractTextFromTiptap = (content: any): string => {
+    if (typeof content === 'string') {
+      return content
+    }
+    if (Array.isArray(content)) {
+      return content.map(extractTextFromTiptap).filter(Boolean).join(' ')
+    }
+    if (content && typeof content === 'object') {
+      const parts: string[] = []
+      if (typeof content.text === 'string') {
+        parts.push(content.text)
+      }
+      if (Array.isArray(content.content)) {
+        parts.push(content.content.map(extractTextFromTiptap).filter(Boolean).join(' '))
+      }
+      return parts.filter(Boolean).join(' ')
+    }
+    return ''
+  }
+
+  /**
    * Insert a single TipTap JSON node with appropriate handling
    */
   const insertSingleNode = (node: any, _startPos: number): number => {
@@ -605,11 +628,11 @@ function AIEditorSidePanel(props: AIEditorSidePanelProps) {
         }, 1500)
       }
     } catch {
-      // Fallback: try inserting as plain text
-      const textContent = typeof content === 'string' ? content : JSON.stringify(content)
+      // Fallback: insert the best plain-text representation so we don't dump raw JSON
+      const text = typeof content === 'string' ? content : extractTextFromTiptap(content)
       props.editor.chain().focus().insertContent({
         type: 'paragraph',
-        content: [{ type: 'text', text: textContent }]
+        content: [{ type: 'text', text: text || 'The AI returned content that could not be inserted.' }]
       }).run()
     }
   }
@@ -705,12 +728,39 @@ function AIEditorSidePanel(props: AIEditorSidePanelProps) {
 
         track(AnalyticsEvent.AiEditorContentInserted)
 
-        // Clean up the content - remove extra whitespace and newlines
+        // Unwrap content from the most common AI output wrappers first.
         let cleanContent = fullContent.trim()
+
+        // 1) Extract from the <<<CONTENT>>> / <<<END_CONTENT>>> markers
+        const markerMatch = cleanContent.match(/<<<CONTENT>>>([\s\S]*?)<<<END_CONTENT>>>/i)
+        if (markerMatch) {
+          cleanContent = markerMatch[1].trim()
+        }
+
+        // 2) Extract JSON from a markdown code fence
+        const codeFenceMatch = cleanContent.match(/```(?:json)?\s*([\s\S]*?)```/)
+        if (codeFenceMatch) {
+          cleanContent = codeFenceMatch[1].trim()
+        }
+
+        // 3) If the whole payload is a double-quoted JSON string, unwrap it
+        if (cleanContent.startsWith('"') && cleanContent.endsWith('"')) {
+          try {
+            const unwrapped = JSON.parse(cleanContent)
+            if (typeof unwrapped === 'string') {
+              cleanContent = unwrapped.trim()
+            }
+          } catch {
+            // leave cleanContent as-is
+          }
+        }
+
+        // Clean up the content - remove extra whitespace and newlines
         cleanContent = cleanContent.replace(/^\n+|\n+$/g, '').trim()
-        // Intentionally strip ASCII control characters from streamed AI output before JSON parsing.
+        // Intentionally strip dangerous ASCII control characters, but keep \t/\n/\r
+        // so that unescaped whitespace can be repaired in the JSON fallback below.
         // eslint-disable-next-line no-control-regex
-        cleanContent = cleanContent.replace(/[\x00-\x1F\x7F]/g, '')
+        cleanContent = cleanContent.replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g, '')
         cleanContent = cleanContent.trim()
         cleanContent = cleanContent.replace(/,(\s*[\]}])/g, '$1')
 
@@ -853,10 +903,20 @@ function AIEditorSidePanel(props: AIEditorSidePanelProps) {
             }
           }
 
-          // Last resort: insert as plain text paragraph
+          // Last resort: insert the best plain-text representation,
+          // but avoid dumping a raw JSON string into the document.
+          let fallbackText = cleanContent
+          if (cleanContent.startsWith('{') || cleanContent.startsWith('[')) {
+            try {
+              const parsed = JSON.parse(cleanContent)
+              fallbackText = extractTextFromTiptap(parsed)
+            } catch {
+              fallbackText = 'The AI returned content that could not be inserted. Please try again.'
+            }
+          }
           const textContent = {
             type: 'paragraph',
-            content: [{ type: 'text', text: cleanContent }],
+            content: [{ type: 'text', text: fallbackText || 'The AI returned content that could not be inserted. Please try again.' }],
           }
           insertContentWithAnimation(textContent)
         }
