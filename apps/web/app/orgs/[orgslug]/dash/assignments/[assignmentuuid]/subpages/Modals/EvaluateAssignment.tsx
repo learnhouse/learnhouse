@@ -1,5 +1,5 @@
 import { useAssignments } from '@components/Contexts/Assignments/AssignmentContext';
-import { BookOpenCheck, Check, CircleHelp, Download, Info, MessageSquare, UserCheck, X } from 'lucide-react';
+import { BookOpenCheck, Check, CircleHelp, ClipboardCheck, Download, Info, MessageSquare, UserCheck, X } from 'lucide-react';
 import Link from 'next/link';
 import React, { useEffect, useState } from 'react'
 import { useQueryClient } from '@tanstack/react-query';
@@ -114,13 +114,17 @@ function EvaluateAssignment({ user_id }: any) {
     const [gradePreview, setGradePreview] = useState<any>(null);
 
     const assignmentUuid = assignments?.assignment_object?.assignment_uuid;
+    // Formative assignment: the API refuses to grade it, so the grade banner,
+    // the per-task score chips and the two grading actions are all replaced by
+    // a plain "handed in" review of the learner's work.
+    const isUngraded = !!assignments?.assignment_object?.ungraded;
 
     // Re-pull the aggregate grade + per-task breakdown. Called on open and after
     // a child task is inline-graded, so the header banner and per-task badges
     // reflect the new score immediately instead of staying stale until the
     // teacher clicks "Set final grade".
     const refreshGradePreview = React.useCallback(async (seedFeedback = false) => {
-        if (!assignmentUuid || !user_id || !access_token) return;
+        if (!assignmentUuid || !user_id || !access_token || isUngraded) return;
         const res = await getFinalGrade(user_id, assignmentUuid, access_token);
         if (res.success) {
             setGradePreview(res.data);
@@ -128,12 +132,12 @@ function EvaluateAssignment({ user_id }: any) {
                 setFeedback(res.data.overall_feedback);
             }
         }
-    }, [assignmentUuid, user_id, access_token]);
+    }, [assignmentUuid, user_id, access_token, isUngraded]);
 
     // Load any existing grade + feedback when the modal opens so the teacher
     // can edit them instead of starting from scratch.
     useEffect(() => {
-        if (!assignmentUuid || !user_id || !access_token) return;
+        if (!assignmentUuid || !user_id || !access_token || isUngraded) return;
         let cancelled = false;
         (async () => {
             const res = await getFinalGrade(user_id, assignmentUuid, access_token);
@@ -146,7 +150,7 @@ function EvaluateAssignment({ user_id }: any) {
             }
         })();
         return () => { cancelled = true; };
-    }, [assignmentUuid, user_id, access_token]);
+    }, [assignmentUuid, user_id, access_token, isUngraded]);
 
     async function gradeAssignment() {
         const res = await putFinalGrade(user_id, assignmentUuid, access_token, feedback ?? null);
@@ -228,8 +232,23 @@ function EvaluateAssignment({ user_id }: any) {
 
     return (
         <div className='flex flex-col min-h-fit'>
+            {/* Formative notice, in place of the grade preview */}
+            {isUngraded && (
+                <div className='flex items-center space-x-3 bg-teal-50/70 border border-teal-200/70 nice-shadow rounded-xl px-5 py-3 mb-4'>
+                    <ClipboardCheck size={18} className='text-teal-600 shrink-0' />
+                    <div className='flex flex-col'>
+                        <p className='text-xs font-bold text-teal-900'>
+                            {t('dashboard.assignments.submissions.ungraded_title', { defaultValue: 'Formative — not graded' })}
+                        </p>
+                        <p className='text-[11px] text-teal-700/90'>
+                            {t('dashboard.assignments.submissions.ungraded_description', { defaultValue: 'This assignment is handed in for review only. No score is recorded.' })}
+                        </p>
+                    </div>
+                </div>
+            )}
+
             {/* Grade preview */}
-            {liveGrade && (
+            {liveGrade && !isUngraded && (
                 <div className='flex items-center justify-between bg-white nice-shadow rounded-xl px-5 py-3 mb-4'>
                     <div className='flex items-center space-x-3'>
                         <div className={`rounded-lg px-3 py-1.5 text-lg font-bold ${liveGrade.passed ? 'bg-emerald-50 text-emerald-700' : 'bg-rose-50 text-rose-700'}`}>
@@ -270,7 +289,7 @@ function EvaluateAssignment({ user_id }: any) {
                                     {index + 1}
                                 </div>
                                 <p className='text-sm font-semibold text-gray-800'>{task.description || t('dashboard.assignments.submissions.task_label', { number: index + 1 })}</p>
-                                {tb && (
+                                {tb && !isUngraded && (
                                     <div className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
                                         !taskSubmitted
                                             ? 'bg-gray-100 text-gray-500'
@@ -335,7 +354,10 @@ function EvaluateAssignment({ user_id }: any) {
                 })}
             </div>
 
-            {/* Overall feedback */}
+            {/* Overall feedback. Only the grading endpoint persists it, and that
+                endpoint refuses a formative assignment — so on one, this box
+                could never deliver anything to the learner. */}
+            {!isUngraded && (
             <div className='flex flex-col space-y-2 pt-5 mt-3 border-t border-gray-100'>
                 <div className='flex items-center space-x-1.5 text-gray-700'>
                     <MessageSquare size={14} />
@@ -355,6 +377,7 @@ function EvaluateAssignment({ user_id }: any) {
                     {t('dashboard.assignments.submissions.feedback.hint')}
                 </p>
             </div>
+            )}
 
             {/* Action bar */}
             <div className='flex items-center justify-between pt-4 mt-3 border-t border-gray-100'>
@@ -382,6 +405,7 @@ function EvaluateAssignment({ user_id }: any) {
                 </div>
 
                 <div className='flex items-center space-x-3'>
+                    {!isUngraded && (
                     <div className='flex items-center space-x-1.5'>
                         <button
                             onClick={gradeAssignment}
@@ -396,6 +420,8 @@ function EvaluateAssignment({ user_id }: any) {
                             </div>
                         </ToolTip>
                     </div>
+                    )}
+                    {!isUngraded && (
                     <div className='flex items-center space-x-1.5'>
                         <button
                             onClick={finalizeAndComplete}
@@ -410,6 +436,7 @@ function EvaluateAssignment({ user_id }: any) {
                             </div>
                         </ToolTip>
                     </div>
+                    )}
                 </div>
             </div>
         </div>

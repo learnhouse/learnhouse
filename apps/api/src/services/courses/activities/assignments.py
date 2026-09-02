@@ -39,6 +39,7 @@ from src.db.courses.assignments import (
     AssignmentUserSubmissionRead,
     AssignmentUserSubmissionStatus,
     GradingTypeEnum,
+    SolutionRevealEnum,
 )
 from src.db.courses.courses import Course
 from src.db.organizations import Organization
@@ -59,6 +60,9 @@ from src.security.rbac import (
 from src.services.courses.activities.uploads.sub_file import upload_submission_file
 from src.services.courses.activities.uploads.tasks_ref_files import (
     upload_reference_file,
+)
+from src.services.courses.activities.uploads.solution_files import (
+    upload_solution_file,
 )
 from src.services.courses.activities.quiz_modes import (
     resolve_grading_mode,
@@ -320,6 +324,110 @@ async def _student_may_see_answer_key(
         if retries_remain:
             return False
     return True
+
+
+# Submission states that count as "the learner has handed their work in".
+# LATE is included: the work is in, it was just past the deadline.
+_HANDED_IN_STATUSES = (
+    AssignmentUserSubmissionStatus.SUBMITTED,
+    AssignmentUserSubmissionStatus.LATE,
+    AssignmentUserSubmissionStatus.GRADED,
+)
+
+
+async def _student_may_see_solution(
+    current_user, assignment, db_session: AsyncSession
+) -> bool:
+    """Whether this (non-instructor) reader has unlocked the model answer.
+
+    The reveal rule is the teacher's ``solution_reveal`` setting measured
+    against the reader's OWN submission:
+
+      NEVER          -> never.
+      ON_SUBMISSION  -> once their submission is handed in (SUBMITTED / LATE /
+                        GRADED). This is the formative case: turn the document
+                        in, get the corrige back immediately.
+      AFTER_GRADING  -> only once their submission is GRADED.
+
+    One extra guard on a *graded* assignment: while a retry attempt is still
+    available, handing over the corrige is a free 100% (read it, hit "Try
+    again", resubmit it). So we withhold it until no attempt remains, mirroring
+    ``_student_may_see_answer_key``. An ungraded (formative) assignment has no
+    score to game, so the retry guard does not apply there — seeing the worked
+    solution and trying again is exactly the intended loop.
+    """
+    reveal = getattr(assignment, "solution_reveal", None) or SolutionRevealEnum.NEVER
+    if reveal == SolutionRevealEnum.NEVER:
+        return False
+    if not isinstance(current_user, PublicUser):
+        return False
+
+    sub = (await db_session.execute(
+        select(AssignmentUserSubmission).where(
+            AssignmentUserSubmission.user_id == current_user.id,
+            AssignmentUserSubmission.assignment_id == assignment.id,
+        )
+    )).scalars().first()
+    if sub is None:
+        return False
+
+    if reveal == SolutionRevealEnum.AFTER_GRADING:
+        if sub.submission_status != AssignmentUserSubmissionStatus.GRADED:
+            return False
+    elif sub.submission_status not in _HANDED_IN_STATUSES:
+        return False
+
+    if not getattr(assignment, "ungraded", False) and getattr(
+        assignment, "allow_retries", False
+    ):
+        max_retries = int(getattr(assignment, "max_retries", 0) or 0)
+        attempt = int(getattr(sub, "attempt_number", 1) or 1)
+        retries_remain = (max_retries == 0) or (attempt < max_retries)
+        if retries_remain:
+            return False
+
+    return True
+
+
+async def _resolve_solution_visibility(
+    request: Request,
+    db_session: AsyncSession,
+    current_user,
+    course_uuid: str,
+    assignment: Assignment,
+) -> bool:
+    """Whether this reader may see the assignment's model answer.
+
+    Short-circuits when the assignment has no corrige at all, so every
+    assignment that never uses the feature — which is all of them until a
+    teacher opts in — pays neither the instructor-role lookup nor the
+    submission query on a read.
+    """
+    if not ((assignment.solution or "").strip() or assignment.solution_file):
+        return False
+    if await _is_assignment_instructor(request, current_user, course_uuid, db_session):
+        return True
+    return await _student_may_see_solution(current_user, assignment, db_session)
+
+
+def _apply_solution_visibility(
+    result: AssignmentRead, assignment: Assignment, *, unlocked: bool
+) -> AssignmentRead:
+    """Stamp the reveal flags on an outgoing AssignmentRead and, when the
+    reader has not unlocked it, strip the corrige from the payload.
+
+    The strip is what actually enforces the reveal — a client-side gate would
+    ship the solution to every learner in the assignment GET and lose the whole
+    point of the feature.
+    """
+    result.has_solution = bool(
+        (assignment.solution or "").strip() or assignment.solution_file
+    )
+    result.solution_unlocked = bool(unlocked)
+    if not unlocked:
+        result.solution = None
+        result.solution_file = None
+    return result
 
 
 ## > Grade computation
@@ -1021,6 +1129,13 @@ async def create_assignment(
     # Create Assignment
     assignment = Assignment(**assignment_object.model_dump())
 
+    # Formative mode and auto-grading are contradictory: one says "never produce
+    # a grade", the other says "produce one on submit". Normalize here (rather
+    # than trusting the client to keep them consistent) so the submit path only
+    # ever has to check one flag.
+    if assignment.ungraded:
+        assignment.auto_grading = False
+
     assignment.assignment_uuid = str(f"assignment_{uuid4()}")
     assignment.creation_date = str(datetime.now())
     assignment.update_date = str(datetime.now())
@@ -1067,7 +1182,12 @@ async def read_assignment(
     result = AssignmentRead.model_validate(assignment)
     result.course_uuid = course_uuid
     result.activity_uuid = activity_uuid
-    return result
+    # The model answer is reveal-gated: an instructor always sees it, a learner
+    # only once their own submission has unlocked it.
+    unlocked = await _resolve_solution_visibility(
+        request, db_session, current_user, course_uuid, assignment
+    )
+    return _apply_solution_visibility(result, assignment, unlocked=unlocked)
 
 
 async def read_assignment_from_activity_uuid(
@@ -1097,7 +1217,12 @@ async def read_assignment_from_activity_uuid(
     result = AssignmentRead.model_validate(assignment)
     result.course_uuid = course_uuid
     result.activity_uuid = activity_uuid_val
-    return result
+    # Same reveal gate as read_assignment — this is the endpoint the learner's
+    # activity page actually calls, so skipping it here would leak the corrige.
+    unlocked = await _resolve_solution_visibility(
+        request, db_session, current_user, course_uuid, assignment
+    )
+    return _apply_solution_visibility(result, assignment, unlocked=unlocked)
 
 
 async def update_assignment(
@@ -1156,6 +1281,9 @@ async def update_assignment(
             setattr(assignment, var, value)
         elif var in CLEARABLE_FIELDS and var in provided:
             setattr(assignment, var, None)
+    # Turning on formative mode turns auto-grading off — see create_assignment.
+    if assignment.ungraded:
+        assignment.auto_grading = False
     assignment.update_date = str(datetime.now())
 
     # Insert Assignment in DB
@@ -1163,8 +1291,134 @@ async def update_assignment(
     await db_session.commit()
     await db_session.refresh(assignment)
 
-    # return assignment read
-    return AssignmentRead.model_validate(assignment)
+    # return assignment read. The caller passed the UPDATE authorization above,
+    # so they are an instructor and the corrige is theirs to see.
+    return _apply_solution_visibility(
+        AssignmentRead.model_validate(assignment), assignment, unlocked=True
+    )
+
+
+async def put_assignment_solution_file(
+    request: Request,
+    db_session: AsyncSession,
+    assignment_uuid: str,
+    current_user: PublicUser | AnonymousUser | APITokenUser,
+    solution_file: UploadFile | None = None,
+):
+    """Attach (or replace) the assignment's model-answer document.
+
+    Mirrors ``put_assignment_task_reference_file`` but at the assignment level.
+    Instructor-only: the stored filename is the corrige, and handing it to a
+    learner before the reveal rule unlocks it would defeat the whole feature.
+    """
+    statement = select(Assignment).where(Assignment.assignment_uuid == assignment_uuid)
+    assignment = (await db_session.execute(statement)).scalars().first()
+
+    if not assignment:
+        raise HTTPException(
+            status_code=404,
+            detail="Assignment not found",
+        )
+
+    statement = select(Activity).where(Activity.id == assignment.activity_id)
+    activity = (await db_session.execute(statement)).scalars().first()
+
+    statement = select(Course).where(Course.id == assignment.course_id)
+    course = (await db_session.execute(statement)).scalars().first()
+
+    if not course:
+        raise HTTPException(
+            status_code=404,
+            detail="Course not found",
+        )
+
+    org_statement = select(Organization).where(Organization.id == course.org_id)
+    org = (await db_session.execute(org_statement)).scalars().first()
+
+    # RBAC check
+    await authorize_assignment_access(
+        request,
+        db_session,
+        current_user,
+        course.course_uuid,
+        AccessAction.UPDATE,
+        token_action="create",
+    )
+
+    if not (solution_file and solution_file.filename):
+        raise HTTPException(
+            status_code=400,
+            detail="No solution file provided",
+        )
+    if not (activity and org):
+        raise HTTPException(
+            status_code=404,
+            detail="Activity not found",
+        )
+
+    name_in_disk = await upload_solution_file(
+        solution_file,
+        activity.activity_uuid,
+        org.org_uuid,
+        course.course_uuid,
+        assignment.assignment_uuid,
+    )
+    assignment.solution_file = name_in_disk
+    assignment.update_date = str(datetime.now())
+
+    db_session.add(assignment)
+    await db_session.commit()
+    await db_session.refresh(assignment)
+
+    return _apply_solution_visibility(
+        AssignmentRead.model_validate(assignment), assignment, unlocked=True
+    )
+
+
+async def delete_assignment_solution_file(
+    request: Request,
+    db_session: AsyncSession,
+    assignment_uuid: str,
+    current_user: PublicUser | AnonymousUser | APITokenUser,
+):
+    """Detach the model-answer document from the assignment.
+
+    Only the reference is dropped; the uploaded blob is left in place, matching
+    how task reference files behave when replaced.
+    """
+    statement = select(Assignment).where(Assignment.assignment_uuid == assignment_uuid)
+    assignment = (await db_session.execute(statement)).scalars().first()
+
+    if not assignment:
+        raise HTTPException(
+            status_code=404,
+            detail="Assignment not found",
+        )
+
+    statement = select(Course).where(Course.id == assignment.course_id)
+    course = (await db_session.execute(statement)).scalars().first()
+
+    if not course:
+        raise HTTPException(
+            status_code=404,
+            detail="Course not found",
+        )
+
+    # RBAC check
+    await authorize_assignment_access(
+        request, db_session, current_user, course.course_uuid, AccessAction.UPDATE
+    )
+
+    assignment.solution_file = None
+    assignment.update_date = str(datetime.now())
+
+    db_session.add(assignment)
+    await db_session.commit()
+    await db_session.refresh(assignment)
+
+    return _apply_solution_visibility(
+        AssignmentRead.model_validate(assignment), assignment, unlocked=True
+    )
 
 
 async def delete_assignment(
@@ -2818,7 +3072,11 @@ async def create_assignment_submission(
     # shared grading helper. For SHORT_ANSWER and NUMBER_ANSWER, the helper
     # re-verifies the student's answer server-side so client-side tampering
     # is caught.
-    if assignment.auto_grading:
+    # A formative (ungraded) assignment never produces a grade, so it skips this
+    # block entirely and the row stays SUBMITTED. create/update_assignment
+    # already force auto_grading off alongside `ungraded`; this second check
+    # covers rows written by anything that bypassed them.
+    if assignment.auto_grading and not assignment.ungraded:
         tasks_statement = select(AssignmentTask).where(
             AssignmentTask.assignment_id == assignment.id
         )
@@ -3319,10 +3577,24 @@ async def retry_assignment_submission(
     # Only graded submissions are eligible to be retried. Retrying a row
     # that is still SUBMITTED would silently throw away the student's
     # pending work before the teacher even sees it.
-    if assignment_user_submission.submission_status != AssignmentUserSubmissionStatus.GRADED:
+    #
+    # A formative (ungraded) assignment is the exception: it is never GRADED, so
+    # requiring that status would make `allow_retries` unreachable there. Its
+    # submissions become retryable as soon as they are handed in — which is the
+    # point of a formative loop (read the corrige, try again).
+    retryable_statuses = (
+        _HANDED_IN_STATUSES
+        if assignment.ungraded
+        else (AssignmentUserSubmissionStatus.GRADED,)
+    )
+    if assignment_user_submission.submission_status not in retryable_statuses:
         raise HTTPException(
             status_code=400,
-            detail="Only graded submissions can be retried",
+            detail=(
+                "Only submitted assignments can be retried"
+                if assignment.ungraded
+                else "Only graded submissions can be retried"
+            ),
         )
 
     # Retry is destructive and irreversible: it deletes every task submission,
@@ -3450,7 +3722,17 @@ async def _apply_grade_and_finalize(
     manual grading endpoint (UPDATE permission) and the student's auto-grade
     path (READ permission, self-grading under teacher-configured auto_grading)
     can share one implementation.
+
+    Refuses to run on a formative (``ungraded``) assignment. The guard lives
+    here rather than only in the grading endpoint so every route into grading —
+    manual, auto, and the bulk regrade after a task edit — is covered by one
+    check, and a formative submission can never be flipped to GRADED.
     """
+    if assignment.ungraded:
+        raise HTTPException(
+            status_code=400,
+            detail="This assignment is ungraded (formative) and cannot be graded.",
+        )
     # Compute max_grade from the current task configuration. The auto-grade
     # path has already loaded this exact list to decide whether every task is
     # auto-gradable, so it hands it over rather than paying for the same query
@@ -3737,6 +4019,15 @@ async def get_grade_assignment_submission(
 
     # RBAC check
     await authorize_assignment_access(request, db_session, current_user, course.course_uuid, AccessAction.READ)
+
+    # A formative assignment has no grade to read. Returning a computed 0 here
+    # would hand every caller a "0/100, not passed" object for work that was
+    # never meant to be scored, and any UI rendering it would look like a fail.
+    if assignment.ungraded:
+        raise HTTPException(
+            status_code=400,
+            detail="This assignment is ungraded (formative) and has no grade.",
+        )
 
     # Ownership check: non-instructors may only read their own grade
     is_instructor = await _is_assignment_instructor(request, current_user, course.course_uuid, db_session)

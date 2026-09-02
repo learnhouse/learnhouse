@@ -302,9 +302,15 @@ export default function TaskFileObject({ view, user_id, assignmentTaskUUID, onGr
             )}
             {view === 'custom-grading' && (
                 <div className='flex flex-col space-y-4 w-full px-2 sm:px-0'>
+                    {/* On a formative assignment there is no grade to input, so
+                        the instruction to enter one would be wrong. */}
                     <div className='flex flex-col sm:flex-row py-5 sm:py-6 text-xs sm:text-sm justify-center mx-auto space-y-2 sm:space-y-0 sm:space-x-3 text-slate-600 px-4 sm:px-2 text-center sm:text-start bg-slate-50 rounded-lg border border-slate-100'>
                         <Download size={18} className="mx-auto sm:mx-0 text-slate-500" />
-                        <p>Please download the file and grade it manually, then input the grade above</p>
+                        <p>
+                            {assignment?.assignment_object?.ungraded
+                                ? t('dashboard.assignments.submissions.download_to_review', { defaultValue: 'Download the file to review what the learner handed in.' })
+                                : t('dashboard.assignments.submissions.download_to_grade', { defaultValue: 'Please download the file and grade it manually, then input the grade above' })}
+                        </p>
                     </div>
                     {userSubmissions.fileUUID && !isLoading && assignmentTaskUUID && (
                         <Link

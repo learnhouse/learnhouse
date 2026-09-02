@@ -27,6 +27,39 @@ export async function updateAssignment(
   return res
 }
 
+// Model answer ("corrigé") document for the whole assignment. Instructor only —
+// the API withholds the stored filename from learners until the assignment's
+// reveal rule unlocks it.
+export async function updateAssignmentSolutionFile(
+  file: any,
+  assignmentUUID: string,
+  access_token: string
+) {
+  const formData = new FormData()
+
+  if (file) {
+    formData.append('solution_file', file)
+  }
+  const result: any = await fetch(
+    `${getAPIUrl()}assignments/${assignmentUUID}/solution_file`,
+    RequestBodyFormWithAuthHeader('POST', formData, null, access_token)
+  )
+  const res = await getResponseMetadata(result)
+  return res
+}
+
+export async function deleteAssignmentSolutionFile(
+  assignmentUUID: string,
+  access_token: string
+) {
+  const result: any = await fetch(
+    `${getAPIUrl()}assignments/${assignmentUUID}/solution_file`,
+    RequestBodyWithAuthHeader('DELETE', null, null, access_token)
+  )
+  const res = await getResponseMetadata(result)
+  return res
+}
+
 export async function getAssignmentFromActivityUUID(
   activityUUID: string,
   access_token: string

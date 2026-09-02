@@ -22,12 +22,14 @@ from src.services.courses.activities.assignments import (
     delete_assignment_from_activity_uuid,
     delete_assignment_submission,
     delete_assignment_task,
+    delete_assignment_solution_file,
     delete_assignment_task_submission,
     get_assignments_from_course,
     get_grade_assignment_submission,
     grade_assignment_submission,
     handle_assignment_task_submission,
     mark_activity_as_done_for_user,
+    put_assignment_solution_file,
     put_assignment_task_reference_file,
     put_assignment_task_submission_file,
     read_assignment,
@@ -158,6 +160,64 @@ async def api_update_assignment(
     """
     return await update_assignment(
         request, assignment_uuid, assignment_object, current_user, db_session
+    )
+
+
+@router.post(
+    "/{assignment_uuid}/solution_file",
+    response_model=AssignmentRead,
+    summary="Upload the assignment model answer document",
+    description=(
+        "Upload or replace the model answer document for an assignment. "
+        "Instructor only. The document is withheld from learners until the "
+        "assignment's solution_reveal rule unlocks it."
+    ),
+    responses={
+        200: {"description": "Solution file stored.", "model": AssignmentRead},
+        400: {"description": "No solution file provided"},
+        401: {"description": "Authentication required"},
+        403: {"description": "User lacks permission to edit this assignment"},
+        404: {"description": "Assignment not found"},
+    },
+)
+async def api_put_assignment_solution_file(
+    request: Request,
+    assignment_uuid: str,
+    solution_file: UploadFile | None = None,
+    current_user: PublicUser = Depends(get_current_user),
+    db_session=Depends(get_db_session),
+) -> AssignmentRead:
+    """
+    Upload the assignment's model answer document
+    """
+    return await put_assignment_solution_file(
+        request, db_session, assignment_uuid, current_user, solution_file
+    )
+
+
+@router.delete(
+    "/{assignment_uuid}/solution_file",
+    response_model=AssignmentRead,
+    summary="Remove the assignment model answer document",
+    description="Detach the model answer document from an assignment. Instructor only.",
+    responses={
+        200: {"description": "Solution file detached.", "model": AssignmentRead},
+        401: {"description": "Authentication required"},
+        403: {"description": "User lacks permission to edit this assignment"},
+        404: {"description": "Assignment not found"},
+    },
+)
+async def api_delete_assignment_solution_file(
+    request: Request,
+    assignment_uuid: str,
+    current_user: PublicUser = Depends(get_current_user),
+    db_session=Depends(get_db_session),
+) -> AssignmentRead:
+    """
+    Remove the assignment's model answer document
+    """
+    return await delete_assignment_solution_file(
+        request, db_session, assignment_uuid, current_user
     )
 
 
