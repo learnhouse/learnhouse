@@ -8,9 +8,11 @@ venv
 
 # Python caches
 __pycache__
+**/__pycache__
 *.pyc
 *.pyo
 *.pyd
+**/*.py[cod]
 .pytest_cache
 .ruff_cache
 .mypy_cache
@@ -22,6 +24,8 @@ htmlcov
 # Secrets and local config
 .env
 .env.*
+**/.env
+**/.env.*
 
 # Node - not used by the Python image
 node_modules

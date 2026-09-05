@@ -153,6 +153,22 @@ def _course_uuid_from_sqlite_path(file_path: str) -> str:
     return course_uuid
 
 
+def _canonical_sqlite_path(file_path: str) -> str:
+    """Bind course authorization and file reads to the same storage path.
+
+    A symlink inside ``content/`` can point into another course without
+    escaping the storage root. Resolve it before extracting the course UUID
+    so access is checked for the file's actual owner.
+    """
+    storage_path = _validate_storage_path(file_path)
+    config = get_learnhouse_config()
+    if config.hosting_config.content_delivery.type == "filesystem":
+        base_real = os.path.realpath("content")
+        resolved = os.path.realpath(storage_path)
+        return os.path.relpath(resolved, base_real).replace(os.sep, "/")
+    return storage_path.removeprefix("content/")
+
+
 async def _require_course_access(
     request: Request,
     current_user: Union[PublicUser, APITokenUser],
@@ -287,10 +303,11 @@ async def execute_code(
 
     if language_id == SQL_LANGUAGE_ID and body.sqlite_db_path:
         # Authorize: caller must have read access to the course that owns the sqlite file.
-        course_uuid = _course_uuid_from_sqlite_path(body.sqlite_db_path)
+        sqlite_path = _canonical_sqlite_path(body.sqlite_db_path)
+        course_uuid = _course_uuid_from_sqlite_path(sqlite_path)
         await _require_course_access(request, current_user, course_uuid, "read", db_session)
 
-        db_bytes = _read_storage_file(body.sqlite_db_path)
+        db_bytes = _read_storage_file(sqlite_path)
         language_id = PYTHON3_LANGUAGE_ID
         source_code = _wrap_sql_in_python(body.source_code)
         additional_files_b64 = _make_additional_files_zip(db_bytes=db_bytes, text_files=zip_files)
@@ -340,10 +357,11 @@ async def execute_batch(
 
     if language_id == SQL_LANGUAGE_ID and body.sqlite_db_path:
         # Authorize: caller must have read access to the course that owns the sqlite file.
-        course_uuid = _course_uuid_from_sqlite_path(body.sqlite_db_path)
+        sqlite_path = _canonical_sqlite_path(body.sqlite_db_path)
+        course_uuid = _course_uuid_from_sqlite_path(sqlite_path)
         await _require_course_access(request, current_user, course_uuid, "read", db_session)
 
-        db_bytes = _read_storage_file(body.sqlite_db_path)
+        db_bytes = _read_storage_file(sqlite_path)
         language_id = PYTHON3_LANGUAGE_ID
         source_code = _wrap_sql_in_python(body.source_code)
         additional_files_b64 = _make_additional_files_zip(db_bytes=db_bytes, text_files=zip_files)

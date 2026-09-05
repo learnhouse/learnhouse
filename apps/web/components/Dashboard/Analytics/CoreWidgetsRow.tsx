@@ -1,6 +1,6 @@
 'use client'
 import React, { useState } from 'react'
-import { safeHref } from '@services/security/url'
+import { safeHref, safeImageSrc } from '@services/security/url'
 import { useAnalyticsPipe } from './useAnalyticsDashboard'
 import { useOrg } from '@components/Contexts/OrgContext'
 import { getCourseThumbnailMediaDirectory } from '@services/media/media'
@@ -336,7 +336,7 @@ export default function CoreWidgetsRow({ days = '30' }: { days?: string }) {
                     <div className="w-9 h-9 rounded-lg bg-gray-100 flex-shrink-0 overflow-hidden flex items-center justify-center">
                       {thumbnail ? (
                         <img
-                          src={safeHref(thumbnail)}
+                          src={safeImageSrc(thumbnail)}
                           alt=""
                           className="w-full h-full object-cover"
                         />
@@ -412,7 +412,7 @@ export default function CoreWidgetsRow({ days = '30' }: { days?: string }) {
                   ? `/course/${cleanCourseUuid}/activity/${cleanActivityUuid}`
                   : null
               const Wrapper = activityHref ? Link : 'div'
-              const wrapperProps = activityHref ? { href: activityHref } : {}
+              const wrapperProps = activityHref ? { href: safeHref(activityHref) } : {}
               const avgTime = row.avg_seconds_spent
                 ? row.avg_seconds_spent >= 60
                   ? `${Math.round(row.avg_seconds_spent / 60)}m`
@@ -479,7 +479,7 @@ function CourseRow({ row, org }: { row: any; org: any }) {
     >
       <div className="w-10 h-10 rounded-lg bg-gray-100 flex-shrink-0 overflow-hidden flex items-center justify-center">
         {thumbnail ? (
-          <img src={safeHref(thumbnail)} alt="" className="w-full h-full object-cover" />
+          <img src={safeImageSrc(thumbnail)} alt="" className="w-full h-full object-cover" />
         ) : (
           <BookOpen size={18} weight="duotone" className="text-gray-300" />
         )}
@@ -521,7 +521,7 @@ function ActivityRow({ row }: { row: any }) {
       ? `/course/${cleanCourseUuid}/activity/${cleanActivityUuid}`
       : null
   const Wrapper = activityHref ? Link : 'div'
-  const wrapperProps = activityHref ? { href: activityHref } : {}
+  const wrapperProps = activityHref ? { href: safeHref(activityHref) } : {}
 
   return (
     <Wrapper

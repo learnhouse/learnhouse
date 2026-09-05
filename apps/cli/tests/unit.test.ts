@@ -2069,7 +2069,7 @@ describe('migrateContentVolume', () => {
     expect(migrateContentVolume(dir, 'dep12345')).toEqual({ status: 'skipped_s3' })
   })
 
-  it('patches the compose file and reports patched_no_data when no container exists', () => {
+  it('patches the compose file and reports patched_no_data when no container exists', async () => {
     const compose = [
       'name: learnhouse-dep12345',
       'services:',
@@ -2084,12 +2084,21 @@ describe('migrateContentVolume', () => {
     ].join('\n')
     fs.writeFileSync(path.join(dir, 'docker-compose.yml'), compose)
 
-    const res = migrateContentVolume(dir, 'dep12345')
-    expect(res).toEqual({ status: 'patched_no_data' })
+    const childProcess = await import('node:child_process')
+    const inspect = vi.spyOn(childProcess, 'execFileSync').mockImplementationOnce(() => {
+      throw new Error('No such container')
+    })
+    try {
+      const res = migrateContentVolume(dir, 'dep12345')
+      expect(res).toEqual({ status: 'patched_no_data' })
+      expect(inspect).toHaveBeenCalledWith('docker', ['inspect', 'learnhouse-app-dep12345'], { stdio: 'pipe' })
 
-    const patched = fs.readFileSync(path.join(dir, 'docker-compose.yml'), 'utf-8')
-    expect(patched).toContain('learnhouse_content_dep12345:/app/api/content')
-    expect(patched).toMatch(/^volumes:/m)
+      const patched = fs.readFileSync(path.join(dir, 'docker-compose.yml'), 'utf-8')
+      expect(patched).toContain('learnhouse_content_dep12345:/app/api/content')
+      expect(patched).toMatch(/^volumes:/m)
+    } finally {
+      inspect.mockRestore()
+    }
   })
 })
 

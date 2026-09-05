@@ -208,7 +208,7 @@ const OrgEditSSO: React.FC = () => {
 
       const safeSetupUrl = safeExternalUrl(setupUrl)
       if (safeSetupUrl) {
-        window.open(safeSetupUrl, '_blank')
+        window.open(safeSetupUrl, '_blank', 'noopener,noreferrer')
       } else {
         toast.error(t('dashboard.organization.sso.setup_not_available'))
       }

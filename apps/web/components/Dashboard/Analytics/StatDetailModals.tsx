@@ -1,5 +1,6 @@
 'use client'
 import React from 'react'
+import { safeInternalPath } from '@services/security/url'
 import {
   Dialog,
   DialogContent,
@@ -177,7 +178,7 @@ export function LiveUsersDetail({ days }: { days: string }) {
               <td className="py-2.5">
                 {row.path ? (
                   <a
-                    href={row.path}
+                    href={safeInternalPath(row.path)}
                     className="text-blue-600 hover:underline truncate max-w-[200px] block"
                     target="_blank"
                     rel="noopener noreferrer"

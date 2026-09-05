@@ -29,5 +29,9 @@
     "pagefind": "^1.5.2",
     "tailwindcss": "^4.3.0",
     "typescript": "6.0.3"
+  },
+  "overrides": {
+    "@xmldom/xmldom": "^0.9.12",
+    "zod": "4.3.6"
   }
 }

@@ -19,6 +19,7 @@ RUN bun run build
 # Measured on bun 1.4.0: the process dies at `new Server()` before it listens.
 # Revisit when @hocuspocus/server picks its adapter at runtime.
 FROM node:24-alpine AS runner
+RUN apk upgrade --no-cache
 
 WORKDIR /app
 

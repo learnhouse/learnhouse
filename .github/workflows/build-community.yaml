@@ -107,7 +107,7 @@ jobs:
   service-images:
     name: Service image (${{ matrix.service }})
     runs-on: ubuntu-latest
-    # apps/web/Dockerfile and apps/collab/Dockerfile build the per-service
+    # The Dockerfiles under apps/ build the per-service
     # images. Nothing in this repo built them: the job above only builds the
     # root Dockerfile, so a change that broke a service image passed every
     # check here and failed later, in the pipeline that ships it. Build them,
@@ -115,7 +115,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        service: [web, collab]
+        service: [api, web, collab]
     steps:
       - uses: actions/checkout@v7
 
