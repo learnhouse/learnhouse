@@ -41,6 +41,11 @@ import { useDirection } from '@hooks/useDirection'
 import { useLHAnalytics, AnalyticsEvent } from '@services/analytics'
 import AIMarkdownRenderer from '@components/Objects/Activities/AI/AIMarkdownRenderer'
 import { setAIHighlight, clearAIHighlight } from '../Extensions/AISelectionHighlight/AISelectionHighlight'
+import {
+  AI_STREAMING_MARK,
+  insertAIContent,
+  prepareAIContent,
+} from './aiEditorContent'
 
 type AIEditorSidePanelProps = {
   editor: Editor
@@ -53,6 +58,36 @@ type AIMessage = {
   message: any
   type: 'ai' | 'user'
 }
+
+// Block types that are truly atomic (atom: true, no editable content)
+const ATOMIC_BLOCK_TYPES = [
+  'blockQuiz',
+  'blockImage',
+  'blockVideo',
+  'blockPDF',
+  'blockLibrary',
+  'blockEmbed',
+  'blockMathEquation',
+  'blockWebPreview',
+  'blockUser',
+  'blockMagic',
+  'scenarios',
+]
+
+// Block types that have content but need direct insertion (React node views)
+const SPECIAL_BLOCK_TYPES = [
+  'calloutInfo',
+  'calloutWarning',
+  'badge',
+  'button',
+  'flipcard',
+]
+
+// Special blocks skip the streaming mark and are inserted as-is
+const SPECIAL_BLOCK_TYPE_SET: ReadonlySet<string> = new Set<string>([
+  ...SPECIAL_BLOCK_TYPES,
+  ...ATOMIC_BLOCK_TYPES,
+])
 
 function AIEditorSidePanel(props: AIEditorSidePanelProps) {
   const { t } = useTranslation()
@@ -334,134 +369,6 @@ function AIEditorSidePanel(props: AIEditorSidePanelProps) {
   const insertPositionRef = useRef<number | null>(null)
   const streamingStartPosRef = useRef<number | null>(null)
 
-  // Block types that are truly atomic (atom: true, no editable content)
-  const ATOMIC_BLOCK_TYPES = [
-    'blockQuiz',
-    'blockImage',
-    'blockVideo',
-    'blockPDF',
-    'blockLibrary',
-    'blockEmbed',
-    'blockMathEquation',
-    'blockWebPreview',
-    'blockUser',
-    'blockMagic',
-    'scenarios',
-  ]
-
-  // Block types that have content but need direct insertion (React node views)
-  const SPECIAL_BLOCK_TYPES = [
-    'calloutInfo',
-    'calloutWarning',
-    'badge',
-    'button',
-    'flipcard',
-  ]
-
-  // Block types that require direct text content (NOT wrapped in paragraphs)
-  const DIRECT_TEXT_BLOCK_TYPES = [
-    'calloutInfo',
-    'calloutWarning',
-    'badge',
-    'button',
-  ]
-
-  /**
-   * Transform content to fix common AI output issues.
-   * Specifically handles blocks that require direct text nodes (not paragraphs).
-   */
-  const transformContentForInsertion = (content: any): any => {
-    if (Array.isArray(content)) {
-      return content.map(transformContentForInsertion)
-    }
-
-    if (typeof content !== 'object' || content === null) {
-      return content
-    }
-
-    // Check if this is a direct-text block with incorrectly wrapped paragraphs
-    if (DIRECT_TEXT_BLOCK_TYPES.includes(content.type) && content.content) {
-      // Check if content is wrapped in paragraphs
-      const unwrappedContent: any[] = []
-
-      for (const node of content.content) {
-        if (node.type === 'paragraph' && node.content) {
-          // Extract text nodes from paragraph
-          for (const textNode of node.content) {
-            if (textNode.type === 'text') {
-              unwrappedContent.push(textNode)
-            }
-          }
-        } else if (node.type === 'text') {
-          // Already a direct text node - keep it
-          unwrappedContent.push(node)
-        }
-      }
-
-      if (unwrappedContent.length > 0) {
-        return {
-          ...content,
-          content: unwrappedContent,
-        }
-      }
-    }
-
-    // Recursively process content arrays for nested structures
-    if (content.content) {
-      return {
-        ...content,
-        content: transformContentForInsertion(content.content),
-      }
-    }
-
-    return content
-  }
-
-  /**
-   * Check if a node type is a special block (needs direct insertion)
-   */
-  const isSpecialBlock = (type: string): boolean => {
-    return SPECIAL_BLOCK_TYPES.includes(type) || ATOMIC_BLOCK_TYPES.includes(type)
-  }
-
-  /**
-   * Add AI streaming marks to all text nodes in a TipTap JSON structure
-   * Skips special blocks that don't support streaming marks
-   */
-  const addStreamingMarksToContent = (content: any): any => {
-    if (Array.isArray(content)) {
-      return content.map(addStreamingMarksToContent)
-    }
-
-    if (typeof content !== 'object' || content === null) {
-      return content
-    }
-
-    // Skip special blocks entirely - they don't need streaming marks
-    if (content.type && isSpecialBlock(content.type)) {
-      return content
-    }
-
-    // If this is a text node, add the aiStreaming mark
-    if (content.type === 'text') {
-      const marks = content.marks || []
-      return {
-        ...content,
-        marks: [...marks, { type: 'aiStreaming' }],
-      }
-    }
-
-    // Recursively process content array
-    if (content.content) {
-      return {
-        ...content,
-        content: addStreamingMarksToContent(content.content),
-      }
-    }
-
-    return content
-  }
-
   /**
    * Remove AI streaming marks from a range in the editor
    */
@@ -471,169 +378,51 @@ function AIEditorSidePanel(props: AIEditorSidePanelProps) {
         .chain()
         .focus()
         .setTextSelection({ from: startPos, to: endPos })
-        .unsetMark('aiStreaming')
+        .unsetMark(AI_STREAMING_MARK)
         .setTextSelection(endPos)
         .run()
     }
   }
 
   /**
-   * Recursively extract plain text from a TipTap/ProseMirror JSON node or array.
+   * Tell the user in the chat that the reply could not be placed in the
+   * document, instead of pasting raw JSON or an error sentence into it.
    */
-  const extractTextFromTiptap = (content: any): string => {
-    if (typeof content === 'string') {
-      return content
-    }
-    if (Array.isArray(content)) {
-      return content.map(extractTextFromTiptap).filter(Boolean).join(' ')
-    }
-    if (content && typeof content === 'object') {
-      const parts: string[] = []
-      if (typeof content.text === 'string') {
-        parts.push(content.text)
-      }
-      if (Array.isArray(content.content)) {
-        parts.push(content.content.map(extractTextFromTiptap).filter(Boolean).join(' '))
-      }
-      return parts.filter(Boolean).join(' ')
-    }
-    return ''
+  const reportInsertFailure = () => {
+    const notice = t(
+      'editor.ai_panel.insert_failed',
+      'I could not insert the generated content into the document. Please try again.'
+    )
+    const separator = accumulatedContentRef.current.trim() ? '\n\n' : ''
+    accumulatedContentRef.current += separator + notice
+    dispatchAIEditor({ type: 'appendStreamingContent', payload: separator + notice })
   }
 
   /**
-   * Insert a single TipTap JSON node with appropriate handling
+   * Insert the AI reply into the editor with the gradient animation.
    */
-  const insertSingleNode = (node: any, _startPos: number): number => {
-    const isSpecial = node.type && isSpecialBlock(node.type)
+  const insertContentWithAnimation = (fullContent: string) => {
+    const { nodes, error } = prepareAIContent(fullContent, props.editor.schema)
 
-    // For special blocks (atomic or with React node views), insert directly
-    if (isSpecial) {
-      const cleanContent = JSON.parse(JSON.stringify(node))
-
-      try {
-        const editor = props.editor
-        const schemaNodeType = editor.schema.nodes[cleanContent.type]
-
-        if (!schemaNodeType) {
-          return props.editor.state.selection.from
-        }
-
-        editor.chain().focus().insertContent(cleanContent).run()
-      } catch {
-        // Fallback: try with just type and attrs
-        try {
-          props.editor.chain().focus().insertContent({
-            type: node.type,
-            attrs: node.attrs || {}
-          }).run()
-        } catch {
-          // Silent fail
-        }
+    if (nodes.length === 0) {
+      if (error) {
+        reportInsertFailure()
       }
-    } else {
-      // For regular content, add streaming marks
-      const nodeWithMarks = addStreamingMarksToContent(node)
-      props.editor.chain().focus().insertContent(nodeWithMarks).run()
+      return
     }
 
-    return props.editor.state.selection.from
-  }
+    const result = insertAIContent(props.editor, nodes, SPECIAL_BLOCK_TYPE_SET)
 
-  /**
-   * Insert TipTap JSON content with gradient animation
-   */
-  const insertContentWithAnimation = (content: any) => {
-    try {
-      // Ensure content is an object, not a string
-      if (typeof content === 'string') {
-        try {
-          content = JSON.parse(content)
-        } catch {
-          props.editor.chain().focus().insertContent({
-            type: 'paragraph',
-            content: [{ type: 'text', text: content }]
-          }).run()
-          return
-        }
-      }
+    if (result.inserted === 0) {
+      reportInsertFailure()
+      return
+    }
 
-      const startPos = props.editor.state.selection.from
-
-      // Handle arrays of nodes - process each node individually
-      if (Array.isArray(content)) {
-        for (const node of content) {
-          if (node && node.type) {
-            insertSingleNode(node, startPos)
-          }
-        }
-
-        const endPos = props.editor.state.selection.from
-
-        // Schedule removal of streaming marks after animation
-        if (startPos < endPos) {
-          setTimeout(() => {
-            removeStreamingMarks(startPos, endPos)
-          }, 1500)
-        }
-        return
-      }
-
-      // Single node - check block type
-      const isSpecial = content.type && isSpecialBlock(content.type)
-
-      // Check if the node type exists in the schema
-      if (content.type) {
-        const nodeExists = !!props.editor.schema.nodes[content.type]
-        if (!nodeExists) {
-          return
-        }
-      }
-
-      // For special blocks (atomic or with React node views), insert directly
-      if (isSpecial) {
-        const cleanContent = JSON.parse(JSON.stringify(content))
-
-        try {
-          const editor = props.editor
-          const schemaNodeType = editor.schema.nodes[cleanContent.type]
-          if (!schemaNodeType) {
-            return
-          }
-
-          editor.chain().focus().insertContent(cleanContent).run()
-        } catch {
-          // Fallback: try with just type and attrs (no content)
-          try {
-            props.editor.chain().focus().insertContent({
-              type: content.type,
-              attrs: content.attrs || {}
-            }).run()
-          } catch {
-            // Silent fail
-          }
-        }
-        return
-      }
-
-      // For non-atomic content, add streaming marks for animation
-      const contentWithMarks = addStreamingMarksToContent(content)
-      props.editor.chain().focus().insertContent(contentWithMarks).run()
-
-      const endPos = props.editor.state.selection.from
-
-      // Schedule removal of streaming marks after animation
-      if (startPos < endPos) {
-        setTimeout(() => {
-          removeStreamingMarks(startPos, endPos)
-        }, 1500)
-      }
-    } catch {
-      // Fallback: insert the best plain-text representation so we don't dump raw JSON
-      const text = typeof content === 'string' ? content : extractTextFromTiptap(content)
-      props.editor.chain().focus().insertContent({
-        type: 'paragraph',
-        content: [{ type: 'text', text: text || 'The AI returned content that could not be inserted.' }]
-      }).run()
+    // Schedule removal of streaming marks after animation
+    if (result.from < result.to) {
+      setTimeout(() => {
+        removeStreamingMarks(result.from, result.to)
+      }, 1500)
     }
   }
 
@@ -728,198 +517,7 @@ function AIEditorSidePanel(props: AIEditorSidePanelProps) {
 
         track(AnalyticsEvent.AiEditorContentInserted)
 
-        // Unwrap content from the most common AI output wrappers first.
-        let cleanContent = fullContent.trim()
-
-        // 1) Extract from the <<<CONTENT>>> / <<<END_CONTENT>>> markers
-        const markerMatch = cleanContent.match(/<<<CONTENT>>>([\s\S]*?)<<<END_CONTENT>>>/i)
-        if (markerMatch) {
-          cleanContent = markerMatch[1].trim()
-        }
-
-        // 2) Extract JSON from a markdown code fence
-        const codeFenceMatch = cleanContent.match(/```(?:json)?\s*([\s\S]*?)```/)
-        if (codeFenceMatch) {
-          cleanContent = codeFenceMatch[1].trim()
-        }
-
-        // 3) If the whole payload is a double-quoted JSON string, unwrap it
-        if (cleanContent.startsWith('"') && cleanContent.endsWith('"')) {
-          try {
-            const unwrapped = JSON.parse(cleanContent)
-            if (typeof unwrapped === 'string') {
-              cleanContent = unwrapped.trim()
-            }
-          } catch {
-            // leave cleanContent as-is
-          }
-        }
-
-        // Clean up the content - remove extra whitespace and newlines
-        cleanContent = cleanContent.replace(/^\n+|\n+$/g, '').trim()
-        // Intentionally strip dangerous ASCII control characters, but keep \t/\n/\r
-        // so that unescaped whitespace can be repaired in the JSON fallback below.
-        // eslint-disable-next-line no-control-regex
-        cleanContent = cleanContent.replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g, '')
-        cleanContent = cleanContent.trim()
-        cleanContent = cleanContent.replace(/,(\s*[\]}])/g, '$1')
-
-        // Count brackets to check if JSON is complete
-        let openBraces = 0
-        let openBrackets = 0
-        let inString = false
-        let escapeNext = false
-
-        for (let i = 0; i < cleanContent.length; i++) {
-          const char = cleanContent[i]
-          if (escapeNext) {
-            escapeNext = false
-            continue
-          }
-          if (char === '\\') {
-            escapeNext = true
-            continue
-          }
-          if (char === '"') {
-            inString = !inString
-            continue
-          }
-          if (!inString) {
-            if (char === '{') openBraces++
-            else if (char === '}') openBraces--
-            else if (char === '[') openBrackets++
-            else if (char === ']') openBrackets--
-          }
-        }
-
-        // If JSON is incomplete, try to close it
-        if (openBraces > 0 || openBrackets > 0) {
-          while (openBrackets > 0) {
-            cleanContent += ']'
-            openBrackets--
-          }
-          while (openBraces > 0) {
-            cleanContent += '}'
-            openBraces--
-          }
-        }
-
-        if (cleanContent.startsWith('{') && !cleanContent.endsWith('}')) {
-          cleanContent += '}'
-        } else if (cleanContent.startsWith('[') && !cleanContent.endsWith(']')) {
-          cleanContent += ']'
-        }
-
-        // Helper function to validate and insert content
-        const validateAndInsert = (parsed: any) => {
-          const transformed = transformContentForInsertion(parsed)
-
-          if (Array.isArray(transformed)) {
-            const isValid = transformed.every((node: any) => node && typeof node.type === 'string')
-            if (!isValid) {
-              return false
-            }
-          } else if (!transformed || typeof transformed.type !== 'string') {
-            return false
-          }
-
-          insertContentWithAnimation(transformed)
-          return true
-        }
-
-        // Try to parse as TipTap JSON
-        try {
-          if (cleanContent.startsWith('{') || cleanContent.startsWith('[')) {
-            let parsed: any
-            try {
-              parsed = JSON.parse(cleanContent)
-            } catch (initialError) {
-              let fixedContent = cleanContent
-              fixedContent = fixedContent.replace(/(?<!\\)\n/g, '\\n')
-              fixedContent = fixedContent.replace(/(?<!\\)\t/g, '\\t')
-              fixedContent = fixedContent.replace(/(?<!\\)\r/g, '\\r')
-
-              try {
-                parsed = JSON.parse(fixedContent)
-              } catch {
-                throw initialError
-              }
-            }
-
-            if (validateAndInsert(parsed)) {
-              return
-            }
-            throw new Error('Invalid TipTap content structure')
-          } else {
-            const textContent = {
-              type: 'paragraph',
-              content: [{ type: 'text', text: cleanContent }],
-            }
-            insertContentWithAnimation(textContent)
-          }
-        } catch {
-          // Try multiple recovery strategies
-
-          // Strategy 1: Check if content is double-escaped JSON string
-          if (cleanContent.startsWith('"') && cleanContent.endsWith('"')) {
-            try {
-              const unescaped = JSON.parse(cleanContent)
-              if (typeof unescaped === 'string') {
-                const innerParsed = JSON.parse(unescaped)
-                if (validateAndInsert(innerParsed)) {
-                  return
-                }
-              }
-            } catch {
-              // Continue to next strategy
-            }
-          }
-
-          // Strategy 2: Extract JSON from markdown code blocks
-          const jsonMatch = cleanContent.match(/```(?:json)?\s*([\s\S]*?)```/)
-          if (jsonMatch) {
-            try {
-              const extracted = jsonMatch[1].trim()
-              const parsed = JSON.parse(extracted)
-              if (validateAndInsert(parsed)) {
-                return
-              }
-            } catch {
-              // Continue to next strategy
-            }
-          }
-
-          // Strategy 3: Try to find JSON object/array in the content
-          const jsonObjectMatch = cleanContent.match(/(\{[\s\S]*\}|\[[\s\S]*\])/)
-          if (jsonObjectMatch) {
-            try {
-              const extracted = jsonObjectMatch[1]
-              const parsed = JSON.parse(extracted)
-              if (validateAndInsert(parsed)) {
-                return
-              }
-            } catch {
-              // Continue to fallback
-            }
-          }
-
-          // Last resort: insert the best plain-text representation,
-          // but avoid dumping a raw JSON string into the document.
-          let fallbackText = cleanContent
-          if (cleanContent.startsWith('{') || cleanContent.startsWith('[')) {
-            try {
-              const parsed = JSON.parse(cleanContent)
-              fallbackText = extractTextFromTiptap(parsed)
-            } catch {
-              fallbackText = 'The AI returned content that could not be inserted. Please try again.'
-            }
-          }
-          const textContent = {
-            type: 'paragraph',
-            content: [{ type: 'text', text: fallbackText || 'The AI returned content that could not be inserted. Please try again.' }],
-          }
-          insertContentWithAnimation(textContent)
-        }
+        insertContentWithAnimation(fullContent)
       },
       onComplete: (data) => {
         const finalContent = accumulatedContentRef.current

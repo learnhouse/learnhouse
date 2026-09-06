@@ -4950,6 +4950,7 @@
       "add_summary": "Add summary",
       "add_tip": "Add tip",
       "add_definition": "Add definition",
+      "insert_failed": "I could not insert the generated content into the document. Please try again.",
       "clear_chat": "Clear chat",
       "clear_selection": "Clear selection",
       "block_selected": "block selected",
