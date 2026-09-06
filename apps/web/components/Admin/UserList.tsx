@@ -4,6 +4,7 @@ import { useQuery } from '@tanstack/react-query'
 import { queryKeys } from '@/lib/query/keys'
 import { getAPIUrl } from '@services/config/config'
 import { getUserAvatarMediaDirectory } from '@services/media/media'
+import { safeImageSrc } from '@services/security/url'
 import { apiFetch } from '@services/utils/ts/requests'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
 import { useSearchParams, useRouter, usePathname } from 'next/navigation'
@@ -377,7 +378,7 @@ export default function UserList() {
                         <div className="flex items-center gap-3">
                           {u.avatar_image ? (
                             <img
-                              src={getAvatarUrl(u.user_uuid, u.avatar_image)}
+                              src={safeImageSrc(getAvatarUrl(u.user_uuid, u.avatar_image))}
                               alt={u.username}
                               className="h-8 w-8 rounded-full object-cover bg-white/[0.05]"
                               onError={(e) => {

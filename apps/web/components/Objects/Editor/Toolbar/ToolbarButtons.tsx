@@ -22,6 +22,7 @@ import {
   Link,
   ListBullets,
   ListNumbers,
+  Minus,
   PuzzlePiece,
   Rows,
   RowsPlusBottom,
@@ -516,6 +517,15 @@ export const ToolbarButtons = React.memo(({ editor }: any) => {
           </div>
         )}
       </div>
+      <ToolTip content={t('editor.blocks.divider')}>
+        <div
+          className="editor-tool-btn editor-tool-btn-divider"
+          onClick={() => editor.chain().focus().setHorizontalRule().run()}
+          aria-label={t('editor.blocks.divider')}
+        >
+          <Minus size={15} weight="bold" />
+        </div>
+      </ToolTip>
       <ToolTip content={t('editor.blocks.embed')}>
         <div
           className="editor-tool-btn editor-tool-btn-embed"

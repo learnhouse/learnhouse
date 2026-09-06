@@ -13,12 +13,35 @@ class GradingTypeEnum(str, Enum):
     GPA_SCALE = "GPA_SCALE"
 
 
+class SolutionRevealEnum(str, Enum):
+    """When the assignment's model answer (the "corrigé") becomes readable by
+    the learner.
+
+    NEVER          - never sent to a student (the default: existing assignments
+                     never start handing out a solution on their own).
+    ON_SUBMISSION  - unlocked the moment the learner turns their work in. This
+                     is the formative-assessment mode: hand in the document,
+                     immediately get the worked solution to self-assess against.
+    AFTER_GRADING  - unlocked only once the submission is GRADED, i.e. the
+                     teacher (or the auto-grader) has finished with it.
+    """
+
+    NEVER = "NEVER"
+    ON_SUBMISSION = "ON_SUBMISSION"
+    AFTER_GRADING = "AFTER_GRADING"
+
+
 class AssignmentBase(SQLModel):
     """Represents the common fields for an assignment."""
 
     title: str
     description: str
-    due_date: str
+    # Optional on purpose. A deadline makes no sense in a self-paced course,
+    # where learners start whenever they enrol, so an assignment may simply not
+    # have one. None (and the empty string an HTML date input clears itself to)
+    # both mean "no deadline": every deadline check treats an unparseable value
+    # as not set, so neither locks anyone out.
+    due_date: Optional[str] = None
     published: Optional[bool] = False
     grading_type: GradingTypeEnum
     # When True, submissions are graded + marked as done automatically on
@@ -49,6 +72,24 @@ class AssignmentBase(SQLModel):
     # applies (50 for NUMERIC/PERCENTAGE/PASS_FAIL, 60 for ALPHABET/GPA_SCALE).
     # Nullable so every existing assignment keeps its legacy behavior.
     pass_threshold_percentage: Optional[float] = None
+    # Formative mode. When True this assignment carries no grade at all: the
+    # submit path skips auto-grading, the grading endpoints refuse to run, and
+    # a submission stays in SUBMITTED forever (it is never GRADED). Course
+    # certification treats a turned-in ungraded assignment as satisfied, so an
+    # ungraded assignment never blocks a certificate the way an unmarked graded
+    # one does. grading_type stays on the row but is unused while this is True.
+    ungraded: Optional[bool] = False
+    # The model answer ("corrigé") for the whole assignment: the worked solution
+    # the learner compares their own work against. Free text, plus an optional
+    # uploaded document. Both are withheld from students until
+    # `solution_reveal` says otherwise — the read services blank them out
+    # server-side, so the payload never carries the solution to a learner who
+    # has not unlocked it.
+    solution: Optional[str] = None
+    # Uploaded corrigé document, stored as the on-disk name produced by
+    # `upload_solution_file` (same convention as AssignmentTask.reference_file).
+    solution_file: Optional[str] = None
+    solution_reveal: Optional[SolutionRevealEnum] = SolutionRevealEnum.NEVER
 
     org_id: int
     course_id: int
@@ -73,6 +114,13 @@ class AssignmentRead(AssignmentBase):
     # build file-ref URLs without a second round-trip per request.
     course_uuid: Optional[str] = None
     activity_uuid: Optional[str] = None
+    # Reveal state of the model answer, computed per-reader by the read
+    # services. `has_solution` says a corrigé exists at all (so the learner
+    # UI can show "submit to unlock" without leaking it); `solution_unlocked`
+    # says this reader is allowed to see it. For an instructor both are True
+    # whenever a corrigé exists.
+    has_solution: Optional[bool] = None
+    solution_unlocked: Optional[bool] = None
 
 
 class AssignmentUpdate(SQLModel):
@@ -98,6 +146,9 @@ class AssignmentUpdate(SQLModel):
     allow_retries: Optional[bool] = None
     max_retries: Optional[int] = None
     pass_threshold_percentage: Optional[float] = None
+    ungraded: Optional[bool] = None
+    solution: Optional[str] = None
+    solution_reveal: Optional[SolutionRevealEnum] = None
     update_date: Optional[str] = None
 
 

@@ -2,7 +2,7 @@ import { describe, expect, test } from "bun:test";
 
 import {
   getCatalogPageNumbers,
-} from "../components/Objects/Catalog/catalogPagination.ts";
+} from "../components/Objects/Catalog/catalogPaginationUtils.ts";
 
 describe("getCatalogPageNumbers", () => {
   test("returns no pages when there are no results", () => {

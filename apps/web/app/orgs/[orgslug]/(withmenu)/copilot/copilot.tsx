@@ -561,7 +561,7 @@ export function CopilotChat({ orgslug }: CopilotProps) {
               <AssistantMessage
                 key={i}
                 content={msg.content}
-                sources={msg.sources || []}
+                sources={msg.sources || EMPTY_SOURCES}
                 orgslug={orgslug}
                 isStreaming={isThisStreaming && showContent}
                 isWaiting={showWaiting}
@@ -787,7 +787,13 @@ export function SessionItem({ session, isActive, onSelect, onDelete }: {
 // Sub-components
 // ------------------------------------------------------------------
 
-export function AssistantMessage({ content, sources, orgslug, isStreaming, isWaiting }: {
+// One shared empty array: `|| []` would hand AssistantMessage a new identity on
+// every render and defeat its memo.
+export const EMPTY_SOURCES: StreamSourceData['sources'] = []
+
+// Memoised: every streamed chunk re-renders the whole transcript, and re-parsing
+// a finished answer's markdown (KaTeX included) on each chunk is wasted work.
+export const AssistantMessage = React.memo(function AssistantMessage({ content, sources, orgslug, isStreaming, isWaiting }: {
   content: string
   sources: StreamSourceData['sources']
   orgslug: string
@@ -821,7 +827,7 @@ export function AssistantMessage({ content, sources, orgslug, isStreaming, isWai
       )}
     </div>
   )
-}
+})
 
 export function ThinkingIndicator() {
   return (
@@ -903,12 +909,106 @@ function renderCitationsInText(text: string, sources: StreamSourceData['sources'
   return parts
 }
 
+// This module is pulled into the org menu bundle, so a static import would put
+// KaTeX and its stylesheet on every page of the app. Load them the first time a
+// message actually contains math, the way the editor's math block does.
+type MathPlugins = { remark: any[]; rehype: any[] }
+
+const BASE_REMARK_PLUGINS: any[] = [remarkGfm]
+const NO_REHYPE_PLUGINS: any[] = []
+
+// KaTeX paints a parse failure bright red; inside a chat bubble a formula the
+// model got wrong reads better in the surrounding text colour.
+const KATEX_OPTIONS = { errorColor: 'inherit' }
+
+let mathPluginsPromise: Promise<MathPlugins> | null = null
+
+function loadMathPlugins(): Promise<MathPlugins> {
+  if (!mathPluginsPromise) {
+    mathPluginsPromise = Promise.all([
+      import('remark-math'),
+      import('rehype-katex'),
+      import('katex/dist/katex.min.css'),
+    ]).then(([remarkMath, rehypeKatex]) => ({
+      remark: [remarkGfm, remarkMath.default],
+      rehype: [[rehypeKatex.default, KATEX_OPTIONS]],
+    }))
+  }
+  return mathPluginsPromise
+}
+
+// Dollar-delimited math, or the LaTeX \( \) / \[ \] forms.
+const MATH_HINT = /\$\$|\\\(|\\\[|\$[^\s$][^$\n]*\$/
+
+// Everything between a pair of code fences or inside a code span, so math
+// rewriting can skip it.
+const CODE_SEGMENT = /(```[\s\S]*?```|~~~[\s\S]*?~~~|`[^`\n]*`)/g
+
+/**
+ * Rewrite LaTeX \( \) and \[ \] delimiters to the $ forms remark-math understands.
+ * The model picks its own delimiters, and the backslash ones would otherwise reach
+ * the reader as literal text with the backslashes stripped. The replacements stay on
+ * one line: a blank line would end the list item or blockquote the formula sits in.
+ */
+export function normalizeMathDelimiters(markdown: string): string {
+  return markdown
+    .split(CODE_SEGMENT)
+    .map((segment, i) =>
+      // Odd indices are the captured code segments, which stay verbatim.
+      i % 2 === 1
+        ? segment
+        : segment
+            // A \[ that opens its own line is a display equation, so it keeps the
+            // fenced form. Anywhere else — inside a list item, a table cell, a
+            // blockquote — it has to stay on one line, or the blank lines around
+            // the fence would close the block it sits in.
+            .replace(
+              /(^|\n)\\\[([\s\S]+?)\\\][ \t]*(?=\n|$)/g,
+              (_m, before, math) => `${before}$$\n${math.trim()}\n$$`
+            )
+            .replace(/\\\[([\s\S]+?)\\\]/g, (_m, math) => `$$${math.trim()}$$`)
+            .replace(/\\\(([\s\S]+?)\\\)/g, (_m, math) => `$${math.trim()}$`)
+    )
+    .join('')
+}
+
+/**
+ * While the answer streams in, the closing $$ of the equation being written has
+ * not arrived yet. Handed to remark-math as is, that open fence swallows every
+ * chunk that follows it and renders the rest of the message as one parse error,
+ * so hold the unfinished equation back until it is closed.
+ */
+function dropUnclosedMath(markdown: string): string {
+  const fences = markdown.match(/\$\$/g)
+  if (!fences || fences.length % 2 === 0) return markdown
+  return markdown.slice(0, markdown.lastIndexOf('$$'))
+}
+
 export function CopilotMarkdown({ content, sources = [], orgslug, isStreaming = false }: {
   content: string
   sources?: StreamSourceData['sources']
   orgslug: string
   isStreaming?: boolean
 }) {
+  const mathContent = React.useMemo(() => {
+    const normalized = normalizeMathDelimiters(content)
+    return isStreaming ? dropUnclosedMath(normalized) : normalized
+  }, [content, isStreaming])
+
+  const [mathPlugins, setMathPlugins] = React.useState<MathPlugins | null>(null)
+  const needsMath = React.useMemo(() => MATH_HINT.test(mathContent), [mathContent])
+
+  React.useEffect(() => {
+    if (!needsMath || mathPlugins) return
+    let active = true
+    loadMathPlugins().then((plugins) => {
+      if (active) setMathPlugins(plugins)
+    })
+    return () => {
+      active = false
+    }
+  }, [needsMath, mathPlugins])
+
   // Custom components to intercept text nodes and render citations
   const components = React.useMemo(() => {
     // Helper: wrap children, replacing any string children that contain [N] patterns
@@ -940,8 +1040,13 @@ export function CopilotMarkdown({ content, sources = [], orgslug, isStreaming = 
   }, [sources, orgslug])
 
   return (
-    <div className="relative z-10 prose prose-sm dark:prose-invert max-w-none prose-p:leading-relaxed prose-p:text-neutral-700 dark:prose-p:text-neutral-300 prose-headings:text-neutral-900 dark:prose-headings:text-white prose-a:text-violet-600 dark:prose-a:text-violet-400 prose-strong:text-neutral-900 dark:prose-strong:text-white prose-code:text-violet-700 dark:prose-code:text-violet-300 prose-code:bg-violet-50 dark:prose-code:bg-violet-500/10 prose-code:px-1 prose-code:py-0.5 prose-code:rounded prose-code:text-xs prose-code:before:content-none prose-code:after:content-none">
-      <ReactMarkdown remarkPlugins={[remarkGfm]} components={components}>{content}</ReactMarkdown>
+    <div className="relative z-10 prose prose-sm dark:prose-invert max-w-none prose-p:leading-relaxed prose-p:text-neutral-700 dark:prose-p:text-neutral-300 prose-headings:text-neutral-900 dark:prose-headings:text-white prose-a:text-violet-600 dark:prose-a:text-violet-400 prose-strong:text-neutral-900 dark:prose-strong:text-white prose-code:text-violet-700 dark:prose-code:text-violet-300 prose-code:bg-violet-50 dark:prose-code:bg-violet-500/10 prose-code:px-1 prose-code:py-0.5 prose-code:rounded prose-code:text-xs prose-code:before:content-none prose-code:after:content-none [&_.katex-display]:overflow-x-auto [&_.katex-display]:overflow-y-hidden [&_.katex-display]:py-1">
+      <ReactMarkdown
+        remarkPlugins={mathPlugins ? mathPlugins.remark : BASE_REMARK_PLUGINS}
+        rehypePlugins={mathPlugins ? mathPlugins.rehype : NO_REHYPE_PLUGINS}
+        components={components}>
+        {mathContent}
+      </ReactMarkdown>
       {isStreaming && (
         <span className="inline-block w-0.5 h-4 bg-violet-500 ms-0.5 align-middle rounded-full animate-pulse" />
       )}

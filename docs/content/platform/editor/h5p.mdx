@@ -32,7 +32,24 @@ Only `http` and `https` URLs are accepted. Anything else is rejected with an err
 
 ## Sizing
 
-H5P activities report their own height to the page they are embedded in, and the block listens for that message and resizes the frame to match. The height is remembered with the block, so the activity opens at roughly the right size the next time the page loads.
+By default the block is set to **Auto**: H5P activities report their own height to the page they are embedded in, the block listens for that message and resizes the frame to match, and the height is remembered so the activity opens at roughly the right size the next time the page loads.
+
+Auto depends on the activity playing its part, and not every one does. A host that never loaded the H5P resizer script stays silent, and an interactive video often reports the height of its poster frame rather than the video — which is why the frame can end up too short and learners have to open fullscreen to see the whole thing.
+
+When that happens, take the height over. Select the block and pick a size:
+
+| Size | What it does |
+| --- | --- |
+| **Auto** | The activity reports its own height. |
+| **16:9** | Widescreen, measured from the block's width. Best for interactive video. |
+| **4:3** | Classic, measured from the block's width. Best for slide-based presentations. |
+| **Short** | A fixed 320 pixel frame. |
+| **Medium** | A fixed 520 pixel frame. |
+| **Tall** | A fixed 760 pixel frame. |
+
+The two ratio sizes track the width of the block, so the activity keeps its proportions on a phone as well as on a wide screen. For anything the presets do not cover, drag the bar under the frame — or focus it and use the up and down arrow keys — and the block switches to a custom height.
+
+A block that is not on Auto stays out of the height handshake entirely. That is deliberate: an activity that has handed its scrolling over to the page has no way of coping with a frame it did not choose the height of, so the ones we size keep scrolling themselves.
 
 ## Notes for administrators
 

@@ -22,7 +22,7 @@ from unittest.mock import AsyncMock, patch
 import pytest
 from pydantic import ValidationError
 
-from src.db.users import User, UserUpdate
+from src.db.users import User, UserRead, UserUpdate
 from src.services.users.users import update_user
 
 
@@ -175,3 +175,39 @@ async def test_update_user_cannot_self_promote_email_verified(
     source = __import__("inspect").getsource(users_service.update_user)
     assert "email_verified" in source
     assert '"email_verified"' in source or "'email_verified'" in source
+
+
+# ---------------------------------------------------------------------------
+# Read-side: stored addresses are returned, not re-validated
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.parametrize(
+    "stored_email",
+    [
+        "deleted-user-41@anonymized.local",
+        "deleted-user-41@anonymized.example.com",
+        "student-3@demo.example.com",
+    ],
+)
+def test_userread_accepts_stored_placeholder_addresses(stored_email):
+    """UserRead must render whatever is on the row.
+
+    The GDPR scrub and the demo seeder both write undeliverable placeholders.
+    email-validator rejects special-use names such as ".local", so typing the
+    response model's email as EmailStr made a single such row 500 every
+    endpoint that returns its org's users.
+    """
+    read = UserRead(
+        id=41,
+        user_uuid="user_deleted_41",
+        username="deleted_user_41",
+        first_name="Deleted",
+        last_name="User",
+        email=stored_email,
+        avatar_image="",
+        bio="",
+        details={},
+        profile={},
+    )
+    assert read.email == stored_email

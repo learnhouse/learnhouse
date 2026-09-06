@@ -3,6 +3,7 @@ import { Building2, ArrowRight } from 'lucide-react'
 import React, { useState } from 'react'
 import { getLEARNHOUSE_DOMAIN_VAL } from '@services/config/config'
 import { stripPort } from '@services/utils/ts/hostUtils'
+import { safeRedirectUrl } from '@services/auth/redirects'
 
 function OrgNotFound() {
   const [orgSlug, setOrgSlug] = useState('')
@@ -12,15 +13,16 @@ function OrgNotFound() {
     e.preventDefault()
     if (!orgSlug.trim()) return
 
-    setIsNavigating(true)
     const domain = getLEARNHOUSE_DOMAIN_VAL()
     const baseDomain = stripPort(domain)
     const cleanSlug = orgSlug.trim().toLowerCase().replace(/[^a-z0-9-]/g, '')
+    if (!/^[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?$/.test(cleanSlug)) return
+    setIsNavigating(true)
     const protocol = window.location.protocol + '//'
     const port = window.location.port
     const portSuffix = port && port !== '80' && port !== '443' ? `:${port}` : ''
 
-    window.location.href = `${protocol}${cleanSlug}.${baseDomain}${portSuffix}/login`
+    window.location.href = safeRedirectUrl(`${protocol}${cleanSlug}.${baseDomain}${portSuffix}/login`)
   }
 
   return (

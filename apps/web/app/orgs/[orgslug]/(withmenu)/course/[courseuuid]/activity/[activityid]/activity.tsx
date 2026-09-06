@@ -1524,6 +1524,11 @@ function AssignmentTools(props: {
           // definitions were fetched pre-grade with the key stripped, so refetch
           // them — otherwise the reveal renders every option as "incorrect".
           queryClient.invalidateQueries({ queryKey: queryKeys.assignments.tasks(props.assignment?.assignment_uuid) })
+          // Handing in can also unlock the model answer (solution_reveal =
+          // ON_SUBMISSION). The corrigé rides on the assignment payload and was
+          // fetched with it stripped, so refetch that too — otherwise the
+          // learner has to reload the page to see what they just earned.
+          queryClient.invalidateQueries({ queryKey: queryKeys.assignments.detail(props.assignment?.assignment_uuid) })
         }
         else {
           toast.error(t('assignments.failed_submit_assignment'))
@@ -1559,6 +1564,10 @@ function AssignmentTools(props: {
         // again — refetch the task definitions so a revealed key from the graded
         // attempt isn't left visible during the retry.
         queryClient.invalidateQueries({ queryKey: queryKeys.assignments.tasks(props.assignment?.assignment_uuid) });
+        // A retry puts the submission back to PENDING, which re-locks the model
+        // answer server-side. Refetch so the learner isn't left reading the
+        // corrigé they are no longer entitled to for this attempt.
+        queryClient.invalidateQueries({ queryKey: queryKeys.assignments.detail(props.assignment?.assignment_uuid) });
         setGradeData(null);
         setIsGradeModalOpen(false);
         // Re-arm the auto-open on this fresh attempt so the next graded
@@ -1617,6 +1626,9 @@ function AssignmentTools(props: {
     submission.length === 0 ||
     submission[0].submission_status === 'PENDING' ||
     submission[0].submission_status === 'NOT_SUBMITTED';
+  // A formative assignment is handed in, not "submitted for grading" — nothing
+  // downstream will ever mark it, so every label here says so.
+  const isUngradedAssignment = !!props.assignment?.ungraded;
   const attemptNumber = submission?.[0]?.attempt_number ?? 1;
   const isRetryAttempt = isAwaitingSubmission && submission?.length > 0 && attemptNumber > 1;
 
@@ -1659,8 +1671,19 @@ function AssignmentTools(props: {
       <ConfirmationModal
         confirmationButtonText={t('assignments.submit_assignment')}
         pendingButtonText={t('assignments.submitting', { defaultValue: 'Submitting…' })}
-        confirmationMessage={t('assignments.submit_assignment_confirm')}
-        dialogTitle={t('assignments.submit_assignment_title')}
+        confirmationMessage={
+          isUngradedAssignment
+            ? t('assignments.hand_in_confirm', {
+                defaultValue:
+                  'Your work will be handed in to your teacher. It is not graded.',
+              })
+            : t('assignments.submit_assignment_confirm')
+        }
+        dialogTitle={
+          isUngradedAssignment
+            ? t('assignments.hand_in_title', { defaultValue: 'Hand in your work' })
+            : t('assignments.submit_assignment_title')
+        }
         dialogTrigger={
           <div className="bg-cyan-800 rounded-md px-4 nice-shadow flex flex-col p-2.5 text-white hover:cursor-pointer transition delay-150 duration-300 ease-in-out">
             <span className="text-[10px] font-bold mb-1 uppercase">
@@ -1670,7 +1693,11 @@ function AssignmentTools(props: {
             </span>
             <div className="flex items-center space-x-2">
               <BookOpenCheck size={17} />
-              <span className="text-xs font-bold">{t('assignments.submit_for_grading')}</span>
+              <span className="text-xs font-bold">
+                {isUngradedAssignment
+                  ? t('assignments.hand_in', { defaultValue: 'Hand in my work' })
+                  : t('assignments.submit_for_grading')}
+              </span>
             </div>
           </div>
         }
@@ -1681,6 +1708,56 @@ function AssignmentTools(props: {
   }
 
   if (submission[0].submission_status === 'SUBMITTED') {
+    // Formative assignments never leave SUBMITTED — there is no grading queue
+    // behind them — so "Grading in progress" would be a lie that never resolves.
+    if (isUngradedAssignment) {
+      const allowRetries = !!props.assignment?.allow_retries;
+      const maxRetries = Number(props.assignment?.max_retries || 0);
+      const currentAttempt = Number(submission?.[0]?.attempt_number || 1);
+      const canRetry =
+        allowRetries &&
+        !isAssignmentPastDue(props.assignment?.due_date) &&
+        (maxRetries === 0 || currentAttempt < maxRetries);
+
+      return (
+        <div className="flex items-center gap-2">
+          <div className="bg-teal-700 rounded-md px-4 nice-shadow flex flex-col p-2.5 text-white transition delay-150 duration-300 ease-in-out">
+            <span className="text-[10px] font-bold mb-1 uppercase">{t('common.status')}</span>
+            <div className="flex items-center space-x-2">
+              <CheckCircle size={17} />
+              <span className="text-xs font-bold">
+                {t('assignments.handed_in', { defaultValue: 'Handed in' })}
+              </span>
+            </div>
+          </div>
+          {canRetry && (
+            <ConfirmationModal
+              confirmationButtonText={t('assignments.retry_assignment')}
+              // The generic warning talks about replacing a grade; here the
+              // consequence is that the corrigé re-locks until the next hand-in.
+              confirmationMessage={t('assignments.retry_assignment_confirm_ungraded', {
+                defaultValue:
+                  'Your current hand-in will be reset so you can start over, and the model answer locks again until you hand in the next attempt.',
+              })}
+              dialogTitle={t('assignments.retry_assignment_title')}
+              dialogTrigger={
+                <button
+                  type="button"
+                  disabled={isRetrying}
+                  className="h-full inline-flex items-center gap-1.5 px-3 py-2.5 rounded-md bg-white/90 hover:bg-white disabled:opacity-50 text-teal-800 text-xs font-bold nice-shadow transition-colors"
+                >
+                  <RotateCcw size={14} />
+                  {t('assignments.retry_assignment')}
+                </button>
+              }
+              functionToExecute={retrySubmissionUI}
+              status="warning"
+            />
+          )}
+        </div>
+      )
+    }
+
     return (
       <div className="bg-amber-800 rounded-md px-4 nice-shadow flex flex-col p-2.5 text-white transition delay-150 duration-300 ease-in-out">
         <span className="text-[10px] font-bold mb-1 uppercase">{t('common.status')}</span>

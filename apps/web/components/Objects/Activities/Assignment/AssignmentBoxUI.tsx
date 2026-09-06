@@ -1,3 +1,4 @@
+import { useAssignments } from '@components/Contexts/Assignments/AssignmentContext'
 import { useAssignmentSubmission } from '@components/Contexts/Assignments/AssignmentSubmissionContext'
 import { useAssignmentDirtyTasks } from '@components/Contexts/Assignments/AssignmentDirtyTasksContext'
 import { useAutoSave, type SaveResult } from './useAutoSave'
@@ -47,7 +48,14 @@ function AssignmentBoxUI({ type, view, currentPoints, currentFeedback, maxPoints
     const [manualGrade, setManualGrade] = React.useState<string>('')
     const [manualFeedback, setManualFeedback] = React.useState<string>('')
     const submission = useAssignmentSubmission() as any
+    const assignmentCtx = useAssignments() as any
     const session = useLHSession() as any
+
+    // A formative assignment carries no grade at all — the API refuses to grade
+    // it — so every scoring affordance in this box is hidden rather than left
+    // wired to an endpoint that 400s. One check here covers the learner view,
+    // the teacher view and both grading views for all six task types.
+    const isUngraded = !!assignmentCtx?.assignment_object?.ungraded
 
     // The student can save/draft answers until they SUBMIT for grading or are
     // GRADED. A retry flips the row back to PENDING, which re-enables saving.
@@ -106,7 +114,7 @@ function AssignmentBoxUI({ type, view, currentPoints, currentFeedback, maxPoints
         gradeCustomFC(parsed, trimmed.length > 0 ? trimmed : undefined)
     }
 
-    const isGradingMode = view === 'grading' || view === 'custom-grading'
+    const isGradingMode = (view === 'grading' || view === 'custom-grading') && !isUngraded
 
     // Check if user is authenticated
     const isAuthenticated = session?.status === 'authenticated'
@@ -148,7 +156,7 @@ function AssignmentBoxUI({ type, view, currentPoints, currentFeedback, maxPoints
                             <p>{t('activities.teacher_view')}</p>
                         </div>
                     }
-                    {maxPoints &&
+                    {maxPoints && !isUngraded &&
                         <div className='flex bg-emerald-200/20 text-xs rounded-full space-x-1 px-2 py-0.5 font-bold outline items-center text-emerald-600 outline-1 outline-emerald-300/40'>
                             <BookPlus size={12} />
                             <p>{maxPoints} {t('assignments.points')}</p>

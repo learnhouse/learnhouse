@@ -160,6 +160,56 @@ export class AssignmentPage {
     })
   }
 
+  /**
+   * Hand in a formative assignment. The trigger reads "Hand in my work" rather
+   * than "Submit for grading" — nothing downstream will grade it — but the
+   * confirmation dialog is the same one.
+   */
+  async handIn(): Promise<void> {
+    const trigger = this.body().getByText('Hand in my work')
+    const count = await trigger.count()
+    for (let i = 0; i < count; i++) {
+      const btn = trigger.nth(i)
+      if (await btn.isVisible().catch(() => false)) {
+        await btn.click()
+        break
+      }
+    }
+    const confirm = this.page.getByRole('button', { name: 'Submit Assignment' })
+    await expect(confirm).toBeVisible({ timeout: 10_000 })
+    await confirm.click()
+    await expect(confirm).toBeHidden({ timeout: 15_000 })
+    await this.page.waitForLoadState('networkidle').catch(() => {})
+  }
+
+  /** The "Handed in" status chip a formative assignment settles on. */
+  async expectHandedIn(): Promise<void> {
+    await expect(this.page.getByText('Handed in', { exact: true }).first()).toBeVisible({
+      timeout: 20_000,
+    })
+  }
+
+  /** The model answer is present but still withheld. */
+  async expectSolutionLocked(): Promise<void> {
+    await expect(this.body().getByText('Model answer locked').first()).toBeVisible({
+      timeout: 20_000,
+    })
+  }
+
+  /** The model answer is revealed; asserts the corrigé text is on screen. */
+  async expectSolutionVisible(text: string): Promise<void> {
+    await expect(this.body().getByText('Model answer', { exact: true }).first()).toBeVisible({
+      timeout: 20_000,
+    })
+    await expect(this.body().getByText(text).first()).toBeVisible({ timeout: 20_000 })
+  }
+
+  /** A formative assignment must never show a score anywhere on the page. */
+  async expectNoGradeShown(): Promise<void> {
+    await expect(this.page.getByText(/\b\d+\/100\b/)).toHaveCount(0)
+    await expect(this.page.getByText('Grading in progress', { exact: true })).toHaveCount(0)
+  }
+
   /** Close the celebratory result modal if it is open. */
   async dismissResultModal(): Promise<void> {
     const close = this.page.getByRole('button', { name: 'Close' }).first()

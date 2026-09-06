@@ -18,17 +18,25 @@ export interface FeatureGateProps {
   /** Feature key (drives icon, copy, upsell tier — see featureMetadata.ts). */
   feature: FeatureKey
   /**
-   * Org slug for the "Go to settings" link in admin-disabled state. Optional;
+   * Org slug for the upgrade deep-link in the plan-locked state. Optional;
    * falls back to the current org context when omitted.
    */
   orgslug?: string
   /**
-   * - 'dashboard': admin context. When the feature is admin-disabled the card
-   *   offers a link to /dash/org/settings/features.
-   * - 'public': learner-facing context. Admin-disabled renders a plain "not
-   *   available" message — no settings link.
+   * Picks the wording of the admin-disabled card — both variants are static,
+   * neither links anywhere.
+   * - 'dashboard': admin context, copy addressed to someone who can flip the
+   *   toggle back on.
+   * - 'public': learner-facing context, plain "not available" message.
    */
   context?: 'dashboard' | 'public'
+  /**
+   * Escape hatch for a surface that HOSTS the toggle controlling this very
+   * feature: without it, turning the feature off unmounts its own switch and
+   * the admin is locked out with no way back. Bypasses the admin-disabled card
+   * only — a plan-locked feature still shows the upgrade card.
+   */
+  allowWhenDisabled?: boolean
   /** Content rendered when the feature is granted. */
   children: React.ReactNode
 }
@@ -45,7 +53,8 @@ const PLAN_GRADIENT: Record<string, string> = {
  * Unified feature gate. Reads resolved_features for the given feature, then:
  *   - renders children when granted
  *   - shows the upgrade card when plan is below the requirement
- *   - shows the admin-disabled card when plan is OK but the feature is toggled off
+ *   - shows the admin-disabled card (a dead end, by design) when plan is OK but
+ *     the feature is toggled off
  *
  * Replaces the previous PlanRestrictedFeature + FeatureDisabledView nesting.
  */
@@ -53,11 +62,12 @@ export default function FeatureGate({
   feature,
   orgslug,
   context = 'dashboard',
+  allowWhenDisabled = false,
   children,
 }: FeatureGateProps) {
   const { t } = useTranslation()
   const org = useOrg() as any
-  const state = useResolvedFeature(feature)
+  const state = useResolvedFeature(feature, { allowWhenDisabled })
   const resolvedSlug = orgslug ?? org?.slug ?? 'default'
 
   if (!state.reason) {

@@ -4,7 +4,7 @@ import path from 'node:path'
 import * as p from '../utils/prompt.js'
 import pc from 'picocolors'
 import type { LearnHouseConfigJson } from '../types.js'
-import { dockerComposeExec } from '../services/docker.js'
+import { dockerComposeExec, dockerComposeRun } from '../services/docker.js'
 
 // Shared upgrade helpers used by BOTH the Community and Enterprise update paths:
 // a pre-upgrade DB backup, Alembic baseline stamping (for create_all installs),
@@ -175,6 +175,55 @@ export function runAlembicUpgrade(dir: string, layout: EditionLayout, ui: Update
     if (detail) console.error(pc.dim(detail.slice(0, 800)))
     ui.warn('Migrations failed — your DB backup is in ./backups/.')
     ui.warn(`  Retry manually: docker compose exec ${layout.appService} sh -c "cd ${layout.alembicCwd} && uv run alembic upgrade heads"`)
+    return false
+  }
+}
+
+/** Migration heads shipped by the *running* image, read from its migration
+ *  scripts alone — no database round-trip. Older images ship an alembic env.py
+ *  that ignores LEARNHOUSE_SQL_CONNECTION_STRING and dials localhost, so
+ *  `current` and `stamp` fail inside them, but `heads` still answers, and it is
+ *  exactly the revision their create_all schema corresponds to. */
+export function readAlembicHeads(dir: string, layout: EditionLayout): string[] {
+  try {
+    return [...parseRevs(alembic(dir, layout, 'heads 2>/dev/null'))]
+  } catch {
+    return []
+  }
+}
+
+/** Bring the database to head with the NEW image before that image boots.
+ *
+ *  The API's startup probes SELECT columns that only a migration adds, so a
+ *  newer image started against an un-migrated database crash-loops and the
+ *  post-start migration step never gets to run. Instead a one-off container of
+ *  the freshly pulled image runs alembic against the database while the old
+ *  version keeps serving. A database with no alembic_version (built by the
+ *  old image's create_all) is first stamped at the old image's heads, so only
+ *  the real delta is applied — stamping it at the *new* heads would skip every
+ *  column migration in between. */
+export function migrateBeforeBoot(dir: string, layout: EditionLayout, previousHeads: string[], ui: UpdateLog): boolean {
+  const run = (args: string) =>
+    dockerComposeRun(dir, layout.appService, `sh -c "cd ${layout.alembicCwd} && uv run alembic ${args}"`)
+  try {
+    const current = parseRevs(run('current 2>/dev/null'))
+    if (current.size === 0) {
+      if (previousHeads.length === 0) {
+        ui.warn('Database has no Alembic revision and the previous image did not report one — migrations will run after startup instead.')
+        return true
+      }
+      run(`stamp ${previousHeads.join(' ')}`)
+      ui.log(`Database created via create_all — stamped at the previous image's revision (${previousHeads.join(', ')})`)
+    }
+    const out = run('upgrade heads')
+    const applied = out.split('\n').filter((l) => /Running upgrade/.test(l)).length
+    ui.ok(applied ? `Applied ${applied} migration(s) before starting the new image` : 'Database migrated to head before starting the new image')
+    return true
+  } catch (err) {
+    const e = err as { stderr?: { toString(): string }; stdout?: { toString(): string }; message?: string }
+    const detail = (e.stderr?.toString() || e.stdout?.toString() || e.message || '').trim()
+    if (detail) console.error(pc.dim(detail.slice(0, 800)))
+    ui.warn('Pre-start migration failed — the previous version is still running and your DB backup is in ./backups/.')
     return false
   }
 }

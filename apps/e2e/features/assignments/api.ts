@@ -46,7 +46,7 @@ async function createCourse(token: string, orgId: number, name: string): Promise
 
 export interface TaskSpec {
   title: string
-  assignment_type: 'QUIZ' | 'SHORT_ANSWER' | 'NUMBER_ANSWER' | 'FORM'
+  assignment_type: 'QUIZ' | 'SHORT_ANSWER' | 'NUMBER_ANSWER' | 'FORM' | 'FILE_SUBMISSION'
   contents: Record<string, unknown>
   description?: string
   hint?: string
@@ -63,7 +63,15 @@ export interface SeedAssignmentOptions {
   allowRetries?: boolean
   maxRetries?: number
   antiCopyPaste?: boolean
+  /** Formative mode: handed in, never graded. */
+  ungraded?: boolean
+  /** Model answer ("corrigé") text. */
+  solution?: string
+  /** When the model answer becomes readable by the learner. */
+  solutionReveal?: SolutionReveal
 }
+
+export type SolutionReveal = 'NEVER' | 'ON_SUBMISSION' | 'AFTER_GRADING'
 
 export interface SeededAssignment extends Ids {
   taskUuids: string[]
@@ -116,6 +124,9 @@ export async function seedAssignment(
     show_correct_answers: opts.showCorrectAnswers ?? true,
     allow_retries: opts.allowRetries ?? false,
     max_retries: opts.maxRetries ?? 0,
+    ungraded: opts.ungraded ?? false,
+    solution: opts.solution ?? null,
+    solution_reveal: opts.solutionReveal ?? 'NEVER',
     org_id: org.id,
     course_id: courseId,
     chapter_id: chapterId,
@@ -187,6 +198,37 @@ export async function submitAssignment(token: string, assignmentUuid: string): P
 /** Reset the current user's graded submission for another attempt. */
 export async function retryMe(token: string, assignmentUuid: string): Promise<void> {
   await req('POST', `/assignments/${assignmentUuid}/submissions/me/retry`, token, {})
+}
+
+/** Turn an assignment into a formative one and attach a model answer (PUT). */
+export async function setFormative(
+  token: string,
+  assignmentUuid: string,
+  opts: { ungraded?: boolean; solution?: string; solutionReveal?: SolutionReveal } = {},
+): Promise<any> {
+  return req('PUT', `/assignments/${assignmentUuid}`, token, {
+    ...(opts.ungraded === undefined ? {} : { ungraded: opts.ungraded }),
+    ...(opts.solution === undefined ? {} : { solution: opts.solution }),
+    ...(opts.solutionReveal === undefined ? {} : { solution_reveal: opts.solutionReveal }),
+  })
+}
+
+/** Upload the assignment's model answer document (multipart field "solution_file"). */
+export async function uploadSolutionFile(
+  token: string,
+  assignmentUuid: string,
+  bytes: Uint8Array,
+  filename = 'corrige.png',
+  contentType = 'image/png',
+): Promise<void> {
+  const fd = new FormData()
+  fd.set('solution_file', new Blob([bytes as unknown as BlobPart], { type: contentType }), filename)
+  const res = await fetch(`${API_URL}/assignments/${assignmentUuid}/solution_file`, {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${token}` },
+    body: fd,
+  })
+  if (!res.ok) throw new Error(`uploadSolutionFile -> ${res.status}: ${await res.text()}`)
 }
 
 /** Upload a teacher reference file to a task (multipart field "reference_file"). */

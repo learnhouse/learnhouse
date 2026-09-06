@@ -5,6 +5,7 @@ import { updateActivity } from '@services/courses/activities'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
 import toast from 'react-hot-toast'
 import { toEmbedUrl } from '@/lib/media/embedUrl'
+import { safeExternalUrl } from '@services/security/url'
 
 interface EmbedActivityProps {
   activity: any
@@ -22,11 +23,15 @@ function EmbedActivity({ activity, editable = false, style }: EmbedActivityProps
   const [, setError] = useState(!embedUrl)
 
   const handleSaveUrl = async () => {
-    if (!editUrl.trim()) return
+    const validatedUrl = safeExternalUrl(editUrl)
+    if (!validatedUrl) {
+      toast.error('Enter a valid http:// or https:// URL')
+      return
+    }
     setSaving(true)
     try {
       await updateActivity(
-        { content: { embed_url: editUrl.trim() } },
+        { content: { embed_url: validatedUrl } },
         activity.activity_uuid,
         access_token
       )
@@ -39,7 +44,7 @@ function EmbedActivity({ activity, editable = false, style }: EmbedActivityProps
     }
   }
 
-  const displayUrl = editable ? editUrl : embedUrl
+  const displayUrl = safeExternalUrl(editable ? editUrl : embedUrl)
 
   if (!displayUrl && !editable) {
     return (
@@ -64,7 +69,7 @@ function EmbedActivity({ activity, editable = false, style }: EmbedActivityProps
           />
           <button
             onClick={handleSaveUrl}
-            disabled={saving || editUrl.trim() === embedUrl}
+            disabled={saving || !safeExternalUrl(editUrl) || editUrl.trim() === embedUrl}
             className="inline-flex items-center gap-2 h-9 px-4 text-sm font-medium text-white bg-black rounded-lg hover:bg-gray-800 transition-colors disabled:opacity-50 flex-shrink-0"
           >
             {saving ? (

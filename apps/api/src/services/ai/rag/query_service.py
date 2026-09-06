@@ -154,6 +154,15 @@ async def query_course_rag_stream(
         "Just use the short [1] notation inline. Example: 'The building has 5 floors [2].'"
     )
 
+    # The copilot renders answers with remark-math + KaTeX, which reads $...$ and
+    # $$...$$ only. A bare $ in front of a number would start a math run and swallow
+    # the rest of the sentence, so ask for it escaped.
+    math_instructions = (
+        "MATH: Write any mathematical expression as LaTeX between dollar signs — $x^2$ inline, "
+        "$$...$$ on its own lines for display equations. Escape a literal dollar sign as \\$ "
+        "(for example \\$5)."
+    )
+
     if context and mode == "general":
         system_prompt = (
             "You are a helpful, knowledgeable educational assistant. Answer the student's question "
@@ -163,6 +172,7 @@ async def query_course_rag_stream(
             "When you add information beyond the course material, wrap that part in a blockquote "
             "using the > prefix.\n\n"
             f"{citation_instructions}\n\n"
+            f"{math_instructions}\n\n"
             f"Course Content:\n{context}"
         )
     elif context:
@@ -176,20 +186,23 @@ async def query_course_rag_stream(
             "you MUST wrap that part in a blockquote using the > prefix. Always do this, even for "
             "brief supplementary notes. Example:\n"
             "> This is additional context from general knowledge.\n\n"
+            f"{math_instructions}\n\n"
             f"Course Content:\n{context}"
         )
     elif mode == "general":
         system_prompt = (
             "You are a helpful, knowledgeable educational assistant. No specific course content "
             "was found for this question, but that's fine — answer the student's question using "
-            "your general knowledge. Be thorough and helpful."
+            "your general knowledge. Be thorough and helpful.\n\n"
+            f"{math_instructions}"
         )
     else:
         system_prompt = (
             "You are a helpful educational assistant. The student asked a question but "
             "no relevant course content was found. Let them know you couldn't find "
             "specific course material related to their question, but offer to help "
-            "with what you know."
+            "with what you know.\n\n"
+            f"{math_instructions}"
         )
 
     # Create the streaming generator

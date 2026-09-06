@@ -2454,7 +2454,12 @@ async def anonymize_user(
 
     user = await _get_user_in_org(user_id, token_user.org_id, db_session)
 
-    placeholder_email = f"deleted-user-{user_id}@anonymized.local"
+    # example.com is reserved by RFC 2606 and has no MX record, so the address
+    # is undeliverable while still being a well-formed one. The previous
+    # ".local" is a special-use name that email-validator rejects; rows scrubbed
+    # before this change still carry it, which is why UserRead has to tolerate
+    # stored addresses rather than re-validate them.
+    placeholder_email = f"deleted-user-{user_id}@anonymized.example.com"
     placeholder_username = f"deleted_user_{user_id}"
 
     existing_tokens = (await db_session.execute(

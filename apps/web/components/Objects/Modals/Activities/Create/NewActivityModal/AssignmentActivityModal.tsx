@@ -25,6 +25,7 @@ import {
   Eye,
   RotateCcw,
   Infinity as InfinityIcon,
+  ClipboardCheck,
 } from 'lucide-react'
 
 function NewAssignment({ submitActivity: _submitActivity, chapterId, course, closeModal }: any) {
@@ -48,6 +49,9 @@ function NewAssignment({ submitActivity: _submitActivity, chapterId, course, clo
   const [showCorrectAnswers, setShowCorrectAnswers] = React.useState(false)
   const [allowRetries, setAllowRetries] = React.useState(false)
   const [maxRetries, setMaxRetries] = React.useState(0)
+  // Formative mode: handed in, never marked. The model answer that pairs with
+  // it is authored afterwards in the assignment editor.
+  const [ungraded, setUngraded] = React.useState(false)
 
   const handleSubmit = async (e: any) => {
     e.preventDefault()
@@ -71,11 +75,16 @@ function NewAssignment({ submitActivity: _submitActivity, chapterId, course, clo
       {
         title: activityName,
         description: activityDescription,
-        due_date: dueDate,
+        // Empty means no deadline; send null rather than an empty string so the
+        // column reads as unset instead of as a value nothing can parse.
+        due_date: dueDate || null,
         grading_type: gradingType,
-        auto_grading: autoGrading,
+        ungraded: ungraded,
+        // An ungraded assignment never auto-grades and has no answer key to
+        // reveal — send the consistent state instead of dead flags.
+        auto_grading: ungraded ? false : autoGrading,
         anti_copy_paste: antiCopyPaste,
-        show_correct_answers: showCorrectAnswers,
+        show_correct_answers: ungraded ? false : showCorrectAnswers,
         allow_retries: allowRetries,
         max_retries: allowRetries ? maxRetries : 0,
         course_id: course?.courseStructure.id,
@@ -175,28 +184,43 @@ function NewAssignment({ submitActivity: _submitActivity, chapterId, course, clo
           </Form.Control>
         </Form.Field>
 
+        {/* Optional: a self-paced course has no date that means anything to a
+            learner who enrolled today. */}
         <Form.Field
           name="assignment-activity-due-date"
           className="space-y-1.5"
         >
-          <Form.Label className="text-sm font-medium text-gray-700">
-            {t('dashboard.assignments.modals.create.form.due_date_label')}
-          </Form.Label>
-          <Form.Message match="valueMissing" className="text-xs text-red-500">
-            {t('dashboard.assignments.modals.create.form.due_date_required')}
-          </Form.Message>
+          <div className="flex items-center justify-between">
+            <Form.Label className="text-sm font-medium text-gray-700">
+              {t('dashboard.assignments.modals.create.form.due_date_label')}
+            </Form.Label>
+            {dueDate && (
+              <button
+                type="button"
+                onClick={() => setDueDate('')}
+                className="text-[10px] font-medium text-gray-400 hover:text-gray-700 transition-colors"
+              >
+                {t('dashboard.assignments.modals.create.form.due_date_clear')}
+              </button>
+            )}
+          </div>
           <Form.Control asChild>
             <input
               onChange={(e) => setDueDate(e.target.value)}
+              value={dueDate}
               type="date"
-              required
               className={inputClass}
             />
           </Form.Control>
+          <p className="text-[10px] text-gray-400">
+            {t('dashboard.assignments.modals.create.form.due_date_hint')}
+          </p>
         </Form.Field>
       </div>
 
-      {/* Grading type */}
+      {/* Grading type — irrelevant on a formative assignment, which never
+          produces a grade to display in any scale. */}
+      {!ungraded && (
       <div className="rounded-xl nice-shadow p-4 space-y-3">
         <div className="flex items-center justify-between">
           <p className="text-sm font-medium text-gray-700">
@@ -212,6 +236,7 @@ function NewAssignment({ submitActivity: _submitActivity, chapterId, course, clo
           translationPrefix="dashboard.assignments.modals.create.form"
         />
       </div>
+      )}
 
       {/* Grading options */}
       <div className="rounded-xl nice-shadow p-4 space-y-3">
@@ -225,12 +250,21 @@ function NewAssignment({ submitActivity: _submitActivity, chapterId, course, clo
         </div>
         <div className="space-y-2">
           <SmallToggleRow
+            icon={<ClipboardCheck size={16} className="text-teal-500" />}
+            label={t('dashboard.assignments.modals.edit.form.ungraded_label', { defaultValue: 'Formative — no grading' })}
+            description={t('dashboard.assignments.modals.create.form.ungraded_description', { defaultValue: 'Learners hand their work in and it is never marked. Add a model answer in the assignment editor to unlock on hand-in.' })}
+            checked={ungraded}
+            onChange={setUngraded}
+          />
+          {!ungraded && (
+          <SmallToggleRow
             icon={<Zap size={16} className="text-amber-500" />}
             label={t('dashboard.assignments.modals.create.form.auto_grading_label')}
             description={t('dashboard.assignments.modals.create.form.auto_grading_description')}
             checked={autoGrading}
             onChange={setAutoGrading}
           />
+          )}
           <SmallToggleRow
             icon={<Shield size={16} className="text-cyan-500" />}
             label={t('dashboard.assignments.modals.create.form.anti_copy_paste_label')}
@@ -238,6 +272,7 @@ function NewAssignment({ submitActivity: _submitActivity, chapterId, course, clo
             checked={antiCopyPaste}
             onChange={setAntiCopyPaste}
           />
+          {!ungraded && (
           <SmallToggleRow
             icon={<Eye size={16} className="text-indigo-500" />}
             label={t('dashboard.assignments.modals.create.form.show_correct_answers_label')}
@@ -245,6 +280,7 @@ function NewAssignment({ submitActivity: _submitActivity, chapterId, course, clo
             checked={showCorrectAnswers}
             onChange={setShowCorrectAnswers}
           />
+          )}
           <div className="rounded-xl border border-gray-100 bg-white overflow-hidden">
             <div className="flex items-start justify-between gap-3 p-3">
               <div className="flex items-start gap-2.5 flex-1 min-w-0">
@@ -256,7 +292,14 @@ function NewAssignment({ submitActivity: _submitActivity, chapterId, course, clo
                     {t('dashboard.assignments.modals.edit.form.allow_retries_label')}
                   </p>
                   <p className="text-[10px] text-gray-500 leading-snug mt-0.5">
-                    {t('dashboard.assignments.modals.edit.form.allow_retries_description')}
+                    {/* The default copy says retries happen "after it's graded",
+                        which never comes true in formative mode. */}
+                    {ungraded
+                      ? t('dashboard.assignments.modals.edit.form.allow_retries_description_ungraded', {
+                          defaultValue:
+                            'Let learners reset and hand the assignment in again. Each retry wipes their previous work and re-locks the model answer.',
+                        })
+                      : t('dashboard.assignments.modals.edit.form.allow_retries_description')}
                   </p>
                 </div>
               </div>

@@ -167,8 +167,14 @@ def _walk_prosemirror_node(node: dict, parts: list[str]) -> None:
     # have. Handled explicitly so it does not fall through to the generic
     # recursion, which would yield nothing for this atom node.
     if node_type == "blockH5P":
-        attrs = node.get("attrs")
-        title = attrs.get("title") if isinstance(attrs, dict) else None
+        attrs = node.get("attrs") if isinstance(node.get("attrs"), dict) else {}
+        url = attrs.get("h5pUrl")
+        # An emptied block may still carry the title of the embed it used to
+        # hold; indexing that keeps search citing content the activity no
+        # longer contains.
+        if not (isinstance(url, str) and url.strip()):
+            return
+        title = attrs.get("title")
         if isinstance(title, str) and title.strip():
             parts.append(f"[H5P interactive content] {title.strip()}")
         return

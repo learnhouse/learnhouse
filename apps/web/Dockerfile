@@ -2,7 +2,7 @@ FROM oven/bun:1.4.0-alpine AS base
 
 # Install dependencies only when needed
 FROM base AS deps
-RUN apk update && apk add --no-cache libc6-compat && rm -rf /var/cache/apk/*
+RUN apk upgrade --no-cache && apk add --no-cache libc6-compat
 WORKDIR /app
 
 COPY package.json bun.lock* ./
@@ -28,7 +28,7 @@ RUN bun run build
 FROM oven/bun:1.4.0-alpine AS runner
 WORKDIR /app
 
-RUN apk update && apk add --no-cache curl && rm -rf /var/cache/apk/*
+RUN apk upgrade --no-cache && apk add --no-cache curl
 
 ENV NODE_ENV=production
 ENV NEXT_TELEMETRY_DISABLED=1

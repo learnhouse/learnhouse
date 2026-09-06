@@ -384,7 +384,7 @@ Capture `id` and `activity_uuid` from the response.
 | --- | --- | --- | --- |
 | `title` | string | Yes | Shown in the assignment header |
 | `description` | string | Yes | Body text |
-| `due_date` | string (`YYYY-MM-DD`) | Yes | -- |
+| `due_date` | string (`YYYY-MM-DD`) | No | Omit it for a self-paced assignment with no deadline |
 | `grading_type` | enum | Yes | `ALPHABET`, `NUMERIC`, `PERCENTAGE`, `PASS_FAIL`, `GPA_SCALE` |
 | `org_id` / `course_id` / `chapter_id` / `activity_id` | int | Yes | All four foreign keys are required |
 | `published` | boolean | No | Defaults `false` |

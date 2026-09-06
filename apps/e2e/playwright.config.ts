@@ -29,7 +29,9 @@ export default defineConfig({
     baseURL: BASE_URL,
     trace: 'on-first-retry',
     screenshot: 'only-on-failure',
-    video: 'retain-on-failure',
+    // Recording every run is wasteful in CI; E2E_VIDEO=1 turns it on for a
+    // local run when the point IS the recording (a feature walkthrough).
+    video: process.env.E2E_VIDEO === '1' ? 'on' : 'retain-on-failure',
     actionTimeout: 15_000,
     navigationTimeout: 30_000,
   },

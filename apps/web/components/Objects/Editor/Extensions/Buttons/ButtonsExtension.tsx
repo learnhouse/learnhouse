@@ -101,7 +101,7 @@ const ButtonsExtension: React.FC = (props: any) => {
     <NodeViewWrapper className={`block-button ${getAlignmentClass()}`}>
       <div className='inline-block'>
         <button
-          onClick={isEditable ? undefined : () => { const safe = safeHref(link); if (safe !== '#') window.open(safe, '_blank') }}
+          onClick={isEditable ? undefined : () => { const safe = safeHref(link); if (safe !== '#') window.open(safe, '_blank', 'noopener,noreferrer') }}
           className={twMerge(
             'flex items-center space-x-2 py-2 px-4 rounded-xl text-white transition-colors',
             getButtonColor(color),

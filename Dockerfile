@@ -2,7 +2,7 @@
 # Stage 1: Frontend dependency install
 # ───────────────────────────────────────────────
 FROM oven/bun:1.4.0-alpine AS frontend-deps
-RUN apk update && apk add --no-cache libc6-compat && rm -rf /var/cache/apk/*
+RUN apk upgrade --no-cache && apk add --no-cache libc6-compat
 WORKDIR /app
 
 COPY apps/web/package.json apps/web/bun.lock* ./
@@ -30,7 +30,7 @@ RUN bun run build
 FROM oven/bun:1.4.0-alpine AS frontend-runner
 WORKDIR /app
 
-RUN apk update && apk add --no-cache curl && rm -rf /var/cache/apk/*
+RUN apk upgrade --no-cache && apk add --no-cache curl
 
 ENV NODE_ENV=production
 ENV NEXT_TELEMETRY_DISABLED=1
@@ -67,22 +67,22 @@ RUN bun run build
 # ───────────────────────────────────────────────
 # Stage 5: Final image combining frontend + backend + collab
 # ───────────────────────────────────────────────
-FROM python:3.14.6-slim-bookworm AS runner
+FROM python:3.14.7-alpine3.24 AS runner
 
-# Single apt layer: nginx, curl, netcat, node, pm2
-RUN apt-get update \
-    && apt-get install -y --no-install-recommends nginx curl netcat-openbsd ca-certificates gnupg unzip build-essential \
-    && curl -fsSL https://deb.nodesource.com/setup_22.x | bash - \
-    && apt-get install -y --no-install-recommends nodejs \
+# Apply the stable distribution's security updates at build time. The Python
+# image can be published before a newer package fix reaches Alpine's mirrors.
+RUN apk upgrade --no-cache \
+    && apk add --no-cache nginx curl netcat-openbsd ca-certificates bash nodejs npm libstdc++ \
     && npm install -g pm2 \
-    && curl -fsSL https://bun.sh/install | bash \
-    && apt-get purge -y gnupg \
-    && apt-get autoremove -y \
-    && apt-get clean \
-    && rm -rf /var/lib/apt/lists/* /tmp/* /root/.npm \
-    && rm /etc/nginx/sites-enabled/default
+    && rm -rf /root/.npm \
+    && mkdir -p /run/nginx
 
-ENV PATH="/root/.bun/bin:${PATH}"
+# Only uv is needed to manage the backend environment at runtime.
+RUN python -m pip uninstall --yes pip \
+    && rm -rf /usr/local/lib/python3.14/ensurepip
+
+COPY --from=frontend-deps /usr/local/bin/bun /usr/local/bin/bun
+COPY --from=ghcr.io/astral-sh/uv:0.10.7 /uv /uvx /bin/
 
 # Copy the frontend standalone build
 COPY --from=frontend-runner /app /app/web
@@ -90,8 +90,7 @@ COPY --from=frontend-runner /app /app/web
 # Backend: install deps first (better layer caching)
 WORKDIR /app/api
 COPY ./apps/api/uv.lock ./apps/api/pyproject.toml ./
-RUN pip install --no-cache-dir --upgrade pip uv \
-    && uv sync --no-dev
+RUN uv sync --frozen --no-dev --no-install-project --no-cache
 COPY ./apps/api ./
 
 # Remove Enterprise Edition folder for public builds
@@ -102,11 +101,11 @@ RUN if [ "$LEARNHOUSE_PUBLIC" = "true" ]; then rm -rf /app/api/ee; fi
 WORKDIR /app/collab
 COPY --from=collab-builder /app/dist ./dist
 COPY apps/collab/package.json apps/collab/bun.lock* ./
-RUN bun install --production
+RUN bun install --frozen-lockfile --production
 
 # Copy configs and scripts
 WORKDIR /app
-COPY ./docker/nginx.conf /etc/nginx/conf.d/default.conf
+COPY ./docker/nginx.conf /etc/nginx/http.d/default.conf
 COPY ./apps/api/docker-entrypoint.sh /app/api/docker-entrypoint.sh
 COPY ./docker/start.sh /app/start.sh
 RUN chmod +x /app/api/docker-entrypoint.sh /app/start.sh

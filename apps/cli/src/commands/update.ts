@@ -3,7 +3,7 @@ import { join } from 'node:path'
 import * as p from '@clack/prompts'
 import pc from 'picocolors'
 import { findInstallDir, readConfig } from '../services/config-store.js'
-import { dockerComposeDown, dockerComposeUp, dockerComposePull } from '../services/docker.js'
+import { dockerComposeDown, dockerComposeStop, dockerComposeUp, dockerComposePull } from '../services/docker.js'
 import { migrateContentVolume } from '../services/content-volume-migration.js'
 import { waitForHealth } from '../services/health.js'
 import { replaceComposeImageTag } from '../services/compose-utils.js'
@@ -11,6 +11,8 @@ import {
   updateEnterprise,
   backupDatabase,
   ensureAlembicBaseline,
+  migrateBeforeBoot,
+  readAlembicHeads,
   runAlembicUpgrade,
   type EditionLayout,
 } from './update-ee.js'
@@ -101,6 +103,10 @@ export async function updateCommand(options: { version?: string; migrate?: boole
     }
     // 2) Stamp an Alembic baseline if the DB was created via create_all and never stamped.
     ensureAlembicBaseline(config.installDir, COMMUNITY_LAYOUT, ui)
+    // Remember which migration heads the running image ships: if stamping
+    // failed (old images can't run alembic against the compose db), this is
+    // the revision the new image must stamp before applying its delta.
+    const previousHeads = readAlembicHeads(config.installDir, COMMUNITY_LAYOUT)
 
     // Resolve the target image tag
     let targetImage: string
@@ -164,6 +170,25 @@ export async function updateCommand(options: { version?: string; migrate?: boole
     dockerComposePull(config.installDir)
     s.stop('Image pulled')
 
+    // 3) Migrate with the new image before it boots. The new image cannot start
+    //    against an un-migrated schema, so this has to happen before the
+    //    restart, not after it. Only the app is stopped first: its open
+    //    connections would otherwise block the ALTER TABLE locks indefinitely.
+    //    db, redis and the proxy keep running.
+    if (options.migrate !== false) {
+      p.log.step('Running database migrations')
+      dockerComposeStop(config.installDir, COMMUNITY_LAYOUT.appService)
+      if (!migrateBeforeBoot(config.installDir, COMMUNITY_LAYOUT, previousHeads, ui)) {
+        const previousImage = composeContent.match(/image:\s*(\S*learnhouse\/app:\S+)/)?.[1]
+        if (previousImage) {
+          writeFileSync(composePath, replaceComposeImageTag(readFileSync(composePath, 'utf-8'), previousImage))
+        }
+        dockerComposeUp(config.installDir)
+        p.log.warn('The previous version has been started again; the compose file still points at its image.')
+        process.exit(1)
+      }
+    }
+
     s.start('Restarting services')
     dockerComposeDown(config.installDir)
     dockerComposeUp(config.installDir, true)
@@ -175,7 +200,9 @@ export async function updateCommand(options: { version?: string; migrate?: boole
     s.stop('LearnHouse is up')
 
     if (options.migrate !== false) {
-      p.log.step('Running database migrations')
+      // Normally a no-op after the pre-start run; catches anything the new
+      // image's startup created that still needs a migration.
+      p.log.step('Verifying database migrations')
       if (!runAlembicUpgrade(config.installDir, COMMUNITY_LAYOUT, ui)) {
         p.log.warn('Your DB backup is in ./backups/ — restore it and re-pin the previous image to roll back.')
         process.exit(1)

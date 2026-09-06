@@ -221,6 +221,27 @@ class TestCreateAssignment:
         assert isinstance(result, AssignmentRead)
         assert result.title == "New Assignment"
 
+    async def test_creates_assignment_without_a_due_date(
+        self, mock_request, db, org, course, chapter, activity, admin_user
+    ):
+        # Self-paced courses have no deadline that means anything to a learner
+        # who enrolled today, so the date is optional all the way down.
+        obj = AssignmentCreate(
+            title="Self-paced",
+            description="Desc",
+            grading_type=GradingTypeEnum.NUMERIC,
+            org_id=org.id,
+            course_id=course.id,
+            chapter_id=chapter.id,
+            activity_id=activity.id,
+        )
+        with patch(_PATCH_RBAC, new_callable=AsyncMock), \
+             patch(_PATCH_LIMITS, new_callable=AsyncMock), \
+             patch(_PATCH_INCREASE, new_callable=AsyncMock):
+            result = await create_assignment(mock_request, obj, admin_user, db)
+        assert result.due_date is None
+        assert _is_assignment_past_due(result) is False
+
     async def test_rejects_activity_from_another_course(
         self, mock_request, db, org, course, chapter, activity, admin_user
     ):
@@ -333,6 +354,37 @@ class TestUpdateAssignment:
                 db,
             )
         assert result.title == "Updated Title"
+
+    async def test_explicit_null_due_date_removes_the_deadline(
+        self, mock_request, db, assignment, admin_user
+    ):
+        # A teacher moving an assignment into a self-paced course has to be
+        # able to take the deadline off, not only push it further out.
+        with patch(_PATCH_RBAC, new_callable=AsyncMock):
+            result = await update_assignment(
+                mock_request,
+                assignment.assignment_uuid,
+                AssignmentUpdate(due_date=None),
+                admin_user,
+                db,
+            )
+        assert result.due_date is None
+
+    async def test_omitting_due_date_leaves_the_deadline_alone(
+        self, mock_request, db, assignment, admin_user
+    ):
+        # Every field on AssignmentUpdate defaults to None, so "not sent" and
+        # "sent as null" have to stay distinguishable.
+        original = assignment.due_date
+        with patch(_PATCH_RBAC, new_callable=AsyncMock):
+            result = await update_assignment(
+                mock_request,
+                assignment.assignment_uuid,
+                AssignmentUpdate(title="Still Due"),
+                admin_user,
+                db,
+            )
+        assert result.due_date == original
 
 
 # ---------------------------------------------------------------------------

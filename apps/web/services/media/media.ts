@@ -220,6 +220,20 @@ export function getTaskRefFileDir(
   return uri
 }
 
+// The assignment-level model answer ("corrigé") document. Mirrors the task
+// reference-file layout but hangs off the assignment, matching
+// `upload_solution_file` on the API side.
+export function getAssignmentSolutionFileDir(
+  orgUUID: string,
+  courseUUID: string,
+  activityUUID: string,
+  assignmentUUID: string,
+  fileID: string
+) {
+  let uri = `${getMediaUrl()}content/orgs/${orgUUID}/courses/${courseUUID}/activities/${activityUUID}/assignments/${assignmentUUID}/solution/${fileID}`
+  return uri
+}
+
 export function getTaskFileSubmissionDir(
   orgUUID: string,
   courseUUID: string,

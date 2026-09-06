@@ -660,6 +660,8 @@ async def are_course_assignments_passed(
     - A missing submission, a not-yet-GRADED submission (SUBMITTED/PENDING), or a
       graded-but-failed submission all return False, so the certificate is
       withheld until the learner actually passes.
+    - A formative (``ungraded``) assignment is the exception: it is satisfied by
+      being handed in, since it is never graded at all.
     - Pass/fail reuses the canonical grader with the assignment's configured
       threshold, so "certified" always agrees with the score shown to the learner.
 
@@ -675,7 +677,10 @@ async def are_course_assignments_passed(
         AssignmentUserSubmission,
         AssignmentUserSubmissionStatus,
     )
-    from src.services.courses.activities.assignments import compute_assignment_grade
+    from src.services.courses.activities.assignments import (
+        _HANDED_IN_STATUSES,
+        compute_assignment_grade,
+    )
 
     # Assignments that belong to activities actually in this course. Use an
     # IN-subquery (not a join) so an activity reused across chapters isn't
@@ -717,6 +722,15 @@ async def are_course_assignments_passed(
     sub_by_assignment = {s.assignment_id: s for s in subs}
 
     for assignment in assignments:
+        # A formative (ungraded) assignment has no grade to pass or fail — it is
+        # satisfied by handing the work in. Requiring GRADED here would make an
+        # ungraded assignment permanently block every certificate in its course,
+        # since nothing ever moves that submission out of SUBMITTED.
+        if getattr(assignment, "ungraded", False):
+            sub = sub_by_assignment.get(assignment.id)
+            if sub is None or sub.submission_status not in _HANDED_IN_STATUSES:
+                return False
+            continue
         # An assignment with no gradable points (no tasks / all-zero max) can't
         # be passed or failed — treat it as vacuously passed so it doesn't
         # permanently block the certificate.

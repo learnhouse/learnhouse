@@ -1,4 +1,5 @@
 import { stripPort, isSubdomainOf, isSameHost, isLocalhost as isLocalhostCheck } from '@services/utils/ts/hostUtils'
+import { safeInternalPath } from '@services/security/url'
 
 // Runtime configuration cache
 let runtimeConfig: Record<string, string> | null = null;
@@ -279,6 +280,9 @@ export const getCustomDomainFromContext = (): string | null => {
  * the menu to forge a non-existent subdomain like `default.localhost:3000`.
  */
 export const getUriWithOrg = (orgslug: string, path: string) => {
+  path = safeInternalPath(path)
+  // A slug is one DNS label, never a host, URL, or path from search/API data.
+  if (orgslug && !/^[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?$/i.test(orgslug)) return path
   const tenancy = getTenancy()
 
   // Client-side
@@ -439,7 +443,6 @@ export const getDefaultOrg = () => {
   // 3. Default
   return 'default'
 }
-
 
 
 

@@ -165,3 +165,63 @@ async def test_document_activity_safe_path_extracts_text():
     assert len(results) == 1
     assert results[0]["text"] == "doc text"
     assert results[0]["source_type"] == "document_activity"
+
+
+# --- blockH5P extraction --------------------------------------------------
+# The H5P block is embed-only: the interactive content lives on the author's
+# own host, so the author-supplied title is the only text the indexer has.
+
+def test_h5p_block_indexes_its_title():
+    parts: list[str] = []
+    ce._walk_prosemirror_node(
+        {
+            "type": "blockH5P",
+            "attrs": {"h5pUrl": "https://team.h5p.com/content/1/embed", "title": "Cell Quiz"},
+        },
+        parts,
+    )
+    assert parts == ["[H5P interactive content] Cell Quiz"]
+
+
+def test_h5p_block_without_a_title_contributes_nothing():
+    parts: list[str] = []
+    ce._walk_prosemirror_node(
+        {"type": "blockH5P", "attrs": {"h5pUrl": "https://team.h5p.com/content/1/embed"}},
+        parts,
+    )
+    assert parts == []
+
+
+def test_h5p_block_emptied_by_the_author_stops_being_indexed():
+    # Removing the embed clears the URL; a title left over from the old
+    # content must not keep showing up in search.
+    parts: list[str] = []
+    ce._walk_prosemirror_node(
+        {"type": "blockH5P", "attrs": {"h5pUrl": "   ", "title": "Cell Quiz"}},
+        parts,
+    )
+    assert parts == []
+
+
+def test_h5p_block_without_attrs_is_skipped_not_crashed():
+    parts: list[str] = []
+    ce._walk_prosemirror_node({"type": "blockH5P"}, parts)
+    assert parts == []
+
+
+def test_h5p_block_nested_in_a_document_is_reached():
+    parts: list[str] = []
+    ce._walk_prosemirror_node(
+        {
+            "type": "doc",
+            "content": [
+                {"type": "paragraph", "content": [{"type": "text", "text": "Intro"}]},
+                {
+                    "type": "blockH5P",
+                    "attrs": {"h5pUrl": "https://example.org/h5p/embed/9", "title": "Drag words"},
+                },
+            ],
+        },
+        parts,
+    )
+    assert parts == ["Intro", "[H5P interactive content] Drag words"]

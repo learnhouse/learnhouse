@@ -1100,7 +1100,18 @@
     "no_task_submission_to_grade": "لم يرسل هذا الطالب ملفًا لهذه المهمة بعد.",
     "past_due": "انتهى الموعد النهائي",
     "past_due_description": "كان الموعد النهائي لهذا الواجب في {{date}}. لم يعد بالإمكان حفظ الإجابات أو إرسالها للتقييم.",
-    "past_due_title": "انتهى الموعد النهائي"
+    "past_due_title": "انتهى الموعد النهائي",
+    "ungraded_badge": "غير مُقيَّم",
+    "hand_in": "تسليم عملي",
+    "hand_in_title": "تسليم عملك",
+    "hand_in_confirm": "سيتم تسليم عملك إلى معلمك. لن يتم تقييمه بدرجة.",
+    "handed_in": "تم التسليم",
+    "solution_title": "الحل النموذجي",
+    "solution_download": "تنزيل الحل النموذجي",
+    "solution_locked_title": "الحل النموذجي مقفل",
+    "solution_locked_on_submission": "سلّم عملك ليُفتح الحل النموذجي على الفور.",
+    "solution_locked_after_grading": "يُفتح الحل النموذجي بعد تقييم عملك.",
+    "retry_assignment_confirm_ungraded": "ستتم إعادة تعيين تسليمك الحالي لتبدأ من جديد، وسيُقفل الحل النموذجي مجدداً حتى تسلّم المحاولة التالية."
   },
   "certificate": {
     "certificate": "الشهادة",
@@ -2620,6 +2631,7 @@
         "enable_ai": "تفعيل ميزات الذكاء الاصطناعي",
         "enable_ai_description": "السماح بميزات الذكاء الاصطناعي عبر محتوى وتجارب التعلم في منظمتك",
         "admin_only": "يمكن للمسؤولين فقط تعديل إعدادات الذكاء الاصطناعي.",
+        "currently_disabled": "ميزات الذكاء الاصطناعي معطّلة حاليًا في هذه المنظمة. فعّل المفتاح أدناه لاستعادتها.",
         "features_enabled": "ميزات الذكاء الاصطناعي المتاحة",
         "feature_editor": "مساعدة محرر المحتوى بالذكاء الاصطناعي",
         "feature_activity": "تفاعلات نشاط التعلم بالذكاء الاصطناعي",
@@ -4145,7 +4157,11 @@
           "placeholder": "اكتب تعليقاً حول التسليم بشكل عام. سيراه الطالب بجانب درجته.",
           "hint": "اتركه فارغاً للإبقاء على أي ملاحظات سابقة دون تغيير."
         },
-        "truncated_warning": "يتم عرض أول {{max}} تسليمات فقط. بعض التسليمات غير مدرجة هنا."
+        "truncated_warning": "يتم عرض أول {{max}} تسليمات فقط. بعض التسليمات غير مدرجة هنا.",
+        "ungraded_title": "تكويني — غير مُقيَّم",
+        "ungraded_description": "يُسلَّم هذا الواجب للاطلاع فقط. لا تُسجَّل أي درجة.",
+        "download_to_grade": "نزّل الملف وقيّمه يدوياً، ثم أدخل الدرجة أعلاه",
+        "download_to_review": "نزّل الملف للاطلاع على ما سلّمه المتعلم."
       },
       "analytics": {
         "loading": "جارٍ تحميل التحليلات...",
@@ -4210,6 +4226,8 @@
             "description_required": "يرجى تقديم وصف لواجبك",
             "due_date_label": "تاريخ الاستحقاق",
             "due_date_required": "يرجى تقديم تاريخ استحقاق لواجبك",
+            "due_date_hint": "اختياري — اتركه فارغًا للدورات ذاتية الوتيرة بلا موعد نهائي.",
+            "due_date_clear": "بلا موعد نهائي",
             "grading_type_label": "نوع التقييم",
             "grading_type_required": "يرجى تقديم نوع تقييم لواجبك",
             "grading_types": {
@@ -4246,13 +4264,30 @@
             "max_retries_bounded": "إجمالي المحاولات المقيّمة (التقديم الأولي + إعادة المحاولات)",
             "pass_threshold_label": "حد النجاح",
             "pass_threshold_description": "أدنى درجة للنجاح. اتركه فارغًا لاستخدام القيمة الافتراضية (50%، أو 60% للتقديرات الحرفية).",
-            "pass_threshold_placeholder": "تلقائي"
+            "pass_threshold_placeholder": "تلقائي",
+            "ungraded_label": "تكويني — بدون تقييم",
+            "ungraded_description": "يسلّم المتعلمون أعمالهم دون أي تقييم بدرجة. لا درجة ولا نجاح أو رسوب — أرفق حلاً نموذجياً أدناه للتقييم الذاتي.",
+            "solution_label": "الحل النموذجي",
+            "solution_hint": "يظهر للمتعلمين بعد فتحه فقط",
+            "solution_placeholder": "اكتب الحل النموذجي الذي يقارن به المتعلمون عملهم…",
+            "solution_no_file": "لا يوجد مستند مرفق",
+            "solution_remove_file": "إزالة",
+            "solution_upload_file": "إرفاق",
+            "solution_reveal_label": "فتح الحل النموذجي",
+            "solution_reveal_never": "أبداً",
+            "solution_reveal_never_hint": "يبقى لك وحدك",
+            "solution_reveal_on_submission": "عند التسليم",
+            "solution_reveal_on_submission_hint": "يُفتح لحظة التسليم",
+            "solution_reveal_after_grading": "بعد التقييم",
+            "solution_reveal_after_grading_hint": "يُفتح بعد وضع الدرجة",
+            "allow_retries_description_ungraded": "السماح للمتعلمين بإعادة التسليم من جديد. كل محاولة تمحو العمل السابق وتُقفل الحل النموذجي مجدداً."
           },
           "toasts": {
             "updating": "جاري تحديث الواجب...",
             "success": "تم تحديث الواجب بنجاح",
             "error": "فشل تحديث الواجب",
-            "error_detail": "حدث خطأ أثناء تحديث الواجب"
+            "error_detail": "حدث خطأ أثناء تحديث الواجب",
+            "solution_file_error": "تعذّر رفع مستند الحل النموذجي."
           }
         },
         "create": {
@@ -4263,6 +4298,8 @@
             "description_required": "يرجى تقديم وصف لواجبك",
             "due_date_label": "تاريخ الاستحقاق",
             "due_date_required": "يرجى تقديم تاريخ استحقاق لواجبك",
+            "due_date_hint": "اختياري — اتركه فارغًا للدورات ذاتية الوتيرة بلا موعد نهائي.",
+            "due_date_clear": "بلا موعد نهائي",
             "grading_type_label": "نوع التقييم",
             "grading_type_required": "يرجى تقديم نوع تقييم لواجبك",
             "grading_types": {
@@ -4288,7 +4325,8 @@
             "grading_type_hint": "كيف تُعرض الدرجات على الطلاب",
             "grading_options_hint": "السلوك عند التسليم",
             "show_correct_answers_description": "بعد التقييم، يرى الطلاب الإجابات الصحيحة بجانب إجاباتهم.",
-            "show_correct_answers_label": "إظهار الإجابات الصحيحة بعد التقييم"
+            "show_correct_answers_label": "إظهار الإجابات الصحيحة بعد التقييم",
+            "ungraded_description": "يسلّم المتعلمون أعمالهم دون أي تقييم بدرجة. أضف حلاً نموذجياً في محرر الواجب ليُفتح عند التسليم."
           },
           "toasts": {
             "creating": "جاري إنشاء الواجب...",
@@ -4687,7 +4725,25 @@
           "empty": "أدخل رابط تضمين H5P.",
           "unparseable": "لا يبدو هذا رابطًا صالحًا. الصق رابط التضمين أو مقتطف iframe من مزوّد H5P.",
           "unsupported_protocol": "يمكن تضمين روابط http و https فقط."
-        }
+        },
+        "size_label": "الحجم",
+        "sizes": {
+          "auto": "تلقائي",
+          "auto_hint": "اترك النشاط يحدد ارتفاعه بنفسه.",
+          "widescreen": "16:9",
+          "widescreen_hint": "شاشة عريضة — الأنسب للفيديو التفاعلي.",
+          "classic": "4:3",
+          "classic_hint": "كلاسيكي — الأنسب للعروض التقديمية.",
+          "short": "قصير",
+          "short_hint": "إطار ثابت بارتفاع 320 بكسل.",
+          "medium": "متوسط",
+          "medium_hint": "إطار ثابت بارتفاع 520 بكسل.",
+          "tall": "طويل",
+          "tall_hint": "إطار ثابت بارتفاع 760 بكسل.",
+          "custom": "مخصص ({{height}} بكسل)",
+          "custom_hint": "ارتفاع حددته بالسحب."
+        },
+        "resize_handle": "تغيير حجم إطار H5P"
       },
       "quiz_block": {
         "all_correct": "جميع الإجابات صحيحة!",
@@ -4771,7 +4827,8 @@
       },
       "magic_block": "كتلة سحرية (مولدة بالذكاء الاصطناعي)",
       "library": "المكتبة",
-      "flipcard_grid": "شبكة البطاقات التعليمية"
+      "flipcard_grid": "شبكة البطاقات التعليمية",
+      "divider": "فاصل"
     },
     "ai_panel": {
       "add_definition": "إضافة تعريف",

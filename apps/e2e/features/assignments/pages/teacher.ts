@@ -100,6 +100,39 @@ export class AssignmentEditorPage {
     await expect(dialog).toBeHidden({ timeout: 10_000 })
   }
 
+  /**
+   * Turn the assignment into a formative one through the Edit modal: switch on
+   * "Formative — no grading", write the model answer, and choose when it
+   * unlocks. Drives the real form rather than the API so the spec proves the
+   * authoring surface works, not just the endpoint behind it.
+   */
+  async configureFormative(opts: {
+    solution: string
+    reveal?: 'Never' | 'On hand-in' | 'After grading'
+    /** Hold on the model-answer section before saving (for a recorded demo). */
+    showCorrigeFor?: number
+  }): Promise<void> {
+    await this.page.getByText('Edit', { exact: true }).first().click()
+    const dialog = this.page.getByRole('dialog', { name: 'Edit Assignment' })
+    await expect(dialog).toBeVisible({ timeout: 15_000 })
+
+    // The formative switch carries its label as an aria-label.
+    await dialog.getByRole('button', { name: 'Formative — no grading' }).click()
+
+    await dialog
+      .getByPlaceholder('Write the worked solution learners should compare their work against…')
+      .fill(opts.solution)
+
+    await dialog.getByRole('button', { name: opts.reveal ?? 'On hand-in' }).click()
+
+    if (opts.showCorrigeFor) {
+      await this.page.waitForTimeout(opts.showCorrigeFor)
+    }
+
+    await dialog.getByRole('button', { name: 'Save Changes' }).click()
+    await expect(dialog).toBeHidden({ timeout: 15_000 })
+  }
+
   async unpublish(): Promise<void> {
     await this.page.getByText('Unpublish', { exact: true }).click()
     await this.page.waitForTimeout(800)

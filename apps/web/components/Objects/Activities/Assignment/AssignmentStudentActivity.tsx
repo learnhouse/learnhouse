@@ -2,7 +2,7 @@ import { useAssignments } from '@components/Contexts/Assignments/AssignmentConte
 import { useAssignmentSubmission, useAssignmentTaskSubmissions } from '@components/Contexts/Assignments/AssignmentSubmissionContext';
 import { useCourse } from '@components/Contexts/CourseContext';
 import { useOrg } from '@components/Contexts/OrgContext';
-import { getTaskRefFileDir } from '@services/media/media';
+import { getAssignmentSolutionFileDir, getTaskRefFileDir } from '@services/media/media';
 import TaskFileObject from 'app/orgs/[orgslug]/dash/assignments/[assignmentuuid]/_components/TaskEditor/Subs/TaskTypes/TaskFileObject';
 import TaskQuizObject from 'app/orgs/[orgslug]/dash/assignments/[assignmentuuid]/_components/TaskEditor/Subs/TaskTypes/TaskQuizObject'
 import TaskFormObject from 'app/orgs/[orgslug]/dash/assignments/[assignmentuuid]/_components/TaskEditor/Subs/TaskTypes/TaskFormObject'
@@ -10,7 +10,7 @@ import TaskCodeObject from 'app/orgs/[orgslug]/dash/assignments/[assignmentuuid]
 import TaskShortAnswerObject from 'app/orgs/[orgslug]/dash/assignments/[assignmentuuid]/_components/TaskEditor/Subs/TaskTypes/TaskShortAnswerObject'
 import TaskNumberAnswerObject from 'app/orgs/[orgslug]/dash/assignments/[assignmentuuid]/_components/TaskEditor/Subs/TaskTypes/TaskNumberAnswerObject'
 import toast from 'react-hot-toast';
-import { AlarmClockOff, Backpack, Calendar, CheckCircle2, Download, EllipsisVertical, Info, MessageSquare, RotateCcw, XCircle } from 'lucide-react';
+import { AlarmClockOff, Backpack, BookOpenCheck, Calendar, CheckCircle2, ClipboardCheck, Download, EllipsisVertical, Info, Lock, MessageSquare, RotateCcw, XCircle } from 'lucide-react';
 import Link from 'next/link';
 import React, { useEffect, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next';
@@ -87,6 +87,21 @@ function AssignmentStudentActivity() {
   // GPA_SCALE). Otherwise a student with 55% on a numeric-graded task sees
   // "Not Passed" inline while the same score is "Pass" at the assignment
   // level — exactly the mismatch the teacher tried to avoid.
+  // Formative assignment: handed in, never marked. The server refuses to grade
+  // it at all, so every grade affordance below is hidden rather than left
+  // showing a score that can never arrive.
+  const isUngraded = !!assignments?.assignment_object?.ungraded;
+
+  // Model answer ("corrigé"). `has_solution` is sent even while locked so this
+  // view can promise the reward; `solution` / `solution_file` are only present
+  // once the server has actually unlocked them for this learner.
+  const hasSolution = !!assignments?.assignment_object?.has_solution;
+  const solutionUnlocked = !!assignments?.assignment_object?.solution_unlocked;
+  const solutionText = (assignments?.assignment_object?.solution || '').trim();
+  const solutionFile = assignments?.assignment_object?.solution_file;
+  const solutionRevealsOnSubmission =
+    assignments?.assignment_object?.solution_reveal === 'ON_SUBMISSION';
+
   const gradingType = assignments?.assignment_object?.grading_type;
   // Honor the teacher-configured passing threshold; fall back to the
   // grading-type default when unset so existing assignments are unchanged.
@@ -154,6 +169,12 @@ function AssignmentStudentActivity() {
                 </div>
               </div>
             )}
+            {isUngraded && (
+              <div className='flex gap-1.5 items-center text-xs px-2.5 py-1 rounded-full bg-teal-50 text-teal-700 font-semibold nice-shadow'>
+                <ClipboardCheck size={12} />
+                <span>{t('assignments.ungraded_badge', { defaultValue: 'Not graded' })}</span>
+              </div>
+            )}
             {showAttemptBadge && (
               <div className='flex gap-1.5 items-center text-xs px-2.5 py-1 rounded-full bg-fuchsia-50 text-fuchsia-700 font-semibold nice-shadow'>
                 <RotateCcw size={12} />
@@ -207,6 +228,59 @@ function AssignmentStudentActivity() {
       )}
       
       
+      {/* Model answer ("corrigé"). Locked, this is only a promise — the text and
+          the document are withheld by the API until the learner hands their
+          work in, so there is nothing here to read early. */}
+      {hasSolution && !solutionUnlocked && (
+        <div className='flex items-start gap-3 p-4 rounded-md bg-slate-50 border border-slate-200/70 nice-shadow'>
+          <Lock size={16} className='shrink-0 mt-0.5 text-slate-400' />
+          <div className='flex flex-col space-y-1'>
+            <p className='text-sm font-semibold text-slate-700'>
+              {t('assignments.solution_locked_title', { defaultValue: 'Model answer locked' })}
+            </p>
+            <p className='text-xs leading-relaxed text-slate-500'>
+              {solutionRevealsOnSubmission
+                ? t('assignments.solution_locked_on_submission', { defaultValue: 'Hand your work in and the model answer unlocks right away.' })
+                : t('assignments.solution_locked_after_grading', { defaultValue: 'The model answer unlocks once your work has been graded.' })}
+            </p>
+          </div>
+        </div>
+      )}
+
+      {solutionUnlocked && (solutionText || solutionFile) && (
+        <div className='flex flex-col space-y-3 p-4 md:p-6 rounded-md bg-teal-50/60 border border-teal-200/70 nice-shadow'>
+          <div className='flex items-center gap-2 text-teal-800'>
+            <BookOpenCheck size={16} className='text-teal-600' />
+            <h3 className='text-sm font-semibold'>
+              {t('assignments.solution_title', { defaultValue: 'Model answer' })}
+            </h3>
+          </div>
+          <div className='ps-6 flex flex-col space-y-3'>
+            {solutionText && (
+              <p className='text-sm leading-relaxed text-slate-700 whitespace-pre-wrap'>{solutionText}</p>
+            )}
+            {solutionFile && (
+              <Link
+                href={getAssignmentSolutionFileDir(
+                  org?.org_uuid,
+                  assignments?.course_object.course_uuid,
+                  assignments?.activity_object.activity_uuid,
+                  assignments?.assignment_object.assignment_uuid,
+                  solutionFile
+                )}
+                target='_blank'
+                download={true}
+                className='px-3 py-1.5 w-fit flex items-center nice-shadow bg-white text-teal-800 rounded-full space-x-2 cursor-pointer'>
+                <Download size={13} />
+                <p className='text-xs font-semibold'>
+                  {t('assignments.solution_download', { defaultValue: 'Download the model answer' })}
+                </p>
+              </Link>
+            )}
+          </div>
+        </div>
+      )}
+
       {assignments && assignments?.assignment_tasks?.slice().sort((a: any, b: any) => a.id - b.id).map((task: any, index: number) => {
         const taskSubmission = taskSubmissionsMap ? taskSubmissionsMap[task.assignment_task_uuid] : null;
         const taskGrade = taskSubmission?.grade ?? 0;
@@ -253,7 +327,7 @@ function AssignmentStudentActivity() {
                 </Link>}
               </div>
             </div>
-            {isGraded && taskSubmission && (
+            {isGraded && !isUngraded && taskSubmission && (
               <div className={`relative overflow-hidden rounded-xl nice-shadow border ${
                 taskPassed
                   ? 'bg-gradient-to-br from-emerald-50 via-teal-50 to-cyan-50 border-emerald-200/60'
