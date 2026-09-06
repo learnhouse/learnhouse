@@ -25,7 +25,12 @@ from datetime import datetime
 from unittest.mock import AsyncMock, patch
 
 import pytest
-from fastapi import HTTPException
+from fastapi import FastAPI, HTTPException
+from httpx import ASGITransport, AsyncClient
+
+from src.core.events.database import get_db_session
+from src.routers.courses.assignments import router as assignments_router
+from src.security.auth import get_current_user
 
 from src.db.courses.assignments import (
     Assignment,
@@ -54,6 +59,9 @@ from src.services.courses.activities.assignments import (
     retry_assignment_submission,
     update_assignment,
 )
+from src.services.courses.activities.uploads.solution_files import (
+    upload_solution_file,
+)
 from src.services.courses.certifications import are_course_assignments_passed
 
 _RBAC = "src.services.courses.activities.assignments.check_resource_access"
@@ -75,6 +83,7 @@ _AUDIT = "src.services.courses.activities.assignments.record_audit_event"
 _REVOKE = "src.services.courses.activities.assignments.revoke_user_certificate"
 _SYNC = "src.services.courses.activities.assignments.sync_trailrun_status"
 _UPLOAD = "src.services.courses.activities.assignments.upload_solution_file"
+_UPLOAD_FILE = "src.services.courses.activities.uploads.solution_files.upload_file"
 
 SOLUTION_TEXT = "Step 1: restate the brief. Step 2: cite two sources."
 
@@ -725,5 +734,150 @@ class TestSolutionFileServices:
                 mock_request, db, a.assignment_uuid, admin_user
             )
         assert result.solution_file is None
+        await db.refresh(a)
+        assert a.solution_file is None
+
+    async def test_upload_on_an_unknown_assignment_is_a_404(
+        self, mock_request, db, admin_user
+    ):
+        with patch(_AUTHZ, new_callable=AsyncMock):
+            with pytest.raises(HTTPException) as exc:
+                await put_assignment_solution_file(
+                    mock_request, db, "assignment_does_not_exist", admin_user, None
+                )
+        assert exc.value.status_code == 404
+
+    async def test_upload_with_a_dangling_course_is_a_404(
+        self, mock_request, db, org, course, chapter, activity, admin_user
+    ):
+        a = await _make_formative(db, org, course, chapter, activity)
+        a.course_id = 999
+        db.add(a)
+        await db.commit()
+        with patch(_AUTHZ, new_callable=AsyncMock):
+            with pytest.raises(HTTPException) as exc:
+                await put_assignment_solution_file(
+                    mock_request, db, a.assignment_uuid, admin_user, None
+                )
+        assert exc.value.status_code == 404
+        assert exc.value.detail == "Course not found"
+
+    async def test_upload_with_a_dangling_activity_is_a_404(
+        self, mock_request, db, org, course, chapter, activity, admin_user
+    ):
+        a = await _make_formative(db, org, course, chapter, activity)
+        a.activity_id = 999
+        db.add(a)
+        await db.commit()
+
+        class _Upload:
+            filename = "corrige.pdf"
+
+        with patch(_AUTHZ, new_callable=AsyncMock), patch(
+            _UPLOAD, new_callable=AsyncMock
+        ) as upload:
+            with pytest.raises(HTTPException) as exc:
+                await put_assignment_solution_file(
+                    mock_request, db, a.assignment_uuid, admin_user, _Upload()
+                )
+        assert exc.value.status_code == 404
+        assert exc.value.detail == "Activity not found"
+        upload.assert_not_awaited()
+
+    async def test_delete_on_an_unknown_assignment_is_a_404(
+        self, mock_request, db, admin_user
+    ):
+        with patch(_AUTHZ, new_callable=AsyncMock):
+            with pytest.raises(HTTPException) as exc:
+                await delete_assignment_solution_file(
+                    mock_request, db, "assignment_does_not_exist", admin_user
+                )
+        assert exc.value.status_code == 404
+
+    async def test_delete_with_a_dangling_course_is_a_404(
+        self, mock_request, db, org, course, chapter, activity, admin_user
+    ):
+        a = await _make_formative(
+            db, org, course, chapter, activity, solution_file="solution_abc.pdf"
+        )
+        a.course_id = 999
+        db.add(a)
+        await db.commit()
+        with patch(_AUTHZ, new_callable=AsyncMock):
+            with pytest.raises(HTTPException) as exc:
+                await delete_assignment_solution_file(
+                    mock_request, db, a.assignment_uuid, admin_user
+                )
+        assert exc.value.status_code == 404
+        assert exc.value.detail == "Course not found"
+
+    async def test_upload_helper_stores_under_the_assignment_solution_dir(self):
+        # The stored path is what the web client rebuilds to download the
+        # corrige, so the directory layout is part of the contract.
+        with patch(_UPLOAD_FILE, new_callable=AsyncMock, return_value="solution_x.pdf") as up:
+            name = await upload_solution_file(
+                object(), "activity_1", "org_1", "course_1", "assignment_1"
+            )
+        assert name == "solution_x.pdf"
+        kwargs = up.await_args.kwargs
+        assert kwargs["directory"] == (
+            "courses/course_1/activities/activity_1/assignments/assignment_1/solution"
+        )
+        assert kwargs["type_of_dir"] == "orgs"
+        assert kwargs["uuid"] == "org_1"
+        assert kwargs["filename_prefix"] == "solution"
+
+
+# --------------------------------------------------------------------------- #
+# Solution file routes
+# --------------------------------------------------------------------------- #
+@pytest.fixture
+def solution_app(db, admin_user):
+    app = FastAPI()
+    app.include_router(assignments_router, prefix="/api/v1/assignments")
+    app.dependency_overrides[get_db_session] = lambda: db
+    app.dependency_overrides[get_current_user] = lambda: admin_user
+    yield app
+    app.dependency_overrides.clear()
+
+
+@pytest.fixture
+async def solution_client(solution_app):
+    async with AsyncClient(
+        transport=ASGITransport(app=solution_app), base_url="http://test"
+    ) as c:
+        yield c
+
+
+class TestSolutionFileRoutes:
+    async def test_post_uploads_and_returns_the_unlocked_read(
+        self, solution_client, db, org, course, chapter, activity
+    ):
+        a = await _make_formative(db, org, course, chapter, activity, solution_file=None)
+        with patch(_AUTHZ, new_callable=AsyncMock), patch(
+            _UPLOAD, new_callable=AsyncMock, return_value="solution_abc.pdf"
+        ):
+            res = await solution_client.post(
+                f"/api/v1/assignments/{a.assignment_uuid}/solution_file",
+                files={"solution_file": ("corrige.pdf", b"%PDF-1.4", "application/pdf")},
+            )
+        assert res.status_code == 200, res.text
+        body = res.json()
+        assert body["solution_file"] == "solution_abc.pdf"
+        assert body["has_solution"] is True
+        assert body["solution_unlocked"] is True
+
+    async def test_delete_detaches_and_returns_the_read(
+        self, solution_client, db, org, course, chapter, activity
+    ):
+        a = await _make_formative(
+            db, org, course, chapter, activity, solution_file="solution_abc.pdf"
+        )
+        with patch(_AUTHZ, new_callable=AsyncMock):
+            res = await solution_client.delete(
+                f"/api/v1/assignments/{a.assignment_uuid}/solution_file"
+            )
+        assert res.status_code == 200, res.text
+        assert res.json()["solution_file"] is None
         await db.refresh(a)
         assert a.solution_file is None
