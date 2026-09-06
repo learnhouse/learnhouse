@@ -2343,8 +2343,13 @@ describe('setup / update in-process', () => {
   })
 
   it('setup --ci WITH start brings services up (mocked docker + health)', async () => {
+    const net = await import('node:net')
+    const probe = net.createServer()
+    await new Promise<void>((resolve) => probe.listen(0, resolve))
+    const port = (probe.address() as { port: number }).port
+    await new Promise<void>((resolve) => probe.close(() => resolve()))
     await setupCommand({
-      ci: true, name: 'started', domain: 'localhost', port: 8092,
+      ci: true, name: 'started', domain: 'localhost', port,
       adminEmail: 'admin@school.dev', adminPassword: 'password123',
       orgName: 'Test', orgSlug: 'default', start: true,
     })

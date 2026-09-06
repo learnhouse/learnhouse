@@ -7,6 +7,7 @@ import { getCourseThumbnailMediaDirectory, getUserAvatarMediaDirectory } from '@
 import { useDebounce } from '@/hooks/useDebounce';
 import { useOrg } from '@components/Contexts/OrgContext';
 import { getUriWithOrg } from '@services/config/config';
+import { safeImageSrc } from '@services/security/url';
 import { removeCoursePrefix } from '../Thumbnails/CourseThumbnail';
 import UserAvatar from '../UserAvatar';
 import { useTranslation } from 'react-i18next';
@@ -272,13 +273,13 @@ export const SearchBar: React.FC<SearchBarProps> = ({
             {searchResults.courses.map((course) => (
               <Link
                 key={course.course_uuid}
-                href={getUriWithOrg(orgslug, `/course/${removeCoursePrefix(course.course_uuid)}`)}
+                href={getUriWithOrg(orgslug, `/course/${encodeURIComponent(removeCoursePrefix(course.course_uuid))}`)}
                 className="flex items-center gap-3 p-2 hover:bg-black/[0.02] rounded-lg transition-colors"
               >
                 <div className="relative">
                   {course.thumbnail_image ? (
                     <img
-                      src={getCourseThumbnailMediaDirectory(org?.org_uuid, course.course_uuid, course.thumbnail_image)}
+                      src={safeImageSrc(getCourseThumbnailMediaDirectory(org?.org_uuid, course.course_uuid, course.thumbnail_image))}
                       alt={course.name}
                       className="w-10 h-10 object-cover rounded-lg"
                     />
@@ -313,7 +314,7 @@ export const SearchBar: React.FC<SearchBarProps> = ({
             {searchResults.folders.map((folder) => (
               <Link
                 key={folder.folder_uuid}
-                href={getUriWithOrg(orgslug, `/library/folder/${folder.folder_uuid.replace('folder_', '')}`)}
+                href={getUriWithOrg(orgslug, `/library/folder/${encodeURIComponent(folder.folder_uuid.replace('folder_', ''))}`)}
                 className="flex items-center gap-3 p-2 hover:bg-black/[0.02] rounded-lg transition-colors"
               >
                 <div className="w-10 h-10 bg-black/5 rounded-lg flex items-center justify-center">
@@ -341,7 +342,7 @@ export const SearchBar: React.FC<SearchBarProps> = ({
             {searchResults.users.map((user) => (
               <Link
                 key={user.user_uuid}
-                href={getUriWithOrg(orgslug, `/user/${user.username}`)}
+                href={getUriWithOrg(orgslug, `/user/${encodeURIComponent(user.username)}`)}
                 className="flex items-center gap-3 p-2 hover:bg-black/[0.02] rounded-lg transition-colors"
               >
                 <UserAvatar

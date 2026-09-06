@@ -6,6 +6,7 @@ import { cn } from '@/lib/utils'
 import { useTranslation } from 'react-i18next'
 import type { CoursePlanningMessage, Attachment } from '@services/ai/courseplanning'
 import lrnaiIcon from 'public/lrnai_icon.png'
+import { safeImageSrc } from '@services/security/url'
 
 interface AICourseChatProps {
   messages: CoursePlanningMessage[]
@@ -287,9 +288,9 @@ function AICourseChat({
                     key={attachment.id}
                     className="relative group flex items-center gap-2 px-2.5 py-2 bg-white/5 rounded-lg ring-1 ring-inset ring-white/10 hover:ring-white/20 transition-all"
                   >
-                    {attachment.preview ? (
+                    {safeImageSrc(attachment.preview) ? (
                       <div className="w-10 h-10 rounded-md overflow-hidden bg-black/20 ring-1 ring-inset ring-white/10">
-                        <img src={attachment.preview} alt={attachment.name} className="w-full h-full object-cover" />
+                        <img src={safeImageSrc(attachment.preview)} alt={attachment.name} className="w-full h-full object-cover" />
                       </div>
                     ) : (
                       <div className="w-10 h-10 rounded-md bg-white/5 flex items-center justify-center text-white/40 ring-1 ring-inset ring-white/10">

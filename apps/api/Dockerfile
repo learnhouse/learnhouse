@@ -1,9 +1,16 @@
-FROM python:3.14.6-slim-bookworm
+FROM python:3.14.7-alpine3.24
 
 # Install curl and netcat for health checks and service waiting, plus ffmpeg
 # for video faststart remuxing (moves the MP4 moov atom to the front so long
-# videos stream smoothly).
-RUN apt-get update && apt-get install -y --no-install-recommends curl netcat-openbsd build-essential ffmpeg && rm -rf /var/lib/apt/lists/*
+# videos stream smoothly). bash runs the entrypoint; libstdc++ backs a few
+# prebuilt wheels. `apk upgrade` picks up fixes published after the base image.
+RUN apk upgrade --no-cache \
+    && apk add --no-cache curl netcat-openbsd ffmpeg bash libstdc++
+
+# uv manages the application environment. Remove the unused pip installer and
+# its bundled bootstrap wheel so their vendored packages do not ship at runtime.
+RUN python -m pip uninstall --yes pip \
+    && rm -rf /usr/local/lib/python3.14/ensurepip
 
 COPY --from=ghcr.io/astral-sh/uv:0.10.7 /uv /uvx /bin/
 
@@ -18,17 +25,17 @@ WORKDIR /app
 # before `uv sync`, so any source change invalidated the ~340MB venv layer and every
 # commit produced a fresh multi-hundred-MB layer for nodes to pull.
 COPY pyproject.toml uv.lock ./
-RUN uv sync --frozen --no-install-project
+RUN uv sync --frozen --no-dev --no-install-project --no-cache
 
 # Copy the project into the image
-ADD . /app
+COPY . /app
 
 # Remove Enterprise Edition folder for public builds
 ARG LEARNHOUSE_PUBLIC=false
 RUN if [ "$LEARNHOUSE_PUBLIC" = "true" ]; then rm -rf /app/ee; fi
 
 # Sync again so the lockfile is verified against the copied project
-RUN uv sync --frozen
+RUN uv sync --frozen --no-dev --no-cache
 
 # Copy entrypoint script
 COPY docker-entrypoint.sh ./

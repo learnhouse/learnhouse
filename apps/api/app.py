@@ -10,6 +10,7 @@
 #  ↳ Created and maintained by @swve © 2022–present
 
 import logging
+from contextlib import asynccontextmanager
 
 import uvicorn
 import sentry_sdk
@@ -128,12 +129,22 @@ if learnhouse_config.general_config.sentry_config.dsn:
         ],
     )
 
+@asynccontextmanager
+async def lifespan(application: FastAPI):
+    await startup_app(application)()
+    try:
+        yield
+    finally:
+        await shutdown_app(application)()
+
+
 app = FastAPI(
     title=learnhouse_config.site_name,
     description=learnhouse_config.site_description,
     docs_url="/docs" if learnhouse_config.general_config.development_mode else None,
     redoc_url="/redoc" if learnhouse_config.general_config.development_mode else None,
     version="1.3.5",
+    lifespan=lifespan,
 )
 
 # Middleware
@@ -142,10 +153,6 @@ configure_cors(app)
 # JSON; 6 is gzip's own default.
 app.add_middleware(SelectiveGZipMiddleware, minimum_size=1000, compresslevel=6)
 register_ee_middlewares(app)
-
-# Lifecycle
-app.add_event_handler("startup", startup_app(app))
-app.add_event_handler("shutdown", shutdown_app(app))
 
 # Content delivery — S3-aware router when S3 is enabled, local otherwise.
 # Both paths enforce access control; neither serves raw StaticFiles.

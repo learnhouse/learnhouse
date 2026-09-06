@@ -38,8 +38,9 @@ def _build_cache_key(
     parts = f"{query_name}:{org_id}:{days}"
     if course_id:
         parts += f":{course_id}"
-    # Short hash to keep key length reasonable
-    digest = hashlib.md5(parts.encode()).hexdigest()[:12]
+    # Keep tenant cache keys resistant to collisions without storing long
+    # query parameters in Redis keys. Existing short-lived entries expire.
+    digest = hashlib.sha256(parts.encode()).hexdigest()
     return f"{_KEY_PREFIX}:{query_name}:{digest}"
 
 

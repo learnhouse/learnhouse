@@ -6,6 +6,7 @@
  */
 
 import { getAPIUrl } from '@services/config/config'
+import { safeExternalUrl } from '@services/security/url'
 import { getErrorMessage as getDetailMessage } from '@services/utils/ts/errorMessage'
 
 // ============================================================================
@@ -381,7 +382,9 @@ export async function handleSSOCallback(
  */
 export async function redirectToSSOLogin(orgSlug: string): Promise<void> {
   const response = await initiateSSOLogin(orgSlug)
-  window.location.href = response.authorization_url
+  const destination = safeExternalUrl(response.authorization_url)
+  if (!destination) throw new Error('Invalid SSO authorization URL')
+  window.location.href = destination
 }
 
 /**

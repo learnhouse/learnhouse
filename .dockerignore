@@ -1,5 +1,6 @@
 # Dependencies
 node_modules
+**/node_modules
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
@@ -7,6 +8,7 @@ pnpm-debug.log*
 
 # Production builds
 .next
+**/.next
 out
 dist
 build
@@ -17,6 +19,8 @@ build
 .env.development.local
 .env.test.local
 .env.production.local
+**/.env
+**/.env.*
 
 # IDE files
 .vscode
@@ -30,6 +34,7 @@ Thumbs.db
 
 # Git
 .git
+**/.git
 .gitignore
 
 # Docker
@@ -99,16 +104,20 @@ temp/
 
 # Python
 __pycache__/
+**/__pycache__
 *.py[cod]
+**/*.py[cod]
 *$py.class
 *.so
 .Python
+**/.venv
 env/
 venv/
 ENV/
 env.bak/
 venv.bak/
 .pytest_cache/
+**/.pytest_cache
 .coverage
 htmlcov/
 .tox/
@@ -129,4 +138,4 @@ media/
 # Documentation
 README.md
 docs/
-*.md 
+*.md

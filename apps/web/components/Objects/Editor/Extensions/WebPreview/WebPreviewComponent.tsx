@@ -3,6 +3,7 @@ import { NodeViewWrapper } from '@tiptap/react';
 import { PencilSimple, FloppyDisk, X, TextAlignLeft, TextAlignCenter, TextAlignRight, Trash } from '@phosphor-icons/react';
 import { useEditorProvider } from '@components/Contexts/Editor/EditorContext';
 import { getUrlPreview } from '@services/courses/activities';
+import { safeExternalUrl, safeImageSrc } from '@services/security/url';
 import Modal from '@components/Objects/StyledElements/Modal/Modal';
 import { Input } from '@components/ui/input';
 import { Label } from '@components/ui/label';
@@ -49,6 +50,10 @@ const WebPreviewComponent: React.FC<WebPreviewProps> = ({ node, updateAttributes
     url: node.attrs.url,
   };
 
+  const previewUrl = safeExternalUrl(previewData.url);
+  const previewImage = safeImageSrc(previewData.og_image);
+  const favicon = safeImageSrc(previewData.favicon);
+
   const alignment = node.attrs.alignment || 'left';
   const hasPreview = !!previewData.title;
 
@@ -59,10 +64,15 @@ const WebPreviewComponent: React.FC<WebPreviewProps> = ({ node, updateAttributes
   const [modalOpen, setModalOpen] = useState(!node.attrs.url);
 
   const fetchPreview = async (url: string) => {
+    const validatedUrl = safeExternalUrl(url);
+    if (!validatedUrl) {
+      setError('Enter a valid http:// or https:// URL.');
+      return false;
+    }
     setLoading(true);
     setError(null);
     try {
-      const res = await getUrlPreview(url);
+      const res = await getUrlPreview(validatedUrl);
       if (!res) throw new Error('Failed to fetch preview');
       const data = res;
       
@@ -75,10 +85,12 @@ const WebPreviewComponent: React.FC<WebPreviewProps> = ({ node, updateAttributes
         });
       }
       
-      updateAttributes({ ...data, url });
+      updateAttributes({ ...data, url: validatedUrl });
       setEditing(false);
+      return true;
     } catch (err: any) {
       setError(err.message || 'Error fetching preview');
+      return false;
     } finally {
       setLoading(false);
     }
@@ -120,9 +132,9 @@ const WebPreviewComponent: React.FC<WebPreviewProps> = ({ node, updateAttributes
     setModalOpen(true);
   };
 
-  const handleSaveEdit = () => {
+  const handleSaveEdit = async () => {
     if (inputUrl && inputUrl !== node.attrs.url) {
-      fetchPreview(inputUrl);
+      if (!await fetchPreview(inputUrl)) return;
     } else {
       setEditing(false);
       setModalOpen(false);
@@ -161,13 +173,15 @@ const WebPreviewComponent: React.FC<WebPreviewProps> = ({ node, updateAttributes
         minWidth="xl"
         minHeight="xl"
         dialogContent={
-          <iframe
-            src={previewData.url}
+          previewUrl ? <iframe
+            src={previewUrl}
             title={t('editor.blocks.web_preview_block.embedded_preview')}
             className="w-full h-full border-0 bg-white"
             style={{ display: 'block', borderRadius: 0 }}
             allowFullScreen
-          />
+            sandbox="allow-scripts allow-same-origin allow-popups allow-forms allow-presentation"
+            referrerPolicy="strict-origin-when-cross-origin"
+          /> : null
         }
       />
       <div className={`flex w-full ${alignClass}`}> {/* CardWrapper */}
@@ -289,16 +303,16 @@ const WebPreviewComponent: React.FC<WebPreviewProps> = ({ node, updateAttributes
           {hasPreview && !editing && (
             <>
               <a
-                href={previewData.url}
+                href={previewUrl ?? undefined}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="no-underline hover:no-underline focus:no-underline active:no-underline"
                 style={{ textDecoration: 'none', borderBottom: 'none' }}
               >
-                {previewData.og_image && (
+                {previewImage && (
                   <div className="-mt-6 -mx-6 mb-0 rounded-t-xl overflow-hidden">
                     <img
-                      src={previewData.og_image}
+                      src={previewImage}
                       alt="preview"
                       className="w-full h-40 object-cover block"
                     />
@@ -320,16 +334,16 @@ const WebPreviewComponent: React.FC<WebPreviewProps> = ({ node, updateAttributes
                 </div>
               </a>
               <div className="flex items-center mt-0 pt-2 border-t border-gray-100">
-                {previewData.favicon && (
+                {favicon && (
                   <img
-                    src={previewData.favicon}
+                    src={favicon}
                     alt="favicon"
                     className="w-[18px] h-[18px] me-2 rounded bg-gray-100"
                   />
                 )}
                 <span className="text-gray-500 text-xs truncate">{previewData.url}</span>
               </div>
-              {showButton && previewData.url && (
+              {showButton && previewUrl && (
                 openInPopup ? (
                   <button
                     type="button"
@@ -341,7 +355,7 @@ const WebPreviewComponent: React.FC<WebPreviewProps> = ({ node, updateAttributes
                   </button>
                 ) : (
                   <a
-                    href={previewData.url}
+                    href={previewUrl ?? undefined}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="block w-full mt-4 rounded-xl bg-black nice-shadow text-[16px] font-semibold text-white py-2.5 px-4 text-center no-underline hover:bg-gray-900 hover:shadow-lg transition-all"

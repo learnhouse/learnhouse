@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { useTranslation } from 'react-i18next'
 import { useCoursePipe } from '../useAnalyticsDashboard'
 import { getUriWithOrg } from '@services/config/config'
+import { safeHref } from '@services/security/url'
 import { Hourglass } from '@phosphor-icons/react'
 import type { ActivityMap } from './CourseAnalyticsTab'
 import CourseWidgetCard, { WidgetIcon, usePagination, PaginationBar } from './CourseWidgetCard'
@@ -32,7 +33,7 @@ function TimeBar({
   return (
     <div className="flex items-center gap-3 py-1.5">
       <Link
-        href={href}
+        href={safeHref(href)}
         className={`${compact ? 'w-[130px]' : 'w-[180px]'} shrink-0 text-sm text-gray-700 font-medium truncate hover:text-indigo-600 hover:underline transition-colors`}
         title={`${row.chapterName ? row.chapterName + ' — ' : ''}${row.displayName}`}
       >

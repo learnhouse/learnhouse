@@ -4,7 +4,7 @@ Embedding service for RAG.
 Embeddings are provider-agnostic: they follow the configured AI provider through the shared
 ``src.services.ai.llm.embeddings`` layer (Google, OpenAI family incl. Ollama; other providers
 fall back to Google). Output is pinned to 768 dims to match the Vector(768) pgvector column.
-Uses llama-index-core SentenceSplitter for chunking.
+Uses local sentence-aware token chunking without downloading language models.
 """
 
 import asyncio
@@ -21,6 +21,7 @@ from src.services.ai.llm.embeddings import (
     embed_query,
 )
 from src.services.ai.rag.content_extraction import extract_all_course_content
+from src.services.ai.rag.text_chunking import split_text
 
 logger = logging.getLogger(__name__)
 
@@ -33,12 +34,8 @@ MAX_RETRIES = 3
 
 
 def chunk_text(text: str) -> list[str]:
-    """Split text into chunks using LlamaIndex SentenceSplitter."""
-    from llama_index.core.node_parser import SentenceSplitter
-
-    splitter = SentenceSplitter(chunk_size=CHUNK_SIZE, chunk_overlap=CHUNK_OVERLAP)
-    chunks = splitter.split_text(text)
-    return chunks
+    """Split source text into bounded chunks for new embedding ingestions."""
+    return split_text(text, CHUNK_SIZE, CHUNK_OVERLAP)
 
 
 async def generate_embeddings(texts: list[str]) -> list[list[float]]:
