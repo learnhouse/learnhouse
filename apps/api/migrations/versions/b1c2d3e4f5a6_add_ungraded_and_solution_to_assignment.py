@@ -18,7 +18,7 @@ here would leave migrated databases with a different column type from freshly
 created ones.
 
 Revision ID: b1c2d3e4f5a6
-Revises: a2b3c4d5e6f7
+Revises: a3b4c5d6e7f8
 Create Date: 2026-09-02
 
 """
@@ -31,7 +31,7 @@ import sqlmodel  # noqa: F401
 
 # revision identifiers, used by Alembic.
 revision: str = 'b1c2d3e4f5a6'
-down_revision: Union[str, None] = 'a2b3c4d5e6f7'
+down_revision: Union[str, None] = 'a3b4c5d6e7f8'
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 

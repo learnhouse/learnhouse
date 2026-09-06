@@ -1151,8 +1151,11 @@ async def create_assignment(
     # Feature usage
     await increase_feature_usage("assignments", course.org_id, db_session)
 
-    # return assignment read
-    return AssignmentRead.model_validate(assignment)
+    # return assignment read. The caller passed the CREATE authorization above,
+    # so they are an instructor and the corrige is theirs to see.
+    return _apply_solution_visibility(
+        AssignmentRead.model_validate(assignment), assignment, unlocked=True
+    )
 
 
 async def read_assignment(
@@ -4199,9 +4202,28 @@ async def get_assignments_from_course(
     # exposure — but the parent Activity's `published` flag is what hides drafts
     # in navigation, and these direct endpoints bypassed it.
     statement = select(Assignment).where(Assignment.course_id == course.id)
-    if not await _is_assignment_instructor(request, current_user, course.course_uuid, db_session):
+    is_instructor = await _is_assignment_instructor(
+        request, current_user, course.course_uuid, db_session
+    )
+    if not is_instructor:
         statement = statement.where(Assignment.published == True)  # noqa: E712
     assignments = (await db_session.execute(statement)).scalars().all()
 
-    # return assignments read
-    return [AssignmentRead.model_validate(assignment) for assignment in assignments]
+    # The model answer is reveal-gated here exactly as on the single read: this
+    # list is reachable with plain course READ, so returning the raw rows would
+    # hand every learner the corrige of every assignment in the course.
+    results = []
+    for assignment in assignments:
+        has_solution = bool(
+            (assignment.solution or "").strip() or assignment.solution_file
+        )
+        unlocked = has_solution and (
+            is_instructor
+            or await _student_may_see_solution(current_user, assignment, db_session)
+        )
+        results.append(
+            _apply_solution_visibility(
+                AssignmentRead.model_validate(assignment), assignment, unlocked=unlocked
+            )
+        )
+    return results

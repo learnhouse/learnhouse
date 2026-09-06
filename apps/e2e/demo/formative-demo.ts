@@ -3,7 +3,7 @@
  *
  * This is a *demo*, not a test — `playwright.config.ts` only collects specs
  * under `features/`, so nothing here runs in CI. It drives the same UI the
- * `22-formative` spec asserts on, but slowly and with an on-screen caption for
+ * `24-formative` spec asserts on, but slowly and with an on-screen caption for
  * each step, and writes a video you can watch end to end.
  *
  * It reuses the feature module's own API seeding and page objects, so the

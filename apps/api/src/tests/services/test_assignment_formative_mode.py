@@ -45,6 +45,7 @@ from src.services.courses.activities.assignments import (
     create_assignment,
     create_assignment_submission,
     delete_assignment_solution_file,
+    get_assignments_from_course,
     get_grade_assignment_submission,
     grade_assignment_submission,
     put_assignment_solution_file,
@@ -359,6 +360,58 @@ class TestSolutionVisibilityOnRead:
                 mock_request, a.assignment_uuid, regular_user, db
             )
         assert result.has_solution is False
+
+    async def test_course_list_is_gated_per_assignment(
+        self, mock_request, db, org, course, chapter, activity, regular_user
+    ):
+        # The course-wide list is reachable with plain course READ, so it has
+        # to apply the same reveal rule as the single read — per assignment,
+        # since the learner may have handed in one and not the other.
+        handed_in = await _make_formative(
+            db, org, course, chapter, activity, uuid="assignment_formative_a"
+        )
+        locked = await _make_formative(
+            db,
+            org,
+            course,
+            chapter,
+            activity,
+            uuid="assignment_formative_b",
+            solution_file="solution_b.pdf",
+        )
+        await _make_submission(
+            db, handed_in, regular_user, AssignmentUserSubmissionStatus.SUBMITTED
+        )
+        with patch(_AUTHZ, new_callable=AsyncMock), patch(
+            _ROLES, new_callable=AsyncMock, return_value=False
+        ):
+            results = await get_assignments_from_course(
+                mock_request, course.course_uuid, regular_user, db
+            )
+        by_uuid = {r.assignment_uuid: r for r in results}
+        assert by_uuid[handed_in.assignment_uuid].solution == SOLUTION_TEXT
+        assert by_uuid[handed_in.assignment_uuid].solution_unlocked is True
+        assert by_uuid[locked.assignment_uuid].solution is None
+        assert by_uuid[locked.assignment_uuid].solution_file is None
+        assert by_uuid[locked.assignment_uuid].has_solution is True
+        assert by_uuid[locked.assignment_uuid].solution_unlocked is False
+
+    async def test_course_list_shows_instructor_everything(
+        self, mock_request, db, org, course, chapter, activity, admin_user
+    ):
+        a = await _make_formative(
+            db, org, course, chapter, activity, solution_file="solution_x.pdf"
+        )
+        with patch(_AUTHZ, new_callable=AsyncMock), patch(
+            _ROLES, new_callable=AsyncMock, return_value=True
+        ):
+            results = await get_assignments_from_course(
+                mock_request, course.course_uuid, admin_user, db
+            )
+        (result,) = [r for r in results if r.assignment_uuid == a.assignment_uuid]
+        assert result.solution == SOLUTION_TEXT
+        assert result.solution_file == "solution_x.pdf"
+        assert result.solution_unlocked is True
 
 
 # --------------------------------------------------------------------------- #
