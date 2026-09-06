@@ -41,6 +41,14 @@ export function dockerComposeDown(cwd: string): void {
   })
 }
 
+/** Stop one service and leave the rest of the stack (db, redis, proxy) running. */
+export function dockerComposeStop(cwd: string, service: string): void {
+  execSync(`docker compose stop ${service}`, {
+    cwd,
+    stdio: 'inherit',
+  })
+}
+
 /**
  * Authenticate to a container registry. The password is piped via stdin
  * (never on the command line / process table / shell history).
@@ -66,6 +74,19 @@ export function dockerLogin(registry: string, username: string, password: string
  *  "the input device is not a TTY" on setups that allocate a TTY when piped. */
 export function dockerComposeExec(cwd: string, service: string, command: string): string {
   return execSync(`docker compose exec -T ${service} ${command}`, {
+    cwd,
+    stdio: 'pipe',
+  }).toString()
+}
+
+/**
+ * Run a command in a fresh one-off container of a service, using whatever
+ * image the compose file currently names for it. `--no-deps` leaves the
+ * running stack alone; the container still joins the compose network, so it
+ * reaches `db` like the real service would.
+ */
+export function dockerComposeRun(cwd: string, service: string, command: string): string {
+  return execSync(`docker compose run --rm --no-deps -T ${service} ${command}`, {
     cwd,
     stdio: 'pipe',
   }).toString()
