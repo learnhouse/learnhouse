@@ -18,6 +18,7 @@ import {
     Backpack,
     Zap,
     BarChart3,
+    ClipboardCheck,
 } from 'lucide-react'
 import React, { useEffect } from 'react'
 import { AssignmentProvider, useAssignments } from '@components/Contexts/Assignments/AssignmentContext';
@@ -306,6 +307,9 @@ const BADGE_ROSE =
 const BADGE_CYAN =
     'bg-gradient-to-b from-cyan-50 to-cyan-100 text-cyan-700 ring-cyan-300/40 shadow-[0_1px_2px_rgba(6,182,212,0.18),inset_0_1px_0_rgba(255,255,255,0.85)]';
 
+const BADGE_TEAL =
+    'bg-gradient-to-b from-teal-50 to-teal-100 text-teal-700 ring-teal-300/40 shadow-[0_1px_2px_rgba(20,184,166,0.18),inset_0_1px_0_rgba(255,255,255,0.85)]';
+
 const GRADING_TYPE_DISPLAY: Record<string, { icon: React.ReactNode; labelKey: string; color: string }> = {
     ALPHABET: { icon: <ALargeSmall size={13} />, labelKey: 'dashboard.assignments.modals.edit.form.grading_types.alphabet', color: BADGE_VIOLET },
     NUMERIC: { icon: <Hash size={13} />, labelKey: 'dashboard.assignments.modals.edit.form.grading_types.numeric', color: BADGE_BLUE },
@@ -320,12 +324,21 @@ function AssignmentInfoBadges() {
     const obj = assignment?.assignment_object;
     if (!obj) return null;
 
+    // A formative assignment carries a grading_type on the row but never uses
+    // it, so showing "Numeric" here would advertise a scale nothing is measured
+    // on. Say what is actually true instead.
+    const isUngraded = !!obj.ungraded;
     const gradingType = obj.grading_type as string | undefined;
     const gradingDisplay = gradingType ? GRADING_TYPE_DISPLAY[gradingType] : null;
 
     return (
         <div className="flex items-center gap-1.5 flex-wrap">
-            {gradingDisplay && (
+            {isUngraded ? (
+                <div className={`${BADGE_BASE} ${BADGE_TEAL}`}>
+                    <ClipboardCheck size={13} />
+                    <span>{t('assignments.ungraded_badge', { defaultValue: 'Not graded' })}</span>
+                </div>
+            ) : gradingDisplay && (
                 <div className={`${BADGE_BASE} ${gradingDisplay.color}`}>
                     {gradingDisplay.icon}
                     <span>{t(gradingDisplay.labelKey)}</span>

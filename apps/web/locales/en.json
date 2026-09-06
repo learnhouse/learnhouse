@@ -1535,7 +1535,18 @@
     "no_task_submission_to_grade": "This student has not submitted a file for this task yet.",
     "past_due": "Deadline passed",
     "past_due_description": "This assignment was due on {{date}}. Answers can no longer be saved or submitted for grading.",
-    "past_due_title": "Deadline passed"
+    "past_due_title": "Deadline passed",
+    "ungraded_badge": "Not graded",
+    "hand_in": "Hand in my work",
+    "hand_in_title": "Hand in your work",
+    "hand_in_confirm": "Your work will be handed in to your teacher. It is not graded.",
+    "handed_in": "Handed in",
+    "solution_title": "Model answer",
+    "solution_download": "Download the model answer",
+    "solution_locked_title": "Model answer locked",
+    "solution_locked_on_submission": "Hand your work in and the model answer unlocks right away.",
+    "solution_locked_after_grading": "The model answer unlocks once your work has been graded.",
+    "retry_assignment_confirm_ungraded": "Your current hand-in will be reset so you can start over, and the model answer locks again until you hand in the next attempt."
   },
   "certificate": {
     "certificate": "Certificate",
@@ -4581,7 +4592,11 @@
           "reject_success": "Assignment rejected successfully",
           "finalize_success": "Assignment graded and activity marked as complete"
         },
-        "truncated_warning": "Only the first {{max}} submissions are shown. Some submissions are not listed here."
+        "truncated_warning": "Only the first {{max}} submissions are shown. Some submissions are not listed here.",
+        "ungraded_title": "Formative — not graded",
+        "ungraded_description": "This assignment is handed in for review only. No score is recorded.",
+        "download_to_grade": "Please download the file and grade it manually, then input the grade above",
+        "download_to_review": "Download the file to review what the learner handed in."
       },
       "analytics": {
         "loading": "Loading analytics...",
@@ -4684,13 +4699,30 @@
             "saving": "Saving...",
             "pass_threshold_label": "Passing threshold",
             "pass_threshold_description": "Minimum score to pass. Leave blank to use the default (50%, or 60% for letter grades).",
-            "pass_threshold_placeholder": "Auto"
+            "pass_threshold_placeholder": "Auto",
+            "ungraded_label": "Formative — no grading",
+            "ungraded_description": "Learners hand their work in and it is never marked. No score, no pass or fail — pair it with a model answer below for self-assessment.",
+            "solution_label": "Model answer",
+            "solution_hint": "Shown to learners only once unlocked",
+            "solution_placeholder": "Write the worked solution learners should compare their work against…",
+            "solution_no_file": "No document attached",
+            "solution_remove_file": "Remove",
+            "solution_upload_file": "Attach",
+            "solution_reveal_label": "Unlock the model answer",
+            "solution_reveal_never": "Never",
+            "solution_reveal_never_hint": "Kept for you only",
+            "solution_reveal_on_submission": "On hand-in",
+            "solution_reveal_on_submission_hint": "Unlocks the moment they submit",
+            "solution_reveal_after_grading": "After grading",
+            "solution_reveal_after_grading_hint": "Unlocks once marked",
+            "allow_retries_description_ungraded": "Let learners reset and hand the assignment in again. Each retry wipes their previous work and re-locks the model answer."
           },
           "toasts": {
             "updating": "Updating assignment...",
             "success": "Assignment updated successfully",
             "error": "Failed to update assignment",
-            "error_detail": "An error occurred while updating the assignment"
+            "error_detail": "An error occurred while updating the assignment",
+            "solution_file_error": "The model answer document couldn't be uploaded."
           }
         },
         "create": {
@@ -4728,7 +4760,8 @@
             "anti_copy_paste_description": "Discourage pasting AI-generated answers by blocking paste events. Note: this is a deterrent — it can be bypassed.",
             "show_correct_answers_label": "Reveal correct answers after grading",
             "show_correct_answers_description": "Once graded, students see the right answers next to their own.",
-            "submit": "Create activity"
+            "submit": "Create activity",
+            "ungraded_description": "Learners hand their work in and it is never marked. Add a model answer in the assignment editor to unlock on hand-in."
           },
           "toasts": {
             "creating": "Creating assignment...",

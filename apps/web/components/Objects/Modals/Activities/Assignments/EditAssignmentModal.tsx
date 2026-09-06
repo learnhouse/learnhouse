@@ -1,5 +1,9 @@
 import React from 'react';
-import { updateAssignment } from '@services/courses/assignments';
+import {
+    deleteAssignmentSolutionFile,
+    updateAssignment,
+    updateAssignmentSolutionFile,
+} from '@services/courses/assignments';
 import { useQueryClient } from '@tanstack/react-query';
 import { queryKeys } from '@/lib/query/keys';
 import toast from 'react-hot-toast';
@@ -30,9 +34,16 @@ import {
     RotateCcw,
     Target,
     Infinity as InfinityIcon,
+    ClipboardCheck,
+    BookOpenCheck,
+    Lock,
+    Paperclip,
+    Trash2,
+    Upload,
 } from 'lucide-react';
 
 type GradingType = 'ALPHABET' | 'NUMERIC' | 'PERCENTAGE' | 'PASS_FAIL' | 'GPA_SCALE';
+type SolutionReveal = 'NEVER' | 'ON_SUBMISSION' | 'AFTER_GRADING';
 
 interface Assignment {
     assignment_uuid: string;
@@ -46,6 +57,10 @@ interface Assignment {
     allow_retries?: boolean;
     max_retries?: number;
     pass_threshold_percentage?: number | null;
+    ungraded?: boolean;
+    solution?: string | null;
+    solution_file?: string | null;
+    solution_reveal?: SolutionReveal;
     assignment_tasks?: any[];
 }
 
@@ -146,6 +161,11 @@ const EditAssignmentForm: React.FC<EditAssignmentFormProps> = ({
         (t: any) => t.assignment_type === 'FILE_SUBMISSION'
     );
 
+    // The corrigé document is staged locally and only sent on save, so a
+    // teacher who cancels the modal doesn't leave a half-applied change behind.
+    const [solutionFile, setSolutionFile] = React.useState<File | null>(null);
+    const [removeSolutionFile, setRemoveSolutionFile] = React.useState(false);
+
     const formik = useFormik({
         initialValues: {
             title: assignment.title || '',
@@ -172,6 +192,10 @@ const EditAssignmentForm: React.FC<EditAssignmentFormProps> = ({
                 typeof assignment.pass_threshold_percentage === 'number'
                     ? assignment.pass_threshold_percentage
                     : '',
+            // Formative mode: the assignment is handed in but never marked.
+            ungraded: assignment.ungraded || false,
+            solution: assignment.solution || '',
+            solution_reveal: (assignment.solution_reveal || 'NEVER') as SolutionReveal,
         },
         enableReinitialize: true,
         onSubmit: async (values, { setSubmitting }) => {
@@ -188,6 +212,19 @@ const EditAssignmentForm: React.FC<EditAssignmentFormProps> = ({
             // Clearing the date means "no deadline". Send null, not the empty
             // string the input clears itself to, so the column reads as unset.
             payload.due_date = values.due_date || null;
+            // Formative mode owns the grading switches: an ungraded assignment
+            // never auto-grades and has no answer key to reveal, so send the
+            // consistent state rather than leaving stale flags in the DB that
+            // would resurface if the teacher turns grading back on.
+            if (payload.ungraded) {
+                payload.auto_grading = false;
+                payload.show_correct_answers = false;
+                // AFTER_GRADING can never fire on something that is never
+                // graded — fall back to unlocking on hand-in.
+                if (payload.solution_reveal === 'AFTER_GRADING') {
+                    payload.solution_reveal = 'ON_SUBMISSION';
+                }
+            }
             // Blank -> null (fall back to the default); otherwise clamp to 0-100.
             payload.pass_threshold_percentage =
                 values.pass_threshold_percentage === '' ||
@@ -198,6 +235,25 @@ const EditAssignmentForm: React.FC<EditAssignmentFormProps> = ({
             try {
                 const res = await updateAssignment(payload, assignment.assignment_uuid, accessToken);
                 if (res.success) {
+                    // The corrigé document lives behind its own endpoint (it is a
+                    // file upload), so it is applied after the field update and
+                    // only when the teacher actually staged a change.
+                    if (removeSolutionFile) {
+                        await deleteAssignmentSolutionFile(assignment.assignment_uuid, accessToken);
+                    } else if (solutionFile) {
+                        const fileRes = await updateAssignmentSolutionFile(
+                            solutionFile,
+                            assignment.assignment_uuid,
+                            accessToken
+                        );
+                        if (!fileRes.success) {
+                            toast.error(
+                                t('dashboard.assignments.modals.edit.toasts.solution_file_error', {
+                                    defaultValue: "The model answer document couldn't be uploaded.",
+                                })
+                            );
+                        }
+                    }
                     queryClient.invalidateQueries({ queryKey: queryKeys.assignments.detail(assignment.assignment_uuid) });
                     toast.success(t('dashboard.assignments.modals.edit.toasts.success'));
                     onClose();
@@ -282,7 +338,18 @@ const EditAssignmentForm: React.FC<EditAssignmentFormProps> = ({
                 </p>
             </Form.Field>
 
+            {/* Formative mode. Deliberately above the grading settings: turning
+                it on removes most of them, so the teacher sees the cause before
+                the effect. */}
+            <UngradedRow
+                checked={formik.values.ungraded}
+                onChange={(v) => formik.setFieldValue('ungraded', v, true)}
+                label={t('dashboard.assignments.modals.edit.form.ungraded_label', { defaultValue: 'Formative — no grading' })}
+                description={t('dashboard.assignments.modals.edit.form.ungraded_description', { defaultValue: 'Learners hand their work in and it is never marked. No score, no pass or fail — pair it with a model answer below for self-assessment.' })}
+            />
+
             {/* Grading type */}
+            {!formik.values.ungraded && (
             <div className="space-y-2">
                 <div className="flex items-center justify-between">
                     <p className={labelClass}>
@@ -328,6 +395,7 @@ const EditAssignmentForm: React.FC<EditAssignmentFormProps> = ({
                     })}
                 </div>
             </div>
+            )}
 
             {/* Grading options */}
             <div className="space-y-2">
@@ -340,6 +408,7 @@ const EditAssignmentForm: React.FC<EditAssignmentFormProps> = ({
                     </p>
                 </div>
                 <div className="space-y-2">
+                    {!formik.values.ungraded && (
                     <ToggleRow
                         icon={<Zap size={16} className="text-amber-500" />}
                         label={t('dashboard.assignments.modals.edit.form.auto_grading_label')}
@@ -353,6 +422,7 @@ const EditAssignmentForm: React.FC<EditAssignmentFormProps> = ({
                         onChange={(v) => formik.setFieldValue('auto_grading', v, true)}
                         warning={hasFileSubmissionTask}
                     />
+                    )}
                     <ToggleRow
                         icon={<Shield size={16} className="text-cyan-500" />}
                         label={t('dashboard.assignments.modals.edit.form.anti_copy_paste_label')}
@@ -360,6 +430,7 @@ const EditAssignmentForm: React.FC<EditAssignmentFormProps> = ({
                         checked={formik.values.anti_copy_paste}
                         onChange={(v) => formik.setFieldValue('anti_copy_paste', v, true)}
                     />
+                    {!formik.values.ungraded && (
                     <ToggleRow
                         icon={<Eye size={16} className="text-indigo-500" />}
                         label={t('dashboard.assignments.modals.edit.form.show_correct_answers_label')}
@@ -367,17 +438,28 @@ const EditAssignmentForm: React.FC<EditAssignmentFormProps> = ({
                         checked={formik.values.show_correct_answers}
                         onChange={(v) => formik.setFieldValue('show_correct_answers', v, true)}
                     />
+                    )}
                     <RetryRow
                         allowRetries={formik.values.allow_retries}
                         maxRetries={formik.values.max_retries}
                         onAllowChange={(v) => formik.setFieldValue('allow_retries', v, true)}
                         onMaxChange={(n) => formik.setFieldValue('max_retries', n, true)}
                         labelAllow={t('dashboard.assignments.modals.edit.form.allow_retries_label')}
-                        descriptionAllow={t('dashboard.assignments.modals.edit.form.allow_retries_description')}
+                        descriptionAllow={
+                            // The default copy says retries happen "after it's
+                            // graded", which never comes true in formative mode.
+                            formik.values.ungraded
+                                ? t('dashboard.assignments.modals.edit.form.allow_retries_description_ungraded', {
+                                      defaultValue:
+                                          'Let learners reset and hand the assignment in again. Each retry wipes their previous work and re-locks the model answer.',
+                                  })
+                                : t('dashboard.assignments.modals.edit.form.allow_retries_description')
+                        }
                         labelMax={t('dashboard.assignments.modals.edit.form.max_retries_label')}
                         helperUnlimited={t('dashboard.assignments.modals.edit.form.max_retries_unlimited')}
                         helperBounded={t('dashboard.assignments.modals.edit.form.max_retries_bounded')}
                     />
+                    {!formik.values.ungraded && (
                     <PassThresholdRow
                         value={formik.values.pass_threshold_percentage}
                         onChange={(v) => formik.setFieldValue('pass_threshold_percentage', v, true)}
@@ -385,8 +467,28 @@ const EditAssignmentForm: React.FC<EditAssignmentFormProps> = ({
                         description={t('dashboard.assignments.modals.edit.form.pass_threshold_description', { defaultValue: 'Minimum score to pass. Leave blank to use the default (50%, or 60% for letter grades).' })}
                         placeholder={t('dashboard.assignments.modals.edit.form.pass_threshold_placeholder', { defaultValue: 'Auto' })}
                     />
+                    )}
                 </div>
             </div>
+
+            {/* Model answer ("corrigé") */}
+            <SolutionSection
+                ungraded={formik.values.ungraded}
+                solution={formik.values.solution}
+                onSolutionChange={(v) => formik.setFieldValue('solution', v, true)}
+                reveal={formik.values.solution_reveal}
+                onRevealChange={(v) => formik.setFieldValue('solution_reveal', v, true)}
+                currentFileName={removeSolutionFile ? null : assignment.solution_file ?? null}
+                stagedFile={solutionFile}
+                onStageFile={(f) => {
+                    setSolutionFile(f);
+                    setRemoveSolutionFile(false);
+                }}
+                onRemoveFile={() => {
+                    setSolutionFile(null);
+                    setRemoveSolutionFile(true);
+                }}
+            />
 
             <div className="flex justify-end space-x-3">
                 <button
@@ -436,6 +538,220 @@ const EditAssignmentModal: React.FC<EditAssignmentModalProps> = ({
         />
     );
 };
+
+// Formative mode gets its own card rather than a row in the grading options
+// list: switching it on removes most of that list, so it needs to read as the
+// decision it is, not as one more checkbox inside what it disables.
+function UngradedRow({
+    checked,
+    onChange,
+    label,
+    description,
+}: {
+    checked: boolean;
+    onChange: (_next: boolean) => void;
+    label: string;
+    description: string;
+}) {
+    return (
+        <div className={`flex items-start justify-between gap-3 p-3.5 rounded-xl border nice-shadow transition-colors ${
+            checked ? 'bg-teal-50/70 border-teal-200' : 'bg-white border-gray-100'
+        }`}>
+            <div className="flex items-start gap-2.5 flex-1 min-w-0">
+                <div className="mt-0.5 flex-none">
+                    <ClipboardCheck size={17} className={checked ? 'text-teal-600' : 'text-gray-400'} />
+                </div>
+                <div className="flex flex-col min-w-0">
+                    <p className="text-xs font-bold text-gray-900">{label}</p>
+                    <p className="text-[10px] text-gray-500 leading-snug mt-0.5">{description}</p>
+                </div>
+            </div>
+            <button
+                type="button"
+                onClick={() => onChange(!checked)}
+                aria-pressed={checked}
+                aria-label={label}
+                className={`relative flex-none inline-flex h-5 w-9 items-center rounded-full transition-colors ${
+                    checked ? 'bg-teal-600' : 'bg-gray-200 hover:bg-gray-300'
+                }`}
+            >
+                <span
+                    className={`inline-block h-3.5 w-3.5 transform rounded-full bg-white shadow transition-transform ${
+                        checked ? 'translate-x-5 rtl:-translate-x-5' : 'translate-x-1 rtl:-translate-x-1'
+                    }`}
+                />
+            </button>
+        </div>
+    );
+}
+
+// The model answer ("corrigé"): free text plus an optional document, and the
+// rule that decides when a learner may read either. The API enforces that rule
+// server-side — this form only chooses it.
+function SolutionSection({
+    ungraded,
+    solution,
+    onSolutionChange,
+    reveal,
+    onRevealChange,
+    currentFileName,
+    stagedFile,
+    onStageFile,
+    onRemoveFile,
+}: {
+    ungraded: boolean;
+    solution: string;
+    onSolutionChange: (_v: string) => void;
+    reveal: SolutionReveal;
+    onRevealChange: (_v: SolutionReveal) => void;
+    currentFileName: string | null;
+    stagedFile: File | null;
+    onStageFile: (_f: File) => void;
+    onRemoveFile: () => void;
+}) {
+    const { t } = useTranslation();
+    const fileInputRef = React.useRef<HTMLInputElement | null>(null);
+
+    // AFTER_GRADING can never fire on an assignment that is never graded, so it
+    // is dropped from the choices in formative mode instead of offering a
+    // setting that would silently never unlock.
+    const revealOptions: { value: SolutionReveal; label: string; hint: string; icon: React.ReactNode }[] = [
+        {
+            value: 'NEVER',
+            label: t('dashboard.assignments.modals.edit.form.solution_reveal_never', { defaultValue: 'Never' }),
+            hint: t('dashboard.assignments.modals.edit.form.solution_reveal_never_hint', { defaultValue: 'Kept for you only' }),
+            icon: <Lock size={14} />,
+        },
+        {
+            value: 'ON_SUBMISSION',
+            label: t('dashboard.assignments.modals.edit.form.solution_reveal_on_submission', { defaultValue: 'On hand-in' }),
+            hint: t('dashboard.assignments.modals.edit.form.solution_reveal_on_submission_hint', { defaultValue: 'Unlocks the moment they submit' }),
+            icon: <BookOpenCheck size={14} />,
+        },
+        ...(ungraded
+            ? []
+            : [
+                  {
+                      value: 'AFTER_GRADING' as SolutionReveal,
+                      label: t('dashboard.assignments.modals.edit.form.solution_reveal_after_grading', { defaultValue: 'After grading' }),
+                      hint: t('dashboard.assignments.modals.edit.form.solution_reveal_after_grading_hint', { defaultValue: 'Unlocks once marked' }),
+                      icon: <Check size={14} />,
+                  },
+              ]),
+    ];
+    const effectiveReveal: SolutionReveal =
+        ungraded && reveal === 'AFTER_GRADING' ? 'ON_SUBMISSION' : reveal;
+
+    return (
+        <div className="space-y-2">
+            <div className="flex items-center justify-between">
+                <p className={labelClass}>
+                    {t('dashboard.assignments.modals.edit.form.solution_label', { defaultValue: 'Model answer' })}
+                </p>
+                <p className="text-[10px] text-gray-400">
+                    {t('dashboard.assignments.modals.edit.form.solution_hint', { defaultValue: 'Shown to learners only once unlocked' })}
+                </p>
+            </div>
+
+            <div className="rounded-xl border border-gray-100 bg-white nice-shadow overflow-hidden">
+                <div className="p-3 space-y-3">
+                    <textarea
+                        value={solution}
+                        onChange={(e) => onSolutionChange(e.target.value)}
+                        rows={4}
+                        placeholder={t('dashboard.assignments.modals.edit.form.solution_placeholder', {
+                            defaultValue: 'Write the worked solution learners should compare their work against…',
+                        })}
+                        className={textareaClass}
+                    />
+
+                    {/* Attached corrigé document */}
+                    <div className="flex items-center justify-between gap-3">
+                        <div className="flex items-center gap-2 min-w-0">
+                            <Paperclip size={14} className="text-gray-400 flex-none" />
+                            {stagedFile ? (
+                                <p className="text-[11px] font-semibold text-gray-700 truncate">
+                                    {stagedFile.name}
+                                </p>
+                            ) : currentFileName ? (
+                                <p className="text-[11px] font-semibold text-gray-700 truncate">
+                                    {currentFileName}
+                                </p>
+                            ) : (
+                                <p className="text-[11px] text-gray-400">
+                                    {t('dashboard.assignments.modals.edit.form.solution_no_file', { defaultValue: 'No document attached' })}
+                                </p>
+                            )}
+                        </div>
+                        <div className="flex items-center gap-1.5 flex-none">
+                            {(stagedFile || currentFileName) && (
+                                <button
+                                    type="button"
+                                    onClick={onRemoveFile}
+                                    className="inline-flex items-center gap-1 h-7 px-2 rounded-md text-[10px] font-bold uppercase tracking-wider text-rose-700 bg-rose-50 hover:bg-rose-100 transition-colors"
+                                >
+                                    <Trash2 size={12} />
+                                    {t('dashboard.assignments.modals.edit.form.solution_remove_file', { defaultValue: 'Remove' })}
+                                </button>
+                            )}
+                            <button
+                                type="button"
+                                onClick={() => fileInputRef.current?.click()}
+                                className="inline-flex items-center gap-1 h-7 px-2 rounded-md text-[10px] font-bold uppercase tracking-wider text-gray-700 bg-gray-100 hover:bg-gray-200 transition-colors"
+                            >
+                                <Upload size={12} />
+                                {t('dashboard.assignments.modals.edit.form.solution_upload_file', { defaultValue: 'Attach' })}
+                            </button>
+                            <input
+                                ref={fileInputRef}
+                                type="file"
+                                className="hidden"
+                                onChange={(e) => {
+                                    const f = e.target.files?.[0];
+                                    if (f) onStageFile(f);
+                                    // Reset so re-picking the same file still fires onChange.
+                                    e.target.value = '';
+                                }}
+                            />
+                        </div>
+                    </div>
+                </div>
+
+                {/* Reveal rule */}
+                <div className="border-t border-gray-100 px-3 py-3 bg-gray-50/50 space-y-2">
+                    <p className="text-[11px] font-semibold text-gray-700">
+                        {t('dashboard.assignments.modals.edit.form.solution_reveal_label', { defaultValue: 'Unlock the model answer' })}
+                    </p>
+                    <div className={`grid gap-2 ${revealOptions.length === 3 ? 'grid-cols-3' : 'grid-cols-2'}`}>
+                        {revealOptions.map((opt) => {
+                            const isSelected = effectiveReveal === opt.value;
+                            return (
+                                <button
+                                    key={opt.value}
+                                    type="button"
+                                    onClick={() => onRevealChange(opt.value)}
+                                    className={`flex flex-col items-start gap-1 p-2.5 rounded-lg border text-start transition-colors ${
+                                        isSelected
+                                            ? 'bg-teal-50 border-teal-300'
+                                            : 'bg-white border-gray-200 hover:bg-gray-50'
+                                    }`}
+                                >
+                                    <span className={isSelected ? 'text-teal-600' : 'text-gray-400'}>
+                                        {opt.icon}
+                                    </span>
+                                    <span className={`text-[11px] font-bold ${isSelected ? 'text-gray-900' : 'text-gray-600'}`}>
+                                        {opt.label}
+                                    </span>
+                                    <span className="text-[10px] text-gray-400 leading-tight">{opt.hint}</span>
+                                </button>
+                            );
+                        })}
+                    </div>
+                </div>
+            </div>
+        </div>
+    );
+}
 
 function ToggleRow({
     icon,
