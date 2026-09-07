@@ -4336,6 +4336,7 @@
     },
     "ai_panel": {
       "add_definition": "Definition hinzufügen",
+      "insert_failed": "Ich konnte die generierten Inhalte nicht in das Dokument einfügen. Bitte versuche es erneut.",
       "add_examples": "Beispiele hinzufügen",
       "add_quiz": "Quiz hinzufügen",
       "add_summary": "Zusammenfassung hinzufügen",

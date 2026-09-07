@@ -4358,6 +4358,7 @@
       "add_summary": "Pridať zhrnutie",
       "add_tip": "Pridať tip",
       "add_definition": "Pridať definíciu",
+      "insert_failed": "Nepodarilo sa mi vložiť vygenerovaný obsah do dokumentu. Skúste to prosím znova.",
       "clear_chat": "Vymazať chat",
       "clear_selection": "Zrušiť výber",
       "block_selected": "blok vybraný",

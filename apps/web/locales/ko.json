@@ -4348,6 +4348,7 @@
     },
     "ai_panel": {
       "add_definition": "정의 추가",
+      "insert_failed": "생성된 콘텐츠를 문서에 삽입하지 못했습니다. 다시 시도해 주세요.",
       "add_examples": "예시 추가",
       "add_quiz": "퀴즈 추가",
       "add_summary": "요약 추가",

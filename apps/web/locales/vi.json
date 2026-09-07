@@ -4360,6 +4360,7 @@
     },
     "ai_panel": {
       "add_definition": "Thêm định nghĩa",
+      "insert_failed": "Tôi không thể chèn nội dung đã tạo vào tài liệu. Vui lòng thử lại.",
       "add_examples": "Thêm ví dụ",
       "add_quiz": "Thêm câu hỏi trắc nghiệm",
       "add_summary": "Thêm tóm tắt",
