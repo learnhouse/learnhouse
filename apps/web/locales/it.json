@@ -1894,7 +1894,6 @@
           "subtitle": "Carica un'immagine di copertina per la tua community",
           "no_thumbnail": "Nessuna miniatura impostata",
           "upload_image": "Carica Immagine",
-          "browse_unsplash": "Sfoglia Unsplash",
           "uploading": "Caricamento...",
           "supported_formats": "Formati supportati: JPG, JPEG, PNG. Dimensione max: 8MB. Proporzioni consigliate: 16:9",
           "toasts": {
@@ -2515,7 +2514,6 @@
         "background_type": "Tipo di sfondo",
         "bg_gradient": "Gradiente",
         "bg_custom": "Personalizzato",
-        "bg_unsplash": "Unsplash",
         "text_color": "Colore del testo",
         "text_light": "Chiaro",
         "text_dark": "Scuro",

@@ -4,7 +4,7 @@ import { useRouter } from 'next/navigation'
 import { useTranslation } from 'react-i18next'
 import { toast } from 'react-hot-toast'
 import { useQueryClient } from '@tanstack/react-query'
-import { ChatCenteredText, Image as ImageIcon, Moon, PaintBrush, Sun, TextAa, UploadSimple } from '@phosphor-icons/react'
+import { ChatCenteredText, Moon, PaintBrush, Sun, TextAa, UploadSimple } from '@phosphor-icons/react'
 import { useOrg } from '@components/Contexts/OrgContext'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
 import { constructAcceptValue } from '@/lib/constants'
@@ -13,7 +13,6 @@ import { AuthBrandingConfig, updateOrgAuthBrandingConfig, uploadOrgAuthBackgroun
 import { revalidateTags } from '@services/utils/ts/requests'
 import { queryKeys } from '@/lib/query/keys'
 import { Textarea } from '@components/ui/textarea'
-import UnsplashImagePicker, { UnsplashPhotoMeta } from '@components/Dashboard/Pages/Course/EditCourseGeneral/UnsplashImagePicker'
 import AIImageButton from '@components/Objects/AI/AIImageButton'
 import { usePlan } from '@components/Hooks/usePlan'
 import { getOrgSquareLogoUrl, getOrgWideLogoUrl } from '@components/Objects/Org/OrgSquareLogo'
@@ -37,7 +36,6 @@ export default function AuthBrandingTab() {
   const [state, setState] = useState<AuthBrandingState>(() => readAuthBranding(org))
   const [saving, setSaving] = useState(false)
   const [uploading, setUploading] = useState(false)
-  const [showUnsplash, setShowUnsplash] = useState(false)
   const [localBackground, setLocalBackground] = useState<string | null>(null)
 
   useEffect(() => {
@@ -73,10 +71,7 @@ export default function AuthBrandingTab() {
     }
   }
 
-  const handleBackgroundUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0]
-    event.target.value = ''
-    if (!file) return
+  const uploadBackground = async (file: File) => {
     setLocalBackground(URL.createObjectURL(file))
     setUploading(true)
     const toastId = toast.loading(t('dashboard.organization.auth_branding.uploading'))
@@ -93,17 +88,15 @@ export default function AuthBrandingTab() {
     }
   }
 
-  const handleUnsplashSelect = (imageUrl: string, meta?: UnsplashPhotoMeta) => {
-    patch({
-      background_type: 'unsplash',
-      background_image: imageUrl,
-      unsplash_photographer_name: meta?.photographer_name || '',
-      unsplash_photographer_url: meta?.photographer_url || '',
-      unsplash_photo_url: meta?.photo_url || '',
-    })
-    setLocalBackground(null)
-    setShowUnsplash(false)
+  const handleBackgroundUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0]
+    event.target.value = ''
+    if (file) await uploadBackground(file)
   }
+
+  // Backgrounds picked from the retired Unsplash option keep rendering on the
+  // sign-in page; here they count as a custom photo.
+  const activeType: BackgroundType = state.background_type === 'unsplash' ? 'custom' : state.background_type
 
   const backgroundOptions: { type: BackgroundType; label: string; icon: React.ElementType; onClick: () => void }[] = [
     {
@@ -120,12 +113,6 @@ export default function AuthBrandingTab() {
       label: t('dashboard.organization.auth_branding.bg_custom'),
       icon: UploadSimple,
       onClick: () => document.getElementById('authBackgroundInput')?.click(),
-    },
-    {
-      type: 'unsplash',
-      label: t('dashboard.organization.auth_branding.bg_unsplash'),
-      icon: ImageIcon,
-      onClick: () => setShowUnsplash(true),
     },
   ]
 
@@ -154,9 +141,9 @@ export default function AuthBrandingTab() {
           title={t('dashboard.organization.branding.auth.background_title')}
           description={t('dashboard.organization.branding.auth.background_desc')}
         >
-          <div className="grid max-w-md grid-cols-3 gap-2">
+          <div className="grid max-w-md grid-cols-2 gap-2">
             {backgroundOptions.map((option) => {
-              const active = state.background_type === option.type
+              const active = activeType === option.type
               return (
                 <button
                   key={option.type}
@@ -168,7 +155,7 @@ export default function AuthBrandingTab() {
                     active ? 'border-black bg-black text-white' : 'border-gray-200 bg-white text-gray-600 hover:bg-gray-50'
                   )}
                 >
-                  <option.icon size={18} weight={active ? 'fill' : 'regular'} />
+                  <option.icon size={18} weight="duotone" />
                   <span className="text-xs font-medium">{option.label}</span>
                 </button>
               )
@@ -177,7 +164,8 @@ export default function AuthBrandingTab() {
           <input type="file" id="authBackgroundInput" accept={ACCEPT} className="hidden" onChange={handleBackgroundUpload} />
           <div className="mt-2 max-w-md">
             <AIImageButton
-              onSelect={(url) => handleUnsplashSelect(url)}
+              onSelect={() => undefined}
+              onSelectFile={uploadBackground}
               className="flex w-full items-center justify-center gap-2 rounded-xl border border-gray-200 bg-white px-3 py-2.5 text-xs font-medium text-gray-600 transition-colors hover:bg-gray-50"
             />
           </div>
@@ -202,7 +190,7 @@ export default function AuthBrandingTab() {
                     active ? 'border-black bg-black text-white' : 'border-gray-200 bg-white text-gray-600 hover:bg-gray-50'
                   )}
                 >
-                  <Icon size={16} weight={active ? 'fill' : 'regular'} />
+                  <Icon size={16} weight="duotone" />
                   {t(`dashboard.organization.auth_branding.text_${value}`)}
                 </button>
               )
@@ -234,9 +222,6 @@ export default function AuthBrandingTab() {
         <SaveBar onSave={handleSave} saving={saving} disabled={uploading} />
       </div>
 
-      {showUnsplash && (
-        <UnsplashImagePicker onSelect={handleUnsplashSelect} onClose={() => setShowUnsplash(false)} isOpen={showUnsplash} />
-      )}
     </div>
   )
 }

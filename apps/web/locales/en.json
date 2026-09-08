@@ -2543,7 +2543,6 @@
           "subtitle": "Upload a cover image for your community",
           "no_thumbnail": "No thumbnail set",
           "upload_image": "Upload Image",
-          "browse_unsplash": "Browse Unsplash",
           "uploading": "Uploading...",
           "supported_formats": "Supported formats: JPG, JPEG, PNG. Max file size: 8MB. Recommended aspect ratio: 16:9",
           "toasts": {
@@ -3070,7 +3069,7 @@
           "message_title": "Welcome message",
           "message_desc": "Shown under your name on the sign-in and sign-up pages. Leave it empty for the default.",
           "background_title": "Background",
-          "background_desc": "What sits behind your logo on the sign-in panel: the default gradient, a photo you upload, or one from Unsplash.",
+          "background_desc": "What sits behind your logo on the sign-in panel: the default gradient, or a photo you upload or generate.",
           "text_title": "Text color",
           "text_desc": "Light text for dark backgrounds, dark text for light ones.",
           "preview_note": "The logo box uses your square logo, or fits the wide logo if you have not added one."
@@ -3100,7 +3099,6 @@
         "background_type": "Background Type",
         "bg_gradient": "Gradient",
         "bg_custom": "Custom",
-        "bg_unsplash": "Unsplash",
         "text_color": "Text Color",
         "text_light": "Light",
         "text_dark": "Dark",

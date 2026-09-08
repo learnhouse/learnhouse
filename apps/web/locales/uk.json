@@ -2222,7 +2222,6 @@
           "subtitle": "Завантажте зображення обкладинки для своєї спільноти",
           "no_thumbnail": "Ескіз не встановлено",
           "upload_image": "Завантажити зображення",
-          "browse_unsplash": "Перегляньте Unsplash",
           "uploading": "Завантаження...",
           "supported_formats": "Підтримувані формати: JPG, JPEG, PNG. Максимальний розмір файлу: 8 Мб. Рекомендоване співвідношення сторін: 16:9",
           "toasts": {
@@ -2676,7 +2675,6 @@
         "background_type": "Тип фону",
         "bg_gradient": "Градієнт",
         "bg_custom": "Власний",
-        "bg_unsplash": "Unsplash",
         "text_color": "Колір тексту",
         "text_light": "Світлий",
         "text_dark": "Темний",

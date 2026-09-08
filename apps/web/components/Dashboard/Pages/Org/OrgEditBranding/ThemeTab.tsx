@@ -87,7 +87,7 @@ export default function ThemeTab() {
               disabled={saving}
               className="h-10 px-2 text-gray-400 hover:text-gray-700"
             >
-              <X size={14} weight="bold" className="me-1" />
+              <X size={14} weight="duotone" className="me-1" />
               {t('dashboard.organization.branding.theme.clear')}
             </Button>
           )}

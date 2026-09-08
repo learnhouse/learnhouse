@@ -72,7 +72,7 @@ export default function FontSelector({ value, onChange }: FontSelectorProps) {
               <span className="truncate" style={value ? { fontFamily: `'${value}', sans-serif` } : undefined}>
                 {displayValue}
               </span>
-              <CaretUpDown size={14} className="ms-2 shrink-0 opacity-50" />
+              <CaretUpDown weight="duotone" size={14} className="ms-2 shrink-0 opacity-50" />
             </Button>
           </PopoverTrigger>
           <PopoverContent className="w-72 p-0" align="start">
@@ -106,7 +106,7 @@ export default function FontSelector({ value, onChange }: FontSelectorProps) {
                       value === font && 'bg-gray-100'
                     )}
                   >
-                    <Check size={14} weight="bold" className={cn('shrink-0', value === font ? 'opacity-100' : 'opacity-0')} />
+                    <Check size={14} weight="duotone" className={cn('shrink-0', value === font ? 'opacity-100' : 'opacity-0')} />
                     <span style={{ fontFamily: `'${font}', sans-serif` }}>{font}</span>
                     {font === DEFAULT_FONT && (
                       <span className="ms-auto text-[10px] text-gray-400">
@@ -131,7 +131,7 @@ export default function FontSelector({ value, onChange }: FontSelectorProps) {
             }}
             className="h-10 px-2 text-gray-400 hover:text-gray-700"
           >
-            <X size={14} weight="bold" />
+            <X size={14} weight="duotone" />
           </Button>
         )}
       </div>

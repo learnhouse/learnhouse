@@ -1916,7 +1916,6 @@
           "subtitle": "อัปโหลดรูปปกสำหรับชุมชนของคุณ",
           "no_thumbnail": "ไม่ได้ตั้งรูปขนาดย่อ",
           "upload_image": "อัปโหลดรูป",
-          "browse_unsplash": "เรียกดู Unsplash",
           "uploading": "กำลังอัปโหลด...",
           "supported_formats": "รูปแบบที่รองรับ: JPG, JPEG, PNG ขนาดสูงสุด: 8MB อัตราส่วนที่แนะนำ: 16:9",
           "toasts": {
@@ -2539,7 +2538,6 @@
         "background_type": "ประเภทพื้นหลัง",
         "bg_gradient": "ไล่ระดับสี",
         "bg_custom": "กำหนดเอง",
-        "bg_unsplash": "Unsplash",
         "text_color": "สีข้อความ",
         "text_light": "สว่าง",
         "text_dark": "มืด",

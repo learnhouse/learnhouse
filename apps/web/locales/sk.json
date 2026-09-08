@@ -2222,7 +2222,6 @@
           "subtitle": "Nahrajte obrázok komunity",
           "no_thumbnail": "Žiadny náhľad",
           "upload_image": "Nahrať obrázok",
-          "browse_unsplash": "Prehliadať Unsplash",
           "uploading": "Nahráva sa...",
           "supported_formats": "Podporované formáty: JPG, JPEG, PNG. Maximálna veľkosť: 8MB. Odporúčaný pomer strán: 16:9",
           "toasts": {
@@ -2676,7 +2675,6 @@
         "background_type": "Typ pozadia",
         "bg_gradient": "Gradient",
         "bg_custom": "Vlastné",
-        "bg_unsplash": "Unsplash",
         "text_color": "Farba textu",
         "text_light": "Svetlý",
         "text_dark": "Tmavý",

@@ -1905,7 +1905,6 @@
           "subtitle": "Téléchargez une image de couverture pour votre communauté",
           "no_thumbnail": "Aucune miniature définie",
           "upload_image": "Télécharger une image",
-          "browse_unsplash": "Parcourir Unsplash",
           "uploading": "Téléchargement...",
           "supported_formats": "Formats pris en charge : JPG, JPEG, PNG. Taille max : 8 Mo. Ratio recommandé : 16:9",
           "toasts": {
@@ -2429,7 +2428,6 @@
         "background_type": "Type d'arrière-plan",
         "bg_gradient": "Dégradé",
         "bg_custom": "Personnalisé",
-        "bg_unsplash": "Unsplash",
         "text_color": "Couleur du texte",
         "text_light": "Clair",
         "text_dark": "Sombre",

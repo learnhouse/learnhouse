@@ -1916,7 +1916,6 @@
           "subtitle": "Unggah gambar sampul untuk komunitas Anda",
           "no_thumbnail": "Gambar mini belum diatur",
           "upload_image": "Unggah Gambar",
-          "browse_unsplash": "Jelajahi Unsplash",
           "uploading": "Mengunggah...",
           "supported_formats": "Format yang didukung: JPG, JPEG, PNG. Ukuran maks: 8MB. Rasio yang disarankan: 16:9",
           "toasts": {
@@ -2756,7 +2755,6 @@
         "background_type": "Tipe Latar Belakang",
         "bg_gradient": "Gradien",
         "bg_custom": "Kustom",
-        "bg_unsplash": "Unsplash",
         "text_color": "Warna Teks",
         "text_light": "Terang",
         "text_dark": "Gelap",

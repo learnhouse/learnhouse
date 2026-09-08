@@ -45,7 +45,7 @@ export function Vignette({ icon: Icon, label, children, className, size = 'w-[22
         {children}
       </div>
       <figcaption className="flex items-center gap-1.5 text-[11px] font-medium text-gray-500">
-        <Icon size={12} weight="bold" className="text-gray-400" />
+        <Icon size={12} weight="duotone" className="text-gray-400" />
         {label}
       </figcaption>
     </figure>
@@ -134,7 +134,7 @@ export function PublicHeaderVignette({ wideUrl, name, primaryColor, font, label,
           </span>
           <span className="flex items-center gap-1.5">
             <span className={cn('flex items-center rounded-md', pill, large ? 'h-6 w-20 px-2' : 'h-4 w-12 px-1')}>
-              <MagnifyingGlass size={large ? 10 : 7} className={cn(light ? 'text-gray-500' : 'text-white/80')} />
+              <MagnifyingGlass weight="duotone" size={large ? 10 : 7} className={cn(light ? 'text-gray-500' : 'text-white/80')} />
             </span>
             <span className={cn('rounded-full', pill, large ? 'h-6 w-6' : 'h-4 w-4')} />
           </span>
@@ -468,7 +468,7 @@ function GalleryCell({ item, tall }: { item?: GalleryItem; tall?: boolean }) {
       {item && <img src={item.url} alt="" className="h-full w-full object-cover" />}
       {item && item.kind !== 'image' && (
         <span className="absolute inset-0 flex items-center justify-center bg-black/35 text-white">
-          <Play size={tall ? 14 : 8} weight="fill" />
+          <Play size={tall ? 14 : 8} weight="duotone" />
         </span>
       )}
     </span>

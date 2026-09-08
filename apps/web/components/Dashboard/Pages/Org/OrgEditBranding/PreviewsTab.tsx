@@ -226,7 +226,7 @@ export default function PreviewsTab() {
       id: 'image',
       title: t('dashboard.organization.images.video_modal.images'),
       description: t('dashboard.organization.images.accepted_files'),
-      icon: <UploadSimple size={26} weight="bold" className="text-gray-700" />,
+      icon: <UploadSimple size={26} weight="duotone" className="text-gray-700" />,
       onClick: () => document.getElementById('previewInput')?.click(),
     },
     {
@@ -334,7 +334,7 @@ export default function PreviewsTab() {
                           {...dragProvided.dragHandleProps}
                           className="absolute -start-1.5 -top-1.5 flex h-6 w-6 cursor-grab items-center justify-center rounded-full bg-white text-gray-500 opacity-0 shadow ring-1 ring-black/10 transition-opacity group-hover:opacity-100 active:cursor-grabbing"
                         >
-                          <DotsSixVertical size={14} weight="bold" />
+                          <DotsSixVertical size={14} weight="duotone" />
                         </span>
                         <button
                           type="button"
@@ -342,7 +342,7 @@ export default function PreviewsTab() {
                           aria-label={t('common.remove', { defaultValue: 'Remove' })}
                           className="absolute -end-1.5 -top-1.5 flex h-6 w-6 items-center justify-center rounded-full bg-white text-gray-500 opacity-0 shadow ring-1 ring-black/10 transition-opacity hover:text-red-600 group-hover:opacity-100"
                         >
-                          <X size={12} weight="bold" />
+                          <X size={12} weight="duotone" />
                         </button>
                       </div>
                     )}
@@ -365,7 +365,7 @@ export default function PreviewsTab() {
                         type="button"
                         className="flex h-[84px] w-[140px] shrink-0 flex-col items-center justify-center gap-1 rounded-lg border border-dashed border-gray-300 bg-gray-50 text-gray-500 transition-colors hover:bg-gray-100"
                       >
-                        <Plus size={16} weight="bold" />
+                        <Plus size={16} weight="duotone" />
                         <span className="text-[11px] font-medium">{t('dashboard.organization.images.add_preview')}</span>
                       </button>
                     </DialogTrigger>
@@ -430,7 +430,7 @@ export default function PreviewsTab() {
                               onClick={() => setSelectedService(null)}
                               className="text-gray-400 hover:text-gray-700"
                             >
-                              <X size={18} weight="bold" />
+                              <X size={18} weight="duotone" />
                             </button>
                           </div>
                           <Input
@@ -459,7 +459,7 @@ export default function PreviewsTab() {
           </Droppable>
         </DragDropContext>
         <p className="mt-3 flex items-center gap-1.5 text-xs text-gray-400">
-          <Info size={13} />
+          <Info weight="duotone" size={13} />
           {t('dashboard.organization.images.drag_to_reorder')}
         </p>
       </BrandingSection>

@@ -200,6 +200,8 @@ class Overrides(BaseModel):
 
 class AuthBrandingConfig(BaseModel):
     welcome_message: str = ""
+    # "unsplash" is no longer offered by the dashboard; it stays accepted so
+    # organizations that picked one before keep their background.
     background_type: Literal["gradient", "custom", "unsplash"] = "gradient"
     background_image: str = ""
     text_color: Literal["light", "dark"] = "light"

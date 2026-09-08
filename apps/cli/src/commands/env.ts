@@ -52,7 +52,6 @@ const CATEGORIES: Record<string, { label: string; keys: string[] }> = {
     label: 'OAuth',
     keys: [
       'LEARNHOUSE_GOOGLE_CLIENT_ID', 'LEARNHOUSE_GOOGLE_CLIENT_SECRET',
-      'NEXT_PUBLIC_UNSPLASH_ACCESS_KEY',
     ],
   },
 }

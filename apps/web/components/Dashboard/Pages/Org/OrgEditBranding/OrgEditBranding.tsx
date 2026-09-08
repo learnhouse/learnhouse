@@ -42,7 +42,7 @@ export default function OrgEditBranding() {
                 value={key}
                 className="flex items-center gap-1.5 rounded-md px-3 py-1.5 text-sm text-gray-600 transition-all data-[state=active]:bg-white data-[state=active]:text-gray-900 data-[state=active]:shadow-xs"
               >
-                <Icon size={14} weight="bold" />
+                <Icon size={14} weight="duotone" />
                 <span className="hidden sm:inline whitespace-nowrap">{t(`dashboard.organization.branding.tabs.${key}`)}</span>
               </TabsTrigger>
             ))}

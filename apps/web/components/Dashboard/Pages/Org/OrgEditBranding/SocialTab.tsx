@@ -147,7 +147,7 @@ export default function SocialTab() {
                     }}
                     className="text-gray-400 hover:text-gray-700"
                   >
-                    <X size={14} weight="bold" />
+                    <X size={14} weight="duotone" />
                   </Button>
                 </div>
               ))}
@@ -164,7 +164,7 @@ export default function SocialTab() {
                     setFieldValue('links', next)
                   }}
                 >
-                  <Plus size={14} weight="bold" className="me-1.5" />
+                  <Plus size={14} weight="duotone" className="me-1.5" />
                   {t('dashboard.organization.socials.add_link')}
                 </Button>
               )}

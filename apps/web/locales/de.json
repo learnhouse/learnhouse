@@ -1894,7 +1894,6 @@
           "subtitle": "Laden Sie ein Titelbild für Ihre Community hoch",
           "no_thumbnail": "Keine Miniaturansicht festgelegt",
           "upload_image": "Bild hochladen",
-          "browse_unsplash": "Unsplash durchsuchen",
           "uploading": "Wird hochgeladen...",
           "supported_formats": "Unterstützte Formate: JPG, JPEG, PNG. Max. Größe: 8MB. Empfohlenes Seitenverhältnis: 16:9",
           "toasts": {
@@ -2418,7 +2417,6 @@
         "background_type": "Hintergrundtyp",
         "bg_gradient": "Farbverlauf",
         "bg_custom": "Benutzerdefiniert",
-        "bg_unsplash": "Unsplash",
         "text_color": "Textfarbe",
         "text_light": "Hell",
         "text_dark": "Dunkel",

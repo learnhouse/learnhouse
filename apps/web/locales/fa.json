@@ -2253,7 +2253,6 @@
           "subtitle": "یک تصویر جلد برای انجمن خود آپلود کنید",
           "no_thumbnail": "هیچ تصویر بند انگشتی تنظیم نشده است",
           "upload_image": "آپلود تصویر",
-          "browse_unsplash": "مرور Unsplash",
           "uploading": "در حال آپلود...",
           "supported_formats": "فرمت‌های پشتیبانی شده: JPG، JPEG، PNG. حداکثر اندازه فایل: ۸ مگابایت. نسبت تصویر توصیه شده: ۱۶:۹",
           "toasts": {
@@ -2707,7 +2706,6 @@
         "background_type": "نوع پس‌زمینه",
         "bg_gradient": "گرادیان",
         "bg_custom": "سفارشی",
-        "bg_unsplash": "Unsplash",
         "text_color": "رنگ متن",
         "text_light": "روشن",
         "text_dark": "تیره",

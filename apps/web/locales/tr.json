@@ -1916,7 +1916,6 @@
           "subtitle": "Topluluğunuz için kapak resmi yükleyin",
           "no_thumbnail": "Küçük resim ayarlanmamış",
           "upload_image": "Resim Yükle",
-          "browse_unsplash": "Unsplash'ta Ara",
           "uploading": "Yükleniyor...",
           "supported_formats": "Desteklenen formatlar: JPG, JPEG, PNG. Maksimum boyut: 8MB. Önerilen en-boy oranı: 16:9",
           "toasts": {
@@ -2758,7 +2757,6 @@
         "background_type": "Arka Plan Türü",
         "bg_gradient": "Gradyan",
         "bg_custom": "Özel",
-        "bg_unsplash": "Unsplash",
         "text_color": "Metin Rengi",
         "text_light": "Açık",
         "text_dark": "Koyu",

@@ -102,7 +102,7 @@ export function BrandingSection({
       <div className="min-w-0">
         <div className="flex items-start gap-3">
           <span className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-gray-100 text-gray-700">
-            <Icon size={16} weight="bold" />
+            <Icon size={16} weight="duotone" />
           </span>
           <div className="min-w-0">
             <h3 className="text-[15px] font-semibold text-gray-900 leading-tight">{title}</h3>
@@ -263,12 +263,12 @@ export function ImageDropzone({
                 )}
               />
               <span className="pointer-events-none absolute inset-0 flex items-center justify-center bg-black/55 text-white opacity-0 transition-opacity group-hover:opacity-100 group-focus-visible:opacity-100">
-                <ArrowsClockwise size={shape === 'icon' ? 16 : 20} weight="bold" />
+                <ArrowsClockwise size={shape === 'icon' ? 16 : 20} weight="duotone" />
               </span>
             </>
           ) : (
             <span className="flex h-full w-full flex-col items-center justify-center gap-1.5 px-2 text-center text-gray-400">
-              <CloudArrowUp size={shape === 'icon' ? 18 : 22} weight="regular" />
+              <CloudArrowUp size={shape === 'icon' ? 18 : 22} weight="duotone" />
               {shape !== 'icon' && <span className="text-[11px] leading-tight">{emptyLabel}</span>}
             </span>
           )}
@@ -283,7 +283,7 @@ export function ImageDropzone({
             onClick={() => inputRef.current?.click()}
             className="rounded-lg bg-white"
           >
-            <CloudArrowUp size={14} weight="bold" className="me-1.5" />
+            <CloudArrowUp size={14} weight="duotone" className="me-1.5" />
             {currentUrl ? replaceLabel : emptyLabel}
           </Button>
           {inheritedNote && <p className="text-[11px] text-amber-700/90 max-w-[220px]">{inheritedNote}</p>}
