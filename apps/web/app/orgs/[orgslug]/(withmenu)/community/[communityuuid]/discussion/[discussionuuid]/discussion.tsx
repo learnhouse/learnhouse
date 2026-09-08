@@ -8,6 +8,7 @@ import { DiscussionSidebar } from '@components/Objects/Communities/DiscussionSid
 import { Breadcrumbs } from '@components/Objects/Breadcrumbs/Breadcrumbs'
 import { EditDiscussionModal } from '@components/Objects/Modals/Communities/EditDiscussionModal'
 import { Community } from '@services/communities/communities'
+import { isRichContentAllowed } from '@components/Objects/Communities/richContent'
 import { DiscussionWithAuthor } from '@services/communities/discussions'
 import { MessageCircle } from 'lucide-react'
 import { getUriWithOrg } from '@services/config/config'
@@ -29,6 +30,7 @@ const DiscussionPageClient = ({
   const session = useLHSession() as any
   const [discussion, setDiscussion] = useState(initialDiscussion)
   const [isEditModalOpen, setIsEditModalOpen] = useState(false)
+  const allowRichContent = isRichContentAllowed(community)
 
   useTrackView(AnalyticsEvent.DiscussionViewed, {
     label: discussion.label,
@@ -72,6 +74,7 @@ const DiscussionPageClient = ({
             communityUuid={community.community_uuid}
             orgslug={orgslug}
             onEdit={() => setIsEditModalOpen(true)}
+            allowRichContent={allowRichContent}
           />
         </div>
       </div>
@@ -82,6 +85,7 @@ const DiscussionPageClient = ({
         onClose={() => setIsEditModalOpen(false)}
         discussion={discussion}
         onUpdated={handleDiscussionUpdated}
+        allowRichContent={allowRichContent}
       />
     </GeneralWrapperStyled>
   )

@@ -17,6 +17,7 @@ export interface CommunityModerationSettings {
   require_email_verified?: boolean
   disable_reactions?: boolean
   auto_lock_days?: number
+  allow_rich_content?: boolean
 }
 
 export interface Community {
