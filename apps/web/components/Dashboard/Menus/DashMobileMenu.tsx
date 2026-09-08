@@ -38,7 +38,7 @@ import { getUriWithOrg, getDeploymentMode } from '@services/config/config'
 import { useTranslation } from 'react-i18next'
 import { changeLanguage } from '@/lib/i18n'
 import { AVAILABLE_LANGUAGES } from '@/lib/languages'
-import { getOrgLogoMediaDirectory } from '@services/media/media'
+import OrgSquareLogo, { hasOrgLogo } from '@components/Objects/Org/OrgSquareLogo'
 import { cn } from '@/lib/utils'
 import { usePlan } from '@components/Hooks/usePlan'
 import { planMeetsRequirement } from '@services/plans/plans'
@@ -189,12 +189,10 @@ function DashMobileMenu() {
             >
               {/* Org header */}
               <div className="flex items-center gap-3 px-4 py-3.5">
-                {planMeetsRequirement(plan, 'standard') && org?.logo_image ? (
-                  <img
-                    src={getOrgLogoMediaDirectory(org.org_uuid, org.logo_image)}
-                    alt={org?.name}
-                    className="h-7 w-7 object-contain rounded-lg"
-                  />
+                {planMeetsRequirement(plan, 'standard') && hasOrgLogo(org) ? (
+                  <div className="h-7 w-7 rounded-lg overflow-hidden bg-white shrink-0">
+                    <OrgSquareLogo org={org} wideInsetClassName="p-0.5" fallback={null} />
+                  </div>
                 ) : (
                   <div className="h-7 w-7 flex items-center justify-center bg-white/[0.06] rounded-lg">
                     <img src="/lrn-dash.svg" alt="LearnHouse" className="h-4 w-4" style={{ filter: 'brightness(0) invert(1)' }} />

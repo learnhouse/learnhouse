@@ -216,6 +216,10 @@ class GeneralCustomization(BaseModel):
     color: str = ""
     footer_text: str = ""
     favicon_image: str = ""
+    # Square variant of the logo for the places that render the brand in a
+    # fixed square box (sign-in panel, org switcher, dashboard sidebar).
+    # Empty means "fall back to logo_image".
+    square_logo_image: str = ""
     watermark: bool = True
     font: str = ""
     default_language: str = "en"
@@ -313,6 +317,7 @@ class OrgGeneralConfig(BaseModel):
     footer_text: str = ""
     watermark: bool = True
     favicon_image: str = ""
+    square_logo_image: str = ""
     auth_branding: AuthBrandingConfig = AuthBrandingConfig()
 
 

@@ -2929,7 +2929,7 @@
         "footer_text_desc": "Custom text displayed at the bottom of your organization pages",
         "email_sender_name": "Email Sender Name",
         "email_sender_name_placeholder": "Your organization's name",
-        "email_sender_name_desc": "The name recipients see on emails sent for this organization. Only the name changes \u2014 the sending address stays the platform's, which is what keeps these emails passing SPF and DKIM checks. Leave empty to use the platform default.",
+        "email_sender_name_desc": "The name recipients see on emails sent for this organization. Only the name changes — the sending address stays the platform's, which is what keeps these emails passing SPF and DKIM checks. Leave empty to use the platform default.",
         "default_language": "Default Language",
         "default_language_desc": "The language new visitors see by default and the language used for emails sent on behalf of this organization. Members can still switch their own UI language.",
         "watermark_label": "\"Made with LearnHouse\" watermark",
@@ -2995,8 +2995,99 @@
         "tabs": {
           "images": "Images & Previews",
           "theme": "Theme",
-          "social": "Social Links",
-          "auth": "Auth"
+          "social": "Social & links",
+          "auth": "Sign-in page",
+          "logos": "Logos",
+          "previews": "Previews"
+        },
+        "where_it_appears": "Where it appears",
+        "specs": {
+          "formats": "PNG or JPG",
+          "max_size": "Up to 5 MB",
+          "wide_size": "About 400×200 px",
+          "square_size": "512×512 px, no rounded corners",
+          "favicon_size": "64×64 px",
+          "thumbnail_size": "1200×600 px",
+          "transparent_png": "Transparent PNG works best"
+        },
+        "logos": {
+          "wide": {
+            "title": "Wide logo",
+            "description": "Your main logo. It sits in the public header, on certificates, and anywhere there is room for a horizontal mark.",
+            "add": "Add wide logo",
+            "replace": "Replace wide logo"
+          },
+          "square": {
+            "title": "Square logo",
+            "description": "A compact mark for square spaces: the sign-in panel, the organization switcher, and the dashboard sidebar. Until you add one, the wide logo is fitted into those boxes.",
+            "add": "Add square logo",
+            "replace": "Replace square logo",
+            "inherited": "Using the wide logo for now. Add a square version so it fills the box."
+          },
+          "favicon": {
+            "title": "Favicon",
+            "description": "The small icon in the browser tab and in bookmarks.",
+            "add": "Add favicon",
+            "replace": "Replace favicon"
+          },
+          "toasts": {
+            "uploading": "Uploading…",
+            "wide_success": "Wide logo updated",
+            "wide_error": "Could not upload the wide logo",
+            "square_success": "Square logo updated",
+            "square_error": "Could not upload the square logo",
+            "favicon_success": "Favicon updated",
+            "favicon_error": "Could not upload the favicon"
+          }
+        },
+        "vignettes": {
+          "public_header": "Public header",
+          "sign_in": "Sign-in page",
+          "org_switcher": "Organization switcher",
+          "sidebar": "Dashboard sidebar",
+          "browser_tab": "Browser tab",
+          "certificate": "Certificate",
+          "explore_card": "Explore listing",
+          "link_preview": "Link preview",
+          "gallery": "Explore gallery",
+          "footer": "Public footer"
+        },
+        "theme": {
+          "color_title": "Primary color",
+          "color_desc": "Tints the public header and the page background behind it. Leave it empty for the plain white header.",
+          "no_color": "No color",
+          "clear": "Clear",
+          "font_title": "Font",
+          "font_desc": "Used on every public page. Pick from the curated list or search all Google Fonts.",
+          "search_fonts": "Search fonts…",
+          "no_fonts": "No fonts found",
+          "all_fonts": "Showing results from all Google Fonts",
+          "default": "default",
+          "preview": "Live preview",
+          "note": "Changes apply to your public pages after you save."
+        },
+        "auth": {
+          "message_title": "Welcome message",
+          "message_desc": "Shown under your name on the sign-in and sign-up pages. Leave it empty for the default.",
+          "background_title": "Background",
+          "background_desc": "What sits behind your logo on the sign-in panel: the default gradient, a photo you upload, or one from Unsplash.",
+          "text_title": "Text color",
+          "text_desc": "Light text for dark backgrounds, dark text for light ones.",
+          "preview_note": "The logo box uses your square logo, or fits the wide logo if you have not added one."
+        },
+        "social": {
+          "title": "Social profiles",
+          "description": "Linked from the footer of every public page.",
+          "links_title": "Custom links",
+          "links_desc": "Up to three extra links in the footer, such as your main website or a help center."
+        },
+        "previews": {
+          "thumbnail_title": "Thumbnail",
+          "thumbnail_desc": "The cover image for your organization when it is listed or shared: on the LearnHouse explore page and in link previews.",
+          "thumbnail_add": "Add thumbnail",
+          "thumbnail_replace": "Replace thumbnail",
+          "gallery_title": "Preview gallery",
+          "gallery_desc": "Up to four images or videos shown on your organization's explore listing. Drag to reorder."
         }
       },
       "auth_branding": {

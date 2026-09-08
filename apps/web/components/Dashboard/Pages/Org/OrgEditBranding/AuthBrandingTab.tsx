@@ -1,379 +1,241 @@
 'use client'
-import React, { useState, useEffect } from 'react'
-import { UploadCloud, Info, Image as ImageIcon, Palette, Sun, Moon } from 'lucide-react'
+import React, { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
+import { useTranslation } from 'react-i18next'
+import { toast } from 'react-hot-toast'
+import { useQueryClient } from '@tanstack/react-query'
+import { ChatCenteredText, Image as ImageIcon, Moon, PaintBrush, Sun, TextAa, UploadSimple } from '@phosphor-icons/react'
 import { useOrg } from '@components/Contexts/OrgContext'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
-import { getOrgLogoMediaDirectory, getOrgAuthBackgroundMediaDirectory } from '@services/media/media'
-import { toast } from 'react-hot-toast'
 import { constructAcceptValue } from '@/lib/constants'
-import { updateOrgAuthBrandingConfig, uploadOrgAuthBackground, AuthBrandingConfig } from '@services/settings/org'
 import { cn } from '@/lib/utils'
-import { Button } from "@components/ui/button"
-import { Label } from "@components/ui/label"
-import { Textarea } from "@components/ui/textarea"
-import { useTranslation } from 'react-i18next'
+import { AuthBrandingConfig, updateOrgAuthBrandingConfig, uploadOrgAuthBackground } from '@services/settings/org'
 import { revalidateTags } from '@services/utils/ts/requests'
-import { useQueryClient } from '@tanstack/react-query'
 import { queryKeys } from '@/lib/query/keys'
+import { Textarea } from '@components/ui/textarea'
 import UnsplashImagePicker, { UnsplashPhotoMeta } from '@components/Dashboard/Pages/Course/EditCourseGeneral/UnsplashImagePicker'
 import AIImageButton from '@components/Objects/AI/AIImageButton'
 import { usePlan } from '@components/Hooks/usePlan'
+import { getOrgSquareLogoUrl, getOrgWideLogoUrl } from '@components/Objects/Org/OrgSquareLogo'
+import { AuthBrandingState, BrandingSection, SaveBar, authBackgroundStyle, readAuthBranding } from './BrandingShared'
+import { LoginPanelVignette } from './BrandingVignettes'
 
-const SUPPORTED_FILES = constructAcceptValue(['png', 'jpg', 'webp'])
+const ACCEPT = constructAcceptValue(['png', 'jpg', 'webp'])
 
-type BackgroundType = 'gradient' | 'custom' | 'unsplash'
-type TextColor = 'light' | 'dark'
+type BackgroundType = AuthBrandingState['background_type']
 
 export default function AuthBrandingTab() {
   const { t } = useTranslation()
   const router = useRouter()
-  const session = useLHSession() as any
-  const access_token = session?.data?.tokens?.access_token
-  const org = useOrg() as any
   const queryClient = useQueryClient()
+  const org = useOrg() as any
+  const session = useLHSession() as any
+  const accessToken = session?.data?.tokens?.access_token
+  // Enterprise orgs do not show the LearnHouse mark on the sign-in panel.
+  const isEnterprise = usePlan() === 'enterprise'
 
-  const existingConfig = org?.config?.config?.customization?.auth_branding || org?.config?.config?.general?.auth_branding || {}
-
-  // Check if org has enterprise plan - hide LearnHouse branding for enterprise users
-  // In OSS mode, always show branding regardless of plan
-  const plan = usePlan()
-  const isEnterprise = plan === 'enterprise'
-
-  const [welcomeMessage, setWelcomeMessage] = useState<string>(existingConfig.welcome_message || '')
-  const [backgroundType, setBackgroundType] = useState<BackgroundType>(existingConfig.background_type || 'gradient')
-  const [backgroundImage, setBackgroundImage] = useState<string>(existingConfig.background_image || '')
-  const [textColor, setTextColor] = useState<TextColor>(existingConfig.text_color || 'light')
-  const [unsplashPhotographerName, setUnsplashPhotographerName] = useState<string>(existingConfig.unsplash_photographer_name || '')
-  const [unsplashPhotographerUrl, setUnsplashPhotographerUrl] = useState<string>(existingConfig.unsplash_photographer_url || '')
-  const [unsplashPhotoUrl, setUnsplashPhotoUrl] = useState<string>(existingConfig.unsplash_photo_url || '')
-  const [isSaving, setIsSaving] = useState(false)
-  const [isUploading, setIsUploading] = useState(false)
-  const [showUnsplashPicker, setShowUnsplashPicker] = useState(false)
-  const [localBackgroundPreview, setLocalBackgroundPreview] = useState<string | null>(null)
+  const [state, setState] = useState<AuthBrandingState>(() => readAuthBranding(org))
+  const [saving, setSaving] = useState(false)
+  const [uploading, setUploading] = useState(false)
+  const [showUnsplash, setShowUnsplash] = useState(false)
+  const [localBackground, setLocalBackground] = useState<string | null>(null)
 
   useEffect(() => {
-    const config = org?.config?.config?.customization?.auth_branding || org?.config?.config?.general?.auth_branding
-    if (config) {
-      setWelcomeMessage(config.welcome_message || '')
-      setBackgroundType(config.background_type || 'gradient')
-      setBackgroundImage(config.background_image || '')
-      setTextColor(config.text_color || 'light')
-      setUnsplashPhotographerName(config.unsplash_photographer_name || '')
-      setUnsplashPhotographerUrl(config.unsplash_photographer_url || '')
-      setUnsplashPhotoUrl(config.unsplash_photo_url || '')
-    }
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setState(readAuthBranding(org))
   }, [org])
 
+  const patch = (next: Partial<AuthBrandingState>) => setState((prev) => ({ ...prev, ...next }))
+
   const handleSave = async () => {
-    setIsSaving(true)
-    const loadingToast = toast.loading(t('dashboard.organization.auth_branding.saving'))
+    setSaving(true)
+    const toastId = toast.loading(t('dashboard.organization.auth_branding.saving'))
     try {
+      const isUnsplash = state.background_type === 'unsplash'
       const config: AuthBrandingConfig = {
-        welcome_message: welcomeMessage,
-        background_type: backgroundType,
-        background_image: backgroundImage,
-        text_color: textColor,
-        unsplash_photographer_name: backgroundType === 'unsplash' ? unsplashPhotographerName : '',
-        unsplash_photographer_url: backgroundType === 'unsplash' ? unsplashPhotographerUrl : '',
-        unsplash_photo_url: backgroundType === 'unsplash' ? unsplashPhotoUrl : '',
+        welcome_message: state.welcome_message,
+        background_type: state.background_type,
+        background_image: state.background_image,
+        text_color: state.text_color,
+        unsplash_photographer_name: isUnsplash ? state.unsplash_photographer_name : '',
+        unsplash_photographer_url: isUnsplash ? state.unsplash_photographer_url : '',
+        unsplash_photo_url: isUnsplash ? state.unsplash_photo_url : '',
       }
-      await updateOrgAuthBrandingConfig(org.id, config, access_token)
+      await updateOrgAuthBrandingConfig(org.id, config, accessToken)
       await revalidateTags(['organizations'], org.slug)
       queryClient.invalidateQueries({ queryKey: queryKeys.org.detail(org.slug) })
-      toast.success(t('dashboard.organization.auth_branding.save_success'), { id: loadingToast })
+      toast.success(t('dashboard.organization.auth_branding.save_success'), { id: toastId })
       router.refresh()
     } catch (_err) {
-      toast.error(t('dashboard.organization.auth_branding.save_error'), { id: loadingToast })
+      toast.error(t('dashboard.organization.auth_branding.save_error'), { id: toastId })
     } finally {
-      setIsSaving(false)
+      setSaving(false)
     }
   }
 
   const handleBackgroundUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
-    if (event.target.files && event.target.files.length > 0) {
-      const file = event.target.files[0]
-      setLocalBackgroundPreview(URL.createObjectURL(file))
-      setIsUploading(true)
-      const loadingToast = toast.loading(t('dashboard.organization.auth_branding.uploading'))
-      try {
-        const response = await uploadOrgAuthBackground(org.id, file, access_token)
-        setBackgroundImage(response.filename)
-        setBackgroundType('custom')
-        toast.success(t('dashboard.organization.auth_branding.upload_success'), { id: loadingToast })
-        queryClient.invalidateQueries({ queryKey: queryKeys.org.detail(org.slug) })
-      } catch (_err) {
-        toast.error(t('dashboard.organization.auth_branding.upload_error'), { id: loadingToast })
-        setLocalBackgroundPreview(null)
-      } finally {
-        setIsUploading(false)
-      }
+    const file = event.target.files?.[0]
+    event.target.value = ''
+    if (!file) return
+    setLocalBackground(URL.createObjectURL(file))
+    setUploading(true)
+    const toastId = toast.loading(t('dashboard.organization.auth_branding.uploading'))
+    try {
+      const response = await uploadOrgAuthBackground(org.id, file, accessToken)
+      patch({ background_type: 'custom', background_image: response.filename })
+      toast.success(t('dashboard.organization.auth_branding.upload_success'), { id: toastId })
+      queryClient.invalidateQueries({ queryKey: queryKeys.org.detail(org.slug) })
+    } catch (_err) {
+      toast.error(t('dashboard.organization.auth_branding.upload_error'), { id: toastId })
+      setLocalBackground(null)
+    } finally {
+      setUploading(false)
     }
   }
 
   const handleUnsplashSelect = (imageUrl: string, meta?: UnsplashPhotoMeta) => {
-    setBackgroundImage(imageUrl)
-    setBackgroundType('unsplash')
-    setUnsplashPhotographerName(meta?.photographer_name || '')
-    setUnsplashPhotographerUrl(meta?.photographer_url || '')
-    setUnsplashPhotoUrl(meta?.photo_url || '')
-    setLocalBackgroundPreview(null)
-    setShowUnsplashPicker(false)
+    patch({
+      background_type: 'unsplash',
+      background_image: imageUrl,
+      unsplash_photographer_name: meta?.photographer_name || '',
+      unsplash_photographer_url: meta?.photographer_url || '',
+      unsplash_photo_url: meta?.photo_url || '',
+    })
+    setLocalBackground(null)
+    setShowUnsplash(false)
   }
 
-  const getBackgroundStyle = () => {
-    if (backgroundType === 'gradient') {
-      // Original black gradient
-      return {
-        background: 'linear-gradient(041.61deg, #202020 7.15%, #000000 90.96%)',
-      }
-    }
-    if (backgroundType === 'custom' && backgroundImage) {
-      const url = localBackgroundPreview || getOrgAuthBackgroundMediaDirectory(org?.org_uuid, backgroundImage)
-      return {
-        backgroundImage: `url(${url})`,
-        backgroundSize: 'cover',
-        backgroundPosition: 'center',
-      }
-    }
-    if (backgroundType === 'unsplash' && backgroundImage) {
-      return {
-        backgroundImage: `url(${backgroundImage})`,
-        backgroundSize: 'cover',
-        backgroundPosition: 'center',
-      }
-    }
-    // Default to original black gradient
-    return {
-      background: 'linear-gradient(041.61deg, #202020 7.15%, #000000 90.96%)',
-    }
-  }
-
-  const backgroundOptions: { type: BackgroundType; label: string; icon: React.ElementType }[] = [
-    { type: 'gradient', label: t('dashboard.organization.auth_branding.bg_gradient'), icon: Palette },
-    { type: 'custom', label: t('dashboard.organization.auth_branding.bg_custom'), icon: UploadCloud },
-    { type: 'unsplash', label: t('dashboard.organization.auth_branding.bg_unsplash'), icon: ImageIcon },
+  const backgroundOptions: { type: BackgroundType; label: string; icon: React.ElementType; onClick: () => void }[] = [
+    {
+      type: 'gradient',
+      label: t('dashboard.organization.auth_branding.bg_gradient'),
+      icon: PaintBrush,
+      onClick: () => {
+        patch({ background_type: 'gradient', background_image: '' })
+        setLocalBackground(null)
+      },
+    },
+    {
+      type: 'custom',
+      label: t('dashboard.organization.auth_branding.bg_custom'),
+      icon: UploadSimple,
+      onClick: () => document.getElementById('authBackgroundInput')?.click(),
+    },
+    {
+      type: 'unsplash',
+      label: t('dashboard.organization.auth_branding.bg_unsplash'),
+      icon: ImageIcon,
+      onClick: () => setShowUnsplash(true),
+    },
   ]
 
+  const backgroundStyle = authBackgroundStyle(org, state, localBackground)
+  const scrim = state.background_type !== 'gradient' && Boolean(state.background_image)
+
   return (
-    <div className="flex flex-col lg:flex-row gap-6">
-      {/* Settings Panel */}
-      <div className="flex-1 space-y-6">
-        {/* Welcome Message */}
-        <div className="bg-gray-50/50 rounded-xl p-5">
-          <Label className="text-sm font-medium text-gray-700 mb-3 block">
-            {t('dashboard.organization.auth_branding.welcome_message')}
-          </Label>
+    <div className="grid lg:grid-cols-[minmax(0,5fr)_minmax(0,6fr)]">
+      <div>
+        <BrandingSection
+          icon={ChatCenteredText}
+          title={t('dashboard.organization.branding.auth.message_title')}
+          description={t('dashboard.organization.branding.auth.message_desc')}
+        >
           <Textarea
-            value={welcomeMessage}
-            onChange={(e) => setWelcomeMessage(e.target.value)}
+            value={state.welcome_message}
+            onChange={(e) => patch({ welcome_message: e.target.value })}
             placeholder={t('dashboard.organization.auth_branding.welcome_placeholder')}
-            className="w-full min-h-[80px] bg-white"
+            className="min-h-[80px] w-full max-w-md bg-white"
             maxLength={200}
           />
-          <p className="text-xs text-gray-400 mt-2">
-            {t('dashboard.organization.auth_branding.welcome_desc')}
-          </p>
-        </div>
+        </BrandingSection>
 
-        {/* Background Type */}
-        <div className="bg-gray-50/50 rounded-xl p-5">
-          <Label className="text-sm font-medium text-gray-700 mb-3 block">
-            {t('dashboard.organization.auth_branding.background_type')}
-          </Label>
-          <div className="grid grid-cols-3 gap-3">
-            {backgroundOptions.map((option) => (
-              <button
-                key={option.type}
-                onClick={() => {
-                  if (option.type === 'unsplash') {
-                    setShowUnsplashPicker(true)
-                  } else if (option.type === 'custom') {
-                    document.getElementById('backgroundInput')?.click()
-                  } else {
-                    setBackgroundType(option.type)
-                    setBackgroundImage('')
-                    setLocalBackgroundPreview(null)
-                  }
-                }}
-                className={cn(
-                  "flex flex-col items-center justify-center p-4 rounded-xl border-2 transition-all",
-                  backgroundType === option.type
-                    ? "border-blue-500 bg-blue-50"
-                    : "border-gray-200 hover:border-gray-300 bg-white"
-                )}
-              >
-                <option.icon size={24} className={cn(
-                  backgroundType === option.type ? "text-blue-500" : "text-gray-400"
-                )} />
-                <span className={cn(
-                  "text-sm mt-2 font-medium",
-                  backgroundType === option.type ? "text-blue-600" : "text-gray-600"
-                )}>
-                  {option.label}
-                </span>
-              </button>
-            ))}
+        <BrandingSection
+          icon={PaintBrush}
+          title={t('dashboard.organization.branding.auth.background_title')}
+          description={t('dashboard.organization.branding.auth.background_desc')}
+        >
+          <div className="grid max-w-md grid-cols-3 gap-2">
+            {backgroundOptions.map((option) => {
+              const active = state.background_type === option.type
+              return (
+                <button
+                  key={option.type}
+                  type="button"
+                  onClick={option.onClick}
+                  disabled={uploading}
+                  className={cn(
+                    'flex flex-col items-center justify-center gap-1.5 rounded-xl border px-2 py-3 text-sm transition-colors',
+                    active ? 'border-black bg-black text-white' : 'border-gray-200 bg-white text-gray-600 hover:bg-gray-50'
+                  )}
+                >
+                  <option.icon size={18} weight={active ? 'fill' : 'regular'} />
+                  <span className="text-xs font-medium">{option.label}</span>
+                </button>
+              )
+            })}
           </div>
-          <input
-            type="file"
-            id="backgroundInput"
-            accept={SUPPORTED_FILES}
-            className="hidden"
-            onChange={handleBackgroundUpload}
-          />
-          <div className="mt-3">
+          <input type="file" id="authBackgroundInput" accept={ACCEPT} className="hidden" onChange={handleBackgroundUpload} />
+          <div className="mt-2 max-w-md">
             <AIImageButton
-              onSelect={handleUnsplashSelect}
-              className="w-full flex items-center justify-center gap-2 p-3 rounded-xl border-2 border-gray-200 hover:border-gray-300 bg-white text-sm font-medium text-gray-600 transition-all"
+              onSelect={(url) => handleUnsplashSelect(url)}
+              className="flex w-full items-center justify-center gap-2 rounded-xl border border-gray-200 bg-white px-3 py-2.5 text-xs font-medium text-gray-600 transition-colors hover:bg-gray-50"
             />
           </div>
-        </div>
+        </BrandingSection>
 
-        {/* Text Color */}
-        <div className="bg-gray-50/50 rounded-xl p-5">
-          <Label className="text-sm font-medium text-gray-700 mb-3 block">
-            {t('dashboard.organization.auth_branding.text_color')}
-          </Label>
-          <div className="flex gap-3">
-            <button
-              onClick={() => setTextColor('light')}
-              className={cn(
-                "flex-1 flex items-center justify-center gap-2 p-3 rounded-xl border-2 transition-all",
-                textColor === 'light'
-                  ? "border-blue-500 bg-blue-50"
-                  : "border-gray-200 hover:border-gray-300 bg-white"
-              )}
-            >
-              <Sun size={18} className={textColor === 'light' ? "text-blue-500" : "text-gray-400"} />
-              <span className={cn(
-                "text-sm font-medium",
-                textColor === 'light' ? "text-blue-600" : "text-gray-600"
-              )}>
-                {t('dashboard.organization.auth_branding.text_light')}
-              </span>
-            </button>
-            <button
-              onClick={() => setTextColor('dark')}
-              className={cn(
-                "flex-1 flex items-center justify-center gap-2 p-3 rounded-xl border-2 transition-all",
-                textColor === 'dark'
-                  ? "border-blue-500 bg-blue-50"
-                  : "border-gray-200 hover:border-gray-300 bg-white"
-              )}
-            >
-              <Moon size={18} className={textColor === 'dark' ? "text-blue-500" : "text-gray-400"} />
-              <span className={cn(
-                "text-sm font-medium",
-                textColor === 'dark' ? "text-blue-600" : "text-gray-600"
-              )}>
-                {t('dashboard.organization.auth_branding.text_dark')}
-              </span>
-            </button>
-          </div>
-          <p className="text-xs text-gray-400 mt-2">
-            {t('dashboard.organization.auth_branding.text_color_desc')}
-          </p>
-        </div>
-
-        {/* Save Button */}
-        <div className="flex justify-end">
-          <Button
-            onClick={handleSave}
-            disabled={isSaving || isUploading}
-            className="bg-black text-white hover:bg-black/90"
-          >
-            {isSaving ? t('dashboard.organization.settings.saving') : t('dashboard.organization.settings.save_changes')}
-          </Button>
-        </div>
-      </div>
-
-      {/* Preview Panel */}
-      <div className="flex-1">
-        <Label className="text-sm font-medium text-gray-700 mb-3 block">
-          {t('dashboard.organization.auth_branding.preview')}
-        </Label>
-        <div className="rounded-xl overflow-hidden border border-gray-200 aspect-[4/3]">
-          <div className="h-full flex">
-            {/* Form Side Preview (left) */}
-            <div className="w-1/2 bg-white flex items-center justify-center p-4">
-              <div className="w-full max-w-[100px] space-y-2">
-                <div className="h-2 w-12 bg-gray-200 rounded" />
-                <div className="h-6 bg-gray-100 rounded border border-gray-200" />
-                <div className="h-2 w-10 bg-gray-200 rounded" />
-                <div className="h-6 bg-gray-100 rounded border border-gray-200" />
-                <div className="h-5 bg-gray-800 rounded mt-3" />
-              </div>
-            </div>
-
-            {/* Branding Side Preview (right) */}
-            <div
-              className="w-1/2 relative flex flex-col p-3"
-              style={getBackgroundStyle()}
-            >
-              {/* Overlay for custom backgrounds only */}
-              {backgroundType !== 'gradient' && backgroundImage && (
-                <div className="absolute inset-0 bg-black/30" />
-              )}
-
-              {/* Top lrn logo - hidden for enterprise users */}
-              {!isEnterprise && (
-                <div className="relative z-10">
-                  <div
-                    className={cn(
-                      "w-4 h-4 bg-contain bg-no-repeat",
-                      textColor === 'light' ? "opacity-60 invert" : "opacity-40"
-                    )}
-                    style={{ backgroundImage: "url(/lrn.svg)" }}
-                  />
-                </div>
-              )}
-
-              {/* Centered content */}
-              <div className="relative z-10 flex-1 flex items-center justify-center">
-                <div className={cn(
-                  "text-center flex flex-col items-center space-y-2",
-                  textColor === 'light' ? "text-white" : "text-gray-900"
-                )}>
-                  {/* Organization logo */}
-                  <div
-                    className="w-10 h-10 bg-contain bg-no-repeat bg-center rounded-lg"
-                    style={{
-                      backgroundImage: org?.logo_image
-                        ? `url(${getOrgLogoMediaDirectory(org?.org_uuid, org?.logo_image)})`
-                        : undefined,
-                      backgroundColor: org?.logo_image ? 'white' : 'rgba(255,255,255,0.2)'
-                    }}
-                  />
-                  {/* Organization name */}
-                  <p className="text-xs font-bold">{org?.name}</p>
-                  {/* Welcome message */}
-                  {welcomeMessage && (
-                    <p className={cn(
-                      "text-[9px] max-w-[100px] leading-relaxed",
-                      textColor === 'light' ? "text-white/70" : "text-gray-600"
-                    )}>
-                      {welcomeMessage}
-                    </p>
+        <BrandingSection
+          icon={TextAa}
+          title={t('dashboard.organization.branding.auth.text_title')}
+          description={t('dashboard.organization.branding.auth.text_desc')}
+        >
+          <div className="flex max-w-md gap-2">
+            {(['light', 'dark'] as const).map((value) => {
+              const active = state.text_color === value
+              const Icon = value === 'light' ? Sun : Moon
+              return (
+                <button
+                  key={value}
+                  type="button"
+                  onClick={() => patch({ text_color: value })}
+                  className={cn(
+                    'flex flex-1 items-center justify-center gap-2 rounded-xl border px-3 py-2.5 text-sm font-medium transition-colors',
+                    active ? 'border-black bg-black text-white' : 'border-gray-200 bg-white text-gray-600 hover:bg-gray-50'
                   )}
-                </div>
-              </div>
-            </div>
+                >
+                  <Icon size={16} weight={active ? 'fill' : 'regular'} />
+                  {t(`dashboard.organization.auth_branding.text_${value}`)}
+                </button>
+              )
+            })}
           </div>
-        </div>
-        <div className="flex items-center space-x-2 bg-blue-50 text-blue-700 px-3 py-2 rounded-lg mt-3">
-          <Info size={14} />
-          <p className="text-xs">{t('dashboard.organization.auth_branding.preview_hint')}</p>
-        </div>
+        </BrandingSection>
       </div>
 
-      {/* Unsplash Picker Modal */}
-      {showUnsplashPicker && (
-        <UnsplashImagePicker
-          onSelect={handleUnsplashSelect}
-          onClose={() => setShowUnsplashPicker(false)}
-          isOpen={showUnsplashPicker}
+      <div className="px-5 py-7 lg:border-s lg:border-gray-100">
+        <p className="mb-3 text-[11px] font-semibold uppercase tracking-wide text-gray-400">
+          {t('dashboard.organization.auth_branding.preview')}
+        </p>
+        <LoginPanelVignette
+          large
+          squareUrl={getOrgSquareLogoUrl(org)}
+          wideUrl={getOrgWideLogoUrl(org)}
+          name={org?.name}
+          welcome={state.welcome_message || t('dashboard.organization.auth_branding.default_welcome')}
+          backgroundStyle={backgroundStyle}
+          textColor={state.text_color}
+          scrim={scrim}
+          showLearnHouseMark={!isEnterprise}
+          label={t('dashboard.organization.branding.vignettes.sign_in')}
         />
+        <p className="mt-3 text-xs text-gray-400">{t('dashboard.organization.branding.auth.preview_note')}</p>
+      </div>
+
+      <div className="lg:col-span-2">
+        <SaveBar onSave={handleSave} saving={saving} disabled={uploading} />
+      </div>
+
+      {showUnsplash && (
+        <UnsplashImagePicker onSelect={handleUnsplashSelect} onClose={() => setShowUnsplash(false)} isOpen={showUnsplash} />
       )}
     </div>
   )

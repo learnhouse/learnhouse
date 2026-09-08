@@ -8,7 +8,7 @@ import useAdminStatus from '@components/Hooks/useAdminStatus'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
 import { useOrg } from '@components/Contexts/OrgContext'
 import { getUriWithOrg, getMainDomainUri, isMultiOrgModeEnabled } from '@services/config/config'
-import { getOrgLogoMediaDirectory } from '@services/media/media'
+import OrgSquareLogo from '@components/Objects/Org/OrgSquareLogo'
 import Tooltip from '@components/Objects/StyledElements/Tooltip/Tooltip'
 import {
   DropdownMenu,
@@ -279,11 +279,14 @@ export const HeaderProfileBox = ({ primaryColor = '' }: { primaryColor?: string 
                           {myOrgs.map((o: any) => (
                             <DropdownMenuItem key={o.id} asChild>
                               <Link href={getUriWithOrg(o.slug, '/')} className="flex items-center space-x-2">
-                                {o.logo_image ? (
-                                  <img src={getOrgLogoMediaDirectory(o.org_uuid, o.logo_image)} alt="" className="w-5 h-5 rounded object-cover shrink-0 ring-1 ring-inset ring-black/5" />
-                                ) : (
-                                  <span className="w-5 h-5 rounded bg-gray-100 text-gray-600 text-[10px] font-bold flex items-center justify-center shrink-0">{(o.name || '?').charAt(0).toUpperCase()}</span>
-                                )}
+                                <span className="w-5 h-5 rounded bg-white overflow-hidden flex items-center justify-center shrink-0 ring-1 ring-inset ring-black/5">
+                                  <OrgSquareLogo
+                                    org={o}
+                                    alt=""
+                                    wideInsetClassName="p-px"
+                                    fallback={<span className="w-full h-full bg-gray-100 text-gray-600 text-[10px] font-bold flex items-center justify-center">{(o.name || '?').charAt(0).toUpperCase()}</span>}
+                                  />
+                                </span>
                                 <span className="truncate flex-1">{o.name}</span>
                                 {o.id === org?.id && <Check size={14} weight="bold" className="text-green-600 shrink-0" />}
                               </Link>

@@ -81,6 +81,7 @@ def _v2_migrate_config(config: dict) -> dict:
             "color": v1_general.get("color", "") if v1_general.get("color", "").startswith("#") else "",
             "footer_text": v1_general.get("footer_text", ""),
             "favicon_image": v1_general.get("favicon_image", ""),
+            "square_logo_image": v1_general.get("square_logo_image", ""),
             "watermark": v1_general.get("watermark", True),
         },
         "auth_branding": v1_general.get("auth_branding", {
