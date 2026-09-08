@@ -40,6 +40,7 @@ def test_v2_migrate_config_transforms_v1_payload():
         "color": "",
         "footer_text": "Footer",
         "favicon_image": "favicon.png",
+        "square_logo_image": "",
         "watermark": False,
     }
     assert migrated["customization"]["seo"] == {"default_meta_description": "desc"}

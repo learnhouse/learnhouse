@@ -1916,7 +1916,6 @@
           "subtitle": "Загрузите обложку для вашего сообщества",
           "no_thumbnail": "Миниатюра не установлена",
           "upload_image": "Загрузить изображение",
-          "browse_unsplash": "Искать на Unsplash",
           "uploading": "Загрузка...",
           "supported_formats": "Поддерживаемые форматы: JPG, JPEG, PNG. Макс. размер: 8МБ. Рекомендуемое соотношение: 16:9",
           "toasts": {
@@ -2758,7 +2757,6 @@
         "background_type": "Тип фона",
         "bg_gradient": "Градиент",
         "bg_custom": "Пользовательский",
-        "bg_unsplash": "Unsplash",
         "text_color": "Цвет текста",
         "text_light": "Светлый",
         "text_dark": "Темный",

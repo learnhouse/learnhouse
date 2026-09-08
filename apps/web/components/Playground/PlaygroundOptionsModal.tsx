@@ -30,7 +30,6 @@ import {
 } from '@services/playgrounds/playgrounds'
 import { getPlaygroundThumbnailMediaDirectory } from '@services/media/media'
 import Modal from '@components/Objects/StyledElements/Modal/Modal'
-import UnsplashImagePicker from '@components/Dashboard/Pages/Course/EditCourseGeneral/UnsplashImagePicker'
 import AIImageButton from '@components/Objects/AI/AIImageButton'
 import toast from 'react-hot-toast'
 import Link from 'next/link'
@@ -431,7 +430,6 @@ function ThumbnailTab({
   const fileInputRef = useRef<HTMLInputElement>(null)
   const [localPreview, setLocalPreview] = useState<string | null>(null)
   const [isUploading, setIsUploading] = useState(false)
-  const [showUnsplash, setShowUnsplash] = useState(false)
 
   useEffect(() => {
     return () => {
@@ -482,7 +480,7 @@ function ThumbnailTab({
     await doUpload(file)
   }
 
-  const handleUnsplashSelect = async (imageUrl: string) => {
+  const handleRemoteImageSelect = async (imageUrl: string) => {
     try {
       const url = new URL(imageUrl)
       if (!['https:', 'http:'].includes(url.protocol)) {
@@ -497,11 +495,11 @@ function ThumbnailTab({
         setIsUploading(false)
         return
       }
-      const file = new File([blob], `unsplash_${Date.now()}.jpg`, { type: blob.type })
+      const file = new File([blob], `ai_image_${Date.now()}.jpg`, { type: blob.type })
       setLocalPreview(URL.createObjectURL(file))
       await doUpload(file)
     } catch {
-      toast.error('Failed to process Unsplash image')
+      toast.error('Failed to load the generated image')
       setIsUploading(false)
     }
   }
@@ -510,7 +508,7 @@ function ThumbnailTab({
     <div className="space-y-6">
       <div>
         <h2 className="text-base font-bold text-gray-900 mb-0.5">Thumbnail</h2>
-        <p className="text-xs text-gray-400">Upload an image or pick one from Unsplash.</p>
+        <p className="text-xs text-gray-400">Upload an image or generate one.</p>
       </div>
 
       {/* Preview */}
@@ -552,27 +550,13 @@ function ThumbnailTab({
             <UploadSimple size={14} weight="bold" />
             Upload image
           </button>
-          <button
-            onClick={() => setShowUnsplash(true)}
-            className="flex items-center gap-1.5 h-9 px-4 rounded-lg border border-gray-200 bg-white hover:bg-gray-50 text-sm font-medium text-gray-700 transition-all nice-shadow"
-          >
-            <Image size={14} weight="bold" />
-            Unsplash
-          </button>
           <AIImageButton
-            onSelect={handleUnsplashSelect}
+            onSelect={handleRemoteImageSelect}
             className="flex items-center gap-1.5 h-9 px-4 rounded-lg border border-gray-200 bg-white hover:bg-gray-50 text-sm font-medium text-gray-700 transition-all nice-shadow"
           />
         </div>
       )}
       <p className="text-xs text-gray-400">PNG or JPG · Max 8MB</p>
-
-      {showUnsplash && (
-        <UnsplashImagePicker
-          onSelect={handleUnsplashSelect}
-          onClose={() => setShowUnsplash(false)}
-        />
-      )}
     </div>
   )
 }

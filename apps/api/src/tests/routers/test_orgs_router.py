@@ -458,6 +458,7 @@ class TestUploadAndListingEndpoints:
         [
             ("/api/v1/orgs/1/logo", "update_org_logo", "logo_file", "logo.png"),
             ("/api/v1/orgs/1/favicon", "update_org_favicon", "favicon_file", "favicon.png"),
+            ("/api/v1/orgs/1/square_logo", "update_org_square_logo", "square_logo_file", "square.png"),
             ("/api/v1/orgs/1/thumbnail", "update_org_thumbnail", "thumbnail_file", "thumb.png"),
             ("/api/v1/orgs/1/preview", "update_org_preview", "preview_file", "preview.png"),
             ("/api/v1/orgs/1/auth_background", "upload_org_auth_background_service", "background_file", "background.png"),

@@ -1904,7 +1904,6 @@
           "subtitle": "커뮤니티 커버 이미지 업로드",
           "no_thumbnail": "썸네일이 설정되지 않음",
           "upload_image": "이미지 업로드",
-          "browse_unsplash": "Unsplash 둘러보기",
           "uploading": "업로드 중...",
           "supported_formats": "지원 형식: JPG, JPEG, PNG. 최대 크기: 8MB. 권장 비율: 16:9",
           "toasts": {
@@ -2430,7 +2429,6 @@
         "background_type": "배경 유형",
         "bg_gradient": "그라데이션",
         "bg_custom": "사용자 지정",
-        "bg_unsplash": "Unsplash",
         "text_color": "텍스트 색상",
         "text_light": "밝은색",
         "text_dark": "어두운색",

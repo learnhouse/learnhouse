@@ -288,6 +288,11 @@ export function getOrgAuthBackgroundMediaDirectory(orgUUID: string, fileId: stri
   return uri
 }
 
+export function getOrgSquareLogoMediaDirectory(orgUUID: string, fileId: string) {
+  let uri = `${getMediaUrl()}content/orgs/${orgUUID}/square_logos/${fileId}`
+  return uri
+}
+
 export function getOrgFaviconMediaDirectory(orgUUID: string, fileId: string) {
   let uri = `${getMediaUrl()}content/orgs/${orgUUID}/favicons/${fileId}`
   return uri

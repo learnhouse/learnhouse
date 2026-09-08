@@ -1,12 +1,11 @@
 'use client'
 
 import React, { useState, useRef, useEffect } from 'react'
-import { UploadCloud, Image as ImageIcon, ArrowBigUpDash } from 'lucide-react'
+import { UploadCloud, ArrowBigUpDash } from 'lucide-react'
 import { useOrg } from '@components/Contexts/OrgContext'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
 import { updateBoardThumbnail } from '@services/boards/boards'
 import { getBoardThumbnailMediaDirectory } from '@services/media/media'
-import UnsplashImagePicker from '@components/Dashboard/Pages/Course/EditCourseGeneral/UnsplashImagePicker'
 import AIImageButton from '@components/Objects/AI/AIImageButton'
 import toast from 'react-hot-toast'
 import { useQueryClient } from '@tanstack/react-query'
@@ -33,7 +32,6 @@ function BoardThumbnailTab({ board, boardUuid, orgUuid, boardKey: _boardKey }: B
   const imageInputRef = useRef<HTMLInputElement>(null)
   const [localThumbnail, setLocalThumbnail] = useState<{ url: string } | null>(null)
   const [isUploading, setIsUploading] = useState(false)
-  const [showUnsplashPicker, setShowUnsplashPicker] = useState(false)
 
   useEffect(() => {
     return () => {
@@ -89,7 +87,7 @@ function BoardThumbnailTab({ board, boardUuid, orgUuid, boardKey: _boardKey }: B
     await uploadFile(file)
   }
 
-  const handleUnsplashSelect = async (imageUrl: string) => {
+  const handleRemoteImageSelect = async (imageUrl: string) => {
     try {
       const url = new URL(imageUrl)
       if (!['https:', 'http:'].includes(url.protocol)) {
@@ -104,13 +102,13 @@ function BoardThumbnailTab({ board, boardUuid, orgUuid, boardKey: _boardKey }: B
         setIsUploading(false)
         return
       }
-      const file = new File([blob], `unsplash_${Date.now()}.jpg`, { type: blob.type })
+      const file = new File([blob], `ai_image_${Date.now()}.jpg`, { type: blob.type })
 
       const blobUrl = URL.createObjectURL(file)
       setLocalThumbnail({ url: blobUrl })
       await uploadFile(file)
     } catch {
-      toast.error('Failed to process Unsplash image')
+      toast.error('Failed to load the generated image')
       setIsUploading(false)
     }
   }
@@ -156,16 +154,8 @@ function BoardThumbnailTab({ board, boardUuid, orgUuid, boardKey: _boardKey }: B
                 <UploadCloud size={16} />
                 {t('boards.thumbnail.upload_image')}
               </button>
-              <button
-                type="button"
-                className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-                onClick={() => setShowUnsplashPicker(true)}
-              >
-                <ImageIcon size={16} />
-                {t('boards.thumbnail.gallery')}
-              </button>
               <AIImageButton
-                onSelect={handleUnsplashSelect}
+                onSelect={handleRemoteImageSelect}
                 onSelectFile={handleAIImageFile}
                 className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
               />
@@ -175,13 +165,6 @@ function BoardThumbnailTab({ board, boardUuid, orgUuid, boardKey: _boardKey }: B
           <p className="text-sm text-gray-500">{t('boards.thumbnail.supported_formats')}</p>
         </div>
       </div>
-
-      {showUnsplashPicker && (
-        <UnsplashImagePicker
-          onSelect={handleUnsplashSelect}
-          onClose={() => setShowUnsplashPicker(false)}
-        />
-      )}
     </div>
   )
 }

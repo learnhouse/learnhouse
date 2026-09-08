@@ -1894,7 +1894,6 @@
           "subtitle": "Upload een omslagafbeelding voor je community",
           "no_thumbnail": "Geen miniatuur ingesteld",
           "upload_image": "Afbeelding uploaden",
-          "browse_unsplash": "Bladeren op Unsplash",
           "uploading": "Uploaden...",
           "supported_formats": "Ondersteunde formaten: JPG, JPEG, PNG. Max. grootte: 8MB. Aanbevolen verhouding: 16:9",
           "toasts": {
@@ -2517,7 +2516,6 @@
         "background_type": "Achtergrondtype",
         "bg_gradient": "Gradiënt",
         "bg_custom": "Aangepast",
-        "bg_unsplash": "Unsplash",
         "text_color": "Tekstkleur",
         "text_light": "Licht",
         "text_dark": "Donker",

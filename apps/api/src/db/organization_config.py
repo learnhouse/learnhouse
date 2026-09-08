@@ -200,6 +200,8 @@ class Overrides(BaseModel):
 
 class AuthBrandingConfig(BaseModel):
     welcome_message: str = ""
+    # "unsplash" is no longer offered by the dashboard; it stays accepted so
+    # organizations that picked one before keep their background.
     background_type: Literal["gradient", "custom", "unsplash"] = "gradient"
     background_image: str = ""
     text_color: Literal["light", "dark"] = "light"
@@ -216,6 +218,10 @@ class GeneralCustomization(BaseModel):
     color: str = ""
     footer_text: str = ""
     favicon_image: str = ""
+    # Square variant of the logo for the places that render the brand in a
+    # fixed square box (sign-in panel, org switcher, dashboard sidebar).
+    # Empty means "fall back to logo_image".
+    square_logo_image: str = ""
     watermark: bool = True
     font: str = ""
     default_language: str = "en"
@@ -313,6 +319,7 @@ class OrgGeneralConfig(BaseModel):
     footer_text: str = ""
     watermark: bool = True
     favicon_image: str = ""
+    square_logo_image: str = ""
     auth_branding: AuthBrandingConfig = AuthBrandingConfig()
 
 

@@ -230,7 +230,6 @@ function buildConfig(opts: {
     emailEnabled: false,
     s3Enabled: false,
     googleOAuthEnabled: false,
-    unsplashEnabled: false,
   }
 }
 

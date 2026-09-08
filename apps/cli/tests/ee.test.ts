@@ -48,7 +48,6 @@ function baseEe(overrides: Partial<SetupConfig> = {}): SetupConfig {
     emailEnabled: false,
     s3Enabled: false,
     googleOAuthEnabled: false,
-    unsplashEnabled: false,
     ...overrides,
   }
 }

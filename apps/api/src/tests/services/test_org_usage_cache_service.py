@@ -404,6 +404,16 @@ class TestOrgUploadWrappers:
                     "filename_prefix": "favicon",
                 },
             ),
+            (
+                org_uploads.upload_org_square_logo,
+                "square.png",
+                {
+                    "directory": "square_logos",
+                    "type_of_dir": "orgs",
+                    "allowed_types": ["image"],
+                    "filename_prefix": "square_logo",
+                },
+            ),
         ],
     )
     async def test_upload_wrappers_delegate_to_upload_file(

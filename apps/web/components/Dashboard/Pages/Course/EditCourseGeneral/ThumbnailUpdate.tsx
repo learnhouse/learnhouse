@@ -7,7 +7,6 @@ import { useLHSession } from '@components/Contexts/LHSessionContext'
 import React, { useState, useEffect, useRef } from 'react'
 import { useQueryClient } from '@tanstack/react-query'
 import { queryKeys } from '@lib/query/keys'
-import UnsplashImagePicker from './UnsplashImagePicker'
 import AIImageButton from '@components/Objects/AI/AIImageButton'
 import toast from 'react-hot-toast'
 import { useTranslation } from 'react-i18next'
@@ -37,7 +36,6 @@ function ThumbnailUpdate({ thumbnailType }: ThumbnailUpdateProps) {
   const queryClient = useQueryClient()
   const [localThumbnail, setLocalThumbnail] = useState<{ file: File; url: string; type: 'image' | 'video' } | null>(null)
   const [isLoading, setIsLoading] = useState(false)
-  const [showUnsplashPicker, setShowUnsplashPicker] = useState(false)
   const [activeTab, setActiveTab] = useState<TabType>('image')
   const _withUnpublishedActivities = course ? course.withUnpublishedActivities : false
 
@@ -110,18 +108,18 @@ function ThumbnailUpdate({ thumbnailType }: ThumbnailUpdateProps) {
     await updateThumbnail(file, type);
   }
 
-  const handleUnsplashSelect = async (imageUrl: string) => {
+  const handleRemoteImageSelect = async (imageUrl: string) => {
     try {
       setIsLoading(true);
       const response = await fetch(imageUrl);
       const blob = await response.blob();
-      
+
       if (!VALID_IMAGE_MIME_TYPES.includes(blob.type as ValidImageMimeType)) {
-        throw new Error('Invalid image format from Unsplash');
+        throw new Error('Invalid generated image format');
       }
 
-      const file = new File([blob], `unsplash_${Date.now()}.jpg`, { type: blob.type });
-      
+      const file = new File([blob], `ai_image_${Date.now()}.jpg`, { type: blob.type });
+
       if (!validateFile(file, 'image')) {
         return;
       }
@@ -130,7 +128,7 @@ function ThumbnailUpdate({ thumbnailType }: ThumbnailUpdateProps) {
       setLocalThumbnail({ file, url: blobUrl, type: 'image' });
       await updateThumbnail(file, 'image');
     } catch (_err) {
-      showError('Failed to process Unsplash image');
+      showError('Failed to load the generated image');
       setIsLoading(false);
     }
   }
@@ -278,16 +276,8 @@ function ThumbnailUpdate({ thumbnailType }: ThumbnailUpdateProps) {
             <UploadCloud size={16} />
             {t('dashboard.courses.general.thumbnail.upload_image')}
           </button>
-          <button
-            type="button"
-            className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-            onClick={() => setShowUnsplashPicker(true)}
-          >
-            <ImageIcon size={16} />
-            {t('dashboard.courses.general.thumbnail.gallery')}
-          </button>
           <AIImageButton
-            onSelect={handleUnsplashSelect}
+            onSelect={handleRemoteImageSelect}
             onSelectFile={handleAIImageFile}
             className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
           />
@@ -357,13 +347,6 @@ function ThumbnailUpdate({ thumbnailType }: ThumbnailUpdateProps) {
           </p>
         </div>
       </div>
-      
-      {showUnsplashPicker && (
-        <UnsplashImagePicker
-          onSelect={handleUnsplashSelect}
-          onClose={() => setShowUnsplashPicker(false)}
-        />
-      )}
     </div>
   )
 }

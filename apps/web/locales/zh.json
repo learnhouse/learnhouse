@@ -1904,7 +1904,6 @@
           "subtitle": "上传社区封面图片",
           "no_thumbnail": "未设置缩略图",
           "upload_image": "上传图片",
-          "browse_unsplash": "浏览Unsplash",
           "uploading": "上传中...",
           "supported_formats": "支持格式: JPG, JPEG, PNG。最大: 8MB。推荐比例: 16:9",
           "toasts": {
@@ -2430,7 +2429,6 @@
         "background_type": "背景类型",
         "bg_gradient": "渐变",
         "bg_custom": "自定义",
-        "bg_unsplash": "Unsplash",
         "text_color": "文字颜色",
         "text_light": "浅色",
         "text_dark": "深色",

@@ -68,6 +68,7 @@ from src.services.orgs.orgs import (
     update_org_seo_config,
     upload_org_og_image_service,
     update_org_favicon,
+    update_org_square_logo,
 )
 from src.db.organization_config import AuthBrandingConfig, SeoOrgConfig
 
@@ -1360,6 +1361,36 @@ async def api_update_org_favicon(
     return await update_org_favicon(
         request=request,
         favicon_file=favicon_file,
+        org_id=org_id,
+        current_user=current_user,
+        db_session=db_session,
+    )
+
+
+@router.put(
+    "/{org_id}/square_logo",
+    summary="Update organization square logo",
+    description="Upload the square variant of the organization logo, used wherever the brand is shown in a square box (sign-in panel, organization switcher, dashboard sidebar).",
+    responses={
+        200: {"description": "Square logo updated."},
+        401: {"description": "Not authenticated"},
+        403: {"description": "Caller is not an organization administrator"},
+        404: {"description": "Organization not found"},
+    },
+)
+async def api_update_org_square_logo(
+    request: Request,
+    org_id: int,
+    square_logo_file: UploadFile,
+    current_user: PublicUser = Depends(get_current_user),
+    db_session: AsyncSession = Depends(get_db_session),
+):
+    """
+    Update org square logo
+    """
+    return await update_org_square_logo(
+        request=request,
+        square_logo_file=square_logo_file,
         org_id=org_id,
         current_user=current_user,
         db_session=db_session,

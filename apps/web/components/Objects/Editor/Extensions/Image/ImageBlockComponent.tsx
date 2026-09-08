@@ -12,7 +12,6 @@ import { useLHSession } from '@components/Contexts/LHSessionContext'
 import { constructAcceptValue } from '@/lib/constants';
 import Modal from '@components/Objects/StyledElements/Modal/Modal'
 import { useTranslation } from 'react-i18next'
-import UnsplashImagePicker, { UnsplashPhotoMeta } from '@components/Dashboard/Pages/Course/EditCourseGeneral/UnsplashImagePicker'
 import AIImageButton from '@components/Objects/AI/AIImageButton'
 
 const SUPPORTED_FILES = constructAcceptValue(['jpg', 'png', 'webp', 'gif'])
@@ -42,7 +41,6 @@ function ImageBlockComponent(props: any) {
   })
   const [alignment, setAlignment] = React.useState(props.node.attrs.alignment || 'center')
   const [isModalOpen, setIsModalOpen] = React.useState(false)
-  const [isUnsplashOpen, setIsUnsplashOpen] = React.useState(false)
 
   const unsplashUrl: string | null = props.node.attrs.unsplash_url || null
   const unsplashPhotographerName: string | null = props.node.attrs.unsplash_photographer_name || null
@@ -160,16 +158,17 @@ function ImageBlockComponent(props: any) {
 
   const imageUrl = unsplashUrl || uploadedImageUrl;
 
-  const handleUnsplashSelect = (url: string, meta?: UnsplashPhotoMeta) => {
+  // Remote (generated) images are stored under the same `unsplash_url` attr
+  // the renderer already reads; no photographer credit applies to them.
+  const handleRemoteImageSelect = (url: string) => {
     props.updateAttributes({
       unsplash_url: url,
-      unsplash_photographer_name: meta?.photographer_name || '',
-      unsplash_photographer_url: meta?.photographer_url || '',
-      unsplash_photo_url: meta?.photo_url || '',
+      unsplash_photographer_name: '',
+      unsplash_photographer_url: '',
+      unsplash_photo_url: '',
       size: imageSize,
       alignment: alignment,
     })
-    setIsUnsplashOpen(false)
   }
 
   const unsplashCredit = unsplashUrl && unsplashPhotographerName ? (
@@ -289,7 +288,7 @@ function ImageBlockComponent(props: any) {
 
           {/* Upload Zone - shown when no image */}
           {!blockObject && !unsplashUrl && isEditable && (
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div
                 onClick={() => fileInputRef.current?.click()}
                 onDragEnter={handleDragEnter}
@@ -345,28 +344,8 @@ function ImageBlockComponent(props: any) {
                   </div>
                 )}
               </div>
-              <button
-                type="button"
-                onClick={() => setIsUnsplashOpen(true)}
-                disabled={isLoading}
-                className="border border-neutral-200 rounded-lg text-center cursor-pointer transition-all flex flex-col items-center justify-center min-h-[160px] p-6 bg-white hover:border-neutral-400 hover:bg-neutral-50 disabled:opacity-50 disabled:cursor-not-allowed outline-none"
-              >
-                <div className="space-y-2">
-                  <svg
-                    viewBox="0 0 448 512"
-                    aria-hidden="true"
-                    className="w-7 h-7 mx-auto text-neutral-500 fill-current"
-                  >
-                    <path d="M448,230.17V480H0V230.17H137.6V355.09H310.4V230.17ZM310.4,32H137.6V156.91H310.4Z" />
-                  </svg>
-                  <div>
-                    <p className="text-sm font-medium text-neutral-700">Browse Unsplash</p>
-                    <p className="text-xs text-neutral-500 mt-1">Free high-quality photos</p>
-                  </div>
-                </div>
-              </button>
               <AIImageButton
-                onSelect={handleUnsplashSelect}
+                onSelect={handleRemoteImageSelect}
                 className="border border-neutral-200 rounded-lg text-center cursor-pointer transition-all flex flex-col gap-2 items-center justify-center min-h-[160px] p-6 bg-white hover:border-neutral-400 hover:bg-neutral-50 disabled:opacity-50 disabled:cursor-not-allowed outline-none text-sm font-medium text-neutral-700"
               />
             </div>
@@ -487,14 +466,6 @@ function ImageBlockComponent(props: any) {
               {unsplashCredit}
             </div>
           }
-        />
-      )}
-
-      {isUnsplashOpen && (
-        <UnsplashImagePicker
-          isOpen={isUnsplashOpen}
-          onSelect={handleUnsplashSelect}
-          onClose={() => setIsUnsplashOpen(false)}
         />
       )}
     </>

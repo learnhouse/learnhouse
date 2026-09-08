@@ -24,7 +24,7 @@ from src.db.organizations import (
 )
 from fastapi import HTTPException, UploadFile, status, Request
 
-from src.services.orgs.uploads import upload_org_logo, upload_org_preview, upload_org_thumbnail, upload_org_landing_content, upload_org_auth_background, upload_org_og_image, upload_org_favicon
+from src.services.orgs.uploads import upload_org_logo, upload_org_preview, upload_org_thumbnail, upload_org_landing_content, upload_org_auth_background, upload_org_og_image, upload_org_favicon, upload_org_square_logo
 from src.db.organization_config import AuthBrandingConfig, SeoOrgConfig
 from src.core.ee_hooks import is_multi_org_allowed
 from src.services.webhooks.dispatch import dispatch_webhooks
@@ -595,13 +595,19 @@ async def update_org_logo(
     return {"detail": "Logo updated"}
 
 
-async def update_org_favicon(
+async def _update_org_general_image(
     request: Request,
-    favicon_file: UploadFile,
+    file: UploadFile,
     org_id: int,
     current_user: PublicUser | AnonymousUser,
     db_session: AsyncSession,
+    *,
+    upload,
+    config_key: str,
+    detail: str,
 ):
+    """Upload an image and store its filename under the org's general
+    customization (v2: customization.general, v1: general)."""
     statement = select(Organization).where(Organization.id == org_id)
     org = (await db_session.execute(statement)).scalars().first()
 
@@ -614,8 +620,7 @@ async def update_org_favicon(
     # RBAC check
     await rbac_check(request, org.org_uuid, current_user, "update", db_session)
 
-    # Upload favicon
-    name_in_disk = await upload_org_favicon(favicon_file, org.org_uuid)
+    name_in_disk = await upload(file, org.org_uuid)
 
     # Get org config
     statement = select(OrganizationConfig).where(OrganizationConfig.org_id == org.id)
@@ -632,11 +637,11 @@ async def update_org_favicon(
 
     if _is_v2_config(updated_config):
         updated_config.setdefault("customization", {}).setdefault("general", {})
-        updated_config["customization"]["general"]["favicon_image"] = name_in_disk
+        updated_config["customization"]["general"][config_key] = name_in_disk
     else:
         if "general" not in updated_config:
-            updated_config["general"] = {"enabled": True, "color": "", "footer_text": "", "watermark": True, "favicon_image": "", "auth_branding": {}}
-        updated_config["general"]["favicon_image"] = name_in_disk
+            updated_config["general"] = {"enabled": True, "color": "", "footer_text": "", "watermark": True, "favicon_image": "", "square_logo_image": "", "auth_branding": {}}
+        updated_config["general"][config_key] = name_in_disk
 
     org_config.config = updated_config
     org_config.update_date = str(datetime.now())
@@ -645,7 +650,37 @@ async def update_org_favicon(
     await db_session.commit()
     await db_session.refresh(org_config)
 
-    return {"detail": "Favicon updated"}
+    return {"detail": detail}
+
+
+async def update_org_favicon(
+    request: Request,
+    favicon_file: UploadFile,
+    org_id: int,
+    current_user: PublicUser | AnonymousUser,
+    db_session: AsyncSession,
+):
+    return await _update_org_general_image(
+        request, favicon_file, org_id, current_user, db_session,
+        upload=upload_org_favicon,
+        config_key="favicon_image",
+        detail="Favicon updated",
+    )
+
+
+async def update_org_square_logo(
+    request: Request,
+    square_logo_file: UploadFile,
+    org_id: int,
+    current_user: PublicUser | AnonymousUser,
+    db_session: AsyncSession,
+):
+    return await _update_org_general_image(
+        request, square_logo_file, org_id, current_user, db_session,
+        upload=upload_org_square_logo,
+        config_key="square_logo_image",
+        detail="Square logo updated",
+    )
 
 
 async def update_org_thumbnail(

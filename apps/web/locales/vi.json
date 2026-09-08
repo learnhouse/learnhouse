@@ -1916,7 +1916,6 @@
           "subtitle": "Tải lên ảnh bìa cho cộng đồng của bạn",
           "no_thumbnail": "Chưa đặt hình thu nhỏ",
           "upload_image": "Tải ảnh lên",
-          "browse_unsplash": "Duyệt Unsplash",
           "uploading": "Đang tải lên...",
           "supported_formats": "Định dạng hỗ trợ: JPG, JPEG, PNG. Kích thước tối đa: 8MB. Tỷ lệ khuyến nghị: 16:9",
           "toasts": {
@@ -2539,7 +2538,6 @@
         "background_type": "Loại nền",
         "bg_gradient": "Gradient",
         "bg_custom": "Tùy chỉnh",
-        "bg_unsplash": "Unsplash",
         "text_color": "Màu chữ",
         "text_light": "Sáng",
         "text_dark": "Tối",

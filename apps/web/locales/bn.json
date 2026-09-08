@@ -1916,7 +1916,6 @@
           "subtitle": "আপনার কমিউনিটির জন্য কভার ইমেজ আপলোড করুন",
           "no_thumbnail": "কোনো থাম্বনেইল সেট করা নেই",
           "upload_image": "ইমেজ আপলোড করুন",
-          "browse_unsplash": "Unsplash ব্রাউজ করুন",
           "uploading": "আপলোড হচ্ছে...",
           "supported_formats": "সমর্থিত ফরম্যাট: JPG, JPEG, PNG। সর্বোচ্চ সাইজ: 8MB। প্রস্তাবিত অনুপাত: 16:9",
           "toasts": {
@@ -2537,7 +2536,6 @@
         "background_type": "ব্যাকগ্রাউন্ডের ধরন",
         "bg_gradient": "গ্রেডিয়েন্ট",
         "bg_custom": "কাস্টম",
-        "bg_unsplash": "Unsplash",
         "text_color": "টেক্সট রঙ",
         "text_light": "হালকা",
         "text_dark": "গাঢ়",

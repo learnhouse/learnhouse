@@ -1894,7 +1894,6 @@
           "subtitle": "Carregue uma imagem de capa para sua comunidade",
           "no_thumbnail": "Nenhuma miniatura definida",
           "upload_image": "Carregar Imagem",
-          "browse_unsplash": "Explorar Unsplash",
           "uploading": "Carregando...",
           "supported_formats": "Formatos suportados: JPG, JPEG, PNG. Tamanho máx.: 8MB. Proporção recomendada: 16:9",
           "toasts": {
@@ -2420,7 +2419,6 @@
         "background_type": "Tipo de fundo",
         "bg_gradient": "Gradiente",
         "bg_custom": "Personalizado",
-        "bg_unsplash": "Unsplash",
         "text_color": "Cor do texto",
         "text_light": "Claro",
         "text_dark": "Escuro",

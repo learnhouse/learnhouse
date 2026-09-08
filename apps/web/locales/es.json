@@ -1894,7 +1894,6 @@
           "subtitle": "Sube una imagen de portada para tu comunidad",
           "no_thumbnail": "Sin miniatura establecida",
           "upload_image": "Subir imagen",
-          "browse_unsplash": "Explorar Unsplash",
           "uploading": "Subiendo...",
           "supported_formats": "Formatos compatibles: JPG, JPEG, PNG. Tamaño máx.: 8MB. Relación recomendada: 16:9",
           "toasts": {
@@ -2418,7 +2417,6 @@
         "background_type": "Tipo de fondo",
         "bg_gradient": "Degradado",
         "bg_custom": "Personalizado",
-        "bg_unsplash": "Unsplash",
         "text_color": "Color del texto",
         "text_light": "Claro",
         "text_dark": "Oscuro",

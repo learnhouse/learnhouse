@@ -1904,7 +1904,6 @@
           "subtitle": "コミュニティのカバー画像をアップロード",
           "no_thumbnail": "サムネイルが設定されていません",
           "upload_image": "画像をアップロード",
-          "browse_unsplash": "Unsplashを閲覧",
           "uploading": "アップロード中...",
           "supported_formats": "対応形式: JPG, JPEG, PNG。最大サイズ: 8MB。推奨アスペクト比: 16:9",
           "toasts": {
@@ -2428,7 +2427,6 @@
         "background_type": "背景タイプ",
         "bg_gradient": "グラデーション",
         "bg_custom": "カスタム",
-        "bg_unsplash": "Unsplash",
         "text_color": "テキストカラー",
         "text_light": "ライト",
         "text_dark": "ダーク",
