@@ -285,6 +285,45 @@ def get_org_logo_url(org, request: Optional[Request] = None) -> Optional[str]:
     return f"{base}/content/orgs/{org_uuid}/logos/{logo_image}"
 
 
+def get_org_square_logo_url(org, org_config, request: Optional[Request] = None) -> Optional[str]:
+    """Absolute URL of the org's SQUARE logo, or None when it has none.
+
+    The square variant lives on the org config next to the favicon
+    (``customization.general.square_logo_image``, v1 ``general.square_logo_image``)
+    and is served from ``content/orgs/{uuid}/square_logos/{file}`` — the same
+    shape as the frontend's ``getOrgSquareLogoMediaDirectory``.
+    """
+    org_uuid = getattr(org, "org_uuid", None)
+    config = getattr(org_config, "config", None)
+    if not org or not org_uuid or not isinstance(config, dict):
+        return None
+
+    def _section(parent, key):
+        value = parent.get(key) if isinstance(parent, dict) else None
+        return value if isinstance(value, dict) else {}
+
+    file_name = (
+        _section(_section(config, "customization"), "general").get("square_logo_image")
+        or _section(config, "general").get("square_logo_image")
+    )
+    if not file_name:
+        return None
+    base = get_media_base_url(request)
+    if not base:
+        return None
+    return f"{base}/content/orgs/{org_uuid}/square_logos/{file_name}"
+
+
+def get_org_brand_logo_url(org, org_config, request: Optional[Request] = None) -> Optional[str]:
+    """The logo an org-branded email should show: square first, then wide.
+
+    Mirrors the frontend's ``OrgSquareLogo`` fallback chain. The square mark
+    sits in a 56px box at the top of the mail; the wide logo is letterboxed
+    into 180×40 when no square variant was uploaded.
+    """
+    return get_org_square_logo_url(org, org_config, request) or get_org_logo_url(org, request)
+
+
 async def _get_primary_verified_custom_domain(db_session, org_id: int) -> Optional[str]:
     """Return the org's primary verified custom domain, or any verified one."""
     try:

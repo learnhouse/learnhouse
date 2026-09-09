@@ -56,11 +56,8 @@ async def notify_user_joined_org(
         ).scalars().first()
 
         # Imported here: these modules pull in org services that import this one.
-        from src.services.email.utils import get_org_logo_url, get_org_signup_base_url
-        from src.services.orgs.orgs import (
-            get_org_default_language,
-            resolve_org_sender_name,
-        )
+        from src.services.email.branding import resolve_org_email_branding
+        from src.services.email.utils import get_org_signup_base_url
         from src.services.users.emails import send_org_join_email
 
         base_url = await get_org_signup_base_url(
@@ -75,9 +72,7 @@ async def notify_user_joined_org(
             # picker on every host and would deroute the user straight back
             # out of the org they just joined.
             cta_url=base_url.rstrip("/") or "/",
-            lang=get_org_default_language(org_config),
-            logo_url=get_org_logo_url(org, request),
-            sender_name=resolve_org_sender_name(org_config),
+            **resolve_org_email_branding(org, org_config, request).as_kwargs(),
         )
     except Exception:
         logger.warning(

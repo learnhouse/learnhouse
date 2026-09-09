@@ -101,35 +101,62 @@ def send_magic_login_email(
     base_url: str,
     token: str,
     lang: str = "en",
+    org_name: str | None = None,
+    sender_name: str | None = None,
+    logo_url: str | None = None,
+    brand_color: str | None = None,
+    powered_by: bool = True,
 ) -> bool:
     """Email the clickable login link. Link points at the frontend consume page,
-    which posts the token back to the verify endpoint."""
-    from src.services.users.emails import STYLES, _email_layout
+    which posts the token back to the verify endpoint.
+
+    With ``org_name`` the mail is the organization's own: its name in the
+    subject and copy, its logo (or name) in the header, its color on the
+    button, its From display name. Without one it is a platform email.
+    """
+    from src.services.email.translations import t
+    from src.services.users.emails import (
+        LOGO_SVG,
+        STYLES,
+        _brand_logo_html,
+        _button_style,
+        _email_layout,
+    )
 
     safe_token = quote(token, safe="")
     login_url = f"{base_url.rstrip('/')}/auth/magic?token={safe_token}"
     safe_name = html.escape(user.username or user.email)
+    white_label = bool(org_name)
+    brand = html.escape(org_name) if org_name else "LearnHouse"
+
+    heading = t(lang, "magic_login.heading", brand=brand)
+    body_text = t(lang, "magic_login.body", username=safe_name)
+    cta = t(lang, "magic_login.cta")
+    copy_paste = t(lang, "email_verification.copy_paste")
 
     body_content = f"""
-        <h1 style="{STYLES['h1']}">Sign in to LearnHouse</h1>
+        <h1 style="{STYLES['h1']}">{heading}</h1>
         <p style="{STYLES['p']}">
-            Hi {safe_name}, click the button below to sign in. This link works
-            once and expires in 15 minutes. If you didn't request it, you can
-            safely ignore this email.
+            {body_text}
         </p>
-        <a href="{login_url}" style="{STYLES['button']}">Sign in</a>
+        <a href="{login_url}" style="{_button_style(brand_color if white_label else None)}">{cta}</a>
         <p style="{STYLES['link_text']}">
-            Or paste this link into your browser:<br />{login_url}
+            {copy_paste}<br />{login_url}
         </p>
     """
     return send_email(
         to=email,
-        subject="Your LearnHouse login link",
+        # Plain-text subject: the org name must not arrive HTML-escaped.
+        subject=t(lang, "magic_login.subject", brand=org_name or "LearnHouse"),
         body=_email_layout(
-            title="Sign in to LearnHouse",
+            title=heading,
             body_content=body_content,
-            footer_note="This link signs you in to your LearnHouse account.",
+            footer_note=t(lang, "magic_login.footer", brand=brand),
+            logo_html=_brand_logo_html(logo_url, org_name) if white_label else LOGO_SVG,
+            powered_by=white_label and powered_by,
+            lang=lang,
         ),
+        sender_name=sender_name,
     )
 
 

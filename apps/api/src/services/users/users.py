@@ -27,7 +27,6 @@ from src.security.rbac.rbac import (
 )
 from src.db.organization_config import OrganizationConfig
 from src.db.organizations import Organization, OrganizationRead
-from src.services.orgs.orgs import get_org_default_language, resolve_org_sender_name
 from src.db.users import (
     AnonymousUser,
     InternalUser,
@@ -319,19 +318,17 @@ async def create_user(
     if is_oauth:
         org_config_stmt = select(OrganizationConfig).where(OrganizationConfig.org_id == org_id)
         org_config = (await db_session.execute(org_config_stmt)).scalars().first()
-        # White-label the welcome email to the org: name it in the subject/body
-        # and use the org's own logo when it has one.
-        from src.services.email.utils import get_org_logo_url
+        # White-label the welcome email to the org: name it in the subject/body,
+        # its logo/color/From name, in its language.
+        from src.services.email.branding import resolve_org_email_branding
         org_stmt = select(Organization).where(Organization.id == org_id)
         org = (await db_session.execute(org_stmt)).scalars().first()
         send_account_creation_email(
             user=user_read,
             email=user_read.email,
-            lang=get_org_default_language(org_config),
             cta_url=await _get_welcome_cta_url(request, db_session, org_id),
             org_name=org.name if org else None,
-            logo_url=get_org_logo_url(org, request) if org else None,
-            sender_name=resolve_org_sender_name(org_config),
+            **resolve_org_email_branding(org, org_config, request).as_kwargs(),
         )
     elif get_deployment_mode() == 'saas':
         # Import here to avoid circular imports

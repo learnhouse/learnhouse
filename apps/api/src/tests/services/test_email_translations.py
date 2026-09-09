@@ -81,3 +81,46 @@ class TestSupportedUILanguages:
         for code in SUPPORTED_UI_LANGUAGES:
             if code not in EMAIL_TRANSLATIONS:
                 assert t(code, "invitation.heading") == EMAIL_TRANSLATIONS["en"]["invitation.heading"]
+
+
+class TestWhiteLabelTranslations:
+    """Org-scoped copy must not hardcode the platform name in any locale."""
+
+    # Keys rendered only inside an organization's own emails.
+    ORG_SCOPED_PREFIXES = (
+        "invitation.",
+        "org_join.",
+        "role_changed.",
+        "email_verification.",
+        "magic_login.",
+        "password_reset.footer_org",
+        "account_creation.subject_org",
+        "account_creation.body_in_org",
+    )
+
+    def test_org_scoped_keys_never_name_learnhouse(self):
+        for lang, bundle in EMAIL_TRANSLATIONS.items():
+            for key, value in bundle.items():
+                if key.startswith(self.ORG_SCOPED_PREFIXES):
+                    assert "LearnHouse" not in value, f"{lang}:{key}"
+
+    def test_every_locale_ships_magic_login_copy(self):
+        for lang in SUPPORTED_LANGUAGES:
+            for suffix in ("subject", "heading", "body", "cta", "footer"):
+                assert f"magic_login.{suffix}" in EMAIL_TRANSLATIONS[lang], f"{lang}:{suffix}"
+
+    def test_placeholders_match_english_in_every_locale(self):
+        import re
+
+        english = EMAIL_TRANSLATIONS["en"]
+        for lang, bundle in EMAIL_TRANSLATIONS.items():
+            for key, value in bundle.items():
+                if key not in english or not key.startswith(self.ORG_SCOPED_PREFIXES):
+                    continue
+                expected = set(re.findall(r"\{(\w+)\}", english[key]))
+                actual = set(re.findall(r"\{(\w+)\}", value))
+                assert actual == expected, f"{lang}:{key} has {actual}, en has {expected}"
+
+    def test_powered_by_line_exists_everywhere(self):
+        for lang in SUPPORTED_LANGUAGES:
+            assert "LearnHouse" in EMAIL_TRANSLATIONS[lang]["common.powered_by"]
