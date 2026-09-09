@@ -28,6 +28,7 @@ interface DiscussionDetailProps {
   communityUuid: string
   orgslug: string
   onEdit?: () => void
+  allowRichContent?: boolean
 }
 
 /**
@@ -71,6 +72,7 @@ export function DiscussionDetail({
   communityUuid,
   orgslug,
   onEdit,
+  allowRichContent = false,
 }: DiscussionDetailProps) {
   const { t } = useTranslation()
   const session = useLHSession() as any
@@ -172,7 +174,10 @@ export function DiscussionDetail({
       <div className="p-6">
         {discussion.content ? (
           <div className="prose prose-gray max-w-none">
-            <DiscussionContent content={parseDiscussionContent(discussion.content)} />
+            <DiscussionContent
+              content={parseDiscussionContent(discussion.content)}
+              allowRichContent={allowRichContent}
+            />
           </div>
         ) : (
           <p className="text-gray-500 italic">{t('communities.discussion_detail.no_details')}</p>

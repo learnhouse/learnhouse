@@ -4,7 +4,10 @@ import { useEditor, EditorContent } from '@tiptap/react'
 import StarterKit from '@tiptap/starter-kit'
 import Link from '@tiptap/extension-link'
 import Placeholder from '@tiptap/extension-placeholder'
-import { Bold, Italic, Strikethrough, Code, Link as LinkIcon, List, ListOrdered, Heading2, Quote } from 'lucide-react'
+import Youtube from '@tiptap/extension-youtube'
+import { Bold, Italic, Strikethrough, Code, Link as LinkIcon, List, ListOrdered, Heading2, Quote, MonitorPlay } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
+import { extractYoutubeVideoId, stripRichContent, youtubeWatchUrl } from './richContent'
 
 interface DiscussionEditorProps {
   content: any
@@ -12,6 +15,8 @@ interface DiscussionEditorProps {
   placeholder?: string
   editable?: boolean
   minHeight?: string
+  /** Enables YouTube embeds (paste a link or use the toolbar). Off by default. */
+  allowRichContent?: boolean
 }
 
 // Defined at module level so React keeps the same component identity across
@@ -48,7 +53,9 @@ export function DiscussionEditor({
   placeholder = 'Write your discussion...',
   editable = true,
   minHeight = '150px',
+  allowRichContent = false,
 }: DiscussionEditorProps) {
+  const { t } = useTranslation()
   const editor = useEditor({
     extensions: [
       StarterKit.configure({
@@ -87,15 +94,32 @@ export function DiscussionEditor({
       Placeholder.configure({
         placeholder,
       }),
+      ...(allowRichContent
+        ? [
+            Youtube.configure({
+              nocookie: true,
+              controls: true,
+              modestBranding: true,
+              allowFullscreen: true,
+              width: 640,
+              height: 360,
+              HTMLAttributes: {
+                class: 'discussion-youtube',
+              },
+            }),
+          ]
+        : []),
     ],
-    content: content || '',
+    // Without the YouTube node in the schema tiptap would drop the whole
+    // document, so strip embeds up front when they are not allowed.
+    content: (allowRichContent ? content : stripRichContent(content)) || '',
     editable,
     immediatelyRender: false,
     onUpdate: ({ editor }) => {
       const json = editor.getJSON()
       onChange(json)
     },
-  })
+  }, [allowRichContent])
 
   if (!editor) {
     return null
@@ -115,6 +139,19 @@ export function DiscussionEditor({
     }
 
     editor.chain().focus().extendMarkRange('link').setLink({ href: url }).run()
+  }
+
+  const embedYoutube = () => {
+    const url = window.prompt(t('communities.create_discussion.embed_video_prompt'))
+    if (url === null || url.trim() === '') {
+      return
+    }
+    const videoId = extractYoutubeVideoId(url)
+    if (!videoId) {
+      window.alert(t('communities.create_discussion.embed_video_invalid'))
+      return
+    }
+    editor.chain().focus().setYoutubeVideo({ src: youtubeWatchUrl(videoId) }).run()
   }
 
   return (
@@ -192,6 +229,15 @@ export function DiscussionEditor({
             >
               <LinkIcon size={16} />
             </ToolbarButton>
+            {allowRichContent && (
+              <ToolbarButton
+                onClick={embedYoutube}
+                isActive={editor.isActive('youtube')}
+                title={t('communities.create_discussion.embed_video_title')}
+              >
+                <MonitorPlay size={16} />
+              </ToolbarButton>
+            )}
           </div>
         </>
       )}
@@ -311,6 +357,29 @@ export function DiscussionEditor({
 
         .discussion-editor-content .ProseMirror s {
           text-decoration: line-through;
+        }
+
+        .discussion-editor-content .ProseMirror .discussion-youtube {
+          position: relative;
+          width: 100%;
+          max-width: 640px;
+          aspect-ratio: 16 / 9;
+          margin: 0.75rem 0;
+          border-radius: 0.5rem;
+          overflow: hidden;
+          background: #111827;
+        }
+
+        .discussion-editor-content .ProseMirror .discussion-youtube iframe {
+          position: absolute;
+          inset: 0;
+          width: 100%;
+          height: 100%;
+          border: 0;
+        }
+
+        .discussion-editor-content .ProseMirror .discussion-youtube.ProseMirror-selectednode {
+          outline: 2px solid #2563eb;
         }
       `}</style>
     </div>
