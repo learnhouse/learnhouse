@@ -10,6 +10,7 @@ const LOCALE_LOADERS: Record<string, () => Promise<{ default: any }>> = {
   fr: () => import('../locales/fr.json'),
   de: () => import('../locales/de.json'),
   es: () => import('../locales/es.json'),
+  ca: () => import('../locales/ca.json'),
   ar: () => import('../locales/ar.json'),
   ja: () => import('../locales/ja.json'),
   pt: () => import('../locales/pt.json'),
