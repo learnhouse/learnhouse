@@ -37,6 +37,11 @@ def _user(**overrides):
     return UserRead(**data)
 
 
+def _wordmark(escaped_name: str) -> str:
+    """The org-name header an org-branded mail shows when it has no logo."""
+    return f'line-height: 1.2;">{escaped_name}</span>'
+
+
 def _org(**overrides):
     data = dict(
         id=1,
@@ -107,16 +112,17 @@ class TestEmailsService:
         assert "Powered by LearnHouse" in call["body"]
         assert "https://acme.test/home" in call["body"]
 
-    def test_whitelabel_without_logo_falls_back_to_learnhouse_mark(self):
+    def test_whitelabel_without_logo_uses_the_org_name_as_wordmark(self):
         with patch("src.services.users.emails.send_email", return_value=True) as send_email:
             send_account_creation_email(
-                _user(), "user@test.com", org_name="Acme", logo_url=None
+                _user(), "user@test.com", org_name="Acme & Co", logo_url=None
             )
         call = send_email.call_args.kwargs
-        # No org logo → LearnHouse wordmark (SVG), but text still white-labeled.
+        # No org logo → the org's own name up top, never the LearnHouse mark.
         assert "<img" not in call["body"]
-        assert "<svg" in call["body"]
-        assert "Acme" in call["subject"]
+        assert "<svg" not in call["body"]
+        assert _wordmark("Acme &amp; Co") in call["body"]
+        assert "Acme &amp; Co" in call["subject"]
         assert "Powered by LearnHouse" in call["body"]
 
     def test_role_changed_email_links_back_to_the_org(self):
@@ -142,7 +148,12 @@ class TestEmailsService:
                 org_name="Acme",
                 new_role_name="Admin",
             )
-        assert "<a href" not in send_email.call_args.kwargs["body"]
+        body = send_email.call_args.kwargs["body"]
+        assert "Go to Acme" not in body
+        assert 'href="/"' not in body
+        # The only link left is the footer attribution, never a CTA.
+        assert body.count("<a href") == 1
+        assert "Powered by LearnHouse" in body
 
     def test_org_join_email_is_whitelabeled_and_links_to_the_org(self):
         with patch("src.services.users.emails.send_email", return_value=True) as send_email:
@@ -162,7 +173,7 @@ class TestEmailsService:
         # Hostile username/org names are escaped, never rendered as markup.
         assert "<script>" not in call["body"]
 
-    def test_org_join_email_falls_back_to_learnhouse_mark_without_logo(self):
+    def test_org_join_email_uses_the_org_name_as_wordmark_without_logo(self):
         with patch("src.services.users.emails.send_email", return_value=True) as send_email:
             send_org_join_email(
                 email="user@test.com",
@@ -172,7 +183,8 @@ class TestEmailsService:
             )
         call = send_email.call_args.kwargs
         assert "<img" not in call["body"]
-        assert "<svg" in call["body"]
+        assert "<svg" not in call["body"]
+        assert _wordmark("Acme") in call["body"]
 
     def test_org_join_email_translates(self):
         with patch("src.services.users.emails.send_email", return_value=True) as send_email:
@@ -466,3 +478,220 @@ class TestSenderNameRouting:
                 signup_url="https://org.test/signup",
             )
             assert sent.call_args.kwargs["sender_name"] is None
+
+
+class TestWhiteLabel:
+    """Every org-scoped email is the organization's own, not LearnHouse's.
+
+    With the org's watermark off there must be no trace of the platform in
+    the rendered mail — no wordmark, no name in the copy, no attribution
+    line. With it on, exactly one "Powered by LearnHouse" line remains.
+    """
+
+    LOGO = "https://api.test/content/orgs/org_uuid/logos/logo.png"
+    BRANDING = dict(
+        lang="en",
+        sender_name="Acme Academy",
+        logo_url=LOGO,
+        brand_color="#ff5500",
+        powered_by=False,
+    )
+
+    def _all_org_scoped_sends(self, **branding):
+        """Render each org-scoped mail once; returns the captured calls."""
+        from src.services.auth.magic_login import send_magic_login_email
+
+        with patch("src.services.users.emails.send_email", return_value=True) as sent, patch(
+            "src.services.auth.magic_login.send_email", return_value=True
+        ) as sent_magic:
+            send_password_reset_email(
+                generated_reset_code="CODE1234",
+                user=_user(),
+                organization=_org(name="Acme & Co"),
+                email="user@test.com",
+                base_url="https://acme.test",
+                **branding,
+            )
+            send_invitation_email(
+                email="user@test.com",
+                org_name="Acme & Co",
+                inviter_username="owner",
+                signup_url="https://acme.test/signup",
+                invite_code="INV-1",
+                **branding,
+            )
+            send_email_verification_email(
+                token="tok",
+                user=_user(),
+                organization=_org(name="Acme & Co"),
+                email="user@test.com",
+                base_url="https://acme.test",
+                **branding,
+            )
+            send_role_changed_email(
+                email="user@test.com",
+                username="learner",
+                org_name="Acme & Co",
+                new_role_name="Admin",
+                cta_url="https://acme.test",
+                **branding,
+            )
+            send_org_join_email(
+                email="user@test.com",
+                username="learner",
+                org_name="Acme & Co",
+                cta_url="https://acme.test",
+                **branding,
+            )
+            send_account_creation_email(
+                _user(),
+                "user@test.com",
+                cta_url="https://acme.test",
+                org_name="Acme & Co",
+                **branding,
+            )
+            send_magic_login_email(
+                _user(),
+                "user@test.com",
+                "https://acme.test",
+                "jwt",
+                org_name="Acme & Co",
+                **branding,
+            )
+        calls = [c.kwargs for c in sent.call_args_list] + [c.kwargs for c in sent_magic.call_args_list]
+        assert len(calls) == 7
+        return calls
+
+    def test_no_platform_branding_leaks_when_watermark_is_off(self):
+        for call in self._all_org_scoped_sends(**self.BRANDING):
+            assert "LearnHouse" not in call["body"], call["subject"]
+            assert "LearnHouse" not in call["subject"]
+            assert "<svg" not in call["body"]
+            assert f'<img src="{self.LOGO}" alt="Acme &amp; Co"' in call["body"]
+            assert call["sender_name"] == "Acme Academy"
+
+    def test_brand_color_tints_the_button(self):
+        for call in self._all_org_scoped_sends(**self.BRANDING):
+            assert "background-color: #ff5500;" in call["body"], call["subject"]
+            assert "background-color: #000000;" not in call["body"]
+            # Orange is light enough that white text would fail contrast.
+            assert "color: #000000; text-decoration: none" in call["body"]
+
+    def test_watermark_on_adds_exactly_one_powered_by_line(self):
+        branding = dict(self.BRANDING, powered_by=True)
+        for call in self._all_org_scoped_sends(**branding):
+            assert call["body"].count("Powered by LearnHouse") == 1, call["subject"]
+            # ...and that line is the only place the platform appears.
+            assert call["body"].count("LearnHouse") == 1
+            assert "LearnHouse" not in call["subject"]
+
+    def test_square_logo_renders_as_a_square_box_and_wide_logo_letterboxed(self):
+        square = "https://api.test/content/orgs/org_uuid/square_logos/sq.png"
+        with patch("src.services.users.emails.send_email", return_value=True) as sent:
+            send_invitation_email(
+                email="user@test.com", org_name="Acme", inviter_username="owner",
+                signup_url="https://acme.test/signup", logo_url=square,
+            )
+            square_body = sent.call_args.kwargs["body"]
+            send_invitation_email(
+                email="user@test.com", org_name="Acme", inviter_username="owner",
+                signup_url="https://acme.test/signup", logo_url=self.LOGO,
+            )
+            wide_body = sent.call_args.kwargs["body"]
+        assert f'<img src="{square}" alt="Acme" width="56" height="56"' in square_body
+        assert "border-radius: 12px" in square_body
+        assert f'<img src="{self.LOGO}" alt="Acme" height="40"' in wide_body
+        assert "max-width: 180px" in wide_body
+        assert "width=\"56\"" not in wide_body
+
+    def test_org_without_logo_or_color_gets_wordmark_and_default_button(self):
+        for call in self._all_org_scoped_sends(powered_by=False):
+            assert _wordmark("Acme &amp; Co") in call["body"], call["subject"]
+            assert "<img" not in call["body"]
+            assert "<svg" not in call["body"]
+            assert "background-color: #000000;" in call["body"]
+
+    def test_invalid_brand_color_keeps_the_default_button(self):
+        for bad in ("red", "#12345", "#ff5500; color: red", "url(x)", "", None):
+            with patch("src.services.users.emails.send_email", return_value=True) as sent:
+                send_invitation_email(
+                    email="user@test.com",
+                    org_name="Acme",
+                    inviter_username="owner",
+                    signup_url="https://acme.test/signup",
+                    brand_color=bad,
+                )
+            body = sent.call_args.kwargs["body"]
+            assert "background-color: #000000;" in body, bad
+            assert "color: red" not in body
+            assert "url(" not in body
+
+    def test_org_verification_mail_names_the_org_not_the_platform(self):
+        with patch("src.services.users.emails.send_email", return_value=True) as sent:
+            send_email_verification_email(
+                token="tok",
+                user=_user(),
+                organization=_org(name="Acme & Co"),
+                email="user@test.com",
+                base_url="https://acme.test",
+                powered_by=False,
+            )
+        body = sent.call_args.kwargs["body"]
+        assert "welcome to Acme &amp; Co!" in body
+        assert "create a Acme &amp; Co account" in body or "Acme &amp; Co account" in body
+        assert "LearnHouse" not in body
+
+    def test_platform_mails_keep_the_learnhouse_mark_and_no_powered_by(self):
+        with patch("src.services.users.emails.send_email", return_value=True) as sent:
+            send_password_reset_email_platform(
+                generated_reset_code="code",
+                user=_user(),
+                email="user@test.com",
+                base_url="https://platform.test",
+            )
+            send_email_verification_email(
+                token="tok",
+                user=_user(),
+                organization=None,
+                email="user@test.com",
+                base_url="https://platform.test",
+                # A stray color from a caller must not tint a platform mail.
+                brand_color="#ff5500",
+            )
+            send_account_creation_email(_user(), "user@test.com")
+            send_account_deleted_email("user@test.com", "user")
+        for call in sent.call_args_list:
+            body = call.kwargs["body"]
+            assert "<svg" in body, call.kwargs["subject"]
+            assert "Powered by LearnHouse" not in body
+            assert "#ff5500" not in body
+        verification_body = sent.call_args_list[1].kwargs["body"]
+        assert "welcome to LearnHouse!" in verification_body
+
+    def test_translated_whitelabel_copy_has_no_unfilled_placeholders(self):
+        from src.services.auth.magic_login import send_magic_login_email
+        from src.services.email.translations import SUPPORTED_LANGUAGES
+
+        for lang in SUPPORTED_LANGUAGES:
+            with patch("src.services.users.emails.send_email", return_value=True) as sent, patch(
+                "src.services.auth.magic_login.send_email", return_value=True
+            ) as sent_magic:
+                send_email_verification_email(
+                    token="tok",
+                    user=_user(),
+                    organization=_org(name="Acme"),
+                    email="user@test.com",
+                    base_url="https://acme.test",
+                    lang=lang,
+                )
+                send_magic_login_email(
+                    _user(), "user@test.com", "https://acme.test", "jwt",
+                    lang=lang, org_name="Acme", powered_by=False,
+                )
+            for call in [sent.call_args.kwargs, sent_magic.call_args.kwargs]:
+                assert "{brand}" not in call["body"], lang
+                assert "{brand}" not in call["subject"], lang
+                assert "{username}" not in call["body"], lang
+                assert "Acme" in call["body"], lang
+            assert "LearnHouse" not in sent_magic.call_args.kwargs["body"], lang
+            assert "LearnHouse" not in sent_magic.call_args.kwargs["subject"], lang

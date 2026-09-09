@@ -60,17 +60,90 @@ STYLES = {
 }
 
 
+# Media directory of the square logo variant (see ``upload_org_square_logo``).
+# The URL path is the one place the shape of an uploaded logo is knowable
+# without a database round-trip, so the renderer keys off it.
+SQUARE_LOGO_DIR = "/square_logos/"
+
+
 def _org_logo_img(logo_url: str, alt: str) -> str:
     """<img> for a white-labeled org logo.
 
-    Bounded to the same footprint as the LearnHouse wordmark. Raster logos
-    (PNG/JPG) render in every mail client; an SVG logo may be stripped by some
-    (e.g. Gmail), in which case the ``alt`` (the org name) shows instead — still
+    A square logo (uploaded on the branding page, served from
+    ``square_logos/``) sits in a 56px rounded box; a wide logo is letterboxed
+    into the same footprint as the LearnHouse wordmark. Raster logos (PNG/JPG)
+    render in every mail client; an SVG logo may be stripped by some (e.g.
+    Gmail), in which case the ``alt`` (the org name) shows instead — still
     org-branded, never a broken LearnHouse mark.
+
+    The ``height``/``width`` attributes are for desktop Outlook, whose
+    Word-based renderer ignores ``max-width``/``max-height`` and would
+    otherwise paint the upload at its native pixel size; every other client
+    lets the inline style win.
+    """
+    src = html.escape(logo_url)
+    safe_alt = html.escape(alt)
+    if SQUARE_LOGO_DIR in logo_url:
+        return (
+            f'<img src="{src}" alt="{safe_alt}" width="56" height="56" '
+            'style="width: 56px; height: 56px; object-fit: cover; border-radius: 12px; '
+            'display: inline-block; border: 0;" />'
+        )
+    return (
+        f'<img src="{src}" alt="{safe_alt}" height="40" '
+        'style="max-height: 40px; max-width: 180px; height: auto; width: auto; '
+        'display: inline-block; border: 0;" />'
+    )
+
+
+def _org_wordmark(org_name: str) -> str:
+    """The org's name set as a wordmark, for orgs that have not uploaded a logo.
+
+    An org-scoped email must never open with the LearnHouse mark — the
+    recipient has a relationship with the academy, not the platform, and a
+    foreign logo above "Reset your Acme Academy password" reads as phishing.
     """
     return (
-        f'<img src="{html.escape(logo_url)}" alt="{html.escape(alt)}" '
-        'style="max-height: 40px; max-width: 180px; height: auto; width: auto;" />'
+        f'<span style="display: inline-block; font-size: 20px; font-weight: 900; '
+        f'color: #000000; letter-spacing: -0.02em; line-height: 1.2;">'
+        f"{html.escape(org_name)}</span>"
+    )
+
+
+def _brand_logo_html(logo_url: str | None, org_name: str) -> str:
+    """Header mark for an org-branded email: its logo, else its name."""
+    if logo_url:
+        return _org_logo_img(logo_url, org_name)
+    return _org_wordmark(org_name)
+
+
+def _button_style(brand_color: str | None) -> str:
+    """CTA button style, tinted with the org's brand color when it has one.
+
+    ``brand_color`` must already be normalized (``#rrggbb``) — see
+    ``services.email.branding.normalize_brand_color``; anything else keeps the
+    default black button rather than risk an unbalanced ``style`` attribute.
+    """
+    from src.services.email.branding import contrasting_text_color, normalize_brand_color
+
+    color = normalize_brand_color(brand_color)
+    if not color:
+        return STYLES["button"]
+    return (
+        STYLES["button"]
+        .replace("background-color: #000000;", f"background-color: {color};")
+        .replace("color: #ffffff;", f"color: {contrasting_text_color(color)};")
+    )
+
+
+def _powered_by_html(lang: str) -> str:
+    """The small "Powered by LearnHouse" line under an org-branded footer."""
+    from src.services.email.branding import POWERED_BY_URL
+
+    return (
+        f'\n            <p style="{STYLES["footer_text"]} margin-top: 12px;">'
+        f'<a href="{POWERED_BY_URL}" style="color: rgba(0,0,0,0.35); text-decoration: none;">'
+        f'{t(lang, "common.powered_by")}</a></p>'
     )
 
 
@@ -168,11 +241,17 @@ def _email_layout(
     unsubscribe_url: str = "",
     unsubscribe_label: str = "Unsubscribe from these emails",
     preheader: str = "",
+    powered_by: bool = False,
+    lang: str = "en",
 ) -> str:
     """Wrap content in the standard email layout.
 
     ``logo_html`` defaults to the LearnHouse mark; white-labeled emails pass the
-    org's logo <img> instead.
+    org's logo <img> (or its name as a wordmark) instead.
+
+    ``powered_by`` adds the "Powered by LearnHouse" line to the footer. Only
+    org-branded mail sets it, and only when the org's watermark is on — a
+    platform email already carries the LearnHouse mark up top.
 
     ``unsubscribe_url`` is set only by bulk lifecycle mail. Transactional email
     (password reset, invitation, verification) leaves it empty and renders
@@ -194,11 +273,13 @@ def _email_layout(
             f'{html.escape(unsubscribe_label)}</a></p>'
         )
 
+    powered_html = _powered_by_html(lang) if powered_by else ""
+
     footer_html = ""
-    if note_html or unsub_html:
+    if note_html or unsub_html or powered_html:
         footer_html = f"""
         <div style="{STYLES['footer']}">
-            <hr style="{STYLES['divider']}" />{note_html}{unsub_html}
+            <hr style="{STYLES['divider']}" />{note_html}{unsub_html}{powered_html}
         </div>"""
 
     # Prefixed with its own newline so that an absent preheader leaves the
@@ -234,6 +315,8 @@ def send_account_creation_email(
     org_name: str | None = None,
     logo_url: str | None = None,
     sender_name: str | None = None,
+    brand_color: str | None = None,
+    powered_by: bool = True,
 ):
     """Welcome email sent once an account exists.
 
@@ -243,9 +326,10 @@ def send_account_creation_email(
 
     When ``org_name`` is set the email is WHITE-LABELED to that organization:
     the subject and body name the org (not LearnHouse), the org's ``logo_url``
-    replaces the LearnHouse mark when present, and the footer is reduced to a
-    subtle "Powered by LearnHouse". Org-less signups keep the LearnHouse-branded
-    variant with the Academy footer link.
+    (or its name) replaces the LearnHouse mark, the button takes the org's
+    ``brand_color``, and the footer is reduced to a "Powered by LearnHouse"
+    line that ``powered_by=False`` removes. Org-less signups keep the
+    LearnHouse-branded variant with the Academy footer link.
     """
     safe_username = html.escape(user.username)
     white_label = bool(org_name)
@@ -257,8 +341,8 @@ def send_account_creation_email(
     if white_label:
         subject = t(lang, "account_creation.subject_org", org_name=safe_org, username=safe_username)
         body_text = t(lang, "account_creation.body_in_org", org_name=safe_org)
-        footer_note = t(lang, "account_creation.footer_powered")
-        logo_html = _org_logo_img(logo_url, org_name) if logo_url else LOGO_SVG
+        footer_note = ""
+        logo_html = _brand_logo_html(logo_url, org_name)
     else:
         subject = t(lang, "account_creation.subject", username=safe_username)
         body_text = t(lang, "account_creation.body")
@@ -275,7 +359,7 @@ def send_account_creation_email(
         <p style="{STYLES['p']}">
             {body_text}
         </p>
-        <a href="{html.escape(cta_url or ACADEMY_URL)}" style="{STYLES['button']}">
+        <a href="{html.escape(cta_url or ACADEMY_URL)}" style="{_button_style(brand_color if white_label else None)}">
             {cta}
         </a>
     """
@@ -288,6 +372,8 @@ def send_account_creation_email(
             body_content=body_content,
             footer_note=footer_note,
             logo_html=logo_html,
+            powered_by=white_label and powered_by,
+            lang=lang,
         ),
         sender_name=sender_name,
     )
@@ -378,7 +464,16 @@ def send_password_reset_email(
     base_url: str,
     lang: str = "en",
     sender_name: str | None = None,
+    logo_url: str | None = None,
+    brand_color: str | None = None,
+    powered_by: bool = True,
 ):
+    """Password reset for an account inside an organization.
+
+    Branded to the org: its logo (or name) in the header, its color on the
+    button, its name as the From display name. Platform-level resets go
+    through ``send_password_reset_email_platform`` instead.
+    """
     safe_username = html.escape(user.username)
     safe_code = html.escape(generated_reset_code)
     safe_email = quote(str(email), safe='')
@@ -397,7 +492,7 @@ def send_password_reset_email(
         <div style="margin: 28px 0;">
             <span style="{STYLES['code']}">{safe_code}</span>
         </div>
-        <a href="{reset_url}" style="{STYLES['button']}">
+        <a href="{reset_url}" style="{_button_style(brand_color)}">
             {cta}
         </a>
     """
@@ -409,6 +504,9 @@ def send_password_reset_email(
             title=heading,
             body_content=body_content,
             footer_note=t(lang, "password_reset.footer_org"),
+            logo_html=_brand_logo_html(logo_url, organization.name),
+            powered_by=powered_by,
+            lang=lang,
         ),
         sender_name=sender_name,
     )
@@ -463,7 +561,11 @@ def send_invitation_email(
     invite_code: Optional[str] = None,
     lang: str = "en",
     sender_name: str | None = None,
+    logo_url: str | None = None,
+    brand_color: str | None = None,
+    powered_by: bool = True,
 ):
+    """Invitation into an organization, branded to that organization."""
     safe_org_name = html.escape(org_name)
     safe_inviter = html.escape(inviter_username)
 
@@ -494,7 +596,7 @@ def send_invitation_email(
             {intro}
         </p>
         {code_section}
-        <a href="{signup_url}" style="{STYLES['button']}">
+        <a href="{signup_url}" style="{_button_style(brand_color)}">
             {cta}
         </a>
     """
@@ -506,6 +608,9 @@ def send_invitation_email(
             title=heading,
             body_content=body_content,
             footer_note=t(lang, "invitation.footer", inviter=safe_inviter),
+            logo_html=_brand_logo_html(logo_url, org_name),
+            powered_by=powered_by,
+            lang=lang,
         ),
         sender_name=sender_name,
     )
@@ -519,6 +624,8 @@ def send_org_join_email(
     lang: str = "en",
     logo_url: str | None = None,
     sender_name: str | None = None,
+    brand_color: str | None = None,
+    powered_by: bool = True,
 ):
     """Greeting sent when an EXISTING account becomes a member of an organization.
 
@@ -528,7 +635,7 @@ def send_org_join_email(
     mail at all and had to find their way to the org on their own.
 
     Always white-labeled to the org — the user is being welcomed into that
-    academy, not onto LearnHouse — with the org's logo when it has one.
+    academy, not onto LearnHouse — with the org's logo (or name) up top.
     """
     safe_username = html.escape(username)
     safe_org_name = html.escape(org_name)
@@ -542,7 +649,7 @@ def send_org_join_email(
         <p style="{STYLES['p']}">
             {body_text}
         </p>
-        <a href="{html.escape(cta_url)}" style="{STYLES['button']}">
+        <a href="{html.escape(cta_url)}" style="{_button_style(brand_color)}">
             {cta}
         </a>
         <p style="{STYLES['link_text']}">{html.escape(cta_url)}</p>
@@ -555,7 +662,9 @@ def send_org_join_email(
             title=heading,
             body_content=body_content,
             footer_note=t(lang, "org_join.footer", org_name=safe_org_name),
-            logo_html=_org_logo_img(logo_url, org_name) if logo_url else LOGO_SVG,
+            logo_html=_brand_logo_html(logo_url, org_name),
+            powered_by=powered_by,
+            lang=lang,
         ),
         sender_name=sender_name,
     )
@@ -569,6 +678,9 @@ def send_role_changed_email(
     lang: str = "en",
     cta_url: str | None = None,
     sender_name: str | None = None,
+    logo_url: str | None = None,
+    brand_color: str | None = None,
+    powered_by: bool = True,
 ):
     """
     Send an email notifying a user that their role has changed in an organization.
@@ -591,7 +703,7 @@ def send_role_changed_email(
     cta_html = ""
     if cta_url:
         cta_html = (
-            f'<a href="{html.escape(cta_url)}" style="{STYLES["button"]}">'
+            f'<a href="{html.escape(cta_url)}" style="{_button_style(brand_color)}">'
             f'{t(lang, "role_changed.cta", org_name=safe_org_name)}</a>'
         )
 
@@ -613,6 +725,9 @@ def send_role_changed_email(
             title=heading,
             body_content=body_content,
             footer_note=t(lang, "role_changed.footer", org_name=safe_org_name),
+            logo_html=_brand_logo_html(logo_url, org_name),
+            powered_by=powered_by,
+            lang=lang,
         ),
         sender_name=sender_name,
     )
@@ -626,9 +741,16 @@ def send_email_verification_email(
     base_url: str,
     lang: str = "en",
     sender_name: str | None = None,
+    logo_url: str | None = None,
+    brand_color: str | None = None,
+    powered_by: bool = True,
 ):
     """
     Send email verification email with verification link.
+
+    With an ``organization`` the mail is branded to it (its name in the copy,
+    its logo or name in the header, its color on the button). Without one it
+    is a platform email under the LearnHouse mark.
 
     Args:
         token: Verification token
@@ -642,6 +764,7 @@ def send_email_verification_email(
         Boolean indicating if email was sent successfully
     """
     safe_username = html.escape(user.username)
+    brand = html.escape(organization.name) if organization else "LearnHouse"
     safe_token = quote(token, safe='')
     safe_user_uuid = quote(user.user_uuid, safe='')
     org_uuid = organization.org_uuid if organization else "none"
@@ -649,7 +772,7 @@ def send_email_verification_email(
     verification_url = f"{base_url}/verify-email?token={safe_token}&amp;user={safe_user_uuid}&amp;org={safe_org_uuid}"
 
     heading = t(lang, "email_verification.heading")
-    body_text = t(lang, "email_verification.body", username=safe_username)
+    body_text = t(lang, "email_verification.body", username=safe_username, brand=brand)
     cta = t(lang, "email_verification.cta")
     copy_paste = t(lang, "email_verification.copy_paste")
 
@@ -658,7 +781,7 @@ def send_email_verification_email(
         <p style="{STYLES['p']}">
             {body_text}
         </p>
-        <a href="{verification_url}" style="{STYLES['button']}">
+        <a href="{verification_url}" style="{_button_style(brand_color if organization else None)}">
             {cta}
         </a>
         <p style="{STYLES['link_text']}">
@@ -672,7 +795,10 @@ def send_email_verification_email(
         body=_email_layout(
             title=heading,
             body_content=body_content,
-            footer_note=t(lang, "email_verification.footer"),
+            footer_note=t(lang, "email_verification.footer", brand=brand),
+            logo_html=_brand_logo_html(logo_url, organization.name) if organization else LOGO_SVG,
+            powered_by=bool(organization) and powered_by,
+            lang=lang,
         ),
         sender_name=sender_name,
     )
@@ -690,6 +816,8 @@ def send_nudge_email(
     track: str = "",
     stats: list[tuple[str, int]] | None = None,
     sender_name: str | None = None,
+    brand_color: str | None = None,
+    powered_by: bool = True,
     **copy_vars,
 ):
     """Send one lifecycle nudge.
@@ -741,7 +869,7 @@ def send_nudge_email(
     if has_cta and cta_url:
         cta = t(lang, f"nudge.{nudge_id}.cta", **safe_vars)
         body_content += f"""
-        <a href="{html.escape(cta_url)}" style="{STYLES['button']}">
+        <a href="{html.escape(cta_url)}" style="{_button_style(brand_color)}">
             {cta}
         </a>
         <p style="{STYLES['link_text']}">{html.escape(cta_url)}</p>
@@ -770,10 +898,12 @@ def send_nudge_email(
             title=heading,
             body_content=body_content,
             footer_note=t(lang, "nudge.common.footer", org_name=safe_org_name),
-            logo_html=_org_logo_img(logo_url, org_name) if logo_url else LOGO_SVG,
+            logo_html=_brand_logo_html(logo_url, org_name),
             unsubscribe_url=unsubscribe_url,
             unsubscribe_label=t(lang, "nudge.common.unsubscribe"),
             preheader=preheader,
+            powered_by=powered_by,
+            lang=lang,
         ),
         headers=headers or None,
         sender_name=sender_name,

@@ -559,12 +559,20 @@ async def run_nudges(
                     )
                     break
 
+                # Square mark first, wide logo as the fallback — same chain
+                # as the transactional mail and the frontend's OrgSquareLogo.
                 logo_url = None
-                if snapshot.logo_image and snapshot.org_uuid and media_base:
-                    logo_url = (
-                        f"{media_base}/content/orgs/{snapshot.org_uuid}"
-                        f"/logos/{snapshot.logo_image}"
-                    )
+                if snapshot.org_uuid and media_base:
+                    if snapshot.square_logo_image:
+                        logo_url = (
+                            f"{media_base}/content/orgs/{snapshot.org_uuid}"
+                            f"/square_logos/{snapshot.square_logo_image}"
+                        )
+                    elif snapshot.logo_image:
+                        logo_url = (
+                            f"{media_base}/content/orgs/{snapshot.org_uuid}"
+                            f"/logos/{snapshot.logo_image}"
+                        )
 
                 result = send_nudge_email(
                     nudge_id=spec.id,
@@ -578,6 +586,8 @@ async def run_nudges(
                     track=spec.track,
                     stats=_stats_for(spec, snapshot),
                     sender_name=snapshot.sender_name,
+                    brand_color=snapshot.brand_color,
+                    powered_by=snapshot.powered_by,
                     **_copy_vars(snapshot, spec),
                 )
 

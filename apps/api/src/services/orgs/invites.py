@@ -19,9 +19,7 @@ from src.db.organizations import Organization, OrganizationRead
 from src.db.usergroups import UserGroup
 from src.db.users import AnonymousUser, PublicUser, UserRead
 from src.services.orgs.orgs import (
-    get_org_default_language,
     rbac_check,
-    resolve_org_sender_name,
 )
 from src.services.users.emails import send_invitation_email
 
@@ -405,16 +403,16 @@ async def send_invite_email(
     else:
         signup_url = f"{org_base_url}/signup"
 
-    lang = "en"
-    sender_name = ""
+    from src.services.email.branding import resolve_org_email_branding
+
+    org_config = None
     if db_session is not None:
         try:
             org_config_stmt = select(OrganizationConfig).where(OrganizationConfig.org_id == org.id)
             org_config = (await db_session.execute(org_config_stmt)).scalars().first()
-            lang = get_org_default_language(org_config)
-            sender_name = resolve_org_sender_name(org_config)
         except Exception:
             pass
+    branding = resolve_org_email_branding(org, org_config, request)
 
     try:
         # Defense in depth: scrub any link out of the inviter's display name
@@ -428,8 +426,7 @@ async def send_invite_email(
             inviter_username=sanitize_display_name(user.username),
             invite_code=invite_code,
             signup_url=signup_url,
-            lang=lang,
-            sender_name=sender_name,
+            **branding.as_kwargs(),
         )
         return result is not None
     except Exception:
