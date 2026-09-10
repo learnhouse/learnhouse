@@ -4336,6 +4336,7 @@
     },
     "ai_panel": {
       "add_definition": "Definitie toevoegen",
+      "insert_failed": "Ik kon de gegenereerde inhoud niet in het document invoegen. Probeer het opnieuw.",
       "add_examples": "Voorbeelden toevoegen",
       "add_quiz": "Quiz toevoegen",
       "add_summary": "Samenvatting toevoegen",

@@ -4344,6 +4344,7 @@
     },
     "ai_panel": {
       "add_definition": "定義を追加",
+      "insert_failed": "生成されたコンテンツをドキュメントに挿入できませんでした。もう一度お試しください。",
       "add_examples": "例を追加",
       "add_quiz": "クイズを追加",
       "add_summary": "要約を追加",

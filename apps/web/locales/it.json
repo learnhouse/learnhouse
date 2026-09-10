@@ -4334,6 +4334,7 @@
     },
     "ai_panel": {
       "add_definition": "Aggiungi definizione",
+      "insert_failed": "Non sono riuscito a inserire il contenuto generato nel documento. Riprova per favore.",
       "add_examples": "Aggiungi esempi",
       "add_quiz": "Aggiungi quiz",
       "add_summary": "Aggiungi riepilogo",

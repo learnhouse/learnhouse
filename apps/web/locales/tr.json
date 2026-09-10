@@ -4358,6 +4358,7 @@
     },
     "ai_panel": {
       "add_definition": "Tanım ekle",
+      "insert_failed": "Oluşturulan içeriği belgeye ekleyemedim. Lütfen tekrar deneyin.",
       "add_examples": "Örnekler ekle",
       "add_quiz": "Sınav ekle",
       "add_summary": "Özet ekle",
