@@ -24,14 +24,14 @@
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4.3.0",
-    "@types/node": "26.5.0",
-    "@types/react": "19.2.18",
+    "@types/node": "26.5.1",
+    "@types/react": "19.3.0",
     "pagefind": "^1.5.2",
     "tailwindcss": "^4.3.0",
     "typescript": "6.0.3"
   },
   "overrides": {
     "@xmldom/xmldom": "^0.9.12",
-    "zod": "4.5.4"
+    "zod": "4.6.1"
   }
 }
