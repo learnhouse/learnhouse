@@ -212,6 +212,25 @@ export async function updateOrgMenuConfig(
   return res
 }
 
+export interface CourseEndConfigPayload {
+  message: string
+  button_text: string
+  button_link: string
+}
+
+export async function updateOrgCourseEndConfig(
+  org_id: string,
+  course_end_config: CourseEndConfigPayload,
+  access_token: string
+) {
+  const result: any = await fetch(
+    `${getAPIUrl()}orgs/${org_id}/config/course-end`,
+    RequestBodyWithAuthHeader('PUT', course_end_config, null, access_token)
+  )
+  const res = await errorHandling(result)
+  return res
+}
+
 export type SignupFieldType =
   | 'text'
   | 'textarea'

@@ -1,7 +1,7 @@
 'use client'
 import React from 'react'
-import { LandingObject, LandingSection, LandingHeroSection, LandingTextAndImageSection, LandingLogos, LandingPeople, LandingBackground, LandingButton, LandingImage, LandingFeaturedCourses } from './landing_types'
-import { Plus, Trash2, GripVertical, LayoutTemplate, ImageIcon, Users, Award, Edit, Link, Upload, Save, BookOpen, TextIcon, EyeOff } from 'lucide-react'
+import { LandingObject, LandingSection, LandingHeroSection, LandingTextAndImageSection, LandingLogos, LandingPeople, LandingBackground, LandingButton, LandingImage, LandingFeaturedCourses, LandingVideoSection } from './landing_types'
+import { Plus, Trash2, GripVertical, LayoutTemplate, ImageIcon, Users, Award, Edit, Link, Upload, Save, BookOpen, TextIcon, Video, LogIn, LogOut, Copy, EyeOff, Type, LayoutGrid, TrendingUp, Quote, HelpCircle, Megaphone, Images, Minus, Sparkles, BadgeDollarSign, ListOrdered, Columns3, Globe, Flag, Timer, SlidersHorizontal, Download, FileUp } from 'lucide-react'
 import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd'
 import { Input } from "@components/ui/input"
 import { Textarea } from "@components/ui/textarea"
@@ -10,14 +10,18 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Button } from "@components/ui/button"
 import { useOrg } from '@components/Contexts/OrgContext'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
-import { updateOrgLanding, uploadLandingContent } from '@services/organizations/orgs'
-import { getOrgLandingMediaDirectory } from '@services/media/media'
+import { updateOrgLanding } from '@services/organizations/orgs'
 import { getOrgCourses } from '@services/courses/courses'
 import toast from 'react-hot-toast'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { queryKeys } from '@/lib/query/keys'
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@components/ui/tabs"
 import { useTranslation } from 'react-i18next'
+import { resolveLandingVideo } from '@components/Landings/landingSections'
+import { ImageUploader } from './LandingImageUploader'
+import { SectionSettingsEditor, RichTextEditor, FeaturesEditor, StatsEditor, TestimonialsEditor, FaqEditor, CtaEditor, GalleryEditor, SpacerEditor, HeroExtrasEditor, PricingEditor, StepsEditor, ColumnsEditor, ImageEditor, EmbedEditor, BannerEditor, CountdownEditor, PageSettingsEditor } from './LandingBlockEditors'
+import { LANDING_TEMPLATES } from './landingTemplates'
+import { parseLandingImport } from './landingImport'
 
 // This will be created inside the component to access translations
 const getSectionTypes = (t: any) => ({
@@ -45,6 +49,86 @@ const getSectionTypes = (t: any) => ({
     icon: BookOpen,
     label: t('dashboard.organization.landing.section_types.featured_courses.label'),
     description: t('dashboard.organization.landing.section_types.featured_courses.description')
+  },
+  video: {
+    icon: Video,
+    label: t('dashboard.organization.landing.section_types.video.label'),
+    description: t('dashboard.organization.landing.section_types.video.description')
+  },
+  'rich-text': {
+    icon: Type,
+    label: t('dashboard.organization.landing.section_types.rich_text.label'),
+    description: t('dashboard.organization.landing.section_types.rich_text.description')
+  },
+  features: {
+    icon: LayoutGrid,
+    label: t('dashboard.organization.landing.section_types.features.label'),
+    description: t('dashboard.organization.landing.section_types.features.description')
+  },
+  stats: {
+    icon: TrendingUp,
+    label: t('dashboard.organization.landing.section_types.stats.label'),
+    description: t('dashboard.organization.landing.section_types.stats.description')
+  },
+  testimonials: {
+    icon: Quote,
+    label: t('dashboard.organization.landing.section_types.testimonials.label'),
+    description: t('dashboard.organization.landing.section_types.testimonials.description')
+  },
+  faq: {
+    icon: HelpCircle,
+    label: t('dashboard.organization.landing.section_types.faq.label'),
+    description: t('dashboard.organization.landing.section_types.faq.description')
+  },
+  cta: {
+    icon: Megaphone,
+    label: t('dashboard.organization.landing.section_types.cta.label'),
+    description: t('dashboard.organization.landing.section_types.cta.description')
+  },
+  gallery: {
+    icon: Images,
+    label: t('dashboard.organization.landing.section_types.gallery.label'),
+    description: t('dashboard.organization.landing.section_types.gallery.description')
+  },
+  spacer: {
+    icon: Minus,
+    label: t('dashboard.organization.landing.section_types.spacer.label'),
+    description: t('dashboard.organization.landing.section_types.spacer.description')
+  },
+  pricing: {
+    icon: BadgeDollarSign,
+    label: t('dashboard.organization.landing.section_types.pricing.label'),
+    description: t('dashboard.organization.landing.section_types.pricing.description')
+  },
+  steps: {
+    icon: ListOrdered,
+    label: t('dashboard.organization.landing.section_types.steps.label'),
+    description: t('dashboard.organization.landing.section_types.steps.description')
+  },
+  columns: {
+    icon: Columns3,
+    label: t('dashboard.organization.landing.section_types.columns.label'),
+    description: t('dashboard.organization.landing.section_types.columns.description')
+  },
+  image: {
+    icon: ImageIcon,
+    label: t('dashboard.organization.landing.section_types.image.label'),
+    description: t('dashboard.organization.landing.section_types.image.description')
+  },
+  embed: {
+    icon: Globe,
+    label: t('dashboard.organization.landing.section_types.embed.label'),
+    description: t('dashboard.organization.landing.section_types.embed.description')
+  },
+  banner: {
+    icon: Flag,
+    label: t('dashboard.organization.landing.section_types.banner.label'),
+    description: t('dashboard.organization.landing.section_types.banner.description')
+  },
+  countdown: {
+    icon: Timer,
+    label: t('dashboard.organization.landing.section_types.countdown.label'),
+    description: t('dashboard.organization.landing.section_types.countdown.description')
   }
 }) as const
 
@@ -122,6 +206,8 @@ const GRADIENT_DIRECTIONS = {
   '0deg': '➡️ Right'
 } as const
 
+const B = 'dashboard.organization.landing.blocks'
+
 const OrgEditLanding = () => {
   const { t } = useTranslation()
   const org = useOrg() as any
@@ -141,6 +227,36 @@ const OrgEditLanding = () => {
   })
   const [selectedSection, setSelectedSection] = React.useState<number | null>(null)
   const [isSaving, setIsSaving] = React.useState(false)
+  const [showPageSettings, setShowPageSettings] = React.useState(false)
+  const importInputRef = React.useRef<HTMLInputElement>(null)
+
+  const exportLanding = () => {
+    const blob = new Blob(
+      [JSON.stringify({ sections: landingData.sections, settings: landingData.settings }, null, 2)],
+      { type: 'application/json' }
+    )
+    const url = URL.createObjectURL(blob)
+    const link = document.createElement('a')
+    link.href = url
+    link.download = `landing-${org?.slug || 'page'}.json`
+    link.click()
+    URL.revokeObjectURL(url)
+  }
+
+  const importLanding = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    e.target.value = ''
+    if (!file) return
+    const parsed = parseLandingImport(await file.text())
+    if (!parsed) {
+      toast.error(t(`${B}.import_invalid`))
+      return
+    }
+    setLandingData(prev => ({ ...prev, sections: parsed.sections, settings: parsed.settings }))
+    setSelectedSection(null)
+    setShowPageSettings(false)
+    toast.success(t(`${B}.import_done`, { count: parsed.sections.length }))
+  }
 
   // Initialize landing data from org config (v2: customization.landing, v1: landing)
   React.useEffect(() => {
@@ -149,7 +265,8 @@ const OrgEditLanding = () => {
       const landingConfig = rawLanding
       setLandingData({
         sections: landingConfig.sections || [],
-        enabled: landingConfig.enabled || false
+        enabled: landingConfig.enabled || false,
+        settings: landingConfig.settings
       })
       setIsLandingEnabled(landingConfig.enabled || false)
     }
@@ -217,6 +334,60 @@ const OrgEditLanding = () => {
           title: t('dashboard.organization.landing.courses_editor.title_placeholder'),
           courses: []
         }
+      case 'video':
+        return {
+          type: 'video',
+          title: t('dashboard.organization.landing.video_editor.title_placeholder'),
+          description: '',
+          url: ''
+        }
+      case 'rich-text':
+        return { type: 'rich-text', title: t(`${B}.rich_text.default_title`), content: t(`${B}.rich_text.default_content`), align: 'left' }
+      case 'features':
+        return {
+          type: 'features', title: t(`${B}.features.default_title`), subtitle: '', columns: 3,
+          items: [1, 2, 3].map(() => ({ icon: '✨', title: t(`${B}.features.default_item_title`), description: t(`${B}.features.default_item_description`) }))
+        }
+      case 'stats':
+        return { type: 'stats', title: '', items: [{ value: '100+', label: t(`${B}.stats.default_label`) }] }
+      case 'testimonials':
+        return { type: 'testimonials', title: t(`${B}.testimonials.default_title`), items: [{ quote: '', author: '', role: '', image_url: '' }] }
+      case 'faq':
+        return { type: 'faq', title: t(`${B}.faq.default_title`), items: [{ question: '', answer: '' }] }
+      case 'cta':
+        return {
+          type: 'cta', heading: t(`${B}.cta.default_heading`), text: '',
+          background: { type: 'gradient', colors: ['#0f172a', '#1e3a8a'], direction: '135deg' }, textColor: '#ffffff',
+          buttons: [{ text: t(`${B}.button_text_default`), link: '/courses', color: '#0f172a', background: '#ffffff' }]
+        }
+      case 'gallery':
+        return { type: 'gallery', title: '', columns: 3, images: [] }
+      case 'spacer':
+        return { type: 'spacer', size: 'medium', divider: true }
+      case 'pricing':
+        return {
+          type: 'pricing', title: t(`${B}.pricing.default_title`), subtitle: '',
+          plans: [
+            { name: t(`${B}.pricing.default_plan`), price: '$0', period: '', description: '', features: '', highlighted: false, button: { text: t(`${B}.pricing.button_default`), link: '/signup', color: '#ffffff', background: '#0f172a' } }
+          ]
+        }
+      case 'steps':
+        return { type: 'steps', title: t(`${B}.steps.default_title`), layout: 'horizontal', items: [{ title: '', description: '' }, { title: '', description: '' }, { title: '', description: '' }] }
+      case 'columns':
+        return { type: 'columns', title: '', items: [{ content: '' }, { content: '' }] }
+      case 'image':
+        return { type: 'image', image: { url: '', alt: '' }, caption: '', link: '', rounded: true }
+      case 'embed':
+        return { type: 'embed', title: '', url: '', height: 600 }
+      case 'banner':
+        return { type: 'banner', text: t(`${B}.banner.default_text`), linkText: '', link: '', background: '#0f172a', textColor: '#ffffff' }
+      case 'countdown':
+        return {
+          type: 'countdown', heading: t(`${B}.countdown.default_heading`), text: '',
+          // A week out, as a datetime-local value.
+          target: new Date(Date.now() + 7 * 86400000).toISOString().slice(0, 16),
+          doneText: '', buttons: []
+        }
       default:
         throw new Error('Invalid section type')
     }
@@ -236,6 +407,31 @@ const OrgEditLanding = () => {
       ...prev,
       sections: prev.sections.filter((_, i) => i !== index)
     }))
+    setSelectedSection(null)
+  }
+
+  const duplicateSection = (index: number) => {
+    setLandingData(prev => {
+      const copy = JSON.parse(JSON.stringify(prev.sections[index])) as LandingSection
+      // Two sections cannot share an element id.
+      if (copy.style?.anchor) delete copy.style.anchor
+      const sections = [...prev.sections]
+      sections.splice(index + 1, 0, copy)
+      return { ...prev, sections }
+    })
+    setSelectedSection(index + 1)
+  }
+
+  const applyTemplate = (id: string) => {
+    const template = LANDING_TEMPLATES.find((tpl) => tpl.id === id)
+    if (!template) return
+    const sections = (JSON.parse(JSON.stringify(template.sections)) as LandingSection[]).map((section) =>
+      // Template countdowns ship without a date; a fixed one would be stale.
+      section.type === 'countdown' && !section.target
+        ? { ...section, target: new Date(Date.now() + 7 * 86400000).toISOString().slice(0, 16) }
+        : section
+    )
+    setLandingData(prev => ({ ...prev, sections }))
     setSelectedSection(null)
   }
 
@@ -261,9 +457,12 @@ const OrgEditLanding = () => {
 
     setIsSaving(true)
     try {
+      const hasSettings = landingData.settings && Object.values(landingData.settings).some((value) => value !== undefined)
       const res = await updateOrgLanding(org.id, {
         sections: landingData.sections,
-        enabled: isLandingEnabled
+        enabled: isLandingEnabled,
+        // Omitted entirely when unset, so an untouched landing keeps its old shape.
+        ...(hasSettings ? { settings: landingData.settings } : {})
       }, access_token)
 
       if (res.status === 200) {
@@ -286,7 +485,7 @@ const OrgEditLanding = () => {
         {/* Enable/Disable Landing Page */}
         <div className="flex items-center justify-between border-b pb-4">
           <div>
-            <h2 className="text-xl font-semibold flex items-center">{t('dashboard.organization.landing.title')} <div className="text-xs ms-2 bg-gray-200 text-gray-700 px-2 py-1 rounded-full"> {t('dashboard.organization.landing.beta')} </div></h2>
+            <h2 className="text-xl font-semibold flex items-center">{t('dashboard.organization.landing.title')}</h2>
             <p className="text-gray-600">{t('dashboard.organization.landing.subtitle')}</p>
           </div>
           <div className="flex items-center space-x-4">
@@ -336,7 +535,7 @@ const OrgEditLanding = () => {
                               <div
                                 ref={provided.innerRef}
                                 {...provided.draggableProps}
-                                onClick={() => setSelectedSection(index)}
+                                onClick={() => { setSelectedSection(index); setShowPageSettings(false) }}
                                 className={`p-4 bg-white/80 backdrop-blur-xs rounded-lg cursor-pointer border  ${
                                   selectedSection === index 
                                     ? 'border-blue-500 bg-blue-50 ring-2 ring-blue-500/20 shadow-xs' 
@@ -369,6 +568,15 @@ const OrgEditLanding = () => {
                                     }`}>
                                       {getSectionDisplayName(section)}
                                     </span>
+                                    {section.hidden && (
+                                      <EyeOff size={13} className="text-gray-400 shrink-0" aria-label={t(`${B}.hidden`)} />
+                                    )}
+                                    {section.visibility === 'logged_in' && (
+                                      <LogIn size={13} className="text-gray-400 shrink-0" aria-label={t('dashboard.organization.landing.visibility.logged_in')} />
+                                    )}
+                                    {section.visibility === 'logged_out' && (
+                                      <LogOut size={13} className="text-gray-400 shrink-0" aria-label={t('dashboard.organization.landing.visibility.logged_out')} />
+                                    )}
                                   </div>
                                   <div className="flex space-x-1 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
                                     <button
@@ -383,6 +591,17 @@ const OrgEditLanding = () => {
                                       }`}
                                     >
                                       <Edit size={14} />
+                                    </button>
+                                    <button
+                                      onClick={(e) => {
+                                        e.stopPropagation()
+                                        duplicateSection(index)
+                                      }}
+                                      aria-label={t(`${B}.duplicate`)}
+                                      title={t(`${B}.duplicate`)}
+                                      className="p-1.5 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-md transition-colors duration-200"
+                                    >
+                                      <Copy size={14} />
                                     </button>
                                     <button
                                       onClick={(e) => {
@@ -438,15 +657,67 @@ const OrgEditLanding = () => {
                     </SelectContent>
                   </Select>
                 </div>
+
+                <div className="pt-4 mt-4 border-t space-y-2">
+                  <Button
+                    id="landing-page-settings"
+                    variant={showPageSettings ? 'default' : 'outline'}
+                    className="w-full justify-start"
+                    onClick={() => { setShowPageSettings(true); setSelectedSection(null) }}
+                  >
+                    <SlidersHorizontal className="h-4 w-4 me-2" />
+                    {t(`${B}.page.title`)}
+                  </Button>
+                  <div className="grid grid-cols-2 gap-2">
+                    <Button variant="outline" onClick={exportLanding} disabled={landingData.sections.length === 0}>
+                      <Download className="h-4 w-4 me-2" />
+                      {t(`${B}.export`)}
+                    </Button>
+                    <Button variant="outline" onClick={() => importInputRef.current?.click()}>
+                      <FileUp className="h-4 w-4 me-2" />
+                      {t(`${B}.import`)}
+                    </Button>
+                  </div>
+                  <input ref={importInputRef} id="landing-import" type="file" accept="application/json,.json" onChange={importLanding} className="hidden" />
+                </div>
               </div>
 
               {/* Editor Panel */}
               <div className="col-span-3">
-                {selectedSection !== null ? (
+                {showPageSettings ? (
+                  <PageSettingsEditor
+                    settings={landingData.settings || {}}
+                    onChange={(settings) => setLandingData(prev => ({ ...prev, settings }))}
+                  />
+                ) : selectedSection !== null ? (
                   <SectionEditor
                     section={landingData.sections[selectedSection]}
                     onChange={(updatedSection) => updateSection(selectedSection, updatedSection)}
                   />
+                ) : landingData.sections.length === 0 ? (
+                  <div className="h-full flex flex-col items-center justify-center gap-5 py-10">
+                    <div className="text-center">
+                      <div className="flex items-center justify-center gap-2 font-medium text-lg">
+                        <Sparkles className="w-5 h-5 text-gray-500" />
+                        {t('dashboard.organization.landing.templates.title')}
+                      </div>
+                      <p className="text-sm text-gray-500 mt-1">{t('dashboard.organization.landing.templates.description')}</p>
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 w-full max-w-3xl">
+                      {LANDING_TEMPLATES.map((template) => (
+                        <button
+                          key={template.id}
+                          type="button"
+                          onClick={() => applyTemplate(template.id)}
+                          className="text-start p-5 rounded-xl border border-gray-200 hover:border-gray-400 hover:bg-gray-50 transition-colors"
+                        >
+                          <div className="font-semibold text-gray-900">{t(`dashboard.organization.landing.templates.${template.id}.name`)}</div>
+                          <div className="text-sm text-gray-500 mt-1">{t(`dashboard.organization.landing.templates.${template.id}.description`)}</div>
+                          <div className="text-xs text-gray-400 mt-3">{t('dashboard.organization.landing.templates.sections_count', { count: template.sections.length })}</div>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
                 ) : (
                   <div className="h-full flex items-center justify-center text-gray-500">
                     {t('dashboard.organization.landing.select_section')}
@@ -467,9 +738,23 @@ interface SectionEditorProps {
 }
 
 const SectionEditor: React.FC<SectionEditorProps> = ({ section, onChange }) => {
+  return (
+    <div className="space-y-4">
+      <SectionSettingsEditor section={section} onChange={onChange} />
+      <SectionTypeEditor section={section} onChange={onChange} />
+    </div>
+  )
+}
+
+const SectionTypeEditor: React.FC<SectionEditorProps> = ({ section, onChange }) => {
   switch (section.type) {
     case 'hero':
-      return <HeroSectionEditor section={section} onChange={onChange} />
+      return (
+        <div className="space-y-4">
+          <HeroSectionEditor section={section} onChange={onChange} />
+          <HeroExtrasEditor section={section} onChange={onChange} />
+        </div>
+      )
     case 'text-and-image':
       return <TextAndImageSectionEditor section={section} onChange={onChange} />
     case 'logos':
@@ -478,6 +763,38 @@ const SectionEditor: React.FC<SectionEditorProps> = ({ section, onChange }) => {
       return <PeopleSectionEditor section={section} onChange={onChange} />
     case 'featured-courses':
       return <FeaturedCoursesEditor section={section} onChange={onChange} />
+    case 'video':
+      return <VideoSectionEditor section={section} onChange={onChange} />
+    case 'rich-text':
+      return <RichTextEditor section={section} onChange={onChange} />
+    case 'features':
+      return <FeaturesEditor section={section} onChange={onChange} />
+    case 'stats':
+      return <StatsEditor section={section} onChange={onChange} />
+    case 'testimonials':
+      return <TestimonialsEditor section={section} onChange={onChange} />
+    case 'faq':
+      return <FaqEditor section={section} onChange={onChange} />
+    case 'cta':
+      return <CtaEditor section={section} onChange={onChange} />
+    case 'gallery':
+      return <GalleryEditor section={section} onChange={onChange} />
+    case 'spacer':
+      return <SpacerEditor section={section} onChange={onChange} />
+    case 'pricing':
+      return <PricingEditor section={section} onChange={onChange} />
+    case 'steps':
+      return <StepsEditor section={section} onChange={onChange} />
+    case 'columns':
+      return <ColumnsEditor section={section} onChange={onChange} />
+    case 'image':
+      return <ImageEditor section={section} onChange={onChange} />
+    case 'embed':
+      return <EmbedEditor section={section} onChange={onChange} />
+    case 'banner':
+      return <BannerEditor section={section} onChange={onChange} />
+    case 'countdown':
+      return <CountdownEditor section={section} onChange={onChange} />
     default:
       return <div>Unknown section type</div>
   }
@@ -1123,75 +1440,6 @@ const HeroSectionEditor: React.FC<{
   )
 }
 
-interface ImageUploaderProps {
-  onImageUploaded: (imageUrl: string) => void
-  className?: string
-  buttonText?: string
-  id: string
-}
-
-const ImageUploader: React.FC<ImageUploaderProps> = ({ onImageUploaded, className, buttonText = "Upload Image", id }) => {
-  const { t } = useTranslation()
-  const org = useOrg() as any
-  const session = useLHSession() as any
-  const access_token = session?.data?.tokens?.access_token
-  const [isUploading, setIsUploading] = React.useState(false)
-  const inputId = `imageUpload-${id}`
-
-  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
-    if (!file) return
-
-    // Validate file using reusable utility
-    const { validateFile } = await import('@/lib/file-validation')
-    const validation = validateFile(file, ['image'])
-    
-    if (!validation.valid) {
-      toast.error(validation.error!)
-      e.target.value = '' // Clear the input
-      return
-    }
-
-    setIsUploading(true)
-    try {
-      const response = await uploadLandingContent(org.id, file, access_token)
-      if (response.status === 200) {
-        const imageUrl = getOrgLandingMediaDirectory(org.org_uuid, response.data.filename)
-        onImageUploaded(imageUrl)
-        toast.success(t('dashboard.organization.images.toasts.logo_success'))
-      } else {
-        toast.error(t('dashboard.organization.images.toasts.logo_error'))
-      }
-    } catch (error) {
-      console.error('Error uploading image:', error)
-      toast.error(t('dashboard.organization.images.toasts.logo_error'))
-    } finally {
-      setIsUploading(false)
-    }
-  }
-
-  return (
-    <div className={className}>
-      <Button
-        variant="outline"
-        onClick={() => document.getElementById(inputId)?.click()}
-        disabled={isUploading}
-        className="w-full"
-      >
-        <Upload className="h-4 w-4 me-2" />
-        {isUploading ? t('dashboard.organization.images.uploading') : buttonText}
-      </Button>
-      <input
-        id={inputId}
-        type="file"
-        accept="image/jpeg,image/png,image/webp,image/gif"
-        onChange={handleFileChange}
-        className="hidden"
-      />
-    </div>
-  )
-}
-
 const TextAndImageSectionEditor: React.FC<{
   section: LandingTextAndImageSection
   onChange: (section: LandingTextAndImageSection) => void
@@ -1578,7 +1826,38 @@ const FeaturedCoursesEditor: React.FC<{
           />
         </div>
 
+        {/* Mode */}
+        <div className="grid grid-cols-2 gap-4">
+          <div>
+            <Label htmlFor="courses-mode">{t(`${B}.courses.mode`)}</Label>
+            <Select
+              value={section.mode || 'selected'}
+              onValueChange={(mode) => onChange({ ...section, mode: mode === 'latest' ? 'latest' : undefined })}
+            >
+              <SelectTrigger id="courses-mode"><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="selected">{t(`${B}.courses.mode_selected`)}</SelectItem>
+                <SelectItem value="latest">{t(`${B}.courses.mode_latest`)}</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          {section.mode === 'latest' && (
+            <div>
+              <Label htmlFor="courses-limit">{t(`${B}.courses.limit`)}</Label>
+              <Input
+                id="courses-limit"
+                type="number"
+                min={1}
+                max={24}
+                value={section.limit || 8}
+                onChange={(e) => onChange({ ...section, limit: Math.min(24, Math.max(1, Number(e.target.value) || 1)) })}
+              />
+            </div>
+          )}
+        </div>
+
         {/* Course Selection */}
+        {section.mode !== 'latest' && (
         <div>
           <Label>{t('dashboard.organization.landing.courses_editor.select_courses')}</Label>
           {hasPrivateSelection && (
@@ -1643,6 +1922,76 @@ const FeaturedCoursesEditor: React.FC<{
               </div>
             )}
           </div>
+        </div>
+        )}
+      </div>
+    </div>
+  )
+}
+
+const VideoSectionEditor: React.FC<{
+  section: LandingVideoSection
+  onChange: (section: LandingVideoSection) => void
+}> = ({ section, onChange }) => {
+  const { t } = useTranslation()
+  const video = resolveLandingVideo(section.url)
+  return (
+    <div className="space-y-6 p-6 bg-white rounded-lg nice-shadow">
+      <div className="flex items-center space-x-2">
+        <Video className="w-5 h-5 text-gray-500" />
+        <h3 className="font-medium text-lg">{t('dashboard.organization.landing.video_editor.title')}</h3>
+      </div>
+
+      <div className="space-y-4">
+        {/* Title */}
+        <div>
+          <Label htmlFor="video-title">{t('dashboard.organization.landing.video_editor.title_label')}</Label>
+          <Input
+            id="video-title"
+            value={section.title}
+            onChange={(e) => onChange({ ...section, title: e.target.value })}
+            placeholder={t('dashboard.organization.landing.video_editor.title_placeholder')}
+          />
+        </div>
+
+        {/* Description */}
+        <div>
+          <Label htmlFor="video-description">{t('dashboard.organization.landing.video_editor.description_label')}</Label>
+          <Textarea
+            id="video-description"
+            value={section.description}
+            onChange={(e) => onChange({ ...section, description: e.target.value })}
+            placeholder={t('dashboard.organization.landing.video_editor.description_placeholder')}
+          />
+        </div>
+
+        {/* Video */}
+        <div>
+          <Label htmlFor="video-url">{t('dashboard.organization.landing.video_editor.url_label')}</Label>
+          <div className="space-y-2 mt-2">
+            <Input
+              id="video-url"
+              value={section.url}
+              onChange={(e) => onChange({ ...section, url: e.target.value })}
+              placeholder="https://www.youtube.com/watch?v=..."
+            />
+            <p className="text-xs text-gray-500">{t('dashboard.organization.landing.video_editor.url_help')}</p>
+            <ImageUploader
+              id="video-section"
+              fileType="video"
+              onImageUploaded={(url) => onChange({ ...section, url })}
+              buttonText={t('dashboard.organization.landing.video_editor.upload_video')}
+            />
+          </div>
+          {video && (
+            <div className="mt-4 max-w-xl aspect-video rounded-lg overflow-hidden bg-black">
+              {video.kind === 'embed' ? (
+                <iframe src={video.src} title={section.title} className="w-full h-full" allowFullScreen />
+              ) : (
+                <video src={video.src} className="w-full h-full" controls preload="metadata" />
+              )}
+            </div>
+          )}
         </div>
       </div>
     </div>
