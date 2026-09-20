@@ -9,6 +9,9 @@ import { useLHSession } from '@components/Contexts/LHSessionContext'
 import CourseThumbnailLanding from '@components/Objects/Thumbnails/CourseThumbnailLanding'
 import UserAvatar from '@components/Objects/UserAvatar'
 import { useTranslation } from 'react-i18next'
+import { useOrg } from '@components/Contexts/OrgContext'
+import { getPublicOffers } from '@services/payments/offers'
+import { formatCurrency } from '@/lib/format'
 import { backgroundCss, deviceClass, hasSectionFrame, isSectionVisible, resolveLandingVideo, sanitizeAnchor, spacingClass } from './landingSections'
 import { BannerBlock, ColumnsBlock, CountdownBlock, CtaBlock, EmbedBlock, FaqBlock, FeaturesBlock, GalleryBlock, ImageBlock, PricingBlock, Reveal, RichTextBlock, SpacerBlock, StatsBlock, StepsBlock, TestimonialsBlock } from './LandingBlocks'
 
@@ -42,7 +45,7 @@ class SectionBoundary extends React.Component<{ children: React.ReactNode }, { f
 }
 
 function LandingCustom({ landing, orgslug }: LandingCustomProps) {
-  const { t } = useTranslation()
+  const { t, i18n } = useTranslation()
   const session = useLHSession() as any
   const access_token = session?.data?.tokens?.access_token
 
@@ -51,6 +54,28 @@ function LandingCustom({ landing, orgslug }: LandingCustomProps) {
     queryKey: queryKeys.courses.list(orgslug),
     queryFn: () => getOrgCourses(orgslug, null, access_token),
     enabled: !!orgslug,
+    staleTime: 60_000,
+  })
+
+  // Pricing plans can link to store offers. Fetch the public listing once, and
+  // only when some plan actually links to one.
+  const org = useOrg() as any
+  const hasLinkedPlans = landing.sections.some(
+    (section) => section.type === 'pricing' && section.plans?.some((plan) => plan.offer_uuid)
+  )
+  const { data: publicOffers } = useQuery({
+    queryKey: ['landing-public-offers', org?.id],
+    queryFn: async () => {
+      // Payments off, or the request failed: resolve to "no offers" so linked
+      // plans drop out instead of showing a loading price forever.
+      try {
+        const result = await getPublicOffers(org.id)
+        return result?.success && Array.isArray(result.data) ? result.data : []
+      } catch {
+        return []
+      }
+    },
+    enabled: hasLinkedPlans && !!org?.id,
     staleTime: 60_000,
   })
 
@@ -338,7 +363,16 @@ function LandingCustom({ landing, orgslug }: LandingCustomProps) {
       case 'spacer':
         return <SpacerBlock key="spacer" section={section} />
       case 'pricing':
-        return <PricingBlock key="pricing" section={section} pad={pad} />
+        return (
+          <PricingBlock
+            key="pricing"
+            section={section}
+            pad={pad}
+            offers={publicOffers}
+            formatPrice={(amount, currency) => formatCurrency(amount, currency, i18n.language)}
+            labels={{ from: t('landing.pricing.from'), subscription: t('landing.pricing.subscription') }}
+          />
+        )
       case 'steps':
         return <StepsBlock key="steps" section={section} pad={pad} />
       case 'columns':

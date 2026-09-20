@@ -24,7 +24,7 @@ import {
   LandingTestimonialsSection,
   LandingVisibility,
 } from './landing_types'
-import { ArrowDown, ArrowUp, BadgeDollarSign, Columns3, Flag, Globe, ImageIcon, ListOrdered, SlidersHorizontal, Timer, HelpCircle, Images, LayoutGrid, Megaphone, Minus, Plus, Quote, Settings2, Trash2, TrendingUp, Type } from 'lucide-react'
+import { ArrowDown, ArrowUp, ShoppingBag, BadgeDollarSign, Columns3, Flag, Globe, ImageIcon, ListOrdered, SlidersHorizontal, Timer, HelpCircle, Images, LayoutGrid, Megaphone, Minus, Plus, Quote, Settings2, Trash2, TrendingUp, Type } from 'lucide-react'
 import { Input } from '@components/ui/input'
 import { Textarea } from '@components/ui/textarea'
 import { Label } from '@components/ui/label'
@@ -32,8 +32,12 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Button } from '@components/ui/button'
 import { Switch } from '@components/ui/switch'
 import { useTranslation } from 'react-i18next'
+import { useQuery } from '@tanstack/react-query'
+import { useOrg } from '@components/Contexts/OrgContext'
+import { getPublicOffers } from '@services/payments/offers'
+import { formatCurrency } from '@/lib/format'
 import { ImageUploader } from './LandingImageUploader'
-import { resolveLandingEmbed, sanitizeAnchor } from '@components/Landings/landingSections'
+import { LandingOffer, resolveLandingEmbed, sanitizeAnchor } from '@components/Landings/landingSections'
 
 const K = 'dashboard.organization.landing.blocks'
 
@@ -590,7 +594,34 @@ export const HeroExtrasEditor: React.FC<EditorProps<LandingHeroSection>> = ({ se
 }
 
 export const PricingEditor: React.FC<EditorProps<LandingPricingSection>> = ({ section, onChange }) => {
-  const { t } = useTranslation()
+  const { t, i18n } = useTranslation()
+  const org = useOrg() as any
+  // The public listing, because those are the offers a visitor can actually buy.
+  const { data: offers = [] } = useQuery<LandingOffer[]>({
+    queryKey: ['landing-public-offers', org?.id],
+    queryFn: async () => {
+      try {
+        const result = await getPublicOffers(org.id)
+        return result?.success && Array.isArray(result.data) ? result.data : []
+      } catch {
+        return []
+      }
+    },
+    enabled: !!org?.id,
+    staleTime: 60_000,
+  })
+  const offerLabel = (offer: LandingOffer) => `${offer.name} · ${formatCurrency(offer.amount, offer.currency, i18n.language)}`
+  const unlinkedOffers = offers.filter((offer) => !section.plans.some((plan) => plan.offer_uuid === offer.offer_uuid))
+
+  const addPlansFromStore = () => {
+    const plans = unlinkedOffers.slice(0, Math.max(0, 4 - section.plans.length)).map((offer) => ({
+      name: '', price: '', period: '', description: '', features: '', highlighted: false,
+      offer_uuid: offer.offer_uuid,
+      button: { text: t(`${K}.pricing.buy_default`), link: '', color: '#ffffff', background: '#0f172a' },
+    }))
+    onChange({ ...section, plans: [...section.plans, ...plans] })
+  }
+
   return (
     <Card icon={BadgeDollarSign} title={t(`${K}.pricing.title`)}>
       <Field id="pricing-title" label={t(`${K}.title_label`)}>
@@ -599,31 +630,80 @@ export const PricingEditor: React.FC<EditorProps<LandingPricingSection>> = ({ se
       <Field id="pricing-subtitle" label={t(`${K}.subtitle_label`)}>
         <Input id="pricing-subtitle" value={section.subtitle} onChange={(e) => onChange({ ...section, subtitle: e.target.value })} />
       </Field>
+      {offers.length > 0 ? (
+        <div className="flex items-center justify-between gap-4 p-3 rounded-lg bg-gray-50 border">
+          <p className="text-sm text-gray-600 flex items-center gap-2">
+            <ShoppingBag className="w-4 h-4 shrink-0" />
+            {t(`${K}.pricing.store_hint`)}
+          </p>
+          <Button id="pricing-add-from-store" variant="outline" disabled={unlinkedOffers.length === 0 || section.plans.length >= 4} onClick={addPlansFromStore}>
+            {t(`${K}.pricing.add_from_store`)}
+          </Button>
+        </div>
+      ) : (
+        <p className="text-xs text-gray-500">{t(`${K}.pricing.store_empty`)}</p>
+      )}
       <ItemList
         items={section.plans}
         onChange={(plans) => onChange({ ...section, plans })}
         max={4}
         empty={{ name: '', price: '', period: '', description: '', features: '', highlighted: false, button: { text: t(`${K}.pricing.button_default`), link: '/signup', color: '#ffffff', background: '#0f172a' } }}
         addLabel={t(`${K}.pricing.add`)}
-        renderItem={(plan, update, index) => (
+        renderItem={(plan, update, index) => {
+          const linked = offers.find((offer) => offer.offer_uuid === plan.offer_uuid)
+          return (
           <>
+            {(offers.length > 0 || plan.offer_uuid) && (
+              <div>
+                <Label htmlFor={`pricing-offer-${index}`}>{t(`${K}.pricing.linked_offer`)}</Label>
+                <Select value={plan.offer_uuid || 'none'} onValueChange={(value) => update({ offer_uuid: value === 'none' ? undefined : value })}>
+                  <SelectTrigger id={`pricing-offer-${index}`}><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="none">{t(`${K}.pricing.linked_none`)}</SelectItem>
+                    {offers.map((offer) => (
+                      <SelectItem key={offer.offer_uuid} value={offer.offer_uuid}>{offerLabel(offer)}</SelectItem>
+                    ))}
+                    {plan.offer_uuid && !linked && (
+                      <SelectItem value={plan.offer_uuid}>{t(`${K}.pricing.linked_missing`)}</SelectItem>
+                    )}
+                  </SelectContent>
+                </Select>
+                {plan.offer_uuid && (
+                  <p className={`text-xs mt-1 ${linked ? 'text-gray-500' : 'text-amber-700'}`}>
+                    {t(linked ? `${K}.pricing.linked_help` : `${K}.pricing.linked_missing_help`)}
+                  </p>
+                )}
+              </div>
+            )}
             <div className="grid grid-cols-3 gap-2">
-              <Input value={plan.name} onChange={(e) => update({ name: e.target.value })} placeholder={t(`${K}.pricing.name`)} />
-              <Input value={plan.price} onChange={(e) => update({ price: e.target.value })} placeholder="$29" aria-label={t(`${K}.pricing.price`)} />
+              <Input value={plan.name} onChange={(e) => update({ name: e.target.value })} placeholder={linked?.name || t(`${K}.pricing.name`)} />
+              <Input
+                value={linked ? formatCurrency(linked.amount, linked.currency, i18n.language) : plan.price}
+                disabled={!!linked}
+                onChange={(e) => update({ price: e.target.value })}
+                placeholder="$29"
+                aria-label={t(`${K}.pricing.price`)}
+              />
               <Input value={plan.period} onChange={(e) => update({ period: e.target.value })} placeholder={t(`${K}.pricing.period`)} />
             </div>
             <Input value={plan.description} onChange={(e) => update({ description: e.target.value })} placeholder={t(`${K}.description_label`)} />
             <Textarea value={plan.features} onChange={(e) => update({ features: e.target.value })} placeholder={t(`${K}.pricing.features`)} className="min-h-[90px]" />
             <div className="grid grid-cols-2 gap-2">
               <Input value={plan.button.text} onChange={(e) => update({ button: { ...plan.button, text: e.target.value } })} placeholder={t(`${K}.button_text`)} />
-              <Input value={plan.button.link} onChange={(e) => update({ button: { ...plan.button, link: e.target.value } })} placeholder="/signup, https://" />
+              <Input
+                value={plan.offer_uuid ? `/store/offers/${plan.offer_uuid}` : plan.button.link}
+                disabled={!!plan.offer_uuid}
+                onChange={(e) => update({ button: { ...plan.button, link: e.target.value } })}
+                placeholder="/signup, https://"
+              />
             </div>
             <div className="flex items-center gap-2">
               <Switch id={`pricing-highlight-${index}`} checked={!!plan.highlighted} onCheckedChange={(highlighted) => update({ highlighted })} />
               <Label htmlFor={`pricing-highlight-${index}`}>{t(`${K}.pricing.highlighted`)}</Label>
             </div>
           </>
-        )}
+          )
+        }}
       />
     </Card>
   )

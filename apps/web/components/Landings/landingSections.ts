@@ -1,4 +1,4 @@
-import type { LandingBackground, LandingSection, LandingSectionStyle } from '@components/Dashboard/Pages/Org/OrgEditLanding/landing_types'
+import type { LandingBackground, LandingPricingPlan, LandingSection, LandingSectionStyle } from '@components/Dashboard/Pages/Org/OrgEditLanding/landing_types'
 import type { SessionStatus } from '@components/Contexts/AuthContext'
 import { youTubeId, vimeoId, toEmbedUrl } from '@/lib/media/embedUrl'
 
@@ -175,4 +175,77 @@ export function safeHref(link?: string): string {
   if (value.startsWith('/') && !value.startsWith('//')) return value
   if (/^(https?:\/\/|mailto:|tel:)/i.test(value)) return value
   return '#'
+}
+
+/** The fields of a public store offer that a pricing plan can draw from. */
+export interface LandingOffer {
+  offer_uuid: string
+  name: string
+  description: string
+  offer_type: 'one_time' | 'subscription'
+  price_type: 'fixed_price' | 'customer_choice'
+  amount: number
+  currency: string
+  benefits: string
+}
+
+export interface ResolvedPricingPlan {
+  name: string
+  price: string
+  period: string
+  description: string
+  features: string[]
+  highlighted: boolean
+  button: LandingPricingPlan['button']
+  // The live price is still being fetched.
+  loading: boolean
+  // "Pay what you want" offers: `price` is the minimum.
+  priceIsMinimum: boolean
+  subscription: boolean
+}
+
+const splitLines = (value: string, separator: RegExp) =>
+  (value || '').split(separator).map((line) => line.trim()).filter(Boolean)
+
+/**
+ * Merge a pricing plan with the store offer it links to.
+ *
+ * `offers` is undefined while the listing loads. A linked offer that is not in
+ * the public listing (archived, unlisted) returns null: showing a typed-in
+ * price for something that can no longer be bought would be worse than
+ * dropping the plan.
+ */
+export function resolvePricingPlan(
+  plan: LandingPricingPlan,
+  offers: LandingOffer[] | undefined,
+  formatPrice: (amount: number, currency: string) => string
+): ResolvedPricingPlan | null {
+  const base: ResolvedPricingPlan = {
+    name: plan.name,
+    price: plan.price,
+    period: plan.period,
+    description: plan.description,
+    features: splitLines(plan.features, /\n/),
+    highlighted: !!plan.highlighted,
+    button: plan.button,
+    loading: false,
+    priceIsMinimum: false,
+    subscription: false,
+  }
+  if (!plan.offer_uuid) return base
+  if (!offers) return { ...base, price: '', loading: true }
+
+  const offer = offers.find((candidate) => candidate.offer_uuid === plan.offer_uuid)
+  if (!offer) return null
+
+  return {
+    ...base,
+    name: plan.name || offer.name,
+    description: plan.description || offer.description || '',
+    features: base.features.length ? base.features : splitLines(offer.benefits, /,/),
+    price: formatPrice(offer.amount, offer.currency),
+    priceIsMinimum: offer.price_type === 'customer_choice',
+    subscription: offer.offer_type === 'subscription',
+    button: { ...plan.button, link: `/store/offers/${offer.offer_uuid}` },
+  }
 }

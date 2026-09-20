@@ -20,7 +20,7 @@ import {
   LandingStatsSection,
   LandingTestimonialsSection,
 } from '@components/Dashboard/Pages/Org/OrgEditLanding/landing_types'
-import { backgroundCss, countdownParts, resolveLandingEmbed, safeHref } from './landingSections'
+import { backgroundCss, countdownParts, LandingOffer, resolveLandingEmbed, resolvePricingPlan, safeHref } from './landingSections'
 
 const SECTION = 'mx-2 sm:mx-4 lg:mx-16 w-full'
 const TITLE = 'text-2xl md:text-3xl font-bold mb-6'
@@ -230,26 +230,48 @@ function LandingButtons({ buttons, className = '' }: { buttons: { text: string; 
   )
 }
 
-export function PricingBlock({ section, pad }: BlockProps<LandingPricingSection>) {
-  const columns = section.plans.length >= 4 ? GRID_COLUMNS[4] : section.plans.length === 2 ? GRID_COLUMNS[2] : GRID_COLUMNS[3]
+export function PricingBlock({
+  section,
+  pad,
+  offers,
+  formatPrice,
+  labels,
+}: BlockProps<LandingPricingSection> & {
+  // Public store offers; undefined while loading. Only read by linked plans.
+  offers: LandingOffer[] | undefined
+  formatPrice: (amount: number, currency: string) => string
+  labels: { from: string; subscription: string }
+}) {
+  const plans = section.plans
+    .map((plan) => resolvePricingPlan(plan, offers, formatPrice))
+    .filter((plan): plan is NonNullable<typeof plan> => plan !== null)
+  if (plans.length === 0) return null
+  const columns = plans.length >= 4 ? GRID_COLUMNS[4] : plans.length === 2 ? GRID_COLUMNS[2] : GRID_COLUMNS[3]
   return (
     <div className={`${pad} ${SECTION}`}>
       {section.title && <h2 className={`${TITLE} text-center ${section.subtitle ? 'mb-2' : ''}`}>{section.title}</h2>}
       {section.subtitle && <p className="text-base md:text-lg opacity-70 mb-10 text-center">{section.subtitle}</p>}
       <div className={`grid grid-cols-1 ${columns} gap-6 items-stretch`}>
-        {section.plans.map((plan, index) => (
+        {plans.map((plan, index) => (
           <div
             key={index}
             className={`bg-white text-gray-900 rounded-2xl p-7 flex flex-col nice-shadow ${plan.highlighted ? 'ring-2 ring-gray-900 md:scale-[1.03]' : ''}`}
           >
             <h3 className="text-lg font-semibold">{plan.name}</h3>
-            <div className="mt-3 flex items-baseline gap-1">
-              <span className="text-4xl font-bold tracking-tight">{plan.price}</span>
-              {plan.period && <span className="text-sm text-gray-500">{plan.period}</span>}
+            <div className="mt-3 flex items-baseline gap-1 flex-wrap">
+              {plan.priceIsMinimum && <span className="text-sm text-gray-500">{labels.from}</span>}
+              {plan.loading ? (
+                <span className="h-10 w-28 rounded-md bg-gray-100 animate-pulse" aria-hidden="true" />
+              ) : (
+                <span className="text-4xl font-bold tracking-tight">{plan.price}</span>
+              )}
+              {(plan.period || plan.subscription) && (
+                <span className="text-sm text-gray-500">{plan.period || labels.subscription}</span>
+              )}
             </div>
             {plan.description && <p className="text-sm text-gray-600 mt-2">{plan.description}</p>}
             <ul className="mt-6 space-y-2 flex-1">
-              {(plan.features || '').split('\n').map((f) => f.trim()).filter(Boolean).map((feature, i) => (
+              {plan.features.map((feature, i) => (
                 <li key={i} className="flex items-start gap-2 text-sm text-gray-700">
                   <Check className="w-4 h-4 mt-0.5 shrink-0 text-emerald-600" />
                   <span>{feature}</span>

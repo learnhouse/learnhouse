@@ -217,6 +217,10 @@ export interface LandingPricingPlan {
   features: string;
   button: LandingButton;
   highlighted: boolean;
+  // Links the plan to a store offer. The live price replaces `price`, the
+  // button goes to the offer's checkout page, and empty name / description /
+  // features fall back to the offer's own.
+  offer_uuid?: string;
 }
 
 export interface LandingPricingSection extends LandingSectionBase {

@@ -256,3 +256,56 @@ describe("landing import", () => {
     }
   });
 });
+
+import { resolvePricingPlan } from "../components/Landings/landingSections.ts";
+
+describe("pricing plans linked to store offers", () => {
+  const fmt = (amount, currency) => `${currency} ${amount}`;
+  const plan = (patch = {}) => ({
+    name: "", price: "$10", period: "", description: "", features: "", highlighted: false,
+    button: { text: "Buy", link: "/signup", color: "#fff", background: "#000" },
+    ...patch,
+  });
+  const offer = {
+    offer_uuid: "offer_1", name: "Pro", description: "Everything", offer_type: "subscription",
+    price_type: "fixed_price", amount: 29, currency: "USD", benefits: "All courses, Certificates",
+  };
+
+  test("an unlinked plan is untouched, with or without offers loaded", () => {
+    const p = plan({ name: "Free", features: "One\n\n Two " });
+    for (const offers of [undefined, [], [offer]]) {
+      const r = resolvePricingPlan(p, offers, fmt);
+      expect(r.price).toBe("$10");
+      expect(r.features).toEqual(["One", "Two"]);
+      expect(r.button.link).toBe("/signup");
+      expect(r.loading).toBe(false);
+    }
+  });
+
+  test("a linked plan takes price, checkout link and empty fields from the offer", () => {
+    const r = resolvePricingPlan(plan({ offer_uuid: "offer_1" }), [offer], fmt);
+    expect(r.price).toBe("USD 29");
+    expect(r.name).toBe("Pro");
+    expect(r.description).toBe("Everything");
+    expect(r.features).toEqual(["All courses", "Certificates"]);
+    expect(r.button.link).toBe("/store/offers/offer_1");
+    expect(r.button.text).toBe("Buy");
+    expect(r.subscription).toBe(true);
+    expect(r.priceIsMinimum).toBe(false);
+  });
+
+  test("typed name, description and features win over the offer's; the price never does", () => {
+    const r = resolvePricingPlan(plan({ offer_uuid: "offer_1", name: "Team", description: "Mine", features: "A", price: "$1" }), [offer], fmt);
+    expect([r.name, r.description, r.features, r.price]).toEqual(["Team", "Mine", ["A"], "USD 29"]);
+  });
+
+  test("pay-what-you-want offers flag the price as a minimum", () => {
+    const r = resolvePricingPlan(plan({ offer_uuid: "offer_1" }), [{ ...offer, price_type: "customer_choice" }], fmt);
+    expect(r.priceIsMinimum).toBe(true);
+  });
+
+  test("loading shows no price; an offer missing from the listing drops the plan", () => {
+    expect(resolvePricingPlan(plan({ offer_uuid: "offer_1" }), undefined, fmt)).toMatchObject({ loading: true, price: "" });
+    expect(resolvePricingPlan(plan({ offer_uuid: "offer_gone" }), [offer], fmt)).toBeNull();
+  });
+});

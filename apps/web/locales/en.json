@@ -3717,7 +3717,16 @@
             "highlighted": "Highlight this plan",
             "button_default": "Get started",
             "default_title": "Simple pricing",
-            "default_plan": "Free"
+            "default_plan": "Free",
+            "linked_offer": "Linked store product",
+            "linked_none": "None (type the price yourself)",
+            "linked_missing": "Product no longer available",
+            "linked_help": "Price and checkout link come from the store and stay in sync. Name, description and features use the product's unless you type your own.",
+            "linked_missing_help": "This product is archived or not publicly listed, so this plan is hidden on the landing page.",
+            "store_hint": "Your store has products you can turn into plans.",
+            "add_from_store": "Add plans from store",
+            "store_empty": "No publicly listed store products. Create one under Payments to link plans to checkout.",
+            "buy_default": "Buy now"
           },
           "steps": {
             "title": "Steps Section",
@@ -6674,6 +6683,10 @@
       "hours": "Hours",
       "minutes": "Minutes",
       "seconds": "Seconds"
+    },
+    "pricing": {
+      "from": "from",
+      "subscription": "subscription"
     }
   }
 }
