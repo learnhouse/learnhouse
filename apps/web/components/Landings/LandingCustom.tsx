@@ -260,9 +260,8 @@ function LandingCustom({ landing, orgslug }: LandingCustomProps) {
               (section.courses as unknown as string[]).includes(course.course_uuid)
             )
 
-        // Picked courses the visitor cannot see (private, unpublished) drop out
-        // of the list. An empty block on a public page only looks broken, so
-        // render nothing instead of an editor-style hint.
+        // Nothing this visitor is allowed to see (private or deleted courses):
+        // drop the section rather than render a heading over an empty grid.
         if (featuredCourses.length === 0) return null
 
         return (

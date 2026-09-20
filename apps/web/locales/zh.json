@@ -4346,6 +4346,7 @@
     },
     "ai_panel": {
       "add_definition": "添加定义",
+      "insert_failed": "无法将生成的内容插入文档。请重试。",
       "add_examples": "添加示例",
       "add_quiz": "添加测验",
       "add_summary": "添加摘要",

@@ -4356,6 +4356,7 @@
     },
     "ai_panel": {
       "add_definition": "Tambah definisi",
+      "insert_failed": "Saya tidak dapat menyisipkan konten yang dihasilkan ke dalam dokumen. Silakan coba lagi.",
       "add_examples": "Tambah contoh",
       "add_quiz": "Tambah kuis",
       "add_summary": "Tambah ringkasan",
