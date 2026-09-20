@@ -3362,6 +3362,66 @@
           "video": {
             "label": "Video",
             "description": "Embed a YouTube, Vimeo or Loom video, or upload your own"
+          },
+          "rich_text": {
+            "label": "Text",
+            "description": "A heading and formatted text, written in Markdown"
+          },
+          "features": {
+            "label": "Features",
+            "description": "A grid of cards with an icon, a title and a description"
+          },
+          "stats": {
+            "label": "Stats",
+            "description": "Big numbers with a label, like learners or courses"
+          },
+          "testimonials": {
+            "label": "Testimonials",
+            "description": "Quotes from learners or customers"
+          },
+          "faq": {
+            "label": "FAQ",
+            "description": "Questions that expand to show their answer"
+          },
+          "cta": {
+            "label": "Call to action",
+            "description": "A bold banner with a heading and buttons"
+          },
+          "gallery": {
+            "label": "Gallery",
+            "description": "A grid of images"
+          },
+          "spacer": {
+            "label": "Spacer",
+            "description": "Empty space, with an optional dividing line"
+          },
+          "pricing": {
+            "label": "Pricing",
+            "description": "Plan cards with a price, a feature list and a button"
+          },
+          "steps": {
+            "label": "Steps",
+            "description": "A numbered sequence, side by side or stacked"
+          },
+          "columns": {
+            "label": "Columns",
+            "description": "Two to four columns of Markdown text"
+          },
+          "image": {
+            "label": "Image",
+            "description": "A single large image with an optional caption and link"
+          },
+          "embed": {
+            "label": "Embed",
+            "description": "A form, calendar, map or board from a supported service"
+          },
+          "banner": {
+            "label": "Announcement",
+            "description": "A slim bar for news or promotions"
+          },
+          "countdown": {
+            "label": "Countdown",
+            "description": "A live timer to a launch or deadline"
           }
         },
         "add_section": "Add Section",
@@ -3499,6 +3559,208 @@
           "everyone": "Everyone",
           "logged_in": "Signed-in users only",
           "logged_out": "Signed-out visitors only"
+        },
+        "templates": {
+          "title": "Start from a template",
+          "description": "Pick a starting point, then edit every section. Or add sections one by one.",
+          "sections_count_one": "{{count}} section",
+          "sections_count_other": "{{count}} sections",
+          "academy": {
+            "name": "Academy",
+            "description": "Separate heroes for visitors and members, stats, how it works, courses, testimonials, FAQ and a sign-up banner."
+          },
+          "product": {
+            "name": "Product training",
+            "description": "Hero, tour video, topics, latest courses and a contact banner."
+          },
+          "minimal": {
+            "name": "Minimal",
+            "description": "A short introduction and your latest courses."
+          },
+          "launch": {
+            "name": "Launch",
+            "description": "Announcement bar, tall hero, live countdown, steps, columns, pricing plans and FAQ, with entrance animations."
+          }
+        },
+        "blocks": {
+          "title_label": "Title",
+          "subtitle_label": "Subtitle",
+          "description_label": "Description",
+          "columns": "Columns",
+          "align": "Alignment",
+          "align_start": "Start",
+          "align_center": "Center",
+          "move_up": "Move up",
+          "move_down": "Move down",
+          "remove": "Remove",
+          "duplicate": "Duplicate section",
+          "upload_image": "Upload image",
+          "hidden": "Hide this section",
+          "hidden_help": "Keep it in the editor without showing it on the landing page.",
+          "style": "Background, colors and spacing",
+          "background": "Background",
+          "background_none": "None",
+          "background_solid": "Solid color",
+          "background_gradient": "Gradient",
+          "background_image": "Image",
+          "color": "Color",
+          "gradient_from": "From",
+          "gradient_to": "To",
+          "text_color": "Text color",
+          "spacing": "Vertical spacing",
+          "spacing_none": "None",
+          "spacing_small": "Small",
+          "spacing_medium": "Medium",
+          "spacing_large": "Large",
+          "anchor": "Anchor",
+          "anchor_help": "Lets a button jump to this section.",
+          "buttons": "Buttons",
+          "add_button": "Add button",
+          "button_text": "Button text",
+          "button_text_default": "Browse courses",
+          "button_background": "Background",
+          "button_color": "Text",
+          "rich_text": {
+            "title": "Text Section",
+            "content": "Content",
+            "markdown_help": "Markdown: **bold**, *italic*, [link](https://...), lists and ## headings.",
+            "default_title": "About us",
+            "default_content": "Write something about your school. **Markdown** is supported."
+          },
+          "features": {
+            "title": "Features Section",
+            "add": "Add feature",
+            "icon": "Icon (emoji)",
+            "default_title": "Why learn with us",
+            "default_item_title": "Feature",
+            "default_item_description": "Describe this feature in a sentence."
+          },
+          "stats": {
+            "title": "Stats Section",
+            "add": "Add stat",
+            "value": "Value",
+            "label": "Label",
+            "default_label": "Learners"
+          },
+          "testimonials": {
+            "title": "Testimonials Section",
+            "add": "Add testimonial",
+            "quote": "Quote",
+            "author": "Name",
+            "role": "Role or company",
+            "photo_url": "Photo URL",
+            "default_title": "What learners say"
+          },
+          "faq": {
+            "title": "FAQ Section",
+            "add": "Add question",
+            "question": "Question",
+            "answer": "Answer",
+            "default_title": "Frequently asked questions"
+          },
+          "cta": {
+            "title": "Call to Action Section",
+            "heading": "Heading",
+            "default_heading": "Ready to start?"
+          },
+          "gallery": {
+            "title": "Gallery Section",
+            "add": "Add image",
+            "alt": "Alt text"
+          },
+          "spacer": {
+            "title": "Spacer",
+            "size": "Size",
+            "divider": "Show a dividing line"
+          },
+          "courses": {
+            "mode": "Courses to show",
+            "mode_selected": "Courses I select",
+            "mode_latest": "Latest courses",
+            "limit": "How many"
+          },
+          "device": "Devices",
+          "device_all": "All devices",
+          "device_desktop": "Desktop only",
+          "device_mobile": "Mobile only",
+          "show_from": "Show from",
+          "show_until": "Show until",
+          "width": "Width",
+          "width_normal": "Normal",
+          "width_narrow": "Narrow",
+          "title_align": "Title alignment",
+          "animation": "Entrance animation",
+          "animation_none": "None",
+          "animation_fade": "Fade in",
+          "animation_slide_up": "Slide up",
+          "export": "Export",
+          "import": "Import",
+          "import_invalid": "This file is not a valid landing export",
+          "import_done": "Landing imported ({{count}} sections). Save to publish it.",
+          "hero": {
+            "title": "Hero size and overlay",
+            "height": "Height",
+            "height_screen": "Full screen",
+            "overlay": "Dark overlay",
+            "overlay_help": "Darkens the background so text stays readable over a photo."
+          },
+          "pricing": {
+            "title": "Pricing Section",
+            "add": "Add plan",
+            "name": "Plan name",
+            "price": "Price",
+            "period": "/ month",
+            "features": "Features, one per line",
+            "highlighted": "Highlight this plan",
+            "button_default": "Get started",
+            "default_title": "Simple pricing",
+            "default_plan": "Free"
+          },
+          "steps": {
+            "title": "Steps Section",
+            "layout": "Layout",
+            "horizontal": "Side by side",
+            "vertical": "Stacked",
+            "add": "Add step",
+            "default_title": "How it works"
+          },
+          "columns_block": {
+            "title": "Columns Section",
+            "add": "Add column"
+          },
+          "image": {
+            "title": "Image Section",
+            "caption": "Caption",
+            "link": "Link",
+            "rounded": "Rounded corners and shadow"
+          },
+          "embed": {
+            "title": "Embed Section",
+            "url": "URL",
+            "help": "Supported: Calendly, Typeform, Tally, Airtable, Google Docs, Forms and Maps embeds, Figma, Loom, Canva, Miro, YouTube, Vimeo.",
+            "not_allowed": "This service is not supported, so nothing will be shown.",
+            "height": "Height (px)"
+          },
+          "banner": {
+            "title": "Announcement",
+            "text": "Text",
+            "link_text": "Link text",
+            "schedule_tip": "Tip: use \"Show from\" and \"Show until\" above to run this announcement for a limited time.",
+            "default_text": "New course just launched"
+          },
+          "countdown": {
+            "title": "Countdown Section",
+            "target": "Counts down to",
+            "done_text": "Text once it is over",
+            "default_heading": "Launching soon"
+          },
+          "page": {
+            "title": "Page settings",
+            "description": "Settings for the whole landing page.",
+            "width": "Content width",
+            "width_wide": "Wide",
+            "gap": "Gap between sections"
+          }
         }
       },
       "seo": {
@@ -6397,6 +6659,14 @@
       "set_up_2fa": "Set up two-factor authentication",
       "signed_in_as": "Signed in as {{email}}",
       "sign_in_to_org": "Sign in to this organization"
+    }
+  },
+  "landing": {
+    "countdown": {
+      "days": "Days",
+      "hours": "Hours",
+      "minutes": "Minutes",
+      "seconds": "Seconds"
     }
   }
 }

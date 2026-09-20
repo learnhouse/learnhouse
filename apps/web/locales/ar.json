@@ -2878,6 +2878,66 @@
           "video": {
             "label": "فيديو",
             "description": "ضمّن فيديو من YouTube أو Vimeo أو Loom، أو ارفع ملفك الخاص"
+          },
+          "rich_text": {
+            "label": "نص",
+            "description": "عنوان ونص منسق مكتوب بصيغة Markdown"
+          },
+          "features": {
+            "label": "المزايا",
+            "description": "شبكة بطاقات تضم أيقونة وعنوانًا ووصفًا"
+          },
+          "stats": {
+            "label": "إحصاءات",
+            "description": "أرقام بارزة مع تسمية، مثل عدد المتعلمين أو الدورات"
+          },
+          "testimonials": {
+            "label": "آراء",
+            "description": "اقتباسات من المتعلمين أو العملاء"
+          },
+          "faq": {
+            "label": "الأسئلة الشائعة",
+            "description": "أسئلة تتوسع لإظهار إجاباتها"
+          },
+          "cta": {
+            "label": "دعوة لاتخاذ إجراء",
+            "description": "لافتة بارزة بعنوان وأزرار"
+          },
+          "gallery": {
+            "label": "معرض",
+            "description": "شبكة من الصور"
+          },
+          "spacer": {
+            "label": "فاصل",
+            "description": "مساحة فارغة مع خط فاصل اختياري"
+          },
+          "pricing": {
+            "label": "الأسعار",
+            "description": "بطاقات خطط تضم السعر وقائمة مزايا وزرًا"
+          },
+          "steps": {
+            "label": "خطوات",
+            "description": "تسلسل مرقم، متجاور أو متراص"
+          },
+          "columns": {
+            "label": "أعمدة",
+            "description": "من عمودين إلى أربعة أعمدة من نص Markdown"
+          },
+          "image": {
+            "label": "صورة",
+            "description": "صورة كبيرة واحدة مع تعليق ورابط اختياريين"
+          },
+          "embed": {
+            "label": "تضمين",
+            "description": "نموذج أو تقويم أو خريطة أو لوحة من خدمة مدعومة"
+          },
+          "banner": {
+            "label": "إعلان",
+            "description": "شريط رفيع للأخبار أو العروض"
+          },
+          "countdown": {
+            "label": "عد تنازلي",
+            "description": "مؤقت مباشر حتى موعد إطلاق أو مهلة"
           }
         },
         "add_section": "إضافة قسم",
@@ -3015,6 +3075,212 @@
           "everyone": "الجميع",
           "logged_in": "المستخدمون المسجلون فقط",
           "logged_out": "الزوار غير المسجلين فقط"
+        },
+        "templates": {
+          "title": "ابدأ من قالب",
+          "description": "اختر نقطة بداية ثم عدّل كل قسم، أو أضف الأقسام واحدًا تلو الآخر.",
+          "sections_count_one": "قسم واحد",
+          "sections_count_zero": "بلا أقسام",
+          "sections_count_two": "قسمان",
+          "sections_count_few": "{{count}} أقسام",
+          "sections_count_many": "{{count}} قسمًا",
+          "sections_count_other": "{{count}} قسم",
+          "academy": {
+            "name": "أكاديمية",
+            "description": "واجهتان منفصلتان للزوار والأعضاء، وإحصاءات، وطريقة العمل، ودورات، وآراء، وأسئلة شائعة، ولافتة تسجيل."
+          },
+          "product": {
+            "name": "تدريب على المنتج",
+            "description": "واجهة رئيسية وفيديو جولة ومواضيع وأحدث الدورات ولافتة تواصل."
+          },
+          "minimal": {
+            "name": "بسيط",
+            "description": "مقدمة قصيرة وأحدث دوراتك."
+          },
+          "launch": {
+            "name": "إطلاق",
+            "description": "شريط إعلان وواجهة طويلة وعد تنازلي مباشر وخطوات وأعمدة وخطط أسعار وأسئلة شائعة، مع حركات ظهور."
+          }
+        },
+        "blocks": {
+          "title_label": "العنوان",
+          "subtitle_label": "العنوان الفرعي",
+          "description_label": "الوصف",
+          "columns": "الأعمدة",
+          "align": "المحاذاة",
+          "align_start": "البداية",
+          "align_center": "الوسط",
+          "move_up": "نقل لأعلى",
+          "move_down": "نقل لأسفل",
+          "remove": "إزالة",
+          "duplicate": "تكرار القسم",
+          "upload_image": "رفع صورة",
+          "hidden": "إخفاء هذا القسم",
+          "hidden_help": "أبقه في المحرر دون عرضه في الصفحة الرئيسية.",
+          "style": "الخلفية والألوان والتباعد",
+          "background": "الخلفية",
+          "background_none": "بدون",
+          "background_solid": "لون ثابت",
+          "background_gradient": "تدرج",
+          "background_image": "صورة",
+          "color": "اللون",
+          "gradient_from": "من",
+          "gradient_to": "إلى",
+          "text_color": "لون النص",
+          "spacing": "التباعد العمودي",
+          "spacing_none": "بدون",
+          "spacing_small": "صغير",
+          "spacing_medium": "متوسط",
+          "spacing_large": "كبير",
+          "anchor": "مرساة",
+          "anchor_help": "تتيح لزر الانتقال إلى هذا القسم.",
+          "buttons": "الأزرار",
+          "add_button": "إضافة زر",
+          "button_text": "نص الزر",
+          "button_text_default": "تصفح الدورات",
+          "button_background": "الخلفية",
+          "button_color": "النص",
+          "rich_text": {
+            "title": "قسم النص",
+            "content": "المحتوى",
+            "markdown_help": "صيغة Markdown: **غامق** و*مائل* و[رابط](https://...) والقوائم وعناوين ##.",
+            "default_title": "من نحن",
+            "default_content": "اكتب شيئًا عن مدرستك. صيغة **Markdown** مدعومة."
+          },
+          "features": {
+            "title": "قسم المزايا",
+            "add": "إضافة ميزة",
+            "icon": "أيقونة (رمز تعبيري)",
+            "default_title": "لماذا تتعلم معنا",
+            "default_item_title": "ميزة",
+            "default_item_description": "صف هذه الميزة في جملة."
+          },
+          "stats": {
+            "title": "قسم الإحصاءات",
+            "add": "إضافة إحصائية",
+            "value": "القيمة",
+            "label": "التسمية",
+            "default_label": "متعلمون"
+          },
+          "testimonials": {
+            "title": "قسم الآراء",
+            "add": "إضافة رأي",
+            "quote": "الاقتباس",
+            "author": "الاسم",
+            "role": "الدور أو الشركة",
+            "photo_url": "رابط الصورة",
+            "default_title": "ماذا يقول المتعلمون"
+          },
+          "faq": {
+            "title": "قسم الأسئلة الشائعة",
+            "add": "إضافة سؤال",
+            "question": "السؤال",
+            "answer": "الإجابة",
+            "default_title": "الأسئلة الشائعة"
+          },
+          "cta": {
+            "title": "قسم الدعوة لاتخاذ إجراء",
+            "heading": "العنوان",
+            "default_heading": "هل أنت مستعد للبدء؟"
+          },
+          "gallery": {
+            "title": "قسم المعرض",
+            "add": "إضافة صورة",
+            "alt": "النص البديل"
+          },
+          "spacer": {
+            "title": "فاصل",
+            "size": "الحجم",
+            "divider": "إظهار خط فاصل"
+          },
+          "courses": {
+            "mode": "الدورات المعروضة",
+            "mode_selected": "دورات أختارها",
+            "mode_latest": "أحدث الدورات",
+            "limit": "العدد"
+          },
+          "device": "الأجهزة",
+          "device_all": "كل الأجهزة",
+          "device_desktop": "سطح المكتب فقط",
+          "device_mobile": "الجوال فقط",
+          "show_from": "العرض من",
+          "show_until": "العرض حتى",
+          "width": "العرض",
+          "width_normal": "عادي",
+          "width_narrow": "ضيق",
+          "title_align": "محاذاة العنوان",
+          "animation": "حركة الظهور",
+          "animation_none": "بدون",
+          "animation_fade": "ظهور تدريجي",
+          "animation_slide_up": "انزلاق للأعلى",
+          "export": "تصدير",
+          "import": "استيراد",
+          "import_invalid": "هذا الملف ليس تصديرًا صالحًا للصفحة الرئيسية",
+          "import_done": "تم استيراد الصفحة (عدد الأقسام: {{count}}). احفظ لنشرها.",
+          "hero": {
+            "title": "حجم الواجهة والتعتيم",
+            "height": "الارتفاع",
+            "height_screen": "ملء الشاشة",
+            "overlay": "طبقة تعتيم",
+            "overlay_help": "تُعتِّم الخلفية ليبقى النص مقروءًا فوق الصورة."
+          },
+          "pricing": {
+            "title": "قسم الأسعار",
+            "add": "إضافة خطة",
+            "name": "اسم الخطة",
+            "price": "السعر",
+            "period": "/ شهريًا",
+            "features": "المزايا، واحدة في كل سطر",
+            "highlighted": "إبراز هذه الخطة",
+            "button_default": "ابدأ الآن",
+            "default_title": "أسعار بسيطة",
+            "default_plan": "مجانية"
+          },
+          "steps": {
+            "title": "قسم الخطوات",
+            "layout": "التخطيط",
+            "horizontal": "متجاورة",
+            "vertical": "متراصة",
+            "add": "إضافة خطوة",
+            "default_title": "كيف يعمل"
+          },
+          "columns_block": {
+            "title": "قسم الأعمدة",
+            "add": "إضافة عمود"
+          },
+          "image": {
+            "title": "قسم الصورة",
+            "caption": "التعليق",
+            "link": "الرابط",
+            "rounded": "زوايا مستديرة وظل"
+          },
+          "embed": {
+            "title": "قسم التضمين",
+            "url": "الرابط",
+            "help": "المدعوم: Calendly وTypeform وTally وAirtable ومستندات Google ونماذجها وخرائطها المضمنة وFigma وLoom وCanva وMiro وYouTube وVimeo.",
+            "not_allowed": "هذه الخدمة غير مدعومة، ولن يُعرض شيء.",
+            "height": "الارتفاع (بكسل)"
+          },
+          "banner": {
+            "title": "إعلان",
+            "text": "النص",
+            "link_text": "نص الرابط",
+            "schedule_tip": "تلميح: استخدم «العرض من» و«العرض حتى» أعلاه لعرض هذا الإعلان لفترة محدودة.",
+            "default_text": "أُطلقت دورة جديدة للتو"
+          },
+          "countdown": {
+            "title": "قسم العد التنازلي",
+            "target": "العد حتى",
+            "done_text": "النص بعد انتهائه",
+            "default_heading": "قريبًا"
+          },
+          "page": {
+            "title": "إعدادات الصفحة",
+            "description": "إعدادات الصفحة الرئيسية بأكملها.",
+            "width": "عرض المحتوى",
+            "width_wide": "واسع",
+            "gap": "المسافة بين الأقسام"
+          }
         }
       },
       "theme": {
@@ -6412,6 +6678,14 @@
       "set_up_2fa": "إعداد التحقق بخطوتين",
       "signed_in_as": "مسجّل الدخول باسم {{email}}",
       "sign_in_to_org": "تسجيل الدخول إلى هذه المؤسسة"
+    }
+  },
+  "landing": {
+    "countdown": {
+      "days": "أيام",
+      "hours": "ساعات",
+      "minutes": "دقائق",
+      "seconds": "ثوانٍ"
     }
   }
 }
