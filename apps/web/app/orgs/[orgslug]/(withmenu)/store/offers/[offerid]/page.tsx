@@ -16,7 +16,7 @@ export async function generateMetadata({ params }: { params: PageParams }): Prom
   let offerName = 'Offer'
   try {
     const result = await getPublicOffer(org.id, offerid)
-    offerName = result?.data?.name || 'Offer'
+    offerName = (result?.success && result.data?.name) || 'Offer'
   } catch {}
   const title = buildPageTitle(offerName, org?.name || 'Organization', seoConfig)
   return {
@@ -35,7 +35,10 @@ export default async function OfferPage({ params }: { params: PageParams }) {
   let offer: any = null
   try {
     const result = await getPublicOffer(org.id, offerid)
-    offer = result?.data ?? result
+    // A failed lookup (archived, unlisted, unknown id) still carries a JSON
+    // body like {"detail": "Not Found"}. Treating that as the offer crashed the
+    // page on its missing currency; only a successful response is an offer.
+    offer = result?.success && result.data?.offer_uuid ? result.data : null
   } catch {}
 
   const breadcrumbJsonLd = buildBreadcrumbJsonLd([
