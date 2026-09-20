@@ -23,13 +23,24 @@ export async function generateMetadata(props: MetadataProps): Promise<Metadata> 
       revalidate: 120,
       tags: ['organizations'],
     }),
-    getCourseMetadata(params.courseuuid, { revalidate: 120, tags: ['courses'] }, access_token || null, { slim: true }),
+    getCourseMetadata(params.courseuuid, { revalidate: 120, tags: ['courses'] }, access_token || null, { slim: true }).catch(() => null),
     getActivityWithAuthHeader(
       params.activityid,
       { revalidate: 120, tags: ['activities'] },
       access_token || null
-    ),
+    ).catch(() => null),
   ])
+
+  // A course/activity this visitor can't read (e.g. signed out on a members-only
+  // course) must not throw here: that replaces the whole page with the generic
+  // error boundary. Fall back to neutral metadata and let the client render the
+  // sign-in prompt.
+  if (!course_meta || !activity) {
+    return {
+      title: `Activity — ${org?.name || 'LearnHouse'}`,
+      description: 'View this activity on LearnHouse',
+    }
+  }
 
   // Check if this is the course end page
   const isCourseEnd = params.activityid === 'end';

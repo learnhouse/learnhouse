@@ -22,6 +22,7 @@ import { queryKeys } from '@/lib/query/keys'
 import { useTrail } from '@/hooks/queries/useTrail'
 import { useCourseMeta } from '@/hooks/queries/useCourses'
 import { useActivity } from '@/hooks/queries/useActivity'
+import CourseAccessError from '@components/Objects/Courses/CourseAccessError/CourseAccessError'
 import ConfirmationModal from '@components/Objects/StyledElements/ConfirmationModal/ConfirmationModal'
 import Modal from '@components/Objects/StyledElements/Modal/Modal'
 import { useMediaQuery, useWindowSize } from 'usehooks-ts'
@@ -244,7 +245,7 @@ function ActivityClient(props: ActivityClientProps) {
   const orgslug = props.orgslug
   const org = useOrg() as any
 
-  const { data: course, isLoading: courseLoading } = useCourseMeta(courseuuid)
+  const { data: course, isLoading: courseLoading, error: courseError } = useCourseMeta(courseuuid)
   const { data: activity, isLoading: activityLoading } = useActivity(activityid)
   const session = useLHSession() as any;
   const pathname = usePathname()
@@ -445,6 +446,12 @@ function ActivityClient(props: ActivityClientProps) {
     }
   }
     , [activity, pathname, isFocusMode])
+
+  // Without this a failed course fetch (e.g. a signed-out visitor on a
+  // members-only course) left the skeleton below spinning forever.
+  if (!course && courseError) {
+    return <CourseAccessError error={courseError} orgslug={orgslug} />
+  }
 
   if (courseLoading || !course) {
     return (

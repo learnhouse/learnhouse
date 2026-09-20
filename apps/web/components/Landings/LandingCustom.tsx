@@ -228,6 +228,10 @@ function LandingCustom({ landing, orgslug }: LandingCustomProps) {
           section.courses.includes(course.course_uuid)
         )
 
+        // Nothing this visitor is allowed to see (private or deleted courses):
+        // drop the section rather than render a heading over an empty grid.
+        if (featuredCourses.length === 0) return null
+
         return (
           <div 
             key={`featured-courses-${section.title}`}
@@ -243,11 +247,6 @@ function LandingCustom({ landing, orgslug }: LandingCustomProps) {
                   />
                 </div>
               ))}
-              {featuredCourses.length === 0 && (
-                <div className="col-span-full text-center py-6 text-gray-500">
-                  {t('courses.no_featured_courses')}
-                </div>
-              )}
             </div>
           </div>
         )

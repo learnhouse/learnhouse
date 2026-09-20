@@ -3469,7 +3469,10 @@
           "select_courses": "Select Courses",
           "loading_courses": "Loading courses...",
           "selected": "Selected",
-          "select": "Select"
+          "select": "Select",
+          "private_badge": "Users only",
+          "private_badge_hint": "Visitors who aren't signed in won't see this course on the landing page.",
+          "private_selected_warning": "Some selected courses are set to Users only, so visitors who aren't signed in won't see them. Make those courses public to show them to everyone."
         },
         "org_id_not_found": "Organization ID not found",
         "unknown_section_type": "Unknown section type"
@@ -6012,6 +6015,9 @@
     "backToCourses": "Back to Courses",
     "loadError": "This course could not be found or there was an error loading it.",
     "noPermission": "You do not have permission to view this course.",
+    "signInRequired": "Sign in to view this course",
+    "signInRequiredDescription": "This course is for members. Sign in and we'll bring you right back here.",
+    "signInToContinue": "Sign in to continue",
     "finish_course": "Finish course"
   },
   "pagination": {

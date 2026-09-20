@@ -25,6 +25,7 @@ from src.db.courses.blocks import Block, BlockTypeEnum
 from src.db.courses.chapters import Chapter
 from src.db.courses.chapter_activities import ChapterActivity
 from src.db.courses.course_chapters import CourseChapter
+from src.db.organization_config import OrganizationConfig
 from src.db.resource_authors import (
     ResourceAuthor,
     ResourceAuthorshipEnum,
@@ -33,6 +34,7 @@ from src.db.resource_authors import (
 from src.db.users import APITokenUser, AnonymousUser
 from src.security.rbac import AccessAction, AccessContext
 from src.services.courses.courses import (
+    _strip_course_from_landing,
     clone_course,
     create_course,
     delete_course,
@@ -576,6 +578,97 @@ class TestDeleteCourse:
         # Verify the course is actually gone from the DB
         remaining = await db.get(Course, 1)
         assert remaining is None
+
+    @staticmethod
+    def _landing(*course_uuids):
+        return {
+            "enabled": True,
+            "sections": [
+                {"type": "hero", "title": "Welcome"},
+                {"type": "featured-courses", "title": "Featured", "courses": list(course_uuids)},
+            ],
+        }
+
+    async def _delete_with_config(self, db, mock_request, admin_user, config):
+        db.add(OrganizationConfig(org_id=1, config=config))
+        await db.commit()
+        with patch(
+            "src.services.courses.courses.decrease_feature_usage"
+        ), patch(
+            "src.services.courses.courses.delete_storage_directory",
+            create=True,
+        ):
+            result = await delete_course(mock_request, "course_test", admin_user, db)
+        assert result == {"detail": "Course deleted"}
+        org_config = (
+            await db.execute(select(OrganizationConfig).where(OrganizationConfig.org_id == 1))
+        ).scalars().first()
+        await db.refresh(org_config)
+        return org_config.config
+
+    @pytest.mark.asyncio
+    async def test_delete_course_removes_it_from_v2_landing(
+        self, db, org, course, admin_user, mock_request, bypass_rbac, bypass_webhooks
+    ):
+        config = await self._delete_with_config(
+            db, mock_request, admin_user,
+            {
+                "config_version": "2.0",
+                "customization": {"landing": self._landing("course_test", "course_other")},
+            },
+        )
+
+        sections = config["customization"]["landing"]["sections"]
+        assert sections[1]["courses"] == ["course_other"]
+        assert sections[0] == {"type": "hero", "title": "Welcome"}
+
+    @pytest.mark.asyncio
+    async def test_delete_course_removes_it_from_v1_landing(
+        self, db, org, course, admin_user, mock_request, bypass_rbac, bypass_webhooks
+    ):
+        config = await self._delete_with_config(
+            db, mock_request, admin_user,
+            {"config_version": "1.4", "landing": self._landing("course_test")},
+        )
+
+        assert config["landing"]["sections"][1]["courses"] == []
+
+    @pytest.mark.asyncio
+    async def test_delete_course_leaves_unrelated_landing_untouched(
+        self, db, org, course, admin_user, mock_request, bypass_rbac, bypass_webhooks
+    ):
+        original = {
+            "config_version": "2.0",
+            "customization": {"landing": self._landing("course_other")},
+        }
+        config = await self._delete_with_config(db, mock_request, admin_user, original)
+
+        assert config == original
+
+    @pytest.mark.asyncio
+    async def test_delete_course_survives_landing_cleanup_failure(
+        self, db, org, course, admin_user, mock_request, bypass_rbac, bypass_webhooks
+    ):
+        with patch(
+            "src.services.courses.courses.decrease_feature_usage"
+        ), patch(
+            "src.services.courses.courses.delete_storage_directory",
+            create=True,
+        ), patch(
+            "src.services.courses.courses._remove_course_from_org_landing",
+            new=AsyncMock(side_effect=RuntimeError("boom")),
+        ):
+            result = await delete_course(mock_request, "course_test", admin_user, db)
+
+        assert result == {"detail": "Course deleted"}
+        assert await db.get(Course, 1) is None
+
+    def test_strip_course_from_landing_tolerates_malformed_landing(self):
+        assert _strip_course_from_landing({}, "course_test") is False
+        assert _strip_course_from_landing({"sections": "nope"}, "course_test") is False
+        assert _strip_course_from_landing(
+            {"sections": [None, {"type": "featured-courses", "courses": None}]}, "course_test"
+        ) is False
 
     @pytest.mark.asyncio
     async def test_delete_course_not_found(

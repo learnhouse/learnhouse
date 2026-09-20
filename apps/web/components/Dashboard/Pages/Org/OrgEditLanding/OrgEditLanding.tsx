@@ -1,7 +1,7 @@
 'use client'
 import React from 'react'
 import { LandingObject, LandingSection, LandingHeroSection, LandingTextAndImageSection, LandingLogos, LandingPeople, LandingBackground, LandingButton, LandingImage, LandingFeaturedCourses } from './landing_types'
-import { Plus, Trash2, GripVertical, LayoutTemplate, ImageIcon, Users, Award, Edit, Link, Upload, Save, BookOpen, TextIcon } from 'lucide-react'
+import { Plus, Trash2, GripVertical, LayoutTemplate, ImageIcon, Users, Award, Edit, Link, Upload, Save, BookOpen, TextIcon, EyeOff } from 'lucide-react'
 import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd'
 import { Input } from "@components/ui/input"
 import { Textarea } from "@components/ui/textarea"
@@ -1553,6 +1553,12 @@ const FeaturedCoursesEditor: React.FC<{
     staleTime: 5 * 60_000,
   })
 
+  // Anonymous visitors only get public courses from the API, so a selected
+  // private course silently disappears from the public landing page.
+  const hasPrivateSelection = (courses ?? []).some(
+    (course: any) => !course.public && section.courses.includes(course.course_uuid)
+  )
+
   return (
     <div className="space-y-6 p-6 bg-white rounded-lg nice-shadow">
       <div className="flex items-center space-x-2">
@@ -1575,6 +1581,12 @@ const FeaturedCoursesEditor: React.FC<{
         {/* Course Selection */}
         <div>
           <Label>{t('dashboard.organization.landing.courses_editor.select_courses')}</Label>
+          {hasPrivateSelection && (
+            <div className="flex items-start gap-2 mt-2 p-3 rounded-lg bg-amber-50 text-amber-800 text-sm">
+              <EyeOff className="w-4 h-4 mt-0.5 shrink-0" />
+              <p>{t('dashboard.organization.landing.courses_editor.private_selected_warning')}</p>
+            </div>
+          )}
           <div className="space-y-4 mt-2">
             {courses ? (
               <div className="grid gap-4">
@@ -1595,7 +1607,18 @@ const FeaturedCoursesEditor: React.FC<{
                         )}
                       </div>
                       <div>
-                        <h4 className="font-medium">{course.name}</h4>
+                        <div className="flex items-center gap-2">
+                          <h4 className="font-medium">{course.name}</h4>
+                          {!course.public && (
+                            <span
+                              title={t('dashboard.organization.landing.courses_editor.private_badge_hint')}
+                              className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-amber-50 text-amber-800 text-xs font-medium"
+                            >
+                              <EyeOff className="w-3 h-3" />
+                              {t('dashboard.organization.landing.courses_editor.private_badge')}
+                            </span>
+                          )}
+                        </div>
                         <p className="text-sm text-gray-500">{course.description}</p>
                       </div>
                     </div>
