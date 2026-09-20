@@ -89,6 +89,22 @@ class TestUpdateOrgCourseEndConfig:
         }
 
     @pytest.mark.asyncio
+    async def test_explicit_empty_link_is_accepted(self, db, org, admin_user, mock_request):
+        # What the settings form sends when the link field is cleared: the
+        # completion screen then falls back to its default button.
+        await _make_config(db, org, {"config_version": "2.0", "customization": {}})
+        await update_org_course_end_config(
+            mock_request, {"message": "Hi", "button_text": "", "button_link": "  "}, org.id, admin_user, db
+        )
+
+        row = await _load_config(db, org.id)
+        assert row.config["customization"]["course_end"] == {
+            "message": "Hi",
+            "button_text": "",
+            "button_link": "",
+        }
+
+    @pytest.mark.asyncio
     async def test_unknown_keys_are_dropped(self, db, org, admin_user, mock_request):
         await _make_config(db, org, {"config_version": "2.0", "customization": {}})
         await update_org_course_end_config(
