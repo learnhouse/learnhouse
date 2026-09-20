@@ -4358,6 +4358,7 @@
     },
     "ai_panel": {
       "add_definition": "Dodaj definicję",
+      "insert_failed": "Nie udało się wstawić wygenerowanej treści do dokumentu. Spróbuj ponownie.",
       "add_examples": "Dodaj przykłady",
       "add_quiz": "Dodaj quiz",
       "add_summary": "Dodaj podsumowanie",
