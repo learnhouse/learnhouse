@@ -9,6 +9,7 @@ import { useLHSession } from '@components/Contexts/LHSessionContext'
 import CourseThumbnailLanding from '@components/Objects/Thumbnails/CourseThumbnailLanding'
 import UserAvatar from '@components/Objects/UserAvatar'
 import { useTranslation } from 'react-i18next'
+import { isSectionVisible, resolveLandingVideo } from './landingSections'
 
 interface LandingCustomProps {
   landing: {
@@ -228,6 +229,11 @@ function LandingCustom({ landing, orgslug }: LandingCustomProps) {
           section.courses.includes(course.course_uuid)
         )
 
+        // Picked courses the visitor cannot see (private, unpublished) drop out
+        // of the list. An empty block on a public page only looks broken, so
+        // render nothing instead of an editor-style hint.
+        if (featuredCourses.length === 0) return null
+
         return (
           <div 
             key={`featured-courses-${section.title}`}
@@ -243,15 +249,48 @@ function LandingCustom({ landing, orgslug }: LandingCustomProps) {
                   />
                 </div>
               ))}
-              {featuredCourses.length === 0 && (
-                <div className="col-span-full text-center py-6 text-gray-500">
-                  {t('courses.no_featured_courses')}
-                </div>
-              )}
             </div>
           </div>
         )
         }
+      case 'video': {
+        const video = resolveLandingVideo(section.url)
+        if (!video) return null
+
+        return (
+          <div
+            key={`video-${section.title}`}
+            className="py-16 mx-2 sm:mx-4 lg:mx-16 w-full"
+          >
+            {section.title && (
+              <h2 className="text-2xl md:text-3xl font-bold text-start mb-3 text-gray-900">{section.title}</h2>
+            )}
+            {section.description && (
+              <p className="text-base md:text-lg text-gray-600 mb-6 whitespace-pre-line">{section.description}</p>
+            )}
+            <div className="w-full max-w-4xl mx-auto aspect-video rounded-xl overflow-hidden nice-shadow bg-black">
+              {video.kind === 'embed' ? (
+                <iframe
+                  src={video.src}
+                  title={section.title || 'Video'}
+                  className="w-full h-full"
+                  loading="lazy"
+                  allow="accelerometer; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen"
+                  allowFullScreen
+                />
+              ) : (
+                <video
+                  src={video.src}
+                  className="w-full h-full"
+                  controls
+                  preload="metadata"
+                  playsInline
+                />
+              )}
+            </div>
+          </div>
+        )
+      }
       default:
         return null
     }
@@ -259,7 +298,9 @@ function LandingCustom({ landing, orgslug }: LandingCustomProps) {
 
   return (
     <div className="flex flex-col items-center justify-between w-full max-w-(--breakpoint-2xl) mx-auto px-4 sm:px-6 lg:px-16 h-full">
-      {landing.sections.map((section) => renderSection(section))}
+      {landing.sections
+        .filter((section) => isSectionVisible(section, session?.status ?? 'loading'))
+        .map((section) => renderSection(section))}
     </div>
   )
 }

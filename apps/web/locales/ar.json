@@ -710,7 +710,8 @@
     "no_image_in_clipboard": "لم يتم العثور على صورة في الحافظة",
     "clipboard_read_error": "تعذرت القراءة من الحافظة",
     "sign_in_to_see_courses": "سجّل الدخول لرؤية دوراتك",
-    "sign_in_to_see_courses_description": "قد لا تظهر الدورات في هذه الأكاديمية إلا بعد تسجيل الدخول."
+    "sign_in_to_see_courses_description": "قد لا تظهر الدورات في هذه الأكاديمية إلا بعد تسجيل الدخول.",
+    "browse_all_courses": "تصفح جميع الدورات"
   },
   "communities": {
     "title": "المجتمعات",
@@ -2426,7 +2427,8 @@
           "automations": "الأتمتة",
           "api": "الوصول عبر API",
           "menu": "القائمة",
-          "danger": "منطقة الخطر"
+          "danger": "منطقة الخطر",
+          "course_end": "إتمام الدورة"
         },
         "pages": {
           "general": {
@@ -2479,6 +2481,10 @@
           },
           "seo": {
             "subtitle": "إدارة إعدادات تحسين محركات البحث"
+          },
+          "course_end": {
+            "title": "إتمام الدورة",
+            "subtitle": "خصّص الشاشة التي يراها المتعلمون عند إنهاء الدورة"
           }
         },
         "name": "اسم المنظمة",
@@ -2868,6 +2874,10 @@
           "featured_courses": {
             "label": "الدورات",
             "description": "أضف قسماً لعرض الدورات المميزة"
+          },
+          "video": {
+            "label": "فيديو",
+            "description": "ضمّن فيديو من YouTube أو Vimeo أو Loom، أو ارفع ملفك الخاص"
           }
         },
         "add_section": "إضافة قسم",
@@ -2988,7 +2998,24 @@
           "select": "اختر"
         },
         "org_id_not_found": "لم يتم العثور على معرف المنظمة",
-        "unknown_section_type": "نوع قسم غير معروف"
+        "unknown_section_type": "نوع قسم غير معروف",
+        "video_editor": {
+          "title": "قسم الفيديو",
+          "title_label": "العنوان",
+          "title_placeholder": "شاهد الجولة",
+          "description_label": "الوصف",
+          "description_placeholder": "نص اختياري يظهر فوق الفيديو",
+          "url_label": "الفيديو",
+          "url_help": "الصق رابط YouTube أو Vimeo أو Loom، أو رابطًا مباشرًا لملف فيديو، أو ارفع ملف MP4/WebM.",
+          "upload_video": "رفع فيديو"
+        },
+        "visibility": {
+          "title": "الظهور",
+          "description": "اختر من يرى هذا القسم في الصفحة الرئيسية",
+          "everyone": "الجميع",
+          "logged_in": "المستخدمون المسجلون فقط",
+          "logged_out": "الزوار غير المسجلين فقط"
+        }
       },
       "theme": {
         "primary_color": "اللون الأساسي",
@@ -3276,6 +3303,21 @@
         "confirm_exempt_note": "{{count}} عضوًا مستثنون لأنهم يسجّلون الدخول عبر مزوّد هوية خارجي.",
         "confirm_reversible": "هذا الإجراء قابل للتراجع: إيقاف الاشتراط يعيد الوصول فورًا.",
         "confirm_button": "نعم، اشترط التحقق بخطوتين"
+      },
+      "course_end": {
+        "title": "شاشة إتمام الدورة",
+        "subtitle": "تظهر للمتعلمين بعد إنهاء الدورة",
+        "save": "حفظ",
+        "saving": "جارٍ الحفظ...",
+        "saved": "تم حفظ شاشة إتمام الدورة",
+        "error": "تعذر حفظ شاشة إتمام الدورة",
+        "message_label": "الرسالة",
+        "message_help": "تحل محل السطر الافتراضي أسفل عنوان التهنئة. اتركها فارغة للإبقاء على النص الافتراضي.",
+        "button_text_label": "نص الزر",
+        "button_link_label": "رابط الزر",
+        "button_link_help": "مسار داخلي مثل ‎/courses أو رابط كامل يبدأ بـ https://. اتركه فارغًا للربط بدليل دوراتك.",
+        "link_invalid": "استخدم مسارًا داخليًا يبدأ بـ / أو رابط http(s) كاملًا",
+        "preview": "معاينة"
       }
     },
     "users": {

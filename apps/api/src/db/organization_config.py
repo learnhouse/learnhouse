@@ -1,5 +1,5 @@
 from typing import Literal, Optional
-from pydantic import BaseModel
+from pydantic import BaseModel, field_validator
 from sqlalchemy import JSON, BigInteger, Column, ForeignKey
 from sqlmodel import Field, SQLModel
 
@@ -300,6 +300,32 @@ class SignupFieldsConfig(BaseModel):
     fields: list[SignupFieldItem] = Field(default_factory=list)
 
 
+class CourseEndConfig(BaseModel):
+    # Shown on the course-completion screen. Everything empty means the screen
+    # renders its defaults.
+    message: str = Field(default="", max_length=500)
+    button_text: str = Field(default="", max_length=60)
+    # Internal path ("/courses") or absolute http(s) URL. Anything else is
+    # rejected so a stored value can never become a javascript: link.
+    button_link: str = Field(default="", max_length=2048)
+
+    @field_validator("message", "button_text", "button_link")
+    @classmethod
+    def _strip(cls, value: str) -> str:
+        return value.strip()
+
+    @field_validator("button_link")
+    @classmethod
+    def _safe_link(cls, value: str) -> str:
+        if not value:
+            return value
+        if value.startswith("/") and not value.startswith("//"):
+            return value
+        if value.lower().startswith(("http://", "https://")):
+            return value
+        raise ValueError("button_link must be an internal path or an http(s) URL")
+
+
 class CustomizationConfig(BaseModel):
     general: GeneralCustomization = GeneralCustomization()
     auth_branding: AuthBrandingConfig = AuthBrandingConfig()
@@ -307,6 +333,7 @@ class CustomizationConfig(BaseModel):
     landing: dict = Field(default_factory=dict)
     menu: MenuConfig = MenuConfig()
     signup_fields: SignupFieldsConfig = SignupFieldsConfig()
+    course_end: CourseEndConfig = CourseEndConfig()
 
 
 # ============================================================================

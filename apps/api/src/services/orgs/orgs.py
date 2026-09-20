@@ -1660,6 +1660,62 @@ async def update_org_menu_config(
     return {"detail": "Menu configuration updated"}
 
 
+async def update_org_course_end_config(
+    request: Request,
+    course_end_config: dict,
+    org_id: int,
+    current_user: PublicUser | AnonymousUser,
+    db_session: AsyncSession,
+):
+    """Replace the org's course-completion screen customization."""
+    statement = select(Organization).where(Organization.id == org_id)
+    org = (await db_session.execute(statement)).scalars().first()
+
+    if not org:
+        raise HTTPException(status_code=404, detail="Organization not found")
+
+    await rbac_check(request, org.org_uuid, current_user, "update", db_session)
+
+    statement = select(OrganizationConfig).where(OrganizationConfig.org_id == org.id)
+    org_config = (await db_session.execute(statement)).scalars().first()
+
+    if org_config is None:
+        raise HTTPException(status_code=404, detail="Organization config not found")
+
+    # Validate/normalise via the pydantic model (drops unknown keys, fills defaults).
+    # The link is rendered as an href for every learner, so a bad scheme is a 400,
+    # not something to store and sanitise later.
+    from pydantic import ValidationError
+    from src.db.organization_config import CourseEndConfig
+
+    try:
+        course_end_data = json.loads(
+            CourseEndConfig(**(course_end_config or {})).model_dump_json()
+        )
+    except ValidationError as exc:
+        raise HTTPException(
+            status_code=400,
+            detail=exc.errors()[0].get("msg", "Invalid course end configuration"),
+        )
+
+    updated_config = _deep_copy_config(org_config)
+    if _is_v2_config(updated_config):
+        updated_config.setdefault("customization", {})
+        updated_config["customization"]["course_end"] = course_end_data
+    else:
+        updated_config.setdefault("general", {"enabled": True})
+        updated_config["general"]["course_end"] = course_end_data
+
+    org_config.config = updated_config
+    org_config.update_date = str(datetime.now())
+
+    db_session.add(org_config)
+    await db_session.commit()
+    await db_session.refresh(org_config)
+
+    return {"detail": "Course end configuration updated"}
+
+
 async def update_org_signup_fields_config(
     request: Request,
     signup_fields_config: dict,

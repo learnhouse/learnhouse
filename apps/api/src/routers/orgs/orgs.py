@@ -62,6 +62,7 @@ from src.services.orgs.orgs import (
     update_org_landing,
     upload_org_landing_content_service,
     update_org_auth_branding_config,
+    update_org_course_end_config,
     update_org_menu_config,
     update_org_signup_fields_config,
     upload_org_auth_background_service,
@@ -912,6 +913,33 @@ async def api_update_org_menu_config(
     """
     return await update_org_menu_config(
         request, menu_config, org_id, current_user, db_session
+    )
+
+
+@router.put(
+    "/{org_id}/config/course-end",
+    summary="Update course completion screen config",
+    description="Customize the message and the extra button shown to learners on the course completion screen.",
+    responses={
+        200: {"description": "Course end configuration updated."},
+        400: {"description": "Invalid configuration, such as a button link that is neither an internal path nor an http(s) URL"},
+        401: {"description": "Not authenticated"},
+        403: {"description": "Caller is not an organization administrator"},
+        404: {"description": "Organization not found"},
+    },
+)
+async def api_update_org_course_end_config(
+    request: Request,
+    org_id: int,
+    course_end_config: dict,
+    current_user: PublicUser = Depends(get_current_user),
+    db_session: AsyncSession = Depends(get_db_session),
+):
+    """
+    Update organization course completion screen configuration (admin-only)
+    """
+    return await update_org_course_end_config(
+        request, course_end_config, org_id, current_user, db_session
     )
 
 

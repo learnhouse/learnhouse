@@ -700,7 +700,8 @@
       "info_description": "Filter courses by user group to see only courses assigned to a specific group. Useful for families or teams sharing the same organization."
     },
     "sign_in_to_see_courses": "Log in to see your courses",
-    "sign_in_to_see_courses_description": "Courses in this academy may only be visible once you are signed in."
+    "sign_in_to_see_courses_description": "Courses in this academy may only be visible once you are signed in.",
+    "browse_all_courses": "Browse all courses"
   },
   "communities": {
     "title": "Communities",
@@ -2861,7 +2862,8 @@
           "seo": "SEO",
           "automations": "Automations",
           "menu": "Menu",
-          "danger": "Danger Zone"
+          "danger": "Danger Zone",
+          "course_end": "Course completion"
         },
         "pages": {
           "general": {
@@ -2914,6 +2916,10 @@
           },
           "seo": {
             "subtitle": "Manage search engine optimization settings"
+          },
+          "course_end": {
+            "title": "Course completion",
+            "subtitle": "Customize the screen learners see when they finish a course"
           }
         },
         "name": "Organization Name",
@@ -3352,6 +3358,10 @@
           "featured_courses": {
             "label": "Courses",
             "description": "Add a section to showcase selected courses"
+          },
+          "video": {
+            "label": "Video",
+            "description": "Embed a YouTube, Vimeo or Loom video, or upload your own"
           }
         },
         "add_section": "Add Section",
@@ -3472,7 +3482,24 @@
           "select": "Select"
         },
         "org_id_not_found": "Organization ID not found",
-        "unknown_section_type": "Unknown section type"
+        "unknown_section_type": "Unknown section type",
+        "video_editor": {
+          "title": "Video Section",
+          "title_label": "Title",
+          "title_placeholder": "Watch the tour",
+          "description_label": "Description",
+          "description_placeholder": "Optional text shown above the video",
+          "url_label": "Video",
+          "url_help": "Paste a YouTube, Vimeo or Loom link, a direct video file URL, or upload an MP4/WebM file.",
+          "upload_video": "Upload video"
+        },
+        "visibility": {
+          "title": "Visibility",
+          "description": "Choose who sees this section on the landing page",
+          "everyone": "Everyone",
+          "logged_in": "Signed-in users only",
+          "logged_out": "Signed-out visitors only"
+        }
       },
       "seo": {
         "org_seo": {
@@ -3711,6 +3738,21 @@
         "confirm_exempt_note": "{{count}} members are exempt because they sign in through an external identity provider.",
         "confirm_reversible": "This is reversible: turning the requirement off restores access immediately.",
         "confirm_button": "Yes, require two-factor"
+      },
+      "course_end": {
+        "title": "Course completion screen",
+        "subtitle": "Shown to learners after they finish a course",
+        "save": "Save",
+        "saving": "Saving...",
+        "saved": "Course completion screen saved",
+        "error": "Could not save the course completion screen",
+        "message_label": "Message",
+        "message_help": "Replaces the default line under the congratulations heading. Leave empty to keep the default.",
+        "button_text_label": "Button text",
+        "button_link_label": "Button link",
+        "button_link_help": "An internal path like /courses, or a full https:// URL. Leave empty to link to your course catalog.",
+        "link_invalid": "Use an internal path starting with / or a full http(s) URL",
+        "preview": "Preview"
       }
     },
     "users": {

@@ -1,7 +1,7 @@
 'use client'
 import React from 'react'
-import { LandingObject, LandingSection, LandingHeroSection, LandingTextAndImageSection, LandingLogos, LandingPeople, LandingBackground, LandingButton, LandingImage, LandingFeaturedCourses } from './landing_types'
-import { Plus, Trash2, GripVertical, LayoutTemplate, ImageIcon, Users, Award, Edit, Link, Upload, Save, BookOpen, TextIcon } from 'lucide-react'
+import { LandingObject, LandingSection, LandingHeroSection, LandingTextAndImageSection, LandingLogos, LandingPeople, LandingBackground, LandingButton, LandingImage, LandingFeaturedCourses, LandingVideoSection, LandingVisibility } from './landing_types'
+import { Plus, Trash2, GripVertical, LayoutTemplate, ImageIcon, Users, Award, Edit, Link, Upload, Save, BookOpen, TextIcon, Video, Eye, LogIn, LogOut } from 'lucide-react'
 import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd'
 import { Input } from "@components/ui/input"
 import { Textarea } from "@components/ui/textarea"
@@ -18,6 +18,7 @@ import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { queryKeys } from '@/lib/query/keys'
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@components/ui/tabs"
 import { useTranslation } from 'react-i18next'
+import { resolveLandingVideo } from '@components/Landings/landingSections'
 
 // This will be created inside the component to access translations
 const getSectionTypes = (t: any) => ({
@@ -45,6 +46,11 @@ const getSectionTypes = (t: any) => ({
     icon: BookOpen,
     label: t('dashboard.organization.landing.section_types.featured_courses.label'),
     description: t('dashboard.organization.landing.section_types.featured_courses.description')
+  },
+  video: {
+    icon: Video,
+    label: t('dashboard.organization.landing.section_types.video.label'),
+    description: t('dashboard.organization.landing.section_types.video.description')
   }
 }) as const
 
@@ -217,6 +223,13 @@ const OrgEditLanding = () => {
           title: t('dashboard.organization.landing.courses_editor.title_placeholder'),
           courses: []
         }
+      case 'video':
+        return {
+          type: 'video',
+          title: t('dashboard.organization.landing.video_editor.title_placeholder'),
+          description: '',
+          url: ''
+        }
       default:
         throw new Error('Invalid section type')
     }
@@ -369,6 +382,12 @@ const OrgEditLanding = () => {
                                     }`}>
                                       {getSectionDisplayName(section)}
                                     </span>
+                                    {section.visibility === 'logged_in' && (
+                                      <LogIn size={13} className="text-gray-400 shrink-0" aria-label={t('dashboard.organization.landing.visibility.logged_in')} />
+                                    )}
+                                    {section.visibility === 'logged_out' && (
+                                      <LogOut size={13} className="text-gray-400 shrink-0" aria-label={t('dashboard.organization.landing.visibility.logged_out')} />
+                                    )}
                                   </div>
                                   <div className="flex space-x-1 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
                                     <button
@@ -467,6 +486,47 @@ interface SectionEditorProps {
 }
 
 const SectionEditor: React.FC<SectionEditorProps> = ({ section, onChange }) => {
+  return (
+    <div className="space-y-4">
+      <SectionVisibilityEditor section={section} onChange={onChange} />
+      <SectionTypeEditor section={section} onChange={onChange} />
+    </div>
+  )
+}
+
+const SectionVisibilityEditor: React.FC<SectionEditorProps> = ({ section, onChange }) => {
+  const { t } = useTranslation()
+  return (
+    <div className="p-6 bg-white rounded-lg nice-shadow">
+      <div className="flex items-center justify-between gap-6">
+        <div>
+          <div className="flex items-center space-x-2">
+            <Eye className="w-5 h-5 text-gray-500" />
+            <h3 className="font-medium text-lg">{t('dashboard.organization.landing.visibility.title')}</h3>
+          </div>
+          <p className="text-sm text-gray-500 mt-1">{t('dashboard.organization.landing.visibility.description')}</p>
+        </div>
+        <div className="w-56 shrink-0">
+          <Select
+            value={section.visibility || 'everyone'}
+            onValueChange={(value) => onChange({ ...section, visibility: value as LandingVisibility })}
+          >
+            <SelectTrigger id="section-visibility" aria-label={t('dashboard.organization.landing.visibility.title')}>
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="everyone">{t('dashboard.organization.landing.visibility.everyone')}</SelectItem>
+              <SelectItem value="logged_in">{t('dashboard.organization.landing.visibility.logged_in')}</SelectItem>
+              <SelectItem value="logged_out">{t('dashboard.organization.landing.visibility.logged_out')}</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+const SectionTypeEditor: React.FC<SectionEditorProps> = ({ section, onChange }) => {
   switch (section.type) {
     case 'hero':
       return <HeroSectionEditor section={section} onChange={onChange} />
@@ -478,6 +538,8 @@ const SectionEditor: React.FC<SectionEditorProps> = ({ section, onChange }) => {
       return <PeopleSectionEditor section={section} onChange={onChange} />
     case 'featured-courses':
       return <FeaturedCoursesEditor section={section} onChange={onChange} />
+    case 'video':
+      return <VideoSectionEditor section={section} onChange={onChange} />
     default:
       return <div>Unknown section type</div>
   }
@@ -1128,9 +1190,10 @@ interface ImageUploaderProps {
   className?: string
   buttonText?: string
   id: string
+  fileType?: 'image' | 'video'
 }
 
-const ImageUploader: React.FC<ImageUploaderProps> = ({ onImageUploaded, className, buttonText = "Upload Image", id }) => {
+const ImageUploader: React.FC<ImageUploaderProps> = ({ onImageUploaded, className, buttonText = "Upload Image", id, fileType = 'image' }) => {
   const { t } = useTranslation()
   const org = useOrg() as any
   const session = useLHSession() as any
@@ -1144,7 +1207,7 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({ onImageUploaded, classNam
 
     // Validate file using reusable utility
     const { validateFile } = await import('@/lib/file-validation')
-    const validation = validateFile(file, ['image'])
+    const validation = validateFile(file, [fileType])
     
     if (!validation.valid) {
       toast.error(validation.error!)
@@ -1184,7 +1247,7 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({ onImageUploaded, classNam
       <input
         id={inputId}
         type="file"
-        accept="image/jpeg,image/png,image/webp,image/gif"
+        accept={fileType === 'video' ? 'video/mp4,video/webm' : 'image/jpeg,image/png,image/webp,image/gif'}
         onChange={handleFileChange}
         className="hidden"
       />
@@ -1620,6 +1683,75 @@ const FeaturedCoursesEditor: React.FC<{
               </div>
             )}
           </div>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+const VideoSectionEditor: React.FC<{
+  section: LandingVideoSection
+  onChange: (section: LandingVideoSection) => void
+}> = ({ section, onChange }) => {
+  const { t } = useTranslation()
+  const video = resolveLandingVideo(section.url)
+  return (
+    <div className="space-y-6 p-6 bg-white rounded-lg nice-shadow">
+      <div className="flex items-center space-x-2">
+        <Video className="w-5 h-5 text-gray-500" />
+        <h3 className="font-medium text-lg">{t('dashboard.organization.landing.video_editor.title')}</h3>
+      </div>
+
+      <div className="space-y-4">
+        {/* Title */}
+        <div>
+          <Label htmlFor="video-title">{t('dashboard.organization.landing.video_editor.title_label')}</Label>
+          <Input
+            id="video-title"
+            value={section.title}
+            onChange={(e) => onChange({ ...section, title: e.target.value })}
+            placeholder={t('dashboard.organization.landing.video_editor.title_placeholder')}
+          />
+        </div>
+
+        {/* Description */}
+        <div>
+          <Label htmlFor="video-description">{t('dashboard.organization.landing.video_editor.description_label')}</Label>
+          <Textarea
+            id="video-description"
+            value={section.description}
+            onChange={(e) => onChange({ ...section, description: e.target.value })}
+            placeholder={t('dashboard.organization.landing.video_editor.description_placeholder')}
+          />
+        </div>
+
+        {/* Video */}
+        <div>
+          <Label htmlFor="video-url">{t('dashboard.organization.landing.video_editor.url_label')}</Label>
+          <div className="space-y-2 mt-2">
+            <Input
+              id="video-url"
+              value={section.url}
+              onChange={(e) => onChange({ ...section, url: e.target.value })}
+              placeholder="https://www.youtube.com/watch?v=..."
+            />
+            <p className="text-xs text-gray-500">{t('dashboard.organization.landing.video_editor.url_help')}</p>
+            <ImageUploader
+              id="video-section"
+              fileType="video"
+              onImageUploaded={(url) => onChange({ ...section, url })}
+              buttonText={t('dashboard.organization.landing.video_editor.upload_video')}
+            />
+          </div>
+          {video && (
+            <div className="mt-4 max-w-xl aspect-video rounded-lg overflow-hidden bg-black">
+              {video.kind === 'embed' ? (
+                <iframe src={video.src} title={section.title} className="w-full h-full" allowFullScreen />
+              ) : (
+                <video src={video.src} className="w-full h-full" controls preload="metadata" />
+              )}
+            </div>
+          )}
         </div>
       </div>
     </div>
