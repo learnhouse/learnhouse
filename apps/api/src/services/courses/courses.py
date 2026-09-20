@@ -1,11 +1,13 @@
 from typing import List
 from uuid import uuid4
+import json
 import logging
 from sqlmodel import select, or_, and_, func
 from sqlmodel.ext.asyncio.session import AsyncSession
 from src.db.usergroup_resources import UserGroupResource
 from src.db.usergroup_user import UserGroupUser
 from src.db.organizations import Organization
+from src.db.organization_config import OrganizationConfig
 from src.db.roles import Role
 from src.db.user_organizations import UserOrganization
 from src.security.features_utils.usage import (
@@ -913,6 +915,57 @@ async def update_course(
     return course
 
 
+def _strip_course_from_landing(landing: dict, course_uuid: str) -> bool:
+    """Drop course_uuid from every featured-courses section. Returns True if anything changed."""
+    changed = False
+    sections = landing.get("sections") if isinstance(landing, dict) else None
+    if not isinstance(sections, list):
+        return False
+    for section in sections:
+        if not isinstance(section, dict) or section.get("type") != "featured-courses":
+            continue
+        courses = section.get("courses")
+        if isinstance(courses, list) and course_uuid in courses:
+            section["courses"] = [c for c in courses if c != course_uuid]
+            changed = True
+    return changed
+
+
+async def _remove_course_from_org_landing(
+    org_id: int, org_slug: str | None, course_uuid: str, db_session: AsyncSession
+) -> None:
+    """
+    Landing pages reference featured courses by uuid inside the org config JSON,
+    so nothing cascades when a course is deleted. Left alone, the dead uuid stays
+    in the landing forever and the section renders short (or empty) for visitors.
+    """
+    statement = select(OrganizationConfig).where(OrganizationConfig.org_id == org_id)
+    org_config = (await db_session.execute(statement)).scalars().first()
+    if org_config is None or not org_config.config:
+        return
+
+    # Deep copy so SQLAlchemy detects the JSON change
+    updated_config = json.loads(json.dumps(org_config.config))
+    is_v2 = str(updated_config.get("config_version", "1.0")).startswith("2")
+    landing = (
+        (updated_config.get("customization") or {}).get("landing")
+        if is_v2
+        else updated_config.get("landing")
+    )
+    if not landing or not _strip_course_from_landing(landing, course_uuid):
+        return
+
+    org_config.config = updated_config
+    org_config.update_date = str(datetime.now())
+    db_session.add(org_config)
+    await db_session.commit()
+
+    from src.services.orgs.cache import invalidate_org_cache, invalidate_org_config_cache
+    invalidate_org_config_cache(org_id)
+    if org_slug:
+        invalidate_org_cache(org_slug)
+
+
 async def delete_course(
     request: Request,
     course_uuid: str,
@@ -942,9 +995,20 @@ async def delete_course(
     course_uuid_val = course.course_uuid
     course_name_val = course.name
     course_org_id = course.org_id
+    org_slug_val = org.slug if org else None
 
     await db_session.delete(course)
     await db_session.commit()
+
+    # Best effort: the course is already gone, a failed landing cleanup must not
+    # turn the delete into a 500.
+    try:
+        await _remove_course_from_org_landing(
+            course_org_id, org_slug_val, course_uuid_val, db_session
+        )
+    except Exception:
+        logger.exception("Failed to remove deleted course %s from org landing", course_uuid_val)
+        await db_session.rollback()
 
     # Feature usage — decrement only AFTER the row is actually gone. The usage
     # counter lives in Redis and is written immediately/irreversibly; doing it
