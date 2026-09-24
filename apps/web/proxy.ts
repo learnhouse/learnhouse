@@ -420,19 +420,11 @@ export default async function proxy(req: NextRequest) {
   }
 
   // -------------------------------------------------------------------------
-  // 6. Stripe Connect OAuth callback — preserve search params + add orgslug
+  // 6. Stripe Connect OAuth callback — served as-is on every host, never
+  //    rewritten into an org route. The page reads code/state itself.
   // -------------------------------------------------------------------------
   if (req.nextUrl.pathname.startsWith('/payments/stripe/connect/oauth')) {
-    const searchParams = req.nextUrl.searchParams
-    const orgslug = searchParams.get('state')?.split('_')[0]
-    const redirectUrl = new URL('/payments/stripe/connect/oauth', req.url)
-    searchParams.forEach((value, key) => {
-      redirectUrl.searchParams.append(key, value)
-    })
-    if (orgslug) {
-      redirectUrl.searchParams.set('orgslug', orgslug)
-    }
-    return NextResponse.rewrite(redirectUrl)
+    return NextResponse.rewrite(new URL(pathname + search, req.url))
   }
 
   // -------------------------------------------------------------------------
