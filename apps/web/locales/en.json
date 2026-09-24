@@ -1636,6 +1636,7 @@
     "stripe_wait": "Please wait while we finish setting up your Stripe integration...",
     "stripe_return": "You can now return to the dashboard to start using payments.",
     "stripe_retry": "Please try again or contact support if the problem persists.",
+    "stripe_login_required": "You are not signed in to LearnHouse in this browser. Sign in, then start the connection again from your payments settings.",
     "subscription": "Subscription",
     "benefits": "Benefits:",
     "min_price": "Minimum Price:",
