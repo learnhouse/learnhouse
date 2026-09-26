@@ -136,7 +136,7 @@
         "videojs-contrib-quality-levels": "^4",
         "videojs-hls-quality-selector": "^2",
         "videojs-sprite-thumbnails": "^2",
-        "wavesurfer.js": "^7.12.1",
+        "wavesurfer.js": "^8.0.0",
         "y-prosemirror": "^1.2.12",
         "yjs": "^13.6.20",
         "yup": "^1.7.1",
@@ -2286,7 +2286,7 @@
 
     "watchpack": ["watchpack@2.5.2", "", { "dependencies": { "graceful-fs": "^4.1.2" } }, "sha512-6i/00NBjP4yGPs+caKSyRfpTF/8Torsu0MOW3mMzIbhgISFder8i7xbqgHlLMwJrdiN8ndBV3UA1/AfzPSr+jg=="],
 
-    "wavesurfer.js": ["wavesurfer.js@7.12.11", "", {}, "sha512-Sx0yZIz7jRJ9J9p7UL+pl9y0UQBB6UN/XNo+R7Gy4tCR5xZI9jMyA0dnt1R8TMVSQ4LZ10SeB2HJYQ+dV2dPSA=="],
+    "wavesurfer.js": ["wavesurfer.js@8.0.1", "", {}, "sha512-h0OnRWSVTqIYLSw3/IVrBtsun/xw9L5u4FA3bjfSDTFMX/xswVWS1JwK4fFu3ulmxRUSHg8zQORl6zENG983eg=="],
 
     "web-namespaces": ["web-namespaces@2.0.1", "", {}, "sha512-bKr1DkiNa2krS7qxNtdrtHAmzuYGFQLiQ13TsorsdT6ULTkPLKuu5+GsFpDlg6JFjUTwX2DyhMPG2be8uPrqsQ=="],
 

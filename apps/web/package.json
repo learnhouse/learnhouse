@@ -145,7 +145,7 @@
     "videojs-contrib-quality-levels": "^4",
     "videojs-hls-quality-selector": "^2",
     "videojs-sprite-thumbnails": "^2",
-    "wavesurfer.js": "^7.12.1",
+    "wavesurfer.js": "^8.0.0",
     "y-prosemirror": "^1.2.12",
     "yjs": "^13.6.20",
     "yup": "^1.7.1"
