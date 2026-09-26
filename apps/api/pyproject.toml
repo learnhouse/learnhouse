@@ -43,7 +43,7 @@ dependencies = [
     "pytest-asyncio==1.4.0",
     "sentry-sdk[fastapi]==2.69.2",
     "protobuf==7.36.1",
-    "workos==10.3.0",
+    "workos==10.4.0",
     "dnspython==2.8.0",
     "defusedxml==0.7.1",
     "pgvector==0.5.0",
