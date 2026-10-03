@@ -37,6 +37,7 @@ def _patch_ai_config(monkeypatch, **overrides):
         ("openai", "gpt-4o", "OpenAIChatModel"),
         ("anthropic", "claude-sonnet-4-5", "AnthropicModel"),
         ("deepseek", "deepseek-chat", "OpenAIChatModel"),
+        ("fireworks", "accounts/fireworks/models/llama-v3p1-70b-instruct", "OpenAIChatModel"),
         ("moonshot", "kimi-k2-0905-preview", "OpenAIChatModel"),
         ("mistral", "mistral-large", "MistralModel"),
     ],
