@@ -57,6 +57,8 @@ class AIConfig(BaseModel):
     model_pro: str | None = None
     # RAG embeddings follow the chosen provider where it supports embeddings (Google, OpenAI
     # family incl. Ollama). Optionally override the embeddings provider/model/dimensions.
+    # Fireworks embeddings are opt-in: set embedding_provider="fireworks" and an explicit
+    # embedding_model (the shared api_key is used); a Fireworks main provider alone does not enable them.
     # Output dimensions default to 768 to match the Vector(768) pgvector column.
     embedding_provider: str | None = None
     embedding_model: str | None = None

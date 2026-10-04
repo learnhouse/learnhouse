@@ -93,12 +93,14 @@ ai_config:
   model_fast: ""        # titles, follow-ups, migration                 (default: gemini-3.1-flash-lite)
   model_standard: ""    # chat, RAG, course planning / blocks (std plan) (default: gemini-3.5-flash)
   model_pro: ""         # course planning / blocks (Pro+ plan)          (default: gemini-3.1-pro-preview)
-  # RAG embeddings follow the chosen provider (Google / OpenAI family incl. Ollama). Override
+  # RAG embeddings follow the chosen provider (Google / OpenAI family incl. Ollama; Fireworks only when set explicitly below). Override
   # any of these; embedding_dimensions defaults to 768 to match the pgvector column (changing
   # it requires a DB migration + re-index). Providers without embeddings (Anthropic, DeepSeek, Fireworks, Moonshot,
-  # Mistral, OpenRouter, Bedrock) fall back to Google when gemini_api_key is set.
-  embedding_provider: ""    # default: same as `provider`
-  embedding_model: ""       # default per provider (e.g. gemini-embedding-001, text-embedding-3-small)
+  # Mistral, OpenRouter, Bedrock) fall back to Google when gemini_api_key is set, unless
+  # embedding_provider is explicitly "fireworks" (requires embedding_model; uses `api_key`).
+  # Changing the embedding provider/model requires re-indexing every course.
+  embedding_provider: ""    # default: same as `provider`; "fireworks" is opt-in only
+  embedding_model: ""       # default per provider (e.g. gemini-embedding-001, text-embedding-3-small); required for fireworks (accounts/fireworks/models/qwen3-embedding-8b)
   embedding_dimensions: ""  # default: 768
   # Google/Gemini key. Also the embeddings fallback for providers that lack an embeddings API.
   gemini_api_key: ""
