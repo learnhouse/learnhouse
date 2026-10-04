@@ -30,6 +30,7 @@ VERSION_FILES=(
   "apps/collab/package.json"
   "apps/api/pyproject.toml"
   "apps/api/app.py"
+  "apps/api/uv.lock"
 )
 
 echo ""
@@ -46,6 +47,7 @@ echo "  🔎 Running preflight checks..."
 
 # Tooling + auth
 command -v gh >/dev/null 2>&1 || die "GitHub CLI 'gh' is not installed."
+command -v uv >/dev/null 2>&1 || die "'uv' is not installed (needed to refresh apps/api/uv.lock)."
 gh auth status >/dev/null 2>&1 || die "GitHub CLI is not authenticated — run: gh auth login"
 [ -n "$REPO" ] || die "Could not determine the GitHub repo (gh repo view)."
 
@@ -83,6 +85,9 @@ sed -i '' "s/^version = \"[^\"]*\"/version = \"${VERSION}\"/" "$REPO_ROOT/apps/a
 sed -i '' "s/version=\"[^\"]*\"/version=\"${VERSION}\"/" "$REPO_ROOT/apps/api/app.py"
 sed -i '' "s/\"version\": \"[^\"]*\"/\"version\": \"${VERSION}\"/" "$REPO_ROOT/apps/api/ee/routers/info.py"
 
+# uv.lock pins the project's own version — refresh it or the Lockfiles check fails on dev.
+(cd "$REPO_ROOT/apps/api" && uv lock --quiet) || die "uv lock failed — aborting before any commit."
+
 echo "  ✅ Version bumped in web, collab, api, ee/info"
 
 # Verify the bump actually landed in every tracked version file before we commit/push.
@@ -101,6 +106,7 @@ FILES_TO_ADD=(
   "$REPO_ROOT/apps/collab/package.json"
   "$REPO_ROOT/apps/api/pyproject.toml"
   "$REPO_ROOT/apps/api/app.py"
+  "$REPO_ROOT/apps/api/uv.lock"
 )
 if [ -L "$REPO_ROOT/apps/api/ee" ]; then
   echo "  ℹ️  apps/api/ee is a symlink — EE info.py bumped in linked repo, skipping git add here"
