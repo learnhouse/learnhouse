@@ -1,6 +1,6 @@
 import { NodeViewWrapper } from '@tiptap/react'
 import React, { useEffect } from 'react'
-import { FileText, DownloadSimple, ArrowsOut, UploadSimple, CircleNotch, WarningCircle } from '@phosphor-icons/react'
+import { FileText, DownloadSimple, ArrowsOut, UploadSimple, CircleNotch, WarningCircle, DotsSix } from '@phosphor-icons/react'
 import toast from 'react-hot-toast'
 import { uploadNewPDFFile } from '../../../../../services/blocks/Pdf/pdf'
 import { getActivityBlockMediaDirectory } from '@services/media/media'
@@ -13,6 +13,12 @@ import Modal from '@components/Objects/StyledElements/Modal/Modal'
 import { useTranslation } from 'react-i18next'
 
 const SUPPORTED_FILES = constructAcceptValue(['pdf'])
+
+// Same reading size the PDF activity uses, capped to the viewport so the whole
+// page fits on a laptop. Authors can drag it taller or shorter per block.
+const DEFAULT_PDF_HEIGHT = 'min(80vh, 900px)'
+const MIN_PDF_HEIGHT = 200
+const MAX_PDF_HEIGHT = 2000
 
 function PDFBlockComponent(props: any) {
   const { t } = useTranslation()
@@ -28,6 +34,10 @@ function PDFBlockComponent(props: any) {
   const [isModalOpen, setIsModalOpen] = React.useState(false)
   const [error, setError] = React.useState<string | null>(null)
   const [progress, setProgress] = React.useState(0)
+  // Read from the node, not local state, so undo and collaborators' resizes show.
+  const pdfHeight: number | null = props.node.attrs.pdfHeight ?? null
+  const [isResizing, setIsResizing] = React.useState(false)
+  const frameRef = React.useRef<HTMLDivElement>(null)
   const fileInputRef = React.useRef<HTMLInputElement>(null)
   const fileId = blockObject
     ? `${blockObject.content.file_id}.${blockObject.content.file_format}`
@@ -98,6 +108,39 @@ function PDFBlockComponent(props: any) {
     setIsModalOpen(true);
   };
 
+  // Pointer capture keeps the drag on the handle even when the cursor crosses
+  // an iframe (this PDF or another block's), which would otherwise swallow
+  // pointerup and leave the drag stuck.
+  const handleResizeStart = (event: React.PointerEvent<HTMLDivElement>) => {
+    event.preventDefault()
+    event.stopPropagation()
+    const handle = event.currentTarget
+    const pointerId = event.pointerId
+    const startY = event.clientY
+    const startHeight = frameRef.current?.offsetHeight || 0
+    let height = startHeight
+    handle.setPointerCapture(pointerId)
+    setIsResizing(true)
+
+    const handleMove = (e: PointerEvent) => {
+      height = Math.min(MAX_PDF_HEIGHT, Math.max(MIN_PDF_HEIGHT, startHeight + e.clientY - startY))
+      if (frameRef.current) frameRef.current.style.height = `${height}px`
+    }
+    const handleEnd = () => {
+      handle.removeEventListener('pointermove', handleMove)
+      handle.removeEventListener('pointerup', handleEnd)
+      handle.removeEventListener('pointercancel', handleEnd)
+      if (handle.hasPointerCapture(pointerId)) handle.releasePointerCapture(pointerId)
+      setIsResizing(false)
+      if (height !== startHeight) props.updateAttributes({ pdfHeight: height })
+    }
+    handle.addEventListener('pointermove', handleMove)
+    handle.addEventListener('pointerup', handleEnd)
+    handle.addEventListener('pointercancel', handleEnd)
+  }
+
+  const frameStyle = { height: pdfHeight ? `${pdfHeight}px` : DEFAULT_PDF_HEIGHT }
+
   const pdfUrl = blockObject ? getActivityBlockMediaDirectory(
     org?.org_uuid,
     course?.courseStructure.course_uuid,
@@ -130,7 +173,8 @@ function PDFBlockComponent(props: any) {
         <NodeViewWrapper className="block-pdf">
           <div className="relative group">
             <iframe
-              className="w-full h-96 rounded-lg nice-shadow bg-white"
+              style={frameStyle}
+              className="w-full rounded-lg nice-shadow bg-white"
               src={pdfUrl}
               title={t('editor.blocks.pdf_block.document_title')}
             />
@@ -258,12 +302,21 @@ function PDFBlockComponent(props: any) {
 
           {/* PDF Preview */}
           {blockObject && pdfUrl && (
-            <div className="relative">
+            <div ref={frameRef} className="relative" style={frameStyle}>
+              {/* Inline height: the editor's global `iframe { height: 440px }` outranks h-full. */}
               <iframe
-                className="w-full h-96 rounded-lg nice-shadow bg-white"
+                style={{ height: '100%' }}
+                className={`w-full rounded-lg nice-shadow bg-white ${isResizing ? 'pointer-events-none' : ''}`}
                 src={pdfUrl}
                 title={t('editor.blocks.pdf_block.document_title')}
               />
+              <div
+                className="absolute start-0 end-0 bottom-0 h-4 cursor-ns-resize touch-none flex items-center justify-center bg-white/70 hover:bg-white/90 rounded-b-lg transition-opacity"
+                onPointerDown={handleResizeStart}
+                title={t('editor.blocks.pdf_block.resize_pdf')}
+              >
+                <DotsSix weight="duotone" size={16} className="text-neutral-500" />
+              </div>
               <div className="absolute top-2 end-2 flex gap-1">
                 <button
                   onClick={handleExpand}

@@ -5125,7 +5125,8 @@
         "upload_pdf": "تحميل PDF",
         "document_title": "مستند PDF",
         "expand_pdf": "توسيع PDF",
-        "download_pdf": "تحميل PDF"
+        "download_pdf": "تحميل PDF",
+        "resize_pdf": "اسحب لتغيير الحجم"
       },
       "h5p_block": {
         "default_title": "محتوى H5P تفاعلي",
