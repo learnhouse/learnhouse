@@ -29,10 +29,9 @@ from dataclasses import dataclass, field
 from typing import Any, Dict, List, Optional
 
 from fastapi import HTTPException, status
-from sqlmodel import select
 from sqlmodel.ext.asyncio.session import AsyncSession
 
-from src.db.organization_config import OrganizationConfig
+from src.services.orgs.org_config_lookup import get_session_org_config
 from src.security.session_context import (
     AUTH_METHOD_API_TOKEN,
     POLICY_AUTH_METHODS,
@@ -82,11 +81,7 @@ class OrgAuthPolicy:
 
 
 async def get_org_auth_policy(db_session: AsyncSession, org_id: int) -> OrgAuthPolicy:
-    row = (
-        await db_session.execute(
-            select(OrganizationConfig).where(OrganizationConfig.org_id == org_id)
-        )
-    ).scalars().first()
+    row = await get_session_org_config(db_session, org_id)
     if row is None or not isinstance(row.config, dict):
         return OrgAuthPolicy()
 

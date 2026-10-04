@@ -1,5 +1,6 @@
 from datetime import datetime
 from src.db.organization_config import OrganizationConfig
+from src.services.orgs.org_config_lookup import get_session_org_config
 from src.db.billing_usage import UsageEvent
 from src.db.user_organizations import UserOrganization
 from src.db.courses.courses import Course
@@ -1208,8 +1209,7 @@ async def get_ai_credits_summary(org_id: int, db_session: AsyncSession) -> dict:
     Uses a single Redis connection and pipelines the key fetches to minimize
     round-trips (purchased + used credits fetched in one call).
     """
-    statement = select(OrganizationConfig).where(OrganizationConfig.org_id == org_id)
-    org_config = (await db_session.execute(statement)).scalars().first()
+    org_config = await get_session_org_config(db_session, org_id)
 
     if org_config is None:
         return {"error": "Organization has no config"}
