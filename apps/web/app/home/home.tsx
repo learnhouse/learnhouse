@@ -8,7 +8,7 @@ import UserAvatar from '@components/Objects/UserAvatar'
 import { getAPIUrl, getUriWithOrg, getLEARNHOUSE_PLATFORM_URL_VAL } from '@services/config/config'
 import { apiFetch } from '@services/utils/ts/requests'
 import { signOut } from '@components/Contexts/AuthContext'
-import { getOrgLogoMediaDirectory } from '@services/media/media'
+import OrgSquareLogo from '@components/Objects/Org/OrgSquareLogo'
 import { deleteOrganizationFromBackend, leaveOrg } from '@services/organizations/orgs'
 import { ChevronRight, Languages, Check, LogOut, Settings, TentTree, LogIn, Plus, MoreVertical, CreditCard, Trash2, AlertTriangle } from 'lucide-react'
 import Link from 'next/link'
@@ -323,18 +323,16 @@ function OrgRow({ org, access_token }: { org: any; access_token: string }) {
         href={getUriWithOrg(org.slug, '/')}
         className="flex items-center flex-1 min-w-0"
       >
-        {org.logo_image ? (
-
-          <img
-            src={getOrgLogoMediaDirectory(org.org_uuid, org.logo_image)}
-            alt={org.name}
-            className="w-11 h-11 rounded-xl object-cover flex-shrink-0 ring-1 ring-inset ring-black/5"
+        <div className="w-11 h-11 rounded-xl bg-white overflow-hidden flex items-center justify-center flex-shrink-0 ring-1 ring-inset ring-black/5">
+          <OrgSquareLogo
+            org={org}
+            fallback={
+              <div className="w-full h-full bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center text-gray-700 font-bold text-lg">
+                {initial}
+              </div>
+            }
           />
-        ) : (
-          <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center text-gray-700 font-bold text-lg flex-shrink-0 ring-1 ring-inset ring-black/5">
-            {initial}
-          </div>
-        )}
+        </div>
 
         <div className="ms-3 flex-1 min-w-0">
           <div className="flex items-center gap-2 min-w-0">

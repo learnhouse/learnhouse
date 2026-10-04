@@ -173,6 +173,43 @@ class TestSendMagicLoginEmail:
         assert "https://academy.example.com/auth/magic?token=raw.jwt.token" in body
         assert send_mock.call_args.kwargs["to"] == "learner@example.com"
 
+    def test_platform_mail_is_learnhouse_branded(self):
+        with patch.object(ml, "send_email", return_value=True) as send_mock:
+            send_magic_login_email(
+                _fake_user_read(), "learner@example.com", "https://app.test", "tok"
+            )
+        call = send_mock.call_args.kwargs
+        assert call["subject"] == "Your LearnHouse login link"
+        assert "Sign in to LearnHouse" in call["body"]
+        assert "<svg" in call["body"]
+        assert "Powered by LearnHouse" not in call["body"]
+        assert call["sender_name"] is None
+
+    def test_org_mail_is_the_orgs_own(self):
+        with patch.object(ml, "send_email", return_value=True) as send_mock:
+            send_magic_login_email(
+                _fake_user_read(),
+                "learner@example.com",
+                "https://academy.example.com",
+                "tok",
+                lang="fr",
+                org_name="Acme & Co",
+                sender_name="Acme Academy",
+                logo_url="https://api.test/content/orgs/o/logos/l.png",
+                brand_color="#1d4ed8",
+                powered_by=False,
+            )
+        call = send_mock.call_args.kwargs
+        # Plain-text subject carries the raw org name; the HTML body escapes it.
+        assert call["subject"] == "Votre lien de connexion Acme & Co"
+        assert "Connectez-vous à Acme &amp; Co" in call["body"]
+        assert '<img src="https://api.test/content/orgs/o/logos/l.png"' in call["body"]
+        assert "background-color: #1d4ed8;" in call["body"]
+        assert "LearnHouse" not in call["body"]
+        assert "<svg" not in call["body"]
+        assert call["sender_name"] == "Acme Academy"
+        assert "https://academy.example.com/auth/magic?token=tok" in call["body"]
+
     def test_token_is_url_encoded_in_link(self):
         with patch.object(ml, "send_email", return_value=True) as send_mock:
             send_magic_login_email(

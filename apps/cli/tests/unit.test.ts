@@ -45,7 +45,6 @@ const baseConfig: SetupConfig = {
   emailEnabled: false,
   s3Enabled: false,
   googleOAuthEnabled: false,
-  unsplashEnabled: false,
 }
 
 // ─── Docker Compose template ────────────────────────────────
@@ -2511,7 +2510,7 @@ describe('checkForUpdates', () => {
 // ─── generateEnvFile — optional-feature branches ────────────
 
 describe('generateEnvFile — feature flags', () => {
-  it('emits AI, SMTP email, S3, Google and Unsplash vars when enabled', () => {
+  it('emits AI, SMTP email, S3 and Google vars when enabled', () => {
     const env = generateEnvFile({
       ...baseConfig,
       aiEnabled: true, geminiApiKey: 'AIzaKEY',
@@ -2519,7 +2518,6 @@ describe('generateEnvFile — feature flags', () => {
       smtpUsername: 'u', smtpPassword: 'pw', smtpUseTls: false, systemEmailAddress: 'no@reply.dev',
       s3Enabled: true, s3BucketName: 'bkt', s3EndpointUrl: 'https://s3.example.com',
       googleOAuthEnabled: true, googleClientId: 'gid', googleClientSecret: 'gsec',
-      unsplashEnabled: true, unsplashAccessKey: 'ukey',
     })
     expect(env).toContain('LEARNHOUSE_GEMINI_API_KEY=AIzaKEY')
     expect(env).toContain('LEARNHOUSE_IS_AI_ENABLED=True')
@@ -2529,7 +2527,6 @@ describe('generateEnvFile — feature flags', () => {
     expect(env).toContain('LEARNHOUSE_S3_API_BUCKET_NAME=bkt')
     expect(env).toContain('LEARNHOUSE_S3_API_ENDPOINT_URL=https://s3.example.com')
     expect(env).toContain('LEARNHOUSE_GOOGLE_CLIENT_ID=gid')
-    expect(env).toContain('NEXT_PUBLIC_UNSPLASH_ACCESS_KEY=ukey')
   })
 
   it('uses the Resend key for the resend email provider', () => {

@@ -8,6 +8,7 @@ import json
 import os
 import re
 import shutil
+import stat
 import time
 import zipfile
 from datetime import datetime
@@ -60,11 +61,6 @@ MAX_ENTRY_SIZE = 250 * 1024 * 1024
 # Max entry count inside the archive. Prevents inode exhaustion / "zip of zero-
 # byte files" attacks even when the compression ratio looks innocent.
 MAX_ENTRY_COUNT = 20000
-
-# Zip central-directory external-attribute mask for symbolic links, in the
-# upper 16 bits (Unix mode). 0xA000 is S_IFLNK. Matching the convention used
-# by zipfile authors, we bail out on any entry whose mode includes this flag.
-_ZIP_SYMLINK_MODE = 0xA000 << 16
 
 # temp_id is always a uuid4 minted by analyze_import_package, but it comes back
 # from the client on the import call, where it is joined into filesystem paths.
@@ -297,7 +293,14 @@ async def analyze_import_package(
                 # SECURITY: reject symlink entries outright — even a contained
                 # symlink can be followed by later entries to write outside
                 # the extract directory.
-                if info.external_attr & _ZIP_SYMLINK_MODE:
+                #
+                # Zip keeps the entry's Unix mode in the upper 16 bits of
+                # external_attr. The file-type nibble there has to be compared
+                # against S_IFLNK exactly: S_IFLNK (0o120000) and S_IFREG
+                # (0o100000) share a bit, so a plain `& S_IFLNK` test also
+                # matches every ordinary file that carries a real mode — which
+                # is every file any Unix zip tool writes.
+                if stat.S_ISLNK(info.external_attr >> 16):
                     raise HTTPException(
                         status_code=400,
                         detail=(

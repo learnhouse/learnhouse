@@ -10,7 +10,7 @@ import { useLHSession } from '@components/Contexts/LHSessionContext'
 import { canManageOrgFromSession } from '@components/Hooks/useAdminStatus'
 import UserAvatar from '@components/Objects/UserAvatar'
 import { getAPIUrl } from '@services/config/config'
-import { getOrgLogoMediaDirectory } from '@services/media/media'
+import OrgSquareLogo from '@components/Objects/Org/OrgSquareLogo'
 import { apiFetch } from '@services/utils/ts/requests'
 import { queryKeys } from '@/lib/query/keys'
 import {
@@ -281,17 +281,16 @@ function BillingClient() {
                 </Link>
                 {org && (
                   <div className="flex items-center gap-2.5 min-w-0">
-                    {org.logo_image ? (
-                      <img
-                        src={getOrgLogoMediaDirectory(org.org_uuid, org.logo_image)}
-                        alt={org.name}
-                        className="w-8 h-8 rounded-lg object-cover flex-shrink-0 ring-1 ring-inset ring-black/5"
+                    <div className="w-8 h-8 rounded-lg bg-white overflow-hidden flex items-center justify-center flex-shrink-0 ring-1 ring-inset ring-black/5">
+                      <OrgSquareLogo
+                        org={org}
+                        fallback={
+                          <div className="w-full h-full bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center text-gray-700 font-bold text-sm">
+                            {(org.name || org.slug || '?').trim().charAt(0).toUpperCase()}
+                          </div>
+                        }
                       />
-                    ) : (
-                      <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center text-gray-700 font-bold text-sm flex-shrink-0 ring-1 ring-inset ring-black/5">
-                        {(org.name || org.slug || '?').trim().charAt(0).toUpperCase()}
-                      </div>
-                    )}
+                    </div>
                     <span className="text-sm font-semibold text-gray-900 truncate">{org.name}</span>
                   </div>
                 )}

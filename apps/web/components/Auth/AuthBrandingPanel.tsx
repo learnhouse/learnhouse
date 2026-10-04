@@ -3,7 +3,8 @@ import React from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
 import learnhouseIcon from 'public/learnhouse_bigicon_1.png'
-import { getOrgLogoMediaDirectory, getOrgAuthBackgroundMediaDirectory } from '@services/media/media'
+import { getOrgAuthBackgroundMediaDirectory } from '@services/media/media'
+import OrgSquareLogo from '@components/Objects/Org/OrgSquareLogo'
 import { getUriWithOrg } from '@services/config/config'
 import { cn } from '@/lib/utils'
 import { usePlan } from '@components/Hooks/usePlan'
@@ -182,22 +183,20 @@ export default function AuthBrandingPanel({ org, welcomeText, title, subtitle }:
                   {/* Organization logo */}
                   <Link prefetch href={getUriWithOrg(org?.slug, '/')}>
                     <div className="w-24 h-24 rounded-2xl ring-1 ring-inset ring-white/10 bg-white flex items-center justify-center overflow-hidden">
-                      {org?.logo_image ? (
-                        <img
-                          src={getOrgLogoMediaDirectory(org.org_uuid, org.logo_image)}
-                          alt={org.name}
-                          className="w-full h-full object-contain p-3"
-                        />
-                      ) : (
-                        <Image
-                          quality={100}
-                          width={96}
-                          height={96}
-                          src={learnhouseIcon}
-                          alt="LearnHouse"
-                          className="object-contain"
-                        />
-                      )}
+                      <OrgSquareLogo
+                        org={org}
+                        wideInsetClassName="p-3"
+                        fallback={
+                          <Image
+                            quality={100}
+                            width={96}
+                            height={96}
+                            src={learnhouseIcon}
+                            alt="LearnHouse"
+                            className="object-contain"
+                          />
+                        }
+                      />
                     </div>
                   </Link>
 

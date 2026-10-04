@@ -39,6 +39,21 @@ export async function uploadOrganizationLogo(
   return res
 }
 
+export async function uploadOrganizationSquareLogo(
+  org_id: string,
+  square_logo_file: any,
+  access_token: string
+) {
+  const formData = new FormData()
+  formData.append('square_logo_file', square_logo_file)
+  const result: any = await fetch(
+    `${getAPIUrl()}orgs/` + org_id + '/square_logo',
+    RequestBodyFormWithAuthHeader('PUT', formData, null, access_token)
+  )
+  const res = await errorHandling(result)
+  return res
+}
+
 export async function uploadOrganizationThumbnail(
   org_id: string,
   thumbnail_file: any,
@@ -192,6 +207,25 @@ export async function updateOrgMenuConfig(
   const result: any = await fetch(
     `${getAPIUrl()}orgs/${org_id}/config/menu`,
     RequestBodyWithAuthHeader('PUT', menu_config, null, access_token)
+  )
+  const res = await errorHandling(result)
+  return res
+}
+
+export interface CourseEndConfigPayload {
+  message: string
+  button_text: string
+  button_link: string
+}
+
+export async function updateOrgCourseEndConfig(
+  org_id: string,
+  course_end_config: CourseEndConfigPayload,
+  access_token: string
+) {
+  const result: any = await fetch(
+    `${getAPIUrl()}orgs/${org_id}/config/course-end`,
+    RequestBodyWithAuthHeader('PUT', course_end_config, null, access_token)
   )
   const res = await errorHandling(result)
   return res

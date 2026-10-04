@@ -1,4 +1,4 @@
-FROM oven/bun:1.4.0-alpine AS base
+FROM oven/bun:1.4.2-alpine AS base
 
 # Install dependencies only when needed
 FROM base AS deps
@@ -25,7 +25,7 @@ RUN if [ "$LEARNHOUSE_PUBLIC" = "true" ]; then rm -rf /app/ee; fi
 RUN bun run build
 
 # Production image — the Next.js standalone server runs on Bun
-FROM oven/bun:1.4.0-alpine AS runner
+FROM oven/bun:1.4.2-alpine AS runner
 WORKDIR /app
 
 RUN apk upgrade --no-cache && apk add --no-cache curl

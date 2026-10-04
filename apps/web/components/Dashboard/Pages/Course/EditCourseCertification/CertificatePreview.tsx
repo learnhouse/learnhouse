@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Award, CheckCircle, QrCode, Building, User, Calendar, Hash } from 'lucide-react';
 import { useOrg } from '@components/Contexts/OrgContext';
-import { getOrgLogoMediaDirectory } from '@services/media/media';
+import OrgSquareLogo, { hasOrgLogo } from '@components/Objects/Org/OrgSquareLogo'
 
 interface CertificatePreviewProps {
   certificationName: string;
@@ -560,12 +560,8 @@ const CertificatePreview: React.FC<CertificatePreviewProps> = ({
             {/* Center: Logo */}
             <div className="flex flex-col items-center space-y-1 flex-1">
               <div className={`w-8 h-8 sm:w-10 sm:h-10 flex items-center justify-center`}>
-                {org?.logo_image ? (
-                  <img
-                    src={`${getOrgLogoMediaDirectory(org.org_uuid, org?.logo_image)}`}
-                    alt="Organization Logo"
-                    className="w-full h-full object-contain"
-                  />
+                {hasOrgLogo(org) ? (
+                  <OrgSquareLogo org={org} alt="Organization Logo" wideInsetClassName="" className="rounded-md" fallback={null} />
                 ) : (
                   <div className={`w-full h-full ${theme.icon.replace('text-', 'bg-')}-100 rounded-full flex items-center justify-center`}>
                     <Building className={`w-4 h-4 sm:w-5 sm:h-5 ${theme.icon}`} />

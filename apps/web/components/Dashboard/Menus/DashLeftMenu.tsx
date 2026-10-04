@@ -70,7 +70,7 @@ import {
 } from "@components/ui/hover-menu"
 import { FeedbackModal } from '@components/Objects/Modals/FeedbackModal'
 import { AVAILABLE_LANGUAGES } from '@/lib/languages'
-import { getOrgLogoMediaDirectory } from '@services/media/media'
+import OrgSquareLogo, { hasOrgLogo } from '@components/Objects/Org/OrgSquareLogo'
 import { cn } from '@/lib/utils'
 import { useQuery } from '@tanstack/react-query'
 import { queryKeys } from '@/lib/query/keys'
@@ -252,12 +252,10 @@ function DashLeftMenu() {
           className={cn("flex items-center transition-opacity hover:opacity-70", isCollapsed ? "" : "space-x-3")}
           href={'/'}
         >
-          {planMeetsRequirement(plan, 'standard') && org?.logo_image ? (
-            <img
-              src={getOrgLogoMediaDirectory(org.org_uuid, org.logo_image)}
-              alt={org?.name}
-              className="h-9 w-9 object-contain rounded-lg"
-            />
+          {planMeetsRequirement(plan, 'standard') && hasOrgLogo(org) ? (
+            <div className="h-9 w-9 rounded-lg overflow-hidden bg-white shrink-0">
+              <OrgSquareLogo org={org} wideInsetClassName="p-1" fallback={null} />
+            </div>
           ) : (
             <img
               src="/lrn-dash.svg"
@@ -313,7 +311,7 @@ function DashLeftMenu() {
 
       {/* Search trigger — replaced by the onboarding progress in this slot until
           setup is complete (then the search box returns). */}
-      <div className={cn('px-3', showOnboarding ? 'pt-2' : 'pt-3')}>
+      <div className={cn('px-3 shrink-0', showOnboarding ? 'pt-2' : 'pt-3')}>
         {showOnboarding ? (
           <OnboardingSidebarBox />
         ) : (
@@ -321,10 +319,14 @@ function DashLeftMenu() {
         )}
       </div>
 
-      {/* Main Navigation - Vertically Centered */}
-      <div className="flex-1 flex flex-col justify-center py-4 px-3">
+      {/* Main Navigation — scrolls once the list outgrows the viewport.
+          Centered with `my-auto`, not `justify-center`: the latter would push
+          the first items above scroll origin, out of reach. No
+          `overscroll-contain`: it stops the wheel from scrolling the page
+          over the sidebar even when the list fits. */}
+      <div className="flex-1 min-h-0 overflow-y-auto flex flex-col py-4 px-3">
         <AdminAuthorization authorizationMode="component">
-          <div className="space-y-1">
+          <div className="space-y-1 my-auto">
             <MenuLink
               href="/dash"
               icon={<House size={20} weight="fill" />}

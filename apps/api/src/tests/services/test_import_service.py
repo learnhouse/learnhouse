@@ -554,6 +554,60 @@ class TestImportHelpers:
         assert "symlink" in exc.value.detail.lower()
 
     @pytest.mark.asyncio
+    async def test_analyze_import_package_accepts_entries_with_unix_modes(
+        self, db, org, admin_user, mock_request, tmp_path, monkeypatch
+    ):
+        """
+        True negative for the F-10 symlink guard: S_IFREG entries are files.
+
+        Every Unix zip tool (Info-Zip, Finder's "Compress", zipfile when given
+        an explicit ZipInfo) records the real mode in the upper 16 bits of
+        external_attr, so ordinary files arrive carrying S_IFREG. Those must
+        pass the guard — otherwise the export -> edit -> re-zip -> re-import
+        round trip dies on the first regular file in the archive.
+        """
+        _set_import_temp_dir(monkeypatch, tmp_path)
+
+        manifest = {
+            "version": "2.0.0",
+            "format": "learnhouse-course-export",
+            "courses": [{"course_uuid": "course-1", "path": "course-1"}],
+        }
+        files = {
+            "manifest.json": json.dumps(manifest).encode(),
+            "course-1/course.json": json.dumps(
+                {"course_uuid": "course-1", "name": "Imported Course"}
+            ).encode(),
+            # Finder's "Compress" ships AppleDouble sidecars alongside the real
+            # entries; they are plain files too and must not trip the guard.
+            "__MACOSX/._manifest.json": b"\x00\x05\x16\x07",
+        }
+
+        buf = BytesIO()
+        with zipfile.ZipFile(buf, "w", compression=zipfile.ZIP_STORED) as z:
+            dir_info = zipfile.ZipInfo("course-1/")
+            dir_info.external_attr = 0o040755 << 16  # S_IFDIR | rwxr-xr-x
+            dir_info.create_system = 3  # unix
+            z.writestr(dir_info, "")
+            for name, content in files.items():
+                info = zipfile.ZipInfo(name)
+                info.external_attr = 0o100644 << 16  # S_IFREG | rw-r--r--
+                info.create_system = 3  # unix
+                z.writestr(info, content)
+
+        with patch(
+            "src.services.courses.transfer.import_service.check_resource_access",
+            new_callable=AsyncMock,
+        ):
+            result = await analyze_import_package(
+                mock_request, _upload_file(buf.getvalue()), org.id, admin_user, db
+            )
+
+        assert result.version == "2.0.0"
+        assert [course.course_uuid for course in result.courses] == ["course-1"]
+        assert os.path.exists(tmp_path / result.temp_id / "extracted" / "manifest.json")
+
+    @pytest.mark.asyncio
     async def test_analyze_import_package_handles_unexpected_errors(
         self,
         db,

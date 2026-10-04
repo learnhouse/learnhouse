@@ -20,8 +20,7 @@ import { useLHSession } from '@components/Contexts/LHSessionContext'
 import toast from 'react-hot-toast'
 import { useFormik } from 'formik'
 import * as Yup from 'yup'
-import {  UploadCloud, Image as ImageIcon, Clipboard } from 'lucide-react'
-import UnsplashImagePicker from "@components/Dashboard/Pages/Course/EditCourseGeneral/UnsplashImagePicker"
+import {  UploadCloud, Clipboard } from 'lucide-react'
 import AIImageButton from '@components/Objects/AI/AIImageButton'
 import FormTagInput from "@components/Objects/StyledElements/Form/TagInput"
 import { useTranslation } from "react-i18next"
@@ -47,7 +46,6 @@ function CreateCourseModal({ closeModal, orgslug }: any) {
   const session = useLHSession() as any
   const queryClient = useQueryClient()
   const [orgId, setOrgId] = React.useState(null) as any
-  const [showUnsplashPicker, setShowUnsplashPicker] = React.useState(false)
   const [isUploading, setIsUploading] = React.useState(false)
   // A free org that hits its course limit gets the shared upgrade paywall.
   const { handlePlanLimit } = useUpgradeModal()
@@ -96,8 +94,8 @@ function CreateCourseModal({ closeModal, orgslug }: any) {
           const thumbnailFile = values.thumbnail as File | null
           track(AnalyticsEvent.CourseCreated, {
             thumbnail_source: thumbnailFile
-              ? thumbnailFile.name === 'unsplash_image.jpg'
-                ? 'unsplash'
+              ? thumbnailFile.name === 'ai_image.jpg'
+                ? 'ai'
                 : 'upload'
               : 'none',
             visibility: values.visibility ? 'public' : 'private',
@@ -177,15 +175,15 @@ function CreateCourseModal({ closeModal, orgslug }: any) {
     }
   }
 
-  const handleUnsplashSelect = async (imageUrl: string) => {
+  const handleRemoteImageSelect = async (imageUrl: string) => {
     setIsUploading(true)
     try {
       const response = await fetch(imageUrl)
       const blob = await response.blob()
-      const file = new File([blob], 'unsplash_image.jpg', { type: 'image/jpeg' })
+      const file = new File([blob], 'ai_image.jpg', { type: 'image/jpeg' })
       formik.setFieldValue('thumbnail', file)
     } catch (_error) {
-      toast.error('Failed to load image from Unsplash')
+      toast.error('Failed to load the generated image')
     }
     setIsUploading(false)
   }
@@ -291,21 +289,13 @@ function CreateCourseModal({ closeModal, orgslug }: any) {
                 <button
                   type="button"
                   className="font-bold antialiased items-center text-gray text-sm rounded-md px-4 mt-6 flex"
-                  onClick={() => setShowUnsplashPicker(true)}
-                >
-                  <ImageIcon size={16} className="me-2" />
-                  <span>{t('courses.choose_from_gallery')}</span>
-                </button>
-                <button
-                  type="button"
-                  className="font-bold antialiased items-center text-gray text-sm rounded-md px-4 mt-6 flex"
                   onClick={handlePasteFromClipboard}
                 >
                   <Clipboard size={16} className="me-2" />
                   <span>{t('courses.paste_from_clipboard')}</span>
                 </button>
                 <AIImageButton
-                  onSelect={handleUnsplashSelect}
+                  onSelect={handleRemoteImageSelect}
                   onSelectFile={handleAIImageFile}
                   className="font-bold antialiased items-center text-gray text-sm rounded-md px-4 mt-6 flex gap-2"
                 />
@@ -377,13 +367,6 @@ function CreateCourseModal({ closeModal, orgslug }: any) {
           )}
         </button>
       </div>
-
-      {showUnsplashPicker && (
-        <UnsplashImagePicker
-          onSelect={handleUnsplashSelect}
-          onClose={() => setShowUnsplashPicker(false)}
-        />
-      )}
     </FormLayout>
   )
 }

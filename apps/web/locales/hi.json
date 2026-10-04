@@ -1916,7 +1916,6 @@
           "subtitle": "अपने समुदाय के लिए कवर इमेज अपलोड करें",
           "no_thumbnail": "कोई थंबनेल सेट नहीं",
           "upload_image": "इमेज अपलोड करें",
-          "browse_unsplash": "Unsplash ब्राउज़ करें",
           "uploading": "अपलोड हो रहा है...",
           "supported_formats": "समर्थित फॉर्मेट: JPG, JPEG, PNG। अधिकतम आकार: 8MB। अनुशंसित अनुपात: 16:9",
           "toasts": {
@@ -2756,7 +2755,6 @@
         "background_type": "पृष्ठभूमि प्रकार",
         "bg_gradient": "ग्रेडिएंट",
         "bg_custom": "कस्टम",
-        "bg_unsplash": "Unsplash",
         "text_color": "टेक्स्ट का रंग",
         "text_light": "हल्का",
         "text_dark": "गहरा",
@@ -4358,6 +4356,7 @@
     },
     "ai_panel": {
       "add_definition": "परिभाषा जोड़ें",
+      "insert_failed": "मैं जेनरेट किए गए कंटेंट को दस्तावेज़ में नहीं डाल पाया। कृपया फिर से कोशिश करें।",
       "add_examples": "उदाहरण जोड़ें",
       "add_quiz": "क्विज़ जोड़ें",
       "add_summary": "सारांश जोड़ें",

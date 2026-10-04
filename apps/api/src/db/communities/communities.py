@@ -14,6 +14,7 @@ DEFAULT_MODERATION_SETTINGS: Dict[str, Any] = {
     "require_email_verified": False,
     "disable_reactions": False,
     "auto_lock_days": 0,
+    "allow_rich_content": False,
 }
 
 

@@ -3,16 +3,20 @@ import React from 'react'
 import { useEditor, EditorContent } from '@tiptap/react'
 import StarterKit from '@tiptap/starter-kit'
 import Link from '@tiptap/extension-link'
+import Youtube from '@tiptap/extension-youtube'
+import { stripRichContent } from './richContent'
 
 interface DiscussionContentProps {
   content: any
+  /** Renders YouTube embeds. When false, embeds are shown as plain links. */
+  allowRichContent?: boolean
 }
 
 /**
  * Renders discussion content (JSON from tiptap) in read-only mode.
  * Falls back to plain text display if content is a string.
  */
-export function DiscussionContent({ content }: DiscussionContentProps) {
+export function DiscussionContent({ content, allowRichContent = false }: DiscussionContentProps) {
   // Handle plain text content (legacy)
   if (typeof content === 'string') {
     return (
@@ -27,10 +31,16 @@ export function DiscussionContent({ content }: DiscussionContentProps) {
     return null
   }
 
-  return <DiscussionContentEditor content={content} />
+  return <DiscussionContentEditor content={content} allowRichContent={allowRichContent} />
 }
 
-function DiscussionContentEditor({ content }: { content: any }) {
+function DiscussionContentEditor({
+  content,
+  allowRichContent,
+}: {
+  content: any
+  allowRichContent: boolean
+}) {
   const editor = useEditor({
     extensions: [
       StarterKit.configure({
@@ -68,11 +78,28 @@ function DiscussionContentEditor({ content }: { content: any }) {
           rel: 'noopener noreferrer',
         },
       }),
+      ...(allowRichContent
+        ? [
+            Youtube.configure({
+              nocookie: true,
+              controls: true,
+              modestBranding: true,
+              allowFullscreen: true,
+              width: 640,
+              height: 360,
+              HTMLAttributes: {
+                class: 'discussion-youtube',
+              },
+            }),
+          ]
+        : []),
     ],
-    content,
+    // Without the YouTube node in the schema tiptap would drop the whole
+    // document, so strip embeds up front when they are not allowed.
+    content: allowRichContent ? content : stripRichContent(content),
     editable: false,
     immediatelyRender: false,
-  })
+  }, [allowRichContent, content])
 
   if (!editor) {
     return null
@@ -184,6 +211,25 @@ function DiscussionContentEditor({ content }: { content: any }) {
 
         .discussion-content-readonly .ProseMirror s {
           text-decoration: line-through;
+        }
+
+        .discussion-content-readonly .ProseMirror .discussion-youtube {
+          position: relative;
+          width: 100%;
+          max-width: 640px;
+          aspect-ratio: 16 / 9;
+          margin: 0.75rem 0;
+          border-radius: 0.5rem;
+          overflow: hidden;
+          background: #111827;
+        }
+
+        .discussion-content-readonly .ProseMirror .discussion-youtube iframe {
+          position: absolute;
+          inset: 0;
+          width: 100%;
+          height: 100%;
+          border: 0;
         }
       `}</style>
     </>

@@ -16,8 +16,10 @@ export async function generateMetadata({ params }: { params: PageParams }): Prom
   let offerName = 'Offer'
   try {
     const result = await getPublicOffer(org.id, offerid)
-    offerName = result?.data?.name || 'Offer'
-  } catch {}
+    offerName = (result?.success && result.data?.name) || 'Offer'
+  } catch {
+    // The title falls back to "Offer"; the page itself reports a missing offer.
+  }
   const title = buildPageTitle(offerName, org?.name || 'Organization', seoConfig)
   return {
     title,
@@ -35,8 +37,13 @@ export default async function OfferPage({ params }: { params: PageParams }) {
   let offer: any = null
   try {
     const result = await getPublicOffer(org.id, offerid)
-    offer = result?.data ?? result
-  } catch {}
+    // A failed lookup (archived, unlisted, unknown id) still carries a JSON
+    // body like {"detail": "Not Found"}. Treating that as the offer crashed the
+    // page on its missing currency; only a successful response is an offer.
+    offer = result?.success && result.data?.offer_uuid ? result.data : null
+  } catch {
+    // Network failure: leave `offer` null so the "Offer not found" view renders.
+  }
 
   const breadcrumbJsonLd = buildBreadcrumbJsonLd([
     { name: 'Home', url: await getServerCanonicalUrl(orgslug, '/') },

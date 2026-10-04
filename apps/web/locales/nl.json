@@ -1894,7 +1894,6 @@
           "subtitle": "Upload een omslagafbeelding voor je community",
           "no_thumbnail": "Geen miniatuur ingesteld",
           "upload_image": "Afbeelding uploaden",
-          "browse_unsplash": "Bladeren op Unsplash",
           "uploading": "Uploaden...",
           "supported_formats": "Ondersteunde formaten: JPG, JPEG, PNG. Max. grootte: 8MB. Aanbevolen verhouding: 16:9",
           "toasts": {
@@ -2517,7 +2516,6 @@
         "background_type": "Achtergrondtype",
         "bg_gradient": "Gradiënt",
         "bg_custom": "Aangepast",
-        "bg_unsplash": "Unsplash",
         "text_color": "Tekstkleur",
         "text_light": "Licht",
         "text_dark": "Donker",
@@ -4338,6 +4336,7 @@
     },
     "ai_panel": {
       "add_definition": "Definitie toevoegen",
+      "insert_failed": "Ik kon de gegenereerde inhoud niet in het document invoegen. Probeer het opnieuw.",
       "add_examples": "Voorbeelden toevoegen",
       "add_quiz": "Quiz toevoegen",
       "add_summary": "Samenvatting toevoegen",

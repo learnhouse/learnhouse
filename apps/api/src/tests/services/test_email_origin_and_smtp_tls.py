@@ -264,7 +264,7 @@ class TestMagicLinkUrlInEmailBody:
     async def _request_link(self, client, email, headers):
         sent = {}
 
-        def _capture(to, subject, body):
+        def _capture(to, subject, body, **kwargs):
             sent["to"] = to
             sent["body"] = body
             return {"id": "msg"}

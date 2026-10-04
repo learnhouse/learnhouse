@@ -956,11 +956,32 @@ async def magic_link_request(
 
     try:
         token = issue_magic_login_token(user.email, org.id if org else None)
+        base_url = get_base_url_from_request(request)
+        branding_kwargs: dict = {}
+        if org is not None:
+            # Org-scoped request: the link lands on the org's own host (its
+            # verified custom domain when it has one) and the mail is branded
+            # as the org's — logo, color, From name, language.
+            from src.db.organization_config import OrganizationConfig
+            from src.services.email.branding import resolve_org_email_branding
+            from src.services.email.utils import get_org_signup_base_url
+
+            org_config = (
+                await db_session.execute(
+                    select(OrganizationConfig).where(OrganizationConfig.org_id == org.id)
+                )
+            ).scalars().first()
+            base_url = await get_org_signup_base_url(
+                org.slug, request, db_session=db_session, org_id=org.id
+            ) or base_url
+            branding = resolve_org_email_branding(org, org_config, request)
+            branding_kwargs = {"org_name": branding.org_name, **branding.as_kwargs()}
         send_magic_login_email(
             UserRead.model_validate(user),
             user.email,
-            get_base_url_from_request(request),
+            base_url,
             token,
+            **branding_kwargs,
         )
     except Exception:
         import logging

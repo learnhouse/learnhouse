@@ -38,12 +38,35 @@ export function vimeoId(url: string): string | null {
   }
 }
 
+/**
+ Private-link hash of an unlisted Vimeo video, or null. Vimeo refuses to embed
+ such a video without it, so it has to survive the rewrite to the player URL.
+ It arrives as `?h=<hash>` on player links and as the path segment after the
+ id on share links (`vimeo.com/<id>/<hash>`).
+*/
+export function vimeoHash(url: string, id: string): string | null {
+  try {
+    const u = new URL(url)
+    const h = u.searchParams.get('h')
+    if (h && /^[a-z0-9]+$/i.test(h)) return h
+    const parts = u.pathname.split('/').filter(Boolean)
+    const next = parts[parts.indexOf(id) + 1]
+    if (next && /^[a-f0-9]{6,}$/i.test(next)) return next
+  } catch {
+    /* not a parseable URL */
+  }
+  return null
+}
+
 export function toEmbedUrl(url: string): string {
   const yt = youTubeId(url)
   if (yt) return `https://www.youtube.com/embed/${yt}?autoplay=0&rel=0`
 
   const vimeo = vimeoId(url)
-  if (vimeo) return `https://player.vimeo.com/video/${vimeo}`
+  if (vimeo) {
+    const hash = vimeoHash(url, vimeo)
+    return `https://player.vimeo.com/video/${vimeo}${hash ? `?h=${hash}` : ''}`
+  }
 
   // Google Docs/Sheets/Slides → preview
   const googleDocMatch = url.match(

@@ -818,12 +818,12 @@ describe('setup input prompts', () => {
     H.q.multiselect.push([])
     await expect(promptFeatures()).resolves.toEqual({
       aiEnabled: false, emailEnabled: false, s3Enabled: false,
-      googleOAuthEnabled: false, unsplashEnabled: false,
+      googleOAuthEnabled: false,
     })
   })
 
   it('promptFeatures with every feature (SMTP email) collects all sub-config', async () => {
-    H.q.multiselect.push(['ai', 'email', 's3', 'google', 'unsplash'])
+    H.q.multiselect.push(['ai', 'email', 's3', 'google'])
     H.q.select.push('smtp')
     H.q.text.push(
       'AIzaKEY',          // gemini key
@@ -835,18 +835,17 @@ describe('setup input prompts', () => {
       '',                 // s3 endpoint (empty → AWS default)
       'gid',              // google client id
       'gsecret',          // google client secret
-      'ukey',             // unsplash key
     )
     H.q.password.push('smtp-pw')
     H.q.confirm.push(true) // use TLS
 
     await expect(promptFeatures()).resolves.toMatchObject({
       aiEnabled: true, emailEnabled: true, s3Enabled: true,
-      googleOAuthEnabled: true, unsplashEnabled: true,
+      googleOAuthEnabled: true,
       geminiApiKey: 'AIzaKEY', emailProvider: 'smtp', smtpHost: 'smtp.test',
       smtpPort: 587, smtpUsername: 'user', smtpPassword: 'smtp-pw', smtpUseTls: true,
       systemEmailAddress: 'noreply@test.dev', s3BucketName: 'mybucket',
-      googleClientId: 'gid', googleClientSecret: 'gsecret', unsplashAccessKey: 'ukey',
+      googleClientId: 'gid', googleClientSecret: 'gsecret',
     })
   })
 

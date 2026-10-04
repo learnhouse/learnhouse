@@ -50,10 +50,6 @@ export function generateEnvFile(config: SetupConfig): string {
     `NEXT_PUBLIC_LEARNHOUSE_HTTPS=${config.useHttps ? 'True' : 'False'}`,
   ]
 
-  if (config.unsplashEnabled && config.unsplashAccessKey) {
-    lines.push(`NEXT_PUBLIC_UNSPLASH_ACCESS_KEY=${quoteEnvValue(config.unsplashAccessKey!)}`)
-  }
-
   lines.push(
     '',
     '# =============================================================================',

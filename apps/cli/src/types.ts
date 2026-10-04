@@ -65,8 +65,6 @@ export interface SetupConfig {
   googleOAuthEnabled: boolean
   googleClientId?: string
   googleClientSecret?: string
-  unsplashEnabled: boolean
-  unsplashAccessKey?: string
 }
 
 export interface LearnHouseConfigJson {

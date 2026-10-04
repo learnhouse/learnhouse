@@ -15,7 +15,6 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@components/ui/dialog'
-import UnsplashImagePicker from '@components/Dashboard/Pages/Course/EditCourseGeneral/UnsplashImagePicker'
 import AIImageButton from '@components/Objects/AI/AIImageButton'
 import toast from 'react-hot-toast'
 import { SafeImage } from '@components/Objects/SafeImage'
@@ -46,7 +45,6 @@ export function CommunityThumbnailModal({
 
   const [localThumbnail, setLocalThumbnail] = useState<{ file: File; url: string } | null>(null)
   const [isLoading, setIsLoading] = useState(false)
-  const [showUnsplashPicker, setShowUnsplashPicker] = useState(false)
 
   const showError = (message: string) => {
     toast.error(message, {
@@ -87,17 +85,17 @@ export function CommunityThumbnailModal({
     await uploadThumbnail(file)
   }
 
-  const handleUnsplashSelect = async (imageUrl: string) => {
+  const handleRemoteImageSelect = async (imageUrl: string) => {
     try {
       setIsLoading(true)
       const response = await fetch(imageUrl)
       const blob = await response.blob()
 
       if (!VALID_IMAGE_MIME_TYPES.includes(blob.type as ValidImageMimeType)) {
-        throw new Error('Invalid image format from Unsplash')
+        throw new Error('Invalid generated image format')
       }
 
-      const file = new File([blob], `unsplash_${Date.now()}.jpg`, { type: blob.type })
+      const file = new File([blob], `ai_image_${Date.now()}.jpg`, { type: blob.type })
 
       if (!validateFile(file)) {
         setIsLoading(false)
@@ -106,10 +104,9 @@ export function CommunityThumbnailModal({
 
       const blobUrl = URL.createObjectURL(file)
       setLocalThumbnail({ file, url: blobUrl })
-      setShowUnsplashPicker(false)
       await uploadThumbnail(file)
     } catch (_err) {
-      showError('Failed to process Unsplash image')
+      showError('Failed to load the generated image')
       setIsLoading(false)
     }
   }
@@ -227,16 +224,8 @@ export function CommunityThumbnailModal({
                   <UploadCloud size={16} />
                   Upload Image
                 </button>
-                <button
-                  type="button"
-                  className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 text-sm font-medium text-gray-700 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
-                  onClick={() => setShowUnsplashPicker(true)}
-                >
-                  <ImageIcon size={16} />
-                  Browse Unsplash
-                </button>
                 <AIImageButton
-                  onSelect={handleUnsplashSelect}
+                  onSelect={handleRemoteImageSelect}
                   onSelectFile={handleAIImageFile}
                   className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 text-sm font-medium text-gray-700 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
                 />
@@ -261,13 +250,6 @@ export function CommunityThumbnailModal({
           </div>
         </DialogContent>
       </Dialog>
-
-      {showUnsplashPicker && (
-        <UnsplashImagePicker
-          onSelect={handleUnsplashSelect}
-          onClose={() => setShowUnsplashPicker(false)}
-        />
-      )}
     </>
   )
 }

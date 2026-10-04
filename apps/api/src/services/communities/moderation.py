@@ -2,6 +2,7 @@ import re
 import json
 from datetime import datetime, timedelta, timezone
 from typing import List, Optional, Tuple, Any, Dict
+from urllib.parse import parse_qs, urlparse
 from fastapi import HTTPException, status
 from sqlmodel import select
 from sqlmodel.ext.asyncio.session import AsyncSession
@@ -15,6 +16,159 @@ URL_PATTERN = re.compile(
     r"(?:https?://|www\.)[^\s<>\"']+",
     re.IGNORECASE,
 )
+
+
+# Rich content (embeds) in discussions is opt-in per community. Only the node
+# types below are ever accepted from the client; "youtube" additionally
+# requires ``allow_rich_content`` to be enabled on the community.
+BASE_NODE_TYPES = frozenset(
+    {
+        "doc",
+        "paragraph",
+        "text",
+        "heading",
+        "bulletList",
+        "orderedList",
+        "listItem",
+        "codeBlock",
+        "blockquote",
+        "hardBreak",
+        "horizontalRule",
+    }
+)
+RICH_NODE_TYPES = frozenset({"youtube"})
+ALLOWED_MARK_TYPES = frozenset({"bold", "italic", "strike", "code", "link", "underline"})
+ALLOWED_LINK_SCHEMES = frozenset({"http", "https", "mailto"})
+YOUTUBE_HOSTS = frozenset(
+    {
+        "youtube.com",
+        "www.youtube.com",
+        "m.youtube.com",
+        "youtube-nocookie.com",
+        "www.youtube-nocookie.com",
+        "youtu.be",
+        "www.youtu.be",
+    }
+)
+YOUTUBE_ID_PATTERN = re.compile(r"^[A-Za-z0-9_-]{11}$")
+
+
+def extract_youtube_video_id(url: str) -> Optional[str]:
+    """
+    Return the 11-character video id when ``url`` is a YouTube watch, share,
+    shorts or embed link on a known YouTube host, otherwise ``None``.
+    """
+    if not url or not isinstance(url, str):
+        return None
+    try:
+        parsed = urlparse(url.strip())
+    except ValueError:
+        return None
+    if parsed.scheme not in ("http", "https"):
+        return None
+    host = (parsed.hostname or "").lower()
+    if host not in YOUTUBE_HOSTS:
+        return None
+
+    candidate: Optional[str] = None
+    path_parts = [part for part in parsed.path.split("/") if part]
+    if host.endswith("youtu.be"):
+        candidate = path_parts[0] if path_parts else None
+    elif path_parts and path_parts[0] in ("embed", "shorts", "live", "v") and len(path_parts) > 1:
+        candidate = path_parts[1]
+    else:
+        candidate = (parse_qs(parsed.query).get("v") or [None])[0]
+
+    if candidate and YOUTUBE_ID_PATTERN.match(candidate):
+        return candidate
+    return None
+
+
+def _rich_content_error(message: str, code: str) -> HTTPException:
+    return HTTPException(
+        status_code=status.HTTP_400_BAD_REQUEST,
+        detail={"message": message, "code": code},
+    )
+
+
+def _walk_content_node(node: Any, allow_rich: bool, content_type: str) -> None:
+    if not isinstance(node, dict):
+        raise _rich_content_error(
+            f"Your {content_type} contains content that is not supported.",
+            "MODERATION_UNSUPPORTED_CONTENT",
+        )
+
+    node_type = node.get("type")
+    if node_type in RICH_NODE_TYPES:
+        if not allow_rich:
+            raise _rich_content_error(
+                f"Embedded media is not allowed in {content_type}s in this community.",
+                "MODERATION_RICH_CONTENT_DISABLED",
+            )
+        if node_type == "youtube":
+            src = (node.get("attrs") or {}).get("src")
+            if not extract_youtube_video_id(src):
+                raise _rich_content_error(
+                    "Only YouTube video links can be embedded.",
+                    "MODERATION_EMBED_NOT_ALLOWED",
+                )
+    elif node_type not in BASE_NODE_TYPES:
+        raise _rich_content_error(
+            f"Your {content_type} contains content that is not supported.",
+            "MODERATION_UNSUPPORTED_CONTENT",
+        )
+
+    for mark in node.get("marks") or []:
+        mark_type = mark.get("type") if isinstance(mark, dict) else None
+        if mark_type not in ALLOWED_MARK_TYPES:
+            raise _rich_content_error(
+                f"Your {content_type} contains formatting that is not supported.",
+                "MODERATION_UNSUPPORTED_CONTENT",
+            )
+        if mark_type == "link":
+            href = (mark.get("attrs") or {}).get("href") or ""
+            scheme = urlparse(str(href).strip()).scheme.lower()
+            if scheme and scheme not in ALLOWED_LINK_SCHEMES:
+                raise _rich_content_error(
+                    f"Your {content_type} contains a link that is not allowed.",
+                    "MODERATION_LINK_NOT_ALLOWED",
+                )
+
+    children = node.get("content")
+    if children is None:
+        return
+    if not isinstance(children, list):
+        raise _rich_content_error(
+            f"Your {content_type} contains content that is not supported.",
+            "MODERATION_UNSUPPORTED_CONTENT",
+        )
+    for child in children:
+        _walk_content_node(child, allow_rich, content_type)
+
+
+def validate_rich_content(
+    content: Optional[str],
+    settings: Dict[str, Any],
+    content_type: str = "discussion",
+) -> None:
+    """
+    Validate the structure of tiptap JSON content: only known node and mark
+    types are accepted, and embeds are only accepted when the community has
+    ``allow_rich_content`` enabled (and then only YouTube video links).
+
+    Plain-text content (anything that is not a tiptap ``doc``) passes through.
+    """
+    if not content:
+        return
+    try:
+        parsed = json.loads(content)
+    except (json.JSONDecodeError, TypeError):
+        return
+    if not isinstance(parsed, dict) or parsed.get("type") != "doc":
+        return
+
+    allow_rich = bool(settings.get("allow_rich_content", False))
+    _walk_content_node(parsed, allow_rich, content_type)
 
 
 def get_community_settings(community: Optional[Community]) -> Dict[str, Any]:
@@ -314,6 +468,7 @@ async def validate_discussion_content(
     )
 
     if content:
+        validate_rich_content(content, settings, content_type="discussion")
         await validate_content_for_community(
             content, community_id, db_session, content_type="discussion",
             min_length=min_post,

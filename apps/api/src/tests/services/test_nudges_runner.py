@@ -620,9 +620,76 @@ class TestWhiteLabelling:
             "https://api.test/content/orgs/org_test/logos/logo.png"
         )
 
+    async def test_square_logo_is_preferred_over_the_wide_one(
+        self, db, activation_org, sender
+    ):
+        from sqlmodel import select
+
+        from src.db.organization_config import OrganizationConfig
+
+        activation_org.logo_image = "logo.png"
+        db.add(activation_org)
+        config = (
+            await db.execute(
+                select(OrganizationConfig).where(OrganizationConfig.org_id == activation_org.id)
+            )
+        ).scalars().first()
+        if config is None:
+            config = OrganizationConfig(
+                org_id=activation_org.id, config={}, creation_date=str(NOW), update_date=str(NOW)
+            )
+        updated = dict(config.config or {})
+        updated.setdefault("customization", {}).setdefault("general", {})["square_logo_image"] = "sq.png"
+        config.config = updated
+        db.add(config)
+        await db.commit()
+
+        await run_nudges(db, now=NOW)
+
+        assert sender.call_args.kwargs["logo_url"] == (
+            "https://api.test/content/orgs/org_test/square_logos/sq.png"
+        )
+
     async def test_no_logo_leaves_the_default_mark(self, db, activation_org, sender):
         await run_nudges(db, now=NOW)
         assert sender.call_args.kwargs["logo_url"] is None
+
+    async def test_brand_color_and_watermark_ride_along(self, db, activation_org, sender):
+        from sqlmodel import select
+
+        from src.db.organization_config import OrganizationConfig
+
+        config = (
+            await db.execute(
+                select(OrganizationConfig).where(OrganizationConfig.org_id == activation_org.id)
+            )
+        ).scalars().first()
+        if config is None:
+            config = OrganizationConfig(
+                org_id=activation_org.id,
+                config={},
+                creation_date=str(NOW),
+                update_date=str(NOW),
+            )
+        updated = dict(config.config or {})
+        updated.setdefault("customization", {}).setdefault("general", {}).update(
+            {"color": "#FF5500", "watermark": False}
+        )
+        updated["plan"] = "pro"
+        config.config = updated
+        db.add(config)
+        await db.commit()
+
+        with patch("src.core.deployment_mode.get_deployment_mode", return_value="saas"):
+            await run_nudges(db, now=NOW)
+
+        assert sender.call_args.kwargs["brand_color"] == "#ff5500"
+        assert sender.call_args.kwargs["powered_by"] is False
+
+    async def test_defaults_when_the_org_has_no_branding(self, db, activation_org, sender):
+        await run_nudges(db, now=NOW)
+        assert sender.call_args.kwargs["brand_color"] is None
+        assert sender.call_args.kwargs["powered_by"] is True
 
 
 class TestBudgetMidOrganization:

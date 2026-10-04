@@ -9,7 +9,7 @@ import { Toaster, toast } from 'react-hot-toast'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
 import UserAvatar from '@components/Objects/UserAvatar'
 import { getAPIUrl } from '@services/config/config'
-import { getOrgLogoMediaDirectory } from '@services/media/media'
+import OrgSquareLogo from '@components/Objects/Org/OrgSquareLogo'
 import { apiFetch } from '@services/utils/ts/requests'
 import { billingPortal, fetchSubscription } from '../billing/_lib/billingClient'
 import { findPlan, resolvePlanIdFromOrg } from '../billing/_lib/plans'
@@ -89,17 +89,16 @@ function OrgSubscriptionRow({ org, enabled }: { org: any; enabled: boolean }) {
       href={`/billing?org=${org.slug}`}
       className="relative flex items-center p-4 bg-white rounded-2xl nice-shadow hover:shadow-lg transition-all group"
     >
-      {org.logo_image ? (
-        <img
-          src={getOrgLogoMediaDirectory(org.org_uuid, org.logo_image)}
-          alt={org.name}
-          className="w-11 h-11 rounded-xl object-cover flex-shrink-0 ring-1 ring-inset ring-black/5"
+      <div className="w-11 h-11 rounded-xl bg-white overflow-hidden flex items-center justify-center flex-shrink-0 ring-1 ring-inset ring-black/5">
+        <OrgSquareLogo
+          org={org}
+          fallback={
+            <div className="w-full h-full bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center text-gray-700 font-bold text-lg">
+              {initial}
+            </div>
+          }
         />
-      ) : (
-        <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center text-gray-700 font-bold text-lg flex-shrink-0 ring-1 ring-inset ring-black/5">
-          {initial}
-        </div>
-      )}
+      </div>
 
       <div className="ms-3 flex-1 min-w-0">
         <div className="font-semibold text-gray-900 tracking-tight truncate">{org.name}</div>

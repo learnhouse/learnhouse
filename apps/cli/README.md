@@ -69,7 +69,7 @@ The setup wizard walks through:
 3. **Database & Redis** — local (Docker) or external
 4. **Organization** — name for your instance
 5. **Admin account** — email and password
-6. **Features** — AI, email, S3, OAuth, Unsplash
+6. **Features** — AI, email, S3, OAuth
 
 You can go back to any step, and edit from the summary before confirming.
 

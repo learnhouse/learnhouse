@@ -1,7 +1,7 @@
 # ───────────────────────────────────────────────
 # Stage 1: Frontend dependency install
 # ───────────────────────────────────────────────
-FROM oven/bun:1.4.0-alpine AS frontend-deps
+FROM oven/bun:1.4.2-alpine AS frontend-deps
 RUN apk upgrade --no-cache && apk add --no-cache libc6-compat
 WORKDIR /app
 
@@ -11,7 +11,7 @@ RUN bun install --frozen-lockfile
 # ───────────────────────────────────────────────
 # Stage 2: Frontend build
 # ───────────────────────────────────────────────
-FROM oven/bun:1.4.0-alpine AS frontend-builder
+FROM oven/bun:1.4.2-alpine AS frontend-builder
 WORKDIR /app
 COPY --from=frontend-deps /app/node_modules ./node_modules
 COPY apps/web .
@@ -27,7 +27,7 @@ RUN bun run build
 # ───────────────────────────────────────────────
 # Stage 3: Frontend production image
 # ───────────────────────────────────────────────
-FROM oven/bun:1.4.0-alpine AS frontend-runner
+FROM oven/bun:1.4.2-alpine AS frontend-runner
 WORKDIR /app
 
 RUN apk upgrade --no-cache && apk add --no-cache curl
@@ -53,7 +53,7 @@ RUN chmod +x server-wrapper.js
 # ───────────────────────────────────────────────
 # Stage 4: Collab server build
 # ───────────────────────────────────────────────
-FROM oven/bun:1.4.0-alpine AS collab-builder
+FROM oven/bun:1.4.2-alpine AS collab-builder
 WORKDIR /app
 
 COPY apps/collab/package.json apps/collab/bun.lock* ./

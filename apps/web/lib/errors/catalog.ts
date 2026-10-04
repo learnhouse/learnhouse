@@ -238,7 +238,6 @@ export const ERROR_CATALOG: ErrorCategory[] = [
         'file too large',
         'png or jpg',
         'did not return a valid image',
-        'process unsplash image',
         'thumbnail',
         'upload_error',
         'upload failed',

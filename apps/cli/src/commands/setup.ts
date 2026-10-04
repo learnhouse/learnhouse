@@ -263,7 +263,6 @@ export async function setupCommand(options: SetupOptions) {
       emailEnabled: false,
       s3Enabled: false,
       googleOAuthEnabled: false,
-      unsplashEnabled: false,
     }
 
     console.log(`Setting up LearnHouse in ~/.learnhouse/${installName}`)
@@ -452,7 +451,6 @@ export async function setupCommand(options: SetupOptions) {
     `  ${pc.dim('Email:')}        ${config.emailEnabled ? 'Enabled' : 'Disabled'}`,
     `  ${pc.dim('S3 Storage:')}   ${config.s3Enabled ? 'Enabled' : 'Disabled'}`,
     `  ${pc.dim('Google OAuth:')} ${config.googleOAuthEnabled ? 'Enabled' : 'Disabled'}`,
-    `  ${pc.dim('Unsplash:')}     ${config.unsplashEnabled ? 'Enabled' : 'Disabled'}`,
   ].join('\n'))
 
   // Confirm or go back to edit a step
@@ -532,7 +530,6 @@ export async function setupCommand(options: SetupOptions) {
         `  ${pc.dim('Email:')}        ${config.emailEnabled ? 'Enabled' : 'Disabled'}`,
         `  ${pc.dim('S3 Storage:')}   ${config.s3Enabled ? 'Enabled' : 'Disabled'}`,
         `  ${pc.dim('Google OAuth:')} ${config.googleOAuthEnabled ? 'Enabled' : 'Disabled'}`,
-        `  ${pc.dim('Unsplash:')}     ${config.unsplashEnabled ? 'Enabled' : 'Disabled'}`,
       ].join('\n'))
     } else {
       confirmed = true

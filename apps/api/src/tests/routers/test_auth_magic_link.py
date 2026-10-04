@@ -123,6 +123,77 @@ class TestMagicLinkRequest:
         assert response.status_code == 200
         send_mock.assert_called_once()
 
+    async def test_org_scoped_request_brands_the_mail_as_the_org(
+        self, client, db, org, verified_user
+    ):
+        org.logo_image = "logo.png"
+        db.add(org)
+        db.add(
+            OrganizationConfig(
+                org_id=org.id,
+                config={
+                    "config_version": "2.0",
+                    "plan": "pro",
+                    "customization": {
+                        "general": {
+                            "default_language": "fr",
+                            "email_sender_name": "Test Academy",
+                            "color": "#1D4ED8",
+                            "watermark": False,
+                        }
+                    },
+                },
+                creation_date=str(datetime.now()),
+                update_date=str(datetime.now()),
+            )
+        )
+        await db.commit()
+        with patch(
+            "src.routers.auth.check_login_rate_limit", return_value=(True, None)
+        ), patch(
+            "src.services.auth.magic_login.issue_magic_login_token", return_value="tok"
+        ), patch(
+            "src.services.auth.magic_login.send_magic_login_email"
+        ) as send_mock, patch(
+            "src.services.email.utils.get_media_base_url", return_value="https://api.test"
+        ), patch(
+            "src.core.deployment_mode.get_deployment_mode", return_value="saas"
+        ), patch(
+            "src.routers.auth.get_base_url_from_request", return_value="http://test", create=True
+        ):
+            response = await client.post(
+                "/api/v1/auth/magic-link/request",
+                json={"email": verified_user.email, "org_slug": org.slug},
+            )
+        assert response.status_code == 200
+        send_mock.assert_called_once()
+        kwargs = send_mock.call_args.kwargs
+        assert kwargs["org_name"] == org.name
+        assert kwargs["lang"] == "fr"
+        assert kwargs["sender_name"] == "Test Academy"
+        assert kwargs["logo_url"] == "https://api.test/content/orgs/org_test/logos/logo.png"
+        assert kwargs["brand_color"] == "#1d4ed8"
+        assert kwargs["powered_by"] is False
+
+    async def test_platform_request_sends_unbranded_mail(self, client, verified_user):
+        with patch(
+            "src.routers.auth.check_login_rate_limit", return_value=(True, None)
+        ), patch(
+            "src.services.auth.magic_login.issue_magic_login_token", return_value="tok"
+        ), patch(
+            "src.services.auth.magic_login.send_magic_login_email"
+        ) as send_mock, patch(
+            "src.services.email.utils.get_base_url_from_request",
+            return_value="http://test",
+        ):
+            response = await client.post(
+                "/api/v1/auth/magic-link/request",
+                json={"email": verified_user.email},
+            )
+        assert response.status_code == 200
+        assert "org_name" not in send_mock.call_args.kwargs
+        assert "sender_name" not in send_mock.call_args.kwargs
+
     async def test_org_disallowing_magic_login_sends_nothing(self, client, db, org, verified_user):
         # The org restricts sign-in to password only; a magic link would be
         # refused at the org gate anyway, so none is sent.

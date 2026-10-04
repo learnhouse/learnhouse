@@ -22,6 +22,7 @@ import logging
 import os
 import shutil
 import tempfile
+import threading
 from datetime import datetime, timezone
 from typing import Optional
 
@@ -37,13 +38,17 @@ from src.services.courses.transfer.storage_utils import (
     is_s3_enabled,
     get_storage_client,
     get_s3_bucket_name,
-    upload_directory_to_s3,
+    upload_directory_to_s3_parallel,
 )
 from src.services.utils.hls_transcode import transcode_source_to_hls
 
 logger = logging.getLogger(__name__)
 
 REDIS_QUEUE_KEY = "learnhouse:hls:queue"
+
+# Statuses the reconciler leaves alone. `unsupported` is a source that can never
+# be transcoded (e.g. an audio-only upload), so retrying it is pure noise.
+TERMINAL_STATUSES = frozenset({"ready", "unsupported"})
 
 
 @contextlib.contextmanager
@@ -65,6 +70,28 @@ def scratch_dir():
             shutil.rmtree(path, ignore_errors=True)
         except Exception:  # pragma: no cover — ignore_errors already swallows
             logger.debug("Could not remove scratch dir %s", path, exc_info=True)
+
+
+async def _upload_output(out_dir: str, prefix: str) -> bool:
+    """Upload a transcode's output dir, in parallel, off the event loop.
+
+    Must be awaited inside ``scratch_dir()``. If the job is cancelled (the
+    JOB_TIMEOUT_SECONDS cap, or a pod shutting down), ``asyncio.to_thread``
+    can't stop its worker thread, and ``scratch_dir`` deletes the files right
+    after. Without the stop flag that thread kept going and logged one
+    "No such file or directory" error per remaining segment.
+    """
+    if not is_s3_enabled():
+        await asyncio.to_thread(shutil.copytree, out_dir, prefix, dirs_exist_ok=True)
+        return True
+    stop = threading.Event()
+    try:
+        return await asyncio.to_thread(
+            upload_directory_to_s3_parallel, out_dir, prefix, stop=stop
+        )
+    except BaseException:
+        stop.set()
+        raise
 
 # In-app background consumer state. Transcoding runs INSIDE the API process as
 # an asyncio background task that drains the Redis queue — no separate worker
@@ -251,12 +278,11 @@ async def transcode_activity(activity_uuid: str) -> bool:
                 await _set_status(activity_uuid, "failed", error="transcode_failed")
                 return False
 
-            if is_s3_enabled():
-                ok = await asyncio.to_thread(upload_directory_to_s3, out_dir, hls_prefix)
-            else:
-                await asyncio.to_thread(shutil.copytree, out_dir, hls_prefix, dirs_exist_ok=True)
-                ok = True
-            if not ok:
+            if result.get("unsupported"):
+                await _set_status(activity_uuid, "unsupported", reason=result["unsupported"])
+                return False
+
+            if not await _upload_output(out_dir, hls_prefix):
                 await _set_status(activity_uuid, "failed", error="upload_failed")
                 return False
 
@@ -434,12 +460,11 @@ async def transcode_block(activity_uuid: str, block_uuid: str) -> bool:
                 await _set_block_status(block_uuid, "failed", error="transcode_failed")
                 return False
 
-            if is_s3_enabled():
-                ok = await asyncio.to_thread(upload_directory_to_s3, out_dir, hls_prefix)
-            else:
-                await asyncio.to_thread(shutil.copytree, out_dir, hls_prefix, dirs_exist_ok=True)
-                ok = True
-            if not ok:
+            if result.get("unsupported"):
+                await _set_block_status(block_uuid, "unsupported", reason=result["unsupported"])
+                return False
+
+            if not await _upload_output(out_dir, hls_prefix):
                 await _set_block_status(block_uuid, "failed", error="upload_failed")
                 return False
 
@@ -599,7 +624,7 @@ async def reconcile_unfinished(max_retries: Optional[int] = None) -> dict:
             if not (a.content or {}).get("filename"):
                 continue
             hls = (a.extra_metadata or {}).get("hls") or {}
-            if hls.get("status") == "ready":
+            if hls.get("status") in TERMINAL_STATUSES:
                 continue
             uuid = a.activity_uuid
             if uuid in pending:
@@ -645,7 +670,7 @@ async def reconcile_unfinished(max_retries: Optional[int] = None) -> dict:
             if not content.get("file_id"):
                 continue
             hls = content.get("hls") or {}
-            if hls.get("status") == "ready":
+            if hls.get("status") in TERMINAL_STATUSES:
                 continue
             activity_uuid = content.get("activity_uuid")
             if not activity_uuid:
@@ -758,7 +783,7 @@ async def _pending_targets(limit: int = 0) -> list[str]:
         targets = [
             a.activity_uuid
             for a in activities
-            if ((a.extra_metadata or {}).get("hls") or {}).get("status") != "ready"
+            if ((a.extra_metadata or {}).get("hls") or {}).get("status") not in TERMINAL_STATUSES
             and (a.content or {}).get("filename")
         ]
     if limit and limit > 0:

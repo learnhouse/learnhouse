@@ -1,4 +1,4 @@
-const { withSentryConfig } = require("@sentry/nextjs");
+const { withSentryConfig } = require("@sentry/nextjs/config");
 
 /** @type {import('common.next').NextConfig} */
 const nextConfig = {
@@ -87,6 +87,10 @@ const nextConfig = {
     ]
   },
   reactStrictMode: false,
+  // `next dev` refuses cross-origin requests for its own chunks. A local
+  // multi-tenant run (DEMO_STACK.md) serves orgs from <slug>.lvh.me, so allow
+  // that family of hosts. Dev-only; ignored by `next build`/`next start`.
+  allowedDevOrigins: ['lvh.me', '*.lvh.me'],
   output: 'standalone',
   images: {
     remotePatterns: [
@@ -169,7 +173,6 @@ module.exports = withSentryConfig(nextConfig, {
   org: process.env.SENTRY_ORG,
   project: process.env.SENTRY_PROJECT,
   silent: true,
-  disableLogger: true,
   tunnelRoute: "/monitoring",
   sourcemaps: {
     disable: !process.env.SENTRY_ORG || !process.env.SENTRY_PROJECT,

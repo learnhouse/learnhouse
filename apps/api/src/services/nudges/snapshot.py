@@ -55,9 +55,15 @@ class OrgSnapshot:
     lang: str
     org_active_flag: bool = True
     logo_image: Optional[str] = None
+    # Square logo variant from the org config; preferred over ``logo_image``.
+    square_logo_image: Optional[str] = None
     org_uuid: Optional[str] = None
     # From display name for this org's mail; "" means use the platform default.
     sender_name: str = ""
+    # Normalized ``#rrggbb`` accent for the CTA button, or None for the default.
+    brand_color: Optional[str] = None
+    # Whether the mail carries the "Powered by LearnHouse" line (org watermark).
+    powered_by: bool = True
 
     created_at: Optional[datetime] = None
     org_updated_at: Optional[datetime] = None

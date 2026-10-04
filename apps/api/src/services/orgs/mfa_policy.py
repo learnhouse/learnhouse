@@ -21,7 +21,7 @@ from fastapi import HTTPException, status
 from sqlmodel import select
 from sqlmodel.ext.asyncio.session import AsyncSession
 
-from src.db.organization_config import OrganizationConfig
+from src.services.orgs.org_config_lookup import get_session_org_config
 from src.db.user_organizations import UserOrganization
 from src.db.users import User
 from src.services.auth.mfa import is_mfa_active
@@ -84,11 +84,7 @@ def _parse_dt(value: Optional[str]) -> Optional[datetime]:
 
 
 async def get_org_mfa_policy(db_session: AsyncSession, org_id: int) -> OrgMFAPolicy:
-    row = (
-        await db_session.execute(
-            select(OrganizationConfig).where(OrganizationConfig.org_id == org_id)
-        )
-    ).scalars().first()
+    row = await get_session_org_config(db_session, org_id)
     if row is None or not isinstance(row.config, dict):
         return OrgMFAPolicy()
 

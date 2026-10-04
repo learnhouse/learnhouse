@@ -84,3 +84,15 @@ async def upload_org_favicon(file: UploadFile, org_uuid: str) -> str:
         allowed_types=["image"],
         filename_prefix="favicon"
     )
+
+
+async def upload_org_square_logo(file: UploadFile, org_uuid: str) -> str:
+    """Upload the square variant of the organization logo."""
+    return await upload_file(
+        file=file,
+        directory="square_logos",
+        type_of_dir="orgs",
+        uuid=org_uuid,
+        allowed_types=["image"],
+        filename_prefix="square_logo"
+    )

@@ -1916,7 +1916,6 @@
           "subtitle": "Prześlij obraz okładki dla swojej społeczności",
           "no_thumbnail": "Nie ustawiono miniatury",
           "upload_image": "Prześlij obraz",
-          "browse_unsplash": "Przeglądaj Unsplash",
           "uploading": "Przesyłanie...",
           "supported_formats": "Obsługiwane formaty: JPG, JPEG, PNG. Maks. rozmiar: 8MB. Zalecany format: 16:9",
           "toasts": {
@@ -2539,7 +2538,6 @@
         "background_type": "Typ tła",
         "bg_gradient": "Gradient",
         "bg_custom": "Własne",
-        "bg_unsplash": "Unsplash",
         "text_color": "Kolor tekstu",
         "text_light": "Jasny",
         "text_dark": "Ciemny",
@@ -4360,6 +4358,7 @@
     },
     "ai_panel": {
       "add_definition": "Dodaj definicję",
+      "insert_failed": "Nie udało się wstawić wygenerowanej treści do dokumentu. Spróbuj ponownie.",
       "add_examples": "Dodaj przykłady",
       "add_quiz": "Dodaj quiz",
       "add_summary": "Dodaj podsumowanie",

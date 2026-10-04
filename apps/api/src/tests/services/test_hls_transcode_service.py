@@ -230,3 +230,25 @@ async def test_probe_non_media_returns_safe_defaults(tmp_path):
     p.write_bytes(b"just text, not a video")
     height, has_audio, duration = await ht._probe(str(p))
     assert height == 0 and has_audio is False and duration == 0.0
+
+
+async def test_transcode_skips_source_without_video_stream(monkeypatch, tmp_path):
+    # Audio-only upload: ffmpeg's [0:v] filtergraph can never match, so don't
+    # run it (or retry it) at all.
+    monkeypatch.setattr(ht, "_ffmpeg", lambda: "/usr/bin/ffmpeg")
+    monkeypatch.setattr(ht, "_ffprobe", lambda: "/usr/bin/ffprobe")
+
+    async def _fake_run(args, timeout):
+        assert "ffprobe" in args[0], "ffmpeg must not run for an audio-only source"
+        return 0, b'{"streams": [{"codec_type": "audio"}], "format": {"duration": "12"}}', b""
+
+    monkeypatch.setattr(ht, "_run_subprocess", _fake_run)
+    src = tmp_path / "talk.mp4"
+    src.write_bytes(b"data")
+    result = await ht.transcode_source_to_hls(str(src), str(tmp_path / "out"))
+    assert result == {"unsupported": "no_video_stream"}
+
+
+async def test_probe_streams_unknown_when_probe_fails(monkeypatch):
+    monkeypatch.setattr(ht, "_ffprobe", lambda: None)
+    assert await ht._probe_streams("x.mp4") == (0, False, 0.0, None)

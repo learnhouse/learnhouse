@@ -19,8 +19,6 @@ export interface FeaturesConfig {
   googleOAuthEnabled: boolean
   googleClientId?: string
   googleClientSecret?: string
-  unsplashEnabled: boolean
-  unsplashAccessKey?: string
 }
 
 export async function promptFeatures(): Promise<FeaturesConfig> {
@@ -31,7 +29,6 @@ export async function promptFeatures(): Promise<FeaturesConfig> {
       { value: 'email', label: 'Email (Resend or SMTP)' },
       { value: 's3', label: 'S3 Storage' },
       { value: 'google', label: 'Google OAuth' },
-      { value: 'unsplash', label: 'Unsplash Images' },
     ],
     required: false,
   })
@@ -43,7 +40,6 @@ export async function promptFeatures(): Promise<FeaturesConfig> {
     emailEnabled: features.includes('email'),
     s3Enabled: features.includes('s3'),
     googleOAuthEnabled: features.includes('google'),
-    unsplashEnabled: features.includes('unsplash'),
   }
 
   if (config.aiEnabled) {
@@ -158,16 +154,6 @@ export async function promptFeatures(): Promise<FeaturesConfig> {
     })
     if (p.isCancel(clientSecret)) { p.cancel(); process.exit(0) }
     config.googleClientSecret = clientSecret as string
-  }
-
-  if (config.unsplashEnabled) {
-    p.log.info('Configure Unsplash')
-    const key = await p.text({
-      message: 'Unsplash Access Key?',
-      validate: validateRequired,
-    })
-    if (p.isCancel(key)) { p.cancel(); process.exit(0) }
-    config.unsplashAccessKey = key as string
   }
 
   return config
