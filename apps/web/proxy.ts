@@ -301,12 +301,19 @@ export default async function proxy(req: NextRequest) {
   //
   //    These render at the apex/root and must NEVER fall into the tenant
   //    catch-all (which would rewrite them to /orgs/{slug}/...). `/home` is the
-  //    org picker and works in every tenancy. The rest form the central
+  //    org picker in multi tenancy (single tenancy redirects it to `/`). The rest form the central
   //    account + org-management hub (create / upgrade / delete an org, billing,
   //    account) and only exist in `multi` tenancy (SaaS); the (hub) route-group
   //    layout additionally enforces SaaS gating. We set instance cookies so the
   //    hub's client components can read tenancy/mode/top-domain.
   // -------------------------------------------------------------------------
+  // A single-tenancy instance serves exactly one org at `/`, and every card on
+  // the picker links back there, so the picker is a dead step. Every sign-in,
+  // signup and verify path defaults to /home; send them all to the org instead.
+  if (instance.tenancy === 'single' && pathname === '/home') {
+    return NextResponse.redirect(new URL(`/${search}`, req.url))
+  }
+
   const HUB_ROOT_PATHS = ['/home', '/organizations', '/account', '/billing', '/subscriptions', '/new']
   const isHubRoot = HUB_ROOT_PATHS.some(
     (p) => pathname === p || pathname.startsWith(`${p}/`),
