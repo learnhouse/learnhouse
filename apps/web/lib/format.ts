@@ -53,9 +53,30 @@ const DAYJS_LOCALES: Record<string, () => Promise<unknown>> = {
  * relative times still localise. Flip this one function if an org asks for
  * native numerals.
  */
-function intlLocale(lng?: string): string {
-  const base = baseCode(lng)
-  return base === 'ar' || base === 'fa' ? `${base}-u-nu-latn` : lng || 'en'
+export function intlLocale(lng?: string): string {
+  const tag = canonicalTag(lng)
+  const base = baseCode(tag)
+  return base === 'ar' || base === 'fa' ? `${base}-u-nu-latn` : tag
+}
+
+/**
+ * `Intl.*` throws a RangeError ("Incorrect locale information provided") on a
+ * malformed tag, which took down whole pages. The language can come from a
+ * cookie, localStorage or the browser, so expect `en_US`, empty strings and
+ * outright junk; fall back to the base language, then English.
+ */
+function canonicalTag(lng?: string): string {
+  const raw = String(lng || '').trim().replace(/_/g, '-')
+  for (const candidate of [raw, raw.split('-')[0]]) {
+    if (!candidate) continue
+    try {
+      const [tag] = Intl.getCanonicalLocales(candidate)
+      if (tag) return tag
+    } catch {
+      // Malformed; try the next, shorter candidate.
+    }
+  }
+  return 'en'
 }
 
 /**
