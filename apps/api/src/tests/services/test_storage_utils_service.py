@@ -681,6 +681,30 @@ class TestUploadAndDeleteHelpers:
         }
         assert all("\\" not in key for key in uploaded_paths)
 
+    def test_upload_directory_to_s3_parallel_stops_when_asked(self, tmp_path):
+        import threading
+
+        local_dir = tmp_path / "hls"
+        local_dir.mkdir()
+        for i in range(5):
+            (local_dir / f"seg_{i}.ts").write_bytes(b"x")
+
+        stop = threading.Event()
+        stop.set()
+        with patch.object(storage_utils, "is_s3_enabled", return_value=True), \
+             patch.object(storage_utils, "upload_file_to_s3") as upload_mock:
+            assert storage_utils.upload_directory_to_s3_parallel(
+                str(local_dir), "content/hls", stop=stop
+            ) is False
+            upload_mock.assert_not_called()
+
+        with patch.object(storage_utils, "is_s3_enabled", return_value=True), \
+             patch.object(storage_utils, "upload_file_to_s3", return_value=True) as upload_mock:
+            assert storage_utils.upload_directory_to_s3_parallel(
+                str(local_dir), "content/hls", stop=threading.Event()
+            ) is True
+            assert upload_mock.call_count == 5
+
     def test_get_storage_client_returns_cached_client_inside_lock(self):
         """Cover line 48: inner double-check guard inside the lock returns cached client."""
         mock_client = Mock()

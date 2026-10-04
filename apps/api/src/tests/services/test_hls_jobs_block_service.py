@@ -221,7 +221,7 @@ async def test_transcode_block_with_redis_and_s3(monkeypatch):
         return {"master": "master.m3u8", "renditions": ["720p"], "thumbnails": None}
     monkeypatch.setattr(hls_jobs, "transcode_source_to_hls", fake_transcode)
     monkeypatch.setattr(hls_jobs, "is_s3_enabled", lambda: True)
-    monkeypatch.setattr(hls_jobs, "upload_directory_to_s3", lambda out, prefix: True)
+    monkeypatch.setattr(hls_jobs, "upload_directory_to_s3_parallel", lambda out, prefix, **k: True)
 
     ok = await hls_jobs.transcode_block("act_1", "block_1")
     assert ok is True
@@ -246,7 +246,7 @@ async def test_transcode_block_upload_failed(monkeypatch):
     monkeypatch.setattr(hls_jobs, "get_redis_client", lambda: None)
     monkeypatch.setattr(hls_jobs, "transcode_source_to_hls", hls_jobs_aret({"master": "m", "renditions": ["720p"]}))
     monkeypatch.setattr(hls_jobs, "is_s3_enabled", lambda: True)
-    monkeypatch.setattr(hls_jobs, "upload_directory_to_s3", lambda out, prefix: False)
+    monkeypatch.setattr(hls_jobs, "upload_directory_to_s3_parallel", lambda out, prefix, **k: False)
     ok = await hls_jobs.transcode_block("a", "b")
     assert ok is False
     assert statuses[-1][2]["error"] == "upload_failed"

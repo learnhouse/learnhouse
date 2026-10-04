@@ -576,7 +576,12 @@ def upload_directory_to_s3(local_dir: str, s3_prefix: str) -> bool:
     return success
 
 
-def upload_directory_to_s3_parallel(local_dir: str, s3_prefix: str, max_workers: int = 8) -> bool:
+def upload_directory_to_s3_parallel(
+    local_dir: str,
+    s3_prefix: str,
+    max_workers: int = 8,
+    stop: Optional[threading.Event] = None,
+) -> bool:
     """
     Upload an entire directory to S3 with concurrent per-file uploads.
 
@@ -584,6 +589,10 @@ def upload_directory_to_s3_parallel(local_dir: str, s3_prefix: str, max_workers:
     for directories with many files (e.g. extracted SCORM packages) sequential
     per-file round-trips dominate the wall clock. The cached boto3 client is
     thread-safe.
+
+    ``stop`` lets the caller abandon the upload: once set, files not yet started
+    are skipped and the call returns False. Callers that run this in a thread
+    and then delete ``local_dir`` must set it first.
 
     Returns:
         True if all uploads successful (or S3 not configured), False if any failed
@@ -606,6 +615,10 @@ def upload_directory_to_s3_parallel(local_dir: str, s3_prefix: str, max_workers:
 
     from concurrent.futures import ThreadPoolExecutor
 
+    def _upload(args) -> bool:
+        if stop is not None and stop.is_set():
+            return False
+        return upload_file_to_s3(*args)
+
     with ThreadPoolExecutor(max_workers=max_workers) as pool:
-        results = pool.map(lambda args: upload_file_to_s3(*args), uploads)
-        return all(results)
+        return all(list(pool.map(_upload, uploads)))
