@@ -1,4 +1,4 @@
-const { withSentryConfig } = require("@sentry/nextjs");
+const { withSentryConfig } = require("@sentry/nextjs/config");
 
 /** @type {import('common.next').NextConfig} */
 const nextConfig = {
@@ -173,7 +173,6 @@ module.exports = withSentryConfig(nextConfig, {
   org: process.env.SENTRY_ORG,
   project: process.env.SENTRY_PROJECT,
   silent: true,
-  disableLogger: true,
   tunnelRoute: "/monitoring",
   sourcemaps: {
     disable: !process.env.SENTRY_ORG || !process.env.SENTRY_PROJECT,

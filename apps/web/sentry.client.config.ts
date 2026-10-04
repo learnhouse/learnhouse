@@ -9,8 +9,6 @@ if (SENTRY_DSN) {
     dsn: SENTRY_DSN,
     tunnel: '/monitoring',
     environment: LEARNHOUSE_ENV,
-    sendDefaultPii: true,
-    enableLogs: true,
     tracesSampleRate: LEARNHOUSE_ENV === "dev" ? 1.0 : 0.1,
     replaysSessionSampleRate: 0.0,
     replaysOnErrorSampleRate: 0.1,
