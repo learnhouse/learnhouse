@@ -107,6 +107,12 @@
       "description": "rehype-katex and react-katex both require katex ^0.16, so a 0.17+ direct dependency resolves to a second nested copy: math is rendered with 0.16 class names while the katex.min.css we import carries the renamed 0.18 ones (.base -> .katex-base) and comes out unstyled. Lift this cap once both libraries support the newer major.",
       "matchPackageNames": ["katex"],
       "allowedVersions": "<0.17"
+    },
+    {
+      "description": "nextra 4.6 validates its component props with zod. From zod 4.4 that validation throws 'expected nonoptional, received undefined' at children while prerendering, and the docs build fails (bisected: 4.3.6 builds, 4.4.0 does not). Lift this cap once nextra ships a fix.",
+      "matchFileNames": ["docs/package.json"],
+      "matchPackageNames": ["zod"],
+      "allowedVersions": "<4.4"
     }
   ]
 }
