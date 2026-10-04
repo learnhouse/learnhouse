@@ -323,8 +323,10 @@ function DashLeftMenu() {
 
       {/* Main Navigation — scrolls once the list outgrows the viewport.
           Centered with `my-auto`, not `justify-center`: the latter would push
-          the first items above scroll origin, out of reach. */}
-      <div className="flex-1 min-h-0 overflow-y-auto overscroll-contain flex flex-col py-4 px-3">
+          the first items above scroll origin, out of reach. No
+          `overscroll-contain`: it stops the wheel from scrolling the page
+          over the sidebar even when the list fits. */}
+      <div className="flex-1 min-h-0 overflow-y-auto flex flex-col py-4 px-3">
         <AdminAuthorization authorizationMode="component">
           <div className="space-y-1 my-auto">
             <MenuLink
