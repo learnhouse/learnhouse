@@ -5545,7 +5545,8 @@
         "upload_pdf": "Upload PDF",
         "document_title": "PDF Document",
         "expand_pdf": "Expand PDF",
-        "download_pdf": "Download PDF"
+        "download_pdf": "Download PDF",
+        "resize_pdf": "Drag to resize"
       },
       "h5p_block": {
         "default_title": "H5P interactive content",

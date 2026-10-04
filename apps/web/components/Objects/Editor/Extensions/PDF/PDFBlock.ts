@@ -17,6 +17,10 @@ export default Node.create({
       blockObject: {
         default: null,
       },
+      // Pixel height chosen by dragging the handle; null = DEFAULT_PDF_HEIGHT.
+      pdfHeight: {
+        default: null,
+      },
     }
   },
 
