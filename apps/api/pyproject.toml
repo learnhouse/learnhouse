@@ -27,7 +27,7 @@ dependencies = [
     "redis==8.1.0",
     "requests==2.34.2",
     "resend==2.49.0",
-    "sqlmodel==0.0.47",
+    "sqlmodel==0.0.44",
     "tiktoken==0.14.0",
     "uvicorn==0.54.0",
     "typer==0.27.2",

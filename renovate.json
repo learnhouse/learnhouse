@@ -113,6 +113,11 @@
       "matchFileNames": ["docs/package.json"],
       "matchPackageNames": ["zod"],
       "allowedVersions": "<4.4"
+    },
+    {
+      "description": "sqlmodel 0.0.45 maps every datetime field to a timestamptz type that rejects naive datetimes on write. The API writes naive datetimes into naive columns, so the bump fails password changes, packs and usage events. Lift this cap once the models and columns are migrated to aware datetimes.",
+      "matchPackageNames": ["sqlmodel"],
+      "allowedVersions": "<0.0.45"
     }
   ]
 }
