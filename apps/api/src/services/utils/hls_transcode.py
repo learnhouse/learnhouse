@@ -192,27 +192,40 @@ async def _probe(src_path: str) -> tuple[int, bool, float]:
     rung (never upscale a source we can't measure), and has_audio False → no
     audio maps (so a silent source can't fail the transcode with a bad a:0 map).
     """
+    height, has_audio, duration, _ = await _probe_streams(src_path)
+    return height, has_audio, duration
+
+
+async def _probe_streams(src_path: str) -> tuple[int, bool, float, Optional[bool]]:
+    """Like _probe, plus whether the source has a video stream at all.
+
+    The last element is None when the probe itself failed (unknown — try the
+    transcode anyway), False when ffprobe read the file and found no video
+    stream (an audio-only upload: ffmpeg's `[0:v]` filtergraph can never match).
+    """
     probe = _ffprobe()
     if not probe:
-        return 0, False, 0.0
+        return 0, False, 0.0, None
     try:
         rc, out, _ = await _run_subprocess(
             [probe, "-v", "error", "-show_streams", "-show_format", "-of", "json", src_path],
             PROBE_TIMEOUT_S,
         )
         if rc != 0:
-            return 0, False, 0.0
+            return 0, False, 0.0, None
     except Exception:
-        return 0, False, 0.0
+        return 0, False, 0.0, None
     try:
         data = json.loads(out.decode() or "{}")
     except json.JSONDecodeError:
-        return 0, False, 0.0
+        return 0, False, 0.0, None
     streams = data.get("streams", [])
     height = 0
     has_audio = False
+    has_video = False
     for s in streams:
         if s.get("codec_type") == "video":
+            has_video = True
             height = max(height, int(s.get("height") or 0))
         elif s.get("codec_type") == "audio":
             has_audio = True
@@ -220,7 +233,7 @@ async def _probe(src_path: str) -> tuple[int, bool, float]:
         duration = float(data.get("format", {}).get("duration") or 0.0)
     except (TypeError, ValueError):
         duration = 0.0
-    return height, has_audio, duration
+    return height, has_audio, duration, has_video
 
 
 # Cap the sprite at a sane cell count so a multi-hour video can't produce a
@@ -312,7 +325,9 @@ async def transcode_source_to_hls(src_path: str, out_dir: str) -> Optional[dict]
     Transcode src_path into an HLS ladder under out_dir.
 
     Returns {"master": "master.m3u8", "renditions": ["720p", ...]} on success,
-    or None on failure (caller keeps the MP4 fallback). Never raises.
+    {"unsupported": reason} when the source can never be transcoded (e.g. no
+    video stream), or None on failure (caller keeps the MP4 fallback). Never
+    raises.
     """
     if not _ffmpeg():
         logger.error("ffmpeg not available; cannot transcode %s", src_path)
@@ -321,7 +336,13 @@ async def transcode_source_to_hls(src_path: str, out_dir: str) -> Optional[dict]
         logger.error("HLS source missing: %s", src_path)
         return None
 
-    height, has_audio, duration = await _probe(src_path)
+    height, has_audio, duration, has_video = await _probe_streams(src_path)
+    if has_video is False:
+        # Nothing to transcode, and retrying will never change that. Report it
+        # as unsupported so the job stops re-queueing it; playback keeps using
+        # the original upload.
+        logger.info("HLS: %s has no video stream; skipping transcode", src_path)
+        return {"unsupported": "no_video_stream"}
     rungs = select_ladder(height)
     os.makedirs(out_dir, exist_ok=True)
     for r in rungs:
