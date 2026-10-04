@@ -32,8 +32,6 @@ if (SENTRY_DSN) {
   Sentry.init({
     dsn: SENTRY_DSN,
     environment: LEARNHOUSE_ENV,
-    sendDefaultPii: true,
-    enableLogs: true,
     tracesSampleRate: LEARNHOUSE_ENV === "dev" ? 1.0 : 0.1,
     beforeSend(event, hint) {
       const msg =
