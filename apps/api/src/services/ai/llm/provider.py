@@ -109,6 +109,13 @@ def build_model(model_name: str) -> Model:
 
         return AnthropicModel(model_name, provider=AnthropicProvider(api_key=api_key))
 
+    # Fireworks AI — OpenAI-compatible; provider auto-configures api.fireworks.ai.
+    if provider_id == "fireworks":
+        from pydantic_ai.models.openai import OpenAIChatModel
+        from pydantic_ai.providers.fireworks import FireworksProvider
+
+        return OpenAIChatModel(model_name, provider=FireworksProvider(api_key=api_key))
+
     # DeepSeek (Chinese) — OpenAI-compatible; provider auto-configures api.deepseek.com.
     if provider_id == "deepseek":
         from pydantic_ai.models.openai import OpenAIChatModel
