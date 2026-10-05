@@ -153,13 +153,13 @@ class TestLoadActivityAndCourse:
 class TestLoadUsergroup:
     async def test_success(self, db, org):
         ug = await _make_usergroup(db, org)
-        result = await _load_usergroup("ug_test", db)
+        result = await _load_usergroup("ug_test", org.id, db)
         assert result.id == ug.id
         assert result.usergroup_uuid == "ug_test"
 
     async def test_not_found(self, db, org):
         with pytest.raises(HTTPException) as exc_info:
-            await _load_usergroup("nonexistent_ug", db)
+            await _load_usergroup("nonexistent_ug", org.id, db)
         assert exc_info.value.status_code == 404
         assert "User group not found" in exc_info.value.detail
 

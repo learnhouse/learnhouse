@@ -303,7 +303,8 @@ class TestGetCourseContributors:
                 db,
             )
 
-        mock_access.assert_awaited_once()
+        # READ gate, then the non-raising UPDATE probe that unlocks emails
+        assert mock_access.await_count == 2
         assert len(result) == 1
         assert result[0]["user_id"] == contributor_user.id
         assert result[0]["authorship"] == ResourceAuthorshipEnum.CONTRIBUTOR

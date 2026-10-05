@@ -6,7 +6,7 @@ schema-valid and safe to insert. Same guard/credit ordering as the other AI rout
 
 import logging
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Request
 from sqlmodel import select
 from sqlmodel.ext.asyncio.session import AsyncSession
 
@@ -19,6 +19,7 @@ from src.db.users import PublicUser
 from src.security.auth import get_authenticated_user
 from src.security.features_utils.usage import refund_ai_credit, reserve_ai_credit
 from src.security.org_auth import is_org_member, enforce_org_mfa
+from src.security.rbac import AccessAction, check_resource_access
 from src.services.ai.generations import (
     delete_generation,
     list_generations,
@@ -55,20 +56,20 @@ async def _authorize_org(org_id: int, user: PublicUser, db_session: AsyncSession
 
 async def _load_activity_content(
     activity_uuid: str, org_id: int, db_session: AsyncSession
-) -> tuple[dict | None, int | None]:
+) -> tuple[dict | None, int | None, str | None]:
     activity = (
         await db_session.execute(
             select(Activity).where(Activity.activity_uuid == activity_uuid)
         )
     ).scalars().first()
     if not activity:
-        return None, None
+        return None, None, None
     course = (
         await db_session.execute(select(Course).where(Course.id == activity.course_id))
     ).scalars().first()
     if not course or course.org_id != org_id:
-        return None, None
-    return (activity.content or None), activity.id
+        return None, None, None
+    return (activity.content or None), activity.id, course.course_uuid
 
 
 @router.post(
@@ -83,6 +84,7 @@ async def _load_activity_content(
 )
 async def api_generate_scenario(
     body: GenerateScenarioRequest,
+    request: Request,
     current_user: PublicUser = Depends(get_authenticated_user),
     db_session: AsyncSession = Depends(get_db_session),
 ) -> GenerateScenarioResponse:
@@ -95,9 +97,16 @@ async def api_generate_scenario(
     activity_content: dict | None = None
     activity_id: int | None = None
     if body.activity_uuid:
-        activity_content, activity_id = await _load_activity_content(
+        activity_content, activity_id, course_uuid = await _load_activity_content(
             body.activity_uuid, org.id, db_session
         )
+        # Grounding a scenario on an activity's (possibly restricted/draft)
+        # content is an authoring action — require content-author rights on
+        # that course, not bare org membership.
+        if course_uuid:
+            await check_resource_access(
+                request, db_session, current_user, course_uuid, AccessAction.UPDATE
+            )
 
     enforce_ai_rate_limit(current_user.id, org.id)
     await reserve_ai_credit(org.id, db_session, amount=SCENARIO_CREDIT_COST)

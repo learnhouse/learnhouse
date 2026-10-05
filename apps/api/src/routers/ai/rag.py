@@ -33,6 +33,7 @@ from src.services.ai.base import (
     update_chat_session_meta,
     chat_session_belongs_to_user,
 )
+from src.services.ai.rag.access import build_rag_access_scope
 from src.services.ai.rag.embedding_service import embed_course_content
 from src.services.ai.rag.query_service import query_course_rag_stream
 from src.services.ai.llm import model_for_tier
@@ -167,7 +168,7 @@ async def api_rag_chat(
     - If course_uuid is provided, searches within that course only.
     - If course_uuid is omitted, searches across all courses for the user's org.
     """
-    course_id = None
+    course = None
     org_id = None
 
     if chat_request.course_uuid:
@@ -176,7 +177,6 @@ async def api_rag_chat(
         )).scalars().first()
         if not course:
             raise HTTPException(status_code=404, detail="Course not found")
-        course_id = course.id
         org_id = course.org_id
     else:
         if chat_request.org_slug:
@@ -235,6 +235,13 @@ async def api_rag_chat(
     from src.services.security.rate_limiting import enforce_ai_rate_limit
     enforce_ai_rate_limit(chat_acting_user_id, org_id)
 
+    # Only content the caller could open through the course/activity endpoints
+    # may reach the model or the returned sources. A named course the caller
+    # cannot read is a 403, before any credit is spent.
+    access_scope = await build_rag_access_scope(
+        request, current_user, org_id, db_session, course=course
+    )
+
     # Validate session ownership BEFORE reserving credits. Reserving first means
     # a request that targets someone else's session (or probes random UUIDs)
     # still raises 404 but silently burns the org's credits with no refund.
@@ -256,7 +263,7 @@ async def api_rag_chat(
         org_id=org_id,
         db_session=db_session,
         message_history=chat_session["message_history"],
-        course_id=course_id,
+        scope=access_scope,
         mode=chat_request.mode or "course_only",
     )
 

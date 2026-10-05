@@ -213,7 +213,8 @@ async def editor_ai_start_chat_session_stream(
     # Get course authors
     from src.db.resource_authors import ResourceAuthor
     from src.db.users import User
-    from src.services.courses.courses import AuthorWithRole, UserRead
+    from src.db.courses.courses import AuthorWithRole
+    from src.db.users import UserReadAuthor
 
     authors_statement = (
         select(ResourceAuthor, User)
@@ -225,7 +226,7 @@ async def editor_ai_start_chat_session_stream(
 
     authors = [
         AuthorWithRole(
-            user=UserRead.model_validate(user),
+            user=UserReadAuthor.model_validate(user),
             authorship=resource_author.authorship,
             authorship_status=resource_author.authorship_status,
             creation_date=resource_author.creation_date,
@@ -327,7 +328,8 @@ async def editor_ai_send_message_stream(
     # Get course authors
     from src.db.resource_authors import ResourceAuthor
     from src.db.users import User
-    from src.services.courses.courses import AuthorWithRole, UserRead
+    from src.db.courses.courses import AuthorWithRole
+    from src.db.users import UserReadAuthor
 
     authors_statement = (
         select(ResourceAuthor, User)
@@ -339,7 +341,7 @@ async def editor_ai_send_message_stream(
 
     authors = [
         AuthorWithRole(
-            user=UserRead.model_validate(user),
+            user=UserReadAuthor.model_validate(user),
             authorship=resource_author.authorship,
             authorship_status=resource_author.authorship_status,
             creation_date=resource_author.creation_date,

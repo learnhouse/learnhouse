@@ -15,13 +15,13 @@ from src.db.users import PublicUser
 from src.db.courses.activities import Activity, ActivityRead
 from src.security.auth import get_current_user, resolve_acting_user_id
 from src.security.org_auth import enforce_org_mfa, is_org_member
-from src.security.rbac import check_resource_access, AccessAction
 from src.services.ai.base import (
     ask_ai,
     get_chat_session_history,
     save_message_to_history,
 )
 from src.services.ai.llm import model_for_tier
+from src.services.ai.rag.access import can_read_activity
 
 from src.services.ai.schemas.ai import (
     ActivityAIChatSessionResponse,
@@ -39,6 +39,7 @@ logger = logging.getLogger(__name__)
 async def _authorize_activity_ai_access(
     request: Request,
     course: CourseRead,
+    activity: ActivityRead,
     org_id: int,
     current_user: PublicUser,
     db_session: AsyncSession,
@@ -57,9 +58,16 @@ async def _authorize_activity_ai_access(
             detail="You are not a member of this organization",
         )
     await enforce_org_mfa(acting_user_id, org_id, db_session)
-    await check_resource_access(
-        request, db_session, current_user, course.course_uuid, AccessAction.READ
-    )
+    # Course READ alone is not enough: the activity's content goes into the
+    # model context, so drafts, chapter/activity locks and paid access apply
+    # exactly as they do when the activity is opened directly.
+    if activity.id is None or not await can_read_activity(
+        request, current_user, course, activity.id, db_session
+    ):
+        raise HTTPException(
+            status_code=403,
+            detail="You do not have access to this activity",
+        )
 
 
 async def ai_start_activity_chat_session(
@@ -103,7 +111,8 @@ async def ai_start_activity_chat_session(
     # Get course authors
     from src.db.resource_authors import ResourceAuthor
     from src.db.users import User
-    from src.services.courses.courses import AuthorWithRole, UserRead
+    from src.db.courses.courses import AuthorWithRole
+    from src.db.users import UserReadAuthor
 
     authors_statement = (
         select(ResourceAuthor, User)
@@ -116,7 +125,7 @@ async def ai_start_activity_chat_session(
     # Convert to AuthorWithRole objects
     authors = [
         AuthorWithRole(
-            user=UserRead.model_validate(user),
+            user=UserReadAuthor.model_validate(user),
             authorship=resource_author.authorship,
             authorship_status=resource_author.authorship_status,
             creation_date=resource_author.creation_date,
@@ -139,7 +148,7 @@ async def ai_start_activity_chat_session(
 
     # F5/F6: authorize the client-supplied activity before any spend.
     await _authorize_activity_ai_access(
-        request, course, org.id, current_user, db_session
+        request, course, activity, org.id, current_user, db_session
     )
 
     # F-9: per-user + per-org rate limit before any compute / credit spend.
@@ -258,7 +267,8 @@ async def ai_send_activity_chat_message(
     # Get course authors
     from src.db.resource_authors import ResourceAuthor
     from src.db.users import User
-    from src.services.courses.courses import AuthorWithRole, UserRead
+    from src.db.courses.courses import AuthorWithRole
+    from src.db.users import UserReadAuthor
 
     authors_statement = (
         select(ResourceAuthor, User)
@@ -271,7 +281,7 @@ async def ai_send_activity_chat_message(
     # Convert to AuthorWithRole objects
     authors = [
         AuthorWithRole(
-            user=UserRead.model_validate(user),
+            user=UserReadAuthor.model_validate(user),
             authorship=resource_author.authorship,
             authorship_status=resource_author.authorship_status,
             creation_date=resource_author.creation_date,
@@ -288,7 +298,7 @@ async def ai_send_activity_chat_message(
 
     # F5/F6: authorize the client-supplied activity before any spend.
     await _authorize_activity_ai_access(
-        request, course, course.org_id, current_user, db_session
+        request, course, activity, course.org_id, current_user, db_session
     )
 
     # F-9: per-user + per-org rate limit before any compute / credit spend.
@@ -401,7 +411,8 @@ async def _get_activity_and_course_info(
     # Get course authors
     from src.db.resource_authors import ResourceAuthor
     from src.db.users import User
-    from src.services.courses.courses import AuthorWithRole, UserRead
+    from src.db.courses.courses import AuthorWithRole
+    from src.db.users import UserReadAuthor
 
     authors_statement = (
         select(ResourceAuthor, User)
@@ -414,7 +425,7 @@ async def _get_activity_and_course_info(
     # Convert to AuthorWithRole objects
     authors = [
         AuthorWithRole(
-            user=UserRead.model_validate(user),
+            user=UserReadAuthor.model_validate(user),
             authorship=resource_author.authorship,
             authorship_status=resource_author.authorship_status,
             creation_date=resource_author.creation_date,
@@ -438,7 +449,7 @@ async def _get_activity_and_course_info(
     # F5: authorize before serializing any of the activity's content into the
     # model context — and before the callers rate-limit / reserve credits.
     await _authorize_activity_ai_access(
-        request, course, org.id, current_user, db_session
+        request, course, activity, org.id, current_user, db_session
     )
 
     # Get Activity Content Blocks

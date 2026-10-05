@@ -44,14 +44,14 @@ _BLOCK = {
 
 async def test_empty_prompt_400():
     with pytest.raises(HTTPException) as exc:
-        await sc.api_generate_scenario(GenerateScenarioRequest(org_id=5, prompt=" "), _user(), _db_returning(_org()))
+        await sc.api_generate_scenario(GenerateScenarioRequest(org_id=5, prompt=" "), MagicMock(), _user(), _db_returning(_org()))
     assert exc.value.status_code == 400
 
 
 async def test_non_member_403():
     with patch.object(sc, "is_org_member", new=AsyncMock(return_value=False)):
         with pytest.raises(HTTPException) as exc:
-            await sc.api_generate_scenario(GenerateScenarioRequest(org_id=5, prompt="p"), _user(), _db_returning(_org()))
+            await sc.api_generate_scenario(GenerateScenarioRequest(org_id=5, prompt="p"), MagicMock(), _user(), _db_returning(_org()))
     assert exc.value.status_code == 403
 
 
@@ -64,7 +64,7 @@ async def test_happy_path():
          patch.object(sc, "resolve_model_for_org", new=AsyncMock(return_value="m")), \
          patch.object(sc, "generate_scenario", new=AsyncMock(return_value=(_BLOCK, "s1"))), \
          patch.object(sc, "record_generation", new=AsyncMock(return_value=record)):
-        resp = await sc.api_generate_scenario(body, _user(), _db_returning(_org()))
+        resp = await sc.api_generate_scenario(body, MagicMock(), _user(), _db_returning(_org()))
     assert resp.session_uuid == "s1"
     assert resp.scenario["currentScenarioId"] == "1"
     assert resp.ai_generation_uuid == "aigen_1"
@@ -80,7 +80,7 @@ async def test_empty_scenarios_refunds_502():
          patch.object(sc, "generate_scenario", new=AsyncMock(return_value=(empty, "s1"))), \
          patch.object(sc, "refund_ai_credit") as refund:
         with pytest.raises(HTTPException) as exc:
-            await sc.api_generate_scenario(body, _user(), _db_returning(_org()))
+            await sc.api_generate_scenario(body, MagicMock(), _user(), _db_returning(_org()))
     assert exc.value.status_code == 502
     refund.assert_called_once()
 
@@ -94,7 +94,7 @@ async def test_not_configured_refunds_403():
          patch.object(sc, "generate_scenario", new=AsyncMock(side_effect=AINotConfiguredError("no key"))), \
          patch.object(sc, "refund_ai_credit") as refund:
         with pytest.raises(HTTPException) as exc:
-            await sc.api_generate_scenario(body, _user(), _db_returning(_org()))
+            await sc.api_generate_scenario(body, MagicMock(), _user(), _db_returning(_org()))
     assert exc.value.status_code == 403
     refund.assert_called_once()
 

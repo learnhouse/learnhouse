@@ -175,6 +175,30 @@ async def _check_read_access(
     raise HTTPException(status_code=403, detail="Access denied to this playground")
 
 
+async def _check_draft_access(
+    playground: Playground,
+    current_user: PublicUser | AnonymousUser | APITokenUser,
+    db_session: AsyncSession,
+) -> None:
+    """Raise 404 if current_user may not see this playground while it is a draft.
+
+    Unpublished (draft) playgrounds must never be exposed by uuid to anyone
+    other than the owner or an org admin. _check_read_access only validates
+    access_type, so without this guard a draft PUBLIC/AUTHENTICATED playground
+    would be readable by anonymous/any authenticated user via its uuid — the
+    same content list_org_playgrounds deliberately hides.
+    """
+    if playground.published:
+        return
+    if isinstance(current_user, AnonymousUser):
+        raise HTTPException(status_code=404, detail="Playground not found")
+    acting_user_id = resolve_acting_user_id(current_user)
+    if playground.created_by != acting_user_id and not await _is_org_admin(
+        acting_user_id, playground.org_id, db_session
+    ):
+        raise HTTPException(status_code=404, detail="Playground not found")
+
+
 async def create_playground(
     request: Request,
     org_id: int,
@@ -259,19 +283,7 @@ async def get_playground(
             resolve_acting_user_id(current_user), playground.org_id, db_session
         )
 
-    # Unpublished (draft) playgrounds must never be exposed by uuid to anyone
-    # other than the owner or an org admin. _check_read_access only validates
-    # access_type, so without this guard a draft PUBLIC/AUTHENTICATED playground
-    # would be readable by anonymous/any authenticated user via its uuid — the
-    # same content list_org_playgrounds deliberately hides.
-    if not playground.published:
-        if isinstance(current_user, AnonymousUser):
-            raise HTTPException(status_code=404, detail="Playground not found")
-        acting_user_id = resolve_acting_user_id(current_user)
-        if playground.created_by != acting_user_id and not await _is_org_admin(
-            acting_user_id, playground.org_id, db_session
-        ):
-            raise HTTPException(status_code=404, detail="Playground not found")
+    await _check_draft_access(playground, current_user, db_session)
 
     return await _playground_to_read(playground, db_session)
 
@@ -486,6 +498,11 @@ async def duplicate_playground(
     if not pg_rights.get("action_create", False):
         raise HTTPException(status_code=403, detail="Insufficient permissions to create playgrounds")
 
+    # A copy hands the caller the source's full content, so the caller must be
+    # able to read the source exactly as get_playground would let them.
+    await _check_read_access(playground, current_user, db_session)
+    await _check_draft_access(playground, current_user, db_session)
+
     now = datetime.now(timezone.utc).replace(tzinfo=None).isoformat()
     new_playground = Playground(
         name=f"{playground.name} (Copy)",
@@ -533,7 +550,10 @@ async def add_usergroup_to_playground(
 
     from src.db.usergroups import UserGroup
     ug = (await db_session.execute(
-        select(UserGroup).where(UserGroup.usergroup_uuid == usergroup_uuid)
+        select(UserGroup).where(
+            UserGroup.usergroup_uuid == usergroup_uuid,
+            UserGroup.org_id == playground.org_id,
+        )
     )).scalars().first()
     if not ug:
         raise HTTPException(status_code=404, detail="User group not found")
@@ -585,7 +605,10 @@ async def remove_usergroup_from_playground(
 
     from src.db.usergroups import UserGroup
     ug = (await db_session.execute(
-        select(UserGroup).where(UserGroup.usergroup_uuid == usergroup_uuid)
+        select(UserGroup).where(
+            UserGroup.usergroup_uuid == usergroup_uuid,
+            UserGroup.org_id == playground.org_id,
+        )
     )).scalars().first()
     if not ug:
         raise HTTPException(status_code=404, detail="User group not found")

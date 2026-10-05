@@ -6,11 +6,12 @@ grounded in course content.
 """
 
 import logging
-from typing import AsyncGenerator, Optional
+from typing import AsyncGenerator
 
-from sqlalchemy import text
+from sqlalchemy import bindparam, text
 from sqlmodel.ext.asyncio.session import AsyncSession
 
+from src.services.ai.rag.access import RagAccessScope, filter_readable_chunks
 from src.services.ai.rag.embedding_service import embed_single_text
 from src.services.ai.base import ask_ai_stream
 from src.services.ai.llm import model_for_tier
@@ -18,13 +19,14 @@ from src.services.ai.llm import model_for_tier
 logger = logging.getLogger(__name__)
 
 TOP_K = 5
+OVERFETCH_FACTOR = 4
 
 
 async def query_course_rag(
     question: str,
     org_id: int,
     db_session: AsyncSession,
-    course_id: Optional[int] = None,
+    scope: RagAccessScope,
     top_k: int = TOP_K,
 ) -> dict:
     """
@@ -33,56 +35,46 @@ async def query_course_rag(
     Args:
         question: The user's question
         org_id: Organization ID to scope the search
-        course_id: Optional course ID to scope to a single course (None = all courses)
         db_session: Database session
+        scope: The courses the caller may read (see build_rag_access_scope);
+            only their content is searched and returned
         top_k: Number of results to return
 
     Returns:
         {context: str, sources: list[dict]}
     """
+    if not scope.course_ids:
+        return {"context": "", "sources": []}
+
     # Embed the question
     query_embedding = await embed_single_text(question)
 
     # Build the similarity search query
     embedding_str = "[" + ",".join(str(v) for v in query_embedding) + "]"
 
-    if course_id is not None:
-        sql = text("""
-            SELECT ce.id, ce.chunk_text, ce.activity_uuid, ce.activity_name,
-                   ce.chapter_name, ce.course_name, ce.source_type, ce.block_uuid,
-                   c.course_uuid,
-                   ce.embedding <=> :query_embedding AS distance
-            FROM course_embedding ce
-            JOIN course c ON c.id = ce.course_id
-            WHERE ce.org_id = :org_id AND ce.course_id = :course_id
-            ORDER BY ce.embedding <=> :query_embedding
-            LIMIT :top_k
-        """)
-        params = {
-            "query_embedding": embedding_str,
-            "org_id": org_id,
-            "course_id": course_id,
-            "top_k": top_k,
-        }
-    else:
-        sql = text("""
-            SELECT ce.id, ce.chunk_text, ce.activity_uuid, ce.activity_name,
-                   ce.chapter_name, ce.course_name, ce.source_type, ce.block_uuid,
-                   c.course_uuid,
-                   ce.embedding <=> :query_embedding AS distance
-            FROM course_embedding ce
-            JOIN course c ON c.id = ce.course_id
-            WHERE ce.org_id = :org_id
-            ORDER BY ce.embedding <=> :query_embedding
-            LIMIT :top_k
-        """)
-        params = {
-            "query_embedding": embedding_str,
-            "org_id": org_id,
-            "top_k": top_k,
-        }
+    # Course-level access is enforced in SQL. Activity-level rules (drafts,
+    # locks, paid access) are applied to the rows afterwards, so over-fetch to
+    # keep top_k results when some of them get filtered out.
+    sql = text("""
+        SELECT ce.id, ce.chunk_text, ce.activity_id, ce.activity_uuid, ce.activity_name,
+               ce.chapter_name, ce.course_name, ce.source_type, ce.block_uuid,
+               ce.course_id, c.course_uuid,
+               ce.embedding <=> :query_embedding AS distance
+        FROM course_embedding ce
+        JOIN course c ON c.id = ce.course_id
+        WHERE ce.org_id = :org_id AND ce.course_id IN :course_ids
+        ORDER BY ce.embedding <=> :query_embedding
+        LIMIT :limit
+    """).bindparams(bindparam("course_ids", expanding=True))
+    params = {
+        "query_embedding": embedding_str,
+        "org_id": org_id,
+        "course_ids": scope.course_ids,
+        "limit": top_k * OVERFETCH_FACTOR,
+    }
 
     results = (await db_session.execute(sql, params)).fetchall()
+    results = (await filter_readable_chunks(results, scope, db_session))[:top_k]
 
     if not results:
         return {"context": "", "sources": []}
@@ -126,7 +118,7 @@ async def query_course_rag_stream(
     org_id: int,
     db_session: AsyncSession,
     message_history: list,
-    course_id: Optional[int] = None,
+    scope: RagAccessScope,
     mode: str = "course_only",
 ) -> tuple[AsyncGenerator[str, None], list[dict]]:
     """
@@ -140,7 +132,7 @@ async def query_course_rag_stream(
         question=question,
         org_id=org_id,
         db_session=db_session,
-        course_id=course_id,
+        scope=scope,
     )
 
     context = rag_result["context"]

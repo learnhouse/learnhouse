@@ -2,7 +2,7 @@ from datetime import datetime
 from fastapi import HTTPException, Request
 from sqlmodel import select, and_
 from sqlmodel.ext.asyncio.session import AsyncSession
-from src.db.users import PublicUser, AnonymousUser, APITokenUser, User, UserRead
+from src.db.users import PublicUser, AnonymousUser, APITokenUser, User, UserRead, UserReadAuthor
 from src.db.courses.courses import Course
 from src.db.resource_authors import ResourceAuthor, ResourceAuthorshipEnum, ResourceAuthorshipStatusEnum
 from src.security.auth import resolve_acting_user_id
@@ -158,6 +158,8 @@ async def get_course_contributors(
     SECURITY NOTES:
     - Requires read access to the course
     - Contributors are visible to anyone with course read access
+    - Full user records (email, etc.) only go to course editors; everyone
+      else gets the author projection
     """
     # Check if course exists
     statement = select(Course).where(Course.course_uuid == course_uuid)
@@ -180,6 +182,15 @@ async def get_course_contributors(
     )
     results = (await db_session.execute(statement)).all()
 
+    # SECURITY: course READ is granted to anonymous users on public courses, so
+    # contributor emails are reserved for callers who can edit the course (the
+    # dashboard contributors editor).
+    can_edit = (await check_resource_access(
+        request, db_session, current_user, course_uuid, AccessAction.UPDATE,
+        raise_on_deny=False,
+    )).allowed
+    user_model = UserRead if can_edit else UserReadAuthor
+
     return [
         {
             "user_id": contributor.user_id,
@@ -187,7 +198,7 @@ async def get_course_contributors(
             "authorship_status": contributor.authorship_status,
             "creation_date": contributor.creation_date,
             "update_date": contributor.update_date,
-            "user": UserRead.model_validate(user).model_dump()
+            "user": user_model.model_validate(user).model_dump()
         }
         for contributor, user in results
     ]

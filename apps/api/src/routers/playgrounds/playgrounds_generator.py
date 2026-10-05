@@ -47,6 +47,8 @@ async def get_org_ai_model(org_id: int, db_session: AsyncSession) -> str:
 
 
 async def _get_course_context(
+    request: Request,
+    current_user: PublicUser | AnonymousUser | APITokenUser,
     course_uuid: Optional[str],
     org_id: int,
     db_session: AsyncSession,
@@ -63,12 +65,19 @@ async def _get_course_context(
         return None, None
 
     try:
+        from src.services.ai.rag.access import build_rag_access_scope
         from src.services.ai.rag.query_service import query_course_rag
+        # Generated output is shaped by the retrieved text, so only content the
+        # caller can read may be used. A course they cannot read raises here
+        # and falls through to "no context" below.
+        scope = await build_rag_access_scope(
+            request, current_user, org_id, db_session, course=course
+        )
         rag_result = await query_course_rag(
             question=prompt,
             org_id=org_id,
             db_session=db_session,
-            course_id=course.id,
+            scope=scope,
         )
         return rag_result.get("context") or None, course.id
     except Exception as e:
@@ -132,6 +141,8 @@ async def start_playground_session(
 
     # Fetch RAG context if course linked
     course_context, _ = await _get_course_context(
+        request,
+        current_user,
         session_request.context.course_uuid,
         org.id,
         db_session,
@@ -232,6 +243,8 @@ async def iterate_playground_session(
 
     # Fetch RAG context if course linked
     course_context, _ = await _get_course_context(
+        request,
+        current_user,
         session.context.course_uuid,
         org.id,
         db_session,

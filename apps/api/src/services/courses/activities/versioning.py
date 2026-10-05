@@ -116,7 +116,9 @@ async def get_activity_versions(
             detail="Course not found",
         )
 
-    await check_resource_access(request, db_session, current_user, course.course_uuid, AccessAction.READ)
+    # Version history exposes full historical content (bypassing paid/lock
+    # gating) — editor-only.
+    await check_resource_access(request, db_session, current_user, course.course_uuid, AccessAction.UPDATE)
 
     # Get versions with user info
     statement = (
@@ -180,7 +182,8 @@ async def get_activity_version(
             detail="Course not found",
         )
 
-    await check_resource_access(request, db_session, current_user, course.course_uuid, AccessAction.READ)
+    # Historical content is editor-only, same as the version list.
+    await check_resource_access(request, db_session, current_user, course.course_uuid, AccessAction.UPDATE)
 
     # Get specific version with user info
     statement = (

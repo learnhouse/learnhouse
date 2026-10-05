@@ -96,7 +96,9 @@ async def export_courses_batch(
                 detail=f"Course not found: {course_uuid}",
             )
 
-        await check_resource_access(request, db_session, current_user, course.course_uuid, AccessAction.READ)
+        # Export bundles every activity (drafts, locked and paid content),
+        # block and file of the course — an authoring action, not a read.
+        await check_resource_access(request, db_session, current_user, course.course_uuid, AccessAction.UPDATE)
 
         if org is None:
             org_statement = select(Organization).where(Organization.id == course.org_id)

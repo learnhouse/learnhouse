@@ -353,7 +353,21 @@ async def get_activityby_id(
     # RBAC check
     await check_resource_access(request, db_session, current_user, course.course_uuid, AccessAction.READ)
 
-    return ActivityRead.model_validate(activity)
+    # Same paid/lock gating as get_activity — ids are sequential, so this
+    # endpoint must not be a way around it.
+    has_paid_access = await check_ee_activity_paid_access(
+        request=request,
+        activity_id=activity.id,
+        user=current_user,
+        db_session=db_session
+    )
+
+    activity_read = ActivityRead.model_validate(activity)
+    activity_read.content = activity_read.content if has_paid_access else { "paid_access": False }
+
+    await _apply_activity_lock(activity_read, activity, course, current_user, db_session)
+
+    return activity_read
 
 
 async def update_activity(

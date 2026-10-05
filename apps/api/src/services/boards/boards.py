@@ -427,6 +427,12 @@ async def get_board_members(
         u.id: u
         for u in (await db_session.execute(select(User).where(col(User.id).in_(user_ids)))).scalars().all()
     }
+    # SECURITY: board READ is granted to anonymous users on public boards, so
+    # member emails are only shown to callers who can manage the board.
+    can_edit = (await check_resource_access(
+        request, db_session, current_user, board.board_uuid, AccessAction.UPDATE,
+        raise_on_deny=False,
+    )).allowed
     return [
         BoardMemberRead(
             id=m.id,
@@ -435,7 +441,7 @@ async def get_board_members(
             role=m.role,
             creation_date=m.creation_date,
             username=users[m.user_id].username if m.user_id in users else None,
-            email=users[m.user_id].email if m.user_id in users else None,
+            email=users[m.user_id].email if can_edit and m.user_id in users else None,
             avatar_image=users[m.user_id].avatar_image if m.user_id in users else None,
             user_uuid=users[m.user_id].user_uuid if m.user_id in users else None,
         )
