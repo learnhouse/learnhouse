@@ -32,13 +32,13 @@ import {
 export const Block = ({ icon: Icon, name, description }) => (
   <li style={{ display: 'flex', alignItems: 'center', gap: 8, listStyle: 'none' }}>
     <Icon size={18} weight="fill" style={{ flexShrink: 0, opacity: 0.6 }} />
-    <span><strong>{name}</strong> — {description}</span>
+    <span><strong>{name}</strong>: {description}</span>
   </li>
 )
 
 # Blocks
 
-The LearnHouse editor supports a wide range of block types for building rich course content. You can insert any block by typing `/` and selecting from the menu.
+The LearnHouse editor supports many block types for building course content. You can insert any block by typing `/` and selecting from the menu.
 
 ## Text Blocks
 

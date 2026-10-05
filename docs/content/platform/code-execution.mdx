@@ -13,18 +13,18 @@ The Code Playground block supports 30 languages: Python 3, JavaScript (Node), Ty
 1. A teacher inserts a **Code Playground** block into a Dynamic Page activity and (optionally) defines test cases as input/output pairs.
 2. Students write their solution in the built-in code editor embedded in the activity.
 3. On submission, the code is executed against all test cases in a sandboxed Judge0 environment.
-4. Results are reported per test case — pass/fail, execution time, and memory usage. Submissions are stored per `activity_uuid` + `block_id`.
+4. Results are reported per test case: pass/fail, execution time, and memory usage. Submissions are stored per `activity_uuid` + `block_id`.
 
 <Callout type="info">
-Code execution is surfaced as an editor block inside course content — it is **not** a standalone assignment task type. If you want graded code exercises, insert a Code Playground block into a Dynamic Page activity.
+Code execution is surfaced as an editor block inside course content. It is **not** a standalone assignment task type. If you want graded code exercises, insert a Code Playground block into a Dynamic Page activity.
 </Callout>
 
 ## Test Cases
 
 Each test case defines:
 
-- **Input** — The standard input provided to the program.
-- **Expected Output** — The output the program should produce.
+- **Input**: The standard input provided to the program.
+- **Expected Output**: The output the program should produce.
 
 The system runs the student's code against each test case and compares the actual output to the expected output.
 
@@ -34,4 +34,4 @@ Code execution requires a Judge0 instance to be configured. See the [Self-Hostin
 
 ## Batch Execution
 
-For blocks with multiple test cases, the platform executes all test cases in a single batch request, providing a comprehensive results summary that shows which tests passed and which failed.
+For blocks with multiple test cases, the platform executes all test cases in a single batch request and returns a summary showing which tests passed and which failed.

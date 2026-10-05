@@ -47,10 +47,10 @@ LEARNHOUSE_SYSTEM_EMAIL_ADDRESS=noreply@example.com
 
 | Variable | Description | Default |
 |---|---|---|
-| `LEARNHOUSE_SMTP_HOST` | SMTP server hostname | -- |
+| `LEARNHOUSE_SMTP_HOST` | SMTP server hostname | None |
 | `LEARNHOUSE_SMTP_PORT` | SMTP server port | `587` |
-| `LEARNHOUSE_SMTP_USERNAME` | SMTP authentication username | -- |
-| `LEARNHOUSE_SMTP_PASSWORD` | SMTP authentication password | -- |
+| `LEARNHOUSE_SMTP_USERNAME` | SMTP authentication username | None |
+| `LEARNHOUSE_SMTP_PASSWORD` | SMTP authentication password | None |
 | `LEARNHOUSE_SMTP_USE_TLS` | Enable TLS encryption | `true` |
 
 ## Applying Changes
@@ -78,7 +78,7 @@ It defaults to `LearnHouse`, so leaving it unset changes nothing.
 
 ### Per-organization override
 
-Organization administrators can set their own name under **Dashboard → Organization → Settings → General → Email Sender Name**. Mail sent for that organization (invitations, password resets, verification, role changes, welcome mail, lifecycle nudges) then carries the organization's name instead of the deployment default. Mail that is not about a single organization — platform password resets, org-less signups, account deletion, magic-login links — always uses the deployment default.
+Organization administrators can set their own name under **Dashboard → Organization → Settings → General → Email Sender Name**. Mail sent for that organization (invitations, password resets, verification, role changes, welcome mail, lifecycle nudges) then carries the organization's name instead of the deployment default. Mail that is not about a single organization (platform password resets, org-less signups, account deletion, magic-login links) always uses the deployment default.
 
 <Callout type="info">
 Only the display **name** is configurable, never the sending **address**. The address stays `LEARNHOUSE_SYSTEM_EMAIL_ADDRESS`, which is the domain carrying your verified SPF and DKIM records. An organization sending from an address on some other domain would fail DKIM alignment on every message, and on a shared sending domain that damages deliverability for every other tenant too.
@@ -94,6 +94,6 @@ If email is not configured, features like user invitations and password resets w
 
 LearnHouse sends the following types of email:
 
-- **User invitations** -- when an admin invites a user to join the platform or an organization
-- **Password resets** -- when a user requests a password reset
-- **System notifications** -- important system-level notifications
+- **User invitations**: when an admin invites a user to join the platform or an organization
+- **Password resets**: when a user requests a password reset
+- **System notifications**: important system-level notifications

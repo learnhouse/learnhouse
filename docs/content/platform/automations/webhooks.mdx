@@ -2,7 +2,7 @@ import { Callout } from 'nextra/components'
 
 # Webhooks
 
-Webhooks deliver real-time event notifications to any HTTPS endpoint you control. When something happens in LearnHouse — a learner completes a course, a user signs up, an assignment is graded — LearnHouse sends a signed `POST` request with a JSON payload to every matching endpoint.
+Webhooks deliver real-time event notifications to any HTTPS endpoint you control. When something happens in LearnHouse, such as a learner completing a course, a user signing up, or an assignment being graded, LearnHouse sends a signed `POST` request with a JSON payload to every matching endpoint.
 
 <Callout type="info">
 Webhooks are available on the **Pro plan** or higher. Manage endpoints under **Settings → Automations** in the organization dashboard, or via the [REST API](#api-reference) with an API token.
@@ -12,8 +12,8 @@ Webhooks are available on the **Pro plan** or higher. Manage endpoints under **S
 
 1. In the dashboard go to **Settings → Automations → Webhooks → New endpoint**.
 2. Enter the target URL (must be HTTPS and publicly reachable).
-3. Select the events you want to subscribe to — see the [Event Catalogue](/platform/automations/events) for the full list.
-4. Click **Create**. The signing secret is shown **once** on this screen — copy it into your server's secret store immediately.
+3. Select the events you want to subscribe to. See the [Event Catalogue](/platform/automations/events) for the full list.
+4. Click **Create**. The signing secret is shown **once** on this screen, so copy it into your server's secret store immediately.
 5. From the endpoint detail page, click **Send test event** to deliver a `ping` payload and confirm your server is reachable.
 
 ## Payload format
@@ -50,11 +50,11 @@ The shape of `data` varies per event. See the [Event Catalogue](/platform/automa
 | `User-Agent` | `LearnHouse-Webhooks/1.0` |
 | `X-Webhook-Event` | Event name (e.g. `course_completed`) |
 | `X-Webhook-Delivery` | Unique delivery ID (matches `delivery_id` in the body) |
-| `X-Webhook-Signature` | `sha256=<hex_digest>` — HMAC-SHA256 of the raw body |
+| `X-Webhook-Signature` | `sha256=<hex_digest>`, the HMAC-SHA256 of the raw body |
 
 ## Verifying the signature
 
-LearnHouse signs every payload with HMAC-SHA256, using the endpoint's signing secret. The signature covers the **raw request body** (exactly the bytes sent over the wire, before any JSON parsing) and is delivered in the `X-Webhook-Signature` header as `sha256=<hex_digest>` — the same convention used by GitHub and Stripe.
+LearnHouse signs every payload with HMAC-SHA256, using the endpoint's signing secret. The signature covers the **raw request body** (exactly the bytes sent over the wire, before any JSON parsing) and is delivered in the `X-Webhook-Signature` header as `sha256=<hex_digest>`. GitHub and Stripe use the same convention.
 
 <Callout type="warning">
 Always verify the signature before trusting a payload. Anyone who discovers your endpoint URL can send unsigned requests; the signature is the only thing that proves the request came from LearnHouse.
@@ -116,7 +116,7 @@ Logs are visible from the endpoint detail page in the dashboard and via `GET /{o
 
 - **HTTPS only.** `http://` URLs are rejected at create time.
 - **Private address protection (SSRF guard).** LearnHouse resolves every webhook URL to an IP before calling it and refuses to deliver to private ranges (`10.0.0.0/8`, `127.0.0.0/8`, `169.254.0.0/16`, `172.16.0.0/12`, `192.168.0.0/16`, `::1`, link-local, etc.). The same check is repeated **after** the connection is established to defeat DNS rebinding.
-- **Signing secret at rest.** Secrets are stored encrypted (Fernet, key derived from the application's JWT secret) and are returned in plaintext **only** at creation and when you click **Regenerate**. LearnHouse cannot recover a lost secret — you can only rotate it.
+- **Signing secret at rest.** Secrets are stored encrypted (Fernet, key derived from the application's JWT secret) and are returned in plaintext **only** at creation and when you click **Regenerate**. LearnHouse cannot recover a lost secret. You can only rotate it.
 - **Scope.** A webhook endpoint is scoped to a single organization. It can only subscribe to events fired for that org.
 
 ## Regenerating a secret
@@ -164,7 +164,7 @@ Response (200):
 ```
 
 <Callout type="warning">
-The `secret` is returned **only on this response**. Store it immediately — it cannot be retrieved again.
+The `secret` is returned **only on this response**. Store it immediately, because it cannot be retrieved again.
 </Callout>
 
 ### List endpoints

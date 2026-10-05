@@ -5,16 +5,16 @@ import { Callout } from 'nextra/components'
 LearnHouse can automatically generate closed captions (subtitles) for **hosted video** activities and translate them into any languages you choose. Captions are transcribed from the video's audio with AI, so you don't have to write or time them by hand.
 
 <Callout type="info">
-  Captions are available for **hosted videos** (files you upload) — not for embedded
+  Captions are available for **hosted videos** (files you upload), not for embedded
   YouTube videos, which use YouTube's own captions.
 </Callout>
 
 ## Enabling captions
 
-You can set captions up in **two places** — the panel is the same in both:
+You can set captions up in **two places**, and the panel is the same in both:
 
-- **When uploading a video** — the **AI Closed Captions** panel appears in the new-video dialog, so captions start generating as soon as the upload finishes.
-- **Later, from the editor** — edit an existing hosted-video activity to add, change, or regenerate captions.
+- **When uploading a video**: the **AI Closed Captions** panel appears in the new-video dialog, so captions start generating as soon as the upload finishes.
+- **Later, from the editor**: edit an existing hosted-video activity to add, change, or regenerate captions.
 
 To configure them:
 
@@ -26,7 +26,7 @@ To configure them:
    - **add a custom language** by entering its code (e.g. `sw` for Swahili, `es-419` for Latin-American Spanish) and a display name.
 5. Click **Generate captions**.
 
-Generation runs in the background. Each language shows a status — **queued → processing → ready** — and captions appear in the player's subtitles/CC menu as soon as they're ready. You can close the editor and come back later; you don't need to keep it open.
+Generation runs in the background. Each language shows a status (**queued → processing → ready**), and captions appear in the player's subtitles/CC menu as soon as they're ready. You can close the editor and come back later; you don't need to keep it open.
 
 ## How it works
 
@@ -46,7 +46,7 @@ Once at least one language is ready, learners get a **CC / subtitles button** in
 Caption generation uses your organization's **AI credits**, the same pool used by the AI chat and course tools.
 
 - The cost scales with the video's length and the number of languages you request (roughly one credit per ~10 minutes of audio, plus one per translated language).
-- If your organization has AI disabled or has run out of credits, you'll be told when you try to generate — nothing is charged in that case.
+- If your organization has AI disabled or has run out of credits, you'll be told when you try to generate, and nothing is charged in that case.
 - If the source language is among your chosen languages, it is reused directly and not re-translated (saving a credit).
 
 <Callout type="warning">
@@ -62,10 +62,10 @@ Caption generation uses your organization's **AI credits**, the same pool used b
 
 ## Requirements (self-hosted)
 
-Captions are available automatically wherever these are in place — no extra
+Captions are available automatically wherever these are in place. There is no extra
 feature flag:
 
-- A configured AI provider (Gemini by default — see the AI settings) with the AI
+- A configured AI provider (Gemini by default; see the AI settings) with the AI
   feature enabled for the organization.
 - `ffmpeg` available to the API (already included in the official image).
 - Redis (used to queue and process caption jobs).

@@ -1,6 +1,6 @@
 ---
 title: Custom Features & Webhooks
-description: Extend LearnHouse beyond the official frontend — authenticate with API tokens, create and query content programmatically, and react to events with webhooks.
+description: Extend LearnHouse beyond the official frontend: authenticate with API tokens, create and query content programmatically, and react to events with webhooks.
 ---
 
 import { Callout } from 'nextra/components'
@@ -8,7 +8,7 @@ import GuideCards from '../../../components/GuideCards/GuideCards'
 
 # Custom Features & Webhooks
 
-The [build guide](/guides/build-learning-platform) showed how to *read* the API as a frontend. This guide is about going further: driving LearnHouse **programmatically** — creating and managing content from your own scripts and services, and reacting to what happens inside LearnHouse with **webhooks**.
+The [build guide](/guides/build-learning-platform) showed how to *read* the API as a frontend. This guide is about going further: driving LearnHouse **programmatically**. You'll create and manage content from your own scripts and services, and react to what happens inside LearnHouse with **webhooks**.
 
 <GuideCards set="custom" />
 
@@ -29,7 +29,7 @@ curl "http://localhost:1338/api/v1/courses/org_slug/{org_slug}/page/1/limit/10" 
 ```
 
 <Callout type="warning">
-API tokens work on resource routes (courses, chapters, activities, collections…) but **not** on routes that require a real user session — `/users/*`, `/orgs/*`, `/roles/*`, and **webhook management** all reject `lh_` tokens with `403`. Use a courses read to smoke-test a token.
+API tokens work on resource routes (courses, chapters, activities, collections…) but **not** on routes that require a real user session: `/users/*`, `/orgs/*`, `/roles/*`, and **webhook management** all reject `lh_` tokens with `403`. Use a courses read to smoke-test a token.
 </Callout>
 
 ### Creating an API token
@@ -47,7 +47,7 @@ curl -X POST "http://localhost:1338/api/v1/orgs/{org_id}/api-tokens" \
   }'
 ```
 
-The response includes the **full token exactly once** — store it securely, it can't be retrieved again:
+The response includes the **full token exactly once**. Store it securely, because it can't be retrieved again:
 
 ```json
 {
@@ -67,12 +67,12 @@ Tokens support fine-grained permissions via a `rights` object (per-resource read
 
 A few things that are true across the whole API:
 
-- **Base path** — every endpoint is under `/api/v1/`.
-- **Auth** — `Authorization: Bearer <token>` (JWT or `lh_` token).
-- **Reads are JSON** — `GET` returns JSON; lists are plain arrays unless documented otherwise.
-- **Writes are often multipart** — create/update endpoints that can take a file (courses, activities, avatars) accept `multipart/form-data`, not JSON. Endpoints without files (collections, trails, users) take JSON.
-- **Errors** — non-2xx responses are `{ "detail": "..." }`. Always read `detail`.
-- **UUIDs vs ids** — resources expose a stable `{resource}_uuid` (e.g. `course_…`, `activity_…`); numeric `id`s are used by a few routes (notably `org_id`).
+- **Base path**: every endpoint is under `/api/v1/`.
+- **Auth**: `Authorization: Bearer <token>` (JWT or `lh_` token).
+- **Reads are JSON**: `GET` returns JSON; lists are plain arrays unless documented otherwise.
+- **Writes are often multipart**: create/update endpoints that can take a file (courses, activities, avatars) accept `multipart/form-data`, not JSON. Endpoints without files (collections, trails, users) take JSON.
+- **Errors**: non-2xx responses are `{ "detail": "..." }`. Always read `detail`.
+- **UUIDs vs ids**: resources expose a stable `{resource}_uuid` (e.g. `course_…`, `activity_…`); numeric `id`s are used by a few routes (notably `org_id`).
 
 ## Recipe: create a course programmatically
 
@@ -88,10 +88,10 @@ curl -X POST "http://localhost:1338/api/v1/courses/?org_id=1" \
 ```
 
 <Callout type="info">
-`name`, `description`, and `about` are all required on course creation — omitting `about` returns `422`. Creating courses, chapters, and activities requires a role with create permission (Admin / Maintainer / Instructor), not a plain member account.
+`name`, `description`, and `about` are all required on course creation. Omitting `about` returns `422`. Creating courses, chapters, and activities requires a role with create permission (Admin / Maintainer / Instructor), not a plain member account.
 </Callout>
 
-Then add structure — a chapter (JSON), then activities inside it:
+Then add structure: a chapter (JSON), then activities inside it:
 
 ```bash
 # Create a chapter
@@ -102,7 +102,7 @@ curl -X POST "http://localhost:1338/api/v1/chapters/" \
 ```
 
 <Callout type="info">
-For bulk or AI-assisted course creation from existing media, see the [Migration](/developers/migration) guides — there's a three-call flow that builds an entire course tree in one transaction.
+For bulk or AI-assisted course creation from existing media, see the [Migration](/developers/migration) guides. They describe a three-call flow that builds an entire course tree in one transaction.
 </Callout>
 
 ## Recipe: search and list content
@@ -121,9 +121,9 @@ curl "http://localhost:1338/api/v1/courses/org_slug/{org_slug}/search?query=pyth
 
 Because the API is built with FastAPI, a complete machine-readable spec is available:
 
-- **OpenAPI JSON** — `http://localhost:1338/openapi.json` (served on all instances)
-- **Swagger UI** — `http://localhost:1338/docs` (development mode only)
-- **ReDoc** — `http://localhost:1338/redoc` (development mode only)
+- **OpenAPI JSON**: `http://localhost:1338/openapi.json` (served on all instances)
+- **Swagger UI**: `http://localhost:1338/docs` (development mode only)
+- **ReDoc**: `http://localhost:1338/redoc` (development mode only)
 
 Point a client generator at `openapi.json` to produce a typed SDK in your language of choice.
 
@@ -133,6 +133,6 @@ The interactive HTML docs (`/docs` and `/redoc`) are served in **development mod
 
 ## Next: react to events
 
-Polling the API to find out "did anyone finish a course?" is wasteful. **Webhooks** push those events to you the moment they happen — enrollment, completion, signups, and dozens more.
+Polling the API to find out "did anyone finish a course?" is wasteful. **Webhooks** push those events to you the moment they happen: enrollment, completion, signups, and dozens more.
 
 → **[Consume webhooks](/guides/custom-features/webhooks)**
