@@ -46,7 +46,7 @@ export async function GET(request: NextRequest) {
   //
   // The demo's slug and whether it is enabled are API-side configuration, so
   // this asks the API rather than reading env vars. An earlier version read
-  // LEARNHOUSE_DEMO_ENABLED / _SLUG from process.env here — neither is exposed
+  // LEARNHOUSE_DEMO_ENABLED / _SLUG from process.env here; neither is exposed
   // to the web process, so the check silently never fired and the demo stayed
   // indexable.
   if (await isDemoSlug(orgSlug)) {

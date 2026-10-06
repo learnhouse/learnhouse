@@ -1,6 +1,6 @@
 'use client'
 
-// /organizations — the hub entry point.
+// /organizations: the hub entry point.
 //
 // Thin route that renders the same org picker used at /home, so the apex
 // org-management hub has a stable, descriptive URL. Kept a client component

@@ -17,7 +17,7 @@ from src.security.features_utils.plans import (
 )
 
 # Cache TTL in seconds (30 seconds)
-USAGE_CACHE_TTL = 120  # 2 min — usage data rarely changes
+USAGE_CACHE_TTL = 120  # 2 min; usage data rarely changes
 
 
 def _get_cache_key(org_id: int) -> str:
@@ -120,7 +120,7 @@ async def get_org_usage_and_limits(
 
     # The demo joins every visitor as an admin, so a free-plan seat limit is
     # permanently "reached" and the first screen of the demo greets a prospect
-    # with a red "Limit reached" warning — about the one dimension the demo is
+    # with a red "Limit reached" warning, about the one dimension the demo is
     # deliberately not billed on. Because admin_seats has no feature config, it
     # cannot be raised through the config overrides that unlock everything else,
     # so it is handled here. 0 means unlimited.

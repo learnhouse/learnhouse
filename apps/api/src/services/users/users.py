@@ -148,7 +148,7 @@ async def _get_welcome_cta_url(
 
         # Org-less signups often arrive without a trusted Origin/Referer, and the
         # generic request fallback would land on the org app rather than the
-        # platform — so only use it after the explicit platform URL.
+        # platform, so only use it after the explicit platform URL.
         base_url = get_trusted_base_url_from_request(request)
         if not base_url:
             platform_url = os.environ.get("LEARNHOUSE_PLATFORM_URL")
@@ -235,7 +235,7 @@ async def create_user(
     # fields alone. Raises 400 when a required field is missing or invalid.
     #
     # OAuth never sees the signup form, so required fields cannot be enforced
-    # here — that would make an org with a required field unable to use Google
+    # here; that would make an org with a required field unable to use Google
     # sign-in at all. Those users are asked to complete their profile after
     # landing instead (see the signup-fields completion endpoint).
     user.extra_metadata = await _resolve_signup_custom_fields(
@@ -262,7 +262,7 @@ async def create_user(
 
     # Exclude unset values; strip protected fields to prevent privilege escalation.
     # `extra_metadata` is protected here because it was just rebuilt from the
-    # org's declared signup fields — re-applying the submitted value would undo
+    # org's declared signup fields; re-applying the submitted value would undo
     # that and let a public caller store arbitrary JSON.
     _PROTECTED_FIELDS = {"is_superadmin", "id", "user_uuid", "extra_metadata"}
     user_data = user.model_dump(exclude_unset=True)
@@ -467,7 +467,7 @@ async def create_user_without_org(
     user.update_date = str(datetime.now())
 
     # SECURITY: this endpoint is public and has no org, so there are no declared
-    # signup fields to validate against — nothing may be stored. Dropping the
+    # signup fields to validate against, so nothing may be stored. Dropping the
     # submitted blob stops an anonymous caller writing arbitrary JSON.
     user.extra_metadata = None
 
@@ -693,7 +693,7 @@ async def update_user_password(
     # Verify old password before allowing change. Accounts with no local
     # password (Google/SSO signups, admin-provisioned users) store an empty
     # sentinel that pwdlib rejects with UnknownHashError, which surfaced as a 500
-    # instead of an answer — there is no old password to prove here, so refuse it
+    # instead of an answer. There is no old password to prove here, so refuse it
     # the same way a wrong one is refused.
     if not user.password or not security_verify_password(form.old_password, user.password):
         raise HTTPException(
@@ -704,7 +704,7 @@ async def update_user_password(
     user.password = security_hash_password(form.new_password)
     # SECURITY: stamp the change so every token minted before it is rejected by
     # get_current_user and /auth/refresh. Without this, a session stolen before
-    # the password change survives it for the full refresh-token lifetime — the
+    # the password change survives it for the full refresh-token lifetime; the
     # reset-code flow already stamps it, this one did not.
     user.password_changed_at = datetime.now(timezone.utc).replace(tzinfo=None)
     user.update_date = str(datetime.now())
@@ -935,7 +935,7 @@ async def delete_user_by_id(
         )).scalar_one()
 
         if other_admins:
-            # Another admin remains — keep the org, only drop this membership.
+            # Another admin remains, so keep the org and only drop this membership.
             continue
 
         org = (await db_session.execute(

@@ -134,7 +134,7 @@ describe("getEditorContentSnapshot — H5P height", () => {
 
   test("a height an author dragged does make the doc dirty", () => {
     // Under `custom` the height IS the author's edit, and a drag on a block
-    // already set to custom moves no other attribute — so if this were treated
+    // already set to custom moves no other attribute, so if this were treated
     // as volatile the resize would be lost with no leave-confirm.
     const dragged = (height) => ({
       type: "doc",

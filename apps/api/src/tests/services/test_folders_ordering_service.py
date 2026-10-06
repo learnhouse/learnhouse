@@ -359,12 +359,12 @@ class TestGetFoldersSortModes:
 
 
 # ---------------------------------------------------------------------------
-# reorder_folder_content — manual (admin drag) ordering of a folder's items
+# reorder_folder_content: manual (admin drag) ordering of a folder's items
 # ---------------------------------------------------------------------------
 
 
 async def _mk_content(db, org, folder, resource_uuid, position=0):
-    """Link a resource into a folder — pass folder=None for the library root."""
+    """Link a resource into a folder; pass folder=None for the library root."""
     row = FolderContent(
         folder_id=folder.id if folder is not None else None,
         resource_uuid=resource_uuid,
@@ -448,7 +448,7 @@ class TestSortModeFeaturesFallback:
         features.folders.sort_mode (covers the fallback branch)."""
         a = await _mk_folder(db, org, "Aaa")
         z = await _mk_folder(db, org, "Zzz")
-        # No general.* key — only the features.* fallback location is set.
+        # No general.* key; only the features.* fallback location is set.
         db.add(
             OrganizationConfig(
                 org_id=org.id,
@@ -533,7 +533,7 @@ class TestFolderRouterDelegation:
 
 
 # ---------------------------------------------------------------------------
-# Folder CONTENT ordering — items follow the org sort_mode, not just position
+# Folder CONTENT ordering: items follow the org sort_mode, not just position
 # ---------------------------------------------------------------------------
 
 
@@ -557,7 +557,7 @@ async def _mk_course(db, org, name, creation_date=None, public=True, update_date
 
 class TestFolderContentSortModes:
     """A folder's items (courses/media) must come back in the same order the
-    org's sort_mode gives its folders — the dashboard and the public library
+    org's sort_mode gives its folders; the dashboard and the public library
     both render the API order, so this is the single source of truth."""
 
     async def _seed(self, db, org):
@@ -644,7 +644,7 @@ class TestFolderContentSortModes:
 
         Every course row carries a non-empty update_date and editing a course
         bumps only that field, so seeding the two in opposite orders is the
-        normal case — if the service ever preferred update_date it would order
+        normal case: if the service ever preferred update_date it would order
         every edited library differently than the client comparator
         (apps/web/lib/library/sort.ts::_dateOf) re-renders it.
         """
@@ -735,7 +735,7 @@ class TestFolderContentSortModes:
 
 
 class TestOrgRootItemsSortModes:
-    """The library-root listing had no sort-mode lookup at all — it must order
+    """The library-root listing had no sort-mode lookup at all; it must order
     its items by the same mode as everything else."""
 
     async def _seed_root(self, db, org):

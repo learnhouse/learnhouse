@@ -4,8 +4,8 @@ from sqlmodel import select
 from cli import _install_async
 from src.core.events.database import _async_session_factory
 from src.db.organizations import Organization
-from src.db.user_activity import UserActivityDay  # noqa: F401 — register table on SQLModel.metadata
-from src.db.organization_plan_history import OrganizationPlanHistory  # noqa: F401 — register table on SQLModel.metadata
+from src.db.user_activity import UserActivityDay  # noqa: F401  # register table on SQLModel.metadata
+from src.db.organization_plan_history import OrganizationPlanHistory  # noqa: F401  # register table on SQLModel.metadata
 from src.services.setup.setup import install_default_elements
 
 logger = logging.getLogger(__name__)
@@ -20,7 +20,7 @@ async def auto_install():
     Creating a dedicated engine here used to open a *second* connection pool
     per pod on top of the app pool: on a pooled Postgres (Supavisor/PgBouncer)
     with a small upstream limit that doubled every pod's connection footprint,
-    and once the pooler was saturated the extra pool raised during startup —
+    and once the pooler was saturated the extra pool raised during startup,
     which aborted the whole boot and put the pod into a crash loop that opened
     yet more connections on the next attempt.
 

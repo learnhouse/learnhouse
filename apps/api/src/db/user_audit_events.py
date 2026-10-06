@@ -23,7 +23,7 @@ def _utcnow() -> datetime:
 class UserAuditEventType:
     """Student learning-activity event types recorded in the durable audit log.
 
-    Deliberately scoped to LEARNER actions — authoring/admin actions (board or
+    Deliberately scoped to LEARNER actions: authoring/admin actions (board or
     playground creation, content authorship, token/webhook management, course
     management, AI editor generation) are out of scope and are NOT recorded here.
     """
@@ -38,7 +38,7 @@ class UserAuditEventType:
     COURSE_COMPLETED = "course_completed"
 
     # Assessments (student side). These matter most for the durable log because
-    # assignment retries reset the live submission row in place — the grade a
+    # assignment retries reset the live submission row in place; the grade a
     # student received on an earlier attempt survives only here.
     ASSIGNMENT_SUBMITTED = "assignment_submitted"
     ASSIGNMENT_GRADED = "assignment_graded"  # grade the student RECEIVED
@@ -47,7 +47,7 @@ class UserAuditEventType:
     CERTIFICATE_CLAIMED = "certificate_claimed"
 
     # NOTE: code submissions and community participation (discussions, comments,
-    # votes, reactions) are NOT mirrored here — their own tables are already
+    # votes, reactions) are NOT mirrored here: their own tables are already
     # append-only and permanent, so the dossier reads them directly.
 
 
@@ -58,7 +58,7 @@ class UserAuditEvent(SQLModel, table=True):
     analytics stream: rows are never updated or deleted, timestamps are real
     ``timestamptz`` values, and writes are committed synchronously (see
     ``services/audit/audit.py``). It also preserves history the live tables
-    overwrite — e.g. an assignment retry resets the submission row in place, but
+    overwrite, e.g. an assignment retry resets the submission row in place, but
     each submission/grade still leaves a permanent row here.
     """
 
@@ -70,7 +70,7 @@ class UserAuditEvent(SQLModel, table=True):
 
     id: Optional[int] = Field(default=None, primary_key=True)
 
-    # Nullable: connection events (login/logout) are org-agnostic — a user can
+    # Nullable: connection events (login/logout) are org-agnostic: a user can
     # belong to several orgs and authenticates once. Activity events set org_id.
     org_id: Optional[int] = Field(
         default=None,
@@ -91,7 +91,7 @@ class UserAuditEvent(SQLModel, table=True):
 
     event_type: str = Field(sa_column=Column(String(64), nullable=False))
 
-    # Request context — captured for connection and action events.
+    # Request context, captured for connection and action events.
     ip: Optional[str] = Field(default=None, sa_column=Column(String(64), nullable=True))
     user_agent: Optional[str] = Field(default=None, sa_column=Column(Text, nullable=True))
 

@@ -1,5 +1,5 @@
 /**
- * Goal: prove the anti-copy-paste deterrent works in the student UI — when the
+ * Goal: prove the anti-copy-paste deterrent works in the student UI: when the
  * assignment has anti_copy_paste enabled, pasting into a form blank is blocked
  * (the field stays empty) and an error toast is shown. The shared student
  * drives a FORM task activity.

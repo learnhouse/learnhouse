@@ -19,7 +19,7 @@ import { RequestBodyWithAuthHeader } from '@services/utils/ts/requests'
  *     until the query resolves),
  *   - fetches the compliance state once per org per session (staleTime/gcTime
  *     Infinity, no refetch on mount/focus/reconnect),
- *   - fails OPEN — a network/API error renders nothing rather than locking
+ *   - fails OPEN: a network/API error renders nothing rather than locking
  *     someone out of an org over a failed request.
  *
  * Two states are user-visible:
@@ -43,7 +43,7 @@ export interface MFAComplianceState {
 }
 
 // The new org-scoped auth policy can refuse this request outright. When it does,
-// the org-policy endpoint answers 403 with one of these codes — we surface a
+// the org-policy endpoint answers 403 with one of these codes, and we surface a
 // scoped "sign in to this org" call-to-action rather than failing fully open.
 export interface OrgAuthPolicyBlock {
   code: 'AUTH_METHOD_NOT_ALLOWED' | 'SESSION_NOT_BOUND_TO_ORG'
@@ -75,7 +75,7 @@ async function getOrgMFACompliance(
   // and `errorHandling()` would additionally force a sign-out on a spurious 401.
   if (!result.ok) {
     // A 403 from the new auth-method / session-binding policy is NOT a spurious
-    // error — it's the org telling us this session can't be here. Surface it as a
+    // error; it's the org telling us this session can't be here. Surface it as a
     // scoped re-sign-in prompt (still failing open for every other error).
     if (result.status === 403) {
       try {
@@ -100,7 +100,7 @@ async function getOrgMFACompliance(
           }
         }
       } catch {
-        /* unparseable 403 — fall through to fail-open */
+        /* unparseable 403; fall through to fail-open */
       }
     }
     return COMPLIANT
@@ -139,13 +139,13 @@ function CountdownBanner({
   orgslug: string
   org_id: number
   days: number | null
-  /** Deadline already passed — the reminder can no longer be dismissed. */
+  /** Deadline already passed; the reminder can no longer be dismissed. */
   overdue?: boolean
 }) {
   const { t } = useTranslation()
   // sessionStorage is only read after mount so the server/client markup match,
   // and using sessionStorage (not localStorage) means the reminder comes back
-  // on the next session — nobody can permanently silence it.
+  // on the next session, so nobody can permanently silence it.
   const [dismissed, setDismissed] = useState(true)
 
   useEffect(() => {
@@ -165,7 +165,7 @@ function CountdownBanner({
     try {
       window.sessionStorage.setItem(dismissKey(org_id), '1')
     } catch {
-      // Private mode / storage disabled — the banner simply reappears.
+      // Private mode / storage disabled; the banner just reappears.
     }
   }
 
@@ -238,8 +238,8 @@ function BlockingInterstitial({
     <section
       aria-labelledby="mfa-policy-block-title"
       className="fixed inset-0 bg-slate-50/95 backdrop-blur-md flex items-start justify-center overflow-y-auto px-4 pt-[100px] pb-12"
-      // Below --z-nav (50) on purpose: the org navigation — and the profile
-      // menu's sign-out inside it — must stay reachable above this overlay.
+      // Below --z-nav (50) on purpose: the org navigation (and the profile
+      // menu's sign-out inside it) must stay reachable above this overlay.
       style={{ zIndex: 'var(--z-interactive)' }}
     >
       <div className="w-full max-w-lg bg-white rounded-2xl nice-shadow outline outline-1 outline-neutral-200/40 p-8 flex flex-col items-center text-center space-y-5">
@@ -309,7 +309,7 @@ function BlockingInterstitial({
 
 // This org's policy refused the current session (wrong auth method, or a central
 // learnhouse.io session that isn't bound to this org). Send the user to THIS
-// org's own login page — never a global logout, since they may belong to other
+// org's own login page, never a global logout, since they may belong to other
 // orgs that are perfectly happy with their session.
 function OrgAuthMethodBanner({
   message,
@@ -347,7 +347,7 @@ export function OrgMFAPolicyGate() {
 
   const orgName = org?.name || orgslug
 
-  // The org's auth policy refused this session — prompt a scoped re-sign-in.
+  // The org's auth policy refused this session, so prompt a scoped re-sign-in.
   // Shown everywhere EXCEPT the org's own login route (where they fix it).
   if (data.authBlock) {
     const segments = (pathname || '').split('/').filter(Boolean)

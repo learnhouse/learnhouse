@@ -5,7 +5,7 @@ import { recordOrgAdminInLoops, updateLoopsContact } from '@services/emails/loop
 
 // POST /api/loops/admin
 // Add the authenticated user to the marketing audience (Loops) as an ORG ADMIN
-// — called when a user becomes an admin, e.g. right after creating an org.
+// (called when a user becomes an admin, e.g. right after creating an org).
 //
 // SaaS-only and fire-and-forget. The email is taken from the VERIFIED session
 // (never the request body), so this can't be used to inject arbitrary contacts.

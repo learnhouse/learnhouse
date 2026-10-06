@@ -31,7 +31,7 @@ export function initialCustomFieldValues(
 /**
  * Client-side validation for the org's custom fields.
  *
- * UX only — the server revalidates every value against the org's declared
+ * UX only; the server revalidates every value against the org's declared
  * fields, since the signup endpoint is public and cannot trust this.
  */
 export function validateCustomFields(

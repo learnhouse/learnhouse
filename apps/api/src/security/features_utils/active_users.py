@@ -8,7 +8,7 @@ includes does activity start to matter, and then only for the members beyond the
 included count: each of those who is active in the month costs
 ACTIVE_USER_OVERAGE_PRICE_USD.
 
-"Included" means the earliest joiners — members are ranked by join date, and the
+"Included" means the earliest joiners: members are ranked by join date, and the
 first plan_limit of them are the ones the subscription already covers.
 
 Active user = a member with >= 2 distinct UTC activity days in a calendar month
@@ -24,7 +24,7 @@ from sqlmodel.ext.asyncio.session import AsyncSession
 from sqlalchemy import and_
 
 from src.db.user_activity import UserActivityDay
-from src.db.organization_plan_history import OrganizationPlanHistory  # noqa: F401 — register table on SQLModel.metadata
+from src.db.organization_plan_history import OrganizationPlanHistory  # noqa: F401 (register table on SQLModel.metadata)
 from src.db.user_organizations import UserOrganization
 from src.security.features_utils.usage import _get_org_config, _get_org_plan, _is_non_saas
 
@@ -155,7 +155,7 @@ async def get_members_beyond_included(
         select(UserOrganization.user_id)
         .where(
             UserOrganization.org_id == org_id,
-            # creation_date is stored as str(datetime) — "YYYY-MM-DD HH:MM:SS…"
+            # creation_date is stored as str(datetime), i.e. "YYYY-MM-DD HH:MM:SS…", which
             # sorts and compares correctly as a string.
             UserOrganization.creation_date < str(end),
         )
@@ -177,7 +177,7 @@ async def calculate_active_user_overage(
     Active-user overage for an org in a calendar month.
 
     The plan's included seats are free whatever their holders do. Overage is the
-    number of members BEYOND those seats who were active in the month — an org
+    number of members BEYOND those seats who were active in the month; an org
     inside its included count never has any, however active it is.
     """
     active = await count_active_users(org_id, year, month, db_session)
@@ -215,7 +215,7 @@ async def get_all_orgs_with_active_user_overage(
     Month-end batch: active-user overage summary for every org that had any
     activity in the month and is over its included member limit.
 
-    Computes only — the platform service performs the Stripe charge.
+    Computes only; the platform service performs the Stripe charge.
     """
     start, end = _month_bounds(year, month)
     org_ids = (
@@ -247,7 +247,7 @@ async def get_active_user_summary(
     Full active-user + overage summary for an org (defaults to current UTC month).
 
     Resolves the plan and member limit that applied during the requested month
-    via resolve_plan_for_month, not the org's plan today — overage is billed in
+    via resolve_plan_for_month, not the org's plan today, because overage is billed in
     arrears. In non-SaaS mode the limit is treated as unlimited (no overage).
     """
     if year is None or month is None:
@@ -255,7 +255,7 @@ async def get_active_user_summary(
 
     # The demo organization seeds UserActivityDay rows so its dashboards and
     # the Users page are not empty. Those rows are synthetic, and this function
-    # is what the platform reads to build a Stripe invoice line — so the demo
+    # is what the platform reads to build a Stripe invoice line, so the demo
     # is zeroed here, at the single point both the per-org endpoint and the
     # month-end batch (get_all_orgs_with_active_user_overage) funnel through.
     # Returning zero overage_units also drops it from that batch's results.
@@ -300,7 +300,7 @@ async def get_active_user_summary(
         "active_users": overage["active_users"],
         "plan_limit": plan_limit,
         # How many members sit beyond the included seats. Zero means the org is
-        # inside its plan and activity is not billable at all — the surface that
+        # inside its plan and activity is not billable at all, so the surface that
         # renders this should stay quiet in that case.
         "members_beyond_included": overage["members_beyond_included"],
         "overage_units": overage["overage_units"],

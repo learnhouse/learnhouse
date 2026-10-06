@@ -13,8 +13,8 @@ import {
 // partners.learnhouse.app/templates, ported to the CLI so the one tool can
 // deploy both Community and Enterprise editions.
 //
-// The EE stack is six services — db (pgvector), redis, caddy (auto-TLS),
-// api, web, collab — pulling enterprise images from images.learnhouse.app
+// The EE stack is six services: db (pgvector), redis, caddy (auto-TLS),
+// api, web, collab. They pull enterprise images from images.learnhouse.app
 // (authenticated with the license key). Single vs. agency (multi-tenant)
 // differ only in the domain variable + tenancy env.
 
@@ -51,7 +51,7 @@ export function eeDomainVar(config: SetupConfig): 'DOMAIN' | 'AGENCY_DOMAIN' {
   return isAgency(config) ? 'AGENCY_DOMAIN' : 'DOMAIN'
 }
 
-/** pgvector init — enables the `vector` extension the API needs for RAG. */
+/** pgvector init: enables the `vector` extension the API needs for RAG. */
 export function generatePgvectorInit(): string {
   return 'CREATE EXTENSION IF NOT EXISTS vector;\n'
 }
@@ -302,7 +302,7 @@ const ROUTES_SINGLE = `	handle /api/v1/* {
 
 /**
  * Caddyfile for the EE stack. `--local-tls` injects `local_certs` so Caddy
- * issues self-signed certs from its internal CA — lets multi-tenant subdomains
+ * issues self-signed certs from its internal CA, which lets multi-tenant subdomains
  * and custom domains work via local /etc/hosts with no public DNS / DNS-01.
  */
 export function generateEeCaddyfile(config: SetupConfig): string {
@@ -311,7 +311,7 @@ export function generateEeCaddyfile(config: SetupConfig): string {
   // Cloudflare DNS-01: required to issue a *wildcard* cert for *.domain.
   // (HTTP-01 can't do wildcards; the on-demand block only covers custom domains.)
   // `resolvers` makes the DNS-01 plugin query public resolvers directly for zone
-  // detection — avoids failures when the host's local resolver has a stale/bogus
+  // detection, which avoids failures when the host's local resolver has a stale/bogus
   // cache (e.g. right after a DNSSEC fix).
   const cfTls = isCloudflareDns(config)
     ? '\n\ttls {\n\t\tdns cloudflare {env.CLOUDFLARE_API_TOKEN}\n\t\tresolvers 1.1.1.1 8.8.8.8\n\t}'
@@ -404,7 +404,7 @@ export function generateEeEnv(config: SetupConfig, secrets: EeSecrets): string {
 
 /** docker-compose.override.yml for --local-tls: trust Caddy's internal CA for
  *  the web/collab server-side fetches to the API (else tenancy falls back to
- *  single/default). Testing only — never production. */
+ *  single/default). Testing only, never production. */
 export function generateEeLocalTlsOverride(): string {
   return `# Written by the LearnHouse CLI --local-tls.
 # Trusts Caddy's internal (self-signed) CA for web/collab -> API fetches.

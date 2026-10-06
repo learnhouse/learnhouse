@@ -1,7 +1,7 @@
 """
 Regression tests for F-9: per-user and per-org AI rate limiting.
 
-Before the fix, AI endpoints had no concurrency throttle — credits alone
+Before the fix, AI endpoints had no concurrency throttle: credits alone
 gated spend but not request rate. A single authenticated user could flood
 ``/ai/*``, ``/boards/playground/*``, ``/playgrounds/generator``,
 ``/ai/courseplanning/*``, etc., and exhaust provider capacity or monopolise
@@ -102,7 +102,7 @@ def test_enforce_ai_rate_limit_raises_429_with_retry_after(fake_redis):
         rate_limiting.enforce_ai_rate_limit(user_id=1, org_id=1)
 
     assert exc_info.value.status_code == 429
-    # Shared error envelope — frontend already handles this for auth routes.
+    # Shared error envelope; the frontend already handles this for auth routes.
     detail = exc_info.value.detail
     assert isinstance(detail, dict)
     assert detail["code"] == "RATE_LIMITED"

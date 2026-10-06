@@ -174,7 +174,7 @@ async def create_role(
 
     # ============================================================================
     # VERIFICATION 8: Ensure user cannot create a role with higher permissions than they have
-    # (superadmins skip this check — they can grant any permission)
+    # (superadmins skip this check; they can grant any permission)
     # ============================================================================
     create_role_user_id = resolve_acting_user_id(current_user)
     if not await is_user_superadmin(create_role_user_id, db_session):
@@ -342,7 +342,7 @@ async def read_role(
             detail="Role not found",
         )
 
-    # RBAC check — scope permission to the role's own org to prevent cross-org IDOR.
+    # RBAC check: scope permission to the role's own org to prevent cross-org IDOR.
     # Global roles (org_id=None) are readable by any authenticated user.
     acting_user_id = resolve_acting_user_id(current_user)
     await authorization_verify_if_user_is_anon(acting_user_id)
@@ -380,7 +380,7 @@ async def update_role(
             detail="Global roles cannot be updated. These are system-defined roles that must remain unchanged.",
         )
 
-    # RBAC check — scope to the role's own org to prevent cross-org IDOR.
+    # RBAC check: scope to the role's own org to prevent cross-org IDOR.
     # org_id is guaranteed non-None here because TYPE_GLOBAL roles are blocked above.
     await require_org_role_permission(resolve_acting_user_id(current_user), role.org_id, db_session, "roles", "action_update")
 
@@ -565,7 +565,7 @@ async def delete_role(
             detail="Global roles cannot be deleted. These are system-defined roles that must remain unchanged.",
         )
 
-    # RBAC check — scope to the role's own org to prevent cross-org IDOR.
+    # RBAC check: scope to the role's own org to prevent cross-org IDOR.
     # org_id is guaranteed non-None here because TYPE_GLOBAL roles are blocked above.
     await require_org_role_permission(resolve_acting_user_id(current_user), role.org_id, db_session, "roles", "action_delete")
 
@@ -595,7 +595,7 @@ async def rbac_check(
     db_session: AsyncSession,
 ):
     # Resolve the real acting user id. For API tokens, current_user.id is the
-    # token id (0), not a user id — using it directly makes the anon check
+    # token id (0), not a user id. Using it directly makes the anon check
     # reject every API token and runs the role/authorship check against id 0.
     acting_user_id = resolve_acting_user_id(current_user)
 

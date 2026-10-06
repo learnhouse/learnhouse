@@ -1,7 +1,7 @@
 """What a visitor leaves behind, and what the next refresh does about it.
 
 Every visitor to the demo is an admin of it, so this is the surface that keeps
-one prospect's mess — and one prospect's identity — out of the next prospect's
+one prospect's mess (and one prospect's identity) out of the next prospect's
 session. The passes here are the ones the generic uuid sweep cannot reach:
 their tables hang off a parent rather than carrying an org_id.
 """
@@ -87,7 +87,7 @@ async def test_audit_events_and_versions_and_tokens_are_swept(db, demo_org, visi
     """The sync creates none of these, so every row is a visitor's.
 
     Activity versions matter most: the refresh puts activity content back, but
-    each intermediate version a visitor saved was kept — carrying their name
+    each intermediate version a visitor saved was kept, carrying their name
     and a one-click restore of the edit that was just undone.
     """
     from src.db.ai.generations import AIGeneration, AIGenerationKind
@@ -147,7 +147,7 @@ async def test_audit_events_and_versions_and_tokens_are_swept(db, demo_org, visi
 async def test_a_custom_role_is_removed_and_its_holders_reassigned(db, demo_org, visitor):
     """role_id has no ON DELETE, so the memberships have to move first.
 
-    Otherwise the DELETE raises and takes the whole sync transaction with it —
+    Otherwise the DELETE raises and takes the whole sync transaction with it,
     and would keep doing so on every refresh afterwards.
     """
     from src.db.roles import Role, RoleTypeEnum
@@ -273,7 +273,7 @@ async def test_library_root_entries_are_swept(db, demo_org):
 # ---------------------------------------------------------------------------
 
 async def test_votes_and_reactions_are_swept(db, demo_org, visitor):
-    """The bundle seeds none of these — upvote counts are a column, not rows.
+    """The bundle seeds none of these; upvote counts are a column, not rows.
 
     They hang off a discussion, a comment or a playground rather than carrying
     an org_id, and their parents are bundle-owned and survive every refresh, so
@@ -393,7 +393,7 @@ async def test_a_visitors_submissions_and_certificate_are_removed(db, demo_org, 
         ).scalar_one()
         assert left == 0, f"{model.__name__} survived for a visitor"
 
-    # The seeded learners keep theirs — this sweep is not a purge.
+    # The seeded learners keep theirs; this sweep is not a purge.
     seeded = (
         await db.execute(select(func.count()).select_from(CertificateUser))
     ).scalar_one()
@@ -411,7 +411,7 @@ async def test_a_storefront_failure_does_not_cost_the_whole_demo(db, monkeypatch
     provider that existed on the Enterprise branch it was written against and
     not in the Enterprise release production ran, so every refresh died with an
     AttributeError and the demo never provisioned at all. Neither the test
-    suite nor CI could see it — CI has no Enterprise package, and the step
+    suite nor CI could see it: CI has no Enterprise package, and the step
     skips itself when payments are unavailable.
 
     Six courses, forty learners and a grading inbox are the sales asset. Losing
@@ -528,7 +528,7 @@ def _fake_ee(monkeypatch, *, provider_members, enrolment_attrs):
 
 
 def test_the_gate_refuses_a_community_install(monkeypatch):
-    """No payments package at all — normal, and not a fault."""
+    """No payments package at all: normal, and not a fault."""
     import sys
 
     from src.services.demo.sync import _store_unsupported_reason

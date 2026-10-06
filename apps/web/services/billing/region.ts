@@ -3,7 +3,7 @@
 // instead of a Vercel-geolocation cookie, we read the country from the CDN's
 // geo header (Cloudflare `cf-ipcountry` or Vercel `x-vercel-ip-country`) on the
 // server. EU visitors see EUR (via Stripe `currency_options`); everyone else
-// falls back to the default USD. Absent a geo header (no CDN), it's USD — a
+// falls back to the default USD. Absent a geo header (no CDN), it's USD, a
 // harmless no-op, so this is safe to ship regardless of the edge setup.
 
 export type Region = 'eur' | 'usd'
@@ -30,7 +30,7 @@ export function regionFromHeaders(headers: Headers): Region {
 
 /**
  * Stripe `currency_options` code to request, or undefined for the plan's
- * default (USD) — passing undefined avoids the extra `currency_options` expand.
+ * default (USD); passing undefined avoids the extra `currency_options` expand.
  */
 export function currencyForRegion(region: Region): string | undefined {
   return region === 'eur' ? 'eur' : undefined

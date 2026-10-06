@@ -50,7 +50,7 @@ from src.security.features_utils.plan_check import require_plan, require_plan_fo
 
 v1_router = APIRouter(prefix="/api/v1")
 
-# Helper dependency to reject API token access (still admits AnonymousUser —
+# Helper dependency to reject API token access (still admits AnonymousUser;
 # use on routers that contain at least one deliberately-public endpoint).
 async def get_non_api_token_user(user = Depends(get_current_user)):
     """Dependency that rejects API token access."""
@@ -76,7 +76,7 @@ v1_router.include_router(
     prefix="/usergroups",
     tags=["usergroups"],
     # Admit API tokens (headless enrollment/usergroup management) while still
-    # rejecting anonymous callers — same pattern as /assignments. `usergroups`
+    # rejecting anonymous callers, same pattern as /assignments. `usergroups`
     # is already an allowed API-token resource type in the RBAC layer
     # (rbac.py authorization_verify_api_token_permissions), and every handler
     # authorizes through usergroups.rbac_check, which has an APITokenUser branch
@@ -138,7 +138,7 @@ v1_router.include_router(
     prefix="/orgs",
     tags=["custom-domains"],
 )
-# Public unsubscribe endpoints (no auth — the HMAC token in the link is the
+# Public unsubscribe endpoints (no auth: the HMAC token in the link is the
 # authorisation; a nudge recipient may have no session at all)
 v1_router.include_router(
     nudges_router_module.public_router,
@@ -386,7 +386,7 @@ v1_router.include_router(
     dependencies=[Depends(get_non_api_token_user)],
 )
 
-# Plan limits (public, no auth — used by frontend pricing pages)
+# Plan limits (public, no auth; used by frontend pricing pages)
 v1_router.include_router(plans.router, prefix="/plans", tags=["plans"])
 
 # Register EE Routers if available

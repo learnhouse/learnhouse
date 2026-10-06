@@ -26,8 +26,8 @@ _redis_client = None
 
 def get_redis_connection():
     # Reuse a single client (and its connection pool) across calls. Creating a
-    # new redis.from_url() client on every session read/write — as the playground
-    # hot path does — spawns a fresh connection pool each time and leaks sockets.
+    # new redis.from_url() client on every session read/write, as the playground
+    # hot path does, spawns a fresh connection pool each time and leaks sockets.
     global _redis_client
     if _redis_client is not None:
         return _redis_client

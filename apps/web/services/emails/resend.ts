@@ -7,7 +7,7 @@ import { LearnHouseEmail, type LearnHouseEmailProps } from '@components/Emails/L
 // Resend transactional email. Lazy singleton so a keyless build/deploy never
 // throws at import time. `send()` renders the shared React Email template and is
 // the single choke point every specific mail (welcome, purchase, plan change…)
-// goes through — see services/billing/emails.ts for the typed wrappers.
+// goes through; see services/billing/emails.ts for the typed wrappers.
 //
 // Disabled gracefully: with no RESEND_API_KEY, send() logs and resolves without
 // throwing, so callers stay fire-and-forget and unconfigured deploys don't error.
@@ -37,7 +37,7 @@ export interface SendResult {
 }
 
 /**
- * Render the shared template and send. Never throws — returns { ok, skipped }.
+ * Render the shared template and send. Never throws; returns { ok, skipped }.
  * `skipped: true` means email is disabled (no key), not an error.
  */
 export async function send(

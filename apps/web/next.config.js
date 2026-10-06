@@ -7,7 +7,7 @@ const nextConfig = {
   skipTrailingSlashRedirect: true,
   async rewrites() {
     return [
-      // PostHog reverse proxy (EU cloud) — served same-origin so adblockers
+      // PostHog reverse proxy (EU cloud), served same-origin so adblockers
       // don't strip ingestion. The client SDK points at api_host: '/ingest'.
       {
         source: '/ingest/static/:path*',
@@ -21,7 +21,7 @@ const nextConfig = {
   },
   async headers() {
     return [
-      // Global security headers on every route — clickjacking (X-Frame-Options /
+      // Global security headers on every route: clickjacking (X-Frame-Options /
       // frame-ancestors), MIME sniffing, referrer leakage and HSTS. The embed
       // override below comes AFTER this block, so it wins for the same header
       // keys on embed paths only (later source overrides earlier in Next).
@@ -168,7 +168,7 @@ if (process.env.NODE_ENV === 'development') {
   )
 }
 
-// Always wrap with Sentry — DSN is resolved at runtime, not build time
+// Always wrap with Sentry; DSN is resolved at runtime, not build time
 module.exports = withSentryConfig(nextConfig, {
   org: process.env.SENTRY_ORG,
   project: process.env.SENTRY_PROJECT,

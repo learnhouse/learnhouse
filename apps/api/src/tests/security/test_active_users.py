@@ -26,7 +26,7 @@ def _mode(mode: str):
     """Patch deployment mode everywhere it is resolved.
 
     usage.py binds get_deployment_mode at import time (module attr), while
-    plans.py imports it per-call (source attr) — patch both so limits and the
+    plans.py imports it per-call (source attr); patch both so limits and the
     saas gate agree.
     """
     stack = ExitStack()
@@ -312,7 +312,7 @@ class _FakeRedis:
 
 
 class _BrokenRedis:
-    """Redis whose get and/or set raise. The cache is an optimisation — a dead
+    """Redis whose get and/or set raise. The cache is an optimisation; a dead
     Redis must never break org resolution or activity capture."""
 
     def __init__(self, fail_get=False, fail_set=False):
@@ -496,7 +496,7 @@ class TestAuthActivityHooks:
         await asyncio.sleep(0.01)
 
     async def test_record_activity_without_org_ref_is_noop(self):
-        """Non org-scoped routes carry no org reference — nothing to record."""
+        """Non org-scoped routes carry no org reference, so there is nothing to record."""
         from src.security import auth
         scheduled = []
 

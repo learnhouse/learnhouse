@@ -22,12 +22,12 @@ export type PlanLevel = 'free' | 'personal' | 'personal-family' | 'standard' | '
 // 'oss' is kept as a display-only type value (not in hierarchy) for OSS mode label rendering.
 export const PLAN_HIERARCHY: PlanLevel[] = ['free', 'personal', 'personal-family', 'standard', 'pro', 'enterprise']
 
-// Features blocked in OSS mode — require EE or SaaS/enterprise plan
+// Features blocked in OSS mode; they require EE or SaaS/enterprise plan
 const OSS_BLOCKED_FEATURES = new Set(['sso', 'audit_logs', 'payments', 'analytics_advanced', 'scorm'])
 
 /**
  * Check if the current plan meets or exceeds the required plan level.
- * Only used in SaaS mode — EE/OSS bypass is handled in isFeatureAvailable().
+ * Only used in SaaS mode; EE/OSS bypass is handled in isFeatureAvailable().
  */
 export function planMeetsRequirement(
   currentPlan: PlanLevel,
@@ -43,7 +43,7 @@ export function planMeetsRequirement(
  * Check if a feature is available based on deployment mode.
  *
  * In SaaS mode, feature availability is determined by `resolved_features`
- * from the API — this function only handles mode-level bypass:
+ * from the API; this function only handles mode-level bypass:
  * - OSS: EE-only features blocked, all others allowed
  * - EE: all features allowed
  * - SaaS: always returns true (callers should check resolved_features)
@@ -53,6 +53,6 @@ export function isFeatureAvailable(featureKey: string, _currentPlan?: PlanLevel)
   if (mode === 'oss') return !OSS_BLOCKED_FEATURES.has(featureKey)
   if (mode === 'ee') return true
   // SaaS: resolved_features from the API is the source of truth.
-  // Return true here — callers gate on resolved_features separately.
+  // Return true here; callers gate on resolved_features separately.
   return true
 }

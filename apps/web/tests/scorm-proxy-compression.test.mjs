@@ -7,7 +7,7 @@ import {
 } from "../ee/services/scorm/proxyCompression.ts";
 
 /**
- * The SCORM proxy carries every file of a package — hundreds of them — so the
+ * The SCORM proxy carries every file of a package (hundreds of them), so the
  * encoding decision it makes is worth more than one asset. Get it too cautious
  * and megabytes of JS cross the last mile uncompressed; get it wrong and the
  * browser is handed bytes its headers contradict.

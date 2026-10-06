@@ -46,10 +46,10 @@ async function proxyToBackend(request: NextRequest): Promise<Response> {
       // and only the final hop's headers survive, so the user landed signed out;
       // and media streaming redirects to a presigned storage URL precisely so
       // the browser fetches bytes directly from object storage (see
-      // _redirect_to_storage) — following it meant proxying every byte through
+      // _redirect_to_storage). Following it meant proxying every byte through
       // this server and discarding the redirect's caching headers.
       redirect: 'manual',
-      // @ts-ignore — needed for streaming request bodies in Node.js
+      // @ts-ignore: needed for streaming request bodies in Node.js
       duplex: 'half',
       signal: controller.signal,
     } as RequestInit)
@@ -76,7 +76,7 @@ async function proxyToBackend(request: NextRequest): Promise<Response> {
       responseHeaders.append('set-cookie', cookie)
     }
 
-    // Stream the response body directly — no buffering
+    // Stream the response body directly, no buffering
     // This preserves SSE streams, file downloads, and binary responses
     return new Response(backendResponse.body, {
       status: backendResponse.status,

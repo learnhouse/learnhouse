@@ -24,10 +24,10 @@ jobs:
     runs-on: ubuntu-latest
     # Dispatch only where the receiving side can act on it:
     #
-    #   forks   — GitHub does not expose secrets (INFRA_REPO_PAT) to fork PRs,
+    #   forks:    GitHub does not expose secrets (INFRA_REPO_PAT) to fork PRs,
     #             so the dispatch can only ever fail there.
-    #   drafts  — dispatched on `ready_for_review` instead.
-    #   bots    — automated dependency PRs are covered by the checks in this
+    #   drafts:   dispatched on `ready_for_review` instead.
+    #   bots:     automated dependency PRs are covered by the checks in this
     #             repo; build-community.yaml still builds the image for them.
     #
     # `closed` always dispatches, so teardown is never skipped.

@@ -1936,7 +1936,7 @@ class TestGetUserCoursesAndRights:
 
         uuid_map = {"old-uuid": "new-uuid", "another-old": "another-new"}
 
-        # List at top level — exercises the list branch (line 1064)
+        # List at top level, which exercises the list branch (line 1064)
         result = _replace_uuids_in_content(["old-uuid", "keep-me", "another-old"], uuid_map)
         assert result == ["new-uuid", "keep-me", "another-new"]
 

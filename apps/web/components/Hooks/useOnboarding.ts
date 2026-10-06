@@ -31,8 +31,8 @@ type OnboardingState = {
 
 const STORAGE_KEY = 'lh_onboarding'
 
-// Outcome-framed onboarding: 6 milestones that ladder toward the north-star —
-// your first enrolled learner — then retention. Each title is the WIN; the
+// Outcome-framed onboarding: 6 milestones that ladder toward the north-star,
+// your first enrolled learner, then retention. Each title is the WIN; the
 // action is just the means. Every step delivers value on the free plan.
 const DEFAULT_STEPS: Omit<OnboardingStep, 'completed'>[] = [
   {

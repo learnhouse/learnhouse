@@ -1,4 +1,4 @@
-"""English nudge copy — the source text every other locale translates from."""
+"""English nudge copy: the source text every other locale translates from."""
 
 STRINGS: dict[str, str] = {
     "nudge.common.unsubscribe": "Unsubscribe from these emails",

@@ -2,9 +2,9 @@
 Single source of truth for deployment mode detection.
 
 Three modes:
-- 'saas': LEARNHOUSE_SAAS=true — plan-based gating, usage limits apply
-- 'ee':   EE folder present (and not SaaS) — all features enabled, unlimited
-- 'oss':  EE folder absent (and not SaaS) — EE features blocked, unlimited otherwise
+- 'saas': LEARNHOUSE_SAAS=true (plan-based gating, usage limits apply)
+- 'ee':   EE folder present (and not SaaS): all features enabled, unlimited
+- 'oss':  EE folder absent (and not SaaS): EE features blocked, unlimited otherwise
 
 Development override:
 - LEARNHOUSE_FORCE_EE=1 skips the license check when the EE folder is present.
@@ -35,7 +35,7 @@ def get_deployment_mode() -> DeploymentMode:
 
     IMPORTANT: SaaS deployments always ship with the EE folder present, so
     is_ee_available() returns True in SaaS mode. The saas_mode flag MUST be
-    checked first — never reorder these checks.
+    checked first; never reorder these checks.
     """
     if get_learnhouse_config().general_config.saas_mode:
         return 'saas'
@@ -56,7 +56,7 @@ def get_deployment_mode() -> DeploymentMode:
         #
         # Fail CLOSED when the hooks module cannot be loaded. is_ee_available()
         # only checks that an `ee` directory exists, so a present-but-broken EE
-        # package used to land here and fall through to 'ee' — full Enterprise
+        # package used to land here and fall through to 'ee': full Enterprise
         # with the license branch never reached and verify_manifest() never run,
         # since its only caller lives inside the module that failed to import.
         # Any import error in the EE tree silently unlocked every EE feature.

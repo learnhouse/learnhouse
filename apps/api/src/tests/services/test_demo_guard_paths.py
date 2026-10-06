@@ -3,7 +3,7 @@
 Every one of these is a one-line `if this is the demo` inside a function that
 ordinary organizations also use. They are the whole safety story of the feature
 and the easiest thing to delete by accident, so each gets a test that fails if
-the branch stops firing — and, where the same call answers 403 for more than one
+the branch stops firing and, where the same call answers 403 for more than one
 reason, an assertion pinned to this guard's own message.
 """
 
@@ -171,7 +171,7 @@ async def test_admin_seats_are_unlimited_in_the_demo(db, demo_org, visitor):
     """Every visitor becomes an admin, so a seat limit would lock the demo.
 
     admin_seats has no feature config, so it cannot be raised by the overrides
-    that unlock everything else — hence the branch this covers.
+    that unlock everything else, hence the branch this covers.
     """
     from src.services.orgs.usage import get_org_usage_and_limits
 

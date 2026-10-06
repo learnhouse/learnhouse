@@ -47,7 +47,7 @@ CONTENT_DIR = "content"
 
 # HLS MIME types (not covered by the generic media maps). Includes the
 # hover-preview sprite (.jpg, served like a segment) and the AES-128 key (.key,
-# served ONLY server-side after RBAC — never presigned/redirected).
+# served ONLY server-side after RBAC, never presigned/redirected).
 _HLS_MIME = {
     ".m3u8": "application/vnd.apple.mpegurl",
     ".ts": "video/mp2t",
@@ -75,7 +75,7 @@ def _safe_hls_relpath(hls_path: str) -> str | None:
 
 # The 302 to the presigned URL is cacheable for a bounded window. This is
 # critical for smooth playback: without it (no-store) the browser re-resolves
-# the redirect — re-running RBAC + presign (~0.3–1.3s) — on every seek and
+# the redirect, re-running RBAC + presign (~0.3–1.3s), on every seek and
 # reconnect, starving the buffer and causing periodic stalls. Caching lets the
 # browser resolve once and reuse the same R2 URL for all Range requests. The
 # 6h window stays well under the 24h presign TTL so a cached 302 never points
@@ -93,7 +93,7 @@ def _redirect_to_storage(file_path: str) -> RedirectResponse | None:
     Returns None when S3 isn't enabled or signing fails, so the caller falls
     back to streaming the file through the API.
 
-    SECURITY: callers MUST run their RBAC check before calling this — the
+    SECURITY: callers MUST run their RBAC check before calling this. The
     presigned URL grants temporary unauthenticated read access to the object.
     """
     if not is_s3_enabled():
@@ -368,7 +368,7 @@ async def stream_activity_hls(
         )
 
     # Segment request. In S3 mode the player uses presigned URLs directly, so
-    # this is only hit in local mode — but redirect defensively if S3 is on.
+    # this is only hit in local mode, but redirect defensively if S3 is on.
     redirect = _redirect_to_storage(asset_key)
     if redirect:
         return redirect

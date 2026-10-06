@@ -4,7 +4,7 @@ Generates a full assignment + graded tasks grounded on a course's content.
 Structured output (``AIAssignmentPlan``) keeps the model on-rails; the service
 then converts each task into the exact ``contents`` shape the server graders in
 ``src/services/courses/activities/assignments.py`` expect, stamping the ids
-(questionUUID / optionUUID / blankUUID). Nothing is persisted here — the plan is
+(questionUUID / optionUUID / blankUUID). Nothing is persisted here; the plan is
 returned for the teacher to preview, edit, and save via the existing endpoints.
 """
 

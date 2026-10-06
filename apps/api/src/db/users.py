@@ -30,7 +30,7 @@ class UserCreate(UserBase):
     #
     # SECURITY: this is the ONLY channel by which a public signup may influence
     # ``extra_metadata``. The inherited ``extra_metadata`` field is stripped on
-    # the signup paths (see services/users/users.py) — otherwise an anonymous
+    # the signup paths (see services/users/users.py); otherwise an anonymous
     # request could write an arbitrary blob. Values here are validated against
     # the org's declared fields before anything is stored.
     custom_fields: Optional[dict] = None
@@ -59,8 +59,8 @@ class UserUpdatePassword(SQLModel):
 class UserRead(UserBase):
     # SECURITY/ROBUSTNESS: a response model must not re-validate what is already
     # stored. EmailStr (email-validator) rejects special-use names such as
-    # ".local", so one anonymized account — "deleted-user-<id>@anonymized.local",
-    # written by the GDPR scrub — turned every endpoint that returns its org's
+    # ".local", so one anonymized account ("deleted-user-<id>@anonymized.local",
+    # written by the GDPR scrub) turned every endpoint that returns its org's
     # members into a 500: the members list, the CSV export, course learners.
     # Addresses are validated where they enter the system (UserCreate,
     # UserUpdate, the auth and admin request bodies), not on the way out.
@@ -74,13 +74,13 @@ class UserRead(UserBase):
 
 
 class UserReadPublic(SQLModel):
-    """User model for public-facing endpoints — excludes sensitive fields.
+    """User model for public-facing endpoints; excludes sensitive fields.
 
     SECURITY: This is the view returned to *any* authenticated user when they
     look up *another* user (by id/uuid/username, or via usergroup member lists).
     It must therefore NOT inherit from ``UserBase``, because ``UserBase`` (and
-    ``UserRead``) expose PII / internal fields — ``email``, ``signup_method``,
-    ``is_superadmin``, ``extra_metadata`` — that would leak to anyone who can
+    ``UserRead``) expose PII / internal fields (``email``, ``signup_method``,
+    ``is_superadmin``, ``extra_metadata``) that would leak to anyone who can
     enumerate user ids. ``details`` and ``profile`` ARE included: they are the
     user's own public profile content (bio extension, links, etc.) that the
     public profile page renders, so they are intentionally exposed.
@@ -102,7 +102,7 @@ class UserReadAuthor(SQLModel):
 
     SECURITY: comment/discussion authors are returned to *every* reader of a
     thread (often anonymous). It must therefore expose ONLY the fields needed to
-    render an author chip — never ``email``, ``is_superadmin``, ``signup_method``
+    render an author chip, never ``email``, ``is_superadmin``, ``signup_method``
     or the raw ``details``/``profile``/``extra_metadata`` blobs that ``UserRead``
     carries. The frontend reads only id/user_uuid/username/name/avatar.
     """
@@ -156,7 +156,7 @@ class APITokenUser(SQLModel):
 class SuperadminAPITokenUser(SQLModel):
     """Represents an authenticated cross-org superadmin API token request.
 
-    Deliberately NOT a subclass of APITokenUser — existing
+    Deliberately NOT a subclass of APITokenUser, so existing
     ``isinstance(user, APITokenUser)`` org-scope checks continue to reject
     org tokens unchanged, while superadmin tokens are handled via their own
     type and the ``require_superadmin`` dependency.

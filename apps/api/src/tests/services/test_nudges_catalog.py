@@ -137,7 +137,7 @@ class TestPlanHelpers:
         limit = plan_limit("free", "members")  # 10
         assert near_resource_limit(s, "members", int(limit * 0.8)) is True
         assert near_resource_limit(s, "members", 1) is False
-        # At the cap it is no longer "near" — the at-limit nudge owns that.
+        # At the cap it is no longer "near"; the at-limit nudge owns that.
         assert near_resource_limit(s, "members", limit) is False
 
 
@@ -190,7 +190,7 @@ class TestContentCourseDraft:
         assert get_spec(self.SPEC).matches(s) is False
 
     def test_does_not_fire_for_an_empty_course(self):
-        """Nothing to publish yet — that is the content track's job, not this."""
+        """Nothing to publish yet; that is the content track's job, not this."""
         s = snap(course_count=1, activity_count=0, last_course_updated_at=ago(4))
         assert get_spec(self.SPEC).matches(s) is False
 
@@ -254,7 +254,7 @@ class TestMonetizationCourseLimit:
         assert get_spec(self.SPEC).matches(s) is False
 
     def test_is_not_suppressed_by_recent_activity(self):
-        """They hit the wall *while* working — suppressing on activity would
+        """They hit the wall *while* working, so suppressing on activity would
         mean this never fires at all."""
         s = snap(
             plan="free",
@@ -274,7 +274,7 @@ class TestDormancy:
         assert get_spec(self.SPEC).matches(s) is True
 
     def test_does_not_fire_for_an_empty_org(self):
-        """Nothing to come back to — activation owns that case."""
+        """Nothing to come back to; activation owns that case."""
         s = snap(course_count=0, activity_count=0, org_updated_at=ago(32))
         assert get_spec(self.SPEC).matches(s) is False
 
@@ -292,8 +292,8 @@ class TestEngagementVsCreation:
     def test_a_brand_new_org_is_not_active(self):
         """Creating an account is not engagement.
 
-        Counting it would mark every new org active for its first days — the
-        exact window the activation emails exist to cover — so they would never
+        Counting it would mark every new org active for its first days (the
+        exact window the activation emails exist to cover), so they would never
         fire at all.
         """
         s = snap(created_at=ago(1.5), org_updated_at=ago(1.5))
@@ -372,7 +372,7 @@ class TestSecondVisitDetection:
         assert get_spec(self.ID).matches(s) is False
 
     def test_any_engagement_signal_counts_as_coming_back(self):
-        """Including an admin login, which is itself an engagement signal —
+        """Including an admin login, which is itself an engagement signal,
         the reason no separate login-timing comparison is needed."""
         from src.services.nudges.catalog import _no_second_visit
 
@@ -448,7 +448,7 @@ class TestNewContentAndAudienceNudges:
         assert get_spec("content.thin_course_d5").matches(thin) is True
 
     def test_assignment_without_submissions_needs_an_audience(self):
-        """With no members there is nobody to submit — the audience track owns
+        """With no members there is nobody to submit; the audience track owns
         that case, and this email would just be confusing."""
         no_members = snap(
             assignment_count=1,
@@ -509,7 +509,7 @@ class TestMilestones:
         assert get_spec("milestone.first_course_published").matches(s) is True
 
     def test_milestones_are_not_suppressed_by_activity(self):
-        """The org is active by definition — something just happened."""
+        """The org is active by definition: something just happened."""
         s = snap(
             published_course_count=1,
             first_published_at=ago(0.5),

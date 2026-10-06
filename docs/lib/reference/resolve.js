@@ -3,7 +3,7 @@
  * simplification, example generation and flattened field rows for display.
  *
  * The LearnHouse spec is fully self-contained (no external $refs), so a small
- * hand-rolled resolver is sufficient — no parser dependency needed.
+ * hand-rolled resolver is enough; no parser dependency needed.
  */
 
 const MAX_REF_DEPTH = 10

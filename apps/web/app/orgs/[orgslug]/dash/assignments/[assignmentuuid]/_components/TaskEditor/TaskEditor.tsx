@@ -52,7 +52,7 @@ function AssignmentTaskEditor({ page }: any) {
             {assignmentTaskState.assignmentTask && Object.keys(assignmentTaskState.assignmentTask).length > 0 && (
                 <>
                     {/* Task header + tabs: flex-none so it stays fixed at the
-                        top of the editor panel. No sticky/overflow here — the
+                        top of the editor panel. No sticky/overflow here, so the
                         surrounding page's tabs bar shadow renders cleanly
                         above it. */}
                     <div className='flex flex-col bg-white ps-10 pe-10 text-sm tracking-tight z-10 nice-shadow pt-5 mb-3 relative flex-none'>
@@ -96,7 +96,7 @@ function AssignmentTaskEditor({ page }: any) {
                             </div>
                         </div>
                     </div>
-                    {/* Scrollable body — only this area scrolls. flex-1
+                    {/* Scrollable body: only this area scrolls. flex-1
                         claims the remaining height; min-h-0 allows the flex
                         child to shrink below its content size so the
                         overflow kicks in correctly. */}

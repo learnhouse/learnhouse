@@ -1,9 +1,9 @@
 'use client'
 // Shared legal/footer bits, ported from the platform's look.
 //
-// AuthFooter   — the "By continuing, you agree to … Terms of Service and
+// AuthFooter:    the "By continuing, you agree to … Terms of Service and
 //                Privacy Policy." line shown under the auth forms.
-// CopyrightFooter — the "© {year} LearnHouse, Inc." line for app surfaces
+// CopyrightFooter: the "© {year} LearnHouse, Inc." line for app surfaces
 //                (the apex /home hub, the onboarding page, …).
 //
 // Legal pages live on the marketing/platform site, so links resolve via

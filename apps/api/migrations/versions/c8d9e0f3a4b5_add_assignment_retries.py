@@ -2,14 +2,14 @@
 
 Adds the columns that back the "Try again" feature on assignments:
 
-1. ``assignment.allow_retries`` (nullable BOOL, default false) — opt-in flag
+1. ``assignment.allow_retries`` (nullable BOOL, default false): opt-in flag
    that lets a graded student reset their work and try the assignment
    again.
-2. ``assignment.max_retries`` (nullable INT, default 0) — upper bound on
+2. ``assignment.max_retries`` (nullable INT, default 0): upper bound on
    the number of attempts. ``0`` means unlimited; the initial submission
    counts as attempt 1, so ``max_retries=3`` allows three graded attempts
    in total (initial + 2 retries).
-3. ``assignmentusersubmission.attempt_number`` (nullable INT, default 1) —
+3. ``assignmentusersubmission.attempt_number`` (nullable INT, default 1):
    the attempt counter incremented on every successful retry. We keep a
    single submission row per (user, assignment) and reset it in place
    rather than storing a full submission history.

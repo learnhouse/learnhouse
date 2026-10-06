@@ -13,7 +13,7 @@ interface EnvVar {
   description: string
   /** Static string or factory (e.g. to generate a secret). */
   defaultValue: string | (() => string)
-  /** If true, the var has NO usable fallback in config.yaml — app won't work without it. */
+  /** If true, the var has NO usable fallback in config.yaml; the app won't work without it. */
   required: boolean
 }
 
@@ -36,7 +36,7 @@ function generateJwtSecret(): string {
  * Only vars that are truly required for dev and have NO working yaml fallback.
  *
  * Most API vars fall back to config.yaml which ships sensible localhost
- * defaults — those are intentionally omitted here.
+ * defaults; those are intentionally omitted here.
  */
 const API_ENV: AppEnvSpec = {
   label: 'API',

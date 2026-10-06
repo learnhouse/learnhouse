@@ -81,7 +81,7 @@ async def test_password_change_revokes_existing_sessions(
 async def test_password_change_survives_revocation_store_failure(
     mock_request, db, admin_user
 ):
-    """Redis being down must not block the password change — the DB stamp is
+    """Redis being down must not block the password change; the DB stamp is
     the load-bearing half of the fix."""
     user = await db.get(User, admin_user.id)
     user.password = security_hash_password("old-password")

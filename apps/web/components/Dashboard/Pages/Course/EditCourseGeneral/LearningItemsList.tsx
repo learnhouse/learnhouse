@@ -196,7 +196,7 @@ const LearningItemsList = ({ value, onChange, error }: LearningItemsListProps) =
                   </button>
                 )}
 
-                {/* Action buttons — always visible but muted */}
+                {/* Action buttons, always visible but muted */}
                 <div className="flex items-center gap-0.5 shrink-0">
                   {!item.link && (
                     <button

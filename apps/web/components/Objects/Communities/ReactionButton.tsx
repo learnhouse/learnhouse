@@ -44,7 +44,7 @@ export function ReactionButton({ discussionUuid, compact = false }: ReactionButt
       const result = await getReactions(discussionUuid, accessToken)
       setReactions(result)
     } catch (_error) {
-      // silent — reactions list failure is not user-actionable
+      // silent; reactions list failure is not user-actionable
     }
   }
 

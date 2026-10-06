@@ -452,7 +452,7 @@ export class ScormRuntimeAPI {
    * Synchronously accept a commit request and persist in the background.
    *
    * The SCORM JS API is synchronous, so the return value must reflect whether
-   * the call is valid *right now* — not the result of the async network commit.
+   * the call is valid *right now*, not the result of the async network commit.
    * The previous code returned based on a stale `lastError` read before the
    * fetch resolved, misreporting success/failure. A network failure now surfaces
    * via getLastError on the next call and is retried by the auto-commit loop and

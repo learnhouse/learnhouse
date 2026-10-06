@@ -27,9 +27,9 @@ function VerifyEmailClient({ org }: VerifyEmailClientProps) {
 
     // The verification token is single-use: the backend consumes (deletes) it the
     // moment it succeeds and auto-signs the user in. So this request must fire
-    // EXACTLY once. Without this guard the effect re-runs — React 18 StrictMode
+    // EXACTLY once. Without this guard the effect re-runs: React 18 StrictMode
     // double-invokes it, and in production the `t`/`track` identities change once
-    // i18n/analytics initialise, retriggering the effect — and the second call
+    // i18n/analytics initialise, retriggering the effect, and the second call
     // hits an already-consumed token, wrongly reporting "invalid or expired" for
     // a user who is, in fact, now verified.
     const hasRunRef = useRef(false)
@@ -61,7 +61,7 @@ function VerifyEmailClient({ org }: VerifyEmailClientProps) {
                     setShowMessage(true)
                     // Verification also signs the user in (session cookies were
                     // set via the auth proxy). Send them into the app hub (/home)
-                    // — NOT the apex '/' which is the public/login page — so a
+                    // (NOT the apex '/' which is the public/login page) so a
                     // fresh, now-verified user lands somewhere useful. A full
                     // navigation lets auth bootstrap from the new cookies.
                     setTimeout(() => {

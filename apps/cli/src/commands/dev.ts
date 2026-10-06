@@ -191,7 +191,7 @@ export async function devCommand(opts: { ee?: boolean; adminEmail?: string; admi
   const envOk = await checkDevEnv(root)
   if (!envOk) process.exit(1)
 
-  // EE mode — set up ee/ symlink when --ee is passed
+  // EE mode: set up ee/ symlink when --ee is passed
   const eePath = path.join(root, 'apps', 'api', 'ee')
   if (opts.ee) {
     if (!fs.existsSync(eePath)) {
@@ -364,7 +364,7 @@ export async function devCommand(opts: { ee?: boolean; adminEmail?: string; admi
 
   printControls()
 
-  // Graceful shutdown — keep containers running for reuse
+  // Graceful shutdown; keep containers running for reuse
   let shuttingDown = false
   const shutdown = async () => {
     if (shuttingDown) return

@@ -22,7 +22,7 @@ from src.security.features_utils.plans import PLAN_FEATURE_CONFIGS  # noqa: E402
 logger = logging.getLogger(__name__)
 
 # Features that have admin toggle entries in v2
-# (storage, usergroups, assignments, courses are always-on — no toggle)
+# (storage, usergroups, assignments, courses are always-on, no toggle)
 ALL_FEATURES = [
     "ai", "analytics", "api", "boards", "collaboration",
     "folders", "communities", "members", "payments", "playgrounds", "podcasts",

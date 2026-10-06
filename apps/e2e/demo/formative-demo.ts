@@ -1,7 +1,7 @@
 /**
  * Recorded walkthrough of the formative-assignment flow.
  *
- * This is a *demo*, not a test — `playwright.config.ts` only collects specs
+ * This is a *demo*, not a test. `playwright.config.ts` only collects specs
  * under `features/`, so nothing here runs in CI. It drives the same UI the
  * `24-formative` spec asserts on, but slowly and with an on-screen caption for
  * each step, and writes a video you can watch end to end.
@@ -66,7 +66,7 @@ async function caption(page: Page, step: string, text: string, holdMs = 2600): P
  *
  * `scrollIntoViewIfNeeded` was not enough here: the panel lands above the fold
  * inside an inner scroll container, and the refetch that follows a hand-in
- * re-renders it, so the scroll has to happen after that settles — hence the
+ * re-renders it, so the scroll has to happen after that settles, hence the
  * second pass.
  */
 async function scrollTo(page: Page, text: string): Promise<void> {
@@ -168,7 +168,7 @@ async function main(): Promise<void> {
     await caption(learner, 'Learner', 'The document is deposited.', 1800)
     await activity.saveProgress()
     await activity.handIn()
-    // The corrigé panel sits above the tasks, so bring it into frame — it is
+    // The corrigé panel sits above the tasks, so bring it into frame; it is
     // the whole point of the flow.
     await scrollTo(learner, 'Model answer')
     await caption(learner, 'Learner', 'Handed in — and the corrigé unlocks immediately.', 4200)

@@ -53,7 +53,7 @@ interface PlanUsageProps {
   subLoading: boolean
   usage?: OrgUsageResponse
   usageError?: boolean
-  /** `GET /orgs/{id}/active-users` — carries members_beyond_included, which the
+  /** `GET /orgs/{id}/active-users`. Carries members_beyond_included, which the
    *  usage payload omits. */
   activeUsers?: ActiveUsersSummary
   upcomingInvoice?: UpcomingInvoice | null
@@ -112,7 +112,7 @@ export default function PlanUsage({
   const showActiveMembers =
     !isFreePlan && usage?.mode === 'saas' && !!activeMembers
 
-  // The seats the plan itself includes — distinct from `members.limit`, which
+  // The seats the plan itself includes, distinct from `members.limit`, which
   // resolve_feature() may have raised via an override.
   const includedMembers = features?.members?.plan_limit ?? activeUsers?.plan_limit
   const includedMembersLabel =
@@ -608,7 +608,7 @@ export default function PlanUsage({
             </p>
           </div>
           <div className="px-6 py-6 space-y-6">
-            {/* Active add-ons — read-only (no pack-detail/cancel route in v1) */}
+            {/* Active add-ons, read-only (no pack-detail/cancel route in v1) */}
             {activePacks.length > 0 &&
               (() => {
                 const grouped = activePacks.reduce((acc: Record<string, any[]>, pack: any) => {

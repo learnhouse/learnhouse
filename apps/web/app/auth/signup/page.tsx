@@ -17,7 +17,7 @@ export async function generateMetadata(): Promise<Metadata> {
   try {
     org = await getOrganizationContextInfo(orgslug, null)
   } catch {
-    // Stale cookie or unknown org — fall back to generic title
+    // Stale cookie or unknown org: fall back to generic title
   }
 
   return {
@@ -30,7 +30,7 @@ const SignUp = async () => {
   const orgslug = await getAuthOrgSlug()
 
   // On the org-less apex (learn.io/signup) there is no subdomain org. We keep
-  // `org` null so the page renders the generic, org-less open-signup form —
+  // `org` null so the page renders the generic, org-less open-signup form,
   // exactly like the apex login page. The account is still created against the
   // instance default org, but that is resolved server-side in the signup API so
   // the UI never shows an org here.

@@ -110,7 +110,7 @@ class ResourceAccessChecker:
                 context=context.value,
             )
 
-        # Superadmin bypass — platform admins act on any tenant without an org
+        # Superadmin bypass: platform admins act on any tenant without an org
         # membership row. The flag is loaded onto PublicUser by get_current_user
         # so this is a free attribute read, no DB hit. API tokens and anonymous
         # users carry no superadmin flag and continue through the normal path.
@@ -152,7 +152,7 @@ class ResourceAccessChecker:
         # users: anonymous public browsing is unaffected, superadmins bypassed
         # above, and API tokens are a separate credential class handled above.
         # Raises rather than returning a denial so the structured error code
-        # survives to the client — the UI needs to tell "enable 2FA" apart from
+        # survives to the client; the UI needs to tell "enable 2FA" apart from
         # "you don't have permission", which a plain reason string cannot do.
         await self._enforce_org_mfa_policy(resource_uuid, config)
 
@@ -264,7 +264,7 @@ class ResourceAccessChecker:
 
         # Fall through to public view rules. Note: public_view's usergroup rule
         # requires is_published=True, so usergroup members on unpublished
-        # resources still get denied here — which is the intended behavior.
+        # resources still get denied here, which is the intended behavior.
         return await self._check_public_view_read_access(resource_uuid, config)
 
     async def _check_public_view_read_access(

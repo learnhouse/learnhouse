@@ -492,7 +492,7 @@ function ScormActivity({ activity, course }: ScormActivityProps) {
 
   return (
     <div className="relative w-full bg-white dark:bg-neutral-950">
-      {/* Save-failure warning — makes silent progress loss visible */}
+      {/* Save-failure warning; makes silent progress loss visible */}
       {saveError && (
         <div
           role="alert"

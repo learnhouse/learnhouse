@@ -1,4 +1,4 @@
-"""Tests for src/services/orgs/orgs.py — org CRUD functions."""
+"""Tests for src/services/orgs/orgs.py: org CRUD functions."""
 
 from datetime import datetime
 from unittest.mock import AsyncMock, Mock, patch
@@ -545,7 +545,7 @@ class TestLeaveOrg:
 
     @pytest.mark.asyncio
     async def test_leave_org_last_admin_blocked(self, mock_request, db, org, admin_user):
-        # The sole admin cannot leave — would orphan the org.
+        # The sole admin cannot leave; it would orphan the org.
         with pytest.raises(HTTPException) as exc:
             await leave_org(mock_request, org.id, db, admin_user)
         assert exc.value.status_code == 400

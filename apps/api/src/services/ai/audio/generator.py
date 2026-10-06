@@ -3,13 +3,13 @@
 Like image generation, TTS is a **Google-only** path: the provider-agnostic text
 layer in ``src/services/ai/llm`` returns text/embeddings only, so speech goes
 straight to the Google GenAI SDK. It reuses the same credential resolution as the
-text layer — ``ai_config.api_key`` when the configured provider is Google,
-otherwise the legacy ``ai_config.gemini_api_key`` — so no separate key is needed
+text layer: ``ai_config.api_key`` when the configured provider is Google,
+otherwise the legacy ``ai_config.gemini_api_key``. So no separate key is needed
 when the deployment already runs on Gemini.
 
 Two modes share one call:
-- ``tts``     — single voice reads the given text.
-- ``podcast`` — up to two named speakers (Gemini caps multi-speaker at 2) read a
+- ``tts``:     single voice reads the given text.
+- ``podcast``: up to two named speakers (Gemini caps multi-speaker at 2) read a
   dialogue script, with tone/pacing steered by a natural-language style prefix.
 
 Gemini returns headerless 24 kHz / 16-bit / mono PCM; we wrap it in a WAV
@@ -131,7 +131,7 @@ def _resolve_tts_config() -> tuple[str, str]:
 def _build_prompt(text: str, *, style: Optional[str], language: Optional[str], podcast: bool) -> str:
     """Prefix the script with natural-language directives.
 
-    Gemini TTS has no separate style/language parameter — tone, pacing and target
+    Gemini TTS has no separate style/language parameter: tone, pacing and target
     language are all steered through the prompt text. Language is otherwise
     auto-detected from the input, so this directive only nudges it when the caller
     explicitly picked one.
@@ -226,11 +226,11 @@ async def generate_spoken_script(
         )
 
     # Token budget. The standard tier is a Gemini 3 "thinking" model, where
-    # max_output_tokens is SHARED between reasoning tokens and the visible answer —
+    # max_output_tokens is SHARED between reasoning tokens and the visible answer, so
     # a tight budget makes the script stop mid-sentence (the reasoning eats it up).
     # So give generous headroom for thinking PLUS ~2x the target output length so
     # the script can never be truncated by the ceiling. (max_tokens is a ceiling,
-    # not a target — length is steered by the prompt.)
+    # not a target; length is steered by the prompt.)
     # Cap stays safely under the flash model's own output limit (~8k tokens); the
     # computed budget for the longest (10 min) script is ~5.8k, so this never binds.
     _THINKING_HEADROOM_TOKENS = 3000
@@ -247,7 +247,7 @@ async def generate_spoken_script(
         )
     except AINotConfiguredError:
         raise
-    except Exception as e:  # noqa: BLE001 — surface a clean error to the router
+    except Exception as e:  # noqa: BLE001 (surface a clean error to the router)
         logger.error("Script generation failed: %s", type(e).__name__)
         raise RuntimeError("Script generation failed") from e
 
@@ -358,7 +358,7 @@ async def generate_speech(
                 config=config,
             )
             break
-        except Exception as e:  # noqa: BLE001 — surface a clean error to the router
+        except Exception as e:  # noqa: BLE001 (surface a clean error to the router)
             # Log only the exception type: the underlying SDK error can embed the
             # API key (request URL/headers), so never log the message or traceback.
             if _is_retryable(e) and attempt < _MAX_ATTEMPTS:

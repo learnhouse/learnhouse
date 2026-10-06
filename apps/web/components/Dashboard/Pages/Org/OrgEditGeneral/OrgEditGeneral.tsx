@@ -120,7 +120,7 @@ const OrgEditGeneral: React.FC = () => {
       await updateOrganization(org.id, values, access_token)
       // Also save footer text
       await updateOrgFooterTextConfig(org.id, footerText, access_token)
-      // Save the email sender display name (name only — the sending address is
+      // Save the email sender display name (name only; the sending address is
       // always the platform's)
       await updateOrgEmailSenderNameConfig(org.id, emailSenderName, access_token)
       // Save default language

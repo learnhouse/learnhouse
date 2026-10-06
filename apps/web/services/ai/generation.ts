@@ -4,7 +4,7 @@ import { getAIImageMediaDirectory } from '@services/media/media'
 
 // ---------------------------------------------------------------------------
 // AI generation clients (image / quiz / assignment) + durable history.
-// Non-streaming, structured endpoints — the backend guarantees schema-valid
+// Non-streaming, structured endpoints: the backend guarantees schema-valid
 // output so the UI can preview/insert directly. See src/routers/ai/{images,
 // quiz,assignment_gen}.py.
 // ---------------------------------------------------------------------------
@@ -95,7 +95,7 @@ export function aiImageUrl(orgUUID: string, fileId: string) {
  * Fetch a generated AI image's bytes SAME-ORIGIN (via the API, not the public
  * media URL) and return a ready-to-upload File. Upload surfaces use this instead
  * of cross-origin fetching getAIImageMediaDirectory(...), which is CORS-gated and
- * fails on custom domains — leaving the surface stuck "processing".
+ * fails on custom domains, leaving the surface stuck "processing".
  */
 export async function fetchAIImageFile(
   orgId: number,

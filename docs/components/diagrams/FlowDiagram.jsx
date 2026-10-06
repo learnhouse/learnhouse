@@ -2,7 +2,7 @@
 
 // A clean, predictable horizontal flow diagram: a row of labelled cards
 // connected by labelled arrows. Wraps/scrolls on narrow screens. Used for the
-// linear pipelines (architecture, auth, webhooks) — no floating-edge guesswork.
+// linear pipelines (architecture, auth, webhooks), with no floating-edge guesswork.
 
 function Arrow({ label, dashed }) {
   return (

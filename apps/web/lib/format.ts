@@ -1,5 +1,5 @@
 /**
- * Locale-aware date and number formatting — one place, so a locale change
+ * Locale-aware date and number formatting in one place, so a locale change
  * reaches every date on screen.
  *
  * Before this existed, all 12 dayjs call sites extended `relativeTime` locally
@@ -39,14 +39,14 @@ const DAYJS_LOCALES: Record<string, () => Promise<unknown>> = {
 }
 
 /**
- * NUMERALS — a deliberate product decision, kept behind one function.
+ * NUMERALS: a deliberate product decision, kept behind one function.
  *
  * `Intl.NumberFormat('ar')` resolves to Eastern Arabic-Indic digits (٠١٢٣٤) on
  * most ICU builds, and `ar-SA` additionally defaults to the Hijri calendar.
  * Neither is right here: prices, seat counts and analytics sit next to
  * Latin-digit data coming straight from the API, and mixed numeral systems on
  * one screen read as broken rather than localised. Arabic-speaking regions are
- * also split — ar-EG and ar-SA use Arabic-Indic, ar-MA and ar-TN use Western —
+ * also split (ar-EG and ar-SA use Arabic-Indic, ar-MA and ar-TN use Western),
  * so a bare `ar` has no single correct answer.
  *
  * So: Latin digits and the Gregorian calendar, everywhere. Month names and
@@ -124,7 +124,7 @@ export function formatDateTime(
   return formatDate(value, lng, { dateStyle: 'medium', timeStyle: 'short', ...options })
 }
 
-/** "2 hours ago". Words, not digits — which is why dayjs is fine here. */
+/** "2 hours ago". Words, not digits, which is why dayjs is fine here. */
 export function formatRelative(value: string | number | Date, lng?: string): string {
   return dayjs(value).locale(baseCode(lng)).fromNow()
 }

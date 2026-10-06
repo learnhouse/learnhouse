@@ -65,7 +65,7 @@ async def require_not_demo_org(org_id: int | None, db_session: AsyncSession) -> 
 
     Applied server-side to the handful of endpoints that would either cost real
     money, touch DNS, or let a visitor use the platform to mail strangers.
-    Everything else stays open — the demo exists to be used, and the hourly
+    Everything else stays open: the demo exists to be used, and the hourly
     refresh undoes ordinary damage.
     """
     if await is_demo_org(org_id, db_session):

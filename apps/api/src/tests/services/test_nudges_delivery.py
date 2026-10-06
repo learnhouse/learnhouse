@@ -89,7 +89,7 @@ class TestOutcomes:
         assert await _pref(db, admin_user.id) is None
 
     async def test_a_delayed_message_stays_under_watch(self, db, sent_row):
-        """It has not finished failing yet — marking it checked would mean the
+        """It has not finished failing yet; marking it checked would mean the
         bounce that lands at hour 60 is never seen."""
         sent_row()
         await db.commit()
@@ -151,7 +151,7 @@ class TestWhatGetsPolled:
         assert lookup.await_count == 1
 
     async def test_recent_messages_are_left_to_settle(self, db, sent_row):
-        """Read too early, a delayed message looks bounced — and suppressing on
+        """Read too early, a delayed message looks bounced, and suppressing on
         that would throw away a perfectly good address."""
         sent_row(hours_ago=MIN_AGE_HOURS - 1)
         await db.commit()
@@ -315,8 +315,8 @@ class TestReconcileFailureLeavesTheSessionUsable:
         self, db, org, monkeypatch
     ):
         """reconcile_delivery commits on the caller's session. Without a
-        rollback here, the first _claim raises PendingRollbackError — which
-        _claim does not catch — and the whole run dies on one bad lookup."""
+        rollback here, the first _claim raises PendingRollbackError (which
+        _claim does not catch) and the whole run dies on one bad lookup."""
         from src.services.nudges import runner as runner_module
 
         monkeypatch.setenv("LEARNHOUSE_NUDGES_ENABLED", "true")

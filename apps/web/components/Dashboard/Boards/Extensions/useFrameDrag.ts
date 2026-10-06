@@ -1,4 +1,5 @@
 import { useCallback, useLayoutEffect, useRef } from 'react'
+import type React from 'react'
 import type { Editor } from '@tiptap/core'
 
 interface FrameDragOptions {
@@ -84,7 +85,7 @@ function getChildBlocks(
 }
 
 /**
- * Drag hook for frame boxes — moves all contained children along with the frame.
+ * Drag hook for frame boxes: moves all contained children along with the frame.
  *
  * Key difference from useDragResize: we do NOT broadcast anything mid-drag.
  * All position updates happen purely via DOM manipulation during the drag,
@@ -190,7 +191,7 @@ export function useFrameDrag({
           elRef.current.style.top = `${newY}px`
         }
 
-        // Move children via DOM — fresh wrapper lookup every frame
+        // Move children via DOM, with a fresh wrapper lookup every frame
         childrenRef.current.forEach((child) => {
           const wrapper = getWrapperForPos(editor, child.pos)
           if (wrapper) {

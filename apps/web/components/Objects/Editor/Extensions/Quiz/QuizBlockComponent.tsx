@@ -34,12 +34,12 @@ interface Answer {
 interface Question {
   question_id: string
   question: string
-  // The kind of question. `custom_answer` is legacy and never rendered — HOW
+  // The kind of question. `custom_answer` is legacy and never rendered. HOW
   // MANY answers may be picked is a separate axis, carried by `response_type`
   // (same field name as the graded assignment quiz task).
   type: 'multiple_choice' | 'custom_answer'
   // 'single' = pick one, 'multiple' = select all that apply. Absent on blocks
-  // authored before the mode existed — always read it through
+  // authored before the mode existed, so always read it through
   // `questionResponseType`, never directly.
   response_type?: QuizResponseType
   answers: Answer[]
@@ -111,7 +111,7 @@ function QuizBlockComponent(props: any) {
     setSubmitted(true)
 
     // This block is an ungraded client-side self-check, so it stays
-    // all-or-nothing (no partial credit here) — but pass/fail now runs through
+    // all-or-nothing (no partial credit here), but pass/fail now runs through
     // the same scoring helper as the graded quiz task, so single- and
     // multiple-response questions are judged the same way in both places.
     // A question with no correct answer marked can't be judged at all; it is
@@ -427,7 +427,7 @@ function QuizBlockComponent(props: any) {
                   )}
                 </div>
 
-                {/* Response mode — switch in edit mode, hint in take mode */}
+                {/* Response mode: switch in edit mode, hint in take mode */}
                 {isEditable ? (
                   <div className="flex flex-wrap items-center gap-1 mb-1.5 px-1">
                     {([QUIZ_RESPONSE_SINGLE, QUIZ_RESPONSE_MULTIPLE] as QuizResponseType[]).map(
@@ -496,28 +496,28 @@ function QuizBlockComponent(props: any) {
 
                     const row = cn(
                       'group flex items-center gap-2 rounded-lg nice-shadow px-2 py-1.5 transition-colors',
-                      // Take mode — default
+                      // Take mode: default
                       !isEditable &&
                         !submitted &&
                         !isSelected &&
                         'bg-white hover:bg-neutral-50 cursor-pointer',
-                      // Take mode — selected
+                      // Take mode: selected
                       !isEditable &&
                         !submitted &&
                         isSelected &&
                         'bg-blue-50 cursor-pointer',
-                      // Submitted — correct
+                      // Submitted: correct
                       isCorrectReveal && 'bg-emerald-50',
-                      // Submitted — wrong selection
+                      // Submitted: wrong selection
                       isWrongSelection && 'bg-red-50',
-                      // Submitted — neutral (not selected, not correct)
+                      // Submitted: neutral (not selected, not correct)
                       submitted &&
                         !isMarkedCorrect &&
                         !isSelected &&
                         'bg-white opacity-60',
-                      // Edit — marked correct
+                      // Edit: marked correct
                       isEditable && isMarkedCorrect && 'bg-emerald-50',
-                      // Edit — not marked
+                      // Edit: not marked
                       isEditable &&
                         !isMarkedCorrect &&
                         'bg-white hover:bg-neutral-50'
@@ -528,30 +528,30 @@ function QuizBlockComponent(props: any) {
                       // Shape is the affordance: a circle means pick one, a
                       // square means select all that apply.
                       isSingleResponse ? 'rounded-full' : 'rounded-md',
-                      // Take mode — default
+                      // Take mode: default
                       !isEditable &&
                         !submitted &&
                         !isSelected &&
                         'bg-neutral-100 text-neutral-500',
-                      // Take mode — selected
+                      // Take mode: selected
                       !isEditable &&
                         !submitted &&
                         isSelected &&
                         'bg-blue-500 text-white',
-                      // Submitted — correct
+                      // Submitted: correct
                       isCorrectReveal && 'bg-emerald-500 text-white',
-                      // Submitted — wrong selection
+                      // Submitted: wrong selection
                       isWrongSelection && 'bg-red-500 text-white',
-                      // Submitted — neutral
+                      // Submitted: neutral
                       submitted &&
                         !isMarkedCorrect &&
                         !isSelected &&
                         'bg-neutral-100 text-neutral-400',
-                      // Edit — correct
+                      // Edit: correct
                       isEditable &&
                         isMarkedCorrect &&
                         'bg-emerald-500 text-white',
-                      // Edit — not correct
+                      // Edit: not correct
                       isEditable &&
                         !isMarkedCorrect &&
                         'bg-neutral-100 text-neutral-500'
@@ -591,7 +591,7 @@ function QuizBlockComponent(props: any) {
                         }}
                         className={row}
                       >
-                        {/* Letter chip — clickable in edit mode to toggle correct */}
+                        {/* Letter chip: clickable in edit mode to toggle correct */}
                         {isEditable ? (
                           <button
                             onClick={(e) => {
@@ -654,7 +654,7 @@ function QuizBlockComponent(props: any) {
                           )}
                         </div>
 
-                        {/* Trailing — status icon (take mode) or delete (edit) */}
+                        {/* Trailing slot: status icon (take mode) or delete (edit) */}
                         {isEditable ? (
                           <button
                             onClick={(e) => {

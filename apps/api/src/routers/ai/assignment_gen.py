@@ -1,7 +1,7 @@
 """AI assignment generation endpoints.
 
 Generates a preview assignment plan (assignment + graded tasks) grounded on a
-course's content. Does NOT persist — the frontend previews/edits then saves via
+course's content. Does NOT persist; the frontend previews/edits then saves via
 the existing /assignments endpoints. Same guard/credit ordering as the other AI
 routers.
 """
@@ -87,7 +87,7 @@ async def api_generate_assignment(
 
     # Authoring, not enrollment: generating an assignment grounds the model on
     # (possibly restricted/draft) course content and spends org AI credits, so it
-    # requires content-author rights on THIS course — not bare org membership,
+    # requires content-author rights on THIS course, not bare org membership,
     # which would let any enrolled learner mine the material and burn credits.
     await check_resource_access(
         request, db_session, current_user, course.course_uuid, AccessAction.UPDATE
@@ -133,7 +133,7 @@ async def api_generate_assignment(
             course_id=course.id,
         )
     except Exception:
-        # Persisting the history record failed after the credits were reserved —
+        # Persisting the history record failed after the credits were reserved;
         # refund so a DB hiccup doesn't silently charge the org for nothing.
         refund_ai_credit(org.id, ASSIGNMENT_CREDIT_COST)
         logger.exception("Failed to record assignment generation")

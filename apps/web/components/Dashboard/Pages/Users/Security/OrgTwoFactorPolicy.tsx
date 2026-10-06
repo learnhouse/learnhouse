@@ -53,7 +53,7 @@ import {
  * and the member coverage it implies.
  *
  * The coverage panel and member list only appear once the requirement is
- * actually on — with the policy off they are a wall of red badges about a rule
+ * actually on; with the policy off they are a wall of red badges about a rule
  * that isn't in force. Before switching it on, the confirmation dialog still
  * spells out exactly who loses access.
  */
@@ -126,7 +126,7 @@ const OrgTwoFactorPolicy: React.FC = () => {
         )
       }
 
-      // The caller's own state is context, not the policy — a failure here must
+      // The caller's own state is context, not the policy, so a failure here must
       // not blank the page.
       if (selfRes.success) setSelfState(selfRes.data as SelfComplianceState)
     } catch {
@@ -145,7 +145,7 @@ const OrgTwoFactorPolicy: React.FC = () => {
   }, [loadData])
 
   // Two-click confirm on the row; never resets your own factor here (the backend
-  // rejects self-reset — use the code-gated disable flow instead).
+  // rejects self-reset; use the code-gated disable flow instead).
   const handleResetMember = React.useCallback(
     async (userId: number) => {
       if (confirmResetId !== userId) {
@@ -231,7 +231,7 @@ const OrgTwoFactorPolicy: React.FC = () => {
   }, [savePolicy, draftRequire, draftGrace, draftExempt, loadData])
 
   const handleSaveClick = () => {
-    // Turning the requirement ON is never one click — it can lock staff out.
+    // Turning the requirement ON is never one click; it can lock staff out.
     if (isTurningOn) {
       setConfirmOpen(true)
       return
@@ -299,7 +299,7 @@ const OrgTwoFactorPolicy: React.FC = () => {
       {readOnly && <ReadOnlyNotice />}
 
       {/* ------------------------------------------------------------------ */}
-      {/* 1. Compliance summary — only while the requirement is on.          */}
+      {/* 1. Compliance summary; only while the requirement is on.           */}
       {/* ------------------------------------------------------------------ */}
       {showCoverage && (
       <div className="bg-white rounded-xl nice-shadow p-5 space-y-4">
@@ -394,7 +394,7 @@ const OrgTwoFactorPolicy: React.FC = () => {
       )}
 
       {/* ------------------------------------------------------------------ */}
-      {/* 2. Member list — same condition as the coverage panel above.       */}
+      {/* 2. Member list; same condition as the coverage panel above.        */}
       {/* ------------------------------------------------------------------ */}
       {showCoverage && (
       <div className="bg-white rounded-xl nice-shadow overflow-hidden">
@@ -664,7 +664,7 @@ const OrgTwoFactorPolicy: React.FC = () => {
           </div>
         )}
 
-        {/* Your own compliance state — context for the admin. */}
+        {/* Your own compliance state, context for the admin. */}
         {selfState?.required && !selfState.satisfied && (
           <div className="flex items-start gap-2 rounded-lg bg-amber-50 border border-amber-200/80 px-4 py-3">
             <Info className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />

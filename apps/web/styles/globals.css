@@ -114,7 +114,7 @@
    the divider in body-text near-black. Match the light rule used everywhere
    else, and give it symmetric spacing (.ProseMirror only sets margin-top).
    All three ProseMirror surfaces: the editor, the learner view, and the
-   preview used by version history and the merge-conflict dialog — which
+   preview used by version history and the merge-conflict dialog, which
    synthesizes an `hr` as its "keep both" seam. */
 .activity-editor-content-wrapper .ProseMirror hr,
 .canva-content-wrapper .ProseMirror hr,
@@ -253,7 +253,7 @@
 
   /* Companion to the same override in @layer base. This declaration has to
      live here as well because the -0.02em above is duplicated into two layers,
-     and utilities outranks base — so a base-layer override alone loses on
+     and utilities outranks base, so a base-layer override alone loses on
      <html> and <body>, and Arabic keeps tracking meant for Latin. */
   [dir='rtl'],
   [dir='rtl'] body,
@@ -264,14 +264,14 @@
     letter-spacing: normal;
   }
 
-  /* Arabic is set in Tajawal, full stop — not layered as a per-glyph fallback.
+  /* Arabic is set in Tajawal, full stop; not layered as a per-glyph fallback.
      Tajawal carries a Latin subset, so forcing it keeps a mixed Arabic screen
      in one typeface instead of alternating between two designs with different
      proportions mid-sentence.
 
      `!important` is required, not defensive: the org's custom font is applied
      as an inline style on .lh-org-font-root, and an inline declaration beats
-     any normal rule regardless of specificity. Monospace is unaffected —
+     any normal rule regardless of specificity. Monospace is unaffected:
      code, pre and the editors set font-family on their own elements, and
      cascade contests only happen element by element. */
   [dir='rtl'],
@@ -324,7 +324,7 @@
   }
   /* Give a remote user a caret */
   .collaboration-cursor__caret {
-    /* rtl-ok: symmetric 1px caret — identical borders and negative
+    /* rtl-ok: symmetric 1px caret, identical borders and negative
        margins on both sides, so there is nothing to mirror. */
     border-left: 1px solid #0d0d0d;
     border-right: 1px solid #0d0d0d;
@@ -470,7 +470,7 @@
 
   /* The -0.02em tracking above is tuned for Latin. Arabic is a cursive script
      where letters join along a baseline, and negative tracking crushes those
-     joins — in some renderers it breaks them outright. Keyed on :lang() as well
+     joins; in some renderers it breaks them outright. Keyed on :lang() as well
      as [dir] so Arabic content inside an English UI is covered too.
      `body` is listed explicitly: it carries its own letter-spacing above, which
      would otherwise beat a value merely inherited from <html>. */
@@ -483,14 +483,14 @@
     letter-spacing: normal;
   }
 
-  /* Arabic is set in Tajawal, full stop — not layered as a per-glyph fallback.
+  /* Arabic is set in Tajawal, full stop; not layered as a per-glyph fallback.
      Tajawal carries a Latin subset, so forcing it keeps a mixed Arabic screen
      in one typeface instead of alternating between two designs with different
      proportions mid-sentence.
 
      `!important` is required, not defensive: the org's custom font is applied
      as an inline style on .lh-org-font-root, and an inline declaration beats
-     any normal rule regardless of specificity. Monospace is unaffected —
+     any normal rule regardless of specificity. Monospace is unaffected:
      code, pre and the editors set font-family on their own elements, and
      cascade contests only happen element by element. */
   [dir='rtl'],
@@ -525,9 +525,9 @@
 
   /* ── Directional icons ──────────────────────────────────────────────────
      A chevron pointing "forward" points the other way in RTL. Rather than
-     swapping the component at ~250 call sites — which would need a mounted
+     swapping the component at ~250 call sites (which would need a mounted
      gate at every one to avoid a hydration mismatch, and would leave every
-     NEW call site as a fresh bug — mirror them in CSS.
+     NEW call site as a fresh bug), mirror them in CSS.
 
      lucide emits a `lucide-<name>` class on every icon, so it can be targeted
      by name. Libraries that don't (phosphor, @radix-ui/react-icons) opt in
@@ -535,14 +535,14 @@
 
      Uses `scale:` rather than `transform: scaleX(-1)` because Tailwind v4
      compiles its translate and rotate utilities to the independent
-     `translate:` and `rotate:` properties — so this composes with them
+     `translate:` and `rotate:` properties, so this composes with them
      instead of overwriting them. It
      does still collide with Tailwind's own `scale-*` utilities; those few
      elements opt out with data-dir-flip="false".
 
      Deliberately NOT listed: vertical icons (chevron-up/down, sort
      indicators), and media transport (play, skip, rewind). Media controls are
-     universally left-to-right — Arabic YouTube does not mirror the play
+     universally left-to-right; Arabic YouTube does not mirror the play
      button. */
   [dir='rtl'] :is(
     .lucide-chevron-left,
@@ -591,7 +591,7 @@
   }
 
   /* Charts stay left-to-right. recharts computes absolute SVG x-coordinates,
-     so dir=rtl flips the DOM but not the geometry — axis labels detach from
+     so dir=rtl flips the DOM but not the geometry: axis labels detach from
      their ticks and the plot area lands outside its own box. Locking the
      wrapper means an Arabic reader sees a left-to-right time axis, which is
      the same compromise Excel and Google Sheets make. Labels are still
@@ -607,7 +607,7 @@
      So rich text must follow the text itself, not the chrome around it.
 
      `unicode-bidi: plaintext` resolves direction per block from its first
-     strong character — the same rule as dir="auto", but applied in CSS. Doing
+     strong character, the same rule as dir="auto", but applied in CSS. Doing
      it this way means the ProseMirror document schema is untouched, so
      nothing new is written into stored activity JSON and the Yjs collab path
      sees no new node attributes.
@@ -635,7 +635,7 @@
     text-align: start;
   }
 
-  /* Toasts carry a mix of translated copy and raw English API errors — see
+  /* Toasts carry a mix of translated copy and raw English API errors; see
      components/Objects/StyledElements/Toast/Toast.tsx. */
   .lh-toast {
     unicode-bidi: plaintext;
@@ -680,7 +680,7 @@
 /*
   Shared <Modal> (components/ui/dialog.tsx) animations.
   Centering uses the standalone `translate` CSS property (set inline) instead
-  of `transform` — that way the keyframes can animate `translate` + `scale`
+  of `transform`; that way the keyframes can animate `translate` + `scale`
   + `opacity` cleanly, and on exit the modal slides DOWN as it fades.
 */
 @keyframes modalEnter {
@@ -698,7 +698,7 @@
   via getComputedStyle(node).animationName on each state flip.
 
   Easing: out-expo on enter for a natural spring settle (fast start, soft
-  landing) — feels modern without the cartoonish overshoot of a back-out.
+  landing); it feels modern without the cartoonish overshoot of a back-out.
   Exit uses a sharp ease-in so the close feels instant, not draggy.
 */
 .lh-modal-content[data-state="open"] {
@@ -774,7 +774,7 @@
   display: contents;
 }
 
-/* One column on narrow screens — three cards side by side is unreadable. */
+/* One column on narrow screens; three cards side by side is unreadable. */
 @media (max-width: 640px) {
   .flipcard-grid-content {
     grid-template-columns: minmax(0, 1fr);
@@ -1724,7 +1724,7 @@
   .board-backbar { display: none !important; }
   .board-feedback { display: none !important; }
 
-  /* Top-right (avatars, clock, timer, share) — center on top, smaller */
+  /* Top-right (avatars, clock, timer, share): center on top, smaller */
   .board-topright {
     /* rtl-ok: the board canvas is dir="ltr"-locked (Yjs shares absolute
        left/top coordinates between collaborators, so a logical coordinate
@@ -1738,7 +1738,7 @@
     top: calc(var(--status-bar-inset, 0px) + 6px) !important;
   }
 
-  /* Social stack — just center it, keep the desktop design as-is */
+  /* Social stack: just center it, keep the desktop design as-is */
   /* rtl-ok: board canvas is dir="ltr"-locked, and this centering is symmetric. */
   .board-social {
     position: fixed !important;
@@ -1795,7 +1795,7 @@
 }
 
 /* The dropdown chevron is a background image, and background-position has no
-   logical form — so it has to be mirrored by hand. */
+   logical form, so it has to be mirrored by hand. */
 [dir='rtl'] .editor-tool-select {
   background-position: left 5px center;
 }
@@ -1898,7 +1898,7 @@
   outline: 1px solid rgba(229, 231, 235, 0.5);
   position: fixed;
   z-index: var(--z-editor-toolbar);
-  /* rtl-ok: symmetric — equivalent to inset-inline: 0. */
+  /* rtl-ok: symmetric, equivalent to inset-inline: 0. */
   left: 0;
   right: 0;
   width: auto;

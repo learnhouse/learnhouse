@@ -25,7 +25,7 @@ function formatInterval(minutes: number): string {
 }
 
 /**
- * "Explore a live demo" — a side path into the shared demo organization.
+ * "Explore a live demo": a side path into the shared demo organization.
  *
  * Renders nothing when the instance has no demo, so it can be dropped onto any
  * page without a guard. It never blocks what it sits next to: the status call
@@ -59,7 +59,7 @@ export default function DemoEntryCard({ className = '' }: { className?: string }
         // "Ready" is not the only terminal state: getDemoStatus answers null on
         // a network error and enabled:false on an instance with no demo at all,
         // and polling either of those every five seconds for the life of the
-        // page buys nothing — the card renders nothing in both cases.
+        // page buys nothing; the card renders nothing in both cases.
         if (!result || !result.enabled || result.ready) {
           stop()
         }

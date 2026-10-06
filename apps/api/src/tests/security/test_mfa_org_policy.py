@@ -87,7 +87,7 @@ class TestPolicyOff:
         await _set_policy(db, org.id, require_2fa=True, require_2fa_grace_days="not-a-number")
         user = await _get_user(db, regular_user.id)
         state = await evaluate_mfa_compliance(db, user, org.id)
-        # Must not enforce with nonsense numbers — an admin fixes the config
+        # Must not enforce with nonsense numbers; an admin fixes the config
         # rather than the whole org being blocked by a typo.
         assert state.required is False
 
@@ -374,8 +374,8 @@ class TestEnforcement:
 @pytest.mark.asyncio
 class TestPlaygroundEnforcement:
     """Playgrounds run their own org-role gate rather than going through
-    ``require_org_*``. These pin that the policy is nonetheless enforced there —
-    the module was a bypass around the org-wide requirement — while a
+    ``require_org_*``. These pin that the policy is nonetheless enforced there.
+    The module was a bypass around the org-wide requirement. Also pinned: a
     non-member is never swept up by an org they do not belong to.
     """
 
@@ -415,7 +415,7 @@ class TestPlaygroundEnforcement:
         await self._make_blocking(db, org.id, regular_user.id)
         await _enroll(db, regular_user.id)
 
-        # Must not raise — an enrolled member is compliant.
+        # Must not raise: an enrolled member is compliant.
         await _get_user_rights(regular_user.id, org.id, db)
 
     async def test_non_member_is_not_subject_to_policy(self, db, org, regular_user):

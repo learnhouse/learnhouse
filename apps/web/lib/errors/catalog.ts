@@ -1,6 +1,6 @@
 import type { ErrorCategory } from './types'
 
-// The meaningful-error catalog. Ordered MOST-SPECIFIC first — classifyError()
+// The meaningful-error catalog. Ordered MOST-SPECIFIC first: classifyError()
 // walks this list and the first category whose matchers hit wins, so narrow
 // signatures (version mismatch, auth, plan limits, a specific 503 detail) sit
 // above broad ones (generic 5xx, unknown). Strings in `messageIncludes` are
@@ -8,7 +8,7 @@ import type { ErrorCategory } from './types'
 //
 // Grounded in a sweep of 221 real failure scenarios across the service layer,
 // the FastAPI backend, the UI surfaces, and the browser runtime. This catalog
-// is the single source of truth for what users read when something breaks —
+// is the single source of truth for what users read when something breaks;
 // keep titles human and non-alarming, descriptions short and honest, and
 // resolutions limited to actions that actually help for that failure.
 
@@ -346,7 +346,7 @@ export const ERROR_CATALOG: ErrorCategory[] = [
   },
 ]
 
-// Catch-all. Has NO matchers (never matched by the loop) — classifyError()
+// Catch-all. Has NO matchers (never matched by the loop); classifyError()
 // returns it explicitly when nothing else fits. Still meaningfully better than
 // a bare "Something went wrong": it owns the problem and offers real next steps.
 export const UNKNOWN_CATEGORY: ErrorCategory = {

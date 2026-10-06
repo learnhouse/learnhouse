@@ -186,7 +186,7 @@ export async function buildGroupModel(spec, slug) {
       method,
       url: exampleUrl(path, queryParams),
       auth,
-      // Session-only endpoints reject lh_ tokens — show a JWT placeholder
+      // Session-only endpoints reject lh_ tokens, so show a JWT placeholder
       // instead so the examples can't mislead (token substitution leaves it alone).
       authValue: group.access === 'session' ? 'YOUR_JWT' : undefined,
       contentType: requestBody?.contentType || null,

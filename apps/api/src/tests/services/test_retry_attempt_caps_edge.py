@@ -5,13 +5,13 @@ submission-status-transition logic.
 Targets two service functions in
 ``src/services/courses/activities/assignments.py``:
 
-- ``retry_assignment_submission`` — resets a GRADED submission for another
+- ``retry_assignment_submission``: resets a GRADED submission for another
   attempt. Requires ``allow_retries``; only GRADED rows are retryable; the
   attempt cap (``max_retries=0`` is unlimited, else ``current_attempt`` must
   be strictly < ``max_retries``) is enforced; on success it wipes per-task
   submissions, flips the row to PENDING/grade 0, resets the TrailStep, and
   revokes any issued certificate.
-- ``create_assignment_submission`` — transitions a reusable PENDING /
+- ``create_assignment_submission``: transitions a reusable PENDING /
   NOT_SUBMITTED row (left behind by a prior retry) to SUBMITTED, or errors if
   the existing row is already SUBMITTED / GRADED.
 
@@ -208,7 +208,7 @@ def _api_token_user(org_id):
 
 
 # ---------------------------------------------------------------------------
-# retry_assignment_submission — status gating edge cases
+# retry_assignment_submission: status gating edge cases
 # ---------------------------------------------------------------------------
 
 
@@ -217,7 +217,7 @@ class TestRetryStatusGatingEdge:
         self, db, regular_user, mock_request, assignment
     ):
         """A PENDING row (mid-retry, not yet resubmitted) is not GRADED, so
-        retry must reject it with 400 — same gate as SUBMITTED but exercising
+        retry must reject it with 400, the same gate as SUBMITTED but exercising
         the PENDING value specifically."""
         await _make_user_submission(
             db,
@@ -239,7 +239,7 @@ class TestRetryStatusGatingEdge:
 
 
 # ---------------------------------------------------------------------------
-# retry_assignment_submission — attempt cap arithmetic
+# retry_assignment_submission: attempt cap arithmetic
 # ---------------------------------------------------------------------------
 
 
@@ -322,7 +322,7 @@ class TestRetryAttemptCapEdge:
 
 
 # ---------------------------------------------------------------------------
-# retry_assignment_submission — side-effect wiping
+# retry_assignment_submission: side-effect wiping
 # ---------------------------------------------------------------------------
 
 
@@ -394,7 +394,7 @@ class TestRetryThenResubmitChain:
         """The existing suite seeds a PENDING row directly to test create's
         reuse path. Here the PENDING state is produced by the REAL retry
         function, then create_assignment_submission transitions that same row
-        to SUBMITTED — proving the two functions hand off correctly and no
+        to SUBMITTED, proving the two functions hand off correctly and no
         duplicate submission row is created."""
         original_uuid = "aus_chain_test"
         submission = await _make_user_submission(
@@ -437,7 +437,7 @@ class TestRetryThenResubmitChain:
 
 
 # ---------------------------------------------------------------------------
-# create_assignment_submission — NOT_SUBMITTED reuse state
+# create_assignment_submission: NOT_SUBMITTED reuse state
 # ---------------------------------------------------------------------------
 
 
@@ -483,7 +483,7 @@ class TestCreateReusesNotSubmittedRow:
 
 
 # ---------------------------------------------------------------------------
-# API-token blocking (_block_api_tokens) — not covered by the existing suite
+# API-token blocking (_block_api_tokens), not covered by the existing suite
 # ---------------------------------------------------------------------------
 
 
@@ -491,7 +491,7 @@ class TestApiTokenBlocked:
     async def test_retry_blocked_for_api_token_user(
         self, db, mock_request, org, assignment
     ):
-        """API tokens cannot touch submission data — retry must 403 before any
+        """API tokens cannot touch submission data; retry must 403 before any
         DB work."""
         token_user = _api_token_user(org.id)
         with patch(_PATCH_RBAC, new_callable=AsyncMock):

@@ -289,7 +289,7 @@ function PlaylistPlayer({
             <div
               ref={progressRef}
               onClick={seekTo}
-              // dir="ltr": see InlineAudioPlayer — fill, thumb and seek math all
+              // dir="ltr": see InlineAudioPlayer. Fill, thumb and seek math all
               // assume left-to-right, and audio transport is LTR everywhere.
               dir="ltr"
               className="flex-1 h-1 bg-gray-200 rounded-full cursor-pointer relative group"
@@ -778,7 +778,7 @@ function AudioBlockComponent(props: ExtendedNodeViewProps) {
                   className="w-full rounded-lg border border-neutral-200 p-3 text-sm outline-none focus:border-blue-400 resize-y"
                 />
 
-                {/* Voice(s) — single voice for text-to-speech and speak; two for podcast */}
+                {/* Voice(s): single voice for text-to-speech and speak; two for podcast */}
                 {genMode !== 'podcast' ? (
                   <label className="block">
                     <span className="text-xs font-medium text-neutral-600">Voice</span>
@@ -1011,7 +1011,7 @@ function AudioBlockComponent(props: ExtendedNodeViewProps) {
           </div>
         )}
 
-        {/* Block exists — preview + controls */}
+        {/* Block exists: preview + controls */}
         {blockObject && (
           <div className="space-y-4">
             {/* Size Controls */}

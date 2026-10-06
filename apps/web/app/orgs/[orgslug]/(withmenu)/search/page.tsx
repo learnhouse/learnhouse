@@ -66,7 +66,7 @@ function extractPreviewText(raw: string | undefined | null): string {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Types mirror the backend SearchResult shape — kept flexible on purpose so
+// Types mirror the backend SearchResult shape, kept flexible on purpose so
 // the backend stays the source of truth.
 // ─────────────────────────────────────────────────────────────────────────────
 
@@ -176,7 +176,7 @@ type ResourceKey =
 type TabKey = 'all' | ResourceKey
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Section registry — each resource type provides its own card renderer and
+// Section registry: each resource type provides its own card renderer and
 // metadata. Adding a new type means one entry here, not scattered JSX.
 // ─────────────────────────────────────────────────────────────────────────────
 

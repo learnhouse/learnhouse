@@ -30,7 +30,7 @@ export default function TokenCreatedDialog({
       setCopied(true)
       setTimeout(() => setCopied(false), 2000)
     } catch {
-      // Clipboard API failed (e.g. insecure context) — fall through silently.
+      // Clipboard API failed (e.g. insecure context); fall through silently.
     }
   }
 

@@ -7,7 +7,7 @@ const LibraryBlockComponent = dynamic(() => import('./LibraryBlockComponent'), {
 })
 
 /**
- * A reference to something that already lives in the org Library — a media file
+ * A reference to something that already lives in the org Library: a media file
  * or embed, or any other library resource (course, podcast, community, board,
  * playground).
  *

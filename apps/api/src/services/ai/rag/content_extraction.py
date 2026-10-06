@@ -162,7 +162,7 @@ def _walk_prosemirror_node(node: dict, parts: list[str]) -> None:
             parts.append(f"[{node_type}] {texts}")
         return
 
-    # Handle H5P blocks — embed-only, the interactive content lives on the
+    # Handle H5P blocks. They are embed-only: the interactive content lives on the
     # author's own H5P host, so the author-supplied title is the only text we
     # have. Handled explicitly so it does not fall through to the generic
     # recursion, which would yield nothing for this atom node.
@@ -242,7 +242,7 @@ def _extract_block_content(block: Block, activity_name: str) -> Optional[dict]:
     content = block.content or {}
 
     if block_type == BlockTypeEnum.BLOCK_VIDEO:
-        # Skip video blocks — too heavy, no text
+        # Skip video blocks: too heavy, no text
         return None
 
     if block_type == BlockTypeEnum.BLOCK_DOCUMENT_PDF:

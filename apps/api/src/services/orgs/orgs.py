@@ -160,7 +160,7 @@ async def _enforce_free_org_cap(
 
     The shared demo organization is excluded. Visitors are joined to it as
     admin, so without this filter simply looking at the demo would consume one
-    of a user's three free slots — and a user who looked at it three times over
+    of a user's three free slots, and a user who looked at it three times over
     could not create a real organization at all.
     """
     admin_org_ids = (
@@ -207,7 +207,7 @@ async def _try_send_org_created(request: Request, org, current_user, db_session)
     The CTA lands on the new org's own dashboard, on the org's host. It used to
     point at `{request-host}/home`, which is wrong twice over: orgs are created
     from the platform apex, so the host was the apex rather than the new org,
-    and `/home` is the org picker on every host — the creator was sent to a list
+    and `/home` is the org picker on every host, so the creator was sent to a list
     of organizations instead of into the one they had just made.
     """
     try:
@@ -228,7 +228,7 @@ async def _try_send_org_created(request: Request, org, current_user, db_session)
 
 
 def _try_record_org_admin_in_loops(current_user, org) -> None:
-    """Best-effort: the org creator is now an ADMIN — add them to the Loops
+    """Best-effort: the org creator is now an ADMIN, so add them to the Loops
     marketing audience. Fire-and-forget, SaaS-gated, never fails the create."""
     try:
         from src.services.marketing.loops import record_org_admin_in_loops
@@ -450,7 +450,7 @@ async def update_org(
     # RBAC check
     await rbac_check(request, org.org_uuid, current_user, "update", db_session)
 
-    # Everything else on the demo org is fair game — editing the name or logo
+    # Everything else on the demo org is fair game; editing the name or logo
     # is part of what a prospect is here to try, and the refresh puts it back.
     # Two fields are not:
     #
@@ -766,7 +766,7 @@ async def delete_org(
             detail="Organization not found",
         )
 
-    # The demo organization is shared, and every visitor holds admin on it — so
+    # The demo organization is shared, and every visitor holds admin on it, so
     # the RBAC check below would happily let any one of them delete it for
     # everybody. It also has its own teardown path: this one leaves the org's
     # media behind in storage and sends a "your organization was deleted"
@@ -1014,7 +1014,7 @@ async def update_org_signup_mechanism(
     await db_session.commit()
     await db_session.refresh(org_config)
 
-    # Explicit Redis invalidation — the SA after_update hook does this too,
+    # Explicit Redis invalidation. The SA after_update hook does this too,
     # but signup method changes must take effect instantly on the public
     # /signup page, so we don't want to rely on the hook's success.
     from src.services.orgs.cache import invalidate_org_cache
@@ -1378,7 +1378,7 @@ async def update_org_email_sender_name_config(
     """Set the display name on transactional email sent for this org.
 
     Only the NAME is configurable. The From address stays the platform's
-    ``system_email_address`` — it is the domain holding the verified SPF/DKIM
+    ``system_email_address``; it is the domain holding the verified SPF/DKIM
     records, and letting an org pick its own address would break DKIM
     alignment and damage a sending reputation shared by every tenant.
 
@@ -1726,7 +1726,7 @@ async def update_org_signup_fields_config(
     """Replace the org's custom signup field definitions.
 
     Note these definitions are served publicly (the signup form is anonymous),
-    so labels/options are public strings — the admin UI says as much.
+    so labels/options are public strings; the admin UI says as much.
     """
     statement = select(Organization).where(Organization.id == org_id)
     org = (await db_session.execute(statement)).scalars().first()
@@ -2075,7 +2075,7 @@ async def rbac_check(
     # its join mechanism are all served to logged-out visitors, and the OAuth
     # signup flow validates an invite code as AnonymousUser.
     #
-    # SECURITY: this makes "read" a no-op — it is NOT an authorization gate.
+    # SECURITY: this makes "read" a no-op; it is NOT an authorization gate.
     # Never guard org-scoped data that is not public (member lists, pending
     # invites, config secrets) with rbac_check(..., "read", ...); gate those on
     # require_org_membership / is_org_admin at the call site instead.

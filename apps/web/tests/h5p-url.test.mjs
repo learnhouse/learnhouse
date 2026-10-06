@@ -163,7 +163,7 @@ describe("normalizeH5PUrl — schemeless input", () => {
   });
 
   test("a scheme followed by digits never reaches the frame as that scheme", () => {
-    // It parses as host `javascript`, port 8080 — harmless, and crucially not
+    // It parses as host `javascript`, port 8080: harmless, and crucially not
     // a javascript: URL.
     expect(normalizeH5PUrl("javascript:8080/x").url.startsWith("https://")).toBe(true);
   });

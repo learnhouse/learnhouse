@@ -123,7 +123,7 @@ async def create_usergroup(
     # SECURITY: enforce the API-token org boundary. The target org here comes
     # from the request body (usergroup_create.org_id), which neither the global
     # path/query org-boundary net (auth._verify_api_token_org_boundary) nor the
-    # RBAC element-org lookup can see — the RBAC check below authorizes against
+    # RBAC element-org lookup can see: the RBAC check below authorizes against
     # the placeholder "usergroup_X", whose org resolves to None so the boundary
     # check is skipped. Without this, a token whose creator also belongs to
     # another org could create a usergroup in that other org. A token is bound
@@ -157,7 +157,7 @@ async def create_usergroup(
             detail="Organization does not exist",
         )
 
-    # Usage check — this is the usergroups limit, not courses. (Previously
+    # Usage check: this is the usergroups limit, not courses. (Previously
     # keyed "courses", so the usergroups cap was never actually enforced.)
     await check_limits_with_usage("usergroups", org.id, db_session)
 
@@ -204,7 +204,7 @@ async def read_usergroup_by_id(
             detail="UserGroup not found",
         )
 
-    # RBAC check — scoped to the usergroup's org to prevent cross-org IDOR
+    # RBAC check, scoped to the usergroup's org to prevent cross-org IDOR
     await rbac_check(
         request,
         usergroup_uuid=usergroup.usergroup_uuid,
@@ -235,7 +235,7 @@ async def get_users_linked_to_usergroup(
             detail="UserGroup not found",
         )
 
-    # RBAC check — scoped to the usergroup's org to prevent cross-org IDOR
+    # RBAC check, scoped to the usergroup's org to prevent cross-org IDOR
     await rbac_check(
         request,
         usergroup_uuid=usergroup.usergroup_uuid,
@@ -359,7 +359,7 @@ async def get_resources_by_usergroup(
             detail="UserGroup not found",
         )
 
-    # RBAC check — scoped to the usergroup's org to prevent cross-org IDOR
+    # RBAC check, scoped to the usergroup's org to prevent cross-org IDOR
     await rbac_check(
         request,
         usergroup_uuid=usergroup.usergroup_uuid,
@@ -394,7 +394,7 @@ async def update_usergroup_by_id(
             detail="UserGroup not found",
         )
 
-    # RBAC check — scoped to the usergroup's org to prevent cross-org IDOR
+    # RBAC check, scoped to the usergroup's org to prevent cross-org IDOR
     await rbac_check(
         request,
         usergroup_uuid=usergroup.usergroup_uuid,
@@ -435,7 +435,7 @@ async def delete_usergroup_by_id(
             detail="UserGroup not found",
         )
 
-    # RBAC check — scoped to the usergroup's org to prevent cross-org IDOR
+    # RBAC check, scoped to the usergroup's org to prevent cross-org IDOR
     await rbac_check(
         request,
         usergroup_uuid=usergroup.usergroup_uuid,
@@ -445,7 +445,7 @@ async def delete_usergroup_by_id(
         org_id=usergroup.org_id,
     )
 
-    # Feature usage — deleting a usergroup must DECREASE the counter, not increase it.
+    # Feature usage: deleting a usergroup must DECREASE the counter, not increase it.
     await decrease_feature_usage("usergroups", usergroup.org_id, db_session)
 
     usergroup_uuid_val = usergroup.usergroup_uuid
@@ -484,7 +484,7 @@ async def add_users_to_usergroup(
             detail="UserGroup not found",
         )
 
-    # RBAC check — scoped to the usergroup's org to prevent cross-org IDOR
+    # RBAC check, scoped to the usergroup's org to prevent cross-org IDOR
     await rbac_check(
         request,
         usergroup_uuid=usergroup.usergroup_uuid,
@@ -580,7 +580,7 @@ async def remove_users_from_usergroup(
             detail="UserGroup not found",
         )
 
-    # RBAC check — scoped to the usergroup's org to prevent cross-org IDOR
+    # RBAC check, scoped to the usergroup's org to prevent cross-org IDOR
     await rbac_check(
         request,
         usergroup_uuid=usergroup.usergroup_uuid,
@@ -633,7 +633,7 @@ async def add_resources_to_usergroup(
             detail="UserGroup not found",
         )
 
-    # RBAC check — scoped to the usergroup's org to prevent cross-org IDOR
+    # RBAC check, scoped to the usergroup's org to prevent cross-org IDOR
     await rbac_check(
         request,
         usergroup_uuid=usergroup.usergroup_uuid,
@@ -706,7 +706,7 @@ async def remove_resources_from_usergroup(
             detail="UserGroup not found",
         )
 
-    # RBAC check — scoped to the usergroup's org to prevent cross-org IDOR
+    # RBAC check, scoped to the usergroup's org to prevent cross-org IDOR
     await rbac_check(
         request,
         usergroup_uuid=usergroup.usergroup_uuid,

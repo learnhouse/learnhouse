@@ -6,7 +6,7 @@
  * Yjs binary state rather than in ordinary columns. The collaboration server
  * loads that state from `Board.ydoc_state` (via GET /boards/{uuid}/ydoc) the
  * first time someone opens a board, which is what makes seeding it possible at
- * all — otherwise every demo board opens on a blank canvas and reads as a
+ * all. Otherwise every demo board opens on a blank canvas and reads as a
  * feature nobody uses.
  *
  * This lives in apps/collab because that is where `yjs` already is. It writes
@@ -73,7 +73,7 @@ function card({ x, y, width = 300, height = 200, color = '#ffffff', title, body 
   return block('boardCard', { x, y, width, height, color, zIndex: 1 }, children)
 }
 
-/** A checklist. This one is an atom — its items live entirely in attributes. */
+/** A checklist. This one is an atom: its items live entirely in attributes. */
 function todo({ x, y, width = 280, height = 260, color = 'blue', title, items }) {
   return block('todoBlock', {
     x,

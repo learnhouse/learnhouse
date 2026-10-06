@@ -163,7 +163,7 @@ async def test_update_user_cannot_self_promote_email_verified(
     body; (2) the service's ``_PROTECTED_FIELDS`` allowlist also refuses
     to apply it, as a belt-and-braces guard against future schema drift.
     """
-    # Layer 1: schema-level — pydantic drops unknown fields by default and
+    # Layer 1: schema-level. pydantic drops unknown fields by default and
     # the ``extra`` setting on SQLModel rejects them on strict validation.
     assert "email_verified" not in UserUpdate.model_fields
     assert "email_verified_at" not in UserUpdate.model_fields

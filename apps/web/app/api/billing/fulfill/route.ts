@@ -4,7 +4,7 @@ import { guardBilling, badRequest, requireOrgBillingAccess } from "../_lib";
 
 // POST /api/billing/fulfill
 // Body: { sessionId, orgId }
-// → { fulfilled, plan? } — verifies a completed Stripe Checkout session and
+// → { fulfilled, plan? }: verifies a completed Stripe Checkout session and
 // applies the org's plan directly, WITHOUT depending on webhook delivery.
 //
 // This is the redundant automatic upgrade path: the client calls it when the
@@ -31,7 +31,7 @@ export async function POST(request: NextRequest) {
 
   // Authorize the caller for this org. The plan itself comes from the verified
   // Stripe session metadata inside fulfillCheckoutSession, so a caller cannot
-  // grant themselves a plan they didn't pay for — but they must still be an
+  // grant themselves a plan they didn't pay for, but they must still be an
   // admin of the org they're fulfilling for.
   const access = await requireOrgBillingAccess(orgId);
   if ("error" in access) return access.error;

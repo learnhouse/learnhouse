@@ -108,7 +108,7 @@ async def api_generate_quiz(
             body.activity_uuid, org.id, db_session
         )
         # Grounding a quiz on an activity's (possibly restricted/draft) content
-        # is an authoring action — require content-author rights on that course,
+        # is an authoring action: require content-author rights on that course,
         # not bare org membership.
         if course_uuid:
             await check_resource_access(

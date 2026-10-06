@@ -123,7 +123,7 @@ async def create_webhook_endpoint(
     await require_org_admin(acting_user_id, org_id, db_session)
 
     # Every visitor to the shared demo is an admin of it, so an endpoint
-    # registered there is a live feed of whatever happens next — including the
+    # registered there is a live feed of whatever happens next, including the
     # signup and enrolment events carrying the next visitor's real email
     # address, delivered to a server the previous visitor controls. The refresh
     # removes the endpoint as drift, but only after ten minutes of delivery.

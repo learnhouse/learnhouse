@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# Regenerate — or verify — every lockfile in the repo.
+# Regenerate (or verify) every lockfile in the repo.
 #
 #   scripts/lockfiles.sh            rewrite the lockfiles to match the manifests
 #   scripts/lockfiles.sh --check    fail if any lockfile is out of date

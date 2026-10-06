@@ -128,7 +128,7 @@ function OpenSignUpComponent({ org: propOrg }: OpenSignUpComponentProps = {}) {
           // gave us nothing readable.
           track(AnalyticsEvent.SignupFailed, { status_code: res.status })
           setError(getErrorMessage(message?.detail, t('common.something_went_wrong')))
-          // Turnstile tokens are single-use — fetch a fresh one for the retry.
+          // Turnstile tokens are single-use, so fetch a fresh one for the retry.
           turnstileRef.current?.reset()
         }
       } catch (err) {
@@ -205,7 +205,7 @@ function OpenSignUpComponent({ org: propOrg }: OpenSignUpComponentProps = {}) {
                 disabled={resendState === 'sending'}
                 onClick={async () => {
                   setResendState('sending')
-                  // org?.id is undefined on the org-less apex — that's fine, the
+                  // org?.id is undefined on the org-less apex; that's fine, the
                   // backend resends by email without an org.
                   const res = await resendVerificationEmail(formik.values.email, org?.id)
                   setResendState(res.success ? 'sent' : 'error')
@@ -396,7 +396,7 @@ function OpenSignUpComponent({ org: propOrg }: OpenSignUpComponentProps = {}) {
         </FormLayout>
         )}
 
-        {/* Divider — only earns its place between two sets of options. */}
+        {/* Divider: only earns its place between two sets of options. */}
         {passwordAllowed && googleAllowed && (
           <div className="relative my-6">
             <div className="absolute inset-0 flex items-center">

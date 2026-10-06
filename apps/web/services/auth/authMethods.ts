@@ -3,7 +3,7 @@
  *
  * Mirrors `allowed_auth_methods` in src/services/orgs/auth_policy.py, including
  * its two "unrestricted" cases: an absent list and an empty one. The empty case
- * matters — a mis-saved policy must not render a login page with no way in.
+ * matters: a mis-saved policy must not render a login page with no way in.
  *
  * The backend refuses a disallowed sign-in at /auth/login, /auth/oauth and the
  * magic-link endpoints; this module only decides what the login page bothers to

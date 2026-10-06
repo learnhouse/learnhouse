@@ -16,7 +16,7 @@ function compareVersions(a: string, b: string): number {
 
 /**
  * Check npm for the latest version and warn if outdated.
- * Non-blocking — silently fails on network errors.
+ * Non-blocking; silently fails on network errors.
  */
 export async function checkForUpdates(): Promise<void> {
   try {
@@ -36,7 +36,7 @@ export async function checkForUpdates(): Promise<void> {
       console.log()
     }
   } catch {
-    // Network error — skip silently
+    // Network error: skip silently
   }
 }
 
@@ -95,7 +95,7 @@ export async function resolveAppImage(
       return { image: `${GHCR_BASE}:${appVersion}`, isLatest: false }
     }
   } catch {
-    // Network error — fall through to latest
+    // Network error: fall through to latest
   }
 
   return { image: `${GHCR_BASE}:latest`, isLatest: true }

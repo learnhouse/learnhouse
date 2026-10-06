@@ -82,7 +82,7 @@ describe('globals.css', () => {
     ].join('|')
   )
 
-  // Physical declarations are allowed, but only with a stated reason — so the
+  // Physical declarations are allowed, but only with a stated reason, so the
   // next person doesn't have to guess whether it was deliberate.
   test('every physical declaration is justified', () => {
     const unjustified = []
@@ -101,7 +101,7 @@ describe('globals.css', () => {
     expect(css).toMatch(/\[dir='rtl'\]/)
   })
 
-  // Being present in the source is not enough — a rule can be valid, correct,
+  // Being present in the source is not enough: a rule can be valid, correct,
   // and still never reach the browser. The icon-mirroring block was silently
   // swallowed once because a comment above it contained `*/`, which closed the
   // comment early and took the following rule with it. Nothing failed: no
@@ -128,7 +128,7 @@ describe('globals.css', () => {
 
     // Tajawal must be forced, not offered as a fallback. next/font injects a
     // local "<Family> Fallback" face for CLS, and on macOS that adjusted system
-    // font covers Arabic — so a per-glyph fallback stack resolves there and the
+    // font covers Arabic, so a per-glyph fallback stack resolves there and the
     // real Arabic face never loads. Two !important rules (one per layer,
     // because the base font-family is declared in both) are what prevent that.
     const forced = result.css.match(/font-family:var\(--font-arabic\)[^}]*!important/g) ?? []
@@ -148,8 +148,8 @@ describe('Arabic translations', () => {
     )
 
   test('ar.json covers every en.json key', () => {
-    // Build the Arabic key set once. Inside the filter it was rebuilt — and
-    // the whole file re-flattened — for every English key, which put the test
+    // Build the Arabic key set once. Inside the filter it was rebuilt (and
+    // the whole file re-flattened) for every English key, which put the test
     // on the edge of its own timeout.
     const arabicKeys = new Set(flatten(ar))
     const missing = flatten(en).filter((k) => !arabicKeys.has(k))

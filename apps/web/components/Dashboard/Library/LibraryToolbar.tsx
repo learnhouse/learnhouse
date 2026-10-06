@@ -1,7 +1,7 @@
 'use client'
 import React from 'react'
 
-// Folder color presets — key is stored on folder.color; maps to a soft icon
+// Folder color presets: key is stored on folder.color; maps to a soft icon
 // tile and a solid swatch for the picker. Keep these in sync with the picker.
 export const FOLDER_COLORS: Record<string, { tile: string; dot: string }> = {
   violet: { tile: 'bg-violet-50 text-violet-500', dot: 'bg-violet-500' },

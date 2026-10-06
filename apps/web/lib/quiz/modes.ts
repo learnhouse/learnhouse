@@ -7,8 +7,8 @@
  * contents, deciding whether a select-all-that-apply question is all-or-nothing
  * or earns partial credit.
  *
- * Both shapes exist in two places — the graded assignment QUIZ task
- * (`TaskQuizObject`) and the in-editor `blockQuiz` (`QuizBlockComponent`) — so
+ * Both shapes exist in two places, the graded assignment QUIZ task
+ * (`TaskQuizObject`) and the in-editor `blockQuiz` (`QuizBlockComponent`), so
  * the resolution lives here once, keyed on a correct-option COUNT rather than
  * on either component's option shape.
  *
@@ -17,7 +17,7 @@
  * Nothing here rewrites stored questions.
  *
  * The server mirror is `apps/api/src/services/courses/activities/quiz_modes.py`.
- * Keep the two in sync — the learner sees the score this file computes and the
+ * Keep the two in sync: the learner sees the score this file computes and the
  * server stores the score that one computes, so a divergence is a visible bug.
  */
 
@@ -74,7 +74,7 @@ export type QuizOptionOutcome = {
  * Score one question in [0, 1].
  *
  * - all-or-nothing (either response type): 1 only on an exact set match.
- * - partial credit, single response: still 1 or 0 — there is no partial state
+ * - partial credit, single response: still 1 or 0, since there is no partial state
  *   to award when only one option can be right.
  * - partial credit, multiple response:
  *   `(correctSelected - incorrectSelected) / totalCorrect`, clamped to [0, 1].

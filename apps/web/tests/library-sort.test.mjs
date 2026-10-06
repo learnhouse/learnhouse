@@ -2,7 +2,7 @@ import { describe, expect, test } from "bun:test";
 
 import { sortLibrary } from "../lib/library/sort.ts";
 
-// Content items carry their display fields under `.resource` — courses expose
+// Content items carry their display fields under `.resource`; courses expose
 // `name`, some resources only a `title`.
 const item = (resource_uuid, resource) => ({ resource_uuid, resource });
 const names = (list) => list.map((x) => x.name ?? x.resource?.name ?? x.resource?.title);
@@ -140,7 +140,7 @@ describe("sortLibrary", () => {
 
     const sorted = sortLibrary(folders, items, "manual");
 
-    // Same order AND the same array references — the drag order is trusted.
+    // Same order AND the same array references: the drag order is trusted.
     expect(sorted.folders).toBe(folders);
     expect(sorted.items).toBe(items);
     expect(names(sorted.folders)).toEqual(["Zeta", "Alpha"]);

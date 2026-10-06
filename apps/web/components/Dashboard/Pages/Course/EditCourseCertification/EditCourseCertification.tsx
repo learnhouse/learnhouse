@@ -191,7 +191,7 @@ function EditCourseCertification(_props: EditCourseCertificationProps) {
         // The backend refuses to delete a certification that has already awarded
         // certificates, because deleting it destroys them and breaks the
         // verification links their holders have shared. Show that reason instead
-        // of a generic failure — it tells the teacher what to do next.
+        // of a generic failure; it tells the teacher what to do next.
         const detail = (e as any)?.detail ?? (e as any)?.message;
         setError(
           typeof detail === 'string' && detail

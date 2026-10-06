@@ -242,7 +242,7 @@ async def _load_applicable_roles(
     user holds it there, or (b) it is a global default role (``org_id IS NULL``)
     and the user is a member of the target organization. When ``target_org_id``
     is ``None`` (placeholder UUIDs used during top-level creation), every role
-    the user holds is returned — existence checks and org-scoped request bodies
+    the user holds is returned; existence checks and org-scoped request bodies
     gate those paths downstream.
     """
     if target_org_id is None:
@@ -284,7 +284,7 @@ async def _shared_org_ids_with_target_user(
 ) -> list[int] | None:
     """Org ids where both the caller and the targeted user are members.
 
-    Returns ``None`` when ``target_user_uuid`` names no real user — the create
+    Returns ``None`` when ``target_user_uuid`` names no real user: the create
     paths pass a placeholder (``user_x``), which has no target to be scoped
     against and is gated by the endpoint instead.
     """
@@ -358,7 +358,7 @@ async def authorization_verify_based_on_roles(
     if element_type == "users" and target_org_id is None:
         # A user row has no org column, so the generic resolver returns None and
         # the placeholder branch below would hand back every role the caller
-        # holds anywhere — letting an admin of one org act on an account that
+        # holds anywhere, letting an admin of one org act on an account that
         # only belongs to another. Scope to the orgs the two actually share.
         shared_org_ids = await _shared_org_ids_with_target_user(
             db_session, user_id, element_uuid
@@ -510,7 +510,7 @@ async def authorization_verify_based_on_roles_and_authorship(
             from ee.services.payments.payments_access import check_enrollment_access
             hasPaidEnrollmentAccess = await check_enrollment_access(element_uuid, user_id, db_session)
         except Exception:
-            pass  # payments module not available (community edition) — skip silently
+            pass  # payments module not available (community edition), skip silently
     logger.info("[RBAC] hasPaidEnrollmentAccess=%s", hasPaidEnrollmentAccess)
 
     if isAuthor or isRole or hasUserGroupAccess or hasPaidEnrollmentAccess:

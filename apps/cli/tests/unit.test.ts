@@ -116,7 +116,7 @@ describe('generateDockerCompose', () => {
   })
 })
 
-// ─── Content volume migration — compose patcher ──────────────
+// ─── Content volume migration: compose patcher ──────────────
 
 describe('patchComposeAddContentVolume', () => {
   const legacyCompose = `name: learnhouse-abc123
@@ -299,7 +299,7 @@ describe('config-store', () => {
   })
 
   it('listInstallations returns empty when ~/.learnhouse does not exist', () => {
-    // This test assumes no real installations interfere —
+    // This test assumes no real installations interfere;
     // if ~/.learnhouse exists on the host, this will still pass
     // since it lists only complete installs
     const list = listInstallations()
@@ -310,7 +310,7 @@ describe('config-store', () => {
 // ─── Regression: --ci must generate a real DB password ──────
 //
 // In CI mode the setup command used to leave `config.dbPassword` undefined,
-// which the env template rendered as the literal string "undefined" — both
+// which the env template rendered as the literal string "undefined", both
 // in the connection string and in POSTGRES_PASSWORD. The DB still worked
 // because both sides used the same wrong value, but the install shipped an
 // obviously-wrong credential. These tests pin the contract: when a password
@@ -402,7 +402,7 @@ describe('generateNginxConf — Server Action headers', () => {
 // `localhost` to ::1 first. nginx's plain `listen 80;` binds IPv4 only,
 // so the healthcheck failed permanently and the proxy showed
 // "(unhealthy)" even though it was serving traffic fine. We pair an
-// explicit IPv6 listen in the conf with a 127.0.0.1 healthcheck —
+// explicit IPv6 listen in the conf with a 127.0.0.1 healthcheck;
 // either alone is enough, both together is durable.
 
 describe('generateNginxConf — IPv6 listen', () => {
@@ -430,7 +430,7 @@ describe('generateDockerCompose — IPv6-safe healthchecks', () => {
 // ─── Regression: org name/slug propagate to the backend ─────
 //
 // The CLI used to collect `orgName` from the user but never sent it
-// downstream — the API's auto-install hard-coded "Default Organization"
+// downstream; the API's auto-install hard-coded "Default Organization"
 // / slug "default". The user's wizard input was discarded silently.
 // The fix threads LEARNHOUSE_INITIAL_ORG_NAME / _ORG_SLUG into .env,
 // where the API's `install(short=True)` reads them.
@@ -478,7 +478,7 @@ vi.mock('../src/services/docker.js', async () => {
 
 // Capture execSync so the docker helpers below can be asserted on the exact
 // command they build, without shelling out to a real daemon. importActual
-// keeps spawn/spawnSync intact — the binary-surface tests spawn a real CLI
+// keeps spawn/spawnSync intact; the binary-surface tests spawn a real CLI
 // subprocess and must not be stubbed.
 vi.mock('node:child_process', async () => {
   const actual = await vi.importActual<typeof import('node:child_process')>('node:child_process')
@@ -563,7 +563,7 @@ describe('findInstallDir — picks the running install over a stale one', () => 
 // The API's Pydantic EmailStr rejects RFC 6761 reserved TLDs (.local,
 // .test, .localhost, .invalid). If the CLI accepts one of those, the
 // generated .env passes setup but the API container crashes during
-// auto_install — leaving an empty `organization` table and a restart
+// auto_install, leaving an empty `organization` table and a restart
 // loop. Reported on Discord against 1.2.1 with a *.local admin email.
 
 describe('validateEmail — reserved TLDs', () => {
@@ -738,7 +738,7 @@ describe('update — docker pull/up commands', () => {
   })
 })
 
-// ─── quoteEnvValue — .env value escaping ────────────────────
+// ─── quoteEnvValue: .env value escaping ────────────────────
 //
 // docker compose's dotenv parser has subtle rules: bare values can have
 // `#` truncate them, `$VAR` gets interpolated, and unquoted spaces are
@@ -945,7 +945,7 @@ describe('validateSlug', () => {
   })
 })
 
-// ─── readEnvVar / setEnvVar — .env mutation helpers ─────────
+// ─── readEnvVar / setEnvVar: .env mutation helpers ─────────
 //
 // `setEnvVar` is called by the `update` command to stamp EE_IMAGE_TAG after
 // a pull, and by `env` to persist user edits. `readEnvVar` reads connection
@@ -1031,7 +1031,7 @@ describe('setEnvVar', () => {
     fs.writeFileSync(path.join(tmpDir, '.env'), 'FOO=bar')
     setEnvVar(tmpDir, 'NEW_KEY', 'value')
     const content = fs.readFileSync(path.join(tmpDir, '.env'), 'utf-8')
-    // The two lines must be separated — not merged into "FOO=barNEW_KEY=value"
+    // The two lines must be separated, not merged into "FOO=barNEW_KEY=value"
     expect(content).toMatch(/FOO=bar\n/)
     expect(content).toContain('NEW_KEY=value')
   })
@@ -1076,7 +1076,7 @@ describe('isExternalDbInstall', () => {
   })
 })
 
-// ─── ensureAlembicBaseline — migration baseline stamping ─────
+// ─── ensureAlembicBaseline: migration baseline stamping ─────
 //
 // Installs created via the app's create_all startup path have no Alembic
 // revision in the database. Before running `upgrade head` we stamp the
@@ -1134,7 +1134,7 @@ describe('ensureAlembicBaseline', () => {
 
     const warns: string[] = []
     const ui = { log: vi.fn(), ok: vi.fn(), warn: (m: string) => warns.push(m) }
-    // Must not propagate the exception — the update continues with a warning.
+    // Must not propagate the exception; the update continues with a warning.
     expect(() => ensureAlembicBaseline(tmpDir, COMMUNITY_LAYOUT, ui)).not.toThrow()
     expect(warns.length).toBeGreaterThan(0)
     expect(warns[0]).toMatch(/baseline|alembic/i)
@@ -1155,7 +1155,7 @@ describe('ensureAlembicBaseline', () => {
   })
 })
 
-// ─── runAlembicUpgrade — migration execution ─────────────────
+// ─── runAlembicUpgrade: migration execution ─────────────────
 //
 // The upgrade step is the riskiest part of an update. Key invariants:
 //  - If the DB is already at head, `upgrade heads` must not be called
@@ -1238,7 +1238,7 @@ describe('runAlembicUpgrade', () => {
   })
 
   it('runs upgrade when only some of the multiple heads are present', async () => {
-    // One branch is at head, one is not — upgrade must run.
+    // One branch is at head, one is not, so upgrade must run.
     const { dockerComposeExec } = await import('../src/services/docker.js')
     const mockExec = vi.mocked(dockerComposeExec)
     mockExec
@@ -1269,7 +1269,7 @@ describe('runAlembicUpgrade', () => {
 //
 // These tests spawn the actual built CLI binary and verify the user-facing
 // experience: help text, version string, and error messages for invalid
-// input. No Docker daemon is needed — they cover the "what does the user
+// input. No Docker daemon is needed; they cover the "what does the user
 // see when they type X" layer that module-level unit tests cannot reach.
 
 const CLI_BIN = path.resolve(__dirname, '..', 'dist', 'bin', 'learnhouse.js')
@@ -1360,11 +1360,11 @@ describe('CLI — backup / restore --help', () => {
   })
 })
 
-// ─── CLI — command registration guard ────────────────────────
+// ─── CLI: command registration guard ────────────────────────
 //
 // A single sweep confirms all 16 commands are wired up. This test
 // exists because scale was fully implemented in scale.ts but forgotten
-// in bin/learnhouse.ts — `npx learnhouse scale` silently showed the
+// in bin/learnhouse.ts, so `npx learnhouse scale` silently showed the
 // main help instead of the scale UI. Never again.
 
 describe('CLI — all 16 commands registered', () => {
@@ -1396,7 +1396,7 @@ describe('CLI — all 16 commands registered', () => {
   it('setup --help lists all CI-mode flags a user needs to automate a deployment', () => {
     const r = runCli('setup --help')
     expect(r.exitCode).toBe(0)
-    // Every flag must be documented — missing flags mean users can't discover them
+    // Every flag must be documented; missing flags mean users can't discover them
     for (const flag of ['--ci', '--domain', '--port', '--admin-email', '--admin-password', '--org-name', '--org-slug', '--no-start']) {
       expect(r.stdout, `"${flag}" missing from setup --help`).toContain(flag)
     }
@@ -1419,7 +1419,7 @@ describe('CLI — all 16 commands registered', () => {
 })
 
 
-// ─── CLI — setup --ci --no-start: real install, no Docker ────
+// ─── CLI setup --ci --no-start: real install, no Docker ────
 //
 // setup --ci --no-start writes the full file set (docker-compose.yml,
 // .env, nginx.conf, learnhouse.config.json) without starting containers.
@@ -1428,7 +1428,7 @@ describe('CLI — all 16 commands registered', () => {
 //   1. Specific values we passed end up in the right files with the right keys
 //   2. The config command correctly reads and displays those values
 //   3. Commands that require running containers (backup, update, status)
-//      exit non-zero with clear, actionable error messages — not silent
+//      exit non-zero with clear, actionable error messages, not silent
 //      crashes or cryptic stack traces
 //   4. Doctor runs its diagnostic checks and exits 0 (never fails, just reports)
 //
@@ -1558,7 +1558,7 @@ describe('CLI — setup --ci --no-start: real installation, real file assertions
     expect(cfg.deploymentId).toMatch(/^[a-z0-9]{8,}$/)
   })
 
-  // ── config command — reads and displays our install ─────────
+  // ── config command: reads and displays our install ─────────
   it('"config" exits 0 and shows our domain in the URL line', () => {
     const r = cliHome(['config'])
     expect(r.status).toBe(0)
@@ -1580,9 +1580,9 @@ describe('CLI — setup --ci --no-start: real installation, real file assertions
     expect(r.stdout).toContain('.env')
   })
 
-  // ── status — prints URL from config before touching Docker ────
+  // ── status: prints URL from config before touching Docker ────
   it('"status" shows our install URL (read from config.json before any Docker call)', () => {
-    // status always prints the URL first — this is guaranteed regardless of whether
+    // status always prints the URL first; this is guaranteed regardless of whether
     // containers are running, because it reads learnhouse.config.json before docker compose ps
     const r = cliHome(['status'])
     expect(r.stdout + r.stderr).toContain(DOMAIN)
@@ -1593,15 +1593,15 @@ describe('CLI — setup --ci --no-start: real installation, real file assertions
     expect(r.stdout + r.stderr).toContain(String(PORT))
   })
 
-  // ── backup — specific error message when DB container is down ─
+  // ── backup: specific error message when DB container is down ─
   it('"backup" exits 1 and says the database container is not running', () => {
     const r = cliHome(['backup'])
     expect(r.status).toBe(1)
-    // Exact message from backup command — "not running" tells the user what to do
+    // Exact message from backup command; "not running" tells the user what to do
     expect(r.stdout + r.stderr).toContain('not running')
   })
 
-  // ── update — version check against GHCR before touching containers ─
+  // ── update: version check against GHCR before touching containers ─
   it('"update --to 0.0.0-nonexistent" exits 1 with version-not-found message', () => {
     const r = cliHome(['update', '--to', '0.0.0-nonexistent', '--no-backup', '--no-migrate'])
     expect(r.status).toBe(1)
@@ -1609,7 +1609,7 @@ describe('CLI — setup --ci --no-start: real installation, real file assertions
     expect(r.stdout + r.stderr).toContain('not found')
   })
 
-  // ── doctor — diagnostic, exits 0, confirms Docker present ────
+  // ── doctor: diagnostic, exits 0, confirms Docker present ────
   it('"doctor" exits 0 (it reports problems but never fails hard)', () => {
     const r = cliHome(['doctor'])
     expect(r.status).toBe(0)
@@ -1626,13 +1626,13 @@ describe('CLI — setup --ci --no-start: real installation, real file assertions
   })
 })
 
-// ─── CLI — setup --ci input validation (no Docker needed) ────
+// ─── CLI setup --ci input validation (no Docker needed) ────
 //
 // Bad input must: (1) exit 1, (2) print a clear message, (3) leave no
 // files behind. Each test uses an isolated temp HOME so a validation
 // failure can never pollute ~/.learnhouse on the developer's machine.
 // Testing at the binary level catches regressions that module-level tests
-// miss — e.g. a Commander flag definition that silently swallows the value
+// miss, e.g. a Commander flag definition that silently swallows the value
 // before validation runs.
 
 describe('CLI — setup --ci input validation', () => {
@@ -1709,17 +1709,17 @@ describe('CLI — setup --ci input validation', () => {
   })
 })
 
-// ─── Template completeness — all services present ────────────
+// ─── Template completeness: all services present ────────────
 //
 // The generated docker-compose.yml must include all four services that a
 // standard community install needs. Missing a service (e.g. redis dropped
 // by a template bug) causes the app to crash at startup, which users
-// report as "it just won't start" — hard to diagnose from logs alone.
+// report as "it just won't start", which is hard to diagnose from logs alone.
 
 describe('generateDockerCompose — service completeness', () => {
   it('default install includes all four core services', () => {
     const yml = generateDockerCompose(baseConfig)
-    // Each service has a container_name with the deployment id — this
+    // Each service has a container_name with the deployment id; this
     // confirms both the service declaration AND the naming convention.
     expect(yml).toContain(`learnhouse-app-${baseConfig.deploymentId}`)
     expect(yml).toContain(`learnhouse-db-${baseConfig.deploymentId}`)
@@ -1743,10 +1743,10 @@ describe('generateDockerCompose — service completeness', () => {
   })
 })
 
-// ─── Env file completeness — no silent empty/undefined values ─
+// ─── Env file completeness: no silent empty/undefined values ─
 //
 // A value rendered as "=undefined" or left blank causes the container to
-// start with a wrong environment — Postgres rejects the connection, JWT
+// start with a wrong environment: Postgres rejects the connection, JWT
 // verification fails, etc. These tests are the first line of defence
 // against template regressions that produce broken installs.
 
@@ -1771,7 +1771,7 @@ describe('generateEnvFile — no empty or undefined values', () => {
 
   it('required secrets are populated (JWT and auth keys)', () => {
     const env = generateEnvFile(envConfig)
-    // These must never be empty — an empty secret lets anyone forge tokens.
+    // These must never be empty; an empty secret lets anyone forge tokens.
     const lines = Object.fromEntries(
       env.split('\n')
         .filter((l) => l.includes('=') && !l.startsWith('#'))
@@ -1782,7 +1782,7 @@ describe('generateEnvFile — no empty or undefined values', () => {
   })
 })
 
-// ─── network — Postgres/Redis connection-string parsers ─────
+// ─── network: Postgres/Redis connection-string parsers ─────
 //
 // setup/doctor parse external DB/Redis URLs to probe TCP reachability.
 // A wrong port or a crash on a malformed string would break the probe,
@@ -1839,7 +1839,7 @@ describe('validateRequired', () => {
   })
 })
 
-// ─── resolveAppImage — channel / version resolution ─────────
+// ─── resolveAppImage: channel / version resolution ─────────
 //
 // `dev` is a pure mapping; `stable` queries GitHub + GHCR and must fall
 // back to :latest on any network failure (never throw, never block setup).
@@ -1890,7 +1890,7 @@ describe('resolveAppImage', () => {
   })
 })
 
-// ─── docker — output parsers (deployment discovery, restarts) ─
+// ─── docker: output parsers (deployment discovery, restarts) ─
 //
 // doctor / deployments parse `docker ps` and `docker inspect` text. These
 // run the real parser against canned execSync output (execSync is mocked
@@ -1969,7 +1969,7 @@ describe('docker output parsers', () => {
   })
 })
 
-// ─── config-store — listInstallations filtering & ordering ──
+// ─── config-store: listInstallations filtering & ordering ──
 
 describe('listInstallations — completeness filter and ordering', () => {
   const fakeHome = path.join(os.tmpdir(), 'lh-listinstall-' + process.pid)
@@ -2018,7 +2018,7 @@ describe('listInstallations — completeness filter and ordering', () => {
   })
 })
 
-// ─── dockerComposeExec — non-interactive contract (-T) ──────
+// ─── dockerComposeExec: non-interactive contract (-T) ──────
 //
 // Callers capture stdout (alembic output, EE readiness curl) under
 // stdio:'pipe'. Without -T, `docker compose exec` can abort with "the
@@ -2041,7 +2041,7 @@ describe('dockerComposeExec builds a non-interactive command', () => {
   })
 })
 
-// ─── migrateContentVolume — fs-driven status branches ───────
+// ─── migrateContentVolume: fs-driven status branches ───────
 //
 // The update flow preserves uploaded media before recreating the app.
 // These cases are decided purely from docker-compose.yml / .env content
@@ -2101,7 +2101,7 @@ describe('migrateContentVolume', () => {
   })
 })
 
-// ─── network — port probing & public IP (real sockets) ─────
+// ─── network: port probing & public IP (real sockets) ─────
 //
 // setup uses these to pick a free HTTP port and to reach external DB/Redis.
 // Tested against real loopback sockets (deterministic, no external network)
@@ -2215,7 +2215,7 @@ describe('network — port and connectivity probes', () => {
   })
 })
 
-// ─── services/health — readiness pollers (mocked fetch) ─────
+// ─── services/health: readiness pollers (mocked fetch) ─────
 
 describe('health pollers', () => {
   afterEach(() => { vi.restoreAllMocks() })
@@ -2275,7 +2275,7 @@ describe('health pollers', () => {
   })
 })
 
-// ─── docker.ts — command construction for the remaining helpers ──
+// ─── docker.ts: command construction for the remaining helpers ──
 //
 // Each helper is a thin wrapper that builds a specific docker command.
 // Asserting the exact command (and the success/failure handling for the
@@ -2371,7 +2371,7 @@ describe('docker.ts command builders', () => {
 
   it('dockerComposeUpRetry retries after a transient failure', () => {
     // The first `up` fails; the helper calls onRetry, waits the 15s backoff
-    // (a real blocking sleep — hence the long timeout), then succeeds.
+    // (a real blocking sleep, hence the long timeout), then succeeds.
     let n = 0
     execSync.mockImplementation(() => { n++; if (n === 1) throw new Error('dependency is unhealthy'); return Buffer.from('') })
     const onRetry = vi.fn()
@@ -2453,7 +2453,7 @@ describe('docker.ts isContainerRunning (real impl)', () => {
   })
 })
 
-// ─── version-check — checkForUpdates (mocked npm registry) ──
+// ─── version-check: checkForUpdates (mocked npm registry) ──
 
 describe('checkForUpdates', () => {
   afterEach(() => { vi.restoreAllMocks() })
@@ -2479,7 +2479,7 @@ describe('checkForUpdates', () => {
 
   it('notices a newer PATCH/MINOR release, not just a newer major', async () => {
     // Bump only the patch segment. compareVersions must walk past the equal
-    // major/minor segments to see the newer patch — a major-only comparison misses it.
+    // major/minor segments to see the newer patch; a major-only comparison misses it.
     const [maj, min, pat] = VERSION.split('.').map(Number)
     const newerPatch = `${maj}.${min}.${(pat || 0) + 1}`
     vi.spyOn(globalThis, 'fetch').mockResolvedValue(
@@ -2507,7 +2507,7 @@ describe('checkForUpdates', () => {
   })
 })
 
-// ─── generateEnvFile — optional-feature branches ────────────
+// ─── generateEnvFile: optional-feature branches ────────────
 
 describe('generateEnvFile — feature flags', () => {
   it('emits AI, SMTP email, S3 and Google vars when enabled', () => {
@@ -2549,7 +2549,7 @@ describe('generateEnvFile — feature flags', () => {
   })
 })
 
-// ─── update — formatBytes (human-readable sizes) ────────────
+// ─── update: formatBytes (human-readable sizes) ────────────
 
 describe('formatBytes', () => {
   it('formats bytes, KB, MB and GB', () => {
@@ -2560,7 +2560,7 @@ describe('formatBytes', () => {
   })
 })
 
-// ─── config-store / network — edge branches ─────────────────
+// ─── config-store / network: edge branches ─────────────────
 
 describe('config-store edge cases', () => {
   it('readConfig returns null on malformed JSON', () => {

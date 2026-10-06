@@ -1,6 +1,6 @@
 """Turn a stored assignment submission into something a human can read.
 
-An ``AssignmentTaskSubmission.task_submission`` row is a bag of UUIDs — a quiz answer
+An ``AssignmentTaskSubmission.task_submission`` row is a bag of UUIDs: a quiz answer
 is literally ``{"questionUUID": "question_3700…", "optionUUID": "option_f9ae…",
 "answer": true}``. On its own it tells an admin nothing. The question and option text
 live on the *task* (``AssignmentTask.contents``), so readability is a join, and this
@@ -12,7 +12,7 @@ structure instead of each re-deriving per-type logic. Pure functions only: no DB
 HTTP, no I/O.
 
 The verdict logic deliberately mirrors the graders in
-``src.services.courses.activities.assignments`` — where a check is subtle
+``src.services.courses.activities.assignments``. Where a check is subtle
 (short-answer regex matching, numeric comma handling) this module *calls* the grader's
 helper rather than reimplementing it, so a rendered verdict can never disagree with
 the stored grade.
@@ -39,7 +39,7 @@ from src.services.courses.activities.assignments import (
 logger = logging.getLogger(__name__)
 
 # Bounds. A dossier can span years of submissions across dozens of assignments, and
-# every value here ends up in a CSV cell and a PDF line — one pathological task must
+# every value here ends up in a CSV cell and a PDF line, so one pathological task must
 # not be able to produce a 100k-row export.
 MAX_TEXT = 2000
 MAX_ITEMS = 200
@@ -201,7 +201,7 @@ def _quiz(assignment_type: Any, contents: dict, submission: dict) -> dict:
     questions = _dicts(contents.get("questions"))
     if not questions:
         # The task row can be gone (deleted task, legacy submission). The submit path
-        # stores a snapshot of the questions alongside the answers — worse than the
+        # stores a snapshot of the questions alongside the answers: worse than the
         # live contents (it may be stripped of the answer key) but far better than
         # showing the admin a wall of UUIDs.
         questions = _dicts(submission.get("questions"))
@@ -320,7 +320,7 @@ def _form(assignment_type: Any, contents: dict, submission: dict) -> dict:
             expected_raw = blank.get("correctAnswer")
             expected = _text(expected_raw)
 
-            # A blank with no configured answer isn't auto-scorable — same skip as
+            # A blank with no configured answer isn't auto-scorable, the same skip as
             # _grade_form_task, which would otherwise credit an empty answer.
             if not expected:
                 correct: bool | None = None
@@ -487,7 +487,7 @@ def _code(assignment_type: Any, contents: dict, submission: dict) -> dict:
                 "name": f"Hidden test {index + 1}" if hidden else f"Test {index + 1}",
                 "hidden": hidden,
                 "passed": passed,
-                # Hidden cases stay hidden even for an admin export — the whole point
+                # Hidden cases stay hidden even for an admin export; the whole point
                 # of marking one hidden is that its inputs never leak to a learner,
                 # and exports get forwarded.
                 "stdin": None if hidden else _text(tc.get("stdin")),

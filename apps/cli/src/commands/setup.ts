@@ -220,7 +220,7 @@ export async function setupCommand(options: SetupOptions) {
     const dbPassword = crypto.randomBytes(24).toString('base64url')
 
     // If the user didn't pin a port, prefer 80 but fall back automatically
-    // when it's taken — CI shouldn't fail just because the runner has another
+    // when it's taken; CI shouldn't fail just because the runner has another
     // service on port 80.
     let httpPort = options.port || 80
     if (!options.port) {
@@ -245,7 +245,7 @@ export async function setupCommand(options: SetupOptions) {
       useHttps: false,
       httpPort,
       autoSsl: false,
-      // External DB/Redis work for the Community stack too — when a connection
+      // External DB/Redis work for the Community stack too: when a connection
       // string is supplied, the in-container service is omitted from the compose.
       useExternalDb: !!options.externalDb,
       externalDbConnectionString: options.externalDb,

@@ -74,36 +74,36 @@ async def _insert_playground(db, org, uuid="playground_test"):
 
 
 # ---------------------------------------------------------------------------
-# utils.py 26 and 96 — media element-type / singular-form resolution
+# utils.py 26 and 96: media element-type / singular-form resolution
 # ---------------------------------------------------------------------------
 
 class TestUtilsMediaType:
     @pytest.mark.asyncio
     async def test_check_element_type_media(self):
-        """utils.py:26 — media_ prefix resolves to 'media'."""
+        """Covers utils.py:26, where the media_ prefix resolves to 'media'."""
         assert await check_element_type("media_abc") == "media"
 
     @pytest.mark.asyncio
     async def test_get_singular_form_of_element_media(self):
-        """utils.py:96 — singular form of a media element is 'media'."""
+        """Covers utils.py:96, where the singular form of a media element is 'media'."""
         assert await get_singular_form_of_element("media_abc") == "media"
 
 
 # ---------------------------------------------------------------------------
-# utils.py 154,155 — get_element_organization_id for a media_ uuid
+# utils.py 154,155: get_element_organization_id for a media_ uuid
 # ---------------------------------------------------------------------------
 
 class TestGetElementOrgIdMedia:
     @pytest.mark.asyncio
     async def test_media_org_id(self, db, org):
-        """utils.py:153-155 — media branch returns the owning org id."""
+        """Covers utils.py:153-155, where the media branch returns the owning org id."""
         await _insert_media(db, org, uuid="media_orgcheck")
         result = await get_element_organization_id("media_orgcheck", db)
         assert result == org.id
 
 
 # ---------------------------------------------------------------------------
-# resource_access.py 845-856 — _get_resource for media / board / playground
+# resource_access.py 845-856: _get_resource for media / board / playground
 # ---------------------------------------------------------------------------
 
 class TestGetResourceMediaBoardPlayground:
@@ -114,7 +114,7 @@ class TestGetResourceMediaBoardPlayground:
 
     @pytest.mark.asyncio
     async def test_get_resource_media(self, db, org):
-        """resource_access.py:845-847 — media resource resolves by uuid."""
+        """Covers resource_access.py:845-847, where a media resource resolves by uuid."""
         await _insert_media(db, org, uuid="media_load")
         checker = self._checker(db)
         config = ResourceConfig(
@@ -132,7 +132,7 @@ class TestGetResourceMediaBoardPlayground:
 
     @pytest.mark.asyncio
     async def test_get_resource_board(self, db, org):
-        """resource_access.py:850-852 — board resource resolves by uuid."""
+        """Covers resource_access.py:850-852, where a board resource resolves by uuid."""
         await _insert_board(db, org, uuid="board_load")
         checker = self._checker(db)
         config = ResourceConfig(
@@ -150,7 +150,7 @@ class TestGetResourceMediaBoardPlayground:
 
     @pytest.mark.asyncio
     async def test_get_resource_playground(self, db, org):
-        """resource_access.py:855-856 — playground resource resolves by uuid."""
+        """Covers resource_access.py:855-856, where a playground resource resolves by uuid."""
         await _insert_playground(db, org, uuid="playground_load")
         checker = self._checker(db)
         config = ResourceConfig(
@@ -168,13 +168,13 @@ class TestGetResourceMediaBoardPlayground:
 
 
 # ---------------------------------------------------------------------------
-# rbac.py 158-163 — media branch of authorization_verify_if_element_is_public
+# rbac.py 158-163: media branch of authorization_verify_if_element_is_public
 # ---------------------------------------------------------------------------
 
 class TestVerifyPublicMedia:
     @pytest.mark.asyncio
     async def test_public_media_is_allowed(self, db, org, mock_request):
-        """rbac.py:158-163 — public media read passes the public check."""
+        """Covers rbac.py:158-163, where a public media read passes the public check."""
         await _insert_media(db, org, uuid="media_public", public=True)
         result = await authorization_verify_if_element_is_public(
             mock_request, "media_public", "read", db
@@ -183,7 +183,7 @@ class TestVerifyPublicMedia:
 
     @pytest.mark.asyncio
     async def test_private_media_is_denied(self, db, org, mock_request):
-        """rbac.py:158-169 — non-public media read raises 403 (media lookup runs)."""
+        """Covers rbac.py:158-169, where a non-public media read raises 403 (media lookup runs)."""
         from fastapi import HTTPException
 
         await _insert_media(db, org, uuid="media_private", public=False)

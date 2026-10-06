@@ -1,10 +1,10 @@
 import "server-only";
 // Billing notification emails, now backed by Resend (services/emails/resend.ts)
 // through the shared React Email template. Every caller still invokes these with
-// `.catch(...)` and they never throw — with no RESEND_API_KEY they log-and-skip,
+// `.catch(...)` and they never throw; with no RESEND_API_KEY they log-and-skip,
 // so a mail failure (or an unconfigured deploy) never blocks the Stripe flow.
 //
-// Plain server module (no `"use server"`) — internal helpers invoked only from
+// Plain server module (no `"use server"`): internal helpers invoked only from
 // server actions / route handlers, never directly from the client.
 import { send, planColor } from "@services/emails/resend";
 

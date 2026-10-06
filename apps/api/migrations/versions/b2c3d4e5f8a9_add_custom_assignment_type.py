@@ -3,7 +3,7 @@
 Adds a first-class CUSTOM assignment task type for headless/custom assignments:
 the task ``contents`` JSON (definition) and ``task_submission`` JSON (answer) are
 an arbitrary, caller-owned data object that the server never interprets or
-auto-grades — it is graded manually. Lets custom frontends fully own the schema.
+auto-grades; it is graded manually. Lets custom frontends fully own the schema.
 
 Revision ID: b2c3d4e5f8a9
 Revises: a1b2c3d4e5f7

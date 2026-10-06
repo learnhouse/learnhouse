@@ -60,7 +60,7 @@ class TestUnsubscribeGet:
         assert "expired" in response.text.lower()
 
     async def test_get_for_unknown_user_shows_the_expired_page(self, client, db):
-        # Signature verifies, but no such user — must not 500.
+        # Signature verifies, but no such user; must not 500.
         token = make_unsubscribe_token("user_does_not_exist")
         response = await client.get(f"/api/v1/emails/unsubscribe?token={token}")
 
@@ -136,7 +136,7 @@ class TestUnsubscribePost:
 
 class TestRouterMounting:
     def test_unsubscribe_routes_carry_no_auth_dependency(self):
-        """The recipient of a nudge may have no session at all — the HMAC
+        """The recipient of a nudge may have no session at all; the HMAC
         token is the only authorisation these routes get."""
         for route in public_router.routes:
             assert route.dependencies == [], route.path
@@ -235,7 +235,7 @@ class TestDeliveryEvents:
         )
 
     async def test_permanent_bounce_suppresses(self, wclient, db, admin_user):
-        """Resend says "Permanent", not "hard" — getting this wrong means the
+        """Resend says "Permanent", not "hard"; getting this wrong means the
         endpoint silently discards every real bounce."""
         r = await self._post(
             wclient,

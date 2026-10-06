@@ -42,7 +42,7 @@ export default async function EditPlaygroundPage({ params }: { params: PageParam
         name: c.name,
       }))
     } catch {
-      // Non-fatal — proceed without course context
+      // Non-fatal: proceed without course context
     }
   }
 

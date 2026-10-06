@@ -44,7 +44,7 @@ async def verify_platform_key(x_platform_key: str = Header(...)):
     True, so dropping either one makes an unconfigured deployment accept every
     request on all five internal pack endpoints. Comparison is on bytes because
     compare_digest rejects non-ASCII str, and header values reach us decoded as
-    latin-1 — an arbitrary caller could otherwise trigger a TypeError.
+    latin-1, so an arbitrary caller could otherwise trigger a TypeError.
     """
     global _REPORTED_MISSING_PLATFORM_KEY
 

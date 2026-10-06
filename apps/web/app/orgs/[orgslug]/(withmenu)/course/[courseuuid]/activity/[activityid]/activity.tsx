@@ -290,7 +290,7 @@ function ActivityClient(props: ActivityClientProps) {
 
   const _queryClient = useQueryClient()
 
-  // Fetch trail data — shares cache key with course page trail query
+  // Fetch trail data; shares cache key with course page trail query
   const { data: trailData } = useTrail(org?.id)
 
   // Memoize activity position calculation
@@ -379,7 +379,7 @@ function ActivityClient(props: ActivityClientProps) {
   const isLastActivity = currentIndex >= 0 && !nextActivity;
 
   // Navigate to an activity. A null target means "there is nothing after this
-  // one" — on the final activity that means the course-end/certificate screen
+  // one"; on the final activity that means the course-end/certificate screen
   // rather than a dead end.
   const navigateToActivity = (activity: any) => {
     const cleanCourseUuid = course.course_uuid?.replace('course_', '');
@@ -1401,7 +1401,7 @@ function NextActivityButton({ course, currentActivityId, orgslug }: { course: an
 
   // On the LAST activity, Next advances to the course-end screen (which holds
   // the certificate) instead of disappearing. Previously the only route there
-  // was the trophy icon on the progress bar, which learners did not find — and
+  // was the trophy icon on the progress bar, which learners did not find, and
   // it was unreachable altogether for anyone who had already marked the final
   // activity complete on an earlier visit.
   const isLastActivity = !nextActivity;
@@ -1529,11 +1529,11 @@ function AssignmentTools(props: {
           // Submitting may auto-grade the assignment (GRADED), which makes the
           // answer key eligible to be revealed (show_correct_answers). The task
           // definitions were fetched pre-grade with the key stripped, so refetch
-          // them — otherwise the reveal renders every option as "incorrect".
+          // them; otherwise the reveal renders every option as "incorrect".
           queryClient.invalidateQueries({ queryKey: queryKeys.assignments.tasks(props.assignment?.assignment_uuid) })
           // Handing in can also unlock the model answer (solution_reveal =
           // ON_SUBMISSION). The corrigé rides on the assignment payload and was
-          // fetched with it stripped, so refetch that too — otherwise the
+          // fetched with it stripped, so refetch that too; otherwise the
           // learner has to reload the page to see what they just earned.
           queryClient.invalidateQueries({ queryKey: queryKeys.assignments.detail(props.assignment?.assignment_uuid) })
         }
@@ -1559,7 +1559,7 @@ function AssignmentTools(props: {
         toast.success(t('assignments.retry_assignment_success'));
         // The retry wiped every per-task submission server-side. Clear the
         // cached batch IMMEDIATELY (before the refetch lands) so the task
-        // editors — which remount on the incremented attempt number — hydrate
+        // editors (which remount on the incremented attempt number) hydrate
         // from an empty state and don't briefly re-adopt the previous attempt's
         // answers as their saved baseline (which would submit empty -> 0%).
         queryClient.setQueryData(queryKeys.assignments.taskSubmission(props.assignment?.assignment_uuid), {});
@@ -1568,7 +1568,7 @@ function AssignmentTools(props: {
         queryClient.invalidateQueries({ queryKey: queryKeys.assignments.submission(props.assignment?.assignment_uuid) });
         queryClient.invalidateQueries({ queryKey: queryKeys.assignments.taskSubmission(props.assignment?.assignment_uuid) });
         // The submission is back to PENDING, so the answer key must be stripped
-        // again — refetch the task definitions so a revealed key from the graded
+        // again; refetch the task definitions so a revealed key from the graded
         // attempt isn't left visible during the retry.
         queryClient.invalidateQueries({ queryKey: queryKeys.assignments.tasks(props.assignment?.assignment_uuid) });
         // A retry puts the submission back to PENDING, which re-locks the model
@@ -1596,7 +1596,7 @@ function AssignmentTools(props: {
     );
     if (res.success) {
       // The backend returns a rich grade object: display_grade, points_summary,
-      // percentage_display, passed, overall_feedback, etc. We just render it —
+      // percentage_display, passed, overall_feedback, etc. We just render it,
       // no client-side math.
       setGradeData(res.data);
     }
@@ -1633,7 +1633,7 @@ function AssignmentTools(props: {
     submission.length === 0 ||
     submission[0].submission_status === 'PENDING' ||
     submission[0].submission_status === 'NOT_SUBMITTED';
-  // A formative assignment is handed in, not "submitted for grading" — nothing
+  // A formative assignment is handed in, not "submitted for grading"; nothing
   // downstream will ever mark it, so every label here says so.
   const isUngradedAssignment = !!props.assignment?.ungraded;
   const attemptNumber = submission?.[0]?.attempt_number ?? 1;
@@ -1715,8 +1715,8 @@ function AssignmentTools(props: {
   }
 
   if (submission[0].submission_status === 'SUBMITTED') {
-    // Formative assignments never leave SUBMITTED — there is no grading queue
-    // behind them — so "Grading in progress" would be a lie that never resolves.
+    // Formative assignments never leave SUBMITTED (there is no grading queue
+    // behind them), so "Grading in progress" would be a lie that never resolves.
     if (isUngradedAssignment) {
       const allowRetries = !!props.assignment?.allow_retries;
       const maxRetries = Number(props.assignment?.max_retries || 0);
@@ -1799,7 +1799,7 @@ function AssignmentTools(props: {
     const attemptsRemaining = maxRetries
       ? Math.max(0, maxRetries - currentAttempt)
       : null;
-    // Past the deadline the server refuses a retry — and rightly so: retry wipes
+    // Past the deadline the server refuses a retry, and rightly so: retry wipes
     // the answers, grade and certificate, and every resubmit path is deadline
     // gated, so a retry here would destroy graded work with no way back. Mirror
     // that client-side rather than offering a button that 403s.
@@ -1809,7 +1809,7 @@ function AssignmentTools(props: {
 
     return (
       <>
-        {/* Compact pill — same footprint and alignment as the Next button */}
+        {/* Compact pill: same footprint and alignment as the Next button */}
         <button
           type="button"
           onClick={() => setIsGradeModalOpen(true)}
@@ -1838,7 +1838,7 @@ function AssignmentTools(props: {
           </div>
         </button>
 
-        {/* Confetti for passing students — fires once each time the modal
+        {/* Confetti for passing students. Fires once each time the modal
             opens because react-confetti with recycle={false} plays through
             and the conditional remount restarts it. */}
         {isGradeModalOpen && isPassing && gradeData && (
@@ -1855,7 +1855,7 @@ function AssignmentTools(props: {
           </div>
         )}
 
-        {/* Detail modal — opens on click and auto-opens once when the
+        {/* Detail modal: opens on click and auto-opens once when the
             assignment is auto-graded so students see their result right
             away. */}
         <Modal

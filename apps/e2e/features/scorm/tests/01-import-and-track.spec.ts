@@ -23,7 +23,7 @@ test('multi-SCO import, learner tracking, completion + instructor results', asyn
   const seed = await seedScorm(admin, org, `SCORM Track ${Date.now()}`, 'valid_12_multi.zip')
   expect(seed.activities.length).toBe(3) // 3 SCOs imported as 3 activities
 
-  // All three activities should share one SCORM package (storage de-dup) — they
+  // All three activities should share one SCORM package (storage de-dup). They
   // resolve content fine, which we assert indirectly via runtime + results below.
   const activityUuid = seed.activities[0].activity_uuid
 
@@ -43,7 +43,7 @@ test('multi-SCO import, learner tracking, completion + instructor results', asyn
     'cmi.core.score.raw': '88',
     'cmi.core.session_time': '00:01:00',
   })
-  // Second commit: SCO reports cumulative session_time (120s) — must NOT add up.
+  // Second commit: SCO reports cumulative session_time (120s), so it must NOT add up.
   await runtimeCommit(studentToken, activityUuid, {
     'cmi.core.session_time': '00:02:00',
   })

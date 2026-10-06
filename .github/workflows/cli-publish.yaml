@@ -8,7 +8,7 @@ name: Publish CLI to npm
 on:
   push:
     tags:
-      # e.g. `cli-1.4.9` — NOT `cli-v1.4.9`. The version (everything after `cli-`)
+      # e.g. `cli-1.4.9`, NOT `cli-v1.4.9`. The version (everything after `cli-`)
       # must equal apps/cli/package.json "version".
       - 'cli-[0-9]*'
 

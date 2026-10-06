@@ -2,7 +2,7 @@
 Centralized organization authorization helpers.
 
 All org membership and admin checks go through this module.
-Superadmin bypass is baked in — superadmins pass every check automatically.
+Superadmin bypass is baked in: superadmins pass every check automatically.
 """
 
 import logging
@@ -77,7 +77,7 @@ async def enforce_org_mfa(user_id: int, org_id: int, db_session: AsyncSession) -
 
     * the "require two-factor" policy (:mod:`src.services.orgs.mfa_policy`), and
     * the auth-method / session-sharing policy
-      (:mod:`src.services.orgs.auth_policy`) — which methods may access the org
+      (:mod:`src.services.orgs.auth_policy`): which methods may access the org
       and whether a central/foreign session is accepted.
 
     Every ``require_*`` gate and every additive call site funnels through here,

@@ -236,7 +236,7 @@ function useAdminStatus(): UseAdminStatusReturn {
     // Every right is derived per-org, so an unresolved org reads as "no rights"
     // rather than "not known yet". Callers that redirect on !isAdmin would then
     // bounce an admin off a deep-linked page during the first render, before
-    // OrgContext's fetch lands — and never again once react-query has the org
+    // OrgContext's fetch lands, and never again once react-query has the org
     // cached, which is why it only ever happened on the first visit.
     //
     // A non-empty orgslug means we are inside an OrgProvider, so an absent

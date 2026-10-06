@@ -25,7 +25,7 @@ _LOGGED_MISSING_GOOGLE_CLIENT_ID = False
 
 # Accept either spelling. The API originally read only the _OAUTH_ name, while
 # the CLI env template and the web app provision the very same value as
-# LEARNHOUSE_GOOGLE_CLIENT_ID — so a deployment that had the client id all along
+# LEARNHOUSE_GOOGLE_CLIENT_ID, so a deployment that had the client id all along
 # still ran with audience verification disabled.
 GOOGLE_CLIENT_ID_ENV_VARS = (
     "LEARNHOUSE_GOOGLE_OAUTH_CLIENT_ID",
@@ -62,8 +62,8 @@ async def _verify_google_token_audience(access_token: str) -> None:
 
     expected_client_id = get_expected_google_client_id()
     if not expected_client_id:
-        # Fail closed. Falling through here meant the check was off by default —
-        # nothing in a stock deployment sets the variable — so any Google access
+        # Fail closed. Falling through here meant the check was off by default
+        # (nothing in a stock deployment sets the variable), so any Google access
         # token, including one minted by an attacker's own OAuth client for a
         # victim who signed in on the attacker's site, was accepted as proof of
         # identity and exchanged for a full LearnHouse session.
@@ -92,7 +92,7 @@ async def _verify_google_token_audience(access_token: str) -> None:
     body = r.json()
     aud = body.get("aud") or body.get("azp")
     if aud != expected_client_id:
-        # Do not echo the presented aud — it could leak which third-party
+        # Do not echo the presented aud; it could leak which third-party
         # app the attacker tried to reuse.
         logger.warning(
             "Google OAuth audience mismatch: token aud did not match our client_id"
@@ -281,7 +281,7 @@ async def signWithGoogle(
             # user id, and it is what the frontend reads the org list from. Every
             # other membership change busts it (join_org, role changes, removals);
             # this one did not, so the user landed in the org they had just joined
-            # with the pre-join role list — no membership, member-only UI hidden —
+            # with the pre-join role list (no membership, member-only UI hidden)
             # until the cache expired on its own.
             from src.routers.users import _invalidate_session_cache
 

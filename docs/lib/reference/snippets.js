@@ -7,7 +7,7 @@ import { isBinaryField } from './resolve'
  * application/x-www-form-urlencoded request bodies.
  *
  * Ported from the dashboard snippet generator and extended for non-JSON
- * content types. The bearer token is always the placeholder — the client
+ * content types. The bearer token is always the placeholder; the client
  * substitutes the visitor's real token at render time.
  */
 

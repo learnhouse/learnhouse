@@ -35,7 +35,7 @@ type SortField =
     | 'date'             // when the student submitted
     | 'name'             // student display name
     | 'status'           // LATE → SUBMITTED → GRADED (or reverse)
-    | 'grade'            // numeric grade value — highest / lowest first
+    | 'grade'            // numeric grade value, highest / lowest first
     | 'needs_grading'    // put LATE/SUBMITTED before GRADED so teachers see what to review
     | 'late_first'       // LATE submissions at the top
     | 'recently_graded'; // GRADED first, then sorted by submission date
@@ -43,7 +43,7 @@ type SortDirection = 'asc' | 'desc';
 type StatusFilter = 'ALL' | 'LATE' | 'SUBMITTED' | 'GRADED' | 'PENDING' | 'NOT_SUBMITTED';
 
 // The submissions endpoint is paginated server-side (`limit` defaults to 50,
-// caps at 500) and answers with a bare array — no total, no cursor. Requesting
+// caps at 500) and answers with a bare array (no total, no cursor). Requesting
 // it without params silently returned only the newest 50 submitters, which made
 // the stats, the filters and the search lie and left everyone else ungradable.
 // So we page through explicitly until a short page comes back.
@@ -92,7 +92,7 @@ function AssignmentSubmissionsSubPage({ assignment_uuid }: { assignment_uuid: st
 
     const { data: assignmentSubmissions } = useQuery({
         queryKey: queryKeys.assignments.allSubmissions(assignment_uuid),
-        // Paged fetch — see fetchAllAssignmentSubmissions: a single unpaginated
+        // Paged fetch; see fetchAllAssignmentSubmissions: a single unpaginated
         // request only ever returned the newest 50 rows.
         queryFn: () => fetchAllAssignmentSubmissions(assignment_uuid, access_token),
         enabled: !!(assignment_uuid && access_token),
@@ -129,7 +129,7 @@ function AssignmentSubmissionsSubPage({ assignment_uuid }: { assignment_uuid: st
         { key: 'LATE', label: t('dashboard.assignments.submissions.status.late'), count: stats.late, icon: <Clock size={13} />, activeClass: 'bg-rose-600/80 text-white' },
         { key: 'SUBMITTED', label: t('dashboard.assignments.submissions.status.submitted'), count: stats.submitted, icon: <SendHorizonal size={13} />, activeClass: 'bg-amber-600/80 text-white' },
         { key: 'GRADED', label: t('dashboard.assignments.submissions.status.graded'), count: stats.graded, icon: <CheckCircle2 size={13} />, activeClass: 'bg-emerald-600/80 text-white' },
-        // Only surfaced when they actually occur — most assignments have none of
+        // Only surfaced when they actually occur; most assignments have none of
         // these and the toolbar is already crowded. Kept visible while selected
         // so the pill can never vanish and strand the user on an empty list.
         ...(stats.pending > 0 || statusFilter === 'PENDING' ? [{ key: 'PENDING' as StatusFilter, label: t('dashboard.assignments.submissions.status.pending', { defaultValue: 'In progress' }), count: stats.pending, icon: <Hourglass size={13} />, activeClass: 'bg-slate-500/80 text-white' }] : []),
@@ -323,7 +323,7 @@ function SubmissionsList({
     const access_token = session?.data?.tokens?.access_token;
 
     // Prefetch every submitter at list level. These use the exact same query
-    // key as the rows did, so react-query dedupes them — no extra requests —
+    // key as the rows did, so react-query dedupes them (no extra requests),
     // but having the names here is what makes a real "sort by name" and a
     // list-level search predicate possible at all.
     const userQueries = useQueries({
@@ -563,7 +563,7 @@ function SubmissionRow({
                 </div>
             </div>
 
-            {/* Grade — show the computed display_grade (e.g. "B", "85/100",
+            {/* Grade: show the computed display_grade (e.g. "B", "85/100",
                 "Pass") so the list matches the evaluate modal and the
                 student's own view instead of showing a naked raw sum. */}
             {submission.submission_status === 'GRADED' && (
@@ -598,7 +598,7 @@ function SubmissionRow({
                 <span>{status.label}</span>
             </div>
 
-            {/* Attempt indicator — only shown when the student is past the
+            {/* Attempt indicator, only shown when the student is past the
                 first attempt so the row stays uncluttered for the common
                 case of a single submission. */}
             {submission.attempt_number && submission.attempt_number > 1 && (

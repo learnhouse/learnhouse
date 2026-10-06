@@ -317,7 +317,7 @@ async def restore_activity_version(
         )
 
     # Create a version of the current state before restoring. Unwrap API
-    # tokens via resolve_acting_user_id — raw current_user.id is 0 on a
+    # tokens via resolve_acting_user_id, because raw current_user.id is 0 on a
     # token, and created_by_id is an FK to user.id (writing 0 fails).
     user_id = resolve_acting_user_id(current_user)
     await create_activity_version(activity, user_id, db_session)

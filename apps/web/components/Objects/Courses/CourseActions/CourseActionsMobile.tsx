@@ -149,7 +149,7 @@ const CourseActionsMobile = ({ courseuuid, orgslug, course, trailData }: CourseA
     }
   ) ?? false;
 
-  // Public endpoint — no auth needed, works for unauthenticated visitors too
+  // Public endpoint: no auth needed, works for unauthenticated visitors too
   const { data: offersResult, isLoading } = useQuery({
     queryKey: ['offers', 'by-resource', org?.id, resourceUuid],
     queryFn: () => getOffersByResource(org.id, resourceUuid!),

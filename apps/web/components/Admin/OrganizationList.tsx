@@ -250,7 +250,7 @@ export default function OrganizationList() {
     enabled: !!accessToken,
     staleTime: 60_000,
     placeholderData: (prev) => prev,
-    // Don't retry a 503 ee_license_inactive — the license state won't change
+    // Don't retry a 503 ee_license_inactive: the license state won't change
     // mid-render and retries just add latency to the failure banner.
     retry: (failureCount, err: any) => err?.status !== 503 && failureCount < 2,
   })

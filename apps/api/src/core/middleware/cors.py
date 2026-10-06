@@ -39,7 +39,7 @@ def _single_tenancy_origin_regex(config) -> str:
         # Exclude only the loopback hosts themselves (added separately below).
         # Use an exact match, not a substring check, so a legitimate operator
         # domain that merely contains "localhost" (e.g. "my-localhost-app.com")
-        # is not silently dropped — which would break CORS for their frontend.
+        # is not silently dropped, which would break CORS for their frontend.
         if host and host not in ("localhost", "127.0.0.1"):
             hosts.add(host)
 

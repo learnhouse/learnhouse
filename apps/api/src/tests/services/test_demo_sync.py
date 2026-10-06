@@ -1,7 +1,7 @@
 """The demo sync must be idempotent, and must undo what visitors change.
 
 The idempotence test is the load-bearing one. The whole design rests on the
-claim that an hourly refresh is nearly free — if that regresses, the demo
+claim that an hourly refresh is nearly free. If that regresses, the demo
 quietly starts rewriting thousands of rows every hour, and nothing else in the
 suite would notice.
 """
@@ -112,11 +112,11 @@ async def test_students_are_created_and_cannot_log_in(db, synced):
     assert len(students) == 40
     for student in students:
         # example.com is RFC 2606 reserved and has no MX record, so this is
-        # undeliverable — and unlike ".invalid" it survives EmailStr validation,
+        # undeliverable, and unlike ".invalid" it survives EmailStr validation,
         # which every endpoint returning a user depends on.
         assert student.email.endswith("@demo.example.com")
         # A valid Argon2 hash of a discarded secret. Empty would make a login
-        # attempt a 500 rather than a 401 — pwdlib raises on a hash it cannot
+        # attempt a 500 rather than a 401, since pwdlib raises on a hash it cannot
         # identify, and authenticate_user does not guard that call.
         assert student.password.startswith("$argon2")
 
@@ -125,7 +125,7 @@ async def test_student_records_survive_api_serialisation(db, synced):
     """Every endpoint that returns a user validates it through UserRead.
 
     Regression guard for a real outage: the students were originally given
-    `@demo.invalid` addresses — undeliverable by RFC 2606, and exactly what you
+    `@demo.invalid` addresses: undeliverable by RFC 2606, and exactly what you
     would reach for. But email-validator, behind pydantic's EmailStr, rejects
     `.invalid` as a special-use name, so the members list, the course learner
     lists and the grading inbox all answered 500 for the demo organization.
@@ -204,7 +204,7 @@ async def test_demo_runs_on_pro_with_everything_unlocked(db, synced):
     """The demo exists to show the product, so nothing may be hidden.
 
     A feature a prospect cannot see is a feature they will not buy. This is
-    only safe because the demo is excluded from every money path — see
+    only safe because the demo is excluded from every money path; see
     test_demo_exclusions.py, in particular the free-org cap test.
     """
     from src.db.organization_config import OrganizationConfig
@@ -220,7 +220,7 @@ async def test_demo_runs_on_pro_with_everything_unlocked(db, synced):
 
     assert config.config["plan"] == "pro"
     # The tiers pro itself withholds, and that the demo can safely serve.
-    # audit_logs, scorm and sso are excluded on purpose — see
+    # audit_logs, scorm and sso are excluded on purpose; see
     # test_the_demo_does_not_unlock_what_it_cannot_clean_up.
     for enterprise_only in ("analytics_advanced", "custom_domains"):
         assert config.config["overrides"][enterprise_only]["force_enabled"] is True
@@ -266,7 +266,7 @@ async def test_the_demo_does_not_unlock_what_it_cannot_clean_up(db, synced):
     audit_logs, scorm and sso are served by Enterprise routers that know
     nothing about the demo: no is_demo guard, and none of their tables in the
     drift sweep. Every visitor is an admin of this shared org, so turning them
-    on would publish surfaces nothing reverts — and the audit one would hand
+    on would publish surfaces nothing reverts, and the audit one would hand
     back exactly the visitor identities the audit router was taught to hide.
 
     A prospect losing three settings pages is the cheaper loss, and this test
@@ -296,7 +296,7 @@ async def test_payments_is_only_unlocked_where_the_storefront_can_be_swept(db, s
     Regression test for a hole opened while fixing another: the storefront
     seeding and its drift sweep were both switched off on an Enterprise build
     too old to support them, while the payments feature stayed force-enabled.
-    That combination is worse than no storefront — a visitor-admin could point
+    That combination is worse than no storefront: a visitor-admin could point
     the demo's payments config at their own account and publish an offer, and
     nothing would ever take it down.
     """
@@ -353,7 +353,7 @@ async def test_no_usage_events_are_written(db, synced):
 
 
 # ---------------------------------------------------------------------------
-# idempotence — the property the design rests on
+# idempotence: the property the design rests on
 # ---------------------------------------------------------------------------
 
 async def test_second_sync_writes_nothing_but_its_own_state_row(db, synced):
@@ -392,7 +392,7 @@ async def test_a_course_removed_from_the_bundle_is_removed_from_the_demo(
 
     A registry entry is what marks a row as bundle-owned and so shields it from
     drift deletion. If the entry outlives its bundle entry, nothing recreates
-    the course and nothing removes it either — it sits in the demo forever,
+    the course and nothing removes it either; it sits in the demo forever,
     unmanaged.
     """
     from src.services.demo import sync as sync_module
@@ -436,7 +436,7 @@ async def test_a_course_removed_from_the_bundle_is_removed_from_the_demo(
 async def test_dropping_the_bundle_does_not_sweep_a_skipped_phase(db, synced):
     """Kinds this run never claimed are left alone.
 
-    Several phases are conditional — the storefront needs the Enterprise
+    Several phases are conditional; the storefront needs the Enterprise
     Edition. A phase that was skipped rather than emptied must not have its
     registry entries pruned, or the rows it created would survive with nothing
     tracking them.
@@ -559,7 +559,7 @@ async def test_visitor_comments_on_seeded_discussions_are_removed(db, synced):
     assert survivor is None
     assert stats.drift_deleted >= 1
 
-    # The seeded comments must still be there — this sweep is not a purge.
+    # The seeded comments must still be there; this sweep is not a purge.
     remaining = (await db.execute(select(DiscussionComment))).scalars().all()
     assert remaining, "the bundle's own comments were deleted too"
 
@@ -606,7 +606,7 @@ async def test_a_replaced_org_logo_is_put_back(db, synced):
     """Branding is the first thing a prospect sees, and it was permanent.
 
     Every media write used to be guarded on the column being empty, so a logo
-    a visitor uploaded through org settings — which leaves the column full —
+    a visitor uploaded through org settings (which leaves the column full)
     was never reverted.
     """
     org = (
@@ -643,7 +643,7 @@ async def test_new_bundle_artwork_reaches_an_existing_demo(db, synced, monkeypat
 
     Derived filenames are what make a replaced image detectable, but they also
     mean redrawn artwork shipped under the same bundle filename computes to the
-    same name — so without the version in the key it would match, and the demo
+    same name, so without the version in the key it would match, and the demo
     would keep showing the old picture forever.
     """
     from src.services.demo import sync as sync_module
@@ -670,7 +670,7 @@ async def test_visitor_progress_is_removed_but_seeded_progress_is_kept(db, synce
     """A prospect's own trail must not greet the next prospect.
 
     Everyone in the demo is an admin, so one visitor's course history was
-    readable by the next under their real name — in the learners table, the
+    readable by the next under their real name: in the learners table, the
     grading inbox and the certificate list.
     """
     from datetime import datetime
@@ -757,7 +757,7 @@ async def test_api_tokens_and_webhooks_created_by_visitors_are_removed(db, synce
 
     Every visitor joins the shared demo with the admin role, which lets them
     create an API token scoped to the organization or point a webhook at a
-    server they control. The bundle owns neither, so both are drift — and
+    server they control. The bundle owns neither, so both are drift, and
     without that, a token minted once would survive every refresh and keep
     working indefinitely against a public sandbox.
     """
@@ -895,7 +895,7 @@ async def test_rolling_the_epoch_reconciles_progress(db, no_uploads):
     courses they are enrolled in. Progress for a dropped course used to be left
     behind, and because it only ever accumulated, within a fortnight all forty
     learners appeared enrolled in the whole catalogue with frozen progress bars
-    and certificates their plan says they never earned — the persona design
+    and certificates their plan says they never earned: the persona design
     erasing itself.
 
     Building at a late epoch directly, versus rolling day by day to the same
@@ -1022,7 +1022,7 @@ async def test_refusing_to_take_over_a_real_organization(db, no_uploads):
 #
 # Each entity reverts through its own branch, so they are listed rather than
 # sampled. `field` is set to `value`, the sync runs, and the original must
-# return — with the row's identity intact, since the whole design rests on
+# return, with the row's identity intact, since the whole design rests on
 # keeping primary keys and uuids stable.
 # ---------------------------------------------------------------------------
 
@@ -1156,7 +1156,7 @@ async def test_custom_scripts_and_previews_are_cleared(db, synced):
 # Chapter is absent on purpose. Deleting one in Postgres cascades to its
 # activities and, through them, to the trail steps recorded against them. This
 # suite runs on SQLite, which does not enforce foreign keys, so the delete
-# leaves orphaned progress behind and the restore then collides with it — a
+# leaves orphaned progress behind and the restore then collides with it, a
 # state the production schema cannot reach. test_demo_teardown.py asserts those
 # cascades directly on the schema instead.
 _RESTORABLE = [
@@ -1210,7 +1210,7 @@ async def test_restoring_does_not_duplicate_anything(db, synced):
     """The registry entry has to follow the row to its new primary key.
 
     If it did not, the next refresh would treat the restored row as drift and
-    delete it, then create another — a demo that churns instead of settling.
+    delete it, then create another: a demo that churns instead of settling.
     """
     from src.db.boards import Board
 

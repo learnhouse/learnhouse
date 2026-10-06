@@ -1,5 +1,5 @@
 /**
- * UI auth helpers — log in / out through the real login form, like a human.
+ * UI auth helpers: log in / out through the real login form, like a human.
  *
  * Selectors are taken from the running (published-image) UI:
  *  - /login renders textboxes labelled "Email" and "Password" and a "Login" button.

@@ -81,7 +81,7 @@ function NewAssignment({ submitActivity: _submitActivity, chapterId, course, clo
         grading_type: gradingType,
         ungraded: ungraded,
         // An ungraded assignment never auto-grades and has no answer key to
-        // reveal — send the consistent state instead of dead flags.
+        // reveal, so send the consistent state instead of dead flags.
         auto_grading: ungraded ? false : autoGrading,
         anti_copy_paste: antiCopyPaste,
         show_correct_answers: ungraded ? false : showCorrectAnswers,
@@ -218,7 +218,7 @@ function NewAssignment({ submitActivity: _submitActivity, chapterId, course, clo
         </Form.Field>
       </div>
 
-      {/* Grading type — irrelevant on a formative assignment, which never
+      {/* Grading type: irrelevant on a formative assignment, which never
           produces a grade to display in any scale. */}
       {!ungraded && (
       <div className="rounded-xl nice-shadow p-4 space-y-3">

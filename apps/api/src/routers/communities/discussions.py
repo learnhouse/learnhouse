@@ -464,7 +464,7 @@ async def api_get_comment_count(
 
     Authorized by community read access (not blanket auth): public-community
     counts remain visible to anonymous callers, while private-community counts
-    require membership — matching the discussion read endpoint.
+    require membership, matching the discussion read endpoint.
     """
     count = await get_comment_count(request, discussion_uuid, current_user, db_session)
     return {"count": count}

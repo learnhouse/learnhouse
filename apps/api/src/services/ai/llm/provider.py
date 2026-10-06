@@ -1,7 +1,7 @@
 """Provider-agnostic model factory built on Pydantic AI.
 
 `build_model()` reads the global AI config (provider + api_key + base_url) and returns a
-configured Pydantic AI ``Model``. Switching providers is a config change only — no business
+configured Pydantic AI ``Model``. Switching providers is a config change only; no business
 logic touches a vendor SDK. Embeddings are handled provider-agnostically in ``embeddings.py``.
 """
 
@@ -109,14 +109,14 @@ def build_model(model_name: str) -> Model:
 
         return AnthropicModel(model_name, provider=AnthropicProvider(api_key=api_key))
 
-    # DeepSeek (Chinese) — OpenAI-compatible; provider auto-configures api.deepseek.com.
+    # DeepSeek (Chinese): OpenAI-compatible; provider auto-configures api.deepseek.com.
     if provider_id == "deepseek":
         from pydantic_ai.models.openai import OpenAIChatModel
         from pydantic_ai.providers.deepseek import DeepSeekProvider
 
         return OpenAIChatModel(model_name, provider=DeepSeekProvider(api_key=api_key))
 
-    # Moonshot AI / Kimi (Chinese) — OpenAI-compatible; auto-configures api.moonshot.ai.
+    # Moonshot AI / Kimi (Chinese): OpenAI-compatible; auto-configures api.moonshot.ai.
     if provider_id in ("moonshot", "moonshotai", "kimi"):
         from pydantic_ai.models.openai import OpenAIChatModel
         from pydantic_ai.providers.moonshotai import MoonshotAIProvider

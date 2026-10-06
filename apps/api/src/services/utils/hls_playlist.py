@@ -58,7 +58,7 @@ def rewrite_playlist(
             continue
         if stripped.startswith("#"):
             # Defense: fMP4 init segments live in an #EXT-X-MAP:URI="..." tag.
-            # (We emit TS, so this normally never fires — future-proofing.)
+            # (We emit TS, so this normally never fires; future-proofing.)
             if stripped.upper().startswith("#EXT-X-MAP:"):
                 out_lines.append(_rewrite_map_tag(line, _sign_relative))
             else:
@@ -101,7 +101,7 @@ def _rewrite_map_tag(line: str, sign_relative) -> str:
 def _resolve_key(base_dir_key: str, relative: str, root: str | None = None) -> str | None:
     """Join a relative URI onto a base key, resolving ./ and ../ segments.
 
-    Returns None if the result escapes `root` (when given) — callers treat that
+    Returns None if the result escapes `root` (when given); callers treat that
     like a failed presign and leave the line unchanged.
     """
     # Drop any query/fragment before resolving.

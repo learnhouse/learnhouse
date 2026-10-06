@@ -1,6 +1,6 @@
 /**
- * Goal: prove the teacher can OVERRIDE a per-task grade in the grading modal —
- * both a custom numeric value and the Half/Zero shortcuts — and have it persist
+ * Goal: prove the teacher can OVERRIDE a per-task grade in the grading modal,
+ * both a custom numeric value and the Half/Zero shortcuts, and have it persist
  * as the finalized grade. Auto-grading is OFF and submissions are seeded as
  * SUBMITTED via API; the teacher grades through the dashboard UI (shared admin).
  */

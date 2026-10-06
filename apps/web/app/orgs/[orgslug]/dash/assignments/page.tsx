@@ -97,12 +97,12 @@ function AssignmentsHome() {
       const settled = await Promise.allSettled(
         courseUuids.map((uuid: string) => getAssignmentsFromACourse(uuid, access_token))
       )
-      // The response helper does not throw — a 404 resolves to
+      // The response helper does not throw; a 404 resolves to
       // `{ success: false, data: { detail: 'Course not found' } }`. That object
       // is truthy, so the downstream `|| []` guards never fired and the error
       // body reached `.filter(...)` during render, blanking the page (no error
       // boundary under this segment) and counting as a phantom draft in the
-      // stats. Anything that isn't a real array collapses to an empty list —
+      // stats. Anything that isn't a real array collapses to an empty list.
       // note we map rather than filter so the result stays index-aligned with
       // `courseUuids` / `courses`, otherwise a single failing course would
       // shift every later course's assignments onto the wrong course.
@@ -121,7 +121,7 @@ function AssignmentsHome() {
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('all')
   const [autoGradedOnly, setAutoGradedOnly] = useState(false)
 
-  // === Stats — computed from the unfiltered data ===
+  // === Stats (computed from the unfiltered data) ===
   const stats = useMemo(() => {
     const allAssignments: any[] = (courseAssignments || []).flat()
     return {
@@ -152,7 +152,7 @@ function AssignmentsHome() {
 
   // Build the filtered course rows. Each entry has { course, assignments } where
   // assignments has been filtered. Courses with zero assignments are always
-  // hidden — empty courses are noise on this dashboard, the teacher uses the
+  // hidden; empty courses are noise on this dashboard, the teacher uses the
   // course editor for those.
   const filteredCourseRows = useMemo(() => {
     if (!courseAssignments || !courses) return []
@@ -460,7 +460,7 @@ function CourseCard({
 
   return (
     <div className='flex flex-col space-y-3'>
-      {/* Course header — sits above the assignment grid as a section title.
+      {/* Course header: sits above the assignment grid as a section title.
           No outer card wrapper around the whole course because the assignments
           themselves are now the cards. */}
       <div className='flex items-center justify-between gap-3 px-1'>
@@ -491,7 +491,7 @@ function CourseCard({
         </Link>
       </div>
 
-      {/* Assignment grid — 1 column on mobile, 2 on tablet, 3 on desktop */}
+      {/* Assignment grid: 1 column on mobile, 2 on tablet, 3 on desktop */}
       <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3'>
         {assignments.map((assignment: any) => (
           <AssignmentCard
@@ -558,7 +558,7 @@ function AssignmentCard({
         {assignment.title || t('dashboard.assignments.home.untitled')}
       </Link>
 
-      {/* Description — fixed min-height so cards align even when one has no description */}
+      {/* Description: fixed min-height so cards align even when one has no description */}
       <p className='text-xs text-gray-500 line-clamp-2 min-h-[2rem] mb-3 break-words'>
         {assignment.description || ''}
       </p>
@@ -585,7 +585,7 @@ function AssignmentCard({
         )}
       </div>
 
-      {/* Footer actions — pinned to the bottom of the card. Restored to the
+      {/* Footer actions, pinned to the bottom of the card. Restored to the
           classic white pill-with-nice-shadow look. */}
       <div className='flex items-center gap-2 mt-auto pt-3 border-t border-gray-100'>
         <Link

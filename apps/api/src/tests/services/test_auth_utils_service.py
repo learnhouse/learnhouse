@@ -239,7 +239,7 @@ class TestAuthUtilsService:
 
     @pytest.mark.asyncio
     async def test_sign_with_google_username_fallback_to_user(self):
-        """Covers line 76 — username_parts.append('user') when name parts are absent
+        """Covers line 76, username_parts.append('user') when name parts are absent
         and the email has no '@', so the prefix-based branch is also skipped."""
         request = Mock(spec=Request)
         current_user = Mock()
@@ -302,7 +302,7 @@ class TestAuthUtilsService:
                 )
 
         # After the F-03 fix, a missing or unverified Google email is a 401
-        # (authentication failure) rather than a 400 (malformed request) — the
+        # (authentication failure) rather than a 400 (malformed request), so the
         # attacker cannot compensate for it by tweaking their request body.
         assert exc_info.value.status_code == 401
         assert "verified email" in exc_info.value.detail.lower()

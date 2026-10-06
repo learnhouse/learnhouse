@@ -85,7 +85,7 @@ export async function generateMetadata(props: MetadataProps): Promise<Metadata> 
 const FolderPage = async (props: any) => {
   const params = await props.params
   // Server-side access gate: a private folder (or one the viewer lacks rights
-  // to) returns a real 404 — no folder name/contents are rendered or indexed.
+  // to) returns a real 404; no folder name/contents are rendered or indexed.
   const folder = await fetchFolderForViewer(params.folderid)
   if (!folder) {
     notFound()

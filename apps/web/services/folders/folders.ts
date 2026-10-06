@@ -180,7 +180,7 @@ export async function removeOrgRootContent(
 
 /**
  * Persist a manual folder ordering. Mirrors updateCourseOrderStructure in
- * services/courses/chapters.ts — position is derived from the array index,
+ * services/courses/chapters.ts: position is derived from the array index,
  * so we only send the ordered folder ids.
  * Optionally scoped to one subfolder via parentFolderUuid so nested folders
  * reorder independently; when omitted it reorders the org's root folders.

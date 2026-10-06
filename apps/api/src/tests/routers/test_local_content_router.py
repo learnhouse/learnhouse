@@ -136,7 +136,7 @@ class TestLocalContentRouter:
     ):
         # A `.` segment survives normalization (only `..` is rejected) but is
         # collapsed by realpath. The access check must run on the CANONICAL path
-        # derived from the resolved file, not the request string — otherwise
+        # derived from the resolved file, not the request string. Otherwise
         # `orgs/./{uuid}/courses/...` shifts the segment indices, misses the
         # private-course pattern, falls through to the public branch, and serves
         # a private file to an anonymous user.

@@ -154,7 +154,7 @@ class TestInEmail:
         assert body.index('role="presentation"') < body.index("<h1")
 
     def test_no_track_still_produces_a_valid_email(self):
-        """Illustrations are decoration — their absence must not break the
+        """Illustrations are decoration; their absence must not break the
         message."""
         body = self._render("")
         assert "<h1" in body

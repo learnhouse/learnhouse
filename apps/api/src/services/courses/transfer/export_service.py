@@ -30,7 +30,7 @@ from src.security.rbac import check_resource_access, AccessAction
 from .models import ExportManifest, ExportCourseInfo
 from .storage_utils import read_file_content, list_directory, walk_directory
 
-# File extensions that are already compressed — use ZIP_STORED to skip
+# File extensions that are already compressed. Use ZIP_STORED to skip
 # re-compression, saving significant CPU on large media files.
 _ALREADY_COMPRESSED = frozenset({
     '.mp4', '.webm', '.mov', '.avi', '.mkv',
@@ -115,10 +115,10 @@ async def export_courses_batch(
     course_export_data = []
     for course in courses_to_export:
         course_data, chapters = await _load_course_export_data(course, db_session)
-        # Extract plain values — can't access SQLModel objects from another thread
+        # Extract plain values; SQLModel objects can't be accessed from another thread
         course_export_data.append((course.course_uuid, course.name, course_data, chapters))
 
-    # Phase 2: Build ZIP in a thread pool (file I/O — don't block event loop)
+    # Phase 2: Build ZIP in a thread pool (file I/O must not block the event loop)
     org_uuid = org.org_uuid
     return await asyncio.to_thread(
         _build_export_zip, course_export_data, org_uuid,
@@ -237,7 +237,7 @@ def _build_export_zip(
     """
     Build the export ZIP file on disk. Runs in a thread pool so file I/O
     (reading from filesystem/S3, writing ZIP) doesn't block the event loop.
-    Only uses plain Python data — no SQLModel objects (not thread-safe).
+    Only uses plain Python data, no SQLModel objects (not thread-safe).
     """
     content_base = "content/orgs"
 

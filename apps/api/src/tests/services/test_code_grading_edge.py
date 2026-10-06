@@ -2,11 +2,11 @@
 Edge-case tests for the CODE-task grading helpers in
 ``src.services.courses.activities.assignments``:
 
-  * ``_normalize_code_output(s)`` — pure string normalization used to compare
+  * ``_normalize_code_output(s)``: pure string normalization used to compare
     Judge0 stdout against the teacher's expected output. Strips trailing
     whitespace per line, drops trailing blank lines, joins with ``\\n``, and
     maps empty/None to ``""``.
-  * ``_grade_code_task_async(task, task_submission)`` — re-grades a CODE task
+  * ``_grade_code_task_async(task, task_submission)``: re-grades a CODE task
     by running the student's stored source against the teacher's test cases via
     Judge0. Judge0 is reached through a *deferred* import inside the function
     (``from src.routers.code_execution import _get_judge0_config, _submit_single``),
@@ -14,7 +14,7 @@ Edge-case tests for the CODE-task grading helpers in
     real Judge0 is ever contacted.
 
 pytest-asyncio runs in ``auto`` mode (see pyproject.toml), so the async tests
-are plain ``async def`` and ``await`` the call directly — no marker needed.
+are plain ``async def`` and ``await`` the call directly; no marker needed.
 
 These are NET-NEW cases; ``test_server_verify_dispatch_edge.py`` deliberately
 does NOT exercise CODE, and no other test touches ``_normalize_code_output``.
@@ -124,7 +124,7 @@ def test_normalize_single_line_no_trailing_newline():
 
 
 # ===========================================================================
-# _grade_code_task_async — short-circuit / guard cases (no Judge0 call)
+# _grade_code_task_async: short-circuit / guard cases (no Judge0 call)
 # ===========================================================================
 
 
@@ -177,7 +177,7 @@ async def test_judge0_not_configured_returns_none():
 
 
 # ===========================================================================
-# _grade_code_task_async — grading modes (Judge0 mocked)
+# _grade_code_task_async: grading modes (Judge0 mocked)
 # ===========================================================================
 
 
@@ -258,7 +258,7 @@ async def test_custom_weights_weighted_score():
 async def test_non_accepted_status_counts_as_fail():
     """
     A correct stdout but a non-Accepted status (id != 3, e.g. compile error 6)
-    must NOT pass — passing requires status id == 3 AND matching stdout.
+    must NOT pass; passing requires status id == 3 AND matching stdout.
     """
     task = _task(
         {
@@ -347,7 +347,7 @@ async def test_language_id_falls_back_to_contents():
 async def test_judge0_exception_per_case_makes_grade_unverifiable():
     """
     If a per-case Judge0 call raises (transport failure / outage), that test
-    couldn't actually execute — so the WHOLE grade is untrustworthy and the
+    couldn't actually execute, so the WHOLE grade is untrustworthy and the
     grader returns None (caller leaves the submission pending) rather than
     zeroing a student out on a partial "1/2 passed" score built on a test that
     never ran. This is the H4 fix: an outage must not finalize a bogus grade.

@@ -5,7 +5,7 @@ Turns a source video into an adaptive HLS ladder: a master playlist plus one
 rendition (index playlist + .ts segments) per quality level, so the player can
 switch quality to match live bandwidth instead of stalling.
 
-Everything here is CPU-heavy and slow — it is meant to run in a worker/CLI, not
+Everything here is CPU-heavy and slow; it is meant to run in a worker/CLI, not
 in a request. The ladder is *source-capped*: we never upscale, and the top rung
 never exceeds the source resolution.
 """
@@ -54,7 +54,7 @@ THUMB_HEIGHT = 90
 THUMB_COLUMNS = 10
 
 # AES-128 segment encryption. The key lives in the private bucket and is only
-# handed out by the authed key endpoint — a deterrent against casual segment
+# handed out by the authed key endpoint, a deterrent against casual segment
 # stitching (not DRM). The URI is relative so it resolves back to our API from
 # a rendition playlist at v{name}/index.m3u8.
 ENC_KEY_NAME = "enc.key"
@@ -77,7 +77,7 @@ async def _run_subprocess(args, timeout: int):
     Uses a blocking `subprocess.run` on a worker thread rather than
     `asyncio.create_subprocess_exec`: the async variant can hang indefinitely
     when spawned from a server (uvicorn) event loop whose child watcher isn't
-    reliably attached — which stalled every in-app transcode before ffmpeg even
+    reliably attached, which stalled every in-app transcode before ffmpeg even
     started. Running in a thread keeps the event loop free AND sidesteps asyncio's
     subprocess machinery entirely. On timeout the process is killed and the
     return code is -1.
@@ -131,7 +131,7 @@ def build_ffmpeg_args(
     """Build the single-invocation ffmpeg command for the whole ladder.
 
     Output layout under out_dir: master.m3u8, v{name}/index.m3u8, v{name}/seg_*.ts
-    (relative refs — master → rendition playlists, rendition → segments).
+    (relative refs: master → rendition playlists, rendition → segments).
 
     When key_info_file is given, segments are AES-128 encrypted and the playlists
     carry an #EXT-X-KEY pointing at the (authed) key URI from that file.
@@ -199,7 +199,7 @@ async def _probe(src_path: str) -> tuple[int, bool, float]:
 async def _probe_streams(src_path: str) -> tuple[int, bool, float, Optional[bool]]:
     """Like _probe, plus whether the source has a video stream at all.
 
-    The last element is None when the probe itself failed (unknown — try the
+    The last element is None when the probe itself failed (unknown, so try the
     transcode anyway), False when ffprobe read the file and found no video
     stream (an audio-only upload: ffmpeg's `[0:v]` filtergraph can never match).
     """

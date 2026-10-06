@@ -2,7 +2,7 @@
 //
 // Faithful port of the platform repo's app/api/payments/route.ts. The webhook
 // self-authenticates by verifying the Stripe signature against
-// STRIPE_WEBHOOK_SECRET, so it does NOT call assertSaaSBilling() — an
+// STRIPE_WEBHOOK_SECRET, so it does NOT call assertSaaSBilling(). An
 // unconfigured deployment simply has no STRIPE_WEBHOOK_SECRET and every event
 // fails signature verification with a 400.
 import { NextResponse } from "next/server";
@@ -34,13 +34,13 @@ async function planFromSubscription(subscription: any): Promise<string | undefin
 
 // Simple in-memory idempotency cache (event_id -> {state, ts}).
 // Stripe retries webhooks, so we skip events we've already processed.
-// TTL: 5 minutes — Stripe won't retry faster than that.
+// TTL: 5 minutes; Stripe won't retry faster than that.
 // NOTE: in-memory, so it does NOT dedupe across serverless instances; the
 // downstream service calls are all idempotent, which covers the gap.
 //
 // The state matters. Marking an event before processing is what blocks a
 // concurrent duplicate delivery, but a bare mark also swallows retries: an
-// event whose handler failed — or whose process died before it could unmark —
+// event whose handler failed (or whose process died before it could unmark)
 // would answer the retry with a "duplicate" 200 and permanently drop the
 // upgrade. So only a `done` entry is a real duplicate. An `in-flight` entry
 // means another delivery is still working on it and may yet fail, so we ask
@@ -70,14 +70,14 @@ export async function POST(request: Request) {
     return NextResponse.json({ message: "Invalid signature", ok: false }, { status: 400 });
   }
 
-  // Idempotency check — skip events already handled successfully
+  // Idempotency check: skip events already handled successfully
   cleanupProcessedEvents();
   const seen = processedEvents.get(event.id);
   if (seen?.state === "done") {
     return NextResponse.json({ result: "duplicate", ok: true });
   }
   if (seen?.state === "in-flight") {
-    // Another delivery of this event is mid-flight. Don't ack for it — if it
+    // Another delivery of this event is mid-flight. Don't ack for it: if it
     // fails, this 500 is what keeps Stripe retrying.
     return NextResponse.json({ message: "event in flight", ok: false }, { status: 409 });
   }
@@ -129,7 +129,7 @@ async function handleCheckoutCompleted(session: any) {
   // Retrieve the session with the subscription expanded to read its metadata.
   // Stripe's basil API (2025-03-31) defers subscription creation until payment
   // completes, so the expanded `subscription` can briefly be null right after
-  // checkout — the same race fulfillCheckoutSession() guards against. Retry so a
+  // checkout, the same race fulfillCheckoutSession() guards against. Retry so a
   // deferred subscription doesn't silently drop the upgrade.
   let fullSession: any;
   let subscription: any;
@@ -148,7 +148,7 @@ async function handleCheckoutCompleted(session: any) {
   const customerEmail = fullSession.customer_details?.email || session.customer_email;
 
   if (!subscription) {
-    // Subscription still not materialized after retries — transient. Throw so
+    // Subscription still not materialized after retries, so transient. Throw so
     // Stripe redelivers (and customer.subscription.created will also cover it),
     // rather than acking with a 200 that permanently drops the upgrade.
     throw new Error(
@@ -158,7 +158,7 @@ async function handleCheckoutCompleted(session: any) {
 
   const orgId = subscription.metadata?.org_id;
   if (!orgId) {
-    // A checkout not created by our flow carries no org linkage — nothing we can
+    // A checkout not created by our flow carries no org linkage, so nothing we can
     // do; ack so Stripe doesn't retry it forever and disable the endpoint. This
     // endpoint shares a Stripe account with other products, so foreign checkouts
     // legitimately land here and must not be treated as failures.
@@ -187,7 +187,7 @@ async function handleCheckoutCompleted(session: any) {
     const plan = await planFromSubscription(subscription);
     if (!plan) {
       // The session belongs to us (it carries org_id) but its price maps to no
-      // known plan — almost always a missing STRIPE_PRICE_* env on this
+      // known plan, almost always a missing STRIPE_PRICE_* env on this
       // deployment. Throw: acking here would drop a paid upgrade on the floor
       // for a config gap that is fixable, and Stripe's retries buy time to fix
       // it. Silent config gaps are exactly how paid orgs end up on free.
@@ -229,7 +229,7 @@ async function handleSubscriptionEvent(eventType: string, subscription: any) {
       eventType === "customer.subscription.created"
     ) {
       if (subscription.cancel_at_period_end) {
-        // User requested cancellation — mark as canceling but keep active until period end
+        // User requested cancellation: mark as canceling but keep active until period end
         await markPackCancelingInternally(orgId, subscription.id);
       } else if (status === "active") {
         // Reactivated (e.g. user undid cancellation) or renewed
@@ -237,7 +237,7 @@ async function handleSubscriptionEvent(eventType: string, subscription: any) {
           await activatePackInternally(orgId, packId, subscription.id);
         }
       } else if (status === "past_due" || status === "unpaid") {
-        // Payment failed — deactivate pack until payment succeeds
+        // Payment failed: deactivate pack until payment succeeds
         console.warn(`Pack subscription ${subscription.id} is ${status} for org ${orgId}`);
         await deactivatePackInternally(orgId, subscription.id);
       } else if (status === "paused") {
@@ -257,7 +257,7 @@ async function handleSubscriptionEvent(eventType: string, subscription: any) {
       eventType === "customer.subscription.created"
     ) {
       if (subscription.cancel_at_period_end) {
-        // Plan is canceling — keep current plan until period ends
+        // Plan is canceling: keep current plan until period ends
         console.log(`Plan subscription canceling for org ${orgId}, access continues until period end`);
       } else if (status === "active") {
         // Derive from price so billing-portal plan changes reconcile correctly.
@@ -268,7 +268,7 @@ async function handleSubscriptionEvent(eventType: string, subscription: any) {
           console.warn(`[webhook] could not resolve plan for active subscription ${subscription.id} (org ${orgId}); price id not in catalog?`);
         }
       } else if (status === "past_due" || status === "unpaid") {
-        // Payment failed — notify user but keep plan active for grace period
+        // Payment failed: notify user but keep plan active for grace period
         console.warn(`Plan subscription ${subscription.id} is ${status} for org ${orgId}`);
         const customer = await stripe.customers.retrieve(subscription.customer);
         if (customer?.email) {

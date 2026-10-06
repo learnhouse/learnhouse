@@ -81,7 +81,7 @@ function EditorWrapper(props: EditorWrapperProps): JSX.Element {
 
   // Normalize content to fix AI-generated mark types (strong -> bold, em -> italic).
   // Most documents have neither, so we pre-scan the raw JSON for those mark
-  // type names before doing the recursive object clone — avoids allocating a
+  // type names before doing the recursive object clone, which avoids allocating a
   // new object per node on every editor open.
   const normalizedContent = React.useMemo(() => {
     if (!props.content) return props.content;

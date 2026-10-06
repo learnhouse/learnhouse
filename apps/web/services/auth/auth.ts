@@ -77,7 +77,7 @@ export async function loginWithOAuthToken(
 }
 
 // Password reset is PLATFORM-level (org-less): the backend finds the user by
-// email, so no org_id is needed — matching how the platform worked and working
+// email, so no org_id is needed, matching how the platform worked and working
 // for org-less accounts created on the apex.
 export async function sendResetLink(email: string) {
   const result = await fetch(

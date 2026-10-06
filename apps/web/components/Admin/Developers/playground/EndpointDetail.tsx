@@ -60,7 +60,7 @@ export default function EndpointDetail({
   const [bodyText, setBodyText] = useState<string>(
     endpoint.sampleBody ? JSON.stringify(endpoint.sampleBody, null, 2) : '',
   )
-  // Only the setter is used — the value is never rendered.
+  // Only the setter is used; the value is never rendered.
   const [, setBodyParseError] = useState('')
 
   const parsedBody: { ok: boolean; value: unknown } = useMemo(() => {

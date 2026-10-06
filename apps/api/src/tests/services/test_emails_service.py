@@ -322,7 +322,7 @@ class TestNotificationEmailResilience:
             "src.services.users.emails.send_email",
             side_effect=HTTPException(status_code=503, detail="Email service temporarily unavailable"),
         ):
-            # A signup whose welcome email fails still returns — the account is
+            # A signup whose welcome email fails still returns; the account is
             # already created, so a dead mail provider must not 5xx the caller.
             assert send_account_creation_email(_user(), "user@test.com") is False
 
@@ -397,7 +397,7 @@ class TestSenderNameRouting:
 
     Org-scoped mail is *about* one organization, so it may go out under that
     organization's name. Platform mail (org-less signup, platform password
-    reset, account deletion) must not borrow one — the recipient has no
+    reset, account deletion) must not borrow one; the recipient has no
     relationship with any org in that moment.
     """
 
@@ -484,7 +484,7 @@ class TestWhiteLabel:
     """Every org-scoped email is the organization's own, not LearnHouse's.
 
     With the org's watermark off there must be no trace of the platform in
-    the rendered mail — no wordmark, no name in the copy, no attribution
+    the rendered mail: no wordmark, no name in the copy, no attribution
     line. With it on, exactly one "Powered by LearnHouse" line remains.
     """
 

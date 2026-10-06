@@ -2,7 +2,7 @@ import "server-only";
 // Internal pack (add-on) lifecycle calls to the backend.
 //
 // These hit the backend's /internal/packs/* endpoints with the
-// `x-platform-key` header — a DIFFERENT key + header than the plan endpoint
+// `x-platform-key` header, a DIFFERENT key + header than the plan endpoint
 // (orgPlan.ts uses `CloudInternalKey`). Both internal auth schemes must coexist.
 import { getServerAPIUrl } from "@services/config/config";
 

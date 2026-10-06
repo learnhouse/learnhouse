@@ -31,7 +31,7 @@ export default function ConnectionsSection({ connections }: { connections: any[]
                 </span>
               </div>
               {/* The full agent string stays available for forensics, just not in the
-                  reading path — it used to occupy the whole line. */}
+                  reading path; it used to occupy the whole line. */}
               {c.user_agent && (
                 <details className="mt-1 text-[11px] text-gray-400">
                   <summary className="cursor-pointer">

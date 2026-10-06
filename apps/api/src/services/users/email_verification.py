@@ -255,7 +255,7 @@ async def verify_email_token(
     # Delete used token
     r.delete(redis_key)
 
-    # Dispatch webhook — resolve org_id from org_uuid
+    # Dispatch webhook; resolve org_id from org_uuid
     if org_uuid != NO_ORG_UUID:
         org_statement = select(Organization).where(Organization.org_uuid == org_uuid)
         org = (await db_session.execute(org_statement)).scalars().first()

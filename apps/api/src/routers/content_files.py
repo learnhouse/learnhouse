@@ -40,7 +40,7 @@ router = APIRouter()
 
 # MIME type mapping.
 #
-# SECURITY: no type a browser executes as a document is listed here — no
+# SECURITY: no type a browser executes as a document is listed here: no
 # text/html, application/javascript, text/css or application/xml. Content keys
 # can carry a caller-chosen extension (course import packages name their own
 # files), and this endpoint answers on the shared API origin where every
@@ -50,7 +50,7 @@ router = APIRouter()
 #
 # SVG is the one exception: org logos and thumbnails are legitimately uploaded
 # as SVG, so refusing to render it would blank them out. It keeps its real type
-# and stays inline, but is served under `_SVG_CSP` — scripting inside an SVG is
+# and stays inline, but is served under `_SVG_CSP`; scripting inside an SVG is
 # already disabled when it loads through <img>, and the CSP covers the
 # remaining case of someone opening the URL top-level or framing it.
 MIME_TYPES = {
@@ -107,8 +107,8 @@ def _security_headers(mime_type: str) -> dict[str, str]:
 def _content_disposition(mime_type: str, file_path: str) -> str:
     """Build the Content-Disposition header for a served file.
 
-    Renderable media stays inline (players and <img> need it); anything else —
-    including every unrecognized extension — is forced to download so the file
+    Renderable media stays inline (players and <img> need it); anything else,
+    including every unrecognized extension, is forced to download so the file
     can never be interpreted as a document on the API origin. RFC 5987
     encoding keeps non-ASCII filenames intact.
     """
@@ -159,7 +159,7 @@ async def _check_content_access(
     """
     parts = file_path.split('/')
 
-    # Assignment submission files must be gated to the owner or an instructor —
+    # Assignment submission files must be gated to the owner or an instructor,
     # not the generic activity-content grant below (which would let any org
     # member, or anyone on a public course, download another learner's work).
     if is_submission_file(parts):
@@ -180,7 +180,7 @@ async def _check_content_access(
         if not course:
             raise HTTPException(status_code=403, detail="Access denied")
         if course.public:
-            return  # Public course — allow anonymous
+            return  # Public course: allow anonymous
         if isinstance(current_user, AnonymousUser):
             raise HTTPException(status_code=401, detail="Authentication required")
         # Verify API token is scoped to the correct org
@@ -213,7 +213,7 @@ async def _check_content_access(
         if not podcast:
             raise HTTPException(status_code=403, detail="Access denied")
         if podcast.public:
-            return  # Public podcast — allow anonymous
+            return  # Public podcast: allow anonymous
         if isinstance(current_user, AnonymousUser):
             raise HTTPException(status_code=401, detail="Authentication required")
         # Verify API token is scoped to the correct org
@@ -246,11 +246,11 @@ async def _check_content_access(
         # access (these are only served via /media/{uuid}/file).
         raise HTTPException(status_code=403, detail="Access denied")
 
-    # Course metadata (thumbnails, etc.) and org-level content — always public
+    # Course metadata (thumbnails, etc.) and org-level content: always public
     if len(parts) >= 2 and parts[0] == 'orgs':
         return
 
-    # User content (avatars, profile images) — always public
+    # User content (avatars, profile images): always public
     if len(parts) >= 2 and parts[0] == 'users':
         return
 

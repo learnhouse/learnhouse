@@ -374,7 +374,7 @@ async def configure_captions(
     enqueue generation. Instructor must have UPDATE rights on the course.
 
     Languages may be any of the platform's available languages OR custom
-    additions — any well-formed BCP-47-ish code is accepted (the model can
+    additions; any well-formed BCP-47-ish code is accepted (the model can
     translate to it). Returns the stored `captions` metadata block.
     """
     activity = (

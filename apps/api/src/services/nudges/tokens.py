@@ -2,7 +2,7 @@
 Stateless unsubscribe tokens for lifecycle email.
 
 A token carries the user's UUID and an HMAC over it, so rendering an
-unsubscribe link needs nothing but the user row already loaded — no token
+unsubscribe link needs nothing but the user row already loaded: no token
 table, no extra query, no expiry to sweep.
 
 Trade-off, deliberate: the key is derived from the application's JWT secret, so

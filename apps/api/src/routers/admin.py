@@ -1,5 +1,5 @@
 """
-Admin API Router — Headless access to LearnHouse via API tokens.
+Admin API Router: headless access to LearnHouse via API tokens.
 
 All endpoints are scoped by org_slug and require API token authentication
 (Bearer lh_...). The token's organization must match the org_slug in the URL.
@@ -947,7 +947,7 @@ def _support_url() -> str:
 def _render_magic_link_error(title: str, message: str) -> HTMLResponse:
     """Render a friendly HTML error page when a magic link fails."""
     support = _support_url()
-    # Plain HTML — no templating dependency. Values are hardcoded/escaped.
+    # Plain HTML, no templating dependency. Values are hardcoded/escaped.
     # title/message come from our own HTTPExceptions, not user input.
     safe_title = title.replace("<", "&lt;").replace(">", "&gt;")
     safe_message = message.replace("<", "&lt;").replace(">", "&gt;")
@@ -1019,7 +1019,7 @@ async def api_admin_magic_consume(
     target = redirect_to or "/"
 
     if mfa_token:
-        # No cookies set — the link only gets the user as far as the code
+        # No cookies set: the link only gets the user as far as the code
         # challenge. The login page picks the pending token up from the query
         # string and opens directly on the second-factor step.
         challenge_url = f"/auth/login?mfa_token={quote(mfa_token, safe='')}"

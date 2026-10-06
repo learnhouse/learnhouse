@@ -4,7 +4,7 @@ import React from 'react'
  * Full-page message for a surface that only exists in Enterprise Edition.
  *
  * Kept separate from EELicenseError, which is an inline banner for a failing
- * licence check and names environment variables and pod logs — operator
+ * licence check and names environment variables and pod logs, operator
  * debugging detail that does not belong on a page any anonymous visitor to an
  * OSS deployment can load.
  */

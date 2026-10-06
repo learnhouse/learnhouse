@@ -181,7 +181,7 @@ async def test_backfill_respects_limit(monkeypatch, db, org, course, chapter, ac
 
 
 # --------------------------------------------------------------------------
-# transcode_activity orchestration (mocked — no ffmpeg/S3 needed)
+# transcode_activity orchestration (mocked, no ffmpeg/S3 needed)
 # --------------------------------------------------------------------------
 
 def _mock_transcode_deps(monkeypatch, *, resolve, fetch=True, transcode=None,
@@ -413,7 +413,7 @@ async def test_consumer_loop_drains_and_transcodes(monkeypatch):
     async def _tr(uuid):
         processed.append(uuid)
         if uuid == "a1":
-            raise RuntimeError("boom")  # one job errors — consumer must survive
+            raise RuntimeError("boom")  # one job errors; the consumer must survive
         return True
 
     monkeypatch.setattr(hls_jobs, "transcode_activity", _tr)
@@ -829,7 +829,7 @@ def test_scratch_dir_cleans_up_and_never_raises_on_busy_tree(monkeypatch):
     """A file appearing mid-cleanup used to surface as "HLS job crashed".
 
     tempfile.TemporaryDirectory raises OSError(39, "Directory not empty") when
-    something writes into the tree while it is being removed — after the
+    something writes into the tree while it is being removed, after the
     transcode had already succeeded and uploaded.
     """
     seen = {}

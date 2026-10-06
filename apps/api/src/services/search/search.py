@@ -44,7 +44,7 @@ class SearchResult(BaseModel):
     # SECURITY: the stripped projection, never ``UserRead``. Search is open to
     # every org member, and ``UserRead`` carries email / signup_method /
     # is_superadmin / extra_metadata (the answers to the org's custom signup
-    # fields) — PII the member directory deliberately restricts to admins.
+    # fields): PII the member directory deliberately restricts to admins.
     users: List[UserReadPublic]
     communities: List[CommunityRead]
     discussions: List[SearchDiscussionRead]
@@ -79,7 +79,7 @@ def _ilike_any(columns: Sequence[ColumnElement[Any]], pattern: str) -> ColumnEle
     """Return a SQL boolean matching `pattern` against any of the given columns.
 
     Uses SQLAlchemy's `ilike`, which is parameterized and keeps the driver
-    responsible for escaping — no string interpolation on user input.
+    responsible for escaping; no string interpolation on user input.
     """
     return or_(*(column.ilike(pattern, escape=LIKE_ESCAPE_CHAR) for column in columns))
 
@@ -145,7 +145,7 @@ async def search_across_org(
     - User hits are serialized as ``UserReadPublic``, never ``UserRead``: search
       is open to every member, so it must not expose the PII the dedicated
       member directory restricts to admins.
-    - Pattern matching goes through SQLAlchemy `ilike` — fully parameterized.
+    - Pattern matching goes through SQLAlchemy `ilike`, which is fully parameterized.
     - Limit is capped at 50 per page.
     """
     from fastapi import HTTPException, status
@@ -227,7 +227,7 @@ async def search_across_org(
         )
 
         # Membership is what gates this, and in the shared demo everyone who
-        # ever opened it is a member — so a two-letter query returned a roster
+        # ever opened it is a member, so a two-letter query returned a roster
         # of real people, with their names, usernames, bios and avatars, to any
         # visitor. The seeded students remain searchable; they are the point.
         from src.services.demo.guards import hide_other_visitors

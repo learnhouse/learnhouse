@@ -203,7 +203,7 @@ class TestDeleteUserById:
     ):
         """Deleting a user wipes orgs they solely administer, keeps the rest."""
         # org (id=1) already has admin_user as admin. Add a second org where the
-        # user-to-delete is the ONLY admin — that one should be deleted with them.
+        # user-to-delete is the ONLY admin; that one should be deleted with them.
         solo_org = Organization(
             id=777,
             name="Solo Org",
@@ -754,7 +754,7 @@ class TestUserPasswordAvatarSession:
         assert created.email_verified is False
         mock_send.assert_awaited_once()
 
-        # Surface that send-email failures are intentionally not swallowed —
+        # Surface that send-email failures are intentionally not swallowed;
         # callers may need to react (e.g., roll back analytics, notify ops).
         with patch(
             "src.services.users.users.validate_password_complexity",
@@ -1127,7 +1127,7 @@ class TestWelcomeCtaUrl:
 
     @pytest.mark.asyncio
     async def test_org_signup_lands_on_the_org_itself(self, mock_request, db, org):
-        """Not `/home` — that is the org PICKER on every host, so it would send
+        """Not `/home`: that is the org PICKER on every host, so it would send
         a new member straight back out of the org the email is about."""
         with patch(
             "src.services.email.utils.get_org_signup_base_url",

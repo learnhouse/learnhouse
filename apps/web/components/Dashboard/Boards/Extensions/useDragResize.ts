@@ -1,4 +1,5 @@
 import { useCallback, useLayoutEffect, useRef } from 'react'
+import type React from 'react'
 import { useBoardSelection } from '../BoardSelectionContext'
 
 interface DragResizeOptions {
@@ -15,7 +16,7 @@ interface DragResizeOptions {
 }
 
 // How often to broadcast position to remote users (ms).
-// Keep low to reduce server load — CSS transition on the remote
+// Keep low to reduce server load; the CSS transition on the remote
 // side bridges the gap so movement still looks fluid.
 const BROADCAST_INTERVAL = 800
 
@@ -106,7 +107,7 @@ export function useDragResize({
       el.style.width = `${liveSize.current.w}px`
       el.style.height = `${liveSize.current.h}px`
     }
-    // When idle, the CSS rule in globals.css handles the transition —
+    // When idle, the CSS rule in globals.css handles the transition,
     // no inline style needed (clearing it lets CSS take over).
   })
 

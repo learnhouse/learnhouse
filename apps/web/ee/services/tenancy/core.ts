@@ -1,5 +1,5 @@
 // Core multi-tenant resolution logic shared by the middleware (Edge Runtime)
-// and server (Node) entry points. Pure functions — no Next.js imports here so
+// and server (Node) entry points. Pure functions, no Next.js imports here, so
 // either runtime can pull this in.
 
 import {

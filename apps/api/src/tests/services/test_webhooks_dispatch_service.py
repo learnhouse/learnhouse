@@ -84,7 +84,7 @@ class TestWebhookDispatchHelpers:
     @pytest.mark.asyncio
     async def test_read_capped_body_ignores_a_non_numeric_content_length(self):
         """A garbage Content-Length is a hint we cannot use, not a reason to
-        drop the body — the streamed read below is what actually enforces the
+        drop the body; the streamed read below is what actually enforces the
         cap."""
         response = httpx.Response(
             200, headers={"content-length": "not-a-number"}, content=b"payload"

@@ -100,7 +100,7 @@ async def get_boards_by_org(
     current_user: PublicUser | AnonymousUser | APITokenUser,
     db_session: AsyncSession,
 ) -> List[BoardRead]:
-    # Require org membership before listing boards — prevents unauthenticated
+    # Require org membership before listing boards; prevents unauthenticated
     # and cross-org enumeration of boards.
     await require_org_membership(resolve_acting_user_id(current_user), org_id, db_session)
 
@@ -389,7 +389,7 @@ async def check_board_membership(
     if not board:
         raise HTTPException(status_code=404, detail="Board not found")
 
-    # Not a direct member — fall back to RBAC so public boards, linked usergroups,
+    # Not a direct member: fall back to RBAC so public boards, linked usergroups,
     # resource authors, and org admins can still join the collab session as viewers.
     await check_resource_access(request, db_session, current_user, board.board_uuid, AccessAction.READ)
 

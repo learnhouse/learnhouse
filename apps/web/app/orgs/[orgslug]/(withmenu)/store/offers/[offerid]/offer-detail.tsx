@@ -229,7 +229,7 @@ export default function OfferDetailClient({ orgslug, orgId, offerUuid, offer, ac
             )}
           </div>
 
-          {/* Right col — sticky pricing card */}
+          {/* Right col: sticky pricing card */}
           <div className="lg:col-span-1">
             <div className="rounded-2xl nice-shadow bg-white p-6 sticky top-24">
               {/* Price */}

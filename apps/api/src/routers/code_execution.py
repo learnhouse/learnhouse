@@ -179,7 +179,7 @@ async def _require_course_access(
     """
     Verify the caller has the requested RBAC action on the given course.
 
-    API tokens are not permitted here — code execution / sqlite upload are
+    API tokens are not permitted here: code execution / sqlite upload are
     interactive features tied to an authenticated user's course access.
     """
     if isinstance(current_user, APITokenUser):
@@ -439,7 +439,7 @@ async def upload_sqlite_db(
     """Upload a SQLite database file for a code playground block.
 
     SECURITY: Requires authentication and update permission on the target
-    course — otherwise an attacker could overwrite any course's playground DB.
+    course; otherwise an attacker could overwrite any course's playground DB.
     """
     if not course_uuid.startswith("course_"):
         raise HTTPException(status_code=400, detail="Invalid course_uuid")

@@ -73,7 +73,7 @@ async def demo_status(db_session: AsyncSession = Depends(get_db_session)):
     if state.last_refresh_at:
         try:
             last = datetime.fromisoformat(state.last_refresh_at)
-            # last_refresh_at is stored as str(datetime.now()) — naive *server
+            # last_refresh_at is stored as str(datetime.now()), i.e. naive *server
             # local* time. Serialising that without an offset makes the browser
             # parse it as ITS OWN local time, so the countdown is wrong by the
             # difference between the two: on a UTC server with a UTC+2 viewer it
@@ -103,7 +103,7 @@ async def enter_demo(
     """Join the signed-in user to the demo organization as an admin.
 
     Idempotent: a returning visitor already has a membership and simply gets
-    the slug back. Admin is deliberate — the demo exists to show the
+    the slug back. Admin is deliberate: the demo exists to show the
     administrator's view, which is where the progress, cohorts and grading all
     live. The endpoints that would let an admin do real damage (invites,
     custom domains, billing, deleting the org) are blocked separately.

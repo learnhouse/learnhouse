@@ -156,7 +156,7 @@ async def update_chapter(
             status_code=status.HTTP_404_NOT_FOUND, detail="Chapter does not exist"
         )
 
-    # RBAC check — use course_uuid (not chapter_uuid) to be consistent with create/get
+    # RBAC check: use course_uuid (not chapter_uuid) to be consistent with create/get
     statement = select(Course).where(Course.id == chapter.course_id)
     course = (await db_session.execute(statement)).scalars().first()
 
@@ -201,7 +201,7 @@ async def delete_chapter(
             status_code=status.HTTP_404_NOT_FOUND, detail="Chapter does not exist"
         )
 
-    # RBAC check — permissions are held at the course level, not the chapter level
+    # RBAC check: permissions are held at the course level, not the chapter level
     statement = select(Course).where(Course.id == chapter.course_id)
     course = (await db_session.execute(statement)).scalars().first()
     if not course:
@@ -264,7 +264,7 @@ async def get_course_chapters(
 
     chapters = [ChapterRead(**chapter.model_dump(), activities=[]) for chapter in chapters]
 
-    # RBAC check — cheap when the caller already ran it on this request
+    # RBAC check. Cheap when the caller already ran it on this request
     # (the checker is memoized on request.state).
     await check_resource_access(request, db_session, current_user, course.course_uuid, AccessAction.READ)  # type: ignore
 
@@ -384,7 +384,7 @@ async def _apply_locks_to_chapters(
     """Compute is_locked for each chapter + activity and strip content for locked items.
 
     Admins/maintainers bypass all locks (still see the lock_type so they can edit
-    it in the dashboard). A locked chapter cascades — all its activities become
+    it in the dashboard). A locked chapter cascades: all its activities become
     locked regardless of their own lock_type. A usergroup attached at the COURSE
     level also grants access to all restricted chapters/activities inside that
     course (same table, keyed on ``course_uuid``), so admins don't have to
@@ -397,7 +397,7 @@ async def _apply_locks_to_chapters(
     acting_user_id = resolve_acting_user_id(current_user)
     admin = False if is_anon else await is_org_admin(acting_user_id, course.org_id, db_session)
 
-    # Admins see everything — no stripping.
+    # Admins see everything, no stripping.
     if admin:
         return
 

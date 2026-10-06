@@ -11,7 +11,7 @@ on:
     paths:
       - "apps/api/**"
 
-# See api-lint.yaml — one live run per PR, dev runs always finish.
+# See api-lint.yaml: one live run per PR, dev runs always finish.
 concurrency:
   group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
@@ -32,7 +32,7 @@ jobs:
         with:
           version: latest
           # Resolving and downloading the API's wheels from scratch on every
-          # run is pure repetition — the lockfile is what decides the answer,
+          # run is pure repetition; the lockfile is what decides the answer,
           # so key the cache on it.
           enable-cache: true
           cache-dependency-glob: "apps/api/uv.lock"
