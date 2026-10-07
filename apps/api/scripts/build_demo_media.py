@@ -232,7 +232,7 @@ def build_episode_audio(text: str, path: str) -> None:
     import tempfile
 
     if not shutil.which("say") or not shutil.which("ffmpeg"):
-        print(f"  skipping {os.path.basename(path)} — needs macOS `say` and ffmpeg")
+        print(f"  skipping {os.path.basename(path)}: needs macOS `say` and ffmpeg")
         return
 
     with tempfile.TemporaryDirectory() as tmp:
@@ -278,7 +278,7 @@ PODCASTS = [
     (
         "support-notes",
         [
-            ("ep-support-1", "The first reply. Acknowledge, restate, commit — and why a time attached is the whole job."),
+            ("ep-support-1", "The first reply. Acknowledge, restate, commit, and why a time attached is the whole job."),
             ("ep-support-2", "Saying no well. A clear refusal beats a soft maybe, every time."),
             ("ep-support-3", "When it was our mistake: owning it plainly, and fixing the thing before discussing compensation."),
         ],

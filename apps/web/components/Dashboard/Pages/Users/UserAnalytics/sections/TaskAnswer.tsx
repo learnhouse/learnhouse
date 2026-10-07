@@ -130,7 +130,7 @@ function CodeAnswer({ code }: { code: any }) {
     <div className="space-y-2">
       <div className="flex items-center gap-2 flex-wrap">
         <span className="flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-lg bg-slate-100 text-slate-600">
-          <Code2 size={10} /> {code.language || '—'}
+          <Code2 size={10} /> {code.language || 'n/a'}
         </span>
         <span className="text-[11px] text-gray-500">
           {code.passed_tests}/{code.total_tests} {t(`${P}.answer.test_passed`, { defaultValue: 'Passed' })}
@@ -203,7 +203,7 @@ export default function TaskAnswer({ answer }: { answer: any }) {
         items.map((item: any, i: number) => (
           <div key={i} className="flex items-center gap-2 text-xs text-gray-700">
             <FileText size={14} className="text-gray-400 flex-none" />
-            <span className="break-words">{item.answer_text || '—'}</span>
+            <span className="break-words">{item.answer_text || 'n/a'}</span>
           </div>
         ))}
 
@@ -216,7 +216,7 @@ export default function TaskAnswer({ answer }: { answer: any }) {
       {answer.kind === 'raw' && (
         <div className="space-y-1">
           <p className="text-[11px] text-gray-400 italic">
-            {t(`${P}.answer.raw_note`, { defaultValue: 'Custom task — shown as raw fields' })}
+            {t(`${P}.answer.raw_note`, { defaultValue: 'Custom task (shown as raw fields)' })}
           </p>
           <dl className="text-[11px] space-y-0.5">
             {items.map((item: any, i: number) => (

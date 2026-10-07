@@ -64,7 +64,7 @@ def get_deployment_mode() -> DeploymentMode:
         if hooks is None or not hasattr(hooks, 'is_license_active'):
             logger.error(
                 "EE directory is present but its hooks module did not load "
-                "(is_license_active unavailable) — refusing to enable EE. "
+                "(is_license_active unavailable); refusing to enable EE. "
                 "Deployment will run as OSS until the import error is fixed."
             )
             return 'oss'

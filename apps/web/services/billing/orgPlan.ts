@@ -23,7 +23,7 @@ export async function updateOrganizationConfigInternally(org_id: any, plan: Lear
     process.env.CLOUD_INTERNAL_KEY || process.env.LEARNHOUSE_CLOUD_INTERNAL_KEY || "";
   if (!internalKey) {
     throw new Error(
-      "[updateOrgConfig] internal key unset — set CLOUD_INTERNAL_KEY (or " +
+      "[updateOrgConfig] internal key unset; set CLOUD_INTERNAL_KEY (or " +
         "LEARNHOUSE_CLOUD_INTERNAL_KEY) on the web deployment to match the API's " +
         "CLOUD_INTERNAL_KEY; the plan write would 403 without it.",
     );

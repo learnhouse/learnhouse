@@ -2181,7 +2181,7 @@ def _store_unsupported_reason() -> Optional[str]:
         )
     except ImportError as exc:
         return (
-            f"payments models unavailable ({exc}) — expected on a community install"
+            f"payments models unavailable ({exc}); expected on a community install"
         )
 
     # CUSTOM means "this organization drives its own enrolments", the only

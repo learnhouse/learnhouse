@@ -412,7 +412,7 @@ async def api_remove_user_from_org(
     "/{org_id}/leave",
     summary="Leave an organization",
     description=(
-        "Remove the CURRENT (authenticated) user's own membership in the org — "
+        "Remove the CURRENT (authenticated) user's own membership in the org; "
         "self-service, no admin rights required. The last remaining admin cannot "
         "leave (they must transfer ownership or delete the org)."
     ),

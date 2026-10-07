@@ -117,7 +117,7 @@ export const API_GROUPS = [
     access: 'token',
     rightsBucket: 'assignments',
     description:
-      'Assignment authoring, tasks, submissions and grading — fully drivable headlessly with an API token. Learner-side "/me" and submission endpoints remain session-only.',
+      'Assignment authoring, tasks, submissions and grading, all fully drivable headlessly with an API token. Learner-side "/me" and submission endpoints remain session-only.',
   },
   {
     slug: 'folders',

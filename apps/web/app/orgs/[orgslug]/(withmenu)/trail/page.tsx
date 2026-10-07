@@ -17,7 +17,7 @@ export async function generateMetadata(props: MetadataProps): Promise<Metadata> 
     tags: ['organizations'],
   })
   return {
-    title: 'Trail — ' + org.name,
+    title: 'Trail | ' + org.name,
     description:
       'Check your progress using trail and easily navigate through your courses.',
   }

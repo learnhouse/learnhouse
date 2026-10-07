@@ -82,7 +82,7 @@ describe("canRecompress", () => {
     expect(canRecompress(gzipped(), null)).toBe(false);
   });
 
-  test("a 206 is left alone — its content-range describes identity bytes", () => {
+  test("a 206 is left alone: its content-range describes identity bytes", () => {
     expect(canRecompress(gzipped(206), "gzip")).toBe(false);
   });
 });

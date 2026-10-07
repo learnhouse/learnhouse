@@ -202,7 +202,7 @@ export async function checkDevEnv(root: string): Promise<boolean> {
   for (const [label, vars] of byApp) {
     console.log(`  ${pc.bold(label)} ${pc.dim(`(${vars[0].app.envFile})`)}`)
     for (const m of vars) {
-      console.log(`    ${pc.red('✗')} ${pc.cyan(m.envVar.name)} — ${pc.dim(m.envVar.description)}`)
+      console.log(`    ${pc.red('✗')} ${pc.cyan(m.envVar.name)}: ${pc.dim(m.envVar.description)}`)
     }
     console.log()
   }
@@ -212,7 +212,7 @@ export async function checkDevEnv(root: string): Promise<boolean> {
     message: 'How would you like to proceed?',
     options: [
       { value: 'defaults', label: 'Apply dev defaults and continue', hint: 'writes only the missing vars' },
-      { value: 'abort', label: "Abort — I'll set them up manually" },
+      { value: 'abort', label: "Abort; I'll set them up manually" },
     ],
   })
 

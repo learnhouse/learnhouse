@@ -159,7 +159,7 @@ export async function envCommand() {
     }
 
     // Show current values
-    p.log.step(`${cat.label} — Current Values`)
+    p.log.step(`${cat.label}: Current Values`)
     for (const key of presentKeys) {
       p.log.message(`  ${pc.dim(key)} = ${maskValue(key, envMap.get(key)!)}`)
     }

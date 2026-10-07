@@ -35,41 +35,41 @@ STRINGS: dict[str, str] = {
 
     "nudge.activation.setup_checklist_d7.subject": "पंद्रह मिनट में चलती-फिरती अकादमी",
     "nudge.activation.setup_checklist_d7.heading": "एक छोटी सूची",
-    "nudge.activation.setup_checklist_d7.body": "{org_name} अब भी पहले कोर्स का इंतज़ार कर रही है। सेटअप सूची कुछ छोटे चरणों में रास्ता दिखाती है — ज़्यादातर लोग पंद्रह मिनट में पूरा कर लेते हैं।",
+    "nudge.activation.setup_checklist_d7.body": "{org_name} अब भी पहले कोर्स का इंतज़ार कर रही है। सेटअप सूची कुछ छोटे चरणों में रास्ता दिखाती है। ज़्यादातर लोग पंद्रह मिनट में पूरा कर लेते हैं।",
     "nudge.activation.setup_checklist_d7.cta": "सूची खोलें",
 
     "nudge.activation.whats_blocking_d14.subject": "बीच में क्या आ गया?",
     "nudge.activation.whats_blocking_d14.heading": "पूछ सकते हैं कि किस वजह से रुक गए?",
-    "nudge.activation.whats_blocking_d14.body": "आपने {org_name} दो हफ़्ते पहले बनाई थी और अब तक कोई कोर्स नहीं जोड़ा। अगर कुछ उलझन भरा था या कुछ कमी रह गई, तो हम जानना चाहेंगे — इस ईमेल का जवाब दीजिए, वह सीधे हम तक पहुँचता है।",
+    "nudge.activation.whats_blocking_d14.body": "आपने {org_name} दो हफ़्ते पहले बनाई थी और अब तक कोई कोर्स नहीं जोड़ा। अगर कुछ उलझन भरा था या कुछ कमी रह गई, तो हम जानना चाहेंगे। इस ईमेल का जवाब दीजिए, वह सीधे हम तक पहुँचता है।",
 
     "nudge.activation.last_call_d30.subject": "{org_name} के बारे में आखिरी ईमेल",
     "nudge.activation.last_call_d30.heading": "यह आखिरी है",
-    "nudge.activation.last_call_d30.body": "{org_name} एक महीने से शांत है, इसलिए हम ये ईमेल भेजना बंद कर रहे हैं। आपका खाता और उसमें सब कुछ वैसा ही रहेगा — लौटेंगे तो सब जहाँ छोड़ा था वहीं मिलेगा।",
+    "nudge.activation.last_call_d30.body": "{org_name} एक महीने से शांत है, इसलिए हम ये ईमेल भेजना बंद कर रहे हैं। आपका खाता और उसमें सब कुछ वैसा ही रहेगा। लौटेंगे तो सब जहाँ छोड़ा था वहीं मिलेगा।",
     "nudge.activation.last_call_d30.cta": "अपना डैशबोर्ड खोलें",
 
     "nudge.content.course_no_chapter_d1.subject": "«{course_name}» को पहला अध्याय चाहिए",
     "nudge.content.course_no_chapter_d1.heading": "बस एक अध्याय बाकी",
-    "nudge.content.course_no_chapter_d1.body": "«{course_name}» बन चुका है पर अभी कोई अध्याय नहीं है, इसलिए खोलने को कुछ नहीं। अध्याय बस खंड होते हैं — एक विषय पर एक अच्छा रहता है।",
+    "nudge.content.course_no_chapter_d1.body": "«{course_name}» बन चुका है पर अभी कोई अध्याय नहीं है, इसलिए खोलने को कुछ नहीं। अध्याय बस खंड होते हैं। एक विषय पर एक अच्छा रहता है।",
     "nudge.content.course_no_chapter_d1.cta": "अध्याय जोड़ें",
 
     "nudge.content.chapter_no_activity_d1.subject": "«{course_name}» में पहला पाठ जोड़ें",
     "nudge.content.chapter_no_activity_d1.heading": "अध्याय तैयार हैं",
-    "nudge.content.chapter_no_activity_d1.body": "«{course_name}» में अध्याय हैं, पर वे अभी खाली हैं। पाठ एक पन्ना लेख, वीडियो या क्विज़ हो सकता है — जो विषय के अनुकूल हो।",
+    "nudge.content.chapter_no_activity_d1.body": "«{course_name}» में अध्याय हैं, पर वे अभी खाली हैं। पाठ एक पन्ना लेख, वीडियो या क्विज़ हो सकता है, जो विषय के अनुकूल हो।",
     "nudge.content.chapter_no_activity_d1.cta": "पाठ जोड़ें",
 
     "nudge.content.activity_unpublished_d2.subject": "«{course_name}» के आपके पाठ अभी दिख नहीं रहे",
     "nudge.content.activity_unpublished_d2.heading": "पाठ अब भी छिपे हैं",
-    "nudge.content.activity_unpublished_d2.body": "आपने «{course_name}» में पाठ लिखे हैं, पर कोई प्रकाशित नहीं है, इसलिए सीखने वालों को खाली कोर्स दिखता है। प्रकाशित करने से कुछ लॉक नहीं होता — बाद में भी संपादन कर सकते हैं।",
+    "nudge.content.activity_unpublished_d2.body": "आपने «{course_name}» में पाठ लिखे हैं, पर कोई प्रकाशित नहीं है, इसलिए सीखने वालों को खाली कोर्स दिखता है। प्रकाशित करने से कुछ लॉक नहीं होता। बाद में भी संपादन कर सकते हैं।",
     "nudge.content.activity_unpublished_d2.cta": "अपने पाठ प्रकाशित करें",
 
     "nudge.content.course_draft_d3.subject": "«{course_name}» अब भी ड्राफ़्ट है",
     "nudge.content.course_draft_d3.heading": "«{course_name}» लगभग तैयार है",
-    "nudge.content.course_draft_d3.body": "आपने «{course_name}» में पाठ जोड़े हैं, पर वह प्रकाशित नहीं है, इसलिए कोई खोल नहीं सकता। पूरा होना ज़रूरी नहीं — प्रकाशित करना बस उसे दृश्य बनाता है, और उसके बाद भी संपादन चलता रहता है।",
+    "nudge.content.course_draft_d3.body": "आपने «{course_name}» में पाठ जोड़े हैं, पर वह प्रकाशित नहीं है, इसलिए कोई खोल नहीं सकता। पूरा होना ज़रूरी नहीं। प्रकाशित करना बस उसे दृश्य बनाता है, और उसके बाद भी संपादन चलता रहता है।",
     "nudge.content.course_draft_d3.cta": "प्रकाशित करें",
 
     "nudge.content.course_draft_d10.subject": "«{course_name}» काफ़ी समय से ड्राफ़्ट है",
     "nudge.content.course_draft_d10.heading": "शायद यह तैयार है",
-    "nudge.content.course_draft_d10.body": "«{course_name}» एक हफ़्ते से ज़्यादा से अप्रकाशित पड़ा है। कोर्स शायद ही कभी पूरा लगता है — प्रकाशित करने से वह दिखने लगता है, और पढ़ने वालों के रहते भी आप उसे बेहतर करते रह सकते हैं।",
+    "nudge.content.course_draft_d10.body": "«{course_name}» एक हफ़्ते से ज़्यादा से अप्रकाशित पड़ा है। कोर्स शायद ही कभी पूरा लगता है। प्रकाशित करने से वह दिखने लगता है, और पढ़ने वालों के रहते भी आप उसे बेहतर करते रह सकते हैं।",
     "nudge.content.course_draft_d10.cta": "प्रकाशित करें",
 
     "nudge.content.thin_course_d5.subject": "«{course_name}» में थोड़ा और जोड़ा जा सकता है",
@@ -94,10 +94,10 @@ STRINGS: dict[str, str] = {
 
     "nudge.audience.members_no_enrollment_d3.subject": "आपके सीखने वालों ने अभी शुरुआत नहीं की",
     "nudge.audience.members_no_enrollment_d3.heading": "जुड़ गए, पर कुछ खोला नहीं",
-    "nudge.audience.members_no_enrollment_d3.body": "लोग {org_name} से जुड़े हैं, पर किसी ने कोर्स शुरू नहीं किया। सीधे लिंक के साथ एक छोटा संदेश आम तौर पर काम कर जाता है — ज़्यादातर को बस रास्ता नहीं मिला।",
+    "nudge.audience.members_no_enrollment_d3.body": "लोग {org_name} से जुड़े हैं, पर किसी ने कोर्स शुरू नहीं किया। सीधे लिंक के साथ एक छोटा संदेश आम तौर पर काम कर जाता है। ज़्यादातर को बस रास्ता नहीं मिला।",
     "nudge.audience.members_no_enrollment_d3.cta": "अपने सदस्य देखें",
 
-    "nudge.audience.share_public_page_d14.subject": "आपका कोर्स पेज सार्वजनिक है — लिंक यह रहा",
+    "nudge.audience.share_public_page_d14.subject": "आपका कोर्स पेज सार्वजनिक है: लिंक यह रहा",
     "nudge.audience.share_public_page_d14.heading": "लिंक वाला कोई भी पढ़ सकता है",
     "nudge.audience.share_public_page_d14.body": "«{course_name}» सार्वजनिक है, इसलिए आप उसे कहीं भी साझा कर सकते हैं और किसी को आमंत्रण की ज़रूरत नहीं। नीचे दिया लिंक वही है जो भेजना है।",
     "nudge.audience.share_public_page_d14.cta": "सार्वजनिक पेज देखें",
@@ -124,7 +124,7 @@ STRINGS: dict[str, str] = {
 
     "nudge.monetization.upgrade_recap_d21.subject": "{next_plan} {org_name} में क्या जोड़ेगी",
     "nudge.monetization.upgrade_recap_d21.heading": "आपने कुछ ठोस बनाया है",
-    "nudge.monetization.upgrade_recap_d21.body": "{org_name} में प्रकाशित कोर्स हैं और उन्हें पढ़ने वाले लोग भी। {next_plan} योजना बढ़ने की गुंजाइश देती है और उसमें कुछ ऐसा है जो {plan_name} योजना में नहीं — विस्तार की सोच रहे हैं तो देखने लायक है।",
+    "nudge.monetization.upgrade_recap_d21.body": "{org_name} में प्रकाशित कोर्स हैं और उन्हें पढ़ने वाले लोग भी। {next_plan} योजना बढ़ने की गुंजाइश देती है और उसमें कुछ ऐसा है जो {plan_name} योजना में नहीं। विस्तार की सोच रहे हैं तो देखने लायक है।",
     "nudge.monetization.upgrade_recap_d21.cta": "योजनाओं की तुलना करें",
 
     "nudge.dormancy.no_login_14d.subject": "{org_name} शांत रही है",
@@ -134,7 +134,7 @@ STRINGS: dict[str, str] = {
 
     "nudge.dormancy.no_login_30d.subject": "{org_name} पर आपके कोर्स अब भी यहीं हैं",
     "nudge.dormancy.no_login_30d.heading": "कुछ हफ़्ते बीत गए",
-    "nudge.dormancy.no_login_30d.body": "आपकी अनुपस्थिति में कुछ नहीं बदला — {org_name} और उसमें सब कुछ ठीक वहीं है जहाँ आपने छोड़ा था। दोबारा शुरू करना एक क्लिक का काम है।",
+    "nudge.dormancy.no_login_30d.body": "आपकी अनुपस्थिति में कुछ नहीं बदला। {org_name} और उसमें सब कुछ ठीक वहीं है जहाँ आपने छोड़ा था। दोबारा शुरू करना एक क्लिक का काम है।",
     "nudge.dormancy.no_login_30d.cta": "अपना डैशबोर्ड खोलें",
 
     "nudge.dormancy.no_login_60d.subject": "{org_name} के बारे में आखिरी संदेश",
@@ -149,7 +149,7 @@ STRINGS: dict[str, str] = {
 
     "nudge.milestone.first_course_published.subject": "«{course_name}» प्रकाशित हो गया",
     "nudge.milestone.first_course_published.heading": "आपने अपना पहला कोर्स प्रकाशित किया",
-    "nudge.milestone.first_course_published.body": "«{course_name}» प्रकाशित है और पढ़ा जा सकता है। अब फ़र्क यह पड़ता है कि कोई उसे पढ़े — शुरुआत में एक-दो लोग भी काफ़ी हैं।",
+    "nudge.milestone.first_course_published.body": "«{course_name}» प्रकाशित है और पढ़ा जा सकता है। अब फ़र्क यह पड़ता है कि कोई उसे पढ़े। शुरुआत में एक-दो लोग भी काफ़ी हैं।",
     "nudge.milestone.first_course_published.cta": "अपने पहले सीखने वालों को बुलाएँ",
 
     "nudge.milestone.first_learner_enrolled.subject": "किसी ने «{course_name}» शुरू किया",
@@ -159,23 +159,23 @@ STRINGS: dict[str, str] = {
 
     "nudge.milestone.first_completion.subject": "किसी ने {org_name} का एक कोर्स पूरा किया",
     "nudge.milestone.first_completion.heading": "पहली बार कोर्स पूरा हुआ",
-    "nudge.milestone.first_completion.body": "एक सीखने वाले ने {org_name} का कोर्स शुरू से अंत तक पूरा किया। इसे ठीक से दर्ज करना हो तो प्रमाणपत्र जोड़ सकते हैं — या अगला कोर्स बनाना शुरू कर सकते हैं।",
+    "nudge.milestone.first_completion.body": "एक सीखने वाले ने {org_name} का कोर्स शुरू से अंत तक पूरा किया। इसे ठीक से दर्ज करना हो तो प्रमाणपत्र जोड़ सकते हैं, या अगला कोर्स बनाना शुरू कर सकते हैं।",
     "nudge.milestone.first_completion.cta": "अपना डैशबोर्ड खोलें",
 
     # -- reactivation ------------------------------------------------------
     "nudge.reactivation.opener.subject": "{org_name} पर आपकी अकादमी अब भी यहीं है",
     "nudge.reactivation.opener.heading": "वैसी ही, जैसी आपने छोड़ी थी",
-    "nudge.reactivation.opener.body": "आपकी पिछली बार के बाद {org_name} को किसी ने नहीं छुआ — हर कोर्स, अध्याय और पाठ वहीं है जहाँ आपने छोड़ा था। दोबारा शुरू करना एक क्लिक का काम है।",
+    "nudge.reactivation.opener.body": "आपकी पिछली बार के बाद {org_name} को किसी ने नहीं छुआ। हर कोर्स, अध्याय और पाठ वहीं है जहाँ आपने छोड़ा था। दोबारा शुरू करना एक क्लिक का काम है।",
     "nudge.reactivation.opener.cta": "अपना डैशबोर्ड खोलें",
     "nudge.reactivation.whats_changed.subject": "LearnHouse में कुछ चीज़ें बदली हैं",
     "nudge.reactivation.whats_changed.heading": "आपकी पिछली बार के बाद",
-    "nudge.reactivation.whats_changed.body": "{org_name} के शांत रहते हुए उत्पाद काफ़ी आगे बढ़ा है: एडिटर, कोर्स के उपकरण और सीखने वालों का रास्ता — सब पर असली काम हुआ है। आपने जो बनाया वह पहले जैसा ही चलता है।",
+    "nudge.reactivation.whats_changed.body": "{org_name} के शांत रहते हुए उत्पाद काफ़ी आगे बढ़ा है: एडिटर, कोर्स के उपकरण और सीखने वालों का रास्ता, सब पर असली काम हुआ है। आपने जो बनाया वह पहले जैसा ही चलता है।",
     "nudge.reactivation.whats_changed.cta": "नया क्या है देखें",
     "nudge.reactivation.need_a_hand.subject": "{org_name} पर लौटने में मदद चाहिए?",
     "nudge.reactivation.need_a_hand.heading": "कुछ रास्ते में आ गया था?",
-    "nudge.reactivation.need_a_hand.body": "अगर {org_name} के रुकने की कोई वजह थी — कुछ उलझन भरा, कुछ कमी, या बस समय की कमी — तो हम सचमुच जानना चाहेंगे। इस ईमेल का जवाब दीजिए, वह सीधे हम तक पहुँचता है।",
+    "nudge.reactivation.need_a_hand.body": "अगर {org_name} के रुकने की कोई वजह थी (कुछ उलझन भरा, कुछ कमी, या बस समय की कमी) तो हम सचमुच जानना चाहेंगे। इस ईमेल का जवाब दीजिए, वह सीधे हम तक पहुँचता है।",
     "nudge.reactivation.closing.subject": "{org_name} के बारे में आखिरी बात",
     "nudge.reactivation.closing.heading": "हम यहीं रुकते हैं",
-    "nudge.reactivation.closing.body": "यह इस तरह का आखिरी ईमेल है। {org_name} जस की तस बनी रहेगी और कुछ भी समाप्त नहीं होता — कभी लौटना चाहें, तो सब इंतज़ार में मिलेगा।",
+    "nudge.reactivation.closing.body": "यह इस तरह का आखिरी ईमेल है। {org_name} जस की तस बनी रहेगी और कुछ भी समाप्त नहीं होता। कभी लौटना चाहें, तो सब इंतज़ार में मिलेगा।",
     "nudge.reactivation.closing.cta": "अपना डैशबोर्ड खोलें",
 }

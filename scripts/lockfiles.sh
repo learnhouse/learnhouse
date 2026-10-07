@@ -32,7 +32,7 @@ note() { printf '\n\033[1m==> %s\033[0m\n' "$*"; }
 have() { command -v "$1" >/dev/null 2>&1; }
 
 if ! have bun; then
-  echo "bun is not installed — see https://bun.sh" >&2
+  echo "bun is not installed; see https://bun.sh" >&2
   exit 127
 fi
 
@@ -95,7 +95,7 @@ if [[ -f apps/api/pyproject.toml ]]; then
       (cd apps/api && uv lock)
     fi
   else
-    echo "uv not installed — skipping apps/api/uv.lock" >&2
+    echo "uv not installed; skipping apps/api/uv.lock" >&2
   fi
 fi
 

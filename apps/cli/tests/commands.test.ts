@@ -104,7 +104,7 @@ class ProcessExit extends Error {
   constructor(code: number) { super(`process.exit(${code})`); this.code = code }
 }
 
-describe('command guards — no installation / bad arguments', () => {
+describe('command guards: no installation / bad arguments', () => {
   let emptyHome: string
   let origHome: string | undefined
 
@@ -164,7 +164,7 @@ describe('command guards — no installation / bad arguments', () => {
 // `scale` reads and rewrites mem_limit lines in docker-compose.yml. These
 // are the exact text transforms, exercised without Docker.
 
-describe('scale — mem_limit parse/set', () => {
+describe('scale: mem_limit parse/set', () => {
   const compose = [
     'services:',
     '  learnhouse-app:',

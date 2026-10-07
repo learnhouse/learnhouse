@@ -321,21 +321,21 @@ function AssignmentAnalyticsSubPage({ assignment_uuid }: { assignment_uuid: stri
                         icon={<Target size={14} className="text-indigo-600" />}
                         iconBg="bg-indigo-50"
                         label={t('dashboard.assignments.analytics.kpis.average')}
-                        value={noGraded ? '—' : avgFmt.primary}
+                        value={noGraded ? 'n/a' : avgFmt.primary}
                         sub={noGraded ? undefined : avgFmt.secondary}
                     />
                     <KpiCard
                         icon={<Minus size={14} className="text-sky-600" />}
                         iconBg="bg-sky-50"
                         label={t('dashboard.assignments.analytics.kpis.median')}
-                        value={noGraded ? '—' : medianFmt.primary}
+                        value={noGraded ? 'n/a' : medianFmt.primary}
                         sub={noGraded ? undefined : medianFmt.secondary}
                     />
                     <KpiCard
                         icon={<Award size={14} className="text-emerald-600" />}
                         iconBg="bg-emerald-50"
                         label={t('dashboard.assignments.analytics.kpis.pass_rate')}
-                        value={noGraded ? '—' : `${Math.round(stats.passRate)}%`}
+                        value={noGraded ? 'n/a' : `${Math.round(stats.passRate)}%`}
                         sub={noGraded ? undefined : t('dashboard.assignments.analytics.kpis.pass_rate_sub', {
                             passed: stats.passedCount,
                             total: stats.gradedCount,
@@ -345,7 +345,7 @@ function AssignmentAnalyticsSubPage({ assignment_uuid }: { assignment_uuid: stri
                         icon={<Clock size={14} className="text-amber-600" />}
                         iconBg="bg-amber-50"
                         label={t('dashboard.assignments.analytics.kpis.on_time')}
-                        value={stats.total === 0 ? '—' : `${Math.round(stats.onTimeRate)}%`}
+                        value={stats.total === 0 ? 'n/a' : `${Math.round(stats.onTimeRate)}%`}
                         sub={stats.total === 0 ? undefined : t('dashboard.assignments.analytics.kpis.on_time_sub', {
                             late: stats.lateCount,
                             total: stats.total,
@@ -358,25 +358,25 @@ function AssignmentAnalyticsSubPage({ assignment_uuid }: { assignment_uuid: stri
                     <MiniStat
                         icon={<ChevronsUp size={12} />}
                         label={t('dashboard.assignments.analytics.mini.highest')}
-                        value={noGraded ? '—' : formatMini(highestFmt)}
+                        value={noGraded ? 'n/a' : formatMini(highestFmt)}
                         tone="emerald"
                     />
                     <MiniStat
                         icon={<TrendingUp size={12} className="rotate-180" />}
                         label={t('dashboard.assignments.analytics.mini.lowest')}
-                        value={noGraded ? '—' : formatMini(lowestFmt)}
+                        value={noGraded ? 'n/a' : formatMini(lowestFmt)}
                         tone="rose"
                     />
                     <MiniStat
                         icon={<Activity size={12} />}
                         label={t('dashboard.assignments.analytics.mini.spread')}
-                        value={noGraded ? '—' : `${Math.round(stats.spread)}%`}
+                        value={noGraded ? 'n/a' : `${Math.round(stats.spread)}%`}
                         tone="violet"
                     />
                     <MiniStat
                         icon={<MessagesSquare size={12} />}
                         label={t('dashboard.assignments.analytics.mini.feedback')}
-                        value={noGraded ? '—' : `${Math.round(stats.feedbackRate)}%`}
+                        value={noGraded ? 'n/a' : `${Math.round(stats.feedbackRate)}%`}
                         tone="sky"
                     />
                 </div>
@@ -840,7 +840,7 @@ function pctToGpa(pct: number): string {
 // grading type. Returns a prominent primary string + optional secondary
 // (e.g. for ALPHABET we show the letter and a "53%" subtitle).
 function formatGradeValue(pct: number, gradingType?: string): { primary: string; secondary?: string } {
-    if (pct === null || pct === undefined || isNaN(pct)) return { primary: '—' };
+    if (pct === null || pct === undefined || isNaN(pct)) return { primary: 'n/a' };
     const rounded = Math.round(pct);
     switch (gradingType) {
         case 'ALPHABET':

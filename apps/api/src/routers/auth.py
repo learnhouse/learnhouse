@@ -1049,7 +1049,7 @@ async def magic_link_verify(
     description=(
         "Log out the current user by clearing the access and refresh cookies. "
         "Because JWTs are stored in httpOnly cookies, the frontend cannot clear "
-        "them directly — the backend must respond with cookie-clearing headers."
+        "them directly; the backend must respond with cookie-clearing headers."
     ),
     responses={
         200: {"description": "Logout successful; auth cookies cleared."},
@@ -1217,7 +1217,7 @@ class ResendVerificationRequest(BaseModel):
     ),
     responses={
         200: {"description": "Verification email dispatch requested."},
-        429: {"description": "Too many verification email requests — rate limited"},
+        429: {"description": "Too many verification email requests (rate limited)"},
     },
 )
 async def api_resend_verification_email(

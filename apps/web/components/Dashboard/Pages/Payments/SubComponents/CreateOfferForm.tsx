@@ -285,7 +285,7 @@ const CreateOfferForm: React.FC<{ onSuccess: () => void }> = ({ onSuccess }) => 
               {/* Payment Group picker */}
               <div>
                 <Label className="text-xs">
-                  Payment Group <span className="text-gray-400 font-normal">(optional — for bundles/subscriptions)</span>
+                  Payment Group <span className="text-gray-400 font-normal">(optional, for bundles/subscriptions)</span>
                 </Label>
                 <Select
                   value={String(values.payments_group_id)}

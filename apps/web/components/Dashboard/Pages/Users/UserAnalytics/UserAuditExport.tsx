@@ -77,7 +77,7 @@ async function buildPdf(dossiers: any[]) {
     line(fullName(u) + `  (@${u.username})`, 12)
     line(u.email || '', 10)
     line('Generated ' + fmtDateTime(new Date().toISOString()), 9)
-    line('Contains teacher answer keys — internal use only.', 9)
+    line('Contains teacher answer keys (internal use only).', 9)
     gap(2)
 
     heading('Summary')
@@ -88,8 +88,8 @@ async function buildPdf(dossiers: any[]) {
     line(`Connections recorded: ${s.connections ?? 0}, last ${fmtDate(s.last_connection)}`, 10)
 
     heading('Account & security')
-    line(`Email verified: ${sec.email_verified ? 'yes' : 'no'}   Signup method: ${sec.signup_method || '—'}`, 10)
-    line(`Last login: ${fmtDateTime(sec.last_login_at)}   IP: ${sec.last_login_ip || '—'}`, 10)
+    line(`Email verified: ${sec.email_verified ? 'yes' : 'no'}   Signup method: ${sec.signup_method || 'n/a'}`, 10)
+    line(`Last login: ${fmtDateTime(sec.last_login_at)}   IP: ${sec.last_login_ip || 'n/a'}`, 10)
 
     heading('Connections')
     ;(d.connections || []).slice(0, 100).forEach((c: any) => {
@@ -99,23 +99,23 @@ async function buildPdf(dossiers: any[]) {
 
     heading('Course progress')
     ;(d.courses || []).forEach((c: any) => {
-      line(`${c.course_name || 'Untitled course'} — ${c.progress_pct}% (${c.activities_completed}/${c.activities_total}), ${c.status}`, 9)
+      line(`${c.course_name || 'Untitled course'}: ${c.progress_pct}% (${c.activities_completed}/${c.activities_total}), ${c.status}`, 9)
     })
     if ((d.courses || []).length === 0) line('No enrollments.', 9)
 
     heading('Assignments')
     ;(d.assignments || []).forEach((a: any) => {
-      const grade = a.grade_display || (a.grade != null ? String(a.grade) : '—')
-      line(`${a.title || a.assignment_uuid} — ${grade}${a.points_summary ? ` (${a.points_summary})` : ''}, ${a.status}, attempt ${a.attempt_number}`, 9)
+      const grade = a.grade_display || (a.grade != null ? String(a.grade) : 'n/a')
+      line(`${a.title || a.assignment_uuid}: ${grade}${a.points_summary ? ` (${a.points_summary})` : ''}, ${a.status}, attempt ${a.attempt_number}`, 9)
       if (a.course_name) line(`Course: ${a.course_name}`, 8, false, 4)
       ;(a.tasks || []).forEach((tk: any) => {
         const points = tk.submitted ? (tk.points_summary || `${tk.grade}`) : 'not submitted'
-        line(`Task ${tk.index} — ${tk.type_label}${tk.title ? `: ${tk.title}` : ''} — ${points}${tk.manually_graded ? ', manually graded' : ''}`, 9, true, 4)
+        line(`Task ${tk.index} (${tk.type_label}${tk.title ? `: ${tk.title}` : ''}): ${points}${tk.manually_graded ? ', manually graded' : ''}`, 9, true, 4)
         const answer = tk.answer
         if (!answer) return
         if (answer.kind === 'code' && answer.code) {
           // Source code belongs in the JSON export, not in a printable report.
-          line(`${answer.code.language || 'Code'} — ${answer.code.passed_tests}/${answer.code.total_tests} tests passed`, 8, false, 8)
+          line(`${answer.code.language || 'Code'}: ${answer.code.passed_tests}/${answer.code.total_tests} tests passed`, 8, false, 8)
           return
         }
         ;(answer.items || []).slice(0, MAX_PDF_ANSWERS_PER_TASK).forEach((item: any) => {
@@ -127,14 +127,14 @@ async function buildPdf(dossiers: any[]) {
           }
         })
         const hidden = (answer.items || []).length - MAX_PDF_ANSWERS_PER_TASK
-        if (hidden > 0) line(`(${hidden} more answers omitted — see the CSV or JSON export)`, 8, false, 8)
+        if (hidden > 0) line(`(${hidden} more answers omitted; see the CSV or JSON export)`, 8, false, 8)
       })
     })
     if ((d.assignments || []).length === 0) line('No submissions.', 9)
 
     heading('Code exercises')
     ;(d.code_submissions || []).slice(0, 100).forEach((cs: any) => {
-      line(`${cs.activity_name || 'Untitled activity'}${cs.course_name ? ` (${cs.course_name})` : ''} — ${cs.language || '—'}, ${cs.result_label || (cs.passed ? 'Passed' : 'Failed')}, ${cs.tests_summary || `${cs.passed_tests}/${cs.total_tests}`} tests, ${fmtDateTime(cs.created_at)}`, 9)
+      line(`${cs.activity_name || 'Untitled activity'}${cs.course_name ? ` (${cs.course_name})` : ''}: ${cs.language || 'n/a'}, ${cs.result_label || (cs.passed ? 'Passed' : 'Failed')}, ${cs.tests_summary || `${cs.passed_tests}/${cs.total_tests}`} tests, ${fmtDateTime(cs.created_at)}`, 9)
     })
     if ((d.code_submissions || []).length === 0) line('None.', 9)
 
@@ -142,16 +142,16 @@ async function buildPdf(dossiers: any[]) {
     const discussions = d.community?.discussions || []
     const comments = d.community?.comments || []
     discussions.slice(0, 100).forEach((disc: any) => {
-      line(`Discussion: ${disc.title} — ${fmtDate(disc.created_at)}`, 9)
+      line(`Discussion: ${disc.title} (${fmtDate(disc.created_at)})`, 9)
     })
     comments.slice(0, 100).forEach((c: any) => {
-      line(`Comment in "${c.discussion_title || '—'}": ${c.excerpt || c.content || ''}`, 9)
+      line(`Comment in "${c.discussion_title || 'untitled'}": ${c.excerpt || c.content || ''}`, 9)
     })
     if (discussions.length === 0 && comments.length === 0) line('No community activity.', 9)
 
     heading('Certificates')
     ;(d.certificates || []).forEach((c: any) => {
-      line(`${c.course_name} — ${fmtDate(c.created_at)}`, 9)
+      line(`${c.course_name} (${fmtDate(c.created_at)})`, 9)
       line(`Credential ID ${c.credential_id || c.user_certification_uuid}`, 8, false, 4)
     })
     if ((d.certificates || []).length === 0) line('None.', 9)
@@ -160,7 +160,7 @@ async function buildPdf(dossiers: any[]) {
     heading('Behavior')
     line(`Total time on activities: ${fmtDuration(totalSeconds)}`, 9)
     ;(d.behavior?.user_time_by_course || []).slice(0, 50).forEach((b: any) => {
-      line(`${b.course_name || 'Untitled course'} — ${fmtDuration(b.total_seconds)}`, 9, false, 4)
+      line(`${b.course_name || 'Untitled course'}: ${fmtDuration(b.total_seconds)}`, 9, false, 4)
     })
     const searches = (d.behavior?.user_searches || []).slice(0, 20)
     if (searches.length > 0) {

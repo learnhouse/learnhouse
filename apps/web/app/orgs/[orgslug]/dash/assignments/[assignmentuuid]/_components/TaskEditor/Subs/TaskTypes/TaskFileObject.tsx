@@ -408,10 +408,10 @@ export default function TaskFileObject({ view, user_id, assignmentTaskUUID, onGr
                                             <div className="text-xs sm:text-sm font-medium">
                                                 {submissionIsGraded
                                                     ? t('dashboard.assignments.editor.task_editor.general.upload_locked_graded', {
-                                                        defaultValue: 'This submission has been graded — your file can no longer be changed.',
+                                                        defaultValue: 'This submission has been graded; your file can no longer be changed.',
                                                     })
                                                     : t('dashboard.assignments.editor.task_editor.general.upload_locked_submitted', {
-                                                        defaultValue: 'You have submitted this assignment — your file can no longer be changed.',
+                                                        defaultValue: 'You have submitted this assignment; your file can no longer be changed.',
                                                     })}
                                             </div>
                                         </div>

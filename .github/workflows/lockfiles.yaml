@@ -113,7 +113,7 @@ jobs:
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add -A -- '*package.json' '*bun.lock' apps/api/uv.lock
           if git diff --cached --quiet; then
-            echo "Nothing to commit — the drift is outside the lockfiles."
+            echo "Nothing to commit: the drift is outside the lockfiles."
             exit 1
           fi
           git commit -m "chore(deps): regenerate lockfiles"
@@ -126,7 +126,7 @@ jobs:
             if [ "$HAS_PAT" != "true" ]; then
               echo
               echo "Pushed with \`GITHUB_TOKEN\`, so the other checks will not"
-              echo "re-run on their own — re-run them to see the new commit."
+              echo "re-run on their own; re-run them to see the new commit."
             fi
           } >> "$GITHUB_STEP_SUMMARY"
 

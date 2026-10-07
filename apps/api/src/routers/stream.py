@@ -390,7 +390,7 @@ async def stream_activity_hls(
     summary="Serve an HLS playlist or segment for a video block",
     description=(
         "Serves the adaptive-bitrate HLS assets for a video block inside a dynamic "
-        "activity — identical behavior to the activity HLS endpoint (RBAC-gated "
+        "activity; identical behavior to the activity HLS endpoint (RBAC-gated "
         "playlists with segment URLs presigned to R2), keyed off the block's dir."
     ),
     responses={

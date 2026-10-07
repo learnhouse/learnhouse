@@ -74,7 +74,7 @@ jobs:
           fi
           BIN_VERSION="$(node dist/bin/learnhouse.js --version)"
           if [ "$BIN_VERSION" != "$TAG_VERSION" ]; then
-            echo "::error::Built binary reports '$BIN_VERSION' but the tag is '$TAG_VERSION' — is src/constants.ts out of sync with package.json?"
+            echo "::error::Built binary reports '$BIN_VERSION' but the tag is '$TAG_VERSION'. Is src/constants.ts out of sync with package.json?"
             exit 1
           fi
           echo "Versions agree: $TAG_VERSION"

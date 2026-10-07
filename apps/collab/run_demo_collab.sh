@@ -12,7 +12,7 @@ cd "$(dirname "$0")"
 
 SECRETS_FILE="../../.demo-secrets"
 if [ ! -f "$SECRETS_FILE" ]; then
-  echo "Start the API first (apps/api/run_demo_api.sh) — it generates $SECRETS_FILE" >&2
+  echo "Start the API first (apps/api/run_demo_api.sh); it generates $SECRETS_FILE" >&2
   exit 1
 fi
 set -a

@@ -161,7 +161,7 @@ _PODCAST_SCRIPT_SYSTEM = (
     "colon, e.g. 'Host:'. Use ONLY these exact speaker names: {names}.\n"
     "- Alternate turns naturally with a clear intro and wrap-up.\n"
     "{length_line}"
-    "- Make it sound spoken — contractions, natural reactions.\n"
+    "- Make it sound spoken: contractions, natural reactions.\n"
     "- Do NOT include stage directions, sound effects, markdown, headings, or narration.\n"
     "{lang_line}{tone_line}"
 )
@@ -175,7 +175,7 @@ _MONOLOGUE_SCRIPT_SYSTEM = (
     "headings, NO bullet points, NO stage directions.\n"
     "- Explain in depth and clearly, well-structured, with a natural intro and a conclusion.\n"
     "{length_line}"
-    "- Make it sound spoken — contractions, natural transitions, a clear voice.\n"
+    "- Make it sound spoken: contractions, natural transitions, a clear voice.\n"
     "{lang_line}{tone_line}"
 )
 

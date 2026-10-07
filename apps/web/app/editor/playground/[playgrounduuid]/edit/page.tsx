@@ -11,7 +11,7 @@ export async function generateMetadata({ params }: { params: PageParams }): Prom
   const { playgrounduuid } = await params
   try {
     const pg = await getPlayground(playgrounduuid)
-    return { title: `Edit — ${pg.name}` }
+    return { title: `Edit | ${pg.name}` }
   } catch {
     return { title: 'Edit Playground' }
   }

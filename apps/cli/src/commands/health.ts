@@ -39,7 +39,7 @@ export async function healthCommand() {
     for (const c of containers) {
       const isUp = c.status.toLowerCase().startsWith('up')
       const svcName = c.name.replace(`-${id}`, '')
-      p.log.message(isUp ? pass(`${svcName} — ${c.status}`) : fail(`${svcName} — ${c.status}`))
+      p.log.message(isUp ? pass(`${svcName}: ${c.status}`) : fail(`${svcName}: ${c.status}`))
     }
   }
 
@@ -81,12 +81,12 @@ export async function healthCommand() {
     const resp = await fetch(healthUrl, { signal: AbortSignal.timeout(5000) })
     const elapsed = Date.now() - start
     if (resp.ok) {
-      p.log.message(pass(`${healthUrl} — ${resp.status} (${elapsed}ms)`))
+      p.log.message(pass(`${healthUrl}: ${resp.status} (${elapsed}ms)`))
     } else {
-      p.log.message(fail(`${healthUrl} — ${resp.status} (${elapsed}ms)`))
+      p.log.message(fail(`${healthUrl}: ${resp.status} (${elapsed}ms)`))
     }
   } catch (err: any) {
-    p.log.message(fail(`${healthUrl} — ${err.message || 'unreachable'}`))
+    p.log.message(fail(`${healthUrl}: ${err.message || 'unreachable'}`))
   }
 
   // 5. Disk usage

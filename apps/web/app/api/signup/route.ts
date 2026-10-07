@@ -83,7 +83,7 @@ export async function POST(request: NextRequest) {
     const emailCheck = await validateSignupEmail(email)
     if (!emailCheck.ok) {
       return NextResponse.json(
-        { detail: 'Please use a permanent email address — temporary/disposable addresses are not allowed.' },
+        { detail: 'Please use a permanent email address; temporary/disposable addresses are not allowed.' },
         { status: 400 },
       )
     }

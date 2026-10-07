@@ -33,7 +33,7 @@ PKG="$REPO_ROOT/apps/cli/package.json"
 CONST="$REPO_ROOT/apps/cli/src/constants.ts"
 
 echo ""
-echo "  🚀 LearnHouse CLI Release — ${VERSION}"
+echo "  🚀 LearnHouse CLI Release: ${VERSION}"
 echo "  ─────────────────────────────────────"
 echo ""
 
@@ -42,12 +42,12 @@ echo "  🔎 Running preflight checks..."
 
 # 1) Version must look like semver (optionally a -preview / .N suffix).
 [[ "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+([.-][0-9A-Za-z.]+)?$ ]] \
-  || die "Invalid version '$VERSION' — expected semver, e.g. 1.4.9"
+  || die "Invalid version '$VERSION': expected semver, e.g. 1.4.9"
 
 # 2) Tooling + auth (the script creates a GitHub Release).
 command -v gh   >/dev/null 2>&1 || die "GitHub CLI 'gh' is not installed."
 command -v node >/dev/null 2>&1 || die "Node.js is not installed."
-gh auth status  >/dev/null 2>&1 || die "GitHub CLI is not authenticated — run: gh auth login"
+gh auth status  >/dev/null 2>&1 || die "GitHub CLI is not authenticated. Run: gh auth login"
 [ -n "$REPO" ] || die "Could not determine the GitHub repo (gh repo view)."
 
 # 3) The version files must exist.
@@ -63,7 +63,7 @@ GIT_DIR="$(git rev-parse --git-dir)"
 #    you happen to be sitting on. (This was the biggest footgun of the old script.)
 CURRENT_BRANCH="$(git rev-parse --abbrev-ref HEAD)"
 [ "$CURRENT_BRANCH" = "dev" ] \
-  || die "You are on '$CURRENT_BRANCH', not 'dev'. Releases must be cut from dev — run: git checkout dev"
+  || die "You are on '$CURRENT_BRANCH', not 'dev'. Releases must be cut from dev. Run: git checkout dev"
 
 # 6) Clean working tree — never release uncommitted local changes.
 git diff --quiet && git diff --cached --quiet \
@@ -76,7 +76,7 @@ git fetch --quiet origin --tags --prune
 # 8) origin/dev must exist, and local dev must not have diverged from it.
 git ls-remote --exit-code --heads origin dev >/dev/null 2>&1 || die "origin/dev not found."
 git pull --ff-only origin dev \
-  || die "Local 'dev' has diverged from origin/dev — reconcile it before releasing."
+  || die "Local 'dev' has diverged from origin/dev; reconcile it before releasing."
 
 # 9) Tag must not already exist locally OR on origin.
 git rev-parse -q --verify "refs/tags/$TAG" >/dev/null 2>&1 \
@@ -88,7 +88,7 @@ git ls-remote --exit-code --tags origin "refs/tags/$TAG" >/dev/null 2>&1 \
 PUBLISHED="$(npm view learnhouse@"$VERSION" version 2>/dev/null || true)"
 [ -n "$PUBLISHED" ] && die "learnhouse@$VERSION is already published on npm. Pick a new version."
 
-echo "  ✅ Preflight passed — releasing ${TAG} to ${REPO}"
+echo "  ✅ Preflight passed, releasing ${TAG} to ${REPO}"
 
 # ─── Bump CLI version (portable; verified before commit) ────────────────────
 echo "  📝 Bumping CLI version to ${VERSION}..."
@@ -96,15 +96,15 @@ sed_inplace "s/\"version\": \"[^\"]*\"/\"version\": \"${VERSION}\"/" "$PKG"
 sed_inplace "s/export const VERSION = '[^']*'/export const VERSION = '${VERSION}'/" "$CONST"
 
 # Confirm the bump actually landed in BOTH files (formats may have changed).
-grep -q "\"version\": \"${VERSION}\""        "$PKG"   || die "Bump did not apply to package.json — aborting before any push."
-grep -q "export const VERSION = '${VERSION}'" "$CONST" || die "Bump did not apply to constants.ts — aborting before any push."
+grep -q "\"version\": \"${VERSION}\""        "$PKG"   || die "Bump did not apply to package.json; aborting before any push."
+grep -q "export const VERSION = '${VERSION}'" "$CONST" || die "Bump did not apply to constants.ts; aborting before any push."
 echo "  ✅ Version bumped in package.json + constants.ts"
 
 # ─── Commit version bump on dev ─────────────────────────────────────────────
 echo "  📦 Committing version bump on dev..."
 git add "$PKG" "$CONST"
 if git diff --cached --quiet; then
-  echo "  ℹ️  package.json/constants.ts already at ${VERSION} — tagging the current dev commit"
+  echo "  ℹ️  package.json/constants.ts already at ${VERSION}; tagging the current dev commit"
 else
   git commit -m "release(cli): bump version to ${VERSION}"
   git push origin dev
@@ -160,6 +160,6 @@ echo ""
 echo "  📋 npm publish (gated on tests): https://github.com/${REPO}/actions/workflows/cli-publish.yaml"
 echo "  📋 Release page:                 https://github.com/${REPO}/releases/tag/${TAG}"
 echo ""
-echo "  ⏳ npm publish runs in CI and will ABORT if the build or tests fail —"
+echo "  ⏳ npm publish runs in CI and will ABORT if the build or tests fail;"
 echo "     watch the workflow above before announcing the release."
 echo ""

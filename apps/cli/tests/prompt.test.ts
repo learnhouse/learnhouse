@@ -27,7 +27,7 @@ vi.mock('@clack/prompts', () => ({
 
 import { text } from '../src/utils/prompt.js'
 
-describe('utils/prompt — custom text()', () => {
+describe('utils/prompt: custom text()', () => {
   it('resolves to the prompt value and validates against the default when empty', async () => {
     const validate = vi.fn(() => undefined)
     expect(await text({ message: 'Name', defaultValue: 'def', validate })).toBe('typed-value')

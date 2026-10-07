@@ -56,7 +56,7 @@ async def api_head_media_file(
 @router.post(
     "/{media_uuid}/share-link",
     summary="Create a media share link",
-    description="Mints a fresh random, revocable token each call. The link is NOT an access bypass — recipients still need access.",
+    description="Mints a fresh random, revocable token each call. The link is NOT an access bypass; recipients still need access.",
 )
 async def api_create_media_share_link(
     request: Request,

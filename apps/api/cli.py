@@ -434,7 +434,7 @@ async def _run_nudges(
         f"inactive_org={result['skipped_inactive_org']}"
     )
     if result["budget_exhausted"]:
-        print("  budget exhausted — remaining candidates deferred to the next run")
+        print("  budget exhausted; remaining candidates deferred to the next run")
     for nudge_id, count in result["by_nudge"].items():
         print(f"    {nudge_id}: {count}")
 
@@ -484,7 +484,7 @@ async def _nudges_stats(days: int) -> None:
     # and the provider call — worth knowing about, never auto-retried.
     stuck = sum(count for _n, status, count in rows if status == "claimed")
     if stuck:
-        print(f"\n  {stuck} row(s) stuck in 'claimed' — a run died mid-send.")
+        print(f"\n  {stuck} row(s) stuck in 'claimed': a run died mid-send.")
 
 
 @cli.command(name="demo-sync")
@@ -522,7 +522,7 @@ async def _demo_sync() -> None:
     print(f"  updated:       {stats.updated}")
     print(f"  drift removed: {stats.drift_deleted}")
     if not stats.created and not stats.updated and not stats.drift_deleted:
-        print("  nothing to do — the demo already matches the bundle")
+        print("  nothing to do: the demo already matches the bundle")
 
 
 @cli.command(name="demo-status")

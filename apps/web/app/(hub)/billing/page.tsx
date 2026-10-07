@@ -189,8 +189,8 @@ function BillingClient() {
         refresh()
         toast.success(
           packPurchased
-            ? t('billing.pack_purchased', { defaultValue: 'Add-on purchased — your limits are updated.' })
-            : t('billing.checkout_success', { defaultValue: 'Subscription updated — welcome to your new plan!' }),
+            ? t('billing.pack_purchased', { defaultValue: 'Add-on purchased. Your limits are updated.' })
+            : t('billing.checkout_success', { defaultValue: 'Subscription updated. Welcome to your new plan!' }),
         )
       } else {
         // Redundant automatic fulfillment: apply the plan directly from the paid
@@ -205,14 +205,14 @@ function BillingClient() {
             if (result?.fulfilled) {
               toast.success(
                 t('billing.checkout_success', {
-                  defaultValue: 'Subscription updated — welcome to your new plan!',
+                  defaultValue: 'Subscription updated. Welcome to your new plan!',
                 }),
               )
             } else {
               toast.success(
                 t('billing.checkout_settling', {
                   defaultValue:
-                    'Payment received — your new plan is being applied and will appear shortly.',
+                    'Payment received. Your new plan is being applied and will appear shortly.',
                 }),
               )
             }
@@ -222,14 +222,14 @@ function BillingClient() {
             toast(
               t('billing.checkout_settling_delayed', {
                 defaultValue:
-                  'Payment received, but your plan has not updated yet. Refresh in a moment — contact support if it persists.',
+                  'Payment received, but your plan has not updated yet. Refresh in a moment, and contact support if it persists.',
               }),
             )
           })
           .finally(refresh)
       }
     } else if (checkoutParam === 'cancelled') {
-      toast(t('billing.checkout_cancelled', { defaultValue: 'Checkout cancelled — no changes were made.' }))
+      toast(t('billing.checkout_cancelled', { defaultValue: 'Checkout cancelled. No changes were made.' }))
     }
     const sp = new URLSearchParams(Array.from(searchParams?.entries() ?? []))
     ;['checkout', 'session_id', 'pack_purchased', 'pack'].forEach((k) => sp.delete(k))

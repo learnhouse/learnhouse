@@ -108,7 +108,7 @@ describe("editor unsaved changes guard", () => {
   });
 });
 
-describe("getEditorContentSnapshot — H5P height", () => {
+describe("getEditorContentSnapshot: H5P height", () => {
   const doc = (height, url = "https://team.h5p.com/content/1/embed") => ({
     type: "doc",
     content: [{ type: "blockH5P", attrs: { h5pUrl: url, title: "Quiz", height } }],

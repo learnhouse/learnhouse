@@ -23,9 +23,9 @@ STRINGS: dict[str, str] = {
     "nudge.activation.come_back_d2.body": "Вы создали {org_name} и с тех пор не возвращались. Всё на месте, а на публикацию первого курса уходит около десяти минут.",
     "nudge.activation.come_back_d2.cta": "Перейти в панель",
 
-    "nudge.activation.ai_course_help_d4.subject": "Самое сложное — чистый лист",
+    "nudge.activation.ai_course_help_d4.subject": "Самое сложное: чистый лист",
     "nudge.activation.ai_course_help_d4.heading": "Пусть ИИ напишет план",
-    "nudge.activation.ai_course_help_d4.body": "Если {org_name} всё ещё пуста, потому что непонятно, с чего начать, — опишите тему, и ИИ подготовит главы и уроки. Дальше правите вы.",
+    "nudge.activation.ai_course_help_d4.body": "Если {org_name} всё ещё пуста, потому что непонятно, с чего начать, опишите тему, и ИИ подготовит главы и уроки. Дальше правите вы.",
     "nudge.activation.ai_course_help_d4.cta": "Создать курс с ИИ",
 
     "nudge.activation.import_existing_d5.subject": "Перенесите то, что уже есть",
@@ -35,41 +35,41 @@ STRINGS: dict[str, str] = {
 
     "nudge.activation.setup_checklist_d7.subject": "Пятнадцать минут до работающей академии",
     "nudge.activation.setup_checklist_d7.heading": "Короткий чек-лист",
-    "nudge.activation.setup_checklist_d7.body": "{org_name} всё ещё ждёт первый курс. Чек-лист проведёт вас за несколько шагов — большинство укладывается в четверть часа.",
+    "nudge.activation.setup_checklist_d7.body": "{org_name} всё ещё ждёт первый курс. Чек-лист проведёт вас за несколько шагов; большинство укладывается в четверть часа.",
     "nudge.activation.setup_checklist_d7.cta": "Открыть чек-лист",
 
     "nudge.activation.whats_blocking_d14.subject": "Что помешало?",
     "nudge.activation.whats_blocking_d14.heading": "Можно спросить, что вас остановило?",
-    "nudge.activation.whats_blocking_d14.body": "Вы создали {org_name} пару недель назад и пока не добавили курс. Если что-то было непонятно или чего-то не хватило, нам важно об этом знать — просто ответьте на это письмо, оно придёт напрямую к нам.",
+    "nudge.activation.whats_blocking_d14.body": "Вы создали {org_name} пару недель назад и пока не добавили курс. Если что-то было непонятно или чего-то не хватило, нам важно об этом знать: просто ответьте на это письмо, оно придёт напрямую к нам.",
 
     "nudge.activation.last_call_d30.subject": "Последнее письмо про {org_name}",
     "nudge.activation.last_call_d30.heading": "Это последнее",
-    "nudge.activation.last_call_d30.body": "{org_name} молчит уже месяц, поэтому мы перестаём отправлять такие письма. Аккаунт и всё его содержимое остаются на месте — вернётесь, и всё будет там, где вы оставили.",
+    "nudge.activation.last_call_d30.body": "{org_name} молчит уже месяц, поэтому мы перестаём отправлять такие письма. Аккаунт и всё его содержимое остаются на месте; вернётесь, и всё будет там, где вы оставили.",
     "nudge.activation.last_call_d30.cta": "Открыть панель",
 
     "nudge.content.course_no_chapter_d1.subject": "Курсу «{course_name}» нужна первая глава",
     "nudge.content.course_no_chapter_d1.heading": "Осталась одна глава",
-    "nudge.content.course_no_chapter_d1.body": "Курс «{course_name}» создан, но глав в нём пока нет, поэтому открывать нечего. Главы — это просто разделы, по одной на тему работает хорошо.",
+    "nudge.content.course_no_chapter_d1.body": "Курс «{course_name}» создан, но глав в нём пока нет, поэтому открывать нечего. Главы просто разделы; по одной на тему работает хорошо.",
     "nudge.content.course_no_chapter_d1.cta": "Добавить главу",
 
     "nudge.content.chapter_no_activity_d1.subject": "Добавьте первый урок в «{course_name}»",
     "nudge.content.chapter_no_activity_d1.heading": "Главы готовы",
-    "nudge.content.chapter_no_activity_d1.body": "В курсе «{course_name}» есть главы, но они пока пустые. Урок может быть страницей текста, видео, тестом — тем, что подходит теме.",
+    "nudge.content.chapter_no_activity_d1.body": "В курсе «{course_name}» есть главы, но они пока пустые. Урок может быть страницей текста, видео, тестом (тем, что подходит теме).",
     "nudge.content.chapter_no_activity_d1.cta": "Добавить урок",
 
     "nudge.content.activity_unpublished_d2.subject": "Ваши уроки в «{course_name}» пока не видны",
     "nudge.content.activity_unpublished_d2.heading": "Уроки всё ещё скрыты",
-    "nudge.content.activity_unpublished_d2.body": "Вы написали уроки в курсе «{course_name}», но ни один не опубликован, поэтому участники видят пустой курс. Публикация ничего не фиксирует — редактировать можно и дальше.",
+    "nudge.content.activity_unpublished_d2.body": "Вы написали уроки в курсе «{course_name}», но ни один не опубликован, поэтому участники видят пустой курс. Публикация ничего не фиксирует; редактировать можно и дальше.",
     "nudge.content.activity_unpublished_d2.cta": "Опубликовать уроки",
 
     "nudge.content.course_draft_d3.subject": "«{course_name}» всё ещё черновик",
     "nudge.content.course_draft_d3.heading": "«{course_name}» почти готов",
-    "nudge.content.course_draft_d3.body": "Вы добавили уроки в «{course_name}», но курс не опубликован, поэтому его никто не откроет. Ему не обязательно быть завершённым — публикация лишь делает его видимым, редактировать можно и после.",
+    "nudge.content.course_draft_d3.body": "Вы добавили уроки в «{course_name}», но курс не опубликован, поэтому его никто не откроет. Ему не обязательно быть завершённым; публикация лишь делает его видимым, редактировать можно и после.",
     "nudge.content.course_draft_d3.cta": "Опубликовать",
 
     "nudge.content.course_draft_d10.subject": "«{course_name}» уже давно в черновиках",
     "nudge.content.course_draft_d10.heading": "Скорее всего, он готов",
-    "nudge.content.course_draft_d10.body": "«{course_name}» лежит неопубликованным больше недели. Курс редко кажется законченным — публикация делает его видимым, а улучшать можно и когда его уже читают.",
+    "nudge.content.course_draft_d10.body": "«{course_name}» лежит неопубликованным больше недели. Курс редко кажется законченным; публикация делает его видимым, а улучшать можно и когда его уже читают.",
     "nudge.content.course_draft_d10.cta": "Опубликовать",
 
     "nudge.content.thin_course_d5.subject": "«{course_name}» не помешает дополнить",
@@ -84,7 +84,7 @@ STRINGS: dict[str, str] = {
 
     "nudge.audience.published_no_members_d1.subject": "«{course_name}» опубликован, но там никого нет",
     "nudge.audience.published_no_members_d1.heading": "Пора кого-нибудь пригласить",
-    "nudge.audience.published_no_members_d1.body": "«{course_name}» опубликован и готов к чтению. В {org_name} пока нет участников, поэтому следующий шаг — пригласить тех, для кого вы его писали.",
+    "nudge.audience.published_no_members_d1.body": "«{course_name}» опубликован и готов к чтению. В {org_name} пока нет участников, поэтому следующий шаг: пригласить тех, для кого вы его писали.",
     "nudge.audience.published_no_members_d1.cta": "Пригласить участников",
 
     "nudge.audience.published_no_members_d7.subject": "У «{course_name}» до сих пор нет участников",
@@ -94,17 +94,17 @@ STRINGS: dict[str, str] = {
 
     "nudge.audience.members_no_enrollment_d3.subject": "Ваши участники ещё не начали",
     "nudge.audience.members_no_enrollment_d3.heading": "Присоединились, но ничего не открыли",
-    "nudge.audience.members_no_enrollment_d3.body": "Люди присоединились к {org_name}, но никто не начал курс. Обычно достаточно короткого сообщения с прямой ссылкой — большинство просто не нашли вход.",
+    "nudge.audience.members_no_enrollment_d3.body": "Люди присоединились к {org_name}, но никто не начал курс. Обычно достаточно короткого сообщения с прямой ссылкой; большинство просто не нашли вход.",
     "nudge.audience.members_no_enrollment_d3.cta": "Посмотреть участников",
 
-    "nudge.audience.share_public_page_d14.subject": "Страница курса публичная — вот ссылка",
+    "nudge.audience.share_public_page_d14.subject": "Страница курса публичная: вот ссылка",
     "nudge.audience.share_public_page_d14.heading": "Прочитать может любой по ссылке",
-    "nudge.audience.share_public_page_d14.body": "«{course_name}» открыт публично, так что делиться им можно где угодно и без приглашений. Ссылка ниже — та самая, которую стоит отправлять.",
+    "nudge.audience.share_public_page_d14.body": "«{course_name}» открыт публично, так что делиться им можно где угодно и без приглашений. Ссылка ниже и есть та самая, которую стоит отправлять.",
     "nudge.audience.share_public_page_d14.cta": "Открыть публичную страницу",
 
     "nudge.audience.stalled_learners_d14.subject": "Некоторые участники остановились на середине",
     "nudge.audience.stalled_learners_d14.heading": "Несколько человек застряли",
-    "nudge.audience.stalled_learners_d14.body": "Некоторые участники {org_name} начали курс и не возвращались уже пару недель. Часто помогает сообщение от вас — или взгляд на то, где именно они остановились.",
+    "nudge.audience.stalled_learners_d14.body": "Некоторые участники {org_name} начали курс и не возвращались уже пару недель. Часто помогает сообщение от вас или взгляд на то, где именно они остановились.",
     "nudge.audience.stalled_learners_d14.cta": "Посмотреть участников",
 
     "nudge.monetization.course_limit_d1.subject": "Вы использовали все курсы тарифа {plan_name}",
@@ -119,12 +119,12 @@ STRINGS: dict[str, str] = {
 
     "nudge.monetization.ai_credits_low.subject": "Кредиты ИИ почти закончились",
     "nudge.monetization.ai_credits_low.heading": "Кредитов ИИ осталось мало",
-    "nudge.monetization.ai_credits_low.body": "{org_name} израсходовала большую часть кредитов ИИ, включённых в тариф {plan_name}. На тарифе {next_plan} их больше — если ИИ стал частью того, как вы готовите курсы.",
+    "nudge.monetization.ai_credits_low.body": "{org_name} израсходовала большую часть кредитов ИИ, включённых в тариф {plan_name}. На тарифе {next_plan} их больше, если ИИ стал частью того, как вы готовите курсы.",
     "nudge.monetization.ai_credits_low.cta": "Посмотреть тарифы",
 
     "nudge.monetization.upgrade_recap_d21.subject": "Что {next_plan} даст {org_name}",
     "nudge.monetization.upgrade_recap_d21.heading": "Вы построили что-то настоящее",
-    "nudge.monetization.upgrade_recap_d21.body": "В {org_name} есть опубликованные курсы и люди, которые их читают. Тариф {next_plan} даёт запас для роста и несколько вещей, которых нет в тарифе {plan_name}, — стоит взглянуть, если планируете расширяться.",
+    "nudge.monetization.upgrade_recap_d21.body": "В {org_name} есть опубликованные курсы и люди, которые их читают. Тариф {next_plan} даёт запас для роста и несколько вещей, которых нет в тарифе {plan_name}; стоит взглянуть, если планируете расширяться.",
     "nudge.monetization.upgrade_recap_d21.cta": "Сравнить тарифы",
 
     "nudge.dormancy.no_login_14d.subject": "В {org_name} было тихо",
@@ -134,12 +134,12 @@ STRINGS: dict[str, str] = {
 
     "nudge.dormancy.no_login_30d.subject": "Ваши курсы в {org_name} никуда не делись",
     "nudge.dormancy.no_login_30d.heading": "Прошло несколько недель",
-    "nudge.dormancy.no_login_30d.body": "Пока вас не было, ничего не изменилось — {org_name} и всё в ней ровно там, где вы оставили. Вернуться — это один клик.",
+    "nudge.dormancy.no_login_30d.body": "Пока вас не было, ничего не изменилось: {org_name} и всё в ней ровно там, где вы оставили. Вернуться можно в один клик.",
     "nudge.dormancy.no_login_30d.cta": "Открыть панель",
 
     "nudge.dormancy.no_login_60d.subject": "Последнее сообщение про {org_name}",
     "nudge.dormancy.no_login_60d.heading": "Больше не беспокоим",
-    "nudge.dormancy.no_login_60d.body": "{org_name} молчит уже пару месяцев, так что это последнее такое письмо. Всё, что вы построили, остаётся как есть — на случай, когда понадобится.",
+    "nudge.dormancy.no_login_60d.body": "{org_name} молчит уже пару месяцев, так что это последнее такое письмо. Всё, что вы построили, остаётся как есть, на случай, когда понадобится.",
     "nudge.dormancy.no_login_60d.cta": "Открыть панель",
 
     "nudge.dormancy.winback_q.subject": "Что нового с вашего последнего визита в {org_name}",
@@ -149,7 +149,7 @@ STRINGS: dict[str, str] = {
 
     "nudge.milestone.first_course_published.subject": "«{course_name}» опубликован",
     "nudge.milestone.first_course_published.heading": "Вы опубликовали первый курс",
-    "nudge.milestone.first_course_published.body": "«{course_name}» опубликован, и его можно читать. Дальше главное — чтобы кто-то его прочитал, пусть даже один-два человека для начала.",
+    "nudge.milestone.first_course_published.body": "«{course_name}» опубликован, и его можно читать. Дальше главное: чтобы кто-то его прочитал, пусть даже один-два человека для начала.",
     "nudge.milestone.first_course_published.cta": "Пригласить первых участников",
 
     "nudge.milestone.first_learner_enrolled.subject": "Кто-то начал «{course_name}»",
@@ -159,13 +159,13 @@ STRINGS: dict[str, str] = {
 
     "nudge.milestone.first_completion.subject": "Кто-то прошёл курс в {org_name}",
     "nudge.milestone.first_completion.heading": "Первое завершение",
-    "nudge.milestone.first_completion.body": "Участник прошёл курс в {org_name} от начала до конца. Чтобы отметить это как следует, можно добавить сертификат — или начать готовить следующий курс.",
+    "nudge.milestone.first_completion.body": "Участник прошёл курс в {org_name} от начала до конца. Чтобы отметить это как следует, можно добавить сертификат или начать готовить следующий курс.",
     "nudge.milestone.first_completion.cta": "Открыть панель",
 
     # -- reactivation ------------------------------------------------------
     "nudge.reactivation.opener.subject": "Ваша академия в {org_name} никуда не делась",
     "nudge.reactivation.opener.heading": "Всё на месте, ровно как вы оставили",
-    "nudge.reactivation.opener.body": "С вашего последнего визита {org_name} никто не трогал — каждый курс, раздел и урок там, где вы их оставили. Вернуться — один клик.",
+    "nudge.reactivation.opener.body": "С вашего последнего визита {org_name} никто не трогал: каждый курс, раздел и урок там, где вы их оставили. Вернуться можно в один клик.",
     "nudge.reactivation.opener.cta": "Открыть панель",
     "nudge.reactivation.whats_changed.subject": "В LearnHouse кое-что изменилось",
     "nudge.reactivation.whats_changed.heading": "С вашего последнего визита",
@@ -173,9 +173,9 @@ STRINGS: dict[str, str] = {
     "nudge.reactivation.whats_changed.cta": "Посмотреть новое",
     "nudge.reactivation.need_a_hand.subject": "Нужна помощь, чтобы вернуться в {org_name}?",
     "nudge.reactivation.need_a_hand.heading": "Что-то помешало?",
-    "nudge.reactivation.need_a_hand.body": "Если была причина, по которой {org_name} остановилась — что-то непонятное, чего-то не хватило или просто не было времени — нам важно об этом знать. Ответьте на это письмо, оно придёт напрямую к нам.",
+    "nudge.reactivation.need_a_hand.body": "Если была причина, по которой {org_name} остановилась (что-то непонятное, чего-то не хватило или просто не было времени), нам важно об этом знать. Ответьте на это письмо, оно придёт напрямую к нам.",
     "nudge.reactivation.closing.subject": "Последнее письмо про {org_name}",
     "nudge.reactivation.closing.heading": "На этом остановимся",
-    "nudge.reactivation.closing.body": "Это последнее такое письмо. {org_name} остаётся ровно как есть, и ничего не сгорает — захотите вернуться, всё будет ждать вас.",
+    "nudge.reactivation.closing.body": "Это последнее такое письмо. {org_name} остаётся ровно как есть, и ничего не сгорает; захотите вернуться, всё будет ждать вас.",
     "nudge.reactivation.closing.cta": "Открыть панель",
 }

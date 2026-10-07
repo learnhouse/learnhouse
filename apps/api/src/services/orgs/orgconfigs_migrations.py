@@ -192,6 +192,6 @@ if __name__ == "__main__":
     async def _main():
         async with _AsyncSession(_engine) as session:
             count = await _v2_migrate_all_configs(session)
-            logger.info("Done — %s config(s) migrated to v2.", count)
+            logger.info("Done: %s config(s) migrated to v2.", count)
 
     asyncio.run(_main())

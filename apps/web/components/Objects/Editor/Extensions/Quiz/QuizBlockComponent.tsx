@@ -475,7 +475,7 @@ function QuizBlockComponent(props: any) {
                   aria-label={
                     isEditable
                       ? undefined
-                      : `${question.question || t('editor.blocks.quiz_block.question_label', { defaultValue: 'Question' })} — ${
+                      : `${question.question || t('editor.blocks.quiz_block.question_label', { defaultValue: 'Question' })}: ${
                           isSingleResponse
                             ? t('editor.blocks.quiz_block.select_one')
                             : t('editor.blocks.quiz_block.select_all_that_apply')

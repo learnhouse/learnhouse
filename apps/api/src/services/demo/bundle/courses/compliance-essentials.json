@@ -40,7 +40,7 @@
             "h2:Only what the work requires",
             "p:Riverbend holds contact details, delivery addresses, order history and payment references. We do not hold full card numbers, and there is no situation in which anyone here needs one. If a customer starts reading one out, stop them.",
             "h2:The principle underneath all of it",
-            "p:Data is collected for a stated purpose and used for that purpose. An address given for delivery is not a marketing list. This is not a technicality — it is the single rule that most of the others follow from.",
+            "p:Data is collected for a stated purpose and used for that purpose. An address given for delivery is not a marketing list. This is not a technicality; it is the single rule that most of the others follow from.",
             {
               "ul": [
                 "Collect only what the task needs.",
@@ -57,7 +57,7 @@
                 "q": "A customer starts reading out their full card number. What do you do?",
                 "a": [
                   [
-                    "Stop them — we never take full card numbers",
+                    "Stop them: we never take full card numbers",
                     true
                   ],
                   [
@@ -88,7 +88,7 @@
               ]
             },
             {
-              "info": "Access reviews happen quarterly. If your job changed, your access should have changed with it — flag it rather than waiting for the review to catch up."
+              "info": "Access reviews happen quarterly. If your job changed, your access should have changed with it; flag it rather than waiting for the review to catch up."
             }
           ]
         },
@@ -98,7 +98,7 @@
           "kind": "document",
           "body": [
             "h2:They have rights, and there is a clock",
-            "p:A customer may ask what we hold about them, ask for it to be corrected, or ask for it to be deleted. These requests have legal deadlines, and the clock starts when the request arrives — not when someone gets round to recognising it as one.",
+            "p:A customer may ask what we hold about them, ask for it to be corrected, or ask for it to be deleted. These requests have legal deadlines, and the clock starts when the request arrives, not when someone gets round to recognising it as one.",
             {
               "ol": [
                 "Recognise it. It will rarely use formal wording; 'what do you have on me?' counts.",
@@ -158,7 +158,7 @@
                 "q": "You email an order confirmation to the wrong customer. Is this a breach?",
                 "a": [
                   [
-                    "Yes — it must be reported like any other",
+                    "Yes: it must be reported like any other",
                     true
                   ],
                   [
@@ -180,7 +180,7 @@
           "kind": "document",
           "body": [
             "h2:Within one hour of noticing",
-            "p:The reporting window is one hour from the moment you notice, not from the moment you are sure. Riverbend has regulatory deadlines that depend on this, and they are measured from when the company first knew — which means from when you knew.",
+            "p:The reporting window is one hour from the moment you notice, not from the moment you are sure. Riverbend has regulatory deadlines that depend on this, and they are measured from when the company first knew, which means from when you knew.",
             "h2:What to do, in order",
             {
               "ol": [
@@ -287,7 +287,7 @@
               "ol": [
                 "Say plainly that you cannot do it that way.",
                 "Offer the version you can do, including how long it takes.",
-                "If the pressure continues, say you are going to check with compliance — and then do.",
+                "If the pressure continues, say you are going to check with compliance, and then do.",
                 "Write down what was asked and by whom, the same day."
               ]
             },
@@ -323,7 +323,7 @@
           "body": [
             "h2:Required annually",
             "p:Six scenarios drawn from things that have actually happened: a misdirected email, a supplier changing bank details, a data request arriving in a support chat, an access question, a threshold decision, and a request to skip a step under time pressure.",
-            "p:For each, say what you would do and in what order. The reporting timings and the verification step for payment details are the parts that must be right — the rest is marked on reasoning."
+            "p:For each, say what you would do and in what order. The reporting timings and the verification step for payment details are the parts that must be right; the rest is marked on reasoning."
           ]
         }
       ]

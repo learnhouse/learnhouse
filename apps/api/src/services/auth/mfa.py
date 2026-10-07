@@ -91,7 +91,7 @@ def decrypt_secret(encrypted: str) -> Optional[str]:
     except (InvalidToken, ValueError, TypeError):
         # Almost always a rotated key. Surfaced to the caller as "broken",
         # never as "not enrolled".
-        logger.error("Failed to decrypt a stored MFA secret — has the key rotated?")
+        logger.error("Failed to decrypt a stored MFA secret. Has the key rotated?")
         return None
 
 

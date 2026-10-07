@@ -359,7 +359,7 @@
     "image_title_forgot": "パスワードをリセット。",
     "image_subtitle_forgot": "すぐにアカウントへ戻れるようサポートします。",
     "image_title_login": "LearnHouse へおかえりなさい。",
-    "image_subtitle_login": "続きから再開しましょう — コース、受講者、ツールが待っています。",
+    "image_subtitle_login": "続きから再開しましょう。コース、受講者、ツールが待っています。",
     "image_title_reset": "あと少しです。",
     "image_subtitle_reset": "アカウントを安全に保つため、強力なパスワードを作成してください。",
     "image_title_signup": "LearnHouse で教え始めましょう。",
@@ -626,7 +626,7 @@
         "plan_generated": "プランが更新されました",
         "plan_generated_hint": "プランタブで確認・編集してください。",
         "describe_course": "コースを説明",
-        "describe_course_hint": "右のチャットで作成したいコースを説明してください — トピック、対象者、目標。",
+        "describe_course_hint": "右のチャットで作成したいコースを説明してください：トピック、対象者、目標。",
         "generating_plan": "コースプランを生成中...",
         "chapters": "チャプター",
         "activities": "アクティビティ",
@@ -3617,7 +3617,7 @@
             "auth_required_submit": "認証が必要です。タスクを提出するにはサインインしてください。",
             "hint_optional": "ヒント（任意）",
             "paste_blocked": "この課題ではペーストが無効です",
-            "paste_blocked_hint": "ペーストは無効です — 直接答えを入力してください。",
+            "paste_blocked_hint": "ペーストは無効です。直接答えを入力してください。",
             "upload_locked_graded": "この提出物は採点済みのため、ファイルを変更できません。",
             "upload_locked_submitted": "この課題は提出済みのため、ファイルを変更できません。"
           },
@@ -3655,13 +3655,13 @@
               "regex": "正規表現"
             },
             "explanation_label": "説明（正解時に表示）",
-            "explanation_placeholder": "任意 — 正解の理由を説明",
+            "explanation_placeholder": "任意：正解の理由を説明",
             "your_answer_placeholder": "回答を入力...",
             "student_answer_label": "学生の回答",
             "accepted_answers_label": "承認済みの回答",
             "no_answer": "回答なし",
             "correct": "正解",
-            "incorrect": "惜しい — もう一度試してください"
+            "incorrect": "惜しい。もう一度試してください"
           },
           "number_answer": {
             "prompt_label": "問題の文",
@@ -3672,14 +3672,14 @@
             "unit_placeholder": "m/s²、kg、°C...",
             "unit_hint": "回答欄の横に表示されます。強制されません。",
             "explanation_label": "説明（正解時に表示）",
-            "explanation_placeholder": "任意 — 解き方を説明",
+            "explanation_placeholder": "任意：解き方を説明",
             "preview_label": "受け付け",
             "your_answer_placeholder": "数値を入力...",
             "student_answer_label": "学生の回答",
             "accepted_range_label": "受付範囲",
             "no_answer": "回答なし",
             "correct": "正解",
-            "incorrect": "惜しい — もう一度試してください"
+            "incorrect": "惜しい。もう一度試してください"
           }
         },
         "generate_ai": "AIで課題を生成",
@@ -3788,7 +3788,7 @@
         },
         "tasks": {
           "title": "課題別パフォーマンス",
-          "subtitle": "課題ごとの平均点 — 低い棒は生徒がつまずいている箇所を示します",
+          "subtitle": "課題ごとの平均点。低い棒は生徒がつまずいている箇所を示します",
           "empty": "採点後に課題別パフォーマンスが表示されます",
           "avg_grade": "平均点",
           "attempts": "回"
@@ -3800,7 +3800,7 @@
         },
         "attention": {
           "title": "サポートが必要かも",
-          "subtitle": "合格しなかった生徒 — 声をかけることを検討してください",
+          "subtitle": "合格しなかった生徒。声をかけることを検討してください",
           "empty": "採点された全員が合格しました。お見事です!"
         }
       },
@@ -3839,7 +3839,7 @@
             "auto_grading_description": "学生が提出したときに自動的にアクティビティを採点して完了します。すべてのタスクが人間のレビューなしで採点できる場合にのみ機能します。",
             "anti_copy_paste_label": "コピー＆ペーストをブロック",
             "anti_copy_paste_description": "ペーストイベントをブロックしてAI生成の回答の貼り付けを抑制します。注：これは抑止力です。",
-            "auto_grading_disabled_file": "自動採点は利用できません — この課題には人間のレビューが必要なファイル提出タスクがあります。",
+            "auto_grading_disabled_file": "自動採点は利用できません。この課題には人間のレビューが必要なファイル提出タスクがあります。",
             "grading_type_hint": "成績の学生への表示方法",
             "grading_options_hint": "提出時の動作",
             "show_correct_answers_description": "提出物が採点された後、学生に自分の回答と並べて正解を表示します。クイズのどの選択肢が正しかったか、期待される短答や数値、フォームの空欄の正解が表示されます。",
@@ -4559,7 +4559,7 @@
         "avg_rate": "平均率",
         "needs_attention": "要注意",
         "total_samples": "総サンプル数",
-        "more_expand": "+{{count}}件 — クリックして展開",
+        "more_expand": "+{{count}}件（クリックして展開）",
         "activities_count": "{{count}}個のアクティビティ",
         "pct_of_total": "全体の%",
         "bar_width_hint": "バーの幅 = 相対的な閲覧数",
@@ -4679,7 +4679,7 @@
       },
       "activity_dropoff": {
         "title": "離脱ポイント",
-        "subtitle": "学習者が進行を停止する場所 — 最後に完了したアクティビティ",
+        "subtitle": "学習者が進行を停止する場所：最後に完了したアクティビティ",
         "total_dropoffs": "総離脱数",
         "dropoff_points": "離脱ポイント"
       },
@@ -4713,7 +4713,7 @@
         "avg_between": "完了間の平均 {{unit}}",
         "transitions_tracked": "追跡された遷移",
         "raw_hours_avg": "生の時間平均",
-        "description": "学習者が次のアクティビティにどれだけ速く進むかを測定します。低いほど良い — 学習者がコンテンツをより速く進めていることを意味します。"
+        "description": "学習者が次のアクティビティにどれだけ速く進むかを測定します。低いほど良い。学習者がコンテンツをより速く進めていることを意味します。"
       },
       "time_to_completion": {
         "title": "完了までの時間",
@@ -5073,7 +5073,7 @@
       },
       "add_content": {
         "title": "参加する価値のあるレッスン",
-        "description": "動画、ページ、クイズを追加 — 学習者に登録する確かな理由を提供しましょう。",
+        "description": "動画、ページ、クイズを追加して、学習者に登録する確かな理由を提供しましょう。",
         "action": "コンテンツを追加"
       },
       "brand_school": {
@@ -5083,17 +5083,17 @@
       },
       "share_grow": {
         "title": "あなたの学校の入口",
-        "description": "公開して共有リンクを取得 — すべての学習者を案内する場所です。",
+        "description": "公開して共有リンクを取得しましょう。すべての学習者を案内する場所です。",
         "action": "学校を開く"
       },
       "invite_learners": {
         "title": "最初の学習者を迎えましょう",
-        "description": "参加リンクを共有するか、人を招待して — 最初の学習者を迎え入れましょう。",
+        "description": "参加リンクを共有するか、人を招待して、最初の学習者を迎え入れましょう。",
         "action": "学習者を招待"
       },
       "build_community": {
         "title": "学習者に再び戻ってもらう",
-        "description": "コミュニティスペースを開設して、学習者が活発に — そして友達を連れてくるように。",
+        "description": "コミュニティスペースを開設して、学習者が活発に、そして友達を連れてくるように。",
         "action": "コミュニティを開く"
       }
     },
@@ -5191,7 +5191,7 @@
         "goal": "コースの収益化を始め、学習コミュニティを構築しましょう。",
         "highlights": {
           "courses": "無制限のコース",
-          "courses_desc": "必要なだけコースを作成 — カリキュラムに制限はありません。",
+          "courses_desc": "必要なだけコースを作成。カリキュラムに制限はありません。",
           "members": "最大500メンバー",
           "members_desc": "学習者を増やし、一か所で管理しましょう。",
           "payments": "決済を受付",
@@ -5249,7 +5249,7 @@
       "trigger_authenticated_title": "アクセス:サインイン済みユーザーのみ",
       "trigger_restricted_title": "アクセス:特定のユーザーグループのみ",
       "usergroups_header": "ユーザーグループ",
-      "usergroups_none_assigned": "割り当てられたグループはありません — 管理者のみ開けます。",
+      "usergroups_none_assigned": "割り当てられたグループはありません。管理者のみ開けます。",
       "usergroups_remove_title": "削除",
       "usergroups_loading": "グループを読み込み中…",
       "usergroups_none_in_org": "この組織にはまだユーザーグループがありません。",
@@ -5512,7 +5512,7 @@
     "recurring_subscription": "定期サブスクリプション",
     "what_youre_getting": "ご利用いただける内容",
     "pack_immediate": "支払い後すぐに有効になります",
-    "pack_cancel_anytime": "いつでも解約可能 — 請求期間の終了まで有効です",
+    "pack_cancel_anytime": "いつでも解約可能。請求期間の終了まで有効です",
     "pack_credits_reset": "クレジットは請求サイクルごとにリセットされます",
     "after_purchase": "購入後",
     "unlimited": "無制限",
@@ -5678,7 +5678,7 @@
     "toast": {
       "creating": "組織を作成中…",
       "created": "組織を作成しました！",
-      "checkoutFailed": "組織を作成しました — プランと使用状況からアップグレードできます。",
+      "checkoutFailed": "組織を作成しました。プランと使用状況からアップグレードできます。",
       "failed": "組織の作成に失敗しました"
     },
     "steps": {

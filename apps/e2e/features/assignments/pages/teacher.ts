@@ -117,7 +117,7 @@ export class AssignmentEditorPage {
     await expect(dialog).toBeVisible({ timeout: 15_000 })
 
     // The formative switch carries its label as an aria-label.
-    await dialog.getByRole('button', { name: 'Formative — no grading' }).click()
+    await dialog.getByRole('button', { name: 'Formative (no grading)' }).click()
 
     await dialog
       .getByPlaceholder('Write the worked solution learners should compare their work against…')

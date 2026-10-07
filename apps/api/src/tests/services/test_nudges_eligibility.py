@@ -479,5 +479,5 @@ class TestQueryCount:
             event.remove(engine.sync_engine, "before_cursor_execute", _count)
 
         assert one_org == two_orgs, (
-            f"{one_org} queries for 1 org vs {two_orgs} for 2 — the scan is per-org"
+            f"{one_org} queries for 1 org vs {two_orgs} for 2; the scan is per-org"
         )

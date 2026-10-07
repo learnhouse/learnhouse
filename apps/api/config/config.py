@@ -705,7 +705,7 @@ def get_learnhouse_config() -> LearnHouseConfig:
         ):
             missing.append(
                 "LEARNHOUSE_GOOGLE_OAUTH_CLIENT_ID (Google OAuth audience "
-                "verification — absent means it is DISABLED, not merely unset)"
+                "verification; absent means it is DISABLED, not merely unset)"
             )
         if missing:
             _log.critical(

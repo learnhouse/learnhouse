@@ -129,7 +129,7 @@ const BOARDS = {
     card({
       x: 80, y: 60, width: 420, height: 150,
       title: 'Escalation triggers',
-      body: ['Any one of these is enough. They are deliberately mechanical — no judgement call required.'],
+      body: ['Any one of these is enough. They are deliberately mechanical; no judgement call required.'],
     }),
     note({ x: 80, y: 250, color: 'pink', title: 'Two or more', body: ['Same fault reported by more than one customer within an hour. This is an incident, not a ticket.'] }),
     note({ x: 370, y: 250, color: 'pink', title: 'Legal', body: ['Legal action, a regulator or the press is mentioned. Escalate before replying.'] }),
@@ -154,7 +154,7 @@ const BOARDS = {
     card({ x: 80, y: 60, width: 340, height: 120, title: 'Went well', body: ['Kept short on purpose. Detail lives in the notes.'] }),
     note({ x: 80, y: 210, color: 'green', body: ['Response times held through the seasonal peak.'] }),
     note({ x: 80, y: 380, color: 'green', body: ['The new starters shipped real work in week three.'] }),
-    card({ x: 450, y: 60, width: 340, height: 120, title: 'Did not', body: ['No blame — these are process problems.'] }),
+    card({ x: 450, y: 60, width: 340, height: 120, title: 'Did not', body: ['No blame; these are process problems.'] }),
     note({ x: 450, y: 210, color: 'pink', body: ['A definition changed mid-quarter and nobody noticed for a month.'] }),
     note({ x: 450, y: 380, color: 'pink', body: ['Two people promised the same last unit.'] }),
     card({ x: 820, y: 60, width: 340, height: 120, title: 'Changing', body: ['Owners named, or it does not count.'] }),

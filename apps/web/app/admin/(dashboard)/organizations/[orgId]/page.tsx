@@ -620,7 +620,7 @@ function UsersTab({ orgId, accessToken }: { orgId: string; accessToken: string }
                   </td>
                   <td className="px-4 py-3">
                     <span className="text-sm text-white/40">
-                      {user.creation_date ? new Date(user.creation_date).toLocaleDateString() : '—'}
+                      {user.creation_date ? new Date(user.creation_date).toLocaleDateString() : 'n/a'}
                     </span>
                   </td>
                 </tr>
@@ -1121,7 +1121,7 @@ function AICreditsSection({ orgId, accessToken }: { orgId: string; accessToken: 
   }
 
   const fmt = (v: number | string | undefined) =>
-    v === undefined ? '—' : typeof v === 'number' ? v.toLocaleString() : v
+    v === undefined ? 'n/a' : typeof v === 'number' ? v.toLocaleString() : v
 
   return (
     <div>

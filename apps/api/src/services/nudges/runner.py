@@ -429,7 +429,7 @@ async def run_nudges(
         and only is None
         and not await _ledger_has_rows(db_session)
     ):
-        logger.info("First nudge run here — seeding the backlog instead of sending")
+        logger.info("First nudge run here: seeding the backlog instead of sending")
         seeded = await run_nudges(
             db_session, seed=True, now=now, org_id=org_id, force=True
         )

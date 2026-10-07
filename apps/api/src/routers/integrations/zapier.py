@@ -298,7 +298,7 @@ async def zapier_list_usergroups(
         "Creates a webhook endpoint tagged `source=\"zapier\"` that the dispatcher will deliver events to."
     ),
     responses={
-        201: {"description": "Subscription created — webhook endpoint registered for the given event.", "model": ZapierSubscriptionResponse},
+        201: {"description": "Subscription created: webhook endpoint registered for the given event.", "model": ZapierSubscriptionResponse},
         400: {"description": "Unknown event name or invalid target URL (SSRF guard)"},
         401: {"description": "Missing or invalid API token"},
         403: {"description": "Organization plan does not include Zapier integration (Pro+ required)"},

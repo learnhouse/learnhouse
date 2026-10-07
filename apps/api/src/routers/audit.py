@@ -188,7 +188,7 @@ async def _make_behavior_fetcher(org_id: int, user_id: int, days: int):
         "rendered as readable question/answer pairs including the teacher's answer key "
         "(admin-only surface); reference solutions and hidden test-case data are excluded. "
         "Pass include_raw=true to also receive each task's original stored submission "
-        "payload — otherwise every task carries only a sha256 answer_digest of it. "
+        "payload; otherwise every task carries only a sha256 answer_digest of it. "
         "Org admin + Pro plan."
     ),
     responses={
@@ -227,7 +227,7 @@ async def get_user_dossier(
 @router.get(
     "/users/summary",
     summary="Per-student audit summary rows",
-    description="Lightweight summary (last connection, courses enrolled/completed, certificates) for one or more students — powers the user list and multi-select comparison. Org admin + Pro plan.",
+    description="Lightweight summary (last connection, courses enrolled/completed, certificates) for one or more students; powers the user list and multi-select comparison. Org admin + Pro plan.",
     responses={
         200: {"description": "Summary rows for the requested users"},
         401: {"description": "Authentication required"},

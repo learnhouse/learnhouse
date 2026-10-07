@@ -11,7 +11,7 @@ vi.mock('node:child_process', () => ({ execFileSync: vi.fn(() => Buffer.from('')
 import { migrateContentVolume, patchComposeAddContentVolume } from '../src/services/content-volume-migration.js'
 import { execFileSync } from 'node:child_process'
 
-describe('migrateContentVolume — migrated path (container present)', () => {
+describe('migrateContentVolume: migrated path (container present)', () => {
   let dir: string
   beforeEach(() => { dir = fs.mkdtempSync(path.join(os.tmpdir(), 'lh-cvm2-')) })
   afterEach(() => { fs.rmSync(dir, { recursive: true, force: true }); vi.restoreAllMocks() })
@@ -65,7 +65,7 @@ describe('migrateContentVolume — migrated path (container present)', () => {
   })
 })
 
-describe('patchComposeAddContentVolume — guard', () => {
+describe('patchComposeAddContentVolume: guard', () => {
   it('throws when the compose file has no learnhouse-app service', () => {
     expect(() => patchComposeAddContentVolume('services:\n  other:\n', 'dep1'))
       .toThrow(/learnhouse-app service not found/)

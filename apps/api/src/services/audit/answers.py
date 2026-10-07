@@ -315,7 +315,7 @@ def _form(assignment_type: Any, contents: dict, submission: dict) -> dict:
                 break
             index += 1
             placeholder = _text(blank.get("placeholder")) or f"Blank {b_index + 1}"
-            prompt = f"{question_text} — {placeholder}" if question_text else placeholder
+            prompt = f"{question_text}: {placeholder}" if question_text else placeholder
             given = answer_by_key.get((q_uuid, blank.get("blankUUID")))
             expected_raw = blank.get("correctAnswer")
             expected = _text(expected_raw)

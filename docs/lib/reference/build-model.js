@@ -48,7 +48,7 @@ function collectByGroup(spec) {
 
   for (const group of API_GROUPS) {
     if (byGroup.get(group.slug).length === 0) {
-      console.warn(`[reference] group "${group.slug}" matched zero operations — spec drift?`)
+      console.warn(`[reference] group "${group.slug}" matched zero operations (spec drift?)`)
     }
   }
 

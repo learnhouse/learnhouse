@@ -477,7 +477,7 @@ function ScormActivityModal({ course, closeModal, onImportComplete, chapterId }:
           {isImporting && (
             <div className="flex items-center gap-2 text-sm text-gray-600 bg-gray-50 p-3 rounded-xl border border-gray-100">
               <BarLoader width={40} color="#000000" cssOverride={{ borderRadius: 60 }} />
-              <span>Importing — copying content to storage, this can take a few minutes for large packages…</span>
+              <span>Importing: copying content to storage, this can take a few minutes for large packages…</span>
             </div>
           )}
 

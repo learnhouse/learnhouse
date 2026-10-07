@@ -180,7 +180,7 @@ const OrgEditDangerZone: React.FC = () => {
                 </div>
                 <p className="text-sm text-gray-500 max-w-xl">
                   Permanently delete <span className="font-semibold">{org.name}</span> and
-                  everything in it — members, courses, content and settings. This
+                  everything in it: members, courses, content and settings. This
                   cannot be undone.
                 </p>
               </div>

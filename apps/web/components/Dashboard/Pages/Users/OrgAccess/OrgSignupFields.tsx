@@ -263,7 +263,7 @@ export default function OrgSignupFields() {
           <p>
             {t('dashboard.users.signup_fields.public_notice', {
               defaultValue:
-                'Labels, help text and options appear on your public signup page — anyone can read them. Do not put anything confidential here.',
+                'Labels, help text and options appear on your public signup page, so anyone can read them. Do not put anything confidential here.',
             })}
           </p>
         </div>
@@ -428,7 +428,7 @@ export default function OrgSignupFields() {
                         {isSaved
                           ? t('dashboard.users.signup_fields.key_locked', {
                               defaultValue:
-                                'Locked — changing it would orphan the answers already collected.',
+                                'Locked: changing it would orphan the answers already collected.',
                             })
                           : t('dashboard.users.signup_fields.key_hint', {
                               defaultValue: 'Set automatically from the label.',

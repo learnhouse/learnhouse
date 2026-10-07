@@ -88,7 +88,7 @@ function GroupResourcePanel({ group, orgId, token }: { group: any; orgId: number
   return (
     <div className="space-y-2">
       {rawList.length === 0 ? (
-        <p className="text-xs text-gray-400 italic py-1">No courses yet — add one below.</p>
+        <p className="text-xs text-gray-400 italic py-1">No courses yet. Add one below.</p>
       ) : (
         <ul className="space-y-1">
           {rawList.map((uuid: string) => (
@@ -189,7 +189,7 @@ function GroupSyncPanel({ group, orgId, token }: { group: any; orgId: number; to
   const handleAdd = async (ugId: number) => {
     await addGroupSync(orgId, group.id, ugId, token);
     queryClient.invalidateQueries({ queryKey: syncQueryKey });
-    toast.success('UserGroup synced — enrolled users will be auto-added');
+    toast.success('UserGroup synced. Enrolled users will be auto-added');
   };
 
   const handleRemove = async (ugId: number) => {
@@ -494,7 +494,7 @@ export default function PaymentsGroupsPage() {
           </div>
           <p className="font-semibold text-gray-600 mb-1">No groups yet</p>
           <p className="text-sm text-gray-400 mb-4 max-w-xs mx-auto">
-            Groups let you attach multiple courses to a single offer — perfect for subscriptions or bundles.
+            Groups let you attach multiple courses to a single offer, perfect for subscriptions or bundles.
           </p>
           <Button onClick={() => setIsCreateOpen(true)} variant="outline" size="sm">
             <Plus size={13} className="me-1.5" /> Create your first group

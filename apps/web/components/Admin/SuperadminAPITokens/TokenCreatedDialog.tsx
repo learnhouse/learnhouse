@@ -51,7 +51,7 @@ export default function TokenCreatedDialog({
         <div className="px-6 py-5 space-y-4">
           <p className="text-sm text-white/70">
             This is the only time the full token <strong>{token.name}</strong> will be shown.
-            Store it somewhere secure — you cannot retrieve it later. If you lose it, revoke this token and create a new one.
+            Store it somewhere secure: you cannot retrieve it later. If you lose it, revoke this token and create a new one.
           </p>
 
           <div className="rounded-lg bg-black/40 border border-white/[0.1] overflow-hidden">

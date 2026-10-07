@@ -14,7 +14,7 @@ export default function LiveUsersCounter() {
         <span className="text-xs font-medium text-gray-400 uppercase tracking-wider">Live Now</span>
       </div>
       <div className="text-3xl font-bold text-gray-900">
-        {isLoading ? '—' : count}
+        {isLoading ? '…' : count}
       </div>
       <p className="text-xs text-gray-400 mt-1">Active users in last 5 minutes</p>
     </div>

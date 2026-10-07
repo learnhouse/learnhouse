@@ -52,7 +52,7 @@ that it did the *right* thing. Fixed the highest-value ones:
 
 ## Flaky test — fixed
 
-- **`checkTcpConnection — timeout`** dialed RFC-5737 `192.0.2.1` and was timing/network dependent
+- **`checkTcpConnection: timeout`** dialed RFC-5737 `192.0.2.1` and was timing/network dependent
   (could spuriously "connect" on intercepting networks — it was the lone intermittent failure during
   this audit). Rewritten to mock `net.createConnection` with a socket that never resolves →
   deterministically exercises the timeout branch (resolve `false` + socket destroyed), plus a new

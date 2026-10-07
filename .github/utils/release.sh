@@ -34,7 +34,7 @@ VERSION_FILES=(
 )
 
 echo ""
-echo "  🚀 LearnHouse Release — ${TAG}"
+echo "  🚀 LearnHouse Release: ${TAG}"
 echo "  ─────────────────────────────"
 echo ""
 
@@ -43,12 +43,12 @@ echo "  🔎 Running preflight checks..."
 
 # Version must look like semver (optionally a -preview / .N suffix)
 [[ "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+([.-][0-9A-Za-z.]+)?$ ]] \
-  || die "Invalid version '$VERSION' — expected semver, e.g. 1.2.5"
+  || die "Invalid version '$VERSION': expected semver, e.g. 1.2.5"
 
 # Tooling + auth
 command -v gh >/dev/null 2>&1 || die "GitHub CLI 'gh' is not installed."
 command -v uv >/dev/null 2>&1 || die "'uv' is not installed (needed to refresh apps/api/uv.lock)."
-gh auth status >/dev/null 2>&1 || die "GitHub CLI is not authenticated — run: gh auth login"
+gh auth status >/dev/null 2>&1 || die "GitHub CLI is not authenticated. Run: gh auth login"
 [ -n "$REPO" ] || die "Could not determine the GitHub repo (gh repo view)."
 
 # No half-finished git operation that we'd otherwise stomp on
@@ -74,7 +74,7 @@ git ls-remote --exit-code --tags origin "refs/tags/$TAG" >/dev/null 2>&1 \
 git ls-remote --exit-code --heads origin dev  >/dev/null 2>&1 || die "origin/dev not found."
 git ls-remote --exit-code --heads origin main >/dev/null 2>&1 || die "origin/main not found."
 
-echo "  ✅ Preflight passed — releasing ${TAG} to ${REPO}"
+echo "  ✅ Preflight passed, releasing ${TAG} to ${REPO}"
 
 # ─── Bump version numbers ───────────────────────────────────
 echo "  📝 Bumping version to ${VERSION}..."
@@ -86,14 +86,14 @@ sed -i '' "s/version=\"[^\"]*\"/version=\"${VERSION}\"/" "$REPO_ROOT/apps/api/ap
 sed -i '' "s/\"version\": \"[^\"]*\"/\"version\": \"${VERSION}\"/" "$REPO_ROOT/apps/api/ee/routers/info.py"
 
 # uv.lock pins the project's own version — refresh it or the Lockfiles check fails on dev.
-(cd "$REPO_ROOT/apps/api" && uv lock --quiet) || die "uv lock failed — aborting before any commit."
+(cd "$REPO_ROOT/apps/api" && uv lock --quiet) || die "uv lock failed; aborting before any commit."
 
 echo "  ✅ Version bumped in web, collab, api, ee/info"
 
 # Verify the bump actually landed in every tracked version file before we commit/push.
 for vf in "${VERSION_FILES[@]}"; do
   grep -q "$VERSION" "$REPO_ROOT/$vf" \
-    || die "Version bump did not apply to $vf (format may have changed) — aborting before any push."
+    || die "Version bump did not apply to $vf (format may have changed); aborting before any push."
 done
 
 # ─── Commit version bump on dev ─────────────────────────────
@@ -109,7 +109,7 @@ FILES_TO_ADD=(
   "$REPO_ROOT/apps/api/uv.lock"
 )
 if [ -L "$REPO_ROOT/apps/api/ee" ]; then
-  echo "  ℹ️  apps/api/ee is a symlink — EE info.py bumped in linked repo, skipping git add here"
+  echo "  ℹ️  apps/api/ee is a symlink; EE info.py bumped in linked repo, skipping git add here"
 else
   FILES_TO_ADD+=("$REPO_ROOT/apps/api/ee/routers/info.py")
 fi
@@ -133,19 +133,19 @@ git checkout main
 
 echo "  ⬇️  Pulling latest main..."
 git pull --ff-only origin main \
-  || die "Local 'main' has diverged from origin/main — reconcile it before releasing."
+  || die "Local 'main' has diverged from origin/main; reconcile it before releasing."
 
 echo "  🔀 Merging dev into main..."
 if ! git merge origin/dev -m "release: merge dev into main for ${TAG}"; then
   # The ONLY conflicts we expect are the version files (main is one release behind).
   # Auto-resolve those to the new version; abort on anything else so a human looks.
   UNMERGED="$(git diff --name-only --diff-filter=U | sort)"
-  [ -z "$UNMERGED" ] && { git merge --abort; die "Merge failed without conflicts to resolve — aborted, repo restored."; }
+  [ -z "$UNMERGED" ] && { git merge --abort; die "Merge failed without conflicts to resolve; aborted, repo restored."; }
   EXPECTED="$(printf '%s\n' "${VERSION_FILES[@]}" | sort)"
   UNEXPECTED="$(comm -23 <(printf '%s\n' "$UNMERGED") <(printf '%s\n' "$EXPECTED") || true)"
   if [ -n "$UNEXPECTED" ]; then
     git merge --abort
-    die "Merge has conflicts beyond the version files — resolve manually, then re-run:"$'\n'"$UNEXPECTED"
+    die "Merge has conflicts beyond the version files. Resolve manually, then re-run:"$'\n'"$UNEXPECTED"
   fi
   echo "  🧩 Auto-resolving version-only conflicts to ${VERSION}..."
   while IFS= read -r vf; do

@@ -89,7 +89,7 @@ fi
 
 if command -v docker >/dev/null 2>&1; then
   DOCKER_VERSION=$(docker --version 2>/dev/null | head -1)
-  ok "Docker already installed — $DOCKER_VERSION"
+  ok "Docker already installed: $DOCKER_VERSION"
 else
   info "Docker not found. Installing..."
 
@@ -184,7 +184,7 @@ if command -v node >/dev/null 2>&1; then
   NODE_VERSION=$(node --version 2>/dev/null)
   NODE_MAJOR=$(echo "$NODE_VERSION" | sed 's/v//' | cut -d. -f1)
   if [ "$NODE_MAJOR" -ge 18 ]; then
-    ok "Node.js already installed — $NODE_VERSION"
+    ok "Node.js already installed: $NODE_VERSION"
   else
     warn "Node.js $NODE_VERSION is too old (need >=18). Installing newer version..."
     NEED_NODE=true
@@ -267,7 +267,7 @@ if [ "$NEED_NODE" = "true" ]; then
 
     # Verify it worked
     if command -v node >/dev/null 2>&1; then
-      ok "Node.js installed — $(node --version)"
+      ok "Node.js installed: $(node --version)"
     else
       fail "Node.js installation failed. Install manually: https://nodejs.org"
     fi

@@ -45,7 +45,7 @@ async def test_password_change_stamps_password_changed_at(
     refreshed = await db.get(User, admin_user.id)
     assert refreshed is not None
     assert refreshed.password_changed_at is not None, (
-        "password_changed_at must be stamped — get_current_user and "
+        "password_changed_at must be stamped: get_current_user and "
         "/auth/refresh use it to reject tokens minted before the change"
     )
     assert refreshed.password_changed_at >= before

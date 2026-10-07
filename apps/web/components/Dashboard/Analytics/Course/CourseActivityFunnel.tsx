@@ -49,7 +49,7 @@ function FunnelStep({
             <Link
               href={href}
               className="text-sm font-semibold text-gray-800 truncate hover:text-indigo-600 hover:underline transition-colors"
-              title={`${row.chapterName ? row.chapterName + ' — ' : ''}${row.displayName}`}
+              title={`${row.chapterName ? row.chapterName + ': ' : ''}${row.displayName}`}
             >
               {row.displayName}
             </Link>

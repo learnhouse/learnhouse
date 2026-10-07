@@ -456,7 +456,7 @@ const OrgTwoFactorPolicy: React.FC = () => {
                       ) : exempt ? (
                         <Badge tone="blue" icon={<ExternalLink className="w-3 h-3" />}>
                           {t('dashboard.organization.security.badge_exempt', {
-                            defaultValue: 'Exempt — {{method}}',
+                            defaultValue: 'Exempt: {{method}}',
                             method: m.signup_method || 'external',
                           })}
                         </Badge>
@@ -575,7 +575,7 @@ const OrgTwoFactorPolicy: React.FC = () => {
             <p className="text-xs text-gray-500 leading-relaxed ps-6">
               {t('dashboard.organization.security.no_restart_note', {
                 defaultValue:
-                  'Saving changes to an already-active policy does not restart anyone’s countdown — existing deadlines stay anchored to the date above. The countdown only resets if you turn the requirement off and back on.',
+                  'Saving changes to an already-active policy does not restart anyone’s countdown; existing deadlines stay anchored to the date above. The countdown only resets if you turn the requirement off and back on.',
               })}
             </p>
           </div>

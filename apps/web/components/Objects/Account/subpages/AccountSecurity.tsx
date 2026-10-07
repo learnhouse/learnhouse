@@ -540,7 +540,7 @@ function TwoFactorAuthSection() {
             <p className="mt-0.5">
               {t('user.settings.security.mfa.codes_once_body', {
                 defaultValue:
-                  'Save them somewhere safe now. Each code can be used once to sign in if you lose access to your authenticator app. Once you leave this screen they cannot be retrieved — you would have to generate new ones.',
+                  'Save them somewhere safe now. Each code can be used once to sign in if you lose access to your authenticator app. Once you leave this screen they cannot be retrieved; you would have to generate new ones.',
               })}
             </p>
           </div>
@@ -882,7 +882,7 @@ function TwoFactorAuthSection() {
             })}
             {lowOnCodes && (
               <>
-                {' — '}
+                {': '}
                 {t('user.settings.security.mfa.codes_low', {
                   defaultValue: 'generate a new set so you do not get locked out.',
                 })}
@@ -1126,7 +1126,7 @@ function AccountSecurity() {
               <Monitor className="text-gray-400 shrink-0" size={20} />
               <div className="min-w-0">
                 <p className="text-sm font-medium text-gray-800 truncate">
-                  {device ? [device.browser, device.os].filter(Boolean).join(' · ') : '—'}
+                  {device ? [device.browser, device.os].filter(Boolean).join(' · ') : 'n/a'}
                 </p>
                 <p className="text-xs text-gray-500">
                   {t('user.settings.security.this_device', { defaultValue: 'This device' })}

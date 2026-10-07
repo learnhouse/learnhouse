@@ -55,7 +55,7 @@ const program = new Command()
 
 program
   .name('learnhouse')
-  .description('The official LearnHouse CLI — deploy, manage, and operate your LearnHouse instance')
+  .description('The official LearnHouse CLI: deploy, manage, and operate your LearnHouse instance')
   .version(VERSION)
   .action(showWelcome)
 
@@ -78,7 +78,7 @@ program
   .option('--tenancy <mode>', 'EE tenancy: single (default) or agency (multi-tenant)')
   .option('--acme-email <email>', "EE: Let's Encrypt contact email (default: admin email)")
   .option('--ee-image-tag <tag>', 'EE image tag (default: "prod")')
-  .option('--local-tls', 'EE: use Caddy internal CA (self-signed) — testing only')
+  .option('--local-tls', 'EE: use Caddy internal CA (self-signed; testing only)')
   .option('--external-db <uri>', 'Use an external Postgres (e.g. Supabase) instead of the in-container db')
   .option('--external-redis <uri>', 'Use an external Redis instead of the in-container redis')
   .option('--dns-provider <provider>', 'EE: DNS-01 provider for wildcard certs (cloudflare)')

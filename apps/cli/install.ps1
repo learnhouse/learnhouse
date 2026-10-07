@@ -28,7 +28,7 @@ $hasWinget = Get-Command winget -ErrorAction SilentlyContinue
 $dockerCmd = Get-Command docker -ErrorAction SilentlyContinue
 if ($dockerCmd) {
     $dockerVersion = & docker --version 2>&1
-    Write-Ok "Docker already installed — $dockerVersion"
+    Write-Ok "Docker already installed: $dockerVersion"
 } else {
     Write-Info "Docker not found. Installing..."
 
@@ -72,7 +72,7 @@ if ($nodeCmd) {
     $nodeVersion = & node --version 2>&1
     $nodeMajor = [int]($nodeVersion -replace 'v(\d+)\..*', '$1')
     if ($nodeMajor -ge 18) {
-        Write-Ok "Node.js already installed — $nodeVersion"
+        Write-Ok "Node.js already installed: $nodeVersion"
     } else {
         Write-Warn "Node.js $nodeVersion is too old (need ≥18). Installing newer version..."
         $needNode = $true

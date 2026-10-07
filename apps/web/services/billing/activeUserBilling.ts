@@ -141,7 +141,7 @@ async function billOverage(params: {
       currency,
       unit_amount: OVERAGE_UNIT_AMOUNT,
       quantity: summary.overage_units,
-      description: `Active members beyond plan — ${monthName} ${year} (${summary.members_beyond_included} beyond the ${summary.plan_limit} included, ${summary.overage_units} active)`,
+      description: `Active members beyond plan, ${monthName} ${year} (${summary.members_beyond_included} beyond the ${summary.plan_limit} included, ${summary.overage_units} active)`,
       metadata: {
         org_id: orgId,
         type: "au_overage",
