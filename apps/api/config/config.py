@@ -43,10 +43,10 @@ class SecurityConfig(BaseModel):
 class AIConfig(BaseModel):
     is_ai_enabled: bool | None
     # Provider-agnostic generation config (Pydantic AI). `provider` selects the SDK
-    # ("google" | "openai" | "anthropic" | "deepseek" | "moonshot" | "mistral" | "openrouter" | "bedrock"
-    # | "ollama" | ...); `api_key`/`base_url` are the single credentials used regardless of
-    # provider. For "openrouter" base_url is auto-set; for "bedrock" use standard AWS
-    # credentials (env/role/profile) + AWS_REGION, with api_key optional.
+    # ("google" | "openai" | "anthropic" | "deepseek" | "fireworks" | "moonshot" | "mistral"
+    # | "openrouter" | "bedrock" | "ollama" | ...); `api_key`/`base_url` are the single
+    # credentials used regardless of provider. For "openrouter" base_url is auto-set; for
+    # "bedrock" use standard AWS credentials (env/role/profile) + AWS_REGION, with api_key optional.
     provider: str | None = None
     api_key: str | None = None
     base_url: str | None = None
@@ -62,7 +62,7 @@ class AIConfig(BaseModel):
     embedding_model: str | None = None
     embedding_dimensions: int | None = None
     # Google/Gemini key. Doubles as the embeddings fallback for providers (Anthropic, DeepSeek,
-    # Moonshot, Mistral, OpenRouter, Bedrock) that have no embeddings API of their own.
+    # Fireworks, Moonshot, Mistral, OpenRouter, Bedrock) that have no embeddings API of their own.
     gemini_api_key: str | None = None
     # Image generation model (Google "nano banana" family). Image generation is a
     # Google-only path — it always uses the Google GenAI SDK regardless of the
