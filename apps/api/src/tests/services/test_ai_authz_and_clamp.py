@@ -99,7 +99,7 @@ class TestActivityChatAuthorization:
         with patch.object(
             ai_service, "reserve_ai_credit", new_callable=AsyncMock
         ) as reserve, patch.object(
-            ai_service, "check_resource_access", new_callable=AsyncMock
+            ai_service, "can_read_activity", new_callable=AsyncMock
         ), patch(
             RATE_LIMIT_PATH
         ) as rate_limit, patch.object(
@@ -126,7 +126,7 @@ class TestActivityChatAuthorization:
         with patch.object(
             ai_service, "reserve_ai_credit", new_callable=AsyncMock
         ) as reserve, patch.object(
-            ai_service, "check_resource_access", new_callable=AsyncMock
+            ai_service, "can_read_activity", new_callable=AsyncMock
         ), patch(
             RATE_LIMIT_PATH
         ), patch.object(
@@ -146,7 +146,7 @@ class TestActivityChatAuthorization:
         with patch.object(
             ai_service, "reserve_ai_credit", new_callable=AsyncMock
         ) as reserve, patch.object(
-            ai_service, "check_resource_access", new_callable=AsyncMock
+            ai_service, "can_read_activity", new_callable=AsyncMock
         ), patch(
             RATE_LIMIT_PATH
         ):
@@ -166,7 +166,7 @@ class TestActivityChatAuthorization:
             ai_service, "reserve_ai_credit", new_callable=AsyncMock
         ) as reserve, patch.object(
             ai_service,
-            "check_resource_access",
+            "can_read_activity",
             new_callable=AsyncMock,
             side_effect=HTTPException(status_code=403, detail="no access"),
         ), patch(
@@ -185,7 +185,7 @@ class TestActivityChatAuthorization:
         self, db, org, course, activity, org_config, mock_request, regular_user
     ):
         with patch.object(
-            ai_service, "check_resource_access", new_callable=AsyncMock
+            ai_service, "can_read_activity", new_callable=AsyncMock
         ) as rbac, patch.object(
             ai_service, "model_for_tier", return_value="test-model"
         ), patch.object(
@@ -210,9 +210,9 @@ class TestActivityChatAuthorization:
         assert got_org.id == org.id
         assert ai_model == "test-model"
         assert ai_friendly_text == "course context"
-        # READ access on the owning course, not the activity.
-        assert rbac.await_args.args[3] == "course_test"
-        assert rbac.await_args.args[4] == AccessAction.READ
+        # Checked against the owning course and the specific activity.
+        assert rbac.await_args.args[2].course_uuid == "course_test"
+        assert rbac.await_args.args[3] == activity.id
 
     async def test_member_non_streaming_start_succeeds(
         self, db, org, course, activity, org_config, mock_request, regular_user
@@ -222,7 +222,7 @@ class TestActivityChatAuthorization:
         )
 
         with patch.object(
-            ai_service, "check_resource_access", new_callable=AsyncMock
+            ai_service, "can_read_activity", new_callable=AsyncMock
         ), patch(
             RATE_LIMIT_PATH
         ) as rate_limit, patch.object(
@@ -264,9 +264,9 @@ class TestActivityChatAuthorization:
         )
 
         with patch.object(
-            ai_service, "chat_session_belongs_to_user", return_value=True
+            ai_service, "can_read_activity", new_callable=AsyncMock
         ), patch.object(
-            ai_service, "check_resource_access", new_callable=AsyncMock
+            ai_service, "chat_session_belongs_to_user", return_value=True
         ), patch(
             RATE_LIMIT_PATH
         ), patch.object(

@@ -149,3 +149,17 @@ def _skip_org_mfa_policy():
     """
     with patch.object(rag_router, "enforce_org_mfa", new=AsyncMock(return_value=None)):
         yield
+
+
+@pytest.fixture(autouse=True)
+def _skip_rag_access_scope():
+    """Stub the per-course read scoping for this module.
+
+    Like the MFA policy above, it issues its own queries against the ordered
+    fake session. Read scoping is covered in
+    src/tests/security/test_rag_access_scope.py.
+    """
+    with patch.object(
+        rag_router, "build_rag_access_scope", new=AsyncMock(return_value=MagicMock())
+    ):
+        yield
