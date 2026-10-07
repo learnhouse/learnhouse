@@ -87,16 +87,16 @@ class TestAISessionsBelongToTheirStarter:
         )
         info = (activity, course, SimpleNamespace(id=course.org_id), "model", "text")
         with patch.object(ai_service, "_get_activity_and_course_info", new=AsyncMock(return_value=info)), \
-             patch.object(ai_service, "reserve_ai_credit", new=AsyncMock()), \
+             patch.object(ai_service, "reserve_ai_credit", new=AsyncMock()) as reserve, \
              patch.object(ai_service, "chat_session_belongs_to_user", return_value=False), \
-             patch.object(ai_service, "refund_ai_credit") as refund, \
              patch("src.services.security.rate_limiting.enforce_ai_rate_limit"):
             with pytest.raises(HTTPException) as exc:
                 await ai_service.ai_send_activity_chat_message_stream(
                     mock_request, body, regular_user, db
                 )
         assert exc.value.status_code == 404
-        refund.assert_called_once()
+        # Rejected before any credit is taken, so there is nothing to refund.
+        reserve.assert_not_awaited()
 
     async def test_course_planning_session_is_user_bound(self, db, org, admin_user):
         from src.routers.ai import courseplanning as cp

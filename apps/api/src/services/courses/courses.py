@@ -16,7 +16,7 @@ from src.security.features_utils.usage import (
     increase_feature_usage,
 )
 from src.db.resource_authors import ResourceAuthor, ResourceAuthorshipEnum, ResourceAuthorshipStatusEnum
-from src.db.users import PublicUser, AnonymousUser, User, UserRead, APITokenUser
+from src.db.users import PublicUser, AnonymousUser, User, UserReadAuthor, APITokenUser
 from src.db.courses.courses import (
     Course,
     CourseCreate,
@@ -88,7 +88,7 @@ async def get_course(
     # Convert to AuthorWithRole objects
     authors = [
         AuthorWithRole(
-            user=UserRead.model_validate(user),
+            user=UserReadAuthor.model_validate(user),
             authorship=resource_author.authorship,
             authorship_status=resource_author.authorship_status,
             creation_date=resource_author.creation_date,
@@ -134,7 +134,7 @@ async def get_course_by_id(
     # Convert to AuthorWithRole objects
     authors = [
         AuthorWithRole(
-            user=UserRead.model_validate(user),
+            user=UserReadAuthor.model_validate(user),
             authorship=resource_author.authorship,
             authorship_status=resource_author.authorship_status,
             creation_date=resource_author.creation_date,
@@ -225,7 +225,7 @@ async def get_course_meta(
     # Convert to AuthorWithRole objects
     authors = [
         AuthorWithRole(
-            user=UserRead.model_validate(user),
+            user=UserReadAuthor.model_validate(user),
             authorship=resource_author.authorship,
             authorship_status=resource_author.authorship_status,
             creation_date=resource_author.creation_date,
@@ -388,7 +388,7 @@ async def get_courses_orgslug(
             course_authors[resource_author.resource_uuid] = []
         course_authors[resource_author.resource_uuid].append(
             AuthorWithRole(
-                user=UserRead.model_validate(user),
+                user=UserReadAuthor.model_validate(user),
                 authorship=resource_author.authorship,
                 authorship_status=resource_author.authorship_status,
                 creation_date=resource_author.creation_date,
@@ -582,7 +582,7 @@ async def search_courses(
     for resource_author, user in author_results:
         course_authors.setdefault(resource_author.resource_uuid, []).append(
             AuthorWithRole(
-                user=UserRead.model_validate(user),
+                user=UserReadAuthor.model_validate(user),
                 authorship=resource_author.authorship,
                 authorship_status=resource_author.authorship_status,
                 creation_date=resource_author.creation_date,
@@ -701,7 +701,7 @@ async def create_course(
     # Convert to AuthorWithRole objects
     authors = [
         AuthorWithRole(
-            user=UserRead.model_validate(user),
+            user=UserReadAuthor.model_validate(user),
             authorship=resource_author.authorship,
             authorship_status=resource_author.authorship_status,
             creation_date=resource_author.creation_date,
@@ -794,7 +794,7 @@ async def update_course_thumbnail(
     # Convert to AuthorWithRole objects
     authors = [
         AuthorWithRole(
-            user=UserRead.model_validate(user),
+            user=UserReadAuthor.model_validate(user),
             authorship=resource_author.authorship,
             authorship_status=resource_author.authorship_status,
             creation_date=resource_author.creation_date,
@@ -920,7 +920,7 @@ async def update_course(
     # Convert to AuthorWithRole objects
     authors = [
         AuthorWithRole(
-            user=UserRead.model_validate(user),
+            user=UserReadAuthor.model_validate(user),
             authorship=resource_author.authorship,
             authorship_status=resource_author.authorship_status,
             creation_date=resource_author.creation_date,
@@ -1107,7 +1107,7 @@ async def get_user_courses(
     for resource_author, user in author_results:
         course_authors.setdefault(resource_author.resource_uuid, []).append(
             AuthorWithRole(
-                user=UserRead.model_validate(user),
+                user=UserReadAuthor.model_validate(user),
                 authorship=resource_author.authorship,
                 authorship_status=resource_author.authorship_status,
                 creation_date=resource_author.creation_date,
@@ -1548,7 +1548,7 @@ async def clone_course(
     # Convert to AuthorWithRole objects
     authors = [
         AuthorWithRole(
-            user=UserRead.model_validate(user),
+            user=UserReadAuthor.model_validate(user),
             authorship=resource_author.authorship,
             authorship_status=resource_author.authorship_status,
             creation_date=resource_author.creation_date,

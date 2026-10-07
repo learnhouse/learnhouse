@@ -22,7 +22,7 @@ from src.db.usergroup_user import UserGroupUser
 from src.db.user_organizations import UserOrganization
 from src.db.organizations import Organization
 from src.db.usergroups import UserGroup, UserGroupCreate, UserGroupRead, UserGroupUpdate
-from src.db.users import AnonymousUser, APITokenUser, InternalUser, PublicUser, User, UserRead
+from src.db.users import AnonymousUser, APITokenUser, InternalUser, PublicUser, User, UserReadPublic
 from src.services.webhooks.dispatch import dispatch_webhooks
 from src.services.security.rate_limiting import enforce_batch_size_limit
 
@@ -231,7 +231,7 @@ async def get_users_linked_to_usergroup(
     db_session: AsyncSession,
     current_user: PublicUser | AnonymousUser,
     usergroup_id: int,
-) -> list[UserRead]:
+) -> list[UserReadPublic]:
 
     statement = select(UserGroup).where(UserGroup.id == usergroup_id)
     usergroup = (await db_session.execute(statement)).scalars().first()
@@ -260,7 +260,9 @@ async def get_users_linked_to_usergroup(
     )
     users = (await db_session.execute(statement)).scalars().all()
 
-    return [UserRead.model_validate(user) for user in users]
+    # SECURITY: learners hold usergroups read by default, so member lists use
+    # the public projection (no email). The router's response_model matches.
+    return [UserReadPublic.model_validate(user) for user in users]
 
 
 async def read_usergroups_by_org_id(
