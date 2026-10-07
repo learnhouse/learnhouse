@@ -91,6 +91,11 @@ class TestStartStreamRefund:
 
 
 class TestSendStreamRefund:
+    @pytest.fixture(autouse=True)
+    def _own_the_session(self):
+        with patch.object(ai_service, "chat_session_belongs_to_user", return_value=True):
+            yield
+
     async def test_refund_on_failure_and_reraise(self):
         chat_obj = SendActivityAIChatMessage(
             aichat_uuid="c1", activity_uuid="act_1", message="hi"

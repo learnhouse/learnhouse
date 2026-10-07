@@ -16,7 +16,7 @@ from src.security.features_utils.usage import (
 from src.db.resource_authors import ResourceAuthor, ResourceAuthorshipEnum, ResourceAuthorshipStatusEnum
 from src.db.users import PublicUser, AnonymousUser, User, UserReadAuthor, APITokenUser
 from src.security.auth import resolve_acting_user_id
-from src.security.org_auth import require_org_membership
+from src.security.org_auth import require_org_create_permission
 from src.db.podcasts.podcasts import (
     Podcast,
     PodcastCreate,
@@ -334,7 +334,14 @@ async def get_podcasts_orgslug(
                 .outerjoin(ResourceAuthor, ResourceAuthor.resource_uuid == Podcast.podcast_uuid)
                 .where(or_(
                     and_(Podcast.published == True, Podcast.public == True),  # Published public podcasts
-                    and_(Podcast.published == True, UserGroupResource.resource_uuid.is_(None)),  # Published podcasts not in any UserGroup
+                    and_(  # Published podcasts not in any UserGroup: org-wide, so members of its org only
+                        Podcast.published == True,
+                        UserGroupResource.resource_uuid.is_(None),
+                        select(UserOrganization.id).where(
+                            UserOrganization.user_id == acting_user_id,
+                            UserOrganization.org_id == Podcast.org_id,
+                        ).exists(),
+                    ),
                     UserGroupUser.user_id == acting_user_id,  # Podcasts in UserGroups where user is a member (including unpublished)
                     ResourceAuthor.user_id == acting_user_id  # Podcasts where user is a resource author (including unpublished)
                 ))
@@ -446,7 +453,14 @@ async def get_podcasts_count_orgslug(
             .outerjoin(ResourceAuthor, ResourceAuthor.resource_uuid == Podcast.podcast_uuid)
             .where(or_(
                 and_(Podcast.published == True, Podcast.public == True),  # Published public podcasts
-                and_(Podcast.published == True, UserGroupResource.resource_uuid.is_(None)),  # Published podcasts not in any UserGroup
+                and_(  # Published podcasts not in any UserGroup: org-wide, so members of its org only
+                    Podcast.published == True,
+                    UserGroupResource.resource_uuid.is_(None),
+                    select(UserOrganization.id).where(
+                        UserOrganization.user_id == count_acting_user_id,
+                        UserOrganization.org_id == Podcast.org_id,
+                    ).exists(),
+                ),
                 UserGroupUser.user_id == count_acting_user_id,  # Podcasts in UserGroups where user is a member (including unpublished)
                 ResourceAuthor.user_id == count_acting_user_id  # Podcasts where user is a resource author (including unpublished)
             ))
@@ -469,10 +483,7 @@ async def create_podcast(
 
     # SECURITY: Check if user has permission to create podcasts
     await check_resource_access(request, db_session, current_user, "podcast_x", AccessAction.CREATE)
-
-    await require_org_membership(
-        resolve_acting_user_id(current_user), org_id, db_session
-    )
+    await require_org_create_permission(current_user, org_id, db_session, "podcasts")
 
     # Check plan access (podcasts require standard+ plan)
     await check_feature_access("podcasts", org_id, db_session)
@@ -651,6 +662,8 @@ async def update_podcast(
 
     if podcast_object.public is not None:
         sensitive_fields_updated.append("public")
+    if podcast_object.published is not None:
+        sensitive_fields_updated.append("published")
 
     if sensitive_fields_updated:
         # Resolve to the token's creator for API-token callers so ownership /

@@ -214,6 +214,9 @@ class TestAuthorizationAndCreationEndpoints:
         with patch(
             "src.routers.users.check_invite_acceptance_rate_limit",
             return_value=(True, 0),
+        ), patch(
+            "src.routers.users.check_signup_rate_limit",
+            return_value=(True, 0),
         ):
             yield
 

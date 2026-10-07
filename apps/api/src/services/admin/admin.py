@@ -46,6 +46,7 @@ from src.services.analytics.analytics import track
 from src.services.analytics import events as analytics_events
 from src.services.webhooks.dispatch import dispatch_webhooks
 from src.security.auth import create_access_token
+from src.security.org_auth import org_owns_account
 from src.security.session_context import AUTH_METHOD_API_TOKEN, session_claims
 from src.security.features_utils.plan_check import get_org_plan
 from src.security.features_utils.plans import plan_meets_requirement
@@ -1947,6 +1948,14 @@ async def update_user_profile(
 
     user = await _get_user_in_org(user_id, token_user.org_id, db_session)
 
+    email_changed = "email" in updates and updates["email"] != user.email
+    username_changed = "username" in updates and updates["username"] != user.username
+    if (email_changed or username_changed) and not await org_owns_account(user.id, token_user.org_id, db_session):
+        raise HTTPException(
+            status_code=403,
+            detail="This account also belongs to other organizations; its email and username can only be changed by the account owner",
+        )
+
     if "email" in updates and updates["email"] != user.email:
         existing = (await db_session.execute(
             select(User).where(User.email == updates["email"], User.id != user_id)
@@ -1984,6 +1993,10 @@ async def update_user_profile(
     for field, value in updates.items():
         if field in _USER_UPDATABLE_FIELDS and value is not None:
             setattr(user, field, value)
+    if email_changed:
+        # A new address has not been proven; same rule as the profile path.
+        user.email_verified = False
+        user.email_verified_at = None
 
     user.update_date = str(datetime.now())
     db_session.add(user)
@@ -2453,6 +2466,12 @@ async def anonymize_user(
     """
 
     user = await _get_user_in_org(user_id, token_user.org_id, db_session)
+
+    if not await org_owns_account(user.id, token_user.org_id, db_session):
+        raise HTTPException(
+            status_code=403,
+            detail="This account also belongs to other organizations and cannot be anonymized from here; remove it from this organization instead",
+        )
 
     # example.com is reserved by RFC 2606 and has no MX record, so the address
     # is undeliverable while still being a well-formed one. The previous

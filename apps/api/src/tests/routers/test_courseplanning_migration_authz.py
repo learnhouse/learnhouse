@@ -425,7 +425,9 @@ class TestFinalizeCoursePlanRequiresCreateRight:
         session = _session(org.id)
 
         with patch.object(cp, "get_course_planning_session", return_value=session), \
-             patch.object(cp, "save_course_planning_session"):
+             patch.object(cp, "save_course_planning_session"), \
+             patch.object(cp, "check_limits_with_usage", new=AsyncMock()), \
+             patch.object(cp, "increase_feature_usage", new=AsyncMock()):
             result = await cp.finalize_course_plan(
                 mock_request,
                 FinalizeCoursePlanRequest(
@@ -449,18 +451,17 @@ class TestFinalizeCoursePlanRequiresCreateRight:
         assert author.user_id == admin_user.id
         assert author.authorship == ResourceAuthorshipEnum.CREATOR
 
-    async def test_plan_course_limit_is_not_enforced_here(
+    async def test_plan_course_limit_is_enforced(
         self, db, org, admin_role, admin_user, mock_request
     ):
-        """This path skips the plan's course limit that `create_course` applies.
-        That is a billing gap, not an authorization one, and enforcing it would
-        start refusing a call that works today — so it stays out of the fix and
-        is pinned here so the choice is visible rather than accidental."""
+        """Finalizing creates a real course, so it counts against the plan's
+        course limit exactly like `create_course`."""
         session = _session(org.id)
 
         with patch.object(cp, "get_course_planning_session", return_value=session), \
              patch.object(cp, "save_course_planning_session"), \
-             patch("src.security.features_utils.usage.check_limits_with_usage") as limits:
+             patch.object(cp, "check_limits_with_usage", new=AsyncMock()) as limits, \
+             patch.object(cp, "increase_feature_usage", new=AsyncMock()) as usage:
             result = await cp.finalize_course_plan(
                 mock_request,
                 FinalizeCoursePlanRequest(
@@ -471,8 +472,8 @@ class TestFinalizeCoursePlanRequiresCreateRight:
             )
 
         assert result.course_uuid.startswith("course_")
-        limits.assert_not_called()
-
+        limits.assert_awaited_once_with("courses", org.id, db)
+        usage.assert_awaited_once()
 
 
 # ===========================================================================

@@ -18,11 +18,13 @@ from starlette.datastructures import Headers
 
 from src.core.events.database import get_db_session
 from src.db.courses.activities import Activity
+from src.db.courses.courses import Course
 from src.db.courses.blocks import BlockRead
 from src.db.users import PublicUser
 from src.security.auth import get_authenticated_user
 from src.security.features_utils.usage import refund_ai_credit, reserve_ai_credit
 from src.security.org_auth import is_org_member, enforce_org_mfa
+from src.security.rbac import check_resource_access, AccessAction
 from src.services.ai.audio.generator import (
     OUTPUT_EXT,
     Speaker,
@@ -49,8 +51,8 @@ AUDIO_CREDIT_COST = 3
 SCRIPT_CREDIT_COST = 1
 
 
-async def _resolve_org_id_for_activity(activity_uuid: str, current_user: PublicUser, db_session: AsyncSession) -> int:
-    """Resolve the owning org for an activity and authorize the caller as a member."""
+async def _resolve_org_id_for_activity(request: Request, activity_uuid: str, current_user: PublicUser, db_session: AsyncSession) -> int:
+    """Resolve the owning org for an activity; the caller must be able to edit its course."""
     activity = (
         await db_session.execute(select(Activity).where(Activity.activity_uuid == activity_uuid))
     ).scalars().first()
@@ -60,6 +62,15 @@ async def _resolve_org_id_for_activity(activity_uuid: str, current_user: PublicU
         raise HTTPException(status_code=403, detail="User is not a member of this organization")
     # Org-wide two-factor policy, applied after the membership gate.
     await enforce_org_mfa(current_user.id, activity.org_id, db_session)
+    # Generating audio into an activity is an authoring action on its course.
+    course = (
+        await db_session.execute(select(Course).where(Course.id == activity.course_id))
+    ).scalars().first()
+    if not course:
+        raise HTTPException(status_code=404, detail="Course not found")
+    await check_resource_access(
+        request, db_session, current_user, course.course_uuid, AccessAction.UPDATE
+    )
     return activity.org_id
 
 
@@ -89,9 +100,8 @@ async def api_generate_audio(
         raise HTTPException(status_code=400, detail="Some text is required to generate audio.")
 
     # Resolve the owning org from the activity so we can meter credits before
-    # spending anything. Full RBAC (UPDATE on the course) is enforced by
     # create_audio_block below.
-    org_id = await _resolve_org_id_for_activity(body.activity_uuid, current_user, db_session)
+    org_id = await _resolve_org_id_for_activity(request, body.activity_uuid, current_user, db_session)
 
     # Rate limit then reserve credit (feature-enabled + quota checked inside reserve).
     enforce_ai_rate_limit(current_user.id, org_id)
@@ -163,6 +173,7 @@ async def api_generate_audio(
     },
 )
 async def api_generate_script(
+    request: Request,
     body: GenerateScriptRequest,
     current_user: PublicUser = Depends(get_authenticated_user),
     db_session: AsyncSession = Depends(get_db_session),
@@ -170,7 +181,7 @@ async def api_generate_script(
     if not (body.text or "").strip():
         raise HTTPException(status_code=400, detail="Add a topic or some text to generate a script from.")
 
-    org_id = await _resolve_org_id_for_activity(body.activity_uuid, current_user, db_session)
+    org_id = await _resolve_org_id_for_activity(request, body.activity_uuid, current_user, db_session)
 
     enforce_ai_rate_limit(current_user.id, org_id)
     await reserve_ai_credit(org_id, db_session, amount=SCRIPT_CREDIT_COST)

@@ -131,7 +131,7 @@ class TestScenarioGroundingRequiresUpdate:
              patch.object(sc, "reserve_ai_credit", new=reserve), \
              patch.object(sc, "enforce_ai_rate_limit"):
             with pytest.raises(HTTPException) as exc:
-                await sc.api_generate_scenario(body, mock_request, regular_user, db)
+                await sc.api_generate_scenario(mock_request, body, regular_user, db)
         assert exc.value.status_code == 403
         reserve.assert_not_awaited()
 
@@ -150,7 +150,7 @@ class TestScenarioGroundingRequiresUpdate:
                  sc, "record_generation",
                  new=AsyncMock(return_value=SimpleNamespace(ai_generation_uuid="g")),
              ):
-            resp = await sc.api_generate_scenario(body, mock_request, admin_user, db)
+            resp = await sc.api_generate_scenario(mock_request, body, admin_user, db)
         assert resp.ai_generation_uuid == "g"
         assert gen.await_args.kwargs["activity_content"] == activity.content
 
@@ -160,7 +160,7 @@ class TestScenarioGroundingRequiresUpdate:
 # ---------------------------------------------------------------------------
 
 
-PAID = "src.services.courses.activities.activities.check_ee_activity_paid_access"
+PAID = "src.services.courses.activities.access.check_ee_activity_paid_access"
 
 
 class TestGetActivityByIdGating:

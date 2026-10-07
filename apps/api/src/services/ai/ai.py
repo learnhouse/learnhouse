@@ -226,11 +226,14 @@ async def ai_start_activity_chat_session(
         logger.error("AI service error in ai_start_activity_chat_session: %s", e)
         raise HTTPException(status_code=503, detail={"code": "AI_UNAVAILABLE", "message": "AI service is temporarily unavailable"})
 
-    # Save the message exchange to history
+    # Save the message exchange to history (and record who owns the session)
     save_message_to_history(
         chat_session["aichat_uuid"],
         chat_session_object.message,
-        response["output"]
+        response["output"],
+        user_id=resolve_acting_user_id(current_user),
+        course_uuid=course.course_uuid,
+        org_id=course.org_id,
     )
 
     return ActivityAIChatSessionResponse(
@@ -372,11 +375,14 @@ async def ai_send_activity_chat_message(
         logger.error("AI service error in ai_send_activity_chat_message: %s", e)
         raise HTTPException(status_code=503, detail={"code": "AI_UNAVAILABLE", "message": "AI service is temporarily unavailable"})
 
-    # Save the message exchange to history
+    # Save the message exchange to history (and record who owns the session)
     save_message_to_history(
         chat_session["aichat_uuid"],
         chat_session_object.message,
-        response["output"]
+        response["output"],
+        user_id=resolve_acting_user_id(current_user),
+        course_uuid=course.course_uuid,
+        org_id=course.org_id,
     )
 
     return ActivityAIChatSessionResponse(

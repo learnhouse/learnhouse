@@ -96,8 +96,8 @@ async def export_courses_batch(
                 detail=f"Course not found: {course_uuid}",
             )
 
-        # Export bundles every activity (drafts, locked and paid content),
-        # block and file of the course — an authoring action, not a read.
+        # The package holds every activity (unpublished, locked and paid ones
+        # included) plus its files: exporting is an editor action, not a read.
         await check_resource_access(request, db_session, current_user, course.course_uuid, AccessAction.UPDATE)
 
         if org is None:

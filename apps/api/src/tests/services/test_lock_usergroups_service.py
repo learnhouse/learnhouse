@@ -163,6 +163,13 @@ class TestLoadUsergroup:
         assert exc_info.value.status_code == 404
         assert "User group not found" in exc_info.value.detail
 
+    async def test_other_orgs_group_is_not_found(self, db, org):
+        """A group from another org can't be attached to this org's course."""
+        await _make_usergroup(db, org)
+        with pytest.raises(HTTPException) as exc_info:
+            await _load_usergroup("ug_test", org.id + 1, db)
+        assert exc_info.value.status_code == 404
+
 
 # ===========================================================================
 # _attach_usergroup

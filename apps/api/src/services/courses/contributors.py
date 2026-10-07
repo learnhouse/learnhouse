@@ -76,6 +76,7 @@ async def apply_course_contributor(
         "status": "pending"
     }
 
+
 async def update_course_contributor(
     request: Request,
     course_uuid: str,
@@ -146,6 +147,7 @@ async def update_course_contributor(
         "status": "success"
     }
 
+
 async def get_course_contributors(
     request: Request,
     course_uuid: str,
@@ -173,6 +175,13 @@ async def get_course_contributors(
 
     # SECURITY: Require read access to the course
     await check_resource_access(request, db_session, current_user, course_uuid, AccessAction.READ)
+    # Emails and account details are for people who manage the course; any
+    # other reader gets the public profile.
+    can_manage = (await check_resource_access(
+        request, db_session, current_user, course_uuid, AccessAction.UPDATE,
+        raise_on_deny=False,
+    )).allowed
+    user_view = UserRead if can_manage else UserReadAuthor
 
     # Get all contributors for this course with user information
     statement = (
@@ -182,15 +191,6 @@ async def get_course_contributors(
     )
     results = (await db_session.execute(statement)).all()
 
-    # SECURITY: course READ is granted to anonymous users on public courses, so
-    # contributor emails are reserved for callers who can edit the course (the
-    # dashboard contributors editor).
-    can_edit = (await check_resource_access(
-        request, db_session, current_user, course_uuid, AccessAction.UPDATE,
-        raise_on_deny=False,
-    )).allowed
-    user_model = UserRead if can_edit else UserReadAuthor
-
     return [
         {
             "user_id": contributor.user_id,
@@ -198,10 +198,11 @@ async def get_course_contributors(
             "authorship_status": contributor.authorship_status,
             "creation_date": contributor.creation_date,
             "update_date": contributor.update_date,
-            "user": user_model.model_validate(user).model_dump()
+            "user": user_view.model_validate(user).model_dump()
         }
         for contributor, user in results
     ]
+
 
 async def add_bulk_course_contributors(
     request: Request,
@@ -319,6 +320,7 @@ async def add_bulk_course_contributors(
         )
 
     return results
+
 
 async def remove_bulk_course_contributors(
     request: Request,

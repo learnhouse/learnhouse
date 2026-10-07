@@ -48,11 +48,11 @@ async def _load_activity_and_course(activity_uuid, db_session):
 
 
 async def _load_usergroup(usergroup_uuid, org_id, db_session):
-    # Scope to the resource's org so an editor can't link another org's group.
+    # Only the course's own org's groups: attaching a foreign group would grant
+    # its members access and expose its name.
     ug = (await db_session.execute(
         select(UserGroup).where(
-            UserGroup.usergroup_uuid == usergroup_uuid,
-            UserGroup.org_id == org_id,
+            UserGroup.usergroup_uuid == usergroup_uuid, UserGroup.org_id == org_id
         )
     )).scalars().first()
     if not ug:

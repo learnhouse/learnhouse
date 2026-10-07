@@ -1293,6 +1293,9 @@ class TestCourseMutationsAndRights:
             "src.services.courses.courses.check_resource_access",
             new_callable=AsyncMock,
         ), patch(
+            "src.services.courses.courses.require_org_create_permission",
+            new_callable=AsyncMock,
+        ), patch(
             "src.services.courses.courses.check_limits_with_usage"
         ), patch(
             "src.services.courses.courses.increase_feature_usage"
