@@ -85,7 +85,7 @@ sed -i '' "s/^version = \"[^\"]*\"/version = \"${VERSION}\"/" "$REPO_ROOT/apps/a
 sed -i '' "s/version=\"[^\"]*\"/version=\"${VERSION}\"/" "$REPO_ROOT/apps/api/app.py"
 sed -i '' "s/\"version\": \"[^\"]*\"/\"version\": \"${VERSION}\"/" "$REPO_ROOT/apps/api/ee/routers/info.py"
 
-# uv.lock pins the project's own version — refresh it or the Lockfiles check fails on dev.
+# uv.lock pins the project's own version; refresh it or the Lockfiles check fails on dev.
 (cd "$REPO_ROOT/apps/api" && uv lock --quiet) || die "uv lock failed; aborting before any commit."
 
 echo "  ✅ Version bumped in web, collab, api, ee/info"
