@@ -1,13 +1,17 @@
 """Provider-agnostic embeddings (Pydantic AI).
 
 Embeddings follow the configured AI provider wherever that provider exposes an embeddings API
-— Google and the OpenAI family (OpenAI, Azure, Together, and local Ollama). Providers without
-an embeddings API (Anthropic, DeepSeek, Moonshot, Mistral, OpenRouter, Bedrock) transparently fall back to
-Google embeddings when ``gemini_api_key`` is set, otherwise a clear error is raised.
+— Google and the OpenAI family (OpenAI, Azure, Together, and local Ollama). Fireworks AI
+embeddings are opt-in only: they are used when the *embedding* provider is explicitly set to
+``fireworks`` (``LEARNHOUSE_AI_EMBEDDING_PROVIDER``) together with an explicit embedding model
+(no default). Providers without an embeddings API (Anthropic, DeepSeek, Moonshot, Mistral,
+OpenRouter, Bedrock, and Fireworks when only the main ``provider`` is Fireworks) transparently
+fall back to Google embeddings when ``gemini_api_key`` is set, otherwise a clear error is raised.
 
 The output dimensionality is pinned (default 768) to match the ``Vector(768)`` pgvector column
 in ``CourseEmbedding``. Changing ``embedding_dimensions`` requires migrating that column and
-re-indexing existing courses.
+re-indexing existing courses. Switching the embedding provider or model also requires
+re-indexing every course, since vectors from different models are not comparable.
 """
 
 from __future__ import annotations
@@ -79,6 +83,28 @@ def build_embedding_model() -> EmbeddingModel:
             settings=settings,
         )
 
+    # Fireworks embeddings are opt-in: only when the embedding provider is explicitly
+    # "fireworks" (not merely inherited from a Fireworks main provider), and the model must be
+    # chosen explicitly.
+    if (getattr(cfg, "embedding_provider", None) or "").strip().lower() == "fireworks":
+        from pydantic_ai.embeddings.openai import OpenAIEmbeddingModel
+        from pydantic_ai.providers.fireworks import FireworksProvider
+
+        if not model_name:
+            raise AINotConfiguredError(
+                "Fireworks embeddings require an explicit model (set LEARNHOUSE_AI_EMBEDDING_MODEL, "
+                "e.g. 'accounts/fireworks/models/qwen3-embedding-8b')."
+            )
+        if not api_key:
+            raise AINotConfiguredError(
+                "Fireworks embeddings require an API key (set LEARNHOUSE_AI_API_KEY)."
+            )
+        return OpenAIEmbeddingModel(
+            model_name,
+            provider=FireworksProvider(api_key=api_key),
+            settings=settings,
+        )
+
     if prov == "ollama":
         from pydantic_ai.embeddings.openai import OpenAIEmbeddingModel
         from pydantic_ai.providers.ollama import OllamaProvider
@@ -103,8 +129,8 @@ def build_embedding_model() -> EmbeddingModel:
             settings=settings,
         )
 
-    # Providers without an embeddings API (anthropic, deepseek, moonshot, mistral, openrouter, bedrock):
-    # fall back to Google embeddings when a Gemini key is available.
+    # Providers without an embeddings API (anthropic, deepseek, moonshot, mistral, openrouter,
+    # bedrock, and fireworks unless it is the explicit embedding provider): fall back to Google embeddings when a Gemini key is available.
     gemini_key = getattr(cfg, "gemini_api_key", None)
     if gemini_key:
         from pydantic_ai.embeddings.google import GoogleEmbeddingModel
@@ -130,13 +156,29 @@ def _embedder() -> Embedder:
     return Embedder(build_embedding_model())
 
 
+def _check_dimensions(vectors: list[list[float]]) -> list[list[float]]:
+    """Ensure every vector matches the pinned pgvector column size before it is stored/queried."""
+    expected = embedding_dimensions()
+    for vec in vectors:
+        if len(vec) != expected:
+            cfg = get_learnhouse_config().ai_config
+            raise AINotConfiguredError(
+                f"Embedding dimension mismatch: expected {expected}, got {len(vec)} "
+                f"(provider={_resolve_embedding_provider(cfg)!r}, "
+                f"model={getattr(cfg, 'embedding_model', None) or 'default'!r}). The "
+                "course_embedding column is pinned to 768 dimensions; use a model that supports "
+                "a configurable output size and set LEARNHOUSE_AI_EMBEDDING_DIMENSIONS to match."
+            )
+    return vectors
+
+
 async def embed_documents(texts: list[str]) -> list[list[float]]:
     """Embed a batch of documents; returns one vector per input."""
     result = await _embedder().embed(texts, input_type="document")
-    return [list(v) for v in result.embeddings]
+    return _check_dimensions([list(v) for v in result.embeddings])
 
 
 async def embed_query(text: str) -> list[float]:
     """Embed a single query string."""
     result = await _embedder().embed(text, input_type="query")
-    return list(result.embeddings[0])
+    return _check_dimensions([list(result.embeddings[0])])[0]

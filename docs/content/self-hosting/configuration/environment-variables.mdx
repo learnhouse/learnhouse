@@ -86,7 +86,7 @@ optional: the feature stays disabled or uses a runtime fallback when the variabl
 | --- | --- | --- | --- | --- |
 | `LEARNHOUSE_IS_AI_ENABLED` | Master switch for AI features. | boolean | `false` | API, CLI |
 | `LEARNHOUSE_GEMINI_API_KEY` | Legacy Google/Gemini key and fallback embeddings key for providers without embeddings. | secret string | unset | API, CLI |
-| `LEARNHOUSE_AI_PROVIDER` | Provider for generation: `google`, `openai`, `anthropic`, `deepseek`, `moonshot`, `mistral`, `openrouter`, `bedrock`, `ollama`, or another supported Pydantic AI provider. | string | `google` | API |
+| `LEARNHOUSE_AI_PROVIDER` | Provider for generation: `google`, `openai`, `anthropic`, `deepseek`, `fireworks`, `moonshot`, `mistral`, `openrouter`, `bedrock`, `ollama`, or another supported Pydantic AI provider. | string | `google` | API |
 | `LEARNHOUSE_AI_API_KEY` | API key for the selected AI provider. Not required for `ollama`; optional for `bedrock`. | secret string | unset; required for most providers | API |
 | `LEARNHOUSE_AI_BASE_URL` | Custom endpoint for OpenAI-compatible or local providers. | URL | unset; Ollama falls back to `http://localhost:11434/v1` | API |
 | `LEARNHOUSE_AI_MODEL_FAST` | Low-latency model tier for titles, follow-ups, and migration tasks. | model id | `gemini-3.1-flash-lite` | API |
@@ -94,8 +94,8 @@ optional: the feature stays disabled or uses a runtime fallback when the variabl
 | `LEARNHOUSE_AI_MODEL_PRO` | Pro model tier for upgraded course planning and generation flows. | model id | `gemini-3.1-pro-preview` | API |
 | `LEARNHOUSE_AI_IMAGE_MODEL` | Google image-generation model ("nano banana"). Google-only path (uses the Gemini key regardless of provider). | model id | `gemini-2.5-flash-image` | API |
 | `LEARNHOUSE_AI_TTS_MODEL` | Google text-to-speech model for AI audio / podcast generation. Google-only path. All Gemini TTS models are currently preview. | model id | `gemini-2.5-flash-preview-tts` | API |
-| `LEARNHOUSE_AI_EMBEDDING_PROVIDER` | Optional provider override for RAG embeddings. | string | same as `LEARNHOUSE_AI_PROVIDER` | API |
-| `LEARNHOUSE_AI_EMBEDDING_MODEL` | Optional embedding model override. | model id | provider default, such as `gemini-embedding-001`, `text-embedding-3-small`, or `nomic-embed-text` | API |
+| `LEARNHOUSE_AI_EMBEDDING_PROVIDER` | Optional provider override for RAG embeddings. `fireworks` is only used when set explicitly here (requires `LEARNHOUSE_AI_EMBEDDING_MODEL`). | string | same as `LEARNHOUSE_AI_PROVIDER` | API |
+| `LEARNHOUSE_AI_EMBEDDING_MODEL` | Optional embedding model override. Required for `fireworks` (for example `accounts/fireworks/models/qwen3-embedding-8b`). | model id | provider default, such as `gemini-embedding-001`, `text-embedding-3-small`, or `nomic-embed-text` | API |
 | `LEARNHOUSE_AI_EMBEDDING_DIMENSIONS` | Embedding vector size. Changing this requires a matching database migration and re-index. | integer | `768` | API |
 
 ## Email

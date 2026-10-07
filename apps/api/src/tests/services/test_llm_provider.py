@@ -37,6 +37,7 @@ def _patch_ai_config(monkeypatch, **overrides):
         ("openai", "gpt-4o", "OpenAIChatModel"),
         ("anthropic", "claude-sonnet-4-5", "AnthropicModel"),
         ("deepseek", "deepseek-chat", "OpenAIChatModel"),
+        ("fireworks", "accounts/fireworks/models/llama-v3p1-70b-instruct", "OpenAIChatModel"),
         ("moonshot", "kimi-k2-0905-preview", "OpenAIChatModel"),
         ("mistral", "mistral-large", "MistralModel"),
     ],
@@ -204,3 +205,83 @@ def test_embedding_dimensions_default_and_override(monkeypatch):
     assert embeddings_mod.embedding_dimensions() == 768
     _patch_embed_config(monkeypatch, provider="google", api_key="g", embedding_dimensions=1536)
     assert embeddings_mod.embedding_dimensions() == 1536
+
+
+# --- Fireworks embeddings (explicit opt-in) -------------------------------------------------
+
+_FW_MODEL = "accounts/fireworks/models/qwen3-embedding-8b"
+
+
+def test_embeddings_fireworks_explicit(monkeypatch):
+    _patch_embed_config(
+        monkeypatch, provider="google", api_key="fw-key",
+        embedding_provider="fireworks", embedding_model=_FW_MODEL,
+    )
+    model = embeddings_mod.build_embedding_model()
+    assert type(model).__name__ == "OpenAIEmbeddingModel"
+    assert model.model_name == _FW_MODEL
+
+
+def test_embeddings_fireworks_passes_dimensions(monkeypatch):
+    _patch_embed_config(
+        monkeypatch, api_key="fw-key", embedding_provider="fireworks",
+        embedding_model=_FW_MODEL, embedding_dimensions=768,
+    )
+    assert embeddings_mod.build_embedding_model().settings["dimensions"] == 768
+
+
+def test_embeddings_fireworks_requires_model(monkeypatch):
+    _patch_embed_config(monkeypatch, api_key="fw-key", embedding_provider="fireworks")
+    with pytest.raises(AINotConfiguredError, match="LEARNHOUSE_AI_EMBEDDING_MODEL"):
+        embeddings_mod.build_embedding_model()
+
+
+def test_embeddings_fireworks_requires_key(monkeypatch):
+    _patch_embed_config(
+        monkeypatch, embedding_provider="fireworks", embedding_model=_FW_MODEL
+    )
+    with pytest.raises(AINotConfiguredError, match="API key"):
+        embeddings_mod.build_embedding_model()
+
+
+def test_embeddings_main_fireworks_without_embedding_provider_falls_back(monkeypatch):
+    _patch_embed_config(
+        monkeypatch, provider="fireworks", api_key="fw-key", gemini_api_key="g-key",
+        embedding_model=_FW_MODEL,
+    )
+    assert type(embeddings_mod.build_embedding_model()).__name__ == "GoogleEmbeddingModel"
+
+
+def test_embeddings_main_fireworks_without_embedding_provider_raises_without_gemini(monkeypatch):
+    _patch_embed_config(monkeypatch, provider="fireworks", api_key="fw-key")
+    with pytest.raises(AINotConfiguredError):
+        embeddings_mod.build_embedding_model()
+
+
+class _FakeEmbedder:
+    def __init__(self, dims):
+        self.dims = dims
+
+    async def embed(self, inputs, input_type=None):
+        n = len(inputs) if isinstance(inputs, list) else 1
+        return SimpleNamespace(embeddings=[[0.1] * self.dims for _ in range(n)])
+
+
+@pytest.mark.asyncio
+async def test_dimension_guard_passes_on_match(monkeypatch):
+    _patch_embed_config(monkeypatch, provider="google", api_key="g")
+    monkeypatch.setattr(embeddings_mod, "_embedder", lambda: _FakeEmbedder(768))
+    assert len(await embeddings_mod.embed_documents(["a", "b"])) == 2
+    assert len(await embeddings_mod.embed_query("q")) == 768
+
+
+@pytest.mark.asyncio
+async def test_dimension_guard_raises_on_mismatch(monkeypatch):
+    _patch_embed_config(
+        monkeypatch, api_key="k", embedding_provider="fireworks", embedding_model=_FW_MODEL
+    )
+    monkeypatch.setattr(embeddings_mod, "_embedder", lambda: _FakeEmbedder(4096))
+    with pytest.raises(AINotConfiguredError, match="expected 768, got 4096"):
+        await embeddings_mod.embed_documents(["a"])
+    with pytest.raises(AINotConfiguredError, match="LEARNHOUSE_AI_EMBEDDING_DIMENSIONS"):
+        await embeddings_mod.embed_query("q")
