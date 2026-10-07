@@ -130,7 +130,7 @@ export function runAlembicUpgrade(dir: string, layout: EditionLayout, ui: Update
   try {
     // Alembic marks the current revision "(head)" when the DB is at the tip of
     // its lineage. If every current revision is a head, there's nothing to apply
-    // so skip. This is more reliable than diffing `current` against `heads` (alembic
+    // and we skip. This is more reliable than diffing `current` against `heads` (alembic
     // collapses `current` to the effective tip) and avoids erroring on images that
     // expose a stray/duplicate extra head, where `upgrade heads` reports
     // "overlaps with other requested revisions".

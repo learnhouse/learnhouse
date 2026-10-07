@@ -43,7 +43,7 @@ test('multi-SCO import, learner tracking, completion + instructor results', asyn
     'cmi.core.score.raw': '88',
     'cmi.core.session_time': '00:01:00',
   })
-  // Second commit: SCO reports cumulative session_time (120s), so it must NOT add up.
+  // Second commit: SCO reports cumulative session_time (120s), so the server must NOT add the two together.
   await runtimeCommit(studentToken, activityUuid, {
     'cmi.core.session_time': '00:02:00',
   })

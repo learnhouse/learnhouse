@@ -88,7 +88,7 @@ def record_org_admin_in_loops(
     """
     Fire-and-forget: ensure an org ADMIN is on the Loops marketing audience.
 
-    Best-effort and non-blocking, so safe to call from inside a request handler.
+    Best-effort and non-blocking: safe to call from inside a request handler.
     No-op when the email is missing, when not in SaaS mode, or when
     ``LOOPS_API_KEY`` is unset.
     """

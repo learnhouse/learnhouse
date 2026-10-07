@@ -4,7 +4,7 @@ Like image generation, TTS is a **Google-only** path: the provider-agnostic text
 layer in ``src/services/ai/llm`` returns text/embeddings only, so speech goes
 straight to the Google GenAI SDK. It reuses the same credential resolution as the
 text layer: ``ai_config.api_key`` when the configured provider is Google,
-otherwise the legacy ``ai_config.gemini_api_key``. So no separate key is needed
+otherwise the legacy ``ai_config.gemini_api_key``, so no separate key is needed
 when the deployment already runs on Gemini.
 
 Two modes share one call:
@@ -226,7 +226,7 @@ async def generate_spoken_script(
         )
 
     # Token budget. The standard tier is a Gemini 3 "thinking" model, where
-    # max_output_tokens is SHARED between reasoning tokens and the visible answer, so
+    # max_output_tokens is SHARED between reasoning tokens and the visible answer:
     # a tight budget makes the script stop mid-sentence (the reasoning eats it up).
     # So give generous headroom for thinking PLUS ~2x the target output length so
     # the script can never be truncated by the ceiling. (max_tokens is a ceiling,

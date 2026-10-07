@@ -10,7 +10,7 @@ Adds everything introduced by the grading refactor in one shot:
 4. assignment.anti_copy_paste: nullable BOOL column, defaults to false; when
    true, student-facing task views block paste events
 5. Two new values in the assignmenttasktypeenum enum: SHORT_ANSWER,
-   NUMBER_ANSWER: auto-gradable text / numeric task types
+   NUMBER_ANSWER (auto-gradable text / numeric task types)
 
 Revision ID: x3y4z5a6b7c8
 Revises: w2x3y4z5a6b7

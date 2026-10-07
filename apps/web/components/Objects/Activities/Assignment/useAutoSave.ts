@@ -43,7 +43,7 @@ type Args = {
   retryMs?: number
   // Hard cap on automatic retries for a given value. Without it a permanently
   // failing write re-armed the debounce effect forever (~every 5s for the life
-  // of the mount) behind a "Couldn't save, retrying…" chip that never resolved.
+  // of the mount) behind a "Couldn't save" chip that promised a retry and never resolved.
   maxRetries?: number
 }
 

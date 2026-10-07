@@ -73,7 +73,7 @@ async def _get_user_rights(
     if not user_org:
         return {}
 
-    # The caller is a confirmed member, so subject to the org's 2FA policy. Every
+    # The caller is a confirmed member and so subject to the org's 2FA policy. Every
     # mutating playground gate (create/update/delete/duplicate and the usergroup
     # ops) resolves rights through here, so enforcing once closes the whole set
     # of write paths against a member who is past their two-factor deadline.

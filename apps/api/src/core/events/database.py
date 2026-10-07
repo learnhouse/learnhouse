@@ -383,7 +383,7 @@ def _is_transient_connect_error(exc: BaseException) -> bool:
 
 async def _bootstrap_schema():
     async with engine.begin() as conn:
-        # Enable pgvector extension for vector similarity search (optional, RAG feature)
+        # Enable pgvector extension for vector similarity search (optional; used by the RAG feature)
         try:
             from sqlalchemy import text
             await conn.execute(text("CREATE EXTENSION IF NOT EXISTS vector"))

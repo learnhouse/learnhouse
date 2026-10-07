@@ -61,7 +61,7 @@ function VerifyEmailClient({ org }: VerifyEmailClientProps) {
                     setShowMessage(true)
                     // Verification also signs the user in (session cookies were
                     // set via the auth proxy). Send them into the app hub (/home)
-                    // (NOT the apex '/' which is the public/login page) so a
+                    // and NOT the apex '/' which is the public/login page, so a
                     // fresh, now-verified user lands somewhere useful. A full
                     // navigation lets auth bootstrap from the new cookies.
                     setTimeout(() => {

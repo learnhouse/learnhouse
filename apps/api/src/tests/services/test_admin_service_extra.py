@@ -515,7 +515,7 @@ async def test_get_course_analytics_with_certification_and_cert_users(db, org, c
 
 
 # ---------------------------------------------------------------------------
-# Line 827, remove_user_from_org_admin: user passes _get_user_in_org but
+# Line 827 (remove_user_from_org_admin): user passes _get_user_in_org but
 # no UserOrganization row exists (second membership query returns None).
 # We patch _get_user_in_org to bypass the first check.
 # ---------------------------------------------------------------------------
@@ -536,7 +536,7 @@ async def test_remove_user_from_org_admin_no_membership_row_raises_404(db, org):
 
 
 # ---------------------------------------------------------------------------
-# Line 1538, change_user_role: user passes _get_user_in_org but no
+# Line 1538 (change_user_role): user passes _get_user_in_org but no
 # UserOrganization row exists (second membership query returns None).
 # ---------------------------------------------------------------------------
 
@@ -556,7 +556,7 @@ async def test_change_user_role_no_membership_row_raises_404(db, org, user_role)
 
 
 # ---------------------------------------------------------------------------
-# Line 1836, bulk_unenroll_users: enrolled user with TrailSteps gets steps
+# Line 1836 (bulk_unenroll_users): enrolled user with TrailSteps gets steps
 # deleted (the db_session.delete(step) branch).
 # ---------------------------------------------------------------------------
 

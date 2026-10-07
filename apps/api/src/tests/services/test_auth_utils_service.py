@@ -239,7 +239,7 @@ class TestAuthUtilsService:
 
     @pytest.mark.asyncio
     async def test_sign_with_google_username_fallback_to_user(self):
-        """Covers line 76, username_parts.append('user') when name parts are absent
+        """Covers line 76: username_parts.append('user') when name parts are absent
         and the email has no '@', so the prefix-based branch is also skipped."""
         request = Mock(spec=Request)
         current_user = Mock()

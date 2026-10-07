@@ -107,7 +107,7 @@ export function useDragResize({
       el.style.width = `${liveSize.current.w}px`
       el.style.height = `${liveSize.current.h}px`
     }
-    // When idle, the CSS rule in globals.css handles the transition,
+    // When idle, the CSS rule in globals.css handles the transition;
     // no inline style needed (clearing it lets CSS take over).
   })
 

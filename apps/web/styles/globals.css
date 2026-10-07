@@ -264,7 +264,7 @@
     letter-spacing: normal;
   }
 
-  /* Arabic is set in Tajawal, full stop; not layered as a per-glyph fallback.
+  /* Arabic is set in Tajawal, full stop, not layered as a per-glyph fallback.
      Tajawal carries a Latin subset, so forcing it keeps a mixed Arabic screen
      in one typeface instead of alternating between two designs with different
      proportions mid-sentence.
@@ -483,7 +483,7 @@
     letter-spacing: normal;
   }
 
-  /* Arabic is set in Tajawal, full stop; not layered as a per-glyph fallback.
+  /* Arabic is set in Tajawal, full stop, not layered as a per-glyph fallback.
      Tajawal carries a Latin subset, so forcing it keeps a mixed Arabic screen
      in one typeface instead of alternating between two designs with different
      proportions mid-sentence.

@@ -333,7 +333,7 @@ class TestSignupCustomFields:
         self, mock_request, db, admin_user
     ):
         """There is no org, so there are no declared fields to validate
-        against, so nothing may be persisted."""
+        against; nothing may be persisted."""
         with _signup_patches():
             created = await create_user_without_org(
                 mock_request,

@@ -372,7 +372,7 @@ class TestSecondVisitDetection:
         assert get_spec(self.ID).matches(s) is False
 
     def test_any_engagement_signal_counts_as_coming_back(self):
-        """Including an admin login, which is itself an engagement signal,
+        """Including an admin login, which is itself an engagement signal and
         the reason no separate login-timing comparison is needed."""
         from src.services.nudges.catalog import _no_second_visit
 

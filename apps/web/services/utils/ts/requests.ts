@@ -261,7 +261,7 @@ export const getResponseMetadata = async (
  * succeeded or not, so an error response puts an object (`{detail: ...}`) where
  * a list was expected. `res?.data ?? []` happily passes that object through and
  * the component dies on `.map is not a function` / `.filter is not a function`
- * leaving a blank page for what is really just a failed request.
+ * and leaves a blank page for what is really just a failed request.
  */
 export const asArray = <T = any>(value: any): T[] => {
   if (Array.isArray(value)) return value as T[]

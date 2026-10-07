@@ -6,7 +6,7 @@ import React, { useContext, createContext } from 'react'
 export const SessionContext = createContext<UseSessionReturn | null>(null)
 
 /**
- * Provides session context to all children. Does NOT block rendering.
+ * Provides session context to all children. Does NOT block rendering;
  * children receive session data (including loading state) and decide
  * how to handle it themselves.
  */

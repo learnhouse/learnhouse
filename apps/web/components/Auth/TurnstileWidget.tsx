@@ -19,7 +19,7 @@ export function getTurnstileSiteKey(): string {
  * True when the page is served on an org CUSTOM DOMAIN (the proxy sets the
  * LH_custom_domain cookie). Cloudflare Turnstile site keys are hostname-locked to
  * the platform domain, so the widget can't render/validate on arbitrary customer
- * domains, so we disable it there rather than show a broken challenge that blocks
+ * domains; we disable it there rather than show a broken challenge that blocks
  * the form. The server (turnstile verify + signup) skips it on custom domains too.
  */
 function isOnCustomDomain(): boolean {

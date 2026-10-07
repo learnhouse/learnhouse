@@ -192,7 +192,7 @@ export function CourseProvider({
   if (error) {
     const status = (error as any)?.status
     if (status === 403 || status === 404) {
-      // Still render the provider so children can call useCourse() without throwing.
+      // Still render the provider so children can call useCourse() without throwing;
       // they'll see isLoading:false and courseStructure as the stub, and the parent
       // page handles the access-denied redirect via useCourseRights.
       return (

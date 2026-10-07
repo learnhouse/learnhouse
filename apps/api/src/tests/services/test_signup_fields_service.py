@@ -193,8 +193,8 @@ class TestValidateSignupFieldValues:
             validate_signup_field_values(fields, {"notes": "x" * (MAX_TEXT_LENGTH + 1)})
 
     def test_urls_in_free_text_are_rejected(self):
-        """Public signup free-text is a standard phishing/spam relay, the same
-        reason display-name fields reject links."""
+        """Public signup free-text is a standard phishing/spam relay; display-name
+        fields reject links for the same reason."""
         # Deliberately a field with no tight max_length, so the URL check is
         # what rejects this rather than the length check.
         fields = [SignupFieldItem(key="notes", label="Notes", type="textarea")]

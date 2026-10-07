@@ -266,7 +266,7 @@ function listFiles() {
   })
   let files = out.split('\n').filter(Boolean)
   if (INCLUDE) {
-    // Prefix/glob match, enough for the batch slicing we do.
+    // Simple prefix/glob match, enough for the batch slicing we do.
     const prefix = INCLUDE.replace(/\*+$/, '').replace(/\/$/, '')
     files = files.filter((f) => f.startsWith(prefix))
   }

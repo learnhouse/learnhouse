@@ -442,7 +442,7 @@ class TestMalformedQuestionsAndBlanks:
 # --------------------------------------------------------------------------- #
 class TestWhitespaceAndLongAnswers:
     def test_whitespace_only_correct_answer_is_skipped(self):
-        """A whitespace-only correctAnswer trims to '', so it's effectively an
+        """A whitespace-only correctAnswer trims to '': it's effectively an
         empty key, so it is skipped (no free credit for a whitespace answer)."""
         contents = {"questions": [_q("q1", [_blank("b1", "   ")])]}
         sub = {"submissions": [_sub("q1", "b1", "\t  \n")]}

@@ -109,7 +109,7 @@ async def _enroll_confirmed_factor(db, user_id: int) -> None:
 
 @pytest.fixture
 def no_google_client_id(monkeypatch):
-    """Neither spelling set, the default state of a stock deployment."""
+    """Neither spelling set: the default state of a stock deployment."""
     for name in GOOGLE_ENV_VARS:
         monkeypatch.delenv(name, raising=False)
     # The "not configured" log line is emitted once per process; reset it so the

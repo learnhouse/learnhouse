@@ -40,7 +40,7 @@ router = APIRouter()
 
 # MIME type mapping.
 #
-# SECURITY: no type a browser executes as a document is listed here: no
+# SECURITY: no type a browser executes as a document is listed here; no
 # text/html, application/javascript, text/css or application/xml. Content keys
 # can carry a caller-chosen extension (course import packages name their own
 # files), and this endpoint answers on the shared API origin where every

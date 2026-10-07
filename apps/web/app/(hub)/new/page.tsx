@@ -664,7 +664,7 @@ function CreateOrgSuccess({ slug, t }: { slug: string; t: any }) {
     setGoing(true)
     // Single-domain (.io) consolidation: the apex and the org subdomain share
     // the .{top_domain}-scoped session cookie, so the session already covers the
-    // subdomain, so no cross-domain code-mint/token-exchange handoff is needed.
+    // subdomain; no cross-domain code-mint/token-exchange handoff is needed.
     // Refresh once to mint a fresh access token, then land on the new org's
     // onboarding (the first page for a brand-new org).
     try {

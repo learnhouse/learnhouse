@@ -74,7 +74,7 @@ function HomeClient() {
   return (
     <div className="fixed inset-0 z-[100] bg-white overflow-y-auto">
       <div className="relative min-h-screen">
-        {/* Blueprint grid, fades in from bottom */}
+        {/* Blueprint grid: fades in from bottom */}
         <div
           className="absolute inset-0 pointer-events-none z-0"
           style={{

@@ -83,7 +83,7 @@ const OrgEditDangerZone: React.FC = () => {
     try {
       await deleteOrganizationFromBackend(org.id, access_token)
       toast.success('Organization deleted', { id: loadingToast })
-      // The org no longer exists, so send the user back to the root so they land
+      // The org no longer exists; send the user back to the root so they land
       // on org selection / login rather than a broken dashboard.
       setTimeout(() => {
         window.location.href = '/'

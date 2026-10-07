@@ -437,7 +437,7 @@ function TaskCodeObject({ view, assignmentTaskUUID, user_id, onGraded }: TaskCod
     // Enforce "must pass all visible tests" gate if the teacher enabled it.
     // This is a POLICY refusal, not a failure: returning `false` would make
     // useAutoSave treat it as a transient error and retry every few seconds
-    // forever (permanent amber "Couldn't save" retrying chip) and would
+    // forever (permanent amber autosave_retry "Couldn't save" chip) and would
     // also fail the assignment-wide flushAll(), blocking submission of the
     // WHOLE assignment. `'blocked'` is handled by useAutoSave as terminal:
     // no retry, no error state. Genuine network/server failures below still

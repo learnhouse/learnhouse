@@ -3,7 +3,7 @@
 Every one of these is a one-line `if this is the demo` inside a function that
 ordinary organizations also use. They are the whole safety story of the feature
 and the easiest thing to delete by accident, so each gets a test that fails if
-the branch stops firing and, where the same call answers 403 for more than one
+the branch stops firing, and, where the same call answers 403 for more than one
 reason, an assertion pinned to this guard's own message.
 """
 

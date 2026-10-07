@@ -220,7 +220,7 @@ export function useOrgSecurityPolicy() {
   const [seedVersion, setSeedVersion] = React.useState(0)
 
   // Same call shape as the account-level two-factor section: getAPIUrl() +
-  // RequestBodyWithAuthHeader + getResponseMetadata. Deliberately NOT apiFetch.
+  // RequestBodyWithAuthHeader + getResponseMetadata. Deliberately NOT apiFetch:
   // its errorHandling() turns a 401 into a global "session expired" event, and
   // we want to read the structured `detail.code` on 403 ourselves.
   const mfaFetch = React.useCallback(

@@ -4,7 +4,7 @@ Image generation is a **Google-only** path: the provider-agnostic text layer in
 ``src/services/ai/llm`` returns text/embeddings only, so images go straight to
 the Google GenAI SDK. It still reuses the same credential resolution as the text
 layer: ``ai_config.api_key`` when the configured provider is Google, otherwise
-the legacy ``ai_config.gemini_api_key``. So no separate key is needed when the
+the legacy ``ai_config.gemini_api_key``, so no separate key is needed when the
 deployment already runs on Gemini.
 
 Supports two modes with the same call:

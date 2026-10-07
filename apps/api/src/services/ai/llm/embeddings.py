@@ -1,7 +1,7 @@
 """Provider-agnostic embeddings (Pydantic AI).
 
-Embeddings follow the configured AI provider wherever that provider exposes an embeddings API
-namely Google and the OpenAI family (OpenAI, Azure, Together, and local Ollama). Providers without
+Embeddings follow the configured AI provider wherever that provider exposes an embeddings API:
+Google and the OpenAI family (OpenAI, Azure, Together, and local Ollama). Providers without
 an embeddings API (Anthropic, DeepSeek, Moonshot, Mistral, OpenRouter, Bedrock) transparently fall back to
 Google embeddings when ``gemini_api_key`` is set, otherwise a clear error is raised.
 

@@ -2482,8 +2482,8 @@ async def read_user_assignment_task_submissions_me_batch(
         )
         .where(AssignmentTask.assignment_id == assignment.id)
         # ASC ordering means that if legacy data has multiple submissions per
-        # (task,user) (handle_assignment_task_submission is upsert so this
-        # shouldn't happen in normal flow) the dict comprehension below
+        # (task,user), something the upsert in handle_assignment_task_submission
+        # should prevent in normal flow, the dict comprehension below
         # overwrites lower ids with higher ones, leaving the most recent
         # submission as the winning value.
         .order_by(AssignmentTaskSubmission.id.asc())  # type: ignore

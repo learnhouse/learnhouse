@@ -2,9 +2,9 @@
 Single source of truth for deployment mode detection.
 
 Three modes:
-- 'saas': LEARNHOUSE_SAAS=true (plan-based gating, usage limits apply)
-- 'ee':   EE folder present (and not SaaS): all features enabled, unlimited
-- 'oss':  EE folder absent (and not SaaS): EE features blocked, unlimited otherwise
+- 'saas': LEARNHOUSE_SAAS=true; plan-based gating, usage limits apply
+- 'ee':   EE folder present (and not SaaS); all features enabled, unlimited
+- 'oss':  EE folder absent (and not SaaS); EE features blocked, unlimited otherwise
 
 Development override:
 - LEARNHOUSE_FORCE_EE=1 skips the license check when the EE folder is present.

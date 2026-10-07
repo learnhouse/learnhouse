@@ -6,7 +6,7 @@ Adds four nullable columns to ``assignment``:
                         submission stays SUBMITTED instead of becoming GRADED.
 - ``solution``        : free-text model answer (the "corrigé").
 - ``solution_file``   : on-disk name of an uploaded corrigé document.
-- ``solution_reveal`` : NEVER / ON_SUBMISSION / AFTER_GRADING: when the two
+- ``solution_reveal`` : NEVER / ON_SUBMISSION / AFTER_GRADING; controls when the two
                         fields above become readable by a learner.
 
 All default to the pre-existing behavior (no formative mode, no corrigé, never

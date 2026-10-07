@@ -109,8 +109,8 @@ function appendClearAuthCookies(response: NextResponse, request: NextRequest) {
 // Headers that identify the ORIGINAL caller, relayed to the backend untouched.
 //
 // This proxy is server-to-server: with nothing forwarded, the backend sees the
-// Next.js pod as the client for EVERY request. Its per-IP limits, login
-// (30/5min), signup (10/hour), refresh (600/min), then share ONE bucket across
+// Next.js pod as the client for EVERY request. Its per-IP limits for login
+// (30/5min), signup (10/hour) and refresh (600/min) then share ONE bucket across
 // the whole deployment instead of being per caller. A single person retrying a
 // password could lock every user out of signing in, and the limits stop being
 // brute-force protection at all because they cannot tell callers apart. The
@@ -178,7 +178,7 @@ async function proxyRequest(
   const refreshToken = cookieStore.get(REFRESH_TOKEN_COOKIE)
 
   // Short-circuit: no refresh token cookie means nothing to refresh. Clear the
-  // stale LH_session marker (and any orphaned cookies) too, otherwise the
+  // stale LH_session marker (and any orphaned cookies) too; otherwise the
   // client keeps seeing "a session exists" and loops on failed refreshes.
   if (pathSegments === 'refresh' && !refreshToken?.value) {
     const response = NextResponse.json({ error: 'No refresh token' }, { status: 401 })

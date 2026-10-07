@@ -148,7 +148,7 @@ async function handleCheckoutCompleted(session: any) {
   const customerEmail = fullSession.customer_details?.email || session.customer_email;
 
   if (!subscription) {
-    // Subscription still not materialized after retries, so transient. Throw so
+    // Subscription still not materialized after retries: transient. Throw so
     // Stripe redelivers (and customer.subscription.created will also cover it),
     // rather than acking with a 200 that permanently drops the upgrade.
     throw new Error(

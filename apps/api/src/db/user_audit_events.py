@@ -70,7 +70,7 @@ class UserAuditEvent(SQLModel, table=True):
 
     id: Optional[int] = Field(default=None, primary_key=True)
 
-    # Nullable: connection events (login/logout) are org-agnostic: a user can
+    # Nullable: connection events (login/logout) are org-agnostic; a user can
     # belong to several orgs and authenticates once. Activity events set org_id.
     org_id: Optional[int] = Field(
         default=None,

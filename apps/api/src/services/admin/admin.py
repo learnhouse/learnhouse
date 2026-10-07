@@ -1082,7 +1082,7 @@ async def provision_user(
     await check_limits_with_usage("members", token_user.org_id, db_session)
 
     # Provisioning always creates a NET-NEW membership, so a dashboard-access
-    # role consumes a fresh admin seat, so enforce the plan's seat cap.
+    # role consumes a fresh admin seat; enforce the plan's seat cap.
     if _role_grants_dashboard_access(role):
         await check_admin_seat_limit(token_user.org_id, db_session)
 
