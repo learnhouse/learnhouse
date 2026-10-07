@@ -22,7 +22,7 @@ def upgrade() -> None:
     bind = op.get_bind()
     inspector = sa.inspect(bind)
 
-    # Only attempt to modify the table if it exists — the auditlog table is
+    # Only attempt to modify the table if it exists; the auditlog table is
     # created lazily via SQLModel.metadata.create_all() on app startup, so a
     # fresh DB will already have the column and should skip this migration.
     if 'auditlog' not in inspector.get_table_names():

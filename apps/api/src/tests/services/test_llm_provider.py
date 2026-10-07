@@ -1,7 +1,7 @@
 """Unit tests for the provider-agnostic LLM layer (src/services/ai/llm).
 
 Covers the model factory (one provider per config), the message-history converter, and the
-attachment converter. No network calls — provider clients are constructed but never invoked.
+attachment converter. No network calls: provider clients are constructed but never invoked.
 """
 
 import base64

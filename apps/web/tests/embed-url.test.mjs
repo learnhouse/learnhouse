@@ -2,7 +2,7 @@ import { describe, expect, test } from "bun:test";
 
 import { toEmbedUrl, vimeoHash } from "../lib/media/embedUrl.ts";
 
-describe("toEmbedUrl — Vimeo private-link hash", () => {
+describe("toEmbedUrl: Vimeo private-link hash", () => {
   test("player URL keeps its ?h= hash", () => {
     expect(toEmbedUrl("https://player.vimeo.com/video/1228007240?h=f9677038e8")).toBe(
       "https://player.vimeo.com/video/1228007240?h=f9677038e8",
@@ -43,7 +43,7 @@ describe("toEmbedUrl — Vimeo private-link hash", () => {
   });
 });
 
-describe("toEmbedUrl — other providers unchanged", () => {
+describe("toEmbedUrl: other providers unchanged", () => {
   test("YouTube", () => {
     expect(toEmbedUrl("https://youtu.be/dQw4w9WgXcQ")).toBe(
       "https://www.youtube.com/embed/dQw4w9WgXcQ?autoplay=0&rel=0",

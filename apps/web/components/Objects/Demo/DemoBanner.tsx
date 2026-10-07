@@ -54,7 +54,7 @@ export default function DemoBanner() {
     load()
     // Re-read the schedule periodically. Fetching once meant the countdown ran
     // to zero at the first reset and then sat on "any moment" forever, because
-    // next_refresh_at never moved — the banner would spend most of a session
+    // next_refresh_at never moved. The banner would spend most of a session
     // telling a visitor a reset was imminent.
     const poll = setInterval(load, 60_000)
     return () => {
@@ -80,8 +80,8 @@ export default function DemoBanner() {
     // In normal flow, deliberately. Two out-of-flow variants were tried and
     // both covered controls: pinned to the bottom it sat over the editor's save
     // bar and the mobile menu (which the dash reserves pb-24 for), and pinned to
-    // the top it sat over page headers while the fixed left menu — a sibling at
-    // a higher stacking level — painted over its own first 256px.
+    // the top it sat over page headers while the fixed left menu (a sibling at
+    // a higher stacking level) painted over its own first 256px.
     //
     // The cost of staying in flow is that dash pages which set h-screen and
     // manage their own inner scrolling become taller than the viewport by this

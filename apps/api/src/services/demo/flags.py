@@ -8,7 +8,7 @@ deployment; nothing here reads the database.
 
 import os
 
-# The demo is a product feature, not a SaaS-only one — a self-hosted install
+# The demo is a product feature, not a SaaS-only one; a self-hosted install
 # showing off LearnHouse to its own stakeholders wants it too. So, unlike the
 # nudge scheduler, none of this is gated on deployment mode.
 
@@ -27,8 +27,8 @@ DEFAULT_REFRESH_MINUTES = 10
 #
 # The obvious choice, `.invalid`, does not work: email-validator (behind
 # pydantic's EmailStr) rejects it as a special-use name, so every endpoint that
-# returns a user through UserRead — the members list, course learners, the
-# grading inbox — answered 500 for the demo org. Undeliverable is necessary;
+# returns a user through UserRead (the members list, course learners, the
+# grading inbox) answered 500 for the demo org. Undeliverable is necessary;
 # being a valid address is equally necessary.
 DEMO_EMAIL_DOMAIN = "demo.example.com"
 

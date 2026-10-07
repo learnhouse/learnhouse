@@ -56,7 +56,7 @@ export async function applyManualGrade({
         return { success: false, reason: 'grade-above-max' }
     }
     // Defence in depth for every task type: with no target submission row the
-    // API falls back to a branch keyed on the SUBMITTER — the instructor —
+    // API falls back to a branch keyed on the SUBMITTER (the instructor),
     // creating a phantom instructor-owned row that is forced to 0 while the UI
     // cheerfully reported "Task graded successfully". Refuse loudly instead.
     if (!assignmentTaskSubmissionUUID) {

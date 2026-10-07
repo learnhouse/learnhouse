@@ -66,12 +66,12 @@ def is_own_agency_subdomain(domain: str, org_slug: str) -> bool:
 
     In agency (multi-tenant) deployments the whole `*.{LEARNHOUSE_DOMAIN}` space
     is under the operator's control (wildcard DNS + wildcard TLS served by Caddy
-    via DNS-01). That proves the *operator* controls the namespace — it does NOT
+    via DNS-01). That proves the *operator* controls the namespace; it does NOT
     prove a given org owns an arbitrary label within it. Only `{slug}.{apex}` is
     provably this org's, so we auto-verify exactly that host and nothing else:
     the bare apex and every other label (including other orgs' slugs) must still
     go through the DNS TXT proof-of-ownership flow. Without this restriction any
-    tenant admin could claim another org's subdomain — or the apex — and hijack
+    tenant admin could claim another org's subdomain (or the apex) and hijack
     its routing.
 
     Guarded so we never auto-verify when no real agency domain is configured
@@ -157,7 +157,7 @@ async def verify_domain_dns(domain: CustomDomain, db_session: AsyncSession, org_
         return True, "Verified (dev mode)"
 
     # This org's own slug host under the agency apex is provably theirs (wildcard
-    # DNS+TLS), so there's nothing to prove via a DNS TXT record — verify it now.
+    # DNS+TLS), so there's nothing to prove via a DNS TXT record; verify it now.
     # Any other label still has to go through the TXT flow below.
     if is_own_agency_subdomain(domain.domain, org_slug):
         logger.info(f"Auto-verifying {domain.domain} (own slug host under agency domain {LEARNHOUSE_DOMAIN})")

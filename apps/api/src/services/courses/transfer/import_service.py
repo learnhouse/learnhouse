@@ -119,7 +119,7 @@ def safe_stored_extension(filename: str) -> Optional[str]:
     return ext
 
 
-# A SCORM package *is* a web app — its manifest, entry HTML, JS and CSS are the
+# A SCORM package *is* a web app: its manifest, entry HTML, JS and CSS are the
 # activity. Those live under `.../<activity>/scorm/`, are served by the EE SCORM
 # route rather than the content router, and dropping them would silently import
 # a broken activity. Everything outside a scorm/ subtree keeps the allowlist.
@@ -292,7 +292,7 @@ async def analyze_import_package(
             # Extract with path sanitization
             abs_extract = os.path.realpath(extract_dir)
             for info in infolist:
-                # SECURITY: reject symlink entries outright — even a contained
+                # SECURITY: reject symlink entries outright. Even a contained
                 # symlink can be followed by later entries to write outside
                 # the extract directory.
                 #
@@ -300,7 +300,7 @@ async def analyze_import_package(
                 # external_attr. The file-type nibble there has to be compared
                 # against S_IFLNK exactly: S_IFLNK (0o120000) and S_IFREG
                 # (0o100000) share a bit, so a plain `& S_IFLNK` test also
-                # matches every ordinary file that carries a real mode — which
+                # matches every ordinary file that carries a real mode, which
                 # is every file any Unix zip tool writes.
                 if stat.S_ISLNK(info.external_attr >> 16):
                     raise HTTPException(
@@ -334,7 +334,7 @@ async def analyze_import_package(
                     with zip_ref.open(info) as source, open(target_path, 'wb') as target:
                         shutil.copyfileobj(source, target)
 
-        # Delete the original ZIP now that extraction is done — free disk space
+        # Delete the original ZIP now that extraction is done to free disk space
         os.unlink(zip_path)
 
         # Find and parse manifest.json
@@ -466,7 +466,7 @@ async def import_courses(
     _require_temp_id(temp_id)
     temp_base_real = os.path.realpath(TEMP_IMPORT_DIR)
 
-    # Atomically claim the temp package by renaming it — prevents race if
+    # Atomically claim the temp package by renaming it. This prevents a race if
     # two requests try to import the same temp_id simultaneously
     temp_dir = _resolve_within(temp_base_real, temp_id)
     work_dir = _resolve_within(temp_base_real, f"{temp_id}-importing")
@@ -546,7 +546,7 @@ async def import_courses(
             # Commit the outer transaction so the course is persisted
             await db_session.commit()
 
-            # Track usage AFTER commit — increase_feature_usage calls commit()
+            # Track usage AFTER commit: increase_feature_usage calls commit()
             # internally, so it must not run inside the savepoint
             await increase_feature_usage("courses", organization_id, db_session)
 
@@ -666,7 +666,7 @@ async def _import_single_course(
                 if course_data.get("thumbnail_video") and filename == course_data["thumbnail_video"]:
                     new_course.thumbnail_video = new_filename
 
-    # Use flush (not commit) for intermediate entities — the caller manages the transaction
+    # Use flush (not commit) for intermediate entities; the caller manages the transaction
     db_session.add(new_course)
     await db_session.flush()
 
@@ -1019,7 +1019,7 @@ async def _import_block(
                             new_block_content['file_id'] = new_file_id
                         # The stored extension is canonicalized (a .jpeg lands
                         # as .jpg), and the frontend builds its URL as
-                        # file_id + "." + file_format — so a stale format here
+                        # file_id + "." + file_format, so a stale format here
                         # requests a filename that does not exist.
                         if new_block_content.get('file_format') != file_ext:
                             new_block_content['file_format'] = file_ext

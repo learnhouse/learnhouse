@@ -150,7 +150,7 @@ def _token_input(token: str) -> str:
 
 
 def _is_legacy_sha256_hash(stored_hash: str) -> bool:
-    # Legacy hashes were pepperless SHA-256 hex digests — exactly 64 lowercase hex chars.
+    # Legacy hashes were pepperless SHA-256 hex digests: exactly 64 lowercase hex chars.
     if not isinstance(stored_hash, str) or len(stored_hash) != 64:
         return False
     try:

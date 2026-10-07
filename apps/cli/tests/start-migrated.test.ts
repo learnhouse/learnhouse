@@ -24,7 +24,7 @@ vi.mock('../src/services/content-volume-migration.js', () => ({
 
 import { startCommand } from '../src/commands/start.js'
 
-describe('start — content migrated branch', () => {
+describe('start: content migrated branch', () => {
   let home: string
   let installDir: string
   let origHome: string | undefined

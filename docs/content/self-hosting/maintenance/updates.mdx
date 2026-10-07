@@ -2,7 +2,7 @@ import { Callout } from 'nextra/components'
 
 # Updates
 
-Keeping LearnHouse up to date ensures you have the latest features, bug fixes, and security patches.
+Update LearnHouse regularly to get the latest features, bug fixes, and security patches.
 
 ## Updating LearnHouse
 
@@ -33,14 +33,14 @@ The update command creates a database backup automatically before making any cha
 
 The command runs these steps in order:
 
-1. **Database backup** — `pg_dump` to `./backups/` (skipped with `--no-backup`)
-2. **Alembic baseline** — stamps the current schema for installs that pre-date Alembic tracking (one-time, idempotent)
-3. **Image tag update** — rewrites the tag in `docker-compose.yml`
-4. **Content volume migration** — moves uploaded media into a named Docker volume so it survives future container recreations (one-time, idempotent)
-5. **Image pull** — `docker compose pull` fetches the new image
-6. **Stack restart** — `docker compose down && docker compose up -d --pull always`
-7. **Health wait** — polls `/api/v1/health` until the app responds
-8. **Database migrations** — `alembic upgrade head` (prompted unless `--migrate`/`--no-migrate` passed)
+1. **Database backup**: `pg_dump` to `./backups/` (skipped with `--no-backup`)
+2. **Alembic baseline**: stamps the current schema for installs that pre-date Alembic tracking (one-time, idempotent)
+3. **Image tag update**: rewrites the tag in `docker-compose.yml`
+4. **Content volume migration**: moves uploaded media into a named Docker volume so it survives future container recreations (one-time, idempotent)
+5. **Image pull**: `docker compose pull` fetches the new image
+6. **Stack restart**: `docker compose down && docker compose up -d --pull always`
+7. **Health wait**: polls `/api/v1/health` until the app responds
+8. **Database migrations**: `alembic upgrade head` (prompted unless `--migrate`/`--no-migrate` passed)
 
 ## Recommended Update Procedure
 
@@ -66,8 +66,8 @@ LearnHouse uses [Alembic](https://alembic.sqlalchemy.org/) to evolve the databas
 ? Run database migrations now? › Yes / No
 ```
 
-- **Yes** — runs `alembic upgrade head` in the app container. Recommended.
-- **No** — skips migrations. You can run them later manually.
+- **Yes**: runs `alembic upgrade head` in the app container. Recommended.
+- **No**: skips migrations. You can run them later manually.
 
 To skip the prompt, pass `--migrate` (always run) or `--no-migrate` (always skip).
 
@@ -81,7 +81,7 @@ docker compose exec learnhouse-app sh -c "cd /app/api && uv run alembic upgrade 
 
 ### Installs Created Before v1.3
 
-Early LearnHouse installs created their schema via SQLAlchemy's `create_all` without Alembic tracking. The update command detects this automatically and stamps the current schema as the baseline before running any delta migrations — so `upgrade head` applies only new changes instead of replaying everything.
+Early LearnHouse installs created their schema via SQLAlchemy's `create_all` without Alembic tracking. The update command detects this automatically and stamps the current schema as the baseline before running any delta migrations, so `upgrade head` applies only new changes instead of replaying everything.
 
 ## Rolling Back
 

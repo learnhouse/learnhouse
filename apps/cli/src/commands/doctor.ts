@@ -110,7 +110,7 @@ export async function doctorCommand() {
       } else if (c.status.toLowerCase().includes('restarting')) {
         fail(`${svcName} is restarting`, 'Check logs: npx learnhouse logs')
       } else {
-        fail(`${svcName} — ${c.status}`, 'Run: npx learnhouse start')
+        fail(`${svcName}: ${c.status}`, 'Run: npx learnhouse start')
       }
     }
   }
@@ -123,7 +123,7 @@ export async function doctorCommand() {
     if (count > 3) {
       warn(`${svcName} has restarted ${count} times`, 'Check container logs for crash reasons')
     } else {
-      pass(`${svcName} — ${count} restarts`)
+      pass(`${svcName}: ${count} restarts`)
     }
   }
 
@@ -161,7 +161,7 @@ export async function doctorCommand() {
       cwd: installDir,
     }).toString().trim()
     const sizeStr = dfOutput.toLowerCase()
-    // Parse available space — warn if under 1G
+    // Parse available space and warn if under 1G
     const numericVal = parseFloat(sizeStr)
     if (sizeStr.includes('g') && numericVal < 1) {
       warn(`Low disk space: ${dfOutput} available`, 'Free up disk space or docker system prune')
@@ -190,13 +190,13 @@ export async function doctorCommand() {
       const errorLines = logs.split('\n').filter((l) => errorPatterns.test(l))
       const svcName = c.name.replace(`-${id}`, '')
       if (errorLines.length > 0) {
-        warn(`${svcName} — ${errorLines.length} error(s) in last 50 log lines`)
+        warn(`${svcName}: ${errorLines.length} error(s) in last 50 log lines`)
         // Show first 3 errors
         for (const line of errorLines.slice(0, 3)) {
           console.log(`    ${pc.dim(line.trim().slice(0, 120))}`)
         }
       } else {
-        pass(`${svcName} — no errors in recent logs`)
+        pass(`${svcName}: no errors in recent logs`)
       }
     } catch {
       warn(`Could not read logs for ${c.name}`)
@@ -255,7 +255,7 @@ export async function doctorCommand() {
         { stdio: 'pipe' },
       ).toString().trim()
       const svcName = c.name.replace(`-${id}`, '')
-      pass(`${svcName} — image: ${localDigest.slice(7, 19)}`)
+      pass(`${svcName}: image ${localDigest.slice(7, 19)}`)
     } catch {
       // Skip
     }

@@ -57,7 +57,7 @@ const CourseEndView: React.FC<CourseEndViewProps> = ({
   const nextButtonClass = "inline-flex items-center space-x-2 bg-white text-gray-800 border border-gray-300 px-6 py-3 rounded-full hover:bg-gray-50 transition duration-200";
 
   // Certificate copy is hidden only when this course definitively has no
-  // certification. While the answer is loading — or if the request failed —
+  // certification. While the answer is loading (or if the request failed)
   // we keep the certificate UI, so a blip never tells a certified course's
   // students that no certificate is coming.
   const {
@@ -294,7 +294,7 @@ const CourseEndView: React.FC<CourseEndViewProps> = ({
             {courseEndMessage || t('certificate.dedication_message')}
           </p>
 
-          {/* Courses without certification skip this block entirely — no
+          {/* Courses without certification skip this block entirely: no
               spinner, no "no certificate" box for something never offered. */}
           {showCertificateUI && (
             isLoadingCertificate || isLoadingCertificationStatus ? (

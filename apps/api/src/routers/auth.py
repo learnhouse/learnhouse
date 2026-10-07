@@ -86,7 +86,7 @@ def get_cookie_domain_for_request(request: Request) -> str | None:
     Determine the appropriate cookie domain based on the tenancy mode.
 
     - tenancy == "single": always returns None. Cookies are host-only on
-      whatever Host the request arrived with — same code path serves
+      whatever Host the request arrived with; the same code path serves
       localhost dev and self-hosted VPS deployments on any domain.
     - tenancy == "multi":
         - request from a subdomain of LEARNHOUSE_DOMAIN → configured cookie
@@ -139,7 +139,7 @@ def get_cookie_domain_for_request(request: Request) -> str | None:
     # We intentionally do NOT query the CustomDomain table to *reject*
     # unrecognized origins: that would add an async DB lookup to the login/
     # refresh hot path and risk locking out legitimate custom domains during DNS
-    # propagation / verification lag — for no real gain, since the host-only
+    # propagation / verification lag, for no real gain, since the host-only
     # fallback already removes the cross-domain leakage vector. If an explicit
     # allowlist is ever required (e.g. to harden against cache-poisoning of the
     # Host header), enforce it in a dedicated dependency on the login/oauth
@@ -248,10 +248,10 @@ def _log_refresh_outcome(
     Exists because this endpoint had NO telemetry: when users reported being
     randomly signed out, there was no way to tell an expired token from a
     revocation from replay detection, and diagnosing it required reading the
-    code instead of querying. Outcomes are a closed set —
+    code instead of querying. Outcomes are a closed set:
     ``ok``, ``grace_reused``, ``rate_limited``, ``cookie_missing``,
     ``undecodable``, ``no_subject``, ``user_not_found``, ``password_changed``,
-    ``revoked_before``, ``replay_detected`` — so they can be counted and alerted
+    ``revoked_before``, ``replay_detected``, so they can be counted and alerted
     on. A rising ``replay_detected`` or ``revoked_before`` rate is the signal
     that sessions are being destroyed rather than expiring.
 
@@ -298,11 +298,11 @@ async def refresh(
     token. The refresh token is read from cookies.
 
     Applies the same ``password_changed_at`` and logout-revocation checks as
-    ``get_current_user`` — a refresh must not outlive either. Rotates the
+    ``get_current_user``; a refresh must not outlive either. Rotates the
     refresh cookie on every call; the old token's ``jti`` is marked consumed
     in Redis, and replay is treated as theft (all sessions revoked).
 
-    Every exit path emits an ``auth.refresh`` log line tagged with its outcome —
+    Every exit path emits an ``auth.refresh`` log line tagged with its outcome;
     see :func:`_log_refresh_outcome`.
     """
     # Rate limit refresh endpoint to prevent brute force attacks
@@ -331,7 +331,7 @@ async def refresh(
 
     payload = decode_refresh_token(refresh_token)
     if not payload:
-        # Bad signature, wrong token type, or — overwhelmingly the common case —
+        # Bad signature, wrong token type, or (overwhelmingly the common case)
         # naturally expired.
         _log_refresh_outcome("undecodable")
         raise credentials_exception
@@ -366,7 +366,7 @@ async def refresh(
             raise credentials_exception
 
     if _is_token_revoked_for_user(user.id, issued_at):
-        # The user's sessions were revoked after this token was issued — by an
+        # The user's sessions were revoked after this token was issued: by an
         # explicit logout, or by replay detection firing on another request.
         _log_refresh_outcome(
             "revoked_before", user_id=user.id, token_age_seconds=_token_age_seconds(payload)
@@ -379,9 +379,9 @@ async def refresh(
     #
     # A subsequent presentation of the SAME jti is either:
     #   - a benign concurrent/retried refresh (multiple tabs sharing the cookie
-    #     jar, a network retry) arriving within the grace window — we re-serve
+    #     jar, a network retry) arriving within the grace window: we re-serve
     #     the exact pair the first call issued, so nobody gets logged out; or
-    #   - a replay AFTER the window (a stolen token being reused) — treated as
+    #   - a replay AFTER the window (a stolen token being reused), treated as
     #     theft: every session for the user is revoked.
     jti = payload.get("jti")
     reused_pair = None
@@ -400,7 +400,7 @@ async def refresh(
                 # No live grace entry → replay outside the window → theft.
                 # This is the single most destructive outcome (it revokes every
                 # session on every device), so it is logged at WARNING with the
-                # token's age — a benign desync shows up as a young token, real
+                # token's age: a benign desync shows up as a young token, real
                 # theft as an old one.
                 _log_refresh_outcome(
                     "replay_detected",
@@ -515,7 +515,7 @@ async def login(
     )
 
     if not user:
-        # Unknown user OR wrong password — responses are indistinguishable.
+        # Unknown user OR wrong password: responses are indistinguishable.
         # The row lookup below runs behind that wall for lockout bookkeeping.
         user_record = (await db_session.execute(
             select(User).where(User.email == username)
@@ -577,7 +577,7 @@ async def login(
     client_ip = get_client_ip(request)
     await update_login_info(user, client_ip, db_session)
 
-    # Durable connection record for the per-student audit log. Org-agnostic —
+    # Durable connection record for the per-student audit log. Org-agnostic:
     # a login authenticates the user, not a single org membership.
     await record_audit_event(
         event_type=UserAuditEventType.LOGIN,
@@ -587,7 +587,7 @@ async def login(
         metadata={"method": "password"},
     )
 
-    # Step 7: Issue a session — unless the account carries a second factor, in
+    # Step 7: Issue a session, unless the account carries a second factor, in
     # which case this returns a short-lived pending token instead and the caller
     # must complete /auth/login/mfa. No cookies and no user object are returned
     # on that branch: nothing is authenticated until the code is verified.
@@ -671,8 +671,8 @@ async def third_party_login(
     #
     # Previously this endpoint required a pending *email* invite in Redis for
     # every org regardless of its join mechanism, and silently dropped org_id
-    # when none was found. Signing up with Google into an open org — or through
-    # an invite *code* link — therefore created an account with no organization
+    # when none was found. Signing up with Google into an open org (or through
+    # an invite *code* link) therefore created an account with no organization
     # at all, while the equivalent form signup joined the org normally.
     if org_id is not None:
         from src.db.organizations import Organization
@@ -689,7 +689,7 @@ async def third_party_login(
                 detail="Invalid org_id",
             )
 
-        # An org that has turned Google off must not be joinable — or reachable —
+        # An org that has turned Google off must not be joinable (or reachable)
         # through the Google button. Same door-level refusal as password login.
         from src.services.orgs.auth_policy import enforce_login_auth_method
 
@@ -867,7 +867,7 @@ async def third_party_login(
     # Issue the session through the same chokepoint as password and magic-link
     # login, so an account with a confirmed second factor is challenged here too.
     # Minting directly meant a Google sign-in skipped an enrolled TOTP factor
-    # entirely — and the org-wide require_2fa policy did not catch it either,
+    # entirely, and the org-wide require_2fa policy did not catch it either,
     # because the factor exists and so the user counts as compliant. The
     # provenance (amr/sorg) is stamped either way for the org auth-method policy.
     issue = await issue_session_or_challenge(
@@ -938,7 +938,7 @@ async def magic_link_request(
 
     org = await resolve_org(body.org_slug, db_session)
     # If the request is scoped to an org that does not offer magic-link login,
-    # do not send one — the link would only be refused at the org gate anyway.
+    # do not send one; the link would only be refused at the org gate anyway.
     if org is not None and not await is_login_method_allowed(
         db_session, org.id, AUTH_METHOD_MAGIC_LOGIN
     ):
@@ -961,7 +961,7 @@ async def magic_link_request(
         if org is not None:
             # Org-scoped request: the link lands on the org's own host (its
             # verified custom domain when it has one) and the mail is branded
-            # as the org's — logo, color, From name, language.
+            # as the org's: logo, color, From name, language.
             from src.db.organization_config import OrganizationConfig
             from src.services.email.branding import resolve_org_email_branding
             from src.services.email.utils import get_org_signup_base_url
@@ -1049,7 +1049,7 @@ async def magic_link_verify(
     description=(
         "Log out the current user by clearing the access and refresh cookies. "
         "Because JWTs are stored in httpOnly cookies, the frontend cannot clear "
-        "them directly — the backend must respond with cookie-clearing headers."
+        "them directly; the backend must respond with cookie-clearing headers."
     ),
     responses={
         200: {"description": "Logout successful; auth cookies cleared."},
@@ -1069,7 +1069,7 @@ async def logout(
     """
     # Identify the session from either credential. A caller that presents only
     # the refresh cookie is still logging out a real session, and refusing it
-    # meant the revocation below never ran — a proxy that forwarded one cookie
+    # meant the revocation below never ran: a proxy that forwarded one cookie
     # and not the other silently turned every logout into cookie-clearing only.
     token = extract_jwt_from_request(request)
     payload = decode_jwt(token) if token else None
@@ -1152,7 +1152,7 @@ async def api_verify_email(
         )
 
     # On invalid/expired/mismatched tokens this raises (4xx) and no session is
-    # issued — only a fresh, valid verification reaches the token-minting below.
+    # issued; only a fresh, valid verification reaches the token-minting below.
     user, message = await verify_email_token(
         request=request,
         db_session=db_session,
@@ -1163,7 +1163,7 @@ async def api_verify_email(
 
     # Auto sign-in: issue a session exactly like /login (sub = email), and go
     # through the same second-factor gate. A brand-new user cannot have MFA yet,
-    # but an existing user re-verifying their address can — and without this the
+    # but an existing user re-verifying their address can, and without this the
     # verification link would be a way around their own second factor.
     #
     # Stamp the provenance like every other sign-in path. Minting a claim-less
@@ -1217,7 +1217,7 @@ class ResendVerificationRequest(BaseModel):
     ),
     responses={
         200: {"description": "Verification email dispatch requested."},
-        429: {"description": "Too many verification email requests — rate limited"},
+        429: {"description": "Too many verification email requests (rate limited)"},
     },
 )
 async def api_resend_verification_email(

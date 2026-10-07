@@ -110,7 +110,7 @@ else:
             pool_timeout=30,
             connect_args=_connect_args,
         )
-        logging.info("DB engine: detected connection pooler — using small client-side pool.")
+        logging.info("DB engine: detected connection pooler, using small client-side pool.")
     else:
         engine_kwargs = dict(
             pool_pre_ping=True,
@@ -205,7 +205,7 @@ def _register_cache_invalidation_hooks():
         # has to bust it too. The identity map is only a shortcut: a request that
         # updates OrganizationConfig without ever loading its Organization (the
         # org-policy endpoints do exactly that) gets a miss here, and a miss is a
-        # None — not an exception. Falling back only on exception therefore left
+        # None, not an exception. Falling back only on exception therefore left
         # the slug cache holding the pre-write config until its TTL expired, and
         # the dashboard, refetching immediately after a save, cached that stale
         # copy for another five minutes and showed the old values back.
@@ -362,7 +362,7 @@ if not is_testing:
 # rolling database restart or a brief network blip are all transient: the pod
 # just needs to try again in a moment. Failing the boot instead turns a
 # seconds-long blip into a crash loop, and every restart opens a fresh batch of
-# connections against the pooler that is already out of clients — the outage
+# connections against the pooler that is already out of clients; the outage
 # feeds itself. Retry those, but keep failing fast on permanent errors
 # (bad password, unknown database) where retrying only delays the real signal.
 _STARTUP_CONNECT_ATTEMPTS = int(os.getenv("LEARNHOUSE_DB_STARTUP_ATTEMPTS", "5"))
@@ -383,13 +383,13 @@ def _is_transient_connect_error(exc: BaseException) -> bool:
 
 async def _bootstrap_schema():
     async with engine.begin() as conn:
-        # Enable pgvector extension for vector similarity search (optional — RAG feature)
+        # Enable pgvector extension for vector similarity search (optional; used by the RAG feature)
         try:
             from sqlalchemy import text
             await conn.execute(text("CREATE EXTENSION IF NOT EXISTS vector"))
         except Exception as e:
             logging.warning(
-                "pgvector extension not available — RAG features will be disabled. "
+                "pgvector extension not available; RAG features will be disabled. "
                 "Install pgvector on your PostgreSQL server to enable course chatbot. "
                 "Error: %s", e
             )

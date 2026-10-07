@@ -48,7 +48,7 @@ async def _authorize_activity_ai_access(
     """Gate activity AI chat on the owning organization and course.
 
     ``activity_uuid`` is client-supplied, so without this any authenticated
-    user could stream another org's activity content back through the model —
+    user could stream another org's activity content back through the model,
     and have that org billed for the credit. Must run before rate limiting and
     credit reservation so an unauthorized caller never spends the victim's quota.
     """
@@ -467,7 +467,7 @@ async def _get_activity_and_course_info(
         )
 
     # F5: authorize before serializing any of the activity's content into the
-    # model context — and before the callers rate-limit / reserve credits.
+    # model context, and before the callers rate-limit / reserve credits.
     await _authorize_activity_ai_access(
         request, course, activity, org.id, current_user, db_session
     )

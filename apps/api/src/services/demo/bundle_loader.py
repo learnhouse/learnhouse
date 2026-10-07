@@ -8,7 +8,7 @@ Two things are load-bearing and are enforced here rather than discovered at
 runtime:
 
 * **Every `bundle_key` is a stable identity.** The refresh matches database
-  rows to bundle entries by key, so a renamed key is not an edit — it orphans
+  rows to bundle entries by key, so a renamed key is not an edit: it orphans
   the old row and creates a new one. Keys are validated for shape and
   uniqueness so a typo fails at load rather than silently duplicating content.
 * **The bundle is fully validated before the first row is written.** Provision
@@ -54,7 +54,7 @@ class ActivitySpec(BaseModel):
     kind: str = "document"  # document | video | assignment
     published: bool = True
     body: list[Any] = Field(default_factory=list)
-    # Only for kind="video": a YouTube id. Deliberately not a hosted file —
+    # Only for kind="video": a YouTube id. Deliberately not a hosted file, since
     # shipping real video would put tens of megabytes in the repo and run an
     # ffmpeg pass on every provision.
     youtube_id: Optional[str] = None
@@ -254,7 +254,7 @@ class Engagement(BaseModel):
     """Boards, playgrounds and the community.
 
     Separate from courses because these are what make the *platform* look
-    used rather than what makes a course look complete — an enabled feature
+    used rather than what makes a course look complete: an enabled feature
     with an empty page demonstrates nothing.
     """
 
@@ -300,7 +300,7 @@ class StoreSpec(BaseModel):
     """The org's store: what it sells and who has bought it.
 
     Payments live in the Enterprise Edition, so this whole section is optional
-    and the sync skips it when those models are not importable — a community
+    and the sync skips it when those models are not importable; a community
     install has no payments tables at all.
     """
 
@@ -365,7 +365,7 @@ def _validate(bundle: Bundle) -> None:
         )
 
     # Keys are the identity the refresh matches on, and they are globally
-    # namespaced by kind — so a chapter and an activity may share a key, but two
+    # namespaced by kind, so a chapter and an activity may share a key, but two
     # activities anywhere in the bundle may not.
     seen_chapters: set[str] = set()
     seen_activities: set[str] = set()

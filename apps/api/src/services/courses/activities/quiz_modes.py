@@ -4,7 +4,7 @@ A quiz question is either a *single response* (pick exactly one) or a *multiple
 response* (select all that apply). The mode lives on the question itself, as
 ``question["response_type"]``, and the grading mode lives on the task contents
 as ``contents["grading_mode"]``. Both are plain keys inside the opaque
-``AssignmentTask.contents`` JSON — no column, no migration.
+``AssignmentTask.contents`` JSON: no column, no migration.
 
 Neither field exists on content authored before this shipped, so everything
 here has to work on questions that carry no mode at all. ``resolve_response_type``
@@ -88,7 +88,7 @@ def score_question(
 
     * all-or-nothing (either response type): 1.0 only when the learner's
       selected set exactly matches the key, else 0.0.
-    * partial credit, single response: still 1.0 or 0.0 — there is no partial
+    * partial credit, single response: still 1.0 or 0.0, since there is no partial
       state to award when only one option can be right.
     * partial credit, multiple response:
       ``(correct_selected - incorrect_selected) / total_correct``, clamped to

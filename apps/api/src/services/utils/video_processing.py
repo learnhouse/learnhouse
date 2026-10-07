@@ -55,7 +55,7 @@ def ensure_faststart(path: str) -> bool:
 
     Returns True if the file is faststart afterwards (either already was, or we
     remuxed it), False if it was left as-is (unsupported type, ffmpeg missing,
-    or remux failed). Never raises — callers treat this as best-effort.
+    or remux failed). Never raises; callers treat this as best-effort.
     """
     ext = Path(path).suffix.lower()
     if ext not in _FASTSTART_EXTENSIONS:

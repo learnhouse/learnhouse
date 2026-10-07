@@ -70,7 +70,7 @@ i18n
     }
   });
 
-// Load the detected language if it's not English — export the promise
+// Load the detected language if it's not English, and export the promise
 // so I18nProvider can wait for resources before rendering.
 // The date locale rides along: dayjs keeps its own registry, and without this
 // every "2 hours ago" renders in English no matter the language.
@@ -80,7 +80,7 @@ export const initialLocaleReady = Promise.all([
 ]).then(() => undefined);
 
 /**
- * Switch language safely — preloads the bundle before switching
+ * Switch language safely: preloads the bundle before switching
  * so the UI never flashes English as a fallback.
  */
 export async function changeLanguage(lng: string) {

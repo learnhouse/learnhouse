@@ -24,7 +24,7 @@ export default function TokenWidget({ compact = false }) {
     const value = draft.trim()
     if (!value) return
     if (!/^lh_[A-Za-z0-9_-]+$/.test(value)) {
-      setWarning('That does not look like an lh_ API token — using it anyway.')
+      setWarning('That does not look like an lh_ API token; using it anyway.')
     } else {
       setWarning('')
     }
@@ -90,7 +90,7 @@ export default function TokenWidget({ compact = false }) {
       {warning && <p className="lh-ref-token-warning">{warning}</p>}
       {!compact && (
         <p className="lh-ref-token-note">
-          Stored only in your browser — it is substituted into every example and used by the
+          Stored only in your browser. It is substituted into every example and used by the
           playground. Prefer a least-privilege token.
         </p>
       )}

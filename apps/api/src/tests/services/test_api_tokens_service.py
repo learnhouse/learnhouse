@@ -297,7 +297,7 @@ class TestApiTokenLifecycle:
             "src.services.api_tokens.api_tokens.validate_rights_structure",
             new_callable=AsyncMock,
         ):
-            # Update with a Rights object — hits line 287
+            # Update with a Rights object (hits line 287)
             updated = await update_api_token(
                 mock_request,
                 db,
@@ -307,7 +307,7 @@ class TestApiTokenLifecycle:
                 admin_user,
             )
 
-            # Regenerate a token_uuid that does not exist — hits line 361
+            # Regenerate a token_uuid that does not exist (hits line 361)
             with pytest.raises(HTTPException) as regen_exc:
                 await regenerate_api_token(
                     mock_request,

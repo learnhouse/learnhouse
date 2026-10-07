@@ -4,11 +4,11 @@ import createGlobe from 'cobe'
 
 // Learning subject emojis placed around the world
 const STICKER_MARKERS = [
-  // Europe — spread across the continent
+  // Europe, spread across the continent
   { id: 'stk-math', location: [48.86, 2.35] as [number, number], sticker: '📐' },
   { id: 'stk-chemistry', location: [59.33, 18.07] as [number, number], sticker: '⚗️' },
   { id: 'stk-germany', location: [48.14, 11.58] as [number, number], sticker: '🧪' },
-  // Asia — well distributed
+  // Asia, well distributed
   { id: 'stk-science', location: [35.68, 139.65] as [number, number], sticker: '🔬' },
   { id: 'stk-astro', location: [28.61, 77.21] as [number, number], sticker: '🔭' },
   { id: 'stk-thailand', location: [13.76, 100.5] as [number, number], sticker: '🎓' },

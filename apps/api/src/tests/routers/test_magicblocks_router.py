@@ -185,7 +185,7 @@ class TestEventGeneratorRefund:
 
 
 # ---------------------------------------------------------------------------
-# start_magicblock_session — org membership 403 (lines 152-161)
+# start_magicblock_session: org membership 403 (lines 152-161)
 # ---------------------------------------------------------------------------
 
 
@@ -260,7 +260,7 @@ class TestStartMagicblockSession:
 
 
 # ---------------------------------------------------------------------------
-# iterate_magicblock_session — ownership 404 + membership 403
+# iterate_magicblock_session: ownership 404 + membership 403
 # ---------------------------------------------------------------------------
 
 
@@ -354,7 +354,7 @@ class TestIterateMagicblockSession:
 
 
 # ---------------------------------------------------------------------------
-# get_session_state — ownership 404 / 200 (lines 320-337)
+# get_session_state: ownership 404 / 200 (lines 320-337)
 # ---------------------------------------------------------------------------
 
 

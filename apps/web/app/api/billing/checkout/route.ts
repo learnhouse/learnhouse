@@ -5,7 +5,7 @@ import { guardBilling, badRequest, requireOrgBillingAccess } from "../_lib";
 
 // POST /api/billing/checkout
 // Body: { plan, billing, orgId, orgSlug?, promotionCode? }
-// → { id, url } — a Stripe Checkout session to redirect the user to.
+// → { id, url }: a Stripe Checkout session to redirect the user to.
 // The customer email comes from the authenticated session, never the body;
 // the caller must be an admin of `orgId`.
 export async function POST(request: NextRequest) {

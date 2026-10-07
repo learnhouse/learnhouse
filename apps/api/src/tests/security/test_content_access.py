@@ -97,7 +97,7 @@ class TestCheckContentAccess:
     @pytest.mark.asyncio
     async def test_activity_path_is_delegated_to_the_activity_gate(self):
         """Files under an activity are gated like the activity itself
-        (course read, published, paywall, locks) — not "public course or member"."""
+        (course read, published, paywall, locks), not "public course or member"."""
         from unittest.mock import patch
         import src.routers.local_content as lc
 

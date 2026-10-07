@@ -1,5 +1,5 @@
 /**
- * Goal: prove the SHORT_ANSWER task type works end-to-end — a student typing an
+ * Goal: prove the SHORT_ANSWER task type works end-to-end: a student typing an
  * accepted answer (in different casing than stored) is auto-graded 100 under
  * the case_insensitive match mode, in the UI and in persisted server state.
  */

@@ -1,7 +1,7 @@
 """
 Plan history: which plan an organization held during a past calendar month.
 
-Active-user overage is billed in arrears — a month in arrears for monthly
+Active-user overage is billed in arrears: a month in arrears for monthly
 subscriptions, up to a year for annual ones. Resolving the member limit from the
 org's *current* plan would therefore bill a past month against a limit the org
 may never have had that month. This module records plan changes as they happen
@@ -84,7 +84,7 @@ async def resolve_plan_for_month(
     for during that month, which keeps a retroactive charge defensible. The
     trade-off is a small under-bill when an org upgrades late in a month.
 
-    Falls back to `current_plan` when no history covers the month — orgs that
+    Falls back to `current_plan` when no history covers the month: orgs that
     predate this table, or that never changed plan.
     """
     start, end = month_bounds_utc(year, month)
@@ -119,7 +119,7 @@ async def resolve_plan_for_month(
     if opening is not None:
         candidates.append(opening)
     elif not candidates:
-        # History exists but starts after this month — nothing covers it.
+        # History exists but starts after this month, so nothing covers it.
         return current_plan, get_plan_limit(current_plan, "members")
 
     best_plan = max(candidates, key=lambda p: _limit_rank(get_plan_limit(p, "members")))

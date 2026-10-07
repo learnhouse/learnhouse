@@ -29,7 +29,7 @@
           "kind": "document",
           "body": [
             "h2:Put the ask in the first line",
-            "p:Most work messages bury the request under context. The reader gets three paragraphs of background and only then discovers what they are being asked to do — by which point they have skimmed it. Invert that. The first line says what you need and by when; the context follows for whoever wants it.",
+            "p:Most work messages bury the request under context. The reader gets three paragraphs of background and only then discovers what they are being asked to do, by which point they have skimmed it. Invert that. The first line says what you need and by when; the context follows for whoever wants it.",
             "h2:Two versions of the same message",
             "p:Weak: a long explanation of a stock discrepancy, ending with a question about whether to hold the order. Strong: 'Can you confirm by Thursday whether we hold order 4192? Background below.' Same information, a fraction of the effort to act on.",
             {"ul": [
@@ -56,7 +56,7 @@
             "p:A message that takes you ten minutes to write and two minutes to read is a good trade when forty people read it. Writing long is easier; writing short is a courtesy.",
             "h2:What to cut first",
             {"ol": [
-              "The warm-up. 'I hope this finds you well, I wanted to reach out regarding' — delete it and start at the real first sentence.",
+              "The warm-up. 'I hope this finds you well, I wanted to reach out regarding': delete it and start at the real first sentence.",
               "The history. Unless the reader needs it to decide, link to it instead of retelling it.",
               "The hedging. 'I was maybe wondering if it might be possible to perhaps' is one word: 'can'.",
               "Anything you wrote to sound thorough rather than to be understood."
@@ -70,7 +70,7 @@
           "kind": "document",
           "body": [
             "h2:Short messages read colder than they are",
-            "p:Written text strips out everything a face and a voice provide. A three-word reply that felt efficient to you can read as annoyed to someone having a bad day. This is not a reason to pad your writing — it is a reason to be deliberate about a few small signals.",
+            "p:Written text strips out everything a face and a voice provide. A three-word reply that felt efficient to you can read as annoyed to someone having a bad day. This is not a reason to pad your writing; it is a reason to be deliberate about a few small signals.",
             {"ul": [
               "Say what you appreciated when it is true. One specific sentence beats a paragraph of general warmth.",
               "Explain a 'no' briefly. An unexplained refusal invites people to invent a reason, and the invented one is usually worse.",
@@ -105,7 +105,7 @@
               "What has changed since last time, especially anything that got worse.",
               "What you need from anyone reading."
             ]},
-            "p:That is the whole format. It works for a project, a customer account, or a piece of work you picked up yesterday. What it does not include is a list of everything you did — activity is not progress, and a reader cannot tell the difference from a task list.",
+            "p:That is the whole format. It works for a project, a customer account, or a piece of work you picked up yesterday. What it does not include is a list of everything you did: activity is not progress, and a reader cannot tell the difference from a task list.",
             "h2:Say when things slip",
             "p:A slipped date reported early is a scheduling problem. The same date reported the day it was due is a trust problem. Nobody at Riverbend has ever been in trouble for flagging a delay in good time.",
             {"warn": "Never let a customer discover a delay from the absence of a delivery. If a date is at risk, it is told, not discovered."}
@@ -166,7 +166,7 @@
           "kind": "document",
           "body": [
             "h2:Be specific about the thing, not the person",
-            "p:'This section is hard to follow because the numbers change halfway through' is useful. 'This is sloppy' is not — there is nothing to act on in it, and the reader spends their energy on feeling bad rather than on fixing it.",
+            "p:'This section is hard to follow because the numbers change halfway through' is useful. 'This is sloppy' is not; there is nothing to act on in it, and the reader spends their energy on feeling bad rather than on fixing it.",
             "h2:A workable pattern",
             {"ul": [
               "Name the specific thing you are reacting to.",
@@ -186,7 +186,7 @@
             {"ul": [
               "Say what you would do instead. Objection without an alternative is very hard to act on.",
               "Say how strongly you hold it. 'I would lean the other way' and 'I think this will fail' need different responses.",
-              "Once it is decided, commit to it properly — including in front of people who were not in the room."
+              "Once it is decided, commit to it properly, including in front of people who were not in the room."
             ]},
             {"quiz": {
               "q": "What does a useful disagreement include?",
@@ -205,7 +205,7 @@
           "body": [
             "h2:Take a bad message and fix it",
             "p:You will be given a real-shaped internal message: too long, request buried at the bottom, no date, and a slipped deadline mentioned in passing. Rewrite it using what this course covers.",
-            "p:Marked on whether the ask is in the first line, whether the delay is stated plainly, and whether you cut it to something a busy reader would actually finish. Shorter is not automatically better — losing the deadline loses the marks."
+            "p:Marked on whether the ask is in the first line, whether the delay is stated plainly, and whether you cut it to something a busy reader would actually finish. Shorter is not automatically better; losing the deadline loses the marks."
           ]
         }
       ]

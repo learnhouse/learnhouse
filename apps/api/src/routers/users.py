@@ -196,7 +196,7 @@ async def _enforce_password_signup_allowed(db_session: AsyncSession, org_id: int
     response_model=UserRead,
     tags=["users"],
     summary="Create user in organization",
-    description="Create a user and attach them to the given organization. Rejected if the organization is invite-only — use the invite-code endpoint instead.",
+    description="Create a user and attach them to the given organization. Rejected if the organization is invite-only; use the invite-code endpoint instead.",
     responses={
         200: {"description": "User created and attached to the organization.", "model": UserRead},
         403: {"description": "Organization is invite-only; an invite code is required"},
@@ -215,7 +215,7 @@ async def api_create_user_with_orgid(
     """
     _enforce_signup_rate_limit(request)
     # An org that has turned email+password off must not hand out password
-    # accounts for itself — they could never be used to sign in to it.
+    # accounts for itself; they could never be used to sign in to it.
     await _enforce_password_signup_allowed(db_session, org_id)
 
     # TODO(fix) : This is temporary, logic should be moved to service
@@ -335,7 +335,7 @@ async def api_get_user_by_id(
 
     SECURITY: Requires authentication to prevent user enumeration attacks.
     Anonymous users cannot access this endpoint.
-    Returns a restricted view — sensitive fields (is_superadmin, signup_method) are excluded.
+    Returns a restricted view: sensitive fields (is_superadmin, signup_method) are excluded.
     """
     return await read_user_by_id(request, db_session, current_user, user_id)
 
@@ -362,7 +362,7 @@ async def api_get_user_by_uuid(
     Get User by UUID.
 
     SECURITY: Requires authentication to prevent user enumeration attacks.
-    Returns a restricted view — sensitive fields (is_superadmin, signup_method) are excluded.
+    Returns a restricted view: sensitive fields (is_superadmin, signup_method) are excluded.
     """
     return await read_user_by_uuid(request, db_session, current_user, user_uuid)
 
@@ -389,7 +389,7 @@ async def api_get_user_by_username(
     Get User by Username.
 
     SECURITY: Requires authentication to prevent username enumeration attacks.
-    Returns a restricted view — sensitive fields (is_superadmin, signup_method) are excluded.
+    Returns a restricted view: sensitive fields (is_superadmin, signup_method) are excluded.
     """
     return await read_user_by_username(request, db_session, current_user, username)
 

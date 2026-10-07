@@ -15,7 +15,7 @@ const DocumentPdfActivity = lazy(() => import('@components/Objects/Activities/Do
 const MarkdownActivity = lazy(() => import('@components/Objects/Activities/Markdown/MarkdownActivity'))
 const EmbedActivity = lazy(() => import('@components/Objects/Activities/Embed/EmbedActivity'))
 
-// Minimal course context for embed — courseStructure must be populated
+// Minimal course context for embed: courseStructure must be populated
 // so that block components (Image, Video, Audio, PDF) can resolve media URLs.
 function EmbedCourseProvider({ children, course }: { children: React.ReactNode; course: any }) {
   const minimalState = {
@@ -103,7 +103,7 @@ function useContentReady(activityType: string, activitySubType?: string) {
 
     observer.observe(el, { childList: true, subtree: true })
 
-    // Safety timeout — always reveal after 1.5s regardless
+    // Safety timeout: always reveal after 1.5s regardless
     const timeout = setTimeout(() => {
       setReady(true)
       observer.disconnect()
@@ -136,7 +136,7 @@ function EmbedActivityClient({ activityId, courseuuid, orgslug, bgcolor }: Embed
   const getActivityUrl = () => {
     const cleanCourseUuid = (course?.course_uuid ?? courseuuid).replace('course_', '')
     const path = `/course/${cleanCourseUuid}/activity/${activityId}`
-    // Always build an absolute org URL — the embed may be served from the main app domain
+    // Always build an absolute org URL: the embed may be served from the main app domain
     // (e.g. app.learnhouse.io), so a relative path would resolve to the wrong host.
     if (typeof window !== 'undefined' && orgslug) {
       const domain = getLEARNHOUSE_DOMAIN_VAL()

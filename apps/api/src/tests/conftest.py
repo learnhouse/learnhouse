@@ -21,7 +21,7 @@ os.environ["TESTING"] = "true"
 # (no ee/ checkout) but potentially 'ee' on a developer machine with the
 # apps/api/ee symlink. That divergence hides EE-gating regressions locally.
 # Going through LEARNHOUSE_DISABLE_EE rather than patching
-# get_deployment_mode is deliberate — several modules import that symbol at
+# get_deployment_mode is deliberate: several modules import that symbol at
 # load time, so a patch would reach only the lazy importers and leave the
 # suite split-brained, silently relaxing the SaaS plan gates that key off the
 # same function. Tests that need 'saas' or 'ee' patch it explicitly.
@@ -31,7 +31,7 @@ os.environ["LEARNHOUSE_DISABLE_EE"] = "1"
 #
 # config.py calls load_dotenv() while parsing, so a developer running the local
 # demo stack has LEARNHOUSE_DEMO_ENABLED=1 in apps/api/.env and it leaks into
-# the test process — the demo scheduler then starts a background task, and
+# the test process. The demo scheduler then starts a background task, and
 # tests that assert on the application's task lifecycle fail on that machine
 # and nowhere else. Tests that need the feature on enable it themselves.
 os.environ["LEARNHOUSE_DEMO_ENABLED"] = "0"

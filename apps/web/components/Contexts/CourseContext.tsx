@@ -192,7 +192,7 @@ export function CourseProvider({
   if (error) {
     const status = (error as any)?.status
     if (status === 403 || status === 404) {
-      // Still render the provider so children can call useCourse() without throwing —
+      // Still render the provider so children can call useCourse() without throwing;
       // they'll see isLoading:false and courseStructure as the stub, and the parent
       // page handles the access-denied redirect via useCourseRights.
       return (
@@ -206,7 +206,7 @@ export function CourseProvider({
     return <div className="p-4 text-center text-gray-500 text-sm">Failed to load course. Please refresh the page.</div>
   }
 
-  // Always render the provider — consumers use state.isLoading to show skeletons.
+  // Always render the provider; consumers use state.isLoading to show skeletons.
   // Returning null here would unmount children before the context is provided,
   // causing useCourse() to throw "must be used within a CourseProvider".
   return (
@@ -262,7 +262,7 @@ export function useCourseFieldSync(componentId: string) {
     debounce.cancel(componentId)
   }, [componentId, debounce])
 
-  // Cleanup on unmount — flush (not cancel) so tab-switches don't drop edits
+  // Cleanup on unmount: flush (not cancel) so tab-switches don't drop edits
   // made during the 500ms debounce window. CourseProvider typically stays
   // mounted across tabs, so the dispatch still lands safely.
   useEffect(() => {
@@ -305,7 +305,7 @@ function courseReducer(state: CourseState, action: CourseAction): CourseState {
         isSaved: false,
       }
 
-    case 'mergePendingChanges':
+    case 'mergePendingChanges': {
       // Merge new changes with existing pending changes and courseStructure
       const mergedStructure = {
         ...state.courseStructure,
@@ -320,6 +320,7 @@ function courseReducer(state: CourseState, action: CourseAction): CourseState {
           ...action.payload,
         },
       }
+    }
 
     case 'setUnsyncedChanges':
       return {

@@ -10,7 +10,7 @@ import { bodyWasDecoded, canRecompress } from '../../../../services/scorm/proxyC
  * Streams response bodies through (no buffering) and forwards Range
  * requests so large media inside packages stays seekable. Redirects from
  * the backend (presigned storage URLs for big media) are passed to the
- * browser instead of being followed here — only the entry documents need
+ * browser instead of being followed here; only the entry documents need
  * to stay same-origin for the SCORM API bridge.
  */
 
@@ -82,7 +82,7 @@ export async function GET(
     if (!headers.has('content-type')) {
       headers.set('content-type', 'application/octet-stream')
     }
-    // A SCORM package is a fixed set of static files — the framework JS, CSS,
+    // A SCORM package is a fixed set of static files: the framework JS, CSS,
     // images and HTML pages the entry document pulls in as relative URLs, all
     // through this proxy. The old default of `no-store` meant the browser
     // cached none of them, so every SCO navigation and every revisit

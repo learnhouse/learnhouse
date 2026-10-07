@@ -30,7 +30,7 @@ const OrgEditDangerZone: React.FC = () => {
   // role membership (rbac "delete"/"update" → authorization_verify_based_on_org_
   // admin_status), which canManageOrg (organizations.action_update, superadmin
   // bypass) reflects. The broad `isAdmin` (dashboard access) also lets editors in,
-  // so gating on it showed them a delete button the API would 403 — a dead button.
+  // so gating on it showed them a delete button the API would 403, a dead button.
   const canDeleteOrg = canManageOrg === true
 
   if (!org?.id) {
@@ -83,7 +83,7 @@ const OrgEditDangerZone: React.FC = () => {
     try {
       await deleteOrganizationFromBackend(org.id, access_token)
       toast.success('Organization deleted', { id: loadingToast })
-      // The org no longer exists — send the user back to the root so they land
+      // The org no longer exists; send the user back to the root so they land
       // on org selection / login rather than a broken dashboard.
       setTimeout(() => {
         window.location.href = '/'
@@ -180,7 +180,7 @@ const OrgEditDangerZone: React.FC = () => {
                 </div>
                 <p className="text-sm text-gray-500 max-w-xl">
                   Permanently delete <span className="font-semibold">{org.name}</span> and
-                  everything in it — members, courses, content and settings. This
+                  everything in it: members, courses, content and settings. This
                   cannot be undone.
                 </p>
               </div>

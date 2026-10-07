@@ -13,14 +13,14 @@ import { directionForLanguage, dirMultiplier, type Direction } from '@/lib/direc
  * ⚠ THE ONE RULE
  * On the server `i18n.language` is always `en`, so the first render is always
  * `ltr`. Therefore this hook must NEVER choose between two different DOM
- * structures — that's a guaranteed hydration mismatch.
+ * structures; that's a guaranteed hydration mismatch.
  *
  *   OK:  x={20 * dx}                    (motion animates post-mount)
  *   OK:  dir={dir} / data-foo={isRTL}   (attribute only)
  *   OK:  className={isRTL ? 'rotate-180' : ''}   (transform only, no layout)
  *   NOT: {isRTL ? <Left /> : <Right />}          (different trees)
  *
- * If you genuinely need a structural swap, gate it behind a `mounted` flag —
+ * If you genuinely need a structural swap, gate it behind a `mounted` flag;
  * see components/Utils/LanguageSwitcher.tsx for the pattern.
  */
 export function useDirection(): { dir: Direction; isRTL: boolean; x: 1 | -1 } {

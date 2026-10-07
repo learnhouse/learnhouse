@@ -165,7 +165,7 @@ describe("checkout.session.completed", () => {
   });
 
   test("asks Stripe to redeliver when the price maps to no known plan", async () => {
-    // This is a missing STRIPE_PRICE_* env, not a foreign checkout — the
+    // This is a missing STRIPE_PRICE_* env, not a foreign checkout: the
     // session carries our org_id, so the upgrade is owed.
     sessionRetrieveQueue = [
       {
@@ -202,7 +202,7 @@ describe("checkout.session.completed", () => {
 });
 
 describe("customer.subscription.created", () => {
-  test("upgrades the org — it is the recovery path when checkout.session.completed is dropped", async () => {
+  test("upgrades the org: it is the recovery path when checkout.session.completed is dropped", async () => {
     const res = await deliver({
       id: nextEventId(),
       type: "customer.subscription.created",

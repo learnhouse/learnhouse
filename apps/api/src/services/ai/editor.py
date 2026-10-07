@@ -41,7 +41,7 @@ def _safe_heading_level(attrs: Any) -> int:
 
 
 def _node_attrs(node: Any) -> dict:
-    """Read a node's ``attrs`` defensively — the document is free-form JSON."""
+    """Read a node's ``attrs`` defensively; the document is free-form JSON."""
     attrs = node.get('attrs') if isinstance(node, dict) else None
     return attrs if isinstance(attrs, dict) else {}
 

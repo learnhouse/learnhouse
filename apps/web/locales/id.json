@@ -382,7 +382,7 @@
     "image_title_forgot": "Atur ulang kata sandi Anda.",
     "image_subtitle_forgot": "Kami akan membantu Anda kembali ke akun Anda dalam sekejap.",
     "image_title_login": "Selamat datang kembali di LearnHouse.",
-    "image_subtitle_login": "Lanjutkan dari tempat Anda berhenti — kursus, siswa, dan alat Anda sudah menanti.",
+    "image_subtitle_login": "Lanjutkan dari tempat Anda berhenti: kursus, siswa, dan alat Anda sudah menanti.",
     "image_title_reset": "Hampir selesai.",
     "image_subtitle_reset": "Buat kata sandi yang kuat untuk menjaga keamanan akun Anda.",
     "image_title_signup": "Mulai mengajar dengan LearnHouse.",
@@ -638,7 +638,7 @@
         "plan_generated": "Rencana diperbarui",
         "plan_generated_hint": "Periksa tab Rencana untuk meninjau dan mengedit.",
         "describe_course": "Jelaskan Kursus Anda",
-        "describe_course_hint": "Gunakan chat di sebelah kanan untuk menjelaskan kursus yang Anda inginkan — topik, audiens, dan tujuan.",
+        "describe_course_hint": "Gunakan chat di sebelah kanan untuk menjelaskan kursus yang Anda inginkan: topik, audiens, dan tujuan.",
         "generating_plan": "Membuat rencana kursus Anda...",
         "chapters": "Bab",
         "activities": "aktivitas",
@@ -1000,7 +1000,7 @@
     "link_copied": "Tautan tersalin!",
     "share": "Bagikan",
     "autosave_blocked": "Belum dapat disimpan",
-    "autosave_retry": "Tidak dapat menyimpan — mencoba lagi…",
+    "autosave_retry": "Tidak dapat menyimpan, mencoba lagi…",
     "autosave_unsaved": "Perubahan belum disimpan",
     "autosaved": "Tersimpan",
     "autosaving": "Menyimpan…",
@@ -1053,8 +1053,8 @@
     "retry_assignment_title": "Coba tugas ini lagi?",
     "retry_assignment_confirm": "Pengiriman dan jawaban Anda saat ini akan direset sehingga Anda dapat memulai dari awal. Nilai sebelumnya Anda akan diganti setelah Anda mengirimkan kembali.",
     "retry_assignment_remaining": "Anda memiliki {{remaining}} percobaan{{plural}} tersisa setelah yang ini.",
-    "retry_assignment_last": "Ini adalah percobaan terakhir Anda — buatnya berarti.",
-    "retry_assignment_success": "Pekerjaan Anda telah direset — coba lagi.",
+    "retry_assignment_last": "Ini adalah percobaan terakhir Anda, buatnya berarti.",
+    "retry_assignment_success": "Pekerjaan Anda telah direset, coba lagi.",
     "retry_assignment_failed": "Tidak dapat mereset pengiriman Anda. Silakan coba lagi.",
     "retry_no_attempts_left": "Tidak ada percobaan tersisa",
     "no_task_submission_to_grade": "Siswa ini belum mengirimkan file untuk tugas ini.",
@@ -1175,7 +1175,7 @@
       "confirm_label": "Ketik {{username}} untuk mengonfirmasi",
       "deleting": "Menghapus…",
       "zone_subtitle": "Hapus akun Anda secara permanen. Tindakan ini tidak dapat dibatalkan.",
-      "zone_body": "Tindakan ini menghapus akun dan akses Anda. Organisasi yang hanya Anda kelola sebagai admin — beserta semua kursus dan kontennya — juga akan dihapus. Organisasi dengan admin lain tetap tersimpan; Anda hanya akan dihapus dari organisasi tersebut."
+      "zone_body": "Tindakan ini menghapus akun dan akses Anda. Organisasi yang hanya Anda kelola sebagai admin (beserta semua kursus dan kontennya) juga akan dihapus. Organisasi dengan admin lain tetap tersimpan; Anda hanya akan dihapus dari organisasi tersebut."
     }
   },
   "user": {
@@ -3629,9 +3629,9 @@
             "auth_required_submit": "Autentikasi diperlukan. Silakan masuk untuk mengirimkan tugas Anda.",
             "hint_optional": "Petunjuk (opsional)",
             "paste_blocked": "Menempel dinonaktifkan untuk tugas ini",
-            "paste_blocked_hint": "Menempel dinonaktifkan — ketik jawaban Anda langsung.",
-            "upload_locked_graded": "Kiriman ini telah dinilai — file Anda tidak dapat diubah lagi.",
-            "upload_locked_submitted": "Anda telah mengirimkan tugas ini — file Anda tidak dapat diubah lagi."
+            "paste_blocked_hint": "Menempel dinonaktifkan, ketik jawaban Anda langsung.",
+            "upload_locked_graded": "Kiriman ini telah dinilai: file Anda tidak dapat diubah lagi.",
+            "upload_locked_submitted": "Anda telah mengirimkan tugas ini: file Anda tidak dapat diubah lagi."
           },
           "code": {
             "student_behavior_label": "Perilaku siswa",
@@ -3648,9 +3648,9 @@
             "show_solution_label": "Ungkapkan solusi setelah kirim",
             "show_solution_description": "Setelah siswa menyimpan pekerjaannya, tampilkan solusi referensi guru.",
             "reference_solution_label": "Solusi referensi",
-            "locked_graded_hint": "Kiriman ini telah dinilai — kode Anda hanya dapat dibaca.",
-            "locked_submitted_hint": "Anda telah mengirimkan tugas ini — kode Anda hanya dapat dibaca.",
-            "no_runnable_tests": "Tugas ini tidak memiliki tes yang dapat dijalankan — kode Anda diperiksa saat penilaian."
+            "locked_graded_hint": "Kiriman ini telah dinilai: kode Anda hanya dapat dibaca.",
+            "locked_submitted_hint": "Anda telah mengirimkan tugas ini: kode Anda hanya dapat dibaca.",
+            "no_runnable_tests": "Tugas ini tidak memiliki tes yang dapat dijalankan: kode Anda diperiksa saat penilaian."
           },
           "short_answer": {
             "prompt_label": "Teks pertanyaan",
@@ -3667,13 +3667,13 @@
               "regex": "Ekspresi reguler"
             },
             "explanation_label": "Penjelasan (ditampilkan pada jawaban benar)",
-            "explanation_placeholder": "Opsional — jelaskan mengapa jawabannya benar",
+            "explanation_placeholder": "Opsional: jelaskan mengapa jawabannya benar",
             "your_answer_placeholder": "Ketik jawaban Anda...",
             "student_answer_label": "Jawaban siswa",
             "accepted_answers_label": "Jawaban yang diterima",
             "no_answer": "Tidak ada jawaban dikirim",
             "correct": "Benar",
-            "incorrect": "Belum tepat — coba lagi"
+            "incorrect": "Belum tepat, coba lagi"
           },
           "number_answer": {
             "prompt_label": "Teks pertanyaan",
@@ -3684,14 +3684,14 @@
             "unit_placeholder": "m/s², kg, °C...",
             "unit_hint": "Ditampilkan di samping kolom jawaban. Tidak diwajibkan.",
             "explanation_label": "Penjelasan (ditampilkan pada jawaban benar)",
-            "explanation_placeholder": "Opsional — jelaskan cara mendapatkan jawabannya",
+            "explanation_placeholder": "Opsional: jelaskan cara mendapatkan jawabannya",
             "preview_label": "Menerima",
             "your_answer_placeholder": "Masukkan angka...",
             "student_answer_label": "Jawaban siswa",
             "accepted_range_label": "Rentang yang diterima",
             "no_answer": "Tidak ada jawaban dikirim",
             "correct": "Benar",
-            "incorrect": "Belum tepat — coba lagi"
+            "incorrect": "Belum tepat, coba lagi"
           }
         },
         "generate_ai": "Buat tugas dengan AI",
@@ -3800,7 +3800,7 @@
         },
         "tasks": {
           "title": "Performa tugas",
-          "subtitle": "Skor rata-rata per tugas — batang rendah menunjukkan area yang sulit bagi siswa",
+          "subtitle": "Skor rata-rata per tugas: batang rendah menunjukkan area yang sulit bagi siswa",
           "empty": "Performa per tugas akan muncul setelah penilaian pertama",
           "avg_grade": "Nilai rata-rata",
           "attempts": "percobaan"
@@ -3812,7 +3812,7 @@
         },
         "attention": {
           "title": "Mungkin perlu bantuan",
-          "subtitle": "Siswa yang tidak lulus — pertimbangkan untuk menghubungi mereka",
+          "subtitle": "Siswa yang tidak lulus: pertimbangkan untuk menghubungi mereka",
           "empty": "Semua yang dinilai lulus. Kerja bagus!"
         }
       },
@@ -3854,7 +3854,7 @@
             "auto_grading_disabled_file": "Penilaian otomatis tidak tersedia karena tugas ini memiliki pengumpulan file yang memerlukan tinjauan manusia.",
             "grading_type_hint": "Bagaimana nilai ditampilkan kepada siswa",
             "grading_options_hint": "Perilaku saat pengiriman",
-            "show_correct_answers_description": "Setelah pengumpulan dinilai, tampilkan kepada siswa jawaban yang benar di samping jawaban mereka — opsi kuis mana yang benar, jawaban singkat atau angka yang diharapkan, dan isian formulir yang benar.",
+            "show_correct_answers_description": "Setelah pengumpulan dinilai, tampilkan kepada siswa jawaban yang benar di samping jawaban mereka: opsi kuis mana yang benar, jawaban singkat atau angka yang diharapkan, dan isian formulir yang benar.",
             "show_correct_answers_label": "Tampilkan jawaban yang benar setelah dinilai",
             "allow_retries_label": "Izinkan percobaan ulang",
             "allow_retries_description": "Biarkan siswa mereset dan mencoba kembali tugas setelah dinilai. Setiap percobaan ulang menghapus jawaban sebelumnya mereka dan dihitung sebagai percobaan baru.",
@@ -4571,7 +4571,7 @@
         "avg_rate": "Rasio Rata-rata",
         "needs_attention": "Perlu Perhatian",
         "total_samples": "Total Sampel",
-        "more_expand": "+{{count}} lagi — klik untuk memperluas",
+        "more_expand": "+{{count}} lagi (klik untuk memperluas)",
         "activities_count": "{{count}} aktivitas",
         "pct_of_total": "% dari Total",
         "bar_width_hint": "Lebar bar = tampilan relatif",
@@ -4691,7 +4691,7 @@
       },
       "activity_dropoff": {
         "title": "Titik Putus",
-        "subtitle": "Di mana pelajar berhenti berkembang — aktivitas terakhir yang diselesaikan",
+        "subtitle": "Di mana pelajar berhenti berkembang: aktivitas terakhir yang diselesaikan",
         "total_dropoffs": "Total Putus",
         "dropoff_points": "Titik Putus"
       },
@@ -4725,7 +4725,7 @@
         "avg_between": "rata-rata {{unit}} antar penyelesaian",
         "transitions_tracked": "transisi terlacak",
         "raw_hours_avg": "rata-rata jam mentah",
-        "description": "Mengukur seberapa cepat pelajar berpindah dari satu aktivitas ke aktivitas berikutnya. Semakin rendah semakin baik — artinya pelajar lebih cepat melalui konten."
+        "description": "Mengukur seberapa cepat pelajar berpindah dari satu aktivitas ke aktivitas berikutnya. Semakin rendah semakin baik: artinya pelajar lebih cepat melalui konten."
       },
       "time_to_completion": {
         "title": "Waktu Penyelesaian",
@@ -5085,7 +5085,7 @@
       },
       "add_content": {
         "title": "Pelajaran yang layak untuk diikuti",
-        "description": "Tambahkan video, halaman, atau kuis — beri pelajar alasan nyata untuk mendaftar.",
+        "description": "Tambahkan video, halaman, atau kuis: beri pelajar alasan nyata untuk mendaftar.",
         "action": "Tambah konten"
       },
       "brand_school": {
@@ -5095,17 +5095,17 @@
       },
       "share_grow": {
         "title": "Pintu depan sekolah Anda",
-        "description": "Tayang dan ambil tautan yang dapat dibagikan — tempat Anda akan mengarahkan setiap pelajar.",
+        "description": "Tayang dan ambil tautan yang dapat dibagikan: tempat Anda akan mengarahkan setiap pelajar.",
         "action": "Buka sekolah saya"
       },
       "invite_learners": {
         "title": "Sambut pelajar pertama Anda",
-        "description": "Bagikan tautan gabung Anda atau undang orang — bawa pelajar pertama itu masuk.",
+        "description": "Bagikan tautan gabung Anda atau undang orang: bawa pelajar pertama itu masuk.",
         "action": "Undang pelajar"
       },
       "build_community": {
         "title": "Buat pelajar terus kembali",
-        "description": "Buka ruang komunitas agar pelajar Anda tetap aktif — dan membawa teman-teman mereka.",
+        "description": "Buka ruang komunitas agar pelajar Anda tetap aktif dan membawa teman-teman mereka.",
         "action": "Buka komunitas"
       }
     },
@@ -5203,7 +5203,7 @@
         "goal": "Mulai monetisasi kursus Anda dan bangun komunitas belajar.",
         "highlights": {
           "courses": "Kursus tanpa batas",
-          "courses_desc": "Buat sebanyak mungkin kursus yang Anda butuhkan — tanpa batasan.",
+          "courses_desc": "Buat sebanyak mungkin kursus yang Anda butuhkan, tanpa batasan.",
           "members": "Hingga 500 anggota",
           "members_desc": "Kembangkan basis pelajar Anda dan kelola di satu tempat.",
           "payments": "Terima pembayaran",
@@ -5261,7 +5261,7 @@
       "trigger_authenticated_title": "Akses: hanya pengguna masuk",
       "trigger_restricted_title": "Akses: grup pengguna tertentu",
       "usergroups_header": "Grup pengguna",
-      "usergroups_none_assigned": "Tidak ada grup yang ditetapkan — hanya admin yang dapat membukanya.",
+      "usergroups_none_assigned": "Tidak ada grup yang ditetapkan: hanya admin yang dapat membukanya.",
       "usergroups_remove_title": "Hapus",
       "usergroups_loading": "Memuat grup…",
       "usergroups_none_in_org": "Belum ada grup pengguna di organisasi ini.",
@@ -5524,7 +5524,7 @@
     "recurring_subscription": "langganan berulang",
     "what_youre_getting": "Yang Anda dapatkan",
     "pack_immediate": "Berlaku segera setelah pembayaran",
-    "pack_cancel_anytime": "Batalkan kapan saja — tetap aktif hingga akhir periode penagihan",
+    "pack_cancel_anytime": "Batalkan kapan saja: tetap aktif hingga akhir periode penagihan",
     "pack_credits_reset": "Kredit diatur ulang setiap siklus penagihan",
     "after_purchase": "Setelah pembelian",
     "unlimited": "Tanpa batas",
@@ -5574,9 +5574,9 @@
     "canceled_desc": "Langganan Anda akan dibatalkan pada akhir periode penagihan Anda saat ini. Anda tetap memiliki akses penuh hingga saat itu.",
     "back_to_plan_usage": "Kembali ke Paket & Penggunaan",
     "back_to_orgs": "Kembali ke organisasi",
-    "pack_purchased": "Add-on dibeli — batas Anda diperbarui.",
-    "checkout_success": "Langganan diperbarui — selamat datang di paket baru Anda!",
-    "checkout_cancelled": "Checkout dibatalkan — tidak ada perubahan yang dilakukan.",
+    "pack_purchased": "Add-on dibeli: batas Anda diperbarui.",
+    "checkout_success": "Langganan diperbarui: selamat datang di paket baru Anda!",
+    "checkout_cancelled": "Checkout dibatalkan: tidak ada perubahan yang dilakukan.",
     "load_failed": "Kami tidak dapat memuat organisasi Anda.",
     "no_permission": "Anda tidak memiliki izin untuk mengelola penagihan untuk organisasi ini.",
     "no_permission_hint": "Hanya admin organisasi yang dapat melihat atau mengubah paket.",
@@ -5690,7 +5690,7 @@
     "toast": {
       "creating": "Membuat organisasi…",
       "created": "Organisasi dibuat!",
-      "checkoutFailed": "Organisasi dibuat — Anda dapat meningkatkan dari Paket & Penggunaan.",
+      "checkoutFailed": "Organisasi dibuat: Anda dapat meningkatkan dari Paket & Penggunaan.",
       "failed": "Gagal membuat organisasi"
     },
     "steps": {

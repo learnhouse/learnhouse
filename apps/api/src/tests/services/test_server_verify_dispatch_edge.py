@@ -24,7 +24,7 @@ Focus here:
 
 These functions are ``async``; pytest-asyncio auto mode is on, so the tests
 are plain ``async def`` and ``await`` the calls (no marker needed). CODE is
-deliberately not exercised here — it delegates to the async Judge0 path, which
+deliberately not exercised here; it delegates to the async Judge0 path, which
 is integration-shaped and out of scope for these pure-dispatch edge cases.
 """
 
@@ -99,7 +99,7 @@ def _form_submission(answers: dict):
 
 
 # --------------------------------------------------------------------------- #
-# SHORT_ANSWER — task_max other than 100
+# SHORT_ANSWER: task_max other than 100
 # --------------------------------------------------------------------------- #
 class TestShortAnswerTaskMaxVariants:
     """A passing SHORT_ANSWER returns the task's own max (not a hard-coded 100);
@@ -134,7 +134,7 @@ class TestShortAnswerTaskMaxVariants:
 
 
 # --------------------------------------------------------------------------- #
-# NUMBER_ANSWER — task_max variants, pass/fail
+# NUMBER_ANSWER: task_max variants, pass/fail
 # --------------------------------------------------------------------------- #
 class TestNumberAnswerTaskMaxVariants:
     """NUMBER_ANSWER pass returns the task's own max; fail returns 0."""
@@ -168,7 +168,7 @@ class TestNumberAnswerTaskMaxVariants:
 
 
 # --------------------------------------------------------------------------- #
-# QUIZ / FORM — proportional (not just full marks)
+# QUIZ / FORM: proportional (not just full marks)
 # --------------------------------------------------------------------------- #
 class TestQuizFormProportionalDispatch:
     """QUIZ / FORM dispatch returns a proportional grade scaled to the task
@@ -319,7 +319,7 @@ class TestMissingContentsKeys:
     async def test_number_answer_no_correct_value_defaults_to_zero(self):
         """NUMBER_ANSWER with no correct_value defaults to 0, so a '0' answer passes for full marks (100)."""
         # correct_value missing → grader compares against 0. A 0 answer with
-        # default 0 tolerance therefore PASSES — pin this real behavior.
+        # default 0 tolerance therefore PASSES; pin this real behavior.
         task = _task(AssignmentTaskTypeEnum.NUMBER_ANSWER, {})
         assert await _server_verified_task_grade(task, _ts({"answer": "0"})) == 100
 

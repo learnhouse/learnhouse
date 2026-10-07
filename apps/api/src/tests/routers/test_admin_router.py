@@ -339,7 +339,7 @@ class TestAdminRouter:
         assert response.json()["role_id"] == 3
 
     async def test_magic_link_issue_and_consume(self, client, api_user):
-        """Magic link endpoints — issue, consume (success + error HTML)."""
+        """Magic link endpoints: issue, consume (success + error HTML)."""
         with _admin_context(api_user), patch(
             "src.routers.admin.issue_magic_link",
             new_callable=AsyncMock,

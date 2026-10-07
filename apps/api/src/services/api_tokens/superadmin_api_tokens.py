@@ -208,7 +208,7 @@ async def validate_superadmin_token_for_auth(
             if now > expires_at:
                 return None
         except (ValueError, TypeError):
-            # Unparseable expiry — fail safe by treating as not expired (matches org-token behavior)
+            # Unparseable expiry: fail safe by treating as not expired (matches org-token behavior)
             pass
 
     try:

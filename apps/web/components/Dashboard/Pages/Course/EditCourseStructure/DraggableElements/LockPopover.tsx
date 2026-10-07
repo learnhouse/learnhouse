@@ -19,7 +19,7 @@ type LockPopoverProps = {
   fetchAssignedUserGroups: () => Promise<UserGroup[]>
   addUserGroup: (_usergroupUuid: string) => Promise<void>
   removeUserGroup: (_usergroupUuid: string) => Promise<void>
-  // Which locale key to use for the popover heading — selects
+  // Which locale key to use for the popover heading; selects
   // `course.lock.title_chapter` vs `title_activity` so translations can
   // keep correct grammatical gender/agreement per language.
   resourceNoun: 'chapter' | 'activity'
@@ -93,7 +93,7 @@ export default function LockPopover({
       const groups = await fetchAssignedUserGroups()
       setAssignedGroups(asArray<UserGroup>(groups))
     } catch {
-      // swallow — TOC still usable, show empty list
+      // swallow; TOC still usable, show empty list
       setAssignedGroups([])
     }
   }
@@ -106,7 +106,7 @@ export default function LockPopover({
       setLoadingGroups(true)
       getUserGroups(org_id, access_token)
         .then((res: any) => {
-          // getUserGroups returns a metadata wrapper — and on a failed request
+          // getUserGroups returns a metadata wrapper, and on a failed request
           // its `data` is the error body, not a list.
           setAllGroups(asArray<UserGroup>(res))
         })
@@ -212,7 +212,7 @@ export default function LockPopover({
             </div>
             {assignedGroups.length === 0 ? (
               <div className="text-xs text-gray-500">
-                {t('course.lock.usergroups_none_assigned', 'No groups assigned — nobody but admins can open this.')}
+                {t('course.lock.usergroups_none_assigned', 'No groups assigned. Nobody but admins can open this.')}
               </div>
             ) : (
               <div className="space-y-1">

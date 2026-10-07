@@ -41,7 +41,7 @@ def ee_mode():
     The credit mutators are superadmin-only and therefore Enterprise-only. The
     suite pins 'oss' globally (see conftest), which would 403 them before any
     of the behaviour under test runs. Tests that specifically want OSS patch
-    the same target again — the inner patch wins.
+    the same target again; the inner patch wins.
     """
     with patch("src.core.deployment_mode.get_deployment_mode", return_value="ee"):
         yield

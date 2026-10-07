@@ -44,7 +44,7 @@ Anonymous reads (no Authorization header needed for public, published content):
 - GET  /courses/org_slug/{ORG_SLUG}/page/{page}/limit/{limit}
     -> JSON ARRAY of courses. Each: { course_uuid, name, description,
        thumbnail_image, public, published }. `course_uuid` already includes a
-       "course_" prefix — use it verbatim in URLs.
+       "course_" prefix; use it verbatim in URLs.
 - GET  /courses/{course_uuid}/meta
     -> course + { org_id, chapters: [ { chapter_uuid, name, description,
        activities: [ { id, activity_uuid, name, activity_type,
@@ -58,7 +58,7 @@ Anonymous reads (no Authorization header needed for public, published content):
        activity_type is one of: TYPE_VIDEO, TYPE_DOCUMENT, TYPE_DYNAMIC,
        TYPE_ASSIGNMENT, TYPE_CUSTOM, TYPE_SCORM.
 
-Media: served from the backend ROOT (NOT under /api/v1) — derive a media base
+Media: served from the backend ROOT (NOT under /api/v1). Derive a media base
 by stripping "/api/v1" from API_BASE. Stored media values are BARE filenames,
 not paths, so build org/course-scoped URLs:
   - course thumbnail: {MEDIA_BASE}/content/orgs/{org_uuid}/courses/{course_uuid}/thumbnails/{thumbnail_image}
@@ -66,7 +66,7 @@ not paths, so build org/course-scoped URLs:
   - document (pdf):    {MEDIA_BASE}/content/orgs/{org_uuid}/courses/{course_uuid}/activities/{activity_uuid}/documentpdf/{fileId}
   org_uuid comes from GET /orgs/slug/{ORG_SLUG} or the /meta response (the
   course LIST does not include org_uuid). Values starting with http(s) are full
-  S3 URLs — use as-is.
+  S3 URLs; use as-is.
 
 Auth (Stage 2):
 - POST /auth/login   Content-Type: application/x-www-form-urlencoded
@@ -78,7 +78,7 @@ Auth (Stage 2):
     body: { email, password, username, first_name, last_name }  -> creates a user.
     (Resolve org_id via GET /orgs/slug/{ORG_SLUG}.)
 - GET  /auth/refresh
-    Reads the refresh token ONLY from the `LH_refresh` cookie — NOT a header or
+    Reads the refresh token ONLY from the `LH_refresh` cookie, NOT a header or
     body. To refresh from the server, send header: Cookie: LH_refresh={value}.
     -> { access_token, refresh_token, expiry }. The refresh token ROTATES: you
     MUST persist the returned refresh_token (and access_token) back into your
@@ -105,7 +105,7 @@ Enrollment & progress (Stage 2, authenticated):
                             that retries once on 401 by refreshing (refresh token
                             sent as a Cookie: LH_refresh header), persisting the
                             rotated access+refresh tokens back to the session
-                            before retrying — see contract.
+                            before retrying (see contract).
 - src/app/page.tsx        : course catalogue (anonymous).
 - src/app/courses/[uuid]/page.tsx           : course detail from /meta (anonymous).
 - src/app/courses/[uuid]/[activityUuid]/page.tsx : activity viewer, switch on
@@ -140,7 +140,7 @@ Create .env.local:
    after marking an activity done.
 Report which criteria pass and show the commands/URLs you used to check.
 
-## Known adjustment points (don't guess — inspect, then adapt)
+## Known adjustment points (don't guess: inspect, then adapt)
 - Activity `content` keys vary by activity_sub_type and editor version. Inspect a
   real GET /activities/{uuid} and adapt the viewer's field names. Dynamic pages
   are a structured block document; rendering raw JSON is an acceptable v1.
@@ -153,7 +153,7 @@ Report which criteria pass and show the commands/URLs you used to check.
 ````
 
 <Callout type="warning">
-The agent can build the structure and the happy path, but it can't see your instance's exact `content` shapes or storage config. Plan to review the **activity viewer** and **media URLs** — the spec flags both as the likely places to adjust.
+The agent can build the structure and the happy path, but it can't see your instance's exact `content` shapes or storage config. Plan to review the **activity viewer** and **media URLs**. The spec flags both as the likely places to adjust.
 </Callout>
 
 ## After it runs

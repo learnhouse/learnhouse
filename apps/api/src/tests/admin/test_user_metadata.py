@@ -198,5 +198,5 @@ class TestProvisionUserExtraMetadata:
         assert row is not None
         assert row.extra_metadata != {"locale": "en-GB", "tier": "gold"}
 
-        # The rest of the update still applies — only this one field is pinned.
+        # The rest of the update still applies; only this one field is pinned.
         assert row.first_name == "Regular"

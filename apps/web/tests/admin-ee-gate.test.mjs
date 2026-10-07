@@ -2,7 +2,7 @@
 //
 // The failure direction here is the whole point. Blocking on anything other
 // than a definitive 'oss' would show live SaaS superadmins a licence screen
-// during an API blip — precisely when they need the dashboard. If someone
+// during an API blip, precisely when they need the dashboard. If someone
 // later "hardens" this into a fail-closed check, these fail.
 
 import { describe, expect, test } from "bun:test";

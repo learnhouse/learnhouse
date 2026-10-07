@@ -103,7 +103,7 @@ async def api_update_org_plan(
     # The demo's plan is owned by its bundle config and is rewritten on every
     # refresh, so a write here would be silently undone within the hour. More
     # importantly, this endpoint is what the billing platform calls after a
-    # successful payment — a plan write landing on the demo means somebody was
+    # successful payment; a plan write landing on the demo means somebody was
     # charged for it.
     if org.is_demo:
         raise HTTPException(
@@ -141,10 +141,10 @@ async def api_update_org_plan(
     # A plan change must be reflected immediately. Proactively invalidate every
     # cache that would otherwise serve the OLD plan/limits until its TTL lapses:
     #   - org config + org-by-slug caches (the badge / plan reads),
-    #   - the usage cache (the limit denominators) — which the generic config
+    #   - the usage cache (the limit denominators), which the generic config
     #     update path never invalidates, so without this a freshly-upgraded org
     #     shows its new plan badge but stale free-tier limits (e.g. Pro plan with
-    #     "Courses 2/1 — Limit reached") for up to the cache TTL.
+    #     "Courses 2/1" and "Limit reached") for up to the cache TTL.
     invalidate_org_config_cache(body.org_id)
     invalidate_org_cache(org.slug)
     invalidate_usage_cache(body.org_id)
@@ -167,7 +167,7 @@ class ReconcileAdminsResponse(BaseModel):
     summary="Backfill existing org admins into the Loops marketing audience",
     description=(
         "Enumerate every current org ADMIN (role_id=1) across all organizations "
-        "and ensure each is on the Loops mailing list. Idempotent — Loops "
+        "and ensure each is on the Loops mailing list. Idempotent: Loops "
         "contact upsert means re-running is safe. Protected by the internal "
         "cloud key (X-Internal-Key header). Best-effort & SaaS-only; a no-op "
         "when LOOPS_API_KEY is unset. The sync itself is fire-and-forget, so a "
@@ -184,7 +184,7 @@ async def api_reconcile_loops_admins(
 ) -> ReconcileAdminsResponse:
     # One admin can administer several orgs; de-dupe by user so each contact is
     # upserted once. We pick a representative org_slug per user (their first
-    # admin membership) purely as a contact property — Loops keys on email.
+    # admin membership) purely as a contact property; Loops keys on email.
     rows = (
         await db_session.execute(
             select(User, Organization.slug)

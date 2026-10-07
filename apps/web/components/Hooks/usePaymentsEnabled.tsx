@@ -17,7 +17,7 @@ export function usePaymentsEnabled() {
     staleTime: 60_000,
   });
 
-  // True if any payment provider is active — not tied to a specific provider
+  // True if any payment provider is active, not tied to a specific provider
   const isAnyProviderActive = paymentConfigs?.some((config: any) => config.active);
 
   return {

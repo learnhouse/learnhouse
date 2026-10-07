@@ -43,7 +43,7 @@
             "author": "student-23",
             "days_ago": 7,
             "upvotes": 5,
-            "content": "Same. The bit nobody says is that the list stops being possible after about six weeks — you stop noticing what is strange."
+            "content": "Same. The bit nobody says is that the list stops being possible after about six weeks; you stop noticing what is strange."
           }
         ]
       },
@@ -55,13 +55,13 @@
         "author": "student-08",
         "days_ago": 12,
         "upvotes": 9,
-        "content": "When the line they want is unavailable I always feel like I am either underselling the alternative or glossing over the difference. Both end badly — one loses the sale, the other comes back as a return.\n\nWhat wording do people use?",
+        "content": "When the line they want is unavailable I always feel like I am either underselling the alternative or glossing over the difference. Both end badly: one loses the sale, the other comes back as a return.\n\nWhat wording do people use?",
         "comments": [
           {
             "author": "student-31",
             "days_ago": 11,
             "upvotes": 14,
-            "content": "I say what it is for first, then name the difference before the similarity: \"This one is the same spec but the lead time is three weeks rather than one — does that still work for the job?\" Putting the drawback first means they trust the rest of it."
+            "content": "I say what it is for first, then name the difference before the similarity: \"This one is the same spec but the lead time is three weeks rather than one. Does that still work for the job?\" Putting the drawback first means they trust the rest of it."
           },
           {
             "author": "student-15",
@@ -79,7 +79,7 @@
         "author": "student-29",
         "days_ago": 19,
         "upvotes": 16,
-        "content": "We spent most of a meeting last month explaining a jump that turned out to be a definition change — returns started being counted when processed rather than when requested.\n\nSuggestion: whoever changes a definition adds a line to the report footer with the date. Costs nothing, saves an afternoon.",
+        "content": "We spent most of a meeting last month explaining a jump that turned out to be a definition change: returns started being counted when processed rather than when requested.\n\nSuggestion: whoever changes a definition adds a line to the report footer with the date. Costs nothing, saves an afternoon.",
         "comments": [
           {
             "author": "student-06",
@@ -91,7 +91,7 @@
       },
       {
         "slug": "d-welcome",
-        "title": "Welcome — how this space works",
+        "title": "Welcome: how this space works",
         "label": "announcement",
         "emoji": "👋",
         "author": "student-00",
@@ -118,7 +118,7 @@
     {
       "slug": "b-support-playbook",
       "name": "Support escalation playbook",
-      "description": "Working canvas for the escalation triggers — what to do, who owns it, what the customer hears.",
+      "description": "Working canvas for the escalation triggers: what to do, who owns it, what the customer hears.",
       "public": true,
       "owner": "student-11",
       "members": [
@@ -147,7 +147,7 @@
       "published": true,
       "owner": "student-11",
       "course": "customer-support-fundamentals",
-      "html": "<div style=\"font-family:system-ui,sans-serif;max-width:640px;margin:0 auto;padding:24px;color:#111\"><h2 style=\"margin:0 0 4px\">Should I escalate this?</h2><p style=\"color:#666;margin:0 0 20px\">Tick anything that is true. Any one of them is enough.</p><form id=\"f\"><label style=\"display:block;padding:12px;border:1px solid #e5e5e5;border-radius:10px;margin-bottom:8px;cursor:pointer\"><input type=\"checkbox\"> More than one customer has reported this in the last hour</label><label style=\"display:block;padding:12px;border:1px solid #e5e5e5;border-radius:10px;margin-bottom:8px;cursor:pointer\"><input type=\"checkbox\"> Legal action, a regulator or the press has been mentioned</label><label style=\"display:block;padding:12px;border:1px solid #e5e5e5;border-radius:10px;margin-bottom:8px;cursor:pointer\"><input type=\"checkbox\"> A refund or credit above the threshold is on the table</label><label style=\"display:block;padding:12px;border:1px solid #e5e5e5;border-radius:10px;margin-bottom:16px;cursor:pointer\"><input type=\"checkbox\"> Three days have passed without progress</label></form><div id=\"out\" style=\"padding:16px;border-radius:10px;background:#f4f4f5;font-weight:600\">Nothing ticked — it is yours to handle.</div><script>const f=document.getElementById('f'),o=document.getElementById('out');f.addEventListener('change',()=>{const n=[...f.querySelectorAll('input')].filter(i=>i.checked).length;o.textContent=n?'Escalate now — '+n+' trigger'+(n>1?'s':'')+' met.':'Nothing ticked — it is yours to handle.';o.style.background=n?'#fee2e2':'#f4f4f5';o.style.color=n?'#991b1b':'#111';});</script></div>"
+      "html": "<div style=\"font-family:system-ui,sans-serif;max-width:640px;margin:0 auto;padding:24px;color:#111\"><h2 style=\"margin:0 0 4px\">Should I escalate this?</h2><p style=\"color:#666;margin:0 0 20px\">Tick anything that is true. Any one of them is enough.</p><form id=\"f\"><label style=\"display:block;padding:12px;border:1px solid #e5e5e5;border-radius:10px;margin-bottom:8px;cursor:pointer\"><input type=\"checkbox\"> More than one customer has reported this in the last hour</label><label style=\"display:block;padding:12px;border:1px solid #e5e5e5;border-radius:10px;margin-bottom:8px;cursor:pointer\"><input type=\"checkbox\"> Legal action, a regulator or the press has been mentioned</label><label style=\"display:block;padding:12px;border:1px solid #e5e5e5;border-radius:10px;margin-bottom:8px;cursor:pointer\"><input type=\"checkbox\"> A refund or credit above the threshold is on the table</label><label style=\"display:block;padding:12px;border:1px solid #e5e5e5;border-radius:10px;margin-bottom:16px;cursor:pointer\"><input type=\"checkbox\"> Three days have passed without progress</label></form><div id=\"out\" style=\"padding:16px;border-radius:10px;background:#f4f4f5;font-weight:600\">Nothing ticked: it is yours to handle.</div><script>const f=document.getElementById('f'),o=document.getElementById('out');f.addEventListener('change',()=>{const n=[...f.querySelectorAll('input')].filter(i=>i.checked).length;o.textContent=n?'Escalate now: '+n+' trigger'+(n>1?'s':'')+' met.':'Nothing ticked: it is yours to handle.';o.style.background=n?'#fee2e2':'#f4f4f5';o.style.color=n?'#991b1b':'#111';});</script></div>"
     },
     {
       "slug": "p-available-stock",
@@ -164,7 +164,7 @@
       "slug": "riverbend-briefing",
       "name": "The Riverbend Briefing",
       "description": "What changed this week and what it means on a live account.",
-      "about": "A short internal briefing from the Riverbend team. Each episode takes one thing that changed — a threshold, a process, a number that moved — and explains what to actually do about it.",
+      "about": "A short internal briefing from the Riverbend team. Each episode takes one thing that changed (a threshold, a process, a number that moved) and explains what to actually do about it.",
       "tags": "internal,weekly,briefing",
       "cover": "riverbend-briefing.webp",
       "episodes": [
@@ -240,7 +240,7 @@
       "slug": "numbers-plainly",
       "name": "Numbers, Plainly",
       "description": "Reading a report without being misled by it.",
-      "about": "Companion audio for Working with Numbers. No statistics — just the questions that stop you acting confidently on a coincidence.",
+      "about": "Companion audio for Working with Numbers. No statistics, just the questions that stop you acting confidently on a coincidence.",
       "tags": "data,reporting",
       "cover": "numbers-plainly.webp",
       "episodes": [

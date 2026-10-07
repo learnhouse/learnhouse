@@ -5,7 +5,7 @@
  * pulling the published image) unless we've been pointed at an already-running
  * instance via E2E_BASE_URL / E2E_SKIP_BOOT. Then it waits until the API
  * health endpoint and the bootstrapped organization are both reachable before
- * any test runs — so specs never start against a half-booted stack.
+ * any test runs, so specs never start against a half-booted stack.
  */
 import { spawnSync } from 'node:child_process'
 import { chromium } from '@playwright/test'

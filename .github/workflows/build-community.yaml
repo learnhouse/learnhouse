@@ -4,7 +4,7 @@ name: Build Community Images
 # Dockerfile). A README edit or a CLI-only change cannot alter the image, so it
 # does not need one. Deliberately a deny-list rather than an allow-list:
 # anything new at the repo root still triggers a build. The list is spelled out
-# twice because GitHub Actions does not support YAML anchors — keep both copies
+# twice because GitHub Actions does not support YAML anchors, so keep both copies
 # in sync.
 on:
   push:
@@ -36,7 +36,7 @@ permissions:
   contents: read
   packages: write
 
-# See api-lint.yaml — one live run per PR, dev runs always finish.
+# See api-lint.yaml: one live run per PR, dev runs always finish.
 concurrency:
   group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
@@ -111,7 +111,7 @@ jobs:
     # images. Nothing in this repo built them: the job above only builds the
     # root Dockerfile, so a change that broke a service image passed every
     # check here and failed later, in the pipeline that ships it. Build them,
-    # never push them — publishing those tags stays with the image pipeline.
+    # never push them; publishing those tags stays with the image pipeline.
     strategy:
       fail-fast: false
       matrix:

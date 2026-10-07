@@ -86,7 +86,7 @@ async function ensureDockerReady(interactive: boolean): Promise<void> {
     const ok = await p.confirm({ message: 'Docker is not installed. Install Docker Engine now (via get.docker.com)?', initialValue: true })
     if (p.isCancel(ok) || !ok) die('Docker is required. Install it (https://docs.docker.com/engine/install/) and re-run.')
   } else {
-    console.log('Docker not found — installing Docker Engine (get.docker.com)…')
+    console.log('Docker not found, installing Docker Engine (get.docker.com)…')
   }
   try { installDockerLinux() } catch (e) {
     die(`Docker installation failed: ${(e as Error)?.message ?? String(e)}. Install it manually and re-run.`)
@@ -100,7 +100,7 @@ async function ensureDockerReady(interactive: boolean): Promise<void> {
 async function ensurePortsFree(interactive: boolean): Promise<void> {
   const busy = [80, 443].filter((port) => isTcpPortListening(port))
   if (busy.length) {
-    const m = `Port(s) ${busy.join(' & ')} already in use — Caddy needs 80 and 443. Stop the other web server (nginx/apache/etc.) and re-run.`
+    const m = `Port(s) ${busy.join(' & ')} already in use; Caddy needs 80 and 443. Stop the other web server (nginx/apache/etc.) and re-run.`
     interactive ? p.log.error(m) : console.error(`Error: ${m}`)
     process.exit(1)
   }
@@ -158,7 +158,7 @@ function dnsBlock(config: SetupConfig, ip: string): string {
   lines.push(pc.dim('  ────────────────────────────────────────────────'))
   if (isAgency(config)) {
     lines.push(`  ${config.domain.padEnd(34)} A   ${ip}`)
-    lines.push(`  ${('*.' + config.domain).padEnd(34)} A   ${ip}   ${pc.dim('(wildcard — tenant subdomains)')}`)
+    lines.push(`  ${('*.' + config.domain).padEnd(34)} A   ${ip}   ${pc.dim('(wildcard: tenant subdomains)')}`)
   } else {
     lines.push(`  ${config.domain.padEnd(34)} A   ${ip}`)
   }
@@ -167,7 +167,7 @@ function dnsBlock(config: SetupConfig, ip: string): string {
   lines.push(`  ${pc.cyan('Admin:')}  ${config.adminEmail}`)
   lines.push(pc.yellow('  Change the admin password immediately after first login.'))
   if (config.eeLocalTls) {
-    lines.push(pc.dim('  TLS: internal CA (self-signed) — browsers warn; map the names above'))
+    lines.push(pc.dim('  TLS: internal CA (self-signed). Browsers warn; map the names above'))
     lines.push(pc.dim('  in /etc/hosts to this server for local/custom-domain testing.'))
   } else {
     lines.push(pc.dim('  Caddy issues a Let’s Encrypt cert once DNS resolves here (~1–2 min).'))
@@ -235,14 +235,14 @@ function buildConfig(opts: {
 
 async function startEe(config: SetupConfig, interactive: boolean, firstDeploy: boolean): Promise<void> {
   const dir = config.installDir
-  // On a fresh deploy, fail early if 80/443 are taken (not on redeploy — our own Caddy holds them).
+  // On a fresh deploy, fail early if 80/443 are taken (not on redeploy, where our own Caddy holds them).
   if (firstDeploy) await ensurePortsFree(interactive)
   // Validate the license by authenticating to the registry BEFORE pulling.
   try {
     dockerLogin(EE_REGISTRY, EE_REGISTRY_USERNAME, config.licenseKey || '')
   } catch (err) {
     const stderr = (err as { stderr?: string })?.stderr ?? ''
-    const msg = `Registry login to ${EE_REGISTRY} failed — the license key is invalid or has no EE entitlement.`
+    const msg = `Registry login to ${EE_REGISTRY} failed: the license key is invalid or has no EE entitlement.`
     if (interactive) { p.log.error(msg); if (stderr) p.log.message(pc.dim(stderr.trim())) }
     else { console.error(msg); if (stderr) console.error(stderr.trim()) }
     process.exit(1)
@@ -264,9 +264,9 @@ async function startEe(config: SetupConfig, interactive: boolean, firstDeploy: b
 
   const ready = await waitForEeReady(dir)
   if (ready === 'ee') {
-    interactive ? p.log.success('API is up in EE mode — license active') : console.log('API is up in EE mode — license active')
+    interactive ? p.log.success('API is up in EE mode, license active') : console.log('API is up in EE mode, license active')
   } else if (ready === 'oss') {
-    const m = 'API is up but in OSS mode — license not active. Check `learnhouse logs`.'
+    const m = 'API is up but in OSS mode, license not active. Check `learnhouse logs`.'
     interactive ? p.log.warn(m) : console.warn(m)
   } else {
     const m = 'Could not confirm EE mode within timeout. The stack may still be starting.'
@@ -292,17 +292,17 @@ async function setupEnterpriseCi(options: EeSetupOptions): Promise<void> {
 
   const domain = normalizeDomain(options.domain!)
   const domErr = validateDomain(domain)
-  if (domErr) fail(`--domain "${domain}" — ${domErr}`)
+  if (domErr) fail(`--domain "${domain}": ${domErr}`)
 
   const emailErr = validateEmail(options.adminEmail!)
-  if (emailErr) fail(`--admin-email "${options.adminEmail}" — ${emailErr}`)
+  if (emailErr) fail(`--admin-email "${options.adminEmail}": ${emailErr}`)
 
   const acmeEmail = options.acmeEmail || options.adminEmail!
   const acmeErr = validateEmail(acmeEmail)
-  if (acmeErr) fail(`--acme-email "${acmeEmail}" — ${acmeErr}`)
+  if (acmeErr) fail(`--acme-email "${acmeEmail}": ${acmeErr}`)
 
   const pwErr = validatePassword(options.adminPassword!)
-  if (pwErr) fail(`--admin-password — ${pwErr}`)
+  if (pwErr) fail(`--admin-password: ${pwErr}`)
 
   if (options.dnsProvider && options.dnsProvider !== 'cloudflare') fail('--dns-provider only supports "cloudflare"')
   if (options.dnsProvider === 'cloudflare' && !options.cfApiToken) fail('--cf-api-token is required with --dns-provider cloudflare')
@@ -373,7 +373,7 @@ async function setupEnterpriseInteractive(options: EeSetupOptions): Promise<void
   })) as string
 
   const domainLabel = tenancy === 'agency'
-    ? 'Apex / agency domain (e.g. learn.acme.com — tenants become <slug>.learn.acme.com)'
+    ? 'Apex / agency domain (e.g. learn.acme.com; tenants become <slug>.learn.acme.com)'
     : 'Domain (e.g. learn.acme.com)'
   const domainRaw = exit(await p.text({
     message: domainLabel,

@@ -47,7 +47,7 @@ def test_ensure_faststart_missing_file_returns_false(tmp_path):
 def test_ensure_faststart_already_faststart_is_noop(tmp_path, monkeypatch):
     p = tmp_path / "d.mp4"
     p.write_bytes(b"\x00\x00ftyp....moov....mdat....")
-    # If ffmpeg were called this would explode — assert it is NOT called.
+    # If ffmpeg were called this would explode, so assert it is NOT called.
     monkeypatch.setattr(vp, "_ffmpeg_available", lambda: (_ for _ in ()).throw(AssertionError("ffmpeg should not run")))
     assert vp.ensure_faststart(str(p)) is True
 

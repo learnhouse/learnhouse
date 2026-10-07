@@ -144,7 +144,7 @@ export async function scaleCommand() {
       changed = true
       p.log.success(`${service}: ${trimmed}`)
     } else if (trimmed) {
-      p.log.warn(`Invalid format "${trimmed}" — skipping. Use format like 512m or 1g.`)
+      p.log.warn(`Invalid format "${trimmed}", skipping. Use format like 512m or 1g.`)
     }
   }
 

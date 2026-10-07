@@ -46,7 +46,7 @@ function StatusPill({ status }: { status: string }) {
 /** Render an ISO-8601 duration (PT#H#M#S) as a compact "1h 2m" label. */
 function humanizeDuration(iso: string): string {
   const m = /^PT(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?$/.exec(iso || '')
-  if (!m) return iso || '—'
+  if (!m) return iso || 'n/a'
   const [h, min, s] = [m[1], m[2], m[3]].map((v) => parseInt(v || '0', 10))
   const parts: string[] = []
   if (h) parts.push(`${h}h`)
@@ -152,7 +152,7 @@ function ScormResults({ activityUuid }: { activityUuid: string }) {
                       ? r.score_raw
                       : r.score_scaled != null
                         ? `${Math.round(r.score_scaled * 100)}%`
-                        : '—'}
+                        : 'n/a'}
                   </td>
                   <td className="px-3 py-2 text-neutral-500 dark:text-neutral-400">
                     <span className="inline-flex items-center gap-1">

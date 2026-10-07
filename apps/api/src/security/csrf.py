@@ -94,7 +94,7 @@ class CSRFProtectionMiddleware(BaseHTTPMiddleware):
         if origin:
             return self._is_origin_allowed(origin)
 
-        # No Origin header — fall back to Referer
+        # No Origin header: fall back to Referer
         if referer:
             referer_origin = self._extract_origin_from_url(referer)
             if referer_origin:
@@ -110,7 +110,7 @@ class CSRFProtectionMiddleware(BaseHTTPMiddleware):
         mutations. We resolve the host against the custom_domains table (verified
         only), short-cached. This does NOT weaken CSRF: browsers set the Origin
         header themselves, so a cross-site request from attacker.com carries
-        Origin: attacker.com (rejected) — only genuine custom-domain requests carry
+        Origin: attacker.com (rejected); only genuine custom-domain requests carry
         the custom-domain Origin.
         """
         try:
@@ -159,12 +159,12 @@ class CSRFProtectionMiddleware(BaseHTTPMiddleware):
         - Stripe webhooks: use HMAC signature verification, no cookies involved
 
         Regular Bearer JWT tokens are NOT exempt because get_current_user()
-        falls back to cookie auth when the JWT is invalid — an attacker could
+        falls back to cookie auth when the JWT is invalid, so an attacker could
         send a fake Bearer header to bypass CSRF while the real auth happens
         via the victim's cookies.
         """
         auth_header = request.headers.get("authorization", "")
-        # Only exempt API tokens (lh_*) — these never fall back to cookies
+        # Only exempt API tokens (lh_*); these never fall back to cookies
         if auth_header.lower().startswith("bearer lh_"):
             return True
 

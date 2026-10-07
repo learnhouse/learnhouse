@@ -506,7 +506,7 @@ class TestEmailVerificationService:
         await db.commit()
 
         # SECURITY: resend-verification must return the same generic response
-        # whether or not the account exists or is already verified — otherwise
+        # whether or not the account exists or is already verified; otherwise
         # it can be used to enumerate accounts or probe verification state.
         with patch(
             "src.services.users.email_verification.check_verification_resend_rate_limit",

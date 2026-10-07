@@ -30,7 +30,7 @@ The script does everything end-to-end:
 1. Fetches latest from `origin`
 2. Bumps `apps/cli/package.json` and `apps/cli/src/constants.ts` (keeps them in sync)
 3. Commits the bump on `dev` and pushes (skipped if already at that version)
-4. Creates and pushes the tag `cli-<version>` (e.g. `cli-1.4.3`) — **no `v` prefix**
+4. Creates and pushes the tag `cli-<version>` (e.g. `cli-1.4.3`), with **no `v` prefix**
 5. Generates a changelog from `feat/fix/refactor/chore` commits that touched `apps/cli/`
 6. Creates a GitHub Release authored by you (not the bot)
 
@@ -46,7 +46,7 @@ The tag push triggers `.github/workflows/cli-publish.yaml`, which:
 
 After the workflow completes (~1-2 minutes):
 
-- **npm:** https://www.npmjs.com/package/learnhouse — should show the new version
+- **npm:** https://www.npmjs.com/package/learnhouse should show the new version
 - **GitHub:** Releases page shows the new release
 - **Test:** `npx learnhouse@latest --version` prints the new version
 
@@ -61,7 +61,7 @@ git add apps/cli/package.json apps/cli/src/constants.ts
 git commit -m "release(cli): bump version to 1.4.3"
 git push origin dev
 
-# Tag format is cli-<version> — NO "v" prefix
+# Tag format is cli-<version>, with NO "v" prefix
 git tag cli-1.4.3
 git push origin cli-1.4.3
 ```
@@ -83,7 +83,7 @@ The release script (and `scripts/bump-version.js`) update both at once so they n
 
 The workflow only triggers on tags matching `cli-[0-9]*`. This means:
 
-- Tags **must** be `cli-1.4.3` — **not** `cli-v1.4.3`, **not** `v1.4.3`
+- Tags **must** be `cli-1.4.3`, **not** `cli-v1.4.3` or `v1.4.3`
 - Regular commits and PRs never trigger a publish
 - Only an explicit `cli-<numeric-version>` tag push triggers it
 - Other tags (e.g. `api-1.0.0`) are ignored

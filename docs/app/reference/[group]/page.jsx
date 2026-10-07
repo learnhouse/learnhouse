@@ -16,7 +16,7 @@ export async function generateMetadata({ params }) {
   const config = groupBySlug(group)
   if (!config) return {}
   return {
-    title: `${config.title} — API Reference`,
+    title: `${config.title} | API Reference`,
     description: config.description,
     alternates: { canonical: `/reference/${config.slug}` },
   }
@@ -31,7 +31,7 @@ export default async function GroupPage({ params }) {
   const jsonLd = {
     '@context': 'https://schema.org',
     '@type': 'APIReference',
-    name: `LearnHouse API — ${model.title}`,
+    name: `LearnHouse API: ${model.title}`,
     description: model.description,
     url: `https://docs.learnhouse.app/reference/${model.slug}`,
     programmingModel: 'REST',

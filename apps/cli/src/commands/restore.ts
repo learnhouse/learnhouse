@@ -44,7 +44,7 @@ export async function restoreCommand(archivePath: string) {
     process.exit(1)
   }
 
-  // Confirm before restoring — auto-confirm in non-interactive mode
+  // Confirm before restoring; auto-confirm in non-interactive mode
   p.log.warn(pc.yellow('This will overwrite the current database with the backup data.'))
   if (process.stdout.isTTY) {
     const confirm = await p.confirm({
@@ -56,7 +56,7 @@ export async function restoreCommand(archivePath: string) {
       process.exit(0)
     }
   } else {
-    p.log.info('Non-interactive mode — proceeding with restore.')
+    p.log.info('Non-interactive mode, proceeding with restore.')
   }
 
   // Extract archive to temp directory
@@ -109,7 +109,7 @@ export async function restoreCommand(archivePath: string) {
     process.exit(1)
   }
 
-  // Optionally restore .env — skip the prompt in non-interactive mode
+  // Optionally restore .env; skip the prompt in non-interactive mode
   const envBackup = path.join(tmpDir, backupFolder, '.env')
   if (fs.existsSync(envBackup) && process.stdout.isTTY) {
     const restoreEnv = await p.confirm({

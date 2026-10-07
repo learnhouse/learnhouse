@@ -93,7 +93,7 @@ export async function appendLoopsContactProperty(
       const current = found?.[0]?.[property]
       if (typeof current === 'string' && current) existing = current.split(',').map((s) => s.trim())
     } catch {
-      // findContact failed — proceed with just the incoming values.
+      // findContact failed; proceed with just the incoming values.
     }
     const merged = Array.from(new Set([...existing, ...incoming].filter(Boolean)))
     return await c.updateContact({ email, properties: { [property]: merged.join(',') } })
@@ -106,8 +106,8 @@ export async function appendLoopsContactProperty(
 /**
  * Record an organization ADMIN in the marketing audience.
  *
- * Loops is for the people we market to — org-less signups (prospects) and org
- * ADMINS (the customers/decision-makers) — NOT org members/learners. This
+ * Loops is for the people we market to: org-less signups (prospects) and org
+ * ADMINS (the customers/decision-makers), NOT org members/learners. This
  * upserts the contact, flags it as an org admin (`is_org_admin`) so admins can
  * be segmented, and fires a `became_org_admin` event. Fire-and-forget.
  */

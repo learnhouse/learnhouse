@@ -73,7 +73,7 @@ async def _get_user_rights(
     if not user_org:
         return {}
 
-    # The caller is a confirmed member — subject to the org's 2FA policy. Every
+    # The caller is a confirmed member and so subject to the org's 2FA policy. Every
     # mutating playground gate (create/update/delete/duplicate and the usergroup
     # ops) resolves rights through here, so enforcing once closes the whole set
     # of write paths against a member who is past their two-factor deadline.
@@ -93,7 +93,7 @@ async def _get_user_rights(
 
 
 async def _enforce_member_mfa(user_id: int, org_id: int, db_session: AsyncSession) -> None:
-    """Apply the org's "require two-factor" policy — but only to actual members.
+    """Apply the org's "require two-factor" policy, but only to actual members.
 
     Playgrounds are also served to non-members and anonymous users (PUBLIC /
     AUTHENTICATED access types), and the org 2FA policy governs *members* of the
@@ -185,7 +185,7 @@ async def _check_draft_access(
     Unpublished (draft) playgrounds must never be exposed by uuid to anyone
     other than the owner or an org admin. _check_read_access only validates
     access_type, so without this guard a draft PUBLIC/AUTHENTICATED playground
-    would be readable by anonymous/any authenticated user via its uuid — the
+    would be readable by anonymous/any authenticated user via its uuid, the
     same content list_org_playgrounds deliberately hides.
     """
     if playground.published:
@@ -215,7 +215,7 @@ async def create_playground(
     # as APITokenUser whose .id is the token id (often 0), not a user id. Using
     # current_user.id directly would (a) make every rights/ownership check fail
     # for token callers and (b) store the token id as created_by, which is a FK
-    # to user.id — corrupting the author reference.
+    # to user.id, corrupting the author reference.
     acting_user_id = resolve_acting_user_id(current_user)
     rights = await _get_user_rights(acting_user_id, org_id, db_session)
     pg_rights = rights.get("playgrounds", {})
@@ -686,9 +686,9 @@ async def get_playground_usergroups(
     if not playground:
         raise HTTPException(status_code=404, detail="Playground not found")
 
-    # This listing is the playground's access-control configuration — cohort
+    # This listing is the playground's access-control configuration (cohort
     # names, descriptions, and the very usergroup uuids that
-    # add_usergroup_to_playground consumes — so it is gated exactly like the
+    # add_usergroup_to_playground consumes), so it is gated exactly like the
     # mutations that manage it, not like a public read of the playground.
     if isinstance(current_user, AnonymousUser):
         raise HTTPException(status_code=401, detail="Authentication required")

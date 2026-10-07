@@ -339,8 +339,8 @@ class TestServeS3Errors:
 
 class TestServedContentTypeIsNotClientControlled:
     """The Content-Type decides how a browser treats a stored file, so it is
-    derived from server-side state only. Rows written before that — which kept
-    the client's own upload header in `file_mime` — must not influence it.
+    derived from server-side state only. Rows written before that (which kept
+    the client's own upload header in `file_mime`) must not influence it.
     """
 
     @pytest.mark.parametrize(

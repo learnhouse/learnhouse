@@ -150,7 +150,7 @@ async def query_course_rag_stream(
     # $$...$$ only. A bare $ in front of a number would start a math run and swallow
     # the rest of the sentence, so ask for it escaped.
     math_instructions = (
-        "MATH: Write any mathematical expression as LaTeX between dollar signs — $x^2$ inline, "
+        "MATH: Write any mathematical expression as LaTeX between dollar signs: $x^2$ inline, "
         "$$...$$ on its own lines for display equations. Escape a literal dollar sign as \\$ "
         "(for example \\$5)."
     )
@@ -174,7 +174,7 @@ async def query_course_rag_stream(
             "based on the course content provided below.\n\n"
             f"{citation_instructions}\n\n"
             "SUPPLEMENTARY KNOWLEDGE: When you add any information that is NOT directly from the "
-            "provided course content — even small additions, clarifications, or general context — "
+            "provided course content (even small additions, clarifications, or general context), "
             "you MUST wrap that part in a blockquote using the > prefix. Always do this, even for "
             "brief supplementary notes. Example:\n"
             "> This is additional context from general knowledge.\n\n"
@@ -184,7 +184,7 @@ async def query_course_rag_stream(
     elif mode == "general":
         system_prompt = (
             "You are a helpful, knowledgeable educational assistant. No specific course content "
-            "was found for this question, but that's fine — answer the student's question using "
+            "was found for this question, but that's fine: answer the student's question using "
             "your general knowledge. Be thorough and helpful.\n\n"
             f"{math_instructions}"
         )

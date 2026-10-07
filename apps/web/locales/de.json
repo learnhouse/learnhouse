@@ -359,7 +359,7 @@
     "image_title_forgot": "Setze dein Passwort zurück.",
     "image_subtitle_forgot": "Wir helfen dir, im Handumdrehen wieder in dein Konto zu kommen.",
     "image_title_login": "Willkommen zurück bei LearnHouse.",
-    "image_subtitle_login": "Mach da weiter, wo du aufgehört hast — deine Kurse, Lernenden und Tools warten auf dich.",
+    "image_subtitle_login": "Mach da weiter, wo du aufgehört hast: Deine Kurse, Lernenden und Tools warten auf dich.",
     "image_title_reset": "Fast geschafft.",
     "image_subtitle_reset": "Erstelle ein sicheres Passwort, um dein Konto zu schützen.",
     "image_title_signup": "Starte das Unterrichten mit LearnHouse.",
@@ -616,7 +616,7 @@
         "plan_generated": "Plan aktualisiert",
         "plan_generated_hint": "Prüfen und bearbeiten Sie den Plan im Plan-Tab.",
         "describe_course": "Beschreiben Sie Ihren Kurs",
-        "describe_course_hint": "Nutzen Sie den Chat rechts, um den gewünschten Kurs zu beschreiben — Thema, Zielgruppe und Ziele.",
+        "describe_course_hint": "Nutzen Sie den Chat rechts, um den gewünschten Kurs zu beschreiben: Thema, Zielgruppe und Ziele.",
         "generating_plan": "Kursplan wird generiert...",
         "chapters": "Kapitel",
         "activities": "Aktivitäten",
@@ -978,7 +978,7 @@
     "link_copied": "Link kopiert!",
     "share": "Teilen",
     "autosave_blocked": "Kann noch nicht gespeichert werden",
-    "autosave_retry": "Konnte nicht gespeichert werden — erneuter Versuch…",
+    "autosave_retry": "Konnte nicht gespeichert werden, erneuter Versuch…",
     "autosave_unsaved": "Ungespeicherte Änderungen",
     "autosaved": "Gespeichert",
     "autosaving": "Wird gespeichert…",
@@ -1153,7 +1153,7 @@
       "confirm_label": "Gib zur Bestätigung {{username}} ein",
       "deleting": "Wird gelöscht…",
       "zone_subtitle": "Dein Konto dauerhaft löschen. Dies kann nicht rückgängig gemacht werden.",
-      "zone_body": "Dadurch werden dein Konto und dein Zugriff entfernt. Jede Organisation, deren einzige:r Admin du bist — einschließlich aller Kurse und Inhalte — wird ebenfalls gelöscht. Organisationen mit weiteren Admins bleiben erhalten; du wirst lediglich daraus entfernt."
+      "zone_body": "Dadurch werden dein Konto und dein Zugriff entfernt. Jede Organisation, deren einzige:r Admin du bist (einschließlich aller Kurse und Inhalte), wird ebenfalls gelöscht. Organisationen mit weiteren Admins bleiben erhalten; du wirst lediglich daraus entfernt."
     }
   },
   "user": {
@@ -3607,9 +3607,9 @@
             "auth_required_submit": "Authentifizierung erforderlich. Bitte melden Sie sich an, um Ihre Aufgabenstellung einzureichen.",
             "hint_optional": "Hinweis (optional)",
             "paste_blocked": "Einfügen ist für diese Aufgabe deaktiviert",
-            "paste_blocked_hint": "Einfügen ist deaktiviert — gib deine Antwort direkt ein.",
-            "upload_locked_graded": "Diese Einreichung wurde bewertet — deine Datei kann nicht mehr geändert werden.",
-            "upload_locked_submitted": "Du hast diese Aufgabe eingereicht — deine Datei kann nicht mehr geändert werden."
+            "paste_blocked_hint": "Einfügen ist deaktiviert, gib deine Antwort direkt ein.",
+            "upload_locked_graded": "Diese Einreichung wurde bewertet, deine Datei kann nicht mehr geändert werden.",
+            "upload_locked_submitted": "Du hast diese Aufgabe eingereicht, deine Datei kann nicht mehr geändert werden."
           },
           "code": {
             "student_behavior_label": "Schülerverhalten",
@@ -3626,9 +3626,9 @@
             "show_solution_label": "Lösung nach Einreichen zeigen",
             "show_solution_description": "Sobald der Schüler seine Arbeit gespeichert hat, zeige die Referenzlösung des Lehrers als einklappbares Panel.",
             "reference_solution_label": "Referenzlösung",
-            "locked_graded_hint": "Diese Einreichung wurde bewertet — dein Code ist schreibgeschützt.",
-            "locked_submitted_hint": "Du hast diese Aufgabe eingereicht — dein Code ist schreibgeschützt.",
-            "no_runnable_tests": "Für diese Aufgabe gibt es keine Tests, die du ausführen kannst — dein Code wird bei der Bewertung geprüft."
+            "locked_graded_hint": "Diese Einreichung wurde bewertet, dein Code ist schreibgeschützt.",
+            "locked_submitted_hint": "Du hast diese Aufgabe eingereicht, dein Code ist schreibgeschützt.",
+            "no_runnable_tests": "Für diese Aufgabe gibt es keine Tests, die du ausführen kannst; dein Code wird bei der Bewertung geprüft."
           },
           "short_answer": {
             "prompt_label": "Frage",
@@ -3645,13 +3645,13 @@
               "regex": "Regulärer Ausdruck"
             },
             "explanation_label": "Erklärung (bei richtiger Antwort)",
-            "explanation_placeholder": "Optional — erkläre warum die Antwort richtig ist",
+            "explanation_placeholder": "Optional: Erkläre warum die Antwort richtig ist",
             "your_answer_placeholder": "Gib deine Antwort ein...",
             "student_answer_label": "Antwort des Schülers",
             "accepted_answers_label": "Akzeptierte Antworten",
             "no_answer": "Keine Antwort eingereicht",
             "correct": "Richtig",
-            "incorrect": "Leider nicht — versuch es nochmal"
+            "incorrect": "Leider nicht, versuch es nochmal"
           },
           "number_answer": {
             "prompt_label": "Frage",
@@ -3662,14 +3662,14 @@
             "unit_placeholder": "m/s², kg, °C...",
             "unit_hint": "Wird neben dem Antwortfeld angezeigt. Nicht erzwungen.",
             "explanation_label": "Erklärung (bei richtiger Antwort)",
-            "explanation_placeholder": "Optional — erkläre wie man zur Antwort kommt",
+            "explanation_placeholder": "Optional: Erkläre wie man zur Antwort kommt",
             "preview_label": "Akzeptiert",
             "your_answer_placeholder": "Zahl eingeben...",
             "student_answer_label": "Antwort des Schülers",
             "accepted_range_label": "Akzeptierter Bereich",
             "no_answer": "Keine Antwort eingereicht",
             "correct": "Richtig",
-            "incorrect": "Leider nicht — versuch es nochmal"
+            "incorrect": "Leider nicht, versuch es nochmal"
           }
         },
         "generate_ai": "Aufgaben mit AI erstellen",
@@ -3778,7 +3778,7 @@
         },
         "tasks": {
           "title": "Aufgabenleistung",
-          "subtitle": "Durchschnittspunkte je Aufgabe — niedrige Balken zeigen, wo es hakt",
+          "subtitle": "Durchschnittspunkte je Aufgabe, niedrige Balken zeigen, wo es hakt",
           "empty": "Die Leistung je Aufgabe erscheint nach den ersten Bewertungen",
           "avg_grade": "Durchschnittsnote",
           "attempts": "Versuche"
@@ -3790,7 +3790,7 @@
         },
         "attention": {
           "title": "Brauchen evtl. Unterstützung",
-          "subtitle": "Studierende, die nicht bestanden haben — ggf. ansprechen",
+          "subtitle": "Studierende, die nicht bestanden haben, ggf. ansprechen",
           "empty": "Alle Bewerteten haben bestanden. Gut gemacht!"
         }
       },
@@ -3832,7 +3832,7 @@
             "auto_grading_disabled_file": "Automatische Bewertung ist nicht verfügbar, da diese Aufgabe einen Datei-Upload enthält, der menschliche Überprüfung benötigt.",
             "grading_type_hint": "Wie Noten den Schülern angezeigt werden",
             "grading_options_hint": "Verhalten bei Einreichung",
-            "show_correct_answers_description": "Sobald die Einreichung bewertet ist, werden Schülern die richtigen Antworten neben ihren eigenen angezeigt — welche Quiz-Optionen korrekt waren, die erwartete Kurzantwort oder Zahl und die korrekten Formularlücken.",
+            "show_correct_answers_description": "Sobald die Einreichung bewertet ist, werden Schülern die richtigen Antworten neben ihren eigenen angezeigt: welche Quiz-Optionen korrekt waren, die erwartete Kurzantwort oder Zahl und die korrekten Formularlücken.",
             "show_correct_answers_label": "Richtige Antworten nach Bewertung anzeigen",
             "allow_retries_label": "Wiederholungen zulassen",
             "allow_retries_description": "Erlauben Sie Lernenden, die Aufgabe nach der Bewertung zurückzusetzen und erneut zu bearbeiten. Bei jeder Wiederholung werden die bisherigen Antworten gelöscht und sie zählt als neuer Versuch.",
@@ -4555,7 +4555,7 @@
         "avg_rate": "Durchschn. Rate",
         "needs_attention": "Aufmerksamkeit erforderlich",
         "total_samples": "Stichproben gesamt",
-        "more_expand": "+{{count}} weitere — klicken zum Aufklappen",
+        "more_expand": "+{{count}} weitere, klicken zum Aufklappen",
         "activities_count": "{{count}} Aktivitäten",
         "pct_of_total": "% vom Gesamt",
         "bar_width_hint": "Balkenbreite = relative Aufrufe",
@@ -4675,7 +4675,7 @@
       },
       "activity_dropoff": {
         "title": "Abbruchpunkte",
-        "subtitle": "Wo Lernende aufhören weiterzumachen — letzte abgeschlossene Aktivität",
+        "subtitle": "Wo Lernende aufhören weiterzumachen, letzte abgeschlossene Aktivität",
         "total_dropoffs": "Abbrüche gesamt",
         "dropoff_points": "Abbruchpunkte"
       },
@@ -4709,7 +4709,7 @@
         "avg_between": "durchschn. {{unit}} zwischen Abschlüssen",
         "transitions_tracked": "Übergänge erfasst",
         "raw_hours_avg": "Rohstunden-Durchschn.",
-        "description": "Misst, wie schnell Lernende von einer Aktivität zur nächsten fortschreiten. Niedriger ist besser — das bedeutet, dass Lernende schneller durch den Inhalt kommen."
+        "description": "Misst, wie schnell Lernende von einer Aktivität zur nächsten fortschreiten. Niedriger ist besser: Das bedeutet, dass Lernende schneller durch den Inhalt kommen."
       },
       "time_to_completion": {
         "title": "Zeit bis zum Abschluss",
@@ -5069,7 +5069,7 @@
       },
       "add_content": {
         "title": "Eine Lektion, für die es sich lohnt",
-        "description": "Füge ein Video, eine Seite oder ein Quiz hinzu — gib Lernenden einen echten Grund, sich anzumelden.",
+        "description": "Füge ein Video, eine Seite oder ein Quiz hinzu, gib Lernenden einen echten Grund, sich anzumelden.",
         "action": "Inhalt hinzufügen"
       },
       "brand_school": {
@@ -5079,17 +5079,17 @@
       },
       "share_grow": {
         "title": "Die Eingangstür deiner Schule",
-        "description": "Geh live und schnapp dir deinen teilbaren Link — der Ort, an den du jeden Lernenden schickst.",
+        "description": "Geh live und schnapp dir deinen teilbaren Link: der Ort, an den du jeden Lernenden schickst.",
         "action": "Meine Schule öffnen"
       },
       "invite_learners": {
         "title": "Begrüße deinen ersten Lernenden",
-        "description": "Teile deinen Beitrittslink oder lade Leute ein — hol den ersten Lernenden an Bord.",
+        "description": "Teile deinen Beitrittslink oder lade Leute ein, hol den ersten Lernenden an Bord.",
         "action": "Lernende einladen"
       },
       "build_community": {
         "title": "Halte Lernende bei der Stange",
-        "description": "Eröffne einen Community-Bereich, damit deine Lernenden aktiv bleiben — und ihre Freunde mitbringen.",
+        "description": "Eröffne einen Community-Bereich, damit deine Lernenden aktiv bleiben und ihre Freunde mitbringen.",
         "action": "Community öffnen"
       }
     },
@@ -5181,7 +5181,7 @@
         "goal": "Monetarisieren Sie Ihre Kurse und bauen Sie eine Lerngemeinschaft auf.",
         "highlights": {
           "courses": "Unbegrenzte Kurse",
-          "courses_desc": "Erstellen Sie so viele Kurse wie nötig — keine Limits.",
+          "courses_desc": "Erstellen Sie so viele Kurse wie nötig, keine Limits.",
           "members": "Bis zu 500 Mitglieder",
           "members_desc": "Vergrößern Sie Ihre Lernbasis und verwalten Sie alles an einem Ort.",
           "payments": "Zahlungen akzeptieren",
@@ -5239,7 +5239,7 @@
       "trigger_authenticated_title": "Zugriff: nur angemeldete Benutzer",
       "trigger_restricted_title": "Zugriff: bestimmte Benutzergruppen",
       "usergroups_header": "Benutzergruppen",
-      "usergroups_none_assigned": "Keine Gruppen zugewiesen — nur Admins können darauf zugreifen.",
+      "usergroups_none_assigned": "Keine Gruppen zugewiesen, nur Admins können darauf zugreifen.",
       "usergroups_remove_title": "Entfernen",
       "usergroups_loading": "Gruppen werden geladen…",
       "usergroups_none_in_org": "In dieser Organisation gibt es noch keine Benutzergruppen.",
@@ -5510,7 +5510,7 @@
     "recurring_subscription": "wiederkehrendes Abonnement",
     "what_youre_getting": "Das bekommst du",
     "pack_immediate": "Wird sofort nach der Zahlung wirksam",
-    "pack_cancel_anytime": "Jederzeit kündbar — bleibt bis zum Ende des Abrechnungszeitraums aktiv",
+    "pack_cancel_anytime": "Jederzeit kündbar, bleibt bis zum Ende des Abrechnungszeitraums aktiv",
     "pack_credits_reset": "Credits werden zu Beginn jedes Abrechnungszeitraums zurückgesetzt",
     "after_purchase": "Nach dem Kauf",
     "unlimited": "Unbegrenzt",
@@ -5560,9 +5560,9 @@
     "canceled_desc": "Dein Abonnement wird am Ende deines aktuellen Abrechnungszeitraums gekündigt. Bis dahin behältst du vollen Zugriff.",
     "back_to_plan_usage": "Zurück zu Tarif & Nutzung",
     "back_to_orgs": "Zurück zu den Organisationen",
-    "pack_purchased": "Add-on gekauft — Ihre Limits wurden aktualisiert.",
-    "checkout_success": "Abonnement aktualisiert — Willkommen bei Ihrem neuen Plan!",
-    "checkout_cancelled": "Checkout abgebrochen — keine Änderungen vorgenommen.",
+    "pack_purchased": "Add-on gekauft, Ihre Limits wurden aktualisiert.",
+    "checkout_success": "Abonnement aktualisiert. Willkommen bei Ihrem neuen Plan!",
+    "checkout_cancelled": "Checkout abgebrochen, keine Änderungen vorgenommen.",
     "load_failed": "Wir konnten Ihre Organisationen nicht laden.",
     "no_permission": "Sie haben keine Berechtigung, die Abrechnung für diese Organisation zu verwalten.",
     "no_permission_hint": "Nur ein Organisations-Administrator kann den Plan anzeigen oder ändern.",
@@ -5676,7 +5676,7 @@
     "toast": {
       "creating": "Organisation wird erstellt…",
       "created": "Organisation erstellt!",
-      "checkoutFailed": "Organisation erstellt — du kannst unter Tarif & Nutzung upgraden.",
+      "checkoutFailed": "Organisation erstellt, du kannst unter Tarif & Nutzung upgraden.",
       "failed": "Organisation konnte nicht erstellt werden"
     },
     "steps": {

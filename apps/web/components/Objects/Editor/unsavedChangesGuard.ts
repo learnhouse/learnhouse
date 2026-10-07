@@ -1,12 +1,12 @@
 // H5P frames report their own height to us over postMessage, so `blockH5P`
 // nodes can gain a new `height` attribute on first load without the author
-// touching anything. Ignore it when deciding whether the document is dirty —
+// touching anything. Ignore it when deciding whether the document is dirty;
 // otherwise opening an activity is enough to trigger the leave-confirm. The
 // value still rides along on the next real save.
 //
 // That only holds while the block is on `auto`. Under any other `sizeMode` the
 // height is the author's own choice, and dragging the frame's bottom edge on a
-// block already set to `custom` moves nothing else — so stripping it there
+// block already set to `custom` moves nothing else, so stripping it there
 // would let a real edit be thrown away with no leave-confirm at all.
 //
 // The rule is a function of the node's attributes rather than a flat key list
@@ -106,7 +106,7 @@ export function shouldGuardNavigationClick(
   // `target="_blank"` (and any non-self target) opens a new browsing context.
   if (anchor.target && anchor.target !== "_self") return false;
   if (!anchor.href) return false;
-  // External links leave the app entirely — `beforeunload` already covers those.
+  // External links leave the app entirely; `beforeunload` already covers those.
   if (anchor.origin !== currentOrigin) return false;
   return true;
 }

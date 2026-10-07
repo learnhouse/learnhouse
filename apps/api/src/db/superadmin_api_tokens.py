@@ -65,7 +65,7 @@ class SuperadminAPITokenRead(BaseModel):
 
 
 class SuperadminAPITokenCreatedResponse(BaseModel):
-    """Returned only on creation — the only response that includes the plaintext token."""
+    """Returned only on creation; the only response that includes the plaintext token."""
     token: str
     token_uuid: str
     name: str

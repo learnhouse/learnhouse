@@ -191,7 +191,7 @@ export async function devCommand(opts: { ee?: boolean; adminEmail?: string; admi
   const envOk = await checkDevEnv(root)
   if (!envOk) process.exit(1)
 
-  // EE mode — set up ee/ symlink when --ee is passed
+  // EE mode: set up ee/ symlink when --ee is passed
   const eePath = path.join(root, 'apps', 'api', 'ee')
   if (opts.ee) {
     if (!fs.existsSync(eePath)) {
@@ -206,7 +206,7 @@ export async function devCommand(opts: { ee?: boolean; adminEmail?: string; admi
           p.log.warning(`Could not create EE symlink: ${err.message}`)
         }
       } else {
-        p.log.warning(`--ee passed but no ee/ folder found at ${eeRepoPath} — running in OSS mode`)
+        p.log.warning(`--ee passed but no ee/ folder found at ${eeRepoPath}; running in OSS mode`)
       }
     }
 
@@ -232,7 +232,7 @@ export async function devCommand(opts: { ee?: boolean; adminEmail?: string; admi
   const alreadyRunning = isInfraRunning()
 
   if (alreadyRunning) {
-    p.log.success('Existing DB and Redis containers detected — reusing them')
+    p.log.success('Existing DB and Redis containers detected, reusing them')
   }
 
   // Resolve admin credentials: CLI flags take priority, then interactive prompts (first setup only)
@@ -364,7 +364,7 @@ export async function devCommand(opts: { ee?: boolean; adminEmail?: string; admi
 
   printControls()
 
-  // Graceful shutdown — keep containers running for reuse
+  // Graceful shutdown; keep containers running for reuse
   let shuttingDown = false
   const shutdown = async () => {
     if (shuttingDown) return

@@ -1,5 +1,5 @@
 #!/bin/bash
-# Local demo stack — API.
+# Local demo stack: API.
 #
 # The demo is a *second* organization, so it needs subdomain tenancy: in single
 # tenancy every path resolves to the one default org and the demo is

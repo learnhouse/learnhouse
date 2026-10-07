@@ -68,7 +68,7 @@ async def join_org(
     # SECURITY: a user may only join an organization as themselves. Without this
     # check, any authenticated caller could pass an arbitrary user_id in the
     # request body and force-join (or, in inviteOnly orgs, force-attach to a
-    # usergroup) any other account — an IDOR / privilege-escalation flaw.
+    # usergroup) any other account: an IDOR / privilege-escalation flaw.
     if isinstance(current_user, AnonymousUser) or str(user.id) != str(current_user.id):
         raise HTTPException(
             status_code=403,

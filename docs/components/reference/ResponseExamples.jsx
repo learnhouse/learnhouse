@@ -4,7 +4,7 @@ import { useState } from 'react'
 
 /**
  * Status-code-tabbed response examples. The JSON is highlighted server-side
- * (shiki) — this component only switches between pre-rendered blocks.
+ * (shiki); this component only switches between pre-rendered blocks.
  */
 export default function ResponseExamples({ responses }) {
   const withExamples = (responses || []).filter((r) => r.exampleHtml)

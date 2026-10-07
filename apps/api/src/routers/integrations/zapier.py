@@ -3,7 +3,7 @@ Zapier integration router.
 
 These endpoints are called by the Zapier Platform (not the LearnHouse dashboard)
 and MUST be authenticated via an API token (``Authorization: Bearer lh_...``).
-The token carries the organization scope — no ``org_id`` appears in the URL.
+The token carries the organization scope; no ``org_id`` appears in the URL.
 
 Pattern: REST Hooks. When a Zap is enabled, Zapier calls ``POST /subscriptions``
 with a target URL; we create a ``WebhookEndpoint`` tagged ``source="zapier"``.
@@ -36,7 +36,7 @@ from src.services.webhooks.crypto import encrypt_secret
 from src.services.webhooks.events import WEBHOOK_EVENTS
 # Reuse the same SSRF guard as the manual webhook create path so both code
 # paths enforce identical validation. The leading underscore is conventional,
-# not enforced — importing it here is deliberate to avoid duplicating the
+# not enforced; importing it here is deliberate to avoid duplicating the
 # logic across files.
 from src.services.webhooks.webhooks import _validate_webhook_url
 
@@ -317,7 +317,7 @@ async def zapier_list_usergroups(
         "Creates a webhook endpoint tagged `source=\"zapier\"` that the dispatcher will deliver events to."
     ),
     responses={
-        201: {"description": "Subscription created — webhook endpoint registered for the given event.", "model": ZapierSubscriptionResponse},
+        201: {"description": "Subscription created: webhook endpoint registered for the given event.", "model": ZapierSubscriptionResponse},
         400: {"description": "Unknown event name or invalid target URL (SSRF guard)"},
         401: {"description": "Missing or invalid API token"},
         403: {"description": "Organization plan does not include Zapier integration (Pro+ required)"},
@@ -338,7 +338,7 @@ async def zapier_create_subscription(
     now = str(datetime.now())
     description = f"Zapier: {payload.zap_name}" if payload.zap_name else "Zapier integration"
 
-    # The signing secret is never returned to Zapier — Zapier's Catch Hook
+    # The signing secret is never returned to Zapier; Zapier's Catch Hook
     # authenticates its own inbound URL, so signatures are unused here. We
     # still persist one so the dispatcher can sign the payload exactly like
     # any other webhook (defence in depth).

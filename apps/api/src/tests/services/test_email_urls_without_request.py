@@ -2,7 +2,7 @@
 
 A cron job has no `Request`, so every fallback these builders take when
 `request is None` is on the lifecycle-email hot path. Untested, a wrong branch
-here produces a link that 404s or points at the wrong tenant — invisible from
+here produces a link that 404s or points at the wrong tenant, invisible from
 the sending side.
 """
 
@@ -136,7 +136,7 @@ class TestOrgSignupBaseUrlWithoutRequest:
         assert await email_utils.get_org_signup_base_url("acme") == ""
 
     async def test_a_verified_custom_domain_still_wins(self, monkeypatch, clean_env):
-        """An org on a custom domain keeps its session there — linking to the
+        """An org on a custom domain keeps its session there; linking to the
         generic subdomain would land the reader cross-origin."""
         monkeypatch.setattr(email_utils, "get_learnhouse_config", _config)
 

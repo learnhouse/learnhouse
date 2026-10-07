@@ -18,11 +18,11 @@ import { INSTALL_NAME, SKIP_BOOT } from './core/instance'
 
 export default async function globalTeardown(): Promise<void> {
   if (SKIP_BOOT) {
-    console.log('Reused an existing instance — leaving it running.')
+    console.log('Reused an existing instance; leaving it running.')
     return
   }
   if (process.env.E2E_KEEP === '1') {
-    console.log(`E2E_KEEP=1 — leaving install "${INSTALL_NAME}" running for debugging.`)
+    console.log(`E2E_KEEP=1: leaving install "${INSTALL_NAME}" running for debugging.`)
     return
   }
 
@@ -38,6 +38,6 @@ export default async function globalTeardown(): Promise<void> {
     timeout: 120_000,
   })
   if (result.status !== 0) {
-    console.warn(`docker compose down exited ${result.status} — manual cleanup may be needed.`)
+    console.warn(`docker compose down exited ${result.status}; manual cleanup may be needed.`)
   }
 }

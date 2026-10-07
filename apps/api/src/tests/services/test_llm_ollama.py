@@ -1,7 +1,7 @@
 """Live, local provider-agnostic tests against Ollama (no cloud keys).
 
 These prove that text generation, streaming, and structured output run through the same
-``src.services.ai.llm`` layer on a NON-Gemini provider with zero code changes — the whole
+``src.services.ai.llm`` layer on a NON-Gemini provider with zero code changes, which is the whole
 point of the refactor. They are opt-in and skipped automatically when Ollama isn't running.
 
 Run locally with:
@@ -103,7 +103,7 @@ async def test_generate_json_text_parses():
 async def test_history_round_trips():
     history = [
         {"role": "user", "content": "My favorite color is teal."},
-        {"role": "model", "content": "Got it — teal."},
+        {"role": "model", "content": "Got it, teal."},
     ]
     text = await llm_client.generate(
         model_name=OLLAMA_MODEL,

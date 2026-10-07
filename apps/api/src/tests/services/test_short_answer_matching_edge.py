@@ -14,7 +14,7 @@ These are NET-NEW cases that complement the happy-path coverage in
 basic per-mode matches, simple trimming, the default-mode fallback, a single
 invalid-regex case, a single multi-accepted case, and blank/None/non-list
 guards). Each test documents its goal and asserts the *actual* observed
-behavior of the function — surprising behaviors are called out in docstrings.
+behavior of the function; surprising behaviors are called out in docstrings.
 
 Realistic input shapes confirmed against the editor UI
 (``TaskShortAnswerObject.tsx``): ``match_mode`` is one of the four literals and
@@ -37,7 +37,7 @@ class TestUnicodeAndCaseFolding:
         assert _check_short_answer("CAFÉ", ["café"], "case_insensitive") is True
 
     def test_accented_differs_from_unaccented_in_exact(self):
-        """Goal: 'cafe' must NOT match 'café' — accents are significant, not stripped."""
+        """Goal: 'cafe' must NOT match 'café'; accents are significant, not stripped."""
         assert _check_short_answer("cafe", ["café"], "exact") is False
 
     def test_accented_differs_from_unaccented_in_case_insensitive(self):
@@ -45,7 +45,7 @@ class TestUnicodeAndCaseFolding:
         assert _check_short_answer("resume", ["résumé"], "case_insensitive") is False
 
     def test_nfc_vs_nfd_combining_marks_not_equal(self):
-        """Goal: surprising-but-real — composed 'é' (NFC) does NOT equal decomposed
+        """Goal: surprising-but-real. Composed 'é' (NFC) does NOT equal decomposed
         'e' + combining accent (NFD). The matcher does no unicode normalization,
         so a student typing the visually-identical NFD form is marked wrong."""
         nfc = "é"          # é as one code point
@@ -55,7 +55,7 @@ class TestUnicodeAndCaseFolding:
         assert _check_short_answer(nfd, [nfc], "case_insensitive") is False
 
     def test_sharp_s_not_equal_to_double_s_uppercase(self):
-        """Goal: surprising-but-real — German 'straße' is NOT matched by 'STRASSE'
+        """Goal: surprising-but-real. German 'straße' is NOT matched by 'STRASSE'
         in case-insensitive mode. Python's str.lower() (not casefold) leaves 'ß'
         unchanged while 'STRASSE'.lower() -> 'strasse', so they differ."""
         assert _check_short_answer("STRASSE", ["straße"], "case_insensitive") is False
@@ -95,7 +95,7 @@ class TestWhitespaceHandling:
         assert _check_short_answer(" \t\nParis \n\t ", ["Paris"], "exact") is True
 
     def test_internal_whitespace_is_preserved_exact(self):
-        """Goal: surprising-but-real — only outer whitespace is trimmed; internal
+        """Goal: surprising-but-real. Only outer whitespace is trimmed; internal
         whitespace is NOT collapsed, so 'New  York' (two spaces) != 'New York'."""
         assert _check_short_answer("New  York", ["New York"], "exact") is False
 
@@ -140,7 +140,7 @@ class TestDirtyAcceptedList:
         assert _check_short_answer("Paris", [""], "exact") is False
 
     def test_empty_string_entry_does_not_match_empty_answer(self):
-        """Goal: even a blank student answer does not match an empty accepted entry —
+        """Goal: even a blank student answer does not match an empty accepted entry;
         the blank-answer guard returns False before the loop runs."""
         assert _check_short_answer("", [""], "exact") is False
 
@@ -172,7 +172,7 @@ class TestDirtyAcceptedList:
         assert _check_short_answer("Paris", [], "exact") is False
 
     def test_later_accepted_answer_matches_case_insensitive(self):
-        """Goal: matching is order-independent — a match on the 3rd entry succeeds."""
+        """Goal: matching is order-independent; a match on the 3rd entry succeeds."""
         accepted = ["Lyon", "Marseille", "Paris"]
         assert _check_short_answer("PARIS", accepted, "case_insensitive") is True
 
@@ -186,7 +186,7 @@ class TestDirtyAcceptedList:
 # --------------------------------------------------------------------------- #
 class TestNonListAccepted:
     def test_tuple_accepted_is_false(self):
-        """Goal: surprising-but-real — a tuple is NOT a list, so even though it
+        """Goal: surprising-but-real. A tuple is NOT a list, so even though it
         contains a matching string it returns False (strict isinstance(list))."""
         assert _check_short_answer("Paris", ("Paris",), "exact") is False
 
@@ -339,7 +339,7 @@ class TestContainsPositions:
         assert _check_short_answer("Paris", ["Paris"], "contains") is True
 
     def test_contains_substring_inside_word_matches(self):
-        """Goal: surprising-but-real — contains has no word boundaries, so 'cat'
+        """Goal: surprising-but-real. The contains mode has no word boundaries, so 'cat'
         matches inside 'category' (could over-credit, but is the actual behavior)."""
         assert _check_short_answer("category theory", ["cat"], "contains") is True
 
@@ -362,7 +362,7 @@ class TestUnknownMode:
         assert _check_short_answer("Paris", ["Paris"], "fuzzy") is False
 
     def test_empty_string_mode_falls_through(self):
-        """Goal: surprising-but-real — an empty-string mode is falsy, so
+        """Goal: surprising-but-real. An empty-string mode is falsy, so
         `mode or 'case_insensitive'` defaults it to case_insensitive (NOT a
         fall-through). So 'paris' matches 'Paris'."""
         assert _check_short_answer("paris", ["Paris"], "") is True
@@ -385,7 +385,7 @@ class TestNumericAndLongInputs:
         assert _check_short_answer("42", ["42"], "exact") is True
 
     def test_numeric_string_no_float_normalization(self):
-        """Goal: surprising-but-real — short-answer does NO numeric parsing, so
+        """Goal: surprising-but-real. Short-answer does NO numeric parsing, so
         '5.0' does NOT match '5' (use a number task for numeric tolerance)."""
         assert _check_short_answer("5.0", ["5"], "exact") is False
 
@@ -399,7 +399,7 @@ class TestNumericAndLongInputs:
         assert _check_short_answer(42, ["42"], "exact") is True
 
     def test_bool_answer_coerced_to_str(self):
-        """Goal: surprising-but-real — a bool answer is str()-coerced to 'True',
+        """Goal: surprising-but-real. A bool answer is str()-coerced to 'True',
         which does not match accepted 'true' in exact mode (capital T)."""
         assert _check_short_answer(True, ["true"], "exact") is False
 

@@ -4,9 +4,9 @@ import MailChecker from 'mailchecker'
 // Disposable / throwaway email detection, used to keep fake signups out.
 //
 // Two layers:
-//  1. `isDisposableEmail` — instant, offline check via mailchecker's bundled
+//  1. `isDisposableEmail`: instant, offline check via mailchecker's bundled
 //     list of known temp-mail domains. Zero latency, no network, always on.
-//  2. `isDisposableEmailAPI` — slower AbstractAPI email-reputation lookup that
+//  2. `isDisposableEmailAPI`: slower AbstractAPI email-reputation lookup that
 //     catches newer/obscure domains the bundled list misses. Cached per-domain
 //     for 4 days. Only runs when ABSTRACT_EMAIL_API_KEY is set; otherwise it's
 //     a no-op that returns false (never blocks).

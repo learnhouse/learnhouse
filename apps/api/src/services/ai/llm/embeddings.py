@@ -1,7 +1,7 @@
 """Provider-agnostic embeddings (Pydantic AI).
 
-Embeddings follow the configured AI provider wherever that provider exposes an embeddings API
-— Google and the OpenAI family (OpenAI, Azure, Together, and local Ollama). Providers without
+Embeddings follow the configured AI provider wherever that provider exposes an embeddings API:
+Google and the OpenAI family (OpenAI, Azure, Together, and local Ollama). Providers without
 an embeddings API (Anthropic, DeepSeek, Moonshot, Mistral, OpenRouter, Bedrock) transparently fall back to
 Google embeddings when ``gemini_api_key`` is set, otherwise a clear error is raised.
 
@@ -27,7 +27,7 @@ from src.services.ai.llm.provider import (
 
 logger = logging.getLogger(__name__)
 
-# Default dimensionality — matches Vector(768) in src/db/course_embeddings.py.
+# Default dimensionality; matches Vector(768) in src/db/course_embeddings.py.
 DEFAULT_EMBEDDING_DIMENSIONS = 768
 
 # Per-provider default embedding model. All chosen to produce 768-dim vectors so the existing

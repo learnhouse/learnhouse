@@ -96,7 +96,7 @@ def _set_temp_dir(monkeypatch, path) -> None:
 
 
 class TestContentFileMimeHardening:
-    """F21/F24 — nothing served from /content may render as a document."""
+    """F21/F24: nothing served from /content may render as a document."""
 
     @pytest.mark.parametrize(
         "filename", ["evil.html", "evil.js", "evil.css", "evil.xml"]
@@ -192,7 +192,7 @@ class TestContentFileMimeHardening:
 
 
 class TestImportExtensionAllowlist:
-    """F21/F24 — the import pipeline must not persist package-chosen types."""
+    """F21/F24: the import pipeline must not persist package-chosen types."""
 
     @pytest.mark.parametrize(
         "filename",
@@ -364,7 +364,7 @@ class TestImportExtensionAllowlist:
 
 
 class TestImportTempIdTraversal:
-    """F8 — temp_id reaches os.rename/open/rmtree and must be a UUID."""
+    """F8: temp_id reaches os.rename/open/rmtree and must be a UUID."""
 
     def test_require_temp_id_rejects_non_uuid_values(self):
         for value in ["../../orgs", "..", "/etc", "not-a-uuid", "", None]:

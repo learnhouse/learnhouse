@@ -2,7 +2,7 @@
 
 Creates the ``aigeneration`` table that durably records AI-generated artifacts
 the user kept (images, editor quizzes, assignment plans). The in-progress
-multi-turn refine chat still lives ephemerally in Redis — this table is the
+multi-turn refine chat still lives ephemerally in Redis; this table is the
 durable, queryable history surfaced in each feature's "History" tab.
 
 The migration tree had multiple open heads when this was authored; this revision
@@ -10,7 +10,7 @@ also merges them (like the prior merge migration in this project) so
 ``alembic upgrade head`` resolves to a single head again.
 
 Revision ID: f9e8d7c6b5a4
-Revises: (merges all prior heads — see down_revision tuple)
+Revises: (merges all prior heads; see down_revision tuple)
 Create Date: 2026-07-02
 
 """

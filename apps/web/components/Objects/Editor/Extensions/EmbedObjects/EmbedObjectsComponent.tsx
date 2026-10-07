@@ -127,7 +127,7 @@ function EmbedObjectsComponent(props: any) {
 
   // Only track the breakpoint here. Sizing itself is handled in CSS
   // (percentage width + aspect-ratio), so the observer never writes node
-  // attributes — that used to fire on every window resize.
+  // attributes; that used to fire on every window resize.
   useEffect(() => {
     const parentElement = containerRef.current?.parentElement;
     if (!parentElement) return;
@@ -162,7 +162,7 @@ function EmbedObjectsComponent(props: any) {
 
     if (!height) return;
 
-    // Never resized by hand, so the 300px is just the attribute default —
+    // Never resized by hand, so the 300px is just the attribute default;
     // 16:9 fits video, which is what most URL embeds are.
     if (height === DEFAULT_EMBED_HEIGHT) {
       setAspectRatio(16 / 9);

@@ -85,7 +85,7 @@ export async function updateCommand(options: { version?: string; migrate?: boole
   }
   const s = p.spinner()
   try {
-    // 1) Back up the database first (safety net for migrations) — works for the
+    // 1) Back up the database first (safety net for migrations). Works for the
     //    in-container db AND an external one via the .env string.
     if (options.backup !== false) {
       s.start('Backing up the database')
@@ -95,7 +95,7 @@ export async function updateCommand(options: { version?: string; migrate?: boole
         ui.ok(`Backup: ${b}`)
       } catch (err) {
         s.stop('Backup failed')
-        p.log.error(`Database backup failed: ${(err as Error)?.message ?? err}. Aborting — nothing changed.`)
+        p.log.error(`Database backup failed: ${(err as Error)?.message ?? err}. Aborting; nothing changed.`)
         process.exit(1)
       }
     } else {
@@ -154,7 +154,7 @@ export async function updateCommand(options: { version?: string; migrate?: boole
           s.stop('Content storage already persistent')
           break
         case 'skipped_s3':
-          s.stop('Content served from S3 — no local volume needed')
+          s.stop('Content served from S3; no local volume needed')
           break
         case 'no_compose':
           s.stop('Skipped content migration (no docker-compose.yml found)')
@@ -204,7 +204,7 @@ export async function updateCommand(options: { version?: string; migrate?: boole
       // image's startup created that still needs a migration.
       p.log.step('Verifying database migrations')
       if (!runAlembicUpgrade(config.installDir, COMMUNITY_LAYOUT, ui)) {
-        p.log.warn('Your DB backup is in ./backups/ — restore it and re-pin the previous image to roll back.')
+        p.log.warn('Your DB backup is in ./backups/; restore it and re-pin the previous image to roll back.')
         process.exit(1)
       }
     } else {

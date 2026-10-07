@@ -2,7 +2,7 @@
 
 Only the display NAME is per-org. The From address stays the platform's
 verified system address, so these tests never assert anything about an
-org-supplied address — there is none.
+org-supplied address; there is none.
 """
 
 from datetime import datetime
@@ -101,7 +101,7 @@ class TestUpdateOrgEmailSenderNameConfig:
     async def test_stores_the_sanitized_value_not_the_raw_one(
         self, mock_request, db, other_org, admin_user
     ):
-        """What is stored is what will be sent, so it is cleaned on write too —
+        """What is stored is what will be sent, so it is cleaned on write too,
         never trusting that the read side is the only guard."""
         await _make_org_config(
             db,

@@ -1,26 +1,26 @@
 import { getUserAvatarMediaDirectory } from '@services/media/media'
 
 export function fmtDate(dateStr: string | null | undefined): string {
-  if (!dateStr) return '—'
+  if (!dateStr) return 'n/a'
   try {
     const d = new Date(dateStr)
-    if (isNaN(d.getTime())) return '—'
+    if (isNaN(d.getTime())) return 'n/a'
     return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
   } catch {
-    return '—'
+    return 'n/a'
   }
 }
 
 export function fmtDateTime(dateStr: string | null | undefined): string {
-  if (!dateStr) return '—'
+  if (!dateStr) return 'n/a'
   try {
     const d = new Date(dateStr)
-    if (isNaN(d.getTime())) return '—'
+    if (isNaN(d.getTime())) return 'n/a'
     return d.toLocaleString('en-US', {
       month: 'short', day: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit',
     })
   } catch {
-    return '—'
+    return 'n/a'
   }
 }
 

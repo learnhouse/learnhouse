@@ -514,7 +514,7 @@ class TestImportHelpers:
     ):
         """
         F-10: zip entries with the S_IFLNK mode flag in external_attr are
-        symbolic links — extracting them lets a malicious archive redirect
+        symbolic links. Extracting them lets a malicious archive redirect
         later writes. We refuse the archive.
         """
         import zipfile as zf
@@ -537,7 +537,7 @@ class TestImportHelpers:
             )
             z.writestr("c1/course.json", json.dumps({"course_uuid": "c1", "name": "x"}))
             # Symlink entry: 0xA1ED (S_IFLNK | 0o755) shifted into the upper
-            # 16 bits of external_attr — matches the convention zipfile uses.
+            # 16 bits of external_attr, matching the convention zipfile uses.
             sym_info = zf.ZipInfo("c1/evil_link")
             sym_info.external_attr = (0xA1ED) << 16
             z.writestr(sym_info, "/etc/passwd")
@@ -563,7 +563,7 @@ class TestImportHelpers:
         Every Unix zip tool (Info-Zip, Finder's "Compress", zipfile when given
         an explicit ZipInfo) records the real mode in the upper 16 bits of
         external_attr, so ordinary files arrive carrying S_IFREG. Those must
-        pass the guard — otherwise the export -> edit -> re-zip -> re-import
+        pass the guard; otherwise the export -> edit -> re-zip -> re-import
         round trip dies on the first regular file in the archive.
         """
         _set_import_temp_dir(monkeypatch, tmp_path)

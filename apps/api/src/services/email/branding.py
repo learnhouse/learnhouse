@@ -1,22 +1,22 @@
 """Per-organization branding for system email.
 
-Every org-scoped message — login link, password reset, invitation, address
-verification, role change, welcome, lifecycle nudge — goes out under the
+Every org-scoped message (login link, password reset, invitation, address
+verification, role change, welcome, lifecycle nudge) goes out under the
 organization's identity rather than the platform's. This module is the single
 place that identity is read from, so no two call sites can disagree about which
 config key holds the logo, the accent color, or the "Powered by" switch.
 
 The pieces, and where each one comes from:
 
-* ``org_name``      — ``Organization.name``; names the org in copy and subjects.
-* ``lang``          — ``customization.general.default_language``.
-* ``sender_name``   — ``customization.general.email_sender_name`` (From display
+* ``org_name``:       ``Organization.name``; names the org in copy and subjects.
+* ``lang``:           ``customization.general.default_language``.
+* ``sender_name``:    ``customization.general.email_sender_name`` (From display
                       name only; the address never changes, see ``send_email``).
-* ``logo_url``      — the square logo (``customization.general.square_logo_image``)
+* ``logo_url``:       the square logo (``customization.general.square_logo_image``)
                       when uploaded, else ``Organization.logo_image``, as an
                       absolute URL.
-* ``brand_color``   — ``customization.general.color``; tints the CTA button.
-* ``powered_by``    — ``customization.general.watermark``; renders the small
+* ``brand_color``:    ``customization.general.color``; tints the CTA button.
+* ``powered_by``:     ``customization.general.watermark``; renders the small
                       "Powered by LearnHouse" footer line. Always on for the
                       open-source edition and for SaaS free-plan orgs; a paid
                       SaaS plan or an Enterprise licence may turn it off.
@@ -59,7 +59,7 @@ def normalize_brand_color(raw: Any) -> Optional[str]:
 def contrasting_text_color(hex_color: str) -> str:
     """Black or white, whichever is legible on ``hex_color``.
 
-    WCAG relative luminance against a 0.179 threshold — the crossover at which
+    WCAG relative luminance against a 0.179 threshold, the crossover at which
     white and black text have equal contrast ratio with the background.
     """
     digits = hex_color.lstrip("#")
@@ -154,7 +154,7 @@ def resolve_org_email_branding(
     ``org_config`` may be None (an org with no config row yet); every field
     then takes its default. ``request`` is only used to resolve the logo to an
     absolute URL on single-tenant deployments where the API host is not
-    configured — background jobs pass None.
+    configured; background jobs pass None.
     """
     # Imported here: orgs.orgs imports the email package indirectly.
     from src.services.email.utils import get_org_brand_logo_url

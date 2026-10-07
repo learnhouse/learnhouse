@@ -39,7 +39,7 @@ RATE_LIMIT_PATH = "src.services.security.rate_limiting.enforce_ai_rate_limit"
 
 @pytest.fixture
 async def org_config(db, org):
-    """Minimal org config row — the AI services validate one before answering."""
+    """Minimal org config row; the AI services validate one before answering."""
     cfg = OrganizationConfig(org_id=org.id, config={"config_version": "1.0"})
     db.add(cfg)
     await db.commit()
@@ -48,7 +48,7 @@ async def org_config(db, org):
 
 @pytest.fixture
 async def outsider_user(db, other_org):
-    """A user registered in another org — no membership in the test org."""
+    """A user registered in another org, with no membership in the test org."""
     u = User(
         id=99,
         username="outsider",
@@ -84,7 +84,7 @@ async def outsider_user(db, other_org):
 
 
 # ---------------------------------------------------------------------------
-# F5 / F6 — activity AI chat authorization
+# F5 / F6: activity AI chat authorization
 # ---------------------------------------------------------------------------
 
 
@@ -300,7 +300,7 @@ class TestActivityChatAuthorization:
 
 
 # ---------------------------------------------------------------------------
-# F32 — editor AI authorization
+# F32: editor AI authorization
 # ---------------------------------------------------------------------------
 
 
@@ -432,7 +432,7 @@ class TestEditorAIAuthorization:
 
 
 # ---------------------------------------------------------------------------
-# F19 — editor TipTap serialization clamp
+# F19: editor TipTap serialization clamp
 # ---------------------------------------------------------------------------
 
 
@@ -503,7 +503,7 @@ class TestEditorHeadingClamp:
 
 
 # ---------------------------------------------------------------------------
-# F40 — stored ProseMirror content clamp (RAG indexing)
+# F40: stored ProseMirror content clamp (RAG indexing)
 # ---------------------------------------------------------------------------
 
 

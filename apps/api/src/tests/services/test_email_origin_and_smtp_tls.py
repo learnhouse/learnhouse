@@ -174,7 +174,7 @@ class TestScopedOriginRegexp:
         assert _is_scoped_origin_regexp(pattern)
 
     def test_shipped_catch_all_default_cannot_host_an_email_link(self):
-        """The shipped default stays a catch-all on purpose — the same value
+        """The shipped default stays a catch-all on purpose: the same value
         drives CORS and CSRF, so narrowing it would lock out every deployment
         that relies on it. What must hold is that a catch-all can never decide
         the host of an emailed link: it is recognized and ignored."""

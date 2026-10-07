@@ -15,7 +15,7 @@ import PlanBadge from '@components/Dashboard/Shared/PlanRestricted/PlanBadge'
 import { useLHAnalytics, useTrackView, AnalyticsEvent } from '@services/analytics'
 
 export interface FeatureGateProps {
-  /** Feature key (drives icon, copy, upsell tier — see featureMetadata.ts). */
+  /** Feature key (drives icon, copy, upsell tier; see featureMetadata.ts). */
   feature: FeatureKey
   /**
    * Org slug for the upgrade deep-link in the plan-locked state. Optional;
@@ -23,7 +23,7 @@ export interface FeatureGateProps {
    */
   orgslug?: string
   /**
-   * Picks the wording of the admin-disabled card — both variants are static,
+   * Picks the wording of the admin-disabled card. Both variants are static,
    * neither links anywhere.
    * - 'dashboard': admin context, copy addressed to someone who can flip the
    *   toggle back on.
@@ -34,7 +34,7 @@ export interface FeatureGateProps {
    * Escape hatch for a surface that HOSTS the toggle controlling this very
    * feature: without it, turning the feature off unmounts its own switch and
    * the admin is locked out with no way back. Bypasses the admin-disabled card
-   * only — a plan-locked feature still shows the upgrade card.
+   * only; a plan-locked feature still shows the upgrade card.
    */
   allowWhenDisabled?: boolean
   /** Content rendered when the feature is granted. */
@@ -111,7 +111,7 @@ function UpgradeCard({
   const upgradeUrl = getUpgradeUrl(orgSlug, meta.upsellPlan)
   const gradient = PLAN_GRADIENT[meta.upsellPlan] ?? 'from-gray-50/80'
 
-  // Impression: fires once per mount everywhere a feature is gated by plan —
+  // Impression: fires once per mount everywhere a feature is gated by plan, which
   // distinguishes "feature locked behind upgrade" across the whole app.
   const { track } = useLHAnalytics('dashboard')
   useTrackView(

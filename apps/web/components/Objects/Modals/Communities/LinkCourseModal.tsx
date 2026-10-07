@@ -51,7 +51,7 @@ export function LinkCourseModal({
         const result = await getOrgCourses(orgSlug, null, accessToken)
         setCourses(result || [])
       } catch (_error) {
-        // silent — empty list handles it
+        // silent; empty list handles it
       } finally {
         setIsLoadingCourses(false)
       }

@@ -63,7 +63,7 @@ def is_range_unsatisfiable(range_header: Optional[str], file_size: int) -> bool:
     if file_size <= 0:
         return True
     spec = range_header.replace("bytes=", "").strip()
-    if spec.startswith("-"):  # suffix range — always satisfiable for size>0
+    if spec.startswith("-"):  # suffix range, always satisfiable for size>0
         return False
     try:
         start = int(spec.split("-")[0])

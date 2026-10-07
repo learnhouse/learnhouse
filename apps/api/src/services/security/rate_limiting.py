@@ -200,11 +200,11 @@ def check_refresh_rate_limit(request: Request) -> Tuple[bool, int]:
     /auth/refresh requires an already-valid, server-signed refresh JWT, so
     there is nothing here an attacker can brute-force.
 
-    The limit is keyed per IP, and schools/companies — LearnHouse's core
-    audience — put hundreds of users behind a single NAT address. The previous
+    The limit is keyed per IP, and schools/companies (LearnHouse's core
+    audience) put hundreds of users behind a single NAT address. The previous
     60/minute ceiling was reached by a few dozen people signing in at the same
     time (start of a class, Monday morning), and every request over the line
-    got a 429 that the frontend then treated as "your session is dead" —
+    got a 429 that the frontend then treated as "your session is dead",
     logging out an entire site at once. Keep this generous; the real
     protections are the JWT signature, the revocation blocklist, and the
     one-time-use rotation.
@@ -465,7 +465,7 @@ def check_ai_rate_limit(user_id: int, org_id: int) -> Tuple[bool, int]:
     Per-user AND per-org sliding-window rate limit for AI endpoints.
 
     AI routes consume real model spend and provider capacity. Credits alone
-    don't prevent a single authenticated user from saturating workers — they
+    don't prevent a single authenticated user from saturating workers; they
     throttle spend, not concurrency. This guard enforces both a per-user
     ceiling (to stop a single actor from exhausting capacity) and a per-org
     ceiling (to protect multi-tenant fairness).

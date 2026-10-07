@@ -69,7 +69,7 @@ async def _course_facts(db_session: AsyncSession, org_ids: Sequence[int]) -> dic
     ).all()
     facts = _rows_by_org(rows)
 
-    # The newest course, and the oldest still-unpublished one — nudges link to
+    # The newest course, and the oldest still-unpublished one. Nudges link to
     # a specific course by name, never to a generic list.
     newest: dict[int, tuple[str, str]] = {}
     drafts: dict[int, tuple[str, str]] = {}
@@ -158,7 +158,7 @@ async def _admin_rows(db_session: AsyncSession, org_ids: Sequence[int]) -> dict:
 
 
 async def _simple_count_facts(db_session: AsyncSession, org_ids: Sequence[int]) -> dict:
-    """Chapters, activities and trail runs — three small grouped queries."""
+    """Chapters, activities and trail runs: three small grouped queries."""
     chapters = _rows_by_org(
         (
             await db_session.execute(
@@ -291,7 +291,7 @@ async def _ai_credit_usage(org_ids: Sequence[int]) -> dict[int, int]:
 async def _activity_day_facts(db_session: AsyncSession, org_ids: Sequence[int]) -> dict:
     """Newest recorded activity day per org.
 
-    The best freshness signal we have, and absent for most orgs — the table is
+    The best freshness signal we have, and absent for most orgs: the table is
     SaaS-gated and only recently populated, so it refines ``last_touch`` rather
     than defining it.
     """
@@ -311,7 +311,7 @@ async def _activity_day_facts(db_session: AsyncSession, org_ids: Sequence[int]) 
 async def _first_nudge_facts(db_session: AsyncSession, org_ids: Sequence[int]) -> dict:
     """When each org first received a nudge.
 
-    The reactivation ladder measures from this instead of from last activity —
+    The reactivation ladder measures from this instead of from last activity;
     a long-dormant org's last-touch figure never moves, so nothing anchored on
     it can advance through a sequence.
     """
@@ -503,7 +503,7 @@ async def iter_snapshots(
     cursor = 0
     while True:
         # The shared demo org is excluded from every nudge. Its admins are
-        # prospects who joined to look around, and its activity is synthetic —
+        # prospects who joined to look around, and its activity is synthetic;
         # nudging them about how quiet their academy is, or congratulating them
         # on fake enrolments, is worse than staying silent. The filter is on the
         # scan itself so no nudge in the catalog can opt back in.

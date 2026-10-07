@@ -19,7 +19,7 @@ class TestLookup:
 
 class TestOptOutState:
     async def test_absence_of_a_row_means_opted_in(self, db, admin_user):
-        """No row is the "never asked" state — everyone starts subscribed."""
+        """No row is the "never asked" state: everyone starts subscribed."""
         assert await is_opted_out(db, admin_user.id) is False
 
     async def test_set_then_read(self, db, admin_user):

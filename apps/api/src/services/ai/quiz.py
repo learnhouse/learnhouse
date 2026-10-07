@@ -30,15 +30,15 @@ Rules:
 - Each question has 3-5 answer options; mark exactly the correct one(s) correct.
   At least one option MUST be correct.
 - Set response_type per question:
-    * "single" — exactly one answer is correct, the learner picks one.
-    * "multiple" — a select-all-that-apply question: mark EVERY correct answer
+    * "single": exactly one answer is correct, the learner picks one.
+    * "multiple": a select-all-that-apply question; mark EVERY correct answer
       correct (two or more) and the learner must find all of them.
   response_type MUST match the number of answers you marked correct. Use
   "multiple" only when the content genuinely has several right answers.
 - Write in the same language as the user's request/content.
 - Base questions strictly on the provided course content when it is supplied;
   do not invent facts that contradict it.
-- Return ONLY the structured quiz — no commentary."""
+- Return ONLY the structured quiz, no commentary."""
 
 
 def _build_prompt(prompt: str, num_questions: int, difficulty: str | None, context: str) -> str:

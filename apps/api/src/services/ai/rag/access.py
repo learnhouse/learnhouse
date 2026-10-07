@@ -5,7 +5,7 @@ Retrieved chunks are handed verbatim to the model and their source metadata is
 streamed back to the caller, so every chunk must come from content the caller
 could open through the normal course/activity endpoints. Course-level access is
 resolved before the vector search (so the search only ranks readable courses);
-activity-level rules — drafts, chapter/activity locks and paid access — are
+activity-level rules (drafts, chapter/activity locks and paid access) are
 applied to the retrieved rows afterwards.
 """
 

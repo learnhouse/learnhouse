@@ -1,6 +1,6 @@
 // Pure helpers for the Stripe Connect OAuth callback page
 // (app/payments/stripe/connect/oauth). Kept out of the component so the
-// decisions that matter — when to submit, and what to submit — are testable.
+// decisions that matter (when to submit, and what to submit) are testable.
 
 export type StripeCallbackParams =
   | { kind: 'ready'; code: string; state: string; orgId: number }

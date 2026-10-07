@@ -12,10 +12,10 @@ import { isLocalhost as isLocalhostCheck } from './services/utils/ts/hostUtils'
 //   1. multi (EE-only):   slug.{LEARNHOUSE_DOMAIN} subdomain detection +
 //                         per-org custom domains. The detection logic lives in
 //                         `./ee/services/tenancy/...` and is dynamic-imported
-//                         here — OSS proxy.ts never references subdomain or
+//                         here, so OSS proxy.ts never references subdomain or
 //                         custom-domain helpers directly.
 //   2. single (localhost): always serves the default org. Host-only cookies.
-//   3. single (VPS):       any domain on a self-hosted VPS. Same as #2 — we
+//   3. single (VPS):       any domain on a self-hosted VPS. Same as #2: we
 //                         trust the incoming Host header.
 //
 // Modes 2 and 3 share `tenancy === "single"`. The OSS code path returns the
@@ -51,7 +51,7 @@ async function getInstanceInfo(): Promise<InstanceInfo> {
       return _instanceCache.data
     }
   } catch {
-    // Backend unavailable — use safe defaults
+    // Backend unavailable; use safe defaults
   }
   return {
     multi_org_enabled: false,
@@ -76,7 +76,7 @@ interface ResolvedTenant {
 /**
  * Resolve the active tenant for this request.
  *
- * In `single` tenancy this is unconditionally the default org — no EE code
+ * In `single` tenancy this is unconditionally the default org: no EE code
  * loaded, no custom-domain lookup, no subdomain extraction. In `multi`
  * tenancy we delegate to the EE resolver via dynamic import; if the import
  * or resolver throws (e.g. EE folder removed at deploy time), we log and
@@ -112,7 +112,7 @@ async function hostIsCustomDomain(host: string | null, instance: InstanceInfo): 
 
 /**
  * Detect the admin subdomain (multi tenancy only). In single mode there is no
- * admin subdomain — operators reach admin via /admin path.
+ * admin subdomain; operators reach admin via /admin path.
  */
 async function isAdminSubdomain(host: string | null, instance: InstanceInfo): Promise<boolean> {
   if (instance.tenancy === 'single' || !host) return false
@@ -216,7 +216,7 @@ export const config = {
      * 5. /examples (inside /public)
      * 6. all root files inside /public (e.g. /favicon.ico)
      * 7. /embed (activity embeds)
-     * 8. /ingest (PostHog reverse proxy — must reach the next.config rewrite
+     * 8. /ingest (PostHog reverse proxy; must reach the next.config rewrite
      *    untouched; otherwise the middleware mis-routes it and ingestion 404s)
      */
     '/((?!api|_next|fonts|umami|ingest|examples|embed|monitoring|[\\w-]+\\.\\w+).*)',
@@ -259,7 +259,7 @@ export default async function proxy(req: NextRequest) {
   }
 
   // -------------------------------------------------------------------------
-  // 1b. Admin path — direct /admin access works in any tenancy mode.
+  // 1b. Admin path: direct /admin access works in any tenancy mode.
   //     In single mode this is the only way to reach the admin panel; in
   //     multi mode it's an alternative to the admin.{domain} subdomain.
   // -------------------------------------------------------------------------
@@ -274,7 +274,7 @@ export default async function proxy(req: NextRequest) {
   //
   //    The old platform (learnhouse.app) used /dashboard/{slug}/plan, /dashboard/
   //    new, /dashboard/account, etc. Those paths do NOT exist on .io and would
-  //    404. Old bookmarks, emails, and — critically — URLs Stripe has already
+  //    404. Old bookmarks, emails, and (critically) URLs Stripe has already
   //    stored on live checkout sessions can still point here, so permanently map
   //    them onto the hub instead of dead-ending. SaaS/multi only.
   // -------------------------------------------------------------------------
@@ -320,7 +320,7 @@ export default async function proxy(req: NextRequest) {
   )
   if (pathname === '/home' || (instance.tenancy === 'multi' && isHubRoot)) {
     // `/account/*` ALSO exists as an org-scoped dashboard route
-    // (/orgs/{slug}/account/[subpage] — general/security/purchases). On an org
+    // (/orgs/{slug}/account/[subpage]: general/security/purchases). On an org
     // subdomain or custom domain it must resolve there, NOT the apex hub (which
     // has no /account subpages), so let it fall through to the tenant catch-all.
     let onOrgHost = false
@@ -337,13 +337,13 @@ export default async function proxy(req: NextRequest) {
   }
 
   // -------------------------------------------------------------------------
-  // 3. Auth pages — resolve tenant for cookie context, rewrite to /auth
+  // 3. Auth pages: resolve tenant for cookie context, rewrite to /auth
   // -------------------------------------------------------------------------
   const authPaths = ['/login', '/signup', '/reset', '/forgot', '/verify-email']
   if (authPaths.includes(pathname)) {
     const hasSession = !!req.cookies.get('LH_session')?.value
 
-    // A logged-in user has no business on /login — bounce them to the hub (the
+    // A logged-in user has no business on /login, so bounce them to the hub (the
     // page itself re-verifies, so this is a best-effort UX shortcut).
     if (pathname === '/login' && hasSession) {
       return NextResponse.redirect(new URL('/home', req.url))
@@ -354,7 +354,7 @@ export default async function proxy(req: NextRequest) {
     // `/signup` is NOT only a signup page: for a signed-in user on an org host
     // it is the JOIN screen (the "Join this organization" banner and every
     // invite link point at it). Bouncing them to /home dropped them on the org
-    // picker instead — and silently threw away any ?inviteCode. So only send a
+    // picker instead, and silently threw away any ?inviteCode. So only send a
     // signed-in visitor to the hub when there is genuinely no org to join here:
     // the org-less apex, with no invite code in hand.
     if (pathname === '/signup' && hasSession) {
@@ -379,7 +379,7 @@ export default async function proxy(req: NextRequest) {
   }
 
   // -------------------------------------------------------------------------
-  // 4. Auth callbacks — pass through without org rewrite
+  // 4. Auth callbacks: pass through without org rewrite
   // -------------------------------------------------------------------------
   if (
     pathname.startsWith('/auth/sso/')
@@ -391,7 +391,7 @@ export default async function proxy(req: NextRequest) {
     return response
   }
 
-  // Magic login links are emailed as /auth/magic?token=… — already the internal
+  // Magic login links are emailed as /auth/magic?token=…, already the internal
   // path, so it needs a pass-through of its own. Without one it fell to the
   // tenant catch-all, was rewritten to /orgs/{slug}/auth/magic, and every
   // emailed link 404'd. Tenant is resolved (unlike the callbacks above) because
@@ -410,7 +410,7 @@ export default async function proxy(req: NextRequest) {
   }
 
   // -------------------------------------------------------------------------
-  // 5. Standalone editors / boards — bypass org rewrite
+  // 5. Standalone editors / boards: bypass org rewrite
   // -------------------------------------------------------------------------
   if (pathname.match(/^\/course\/[^/]+\/activity\/[^/]+\/edit$/)) {
     return NextResponse.rewrite(new URL(`/editor${pathname}`, req.url))
@@ -427,7 +427,7 @@ export default async function proxy(req: NextRequest) {
   }
 
   // -------------------------------------------------------------------------
-  // 6. Stripe Connect OAuth callback — served as-is on every host, never
+  // 6. Stripe Connect OAuth callback: served as-is on every host, never
   //    rewritten into an org route. The page reads code/state itself.
   // -------------------------------------------------------------------------
   if (req.nextUrl.pathname.startsWith('/payments/stripe/connect/oauth')) {
@@ -472,7 +472,7 @@ export default async function proxy(req: NextRequest) {
           dest = `${candidate.pathname}${candidate.search}${candidate.hash}`
         }
       } catch {
-        // Unparseable — fall back to the root.
+        // Unparseable; fall back to the root.
       }
     }
 
@@ -512,11 +512,11 @@ export default async function proxy(req: NextRequest) {
   }
 
   // -------------------------------------------------------------------------
-  // 10. Apex root (multi tenancy only) — login-first, then org picker.
+  // 10. Apex root (multi tenancy only): login-first, then org picker.
   //
   //     The bare apex (learnhouse.io) is NOT org-scoped. An unauthenticated
   //     visitor lands on the login page; once signed in they get the /home org
-  //     picker and choose an org — which lives on its own subdomain
+  //     picker and choose an org, which lives on its own subdomain
   //     ({slug}.learnhouse.io) or custom domain. Org content is ONLY served on
   //     a subdomain/custom domain, never at the apex. Mirrors the platform's
   //     "log in, then choose an org" flow. We branch on the non-httpOnly
@@ -544,7 +544,7 @@ export default async function proxy(req: NextRequest) {
   }
 
   // -------------------------------------------------------------------------
-  // 11. Tenant-scoped rewrite — the catch-all that puts us under /orgs/{slug}
+  // 11. Tenant-scoped rewrite: the catch-all that puts us under /orgs/{slug}
   // -------------------------------------------------------------------------
   const resolved = await resolveTenant(req, instance)
   const requestHeaders = tenantRequestHeaders(req, resolved, instance)

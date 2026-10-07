@@ -160,9 +160,9 @@ async def api_generate_audio(
     response_model=GenerateScriptResponse,
     summary="Generate a spoken script with AI (podcast dialogue or monologue)",
     description=(
-        "Turn a topic, question, or source material into a spoken script — a "
+        "Turn a topic, question, or source material into a spoken script: a "
         "two-speaker discussion ('podcast') or a detailed single-speaker explanation "
-        "('speak') — of an approximate length. Consumes AI credits."
+        "('speak'), of an approximate length. Consumes AI credits."
     ),
     responses={
         200: {"description": "Script generated.", "model": GenerateScriptResponse},

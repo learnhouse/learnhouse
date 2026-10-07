@@ -172,7 +172,7 @@ function PublishingState() {
         try {
             const res = await updateAssignment({ published: nextPublished }, assignmentUUID, access_token)
             const res2 = await updateActivity({ published: nextPublished }, assignment?.activity_object?.activity_uuid, access_token)
-            // `res2` is a response-metadata envelope — always an object, so the
+            // `res2` is a response-metadata envelope, always an object, so the
             // old `res.success && res2` guard degenerated to `res.success` and
             // reported success even when the activity leg 404'd/5xx'd, leaving
             // the badge on "Published" while learners still couldn't see it.
@@ -287,7 +287,7 @@ function AssignmentTitle() {
     );
 }
 
-// Skeuomorphic badge tokens — vertical gradient + colored ring + colored
+// Skeuomorphic badge tokens: vertical gradient + colored ring + colored
 // drop shadow + inset white highlight for a soft "raised pill" look. Same
 // values used in the assignments dashboard (page.tsx in /dash/assignments)
 // so the design language matches across both views.

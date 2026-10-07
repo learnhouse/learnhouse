@@ -1,7 +1,7 @@
 """Notification sent when an account becomes a member of an organization.
 
 Every membership path funnels through :func:`notify_user_joined_org` so a user
-who joins an org gets the same greeting regardless of how they got in — invite
+who joins an org gets the same greeting regardless of how they got in: invite
 code, open join, an OAuth invite accepted with an existing account, or admin
 provisioning.
 
@@ -68,7 +68,7 @@ async def notify_user_joined_org(
             email=user.email,
             username=user.username,
             org_name=org.name,
-            # Org landing page, not `/home` — `/home` is the platform org
+            # Org landing page, not `/home`, because `/home` is the platform org
             # picker on every host and would deroute the user straight back
             # out of the org they just joined.
             cta_url=base_url.rstrip("/") or "/",

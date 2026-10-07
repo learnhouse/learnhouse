@@ -195,7 +195,7 @@ class TestCrossOrgRoleFallback:
 
 class TestUsersOnlyIsOrgScoped:
     """"Users Only" (public=false, no linked usergroup) means signed-in members
-    of the owning org — not every account on the deployment."""
+    of the owning org, not every account on the deployment."""
 
     @pytest.mark.asyncio
     async def test_users_only_course_is_denied_to_another_orgs_member(
@@ -243,7 +243,7 @@ class TestUsersOnlyIsOrgScoped:
 class TestUserAccountsAreOrgScoped:
     """A user row carries no org column, so the resource-org resolver answers
     None for it. That used to fall into the placeholder branch, which loads every
-    role the caller holds anywhere — enough for an admin of one org to update or
+    role the caller holds anywhere, enough for an admin of one org to update or
     delete an account belonging only to another."""
 
     @pytest.mark.asyncio

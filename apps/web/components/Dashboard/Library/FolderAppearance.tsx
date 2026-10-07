@@ -56,7 +56,7 @@ export default function FolderAppearance({ color, onColorChange, file, onFileCha
         <span className="text-sm font-medium text-gray-700">{t('library.thumbnail')}</span>
         {preview ? (
           <div className="mt-1.5 flex items-center gap-3 rounded-xl border border-gray-200 p-2.5">
-            {/* The thumbnail itself is the (replace) file input — real click target */}
+            {/* The thumbnail itself is the (replace) file input, the real click target */}
             <label className="relative w-14 h-14 rounded-lg bg-cover bg-center flex-shrink-0 ring-1 ring-inset ring-black/10 cursor-pointer overflow-hidden" style={{ backgroundImage: `url(${preview})` }}>
               <input type="file" accept="image/*" className="absolute inset-0 w-full h-full opacity-0 cursor-pointer" onChange={(e) => onFileChange(e.target.files?.[0] || null)} />
             </label>

@@ -101,7 +101,7 @@ def validate_zip_content(content: bytes) -> bool:
     import io
     import zipfile
 
-    # 500 MB uncompressed limit — protects against zip bomb attacks.
+    # 500 MB uncompressed limit; protects against zip bomb attacks.
     try:
         with zipfile.ZipFile(io.BytesIO(content)) as zf:
             total = sum(info.file_size for info in zf.infolist())
@@ -150,7 +150,7 @@ def _rewind(stream: Any) -> None:
 
 
 def _stream_length(stream: Any) -> Optional[int]:
-    """Byte length of a seekable stream, measured by seeking — never by reading.
+    """Byte length of a seekable stream, measured by seeking, never by reading.
 
     Returns ``None`` when the stream cannot be measured (non-seekable, or a test
     double), in which case the caller falls back to a bounded read.
@@ -169,21 +169,21 @@ def validate_ole_content(content: bytes) -> bool:
 
     Covers the binary .doc/.xls/.ppt formats. These can embed VBA macros, but
     media files are only ever served as downloads (never executed server-side
-    or rendered inline), so the residual risk is the same as any file-share —
+    or rendered inline), so the residual risk is the same as any file-share:
     the user must explicitly open and enable macros locally.
     """
     return content[:8] == b'\xd0\xcf\x11\xe0\xa1\xb1\x1a\xe1'
 
 
 # Per-type size caps. Two risks, not one: storage-fill DoS, and memory
-# exhaustion — an accepted upload is handed to the caller as a single `bytes`
+# exhaustion. An accepted upload is handed to the caller as a single `bytes`
 # object (see upload_content.upload_file), so the cap is also the per-request
 # RAM ceiling and a handful of concurrent uploads at the old multi-GB caps
 # could OOM the worker for every tenant on the pod.
 #
 # Caps are sized to the flows that actually reach this validator: media
 # library, activity/assignment attachments, org branding, podcasts. The course
-# migration dropzone's 5 GB-per-file ceiling does NOT come through here — that
+# migration dropzone's 5 GB-per-file ceiling does NOT come through here; that
 # path streams to a temp file in migration_service with its own limits.
 _GB = 1024 * 1024 * 1024
 _MB = 1024 * 1024
@@ -412,7 +412,7 @@ def get_safe_filename(
 
     When ``content_type`` is provided (the validated, server-determined MIME
     type from ``validate_upload``), the stored extension is derived from that
-    type via ``MIME_TO_SAFE_EXT`` — NOT from the client-supplied filename.
+    type via ``MIME_TO_SAFE_EXT``, NOT from the client-supplied filename.
     This prevents a client from controlling the stored file's extension (e.g.
     uploading image bytes under a ".html" name). When no content_type is
     given, fall back to the (sanitized) client extension for backward

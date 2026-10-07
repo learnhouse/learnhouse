@@ -1,8 +1,8 @@
 """Live, end-to-end tests of the REAL AI feature functions against a local Ollama server.
 
 Unlike test_llm_ollama.py (which exercises the llm primitives directly), this drives the
-actual production service functions — activity chat, chat title, follow-ups, course planning,
-and MagicBlocks — and configures the provider through the REAL config path
+actual production service functions (activity chat, chat title, follow-ups, course planning,
+and MagicBlocks) and configures the provider through the REAL config path
 (LEARNHOUSE_AI_* env vars -> get_learnhouse_config() -> build_model), exactly as a deployment
 would. Proves the whole stack runs on a non-Gemini provider with config-only changes.
 
@@ -61,7 +61,7 @@ def _ollama_env(monkeypatch):
 
 @pytest.mark.asyncio
 async def test_activity_chat_ask_ai():
-    """base.ask_ai — the activity-chat / editor non-streaming path."""
+    """base.ask_ai: the activity-chat / editor non-streaming path."""
     result = await base.ask_ai(
         question="What is 2 + 2? Reply with just the number.",
         message_history=[],
@@ -75,7 +75,7 @@ async def test_activity_chat_ask_ai():
 
 @pytest.mark.asyncio
 async def test_activity_chat_ask_ai_stream():
-    """base.ask_ai_stream — the streaming path used by activity chat, RAG, and the editor."""
+    """base.ask_ai_stream: the streaming path used by activity chat, RAG, and the editor."""
     chunks = [
         chunk
         async for chunk in base.ask_ai_stream(
@@ -109,7 +109,7 @@ async def test_chat_history_is_used():
 
 @pytest.mark.asyncio
 async def test_generate_chat_title():
-    """base.generate_chat_title — fast tier summarization."""
+    """base.generate_chat_title: fast tier summarization."""
     title = await base.generate_chat_title(
         "How do volcanoes form?",
         "Volcanoes form where magma rises through the crust and erupts.",
@@ -120,7 +120,7 @@ async def test_generate_chat_title():
 
 @pytest.mark.asyncio
 async def test_generate_follow_up_suggestions():
-    """base.generate_follow_up_suggestions — fast tier, parsed into a list."""
+    """base.generate_follow_up_suggestions: fast tier, parsed into a list."""
     suggestions = await base.generate_follow_up_suggestions(
         ai_response="Photosynthesis converts sunlight, water, and CO2 into glucose and oxygen.",
         context="biology lesson",
@@ -134,7 +134,7 @@ async def test_generate_follow_up_suggestions():
 
 @pytest.mark.asyncio
 async def test_course_planning_stream_parses_into_plan():
-    """generate_course_plan_stream — real JSON-text streaming, parsed into a CoursePlan."""
+    """generate_course_plan_stream: real JSON-text streaming, parsed into a CoursePlan."""
     session = CoursePlanningSessionData(
         session_uuid="cp_ollama_test",
         org_id=1,
@@ -156,7 +156,7 @@ async def test_course_planning_stream_parses_into_plan():
 
 @pytest.mark.asyncio
 async def test_magicblock_stream_produces_html():
-    """generate_magicblock_stream — real interactive-HTML generation (interactive tier)."""
+    """generate_magicblock_stream: real interactive-HTML generation (interactive tier)."""
     context = MagicBlockContext(
         course_title="Intro to Web",
         course_description="Basics of interactive widgets.",

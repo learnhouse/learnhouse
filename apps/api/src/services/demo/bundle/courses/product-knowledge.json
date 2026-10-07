@@ -29,7 +29,7 @@
           "kind": "document",
           "body": [
             "h2:Three levels, and only three",
-            "p:Everything Riverbend sells sits in a category, a family within that category, and a line within that family. A customer asking for a product by name is usually naming a family, not the line they want — which is where most mis-shipments start.",
+            "p:Everything Riverbend sells sits in a category, a family within that category, and a line within that family. A customer asking for a product by name is usually naming a family, not the line they want, which is where most mis-shipments start.",
             {"ul": [
               "Category: the broad area. Roughly a dozen of them, and they rarely change.",
               "Family: a group that shares a purpose and usually a supplier.",
@@ -91,7 +91,7 @@
           "kind": "document",
           "body": [
             "h2:List, tier, and agreed",
-            "p:Three prices exist for any line and they are not interchangeable. Quoting the wrong one is not a rounding error — it is a promise the company then has to either honour or retract.",
+            "p:Three prices exist for any line and they are not interchangeable. Quoting the wrong one is not a rounding error; it is a promise the company then has to either honour or retract.",
             {"ol": [
               "List: the published price. What a new customer sees.",
               "Tier: an automatic discount based on volume over the last twelve months.",
@@ -144,7 +144,7 @@
               "Availability of a line you have not checked in the last hour.",
               "Any commitment about a supplier's own timelines."
             ]},
-            "p:These are not bureaucratic. Each one has produced a real dispute, and in every case the customer was reasonable to be annoyed — they were told something by someone who works here, which makes it a company promise regardless of who said it.",
+            "p:These are not bureaucratic. Each one has produced a real dispute, and in every case the customer was reasonable to be annoyed; they were told something by someone who works here, which makes it a company promise regardless of who said it.",
             {"warn": "If you have already promised one of these by mistake, say so immediately to your team lead. Fixing it the same day is nearly always possible; fixing it after delivery is not."}
           ]
         }
@@ -166,7 +166,7 @@
               "Why is it more expensive than last time? Usually a tier change or an expired agreed price. Check the account before answering.",
               "Is this the same as the one I had before? Check the line code, not the family name.",
               "Can I return it if it is wrong? Yes, within the returns window, unless it was made to order.",
-              "Do you have anything cheaper? Ask what it is for first — the cheaper line is often unsuitable and the return costs more than the difference."
+              "Do you have anything cheaper? Ask what it is for first; the cheaper line is often unsuitable and the return costs more than the difference."
             ]},
             "p:In every one of these, the answer starts with looking something up. Answering from memory is where the errors come from."
           ]

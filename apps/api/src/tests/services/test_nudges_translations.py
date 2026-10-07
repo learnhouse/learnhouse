@@ -98,7 +98,7 @@ class TestPlanDataIsNeverHardcoded:
 
         English is the source every locale translates from, so a hardcoded
         tier name can only enter here. Running the same check across all
-        twenty locales produces false positives instead of findings — "pro"
+        twenty locales produces false positives instead of findings: "pro"
         is the ordinary German word for "per" ("eines pro Thema"), and
         "standard" is a normal word in most of these languages.
 
@@ -150,6 +150,6 @@ class TestTone:
 
     def test_final_emails_say_so(self):
         """Announcing the last message in a sequence earns more goodwill than
-        any subject-line trick — and it is a promise the catalog keeps."""
+        any subject-line trick, and it is a promise the catalog keeps."""
         assert "last" in ENGLISH["nudge.activation.last_call_d30.heading"].lower()
         assert "last" in ENGLISH["nudge.dormancy.no_login_60d.subject"].lower()

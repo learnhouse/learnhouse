@@ -2,7 +2,7 @@
 
 ``issue_user_token`` mints an ordinary session JWT for an arbitrary member of
 the token's org, so it has to be gated on the token's declared rights and must
-refuse privileged targets — otherwise any org API token, whatever it was scoped
+refuse privileged targets. Otherwise any org API token, whatever it was scoped
 to, could borrow the org administrator's session.
 """
 
@@ -103,7 +103,7 @@ def reader_token(org):
 class TestIssueUserTokenIsNotRightsScoped:
     async def test_a_content_scoped_token_can_still_mint_for_a_member(self, db, org):
         """Tokens only ever carry content buckets, so impersonation is not
-        gated on a ``users`` right — it is gated on the target instead."""
+        gated on a ``users`` right; it is gated on the target instead."""
         target = await _member(db, org.id, user_id=20, role_id=MEMBER_ROLE_ID)
         token = _token(org.id, COURSES_ONLY_RIGHTS)
 

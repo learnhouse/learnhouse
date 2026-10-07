@@ -3,7 +3,7 @@ import fs from 'node:fs'
 import os from 'node:os'
 import path from 'node:path'
 
-// Docker helpers shell out via execSync — stub it so guard-path tests never
+// Docker helpers shell out via execSync; stub it so guard-path tests never
 // touch a real daemon. spawn returns a fake long-lived child (so the dev
 // happy-path can reach its keep-alive without launching real servers);
 // spawnSync reports success (dependency installs are no-ops).
@@ -56,7 +56,7 @@ const H = vi.hoisted(() => {
 vi.mock('@clack/prompts', () => H.mock)
 vi.mock('../src/utils/prompt.js', () => H.mock)
 
-// Health pollers would otherwise hit real URLs / exec on a 3-minute timeout —
+// Health pollers would otherwise hit real URLs / exec on a 3-minute timeout;
 // stub them (overridable per test) so setup/update run in-process without hanging.
 const healthMock = vi.hoisted(() => ({
   waitForHealth: vi.fn(async () => true),
@@ -92,7 +92,7 @@ import { checkPrerequisites } from '../src/prompts/prerequisites.js'
 import { setupEnterprise } from '../src/commands/setup-ee.js'
 import { dockerLogin, dockerComposeLogs, dockerLogsMulti, dockerExecInteractive } from '../src/services/docker.js'
 
-// ─── Command guards — every entry point must bail cleanly with no install ──
+// ─── Command guards: every entry point must bail cleanly with no install ──
 //
 // Each command resolves an install, then `process.exit(1)`s when none exists.
 // Real process.exit would terminate; the code after it assumes a non-null
@@ -104,7 +104,7 @@ class ProcessExit extends Error {
   constructor(code: number) { super(`process.exit(${code})`); this.code = code }
 }
 
-describe('command guards — no installation / bad arguments', () => {
+describe('command guards: no installation / bad arguments', () => {
   let emptyHome: string
   let origHome: string | undefined
 
@@ -148,7 +148,7 @@ describe('command guards — no installation / bad arguments', () => {
   })
 
   it('deployments (menu-first) exits cleanly when the menu is dismissed', async () => {
-    // deployments has no install guard — it opens a select menu; a cancelled
+    // deployments has no install guard: it opens a select menu; a cancelled
     // selection must exit(0), not crash or hang.
     await expect(deploymentsCommand()).rejects.toBeInstanceOf(ProcessExit)
   })
@@ -159,12 +159,12 @@ describe('command guards — no installation / bad arguments', () => {
   })
 })
 
-// ─── scale — compose mem_limit parse / set (pure) ───────────
+// ─── scale: compose mem_limit parse / set (pure) ───────────
 //
 // `scale` reads and rewrites mem_limit lines in docker-compose.yml. These
 // are the exact text transforms, exercised without Docker.
 
-describe('scale — mem_limit parse/set', () => {
+describe('scale: mem_limit parse/set', () => {
   const compose = [
     'services:',
     '  learnhouse-app:',
@@ -219,7 +219,7 @@ describe('scale — mem_limit parse/set', () => {
   })
 })
 
-// ─── dev pre-flight — checkDevEnv (the dev command's env gate) ───
+// ─── dev pre-flight: checkDevEnv (the dev command's env gate) ───
 //
 // `dev` spawns the real API/Web servers (not unit-testable), but its
 // pre-flight env check is pure fs: it scans apps/*/.env for required vars
@@ -280,8 +280,8 @@ describe('checkDevEnv', () => {
 
 // ─── Interactive command flows (driven via scripted prompts) ────
 //
-// These exercise the FULL bodies of the interactive commands — not just
-// guards — by scripting prompt responses and pointing the command at a
+// These exercise the FULL bodies of the interactive commands (not just
+// guards) by scripting prompt responses and pointing the command at a
 // real fixture install in a temp $HOME. Docker calls hit the mocked
 // execSync, so nothing touches a daemon.
 
@@ -688,10 +688,10 @@ describe('interactive command flows', () => {
   })
 })
 
-// ─── setup input layer — the prompt sub-modules (driven) ────────
+// ─── setup input layer: the prompt sub-modules (driven) ────────
 //
 // setup's file generation is covered by the binary `setup --ci` test in
-// unit.test.ts; here we drive its INPUT gathering — the prompt modules —
+// unit.test.ts; here we drive its INPUT gathering (the prompt modules)
 // with scripted answers and assert the config objects they return.
 
 describe('setup input prompts', () => {
@@ -913,7 +913,7 @@ describe('setup input prompts', () => {
 
 // ─── dev command guards ─────────────────────────────────────────
 //
-// devCommand ends in `await new Promise(() => {})` — it runs the local
+// devCommand ends in `await new Promise(() => {})`: it runs the local
 // servers until Ctrl+C and never returns by design, so the happy-path tail
 // (spawn + keep-alive) cannot be asserted past that point. Every DECISION
 // branch before it is reachable, driven here by controlling process.cwd()
@@ -963,7 +963,7 @@ describe('dev command guards', () => {
   })
 
   it('exits when not inside a LearnHouse project', async () => {
-    process.chdir(tmp) // a bare temp dir — no apps/api+apps/web up the tree
+    process.chdir(tmp) // a bare temp dir, no apps/api+apps/web up the tree
     await expect(devCommand({})).rejects.toBeInstanceOf(ProcessExit)
   })
 
@@ -1412,7 +1412,7 @@ describe('dev command guards', () => {
     spawnMock.mockClear()
 
     const sigintBefore = process.listenerCount('SIGINT')
-    // devCommand never resolves — it ends in `await new Promise(() => {})`.
+    // devCommand never resolves; it ends in `await new Promise(() => {})`.
     const promise = devCommand({ adminEmail: 'a@b.dev', adminPassword: 'pw' })
     promise.catch(() => {}) // guard against an unhandled rejection if it ever errors
     await new Promise((r) => setTimeout(r, 150)) // let the async flow run to the keep-alive
@@ -1943,7 +1943,7 @@ describe('command success paths', () => {
 // ─── setup + update full bodies (in-process, mocked docker/health) ──
 //
 // These run the orchestration that the integration suite exercises as a
-// subprocess — driven here in-process so the bodies are measurably covered.
+// subprocess, driven here in-process so the bodies are measurably covered.
 
 describe('setup / update in-process', () => {
   let home: string
@@ -1957,7 +1957,7 @@ describe('setup / update in-process', () => {
     vi.spyOn(process, 'exit').mockImplementation(((code?: number) => {
       throw new ProcessExit(code ?? 0)
     }) as never)
-    // resolveAppImage hits GitHub/GHCR — force the offline fallback to :latest.
+    // resolveAppImage hits GitHub/GHCR, so force the offline fallback to :latest.
     vi.spyOn(globalThis, 'fetch').mockRejectedValue(new Error('offline'))
     healthMock.waitForHealth.mockResolvedValue(true)
     healthMock.waitForOrgSeed.mockResolvedValue(true)
@@ -2820,7 +2820,7 @@ describe('setup / update in-process', () => {
     fs.writeFileSync(path.join(dir, 'docker-compose.yml'),
       'name: learnhouse-dep1\nservices:\n  learnhouse-app:\n    image: ghcr.io/learnhouse/app:1.4.0\n    container_name: learnhouse-app-dep1\n    networks:\n      - n\nnetworks:\n  n:\n')
 
-    // resolveTag fetches a GHCR token then the manifest — make both succeed.
+    // resolveTag fetches a GHCR token then the manifest; make both succeed.
     vi.spyOn(globalThis, 'fetch').mockImplementation((async (u: unknown) =>
       String(u).includes('ghcr.io/token')
         ? new Response(JSON.stringify({ token: 't' }), { status: 200 })
@@ -2832,7 +2832,7 @@ describe('setup / update in-process', () => {
   })
 })
 
-// ─── prerequisites — docker preflight ───────────────────────────
+// ─── prerequisites: docker preflight ───────────────────────────
 
 describe('checkPrerequisites', () => {
   let execSyncMock: ReturnType<typeof vi.fn>
@@ -2863,7 +2863,7 @@ describe('checkPrerequisites', () => {
   })
 })
 
-// ─── dockerLogin — registry auth via spawnSync (password on stdin) ──
+// ─── dockerLogin: registry auth via spawnSync (password on stdin) ──
 
 describe('dockerLogin', () => {
   let spawnSyncMock: ReturnType<typeof vi.fn>

@@ -2,12 +2,12 @@
 import React, { createContext, useContext, useEffect, useMemo, useReducer, useRef } from 'react'
 
 /**
- * A small, generic "background tasks" store. It's not upload-specific — any
+ * A small, generic "background tasks" store. It's not upload-specific; any
  * feature can register a long-running task (upload, export, generation, …) and
  * it shows up in the global notification panel. State is persisted to
  * localStorage so the panel survives a page reload.
  *
- * Note: an in-flight browser transfer (XHR) cannot survive a hard reload — the
+ * Note: an in-flight browser transfer (XHR) cannot survive a hard reload; the
  * request dies with the page. So on hydrate we mark any task still in
  * `uploading` as `interrupted` (the notification persists; the transfer doesn't).
  */
@@ -106,7 +106,7 @@ export function BackgroundTasksProvider({ children }: { children: React.ReactNod
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(tasks))
     } catch {
-      /* quota / private mode — ignore */
+      /* quota / private mode; ignore */
     }
   }, [tasks])
 

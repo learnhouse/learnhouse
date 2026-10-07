@@ -2,7 +2,7 @@
 Security tests for media-file access (folder-aware) + random share links.
 
 Targets the access *decisions* (the security-critical part) via the service
-authorizers — not the byte streaming.
+authorizers, not the byte streaming.
 """
 
 from datetime import datetime

@@ -492,14 +492,14 @@ function ScormActivity({ activity, course }: ScormActivityProps) {
 
   return (
     <div className="relative w-full bg-white dark:bg-neutral-950">
-      {/* Save-failure warning — makes silent progress loss visible */}
+      {/* Save-failure warning; makes silent progress loss visible */}
       {saveError && (
         <div
           role="alert"
           className="absolute top-3 left-1/2 -translate-x-1/2 z-20 px-3 py-1.5 rounded-full bg-amber-500 text-white text-xs font-medium shadow-lg flex items-center gap-1.5"
         >
           <AlertCircle size={13} />
-          <span>Progress isn’t saving — check your connection. We’ll keep retrying.</span>
+          <span>Progress isn’t saving. Check your connection. We’ll keep retrying.</span>
         </div>
       )}
 

@@ -381,7 +381,7 @@ class TestDirectoryHelpers:
         assert all("\\" not in root for root, _, _ in walked)
 
         # A trailing slash on the base path must not double up in the roots we
-        # yield — the S3 keys built from them would stop resolving.
+        # yield; the S3 keys built from them would stop resolving.
         with patch.object(
             storage_utils,
             "get_content_delivery_type",

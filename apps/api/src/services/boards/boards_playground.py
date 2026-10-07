@@ -26,8 +26,8 @@ _redis_client = None
 
 def get_redis_connection():
     # Reuse a single client (and its connection pool) across calls. Creating a
-    # new redis.from_url() client on every session read/write — as the playground
-    # hot path does — spawns a fresh connection pool each time and leaks sockets.
+    # new redis.from_url() client on every session read/write, as the playground
+    # hot path does, spawns a fresh connection pool each time and leaks sockets.
     global _redis_client
     if _redis_client is not None:
         return _redis_client
@@ -99,16 +99,16 @@ CONTEXT:
 - Board: {context.board_name}
 - Description: {context.board_description}
 
-You create standalone interactive HTML elements — widgets, visualizations, mini-apps, simulations, and educational tools that run entirely in the browser.
+You create standalone interactive HTML elements: widgets, visualizations, mini-apps, simulations, and educational tools that run entirely in the browser.
 
 DESIGN RULES:
 1. Generate a COMPLETE, self-contained HTML document
 2. ALWAYS use Tailwind CSS via CDN for styling
-3. Use LIGHT backgrounds (white, gray-50) — no dark themes
+3. Use LIGHT backgrounds (white, gray-50), no dark themes
 4. Design as an embedded widget/component, NOT a full page
 5. Keep it responsive and sized to fit its container (use 100% width/height on html and body)
 6. Use clean, modern UI with proper spacing, rounded corners, shadows
-7. Make it interactive and engaging — buttons, inputs, animations, visual feedback
+7. Make it interactive and engaging: buttons, inputs, animations, visual feedback
 8. Include clear instructions or labels so users know how to interact
 
 AVAILABLE LIBRARIES (use via CDN):

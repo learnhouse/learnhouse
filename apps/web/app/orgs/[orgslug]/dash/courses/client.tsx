@@ -60,7 +60,7 @@ function CoursesHome(params: CourseProps) {
   const isCoursesEnabled = org?.config?.config?.resolved_features?.courses?.enabled ?? org?.config?.config?.features?.courses?.enabled !== false
   const queryClient = useQueryClient()
 
-  // TanStack Query for courses — cached on the client, instant on return visits
+  // TanStack Query for courses: cached on the client, instant on return visits
   const { data: coursesData, isLoading: isCoursesLoading } = useQuery({
     queryKey: queryKeys.courses.list(orgslug),
     queryFn: async () => {
@@ -96,7 +96,7 @@ function CoursesHome(params: CourseProps) {
   const courseLimitReached = usageData?.features?.courses?.limit_reached ?? false
   const courseLimit = usageData?.features?.courses?.limit ?? 0
 
-  // Usergroup filter — shown only when the org's plan actually includes
+  // Usergroup filter, shown only when the org's plan actually includes
   // usergroups (a standard+ feature per the backend), via resolved features.
   const usergroupsAvailable = org?.config?.config?.resolved_features?.usergroups?.enabled ?? false
   const [usergroups, setUsergroups] = useState<any[]>([])

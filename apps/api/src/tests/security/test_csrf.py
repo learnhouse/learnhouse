@@ -172,7 +172,7 @@ class TestCSRFExemptions:
         assert mw._is_csrf_exempt(req) is True
 
     def test_regular_bearer_jwt_not_exempt(self):
-        """Regular Bearer JWT should NOT be exempt — get_current_user falls back to cookies."""
+        """Regular Bearer JWT should NOT be exempt; get_current_user falls back to cookies."""
         mw = self._make_middleware()
         req = _make_request(headers={"authorization": "Bearer eyJ0eXAiOiJKV1Q..."})
         assert mw._is_csrf_exempt(req) is False
