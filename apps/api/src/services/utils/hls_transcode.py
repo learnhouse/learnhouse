@@ -185,23 +185,15 @@ def build_ffmpeg_args(
     return args
 
 
-async def _probe(src_path: str) -> tuple[int, bool, float]:
-    """Return (height, has_audio, duration_s).
+async def _probe(src_path: str) -> tuple[int, bool, float, Optional[bool]]:
+    """Return (height, has_audio, duration_s, has_video).
 
-    On any probe failure returns (0, False, 0.0): height 0 → a single lowest
-    rung (never upscale a source we can't measure), and has_audio False → no
-    audio maps (so a silent source can't fail the transcode with a bad a:0 map).
-    """
-    height, has_audio, duration, _ = await _probe_streams(src_path)
-    return height, has_audio, duration
-
-
-async def _probe_streams(src_path: str) -> tuple[int, bool, float, Optional[bool]]:
-    """Like _probe, plus whether the source has a video stream at all.
-
-    The last element is None when the probe itself failed (unknown — try the
-    transcode anyway), False when ffprobe read the file and found no video
-    stream (an audio-only upload: ffmpeg's `[0:v]` filtergraph can never match).
+    On any probe failure returns (0, False, 0.0, None): height 0 → a single
+    lowest rung (never upscale a source we can't measure), has_audio False → no
+    audio maps (so a silent source can't fail the transcode with a bad a:0 map),
+    and has_video None → unknown, so the transcode is still attempted.
+    has_video False means ffprobe read the file and found no video stream (an
+    audio-only upload: ffmpeg's `[0:v]` filtergraph can never match).
     """
     probe = _ffprobe()
     if not probe:
@@ -336,7 +328,7 @@ async def transcode_source_to_hls(src_path: str, out_dir: str) -> Optional[dict]
         logger.error("HLS source missing: %s", src_path)
         return None
 
-    height, has_audio, duration, has_video = await _probe_streams(src_path)
+    height, has_audio, duration, has_video = await _probe(src_path)
     if has_video is False:
         # Nothing to transcode, and retrying will never change that. Report it
         # as unsupported so the job stops re-queueing it; playback keeps using
