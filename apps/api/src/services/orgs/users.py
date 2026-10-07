@@ -33,8 +33,14 @@ from src.services.security.rate_limiting import (
     enforce_batch_size_limit,
     enforce_invite_rate_limit,
 )
-from src.security.org_auth import is_org_member, enforce_org_mfa
-from src.security.rbac.constants import ADMIN_ROLE_ID
+from src.security.org_auth import (
+    enforce_org_mfa,
+    get_user_org,
+    is_org_member,
+    require_org_destroy_right,
+)
+from src.security.rbac.constants import ADMIN_OR_MAINTAINER_ROLE_IDS, ADMIN_ROLE_ID
+from src.security.superadmin import is_user_superadmin
 from src.services.orgs.invites import send_invite_email
 from src.services.demo.guards import hide_other_visitors
 from src.services.orgs.orgs import rbac_check
@@ -735,6 +741,8 @@ async def remove_all_users_from_org(
 
     # RBAC check
     await rbac_check(request, org.org_uuid, current_user, "delete", db_session)
+    # Keeping only the caller would leave a maintainer-run org with no admin.
+    await require_org_destroy_right(resolve_acting_user_id(current_user), org.id, db_session)
 
     # Keep the caller so the org always retains at least one admin.
     keep_user_id = resolve_acting_user_id(current_user)
@@ -792,6 +800,18 @@ async def update_user_role(
 
     # RBAC check
     await rbac_check(request, org.org_uuid, current_user, "update", db_session)
+
+    # Handing out Admin or Maintainer is reserved for Admins: a maintainer
+    # must not be able to promote themselves (or anyone) past their own role.
+    if role_id in ADMIN_OR_MAINTAINER_ROLE_IDS:
+        acting_user_id = resolve_acting_user_id(current_user)
+        if not await is_user_superadmin(acting_user_id, db_session):
+            caller_membership = await get_user_org(acting_user_id, org.id, db_session)
+            if caller_membership is None or caller_membership.role_id != ADMIN_ROLE_ID:
+                raise HTTPException(
+                    status_code=403,
+                    detail="Only organization administrators can assign the Admin or Maintainer role",
+                )
 
     # Check if user is the last admin and if the new role is not admin
     statement = select(UserOrganization).where(

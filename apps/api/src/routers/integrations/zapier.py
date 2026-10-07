@@ -29,6 +29,7 @@ from src.db.user_organizations import UserOrganization
 from src.db.users import APITokenUser, User
 from src.db.webhooks import WebhookEndpoint
 from src.security.auth import get_current_user
+from src.security.org_auth import require_org_admin
 from src.security.features_utils.plan_check import get_org_plan
 from src.security.features_utils.plans import plan_meets_requirement
 from src.services.webhooks.crypto import encrypt_secret
@@ -66,6 +67,21 @@ async def _require_pro_plan(org_id: int, db_session: AsyncSession) -> None:
                 "Zapier integration requires a Pro plan or higher. "
                 f"Your organization is currently on the {current_plan.capitalize()} plan."
             ),
+        )
+
+
+def _require_token_right(api_user: APITokenUser, resource: str) -> None:
+    """Listing endpoints return org data (member emails, cohorts): the token
+    needs the matching read right, like every other API-token route."""
+    rights = api_user.rights or {}
+    if isinstance(rights, dict):
+        allowed = bool((rights.get(resource) or {}).get("action_read", False))
+    else:
+        allowed = bool(getattr(getattr(rights, resource, None), "action_read", False))
+    if not allowed:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail=f"API token does not have 'read' permission for {resource}",
         )
 
 
@@ -206,6 +222,7 @@ async def zapier_list_courses(
     ctx=Depends(_zapier_context),
 ) -> List[ZapierCourseItem]:
     api_user, db_session = ctx
+    _require_token_right(api_user, "courses")
     query = (
         select(Course)
         .where(Course.org_id == api_user.org_id)
@@ -235,6 +252,7 @@ async def zapier_list_users(
     ctx=Depends(_zapier_context),
 ) -> List[ZapierUserItem]:
     api_user, db_session = ctx
+    _require_token_right(api_user, "users")
     query = (
         select(User)
         .join(UserOrganization, UserOrganization.user_id == User.id)  # type: ignore
@@ -271,6 +289,7 @@ async def zapier_list_usergroups(
     ctx=Depends(_zapier_context),
 ) -> List[ZapierUserGroupItem]:
     api_user, db_session = ctx
+    _require_token_right(api_user, "usergroups")
     query = (
         select(UserGroup)
         .where(UserGroup.org_id == api_user.org_id)
@@ -310,6 +329,9 @@ async def zapier_create_subscription(
     ctx=Depends(_zapier_context),
 ) -> ZapierSubscriptionResponse:
     api_user, db_session = ctx
+    # A subscription is an outbound event feed carrying member data: the
+    # same admin gate manual webhook endpoints have.
+    await require_org_admin(api_user.created_by_user_id, api_user.org_id, db_session)
     _validate_event(payload.event)
     _validate_webhook_url(payload.target_url)
 

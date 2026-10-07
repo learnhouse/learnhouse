@@ -22,11 +22,11 @@ from botocore.exceptions import ClientError
 
 from sqlmodel.ext.asyncio.session import AsyncSession
 from src.core.events.database import get_db_session
-from src.db.courses.courses import Course
 from src.db.podcasts.podcasts import Podcast
 from src.db.users import AnonymousUser, PublicUser, APITokenUser
 from src.db.user_organizations import UserOrganization
 from src.security.auth import get_current_user
+from src.services.courses.activities.access import verify_activity_reader_access_by_uuid
 from src.security.submission_file_access import (
     is_submission_file,
     enforce_submission_file_access,
@@ -173,30 +173,13 @@ async def _check_content_access(
         and parts[2] == 'courses'
         and parts[4] == 'activities'
     ):
-        course_uuid = parts[3]
-        course = (await db_session.execute(
-            select(Course).where(Course.course_uuid == course_uuid)
-        )).scalars().first()
-        if not course:
-            raise HTTPException(status_code=403, detail="Access denied")
-        if course.public:
-            return  # Public course: allow anonymous
-        if isinstance(current_user, AnonymousUser):
-            raise HTTPException(status_code=401, detail="Authentication required")
-        # Verify API token is scoped to the correct org
-        if isinstance(current_user, APITokenUser):
-            if current_user.org_id != course.org_id:
-                raise HTTPException(status_code=403, detail="Access denied")
-            return
-        # Verify user belongs to the org that owns this course
-        membership = (await db_session.execute(
-            select(UserOrganization).where(
-                UserOrganization.user_id == current_user.id,
-                UserOrganization.org_id == course.org_id,
-            )
-        )).scalars().first()
-        if not membership:
-            raise HTTPException(status_code=403, detail="Access denied")
+        # The files under an activity (HLS segments and key, captions, block
+        # uploads) are the activity: apply the activity's own gate (course
+        # read, published, paywall, locks), not just "public course or member".
+        course_uuid, activity_uuid = parts[3], parts[5]
+        await verify_activity_reader_access_by_uuid(
+            request, activity_uuid, current_user, db_session, course_uuid=course_uuid
+        )
         return
 
     # Podcast episode content: requires podcast to be public or user to be org member

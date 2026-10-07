@@ -545,11 +545,19 @@ class TestPlanAndTargetGuards:
             resp = await client.get(f"/api/v1/audit/user/{regular_user.id}?org_id=1")
         assert resp.status_code == 200
 
-    async def test_superadmin_target_bypasses_membership(self, client, regular_user):
-        """A superadmin target passes the in-org check without a membership row."""
-        with _bypass_plan(), patch("src.routers.audit.is_user_superadmin", new_callable=AsyncMock, return_value=True):
-            resp = await client.get(f"/api/v1/audit/user/{regular_user.id}?org_id=1")
-        assert resp.status_code == 200
+    async def test_superadmin_target_outside_org_is_not_disclosed(self, client, db):
+        """Being a superadmin is no reason to hand an org admin that person's
+        dossier: a target outside the org is a 404 like anyone else."""
+        from src.db.users import User
+
+        db.add(User(
+            id=50, username="ops", first_name="", last_name="", email="ops@test.com",
+            password="x", user_uuid="user_ops", is_superadmin=True,
+        ))
+        await db.commit()
+        with _bypass_plan():
+            resp = await client.get("/api/v1/audit/user/50?org_id=1")
+        assert resp.status_code == 404
 
     async def test_valid_days_param(self, client, regular_user, seed_activity):
         with _bypass_plan():

@@ -39,7 +39,7 @@ async def verify_cloud_internal_key(x_internal_key: str = Header(...)):
     if (
         not expected_key
         or not x_internal_key
-        or not secrets.compare_digest(x_internal_key, expected_key)
+        or not secrets.compare_digest(x_internal_key.encode(), expected_key.encode())
     ):
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,

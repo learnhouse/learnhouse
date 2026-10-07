@@ -73,22 +73,30 @@ def scratch_dir():
 
 
 async def _upload_output(out_dir: str, prefix: str) -> bool:
-    """Upload a transcode's output dir, in parallel, off the event loop.
+    """Publish a transcode's output dir (S3 in parallel, or a local copy) off
+    the event loop.
 
     Must be awaited inside ``scratch_dir()``. If the job is cancelled (the
     JOB_TIMEOUT_SECONDS cap, or a pod shutting down), ``asyncio.to_thread``
     can't stop its worker thread, and ``scratch_dir`` deletes the files right
-    after. Without the stop flag that thread kept going and logged one
-    "No such file or directory" error per remaining segment.
+    after. The stop flag tells that thread to give up instead of failing on
+    every file that has disappeared.
     """
-    if not is_s3_enabled():
-        await asyncio.to_thread(shutil.copytree, out_dir, prefix, dirs_exist_ok=True)
-        return True
     stop = threading.Event()
+
+    def _copy_unless_stopped(src: str, dst: str) -> str:
+        return dst if stop.is_set() else shutil.copy2(src, dst)
+
     try:
-        return await asyncio.to_thread(
-            upload_directory_to_s3_parallel, out_dir, prefix, stop=stop
+        if is_s3_enabled():
+            return await asyncio.to_thread(
+                upload_directory_to_s3_parallel, out_dir, prefix, stop=stop
+            )
+        await asyncio.to_thread(
+            shutil.copytree, out_dir, prefix,
+            dirs_exist_ok=True, copy_function=_copy_unless_stopped,
         )
+        return True
     except BaseException:
         stop.set()
         raise

@@ -3,7 +3,7 @@ import { Callout } from 'nextra/components'
 # Formative Assessment
 
 A formative assignment is handed in and never marked. There is no score, no
-pass/fail line, and no grading queue behind it — the learner deposits their
+pass/fail line, and no grading queue behind it. The learner deposits their
 work, and in return they get the **model answer** (the *corrigé*) to compare it
 against.
 
@@ -20,16 +20,16 @@ In the assignment's **Edit** dialog:
 2. Write the **model answer**, and optionally attach a document (a PDF worked
    solution, a marking rubric, an exemplar).
 3. Choose when it unlocks:
-   - **Never** — kept for you only.
-   - **On hand-in** — the learner gets it the moment they submit. This is the
+   - **Never**: kept for you only.
+   - **On hand-in**: the learner gets it the moment they submit. This is the
      formative loop.
-   - **After grading** — only once the work has been marked. Offered on graded
+   - **After grading**: only once the work has been marked. Offered on graded
      assignments only.
 
 <Callout>
-The model answer is withheld **server-side**, not just hidden in the interface.
+The model answer is withheld **server-side**, not only hidden in the interface.
 Until a learner's own submission satisfies the unlock rule, the assignment
-payload they receive contains no model answer at all — though it does say that
+payload they receive contains no model answer at all. It does say that
 one exists, so they know what handing in earns them.
 </Callout>
 
@@ -45,15 +45,15 @@ Nothing anywhere shows a score.
 ## What the teacher sees
 
 The submission still appears in the **Submissions** list, and opening it shows
-what was handed in — but with no grade banner, no per-task scores, and no
+what was handed in, but with no grade banner, no per-task scores, and no
 grading actions. The API refuses to grade a formative assignment outright, so
 there is no way to accidentally put a mark on one.
 
 ## Retries
 
 Retries work as usual, and the deadline still applies. On a formative
-assignment the model answer stays readable while attempts remain — there is no
-score to game by reading it — but a retry re-locks it until the next hand-in.
+assignment the model answer stays readable while attempts remain, since there is no
+score to game by reading it. A retry re-locks it until the next hand-in.
 
 ## Certificates
 

@@ -9,6 +9,7 @@ import redis
 from sqlmodel import select, func
 from sqlmodel.ext.asyncio.session import AsyncSession
 from config.config import get_learnhouse_config
+from src.security.superadmin import is_user_superadmin
 from src.security.features_utils.usage import (
     check_limits_with_usage,
     increase_feature_usage,
@@ -361,8 +362,6 @@ async def create_user_with_invite(
     # Usage check
     await check_limits_with_usage("members", org_id, db_session)
 
-
-
     user = await create_user(request, db_session, current_user, user_object, org_id, signup_provider="invite")
 
     # Check if invite code contains UserGroup
@@ -537,6 +536,15 @@ async def update_user(
 
     # RBAC check
     await rbac_check(request, current_user, "update", user.user_uuid, db_session)
+
+    # Email and username identify a global account; only its owner (or a
+    # superadmin) changes them, never an admin of one of its orgs.
+    identity_changed = user_object.email != user.email or user_object.username != user.username
+    if identity_changed and current_user.id != user.id and not await is_user_superadmin(current_user.id, db_session):
+        raise HTTPException(
+            status_code=403,
+            detail="Only the account owner can change its email or username",
+        )
 
     # Reject phishing links in display-name fields on profile update.
     _reject_urls_in_profile_fields(
@@ -906,6 +914,14 @@ async def delete_user_by_id(
 
     # RBAC check
     await rbac_check(request, current_user, "delete", user.user_uuid, db_session)
+
+    # Deleting an account is global and cascades to every org the user is the
+    # sole admin of. Org admins remove members from their org instead.
+    if current_user.id != user.id and not await is_user_superadmin(current_user.id, db_session):
+        raise HTTPException(
+            status_code=403,
+            detail="Only the account owner can delete this account",
+        )
 
     # Capture identity before deletion for the confirmation ('goodbye') email.
     deleted_email = user.email

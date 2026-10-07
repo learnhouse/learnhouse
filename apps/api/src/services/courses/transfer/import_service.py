@@ -33,6 +33,7 @@ from src.db.resource_authors import (
 )
 from src.db.users import PublicUser, AnonymousUser, APITokenUser
 from src.security.file_validation import EXT_TO_CANONICAL_MIME, MIME_TO_SAFE_EXT
+from src.security.org_auth import require_org_create_permission
 from src.security.rbac import check_resource_access, AccessAction
 from src.security.features_utils.usage import check_limits_with_usage, increase_feature_usage
 
@@ -208,8 +209,9 @@ async def analyze_import_package(
     if not organization:
         raise HTTPException(status_code=404, detail="Organization not found")
 
-    # RBAC check - user needs create permission for courses
+    # RBAC check - user needs create permission for courses, in this org
     await check_resource_access(request, db_session, current_user, "course_x", AccessAction.CREATE)
+    await require_org_create_permission(current_user, org_id, db_session, "courses")
 
     # Create temp directory for extraction
     temp_id = str(uuid4())
@@ -453,8 +455,9 @@ async def import_courses(
     organization_id = organization.id
     organization_uuid = organization.org_uuid
 
-    # RBAC check - user needs create permission for courses
+    # RBAC check - user needs create permission for courses, in this org
     await check_resource_access(request, db_session, current_user, "course_x", AccessAction.CREATE)
+    await require_org_create_permission(current_user, org_id, db_session, "courses")
 
     # temp_id is client-supplied here: validate it as the UUID analyze minted
     # and resolve every derived path back into TEMP_IMPORT_DIR before it reaches

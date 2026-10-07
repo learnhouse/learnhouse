@@ -137,6 +137,13 @@ async def create_usergroup(
     await require_org_membership(
         resolve_acting_user_id(current_user), usergroup_create.org_id, db_session
     )
+    # Membership is not permission to create (the placeholder check below
+    # passes for any signed-in member).
+    if not isinstance(current_user, APITokenUser):
+        await require_org_role_permission(
+            resolve_acting_user_id(current_user), usergroup_create.org_id, db_session,
+            "usergroups", "action_create",
+        )
 
     # RBAC check
     await rbac_check(

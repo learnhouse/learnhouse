@@ -25,6 +25,7 @@ from src.db.users import AnonymousUser, PublicUser, APITokenUser
 from src.core.events.database import get_db_session
 from src.security.auth import get_current_user
 from src.security.rbac.resource_access import ResourceAccessChecker, AccessAction, AccessContext
+from src.services.courses.activities.access import verify_activity_reader_access
 from src.services.courses.transfer.storage_utils import (
     is_s3_enabled,
     generate_presigned_get_url,
@@ -72,6 +73,7 @@ def _safe_hls_relpath(hls_path: str) -> str | None:
     if os.path.splitext(parts[-1])[1].lower() not in _HLS_MIME:
         return None
     return "/".join(parts)
+
 
 # The 302 to the presigned URL is cacheable for a bounded window. This is
 # critical for smooth playback: without it (no-store) the browser re-resolves
@@ -137,12 +139,9 @@ async def _verify_course_activity_access(
     if not course or course.course_uuid != course_uuid:
         raise HTTPException(status_code=404, detail="Course not found or activity doesn't belong to course")
 
-    # RBAC check - verify user can read this course
-    checker = ResourceAccessChecker(request, db_session, current_user)
-    decision = await checker.check_access(course_uuid, AccessAction.READ, AccessContext.PUBLIC_VIEW)
-
-    if not decision.allowed:
-        raise HTTPException(status_code=403, detail=decision.reason)
+    # Course read, published state, paywall and locks: the same gate the
+    # activity read applies, or the files are a way around it.
+    await verify_activity_reader_access(request, activity, course, current_user, db_session)
 
 
 async def _verify_podcast_episode_access(

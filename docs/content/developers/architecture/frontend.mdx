@@ -1,6 +1,6 @@
 # Frontend Architecture
 
-The LearnHouse frontend is a **Next.js 16** application located at `apps/web` in the project. It serves as the primary user interface for learners, instructors, and administrators.
+The LearnHouse frontend is a **Next.js 16** application located at `apps/web` in the project. It is the main user interface for learners, instructors, and administrators.
 
 ## Technology Stack
 
@@ -14,27 +14,27 @@ The LearnHouse frontend is a **Next.js 16** application located at `apps/web` in
 
 ## Key Dependencies
 
-- **@tiptap/core** -- Block-based rich text editor
-- **@radix-ui** -- Accessible, unstyled UI primitives
-- **@hocuspocus/provider** -- Real-time collaboration client
-- **yjs** -- CRDT library for conflict-free collaborative editing
-- **@codemirror** -- Code editor component
-- **recharts** -- Charting and data visualization
-- **formik / yup** -- Form handling and validation
-- **motion** -- Animation library
-- **i18next** -- Internationalization
-- **wavesurfer.js** -- Audio/podcast player
-- **jspdf / html2canvas** -- Certificate generation
-- **unsplash-js** -- Unsplash image integration
+- **@tiptap/core**: Block-based rich text editor
+- **@radix-ui**: Accessible, unstyled UI primitives
+- **@hocuspocus/provider**: Real-time collaboration client
+- **yjs**: CRDT library for conflict-free collaborative editing
+- **@codemirror**: Code editor component
+- **recharts**: Charting and data visualization
+- **formik / yup**: Form handling and validation
+- **motion**: Animation library
+- **i18next**: Internationalization
+- **wavesurfer.js**: Audio/podcast player
+- **jspdf / html2canvas**: Certificate generation
+- **unsplash-js**: Unsplash image integration
 
 ## App Router
 
 The frontend uses the Next.js App Router, which enables:
 
-- **Server Components by default** -- Pages and layouts render on the server, reducing client-side JavaScript and improving initial load times.
-- **Client Components where needed** -- Interactive elements opt into client-side rendering with the `"use client"` directive.
-- **Streaming and Suspense** -- Content is progressively streamed to the browser as it becomes ready.
-- **Route Groups and Layouts** -- Shared layouts and nested routing keep the codebase organized.
+- **Server Components by default**: Pages and layouts render on the server, reducing client-side JavaScript and improving initial load times.
+- **Client Components where needed**: Interactive elements opt into client-side rendering with the `"use client"` directive.
+- **Streaming and Suspense**: Content is progressively streamed to the browser as it becomes ready.
+- **Route Groups and Layouts**: Shared layouts and nested routing keep the codebase organized.
 
 ## Authentication
 
@@ -44,8 +44,8 @@ Authentication is handled via **JWT tokens** issued by the FastAPI backend. On l
 
 The frontend communicates with the FastAPI backend over HTTP. API calls are made from both:
 
-- **Server Components** -- Data is fetched at request time on the server, which keeps sensitive tokens off the client.
-- **Client Components** -- Interactive features make API calls directly from the browser using **SWR** for caching and revalidation.
+- **Server Components**: Data is fetched at request time on the server, which keeps sensitive tokens off the client.
+- **Client Components**: Interactive features make API calls directly from the browser using **SWR** for caching and revalidation.
 
 ## Directory Structure
 

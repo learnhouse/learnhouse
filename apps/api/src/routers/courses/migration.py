@@ -9,7 +9,7 @@ from src.core.redis import get_redis_client
 from src.db.organizations import Organization
 from src.db.users import PublicUser
 from src.security.auth import get_authenticated_user, resolve_acting_user_id
-from src.security.org_auth import is_org_member, enforce_org_mfa
+from src.security.org_auth import is_org_member, enforce_org_mfa, require_org_create_permission
 from src.security.rbac import check_resource_access, AccessAction
 from src.services.security.rate_limiting import enforce_ai_rate_limit
 from sqlmodel.ext.asyncio.session import AsyncSession
@@ -64,6 +64,7 @@ async def require_migration_org_access(
     await enforce_org_mfa(user_id, org.id, db_session)
 
     await check_resource_access(request, db_session, current_user, "course_x", AccessAction.CREATE)
+    await require_org_create_permission(current_user, org.id, db_session, "courses")
     return user_id
 
 

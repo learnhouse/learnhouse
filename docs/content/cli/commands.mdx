@@ -84,7 +84,7 @@ npx learnhouse logs
 
 ## `config`
 
-Display current installation metadata — version, directory, URL, organization slug, and file locations.
+Display current installation metadata: version, directory, URL, organization slug, and file locations.
 
 ```bash
 npx learnhouse config
@@ -160,7 +160,7 @@ The dump uses `--clean --if-exists` so it can be replayed into an existing datab
 
 ## `doctor`
 
-Run comprehensive diagnostics to identify issues.
+Run diagnostics to find issues.
 
 ```bash
 npx learnhouse doctor
@@ -199,7 +199,7 @@ Interactive environment variable editor. Edit variables by category:
 - Database & Redis
 - Security
 - AI
-- Email (Resend only — edit `.env` directly to set SMTP credentials)
+- Email (Resend only; edit `.env` directly to set SMTP credentials)
 - S3 Storage
 - OAuth
 
@@ -237,7 +237,7 @@ npx learnhouse dev
 
 ### Containers restart in a loop
 
-Run `npx learnhouse doctor` — it scans logs and surfaces the root cause. Common causes:
+Run `npx learnhouse doctor`. It scans logs and reports the root cause. Common causes:
 - Missing required env var in `.env`
 - Port conflict (another process is using port 80 or 5432)
 - Postgres volume corruption (restore from backup)

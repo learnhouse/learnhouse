@@ -8,7 +8,7 @@ import WebhookFlowDiagram from '../../../components/diagrams/WebhookFlowDiagram'
 
 # Webhooks
 
-Webhooks let LearnHouse **push events to your application** the moment they happen — a learner enrolls, completes a course, submits an assignment, signs up — so you can react without polling. Use them to sync a CRM, send custom emails, update a dashboard, or kick off any workflow.
+Webhooks let LearnHouse **push events to your application** the moment they happen (a learner enrolls, completes a course, submits an assignment, signs up), so you can react without polling. Use them to sync a CRM, send custom emails, update a dashboard, or kick off any workflow.
 
 <WebhookFlowDiagram />
 
@@ -21,7 +21,7 @@ Webhooks are a **Pro** feature. They're managed by an authenticated user under o
 1. You register an **endpoint** (a public HTTPS URL) and choose which events to subscribe to.
 2. When a subscribed event fires, LearnHouse sends a `POST` to your URL with a JSON body, **signed** with a per-endpoint secret.
 3. Your receiver **verifies the signature**, then handles the event.
-4. If your endpoint doesn't return a `2xx`, LearnHouse **retries** — up to 3 attempts, waiting 1s then 4s between them — and logs every delivery.
+4. If your endpoint doesn't return a `2xx`, LearnHouse **retries** up to 3 attempts, waiting 1s then 4s between them, and logs every delivery.
 
 ## Managing endpoints
 
@@ -51,7 +51,7 @@ curl -X POST "http://localhost:1338/api/v1/orgs/1/webhooks" \
   }'
 ```
 
-The response contains the **signing secret exactly once** (prefixed `whsec_`). Store it — you'll need it to verify signatures, and it can't be retrieved again (only rotated). It also returns the usual metadata (`created_by_user_id`, `creation_date`, …):
+The response contains the **signing secret exactly once** (prefixed `whsec_`). Store it. You'll need it to verify signatures, and it can't be retrieved again (only rotated). It also returns the usual metadata (`created_by_user_id`, `creation_date`, …):
 
 ```json
 {
@@ -90,12 +90,12 @@ Each request also carries these headers:
 | --- | --- |
 | `X-Webhook-Event` | The event name, e.g. `course_completed` |
 | `X-Webhook-Delivery` | Unique delivery id, e.g. `dlv_…` (use it for idempotency) |
-| `X-Webhook-Signature` | `sha256=<hmac-hex>` — HMAC-SHA256 of the **raw request body** |
+| `X-Webhook-Signature` | `sha256=<hmac-hex>`: HMAC-SHA256 of the **raw request body** |
 | `User-Agent` | `LearnHouse-Webhooks/1.0` |
 
 ## Verifying the signature
 
-The signature is `sha256=` followed by the hex HMAC-SHA256 of the **exact raw body bytes**, keyed by your endpoint secret. You must compute the HMAC over the **unparsed** body — re-serializing the JSON will change the bytes and break verification.
+The signature is `sha256=` followed by the hex HMAC-SHA256 of the **exact raw body bytes**, keyed by your endpoint secret. You must compute the HMAC over the **unparsed** body. Re-serializing the JSON will change the bytes and break verification.
 
 Here's a complete receiver as a Next.js Route Handler:
 
@@ -106,7 +106,7 @@ import crypto from 'node:crypto'
 const SECRET = process.env.LEARNHOUSE_WEBHOOK_SECRET! // the whsec_… value
 
 export async function POST(req: NextRequest) {
-  // 1. Read the RAW body — do not use req.json() first.
+  // 1. Read the RAW body. Do not use req.json() first.
   const raw = await req.text()
   const signature = req.headers.get('x-webhook-signature') ?? ''
 
@@ -154,7 +154,7 @@ function verify(rawBody, signatureHeader, secret) {
 ```
 
 <Callout type="warning">
-**Always verify before trusting a payload**, and treat deliveries as **at-least-once** — the same `delivery_id` can arrive more than once after a retry. Make your handler idempotent (e.g. record processed `delivery_id`s).
+**Always verify before trusting a payload**, and treat deliveries as **at-least-once**: the same `delivery_id` can arrive more than once after a retry. Make your handler idempotent (e.g. record processed `delivery_id`s).
 </Callout>
 
 ## Event catalogue
@@ -177,11 +177,11 @@ A webhook can subscribe to any of these events. The shape of each event's `data`
 ## Security notes
 
 - **Secrets** are stored encrypted at rest and are shown to you only at creation and on rotation.
-- **Signatures** use HMAC-SHA256 over the raw body — the same convention as GitHub and Stripe.
-- **Outbound requests are SSRF-protected**: LearnHouse validates the target URL and the resolved IP before every delivery, so endpoints must be publicly reachable — `localhost` and private/reserved IP ranges are always rejected (in every environment).
+- **Signatures** use HMAC-SHA256 over the raw body, the same convention as GitHub and Stripe.
+- **Outbound requests are SSRF-protected**: LearnHouse validates the target URL and the resolved IP before every delivery, so endpoints must be publicly reachable. `localhost` and private/reserved IP ranges are always rejected (in every environment).
 
 ## See also
 
-- [Custom features overview](/guides/custom-features) — API tokens and programmatic content.
-- [Build a learning platform](/guides/build-learning-platform) — the frontend side of the API.
-- [API Reference](/developers/api) — every endpoint and schema.
+- [Custom features overview](/guides/custom-features): API tokens and programmatic content.
+- [Build a learning platform](/guides/build-learning-platform): the frontend side of the API.
+- [API Reference](/developers/api): every endpoint and schema.

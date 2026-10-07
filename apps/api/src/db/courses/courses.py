@@ -4,7 +4,7 @@ from sqlalchemy.dialects.postgresql import JSONB
 from sqlmodel import Field, SQLModel
 from enum import Enum
 from pydantic import BaseModel
-from src.db.users import UserRead
+from src.db.users import UserReadPublic
 from src.db.trails import TrailRead
 from src.db.courses.chapters import ChapterRead
 from src.db.resource_authors import ResourceAuthorshipEnum, ResourceAuthorshipStatusEnum
@@ -38,7 +38,9 @@ class ThumbnailType(str, Enum):
 
 
 class AuthorWithRole(SQLModel):
-    user: UserRead
+    # Authors ship with public course/podcast pages: never the full UserRead
+    # (email, signup method, superadmin flag, admin-defined signup fields).
+    user: UserReadPublic
     authorship: ResourceAuthorshipEnum
     authorship_status: ResourceAuthorshipStatusEnum
     creation_date: str

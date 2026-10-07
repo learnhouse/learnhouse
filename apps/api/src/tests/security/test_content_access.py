@@ -95,16 +95,38 @@ class TestCheckContentAccess:
         return podcast
 
     @pytest.mark.asyncio
-    async def test_public_course_activity_anonymous(self):
-        """Anonymous users can access activity content of public courses."""
-        from src.routers.local_content import _check_content_access
-        course = self._make_course(public=True)
-        db = self._make_db_session(course=course)
-        # Should not raise
-        await _check_content_access(
-            "orgs/org1/courses/course_abc/activities/act1/video.mp4",
-            self._make_anon_user(), db
-        )
+    async def test_activity_path_is_delegated_to_the_activity_gate(self):
+        """Files under an activity are gated like the activity itself
+        (course read, published, paywall, locks), not "public course or member"."""
+        from unittest.mock import patch
+        import src.routers.local_content as lc
+
+        db = self._make_db_session()
+        user = self._make_anon_user()
+        with patch.object(lc, "verify_activity_reader_access_by_uuid", new_callable=AsyncMock) as gate:
+            await lc._check_content_access(
+                "orgs/org1/courses/course_abc/activities/act1/video.mp4", user, db
+            )
+        gate.assert_awaited_once()
+        assert gate.await_args.args[1] == "act1"
+        assert gate.await_args.kwargs["course_uuid"] == "course_abc"
+
+    @pytest.mark.asyncio
+    async def test_activity_gate_refusal_propagates(self):
+        from unittest.mock import patch
+        import src.routers.local_content as lc
+
+        db = self._make_db_session()
+        with patch.object(
+            lc, "verify_activity_reader_access_by_uuid", new_callable=AsyncMock,
+            side_effect=HTTPException(status_code=401, detail="Authentication required"),
+        ):
+            with pytest.raises(HTTPException) as exc_info:
+                await lc._check_content_access(
+                    "orgs/org1/courses/course_abc/activities/act1/video.mp4",
+                    self._make_anon_user(), db
+                )
+        assert exc_info.value.status_code == 401
 
     @pytest.mark.asyncio
     async def test_submission_file_delegates_to_access_control(self):
@@ -132,43 +154,6 @@ class TestCheckContentAccess:
         with patch.object(cf, "enforce_submission_file_access", new_callable=AsyncMock) as gate:
             await cf._check_content_access(path, MagicMock(), db)
         gate.assert_awaited_once()
-
-    @pytest.mark.asyncio
-    async def test_private_course_activity_anonymous_rejected(self):
-        """Anonymous users cannot access activity content of private courses."""
-        from src.routers.local_content import _check_content_access
-        course = self._make_course(public=False)
-        db = self._make_db_session(course=course)
-        with pytest.raises(HTTPException) as exc_info:
-            await _check_content_access(
-                "orgs/org1/courses/course_abc/activities/act1/video.mp4",
-                self._make_anon_user(), db
-            )
-        assert exc_info.value.status_code == 401
-
-    @pytest.mark.asyncio
-    async def test_private_course_activity_authenticated(self):
-        """Authenticated users can access private course activity content."""
-        from src.routers.local_content import _check_content_access
-        course = self._make_course(public=False)
-        db = self._make_db_session(course=course)
-        # Should not raise
-        await _check_content_access(
-            "orgs/org1/courses/course_abc/activities/act1/video.mp4",
-            self._make_auth_user(), db
-        )
-
-    @pytest.mark.asyncio
-    async def test_course_not_found_anonymous_rejected(self):
-        """If course doesn't exist, anonymous users are rejected."""
-        from src.routers.local_content import _check_content_access
-        db = self._make_db_session()  # returns None
-        with pytest.raises(HTTPException) as exc_info:
-            await _check_content_access(
-                "orgs/org1/courses/course_abc/activities/act1/video.mp4",
-                self._make_anon_user(), db
-            )
-        assert exc_info.value.status_code == 403
 
     @pytest.mark.asyncio
     async def test_public_podcast_episode_anonymous(self):
@@ -303,26 +288,18 @@ class TestS3ContentAccess:
         return course
 
     @pytest.mark.asyncio
-    async def test_public_course_anonymous_allowed(self):
-        from src.routers.content_files import _check_content_access
-        course = self._make_course(public=True)
-        db = self._make_db_session(course=course)
-        await _check_content_access(
-            "orgs/org1/courses/c1/activities/a1/file.mp4",
-            self._make_anon_user(), db
-        )
+    async def test_activity_path_is_delegated_to_the_activity_gate(self):
+        from unittest.mock import patch
+        import src.routers.content_files as cf
 
-    @pytest.mark.asyncio
-    async def test_private_course_anonymous_rejected(self):
-        from src.routers.content_files import _check_content_access
-        course = self._make_course(public=False)
-        db = self._make_db_session(course=course)
-        with pytest.raises(HTTPException) as exc_info:
-            await _check_content_access(
-                "orgs/org1/courses/c1/activities/a1/file.mp4",
-                self._make_anon_user(), db
+        db = self._make_db_session()
+        with patch.object(cf, "verify_activity_reader_access_by_uuid", new_callable=AsyncMock) as gate:
+            await cf._check_content_access(
+                "orgs/org1/courses/c1/activities/a1/file.mp4", self._make_anon_user(), db
             )
-        assert exc_info.value.status_code == 401
+        gate.assert_awaited_once()
+        assert gate.await_args.args[1] == "a1"
+        assert gate.await_args.kwargs["course_uuid"] == "c1"
 
     @pytest.mark.asyncio
     async def test_user_avatar_public(self):

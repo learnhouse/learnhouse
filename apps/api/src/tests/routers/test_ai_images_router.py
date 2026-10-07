@@ -40,6 +40,14 @@ def _user(id=1):
     return SimpleNamespace(id=id)
 
 
+@pytest.fixture(autouse=True)
+def _authoring_gate_passes():
+    """These tests cover the endpoint mechanics; the authoring-rights gate
+    added on top of org membership is exercised in the security suite."""
+    with patch.object(img, "require_org_create_permission", new=AsyncMock()):
+        yield
+
+
 def _patches(member=True):
     """Common happy-path patches; returns a contextlib-style list to enter."""
     return [

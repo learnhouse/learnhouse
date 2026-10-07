@@ -41,7 +41,7 @@ from src.services.auth.session import (
 from src.services.orgs.auth_policy import auth_policy_exception, evaluate_org_auth
 from src.services.orgs.mfa_policy import evaluate_mfa_compliance, get_org_mfa_policy
 from src.services.security.rate_limiting import check_rate_limit, get_client_ip
-from src.security.org_auth import is_org_admin
+from src.security.org_auth import is_org_admin, org_owns_account
 from src.db.organization_config import OrganizationConfig
 from src.db.user_organizations import UserOrganization
 from src.routers.auth import get_token_expiry_ms, set_auth_cookies
@@ -814,6 +814,14 @@ async def api_org_reset_member_mfa(
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail={"code": "TARGET_IS_SUPERADMIN", "message": "You cannot reset this user's two-factor."},
+        )
+
+    # The factor protects the whole account. An org only gets to clear it for
+    # accounts that belong to it alone.
+    if not await org_owns_account(user_id, org_id, db_session):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail={"code": "ACCOUNT_SHARED", "message": "This account also belongs to other organizations; only the user can reset their two-factor."},
         )
 
     had_factor = await get_user_mfa(db_session, user_id) is not None

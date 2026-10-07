@@ -24,7 +24,11 @@ from src.db.resource_authors import (
     ResourceAuthorshipStatusEnum,
 )
 from src.security.auth import resolve_acting_user_id
-from src.security.org_auth import is_org_member, require_org_membership
+from src.security.org_auth import (
+    is_org_member,
+    require_org_create_permission,
+    require_org_role_permission,
+)
 from src.security.rbac import check_resource_access, AccessAction
 from src.services.webhooks.dispatch import dispatch_webhooks
 
@@ -338,9 +342,7 @@ async def create_folder(
     # The "folder_x" placeholder has no organization of its own, so the RBAC
     # check above accepts any role the caller holds in ANY org. The target org
     # comes from the request body, so gate it explicitly.
-    await require_org_membership(
-        resolve_acting_user_id(current_user), folder_object.org_id, db_session
-    )
+    await require_org_create_permission(current_user, folder_object.org_id, db_session, "folders")
 
     parent_folder_id = None
     if folder_object.parent_folder_uuid:
@@ -403,7 +405,7 @@ async def get_folder(
         request, db_session, current_user, folder.folder_uuid, AccessAction.READ
     )
 
-    include_private = not _is_anonymous(current_user)
+    include_private = await _may_see_private(current_user, folder.org_id, db_session)
     return await _folder_to_read(db_session, folder, include_private=include_private)
 
 
@@ -985,9 +987,7 @@ async def add_org_root_content(
     )
     # "folder_x" carries no organization, so the check above is satisfied by any
     # role the caller holds anywhere. org_id is caller-supplied, so gate it.
-    await require_org_membership(
-        resolve_acting_user_id(current_user), int(org_id), db_session
-    )
+    await require_org_create_permission(current_user, int(org_id), db_session, "folders")
     await check_resource_access(
         request, db_session, current_user, resource_uuid, AccessAction.READ
     )
@@ -1030,8 +1030,9 @@ async def remove_org_root_content(
     )
     # Same "folder_x" placeholder caveat as add_org_root_content: the target org
     # is only ever checked here.
-    await require_org_membership(
-        resolve_acting_user_id(current_user), int(org_id), db_session
+    await require_org_role_permission(
+        resolve_acting_user_id(current_user), int(org_id), db_session,
+        "folders", "action_update",
     )
     rows = (
         await db_session.execute(

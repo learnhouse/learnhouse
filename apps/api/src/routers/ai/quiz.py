@@ -19,7 +19,7 @@ from src.db.organizations import Organization
 from src.db.users import PublicUser
 from src.security.auth import get_authenticated_user
 from src.security.features_utils.usage import refund_ai_credit, reserve_ai_credit
-from src.security.org_auth import is_org_member, enforce_org_mfa
+from src.security.org_auth import is_org_member, enforce_org_mfa, require_org_create_permission
 from src.security.rbac import check_resource_access, AccessAction
 from src.services.ai.generations import (
     delete_generation,
@@ -110,10 +110,15 @@ async def api_generate_quiz(
         # Grounding a quiz on an activity's (possibly restricted/draft) content
         # is an authoring action: require content-author rights on that course,
         # not bare org membership.
-        if course_uuid:
-            await check_resource_access(
-                request, db_session, current_user, course_uuid, AccessAction.UPDATE
-            )
+        if not course_uuid:
+            # Unknown activity: don't fall through to a path with no gate.
+            raise HTTPException(status_code=404, detail="Activity not found")
+        await check_resource_access(
+            request, db_session, current_user, course_uuid, AccessAction.UPDATE
+        )
+    else:
+        # Quizzes are editor blocks: creating one takes course-author rights.
+        await require_org_create_permission(current_user, org.id, db_session, "courses")
 
     enforce_ai_rate_limit(current_user.id, org.id)
     await reserve_ai_credit(org.id, db_session, amount=QUIZ_CREDIT_COST)
