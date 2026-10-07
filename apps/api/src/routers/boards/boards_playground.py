@@ -14,6 +14,7 @@ from src.security.features_utils.usage import (
     reserve_ai_credit,
 )
 from src.security.org_auth import is_org_member, enforce_org_mfa
+from src.security.rbac import check_resource_access, AccessAction
 from src.services.ai.llm import model_for_tier
 from src.services.boards.boards_playground import (
     get_boards_playground_session,
@@ -87,6 +88,11 @@ async def start_boards_playground_session(
             status_code=403,
             detail="You are not a member of this organization",
         )
+    # Generating into a board spends the org's credits on that board's behalf:
+    # require edit rights on it, not just membership of the org.
+    await check_resource_access(
+        request, db_session, current_user, board.board_uuid, AccessAction.UPDATE
+    )
 
     # Org-wide two-factor policy, applied after the membership gate.
     await enforce_org_mfa(start_acting_user_id, org.id, db_session)
@@ -174,6 +180,11 @@ async def iterate_boards_playground_session(
             status_code=403,
             detail="You are not a member of this organization",
         )
+    # Generating into a board spends the org's credits on that board's behalf:
+    # require edit rights on it, not just membership of the org.
+    await check_resource_access(
+        request, db_session, current_user, board.board_uuid, AccessAction.UPDATE
+    )
 
     # Org-wide two-factor policy, applied after the membership gate.
     await enforce_org_mfa(iterate_acting_user_id, org.id, db_session)

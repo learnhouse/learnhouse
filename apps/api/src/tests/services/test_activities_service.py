@@ -7,8 +7,8 @@ from fastapi import HTTPException
 
 from src.db.courses.activities import ActivityCreate, ActivityRead, ActivityTypeEnum, ActivitySubTypeEnum, ActivityUpdate
 from src.db.organizations import OrganizationRead
+from src.services.courses.activities.access import apply_activity_lock
 from src.services.courses.activities.activities import (
-    _apply_activity_lock,
     _trigger_course_embedding,
     create_activity,
     delete_activity,
@@ -75,11 +75,11 @@ class TestGetEditorBootstrap:
             "src.services.courses.activities.activities.check_resource_access",
             new_callable=AsyncMock,
         ), patch(
-            "src.services.courses.activities.activities.check_ee_activity_paid_access",
+            "src.services.courses.activities.access.check_ee_activity_paid_access",
             new_callable=AsyncMock,
             return_value=True,
         ), patch(
-            "src.services.courses.activities.activities._apply_activity_lock",
+            "src.services.courses.activities.access.apply_activity_lock",
             new_callable=AsyncMock,
         ):
             with pytest.raises(HTTPException) as exc:
@@ -96,11 +96,11 @@ class TestGetEditorBootstrap:
             "src.services.courses.activities.activities.check_resource_access",
             new_callable=AsyncMock,
         ), patch(
-            "src.services.courses.activities.activities.check_ee_activity_paid_access",
+            "src.services.courses.activities.access.check_ee_activity_paid_access",
             new_callable=AsyncMock,
             return_value=True,
         ), patch(
-            "src.services.courses.activities.activities._apply_activity_lock",
+            "src.services.courses.activities.access.apply_activity_lock",
             new_callable=AsyncMock,
         ), patch(
             "src.services.orgs.orgs._build_org_read_with_resolved",
@@ -124,11 +124,11 @@ class TestGetEditorBootstrap:
             "src.services.courses.activities.activities.check_resource_access",
             new_callable=AsyncMock,
         ), patch(
-            "src.services.courses.activities.activities.check_ee_activity_paid_access",
+            "src.services.courses.activities.access.check_ee_activity_paid_access",
             new_callable=AsyncMock,
             return_value=False,
         ), patch(
-            "src.services.courses.activities.activities._apply_activity_lock",
+            "src.services.courses.activities.access.apply_activity_lock",
             new_callable=AsyncMock,
         ), patch(
             "src.services.orgs.orgs._build_org_read_with_resolved",
@@ -150,11 +150,11 @@ class TestGetActivity:
             "src.services.courses.activities.activities.check_resource_access",
             new_callable=AsyncMock,
         ), patch(
-            "src.services.courses.activities.activities.check_ee_activity_paid_access",
+            "src.services.courses.activities.access.check_ee_activity_paid_access",
             new_callable=AsyncMock,
             return_value=True,
         ), patch(
-            "src.services.courses.activities.activities._apply_activity_lock",
+            "src.services.courses.activities.access.apply_activity_lock",
             new_callable=AsyncMock,
         ):
             with pytest.raises(HTTPException) as exc:
@@ -169,11 +169,11 @@ class TestGetActivity:
             "src.services.courses.activities.activities.check_resource_access",
             new_callable=AsyncMock,
         ), patch(
-            "src.services.courses.activities.activities.check_ee_activity_paid_access",
+            "src.services.courses.activities.access.check_ee_activity_paid_access",
             new_callable=AsyncMock,
             return_value=True,
         ), patch(
-            "src.services.courses.activities.activities._apply_activity_lock",
+            "src.services.courses.activities.access.apply_activity_lock",
             new_callable=AsyncMock,
         ):
             result = await get_activity(
@@ -299,9 +299,9 @@ class TestGetActivityById:
 # _apply_activity_lock
 # ---------------------------------------------------------------------------
 
-_PATCH_IS_ORG_ADMIN = "src.services.courses.activities.activities.is_org_admin"
-_PATCH_BATCH_ACCESSIBLE = "src.services.courses.activities.activities.batch_accessible_restricted_uuids"
-_PATCH_IS_LOCKED = "src.services.courses.activities.activities.is_locked_for_user"
+_PATCH_IS_ORG_ADMIN = "src.services.courses.activities.access.is_org_admin"
+_PATCH_BATCH_ACCESSIBLE = "src.services.courses.activities.access.batch_accessible_restricted_uuids"
+_PATCH_IS_LOCKED = "src.services.courses.activities.access.is_locked_for_user"
 
 
 class TestApplyActivityLock:
@@ -312,7 +312,7 @@ class TestApplyActivityLock:
         """Admin path: returns immediately without locking (covers lines 272-275)."""
         activity_read = ActivityRead.model_validate(activity)
         with patch(_PATCH_IS_ORG_ADMIN, new_callable=AsyncMock, return_value=True):
-            await _apply_activity_lock(activity_read, activity, course, admin_user, db)
+            await apply_activity_lock(activity_read, activity, course, admin_user, db)
         assert activity_read.is_locked is False
 
     @pytest.mark.asyncio
@@ -324,7 +324,7 @@ class TestApplyActivityLock:
         with patch(_PATCH_IS_ORG_ADMIN, new_callable=AsyncMock, return_value=False), \
              patch(_PATCH_BATCH_ACCESSIBLE, new_callable=AsyncMock, return_value=set()), \
              patch(_PATCH_IS_LOCKED, new_callable=AsyncMock, return_value=False):
-            await _apply_activity_lock(
+            await apply_activity_lock(
                 activity_read, activity, course, regular_user, db, parent_chapter=chapter
             )
         assert activity_read.is_locked is False
@@ -339,7 +339,7 @@ class TestApplyActivityLock:
         with patch(_PATCH_IS_ORG_ADMIN, new_callable=AsyncMock, return_value=False), \
              patch(_PATCH_BATCH_ACCESSIBLE, new_callable=AsyncMock, return_value=set()), \
              patch(_PATCH_IS_LOCKED, new_callable=AsyncMock, return_value=False):
-            await _apply_activity_lock(
+            await apply_activity_lock(
                 activity_read, activity, course, regular_user, db, parent_chapter=None
             )
         assert activity_read.is_locked is False
@@ -353,7 +353,7 @@ class TestApplyActivityLock:
         with patch(_PATCH_IS_ORG_ADMIN, new_callable=AsyncMock, return_value=False), \
              patch(_PATCH_BATCH_ACCESSIBLE, new_callable=AsyncMock, return_value=set()), \
              patch(_PATCH_IS_LOCKED, new_callable=AsyncMock, return_value=True):
-            await _apply_activity_lock(
+            await apply_activity_lock(
                 activity_read, activity, course, regular_user, db
             )
         assert activity_read.is_locked is True

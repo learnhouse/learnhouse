@@ -5,6 +5,7 @@ from typing import Literal, Optional
 from uuid import uuid4
 from sqlmodel import select
 from sqlmodel.ext.asyncio.session import AsyncSession
+from src.security.org_auth import require_org_destroy_right, require_org_role_permission
 from src.db.organization_config import (
     OrganizationConfig,
     OrganizationConfigBase,
@@ -431,6 +432,13 @@ async def create_org_with_config(
     return org_read
 
 
+def _acting_user_id(current_user) -> int:
+    # Lazy: src.security.auth -> services.users.users -> orgs.invites -> this module.
+    from src.security.auth import resolve_acting_user_id
+
+    return resolve_acting_user_id(current_user)
+
+
 async def update_org(
     request: Request,
     org_object: OrganizationUpdate,
@@ -476,6 +484,13 @@ async def update_org(
                 detail="Custom scripts cannot be set on the demo organization.",
             )
 
+    # `scripts` runs as JavaScript on every page of the org: changing it takes
+    # the organizations.update right, not just maintainer status.
+    if org_object.scripts is not None and org_object.scripts != org.scripts:
+        await require_org_role_permission(
+            _acting_user_id(current_user), org.id, db_session,
+            "organizations", "action_update",
+        )
     # Verify if the new slug is already in use
     statement = select(Organization).where(Organization.slug == org_object.slug)
     slug_available = (await db_session.execute(statement)).scalars().first()
@@ -717,6 +732,7 @@ async def update_org_thumbnail(
 
     return {"detail": "Thumbnail updated"}
 
+
 async def update_org_preview(
     request: Request,
     preview_file: UploadFile,
@@ -740,6 +756,7 @@ async def update_org_preview(
     name_in_disk = await upload_org_preview(preview_file, org.org_uuid)
 
     return {"name_in_disk": name_in_disk}
+
 
 async def delete_org(
     request: Request,
@@ -784,6 +801,7 @@ async def delete_org(
 
     # RBAC check - verifies user is admin of THIS specific organization
     await rbac_check(request, org.org_uuid, current_user, "delete", db_session)
+    await require_org_destroy_right(_acting_user_id(current_user), org.id, db_session)
 
     # AUDIT LOG: Record the deletion for security audit trail
     user_id = current_user.id if hasattr(current_user, 'id') else 'unknown'
@@ -852,6 +870,7 @@ async def wipe_org_content(
 
     # RBAC check - verifies the caller is an admin of THIS organization
     await rbac_check(request, org.org_uuid, current_user, "delete", db_session)
+    await require_org_destroy_right(_acting_user_id(current_user), org.id, db_session)
 
     courses = (await db_session.execute(
         select(Course).where(Course.org_id == org_id)
@@ -1895,6 +1914,7 @@ async def get_org_join_mechanism(
 
     return signup_mechanism
 
+
 async def upload_org_preview_service(
     preview_file: UploadFile,
     org_uuid: str,
@@ -1908,6 +1928,7 @@ async def upload_org_preview_service(
         "detail": "Preview uploaded successfully",
         "filename": name_in_disk
     }
+
 
 async def update_org_landing(
     request: Request,
@@ -1956,6 +1977,7 @@ async def update_org_landing(
 
     return {"detail": "Landing object updated"}
 
+
 async def upload_org_landing_content_service(
     request: Request,
     content_file: UploadFile,
@@ -1982,6 +2004,7 @@ async def upload_org_landing_content_service(
         "detail": "Landing content uploaded successfully",
         "filename": name_in_disk
     }
+
 
 async def update_org_seo_config(
     request: Request,

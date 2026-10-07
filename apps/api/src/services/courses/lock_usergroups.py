@@ -47,9 +47,13 @@ async def _load_activity_and_course(activity_uuid, db_session):
     return activity, course
 
 
-async def _load_usergroup(usergroup_uuid, db_session):
+async def _load_usergroup(usergroup_uuid, org_id, db_session):
+    # Only the course's own org's groups: attaching a foreign group would grant
+    # its members access and expose its name.
     ug = (await db_session.execute(
-        select(UserGroup).where(UserGroup.usergroup_uuid == usergroup_uuid)
+        select(UserGroup).where(
+            UserGroup.usergroup_uuid == usergroup_uuid, UserGroup.org_id == org_id
+        )
     )).scalars().first()
     if not ug:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User group not found")
@@ -133,7 +137,7 @@ async def add_usergroup_to_chapter(
     await check_resource_access(
         request, db_session, current_user, course.course_uuid, AccessAction.UPDATE
     )
-    ug = await _load_usergroup(usergroup_uuid, db_session)
+    ug = await _load_usergroup(usergroup_uuid, course.org_id, db_session)
     return await _attach_usergroup(chapter_uuid, course.org_id, ug.id, db_session)
 
 
@@ -148,7 +152,7 @@ async def remove_usergroup_from_chapter(
     await check_resource_access(
         request, db_session, current_user, course.course_uuid, AccessAction.UPDATE
     )
-    ug = await _load_usergroup(usergroup_uuid, db_session)
+    ug = await _load_usergroup(usergroup_uuid, course.org_id, db_session)
     return await _detach_usergroup(chapter_uuid, ug.id, db_session)
 
 
@@ -181,7 +185,7 @@ async def add_usergroup_to_activity(
     await check_resource_access(
         request, db_session, current_user, course.course_uuid, AccessAction.UPDATE
     )
-    ug = await _load_usergroup(usergroup_uuid, db_session)
+    ug = await _load_usergroup(usergroup_uuid, course.org_id, db_session)
     return await _attach_usergroup(activity_uuid, course.org_id, ug.id, db_session)
 
 
@@ -196,7 +200,7 @@ async def remove_usergroup_from_activity(
     await check_resource_access(
         request, db_session, current_user, course.course_uuid, AccessAction.UPDATE
     )
-    ug = await _load_usergroup(usergroup_uuid, db_session)
+    ug = await _load_usergroup(usergroup_uuid, course.org_id, db_session)
     return await _detach_usergroup(activity_uuid, ug.id, db_session)
 
 

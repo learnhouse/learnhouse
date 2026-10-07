@@ -987,7 +987,9 @@ def _get_request_checker(
     that request. This collapses what was previously 2–3× redundant author /
     admin / usergroup / resource lookups per course endpoint.
     """
-    existing = getattr(request.state, "rbac_checker", None)
+    # Service helpers are sometimes called without a live request (tests,
+    # background tasks); only memoize when there is one.
+    existing = getattr(getattr(request, "state", None), "rbac_checker", None)
     if (
         existing is not None
         and existing.db_session is db_session
