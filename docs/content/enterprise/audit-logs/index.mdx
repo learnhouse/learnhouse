@@ -2,7 +2,7 @@ import { Callout } from 'nextra/components'
 
 # Audit Logs
 
-Audit logs provide a detailed record of all actions taken on the platform, giving administrators full visibility into who did what and when. This is essential for compliance, security monitoring, and troubleshooting.
+Audit logs record all actions taken on the platform, so administrators can see who did what and when. They are useful for compliance, security monitoring, and troubleshooting.
 
 <Callout>
 Audit logs require an Enterprise plan.
@@ -44,4 +44,4 @@ Audit logs can be exported as CSV files for offline analysis, compliance reporti
 
 ## Performance
 
-Audit log entries are buffered in Redis and flushed to the database in batches every 60 seconds. This ensures that logging does not impact platform performance, even under heavy usage.
+Audit log entries are buffered in Redis and flushed to the database in batches every 60 seconds. Logging therefore does not slow the platform down, even under heavy usage.

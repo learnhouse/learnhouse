@@ -24,10 +24,10 @@ Self-hosted deployments do not have a checked-in `docker-compose.yml`. The Learn
 
 The platform consists of four applications backed by two core services:
 
-- **Web (Next.js)** -- The user-facing frontend that communicates with the backend API and the collaboration server.
-- **API (FastAPI)** -- The backend that handles authentication, course management, storage, uploads, AI features, and all business logic.
-- **Collab (Hocuspocus)** -- A WebSocket server that powers real-time collaborative editing with JWT authentication, Redis persistence, and per-board user limits.
-- **CLI (Commander)** -- A command-line tool used for local development and management tasks.
+- **Web (Next.js)**: The user-facing frontend that communicates with the backend API and the collaboration server.
+- **API (FastAPI)**: The backend that handles authentication, course management, storage, uploads, AI features, and all business logic.
+- **Collab (Hocuspocus)**: A WebSocket server that powers real-time collaborative editing with JWT authentication, Redis persistence, and per-board user limits.
+- **CLI (Commander)**: A command-line tool used for local development and management tasks.
 
 <ArchitectureDiagram />
 
@@ -35,5 +35,5 @@ The platform consists of four applications backed by two core services:
 
 LearnHouse relies on two primary backing services:
 
-- **PostgreSQL 16 (pgvector)** -- The primary relational database for storing all application data including users, courses, organizations, and activity records. Uses the pgvector extension for AI embedding storage. Both dev and self-host production use the `pgvector/pgvector:pg16` image.
-- **Redis** -- Used for caching, session management, collaboration state persistence, and message brokering between services. Dev mode uses `redis:8.6.1-alpine`; the CLI-generated self-host production stack uses `redis:7.2.3-alpine`.
+- **PostgreSQL 16 (pgvector)**: The primary relational database for storing all application data including users, courses, organizations, and activity records. Uses the pgvector extension for AI embedding storage. Both dev and self-host production use the `pgvector/pgvector:pg16` image.
+- **Redis**: Used for caching, session management, collaboration state persistence, and message brokering between services. Dev mode uses `redis:8.6.1-alpine`; the CLI-generated self-host production stack uses `redis:7.2.3-alpine`.
